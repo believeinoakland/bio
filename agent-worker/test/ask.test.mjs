@@ -1,0 +1,277 @@
+/* agent-worker — `POST /ask` (R54–R56), the ask's reach (R55, R37), the suggestions switch on a run (R56), and the
+ * account and usage a run's model half carries (R36, R58), AT THE MEMBER'S INTERFACE: its default export
+ * `fetch(request, env)`, driven in this process with a recording plane binding and the global `fetch` replaced by a
+ * scripted model API (agent-model's API-key path). Nothing here reads the member's source text.
+ *
+ * The plane's own lists are imported from their modules: `credentials`' `AI_GRANT_OPS` (its R28), which `answers`'
+ * `ASK_SCOPE` equals with `rule` added until N580 (K1603); `answers` has no code on the tranche yet, so its list is
+ * re-pointed here at its merge (K1563 (1)). */
+import { readFileSync } from "node:fs";
+import worker from "../src/index.mjs";
+import { ASK_OPS, ASK_PLANE_OPS, PLANE_OPS } from "../src/ops.mjs";
+import { AI_GRANT_OPS } from "../../bio-plane/src/credentials/index.mjs";
+import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
+import { MODEL_ENDPOINT, MODEL_FOR_MODE, USAGE_FIGURES } from "../../agent-model/src/model.mjs";
+import { MEMBER } from "./account.mjs";
+
+let pass = 0, fail = 0;
+const t = (label, got, want) => {
+  const ok = JSON.stringify(got) === JSON.stringify(want);
+  console.log(`  ${ok ? "PASS" : "FAIL"}  ${label}${ok ? "" : `\n         want ${JSON.stringify(want)}\n         got  ${JSON.stringify(got)}`}`);
+  ok ? pass++ : fail++;
+};
+const section = (s) => console.log(`\n--- ${s} ---`);
+
+const GRANT = "aig-ask-fixture-grant-never-echoed";
+const SECRET = "sk-ant-ask-fixture-key-never-echoed";
+const ACCOUNT = { kind: "apikey", secret: SECRET, member: MEMBER };
+const AIK = "aik-" + "d".repeat(64);
+const PACK = { id: "investigative-session", version: "pack@ask", resident: { objective: "answer from the record" },
+               disclosed: { ask: { body: "closed book" }, suggestions: { body: "labelled suggestions only" } } };
+const CEILING = { ok: false, reason: "AI_USE_CEILING_REACHED", code: "AI_USE_CEILING_REACHED", check: "C-22.30",
+                  translation: "You have reached today's limit for questions." };
+
+/* The plane: records every call; answers the ask's own ops, its reads, and a run's ops. */
+function plane(cfg = {}) {
+  const calls = [];
+  const ok = (result) => Response.json({ ok: true, result, tokenClass: "ai", version: "ask-test" });
+  const S = { status: "running" };
+  return { calls, binding: { async fetch(url, init) {
+    const u = new URL(url);
+    const op = u.searchParams.get("op");
+    let body = null; try { body = init?.body ? JSON.parse(init.body) : null; } catch { body = null; }
+    calls.push({ op, token: u.searchParams.get("token"), store: u.searchParams.get("store"), query: Object.fromEntries(u.searchParams), body, raw: String(url) + (init?.body ?? "") });
+    if (cfg.silent?.includes(op)) return new Response("<html>", { status: 502 });
+    switch (op) {
+      case "askceiling": return cfg.ceiling ? ok(CEILING) : ok({ ok: true, reached: false });
+      case "affordances": return ok(cfg.noPack ? { pack: null, pack_absent: "no fences" } : { pack: PACK });
+      case "askcheck":
+        if (cfg.checkRefused) return Response.json({ ok: false, reason: "GRANT_EXPIRED", check: "C-29.30" }, { status: 403 });
+        return ok({ ok: true, answer: { ...(body?.answer || {}), sentences: [] },
+                    withheld: [{ sentence: 0, code: "ANSWER_CITES_UNREAD", translation: "a quote was not read" }] });
+      case "askusage": return ok({ ok: true });
+      case "whoami": return ok({ tokenClass: "ai", session: false, member: null });
+      case "airun": return ok({ found: true, session: { id: "RUN-A", mode: "check", status: S.status, max_passes: 1,
+        principal: { plane: MEMBER, claude: MEMBER, skill: PACK.version }, context: { type: "inquiry", id: "INQ-1" },
+        budget: [{ bound: "fetches", allowed: 9 }, { bound: "subsessions", allowed: 9 }, { bound: "wallclock", allowed: 9e5 },
+                 { bound: "runtime", allowed: 900 }].map((b) => ({ ...b, consumed: 0 })) } });
+      case "airunlog": return ok({ found: true, entries: [], truncated: false });
+      case "airunspawn": return ok({ found: true, half: "search", payload: { run: "RUN-A", context: { type: "inquiry", id: "INQ-1" },
+                                                                            mode: "check", skill: PACK.version, standard_pair: null } });
+      case "basisversions": return ok({ versions: [] });
+      case "airuntick": return ok({ ticked: true, appended: (body?.log || []).length, refused: [] });
+      case "airunclose": S.status = "finished"; return ok({ terminated: true });
+      default:
+        if (ASK_OPS.includes(op) || op === "meaningrows" || op === "search") return ok({ op, rows: [{ id: "EVT-1" }] });
+        return Response.json({ ok: false, reason: "UNKNOWN_OP" }, { status: 400 });
+    }
+  } } };
+}
+
+/* The model API (agent-model's API-key path): scripted per conversation, recording every request. */
+function model(script = {}) {
+  const calls = [];
+  const fn = async (url, init) => {
+    const body = JSON.parse(init.body);
+    calls.push({ url: String(url), key: init.headers["x-api-key"], body, raw: init.body });
+    if (script.refuse) return Response.json({ type: "error", error: { type: "overloaded_error", message: "busy" } }, { status: 529 });
+    const names = (body.tools || []).map((x) => x.name);
+    const results = body.messages.filter((m) => Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result"));
+    const use = (name, input) => Response.json({ id: "m", type: "message", role: "assistant", stop_reason: "tool_use",
+      content: [{ type: "tool_use", id: `u${calls.length}`, name, input }], usage: { input_tokens: 3, output_tokens: 2 } });
+    if (names.includes("done_reading")) {
+      const plan = script.reading || [["load_layer", { name: "ask" }], ["read", { op: "sources", args: {} }],
+                                       ["read", { op: "eventsfor", args: { entity: "ENT-1" } }]];
+      const n = results.length;
+      if (n < plan.length && plan[n][0] === "batch")
+        return Response.json({ id: "m", type: "message", role: "assistant", stop_reason: "tool_use", usage: { input_tokens: 3, output_tokens: 2 },
+          content: plan[n][1].map(([name, input], i) => ({ type: "tool_use", id: `u${calls.length}_${i}`, name, input })) });
+      if (n < plan.length) return use(...plan[n]);
+      return use("done_reading", { question_as_read: "who held the seat in March" });
+    }
+    if (names.includes("answer"))
+      return use("answer", { question_as_read: "who held the seat in March", clarifying: null, summary: "S1",
+                             sentences: [{ text: "Ruth held it.", kind: "quote", support: ["EVT-1"] }], label: "machine work" });
+    /* a run's parent: load the suggestions layer once, then answer the judge tool it is asked for */
+    if (names.includes("load_layer") && results.length === 0 && script.runLoad)
+      return use("load_layer", { name: "suggestions" });
+    const judge = names.find((x) => x.startsWith("judge_") && body.messages.some((m) => JSON.stringify(m.content).includes(`calling ${x}`)));
+    if (names.includes("report"))
+      return use("report", { state: "LOOKED_ABSENT", summary: "nothing" });
+    return use(judge || names.find((x) => x.startsWith("judge_")), {});
+  };
+  return { calls, fn };
+}
+
+async function drive(path, body, { planeCfg = {}, modelScript = {}, env = {} } = {}) {
+  const p = plane(planeCfg), m = model(modelScript);
+  const saved = globalThis.fetch;
+  globalThis.fetch = m.fn;
+  try {
+    const res = await worker.fetch(new Request(`http://agent-worker/${path}`, { method: "POST",
+      body: typeof body === "string" ? body : JSON.stringify(body) }), { VERSION: "ask", PLANE: p.binding, ...env });
+    const text = await res.text();
+    const lines = res.headers.get("content-type") === "application/x-ndjson"
+      ? text.trim().split("\n").map((l) => JSON.parse(l)) : null;
+    let out = null; if (!lines) try { out = JSON.parse(text); } catch { out = null; }
+    return { status: res.status, type: res.headers.get("content-type"), text, lines, out, plane: p.calls, model: m.calls };
+  } finally { globalThis.fetch = saved; }
+}
+const ask = (extra = {}, opts) => drive("ask", { question: "Who held the seat in March?", grant: GRANT, account: ACCOUNT, ...extra }, opts);
+const last = (r) => (r.lines ? r.lines[r.lines.length - 1] : null);
+const TRANSCRIPTS = [];
+
+section("R54 · refusals before any model call, each by its code, as plain JSON");
+{
+  const cases = [
+    ["no PLANE binding (as R1)", () => drive("ask", { question: "q", grant: GRANT, account: ACCOUNT }, { env: { PLANE: undefined } }), 503, "PLANE_NOT_CONFIGURED"],
+    ["a body that is not JSON (as R2)", () => drive("ask", "{{{"), 400, "BAD_BODY"],
+    ["no question", () => ask({ question: "" }), 400, "BAD_QUESTION"],
+    ["no grant", () => ask({ grant: undefined }), 401, "NO_GRANT"],
+    ["an empty grant", () => ask({ grant: "" }), 401, "NO_GRANT"],
+    ["no account", () => ask({ account: undefined }), 409, "NO_ACCOUNT"],
+    ["an account naming no member", () => ask({ account: { kind: "apikey", secret: SECRET } }), 400, "BAD_ACCOUNT"],
+    ["a namespace no instance holds", () => ask({ store: "biosmoke" }), 400, "NAMESPACE_UNKNOWN"],
+    ["a conversation that is not this ask's turns", () => ask({ conversation: [{ role: "system", content: "x" }] }), 400, "BAD_CONVERSATION"],
+  ];
+  for (const [label, run, status, code] of cases) {
+    const r = await run();
+    t(`R54: ${label} -> ${status} ${code}, no plane call, no model call, not a stream`,
+      [r.status, r.out?.code, r.out?.reason, r.plane.length, r.model.length, r.lines], [status, code, code, 0, 0, null]);
+  }
+  const c = await ask({}, { planeCfg: { ceiling: true } });
+  t("R54: a member over the use ceiling, as the plane answers it, is relayed unchanged (R43), before any model call",
+    [c.status, c.out?.reason, c.out?.plane?.result, c.plane.map((x) => x.op), c.model.length],
+    [403, "PLANE_REFUSED", CEILING, ["askceiling"], 0]);
+  const s = await ask({}, { planeCfg: { silent: ["askceiling"] } });
+  t("R54: a silent plane at the ceiling -> 502 PLANE_SILENT, no model call", [s.status, s.out?.code, s.model.length], [502, "PLANE_SILENT", 0]);
+  const np = await ask({}, { planeCfg: { noPack: true } });
+  t("R54, R48: no pack published -> refused PACK_UNDETERMINED, no model call", [np.status, np.out?.code, np.model.length], [502, "PACK_UNDETERMINED", 0]);
+}
+
+section("R54 · interpret, read through the grant, compose, check, and return only what the checks pass");
+{
+  const r = await ask();
+  TRANSCRIPTS.push(r);
+  t("R54: a 200 NDJSON stream", [r.status, r.type], [200, "application/x-ndjson"]);
+  t("R54: progress is streamed as each step begins: interpreting, each read with its op, composing, checking, then the answer",
+    r.lines.map((l) => l.event === "step" ? l.step : l.event === "read" ? `read ${l.op}` : l.event),
+    ["interpreting", "read eventsfor", "composing", "checking", "answer"]);
+  t("R54: no progress event carries text the checks have not passed: a step's name or a read's op, nothing more",
+    r.lines.slice(0, -1).map((l) => Object.keys(l).sort().join(",")), ["event,step", "event,op", "event,step", "event,step"]);
+  const check = r.plane.find((x) => x.op === "askcheck");
+  t("R54: the composed answer was handed to the plane's answers checks, with the question",
+    [check?.body?.question, check?.body?.answer?.summary, check?.body?.answer?.label], ["Who held the seat in March?", "S1", "machine work"]);
+  t("R54: what is returned is what the checks passed, and what they withheld is named",
+    [last(r).event, last(r).ok, last(r).answer.sentences, last(r).withheld.map((w) => w.code)],
+    ["answer", true, [], ["ANSWER_CITES_UNREAD"]]);
+  t("R54: the model's own sentence never reached the member: only the checked answer did", r.text.includes("Ruth held it."), false);
+  t("R54: the calls, in order: the ceiling, the pack, the reads, the usage, the checks",
+    r.plane.map((x) => x.op), ["askceiling", "affordances", "eventsfor", "askusage", "askusage", "askcheck"]);
+  t("R54: every plane call went under the grant and nothing else", [...new Set(r.plane.map((x) => x.token))], [GRANT]);
+  t("R54: it writes no run row and no observation: no run op was called",
+    r.plane.filter((x) => PLANE_OPS[x.op] && !["affordances", "search", "meaningrows", "standard", "profiles"].includes(x.op)).map((x) => x.op), []);
+  const usage = r.plane.filter((x) => x.op === "askusage").map((x) => x.body);
+  t("R54: each conversation's usage is reported for mode ask, with its model, its five figures and its call count",
+    usage.map((u) => [u.mode, u.model, Object.keys(u.usage), u.calls]),
+    [["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, 4], ["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, 1]]);
+  t("R54: the turns ran through agent-model under the member's own reference, mode ask's model",
+    [[...new Set(r.model.map((c) => c.url))], [...new Set(r.model.map((c) => c.key))], [...new Set(r.model.map((c) => c.body.model))]],
+    [[MODEL_ENDPOINT], [SECRET], [MODEL_FOR_MODE.ask]]);
+  t("R54: an ask naming no namespace sends none (the plane's default)", r.plane.every((x) => x.store === null), true);
+  const named = await ask({ store: "scratch" });
+  t("R54: an ask naming one sends it on every call", [...new Set(named.plane.map((x) => x.store))], ["scratch"]);
+  const conv = await ask({ conversation: [{ role: "user", content: "earlier question" }, { role: "assistant", content: "earlier answer" }] });
+  t("R54: the earlier turns the member's device holds are carried into the conversation, before the question",
+    conv.model[0].body.messages.slice(0, 2).map((m) => [m.role, typeof m.content === "string" ? m.content : m.content.map((c) => c.text).join("")]),
+    [["user", "earlier question"], ["assistant", "earlier answer"]]);
+}
+
+section("R54 · after the stream begins, a failure ends it as a refusal, and nothing unchecked is returned");
+{
+  const ref = await ask({}, { planeCfg: { checkRefused: true } });
+  t("R54: the checks refused -> the last event is a refusal carrying the plane's body; no answer",
+    [last(ref).event, last(ref).code, last(ref).plane?.reason, ref.lines.some((l) => l.event === "answer")],
+    ["refused", "PLANE_REFUSED", "GRANT_EXPIRED", false]);
+  const sil = await ask({}, { planeCfg: { silent: ["askcheck"] } });
+  t("R54: the checks silent -> refused PLANE_SILENT, no answer", [last(sil).code, sil.lines.some((l) => l.event === "answer")], ["PLANE_SILENT", false]);
+  const mr = await ask({}, { modelScript: { refuse: true } });
+  t("R54: the model refused -> refused MODEL_REFUSED with its status and type", [last(mr).code, last(mr).model_status, last(mr).model_error],
+    ["MODEL_REFUSED", 529, "overloaded_error"]);
+  const many = [["batch", Array.from({ length: ASK_BOUNDS.reads.default + 3 }, () => ["read", { op: "timeline", args: {} }])]];
+  const bound = await ask({}, { modelScript: { reading: many } });
+  t("R54 (run-rules R17): the reads bound stops reading at its figure; the read past it is refused to the model, never sent",
+    [bound.plane.filter((x) => x.op === "timeline").length,
+     JSON.stringify(bound.model[1]?.body?.messages ?? []).includes("ASK_BOUND_REACHED")],
+    [ASK_BOUNDS.reads.default, true]);
+}
+
+section("R55 · the ask's whole reach is ASK_OPS, equal to answers' ASK_SCOPE and credentials' AI_GRANT_OPS");
+{
+  t("R55: ASK_OPS equals credentials' AI_GRANT_OPS with answers' `rule` (K1603, until N580), both ways",
+    [ASK_OPS.filter((o) => !AI_GRANT_OPS.includes(o)), AI_GRANT_OPS.filter((o) => !ASK_OPS.includes(o))], [["rule"], []]);
+  t("R55: never a sources op, member history, an administrative op, an export, or a write",
+    ASK_OPS.filter((o) => /^sources|history|admin|export|purge|suggest|tick|close|propose|capture|set$/.test(o)), []);
+  t("R55, R37: an ask's reach is not PLANE_OPS: the run's ops are unchanged, and no write of a run is an ask's op",
+    [Object.keys(PLANE_OPS).filter((o) => PLANE_OPS[o].mutating).filter((o) => ASK_OPS.includes(o)), Object.keys(PLANE_OPS).length], [[], 22]);
+  t("R55: the ask's own calls are not reads of the record, and none is in ASK_OPS",
+    Object.keys(ASK_PLANE_OPS).filter((o) => ASK_OPS.includes(o)), []);
+  const r = TRANSCRIPTS[0];
+  t("R55: a tool call naming another op is refused here, before any plane call",
+    r.plane.some((x) => x.op === "sources"), false);
+  const refusedResult = r.model.flatMap((c) => c.body.messages).flatMap((m) => Array.isArray(m.content) ? m.content : [])
+    .find((b) => b.type === "tool_result" && /ASK_OP_REFUSED/.test(String(b.content)));
+  t("R55: and the refusal is returned to the model as the tool's result, marked an error", [!!refusedResult, refusedResult?.is_error], [true, true]);
+  const args = await ask({}, { modelScript: { reading: [["read", { op: "timeline", args: { token: "x" } }],
+                                                        ["read", { op: "timeline", args: { nested: { a: 1 } } }]] } });
+  t("R55: a read whose arguments would carry a token, a namespace or a structure is refused, never sent",
+    args.plane.filter((x) => x.op === "timeline").length, 0);
+  t("R55: every op the ask's reads reached the plane with is in ASK_OPS",
+    TRANSCRIPTS.concat([args]).flatMap((x) => x.plane.map((c) => c.op)).filter((o) => !ASK_OPS.includes(o) && !(o in ASK_PLANE_OPS)), []);
+}
+
+section("R56 · the member's own suggestions switch: off by default, the layer loaded only when it is on");
+{
+  const tools = (r) => r.model[0].body.tools.find((x) => x.name === "load_layer").input_schema.properties.name.enum;
+  const off = await ask({}, { modelScript: { reading: [["load_layer", { name: "suggestions" }]] } });
+  t("R56: off (absent): the ask's load_layer does not offer the suggestions layer", tools(off), ["ask"]);
+  const offResult = off.model[1].body.messages.flatMap((m) => Array.isArray(m.content) ? m.content : [])
+    .find((b) => b.type === "tool_result");
+  t("R56: off: a call naming it is refused, and the layer's words never reach the model",
+    [offResult?.is_error, off.model.some((c) => c.raw.includes("labelled suggestions only"))], [true, false]);
+  const on = await ask({ account: { ...ACCOUNT, suggestions: true } }, { modelScript: { reading: [["load_layer", { name: "suggestions" }]] } });
+  t("R56: on: it is offered and loaded", [tools(on), on.model.some((c) => c.raw.includes("labelled suggestions only"))],
+    [["ask", "suggestions"], true]);
+  const runBody = (account) => ({ run_id: "RUN-A", store: "scratch", credential: AIK, account });
+  const runOff = await drive("run", runBody(ACCOUNT), { modelScript: { runLoad: true } });
+  const runOn = await drive("run", runBody({ ...ACCOUNT, suggestions: true }), { modelScript: { runLoad: true } });
+  const layerOf = (r) => r.model[0].body.tools.find((x) => x.name === "load_layer").input_schema.properties.name.enum;
+  t("R56: a run started by that member honours the same switch: off, not offered and never loaded; on, offered and loaded",
+    [runOff.status, layerOf(runOff), runOff.model.some((c) => c.raw.includes("labelled suggestions only")),
+     runOn.status, layerOf(runOn), runOn.model.some((c) => c.raw.includes("labelled suggestions only"))],
+    [200, ["ask"], false, 200, ["ask", "suggestions"], true]);
+  TRANSCRIPTS.push(runOff, runOn);
+}
+
+section("R58, R36 · a run's model half: turns through agent-model, usage reported, no secret anywhere");
+{
+  const r = TRANSCRIPTS[TRANSCRIPTS.length - 1];
+  t("R58: a run whose member's reference arrived and whose caller supplied no judgements runs its turns, and says so",
+    [r.status, JSON.parse(r.text).judgement_source, JSON.parse(r.text).turns_run === r.model.length, r.model.length > 0], [200, "model", true, true]);
+  const entries = r.plane.filter((x) => x.op === "airuntick").flatMap((x) => x.body?.usage || []);
+  t("R58 (ai-runs R48): each tick carries the usage of the model calls since the last, each exactly {mode, model, usage}",
+    [entries.length > 0, [...new Set(entries.map((e) => Object.keys(e).join(",")))], [...new Set(entries.map((e) => e.mode))]],
+    [true, ["mode,model,usage"], ["check"]]);
+  const v = await (await worker.fetch(new Request("http://agent-worker/version"), { VERSION: "ask", PLANE: plane().binding })).json();
+  t("R58: GET /version answers the one statement of when model turns run",
+    /exactly when the member's own Claude account reference arrives/.test(v.model_turns ?? ""), true);
+  const all = TRANSCRIPTS;
+  t("R36: no answer or event carried the grant, the ai credential or the member's secret",
+    all.filter((x) => x.text.includes(GRANT) || x.text.includes(SECRET) || x.text.includes(AIK)).length, 0);
+  t("R36: the member's secret went only in the model API's key header: never to the plane, never in a request body",
+    [all.some((x) => x.plane.some((c) => c.raw.includes(SECRET))), all.some((x) => x.model.some((c) => c.raw.includes(SECRET)))], [false, false]);
+  t("R36: the grant went only to the plane, never to the model", all.some((x) => x.model.some((c) => c.raw.includes(GRANT))), false);
+}
+
+console.log(`\nask: ${pass} passed, ${fail} failed`);
+process.exit(fail ? 1 : 0);

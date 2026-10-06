@@ -68,6 +68,7 @@
  * ========================================================================= */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. */
+import { ACCOUNT, MEMBER, ACCOUNT_SECRET, withAccount } from "./account.mjs";
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync } from "node:fs";
@@ -75,11 +76,8 @@ import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import {
-  CONTROL_FLOW, FIRST_STEP, LEVELS, MODES, BUDGET_BOUNDS, SPENT_NOT_WATCHED, NOT_OUR_BOUNDS,
-  PLANE_OPS, JUDGEABLE, NOT_JUDGEABLE,
-  nextStep, stopBecause, stepLog, applyJudgement, adjustedFrom, canonical, emptyLevelCandidates,
-} from "../src/harness.mjs";
+import { CONTROL_FLOW, FIRST_STEP, LEVELS, MODES, BUDGET_BOUNDS, SPENT_NOT_WATCHED, NOT_OUR_BOUNDS, JUDGEABLE, NOT_JUDGEABLE, nextStep, stopBecause, stepLog, applyJudgement, adjustedFrom, canonical, emptyLevelCandidates } from "../../agent-harness/src/harness.mjs";
+import { PLANE_OPS } from "../src/ops.mjs";
 /* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
    registry and refusal catalog. This suite stages ROWS through `CFG.meaningRows`
    and still can — what it may no longer do is stage a SUCCESS for an arm the
@@ -95,7 +93,8 @@ import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
 import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
-import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
+import { REPORTING_LEVEL } from "../../agent-harness/src/harness.mjs";
+import { MEANING_ARM } from "../src/ops.mjs";
 /* FL-8 / IC-67 — THE PLANE'S STATUS KEYING, TAKEN FROM THE PLANE INSTEAD OF
    REPRODUCED HERE, AND THE CORRECTION IS A MEASURED DEFECT RATHER THAN A TIDY-UP.
    The mock's `airunclose` branch computed the run's status by hand as
@@ -113,7 +112,7 @@ import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
 /* The run's vocabulary is run-rules' (the ai-runs split, K617, K649 (1)); the observation vocabulary it re-exports. */
 import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 /* N421: the harness's exports, for the purity walk, and the member driven in this process for the op arms (A9). */
-import * as HARNESS from "../src/harness.mjs";
+import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { driveMember, SUBSESSION_LIMIT } from "./inprocess.mjs";
 
 let pass = 0, fail = 0;
@@ -169,6 +168,7 @@ async function harnessPurity() {
     nextStep: () => states.map((x) => H.nextStep(x)),
     nextPlanStep: () => states.map((x) => H.nextPlanStep(x)),
     stopBecause: () => states.map((x) => H.stopBecause(x)),
+    passLimit: () => [3, 0, -1, "2", null, undefined, NaN].map((x) => H.passLimit(x)),
     planStopBecause: () => states.map((x) => H.planStopBecause(x)),
     gateStep: () => states.map((x) => H.gateStep(x)),
     advance: () => states.map((x) => H.advance(x, H.nextStep(x))),
@@ -695,6 +695,7 @@ export default {
     if (op === "airun")
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
         id: url.searchParams.get("run"), mode: CFG.mode || "check", status: S.status,
+        principal: { plane: "member:ruth", claude: CFG.payer ?? "member:ruth" },
         context: runCtx(CFG),
         max_passes: CFG.maxPasses || 1,
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
@@ -819,7 +820,7 @@ const newMf = (cfg = {}) => new Miniflare({
 });
 
 const runOp = (mf, body) =>
-  mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(body) });
+  mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(withAccount(body)) });
 const mockState = async (mf) =>
   (await (await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/state")).json());
 const base = { run_id: "run-1", store: "scratch", credential: AIK };
@@ -836,7 +837,7 @@ console.log("\n--- B1 · a CHECK run walks the table and the plane holds the who
   t("the stage says the HARNESS ran, not a round trip", out.stage, "harness");
   console.log("\n  -- and it still says WHICH HALF ran: no model turns, FL-6's cascade unresolved --");
   t("zero model turns, stated", out.turns_run, 0);
-  t("the judgement source is named rather than implied", out.judgement_source, "supplied");
+  t("R28: the judgement source is named rather than implied: the body's, on the stubbed path", out.judgement_source, "body");
   t("the mode is the RECORD's", out.mode, "check");
   t("the run ended and named its bound", out.ended?.bound ?? null, "completed");
 

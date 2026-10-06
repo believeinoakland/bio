@@ -13,8 +13,9 @@
  * component in this system that is both called by the plane and a caller of it.
  * Every rule below follows from that one fact.
  *
- * WHAT IT DOES AT FL-3. `/run` DRIVES THE RUN HARNESS — `src/harness.mjs`'s
- * deterministic control-flow table (IS-9). It takes the run identity, the
+ * WHAT IT DOES. `/run` DRIVES THE RUN HARNESS — `agent-harness`' deterministic
+ * control-flow table (IS-9; moved there by copy at T33-54, and this file now
+ * imports it). It takes the run identity, the
  * namespace and the `ai` credential the plane hands it; asks the plane who that
  * credential is; reads the run's MODE and BUDGET from the record and its own
  * OBSERVATION LOG (so a resumed run continues rather than restarting); then
@@ -26,22 +27,24 @@
  * for the bias manifest to arrive in — and the returns are held to a RETURN
  * CONTRACT: a REPORT with a citation, never documents, with the parent re-reading
  * each citation BY ADDRESS through the one meaning reader it already had. Both
- * contracts are `src/subsession.mjs` and both are pure. The rule they enforce is
+ * contracts are `agent-harness`' `subsession.mjs` and both are pure. The rule they enforce is
  * the design's own: *a sub-session that returns documents rather than reports has
  * defeated the architecture* — so a return that breaks the contract is REFUSED
  * and NAMED, and its level goes UNDETERMINED rather than becoming an absence.
  *
- * **IT STILL RUNS NO MODEL TURNS AND IT STILL SAYS SO ON THE WIRE**
- * (`turns_run: 0`, `judgement_source: "supplied"`). The DETERMINISTIC half is
- * what FL-3 builds. SINCE FL-6 the Claude account that would pay for a model
- * turn IS resolved here — `src/cascade.mjs`, member → project → instance, from
- * per-call material retained exactly as long as the credential is: not at all
- * — and the response names which level pays or states, per level, why none
- * can. What still does not happen is the model turn itself, whose segment
- * sizing is D-218's measurement; a judgement therefore still arrives from the
- * caller and the answer names that fact rather than presenting a table-driven
- * walk as a model run. Nothing here is a stub that pretends to be finished,
- * and nothing here claims to be the half it is not.
+ * **WHEN IT RUNS MODEL TURNS, AND IT SAYS WHICH ON THE WIRE (R28, R58).** It
+ * runs model turns through `agent-model` exactly when the member's own Claude
+ * account reference arrived with the call (R6; K1502: there is no group or
+ * project account) and the run's mode has turns to run: an API key goes to the
+ * Messages API, a subscription to Claude Code in the `agent-runner` container
+ * through the Container Durable Object binding (R35). A segment whose caller
+ * supplied the judgements (`judgements` in the body, the stubbed path) runs no
+ * turn. The answer's `turns_run` counts the turns that actually ran and
+ * `judgement_source` says whose judgements the table applied (`model` or
+ * `body`), so a table-driven walk is never presented as a model run, nor the
+ * reverse. `POST /ask` (R54) is a member's question, answered through the same
+ * module under the member's own reference and an ask grant, and handed to the
+ * plane's `answers` checks before anything is returned.
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
  * suite behaviourally, at this member's interface — what it reads from `env`,
@@ -70,15 +73,16 @@
  *     why the old one was wrong. The property FL-2 was actually protecting is
  *     untouched: no binding but the plane, no write this member performs itself,
  *     and no op it may name that somebody did not decide to give it.
- *   - HOLD A CREDENTIAL. It has no token of its own and no secret binding. The
- *     `ai` credential arrives PER CALL and is not retained, so this member cannot
- *     act except while somebody is asking it to.
+ *   - HOLD A CREDENTIAL (R36). It has no token of its own and no secret binding.
+ *     The `ai` credential, an ask's grant and the member's own Claude account
+ *     reference arrive PER CALL and are never stored, logged or echoed, so this
+ *     member cannot act except while somebody is asking it to.
  *   - JUDGE ITS OWN SCOPE. D-199 (2): what an agent may reach is a row a member
  *     AUTHORED, read from the record at the plane's gate by `aiTaskScope`. A copy
  *     of that judgement here would be a second enforcement point that drifts from
  *     the first, and a scope compiled into a Worker is precisely the settings row
  *     D-199 refused. There is no op allow-list, no scope and no class in this
- *     file. `harness.mjs`'s `PLANE_OPS` is a DECLARATION of what the table's rows
+ *     file. `ops.mjs`' `PLANE_OPS` is a DECLARATION of what the table's rows
  *     do and grants nothing — naming an op the credential does not declare gets
  *     the plane's `AI_BEYOND_TASK_SCOPE` refusal, passed through verbatim. It is
  *     pinned as an exact set by the suite — floor and ceiling both — so a call
@@ -114,20 +118,25 @@
 const PLANE_ORIGIN = "http://plane"; /* a binding ignores the host; this names the
                                         request, it does not route it. */
 
-/* FL-3 / IS-9 — THE CONTROL FLOW TABLE, IN ITS OWN FILE AND PURE.
+/* FL-3 / IS-9 — THE CONTROL FLOW TABLE, IN ITS OWN MODULE AND PURE (`agent-harness`, T33-54).
  *
- * Read `harness.mjs`'s header for why it is a table rather than a narrative.
+ * Read `agent-harness/src/harness.mjs`'s header for why it is a table rather than a narrative.
  * The split matters here: this file is the DRIVER and holds no decision, so the
  * suite can walk every row of the table in a plain node process AND drive it
  * through `POST /run` inside workerd, and the two must agree. A table exercised
  * only through the op is a table nobody can exhaust. */
 import {
-  CONTROL_FLOW, FIRST_STEP, LEVELS, BUDGET_BOUNDS, MEANING_ARM,
+  FIRST_STEP, LEVELS, BUDGET_BOUNDS, passLimit,
   nextStep, stepLog, applyJudgement, adjustedFrom, emptyLevelCandidates, runContextTarget,
-  advance, publishableState, resumeFrom, NAMESPACES,
+  advance, publishableState, resumeFrom,
   PLAN_FLOW, PLAN_MAX_PASSES, OPTION_KEYS, flowFor, nextPlanStep, planAdvance, applyPlanJudgement, planDedup,
   PLAN_READS, PROFILE_FACTS, planSubjectReads, earlierPlans, whyWithUndetermined, resumeTargets,
-} from "./harness.mjs";
+} from "../../agent-harness/src/harness.mjs";
+
+/* R4, R37, R55 — what this member names to the plane: its namespaces, a run's ops, the meaning arm, an ask's reach. */
+import { NAMESPACES, MEANING_ARM } from "./ops.mjs";
+/* R54–R56 — `POST /ask`, in its own file. */
+import { handleAsk } from "./ask.mjs";
 
 /* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
  * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
@@ -137,26 +146,22 @@ import { AI_RUN_STATE_MAX_BYTES } from "../../bio-plane/src/run-rules/index.mjs"
  * PURE. What goes OUT to a sub-session and what may come BACK are shapes, not
  * control flow, so they live beside the table rather than inside it — and the
  * suite can drive every spelling of a return in a plain node process while the
- * driver's job is reduced to asking and obeying. Read `subsession.mjs`'s header
+ * driver's job is reduced to asking and obeying. Read `agent-harness`' `subsession.mjs` header
  * for why the rule is an exact key set rather than a list of banned fields. */
 import {
-  SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote,
-} from "./subsession.mjs";
+  SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
+} from "../../agent-harness/src/subsession.mjs";
 
-/* FL-6 — THE CLAUDE-ACCOUNT CASCADE, in its own file and pure like the two
- * above. Which level pays is resolved HERE, in the fleet member, because the
- * plane's own airunopen stamp says so: the plane learns it by being told and
- * refuses a run that cannot say. The material arrives PER CALL beside the `ai`
- * credential and is retained exactly as long: not at all. */
-import { resolveClaudeCascade, cascadeToken, CASCADE_NO_ACCOUNT } from "./cascade.mjs";
+/* R32, R33 (K1502) — WHOSE ACCOUNT PAYS: the member's own, the one level, judged in its own file and pure. The
+ * reference arrives PER CALL beside the `ai` credential and is retained exactly as long: not at all (R36). */
+import { resolveClaudeCascade, cascadeToken, CASCADE_NO_ACCOUNT, ACCOUNT_KINDS } from "./cascade.mjs";
 
-/* R40, R41, D-611 — THE MODEL HALF, in its own file. It asks the model for a judgement inside a step and
- * decides no step; the table above still decides every one. */
+/* THE MODEL HALF (`agent-model`, T33-55; R58). It runs a judgement's turns inside a step, under the member's own
+ * reference and the model its mode names (`MODEL_FOR_MODE`), and decides no step; the table still decides every one. */
 import {
-  DEFAULT_MODEL, DEFAULT_MAX_SEGMENT_BYTES, SEGMENT_BYTES_SOURCE, segmentMeter, converse,
+  DEFAULT_MAX_SEGMENT_BYTES, SEGMENT_BYTES_SOURCE, segmentMeter, converse, MODEL_FOR_MODE,
   judgeTools, planJudgeTools, LOAD_LAYER, parentSystem, rowPrompt, rowFacts, subsessionSystem, subsessionTools,
-} from "./model.mjs";
-import { LOOKED_STATES } from "./subsession.mjs";
+} from "../../agent-model/src/model.mjs";
 
 /* R48 — THE PACK A RUN'S MODEL IS INSTRUCTED BY is the one the plane renders and publishes on its untargeted
  * `op=affordances` answer (`pack`, control-plane R41: `skills.renderPack` over the composed machine fences). This
@@ -206,7 +211,7 @@ const BOUND_SOURCE = "FL-1 2026-08-08 curve, re-checked by D-312 2026-09-25 (M-1
    from the record, and it is never duplicated here. */
 const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 
-/* D-462, R4 — THE NAMESPACES THIS MEMBER WILL NAME TO THE PLANE: `NAMESPACES` in `harness.mjs`, exactly `bio` or
+/* D-462, R4 — THE NAMESPACES THIS MEMBER WILL NAME TO THE PLANE: `NAMESPACES` in `ops.mjs`, exactly `bio` or
  * `scratch`, exported there (a Worker entry may export only handlers) so control-plane pins it to its namespace gate
  * (N402). A named namespace outside it is refused here, before the cascade and before any plane call is spent. NOT
  * NAMING ONE is a different condition and keeps its old code, BAD_STORE: the plane defaults an ABSENT `store=`, and
@@ -253,6 +258,7 @@ const refusal = (code, detail, status, extra) =>
  * fail a member that declares a mutating surface op. */
 export const SURFACE = {
   run:     { method: "POST", mutating: false },
+  ask:     { method: "POST", mutating: false },
   version: { method: "GET",  mutating: false },
 };
 
@@ -266,7 +272,9 @@ export const SURFACE = {
  * convert its own failure into a statement about the record or about who the
  * caller is. */
 async function askPlane(env, op, credential, store, query = null, body = null) {
-  let url = `${PLANE_ORIGIN}/?op=${op}&store=${encodeURIComponent(store)}&token=${encodeURIComponent(credential)}`;
+  /* An ask that names no namespace sends none, and the plane's default applies (K1601 (5)); a run always names one (R4). */
+  let url = `${PLANE_ORIGIN}/?op=${op}${store == null ? "" : `&store=${encodeURIComponent(store)}`}`
+    + `&token=${encodeURIComponent(credential)}`;
   for (const [k, v] of Object.entries(query || {}))
     if (v != null && v !== "") url += `&${k}=${encodeURIComponent(String(v))}`;
   let res;
@@ -294,16 +302,16 @@ async function askPlane(env, op, credential, store, query = null, body = null) {
  * rule and the one this Worker already applies to a silent plane. */
 const MAX_STEPS = 400;
 
-/** FL-3's DRIVER. It turns each row of `harness.mjs`'s table into plane calls
+/** FL-3's DRIVER. It turns each row of `agent-harness`' table into plane calls
  *  and appends an observation entry for EVERY step — including the last one, and
  *  including the steps of a run that ends badly (§14b.6: log-always).
  *
  *  IT DECIDES NOTHING. `nextStep` picks the step, `stopBecause` names the bound,
  *  `applyJudgement` polices what a judgement may touch, and `adjustedFrom`
- *  answers F10's precondition. Every one of those is in `harness.mjs`, is pure,
+ *  answers F10's precondition. Every one of those is in `agent-harness`, is pure,
  *  and is driven directly by the suite as well as through this function — so a
  *  decision made here instead would be a decision nothing exhaustive covers. */
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps, cascade = null, model = null }) {
+async function driveHarness(env, { runId, store, credential, judgements, maxSteps, account = null, model = null }) {
   /* EVERY PLANE CALL IS COUNTED, AND THE COUNT IS WHAT SPENDS `runtime`.
      §14b.6 named `runtime-ceiling-reached` as a word the record had with no
      writer, and IS-9(d) as the item that builds the producer. This counter IS
@@ -346,25 +354,20 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       + "member opens no run: a run's identity and its conditions are the plane's, and a member that "
       + "could open one would be a machine deciding what it was formed under.", 404, { run_id: runId }) };
 
-  /* FL-6 — THE RECORD'S PAYER AND THE RUNTIME'S RESOLUTION MUST BE THE SAME
-     FACT. The run object names WHICH LEVEL of the cascade pays (two principals,
-     both named — §14a, DEC-27(b)); this segment just resolved the cascade from
-     the material it was handed. When the two disagree, driving on would spend
-     under one account while the record names another — a payer nobody can
-     audit, which is exactly the fail-closed reason the store refuses to OPEN a
-     run with no payer named. Refused naming BOTH, so the reader knows which
-     two facts disagree; this member re-words neither. Checked only when
-     material was supplied: a judgements-only segment resolves nothing and has
-     nothing to disagree with. */
+  /* R10, R57 (K1502, K1503) — THE RECORD'S PAYER AND THE MEMBER WHOSE REFERENCE ARRIVED MUST BE THE SAME MEMBER.
+     The run records the member whose act started it (a standing question's author) as its account holder
+     (`session.principal.claude`); this segment was handed one member's own reference. When the two differ, driving on
+     would spend one member's account on another's run, which K1502 forbids and nobody could audit. Refused before any
+     step, naming both members (ids, never a secret); this member re-words neither. Every segment carries a reference
+     (R6), the stubbed `judgements` path included, so the check is made on every segment. */
   const recordedPayer = session.principal?.claude ?? null;
-  if (cascade?.available && recordedPayer !== cascade.level)
+  if (account && recordedPayer !== account.member)
     return { refusal: refusal("RUN_NAMES_A_DIFFERENT_PAYER",
-      `the run's own record says the ${JSON.stringify(recordedPayer)} level of the Claude-account `
-      + `cascade pays for it, but the material handed to this segment resolves to the `
-      + `${JSON.stringify(cascade.level)} level. Those are two different payers and this member will `
-      + "not spend under one while the record names the other. Either the launch recorded the wrong "
-      + "level or this segment was handed the wrong accounts; both are the caller's to fix.",
-      409, { run_id: runId, recorded: recordedPayer, resolved: cascade.level, levels: cascade.levels }) };
+      `the run's own record says the Claude account of ${JSON.stringify(recordedPayer)} pays for it, but the reference `
+      + `handed to this segment is ${JSON.stringify(account.member)}'s. A run is continued only under the account of `
+      + "the member whose act started it, never under another member's (K1502, D-260), so no step was taken and the "
+      + "run stays as it was. The caller handed the wrong member's reference, or the run recorded the wrong member.",
+      409, { run_id: runId, recorded: recordedPayer, supplied: account.member }) };
 
   /* R48 — THE PACK, AS THE PLANE PUBLISHED IT, HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run:
      until then the pack instructs nothing and this changes nothing. */
@@ -390,7 +393,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     model.messages = [];
     model.system = parentSystem(held);
     /* R52: a plan-mode run judges with `optionPropose`'s fields only; every other mode with the search table's. */
-    model.tools = [LOAD_LAYER(Object.keys(held.disclosed || {})),
+    /* R56 (K1479, K1502): the `suggestions` layer is loadable only when the member's own switch is on. */
+    model.layers = loadableLayers(held, model.suggestions);
+    model.tools = [LOAD_LAYER(model.layers),
                    ...(session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS))];
   }
 
@@ -411,7 +416,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       { status: 403, body: logRead.refused.plane ?? null }) };
   const priorLog = logRead.result ?? {};
   const resumedFrom = Array.isArray(priorLog.entries) ? priorLog.entries.length : 0;
-  /* THE ADDRESS OF A LOOK THIS SEGMENT WRITES: `log:<seq>`, the ordinal `op=airunlog` answers (R41's reports
+  /* THE ADDRESS OF A LOOK THIS SEGMENT WRITES: `log:<seq>`, the ordinal `op=airunlog` answers (agent-harness R7's reports
      cite it as `observed_at`). Knowable only from a whole log: a truncated read leaves it UNDETERMINED. */
   const logSeq = { next: () => (priorLog.truncated === true ? null : resumedFrom + logged + 1),
                    landed: () => { logged += 1; },
@@ -435,7 +440,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     pass: 0,
     /* R50: mode `plan` walks one pass; R15's limit otherwise. */
     maxPasses: session.mode === "plan" ? PLAN_MAX_PASSES
-      : (Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES),
+      : passLimit(session.max_passes),
     /* R51: the plan a plan-mode run proposes to is the run's own (ai-runs R46, R19), never the caller's. */
     planId: typeof session.plan === "string" && session.plan ? session.plan : null,
     resumedFrom,
@@ -467,22 +472,20 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     const callsAtStepStart = calls;
     const row = FLOW[state.step];
 
-    /* THE JUDGEMENT, AND THE ONE DOOR IT COMES THROUGH. Supplied by the caller in order, or (R40) made by a model
-       turn at every judged row but `collect`, whose judgements are the sub-sessions' REPORTS (R41). */
+    /* THE JUDGEMENT, AND THE ONE DOOR IT COMES THROUGH. Supplied by the caller in order, or (R58; agent-model R1) made by
+       a model turn at every judged row but `collect`, whose judgements are the sub-sessions' REPORTS (agent-harness R7). */
     let judgement;
     if (row && row.judged && model && state.step !== "collect") {
       model.messages.push({ role: "user", content: rowPrompt(state.step, row, rowFacts(state, LEVELS)) });
       const got = await converse({
-        token: model.token, model: model.id, meter: model.meter, system: model.system,
+        reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter, system: model.system,
         messages: model.messages, tools: model.tools, finalTool: `judge_${state.step}`,
         onTool: async (name, input) => {
-          if (name === "load_layer") {
-            const layer = model.pack.disclosed?.[String(input.name)];
-            return layer ? { content: layer } : { content: `no disclosed layer '${String(input.name)}'`, error: true };
-          }
+          if (name === "load_layer") return loadLayer(model, input);
           return { content: `this step is judged by judge_${state.step}`, error: true };
         },
       });
+      model.spent(got, state.mode);
       if (got.silent) return { refusal: modelSilent(got.silent, runId) };
       if (got.refused) return { refusal: modelRefused(got.refused, runId) };
       if (got.stopped) { segmentStopped = got.stopped; break; }
@@ -572,8 +575,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
           + "and a later segment re-does it rather than resume from a state the record refuses";
       }
     }
+    /* ai-runs R48: the usage of every model call since the last tick, counted for the member whose account carried it. */
+    const usage = model ? model.drain() : [];
     const tick = await call("airuntick", null,
-      { run: runId, log: entry ? [entry] : [], consume, ...(published ? { state: published.state } : {}) });
+      { run: runId, log: entry ? [entry] : [], consume, ...(published ? { state: published.state } : {}),
+        ...(usage.length ? { usage } : {}) });
     if (!tick.reached) return { refusal: planeSilent(tick) };
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
        an entry that landed. */
@@ -845,7 +851,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
                + `(${SUBSESSION_OPS.join(", ")}) and with no field for the lens to arrive in`;
       out.state = { ...state, contracts };
 
-      /* R41 — THE SUB-SESSIONS RUN, when model turns do: one per level, each its own conversation under its own
+      /* agent-harness R7 — THE SUB-SESSIONS RUN, when model turns do: one per level, each its own conversation under its own
          contract, and each hands back a REPORT that `collect` holds to R20. */
       if (model) {
         const ran = await runSubsessions(call, out.state, runId, model, logSeq, contracts);
@@ -888,9 +894,9 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
 
     case "collect": {
       /* FL-5 / IS-9(a) — THE RETURN CONTRACT, ENFORCED AT THE ROW THAT COLLECTS.
-         The four returns arrived as this row's judgement (until FL-6's cascade
-         runs the sub-sessions themselves, they arrive from the caller — the same
-         honesty `turns_run: 0` states one field over). Every one is held to
+         The four returns arrived as this row's judgement (the sub-sessions'
+         reports when model turns run, the caller's on the stubbed path, as
+         `judgement_source` states). Every one is held to
          `checkReport`: a REPORT with a citation, never documents.
 
          A REFUSED RETURN IS NOT DROPPED AND NEVER BECOMES AN ABSENCE. It is
@@ -1246,7 +1252,7 @@ async function performPlanStep(call, state, runId) {
   }
 }
 
-/** R41 — THE SUB-SESSIONS. Each gets a fresh transcript (nothing shared with the parent or another level), its
+/** agent-harness R7 — THE SUB-SESSIONS. Each gets a fresh transcript (nothing shared with the parent or another level), its
  *  frozen contract, the contract's `scope` as its only plane tool, and `report` as its answer. Its look is logged
  *  at its level, and that entry's address is the report's `observed_at`. A sub-session that returns no report is
  *  named, never read as an absence. */
@@ -1254,7 +1260,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   const reports = [], refused = [];
   for (const contract of contracts) {
     const got = await converse({
-      token: model.token, model: model.id, meter: model.meter,
+      reference: model.reference, runner: model.runner, mode: state.mode, meter: model.meter,
       system: subsessionSystem(model.pack, contract),
       messages: [{ role: "user", content: `Search the ${contract.level} level for the run's question, then report.` }],
       tools: subsessionTools(contract),
@@ -1269,6 +1275,7 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
         return { content: r.result };
       },
     });
+    model.spent(got, state.mode);
     if (got.planeSilent) return { silent: got.planeSilent };
     if (got.silent || got.refused) return { model: got };
     if (got.stopped) return { stopped: got.stopped };
@@ -1306,6 +1313,39 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   return { reports, refused };
 }
 
+/* R56 (K1479, K1502) — THE MEMBER'S OWN SUGGESTIONS SWITCH. Only when it is on may the pack's `suggestions` layer
+   (skills R35) be loaded; off, as by default, the layer is not offered and a call naming it is refused, so DEC-27's
+   clause in the layers that are loaded governs and no unprompted suggestion is offered. The pack and its version are
+   the same for every member (skills R35); only what this member lets the model load differs. */
+const SUGGESTIONS_LAYER = "suggestions";
+function loadableLayers(pack, suggestionsOn) {
+  return Object.keys(pack?.disclosed || {}).filter((k) => suggestionsOn === true || k !== SUGGESTIONS_LAYER);
+}
+function loadLayer(model, input) {
+  const name = String(input?.name ?? "");
+  if (!model.layers.includes(name))
+    return { content: name === SUGGESTIONS_LAYER
+      ? "the suggestions layer is not loaded: the asking member's own suggestions switch is off"
+      : `no disclosed layer '${name}'`, error: true };
+  return { content: model.pack.disclosed[name] };
+}
+
+/** A segment's or an ask's model half (R54, R58): the member's reference for the calls it serves, the runner binding,
+ *  the meter, and the usage of each conversation kept until it is reported (ai-runs R48). Nothing in it outlives the
+ *  call that made it (R36). */
+function modelHalf({ reference, runner, meter, suggestions }) {
+  const pending = [];
+  return {
+    reference, runner, meter, suggestions: suggestions === true, pack: null, layers: [], messages: [],
+    /* One entry per conversation that reached the provider: `{mode, model, usage}` (ai-runs R48's entry). */
+    spent(got, mode, calls = null) {
+      if (got && got.usage) pending.push({ mode, model: MODEL_FOR_MODE[mode] ?? null, usage: got.usage,
+                                           ...(calls == null ? {} : { calls }) });
+    },
+    drain() { return pending.splice(0, pending.length); },
+  };
+}
+
 const modelSilent = (silent, runId) => refusal("MODEL_SILENT",
   "the model API could not be reached, so no judgement was made at this step and the segment stopped. The run is "
   + "resumable; nothing the table did before this step is lost.", 502,
@@ -1328,10 +1368,36 @@ const planeRefused = (runId, store, asked) =>
                + "passed through exactly as the plane worded it.",
          plane_status: asked.status, plane: asked.body }, 403);
 
-/* The table's own loop bound when the run object names none. Deliberately small
-   and deliberately NOT a judgement's to set: §14b.4 and TREC 2011 — the model
-   never decides when the loop stops. */
-const DEFAULT_MAX_PASSES = 3;
+/** R6, R32, R57 — the account a call carries: `{account, cascade}` or `{refusal}`. `account` is the member's own
+ *  reference as credentials R24 unseals it for this act, with the member it belongs to and their suggestions switch:
+ *  `{kind, secret, member, suggestions?}` (K1601 (1), (2)). There is no group, project or instance level (R32): a body
+ *  still carrying the old cascade's `claude_accounts` is refused naming that field, and a member with no usable
+ *  reference of their own has no assistant, refused by name before any plane call (D-260 as K1503 reads it). The
+ *  secret is read here for the call it serves and goes no further than `agent-model` (R36). */
+async function accountOf(body) {
+  if (body.claude_accounts !== undefined)
+    return { refusal: refusal("BAD_ACCOUNT",
+      "claude_accounts is the retired three-level cascade's field: there is no group, project or instance Claude "
+      + "account (K1502). A call carries one member's own reference, as account.", 400, { field: "claude_accounts" }) };
+  const a = body.account;
+  if (a === undefined || a === null)
+    return { refusal: refusal("NO_ACCOUNT",
+      "this call carries no Claude account reference of the member whose act started it. Each member who wants the "
+      + "assistant connects their own subscription or their own API key, and it serves only that member; there is no "
+      + "group or project account to fall back to (K1502), so the capability is UNAVAILABLE and nothing was done.",
+      409, { capability: "unavailable" }) };
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind)
+      || typeof a.member !== "string" || !a.member)
+    return { refusal: refusal("BAD_ACCOUNT",
+      `account is the member's own reference: {kind, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, and `
+      + "member the member it belongs to. What arrived is not one, and this member judges only what it is handed.",
+      400, { field: "account" }) };
+  const cascade = await resolveClaudeCascade(a);
+  if (!cascade.available)
+    return { refusal: refusal(CASCADE_NO_ACCOUNT, cascade.detail, 409,
+      { capability: "unavailable", levels: cascade.levels }) };
+  return { account: a, cascade };
+}
 
 async function handleRun(req, env) {
   if (typeof env.PLANE?.fetch !== "function")
@@ -1382,29 +1448,10 @@ async function handleRun(req, env) {
       + "well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and "
       + "is never made here.", 400);
 
-  /* FL-6 — THE CASCADE, RESOLVED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN.
-     `claude_accounts` is per-call material for the three levels ({member,
-     project, instance}, each `{ token, ref }`), handed over the way the `ai`
-     credential is and retained the same way: not at all — it is read here,
-     judged, and only the SECRET-FREE status travels further. ABSENT ENTIRELY
-     is a legal caller (the deterministic, judgements-supplied mode FL-3 built)
-     and is STATED as an absence on the response rather than silently treated
-     as the same fact as "nothing resolved".
-
-     SUPPLIED-BUT-NOTHING-RESOLVES REFUSES, by name, per level. The caller
-     asked for a run some Claude account would pay for and none can: that is
-     the capability UNAVAILABLE, and FL-6's own row states the failure mode
-     this guards — a silent no-op is indistinguishable from a run that found
-     nothing. An "empty success" here would be exactly that. */
-  const accountsSupplied = body.claude_accounts != null;
-  if (accountsSupplied && (typeof body.claude_accounts !== "object" || Array.isArray(body.claude_accounts)))
-    return refusal("BAD_CLAUDE_ACCOUNTS",
-      "claude_accounts, when present, is an object keyed by cascade level (member, project, "
-      + "instance), each entry { token, ref }. This member judges only what it is handed.", 400);
-  const cascade = accountsSupplied ? await resolveClaudeCascade(body.claude_accounts) : null;
-  if (cascade && !cascade.available)
-    return refusal(CASCADE_NO_ACCOUNT, cascade.detail, 409,
-      { capability: "unavailable", levels: cascade.levels });
+  /* R6, R32, R57 (K1502, K1503) — THE MEMBER'S OWN ACCOUNT, JUDGED BEFORE ANY PLANE CALL IS SPENT ON THIS RUN. */
+  const acct = await accountOf(body);
+  if (acct.refusal) return acct.refusal;
+  const { account, cascade } = acct;
 
   /* R7: a positive number, else 120 — `Number(x) || 120` let a negative setting become the bound. */
   const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
@@ -1445,22 +1492,25 @@ async function handleRun(req, env) {
 
   /* ------------------------------------------------------- FL-3: DRIVE THE TABLE
    *
-   * Everything below is `harness.mjs`'s decision and this function's plumbing.
+   * Everything below is `agent-harness`' decision and this function's plumbing.
    * The split is deliberate and it is the item: the TABLE is pure and a suite
    * walks it with no network at all, and this driver is the part that turns a
    * row into a plane call. A driver that decided anything would be a second
    * control flow nobody could exhaust. */
-  /* R40 — MODEL TURNS RUN when an account resolved and the caller supplied no judgements; `judgements` in the
-     body keeps the supplied mode, in which no turn is taken. The token is read here, for this call only. */
+  /* R58 — MODEL TURNS RUN, through `agent-model`, when the member's reference arrived (it always has, past R6) and the
+     caller supplied no judgements; `judgements` in the body is the stubbed path, in which no turn is taken. The
+     reference is handed to `agent-model` for the calls it serves and kept by nothing here (R33, R36). A subscription's
+     turns reach `agent-runner` through the Container Durable Object binding (R35), passed as it is bound. */
   const bytesBound = Number(env.MAX_SEGMENT_BYTES) > 0 ? Number(env.MAX_SEGMENT_BYTES) : DEFAULT_MAX_SEGMENT_BYTES;
   const meter = segmentMeter({ turnsBound: requested, bytesBound });
-  const modelMode = !!(cascade && cascade.available) && !Array.isArray(body.judgements);
+  const modelMode = !Array.isArray(body.judgements);
   const model = modelMode
-    ? { token: (await cascadeToken(body.claude_accounts)).token, id: env.MODEL || DEFAULT_MODEL, meter }
+    ? modelHalf({ reference: (await cascadeToken(account)).reference, runner: env.RUNNER ?? null, meter,
+                  suggestions: account.suggestions })
     : null;
 
   const drive = await driveHarness(env, {
-    runId, store, credential, cascade, model,
+    runId, store, credential, account, model,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
     maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS,
   });
@@ -1470,37 +1520,22 @@ async function handleRun(req, env) {
     ok: true,
     run_id: runId,
     store,
-    /* WHAT WAS ACTUALLY DONE, NAMED — FL-2's rule, kept and made more specific.
-       An answer that did not say which half ran would be indistinguishable from
-       a run that executed model turns and found nothing, and those are
-       different claims. `stage: "harness"` says the deterministic table ran;
-       `turns_run: 0` and `judgement_source` say the model half did not. */
+    /* WHAT WAS ACTUALLY DONE, NAMED (R28, R58). `stage: "harness"` says the deterministic table ran; `turns_run` is the
+       number of model turns this segment actually ran through `agent-model` (0 when none ran), and `judgement_source`
+       says whose judgements the table applied: `model` (the turns') or `body` (the caller's, the stubbed path). The
+       two never mix in one segment: supplied judgements turn the model half off for it. */
     stage: "harness",
     turns_run: meter.turns,
-    judgement_source: modelMode ? "model" : "supplied",
-    /* CORRECTED AT FL-6, never exempted: this note used to say the model
-       account "is FL-6's cascade and is not resolved here". The cascade IS
-       resolved here now, and the honest remainder is different — the account
-       is resolved and NAMED, and what still does not happen is a MODEL TURN,
-       whose sizing is D-218's measurement and not this item's. */
+    judgement_source: modelMode ? "model" : "body",
     judgement_note: modelMode
-      ? `the control-flow table ran and the judgements inside its steps were made by model turns (${meter.turns}), `
-        + "under the Claude account the cascade resolved and the skill pack the run names; the sub-sessions ran "
-        + "one per level and returned REPORTS"
-      : "the control-flow table ran and its judgements arrived from the caller, so no model turn was taken "
+      ? `the control-flow table ran and the judgements inside its steps were made by model turns run through `
+        + `agent-model (${meter.turns}), under the member's own Claude account and the skill pack the run names; `
+        + "the sub-sessions ran one per level and returned REPORTS"
+      : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken "
         + "(turns_run: 0). Stated rather than presented as a model run.",
-    /* FL-6 ON THE WIRE, secret-free by construction. Three shapes, each an
-       honest statement of a different fact: material supplied and RESOLVED
-       (level + ref + every level's own state); material supplied and NOTHING
-       resolved never reaches here — it refused above, by name; material NOT
-       supplied is its own stated absence, distinct from "nothing resolved",
-       because a caller that offered no accounts and a cascade that exhausted
-       them are different facts about this segment. */
-    claude_account: cascade
-      ? { available: true, level: cascade.level, ref: cascade.ref, levels: cascade.levels }
-      : { available: false, reason: "NO_ACCOUNT_MATERIAL_SUPPLIED",
-          detail: "this segment was handed no claude_accounts material, so the cascade had nothing "
-                + "to resolve — the deterministic, judgements-supplied mode. An absence, stated." },
+    /* R29 — WHOSE ACCOUNT, secret-free by construction: its kind and the member it belongs to. A call with none never
+       reaches here (R6 refused it by name before any step). */
+    claude_account: { available: true, kind: cascade.kind, member: cascade.member },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,
@@ -1577,8 +1612,17 @@ async function handleRun(req, env) {
    that window is invisible to both. A verification must establish which build
    ANSWERED. This is how this member answers that question about itself. */
 function handleVersion(env) {
-  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0" });
+  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS });
 }
+
+/* R54 — what `/ask` (ask.mjs) uses of this shell: one route to the plane, one refusal helper, one account judgement. */
+const ASK_DEPS = { refusal, json, askPlane, planeAnswer, publishedPack, accountOf, cascadeToken, modelHalf,
+                   loadableLayers, loadLayer, converse, segmentMeter, NAMESPACES, DEFAULT_MAX_SEGMENT_BYTES };
+
+/* R58 — ONE TRUTH FOR MODEL TURNS, the sentence this member states about itself on `GET /version`, and the same one its
+   header and its `/run` answer state. */
+const MODEL_TURNS = "run through agent-model exactly when the member's own Claude account reference arrives with the "
+  + "call and the run's or ask's mode has turns to run; a segment whose caller supplies the judgements runs none";
 
 export default {
   async fetch(req, env) {
@@ -1586,6 +1630,7 @@ export default {
     const path = url.pathname.replace(/^\/+/, "");
     if (req.method === "GET" && path === "version") return handleVersion(env);
     if (req.method === "POST" && (path === "run" || path === "")) return handleRun(req, env);
-    return refusal("UNKNOWN", "POST /run or GET /version only.", 404);
+    if (req.method === "POST" && path === "ask") return handleAsk(req, env, ASK_DEPS);
+    return refusal("UNKNOWN", "POST /run, POST /ask or GET /version only.", 404);
   },
 };

@@ -2,7 +2,7 @@
  *
  * Every live id R1–R49 is named by a test here, in its title, and each test checks the whole requirement. The
  * member is driven through `POST /run` and `GET /version` inside workerd, over a real service binding to a plane
- * mock, with its one other egress — the model API (R40, R41) — answered by a scripted model mock that
+ * mock, with its one other egress — the model API (R58, agent-harness R7) — answered by a scripted model mock that
  * miniflare's `outboundService` puts behind every global `fetch`. The pure exports the requirements name
  * (`CONTROL_FLOW`, `nextStep`, `checkReport`, `resolveClaudeCascade`, `cascadeToken`, `SURFACE`) are driven
  * directly. The plane's own vocabularies are IMPORTED from the plane's modules, never retyped (R44), and the one
@@ -17,18 +17,17 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import {
-  CONTROL_FLOW, FIRST_STEP, LEVELS, MODES, REPORTING_LEVEL, PLANE_OPS, JUDGEABLE, NOT_JUDGEABLE, BUDGET_BOUNDS,
-  nextStep, stopBecause, applyJudgement, runContextTarget, stepLog, publishableState, stateBytes, resumableState,
-} from "../src/harness.mjs";
+import { CONTROL_FLOW, FIRST_STEP, LEVELS, MODES, REPORTING_LEVEL, JUDGEABLE, NOT_JUDGEABLE, BUDGET_BOUNDS, nextStep, stopBecause, applyJudgement, runContextTarget, stepLog, publishableState, stateBytes, resumableState } from "../../agent-harness/src/harness.mjs";
+import { PLANE_OPS } from "../src/ops.mjs";
 import {
   REPORT_KEYS, REPORT_STATES, SUMMARY_MAX, ADDRESS_MAX, CITATIONS_MAX, REPORT_MAX_BYTES, SPAWN_KEYS,
   checkReport, documentHoldings,
-} from "../src/subsession.mjs";
+} from "../../agent-harness/src/subsession.mjs";
 import {
   CASCADE_ORDER, resolveClaudeCascade, cascadeToken,
 } from "../src/cascade.mjs";
-import { MODEL_ENDPOINT, DEFAULT_MAX_SEGMENT_BYTES } from "../src/model.mjs";
+import { MODEL_ENDPOINT, DEFAULT_MAX_SEGMENT_BYTES } from "../../agent-model/src/model.mjs";
+import { MEMBER, withAccount } from "./account.mjs";
 import { SURFACE } from "../src/index.mjs";
 import { meaningRowsBranch } from "./plane-meaning.mjs";
 import { versionReadBranches } from "./plane-versions.mjs";
@@ -40,7 +39,7 @@ import { OBSERVATION_LEVELS, OBSERVATION_STATES, RUN_ENDINGS, RUN_BOUNDS, runSta
 import * as RUN_RULES from "../../bio-plane/src/run-rules/index.mjs";
 import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, DEPLOYED_MODES } from "../../bio-plane/src/run-rules/index.mjs";
 import { reportsAs } from "../../bio-plane/src/skilldoctrine.mjs";
-import * as HARNESS from "../src/harness.mjs";
+import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { discoverMembers, verifyStatic, verifyFresh } from "../../bio-plane/scripts/fleet-bundle.mjs";
 
 const { Miniflare } = await (async () => {
@@ -56,6 +55,8 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 const section = (s) => console.log(`\n--- ${s} ---`);
+/* agent-model R4: the API-key path sends the system prompt as cache-marked blocks; its text is what a test reads. */
+const sysText = (b) => (Array.isArray(b.system) ? b.system.map((x) => x.text).join("") : String(b.system ?? ""));
 
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WRANGLER = readFileSync(fileURLToPath(new URL("../wrangler.jsonc", import.meta.url)), "utf8")
@@ -67,7 +68,8 @@ const PLANE_ENTRY = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs",
 const AIK = "aik-" + "a".repeat(64);
 const REVOKED = "aik-" + "c".repeat(64);
 const CLAUDE_TOKEN = "sk-ant-requirements-fixture-never-echoed";
-const ACCOUNTS = { project: { token: CLAUDE_TOKEN, ref: "the-project-account" } };
+/* R6 (K1601 (1)): the member's own reference, as the plane sends it; with no `judgements`, model turns run (R58). */
+const ACCOUNTS = Object.freeze({ kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER });
 const wide = [{ bound: "fetches", allowed: 50 }, { bound: "subsessions", allowed: 50 },
               { bound: "wallclock", allowed: 500000 }, { bound: "runtime", allowed: 5000 }];
 
@@ -81,7 +83,7 @@ const real = new Miniflare({
 const PUBLISHED = (await (await real.dispatchFetch("http://x/api/?op=affordances&token=mem-req")).json());
 const PUBLISHED_ANSWER = PUBLISHED && typeof PUBLISHED === "object" && "result" in PUBLISHED ? PUBLISHED.result : PUBLISHED;
 /* R48 (N157, §1a): the member reads the pack the plane renders and publishes on this answer (`pack`, control-plane
-   R41) and renders nothing itself. The answer here is the real plane's with a STUB pack in place of the one it renders,
+   agent-harness R7) and renders nothing itself. The answer here is the real plane's with a STUB pack in place of the one it renders,
    carrying what the member reads (version, resident, disclosed), so a run's recorded skill can name it. */
 const PACK = Object.freeze({
   id: "investigative-session", edition: "stub", version: "investigative-session@stub+0123456789abcdef",
@@ -91,7 +93,7 @@ const PACK = Object.freeze({
                                body: [{ text: "no single confidence score" }] } },
 });
 const PUBLISHED_WITH_PACK = { ...PUBLISHED_ANSWER, pack: PACK };
-/* The real answer with no pack at all: since control-plane R41 the real plane publishes one, so R48's no-pack arm
+/* The real answer with no pack at all: since control-plane agent-harness R7 the real plane publishes one, so R48's no-pack arm
    takes the key away rather than relying on the plane to omit it. */
 const { pack: _realPack, pack_absent: _realAbsent, ...PUBLISHED_NO_PACK } = PUBLISHED_ANSWER || {};
 const planeNamespaces = (await (await real.dispatchFetch("http://x/api/?op=whoami&token=mem-req&store=biosmoke")).json()).namespaces;
@@ -151,7 +153,7 @@ export default {
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
         id: url.searchParams.get("run"), mode: CFG.mode === undefined ? "check" : CFG.mode, status: S.status, context: runCtx(CFG),
         ...(CFG.maxPasses != null ? { max_passes: CFG.maxPasses } : {}),
-        principal: { plane: "member:ruth", claude: CFG.payer ?? null, ref: null, skill: CFG.skill ?? null },
+        principal: { plane: "member:ruth", claude: CFG.payer ?? "member:ruth", ref: null, skill: CFG.skill ?? null },
         state: S.state,
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
       } } });
@@ -257,7 +259,8 @@ export default {
     }
     const lastIsResult = Array.isArray(last.content) && last.content.some((b) => b.type === "tool_result");
     if (names.includes("report")) {
-      const contract = JSON.parse(String(body.system).split("YOUR SPAWN CONTRACT:\\n")[1]);
+      const sys = Array.isArray(body.system) ? body.system.map((x) => x.text).join("") : String(body.system);
+      const contract = JSON.parse(sys.split("YOUR SPAWN CONTRACT:\\n")[1]);
       const rep = (CFG.reports || {})[contract.level];
       if (!lastIsResult && CFG.subQuery !== false)
         return reply([{ type: "tool_use", id: "q" + n, name: "meaningrows", input: { rows: "leg", q: "", limit: 5 } }]);
@@ -265,7 +268,7 @@ export default {
       return reply([{ type: "tool_use", id: "r" + n, name: "report",
                       input: rep ?? { state: "LOOKED_ABSENT", summary: "nothing supportable at " + contract.level } }]);
     }
-    const prompt = [...body.messages].reverse().find((m) => m.role === "user" && typeof m.content === "string");
+    const prompt = [...body.messages].reverse().map((m) => (m.role !== "user" ? null : typeof m.content === "string" ? { content: m.content } : Array.isArray(m.content) && m.content.find((c) => c.type === "text") ? { content: m.content.filter((c) => c.type === "text").map((c) => c.text).join("") } : null)).find((m) => m && /judge_/.test(m.content));
     const step = (/Answer by calling judge_([a-z]+)/.exec(prompt ? prompt.content : "") || [])[1] || "";
     if (CFG.refuseAt === step)
       return Response.json({ id: "m", type: "message", role: "assistant", content: [], stop_reason: "refusal",
@@ -301,7 +304,7 @@ const call = async (mf, path, init) => {
   ANSWERS.push({ status: res.status, headers: Object.fromEntries(res.headers.entries()), text });
   return { status: res.status, out: out ?? {}, headers: Object.fromEntries(res.headers.entries()) };
 };
-const runOp = (mf, body) => call(mf, "run", { method: "POST", body: JSON.stringify(body) });
+const runOp = (mf, body) => call(mf, "run", { method: "POST", body: JSON.stringify(withAccount(body)) });
 const reset = async (mf, plane = {}, model = {}) => {
   await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/reset",
     { method: "POST", body: JSON.stringify({ mode: "check", maxPasses: 1, budget: wide, target: "INQ-1",
@@ -351,16 +354,22 @@ section("R2–R7 · each malformed request refused by its code, in order, with n
     ["R5", "credential of another shape", { run_id: "r", store: "scratch", credential: "hunter2" }, 400, "BAD_CREDENTIAL_SHAPE"],
     ["R5", "credential with upper-case hex", { run_id: "r", store: "scratch", credential: "aik-" + "A".repeat(64) }, 400, "BAD_CREDENTIAL_SHAPE"],
     ["R5", "credential one hex short", { run_id: "r", store: "scratch", credential: "aik-" + "a".repeat(63) }, 400, "BAD_CREDENTIAL_SHAPE"],
-    ["R6", "claude_accounts an array", { ...base, claude_accounts: [] }, 400, "BAD_CLAUDE_ACCOUNTS"],
-    ["R6", "claude_accounts a string", { ...base, claude_accounts: "x" }, 400, "BAD_CLAUDE_ACCOUNTS"],
-    ["R6", "claude_accounts where no level resolves", { ...base, claude_accounts: { member: { token: "" } } }, 409, "NO_ACCOUNT_RESOLVED"],
+    ["R6", "account absent", { ...base, account: undefined }, 409, "NO_ACCOUNT"],
+    ["R6", "account null", { ...base, account: null }, 409, "NO_ACCOUNT"],
+    ["R6", "account an array", { ...base, account: [] }, 400, "BAD_ACCOUNT"],
+    ["R6", "account a string", { ...base, account: "x" }, 400, "BAD_ACCOUNT"],
+    ["R6", "account of a kind agent-model does not take", { ...base, account: { ...ACCOUNTS, kind: "password" } }, 400, "BAD_ACCOUNT"],
+    ["R6", "account naming no member", { ...base, account: { kind: "apikey", secret: CLAUDE_TOKEN } }, 400, "BAD_ACCOUNT"],
+    ["R6", "a body still carrying claude_accounts", { ...base, account: ACCOUNTS, claude_accounts: {} }, 400, "BAD_ACCOUNT"],
+    ["R6", "account with an empty secret", { ...base, account: { ...ACCOUNTS, secret: "" } }, 409, "NO_ACCOUNT"],
     ["R7", "turns zero", { ...base, turns: 0 }, 400, "BAD_TURNS"],
     ["R7", "turns negative", { ...base, turns: -3 }, 400, "BAD_TURNS"],
     ["R7", "turns not a number", { ...base, turns: "many" }, 400, "BAD_TURNS"],
     ["R7", "turns above the bound", { ...base, turns: 121 }, 400, "SEGMENT_OVER_BOUND"],
   ];
   for (const [id, label, body, status, code] of cases) {
-    const r = await call(mf, "run", { method: "POST", body: typeof body === "string" ? body : JSON.stringify(body) });
+    const r = await call(mf, "run", { method: "POST", body: typeof body === "string" ? body
+      : JSON.stringify(id === "R6" ? { judgements: [], ...body } : withAccount(body)) });
     t(`${id}: ${label} -> ${status} ${code}`, [r.status, r.out.code, r.out.reason], [status, code, code]);
   }
   t("R2–R7: and not one of those requests reached the plane", (await planeState(mf)).log, []);
@@ -369,10 +378,12 @@ section("R2–R7 · each malformed request refused by its code, in order, with n
   t("R4: NAMESPACE_UNKNOWN carries `asked` cut to 80 characters and `namespaces`, the two in order",
     [ns.out.asked, ns.out.namespaces], ["n".repeat(80), ["bio", "scratch"]]);
   t("R4: the set equals the plane's — the REAL plane's own refusal lists the same namespaces", ns.out.namespaces, planeNamespaces);
-  const none = await runOp(mf, { ...base, claude_accounts: { member: { token: "" }, project: {} } });
-  t("R6: NO_ACCOUNT_RESOLVED carries capability 'unavailable' and every level's state",
-    [none.out.capability, (none.out.levels || []).map((l) => `${l.level}:${l.state}`)],
-    ["unavailable", ["member:unset", "project:unset", "instance:unset"]]);
+  const none = await call(mf, "run", { method: "POST", body: JSON.stringify({ ...base, judgements: [] }) });
+  t("R6: NO_ACCOUNT carries capability 'unavailable', and is refused before any plane call (D-260 as K1503 reads it)",
+    [none.status, none.out.code, none.out.capability, (await planeState(mf)).log.length], [409, "NO_ACCOUNT", "unavailable", 0]);
+  const old = await runOp(mf, { ...base, account: ACCOUNTS, claude_accounts: { member: { token: CLAUDE_TOKEN } } });
+  t("R6: a body still carrying claude_accounts is refused BAD_ACCOUNT naming the field", [old.out.code, old.out.field],
+    ["BAD_ACCOUNT", "claude_accounts"]);
   const over = await runOp(mf, { ...base, turns: 400 });
   t("R7: SEGMENT_OVER_BOUND names turns_requested, turns_bound and bound_source; refused, never clamped",
     [over.out.turns_requested, over.out.turns_bound, typeof over.out.bound_source === "string" && over.out.bound_source.length > 0],
@@ -432,16 +443,22 @@ section("R9 · op=airun: silent, refused, no such run; the record's mode, never 
     [b.out.ended?.bound, (await planeState(mf)).spawns], ["fetches", 0]);
 }
 
-section("R10 · the run's recorded payer must be the level the accounts resolved");
+section("R10, R57 · the run's recorded account holder must be the member whose reference arrived");
 {
-  await reset(mf, { payer: "member" });
-  const r = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, { payer: "member:sam" });
+  const r = await runOp(mf, { ...base, account: ACCOUNTS });
   const st = await planeState(mf);
-  t("R10: recorded member, resolved project -> 409 RUN_NAMES_A_DIFFERENT_PAYER with recorded, resolved and levels",
-    [r.status, r.out.code, r.out.recorded, r.out.resolved, (r.out.levels || []).map((l) => l.state)],
-    [409, "RUN_NAMES_A_DIFFERENT_PAYER", "member", "project", ["unset", "available", "unset"]]);
-  t("R10: before any step — only whoami and airun were asked", st.log.map((l) => l.op), ["whoami", "airun"]);
+  t("R10: recorded member:sam, Ruth's reference supplied -> 409 RUN_NAMES_A_DIFFERENT_PAYER with recorded and supplied (ids, never a secret)",
+    [r.status, r.out.code, r.out.recorded, r.out.supplied, JSON.stringify(r.out).includes(CLAUDE_TOKEN)],
+    [409, "RUN_NAMES_A_DIFFERENT_PAYER", "member:sam", MEMBER, false]);
+  t("R10, R57: before any step — only whoami and airun were asked, and nothing was written", st.log.map((l) => l.op), ["whoami", "airun"]);
   t("R10: and no model turn was taken", (await modelState(mf)).calls.length, 0);
+  await reset(mf, { payer: "member:sam" });
+  const supplied = await runOp(mf, { ...base, account: ACCOUNTS, judgements: J() });
+  t("R10, R57: the stubbed path is held to the same check", [supplied.status, supplied.out.code], [409, "RUN_NAMES_A_DIFFERENT_PAYER"]);
+  await reset(mf, { payer: "member:sam" });
+  const own = await runOp(mf, { ...base, account: { ...ACCOUNTS, member: "member:sam" }, judgements: J() });
+  t("R10 (control): the starter's own reference drives", own.status, 200);
 }
 
 section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its entries");
@@ -546,9 +563,9 @@ section("R12 · the target is the run's context, never a project id");
 }
 
 /* ============================================================ the control-flow table, pure */
-section("R13 · the rows, their declared edges, and nextStep held to them");
+section("agent-harness R1 · the rows, their declared edges, and nextStep held to them");
 {
-  t("R13: the rows are exactly gate-mode, resume, plan, fanout, collect, compose, dedup, submit, adjust, next-pass, close",
+  t("agent-harness R1: the rows are exactly gate-mode, resume, plan, fanout, collect, compose, dedup, submit, adjust, next-pass, close",
     Object.keys(CONTROL_FLOW), ["gate-mode", "resume", "plan", "fanout", "collect", "compose", "dedup", "submit",
                                 "adjust", "next-pass", "close"]);
   const illegal = [];
@@ -562,16 +579,16 @@ section("R13 · the rows, their declared edges, and nextStep held to them");
                                  queue: Array.from({ length: q }, (_, i) => ({ name: `c${i}` })) });
             if (!CONTROL_FLOW[step].to.includes(d.step) && !(step === "close" && d.step === "close")) illegal.push([step, d.step]);
           }
-  t("R13: nextStep never returns a step outside its row's declared `to`, over every combination walked", illegal, []);
-  t("R13: there is no edge from compose to submit", CONTROL_FLOW.compose.to.includes("submit"), false);
-  t("R13: a refused submit goes to adjust, never back to submit",
+  t("agent-harness R1: nextStep never returns a step outside its row's declared `to`, over every combination walked", illegal, []);
+  t("agent-harness R1: there is no edge from compose to submit", CONTROL_FLOW.compose.to.includes("submit"), false);
+  t("agent-harness R1: a refused submit goes to adjust, never back to submit",
     nextStep({ step: "submit", mode: "check", pass: 0, maxPasses: 3, refusal: { code: "X" }, queue: [{ name: "a" }] }).step, "adjust");
   const unknown = nextStep({ step: "nowhere", pass: 0, maxPasses: 3 });
-  t("R13: an unknown step closes with `completed` and says so",
+  t("agent-harness R1: an unknown step closes with `completed` and says so",
     [unknown.step, unknown.bound, /not a row/.test(unknown.why)], ["close", "completed", true]);
 }
 
-section("R14 · gate-mode is first; an undeployed mode closes mode-not-deployed before anything is spent");
+section("agent-harness R2 · gate-mode is first; an undeployed mode closes mode-not-deployed before anything is spent");
 {
   /* skillsequencing's agent-worker share (T17 convert): every held mode not deployed, an ABSENT mode and a mis-spelled
      one each close mode-not-deployed; plan (R53) is held and not deployed. */
@@ -579,65 +596,65 @@ section("R14 · gate-mode is first; an undeployed mode closes mode-not-deployed 
     await reset(mf, { mode });
     const r = await runOp(mf, { ...base, judgements: J() });
     const st = await planeState(mf);
-    t(`R14: mode '${mode}' -> closed at its first step, bound mode-not-deployed, after only the run and log reads`,
+    t(`agent-harness R2: mode '${mode}' -> closed at its first step, bound mode-not-deployed, after only the run and log reads`,
       [r.out.trace?.map((x) => x.step), r.out.ended?.bound, st.log.map((l) => l.op), st.spawns, st.suggested.length],
       [["gate-mode"], "mode-not-deployed", ["whoami", "airun", "airunlog", "airuntick", "airunclose"], 0, 0]);
     const why = r.out.trace?.[0]?.why ?? "";
-    t(`R14: its why ${MODES[mode] ? "says the table holds it and has not deployed it" : "says the table does not hold the word"}, and names the deployed modes`,
+    t(`agent-harness R2: its why ${MODES[mode] ? "says the table holds it and has not deployed it" : "says the table does not hold the word"}, and names the deployed modes`,
       [MODES[mode] ? /not deployed yet/.test(why) : /no mode this table knows/.test(why), /deployed now: check/.test(why)],
       [true, true]);
-    t(`R14: …and the close was written (${mode})`, st.ended?.bound, "mode-not-deployed");
+    t(`agent-harness R2: …and the close was written (${mode})`, st.ended?.bound, "mode-not-deployed");
   }
-  t("R14: the first step is gate-mode, and check is deployed while investigate, extract and plan are not",
+  t("agent-harness R2: the first step is gate-mode, and check is deployed while investigate, extract and plan are not",
     /* read with `?.`: a deleted row FAILS this arm instead of killing the suite (found by harness.control E2, T21) */
     [FIRST_STEP, MODES.check?.deployed, MODES.investigate?.deployed, MODES.extract?.deployed, MODES.plan?.deployed],
     ["gate-mode", true, false, false, false]);
-  t("R14 (skillsequencing): MODES is exactly the recorded set, the one deployment order's members",
+  t("agent-harness R2 (skillsequencing): MODES is exactly the recorded set, the one deployment order's members",
     Object.keys(MODES), DEPLOYMENT_SEQUENCE.order);
 }
 
-section("R15 · stopBecause: fetches, subsessions, wallclock, then the pass limit");
+section("agent-harness R3 · stopBecause: fetches, subsessions, wallclock, then the pass limit");
 {
   const full = { fetches: { allowed: 1, consumed: 1 }, subsessions: { allowed: 1, consumed: 1 }, wallclock: { allowed: 1, consumed: 1 } };
-  t("R15: the bounds are asked in order fetches, subsessions, wallclock, and the first spent one closes",
+  t("agent-harness R3: the bounds are asked in order fetches, subsessions, wallclock, and the first spent one closes",
     [stopBecause({ budget: full, pass: 0, maxPasses: 3 }),
      stopBecause({ budget: { ...full, fetches: { allowed: 2, consumed: 1 } }, pass: 0, maxPasses: 3 }),
      stopBecause({ budget: { wallclock: full.wallclock }, pass: 0, maxPasses: 3 })],
     ["fetches", "subsessions", "wallclock"]);
-  t("R15: an absent or non-positive allowance never stops a run",
+  t("agent-harness R3: an absent or non-positive allowance never stops a run",
     [stopBecause({ budget: {}, pass: 0, maxPasses: 3 }),
      stopBecause({ budget: { fetches: { allowed: 0, consumed: 9 }, subsessions: { allowed: -1, consumed: 9 } }, pass: 0, maxPasses: 3 })],
     [null, null]);
-  t("R15: then pass count >= the pass limit closes `completed`",
+  t("agent-harness R3: then pass count >= the pass limit closes `completed`",
     [stopBecause({ pass: 3, maxPasses: 3 }), stopBecause({ pass: 2, maxPasses: 3 })], ["completed", null]);
   await reset(mf, { maxPasses: 2 });
   const two = await runOp(mf, { ...base, judgements: [...J(), ...J()] });
-  t("R15: the limit is the run's max_passes when positive (2 -> two passes, each counted at next-pass)",
+  t("agent-harness R3: the limit is the run's max_passes when positive (2 -> two passes, each counted at next-pass)",
     [two.out.passes, two.out.trace?.filter((x) => x.step === "next-pass").length, two.out.ended?.bound], [2, 2, "completed"]);
   await reset(mf, { maxPasses: null });
   const dflt = await runOp(mf, { ...base, judgements: [] });
-  t("R15: and 3 when the run names none", dflt.out.passes, 3);
+  t("agent-harness R3: and 3 when the run names none", dflt.out.passes, 3);
 }
 
-section("R16 · judgements taken in order, one per judged row; a judgement reaching control flow refused");
+section("agent-harness R4 · judgements taken in order, one per judged row; a judgement reaching control flow refused");
 {
   const judged = Object.keys(CONTROL_FLOW).filter((s) => CONTROL_FLOW[s].judged);
-  t("R16: the judged rows are plan, collect, compose, dedup, adjust", judged, ["plan", "collect", "compose", "dedup", "adjust"]);
-  t("R16: the fields a judgement may set are exactly these, and the ones it may not are exactly these",
+  t("agent-harness R4: the judged rows are plan, collect, compose, dedup, adjust", judged, ["plan", "collect", "compose", "dedup", "adjust"]);
+  t("agent-harness R4: the fields a judgement may set are exactly these, and the ones it may not are exactly these",
     [JUDGEABLE, NOT_JUDGEABLE],
     [["targets", "reports", "candidates", "queue", "adjusted", "submission", "level", "observed", "governed", "condition"],
      ["pass", "maxPasses", "step", "budget", "mode", "bound", "run", "store", "target"]]);
-  t("R16: every NOT_JUDGEABLE field is refused and named, pure",
+  t("agent-harness R4: every NOT_JUDGEABLE field is refused and named, pure",
     NOT_JUDGEABLE.map((f) => applyJudgement({}, { [f]: 1 }).overreach), NOT_JUDGEABLE.map((f) => [f]));
-  t("R16: only JUDGEABLE fields are applied; anything else is ignored, not stored",
+  t("agent-harness R4: only JUDGEABLE fields are applied; anything else is ignored, not stored",
     applyJudgement({ pass: 1 }, { candidates: [1], whimsy: 2 }).state, { pass: 1, candidates: [1] });
   await reset(mf);
   const r = await runOp(mf, { ...base, judgements: [{ targets: [] }, { reports: [], target: "INQ-OTHER", mode: "x" }] });
-  t("R16: through the op, a judgement naming target and mode at collect -> 400 JUDGEMENT_OVERREACH with step and fields",
+  t("agent-harness R4: through the op, a judgement naming target and mode at collect -> 400 JUDGEMENT_OVERREACH with step and fields",
     [r.status, r.out.code, r.out.step, r.out.fields], [400, "JUDGEMENT_OVERREACH", "collect", ["target", "mode"]]);
   await reset(mf);
   const ok = await runOp(mf, { ...base, judgements: [{ targets: [] }] });
-  t("R16: a judged row with no judgement left carries the state on (the run completes)", [ok.status, ok.out.ended?.bound], [200, "completed"]);
+  t("agent-harness R4: a judged row with no judgement left carries the state on (the run completes)", [ok.status, ok.out.ended?.bound], [200, "completed"]);
 }
 
 /* ============================================================ what each row does against the plane */
@@ -666,7 +683,7 @@ section("R17 · fanout: one spawn per level, the contract built key by key, 4 su
   const ref = await runOp(mf, { ...base, judgements: J() });
   t("R17: a refused spawn -> 403 PLANE_REFUSED with the plane's body", [ref.status, ref.out.reason, ref.out.plane?.reason],
     [403, "PLANE_REFUSED", "AI_BEYOND_TASK_SCOPE"]);
-  const { spawnContracts } = await import("../src/subsession.mjs");
+  const { spawnContracts } = await import("../../agent-harness/src/subsession.mjs");
   const cs = spawnContracts({ run: "r", context: { type: "inquiry", id: "I" } }).contracts;
   t("R17: the contracts are frozen and share no object", [cs.every((c) => Object.isFrozen(c) && Object.isFrozen(c.context)),
     new Set(cs.map((c) => c.context)).size, new Set(cs.map((c) => c.returns)).size], [true, 4, 4]);
@@ -690,7 +707,7 @@ section("R18 · fanout, the internet level: one op=capturerequest per judged tar
   t("R18: one fetch is spent per request", st.budget.fetches.consumed, 3);
 }
 
-section("R19 · collect: every report held to R20; each cited address re-read by address");
+section("R19 · collect: every report held to agent-harness R5; each cited address re-read by address");
 {
   await reset(mf);
   const reports = [
@@ -717,11 +734,11 @@ section("R19 · collect: every report held to R20; each cited address re-read by
   t("R19: a read that did not answer is not counted", refused.out.citations_reread, 0);
 }
 
-section("R20 · the report contract, each breach refused by its own code");
+section("agent-harness R5 · the report contract, each breach refused by its own code");
 {
   const good = { level: "document", state: "PRESENT", observed_at: "log:7", summary: "s", citations: [{ address: "a" }] };
-  t("R20: a report with exactly the contract's keys is accepted", checkReport(good), null);
-  t("R20: the keys are level, state, observed_at, summary, citations, governed, condition",
+  t("agent-harness R5: a report with exactly the contract's keys is accepted", checkReport(good), null);
+  t("agent-harness R5: the keys are level, state, observed_at, summary, citations, governed, condition",
     Object.keys(REPORT_KEYS), ["level", "state", "observed_at", "summary", "citations", "governed", "condition"]);
   const cases = [
     [{ ...good, bytes: "x" }, "REPORT_UNKNOWN_FIELD"],
@@ -740,15 +757,15 @@ section("R20 · the report contract, each breach refused by its own code");
     [{ ...good, summary: "s".repeat(SUMMARY_MAX + 1) }, "REPORT_OVER_BOUND"],
     [{ ...good, summary: { pages: [] } }, "REPORT_SUMMARY_NOT_PROSE"],
   ];
-  t("R20: every breach refused by its own code", cases.map(([r]) => checkReport(r)?.code), cases.map(([, c]) => c));
-  t("R20: NEVER_LOOKED needs no observed_at, and an absence no citation",
+  t("agent-harness R5: every breach refused by its own code", cases.map(([r]) => checkReport(r)?.code), cases.map(([, c]) => c));
+  t("agent-harness R5: NEVER_LOOKED needs no observed_at, and an absence no citation",
     [checkReport({ level: "meaning", state: "NEVER_LOOKED" }), checkReport({ level: "meaning", state: "LOOKED_ABSENT", observed_at: "l" })],
     [null, null]);
-  t("R20: at the bounds exactly (20 citations of 200 characters, a 500-character summary) is accepted, inside REPORT_MAX_BYTES",
+  t("agent-harness R5: at the bounds exactly (20 citations of 200 characters, a 500-character summary) is accepted, inside REPORT_MAX_BYTES",
     checkReport({ ...good, summary: "s".repeat(SUMMARY_MAX),
       citations: Array.from({ length: CITATIONS_MAX }, (_, i) => ({ address: String(i).padEnd(ADDRESS_MAX, "x") })) }), null);
-  t("R20: the whole-report ceiling is REPORT_MAX_BYTES", REPORT_MAX_BYTES > SUMMARY_MAX + CITATIONS_MAX * ADDRESS_MAX, true);
-  t("R20: the states are D-129's five", Object.keys(REPORT_STATES), ["NEVER_LOOKED", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"]);
+  t("agent-harness R5: the whole-report ceiling is REPORT_MAX_BYTES", REPORT_MAX_BYTES > SUMMARY_MAX + CITATIONS_MAX * ADDRESS_MAX, true);
+  t("agent-harness R5: the states are D-129's five", Object.keys(REPORT_STATES), ["NEVER_LOOKED", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"]);
 }
 
 section("R21 · collect, holdings: each citation resolved to its document by address_norm");
@@ -1014,27 +1031,31 @@ section("R28 · the 200 answer carries exactly its fields");
 
 section("R29 · claude_account and principal");
 {
-  await reset(mf, { payer: "project" });
-  const a = await runOp(mf, { ...base, judgements: J(), claude_accounts: ACCOUNTS });
-  t("R29: accounts resolved -> {available: true, level, ref, levels}", a.out.claude_account,
-    { available: true, level: "project", ref: "the-project-account",
-      levels: [{ level: "member", state: "unset" }, { level: "project", state: "available" }, { level: "instance", state: "unset" }] });
   await reset(mf);
-  const n = await runOp(mf, { ...base, judgements: J() });
-  t("R29: none supplied -> {available: false, reason: NO_ACCOUNT_MATERIAL_SUPPLIED, detail}",
-    [n.out.claude_account?.available, n.out.claude_account?.reason, typeof n.out.claude_account?.detail], [false, "NO_ACCOUNT_MATERIAL_SUPPLIED", "string"]);
+  const a = await runOp(mf, { ...base, judgements: J(), account: ACCOUNTS });
+  t("R29: the member's reference arrived -> {available: true, kind, member}, never the secret", a.out.claude_account,
+    { available: true, kind: "apikey", member: MEMBER });
+  await reset(mf);
+  const s = await runOp(mf, { ...base, judgements: J(), account: { ...ACCOUNTS, kind: "subscription" } });
+  t("R29: a subscription is named as one", s.out.claude_account, { available: true, kind: "subscription", member: MEMBER });
+  const n = await call(mf, "run", { method: "POST", body: JSON.stringify({ ...base, judgements: J() }) });
+  t("R29: with none, the answer is never a 200: R6 refused it before any step, {available: false} never reaches the wire",
+    [n.status, n.out.code, "claude_account" in n.out], [409, "NO_ACCOUNT", false]);
   t("R29: principal is null and principal_source states no op an ai credential may call publishes it",
-    [n.out.principal, /no read op an ai credential may call states its own principal/.test(n.out.principal_source)], [null, true]);
+    [a.out.principal, /no read op an ai credential may call states its own principal/.test(a.out.principal_source)], [null, true]);
 }
 
 section("R30, R31 · GET /version; anything else 404 UNKNOWN");
 {
   const v = await call(mf, "version", { method: "GET" });
-  t("R30: GET /version -> 200 {ok, name, version: env.VERSION}", [v.status, v.out], [200, { ok: true, name: "agent-worker", version: "req-test" }]);
+  t("R30, R58: GET /version -> 200 {ok, name, version: env.VERSION} and the one statement of when model turns run",
+    [v.status, v.out.ok, v.out.name, v.out.version, /through agent-model exactly when the member's own Claude account reference arrives/.test(v.out.model_turns)],
+    [200, true, "agent-worker", "req-test", true]);
   const bare = newMf({ VERSION: "" });
   t("R30: and \"0.0.0\" when env.VERSION is empty", (await call(bare, "version", { method: "GET" })).out.version, "0.0.0");
   await bare.dispose();
-  const others = [["GET", "run"], ["GET", ""], ["POST", "version"], ["PUT", "run"], ["GET", "nope"], ["POST", "run/extra"]];
+  const others = [["GET", "run"], ["GET", ""], ["POST", "version"], ["PUT", "run"], ["GET", "nope"], ["POST", "run/extra"],
+                  ["GET", "ask"], ["PUT", "ask"], ["POST", "ask/extra"]];
   const got = [];
   for (const [method, path] of others) {
     const r = await call(mf, path, { method, ...(method === "GET" ? {} : { body: "{}" }) });
@@ -1046,68 +1067,70 @@ section("R30, R31 · GET /version; anything else 404 UNKNOWN");
 }
 
 /* ============================================================ the cascade, pure */
-section("R32, R33 · the cascade");
+section("R32, R33 · the cascade: the member's own reference only");
 {
   const PUBLISHED_VALUE = readFileSync(fileURLToPath(new URL("../../bio-plane/dist/SECRETS.txt", import.meta.url)), "utf8")
     .split("\n").find((l) => l.startsWith("ADMIN_TOKEN=")).split("=")[1].trim();
-  const st = async (a) => (await resolveClaudeCascade(a)).levels.map((l) => l.state);
-  t("R32: levels judged member, project, instance, in that order", [...CASCADE_ORDER], ["member", "project", "instance"]);
-  t("R32: each level is unset (no non-empty string token), revoked_by_publication, or available — no shape check",
-    [await st({}), await st({ member: { token: 7 }, project: { token: "" }, instance: { token: "x" } }),
-     await st({ member: { token: PUBLISHED_VALUE } })],
-    [["unset", "unset", "unset"], ["unset", "unset", "available"], ["revoked_by_publication", "unset", "unset"]]);
-  const r = await resolveClaudeCascade({ member: { token: PUBLISHED_VALUE, ref: "m" }, project: { token: "p" }, instance: { token: "i", ref: "inst" } });
-  t("R32: the first available level resolves, its ref or null", [r.available, r.level, r.ref], [true, "project", null]);
-  const none = await resolveClaudeCascade({ member: { token: "" } });
-  t("R32: none -> {available:false, reason:NO_ACCOUNT_RESOLVED, levels, detail}",
-    [none.available, none.reason, none.levels.length, typeof none.detail], [false, "NO_ACCOUNT_RESOLVED", 3, "string"]);
-  t("R32: the status never carries a token", JSON.stringify(await resolveClaudeCascade({ member: { token: "sk-secret" } })).includes("sk-secret"), false);
-  t("R33: cascadeToken returns {level, token} for exactly the level resolved, else null",
-    [await cascadeToken({ project: { token: "p" }, instance: { token: "i" } }), await cascadeToken({ member: { token: PUBLISHED_VALUE } })],
-    [{ level: "project", token: "p" }, null]);
+  const st = async (a) => (await resolveClaudeCascade(a)).levels.map((l) => `${l.level}:${l.state}`);
+  t("R32: one level, member; no project or instance level is judged, held or answered", [...CASCADE_ORDER], ["member"]);
+  t("R32: unset (no non-empty secret), revoked_by_publication, or available — no shape check beyond agent-model's kinds",
+    [await st({ kind: "apikey", secret: "", member: MEMBER }), await st({ kind: "apikey", secret: PUBLISHED_VALUE, member: MEMBER }),
+     await st({ kind: "subscription", secret: "x", member: MEMBER }), await st({ kind: "other", secret: "x", member: MEMBER })],
+    [["member:unset"], ["member:revoked_by_publication"], ["member:available"], ["member:unset"]]);
+  const r = await resolveClaudeCascade(ACCOUNTS);
+  t("R32: available resolves with its kind", [r.available, r.level, r.kind, r.member], [true, "member", "apikey", MEMBER]);
+  const none = await resolveClaudeCascade({ kind: "apikey", secret: PUBLISHED_VALUE, member: MEMBER });
+  t("R32: anything else -> {available:false, reason:NO_ACCOUNT, level:member, detail}",
+    [none.available, none.reason, none.level, typeof none.detail], [false, "NO_ACCOUNT", "member", "string"]);
+  t("R32: the status never carries a secret", JSON.stringify(r).includes(CLAUDE_TOKEN), false);
+  t("R33: cascadeToken returns {level: member, reference} in agent-model's terms exactly when R32 resolves, else null",
+    [await cascadeToken(ACCOUNTS), await cascadeToken({ ...ACCOUNTS, kind: "subscription" }),
+     await cascadeToken({ ...ACCOUNTS, secret: PUBLISHED_VALUE }), await cascadeToken(undefined)],
+    [{ level: "member", reference: { kind: "apikey", key: CLAUDE_TOKEN } },
+     { level: "member", reference: { kind: "subscription", token: CLAUDE_TOKEN } }, null, null]);
 }
 
 section("R34 · SURFACE and fleet-member.json");
 {
-  t("R34: SURFACE is {run: POST, version: GET}, both mutating: false", SURFACE,
-    { run: { method: "POST", mutating: false }, version: { method: "GET", mutating: false } });
+  t("R34, R54: SURFACE is {run: POST, ask: POST, version: GET}, every one mutating: false (K1601 (5))", SURFACE,
+    { run: { method: "POST", mutating: false }, ask: { method: "POST", mutating: false }, version: { method: "GET", mutating: false } });
   t("R34: the manifest names the entry, the surface, the test directory and the bundle recipe",
     [MANIFEST.entry, MANIFEST.surface, MANIFEST.testDir, MANIFEST.bundle?.entry, MANIFEST.bundle?.outfile, MANIFEST.bundle?.manifest],
     ["src/index.mjs", "SURFACE", "test", "src/index.mjs", "dist/agent-worker.bundled.mjs", "dist/agent-worker.bundle.json"]);
 }
 
-/* ============================================================ R40, R41, R48: model turns */
+/* ============================================================ R58, agent-harness R7, R48: model turns */
 section("R48 · in the model mode the pack is the one the plane publishes, and a run under another pack is refused before any turn");
 {
-  await reset(mf, { payer: "project", skill: "investigative-session@1+0000000000000000" });
-  const r = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, { skill: "investigative-session@1+0000000000000000" });
+  const r = await runOp(mf, { ...base, account: ACCOUNTS });
   t("R48: the recorded skill version is not the published pack's -> 409 SKILL_VERSION_MISMATCH carrying both",
     [r.status, r.out.code, r.out.recorded, r.out.rendered], [409, "SKILL_VERSION_MISMATCH", "investigative-session@1+0000000000000000", PACK.version]);
   t("R48: refused before any turn, after the payer check (R10), from the untargeted op=affordances",
     [(await modelState(mf)).calls.length, (await planeState(mf)).log.map((l) => l.op),
      (await planeState(mf)).log.filter((l) => l.op === "affordances").map((l) => l.query.target ?? null)],
     [0, ["whoami", "airun", "affordances"], [null]]);
-  await reset(mf, { payer: "project", refuse_op: { affordances: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", check: "C-29.9" } } } });
-  const ref = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, { refuse_op: { affordances: { status: 403, body: { ok: false, reason: "AI_BEYOND_TASK_SCOPE", check: "C-29.9" } } } });
+  const ref = await runOp(mf, { ...base, account: ACCOUNTS });
   t("R48: a refused op=affordances -> 403 PLANE_REFUSED, no turn", [ref.status, ref.out.reason, (await modelState(mf)).calls.length], [403, "PLANE_REFUSED", 0]);
-  await reset(mf, { payer: "project", published: { ...PUBLISHED_ANSWER, pack: null, pack_absent: "renderPack: no fences published" } });
-  const absent = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, { published: { ...PUBLISHED_ANSWER, pack: null, pack_absent: "renderPack: no fences published" } });
+  const absent = await runOp(mf, { ...base, account: ACCOUNTS });
   t("R48: an answer whose pack the plane could not render -> 409 carrying both versions, the published one UNDETERMINED, no turn",
     [absent.status, absent.out.code, absent.out.recorded, absent.out.rendered, absent.out.rendered_basis, absent.out.pack_absent,
      (await modelState(mf)).calls.length],
     [409, "SKILL_VERSION_MISMATCH", PACK.version, null, "UNDETERMINED", "renderPack: no fences published", 0]);
-  await reset(mf, { payer: "project", published: PUBLISHED_NO_PACK });
-  const none = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, { published: PUBLISHED_NO_PACK });
+  const none = await runOp(mf, { ...base, account: ACCOUNTS });
   t("R48: an answer carrying no pack at all -> 409, its version UNDETERMINED, no turn",
     ["pack" in PUBLISHED_NO_PACK, none.status, none.out.code, none.out.rendered, none.out.rendered_basis,
      (await modelState(mf)).calls.length],
     [false, 409, "SKILL_VERSION_MISMATCH", null, "UNDETERMINED", 0]);
-  await reset(mf, { payer: "project", published: { ...PUBLISHED_ANSWER, pack: { version: PACK.version } } });
-  const partial = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, { published: { ...PUBLISHED_ANSWER, pack: { version: PACK.version } } });
+  const partial = await runOp(mf, { ...base, account: ACCOUNTS });
   t("R48: a partial pack (a version and no layers) is never used: 409, UNDETERMINED, no turn",
     [partial.status, partial.out.rendered, (await modelState(mf)).calls.length], [409, null, 0]);
-  await reset(mf, { payer: "project" });
-  await runOp(mf, { ...base, claude_accounts: ACCOUNTS, judgements: J() });
+  await reset(mf, {});
+  await runOp(mf, { ...base, account: ACCOUNTS, judgements: J() });
   t("R48: until turns run it changes nothing: the supplied mode never asks for the pack",
     (await planeState(mf)).log.some((l) => l.op === "affordances"), false);
   const bundle = JSON.parse(readFileSync(fileURLToPath(new URL("../dist/agent-worker.bundle.json", import.meta.url)), "utf8"));
@@ -1116,106 +1139,111 @@ section("R48 · in the model mode the pack is the one the plane publishes, and a
     [inputs.length > 0, inputs.filter((f) => /bio-checks\.mjs$|skillpack\.mjs$|skilldoctrine\.mjs$/.test(f))], [true, []]);
 }
 
-section("R40 · model turns run under the resolved account and the run's pack, within the segment bound");
+section("R58 · model turns run under the resolved account and the run's pack, within the segment bound");
 {
-  await reset(mf, { payer: "project", target: "INQ-R40" }, {
+  await reset(mf, { target: "INQ-R40" }, {
     loadLayer: "prohibitions",
     judge: { compose: { candidates: [{ kind: "basis-version", name: "model-made", description: "the reading the model composed, in full" }] } } });
-  const r = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  const r = await runOp(mf, { ...base, account: ACCOUNTS });
   const calls = (await modelState(mf)).calls;
   const bodies = calls.map((c) => JSON.parse(c.raw));
   const parent = bodies.filter((b) => !(b.tools || []).some((x) => x.name === "report"));
-  t("R40: the run completed with judgements the model made: the model's candidate landed",
+  t("R58: the run completed with judgements the model made: the model's candidate landed",
     [r.status, r.out.judgement_source, (await planeState(mf)).suggested.map((s) => s.name).includes("model-made")], [200, "model", true]);
-  t("R40: every model call went to the model API with the resolved account's token and the API version",
+  t("R58: every model call went to the model API with the resolved account's token and the API version",
     [[...new Set(calls.map((c) => c.url))], [...new Set(calls.map((c) => c.key))], [...new Set(calls.map((c) => c.version))]],
     [[MODEL_ENDPOINT], [CLAUDE_TOKEN], ["2023-06-01"]]);
-  t("R40: turns_run counts the model calls, within the segment", [r.out.turns_run, r.out.segment?.turns_run], [calls.length, calls.length]);
-  t("R40: the parent is instructed by the run's pack: its system names the pack's version and carries the resident layer",
-    [parent.every((b) => b.system.includes(PACK.version)), parent.every((b) => b.system.includes(JSON.stringify(PACK.resident)))], [true, true]);
-  t("R40: a disclosed layer the model asked for was loaded from the pack",
+  t("R58: turns_run counts the model calls, within the segment", [r.out.turns_run, r.out.segment?.turns_run], [calls.length, calls.length]);
+  t("R58: the parent is instructed by the run's pack: its system names the pack's version and carries the resident layer",
+    [parent.every((b) => sysText(b).includes(PACK.version)), parent.every((b) => sysText(b).includes(JSON.stringify(PACK.resident)))], [true, true]);
+  t("R58: a disclosed layer the model asked for was loaded from the pack",
     parent.some((b) => b.messages.some((m) => Array.isArray(m.content) && m.content.some((c) => c.type === "tool_result"
       && c.content === JSON.stringify(PACK.disclosed.prohibitions)))), true);
-  t("R40: the parent judged plan, compose, dedup — collect's judgements are the sub-sessions' reports",
+  t("R58: the parent judged plan, compose, dedup — collect's judgements are the sub-sessions' reports",
     [...new Set(parent.map((b) => (/Answer by calling judge_([a-z]+)/.exec([...b.messages].reverse()
-      .find((m) => m.role === "user" && typeof m.content === "string")?.content ?? "") || [])[1]))], ["plan", "compose", "dedup"]);
-  t("R40: the segment publishes what it sent the model", [r.out.segment?.bytes_sent, r.out.segment?.bytes_bound, r.out.segment?.stopped],
+      .map((m) => (m.role !== "user" ? "" : typeof m.content === "string" ? m.content
+        : Array.isArray(m.content) ? m.content.filter((c) => c.type === "text").map((c) => c.text).join("") : ""))
+      .find((c) => /judge_/.test(c)) ?? "") || [])[1]))], ["plan", "compose", "dedup"]);
+  t("R58: the segment publishes what it sent the model", [r.out.segment?.bytes_sent, r.out.segment?.bytes_bound, r.out.segment?.stopped],
     [calls.reduce((n, c) => n + c.bytes, 0), DEFAULT_MAX_SEGMENT_BYTES, null]);
 
-  await reset(mf, { payer: "project" });
-  const three = await runOp(mf, { ...base, claude_accounts: ACCOUNTS, turns: 3 });
-  t("R40: the turn bound stops the SEGMENT, never the run: ended null, stopped 'turns', no close, 3 turns",
+  await reset(mf, {});
+  const three = await runOp(mf, { ...base, account: ACCOUNTS, turns: 3 });
+  t("R58: the turn bound stops the SEGMENT, never the run: ended null, stopped 'turns', no close, 3 turns",
     [three.status, three.out.ended, three.out.segment?.stopped, three.out.turns_run, (await planeState(mf)).log.some((l) => l.op === "airunclose")],
     [200, null, "turns", 3, false]);
 
   /* The bound is half of what the whole run above sent, so it bites mid-run whatever the pack's size. */
   const half = Math.floor(calls.reduce((n, c) => n + c.bytes, 0) / 2);
   const small = newMf({ MAX_SEGMENT_BYTES: String(half) });
-  await reset(small, { payer: "project" });
-  const b = await runOp(small, { ...base, claude_accounts: ACCOUNTS });
+  await reset(small, {});
+  const b = await runOp(small, { ...base, account: ACCOUNTS });
   const sent = (await modelState(small)).calls.reduce((n, c) => n + c.bytes, 0);
-  t("R40 (D-611): the byte bound stops the segment before a request would carry it past the bound",
+  t("R58 (D-611): the byte bound stops the segment before a request would carry it past the bound",
     [b.out.segment?.stopped, b.out.ended, sent <= half, b.out.segment?.bytes_sent === sent, b.out.segment?.bytes_bound], ["bytes", null, true, true, half]);
   await small.dispose();
 
-  await reset(mf, { payer: "project" }, { status: 529, errorType: "overloaded_error" });
-  const refused = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
-  t("R40: a model call the API refuses -> 502 MODEL_REFUSED with its status and error type, no token",
+  await reset(mf, {}, { status: 529, errorType: "overloaded_error" });
+  const refused = await runOp(mf, { ...base, account: ACCOUNTS });
+  t("R58: a model call the API refuses -> 502 MODEL_REFUSED with its status and error type, no token",
     [refused.status, refused.out.code, refused.out.model_status, refused.out.model_error], [502, "MODEL_REFUSED", 529, "overloaded_error"]);
-  await reset(mf, { payer: "project" }, { refuseAt: "plan" });
-  const declined = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
-  t("R40: a model that declines -> 502 MODEL_REFUSED, type refusal", [declined.out.code, declined.out.model_error], ["MODEL_REFUSED", "refusal"]);
-  await reset(mf, { payer: "project" }, { silent: true });
-  const silent = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
-  t("R40: a model API that does not answer JSON -> 502 MODEL_SILENT", [silent.status, silent.out.code], [502, "MODEL_SILENT"]);
-  await reset(mf, { payer: "project" }, { judge: { plan: { targets: [], maxPasses: 9 } } });
-  const over = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
-  t("R40 (R16): a model judgement reaching for control flow is refused as any judgement is",
+  await reset(mf, {}, { refuseAt: "plan" });
+  const declined = await runOp(mf, { ...base, account: ACCOUNTS });
+  t("R58: a model that declines -> 502 MODEL_REFUSED, type refusal", [declined.out.code, declined.out.model_error], ["MODEL_REFUSED", "refusal"]);
+  await reset(mf, {}, { silent: true });
+  const silent = await runOp(mf, { ...base, account: ACCOUNTS });
+  t("R58: a model API that does not answer JSON -> 502 MODEL_SILENT", [silent.status, silent.out.code], [502, "MODEL_SILENT"]);
+  await reset(mf, {}, { judge: { plan: { targets: [], maxPasses: 9 } } });
+  const over = await runOp(mf, { ...base, account: ACCOUNTS });
+  t("R58 (agent-harness R4): a model judgement reaching for control flow is refused as any judgement is",
     [over.status, over.out.code, over.out.fields], [400, "JUDGEMENT_OVERREACH", ["maxPasses"]]);
 }
 
-section("R41 · sub-sessions run, one per level, each under its contract, returning only reports");
+section("agent-harness R7 · sub-sessions run, one per level, each under its contract, returning only reports");
 {
-  await reset(mf, { payer: "project", target: "INQ-R41" }, { reports: {
+  await reset(mf, { target: "INQ-R41" }, { reports: {
     meaning: { state: "PRESENT", summary: "a leg already reaches this", citations: [{ address: "bundle:m1" }] },
     content: { state: "LOOKED_ABSENT", summary: "nothing extracted says so" },
     document: { state: "LOOKED_INDETERMINATE", summary: "the packets could not be read", bytes: "%PDF the packet" },
     internet: "silent" } });
-  const r = await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  const r = await runOp(mf, { ...base, account: ACCOUNTS });
   const calls = (await modelState(mf)).calls.map((c) => JSON.parse(c.raw));
   const subs = calls.filter((b) => (b.tools || []).some((x) => x.name === "report"));
   const firsts = subs.filter((b) => b.messages.length === 1);
-  t("R41: one sub-session per level, each starting its own conversation (nothing shared with the parent or another level)",
-    firsts.map((b) => JSON.parse(b.system.split("YOUR SPAWN CONTRACT:\n")[1]).level), LEVELS);
-  t("R41: each is briefed with its own spawn contract, exactly as published", firsts.map((b) => b.system.split("YOUR SPAWN CONTRACT:\n")[1]),
+  t("agent-harness R7: one sub-session per level, each starting its own conversation (nothing shared with the parent or another level)",
+    firsts.map((b) => JSON.parse(sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]).level), LEVELS);
+  t("agent-harness R7: each is briefed with its own spawn contract, exactly as published", firsts.map((b) => sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]),
     (r.out.fanout?.contracts || []).map((c) => JSON.stringify(c)));
-  t("R41: its tools are its contract's scope and `report`, nothing else",
+  t("agent-harness R7: its tools are its contract's scope and `report`, nothing else",
     [...new Set(subs.map((b) => b.tools.map((x) => x.name).join(",")))], ["meaningrows,report"]);
-  t("R41: no sub-session was handed the lens or a credential", subs.some((b) => /LENS|aik-|sk-ant/.test(JSON.stringify(b))), false);
+  t("agent-harness R7: no sub-session was handed the lens or a credential", subs.some((b) => /LENS|aik-|sk-ant/.test(JSON.stringify(b))), false);
   const st = await planeState(mf);
-  t("R41: a sub-session's meaningrows reached the plane through the parent's reader",
+  t("agent-harness R7: a sub-session's meaningrows reached the plane through the parent's reader",
     st.log.filter((l) => l.op === "meaningrows" && l.query.limit === "5").length >= 4, true);
   const looks = st.runlog.filter((e) => /^sub-session /.test(e.subject ?? ""));
-  t("R41: each sub-session that looked was logged at its level (PRESENT as LOOKED_INDETERMINATE)",
+  t("agent-harness R7: each sub-session that looked was logged at its level (PRESENT as LOOKED_INDETERMINATE)",
     looks.map((e) => [e.level, e.state]), [["meaning", "LOOKED_INDETERMINATE"], ["content", "LOOKED_ABSENT"], ["document", "LOOKED_INDETERMINATE"]]);
-  t("R41: its report's observed_at is that entry's address, log:<seq>, and the level-empty candidate cites it",
+  t("agent-harness R7: its report's observed_at is that entry's address, log:<seq>, and the level-empty candidate cites it",
     st.log.find((l) => l.op === "suggest" && l.body?.kind === "level-empty")?.body?.observed_at,
     `log:${looks.find((e) => e.level === "content")?.seq}`);
-  t("R41: reports are held to R20 at collect: the one carrying bytes refused, the silent one named, neither an absence",
+  t("agent-harness R7: reports are held to agent-harness R5 at collect: the one carrying bytes refused, the silent one named, neither an absence",
     [r.out.reports_taken, (r.out.reports_refused || []).map((x) => [x.level, x.code]).sort()],
     [2, [["document", "REPORT_UNKNOWN_FIELD"], ["internet", "SUBSESSION_NO_REPORT"]]]);
-  t("R41: the cited address was re-read by the parent", r.out.citations_reread, 1);
+  t("agent-harness R7: the cited address was re-read by the parent", r.out.citations_reread, 1);
 }
 
 /* ============================================================ the invariants */
 section("R35 · its only binding is PLANE; the plane is reached by no other route");
 {
-  t("R35: wrangler declares exactly one service binding, PLANE, and no Durable Object, R2, KV, D1, queue or secret binding",
-    [WRANGLER_CFG.services, ["durable_objects", "r2_buckets", "kv_namespaces", "d1_databases", "queues", "secrets_store_secrets",
-      "secrets"].filter((k) => k in WRANGLER_CFG)], [[{ binding: "PLANE", service: "bio-plane" }], []]);
+  t("R35: wrangler declares exactly one service binding, PLANE, the runner's Container DO binding cross-script, and no other "
+    + "Durable Object, R2, KV, D1, queue or secret binding",
+    [WRANGLER_CFG.services, WRANGLER_CFG.durable_objects, ["r2_buckets", "kv_namespaces", "d1_databases", "queues",
+      "secrets_store_secrets", "secrets", "containers"].filter((k) => k in WRANGLER_CFG)],
+    [[{ binding: "PLANE", service: "bio-plane" }],
+     { bindings: [{ name: "RUNNER", class_name: "AgentRunner", script_name: "agent-runner" }] }, []]);
   t("R35: its vars hold no token and no plane URL", Object.keys(WRANGLER_CFG.vars), ["VERSION"]);
-  await reset(mf, { payer: "project" });
-  await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, {});
+  await runOp(mf, { ...base, account: ACCOUNTS });
   t("R35: across a whole model-mode run, every global fetch went to the model API and nowhere else",
     [...new Set((await modelState(mf)).calls.map((c) => c.url))], [MODEL_ENDPOINT]);
 }
@@ -1224,16 +1252,16 @@ section("R36 · it holds no credential; nothing it answers carries a token");
 {
   t("R36: no answer this suite received carried the ai credential or the Claude token",
     ANSWERS.filter((a) => a.text.includes(AIK) || a.text.includes(CLAUDE_TOKEN)).length, 0);
-  await reset(mf, { payer: "project" });
-  await runOp(mf, { ...base, claude_accounts: ACCOUNTS });
+  await reset(mf, {});
+  await runOp(mf, { ...base, account: ACCOUNTS });
   const st = await planeState(mf);
   const m = await modelState(mf);
   t("R36: the Claude token went only in the model API's key header: never to the plane, never in a model request body",
     [JSON.stringify(st.log).includes(CLAUDE_TOKEN), m.calls.some((c) => c.raw.includes(CLAUDE_TOKEN)), m.calls.every((c) => c.key === CLAUDE_TOKEN)],
     [false, false, true]);
   t("R36: the ai credential went only to the plane, never to the model", m.calls.some((c) => c.raw.includes(AIK)), false);
-  await reset(mf, { payer: "project" });
-  const again = await runOp(mf, { ...base, claude_accounts: { member: { token: "" }, project: { token: "sk-ant-second" } } });
+  await reset(mf, {});
+  const again = await runOp(mf, { ...base, account: { ...ACCOUNTS, secret: "sk-ant-second" } });
   t("R36: a second call's material is its own: nothing of the first was retained", [again.status, (await modelState(mf)).calls.every((c) => c.key === "sk-ant-second")],
     [200, true]);
 }
@@ -1305,8 +1333,8 @@ section("R44 · its copies equal their sources, both ways");
     [Object.keys(REPORTING_LEVEL), LEVELS.map((l) => REPORTING_LEVEL[l] === reportsAs(l))], [LEVELS, LEVELS.map(() => true)]);
   t("R44: NAMESPACES is the plane's (the member's refusal and the real plane's list the same set)",
     (await runOp(mf, { run_id: "r", store: "x", credential: AIK })).out.namespaces, planeNamespaces);
-  /* R44 as R53 reads it: only the order's first member is deployed, and `plan` once R40 and R48 are met (it is not in
-     T18, run-rules R14): MODES' deployed set is run-rules' DEPLOYED_MODES, both ways. */
+  /* R44 as R53 reads it: only the order's first member is deployed, and `plan` once R58 and R48 are met (it is not in
+     T18, run-rules agent-harness R2): MODES' deployed set is run-rules' DEPLOYED_MODES, both ways. */
   t("R44, R53: MODES' keys are DEPLOYMENT_SEQUENCE.order, and its deployed modes are run-rules' DEPLOYED_MODES: the first member only",
     [Object.keys(MODES), Object.keys(MODES).filter((k) => MODES[k].deployed), [...DEPLOYED_MODES]],
     [DEPLOYMENT_SEQUENCE.order, [DEPLOYMENT_SEQUENCE.order[0]], [DEPLOYMENT_SEQUENCE.order[0]]]);
@@ -1315,7 +1343,7 @@ section("R44 · its copies equal their sources, both ways");
   t("R44: the mode-not-deployed ending is one of the plane's RUN_ENDINGS", Object.keys(RUN_ENDINGS).includes("mode-not-deployed"), true);
 }
 
-section("N53 · the skills doctrine's pins on this member, owned here (R14, R44)");
+section("N53 · the skills doctrine's pins on this member, owned here (agent-harness R2, R44)");
 {
   /* Moved from `bio-plane/test/skillsequencing.test.mjs` BLOCKS B and D (N53, K81): the skills doctrine cites this
      member's gate by address, and this member's own suite holds the address true. */
@@ -1324,12 +1352,12 @@ section("N53 · the skills doctrine's pins on this member, owned here (R14, R44)
      typeof HARNESS[GATE_ADDRESS.first_step_export], typeof HARNESS[GATE_ADDRESS.decision_function],
      Object.prototype.hasOwnProperty.call(CONTROL_FLOW, GATE_ADDRESS.row), GATE_ADDRESS.file],
     ["object", "object", "string", "function", true, "agent-worker/src/harness.mjs"]);
-  t("R14 (N53): the gate is the first row every run takes, and nothing in it is judged",
+  t("agent-harness R2 (N53): the gate is the first row every run takes, and nothing in it is judged",
     [FIRST_STEP === GATE_ADDRESS.row, CONTROL_FLOW[GATE_ADDRESS.row].judged], [true, null]);
-  t("R14 (N53): the gate is reached before any bound — an undeployed mode with a spent budget still stops on the mode",
+  t("agent-harness R2 (N53): the gate is reached before any bound — an undeployed mode with a spent budget still stops on the mode",
     nextStep({ step: "gate-mode", mode: "investigate", pass: 9, maxPasses: 3,
                budget: { fetches: { allowed: 1, consumed: 999 } } }).bound, "mode-not-deployed");
-  t("R14 (N53): a mis-spelled deployed mode is refused too — the gate is not a denylist of one word",
+  t("agent-harness R2 (N53): a mis-spelled deployed mode is refused too — the gate is not a denylist of one word",
     [nextStep({ step: "gate-mode", mode: "CHECK ", pass: 0, maxPasses: 3 }).bound,
      nextStep({ step: "gate-mode", mode: "check", pass: 0, maxPasses: 3 }).step], ["mode-not-deployed", "resume"]);
 }
@@ -1352,7 +1380,7 @@ section("R46 · no place is named in its behaviour or outward text; its account 
   const PLACES = /Oakland|Alameda|California|Berkeley|San Francisco/i;
   t("R46: no answer this suite received names a place", ANSWERS.filter((a) => PLACES.test(a.text.replace(/"[^"]*(?:ruth|believe-in-oakland)[^"]*"/g, ""))).length, 0);
   t("R46: no instruction it sends the model names a place",
-    (await modelState(mf)).calls.some((c) => PLACES.test(JSON.parse(c.raw).system.replace(JSON.stringify(PACK.resident), ""))), false);
+    (await modelState(mf)).calls.some((c) => PLACES.test(sysText(JSON.parse(c.raw)).replace(JSON.stringify(PACK.resident), ""))), false);
   t("R46: its account_id is the project's one Cloudflare account", WRANGLER_CFG.account_id, "20b533579290b9b93168345edd3b7f72");
 }
 

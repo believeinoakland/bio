@@ -1,4 +1,4 @@
-// src/harness.mjs
+// ../agent-harness/src/harness.mjs
 var LEVELS = ["meaning", "content", "document", "internet"];
 var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var REPORTING_LEVEL = Object.freeze({
@@ -42,7 +42,6 @@ var MODES = {
   }
 };
 var BUDGET_BOUNDS = ["fetches", "subsessions", "wallclock"];
-var MEANING_ARM = "leg";
 var CONTROL_FLOW = {
   "gate-mode": {
     does: "SK-4's gate: refuse a mode that is not deployed, before anything is spent",
@@ -247,8 +246,13 @@ function stopBecause(state) {
     const row2 = allowance(s.budget, bound);
     if (row2 && row2.consumed >= row2.allowed) return bound;
   }
-  if (Number(s.pass) >= Number(s.maxPasses)) return "completed";
+  if (Number(s.pass) >= passLimit(s.maxPasses)) return "completed";
   return null;
+}
+var DEFAULT_MAX_PASSES = 3;
+function passLimit(maxPasses) {
+  const n = Number(maxPasses);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_PASSES;
 }
 function gateStep(state) {
   const s = state || {};
@@ -277,7 +281,7 @@ function nextStep(state) {
     return {
       step: "close",
       bound: stopped,
-      why: stopped === "completed" ? `${s.pass} of ${s.maxPasses} passes are done; the loop's termination is the table's and not the model's` : `the '${stopped}' budget is spent. \xA714b.6: when a bound stops a run, the log says WHICH bound and where`
+      why: stopped === "completed" ? `${s.pass} of ${passLimit(s.maxPasses)} passes are done; the loop's termination is the table's and not the model's` : `the '${stopped}' budget is spent. \xA714b.6: when a bound stops a run, the log says WHICH bound and where`
     };
   switch (at) {
     case "resume":
@@ -295,10 +299,10 @@ function nextStep(state) {
     case "fanout":
       return { step: "collect", why: `${LEVELS.length} sub-sessions spawned, one per level, in LEVELS order` };
     case "collect": {
-      const refused = (s.reportsRefused || []).length;
+      const refused2 = (s.reportsRefused || []).length;
       return {
         step: "compose",
-        why: `${(s.reports || []).length} REPORT(s) honoured the return contract` + (refused ? `; ${refused} return(s) REFUSED \u2014 a sub-session that returns documents has defeated the architecture, and those levels are UNDETERMINED, not empty` : "; none refused")
+        why: `${(s.reports || []).length} REPORT(s) honoured the return contract` + (refused2 ? `; ${refused2} return(s) REFUSED \u2014 a sub-session that returns documents has defeated the architecture, and those levels are UNDETERMINED, not empty` : "; none refused")
       };
     }
     case "compose":
@@ -691,6 +695,44 @@ function whyWithUndetermined(why, undetermined) {
   const head = own.length > room ? `${own.slice(0, Math.max(0, room - 1))}\u2026` : own;
   return `${head}${tail}`.trim().slice(0, WHY_MAX);
 }
+
+// src/ops.mjs
+var NAMESPACES2 = Object.freeze(["bio", "scratch"]);
+var MEANING_ARM = "leg";
+var ASK_OPS = Object.freeze([
+  "calculations",
+  "careerof",
+  "committedagainstpaid",
+  "duties",
+  "entity",
+  "entitybyalias",
+  "eventsfor",
+  "explore",
+  "frontier",
+  "holderat",
+  "lines",
+  "meaningrows",
+  "moneyfacts",
+  "moneyof",
+  "occurrences",
+  "profiles",
+  "relation",
+  "resolutions",
+  "rule",
+  "search",
+  "searchfields",
+  "standard",
+  "standardinforce",
+  "standards",
+  "strengthbarof",
+  "timeline"
+]);
+var ASK_PLANE_OPS = Object.freeze({
+  askceiling: { mutating: false, why: "R54 \u2014 the member's use ceiling, before any model call (ai-runs R50)" },
+  affordances: { mutating: false, why: "R54, R48 \u2014 the rendered pack whose `ask` layer instructs the ask" },
+  askcheck: { mutating: false, why: "R54 \u2014 answers' checks over the read log the plane holds for the grant (answers R4)" },
+  askusage: { mutating: true, why: "R54 \u2014 each model call's usage, counted for the member (ai-runs R48's countAskUsage)" }
+});
 
 // ../bio-plane/src/record-grammar/ids.mjs
 var row = (prefix, owner, form = "sequential") => Object.freeze({ prefix, owner, form });
@@ -1117,6 +1159,32 @@ var AI_RUN_OWN_CHECKS = {
     check: "C-22.18",
     where: "src/run-rules/rules.mjs checkRunState, called from src/ai-runs/index.mjs open and tick",
     translation: "The investigation tried to keep more working notes than one investigation may hold, so nothing it sent with them was recorded and none of its budget was spent. An investigation keeps a short list of what it has left to do, not everything it has read."
+  },
+  /* R18 (K1481; T33-49): AN AI RUN OR ASK STARTS ONLY AT A MEMBER'S ACT, with one exception: the AI half of a standing
+     question a member wrote, which reads only, asks only, and runs on its author's own account. `startAllowed` makes the
+     decision; `ai-runs` and `answers` relay it before anything is written or any model is called. A C-22 row because
+     its one minting site is this module's pure rule (`rules.mjs`), as C-22.8's is. */
+  AI_RUN_NOT_A_MEMBER_ACT: {
+    check: "C-22.19",
+    where: "src/run-rules/rules.mjs startAllowed, called from src/ai-runs/index.mjs open and by answers",
+    translation: "Nothing was started, because the assistant starts work only when a member asks for it. The one exception is a standing question a member wrote themselves, which may only read and only answer that question. Nothing here asked on a member's behalf, so nothing ran."
+  },
+  /* R19 (VF-4; T33-49): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED is judged here and written by `ai-runs`.
+     One code for every way the act is unfit (a mode outside the order, no run, no person verifying, a machine
+     verifying, no evidence), the detail naming which field: they are one fact — this record cannot enable the next
+     mode — and each remedy is to fill the field the detail names. */
+  AI_RUN_VERIFICATION_UNFIT: {
+    check: "C-22.20",
+    where: "src/run-rules/deployment.mjs checkVerification, called from src/ai-runs/index.mjs",
+    translation: "This record of a kind of work checked in real use was not kept, because it does not say all it must: which kind of work, which run was checked, which person checked it, and what they saw. A machine cannot record that its own work was checked. Until such a record is kept, the next kind of work stays switched off."
+  },
+  /* R17 (Q0-5; T33-49): A PER-ASK BOUND DECLARED ABOVE ITS CEILING. R3's codes say the rest of R17's refusals (an
+     unknown name, an absent or zero figure, a figure that is not a whole number); none of them says this truthfully —
+     the figure is a good whole number, and it is simply more than one ask may have. */
+  AI_ASK_BOUND_ABOVE_CEILING: {
+    check: "C-22.21",
+    where: "src/run-rules/rules.mjs checkAskBounds, called from agent-worker and answers when an ask starts",
+    translation: "Nothing was asked, because the question was given more room than one question may have \u2014 more turns, more reading or more time than the most allowed. Ask again within those limits."
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -1349,13 +1417,46 @@ var AI_RUN_PLAN_CHECKS = {
     translation: "Nothing was run, because this kind of work has nothing in place yet to check what it is asked to work on. Rather than start without that check, the run is refused until the part that provides it is running."
   }
 };
+var AI_USE_CHECKS = {
+  /* R50: the member's own daily ceiling, set by the member. */
+  AI_USE_CEILING_REACHED: {
+    check: "C-109.8",
+    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
+    translation: "Nothing was run, because you have used the assistant as much today as your own daily limit allows. You set that limit yourself and can raise it; otherwise it resets at the start of tomorrow."
+  },
+  /* R50: the lower ceiling an administrator set for the copy's own load. */
+  AI_USE_COPY_CEILING_REACHED: {
+    check: "C-109.9",
+    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
+    translation: "Nothing was run, because you have reached today's limit that this group's administrator set to keep the group's copy from being overloaded. It resets at the start of tomorrow, or an administrator can raise it."
+  },
+  /* R52 (K1502, K1503): there is no group-wide account; each member brings their own. */
+  AI_NO_ACCOUNT: {
+    check: "C-109.10",
+    where: "src/ai-runs/index.mjs open and the ask's account, reached from op=airunopen and an ask",
+    translation: "Nothing was run, because you have not connected a Claude account or an API key of your own. The assistant works only on the account of the member who asks; connect yours to use it."
+  },
+  /* R50 (K1601): a member's ceiling is that member's own to set and read; the copy's lower one an administrator's. */
+  NOT_YOUR_CEILING: {
+    check: "C-109.11",
+    where: "src/ai-runs/index.mjs aiCeilingSet, aiCopyCeilingSet and the ceiling's reads",
+    translation: "Nothing was changed, because a member's daily limit on the assistant is theirs alone to set or look at, and the limit for the whole group's copy is set only by an administrator."
+  },
+  /* R50 (K1601): a ceiling's figure is a whole number of one or more, or none at all (null: no ceiling of one's own). */
+  AI_CEILING_INVALID: {
+    check: "C-109.12",
+    where: "src/ai-runs/index.mjs aiCeilingSet and aiCopyCeilingSet",
+    translation: "Nothing was changed, because a daily limit on the assistant is a whole number of one or more, or no limit of your own at all. Give a whole number, or clear the limit."
+  }
+};
 var AI_RUNS_CHECKS = Object.freeze({
   ...AI_RUN_OWN_CHECKS,
   ...AI_RUN_ACT_SHAPE_CHECKS,
   ...AI_RUNS_CONTEXT_CHECKS,
   ...SURFACE_RUN_CHECKS,
   ...AI_RUN_OPEN_CHECKS,
-  ...AI_RUN_PLAN_CHECKS
+  ...AI_RUN_PLAN_CHECKS,
+  ...AI_USE_CHECKS
 });
 
 // ../bio-plane/src/observation-log/vocabulary.mjs
@@ -1452,6 +1553,24 @@ var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUNS_CHECKS });
 var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals"]);
 var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
 var AI_RUN_STATE_MAX_BYTES = 262144;
+var ASK_BOUNDS = Object.freeze({
+  turns: Object.freeze({ default: 12, means: "model turns one ask may take" }),
+  bytes: Object.freeze({ default: 1048576, means: "bytes of the record's answers one ask may read into the model" }),
+  wall_ms: Object.freeze({ default: 18e4, means: "milliseconds from the ask's start to its answer" }),
+  reads: Object.freeze({ default: 40, means: "reads of the record one ask may make" })
+});
+var isCount = (v) => typeof v === "number" && Number.isSafeInteger(v);
+function askBoundReached(bounds, used) {
+  const b = bounds && typeof bounds === "object" ? bounds : {};
+  const u = used && typeof used === "object" ? used : {};
+  for (const [k, { default: ceiling }] of Object.entries(ASK_BOUNDS)) {
+    const declared = Object.prototype.hasOwnProperty.call(b, k) ? b[k] : void 0;
+    const limit = isCount(declared) && declared > 0 && declared <= ceiling ? declared : ceiling;
+    const spent = Object.prototype.hasOwnProperty.call(u, k) ? u[k] : void 0;
+    if (typeof spent === "number" && spent >= limit) return k;
+  }
+  return null;
+}
 
 // ../bio-plane/src/run-rules/deployment.mjs
 var GATE_ADDRESS = {
@@ -1480,9 +1599,9 @@ var DEPLOYMENT_SEQUENCE = {
      digest moves with this line by construction and nothing needs bumping by hand. */
   /* `plan` APPENDED (K660 (5), BIO_Action_v0_1.md §4 rule 1): the planning run, which proposes options for an
      action plan from what the record already holds. It is last in the order and it does NOT wait on the chain above
-     it: it deploys as soon as `agent-worker` runs model turns (its R40 and R48 met), whether or not `investigate` or
-     `extract` is deployed, by the reviewed change that meets those Rs setting `deploys_apart.plan.deployed` here and
-     `agent-worker`'s `MODES.plan` together (its R42, R53). No separate act. */
+     it: `investigate` or `extract` being deployed or not changes nothing for it. AMENDED for T33 (R14; Q0-5, §7 item
+     10): it is deployed ONLY by its own flag, `deploys_apart.plan.deployed`, set by an explicit reviewed change of its
+     own that sets `agent-worker`'s `MODES.plan` with it (its R42, R53) — never as a side effect of model turns running. */
   order: ["check", "investigate", "extract", "plan"],
   first_deployed_mode: "check",
   /* §2, VERBATIM. Looked up in the design document through SK-1's normaliser
@@ -1519,7 +1638,7 @@ var DEPLOYMENT_SEQUENCE = {
   deploys_apart: {
     plan: {
       deployed: false,
-      when: "as soon as agent-worker runs model turns (its R40 and R48), whether or not investigate or extract is deployed; the reviewed change that meets those sets this flag and agent-worker's MODES.plan together"
+      when: "only by an explicit reviewed change of its own, which sets this flag and agent-worker's MODES.plan together; never as a side effect of model turns running, and whether or not investigate or extract is deployed"
     }
   },
   /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
@@ -1534,14 +1653,392 @@ var DEPLOYMENT_SEQUENCE = {
   /* THE ONE SENTENCE THIS RECORD EXISTS TO MAKE UNAMBIGUOUS. */
   holds_no_gate: "This record is INSTRUCTION about an order. It refuses nothing. A model ignoring every word of it gets past nothing, because the row at `gate-mode` runs before anything it could ignore."
 };
+var ASK_MODE = Object.freeze({
+  mode: "ask",
+  read_only: true,
+  reach: "answers' ASK_SCOPE (its R1), the whole of an ask's reach; no write op of any module",
+  interactive: true,
+  writes_run_row: false,
+  why: "it answers one member's question inside that member's act and is no run: it writes no run row and no observation, and keeps nothing but the member's own device-local transcript (K1450)",
+  deploys_apart: true,
+  deployed: false,
+  when: "only by a reviewed change of its own that sets this flag, whatever the run modes' state",
+  bounds: "ASK_BOUNDS (R17), declared when the ask starts"
+});
+var RUN_MODES = Object.freeze([...DEPLOYMENT_SEQUENCE.order]);
 var CHAIN = DEPLOYMENT_SEQUENCE.order.filter((m) => !Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m));
 var DEPLOYED_MODES = Object.freeze([
   ...CHAIN.slice(0, DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2),
-  ...DEPLOYMENT_SEQUENCE.order.filter((m) => DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed === true)
+  ...DEPLOYMENT_SEQUENCE.order.filter((m) => DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed === true),
+  ...ASK_MODE.deployed === true ? [ASK_MODE.mode] : []
 ]);
 var DEFAULT_MODE = DEPLOYED_MODES[0];
+var VERIFICATION_RECORDED = Object.freeze({
+  act: "verification_recorded",
+  fields: Object.freeze(["mode", "run", "verified_by", "at", "evidence"]),
+  means: Object.freeze({
+    mode: "the mode of the deployment order whose first live run was verified",
+    run: "the run that was verified",
+    verified_by: "the member who verified it; never a machine",
+    at: "when it was verified",
+    evidence: "what the member saw, in their words or as references to it"
+  })
+});
 
-// src/subsession.mjs
+// src/ask.mjs
+var ASK_DECLARED = Object.freeze(Object.fromEntries(Object.entries(ASK_BOUNDS).map(([k, v]) => [k, v.default])));
+var QUESTION_MAX = 4e3;
+var CONVERSATION_MAX = 40;
+var ARG_MAX = 500;
+function askTools(layers) {
+  const load = {
+    name: "load_layer",
+    description: "load one of the skill pack's disclosed layers when the work needs it",
+    input_schema: {
+      type: "object",
+      properties: { name: { type: "string", enum: layers } },
+      required: ["name"],
+      additionalProperties: false
+    }
+  };
+  const read = {
+    name: "read",
+    description: "read the record through the plane, under the member's grant: one op of the ask's list, with its arguments as plain values. Nothing is answered from your own knowledge: what is not read is not held.",
+    input_schema: {
+      type: "object",
+      properties: {
+        op: { type: "string", enum: [...ASK_OPS] },
+        args: { type: "object", additionalProperties: { type: ["string", "number", "boolean"] } }
+      },
+      required: ["op"],
+      additionalProperties: false
+    }
+  };
+  const done = {
+    name: "done_reading",
+    description: "end reading: the question as you read it, and at most one clarifying question when it cannot be answered without one",
+    input_schema: {
+      type: "object",
+      properties: {
+        question_as_read: { type: "string" },
+        clarifying: { type: ["string", "null"] }
+      },
+      required: ["question_as_read"],
+      additionalProperties: false
+    }
+  };
+  const answer = {
+    name: "answer",
+    description: "the answer, in the answers contract: every sentence rests on what was read, quotes are exact, an absence names its level, and every rule is the plane's",
+    input_schema: {
+      type: "object",
+      properties: {
+        question_as_read: { type: "string" },
+        clarifying: { type: ["string", "null"] },
+        summary: {},
+        sentences: { type: "array" },
+        holdings: { type: "array" },
+        rules: { type: "array" },
+        looks: { type: "array" },
+        bound: {},
+        truncated: {},
+        out_of_view: {},
+        lens: {},
+        not_established: {},
+        query: {},
+        next_acts: {},
+        label: { type: "string", enum: ["machine work"] }
+      },
+      required: ["question_as_read"],
+      additionalProperties: false
+    }
+  };
+  return { reading: [load, read, done], composing: [load, answer] };
+}
+function admitRead(input) {
+  const op = String(input?.op ?? "");
+  if (!ASK_OPS.includes(op))
+    return { refused: {
+      code: "ASK_OP_REFUSED",
+      op: op.slice(0, 60),
+      detail: `'${op.slice(0, 60)}' is not a read an ask may make; an ask reads only ${ASK_OPS.join(", ")}`
+    } };
+  const args = input?.args == null ? {} : input.args;
+  if (typeof args !== "object" || Array.isArray(args))
+    return { refused: { code: "ASK_ARGS_REFUSED", op, detail: "a read's arguments are a map of plain values" } };
+  const query = {};
+  for (const [k, v] of Object.entries(args)) {
+    if (["op", "token", "store"].includes(k) || !/^[a-z_][a-z0-9_]{0,40}$/i.test(k) || !["string", "number", "boolean"].includes(typeof v) || String(v).length > ARG_MAX)
+      return { refused: {
+        code: "ASK_ARGS_REFUSED",
+        op,
+        detail: `the argument '${k.slice(0, 40)}' is not one a read may carry: a name, and a plain value of at most ${ARG_MAX} characters`
+      } };
+    query[k] = v;
+  }
+  return { op, query };
+}
+function conversationOf(c) {
+  if (c == null) return { turns: [] };
+  if (!Array.isArray(c) || c.length > CONVERSATION_MAX || !c.every((t) => t && (t.role === "user" || t.role === "assistant") && typeof t.content === "string" && t.content.length <= QUESTION_MAX * 4))
+    return { bad: true };
+  return { turns: c.map((t) => ({ role: t.role, content: t.content })) };
+}
+async function handleAsk(req, env, deps) {
+  const {
+    refusal: refusal3,
+    json: json2,
+    askPlane: askPlane2,
+    planeAnswer: planeAnswer2,
+    publishedPack: publishedPack2,
+    accountOf: accountOf2,
+    cascadeToken: cascadeToken2,
+    modelHalf: modelHalf2,
+    loadableLayers: loadableLayers2,
+    loadLayer: loadLayer2,
+    converse: converse2,
+    segmentMeter: segmentMeter2,
+    NAMESPACES: NAMESPACES3,
+    DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2,
+    now = () => Date.now()
+  } = deps;
+  if (typeof env.PLANE?.fetch !== "function")
+    return refusal3(
+      "PLANE_NOT_CONFIGURED",
+      "this member reaches the record only through the plane service binding, and the binding is absent, so no question can be answered and none was sent anywhere.",
+      503
+    );
+  const body = await req.json().catch(() => null);
+  if (body == null || typeof body !== "object" || Array.isArray(body))
+    return refusal3("BAD_BODY", "the request body could not be read as a JSON object.", 400);
+  if (typeof body.question !== "string" || !body.question.trim() || body.question.length > QUESTION_MAX)
+    return refusal3("BAD_QUESTION", `an ask carries one question in words, of at most ${QUESTION_MAX} characters.`, 400);
+  let store = null;
+  if (body.store !== void 0) {
+    if (typeof body.store !== "string")
+      return refusal3("BAD_STORE", "store, when an ask names one, is the namespace's name.", 400);
+    if (!NAMESPACES3.includes(body.store))
+      return refusal3(
+        "NAMESPACE_UNKNOWN",
+        "an ask names the namespace it reads, and no namespace by that name exists on any instance this member can be bound to, so nothing was read; they are listed beside this message.",
+        400,
+        { asked: body.store.slice(0, 80), namespaces: [...NAMESPACES3] }
+      );
+    store = body.store;
+  }
+  const grant = typeof body.grant === "string" ? body.grant : "";
+  if (!grant)
+    return refusal3(
+      "NO_GRANT",
+      "an ask is read only under the asking member's own short-lived, read-only grant, and none arrived. This member holds no credential of its own, so nothing was read and no model was called.",
+      401
+    );
+  const acct = await accountOf2(body);
+  if (acct.refusal) return acct.refusal;
+  const { account } = acct;
+  const conv = conversationOf(body.conversation);
+  if (conv.bad)
+    return refusal3(
+      "BAD_CONVERSATION",
+      `conversation, when present, is this ask's earlier turns: at most ${CONVERSATION_MAX}, each {role: user or assistant, content: words}.`,
+      400
+    );
+  const call = (op, query, post) => askPlane2(env, op, grant, store, query, post);
+  const relayed = (asked, at) => json2({
+    ok: false,
+    reason: "PLANE_REFUSED",
+    code: "PLANE_REFUSED",
+    worker: "agent-worker",
+    at,
+    detail: "the plane refused this ask under the member's grant. Its refusal is passed through exactly as the plane worded it.",
+    plane_status: asked.status ?? null,
+    plane: asked.body ?? null
+  }, 403);
+  const silentNow = (asked) => refusal3(
+    "PLANE_SILENT",
+    "the plane could not be reached, so nothing was read and no model was called. A failure to answer is not an answer.",
+    502,
+    { detail_from_binding: asked.detail ?? null }
+  );
+  const ceiling = await call("askceiling");
+  if (!ceiling.reached) return silentNow(ceiling);
+  if (planeAnswer2(ceiling, "askceiling").refused) return relayed(ceiling, "askceiling");
+  const pub = await call("affordances");
+  if (!pub.reached) return silentNow(pub);
+  const pubAnswer = planeAnswer2(pub, "affordances");
+  if (pubAnswer.refused) return relayed(pub, "affordances");
+  const pack = publishedPack2(pubAnswer.result);
+  if (!pack.ok)
+    return refusal3(
+      "PACK_UNDETERMINED",
+      `the plane published no skill pack this ask can be instructed by, so no model was called: an ask answered without the pack's closed-book rule would answer from the model's own knowledge (${pack.why}).`,
+      502
+    );
+  const reference = (await cascadeToken2(account)).reference;
+  const meter = segmentMeter2({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES2 });
+  const model = modelHalf2({ reference, runner: env.RUNNER ?? null, meter, suggestions: account.suggestions });
+  model.pack = pack.pack;
+  model.layers = loadableLayers2(pack.pack, model.suggestions);
+  const tools = askTools(model.layers);
+  const started = now();
+  const stream = new TransformStream();
+  const writer = stream.writable.getWriter();
+  const enc = new TextEncoder();
+  const emit = (o) => writer.write(enc.encode(`${JSON.stringify(o)}
+`));
+  (async () => {
+    const used = { turns: 0, bytes: 0, wall_ms: 0, reads: 0 };
+    const reached = () => {
+      used.turns = meter.turns;
+      used.wall_ms = Math.max(0, now() - started);
+      return askBoundReached(ASK_DECLARED, used);
+    };
+    const report = async (got) => {
+      if (!got || !got.usage) return;
+      const entries = model.drain();
+      for (const e of entries)
+        await call("askusage", null, { mode: "ask", model: e.model, usage: e.usage, calls: e.calls });
+    };
+    const spend = (got, turnsBefore) => model.spent(got, "ask", meter.turns - turnsBefore);
+    const finish = async (o) => {
+      await emit(o);
+      await writer.close();
+    };
+    const refusedEvent = (code, detail, extra) => ({
+      event: "refused",
+      ok: false,
+      reason: code,
+      code,
+      detail,
+      worker: "agent-worker",
+      ...extra || {}
+    });
+    const modelEnded = (got) => {
+      if (got.stopped || got.exhausted)
+        return refusedEvent(
+          "ASK_BOUND_REACHED",
+          `the ask reached its ${got.stopped ?? "turns"} bound before it was answered, so nothing is returned.`,
+          { bound: got.stopped ?? "turns" }
+        );
+      if (got.silent)
+        return refusedEvent(
+          "MODEL_SILENT",
+          "the model could not be reached, so nothing is returned.",
+          { detail_from_model: got.silent.detail ?? null }
+        );
+      return refusedEvent(
+        "MODEL_REFUSED",
+        "the model's provider refused the call, or the model declined, so nothing is returned. Its own error type and status are beside this, unchanged.",
+        {
+          model_status: got.refused?.status ?? null,
+          model_error: got.refused?.type ?? null,
+          model_message: got.refused?.message ?? null
+        }
+      );
+    };
+    try {
+      const messages = [...conv.turns, { role: "user", content: `QUESTION: ${body.question}` }];
+      const system = `You answer one member's question from the BIO record and nothing else. Read what the record holds through the read tool, under the member's grant, then end reading; you will then compose the answer. You never answer from your own knowledge. The instructions you work under are this skill pack, version ${String(pack.pack.version)}.
+
+RESIDENT LAYER:
+${JSON.stringify(pack.pack.resident)}
+
+Disclosed layers, loaded with load_layer: ` + model.layers.join(", ") + ". Load the ask layer before you read.";
+      await emit({ event: "step", step: "interpreting" });
+      let turnsBefore = meter.turns;
+      const reading = await converse2({
+        reference,
+        runner: model.runner,
+        mode: "ask",
+        meter,
+        system,
+        messages,
+        tools: tools.reading,
+        finalTool: "done_reading",
+        maxTurns: ASK_DECLARED.turns,
+        onTool: async (name, input) => {
+          if (name === "load_layer") return loadLayer2(model, input);
+          if (name !== "read") return { content: `'${String(name).slice(0, 40)}' is not a tool of this step`, error: true };
+          const bound2 = reached();
+          if (bound2) return { content: {
+            code: "ASK_BOUND_REACHED",
+            bound: bound2,
+            detail: `the ask's ${bound2} bound is reached; end reading`
+          }, error: true };
+          const admitted = admitRead(input);
+          if (admitted.refused) return { content: admitted.refused, error: true };
+          used.reads += 1;
+          await emit({ event: "read", op: admitted.op });
+          const got = await call(admitted.op, admitted.query);
+          if (!got.reached) return { content: { code: "PLANE_SILENT", detail: "the plane did not answer this read; what it would have answered is not held" }, error: true };
+          const a = planeAnswer2(got, admitted.op);
+          const content = a.refused ? a.refused.plane ?? { code: a.refused.code } : a.result;
+          used.bytes += JSON.stringify(content ?? null).length;
+          return a.refused ? { content, error: true } : { content };
+        }
+      });
+      spend(reading, turnsBefore);
+      await report(reading);
+      if (!reading.answer) return await finish(modelEnded(reading));
+      await emit({ event: "step", step: "composing" });
+      const bound = reached();
+      if (bound) return await finish(refusedEvent(
+        "ASK_BOUND_REACHED",
+        `the ask reached its ${bound} bound before it was answered, so nothing is returned.`,
+        { bound }
+      ));
+      messages.push({ role: "user", content: "Reading is closed. Compose the answer by calling the answer tool, in the answers contract, resting every sentence on what was read." });
+      turnsBefore = meter.turns;
+      const composed = await converse2({
+        reference,
+        runner: model.runner,
+        mode: "ask",
+        meter,
+        system,
+        messages,
+        tools: tools.composing,
+        finalTool: "answer",
+        maxTurns: ASK_DECLARED.turns,
+        onTool: async (name, input) => name === "load_layer" ? loadLayer2(model, input) : { content: "reading is closed; answer with the answer tool", error: true }
+      });
+      spend(composed, turnsBefore);
+      await report(composed);
+      if (!composed.answer) return await finish(modelEnded(composed));
+      await emit({ event: "step", step: "checking" });
+      const checked = await call("askcheck", null, { question: body.question, answer: composed.answer });
+      if (!checked.reached)
+        return await finish(refusedEvent(
+          "PLANE_SILENT",
+          "the plane could not be reached to check the answer, so nothing is returned: an unchecked answer is never shown.",
+          { detail_from_binding: checked.detail ?? null }
+        ));
+      const c = planeAnswer2(checked, "askcheck");
+      if (c.refused)
+        return await finish(refusedEvent(
+          "PLANE_REFUSED",
+          "the plane refused to check the answer, so nothing is returned. Its refusal is passed through exactly as the plane worded it.",
+          { at: "askcheck", plane: c.refused.plane ?? null }
+        ));
+      const r = c.result || {};
+      if (!r.answer || typeof r.answer !== "object")
+        return await finish(refusedEvent(
+          "ASK_UNCHECKED",
+          "the plane's checks answered without a checked answer, so nothing is returned: an unchecked answer is never shown."
+        ));
+      await finish({ event: "answer", ok: true, answer: r.answer, withheld: Array.isArray(r.withheld) ? r.withheld : [] });
+    } catch (e) {
+      await finish(refusedEvent(
+        "ASK_FAILED",
+        "the ask failed inside this member, so nothing is returned.",
+        { detail_from_member: String(e?.message ?? e).slice(0, 200) }
+      )).catch(() => {
+      });
+    }
+  })();
+  return new Response(stream.readable, { status: 200, headers: { "content-type": "application/x-ndjson" } });
+}
+
+// ../agent-harness/src/subsession.mjs
 var REPORT_STATES = {
   NEVER_LOOKED: "nobody looked at this level for this subject",
   LOOKED_ABSENT: "we looked and it is positively not there",
@@ -1747,10 +2244,10 @@ function checkReport(report) {
 }
 var REPORT_MAX_BYTES = SUMMARY_MAX + CITATIONS_MAX * (ADDRESS_MAX + 20) + 400;
 function takeReports(returns) {
-  const taken = [], refused = [];
+  const taken = [], refused2 = [];
   for (const r of Array.isArray(returns) ? returns : []) {
     const bad = checkReport(r);
-    if (bad) refused.push({
+    if (bad) refused2.push({
       level: r && typeof r === "object" ? r.level ?? null : null,
       code: bad.code,
       detail: bad.detail,
@@ -1758,7 +2255,7 @@ function takeReports(returns) {
     });
     else taken.push(r);
   }
-  return { taken, refused };
+  return { taken, refused: refused2 };
 }
 function citedAddresses(reports) {
   const out = [];
@@ -1853,62 +2350,119 @@ var sha256hex = async (v) => {
 };
 
 // src/cascade.mjs
-var CASCADE_ORDER = Object.freeze(["member", "project", "instance"]);
-var CASCADE_NO_ACCOUNT = "NO_ACCOUNT_RESOLVED";
+var CASCADE_ORDER = Object.freeze(["member"]);
+var ACCOUNT_KINDS = Object.freeze(["apikey", "subscription"]);
+var CASCADE_NO_ACCOUNT = "NO_ACCOUNT";
 var LEVEL_UNSET = "unset";
 var LEVEL_REVOKED = "revoked_by_publication";
 var LEVEL_AVAILABLE = "available";
-async function levelState(entry) {
-  const v = entry && typeof entry.token === "string" ? entry.token : "";
+var secretOf = (account) => account && typeof account === "object" && typeof account.secret === "string" ? account.secret : "";
+async function levelState(account) {
+  const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
   if (PUBLISHED_TOKEN_HASHES.has(await sha256hex(v))) return LEVEL_REVOKED;
   return LEVEL_AVAILABLE;
 }
-async function resolveClaudeCascade(accounts = {}) {
-  const levels = [];
-  let resolved = null;
-  for (const level of CASCADE_ORDER) {
-    const entry = accounts?.[level];
-    const state = await levelState(entry);
-    levels.push({ level, state });
-    if (!resolved && state === LEVEL_AVAILABLE)
-      resolved = { level, ref: typeof entry.ref === "string" && entry.ref ? entry.ref : null };
-  }
-  if (resolved) return { available: true, level: resolved.level, ref: resolved.ref, levels };
+async function resolveClaudeCascade(account) {
+  const kindOk = account && typeof account === "object" && ACCOUNT_KINDS.includes(account.kind);
+  const state = kindOk ? await levelState(account) : LEVEL_UNSET;
+  const levels = [{ level: "member", state }];
+  if (state === LEVEL_AVAILABLE)
+    return {
+      available: true,
+      level: "member",
+      kind: account.kind,
+      member: typeof account.member === "string" ? account.member : null,
+      levels
+    };
   return {
     available: false,
     reason: CASCADE_NO_ACCOUNT,
+    level: "member",
     levels,
-    detail: "no Claude account resolved at any level of the cascade (member, then project, then instance). The capability is UNAVAILABLE and this is that statement \u2014 an honest absence, stated, because a silent no-op is indistinguishable from a run that found nothing. Each level's own absence is named beside this."
+    detail: state === LEVEL_REVOKED ? "the member's own Claude account reference has been published in this repository, which revokes it, so no model turn can run under it. There is no group or project account to fall back to (K1502): the member connects a new one, or has no assistant." : "no Claude account reference of the member's own arrived. There is no group or project account (K1502): a member with neither their own subscription nor their own API key has no assistant."
   };
 }
-async function cascadeToken(accounts = {}) {
-  const st = await resolveClaudeCascade(accounts);
+async function cascadeToken(account) {
+  const st = await resolveClaudeCascade(account);
   if (!st.available) return null;
-  return { level: st.level, token: accounts[st.level].token };
+  const secret = secretOf(account);
+  return {
+    level: "member",
+    reference: account.kind === "apikey" ? { kind: "apikey", key: secret } : { kind: "subscription", token: secret }
+  };
 }
 
-// src/model.mjs
+// ../agent-model/src/outcome.mjs
+var USAGE_FIGURES = Object.freeze([
+  "input_tokens",
+  "output_tokens",
+  "cache_read_input_tokens",
+  "cache_creation_input_tokens",
+  "total_cost_usd"
+]);
+var DETAIL_MAX = 200;
+var MESSAGE_MAX = 300;
+function usageOf(stated) {
+  const u = stated && typeof stated === "object" ? stated : {};
+  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, typeof u[k] === "number" && Number.isFinite(u[k]) ? u[k] : null]));
+}
+function sumUsage(a, b) {
+  if (!a) return b ? usageOf(b) : null;
+  if (!b) return usageOf(a);
+  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
+}
+function scrub(text, secret, max) {
+  let s = String(text ?? "");
+  if (typeof secret === "string" && secret) s = s.split(secret).join("[secret]");
+  return s.slice(0, max);
+}
+var silent = (detail, secret) => ({ silent: { detail: scrub(detail, secret, DETAIL_MAX) } });
+var refused = (status, type, message, secret) => ({ refused: { status, type: type == null ? null : scrub(type, secret, MESSAGE_MAX), message: scrub(message, secret, MESSAGE_MAX) } });
+
+// ../agent-model/src/apikey.mjs
 var MODEL_ENDPOINT = "https://api.anthropic.com/v1/messages";
 var MODEL_API_VERSION = "2023-06-01";
-var DEFAULT_MODEL = "claude-opus-5";
-var MODEL_MAX_TOKENS = 16e3;
-var DEFAULT_MAX_SEGMENT_BYTES = 1e9;
-var SEGMENT_BYTES_SOURCE = "D-611 on M-168: CPU binds at ~7-10 ms per MB re-serialised, ~3 GB under the 30 s default; a segment sends at most a third of that";
-var CONVERSATION_MAX_TURNS = 12;
-function segmentMeter({ turnsBound, bytesBound }) {
-  return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
+var EPHEMERAL = Object.freeze({ type: "ephemeral" });
+var marked = (block) => ({ ...block, cache_control: EPHEMERAL });
+function cachedSystem(system) {
+  if (system == null || system === "") return void 0;
+  const blocks = Array.isArray(system) ? system.map((b) => ({ ...b })) : [{ type: "text", text: String(system) }];
+  if (blocks.length) blocks[blocks.length - 1] = marked(blocks[blocks.length - 1]);
+  return blocks;
 }
-async function modelCall(token, serialized) {
+function cachedMessages(messages) {
+  const list2 = Array.isArray(messages) ? messages.slice() : [];
+  const i = list2.length - 1;
+  if (i < 0) return list2;
+  const m = list2[i];
+  const blocks = Array.isArray(m.content) ? m.content.map((b) => ({ ...b })) : [{ type: "text", text: String(m.content ?? "") }];
+  if (blocks.length) blocks[blocks.length - 1] = marked(blocks[blocks.length - 1]);
+  list2[i] = { ...m, content: blocks };
+  return list2;
+}
+function withCache(body) {
+  const out = { ...body };
+  const system = cachedSystem(body.system);
+  if (system) out.system = system;
+  else delete out.system;
+  if (Array.isArray(body.tools) && body.tools.length) {
+    out.tools = body.tools.map((t) => ({ ...t }));
+    out.tools[out.tools.length - 1] = marked(out.tools[out.tools.length - 1]);
+  }
+  out.messages = cachedMessages(body.messages);
+  return out;
+}
+async function apikeyTurn(key, serialized) {
   let res;
   try {
     res = await fetch(MODEL_ENDPOINT, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": token, "anthropic-version": MODEL_API_VERSION },
+      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": MODEL_API_VERSION },
       body: serialized
     });
   } catch (e) {
-    return { silent: { detail: String(e && e.message || e).slice(0, 200) } };
+    return silent(e && e.message || e, key);
   }
   let body = null;
   try {
@@ -1916,24 +2470,239 @@ async function modelCall(token, serialized) {
   } catch {
     body = null;
   }
-  if (body == null) return { silent: { detail: `the model API answered ${res.status} with a body that is not JSON` } };
+  if (body == null || typeof body !== "object")
+    return { ...silent(`the model API answered ${res.status} with a body that is not JSON`, key), usage: usageOf(null) };
+  const usage = usageOf(body.usage);
   if (res.status !== 200)
-    return { refused: {
-      status: res.status,
-      type: body?.error?.type ?? null,
-      message: String(body?.error?.message ?? "").slice(0, 300)
-    } };
+    return { ...refused(res.status, body?.error?.type ?? null, body?.error?.message ?? "", key), usage };
   if (body.stop_reason === "refusal")
-    return { refused: {
-      status: 200,
-      type: "refusal",
-      message: String(body?.stop_details?.explanation ?? "").slice(0, 300)
-    } };
-  return { result: body };
+    return { ...refused(200, "refusal", body?.stop_details?.explanation ?? "", key), usage };
+  return { result: body, usage };
+}
+
+// ../agent-model/src/subscription.mjs
+var RUNNER_URL = "https://agent-runner/conversation";
+var ANSWERED = "received";
+var AFTER_ANSWER = "not performed: the answer ended this step";
+function renderTranscript(messages) {
+  const text = (content) => {
+    if (!Array.isArray(content)) return String(content ?? "");
+    return content.map((b) => {
+      if (!b || typeof b !== "object") return String(b ?? "");
+      if (b.type === "text") return String(b.text ?? "");
+      if (b.type === "tool_use") return `[called ${b.name} with ${JSON.stringify(b.input ?? {})}]`;
+      if (b.type === "tool_result")
+        return `[result of ${b.tool_use_id}${b.is_error ? " (error)" : ""}: ${typeof b.content === "string" ? b.content : JSON.stringify(b.content ?? null)}]`;
+      return JSON.stringify(b);
+    }).join("\n");
+  };
+  return (Array.isArray(messages) ? messages : []).map((m) => `${m && m.role === "assistant" ? "ASSISTANT" : "USER"}:
+${text(m && m.content)}`).join("\n\n");
+}
+var systemText = (system) => Array.isArray(system) ? system.map((b) => String((b && b.text) ?? "")).join("\n\n") : String(system ?? "");
+var plainTools = (tools) => (Array.isArray(tools) ? tools : []).map((t) => ({ name: t.name, description: t.description, input_schema: t.input_schema }));
+function conversationRequest(token, { model, system, messages, tools, maxTurns }) {
+  return {
+    credential: { kind: "subscription", secret: token },
+    model,
+    system: systemText(system),
+    prompt: renderTranscript(messages),
+    tools: plainTools(tools),
+    max_turns: maxTurns
+  };
+}
+async function openRunner(runner, token) {
+  let res;
+  try {
+    const stub = typeof runner.fetch === "function" ? runner : runner.get(runner.newUniqueId());
+    res = await stub.fetch(RUNNER_URL, { headers: { Upgrade: "websocket" } });
+  } catch (e) {
+    return silent(e && e.message || e, token);
+  }
+  const ws = res && res.webSocket;
+  if (!ws) return refused(
+    res ? res.status : null,
+    "RUNNER_REFUSED",
+    `the runner answered ${res ? res.status : "nothing"} without a connection`,
+    token
+  );
+  const queue = [], waiting = [];
+  let ended = null;
+  const push = (m) => {
+    if (ended) return;
+    if (m.closed) ended = m;
+    const w = waiting.shift();
+    if (w) w(m);
+    else queue.push(m);
+  };
+  try {
+    ws.accept();
+    ws.addEventListener("message", (ev) => {
+      let m;
+      try {
+        m = JSON.parse(typeof ev.data === "string" ? ev.data : new TextDecoder().decode(ev.data));
+      } catch {
+        m = null;
+      }
+      push(m && typeof m === "object" ? m : { closed: true, detail: "the runner sent a message that is not JSON" });
+    });
+    ws.addEventListener("close", (ev) => push({ closed: true, detail: `the runner closed the connection (${ev && ev.code})` }));
+    ws.addEventListener("error", () => push({ closed: true, detail: "the runner's connection failed" }));
+  } catch (e) {
+    return silent(e && e.message || e, token);
+  }
+  return {
+    send(text) {
+      try {
+        ws.send(text);
+        return true;
+      } catch {
+        push({ closed: true, detail: "the runner's connection failed on send" });
+        return false;
+      }
+    },
+    next() {
+      if (queue.length) return Promise.resolve(queue.shift());
+      if (ended) return Promise.resolve(ended);
+      return new Promise((r) => waiting.push(r));
+    },
+    close() {
+      try {
+        ws.close(1e3, "done");
+      } catch {
+      }
+    }
+  };
+}
+function ending(m, usage, token) {
+  if (m.ok === false)
+    return m.code === "MAX_TURNS" ? { exhausted: true, usage } : { ...refused(null, m.code ?? null, m.detail ?? "", token), usage };
+  if (m.stop_reason === "refusal") return { ...refused(200, "refusal", m.result ?? "", token), usage };
+  return null;
+}
+async function subscriptionConverse({
+  token,
+  runner,
+  model,
+  system,
+  messages,
+  tools,
+  finalTool,
+  onTool,
+  maxTurns,
+  charge
+}) {
+  const offered = new Set(plainTools(tools).map((t) => t.name));
+  let usage = null;
+  let k = 0;
+  const unstated = () => sumUsage(usage, usageOf(null));
+  while (k < maxTurns) {
+    const serialized = JSON.stringify(conversationRequest(token, { model, system, messages, tools, maxTurns: maxTurns - k }));
+    const stop = charge(serialized);
+    if (stop) return { ...stop, usage };
+    k += 1;
+    const conn = await openRunner(runner, token);
+    if (!conn.send) return { ...conn, usage: conn.silent ? usage : unstated() };
+    conn.send(serialized);
+    let answer = null;
+    for (; ; ) {
+      const m = await conn.next();
+      if (m.closed) {
+        if (answer) return { answer, usage: unstated() };
+        return { ...silent(m.detail, token), usage: unstated() };
+      }
+      if (m.tool_use) {
+        const u = m.tool_use;
+        const input = u.input && typeof u.input === "object" ? u.input : {};
+        messages.push({ role: "assistant", content: [{ type: "tool_use", id: u.id, name: u.name, input }] });
+        let content, isError = false;
+        if (answer) {
+          content = AFTER_ANSWER;
+          isError = true;
+        } else if (u.name === finalTool) {
+          answer = input;
+          content = ANSWERED;
+        } else if (!offered.has(u.name)) {
+          content = `'${String(u.name)}' is not a tool of this conversation`;
+          isError = true;
+        } else {
+          const r = await onTool(u.name, input);
+          if (r && r.halt) {
+            conn.close();
+            return r.halt;
+          }
+          content = JSON.stringify(r?.content ?? null);
+          isError = !!r?.error;
+        }
+        messages.push({ role: "user", content: [{
+          type: "tool_result",
+          tool_use_id: u.id,
+          content,
+          ...isError ? { is_error: true } : {}
+        }] });
+        const out = JSON.stringify({ tool_result: { id: u.id, content, ...isError ? { is_error: true } : {} } });
+        const halt = k >= maxTurns ? { exhausted: true } : charge(out);
+        if (halt) {
+          conn.close();
+          return answer ? { answer, usage: unstated() } : { ...halt, usage: unstated() };
+        }
+        k += 1;
+        conn.send(out);
+        continue;
+      }
+      conn.close();
+      usage = sumUsage(usage, usageOf(m.usage));
+      if (answer) return { answer, usage };
+      const end = ending(m, usage, token);
+      if (end) return end;
+      messages.push({ role: "assistant", content: [{ type: "text", text: String(m.result || "(no answer)") }] });
+      messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
+      break;
+    }
+  }
+  return { exhausted: true, usage };
+}
+
+// ../agent-model/src/model.mjs
+var MODEL_FOR_MODE = Object.freeze({
+  check: "claude-opus-5",
+  investigate: "claude-opus-5",
+  extract: "claude-opus-5",
+  plan: "claude-opus-5",
+  ask: "claude-opus-5"
+});
+var MODEL_MAX_TOKENS = 16e3;
+var DEFAULT_MAX_SEGMENT_BYTES = 1e9;
+var SEGMENT_BYTES_SOURCE = "D-611 on M-168: CPU binds at ~7-10 ms per MB re-serialised, ~3 GB under the 30 s default; a segment sends at most a third of that";
+var CONVERSATION_MAX_TURNS = 12;
+function segmentMeter({ turnsBound, bytesBound }) {
+  return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
+}
+function usable(reference) {
+  if (!reference || typeof reference !== "object") return null;
+  if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
+  if (reference.kind === "subscription" && typeof reference.token === "string" && reference.token)
+    return { kind: "subscription", secret: reference.token };
+  return null;
+}
+function precheck(reference, runner) {
+  const ref = usable(reference);
+  if (!ref) return { refusal: refused(
+    null,
+    "ACCOUNT_REFERENCE_UNUSABLE",
+    `a model turn runs only under one member's own account reference: {kind: "apikey", key} or {kind: "subscription", token}`
+  ) };
+  if (ref.kind === "subscription" && !runner) return { refusal: refused(
+    null,
+    "RUNNER_NOT_CONFIGURED",
+    "a subscription runs in the agent runner, and no runner binding was passed"
+  ) };
+  return { ref };
 }
 async function converse({
-  token,
-  model,
+  reference,
+  runner,
+  mode,
   meter,
   system,
   messages,
@@ -1942,15 +2711,11 @@ async function converse({
   onTool,
   maxTurns = CONVERSATION_MAX_TURNS
 }) {
-  for (let k = 0; k < maxTurns; k += 1) {
-    const serialized = JSON.stringify({
-      model,
-      max_tokens: MODEL_MAX_TOKENS,
-      system,
-      messages,
-      tools,
-      tool_choice: { type: "auto" }
-    });
+  const { ref, refusal: refusal3 } = precheck(reference, runner);
+  if (refusal3) return refusal3;
+  const model = Object.prototype.hasOwnProperty.call(MODEL_FOR_MODE, mode) ? MODEL_FOR_MODE[mode] : null;
+  if (!model) return refused(null, "MODE_UNKNOWN", `no model is set for mode '${String(mode).slice(0, 40)}'`);
+  const charge = (serialized) => {
     if (meter.turns >= meter.turnsBound) {
       meter.stopped = "turns";
       return { stopped: "turns" };
@@ -1961,8 +2726,36 @@ async function converse({
     }
     meter.turns += 1;
     meter.bytes += serialized.length;
-    const got = await modelCall(token, serialized);
-    if (got.silent || got.refused) return got;
+    return null;
+  };
+  if (ref.kind === "subscription")
+    return subscriptionConverse({
+      token: ref.secret,
+      runner,
+      model,
+      system,
+      messages,
+      tools,
+      finalTool,
+      onTool,
+      maxTurns,
+      charge
+    });
+  let usage = null;
+  for (let k = 0; k < maxTurns; k += 1) {
+    const serialized = JSON.stringify(withCache({
+      model,
+      max_tokens: MODEL_MAX_TOKENS,
+      system,
+      messages,
+      tools,
+      tool_choice: { type: "auto" }
+    }));
+    const stop = charge(serialized);
+    if (stop) return { ...stop, usage };
+    const got = await apikeyTurn(ref.secret, serialized);
+    if (got.usage) usage = sumUsage(usage, got.usage);
+    if (got.silent || got.refused) return { ...got, usage };
     const content = Array.isArray(got.result.content) ? got.result.content : [];
     messages.push({ role: "assistant", content });
     const uses = content.filter((b) => b && b.type === "tool_use");
@@ -1973,7 +2766,7 @@ async function converse({
         tool_use_id: u.id,
         content: u === final ? "received" : "not performed: the answer ended this step"
       })) });
-      return { answer: final.input && typeof final.input === "object" ? final.input : {} };
+      return { answer: final.input && typeof final.input === "object" ? final.input : {}, usage };
     }
     if (!uses.length) {
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
@@ -1992,7 +2785,7 @@ async function converse({
     }
     messages.push({ role: "user", content: results });
   }
-  return { exhausted: true };
+  return { exhausted: true, usage };
 }
 var STATE_ENUM = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"];
 var LOOK_FIELDS = (levels) => ({
@@ -2194,10 +2987,11 @@ var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
 var refusal2 = (code, detail, status, extra) => json({ ok: false, reason: code, code, detail, worker: "agent-worker", ...extra || {} }, status);
 var SURFACE = {
   run: { method: "POST", mutating: false },
+  ask: { method: "POST", mutating: false },
   version: { method: "GET", mutating: false }
 };
 async function askPlane(env, op, credential, store, query = null, body = null) {
-  let url = `${PLANE_ORIGIN}/?op=${op}&store=${encodeURIComponent(store)}&token=${encodeURIComponent(credential)}`;
+  let url = `${PLANE_ORIGIN}/?op=${op}${store == null ? "" : `&store=${encodeURIComponent(store)}`}&token=${encodeURIComponent(credential)}`;
   for (const [k, v] of Object.entries(query || {}))
     if (v != null && v !== "") url += `&${k}=${encodeURIComponent(String(v))}`;
   let res;
@@ -2220,7 +3014,7 @@ async function askPlane(env, op, credential, store, query = null, body = null) {
   return { reached: true, status: res.status, body: parsed };
 }
 var MAX_STEPS = 400;
-async function driveHarness(env, { runId, store, credential, judgements, maxSteps, cascade = null, model = null }) {
+async function driveHarness(env, { runId, store, credential, judgements, maxSteps, account = null, model = null }) {
   let calls = 0;
   const call = (op, query, body) => {
     calls += 1;
@@ -2249,12 +3043,12 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       { run_id: runId }
     ) };
   const recordedPayer = session.principal?.claude ?? null;
-  if (cascade?.available && recordedPayer !== cascade.level)
+  if (account && recordedPayer !== account.member)
     return { refusal: refusal2(
       "RUN_NAMES_A_DIFFERENT_PAYER",
-      `the run's own record says the ${JSON.stringify(recordedPayer)} level of the Claude-account cascade pays for it, but the material handed to this segment resolves to the ${JSON.stringify(cascade.level)} level. Those are two different payers and this member will not spend under one while the record names the other. Either the launch recorded the wrong level or this segment was handed the wrong accounts; both are the caller's to fix.`,
+      `the run's own record says the Claude account of ${JSON.stringify(recordedPayer)} pays for it, but the reference handed to this segment is ${JSON.stringify(account.member)}'s. A run is continued only under the account of the member whose act started it, never under another member's (K1502, D-260), so no step was taken and the run stays as it was. The caller handed the wrong member's reference, or the run recorded the wrong member.`,
       409,
-      { run_id: runId, recorded: recordedPayer, resolved: cascade.level, levels: cascade.levels }
+      { run_id: runId, recorded: recordedPayer, supplied: account.member }
     ) };
   if (model) {
     const pub = planeAnswer(await call("affordances"), "affordances");
@@ -2279,8 +3073,9 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     model.pack = held;
     model.messages = [];
     model.system = parentSystem(held);
+    model.layers = loadableLayers(held, model.suggestions);
     model.tools = [
-      LOAD_LAYER(Object.keys(held.disclosed || {})),
+      LOAD_LAYER(model.layers),
       ...session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS)
     ];
   }
@@ -2315,7 +3110,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     targetBasis: seeded.basis,
     pass: 0,
     /* R50: mode `plan` walks one pass; R15's limit otherwise. */
-    maxPasses: session.mode === "plan" ? PLAN_MAX_PASSES : Number(session.max_passes) > 0 ? Number(session.max_passes) : DEFAULT_MAX_PASSES,
+    maxPasses: session.mode === "plan" ? PLAN_MAX_PASSES : passLimit(session.max_passes),
     /* R51: the plan a plan-mode run proposes to is the run's own (ai-runs R46, R19), never the caller's. */
     planId: typeof session.plan === "string" && session.plan ? session.plan : null,
     resumedFrom,
@@ -2346,21 +3141,20 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     if (row2 && row2.judged && model && state.step !== "collect") {
       model.messages.push({ role: "user", content: rowPrompt(state.step, row2, rowFacts(state, LEVELS)) });
       const got = await converse({
-        token: model.token,
-        model: model.id,
+        reference: model.reference,
+        runner: model.runner,
+        mode: state.mode,
         meter: model.meter,
         system: model.system,
         messages: model.messages,
         tools: model.tools,
         finalTool: `judge_${state.step}`,
         onTool: async (name, input) => {
-          if (name === "load_layer") {
-            const layer = model.pack.disclosed?.[String(input.name)];
-            return layer ? { content: layer } : { content: `no disclosed layer '${String(input.name)}'`, error: true };
-          }
+          if (name === "load_layer") return loadLayer(model, input);
           return { content: `this step is judged by judge_${state.step}`, error: true };
         }
       });
+      model.spent(got, state.mode);
       if (got.silent) return { refusal: modelSilent(got.silent, runId) };
       if (got.refused) return { refusal: modelRefused(got.refused, runId) };
       if (got.stopped) {
@@ -2434,10 +3228,17 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
         last.note = (last.note ? `${last.note}; ` : "") + `the table's state is ${published.restarted.bytes} bytes, over the ${published.restarted.limit} a run's state may hold (ai-runs R45), so this tick publishes the pass restarted at '${published.restarted.at}' and a later segment re-does it rather than resume from a state the record refuses`;
       }
     }
+    const usage = model ? model.drain() : [];
     const tick = await call(
       "airuntick",
       null,
-      { run: runId, log: entry ? [entry] : [], consume, ...published ? { state: published.state } : {} }
+      {
+        run: runId,
+        log: entry ? [entry] : [],
+        consume,
+        ...published ? { state: published.state } : {},
+        ...usage.length ? { usage } : {}
+      }
     );
     if (!tick.reached) return { refusal: planeSilent(tick) };
     const tickAnswer = planeAnswer(tick, "airuntick");
@@ -2605,7 +3406,7 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       return out;
     }
     case "collect": {
-      const { taken, refused } = takeReports(state.reports);
+      const { taken, refused: refused2 } = takeReports(state.reports);
       const addresses = citedAddresses(taken);
       let reread = 0;
       const rereadRefused = [];
@@ -2653,12 +3454,12 @@ async function performStep(call, state, runId, model = null, logSeq = null) {
       }
       const holdings = documentHoldings(resolved);
       if (rereadRefused.length) out.refused = rereadRefused;
-      out.note = `${taken.length} REPORT(s) taken, ${refused.length} REFUSED; ${reread} of ${addresses.length} citation(s) re-read BY ADDRESS` + (rereadRefused.length ? `, and ${rereadRefused.length} read(s) could NOT be made \u2014 the plane refused '${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD rather than empty` : "") + `; ${holdingsNote(holdings)}. No document was returned by a sub-session and none was loaded`;
+      out.note = `${taken.length} REPORT(s) taken, ${refused2.length} REFUSED; ${reread} of ${addresses.length} citation(s) re-read BY ADDRESS` + (rereadRefused.length ? `, and ${rereadRefused.length} read(s) could NOT be made \u2014 the plane refused '${String(rereadRefused[0].code ?? "?")}', so what they would have answered is UNREAD rather than empty` : "") + `; ${holdingsNote(holdings)}. No document was returned by a sub-session and none was loaded`;
       out.state = {
         ...state,
         reports: taken,
         rereads: (state.rereads || 0) + reread,
-        reportsRefused: [...state.reportsRefused || [], ...refused],
+        reportsRefused: [...state.reportsRefused || [], ...refused2],
         holdings
       };
       return out;
@@ -2857,11 +3658,12 @@ async function performPlanStep(call, state, runId) {
   }
 }
 async function runSubsessions(call, state, runId, model, logSeq, contracts) {
-  const reports = [], refused = [];
+  const reports = [], refused2 = [];
   for (const contract of contracts) {
     const got = await converse({
-      token: model.token,
-      model: model.id,
+      reference: model.reference,
+      runner: model.runner,
+      mode: state.mode,
       meter: model.meter,
       system: subsessionSystem(model.pack, contract),
       messages: [{ role: "user", content: `Search the ${contract.level} level for the run's question, then report.` }],
@@ -2877,11 +3679,12 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
         return { content: r.result };
       }
     });
+    model.spent(got, state.mode);
     if (got.planeSilent) return { silent: got.planeSilent };
     if (got.silent || got.refused) return { model: got };
     if (got.stopped) return { stopped: got.stopped };
     if (!got.answer) {
-      refused.push({
+      refused2.push({
         level: contract.level,
         code: "SUBSESSION_NO_REPORT",
         detail: "the sub-session ended without calling report; its level is UNDETERMINED, not empty"
@@ -2924,23 +3727,57 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
     }
     reports.push(report);
   }
-  return { reports, refused };
+  return { reports, refused: refused2 };
 }
-var modelSilent = (silent, runId) => refusal2(
+var SUGGESTIONS_LAYER = "suggestions";
+function loadableLayers(pack, suggestionsOn) {
+  return Object.keys(pack?.disclosed || {}).filter((k) => suggestionsOn === true || k !== SUGGESTIONS_LAYER);
+}
+function loadLayer(model, input) {
+  const name = String(input?.name ?? "");
+  if (!model.layers.includes(name))
+    return { content: name === SUGGESTIONS_LAYER ? "the suggestions layer is not loaded: the asking member's own suggestions switch is off" : `no disclosed layer '${name}'`, error: true };
+  return { content: model.pack.disclosed[name] };
+}
+function modelHalf({ reference, runner, meter, suggestions }) {
+  const pending = [];
+  return {
+    reference,
+    runner,
+    meter,
+    suggestions: suggestions === true,
+    pack: null,
+    layers: [],
+    messages: [],
+    /* One entry per conversation that reached the provider: `{mode, model, usage}` (ai-runs R48's entry). */
+    spent(got, mode, calls = null) {
+      if (got && got.usage) pending.push({
+        mode,
+        model: MODEL_FOR_MODE[mode] ?? null,
+        usage: got.usage,
+        ...calls == null ? {} : { calls }
+      });
+    },
+    drain() {
+      return pending.splice(0, pending.length);
+    }
+  };
+}
+var modelSilent = (silent2, runId) => refusal2(
   "MODEL_SILENT",
   "the model API could not be reached, so no judgement was made at this step and the segment stopped. The run is resumable; nothing the table did before this step is lost.",
   502,
-  { run_id: runId, detail_from_model: silent?.detail ?? null }
+  { run_id: runId, detail_from_model: silent2?.detail ?? null }
 );
-var modelRefused = (refused, runId) => refusal2(
+var modelRefused = (refused2, runId) => refusal2(
   "MODEL_REFUSED",
   "the model API refused the call, or the model declined, so no judgement was made at this step and the segment stopped. The API's own error type and status are beside this, unchanged.",
   502,
   {
     run_id: runId,
-    model_status: refused?.status ?? null,
-    model_error: refused?.type ?? null,
-    model_message: refused?.message ?? null
+    model_status: refused2?.status ?? null,
+    model_error: refused2?.type ?? null,
+    model_message: refused2?.message ?? null
   }
 );
 var planeSilent = (asked) => refusal2(
@@ -2959,7 +3796,39 @@ var planeRefused = (runId, store, asked) => json({
   plane_status: asked.status,
   plane: asked.body
 }, 403);
-var DEFAULT_MAX_PASSES = 3;
+async function accountOf(body) {
+  if (body.claude_accounts !== void 0)
+    return { refusal: refusal2(
+      "BAD_ACCOUNT",
+      "claude_accounts is the retired three-level cascade's field: there is no group, project or instance Claude account (K1502). A call carries one member's own reference, as account.",
+      400,
+      { field: "claude_accounts" }
+    ) };
+  const a = body.account;
+  if (a === void 0 || a === null)
+    return { refusal: refusal2(
+      "NO_ACCOUNT",
+      "this call carries no Claude account reference of the member whose act started it. Each member who wants the assistant connects their own subscription or their own API key, and it serves only that member; there is no group or project account to fall back to (K1502), so the capability is UNAVAILABLE and nothing was done.",
+      409,
+      { capability: "unavailable" }
+    ) };
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || typeof a.member !== "string" || !a.member)
+    return { refusal: refusal2(
+      "BAD_ACCOUNT",
+      `account is the member's own reference: {kind, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, and member the member it belongs to. What arrived is not one, and this member judges only what it is handed.`,
+      400,
+      { field: "account" }
+    ) };
+  const cascade = await resolveClaudeCascade(a);
+  if (!cascade.available)
+    return { refusal: refusal2(
+      CASCADE_NO_ACCOUNT,
+      cascade.detail,
+      409,
+      { capability: "unavailable", levels: cascade.levels }
+    ) };
+  return { account: a, cascade };
+}
 async function handleRun(req, env) {
   if (typeof env.PLANE?.fetch !== "function")
     return refusal2(
@@ -2985,12 +3854,12 @@ async function handleRun(req, env) {
       "a run happens inside one namespace and this member guesses none: the caller must say which. A default namespace here would let a run touch the real record while its caller believed it was working in a scratch one.",
       400
     );
-  if (!NAMESPACES.includes(store))
+  if (!NAMESPACES2.includes(store))
     return refusal2(
       "NAMESPACE_UNKNOWN",
       "a run names the namespace it works in, and no namespace by that name exists on any instance this member can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message.",
       400,
-      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES2] }
     );
   if (!credential)
     return refusal2(
@@ -3004,21 +3873,9 @@ async function handleRun(req, env) {
       "the credential handed to this member is not shaped like one this plane issues. Whether a well-shaped credential is live, withdrawn, or scoped to this work is the plane's judgement and is never made here.",
       400
     );
-  const accountsSupplied = body.claude_accounts != null;
-  if (accountsSupplied && (typeof body.claude_accounts !== "object" || Array.isArray(body.claude_accounts)))
-    return refusal2(
-      "BAD_CLAUDE_ACCOUNTS",
-      "claude_accounts, when present, is an object keyed by cascade level (member, project, instance), each entry { token, ref }. This member judges only what it is handed.",
-      400
-    );
-  const cascade = accountsSupplied ? await resolveClaudeCascade(body.claude_accounts) : null;
-  if (cascade && !cascade.available)
-    return refusal2(
-      CASCADE_NO_ACCOUNT,
-      cascade.detail,
-      409,
-      { capability: "unavailable", levels: cascade.levels }
-    );
+  const acct = await accountOf(body);
+  if (acct.refusal) return acct.refusal;
+  const { account, cascade } = acct;
   const bound = Number(env.MAX_TURNS_PER_SEGMENT) > 0 ? Number(env.MAX_TURNS_PER_SEGMENT) : DEFAULT_MAX_TURNS_PER_SEGMENT;
   const requested = body.turns == null ? bound : Number(body.turns);
   if (!Number.isFinite(requested) || requested < 1)
@@ -3051,13 +3908,18 @@ async function handleRun(req, env) {
     }, 403);
   const bytesBound = Number(env.MAX_SEGMENT_BYTES) > 0 ? Number(env.MAX_SEGMENT_BYTES) : DEFAULT_MAX_SEGMENT_BYTES;
   const meter = segmentMeter({ turnsBound: requested, bytesBound });
-  const modelMode = !!(cascade && cascade.available) && !Array.isArray(body.judgements);
-  const model = modelMode ? { token: (await cascadeToken(body.claude_accounts)).token, id: env.MODEL || DEFAULT_MODEL, meter } : null;
+  const modelMode = !Array.isArray(body.judgements);
+  const model = modelMode ? modelHalf({
+    reference: (await cascadeToken(account)).reference,
+    runner: env.RUNNER ?? null,
+    meter,
+    suggestions: account.suggestions
+  }) : null;
   const drive = await driveHarness(env, {
     runId,
     store,
     credential,
-    cascade,
+    account,
     model,
     judgements: Array.isArray(body.judgements) ? body.judgements : [],
     maxSteps: Number(body.max_steps) > 0 ? Math.min(Number(body.max_steps), MAX_STEPS) : MAX_STEPS
@@ -3067,32 +3929,17 @@ async function handleRun(req, env) {
     ok: true,
     run_id: runId,
     store,
-    /* WHAT WAS ACTUALLY DONE, NAMED — FL-2's rule, kept and made more specific.
-       An answer that did not say which half ran would be indistinguishable from
-       a run that executed model turns and found nothing, and those are
-       different claims. `stage: "harness"` says the deterministic table ran;
-       `turns_run: 0` and `judgement_source` say the model half did not. */
+    /* WHAT WAS ACTUALLY DONE, NAMED (R28, R58). `stage: "harness"` says the deterministic table ran; `turns_run` is the
+       number of model turns this segment actually ran through `agent-model` (0 when none ran), and `judgement_source`
+       says whose judgements the table applied: `model` (the turns') or `body` (the caller's, the stubbed path). The
+       two never mix in one segment: supplied judgements turn the model half off for it. */
     stage: "harness",
     turns_run: meter.turns,
-    judgement_source: modelMode ? "model" : "supplied",
-    /* CORRECTED AT FL-6, never exempted: this note used to say the model
-       account "is FL-6's cascade and is not resolved here". The cascade IS
-       resolved here now, and the honest remainder is different — the account
-       is resolved and NAMED, and what still does not happen is a MODEL TURN,
-       whose sizing is D-218's measurement and not this item's. */
-    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns (${meter.turns}), under the Claude account the cascade resolved and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller, so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
-    /* FL-6 ON THE WIRE, secret-free by construction. Three shapes, each an
-       honest statement of a different fact: material supplied and RESOLVED
-       (level + ref + every level's own state); material supplied and NOTHING
-       resolved never reaches here — it refused above, by name; material NOT
-       supplied is its own stated absence, distinct from "nothing resolved",
-       because a caller that offered no accounts and a cascade that exhausted
-       them are different facts about this segment. */
-    claude_account: cascade ? { available: true, level: cascade.level, ref: cascade.ref, levels: cascade.levels } : {
-      available: false,
-      reason: "NO_ACCOUNT_MATERIAL_SUPPLIED",
-      detail: "this segment was handed no claude_accounts material, so the cascade had nothing to resolve \u2014 the deterministic, judgements-supplied mode. An absence, stated."
-    },
+    judgement_source: modelMode ? "model" : "body",
+    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns run through agent-model (${meter.turns}), under the member's own Claude account and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
+    /* R29 — WHOSE ACCOUNT, secret-free by construction: its kind and the member it belongs to. A call with none never
+       reaches here (R6 refused it by name before any step). */
+    claude_account: { available: true, kind: cascade.kind, member: cascade.member },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,
@@ -3166,15 +4013,33 @@ async function handleRun(req, env) {
   });
 }
 function handleVersion(env) {
-  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0" });
+  return json({ ok: true, name: "agent-worker", version: env.VERSION || "0.0.0", model_turns: MODEL_TURNS });
 }
+var ASK_DEPS = {
+  refusal: refusal2,
+  json,
+  askPlane,
+  planeAnswer,
+  publishedPack,
+  accountOf,
+  cascadeToken,
+  modelHalf,
+  loadableLayers,
+  loadLayer,
+  converse,
+  segmentMeter,
+  NAMESPACES: NAMESPACES2,
+  DEFAULT_MAX_SEGMENT_BYTES
+};
+var MODEL_TURNS = "run through agent-model exactly when the member's own Claude account reference arrives with the call and the run's or ask's mode has turns to run; a segment whose caller supplies the judgements runs none";
 var index_default = {
   async fetch(req, env) {
     const url = new URL(req.url);
     const path = url.pathname.replace(/^\/+/, "");
     if (req.method === "GET" && path === "version") return handleVersion(env);
     if (req.method === "POST" && (path === "run" || path === "")) return handleRun(req, env);
-    return refusal2("UNKNOWN", "POST /run or GET /version only.", 404);
+    if (req.method === "POST" && path === "ask") return handleAsk(req, env, ASK_DEPS);
+    return refusal2("UNKNOWN", "POST /run, POST /ask or GET /version only.", 404);
   }
 };
 export {

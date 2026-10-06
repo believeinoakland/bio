@@ -43,19 +43,21 @@
  * ========================================================================= */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. */
+import { ACCOUNT, MEMBER, ACCOUNT_SECRET, withAccount } from "./account.mjs";
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { LEVELS, PLANE_OPS, emptyLevelCandidates } from "../src/harness.mjs";
+import { LEVELS, emptyLevelCandidates } from "../../agent-harness/src/harness.mjs";
+import { PLANE_OPS } from "../src/ops.mjs";
 import {
   REPORT_STATES, REPORT_KEYS, CITATION_KEYS, SPAWN_KEYS, SUBSESSION_OPS,
   SUMMARY_MAX, ADDRESS_MAX, CITATIONS_MAX, REPORT_MAX_BYTES,
   FOUND_STATES, LOOKED_STATES,
   spawnContract, spawnContracts, checkReport, takeReports, citedAddresses,
-} from "../src/subsession.mjs";
+} from "../../agent-harness/src/subsession.mjs";
 /* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
    registry and refusal catalog. This suite's own mock used to answer
    `{ ok: true, rows: [] }` for any argument, which is why its 172 assertions
@@ -70,7 +72,8 @@ import { versionReadBranches } from "./plane-versions.mjs";
 import { suggestBranch, WIRE_CHECKS } from "./plane-suggest.mjs";
 /* FL-12: the capture-request door, derived from the plane — it reads `address` and refuses by name. */
 import { captureRequestBranch } from "./plane-capturerequest.mjs";
-import { MEANING_ARM, REPORTING_LEVEL } from "../src/harness.mjs";
+import { REPORTING_LEVEL } from "../../agent-harness/src/harness.mjs";
+import { MEANING_ARM } from "../src/ops.mjs";
 import { OBSERVATION_STATES } from "../../bio-plane/src/run-rules/index.mjs";
 
 let pass = 0, fail = 0;
@@ -490,6 +493,7 @@ export default {
     if (op === "airun")
       return Response.json({ ok: true, result: { session: {
         id: url.searchParams.get("run"), mode: "check", status: "running",
+        principal: { plane: "member:ruth", claude: "member:ruth" },
         context: { type: "inquiry", id: "INQ-1" }, max_passes: 1,
         budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
                  { bound: "subsessions", allowed: 50, consumed: 0 },
@@ -551,7 +555,7 @@ const newMf = (cfg = {}) => new Miniflare({
   ],
 });
 const runOp = (mf, body) =>
-  mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(body) });
+  mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(withAccount(body)) });
 const mockState = async (mf) =>
   (await (await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/state")).json());
 const base = { run_id: "run-1", store: "scratch", credential: AIK };
