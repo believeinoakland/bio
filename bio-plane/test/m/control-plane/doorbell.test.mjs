@@ -489,8 +489,9 @@ test("R26 (N379, K566): the record store's door dispatches sources' own map — 
   const r = await record();
   const { sourcesOps } = await import("../../../src/sources/index.mjs");
   const routes = Object.keys(sourcesOps({}, new URL("http://do/"), null));
-  assert.deepEqual(routes.sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcelink",
-                                   "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
+  /* T33 (sources R16; K1550): `sourcekeyed`, a member's mark of a keyed result, joins them */
+  assert.deepEqual(routes.sort(), ["knockerconsent", "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcekeyed",
+                                   "sourcelink", "sourceof", "sourcepublishable", "sourcereadlog", "sourcerung"]);
   for (const op of routes) {
     const a = await r.go(`${op}?by=ann&viewer=member:ann&source=203.0.113.9&now=${Date.now()}`, "POST", { captureSha: "a".repeat(64) });
     assert.equal(a.status, 200, `${op}: ${JSON.stringify(a.json).slice(0, 200)}`);
