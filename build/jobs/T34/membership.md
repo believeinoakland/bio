@@ -14,3 +14,15 @@ Readings I am building on (T34-10); none blocks me. Correct any and I bring the 
 6. **R109 `kinds`** must be an array (an absent `kinds` is `GROUP_KIND_UNKNOWN`, as worded); duplicates are kept once, in the order given.
 7. **R110's founder** is the viewer `admin` or `member:admin` once the instance is claimed (R94); a machine credential is any viewer R43 reads as a machine class.
 8. **Ops.** The new services join `membershipOps` (stamps from the query, secrets and texts from the body): `invitewithdraw`, `websitekeycreate`, `websitekeyset`, `websitekeyrevoke`, `websiteinvite`, `joinlinkenable`, `joinlinkset`, `joinlinkreplace`, `joinlinkoff`, `joinlinkinvite`, `checkaddressees`, `courtnoticeset`, `courtnotice`, `groupdescriptionset`, `groupdescription`. Declaring and routing them is `op-declarations`', `admission`'s and `control-plane`'s (I will REPORT it).
+
+## J2 · REPORT
+
+What other modules must change because of T34-10 (none of it done by me, P7):
+
+1. **op-declarations, admission, control-plane (L11).** Fifteen new ops in `membershipOps`: `invitewithdraw`, `websitekeycreate`, `websitekeyset`, `websitekeyrevoke`, `joinlinkenable`, `joinlinkset`, `joinlinkreplace`, `joinlinkoff`, `courtnoticeset`, `groupdescriptionset` (administrators; `by` stamped), `websiteinvite` and `joinlinkinvite` (the doors: no session; the secret and cover in the body; admission routes them, R101, R104), `checkaddressees` (`target`, `label`; tasks' read), `courtnotice` (read), `groupdescription` (`viewer` stamped; answers the public too, R110). None is declared yet, so none is reachable through the plane.
+2. **control-plane R43 (already a named red, K1708).** `test/m/control-plane/rows-before-r43.json` still holds `ADMINS_FIRST` (C-96.5) and `RESIGN_AT_TWO` (C-96.10), retired by DEC-134 (R10, R12): `catalogue-end.test.mjs` now first fails `ADMINS_FIRST lost its row`. The snapshot drops both codes.
+3. **promotion (T34-12) stamps**: arrived C-96.22–C-96.38 (seventeen rows, listed in my COMPLETE); departed C-96.5 `ADMINS_FIRST`, C-96.10 `RESIGN_AT_TWO`.
+4. **instance-setup (T34-57)**: `memberAdd` no longer answers `hostingAccess` (R11): setup asks R11's record and R107's choice itself.
+5. **Comments in other modules' tests** still say a group's second member must be an administrator (`mk6-bundle-names-no-author`, `stats-disclosure`, `d526-refusal-order`, `civicos-ui/test/review-copy`); `scheduler/plane.test.mjs:218` handles `ADMINS_FIRST` conditionally. All still pass; the wording is stale (DEC-134).
+6. **Generated artifact**: `bio-plane/dist/bio-plane.bundled.mjs` is stale by my change (it was already stale on `tranche/T34`; `fleetbundles` red on both). BOB regenerates at the layer close (mechanics §14).
+7. **A read the admin screens will want, not built (no requirement):** the live website key's and join link's settings and their history without the secrets. Today only the acts' answers carry them. A requirement for it would serve the UX stream's key/link screens and admission.
