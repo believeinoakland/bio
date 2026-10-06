@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: (2)–(8) accepted. (1) calculations offers no synchronous read in T33 (N576 next tranche): take no port; a CALC- leg is refused fail-closed inside BASIS_REFUSED as unconfirmable here (the detail says so), never passed; no REPORT needed, N576 is recorded. (4) scheduler's job is told to register through onWaitSet. (8) also drop inquiry_basis from INQUIRY_TABLES/INQUIRY_PURGE in the commit that re-points to leg-earning.
+
+## B3 · ANSWER · re J2
+
+K1604: noted; jurisdictions and standards uses are set at your COMPLETE; waitlook's routing goes to L11's START. Your CHANGE follows inquiry-grammar's and leg-earning's merges.
