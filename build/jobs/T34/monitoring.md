@@ -32,3 +32,7 @@ The excluded rows (:263, :544, :987, :1240) and the comments stay, as the START 
 - P6: monitoring is 3,407 lines (under 4,000).
 
 Size (session_01VVunakJ19AyEPJNoZhz7Uc): test runs 10, module lines 3407
+
+## J1 · COMPLETE
+
+T34-87 applied: monitoring's six DEC-149 rows (C-48.8 and C-48.9 translations, DRIVE_SHAPE_UNRECOGNISED's sentence and the per-meeting reason say "your group's Civicsmith"; the Drive tick's Session Log line and the landing's failure detail need no name); C-48.8/C-48.9 awaiting stamp. K1847 cleared: cadence.test.mjs:298 (R18) was red because docprofile's T34-8 removed its default doctype registration, so the ASP.NET calendar read as no type (substance, weekly); the fixture now registers a stand-in calendar type through docprofile's seam. Monitoring 121/121; new voice.test.mjs 6 tests (negative control 6/6 fail on old wording); link-sweep 29/0; following and scheduler 1 fail each, the named reds K1738 and K1708. format, architecture, coverage (56/56), ownership: 0 failures. 3,407 lines. Found elsewhere (record, Completion): capture-sources drive.mjs:216 still says "this instance" in readDriveAddress's why (member-facing, L3 closed); capture-requests index.mjs:864, :933 "this plane did not record why"; following's fixture.mjs:156 stand-in still answers the old per-meeting reason; promotion's catalogue version and row census, and control-plane's rows-before-r43.json pins (accepted red 9), move with C-48.8/C-48.9; the plane bundle is stale for L10's close.
