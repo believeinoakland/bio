@@ -7,11 +7,33 @@
 - Built on `job/T33/people` @ adfd8e0efc: `bio-plane/src/people/` (index.mjs, checks.mjs, schema.mjs; 1,714 lines with comments) and `bio-plane/test/m/people/` (fixture and 7 test files). 34/34 tests pass; every R1–R33 named and tested at the interface, M-P5 and M-P6 (R8) included. Checks, run in a scratch worktree with this module's `paths`/`tests`/`uses` filled in (uncommitted; BOB writes them at merge): format 0, architecture 0, coverage 33 of 33, ownership 0 failures.
 - J1 accepted (B2, K1563); merged `tranche/T33` @ e07becea; `neighbours` now registered at load and read through the walk's `host` (K1563 (1)).
 - Detail beyond J1 (2): `corroborated_name` evidence names the cited line on each record as `lines: {a, b}` (one line cannot be held by two persons), same kind and same other end.
-- **B3 (CHANGE, K1585):** events, lines, money and duties are merged; `tranche/T33` merged into this branch (373c705428). Not yet done when context ran out (past half the window, JOB.md). **Next step for the restarted job:**
-  1. `peopleOf(ctx, deps)`: default each dep to the real module on the same host, lazily (duties' `dutiesOf` pattern: `entitiesOf`, `provenanceOf`, `contentOf`, `sourcesOf`, `eventsOf`, `linesOf`, `moneyOf`, `dutiesOf`; a dep given as a function is a thunk). Use `checkContentExtent` imported from content (it is a module function, not a method) with `content.contentContextFor`.
-  2. Real shapes to adapt to: lines' `valid` is `{undetermined, why}` when its cache is stale and a line may carry `current_through` (honour both in `#judge`); events' `eventsFor` answers `events` + `placed_nowhere`, `statementsOf` answers `statements` + `placed_nowhere` (read both), `sequence` answers `{answer}`; money's facts list is `facts` with parties `{entity, fund, as_written}`; duties' `dutiesOf` answers `duties`; entities' `entityByIdentifier` answers `{undetermined, candidates}` when two hold one identifier (R43 refuses two holders with overlapping or unstated validity, so tests must give same-identifier records non-overlapping validities; take every candidate in R7).
-  3. Rebuild the test fixture on the real modules as `bio-plane/test/m/duties/fixture.mjs` does (standards' `seeded` world for host, content, provenance, events and passages; real `Entities`, `Lines`, `Money`, `dutiesOf`): `person`/`entity` through `createEntity`, `identify` through `addIdentifier` (check the test profile's `ellery_person` form), `line` through `lines.recordLine` (testimony basis, `capacity` on holds; a fenced line through a fenced passage or project), `event` through `events.createEvent`, money through `money.recordFact`, a person duty through `duties.declare` (person obligor needs a standard naming them). `sources` stays a stand-in (layer 3, not in the re-point list). M-P5: seed 50,000 lines by cloning one recorded row in SQL rather than 50,000 acts.
-  4. Re-run the 34 tests and the four checks (format, architecture, coverage, ownership with `paths`/`tests`/`uses` filled in a scratch worktree), write the completion section, COMPLETE with paths `bio-plane/src/people/`, tests `bio-plane/test/m/people/`, uses as J1 (7).
+- **B3 (CHANGE, K1585): done by PEOPLE #2** (session_01HWob318ogqK3NFAgoHW3po), on `tranche/T33` merged again @ 8f8c1d78fa. See Completion below.
+
+## Completion (PEOPLE #2)
+
+**Entries applied.** T33-36 whole (B1b.1, 2b, 3): R1–R33, M-P5 and M-P6 in the job, as J2 reported; then B3:
+- `peopleOf(ctx, deps)` defaults every used module to the real one on the same host, reached on first use (duties' pattern; a dep given as a function is a thunk): `record`, `membership`, `entities`, `provenance`, `content`, `sources`, `events`, `lines`, `money`, `duties`.
+- Real answer shapes: content's `checkContentExtent` (a module function, with `canonicalExtent`) over `content.contentContextFor`; lines' `valid: {undetermined, why}` (stale cache, lines R7) answered undetermined with its owner's reason, and lines R21's `current_through` honoured (in on or before the day, undetermined after it) in `personAt`, `credentialsOf`, `interestsOf`, `staffingAt` and the identity grade; events' `placed_nowhere` read beside `events`/`statements` (reads and checks), `sequence`'s `{answer}`; money's `facts` with `{entity, fund, as_written}` parties, each answered with its citation; duties' `dutiesOf`: a withdrawn duty or one `not_in_force` at the date binds nothing, an unsettled in-force answer is listed undetermined with its reason (R14); entities R44's `{undetermined, candidates}` takes every candidate (R7); sources R9's `rungOf` asked as the linking member (a machine viewer is answered `NO_SUCH_SOURCE`).
+- R2 tightened: an identifier's stated validity and a corroborating line must be `in` at the record's date; undetermined earns nothing (it was only `out` that failed).
+- Tests rebuilt on the real modules (`test/m/people/fixture.mjs` over duties' world: real record-core, membership, promotion, provenance, content, entities, events, lines, money, duties, standards). `sources` stays a stand-in (layer 3; its sources are knockers' acts). M-P5 seeds 50,000 lines by cloning one recorded `holds` and one `part_of` row (with their bound cache) in SQL. One test added: the default wiring, current-through and a stale cache through `personAt`.
+
+**Deferred.** None.
+
+**Found in other modules** (in J4 to BOB):
+1. `lines`: a line holds no title as written, so people R15's "title as written" in `careerOf` is always `null`. Against people R15 / lines Terms (a `holds` line's `{… capacity?}` has no title field).
+2. Profile data (`jurisdictions`): no held profile has an identifier scheme for an institution (test-port-ellery's and oakland-alameda's schemes identify persons only), so R15's issuer identifier of a `credentialed_by` line cannot be held through entities R43 today. The R15 test lays entities' `identifiersOf` over the real registry for that one issuer.
+3. `build/modules.json` and people's Uses: `promotion` and `roster-reader` are listed; the code uses neither (J1 (7)). Final uses below.
+
+**Tests and checks** (run on `job/T33/people` @ 9957f5f6be; checks in a scratch worktree with people's `paths`/`tests`/`uses` filled in `modules.json`, uncommitted):
+- `node --test bio-plane/test/m/people/`: tests 35, pass 35, fail 0 (about 8 s; M-P5 about 0.6 s, budget 10,000 ms; M-P6 0 false merges among the agreeing candidates).
+- `format`: 126 modules, 125 requirements files; 0 failures.
+- `architecture`: 11 product files, 39 relative imports; 0 failures.
+- `coverage`: 33 of 33 live requirement ids named by a test; 0 failures.
+- `ownership` (against `origin/tranche/T33`): 12 files changed by people; 0 failures.
+
+**For the merge.** paths `bio-plane/src/people/`; tests `bio-plane/test/m/people/`; uses `record-grammar`, `jurisdictions`, `civil-time`, `connection-grammar`, `record-core`, `membership`, `provenance`, `content`, `sources`, `entities`, `events`, `lines`, `money`, `duties`.
+
+Size (session_01HWob318ogqK3NFAgoHW3po): test runs 5, module lines 1788
 
 ## J1 · QUESTION
 
