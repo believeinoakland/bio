@@ -44,3 +44,7 @@ Size (session_01M4x59wQhwN7AXzMLPTFvn1): test runs 7, module lines 1511
 ## J3 · REPORT
 
 Wording gap in id-spaces' requirements (BOB's file): R1 now says twelve spaces in the order Provides names them, but Provides' sentence ('The identifier spaces are ...') still ends at 'body and office (T34-7)' and does not name institution. I placed institution last, after office, as jurisdictions R3 orders them. Entities' R20 literal list (J1) is now three short (twelve spaces).
+
+## J4 · COMPLETE
+
+B2 (K1729) applied after merging tranche/T34: R1 twelve spaces, institution after office, one form per scheme as person, referent reading; new R1 test (schemes never join without a crosswalk). id-spaces 33/33; format, architecture, coverage (28/28), ownership (4 files) 0 failures. Users green except entities 81/1 (R20's literal list, J1). Wording gap in Provides' list: J3. Record: build/jobs/T34/id-spaces.md, 'B2 · CHANGE applied'.
