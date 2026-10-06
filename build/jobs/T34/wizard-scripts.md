@@ -122,3 +122,26 @@ wizard-scripts T34 complete on `job/T34/wizard-scripts`. I applied T34-52, T34-8
 - Size: 2,261 lines.
 - The record's Completion lists the details I decided, for `rulings.md`, and one item deferred: templates are named by name.
 - The new reds in other modules are in J2.
+
+## Completion of B6 (CHANGE, K1883 (2))
+
+**Applied.** R11, re-worded: a Civicsmith library script that fails R12 against the registration is not offered until it passes.
+- The set of withheld scripts is computed once at registration (`withheldLibrary`). Templates are judged by shape and side trips against the whole library, as R14 judges them.
+- The offered reads skip a withheld script: `wizardsAt`, `wizardRegistry`, `startFrom`, the default `wizards` list and the duplicate and side-trip checks. `wizardRead` answers it with `offered: false`.
+- The library data is unchanged: still 17 scripts.
+
+**Reading, for BOB.** R11's grounds are a script's own acts and screens (its parenthesis), so a side trip to a withheld script does not withhold the script that takes it. Without this, the required "Welcome a new member" would be withheld while "Connect your Claude account" waits on `subscriptionsignin` (N678). The runner skips a side trip to a script that is not offered (R2: "as R11 offers it to them"). If BOB reads R12's `via` check against the offered set here as well, the welcome flow is withheld until N678 lands, and R14 should then use the same offered set.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/wizard-scripts/`: 63 pass, 0 fail (new: `library.test.mjs`, "R11 (K1883)…": a failing script withheld everywhere it is offered, a passing one offered, both offered once their ops exist, a required flow failing on its own act withheld, and the published steps naming only registered screens and acts).
+- affordances `plane.test.mjs`: 27 pass, 0 fail (`:317` green).
+- Users' suites:
+  - affordances: 203 pass, 0 fail.
+  - queue-producers: 80 pass, 0 fail.
+  - instance-setup: 99 pass, 0 fail.
+  - op-declarations: 84 pass, 0 fail.
+  - plane: 115 pass, 0 fail.
+  - control-plane: 181 pass, 1 fail. That test (R2, R41, the unaccounted acts) also fails on `tranche/T34` @ the merged head, so it is not this job's.
+- Process checks: format, architecture and ownership all pass with 0 failures; coverage, 27 of 27 live ids.
+
+Size (session_0115AZ1UBhQP27WSj9Lbgs8E): test runs 31, module lines 2,268
