@@ -160,8 +160,8 @@ test("R12 matchEvent is a member's act, recorded with who, when and why, and cor
   const id = requests(w);
   const k = byRef(occ(w, id))[X.req1].key;
   const m = (over) => w.duties.matchEvent({ dutyId: id, occurrenceKey: k, eventId: X.resp1, reason: "the response", by: BOB, ...over });
-  row(m({ by: MACHINE }), "MEMBER_ACT_ONLY");
-  row(m({ reason: "" }), "NO_REASON");
+  row(m({ by: MACHINE }), "DUTY_MEMBER_ACT_ONLY");
+  row(m({ reason: "" }), "DUTY_NO_REASON");
   row(m({ dutyId: "DUT-2026-0077" }), "NO_SUCH_DUTY");
   row(m({ eventId: evt("nothing") }), "NO_SUCH_EVENT");
   row(m({ occurrenceKey: "OCC-0000" }), "NO_SUCH_OCCURRENCE");

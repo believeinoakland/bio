@@ -104,7 +104,7 @@ test("R19 dutiesOps publishes one route arm per act and read, with the control p
   const d = w.ops("by=member:bob&viewer=member:bob", body).dutydeclare();
   assert.equal(d.ok, true);
   assert.equal(d.adopted_by, BOB, "the stamp, not the body's by");
-  row(w.ops(`by=${MACHINE}&viewer=${MACHINE}`, body).dutydeclare(), "MEMBER_ACT_ONLY");
+  row(w.ops(`by=${MACHINE}&viewer=${MACHINE}`, body).dutydeclare(), "DUTY_MEMBER_ACT_ONLY");
   assert.equal(w.ops(`id=${d.duty_id}&viewer=member:bob`).duty().duty.duty_id, d.duty_id);
   assert.equal(w.ops(`entity=${E.clerk}&viewer=member:bob`).dutiesof().count, 1);
   const occ = w.ops(`id=${d.duty_id}&as_of=2026-03-02T12:00:00Z&from=2026-01-01&to=2026-03-01&viewer=member:bob`).dutyoccurrences();

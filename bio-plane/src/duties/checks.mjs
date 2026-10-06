@@ -34,8 +34,8 @@ export const DUTIES_CHECKS = Object.freeze({
     "The version of the law named is not one the record holds for that instrument. Name a held version. Nothing was "
     + "written."),
   UNKNOWN_TRIGGER: row(9, "fieldRefusal", "is-duty-trigger",
-    "An obligation says what starts it: an event concerning someone, a repeating schedule, an item a part of this "
-    + "copy records (such as a request the group sent), or a stated date. This is none of them. Nothing was written."),
+    "An obligation says what starts it: an event concerning someone, a repeating schedule, an item the group's own "
+    + "work records (such as a request the group sent), or a stated date. This is none of them. Nothing was written."),
   BAD_RECURRENCE: row(10, "fieldRefusal", "is-duty-recurrence",
     "The repeating schedule could not be read. It is written as a recurrence rule of the supported kind (weekly, "
     + "monthly or yearly), with its first date. Nothing was written."),
@@ -60,19 +60,21 @@ export const DUTIES_CHECKS = Object.freeze({
   EXTENT_NOT_HELD: row(18, "fieldRefusal", "is-duty-extent",
     "A reported status quotes a passage of a captured document the record holds. The passage named is not held. "
     + "Nothing was written."),
-  MEMBER_ACT_ONLY: row(19, "memberOnly", "is-duty-member",
+  /* C-133.19, .21 and .24 are this module's own codes (R2, K1679; DEC-49 arm A: one code, one condition): the bare
+     `MEMBER_ACT_ONLY`, `NO_REASON` and `NO_SUCH_PROPOSAL` are other families' for other conditions. */
+  DUTY_MEMBER_ACT_ONLY: row(19, "memberOnly", "is-duty-member",
     "Adopting, declaring, revising or withdrawing an obligation, matching an event to it and recording its state "
     + "are a member's own acts. The machine may only propose. Nothing was written."),
   NO_CLAUSE: row(20, "noClause", "is-duty-clause",
     "Adopting an obligation names the clause it rests on, in the member's own words. None was given. Nothing was "
     + "written."),
-  NO_REASON: row(21, "noReason", "is-duty-reason",
+  DUTY_NO_REASON: row(21, "noReason", "is-duty-reason",
     "This act needs your reason, in your own words. None was given. Nothing was written."),
   NO_DUTY: row(22, "noDuty", "is-duty-named",
     "This request is about one obligation, named by its id, and it names none. Nothing was written."),
   NO_SUCH_DUTY: row(23, "noSuchDuty", "is-duty-held",
     "No obligation you can see answers to that id. Nothing was written."),
-  NO_SUCH_PROPOSAL: row(24, "adopt", "is-duty-proposal",
+  DUTY_NO_SUCH_PROPOSAL: row(24, "adopt", "is-duty-proposal",
     "No proposed obligation answers to that id. Nothing was written."),
   ALREADY_ADOPTED: row(25, "adopt", "is-duty-proposal",
     "That proposal was already adopted; the answer names the obligation it became. Nothing was written."),

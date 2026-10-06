@@ -19,7 +19,11 @@
  *   registry               connection-grammar's registry (default: the plane's default registry).
  *   factOf(entry)          a calendar entry's status on this instance (`local-facts`' R2, as `civil-time` R9 takes it;
  *                          plane wires it), so a disputed or corrected closure list moves the due date.
- *   now(), clockMs()       the module's clock for act stamps (an ISO instant) and the transitions' time budget. */
+ *   now(), clockMs()       the module's clock for act stamps (an ISO instant) and the transitions' time budget.
+ *
+ * A read as `INTERNAL` (the scheduler's consumer, an act's own checks) reaches every other module as `SYSTEM_VIEWER`
+ * (`class:daemon`, which membership R43 lets see every bundle), never as the symbol itself, which no other module
+ * knows (N581): so a law's in-force answer, an event and a registered source's items are read whole (R8, R9, R16). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { canonicalJson, isHypothesisId, sha256HexSync, ISO_TS_RE } from "../record-grammar/index.mjs";
@@ -35,7 +39,7 @@ import { contentOf } from "../content/index.mjs";
 import { OBSERVATION_LEVELS } from "../observation-log/index.mjs";
 import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalendarDate, validAt as civilValidAt } from "../civil-time/index.mjs";
 import { defaultRegistry, derivedId, BOUNDS } from "../connection-grammar/index.mjs";
-import { relate } from "../calc-grammar/decimal.mjs";
+import { relate } from "../calc-grammar/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { DUTIES_CHECKS, refusal } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
@@ -86,7 +90,7 @@ function walk(v, fn, key = null) {
 function memberOnly(by, act) {
   /* DEC-49 REGION is-duty-member */
   if (isMember(by)) return null;
-  return refusal("MEMBER_ACT_ONLY", `${act} is a member's own act; the machine may only propose.`, { by: said(by) ? str(by) : null });
+  return refusal("DUTY_MEMBER_ACT_ONLY", `${act} is a member's own act; the machine may only propose.`, { by: said(by) ? str(by) : null });
   /* END DEC-49 REGION is-duty-member */
 }
 /** R2, R3: adoption names its clause. */
@@ -100,7 +104,7 @@ function noClause(clause) {
 function noReason(reason) {
   /* DEC-49 REGION is-duty-reason */
   if (said(reason) && reason.length <= REASON_MAX) return null;
-  return refusal("NO_REASON", `give your reason, in 1 to ${REASON_MAX} characters.`, { max: REASON_MAX });
+  return refusal("DUTY_NO_REASON", `give your reason, in 1 to ${REASON_MAX} characters.`, { max: REASON_MAX });
   /* END DEC-49 REGION is-duty-reason */
 }
 /** R7: a request naming no duty. */
@@ -109,12 +113,32 @@ function noDuty() {
   return refusal("NO_DUTY", "an obligation is named by its id (DUT-...).");
   /* END DEC-49 REGION is-duty-named */
 }
-/** R6, R7, R9, R12–R14, R17: no duty the caller may see answers to the id; an invisible one answers alike. */
-function noSuchDuty(dutyId) {
+/* R25 (N601, K1650): THE ONE ANSWER TO ONE CONDITION, no duty the caller may see answers to `dutyId` (absent, or not
+   visible to the viewer, answered alike, R22). Every read and act of this module that answers that condition answers
+   through here (R6, R9, R12–R14, R17), and a later module that answers it without reading a duty (`action-plans`)
+   calls it, so `NO_SUCH_DUTY` is minted at one site and its one row is this module's (C-133.23); `entities.noSuchEntity`'s
+   pattern (K1569). The detail is one fixed sentence, the same for every caller. `extra` adds a caller's own fields beside
+   these and never replaces one of them. Writes nothing and never throws. */
+const NO_SUCH_DUTY_DETAIL = "no obligation you can see answers to that id";
+const NO_SUCH_DUTY_FIXED = new Set(["ok", "reason", "code", "check", "translation", "duty_id", "detail"]);
+
+/** R25: the one answer to "no duty the caller may see answers to that id". */
+export function noSuchDuty(dutyId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_DUTY_FIXED.has(k));
+  } catch { own = []; }
   /* DEC-49 REGION is-duty-held */
-  return refusal("NO_SUCH_DUTY", "no obligation you can see answers to that id.", { duty_id: typeof dutyId === "string" ? dutyId.slice(0, 80) : null });
+  const row = DUTIES_CHECKS.NO_SUCH_DUTY;
+  return { ok: false, reason: "NO_SUCH_DUTY", code: "NO_SUCH_DUTY", check: row.check, translation: row.translation,
+           duty_id: dutyId ?? null, ...Object.fromEntries(own), detail: NO_SUCH_DUTY_DETAIL };
   /* END DEC-49 REGION is-duty-held */
 }
+
+/** R24 (N583): the form of R9's occurrence key, `OCC-` and 32 lowercase hexadecimal digits, anchored at both ends. A
+ *  later module that checks a key's form (`inquiry-grammar` R15) imports it rather than spelling its own. */
+export const OCCURRENCE_KEY_RE = Object.freeze(/^OCC-[0-9a-f]{32}$/);
 
 /* ===================================================================== *
  * The module
@@ -124,6 +148,7 @@ export class Duties {
   #sources = [];   /* R16: [{module, fn}] */
   #deps = {};      /* the used modules' services, each an instance or a function answering it on first use */
   #evidence = [];  /* R12: [{module, fn}] */
+  #tracked = [];   /* R26: [{module, fn}] */
 
   constructor({ storage, record, membership = null, entities = null, standards = null, events = null, lines = null,
                 money = null, provenance = null, content = null, view = null, registry = defaultRegistry,
@@ -149,6 +174,10 @@ export class Duties {
   get money() { return this.#dep("money"); }
   get provenance() { return this.#dep("provenance"); }
   get content() { return this.#dep("content"); }
+
+  /* N581: the viewer this module's reads of other modules carry: the caller's own, or `SYSTEM_VIEWER` for an internal
+     read (`INTERNAL`) or an act's own checks (no viewer). */
+  static #reader(viewer) { return viewer === INTERNAL || viewer === null || viewer === undefined ? SYSTEM_VIEWER : viewer; }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { return this.#rows(q, ...a)[0] || null; }
@@ -198,15 +227,15 @@ export class Duties {
   }
   #standard(id, viewer = null) {
     if (!said(id) || !this.standards) return null;
-    try { const r = this.standards.standardRead({ id, viewer: viewer ?? SYSTEM_VIEWER }); return r && r.ok !== false ? r : null; } catch { return null; }
+    try { const r = this.standards.standardRead({ id, viewer: Duties.#reader(viewer) }); return r && r.ok !== false ? r : null; } catch { return null; }
   }
   #event(id, viewer = null) {
     if (!said(id) || !this.events) return null;
-    try { const r = this.events.readEvent({ eventId: id, viewer: viewer ?? SYSTEM_VIEWER }); return r && r.ok !== false && r.found !== false ? (r.event || r) : null; } catch { return null; }
+    try { const r = this.events.readEvent({ eventId: id, viewer: Duties.#reader(viewer) }); return r && r.ok !== false && r.found !== false ? (r.event || r) : null; } catch { return null; }
   }
   #fact(id, viewer = null) {
     if (!said(id) || !this.money) return null;
-    try { const r = this.money.readFact({ factId: id, viewer: viewer ?? SYSTEM_VIEWER }); return r && r.ok !== false && r.found !== false ? (r.fact || r) : null; } catch { return null; }
+    try { const r = this.money.readFact({ factId: id, viewer: Duties.#reader(viewer) }); return r && r.ok !== false && r.found !== false ? (r.fact || r) : null; } catch { return null; }
   }
   #isPublic(e) {
     if (!e) return false;
@@ -289,7 +318,9 @@ export class Duties {
         return refusal("ARISING_IN_NOT_HELD", "arising_in names a registered proceeding or a held capture.", { arising_in: said(ai) ? ai.slice(0, 80) : null });
       /* END DEC-49 REGION is-duty-arising */
     }
-    const statuses = Array.isArray(view.response_statuses) ? view.response_statuses.map((x) => x && x.status).filter(said) : [];
+    /* R1, R4 (N561): the active profiles' `response_statuses` (`jurisdictions` R58, a `vocabulary` key); none held, none accepted */
+    const held = view.vocabulary && Array.isArray(view.vocabulary.response_statuses) ? view.vocabulary.response_statuses : [];
+    const statuses = held.map((x) => x && x.status).filter(said);
     for (const rs of Array.isArray(f.reported_status) ? f.reported_status : f.reported_status === undefined ? [] : [f.reported_status]) {
       /* DEC-49 REGION is-duty-reported */
       if (!isObj(rs) || !statuses.includes(rs.status))
@@ -490,7 +521,7 @@ export class Duties {
     if (c) return c;
     const p = this.#one(`SELECT * FROM duty_proposals WHERE proposal_id=?`, Number(b.proposalId));
     /* DEC-49 REGION is-duty-proposal */
-    if (!p) return refusal("NO_SUCH_PROPOSAL", "no proposal answers to that id.", { proposal_id: b.proposalId ?? null });
+    if (!p) return refusal("DUTY_NO_SUCH_PROPOSAL", "no proposal answers to that id.", { proposal_id: b.proposalId ?? null });
     if (p.adopted_duty) return refusal("ALREADY_ADOPTED", "the proposal was adopted.", { duty_id: p.adopted_duty });
     /* END DEC-49 REGION is-duty-proposal */
     const fields = safeJson(p.fields_json);
@@ -515,7 +546,7 @@ export class Duties {
   /* R3: allocates `DUT-<year>-NNNN`, records who, when and the clause, version 1. */
   #adoptFields(fields, { by, clause, proposal }) {
     const at = this.#stamp();
-    return this.record.transact(() => {
+    return this.#told(() => this.record.transact(() => {
       const alloc = this.record.allocId("DUT", at.slice(0, 4));
       if (!alloc || !alloc.id) return alloc;
       const id = alloc.id;
@@ -527,7 +558,7 @@ export class Duties {
       if (g) return g;
       if (proposal !== null) this.sql.exec(`UPDATE duty_proposals SET adopted_duty=? WHERE proposal_id=? AND adopted_duty IS NULL`, id, proposal);
       return { ok: true, duty_id: id, version: 1, adopted_by: by, at, clause: clause.trim(), proposal_id: proposal, tracked: true };
-    });
+    }));
   }
 
   /* ===================================================================== *
@@ -553,14 +584,14 @@ export class Duties {
     const r = this.fieldRefusal(next);
     if (r) return r;
     const at = this.#stamp();
-    return this.record.transact(() => {
+    return this.#told(() => this.record.transact(() => {
       const v = d.version + 1;
       const g = this.#write("duty_versions", { duty_id: d.duty_id, version: v, fields_json: canonicalJson(next), reason: b.reason.trim(), by_member: str(b.by), at });
       if (g) return g;
       this.sql.exec(`UPDATE duties SET version=?, obligee=?, enforcer=?, obligor=?, modality=?, arising_in=? WHERE duty_id=?`,
                     v, next.obligee ?? null, next.enforcer ?? null, next.obligor, next.modality, Duties.capturedIn(next), d.duty_id);
       return { ok: true, duty_id: d.duty_id, version: v, prior_version: d.version, by: str(b.by), at, reason: b.reason.trim() };
-    });
+    }));
   }
 
   /** R6: a withdrawn duty remains, shown withdrawn, and derives no further occurrences. */
@@ -575,11 +606,33 @@ export class Duties {
     if (!d) return noSuchDuty(b.dutyId);
     if (d.withdrawn_at) return { ok: true, already: true, duty_id: d.duty_id, withdrawn_at: d.withdrawn_at, withdrawn_by: d.withdrawn_by };
     const at = this.#stamp();
-    return this.record.transact(() => {
+    return this.#told(() => this.record.transact(() => {
       this.sql.exec(`UPDATE duties SET withdrawn_at=?, withdrawn_by=?, withdraw_reason=? WHERE duty_id=? AND withdrawn_at IS NULL`,
                     at, str(b.by), b.reason.trim(), d.duty_id);
       return { ok: true, duty_id: d.duty_id, withdrawn_at: at, withdrawn_by: str(b.by), reason: b.reason.trim() };
-    });
+    }));
+  }
+
+  /* ===================================================================== *
+   * R26: the arming notice
+   * ===================================================================== */
+
+  /** R26 (N605, K1666): one listener per module, told `{duty}` (the duty's id) once, after a duty is adopted, declared,
+   *  revised or withdrawn, so `scheduler` re-arms its wake for R13's consumer. A malformed or second registration is
+   *  refused through `membership.listenerRefusal`. */
+  onDutyTracked(module, fn) {
+    const r = listenerRefusal(this.#tracked, module, fn, { slot: "duty_tracked" });
+    if (r) return r;
+    this.#tracked.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R26: runs the act (its transaction whole), then tells each listener once when it stood; a listener that throws
+     never undoes the act, nor stops the others, and the notice writes nothing. */
+  #told(act) {
+    const r = act();
+    if (r && r.ok === true && said(r.duty_id))
+      for (const l of this.#tracked) { try { l.fn({ duty: r.duty_id }); } catch { /* the act stands (R26) */ } }
+    return r;
   }
 
   /** R20 (K1563): the capture a duty's source item rests on, for the read contract's `arising_in`; else null. */
@@ -624,7 +677,7 @@ export class Duties {
     if (!this.standards || typeof this.standards.inForceAt !== "function")
       return { state: "undetermined", why: "the standards service is not available to answer whether the source is in force" };
     try {
-      const r = this.standards.inForceAt({ standard: src.standard, portion: src.portion, date, viewer });
+      const r = this.standards.inForceAt({ standard: src.standard, portion: src.portion, date, viewer: Duties.#reader(viewer) });
       if (!r || !r.state) return { state: "undetermined", why: "the standard's in-force answer was not given" };
       return { state: r.state, why: r.why ?? null, ...(r.version ? { version: r.version } : {}) };
     } catch (e) { return { state: "undetermined", why: `the in-force read failed: ${String(e && e.message || e).slice(0, 200)}` }; }
@@ -717,7 +770,7 @@ export class Duties {
     };
     if (t.kind === "event") {
       let r = null;
-      try { r = this.events ? this.events.eventsFor({ entity: t.entity, kinds: [t.event_kind], from, to, limit: LIST_MAX, viewer: viewer === INTERNAL || !viewer ? SYSTEM_VIEWER : viewer }) : null; } catch (e) { errors.push({ source: "events", error: String(e && e.message || e).slice(0, 200) }); }
+      try { r = this.events ? this.events.eventsFor({ entity: t.entity, kinds: [t.event_kind], from, to, limit: LIST_MAX, viewer: Duties.#reader(viewer) }) : null; } catch (e) { errors.push({ source: "events", error: String(e && e.message || e).slice(0, 200) }); }
       const evs = r ? [...(Array.isArray(r.events) ? r.events : Array.isArray(r.items) ? r.items : []),
                        ...(Array.isArray(r.placed_nowhere) ? r.placed_nowhere : [])] : [];
       if (r && r.truncated) errors.push({ source: "events", error: `the events read stopped at its bound of ${r.limit ?? LIST_MAX}`, truncated: true });
@@ -745,7 +798,8 @@ export class Duties {
       if (!s) errors.push({ source: t.source, error: "no module has registered this trigger source" });
       else {
         let items;
-        try { items = s.fn({ duty: { duty_id: dutyId, version, ...clone(fields) }, from, to }); }
+        /* R16 (N595, K1649): the source reads as its reader does, so a member's read sees what the member may see */
+        try { items = s.fn({ duty: { duty_id: dutyId, version, ...clone(fields) }, from, to, viewer: Duties.#reader(viewer) }); }
         catch (e) { errors.push({ source: t.source, error: String(e && e.message || e).slice(0, 200) }); items = []; }
         for (const it of Array.isArray(items) ? items : []) {
           /* R23: the group's own checkpoint is never an occurrence of a body's duty */
@@ -843,7 +897,7 @@ export class Duties {
       occ.evidence.push({ kind: "exception", exception: ex ?? null, by: latest.by_member, at: latest.at, reason: latest.reason });
       state = { state: "discharged", why: `a held exception applies, as ${latest.by_member} recorded on ${latest.at.slice(0, 10)}` };
     } else if (latest && latest.event_id) {
-      const ev = this.#event(latest.event_id, viewer === INTERNAL ? null : viewer);
+      const ev = this.#event(latest.event_id, viewer);
       const when = ev ? this.#whenOf(ev) : { undetermined: true, why: "the matched event is not readable" };
       occ.evidence.push({ kind: "event", event_id: latest.event_id, when, by: latest.by_member, at: latest.at, reason: latest.reason,
                           corrects: acts.length > 1 ? acts.slice(0, -1).map((x) => x.seq) : [] });
@@ -852,7 +906,7 @@ export class Duties {
     if (!state) {
       for (const { module, fn } of this.#evidence) {
         let got;
-        try { got = fn({ duty: { duty_id: d.duty_id, version: d.version, ...clone(fields) }, occurrence: { key, trigger: occ.trigger, due: occ.due } }); }
+        try { got = fn({ duty: { duty_id: d.duty_id, version: d.version, ...clone(fields) }, occurrence: { key, trigger: occ.trigger, due: occ.due }, viewer: Duties.#reader(viewer) }); }
         catch (e) { occ.evidence.push({ kind: "measured", source: module, error: String(e && e.message || e).slice(0, 200) }); continue; }
         for (const g of Array.isArray(got) ? got : got ? [got] : []) {
           const when = g.when ? this.#dt(g.when) : null;
@@ -912,7 +966,7 @@ export class Duties {
     if (exception === null && !this.#event(b.eventId, b.viewer ?? null)) return noSuchEvent(said(b.eventId) ? b.eventId.slice(0, 80) : null);
     const at = this.#stamp();
     /* DEC-49 REGION is-duty-occurrence */
-    if (!said(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, at))
+    if (!said(b.occurrenceKey) || !OCCURRENCE_KEY_RE.test(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, at))
       return refusal("NO_SUCH_OCCURRENCE", "no occurrence of this obligation answers to that key.", { occurrence_key: said(b.occurrenceKey) ? b.occurrenceKey.slice(0, 80) : null });
     /* END DEC-49 REGION is-duty-occurrence */
     return this.record.transact(() => {
@@ -981,7 +1035,7 @@ export class Duties {
     const d = this.#one(`SELECT * FROM duties WHERE duty_id=?`, b.dutyId);
     if (!d) return noSuchDuty(b.dutyId);
     const fields = this.#fieldsOf(d.duty_id, d.version);
-    if (!said(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, b.asOf))
+    if (!said(b.occurrenceKey) || !OCCURRENCE_KEY_RE.test(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, b.asOf))
       return refusal("NO_SUCH_OCCURRENCE", "no occurrence of this obligation answers to that key.", { occurrence_key: said(b.occurrenceKey) ? b.occurrenceKey.slice(0, 80) : null });
     const at = this.#stamp();
     return this.record.transact(() => {
@@ -1073,7 +1127,7 @@ export class Duties {
     const items = [], undetermined = [];
     for (const ent of scope) {
       let r;
-      try { r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX, viewer: b.viewer ?? SYSTEM_VIEWER }); } catch (e) { undetermined.push({ entity: ent, why: String(e && e.message || e).slice(0, 200) }); continue; }
+      try { r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX, viewer: Duties.#reader(b.viewer) }); } catch (e) { undetermined.push({ entity: ent, why: String(e && e.message || e).slice(0, 200) }); continue; }
       for (const f of r && Array.isArray(r.facts) ? r.facts : r && Array.isArray(r.items) ? r.items : []) {
         if (terms.includes(f.fact_id)) continue;
         for (const t of termFacts) {
