@@ -8,15 +8,15 @@ import { corpusExportOps, EXPORT_NOTE_MAX } from "../../../src/corpus-export/ind
 const A = "INFO-2026-0001-minutes", B = "INQ-2026-0001";
 const query = (params) => { const asked = []; const q = (k) => { asked.push(k); return params[k] ?? null; }; return { q, asked }; };
 
-test("R6 corpusExportOps publishes exactly the arms export and exportlog, each a function of no arguments", () => {
+test("R6 corpusExportOps publishes exactly the arms export, exportlog, exportpage and exportrender, each a function of no arguments", () => {
   const w = world();
   const ops = corpusExportOps(w.ce, query({}).q);
-  assert.deepEqual(Object.keys(ops).sort(), ["export", "exportlog"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["export", "exportlog", "exportpage", "exportrender"]);
   for (const [name, arm] of Object.entries(ops)) {
     assert.equal(typeof arm, "function", name);
     assert.equal(arm.length, 0, `${name} takes no arguments`);
   }
-  assert.deepEqual(Object.keys({ ...ops }).sort(), ["export", "exportlog"], "a spread carries both arms");
+  assert.deepEqual(Object.keys({ ...ops }).sort(), ["export", "exportlog", "exportpage", "exportrender"], "a spread carries every arm");
 });
 
 test("R6 the export arm answers R1 with q(\"note\") passed through: the same manifest exportManifest answers, and the same log row", () => {
@@ -29,7 +29,9 @@ test("R6 the export arm answers R1 with q(\"note\") passed through: the same man
     const viaOps = corpusExportOps(w.ce, q).export();
     assert.deepEqual(asked, ["note"], "the arm reads note, and only note");
     const direct = w.ce.exportManifest({ note });
-    assert.deepEqual(viaOps, direct, `the arm answers what R1 answers (note ${String(note).slice(0, 12)})`);
+    /* export_log is itself a carried table, so the second export carries the first's row: compared without it */
+    const bare = (m) => ({ ...m, tables: m.tables.filter((t) => t.table !== "export_log"), counts: { ...m.counts, rows: null } });
+    assert.deepEqual(bare(viaOps), bare(direct), `the arm answers what R1 answers (note ${String(note).slice(0, 12)})`);
     const [byArm, byService] = w.rows(`SELECT at, scope, bundles, files, note FROM export_log ORDER BY seq DESC LIMIT 2`).reverse();
     assert.deepEqual(byArm, byService, "the arm logs the row R1 logs");
     assert.equal(byArm.note, note === null ? null : note.slice(0, EXPORT_NOTE_MAX), "the note passed through, cut as R1 cuts it");
@@ -56,4 +58,30 @@ test("R6 the exportlog arm answers R2 with q(\"limit\") passed through: the same
   const two = corpusExportOps(w.ce, q).exportlog();
   assert.deepEqual([two.exports.map((e) => e.bundles), two.limit, two.truncated], [[4, 3], 2, true]);
   assert.equal(w.count("export_log"), 5, "reading the log writes nothing");
+});
+
+test("R6 the exportpage arm answers R8's page with q(\"table\"), q(\"index\") and q(\"after\") passed through", () => {
+  const w = world();
+  w.doc(A, ["the minutes, as captured"]);
+  w.inquiry(B, { cites: [A] });
+  const x = w.ce.exportManifest({});
+  for (const t of x.tables.filter((e) => e.pages.length))
+    for (const p of t.pages) {
+      const { q, asked } = query({ table: t.table, index: String(p.index), after: JSON.stringify(p.after) });
+      const viaOps = corpusExportOps(w.ce, q).exportpage();
+      assert.deepEqual(asked.sort(), ["after", "index", "table"]);
+      assert.deepEqual(viaOps, w.ce.exportPage({ table: t.table, index: p.index, after: p.after }), `${t.table} ${p.index}`);
+      assert.equal(viaOps.sha256, p.sha256);
+    }
+  assert.equal(corpusExportOps(w.ce, query({ table: "nothing", index: "0" }).q).exportpage().reason, "EXPORT_TABLE_UNKNOWN");
+});
+
+test("R6 the exportrender arm answers R10 with q(\"format\") and q(\"viewer\") passed through", () => {
+  const w = world();
+  for (const [format, viewer] of [["ftm", "admin"], ["popolo", "member:olive"], ["csv", "admin"], [null, null]]) {
+    const { q, asked } = query({ format, viewer });
+    const viaOps = corpusExportOps(w.ce, q).exportrender();
+    assert.deepEqual(asked.sort(), ["format", "viewer"]);
+    assert.deepEqual(viaOps, w.ce.exportRendering({ format, viewer }), `${format} ${viewer}`);
+  }
 });

@@ -1,12 +1,14 @@
 /* case-disclosures over the modules it uses, each the real one (record-core, membership, promotion, provenance,
-   attestation, capture, sources, extraction's tables, content, inquiry, strength, contradiction), on a real SQLite
+   attestation, capture, sources, extraction's tables, content, entities, events, lines, money, people, inquiry, strength,
+   contradiction), on a real SQLite
    database (node:sqlite) standing in for a Durable Object's storage. Copied from case-authoring's fixture without
    `caseAuthoringOf` (N529, K1333) and without the modules case-disclosures does not use: what `case-authoring` would
    hand a service (`prepared`, `memberRoles`) the test builds as case-authoring R4 and R5 do. What a later module fills
    is a stand-in the test controls: the run gate `ai-runs` registers with contradiction (its R13; `runs`), and, unless
    a test asks for the real one, `case-import`'s reads (`importsStandIn`); the real one's checker is scripted at
-   case-checker's R1 and its re-evaluation listener answered. Every test drives `case-disclosures` at its
-   interface: its services, its renderers, its exports. */
+   case-checker's R1 and its re-evaluation listener answered. `people` is handed a stand-in for `duties` (a person's
+   duties are no read of this module's), and `entities` is built on the host directly, not reached through inquiry's
+   instance (K1619). Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -23,6 +25,11 @@ import { sourcesOf } from "../../../src/sources/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { linesOf } from "../../../src/lines/index.mjs";
+import { moneyOf } from "../../../src/money/index.mjs";
+import { peopleOf } from "../../../src/people/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -82,12 +89,25 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
   };
   const content = contentOf(host, { record, membership, provenance: prov, extraction: exProvider, now: () => clock.now });
   content.migrate();
+  /* the record of people (layer 5), each the real module on this host: the registry, the world's events, the lines
+     between entities, money facts and people, migrated here */
+  const entities = entitiesOf(host, { record, membership, provenance: prov });
+  entities.migrate();
+  const events = eventsOf(host, { record, membership, content, extraction: exProvider, provenance: prov, entities, readHooks: {},
+                                  now: () => clock.now });
+  events.migrate();
+  const lines = linesOf(host, { record, provenance: prov, content, entities, events, now: () => clock.now });
+  lines.migrate();
+  const money = moneyOf(host, { record, membership, entities, provenance: prov, events, lines, now: () => clock.now });
+  money.migrate();
+  const people = peopleOf(host, { record, membership, entities, provenance: prov, content, sources, events, lines, money,
+                                  duties: { dutiesOf: () => ({ ok: true, duties: [] }) }, now: () => clock.now });
+  people.migrate();
   const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
-  const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, now: () => clock.now });
+  const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, entities, now: () => clock.now });
   inquiry.migrate();
   const promotion = inquiry.promotion;
   promotion.registerFact("producingGroup", "instance-setup", () => group);
-  inquiry.entities.migrate();
   inquiry.connections.migrate();
   const strength = strengthOf(host, { record, membership,
     inquiry: { basisFor: (id, o) => inquiry.basisFor(id, o), earned: (e, t) => inquiry.earned(e, t), legCapped,
@@ -123,7 +143,7 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
   if (!realImports) strength.acceptedWork.registerAcceptedWork("case-import", imports.registration);
   const w = {
     imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
-    capture, sources, attestation, extraction: ex,
+    capture, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     snapshot() {
@@ -134,7 +154,8 @@ export function world({ group = "test-group", deps = {}, realImports = false } =
     },
   };
   w.cd = caseDisclosuresOf(host, { record, inquiry, strength, contradiction, provenance: prov, attestation, capture,
-    sources, extraction: ex, promotion, caseImport: imports, ...deps });
+    sources, extraction: ex, promotion, caseImport: imports, entities, events, lines, money, people, membership,
+    now: () => clock.now, ...deps });
   let n = 0;
   Object.assign(w, {
     head: (id) => record.head(id)?.bundleSha ?? null,

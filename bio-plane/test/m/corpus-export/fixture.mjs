@@ -35,6 +35,12 @@ export function world() {
                               b.bundle_id, s.snap_key, s.path)?.content);
       }
       for (const r of manifest.register) put(r.capture_sha, w.record.readFile(r.bundle_id, r.path)?.text);
+      /* R8: every carried table's pages, each fetched alone from its index and after */
+      for (const t of manifest.tables || [])
+        for (const p of t.pages) {
+          const got = ce.exportPage({ table: t.table, index: p.index, after: p.after });
+          if (got.ok) out.set(got.sha256, got.bytes);
+        }
       return out;
     },
   });
