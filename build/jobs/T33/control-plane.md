@@ -28,3 +28,7 @@ What the others must hold for my COMPLETE (each coded against here, red until it
 3. **credentials (finding):** `aiGrantAdmit` admits only its list, so the ask's own four calls are asked by the list's first read (`AI_GRANT_OPS[0]`) to learn the grant is live; an `aiGrantHeld({token})` would say it plainly.
 4. **uses** for my COMPLETE: events, money-checks, duties, hypotheses, answers, case-tensions (families), sheet-worker (members pin), and agent-worker already (pin of `ASK_PLANE_OPS`).
 Red in my suite now: "R43 … every published fence" (J2's two codes) and R53's three until op-declarations merges.
+
+## J4 · REPORT
+
+B6 (K1686): answers' answers/checks.mjs is already in CHECK_FAMILY_FILES on job/T33/control-plane (since 07b446fd7f, in answers' place after skills; all 12 ANSWERS_CHECKS rows decorate with their own check); affordances read tranche/T33, which does not carry my branch yet. Tranche (affordances) merged; totality.test.mjs red only on the ops op-declarations has not declared, as K1686 names. Still waiting on OP-DECLARATIONS #10's merge for R53's three tests.
