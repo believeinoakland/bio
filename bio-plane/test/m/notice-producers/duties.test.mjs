@@ -24,7 +24,7 @@ test("R5: an adopted duty's occurrence the record shows overdue is one FINDING t
   assert.equal(items.length, 1);
   const occ = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-02-13T12:00:00Z", viewer: BOB }).occurrences[0];
   const it = items[0];
-  assert.equal(it.id, `FINDING::${KIND}::${a.duty_id}::${occ.key}`);
+  assert.equal(it.id, `FINDING::${KIND}::${a.duty_id}::${occ.key}::overdue`);
   assert.equal(it.class, "FINDING");
   assert.equal(it.label, "noticed");
   assert.equal(it.due, "2026-02-12");
@@ -51,7 +51,7 @@ test("R5: never a violation: the detail is a question with its derivation; it sa
   assert.ok(it.basis.derivation.source_in_force, "the source in force, the trigger date, the due date stated");
 });
 
-test("R5: an uncertain due date: between the candidates the item reads possibly overdue: undetermined, because …; after the latest, overdue; before the first, nothing (K1444 (i))", () => {
+test("R5: an uncertain due date: between the candidates the item reads possibly overdue: undetermined, because …; after the latest, overdue, a fresh item keyed by its state; before the first, nothing (K1444 (i), K1676)", () => {
   const { w, read } = setup();
   const a = w.declare({ trigger: { kind: "date", date: "2026-01-31" }, time: { basis: "rule", rule: "monthly_report", applies_to: "claim" } });
   assert.deepEqual(ofKind(read("bob", { now: "2026-02-28T16:00:00Z" }), KIND), []);
@@ -63,7 +63,9 @@ test("R5: an uncertain due date: between the candidates the item reads possibly 
   assert.deepEqual(between[0].subject.due.candidates.map((c) => c.value), ["2026-02-28", "2026-03-01"]);
   const after = ofKind(read("bob", { now: "2026-03-02T16:00:00Z" }), KIND);
   assert.equal(after.length, 1);
-  assert.equal(after[0].id, between[0].id, "one item per occurrence (its key as R5 states it)");
+  assert.match(between[0].id, /::undetermined$/);
+  assert.equal(after[0].id, between[0].id.replace(/::undetermined$/, "::overdue"), "a change of state raises a fresh item (K1676)");
+  assert.deepEqual(ofKind(read("bob", { now: "2026-03-09T16:00:00Z" }), KIND).map((i) => i.id), [after[0].id], "raised once per occurrence and state");
   assert.equal(after[0].subject.state, "overdue");
   assert.ok(a.ok);
 });

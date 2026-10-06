@@ -10,7 +10,7 @@
  *   R2  interest-check-noticed   FINDING, people.checkResults            the machine's, "Noticed", hypothesis layer
  *   R3  money-detector-noticed   FINDING, money-checks.noticed           the machine's, "Noticed", hypothesis layer
  *   R4  standing-answer          FINDING, answers.standingAnswersFor     the assistant's machine work, told once
- *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation
+ *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state
  *   R6  inquiry-recheck-due      OBLIGATION (K1505 (15), K1522), inquiry.datedWaits, to the wait's setter alone
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
@@ -411,7 +411,9 @@ export class NoticeProducers {
     const act = d.performance && d.performance.act ? d.performance.act : "what it names";
     const sinceDay = state === "overdue" ? dueDay : first && typeof first === "object" ? dayOf(first.value) : null;
     return {
-      id: `FINDING::temporal-expectation-due::${d.duty_id}::${occ.key}`, class: "FINDING", kind: "temporal-expectation-due",
+      /* K1676: the key carries the occurrence's state as duties answers it, so possibly overdue becoming overdue is new */
+      id: `FINDING::temporal-expectation-due::${d.duty_id}::${occ.key}::${state === "overdue" ? "overdue" : "undetermined"}`,
+      class: "FINDING", kind: "temporal-expectation-due",
       label: NOTICED_LABEL, by: "the machine's",
       case: this.#homesAt(filled(d.project) ? [d.project] : [], viewer),
       due: dueDay,

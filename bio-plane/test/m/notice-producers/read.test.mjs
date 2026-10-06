@@ -48,7 +48,7 @@ test("R1: every item R2–R6 derive for this member and viewer, each homed throu
   const m = byId(r);
   assert.deepEqual(Object.keys(m).sort(), [
     `FINDING::interest-check-noticed::CHK-1::r-${P}`, `FINDING::money-detector-noticed::md-1::m-${P}`,
-    "FINDING::standing-answer::STQ-1::1", "FINDING::temporal-expectation-due::DUT-1::OCC-1",
+    "FINDING::standing-answer::STQ-1::1", "FINDING::temporal-expectation-due::DUT-1::OCC-1::overdue",
     "OBLIGATION::inquiry-recheck-due::INQ-1::2026-10-01"].sort());
   for (const it of r.items) {
     assert.equal(it.class, NOTICE_KINDS[it.kind], it.kind);
@@ -57,7 +57,7 @@ test("R1: every item R2–R6 derive for this member and viewer, each homed throu
     assert.equal("disposition" in it, false, "queue's mint gives the disposition");
   }
   assert.deepEqual(asked.homes.filter((s) => s.includes(P)).length >= 2, true, "the walk asked from the projects");
-  assert.deepEqual(m["FINDING::temporal-expectation-due::DUT-1::OCC-1"].options, [{ id: "opt", on: ["DUT-1"] }], "queue's options for the subject");
+  assert.deepEqual(m["FINDING::temporal-expectation-due::DUT-1::OCC-1::overdue"].options, [{ id: "opt", on: ["DUT-1"] }], "queue's options for the subject");
   assert.deepEqual(r.facts, { projects: { bound: NOTICE_PROJECTS_MAX, truncated: false }, interest_check: { truncated: false },
     money_detector: { truncated: false }, standing_answer: { bound: 1000, truncated: false },
     temporal_expectation: { bound: DUTIES_MAX, truncated: false }, inquiry_recheck: { truncated: false }, failed: [] });
@@ -67,7 +67,7 @@ test("R1: with no walk and no options passed, an item is ungrouped and carries o
   const { read } = setup();
   const r = read("alice", { now: NOW, homes: false, options: false });
   for (const it of r.items) assert.equal(it.case.ancestors.filter((a) => a.depth !== 0).length, 0);
-  assert.deepEqual(byId(r)["FINDING::temporal-expectation-due::DUT-1::OCC-1"].options, []);
+  assert.deepEqual(byId(r)["FINDING::temporal-expectation-due::DUT-1::OCC-1::overdue"].options, []);
 });
 
 test("R1: writes nothing and never throws; a provider that throws contributes no item and is named in facts.failed, the others still answer", () => {
