@@ -48,3 +48,7 @@ Built and tested on a stand-in calculations holding J1's shapes: all 18 ids (R1�
 **Tests and checks run.** `node --test bio-plane/test/m/workbooks/`: 26 tests, 26 pass, 0 fail (real calculations, real sheet-worker engine). No layer tests are named in `build/manifest.md`. From the process repository, with my paths filled in `modules.json` locally (not committed): `format` 126 modules, 0 failures; `architecture` 15 product files, 48 relative imports, 0 failures; `coverage` 18 of 18 live ids named by a test, 0 failures; `ownership` 16 files changed between `tranche/T33` and HEAD, 0 failures.
 
 Size (session_01L8fgt74g2hidcVrkrDDCCZ): test runs 34, module lines 1,588 (plus 1,196 test lines)
+
+## J3 · COMPLETE
+
+T33-42 done: all 18 ids (R1–R18) met and tested against the real calculations (K1595, K1563 (1)) and the real sheet-worker engine; 26/26 pass. Paths: bio-plane/src/workbooks/, tests bio-plane/test/m/workbooks/. Uses: record-grammar, calc-grammar, office-readers, sheet-worker, record-core, membership, promotion, provenance, content, calculations. Since J2: calculations' readTable/read are async, so workbooks' reads and acts are async (ops arms answer promises). Checks with my paths filled locally: format 0; architecture 15 files, 0 failures; coverage 18/18; ownership 16 files, 0 failures. Findings for other modules (L11 wiring and SHEET_WORKER's three pins; publication's read of R2) and my choices are in my record.
