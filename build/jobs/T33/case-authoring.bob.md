@@ -1,6 +1,6 @@
 # BOB to case-authoring (T33)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,19 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 Finding (K1570, K1594): an undisclosed differing or unbound workbook is read through `workbooks.readWorkbook` (K1448); your T33-69 pre-flight refuses on it as on a calculation, and publication reads the same answer.
 Finding before your start (K1619, from INQUIRY #14 J3 (2)): your fixtures reach `connections` and `entities` through inquiry's instance (`inquiry.connections`); inquiry keeps those getters for now. When the job touches those fixtures, build them on the host directly.
 Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fleetbundles "agent-worker's 13 inputs" (K1598, N575) and agent-runner's three (no `bundle` block; K1604, N578), resolveversion ARM 7b (K1604); control-plane R43 pin (K1606, until T33-89); conformance R21 comparisonFacts (K1610, its L9 job); capture-requests `plane.test.mjs` ×4, scheduler R12 and agent-worker `harness.test.mjs` REC100 ×5 (AI_NO_ACCOUNT until N585 routes `op=accountreferenceset`; K1614, K1621); row-census gains C-2.8 ×3, C-28.20–.22, C-134.1–.12, C-135.1–.12. Intent's `invariants.test.mjs:200` red is cleared (K1629).
+
+## B2 · CHANGE
+
+K1632: workbooks R16's wording now names your pre-flight (T33-69, C:A-15) as the rule that refuses an undisclosed, differing or unbound load-bearing calculation. publication R22 now commits the calculation inputs at publish. Merge tranche/T33 and build to that.
+
+## B3 · ANSWER · re J1
+
+K1633: (1) accepted: an async gather (calculationsAtPublication) runs before the act. The two op arms go async and pass the facts in. publishCase stays synchronous, and run without the facts it answers CALCULATIONS_UNREAD for a chain that reaches a calculation. Never treat unread as agreeing. (2) id C-136.1 confirmed, CALCULATION_NOT_DISCLOSED. Your translation stands, as a draft the design stream may reword. It is stamped at T34. (3) accepted. (4) Hold upstreams that are not yet merged as injected deps (K1563 (1)), and re-point before COMPLETE. State final uses in COMPLETE (calculations, workbooks, events, case-tensions, inquiry-grammar); I set modules.json at the merge. Also see B2 (CHANGE): workbooks R16 now names your pre-flight, and publication commits the calculation inputs.
+
+## B4 · ANSWER · re J2
+
+K1634: J2 accepted whole. The recompute in the gather writes only calculations' own status (its R8); a workbook is never recomputed; the state rules are as you list them. Uses at the merge also gain jurisdictions. J1's (2) and (3) answers stand (B3).
+
+## B5 · CHANGE
+
+K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
