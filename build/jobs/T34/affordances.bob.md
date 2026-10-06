@@ -26,3 +26,7 @@ From OP-DECLARATIONS #11 J2 (K1863 (4)): op-declarations' T34 work gives `NEEDS`
 ## B5 · CHANGE
 
 `build/requirements/affordances.md` gains R45 on `tranche/T34` (K1864 (1)); merge `tranche/T34` into your branch.
+
+## B6 · ANSWER · re J4
+
+All three readings accepted (K1867 (2)). The writingHelpRefused CHANGE follows wizard-scripts' merge.
