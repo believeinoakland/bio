@@ -1,13 +1,17 @@
 # people (T33)
 
-**Status** · session_01RGGE4ZfFHwpKSDT9uQhM9P · depth 2 · WORKING · handled B2
+**Status** · session_01RGGE4ZfFHwpKSDT9uQhM9P · depth 2 · WORKING · handled B3
 
 ## Progress (by the job; not a mail entry)
 
 - Built on `job/T33/people` @ adfd8e0efc: `bio-plane/src/people/` (index.mjs, checks.mjs, schema.mjs; 1,714 lines with comments) and `bio-plane/test/m/people/` (fixture and 7 test files). 34/34 tests pass; every R1–R33 named and tested at the interface, M-P5 and M-P6 (R8) included. Checks, run in a scratch worktree with this module's `paths`/`tests`/`uses` filled in (uncommitted; BOB writes them at merge): format 0, architecture 0, coverage 33 of 33, ownership 0 failures.
 - J1 accepted (B2, K1563); merged `tranche/T33` @ e07becea; `neighbours` now registered at load and read through the walk's `host` (K1563 (1)).
 - Detail beyond J1 (2): `corroborated_name` evidence names the cited line on each record as `lines: {a, b}` (one line cannot be held by two persons), same kind and same other end.
-- **Next step:** when events, lines, money and duties merge into `tranche/T33` (Roster: … duties → people), merge it and re-point the fixture's stand-ins at the real modules (`eventsOf`, `linesOf`, `moneyOf`, `dutiesOf`) and entities' T33 identifier reads, re-run steps 5–7, then COMPLETE.
+- **B3 (CHANGE, K1585):** events, lines, money and duties are merged; `tranche/T33` merged into this branch (373c705428). Not yet done when context ran out (past half the window, JOB.md). **Next step for the restarted job:**
+  1. `peopleOf(ctx, deps)`: default each dep to the real module on the same host, lazily (duties' `dutiesOf` pattern: `entitiesOf`, `provenanceOf`, `contentOf`, `sourcesOf`, `eventsOf`, `linesOf`, `moneyOf`, `dutiesOf`; a dep given as a function is a thunk). Use `checkContentExtent` imported from content (it is a module function, not a method) with `content.contentContextFor`.
+  2. Real shapes to adapt to: lines' `valid` is `{undetermined, why}` when its cache is stale and a line may carry `current_through` (honour both in `#judge`); events' `eventsFor` answers `events` + `placed_nowhere`, `statementsOf` answers `statements` + `placed_nowhere` (read both), `sequence` answers `{answer}`; money's facts list is `facts` with parties `{entity, fund, as_written}`; duties' `dutiesOf` answers `duties`; entities' `entityByIdentifier` answers `{undetermined, candidates}` when two hold one identifier (R43 refuses two holders with overlapping or unstated validity, so tests must give same-identifier records non-overlapping validities; take every candidate in R7).
+  3. Rebuild the test fixture on the real modules as `bio-plane/test/m/duties/fixture.mjs` does (standards' `seeded` world for host, content, provenance, events and passages; real `Entities`, `Lines`, `Money`, `dutiesOf`): `person`/`entity` through `createEntity`, `identify` through `addIdentifier` (check the test profile's `ellery_person` form), `line` through `lines.recordLine` (testimony basis, `capacity` on holds; a fenced line through a fenced passage or project), `event` through `events.createEvent`, money through `money.recordFact`, a person duty through `duties.declare` (person obligor needs a standard naming them). `sources` stays a stand-in (layer 3, not in the re-point list). M-P5: seed 50,000 lines by cloning one recorded row in SQL rather than 50,000 acts.
+  4. Re-run the 34 tests and the four checks (format, architecture, coverage, ownership with `paths`/`tests`/`uses` filled in a scratch worktree), write the completion section, COMPLETE with paths `bio-plane/src/people/`, tests `bio-plane/test/m/people/`, uses as J1 (7).
 
 ## J1 · QUESTION
 
