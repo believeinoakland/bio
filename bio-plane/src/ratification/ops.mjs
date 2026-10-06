@@ -203,7 +203,7 @@ export async function caseRatifyOp(req, stub, ctx) {
    the published bucket by its SHA-256, as `op=ratify` copies captures; a key already there is `present`. One the
    evidence store no longer holds, or whose copy fails, is `missing`: a re-sent op=caseratify retries it, and it never
    changes `ok`, because the edition is committed. */
-async function copyMaterials(env, storeName, shas) {
+export async function copyMaterials(env, storeName, shas) {
   const out = { copied: 0, present: 0, missing: [] };
   for (const sha of shas) {
     const key = `${storeName}/published/${sha}`;

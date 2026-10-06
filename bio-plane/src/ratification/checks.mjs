@@ -1008,12 +1008,13 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
      ROW FOR EVERY BEARER CLASS rather than one per class: the refusal is keyed
      on how the caller ARRIVED (not through a session), so the class is named in
      the answer's `tokenClass` and the rule does not need a row per token. */
+  /* R47 (DEC-149, N664): "for this copy" is "for your group's Civicsmith"; awaiting T35's stamp (accepted red 4). */
   OPERATOR_TOKEN_CANNOT_RATIFY: {
     check: 'C-32.14',
     where: 'src/ratification/ops.mjs ratifyOp > is-operator-ratify-bundle',
     translation: 'Ratifying puts a finding into the published record under a member\'s signature, '
       + 'and it is delivered by that member signed in as themselves. The credential that asked here '
-      + 'is one of the operator\'s access tokens for this copy, not a person: a valid signature does '
+      + 'is one of the operator\'s access tokens for your group\'s Civicsmith, not a person: a valid signature does '
       + 'not change that, because the credential that carries it in decides when the record changes. '
       + 'Sign in as the member whose key signed it and ratify it there.',
   },
@@ -1022,7 +1023,7 @@ export const RATIFY_MACHINE_FENCE_CHECKS = {
     where: 'src/ratification/refusals.mjs operatorCaseRefusal > is-operator-ratify-case',
     translation: 'Ratifying a case commits the group\'s own assertions about it under a member\'s '
       + 'signature, and it is delivered by that member signed in as themselves. The credential that '
-      + 'asked here is one of the operator\'s access tokens for this copy, not a person, and a valid '
+      + 'asked here is one of the operator\'s access tokens for your group\'s Civicsmith, not a person, and a valid '
       + 'signature does not change that. Sign in as the member whose key signed it and ratify it there.',
   },
 };
@@ -1178,6 +1179,40 @@ export const RATIFY_SCOPE_CHECKS = {
       + 'Each such member, observation and document is named. Corroborate the claim with an independent leg, ask '
       + 'the author or the attesting member to choose cover or name, or drop the finding that rests on it. Nothing '
       + 'was signed.',
+  },
+  /* R46 (DEC-147 (3); T34-85): publishing at a set time. BOB's drafts, which the UX stream may re-word; awaiting T35's
+     stamp (accepted red 4). C-58.6 is `op=publishat`'s (R40); C-58.7–C-58.10 are the scheduled publisher's stops (R42). */
+  SCHEDULE_UNCHECKABLE: {
+    check: 'C-58.6',
+    where: 'src/ratification/schedule.mjs scheduleUncheckableRefusal > is-schedule-uncheckable',
+    translation: 'Publishing at a set time means checking again at that time everything checked now, and part of it '
+      + 'cannot be read now. It is named. Nothing was signed. You can publish now, or try again later.',
+  },
+  SCHEDULED_SOURCES_CHANGED: {
+    check: 'C-58.7',
+    where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
+    translation: 'This edition was not published at its set time: a source it rests on changed since it was signed. '
+      + 'It is named. Nothing was published. Prepare and sign the edition again to publish it.',
+  },
+  SCHEDULED_TIES_CHANGED: {
+    check: 'C-58.8',
+    where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
+    translation: 'This edition was not published at its set time: a member who signed it has declared or withdrawn a '
+      + 'tie to someone the case names since signing, so their confirmation of no undeclared tie may no longer hold. '
+      + 'Nothing was published. Prepare and sign the edition again to publish it.',
+  },
+  SCHEDULED_HOLD_CHANGED: {
+    check: 'C-58.9',
+    where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
+    translation: 'This edition was not published at its set time: a hold on the case or its project changed since it '
+      + 'was signed. It is named. Nothing was published. Prepare and sign the edition again to publish it.',
+  },
+  SCHEDULED_CHECK_REFUSED: {
+    check: 'C-58.10',
+    where: 'src/ratification/schedule.mjs scheduledStop > is-scheduled-stop',
+    translation: 'This edition was not published at its set time: a check made when it was signed no longer passes, '
+      + 'or could not be made. The reason is given. Nothing was published. Prepare and sign the edition again to '
+      + 'publish it.',
   },
 };
 
