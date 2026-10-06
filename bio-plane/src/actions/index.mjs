@@ -761,9 +761,11 @@ export class Actions {
     }
     const proc = val(nextFm, "proceeding");
     if (JSON.stringify(val(heldFm, "proceeding")) !== JSON.stringify(proc)) {
+      /* DEC-49 REGION is-machine-set-proceeding */
       if (!who || isMachineIdentity(who))
-        return { ok: false, reason: "MACHINE_CANNOT_SET_PROCEEDING", detail: "the proceeding an action belongs to is a "
-          + "member's statement; a machine credential may not set, change or remove it. Nothing was written." };
+        return refuse("MACHINE_CANNOT_SET_PROCEEDING", "the proceeding an action belongs to is a member's statement; a "
+          + "machine credential may not set, change or remove it. Nothing was written.");
+      /* END DEC-49 REGION is-machine-set-proceeding */
       if (proc !== null) {
         const r = this.#proceedingRefusal(proc);
         if (r) return r;
@@ -786,10 +788,11 @@ export class Actions {
     const pid = typeof id === "string" ? id.trim() : "";
     const kind = pid ? this.#entityKind(pid) : null;
     if (!kind) return noSuchEntity(pid || null, { end: "proceeding" });
+    /* DEC-49 REGION is-proceeding-kind */
     if (kind !== "proceeding")
-      return { ok: false, reason: "NOT_A_PROCEEDING", entity_id: pid, kind,
-               detail: `proceeding names an entity of kind ${kind}; an action belongs to an entity of kind proceeding. `
-                     + "Nothing was written." };
+      return refuse("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind}; an action belongs to an entity of `
+        + "kind proceeding. Nothing was written.", { entity_id: pid, kind });
+    /* END DEC-49 REGION is-proceeding-kind */
     return null;
   }
 
@@ -2730,8 +2733,10 @@ export class Actions {
    *  (`lines.structureAt`); undetermined ones apart, with why. A suggestion: it writes nothing and sets nothing. */
   addresseeSuggest({ action = null, subject = null, viewer = null } = {}) {
     const subj = typeof subject === "string" ? subject.trim() : "";
-    if (!subj) return { ok: false, reason: "NO_SUBJECT", detail: "an addressee is suggested for a subject: an entity "
-      + "(ENT-) or a record the action rests on." };
+    /* DEC-49 REGION is-addressee-subject */
+    if (!subj) return refuse("NO_SUBJECT", "an addressee is suggested for a subject: an entity (ENT-) or a record the "
+      + "action rests on. Nothing was read.");
+    /* END DEC-49 REGION is-addressee-subject */
     let at = null, basis = "today";
     if (action) {
       const b = this.#visibleAction(String(action), viewer);

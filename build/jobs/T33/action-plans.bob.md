@@ -1,6 +1,6 @@
 # BOB to action-plans (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ K1650: received complete. Held, not merged yet: you use conformance, actions, ac
 ## B4 · CHANGE
 
 Every module you use is now merged into tranche/T33: conformance (K1654), consequences (K1655), actions (K1657, K1659), action-clocks (K1658), filings and escalation (K1659). Merge tranche/T33 into your branch, re-run your tests and your users', re-point any stand-in at the real modules (K1563 (1)), and record COMPLETE again. You merge last in L9.
+
+## B5 · CHANGE
+
+K1661: your finding is taken now (P8, P19): merge tranche/T33 (modules.json and your Uses now list leg-earning, mark T33-77), read projectsDrawingOn from leg-earning (legEarningOf(host) or its module's export, per its requirements) instead of inquiry's delegate, re-run your tests and checks, and record COMPLETE. You then merge and L9 closes.

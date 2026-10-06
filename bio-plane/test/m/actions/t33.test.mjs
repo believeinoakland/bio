@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import { noSuchStandard } from "../../../src/standards/index.mjs";
+import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
@@ -202,6 +203,12 @@ test("R65 an action may state its proceeding: set and changed by a member, an en
   const absent = w.promote(A, md(A, ["proceeding: ENT-2026-0404"]));
   assert.deepEqual([absent.reason, absent.end], ["NO_SUCH_ENTITY", "proceeding"]);
   assert.deepEqual([w.promote(A, md(A, [`proceeding: ${office}`])).reason], ["NOT_A_PROCEEDING"]);
+  /* each refusal carries its row (C-117.27, C-117.28), minted at the region its `where` names */
+  for (const [r, code, check, region] of [[w.promote(A, md(A, [`proceeding: ${P}`]), { author: MACHINE }), "MACHINE_CANNOT_SET_PROCEEDING", "C-117.27", "#heldLinks > is-machine-set-proceeding"],
+                                          [w.promote(A, md(A, [`proceeding: ${office}`])), "NOT_A_PROCEEDING", "C-117.28", "#proceedingRefusal > is-proceeding-kind"]]) {
+    assert.deepEqual([r.reason, r.code, r.check, r.translation], [code, code, check, grammar.ACTION_CATALOGUE_CHECKS[code].translation]);
+    assert.equal(grammar.ACTION_CATALOGUE_CHECKS[code].where, `src/actions/index.mjs ${region}`);
+  }
   assert.equal(w.record.head(A), null);
   assert.equal(w.promote(A, md(A, [`proceeding: ${P}`])).ok, true);
   w.action(B);
@@ -247,6 +254,9 @@ test("R62 addresseeSuggest answers the offices held as custodian_of or responsib
                  VALUES (?,?,?,?,?,?,?,?,?,?)`, s0, "INFO-2026-0001-d", "r1", contract, "A", 1, "m", "b", M, "2026-09-01T00:00:00Z");
   assert.deepEqual(w.a.addresseeSuggest({ subject: "INFO-2026-0001-d", viewer: M }).offices.map((o) => o.addressee.entity_id), [office]);
   /* refusals */
+  const ns = w.a.addresseeSuggest({ viewer: M });
+  assert.deepEqual([ns.code, ns.check, ns.translation], ["NO_SUBJECT", "C-117.26", grammar.ACTION_CATALOGUE_CHECKS.NO_SUBJECT.translation]);
+  assert.equal(grammar.ACTION_CATALOGUE_CHECKS.NO_SUBJECT.where, "src/actions/index.mjs addresseeSuggest > is-addressee-subject");
   assert.deepEqual(reasons([w.a.addresseeSuggest({ viewer: M }), w.a.addresseeSuggest({ subject: "ENT-2026-0404", viewer: M }),
     w.a.addresseeSuggest({ subject: "INFO-2026-0404-x", viewer: M }), w.a.addresseeSuggest({ action: "ACTN-2026-0404-x", subject: contract, viewer: M }),
     w.a.addresseeSuggest({ subject: "INFO-2026-0001-d", viewer: "nobody" })]),
