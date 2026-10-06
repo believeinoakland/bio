@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · CHANGE
 
 Before you build N615 (K1773): origin is "member" exactly when the bytes were supplied by a member's own act (their upload under their session, made outside the copy); every fetch the copy makes is "fetch", a member session's request included; a knock carries no session, so "fetch" (capture R30, K1776). acquisition's profileOf takes the origin the same way (K1775). court-doctypes R2's member-only type must never match a copy's fetch.
+
+## B3 · ANSWER · re J1
+
+Accepted (K1780): read hands origin "fetch" to both doctypeFor passes; no new option on read (R24 unchanged). A member-supplied-bytes path (an upload) states its origin in its own entry when it is built.
