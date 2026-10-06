@@ -1,4 +1,4 @@
-/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R32; map:
+/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R35; map:
  * `build/extraction/observation-log.md`). Extracted from the legacy store (the append site `#observe` and
  * `#observationReferent`, the writers `#observeExtraction`, `#observeIndexed`, `#observeReaderRun`,
  * `#observeResolutionAttempt`, `#observeConnectionDerivation` and the receipt's look, the missing-row rule, the
@@ -7,9 +7,9 @@
  * every writer uses are `vocabulary.mjs`'s.
  *
  * `observationLogOf(ctx)` answers the one instance per Durable Object storage (K61). It reaches `record-core` and
- * `membership` through their factories, declares its tables to purge (R23, K23), and registers its writers with
- * `provenance` (the receipt, R5, and the testimony slot, R30) and `extraction` (the reading notice, R6–R8, and the
- * index notice, R7) on the same `ctx` (K31). `listenToCapture` registers the row writer on `capture`'s `observation`
+ * `membership` through their factories, declares its tables with their classes (R23, R35; K23), and registers its
+ * writers with `provenance` (the receipt, R5, and the testimony slot, R30) and `extraction` (the reading notice, R6–R8,
+ * and the index notice, R7) on the same `ctx` (K31). `listenToCapture` registers the row writer on `capture`'s `observation`
  * event (R31), which the composition root calls once capture exists. `attachMeaning` registers the meaning-level writers with `entities.onResolveAttempt` and `connections`'
  * derivation notice, and this module's derivation statement as connections' provider (its R5, R51), each under this
  * module's own name. Its share of the instance's figures (R32) is exported for `plane` to register; it registers none
@@ -1028,19 +1028,23 @@ export class ObservationLog {
 const instances = new WeakMap();
 
 /** The one observation-log instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on
- *  the first call only. At creation it declares its tables to purge (R23) and registers its writers with provenance's
- *  receipt (R5) and testimony slot (R30), extraction's reading notice (R6–R8) and index notice (R7), and, when
- *  `deps.capture` is given, capture's `observation` event (R31). A refused testimony registration is a defect of the
- *  wiring and throws. */
+ *  the first call only. At creation it declares its tables with their classes (R23, R35) and registers its writers
+ *  with provenance's receipt (R5) and testimony slot (R30), extraction's reading notice (R6–R8) and index notice (R7),
+ *  and, when `deps.capture` is given, capture's `observation` event (R31). A refused table declaration or testimony
+ *  registration is a defect of the wiring and throws. */
 export function observationLogOf(host, deps) {
   let o = instances.get(host);
   if (!o) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
+    /* R35: declared explicitly with their classes; a refused declaration is a defect of the wiring and throws before
+       an instance is held, so no later call is answered by one whose tables were never declared. */
+    const declared = record.declareTable(OBSERVATION_LOG_MODULE, OBSERVATION_LOG_TABLES.map((t) => ({ ...t })));
+    if (declared && declared.ok === false)
+      throw new Error(`observation-log: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
     o = new ObservationLog({ storage: d.storage || host.storage, record, membership, now: d.now || null });
     instances.set(host, o);
-    record.declarePurge("observation-log", OBSERVATION_LOG_TABLES);
     const provenance = d.provenance === undefined ? provenanceOf(host) : d.provenance;
     if (provenance && typeof provenance.onReceipt === "function")
       provenance.onReceipt(OBSERVATION_LOG_MODULE, (e) => o.receiptLook(e));
