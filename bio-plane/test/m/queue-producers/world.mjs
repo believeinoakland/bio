@@ -152,7 +152,8 @@ export function defaultFakes() {
                     calendarFactsRead: () => ({ ok: true, as_of: "2026-09-01", paths: [], actions_limit: 500, truncated: false }) },
     escalation: { escalationsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     actionPlans: { checkpointsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
-    actions: { holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
+    /* actions R12's place: the active profiles' combined view, of which this module reads the `time_zone` (R25, R36) */
+    actions: { place: () => ({ time_zone: { value: "UTC", status: "ruled", basis: "TEST" } }), holdsDue: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }),
                holdsReleased: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
     docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
     filingTemplates: { reviewsRequested: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },

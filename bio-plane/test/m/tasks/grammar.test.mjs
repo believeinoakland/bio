@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { inbox, ev, NOW, iso } from "./world.mjs";
 import { QUEUE_INBOX_CHECKS, checkInboxGrammar } from "../../../src/tasks/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
+import { idPattern } from "../../../src/record-grammar/index.mjs";
 
 const DOC2 = "INFO-2026-0002-other";
 const sha = (t) => createHash("sha256").update(t).digest("hex");
@@ -191,4 +192,62 @@ test("R4 (N367): two tasks sharing an id are refused; the repair of an unresolva
   const [r] = errorsOf([t]);
   assert.deepEqual([r.repairable, r.repairs], [true, ["re-point the task at the successor record", "resolve the task with a reason if its subject is gone"]]);
   assert.equal(BOUNDS.length >= 31, true, "every per-bound arm of the retired suite is carried");
+});
+
+/* ---- R12 (S0-11, B0.11; K1470): the task id is tested by the one id table's pattern ---- */
+
+/* Every id built from these parts, so each way an id can differ (prefix, year, counter, slug, separators) is crossed with
+   every other, rather than a few ids picked by hand. */
+const PREFIXES = ["TASK", "GATH", "task", "TASKS", "TAS", ""];
+const YEARS = ["", "26", "202", "2026", "20266", "abcd"];
+const COUNTERS = ["", "1", "999", "0001", "9999", "10000", "123456789", "12a4", "-0001"];
+const SLUGS = ["", "x", "a-b", "subject-2", "-x", "x-", "X", "a--b", "a_b", "0001-x", "a.b"];
+const IDS = [];
+for (const p of PREFIXES) for (const y of YEARS) for (const c of COUNTERS) for (const g of SLUGS) {
+  IDS.push(`${p}-${y}-${c}-${g}`);
+  if (!g) IDS.push(`${p}-${y}-${c}`);
+}
+/* The table's core with C-19.1's slug after it (record-grammar R47: a validator composes its own slug after the core). */
+const TABLE_TASK = new RegExp(`^${idPattern("TASK").source.slice(1, -1)}-[a-z0-9]+(-[a-z0-9]+)*$`);
+/* The grammar's own pattern before T33, kept here only as the reference R12's "every id valid before stays valid" names. */
+const BEFORE_T33 = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+const idFindings = (id) => errorsOf([{ ...good(), id }]);
+
+test("R12: C-19.1 accepts exactly the TASK ids the id table's pattern accepts, over every id in the enumeration", () => {
+  assert.ok(IDS.length > 3000);
+  let accepted = 0;
+  for (const id of IDS) {
+    const f = idFindings(id);
+    if (TABLE_TASK.test(id)) { assert.deepEqual(f, [], id); accepted++; }
+    else assert.deepEqual(f.map((x) => [x.check, x.severity, x.message]),
+      [["C-19.1", "error", `inbox.json tasks[0].id '${id}' does not match the TASK grammar`]], id);
+  }
+  assert.ok(accepted >= 16 && accepted < IDS.length - 1000, `both arms exercised (${accepted} accepted)`);
+  for (const bad of [undefined, null, 7, ""]) assert.equal(idFindings(bad).length, 1, String(bad));
+});
+
+test("R12: a counter of four or more digits is accepted: the 10,000th task of a year; fewer digits and other prefixes are refused", () => {
+  for (const id of ["TASK-2026-10000-subject", "TASK-2026-9999-subject", "TASK-2026-0001-subject", "TASK-2026-123456789-a-b"])
+    assert.deepEqual(idFindings(id), [], id);
+  for (const id of ["TASK-2026-999-subject", "TASK-2026-1-subject", "TASK-26-0001-subject", "TASK-2026-10000",
+                    "GATH-2026-10000-subject", "TASK-2026-1000a-subject"])
+    assert.equal(idFindings(id).length, 1, id);
+});
+
+test("R12: every id valid before T33 stays valid, and every finding on an inbox file written before T33 is byte-identical", () => {
+  const before = IDS.filter((id) => BEFORE_T33.test(id));
+  assert.ok(before.length >= 8 && before.length < IDS.length - 1000);
+  for (const id of before) assert.deepEqual(idFindings(id), [], id);
+  /* What changed is exactly the widening: an id accepted now and refused before has a counter of five or more digits. */
+  for (const id of IDS.filter((x) => TABLE_TASK.test(x) && !BEFORE_T33.test(x)))
+    assert.match(id, /^TASK-\d{4}-\d{5,}-/, id);
+  /* A whole file as written before T33, a mix of good and bad ids among other errors: its findings, as the grammar
+     before T33 wrote them, each message spelled out. */
+  const file = [{ ...good(), id: "TASK-2026-0001-a" }, { ...good(), id: "TASK-2026-12-b" }, { ...good(), id: "TASK-2026-0001-a" },
+                { ...good(), id: "task-2026-0002-c", kind: "x" }, { ...good(), id: "TASK-2026-0003-d" }];
+  assert.deepEqual(errorsOf(file).map((x) => [x.check, x.severity, x.message]), [
+    ["C-19.1", "error", "inbox.json tasks[1].id 'TASK-2026-12-b' does not match the TASK grammar"],
+    ["C-19.1", "error", "inbox.json tasks[2] repeats id 'TASK-2026-0001-a'"],
+    ["C-19.1", "error", "inbox.json tasks[3].id 'task-2026-0002-c' does not match the TASK grammar"],
+    ["C-19.1", "error", "inbox.json tasks[3].kind 'x' must be one of: authority-undetermined"]]);
 });

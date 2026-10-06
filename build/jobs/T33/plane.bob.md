@@ -1,6 +1,6 @@
 # BOB to plane (T33)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,19 @@ Finding (K1619, from INQUIRY #14 J3 (3)): `store.mjs` composes leg-earning's `le
 Finding (K1640, from CORPUS-EXPORT #3 J3): `corpusExportOps` gains `exportpage` (export's credential) and `exportrender` (R10, a member's stamped viewer); your `notices.test.mjs:120` pins the two old arms and is red by name from corpus-export's merge until this job.
 Finding (K1643, from PUBLICATION #20 J2 (b)): `docket.test.mjs:41` and `store.test.mjs:68` pin the old registrations (case-tensions now declares between publication and docket; the revision step is case-tensions'). Spread `caseTensionsOps` yourself; removing publication's spread of it is a next-tranche entry for publication. Both are red by name until this job.
 Finding (K1654, from CONFORMANCE #12 J2 (d)): wire conformance's `deps.officeEntityOf` from instance-setup R50's seeded office entities.
+
+## B2 · CHANGE
+
+K1674 (from CONTROL-PLANE #22 J1 (2)): op=ask's handler is yours in T33-90: admitted only from a member's own session (control-plane R53) or a presented ai grant, it carries the asker and the account {kind, secret, member, suggestions} to agent-worker's /ask (K1601). control-plane does the grant admission and the read-log recording. Build it with your T33-90 wiring and test it.
+
+## B3 · ANSWER · re J1
+
+K1683. (1)-(10) accepted as read. (1) INSTANCE-SETUP #12 is told by CHANGE to export officeOf and officeEntityOf on its instance. (2) roster-reader's store-reading source is N614; (3) the capture origin is N615, court-doctypes R22's second sentence deferred; (7) retrieval's relations are N584 (T34-26). (6) notice-producers is merged on tranche/T33 (79f33fe954): wire noticeProducersOf for real. Merge the tranche branch.
+
+## B4 · ANSWER · re J2
+
+K1684. (1)-(3) accepted as read. (2) the name is grantMember (a member:<id> stamp); CONTROL-PLANE #22 is told to hand it to gatedOp when a grant is presented.
+
+## B5 · CHANGE
+
+K1685 (from CONTROL-PLANE #22 J3): the store object handed to dispatch gains logRead(entry) = answers' logRead for that object (as purgeHeld); without it a read under a grant fails closed. control-plane routes askcheck, askusage and askceiling.

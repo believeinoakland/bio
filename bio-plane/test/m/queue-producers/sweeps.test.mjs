@@ -154,7 +154,7 @@ test("R27: notice-attestation-missed, for the owners of a project whose open not
   assert.deepEqual(asked.at(-1), { project: "PRJ-1", viewer: "member:olga" }, "read through noticesOf, under the viewer");
   assert.deepEqual([it.class, it.kind, it.subject], ["CONDITION", "notice-attestation-missed",
     { kind: "notice", id: "WO-1", project: "PRJ-1", status: "open" }]);
-  assert.deepEqual(it.age, { state: "determined", since: "2026-08-01T00:00:00Z", ms: NOW - Date.parse("2026-08-01T00:00:00Z") });
+  assert.deepEqual(it.age, { state: "determined", since: "2026-08-01T00:00:00Z", ms: NOW - Date.parse("2026-08-01T00:00:00Z"), days: 31 });
   assert.deepEqual([it.basis.source, it.basis.month, it.basis.recipients_rule], ["network-notices.noticesOf", "2026-08", "project_owners"]);
   assert.deepEqual(it.recipients, w.membership.projectOwners("PRJ-1"), "the project's owners, as membership R65 lists them");
   assert.deepEqual([...it.recipients].sort(), ["ada", "olga"]);
@@ -184,7 +184,7 @@ test("R27: notice-lapse-near, for the owners while a lapse is due within 7 days,
   const it = byId(w.read("olga"))[id];
   assert.ok(it, "7 days before the lapse");
   assert.deepEqual([it.class, it.kind, it.basis.lapse_date, it.basis.window_days], ["CONDITION", "notice-lapse-near", "2026-09-08", 7]);
-  assert.deepEqual(it.age, { state: "determined", since: "2026-09-01T00:00:00Z", ms: 0 }, "aged from the day the window opened");
+  assert.deepEqual(it.age, { state: "determined", since: "2026-09-01T00:00:00Z", ms: 0, days: 0 }, "aged from the day the window opened");
   assert.deepEqual(it.options.map((o) => o.id), ["noticeprepare"], "a revision or a stop answers it (network-notices R6, R11)");
   assert.ok(!("due" in it), "R25: no due on it");
   assert.equal(byId(w.read("alice"))[id], undefined, "a non-owner is told nothing");
@@ -205,12 +205,13 @@ test("R27: notice-project-closed, for the owners when the project closed while t
   const id = "CONDITION::notice-project-closed::WO-3";
   const it = byId(w.read("olga"))[id];
   assert.deepEqual([it.class, it.kind, it.subject.status], ["CONDITION", "notice-project-closed", "closed"]);
-  assert.deepEqual(it.age, { state: "determined", since: closedAt, ms: NOW - Date.parse(closedAt) });
+  assert.deepEqual(it.age, { state: "determined", since: closedAt, ms: NOW - Date.parse(closedAt), days: 22 });
   assert.deepEqual(it.options.map((o) => o.id), ["noticeprepare"], "the owner's stop, which may add a handoff");
   assert.equal(byId(w.read("alice"))[id], undefined, "a non-owner is told nothing");
-  const at = (d) => ({ now: Date.parse(closedAt) + d * DAY });
-  assert.ok(byId(w.read("olga", "member:olga", at(29.9)))[id], "within 30 days");
-  assert.equal(byId(w.read("olga", "member:olga", at(30)))[id], undefined, "after 30 days it leaves");
+  /* R36: 30 local days from the closing's day (2026-08-10, the world's zone UTC): it stands through 2026-09-08 and leaves
+     at the first instant of 2026-09-09, never 720 hours after the instant */
+  assert.ok(byId(w.read("olga", "member:olga", { now: Date.parse("2026-09-08T23:59:59Z") }))[id], "within 30 days");
+  assert.equal(byId(w.read("olga", "member:olga", { now: Date.parse("2026-09-09T00:00:00Z") }))[id], undefined, "after 30 days it leaves");
   n = { ...n, status: "stopped" };
   assert.equal(byId(w.read("olga"))[id], undefined, "an owner's stop");
   /* no other notice state raises it, and an open notice never does */

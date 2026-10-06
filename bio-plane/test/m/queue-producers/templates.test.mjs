@@ -101,12 +101,13 @@ test("R21: one OBLIGATION per fact factsDue answers over the paths calendarFacts
   assert.deepEqual(it.recipients, ["alice", "olga"], "R15's recipients of each reading action, together");
   assert.equal(it.basis.recipients_rule, "author+project_owners");
   assert.deepEqual(it.basis.actions, ["ACT-1", "ACT-2"]);
-  assert.deepEqual(it.age, { state: "determined", since: "2024-11-01", ms: NOW - Date.parse("2024-11-01T00:00:00Z") }, "aged from the day it fell due");
+  assert.deepEqual(it.age, { state: "determined", since: "2024-11-01T00:00:00Z", ms: NOW - Date.parse("2024-11-01T00:00:00Z"), days: 669 },
+    "aged from the first local instant of the day it fell due (R36)");
   const disputed = byId(alice)[`OBLIGATION::local-fact-due::${H26}::disputed`];
   assert.equal(disputed.subject.status, "disputed");
-  assert.deepEqual(disputed.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY }, "a dispute ages from the dispute");
+  assert.deepEqual(disputed.age, { state: "determined", since: iso(NOW - 2 * DAY), ms: 2 * DAY, days: 2 }, "a dispute ages from the dispute");
   const ada = byId(w.read("ada"));
-  assert.deepEqual(ada[`OBLIGATION::local-fact-due::${HRS}::unconfirmed`].age, { state: "determined", since: "2026-08-29", ms: 3 * DAY },
+  assert.deepEqual(ada[`OBLIGATION::local-fact-due::${HRS}::unconfirmed`].age, { state: "determined", since: "2026-08-29T00:00:00Z", ms: 3 * DAY, days: 3 },
     "a lapsed confirmation ages from the day it lapsed");
   assert.equal(ada[`OBLIGATION::local-fact-due::${TZ}::unconfirmed`].age.state, "undetermined");
   assert.equal(ada[`OBLIGATION::local-fact-due::${HRS}::unconfirmed`].basis.recipients_rule, "administrators");

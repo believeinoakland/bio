@@ -121,9 +121,20 @@ CREATE TABLE IF NOT EXISTS wiz_refusal_tallies (
 CREATE INDEX IF NOT EXISTS wiz_refusal_tallies_key ON wiz_refusal_tallies (op, code, day);
 `;
 
+/** R18 (record-core R21; plan T33, Rules (6): a module with a T33 job declares its tables explicitly): each table with
+ *  its classes. Every one is cleared by purge (a project's rows by its bundle's purge, a grant's and a tally's by the
+ *  whole-store purge only), never expunged, exported to administrators only, stored, never derived. A project's script
+ *  rows are seen by the project's sight; grants and tallies are group-wide. Versions and revisions append, never
+ *  overwrite. Keying stays R46's: by `bundle_id` where a table has it. */
+export const WIZARD_SCRIPTS_TABLE_CLASSES = Object.freeze([
+  ["wiz_scripts", "bundle", false], ["wiz_versions", "bundle", true], ["wiz_revisions", "bundle", true], ["wiz_events", "bundle", false],
+  ["wiz_proposals", "bundle", false], ["wiz_editor_grants", "group", false], ["wiz_editor_revocations", "group", false],
+  ["wiz_breaks", "bundle", false], ["wiz_tallies", "group", false], ["wiz_refusal_tallies", "group", false],
+].map(([name, sight, chain]) => Object.freeze({ name, purge: "clear", expunge: "none", export: "admin-only", sight, derive: "stored",
+                                                version_chain: chain })));
+
 /** The tables, each keyed to its bundle by `bundle_id` where it has one (record-core R21, R46; K23). */
-export const WIZARD_SCRIPTS_TABLES = Object.freeze(["wiz_scripts", "wiz_versions", "wiz_revisions", "wiz_events",
-  "wiz_proposals", "wiz_editor_grants", "wiz_editor_revocations", "wiz_breaks", "wiz_tallies", "wiz_refusal_tallies"]);
+export const WIZARD_SCRIPTS_TABLES = Object.freeze(WIZARD_SCRIPTS_TABLE_CLASSES.map((t) => t.name));
 
 /** The opaque ids its tables hold, for record-core's mint ledger (its R40, R70). */
 export const WIZARD_SCRIPTS_MINT_SEED = Object.freeze([

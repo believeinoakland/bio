@@ -9,7 +9,7 @@
  * registers the one function with promotion (at the write, R4's `INBOX_REFUSED`) and with record-core's audit, and its
  * own drain runs it over every candidate task. */
 
-import { isPublicHttpsLocator, ISO_TS_RE, BUNDLE_ID_RE } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator, ISO_TS_RE, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
 
 const at = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
 
@@ -77,7 +77,10 @@ function asText(v) {
   return new TextDecoder().decode(v);
 }
 
-const TASK_ID_RE = /^TASK-\d{4}-\d{4}-[a-z0-9]+(-[a-z0-9]+)*$/;
+/* R12 (S0-11, B0.11; K1470): the task id's core is the one id table's (`idPattern('TASK')`, record-grammar R46, R47), never
+   a pattern of this module's own; the slug after it keeps C-19.1's rule. The counter is four or more digits, so the
+   10,000th task of a year is accepted and every id valid before T33 stays valid, with the same finding when it is not. */
+const TASK_ID_RE = new RegExp(`^${idPattern('TASK').source.slice(1, -1)}-[a-z0-9]+(-[a-z0-9]+)*$`);
 const TASK_KIND_ENUM = ['authority-undetermined'];
 const TASK_ROLE_ENUM = ['project-manager', 'group-admin', 'member'];
 const TASK_STATUS_ENUM = ['open', 'resolved', 'forwarded'];

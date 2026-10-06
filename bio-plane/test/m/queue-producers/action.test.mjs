@@ -52,8 +52,8 @@ test("R15: one CONDITION per overdue clock entry action-clocks answers the viewe
   assert.deepEqual([it.class, it.kind], ["CONDITION", "action-clock-overdue"], "a CONDITION, as Bob's approved draft has it (K611)");
   assert.deepEqual(it.subject, { kind: "action", id: "ACT-1", entry: 0, date: day(NOW - 3 * DAY), basis: "the records act, ten days",
     text: "response due", project: "PRJ-1" }, "its subject the action, naming the entry's date, basis and text");
-  assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - 2 * DAY)}T00:00:00Z`, ms: 2 * DAY },
-    "aged from the day after the entry's date");
+  assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - 2 * DAY)}T00:00:00Z`, ms: 2 * DAY, days: 2 },
+    "aged from the day after the entry's date, in local days (R36; the world's zone is UTC)");
   assert.deepEqual(it.recipients, ["alice"]); assert.equal(it.basis.recipients_rule, "author");
   assert.deepEqual(byId(w.read("olga"))["CONDITION::action-clock-overdue::ACT-2::0"].basis.recipients_rule, "project_owners");
   assert.deepEqual(byId(w.read("ada"))["CONDITION::action-clock-overdue::ACT-3::1"].basis.recipients_rule, "administrators");
@@ -89,7 +89,8 @@ test("R16: one OBLIGATION per checkpoint action-plans answers due, keyed OBLIGAT
   const it = byId(bob)["OBLIGATION::plan-checkpoint-due::PLN-1::1::p1"];
   assert.deepEqual([it.class, it.kind], ["OBLIGATION", "plan-checkpoint-due"]);
   assert.deepEqual(it.subject, { kind: "plan", id: "PLN-1", project: "PRJ-1", scenario: 1, phase: "p1", version: 2 });
-  assert.deepEqual(it.age, { state: "determined", since: day(NOW - 4 * DAY), ms: 4 * DAY }, "aged from the checkpoint's day");
+  assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - 4 * DAY)}T00:00:00Z`, ms: 4 * DAY, days: 4 },
+    "aged from the first local instant of the checkpoint's day (R36)");
   assert.deepEqual(it.case.ancestors.map((a) => [a.id, a.depth]), [["PRJ-1", 0]]);
   assert.deepEqual(it.options.map((o) => o.id), ["checkpointrecord"], "the act that answers it: a member's judgement");
   assert.deepEqual(it.recipients, ["bob"]);
@@ -155,7 +156,7 @@ test("R18: one OBLIGATION per reminder action-clocks answers due, keyed OBLIGATI
   assert.deepEqual([it.class, it.kind], ["OBLIGATION", "action-reminder"]);
   assert.deepEqual(it.subject, { kind: "action", id: "ACT-1", entry: 0, date: day(NOW + 5 * DAY), basis: "the records act",
     text: "response due", on: day(NOW - DAY), project: "PRJ-1" }, "its subject the action, naming the entry's date, basis and text");
-  assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - DAY)}T00:00:00Z`, ms: DAY }, "aged from the reminder's day");
+  assert.deepEqual(it.age, { state: "determined", since: `${day(NOW - DAY)}T00:00:00Z`, ms: DAY, days: 1 }, "aged from the reminder's day");
   assert.deepEqual(it.recipients, ["alice"]);
   assert.deepEqual(it.options, [{ id: "reminderanswer", label: "Remind me again on a later day, or not again", weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "its response offers another reminder or none, beside the acts on the action");
