@@ -44,3 +44,7 @@ T34-23 applied (N617, N573, N574, N594, N600 R34, N605 R35); record Completion h
 - `format` 0 failures; `architecture` 0 failures; `coverage` 35 of 35, 0 failures; 9 files changed by people between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01FBkdcqM2R142K6beJtipCh): test runs 10, module lines 1911
+
+## J3 · COMPLETE · re B2
+
+B2 done: tranche/T34 merged; declarations match R33 (K1791); R33's test names both histories. people 36/37 (R15 title red, waiting on lines T34-18); format, architecture, coverage 35/35, ownership 0 failures. Size (session_01FBkdcqM2R142K6beJtipCh): test runs 10, module lines 1911.
