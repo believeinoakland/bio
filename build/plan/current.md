@@ -124,7 +124,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 ### L8
 
-- **T34-42 · corpus-export** · (N554) R4's tests follow record-core's new refusal shape. (N593) R7's rule names a `derived-rebuildable` table's `from` from `declaredTables()` · K1545, K1632 · req: R7 (no `from` until now, K1632), BOB's wording · depends T34-9.
+- **T34-42 · corpus-export** · (PEOPLE #3 J1, K1791) R7's test (`tables.test.mjs`:84) and its HELD_NEVER interim note follow people's `member_ties` export `never` (N594). (N554) R4's tests follow record-core's new refusal shape. (N593) R7's rule names a `derived-rebuildable` table's `from` from `declaredTables()` · K1545, K1632 · req: R7 (no `from` until now, K1632), BOB's wording · depends T34-9.
 - **T34-43 · case-carriage** · (N554) R6's tests follow the new refusal shape · K1545 · req: none · depends T34-9.
 - **T34-44 · publication** · (N597) drops its own spread of `caseTensionsOps` (plane spreads it since T33-90). (N598) a set-wide `stampedEditions()` read. (N551, DEC-132) the self-description is shown on the public page and directory only when chosen, behind the outward-act warning · K1643, K1644, K1541 · req: the new read; the display, BOB's wording of DEC-132 · depends T34-10. **P6:** 3,959 lines. The spread's removal offsets the new read; if the display would pass about 4,000, BOB splits before the job adds it.
 - **T34-45 · docket** · (N595) R26's lane, fail-closed without a viewer, shows a member's cases now that events passes the `viewer`; it carries a source's `truncated` · K1632, K1635 · req: none · depends T34-17.
@@ -140,7 +140,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 ### L9
 
-- **T34-49 · consequences** · (N576, widened by K1649) R2 and R15 read a calculation operand through calculations' synchronous read, instead of withholding it from every member viewer. (N600) R16 tells "no link" from "a link that does not admit me" through people's `sourceLinkSight`, instead of showing a person only to a viewer `sourceLinksOf` lists · K1649 · req: R2, R15, R16, BOB's wording (the fail-closed reading was the interim) · depends T34-27, T34-23.
+- **T34-49 · consequences** · (PEOPLE #3 J1, K1791) retires R16's interim fail-closed test (`person.test.mjs`:84), red since people's `sourceLinkSight`. (N576, widened by K1649) R2 and R15 read a calculation operand through calculations' synchronous read, instead of withholding it from every member viewer. (N600) R16 tells "no link" from "a link that does not admit me" through people's `sourceLinkSight`, instead of showing a person only to a viewer `sourceLinksOf` lists · K1649 · req: R2, R15, R16, BOB's wording (the fail-closed reading was the interim) · depends T34-27, T34-23.
 - **T34-50 · action-clocks** · (N609) R3, R5 items carry `zone`. (N562) `factOf` per calendar entry uses local-facts R6's named closure-list entries. (N603, user side) drops `count.mjs`'s `governedView` once civil-time counts on the governing correction · K1563 (10) · req: BOB's wording · depends T34-19, T34-3.
 
 - **T34-61 · action-plans** · (N601, user side) answers `NO_SUCH_DUTY` through duties' `noSuchDuty`; C-124.32's translation as T34-12 stamps it · K1650 · req: BOB's wording · depends T34-22, T34-12.
