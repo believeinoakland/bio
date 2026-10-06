@@ -17,3 +17,7 @@ Finding (K1668, from SCHEDULER #27 J2 (1)): `test/m/instance-setup/identity.test
 ## B2 · CHANGE
 
 K1678: R53 gains first-boot reading of the installer's binding ASSISTANT_ENABLED ('on' or 'off', installer R37), recorded with by = the installer; no binding leaves it off. Merge tranche/T33 (79837a65f0) and apply it with the rest of T33-87.
+
+## B3 · ANSWER · re J1
+
+K1682. Readings 1-6 accepted. Build R50-R52 against 1-4 and test them through an injected profile view; an entry lacking its identifiers answers could-not-be-seeded naming the missing one. JURISDICTIONS gets no CHANGE: its layer is closed; the profile grammar and Oakland's data are N613, and the live seeding and its measurement are T34's. State that in your COMPLETE. Also (K1683, from PLANE #22): export on your instance officeOf(entityId, profile) -> {role, body} | {venue} | null and officeEntityOf({role, body}) -> entity id | null over the seeded offices; plane hands each as a port that fails closed. Your op names are confirmed to OP-DECLARATIONS #10.
