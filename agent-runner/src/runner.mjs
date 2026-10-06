@@ -15,6 +15,10 @@ const QUIET = {
   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
 };
 const PATH = '/usr/local/bin:/usr/bin:/bin';
+// The one variable of the process environment a query inherits: the CA through which the container's HTTPS egress is
+// applied (src/worker.mjs, R10). It names a file, never a secret.
+const PASSED = ['NODE_EXTRA_CA_CERTS'];
+const passed = () => Object.fromEntries(PASSED.filter((k) => process.env[k]).map((k) => [k, process.env[k]]));
 
 const fail = (code, detail) => ({ ok: false, code, detail });
 const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : null);
@@ -131,7 +135,7 @@ export function converse(sdk, request, channel, { tmpRoot = tmpdir(), version = 
         permissionMode: 'dontAsk',
         cwd: join(dir, 'work'),
         env: {
-          PATH, HOME: join(dir, 'home'), TMPDIR: join(dir, 'tmp'), CLAUDE_CONFIG_DIR: dir, ...QUIET,
+          PATH, ...passed(), HOME: join(dir, 'home'), TMPDIR: join(dir, 'tmp'), CLAUDE_CONFIG_DIR: dir, ...QUIET,
           CLAUDE_AGENT_SDK_CLIENT_APP: `agent-runner/${version}`,
           [cred.variable]: cred.secret,
         },
