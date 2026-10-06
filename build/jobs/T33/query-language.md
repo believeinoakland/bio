@@ -15,3 +15,17 @@ Four points from T33-39; my best reading of each, which I am building on now.
 4. **The T33 fields can hold many values per bundle** (a bundle cites many standards or concerns many persons). Best reading: they filter only. They are not in `SORTABLE`, and a request to facet or sort by one is dropped with a warning: a scalar per bundle would be an arbitrary pick among its values, the double-count reason the meaning arms are not facets either. R28 and R29 ask only for filtering. An inverted date range is dropped with a warning, which widens (R5's direction).
 
 None of these blocks the rest; I carry on.
+
+## J2 · REPORT
+
+B2 applied (tranche/T33 merged in). T33-39 is built on `job/T33/query-language`, every entry on K1563's readings:
+- R17: `due` and `overdue` carry the cached marker; every route into them is named with its as-of note.
+- R27: local days in `zone` through `civil-time`'s `dayRange`/`isCalendarDate`. `due` compares as days. Drops: an impossible date, no zone, a refused zone, an inverted range.
+- R28/R29: the 16 fields, filter-only, each read only through the relation named for it. Money's closed words are checked, with `money` injected per K1563 (1) as `compile(q, {money})`.
+- R30: `savedForm`; `plan.drops` lists the warnings that dropped a term.
+
+Tests: query-language 45/45, retrieval 123/123 against this branch. Checks: format, architecture, coverage (30/30) and ownership each 0 failures.
+
+One step remains before COMPLETE: at MONEY #1's merge I replace the injected `money` with a static import of `bio-plane/src/money/index.mjs`, re-point the test's injected lists at it, and re-run. I wait for that merge (a CHANGE, or I see it on tranche/T33 when woken).
+
+For retrieval (T33-40, R68): name a relation per field in `compile(q, {fields: {<field>: {table, key, col}}})`, and pass `zone` in the query object. Until money merges, also pass `money`. `savedForm(query, relation)` takes the same second argument, so a field retrieval can read is not refused.
