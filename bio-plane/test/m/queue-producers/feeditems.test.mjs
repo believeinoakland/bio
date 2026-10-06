@@ -374,9 +374,9 @@ test("R24 (DEC-107; DEC-131; H15, H19): no member-facing sentence of any item ki
   assert.equal(m["CONDITION::governor-holding-host::h.example"].class, "CONDITION");
   assert.equal(m["OBLIGATION::contradiction::CC-D"].class, "OBLIGATION");
   assert.equal(m["OBLIGATION::contradiction-unseen::CN-D"].kind, "contradiction-duty-unseen");
-  /* the re-keyed words: a signal is our own machinery's fact, said as a signal */
-  assert.match(m["CONDITION::governor-holding-host::h.example"].basis.detail, /^a signal is a fact about OUR OWN machinery/);
-  assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a signal is a fact about OUR OWN machinery/);
+  /* the re-keyed words (DEC-131): a fact about our own machinery is a status, as machinery-producers answers it (its R9) */
+  assert.match(m["CONDITION::governor-holding-host::h.example"].basis.detail, /^a status is a fact about OUR OWN machinery/);
+  assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a status is a fact about OUR OWN machinery/);
   assert.match(m["FINDING::contradiction::CC-L"].detail, /asks nothing of you: dismiss it or take it up/);
   assert.match(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].detail, /records whether what it set was met/);
   /* R38: the place's arrival calls itself a status (DEC-131) */

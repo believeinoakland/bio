@@ -3,8 +3,10 @@
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26, R27, R29–R35, R37–R39 derive for a
- *                  member and viewer, each homed through queue's walk and carrying queue's options (both passed in),
+ *   feedItems      queue's one read of this module (R8): every item R1, R2, R4–R7, R9, R14–R21, R23, R29–R35, R37–R39 derive
+ *                  for a member and viewer, and every item `machinery-producers.conditionItems` answers (its R1: the
+ *                  CONDITIONs about our own machinery, split out by K1850), each homed through queue's walk and carrying
+ *                  queue's options (both passed in),
  *                  with the facts the answer publishes beside them. No item carries `disposition` (queue's mint gives
  *                  it) or `catalogue_id` (queue stamps it from its R2).
  *   proposalFindingItems, CARDINALITY_EXCEEDED   the FINDING producer over `progressions.proposalsFeed` (R2, R10, R11),
@@ -17,15 +19,16 @@
  * module and holds no check row: it refuses nothing a member does (draft §3.3); a second registration at R38's door is a
  * programming error answered to its caller.
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
- *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
- *   publication, corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans,
- *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket, caseImport, wizardScripts, caseTensions   the
- *   providers.
+ *   record, membership, credentials, provenance, captureRequests, basisVersions, progressions, aiRuns, bias, publication,
+ *   corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions,
+ *   filingTemplates, localFacts, docket, caseImport, wizardScripts, caseTensions   the providers; and `machinery`
+ *   (machinery-producers, K1850), built lazily over these same deps, so a dep a caller injects reaches it too (the
+ *   moved producers' own: governor, capture, captureRequests, monitoring, linkSweep, networkNotices, actions).
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
- * them for the length of that one synchronous read. `#conditionHomes` (`subject_bound`) and `#homesAt` (a case at
- * depth 0) are built over `homesOf`.
+ * them for the length of that one synchronous read. `#homesAt` (a case at depth 0) is built over `homesOf`, and both are
+ * handed on to `machinery-producers.conditionItems` as they were handed here.
  */
 
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -34,10 +37,8 @@ import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/a
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, hiddenBundles, GATE_MARK } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
-import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { captureOf, ACQUIRE_GRADE_NOTE } from "../capture/index.mjs";
-import { captureRequestsOf, renderHoldReason } from "../capture-requests/index.mjs";
+import { captureRequestsOf } from "../capture-requests/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
@@ -49,7 +50,6 @@ import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { intentOf } from "../intent/index.mjs";
 import { monitoringOf } from "../monitoring/index.mjs";
-import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../link-sweep/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { actionPlansOf } from "../action-plans/index.mjs";
@@ -57,10 +57,10 @@ import { actionsOf, zoneOf } from "../actions/index.mjs";
 import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
-import { networkNoticesOf } from "../network-notices/index.mjs";
 import { docketOf, DOCKET_UNREADABLE } from "../docket/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
+import { machineryProducersOf, MachineryProducers } from "../machinery-producers/index.mjs";
 import { proposalFindingItems } from "./proposals.mjs";
 
 export { proposalFindingItems, CARDINALITY_EXCEEDED } from "./proposals.mjs";
@@ -88,9 +88,7 @@ export class QueueProducers {
   get #record() { return this.#dep("record", () => recordOf(this.#host)); }
   get #membership() { return this.#dep("membership", () => membershipOf(this.#host)); }
   get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
-  get #governor() { return this.#dep("governor", () => governorOf(this.#host)); }
   get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
-  get #capture() { return this.#dep("capture", () => captureOf(this.#host)); }
   get #captureRequests() { return this.#dep("captureRequests", () => captureRequestsOf(this.#host)); }
   get #basisVersions() { return this.#dep("basisVersions", () => basisVersionsOf(this.#host)); }
   get #progressions() { return this.#dep("progressions", () => progressionsOf(this.#host)); }
@@ -109,9 +107,9 @@ export class QueueProducers {
   get #localFacts() { return this.#dep("localFacts", () => localFactsOf(this.#host)); }
   /* N483 (K1122): the export log is corpus-export's (its R2), read from the host's one instance. */
   get #corpusExport() { return this.#dep("corpusExport", () => corpusExportOf(this.#host)); }
-  get #networkNotices() { return this.#dep("networkNotices", () => networkNoticesOf(this.#host)); }
-  /* N506: a sweep's signals are link-sweep's (its R11), split from monitoring. */
-  get #linkSweep() { return this.#dep("linkSweep", () => linkSweepOf(this.#host)); }
+  /* K1850: the CONDITIONs about our own machinery are machinery-producers' (its R1–R5, was this module's R3, R22, R26, R27),
+     built over this module's own deps, so whatever a caller injected here reaches it too. */
+  get #machinery() { return this.#dep("machinery", () => machineryProducersOf(this.#host, this.#deps)); }
   /* N520: a case's required core is docket's (its R9). */
   get #docket() { return this.#dep("docket", () => docketOf(this.#host)); }
   /* N534: a watch's entries are case-import's (its R20). */
@@ -251,17 +249,11 @@ export class QueueProducers {
   static QUEUE_CASE_TYPES = ["inquiry", "project"];
   /** How many subject bundles one item names (R2: at most 8), the bound queue's options read under too. */
   static QUEUE_OPTION_SUBJECTS_MAX = 8;
-  /** R3: how many SUBJECT documents one CONDITION may gather before the gathering is reported `subject_bound`.
-   *  Sixteen: twice the option bound, because a home set is cheaper than an affordances derivation. */
-  static QUEUE_CONDITION_SUBJECTS_MAX = 16;
-  /** The prefix the control plane stamps on a MACHINE credential's `author`, `token:<class>`, imported from
-   *  record-grammar so the stamp and the read are the same string (REC-46); what `capture-completed-unattended` reads. */
-  static QUEUE_MACHINE_AUTHOR_PREFIX = MACHINE_AUTHOR_PREFIX;
   /** R9: the lead's inquiry-grain act, take it up (cite into that inquiry); queue decorates it (its R17) and adds the
    *  set-aside at its mint, where the disposition is known (its R18). */
   static LEAD_TAKE_UP = Object.freeze({ id: "cite", label: "Take it up under this question", weight: "report" });
-  /** N95: the page `manifestByAuthor` is read in (record-core R53's bound). */
-  static QUEUE_UNATTENDED_PAGE = 200;
+  /** K1850: the five sweep kinds, now machinery-producers' (its R4), kept here as an alias for this module's readers. */
+  static SWEEP_CONDITION_KINDS = MachineryProducers.SWEEP_CONDITION_KINDS;
 
   /* ================================================================== R8 · feedItems
    * queue's ONE read of this module. Every producer here is a pure read, called in the order queue's feed assembled
@@ -304,8 +296,11 @@ export class QueueProducers {
       const gaps = this.#findingsObjectiveGap(me, viewer, at);
       items.push(...gaps);
       items.push(...this.#findingsSourceFlagged(viewer, at));
-      /* CONDITION · R3. */
-      items.push(...this.#queueConditions(viewer, at));
+      /* CONDITION (K1850): our own machinery's, machinery-producers' (its R1–R5), homed and offered through the same
+         walk and options this read was handed. */
+      const machinery = this.#machinery.conditionItems({ member: me, viewer, now: at, homesOf: this.#homesFn || undefined,
+                                                         optionsOf: this.#optionsFn || undefined });
+      items.push(...(machinery && Array.isArray(machinery.items) ? machinery.items : []));
       /* N345 · R4–R7: the contradictions. */
       const scope = this.#contradictionProjects(me, viewer);
       items.push(...this.#contradictionItems(scope, viewer, at));
@@ -328,9 +323,6 @@ export class QueueProducers {
       items.push(...this.#obligationsLocalFactDue(me, viewer, at));
       /* R23 (DEC-102 item 3): an observation of the member's own a prepared case uses, its credit level unchosen. */
       items.push(...this.#obligationsAttributionUnchosen(me, viewer, at));
-      /* R26, R27 (K1036 (8); DEC-111): a sweep that needs a member's look; a working-on notice that needs its owners'. */
-      items.push(...this.#conditionsSweep(me, viewer, at));
-      items.push(...this.#conditionsNotice(me, viewer, at));
       /* R30, R31 (N520; DEC-116): a case's required core still due, to its manager; a finding resting on an edition
          withdrawn or contested on its docket. */
       items.push(...this.#obligationsDocketCoreDue(me, viewer, at));
@@ -365,426 +357,6 @@ export class QueueProducers {
       this.#optionsFn = null;
       this.#zone = undefined;
     }
-  }
-
-  /* ================== REC-32 · the CONDITION half of the feed =======   *
-   * WHAT A CONDITION IS, and it is the reason this class exists separately: a
-   * fact about OUR OWN MACHINERY rather than about the world (NOTIFICATIONS.md,
-   * "The classes"). An overdue set of minutes is evidence about a public body;
-   * a governor holding a host is a limitation of our own run. Merging them
-   * would let our plumbing dilute the record's findings, which is the one thing
-   * the three-class split exists to prevent.
-   *
-   * DERIVED ON READ, NO TABLE, NO STORED STATE — the REC-20 precedent, and here
-   * it is not a shortcut but the only correct shape. Every one of these facts is
-   * ALREADY state on the producing subsystem's own row: the governor's
-   * `cooloff_until`, the capture session's existence and expiry, the manifest's
-   * author. A stored copy would be a second record of one fact and would go
-   * stale the instant the fact resolved — which is exactly the failure this
-   * item's negative control produces on purpose.
-   *
-   * SO RESOLUTION NEEDS NO MECHANISM. A condition clears when its underlying
-   * fact stops being true, for EVERY member at once, because there is nothing
-   * per-member to clear: the hold expires, the session is dropped, a member
-   * authors the document again. That is DEC-16's one-state-N-homes rule
-   * inherited rather than re-implemented, and it is why muting (personal) and
-   * resolving (shared) can sit on the same item without colliding.
-   *
-   * THREE KINDS, AND THEY ARE THE THREE WHOSE DATA IS ALREADY HERE. The
-   * catalogue names eleven CONDITION kinds (queuestate.mjs holds the
-   * vocabulary, transcribed from NOTIFICATIONS.md and still the single
-   * authority). These three are built because their producing subsystems
-   * already write the fact down; the other eight wait on producers that do not
-   * exist yet, and nothing here invents one. NOTHING IS COUPLED TO A MONITOR
-   * TICK: a later capture-fact producer adds kinds, it does not change these.
-   *
-   * THE VIEWER POSTURE IS REC-30'S, arm for arm:
-   *   - a condition ABOUT A BUNDLE the viewer may not see is WITHHELD WHOLE and
-   *     with no count, the posture an OBLIGATION about an invisible subject
-   *     takes — a count here would say a project exists;
-   *   - a condition about something that is NOT a bundle (a host, an
-   *     unregistered capture) stands for every member, because it names no
-   *     bundle to withhold; what is gated is which DOCUMENTS sit behind it;
-   *   - the homes come from `homesOf` (queue R7), so an ancestor the viewer may not
-   *     see is `undetermined`/`out_of_view` and never silently dropped.
-   * ======================================================================== */
-
-  /** The home set for a condition, with the ONE extra way a condition's walk can
-   *  come back incomplete that an obligation's cannot.
-   *
-   *  An obligation and a finding both start from a bounded, known set of
-   *  subjects. A condition about a HOST does not: the documents it concerns are
-   *  every document captured from that host. So the subject gathering carries
-   *  R3's discipline too — a bound, and an EXHAUSTED bound reported as
-   *  `subject_bound` rather than as a quietly shorter home set. Same rule as
-   *  `depth_bound`, same reason, and deliberately a DIFFERENT word, because
-   *  "we stopped walking up" and "we stopped gathering subjects" are different
-   *  facts and a surface should be able to say which happened. */
-  #conditionHomes(subjectIds, viewer, bounded = false) {
-    const homes = this.#homesOf(subjectIds);
-    if (!bounded) return homes;
-    return { ...homes, state: "undetermined", ungrouped: false,
-             reasons: [...new Set([...homes.reasons, "subject_bound"])].sort() };
-  }
-
-  /** Which documents in this record came from a HOST, viewer-gated and bounded.
-   *
-   *  `captured_locators` is the store's own index of "what we retrieved from
-   *  what address", written unconditionally for every capture, and `register`
-   *  is the trust root that says which bundle those bytes were registered
-   *  under. The join is the honest path from a host to the documents a member
-   *  is actually working on; site_assets would answer a narrower question (what
-   *  a host SERVED as furniture) and reuse_verdicts a narrower one still.
-   *
-   *  AN ADDRESS BELONGS TO THE HOST WHEN IT BEGINS WITH ONE OF FOUR PREFIXES, since normalizeAddress keeps the
-   *  scheme and a non-default port: `https://<host>/`, `http://<host>/`, `https://<host>:`, `http://<host>:`. Each
-   *  prefix is asked as a RANGE over the text, `prefix <= address_norm < upper`, where `upper` is the prefix with
-   *  its last character (`/` or `:`) raised by one: under SQLite's binary collation that is exactly "begins with",
-   *  and it is a seek on the `address_norm` key. No LIKE or GLOB pattern is built (N270): a pattern grows with the
-   *  host, and workerd refuses one over 50 bytes (K313), so a long hostname failed the whole read on the plane. */
-  #conditionBundlesForHost(host, viewer) {
-    const cap = QueueProducers.QUEUE_CONDITION_SUBJECTS_MAX;
-    if (typeof host !== "string" || !host) return { ids: [], bounded: false };
-    const seen = this.#bundleGate("r.bundle_id", viewer);
-    const prefixes = [`https://${host}/`, `http://${host}/`, `https://${host}:`, `http://${host}:`];
-    const ranges = prefixes.flatMap((p) => [p, p.slice(0, -1) + String.fromCharCode(p.charCodeAt(p.length - 1) + 1)]);
-    const rows = this.#rows(
-      `SELECT DISTINCT r.bundle_id FROM captured_locators cl
-         JOIN register r ON r.capture_sha = cl.capture_sha
-        WHERE (${prefixes.map(() => "(cl.address_norm >= ? AND cl.address_norm < ?)").join(" OR ")})
-          AND (${seen.sql})
-        ORDER BY r.bundle_id LIMIT ?`,
-      ...ranges, ...seen.args, cap + 1);
-    const ids = rows.map((r) => r.bundle_id);
-    return { ids: ids.slice(0, cap), bounded: ids.length > cap };
-  }
-
-  /** `governor-holding-host` (D-103, and D-95 which built the governor).
-   *
-   *  THE FACT IS THE GOVERNOR'S OWN, read at the same predicate the governor
-   *  itself admits on: `cooloff_until > now` is the exact test `governorAdmit`
-   *  applies before refusing with `cooling_off`, and the one the capture path
-   *  applies before stopping a page's remaining subresources. This derivation does not
-   *  restate the rule, it asks it.
-   *
-   *  WHY IT EARNS AN ITEM AT ALL (NOTIFICATIONS.md rule 4 — a CONDITION is
-   *  status until a member can change it): because the member's conclusion
-   *  changes. "The source is down" and "we are pacing ourselves" are different
-   *  facts about the world and about us, and D-104 is explicit that they must be
-   *  distinguishable. A member who cannot tell them apart will either wait for
-   *  a source that is fine or chase a publisher who did nothing.
-   *
-   *  IT RESOLVES BY THE HOLD ENDING, and for everyone at once. There is no act
-   *  to take and none is offered: `options[]` are the acts available on the
-   *  DOCUMENTS behind it, derived exactly as every other item's are. */
-  #conditionsGovernorHolding(viewer, now) {
-    const out = [];
-    for (const r of this.#governor.governorHolding({ now })) {
-      const subj = this.#conditionBundlesForHost(r.host, viewer);
-      const refusedAt = Number(r.last_refusal_at);
-      out.push({
-        id: `CONDITION::governor-holding-host::${r.host}`,
-        class: "CONDITION",
-        kind: "governor-holding-host",
-        case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
-        subject: { kind: "host", id: null, host: r.host,
-                   bundles: subj.ids.slice(0, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: `our own pacing is holding ${r.host}: captures from it are PACED, not broken`,
-        detail: `the per-host governor is in cool-off for ${r.host} for another `
-              + `${Math.max(0, r.cooloff_until - now)}ms after `
-              + `${r.refusals} consecutive refusal${r.refusals === 1 ? "" : "s"}`
-              + (r.last_refusal_status ? ` (last status ${r.last_refusal_status})` : "")
-              + ". Nothing about the source is being claimed here.",
-        basis: { source: "host_governor", host: r.host,
-                 cooloff_until: r.cooloff_until, retry_in_ms: Math.max(0, r.cooloff_until - now),
-                 refusals: r.refusals, last_refusal_status: r.last_refusal_status ?? null,
-                 last_refusal_at: Number.isFinite(refusedAt) ? refusedAt : null,
-                 appetite_per_min: r.appetite_per_min ?? null,
-                 granted: r.granted, refused_total: r.refused_total,
-                 detail: "a signal is a fact about OUR OWN machinery (D-103/D-95): this instance's "
-                       + "governor is holding the host, which is distinguishable from the source being "
-                       + "unreachable and must not be read as evidence about the publisher. It clears "
-                       + "for every member when the hold expires; there is no act that ends it." },
-        age: Number.isFinite(refusedAt) && refusedAt > 0
-          ? { state: "determined", since: new Date(refusedAt).toISOString(),
-              ms: Math.max(0, now - refusedAt) }
-          : { state: "undetermined", reason: "no_refusal_instant",
-              detail: "the governor row is in cool-off but carries no instant for the refusal that "
-                    + "started it, so how long this has been true is not derivable" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf(subj.ids),
-      });
-    }
-    return out;
-  }
-
-  /** `partial-capture-outstanding` (CAPTURE-SCALING; the subresource ceiling).
-   *
-   *  THE FACT IS THE LEDGER'S OWN. `capture_sessions` is a work list with an
-   *  expiry: a row exists exactly when a capture ran out of subrequest budget
-   *  with support material still outstanding, and the capture path DROPS it the
-   *  moment nothing is left. So "a capture did not finish" is the existence of
-   *  an unexpired row and nothing else.
-   *
-   *  THIS READ DOES NOT PRUNE. `saveCaptureSession` and `loadCaptureSession`
-   *  delete expired rows on the way past, which is right for a write path and
-   *  wrong for this one: op=queue REPORTS and never mutates. An expired session
-   *  is filtered by the same instant comparison instead, in the same stamp
-   *  format those two methods write.
-   *
-   *  WHAT IT IS ABOUT. The primary capture is COMPLETE from the first tick and
-   *  its bytes are in the store; what is outstanding is support material. If
-   *  those bytes were registered under a bundle, that bundle is the subject and
-   *  the ordinary viewer posture applies — invisible subject, withheld whole. If
-   *  they were not, the session names no bundle at all (the intake doctrine's
-   *  own words), so there is nothing to withhold and the item stands ungrouped
-   *  about a capture rather than about a document. */
-  #conditionsPartialCapture(viewer, now) {
-    const out = [];
-    const nowIso = stampInstant("second", now);
-    const redact = this.#bundleRedactor(viewer);
-    /* capture R46 (the live sessions, each `{session, locator, primarySha, …, state}` with its state parsed) and
-       provenance R4 (the capture's home, null when none or gone). */
-    for (const s of this.#capture.liveCaptureSessions(nowIso)) {
-      const r = { ...s, primary_sha: s.primarySha };
-      const home = this.#provenance.homeOf(r.primary_sha);
-      const bundleId = home ? home.bundleId : null;
-      /* REC-30: a condition about a bundle this viewer may not see is withheld
-         WHOLE and with no count. The count is the leak. */
-      if (bundleId && redact(bundleId) === null) continue;
-      let outstanding = null, discovered = null, spent = null, parsed = true;
-      const st = r.state;
-      if (st && typeof st === "object") {
-        outstanding = Array.isArray(st.queue) ? st.queue.length : null;
-        discovered = Number.isFinite(st.discovered) ? st.discovered : null;
-        spent = Number.isFinite(st.spent) ? st.spent : null;
-      } else parsed = false;
-      const createdMs = Date.parse(r.created);
-      out.push({
-        id: `CONDITION::partial-capture-outstanding::${r.session}`,
-        class: "CONDITION",
-        kind: "partial-capture-outstanding",
-        case: this.#conditionHomes(bundleId ? [bundleId] : [], viewer),
-        subject: bundleId
-          ? { kind: "bundle", id: bundleId, capture_sha: r.primary_sha, locator: r.locator }
-          : { kind: "capture", id: null, capture_sha: r.primary_sha, locator: r.locator },
-        summary: `the capture of ${r.locator} did not finish: support material is still outstanding`,
-        detail: "the primary document is captured and its bytes are in the store; the platform's "
-              + "subrequest ceiling was reached before its support material was fetched, and the "
-              + `remainder is parked for another tick (tick ${r.ticks}, expires ${r.expires}).`,
-        basis: { source: "capture_sessions", session: r.session, locator: r.locator,
-                 primary_sha: r.primary_sha, bundle_id: bundleId, ticks: r.ticks,
-                 created: r.created, updated: r.updated, expires: r.expires,
-                 outstanding: parsed ? outstanding : null,
-                 discovered: parsed ? discovered : null, spent: parsed ? spent : null,
-                 state_readable: parsed,
-                 detail: "the ledger is SCRATCH and not record: it names a work list with an expiry, "
-                       + "the primary capture is complete from the first tick, and the row is dropped "
-                       + "by the capture path itself when nothing is left. It therefore clears for "
-                       + "every member when the capture finishes or the session expires." },
-        age: Number.isFinite(createdMs)
-          ? { state: "determined", since: r.created, ms: Math.max(0, now - createdMs) }
-          : { state: "undetermined", reason: "unparseable_created",
-              detail: "the session row carries a created stamp this producer cannot read as an instant" },
-        assignee: null,
-        assignee_role: null,
-        options: bundleId ? this.#optionsOf([bundleId]) : [],
-      });
-    }
-    return out;
-  }
-
-  /** R22 (DEC-95 (1); K1105): the grade note of each capture an unattended item names, the words `op=acquire`'s answer
-   *  carries (`ACQUIRE_GRADE_NOTE`, capture's export, as its R76 answers them), read synchronously. A capture is named,
-   *  and held, by its `register` row (provenance R48): those under the item's bundle, at most R2's option bound, or a
-   *  request's own digest. A capture the viewer may not see (its register row's bundle out of sight) carries none. */
-  #gradeNotes({ bundle = null, sha = null }, visible) {
-    const rows = bundle
-      ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.bundle_id=? ORDER BY r.capture_sha LIMIT ?`,
-          bundle, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX)
-      : typeof sha === "string" && sha
-        ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.capture_sha=?`, sha.toLowerCase())
-        : [];
-    return rows.filter((r) => visible(r.bundle_id) !== null).map((r) => ({ capture_sha: r.capture_sha, note: ACQUIRE_GRADE_NOTE }));
-  }
-
-  /** R22: the detail's sentence carrying the notes, the same words for each capture, said once with the captures named. */
-  static #gradeNoteSentence(notes) {
-    if (!notes.length) return "";
-    const byNote = new Map();
-    for (const n of notes) byNote.set(n.note, [...(byNote.get(n.note) || []), n.capture_sha]);
-    return [...byNote].map(([note, shas]) => ` The grade note of ${shas.length === 1 ? "the capture" : "the captures"} it `
-      + `names (${shas.map((x) => x.slice(0, 12)).join(", ")}), as a member present would have read it: ${note}`).join("");
-  }
-
-  /** `capture-completed-unattended` (D-61, closed by REC-2).
-   *
-   *  THE FACT IS THE MANIFEST'S OWN, and REC-2 is what made it exist. Before
-   *  REC-2 an unattended writer could not take a lease at all, so a daemon
-   *  could not finish a capture a member walked away from; REC-2's answer was a
-   *  NAMED machine actor, `token:<class>`, stamped by the control plane with the
-   *  caller's own value deleted first. That stamp lands on `manifest.author`,
-   *  and it is the only durable trace of an unattended write anywhere in this
-   *  store.
-   *
-   *  THE CONDITION IS THE SEQUENCE, NOT THE STAMP. A document written only ever
-   *  by a machine was never walked away from by anybody — the whole intake path
-   *  runs on a machine credential. What D-61 describes is a PERSON's document
-   *  finished by a daemon, so the test is: the LATEST snapshot was machine
-   *  written, and an EARLIER one was authored by a person. Both halves are
-   *  required and the basis names both.
-   *
-   *  IT RESOLVES WHEN THE MEMBER COMES BACK — that is, when a person authors the
-   *  document again and the latest snapshot is theirs. Shared, like every other
-   *  condition here, because it is a property of the manifest and not of a
-   *  reader.
-   *
-   *  ORDERING. `created` is the DOCUMENT's own time (promote records
-   *  meta.last_updated, never the wall clock — C-12.1 depends on that). The
-   *  tiebreak is `rowid DESC`, the store's own write order, because `snap_key`
-   *  is an opaque caller-chosen string and its lexical order is not a clock: two
-   *  snapshots stamped at the same instant would otherwise be ordered by a hash.
-   *  #revisionKind reads the latest manifest entry by this SAME order since
-   *  D-171 (it tiebroke on `snap_key DESC` until then, and named the wrong
-   *  writer on a tie); the two sites agree on purpose. */
-  #conditionsCaptureUnattended(viewer, now) {
-    const out = [];
-    /* N95: record-core's `manifestByAuthor` (its R53) answers, per held bundle with a machine-written entry, its
-       latest entry and its earliest entry by anybody else, in the order described above; which of them this viewer
-       sees is membership's to answer (R43, R80). Paged by its cursor to the end, as the walk was whole before. */
-    const visible = this.#bundleRedactor(viewer);
-    const page = QueueProducers.QUEUE_UNATTENDED_PAGE;
-    const found = [];
-    for (let after = ""; ;) {
-      const r = this.#record.manifestByAuthor({ authorPrefix: QueueProducers.QUEUE_MACHINE_AUTHOR_PREFIX, after, limit: page });
-      for (const b of r.bundles) if (visible(b.bundleId) !== null) found.push(b);
-      if (!r.cursor || r.bundles.length < page) break;
-      after = r.cursor;
-    }
-    for (const m of found) {
-      const b = { bundle_id: m.bundleId };
-      const latest = m.latest ? { ...m.latest, snap_key: m.latest.snapKey } : null;
-      if (!latest || !String(latest.author || "").startsWith(QueueProducers.QUEUE_MACHINE_AUTHOR_PREFIX))
-        continue;                       // a person wrote last: the member came back
-      const started = m.firstOther ? { ...m.firstOther, snap_key: m.firstOther.snapKey } : null;
-      if (!started) continue;           // never a person's document: nobody walked away
-      const createdMs = Date.parse(latest.created);
-      const title = this.#record.bundleInfo(b.bundle_id);
-      const notes = this.#gradeNotes({ bundle: b.bundle_id }, visible);
-      out.push({
-        id: `CONDITION::capture-completed-unattended::${b.bundle_id}`,
-        class: "CONDITION",
-        kind: "capture-completed-unattended",
-        case: this.#conditionHomes([b.bundle_id], viewer),
-        subject: { kind: "bundle", id: b.bundle_id },
-        summary: `${title && title.title ? title.title : b.bundle_id} was completed by an unattended `
-               + `writer after ${started.author} left it`,
-        detail: `${started.author} authored this document and an unattended writer (${latest.author}) `
-              + "wrote the most recent revision, which is the shape D-61 describes: a capture a member "
-              + "walked away from has completed. Nothing is claimed about whether the result is right."
-              + QueueProducers.#gradeNoteSentence(notes),
-        basis: { source: "manifest", bundle_id: b.bundle_id,
-                 completed_by: latest.author, completed_snap_key: latest.snap_key,
-                 completed_created: latest.created, completed_kind: latest.kind,
-                 writer: latest.writer ?? null, operation: latest.operation ?? null,
-                 started_by: started.author, started_snap_key: started.snap_key,
-                 started_created: started.created, grade_notes: notes,
-                 detail: "the machine writer is NAMED, never anonymous: the control plane deletes any "
-                       + "caller-supplied author and stamps token:<class> for a machine credential "
-                       + "(REC-2, closing D-61), so this is the record's own trace of an unattended "
-                       + "write and not an inference. It clears for every member when a person "
-                       + "authors the document again." },
-        age: Number.isFinite(createdMs)
-          ? { state: "determined", since: latest.created, ms: Math.max(0, now - createdMs) }
-          : { state: "undetermined", reason: "unparseable_created",
-              detail: "the manifest entry carries a created stamp this producer cannot read as an instant" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([b.bundle_id]),
-      });
-    }
-    return out;
-  }
-
-  /** `capture-completed-unattended` (D-61) — ITS SECOND PRODUCER, and PL-4's
-   *  completion notification.
-   *
-   *  THE DESIGN SAYS *"extend the subscriber, do not invent a channel"* (§4, on
-   *  the pursue session waiting on a capture), and this is that: the SAME
-   *  catalogued kind, the same class, a different subject and a different basis.
-   *  A second producer for one kind is not novel — `C-27.13` has two, and PL-3's
-   *  own control arm 6 turns on the distinction.
-   *
-   *  WHY THE FIRST PRODUCER CANNOT COVER THIS CASE, stated rather than left to
-   *  be discovered. `#conditionsCaptureUnattended` requires an EARLIER manifest
-   *  entry authored by a PERSON — its whole condition is "a person's document
-   *  finished by a daemon". A requested capture was never a person's document:
-   *  the run asked for a URL nobody had captured. So the walk finds no `started`
-   *  row and correctly emits nothing, and the member waiting on this capture
-   *  would be told nothing at all.
-   *
-   *  WHAT IT NAMES: BOTH PRINCIPALS, through the one composer the drain used. A
-   *  row whose attribution cannot be composed emits NO ITEM — a notification
-   *  that could not say whose act it was would be the defect DEC-27(b) names,
-   *  surfaced to a member.
-   *
-   *  RECORDED FOR THE NEXT READER: the plan row and INVESTIGATIVE-SESSION.md §4
-   *  both call this "the existing FINDING-class slug". IT IS NOT ONE.
-   *  `queuestate.mjs` has classed `capture-completed-unattended` as a CONDITION
-   *  since REC-32 and has a live producer for it. It is built here as the
-   *  CONDITION it actually is rather than reclassified to match the prose: a
-   *  kind's class decides whether leaving the list is a personal mute or an
-   *  authored record act (D-125, DEC-16), and moving one to match a sentence in
-   *  a plan would be changing doctrine to fix a citation. The discrepancy is
-   *  reported rather than silently absorbed. */
-  #conditionsCaptureRequested(viewer, now) {
-    const out = [];
-    const visible = this.#bundleRedactor(viewer);
-    for (const r of this.#captureRequests.completed({ viewer }).requests) {
-      const attribution = r.attribution;
-      /* DEFENCE IN DEPTH, AND STATED AS SUCH RATHER THAN CLAIMED AS A CONTROL.
-         The drain refuses to capture a row it cannot attribute, so no `captured`
-         row reaching this walk can fail the composer today and this `continue`
-         is UNDRIVABLE. It stays because this is a READ over stored rows, which
-         outlive the rules that wrote them, and a member-facing item that could
-         not say whose act it announces is DEC-27(b)'s defect surfaced to a
-         person. It mints no DEC-49 code, which is why it is kept where the two
-         undrivable CODES this item found were removed: an unreachable branch
-         costs a reader a moment, an unreachable code costs the whole family its
-         floor. */
-      if (!attribution.ok) continue;
-      const capturedMs = Date.parse(r.captured_at);
-      const notes = this.#gradeNotes({ sha: r.capture_sha }, visible);
-      out.push({
-        id: `CONDITION::capture-completed-unattended::${r.request}`,
-        class: "CONDITION",
-        kind: "capture-completed-unattended",
-        case: this.#conditionHomes([r.target], viewer),
-        subject: { kind: "capture_request", id: r.request },
-        summary: `${r.address} was captured by the daemon at the investigative session's request`,
-        detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT `
-              + "an entry of that document into the leg of a claim: it lands at 'collected' and never "
-              + "higher, and nothing about the record's conclusions has moved."
-              + QueueProducers.#gradeNoteSentence(notes),
-        basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
-                 address: r.address, host: r.host, purpose: r.purpose, ua_mode: r.ua_mode,
-                 capture_sha: r.capture_sha, captured_at: r.captured_at, grade_notes: notes,
-                 attribution,
-                 detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, "
-                       + "performed at the session's request, under the plane credential the run holds "
-                       + "and paid for by the level of the Claude-account cascade the run named. Never a "
-                       + "token value, and never a person's name on the act itself." },
-        age: Number.isFinite(capturedMs)
-          ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) }
-          : { state: "undetermined", reason: "unparseable_captured_at",
-              detail: "the request row carries a completion stamp this producer cannot read as an instant" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([r.target]),
-      });
-    }
-    return out;
   }
 
   /** PL-15 / D-213 — WHAT THE RECORD CAN SAY ABOUT A CAPTURED DOCUMENT'S PLACE
@@ -1856,192 +1428,11 @@ export class QueueProducers {
     return out;
   }
 
-  /** The documents captured at one address (provenance R48's read contract), viewer-gated and bounded as
-   *  `#conditionBundlesForHost` is. */
-  #conditionBundlesForAddress(addressNorm, viewer) {
-    const cap = QueueProducers.QUEUE_CONDITION_SUBJECTS_MAX;
-    const seen = this.#bundleGate("r.bundle_id", viewer);
-    const ids = this.#rows(
-      `SELECT DISTINCT r.bundle_id FROM captured_locators cl JOIN register r ON r.capture_sha = cl.capture_sha
-        WHERE cl.address_norm = ? AND (${seen.sql}) ORDER BY r.bundle_id LIMIT ?`,
-      addressNorm, ...seen.args, cap + 1).map((r) => r.bundle_id);
-    return { ids: ids.slice(0, cap), bounded: ids.length > cap };
-  }
-
-  /** `archive-fallback-eligible` (N229, N330; monitoring R47; capture R8): one CONDITION per address
-   *  `monitoring.archiveEligible` answers, what the next archive tick would find eligible (K406 Q2), asked as the tick
-   *  asks and writing nothing. Its bound, whether it cut, and the daemon's pause are published on each item: a pause
-   *  never empties the list, since eligibility is capture's fact about our attempts. */
-  #conditionsArchiveEligible(viewer, now) {
-    const page = this.#monitoring.archiveEligible(now) || {};
-    const list = page.ok !== false && Array.isArray(page.eligible) ? page.eligible : [];
-    const out = [];
-    for (const r of list) {
-      const address = r && typeof r.address === "string" && r.address ? r.address : null;
-      if (!address) continue;
-      const subj = this.#conditionBundlesForAddress(address, viewer);
-      const sinceMs = Date.parse(r.first_failure_since ?? "");
-      out.push({
-        id: `CONDITION::archive-fallback-eligible::${address}`,
-        class: "CONDITION",
-        kind: "archive-fallback-eligible",
-        case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
-        subject: { kind: "address", id: null, address,
-                   bundles: subj.ids.slice(0, QueueProducers.QUEUE_OPTION_SUBJECTS_MAX) },
-        summary: `${address} has stopped answering often enough that its archived copy may be fetched instead`,
-        detail: "our own attempts at this address have failed enough times, for long enough, that the archive "
-              + "fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about "
-              + "the publisher.",
-        basis: { source: "monitoring.archiveEligible", address, reachability: r.reachability ?? null,
-                 bound: { limit: page.limit ?? null, truncated: page.truncated === true },
-                 paused: page.paused ?? null,
-                 detail: "eligibility is capture's rule (its R8), read as the next archive tick would read it "
-                       + "(monitoring R47); the tick itself fires the fallback, and this item clears when the address "
-                       + "answers again." },
-        age: Number.isFinite(sinceMs)
-          ? { state: "determined", since: r.first_failure_since, ms: Math.max(0, now - sinceMs) }
-          : { state: "undetermined", reason: "no_first_failure",
-              detail: "the failing run carries no first-failure instant this producer can read" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf(subj.ids),
-      });
-    }
-    return out;
-  }
-
-  /** `monitoring-recheck-due` (N229; monitoring R16, R31, R32): one CONDITION per monitored address monitoring's plan
-   *  shows this viewer as overdue by more than its own interval, or unscheduled (no interval can be derived), so a
-   *  document that is not being checked is visible. A document never checked is due now and is not yet overdue. */
-  #conditionsRecheckDue(viewer, now) {
-    const plan = this.#monitoring.monitoring({ viewer, now });
-    const out = [];
-    for (const r of (plan && Array.isArray(plan.items) ? plan.items : [])) {
-      const dueMs = r.due_at ? Date.parse(r.due_at) : NaN;
-      const overdue = r.state === "due" && Number.isFinite(dueMs) && Number.isFinite(r.interval_ms)
-        && now - dueMs > r.interval_ms;
-      if (!(overdue || r.state === "unscheduled")) continue;
-      const key = r.address || r.bundle;
-      out.push({
-        id: `CONDITION::monitoring-recheck-due::${key}`,
-        class: "CONDITION",
-        kind: "monitoring-recheck-due",
-        case: this.#conditionHomes([r.bundle], viewer),
-        subject: { kind: "address", id: r.bundle, address: r.address ?? null },
-        summary: overdue
-          ? `${r.address || r.bundle} is overdue for its check by more than its own interval`
-          : `${r.address || r.bundle} is monitored and has no check scheduled`,
-        detail: overdue
-          ? `it was due at ${r.due_at} and is checked every ${Math.round(r.interval_ms / 3600000)} hours; the check `
-            + "has not run since. Nothing about the source is claimed here."
-          : `no interval can be derived for it (${r.reason || "no reason recorded"}), so no check is scheduled.`,
-        basis: { source: "monitoring", state: r.state, bundle: r.bundle, address: r.address ?? null,
-                 frequency: r.frequency ?? null, due_at: r.due_at ?? null, interval_ms: r.interval_ms ?? null,
-                 reason: r.reason ?? null, truncated: plan.truncated === true,
-                 detail: "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind "
-                       + "or unable to schedule, and it clears when the check runs or a cadence is set." },
-        age: overdue
-          ? { state: "determined", since: r.due_at, ms: Math.max(0, now - dueMs) }
-          : { state: "undetermined", reason: "unscheduled",
-              detail: "an unscheduled address has no instant it fell due" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([r.bundle]),
-      });
-    }
-    return out;
-  }
-
   /** The bounds the new producers read under (R2): reevaluation's largest page; R2's fifty projects. The monitored
    *  documents and the archive addresses are bounded by monitoring's reads (its R47, R48), which publish their bounds. */
   static QUEUE_NOTICES_MAX = 1000;
   static QUEUE_OBJECTIVE_GAP_PROJECTS = 50;
   static QUEUE_OBJECTIVE_GAP_PAGE = 200;
-  /** The four generators, in catalogue order, and the ONE place a CONDITION
-   *  item is minted. Every one of them is a pure read. */
-  #queueConditions(viewer, now) {
-    return [
-      ...this.#conditionsGovernorHolding(viewer, now),
-      ...this.#conditionsPartialCapture(viewer, now),
-      ...this.#conditionsCaptureUnattended(viewer, now),
-      ...this.#conditionsCaptureRequested(viewer, now),
-      ...this.#conditionsRenderDeferred(viewer, now),
-      ...this.#conditionsArchiveEligible(viewer, now),
-      ...this.#conditionsRecheckDue(viewer, now),
-    ];
-  }
-
-  /** `render-deferred` (D-523; BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24 by BOB #33").
-   *
-   *  THE FACT IS THE REQUEST ROW'S OWN: a request that asked for the page as a visitor saw it (`render = 1`) and
-   *  carries a C-83 code. While it is `requested` the drain is HOLDING it under that code (D-491) and asks again on
-   *  every tick until its `expires`; once `expired` the drain has RELEASED it and the render never happened. Both
-   *  are shown, under one kind, because they are one fact at two moments and a member who saw the first must be
-   *  able to see how it ended — an item that simply vanished at expiry would be the silent drop the ruling forbids.
-   *
-   *  THE REASON IS C-83's OWN, in DEC-49 words: the code, its C-number and the canned translation are read off the
-   *  family that minted them and never re-typed here, so the sentence a member reads is the one the plane refuses
-   *  with. C-83.3 and C-83.4 say different things — one that this instance cannot render at all, the other that
-   *  today's allowance is committed — and collapsing them into "deferred" would tell a member to wait for a
-   *  renderer that is not coming.
-   *
-   *  A CONDITION: our renderer, our allowance and our pacing hold it, so it is a fact about our machinery and never
-   *  about the page, and a member may mute it for themselves (D-125's item form). It offers no act of its own; the
-   *  options are the acts on the question the request was asked under, derived as every other item's are.
-   *
-   *  GATED AT THE TARGET through `#bundleGate`, exactly as the completion notification one producer up is: a
-   *  request under a question the viewer cannot see is absent from their feed as it is from op=capturerequests. */
-  #conditionsRenderDeferred(viewer, now) {
-    const out = [];
-    for (const r of this.#captureRequests.rendersHeld({ viewer }).requests) {
-      /* EVERY RENDER THE DRAIN HAS HELD, UNDER WHATEVER CODE IT LAST CARRIED, and every one that EXPIRED. A render
-         held under C-83 on one tick is held by the drain's own RATE rule on the next when a plain request for the
-         same host wins the slot, and that overwrites the row's code (measured, capturerequests.test.mjs 7d) — so
-         showing C-83 codes alone would make the item VANISH for a tick while the render still waits, which is the
-         silence the ruling forbids. A row never yet attempted (no code) is simply queued and is not shown. The
-         reason is the code's own family's sentence; a code no family catalogues says so. */
-      const row = renderHoldReason(r.code);
-      const words = row.translation
-        || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
-      const released = r.state === "expired";
-      const sinceMs = Date.parse(r.requested_at);
-      out.push({
-        id: `CONDITION::render-deferred::${r.request}`,
-        class: "CONDITION",
-        kind: "render-deferred",
-        case: this.#conditionHomes([r.target], viewer),
-        subject: { kind: "capture_request", id: r.request },
-        summary: released
-          ? `the render of ${r.address} was never performed: it was held until its request expired, and what `
-            + "the page showed is UNDETERMINED"
-          : `a render of ${r.address} is waiting: ${words}`,
-        detail: released
-          ? `${words} The request expired at ${r.expires} and was released; nothing was filed in the `
-            + "render's place, and no conclusion about the page can rest on it."
-          : `${words} The request is held and asked again on every tick until ${r.expires}; if it `
-            + "cannot be rendered by then it is recorded UNDETERMINED and released.",
-        basis: { source: "capture_requests", request: r.request, run: r.run, inquiry: r.target,
-                 address: r.address, host: r.host,
-                 render: released ? { state: "expired", content: "undetermined" }
-                                  : { state: "deferred", content: "undetermined" },
-                 code: r.code, check: row.check, translation: row.translation,
-                 attempts: r.attempts, expires: r.expires, updated: r.updated,
-                 plane_detail: r.detail ?? null,
-                 detail: "a signal is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's "
-                       + "renderer, render allowance or host pacing is what holds the render, which says "
-                       + "nothing about the page. The served frame is never filed as the content, so while it "
-                       + "waits and after it expires there is NO capture of what a visitor saw." },
-        age: Number.isFinite(sinceMs)
-          ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) }
-          : { state: "undetermined", reason: "unparseable_requested_at",
-              detail: "the request row carries a request stamp this producer cannot read as an instant" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([r.target]),
-      });
-    }
-    return out;
-  }
   /** D-86: the OBLIGATION items the sweep raised, for `queueFeed`. Synchronous, like every producer there. The
    *  row is gated by `#bundleGate` over the run's `context_id` — the predicate `aiRunRead` compiles for the run
    *  itself, so an item about a run is shown exactly to the readers of that run. A member who is not a recipient
@@ -3046,213 +2437,6 @@ export class QueueProducers {
   }
 
   /* ======================================================================
-   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (link-sweep R8, R11; monitoring R60, R63 before N506).
-   * DEC-111, K1031 · R27 — A WORKING-ON NOTICE THAT NEEDS ITS OWNERS' (network-notices R12, R13, R22).
-   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
-   * first read after the fact stops holding. The items' words are the UX design stream's to set (NOTIFICATIONS.md, the
-   * item contract; `ux-experience.json` UC-035): the sentences here say the fact plainly and claim nothing beyond it.
-   * ====================================================================== */
-
-  /** R26: the five kinds `link-sweep.sweepConditions` answers (its R11), as link-sweep exports them. */
-  static SWEEP_CONDITION_KINDS = SWEEP_CONDITION_KINDS;
-  /** R27: how many owned projects one read asks `network-notices` about; the window `notice-lapse-near` opens in before
-   *  a lapse, and how long `notice-project-closed` stands after the closing. */
-  static QUEUE_NOTICE_PROJECTS = 50;
-  static NOTICE_LAPSE_NEAR_DAYS = 7;
-  static NOTICE_CLOSED_DAYS = 30;
-  /** R27: the act that answers a notice (network-notices R6, R11): a new revision, or a stop with an optional handoff. */
-  static NOTICE_REVISE = Object.freeze({ id: "noticeprepare", label: "Revise this notice, or stop it", weight: "single" });
-  static NOTICE_STOP = Object.freeze({ id: "noticeprepare", label: "Stop this notice, with a handoff if you want one", weight: "single" });
-
-  /** R26's sentences, one per kind, each saying what the condition's `detail` gives and nothing more. */
-  static #sweepWords(kind, d, title) {
-    const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : "an undetermined number of");
-    const list = (xs, f) => (Array.isArray(xs) && xs.length ? xs.map(f).join("; ") : "none named");
-    switch (kind) {
-      case "sweep-held-backlog":
-        return { summary: `the sweep ${title} is held: its captures awaiting review have reached its limit`,
-                 detail: `${n(d.backlog)} of its captures are still awaiting review, at or over its backlog limit of `
-                       + `${n(d.limit)}. It runs again when members review or set aside enough of them.` };
-      case "sweep-yield-anomaly":
-        return { summary: `the sweep ${title} filed an unusual number of documents on its last run`,
-                 detail: `its last run filed ${n(d.filed)} against a median of ${n(d.median)} over its recent runs. `
-                       + "Nothing else changed: the run's note says only that the number was unusual." };
-      case "sweep-seed-unreachable":
-        return { summary: `a listing page the sweep ${title} reads failed on its last run`,
-                 detail: `on its last run these could not be fetched: ${list(d.seeds, (x) => String(x && x.seed))}. `
-                       + "The sweep's other pages were read; each one's reachability is on the basis." };
-      case "sweep-redirect-out-of-scope":
-        return { summary: `the sweep ${title} met a redirect outside its sources on its last run`,
-                 detail: `on its last run these addresses redirected outside the sweep's sources, and nothing at the target `
-                       + `was fetched: ${list(d.redirects, (x) => (x && typeof x === "object"
-                         ? `${x.address ?? "an address"} to ${x.target ?? "an undetermined target"}` : String(x)))}.` };
-      default:
-        return { summary: `the sweep ${title} has filed nothing on its last ${n(d.runs)} runs`,
-                 detail: `its last ${n(d.runs)} runs each filed nothing, and it is not held. Its seeds or its match may `
-                       + "no longer find what it was set up to find." };
-    }
-  }
-
-  /** `sweep-*` (R26; link-sweep R11, K1036 (8), N506): one CONDITION per condition `link-sweep.sweepConditions` answers the
-   *  viewer, keyed `CONDITION::<kind>::<bundle>#<id>`, to the members of the sweep's project (joined or leaving,
-   *  membership R74) who may see its bundle and to nobody else: a caller with no member is none of them, and a sweep in
-   *  no project has no members. Its subject the sweep's bundle, homed under the project at depth 0 and the bundle's own
-   *  walk; its `age` from the condition's `since`; its `detail` the condition's, carried whole on the basis and said in
-   *  the sentence. It leaves when the condition leaves (the read no longer answers it). */
-  #conditionsSweep(me, viewer, now) {
-    if (!me) return [];
-    const r = this.#linkSweep.sweepConditions({ viewer, now });
-    const list = r && r.ok !== false && Array.isArray(r.conditions) ? r.conditions : [];
-    const visible = this.#bundleRedactor(viewer);
-    const joined = new Map();
-    const out = [];
-    for (const c of list) {
-      if (!c || typeof c.sweep !== "string" || !QueueProducers.SWEEP_CONDITION_KINDS.includes(c.kind)) continue;
-      const hash = c.sweep.indexOf("#");
-      if (hash <= 0 || hash === c.sweep.length - 1) continue;
-      const bundle = c.sweep.slice(0, hash), sweepId = c.sweep.slice(hash + 1);
-      if (visible(bundle) === null) continue;                    // R11: a bundle the viewer may not see is no item
-      const info = this.#record.bundleInfo(bundle);
-      const project = info ? (info.type === "project" ? info.id : info.project) : null;
-      if (!project) continue;
-      if (!joined.has(project)) {
-        const p = this.#membership.participation(project, me);
-        joined.set(project, !!(p && (p.state === "joined" || p.state === "leaving")));
-      }
-      if (!joined.get(project)) continue;
-      const d = c.detail && typeof c.detail === "object" ? c.detail : {};
-      const title = info && info.title ? `"${info.title}" (${sweepId})` : c.sweep;
-      const words = QueueProducers.#sweepWords(c.kind, d, title);
-      const sinceMs = Date.parse(c.since ?? "");
-      out.push({
-        id: `CONDITION::${c.kind}::${c.sweep}`,
-        class: "CONDITION",
-        kind: c.kind,
-        case: this.#homesAt([project], viewer, [bundle]),
-        subject: { kind: "bundle", id: bundle, sweep: c.sweep, sweep_id: sweepId, project },
-        summary: words.summary,
-        detail: words.detail,
-        basis: { source: "link-sweep.sweepConditions", sweep: c.sweep, bundle, sweep_id: sweepId, project, kind: c.kind,
-                 since: c.since ?? null, condition: d, recipients_rule: "project_members_who_see_the_bundle",
-                 detail: "a sweep's signal is link-sweep's (its R8, R11): derived on read from the sweep's own runs and "
-                       + "backlog, read here and never restated. It goes to the members of the sweep's project who may "
-                       + "see its record, and it leaves on the first read after it stops holding." },
-        age: Number.isFinite(sinceMs)
-          ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) }
-          : { state: "undetermined", reason: "no_condition_instant",
-              detail: "the sweep's signal carries no instant this producer can read" },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([bundle]),
-      });
-    }
-    return out;
-  }
-
-  /** `notice-attestation-missed`, `notice-lapse-near` and `notice-project-closed` (R27; network-notices R12, R13, R22;
-   *  DEC-111, K1031, K1100): for each project the member owns (membership R65), at most 50 in id order, the project's
-   *  notices as `network-notices.noticesOf` answers the viewer, and per notice:
-   *  - an open notice whose latest `monthly` missed for want of an instance key has had no `monthly` issued since;
-   *  - an open notice whose lapse date (a lapse running) is at most 7 days away;
-   *  - a notice whose project closed while it was open (status `closed`; an owner's stop makes it `stopped`), for 30
-   *    days from the closing.
-   *  Each keyed `CONDITION::<kind>::<notice>`, to the project's owners and to nobody else: a caller with no member, or
-   *  a member who owns none, is told nothing. Each leaves on the first read after its fact stops holding. */
-  #conditionsNotice(me, viewer, now) {
-    if (!me) return [];
-    const scope = this.#ownedProjects(me, viewer, QueueProducers.QUEUE_NOTICE_PROJECTS);
-    const DAY = QueueProducers.DAY_MS;
-    /* R36: the windows are counted on local days of the instance's zone (civil-time); with none held, the lapse window
-       is read at the latest local day any zone has reached (UTC+14), so no item is withheld for want of a zone, and
-       its age is undetermined. */
-    const zone = this.#instanceZone();
-    const today = QueueProducers.#today(now, zone);
-    const out = [];
-    for (const project of scope.projects) {
-      const r = this.#networkNotices.noticesOf({ project, viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.notices)) continue;
-      const owners = this.#membership.projectOwners(project) || [];
-      const title = (this.#record.bundleInfo(project) || {}).title || project;
-      const item = (kind, n, { since, summary, detail, facts, options }) => {
-        out.push({
-          id: `CONDITION::${kind}::${n.notice}`,
-          class: "CONDITION",
-          kind,
-          case: this.#homesAt([project], viewer),
-          subject: { kind: "notice", id: n.notice, project, status: n.status },
-          summary,
-          detail,
-          basis: { source: "network-notices.noticesOf", notice: n.notice, project, status: n.status, ...facts,
-                   recipients_rule: "project_owners", zone,
-                   bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
-                   detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never "
-                         + "restated. It is told to the project's owners and to nobody else, and it leaves on the first "
-                         + "read after it stops holding." },
-          age: QueueProducers.#localAge(since, zone, now, "no_notice_instant",
-            "the notice carries no instant this producer can read for when this began"),
-          assignee: null,
-          assignee_role: null,
-          recipients: [...owners],
-          options,
-        });
-      };
-      for (const n of r.notices) {
-        if (!n || typeof n.notice !== "string" || !n.notice) continue;
-        const atts = Array.isArray(n.attestations) ? n.attestations : [];
-        /* an attestation's instant: its publication, else the first local instant of its `as_of` day */
-        const instant = (a) => Date.parse((a && (a.published_at || QueueProducers.#dayEdge(a.as_of, zone, "start"))) || "");
-        if (n.status === "open") {
-          const misses = Array.isArray(n.missed_monthlies) ? n.missed_monthlies.filter((m) => m && m.month) : [];
-          const miss = misses.at(-1);
-          if (miss) {
-            const missMs = Date.parse(miss.at ?? "");
-            const since = atts.some((a) => a.kind === "monthly" && (Number.isFinite(missMs) && Number.isFinite(instant(a))
-              ? instant(a) > missMs : String(a.as_of || "").slice(0, 7) > miss.month));
-            if (!since)
-              item("notice-attestation-missed", n, { since: miss.at ?? null,
-                summary: `the monthly attestation of ${title}'s working-on notice for ${miss.month} was not issued`,
-                detail: "no instance key was bound when it fell due, so this copy could not sign the notice's activity "
-                      + "level. The notice shows its last attested level with that level's date until an attestation "
-                      + "is issued; an administrator binds the key.",
-                facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
-                options: this.#optionsOf([project]) });
-          }
-          const lapse = typeof n.lapse_date === "string" && isCalendarDate(n.lapse_date.slice(0, 10)) ? n.lapse_date.slice(0, 10) : null;
-          const opens = lapse ? QueueProducers.#addDays(lapse, -QueueProducers.NOTICE_LAPSE_NEAR_DAYS) : null;
-          const reached = today || QueueProducers.#today(now, "Etc/GMT-14");
-          if (opens && reached && opens <= reached) {
-            item("notice-lapse-near", n, { since: opens,
-              summary: `${title}'s working-on notice will lapse on ${n.lapse_date.slice(0, 10)}`,
-              detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no "
-                    + "revision lapses it. A revision or a stop answers this; so does the lapse itself.",
-              facts: { lapse_date: n.lapse_date.slice(0, 10), window_days: QueueProducers.NOTICE_LAPSE_NEAR_DAYS,
-                       level: n.level ?? null },
-              options: [QueueProducers.NOTICE_REVISE] });
-          }
-        } else if (n.status === "closed") {
-          const closed = atts.find((a) => a && a.kind === "closed");
-          const since = closed ? closed.published_at || (isCalendarDate(closed.as_of) ? closed.as_of : null) : null;
-          const closedDay = QueueProducers.#localDayOf(since, zone);
-          /* 30 local days from the closing; with no zone held, 30 days elapsed from a published instant, else it stands */
-          const closedMs = Date.parse(closed && closed.published_at || "");
-          const stands = closedDay && today ? QueueProducers.#daysBetween(closedDay, today, zone) < QueueProducers.NOTICE_CLOSED_DAYS
-            : !Number.isFinite(closedMs) || now - closedMs < QueueProducers.NOTICE_CLOSED_DAYS * DAY;
-          if (stands) {
-            item("notice-project-closed", n, { since,
-              summary: `${title} closed while its working-on notice was open`,
-              detail: "this copy signed the closing into the notice's public record. An owner may still stop the notice "
-                    + "with a handoff naming another group or an open lead. This stands for 30 days from the closing, "
-                    + "or until an owner stops the notice.",
-              facts: { closed_at: since, window_days: QueueProducers.NOTICE_CLOSED_DAYS },
-              options: [QueueProducers.NOTICE_STOP] });
-          }
-        }
-      }
-    }
-    return out;
-  }
-
-  /* ======================================================================
    * N520 · R30, R31 — THE DOCKET (docket R9; reevaluation R30; DEC-116 items 2, 3, 7).
    * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
    * first read after the fact stops holding.
@@ -4088,18 +3272,6 @@ export class QueueProducers {
     return out;
   }
 
-  static DAY_MS = 86400000;
-
-  /** A calendar day `n` days from `day` in the proleptic Gregorian calendar: arithmetic on the date's own numbers, no
-   *  instant and no zone (civil-time R6's calendar). */
-  static #addDays(day, n) {
-    if (!isCalendarDate(day)) return null;
-    const [y, m, d] = day.split("-").map(Number);
-    const t = new Date(0);
-    t.setUTCFullYear(y, m - 1, d + n);
-    const yy = t.getUTCFullYear();
-    return `${yy < 0 ? "-" : ""}${String(Math.abs(yy)).padStart(4, "0")}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
-  }
 }
 
 const OF = new WeakMap();
