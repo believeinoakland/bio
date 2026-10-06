@@ -1,13 +1,15 @@
 /* consequences' refusal rows (requirements: `build/requirements/consequences.md`, R1, R3, R6, R9; K248 (4)). DEC-49:
  * every refusal this module answers carries its code, its row in this module's own family, C-114, and the member's
- * translation. The codes are the requirements' (R1's in its order, then R3's, R6's and R9's) and K249's lower-level
+ * translation. The codes are the requirements' (R1's in its order, R10's among them, then R3's, R6's and R9's) and K249's lower-level
  * choices (`NO_RATIONALE`, `BAD_RATIONALE`, `BASIS_UNREADABLE`, `NO_SUCH_EVIDENCE`, `NO_SUCH_PART`,
  * `ALREADY_SUPERSEDED`, `NO_REASON`, `BAD_REASON`, `ADDRESSED_UNKNOWN_STATE`). Each code is minted at one site, the
  * function its row's `where` names (K231): a code more than one act answers is minted by one helper, which they call.
  * `NO_SUCH_DETERMINATION` and `DETERMINATION_SUPERSEDED` are conformance's own (its R19 `noSuchDetermination` and R20
  * `determinationSuperseded`, N309, K275), which R1, R7 and R9 answer through: C-114.1 is retired (K380) and its number
  * is not reused. R1's two codes of this module's own conditions are named for it (K380): `CONSEQUENCE_NOT_NONCOMPLIANT`
- * (C-114.2) and `CONSEQUENCE_NOT_A_PARTICIPANT` (C-114.3). */
+ * (C-114.2) and `CONSEQUENCE_NOT_A_PARTICIPANT` (C-114.3). R10's codes since T33 (K1484) are C-114.21 and C-114.22;
+ * `AFFECTED_INDIVIDUAL` (C-114.5) is retired. Codes R2 answers for its owners, `calc-grammar`'s `UNIT_MISMATCH` and
+ * `money`'s summation codes (`SUM_MIXED_*`, `FACT_WITHDRAWN`), are theirs and carry no row here (`foreignRefusal`). */
 
 const at = (fn) => `src/consequences/index.mjs ${fn}`;
 const row = (n, fn, translation) => Object.freeze({ check: `C-114.${n}`, where: at(fn), translation });
@@ -19,12 +21,10 @@ export const CONSEQUENCES_CHECKS = Object.freeze({
     + "addressed, is work inside the determination's project, done by a member who has joined it. A machine may prepare "
     + "a computed part and answers no project's authority."),
   AFFECTED_UNKNOWN_KIND: row(4, "checkAffected", "Who or what is affected is a class, a fund, a program, a service, a "
-    + "body or other, with a description."),
-  AFFECTED_INDIVIDUAL: row(5, "checkAffected", "People are counted as a class or named in their official role, never "
-    + "singled out: no part names an individual."),
+    + "body, a person a document names, or other, with a description; an office is named by its role and its body."),
   MEASURE_UNKNOWN_UNIT: row(6, "checkMeasure", "A measure counts money, benefits, services, time or a count."),
-  MEASURE_INVALID: row(7, "checkMeasure", "A measure's value, or its range's bounds, are finite numbers, the range in "
-    + "order, and a currency belongs only to money."),
+  MEASURE_INVALID: row(7, "checkMeasure", "A measure's value, or its range's bounds, are exact decimals such as "
+    + "1200.50, the range in order, and a currency belongs only to money."),
   PERIOD_INVALID: row(8, "checkPeriod", "A consequence runs over a period: two dates, the start not after the end."),
   MACHINE_CANNOT_ASSESS: row(9, "#basis", "An assessment is a member's judgment. A machine may compute a part from the "
     + "record's own figures and propose an assessment as text; it never records one."),
@@ -48,4 +48,9 @@ export const CONSEQUENCES_CHECKS = Object.freeze({
   ADDRESSED_UNKNOWN_STATE: row(19, "addressedRecord", "A part is recorded addressed or not_addressed."),
   ADDRESSED_NO_EVIDENCE: row(20, "addressedRecord", "A consequence is recorded addressed with the evidence that it was. "
     + "Partial redress does not end an escalation."),
+  /* R10 (K1484 C2 row 7; T33-71): AFFECTED_INDIVIDUAL's C-114.5 is retired with the code, and its number not reused. */
+  AFFECTED_PERSON_NOT_NAMED: row(21, "#checkPerson", "A person is recorded as affected only as a document in the record "
+    + "names them: give the content whose passage names the person. Nothing was written."),
+  AFFECTED_NOT_A_PERSON: row(22, "#checkPerson", "Only a registered person is recorded as an affected person: the entity "
+    + "named is not one this record holds as a person. Nothing was written."),
 });

@@ -8,9 +8,13 @@
  * A new module (layer 9, K102, K171): nothing moved here from the legacy modules. Its tables are `./schema.mjs`, its
  * refusal rows `./checks.mjs` (family C-113).
  *
- * THE ACT. An act is what the government did, the office that did it (role and body, never a person), when, and the
- * content ids that show it. The first determination of an act mints its id (`ACT-`, record-core's `allocId`, stored on
- * the determination, no bundle); a later one names it, and "the same act" is that id's equality (K171 (6)).
+ * THE ACT (R25, R26; K1465, K1485). An act is an event `events` holds: what the government did, with its kind, `when`,
+ * attestations and participants; the office that did it (`actor`, role and body, carrying the `office` entity it is, or
+ * null when none is held), and the content ids that show it. The people who decided, wrote, signed or carried it out are
+ * the event's participants, read beside the act and never its actor. Its date is the event's `when` (R3). "The same act"
+ * is the event's equality, an `ACT-` alias resolved (`events.eventForAct`). Before T33 the first determination of an act
+ * minted an `ACT-` id with a description and a date (K171 (6)); those rows read as recorded, and an id no member has yet
+ * aliased to an event reads `act_unaliased: true` and is never determined again until one does. No `ACT-` id is minted.
  *
  * THE RECORD OBJECT (R17). Each determination is a `CONF-` bundle promoted through `promotion`, with history, audit and
  * export like a finding; its document states the act, the standards with their outcomes, the comparison, the pinned
@@ -30,8 +34,12 @@
  *   strength      `inquiryStrength` (R9).
  *   reevaluation  `onBasisChanged` (R10).
  *   publication   `publishedEditionsOf` (R2, R9, R10; its R37).
- *   standards     `standardRead`, `inForce` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`).
+ *   standards     `standardRead`, `inForceAt` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`).
  *   contradiction `candidatesFor` (R21: the two sides of the candidate a contradiction inquiry took up; N345).
+ *   events       `readEvent`, `eventForAct` (R25, R26); `noSuchEvent` its one answer to an absent or unseen event.
+ *   entities     `readEntity` (R25: whether the actor's entity is an `office`).
+ *   officeEntityOf `({role, body})` → the `office` entity seeded for that office (the bridge, instance-setup R50), or
+ *                null; wired by the composition root (as local-facts' `officeOf`). Absent, no office entity is held.
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37), through
@@ -47,7 +55,10 @@ import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
-import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle } from "../record-grammar/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
+import { eventsOf, noSuchEvent } from "../events/index.mjs";
+import { localDay } from "../civil-time/index.mjs";
+import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle, idPattern } from "../record-grammar/index.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
 import { CONFORMANCE_TABLES, migrateConformance } from "./schema.mjs";
 
@@ -88,6 +99,22 @@ export const FACTS_SAY = "These are facts the record holds, as the two sides of 
 export const OUTCOMES_DIFFER_SAYS = "The outcomes differ from one standard to another. Each is the member's, given per "
   + "standard, and none is composed into one verdict.";
 
+/** R25: the event roles read beside the act as who took part in it (K1465), never as its actor. */
+export const ACT_ROLES = Object.freeze(["decider", "author", "signatory", "implementer"]);
+/** R25: the sentence beside those participants. */
+export const PARTICIPANTS_SAY = "These are the people the record states took part in the act (who decided, wrote, signed "
+  + "or carried it out), each with what attests it. The actor is the office; they are never the actor, and nothing about "
+  + "them changes the outcomes.";
+/** R25: the sentence an actor with no office entity carries. */
+export const NO_OFFICE_ENTITY = "no office entity is held for this role and body, so the actor stands as the office's "
+  + "role and body only";
+/** R26: the sentence an actor recorded before T33 carries (no actor then carried an entity). */
+export const ACTOR_BEFORE_ENTITIES = "this actor was recorded before an act's office carried an entity";
+/** R26: the sentence an act no member has yet linked to an event carries. */
+export const UNALIASED_SAYS = "This act was recorded before acts were events, and no event is linked to it yet. It reads "
+  + "as recorded; a member links it to its event (events' aliasAct) before it is determined again.";
+
+const ACT_RE = idPattern("ACT");
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -143,12 +170,14 @@ export class Conformance {
   #writing = new Set();   // R13, R17: the determination ids this module is promoting now
 
   constructor({ storage, record, membership, promotion, host = null, content = null, inquiry = null, strength = null,
-                reevaluation = null, publication = null, standards = null, contradiction = null, now = null } = {}) {
+                reevaluation = null, publication = null, standards = null, contradiction = null, events = null,
+                entities = null, officeEntityOf = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards, contradiction };
+    this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards, contradiction, events, entities };
+    this.officeEntityOf = typeof officeEntityOf === "function" ? officeEntityOf : null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -160,6 +189,8 @@ export class Conformance {
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
   get standards() { return this.#deps.standards ||= standardsOf(this.#deps.host); }
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
+  get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
 
   migrate() { migrateConformance(this.sql); }
 
@@ -299,61 +330,132 @@ export class Conformance {
    * THE PARTS OF A DETERMINATION (R1–R4, R6, R7)
    * ===================================================================== */
 
-  /* R1, K171 (6): the act. `{id}` names an act an earlier determination of this project minted, and answers it as
-     recorded; otherwise every part is required. With `supersedes` and no act id, the act is the predecessor's (R7). */
-  #actOf(act, project, supersedes) {
-    const a = isObj(act) ? act : {};
-    let id = str(a.id);
-    if (!id && str(supersedes)) {
-      const prev = this.#one(`SELECT act_id FROM determinations WHERE determination_id=? AND project_id=?`,
-                             str(supersedes), project);
-      if (prev) id = prev.act_id;
+  /* R25, R26, then R1's ACT_INCOMPLETE: the act `{event, actor: {role, body, entity_id?}, evidence}`. `event` (or a
+     pre-T33 `id`) may be an `ACT-` id, resolved through `events.eventForAct`: aliased, it is its event; not, it is
+     `ACT_NOT_AN_EVENT` when this project recorded it and an absent event otherwise. With `supersedes` and no act, the act
+     is the predecessor's (R7); a pre-T33 act named by its `ACT-` id alone takes the actor and evidence it was recorded
+     with. The event is read as `viewer` reads it (`NO_SUCH_EVENT`, absent and unseen alike, events' one answer). An
+     `entity_id` given is an `office` entity or `ACTOR_NOT_AN_OFFICE`; absent, it is the office entity seeded for that
+     role and body (`officeEntityOf`), or null, stated so on the read. */
+  #actOf(act, project, supersedes, viewer) {
+    let a = isObj(act) ? act : null;
+    if (!a && str(supersedes)) {
+      const prev = this.#one(`SELECT * FROM determinations WHERE determination_id=? AND project_id=?`, str(supersedes), project);
+      if (prev) a = { event: prev.act_event ?? prev.act_id, evidence: safeJson(prev.act_evidence, []),
+                      actor: { role: prev.act_role, body: prev.act_body, ...(prev.act_entity ? { entity_id: prev.act_entity } : {}) } };
     }
+    a = a || {};
     const incomplete = (part, detail, extra = {}) => {
       /* DEC-49 REGION is-act-complete */
       const missing = { part, ...extra };
-      return refusal("ACT_INCOMPLETE", `${detail} The act names what was done, the office that did it, when, and the `
-        + "content that shows it. Nothing was written.", missing);
+      return refusal("ACT_INCOMPLETE", `${detail} The act names its event, the office that did it and the content that `
+        + "shows it. Nothing was written.", missing);
       /* END DEC-49 REGION is-act-complete */
     };
-    if (id) {
-      const held = this.#one(`SELECT * FROM determinations WHERE act_id=? AND project_id=? AND act_minted=1 LIMIT 1`,
-                             id, project);
-      if (!held) return incomplete("id", `the act id ${id.slice(0, 60)} names no act this project has determined.`,
-                                   { act: id });
-      return { ok: true, act: this.#actView(held), minted: false };
+    const named = str(a.event) ?? str(a.id);
+    /* DEC-49 REGION is-act-event-named */
+    if (!named)
+      return refusal("ACT_NO_EVENT", "the act names no event: a government act is the event that records what was done. "
+        + "Nothing was written.", { part: "event" });
+    /* END DEC-49 REGION is-act-event-named */
+    let eventId = named;
+    if (ACT_RE.test(named)) {
+      let f = null;
+      try { f = this.events.eventForAct(named); } catch { f = null; }
+      const recorded = this.#one(`SELECT * FROM determinations WHERE act_id=? AND project_id=? ORDER BY determination_id DESC
+                                  LIMIT 1`, named, project);
+      if (!f || !f.found || !str(f.event_id)) {
+        if (!recorded) return noSuchEvent(named, { act: named });
+        /* DEC-49 REGION is-act-aliased */
+        return refusal("ACT_NOT_AN_EVENT", `${named} was recorded before acts were events, and no event is linked to it `
+          + "yet. A member links it to its event first. Nothing was written.", { act: named });
+        /* END DEC-49 REGION is-act-aliased */
+      }
+      eventId = f.event_id;
+      if (recorded && a.actor === undefined && a.evidence === undefined)
+        a = { ...a, evidence: safeJson(recorded.act_evidence, []),
+              actor: { role: recorded.act_role, body: recorded.act_body,
+                       ...(recorded.act_entity ? { entity_id: recorded.act_entity } : {}) } };
     }
-    const description = text(a.description);
-    if (!description) return incomplete("description", "the act states no description of what the government did.");
+    let read = null;
+    try { read = this.events.readEvent({ eventId, viewer }); } catch { read = null; }
+    if (!read || read.ok === false || !read.found || !isObj(read.event)) return noSuchEvent(named);
+    const ev = read.event;
     const actor = isObj(a.actor) ? a.actor : {};
+    let entity = null;
+    if (actor.entity_id !== undefined && actor.entity_id !== null) {
+      entity = str(actor.entity_id);
+      /* DEC-49 REGION is-actor-office */
+      if (!this.#isOffice(entity))
+        return refusal("ACTOR_NOT_AN_OFFICE", `${String(actor.entity_id).slice(0, 60)} is not an office entity: the actor `
+          + "is the office, and the people who took part are the event's participants. Nothing was written.",
+          { entity_id: entity });
+      /* END DEC-49 REGION is-actor-office */
+    }
     const role = text(actor.role), body = text(actor.body);
     if (!role || !body)
       return incomplete("actor", "the act names the office that did it by its official role and body, never by a person.");
-    let at = null, from = null, to = null;
-    if (a.at != null || !isObj(a.period)) {
-      if (!isDate(a.at)) return incomplete("at", "the act states when it was done, as a date (YYYY-MM-DD), or a period.");
-      at = a.at;
-    } else {
-      from = a.period.from; to = a.period.to;
-      if (!isDate(from) || !isDate(to) || to < from)
-        return incomplete("period", "the act's period states both ends as dates (YYYY-MM-DD), the end not before the start.");
-    }
-    const ev = Array.isArray(a.evidence) ? a.evidence.map(str) : [];
-    if (!ev.length || ev.some((x) => !x)) return incomplete("evidence", "the act names the content that shows it.");
-    const unheld = [...new Set(ev)].filter((cid) => { try { return !this.content.contentRow(cid); } catch { return true; } });
+    const ev0 = Array.isArray(a.evidence) ? a.evidence.map(str) : [];
+    if (!ev0.length || ev0.some((x) => !x)) return incomplete("evidence", "the act names the content that shows it.");
+    const unheld = [...new Set(ev0)].filter((cid) => { try { return !this.content.contentRow(cid); } catch { return true; } });
     if (unheld.length)
       return incomplete("evidence", "the act names content the record does not hold.", { unresolved: unheld.slice(0, 20) });
-    return { ok: true, minted: true,
-             act: { id: null, description, actor: { role, body }, at, period: at ? null : { from, to },
-                    evidence: [...new Set(ev)] } };
+    if (!entity && this.officeEntityOf) {
+      let found = null;
+      try { found = str(this.officeEntityOf({ role, body })); } catch { found = null; }
+      if (found && this.#isOffice(found)) entity = found;
+    }
+    return { ok: true, act: { event: ev.event_id, kind: ev.kind ?? null, when: ev.when ?? null, why: ev.why ?? null,
+                              actor: { role, body, entity_id: entity }, evidence: [...new Set(ev0)] } };
   }
 
-  /* The act as recorded; with `seen` (R24), an evidence content id the viewer may not see leaves the list. */
+  /* R25: whether `id` names an `office` entity (an absent one is not). */
+  #isOffice(id) {
+    if (!id) return false;
+    let r = null;
+    try { r = this.entities.readEntity({ entityId: id, viewer: "class:daemon" }); } catch { r = null; }
+    return !!(r && r.found !== false && isObj(r.entity) && r.entity.kind === "office");
+  }
+
+  /* The act as recorded (R9, R25, R26); with `seen` (R24), an evidence content id the viewer may not see leaves the list.
+     From T33 it is `{id, event, actor: {role, body, entity_id, entity_why?}, evidence, when}`, `when` the event's as the
+     author read it. A pre-T33 act keeps its description, date and period; aliased, `event` is its event, otherwise null
+     with `act_unaliased: true` and the sentence saying so. */
   #actView(r, seen = null) {
-    const evidence = safeJson(r.act_evidence, []);
-    return { id: r.act_id, description: r.act_description, actor: { role: r.act_role, body: r.act_body },
-             at: r.act_at ?? null, period: r.act_at ? null : { from: r.act_from, to: r.act_to },
-             evidence: seen ? seen.contents(evidence) : evidence };
+    const all = safeJson(r.act_evidence, []);
+    const evidence = seen ? seen.contents(all) : all;
+    const actor = { role: r.act_role, body: r.act_body, entity_id: r.act_entity ?? null,
+                    ...(r.act_entity ? {} : { entity_why: r.act_event ? NO_OFFICE_ENTITY : ACTOR_BEFORE_ENTITIES }) };
+    if (r.act_event) return { id: r.act_id, event: r.act_event, actor, evidence, when: safeJson(r.act_when, null) };
+    let f = null;
+    try { f = this.events.eventForAct(r.act_id); } catch { f = null; }
+    const event = f && f.found && str(f.event_id) ? f.event_id : null;
+    return { id: r.act_id, event, actor, evidence, when: null, description: r.act_description, at: r.act_at ?? null,
+             period: r.act_at ? null : { from: r.act_from, to: r.act_to },
+             ...(event ? {} : { act_unaliased: true, act_says: UNALIASED_SAYS }) };
+  }
+
+  /* R25 (R24): the act's event as `viewer` reads it, with its participants in ACT_ROLES labelled as who took part; null
+     when the viewer sees none of it (`seen` notes the withholding), or when the act names no event (R26). A participant
+     events withholds from the viewer is left out whole, noted by comparing with the machine's read (only the flag says
+     so). */
+  #eventRead(eventId, viewer, seen) {
+    if (!eventId) return null;
+    let r = null;
+    try { r = this.events.readEvent({ eventId, viewer }); } catch { r = null; }
+    if (!r || r.ok === false || !r.found || !isObj(r.event)) { seen.withheld = true; return null; }
+    const e = r.event;
+    const took = (x) => (Array.isArray(x.participants) ? x.participants : [])
+      .filter((p) => isObj(p) && ACT_ROLES.includes(p.role) && !p.superseded);
+    const parts = took(e).map((p) => ({ entity_id: p.entity_id, role: p.role,
+      attestation: (e.attestations || []).find((x) => x.attestation_id === p.attestation_id) || null,
+      grades: p.grades ?? null }));
+    let all = null;
+    try { all = this.events.readEvent({ eventId, viewer: "class:daemon" }); } catch { all = null; }
+    if (all && all.found && isObj(all.event) && took(all.event).length > parts.length) seen.withheld = true;
+    return { id: e.event_id, kind: e.kind, status: e.status ?? null, when: e.when ?? null, ...(e.why ? { why: e.why } : {}),
+             attestations: Array.isArray(e.attestations) ? e.attestations : [], participants: parts,
+             participants_say: PARTICIPANTS_SAY };
   }
 
   /* R24 (K903 (4), DEC-36): one read's sight. Each filter keeps what `viewer` may see and leaves the rest out whole (no
@@ -383,8 +485,33 @@ export class Conformance {
     };
   }
 
-  /* The dates a standard is read at (R3): the act's date, or each end of its period. */
-  static datesOf(act) { return act.at ? [act.at] : [act.period.from, act.period.to]; }
+  /* R3: the days a standard is read at: the act event's `when` on its local day, or each end of a band in its zone (the
+     end exclusive). An end the `when` does not state (an upper bound's start; a `when` placed nowhere or undetermined)
+     is `{date: null, why}`, read as undetermined. */
+  static datesOf(act) {
+    const w = act.when;
+    const nowhere = (why) => [{ date: null, why }];
+    if (w === null || w === undefined)
+      return nowhere(`the act's event is placed nowhere${act.why ? ` (${act.why})` : ": no attestation of it is dated"}`);
+    if (!isObj(w)) return nowhere(`the act's event's date is undetermined${act.why ? ` (${act.why})` : ""}`);
+    const day = (instant, back = false) => {
+      if (typeof instant !== "string" || !w.zone) return null;
+      const t = Date.parse(instant);
+      if (Number.isNaN(t)) return null;
+      const at = new Date(back ? t - 1000 : t).toISOString().replace(/\.\d{3}Z$/, "Z");
+      try { const d = localDay(at, w.zone); return typeof d === "string" ? d : null; } catch { return null; }
+    };
+    if (["day", "minute", "second"].includes(w.precision) && typeof w.value === "string" && isDate(w.value.slice(0, 10)))
+      return [{ date: w.value.slice(0, 10), why: null }];
+    if (w.precision === "upper_bound") {
+      const end = typeof w.value === "string" && isDate(w.value.slice(0, 10)) ? w.value.slice(0, 10) : day(w.end, true);
+      return [{ date: null, why: "the act's event is held only as on or before a date, so its start is not stated" },
+              end ? { date: end, why: null } : { date: null, why: "the act's event's latest date is not stated" }];
+    }
+    const from = day(w.start), to = day(w.end, true);
+    return [from ? { date: from, why: null } : { date: null, why: "the start of the act's event's band is not stated" },
+            to ? { date: to, why: null } : { date: null, why: "the end of the act's event's band is not stated" }];
+  }
 
   /* R2: each finding, pinned to a ratified edition of `project` (publication R37). An item is an id or
      `{finding, version?, case?, edition?}`; of the editions left, the latest edition of the last case is pinned. */
@@ -440,7 +567,8 @@ export class Conformance {
       try { read = id ? this.standards.standardRead({ id, viewer }) : null; } catch { read = null; }
       /* R1 (standards R17): one answer, standards' own, whatever the read said. */
       if (!read || read.ok === false) return noSuchStandard(id);
-      const answers = Conformance.datesOf(act).map((d) => this.#inForce(id, d));
+      const answers = Conformance.datesOf(act).map((d) => (d.date ? this.#inForce(id, d.date, viewer)
+                                                                  : { date: null, answer: "undetermined", why: d.why }));
       const not = answers.find((x) => x.answer === "not_in_force");
       /* DEC-49 REGION is-standard-in-force */
       if (not)
@@ -450,18 +578,18 @@ export class Conformance {
       const und = answers.find((x) => x.answer !== "in_force");
       if (byId.has(id)) { byId.get(id).outcomes.push(outcome); continue; }
       const s = { standard: id, outcome, outcomes: [outcome], in_force: und ? "undetermined" : "in_force",
-                  in_force_why: und ? `on ${und.date}: ${und.why ?? "the record does not decide it"}` : null };
+                  in_force_why: und ? (und.date ? `on ${und.date}: ${und.why ?? "the record does not decide it"}` : und.why) : null };
       byId.set(id, s);
       out.push(s);
     }
     return { ok: true, standards: out };
   }
 
-  /* standards R7's answer (`{ok, id, date, state, why}`, K251) as a word and why. A refusal or an unreadable answer is
-     undetermined, never in force. */
-  #inForce(id, date) {
+  /* R3: standards R20's answer (`{state, why, standard, version}`) as a word and why. A refusal or an unreadable answer
+     is undetermined, never in force. */
+  #inForce(id, date, viewer) {
     let r = null;
-    try { r = this.standards.inForce(id, date); } catch { r = null; }
+    try { r = this.standards.inForceAt({ standard: id, date, viewer }); } catch { r = null; }
     const ok = isObj(r) && r.ok !== false;
     const answer = ok && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
     return { date, answer, why: ok ? (r.why ?? null) : (isObj(r) ? (r.detail ?? r.reason ?? null) : "standards did not answer") };
@@ -534,10 +662,13 @@ export class Conformance {
     const prev = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, id);
     if (!prev || prev.project_id !== project || this.membership.sight(prev.project_id, viewer) !== Membership.SIGHT_FULL)
       return noSuchDetermination(id, { supersedes: id });
+    /* R7, R25: the same act is the same event, an `ACT-` alias resolved; a predecessor whose act no member has linked
+       to an event is no act this one can be shown to be. */
+    const prevEvent = this.#eventOfRow(prev);
     /* DEC-49 REGION is-same-act */
-    if (act.id && act.id !== prev.act_id)
-      return refusal("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.id}. `
-        + "Nothing was written.", { supersedes: id, act: act.id, predecessor_act: prev.act_id });
+    if (act.event !== prevEvent)
+      return refusal("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.event}. `
+        + "Nothing was written.", { supersedes: id, act: act.event, predecessor_act: prevEvent ?? prev.act_id });
     /* END DEC-49 REGION is-same-act */
     const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
     /* DEC-49 REGION is-reason-given */
@@ -554,6 +685,15 @@ export class Conformance {
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
     if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
     return { ok: true, prev, reason: why };
+  }
+
+  /* R7, R11, R26: the event a determination's act is, an `ACT-` id resolved through its alias; null for one not aliased. */
+  #eventOfRow(r) {
+    if (r.act_event) return r.act_event;
+    if (!ACT_RE.test(String(r.act_id ?? ""))) return r.act_id ?? null;
+    let f = null;
+    try { f = this.events.eventForAct(r.act_id); } catch { f = null; }
+    return f && f.found && str(f.event_id) ? f.event_id : null;
   }
 
   /* ===================================================================== *
@@ -578,7 +718,7 @@ export class Conformance {
                                       evidence: isObj(act) ? act.evidence : null })
       || this.#sizeRefusal({ evidence: isObj(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
     if (large) return large;
-    const a = this.#actOf(act, pid, supersedes);
+    const a = this.#actOf(act, pid, supersedes, viewer);
     if (!a.ok) return a;
     const f = this.#pinFindings(findings, pid);
     if (!f.ok) return f;
@@ -620,8 +760,7 @@ export class Conformance {
     let id = null;
     const out = this.record.transact(() => {
       id = `${this.record.allocId("CONF", year).id}-determination`;
-      const actId = act.minted ? this.record.allocId("ACT", year).id : act.act.id;
-      const theAct = { ...act.act, id: actId };
+      const theAct = { ...act.act, id: act.act.event };
       const qs = [];
       for (const x of questions) {
         if (x.inquiry) { qs.push({ ...x, opened: false }); continue; }
@@ -642,12 +781,12 @@ export class Conformance {
       if (!p || !p.ok) return p || { ok: false, reason: "PROMOTION_FAILED" };
       this.sql.exec(
         `INSERT INTO determinations (determination_id, project_id, act_id, act_minted, act_description, act_role, act_body,
-           act_at, act_from, act_to, act_evidence, proposal_id, supersedes, reason, author, at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        id, project, actId, act.minted ? 1 : 0, theAct.description, theAct.actor.role, theAct.actor.body,
-        theAct.at, theAct.period ? theAct.period.from : null, theAct.period ? theAct.period.to : null,
+           act_at, act_from, act_to, act_evidence, proposal_id, supersedes, reason, author, at, act_event, act_entity,
+           act_when) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id, project, theAct.event, 0, "", theAct.actor.role, theAct.actor.body, null, null, null,
         JSON.stringify(theAct.evidence), proposal, sup.prev ? sup.prev.determination_id : null,
-        sup.prev ? sup.reason : null, author, at);
+        sup.prev ? sup.reason : null, author, at, theAct.event, theAct.actor.entity_id,
+        JSON.stringify(theAct.when ?? null));
       standards.forEach((x, i) => this.sql.exec(
         `INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force, in_force_why)
          VALUES (?,?,?,?,?,?)`, id, i, x.standard, x.outcome, x.in_force, x.in_force_why));
@@ -710,14 +849,17 @@ export class Conformance {
    *  disagreement stated, R4), each finding's pinned edition with its frozen pair beside its live pair per axis (never
    *  composed), the questions, the author and time, the supersession links and R10's flag. THE ONE SHAPE (K248), which
    *  `consequences`, `actions`, `filings` and `escalation` read, and of which each R11 item is a subset:
-   *    {ok, id, project, act: {id, description, actor: {role, body}, at, period, evidence}, outcomes: [{standard,
+   *    {ok, id, project, act: {id, event, actor: {role, body, entity_id, entity_why?}, evidence, when} (R25; a pre-T33
+   *     act also carries description, at and period, and `act_unaliased`, `act_says` when no event is linked, R26),
+   *     event: null | {id, kind, status, when, why?, attestations, participants: [{entity_id, role, attestation,
+   *     grades}], participants_say} (R25: who took part, never the actor), outcomes: [{standard,
    *     outcome}], standards: [{standard, outcome, in_force, in_force_why, rows: [{requires, did, reading, content}],
    *     disagreement}], findings: [{finding, case, edition, version_sha, role, frozen, live}], questions: [{question,
    *     inquiry?, opened}], author, at, supersedes, reason, superseded_by, live, proposal,
    *     basis_changed: null | {causes: [{kind, subject, source, since, detail?, affects?}], says},
    *     cause: null | {statement, evidence: [content id]}, cause_says: null | "cause not established",
    *     outcomes_differ, outcomes_differ_says: null | sentence, out_of_view?: true}
-   *  `at` or `period` is null as the act states. R24 (DEC-36): what the viewer may not see is withheld whole: a pinned
+   *  R24 (DEC-36): what the viewer may not see is withheld whole: the act's event, a participant of it, a pinned
    *  finding, a standard with its outcome, rows and disagreement, a question's `inquiry` key, an evidence content id of
    *  the act, a row or the cause, and a cause of the flag whose subject is one; `out_of_view: true` says only that
    *  something was. What is authored on the determination stands: `outcomes_differ` is over every standard (DEC-84 item
@@ -763,10 +905,12 @@ export class Conformance {
     const by = this.#one(`SELECT * FROM determination_supersessions WHERE superseded=?`, did);
     const flag = this.#flag(r, viewer);
     if (flag.withheld) seen.withheld = true;
+    const act = this.#actView(r, seen);
+    const event = this.#eventRead(act.event, viewer, seen);
     const cz = this.#one(`SELECT statement, evidence FROM determination_causes WHERE determination_id=?`, did);
     const cause = cz ? { statement: cz.statement,
                          evidence: seen.contents(safeJson(cz.evidence, []).slice(0, LIMITS.evidence)) } : null;
-    return seen.mark({ ok: true, id: did, project: r.project_id, act: this.#actView(r, seen),
+    return seen.mark({ ok: true, id: did, project: r.project_id, act, event,
              outcomes: standards.map((s) => ({ standard: s.standard, outcome: s.outcome })), standards, findings,
              questions, author: r.author, at: r.at, supersedes: r.supersedes ?? null, reason: r.reason ?? null,
              superseded_by: by ? by.superseded_by : null, live: !by, proposal: r.proposal_id ?? null,
@@ -859,7 +1003,11 @@ export class Conformance {
     const gate = viewerPredicate(viewer);
     const where = [`d.determination_id > ?`, `(${gate.sql})`], args = [str(after) ?? "", ...gate.args];
     if (pid) { where.push(`d.project_id = ?`); args.push(pid); }
-    if (str(act)) { where.push(`d.act_id = ?`); args.push(str(act)); }
+    if (str(act)) {
+      const ids = this.#actIds(str(act));
+      where.push(`d.act_id IN (${ids.map(() => "?").join(",")})`);
+      args.push(...ids);
+    }
     if (str(standard)) {
       where.push(`EXISTS (SELECT 1 FROM determination_standards s WHERE s.determination_id = d.determination_id
                           AND s.standard_id = ?)`);
@@ -900,6 +1048,23 @@ export class Conformance {
     return { ok: true, items, limit: cap, truncated, cursor: truncated ? items[items.length - 1].id : null };
   }
 
+  /* R11, R26: the act ids that name the same act as `act`: the event an `ACT-` alias resolves to, and every pre-T33
+     `ACT-` id this module holds that resolves to that event (bounded); an id not aliased names only itself. */
+  #actIds(act) {
+    let event = act;
+    if (ACT_RE.test(act)) {
+      let f = null;
+      try { f = this.events.eventForAct(act); } catch { f = null; }
+      if (!f || !f.found || !str(f.event_id)) return [act];
+      event = f.event_id;
+    }
+    const out = new Set([act, event]);
+    for (const r of this.#rows(`SELECT DISTINCT act_id FROM determinations WHERE act_event IS NULL AND act_id LIKE 'ACT-%'
+                                ORDER BY act_id LIMIT 1000`))
+      if (this.#eventOfRow(r) === event) out.add(r.act_id);
+    return [...out];
+  }
+
   /* ===================================================================== *
    * R12: the comparison proposed
    * ===================================================================== */
@@ -930,11 +1095,10 @@ export class Conformance {
       if (!from.ok) return from;
     }
     const a = isObj(act) ? act : {};
-    const theAct = { id: str(a.id), description: text(a.description),
-                     actor: isObj(a.actor) ? { role: text(a.actor.role), body: text(a.actor.body) } : null,
-                     at: isDate(a.at) ? a.at : null,
-                     period: isObj(a.period) ? { from: isDate(a.period.from) ? a.period.from : null,
-                                                 to: isDate(a.period.to) ? a.period.to : null } : null,
+    /* R25: the act as proposed, `{event, actor, evidence}`, kept as given and judged only by a member's determination */
+    const theAct = { event: str(a.event) ?? str(a.id),
+                     actor: isObj(a.actor) ? { role: text(a.actor.role), body: text(a.actor.body),
+                                               entity_id: str(a.actor.entity_id) } : null,
                      evidence: Array.isArray(a.evidence) ? a.evidence.map(str).filter(Boolean) : [] };
     const stds = (Array.isArray(standards) ? standards : []).map((x) => (isObj(x) ? str(x.standard ?? x.id) : str(x)))
       .filter(Boolean);
@@ -1133,21 +1297,29 @@ function refuseNoSuchComparison(id) {
   /* END DEC-49 REGION is-comparison-seen */
 }
 
+/* R3, R17: the act event's `when` in words, as the author read it. */
+function whenWords(w, why) {
+  if (w === null || w === undefined) return `placed nowhere${why ? ` (${oneLine(why)})` : ""}`;
+  if (!isObj(w)) return `its date undetermined${why ? ` (${oneLine(why)})` : ""}`;
+  if (w.precision === "upper_bound") return `on or before ${w.value}${w.zone ? ` (${w.zone})` : ""}`;
+  return `${w.precision === "day" || w.precision === "edtf" ? "in" : "at"} ${w.value}${w.zone ? ` (${w.zone})` : ""}`;
+}
+
 /* R17: the determination's own document, the record's word on it, as promotion stores it (history, audit, export). Its
    front matter carries the core fields every record document states; its body states every part in words. */
 export function determinationDoc({ id, project, act, pins, standards, rows, questions, sup, proposal, cause = null, author,
                                    at }) {
-  const when = act.at ? `on ${act.at}` : `from ${act.period.from} to ${act.period.to}`;
-  const title = `Determination: ${oneLine(act.description).slice(0, 100)}`;
+  const title = `Determination: the ${oneLine(act.kind ?? "act")} ${act.event}`;
   const lines = ["---", `id: ${id}`, "object_type: determination", "schema: determination@1", `title: ${q(title)}`,
     "current_state: recorded", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`,
-    `project: ${project}`, `act_id: ${act.id}`, `author: ${q(author)}`,
+    `project: ${project}`, `act_id: ${act.id}`, `act_event: ${act.event}`, `author: ${q(author)}`,
     ...(sup && sup.prev ? [`supersedes: ${sup.prev.determination_id}`] : []),
     ...(proposal ? [`drew_on: ${proposal}`] : []),
     "produced_by:", "  mode: human", "  capability_tier: session", "references: []", "state_history: []",
     "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "---", "",
-    "## Act", "", `${oneLine(act.description)}`, "",
-    `Done by ${oneLine(act.actor.role)}, ${oneLine(act.actor.body)}, ${when}. Shown by: ${act.evidence.join(", ")}.`, "",
+    "## Act", "", `The ${oneLine(act.kind ?? "act")} ${act.event}, ${whenWords(act.when, act.why)}.`, "",
+    `Done by the office ${oneLine(act.actor.role)}, ${oneLine(act.actor.body)}`
+      + `${act.actor.entity_id ? ` (${act.actor.entity_id})` : ` (${NO_OFFICE_ENTITY})`}. Shown by: ${act.evidence.join(", ")}.`, "",
     "## Standards and Outcomes", "",
     ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.in_force === "undetermined"
       ? ` (whether it was in force is undetermined: ${oneLine(s.in_force_why)})` : ""}`), "",

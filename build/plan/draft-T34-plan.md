@@ -1,0 +1,191 @@
+# Plan T34 (draft)
+
+**Status** · DRAFT by a worker for BOB #119, 2026-10-06 (P18); for BOB's review; not yet opened.
+
+**BOB #119 note (K1651).** Drafted before N601 (K1650) was added; N601 and N602 folded by BOB #120 (K1656). Homes for DEC-132/135/136 per the draft (membership, hypotheses, tasks), BOB's under P17, unless membership's size guard trips. To be reviewed against `next.md` at T33's close before it becomes `next.md`'s T34 plan.
+
+**Sources** · `next.md` (T34), its 51 entries N549–N554 and N556–N600 (N555 left `next.md` for T33 as T33-20b, K1548; N576 and N595 as widened and N600 as added by K1649); the rulings each entry cites (K1513–K1646); the DECs on PR #11 (`claude/gallant-brown-zg0wc1` @ 4ed8870f, DEC-131 to DEC-141), whose owed lines are folded once PR #11 is on `main` at T33's close (§13.1 item 5); `modules.json` for the order. Sizes are this draft's count of `.mjs`/`.js` lines over each module's `paths` on `tranche/T33` today. An entry whose text waits on something T33 delivers (T33-90 merged, PR #11 on `main`, L11's routing) is in, because T33 will have closed.
+
+## Legacy census (§5.2 (2))
+
+| legacy module (`modules.json`) | in T34 | entry or hard reason |
+|---|---|---|
+| **legacy-ui** (`civicos-ui/`) | stays | No T34 entry retires it. Hard reasons: Bob's (UX): K633 ("stays as it is … until the new interface replaces it"); and a dependency not yet built: the new member screens (the UX stream's step 5; DEC-138's stylesheet waits on them, N559). |
+
+## Rules at the opening
+
+1. T33's rules hold. Merge order within a layer is `modules.json` order, except where a layer's merge order below says otherwise: an upstream engine merges first.
+2. **DECs folded at the opening.** DEC-131 to DEC-136 and DEC-139 to DEC-141 reach `main` with PR #11 at T33's close. BOB folds each one's owed line into the requirements of the modules named below before that module's layer starts (§5.3, §5.9). DEC-132 to DEC-136 were decided by Bob; DEC-131 by the design session under his delegation; DEC-139 to DEC-141 by the design session (P17), DEC-141 beneath Bob's K1618. So each fold is BOB's wording of a meaning Bob has ruled. The only exceptions are the Civicsmith library (S2) and any new module (Question 1).
+3. **Homes BOB names at the opening (P17).** Each choice is BOB's while it places the work in an existing module. Bob decides only if a new module is needed (P4; Question 1). This draft's recommendations:
+   - The group's own settings (N551, N558) go to **membership** (L2). The home must come before `bias` (L5) and `publication` (L8), which read it, and before membership's joining statement (DEC-136). membership is the only existing home that low that already holds group-wide administration.
+   - The check request and the check record (N557) go to **tasks** (L11), the act's own module. Its readers are the screens.
+   - Members' own notes (N558) go to **hypotheses** (L6, 513 lines). A note turns into an observation (observation-log, L5), a hunch (hypotheses itself) or a question (inquiry, L6, earlier in the order), all reachable from there.
+   - The "list of terms" (N558): if it is served data, it goes to **affordances** (L11), which publishes members' words "so no surface holds a copy". If it is a member screen, it is out with N559 (a dependency not yet built).
+   - The screen registry (N564) goes to **wizard-scripts** (R13), as DEC-139's owed line names it.
+4. **The release's results.** T33's release (K1501) runs the deployment-gated measurements at T33's close. The work they unlock is written into this plan at the opening (`next.md`: "written here then"). That includes N566 if its volumes are measured (see L1, L5).
+5. **Accepted reds at the opening, by name:**
+   1. Coverage: every id marked `*(not yet met: T34)*`, until its module's merge.
+   2. From record-core's merge (T34-9) until their L8 jobs: case-carriage R6 and corpus-export R4, whose tests `deepEqual` the old `TABLE_DECLARED`/`TABLE_NAME_INVALID` refusal shape (N554).
+   3. From connection-grammar's merge (T34-5) until the owners' L5 jobs: the owners' battery tests that assert the inapplicable `at`/`sight` checks as failures (K1563 (2); N560).
+   4. Row census: rows that T34's L3–L11 jobs add stay `awaiting stamp` until T35's promotion job. The order rules out an earlier stamp: promotion (L2) comes first (P4).
+   5. The UI's DEC-88 tests (Bob's), carried.
+
+## Entries
+
+Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids) · rulings · requirement change BOB writes before the job starts, and whose meaning it is · depends on.
+
+### L1
+
+- **T34-1 · record-grammar** · (N568) a `law_relation` subject in `PROPOSAL_STATES` (law relations, court links, treatments), so standards' `lawPropose` labels through it instead of `standard`. (N570) `CALC` minted opaque, as `EVT` and `MNY` are, so no sequential counter tells a reader how many calculations were minted, withheld ones included (DEC-36's withheld-as-absent) · K1571, K1576 · req: `PROPOSAL_STATES` and `ID_TABLE`'s `CALC` form, BOB's wording (no new meaning; DEC-36 governs) · depends —.
+- **T34-2 · jurisdictions** · (N561) two profile vocabulary keys with validate and combine, `vote_values` (`[{value, label, citation}]`, events R11) and `response_statuses` (`[{status, label, citation, basis}]`, duties R1, R4), never a default list. (N569) the Oakland profile's Legistar `PersonId` and `BodyId` schemes (numeric forms). (N574) an identifier scheme for institutions in the held profiles (test-port-ellery, oakland-alameda), so people R15's issuer on a `credentialed_by` line can be held through entities R43 · K1563 (8), K1574, K1592 · req: jurisdictions' profile keys and schemes, BOB's wording (shapes; K1563) · depends T34-1.
+- **T34-3 · civil-time** · (N565) cache `offsetAt`'s zone offsets per zone, keyed by its transitions or the hour (`formatToParts` per call is most of an explore walk's time) · K1566 · req: none (efficiency within the existing service) · depends —.
+- **T34-4 · calc-grammar** · (N567) export `relate` (R10) from its index. (N571) a streaming evaluate over a table, not row objects, so calculations R1's cell bound can return to about 1,000,000 · K1569, K1576 · req: the index export and the streaming evaluate, BOB's wording (K1576: a capacity bound) · depends T34-3.
+- **T34-5 · connection-grammar** · (N560) R9's `ownerConformance` takes an owner's declaration that its kinds are undated (no `valid`, so `at` is inapplicable) or group-wide (no fenced item, so `sight` is inapplicable), and reports those checks `inapplicable`, not failed. The `neighbours` contract states the optional `unread: [{what, why}]` (explore R8). *(Conditional, N566: the hub bound's form, per kind or a narrower window, only if T33's release measured council volumes; otherwise see Left out.)* · K1563 (2), K1566 · req: R9 and the `neighbours` contract, BOB's wording (K1563) · depends T34-3.
+- **T34-6 · bundler** · (N575) re-pin `fleetbundles.test.mjs` "agent-worker's 13 inputs" to the 14 its committed manifest records (observation-log's `checks.mjs` imports record-grammar's `ids.mjs`, T33-30). (N578) container fleet members: a `fleet-member.json` with `"kind": "container"` and an `image` block is discovered and listed, not bundle-guarded, so the member list admits agent-runner. (N586, bundler's share) `fleetbundles.control` names agent-harness' files · K1598, K1601, K1615 · req: bundler's container-member arm, BOB's wording · depends —.
+- **T34-7 · id-spaces** · (N569) a `body` id space (`SPACE_NAMES` has none today), so events R22's Legistar following resolves rows in a deployed copy · K1574 · req: R on `SPACE_NAMES`, BOB's wording · depends T34-2.
+- **T34-8 · docprofile** · (N549) deletes its seven copied doctypes and their default registration now that `plane` registers `doctypes`' types (T33-90 merged), and re-points its own tests to the seam's stubs · K1513 · req: the default-registration clause K1513 (3) kept until now is retired, BOB's wording · depends —.
+
+**L1 merge order:** record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar (the engines and the profile first), then bundler → id-spaces (after jurisdictions, whose schemes it reads) → docprofile.
+
+### L2
+
+- **T34-9 · record-core** · (N554) `TABLE_DECLARED` and `TABLE_NAME_INVALID` get their check rows: `code`, `check`, `translation`, `detail` (DEC-49). (N593) `declareTable` takes and keeps, for a `derived-rebuildable` table, the stored tables it is rebuilt from (R77), so `declaredTables()` answers them · K1545, K1632 · req: R77 and the two refusals, BOB's wording (DEC-49 governs) · depends —.
+- **T34-10 · membership** · (N552, DEC-133) the website key: an administrator creates, scopes, caps daily and revokes it, and its call returns a one-time invitation for a cover name with an optional approver name, recorded "through the website". Also invitation expiry (seven days by default) and withdrawal of an unused one; the optional reusable join link (enable, replace, switch off), recorded "through the join link"; ordinary members only, with the capabilities the administrator chose; the one-time warning. (N556, DEC-134) `ADMINS_FIRST` removed (R12), so R13 invites an ordinary member while one administrator exists; resignation refused only for the last administrator (R10); the hosting-access record (R11, with instance-setup). (N557, DEC-135) members addressed by declared expertise and sight for a check request (R21–R24 read; expertise still gates nothing). (N558, DEC-136, joining) the first-time statement at joining when the group chose "tell our members". *(If BOB names membership the group-settings home, Rule 3:)* (N551, DEC-132) the group's optional self-description: kinds from a closed list plus "other", focus, purpose, visibility (members or public), change history, an administrator's act. (N558) the setting "tell our members what a court can reach", chosen at setup or in settings, nothing preselected · K1541, K1547, K1554 · req: R10–R13 and new Rs for the key, link, expiry, self-description and setting; BOB's wording of DEC-132 to DEC-136 (Bob's) · depends —. **P6:** 3,356 lines before four DECs. If a draft would pass about 4,000, the self-description and setting move out before the job adds more, and a new module is Bob's (Question 1).
+- **T34-11 · credentials** · (N580) `AI_GRANT_OPS` gains `rule` (answers R7) and names six ops as the plane routes them (`careerof`→`career`, `occurrences`→`dutyoccurrences`, `lines`→`linesof`/`structureat`, `duties`→`dutiesof`, `calculations`→`calculation`, `moneyfacts`→`money`). A standing question's AI half gets a grant path; `aiGrantMint` refuses a non-member `by` (R27) · K1603, K1609 · req: `AI_GRANT_OPS` and the standing-question grant path, BOB's wording (the AI half stays off until its bar, K1481) · depends —.
+- **T34-12 · promotion** · (N553) stamps the rows awaiting stamp, so `test/system/row-census.test.mjs` is green: record-core's 9 (C-102.21–.25, C-132.1–.4; K1542, K1545), the rows that joined the named red in T33 (C-112.21–.32 K1571; C-28.20–.22 K1605; C-134.1–.12 K1607; inquiry-grammar's three C-2.8 rows and C-135.1–.12 K1608, K1609; C-129.27/.28 K1635; C-120.14–.16 K1638; C-98.11 K1644; C-113.29–.31 and C-114.21/.22 K1649; and any others T33's L9–L11 add), N554's two new rows, and any rows T34's L2 jobs add. (N601) C-124.32 PHASE_MALFORMED's re-worded translation (an obligation's state among a phase's starts) is re-stamped here, with control-plane's pinned digest (`rows-before-r43.json`) moved with it · K1542, K1545, K1650 and the rulings named · req: none (a stamp) · depends T34-9, T34-10, T34-11.
+
+**L2 merge order:** record-core → membership → credentials → promotion last (it stamps the layer's new rows).
+
+### L3
+
+- **T34-13 · capture-sources** · (N577) its `capture_credentials` table declared explicitly with `export: "never"` (capture-requests R47's supplied secrets) · K1601 · req: none (a declaration under record-core's R; BOB's wording if its Rs name the table) · depends —.
+- **T34-14 · capture** · (N587, DEC-141) R77 and R79 answer, for each held document, the question it was captured for and its asker when the viewer may see the question; otherwise the whole entry is withheld ("Captured for a question you may not see"). R79 requires a reason when an open question waits on the document, and records the question (a batch: one reason applies to each waiting question). R81's restore records its reason in the same history. capture (L3) cannot use capture-requests (L6), so the question and asker reach it through a seam that capture-requests registers into, which BOB names at the opening (P17, dependency edges) · K1618, K1645 · req: R77, R79, R81, BOB's wording of DEC-141 under K1618 (Bob's) · depends —. **P6:** 3,458 lines.
+
+### L4
+
+- **T34-15 · content** · (N589) compares two captures held at different addresses, so a cross-address passage notice can be graded (`passageNotice`/`noticeForRow` grade only within one address's chain today) · K1624 · req: a new provided read, BOB's wording (no new meaning; reevaluation R36 already requires the notice) · depends —. **P6:** 3,683 lines; the job reports if it would pass about 4,000.
+
+### L5
+
+- **T34-16 · entities** · (N560) as an owner whose kinds are undated or group-wide, it declares that to the battery and its tests assert `ok` whole (ENTITIES #9 J1) · K1563 (2) · req: none · depends T34-5.
+- **T34-17 · events** · (N591) R16's telling states the change's instant. (N595) R30's `timeline` passes its `viewer` to each registered source, and carries a source's own `truncated`. (N561, user side) R11 reads `vote_values` from the profile, not refused, once jurisdictions holds them (K1563 (8)). (N602) `timeline` with `from` or `to` lists placed-nowhere items apart instead of dropping them, so a dated read never loses them against R28/R29 · K1626, K1632, K1635, K1563, K1653 · req: R16, R30, BOB's wording · depends T34-2.
+- **T34-18 · lines** · (N573) a `holds` line carries the title as written (its cited document's words), so people R15's `careerOf` answers it · K1592 · req: the `holds` line's field, BOB's wording · depends —.
+- **T34-19 · local-facts** · (N562) R6 names a profile's named closure-list holiday entries (`list=<name>`), so members can confirm a court's judicial holidays · K1563 (10) · req: R6, BOB's wording (K1563) · depends T34-2.
+- **T34-20 · connections** · (N560) as T34-16, for its kinds (CONNECTIONS #12 J1) · K1563 (2) · req: none · depends T34-5.
+- **T34-21 · standards** · (N583) exports a portion-path predicate (R18). (N590) answers a read by key and portion, and by a portion's content id. (N568, user side) `lawPropose` labels through record-grammar's `law_relation` subject · K1608, K1626, K1571 · req: the new reads and export, BOB's wording · depends T34-1.
+- **T34-22 · duties** · (N581) a read as `INTERNAL` reaches other modules as its `SYSTEM_VIEWER` (`class:daemon`), as `#instances` does for events; today `occurrencesOf({viewer: INTERNAL})` answers every `source_in_force` undetermined, against R8 and R9. (N595, widened by K1649) R16 passes its reader's `viewer` to the sources it reads, so actions R67's `duties` source is not empty. (N583) exports its occurrence key's pattern (`OCC-` + 32 hex, R9). (N567, user side) imports `relate` from calc-grammar's index, not `decimal.mjs`. (N561, user side) R1 and R4 read `response_statuses` from the profile. (N601) exports `noSuchDuty` (the `noSuchEntity` pattern), so a caller answers `NO_SUCH_DUTY` without a read · K1605, K1608, K1569, K1563 (8), K1649, K1650 · req: N581 and N595 none (a defect against R8, R9); the export, BOB's wording · depends T34-4, T34-21.
+- **T34-23 · people** · (N573, user side) R15's `careerOf` answers the `holds` title. (N594) `member_ties` declared `export: "never"` (`people/schema.mjs`:168; corpus-export R7 and Bob's K1490). (N574, user side) R15's issuer identifier is held through entities R43 when the profile names the scheme. (N600) an internal synchronous `sourceLinkSight(person)` → null or the members a source link admits, never answered to a viewer, so consequences R16 can tell "no link" from "a link that does not admit me" · K1592, K1632, K1490, K1649 · req: none for N594 (aligns code to K1490); `sourceLinkSight`, BOB's wording (an internal read); R15 wording if needed, BOB's · depends T34-18, T34-2.
+- **T34-24 · explore** · (N582) `explore.rederive` reads a derivation's ends with the leg's inquiry as `scope`, or answers an input it cannot read as undetermined, refused, so a derived connection resting on a hunch is seen as a lead (hypotheses R6). *(Conditional, N566: the hub bound, as T34-5.)* · K1607, K1566 · req: rederive's `scope`, BOB's wording · depends T34-5.
+- **T34-25 · bias** · (N551, DEC-132) the declared bias is offered the group's self-description as its starting draft · K1541 · req: new R, BOB's wording of DEC-132 (Bob's) · depends T34-10 (the settings home).
+- **T34-26 · retrieval** · (N584) exports a read of the relations it compiles with, so answers R15's saved-form check sees T33's fields; `runSaved` re-checks a form with the zone it was set with · K1609 · req: the new export, BOB's wording · depends —.
+- **T34-27 · calculations** · (N576) a synchronous read for the synchronous checks: `gradeFactsOf({calcId, viewer})` returns R9's grade facts `{found, accepted, capture: {grade, why}, inputs, method}` with R10's withholding, plus a status read `{held, visible, accepted}`. (N571, user side) R1's cell bound back to about 1,000,000 over the streaming evaluate. (N596) `read` states each input's canonical bytes' SHA-256 (figure, money and calculation inputs, not only tables) · K1601, K1576, K1639 · req: the two reads, R1's bound and the input hash, BOB's wording (K1576, K1601) · depends T34-4.
+
+**L5 merge order:** `modules.json` order: entities → events → lines → local-facts → connections → standards → duties → people → explore → bias → retrieval → calculations. lines merges before people (N573) and standards before duties (N583).
+
+### L6
+
+- **T34-28 · inquiry-grammar** · (N582) the leg arm admits a derived-id target with its five `derivation_*` fields. (N583) R13 and R15 import duties' occurrence pattern and standards' portion-path predicate instead of spelling them · K1607, K1608 · req: the leg arm, BOB's wording · depends T34-22, T34-21, T34-24.
+- **T34-29 · inquiry** · (N576, N596) R11 admits a `CALC-` leg through calculations' synchronous read, instead of refusing it as unconfirmable. (N587, DEC-141) the wait "a document it waits on was set aside", read on the question and on its project's question list, never a queue item, no notification (DEC-94) · K1601, K1639, K1618, K1645 · req: R11 and the new wait, BOB's wording of DEC-141 · depends T34-27, T34-14.
+- **T34-30 · hypotheses** · (N576) R6's calculation arm asks through calculations' synchronous read. *(If BOB names it the notes home, Rule 3:)* (N558, DEC-136) a member's own notes: member-private, never cited, published, counted or shared, turned by the member's act into an observation, hunch or question · K1601, K1554 · req: R6; the notes Rs, BOB's wording of DEC-136 (Bob's) · depends T34-27.
+- **T34-31 · strength** · (N576) R36 grades a `CALC-` leg through calculations' synchronous read instead of answering it undetermined · K1601 · req: none (R36's undetermined was the interim) · depends T34-27.
+- **T34-32 · run-rules** · (N586) `GATE_ADDRESS` and `DEPLOYMENT_SEQUENCE` name agent-harness' files · K1603, K1615 · req: none · depends —.
+- **T34-33 · ai-runs** · (N588) R48's usage entry states per-call usage (or a `calls` count) as agent-worker passes it through · K1621 · req: R48, BOB's wording · depends T34-38, T34-39.
+- **T34-34 · capture-requests** · (N585) its four `plane.test.mjs` tests that open a run connect the opener's account through `op=accountreferenceset` and name the member (ai-runs R52), now that T33's L11 routes the op and binds the seal secret. (N587) registers the question and asker of each request (R8, R10) into capture's seam (T34-14) · K1614, K1645 · req: none for N585; the registration, BOB's wording · depends T34-14.
+- **T34-35 · skills** · (N586) the doctrine pin names agent-harness' files · K1615 · req: none · depends —.
+- **T34-36 · answers** · (N580, user side) ASK_SCOPE follows credentials' list and its copy test returns to equality. (N564, DEC-139) the standing question runs for a member with no account of their own, its new matches reaching the queue once as a list, unread. (N584, user side) R15's saved-form check reads retrieval's new relations read · K1603, K1609, K1565 · req: the no-account standing question, BOB's wording of DEC-139 · depends T34-11, T34-26.
+- **T34-37 · agent-harness** · (N586) stops exporting `PLANE_OPS`, `NAMESPACES` and `MEANING_ARM`, which are now agent-worker's `ops.mjs` · K1615 · req: its R list loses them, BOB's wording · depends —.
+- **T34-38 · agent-model** · (N588) `converse` answers per-call usage (or a `calls` count), not only a conversation's sum · K1621 · req: the usage shape, BOB's wording · depends —.
+- **T34-39 · agent-worker** · (N588) passes per-call usage through to ai-runs. (N585, its share, K1621) the five REC100 arms of `harness.test.mjs` (AI_NO_ACCOUNT) connect an account through the routed op. Its re-export files stay (see Left out, N586) · K1621, K1615 · req: the tick's usage field, BOB's wording · depends T34-38.
+
+**L6 merge order:** inquiry-grammar first; inquiry, hypotheses and strength (on calculations' read); run-rules, capture-requests, skills, answers; then **agent-harness → agent-model → agent-worker → ai-runs**. ai-runs moves last, because it states the usage that agent-model answers and agent-worker carries (N588).
+
+### L7
+
+- **T34-40 · intent** · (N587) named by the entry. Its owed work is not spelled out in N587, DEC-141 or K1618 (see Ambiguities). BOB states it in the START from intent's requirements, or drops the job if nothing is owed · K1618 · req: BOB's · depends T34-29.
+- **T34-41 · reevaluation** · (N589) grades R36's cross-address notice through content's comparison. (N590) R36 reads through standards' read by key and portion and by content id, instead of paging `standardsIn` per batch. (N591) R34 carries events' telling instant as `since` · K1624, K1626 · req: R34, R36, BOB's wording · depends T34-15, T34-21, T34-17. **P6:** 3,429 lines.
+
+**L7 merge order:** intent → reevaluation.
+
+### L8
+
+- **T34-42 · corpus-export** · (N554) R4's tests follow record-core's new refusal shape. (N593) R7's rule names a `derived-rebuildable` table's `from` from `declaredTables()` · K1545, K1632 · req: R7 (no `from` until now, K1632), BOB's wording · depends T34-9.
+- **T34-43 · case-carriage** · (N554) R6's tests follow the new refusal shape · K1545 · req: none · depends T34-9.
+- **T34-44 · publication** · (N597) drops its own spread of `caseTensionsOps` (plane spreads it since T33-90). (N598) a set-wide `stampedEditions()` read. (N551, DEC-132) the self-description is shown on the public page and directory only when chosen, behind the outward-act warning · K1643, K1644, K1541 · req: the new read; the display, BOB's wording of DEC-132 · depends T34-10. **P6:** 3,959 lines. The spread's removal offsets the new read; if the display would pass about 4,000, BOB splits before the job adds it.
+- **T34-45 · docket** · (N595) R26's lane, fail-closed without a viewer, shows a member's cases now that events passes the `viewer`; it carries a source's `truncated` · K1632, K1635 · req: none · depends T34-17.
+- **T34-46 · public-read** · (N598) R28's index makes one `stampedEditions()` query instead of one `stampsOf` per published edition · K1644 · req: none (efficiency) · depends T34-44.
+- **T34-47 · case-checker** · (N599) R9 fills a calculation's inputs held at their hash in the case file, so after case-import's completion the checker and the import agree · K1646 · req: R9, BOB's wording · depends —.
+- **T34-48 · case-authoring** · (N596) writes each non-table input's hash from calculations' `read`, not a null `sha`, so publication can commit its bytes (R22) · K1639 · req: none · depends T34-27.
+
+**L8 merge order:** corpus-export → case-carriage → **publication → docket → public-read** (publication's new read first) → case-checker → case-authoring.
+
+### L9
+
+- **T34-49 · consequences** · (N576, widened by K1649) R2 and R15 read a calculation operand through calculations' synchronous read, instead of withholding it from every member viewer. (N600) R16 tells "no link" from "a link that does not admit me" through people's `sourceLinkSight`, instead of showing a person only to a viewer `sourceLinksOf` lists · K1649 · req: R2, R15, R16, BOB's wording (the fail-closed reading was the interim) · depends T34-27, T34-23.
+- **T34-50 · action-clocks** · (N562) `factOf` per calendar entry uses local-facts R6's named closure-list entries · K1563 (10) · req: BOB's wording · depends T34-19.
+
+- **T34-61 · action-plans** · (N601, user side) answers `NO_SUCH_DUTY` through duties' `noSuchDuty`; C-124.32's translation as T34-12 stamps it · K1650 · req: BOB's wording · depends T34-22, T34-12.
+- **T34-62 · filings** · (N602, user side) reads placed-nowhere items from events' dated `timeline` instead of its second undated read · K1653 · req: none (a simplification) · depends T34-17.
+
+**L9 merge order:** consequences → action-clocks → filings → action-plans (`modules.json` order).
+
+### L10
+
+- **T34-51 · scheduler** · (N585) its R12 test connects the opener's account through `op=accountreferenceset` and names the member (ai-runs R52) · K1614 · req: none · depends —.
+
+### L11
+
+- **T34-52 · wizard-scripts** · (N564, DEC-139) registers the screen registry (`docs/development/ux-substrate/screens/registry.json`: 42 screens, 192 acts) as its R13's registry. R2 gains an optional `via`: a side trip into another wizard, returning to the step left · K1565 · req: R2, R13, BOB's wording of DEC-139 · depends —.
+- **T34-53 · tasks** · (N557, DEC-135) "Ask for a check": the owner names a target, an expertise label and an optional note. A task kind addressed by expertise and sight goes only to those who can see the target. The first who accepts takes it, and the others' To do closes, naming who took it. The owner reads an untaken request. *(Check record here if BOB names tasks, Rule 3:)* the check carries the checker's declared expertise and whether an administrator confirmed it; it gates nothing · K1547 · req: new Rs, BOB's wording of DEC-135 (Bob's) · depends T34-10.
+- **T34-54 · queue-producers** · (N550, DEC-131) R24's member-facing word "signal" becomes "status"; codes are unchanged · K1536 · req: R24, BOB's wording · depends —. **P6:** 3,873 lines; a word change only.
+- **T34-55 · notice-producers** · (N550) the "Hint" label ("Hint · machine work" on K1491's items) wherever its K1473 signals and K1491 machine checks reach a member · K1536 · req: its label wording, BOB's · depends —.
+- **T34-56 · queue** · (N550) R48 `QUEUE_CLASS_LABELS` CONDITION "Signal" becomes "Status" · K1536 · req: R48, BOB's wording · depends T34-55.
+- **T34-57 · instance-setup** · (N556, DEC-134) asks for the hosting-access record at setup (R11, with membership). Gives the one-time recommendation of a second administrator and its statement of dependence · K1547 · req: new Rs, BOB's wording of DEC-134 · depends T34-10.
+- **T34-58 · op-declarations** · (N564) declares the registry's 69 requirement functions' ops by lowercased name · K1565 · req: BOB's wording · depends T34-52.
+- **T34-59 · admission** · (N552, DEC-133) the website key's call and the join link's page (it asks the cover name), each recorded through its door, with the daily cap · K1541 · req: new Rs, BOB's wording of DEC-133 · depends T34-10.
+- **T34-60 · control-plane** · (N552) routes the key's and the link's acts (an administrator's). (N586) `members-pin.test.mjs` names agent-harness' files (and agent-worker's `ops.mjs`) instead of agent-worker's `harness.mjs`/`subsession.mjs` · K1541, K1615 · req: BOB's wording · depends T34-58, T34-59. **P6:** 3,729 lines; wiring only.
+
+**L11 merge order:** wizard-scripts → tasks → queue-producers → notice-producers → queue (it uses notice-producers and tasks, K1594) → instance-setup → op-declarations → admission → control-plane last.
+
+## Left out of T34 (one hard reason each)
+
+| entry | item | hard reason |
+|---|---|---|
+| N559 | DEC-138's stylesheet, fonts and icons for the member screens | a dependency not yet built: the new member screens (UX step 5) |
+| N563 | money-checks M-C8 on a gold set of payments | a measurement: no gold set exists (K1506) |
+| N566 | M-X1a's hub bound, per kind or narrower window (connection-grammar, explore) | a measurement: real council volumes from T33's release. It enters T34-5 and T34-24 if they are measured by the opening (Rule 4) |
+| N572 | DEC-140's "Show me where" | a dependency not yet built: the wizard runner. No requirement changes |
+| N579 | contradiction's K6 prompt arm | a measurement: the arm is measured before it is shown (K1601 (3)) |
+| N592 | the investigation study | not a module job: a P18 study on `study/investigation`. Its requirements follow Bob's ruling on its proposed architecture (P17) |
+| N551 (part) | the welcome and first-question wizards ordering what they offer by the self-description | a question that is Bob's: S2, the Civicsmith library (K1565). Also a dependency not yet built: the wizard runner |
+| N564 (part) | the Civicsmith library as wizard-scripts' data file | a question that is Bob's: S2 (DEC-121 (1); K1565) |
+| N586 (part) | agent-worker's `harness.mjs` and `subsession.mjs` re-exports and its stale negative controls | the order (P4) and one job per module (P8): control-plane's `members-pin.test.mjs` imports them and re-points only in L11 (T34-60), after agent-worker's L6 job. The re-exports outlive every importer (Rules (9) item 4). T35 |
+| N597 (part) | publication's delegates for the moved case-tensions names | the order (P4): their importers (ratification in L8; affordances `facts.mjs` and queue-producers `caseTensions` in L11) read through publication, and the L11 ones re-point after publication's L8 job. T35, once they re-point (see Question 4) |
+| N553 (tail) | stamping rows T34's L3–L11 jobs add | the order (P4): promotion (L2) precedes them. T35 |
+
+**Carried from T33** (`current.md`'s left-out table, re-read at the opening). Every "deployment, held for the release at T33's close (K1501)" row (N540, T33-D1–D10, B1–B3, B11/C9, B16, C1–C3) is replaced by what the release unlocks (Rule 4), or keeps its row if the release did not run it. The measurement rows (C4 A11–A17, C8, T33-M1–M3), the real-group rows (T33-G1–G4), Bob's UX rows (T33-U1–U5, B4/B5, A54, B6–B10…, N487, H3…J11, N493 part, T27-1, C5), the dependency rows (N521, T33-X1, A8, A21, A22/A23, A41, N538 (4)) and the trigger rows (T33-T1–T5, J7, H13, T28-1, T33-B1) keep their reasons unchanged. T33-C1–C5 leave the table: every conditional row read GO (K1506) and was built in T33.
+
+## P6 notes
+
+membership 3,356 (four DECs; the guard in T34-10), publication 3,959 (T34-44), queue-producers 3,873 (a word change), content 3,683, control-plane 3,729 (wiring only), capture 3,458, reevaluation 3,429. docprofile shrinks with N549.
+
+## Summary
+
+**Jobs per layer:** L1 8, L2 4, L3 2, L4 1, L5 12, L6 12, L7 2, L8 7, L9 2, L10 1, L11 9. **Total 60 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
+
+**Entries carried:** 53 in `next.md` (50 at this draft's start; N600 added by K1649 while it was written; N601, N602 folded by BOB #120, K1656). **43 wholly in T34**: N549, N550, N552–N554, N556–N558, N560–N562, N565, N567–N571, N573–N578, N580–N585, N587–N591, N593–N596, N598–N602. **4 in part**: N551, N564, N586, N597. **6 left out**: N559 and N572 (a dependency not yet built), N563 and N579 (a measurement), N566 (a measurement, unless the release measured it), N592 (a study, not a module job; Bob's ruling first).
+
+**Questions that are Bob's (each with a recommendation):**
+1. **New modules, only if needed (P4).** The group's settings (DEC-132, DEC-136), members' own notes (DEC-136) and the check record (DEC-135) need a home. Recommendation: no new module. Put them in membership, hypotheses and tasks (Rule 3), which is BOB's call. Bring Bob a new module only if membership's P6 guard trips. Then propose a `group-settings` module in L2.
+2. **S2, the Civicsmith library** (already asked by the design stream, K1565). Recommendation: approve it, so wizard-scripts takes the data file in T34-52 and N551's wizard ordering is ready once the runner is built.
+3. **legacy-ui** stays under K633. No new question; the census names it.
+4. Not Bob's, BOB's (P17): **add re-point entries** for publication's delegate importers (ratification, affordances, queue-producers) to T34. publication's delegates can then go in T35 (P19).
+
+## Ambiguities this draft decided
+
+- **N550's "each module":** this draft names queue, queue-producers and notice-producers. money-checks emits `kind: "signal"` (a code, unchanged). BOB greps the member-facing text at the opening for any other module.
+- **N560's "owners":** entities and connections, from the J1s cited. explore's R8 already reads `unread`.
+- **User-side follow-ups put in existing jobs** where an entry says "so X reads it": duties (N567, N561), standards (N568), events (N561), people (N573, N574), answers (N584).
+- **N587:** capture-requests and intent are named without stated work. This draft gives capture-requests the seam that registers question and asker into capture, which the order requires. intent's share is left to BOB.
+- **N551's directory:** the entry names only publication. BOB confirms whether public-read or network-notices serves the public page or the directory.
+- **DEC-136's setting "at setup":** N558 does not name instance-setup. BOB may add it to T34-57.
+- **N553:** read as stamping every row awaiting stamp at T33's close (the rulings route each one to "the stamp"), not only the 9.
