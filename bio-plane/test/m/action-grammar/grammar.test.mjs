@@ -1,11 +1,11 @@
-/* action-grammar R1–R11 at the module's interface. Every value, row, finding and reading is compared with what the code
+/* action-grammar R1–R12 at the module's interface. Every value, row, finding and reading is compared with what the code
    answered for the same input before the move (`golden.json`: `actions/checks.mjs` and the catalogue's vocabularies;
    K585 (2)): the same in check, severity, message, repairs and code, and in order. Negative controls state each arm's
    answer by hand. Pure functions, driven with documents; the time is handed in. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as AG from "../../../src/action-grammar/index.mjs";
-import { proposalLabel } from "../../../src/record-grammar/index.mjs";
+import { proposalLabel, idPattern } from "../../../src/record-grammar/index.mjs";
 import * as J from "../../../../jurisdictions/index.mjs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
 import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, REWORDED_COUNTS } from "./fixture.mjs";
@@ -335,4 +335,30 @@ test("R11: no place is named in the module's outward text (rows, findings, readi
   for (const k of kinds.filter((x) => !AG.PRODUCT_KINDS.includes(x)))
     assert.deepEqual(audit({ ...DOCS["clean-other"], action_kind: k }, { actionKinds: kinds }).findings, [], k);
   assert.deepEqual(plain(AG.recordsLawRefusal({ ...DOCS["law-clean"], action_kind: "bylaw_complaint" })).code, "RECORDS_LAW_REFUSED");
+});
+
+test("R12: every entity id the module tests (counterparty.entity_id, under every named kind, at the arm and in the audit) is tested by record-grammar's idPattern('ENT'): ENT-2026-10000 is accepted, ENT-2026-999 refused as before, and every finding on the corpus is byte-identical", () => {
+  const ENT = idPattern("ENT");
+  const ids = ["ENT-2026-0001", "ENT-2026-9999", "ENT-2026-10000", "ENT-2026-123456789", "ENT-2026-999", "ENT-2026-0001a",
+    "ENT-26-0001", "ENT-2026-", "ent-2026-0001", "REL-2026-0001", "ENT-2026-0001-slug", " ENT-2026-0001 ", "ENT-1", 12345];
+  const NAMED = [{ ...DOCS["clean-records-request"].counterparty }, { state: "named", kind: "press", role: "editor", organisation: "The Paper" },
+    { state: "named", kind: "group", role: "chair", organisation: "Neighbours" }, { state: "named", kind: "organisation", role: "director", organisation: "A Fund" }];
+  const isKeyFinding = (x) => x.check === "C-2.10" && /is not a subject registry key/.test(x.message);
+  for (const cp of NAMED) for (const id of ids) {
+    const fm = { ...DOCS["clean-records-request"], counterparty: { ...cp, entity_id: id } };
+    const want = !ENT.test(String(id).trim());
+    const atArm = pushed((f) => AG.counterpartyFindings(fm, f)).findings.filter(isKeyFinding);
+    const inAudit = audit(fm).findings.filter(isKeyFinding);
+    assert.equal(atArm.length, want ? 1 : 0, `${cp.kind ?? "office"} ${id}`);
+    assert.deepEqual(inAudit, atArm, `${cp.kind ?? "office"} ${id}`);
+    if (want) assert.deepEqual(atArm[0], { check: "C-2.10", severity: "error", repairable: true,
+      message: `counterparty.entity_id '${String(id).trim().slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
+      repairs: ["point entity_id at the office in the subject registry, or omit it: it is optional"] });
+  }
+  assert.deepEqual(audit({ ...DOCS["cp-office-explicit"], counterparty: { ...DOCS["cp-office-explicit"].counterparty, entity_id: "ENT-2026-10000" } }).findings, []);
+  assert.equal(audit({ ...DOCS["cp-office-explicit"], counterparty: { ...DOCS["cp-office-explicit"].counterparty, entity_id: "ENT-2026-999" } }).findings.filter(isKeyFinding).length, 1);
+  for (const id of ["cp-bad-entity", "cp-office-explicit", "cp-legacy-name", "cp-audience-named"]) {
+    assert.deepEqual(S.docs[id].counterpartyFindings, GOLDEN.docs[id].counterpartyFindings, id);
+    assert.deepEqual(S.docs[id].audit, GOLDEN.docs[id].audit, id);
+  }
 });

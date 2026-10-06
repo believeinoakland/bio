@@ -71,6 +71,7 @@ Rows C-113.24–C-113.28 (this module's C-113; N345), with their translations; p
 
 ### Uses
 
+- `civil-time` (T33-70): `localDay`, R3's reading of a `when` on its local day and an EDTF band's ends (K1649).
 - `record-grammar`: `isMachineIdentity`, `proposalLabel`; the `CONF-` type registration (R17).
 - `record-core`: `allocId`, `transact`, `stampInstant`.
 - `membership`: `sight`, `projectAuthority`, `viewerPredicate`; `noSuchProject` (its R78), through which R1's `NO_SUCH_PROJECT` is answered, its translation membership's C-70.5, in place of C-113.2 (N274, N208, K275).
