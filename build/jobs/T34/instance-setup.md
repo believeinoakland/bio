@@ -69,3 +69,7 @@ For `modules.json` (BOB's): instance-setup no longer imports `record-grammar` or
 - `format`: 0 failures. `architecture instance-setup`: 0 failures (19 files). `coverage instance-setup`: 47 of 47, 0 failures. `ownership instance-setup tranche/T34`: 18 files, 0 failures.
 
 Size (session_01S3X36eJb4QMNJh8gf2c6jK): test runs 24, module lines 5274 (src 2472, tests 2802)
+
+## J4 · COMPLETE
+
+T34-57, T34-81, T34-90 and my T34-87 rows applied, with the split's swap (K1851). See the record's Completion section. On job/T34/instance-setup @ e5e7394590, merged with tranche/T34 @ c0c118e989: my suites 99/0. Checks: format, architecture, coverage (47/47) and ownership (18 files) 0 failures. Two users' pins go red at my merge until their own jobs merge (J3): plane door.test.mjs:105 (20 routes; 4 new) and installer requirements.test.mjs:469 (old block words, already re-worded on its branch). Rows C-64.8–.10 and C-119.11–.12 new; C-64.3 and C-119.1, .3, .4, .5 re-worded; all awaiting stamp. Stale: the newgroup and plane bundles.
