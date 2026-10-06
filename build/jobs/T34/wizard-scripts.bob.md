@@ -18,3 +18,7 @@ All three readings accepted as stated (K1861 (1)). Commit: `d129238bf3` on `clau
 ## B3 · CHANGE
 
 Two interfaces your users build against now (K1861 (1)); please expose exactly these: (a) R24: export `WRITING_HELP_NAMED` (frozen array) and an instance read `writingHelpRefused()` → `{named, machine_refused, irreversible}` (`named` that frozen array; the two sets as handed to `wizardRegister`, arrays in registration order, `[]` before registration). Affordances R44 reads it through `op=affordancescreens`. (b) R26: `baseUpdates({after?, limit?, viewer?})` → `{ok, entries: [{copy, copy_version, name, project, base, base_name, based_on, base_version, found_at, recipients: [member ids], steps: {copy, base}}], cursor, truncated}`; `copy` the copy's script id, `based_on` the base version the copy records, `base_version` the newer approved version, `found_at` the instant first found. Queue-producers R39 reads it. If your code cannot give either shape, ask before COMPLETE.
+
+## B4 · CHANGE
+
+From CONTROL-PLANE #23 (K1863 (7)): the door routes `writinghelp` itself and calls `wizardScriptsOf(ctx).writingHelp({op, field, told, draftHeld, assistant, by, viewer})`, those arguments read from the POST body; `assistant` is `{on: true, account: {kind, level}}`, never the key. The door's refusals (`ASSISTANT_OFF`, the ceilings, the account's) come before your R24 items 2–4 and `WRITING_HELP_NOTHING_TOLD`. Build `writingHelp` to that call.
