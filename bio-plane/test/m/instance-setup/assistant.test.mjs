@@ -1,16 +1,14 @@
 /* The assistant, optional for the copy, and each member's disclosure (R53–R55; K1502, K1478 (i), D311), at the
-   module's interface: the module over the real record-core, its routes through the frame control-plane joins them to,
-   and the page as served. */
+   module's interface: the module over the real record-core and its routes through the frame control-plane joins them
+   to. The page's half (whether it is on, and the switch) is setup-page's (its R24). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boot, frame, pageOver } from "./fixture.mjs";
-import { ASSISTANT_DISCLOSURE, ASSISTANT_INSTALLER, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, setupPage }
+import { boot, frame } from "./fixture.mjs";
+import { ASSISTANT_DISCLOSURE, ASSISTANT_INSTALLER, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS }
   from "../../../src/setup.mjs";
 
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
-const tick = () => new Promise((r) => setTimeout(r, 0));
-const settle = async () => { for (let i = 0; i < 20; i++) await tick(); };
 
 test("R53 the assistant is off unless chosen: assistantState answers {on, set_by, set_at}, off with nobody and no instant when nothing is recorded, on every boot of a fresh copy", async () => {
   const w = await boot({ env: { INSTANCE_NAME: "river-town" } });
@@ -38,7 +36,8 @@ test("R53 assistantSet is an administrator's act only (NOT_AN_ADMIN through memb
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 0, "no refusal writes");
   const on = w.m.assistantSet({ on: true, by: "member:ada" });
   assert.deepEqual([on.ok, on.on, on.set_by, on.set_at], [true, true, "member:ada", "2026-10-06T08:00:00.000Z"]);
-  assert.match(on.note, /no account of its own/);
+  assert.match(on.note, /^the assistant is on for your group's Civicsmith\. Switching it on binds no account/);
+  assert.match(on.note, /their own Claude account or API key, connected by their own act, or by the group's Anthropic API key/);
   t += 60_000;
   const off = w.m.assistantSet({ on: false, by: "admin" });
   t += 60_000;
@@ -66,56 +65,6 @@ test("R53 R29 over the routes: op=assistantset takes `by` from the control plane
   assert.deepEqual([set.result.on, set.result.set_by], [true, "admin"]);
   const st = await call(w.m, "assistantstate");
   assert.deepEqual([st.ok, st.result.on, st.result.set_by], [true, true, "admin"]);
-});
-
-test("R53 offered on the page and changeable later: every signed-in member reads whether it is on; only an administrator is offered the switch, which sends op=assistantset with the opposite value and reads the switch back", async () => {
-  let state = { ok: true, on: false, set_by: null, set_at: null };
-  const sent = [];
-  const make = (administer) => {
-    const fetch = async (url, init) => {
-      const u = new URL(url, "https://copy.example");
-      const op = u.searchParams.get("op");
-      const body = init && init.body ? JSON.parse(init.body) : null;
-      let out = { result: { ok: true } };
-      if (op === "bootstrap") out = { claimed: true, version: "v1" };
-      else if (op === "whoami") out = { result: { capabilities: ["contribute"], administer } };
-      else if (op === "assistantstate") out = { result: state };
-      else if (op === "assistantset") {
-        sent.push(body);
-        state = { ok: true, on: body.on, set_by: "admin", set_at: "2026-10-06T08:00:00Z" };
-        out = { result: { ok: true, ...state } };
-      } else if (op === "profiles") out = { result: { ok: true, profiles: [], choices: [] } };
-      return { ok: true, status: 200, json: async () => out };
-    };
-    return pageOver({ html: setupPage({ answered: true, result: { ok: true, group: "river-town" } }),
-                      session: { t: "sess-1", e: 0, w: administer ? "admin" : "ruth" }, fetch });
-  };
-  const member = make(false);
-  await settle();
-  assert.match(member.el("#as-state").innerHTML, /The assistant is off for this copy\./);
-  assert.equal(member.el("#as-choose").hidden, true);
-  const admin = make(true);
-  await settle();
-  assert.equal(admin.el("#as-choose").hidden, false);
-  assert.equal(admin.el("#as-toggle").textContent, "Switch the assistant on");
-  await admin.el("#as-toggle").fire(); await settle();
-  assert.deepEqual(sent, [{ on: true }]);
-  assert.match(admin.el("#as-state").innerHTML, /The assistant is on for this copy\. Last set by admin/);
-  assert.equal(admin.el("#as-toggle").textContent, "Switch the assistant off");
-  /* a read that does not answer offers nothing and says it could not read */
-  const silent = pageOver({ html: setupPage({ answered: true, result: { ok: true, group: "river-town" } }),
-    session: { t: "s", e: 0, w: "admin" },
-    fetch: async (url) => {
-      const op = new URL(url, "https://copy.example").searchParams.get("op");
-      const out = op === "whoami" ? { result: { capabilities: [], administer: true } } : op === "assistantstate" ? { error: "x" } : { result: { ok: true } };
-      return { ok: true, status: 200, json: async () => out };
-    } });
-  await settle();
-  assert.match(silent.el("#as-state").innerHTML, /could not read whether the assistant is on/);
-  assert.equal(silent.el("#as-choose").hidden, true);
-  /* the page's words say no account is bound and each member connects their own */
-  const html = setupPage({ answered: true, result: { ok: true, group: "river-town" } });
-  assert.match(html, /This copy holds no account for it: each member who wants it connects\s+their own Claude account or API key/);
 });
 
 test("R54 disclosureShown records who, when and the version, only by the member's own act: DISCLOSURE_MALFORMED without a member or a version, DISCLOSURE_NOT_THE_MEMBERS for another member, an administrator or a machine; nothing written on a refusal", async () => {
@@ -187,7 +136,7 @@ test("R28 R41 R53 R54 every table is declared explicitly to record-core (declare
   const mine = w.record.declaredTables().filter((d) => d.module === "instance-setup");
   assert.deepEqual(mine.map((d) => d.name), INSTANCE_SETUP_TABLE_DECLARATIONS.map((d) => d.name));
   for (const d of mine) assert.equal(d.purge, INSTANCE_SETUP_TABLES.includes(d.name) ? "exempt" : "clear", d.name);
-  assert.deepEqual(mine.filter((d) => d.purge === "clear").map((d) => d.name), ["seed_entities", "seed_lines", "seed_offices"]);
+  assert.deepEqual(mine.filter((d) => d.purge === "clear").map((d) => d.name), ["seed_entities", "seed_lines", "seed_offices", "seed_bodies"]);
   const disc = mine.find((d) => d.name === "assistant_disclosures");
   assert.equal(disc.export, "never");
   w.prov.admins = new Set(["admin"]);

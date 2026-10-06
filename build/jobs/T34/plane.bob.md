@@ -1,6 +1,6 @@
 # BOB to plane (T34)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -26,3 +26,11 @@ Re-opened (K1868 (2), from INSTANCE-SETUP #13 J2 (2)): `queueProducersOf(ctx, de
 ## B5 · CHANGE
 
 Wizard-scripts is merged (K1869 (2)). Your `release.test.mjs` R19 ×2: the plane registers its own 21-screen `SCREENS`; register `SCREEN_REGISTRY` (or omit `screens`) so R14's required flows walk the registry's screens. The required flows' acts with no spec today (`groupkeyset`, `courtnoticeset`, `memberlanguageset`, `startfrom`, `publishat`) arrive with op-declarations' merge, which follows instance-setup in the order; test against `job/T34/op-declarations` meanwhile if you can. This also clears affordances' `plane.test.mjs` R17/R37. Merge `tranche/T34` first; post COMPLETE with B4's wiring.
+
+## B6 · CHANGE
+
+From INSTANCE-SETUP #13 J3 (K1870): `door.test.mjs`:105 pins `instanceSetupOps` at 20 routes; instance-setup adds four (R60, R64): drive `placewanted?by=admin` POST `{name}`, `placewantedstate?viewer=admin`, `memberlanguageset?by=<member>` POST `{language}`, `memberlanguage?viewer=<member>` (24 routes). `groupdescriptiondraft` is in-process, not a route. Read them from `job/T34/instance-setup` until it merges.
+
+## B7 · ANSWER · re J5
+
+COMPLETE received; queue-producers and instance-setup are merged (K1871). R19 and R24 re-worded as you proposed. You merge after op-declarations, admission and control-plane; merge `tranche/T34` meanwhile if you like.

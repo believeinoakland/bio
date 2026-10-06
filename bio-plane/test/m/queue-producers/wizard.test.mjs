@@ -135,3 +135,45 @@ test("R32, R33 against wizard-scripts itself (K1397, K1399): a break and a retur
   assert.ok(typeof wd.subject.refusal.translation === "string" && wd.detail.includes(wd.subject.refusal.translation), "the row's translation, in plain words");
   assert.deepEqual(wd.recipients.sort(), ["alice", "bob", "frank"]);
 });
+
+test("R39 against wizard-scripts itself (its R26, K1869 (4)): a copy whose base gets a newer approved version is told once to each of the copy's editors R26 names, through the real baseUpdates", async () => {
+  const fx = await import("../wizard-scripts/fixture.mjs");
+  const { defaultFakes } = await import("./world.mjs");
+  const { QueueProducers } = await import("../../../src/queue-producers/index.mjs");
+  const w = fx.seeded();                 // alice and bob owners of P, frank joined in P, dave outside P, erin an administrator
+  const base = fx.approved(w, { name: "Base" });
+  const cp = w.wz.wizardDraft({ project: w.P, copy: base.version, name: "Copy", author: fx.V("bob"), viewer: fx.V("bob") });
+  assert.equal(cp.ok, true);
+  w.st.db.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
+    CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT, target_id TEXT, kind TEXT);
+    CREATE TABLE IF NOT EXISTS progression_instances (progression_key TEXT, entity_id TEXT, stage_key TEXT, capture_sha TEXT, bundle_id TEXT)`);
+  const p = new QueueProducers({ host: w.host, storage: w.st,
+    deps: { ...defaultFakes(), record: w.record, membership: w.membership, credentials: { signerList: () => ({ signers: [] }) }, wizardScripts: w.wz } });
+  const read = (m) => p.feedItems({ member: m, viewer: fx.V(m), now: Date.parse("2026-10-08T00:00:00Z") });
+  const told = (m) => read(m).items.filter((i) => i.kind === "wizard-base-updated");
+  assert.deepEqual(told("alice"), [], "the base has not moved: nothing");
+  w.clock.now = "2026-10-05T00:00:00Z";
+  const n2 = w.wz.wizardDraft({ from: base.version, author: fx.V("frank"), viewer: fx.V("frank") });
+  w.wz.wizardRevise({ version: n2.version, steps: [fx.STEPS[1], fx.STEPS[0]], author: fx.V("frank"), viewer: fx.V("frank") });
+  w.wz.wizardSubmit({ version: n2.version, author: fx.V("frank"), viewer: fx.V("frank") });
+  w.wz.wizardApprove({ version: n2.version, by: fx.V("alice"), viewer: fx.V("alice") });
+  w.clock.now = "2026-10-06T00:00:00Z";
+  for (const m of ["alice", "bob"]) {
+    const items = told(m);
+    assert.deepEqual(items.map((i) => i.id), [`FINDING::wizard-base-updated::${cp.script}::${n2.version}::${m}`],
+      `${m}, an approver of the copy (no editor holds a grant): told once`);
+    const x = items[0];
+    assert.deepEqual([x.recipients, x.subject.id, x.subject.base_version, x.basis.based_on], [[m], cp.script, n2.version, base.version]);
+    assert.match(x.summary, /"Base"/); assert.match(x.summary, /"Copy"/);
+    assert.deepEqual(x.basis.steps, { copy: fx.STEPS, base: [fx.STEPS[1], fx.STEPS[0]] }, "both step lists, to see what changed");
+    assert.deepEqual(x.age.since, "2026-10-06T00:00:00Z", "aged from the instant R26 first found the pair");
+    assert.deepEqual(x.options.map((o) => o.id), ["wizardread", "wizardrevise"]);
+  }
+  assert.equal(told("alice").length, 1, "read again: still one, its instant unchanged");
+  assert.deepEqual(told("frank"), [], "frank wrote the newer base version but is neither editor nor approver of the copy");
+  assert.deepEqual(told("dave"), [], "nobody outside the copy's project");
+  /* an editor grant names the editors instead (R26), and they alone are told */
+  w.wz.wizardEditorGrant({ member: "frank", by: fx.V("erin") });
+  assert.deepEqual(told("frank").map((i) => i.id), [`FINDING::wizard-base-updated::${cp.script}::${n2.version}::frank`]);
+  assert.deepEqual(told("alice"), []);
+});
