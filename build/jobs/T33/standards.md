@@ -28,3 +28,17 @@ Found in other modules, for routing (none is mine to change):
 5. **row census** (promotion R50): C-112.21–C-112.32 are new rows, awaiting stamp (T34).
 
 One reading departs from J1 (3), BOB's detail: the derived "in force at an event's date" item's `valid` is the standard's period (relation- and event-bounded), not the event's day range, because `connection-grammar` R6 filters every item by `validAt(valid, at)`; with the event's day as `valid`, a walk at any other date would drop it and an undetermined in-force answer could not be marked. `as_of` is the event's day and `in_force` carries R20's state and why at that day. Also `lawPropose` ids are `lprop-` + 24 hex, as the other rows.
+
+## J3 · COMPLETE
+
+**Entries applied** (T33-31; K1438, K1442, K1446, K1447, K1449; B2, B3, B4; K1563, K1571, K1574): R1 (R18–R19's refusals after R1's), R7 (`inForce` the alias of `inForceAt`), R9 (a proposal with no text says so), R14 (every table through `declareTable`: version_chain true, sight group), R18–R30 all built and tested: instrument keys from profile data only (`instrument.mjs`), portion, requires (quoted), copy, current_through, period_basis; `inForceAt` through `civil-time.validAt` with event bounds, relation bounds and codifier lag; `standardsFor` over extraction's `reading_refs` contract; law relations (temporal and referential apart), court links, treatments and `stillStanding`, withdrawals, proposals that move nothing (`law.mjs`); `addressesOf`; `resolveCourtCitation` (verified only by a held capture; the keyed lookup labelled the service's, asked with the member viewer, K1551); the connection owner registered at load (optional host, else the one instance, else `OWNER_HOST_AMBIGUOUS`, K1563 (1)), passing `ownerConformance`; R29's listener-order test; `portionUnknown` exported for progressions R39 (K1563 (10)). `eventsOf(host)` is the default events provider (K1574); an internal read with no viewer asks events as `class:daemon` (membership's "not asked"), a viewer's read asks with that viewer. 11 new ops in `standardsOps`.
+
+**Final `uses`:** record-grammar, jurisdictions, civil-time, connection-grammar, id-spaces, record-core, membership, promotion, acquisition, extraction, content, events (as set in K1563 (3); `entities` not used).
+
+**Deferred:** none.
+
+**Other modules** (J2, answered B3/K1571): affordances' catalogue "R3 R7 R12: layer 9's 41 mutating ops … 62 ops" red by the new ops (accepted until T33-85/T33-88); plane passes `keyedStore` (plane's START); `dist/bio-plane.bundled.mjs` stale (layer close); record-grammar proposal subject (N568); C-112.21–C-112.32 awaiting stamp (K1542's row-census red).
+
+**Tests and checks:** `node --test bio-plane/test/m/standards/` 47 pass, 0 fail (on the real events module). Users of standards: conformance 54/0, action-plans 53/0, plane 85/0, progressions 47/0, events 44/0; filings 58/2 (R9, R30: K1519's named reds, red on the tranche too); affordances 165/2 (N364's, K1550, red on the tranche; the layer-9 ops count, K1571). No layer tests named in the manifest. format: 0 failures; architecture (standards): 0 failures; coverage: 30 of 30 live ids named, 0 failures; ownership vs tranche/T33: 13 files, 0 failures.
+
+Size (session_01K6bPyjeg2L6kvnBumSsfb9): test runs 34, module lines 2290
