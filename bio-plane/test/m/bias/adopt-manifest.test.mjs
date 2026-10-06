@@ -418,3 +418,21 @@ test("R30: the tables are declared to record-core's purge — statements by bund
   assert.deepEqual(["bias_statements", "bias_adoptions", "bias_debts", "bias_debt_settlements", "bias_debt_sweeps"].map((t) => w.count(t)),
     [0, 0, 0, 0, 1]);
 });
+
+test("R47: the five tables are declared explicitly through record-core's declareTable, with R30's keying and sight and the default form's other classes", async () => {
+  const w = await adoptWorld();
+  const mine = w.record.declaredTables().filter((d) => d.module === "bias");
+  const base = { module: "bias", purge: "clear", expunge: "none", export: "admin-only", derive: "stored", version_chain: false };
+  assert.deepEqual(mine, [
+    { ...base, name: "bias_statements", keys: ["bundle_id"], sight: "bundle" },
+    { ...base, name: "bias_adoptions", keys: ["bundle_id", "scope_id"], sight: "bundle" },
+    { ...base, name: "bias_debts", keys: [], sight: "group" },
+    { ...base, name: "bias_debt_settlements", keys: [], sight: "group" },
+    { ...base, name: "bias_debt_sweeps", purge: "exempt", sight: "group" },
+  ]);
+  /* explicit, not the default form's: no entry's sight is decided by its keying when read */
+  assert.ok(mine.every((d) => ["bundle", "group"].includes(d.sight)));
+  /* declared once: a second declaration of any of them is refused, naming this module */
+  const again = w.record.declareTable("other", [{ ...base, name: "bias_debts", sight: "group" }]);
+  assert.deepEqual([again.ok, again.reason, again.declaredBy], [false, "TABLE_DECLARED", "bias"]);
+});
