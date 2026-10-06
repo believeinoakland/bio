@@ -143,7 +143,7 @@ test("R12: a shared ledger table: two calculations reading one declared table, o
   /* A calculation resting on another shares it; an occurrence's duty is its origin, and two keys of one duty share it. */
   w.calcs.set("CALC-2026-0004", { capture: { grade: "B" }, inputs: [{ name: "c", kind: "calculation", ref: "CALC-2026-0001" }] });
   assert.deepEqual(through(ind(w, "CALC-2026-0001", "CALC-2026-0004")), ["calc:CALC-2026-0001"]);
-  assert.deepEqual(through(ind(w, "occurrence:DUT-2026-0001/a", "occurrence:DUT-2026-0001/b")), ["duty:DUT-2026-0001"]);
+  assert.deepEqual(through(ind(w, "occurrence:DUT-2026-0001/OCC-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "occurrence:DUT-2026-0001/OCC-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")), ["duty:DUT-2026-0001"]);
 });
 
 test("R12, R27: the new origins are one implementation: a version, a partition and a candidate of the same legs agree, and versionStrength carries them", () => {

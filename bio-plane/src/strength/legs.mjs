@@ -3,21 +3,12 @@
  * another group's finding by its accepted edition (R33), a calculation by its inputs (R36), a held standard by its
  * captured text (R37), and a duty occurrence by its derivation (R38).
  *
- * The occurrence reference is spelled as `inquiry-grammar` R15 states it, `occurrence:<DUT id>/<key>`. Until that
- * module's T33 job merges, this module reads the spelling from that requirement (K1563 (1): an upstream not yet merged
- * is coded to its requirements); the job re-points to `inquiry-grammar.parseOccurrenceRef` after the merge. */
+ * The occurrence reference is `inquiry-grammar`'s one spelling (its R15), read from it and never restated. */
 
-import { normalizeType, OBJECT_TYPES, idPattern } from "../record-grammar/index.mjs";
-import { parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
+import { normalizeType, OBJECT_TYPES } from "../record-grammar/index.mjs";
+import { parseImportedFindingRef, parseOccurrenceRef } from "../inquiry-grammar/index.mjs";
 
-/** R38 (inquiry-grammar R15): an occurrence reference, `occurrence:<DUT id>/<key>`. */
-const DUTY_ID = idPattern("DUT").source.replace(/^\^/, "").replace(/\$$/, "");
-export const OCCURRENCE_REF_RE = new RegExp(`^occurrence:(${DUTY_ID})\\/([^\\s/][^\\s]{0,199})$`);
-/** R38: `{duty, key}` for an occurrence reference, else null. */
-export function parseOccurrenceRef(s) {
-  const m = typeof s === "string" ? OCCURRENCE_REF_RE.exec(s) : null;
-  return m ? { duty: m[1], key: m[2] } : null;
-}
+export { OCCURRENCE_REF_RE, parseOccurrenceRef } from "../inquiry-grammar/index.mjs";
 
 /** The kinds a leg resolves as. `calculation` and `occurrence` are DERIVED: they carry no grade of their own, the walk
  *  derives one on the capture axis. `standard` carries a capture grade, bounded by its text's ceiling. */

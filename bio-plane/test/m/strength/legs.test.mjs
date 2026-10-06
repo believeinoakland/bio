@@ -11,7 +11,7 @@ const INQ = "INQ-2026-0001-a";
 const CALC = "CALC-2026-0001", CALC2 = "CALC-2026-0002";
 const STD = "STD-2026-0001";
 const DUT = "DUT-2026-0001";
-const OCC = `occurrence:${DUT}/k1`;
+const OCC = `occurrence:${DUT}/OCC-11111111111111111111111111111111`;
 const DOC = "INFO-2026-0001-a";
 const axesOf = (p) => STRENGTH_AXES.map((a) => [a, p[a].state, p[a].grade]);
 const exhaustedWhy = (axis, target) => (axis.undetermined_at || []).find((m) => m.target_id === target)?.why;
@@ -146,14 +146,14 @@ function dutyWorld({ state = "overdue", due = { date: "2026-03-11" }, inForce = 
   const w = world();
   w.ceilings.set(STD, { grade: ceiling, why: "the text of the rule is captured" });
   w.event("EVT-2026-0001", { grade: eventGrade });
-  w.duties.set(DUT, { source, occurrences: [{ key: "k1", trigger, due, state, why: "as known",
+  w.duties.set(DUT, { source, occurrences: [{ key: "OCC-11111111111111111111111111111111", trigger, due, state, why: "as known",
     derivation: { source_in_force: inForce, trigger_date: trigger.date, due_date: due.date ?? null, level_searched: "meaning" } }] });
   return w;
 }
 
 test("R38: an occurrence leg counts on the capture axis at the weaker of its source's text and its trigger date's attestation; its state is stated beside the grade and never moves it", () => {
-  assert.deepEqual(parseOccurrenceRef(OCC), { duty: DUT, key: "k1" });
-  for (const bad of ["occurrence:DUT-2026-0001", "occurrence:/k1", `occurrence:${DUT}/`, "DUT-2026-0001/k1", null])
+  assert.deepEqual(parseOccurrenceRef(OCC), { duty: DUT, key: "OCC-11111111111111111111111111111111" });
+  for (const bad of ["occurrence:DUT-2026-0001", "occurrence:/OCC-11111111111111111111111111111111", `occurrence:${DUT}/`, "DUT-2026-0001/OCC-11111111111111111111111111111111", null])
     assert.equal(parseOccurrenceRef(bad), null, String(bad));
   const grades = [];
   for (const state of ["met", "met_late", "overdue", "pending", "discharged"]) {
@@ -196,10 +196,10 @@ test("R38: a part of the derivation duties answers undetermined, or an occurrenc
     assert.match(exhaustedWhy(p.capture, OCC), why, name);
   }
   const w = dutyWorld();
-  w.inquiry(INQ, [{ target: `occurrence:${DUT}/nope` }, { target: "occurrence:DUT-2026-0009/k1" }]);
+  w.inquiry(INQ, [{ target: `occurrence:${DUT}/OCC-ffffffffffffffffffffffffffffffff` }, { target: "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111" }]);
   const p = w.s.strengthOf(INQ);
-  assert.match(exhaustedWhy(p.capture, `occurrence:${DUT}/nope`), /no occurrence by that key is derived/);
-  assert.match(exhaustedWhy(p.capture, "occurrence:DUT-2026-0009/k1"), /DUT-2026-0009 is not an obligation this copy holds/);
+  assert.match(exhaustedWhy(p.capture, `occurrence:${DUT}/OCC-ffffffffffffffffffffffffffffffff`), /no occurrence by that key is derived/);
+  assert.match(exhaustedWhy(p.capture, "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111"), /DUT-2026-0009 is not an obligation this copy holds/);
 });
 
 test("R38: versionStrength, candidatePair, gradingFacts and recomputePair answer the same occurrence grade; inquiryStrength withholds an occurrence whose obligation the viewer may not see", () => {

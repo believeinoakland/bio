@@ -304,9 +304,9 @@ test("R28: the sentences T33 added (a calculation's, a held standard's and an oc
   w.ceilings.set("STD-2026-0002", { grade: null, undetermined_because: "STANDARD_NO_TEXT", why: "The standard holds no captured text at that version." });
   w.event("EVT-2026-0001", { grade: "C" });
   w.duties.set("DUT-2026-0001", { source: { kind: "standard", standard: "STD-2026-0001" }, occurrences: [
-    { key: "k1", trigger: { kind: "event", ref: "EVT-2026-0001", date: "2026-03-01" }, due: { date: "2026-03-11" }, state: "overdue",
+    { key: "OCC-11111111111111111111111111111111", trigger: { kind: "event", ref: "EVT-2026-0001", date: "2026-03-01" }, due: { date: "2026-03-11" }, state: "overdue",
       derivation: { source_in_force: { state: "in" } } },
-    { key: "k2", trigger: { kind: "event", ref: "EVT-2026-0001", date: "2026-03-01" }, due: { undetermined: true, why: "The day count is not held." },
+    { key: "OCC-22222222222222222222222222222222", trigger: { kind: "event", ref: "EVT-2026-0001", date: "2026-03-01" }, due: { undetermined: true, why: "The day count is not held." },
       state: "undetermined", derivation: { source_in_force: { state: "in" } } }] });
   w.inquiry("INQ-2026-0001-a", [
     { target: "CALC-2026-0001", ground: "P1" }, { target: "CALC-2026-0002", ground: "P2" }, { target: "CALC-2026-0003", ground: "P2" },
@@ -314,10 +314,10 @@ test("R28: the sentences T33 added (a calculation's, a held standard's and an oc
     { target: "STD-2026-0001", grade: "A", axis: "capture", source: "capture", ground: "P1" },
     { target: "STD-2026-0002", grade: "A", axis: "capture", source: "capture", ground: "P2" },
     { target: "STD-2026-0001", grade: "A", axis: "connection", source: "resolution", ground: "P2" },
-    { target: "occurrence:DUT-2026-0001/k1", ground: "P1" }, { target: "occurrence:DUT-2026-0001/k2", ground: "P2" },
-    { target: "occurrence:DUT-2026-0009/k1", ground: "P2" }]);
+    { target: "occurrence:DUT-2026-0001/OCC-11111111111111111111111111111111", ground: "P1" }, { target: "occurrence:DUT-2026-0001/OCC-22222222222222222222222222222222", ground: "P2" },
+    { target: "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111", ground: "P2" }]);
   w.inquiry("INQ-2026-0002-a", [{ target: "STD-2026-0001", grade: "A", axis: "capture", source: "capture" }]);
-  w.inquiry("INQ-2026-0003-a", [{ target: "occurrence:DUT-2026-0001/k1" }]);
+  w.inquiry("INQ-2026-0003-a", [{ target: "occurrence:DUT-2026-0001/OCC-11111111111111111111111111111111" }]);
   const p = w.s.strengthOf("INQ-2026-0001-a"), q = w.s.strengthOf("INQ-2026-0002-a"), o = w.s.strengthOf("INQ-2026-0003-a");
   const corpus = STRENGTH_AXES.flatMap((axis) => [...sentences(p[axis], axis), ...sentences(q[axis], `standard ${axis}`),
                                                   ...sentences(o[axis], `occurrence ${axis}`)]);

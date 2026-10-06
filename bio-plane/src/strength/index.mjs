@@ -85,7 +85,7 @@ import { dutiesOf } from "../duties/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { STRENGTH_AXES, DEPTH_BOUND, GRADE_RANK } from "./arithmetic.mjs";
-import { legKind, parseOccurrenceRef, DERIVED_KINDS } from "./legs.mjs";
+import { legKind, parseOccurrenceRef, OCCURRENCE_REF_RE, DERIVED_KINDS } from "./legs.mjs";
 import { originsReader, ORIGIN_LIMIT, RECORD_READER } from "./origins.mjs";
 import { levelPair, anonymityOf, levelsGiven, HUNCH_WHY, UNCORROBORATED_WHY, UNCORROBORATED_EVIDENCE_WHY,
          GRADING_METHOD_VERSION } from "./method.mjs";
@@ -128,7 +128,7 @@ const isImportedRef = (id) => parseImportedFindingRef(id) !== null;
    tail would otherwise be read as. */
 const unanchored = (re) => re.source.replace(/^\^/, "").replace(/\$$/, "");
 /* T33 (R36–R38): a calculation's, a standard's and an occurrence's ids too, which name no bundle. */
-const ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|occurrence:${unanchored(idPattern("DUT"))}/[^\\s,;()]+`
+const ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|${unanchored(OCCURRENCE_REF_RE)}`
   + `|${unanchored(BUNDLE_ID_RE)}|${unanchored(idPattern("CALC"))}|STD-\\d{4}-\\d{4,})`, "g");
 /** R15 (DEC-88): the longest reason an administrator may give for the group's default bar. */
 export const BAR_REASON_MAX = 2000;
