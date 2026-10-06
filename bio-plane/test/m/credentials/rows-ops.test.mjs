@@ -93,7 +93,6 @@ test("R22 R23 R24 R25 R26 R27 R28 R29 the T33-20 rows: each id once, across ever
     ACCOUNT_MEMBER_NOT_ACTIVE: ["C-29.15", W("#accountBar", "is-account-own-act")],
     ACCOUNT_LEVEL_MEMBER_ONLY: ["C-29.16", W("#accountBar", "is-account-own-act")],
     UNKNOWN_ACCOUNT_KIND: ["C-29.17", W("accountReferenceSet", "is-account-kind")],
-    ACCOUNT_KIND_NOT_OFFERED: ["C-29.18", W("accountReferenceSet", "is-account-kind")],
     NO_SECRET: ["C-29.19", W("accountReferenceSet", "is-account-kind")],
     NO_ACCOUNT: ["C-29.20", W("#noAccount", "is-account-held")],
     UNKNOWN_SWITCH: ["C-29.21", W("accountSwitchSet", "is-account-switch")],
@@ -117,10 +116,14 @@ test("R22 R23 R24 R25 R26 R27 R28 R29 the T33-20 rows: each id once, across ever
   }
   const ids = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ...fresh].flatMap((f) => Object.values(f).map((r) => r.check));
   assert.equal(new Set(ids).size, ids.length, "one row per id across the module");
+  assert.ok(!ids.includes("C-29.18"), "C-29.18, the held-back kind's row, is retired and not reused (K1547)");
 });
 
 test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `session` from the query over the body; the secret from the body only; never answered back", async () => {
   const w = await world().group("ann");
+  const sub = await w.ops("by=ann", { member: "ann", kind: "subscription", secret: "sk-route-sub", by: "admin" }).accountreferenceset();
+  assert.deepEqual([sub.ok, sub.kind], [true, "subscription"]);
+  assert.equal(w.ops("member=ann&viewer=member:ann").accountreference().kind, "subscription");
   const set = await w.ops("by=ann", { member: "ann", kind: "apikey", secret: "sk-route", by: "admin" }).accountreferenceset();
   assert.equal(set.ok, true);
   assert.equal((await w.ops("by=second", { member: "ann", kind: "apikey", secret: "x", by: "ann" }).accountreferenceset()).reason,
@@ -136,5 +139,5 @@ test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `sessi
   assert.equal(w.ops("by=admin", { service: "courtlistener", on: true }).keyedserviceswitch().on, true);
   assert.deepEqual(w.ops().keyedservices(), w.c.keyedServices());
   assert.equal(w.ops("by=ann", { member: "ann" }).accountreferenceremove().removed, true);
-  assert.ok(!JSON.stringify([set, g]).includes("sk-route"));
+  assert.ok(!JSON.stringify([sub, set, g]).includes("sk-route"));
 });
