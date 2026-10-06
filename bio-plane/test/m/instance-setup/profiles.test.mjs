@@ -1,13 +1,9 @@
-/* The jurisdiction profiles (R12–R16, N10) and R31, at the module's interface. The profiles held are `jurisdictions`'
-   own: one real profile and one test profile. R15 runs end to end: the page the real plane serves (Miniflare), its
-   script driving op=profiles and op=profilesset through the Worker's route to this module in the Durable Object. */
-import test, { after } from "node:test";
+/* The jurisdiction profiles (R12–R14, R16, N10) and R31, at the module's interface. The profiles held are `jurisdictions`'
+   own: one real profile and one test profile. The page's half (the choice under Places) is setup-page's (its R13). */
+import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { Miniflare } from "miniflare";
 import { list as heldProfiles, combine } from "../../../../jurisdictions/index.mjs";
-import { boot, pageOver, stubOver, doAnswer } from "./fixture.mjs";
+import { boot, stubOver, doAnswer } from "./fixture.mjs";
 import { INSTANCE_SETUP_CHECKS, SETUP_HTML, NO_GROUP_RECORDED, RUNTIME_ASYMMETRY } from "../../../src/setup.mjs";
 
 const REAL = heldProfiles().filter((p) => p.test !== true);
@@ -153,118 +149,6 @@ test("R14 profilesSet replaces the list: PROFILES_NOT_ADMIN, NOT_A_LIST, UNKNOWN
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM settings WHERE name='jurisdiction_profiles'`).get().n, 2);
 });
 
-/* ------------------------------------------------------------------------------ R15 end to end, on the real plane */
-
-const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
-const ADMIN_TOKEN = "adm-profiles-e2e-0123456789";
-let mf = null;
-after(async () => { if (mf) await mf.dispose(); });
-/* The page's fetch, answered by the real Worker: its `/api/` routes, the control plane's credential and stamps, and
-   the Durable Object this module runs in. `sent` records every op the page asked, with its body. */
-const planeFetch = (sent) => async (url, init) => {
-  const u = new URL(url, "https://copy.example");
-  sent.push({ op: u.searchParams.get("op"), body: init && init.body ? JSON.parse(init.body) : null });
-  return mf.dispatchFetch(u.href, init);
-};
-const api = async (op, body, token) => (await mf.dispatchFetch(
-  `https://copy.example/api/?op=${op}${token ? `&token=${encodeURIComponent(token)}` : ""}`,
-  body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) })).json();
-const until = async (cond, what) => {
-  for (let i = 0; i < 400; i++) { if (cond()) return; await new Promise((r) => setTimeout(r, 10)); }
-  assert.fail(`the page never reached: ${what}`);
-};
-/* The page exactly as the Worker serves it at `/`, its script run with the plane behind its fetch. */
-const servedPage = async ({ hash = "", sent = [] } = {}) =>
-  pageOver({ html: await (await mf.dispatchFetch("https://copy.example/")).text(), hash, fetch: planeFetch(sent) });
-
-test("R15 end to end through the Worker's route: the page served at / shows the active profiles by name, offers an administrator every held non-test profile with none preselected, warns before op=profilesset and sends only on confirmation; none is allowed and said; a member sees the names and no choice, and the plane refuses a member's set and a bearer's", { timeout: 300000 }, async () => {
-  mf = new Miniflare({
-    modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
-    compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
-    durableObjects: { STORE: { className: "Store", useSQLite: true } },
-    bindings: { ADMIN_TOKEN, MEMBER_TOKEN: "mem-profiles-e2e-0123456789", PROBE_TOKEN: "prb-profiles-e2e-0123456789",
-                VERSION: "test", INSTANCE_NAME: "river-town" },
-  });
-  await mf.ready;
-  /* The founder claims the copy on the page and is signed in: nothing is active (none recorded at install). */
-  const sent = [];
-  const admin = await servedPage({ hash: `#boot=${ADMIN_TOKEN}`, sent });
-  await until(() => admin.el("#boot").value === ADMIN_TOKEN, "the claim form");
-  admin.el("#pw1").value = "the-founders-password"; admin.el("#pw2").value = "the-founders-password";
-  await admin.el("#do-claim").fire();
-  await until(() => /class="pf-pick"/.test(admin.el("#pf-choices").innerHTML), "the administrator's choice");
-  assert.equal(admin.el("#pf-choose").hidden, false);
-  assert.match(admin.el("#pf-active").innerHTML, /No profile is active/);
-  /* every held non-test profile is offered, by name, and nothing is preselected */
-  const offered = [...admin.el("#pf-choices").innerHTML.matchAll(/class="pf-pick" value="([^"]*)"/g)].map((m) => m[1]);
-  assert.deepEqual(offered, REAL.map((p) => p.id));
-  for (const p of REAL) assert.ok(admin.el("#pf-choices").innerHTML.includes(p.name), p.name);
-  for (const p of TEST) assert.equal(admin.el("#pf-choices").innerHTML.includes(p.id), false, p.id);
-  assert.doesNotMatch(admin.el("#pf-choices").innerHTML, /checked/);
-  /* ticked and reviewed: the warning, and nothing sent until it is confirmed */
-  const pick = admin.sandbox.document.querySelectorAll("#pf-choices .pf-pick").find((x) => x.value === REAL[0].id);
-  pick.checked = true; await pick.fire("change");
-  admin.el("#pf-warn").hidden = true;
-  await admin.el("#pf-review").fire();
-  await until(() => admin.el("#pf-warn").hidden === false, "the warning");
-  assert.match(admin.el("#pf-warn-text").textContent, new RegExp(`${REAL[0].name}[^]*read differently from then on`));
-  assert.equal(sent.filter((c) => c.op === "profilesset").length, 0, "nothing is sent before the warning is confirmed");
-  await admin.el("#pf-confirm").fire();
-  await until(() => sent.some((c) => c.op === "profilesset") && /class="k">1\./.test(admin.el("#pf-active").innerHTML), "the change shown");
-  assert.deepEqual(sent.filter((c) => c.op === "profilesset").map((c) => c.body), [{ profiles: [REAL[0].id] }]);
-  assert.match(admin.el("#pf-active").innerHTML, new RegExp(`1\\. ${REAL[0].name}`));
-  assert.equal(admin.el("#pf-err").textContent, "");
-  /* the plane recorded it, attributed to the administrator's own session */
-  const token = JSON.parse(admin.sandbox.sessionStorage.getItem("bio-session")).t;
-  const read = await api("profiles", undefined, token);
-  assert.deepEqual(read.result.profiles.map((p) => p.id), [REAL[0].id]);
-  /* R12's view through the Worker's route, as agent-worker R51 reads op=profiles */
-  assert.deepEqual(read.result.view, viewOf([REAL[0].id]));
-
-  /* a second administrator (the group's floor before any ordinary member), enrolled: an administrator's own session,
-     not only the founder's, sets the list, and the set is attributed to that session's member */
-  const second = await api("memberadd", { memberId: "bea", cover: "volunteer-2", role: "admin" }, token);
-  assert.equal(second.result.ok, true, JSON.stringify(second));
-  assert.equal((await api("enroll", { invite: second.result.invite, handle: "bea", password: "beas-own-password" })).result.ok, true);
-  const bea = await api("login", { role: "member:bea", password: "beas-own-password" });
-  const beaSet = await api("profilesset", { profiles: [REAL[0].id] }, bea.result.token);
-  assert.equal(beaSet.result.ok, true, JSON.stringify(beaSet));
-  assert.match(beaSet.result.set_by, /bea/);
-
-  /* a member: enrolled by the administrator, signed in on a fresh page, shown the names and offered no choice */
-  const invited = await api("memberadd", { memberId: "ada", cover: "volunteer-7" }, token);
-  assert.equal(invited.result.ok, true, JSON.stringify(invited));
-  const joined = await api("enroll", { invite: invited.result.invite, handle: "ada", password: "adas-own-password" });
-  assert.equal(joined.result.ok, true, JSON.stringify(joined));
-  const member = await servedPage();
-  await until(() => typeof member.el("#do-login").listeners.click !== "undefined", "the sign-in form");
-  member.el("#lwho").value = "ada"; member.el("#lpw").value = "adas-own-password";
-  await member.el("#do-login").fire();
-  await until(() => /class="k">1\./.test(member.el("#pf-active").innerHTML), "the member's view of the profiles");
-  assert.match(member.el("#pf-active").innerHTML, new RegExp(REAL[0].name));
-  assert.equal(member.el("#pf-choose").hidden, true);
-  /* the plane refuses the set to a member's session (instance-setup's check) and to every bearer (the route's) */
-  const memberToken = JSON.parse(member.sandbox.sessionStorage.getItem("bio-session")).t;
-  const refused = await api("profilesset", { profiles: [] }, memberToken);
-  assert.equal(refused.result.reason, "PROFILES_NOT_ADMIN", JSON.stringify(refused));
-  const bearer = await (await mf.dispatchFetch("https://copy.example/api/?op=profilesset", {
-    method: "POST", body: JSON.stringify({ profiles: [] }), headers: { authorization: `Bearer ${ADMIN_TOKEN}` } })).json();
-  assert.equal(bearer.ok, false, JSON.stringify(bearer));
-  assert.deepEqual((await api("profiles", undefined, token)).result.profiles.map((p) => p.id), [REAL[0].id]);
-
-  /* choosing none: allowed, said before it is sent, and shown after */
-  const unpick = admin.sandbox.document.querySelectorAll("#pf-choices .pf-pick").find((x) => x.value === REAL[0].id);
-  unpick.checked = false; await unpick.fire("change");
-  admin.el("#pf-warn").hidden = true;
-  await admin.el("#pf-review").fire();
-  await until(() => admin.el("#pf-warn").hidden === false, "the warning for none");
-  assert.match(admin.el("#pf-warn-text").textContent, /You chose no profile[^]*read differently from then on/);
-  await admin.el("#pf-confirm").fire();
-  await until(() => /No profile is active/.test(admin.el("#pf-active").innerHTML), "none shown");
-  assert.deepEqual(sent.filter((c) => c.op === "profilesset").map((c) => c.body).at(-1), { profiles: [] });
-  assert.deepEqual((await api("profiles", undefined, token)).result.profiles, []);
-});
-
 test("R16 profiles() and profilesSet answer from the namespace addressed: a scratch store holds its own list", async () => {
   const bio = await world();
   const scratch = await world();
@@ -275,7 +159,7 @@ test("R16 profiles() and profilesSet answer from the namespace addressed: a scra
   assert.deepEqual(bio.m.profiles().profiles.map((p) => p.id), [REAL[0].id]);
 });
 
-test("R31 no place is named in this module's outward text: the page, every refusal and every stated sentence name no jurisdiction a profile covers", async () => {
+test("R31 no place is named in this module's outward text: the page it composes and serves, every refusal and every stated sentence name no jurisdiction a profile covers", async () => {
   const places = heldProfiles().flatMap((p) => p.covers).flatMap((c) => c.split(/\s+(?:of|and)\s+|\s+/))
     .filter((w) => /^[A-Z]/.test(w) && !["City", "County", "Town"].includes(w));
   assert.ok(places.length >= 2);
