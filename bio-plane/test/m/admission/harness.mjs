@@ -1,7 +1,7 @@
 /* admission's test harness: a fake `env` whose `STORE` is shaped like a Durable Object namespace and records every
    inner request, the reader the door passes in (`doAnswer`'s contract: `{answered, result, correlation?}`), the
-   callers, and a `gate` driver that runs the gates in the door's order (R1, R6's lookup, R2, R3, then `admit` and
-   R12) and answers the first refusal, silence or admission. Every test drives the module at its interface. */
+   callers, and a `gate` driver that runs the gates in the door's order (R1, R17/R19's query gate, R6's lookup, R2,
+   R3, then `admit` and R12) and answers the first refusal, silence or admission. Every test drives the module at its interface. */
 import { createHash, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 
@@ -96,6 +96,7 @@ export async function gate(env, { op, token, params = {}, method = "POST", table
   assert.ok(spec, `test asks an op with a spec: ${op}`);
   const ns = A.namespaceGate(url);
   if (ns) return { refusal: ns };
+  A.queryGate(url, op);
   const presented = await A.aiCredentialPresented(url, env, doAnswer);
   if (presented.silent) return { silent: presented.silent };
   const confined = A.confinedNamespaceGate(url, presented.cred);
