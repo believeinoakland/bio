@@ -32,3 +32,7 @@
 (e) `op-declarations` (T34-83), `admission`/`control-plane`, `affordances` (R42): the new ops are `publishatmove`, `publishatcancel` (body `{case, edition, at?}`, stamp `by`) and `publishschedule` (query `case`, `state`, `after`, `limit`, stamp `viewer`).
 (f) `queue-producers` (T34-82, its R37): `scheduledEditions({...})` with no `viewer` reads as the plane.
 (g) Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs` (this module's source changed).
+
+**Tests and checks.** `node --test bio-plane/test/m/publication/`: 113 tests, 112 pass, 0 fail, 1 todo (R30). New `t34.test.mjs` (15 tests: N597, R64, R65, R66 ×2, R21, R67 ×3, R68 ×2, R69, R70 with R40, R71, R31 with R66); `fixture.mjs` and `door.test.mjs` build the op map as the plane does (N597); `invariants.test.mjs` names the new table. Dependent suites (docket, public-read, project-stage, network-notices, ratification, case-disclosures, case-authoring, review, conformance, filings, monitoring, affordances, queue-producers, control-plane, plane, system migrate-released), on this branch after merging `tranche/T34` @ 91a71abdab and on the tranche itself: identical, the tranche's own reds only (filings 1, monitoring 1, affordances 3, control-plane 2, plane 1; all inherited, none naming publication). No layer tests in the manifest. From the process repository: format 127 modules, 0 failures; architecture 0 failures; coverage 47 of 47; ownership 8 files, 0 failures.
+
+Size (session_018fH9gcTb8rPoU4TBHkufJK): test runs 20, module lines 3579
