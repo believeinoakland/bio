@@ -34,3 +34,17 @@ Workbooks reads them through one adapter, so a different shape costs one functio
 ## J2 · REPORT
 
 Built and tested on a stand-in calculations holding J1's shapes: all 18 ids (R1–R18), 26 tests pass (the real sheet-worker engine for R6–R8 and R14); format, architecture, coverage 18/18 and ownership 0 failures with my paths filled locally. Paths: bio-plane/src/workbooks/, tests bio-plane/test/m/workbooks/. Per K1563 (1) I re-point my tests at the real calculations after CALCULATIONS merges, then post COMPLETE; please send a CHANGE when it has. Found in other modules (record's Progress): plane/control-plane/op-declarations/affordances take my 11 ops and wire ctx.recompute to SHEET_WORKER (I bind nothing in the plane, so K1531's three test pins fall to whichever job first binds it); publication reads readWorkbook for an undisclosed differing or unbound workbook (K1448). Choices on my reading, including two refusals beyond the lists (NO_SUCH_BINDING, NO_SUCH_FINDING) and the op name workbooksecondcheck (workbookcheck names T33-D6), are in my record.
+
+## Completion (WORKBOOKS #1, 2026-10-06)
+
+**Entry applied.** T33-42: the new module `workbooks` (layer 5), all 18 ids (R1–R18) met and tested against the real `calculations` (merged, K1595; re-pointed per K1563 (1)). **Paths for `modules.json`:** `paths: ["bio-plane/src/workbooks/"]`, `tests: ["bio-plane/test/m/workbooks/"]`. **Final `uses`:** `record-grammar`, `calc-grammar`, `office-readers`, `sheet-worker`, `record-core`, `membership`, `promotion` (tests), `provenance`, `content`, `calculations` (each as in my Progress section above).
+
+**Changed since Progress.** `calculations.readTable` and `read` are async in the real module, so every read and act of `workbooks` that may reach a bound table is now async (`bind`, `unbind`, `inputsOf`, `lint`, `explainLint`, `recordMethodNote`, `recordCheck`, `readWorkbook`, `exportRecipe`; `addWorkbook` and `recompute` already were). The ops arms answer promises, as the control plane awaits. The fixture now declares tables and creates calculations through the real module over captured CSVs held in an in-memory evidence store, and reads capture bytes through the record's evidence store (the default `bytesOf`). R12's test reads a real table's grade facts: its source fetched directly (B) and read under a chain capped at C, so its bound inputs grade C.
+
+**Deferred.** Nothing in my own module. The choices made on my reading are those in my Progress section.
+
+**Found in other modules.** As in my Progress section and J2: the L11 wiring (plane, control-plane, op-declarations, affordances R40) and the `SHEET_WORKER` binding with K1531's three pins; `publication`'s read of R2 (K1448). No generated artifact staled.
+
+**Tests and checks run.** `node --test bio-plane/test/m/workbooks/`: 26 tests, 26 pass, 0 fail (real calculations, real sheet-worker engine). No layer tests are named in `build/manifest.md`. From the process repository, with my paths filled in `modules.json` locally (not committed): `format` 126 modules, 0 failures; `architecture` 15 product files, 48 relative imports, 0 failures; `coverage` 18 of 18 live ids named by a test, 0 failures; `ownership` 16 files changed between `tranche/T33` and HEAD, 0 failures.
+
+Size (session_01L8fgt74g2hidcVrkrDDCCZ): test runs 34, module lines 1,588 (plus 1,196 test lines)
