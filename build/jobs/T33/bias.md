@@ -1,6 +1,6 @@
 # bias (T33)
 
-**Status** · session_01UoYr2kGcT4PB5AXrdUSnAZ · depth 2 · WORKING · handled B1
+**Status** · session_01UoYr2kGcT4PB5AXrdUSnAZ · depth 2 · COMPLETE · handled B1
 
 ## Completion (BIAS #9, T33-38)
 
