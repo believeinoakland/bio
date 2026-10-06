@@ -2,7 +2,7 @@
 
 **Status** · session_01UxA8Yv7kHqsFpTvQSvpR4k · depth 2 · WAITING ON BOB (J1) · handled B2
 
-**Progress** (not an entry) · Built on J1's readings: `bio-plane/src/lines/` (index, vocab, schema; 846 lines) and `bio-plane/test/m/lines/` (24 tests naming R1–R20, all passing). Checks clean with the proposed `paths`/`tests`/`uses` applied locally: format, architecture, coverage 20/20, ownership 0 failures. **Next:** apply BOB's answer to J1; when `entities` and `events` merge into `tranche/T33`, merge them and point the fixture at the real modules; re-run steps 5–6; then COMPLETE.
+**Progress** (not an entry) · Built on J1's readings, all accepted by B2 (K1563): `bio-plane/src/lines/` (index, vocab, schema) and `bio-plane/test/m/lines/` (25 tests naming R1–R20, all passing). K1563 (1) applied: the owner registered at load into the default registry, `neighbours` by `host`, else the one instance, else `OWNER_HOST_AMBIGUOUS`. Checks clean with the proposed `paths`/`tests`/`uses` applied locally. **Next:** when `entities` and `events` merge into `tranche/T33`, merge them and point the fixture at the real modules; re-run steps 5–6; then COMPLETE.
 
 ## J1 · QUESTION
 
