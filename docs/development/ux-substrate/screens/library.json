@@ -58,8 +58,8 @@
       {
        "screen": "setup",
        "act": "groupdomainset",
-       "what": "Verify the group's web address.",
-       "why": "Readers can then confirm that a published case really comes from your group."
+       "what": "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.",
+       "why": "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this."
       },
       {
        "screen": "setup",
