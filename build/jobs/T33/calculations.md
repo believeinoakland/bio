@@ -42,3 +42,12 @@ Not COMPLETE yet, by K1563 (1): my tests re-point at the real money (T33-33), du
 Two findings, outside my module:
 1. record-grammar: ID_TABLE holds CALC sequential, so a CALC- counter tells a reader how many calculations were minted before, withheld ones included (R10's withheld-as-absent, DEC-36); record-core mints its gated prefixes opaque for that reason. Proposal: CALC opaque, as EVT/MNY are.
 2. Requirement question (calculations R1, Bob's bound via the draft): at the bound, 990,000 cells (8.4 MB), declaring now fits a 128 MB heap (built row by row), but evaluating needs about 70 MB of heap over the caller's baseline, because calc-grammar takes a table as row objects; with the plane's own heap that may not fit a Worker's 128 MB. Options: lower R1's cell bound (about 500,000 keeps evaluation near 35 MB), or a streaming evaluate in calc-grammar (its job). Until then, a table near the bound may fail to evaluate.
+
+## J3 · COMPLETE
+
+T33-41 complete on the real upstreams (tranche/T33 merged at B8; every one re-pointed: entities, events, lines, standards, money, duties, people, retrieval, progressions' feed). Re-pointing found and fixed seven faults against the real modules (record, "State of the work"); notably people and duties ask calculations synchronously, so table rows are now also held as a chunked copy (`calc_table_bytes`, export never) beside the evidence store's.
+Paths: bio-plane/src/calculations/; tests: bio-plane/test/m/calculations/.
+Uses: record-grammar, jurisdictions, calc-grammar, civil-time, id-spaces, record-core, membership, promotion, provenance, content, entities, events, lines, observation-log, standards, progressions, money, duties, people, retrieval (source imports layers 1–4 only; layer 5 injected; lines and observation-log for the tests' fixture).
+Tests 31/31; format, architecture (49 imports), coverage 29/29, ownership 12 files: 0 failures (paths and uses in a local copy of modules.json).
+Deferred: the out-of-order flow case runs on a provider (real progressions checked on its empty feed: threading needs extraction-resolved captures); evaluation at the bound waits on N571.
+Record: build/jobs/T33/calculations.md on job/T33/calculations.
