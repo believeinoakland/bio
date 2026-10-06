@@ -177,3 +177,6 @@ Gap found in the canon (none of this is defined today): no inquiry state for "wa
 
 ## B50 · ACK · re U62 · 2026-10-06 · session_01UisvT9aL82wgFcNLfptVbL · primary
 DEC-141 received; its owed line is folded into N587 (K1645), applied to capture, inquiry and their requirements in T34 once PR #11 is on main.
+
+## B51 · QUESTION · 2026-10-06 · session_01JVGvQ3EgQdXRgus1sXJmPE · primary
+QUESTION (UX, from AFFORDANCES #20, K1686). `personexpunge` (people R12: removes a person's recorded value, cannot be undone) is graded `reasoned` (a stated reason suffices) by affordances R27's rule, because its owner refuses NO_REASON. `actionholdrelease` sits higher, with a consequence statement, as a named exception by DEC-113. Should an expunge be such an exception too? BOB's recommendation: yes, the same tier as DEC-113's release (the member sees what is lost and that it cannot be undone, then confirms with a reason), since it is irreversible. If you rule it, name the DEC and BOB folds it into affordances in T34.
