@@ -83,13 +83,6 @@ function refuseRelationUnknown(type, allowed) {
   /* END DEC-49 REGION is-law-relation-type */
 }
 
-function refusePortionUnknown(end, standard, portion) {
-  /* DEC-49 REGION is-portion-held */
-  return refusal("PORTION_UNKNOWN", `${standard} records no portion '${String(portion).slice(0, 80)}'. Nothing was written.`,
-                 { end, standard, portion: String(portion).slice(0, PATH_MAX) });
-  /* END DEC-49 REGION is-portion-held */
-}
-
 function refuseNoCitation(of, citation) {
   /* DEC-49 REGION is-law-relation-cited */
   return refusal("LAW_RELATION_NO_CITATION", `the citation is a content id among the text of ${of}, the passage that makes `
@@ -129,10 +122,11 @@ export class LawRecords {
     return `${prefix}-${sha256HexSync(JSON.stringify({ ...fields, nonce: this.k.nonce() })).slice(0, 24)}`;
   }
 
-  /* NO_SUCH_STANDARD (R17) for an end the viewer may not read, else the row. */
+  /* NO_SUCH_STANDARD (R17) for an end the viewer may not read, else the row. A viewer never sent is an internal
+     caller, which sight does not ask (membership's terms); a viewer the record admits to nothing reads nothing. */
   #held(id, viewer, end) {
     const row = this.k.row(id);
-    if (!row || !this.k.readable(id, viewer)) return { refused: this.k.noSuchStandard(id || null, { id: id || null, end }) };
+    if (!row || (viewer != null && !this.k.readable(id, viewer))) return { refused: this.k.noSuchStandard(id || null, { id: id || null, end }) };
     return { row };
   }
 
@@ -213,7 +207,7 @@ export class LawRecords {
     const t = this.#held(to.standard, viewer, "to");
     if (t.refused) return t.refused;
     for (const [end, e, row] of [["from", from, f.row], ["to", to, t.row]])
-      if (e.portion !== null && e.portion !== row.portion_path) return refusePortionUnknown(end, e.standard, e.portion);
+      if (e.portion !== null && e.portion !== row.portion_path) return this.k.portionUnknown(end, e.standard, e.portion);
     /* DEC-49 REGION is-relation-two-ends */
     if (from.standard === to.standard && from.portion === to.portion)
       return refusal("LAW_RELATION_SELF", "both ends name the same standard and portion. Nothing was written.",
@@ -266,7 +260,7 @@ export class LawRecords {
 
   #sees(contentId, viewer) {
     const c = this.k.content().contentRow(contentId);
-    return !!c && this.k.membership.inSight(c.bundle_id, viewer);
+    return !!c && (viewer == null || this.k.membership.inSight(c.bundle_id, viewer));
   }
 
   /** R23, R26, R27: withdraw a relation, link or treatment, kept with who, when and why. */
@@ -364,7 +358,7 @@ export class LawRecords {
       return refusal("COURT_LINK_TARGET_NOT_LAW", `${to.standard} is a ${t.row.kind} standard; a court link ends at a `
                      + `${LINK_TARGET_KINDS.join(", ")}. Nothing was written.`, { standard: to.standard, kind: t.row.kind });
     /* END DEC-49 REGION is-link-target-law */
-    if (to.portion !== null && to.portion !== t.row.portion_path) return refusePortionUnknown("to", to.standard, to.portion);
+    if (to.portion !== null && to.portion !== t.row.portion_path) return this.k.portionUnknown("to", to.standard, to.portion);
     if (!this.#cited(from.standard, a.citation, viewer)) return refuseNoCitation(from.standard, a.citation);
     const fault = reasonFault(a.reason);
     if (fault) return this.k.refuseReason(fault);

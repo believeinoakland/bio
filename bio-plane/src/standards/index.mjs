@@ -163,7 +163,7 @@ export class Standards {
       rows: (q, ...a) => this.#rows(q, ...a), one: (q, ...a) => this.#one(q, ...a),
       row: (id) => this.#row(id), texts: (id) => this.#texts(id), readable: (id, v) => this.#readable(id, v),
       content: () => this.content, when: () => this.#when(), nonce: () => rand(8),
-      noSuchStandard, refuseNoId, refuseDateInvalid, refuseFieldUnknown, refuseReason: refuseLawReason,
+      noSuchStandard, portionUnknown: (end, standard, portion) => portionUnknown(standard, portion, { end }), refuseNoId, refuseDateInvalid, refuseFieldUnknown, refuseReason: refuseLawReason,
       refuseNoSuchProposal, refuseProposalAdopted, refuseProposerUnnamed, refuseWhyInvalid,
       inForceAt: (a) => this.inForceAt(a), periodOf: (row) => this.#periodOf(row, null),
       eventDay: (event, edge, viewer) => this.#eventDay(event, edge, viewer),
@@ -718,7 +718,8 @@ export class Standards {
         if (row && !this.#readable(row.standard_id, viewer)) return refuseNoSuchStandard(t);
         const key = row ? row.instrument ?? null : t;
         const cite = row ? foldCite(row.cite) : null;
-        const probe = key ? key.slice(key.lastIndexOf("/") + 1) : cite;
+        /* a prefilter, a superset of what matches: the key's number, else the cite's last word */
+        const probe = key ? key.slice(key.lastIndexOf("/") + 1) : cite.split(" ").pop();
         const refs = this.#rows(`SELECT DISTINCT capture_sha, bundle_id, ref, ref_kind, ref_key, label FROM reading_refs
                                  WHERE instr(lower(coalesce(label,'') || ' ' || coalesce(ref_key,'') || ' ' || ref), lower(?)) > 0
                                  ORDER BY capture_sha, ref LIMIT ?`, probe, SCAN_FOR);
@@ -829,7 +830,10 @@ export class Standards {
                     id, cite, kind, issuer, JSON.stringify(texts), why, act === null ? null : act.trim(), who, at);
       return { ok: true, proposal: this.#proposalAnswer(this.#proposal(id)), standard: false,
                says: "this is a proposal and not a standard: it is not in the record's standards and no list of "
-                   + "standards shows it. Only a member recording a standard, or adopting this proposal, enters one." };
+                   + "standards shows it. Only a member recording a standard, or adopting this proposal, enters one."
+                   + (texts.length ? "" : " It is stored with no captured text, and cannot be adopted until a member "
+                                          + "names the captured passages that hold the standard's words (R9)."),
+               ...(texts.length ? {} : { text_held: false }) };
     });
   }
 
@@ -1036,6 +1040,21 @@ const NO_SUCH_STANDARD_DETAIL = "no standard answers to that id here. One your c
   + "exactly as one that does not exist.";
 const NO_SUCH_STANDARD_FIXED = new Set(["ok", "reason", "code", "check", "translation", "standard", "detail"]);
 
+/** R23 (K1563 (10)): THE answer to one condition, a portion named that the standard does not record (`PORTION_UNKNOWN`):
+ *  minted here and nowhere else; R23, R26 and `progressions` R39 answer through it. `extra` adds a caller's own fields
+ *  and never replaces these. It writes nothing and never throws. */
+export function portionUnknown(standardId, portion, extra = null) {
+  let own = [];
+  try { if (extra && typeof extra === "object" && !Array.isArray(extra)) own = Object.entries(extra); } catch { own = []; }
+  const p = portion == null ? null : String(portion).slice(0, 200);
+  /* DEC-49 REGION is-portion-held */
+  return refusal("PORTION_UNKNOWN", `${standardId ?? "the standard"} records no portion '${p ?? ""}'. Nothing was written.`,
+                 { ...Object.fromEntries(own.filter(([k]) => !["ok", "reason", "code", "check", "translation", "detail",
+                                                                "standard", "portion"].includes(k))),
+                   standard: standardId ?? null, portion: p });
+  /* END DEC-49 REGION is-portion-held */
+}
+
 /* R5, R7: this module's own answer, through R17, naming the id also as `id` (the field its readers key on, filings R14). */
 const refuseNoSuchStandard = (id) => noSuchStandard(id, { id });
 
@@ -1086,16 +1105,24 @@ export function standardsOps(s, url, body) {
 }
 
 const instances = new WeakMap();
-/* R28: the instance the module's one registration in connection-grammar's default registry reads: the latest
-   constructed (one per Durable Object, K61). */
-let current = null;
+/* R28 (K1563 (1)): the instance the module's one registration in connection-grammar's default registry reads: the
+   host's, when the registry passes `host`, else the isolate's one instance; with several and no host, ambiguous. */
+let current = null, constructed = 0;
+function ownerRead(a) {
+  const { host, ...rest } = a && typeof a === "object" ? a : {};
+  const s = host !== undefined && host !== null ? instances.get(host) : constructed === 1 ? current : null;
+  if (s) return s.neighbours(rest);
+  return host !== undefined && host !== null
+    ? { refused: "OWNER_NOT_READY", why: "no standards instance is constructed on this host yet" }
+    : constructed === 0 ? { refused: "OWNER_NOT_READY", why: "no standards instance is constructed yet" }
+    : { refused: "OWNER_HOST_AMBIGUOUS", why: `${constructed} standards instances are held here and the read names no host` };
+}
 /** R28: the owner's registration (`connection-grammar` R2), over an instance, for a registry a caller holds. */
 export const connectionOwnerOf = (s) => ({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
                                           neighbours: (a) => s.neighbours(a) });
 /* R28: registered once at load as a connection owner. */
 registerOwner({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
-  neighbours: (a) => (current ? current.neighbours(a)
-    : { refused: "OWNER_NOT_READY", why: "no standards instance is constructed on this host yet" }) });
+  neighbours: ownerRead });
 
 /** K61: the one instance per host, created on the first call with `deps`. Its tables are created with it (R16); it
  *  registers its check with promotion (R39, for R11) and its tables with purge (R14). */
@@ -1112,6 +1139,7 @@ export function standardsOf(host, deps) {
                         events: d.events || null });
     instances.set(host, s);
     current = s;
+    constructed++;
     record.declareTable("standards", STANDARDS_TABLES.map((t) => ({ ...t })));
     promotion.registerStep("standards", { check: (c) => s.check(c) });
   }

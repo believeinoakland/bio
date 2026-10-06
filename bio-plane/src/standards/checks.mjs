@@ -130,7 +130,7 @@ export const STANDARDS_CHECKS = Object.freeze({
       + 'was written.',
   },
   PORTION_UNKNOWN: {
-    check: 'C-112.25', where: law("refusePortionUnknown", "is-portion-held"),
+    check: 'C-112.25', where: at("portionUnknown", "is-portion-held"),
     translation: 'The portion named is not a portion recorded for that standard. Name the portion as it was recorded, '
       + 'or none. Nothing was written.',
   },
