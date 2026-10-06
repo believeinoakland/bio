@@ -82,7 +82,7 @@ test("R3: stating a parameter: refusals, citation required, a member's act", () 
   assert.equal(w.c.stateParameter({ ...base, name: "limit" }).reason, "UNKNOWN_PARAMETER");
   assert.equal(w.c.stateParameter({ ...base, value: "" }).reason, "NO_VALUE");
   assert.equal(w.c.stateParameter({ ...base, value: "about 10%" }).reason, "BAD_VALUE");
-  assert.equal(w.c.stateParameter({ ...base, citation: " " }).reason, "NO_CITATION");
+  assert.equal(w.c.stateParameter({ ...base, citation: " " }).reason, "MONEY_CHECK_NO_CITATION");
   assert.equal(w.c.stateParameter({ ...base, contract: "ENT-2026-9999" }).reason, "NO_SUCH_ENTITY");
   assert.equal(w.count("money_check_params"), 0);
 });
