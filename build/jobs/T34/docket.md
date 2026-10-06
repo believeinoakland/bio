@@ -18,3 +18,7 @@
 **Ran.** `node --test test/m/docket/`: tests 59, pass 59, fail 0. Users (wording only, run anyway): public-read 123/123, network-notices 68/68, queue 124/124, affordances catalogue 50/50, control-plane families 10/10, monitoring 114 pass 1 fail (as above). No layer tests are named in `build/manifest.md`. Checks: format "127 modules, 126 requirements files; 0 failures"; architecture "10 product files, 52 relative imports …; 0 failures"; coverage "26 of 26 live requirement ids named by a test; 0 failures"; ownership "4 files changed by docket between tranche/T34 and HEAD; 0 failures".
 
 Size (session_011xvZrjC2VEHSEoquWKsvpe): test runs 9, module lines 1483
+
+## J1 · COMPLETE
+
+T34-45 and T34-87 applied. T34-45: R26's source needed no change (it already fails closed without a viewer and answers truncated); new lane.test.mjs proves the lane through the real events.timeline: a member's cases shown, fail-closed for an unseeing reader and no viewer, the source's truncated carried. T34-87: C-129.16 and C-129.22 now say 'Your group's Civicsmith'; words.test.mjs names each (0/3 before, 3/3 after). Module 59/59; public-read, network-notices, queue, affordances catalogue, control-plane families green; format, architecture, coverage 26/26, ownership 0 failures. Named reds: row census gains C-129.16/.22 awaiting T35's stamp (Rules 5 (4)); monitoring cadence.test.mjs:298 R18 fails with and without this change, not docket's; plane bundle stale until the layer close. Detail in my record's Completion.
