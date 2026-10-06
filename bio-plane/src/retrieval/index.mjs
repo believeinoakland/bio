@@ -127,6 +127,7 @@ export class Retrieval {
   #stepped = false;
   /* R68: the T33 fields whose view exists, field → relation, and the providers of the projected ones. */
   #live = new Map();
+  #schemaSeen = null;           // R68: the schema version the views were last checked at
   #terms = null;
   /* R69: where the governing time zone is read (local-facts R2; jurisdictions R41 as its fallback). */
   #localFacts; #combine; #host;
@@ -336,6 +337,9 @@ export class Retrieval {
    *  empty would read as "no bundle has it" rather than as unavailable). `force` re-creates the live views (at
    *  `migrate()`, so a changed body replaces the old). A view that cannot be created leaves its field unavailable. */
   #fieldViews(force = false) {
+    /* A table an owner creates moves SQLite's schema version, so an unchanged version has nothing new to find. */
+    const version = (() => { try { return this.#one(`PRAGMA schema_version`)?.schema_version ?? null; } catch { return null; } })();
+    if (!force && version !== null && version === this.#schemaSeen) return this.#live;
     for (const v of FIELD_VIEWS) {
       if (!Object.prototype.hasOwnProperty.call(FIELDS, v.field)) continue;
       if (this.#live.has(v.field) && !force) continue;
@@ -352,6 +356,7 @@ export class Retrieval {
         this.#live.set(v.field, fieldRelation(v.field));
       } catch { this.#live.delete(v.field); }
     }
+    try { this.#schemaSeen = this.#one(`PRAGMA schema_version`)?.schema_version ?? null; } catch { this.#schemaSeen = null; }
     return this.#live;
   }
 
