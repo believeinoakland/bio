@@ -31,3 +31,7 @@ Size (session_01HJShRzbYgDYYHUhx8BEoBq): test runs 10, module lines 2101
 ## J1 · REPORT
 
 Outside escalation, from T34-87 (detail in my record's Completion): (1) promotion: C-116.44's translation changed, so row-census.test.mjs names it 'changed with no record'; already red on tranche/T34 from the other DEC-149 re-wordings, it joins that list until T35's stamp moves CATALOG_VERSION (gate.mjs) and re-pins (plan Rules (5) item 4; K1750). (2) control-plane: test/m/control-plane/rows-before-r43.json pins C-116.44's digest (cf5a6a370b72dfc5), now stale; catalogue-end.test.mjs is already red (K1789), its re-pin control-plane's in T34-60. (3) bio-plane/dist/bio-plane.bundled.mjs holds the old wording, for your regeneration at L9's close.
+
+## J2 · COMPLETE
+
+T34-87 applied: C-116.44 PROVIDER_UNAVAILABLE's translation says 'your group's Civicsmith'; index.mjs:1535's operator-facing detail stays. voice.test.mjs names the changed string (R3 R14) and checks no translation uses the old names (R17 R20); negative control 2 of 2 red on the old wording. escalation tests 63/0; format, architecture, coverage (30/30), ownership (3 files): 0 failures. Nothing deferred. Branch job/T34/escalation; record has the summary lines and Size.
