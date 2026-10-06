@@ -30,3 +30,11 @@ From AFFORDANCES #21 (N630, K1717; K1864 (1)): `json()` (`index.mjs`:218) answer
 ## B6 · CHANGE
 
 `build/modules.json` on `tranche/T34`: control-plane uses following and agent-harness (K1866); merge `tranche/T34`.
+
+## B7 · CHANGE
+
+Tasks is merged on `tranche/T34` (K1868 (1)): its five ops (`tasksOps`) and C-138 (15 rows); `families.test.mjs`:515 pins tasks' old four rows. Merge `tranche/T34` and re-pin; this is part of your accepted red 9.
+
+## B8 · CHANGE
+
+Wizard-scripts is merged (K1869 (2)): `startfrom` and `baseupdates` in its ops map turn your R50 red; C-131.24 re-worded and C-131.33–.41 new reach your R43 (accepted red 4 for the stamp). Merge `tranche/T34` and carry both.
