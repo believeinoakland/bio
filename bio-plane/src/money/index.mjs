@@ -61,6 +61,24 @@ export function refusal(code, detail, extra = {}) {
 }
 const list = (xs) => xs.join(", ");
 
+/* K1569: THE ONE ANSWER TO ONE CONDITION, no money fact with the id `factId` is held (or the asker may not see it,
+   answered alike, R21). Every act of any module that answers that condition answers through here (this module's R7,
+   R10, R11, R12, R13; duties), so `NO_SUCH_FACT` is minted at one site (entities' `noSuchEntity` pattern). The detail is
+   one fixed sentence, the same for every caller; `extra` adds a caller's own fields and never replaces these. Writes
+   nothing and never throws. */
+const NO_SUCH_FACT_DETAIL = "no money fact with that id is held here, or it is not visible to the asker; a money fact is "
+  + "recorded with op=moneyrecord before anything can name it";
+const NO_SUCH_FACT_FIXED = new Set(["ok", "reason", "code", "fact_id", "detail"]);
+export function noSuchFact(factId, extra = null) {
+  let own = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own = Object.entries(extra).filter(([k]) => !NO_SUCH_FACT_FIXED.has(k));
+  } catch { own = []; }
+  return { ok: false, reason: "NO_SUCH_FACT", code: "NO_SUCH_FACT", fact_id: typeof factId === "string" ? factId : null,
+           ...Object.fromEntries(own), detail: NO_SUCH_FACT_DETAIL };
+}
+
 /* An exact decimal by calc-grammar's figure parser (R1's BAD_AMOUNT): digits, thousands separators and one point,
    unsigned, unscaled, with no currency sign. Answers its normal value, or null. Never a JavaScript number. */
 function exactDecimal(s) {
@@ -571,7 +589,7 @@ export class Money {
   withdrawFact({ factId, reason, by } = {}) {
     if (!filled(reason)) return refusal("NO_REASON", "a withdrawal states why");
     const row = this.#factRow(factId);
-    if (!row) return refusal("NO_SUCH_FACT", `no money fact ${String(factId ?? "").slice(0, 60)} is held`);
+    if (!row) return noSuchFact(factId);
     if (row.withdrawn_at) return { ok: true, already: true, fact_id: row.fact_id };
     const at = this.#now();
     return this.#record.transact(() => {
@@ -710,7 +728,7 @@ export class Money {
     const rows = [];
     for (const id of ids) {
       const r = this.#factRow(id, viewer === undefined ? null : viewer);
-      if (!r) return refusal("NO_SUCH_FACT", `no money fact ${String(id).slice(0, 60)} is held`, { fact_id: id });
+      if (!r) return noSuchFact(id);
       if (r.withdrawn_at) return refusal("FACT_WITHDRAWN", `${r.fact_id} is withdrawn and is never counted`, { fact_id: r.fact_id });
       rows.push(r);
     }
@@ -775,7 +793,7 @@ export class Money {
     const set = filled(setId) ? this.#one(`SELECT * FROM money_sets WHERE set_id=?`, setId) : null;
     if (!set) return refusal("NO_SUCH_SET", `no money set ${String(setId ?? "").slice(0, 60)} is held`);
     const fact = this.#factRow(factId, by);
-    if (!fact) return refusal("NO_SUCH_FACT", `no money fact ${String(factId ?? "").slice(0, 60)} is held`);
+    if (!fact) return noSuchFact(factId);
     const at = this.#now();
     return this.#record.transact(() => {
       const open = act === "include" ? this.#one(`SELECT proposal_id FROM money_set_proposals WHERE set_id=? AND fact_id=? AND adopted_act IS NULL ORDER BY proposal_id LIMIT 1`, setId, fact.fact_id) : null;
@@ -793,7 +811,7 @@ export class Money {
     const set = filled(setId) ? this.#one(`SELECT 1 AS x FROM money_sets WHERE set_id=?`, setId) : null;
     if (!set) return refusal("NO_SUCH_SET", `no money set ${String(setId ?? "").slice(0, 60)} is held`);
     const fact = this.#factRow(factId, by ?? "");
-    if (!fact) return refusal("NO_SUCH_FACT", `no money fact ${String(factId ?? "").slice(0, 60)} is held`);
+    if (!fact) return noSuchFact(factId);
     const at = this.#now();
     this.#sql.exec(`INSERT INTO money_set_proposals (set_id, fact_id, method, by, at) VALUES (?,?,?,?,?)`, setId, fact.fact_id, clip(method), by ?? null, at);
     return { ok: true, set_id: setId, fact_id: fact.fact_id, proposal_id: this.#one(`SELECT max(proposal_id) AS id FROM money_set_proposals`).id,

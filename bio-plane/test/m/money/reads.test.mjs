@@ -94,3 +94,22 @@ test("R9 moneyOf answers only what the viewer may see, and counts nothing withhe
   assert.equal(s.m.moneyOf({ entity: s.vendor, viewer: OUTSIDER }).count, 1);
   assert.equal(s.m.moneyOf({ entity: s.vendor }).count, 0);
 });
+
+test("R7 noSuchFact is the one answer to an absent fact (K1569): every act that answers NO_SUCH_FACT answers it, a hidden fact alike", async () => {
+  const { noSuchFact } = await import("../../../src/money/index.mjs");
+  const s = seeded();
+  const absent = "MNY-2026-aaaaaaaaaaaaaaaa";
+  const one = noSuchFact(absent, { end: "x", reason: "not mine", detail: "not mine" });
+  assert.deepEqual([one.ok, one.reason, one.code, one.fact_id, one.end], [false, "NO_SUCH_FACT", "NO_SUCH_FACT", absent, "x"]);
+  assert.equal(one.detail, noSuchFact(absent).detail, "a caller's fields never replace the fixed ones");
+  assert.deepEqual(noSuchFact(undefined).fact_id, null);
+  const a = s.rec();
+  const set = s.m.createSet({ purpose: "trail", label: "t", by: ANN }).set_id;
+  for (const r of [s.m.withdrawFact({ factId: absent, reason: "r", by: ANN }), s.m.summable({ factIds: [a, absent] }),
+                   s.m.reconcile({ a, b: absent }), s.m.include({ setId: set, factId: absent, reason: "r", by: ANN }),
+                   s.m.proposeInclusion({ setId: set, factId: absent, method: "m", by: ANN })])
+    assert.deepEqual(r, noSuchFact(absent));
+  s.project("PROJ-1", "bob");
+  const hid = s.rec({ source: { capture_sha: s.held("INFO-H", sha("hidden"), { project: "PROJ-1" }) }, by: BOB });
+  assert.deepEqual(s.m.include({ setId: set, factId: hid, reason: "r", by: OUTSIDER }), noSuchFact(hid));
+});
