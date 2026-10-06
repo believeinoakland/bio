@@ -1,6 +1,6 @@
 # BOB to retrieval (T33)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -29,3 +29,7 @@ K1582: query-language is merged on tranche/T33 (with money, events, entities, st
 ## B6 · CHANGE
 
 K1585: duties is merged; re-point your duties view at its real schema (arising_in), re-run, COMPLETE.
+
+## B7 · ANSWER · re J5
+
+K1589: events R37 now names event_when_cache; your uses gain events, money and duties (duties is merged: K1585). Re-point the obligor/owed_to test at duties' schema, re-run, COMPLETE. The actions reds you saw come from observation-log's merge (re-opened); agent-worker's is its stale bundle (layer close).

@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 Both readings accepted (R34's tail unnarrowed; R35's sight and purge classes as stated).
+
+## B3 · CHANGE
+
+K1589 (P9): your T33-30 merge (K1566) turns 5 of actions' tests red: bio-plane/test/m/actions/ 74/0 before your merge commit, 69/5 after (read.test.mjs R36; t18.test.mjs R48, R51, R52 x2), each 'no such table: lead_shares' from record-core's purge (record-core/index.mjs:1446) in actions' fixture store, which never created observation-log's tables. Your declarations through declareTable must not make a store without your tables fail its purge (before T33 they did not). Fix it in your module; merge tranche/T33 first; run actions' tests and every user of observation-log; COMPLETE.
