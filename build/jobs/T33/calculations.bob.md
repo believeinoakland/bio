@@ -30,3 +30,7 @@ K1578: entities, events, lines and standards are merged on tranche/T33; re-point
 ## B6 · CHANGE
 
 K1580: money is merged too; re-point at it.
+
+## B7 · CHANGE
+
+K1585: duties is merged too (and query-language, money-checks, local-facts, explore). Re-point; people, progressions and retrieval follow.
