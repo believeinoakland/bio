@@ -54,7 +54,8 @@ screen('project', 'Project', 'working', 'A project\'s home: objective, bar, ques
   [('promote','Open a question'),('strengthbarset','Set the project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; strength against the bar; concluding.',
   [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('withdrawconclusion','Withdraw the conclusion'),
-   ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('owed:checkrequest DEC-135','Ask for a check by expertise')], [6,9,15,16])
+   ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('owed:checkrequest DEC-135','Ask for a check by expertise'),
+   ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
   [('ruleanswer','Ask'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
 screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs only on the member\'s own account.',

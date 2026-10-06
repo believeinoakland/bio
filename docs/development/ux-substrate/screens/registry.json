@@ -929,6 +929,23 @@
      "op": "owed:checkrequest DEC-135",
      "label": "Ask for a check by expertise",
      "status": "owed"
+    },
+    {
+     "op": "heldrestore",
+     "label": "Restore a set-aside document, with a reason",
+     "status": "declared",
+     "modules": [
+      "capture"
+     ]
+    },
+    {
+     "op": "search",
+     "label": "Find another source",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "retrieval"
+     ]
     }
    ],
    "journeys": [
