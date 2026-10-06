@@ -16,7 +16,7 @@
 - `node --test agent-model/test/`: tests 12, pass 12, fail 0 (new tests named R6 (calls) and R11; R1 and R9 extended).
 - `node --test agent-worker/test/` (the module that uses agent-model): tests 9, pass 6, fail 3; without my change pass 7, fail 2. The added red is `requirements.test.mjs` R45 ×2, the stale bundle above; `ask` and `harness` are inherited.
 - Layer tests: none named in `build/manifest.md`.
-- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 5 product files, 6 relative imports; 0 failures. `coverage`: 11 of 11 live requirement ids named by a test; 0 failures. `ownership`: see the commit (re-run after commit below).
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 5 product files, 6 relative imports; 0 failures. `coverage`: 11 of 11 live requirement ids named by a test; 0 failures. `ownership`: 5 files changed by agent-model between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01PAru3fgq7yRoTJvbfx1aDq): test runs 9, module lines 602
 
