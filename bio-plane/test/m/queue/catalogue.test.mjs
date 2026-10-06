@@ -15,7 +15,9 @@ const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "
   "signer-self-registered", "plan-checkpoint-due", "escalation-stage-proposed", "action-reminder", "litigation-hold",
   "template-review-requested", "local-fact-due", "attribution-unchosen", "docket-core-due",
   /* T31 (queue-producers R33, DEC-121 (1)) */
-  "wizard-approval-requested"];
+  "wizard-approval-requested",
+  /* T33-83 (notice-producers R6; K1505 (15), K1594 (3)) */
+  "inquiry-recheck-due"];
 /* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
    docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */
@@ -28,7 +30,9 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   "tension-after-publication", "edition-withdrawn", "edition-contested", "litigation-hold-released",
   /* T31 (queue-producers R32, R34, R35; DEC-121 (5), DEC-101 (3), DEC-116 item 8) */
   "wizard-withdrawn", "wizard-restored", "cited-newer-edition", "cited-edition-withdrawn", "followed-case-entry",
-  "cited-docket-entry-refused"];
+  "cited-docket-entry-refused",
+  /* T33-83 (notice-producers R2, R3, R4; K1491, K1481) */
+  "interest-check-noticed", "money-detector-noticed", "standing-answer"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */

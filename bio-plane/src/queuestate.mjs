@@ -152,6 +152,11 @@ export const QUEUE_OBLIGATION_KINDS = {
      (its R33). */
   "wizard-approval-requested":   "a member submitted a wizard script's version that you may approve; approve it or leave "
                               + "it (op=wizardapprove; DEC-121) — LIVE: queue-producers R33",
+  /* T33-83 (R1; K1505 (15), K1594 (3); inquiry R54–R57): a dated wait a member set on an inquiry has come round. The
+     member set it for themselves, so it is theirs to answer, never muted: by recording a look (R12's door,
+     op=waitlook), a new date or the wait removed. Its producer is `notice-producers`' (its R6). */
+  "inquiry-recheck-due":         "a date you set to look again at a question has come; look again (op=waitlook), set a "
+                              + "new date or remove the wait — LIVE: notice-producers R6",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -161,7 +166,11 @@ export const QUEUE_FINDING_KINDS = {
      own words, because it is not "required and absent". It decides nothing about which document belongs. */
   "cardinality_exceeded":       "a stage declared to hold at most one document holds more; noticed, which decides "
                               + "nothing about which of them belongs (framework 8.2) — LIVE: queue-producers/proposals.mjs",
-  "temporal-expectation-due":   "a temporal expectation is coming due (framework 8.2, D-73)",
+  /* T33-83 (R1; K1466, K1444 (i)): an occurrence of a body's duty a member adopted has come due with nothing the record
+     holds meeting it, or may have (between its candidate dates). A question about the body, never a violation. Its
+     producer is `notice-producers`' (its R5). */
+  "temporal-expectation-due":   "an occurrence of a body's duty you adopted has come due and nothing the record holds "
+                              + "shows it met; a question, never a violation (K1466) — LIVE: notice-producers R5",
   "source-modified":            "a monitor tick found the source modified — LIVE: queue-producers #findingsSourceFlagged",
   "source-removed":             "a monitor tick found the source removed (404/410) — LIVE: queue-producers #findingsSourceFlagged",
   "duplicate-document":         "a duplicate document was detected (D-60)",
@@ -283,6 +292,16 @@ export const QUEUE_FINDING_KINDS = {
   "followed-case-entry":        "a docket you follow gained an entry (DEC-101, DEC-116) — LIVE: queue-producers R35",
   "cited-docket-entry-refused": "an entry of a docket you follow failed its checks and was not taken in (DEC-116) "
                               + "— LIVE: queue-producers R35",
+  /* T33-83 (R1; K1491, K1481): what the machine pointed at, labelled as the machine's and held in the hypothesis layer,
+     never a fact about a person and never moving a finding; a member disposes of it or takes it up as a hunch or
+     hypothesis (R12). Shown only once each check's or detector's gate is open (plan Rule 7), which is its owner's to
+     judge. Their producer is `notice-producers`' (its R2, R3, R4). */
+  "interest-check-noticed":     "the machine noticed a pattern among people's facts that a check you may see describes; "
+                              + "labelled as the machine's, not a judgment of anyone (K1491) — LIVE: notice-producers R2",
+  "money-detector-noticed":     "the machine noticed a pattern in the money facts that a detector describes; labelled as "
+                              + "the machine's (K1491) — LIVE: notice-producers R3",
+  "standing-answer":            "your standing question found something new; labelled as the assistant's (K1481) "
+                              + "— LIVE: notice-producers R4",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before
