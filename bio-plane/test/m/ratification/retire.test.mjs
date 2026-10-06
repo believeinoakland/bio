@@ -34,7 +34,7 @@ function setup({ promotion, retrieval } = {}) {
   w.citesAsked = [];
   const connections = { citesInto: (id) => { w.citesAsked.push(id); return w.cites.get(id) ?? { confirmed: [], severed: [] }; } };
   const r = ratificationOf(w.host, { storage: w.st, record: w.record, membership: w.membership,
-                                     promotion: w.promotion, retrieval: w.retrieval, connections });
+                                     promotion: w.promotion, retrieval: w.retrieval, connections, publication: {} });
   w.r = promotion || retrieval
     ? new Ratification({ storage: w.st, record: w.record, membership: w.membership,
                          promotion: promotion ? promotion(w.promotion) : w.promotion,

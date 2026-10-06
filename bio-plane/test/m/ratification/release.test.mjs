@@ -28,7 +28,7 @@ function setup({ promotion, contradiction } = {}) {
   const w = retrievalWorld();
   contradictionOf(w.host).migrate();
   const r = ratificationOf(w.host, { storage: w.st, record: w.record, membership: w.membership,
-                                     promotion: w.promotion, retrieval: w.retrieval });
+                                     promotion: w.promotion, retrieval: w.retrieval, publication: {} });
   w.r = promotion || contradiction
     ? new Ratification({ storage: w.st, record: w.record, membership: w.membership,
                          promotion: promotion ? promotion(w.promotion) : w.promotion, retrieval: w.retrieval,
