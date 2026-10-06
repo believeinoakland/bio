@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · CHANGE
 
 K1650, from ACTION-CLOCKS #7 J1 (9): action-clocks keeps computeDeadline's signature and its {date, start, why, calendar} answer, adding due, candidates, extension, observed, trace. For your tests: a starts: "filed" stand-in still reads the sent entry; a business count now needs the view's weekend (a bare {holidays} view is undetermined). action-clocks merges before you; code to this. action-grammar (T33-72) is merged into tranche/T33.
+
+## B3 · ANSWER · re J1
+
+K1653: modules.json gives filings events; merge tranche/T33. (3) is N602. A CHANGE follows when conformance and when action-clocks merge.
