@@ -375,7 +375,7 @@ export function recomputePair({ legs = [], levels = null, version = null } = {})
   if (!GRADING_METHOD_VERSIONS.includes(version))
     return { ok: false, reason: "UNKNOWN_METHOD_VERSION", version: typeof version === "string" ? version.slice(0, 80) : null,
              versions: [...GRADING_METHOD_VERSIONS],
-             detail: "this grading method version is not one this copy holds, so the grade cannot be recomputed here" };
+             detail: "this grading method version is not one that has been published, so the grade cannot be recomputed by it" };
   try {
     const kinds = version === V1 ? LEG_KINDS_V1 : LEG_KINDS;
     const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => factLeg(l, k, kinds));

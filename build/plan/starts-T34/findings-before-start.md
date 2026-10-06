@@ -39,3 +39,9 @@
 - filings (T34-62): `chronology.test.mjs`:63 (R33) `deepEqual`s a registered source's arguments as `{set, from, to, limit}`; events R30 now passes `viewer` too (EVENTS #2). Red from events' merge until this job's (K1795).
 - consequences (T34-49): `computed.test.mjs`:176 (R2) expects alice `out_of_view` once `gradeFactsOf` exists, but alice created the calculation and calculations R30 admits her: invert the expectation (CALCULATIONS #2). Red from calculations' merge until this job's (K1795).
 - publication (T34-79): calculations R9's input bytes are now also put in the evidence store at create (for publication R22), with a new column `calculations.input_shas_json` (CALCULATIONS #2).
+- control-plane (T34-60): `askusage` (`dispatch.mjs`:294) passes only `b.usage`; pass `calls: b.calls` too (ai-runs R48; agent-worker's ask sends it), K1798.
+- case-authoring (T34-48): DEC-149: `index.mjs` ~:1226 and ~:2188 carry "this plane"/"this copy" for the group's Civicsmith (BASIS-VERSIONS #12), K1799.
+- plane (T34-76): answers reads retrieval's `relations()` and `zone()` itself (ANSWERS #2): drop the `relations` dep `store.mjs` ~:207 hands it (replaces K1788's wiring line), K1803.
+- scheduler (T34-51): register with answers' `onStandingSet` (its R27) to re-arm `standing-questions` at once (ANSWERS #2), K1803.
+- affordances (T34-75): `t33-backing.test.mjs`:122 (R19) red since duties' merge (`DUTY_NO_REASON`, N608), K1805.
+- op-declarations (T34-58): `askusage`'s reason text (`index.mjs`:2913) omits `calls` (AI-RUNS #11), K1805.

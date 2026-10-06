@@ -160,7 +160,7 @@ test("R12: the minted-to-cited ratio is over the machine-minted content rows of 
   const { w, propose } = base({ mints: 10 });
   const r = propose({ refs: [REF(1, { source: AT(0) }), REF(2, { source: AT(1) }), REF(3, { source: AT(2) })] });
   const [c0, c1] = r.proposed.map((x) => x.content_id);
-  w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, role, target_id, content_id) VALUES (?, 0, 'supports', ?, ?)`, Q, DOC, c0);
+  w.st.sql.exec(`INSERT INTO inquiry_basis (bundle_id, ord, role, target_id, target_type, content_id) VALUES (?, 0, 'supports', ?, 'information', ?)`, Q, DOC, c0);
   w.st.sql.exec(`INSERT INTO inquiry_basis_version_legs (bundle_id, name, ord, target_id, content_id) VALUES (?, 'v', 0, ?, ?)`, Q, DOC, c1);
   const seen = w.p.extractProposals({ run: RUN, viewer: ALICE });
   assert.deepEqual([seen.instrument.minted, seen.instrument.cited, seen.instrument.uncited], [3, 2, 1]);
