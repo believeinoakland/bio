@@ -19,3 +19,7 @@
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture run-productions`: 8 product files, 41 relative imports; 0 failures. `coverage run-productions`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership run-productions tranche/T34`: 3 files changed; 0 failures.
 
 Size (session_01XYgGBGhRvjEuFN3iKFUv7K): test runs 4, module lines 1358
+
+## J1 · COMPLETE
+
+T34-73 applied (N627, test-only): the fixture's stub inquiry_basis now holds leg-earning R12's columns and key, so leg-earning's grade_source index migrates when the real strength and citation reach inquiry. The inherited red 'run-productions R3 fixture' (K1708) is cleared. The R12 ratio test's leg row gains target_type. Product code unchanged. run-productions 39/0. format, architecture, coverage 20/20, ownership 3 files: 0 failures. No generated artifact is stale; nothing found in other modules. Record: build/jobs/T34/run-productions.md.
