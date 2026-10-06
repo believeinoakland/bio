@@ -28,3 +28,7 @@
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 15 product files, 50 relative imports; 0 failures. `coverage`: 27 of 27 live requirement ids named by a test; 0 failures. `ownership`: 8 files changed by answers between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01Ya6c1GwmcFiEnh99zBxMdo): test runs 12, module lines 1380
+
+## J1 · COMPLETE
+
+T34-36 applied: ASK_SCOPE renamed to the routed ops and equal to AI_GRANT_OPS (copy test green again); zone and relations read from retrieval (R69, R72); R19 through credentials.accountFor and aiGrantMintStanding (grant token keys the run's read log); R26 (no-account member: finds as a list, answer null); R27 onStandingSet. answers 34/34; users unchanged from baseline (inherited reds only); format, architecture, coverage 27/27, ownership 0 failures. Two rulings and three findings for you in the record: plane's stale relations dep, scheduler to register onStandingSet, retrieval zone()'s lazy local-facts table.
