@@ -232,6 +232,23 @@ test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed 
   const cor = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: [{ date: "2026-10-12", name: "corrected in" }], by: "a member", at: "2026-10-02" }) });
   assert.equal(cor.due.value, "2026-10-13", "the corrected list governs");
   assert.match(cor.trace.calendar.notes.join(" "), /corrected on this instance by a member/);
+  /* N603 (local-facts R2, R3): a correction governs until a later act and a later confirm confirms it, so it is counted
+     on whenever the answer says the governing value is a correction, whatever the status reads now; never otherwise */
+  const fixed = [{ date: "2026-10-12", name: "corrected in" }];
+  for (const status of ["confirmed", "unconfirmed"]) {
+    const r = ev(v, "records_response", day("2026-09-30", LA), { factOf: st(status, { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
+    assert.equal(r.due.value, "2026-10-13", `the confirmed correction governs (${status})`);
+    assert.match(r.trace.calendar.notes.join(" "), new RegExp(`counted on a correction that governs on this instance, now ${status} \\(corrected locally by a member, 2026-10-02\\)`));
+    assert.ok(r.trace.calendar.entries.some((e) => e.governs === "correction" && e.status === status));
+    assert.match(r.trace.notes.join(" "), new RegExp(`counted on its correction, now ${status}`));
+  }
+  const whole = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("confirmed", { corrected: true, value: { year: 2026, days: fixed } }) });
+  assert.equal(whole.due.value, "2026-10-13", "a correction given as the whole entry governs by its days");
+  const notCorr = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("confirmed", { corrected: false, value: fixed }) });
+  assert.equal(notCorr.due.value, "2026-10-12", "a profile value is not a correction: the view's days govern");
+  assert.ok(!notCorr.trace.calendar.entries.some((e) => e.governs));
+  const dis = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("disputed", { corrected: true, value: fixed }) });
+  assert.equal(dis.code, "FACT_DISPUTED", "a dispute after a correction is still undetermined");
   /* UNMEASURED */
   assert.equal(evaluateRule({ rule: custom({ units: "days", amount: 1, count: "calendar", basis: "UNMEASURED" }), anchor: day("2026-10-01", LA), view: v }).code, "UNMEASURED");
   /* an undetermined anchor */
