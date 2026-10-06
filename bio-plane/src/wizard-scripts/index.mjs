@@ -43,7 +43,7 @@ export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLAS
 export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE } from "./civicsmith-library.mjs";
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
 export { FRONT_DOORS } from "./front-doors.mjs";
-export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
+export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
          TOLD_MAX } from "./writing-help.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies */
@@ -99,7 +99,7 @@ export function withRow(r) {
   const row = rowOf(r.reason);
   return row ? { ...r, code: r.code ?? r.reason, check: row.check, translation: row.translation } : r;
 }
-const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
+const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, code, detail, ...(extra || {}) });
 
 /** A version's id, `<script>@<version>` (the Terms). */
 export const versionId = (script, version) => `${script}@${version}`;
@@ -1327,7 +1327,8 @@ export class WizardScripts {
 
   /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
    *  `{offered: false, code}`, against the registration's refused and irreversible acts. Writes nothing; never throws. */
-  writingHelpAt({ op = null, field = null, draftHeld = false, assistant = null } = {}) {
+  writingHelpAt(args = {}) {
+    const { op = null, field = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
     return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused);
   }
 
@@ -1335,7 +1336,8 @@ export class WizardScripts {
    *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
    *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The ceiling refusals are the door's (`control-plane` R57). Writes
    *  nothing. */
-  writingHelp({ op = null, field = null, told = null, draftHeld = false, assistant = null } = {}) {
+  writingHelp(args = {}) {
+    const { op = null, field = null, told = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
     const at = this.writingHelpAt({ op, field, draftHeld, assistant });
     if (!at.offered) return refuse(at.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
     const text = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";

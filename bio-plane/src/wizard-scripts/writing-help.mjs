@@ -35,8 +35,9 @@ export function isReasonField(field) {
 /** R24 (pure): `{offered: true}` or `{offered: false, code}` for one field of `op`, in R24's order: the assistant off or
  *  no account serving the viewer; an act the assistant is refused or that cannot be undone; a field stating the
  *  member's reason; a labelled draft already in the field. `refused` is `helpRefusedActs` of the registration. */
-export function writingHelpAt({ op = null, field = null, draftHeld = false, assistant = null } = {}, refused = helpRefusedActs()) {
+export function writingHelpAt(args = {}, refused = helpRefusedActs()) {
   try {
+    const { op = null, field = null, draftHeld = false, assistant = null } = args && typeof args === "object" ? args : {};
     const a = assistant && typeof assistant === "object" ? assistant : {};
     if (a.on !== true) return { offered: false, code: "ASSISTANT_OFF" };
     if (!a.account) return { offered: false, code: "AI_NO_ACCOUNT" };
@@ -102,8 +103,9 @@ const asTexts = (v) => (typeof v === "string" ? [v] : Array.isArray(v) ? v.map((
  *  (`WRITING_HELP_FIRSTHAND_READ`); otherwise each sentence stating a figure, a date, a name or a quotation that is in
  *  neither `told` nor `readLog` is withheld whole (`WRITING_HELP_FACT_ADDED`), never rewritten. The text is answered
  *  with its label `{kind: "machine", asked_by}` and is never stored. Writes nothing; never throws. */
-export function checkDraft(text, { told = [], readLog = [], firsthand = false, suggestions = false, askedBy = null } = {}) {
+export function checkDraft(text, opts = {}) {
   try {
+    const { told = [], readLog = [], firsthand = false, suggestions = false, askedBy = null } = opts && typeof opts === "object" ? opts : {};
     const read = asTexts(readLog);
     const sources = [...asTexts(told), ...read];
     const kept = [], withheld = [];
