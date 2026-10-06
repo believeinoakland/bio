@@ -14,7 +14,7 @@
 | 8 | Publication | 16 | What the group stands behind leaves one way. | case-grammar, corpus-export, case-carriage, case-tensions, publication, docket, public-read, project-stage, network-notices, case-catalogue, ratification, case-checker, case-import, case-disclosures, case-authoring, review |
 | 9 | Action | 16 (`BIO_Action_v0_1.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | conformance, consequences, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, following, link-sweep, scheduler |
-| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | wizard-scripts, affordances, tasks, machinery-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, admission, control-plane, plane, legacy-ui, installer |
+| 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | wizard-scripts, affordances, tasks, machinery-producers, queue-producers, notice-producers, queue, setup-page, instance-setup, op-declarations, admission, control-plane, plane, legacy-ui, installer |
 
 ## No jurisdiction in the product (Bob's concern, 2026-09-25; ruled by BOB #37)
 
