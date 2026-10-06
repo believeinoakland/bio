@@ -1,6 +1,6 @@
 # control-plane (T34)
 
-**Status** · session_018eayTV8uSbTs4embGXypYg · depth 2 · WAITING ON BOB (J2) · handled B6
+**Status** · session_018eayTV8uSbTs4embGXypYg · depth 2 · WAITING ON BOB (J2) · handled B8
 
 ## J1 · QUESTION
 
