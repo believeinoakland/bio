@@ -41,3 +41,11 @@ Size (session_01G7Adz3cZJyj9EDveznQ5vf): test runs 6, module lines 2716
 ## J3 · COMPLETE
 
 CHANGE B3 applied: tranche/T33 merged; R69 calls readHooksOf(storage).afterRead after each reading's commit (namespace import, so nothing is called before reading-pipeline merges); tests inject a ReadHooks-like object. Also checked once (uncommitted) against job/T33/reading-pipeline's hooks.mjs: works. 119/119; format, architecture, coverage 45/45, ownership 0 failures. Merges after reading-pipeline.
+
+## CHANGE B4 (K1557)
+
+Merged `tranche/T33` (reading-pipeline merged, with its R28 and `readHooksOf`). The re-read (R34) now adds `reading-pipeline.emittedFieldsOf` of the text it composed from, so its reading carries the pdf entry's `metadata` unaltered (null when none) and, as for any non-workbook, no `cells`; tested at `pdfStructure` (`pdfstructure.test.mjs`, "R34 (reading-pipeline R28; K1557)"). With `readHooksOf` now real, R69 gains a test over the storage's own registry with nothing injected (a hook for the class runs after the commit, a throwing one is in `failed`, another class and another storage run none).
+
+Tests and checks re-run: `node --test bio-plane/test/m/extraction/`: ℹ pass 121, ℹ fail 0. format 0 failures; architecture (26 product files, 96 imports) 0 failures; coverage 45 of 45, 0 failures; ownership 0 failures.
+
+Size (session_01G7Adz3cZJyj9EDveznQ5vf): test runs 9, module lines 2719
