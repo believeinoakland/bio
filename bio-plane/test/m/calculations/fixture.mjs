@@ -10,6 +10,8 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf, listenerRefusal } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -131,13 +133,6 @@ export function moneyProvider(record) {
   return m;
 }
 
-/** entities (its R44): `entityByIdentifier({scheme, id})`. */
-export function entitiesProvider() {
-  const ids = new Map();
-  return { ids, set(scheme, id, entity) { ids.set(`${scheme}\u0000${id}`, entity); },
-    entityByIdentifier({ scheme, id }) { const e = ids.get(`${scheme}\u0000${id}`); return e ? { entity_id: e } : null; } };
-}
-
 /** standards (its R20): `inForceAt({standard, date})` over periods the test holds. */
 export function standardsProvider() {
   const periods = new Map();
@@ -197,21 +192,6 @@ export function peopleProvider() {
     } };
 }
 
-/** events (its R26, R27): meetings and publications the test holds. */
-export function eventsProvider() {
-  const events = new Map();
-  return { events,
-    eventsFor({ entity, kinds }) {
-      return { ok: true, events: [...events.values()].filter((e) => e.body === entity && (!kinds || kinds.includes(e.kind))).map((e) => ({ event_id: e.event_id, when: e.when })) };
-    },
-    readEvent({ eventId, viewer }) {
-      const e = events.get(eventId);
-      if (!e) return { ok: true, found: false };
-      if (Array.isArray(e.visibleTo) && !/^class:/.test(viewer || "") && !e.visibleTo.includes(viewer)) return { ok: true, found: false };
-      return { ok: true, found: true, ...e };
-    } };
-}
-
 /** progressions (its R18, R38): the feed the test holds. */
 export function progressionsProvider() {
   const feed = { instances: [] };
@@ -247,8 +227,13 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   prov.migrate();
   content.migrate();
   if (profiles !== null) record.setSetting("jurisdiction_profiles", profiles, "admin");
-  const money = moneyProvider(record), entities = entitiesProvider(), standards = standardsProvider(),
-    retrieval = retrievalProvider(), duties = dutiesProvider(), people = peopleProvider(), events = eventsProvider(),
+  /* entities and events are the real modules (merged, K1576); the rest are providers until their merges. */
+  const entities = entitiesOf(host, { record, membership, provenance: prov });
+  if (typeof entities.migrate === "function") entities.migrate();
+  const events = eventsOf(host, { record, membership, provenance: prov, extraction, content, entities, now: () => clock.now });
+  if (typeof events.migrate === "function") events.migrate();
+  const money = moneyProvider(record), standards = standardsProvider(),
+    retrieval = retrievalProvider(), duties = dutiesProvider(), people = peopleProvider(),
     progressions = progressionsProvider();
   const deps = { record, membership, content, provenance: prov, money, entities, standards, retrieval, duties, people, events,
     progressions, now: () => clock.now, clock: () => clock.ms };
@@ -311,6 +296,39 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
       const m = content.mint({ bundleId: d.bundleId, captureSha: d.capSha, extent: { kind: "sheet-range", sheet: "S", range }, mintedBy: V("bob") });
       if (!m.ok) throw new Error(`fixture sheet mint refused: ${JSON.stringify(m).slice(0, 400)}`);
       return m.content_id;
+    },
+    /** A registered person holding the profile's person identifier `id` (entities R43): its entity id. */
+    person(label, id = null) {
+      const e = entities.createEntity({ kind: "person", label, note: "a subject the test registers", declaredBy: V("bob") });
+      if (!e.ok) throw new Error(`fixture entity refused: ${JSON.stringify(e).slice(0, 300)}`);
+      if (id) {
+        const r = entities.addIdentifier({ entityId: e.entity_id, scheme: "ellery_person", id, basis: "the minutes' roll", by: V("bob") });
+        if (!r.ok) throw new Error(`fixture identifier refused: ${JSON.stringify(r).slice(0, 300)}`);
+      }
+      return e.entity_id;
+    },
+    /** A registered entity of another kind (an office, a body): its entity id. */
+    entity(label, kind = "office") {
+      const proceeding = kind === "proceeding"
+        ? { forum: w.entity(`${label}, its forum`, "institution"), kind: "commitment_suit", number: `MC-26-${String(1000 + ++n).slice(-4)}` } : undefined;
+      const e = entities.createEntity({ kind, label, note: "a subject the test registers", declaredBy: V("bob"), ...(proceeding ? { proceeding } : {}) });
+      if (!e.ok) throw new Error(`fixture entity refused: ${JSON.stringify(e).slice(0, 300)}`);
+      return e.entity_id;
+    },
+    /** An event (events R6) attested by a dated fact of a fresh captured document, dated `value`: its event id. */
+    event(kind, value, { concerns = [], dkind = "meeting" } = {}) {
+      const d = w.document(`an event document ${++n}`);
+      const f = events.recordDatedFact({ captureSha: d.capSha, extent: { kind: "document" }, kind: dkind, value, method: "read by a member", by: V("bob") });
+      if (!f.ok) throw new Error(`fixture dated fact refused: ${JSON.stringify(f).slice(0, 300)}`);
+      const e = events.createEvent({ kind, attestations: [{ datedFactId: f.dated_fact.dated_fact_id }], concerns, by: V("bob") });
+      if (!e.ok) throw new Error(`fixture event refused: ${JSON.stringify(e).slice(0, 300)}`);
+      return { eventId: e.event_id, capSha: d.capSha };
+    },
+    /** `inner` held within `outer` (events R19), attested by inner's document. */
+    within(inner, outer) {
+      const r = events.relate({ from: inner.eventId, to: outer.eventId, kind: "within", attestation: { captureSha: inner.capSha, extent: { kind: "document" } }, by: V("bob") });
+      if (!r.ok) throw new Error(`fixture relation refused: ${JSON.stringify(r).slice(0, 300)}`);
+      return r;
     },
     project(title, owner) {
       const r = promotion.promote({ base: null, snapKey: `p${++n}`, author: V(owner), ownerMemberId: owner,

@@ -55,10 +55,10 @@ test("R13 no act of this module records a money fact whose source is a CALC-, an
   await w.c.read({ calcId: c.calc_id, viewer: V("bob") });
   assert.equal(w.money.calls.length, 0, "creating, accepting, recomputing and reading a total record no money fact");
   /* the ingest writer's facts cite a canonical table row, never a calculation */
-  const t = await w.table("payer,payee,amount\nS-00001,S-00002,5\n", [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }],
-    { roles: { payer: { role: "payer", scheme: "vendor" }, payee: { role: "payee", scheme: "vendor" }, amount: { role: "amount" } } });
-  w.entities.set("vendor", "S-00001", "ENT-2026-0011");
-  w.entities.set("vendor", "S-00002", "ENT-2026-0012");
+  const t = await w.table("payer,payee,amount\nP001,P002,5\n", [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }],
+    { roles: { payer: { role: "payer", scheme: "ellery_person" }, payee: { role: "payee", scheme: "ellery_person" }, amount: { role: "amount" } } });
+  w.person("Pat Quill", "P001");
+  w.person("Lee Quill", "P002");
   const b = w.c.adoptBinding({ table: t.sha, roles: { amount: "amount", payer: "payer", payee: "payee", kind: { value: "payment" }, phase: { value: "actual" },
     stage: { value: "paid" }, basis: { value: "cash" }, currency: { value: "USD" }, period: { value: "2025-07-01/2026-06-30" } }, by: V("bob") });
   const ing = await w.c.ingestMoney({ binding: b.binding, rows: [0], by: V("bob") });
@@ -70,12 +70,13 @@ test("R13 no act of this module records a money fact whose source is a CALC-, an
 test("R14 adoptBinding records a member's adoption of a table's money roles; ingestMoney writes money facts through money.recordFact, machine-attributed, only at a member's request, only from an adopted binding, only for rows whose payer and payee each resolve through an identifier, each citing its canonical row; rows not written are listed with their reason; all rows only with rows: all and a reason", async () => {
   const w = seeded();
   const fields = [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }, { name: "fund", type: "string" }];
-  const roles = { payer: { role: "payer", scheme: "vendor" }, payee: { role: "payee", crosswalk: null }, amount: { role: "amount" }, fund: { role: "fund" } };
-  const cw = await w.table("vendor_no,entity\nS-00002,ENT-2026-0022\nS-00009,ENT-2026-0029\n", [{ name: "vendor_no", type: "string" }, { name: "entity", type: "string" }],
+  const roles = { payer: { role: "payer", scheme: "ellery_person" }, payee: { role: "payee", crosswalk: null }, amount: { role: "amount" }, fund: { role: "fund" } };
+  const pat = w.person("Pat Quill", "P001");
+  const v2 = w.entity("Harbour Supply", "institution"), v9 = w.entity("Dock Works", "institution");
+  const cw = await w.table(`vendor_no,entity\nS-00002,${v2}\nS-00009,${v9}\n`, [{ name: "vendor_no", type: "string" }, { name: "entity", type: "string" }],
     { roles: { vendor_no: { role: "crosswalk_from" }, entity: { role: "crosswalk_to" } } });
   roles.payee = { role: "payee", crosswalk: { table: cw.sha, from: "vendor_no", to: "entity" } };
-  const t = await w.table("payer,payee,amount,fund\nS-00001,S-00002,\"$1,000\",General\nS-00001,Somebody,5,General\nS-00777,S-00009,7,General\nS-00001,S-00009,oops,General\nS-00001,S-00009,9,General\n", fields, { roles });
-  w.entities.set("vendor", "S-00001", "ENT-2026-0011");
+  const t = await w.table("payer,payee,amount,fund\nP001,S-00002,\"$1,000\",General\nP001,Somebody,5,General\nP777,S-00009,7,General\nP001,S-00009,oops,General\nP001,S-00009,9,General\n", fields, { roles });
   const bindRoles = { amount: "amount", payer: "payer", payee: "payee", fund: "fund", kind: { value: "payment" }, phase: { value: "actual" },
     stage: { value: "paid" }, basis: { value: "cash" }, currency: { value: "USD" }, period: { value: "FY2025-26" } };
   /* adoptBinding's refusals */
@@ -107,8 +108,8 @@ test("R14 adoptBinding records a member's adoption of a table's money roles; ing
   assert.equal(r.asked_by, V("bob"), "at the member's request, recorded");
   assert.deepEqual({ amount: fact.amount, as_read: fact.as_read, currency: fact.currency, kind: fact.kind, phase: fact.phase, stage: fact.stage, basis: fact.basis, period: fact.period },
     { amount: "1000", as_read: "$1,000", currency: "USD", kind: "payment", phase: "actual", stage: "paid", basis: "cash", period: "FY2025-26" });
-  assert.deepEqual(fact.from, { entity: "ENT-2026-0011", as_written: "S-00001", fund: "General" });
-  assert.deepEqual(fact.to, { entity: "ENT-2026-0022", as_written: "S-00002" }, "resolved through the captured crosswalk");
+  assert.deepEqual(fact.from, { entity: pat, as_written: "P001", fund: "General" }, "resolved through the person scheme (entities.entityByIdentifier)");
+  assert.deepEqual(fact.to, { entity: v2, as_written: "S-00002" }, "resolved through the captured crosswalk");
   assert.deepEqual(fact.source, { table: t.sha, row: 0, binding: b.binding }, "cites its canonical row");
   /* a fact money refuses is listed not written, with money's reason */
   const bad = w.c.adoptBinding({ table: t.sha, roles: { ...bindRoles, kind: { value: "nonsense" } }, by: V("bob") });

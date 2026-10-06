@@ -1103,6 +1103,7 @@ export class Calculations {
     if (spec.scheme) {
       let e = null;
       try { e = entities ? await entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
+      if (plain(e) && e.undetermined) return { why: `"${String(value).slice(0, 64)}" through the scheme ${spec.scheme} is undetermined: ${e.why || "more than one entity"}` };
       const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
       return id ? { entity: id } : { why: `"${String(value).slice(0, 64)}" resolves to no registered entity through the scheme ${spec.scheme}` };
     }

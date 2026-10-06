@@ -43,8 +43,8 @@ test("R1 declareTable's refusals in order, each with a negative control: NO_SOUR
   assert.deepEqual(w.snapshot(), { ...before, ...pick(w.snapshot(), before) }, "no calculations table gained a row");
   assert.equal(w.count("calc_tables"), 0);
   /* the bounds: cells, then bytes */
-  const wide = Array.from({ length: 1001 }, (_, i) => `c${i}`);
-  const many = w.csv(`${wide.join(",")}\n${Array.from({ length: 1000 }, () => wide.map(() => "1").join(",")).join("\n")}\n`);
+  const wide = Array.from({ length: 1000 }, (_, i) => `c${i}`);
+  const many = w.csv(`${wide.join(",")}\n${Array.from({ length: 501 }, () => wide.map(() => "1").join(",")).join("\n")}\n`);
   const tooMany = await w.c.declareTable({ source: many, schema: { fields: wide.map((name) => ({ name, type: "integer" })) }, header: wide, by: V("bob") });
   assert.equal(code(tooMany), "TABLE_TOO_LARGE");
   assert.equal(tooMany.bound, "cells");
@@ -56,8 +56,9 @@ test("R1 declareTable's refusals in order, each with a negative control: NO_SOUR
   assert.equal(tooBig.max, TABLE_MAX_BYTES);
   assert.equal(w.count("calc_tables"), 0, "nothing written by any refusal");
   /* negative controls: under the cell bound, and the good declaration */
-  const under = w.csv(`${wide.slice(0, 1000).join(",")}\n${Array.from({ length: 999 }, () => wide.slice(0, 1000).map(() => "1").join(",")).join("\n")}\n`);
-  assert.equal((await w.c.declareTable({ source: under, schema: { fields: wide.slice(0, 1000).map((name) => ({ name, type: "integer" })) }, header: wide.slice(0, 1000), by: V("bob") })).ok, true, "999,000 cells");
+  const under = w.csv(`${wide.join(",")}\n${Array.from({ length: 500 }, () => wide.map(() => "2").join(",")).join("\n")}\n`);
+  assert.equal(TABLE_MAX_CELLS, 500000, "K1576");
+  assert.equal((await w.c.declareTable({ source: under, schema: { fields: wide.map((name) => ({ name, type: "integer" })) }, header: wide, by: V("bob") })).ok, true, "500,000 cells, the bound itself, is admitted");
   assert.equal((await w.c.declareTable(good)).ok, true);
 });
 

@@ -46,45 +46,48 @@ test("R20 at start it registers with people.registerRosterSource: for an organis
   assert.deepEqual(w.people.sources.map((s) => s.module), ["calculations"]);
   const source = w.people.sources[0].fn;
   const fields = [{ name: "person", type: "string" }, { name: "org", type: "string" }, { name: "post", type: "string" }];
-  const roles = { person: { role: "roster_person", space: "person" }, org: { role: "roster_organisation", scheme: "org_code" }, post: { role: "roster_post" } };
-  w.entities.set("org_code", "PW", "ENT-2026-0100");
-  w.entities.set("org_code", "LIB", "ENT-2026-0200");
+  const pw = w.entity("Public Works", "body"), lib = w.entity("Library", "body");
+  const cw = await w.table(`code,entity\nPW,${pw}\nLIB,${lib}\n`, [{ name: "code", type: "string" }, { name: "entity", type: "string" }],
+    { roles: { code: { role: "crosswalk_from" }, entity: { role: "crosswalk_to" } } });
+  const roles = { person: { role: "roster_person", space: "person" }, org: { role: "roster_organisation", crosswalk: { table: cw.sha, from: "code", to: "entity" } }, post: { role: "roster_post" } };
   const a = await w.table("person,org,post\nP001,PW,Director\nP002,LIB,Librarian\nP003,PW,Engineer\nP004,??,Clerk\n", fields, { roles, vintage: { key: "roster", valid: { from: "2025-01-01", to: "2025-12-31" } } });
   const b = await w.table("person,org,post\nP009,PW,Director\n", fields, { roles, vintage: { key: "roster", valid: { from: "2026-01-01", to: "2026-12-31" } } });
   const c = await w.table("person,org,post\nP010,PW,Intern\n", fields, { roles });
   const lines = w.count("calc_tables");
-  const r = await source({ organisation: "ENT-2026-0100", at: "2025-06-01", viewer: V("carol") });
+  const r = await source({ organisation: pw, at: "2025-06-01", viewer: V("carol") });
   assert.deepEqual(r.rows.map((x) => [x.person_key, x.post, x.table]), [["P001", "Director", a.sha], ["P003", "Engineer", a.sha]]);
   assert.deepEqual(r.tables, [a.sha], "the table valid at that date, by its sha; the later vintage is not read");
   assert.ok(r.not_read.some((x) => x.table === c.sha && /no vintage/.test(x.why)), "a table stating no vintage is not read, and says why");
   assert.ok(r.not_read.some((x) => x.table === a.sha && x.row === 3), "an organisation value that resolves to none is stated");
-  assert.equal((await source({ organisation: "ENT-2026-0100", at: "2026-03-01" })).rows[0].table, b.sha);
+  assert.equal((await source({ organisation: pw, at: "2026-03-01" })).rows[0].table, b.sha);
   assert.equal(w.count("calc_tables"), lines, "no row is read into a line, nor anything written");
   assert.match(r.says, /never copied into lines/);
 });
 
 /* The duty fixture the lateness patterns read: three occurrences of the clerk's duty, one met late by 5 days. */
 function lateness(w) {
-  w.duties.duties.set("DUT-2026-0001", { duty_id: "DUT-2026-0001", obligor: "ENT-2026-0050", arising_in: "ENT-2026-0900" });
-  w.duties.duties.set("DUT-2026-0002", { duty_id: "DUT-2026-0002", obligor: "ENT-2026-0050", arising_in: null, visibleTo: [V("alice")] });
+  const office = w.entity("Town Clerk", "office"), proceeding = w.entity("The harbour bond", "proceeding");
+  const meeting = w.event("meeting", "2026-01-15T18:00", { concerns: [office] });
+  const posting = w.event("publication", "2026-01-13T09:00", { concerns: [office], dkind: "published" });
+  w.within(posting, meeting);
+  w.duties.duties.set("DUT-2026-0001", { duty_id: "DUT-2026-0001", obligor: office, arising_in: proceeding });
+  w.duties.duties.set("DUT-2026-0002", { duty_id: "DUT-2026-0002", obligor: office, arising_in: null, visibleTo: [V("alice")] });
   w.duties.transitions.push(
     { duty_id: "DUT-2026-0001", occurrence_key: "a", state: "met_late", as_of: "2026-01-20", at: "2026-01-20T00:00:00Z" },
     { duty_id: "DUT-2026-0001", occurrence_key: "b", state: "met", as_of: "2026-02-20", at: "2026-02-20T00:00:00Z" },
     { duty_id: "DUT-2026-0002", occurrence_key: "c", state: "met", as_of: "2026-03-20", at: "2026-03-20T00:00:00Z" },
     { duty_id: "DUT-2026-0002", occurrence_key: "d", state: "overdue", as_of: "2026-03-20", at: "2026-03-20T00:00:00Z" });
-  w.duties.occurrences.set("DUT-2026-0001", [{ key: "a", due: { due: { value: "2026-01-10", precision: "day", zone: "UTC" } }, evidence: [{ event_id: "EVT-2026-aaaaaaaaaaaaaaaa", when: { value: "2026-01-15", precision: "day", zone: "UTC" } }] }]);
-  w.events.events.set("EVT-2026-aaaaaaaaaaaaaaaa", { event_id: "EVT-2026-aaaaaaaaaaaaaaaa", kind: "meeting", body: "ENT-2026-0050", when: { start: "2026-01-15T18:00", precision: "minute", zone: "UTC" },
-    relations: [{ kind: "within", from: "EVT-2026-bbbbbbbbbbbbbbbb", to: "EVT-2026-aaaaaaaaaaaaaaaa" }] });
-  w.events.events.set("EVT-2026-bbbbbbbbbbbbbbbb", { event_id: "EVT-2026-bbbbbbbbbbbbbbbb", kind: "publication", body: "ENT-2026-0050", when: { start: "2026-01-13T09:00", precision: "minute", zone: "UTC" } });
+  w.duties.occurrences.set("DUT-2026-0001", [{ key: "a", due: { due: { value: "2026-01-10", precision: "day", zone: "UTC" } }, evidence: [{ event_id: meeting.eventId, when: { value: "2026-01-15", precision: "day", zone: "UTC" } }] }]);
   w.progressions.feed.instances = [
     { progression_key: "contracting", entity_id: "ENT-2026-0300", findings: [{ kind: "out_of_order", stage_key: "payment", after_stage: "award", placements: [{ bundle_id: null }] }] },
     { progression_key: "contracting", entity_id: "ENT-2026-0301", findings: [{ kind: "missing_predecessor", stage_key: "award" }] },
   ];
+  return { office, proceeding, meeting, posting };
 }
 
 test("R22 the shipped, data-defined patterns (sequence anomalies, lateness per occurrence and per meeting's posting, and patterns about an office and across proceedings) each carry a denominator and cited derivation; runPatterns evaluates them within the budget into their own result table, never onto a person or entity row, and answers {evaluated, remaining}", async () => {
   const w = seeded();
-  lateness(w);
+  const L = lateness(w);
   assert.deepEqual(PATTERNS.map((p) => p.pattern), ["flow_out_of_order", "duty_lateness", "posting_lateness", "office_lateness", "proceeding_lateness"]);
   for (const p of PATTERNS) assert.ok(p.denominator && p.method && p.label && Number.isInteger(p.version), p.pattern);
   /* a budget that runs out: one pattern per call when the clock moves past it */
@@ -110,14 +113,14 @@ test("R22 the shipped, data-defined patterns (sequence anomalies, lateness per o
   assert.equal(late.length, 1);
   assert.deepEqual(late[0].value.days_late, { value: "5", sign: "+", precision: "exact", unit: "days" }, "days late, through calc-grammar's span");
   assert.equal(late[0].d.n, 3, "over the occurrences recorded met or met late");
-  assert.deepEqual(late[0].rests, ["DUT-2026-0001", "EVT-2026-aaaaaaaaaaaaaaaa"], "its cited derivation");
+  assert.deepEqual(late[0].rests, ["DUT-2026-0001", L.meeting.eventId], "its cited derivation");
   const posting = of("posting_lateness");
   assert.equal(posting.length, 1);
   assert.equal(posting[0].value.hours_before.value, "57");
   const office = of("office_lateness");
-  assert.deepEqual(office.map((o) => [o.subject, o.value.share_met_late.numerator.value, o.value.share_met_late.denominator.value]), [["ENT-2026-0050", "1", "3"]]);
+  assert.deepEqual(office.map((o) => [o.subject, o.value.share_met_late.numerator.value, o.value.share_met_late.denominator.value]), [[L.office, "1", "3"]]);
   const proc = of("proceeding_lateness");
-  assert.deepEqual(proc.map((o) => [o.subject, o.value.share_met_late.numerator.value, o.value.share_met_late.denominator.value]), [["ENT-2026-0900", "1", "2"]]);
+  assert.deepEqual(proc.map((o) => [o.subject, o.value.share_met_late.numerator.value, o.value.share_met_late.denominator.value]), [[L.proceeding, "1", "2"]]);
   /* every run is recorded with its denominator */
   assert.equal(new Set(w.rows(`SELECT pattern FROM calc_pattern_runs`).map((r) => r.pattern)).size, 5);
 });

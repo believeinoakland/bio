@@ -10,7 +10,7 @@ import { sha256HexSync, createSha256 } from "../record-grammar/index.mjs";
 
 /** R1: the bounds of a table, in bytes of canonical CSV and in cells. */
 export const TABLE_MAX_BYTES = 20 * 1024 * 1024;
-export const TABLE_MAX_CELLS = 1_000_000;
+export const TABLE_MAX_CELLS = 500_000;
 /** R1: how many undetermined cells a declaration lists by place (the count is always whole). */
 export const UNDETERMINED_LISTED = 200;
 

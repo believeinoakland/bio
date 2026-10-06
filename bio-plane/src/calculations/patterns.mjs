@@ -151,7 +151,8 @@ const EVALUATORS = {
         }
       }
     }
-    const dt = (v) => (plain(v) && typeof v.start === "string" ? { value: v.start, precision: v.precision || "day", zone: v.zone || "UTC" } : plain(v) && typeof v.value === "string" ? v : "");
+    /* events' when: the local value at its precision in its zone (events R9), never the UTC instant read as local */
+    const dt = (v) => (plain(v) && typeof v.value === "string" ? { value: v.value, precision: v.precision || "day", zone: v.zone || "UTC" } : "");
     const t = { fields: [{ name: "start", type: "datetime" }, { name: "posted", type: "datetime" }],
       rows: units.map((u) => ({ start: dt(u.startDt), posted: dt(u.postedDt) })) };
     const hours = units.length ? evaluate(recipe([{ op: "span", from: "t", start: "posted", end: "start", unit: "hours", as: "hours_before" }], "hours_before"), { t }) : null;
