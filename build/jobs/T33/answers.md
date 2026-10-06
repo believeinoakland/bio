@@ -28,7 +28,7 @@ Readings I am building on now (step 3); each is my best reading, the job carries
 
 **Deferred.** None of my module's. The AI half (R19) and the rule services (R7) ship switched off, as ruled.
 
-**Found in other modules** (REPORT J3):
+**Found in other modules** (REPORT J2):
 1. **credentials `AI_GRANT_OPS` names six ops the plane routes under other names**: `careerof` (people's op is `career`), `occurrences` (duties' `dutyoccurrences`), `lines` (lines' `linesof`/`structureat`), `duties` (duties' `dutiesof`), `calculations` (calculations' `calculation`), `moneyfacts` (money's `money`). A grant would refuse the real op. ASK_SCOPE mirrors the list (the copy test), so N580 should fix both together; my scope changes when credentials' does.
 2. **retrieval** offers no public read of the relations it compiles with (`#relations`), so R15's saved-form check cannot see the T33 fields: a standing question naming one is refused `SAVED_QUERY_DROPS` until plane passes answers a `relations` dep (or retrieval exports it). And `runSaved` re-checks the form with `savedForm` without the zone, so a date term accepted at setting may be refused at each run.
 3. **credentials R27**: `aiGrantMint` refuses a non-member `by`, so a standing question's AI half has no grant path yet (J1 (5)); the answerer is given answers' own read log for the run.
