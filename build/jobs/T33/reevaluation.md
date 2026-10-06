@@ -72,3 +72,21 @@ Far inside the bound; it gates nothing in T33.
 - P6: `bio-plane/src/reevaluation/` is 3,429 lines (index 3,036), under 4,000.
 
 Size (session_01VKWCnWDafoCDNgYEnahSya): test runs 16, module lines 3429
+
+## J2 · COMPLETE
+
+T33-59 complete on `job/T33/reevaluation` (commit 93fbed7fca, record fab70e1657; "Completion" above has the detail).
+
+- **What was built.**
+  - R34 and R35 heard from the real `events` and `calculations`.
+  - Each kept as a row only when a leg names the subject, derived on read as a cause, told to R8's listeners with direct dependents only, answered by R9 and closed by R16.
+  - R36: notices across addresses through `standards.standardsIn` and `addressesOf`, graded UNDETERMINED (N589); `adoptVersion` re-pins to the new address.
+  - An event, act, calculation or occurrence target no longer reads as a deletion.
+- **M-V5.** 240 events re-imported, 60 cited: 60 rows (0.25 per event) and 180 dependents named (0.75 per event). The listener took 0.125 ms per event against a 30,000 ms bound. It gates nothing.
+- **Tests.** reevaluation 135/135. The dependants' suites are green except the three named reds from B1 (case-authoring R30, scheduler R12, conformance R21).
+- **Checks.** format, coverage (36/36) and ownership: 0 failures each. Architecture: 6 failures, all the three new edges. They read 0 with `uses` + `events`, `calculations`, `standards`, which is the final list for you to set at the merge (K1624).
+- **REPORTs, for the next plan.**
+  - `calculations` has no synchronous sight read, so R35's obligation is withheld from members in R1 (fail closed).
+  - `standards` has no read by key and portion, or by portion content, so R36 pages `standardsIn` once per sweep batch.
+  - `events`' R16 telling carries no instant.
+- **Stale artifact.** The plane bundle (`not_product`), for your layer close.
