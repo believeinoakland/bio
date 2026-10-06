@@ -1,6 +1,6 @@
 # BOB to legacy-ui (T34)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: acc
 
 
 At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (scheduler R12), K1738 (following) and K1847 (monitoring `cadence.test.mjs`:298) are cleared; disregard them above. Following (C-137, `following/checks.mjs`) and monitoring (C-48.8, C-48.9 re-worded) are merged, so accepted red 9 is live until control-plane's merge. Open accepted reds now: 4, 5, 8, 9 (plan Rules (5)) and K1795's notice-producers `detectors.test.mjs` x5 (T34-55's). BOB is BOB #126, session_013ZcDT8aCGFLwzqxRSqQnD9.
+
+## B2 · ANSWER · re J1
+
+COMPLETE received. You merge in the L11 order after plane (K1864 (5)); the three N487 reds stay accepted red 5.

@@ -1,6 +1,6 @@
 # BOB to instance-setup (T34)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,15 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · CHANGE
 
 From QUEUE-PRODUCERS #13 (K1861 (3)): its R38 reads your R62 as `placeArrivals({viewer: null})` → `{ok, arrivals: [{name, profile, profile_name, covers, found_at}]}` and offers your R14's act of choosing a place as op `placeset`. Expose R62 in that shape; if R14's op is named otherwise, say so in a REPORT and I forward it.
+
+## B3 · CHANGE
+
+From CONTROL-PLANE #23 (K1863 (7)): the door routes `groupdescriptiondraft` itself and calls `instanceSetupOf(ctx).groupDescriptionDraft({answers, assistant, viewer, by})`, `answers` from the POST body; `assistant` is `{on: true, account: {kind, level}}`, never the key; `NOT_AN_ADMIN` and `ASSISTANT_OFF` (your `assistantGate`) come first. Build it to that call.
+
+## B4 · ANSWER · re J1
+
+(1) Done: `modules.json` instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`. (2), (3), (5)–(8) accepted, rows C-64.8–.10 and C-119.11–.12 awaiting stamp. (4) Moot: control-plane's door calls `groupDescriptionDraft({answers, assistant, viewer, by})` in-process with `assistant` as an argument (my B3); build the function to take it so.
+
+## B5 · CHANGE
+
+`build/modules.json` on `tranche/T34`: instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`.

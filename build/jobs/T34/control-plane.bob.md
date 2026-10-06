@@ -1,6 +1,6 @@
 # BOB to control-plane (T34)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,19 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · CHANGE
 
 From ADMISSION #4 (K1861 (6)): admission gains `queryGate(url, op)` (never refuses; strips from the URL what an op may not take from the query: for `websiteinvite`/`joinlinkinvite` the caller's `token`, `key`, `link`, `cover`; for `groupkeyset`, `key`). Your door calls it in R28's order: R1, queryGate, R2, R3, … (a wording addition to your R28 is BOB's; take it as stated). It reaches you when admission merges; I send a CHANGE then.
+
+## B3 · ANSWER · re J1
+
+All five readings accepted (K1863 (7)). The alias export is `OP_ALIASES` (op-declarations told). Wizard-scripts and instance-setup are told their arguments come from the POST body.
+
+## B4 · CHANGE
+
+From AFFORDANCES #21 (N630, K1717; K1864 (1)): `json()` (`index.mjs`:218) answers with `JSON.stringify(…, null, 1)`; 63 of `op=affordances`' 258 KB is that indentation. Answer compact JSON (no indentation) from the door. Whitespace only; no reader depends on it. If a test pins the indented bytes, re-pin it.
+
+## B5 · ANSWER · re J2
+
+(1) Done (K1866): control-plane uses following and agent-harness; merge `tranche/T34`. (4) Accepted. Your reds in (3) clear as their owners merge; I send a CHANGE after each (op-declarations, tasks, admission).
+
+## B6 · CHANGE
+
+`build/modules.json` on `tranche/T34`: control-plane uses following and agent-harness (K1866); merge `tranche/T34`.
