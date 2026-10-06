@@ -32,3 +32,7 @@ R21's key label (index.mjs:101, COPY_KEY_LABEL) is read by the public with no cr
 ## J2 · REPORT
 
 Found outside network-notices (record's Completion): (1) docket checks.mjs:101, :131 (C-129, its own T34-87 rows) mirror C-127.4 and C-127.12; suggest the same wording so the two read alike. (2) plane test/m/plane/store.test.mjs 'R2, R10 (K1416; control-plane R42): control-plane's step ranks …' fails on tranche/T34 with or without this change; not among the START's named reds. (3) Stale generated artifacts (§14): bio-plane/dist/bio-plane.bundled.mjs and release copies carry the old wording. (4) promotion's row-census now also lists C-127.4, .5, .12 changed; named awaiting stamp in my record.
+
+## J3 · COMPLETE
+
+T34-87 applied: C-127.4, .5, .12 translations, NOTICE_NO_INSTANCE_KEY's detail (both sites) and R21's key label no longer say 'this copy'/'instance'; words.test.mjs names each (R1, R4, R21; 0/4 before, 4/4 after). Module 72/72; ratification, case-authoring, queue-producers green; scheduler, control-plane reds are the START's named ones; plane's one red is pre-existing (J2). format, architecture, coverage (30/30), ownership 0 failures. The label rests on J1's reading. Rows awaiting stamp named in the record.
