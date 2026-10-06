@@ -25,7 +25,7 @@ import { parse as legistarParse, readPages as legistarPages, readBodyName as leg
          BASIS as LEGISTAR_BASIS } from "../../legistar-reader/index.mjs";
 /* R65 (K1837): the no-added-fact check and the one row both assistant drafts answer until the model turn lands are
    wizard-scripts' (its R25, its rows), read there and never copied. */
-import * as wizardScripts from "./wizard-scripts/index.mjs";
+import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
@@ -236,7 +236,7 @@ const refusal = (code, detail, extra) => {
 /* R65: a refusal in one of wizard-scripts' rows (its R25's codes, and `ASSISTANT_DRAFT_UNAVAILABLE`), with its check and
    translation as that module holds them. */
 const scriptRefusal = (code, detail) => {
-  const row = (wizardScripts.WIZARD_SCRIPTS_CHECKS || {})[code] || {};
+  const row = WIZARD_SCRIPTS_CHECKS[code] || {};
   return { ok: false, reason: code, code, check: row.check ?? null, translation: row.translation ?? null, detail };
 };
 const draftUnavailable = (detail) => scriptRefusal("ASSISTANT_DRAFT_UNAVAILABLE", detail);
@@ -1754,7 +1754,7 @@ export class InstanceSetup {
     const out = { ok: true, withheld: [] };
     for (const [field, max] of [["focus", GROUP_FOCUS_MAX], ["purpose", GROUP_PURPOSE_MAX]]) {
       const text = typeof got[field] === "string" ? got[field] : "";
-      const checked = wizardScripts.checkDraft(text, { told, readLog, firsthand: false, suggestions, askedBy: by });
+      const checked = checkDraft(text, { told, readLog, firsthand: false, suggestions, askedBy: by });
       if (!checked || checked.ok !== true) return draftRefused(checked);
       if ([...checked.text].length > max) return unavailable();
       out[field] = { text: checked.text, label: { kind: "machine", asked_by: by } };

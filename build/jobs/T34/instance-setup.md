@@ -36,3 +36,36 @@ The other two reds (plane `step.test.mjs` R2/R10, control-plane `families.test.m
 
 Also for op-declarations (its R26, R28): the four ops above are served by my routes now.
 For `modules.json` (BOB's): instance-setup no longer imports `record-grammar` or `action-grammar` (they went with the page); its `uses` may drop them. It now imports `setup-page`.
+
+## Completion (T34-57, T34-81, T34-90, T34-87's rows; the split's swap, K1851)
+
+**Entries applied.**
+- **The split (K1851; seam read §0–§5).** My copy of the page (`setup.mjs` 1–1636) is deleted. `setup.mjs` composes `setup-page`'s `PAGE_HTML` with R47's block in `HOSTING_SLOT` (`SETUP_HTML`), serves it through `setupPage(read)` (the unread group line replaced by the read's) and re-exports `groupLine`, so control-plane and every importer are unchanged. `setup-fleet.mjs` stays the one home of the block for the page and the installer. The moved test arms are deleted (`loads`, `intake`, `keys`, `worker-page` whole; `page` except R47; `profiles` R15's Miniflare arm; `assistant`'s page arm; the fixture's `pageOver`); R31 and R47 stay over the composed page.
+- **T34-57.** R50–R52 seed from the first profile as held (N613). Each entity is seeded when, and only when, the profile gives its own identifier (J1 (2), accepted): a body under `ids.body` with or without its office, through a new body ledger `seed_bodies` (purge-clear, backfilled from `seed_offices`). R51 finds the matched body there, and R52's `member_types` read an entry for the seat's body's organisation before an all-bodies one (jurisdictions R60, K1729; J1 (3)). R53's sentences (K1755: the member's own account or the group's key; no credential bound).
+- **T34-81.** R60 `placeWantedSet`/`placeWanted` (`op=placewanted`, `op=placewantedstate`; tables `place_wanted`, `place_seen`; export never). R62 `placeArrivals`: compared at each start, recorded once per name (`place_arrivals`), left when the profile is made active (R14) or the name is cleared or changed. It is registered with `queue-producers` R38 through `deps.queueProducers`, which the plane hands (B7), in B2's shape `{ok, arrivals}`. R64 `memberLanguageSet`/`memberLanguage` (`op=memberlanguageset`, `op=memberlanguage`; `member_languages`). R47's block, R53's and R55's words (DEC-149).
+- **T34-90.** R65 `groupDescriptionDraft({answers, assistant, viewer, by})`, called in-process by the door (B3). Refusals in order: `NOT_AN_ADMIN`, `ASSISTANT_OFF`, `GROUP_DRAFT_ANSWERS_MALFORMED` (J1 (5)), `GROUP_DRAFT_NO_ANSWERS`; then wizard-scripts' `ASSISTANT_DRAFT_UNAVAILABLE` while no model turn exists (N686). The draft path a T35 turn takes is built and tested through an injected turn: wizard-scripts' `checkDraft` (firsthand false), the label `{kind: "machine", asked_by}`, holdings only with the account's suggestions switch on, and R109's limits. It writes nothing.
+- **T34-87 (DEC-149, R63).** My 23 rows (`setup.mjs` :1701, :1731, :1742, :1755, :2245, :2351, :2368, :2371, :2373, :2451, :2479, :2493, :2502, :2925, :2933, :2945, :2947, :2958, :2959; `setup-fleet.mjs` :22, :24, :25, :31) and C-119.4's translation say "your group's Civicsmith" or need no name. Each is named by a test in `words.test.mjs`, which also sweeps every translation and sentence the new acts answer.
+- **Rows, all `awaiting stamp` (plan Rules (5) 4):** new C-64.8 `PLACE_NAME_MALFORMED`, C-64.9 `GROUP_DRAFT_NO_ANSWERS`, C-64.10 `GROUP_DRAFT_ANSWERS_MALFORMED`, C-119.11 `MACHINE_CANNOT_SET_LANGUAGE`, C-119.12 `LANGUAGE_MALFORMED`; re-worded translations C-64.3, C-119.1, C-119.3, C-119.4, C-119.5 (the catalogue version moves with promotion's T35 stamp).
+
+**Measured (N613), informational.** First profile as held, over legistar-reader's captured Oakland JSON (2026-10-05):
+- R50 seeds 3 bodies under `legistar_body_id` (Finance Department 171, Oakland City Council 1, Office Of The City Auditor 16). It seeds no office (no `ids.office`) and no line (`within.ids` is `[]`).
+- R51's bridge is 3 of 5 (the Council by `city_council`, its cancellation form 226 added).
+- R52 seeds 46 seats and 46 holders, all elected, 0 undetermined, with 9 same-name pairs.
+- Every Council record ends before 2026-10-06 (J2 (3)).
+
+**Deferred:** nothing in this module.
+
+**Found in other modules** (reported: J2, J3):
+- **plane:** `door.test.mjs`:105 pins 20 instance-setup routes. It needs the four new ones (PLANE #23).
+- **installer:** `requirements.test.mjs`:469 pins the old block words. Already re-worded on INSTALLER #8's branch.
+- **jurisdictions:** `isLocale` is not exported (to N700).
+- **modules.json:** `record-grammar` and `action-grammar` are no longer imported by this module.
+- **Stale artifacts:** the `newgroup` bundle (`setup-fleet.mjs`) and the plane bundle (`setup.mjs`); both regenerate at the layer close.
+
+**Tests and checks** (on `job/T34/instance-setup` merged with `tranche/T34` @ `c0c118e989`):
+- `node --test bio-plane/test/m/instance-setup/*.test.mjs`: **tests 99, pass 99, fail 0**.
+- Users' tests (the 11 files importing `setup.mjs`/`setup-fleet.mjs`): 92 pass, 4 fail. Two are red on the tranche too (accepted reds 8, 9); two are the plane and installer pins above.
+- Layer tests: none named in the manifest.
+- `format`: 0 failures. `architecture instance-setup`: 0 failures (19 files). `coverage instance-setup`: 47 of 47, 0 failures. `ownership instance-setup tranche/T34`: 18 files, 0 failures.
+
+Size (session_01S3X36eJb4QMNJh8gf2c6jK): test runs 24, module lines 5274 (src 2472, tests 2802)
