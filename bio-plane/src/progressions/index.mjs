@@ -29,7 +29,9 @@
  *                its export `noEntity` (R37, N285).
  *   connections  `weakerGrade(a, b)`, its module-level export (connections R50).
  *   events       `eventsOf(host)`: `readEvent({eventId, viewer})` (an event's `when` and attestations, its R9, R26) and
- *                `datedFactsFor({captureSha, viewer})` (its R27): a stage document's own date (R37).
+ *                `datedFactsFor({captureSha, viewer})` (its R27): a stage document's own date (R37); its export
+ *                `noSuchDatedFact` (R7; K1568 (3)) answers a dated fact not held for the capture (`deps.noSuchDatedFact`
+ *                in tests).
  *   standards    `standardsOf(host)`: `standardRead({id, viewer})` and `inForceAt({standard, portion, date, viewer})`
  *                (its R5, R20): a basis naming a held standard (R39); its exports `noSuchStandard` (R17) and
  *                `portionUnknown` (K1563 (10)) answer for a standard or portion not held (`deps.portionUnknown` in tests).
@@ -47,7 +49,7 @@ import { entitiesOf, gradeRank, isEstablished, noSuchEntity, noEntity } from "..
 import { weakerGrade } from "../connections/index.mjs";
 import { evaluateRule, overdueOn, compare, bounds, span, localDay, validAt } from "../civil-time/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
-import { eventsOf } from "../events/index.mjs";
+import * as EVENTS from "../events/index.mjs";
 import * as STANDARDS from "../standards/index.mjs";
 import { registerOwner, BOUNDS } from "../connection-grammar/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
@@ -161,7 +163,7 @@ const listOf = (a, ...names) => (Array.isArray(a) ? a : a && typeof a === "objec
 
 export class Progressions {
   constructor({ storage, record, extraction, provenance, entities, connections, events = null, standards = null,
-                zoneOf = null, portionUnknown = null, env = null, now = null, nowMs = null }) {
+                zoneOf = null, portionUnknown = null, noSuchDatedFact = null, env = null, now = null, nowMs = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -175,6 +177,8 @@ export class Progressions {
     this.zoneOf = typeof zoneOf === "function" ? zoneOf : () => null;
     /* standards' `portionUnknown` (K1563 (10)); a test passes one coded to its requirements until standards merges */
     this.portionUnknown = typeof portionUnknown === "function" ? portionUnknown : (...a) => STANDARDS.portionUnknown(...a);
+    /* events' `noSuchDatedFact` (its R7; K1568 (3)); a test passes one coded to its requirements until events merges */
+    this.noSuchDatedFact = typeof noSuchDatedFact === "function" ? noSuchDatedFact : (...a) => EVENTS.noSuchDatedFact(...a);
     this.env = env;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.clockMs = typeof nowMs === "function" ? nowMs : null;
@@ -905,12 +909,9 @@ export class Progressions {
     if (df) {
       let facts = [];
       try { facts = listOf(this.events.datedFactsFor({ captureSha: cs, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items"); } catch { facts = []; }
-      /* DEC-49 REGION is-dated-fact-held */
+      /* events' one answer (its R7; K1568 (3)), never minted here */
       if (!facts.some((f) => f && f.dated_fact_id === df))
-        return refusal("NO_SUCH_DATED_FACT",
-          `the dated fact ${df} is not one events holds for the document ${cs} placed at '${sk}'`,
-          { stage_key: sk, capture_sha: cs, dated_fact: df });
-      /* END DEC-49 REGION is-dated-fact-held */
+        return this.noSuchDatedFact(df, { stage_key: sk, capture_sha: cs });
     }
     return { event_id: ev, dated_fact_id: df };
   }
@@ -1517,7 +1518,7 @@ export function progressionsOf(host, deps) {
                            provenance: d.provenance || provenanceOf(host),
                            entities: d.entities || entitiesOf(host, { record }),
                            connections: d.connections || { weakerGrade },
-                           events: d.events || (() => eventsOf(host)),
+                           events: d.events || (() => EVENTS.eventsOf(host)),
                            standards: d.standards || (() => STANDARDS.standardsOf(host, { record })),
                            zoneOf: d.zoneOf || (() => governingZone(localFactsOf(host, { record }))) });
     instances.set(host, p);

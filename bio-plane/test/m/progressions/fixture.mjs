@@ -102,6 +102,13 @@ export function portionUnknown(standardId, portion, extra = null) {
            detail: "no such portion of that standard is held" };
 }
 
+/** events' one answer for a dated fact not held for a capture (its R7; K1568 (3)), in its refusal shape, until events'
+ *  job merges and the tests re-point at its export. */
+export function noSuchDatedFact(datedFactId, extra = null) {
+  return { ...(extra || {}), ok: false, reason: "NO_SUCH_DATED_FACT", code: "NO_SUCH_DATED_FACT", check: "C-events.x",
+           translation: "events' translation", dated_fact: datedFactId ?? null, detail: "no such dated fact is held" };
+}
+
 /** What `standards` holds (R5, R20): each standard with its portion and the in-force answer it gives. */
 export function standardsWorld() {
   const s = { held: new Map(), asked: [] };
@@ -130,7 +137,7 @@ export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null, zone = Z
   const ev = eventsWorld(), std = standardsWorld();
   const tz = { zone };
   const p = progressionsOf(host, { record, extraction, provenance, entities: mean.entities_,
-                                   events: ev.provider, standards: std.provider, zoneOf: () => tz.zone, portionUnknown,
+                                   events: ev.provider, standards: std.provider, zoneOf: () => tz.zone, portionUnknown, noSuchDatedFact,
                                    now: () => clock.now, nowMs: clock.nowMs == null ? null : () => clock.nowMs });
   p.migrate();
   const w = {

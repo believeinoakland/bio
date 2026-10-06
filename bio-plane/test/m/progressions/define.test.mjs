@@ -2,7 +2,7 @@
    refusal rows (R27, R28) and the outward text (R30). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, seeded, MEMBER, portionUnknown } from "./fixture.mjs";
+import { world, seeded, MEMBER, portionUnknown, noSuchDatedFact } from "./fixture.mjs";
 import { PROGRESSION_CHECKS, GENERIC_CODES, STAGE_REQUIREDNESS } from "../../../src/progressions/index.mjs";
 import { SHARED_ACT_CHECKS } from "../../../src/record-grammar/index.mjs";
 import { noSuchEntity, noEntity, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
@@ -201,7 +201,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   const kept = ["PROGRESSION_NO_LABEL", "PROGRESSION_VERSION_NOT_HELD", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
     "NO_PLACEMENTS", "NO_SUCH_PROGRESSION", "NO_STAGE", "BAD_STAGE", "NO_CAPTURE", "DUPLICATE_PLACEMENT", "NOT_CONCERNED",
     "NO_REASON", "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED",
-    "NOT_ATTESTED_BY_DOCUMENT", "NO_SUCH_DATED_FACT"];
+    "NOT_ATTESTED_BY_DOCUMENT"];
   assert.deepEqual(Object.keys(PROGRESSION_CHECKS).sort(), [...kept].sort());
   const ids = new Set();
   for (const c of kept) {
@@ -215,7 +215,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
                                                       : /^src\/progressions\/index\.mjs #?[A-Za-z]+ > is-[a-z-]+$/, c);
   }
   // the ids of the rows that left C-100 in T10 are retired, never reused
-  for (const retired of ["C-100.1", "C-100.9", "C-100.12", "C-100.19", "C-100.23"])
+  for (const retired of ["C-100.1", "C-100.9", "C-100.12", "C-100.19", "C-100.23", "C-100.25"])
     assert.ok(!ids.has(retired), retired);
   // N285: the renamed codes keep their ids; the old names and the retired NO_SHA row are gone
   assert.equal(PROGRESSION_CHECKS.PROGRESSION_NO_LABEL.check, "C-100.2");
@@ -280,6 +280,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
       assert.equal(r.check, EXTRACTION_CHECKS.NO_SHA.check);
     }
     else if (r.code === "NO_SUCH_STANDARD") assert.deepEqual(r, noSuchStandard("STD-2026-0009"));  // standards R17 (R39)
+    else if (r.code === "NO_SUCH_DATED_FACT") assert.deepEqual(r, noSuchDatedFact("DF-x", { stage_key: "need", capture_sha: "sa" }));  // events R7 (K1568 (3))
     else if (r.code === "PORTION_UNKNOWN") assert.deepEqual(r, portionUnknown("STD-2026-0001", "s 3", { portion_held: "s 2" }));  // K1563 (10)
     else if (r.code === "LISTENER_DECLARED") assert.deepEqual(r, listenerRefusal([{ module: "scheduler" }], "scheduler", f));
     else if (r.code === "LISTENER_MALFORMED") assert.deepEqual(r, listenerRefusal([], "", f));   // membership R81 (N202)
@@ -291,7 +292,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   }
   // the drive reached every code: each row, each generic code, the shared act rows and the owners' answers
   assert.deepEqual([...seen].sort(), [...kept, ...GENERIC_CODES, "NO_BASIS", "NO_CITATION", "NO_SUCH_ENTITY",
-                                      "LISTENER_DECLARED", "LISTENER_MALFORMED", "NO_SHA", "NO_ENTITY", "NO_SUCH_STANDARD", "PORTION_UNKNOWN"].sort());
+                                      "LISTENER_DECLARED", "LISTENER_MALFORMED", "NO_SHA", "NO_ENTITY", "NO_SUCH_STANDARD", "PORTION_UNKNOWN", "NO_SUCH_DATED_FACT"].sort());
 });
 
 test("R27: NO_ENTITY is entities' one answer (its R37, noEntity, C-91.5) at every act that asks for an entity, whatever shape of absence; writes nothing", async () => {

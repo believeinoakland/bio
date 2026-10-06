@@ -3,7 +3,7 @@
    report and never decide, and a date that does not settle the question is undetermined, never a finding. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, MEMBER, ZONE } from "./fixture.mjs";
+import { seeded, MEMBER, ZONE, noSuchDatedFact } from "./fixture.mjs";
 import { PROGRESSION_CHECKS } from "../../../src/progressions/index.mjs";
 
 const T = (w, placements, entityId = "ENT-1") =>
@@ -23,8 +23,9 @@ test("R37: a placement may name an event its document attests or a dated fact of
   assert.deepEqual([na.code, na.check, na.translation, na.event, na.capture_sha],
     ["NOT_ATTESTED_BY_DOCUMENT", "C-100.24", PROGRESSION_CHECKS.NOT_ATTESTED_BY_DOCUMENT.translation, E1, "sb"]);
   assert.equal((await T(w, [{ stage: "need", captureSha: "sa", event: "EVT-2026-cccccccccccccccc" }])).code, "NOT_ATTESTED_BY_DOCUMENT");
-  const nf = await T(w, [{ stage: "need", captureSha: "sa", datedFact: "DF-B" }]);   // a dated fact of another capture
-  assert.deepEqual([nf.code, nf.check, nf.dated_fact], ["NO_SUCH_DATED_FACT", "C-100.25", "DF-B"]);
+  // a dated fact of another capture: events' one answer (its R7; K1568 (3)), field for field
+  assert.deepEqual(await T(w, [{ stage: "need", captureSha: "sa", datedFact: "DF-B" }]),
+                   noSuchDatedFact("DF-B", { stage_key: "need", capture_sha: "sa" }));
   assert.equal((await T(w, [{ stage: "bid", captureSha: "sa", event: "nope" }])).code, "BAD_STAGE");          // R6's order first
   assert.equal((await T(w, [{ stage: "need", captureSha: "zz", datedFact: "nope" }])).code, "NOT_CONCERNED");
   assert.deepEqual(w.snapshot(), before);
