@@ -14,3 +14,13 @@ Readings I am building on while leg-earning and inquiry-grammar run; each is my 
 6. **Refusal rows.** R11's new codes (`PORTION_UNKNOWN`, `NO_SUCH_OCCURRENCE`, `CALCULATION_NOT_ACCEPTED`) are findings inside `BASIS_REFUSED` with check `C-2.8` and their code; `waitLook`'s (`MACHINE_CANNOT_LOOK`, `NOT_YOUR_WAIT`, `NO_SUCH_WAIT`) are codes with no catalogue row. No new C-rows (promotion's stamp of T33 rows is T34's anyway).
 7. **R55 "only the member who set a wait".** `datedWaits` answers only when `viewer` is that member's own stamp (`member:<id>` naming `member`); an administrator or any other viewer reads none.
 8. **inquiry_basis's declaration after the split.** After leg-earning merges it declares `inquiry_basis` (K1505 (2)); I then drop it from my declarations (a second declaration is `TABLE_DECLARED`).
+
+## J2 · REPORT
+
+Where I stand, and what I need next.
+
+**Done on `job/T33/inquiry` (green: 182 pass, 0 fail in `test/m/inquiry/`):** R54–R57 dated waits (table `inquiry_dated_waits`, projection in R12, `datedWaits`, `waitLook`, `datedWaitsDue/Wake/Tick`, `onWaitSet` for scheduler R9; 12 tests); R36 every table declared through `declareTable` (waits `sight: "owner"`); R11's record checks for `STD-` legs (`standards.standardRead` as the promotion author; `PORTION_UNKNOWN`) and `CALC-` legs (fail-closed, K1601).
+
+**Uses edges I add (for `modules.json` at merge):** `jurisdictions` (the view's `time_zone`, K1601 (3)) and `standards` (R11's `STD-` check: `standardRead`; inquiry's Uses do not list it, but R11 needs a held standard and its portion, which only standards answers). I also add an op entry `waitlook` to `inquiryOps` (R56: the look is the stamped member's own act); routing it is control-plane's / op-declarations', not mine.
+
+**Waiting on:** inquiry-grammar's merge (today's grammar refuses `STD-`, `CALC-` and occurrence targets as "not a canonical record id", so R11's new arms cannot be driven through a promotion until its R13–R15 land) and leg-earning's merge with your CHANGE (the deletion, re-points of R11, R12, R29, R39, R40, R52, the occurrence check through leg-earning R9, and the tests of the new leg arms).
