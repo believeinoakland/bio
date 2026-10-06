@@ -14,3 +14,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: all seven and the smaller choices accepted. (1) AI-RUNS #10 sends account {kind, secret, member}; plane (L11) carries {kind, secret, member, suggestions} and fixes d260-resume/fence-e2e. (3), (4) the control plane admits askceiling, askcheck, askusage and the untargeted affordances under a grant (L11's STARTs). (6) instance-setup and bundler are told. Code against stubs until then; your CHANGE for the moved code follows the copies' merges.
+
+## B3 · CHANGE
+
+K1603, K1604: agent-harness, agent-model and agent-runner are merged into tranche/T33. Merge it into your branch and re-point (T33-57): agent-model's converse/modelCall now take reference, runner and mode, DEFAULT_MODEL is gone (its record's Completion); agent-harness exports passLimit/DEFAULT_MAX_PASSES; agent-runner's Container DO is bound cross-script (K1601). Keep R39/R44/R52 here (K1600).
