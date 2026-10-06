@@ -130,22 +130,18 @@ export const ACCOUNT_CHECKS = Object.freeze({
   }),
   UNKNOWN_ACCOUNT_KIND: Object.freeze({
     check: 'C-29.17', where: at("accountReferenceSet", "is-account-kind"),
-    translation: 'That is not a kind of Claude account this group can hold. Connect your own API key. Nothing was '
-      + 'changed.',
+    translation: 'That is not a kind of Claude account this group can hold. Connect your own API key or your own '
+      + 'Claude subscription token. Nothing was changed.',
   }),
-  ACCOUNT_KIND_NOT_OFFERED: Object.freeze({
-    check: 'C-29.18', where: at("accountReferenceSet", "is-account-kind"),
-    translation: 'This copy does not hold a Claude subscription token. Connect your own API key instead. Nothing was '
-      + 'changed.',
-  }),
+  /* C-29.18 (ACCOUNT_KIND_NOT_OFFERED) is retired with K1537's hold (K1547, T33-20b); its id is not reused. */
   NO_SECRET: Object.freeze({
     check: 'C-29.19', where: at("accountReferenceSet", "is-account-kind"),
-    translation: 'No key was given, so there is nothing to connect. Nothing was changed.',
+    translation: 'No key or token was given, so there is nothing to connect. Nothing was changed.',
   }),
   NO_ACCOUNT: Object.freeze({
     check: 'C-29.20', where: at("#noAccount", "is-account-held"),
     translation: 'You have not connected a Claude account, so the assistant cannot work for you. Connect your own API '
-      + 'key to use it. Nothing was changed.',
+      + 'key or your own Claude subscription token to use it. Nothing was changed.',
   }),
   UNKNOWN_SWITCH: Object.freeze({
     check: 'C-29.21', where: at("accountSwitchSet", "is-account-switch"),

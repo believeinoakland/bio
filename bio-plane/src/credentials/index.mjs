@@ -27,10 +27,10 @@ import { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCO
 export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCOUNT_CHECKS,
          KEYED_SERVICE_CHECKS } from "./checks.mjs";
 
-/* R22 (K1537): the kinds of a member's own Claude account reference this copy holds. `subscription` (the member's
-   `claude setup-token` output) is held back until Bob rules on Anthropic's terms (K1537), and is refused by name. */
-export const ACCOUNT_KINDS = Object.freeze(["apikey"]);
-const HELD_BACK_KINDS = Object.freeze(["subscription"]);
+/* R22 (K1502, K1547): the kinds of a member's own Claude account reference: `apikey` (the member's own API key) and
+   `subscription` (the member's own subscription token, from `claude setup-token`). Both are held, sealed and used
+   alike, for that member alone. */
+export const ACCOUNT_KINDS = Object.freeze(["apikey", "subscription"]);
 /* R25 (K1479, K1500): the member's two switches. */
 export const ACCOUNT_SWITCHES = Object.freeze(["suggestions", "standing"]);
 /* R27: an ask grant's life, in seconds (it also ends with the member's session). */
@@ -790,21 +790,18 @@ export class Credentials {
     } catch { return null; }
   }
 
-  /* R22: one reference for `member`, replacing any earlier one, by that member's own act. Answers `{ok, kind, set_at}`
-     and never the secret. A replacement keeps the member's switches (R25); only removal turns them off. */
+  /* R22: one reference for `member`, of either kind, replacing any earlier one of either kind, by that member's own act.
+     Answers `{ok, kind, set_at}` and never the secret. A replacement keeps the member's switches (R25); only removal turns them off. */
   async accountReferenceSet({ member = null, kind = null, secret = null, by = null, level = null } = {}) {
     const bar = this.#accountBar(member, by, level);
     if (bar) return bar;
     const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail);
     /* DEC-49 REGION is-account-kind */
-    if (HELD_BACK_KINDS.includes(kind))
-      return refuse("ACCOUNT_KIND_NOT_OFFERED", "this copy does not hold a Claude subscription token (held back, K1537); "
-        + "connect your own API key. Nothing was written.");
     if (!ACCOUNT_KINDS.includes(kind))
-      return refuse("UNKNOWN_ACCOUNT_KIND", `the kinds this copy holds are ${ACCOUNT_KINDS.join(", ")}. Nothing was `
+      return refuse("UNKNOWN_ACCOUNT_KIND", `the kinds this copy holds are ${ACCOUNT_KINDS.join(" and ")}. Nothing was `
         + "written.");
     if (typeof secret !== "string" || secret.trim() === "")
-      return refuse("NO_SECRET", "no key was given. Nothing was written.");
+      return refuse("NO_SECRET", "no key or token was given. Nothing was written.");
     /* END DEC-49 REGION is-account-kind */
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
