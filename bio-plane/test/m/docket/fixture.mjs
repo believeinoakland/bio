@@ -6,10 +6,10 @@
    is a register row with its origin locator (provenance R48), homed on an Information bundle whose `data/provenance.json`
    states its co-archive and origin (attestation R7, acquisition R21), with its bytes in a stubbed evidence bucket.
    Neighbours are stand-ins the test controls, each answering exactly the service docket reads: `inquiry`'s
-   `subjectEntityOf` (its R43), `entities`' `readEntity` (its R5), `contradiction`'s `unresolvedRecordOn` (its R29), which
-   the real `case-tensions` reads for its `caseTensions` (its R4) through a publication provider standing in for the one
-   `publication` registers (its R61; until T33-63 merges, K1563 (1)), and `publication`'s `stampEdition` (its R62; injected until T33-63 merges), a recorder
-   that checks its edition and order as R62 does and can be made to refuse or throw; and `reevaluation` is a recorder of
+   `subjectEntityOf` (its R43), `entities`' `readEntity` (its R5), and `contradiction`'s `unresolvedRecordOn` (its R29), which
+   the real `case-tensions` reads for its `caseTensions` (its R4) through the provider the real `publication` registers
+   (its R61). `publication`'s `stampEdition` and `registerOrderSource` (its R62) are the real module's, reached through a
+   pass-through that a test can make refuse or throw, to show the post undone; and `reevaluation` is a recorder of
    `registerDocket` and `docketActed` (its R30), which can be made to throw. `events` is the real module (its R30). The group slug
    is the fact `producingGroup` (promotion R40), registered as instance-setup does. Every test drives `docket` at its
    interface. */
@@ -102,7 +102,28 @@ export function world({ slug = SLUG, before = null } = {}) {
   const provenance = provenanceOf(host, { record, membership, promotion, now: () => iso(clock.now) });
   provenance.migrate();
   const attestation = attestationOf(host, { record, provenance, signingKey: null, now: () => iso(clock.now) });
-  publicationOf(host, { record, membership, promotion });
+  const tensions = { list: [], asked: [] };
+  /* contradiction R29: the candidates `tensions.list` names on a finding, at whatever pin is asked. */
+  const contradiction = { unresolvedRecordOn: ({ finding }) => { tensions.asked.push(finding);
+    return { ok: true, candidates: tensions.list.filter((t) => t.member === finding).map((t) => ({ candidate: t.candidate, state: t.state })) }; } };
+  /* case-tensions first, with the stand-in contradiction, so publication's factory registers its provider on it */
+  const caseTensions = caseTensionsOf(host, { record, membership, promotion, contradiction, now: () => iso(clock.now) });
+  const realPublication = publicationOf(host, { record, membership, promotion, now: () => iso(clock.now) });
+  /* publication R62, the real module's; `stamps.refuse` or `stamps.throws` makes the pass-through refuse or throw */
+  const stamps = { calls: [], refuse: null, throws: false,
+    get list() {
+      return [...st.sql.exec(`SELECT case_id, edition FROM edition_stamps GROUP BY case_id, edition ORDER BY MIN(rowid)`)]
+        .flatMap((r) => realPublication.stampsOf({ case: r.case_id, edition: Number(r.edition) }).stamps)
+        .sort((a, b) => a.entry - b.entry || a.edition - b.edition);
+    } };
+  const publication = {
+    registerOrderSource: (...a) => realPublication.registerOrderSource(...a),
+    stampEdition(q) {
+      stamps.calls.push(q);
+      if (stamps.throws) throw new Error("stamp store down");
+      if (stamps.refuse) return { ok: false, reason: stamps.refuse, detail: "refused by the test" };
+      return realPublication.stampEdition(q);
+    } };
   const subjects = new Map();
   const names = new Map([[SUBJECT, SUBJECT_NAME], [OTHER_SUBJECT, "City Clerk"]]);
   const inquiry = { subjectEntityOf: (id) => subjects.get(id) ?? null };
@@ -110,48 +131,12 @@ export function world({ slug = SLUG, before = null } = {}) {
     ? { ok: true, found: true, entity: { entity_id: entityId, label: `label of ${entityId}`,
         aliases: [{ alias: `alias of ${entityId}`, canonical: false }, { alias: names.get(entityId), canonical: true }] } }
     : { ok: true, found: false, entity_id: entityId, entity: null }) };
-  const tensions = { list: [], asked: [] };
-  /* contradiction R29: the candidates `tensions.list` names on a finding, at whatever pin is asked. */
-  const contradiction = { unresolvedRecordOn: ({ finding }) => { tensions.asked.push(finding);
-    return { ok: true, candidates: tensions.list.filter((t) => t.member === finding).map((t) => ({ candidate: t.candidate, state: t.state })) }; } };
-  const rowsOf = (q, ...a) => [...st.sql.exec(q, ...a)];
-  const caseTensions = caseTensionsOf(host, { record, membership, promotion, contradiction, now: () => iso(clock.now) });
-  caseTensions.registerPublicationProvider("publication", {
-    pins: () => [], preparations: () => [], signedDocumentsNaming: () => [], reauthorSection: () => ({ ok: false }),
-    caseDocument: (caseId, edition) => {
-      const d = rowsOf(`SELECT d.case_id, d.edition, d.doc_sha, d.text, d.sig_armored, c.project_id FROM case_documents d
-                        JOIN cases c ON c.case_id = d.case_id WHERE d.case_id=? AND d.edition=?`, caseId, edition)[0];
-      return d ? { case_id: d.case_id, edition: Number(d.edition), doc_sha: d.doc_sha, text: d.text, signed: !!d.sig_armored, project_id: d.project_id } : null;
-    },
-    members: (caseId, edition) => rowsOf(`SELECT bundle_id, version_sha FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`, caseId, edition),
-    latestRatified: ({ project, after, limit }) => rowsOf(`SELECT p.case_id, MAX(p.edition) AS edition, c.project_id FROM published_cases p
-        JOIN cases c ON c.case_id = p.case_id WHERE p.ratified_at IS NOT NULL AND (? IS NULL OR c.project_id = ?) AND p.case_id > ?
-        GROUP BY p.case_id ORDER BY p.case_id LIMIT ?`, project, project, after || "", limit).map((r) => ({ ...r, edition: Number(r.edition) })),
-  });
-  /* publication R62 as its requirement words it (K1632): a stamp per named ratified edition, linked to a posted
-     court-order entry of the case, which it reads through the one order source docket registers at start. */
-  const stamps = { list: [], calls: [], refuse: null, throws: false, sources: [] };
-  const publication = { registerOrderSource(src) {
-    if (stamps.sources.length) return { ok: false, reason: "LISTENER_DECLARED" };
-    stamps.sources.push(src);
-    return { ok: true };
-  }, stampEdition(q) {
-    stamps.calls.push(q);
-    if (stamps.throws) throw new Error("stamp store down");
-    if (stamps.refuse) return { ok: false, reason: stamps.refuse, detail: "refused by the stand-in" };
-    const ratified = new Set([...st.sql.exec(`SELECT edition FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, q.case)].map((r) => Number(r.edition)));
-    if (!Array.isArray(q.editions) || !q.editions.length || !q.editions.every((e) => ratified.has(e))) return { ok: false, reason: "NO_SUCH_CASE_EDITION" };
-    const o = stamps.sources.length ? stamps.sources[0].courtOrderOf(q.case, q.entry) : null;
-    if (!o || o.effect !== q.effect) return { ok: false, reason: "STAMP_NO_ORDER" };
-    for (const edition of q.editions) stamps.list.push({ case: q.case, edition, effect: q.effect, parts: q.parts ?? null, entry: q.entry, stamped_at: iso(clock.now) });
-    return { ok: true, stamped: q.editions.length };
-  } };
   const reeval = { registrations: [], acted: [], throws: false,
     registerDocket(module, fns) { reeval.registrations.push({ module, fns }); return { ok: true, module }; },
     docketActed(q) { reeval.acted.push(q); if (reeval.throws) throw new Error("listener down"); return { ok: true, told: true }; } };
   let n = 0;
   const w = {
-    st, host, caseTensions, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval, stamps,
+    st, host, caseTensions, publication: realPublication, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval, stamps,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, for "nothing written" and "byte-identical" (the record's own and every module's here). */

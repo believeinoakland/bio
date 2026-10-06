@@ -111,7 +111,9 @@ test("R25 the post: stored and signed like any public entry; each named edition 
   const r = await w.docket.docketPost({ digest: p.digest, signature: sign(p), acknowledged: true, by: A, viewer: A });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.deepEqual(w.stamps.list, [1, 2, 3].map((edition) => ({ case: CASE, edition, effect: "seal", parts: ["Exhibit 3", "Appendix B"],
-                                                                entry: `${CASE}#1`, stamped_at: "2026-10-01T12:00:00Z" })));
+                                                                entry: 1, stamped_at: "2026-10-01T12:00:00Z" })));
+  assert.deepEqual(w.publication.stampsOf({ case: CASE, edition: 2 }).stamps.map((s) => [s.entry, s.effect]), [[1, "seal"]],
+                   "publication answers the stamp beside the edition, linked to the entry");
   /* an edition ratified after the post is not named by it */
   w.publish(w.P, CASE, 4, [{ id: w.F1, role: "load_bearing" }]);
   assert.deepEqual(w.docket.courtOrdersOf({ case: CASE }).map((o) => o.editions), [[1, 2, 3]]);
@@ -120,7 +122,7 @@ test("R25 the post: stored and signed like any public entry; each named edition 
   assert.deepEqual(w.docket.courtOrdersOf({ case: null }), []);
   /* one edition named: only it is stamped, and remove carries no parts */
   await post(w, ORDER(w, { order: { effect: "remove", editions: [2] }, reason: "The court ordered edition 2 removed." }));
-  assert.deepEqual(w.stamps.list.slice(3).map((s) => [s.edition, s.effect, s.parts, s.entry]), [[2, "remove", null, `${CASE}#2`]]);
+  assert.deepEqual(w.stamps.list.slice(3).map((s) => [s.edition, s.effect, s.parts, s.entry]), [[2, "remove", null, 2]]);
   assert.equal(w.reeval.acted.length, 0, "a court order is not a withdrawal: reevaluation is not told");
 });
 
@@ -232,10 +234,11 @@ test("R26 docketEvents: each public entry of a case whose named subjects are in 
 
 test("R25 (K1632) at start the docket registers its order source with publication once; courtOrderOf answers a posted court-order entry, null otherwise", async () => {
   const w = seeded();
-  assert.deepEqual(w.docket.orderSourceRegistration, { ok: true });
+  assert.deepEqual(w.docket.orderSourceRegistration, { ok: true, module: "docket" });
   w.docket.start();
-  assert.equal(w.stamps.sources.length, 1, "once");
-  const src = w.stamps.sources[0];
+  assert.deepEqual(w.publication.orderSource(), { registered: true, module: "docket" });
+  assert.equal(w.publication.registerOrderSource("docket", { courtOrderOf: () => null }).reason, "PROVIDER_DECLARED", "once");
+  const src = w.docket;
   assert.equal(src.courtOrderOf(CASE, `${CASE}#1`), null, "nothing posted yet");
   const { posted } = await fileAndPlace(w);
   w.publish(w.P, CASE, 2, [{ id: w.F1, role: "load_bearing" }]);
@@ -248,5 +251,5 @@ test("R25 (K1632) at start the docket registers its order source with publicatio
     assert.equal(w.docket.courtOrderOf(c, e), null, `${c} ${e}: not a posted court order of that case`);
   assert.deepEqual(w.snapshot(), before, "writes nothing");
   /* the stamp reads through it: each post above was stamped, linked to its entry */
-  assert.deepEqual(w.stamps.list.map((s) => [s.edition, s.entry]), [[1, `${CASE}#${o.seq}`], [2, `${CASE}#${o.seq}`], [1, `${CASE}#${r.seq}`]]);
+  assert.deepEqual(w.stamps.list.map((s) => [s.edition, s.entry]), [[1, o.seq], [2, o.seq], [1, r.seq]]);
 });

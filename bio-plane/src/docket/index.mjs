@@ -765,7 +765,7 @@ export class Docket {
          undoes the post and is answered as publication gave it; a throw undoes it too: never a silent compliance. */
       if (held.kind === "court-order") {
         const s = this.publication.stampEdition({ case: held.case, editions: fixed, entry: publicId(held.case, held.seq),
-                                                  effect: held.order.effect, ...(held.order.parts ? { parts: held.order.parts } : {}) });
+                                                  effect: held.order.effect, ...(held.order.parts ? { parts: held.order.parts } : {}), at });
         if (s && s.ok === false) return s;
         if (!s || s.ok !== true) throw new Error("publication answered no stamp for the court order; nothing was published");
       }
@@ -1049,7 +1049,7 @@ export class Docket {
     this.registration = this.#call(() => this.reevaluation.registerDocket("docket", {
       withdrawals: (q) => this.docketWithdrawals(q || {}), contested: (q) => this.docketContested(q || {}) }),
       { ok: false, reason: "REGISTRATION_FAILED" });
-    this.orderSourceRegistration = this.#call(() => this.publication.registerOrderSource({
+    this.orderSourceRegistration = this.#call(() => this.publication.registerOrderSource("docket", {
       courtOrderOf: (caseId, entry) => this.courtOrderOf(caseId, entry) }), { ok: false, reason: "REGISTRATION_FAILED" });
     this.eventSourceRegistration = this.#call(() => this.events.registerEventSource("docket", (q) => this.docketEvents(q || {})),
       { ok: false, reason: "REGISTRATION_FAILED" });
