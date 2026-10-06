@@ -49,3 +49,7 @@ Merged `tranche/T33` (reading-pipeline merged, with its R28 and `readHooksOf`). 
 Tests and checks re-run: `node --test bio-plane/test/m/extraction/`: ℹ pass 121, ℹ fail 0. format 0 failures; architecture (26 product files, 96 imports) 0 failures; coverage 45 of 45, 0 failures; ownership 0 failures.
 
 Size (session_01G7Adz3cZJyj9EDveznQ5vf): test runs 9, module lines 2719
+
+## J4 · COMPLETE
+
+CHANGE B4 applied: tranche/T33 merged; the re-read's reading carries emittedFieldsOf (metadata unaltered or null, no cells for a pdf), tested at pdfStructure; R69 now also tested over the real readHooksOf with nothing injected. 121/121; format, architecture, coverage 45/45, ownership 0 failures. Record updated.
