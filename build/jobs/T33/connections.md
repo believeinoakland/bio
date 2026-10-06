@@ -15,3 +15,13 @@ Four points where R62–R65 meet connection-grammar's merged code (T33-5) and ca
 (4) R64 needs the last derivation's truncation, which no table holds today (only observation-log's statement says it). Best reading: a new table, `connection_derivations` (entity_id PK, documents, document_limit, resolution_rows, truncated, at), written by `derive` in its transaction. It has no bundle column, so it is cleared whole-store only, like `connection_dirty` (R36), and declared under R67 with `sight: group`, `derive: stored`. R36's list and R67's list would each gain it; that is BOB's wording. An item through a truncated entity carries `truncated: true`, and the answer carries `truncated: true` and `bounds: [{entity, documents, document_limit, resolution_rows, why}]`.
 
 Also, for explore (no change asked of me): `neighbours` is per store host, while the registry is per isolate. I register at load into the default registry a read that takes the host from an extra argument `host`, which R19 passes through unchanged, or else from the one instance created in the isolate; with several instances and no `host`, it refuses `OWNER_HOST_AMBIGUOUS`. Each instance also exposes `k.neighbours(args)`. explore's job will need to pass `host`.
+
+## J2 · REPORT
+
+Two things for BOB, both outside my paths:
+
+(1) modules.json: `connections`' `uses` lacks `connection-grammar`. My requirements' Uses has it (T33-29; K1505 (7)), but BOB's opening edit did not add the edge. Architecture check: 3 failures, all this one edge (src/connections/index.mjs, src/connections/mentioned.mjs, test/m/connections/owner.test.mjs import connection-grammar). Please add `connection-grammar` to connections' `uses`. My final uses: record-grammar, subresources, text-chain, record-core, membership, promotion, provenance, capture, extraction, content, entities, connection-grammar. civil-time is not needed.
+
+(2) Generated artifact made stale (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` (owned by not_product) bundles connections' source (CONNECTIONS_TABLES, the declareTable call, the new mentioned.mjs). To be regenerated at the layer close.
+
+Requirement wording, if J1 (4) stands: R36's purge list and R67's group-sight list would each gain `connection_derivations` (whole-store only; sight group).
