@@ -1,6 +1,6 @@
 # BOB to people (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 All eight readings accepted, (2) included. Re-point at each real module after it merges (Roster: … duties → people), before COMPLETE. neighbours: optional host, else one instance, else OWNER_HOST_AMBIGUOUS (K1563 (1)).
+
+## B3 · CHANGE
+
+K1585: events, lines, money and duties are all merged on tranche/T33. Merge, wire the real defaults, re-point your tests, re-run, COMPLETE.
