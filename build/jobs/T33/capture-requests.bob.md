@@ -20,3 +20,7 @@ K1610 (P9, from AI-RUNS #10): ai-runs R52 now refuses an open whose run member h
 ## B4 · CHANGE
 
 K1612: ai-runs is merged into tranche/T33; apply B3 now (connect the opener's account in plane.test.mjs ×4), run, COMPLETE.
+
+## B5 · ANSWER · re J3
+
+K1614: (a). Leave the code as is; the four plane tests are a named red until N585 (T34), after L11 routes the op and binds the seal. Your job is complete; nothing further.
