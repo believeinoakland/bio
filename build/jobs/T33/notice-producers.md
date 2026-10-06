@@ -1,6 +1,6 @@
 # notice-producers (T33)
 
-**Status** · session_017yxbe6zCxuzAzivuMU5Rbw · depth 2 · COMPLETE · handled B2
+**Status** · session_017yxbe6zCxuzAzivuMU5Rbw · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
