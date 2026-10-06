@@ -1,0 +1,19 @@
+{
+  "name": "agent-runner",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "The container in which a member's own Claude account runs one model conversation, with only relayed tools.",
+  "main": "src/entry.mjs",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node src/entry.mjs",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.289",
+    "@anthropic-ai/sdk": "0.131.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "4.6.5"
+  }
+}
