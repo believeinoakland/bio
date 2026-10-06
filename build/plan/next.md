@@ -52,6 +52,8 @@
 
 - N574 · `jurisdictions` (profile data) · an identifier scheme for institutions in the held profiles (test-port-ellery's and oakland-alameda's identify persons only), so people R15's issuer identifier on a `credentialed_by` line can be held through entities R43 (PEOPLE #2 J4 (2); K1592). **Hard reason:** the order: jurisdictions (L1) is closed.
 
+- N575 · `bundler` · re-pin `bio-plane/test/system/fleetbundles.test.mjs` "agent-worker's 13 inputs" to the 14 its committed manifest records: observation-log's `checks.mjs` now imports record-grammar's `ids.mjs` (T33-30), so the member's build carries it (K1598). **Hard reason:** the order: bundler (L1) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
