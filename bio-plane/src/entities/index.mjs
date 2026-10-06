@@ -254,19 +254,25 @@ export function entitiesOf(ctx, opts = {}) {
                                 provenance: opts.provenance ?? (() => provenanceOf(ctx)) });
     instances.set(storage, e);
     registerFigures(e, record);
+    opened = opened === null ? e : AMBIGUOUS;
   }
-  open = e;
   return e;
 }
 
-/* R47 (B1a.3, K1487; connection-grammar R2, R6): this module registers ONCE, at load, in the plane's default owner
-   registry, as the owner of its three declared kinds. The registry is process-wide and a Durable Object holds one
-   storage, so the read is answered by the storage's instance `entitiesOf` last opened; before any is open the read is
-   refused, never answered empty. `OWNER_REGISTRATION` is the registry's answer, kept for whoever wires the plane. */
-let open = null;
+/* R47 (B1a.3, K1487; connection-grammar R2, R6; K1563 (1)): this module registers ONCE, at load, in the plane's default
+   owner registry, as the owner of its three declared kinds. The registry is process-wide, so the read takes the
+   optional `host` the registry passes through unchanged (explore passes it) and answers from that host's instance;
+   without one, from the isolate's one instance; with none open, or more than one, it is refused
+   `OWNER_HOST_AMBIGUOUS`, never answered from a guess. `OWNER_REGISTRATION` is the registry's answer. */
+const AMBIGUOUS = Symbol("more than one");
+let opened = null;
 export const OWNER_REGISTRATION = registerOwner({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
-  neighbours: (a) => (open ? open.neighbours(a)
-    : { refused: "OWNER_NOT_OPEN", why: "the subject registry is not open in this process, so its relations cannot be read" }) });
+  neighbours: ({ host = null, ...a } = {}) => {
+    const e = host ? entitiesOf(host) : opened instanceof Entities ? opened : null;
+    return e ? e.neighbours(a) : { refused: "OWNER_HOST_AMBIGUOUS", why: opened === AMBIGUOUS
+      ? "more than one subject registry is open in this process and the read names no host, so which one is meant is not settled"
+      : "no subject registry is open in this process and the read names no host" };
+  } });
 
 /** R41: this module's figures for `op=stats` and purge's proof, registered with record-core's `registerCounts` (its
  *  R63) once per storage, when the instance is first made. A record with no seam (a test's stand-in) is left alone; a

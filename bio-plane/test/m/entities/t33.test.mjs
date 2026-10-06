@@ -419,12 +419,24 @@ test("R47 neighbours answers the relations, not withdrawn, with the node at one 
   assert.deepEqual(w.e.neighbours({ node: "ENT-2026-0404", at: AT, viewer: "member:ann" }).items, []);
   assert.ok(w.e.neighbours({ node: w.a, viewer: "member:ann" }).items.every((i) => i.undetermined));
   assert.equal(JSON.stringify(w.rows(`SELECT * FROM entity_relations`)), before, "writes nothing");
-  /* through the plane's default registry, which judges every answer at the interface */
+  /* through the plane's default registry, which judges every answer at the interface (K1563 (1)): with none open and
+     no host, refused; the host the registry passes through, else the isolate's one instance; two open and no host,
+     refused OWNER_HOST_AMBIGUOUS, never a guess */
+  const q = { owner: "entities", node: w.a, at: AT, viewer: "member:ann", scope: null };
+  assert.equal(registryNeighbours(q).refused, "OWNER_HOST_AMBIGUOUS", "none open in this process yet");
   const host = { storage: w.st };
   entitiesOf(host, { record: w.record, membership: w.membership, provenance: w.prov });
-  const viaRegistry = registryNeighbours({ owner: "entities", node: w.a, at: AT, viewer: "member:ann", scope: null });
-  assert.deepEqual(viaRegistry, all, "conforming: the registry passes the answer whole");
+  assert.deepEqual(registryNeighbours({ ...q, host }), all, "conforming: the registry passes the answer whole");
+  assert.deepEqual(registryNeighbours(q), all, "the isolate's one instance");
   assert.equal(registryNeighbours({ owner: "entities", node: w.a, at: AT, scope: null }).refused, "VIEWER_MISSING");
+  const w2 = related();
+  const host2 = { storage: w2.st };
+  entitiesOf(host2, { record: w2.record, membership: w2.membership, provenance: w2.prov });
+  const amb = registryNeighbours(q);
+  assert.equal(amb.refused, "OWNER_HOST_AMBIGUOUS");
+  assert.match(amb.why, /more than one/);
+  assert.deepEqual(registryNeighbours({ ...q, host }), all, "a named host is answered from its own instance");
+  assert.deepEqual(registryNeighbours({ ...q, node: w2.a, host: host2 }).items.map((i) => i.id), [w2.r1, w2.r2]);
 });
 
 test("R47 R9 connection-grammar's owner-conformance battery runs over this owner: every check passes but the two a dateless, group-wide owner cannot supply (an item in at the date; an item fenced from one member)", () => {
