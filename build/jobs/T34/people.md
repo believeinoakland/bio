@@ -32,3 +32,7 @@ Size (session_01FBkdcqM2R142K6beJtipCh): test runs 9, module lines 1911
 ## J1 · REPORT
 
 Found in other modules by T34-23 (details in my record's Completion): (1) corpus-export R7 test (tables.test.mjs:84) asserts member_ties export admin-only; people now declares never (N594), so it reds until corpus-export's test and its HELD_NEVER interim note follow; its export already treats it as never (K1632 (6)). (2) consequences R16 interim test 'until people answers a link's sight ... (fail closed)' (person.test.mjs:84) reds: consequences already uses sourceLinkSight when present, and with no link held it shows the person, as N600 intends; T34-49's to retire. (3) R33 lists people's tables; N617's two history tables (source_person_link_history export never, interest_check_gate_history admin-only) are not named; your wording if wanted.
+
+## J2 · COMPLETE
+
+T34-23 applied (N617, N573, N574, N594, N600 R34, N605 R35); record Completion has the detail. people tests 37: 36 pass, 1 red = R15's title assertion, waiting on lines (T34-18) holding title; the rest of R15 passes. format, architecture, coverage (35/35), ownership (9 files) 0 failures. Deferred: none. Size (session_01FBkdcqM2R142K6beJtipCh): test runs 9, module lines 1911.
