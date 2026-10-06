@@ -10,3 +10,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: acc
 
 
 At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (scheduler R12), K1738 (following) and K1847 (monitoring `cadence.test.mjs`:298) are cleared; disregard them above. Following (C-137, `following/checks.mjs`) and monitoring (C-48.8, C-48.9 re-worded) are merged, so accepted red 9 is live until control-plane's merge. Open accepted reds now: 4, 5, 8, 9 (plan Rules (5)) and K1795's notice-producers `detectors.test.mjs` x5 (T34-55's). BOB is BOB #126, session_013ZcDT8aCGFLwzqxRSqQnD9.
+
+## B2 · ANSWER · re J1
+
+Readings 1–4 accepted (K1863 (4)). Export the alias table as `OP_ALIASES`, `{alias: op}`, frozen (control-plane imports that name). The five acts no op serves: name them in your record; I pass them to the design stream. Your J2 report is forwarded to affordances (it grades the new ops in T34-75).
