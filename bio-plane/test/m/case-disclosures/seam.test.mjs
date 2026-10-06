@@ -3,8 +3,8 @@
    rendered from the same rows before the split. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { list as profiles } from "../../../../jurisdictions/index.mjs";
 import { world, storage, V, T0 } from "./fixture.mjs";
 import * as CD from "../../../src/case-disclosures/index.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -29,9 +29,13 @@ const ROWS = [
   ["FLAG_NOT_DISCLOSED", "C-120.11", "flagsJudged", "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published."],
   ["FLAGS_UNDETERMINED", "C-120.12", "flagsJudged", "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published."],
   ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "flagsJudged", "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."],
+  /* R22's new rows (T33-68), numbered provisionally until their stamp; the translations are drafts */
+  ["PERSON_BASIS_UNRECORDED", "C-120.14", "peopleJudged", "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written."],
+  ["PERSON_BASIS_NOT_STANDING", "C-120.15", "peopleJudged", "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written."],
+  ["TIE_ATTESTATION_MISSING", "C-120.16", "tieAttestationJudged", "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written."],
 ];
 
-test("R22: C-120.1–C-120.8 and C-120.10–C-120.13 are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
+test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
   assert.deepEqual(Object.keys(CASE_DISCLOSURE_CHECKS), ROWS.map(([code]) => code));
   assert.ok(Object.isFrozen(CASE_DISCLOSURE_CHECKS));
   const w = world();
@@ -86,28 +90,41 @@ test("R22: each row's method raises its code, with the row's check and translati
   assert.deepEqual(raised(fl(open).flagsJudged(eds, [{ flag: "F2" }]).refusals), [row("FLAG_NOT_DISCLOSED"), row("FLAG_DISCLOSURE_NOT_STANDING")]);
   assert.deepEqual(raised(fl({ ok: true, complete: false, flags: [] }).flagsJudged(eds, null).refusals), [row("FLAGS_UNDETERMINED")]);
   assert.deepEqual(fl(open).flagsJudged(eds, [{ flag: "F1" }]).refusals, []);
+  /* C-120.14, C-120.15 */
+  const P = "ENT-2026-0001", named = { named: [{ person: P, members: [P], places: [{ place: "statement", where: "s1", ref: P }] }] };
+  const pj = world().cd;
+  assert.deepEqual(raised(pj.peopleJudged(named, []).refusals), [row("PERSON_BASIS_UNRECORDED")]);
+  assert.deepEqual(raised(pj.peopleJudged(named, [{ person: P, basis: "private_party", ref: null }]).refusals), [row("PERSON_BASIS_NOT_STANDING")]);
+  assert.deepEqual(pj.peopleJudged(named, [{ person: P, basis: "private_party", ref: null, words: "they spoke at the hearing" }]).refusals, []);
+  /* C-120.16 */
+  assert.deepEqual(raised(pj.tieAttestationJudged(["alice"], { named: [], entities: [] }, [], [], V("alice")).refusals), [row("TIE_ATTESTATION_MISSING")]);
+  assert.deepEqual(pj.tieAttestationJudged(["alice"], { named: [], entities: [] }, [], [{ signer: "alice", at: T0 }], V("alice")).refusals, []);
 });
 
 /* ---------------------------------------------------------------- R21 */
 
-test("R21: no place is named in this module's behaviour or outward text — its rows, sentences, refusals and every line its renderers write name no place a jurisdiction profile covers", () => {
-  const dir = new URL("../../../../jurisdictions/profiles/", import.meta.url);
+test("R21: no place is named in this module's behaviour or outward text — its rows, sentences, refusals and every line its renderers write name no place a jurisdiction profile covers (the profiles' `covers`, read through jurisdictions' own `list`, K1545)", () => {
   const places = new Set();
-  for (const f of readdirSync(dir))
-    for (const m of readFileSync(new URL(f, dir), "utf8").matchAll(/covers:\s*\[([^\]]*)\]/g))
-      for (const q of m[1].matchAll(/"([^"]+)"/g)) {
-        places.add(q[1]);
-        places.add(q[1].replace(/^(City|Town|County) of /, "").replace(/ (County|City)$/, ""));
-      }
+  for (const p of profiles())
+    for (const c of p.covers) {
+      places.add(c);
+      places.add(c.replace(/^(City|Town|County) of /, "").replace(/ (County|City)$/, ""));
+    }
   assert.ok(places.size >= 4, "the profiles name places");
   const said = [JSON.stringify(Object.values(CASE_DISCLOSURE_CHECKS)), CD.SELF_ATTESTED_SENTENCE, CD.HIGHLIGHT_SENTENCE,
                 CD.NOT_SHOWN_WORDS, CD.TENSIONS_DEPTH_STATED, JSON.stringify(CD.TENSION_TEMPLATES), CD.FLAG_SENTENCE, CD.FLAGS_SAY,
+                JSON.stringify([CD.PERSON_BASES, CD.PERSON_PLACES]), CD.peopleLines([{ person: "ENT-1", places: "statement s1", basis: "tie", citation: "line LIN-1", words: null }]).join("\n"),
+                CD.memberTieLines([{ row: "tie", signer: null, at: null, entity: "ENT-2", kind: "employer", level: "group", shown: null }]).join("\n"),
                 ...Object.values(RENDERED).map(([fn, args]) => CD[fn](...args).join("\n")), ...ROWS_T.map(CD.tensionSentence)];
   /* the refusals' own words, each raised */
   const w = world({ deps: { contradiction: { unresolvedRecordOn: () => { throw new Error("x"); } } } });
   w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC, grade: "B", grade_axis: "connection", grade_source: "hunch", author: "member:alice", date: "2026-09-27" }]);
   said.push(JSON.stringify(w.cd.hunchDebt(w.prepared([Q]))), JSON.stringify(w.cd.tensionsJudged(w.prepared([Q]), V("alice"), null)),
             JSON.stringify(w.cd.tensionsJudged(w.prepared([Q]), V("alice"), "x")), JSON.stringify(w.cd.methodOf()));
+  const P = "ENT-2026-0001", named = { named: [{ person: P, members: [P], places: [{ place: "statement", where: "s1", ref: P }] }], entities: [P] };
+  said.push(JSON.stringify(w.cd.peopleJudged(named, [])), JSON.stringify(w.cd.peopleJudged(named, [{ person: P, basis: "tie", ref: "LIN-2026-0009" }])),
+            JSON.stringify(w.cd.peopleJudged(named, "x")), JSON.stringify(w.cd.tieAttestationJudged(["alice", "bo"], named, [], [], V("alice"))),
+            JSON.stringify(w.cd.peopleNamed(w.prepared([Q]), [{ place: "statement", where: "s1", people: ["nobody"] }, { place: "x" }], V("alice"))));
   const all = said.join("\n");
   for (const p of places) assert.equal(all.includes(p), false, `names ${p}`);
 });
@@ -120,7 +137,10 @@ test("R23: every service is synchronous, and none throws when every module it re
                  provenance: { captureGrade: boom }, attestation: { attestationsOf: boom },
                  capture: { lateAttestationsOf: boom, captureAccountsOf: boom }, sources: { sourceOf: boom, publishableAt: boom },
                  extraction: { unitsOf: boom }, promotion: { fact: boom },
-                 caseImport: { acceptanceOf: boom, openFlagsOn: boom, importedCase: boom } };
+                 caseImport: { acceptanceOf: boom, openFlagsOn: boom, importedCase: boom },
+                 entities: { readEntity: boom }, events: { readEvent: boom }, lines: { readLine: boom, structureAt: boom },
+                 money: { readFact: boom }, people: { identityOf: boom, interestsOf: boom, personAt: boom, tiesConcerning: boom },
+                 membership: { memberFacts: boom } };
   const w = world({ deps: { ...deps, record: { readFile: boom } } });
   w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   const prep = w.prepared([Q]), roles = w.roles([Q]);
@@ -140,6 +160,11 @@ test("R23: every service is synchronous, and none throws when every module it re
     withheldOf: () => w.cd.withheldOf([]),
     findingFacts: () => w.cd.findingFacts([{ id: Q, member: Q }], V("alice")),
     methodOf: () => w.cd.methodOf(),
+    peopleNamed: () => w.cd.peopleNamed(prep, [{ place: "statement", where: "s1", people: ["ENT-2026-0001"] },
+      { place: "timeline", where: "t1", event: "EVT-2026-0001" }, { place: "money", where: "m1", fact: "MNY-2026-0001" }], V("alice")),
+    peopleJudged: () => w.cd.peopleJudged({ named: [{ person: "ENT-2026-0001", members: ["ENT-2026-0001"], places: [] }] },
+      [{ person: "ENT-2026-0001", basis: "act_or_position", ref: { line: "LIN-2026-0001", event: "EVT-2026-0001" }, words: "w" }], V("alice")),
+    tieAttestationJudged: () => w.cd.tieAttestationJudged(["alice"], { named: [], entities: ["ENT-2026-0001"] }, [], [{ signer: "alice", at: T0 }], V("alice")),
     disclosureBlocks: () => w.cd.disclosureBlocks({ resting: [{ member: Q, capture: "e".repeat(64) }],
       reached: { materials: [{ ref: DOC, kind: "document", sha: "e".repeat(64), held: { text_sha: null }, included: false, rests_under: "supporting" }] },
       author: "alice", at: T0 }),
@@ -161,6 +186,10 @@ test("R23: every service is synchronous, and none throws when every module it re
   assert.deepEqual(calls.findingFacts().grading, []);
   assert.equal(calls.disclosureBlocks().group, null);
   assert.equal(calls.materialsJudged().materials[0].included, false, "a file that cannot be read is not held");
+  assert.deepEqual(calls.peopleNamed().named, []);
+  assert.deepEqual(calls.peopleNamed().unresolved.map((u) => u.ref), ["EVT-2026-0001", "MNY-2026-0001", "ENT-2026-0001"], "each failed read stated, never dropped");
+  assert.equal(calls.peopleJudged().refusals[0].reason, "PERSON_BASIS_NOT_STANDING", "a basis whose read fails does not stand");
+  assert.deepEqual(calls.tieAttestationJudged().undetermined.map((u) => u.signer), ["alice"], "a ties read that fails is stated undetermined");
 });
 
 test("R23: it writes nothing of its own and holds no table — creating it adds no table and declares nothing to purge; every judgment leaves the store as it found it, the one write it reaches (sources' minted id) inside the caller's transaction, which rolls it back", () => {

@@ -29,3 +29,7 @@ K1634: J2 accepted whole. The recompute in the gather writes only calculations' 
 ## B5 · CHANGE
 
 K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
+
+## B6 · CHANGE
+
+K1638: case-disclosures (T33-68) is merged into tranche/T33; merge the tranche. Re-point your injected case-disclosures (peopleNamed, peopleJudged, tieAttestationJudged, peopleLines, memberTieLines) at the real module. Your own red to fix: invariants.test.mjs and preflight.test.mjs (R29) pin the C-120 set as .1–.8 and .10–.13. Widen both to C-120.14–.16, which your R34 pre-flight and R55 now ask.
