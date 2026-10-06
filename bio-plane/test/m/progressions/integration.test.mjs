@@ -7,12 +7,10 @@ import { createHash } from "node:crypto";
 import { storage } from "./fixture.mjs";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { Extraction } from "../../../src/extraction/index.mjs";
+import { extractionOf } from "../../../src/extraction/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { Entities } from "../../../src/entities/index.mjs";
-import { readHooksOf } from "../../../src/reading-pipeline/hooks.mjs";
-import { combine } from "../../../../jurisdictions/index.mjs";
 import { eventsOf, noSuchDatedFact } from "../../../src/events/index.mjs";
 import { standardsOf, noSuchStandard } from "../../../src/standards/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
@@ -32,20 +30,20 @@ function realWorld() {
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionStub();
-  const x = new Extraction(st, { record, membership, promotion });
+  const x = extractionOf(host, { record, membership, promotion });
   x.migrate();
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });
   prov.migrate();
-  const content = contentOf(host, { record, membership, provenance: prov, extraction: x });
-  if (typeof content.migrate === "function") content.migrate();
   const ents = new Entities(st, { record, membership, provenance: prov });
   ents.migrate();
-  const view = combine(["test-port-ellery"]).view;
-  ents.view = () => ({ ...view, conflicts: [] });
-  const ev = eventsOf(host, { record, membership, provenance: prov, extraction: x, content, entities: ents, readHooks: readHooksOf(host),
-                              now: () => "2026-10-01T00:00:00Z", view: () => view });
+  /* content's tables, as the plane's migration pass makes them (the extent check events runs reads them); events and
+     standards reach content, the reading hooks and the jurisdiction view through their own factories */
+  const content = contentOf(host, { record, membership, provenance: prov, extraction: x });
+  if (typeof content.migrate === "function") content.migrate();
+  const ev = eventsOf(host, { record, membership, provenance: prov, extraction: x, entities: ents, now: () => "2026-10-01T00:00:00Z" });
   ev.migrate();
-  const std = standardsOf(host, { record, membership, promotion, content });
+  const view = { time_zone: { value: ev.zone() } };
+  const std = standardsOf(host, { record, membership, promotion });
   st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status, created, updated) VALUES ('alice', 'c', 'member', 'active', '2026-01-01', '2026-01-01')`);
   const p = progressionsOf(host, { record, extraction: x, provenance: prov, entities: ents, now: () => "2026-10-01T12:00:00.000Z" });
   p.migrate();
