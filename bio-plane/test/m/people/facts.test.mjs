@@ -131,7 +131,7 @@ test("R12 expunge removes the value of a PFA-, IDC-, MTI- or source link and lea
   assert.deepEqual(w.record.rebuildAndCompare("people", "identity_cluster"), { same: true });
 });
 
-test("R33 every table is declared explicitly through record-core's declareTable with the classes the requirement names: person_facts export yes, its contact table never, identity_claims yes with sight by project, member_ties never (K1490), source_person_links never, the checks and their results admin-only, the cluster derived-rebuildable; rows naming a bundle are keyed to it", () => {
+test("R33 every table is declared explicitly through record-core's declareTable with the classes the requirement names: person_facts export yes, its contact table never, identity_claims yes with sight by project, member_ties never (K1490), source_person_links never, the checks and their results admin-only, N617's histories source_person_link_history never and interest_check_gate_history admin-only, the cluster derived-rebuildable; rows naming a bundle are keyed to it", () => {
   const w = world();
   const d = Object.fromEntries(w.record.declaredTables().filter((x) => x.module === "people").map((x) => [x.name, x]));
   const want = { person_facts: "yes", person_contacts: "never", identity_claims: "yes", member_ties: "never",
