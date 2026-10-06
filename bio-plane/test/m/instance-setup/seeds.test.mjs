@@ -4,6 +4,8 @@
    runs the real `entities` and `lines` over the real held profile. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { boot, frame, registryOver, providers } from "./fixture.mjs";
 import { get as heldProfile, list as heldList } from "../../../../jurisdictions/index.mjs";
 import { INSTANCE_SETUP_CHECKS, LEGISTAR_SCHEMES, SEED_MACHINE } from "../../../src/setup.mjs";
@@ -95,7 +97,7 @@ async function world({ view = profileView(), env = {} } = {}) {
 }
 const whats = (list) => list.map((x) => `${x.what}:${x.role ?? x.OfficeRecordId ?? x.body ?? ""}`);
 
-test("R50 officesSeed seeds each profile office as an office and its body as a body under the profile's identifiers, with post_in office→body and part_of body→the organisation it is within, machine-attributed from the profile entry; an entry lacking an identifier seeds nothing and says which", async () => {
+test("R50 officesSeed seeds each profile office as an office and its body as a body under the profile's identifiers, with post_in office→body and part_of body→the organisation it is within, machine-attributed from the profile entry; an entity whose identifier the entry lacks is not seeded, and the answer says which", async () => {
   const w = await world();
   const r = w.m.officesSeed({ by: "admin" });
   assert.equal(r.ok, true);
@@ -105,8 +107,10 @@ test("R50 officesSeed seeds each profile office as an office and its body as a b
     "body:Commissioner", "office:Commissioner", "post_in:Commissioner"]);
   assert.deepEqual(r.already, []);
   const why = Object.fromEntries(r.unseeded.map((x) => [`${x.what}:${x.role}`, x.why]));
-  assert.deepEqual(Object.keys(why), ["part_of:Town Clerk", "office:Harbour District Board", "part_of:Examiner of Accounts", "part_of:Commissioner"]);
+  assert.deepEqual(Object.keys(why), ["part_of:Town Clerk", "body:Harbour District Board", "office:Harbour District Board",
+    "part_of:Examiner of Accounts", "part_of:Commissioner"]);
   assert.match(why["office:Harbour District Board"], /no identifier for this office \(ids\.office\)/);
+  assert.match(why["body:Harbour District Board"], /no identifier for this body \(ids\.body\)/);
   assert.match(why["office:Harbour District Board"], /never by its name/);
   assert.match(why["part_of:Town Clerk"], /names no organisation this body is within/);
   assert.match(why["part_of:Examiner of Accounts"], /with no identifier \(within\.ids\)/);
@@ -134,7 +138,7 @@ test("R50 officesSeed seeds each profile office as an office and its body as a b
   assert.equal(postIn.valid.zone, "America/Halifax");
   const partOf = L.find((x) => x.kind === "part_of");
   assert.deepEqual([partOf.to, partOf.basis.ids], [orgId, { from: { scheme: "ellery_body", id: "B-2" }, to: { scheme: "ellery_org", id: "T-1" } }]);
-  assert.deepEqual(r.counts, { seeded: 14, already: 0, unseeded: 4 });
+  assert.deepEqual(r.counts, { seeded: 14, already: 0, unseeded: 5 });
 });
 
 test("R50 a repeat seeds nothing again (already: true for each entity and line), an entity a member already identified is taken as held, and an office the profile no longer names is never deleted, its lines left as they stand", async () => {
@@ -267,6 +271,32 @@ test("R52 each seat on a matched body is seeded: an office per OfficeRecordId, s
   assert.match(r.bodies_without_records[0].why, /no office record/);
 });
 
+test("R50 R51 R52 a body the profile identifies is seeded though its office has no identifier, and its Legistar match and seats follow; the MemberType map's entry for the seat's body's organisation is read before the entry for all bodies, and a type mapped for neither is undetermined", async () => {
+  const view = profileView();
+  delete view.counterparties[1].ids.office;                         // the Selectboard's office: no identifier
+  view.vocabulary.member_types = [
+    { member_type: "Member", organisation: "selectboard", capacity: "appointed", basis: "TEST" },
+    { member_type: "Member", capacity: "elected", basis: "TEST" },
+    { member_type: "Alternate", capacity: "appointed", basis: "TEST" },
+    { member_type: "Chair", organisation: "harbour", capacity: "elected", basis: "TEST" }];
+  const w = await world({ view });
+  const o = w.m.officesSeed({ by: "admin" });
+  const at = (list, what, role) => list.find((x) => x.what === what && x.role === role);
+  assert.ok(at(o.seeded, "body", "Selectboard"), "the body is seeded under ids.body");
+  assert.match(at(o.unseeded, "office", "Selectboard").why, /no identifier for this office \(ids\.office\)/);
+  assert.match(at(o.unseeded, "post_in", "Selectboard").why, /its office is not held under an identifier/);
+  assert.ok(at(o.seeded, "part_of", "Selectboard"), "the body's part_of line needs only the body and its organisation");
+  assert.equal(w.m.officeEntityOf({ role: "Selectboard", body: "Port Ellery Selectboard" }), null);
+  const r = await w.m.seatsSeed({ ...SHAS, by: "admin" });
+  assert.deepEqual(r.matches.find((m) => m.body === "Port Ellery Selectboard").bodies.map((b) => b.BodyId), [10, 11]);
+  const holds = r.seeded.filter((x) => x.what === "holds");
+  /* Member on the selectboard: its organisation's entry (appointed), not the all-bodies one (elected); Alternate on the
+     audit office, which has no organisation: the all-bodies entry; Chair: mapped only for another organisation */
+  assert.deepEqual(holds.map((h) => [h.OfficeRecordId, h.capacity]), [[500, "appointed"], [502, "appointed"]]);
+  const und = Object.fromEntries(r.holders_undetermined.map((x) => [x.OfficeRecordId, x.why]));
+  assert.match(und[501], /maps no capacity for the MemberType "Chair" on selectboard or on all bodies/);
+});
+
 test("R52 two PersonIds with one whitespace-normalised name are two persons, each naming the other and never merged; no contact field is copied anywhere; a repeat seeds nothing again", async () => {
   const w = await world();
   w.m.officesSeed({ by: "admin" });
@@ -314,16 +344,65 @@ test("R51 R52 seatsSeed is an administrator's act and reads only held Legistar c
   assert.match(none.detail, /no profile is active/);
 });
 
-test("R50 over the real entities and lines and the real held profile: its counterparties carry no identifiers yet (N613), so every office is answered could-not-be-seeded naming the missing identifier and no entity or line is written", async () => {
+/* The first profile as held (jurisdictions R61; N613) over the captures legistar-reader holds of its client (taken
+   2026-10-05, contact fields dropped; legistar-reader R16), read as data, never imported. */
+const LEGISTAR_FIXTURES = new URL("../../../../legistar-reader/test/fixtures/", import.meta.url);
+function heldCaptures() {
+  const caps = {}, shas = {};
+  for (const f of ["bodies", "persons", "officerecords-0", "officerecords-1"]) {
+    const j = JSON.parse(readFileSync(new URL(`${f}.json`, LEGISTAR_FIXTURES), "utf8"));
+    const text = JSON.stringify(j.body);
+    const sha = createHash("sha256").update(text).digest("hex");
+    caps[sha] = { locator: j.locator, text, at: j.captured_at };
+    shas[f] = sha;
+  }
+  return { caps, shas: { bodies: shas.bodies, persons: shas.persons, officerecords: [shas["officerecords-0"], shas["officerecords-1"]] } };
+}
+
+test("R50 R51 R52 on the first profile as held (N613), measured: each body the profile identifies is seeded under its Legistar BodyId and every office it gives no identifier is not; 3 of its 5 bodies match a Legistar body after normalisation, the Council by its organisation with its cancellation form; the Council's 46 office records seed 46 seats and 46 elected holders by the Council's own MemberType map", async () => {
   const real = heldList().find((p) => p.test !== true);
   const held = heldProfile(real.id);
-  const w = await boot({ prov: providers({ admins: ["admin"] }) });
+  const reg = await registryOver(() => held.identifier_schemes);
+  const { caps, shas } = heldCaptures();
+  const w = await boot({ prov: providers({ admins: ["admin"] }), now: () => Date.parse("2026-10-06T12:00:00Z"),
+    more: { entities: reg.entities, lines: reg.lines, readCapture: async (sha) => caps[sha] || null } });
   w.record.setSetting("jurisdiction_profiles", [real.id], "test");
-  const r = w.m.officesSeed({ by: "admin" });
-  assert.equal(r.ok, true);
-  assert.equal(r.seeded.length + r.already.length, 0);
-  assert.equal(r.unseeded.length, held.counterparties.length);
-  for (const u of r.unseeded) assert.match(u.why, /names no identifier for this office \(ids\.office\)/);
-  assert.equal(w.st.db.prepare(`SELECT count(*) n FROM seed_entities`).get().n + w.st.db.prepare(`SELECT count(*) n FROM seed_lines`).get().n, 0);
-  assert.equal(w.m.officeEntityOf({ role: held.counterparties[0].role, body: held.counterparties[0].body }), null);
+  const o = w.m.officesSeed({ by: "admin" });
+  /* R50: a body is seeded under the profile's own identifier for it, an office only under its own, never by a name */
+  const withBody = held.counterparties.filter((c) => c.ids && c.ids.body);
+  assert.deepEqual(o.seeded.map((x) => [x.what, x.body, x.ident.id]), withBody.map((c) => ["body", c.body, c.ids.body.id]));
+  for (const x of o.seeded) assert.deepEqual(reg.entities.idents.find((i) => i.entity_id === x.entity_id).basis,
+    { system: held.identifier_schemes.find((sc) => sc.scheme === "legistar_body_id").systems[0], row: `${real.id}/${x.entry}/body` });
+  const un = o.unseeded.map((x) => `${x.what}:${x.role}`);
+  for (const c of held.counterparties) {
+    assert.ok(un.includes(`office:${c.role}`), `${c.role}: no ids.office, so no office`);
+    assert.equal(un.includes(`body:${c.role}`), !(c.ids && c.ids.body), c.role);
+  }
+  assert.equal(reg.lines.lines.length, 0, "no office and no organisation is identified, so no post_in or part_of line");
+  for (const x of o.unseeded.filter((u) => u.what === "post_in")) assert.match(x.why, /its office is not held under an identifier/);
+  for (const x of o.unseeded.filter((u) => u.what === "part_of")) assert.match(x.why, /no identifier \(within\.ids\)/);
+  /* R51: the bridge over the held bodies list */
+  const s = await w.m.seatsSeed({ ...shas, by: "admin" });
+  assert.equal(s.ok, true, JSON.stringify(s));
+  assert.deepEqual(s.matches.map((m) => [m.body, m.form, m.bodies.map((b) => b.BodyId)]), [
+    ["Finance Department", "name:finance department", [171]],
+    ["Oakland City Council", "organisation:city_council", [1, 226]],
+    ["Office Of The City Auditor", "name:office of the city auditor", [16]]]);
+  assert.deepEqual(s.unmatched.map((m) => [m.body, m.candidates]), [["Alameda County Civil Grand Jury", []], ["California State Controller's Office", []]]);
+  /* the Council's body entity now holds both BodyIds: the profile's own (1, already) and the cancellation form's (226) */
+  const council = o.seeded.find((x) => x.role === "City Council").entity_id;
+  assert.deepEqual(reg.entities.idents.filter((i) => i.entity_id === council).map((i) => i.id), ["1", "226"]);
+  /* R52: every Council office record is a seat with its holder, elected by the Council's own MemberType entries */
+  const records = ["officerecords-0", "officerecords-1"].flatMap((f) =>
+    JSON.parse(readFileSync(new URL(`${f}.json`, LEGISTAR_FIXTURES), "utf8")).body).filter((r) => [1, 226].includes(r.OfficeRecordBodyId));
+  assert.equal(records.length, 46);
+  const seats = s.seeded.filter((x) => x.what === "seat"), holds = s.seeded.filter((x) => x.what === "holds");
+  assert.deepEqual([seats.length, holds.length, s.holders_undetermined.length], [46, 46, 0]);
+  assert.deepEqual([...new Set(holds.map((h) => h.capacity))], ["elected"]);
+  assert.deepEqual(new Set(seats.map((x) => x.OfficeRecordId)), new Set(records.map((r) => r.OfficeRecordId)));
+  /* the two matched bodies Legistar keeps no office records for seed no seat, and say so */
+  assert.deepEqual(s.bodies_without_records.map((b) => b.body).sort(), ["Finance Department", "Office Of The City Auditor"]);
+  /* no contact value reaches the registry */
+  const everything = JSON.stringify([[...reg.entities.ents.values()], reg.entities.idents, reg.lines.lines, s]);
+  assert.equal(/@|PersonEmail|PersonPhone/.test(everything), false);
 });

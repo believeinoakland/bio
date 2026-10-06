@@ -144,7 +144,5 @@ test("R14 requiredFailures answers each required Civicsmith script R12 refuses, 
   /* a required flow fails when its screen leaves the registry */
   const r = wz.requiredFailures(registration({ screens: SCREENS.filter((s) => s.id !== "case-home") }));
   assert.deepEqual(r.map((x) => [x.id, x.refusal.code, x.refusal.step]), [[LIBRARY[0].id, "WIZARD_SCREEN_UNKNOWN", 1]]);
-  assert.deepEqual(wz.CIVICSMITH_LIBRARY, []);
-  assert.ok(Object.isFrozen(wz.CIVICSMITH_LIBRARY));
-  assert.deepEqual(wz.requiredFailures(registration({ library: wz.CIVICSMITH_LIBRARY })), []);
+  /* the real library's required flows against the real registry: library.test.mjs (R14, R22) */
 });

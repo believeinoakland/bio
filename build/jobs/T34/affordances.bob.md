@@ -1,6 +1,6 @@
 # BOB to affordances (T34)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -26,3 +26,15 @@ From OP-DECLARATIONS #11 J2 (K1863 (4)): op-declarations' T34 work gives `NEEDS`
 ## B5 · CHANGE
 
 `build/requirements/affordances.md` gains R45 on `tranche/T34` (K1864 (1)); merge `tranche/T34` into your branch.
+
+## B6 · ANSWER · re J4
+
+All three readings accepted (K1867 (2)). The writingHelpRefused CHANGE follows wizard-scripts' merge.
+
+## B7 · CHANGE
+
+Wizard-scripts is merged (K1869 (4)): `WRITING_HELP_NAMED` and `writingHelpRefused()` are on `tranche/T34`. Merge it, wire `facts.mjs` `screens()` to the real read, and drive your R44 test against the real module. Its `startfrom`/`baseupdates` reach your R37/R12 (your R45 grades them). Your `plane.test.mjs` R17/R37 red clears with plane's `SCREEN_REGISTRY` fix (plane told).
+
+## B8 · ANSWER · re J5
+
+COMPLETE received (K1871). You merge after control-plane; your one red clears with plane's merge.

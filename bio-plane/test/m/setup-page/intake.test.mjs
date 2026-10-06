@@ -1,5 +1,5 @@
-/* R45 (N397, K573; D-62): the intake form's bundle writer states a captured document's digest as `content_hash`, and
-   R46 (D-110): the form explains each capture refusal the plane makes, and none it no longer makes. Driven at the
+/* R9 (N397, K573; D-62): the intake form's bundle writer states a captured document's digest as `content_hash`, and
+   R10 (D-110): the form explains each capture refusal the plane makes, and none it no longer makes. Driven at the
    page's interface: the served page's script in the fixture's sandbox, its intake form filled and saved against
    scripted `acquire`, `attest`, `allocid` and `promote` answers; what it sends to `promote` is checked by
    record-grammar's `checkBundle` with capture's C-2.7 grammar in its slot (capture R37, K767), the one authority over
@@ -7,7 +7,7 @@
    source-text arms (the emission's spelling and guard, a token's absence from the served bytes) are dropped (P7). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { setupPage } from "../../../src/setup.mjs";
+import { pageOf } from "../../../src/setup-page/index.mjs";
 import { checkBundle, createSha256 } from "../../../src/record-grammar/index.mjs";
 import { INFORMATION_GRAMMAR } from "../../../src/capture/index.mjs";
 import { pageOver } from "./fixture.mjs";
@@ -35,7 +35,7 @@ async function intake({ acquire = null } = {}) {
     else if (op === "image") out = { result: {} };
     return { ok: true, status: 200, json: async () => out };
   };
-  const p = pageOver({ html: setupPage({ answered: true, result: { ok: true, group: "river-town" } }),
+  const p = pageOver({ html: pageOf({ answered: true, result: { ok: true, group: "river-town" } }),
                        session: { t: "sess-1", e: 0, w: "ada" }, fetch });
   await settle();
   const save = async ({ title = "A captured document", body = "what the member wrote", loc = "", auth = "" } = {}) => {
@@ -58,7 +58,7 @@ const verifiedFindings = async (md) => {
   return findings.filter((x) => x.check === "C-2.7");
 };
 
-test("R45 a bundle written from the intake form with a captured document states content_hash: sha256:<the capture's own digest>, and so clears C-2.7's verified-state content_hash requirement", async () => {
+test("R9 a bundle written from the intake form with a captured document states content_hash: sha256:<the capture's own digest>, and so clears C-2.7's verified-state content_hash requirement", async () => {
   const docSha = await shaHex(enc("the captured document bytes"));
   const doc = { file: "captures/doc.pdf", capture: { sha256: docSha, bytes: 27, encoding: "binary" } };
   const p = await intake({ acquire: () => ({ ok: true, document: doc }) });
@@ -76,7 +76,7 @@ test("R45 a bundle written from the intake form with a captured document states 
                             { content_hash: sha }, null), new RegExp(`\\ncontent_hash: sha256:${sha}\\n`));
 });
 
-test("R45 typed intake, with no document, writes no content_hash: none is invented, and the same bundle advanced to verified is refused by C-2.7 for the missing hash, by name", async () => {
+test("R9 typed intake, with no document, writes no content_hash: none is invented, and the same bundle advanced to verified is refused by C-2.7 for the missing hash, by name", async () => {
   const p = await intake();
   assert.equal(await p.save(), "");
   assert.deepEqual(p.acquired, []);
@@ -94,7 +94,7 @@ test("R45 typed intake, with no document, writes no content_hash: none is invent
                                    { counterparty: { state: "undetermined", basis: "b" } }), /content_hash/, type);
 });
 
-test("R46 the intake form states each capture refusal acquire makes in its own sentence and writes nothing; any other reason, the removed NO_AUTHORITY included, is stated by its code and never explained", async () => {
+test("R10 the intake form states each capture refusal acquire makes in its own sentence and writes nothing; any other reason, the removed NO_AUTHORITY included, is stated by its code and never explained", async () => {
   const REFUSALS = {
     BAD_LOCATOR: [{ reason: "BAD_LOCATOR" }, /cannot be fetched[^]*https address on a public site/],
     SOURCE_REFUSED: [{ reason: "SOURCE_REFUSED", status: 403 }, /answered with an error \(403\)/],

@@ -141,3 +141,30 @@ test("R15 (K1658): the overdue item states action-clocks' local day and the entr
   assert.equal(it.basis.bound.zone_undetermined, 5, "pending entries of actions with no zone held, left out: 2 + 3, stated, never judged on UTC");
   assert.equal(byId(w.read("alice"))["CONDITION::action-clock-overdue::ACT-1::1"].basis.bound.zone_undetermined, 5);
 });
+
+test("R15, R18 (N609; K1675): each item's days are read in its own zone as action-clocks carries it, else in actions' zone; the zone is stated", () => {
+  const tokyo = { action: "ACT-2", ord: 0, date: "2026-09-12", basis: "b", text: "t", on: "2026-08-31", set_by: "alice", project: "PRJ-1",
+    zone: "Asia/Tokyo" };
+  for (const instance of [LA, null]) {
+    const w = zoned(instance, { actionClocks: {
+      overdueClocks: () => page([{ action: "ACT-2", ord: 0, date: "2026-08-29", basis: "b", text: "t", status: "pending", past: true,
+        project: "PRJ-1", created_by: "alice", zone: "Asia/Tokyo", local_day: "2026-09-01" }]),
+      remindersDue: () => page([tokyo, { ...tokyo, action: "ACT-1", zone: undefined }]),
+      calendarFactsRead: () => ({ ok: true, paths: [], actions_limit: 500, truncated: false }) } });
+    const m = byId(w.read("alice"));
+    /* R18: the reminder's day 2026-08-31 begins at 2026-08-30T15:00Z in Tokyo; Tokyo's day at the read is 2026-09-01 */
+    const own = m["OBLIGATION::action-reminder::ACT-2::0::2026-08-31"];
+    assert.deepEqual(own.age, { state: "determined", since: "2026-08-30T15:00:00Z", ms: NOW - ms("2026-08-30T15:00:00Z"), days: 1 },
+      `${instance}: R18 reads the reminder's own zone`);
+    assert.equal(own.basis.zone, "Asia/Tokyo");
+    assert.equal(own.due, "2026-09-12", "the entry's date, a local day of that zone, carried as it is");
+    /* R15: the overdue entry, aged in its own zone whatever the instance's */
+    assert.equal(m["CONDITION::action-clock-overdue::ACT-2::0"].basis.zone, "Asia/Tokyo");
+    assert.equal(m["CONDITION::action-clock-overdue::ACT-2::0"].age.since, "2026-08-29T15:00:00Z");
+    /* an item carrying no zone falls back to actions' zone, and with none held its age is undetermined */
+    const fallback = m["OBLIGATION::action-reminder::ACT-1::0::2026-08-31"];
+    assert.equal(fallback.basis.zone, instance);
+    if (instance) assert.equal(fallback.age.since, "2026-08-31T07:00:00Z");
+    else assert.deepEqual([fallback.age.state, fallback.age.reason], ["undetermined", "zone_undetermined"]);
+  }
+});

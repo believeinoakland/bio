@@ -157,6 +157,11 @@ export const QUEUE_OBLIGATION_KINDS = {
      op=waitlook), a new date or the wait removed. Its producer is `notice-producers`' (its R6). */
   "inquiry-recheck-due":         "a date you set to look again at a question has come; look again (op=waitlook), set a "
                               + "new date or remove the wait — LIVE: notice-producers R6",
+  /* T34-53 (R1; tasks R14, DEC-135 (2)): a project owner asked for a check, by an expertise the member declared or by
+     name, on something they can see. A task in `tasks` (R8 reads it as any task), so it leaves by its own act and never
+     by a mute: taken and recorded (op=checktake, op=checkrecord), or left (op=taskresolve closes this member's own). */
+  "check-requested":             "a project owner asked for a check, by an expertise you declared or by name, on something "
+                              + "you can see; take it (op=checktake), or leave it (DEC-135) — LIVE: tasks R14",
 };
 
 export const QUEUE_FINDING_KINDS = {

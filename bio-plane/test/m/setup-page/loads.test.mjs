@@ -1,12 +1,12 @@
-/* R49 (DEC-122 (3)): every page this module serves names no resource on another origin and uses only typefaces on the
-   device or bundled with the plane. Read at the interface twice over: the bytes `setupPage` serves, in each of its group
-   line's states (R20), and the page's script run in the fixture's sandbox through every section it draws (claim,
+/* R12 (DEC-122 (3)): the page this module builds names no resource on another origin and uses only typefaces on the
+   device or bundled with the plane. Read at the interface twice over: the bytes `pageOf` serves, in each of its group
+   line's states (R1), and the page's script run in the fixture's sandbox through every section it draws (claim,
    sign-in, enrolment, the panel and profiles, the record browser, a record and its files, intake with a capture, the
-   inbox, members and keys), every URL it fetches and every piece of markup it draws read the same way. A link the reader
+   inbox, members and keys, and T34's sections: the join link, the claim's choices, the offices, who your group is), every URL it fetches and every piece of markup it draws read the same way. A link the reader
    follows (`<a href>`) is not a load. The reading runs over pages that break it, so it is seen to fail. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { setupPage, groupLine, SETUP_HTML } from "../../../src/setup.mjs";
+import { pageOf, groupLine, PAGE_HTML } from "../../../src/setup-page/index.mjs";
 import { pageOver } from "./fixture.mjs";
 
 const ORIGIN = "https://copy.example";
@@ -58,20 +58,20 @@ function outsideLoads(html) {
 
 const hostile = { ok: true, group: "river-town", display_name: '<img src="https://evil.example/x.png">',
                   domain: "evil.example", domain_verified_at: "2026-10-03T00:00:00Z" };
-const PAGES = [setupPage(undefined), setupPage({ answered: true, result: { ok: true, group: null } }),
-  setupPage({ answered: true, result: { ok: true, group: "river-town" } }), setupPage({ answered: true, result: hostile })];
+const PAGES = [pageOf(undefined), pageOf({ answered: true, result: { ok: true, group: null } }),
+  pageOf({ answered: true, result: { ok: true, group: "river-town" } }), pageOf({ answered: true, result: hostile })];
 
-test("R49 the bytes served at /, in every state of the group line, name no resource on another origin in any src, href, @import, url() or script, and use only typefaces on the device: no @font-face, every font stack ending in a generic family", () => {
+test("R12 the bytes served at /, in every state of the group line, name no resource on another origin in any src, href, @import, url() or script, and use only typefaces on the device: no @font-face, every font stack ending in a generic family", () => {
   for (const html of PAGES) assert.deepEqual(outsideLoads(html), []);
   /* not vacuous: the page does name resources and typefaces, and the reading sees them */
-  assert.match(SETUP_HTML, /href="\/sign"/);
-  assert.match(SETUP_HTML, /font-family:Georgia,serif/);
-  assert.match(SETUP_HTML, /--body:system-ui,[^;]*,sans-serif;/);
+  assert.match(PAGE_HTML, /href="\/sign"/);
+  assert.match(PAGE_HTML, /font-family:Georgia,serif/);
+  assert.match(PAGE_HTML, /--body:system-ui,[^;]*,sans-serif;/);
   assert.match(groupLine({ answered: true, result: hostile }), /&lt;img src=&quot;https:\/\/evil/, "a name is text, never markup");
 });
 
-test("R49 negative controls: the same reading refuses a remote stylesheet, @import, a remote url(), a remote script, an image, a scheme-relative source, a fetch to another origin, a web font and a stack with no generic family; a followed link to another origin is not a load", () => {
-  const inject = (where, what) => SETUP_HTML.replace(where, what + where);
+test("R12 negative controls: the same reading refuses a remote stylesheet, @import, a remote url(), a remote script, an image, a scheme-relative source, a fetch to another origin, a web font and a stack with no generic family; a followed link to another origin is not a load", () => {
+  const inject = (where, what) => PAGE_HTML.replace(where, what + where);
   const BROKEN = {
     stylesheet: inject("</head>", '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter">'),
     preconnect: inject("</head>", '<link rel="preconnect" href="https://fonts.gstatic.com">'),
@@ -80,9 +80,9 @@ test("R49 negative controls: the same reading refuses a remote stylesheet, @impo
     script: inject("</body>", '<script src="https://cdn.example/x.js"></script>'),
     image: inject("</main>", "<img src='//cdn.example/pixel.gif'>"),
     srcset: inject("</main>", '<img src="/a.png" srcset="/a.png 1x, https://cdn.example/a2.png 2x">'),
-    fetch: SETUP_HTML.replace("const $ = ", 'fetch("https://telemetry.example/hit");\nconst $ = '),
+    fetch: PAGE_HTML.replace("const $ = ", 'fetch("https://telemetry.example/hit");\nconst $ = '),
     fontface: inject("</style>", "@font-face{font-family:Inter;src:local(Inter)}"),
-    stack: SETUP_HTML.replace("font-family:Georgia,serif", "font-family:Inter"),
+    stack: PAGE_HTML.replace("font-family:Georgia,serif", "font-family:Inter"),
   };
   for (const [name, html] of Object.entries(BROKEN)) assert.notDeepEqual(outsideLoads(html), [], name);
   assert.deepEqual(outsideLoads(inject("</main>", '<a href="https://elsewhere.example/">a link</a>')), []);
@@ -118,13 +118,13 @@ function driven() {
     const op = new URL(url, ORIGIN).searchParams.get("op");
     return { ok: true, status: 200, json: async () => answers[op] ?? { result: { ok: true } } };
   };
-  return { ...pageOver({ html: setupPage({ answered: true, result: hostile }), session: { t: "sess-1", e: 0, w: "admin" }, fetch }), urls };
+  return { ...pageOver({ html: pageOf({ answered: true, result: hostile }), session: { t: "sess-1", e: 0, w: "admin" }, fetch }), urls };
 }
 
 const DRAWN = ["#browse-body", "#b-facts", "#b-md", "#b-files", "#b-history", "#b-ratify", "#inbox-body", "#m-list", "#k-list",
   "#m-invite", "#k-read", "#pf-active", "#pf-choices", "#n-risk-choices", "#en-who"];
 
-test("R49 driven through every section the page draws, signed out and signed in: every URL its script fetches is on the page's own origin, and no markup it draws names a resource on another origin", async () => {
+test("R12 driven through every section the page draws, signed out and signed in: every URL its script fetches is on the page's own origin, and no markup it draws names a resource on another origin", async () => {
   const p = driven();
   await settle();
   await p.ui.openBrowse(); await settle();
@@ -137,13 +137,13 @@ test("R49 driven through every section the page draws, signed out and signed in:
   p.el("#n-loc").value = "https://records.example.org/doc.pdf"; p.el("#n-auth").value = "A records office";
   await p.el("#n-save").fire(); await settle();
   /* signed out: the claim, and an invitation */
-  const out = pageOver({ html: SETUP_HTML, hash: "#boot=t", fetch: async (url) => { p.urls.push(String(url));
+  const out = pageOver({ html: PAGE_HTML, hash: "#boot=t", fetch: async (url) => { p.urls.push(String(url));
     return { ok: true, status: 200, json: async () => ({ claimed: false, bootstrapConfigured: true, result: { ok: true, cover: "c", role: "member" } }) }; } });
   await settle();
   out.el("#pw1").value = "twelve-chars-a"; out.el("#pw2").value = "twelve-chars-a";
   await out.el("#do-claim").fire(); await settle();
   out.el("#lpw").value = "twelve-chars-a"; await out.el("#do-login").fire(); await settle();
-  const inv = pageOver({ html: SETUP_HTML, hash: "#invite=t", fetch: async (url) => { p.urls.push(String(url));
+  const inv = pageOver({ html: PAGE_HTML, hash: "#invite=t", fetch: async (url) => { p.urls.push(String(url));
     return { ok: true, status: 200, json: async () => ({ result: { ok: true, cover: '<img src="https://evil.example/c.png">', role: "member" } }) }; } });
   await settle();
   /* the sections drew, and the page asked what each needs: the reading below is over real output */
@@ -155,4 +155,44 @@ test("R49 driven through every section the page draws, signed out and signed in:
   assert.match(p.el("#b-files").innerHTML, /href="\/api\/\?op=capture/);
   for (const u of p.urls) assert.ok(ownOrigin(u), u);
   for (const page of [p, out, inv]) for (const s of DRAWN) assert.deepEqual(outsideLoads(page.el(s).innerHTML), [], s);
+});
+
+test("R12 T34's sections, driven: the join link, the claim's choices, the offices the group adds and the assistant's draft draw nothing that loads from another origin, whatever the plane answers", async () => {
+  const evil = '<img src="https://evil.example/z.png">';
+  const urls = [];
+  const answers = {
+    bootstrap: { claimed: false, bootstrapConfigured: true }, claim: { result: { ok: true } }, login: { result: { ok: true, token: "t" } },
+    whoami: { result: { capabilities: ["contribute"], administer: true } },
+    profiles: { result: { ok: true, profiles: [], conflicts: [], choices: [] } },
+    hostingaccess: { result: { ok: true, current: { holders: evil, note: evil, recorded_by: evil, at: "2026-10-06T00:00:00Z" } } },
+    courtnotice: { result: { choice: null } }, assistantstate: { result: { ok: true, on: true, set_by: evil, set_at: "2026-10-06T00:00:00Z" } },
+    groupkeystate: { result: { held: true, on: true } }, placewantedstate: { result: { name: evil } },
+    entitycreate: { result: { ok: true, entity_id: "ENT-2026-0001", label: evil } },
+    groupdescription: { result: { description: null, history: [] } },
+    groupdescriptiondraft: { result: { focus: { text: evil, label: { kind: "machine", asked_by: evil } }, purpose: { text: evil, label: { kind: "machine", asked_by: evil } } } },
+    memberlanguage: { result: { language: evil } },
+    joinlinkinvite: { result: { ok: true, invite: "i" } }, invitelook: { result: { ok: true, cover: evil, role: evil } },
+  };
+  const fetch = async (url) => { urls.push(String(url));
+    const op = new URL(url, ORIGIN).searchParams.get("op");
+    return { ok: true, status: 200, json: async () => answers[op] ?? { result: { ok: true } } }; };
+  const p = pageOver({ html: pageOf({ answered: true, result: hostile }), hash: "#boot=t", fetch });
+  await settle();
+  p.el("#pw1").value = "twelve-chars-a"; p.el("#pw2").value = "twelve-chars-a";
+  await p.el("#do-claim").fire(); await settle();
+  await p.el("#claim-on").fire(); await settle();
+  p.el("#of-label").value = "Clerk"; p.el("#of-note").value = "n"; await p.el("#of-set").fire(); await settle();
+  await p.el("#go-members").fire(); await settle();
+  await p.el("#gd-ask").fire(); await settle();
+  const j = pageOver({ html: PAGE_HTML, hash: "#join=l", fetch });
+  await settle();
+  j.el("#jn-cover").value = "Sam"; await j.el("#jn-go").fire(); await settle();
+  const ops = new Set(urls.map((u) => new URL(u, ORIGIN).searchParams.get("op")));
+  for (const op of ["hostingaccess", "courtnotice", "groupkeystate", "entitycreate", "groupdescriptiondraft", "joinlinkinvite", "memberlanguage"]) assert.ok(ops.has(op), op);
+  for (const u of urls) assert.ok(ownOrigin(u), u);
+  assert.match(p.el("#of-list").innerHTML, /&lt;img/);
+  for (const s of ["#of-list", "#as-state", "#en-who", "#pf-active"]) assert.deepEqual(outsideLoads(p.el(s).innerHTML), [], s);
+  assert.deepEqual(outsideLoads(j.el("#en-who").innerHTML), []);
+  /* what the script writes as text stays text: the rest of T34's lines are set through textContent */
+  for (const s of ["#cl-ha-now", "#mk-ha-now", "#pw-now", "#of-why", "#gd-label", "#ln-now"]) assert.equal(p.el(s).innerHTML, "", s);
 });

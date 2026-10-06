@@ -1,11 +1,12 @@
-/* wizard-scripts' refusal rows (requirements: `build/requirements/wizard-scripts.md`, R20; K1364, K1393). DEC-49: every
+/* wizard-scripts' refusal rows (requirements: `build/requirements/wizard-scripts.md`, R20; K1364, K1393; T34's rows,
+ * C-131.33–.41, awaiting stamp until T35's promotion job, plan Rules (5) 4). DEC-49: every
  * refusal this module answers carries its code, its row and the member's translation. A new family, C-131 (K1393): every
  * row is new, and each is stamped by the next promotion job. `NOT_AN_ADMIN` is membership's (its R84, C-96.1), answered
  * through `notAnAdmin` and never held here. `NOT_A_DRAFT`, `NOT_AN_APPROVER` and `APPROVER_IS_AUTHOR` are also
  * filing-templates' codes (its C-125.9, .24, .25): this module answers its own rows, worded for a wizard script, and the
  * composed catalogue keeps the first source's (control-plane R22). */
 
-const at = (fn, region) => `src/wizard-scripts/index.mjs ${fn} > ${region}`;
+const at = (fn, region, file = "index.mjs") => `src/wizard-scripts/${file} ${fn} > ${region}`;
 
 export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DRAFT_WIZARD: {
@@ -113,7 +114,7 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   WIZARD_DRAFT_REFUSED: {
     check: "C-131.24", where: at("checkScript", "is-wizard-check"),
     translation: "A step's draft is the script's own words, a filing template offered here, or a labelled machine draft "
-      + "the instance registers, and this one is none of them.",
+      + "your group's Civicsmith registers, and this one is none of them.",
   },
   WIZARD_STEP_CONCLUDES: {
     check: "C-131.25", where: at("checkScript", "is-wizard-check"),
@@ -149,6 +150,49 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
   WIZARD_NO_SUCH_GRANT: {
     check: "C-131.32", where: at("wizardEditorRevoke", "is-wizard-editor-grant"),
     translation: "There is no editor grant by that id.",
+  },
+  /* T34 (T34-52; DEC-139 (4)): a side trip that would not return. */
+  WIZARD_VIA_REFUSED: {
+    check: "C-131.33", where: at("checkScript", "is-wizard-check"),
+    translation: "A step's side trip goes to another wizard offered here that never leads back to this one, so the member "
+      + "always returns to the step they left. This one does not.",
+  },
+  /* T34 (T34-90, T34-91; DEC-152, DEC-153; K1837, K1841): writing help in a member's own words. BOB's drafts. */
+  WRITING_HELP_REFUSED: {
+    check: "C-131.34", where: at("writingHelpAt", "is-writing-help", "writing-help.mjs"),
+    translation: "The assistant does not help word this: it is an act the assistant may never take, or one that cannot be "
+      + "undone. The words here are yours alone.",
+  },
+  WRITING_HELP_REASON_FIELD: {
+    check: "C-131.35", where: at("writingHelpAt", "is-writing-help", "writing-help.mjs"),
+    translation: "The assistant never words your reason for an act: your reasons are yours alone. Nothing was changed.",
+  },
+  WRITING_HELP_DRAFT_HELD: {
+    check: "C-131.36", where: at("writingHelpAt", "is-writing-help", "writing-help.mjs"),
+    translation: "This field already holds a draft. Keep it, edit it or clear it before asking the assistant.",
+  },
+  WRITING_HELP_NOTHING_TOLD: {
+    check: "C-131.37", where: at("writingHelp", "is-writing-help-request"),
+    translation: "Tell the assistant what you want to say first: it works only from what you tell it and what your group "
+      + "holds.",
+  },
+  WRITING_HELP_FACT_ADDED: {
+    check: "C-131.38", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
+    translation: "A sentence was left out because it said something you did not tell the assistant and your group's record "
+      + "does not hold.",
+  },
+  WRITING_HELP_SUGGESTIONS_OFF: {
+    check: "C-131.39", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
+    translation: "Your suggestions are switched off, so the assistant works only from what you typed and reads nothing your "
+      + "group holds.",
+  },
+  WRITING_HELP_FIRSTHAND_READ: {
+    check: "C-131.40", where: at("checkDraft", "is-writing-help-check", "writing-help.mjs"),
+    translation: "For what you saw yourself, the assistant only helps word what you told it, and reads nothing else.",
+  },
+  ASSISTANT_DRAFT_UNAVAILABLE: {
+    check: "C-131.41", where: at("writingHelp", "is-writing-help-request"),
+    translation: "The assistant cannot draft this yet. Write it in your own words; nothing was changed.",
   },
 });
 
