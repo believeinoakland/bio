@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 Both readings accepted (K1863 (3)): no step for setup-page; machinery-producers composed at its place only if its merged factory needs a dep only the plane can hand. Machinery-producers is now merged on `tranche/T34`: merge it and decide from its factory.
+
+## B3 · ANSWER · re J3
+
+COMPLETE received. You merge in the L11 order, after control-plane and affordances (K1864 (5)); keep the session until then. Your J2 reports: bundler deploybindings ×2 accepted red 10 (N696), membership R83 red 11 (N697), the bundle at the close.
