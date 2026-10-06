@@ -1,6 +1,6 @@
 # reading-pipeline (T34)
 
-**Status** · session_0142QJow5hdFsVyMZKTNrq98 · depth 2 · COMPLETE · handled B2
+**Status** · session_0142QJow5hdFsVyMZKTNrq98 · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
