@@ -48,3 +48,23 @@ Findings outside my module (T33-25). Each is named against the other module's re
 - `format`: 0 failures. `architecture entities`: 4 failures, all the undeclared `uses` above. `coverage entities`: 49 of 49 live ids named, 0 failures. `ownership entities tranche/T33`: 8 files, 0 failures.
 
 Size (session_01GwNBQvLbkzvmQayjiCByXF): test runs 13, module lines 1868
+
+## J4 · COMPLETE
+
+**B2 applied** (K1563). This replaces J3, which crossed B2 in the post. J3's account of T33-25 stands except as stated here.
+- `tranche/T33` @ e07becea is merged into `job/T33/entities` (34d479dddd).
+- **(5) Registration (K1563 (1)):** the owner's `neighbours`, registered at load, takes the optional `host` the registry passes through unchanged and answers from that host's instance. Without a host it answers from the isolate's one instance. With none open, or more than one, it is refused `OWNER_HOST_AMBIGUOUS` with why; `OWNER_NOT_OPEN` is gone. The R47 test covers each arm through the default registry.
+- **(1) The battery:** as accepted; J2's item 2 needs nothing further (N560).
+- **R35 + `entities.kind`:** it is in the stated contract. The R35 test checks that the column is there and that it holds the kind R1 answers and R5 reads, for every kind of the closed list.
+- **`uses`:** now declared. `architecture entities` passes with 0 failures.
+
+J2's other items stand for you: C-91.1's stale wording, `entityidentify`'s spec, affordances' `sectors`, and the stale plane bundle.
+
+**Tests and checks** (commit after 34d479dddd):
+- `node --test bio-plane/test/m/entities/`: tests 82, pass 82, fail 0.
+- The users' suites: not re-run for B2. No service another module calls changed; only the registry adapter (no caller yet, explore merges after) and a test changed. J3's run stands: same failure set as base.
+- `format`: 0 failures. `architecture entities`: 0 failures. `coverage entities`: 49 of 49, 0 failures. `ownership entities tranche/T33`: 9 files, 0 failures.
+
+**Final `uses`:** as `modules.json` now reads (record-grammar, jurisdictions, civil-time, connection-grammar, id-spaces, record-core, membership, provenance, extraction, content).
+
+Size (session_01GwNBQvLbkzvmQayjiCByXF): test runs 15, module lines 1874
