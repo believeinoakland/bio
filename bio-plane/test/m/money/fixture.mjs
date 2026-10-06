@@ -2,7 +2,8 @@
    `transactionSync` nesting as savepoints) with the real modules money uses — record-core, membership, provenance,
    entities (the registry and its `resolutions` table) and the fictional test profile through jurisdictions. `events`
    and `lines` are not merged yet (T33-26, T33-27): they are stand-ins written to their approved requirements (events
-   R6, R17, R26, R27; lines' `has`), and so is entities' T33 `entityByIdentifier` (its R44), until those jobs merge.
+   R6, R17, R26, R27; lines' `has`), and so are entities' T33 `entityByIdentifier` (its R44) and `calculations`'
+   `bindingOf` (K1563 (6); calculations merges after money), until those jobs merge.
    Every test drives `money` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -71,7 +72,7 @@ export function eventsStandIn() {
   return ev;
 }
 
-export function world({ events = true, lines = true, now = null } = {}) {
+export function world({ events = true, lines = true, calculations = true, now = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const record = recordOf(host);
@@ -93,12 +94,15 @@ export function world({ events = true, lines = true, now = null } = {}) {
   const ev = events ? eventsStandIn() : null;
   const heldLines = new Set();
   const ln = lines ? { has: (id) => heldLines.has(id) } : null;
+  /* calculations' bindings, K1563 (6): bindingOf(key) → {adopted, table, roles, capture_sha} | null. */
+  const bindings = new Map();
+  const calc = calculations ? { bindingOf: (key) => bindings.get(key) ?? null } : null;
   let clock = 0;
-  const m = new Money(st, { record, membership, entities, provenance: prov, events: ev, lines: ln,
+  const m = new Money(st, { record, membership, entities, provenance: prov, events: ev, lines: ln, calculations: calc,
     now: now || (() => new Date(Date.UTC(2026, 9, 6, 0, 0, clock++)).toISOString().replace(/\.\d{3}Z$/, "Z")) });
   m.migrate();
   const w = {
-    st, host, record, membership, prov, e, entities, events: ev, lines: heldLines, m, identifiers,
+    st, host, record, membership, prov, e, entities, events: ev, lines: heldLines, m, identifiers, bindings,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)], one: (q, ...a) => [...st.sql.exec(q, ...a)][0] || null,
     bundle(id, { type = "information", project = null } = {}) {
       st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)

@@ -7,8 +7,9 @@
    read contract (R19). One home per fact is checked at the store's gate (R20); a fact follows its source's sight
    (R21). No field marks a fact as the group's own (R6, K1463).
 
-   Reached through `moneyOf(ctx, opts)` (K61). `events` and `lines` are reached through the ports `opts.events` and
-   `opts.lines` (their `has`, `eventsFor`, `readEvent`): absent, money fails closed where it needs them. */
+   Reached through `moneyOf(ctx, opts)` (K61). `events`, `lines` and `calculations` are reached through the ports
+   `opts.events`, `opts.lines` and `opts.calculations` (their `has`, `eventsFor`, `readEvent`, `bindingOf`; K1563 (1),
+   (6)): absent, money fails closed where it needs them. */
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
@@ -40,10 +41,10 @@ const SOURCE_DEPTH_MAX = 32;
 /* R1, R6: the fields a write may carry, and a party's. Every other field is refused (R6: no field marks a fact as
    the group's own). `fact_id`, `grade` and `at` are the module's to assign, never a caller's. */
 const FIELDS = new Set(["amount", "as_read", "currency", "sign", "precision", "kind", "phase", "stage", "adjusts",
-  "basis", "period", "from", "to", "codes", "balance_class", "buys", "concerns", "source", "method", "binding", "by"]);
+  "basis", "period", "from", "to", "codes", "balance_class", "buys", "concerns", "source", "method", "by"]);
 const PARTY_FIELDS = new Set(["entity", "fund", "account", "as_written", "identifier"]);
 const PERIOD_FIELDS = new Set(["from", "to", "precision", "zone", "fiscal", "body"]);
-const SOURCE_FIELDS = new Set(["capture_sha", "extent", "content_id", "fact"]);
+const SOURCE_FIELDS = new Set(["capture_sha", "extent", "content_id", "fact", "table", "row", "binding"]);
 const BUYS_FIELDS = new Set(["quantity", "unit", "what"]);
 
 const SHA_RE = /^[0-9a-f]{64}$/;
@@ -72,13 +73,18 @@ function exactDecimal(s) {
 const negate = (v) => (/^0(?:\.0+)?$/.test(v) ? v : `-${v}`);
 
 const instances = new WeakMap();
+/* The storages this isolate made a Money for, so the owner's read registered at load can find the one instance when
+   the registry passes no host (K1563 (1)). */
+const live = new Set();
 
 /** K61: the one Money for this object's storage. `opts` is read on the first call only: `record`, `membership`,
- *  `entities`, `provenance`, `events` and `lines` (ports; absent, money fails closed where it needs them), `now`. */
+ *  `entities`, `provenance`, `events`, `lines` and `calculations` (ports; absent, money fails closed where it needs
+ *  them), `now`. */
 export function moneyOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let m = instances.get(storage);
   if (!m) {
+    live.add(storage);
     const record = opts.record ?? recordOf(ctx);
     const membership = opts.membership ?? membershipOf(ctx, { record });
     m = new Money(storage, { ...opts, record, membership,
@@ -90,11 +96,11 @@ export function moneyOf(ctx, opts = {}) {
 }
 
 export class Money {
-  #sql; #record; #membership; #entities; #provenance; #events; #lines; #now;
+  #sql; #record; #membership; #entities; #provenance; #events; #lines; #calculations; #now;
   #listeners = []; #declared = false; #registered = false; #stepped = false;
 
   constructor(storage, { record, membership = null, entities = null, provenance = null, events = null, lines = null,
-                         now = null } = {}) {
+                         calculations = null, now = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
@@ -102,6 +108,7 @@ export class Money {
     this.#provenance = provenance;
     this.#events = events;
     this.#lines = lines;
+    this.#calculations = calculations;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   }
 
@@ -378,27 +385,26 @@ export class Money {
     if (isMember(by) === false && !MACHINE_METHODS.includes(method) && by !== null)
       return refusal("NO_METHOD", `a machine's reading is one of ${list(MACHINE_METHODS)}`);
 
-    /* R4: the machine writes only from an adopted table binding, every party by a scheme identifier (K1443). */
-    let binding = null;
+    /* R4: the machine writes only from a canonical table row read through a binding a member adopted, each party a
+       registered entity resolved by its identifier (K1443 as BOB extended it; K1563 (6)); an identifier it states must
+       be one that entity holds. */
     if (isMachine(by)) {
-      const b = input.binding;
       const lacks = [];
-      if (!isObj(b) || !filled(b.id) || !isMember(b.adopted_by)) lacks.push("a table binding a member adopted ({id, adopted_by})");
+      if (!src.table) lacks.push("a canonical table row read through a binding a member adopted (source {table, row, binding})");
       for (const end of ["from", "to"]) {
         const p = parties[end];
-        const node = p && (p.entity || p.fund);
-        if (!node) { lacks.push(`the party ${end} identified`); continue; }
+        if (!p || !filled(p.entity)) { lacks.push(`the party ${end} named by its registered entity`); continue; }
+        if (p.identifier === undefined) continue;
         const idf = p.identifier;
         let held = null;
         try { held = isObj(idf) && typeof ent.entityByIdentifier === "function" ? ent.entityByIdentifier({ scheme: idf.scheme, id: idf.id }) : null; }
         catch { held = null; }
         const heldId = held && typeof held === "object" ? held.entity_id ?? held.entityId ?? null : held;
-        if (heldId !== node) lacks.push(`the party ${end} identified by a scheme identifier its entity holds`);
+        if (heldId !== p.entity) lacks.push(`the party ${end}'s identifier held by its entity`);
       }
       if (lacks.length)
         return refusal("MACHINE_NEEDS_IDENTIFIERS", `a machine records a money fact only with ${list(lacks)}; anything else `
           + "is proposed to a member, never written", { lacks });
-      binding = { id: b.id, adopted_by: b.adopted_by };
     }
     let buys = null;
     if (input.buys !== undefined && input.buys !== null) {
@@ -408,7 +414,7 @@ export class Money {
       buys = { ...input.buys };
     }
     return { ok: true, by, value, low, high, input, stage, period, codes, parties, balanceClass, refs, src, adjusts,
-             method, binding, buys };
+             method, buys };
   }
 
   /* R2: exactly one source, never a calculation; held and visible to the writer. Answers the source with its grade
@@ -425,9 +431,10 @@ export class Money {
     if (!isObj(x)) return refusal("NO_SOURCE", "a source is {capture_sha, extent}, {content_id} or {fact}");
     const k = Object.keys(x).find((f) => !SOURCE_FIELDS.has(f));
     if (k) return refusal("UNKNOWN_FIELD", `a source has no field ${k.slice(0, 40)}`, { field: k });
-    const forms = [x.capture_sha !== undefined || x.extent !== undefined, x.content_id !== undefined, x.fact !== undefined]
+    const tableForm = x.table !== undefined || x.row !== undefined || x.binding !== undefined;
+    const forms = [x.capture_sha !== undefined || x.extent !== undefined, x.content_id !== undefined, x.fact !== undefined, tableForm]
       .filter(Boolean).length;
-    if (forms === 0) return refusal("NO_SOURCE", "a source is {capture_sha, extent}, {content_id} or {fact}");
+    if (forms === 0) return refusal("NO_SOURCE", "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}");
     if (forms > 1) return refusal("TWO_SOURCES", "a source is one of a content extent or a money fact, never both");
     const notHeld = (what) => refusal("SOURCE_NOT_HELD", `${what} is not held here, or not visible to the writer`);
     if (x.fact !== undefined) {
@@ -436,22 +443,34 @@ export class Money {
       return { ok: true, fact: row.fact_id, grade: row.grade_reading, grade_basis: `the source fact ${row.fact_id}'s reading grade`,
                sight: row.sight_bundle };
     }
-    let capture = x.capture_sha, extent = x.extent ?? { kind: "document" }, contentId = null;
-    if (x.content_id !== undefined) {
+    let capture = x.capture_sha, extent = x.extent ?? { kind: "document" }, contentId = null, table = null;
+    if (tableForm) {
+      /* A canonical table's row, a derived view of captured bytes, read through `calculations`' binding (K1563 (6)). */
+      if (!filled(x.table) || x.row === undefined || x.row === null || !filled(x.binding))
+        return refusal("NO_SOURCE", "a table row source names its table, its row and the binding it was read through");
+      let b = null;
+      try { b = this.#calculations && typeof this.#calculations.bindingOf === "function" ? this.#calculations.bindingOf(x.binding) : null; }
+      catch { b = null; }
+      if (!b || !b.adopted || b.table !== x.table || !filled(b.capture_sha))
+        return notHeld(`a binding ${x.binding.slice(0, 60)} a member adopted for the table ${x.table.slice(0, 60)}`
+          + `${this.#calculations ? "" : " (calculations is not wired here)"}`);
+      capture = b.capture_sha; extent = null;
+      table = { table: x.table, row: typeof x.row === "string" ? x.row : JSON.stringify(x.row), binding: x.binding };
+    } else if (x.content_id !== undefined) {
       const c = typeof x.content_id === "string" ? this.#one(`SELECT capture_sha, extent FROM content WHERE content_id=?`, x.content_id) : null;
       if (!c) return notHeld(`the content ${String(x.content_id).slice(0, 64)}`);
       capture = c.capture_sha; contentId = x.content_id;
       try { extent = JSON.parse(c.extent); } catch { extent = { kind: "document" }; }
     }
     if (typeof capture !== "string" || !SHA_RE.test(capture)) return notHeld("the capture named");
-    const bad = checkContentExtent(extent, {});
+    const bad = extent === null ? null : checkContentExtent(extent, {});
     /* Only the grammar is asked here: a bound the capture's reading does not hold is not a refusal (content R8). */
     if (bad && bad.ok === false && ["CONTENT_EXTENT_UNREADABLE", "CONTENT_EXTENT_NO_PRODUCER"].includes(bad.code)) return refusal("SOURCE_EXTENT_UNREADABLE", `the source's extent: ${bad.detail}`, { extent_code: bad.code });
     const reg = this.#one(`SELECT bundle_id FROM register WHERE capture_sha=?`, capture);
     if (!reg || !this.#visibleBundle(reg.bundle_id, who)) return notHeld(`the capture ${capture}`);
     let g = null;
     try { g = this.#prov() && typeof this.#prov().captureGrade === "function" ? this.#prov().captureGrade(capture) : null; } catch { g = null; }
-    return { ok: true, capture, extent: JSON.parse(canonicalExtent(extent)), contentId, sight: reg.bundle_id,
+    return { ok: true, capture, extent: extent === null ? null : JSON.parse(canonicalExtent(extent)), contentId, table, sight: reg.bundle_id,
              grade: g && typeof g.grade === "string" ? g.grade : null,
              grade_basis: g ? `${g.route ?? "unrecorded"} capture${g.determined === false ? ", not measured" : ""}` : "undetermined" };
   }
@@ -477,9 +496,10 @@ export class Money {
       to_entity: party(parties.to, "entity"), to_fund: party(parties.to, "fund"), to_account: party(parties.to, "account"),
       to_as_written: party(parties.to, "as_written"), to_identifier: party(parties.to, "identifier"),
       balance_class: v.balanceClass, buys: v.buys ? JSON.stringify(v.buys) : null,
-      source_capture: src.capture ?? null, source_extent: src.extent ? JSON.stringify(src.extent) : null,
-      source_content_id: src.contentId ?? null, source_fact: src.fact ?? null,
-      method: v.method, binding: v.binding ? JSON.stringify(v.binding) : null,
+      source_capture_sha: src.capture ?? null, source_extent: src.extent ? JSON.stringify(src.extent) : null,
+      source_content_id: src.contentId ?? null, source_table: src.table ? src.table.table : null,
+      source_row: src.table ? src.table.row : null, source_binding: src.table ? src.table.binding : null,
+      source_fact: src.fact ?? null, method: v.method,
       grade_reading: src.grade ?? null, grade_basis: src.grade_basis ?? null,
       by, at, sight_bundle: src.sight ?? null, withdrawn_at: null, projected_key: projectedKey,
     };
@@ -490,10 +510,10 @@ export class Money {
     for (const c of v.codes)
       this.#sql.exec(`INSERT OR IGNORE INTO money_codes (fact_id, scheme, code, sight_bundle) VALUES (?,?,?,?)`, id, c.scheme, String(c.code), row.sight_bundle);
     for (const r of v.refs) {
-      const crow = { fact_id: id, ref_id: r.id, ref_kind: r.kind, sight_bundle: row.sight_bundle };
+      const crow = { fact_id: id, concerns: r.id, ref_kind: r.kind, sight_bundle: row.sight_bundle };
       const g = this.#record.storeGate("money", "money_concerns", crow, "insert");
       if (g) return g;
-      this.#sql.exec(`INSERT OR IGNORE INTO money_concerns (fact_id, ref_id, ref_kind, sight_bundle) VALUES (?,?,?,?)`, id, r.id, r.kind, row.sight_bundle);
+      this.#sql.exec(`INSERT OR IGNORE INTO money_concerns (fact_id, concerns, ref_kind, sight_bundle) VALUES (?,?,?,?)`, id, r.id, r.kind, row.sight_bundle);
     }
     const told = this.#tell([{ factId: id, change: "added" }, ...(v.adjusts ? [{ factId: v.adjusts, change: "adjusted" }] : [])]);
     if (told) return told;
@@ -578,7 +598,7 @@ export class Money {
 
   #view_(row) {
     const codes = this.#rows(`SELECT scheme, code FROM money_codes WHERE fact_id=? ORDER BY scheme, code`, row.fact_id);
-    const concerns = this.#rows(`SELECT ref_id FROM money_concerns WHERE fact_id=? ORDER BY ref_id`, row.fact_id).map((r) => r.ref_id);
+    const concerns = this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=? ORDER BY concerns`, row.fact_id).map((r) => r.concerns);
     const w = row.withdrawn_at ? this.#one(`SELECT reason, by, at FROM money_withdrawals WHERE fact_id=?`, row.fact_id) : null;
     const party = (p) => {
       const out = {};
@@ -588,8 +608,7 @@ export class Money {
     };
     const unsigned = (d) => (d && d.startsWith("-") ? d.slice(1) : d);
     const capture = this.#rootCapture(row);
-    const source = row.source_fact ? { fact: row.source_fact }
-      : { capture_sha: row.source_capture, extent: JSON.parse(row.source_extent), ...(row.source_content_id ? { content_id: row.source_content_id } : {}) };
+    const source = sourceOf(row);
     return {
       fact_id: row.fact_id,
       amount: row.precision === "range" ? { low: unsigned(row.sign === "-" ? row.amount_high : row.amount_low), high: unsigned(row.sign === "-" ? row.amount_low : row.amount_high) } : unsigned(row.amount),
@@ -600,8 +619,9 @@ export class Money {
       from: party("from"), to: party("to"), codes, ...(row.balance_class ? { balance_class: row.balance_class } : {}),
       ...(row.buys ? { buys: JSON.parse(row.buys) } : {}), concerns, source,
       citation: row.source_fact ? `money fact ${row.source_fact}`
-        : `${describeExtent(JSON.parse(row.source_extent))} of capture ${row.source_capture}`,
-      method: row.method, ...(row.binding ? { binding: JSON.parse(row.binding) } : {}),
+        : row.source_table ? `row ${row.source_row} of the table ${row.source_table}, read from capture ${row.source_capture_sha} through the binding ${row.source_binding}`
+        : `${describeExtent(JSON.parse(row.source_extent))} of capture ${row.source_capture_sha}`,
+      method: row.method,
       grade: { reading: row.grade_reading, reading_basis: row.grade_basis,
                parties: { from: this.#partyGrade(capture, row.from_entity ?? row.from_fund),
                           to: this.#partyGrade(capture, row.to_entity ?? row.to_fund) } },
@@ -612,8 +632,8 @@ export class Money {
   #rootCapture(row) {
     let r = row;
     for (let i = 0; r && i < SOURCE_DEPTH_MAX; i++) {
-      if (r.source_capture) return r.source_capture;
-      r = this.#one(`SELECT source_capture, source_fact FROM money_facts WHERE fact_id=?`, r.source_fact);
+      if (r.source_capture_sha) return r.source_capture_sha;
+      r = this.#one(`SELECT source_capture_sha, source_fact FROM money_facts WHERE fact_id=?`, r.source_fact);
     }
     return null;
   }
@@ -644,7 +664,7 @@ export class Money {
     const g = this.#gate("f.sight_bundle", viewer ?? "");
     const rows = this.#rows(`SELECT f.* FROM money_facts f
        WHERE f.withdrawn_at IS NULL AND (f.from_entity=? OR f.from_fund=? OR f.to_entity=? OR f.to_fund=?
-             OR f.fact_id IN (SELECT fact_id FROM money_concerns WHERE ref_id=?))
+             OR f.fact_id IN (SELECT fact_id FROM money_concerns WHERE concerns=?))
          ${ks.length ? `AND f.kind IN (${ks.map(() => "?").join(",")})` : ""}
          ${ps.length ? `AND f.phase IN (${ps.map(() => "?").join(",")})` : ""}
          AND (${g.sql})
@@ -819,7 +839,7 @@ export class Money {
     /* As of `at`: a fact recorded by then and not withdrawn by then. */
     const live = (r) => !!r && (!asOf || r.at <= asOf) && (!r.withdrawn_at || (!!asOf && r.withdrawn_at > asOf));
     const concerning = (refId, stage) => this.#rows(`SELECT f.* FROM money_facts f JOIN money_concerns c ON c.fact_id=f.fact_id
-        WHERE c.ref_id=? AND f.phase='actual' AND f.stage=? ORDER BY f.period_start, f.fact_id`, refId, stage)
+        WHERE c.concerns=? AND f.phase='actual' AND f.stage=? ORDER BY f.period_start, f.fact_id`, refId, stage)
       .filter((r) => live(r) && this.#visibleBundle(r.sight_bundle, v));
     let committed;
     if (!this.#events) committed = { undetermined: true, why: "events is not wired here, so the award and its change orders are not read" };
@@ -884,7 +904,7 @@ export class Money {
     if (!filled(factId)) return refusal("NO_FACT", "a chain of authority is read for one money fact (MNY-...)");
     const row = this.#factRow(factId, viewer ?? "");
     if (!row) return { ok: true, found: false, fact_id: factId };
-    const events = this.#rows(`SELECT ref_id FROM money_concerns WHERE fact_id=? AND ref_kind='event' ORDER BY ref_id`, row.fact_id).map((r) => r.ref_id);
+    const events = this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=? AND ref_kind='event' ORDER BY concerns`, row.fact_id).map((r) => r.concerns);
     if (!events.length) return { ok: true, found: true, fact_id: row.fact_id, chains: [], says: "the fact concerns no event, so no chain of authority is read" };
     if (!this.#events) return { ok: true, found: true, fact_id: row.fact_id, chains: [], undetermined: true, why: "events is not wired here" };
     const chains = events.map((e) => this.#walk(e, viewer ?? ""));
@@ -951,7 +971,7 @@ export class Money {
       const ends = [this.#partyGrade(capture, r.from_entity ?? r.from_fund), this.#partyGrade(capture, r.to_entity ?? r.to_fund)];
       items.push({
         id: r.fact_id, from: r.from_entity ?? r.from_fund, to: r.to_entity ?? r.to_fund, kind: CONNECTION_KIND, owner: "money",
-        valid, evidence: [r.source_fact ? { source: r.source_fact } : { source: r.source_capture, extent: JSON.parse(r.source_extent) }],
+        valid, evidence: [r.source_fact ? { source: r.source_fact } : { source: r.source_capture_sha, ...(r.source_table ? { table: r.source_table, row: r.source_row } : { extent: JSON.parse(r.source_extent) }) }],
         grade: { assertion: r.grade_reading ?? LOWEST_GRADE, ends: ends.map((x) => x ?? LOWEST_GRADE) },
         derived: null,
         money: { kind: r.kind, phase: r.phase, ...(r.stage ? { stage: r.stage } : {}), fund: r.from_fund ?? r.to_fund ?? null,
@@ -1013,6 +1033,13 @@ function noSuchEntityAt(_ent, id, end) {
   return noSuchEntity(typeof id === "string" ? id : null, { end });
 }
 
+/* A fact's source as read back (R8): an extent of a capture, a table row read through a binding, or a fact. */
+function sourceOf(row) {
+  if (row.source_fact) return { fact: row.source_fact };
+  if (row.source_table) return { table: row.source_table, row: row.source_row, binding: row.source_binding, capture_sha: row.source_capture_sha };
+  return { capture_sha: row.source_capture_sha, extent: JSON.parse(row.source_extent), ...(row.source_content_id ? { content_id: row.source_content_id } : {}) };
+}
+
 /* A fact's figure for calc-grammar (R14): signed, with its precision and currency. */
 function figureOf(r) {
   if (r.precision === "range")
@@ -1040,9 +1067,11 @@ function factsOf(c) {
 
 const HAS_ID_FIELDS = ["adjusts", "from_entity", "from_fund", "to_entity", "to_fund", "source_fact", "by"];
 function factGate(row) {
-  const sources = [row.source_capture, row.source_fact].filter((x) => x !== null && x !== undefined);
-  if (sources.length !== 1) return { code: "ONE_SOURCE", detail: "a money fact rests on exactly one source" };
-  if ([row.source_capture, row.source_fact, row.source_content_id].some((x) => typeof x === "string" && x.startsWith("CALC-")))
+  const has = (x) => x !== null && x !== undefined;
+  const sources = [has(row.source_extent), has(row.source_table), has(row.source_fact)].filter(Boolean).length;
+  const capture = has(row.source_capture_sha);
+  if (sources !== 1 || capture === has(row.source_fact)) return { code: "ONE_SOURCE", detail: "a money fact rests on exactly one source" };
+  if ([row.source_capture_sha, row.source_fact, row.source_content_id].some((x) => typeof x === "string" && x.startsWith("CALC-")))
     return { code: "SOURCE_IS_CALCULATION", detail: "a calculation is never a money fact's source" };
   for (const [k, v] of Object.entries(row)) {
     if (typeof v === "string" && isHypothesisId(v)) return { code: "HYPOTHESIS_ID", detail: `a hypothesis is never named in a money fact (${k})` };
@@ -1053,8 +1082,8 @@ function factGate(row) {
   return null;
 }
 function concernsGate(row) {
-  if (typeof row.ref_id === "string" && row.ref_id.startsWith("DUT-")) return { code: "CONCERNS_DUTY", detail: "a money fact never concerns a duty" };
-  if (typeof row.ref_id === "string" && isHypothesisId(row.ref_id)) return { code: "HYPOTHESIS_ID", detail: "a hypothesis is never named in a money fact" };
+  if (typeof row.concerns === "string" && row.concerns.startsWith("DUT-")) return { code: "CONCERNS_DUTY", detail: "a money fact never concerns a duty" };
+  if (typeof row.concerns === "string" && isHypothesisId(row.concerns)) return { code: "HYPOTHESIS_ID", detail: "a hypothesis is never named in a money fact" };
   return null;
 }
 
@@ -1084,3 +1113,26 @@ export function moneyOps(money, url, body) {
     authoritychain: () => money.authorityChain({ factId: q("id"), viewer: q("viewer") }),
   };
 }
+
+/* ---- R17: the closed lists, module-level (query-language and affordances import them; K1563) ---- */
+
+export const kinds = () => MONEY_KINDS;
+export const phases = () => PHASES;
+export const stages = () => STAGES;
+export const bases = () => BASES;
+export const precisions = () => PRECISIONS;
+
+/* ---- R16: the owner, registered once at load with the plane's registry (K1563 (1)) ---- */
+
+/** The owner's read: the instance of `host` when the registry passes one, else the isolate's one instance, else
+ *  refused `OWNER_HOST_AMBIGUOUS`. */
+export function ownerNeighbours(args = {}) {
+  const { host, ...rest } = args && typeof args === "object" ? args : {};
+  if (host) return moneyOf(host).neighbours(rest);
+  if (live.size !== 1)
+    return { refused: "OWNER_HOST_AMBIGUOUS", why: `money's read names no host and this isolate holds ${live.size} money stores` };
+  const [storage] = live;
+  return instances.get(storage).neighbours(rest);
+}
+try { defaultRegistry.registerOwner({ owner: "money", kinds: Money.CONNECTION_KINDS, neighbours: ownerNeighbours }); }
+catch { /* the registry is the plane's; a refusal here leaves the owner unregistered, never the module unloaded */ }

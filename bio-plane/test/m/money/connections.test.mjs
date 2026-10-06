@@ -2,7 +2,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, sha, ANN, BOB, OUTSIDER, ZONE } from "./fixture.mjs";
-import { Money } from "../../../src/money/index.mjs";
+import { Money, ownerNeighbours } from "../../../src/money/index.mjs";
+import { kindOf } from "../../../src/connection-grammar/index.mjs";
 import { createRegistry, ownerConformance, BOUNDS } from "../../../src/connection-grammar/index.mjs";
 
 const AT = { value: "2014-01-15", precision: "day", zone: ZONE };
@@ -60,4 +61,15 @@ test("R16 a withdrawn fact and a fact with no payer or payee are no edge", () =>
   const ids = s.m.neighbours({ node: s.vendor, at: AT, viewer: ANN }).items.map((i) => i.id);
   assert.equal(ids.includes(s.inside), false);
   assert.equal(ids.includes(half), false);
+});
+
+test("R16 registered at load with the plane's registry: the owner's read takes a host, and with none and more than one store it refuses OWNER_HOST_AMBIGUOUS", () => {
+  assert.deepEqual(kindOf("money_flow"), { owner: "money", word: "money", class: "evidentiary" });
+  const s = owned();
+  const r = ownerNeighbours({ host: s.host, node: s.vendor, at: AT, viewer: ANN });
+  assert.deepEqual(r.items.map((i) => i.id).sort(), [s.inside, s.open].sort());
+  assert.deepEqual(ownerNeighbours({ node: s.vendor, at: AT, viewer: ANN }), r, "one store in the isolate: its instance");
+  const t = owned();
+  ownerNeighbours({ host: t.host, node: t.vendor, at: AT, viewer: ANN });
+  assert.equal(ownerNeighbours({ node: s.vendor, at: AT, viewer: ANN }).refused, "OWNER_HOST_AMBIGUOUS");
 });

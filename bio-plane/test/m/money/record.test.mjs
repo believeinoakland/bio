@@ -2,7 +2,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, world, sha, MACHINE, ANN, BOB, OUTSIDER } from "./fixture.mjs";
-import { MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES } from "../../../src/money/index.mjs";
+import { MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, kinds, phases, stages, bases, precisions }
+  from "../../../src/money/index.mjs";
 
 const count = (s, t = "money_facts") => s.one(`SELECT count(*) AS n FROM ${t}`).n;
 
@@ -134,6 +135,7 @@ test("R2 exactly one source, never a calculation, held and visible to the writer
   assert.equal(r(undefined), "NO_SOURCE");
   assert.equal(r([{ capture_sha: s.cap }, { capture_sha: s.cap }]), "TWO_SOURCES");
   assert.equal(r({ capture_sha: s.cap, fact: "MNY-2026-aaaaaaaaaaaaaaaa" }), "TWO_SOURCES");
+  assert.equal(r({ capture_sha: s.cap, table: "TBL-1", row: 1, binding: "BND-1" }), "TWO_SOURCES");
   assert.equal(r({ fact: "CALC-2026-0001" }), "SOURCE_IS_CALCULATION");
   assert.equal(r("CALC-2026-0001"), "SOURCE_IS_CALCULATION");
   assert.equal(r({ capture_sha: sha("never held") }), "SOURCE_NOT_HELD");
@@ -177,20 +179,33 @@ test("R3 each party's entity resolution grade is answered apart from the reading
   assert.deepEqual(s.m.readFact({ factId: id, viewer: ANN }).fact.grade.parties, { from: "A", to: null });
 });
 
-test("R4 the machine writes only from an adopted table binding with every party identified by a scheme identifier", () => {
+test("R4 the machine writes only from a canonical table row read through a binding a member adopted, each party a registered entity; an identifier it states must be its entity's", () => {
   const s = seeded();
-  const fromId = s.identify(s.city, "ellery_person", "P-1");
-  const toId = s.identify(s.vendor, "ellery_person", "P-2");
-  const machine = (over) => s.m.recordFact(s.fact({ by: MACHINE, method: "table_binding", binding: { id: "BIND-1", adopted_by: ANN },
-    from: { entity: s.city, identifier: fromId }, to: { entity: s.vendor, identifier: toId }, ...over }));
-  assert.equal(machine({}).ok, true);
-  assert.equal(machine({ to: { entity: s.vendor, as_written: "Harbour Dredging Co" } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
-  assert.equal(machine({ to: { entity: s.vendor, identifier: fromId } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
-  assert.equal(machine({ binding: undefined }).reason, "MACHINE_NEEDS_IDENTIFIERS");
-  assert.equal(machine({ binding: { id: "BIND-1", adopted_by: MACHINE } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
+  s.bindings.set("BND-1", { adopted: ANN, table: "TBL-payments", roles: { from: "payer", to: "payee" }, capture_sha: s.cap });
+  s.bindings.set("BND-2", { adopted: null, table: "TBL-payments", roles: {}, capture_sha: s.cap });
+  const row = { table: "TBL-payments", row: 17, binding: "BND-1" };
+  const machine = (over) => s.m.recordFact(s.fact({ by: MACHINE, method: "table_binding", source: row,
+    from: { entity: s.city, as_written: "City of Port Ellery" }, to: { entity: s.vendor, as_written: "Harbour Dredging Co" }, ...over }));
+  const ok = machine({});
+  assert.equal(ok.ok, true, ok.detail);
+  const f = s.m.readFact({ factId: ok.fact_id, viewer: ANN }).fact;
+  assert.deepEqual(f.source, { table: "TBL-payments", row: "17", binding: "BND-1", capture_sha: s.cap });
+  assert.match(f.citation, /^row 17 of the table TBL-payments, read from capture [0-9a-f]{64} through the binding BND-1$/);
+  assert.equal(f.grade.reading, "B");
+  assert.equal(s.one(`SELECT source_capture_sha FROM money_facts WHERE fact_id=?`, ok.fact_id).source_capture_sha, s.cap);
+  assert.equal(machine({ source: { capture_sha: s.cap } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
+  assert.equal(machine({ to: { as_written: "Harbour Dredging Co" } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
   assert.equal(machine({ to: null }).reason, "MACHINE_NEEDS_IDENTIFIERS");
+  const idf = s.identify(s.vendor, "ellery_person", "P-2");
+  assert.equal(machine({ to: { entity: s.vendor, identifier: idf } }).ok, true);
+  assert.equal(machine({ from: { entity: s.city, identifier: idf } }).reason, "MACHINE_NEEDS_IDENTIFIERS");
+  assert.equal(machine({ source: { ...row, binding: "BND-2" } }).reason, "SOURCE_NOT_HELD", "a binding no member adopted");
+  assert.equal(machine({ source: { ...row, binding: "BND-9" } }).reason, "SOURCE_NOT_HELD");
+  assert.equal(machine({ source: { ...row, table: "TBL-other" } }).reason, "SOURCE_NOT_HELD");
   assert.equal(machine({ method: undefined }).reason, "NO_METHOD");
-  assert.equal(count(s), 1);
+  assert.equal(count(s), 2);
+  const bare = seeded({ calculations: false });
+  assert.equal(bare.m.recordFact(bare.fact({ source: row })).reason, "SOURCE_NOT_HELD");
 });
 
 test("R6 no field, flag or read marks a fact as the group's own: such a field is refused UNKNOWN_FIELD, and no read answers one", () => {
@@ -212,6 +227,8 @@ test("R17 kinds, phases, stages, bases and precisions answer the closed lists, f
     assert.deepEqual(m[fn](), xs);
     assert.equal(Object.isFrozen(m[fn]()), true, fn);
   }
+  for (const [fn, xs] of [[kinds, MONEY_KINDS], [phases, PHASES], [stages, STAGES], [bases, BASES], [precisions, PRECISIONS]])
+    assert.equal(fn(), xs, "the module-level functions answer the same frozen lists");
   assert.equal(MONEY_KINDS.length, 14);
   assert.deepEqual(STAGES, ["encumbered", "incurred", "paid", "assessed", "collected"]);
 });
@@ -219,26 +236,33 @@ test("R17 kinds, phases, stages, bases and precisions answer the closed lists, f
 test("R19 the facts table is the stated read contract: signed amount, currency, kind, phase, stage, basis, period, the parties' entity and fund, withdrawal", () => {
   const s = seeded();
   const id = s.rec({ sign: "-", amount: "996", as_read: "(996)" });
-  const row = s.one(`SELECT fact_id, amount, currency, kind, phase, stage, basis, period_from, period_to, from_entity, from_fund,
-                     to_entity, to_fund, withdrawn_at FROM money_facts WHERE fact_id=?`, id);
-  assert.deepEqual(row, { fact_id: id, amount: "-996", currency: "USD", kind: "expenditure", phase: "actual", stage: "paid",
+  const row = s.one(`SELECT fact_id, amount, currency, sign, kind, phase, stage, basis, period_from, period_to, from_entity, from_fund,
+                     to_entity, to_fund, source_capture_sha FROM money_facts WHERE fact_id=?`, id);
+  assert.deepEqual(row, { fact_id: id, amount: "-996", currency: "USD", sign: "-", kind: "expenditure", phase: "actual", stage: "paid",
     basis: "modified accrual", period_from: "2013-04-01", period_to: "2014-03-31", from_entity: s.city, from_fund: s.general,
-    to_entity: s.vendor, to_fund: null, withdrawn_at: null });
+    to_entity: s.vendor, to_fund: null, source_capture_sha: s.cap });
+  const onFact = s.rec({ source: { fact: id }, concerns: [s.contract, s.general] });
+  assert.equal(s.one(`SELECT source_capture_sha FROM money_facts WHERE fact_id=?`, onFact).source_capture_sha, null);
+  assert.deepEqual(s.rows(`SELECT fact_id, concerns FROM money_concerns WHERE fact_id=? ORDER BY concerns`, onFact),
+    [s.contract, s.general].sort().map((c) => ({ fact_id: onFact, concerns: c })));
+  assert.equal(s.one(`SELECT count(*) AS n FROM money_withdrawals WHERE fact_id=?`, id).n, 0);
   s.m.withdrawFact({ factId: id, reason: "misread", by: ANN });
-  assert.notEqual(s.one(`SELECT withdrawn_at FROM money_facts WHERE fact_id=?`, id).withdrawn_at, null);
+  assert.equal(s.one(`SELECT count(*) AS n FROM money_withdrawals WHERE fact_id=?`, id).n, 1);
 });
 
 test("R20 one home per fact at the store's gate: one source never a calculation, no HYP- id, no duty, no total", () => {
   const s = seeded();
   assert.equal(s.m.recordFact(s.fact({ concerns: ["HYP-2026-0001"] })).reason, "HYPOTHESIS_ID");
   assert.equal(count(s), 0);
-  const row = { fact_id: "MNY-2026-aaaaaaaaaaaaaaaa", source_capture: s.cap, source_fact: null };
+  const row = { fact_id: "MNY-2026-aaaaaaaaaaaaaaaa", source_capture_sha: s.cap, source_extent: '{"kind":"document"}', source_table: null, source_fact: null };
   assert.equal(s.record.storeGate("money", "money_facts", { ...row, source_fact: "MNY-2026-bbbbbbbbbbbbbbbb" }, "insert").reason, "ONE_SOURCE");
-  assert.equal(s.record.storeGate("money", "money_facts", { ...row, source_capture: null }, "insert").reason, "ONE_SOURCE");
-  assert.equal(s.record.storeGate("money", "money_facts", { ...row, source_capture: null, source_fact: "CALC-2026-0001" }, "insert").reason, "SOURCE_IS_CALCULATION");
+  assert.equal(s.record.storeGate("money", "money_facts", { ...row, source_table: "TBL-1" }, "insert").reason, "ONE_SOURCE");
+  assert.equal(s.record.storeGate("money", "money_facts", { ...row, source_extent: null }, "insert").reason, "ONE_SOURCE");
+  assert.equal(s.record.storeGate("money", "money_facts", { ...row, source_capture_sha: null }, "insert").reason, "ONE_SOURCE");
+  assert.equal(s.record.storeGate("money", "money_facts", { ...row, source_capture_sha: null, source_extent: null, source_fact: "CALC-2026-0001" }, "insert").reason, "SOURCE_IS_CALCULATION");
   assert.equal(s.record.storeGate("money", "money_facts", { ...row, adjusts: "HYP-2026-0002" }, "insert").reason, "HYPOTHESIS_ID");
   assert.equal(s.record.storeGate("money", "money_facts", { ...row, total: "5" }, "insert").reason, "TOTAL_NOT_STORED");
-  assert.equal(s.record.storeGate("money", "money_concerns", { fact_id: row.fact_id, ref_id: "DUT-2026-0001" }, "insert").reason, "CONCERNS_DUTY");
+  assert.equal(s.record.storeGate("money", "money_concerns", { fact_id: row.fact_id, concerns: "DUT-2026-0001" }, "insert").reason, "CONCERNS_DUTY");
   assert.equal(s.record.storeGate("money", "money_facts", row, "insert"), null);
   const cols = s.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'money%'`).map((r) => r.name);
   for (const t of cols) assert.equal(s.rows(`PRAGMA table_info(${t})`).some((c) => /total|^sum/.test(c.name)), false, t);

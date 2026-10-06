@@ -57,6 +57,12 @@ test("R9 moneyOf answers the facts naming the entity as party (entity or fund) o
   assert.equal(r.says, "facts, never a total");
   assert.equal(["total", "sum"].some((k) => k in r), false);
   assert.equal(s.m.moneyOf({ viewer: ANN }).reason, "NO_ENTITY");
+  // any id a fact's concerns may name (K1563): an event, a line
+  const award = s.events.add("EVT-2026-award00000000001", "award", [s.contract]);
+  s.lines.add("LIN-2026-line000000000001");
+  const onEvent = s.rec({ concerns: [award, "LIN-2026-line000000000001"] });
+  assert.deepEqual(s.m.moneyOf({ entity: award, viewer: ANN }).facts.map((f) => f.fact_id), [onEvent]);
+  assert.deepEqual(s.m.moneyOf({ entity: "LIN-2026-line000000000001", viewer: ANN }).facts.map((f) => f.fact_id), [onEvent]);
 });
 
 test("R9 moneyOf filters by period overlap (undetermined ones apart), kinds and phases, bounded 1–500 with truncated", () => {
