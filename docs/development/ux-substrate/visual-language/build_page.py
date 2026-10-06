@@ -3,6 +3,7 @@
 faces.css and icons.svg, with the palette, icon grid and contrast table generated from the sources.
 Run: python3 docs/development/ux-substrate/visual-language/build_page.py"""
 import json, os, re, subprocess, sys, html
+sys.dont_write_bytecode = True
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 subprocess.check_call([sys.executable, os.path.join(HERE, 'build.py')])
