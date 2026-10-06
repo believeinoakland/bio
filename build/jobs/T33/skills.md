@@ -65,3 +65,7 @@ T33-52 done on job/T33/skills, with tranche/T33 merged in. Built: R33 legal_look
 - coverage and ownership: reported in the COMPLETE entry.
 
 Size (session_01GmSBs9c4ZXTh8Wo9f4QZWg): test runs 12, module lines 2187
+
+## J4 · COMPLETE
+
+B4 done: merged tranche/T33. C-2.8 is now read from INQUIRY_GRAMMAR_CHECKS.STANDARD_LEG_AXIS.check, and TYPED is ['C-32.6']. Skills' tests 67/67. format, architecture, coverage (35/35) and ownership: 0 failures each. R15's wording 'C-2.8, which has no keyed row' is now stale: yours to fold.
