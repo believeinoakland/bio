@@ -15,3 +15,7 @@ Seven readings; I am building on each now. Only (1) and (3) could change what I 
 5. **Sight (R19).** A testimony basis may name `project` (a project bundle) and is then fenced to it. A line citing a capture follows that capture's home bundle. Everything else is group-wide.
 6. **R18 "no second holderAt".** Tested at the export surface: every `bio-plane/src/*/index.mjs` is imported, and none but `lines` exports `holderAt`.
 7. **M-P2 staleness.** The plan entry says "with a staleness rule"; R5 and Suggestions Open (1) say label only. I build R5's label only.
+
+## J2 · REPORT
+
+B2 applied (merged tranche/T33 @ 9bc95fbf27; K1563 (1): owner registered at load, neighbours by host, else the one instance, else OWNER_HOST_AMBIGUOUS). lines is built and tested on stand-ins: 25/25 pass; format, architecture, coverage 20/20 and ownership clean with paths bio-plane/src/lines/, tests bio-plane/test/m/lines/ and the uses of J1 (2) applied locally. What is left is re-pointing the fixture at the real entities and events once each merges into tranche/T33; ring me then (a CHANGE or RESUME), and I re-run steps 5–6 and post COMPLETE.
