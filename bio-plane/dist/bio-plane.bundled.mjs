@@ -105753,8 +105753,8 @@ CREATE TABLE IF NOT EXISTS reevaluation_capture_level_moves (
 CREATE INDEX IF NOT EXISTS reevaluation_capture_level_moves_capture ON reevaluation_capture_level_moves (capture_sha, at);
 -- R34 (B1a.11, K1470): AN EVENT'S CHANGE HEARD FROM events.onEventChanged
 -- (its R16): one row per telling of when_moved or participant_re_resolved,
--- the event, which of the two changed, and the instant this module heard it
--- (the telling carries none). Kept only when some basis leg names the event,
+-- the event, which of the two changed, and the instant the telling states
+-- (events' at, the write that made the change; N591). Kept only when some basis leg names the event,
 -- or an ACT- id aliasing it, when it is told: a telling nothing rests on could
 -- never raise a cause, since the cause needs the telling later than the
 -- dependent's last write. No value is held. Append-only.
@@ -105845,8 +105845,8 @@ var EVENT_REF = /^EVT-/;
 var ACT_REF = /^ACT-/;
 var CALC_REF = /^CALC-/;
 var isRowTarget = (id) => typeof id === "string" && (EVENT_REF.test(id) || ACT_REF.test(id) || CALC_REF.test(id) || id.startsWith("occurrence:"));
-var STANDARDS_PAGE = 200;
-var ACROSS_UNDETERMINED_WHY = "the newer version is held at another address, and content compares a passage only along one address's version chain, so whether the change touches this passage is undetermined; that is not the same as unaffected";
+var TELLING_UNTIMED = "the telling states no instant of the change, so it cannot be ordered against a dependent's last write and was not kept; that is not the same as no change";
+var ACROSS_UNDETERMINED_WHY = "the newer version is held at another address, and content could not compare the passage with it, so whether the change touches this passage is undetermined; that is not the same as unaffected";
 var MOVES_PAGE = 200;
 var CITED_LIMIT_DEFAULT = 200;
 var CITED_LIMIT_MAX = 200;
@@ -107335,11 +107335,14 @@ var Reevaluation = class {
     return out.sort((a, b) => (a.bundle_id < b.bundle_id ? -1 : a.bundle_id > b.bundle_id ? 1 : 0) || a.ord - b.ord);
   }
   /** R34, R8: the listener registered with `events.onEventChanged` (its R16), called after an event's change commits with
-   *  `{eventId, change, …}`. A `when_moved` or `participant_re_resolved` telling about an event some basis leg names
-   *  (itself, or an `ACT-` id aliasing it) is kept as one row (R18: the event, the change and this module's instant; no
+   *  `{eventId, change, at, …}`. A `when_moved` or `participant_re_resolved` telling about an event some basis leg names
+   *  (itself, or an `ACT-` id aliasing it) is kept as one row (R18: the event, the change and the telling's instant; no
    *  value), then told to R8's listeners as `kind: "event_changed"` with the live legs resting on it, direct dependents
-   *  only. Any other change, or a telling nothing rests on, writes nothing. It moves nothing and never throws. */
-  eventChanged({ eventId: eventId3 = null, change: change2 = null } = {}) {
+   *  only. The instant is the `at` events states (the instant of the write that made the change, N591), never this
+   *  module's clock, so a dependent written between the change and its telling is ordered by when the event changed. A
+   *  telling stating no readable `at` breaks events' R16 and is not kept, the answer saying why (R21). Any other change,
+   *  or a telling nothing rests on, writes nothing. It moves nothing and never throws. */
+  eventChanged({ eventId: eventId3 = null, change: change2 = null, at: at33 = null } = {}) {
     try {
       const id = str12(eventId3);
       if (!id || !EVENT_CHANGES.includes(change2)) return { ok: true, kept: false };
@@ -107349,7 +107352,9 @@ var Reevaluation = class {
         JSON.stringify(names)
       ))
         return { ok: true, kept: false, dependents: 0 };
-      const at33 = this.#when();
+      const told = str12(at33);
+      if (!told || Number.isNaN(instantOrder(told, told))) return { ok: true, kept: false, why: TELLING_UNTIMED };
+      at33 = told;
       this.sql.exec(`INSERT INTO reevaluation_event_changes (event_id, change, at) VALUES (?,?,?)`, id, change2, at33);
       let dependents = [];
       try {
@@ -108460,7 +108465,7 @@ var Reevaluation = class {
     const rows2 = new Map((ids.length ? this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content
                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length) : []).map((r) => [r.content_id, r]));
     const memo = /* @__PURE__ */ new Map(), noticeMemo = /* @__PURE__ */ new Map();
-    const across = this.#acrossReader(legs.length > 0);
+    const across = this.#acrossReader(legs.length > 0, memo);
     const cases = truncated3 ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
     const raised = [];
@@ -108601,7 +108606,7 @@ var Reevaluation = class {
         subject: r.content_id,
         source: "newer_capture",
         since: when,
-        detail: r.across ? `a newer version of the same portion of law (${r.across.key}, ${r.across.portion}) is held at another address (${r.newer_capture.slice(0, 12)}); whether it touches this passage is undetermined` : `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades this passage ${r.grade ?? "undetermined"} (${r.affects})`,
+        detail: r.across ? `a newer version of the same portion of law (${r.across.key}, ${r.across.portion}) is held at another address (${r.newer_capture.slice(0, 12)}); compared with this passage it grades ${r.grade ?? "undetermined"} (${r.affects})` : `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades this passage ${r.grade ?? "undetermined"} (${r.affects})`,
         dependents: [{ bundle_id: r.holder, ord: r.ord }],
         captures: { cited: r.capture_sha, newer: r.newer_capture },
         grade: r.grade,
@@ -108613,79 +108618,76 @@ var Reevaluation = class {
     }
     return out;
   }
-  /** R36 (X73, K1446): R14's notice across addresses, for one sweep batch. A reference pinned to a held standard's
-   *  portion (its content id is the portion's content id, `standards` R18) has a newer version at another address when
-   *  `standards` holds the same instrument key and portion at another capture, or holds the key and portion a
-   *  member-recorded renumbering or recodification names (`addressesOf`, its R24), and that capture was first retrieved
-   *  after the pinned one (provenance's `captured_locators`, R48) and is held at none of the addresses the pinned
-   *  capture is: an address is never matched to another by its text. Content grades a passage only along one address's
-   *  version chain, so each such version is graded UNDETERMINED by name (R21). `enabled` false reads nothing. Answers
-   *  `{of(row), read()}`: `of` the candidates for one content row, each `{capture_sha, bundle_id, content_id, grade,
-   *  affects, why, across}`; `read` false when the standards could not all be read. Reads only. */
-  #acrossReader(enabled) {
-    let index2 = null, ok2 = true;
-    const load = () => {
-      if (index2) return index2;
-      index2 = { byPortion: /* @__PURE__ */ new Map(), byKeyPortion: /* @__PURE__ */ new Map(), byId: /* @__PURE__ */ new Map() };
-      const kp = (k, p3) => `${k}\0${p3}`;
-      const push = (map, k, v) => {
-        if (!map.has(k)) map.set(k, []);
-        map.get(k).push(v);
-      };
-      const seen = /* @__PURE__ */ new Set();
-      let after = null;
-      for (; ; ) {
-        let page2 = null;
-        try {
-          page2 = this.standards.standardsIn({ after, limit: STANDARDS_PAGE, viewer: MACHINE_ADMIN });
-        } catch {
-          page2 = null;
-        }
-        if (!page2 || page2.ok === false || !Array.isArray(page2.items)) {
-          ok2 = false;
-          break;
-        }
-        for (const it of page2.items) {
-          const key = it && it.instrument && it.instrument.state === "composed" ? str12(it.instrument.key) : null;
-          const portion = it && it.portion ? str12(it.portion.path) : null;
-          const content = it && it.portion ? str12(it.portion.content_id) : null;
-          if (!key || !portion || !content || !str12(it.id)) continue;
-          const sd = { id: it.id, key, portion, content };
-          index2.byId.set(sd.id, sd);
-          push(index2.byPortion, content, sd);
-          push(index2.byKeyPortion, kp(key, portion), sd);
-        }
-        const next = typeof page2.cursor === "string" ? page2.cursor : null;
-        if (!page2.truncated || !next || seen.has(next)) break;
-        seen.add(next);
-        after = next;
+  /** R36 (X73, K1446; N589, N590): R14's notice across addresses, for one sweep batch. A reference pinned to a held
+   *  standard's portion (its content id is the portion's content id, `standards` R18) has a newer version at another
+   *  address when `standards` holds the same instrument key and portion at another capture, or holds the key and portion
+   *  a member-recorded renumbering or recodification names (`addressesOf`, its R24), and that capture was first
+   *  retrieved after the pinned one (provenance's `captured_locators`, R48) and is held at none of the addresses the
+   *  pinned capture is: an address is never matched to another by its text. The standards are read where they are
+   *  needed, through `standards.standardsWithPortion` (the passage's own standards) and `standards.standardsAt` (those
+   *  at a key and portion), its R32, never by paging `standardsIn`; an answer `standards` marks `truncated` (or one that
+   *  fails) leaves `read` false, so the sweep says by name that a notice may be missing (R21). Whether the newer version
+   *  is newer and the same work and portion is decided here; how it touches the passage is content's comparison of the
+   *  two captures (`passageAcross`, its R55), its grade, reason and why kept, and `undetermined` by name where it gives
+   *  no answer (R21), never A or B by default. `enabled` false reads nothing. Answers `{of(row), read()}`: `of` the
+   *  candidates for one content row, each `{capture_sha, bundle_id, content_id, grade, affects, across}`. Reads only. */
+  #acrossReader(enabled, memo = /* @__PURE__ */ new Map()) {
+    let ok2 = true;
+    const asStandards = (a) => {
+      if (!a || a.ok === false || !Array.isArray(a.items)) {
+        ok2 = false;
+        return [];
       }
-      index2.kp = kp;
-      return index2;
+      if (a.truncated) ok2 = false;
+      const out = [];
+      for (const it of a.items) {
+        const key = it ? str12(it.instrument) : null;
+        const portion = it && it.portion ? str12(it.portion.path) : null;
+        const content = it && it.portion ? str12(it.portion.content_id) : null;
+        if (key && portion && content && str12(it.id)) out.push({ id: it.id, key, portion, content });
+      }
+      return out;
     };
-    const memo = /* @__PURE__ */ new Map();
+    const atMemo = /* @__PURE__ */ new Map();
+    const at33 = (key, portion) => {
+      const k = `${key}\0${portion}`;
+      if (!atMemo.has(k)) {
+        let a = null;
+        try {
+          a = this.standards.standardsAt({ key, portion, viewer: MACHINE_ADMIN });
+        } catch {
+          a = null;
+        }
+        atMemo.set(k, asStandards(a));
+      }
+      return atMemo.get(k);
+    };
     const placed = (capture2) => {
-      const at33 = this.#rows(`SELECT address_norm, MIN(first_retrieved) AS first FROM captured_locators WHERE capture_sha=?
-                              GROUP BY address_norm ORDER BY address_norm`, capture2);
-      const firsts = at33.map((r) => r.first).filter((x) => typeof x === "string" && x).sort();
-      return { addresses: new Set(at33.map((r) => r.address_norm).filter(Boolean)), first: firsts[0] ?? null };
+      const rows2 = this.#rows(`SELECT address_norm, MIN(first_retrieved) AS first FROM captured_locators WHERE capture_sha=?
+                                GROUP BY address_norm ORDER BY address_norm`, capture2);
+      const firsts = rows2.map((r) => r.first).filter((x) => typeof x === "string" && x).sort();
+      return { addresses: new Set(rows2.map((r) => r.address_norm).filter(Boolean)), first: firsts[0] ?? null };
     };
+    const seen = /* @__PURE__ */ new Map();
     const of = (row8) => {
       if (!enabled || !row8 || !row8.content_id) return [];
-      if (memo.has(row8.content_id)) return memo.get(row8.content_id);
+      if (seen.has(row8.content_id)) return seen.get(row8.content_id);
       const out = [];
-      memo.set(row8.content_id, out);
-      const idx = load();
-      const own5 = idx.byPortion.get(row8.content_id) || [];
+      seen.set(row8.content_id, out);
+      let w = null;
+      try {
+        w = this.standards.standardsWithPortion({ contentId: row8.content_id, viewer: MACHINE_ADMIN });
+      } catch {
+        w = null;
+      }
+      const own5 = asStandards(w);
       if (!own5.length) return out;
-      const pinned = placed(row8.capture_sha);
       const cands = /* @__PURE__ */ new Map();
       const add2 = (from, to, via) => {
         if (to.id !== from.id && !cands.has(to.content)) cands.set(to.content, { from, to, via });
       };
       for (const sd of own5) {
-        for (const o of idx.byKeyPortion.get(idx.kp(sd.key, sd.portion)) || [])
-          add2(sd, o, { type: "same_instrument", relation: null, effective: null });
+        for (const o of at33(sd.key, sd.portion)) add2(sd, o, { type: "same_instrument", relation: null, effective: null });
         let a = null;
         try {
           a = this.standards.addressesOf({ key: sd.key, portion: sd.portion });
@@ -108703,12 +108705,11 @@ var Reevaluation = class {
             relation: x.via ? x.via.relation ?? null : null,
             effective: x.via ? x.via.effective ?? null : null
           };
-          const named = idx.byId.get(x.standard);
-          if (named) add2(sd, named, via);
-          if (x.key && x.portion) for (const o of idx.byKeyPortion.get(idx.kp(x.key, x.portion)) || []) add2(sd, o, via);
+          if (x.key && x.portion) for (const o of at33(x.key, x.portion)) add2(sd, o, via);
         }
       }
       if (!cands.size) return out;
+      const pinned = placed(row8.capture_sha);
       const rows2 = new Map(this.#rows(
         `SELECT content_id, capture_sha, bundle_id FROM content
                                         WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
@@ -108721,14 +108722,29 @@ var Reevaluation = class {
         const there = placed(r.capture_sha);
         if (!there.addresses.size || [...there.addresses].some((x) => pinned.addresses.has(x))) continue;
         if (!there.first || !pinned.first || !laterThan(there.first, pinned.first)) continue;
+        let c = null;
+        try {
+          c = this.content.passageAcross(row8, r.capture_sha, memo);
+        } catch {
+          c = null;
+        }
+        const graded = !!c && typeof c === "object" && typeof c.grade === "string" && typeof c.affects === "string";
         out.push({
           capture_sha: r.capture_sha,
           bundle_id: r.bundle_id,
           content_id: content,
-          grade: "UNDETERMINED",
-          affects: "undetermined",
-          why: ACROSS_UNDETERMINED_WHY,
-          across: { from_standard: from.id, standard: to.id, key: to.key, portion: to.portion, via }
+          grade: graded ? c.grade : "UNDETERMINED",
+          affects: graded ? c.affects : "undetermined",
+          across: {
+            from_standard: from.id,
+            standard: to.id,
+            key: to.key,
+            portion: to.portion,
+            via,
+            compared: graded,
+            reason: graded ? c.grade_reason ?? null : null,
+            why: graded ? c.grade_why ?? null : ACROSS_UNDETERMINED_WHY
+          }
         });
       }
       return out;
@@ -108894,7 +108910,13 @@ var Reevaluation = class {
         newer_capture: null,
         grade: null,
         affects: null,
-        ...r.across ? { newer_content: null } : {}
+        /* R36: content's reason and why read the version withheld */
+        ...r.across ? { newer_content: null, across: {
+          ...parseAcross(r.across),
+          compared: null,
+          reason: null,
+          why: null
+        } } : {}
       }
     }));
     return {
