@@ -58,3 +58,7 @@ T33-91 is built to K1678 and green on my branch (7bfd49a664): embed 23/0, wizard
 (3) **agent-runner's image repository is `docker.io/civicos/agent-runner`** (`agent-runner/fleet-member.json`). A group sees that name in its own Cloudflare dashboard, and it carries the product's old name (DEC-124). It is the release's to choose before the image is first published.
 
 (4) **The Containers API calls are wrangler's own, and deploy-gated, like SELF.** They are: the namespaces list, `POST /containers/applications`, and `POST …/applications/<id>/rollouts`. The first real install at the release confirms them. M-Q2's run can do that.
+
+## J3 · COMPLETE
+
+T33-91 complete on job/T33/installer, re-pointed at the merged five-member FLEET_BINDINGS (K1690). Its five named reds pass on the real list. embed 23/0, wizard 208/0, requirements 37 pass 0 fail 2 todo (R13, R24), bundle-fresh 1/0. The bundle is rebuilt. format, architecture, coverage (38/38) and ownership (9 files) all show 0 failures. Final uses unchanged: bundler, jurisdictions, signatures, instance-setup, test-support. The record carries the completion.
