@@ -45,19 +45,44 @@ function mast(c, s) {
     ${c.ai ? `<button type="button" class="cs-btn" data-tone="quiet" aria-label="The assistant">${I('machine')}<span class="mk-hide-phone">Assistant</span></button>` : ''}
     <span class="cs-kind mk-hide-phone" data-kind="todo">${I('queue')}4</span><span class="mk-avatar" aria-label="Mai">M</span></header>`;
 }
+// DEC-154 (Bob, 6 October): every screen shows where it is, in the same place: its path, from the section of the rail
+// (or, outside the workspace, the group or Civicsmith) to the screen's own name, which is always last. The heading below
+// names the thing shown (a question's words, a person's name); the path names the screen.
+const PATH = {
+  install: ['Civicsmith', 'Install'], setup: ['Set up', 'Places and languages'], join: ['Lakeshore Tenants', 'Your invitation'],
+  doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
+  home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
+  finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'],
+  'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], account: ['Settings', 'Your account'],
+  connect: ['Settings', 'Your Claude account'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
+  translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'],
+  person: ['People', 'Person'], explore: ['People', 'Person', 'Explore connections'],
+  project: ['Projects', 'Pothole repairs'], document: ['Projects', 'Pothole repairs', 'Document'],
+  question: ['Projects', 'Pothole repairs', 'Question'], assistant: ['Projects', 'Pothole repairs', 'Question'],
+  calculation: ['Projects', 'Pothole repairs', 'Calculation'], standard: ['Projects', 'Pothole repairs', 'Standard'],
+  plan: ['Projects', 'Pothole repairs', 'Action plan'], 'start-send': ['Projects', 'Pothole repairs', 'Action plan', 'Start and send'],
+  request: ['Projects', 'Pothole repairs', 'Request records'], action: ['Projects', 'Pothole repairs', 'Action'],
+  timeline: ['Projects', 'The Coliseum lease', 'Timeline'], money: ['Projects', 'Sewer fund transfers', 'Money trail'],
+  proceeding: ['Projects', 'The Coliseum lease', 'Proceeding'], matter: ['Projects', 'The Coliseum lease', 'Matter'],
+  'case-editor': ['Projects', 'The Coliseum lease', 'Case'], 'review-copy': ['Projects', 'The Coliseum lease', 'Review copy'],
+  ceremony: ['Projects', 'The Coliseum lease', 'Publish'], docket: ['Projects', 'The Coliseum lease', 'Docket'],
+  imported: ['Projects', 'Imported', "Another group's case"],
+};
+const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
+const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;
 function render(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
   WRITE_ON = false;
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
-  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain">${s.main}</main>
+  if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain">${pathNav(pathOf(screenId, s))}${s.main}</main>
     <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
-  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain">${s.main}</main>${dock}</div>`;
+  if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain">${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
   return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}" data-frame="working">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>
    <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}</nav>
-   <main class="cs-main">${s.crumbs ? crumbs(s.crumbs) : ''}${s.main}</main>${dock}
+   <main class="cs-main">${pathNav(pathOf(screenId, s))}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;
 }
 /* "Show me where": draw the ring again on the step's control, scroll it into view, and move the keyboard to it */

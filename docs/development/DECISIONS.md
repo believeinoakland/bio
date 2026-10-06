@@ -2430,3 +2430,17 @@ response: **Bob, 2026-10-06: "Yes, offer it wherever members write in their own 
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (section 2; the notes, capture, held and case-editor screens); `screens/mock-kit.js` (the rule as code: `writeHelp`); BIO_Interaction_Constructs_v0_1.md §P.
 owed: (BOB) the assistant's writing help as an act (the op behind the registry's `owed:writinghelp DEC-153`): a machine draft into a member's own-words field, labelled, kept only by the member's act, refused on the acts named in (4), the facts it may use limited as in (2); the assistant's roles amended to allow it.
+
+### DEC-154 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment while reviewing the layouts page)
+for: bob
+question: Whether every screen shows its own name and where it sits, in the same place.
+why it is Bob's: UX (P17); Bob directed it.
+provisional: some screens carried breadcrumbs, others none; headings named the thing shown, not the screen.
+alternative: headings only.
+recommendation: as Bob directed.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "I'm noticing that screens don't show their names. For example, 'The roster' doesn't say the roster. I think it would be orientating for users to see a screen name in the same place on every screen. Indeed, I think that every screen should show it's 'path' (People>Roster)." Ruled as he directs. **Design session's details (P17), Bob may change any:** (1) every screen, in every frame (working, setup, public, published), opens its main area with its path, at the same place: from the rail's section (or, outside the workspace, the group's name or "Civicsmith") to the screen's own name, always last, in the ink colour and semibold, marked as the current page; earlier steps are links; (2) the heading below names the thing shown (a question's words, a person's name), so the path names the screen and the heading the thing; (3) the group's own members stay under Settings ("Settings › Members"), because "People" names the people the record is about, never the group's members (brand and voice §5); (4) a phone shows the same path above the heading.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (every screen); `screens/mock-shell.js` (`PATH`, `pathNav`); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) the path on every member screen and public page when the screens are built (each screen's path as in `screens/mock-shell.js` `PATH`).

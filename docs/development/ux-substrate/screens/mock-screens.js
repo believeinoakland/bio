@@ -83,7 +83,7 @@ SCR.home = c => ({ rail: 'home', title: 'Home', main: `
     row(I('project'), '<b>Pothole repairs</b><span class="meta">2 questions · forming</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 1)) +
     row(I('project'), '<b>Sewer fund transfers</b><span class="meta">1 question · investigating</span>', ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 2))))}` });
 
-SCR.members = c => ({ rail: 'members', title: 'Members', crumbs: ['Settings', 'Members'], main: `
+SCR.members = c => ({ rail: 'settings', title: 'Members', crumbs: ['Settings', 'Members'], main: `
   ${h1('Members', '6 members · 1 administrator')}
   ${note('With one administrator, the group depends on Rosa and the hosting account. <a href="#" onclick="return false">Add a second administrator</a>.')}
   ${sheet(row(I('subject'), '<b>Rosa</b> · administrator · <span class="muted">cover: R. Medina</span>', '<span class="muted">contribute, administer</span>') +
