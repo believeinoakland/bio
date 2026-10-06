@@ -28,3 +28,7 @@
 - `node checks/format.mjs .` → 0 failures; `architecture.mjs . calculations` → 0 failures; `coverage.mjs . calculations` → 31 of 31 live ids named, 0 failures; `ownership.mjs . calculations tranche/T34` → 0 failures.
 
 Size (session_01Mw67tJ7nrb4VadYNLsCpUT): test runs 31, module lines 2411
+
+## J1 · COMPLETE
+
+T34-27 and calculations' share of T34-78 applied; B2 done (R19 test matched by id; code answers in creation order). calculations 38/0; format, architecture, coverage 31/31, ownership 8 files: 0 failures. New red from this merge: consequences computed.test.mjs:176 (R2) — its test expects alice out_of_view once gradeFactsOf exists, but alice created the calculation, so R30 admits her; inverted expectation, clears with T34-49. Stale: the plane bundle. Readings to note: R9 input bytes are also put in the evidence store at create (for publication R22); new column calculations.input_shas_json via migration. Details in my record.
