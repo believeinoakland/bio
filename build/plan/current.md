@@ -159,9 +159,9 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 - **T34-61 · action-plans** · (N601, user side) answers `NO_SUCH_DUTY` through duties' `noSuchDuty`; C-124.32's translation as T34-12 stamps it · K1650 · req: BOB's wording · depends T34-22, T34-12.
 - **T34-62 · filings** · (EVENTS #2 J2, K1795) `chronology.test.mjs`:63 (R33) expects the source arguments with `viewer` (events R30). (N602, user side) reads placed-nowhere items from events' dated `timeline` instead of its second undated read · K1653 · req: none (a simplification) · depends T34-17.
 
-**L9 merge order:** consequences → action-clocks → filings → action-plans (`modules.json` order).
+**L9 merge order:** consequences → actions (T34-67) → action-clocks → filings → action-plans (`modules.json` order; K1830). The row-only joiners (action-grammar, conformance, escalation, filing-templates) merge as they complete.
 
-- **T34-67 · actions** · (N611) Provides gains `place()` and `zoneOf` (R12's zone read) · K1681 · req: BOB's wording · depends —.
+- **T34-67 · actions** · (N611) Provides gains `place()` and `zoneOf` (R12's zone read). (K1830, N662's share) R69: registers the hold reader `ratification` R45 asks (`holdsOn({project})`, R58's answer for one project, read as the plane), so `op=publishat` stops answering `SCHEDULE_UNCHECKABLE` once this job merges · K1681, K1830 · req: R68 (worded, K1753), R69 (worded) · depends T34-85.
 
 ### L10
 

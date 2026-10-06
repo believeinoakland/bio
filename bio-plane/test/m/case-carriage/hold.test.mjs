@@ -247,6 +247,22 @@ test("R1 unheld names at most 1,000; never throws: no front matter, a malformed 
   assert.deepEqual(broken.unheld.map((u) => [u.kind, u.sha256]), [["document", docSha], ["extracted_text", null]]);
 });
 
+test("R1 (DEC-149) each why a member reads names the group's Civicsmith as \"your group's Civicsmith\", never this copy, instance or plane", () => {
+  const w = world();
+  const docSha = w.doc(DOC);
+  const r = w.cc.holdMaterials(caseFm({ materials: [obsRow("INFO-2026-0405-obs", sha("no such words")),
+                                                    docRow("INFO-2026-0404-gone", sha("never captured")), docRow(DOC, docSha)] }),
+                               { caseId: CASE, edition: 1, at: NOW });
+  assert.deepEqual(r.unheld.map((u) => u.why), [
+    "your group's Civicsmith holds no text of that observation at its digest",
+    "your group's Civicsmith holds no bytes of that document at its digest",
+    "your group's Civicsmith holds no whole extracted text of that document at its stated digest"]);
+  w.st.sql.exec(`DROP TABLE published_material_texts`);
+  const broken = w.cc.holdMaterials(caseFm({ materials: [docRow(DOC, docSha)] }), { caseId: CASE, edition: 2, at: NOW });
+  assert.equal(broken.unheld[0].why, "your group's Civicsmith could not record it");
+  assert.doesNotMatch(JSON.stringify([r, broken]), /\b(this|the) (copy|instance|plane)\b/i);
+});
+
 /* ---------------------------------------------------------------- R2 */
 
 test("R2 heldMaterialsOf answers the list R1 wrote for that case edition in its order; [] for an edition that held nothing or was never committed; writes nothing, never throws", () => {

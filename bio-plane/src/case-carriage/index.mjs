@@ -121,12 +121,12 @@ export class CaseCarriage {
       const inlineOk = !!inline && shaOf(inline.content) === sha;
       if (kind === "observation") {
         if (inlineOk) hold(ref, "observation", sha, inline.content);
-        else miss("observation", "this copy holds no text of that observation at its digest");
+        else miss("observation", "your group's Civicsmith holds no text of that observation at its digest");
         continue;
       }
       if (inlineOk) hold(ref, "document", sha, inline.content);
       else if (home && !inline) hold(ref, "document", sha, null, Number(home.bytes));
-      else { miss("document", "this copy holds no bytes of that document at its digest"); continue; }
+      else { miss("document", "your group's Civicsmith holds no bytes of that document at its digest"); continue; }
       /* its extracted text */
       const textSha = str(m.text_sha).toLowerCase();
       let text = null;
@@ -136,7 +136,7 @@ export class CaseCarriage {
           text = extractedTextOf(u.units);
       } catch { text = null; }
       if (typeof text === "string" && HEX64.test(textSha) && shaOf(text) === textSha) hold(ref, "extracted_text", textSha, text);
-      else miss("extracted_text", "this copy holds no whole extracted text of that document at its stated digest");
+      else miss("extracted_text", "your group's Civicsmith holds no whole extracted text of that document at its stated digest");
       /* its timestamp tokens, as the capture's home provenance names them (K1315, K1322) */
       for (const t of this.#tokenFiles(home, sha)) {
         const f = this.#fileRow(home.bundle_id, t);
@@ -159,7 +159,7 @@ export class CaseCarriage {
     } catch {
       /* Nothing written can be answered as held: every item is named unheld instead, never refused. */
       return { materials: [], files: [], unheld: [...files.map((f) => ({ ref: f.ref || null, kind: f.kind, sha256: f.sha256,
-        why: "this copy could not record it" })), ...unheld].slice(0, UNHELD_MAX) };
+        why: "your group's Civicsmith could not record it" })), ...unheld].slice(0, UNHELD_MAX) };
     }
     return { materials, unheld: unheld.slice(0, UNHELD_MAX), files };
   }
