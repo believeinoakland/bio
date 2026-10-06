@@ -1,9 +1,10 @@
 /* following's test fixture: a Durable Object storage stand-in over node:sqlite (the plane's `sql.exec` cursor shape,
    `transactionSync` as savepoints) with the real modules following reads through — record-core, membership,
-   extraction (the readings events reads), provenance (the register), content, entities (the body's identifiers) and
+   extraction (the readings events reads), provenance (the register a landing writes; product code imports neither,
+   promotion reaches them), entities (the body's identifiers) and
    events (its Legistar import and observed meetings) — over the fictional test profile, to which a test adds a
    Legistar system and body scheme as test data (the profile names none).
-   Two services are injected, coded to their requirements (K1563 (1)): `monitoring`'s host (its R65: pause, epoch,
+   Services injected, coded to their requirements (K1563 (1)): `content`'s extent context (no container extent held); `monitoring`'s host (its R65: pause, epoch,
    claim, running, ranked, land; `land` registers the capture under a new bundle in the request's project and writes
    the document's reading as promotion's projection does, extraction R20), its `schedule` (R16's unscheduled
    `per_meeting` rows) and `monitor` (R1–R10's answer); and `capture.acquire`'s capture-request arm (acquisition
@@ -14,9 +15,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
-import { contentOf } from "../../../src/content/index.mjs";
 import { Entities } from "../../../src/entities/index.mjs";
-import { readHooksOf } from "../../../src/reading-pipeline/hooks.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { followingOf } from "../../../src/following/index.mjs";
@@ -92,19 +91,19 @@ export function world({ view = testView(), now = T0 } = {}) {
   x.migrate();
   const prov = provenanceOf(host, { record, membership, promotion: promotionStub(), now: () => "2026-10-01T00:00:00Z" });
   prov.migrate();
-  const content = contentOf(host, { record, membership, provenance: prov, extraction: x });
-  if (typeof content.migrate === "function") content.migrate();
   const ents = new Entities(st, { record, membership, provenance: prov });
   ents.migrate();
   ents.view = () => ({ ...view, conflicts: [] });
   let clock = 0;
-  const ev = eventsOf(host, { record, membership, provenance: prov, extraction: x, content, entities: ents, readHooks: readHooksOf(host),
+  /* content's extent context (its R12–R13) for a capture whose container extent this record does not hold */
+  const content = { contentContextFor: () => ({ chain: null, pageCount: null, pageBoxes: null, container: { held: false }, format: null, office: null }) };
+  const ev = eventsOf(host, { record, membership, provenance: prov, extraction: x, content, entities: ents,
                               now: () => new Date(Date.UTC(2026, 9, 1, 0, 0, clock++)).toISOString(), view: () => view });
   ev.migrate();
   for (const [m, role] of [["alice", "member"], ["bob", "member"], ["outsider", "member"], ["root", "admin"]])
     st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', ?, 'active', '2026-01-01', '2026-01-01')`, m, role);
 
-  const w = { st, host, record, membership, x, prov, ents, ev, view, t: now,
+  const w = { st, host, record, membership, x, ents, ev, view, t: now,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)], one: (q, ...a) => [...st.sql.exec(q, ...a)][0] || null };
 
   /* ---- what bytes the network serves, and what capture did ---- */
@@ -219,7 +218,6 @@ export function observedMeeting(w, bodyId, value, status = "EventScheduled") {
   const s = sha(`meeting ${value} ${Math.random()}`);
   w.bundle("INFO-2026-0900-minutes");
   w.st.sql.exec(`INSERT OR REPLACE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, 'INFO-2026-0900-minutes', 'snapshots/m', 'utf8', 1, '2026-10-01T00:00:00Z')`, s);
-  w.prov.recordReceipt({ address: `https://ellery.example/${s}`, addressNorm: `https://ellery.example/${s}`, captureSha: s, retrieved: "2026-10-01T00:00:00Z", via: "direct" });
   w.x.writeReading({ bundleId: "INFO-2026-0900-minutes", captureSha: s, composed: true,
     reading: { content_type: "text/html", reader_version: 1, found: true, at: "2026-10-01T00:00:00Z", entities: [], facts: {} } });
   const df = w.ev.recordDatedFact({ captureSha: s, extent: { kind: "document" }, kind: "meeting", value, method: "read by a member", by: MEMBER });
