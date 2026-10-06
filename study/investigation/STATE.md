@@ -15,11 +15,11 @@
 | 1 | M2 | done | `notes/M2.md` |
 | 1 | M3 | done | `notes/M3.md` |
 | 1 | M4 | done | `notes/M4.md` |
-| 1b | B1 | partial | `research/B1.md` |
+| 1b | B1 | done | `research/B1.md` |
 | 1b | B2 | done | `research/B2.md` |
 | 1b | B3 | done | `research/B3.md` |
 | 1b | B4 | done | `research/B4.md` |
-| 1b | B5 | partial | `research/B5.md` |
+| 1b | B5 | done | `research/B5.md` |
 | 2 | A-READING | missing | `studies/READING.md` |
 | 2 | A-PLANNING | missing | `studies/PLANNING.md` |
 | 2 | A-HOME | missing | `studies/HOME.md` |
