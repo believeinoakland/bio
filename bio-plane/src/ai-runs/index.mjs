@@ -3,8 +3,10 @@
  * rows are `run-rules`' since the split (K617, K649 (1)); this file is the mechanism: the one exit, open, tick,
  * close, the reaper and the wake, the reads, and the services later modules produce under a run through (R28, R29).
  * Since T33-50 it also holds the assistant's use: the counter of every model call's figures per member and local day
- * (R48, R49), each member's own daily ceiling and the administrator's lower one for the copy (R50), the two reads of
- * use (R51), and the account a run carries (R52): the member whose act started it, refused by name when they hold none.
+ * (R48, R49; since T34-33 one entry per conversation, carrying the calls its sum covers), each member's own daily ceiling
+ * and the administrator's lower one for the copy (R50), the two reads of use (R51), and the account a run carries (R52):
+ * the one `credentials.accountFor` answers for the act of the member who started it, their own or the group's API key
+ * (K1755), the act and its use still that member's; refused by name when no account serves them.
  *
  * THE ONE EXIT (R14, R31) is `#aiRunTerminate`, and it is the only thing that moves a run out of `running`: the
  * terminal log entry and the status change are one transaction, so no run is over while its log is silent. The
@@ -42,8 +44,9 @@ export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
  *  default at the release (plan T33). `tokens` counts every token a call processed (input, output, cache read and cache
  *  write); `calls` counts model calls. */
 export const AI_CEILING_DEFAULT = Object.freeze({ tokens: 2_000_000, calls: 200 });
-/** R48: the figures of one model call's `usage`, as `agent-model` returns them (its R5); token figures are whole
- *  numbers, the cost a dollar amount, and any of them `null` where the provider did not state it. */
+/** R48: the figures of one conversation's `usage`, as `agent-model` returns them (its R5, R6: the sum over its model
+ *  calls); token figures are whole numbers, the cost a dollar amount, and any of them `null` where the provider did not
+ *  state it. */
 export const USAGE_TOKEN_FIGURES = Object.freeze(["input_tokens", "output_tokens", "cache_read_input_tokens",
   "cache_creation_input_tokens"]);
 export const USAGE_FIGURES = Object.freeze([...USAGE_TOKEN_FIGURES, "total_cost_usd"]);
@@ -712,10 +715,12 @@ export class AiRuns {
    *  against.
    *
    *  BOTH PRINCIPALS ARE REQUIRED and neither is ever a token value (§14a,
-   *  DEC-27(b), DEC-55.4). Since K1502 there is no cascade: the Claude account a
-   *  run carries is the member's whose act started it (R52), and it is recorded
-   *  as `principal_claude`, `member:<id>`; the plane refuses to open a run that
-   *  names none, or whose member holds no account.
+   *  DEC-27(b), DEC-55.4). The Claude account a run carries is the one
+   *  `credentials.accountFor` answers for the act of the member who started it
+   *  (R52; K1755: their own, else the group's API key), and the run is that
+   *  member's act, recorded as `principal_claude`, `member:<id>`, whichever
+   *  account serves it; the plane refuses to open a run that names no member, or
+   *  one no account serves.
    *
    *  AND SINCE SK-1, SO IS THE SKILL VERSION. The paragraph above still holds
    *  for the bias manifest and the standard pair — absent is stored as absent
@@ -953,6 +958,12 @@ export class AiRuns {
       bundles: (Array.isArray(lensNow.bundles) ? lensNow.bundles : [])
         .map((b) => ({ bundle_id: b.bundle_id, revision: b.revision ?? null })),
       at: now });
+    /* R52 (K1503, K1755): THE ACCOUNT THE RUN CARRIES, asked of `credentials.accountFor` for the act of the member who
+       started it, here, before the id's existence is asked, so the check below and the insert stay one synchronous step
+       with no await between them. Its answer is applied in R52's place further down (after the re-run refusals), and
+       the unsealed key is dropped at once: only whether an account serves the member, and which, is kept. */
+    const accountMember = AiRuns.#accountMember({ actor, principalPlane, principalClaude });
+    const account = accountMember ? await this.#accountFor(accountMember, "run") : null;
     /* REC-76 — the second of the two codeless refusals the widened classifier
        found here. It is a real member-facing condition (an id that is already in
        use), and it was answering with a bare sentence a surface could only
@@ -998,17 +1009,18 @@ export class AiRuns {
                      + "else would be measured against a different lens entirely" });
     }
 
-    /* R52 (K1502, K1503): THE ACCOUNT THE RUN CARRIES, that of the member whose act started it; with none, refused by
-       name. Then R50: that member's use today against the ceiling in force. Both before anything is written, and
-       before R47's check, which stays last. Each refusal keeps the open's shape. */
-    const accountMember = AiRuns.#accountMember({ actor, principalPlane, principalClaude });
+    /* R52 (K1502, K1503, K1755): THE ACCOUNT THE RUN CARRIES, the one `credentials.accountFor` answered above for the act
+       of the member who started it (their own reference, else the group's API key while held and on); with none,
+       refused by name. Then R50: that member's use today against the ceiling in force, the copy's included, whichever
+       account serves them. Both before anything is written, and before R47's check, which stays last. Each refusal keeps
+       the open's shape. */
     /* K1606 (run-rules R18, C-22.19, a RELAY): a run starts only at a member's act — the member found above; with none,
        the caller's own stamp is what is judged, and a run is never the standing question's exception. */
     const start = startAllowed({ startedBy: accountMember ? `member:${accountMember}` : (actor || principalPlane), mode: runMode });
     if (!start || start.ok !== true)
       return { run, started: false, code: start.code, check: start.check, translation: start.translation, detail: start.detail };
-    if (!this.#accountHeld(accountMember))
-      return { run, started: false, ...this.#noAccount(accountMember, "A run") };
+    if (!account || account.refusal)
+      return { run, started: false, ...(account ? account.refusal : this.#noAccount(accountMember, "A run")) };
     const overCeiling = this.#ceilingRefusal(accountMember, nowMs);
     if (overCeiling) return { run, started: false, ...overCeiling };
 
@@ -1109,7 +1121,8 @@ export class AiRuns {
    *  is a fact about the run's state, and a late tick from a straggling
    *  sub-session must not resurrect a run whose log is already closed. */
   tick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
-              /* R48: one entry per model call made since the last tick, `{mode, model, usage}`. */
+              /* R48 (N588): one entry per conversation that reached the provider since the last tick,
+                 `{mode, model, usage, calls}`. */
               usage = null,
               actor = null, viewer = null,
               /* REC-152: the caller's PRINCIPAL, stamped server-side by `control-plane` in the form the open
@@ -1195,16 +1208,17 @@ export class AiRuns {
                bytes: badState.bytes, limit: badState.limit,
                note: "a run's state is its resumable work list, and it is bounded. "
                    + "Nothing was appended and no budget was spent" };
-    /* R48 — THE CALLS' FIGURES, judged whole after the state and before anything is written: a malformed entry refuses
-       the whole tick as R3 refuses a malformed consumption (C-22.13). */
+    /* R48 — THE CONVERSATIONS' FIGURES, judged whole after the state and before anything is written: a malformed entry
+       (its `calls` included) refuses the whole tick as R3 refuses a malformed consumption (C-22.13). */
     const badUsage = this.#usageRefusal(usage);
     if (badUsage)
       return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(badUsage),
-               note: "each model call's figures are as the model service states them. Nothing was appended and no budget "
-                   + "was spent" };
+               note: "each conversation's figures and calls are as the model service states them. Nothing was appended and "
+                   + "no budget was spent" };
     const calls = Array.isArray(usage) ? usage : [];
-    /* R52: the calls are counted against the member whose account carries the run; a run that carries none (one opened
-       before T33-50) cannot have its calls counted, and a tick reporting calls for it is refused by name. */
+    /* R52: the calls are counted against the member whose act the run serves, whichever account carried it (their own or
+       the group's key, K1755); a run that names no member (one opened before T33-50) cannot have its calls counted, and a
+       tick reporting calls for it is refused by name. */
     const payer = AiRuns.#payerOf(row.principal_claude);
     if (calls.length && !payer)
       return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(this.#noAccount(null, "This run")) };
@@ -1653,21 +1667,22 @@ export class AiRuns {
        exists to prevent — so it resumes nothing, and says so. */
     if (c.principalKind !== "organisation")
       return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION", tokenId: c.tokenId };
-    /* K1502, K1514: the copy holds no Claude account; the account a resumed run is carried by is its own member's
-       (R52), read per run at the dispatch. */
+    /* K1502, K1514, K1755: the copy binds no Claude credential; the account a resumed run is carried by is the one that
+       serves its member's act (R52: their own, or the group's API key), read per run at the dispatch. */
     return { ready: true, stamp: `${c.principal}/${c.tokenId}`, tokenId: c.tokenId, token: cred.token, store };
   }
 
   /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. */
   #aiRunResumeDecision(run, resumer) {
     const principal = String((run && run.principal_plane) || "");
-    /* R52 (K1503): the run continues only on the account of the member whose act started it; with none held, it is
-       withheld by name and waits, and the binding is not called. */
+    /* R52 (K1503, K1755): the run continues only on the account that serves the act of the member who started it (their
+       own, or the group's key); with none, it is withheld by name and waits, and the binding is not called. */
     const payer = AiRuns.#payerOf(run && run.principal_claude);
-    if (resumer && resumer.ready && principal === resumer.stamp && !(payer && this.#accountHeld(payer)))
+    if (resumer && resumer.ready && principal === resumer.stamp && !(payer && this.#accountServing(payer)))
       return { dispatch: false, withheld: "NO_ACCOUNT",
-               says: "Resumption: NOT dispatched — the member whose act started this run has no Claude account or API key "
-                   + "connected, and a run continues only on that member's own account (K1503). It waits." };
+               says: "Resumption: NOT dispatched — no Claude account serves the member whose act started this run (none of "
+                   + "their own is connected, and the group's key is not set or not on), and a run continues only on the "
+                   + "account that serves that member's act (K1503, K1755). It waits." };
     if (resumer && resumer.ready && principal === resumer.stamp)
       return { dispatch: true, withheld: null,
                says: `Resumption: handed to agent-worker under the instance's organisation credential `
@@ -1688,29 +1703,31 @@ export class AiRuns {
   /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
    *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
   async #aiRunDispatch(d, resumer, iso) {
-    /* R52, K1514, K1601 (agent-worker R6, R10): the body carries `account`, the run member's own reference as credentials
-       R24 unseals it for this run, `{kind, secret, member, suggestions}` — a subscription token stays `subscription`, never an API key
-       (K1553), and `member` is the run's account member, `member:<id>`, so agent-worker can check it against the run.
-       Used for this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
+    /* R52, K1514, K1601, K1755 (agent-worker R6, R10): the body carries `account`, the account `credentials.accountFor`
+       answers for the act of the run's member (its R35), `{kind, level, secret, member, suggestions}`: `level` `member`
+       for their own reference (a subscription token stays `subscription`, never an API key, K1553), `group` for the
+       group's API key, whose use is still that member's act; `secret` is R35's `key`, named as agent-worker R6 reads it;
+       `member` is the run's account member, `member:<id>`, so agent-worker can check it against the run (its R10). Used
+       for this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
     let outcome, timer;
-    let ref = null;
-    try {
-      ref = await credentialsOf(this.ctx).accountReferenceFor({ member: `member:${d.payer}`, act: { kind: "run", member: `member:${d.payer}` } });
-    } catch { ref = null; }
-    if (!ref || ref.ok !== true || typeof ref.secret !== "string")
+    let ref = d.payer ? await this.#accountFor(d.payer, "run") : null;
+    if (!ref || ref.refusal)
       outcome = { state: "REFUSED", status: null,
-                  reason: String((ref && (ref.code || ref.reason)) || "NO_ACCOUNT").slice(0, 80) };
-    /* K1615 (agent-worker R56): and the member's own suggestions switch (credentials R25), read from their reference's
-       state; anything but an explicit on is off. */
+                  reason: String((ref && ref.refusal && (ref.refusal.code || ref.refusal.reason)) || "NO_ACCOUNT").slice(0, 80) };
+    /* K1615 (agent-worker R56): and the switch that governs the serving account: the member's own (credentials R25), read
+       from their reference's state; anything but an explicit on is off. The group key's own switch (credentials R37) has
+       no in-plane read for a member's act (ai-runs #11 J1 (2)), so a run the group key serves offers none: off, as by
+       default. */
     let suggestions = false;
-    if (!outcome) {
+    if (!outcome && ref.level === "member") {
       try {
         const st = credentialsOf(this.ctx).accountReferenceState({ member: `member:${d.payer}`, viewer: `member:${d.payer}` });
         suggestions = !!(st && st.ok === true && st.suggestions === true);
       } catch { suggestions = false; }
     }
     const body = outcome ? null : { run_id: d.run, store: resumer.store, credential: resumer.token,
-                                    account: { kind: ref.kind, secret: ref.secret, member: `member:${d.payer}`, suggestions } };
+                                    account: { kind: ref.kind, level: ref.level, secret: ref.key, member: `member:${d.payer}`,
+                                               suggestions } };
     ref = null;
     if (body) try {
       const res = await Promise.race([
@@ -2594,26 +2611,46 @@ export class AiRuns {
     return { day: localDay(iso, "UTC"), zone: "UTC" };
   }
 
-  /** R48: a list of model calls' usage, one entry per call, `{mode, model, usage}`, `usage` as `agent-model` R5 states
-   *  it. Null when well formed; else run-rules R3's refusal of a malformed consumption (C-22.13), naming the entry. */
+  /** R48 (N588; K1621): a list of conversations' usage, one entry per conversation that reached the provider,
+   *  `{mode, model, usage, calls}`: `usage` its summed figures as `agent-model` R5 and R6 state them, `calls` the model
+   *  calls that sum covers (its R6), a positive whole number or `null` where the runner states none. Null when well
+   *  formed; else run-rules R3's refusal of a malformed consumption (C-22.13), naming the entry. `calls` absent is
+   *  malformed, as R48 says. */
   #usageRefusal(list) {
     if (list == null) return null;
     const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", detail);
     if (!Array.isArray(list))
-      return bad("`usage` is a list with one entry per model call made since the last tick, each {mode, model, usage}.");
+      return bad("`usage` is a list with one entry per conversation that reached the model since the last tick, each "
+        + "{mode, model, usage, calls}.");
     for (let i = 0; i < list.length; i++) {
       const e = list[i];
       if (!e || typeof e !== "object" || Array.isArray(e))
-        return bad(`usage entry ${i + 1} is not an object {mode, model, usage}.`);
+        return bad(`usage entry ${i + 1} is not an object {mode, model, usage, calls}.`);
       if (typeof e.mode !== "string" || !e.mode.trim() || e.mode.length > 40)
         return bad(`usage entry ${i + 1} names no mode.`);
       if (e.model != null && (typeof e.model !== "string" || e.model.length > 120))
         return bad(`usage entry ${i + 1}'s model is not a model's name.`);
       const u = AiRuns.#figuresRefusal(e.usage);
       if (u) return bad(`usage entry ${i + 1}: ${u}`);
+      const c = AiRuns.#callsRefusal(e);
+      if (c) return bad(`usage entry ${i + 1}: ${c}`);
     }
     return null;
   }
+
+  /** R48: an entry's `calls`, the model calls its usage covers: present, and a positive safe integer or `null` (the
+   *  runner stated none). A sentence saying what is wrong, else null. */
+  static #callsRefusal(e) {
+    if (!Object.prototype.hasOwnProperty.call(e, "calls"))
+      return "it names no 'calls', the model calls its usage covers (null when the runner stated none).";
+    const v = e.calls;
+    if (v === null || (typeof v === "number" && Number.isSafeInteger(v) && v >= 1)) return null;
+    return "its 'calls' is not a whole number of one or more, or null.";
+  }
+
+  /** R48: the calls an entry adds to the count: its `calls`, a `null` counting as one, never none, so a ceiling on
+   *  calls is never reached later than the calls made. */
+  static #callsOf(e) { return e.calls === null || e.calls === undefined ? 1 : e.calls; }
 
   /** One call's figures: each of `USAGE_FIGURES` present, `null` (not stated) or a figure — a token count a whole
    *  number of zero or more, the cost a finite amount of zero or more. A sentence saying what is wrong, else null. */
@@ -2630,12 +2667,14 @@ export class AiRuns {
     return null;
   }
 
-  /** R48, R49: add well-formed calls to `member`'s counter for the local day of `ms`, inside the caller's transaction.
-   *  A figure not stated adds nothing and is counted as unstated, never as 0. */
+  /** R48, R49: add well-formed entries to `member`'s counter for the local day of `ms`, inside the caller's transaction:
+   *  each entry's figures to the sums and its calls (R48's `#callsOf`) to the count. A figure not stated adds nothing and
+   *  is counted as unstated, never as 0. */
   #count(member, entries, ms) {
     const { day } = this.#dayOf(ms);
     for (const e of entries) {
       const u = e.usage;
+      const callCount = AiRuns.#callsOf(e);
       const n = (f) => (u[f] === null ? 0 : u[f]);
       const tokensUnstated = USAGE_TOKEN_FIGURES.some((f) => u[f] === null) ? 1 : 0;
       const costUnstated = u.total_cost_usd === null ? 1 : 0;
@@ -2643,14 +2682,14 @@ export class AiRuns {
       this.sql.exec(
         `INSERT INTO ai_usage (member, day, mode, calls, input_tokens, output_tokens, cache_read_input_tokens,
            cache_creation_input_tokens, cost_micro_usd, tokens_unstated, cost_unstated)
-         VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(member, day, mode) DO UPDATE SET calls = calls + 1, input_tokens = input_tokens + excluded.input_tokens,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(member, day, mode) DO UPDATE SET calls = calls + excluded.calls, input_tokens = input_tokens + excluded.input_tokens,
            output_tokens = output_tokens + excluded.output_tokens,
            cache_read_input_tokens = cache_read_input_tokens + excluded.cache_read_input_tokens,
            cache_creation_input_tokens = cache_creation_input_tokens + excluded.cache_creation_input_tokens,
            cost_micro_usd = cost_micro_usd + excluded.cost_micro_usd,
            tokens_unstated = tokens_unstated + excluded.tokens_unstated, cost_unstated = cost_unstated + excluded.cost_unstated`,
-        member, day, String(e.mode).trim(), n("input_tokens"), n("output_tokens"), n("cache_read_input_tokens"),
+        member, day, String(e.mode).trim(), callCount, n("input_tokens"), n("output_tokens"), n("cache_read_input_tokens"),
         n("cache_creation_input_tokens"), micro, tokensUnstated, costUnstated);
     }
     return entries.length;
@@ -2694,20 +2733,44 @@ export class AiRuns {
     return null;
   }
 
-  /** R52: whether `member` holds an account reference (credentials R23's state, asked as that member; nothing is
-   *  unsealed). */
-  #accountHeld(member) {
+  /** R52 (K1755): which account serves `member`'s act now, read without unsealing, for the synchronous checks (an ask's
+   *  ceiling check, the wake's decision): `member` when they hold a reference of their own (credentials R23's state, asked
+   *  as that member), else `group` when the group's API key is on and they are an active member (credentials R34's
+   *  state, asked as that member: it answers `{on}` to an active member alone), else null. R35's choice, as its own
+   *  order makes it. */
+  #accountServing(member) {
+    const c = credentialsOf(this.ctx), as = `member:${member}`;
     try {
-      const s = credentialsOf(this.ctx).accountReferenceState({ member: `member:${member}`, viewer: `member:${member}` });
-      return !!(s && s.ok === true && s.held === true);
-    } catch { return false; }
+      const s = c.accountReferenceState({ member: as, viewer: as });
+      if (s && s.ok === true && s.held === true) return "member";
+    } catch { /* read as none of their own */ }
+    try {
+      const g = c.groupKeyState({ viewer: as });
+      return g && g.ok === true && g.on === true ? "group" : null;
+    } catch { return null; }
+  }
+
+  /** R52 (K1503, K1755): the account `credentials.accountFor` (its R35) answers for `member`'s act of `kind` (`run`):
+   *  `{level, kind, key}` when one serves it; else `{refusal}`: `NO_ACCOUNT` read as this module's `AI_NO_ACCOUNT`, any
+   *  other refusal of that service (the group key's notice not yet read, a member not active, the seal) relayed as it
+   *  came. The caller keeps the key for the one call it serves, or not at all. */
+  async #accountFor(member, kind) {
+    let a = null;
+    try {
+      a = await credentialsOf(this.ctx).accountFor({ member: `member:${member}`, act: { kind, member: `member:${member}` } });
+    } catch { a = null; }
+    if (a && a.ok === true && typeof a.key === "string" && (a.level === "member" || a.level === "group"))
+      return { level: a.level, kind: a.kind, key: a.key };
+    if (!a || a.code === "NO_ACCOUNT" || typeof a.code !== "string") return { refusal: this.#noAccount(member, "A run") };
+    const { ok: _ok, ...rest } = a;
+    return { refusal: { ok: false, ...rest } };
   }
 
   #noAccount(member, what) {
     /* DEC-49 REGION is-ai-no-account */
     return this.#refuse("AI_NO_ACCOUNT", member
-      ? `${what} needs the Claude account or API key of the member whose act started it, and that member has none `
-        + `connected. Nothing was started.`
+      ? `${what} needs a Claude account to serve the member whose act started it, and none serves that member: they have `
+        + `connected none of their own, and the group's key is not set or not on. Nothing was started.`
       : `${what} names no member whose Claude account carries it. Nothing was started.`);
     /* END DEC-49 REGION is-ai-no-account */
   }
@@ -2726,16 +2789,20 @@ export class AiRuns {
     return typeof principalClaude === "string" && principalClaude.startsWith("member:") ? memberIdOf(principalClaude) : null;
   }
 
-  /** R48: count an ask's model call (an ask is no run, K1450), or a standing question's AI half (R52, its author's),
-   *  for `member`, by `answers`. `usage` is one call's figures; `mode` the call's mode. Writes the counter only. */
-  countAskUsage({ member = null, mode = null, usage = null, at = null } = {}) {
+  /** R48: count an ask's conversation (an ask is no run, K1450), or a standing question's AI half (R52, its author's),
+   *  for `member`, by `answers` (and the control plane's `askusage`). `usage` is the conversation's summed figures,
+   *  `calls` the model calls they cover, read as in a tick's entry (a `null` counts one); `mode` the conversation's mode.
+   *  An omitted `calls` reads as `null` (ai-runs #11 J1 (1): a caller that predates N588 states none). Writes the counter
+   *  only, to `member`'s day, whichever account served the ask (K1755). */
+  countAskUsage({ member = null, mode = null, usage = null, calls = null, at = null } = {}) {
     const id = memberIdOf(member);
     if (!id) return this.#noAccount(null, "Counting an ask's use");
-    const bad = this.#usageRefusal([{ mode, model: null, usage }]);
+    const entry = { mode, model: null, usage, calls };
+    const bad = this.#usageRefusal([entry]);
     if (bad) return bad;
     const ms = at ? Date.parse(at) : Date.now();
-    this.#transact(() => this.#count(id, [{ mode, usage }], ms));
-    return { ok: true, counted: 1, day: this.#dayOf(ms).day };
+    this.#transact(() => this.#count(id, [entry], ms));
+    return { ok: true, counted: 1, calls: AiRuns.#callsOf(entry), day: this.#dayOf(ms).day };
   }
 
   /** R50: a provider's refusal for a spent limit (a 429 `enforced_spend_limit_reached` on the member's own account),
@@ -2749,11 +2816,12 @@ export class AiRuns {
       + "the assistant cannot continue for now. Nothing was lost.", { provider_limit: true });
   }
 
-  /** R50, R52: before an ask's (or a standing question's) first model call, `answers` asks this: null when `member` holds
-   *  an account and is under the ceiling in force today; else the refusal, in plain words. Writes nothing. */
+  /** R50, R52: before an ask's (or a standing question's) first model call, `answers` asks this: null when an account
+   *  serves `member` (their own, or the group's key, K1755) and they are under the ceiling in force for them today, the
+   *  copy's included; else the refusal, in plain words. Writes nothing. */
   aiUseCheck({ member = null, at = null } = {}) {
     const id = memberIdOf(member);
-    if (!id || !this.#accountHeld(id)) return this.#noAccount(id, "An ask");
+    if (!id || !this.#accountServing(id)) return this.#noAccount(id, "An ask");
     return this.#ceilingRefusal(id, at ? Date.parse(at) : Date.now());
   }
 

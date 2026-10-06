@@ -1,6 +1,7 @@
-/* ai-runs R48–R53 (T33-50; Q0-6; K1450, K1481, K1502, K1503): the use of every model call counted per member, local day
-   and mode; each member's own daily ceiling and the administrator's lower one for the copy; the two reads of use; the
-   account a run carries; and the tables declared explicitly. */
+/* ai-runs R48–R53 (T33-50; Q0-6; K1450, K1481, K1502, K1503; T34-33: N588, K1621, K1755): the use of every model call
+   counted per member, local day and mode, one entry per conversation carrying its calls; each member's own daily ceiling
+   and the administrator's lower one for the copy; the two reads of use; the account a run carries (the member's own or
+   the group's API key, the act still the member's); and the tables declared explicitly. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, PROJ, ANN, ORG, T0, USAGE, sha, agentWorker } from "./world.mjs";
@@ -10,7 +11,8 @@ import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 const at = (s) => `2026-07-01T${s}Z`;
 const ROWS = AI_RUNS_CHECKS;
 const usageRows = (w) => w.rows(`SELECT * FROM ai_usage ORDER BY member, day, mode`);
-const call = (mode = "check", over = {}) => ({ mode, model: "claude-model-x", usage: USAGE(over) });
+/** One conversation's entry, `{mode, model, usage, calls}` (agent-worker R26, agent-model R6). */
+const call = (mode = "check", over = {}, calls = 1) => ({ mode, model: "claude-model-x", usage: USAGE(over), calls });
 /** A refusal carrying its row (R35: read by key from `run-rules`' table, its R20). */
 function refused(r, code) {
   assert.equal(r.code, code, JSON.stringify(r).slice(0, 300));
@@ -28,15 +30,17 @@ async function useWorld(opts = {}) {
   return w;
 }
 
-test("R48: tick takes usage, one entry per model call {mode, model, usage}; each is added to the counter of the member whose account carries the run, inside the tick's transaction; nothing of it reaches the run's log, an observation or a bundle", async () => {
+test("R48: tick takes usage, one entry per conversation {mode, model, usage, calls}; each is added to the counter of the member whose act the run serves, its figures to the sums and its calls to the count (a null calls counting as one, never none), inside the tick's transaction; nothing of it reaches the run's log, an observation or a bundle", async () => {
   const w = await useWorld();
   await w.runs.open(OPEN());
   const logBefore = w.rows(`SELECT * FROM observation_log`);
   const bundlesBefore = w.rows(`SELECT * FROM bundles ORDER BY bundle_id`);
   const t = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:05:00"),
-    usage: [call("check"), call("check", { input_tokens: 10, output_tokens: 5, total_cost_usd: 0.5 }), call("check", { total_cost_usd: null })] });
+    usage: [call("check", {}, 4), call("check", { input_tokens: 10, output_tokens: 5, total_cost_usd: 0.5 }, 1),
+            call("check", { total_cost_usd: null }, null)] });
   assert.deepEqual([t.ticked, t.counted, t.appended], [true, 3, 0]);
-  assert.deepEqual(usageRows(w), [{ member: "ann", day: "2026-07-01", mode: "check", calls: 3, input_tokens: 2010, output_tokens: 405,
+  /* three conversations: 4 calls, 1 call, and one whose runner stated none, counted as one */
+  assert.deepEqual(usageRows(w), [{ member: "ann", day: "2026-07-01", mode: "check", calls: 6, input_tokens: 2010, output_tokens: 405,
     cache_read_input_tokens: 0, cache_creation_input_tokens: 0, cost_micro_usd: 512000, tokens_unstated: 0, cost_unstated: 1 }]);
   assert.deepEqual(w.rows(`SELECT * FROM observation_log`), logBefore, "no entry for the calls");
   assert.deepEqual(w.rows(`SELECT * FROM bundles ORDER BY bundle_id`), bundlesBefore);
@@ -62,9 +66,14 @@ test("R48: a usage entry not of that shape refuses the whole tick as R3 refuses 
   const look = { level: "document", subject: "https://example.org/a", state: "LOOKED_ABSENT", detail: "none" };
   const before = w.dump() + JSON.stringify(usageRows(w));
   const { input_tokens: _drop, ...missing } = USAGE();
-  for (const usage of [{}, "x", [null], [1], [{ model: "m", usage: USAGE() }], [{ mode: "", model: "m", usage: USAGE() }],
-                       [{ mode: "check", model: 7, usage: USAGE() }], [{ mode: "check", model: "m" }], [{ mode: "check", model: "m", usage: [] }],
-                       [{ mode: "check", model: "m", usage: missing }], [call("check", { input_tokens: -1 })], [call("check", { output_tokens: 1.5 })],
+  for (const usage of [{}, "x", [null], [1], [{ model: "m", usage: USAGE(), calls: 1 }], [{ mode: "", model: "m", usage: USAGE(), calls: 1 }],
+                       [{ mode: "check", model: 7, usage: USAGE(), calls: 1 }], [{ mode: "check", model: "m", calls: 1 }],
+                       [{ mode: "check", model: "m", usage: [], calls: 1 }],
+                       /* N588: `calls` absent, or neither null nor a positive whole number */
+                       [{ mode: "check", model: "m", usage: USAGE() }], [call("check", {}, 0)], [call("check", {}, -1)], [call("check", {}, 1.5)],
+                       [call("check", {}, "2")], [call("check", {}, Number.NaN)], [call("check", {}, Infinity)], [call("check", {}, 2 ** 53)],
+                       [{ ...call(), calls: undefined }], [call("check", {}, true)], [call("check"), call("check", {}, [3])],
+                       [{ mode: "check", model: "m", usage: missing, calls: 1 }], [call("check", { input_tokens: -1 })], [call("check", { output_tokens: 1.5 })],
                        [call("check", { cache_read_input_tokens: "5" })], [call("check", { total_cost_usd: -0.1 })],
                        [call("check", { total_cost_usd: Number.NaN })], [call("check"), call("check", { cache_creation_input_tokens: Infinity })]]) {
     const r = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:05:00"), usage, log: [look], consume: { fetches: 1 } });
@@ -76,7 +85,7 @@ test("R48: a usage entry not of that shape refuses the whole tick as R3 refuses 
   /* every figure stated or null: accepted; nulls are counted as unstated */
   const nulls = Object.fromEntries(USAGE_FIGURES.map((f) => [f, null]));
   assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:05:00"),
-    usage: [{ mode: "check", model: null, usage: nulls }] })).counted, 1);
+    usage: [{ mode: "check", model: null, usage: nulls, calls: null }] })).counted, 1);
   assert.deepEqual(w.row(`SELECT calls, input_tokens, cost_micro_usd, tokens_unstated, cost_unstated FROM ai_usage`),
     { calls: 1, input_tokens: 0, cost_micro_usd: 0, tokens_unstated: 1, cost_unstated: 1 });
   /* the order: the run's own refusals come first (an absent run is absent; a stranger is not its principal) */
@@ -93,19 +102,23 @@ test("R48: a usage entry not of that shape refuses the whole tick as R3 refuses 
     "without calls it ticks as before");
 });
 
-test("R48, R52: countAskUsage counts an ask's call (no run) for its member — a standing question's AI half for its author — and refuses a malformed call or no member, writing nothing", () => {
+test("R48, R52: countAskUsage counts an ask's conversation (no run) for its member — a standing question's AI half for its author — its calls read as in a tick's entry (a null counting as one; omitted read as null, J1 (1)), and refuses a malformed entry or no member, writing nothing", () => {
   const w = world();
   const before = JSON.stringify(usageRows(w));
   refused(w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: { input_tokens: 1 }, at: at("09:00:00") }), "AI_RUN_CONSUME_INVALID");
   refused(w.runs.countAskUsage({ member: "member:ann", mode: "", usage: USAGE(), at: at("09:00:00") }), "AI_RUN_CONSUME_INVALID");
+  for (const calls of [0, -2, 1.5, "3", Number.NaN, true, {}])
+    refused(w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE(), calls, at: at("09:00:00") }), "AI_RUN_CONSUME_INVALID");
   for (const member of [null, "", "class:ai", "token:admin", "member:"])
-    refused(w.runs.countAskUsage({ member, mode: "ask", usage: USAGE() }), "AI_NO_ACCOUNT");
+    refused(w.runs.countAskUsage({ member, mode: "ask", usage: USAGE(), calls: 1 }), "AI_NO_ACCOUNT");
   assert.equal(JSON.stringify(usageRows(w)), before);
-  assert.deepEqual(w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE(), at: at("09:00:00") }),
-    { ok: true, counted: 1, day: "2026-07-01" });
-  w.runs.countAskUsage({ member: "ann", mode: "ask", usage: USAGE({ output_tokens: 1 }), at: at("10:00:00") });
+  assert.deepEqual(w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE(), calls: 3, at: at("09:00:00") }),
+    { ok: true, counted: 1, calls: 3, day: "2026-07-01" });
+  assert.equal(w.runs.countAskUsage({ member: "ann", mode: "ask", usage: USAGE({ output_tokens: 1 }), calls: null, at: at("10:00:00") }).calls, 1);
+  assert.equal(w.runs.countAskUsage({ member: "ann", mode: "ask", usage: USAGE({ output_tokens: 0 }), at: at("11:00:00") }).calls, 1,
+    "an omitted calls reads as null: one call");
   assert.deepEqual(w.row(`SELECT member, mode, calls, input_tokens, output_tokens FROM ai_usage`),
-    { member: "ann", mode: "ask", calls: 2, input_tokens: 2000, output_tokens: 201 });
+    { member: "ann", mode: "ask", calls: 5, input_tokens: 3000, output_tokens: 201 });
   assert.equal(w.count("ai_runs"), 0, "an ask writes no run row");
   assert.equal(w.count("observation_log"), 0, "and no observation");
 });
@@ -318,6 +331,71 @@ test("R52: a run carries the account of the member whose act started it — the 
   refused(w.runs.aiUseCheck({ member: "member:bob", at: T0 }), "AI_USE_CEILING_REACHED");
   refused(w.runs.aiUseCheck({ member: "member:dan", at: T0 }), "AI_NO_ACCOUNT");
   refused(w.runs.aiUseCheck({ member: null, at: T0 }), "AI_NO_ACCOUNT");
+});
+
+test("R48, R50 (N588): a ceiling on calls is reached by the calls a conversation made, never later — one entry of five calls reaches a five-call ceiling, and a null calls counts as one", async () => {
+  const w = await useWorld();
+  w.runs.aiCeilingSet({ member: "member:ann", calls: 5, by: "member:ann" });
+  await w.runs.open(OPEN());
+  assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:05:00"), usage: [call("check", {}, 4)] })).ticked, true);
+  assert.equal(w.runs.aiUseCheck({ member: "member:ann", at: at("00:06:00") }), null, "4 of 5: under");
+  assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:07:00"), usage: [call("check", {}, null)] })).ticked, true);
+  assert.equal(w.runs.aiUsageMine({ viewer: "member:ann", day: "2026-07-01" }).used.calls, 5, "a null counted as one");
+  refused(w.runs.aiUseCheck({ member: "member:ann", at: at("00:08:00") }), "AI_USE_CEILING_REACHED");
+  refused(await w.runs.open(OPEN({ run: "R2", at: at("00:08:00") })), "AI_USE_CEILING_REACHED");
+  /* one conversation of many calls: bob's five-call ceiling is reached by a single entry, not after five conversations */
+  w.runs.aiCeilingSet({ member: "member:bob", calls: 5, by: "member:bob" });
+  w.runs.countAskUsage({ member: "member:bob", mode: "ask", usage: USAGE(), calls: 5, at: at("00:09:00") });
+  refused(w.runs.aiUseCheck({ member: "member:bob", at: at("00:09:00") }), "AI_USE_CEILING_REACHED");
+});
+
+test("R52 (K1755): a member with no account of their own is served by the group's API key while it is held and on — the run opens as that member's act (principal_claude their own id), its use counted to their day and held by the ceiling in force for them, the copy's included; the key off or removed, AI_NO_ACCOUNT; credentials' other refusals (the key's notice unread) relayed as given; nothing written on any refusal", async () => {
+  const w = await useWorld();
+  const C = w.credentials;
+  const danOpen = (run, over = {}) => w.runs.open(OPEN({ run, contextType: "project", contextId: PROJ, actor: "dan", viewer: "member:dan",
+                                                          principalPlane: "member:dan", ...over }));
+  /* no key yet: dan has no assistant */
+  const before = w.dump();
+  refused(await danOpen("D0"), "AI_NO_ACCOUNT");
+  refused(w.runs.aiUseCheck({ member: "member:dan", at: T0 }), "AI_NO_ACCOUNT");
+  /* held but off (off when first set): still none */
+  assert.equal((await C.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
+  refused(await danOpen("D0"), "AI_NO_ACCOUNT");
+  refused(w.runs.aiUseCheck({ member: "member:dan", at: T0 }), "AI_NO_ACCOUNT");
+  /* on, the notice unread: accountFor refuses GROUP_KEY_NOTICE_DUE (credentials R36), relayed with its row */
+  assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);
+  const due = await danOpen("D0");
+  assert.deepEqual([due.started, due.code], [false, "GROUP_KEY_NOTICE_DUE"], JSON.stringify(due).slice(0, 300));
+  assert.equal(typeof due.check, "string");
+  assert.equal(typeof due.translation, "string");
+  assert.equal(w.dump(), before, "nothing written on any refusal");
+  /* the notice read: the run opens, and it is dan's act */
+  assert.equal(C.groupKeyNoticeSeen({ member: "member:dan", by: "member:dan" }).ok, true);
+  assert.equal(w.runs.aiUseCheck({ member: "member:dan", at: T0 }), null);
+  const o = await danOpen("D1");
+  assert.equal(o.started, true, JSON.stringify(o).slice(0, 300));
+  assert.equal(w.row(`SELECT principal_claude FROM ai_runs WHERE run='D1'`).principal_claude, "member:dan");
+  assert.equal(JSON.stringify(w.rows(`SELECT * FROM ai_runs`)).includes("group-key-secret"), false, "the key enters no record");
+  assert.equal(JSON.stringify(o).includes("group-key-secret"), false);
+  /* its use is dan's, on dan's day */
+  await w.runs.tick({ run: "D1", viewer: "member:dan", actor: "dan", caller: "member:dan", at: at("00:05:00"), usage: [call("check", {}, 2)] });
+  assert.deepEqual(w.rows(`SELECT member, calls FROM ai_usage`), [{ member: "dan", calls: 2 }]);
+  /* the copy's ceiling caps the group key's use as it caps every use; dan's own ceiling holds too */
+  w.runs.aiCopyCeilingSet({ calls: 2, by: "admin" });
+  refused(w.runs.aiUseCheck({ member: "member:dan", at: at("00:06:00") }), "AI_USE_COPY_CEILING_REACHED");
+  refused(await danOpen("D2", { at: at("00:06:00") }), "AI_USE_COPY_CEILING_REACHED");
+  w.runs.aiCopyCeilingSet({ calls: null, by: "admin" });
+  w.runs.aiCeilingSet({ member: "member:dan", calls: 2, by: "member:dan" });
+  refused(await danOpen("D2", { at: at("00:06:00") }), "AI_USE_CEILING_REACHED");
+  w.runs.aiCeilingSet({ member: "member:dan", calls: null, by: "member:dan" });
+  /* a member with their own account is served by it, the group key on or not */
+  assert.equal(w.runs.aiUseCheck({ member: "member:ann", at: T0 }), null);
+  /* the key switched off: dan has none again */
+  assert.equal(C.groupKeySwitch({ on: false, by: "admin" }).ok, true);
+  const was = w.dump();
+  refused(await danOpen("D3", { at: at("00:07:00") }), "AI_NO_ACCOUNT");
+  refused(w.runs.aiUseCheck({ member: "member:dan", at: T0 }), "AI_NO_ACCOUNT");
+  assert.equal(w.dump(), was);
 });
 
 test("R53: the module's tables are declared explicitly through record-core's declareTable — ai_usage and ai_ceilings admin-only, group sight, purged only with the whole store; ai_runs, ai_run_bounds and inquiry_run_surfacings with a run's sight, as R38 purges them", async () => {
