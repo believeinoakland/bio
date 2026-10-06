@@ -65,7 +65,7 @@
        "screen": "setup",
        "act": "profilesset",
        "what": "Choose the places whose rules apply, and the languages your members use.",
-       "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself."
+       "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose none: everything else works, and you enter due dates yourself."
       },
       {
        "screen": "setup",
