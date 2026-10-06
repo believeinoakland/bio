@@ -43,7 +43,8 @@ test("R9 readLine: NO_LINE for an empty id, found false for an absent one, other
   assert.equal(w.l.readLine({ lineId: "", viewer: ANN }).reason, "NO_LINE");
   assert.deepEqual(w.l.readLine({ lineId: "LIN-2026-aaaaaaaaaaaaaaaa", viewer: ANN }), { ok: true, found: false, line_id: "LIN-2026-aaaaaaaaaaaaaaaa" });
   const s = w.held("INFO-2026-0001", sha("org chart"));
-  w.resolved("INFO-2026-0001", s, [{ kind: "office", key: "Harbour Master", label: "Harbour Master", ref: "Harbour Master" }]);
+  w.entities.resolve(s, o, "B");
+  w.entities.resolve(s, o, "A");
   const r = w.l.recordLine({ kind: "reports_to", from: o, to: b, role: "functional", valid: { from: "2020-01-01" },
                              basis: { captureSha: s, extent: { kind: "document" } }, by: ANN });
   const line = w.l.readLine({ lineId: r.line_id, viewer: ANN }).line;
@@ -53,7 +54,7 @@ test("R9 readLine: NO_LINE for an empty id, found false for an absent one, other
   assert.deepEqual(line.basis, { form: "passage", captureSha: s, extent: { kind: "document" } });
   assert.equal(line.citation, `capture ${s}`);
   assert.equal(line.assertion, w.prov.captureGrade(s).grade, "the assertion is the capture's grade");
-  assert.deepEqual(line.ends, { from: "A", to: "D" }, "the office resolves in the capture by its alias; the body does not");
+  assert.deepEqual(line.ends, { from: "A", to: "D" }, "the office's strongest resolution in the capture; the body is not resolved there");
   assert.deepEqual(line.bounds.given, { from: "2020-01-01", to: null, precision: "day", zone: "America/Halifax" });
   assert.equal(line.bounds.cached.from, "2020-01-01");
   assert.equal(line.withdrawn, null);

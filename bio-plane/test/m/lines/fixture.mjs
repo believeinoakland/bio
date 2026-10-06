@@ -1,8 +1,10 @@
 /* lines' test fixture: a Durable Object storage stand-in over node:sqlite at the plane's shape (`sql.exec` answering a
    cursor, `transactionSync` nesting as savepoints), the real modules lines uses that are built (record-core,
-   membership, provenance, extraction, content, entities, connection-grammar), and two contract stand-ins for what is
+   membership, provenance, content, entities, connection-grammar), a capture with no reading for `content`'s context
+   (extraction is not lines' use), and two contract stand-ins for what is
    being built beside this job in T33's layer 5 (reading J1 (3)):
-   - `entities`' T33 parts (kind `proceeding`, `entityByIdentifier`, entities R43–R45), over the real registry;
+   - `entities`' T33 parts (kind `proceeding`, `entityByIdentifier`, entities R43–R45) over the real registry, and
+     the resolutions a capture holds (entities R14's answer), set by the test;
    - `events` (R15 `onWhenChanged`, R26 `readEvent`'s `when`), which moves an event's `when` inside a transaction
      and tells its listeners there, as its R15 says.
    Every test drives `lines` at its interface. */
@@ -10,9 +12,8 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf, listenerRefusal } from "../../../src/membership/index.mjs";
-import { Extraction } from "../../../src/extraction/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
-import { contentOf } from "../../../src/content/index.mjs";
+import { Content } from "../../../src/content/index.mjs";
 import { Entities, noSuchEntity } from "../../../src/entities/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { Lines } from "../../../src/lines/index.mjs";
@@ -62,6 +63,7 @@ function promotionStub() {
 function entitiesT33(real) {
   const extra = new Map();          /* entity_id → {kind, label} for kinds the built registry does not yet take */
   const idents = new Map();         /* `${scheme}|${id}` → entity_id */
+  const res = new Map();            /* capture sha → [{entity_id, grade}] */
   let n = 0;
   return {
     real,
@@ -69,7 +71,7 @@ function entitiesT33(real) {
     readEntity: ({ entityId, viewer }) => (extra.has(entityId)
       ? { ok: true, found: true, entity: { entity_id: entityId, ...extra.get(entityId) } }
       : real.readEntity({ entityId, viewer })),
-    resolutionsFor: (a) => real.resolutionsFor(a),
+    resolutionsFor: ({ captureSha }) => ({ ok: true, capture_sha: captureSha, resolutions: res.get(captureSha) ?? [] }),
     entityByIdentifier: ({ scheme, id }) => idents.get(`${scheme}|${id}`) ?? null,
     noSuchEntity,
     /* test-side acts */
@@ -84,6 +86,7 @@ function entitiesT33(real) {
       return r.entity_id;
     },
     identify(entityId, scheme, id) { idents.set(`${scheme}|${id}`, entityId); },
+    resolve(captureSha, entityId, grade) { res.set(captureSha, [...(res.get(captureSha) ?? []), { capture_sha: captureSha, entity_id: entityId, grade }]); },
   };
 }
 
@@ -129,11 +132,10 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionStub();
-  const x = new Extraction(st, { record, membership, promotion });
-  x.migrate();
+  const x = { readingOf: () => null };
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });
   prov.migrate();
-  const content = contentOf(host, { record, membership, provenance: prov, extraction: x });
+  const content = new Content({ storage: st, record, membership, provenance: prov, extraction: x });
   content.migrate();
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
   const realEntities = new Entities(st, { record, membership, provenance: prov });
@@ -160,12 +162,6 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
                    VALUES (?, ?, 'snapshots/x', 'utf8', 1, '2026-09-27T00:00:00Z')`, captureSha, bundleId);
       prov.recordReceipt({ address, addressNorm: address.toLowerCase(), captureSha, retrieved: "2026-09-27T00:00:00Z" });
       return captureSha;
-    },
-    /* A reading of the capture carrying `refs`, then the recogniser over it: the capture's resolutions. */
-    resolved(bundleId, captureSha, refs) {
-      x.writeReading({ bundleId, captureSha, composed: true,
-        reading: { content_type: "text/html", reader_version: 1, found: true, at: "2026-09-27T00:00:00Z", entities: refs } });
-      return realEntities.resolve({ captureSha, resolvedBy: MACHINE });
     },
     /* A project with one participant, and an outsider member. */
     project(id, participant) {
