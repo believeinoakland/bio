@@ -1,6 +1,6 @@
 # promotion (T34)
 
-**Status** · session_011TTwXKMsCDA3RVYLNZrRLP · depth 2 · WORKING · handled B4
+**Status** · session_011TTwXKMsCDA3RVYLNZrRLP · depth 2 · WAITING ON BOB (CHANGE: record-core, credentials) · handled B4
 
 ## J1 · REPORT
 
