@@ -8,6 +8,8 @@
 
 **Sources** · `next.md` (T34), its 51 entries N549–N554 and N556–N600 (N555 left `next.md` for T33 as T33-20b, K1548; N576 and N595 as widened and N600 as added by K1649); the rulings each entry cites (K1513–K1646); the DECs on PR #11 (`claude/gallant-brown-zg0wc1` @ 4ed8870f, DEC-131 to DEC-141), whose owed lines are folded once PR #11 is on `main` at T33's close (§13.1 item 5); `modules.json` for the order. Sizes are this draft's count of `.mjs`/`.js` lines over each module's `paths` on `tranche/T33` today. An entry whose text waits on something T33 delivers (T33-90 merged, PR #11 on `main`, L11's routing) is in, because T33 will have closed.
 
+**Account switch (K1820).** When Bob's primary meter reads about 90% or more, BOB moves the work to his secondary Max 20x account at the next layer close (no job live): handoff written and pushed, then Bob's one act, starting the secondary account's ROOT; the `BOB` row of `build/channels.md` changes at T34's close (§13.1 item 1). BOB asks Bob for his meter at each layer close.
+
 ## Legacy census (§5.2 (2))
 
 | legacy module (`modules.json`) | in T34 | entry or hard reason |
