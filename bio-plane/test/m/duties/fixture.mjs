@@ -61,11 +61,12 @@ export function fictionalView(extra = {}) {
       { rule: "monthly_report", applies_to: "claim", units: "months", amount: 1, starts: "act", citation: "Test Code §9",
         status: "researched", basis: "TEST" },
     ],
-    response_statuses: [
+    /* jurisdictions R58: the response vocabulary is a `vocabulary` key */
+    vocabulary: { response_statuses: [
       { status: "implemented", label: "has been implemented", citation: "Test Penal Code §933", basis: "TEST" },
       { status: "will_implement", label: "will be implemented", citation: "Test Penal Code §933", basis: "TEST" },
       { status: "will_not_implement", label: "will not be implemented", citation: "Test Penal Code §933", basis: "TEST" },
-    ],
+    ] },
     ...extra,
   };
 }

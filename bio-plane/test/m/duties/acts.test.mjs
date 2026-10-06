@@ -81,7 +81,7 @@ test("R1 refusals for a duty's fields, in order, each writing nothing, with a pa
   const c1 = w.passage().contentId;
   row(d({ reported_status: [{ status: "done", extent: c1 }] }), "UNKNOWN_REPORTED_STATUS");
   assert.equal(d({ reported_status: [{ status: "implemented", extent: c1 }] }).ok, true);
-  const bare = world({ view: fictionalView({ response_statuses: undefined }) });
+  const bare = world({ view: fictionalView({ vocabulary: {} }) });
   const bc = bare.passage().contentId;
   const none = bare.duties.declare({ ...bare.fields({ reported_status: [{ status: "implemented", extent: bc }] }), clause: "c", by: BOB });
   row(none, "UNKNOWN_REPORTED_STATUS");
@@ -102,11 +102,11 @@ test("R2 a proposed duty is stored apart and labelled, never tracked until a mem
   /* a proposal is checked as R1 says */
   row(w.duties.propose({ ...w.fields({ modality: "maybe" }), by: MACHINE }), "UNKNOWN_MODALITY");
   /* the machine never adopts or declares */
-  row(w.duties.adopt({ proposalId: p.proposal_id, clause: "s1", by: MACHINE }), "MEMBER_ACT_ONLY");
-  row(w.duties.adopt({ proposalId: p.proposal_id, clause: "s1", by: "" }), "MEMBER_ACT_ONLY");
-  row(w.duties.declare({ ...w.fields(), clause: "s1", by: MACHINE }), "MEMBER_ACT_ONLY");
+  row(w.duties.adopt({ proposalId: p.proposal_id, clause: "s1", by: MACHINE }), "DUTY_MEMBER_ACT_ONLY");
+  row(w.duties.adopt({ proposalId: p.proposal_id, clause: "s1", by: "" }), "DUTY_MEMBER_ACT_ONLY");
+  row(w.duties.declare({ ...w.fields(), clause: "s1", by: MACHINE }), "DUTY_MEMBER_ACT_ONLY");
   row(w.duties.adopt({ proposalId: p.proposal_id, clause: "  ", by: BOB }), "NO_CLAUSE");
-  row(w.duties.adopt({ proposalId: 999, clause: "s1", by: BOB }), "NO_SUCH_PROPOSAL");
+  row(w.duties.adopt({ proposalId: 999, clause: "s1", by: BOB }), "DUTY_NO_SUCH_PROPOSAL");
   const a = w.duties.adopt({ proposalId: p.proposal_id, clause: "s7922(a)", by: BOB });
   assert.equal(a.ok, true);
   assert.equal(a.duty_id, "DUT-2026-0001");
@@ -183,8 +183,8 @@ test("R5 a profile deadline is held as a generic duty of the office the rule nam
 test("R6 revise writes a new version with who, when and why, re-checking R1; withdraw keeps the duty, shown withdrawn, deriving no further occurrences", () => {
   const w = world();
   const a = w.declare({ trigger: { kind: "recurrence", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", dtstart: "2026-01-01" }, time: { basis: "commitment" } });
-  row(w.duties.revise({ dutyId: a.duty_id, performance: { act: "post minutes" }, reason: "the clause says minutes", by: MACHINE }), "MEMBER_ACT_ONLY");
-  row(w.duties.revise({ dutyId: a.duty_id, performance: { act: "post minutes" }, reason: "", by: BOB }), "NO_REASON");
+  row(w.duties.revise({ dutyId: a.duty_id, performance: { act: "post minutes" }, reason: "the clause says minutes", by: MACHINE }), "DUTY_MEMBER_ACT_ONLY");
+  row(w.duties.revise({ dutyId: a.duty_id, performance: { act: "post minutes" }, reason: "", by: BOB }), "DUTY_NO_REASON");
   row(w.duties.revise({ dutyId: "DUT-2026-0099", reason: "x", by: BOB }), "NO_SUCH_DUTY");
   row(w.duties.revise({ dutyId: a.duty_id, modality: "wish", reason: "x", by: BOB }), "UNKNOWN_MODALITY");
   w.at("2026-03-05T00:00:00.000Z");
@@ -196,8 +196,8 @@ test("R6 revise writes a new version with who, when and why, re-checking R1; wit
     [1, BOB, "2026-03-02T12:00:00Z", null, "respond to the records request"],
     [2, CAROL, "2026-03-05T00:00:00Z", "the clause says minutes", "post the minutes"]]);
   /* withdraw */
-  row(w.duties.withdraw({ dutyId: a.duty_id, reason: " ", by: BOB }), "NO_REASON");
-  row(w.duties.withdraw({ dutyId: a.duty_id, reason: "repealed", by: MACHINE }), "MEMBER_ACT_ONLY");
+  row(w.duties.withdraw({ dutyId: a.duty_id, reason: " ", by: BOB }), "DUTY_NO_REASON");
+  row(w.duties.withdraw({ dutyId: a.duty_id, reason: "repealed", by: MACHINE }), "DUTY_MEMBER_ACT_ONLY");
   const before = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-06-02T00:00:00Z", from: "2026-01-01", to: "2026-06-01", viewer: BOB });
   assert.equal(before.occurrences.length, 6);
   w.at("2026-03-15T00:00:00.000Z");

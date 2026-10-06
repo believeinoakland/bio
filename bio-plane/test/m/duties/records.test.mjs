@@ -53,7 +53,7 @@ test("R13 recordTransition: a member's own recording, refusing UNKNOWN_STATE and
   const key = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-03-02T00:00:00Z", viewer: BOB }).occurrences[0].key;
   const rec = (over) => w.duties.recordTransition({ dutyId: a.duty_id, occurrenceKey: key, state: "met", asOf: "2026-03-01T00:00:00Z",
                                                    cause: "the clerk's letter of 10 February", by: BOB, ...over });
-  row(rec({ by: MACHINE }), "MEMBER_ACT_ONLY");
+  row(rec({ by: MACHINE }), "DUTY_MEMBER_ACT_ONLY");
   row(rec({ state: "breached" }), "UNKNOWN_STATE");
   row(rec({ cause: " " }), "NO_CAUSE");
   row(rec({ occurrenceKey: "OCC-nope" }), "NO_SUCH_OCCURRENCE");
