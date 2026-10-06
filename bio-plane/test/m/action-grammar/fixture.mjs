@@ -9,12 +9,17 @@ import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
    the UTC day and every finding is the recorded one; the local day in other zones is R7's own tests'. */
 export const ZONE = "UTC";
 
-/* K899 (1) (T20 layer 9): text a member reads says "record" where the code before the move said "bundle". These are the
-   two sentences of this module that held the word, each old phrase with its new one; the golden file stays as recorded
-   and is compared with these applied, so no other byte of it moves. */
+/* K899 (1) (T20 layer 9): text a member reads says "record" where the code before the move said "bundle"; T34-87
+   (DEC-149) re-words three more. Each old phrase with its new one; the golden file stays as recorded and is compared with
+   these applied, so no other byte of it moves. */
 export const REWORDED = [
   ["' is not a canonical bundle id", "' is not a canonical record id"],
   ["point the edge at the ACTN- bundle whose correspondence this answers", "point the edge at the ACTN- record whose correspondence this answers"],
+  /* T34-87 (DEC-149, K1811): a member reads "your group's Civicsmith" where three sentences said "the plane" or "this
+     instance": `requestLifecycleOf`'s `says` (R8), C-2.10's kind finding (R7) and C-101.1's translation (R9). */
+  ["The plane derives only the days", "Your group's Civicsmith derives only the days"],
+  ["' is not a kind this instance offers", "' is not a kind your group's Civicsmith offers"],
+  ["An action is one of the kinds this instance offers:", "An action is one of the kinds your group's Civicsmith offers:"],
 ];
 const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
 export const GOLDEN = JSON.parse(REWORDED.reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
