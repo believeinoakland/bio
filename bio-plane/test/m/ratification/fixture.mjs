@@ -96,7 +96,7 @@ export const bucketOver = (m) => ({
   put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
 });
 
-export function world() {
+export function world({ steer = {} } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
@@ -172,6 +172,8 @@ export function world() {
     attributionStatedFor: () => false,
     observationsNamingAuthor: () => [],
     commitCaseEdition: (a) => { pub.committed.push(a); return realPub.commitCaseEdition(a); },
+    /* a test's own stand-ins (T34-85: publication R66, R67, R69, R62 until publication's merge), present at creation */
+    ...steer,
   };
   const publication = new Proxy(steered, {
     get(t, k) {
@@ -194,13 +196,21 @@ export function world() {
      a test replaces (a throw, a rejection, a refusal); R37's test also boots the real module */
   const sealCalls = [];
   const networkNotices = { openSeals: (a) => (sealCalls.push(a), w.openSeals(a)) };
+  /* people R20's `tiesConcerning` and money's `readFact` (R41's `ties`), answered from `ties` (member -> ties) and
+     `moneyFacts` (fact id -> fact), each call kept in `tiesAsked` */
+  const ties = new Map(), moneyFacts = new Map(), tiesAsked = [];
+  const people = { tiesConcerning: (a) => (tiesAsked.push(a), { ok: true, member: a.member,
+    ties: (ties.get(a.member) ?? []).filter((t) => a.entities.includes(t.entity)) }) };
+  const money = { readFact: ({ factId }) => (moneyFacts.has(factId) ? { ok: true, found: true, fact_id: factId, fact: moneyFacts.get(factId) }
+                                                                  : { ok: true, found: false, fact_id: factId, fact: null }) };
   const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
-                                   basisVersions, publication, capture, strength, reevaluation, networkNotices });
+                                   basisVersions, publication, capture, strength, reevaluation, networkNotices,
+                                   people, money });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication, calls,
-    readers, corroboration, corroborationAsked, levelMoves, sealCalls,
+    readers, corroboration, corroborationAsked, levelMoves, sealCalls, realPub, ties, moneyFacts, tiesAsked,
     openSeals: async (a) => ({ ok: true, case: a.case, edition: a.edition, project: null, opened: [], attestation: null }),
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
