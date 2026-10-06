@@ -53,7 +53,7 @@
   --d-1: 120ms; --d-2: 200ms; --ease: cubic-bezier(.2,0,.2,1);
 
   /* layout */
-  --rail: 232px; --dock: 380px; --mast: 52px; --tap: 44px;
+  --rail: 184px; --dock: 380px; --mast: 52px; --tap: 44px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
 /*@DARK@*/

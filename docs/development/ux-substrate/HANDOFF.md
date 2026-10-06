@@ -1,6 +1,20 @@
 # UX design session: handoff
 
-Rewritten 2026-10-06 by the UX design session `session_011wdWGoa6RAbZiRU4Bn3Rng` (Bob's primary account) for its successor, at Bob's request after step 3 (journeys) settled. Its predecessors: `session_01EhPoUTrVCgAqw2ktRyKjCU` (to 2026-10-01), `session_01TNeXM2Qvi7zMXT6BntbENE` (to 2026-10-03), `session_01JZtUsAKpStQoiwF6rzqsyJ` (to 2026-10-05). Read this whole, then `README.md` in this folder (especially "Working alongside the development process"), then CLAUDE.md.
+Rewritten 2026-10-06 (evening) by the UX design session `session_01SEmEip2dMnNBFgsXF9Tids` (Bob's primary account) for its successor, at Bob's request when its context passed 65%. Predecessors: `session_011wdWGoa6RAbZiRU4Bn3Rng` (to 2026-10-06), `session_01EhPoUTrVCgAqw2ktRyKjCU` (to 2026-10-01), and earlier. **Taken over 2026-10-06 (late evening) by `session_01NWPmrrYZbbF8Wkrvp5Y2vx`**, which keeps §0 current. **Read §0 first: the state as handed over.**
+
+## 0. State at handover (2026-10-06, evening)
+
+- **Branch and PR.** `claude/gallant-brown-zg0wc1`; PR #11 merged (e879c270). **Open: PR believeinoakland/bio#12** (draft), DEC-142 to DEC-161, clean against `main` @ 454e5852 (K1700). MERGE entry **U72** posted; BOB merges it at T34's close (B60), later commits ride with it. Subscribe to it at takeover (`subscribe_pr_activity`).
+- **Outbox.** Writer `session_01NWPmrrYZbbF8Wkrvp5Y2vx` since 2026-10-06. Last entry **U96**. Read cursor **B74** (BOB #125, `session_01BDnHPha55vjqRQRyUZwLWo`, writes `mail/BOB` since B66). B74 (K1875) handed the security screen: drawn as DEC-165; S9 answered (DEC-166, countries, never a member's own address). B72 (K1852, ZIP archives): drawn as DEC-167 (screen `archive`, a row on Held captures).
+- **Decisions this session:** DEC-138 to DEC-161, each with a NOTICE (U59–U89). Bob's own: DEC-147 (publish at a set time), DEC-148 (wizard library approved), DEC-149 ("your group's Civicsmith", never "copy"), DEC-150/151 (a place not yet held; a group's own place rules after the first public release), DEC-152/153 (the assistant's help with writing), DEC-154 (every screen's path), DEC-156 (subscription sign-in through Anthropic's page; terms points U-7 left open, Bob's decision to build), DEC-157 (translation process, local names), DEC-161 (hover timing 0.5 s). The rest are the design session's under P17.
+- **Where BOB has them:** DEC-147–150 folded in T34 (K1784–K1785); DEC-152, 153, 158 named for T34 (K1818); DEC-156 is N678 in T35, with the sign-in living in each member's own agent-runner container (K1819); DEC-154, 155, 159, 160, 161 with the new screens' shell (N672); DEC-157 in N669 (T35); DEC-151 is N666, after the first public release.
+- **"Find in this": DONE (DEC-164, U93).** Bob's question of 6 October answered on the layouts page ("Making content, and finding it in what you hold") and drawn as the screen `find-in` (three scopes by `c.v`: `doc`, `set`, `project`), walked in journeys 6 and 10; the "Found by search" origin mark added to the visual language. K1841 (B71) folded into DEC-153 the same evening (no writing help in a reason field; with suggestions off, only from what the member typed; `WRITE_REFUSED` aligned, B69).
+- **Bob is waiting on:** nothing from you. S8 was answered (DEC-162, two levels); its guidance texts are `SCREEN_HELP` and `RAIL_HELP` in `screens/mock-refs.js`, marked `data-level="2"`. Last DEC: **DEC-167** (a captured archive's files); last outbox entry: **U96**.
+- **Bob's working style this session:** he reviews the layouts page by comments, many in a row; answer each in its thread, change the page, republish, resolve. He wants the reason before the recommendation, plain words, and references and context everywhere (DEC-159–161).
+- **Pages** (each watched): layouts https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv (v44) · journeys https://claude.ai/artifact/9hNPVCMcT8eyewWqKXfgSu (v36) · visual language https://claude.ai/artifact/QuvX7DzX7XbxS6SQG4MtT1 (v10) · brand and voice https://claude.ai/artifact/EipzYKnNxe5LG3YwWnTkpv (v15) · measures map https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni. No comment thread is open.
+- **The screens' machinery** (`screens/`): `mock-kit.js` (helpers: `btn`, `field` with `writeHelp` (DEC-153), `ref`, `card`, `strength(…, weak)`), `mock-screens.js` (SCR per screen), `mock-shell.js` (`render`, `PATH` (DEC-154), `GLOBAL_REFS` and `REFS`, `attachRefs` (DOM-based, every occurrence, skips `NO_REF`)), `mock-refs.js` (287 per-screen references), `page.src.html` (viewer; tips with 0.5 s timing, `data-goto` navigation, rail resizing, state switches `.st`, `.mk-ifother`, `.mk-ifelse`). Build `python3 build_page.py`; check `node check_walk.mjs`, `python3 check_library.py`; `visual-language/build.py` then `check_contrast.py`; then `node <civicos-process>/checks/run.mjs /home/user/bio`.
+- **Known mockup loose ends:** the queue's dates (due Friday vs a reply overdue since 9 October, today 6 October); the work orders' capture grade A on find and queue, B on the calculation; "Ben" appears once as a sixth member; review-copy and ceremony dates after "today".
+- **Check-in:** a `send_later` safety net (trigger `trig_01LiJoWNpfQns7DQmL59d5Ty`, 23:43 UTC). Delete it at takeover if you arm your own.
 
 ## 1. Who you are
 
@@ -79,7 +93,7 @@ You are the UX design session for Civicsmith (named CivicOS until DEC-124, 2026-
      - type, colour, shape, motion, light and dark, icons;
      - the marks: grades, weights, origin, states, the queue's To do / Noticed / Status, the hint, the hold strip, and the wizard mark (not a gear).
 
-     It builds on the plumb-bob mark (`marks/civicsmith-plumb-bob.svg`, DEC-126). Everything ships inside the group's copy, with no outside fonts (principle 9.6, DEC-122). It must meet WCAG 2.2 AA (DEC-99), and colour is never the only signal. The "Design System" artifact type is available (Artifact `quickstart`, intent "other").
+     It builds on the plumb-bob mark (`marks/civicsmith-plumb-bob.svg`, DEC-126). Everything ships inside the group's Civicsmith, with no outside fonts (principle 9.6, DEC-122). It must meet WCAG 2.2 AA (DEC-99), and colour is never the only signal. The "Design System" artifact type is available (Artifact `quickstart`, intent "other").
   5. **Layouts and key screens.** In this order of work:
      - frames (working, published, imported), grid, phone and desktop;
      - rendered mockups walking the journeys, each also drawn without the assistant (K1547);
@@ -110,7 +124,7 @@ You are the UX design session for Civicsmith (named CivicOS until DEC-124, 2026-
 | The new name (decided, DEC-124) | `new-name.html` | https://claude.ai/artifact/Fmr6rVd7GMifYDRaWcV7s8 |
 | Journeys (step 3, draft, partly answered) | `journeys.html` (edit it directly) | https://claude.ai/artifact/9hNPVCMcT8eyewWqKXfgSu |
 | Visual language (step 4, decided, DEC-138) | `visual-language.html`, built by `visual-language/build_page.py` | https://claude.ai/artifact/QuvX7DzX7XbxS6SQG4MtT1 |
-| Screens (step 5, drafted, DEC-139; S1, S2 open) | `layouts.html`, built by `screens/build_page.py` | https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv |
+| Screens (step 5, DEC-139; library approved DEC-148; S1, S4 ruled DEC-147, DEC-149) | `layouts.html`, built by `screens/build_page.py` | https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv |
 | Measures map (approved, DEC-82) | `measures-map.html` | https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni |
 
 From a new session, `read` a page (Artifact `read` with its `url`) before republishing to it, then publish with `url`; and watch each page you will receive comments on (`ArtifactComments` `watch` with its `url`). The design-phase pages share one look (the old design language's tokens: paper ground, Source Serif 4 for judgement, Source Sans 3 for plain speech, Source Code Pro for fact) as a reading format only; step 4 decides the product's look.

@@ -1,7 +1,7 @@
 /* The twenty-seven journeys of step 3 (journeys.html), walked through the mockups. A journey either walks a wizard from
    the library (its steps are the script's, unchanged) or lists its own steps. Each step: s (screen), act (the control
    it points at, an op of that screen), say (what happens, in Bob's words), only ('ai' or 'noai': a step that exists on
-   one path only), alt (what the member without the assistant does instead), dock (open the assistant panel). */
+   one path only), alt (what the member without the assistant does instead), dock (open the assistant panel), v (the screen's variant, as "Find in this"'s scope). */
 'use strict';
 const J = [
  { n: 1, t: 'A group gets going', who: 'The person installing it, the founder', wiz: 'Set up and claim',
@@ -14,10 +14,11 @@ const J = [
  { n: 5, t: 'Declaring your own ties', who: 'Every member, before they publish', wiz: 'Your ties' },
  { n: 6, t: 'From a problem to a question', who: 'Any member, often a newcomer', steps: [
    { s: 'home', act: 'owed:startfrom DEC-129', say: 'Mai opens the group\'s home and picks "A problem I live with".' },
-   { s: 'notes', act: 'owed:noteadd DEC-136', say: 'She writes the problem in her own words, in a note only she can see.' },
+   { s: 'notes', act: 'notewrite', say: 'She writes the problem in her own words, in a note only she can see.' },
    { s: 'capture', act: 'testify', say: 'She records what she has seen on Seminary Avenue: where, when, and a photo.' },
    { s: 'answers', act: 'ruleanswer', only: 'ai', say: 'She asks the assistant what standard the city set itself. It quotes Administrative Instruction 4.12 from what the group holds, as legal information.' },
    { s: 'finder', act: 'search', only: 'noai', say: 'She searches what the group holds for "pothole" and finds the city\'s own instruction, section by section.' },
+   { s: 'find-in', act: 'owed:findin DEC-164', v: 'doc', say: 'On the instruction she uses "Find in this" for dates, deadlines and requirements. It lists "within seven calendar days" at passage 3, found by search.' },
    { s: 'standard', act: 'standarddeclare', say: 'She holds the seven-day rule as a standard the city must meet.' },
    { s: 'project', act: 'promote', say: 'She turns the problem into a question the record can answer, in the Pothole repairs project.' },
    { s: 'request', act: 'addresseesuggest', say: 'The records she needs are not public, so she asks for them (journey 7).' } ] },
@@ -31,6 +32,7 @@ const J = [
  { n: 9, t: 'Checking a claim about the city\'s performance', who: 'Members; often an analyst or accountant', wiz: 'Check a claim' },
  { n: 10, t: 'Following a person', who: 'Any member; often an investigator or reporter', steps: [
    { s: 'document', act: 'identityclaim', say: 'Dev meets a name in the repair policy: L. Chen, Director of Public Works.' },
+   { s: 'find-in', act: 'recordpersonfact', v: 'project', say: 'He uses "Find in this project" for people and offices: L. Chen is named in 6 of its 14 documents, each with its passage. Nothing is recorded until he records it.' },
    { s: 'person', act: 'person', say: 'He opens the person\'s page: positions over time, each dated and cited.' },
    { s: 'person', act: 'recordpersonfact', say: 'He adds a fact from a captured document: a licence from the state register.' },
    { s: 'person', act: 'claimidentity', say: '"Lin Chen" in the 2019 minutes: he records "claimed the same person, grade B, because…". Records are linked, never merged.' },
@@ -58,7 +60,7 @@ const J = [
  { n: 16, t: 'A professional lends expertise', who: 'A professional member; project owners', steps: [
    { s: 'account', act: 'expertisedeclare', say: 'Ana joins like any member and declares "CPA".' },
    { s: 'members', act: 'expertiseconfirm', say: 'Rosa, an administrator, may confirm it. Confirmation gates nothing.' },
-   { s: 'question', act: 'owed:checkrequest DEC-135', say: 'Dev asks for a check from someone with accounting expertise; it reaches Ana as a To do.' },
+   { s: 'question', act: 'checkrequest', say: 'Dev asks for a check from someone with accounting expertise; it reaches Ana as a To do.' },
    { s: 'calculation', act: 'recordcheck', say: 'Ana reads the calculation and its inputs and records her check.' },
    { s: 'question', act: null, say: 'Her declared, confirmed expertise shows beside her check, so readers know who looked.' } ] },
  { n: 17, t: 'Working with the assistant', who: 'A member with their own Claude account', steps: [

@@ -23,15 +23,15 @@ const WEIGHT = {
   standardadopt:2, lawrelate:2, casedraft:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
   testify:2, acquire:2, capture:2, capturerequest:1, hypothesishold:1, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
   taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, aicopyceilingset:2, hostingaccess:2, enroll:2,
-  bootstrap:2, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
+  bootstrap:5, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
   filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, owed_memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,
   owed_noteadd:1, owed_noteconvert:2, owed_translationdraft:1, owed_translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,
-  retire:3, planclose:3, filingapprove:3, expunge:3, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
+  retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
   release:4, attest:4, caseratify:4, docketpost:4, signerregisterown:4, claim:4, docketfile:2,
-  publish:5,
+  publish:5, owed_publishat:5, owed_findin:1, owed_securitymap:1, owed_archivelist:1,
 };
-const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'owed_websitekeymint', 'owed_joinlinkset']);
+const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'owed_publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
 const key = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0] : op;
 /* a button carrying its act and weight. o: {tone, icon, out, quiet, id} */
 function btn(op, label, o = {}) {
@@ -42,22 +42,41 @@ function btn(op, label, o = {}) {
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;
 const grade = (scale, l, full) => `<span class="cs-grade" data-scale="${scale}" tabindex="0" aria-label="${scale} ${l}">${I(scale === 'subject' ? 'subject' : scale)}${full ? `<span class="sc">${full}</span> ` : ''}${l}</span>`;
-const strength = (c, n, phrase, t) => `<span class="cs-strength">${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
+// DEC-160: anything the record holds that a screen names is a link: click opens it (here, the screen that shows it), hover
+// or focus shows its card. `go` is the screen it opens.
+const ref = (text, go, tip, cls = '') => `<a href="#" class="cs-ref${cls ? ' ' + cls : ''}" data-goto="${go}" data-tip="${esc(tip)}">${text}</a>`;
+// a name or object that opens a card on hover, focus or tap (DEC-159)
+const card = (text, tip) => `<span class="cs-card" tabindex="0" data-tip="${esc(tip)}">${text}</span>`;
+const strength = (c, n, phrase, t, weak) => `<span class="cs-strength"${weak ? ` data-weak="${esc(weak)}"` : ''}>${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
 const gapm = (k, html) => `<span class="cs-gap" data-gap="${k}">${I({undetermined:'undetermined', withheld:'withheld', unrated:'unrated', nobody:'nobody', refused:'refused'}[k])}<span>${html}</span></span>`;
-const origin = (k, t) => `<span class="cs-origin" data-origin="${k}">${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged'}[k])}${esc(t)}</span>`;
+const origin = (k, t) => `<span class="cs-origin" data-origin="${k}">${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged', search:'search'}[k])}${esc(t)}</span>`;
 const kindm = k => `<span class="cs-kind" data-kind="${k}">${I(k === 'todo' ? 'todo' : k)}${{todo:'To do', noticed:'Noticed', status:'Status'}[k]}</span>`;
 const due = (s, t) => `<span class="cs-due"${s ? ` data-due="${s}"` : ''}>${I(s === 'met' ? 'accepted' : 'clock')}${esc(t)}</span>`;
 const hint = t => `<span class="cs-hint">${I('hint')}${esc(t || 'Hint · machine work')}</span>`;
 const pathm = cur => `<span class="cs-path">${['Working', 'Shared for review', 'Published'].map((s, i) => `<span${i === cur ? ' aria-current="step"' : ''}>${s}</span>`).join('<i>→</i>')}</span>`;
 const ladder = (k, steps, on, pend = []) => `<div class="cs-ladder" data-ladder="${k}">${steps.map((s, i) => `<span class="${i < on ? 'on' : ''}${pend.includes(i) ? ' pend' : ''}">${esc(s)}</span>`).join('')}</div>`;
+// DEC-153: wherever a member writes in their own words (a `rec` field), the assistant can help when it is reachable;
+// never in a field stating a member's reason for an act (`reason`, K1841), never on an act the assistant is refused
+// (affordances R7) or a signed or irreversible one (weight 4 or 5: publishing, at once or at a set time, signing, attesting),
+// never where a labelled draft already fills the field, and not on the group's own description, which has its own guided
+// draft (DEC-152). With the member's suggestions switch off it works only from what they typed (K1841 (2)).
+const WRITE_ACT = 'owed:writinghelp DEC-153';
+const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'inquirydivide', 'inquiryground',
+  'actionmove', 'actioncorrespond', 'actionlaws', 'actionrisktier', 'versionaccept', 'versionreject', 'versionconsider', 'versionrevert',
+  'versionhide', 'versioncurrent', 'contradictionresolve', 'caseratify', 'personexpunge', 'bootstrap', 'groupdescriptionset']);
+let WRITE_ON = false;
+const writeHelp = o => WRITE_ON && o.rec && !o.reason && !o.draft && !WRITE_REFUSED.has(o.act || '') && !((WEIGHT[key(o.act || '')] || 0) >= 4) ? `<div class="mk-acts">${btn(WRITE_ACT, 'Help me write this', { w: 1 })}</div>` : '';
 function field(id, label, value = '', o = {}) {
   const tag = o.area ? 'textarea' : 'input';
   const cls = `cs-input${o.rec ? ' rec' : ''}${o.draft ? ' cs-draft' : ''}`;
   const v = o.area ? `>${esc(value)}</textarea>` : ` value="${esc(value)}">`;
+  return writeHelp(o) ? fieldHtml(id, label, value, o, tag, cls, v) + writeHelp(o) : fieldHtml(id, label, value, o, tag, cls, v);
+}
+function fieldHtml(id, label, value, o, tag, cls, v) {
   return `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<${tag} id="${id}" class="${cls}"${o.area ? '' : ' type="text"'}${o.area ? '' : ''}${v}${o.draft ? `<span class="cs-draftlabel">${I(o.draft === 'machine' ? 'machine' : 'wizard')}${o.draft === 'machine' ? 'Draft by the assistant, at your request · edit it until it is yours' : o.draft === 'template' ? 'Draft from your group\'s template · edit it until it is yours' : 'Draft from the wizard · edit it until it is yours'}</span>` : ''}</div>`;
 }
-const choice = (id, label, opts, sel, o = {}) => `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<select id="${id}" class="cs-input">${opts.map(x => `<option${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
-const checks = (name, opts, o = {}) => `<fieldset class="mk-checks"${o.act ? ` data-act="${esc(o.act)}"` : ''}><legend>${esc(name)}</legend>${opts.map(([t, on], i) => `<label><input type="${o.radio ? 'radio' : 'checkbox'}" name="${esc(name)}"${on ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>`;
+const choice = (id, label, opts, sel, o = {}) => `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<select id="${id}" class="cs-input"${o.onchange ? ` onchange="${o.onchange}"` : ''}>${opts.map(x => `<option${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
+const checks = (name, opts, o = {}) => `<fieldset class="mk-checks"${o.act ? ` data-act="${esc(o.act)}"` : ''}${o.onchange ? ` onchange="${o.onchange}"` : ''}><legend>${esc(name)}</legend>${opts.map(([t, on], i) => `<label><input type="${o.radio ? 'radio' : 'checkbox'}" name="${esc(name)}"${on ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>`;
 const h1 = (t, sub) => `<div class="mk-h"><h1 class="t-title">${t}</h1>${sub ? `<p class="mk-sub">${sub}</p>` : ''}</div>`;
 const sec = (t, inner, o = {}) => `<section class="cs-section mk-sec"${o.act ? ` data-act="${esc(o.act)}"` : ''}><h2>${t}</h2>${inner}</section>`;
 const sheet = inner => `<div class="cs-sheet">${inner}</div>`;

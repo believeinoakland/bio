@@ -7,54 +7,62 @@ def screen(id, name, frame, purpose, acts, journeys):
     S.append(dict(id=id, name=name, frame=frame, purpose=purpose,
                   acts=[dict(op=a[0], label=a[1]) for a in acts], journeys=journeys))
 
-# --- the group's copy: setting up, joining, accounts
+# --- the group's Civicsmith: setting up, joining, accounts
 screen('install', 'Install Civicsmith', 'setup', 'The installer page: what is needed, the short name, installing the signed release into the group\'s own account.',
   [('bootstrap','Install with this short name'),('selftest','Let it test itself')], [1])
-screen('setup', 'Set up your group\'s copy', 'setup', 'The founder claims the copy, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
+screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
-   ('officesseed','Review offices and seats'),('assistantset','Offer the assistant to members'),('aicopyceilingset','Set the copy\'s daily limit'),
+   ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('owed:placewanted DEC-150','Name a place not yet listed'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the group\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccess','Record who holds the hosting account'),('memberadd','Invite a member or a second administrator')], [1])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
-  [('owed:groupprofileset DEC-132','Save who your group is'),('owed:groupprofilevisibility DEC-132','Choose who sees it')], [2])
+  [('groupdescriptionset','Save who your group is, and who sees it'),('owed:groupdescriptiondraft DEC-152','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
   [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('enroll','Join with a handle and password')], [3])
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What brought you here?".',
   [('projectcreated','Start a project'),('owed:startfrom DEC-129','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
   [('memberadd','Invite a member'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
-   ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('owed:websitekeymint DEC-133','Create a website key'),('owed:joinlinkset DEC-133','Turn the join link on or off')], [16,27])
+   ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
+   ('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('groupswitchset','Set the group key\'s suggestions and standing questions'),('groupkeyremove','Remove the group\'s key')], [16,27])
+screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
+  [('owed:securitymap K1875','Show the level for a period')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
-  [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language')], [3,16])
-screen('connect', 'Connect your Claude account', 'working', 'The member\'s own API key or subscription token, or skip; their daily limit; suggestions on or off (K1502, K1547).',
-  [('disclosureshown','Read what connecting means'),('accountreferenceset','Connect with your own key or token'),('aiceilingset','Set your daily limit'),('accountswitchset','Let the assistant suggest unprompted'),('accountreferenceremove','Disconnect')], [4,17])
+  [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
+screen('connect', 'The assistant and your account', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).',
+  [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('owed:subscriptionsignin DEC-156','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own subscription or key'),('aiceilingset','Set your daily limit'),('accountswitchset','Let the assistant suggest unprompted'),('accountreferenceremove','Disconnect')], [4,17])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',
-  [('owed:noteadd DEC-136','Write a note'),('owed:noteconvert DEC-136','Turn a note into an observation, hunch or question')], [6])
+  [('notewrite','Write a note'),('noteturn','Turn a note into an observation, hunch or question'),('owed:noterevise DEC-144','Revise your note'),('owed:notedelete DEC-144','Delete your note'),('owed:writinghelp DEC-153','Help me write this')], [6])
 screen('translations', 'Translations', 'working', 'The interface\'s words in the group\'s languages (DEC-127).',
-  [('owed:translationdraft DEC-127','Ask the assistant to draft'),('owed:translationadopt DEC-127','Adopt a translation')], [3])
+  [('owed:translationdraft DEC-127','Ask the assistant to draft'),('owed:translationadopt DEC-127','Adopt a translation'),('owed:translationgrant DEC-157','Give a member the grant for a language'),('owed:translationconfirm DEC-157','Confirm a protected word'),('owed:translationrevert DEC-157','Undo a change')], [3])
 screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, drafts, submitted (DEC-121).',
   [('wizards','See the library'),('wizarddraft','Record a new wizard'),('wizardrevise','Revise a draft'),('wizardsubmit','Submit for approval'),('wizardapprove','Approve'),('wizardretire','Retire')], [])
 
 # --- daily work
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
-   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder')], [19,23])
+   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint')], [19,23])
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
-  [('search','Search'),('select','Hold these together'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('countask','Count')], [6,7])
+  [('search','Search'),('select','Hold these together'),('owed:findin DEC-164','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('countask','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
-  [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address')], [6,7,9,15])
+  [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('owed:writinghelp DEC-153','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
   [('heldcaptures','See held captures'),('release','Vouch for them'),('heldsetaside','Set aside with a reason'),('heldrestore','Restore')], [15])
+screen('archive', 'Archive', 'working', 'A captured ZIP: every file with its state (filed with the archive\'s grade and held for review, already held, or not filed with its reason); vouching or setting files aside; an archive refused whole (K1852, DEC-167).',
+  [('gradenote','Read the grade note'),('owed:archivelist K1852','List the archive\'s files by state'),('heldsetaside','Set aside with a reason'),('release','Vouch for them')], [15])
 screen('document', 'Document', 'working', 'One captured document: its copy, grade note, passages, versions and what cites it.',
-  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Claim the same person'),('monitor','Watch for changes')], [7,15,23])
+  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Claim the same person'),('monitor','Watch for changes'),('owed:findin DEC-164','Find in this')], [7,15,23])
+screen('find-in', 'Find in this', 'working', 'One control on a document, a held set or a project: pick what to find; each result cites its passage and becomes a fact only by a member\'s own act (DEC-164, K1468).',
+  [('owed:findin DEC-164','Find in this'),('standingquestionset','Keep finding this as documents arrive'),('recordpersonfact','Add a fact from this passage'),('recorddatedfact','Record a dated fact'),
+   ('standarddeclare','Hold this as a standard'),('recordfact','Read into a money fact'),('tabledeclare','Declare the table'),('cite','Cite in the question'),('search','See all in Find')], [6,10])
 
 # --- projects and questions
 screen('project', 'Project', 'working', 'A project\'s home: objective, bar, questions, stage, plans, members.',
-  [('promote','Open a question'),('strengthbarset','Set the project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
+  [('promote','Open a question'),('owed:findin DEC-164','Find in this project'),('strengthbarset','Set the project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; strength against the bar; concluding.',
   [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('withdrawconclusion','Withdraw the conclusion'),
-   ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('owed:checkrequest DEC-135','Ask for a check by expertise'),
+   ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
    ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
   [('ruleanswer','Ask'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
@@ -63,7 +71,7 @@ screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it 
 
 # --- the record's subjects
 screen('person', 'Person', 'working', 'Positions, career, credentials, memberships, interests, statements; same person?',
-  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Claim the same person'),('withdrawidentityclaim','Withdraw a claim'),('followregister','Follow a register'),('expunge','Remove where the law requires')], [10])
+  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Claim the same person'),('withdrawidentityclaim','Withdraw a claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
 screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',
@@ -94,11 +102,11 @@ screen('matter', 'Matter', 'working', 'One government act: determination, conseq
 
 # --- publishing
 screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.',
-  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason')], [15,23])
+  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason'),('owed:writinghelp DEC-153','Help me write this')], [15,23])
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, signing.',
-  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie')], [15,24])
+  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie'),('owed:publishat DEC-147','Publish at a set time, checked again then')], [15,24])
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the group.',
   [('verify','Check the signature'),('publishedcase','Read the case')], [26])
 screen('imported', 'Another group\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',
