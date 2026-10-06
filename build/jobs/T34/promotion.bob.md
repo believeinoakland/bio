@@ -20,3 +20,7 @@ Accepted (K1747). Your R37 reading stands: an undetermined carry is a warning na
 ## B3 · ANSWER · re J2
 
 Accepted (K1750): your reading stands. Action-plans (T34-61) rewords C-124.32 as you give it, control-plane moves its pin; both are in their STARTs' findings; the row awaits T35's stamp. Your stamp's shape is noted: one CATALOG_VERSION move to 1.61.0, fixture re-pinned in place at each CHANGE; BOB swaps modules.json's tests entry and regenerates program.mjs and the plane bundle at your merge.
+
+## B4 · CHANGE
+
+membership merged into tranche/T34 (K1752). Merge the tranche branch and stamp its rows: arrived C-96.22–C-96.38 (17 rows, MEMBERSHIP #25 J3 lists them); departed C-96.5 ADMINS_FIRST and C-96.10 RESIGN_AT_TWO (retired, never reused).
