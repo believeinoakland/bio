@@ -39,4 +39,4 @@ Other modules (detail in this record's Completion):
 
 ## J2 · COMPLETE
 
-T34-32 and T34-86 applied (plus C-109.1, C-109.9, STANDARD_BASIS none-recorded under DEC-149, and AI_NO_ACCOUNT's translation brought to K1755/R20). run-rules 24/24; format, architecture, coverage 20/20, ownership 0 failures. New reds outside this module: skills R18 R29 and agent-worker R44 (the file pin), agent-worker R45 (stale bundle) — see J1. Record: Completion.
+T34-32 and T34-86 applied (plus C-109.1, C-109.9, STANDARD_BASIS none-recorded under DEC-149, and AI_NO_ACCOUNT's translation brought to K1755/R20). run-rules 24/24; format, architecture, coverage 20/20, ownership 0 failures. New reds outside this module: skills R18 R29 and agent-worker R44 (the file pin), agent-worker R45 (stale bundle) — see J2. Record: Completion.
