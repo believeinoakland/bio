@@ -285,3 +285,17 @@ test("R71: every table is declared explicitly with its classes: the projection, 
   /* The selections are cleared only by the whole-store purge (R33). */
   assert.equal(w.record.purge({ bundleId: "INFO-1" }).removed.bundle_terms, 1);
 });
+
+test("R68: money's closed words reach the compiler with every compile this module runs (K1563 (1), while money is injected): a word in money's list filters, one outside it is dropped with the warning naming the list", () => {
+  const money = { kinds: () => ["revenue", "expenditure"], phases: () => ["proposed", "adopted", "adjusted", "actual"],
+                  stages: () => ["encumbered", "incurred", "paid", "assessed", "collected"],
+                  bases: () => ["budgetary", "cash", "modified accrual", "accrual", "undetermined"] };
+  const { w } = corpus({ deps: { money } });
+  assert.deepEqual(ids(w, "kind:expenditure", V("vera")), ["INFO-1"]);
+  const s = w.retrieval.search({ q: "kind:bogus", viewer: V("vera"), mode: "ids", facets: false });
+  assert.equal(s.total, 3, "a dropped word widens the answer");
+  assert.ok(s.query.warnings.some((m) => m.includes("bogus") && m.includes("expenditure")), "the warning names money's list");
+  const run = w.retrieval.runSaved({ form: { v: 1, q: "kind:bogus", implicitOp: "and", sort: null, dir: null },
+                                     owner: V("ann"), viewer: V("ann") });
+  assert.equal(run.ok, false, "a saved form that drops a word does not run");
+});

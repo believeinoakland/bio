@@ -131,9 +131,11 @@ export class Retrieval {
   #terms = null;
   /* R69: where the governing time zone is read (local-facts R2; jurisdictions R41 as its fallback). */
   #localFacts; #combine; #host;
+  /* query-language's money words (its R28), injected until it reads `money` itself (K1563 (1); its J2). */
+  #money = null;
 
   constructor({ storage, record, membership, promotion, extraction, observation = null, now = null, selectionNow = null,
-                order = null, terms = null, localFacts = undefined, combine = combineProfiles, host = null }) {
+                order = null, terms = null, localFacts = undefined, combine = combineProfiles, host = null, money = null }) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.record = record;
@@ -150,6 +152,7 @@ export class Retrieval {
     /* `undefined`: the host's own local-facts, made when first asked (R69); `null`: none. */
     this.#localFacts = localFacts;
     this.#host = host;
+    this.#money = money && typeof money === "object" ? money : null;
     this.#combine = typeof combine === "function" ? combine : null;
     this.frontierReader = new Frontier(this);
   }
@@ -410,10 +413,11 @@ export class Retrieval {
    *  field no registration holds (R68). */
   #relations() {
     const live = this.#fieldViews(false);
-    if (!live.size) return this.#via;
+    const money = this.#money ? { money: this.#money } : {};
+    if (!live.size) return this.#money ? Object.freeze({ ...this.#via, ...money }) : this.#via;
     const fields = { ...Object.fromEntries([...live].filter(([f]) => !(this.#via.fields && this.#via.fields[f]))),
                      ...(this.#via.fields || {}) };
-    return Object.freeze({ projection: PROJECTION_RELATION, fields: Object.freeze(fields) });
+    return Object.freeze({ projection: PROJECTION_RELATION, fields: Object.freeze(fields), ...money });
   }
 
   /** R68, R69: every compile this module runs: the relations, and the governing zone (`query-language` R27). */
@@ -1294,7 +1298,7 @@ export class Retrieval {
     const isForm = !!form && typeof form === "object" && !Array.isArray(form) && form.v === 1 && typeof form.q === "string";
     if (!isForm || typeof owner !== "string" || !owner || typeof viewer !== "string" || viewer !== owner) return notYours;
     const saved = typeof QL.savedForm === "function"
-      ? QL.savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir })
+      ? QL.savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir }, this.#relations())
       : { ok: true };
     if (!saved || saved.ok !== true) return saved && typeof saved === "object" ? saved : notYours;
     const asked = Number(limit);
