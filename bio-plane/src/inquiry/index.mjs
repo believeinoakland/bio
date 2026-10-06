@@ -43,14 +43,16 @@ import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
-import { INQUIRY_TABLES, INQUIRY_PURGE, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
+import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
+import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
+import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
 import { checkInquiryEntry } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
          spliceBasisGround, blockEntries, fmSafe, rand } from "./text.mjs";
 
-export { INQUIRY_SCHEMA, INQUIRY_TABLES, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
+export { INQUIRY_SCHEMA, INQUIRY_TABLES, INQUIRY_DECLARATIONS, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
   from "./schema.mjs";
 export * from "./grammar.mjs";
 export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS } from "./checks.mjs";
@@ -78,6 +80,20 @@ const agentOf = (v) => {
   const t = typeof v === "string" ? v.trim() : "";
   return t && t.length <= MEMBER_AGENT_MAX && !/[\u0000-\u001f\u007f]/.test(t) ? t : null;
 };
+/** R54, R55: the states that end every wait on an inquiry (nothing is awaited on a question no longer worked). */
+export const WAIT_ENDING_STATES = Object.freeze(["concluded", "divided", "dismissed"]);
+/** R56: the longest note a look carries. */
+export const LOOK_NOTE_MAX = 500;
+/** R55: a member's own stamp, as the control plane writes it. */
+const memberStamp = (m) => {
+  const t = typeof m === "string" ? m.trim() : "";
+  if (!t) return null;
+  const x = /^member:([A-Za-z0-9._:-]{1,128}?)(?:\/.*)?$/.exec(t);
+  return x ? `member:${x[1]}` : t.includes(":") ? null : `member:${t}`;
+};
+/** R54: who set a wait, as a member's own stamp; any other author (a machine) is kept as written. */
+const setterOf = (author) => { const t = typeof author === "string" ? author.trim() : ""; return t ? (memberStamp(t) ?? t) : null; };
+
 /** R20 (N285): the two dispositions, `progressions`' one list (its R35), re-exported for `affordances` (K78 (3)); this
  *  module holds no copy of its own. */
 export { DISPOSITIONS };
@@ -208,10 +224,12 @@ export class Inquiry {
   #onRaised = null;      // {module, fn}: reevaluation's obligation (R21, R25)
   #onGrounded = null;    // {module, fn}: strength's pair (R28)
   #bias = null;          // R53: the lens a finding is made under is read here
+  #onWaitSet = null;     // {module, fn}: scheduler's arming notice (R54; scheduler R9)
+  #view;                 // R55, R57: the active jurisdiction view, whose time_zone is the profile's
   #deps;
 
   constructor({ storage, record, membership, promotion, content, connections = null, entities = null, retrieval = null,
-                provenance = null, bias = null, host = null, now } = {}) {
+                provenance = null, bias = null, host = null, view = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -220,6 +238,7 @@ export class Inquiry {
     this.content = content;
     this.#deps = { connections, entities, retrieval, provenance, host };
     this.#bias = bias;
+    this.#view = typeof view === "function" ? view : null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -633,6 +652,8 @@ export class Inquiry {
         bundleId, pkg.migrationReplay.capture, promotionKey, ts);
       migrated = { capture: pkg.migrationReplay.capture, promotion: promotionKey, at: ts };
     }
+    /* R54: the dated waits, re-derived from the document's recheck triggers. */
+    if (isInquiry && docFm) this.#projectWaits(bundleId, docFm, c.author);
     /* R53 (A9, bias R40): a finding, when the document enters `concluded` stating its project. */
     if (isInquiry && docFm && docFm.current_state === "concluded" && !(cur && cur.currentState === "concluded"))
       this.#recordFinding(bundleId, docFm, c.author, !!pkg.replay);
@@ -802,6 +823,184 @@ export class Inquiry {
       return mig ? { recorded: false, stated: "not recorded (migrated from the Drive era)", run: null, lens: null,
                      migrated: { capture: mig.capture_sha, promotion: mig.promotion_key ?? null, at: mig.at } } : null;
     } catch { return null; }
+  }
+
+  /* ---------------------------------------------------------------- R54–R57: dated waits on an inquiry */
+
+  /** R54 (scheduler R9): the notice a dated wait's setting raises, for `scheduler` to arm its alarm by; one registration
+   *  (membership's `listenerRefusal`). `fn({inquiry, date, set_by})` is told after a promotion sets or re-dates a wait. */
+  onWaitSet(module, fn) {
+    const refused = listenerRefusal(this.#onWaitSet, module, fn);
+    if (refused) return refused;
+    this.#onWaitSet = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R54: inside the promotion's transaction. Each recheck trigger carrying a calendar date is a wait. A held wait whose
+     text and date the document still states keeps who set it and when (its position and description follow the
+     document); one whose text is still stated under another date ends `redated`, and the new date is a new wait set by
+     this promotion's author; one no longer stated ends `removed`. Ended waits are kept, with who and when. */
+  #projectWaits(bundleId, fm, author) {
+    const triggers = Array.isArray(fm.recheck_triggers) ? fm.recheck_triggers : [];
+    const stated = [];
+    triggers.forEach((t, i) => {
+      if (!t || typeof t !== "object" || Array.isArray(t)) return;
+      const date = typeof t.date === "string" ? t.date.trim() : "";
+      if (!isCalendarDate(date) || typeof t.text !== "string" || !t.text.trim()) return;
+      stated.push({ idx: i, text: t.text, description: typeof t.description === "string" ? t.description : "", date });
+    });
+    const held = this.#rows(`SELECT wait_id, text, date FROM inquiry_dated_waits WHERE bundle_id=? AND ended IS NULL
+                             ORDER BY wait_id`, bundleId);
+    const when = this.#when(), who = setterOf(author);
+    const kept = new Set(), set = [];
+    for (const w of stated) {
+      const same = held.find((h) => !kept.has(h.wait_id) && h.text === w.text && h.date === w.date);
+      if (same) {
+        kept.add(same.wait_id);
+        this.sql.exec(`UPDATE inquiry_dated_waits SET idx=?, description=? WHERE wait_id=?`, w.idx, w.description, same.wait_id);
+        continue;
+      }
+      const moved = held.find((h) => !kept.has(h.wait_id) && h.text === w.text
+                                && !stated.some((x) => x.text === h.text && x.date === h.date));
+      if (moved) {
+        kept.add(moved.wait_id);
+        this.sql.exec(`UPDATE inquiry_dated_waits SET ended='redated', ended_by=?, ended_at=?, idx=NULL WHERE wait_id=?`,
+          who, when, moved.wait_id);
+      }
+      this.sql.exec(`INSERT INTO inquiry_dated_waits (bundle_id, idx, text, description, date, set_by, set_at)
+                     VALUES (?,?,?,?,?,?,?)`, bundleId, w.idx, w.text, w.description, w.date, who, when);
+      set.push({ inquiry: bundleId, date: w.date, set_by: who });
+    }
+    for (const h of held)
+      if (!kept.has(h.wait_id))
+        this.sql.exec(`UPDATE inquiry_dated_waits SET ended='removed', ended_by=?, ended_at=?, idx=NULL WHERE wait_id=?`,
+          who, when, h.wait_id);
+    if (this.#onWaitSet) for (const n of set) { try { this.#onWaitSet.fn(n); } catch { /* never undoes the promotion */ } }
+  }
+
+  /* R55, R57: the profile's time zone (the active jurisdiction view's `time_zone`), or null when none is held: a wait's
+     day is never read as the UTC day. */
+  #zone() {
+    let view = null;
+    try {
+      if (this.#view) view = this.#view();
+      else {
+        const ids = this.record.getSetting("jurisdiction_profiles");
+        const c = Array.isArray(ids) && ids.length ? combineProfiles(ids) : null;
+        view = c && c.ok ? c.view : null;
+      }
+    } catch { view = null; }
+    const z = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
+    if (!z) return null;
+    const probe = localDay("2026-01-01T00:00:00Z", z);
+    return typeof probe === "string" ? z : null;
+  }
+  #day(instant, zone) {
+    if (!zone || typeof instant !== "string") return null;
+    try { const d = localDay(instant, zone); return typeof d === "string" ? d : null; } catch { return null; }
+  }
+
+  /* The open waits, each with its inquiry's state, set by `setBy` (or every setter), read whole. */
+  #openWaits(setBy = null) {
+    return this.#rows(`SELECT w.*, b.current_state FROM inquiry_dated_waits w JOIN bundles b ON b.bundle_id = w.bundle_id
+                        WHERE w.ended IS NULL ${setBy ? "AND w.set_by=?" : ""} ORDER BY w.date, w.bundle_id, w.idx`,
+                      ...(setBy ? [setBy] : []));
+  }
+
+  /** R55: the waits `member` set on inquiries `viewer` may see, each with its text and description as written, its date
+   *  and its state as of `asOf`: `waiting` before its date, `due` from the start of that local day in the profile's zone,
+   *  `looked` once its setter recorded a look, `ended` when the inquiry is concluded, divided or dismissed, and
+   *  `undetermined` (with why) while no zone is held. Only the member who set a wait is answered it. Writes nothing;
+   *  never throws. */
+  datedWaits({ member = null, asOf = null, viewer = null } = {}) {
+    try {
+      const m = memberStamp(member);
+      if (!m || typeof viewer !== "string" || !viewer.startsWith("member:") || memberStamp(viewer) !== m) return { ok: true, member: m, waits: [] };
+      const zone = this.#zone();
+      const at = typeof asOf === "string" && asOf ? asOf : this.#when();
+      const today = this.#day(at, zone);
+      const waits = [];
+      for (const w of this.#openWaits(m)) {
+        if (!this.membership.inSight(w.bundle_id, viewer)) continue;
+        const state = WAIT_ENDING_STATES.includes(w.current_state) ? "ended"
+          : w.looked_at ? "looked"
+          : today === null ? "undetermined"
+          : today >= w.date ? "due" : "waiting";
+        waits.push({ inquiry: w.bundle_id, index: w.idx, text: w.text, description: w.description, date: w.date,
+                     set_by: w.set_by, set_at: w.set_at, state,
+                     ...(state === "looked" ? { looked_at: w.looked_at, ...(w.look_note ? { note: w.look_note } : {}) } : {}),
+                     ...(state === "ended" ? { inquiry_state: w.current_state } : {}),
+                     ...(state === "undetermined"
+                       ? { why: "no time zone is held for this instance's profile, so the local day the wait falls due on "
+                              + "cannot be read (it is never read as the UTC day)" } : {}) });
+      }
+      return { ok: true, member: m, as_of: at, zone, waits };
+    } catch { return { ok: true, member: memberStamp(member), waits: [] }; }
+  }
+
+  /** R56: the wait's setter records that they looked, with the instant; it reads `looked` until a later revision sets a
+   *  new date. Refusals: `MACHINE_CANNOT_LOOK`, `NO_SUCH_WAIT` (absent, or on an inquiry `by` may not see, one answer),
+   *  `NOT_YOUR_WAIT`, `BAD_NOTE`. It writes the look and nothing else, and moves nothing in the inquiry. */
+  waitLook({ inquiry = null, index = null, note = null, by = null } = {}) {
+    const who = typeof by === "string" ? by.trim() : "";
+    if (!who || isMachineIdentity(who))
+      return { ok: false, reason: "MACHINE_CANNOT_LOOK",
+               detail: "a look at a dated wait is the setter's own act: a member signed in, never a machine credential." };
+    const idx = Number(index);
+    const w = typeof inquiry === "string" && inquiry && Number.isInteger(idx)
+      ? this.#one(`SELECT * FROM inquiry_dated_waits WHERE bundle_id=? AND idx=? AND ended IS NULL`, inquiry, idx) : null;
+    if (!w || !this.membership.inSight(w.bundle_id, who))
+      return { ok: false, reason: "NO_SUCH_WAIT", inquiry, index,
+               detail: "no dated wait is held at that position on that question." };
+    if (w.set_by !== memberStamp(who))
+      return { ok: false, reason: "NOT_YOUR_WAIT", inquiry, index,
+               detail: "a dated wait is its setter's own: only the member who set it records that they looked." };
+    if (note !== null && note !== undefined && (typeof note !== "string" || note.length > LOOK_NOTE_MAX))
+      return { ok: false, reason: "BAD_NOTE", detail: `a look's note is text of at most ${LOOK_NOTE_MAX} characters.` };
+    const at = this.#when();
+    this.sql.exec(`UPDATE inquiry_dated_waits SET looked_by=?, looked_at=?, look_note=? WHERE wait_id=?`,
+      who, at, typeof note === "string" && note.trim() ? note.trim() : null, w.wait_id);
+    return { ok: true, inquiry: w.bundle_id, index: w.idx, date: w.date, looked_at: at, state: "looked" };
+  }
+
+  /* R57: the waits the scheduler's consumer may mark: open, on an inquiry still worked, not looked at, not yet marked. */
+  #markable() {
+    return this.#openWaits().filter((w) => !WAIT_ENDING_STATES.includes(w.current_state) && !w.looked_at && !w.marked_day);
+  }
+
+  /** R57 (scheduler R21): whether any wait reaches `due` on or before `now`'s local day and is not yet marked. */
+  datedWaitsDue(now) {
+    try {
+      const today = this.#day(now, this.#zone());
+      return today !== null && this.#markable().some((w) => w.date <= today);
+    } catch { return false; }
+  }
+
+  /** R57: the start of the next local day after `now`'s holding an unmarked wait, or null. */
+  datedWaitsWake(now) {
+    try {
+      const zone = this.#zone(), today = this.#day(now, zone);
+      if (today === null) return null;
+      const next = this.#markable().map((w) => w.date).filter((d) => d > today).sort()[0];
+      if (!next) return null;
+      const r = dayRange(next, next, zone);
+      return r && typeof r.start === "string" ? r.start : null;
+    } catch { return null; }
+  }
+
+  /** R57: marks each newly due wait once (a second tick on the same day marks nothing) and answers those it marked. */
+  datedWaitsTick(now) {
+    try {
+      const today = this.#day(now, this.#zone());
+      if (today === null) return { marked: [] };
+      const at = this.#when(), marked = [];
+      for (const w of this.#markable().filter((x) => x.date <= today)) {
+        this.sql.exec(`UPDATE inquiry_dated_waits SET marked_day=?, marked_at=? WHERE wait_id=? AND marked_day IS NULL`,
+          today, at, w.wait_id);
+        marked.push({ inquiry: w.bundle_id, index: w.idx, date: w.date, set_by: w.set_by });
+      }
+      return { marked };
+    } catch { return { marked: [] }; }
   }
 
   /** R52 (1) (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under
@@ -2987,7 +3186,7 @@ export function inquiryOf(host, deps) {
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
     instances.set(host, k);
-    record.declarePurge("inquiry", INQUIRY_PURGE);
+    record.declareTable("inquiry", INQUIRY_DECLARATIONS.map((d) => ({ ...d })));
     /* K783 (record-core R69, R45): the audit's context for each bundle's checks, the earned registry over the legs its
        basis projects (R13), null for a bundle resting on nothing. */
     if (typeof record.registerAuditContext === "function")
@@ -3051,5 +3250,8 @@ export function inquiryOps(k, url, body) {
                                owner: q("owner"), author: q("author") }),
     inquirydivide: () => k.divide({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
     inquiryground: () => k.ground({ ...b, target: q("target") || b.target, viewer: q("viewer"), author: q("author") }),
+    /* R56: the look is the stamped member's own (`by` from the stamp, never the body). */
+    waitlook: () => k.waitLook({ inquiry: q("inquiry") || b.inquiry, index: q("index") ?? b.index, note: b.note ?? null,
+                                 by: q("author") }),
   };
 }

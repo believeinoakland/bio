@@ -57,9 +57,10 @@ const STRENGTH_COLUMNS = ["inquiry_capture_strength TEXT", "inquiry_capture_stat
 /** `realRetrieval`: the real retrieval module over the same storage (its selections, its projection's decorations,
  *  its search), instead of the stand-in whose selections the test controls. `legacyColumns`: `bundles` as a store
  *  written before T18 holds it (R36's move). `bias`: the real bias module over the same storage, migrated, with this
- *  module's findings registered with it as `plane` registers them (R53, `inquiryFindings`). */
+ *  module's findings registered with it as `plane` registers them (R53, `inquiryFindings`). `view`: the active
+ *  jurisdiction view the dated waits read their time zone from (R55, R57), a function; absent, the record's own. */
 export function world({ caseMembers = new Set(), published = null, group = "test-group", realRetrieval = false,
-                        legacyColumns = false, bias: withBias = false } = {}) {
+                        legacyColumns = false, bias: withBias = false, view = undefined } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -103,7 +104,7 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   const bias = withBias ? biasOf(host, { record, membership, promotion, entities: null }) : null;
   if (bias) bias.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval, provenance: prov,
-                              now: () => clock.now });
+                              now: () => clock.now, ...(view !== undefined ? { view } : {}) });
   k.migrate();
   if (bias) bias.registerWorkProducts("finding", inquiryFindings(host, bias));
   const raisedCalls = [];

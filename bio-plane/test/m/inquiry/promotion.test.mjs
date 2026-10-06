@@ -123,7 +123,17 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
   assert.equal(w.promote("INQ-2026-0001-q", w.text("INQ-2026-0001-q").replace("---\n\n## Question",
     `contradiction:\n  candidate: ${"c".repeat(64)}\n---\n\n## Question`)).ok, true);
   assert.deepEqual(INQUIRY_TABLES, ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
-                                    "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings"]);
+                                    "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings",
+                                    "inquiry_dated_waits"]);
+  /* T33 (plan Rules (6)): each declared explicitly, with the default form's classes, the sight of the bundle it names,
+     and the dated waits told to their setter alone */
+  const declared = w.record.declaredTables().filter((d) => d.module === "inquiry");
+  assert.deepEqual(declared.map((d) => d.name), INQUIRY_TABLES);
+  for (const d of declared)
+    assert.deepEqual({ purge: d.purge, expunge: d.expunge, export: d.export, sight: d.sight, derive: d.derive,
+                       version_chain: d.version_chain }, { purge: "clear", expunge: "none", export: "admin-only",
+      sight: d.name === "inquiry_dated_waits" ? "owner" : "bundle", derive: "stored", version_chain: false }, d.name);
+  assert.deepEqual([...declared.find((d) => d.name === "inquiry_findings").keys], ["bundle_id", "project_id"]);
   for (const t of INQUIRY_TABLES) {
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), t);
     assert.ok(inquiryOwns(t) && inquiryOwns({ name: t }));

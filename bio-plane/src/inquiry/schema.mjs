@@ -1,7 +1,7 @@
 /* inquiry's tables (requirements: `build/requirements/inquiry.md`, R36). Moved out of the legacy `schema.mjs` at this
  * module's extraction (layers.md ruling 3, "each module owns its tables"): `inquiry_basis`, `inquiry_exclusions` and
  * `inquiry_migration_replays` (and, since T10, `inquiry_member_agents`; since T15, `inquiry_contradiction_links`; since
- * T18, `inquiry_bundle_facts`, which gained the subject entity in T19), with the comments that record why each is shaped as it is. Each carries `bundle_id`
+ * T18, `inquiry_bundle_facts`, which gained the subject entity in T19; since T33, `inquiry_dated_waits`), with the comments that record why each is shaped as it is. Each carries `bundle_id`
  * and is declared to record-core's purge by this module (K23). `migrateInquiry` brings a store created under an
  * earlier shape to this one (the `ground` and `content_id` columns REC-42 and REC-82 added, moved here from the
  * store's additive list). */
@@ -250,14 +250,51 @@ CREATE TABLE IF NOT EXISTS inquiry_findings (
   principal   TEXT,
   at          TEXT NOT NULL
 );
+
+-- R54-R57 (T33-45; ladders section 4.5 "Dated waits on an inquiry", DEC-98, Choices 23): a DATED WAIT is a recheck
+-- trigger of an inquiry that carries a date, what the member who set it is waiting for, from whom, and by when. A
+-- projection of the document's recheck_triggers[], re-derived at each promotion (R12, R54), one row per wait: a wait
+-- keeps set_by and set_at while its text and date are unchanged (matched by both, idx its current position); a trigger
+-- re-dated or removed by a later revision ENDS the wait it was ('redated' or 'removed', with who and when) and is kept,
+-- never deleted, so what the member was waiting for stays on the record. looked_* is the setter's own look (R56);
+-- marked_day the local day the scheduler's tick marked it due (R57), once. Told to its setter alone: declared
+-- sight 'owner' (R36). Keyed by bundle_id and cleared with its inquiry.
+CREATE TABLE IF NOT EXISTS inquiry_dated_waits (
+  wait_id      INTEGER PRIMARY KEY,
+  bundle_id    TEXT NOT NULL,
+  idx          INTEGER,
+  text         TEXT NOT NULL,
+  description  TEXT NOT NULL,
+  date         TEXT NOT NULL,
+  set_by       TEXT,
+  set_at       TEXT NOT NULL,
+  ended        TEXT,
+  ended_by     TEXT,
+  ended_at     TEXT,
+  looked_by    TEXT,
+  looked_at    TEXT,
+  look_note    TEXT,
+  marked_day   TEXT,
+  marked_at    TEXT
+);
+CREATE INDEX IF NOT EXISTS inquiry_dated_waits_bundle ON inquiry_dated_waits(bundle_id);
+CREATE INDEX IF NOT EXISTS inquiry_dated_waits_setter ON inquiry_dated_waits(set_by, date);
 `;
 
 /** R36: the tables this module declares to purge, each keyed to a bundle by its `bundle_id`. */
 export const INQUIRY_TABLES = ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
-                              "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings"];
-/** R36, R53: the purge declaration, `inquiry_findings` also keyed by the project its lens was read for. */
-export const INQUIRY_PURGE = [...INQUIRY_TABLES.filter((t) => t !== "inquiry_findings"),
-                              { name: "inquiry_findings", keys: ["bundle_id", "project_id"] }];
+                              "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings",
+                              "inquiry_dated_waits"];
+/** R36 (plan T33, Rules (6)): every table declared explicitly through `record-core.declareTable` (its R21), with the
+ *  classes `declarePurge`'s default form gives (purge `clear`, expunge `none`, export `admin-only`, derive `stored`, no
+ *  version chain), each with the sight of the bundle it names; `inquiry_findings` also keyed by the project its lens
+ *  was read for (R53); the dated waits told to their setter alone, `sight: "owner"` (R54, R55). */
+const CLASSES = Object.freeze({ purge: "clear", expunge: "none", export: "admin-only", sight: "bundle", derive: "stored",
+                                version_chain: false });
+export const INQUIRY_DECLARATIONS = Object.freeze(INQUIRY_TABLES.map((name) => Object.freeze({
+  name, ...CLASSES,
+  ...(name === "inquiry_findings" ? { keys: ["bundle_id", "project_id"] } : {}),
+  ...(name === "inquiry_dated_waits" ? { sight: "owner" } : {}) })));
 
 /** R36 (N136): the table holding the leg count and the superseded-by index, and the relation `legs` is read through
  *  (retrieval R62). */
