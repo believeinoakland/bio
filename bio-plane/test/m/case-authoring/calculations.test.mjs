@@ -164,9 +164,8 @@ test("R56 (K1570, K1594): a workbook among the captures a member rests on is rea
   const ok = await op(w, P, { targets: [Q], roles: roles([Q]) });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
   const row = calcs(w, ok)[0];
-  /* case-grammar R18 holds three statuses; "not recomputed here" is stated in the body, and the block's value waits on
-     case-grammar taking it (J3 (3)) */
-  assert.deepEqual([row.calc, row.disclosed, row.method_version], [cap, null, "IronCalc 0.5"]);
+  /* case-grammar R18's fourth status, a workbook not recomputed here (K1639 (3), K1642), never a gate */
+  assert.deepEqual([row.calc, row.recompute, row.disclosed, row.method_version], [cap, "not_recomputed", null, "IronCalc 0.5"]);
   assert.ok(bodyOf(docOf(w, ok)).includes(`- ${cap}: ${CALCULATION_STATE_WORDS.not_recomputed}.`));
 });
 
