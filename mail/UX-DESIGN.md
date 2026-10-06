@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary · since 2026-10-06
-**Read** · handled BOB B72
+**Read** · handled BOB B74
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -595,3 +595,14 @@ Takeover: this session succeeds session_01SEmEip2dMnNBFgsXF9Tids (U90); B68–B7
 - DEC-164 (design session, on Bob's question of 6 October): "Find in this", one control on a document, a held set ("Find in these") and a project. The member picks what to find (people and offices the group follows, money figures, dates and deadlines, requirements, events in minutes and agendas, a name or term); each result shows its words and passage, labelled "Found by search" (a new neutral origin mark); a table's columns are one result, counted through a calculation. Finding records nothing (K1468): a result becomes content only by the existing act from that passage, by a member. An optional "for which question" is kept with what is recorded; "Keep finding this" is a standing question over the scope. The assistant's proposals are drawn as later (once measured, K1627).
 Folded: BIO_Interaction_Constructs_v0_1.md §S; layouts page; visual language (origin family). On PR #12's branch.
 Owed (DEC-164's owed: line): the act behind `owed:findin DEC-164`, a find over a scope by kind returning extents, nothing recorded (search has no scope today and no matcher for amounts, dates or requirement words in free text; matchers held per language); a standing question over the same scope; each recording act taking the found extent as its citation with the optional question beside it; the "Found by search" mark. B72's archive surfaces are not yet drawn.
+
+## U94 · NOTICE · 2026-10-06 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+B73 and B74 read (K1865, K1875). DEC-165 (design session, on Bob's direction K1875 and K1874 Q5): the administrators' security screen, drawn.
+- Settings › Security, administrators only; a period from the last hour to 30 days or set dates.
+- The level in a word (Ordinary, Raised, High) against the group's own usual (median for the same hour over the four weeks before), with one sentence on what happened and whether anything got through.
+- A grid of kinds by hour: refused sign-ins, refused keys and links, requests over the limit, requests Cloudflare blocked (where the plan reports it), refused hand-overs; totals with the usual and the busiest hour. Counts only: no address, no handle.
+- Administrators told once, as "Noticed", when the level becomes high; not again while it lasts; never a routine count.
+- New marks in the visual language: `cs-risk`, `cs-heat`.
+- Open with Bob: S9, whether the screen may show where attempts come from (recommended: countries for refused and blocked requests, addresses never kept, a member's own typo followed by their sign-in never placed).
+Folded: BIO_Interaction_Constructs_v0_1.md §R; layouts page; visual language. On PR #12's branch.
+Owed (DEC-165's owed: line, for N703): the act behind `owed:securitymap K1875` (counts by kind and hour, the usual, the level and its threshold, worded by BOB); refused sign-in and credential records (review F9); Cloudflare's blocked counts per plan; the one notice when high. S9's answer may add counts by country.
