@@ -44,3 +44,7 @@ Every T33-32 entry is applied on `job/T33/progressions` @ e9388ab7b3 (tranche/T3
 **Tests and checks (on `job/T33/progressions` @ 601693e984, tranche/T33 merged):** progressions 61/61 pass (including `integration.test.mjs` over the real events, standards and local-facts); users: queue 113/113, queue-producers 80/80, scheduler 66/66, monitoring 111/111, inquiry 170/170, plane 85/85, events 44/44, standards 47/47, local-facts 33/33, intent 64/65 (the red above), affordances 165/167 (the tranche's reds). `format`: 0 failures; `architecture`: 1 failure (content, above); `coverage`: 42 of 42 live ids; `ownership`: 15 files, 0 failures.
 
 Size (session_017DVQNok5seqfZSHmhaBsqx): test runs 24, module lines 2113
+
+## J3 · COMPLETE
+
+T33-32 complete on job/T33/progressions @ 601693e984 (record of completion above): every entry applied, tests re-pointed at the real events, standards and local-facts (K1581). progressions 61/61; format 0, coverage 42/42, ownership 0. Architecture's one failure: integration.test.mjs imports content (events' extent check needs content's tables): add content to progressions' uses, or tell me to drop that test. intent's red as K1568 (2).
