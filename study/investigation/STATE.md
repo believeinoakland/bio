@@ -1,0 +1,32 @@
+# State
+
+| phase | unit | state | output |
+| --- | --- | --- | --- |
+| 0 | P0 | missing | `notes/P0.md` |
+| 1 | C1 | missing | `notes/C1.md` |
+| 1 | C2 | missing | `notes/C2.md` |
+| 1 | C3 | missing | `notes/C3.md` |
+| 1 | C4 | missing | `notes/C4.md` |
+| 1 | C5 | missing | `notes/C5.md` |
+| 1 | C6 | missing | `notes/C6.md` |
+| 1 | D1 | missing | `notes/D1.md` |
+| 1 | D2 | missing | `notes/D2.md` |
+| 1 | M1 | missing | `notes/M1.md` |
+| 1 | M2 | missing | `notes/M2.md` |
+| 1 | M3 | missing | `notes/M3.md` |
+| 1 | M4 | missing | `notes/M4.md` |
+| 1b | B1 | missing | `research/B1.md` |
+| 1b | B2 | missing | `research/B2.md` |
+| 1b | B3 | missing | `research/B3.md` |
+| 1b | B4 | missing | `research/B4.md` |
+| 1b | B5 | missing | `research/B5.md` |
+| 2 | A-READING | missing | `studies/READING.md` |
+| 2 | A-PLANNING | missing | `studies/PLANNING.md` |
+| 2 | A-HOME | missing | `studies/HOME.md` |
+| 2 | A-PROCUREMENT | missing | `studies/PROCUREMENT.md` |
+| 2 | A-LOOP | missing | `studies/LOOP.md` |
+| 2 | A-COST | missing | `studies/COST.md` |
+| 3 | R-1 | missing | `reviews/R-1.md` |
+| 3 | R-2 | missing | `reviews/R-2.md` |
+| 3 | R-3 | missing | `reviews/R-3.md` |
+| 4 | S-SYNTHESIS | missing | `synthesis/architecture.md` |

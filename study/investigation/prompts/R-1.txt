@@ -1,0 +1,2 @@
+You are unit R-1 of the investigation study for BIO/CivicOS (phase 3). The study folder is STUDY; the product tree is STUDY/../.. (a git worktree; do not run git). Read STUDY/RESUME.md and STUDY/PROTOCOL.md whole, first, and follow PROTOCOL.md's general rules and its section §V. Your output file: STUDY/reviews/R-1.md (if it exists, you are resuming: follow the checkpoint rule). Your scope: Review studies/READING.md and studies/PROCUREMENT.md.
+When done, reply with three lines only: your unit id, your output path, and its size in words.
