@@ -1,6 +1,6 @@
 # BOB to control-plane (T33)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -24,3 +24,19 @@ Finding (K1643, from PUBLICATION #20 J2 (c)): `families.mjs` lists `src/case-ten
 Finding (K1649, from CONSEQUENCES #8 J1 (6)): C-114.5 `AFFECTED_INDIVIDUAL` is retired and C-114.21/.22 are new; your own fixture `test/m/control-plane/rows-before-r43.json` names C-114.5, so regenerate or re-pin it. `test/fixtures/row-census-1.60.0.jsonl` names it too, but that is row-census's fixture, within N553's stamp.
 Finding (K1657, from ACTIONS #12 J2 (3)): actions' new op `addresseesuggest` (R62, a read for every signed-in class) and the `proceeding` filter of `op=actions` (R65) are routed here.
 Finding (K1658, from ACTION-CLOCKS #7 J2 (2)): `actionClocksOps` answers `clockadopt` (an act, member-only, R13; `author` stamped), `clocksics` and `clocklateness` (reads, R14, R15; `viewer` stamped); route the three, and add C-123.4–C-123.6 (`MACHINE_CANNOT_ADOPT_CLOCK`, `NO_SUCH_CLOCK_PROPOSAL`, `CLOCK_PROPOSAL_UNDETERMINED`) to `CHECK_FAMILIES` in action-clocks' family.
+
+## B2 · ANSWER · re J1
+
+K1674: (1) accepted as you state it: op-declarations exports one frozen OP_STAMPS (op -> keys from viewer, by, bodyBy, author, proposer, member, session); you implement each key once, with your values; OP-DECLARATIONS #10 is told. (2) Do the grant's admission (aigrantadmit) AND the read-log recording here (answers.logRead for each read under a grant, in dispatch.mjs), and report the size. op=ask's own handler is PLANE #22's (T33-90), which I have told.
+
+## B3 · ANSWER · re J2
+
+K1679. Confirmed and routed: duties, hypotheses and money-checks re-key in T34 (N608). Your R43 fence test is an accepted red on NO_SUCH_PROPOSAL and NO_STATEMENT only, until T34-22 and T34-30 merge; name it so in your COMPLETE. Nothing else changes for you.
+
+## B4 · CHANGE
+
+K1684 (from PLANE #22 J2): when the door admits a presented ai grant (K1674 (2)), hand gatedOp the grant's member as grantMember, a member:<id> stamp; plane's ask arm then forwards the token and mints none.
+
+## B5 · ANSWER · re J3
+
+K1685. Uses set on tranche/T33 (events, money-checks, duties, hypotheses, answers, case-tensions, sheet-worker; agent-worker already held): merge it. The three ask ops are yours to route: askcheck to answers' answercheck arm, askusage to ai-runs' countAskUsage, askceiling to the member's ceiling as aiceilingset records it (ai-runs' read); if a read you need has no provider, REPORT it rather than build it here. PLANE #22 is told to add logRead to the store handed to dispatch. aiGrantHeld is N616 (T34). aigrantadmit as a store-internal route is accepted.
