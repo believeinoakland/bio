@@ -40,3 +40,7 @@ Merged `tranche/T34` (R1 amended, `ae810bb389`). R1: twelve spaces, `institution
 Re-run (after the merge): id-spaces 33/33. Users: court-doctypes 24/0; record-core 126/0; `stats-disclosure` 1/0; entities 81 pass, 1 fail (R20's literal list, as J1, now eleven short of twelve); standards 47/0; calculations 31/0; jurisdictions 81/0. `format` 0 failures; `architecture id-spaces` 0 failures; `coverage id-spaces` 28 of 28, 0 failures; `ownership id-spaces tranche/T34`: 4 files changed; 0 failures.
 
 Size (session_01M4x59wQhwN7AXzMLPTFvn1): test runs 7, module lines 1511
+
+## J3 · REPORT
+
+Wording gap in id-spaces' requirements (BOB's file): R1 now says twelve spaces in the order Provides names them, but Provides' sentence ('The identifier spaces are ...') still ends at 'body and office (T34-7)' and does not name institution. I placed institution last, after office, as jurisdictions R3 orders them. Entities' R20 literal list (J1) is now three short (twelve spaces).
