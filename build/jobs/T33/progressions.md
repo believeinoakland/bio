@@ -1,6 +1,6 @@
 # progressions (T33)
 
-**Status** · session_017DVQNok5seqfZSHmhaBsqx · depth 2 · WORKING · handled B3
+**Status** · session_017DVQNok5seqfZSHmhaBsqx · depth 2 · WORKING · handled B4
 
 ## J1 · QUESTION
 
