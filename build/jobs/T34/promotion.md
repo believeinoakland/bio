@@ -29,3 +29,9 @@ Next: the stamp (N553, N601) over what is on `tranche/T34` now.
 If you mean instead that I own the line's stamp in T34, that needs action-plans' job to merge before mine, which inverts the layer order. Say so and I will stamp it on a CHANGE after that merge.
 
 **The stamp's shape (stated, not asked).** I move `CATALOG_VERSION` once for T34, 1.60.0 → 1.61.0 (MINOR: arrivals, and C-20.1's changed judgement, N631). I re-pin `ROW_CENSUS` and write `fixtures/row-census-1.61.0.jsonl` in place at each CHANGE until my COMPLETE, so T34 names one catalogue. **You swap my `tests` entry** in `modules.json` from `row-census-1.60.0.jsonl` to `row-census-1.61.0.jsonl` (K1027's form, as in T32). After the stamp, case-checker's `program.mjs` (it embeds `CATALOG_VERSION`) and the plane bundle are stale; both are yours to regenerate.
+
+## Progress (not yet COMPLETE)
+
+- N631 done (`99d13d07ac`; J1, accepted B2/K1747). Stamp 1.61.0 (`abcfa6fc52`), re-pinned in place after membership (B4, `3acf57a74b`) and record-core (B5, `12b0fc5471`): 1314 rows `765634b5…`, row-census 8/0.
+- Next: credentials' merge (its CHANGE), then merge `tranche/T34`, re-pin with the scratch reader (`censusRows`/`censusOf` over the repo, fixture `bio-plane/test/fixtures/row-census-1.61.0.jsonl`), verify the moved rows are exactly credentials', re-run promotion, d526, row-census and the four checks, write the completion section and post COMPLETE.
+- Known, BOB's at merge: `modules.json` tests entry 1.60.0 → 1.61.0 (format and ownership each show that one failure until then); case-checker `program.mjs` and the plane bundle stale.
