@@ -18,7 +18,7 @@
 - `acquisition/checks.mjs` and `extraction/checks.mjs` still have a member-facing "in a form this instance does not …" (DEC-149). These are L3/L4 modules, already closed for T34; this is a candidate for N664's T35 share.
 
 **Tests and checks.**
-- capture-requests (`bio-plane/test/m/capture-requests/`): 90 pass, 0 fail. New tests: `t34.test.mjs` (4 R48 tests through the registered reader, and 1 DEC-149 test), plus 1 R48 test in `plane.test.mjs` (`op=heldcaptures` in Miniflare shows the question and asker through real `capture`). Before this job the module had 4 failing tests (N585); they now pass.
+- capture-requests (`bio-plane/test/m/capture-requests/`): 86 pass, 0 fail. New tests: `t34.test.mjs` (4 R48 tests through the registered reader, and 1 DEC-149 test), plus 1 R48 test in `plane.test.mjs` (`op=heldcaptures` in Miniflare shows the question and asker through real `capture`). Before this job the module had 4 failing tests (N585); they now pass.
 - capture (the reader's consumer, `bio-plane/test/m/capture/`): 127 pass, 0 fail.
 - `test/system/row-census.test.mjs`: red, as accepted. Its C-28 movements are the eight rows above. The others (C-126.2, C-133.*, C-91.*) are not this module's.
 - `format`: 0 failures. `architecture capture-requests`: 0 failures. `coverage capture-requests`: 48 of 48 live ids named, 0 failures. `ownership capture-requests tranche/T34`: 7 files, 0 failures.
