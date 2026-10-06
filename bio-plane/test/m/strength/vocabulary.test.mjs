@@ -293,3 +293,38 @@ test("R28: the sentences T28 added (another group's finding, R33; anonymous evid
   corpus.push(["recomputePair refusal", recomputePair({ version: "x" }).detail]);
   clean(corpus);
 });
+
+test("R28: the sentences T33 added (a calculation's, a held standard's and an occurrence's whys, known and unknown, R36–R38; the method's version 2, R31) carry no analyst's word", async () => {
+  const { GRADING_METHOD_VERSION, gradingMethodText } = await import("../../../src/strength/index.mjs");
+  const w = real();
+  w.calcs.set("CALC-2026-0001", { capture: { grade: "C", why: "held" }, method: { note: "a share" }, inputs: [] });
+  w.calcs.set("CALC-2026-0002", { accepted: false, capture: { grade: "C" } });
+  w.calcs.set("CALC-2026-0003", { capture: { grade: "B" }, inputs: [{ name: "cell", engine: "sheet" }] });
+  w.ceilings.set("STD-2026-0001", { grade: "B", why: "The text is captured." });
+  w.ceilings.set("STD-2026-0002", { grade: null, undetermined_because: "STANDARD_NO_TEXT", why: "The standard holds no captured text at that version." });
+  w.event("EVT-2026-0001", { grade: "C" });
+  w.duties.set("DUT-2026-0001", { source: { kind: "standard", standard: "STD-2026-0001" }, occurrences: [
+    { key: "k1", trigger: { kind: "event", ref: "EVT-2026-0001", date: "2026-03-01" }, due: { date: "2026-03-11" }, state: "overdue",
+      derivation: { source_in_force: { state: "in" } } },
+    { key: "k2", trigger: { kind: "event", ref: "EVT-2026-0001", date: "2026-03-01" }, due: { undetermined: true, why: "The day count is not held." },
+      state: "undetermined", derivation: { source_in_force: { state: "in" } } }] });
+  w.inquiry("INQ-2026-0001-a", [
+    { target: "CALC-2026-0001", ground: "P1" }, { target: "CALC-2026-0002", ground: "P2" }, { target: "CALC-2026-0003", ground: "P2" },
+    { target: "CALC-2026-0009", ground: "P2" },
+    { target: "STD-2026-0001", grade: "A", axis: "capture", source: "capture", ground: "P1" },
+    { target: "STD-2026-0002", grade: "A", axis: "capture", source: "capture", ground: "P2" },
+    { target: "STD-2026-0001", grade: "A", axis: "connection", source: "resolution", ground: "P2" },
+    { target: "occurrence:DUT-2026-0001/k1", ground: "P1" }, { target: "occurrence:DUT-2026-0001/k2", ground: "P2" },
+    { target: "occurrence:DUT-2026-0009/k1", ground: "P2" }]);
+  w.inquiry("INQ-2026-0002-a", [{ target: "STD-2026-0001", grade: "A", axis: "capture", source: "capture" }]);
+  w.inquiry("INQ-2026-0003-a", [{ target: "occurrence:DUT-2026-0001/k1" }]);
+  const p = w.s.strengthOf("INQ-2026-0001-a"), q = w.s.strengthOf("INQ-2026-0002-a"), o = w.s.strengthOf("INQ-2026-0003-a");
+  const corpus = STRENGTH_AXES.flatMap((axis) => [...sentences(p[axis], axis), ...sentences(q[axis], `standard ${axis}`),
+                                                  ...sentences(o[axis], `occurrence ${axis}`)]);
+  for (const re of [/weakest capture among its inputs/, /is not accepted/, /another program computed/, /is not a calculation this copy holds/,
+                    /no more than B for STD-2026-0001/, /no captured text at that version/, /held standard, so a connection grade/,
+                    /capture axis only/, /It is overdue as known today/, /due date is undetermined/, /not an obligation this copy holds/])
+    assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
+  corpus.push(["gradingMethodText v2", gradingMethodText(GRADING_METHOD_VERSION)]);
+  clean(corpus);
+});

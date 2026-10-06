@@ -30,6 +30,13 @@
  * T31 (layer 6): the product is named Civicsmith (DEC-124): the bar's honest note says so (R15), and the method's words
  * take the product's name from their caller, "CivicOS" answering the words that version answered before (R31; K1365 (1)).
  *
+ * T33 (layer 6, T33-47; K1447, K1470): independence fails on more than a shared document, capture or address: one
+ * issuing source, a shared person, a shared event, a shared ledger table, or an `acts_for` or `within` tie, each named,
+ * and a tie undetermined on the documents' dates is named undetermined (R12, `./origins.mjs`); a calculation, a held
+ * standard and a duty occurrence are legs on the capture axis, their grades derived from what they rest on (R36–R38,
+ * `./legs.mjs`), so the method moved to version 2 (R31); and the tables are declared explicitly, the cache read through
+ * record-core's derived-cache convention so a stale row is never answered as current (R39).
+ *
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge
  * (`strength_cache` by bundle, `group_strength_bar` exempt, R23), registers its projection with promotion (the cache,
@@ -53,9 +60,14 @@
  *   retrieval    when given: `registerField(module, field, {table, key, col})` (R23).
  *   producingGroup  the store's recorded group or null; default: promotion's fact `producingGroup`.
  *   now          the clock for the instants it writes, an ISO string (default: the wall clock).
+ *   events, lines, people, money, duties, calculations   the layer-5 modules R12, R36 and R38 read, each `<name>Of(host)`
+ *                unless given (K1563 (1)): `events.readEvent`, `lines.structureAt` and `linesOf`, `people.identityOf`,
+ *                `money.readFact`, `duties.readDuty` and `occurrencesOf`, and `calculations.gradeFactsOf` (its R9's grade
+ *                facts, read synchronously; J1 (5), J2).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37) and
- * provenance's `register` (with `authored` and `author`, R29, R30) and `captured_locators` (its R48). */
+ * provenance's `register` (with `authored` and `author`, R29, R30) and `captured_locators` (its R48); since T33 events'
+ * `event_attestations` (its R37) and entities' `entities.kind` (its R35), read by `./origins.mjs`. */
 
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
@@ -64,9 +76,17 @@ import { inquiryOf, legCapped } from "../inquiry/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { basisVersionsOf, BASIS_VERSION_LEGS_MAX, VERSION_MACHINE } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
-         isMachineIdentity } from "../record-grammar/index.mjs";
+         isMachineIdentity, idPattern } from "../record-grammar/index.mjs";
 import { IMPORTED_FINDING_RE, parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { linesOf } from "../lines/index.mjs";
+import { moneyOf } from "../money/index.mjs";
+import { dutiesOf } from "../duties/index.mjs";
+import { peopleOf } from "../people/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
 import { STRENGTH_AXES, DEPTH_BOUND, GRADE_RANK } from "./arithmetic.mjs";
+import { legKind, parseOccurrenceRef, DERIVED_KINDS } from "./legs.mjs";
+import { originsReader, ORIGIN_LIMIT, RECORD_READER } from "./origins.mjs";
 import { levelPair, anonymityOf, levelsGiven, HUNCH_WHY, UNCORROBORATED_WHY, UNCORROBORATED_EVIDENCE_WHY,
          GRADING_METHOD_VERSION } from "./method.mjs";
 import { VERSION_STRENGTH_CHECKS, VERSION_STRENGTH_DEFAULT_STATES, VERSION_STRENGTH_INERT_SOURCES,
@@ -86,10 +106,8 @@ export { STRENGTH_SCHEMA, STRENGTH_EXEMPT_TABLES, STRENGTH_PURGED_TABLES, STRENG
    per-version bound (its R9), `BASIS_VERSION_LEGS_MAX`, read from it and never restated (N184); re-exported under the
    name this module's callers use. */
 export { BASIS_VERSION_LEGS_MAX as VERSION_LEGS_MAX } from "../basis-versions/index.mjs";
-/** R12: the origins read per step of the independence walk; reaching it makes the answer incomplete, never clean. */
-export const ORIGIN_LIMIT = 200;
-/** R12: the shared origins named per pair of parts. */
-export const SHARED_NAMED_MAX = 5;
+export { ORIGIN_LIMIT, SHARED_NAMED_MAX } from "./origins.mjs";
+export { OCCURRENCE_REF_RE, parseOccurrenceRef } from "./legs.mjs";
 /** R7: how many state words a caller may name; the machine's own size, so it cannot go stale. */
 export const VERSION_STRENGTH_STATES_MAX = VERSION_MACHINE.legal.length;
 /** R26: the longest error message a candidate pair answers. */
@@ -109,7 +127,9 @@ const isImportedRef = (id) => parseImportedFindingRef(id) !== null;
    they cannot come to disagree about what an id looks like; a ref (R33) is matched whole, before the record id its
    tail would otherwise be read as. */
 const unanchored = (re) => re.source.replace(/^\^/, "").replace(/\$$/, "");
-const ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|${unanchored(BUNDLE_ID_RE)})`, "g");
+/* T33 (R36–R38): a calculation's, a standard's and an occurrence's ids too, which name no bundle. */
+const ID_IN_PROSE = new RegExp(`(?:${unanchored(IMPORTED_FINDING_RE)}|occurrence:${unanchored(idPattern("DUT"))}/[^\\s,;()]+`
+  + `|${unanchored(BUNDLE_ID_RE)}|${unanchored(idPattern("CALC"))}|STD-\\d{4}-\\d{4,})`, "g");
 /** R15 (DEC-88): the longest reason an administrator may give for the group's default bar. */
 export const BAR_REASON_MAX = 2000;
 /* R15 (DEC-105, H12): the bar's honest note, in the ruling's words, the product named as DEC-124 names it. */
@@ -140,13 +160,15 @@ export class Strength {
   #deps;
   #joined = false;
   #versionEdition = undefined;
+  #projecting = null;
 
   constructor({ storage, record, membership, inquiry = null, versions = null, acceptedWork = null, promotion = null,
-                producingGroup = null, now = null, host = null }) {
+                producingGroup = null, now = null, host = null, calculations = null, duties = null, events = null,
+                lines = null, people = null, money = null }) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { inquiry, versions, acceptedWork, promotion, host };
+    this.#deps = { inquiry, versions, acceptedWork, promotion, host, calculations, duties, events, lines, people, money };
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : () => null;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
@@ -163,6 +185,22 @@ export class Strength {
       this.#deps.acceptedWork = acceptedWorkOf(this.#deps.host,
         { record: this.record, ...(this.#deps.promotion ? { promotion: this.#deps.promotion } : {}) });
     return this.#deps.acceptedWork;
+  }
+  /* T33 (R12, R36, R38): the layer-5 modules the origins and the derived legs read, each on the same host, reached on
+     first use (K1563 (1)); a module that cannot be built here is null and its reads answer nothing. */
+  #upstream(name, make) {
+    if (this.#deps[name] == null && this.#deps.host) {
+      try { this.#deps[name] = make(this.#deps.host); } catch { this.#deps[name] = false; }
+    }
+    return this.#deps[name] || null;
+  }
+  get events() { return this.#upstream("events", (h) => eventsOf(h, { record: this.record, membership: this.membership })); }
+  get lines() { return this.#upstream("lines", (h) => linesOf(h, { record: this.record })); }
+  get money() { return this.#upstream("money", (h) => moneyOf(h, { record: this.record, membership: this.membership })); }
+  get people() { return this.#upstream("people", (h) => peopleOf(h, { record: this.record, membership: this.membership })); }
+  get duties() { return this.#upstream("duties", (h) => dutiesOf(h, { record: this.record, membership: this.membership })); }
+  get calculations() {
+    return this.#upstream("calculations", (h) => calculationsOf(h, { record: this.record, membership: this.membership }));
   }
   get versions() {
     if (!this.#deps.versions && this.#deps.host)
@@ -220,10 +258,24 @@ export class Strength {
     return (id) => {
       if (!id) return id ?? null;
       if (!memo.has(id))
-        memo.set(id, isImportedRef(id) ? seesRef(id)
-          : !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, id, ...g.args));
+        memo.set(id, isImportedRef(id) ? seesRef(id) : this.#sees(id, viewer, g));
       return memo.get(id) ? id : null;
     };
+  }
+
+  /* R6 for one id the redactor asks about: a bundle by membership's rule; a calculation as `calculations` answers it
+     to this viewer (its R10: an input unseen withholds it whole); an occurrence as `duties` answers its obligation to
+     this viewer; a held standard is the group's law, seen by every viewer the gate admits. */
+  #sees(id, viewer, g) {
+    const kind = Strength.#kindOf({ target_id: id });
+    if (kind === "calculation") { const f = this.#calcFacts(id, viewer); return !!(f && f.found); }
+    if (kind === "standard") return true;
+    if (kind === "occurrence") {
+      const ref = parseOccurrenceRef(id);
+      try { const d = this.duties && this.duties.readDuty({ dutyId: ref.duty, viewer }); return !!(d && d.found); }
+      catch { return false; }
+    }
+    return !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, id, ...g.args);
   }
 
   /* R1 (REC-105, D-373): the walk's whole document-target set, collected once, so the registry is asked once. It
@@ -234,8 +286,10 @@ export class Strength {
     const targets = new Set();
     const visit = (legs, depth) => {
       for (const leg of legs) {
-        if (typeof leg.target_id !== "string" || !leg.target_id || isImportedRef(leg.target_id)) continue;
-        if (normalizeType(leg.target_type) === "inquiry") {
+        if (typeof leg.target_id !== "string" || !leg.target_id) continue;
+        const kind = Strength.#kindOf(leg);
+        if (kind === "imported" || DERIVED_KINDS.includes(kind)) continue;
+        if (kind === "inquiry") {
           if (depth + 1 <= bound) visit(this.#legsOf(leg.target_id), depth + 1);
           continue;
         }
@@ -253,12 +307,9 @@ export class Strength {
     return (b && Array.isArray(b.legs)) ? b.legs : [];
   }
 
-  /* A leg's kind as the walk reads it (R2, R33): another group's finding by its reference, a question by its type, else
-     a document. */
-  static #kindOf(leg) {
-    if (isImportedRef(leg.target_id)) return "imported";
-    return normalizeType(leg.target_type) === "inquiry" ? "inquiry" : "document";
-  }
+  /* A leg's kind as the walk reads it (R2, R33, R36–R38): another group's finding by its reference, an occurrence by
+     its reference, a question by its type, a calculation or a held standard by its id, else a document. */
+  static #kindOf(leg) { return legKind(leg); }
 
   /* R33: the edition a leg on another group's finding names: the leg's own `target_edition` when it carries one, else,
      for a leg of the inquiry's own projected basis (`authored`), its authored `basis[ord]` in its bundle.md (the
@@ -322,7 +373,8 @@ export class Strength {
     return levelPair(bundleId, legs, {
       bound,
       kindOf: (l) => Strength.#kindOf(l),
-      capCapture: (l, stated) => (captureBounds ? this.inquiry.legCapped(stated, captureBounds.get(l.target_id), l.target_id) : null),
+      capCapture: (l, stated) => this.#capped(l, stated, captureBounds),
+      derive: (l) => this.#derive(l, ctx),
       /* R29, R34: which legs of THIS basis are credited anonymously, and which something independent in the same basis
          bears out. The pair is a record fact, so no viewer narrows it (R6). */
       anonymous: this.#anonymousOf(legs, ctx.levels, captureBounds),
@@ -343,6 +395,107 @@ export class Strength {
     const ctx = { captureBounds: this.#captureBoundsFor(bundleId, DEPTH_BOUND, legs), levels, refs: new Map(),
                   ownTop: topLegs == null };
     return { pair: this.#walk(bundleId, 0, DEPTH_BOUND, legs, ctx), legs, refs: ctx.refs };
+  }
+
+  /* R1, R37: a stated capture letter under what the record earns for its target, or null when it stands. A held
+     standard the registry earns nothing for is unknown, never counted at its stated letter (R37). */
+  #capped(leg, stated, captureBounds) {
+    const earned = captureBounds ? captureBounds.get(leg.target_id) : undefined;
+    if (Strength.#kindOf(leg) === "standard" && !earned)
+      return { grade: null, why: `nothing here establishes what the record holds for the text of ${leg.target_id}` };
+    return captureBounds ? this.inquiry.legCapped(stated, earned, leg.target_id) : null;
+  }
+
+  /* R36, R38: a derived leg's capture grade, `{grade, why}`, or `{stopped: why}`; memoised for one walk. */
+  #derive(leg, ctx = null) {
+    const memo = ctx ? (ctx.derived ||= new Map()) : new Map();
+    if (!memo.has(leg.target_id))
+      memo.set(leg.target_id, Strength.#kindOf(leg) === "calculation" ? this.#deriveCalculation(leg.target_id)
+                              : this.#deriveOccurrence(leg.target_id));
+    return memo.get(leg.target_id);
+  }
+
+  /* R36 (`calculations` R9; J1 (5)): a calculation's grade facts, read synchronously, or null when they cannot be. */
+  #calcFacts(id, viewer = RECORD_READER) {
+    const c = this.calculations;
+    if (!c || typeof c.gradeFactsOf !== "function") return null;
+    try {
+      const f = c.gradeFactsOf({ calcId: id, viewer });
+      return f && typeof f.then !== "function" ? f : null;
+    } catch { return null; }
+  }
+
+  /* R36 (K1447 (ii)): the weakest of the inputs' captures, each capped by its derivation (the calculation's own grade
+     facts, calculations R9); recipe arithmetic weakens nothing; a value another program computed is unknown until its
+     agreement is measured; the method is named beside the grade, never graded. Not accepted, an input that cannot be
+     read, or no facts at all: unknown, with why. */
+  #deriveCalculation(id) {
+    const f = this.#calcFacts(id);
+    if (!f) return { stopped: `the grade facts of ${id} cannot be read here, so what this leg rests on is unknown` };
+    if (!f.found) return { stopped: `${id} is not a calculation this copy holds, so what this leg rests on is unknown` };
+    if (!f.accepted) return { stopped: `the result of ${id} is not accepted, so what this leg rests on is unknown` };
+    const inputs = Array.isArray(f.inputs) ? f.inputs : [];
+    const engine = inputs.find((i) => i && i.engine && !i.engine_measured);
+    if (engine)
+      return { stopped: `${id} uses a value another program computed (${String(engine.name ?? "an input")}), and that `
+                      + `program's agreement is not measured, so what this leg rests on is unknown` };
+    const cap = f.capture || {};
+    if (!GRADE_RANK[cap.grade])
+      return { stopped: `the capture strength of ${id} is unknown: ${String(cap.why ?? "no input carries a capture grade")}` };
+    const note = f.method && typeof f.method.note === "string" && f.method.note.trim() ? ` (${f.method.note.trim()})` : "";
+    return { grade: cap.grade,
+             why: `${id} counts at ${cap.grade}, the weakest capture among its inputs, each no stronger than where it came `
+                + `from; the recipe's arithmetic does not weaken it. Its method is stated beside the grade${note} and is `
+                + `not graded.` };
+  }
+
+  /* R38 (K1447 (i); leg-earning R9): an occurrence's derivation (the source in force, the trigger date, the due date
+     and the level searched, `duties` R9), graded at the weaker of the source's text at its version (its capture ceiling,
+     leg-earning R8) and the trigger date's attestation (`events`); the state is named beside it, never grading it. */
+  #deriveOccurrence(ref) {
+    const parts = parseOccurrenceRef(ref);
+    const unknown = (why) => ({ stopped: `${ref}: ${why}, so what this leg rests on is unknown` });
+    const d = this.duties;
+    if (!parts || !d) return unknown("the obligation cannot be read here");
+    const duty = (() => { try { return d.readDuty({ dutyId: parts.duty, viewer: RECORD_READER }); } catch { return null; } })();
+    if (!duty || !duty.found) return unknown(`${parts.duty} is not an obligation this copy holds`);
+    let read = null;
+    try { read = d.occurrencesOf({ dutyId: parts.duty, asOf: this.#asOf(), viewer: RECORD_READER }); } catch { read = null; }
+    const occ = read && Array.isArray(read.occurrences) ? read.occurrences.find((o) => o && o.key === parts.key) : null;
+    if (!occ) return unknown("no occurrence by that key is derived");
+    const dv = occ.derivation || {};
+    if (!occ.due || occ.due.undetermined) return unknown(`its due date is undetermined${occ.due && occ.due.why ? `: ${occ.due.why}` : ""}`);
+    const inForce = dv.source_in_force || {};
+    if (inForce.state === "undetermined") return unknown(`whether its source is in force is undetermined: ${inForce.why ?? ""}`.trim());
+    const source = duty.duty && duty.duty.source ? duty.duty.source : {};
+    if (!source.standard) return unknown("its source holds no captured text");
+    const reg = this.inquiry.earned(null, [source.standard]);
+    const ceil = reg && reg.earned && reg.earned.capture ? reg.earned.capture[source.standard] : null;
+    if (!ceil || !GRADE_RANK[ceil.grade])
+      return unknown(`what the record holds for the text of ${source.standard} is undetermined${ceil && ceil.why ? `: ${ceil.why}` : ""}`);
+    let grade = ceil.grade, setter = `the text of ${source.standard}`;
+    const trig = occ.trigger || {};
+    if (trig.kind === "event") {
+      let ev = null;
+      try { ev = this.events ? this.events.readEvent({ eventId: trig.ref, viewer: RECORD_READER }) : null; } catch { ev = null; }
+      const e = ev && ev.found ? ev.event : null;
+      const gov = e && e.governing != null && Array.isArray(e.attestations)
+        ? e.attestations.find((a) => Number(a.attestation_id) === Number(e.governing)) : null;
+      if (!gov || !GRADE_RANK[gov.grade]) return unknown(`the date of ${trig.ref}, which started it, is not attested here`);
+      if (GRADE_RANK[gov.grade] < GRADE_RANK[grade]) { grade = gov.grade; setter = `the record of ${trig.ref}'s date`; }
+    } else if (!trig.date || (typeof trig.date === "object" && trig.date.undetermined)) {
+      return unknown("the date that started it is undetermined");
+    }
+    return { grade,
+             why: `${ref} counts at ${grade}, set by ${setter}: the weaker of the text of the rule in force and the record `
+                + `of the date that started it. It is ${String(occ.state ?? "undetermined").replace(/_/g, " ")} as known `
+                + `today; that is stated beside the grade and never changes it.` };
+  }
+
+  /* The day an occurrence's state is stated as of (duties R9 reads no clock itself). */
+  #asOf() {
+    const n = String(this.now() || "");
+    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(n) ? `${n.slice(0, 19)}Z` : new Date().toISOString().slice(0, 19) + "Z";
   }
 
   /* R29, R30 (DEC-102): the register's author of an authored observation (provenance R48's `register.author`), read and
@@ -459,26 +612,40 @@ export class Strength {
              connection: { grade: s.connection.grade, state: s.connection.state }, pair: s };
   }
 
-  /** R13: writes the cache for one bundle, `strength_cache`'s row, from R1–R5 over the legs as they now stand, and
+  /** R13, R39: writes the cache for one bundle, `strength_cache`'s row, from R1–R5 over the legs as they now stand, and
    *  answers what it wrote (null for a bundle that is not an inquiry, whose row, if a former revision left one, goes:
-   *  only an inquiry has a pair). Called inside the promotion that writes the legs, so the row is never a revision
-   *  behind them. It is still a cache: a leg raised beneath this inquiry does not re-promote it, and a document re-read
-   *  moves the capture ceiling without re-promoting anything (REC-105), so the row can go stale, never weaker than the
-   *  record earns; REC-108 / D-379 ruled to keep it so and mark the fields cached (`query-language`'s `asOf`) rather than
-   *  re-walk every dependent inside a promotion. `strengthOf` is what anything needing the truth calls. */
+   *  only an inquiry has a pair). It goes through record-core's derived-cache convention (its R77): the row is rebuilt
+   *  by the table's own `rebuild`, and any mark that it had gone stale is cleared with it. Called inside the promotion
+   *  that writes the legs, so the row is never a revision behind them. It is still a cache: a leg raised beneath this
+   *  inquiry, or a document re-read, does not re-promote it, so the row can go stale (REC-108, D-379); the promotion of
+   *  what it rests on marks it stale (`project`), and `cachedOf` never answers a stale row as current. `strengthOf` is
+   *  what anything needing the truth calls. */
   writeProjection(bundleId, isInquiry) {
-    const c = this.cacheOf(bundleId, isInquiry);
-    if (!c) {
-      this.sql.exec(`DELETE FROM ${STRENGTH_CACHE_TABLE} WHERE bundle_id=?`, bundleId);
-      return null;
+    this.#projecting = { bundleId, isInquiry: !!isInquiry };
+    try { this.record.rebuildDerived("strength", STRENGTH_CACHE_TABLE, { bundle_id: bundleId }); }
+    finally { this.#projecting = null; }
+    const row = this.#one(`SELECT capture_grade, capture_state, connection_grade, connection_state FROM ${STRENGTH_CACHE_TABLE}
+                             WHERE bundle_id=?`, bundleId);
+    return row ? { capture: { grade: row.capture_grade, state: row.capture_state },
+                   connection: { grade: row.connection_grade, state: row.connection_state } } : null;
+  }
+
+  /** R39: the cache's `rebuild` (record-core R77): R13's row for each inquiry in `scope` (one `bundle_id`, or every
+   *  inquiry the record holds), computed now. A promotion in progress says whether its bundle is an inquiry. */
+  rebuildCache(scope = null) {
+    const id = scope && typeof scope.bundle_id === "string" ? scope.bundle_id : null;
+    const ids = id ? [id] : this.#rows(`SELECT bundle_id, object_type FROM bundles ORDER BY bundle_id`)
+      .filter((r) => normalizeType(r.object_type) === "inquiry").map((r) => r.bundle_id);
+    const rows = [];
+    for (const b of ids) {
+      const p = this.#projecting;
+      const isInquiry = p && p.bundleId === b ? p.isInquiry
+        : normalizeType(this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, b)?.object_type) === "inquiry";
+      const c = this.cacheOf(b, isInquiry);
+      if (c) rows.push({ bundle_id: b, capture_grade: c.capture.grade, capture_state: c.capture.state,
+                         connection_grade: c.connection.grade, connection_state: c.connection.state });
     }
-    this.sql.exec(
-      `INSERT INTO ${STRENGTH_CACHE_TABLE} (bundle_id, capture_grade, capture_state, connection_grade, connection_state)
-       VALUES (?,?,?,?,?)
-       ON CONFLICT(bundle_id) DO UPDATE SET capture_grade=excluded.capture_grade, capture_state=excluded.capture_state,
-         connection_grade=excluded.connection_grade, connection_state=excluded.connection_state`,
-      bundleId, c.capture.grade, c.capture.state, c.connection.grade, c.connection.state);
-    return { capture: c.capture, connection: c.connection };
+    return rows;
   }
 
   /** R13 (promotion R39): this module's projection in every promotion, run after inquiry's (which writes the legs) in
@@ -486,13 +653,42 @@ export class Strength {
   project(c) {
     if (!c || !c.bundleId) return null;
     this.writeProjection(c.bundleId, c.promotedType === "inquiry");
+    this.#markDependantsStale(c.bundleId);
     return null;
   }
 
-  /** R13, R23 (N137): the row the cache holds for one bundle, as search reads it, or null when it holds none. */
+  /* R39 (record-core R77): every cached inquiry resting on `id`, to the depth bound, is marked stale in the promotion's
+     own transaction, so its row is not answered as current until its own promotion rebuilds it. Read through the
+     resting-on read (`leg-earning` R4, through `inquiry` until re-pointed); a provider offering none marks nothing. */
+  #markDependantsStale(id) {
+    const k = this.inquiry;
+    if (!k || typeof k.restingOn !== "function") return;
+    const seen = new Set([id]);
+    let frontier = [id];
+    for (let depth = 0; depth < DEPTH_BOUND && frontier.length; depth++) {
+      const next = [];
+      for (const t of frontier) {
+        let r = null;
+        try { r = k.restingOn(t); } catch { r = null; }
+        for (const d of (r && Array.isArray(r.dependents) ? r.dependents : [])) {
+          if (!d || seen.has(d.bundle_id)) continue;
+          seen.add(d.bundle_id);
+          next.push(d.bundle_id);
+          if (this.#one(`SELECT 1 AS x FROM ${STRENGTH_CACHE_TABLE} WHERE bundle_id=?`, d.bundle_id))
+            this.record.markStale("strength", STRENGTH_CACHE_TABLE, d.bundle_id);
+        }
+      }
+      frontier = next;
+    }
+  }
+
+  /** R13, R23, R39 (N137; record-core R77): the row the cache holds for one bundle, read fail-closed: `{stale: false,
+   *  row}` when it is current, `{stale: true}` when it is marked stale or there is none, never a stale row as current. */
   cachedOf(bundleId) {
-    return this.#one(`SELECT capture_grade, capture_state, connection_grade, connection_state FROM ${STRENGTH_CACHE_TABLE}
-                       WHERE bundle_id=?`, bundleId);
+    const r = this.record.readDerived("strength", STRENGTH_CACHE_TABLE, bundleId);
+    if (!r || r.stale) return { stale: true };
+    const { bundle_id: _id, ...row } = r.row;
+    return { stale: false, row };
   }
 
   /* ============================================================ the pair over a version (R7–R10; PL-14, §12) */
@@ -503,7 +699,8 @@ export class Strength {
      about the record, and is published beside the arithmetic's own explanation rather than overwriting it. With `levels`
      (R29), an anonymous observation nothing independent in the version bears out is in `ungraded`, named so. */
   #versionLegsAsMembers(rows, subjectEntity, levels = null) {
-    const targets = rows.map((r) => r.target_id).filter((t) => typeof t === "string" && t && !isImportedRef(t));
+    const targets = rows.filter((r) => typeof r.target_id === "string" && r.target_id
+      && !["imported", ...DERIVED_KINDS].includes(Strength.#kindOf(r))).map((r) => r.target_id);
     const reg = this.inquiry.earned(subjectEntity || null, targets);
     const earnedConn = (reg && reg.earned && reg.earned.connection) || {};
     const earnedCap = (reg && reg.earned && reg.earned.capture) || {};
@@ -532,6 +729,15 @@ export class Strength {
       if (isImportedRef(r.target_id))
         return inert("this leg rests on another group's finding and carries no grade of its own: it counts at what that "
                      + "accepted edition publishes on each axis", "ungraded");
+      /* R36, R38: a calculation or an occurrence carries no grade of its own; its capture grade is derived from what it
+         rests on, and the walk derives it the same way (unknown there when it is unknown here). */
+      if (DERIVED_KINDS.includes(Strength.#kindOf(r))) {
+        const d = this.#derive(r);
+        if (d.stopped) { inert(d.stopped, "ungraded"); return { ...base, grade_axis: "capture", grade: null }; }
+        placed.push(["graded", { target_id: r.target_id, ord: r.ord, ground: r.ground, grade_axis: "capture",
+                                 grade_source: source, grade: d.grade, authored: null, why: d.why }]);
+        return { ...base, grade_axis: "capture", grade: null };
+      }
       if (!axis) return inert("this leg states no axis, so there is no population it belongs to", "ungraded");
       if (axis === "connection") {
         /* The registry holds the letter, so the leg is worth that letter and no other. A member's signed testimony
@@ -559,6 +765,12 @@ export class Strength {
       /* CAPTURE: the earned entry is a ceiling, not a value, so the member's letter stands and is capped. Two empty
          levels are different facts (REC-88, D-349): no bytes held, and bytes held with no measured fidelity. */
       const c = earnedCap[r.target_id];
+      /* R37: a held standard whose text the record does not hold is unknown: named here, and the walk, which bounds the
+         authored letter again, finds it undetermined. */
+      if (Strength.#kindOf(r) === "standard" && (!c || !c.grade)) {
+        inert(c && c.why ? c.why : `nothing here establishes what the record holds for the text of ${r.target_id}`, "ungraded");
+        return { ...base, grade: authored };
+      }
       if (c && c.grade == null && c.undetermined_because) return inert(c.why, "ungraded");
       if (!c || !c.grade)
         return inert(`the record holds no captured bytes for ${r.target_id}, so there is nothing here `
@@ -716,61 +928,19 @@ export class Strength {
 
   /* ============================================================ independence (R11, R12, R27; D-195) */
 
-  /* The upstream origins of some bundles (R12): each bundle, its captures and their captured addresses, each read one
-     past `ORIGIN_LIMIT`; `complete` false when a read reached it. */
-  #originsOf(bundleIds) {
-    let complete = true;
-    const set = new Set();
-    for (const id of bundleIds) {
-      set.add(`bundle:${id}`);
-      const caps = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? LIMIT ?`, id, ORIGIN_LIMIT + 1);
-      if (caps.length > ORIGIN_LIMIT) complete = false;
-      for (const r of caps.slice(0, ORIGIN_LIMIT)) {
-        set.add(`capture:${r.capture_sha}`);
-        const addrs = this.#rows(
-          `SELECT DISTINCT address_norm FROM captured_locators WHERE capture_sha=? ORDER BY address_norm LIMIT ?`,
-          r.capture_sha, ORIGIN_LIMIT + 1);
-        if (addrs.length > ORIGIN_LIMIT) complete = false;
-        for (const l of addrs.slice(0, ORIGIN_LIMIT)) set.add(`address:${l.address_norm}`);
-      }
-    }
-    return { set, complete };
+  /* The reader R12's one implementation walks (`./origins.mjs`), fresh for each answer: the store and the layer-5 reads. */
+  #origins() {
+    return originsReader({ rows: (q, ...a) => this.#rows(q, ...a), events: this.events, lines: this.lines,
+                           people: this.people, money: this.money, calcFacts: (id) => this.#calcFacts(id) });
   }
 
+  /* R30, R34: some bundles' own provenance (the document, its captures, their addresses), `{set, complete}`. */
+  #originsOf(bundleIds) { return this.#origins().provenanceOf(bundleIds); }
+
   /* THE ONE IMPLEMENTATION (R12), for the pair over a version, a partition and a candidate alike, so the write gate
-     and the ceremony's read cannot come to disagree about what "independent" means. Derived from content-addressed
-     provenance: `register` maps a capture's sha to the bundle that holds it and `captured_locators` maps that sha to
-     the address it was retrieved from (provenance R48); two parts sharing a bundle, a capture or an address share an
-     upstream origin. `checked: false` says there was nothing to compare (one part), which is different from looked and
-     found nothing; `complete` is null then. Every read asks one past the limit, and reaching it makes the answer
-     incomplete rather than clean: a missed origin would be a silent pass on the side that overstates the finding. */
-  #independenceOf(legs, parts) {
-    let complete = true;
-    const originsOf = (bundleIds) => {
-      const o = this.#originsOf(bundleIds);
-      if (!o.complete) complete = false;
-      return o.set;
-    };
-    const checked = parts > 1;
-    const shared = [];
-    if (checked) {
-      const byPart = new Map();
-      for (const l of legs) {
-        const g = str(l.ground);
-        if (!g) continue;
-        if (!byPart.has(g)) byPart.set(g, []);
-        byPart.get(g).push(l.target_id);
-      }
-      const originSets = [...byPart].map(([label, ids]) => [label, originsOf(ids)]);
-      for (let i = 0; i < originSets.length; i++)
-        for (let j = i + 1; j < originSets.length; j++) {
-          const common = [...originSets[i][1]].filter((o) => originSets[j][1].has(o));
-          if (common.length)
-            shared.push({ a: originSets[i][0], b: originSets[j][0], through: common.slice(0, SHARED_NAMED_MAX) });
-        }
-    }
-    return { checked, parts, shared, complete: checked ? complete : null, limit: ORIGIN_LIMIT };
-  }
+     and the ceremony's read cannot come to disagree about what "independent" means. `checked: false` says there was
+     nothing to compare (one part), which is different from looked and found nothing; `complete` is null then. */
+  #independenceOf(legs, parts) { return this.#origins().independenceOf(legs, parts); }
 
   /** R11–R12: `op=partitionindependence`, D-195's derivation over a PROPOSED partition of a question's existing reasons
    *  (REC-161), or over a stored version's groups (REC-192), answering independence on its own with no strength key.
@@ -1038,6 +1208,20 @@ export class Strength {
       if (kind0 === "document" && leg.grade_axis === "capture" && leg.grade != null && captureBounds) {
         const capped = this.inquiry.legCapped(leg.grade, captureBounds.get(leg.target_id), leg.target_id);
         if (capped) out.grade = capped.grade;
+      }
+      /* R36–R38: a calculation's or an occurrence's derived capture grade, or why it is unknown; a held standard's
+         letter under its text's ceiling, or why that text is unknown. */
+      if (DERIVED_KINDS.includes(kind0) && !isHunch(leg.grade_source)) {
+        const d = this.#derive(leg, ctx);
+        out.grade_axis = "capture";
+        out.grade = d.stopped ? null : d.grade;
+        if (d.stopped) out.undetermined = d.stopped;
+      }
+      if (kind0 === "standard" && leg.grade_axis === "capture" && leg.grade != null && !isHunch(leg.grade_source)) {
+        const capped = this.#capped(leg, leg.grade, captureBounds);
+        /* The stated letter stays beside why its text is unknown, so the recomputation finds it unknown too (R32). */
+        if (capped && capped.grade == null) out.undetermined = capped.why;
+        else if (capped) out.grade = capped.grade;
       }
       if (kind0 === "inquiry" && !isHunch(leg.grade_source)) {
         const sub = this.#walk(leg.target_id, 1, DEPTH_BOUND, null, ctx);
@@ -1327,6 +1511,19 @@ export function strengthOps(s, url, body) {
 
 const instances = new WeakMap();
 
+/** R39 (plan T33, Rules (6); record-core R21, R77): this module's tables, each with its classes. The cache is
+ *  derived-rebuildable, keyed by `bundle_id`, with the sight of the bundle it names, rebuilt by R13's computation; the
+ *  group's default bar is exempt from purge as an instance setting (R23), group-wide; the rest as `declarePurge`'s
+ *  default form gives them. */
+export function strengthTables(s) {
+  const rest = { expunge: "none", export: "admin-only", version_chain: false };
+  return [
+    { name: STRENGTH_CACHE_TABLE, purge: "clear", sight: "bundle", derive: "derived-rebuildable", key: ["bundle_id"],
+      rebuild: (scope) => s.rebuildCache(scope), ...rest },
+    ...STRENGTH_EXEMPT_TABLES.map((name) => ({ name, purge: "exempt", sight: "group", derive: "stored", ...rest })),
+  ];
+}
+
 /** K61: the one instance per host, created on the first call with `deps`. It creates its tables and declares them to
  *  purge (R23), joins every promotion with its cache projection (R13) and registers its pair with inquiry's grouping
  *  act (R17). Any call handing `retrieval` in registers the cache's columns with it, once (R23, N137). */
@@ -1345,7 +1542,8 @@ export function strengthOf(host, deps) {
     s = new Strength({ ...d, host, storage, record, membership, promotion, producingGroup });
     instances.set(host, s);
     s.migrate();
-    record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
+    const declared = record.declareTable("strength", strengthTables(s));
+    if (!declared || declared.ok === false) throw new Error(`strength's tables could not be declared: ${JSON.stringify(declared)}`);
     promotion.registerStep("strength", { project: (c) => s.project(c) });
     s.registerGrounded();
   }
