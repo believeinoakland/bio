@@ -339,7 +339,7 @@ test("R22 each refusal code is a row of this module's own table, one new family;
     "DOCKET_NO_EDITION", "DOCKET_NO_GROUP_SLUG", "DOCKET_NO_REASON", "DOCKET_NO_STANDING", "DOCKET_NO_SUMMARY", "DOCKET_SIGNATURE_REFUSED",
     "DOCKET_STALE", "DOCKET_TAKE_BACK_FINAL", "DOCKET_WARNING_NOT_ACKNOWLEDGED", "DOCKET_WITHDRAWAL_FINAL", "DOCKET_WRONG_SHELF",
     "MACHINE_CANNOT_FILE_DOCKET", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "MACHINE_CANNOT_PLACE_DOCKET", "NO_SUCH_DOCKET_ENTRY",
-    "DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_REFUSED"].sort());
+    "DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_REFUSED", "DOCKET_ORDER_UNREADABLE", "DOCKET_NOTHING_SEALED"].sort());
   const checks = Object.values(DOCKET_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "one row per code");
   for (const c of checks) assert.match(c, /^C-129\.\d+$/, "one family");

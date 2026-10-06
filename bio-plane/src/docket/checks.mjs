@@ -7,7 +7,7 @@
  * until T30's stamp. No code here is a code another module's table holds (R22). `NO_SUCH_CASE` is the shared answer for an absent case, a case with no ratified edition and one
  * the viewer does not see, and has no row here (R22). The words a member reads before posting (the outward-act warning,
  * the invitation, the shelves' labels) are the UX design stream's; these rows only say why an act was refused and that
- * nothing changed. */
+ * nothing changed. At T33 (K1480, T33-64) C-129.27 and C-129.28 arrived for a court order (R25), awaiting the stamp. */
 
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
@@ -17,6 +17,7 @@ const MANAGER = at("#managerRefusal", "is-docket-manager");
 const ENTRY = at("#entryRefusal", "is-docket-entry");
 const KIND = at("#kindRefusal", "is-docket-kind");
 const POST = at("docketPost", "is-docket-post");
+const ORDER = at("#orderRefusal", "is-docket-order");
 
 export const DOCKET_CHECKS = Object.freeze({
   MACHINE_CANNOT_FILE_DOCKET: {
@@ -149,6 +150,18 @@ export const DOCKET_CHECKS = Object.freeze({
   DOCKET_ALREADY_WITHDRAWN: {
     check: "C-129.26", where: KIND,
     translation: "That edition is already withdrawn, and a withdrawal is never repeated or lifted. Nothing was "
+      + "published.",
+  },
+  /* R25 (K1480, T33-64): a court order's own refusals; rows awaiting promotion's stamp. */
+  DOCKET_ORDER_UNREADABLE: {
+    check: "C-129.27", where: ORDER,
+    translation: "A court order is placed with what it orders (remove, redact, seal or unseal), the published editions "
+      + "it names, and, to redact, seal or unseal, the parts of the edition it names. This one does not say so. Nothing "
+      + "was published.",
+  },
+  DOCKET_NOTHING_SEALED: {
+    check: "C-129.28", where: ORDER,
+    translation: "An unsealing order names a part that no sealing order on this case's docket names. Nothing was "
       + "published.",
   },
 });
