@@ -9,3 +9,4 @@
 - standards (T34-21): `law.mjs:312` labels law proposals through `standard`; record-grammar R49's `law_relation` subject is now there (K1732).
 - entities (T34-16): with id-spaces' twelve spaces (K1729), R20's literal list is three short; drop the literal (ID-SPACES #4 J4).
 - agent-runner (T34-74): BUNDLER #8 J2 (K1734): its marker needs `bundle` (the Worker hosting `AgentRunner`), `class_name`, `max_instances`, `bind` (e.g. agent-worker's RUNNER), `image.digest` (`sha256:<64 hex>`, written at the release), and its wrangler.jsonc `containers`; the fleet gate needs no edit (fleetbundles admits it; resolveversion ARM 7b is a floor).
+- calculations (T34-27): calc-grammar's streamed evaluate answers a streamed table result as `{fields, rows}`; read it through `rows()` when storing one (K1734).
