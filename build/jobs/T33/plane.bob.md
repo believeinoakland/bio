@@ -38,3 +38,7 @@ K1685 (from CONTROL-PLANE #22 J3): the store object handed to dispatch gains log
 ## B6 · CHANGE
 
 K1689: queue (T33-83, noticeProducers dep) and control-plane are merged on tranche/T33, and your 22 uses are set. Merge the tranche branch, clear t33.test.mjs R21, and COMPLETE.
+
+## B7 · CHANGE
+
+K1690: instance-setup is merged on tranche/T33: its routes are now twenty (+assistantset, assistantstate, disclosureshown, disclosureof, officesseed, seatsseed), so your R1/R5 pin of 'fourteen routes' needs re-pinning; hand officeOf/officeEntityOf and assistantGate (to answers) as ports. Merge the tranche branch before COMPLETE.
