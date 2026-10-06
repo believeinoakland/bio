@@ -25,6 +25,14 @@
 
 Size (session_019tmdRWuokxq2rwBpT9RPKW): test runs 17, module lines 719
 
+## Completion, B5 (K1585)
+
+Merged `tranche/T33` after duties' merge. `real-duties.test.mjs`: over duties' own test world (real standards, events, lines, money and duties), duties registers `holds_power` (read from the registry, word "holds the power"), `chain`'s kind set names it, and `chain` from an office walks its power through duties' `neighbours`, as of a day after the power's adoption (its validity starts at adoption). No code change: K1563 (8)'s name was right.
+- `node --test bio-plane/test/m/explore/`: tests 25, pass 25, fail 0.
+- `format` 0 failures; `coverage explore` 18 of 18, 0 failures; `ownership explore tranche/T33` 2 files, 0 failures; `architecture explore` 1 failure: the test imports `bio-plane/test/m/duties/fixture.mjs`, and explore's `uses` lacks `duties`. With `duties` added to explore's `uses` (a test-only edge, earlier in the order) it passes: 16 files, 0 failures. Final **`uses`: civil-time, connection-grammar, events, observation-log, money, duties**.
+
+Size (session_019tmdRWuokxq2rwBpT9RPKW): test runs 21, module lines 719
+
 ## J1 · QUESTION
 
 Four points; I carry on with each best reading.
