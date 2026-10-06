@@ -122,7 +122,7 @@ function reviewProvider(w) {
 }
 
 export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
-                        deps = {}, realImports = false } = {}) {
+                        inquiry: inqWrap = null, deps = {}, realImports = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -258,11 +258,14 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const disclosures = caseDisclosuresOf(host, { storage: st, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
     extraction: ex, caseImport: imports, promotion, inquiry, strength,
     ...given((d) => READ_BY_DISCLOSURES.includes(d)) });
-  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, inquiry, basisVersions,
+  /* `inquiry` (a wrap) changes only what case-authoring reads of inquiry: R56's and R57's tests give a finding legs on a
+     calculation or an event, which inquiry's own gate does not yet admit at promotion (C-2.8). */
+  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
     networkNotices, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)),
     disclosures: withPeople(disclosures, people), grammar,
-    ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength") });
+    ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
+    inquiry: inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry });
   w.people = people;
   let n = 0;
   Object.assign(w, {
@@ -445,7 +448,7 @@ export function infoMd(id) {
 export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
   /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
-  const refs = [...new Set(legs.map((l) => l.target).filter((t) => !String(t).startsWith("imported:")))];
+  const refs = [...new Set(legs.map((l) => l.target).filter((t) => !/^(imported:|CALC-)/.test(String(t))))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
     ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",

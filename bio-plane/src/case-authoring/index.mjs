@@ -86,7 +86,7 @@ export { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from
 export { CASE_AUTHORING_SCHEMA, CASE_AUTHORING_TABLES } from "./schema.mjs";
 export { searchedSection, SEARCHED_LEVEL_OUTCOMES } from "./searched.mjs";
 export { caseDocumentText, statementSha, withheldWriterStated, fmSafe, ackFrontmatterLines, ackBodyLines,
-         ACK_PROSE_HEAD, CASE_CITATION_WORDS, CEREMONY_HIGHLIGHT_SENTENCE } from "./document.mjs";
+         ACK_PROSE_HEAD, CASE_CITATION_WORDS, CEREMONY_HIGHLIGHT_SENTENCE, CALCULATION_STATE_WORDS } from "./document.mjs";
 /* N529 (K1333): what moved to `case-disclosures`, re-exported for this module's importers (`affordances`, `review`,
    `plane` and their tests) so the split asks nothing of them: the C-120 family (R29) and the disclosure constants and
    renderers this module's document writes (R14). Each is case-disclosures' one spelling, never a copy. */
