@@ -89,3 +89,44 @@ B2 applied (K1563). I merged `tranche/T33` at e07becea; the reworded R1 is the o
 **Correction to J2:** the module is 942 lines, not 958 (`index.mjs` 800, `schema.mjs` 104, `checks.mjs` 38).
 
 J2's `paths`, `tests` and `uses` stand.
+
+## J4 · COMPLETE
+
+B3 applied. This replaces J2 as my completion. I merged `tranche/T33` with MONEY #1 (K1580) in.
+
+**Real modules wired** (commit `7806c0d9cf` on `job/T33/money-checks`):
+- `moneyChecksOf` now defaults `deps.money` to the real `moneyOf(host, {record, membership})`.
+- The adapter follows money's real answers in three places:
+  - **`committedAgainstPaid`** returns one `committed.facts` list with `committed.awards`. Award facts are those concerning one of `awards`; change orders are the rest. An undetermined committed side (events not wired) answers its checks `undetermined` with money's why.
+  - **Read-contract amounts are signed** (`amount`, `amount_low`, `amount_high`), while the read view's are unsigned with a `sign`. `factFigure` reads both.
+  - **A fact's capture** comes from `source_capture_sha`.
+
+**Tests re-pointed at the real modules** (K1563 (1)):
+- The fixture now builds real record-core, membership, provenance, content, entities, events, lines, money and progressions, as money's own fixture does.
+- Facts are recorded through `money.recordFact`. Awards and change orders are real events joined by a real `amends` relation.
+- Placements are threaded through real `progressions` over held, resolved captures.
+- The real money is stricter than my stand-in was, and I followed it: a revenue takes stage `collected`, and a fact on a hidden project's capture is written by a participant.
+
+**For `modules.json` at the merge:**
+- `paths`: `bio-plane/src/money-checks/`
+- `tests`: `bio-plane/test/m/money-checks/`
+- final `uses`: record-grammar, calc-grammar, connection-grammar, record-core, membership, provenance, content, entities, events, lines, progressions, money.
+  - The product code imports record-grammar, calc-grammar, record-core, membership, entities, progressions and money.
+  - **connection-grammar, provenance, content, events and lines are for the tests only:** the fixture builds the real modules money reads (K1353's precedent for test-only uses).
+  - civil-time is dropped, and events stays only as a test use.
+
+Everything else in J2 stands: what was built, what is deferred (M-C8 is now N563), and what I found in other modules (money R19 is now named, K1563).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/money-checks/`: tests 30, pass 30, fail 0.
+- Negative controls:
+  - `GATE_MAX` set to 0.3 made 1 test fail (R9).
+  - Treating every committed fact as an award made 3 tests fail (R2 ×2, R1). Both were restored.
+- Checks, run against a local, uncommitted `modules.json` row with the paths, tests and uses above:
+  - `format: 126 modules, 125 requirements files; 0 failures`
+  - `architecture: 8 product files, 27 relative imports (0 naming no tracked file, not judged); 0 failures`
+  - `coverage: 1 modules, 14 of 14 live requirement ids named by a test; 0 failures`
+  - `ownership: 9 files changed by money-checks between tranche/T33 and HEAD; 0 failures`
+- Module 960 lines (`index.mjs` 818, `schema.mjs` 104, `checks.mjs` 38); tests 755 lines.
+
+Size (session_019trC8S5wM3AqjiTSTYewWk): test runs 19, module lines 960
