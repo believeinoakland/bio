@@ -361,6 +361,10 @@ test("R14 C11 a case file whose document carries the timeline prints it right af
                    `It was ${RECOMPUTE_WORDS.differs}.`, `The publisher's disclosure: ${c.disclosed}`])
     assert.equal(has(calc, s), true, s);
   assert.equal(render(manifest, files), html, "byte-identical twice");
+  /* K1639: a workbook row not recomputed is stated so, in words */
+  const wb = new Map(files);
+  wb.set("case.md", files.get("case.md").replace('recompute: \'"differs"\'', 'recompute: \'"not_recomputed"\''));
+  assert.equal(has(render(manifest, wb), `It was ${RECOMPUTE_WORDS.not_recomputed}.`), true);
 });
 
 test("R14 negative controls: a document without the blocks renders exactly as before T33 (no new section, the nine numbered as they were); an empty block states that its section has nothing", () => {
