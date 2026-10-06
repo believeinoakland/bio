@@ -35,10 +35,12 @@ Smaller choices I will make unless told otherwise: `judgement_source` is `"body"
 - **R56.** The `suggestions` layer is offered to `load_layer` and loaded only when `account.suggestions` is true, for asks and runs alike; off (absent) it is not offered, and a call naming it is refused.
 - **Beyond the entry (ai-runs R48).** A run's ticks carry `usage: [{mode, model, usage}]`, one entry per model conversation since the last tick, so ai-runs can count it for the member; sent only when non-empty.
 
-**Paths, uses.** Paths and tests unchanged (`agent-worker/`, `agent-worker/test/`). Final `uses`: the current list plus `agent-harness`, `agent-model` and `credentials` (`ask.test.mjs` reads `AI_GRANT_OPS`). `answers` is added when R55's test re-points at its `ASK_SCOPE` (below).
+**After B4, B5 (K1610, K1612, K1614).** Merged `tranche/T33` with every upstream (answers, ai-runs, skills). R55's copy test now reads `answers`' `ASK_SCOPE` (equal to `ASK_OPS` both ways) beside `credentials`' `AI_GRANT_OPS` (equal but `rule`, until N580). B4: `harness.test.mjs`' REC-100 fixture opens its two real-plane runs naming Ruth (`principalClaude: member:ruth`, the member `withAccount` sends) and first connects her own account by her act (`op=accountreferenceset`). The running plane cannot do that yet: the op answers `UNKNOWN_OP` (C-69.1, measured) and the seal secret is unbound until L11 (N585), so the open is refused `AI_NO_ACCOUNT` and REC100-0, -1b, -2, -2b, -2c stay red by name, exactly K1614's reading for capture-requests' four; they go green with no further edit once N585 routes the op.
+
+**Paths, uses.** Paths and tests unchanged (`agent-worker/`, `agent-worker/test/`). Final `uses`: the current list plus `agent-harness`, `agent-model`, `credentials` and `answers` (`ask.test.mjs` reads `AI_GRANT_OPS` and `ASK_SCOPE`).
 
 **Deferred.**
-1. R55's copy test pins `ASK_OPS` to credentials' `AI_GRANT_OPS` with `rule` (K1603). `answers` has no code on the tranche yet; at its merge I re-point the test at its `ASK_SCOPE` too (K1563 (1)), before COMPLETE.
+1. (done after B5: R55 reads answers' `ASK_SCOPE`.)
 2. The negative controls (`test/*.control.mjs`) arm source lines of `src/harness.mjs`, `subsession.mjs`, `model.mjs` and the three-level cascade, which this job removed or moved; they no longer arm and are stale until re-written against `agent-harness`, `agent-model` and the new `cascade.mjs`. `cascade.test.mjs`' header names the arms a re-armed control must fail. Not done here because the arms belong largely to the moved code, whose controls are agent-harness' and agent-model's.
 3. The Container DO class `AgentRunner` must be exported by a Worker named `agent-runner` with the image and its egress (agent-runner R10). agent-runner is a container member with no Worker today, so this binding cannot deploy until that script exists (installer T33-91 or the release, T33-D1).
 
@@ -48,16 +50,17 @@ Smaller choices I will make unless told otherwise: `judgement_source` is `"body"
 - ai-runs (T33-50): its dispatch must send `account: {kind, secret, member, suggestions}` on every segment, and record `principal.claude` as the member id; until then the plane's dispatch to this member is refused `NO_ACCOUNT` (K1601 said AI-RUNS #10 does this). Its tick may now carry `usage` (its R48).
 - control-plane, op-declarations (L11): route `askceiling`, `askcheck`, `askusage` and the untargeted `affordances` under a grant, as K1601 ruled; this member's `/ask` reaches them under the grant with no `store` unless the ask names one.
 - instance-setup `FLEET_BINDINGS`, bundler's deploy bindings: gain `RUNNER` (cross-script DO to `agent-runner`), per K1601 (6).
+- ai-runs R48 takes one usage entry per model CALL; `agent-model`'s `converse` answers only the conversation's summed `usage`, so this member sends one entry per conversation (its call count is lost to the run's counter; `/ask` sends it as `calls`). agent-model returning per-turn usage, or ai-runs' entry taking `calls`, would make the count exact.
 - The agent-worker bundle (my own artifact) is rebuilt: 20 first-party inputs (was 13; agent-harness' two files and agent-model's four join), so `fleetbundles.test.mjs` "agent-worker's 13 inputs" stays red until N575 (accepted). Its plane-bundle arms (`bio-plane: no staleness…`, byte identity) are red on the tranche branch from other L6 merges, not from this job (the plane bundle has no agent-worker input).
 
 **Tests and checks.**
-- `agent-worker`: `npm test`: tests 9 (suites), pass 9, fail 0. Per suite: agent-worker 140/0, ask 48/0 (new), cascade 38/0 (rewritten for R32/R33), fanout 184/0, harness 261/0, plan 55/0, requirements 282/0, versions 20/0, wire-vocabulary 83/0.
+- `agent-worker` after B5: `npm test`: 9 suites, 8 pass, 1 fail (harness, the five REC100 arms, K1614's reading). Per suite: agent-worker 140/0, ask 49/0 (new), cascade 38/0 (rewritten for R32/R33), fanout 184/0, harness 256/5, plan 55/0, requirements 282/0, versions 20/0, wire-vocabulary 83/0. Before the merge of ai-runs, harness was 261/0.
 - Plane suites naming this member: 15 green; `ai-runs/scheduler.test.mjs` 4/1 (K1514, accepted until ai-runs' job); `system/fleetbundles.test.mjs` and `system/resolveversion.test.mjs` red on the named N575/N578 arms (and the plane bundle, above).
 - `node checks/format.mjs`: 126 modules, 125 requirements files; 0 failures.
-- With `uses` + agent-harness, agent-model, credentials in a working copy of `modules.json` (not committed): `architecture.mjs … agent-worker`: 34 product files, 109 relative imports; 0 failures. `coverage.mjs … agent-worker`: 50 of 50 live ids named by a test; 0 failures. Without that edit, architecture reports the three undeclared edges.
+- With `uses` + agent-harness, agent-model, credentials, answers in a working copy of `modules.json` (not committed): `architecture.mjs … agent-worker`: 34 product files, 110 relative imports; 0 failures. `coverage.mjs … agent-worker`: 50 of 50 live ids named by a test; 0 failures. Without that edit, architecture reports the three undeclared edges.
 - `ownership.mjs … agent-worker tranche/T33`: 22 files changed; 0 failures.
 
-Size (session_01121q68NpD9QHccE6EUQKtV): test runs 30, module lines 2098
+Size (session_01121q68NpD9QHccE6EUQKtV): test runs 36, module lines 2098
 
 ## J2 · REPORT
 

@@ -3,13 +3,13 @@
  * `fetch(request, env)`, driven in this process with a recording plane binding and the global `fetch` replaced by a
  * scripted model API (agent-model's API-key path). Nothing here reads the member's source text.
  *
- * The plane's own lists are imported from their modules: `credentials`' `AI_GRANT_OPS` (its R28), which `answers`'
- * `ASK_SCOPE` equals with `rule` added until N580 (K1603); `answers` has no code on the tranche yet, so its list is
- * re-pointed here at its merge (K1563 (1)). */
+ * The plane's own lists are imported from their modules: `answers`' `ASK_SCOPE` (its R1) and `credentials'
+ * `AI_GRANT_OPS` (its R28), which equals ASK_SCOPE with `rule` left out until N580 (K1603). */
 import { readFileSync } from "node:fs";
 import worker from "../src/index.mjs";
 import { ASK_OPS, ASK_PLANE_OPS, PLANE_OPS } from "../src/ops.mjs";
 import { AI_GRANT_OPS } from "../../bio-plane/src/credentials/index.mjs";
+import { ASK_SCOPE } from "../../bio-plane/src/answers/scope.mjs";
 import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MODEL_ENDPOINT, MODEL_FOR_MODE, USAGE_FIGURES } from "../../agent-model/src/model.mjs";
 import { MEMBER } from "./account.mjs";
@@ -208,7 +208,9 @@ section("R54 · after the stream begins, a failure ends it as a refusal, and not
 
 section("R55 · the ask's whole reach is ASK_OPS, equal to answers' ASK_SCOPE and credentials' AI_GRANT_OPS");
 {
-  t("R55: ASK_OPS equals credentials' AI_GRANT_OPS with answers' `rule` (K1603, until N580), both ways",
+  const scope = ASK_SCOPE.map((e) => e.op);
+  t("R55: ASK_OPS equals answers' ASK_SCOPE, both ways", [ASK_OPS.filter((o) => !scope.includes(o)), scope.filter((o) => !ASK_OPS.includes(o))], [[], []]);
+  t("R55: and credentials' AI_GRANT_OPS, both ways, but answers' `rule`, which that list gains by N580 (K1603)",
     [ASK_OPS.filter((o) => !AI_GRANT_OPS.includes(o)), AI_GRANT_OPS.filter((o) => !ASK_OPS.includes(o))], [["rule"], []]);
   t("R55: never a sources op, member history, an administrative op, an export, or a write",
     ASK_OPS.filter((o) => /^sources|history|admin|export|purge|suggest|tick|close|propose|capture|set$/.test(o)), []);

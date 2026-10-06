@@ -1668,13 +1668,18 @@ console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC
               sha256: createHash("sha256").update(PROJECT_MD).digest("hex") }],
     register: [] };
   const SURFACING_OPEN = { run: "RUN-2026-0918-rec171-surfacing", contextType: "project",
-    label: "REC-171: the run the context question is surfaced inside", mode: "check", principalClaude: "project",
-    principalClaudeRef: "believe-in-oakland/claude", skillVersion: "investigative-session@1", biasManifest: null,
+    label: "REC-171: the run the context question is surfaced inside", mode: "check", principalClaude: MEMBER,
+    principalClaudeRef: "ruth's own account", skillVersion: "investigative-session@1", biasManifest: null,
     bounds: [{ bound: "surfaces", allowed: 1, unit: "questions" }], leaseMs: 3600000 };
   const OPEN = { contextType: "inquiry", contextId: RB, label: "REC-100's agent-worker fixture",
-    mode: "check", principalClaude: "project", principalClaudeRef: "believe-in-oakland/claude",
+    mode: "check", principalClaude: MEMBER, principalClaudeRef: "ruth's own account",
     skillVersion: "investigative-session@1", biasManifest: null,
     bounds: [{ bound: "fetches", allowed: 100000, unit: "requests" }], leaseMs: 3600000 };
+  /* K1610 (ai-runs R52, K1503): a run opens only on the account of the member whose act starts it, so the opener names
+     Ruth and her own account is connected first, by her act (credentials R22). The plane routes
+     `op=accountreferenceset` and binds the seal secret at L11 (N585); until then this connect is refused and the open
+     refused AI_NO_ACCOUNT, so the five REC100 arms below are red by name (K1614's reading). */
+  const CONNECT = { member: MEMBER, kind: ACCOUNT.kind, secret: ACCOUNT.secret };
   const FRONT = `
 export default {
   async fetch(req, env) {
@@ -1685,6 +1690,8 @@ export default {
     const post = (op, b) => env.REAL.fetch("http://real/api/?op=" + op + "&token=" + T,
       { method: "POST", body: JSON.stringify(b) });
     if (!globalThis.__opened) {
+      await env.REAL.fetch("http://real/api/?op=accountreferenceset&token=" + T + "&by=" + encodeURIComponent(${JSON.stringify(MEMBER)}),
+        { method: "POST", body: ${JSON.stringify(JSON.stringify(CONNECT))} });
       /* CORRECTED 2026-09-23 by REC-171 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30): the MEMBER
          deploy token's creation of the context question is stamped surfaced_by: agent, so it names a running run the
          token holds, with a surfaces bound, or the plane refuses it SURFACE_NO_RUN. The fixture used to create it
