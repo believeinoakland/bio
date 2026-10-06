@@ -62,9 +62,17 @@
 
 - N579 · `contradiction` · a measured prompt arm for K6 (money) pairs, as K5's: until measured K6 is formed and counted but `not_shown` (CONTRADICTION #8 J1 (4); K1601). **Hard reason:** a measurement (the prompt arm is measured before it is shown).
 
-- N580 · `credentials`, `answers` · `AI_GRANT_OPS` gains `rule` (answers R7's door to every rule service), and answers' copy test returns to equality (ANSWERS #1 J1 (1); K1603). **Hard reason:** the order: credentials (L2) is closed.
+- N580 · `credentials`, `answers` · `AI_GRANT_OPS` gains `rule` (answers R7's door to every rule service) and names six ops as the plane routes them (`careerof` → `career`, `occurrences` → `dutyoccurrences`, `lines` → `linesof`/`structureat`, `duties` → `dutiesof`, `calculations` → `calculation`, `moneyfacts` → `money`; today a grant would refuse the real op); a standing question's AI half gets a grant path (`aiGrantMint` refuses a non-member `by`, R27); answers' ASK_SCOPE follows and its copy test returns to equality (ANSWERS #1 J1 (1), J2 (1), (3); K1603, K1609). **Hard reason:** the order: credentials (L2) is closed.
 
 - N581 · `duties` · a read as `INTERNAL` reaches other modules as its `SYSTEM_VIEWER` (`class:daemon`), as `#instances` does for events: today `occurrencesOf({viewer: INTERNAL})` answers every `source_in_force` undetermined, because `standards.inForceAt` reads no standard for a non-string viewer (against duties R8, R9; LEG-EARNING #1 J2; K1605). **Hard reason:** the order: duties (L5) is closed.
+
+- N582 · `explore`, `inquiry-grammar` · a leg on a derived connection: `explore.rederive` reads a derivation's ends with the leg's inquiry as `scope` (or answers an input it cannot read as undetermined, refused), so a derived connection resting on a hunch is seen as a lead (hypotheses R6); and inquiry-grammar's leg arm admits a derived-id target with its five `derivation_*` fields. Until both, such a leg is refused by inquiry-grammar as an unknown target, so no derived connection passes as evidence (HYPOTHESES #1 J2 (1), (3); K1607). **Hard reason:** the order: explore (L5) is closed; inquiry-grammar's T33 job is running on its own entries.
+
+- N583 · `duties`, `standards`, `inquiry-grammar` · one home for two forms inquiry-grammar spells itself: duties exports its occurrence key's pattern (`OCC-` + 32 hex, R9), standards a portion-path predicate (R18); inquiry-grammar R13, R15 import them (INQUIRY-GRAMMAR #6 J2 (5); K1608). **Hard reason:** the order: duties, standards (L5) are closed.
+
+- N584 · `retrieval` · export a read of the relations it compiles with, so answers R15's saved-form check sees the T33 fields (until then a standing question naming one is refused `SAVED_QUERY_DROPS`), and `runSaved` re-checks a form with the zone it was set with (ANSWERS #1 J2 (2); K1609). **Hard reason:** the order: retrieval (L5) is closed.
+
+- N585 · `capture-requests`, `scheduler` · their plane tests that open a run connect the opener's account through `op=accountreferenceset` and name the member (ai-runs R52): capture-requests `plane.test.mjs` ×4 (R30; R16 R31 R14; R19 R42 R38; R14 N295) and scheduler's R12 test (CAPTURE-REQUESTS #11 J3; K1614). **Hard reason:** a dependency not yet built: the op is routed and the seal secret bound only by L11 (op-declarations, control-plane, plane), after both modules' T33 jobs.
 
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 

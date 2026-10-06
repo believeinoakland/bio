@@ -15,6 +15,12 @@ export const STATES = Object.freeze(["open", "dismissed", "explained_not_shown",
 export const K5_GATE_MEASURED = false;
 export const K5_UNSHOWN_WHY = "k5_gate_unmeasured";
 
+/** K6 (T33-48; K1601): the pinned judgement prompt (R2) names K1–K4 and R3 renders no field of a money side, so a run
+ *  judging a K6 pair sees no text. K6 pairs are formed and counted, and every K6 candidate is withheld as `not_shown`,
+ *  saying why, until its prompt arm is measured (N579), K5's rule. The day that is true, it is weighted as K4's. */
+export const K6_GATE_MEASURED = false;
+export const K6_UNSHOWN_WHY = "k6_gate_unmeasured";
+
 /** R24: a candidate's weight from its label and key, and whether a member recorded `no_difference` on it (R34). Never
  *  stored. Answers `{weight, why}`; `why` is null except for a withheld K5 candidate. */
 export function weightOf(label, key, noDifference = false) {
@@ -23,6 +29,7 @@ export function weightOf(label, key, noDifference = false) {
     if (!K5_GATE_MEASURED) return { weight: "not_shown", why: K5_UNSHOWN_WHY };
     return { weight: noDifference ? "duty" : "plurality", why: null };
   }
+  if (key === "K6" && !K6_GATE_MEASURED) return { weight: "not_shown", why: K6_UNSHOWN_WHY };
   if (label === "world" || label === "undetermined") return { weight: "lead", why: null };
   if (label === "record") return { weight: "duty", why: null };
   return { weight: "not_shown", why: null };

@@ -1,6 +1,6 @@
 # BOB to skills (T33)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ K1601: all six accepted, and the R28 re-quote (wording only). affordances publis
 ## B3 · ANSWER · re J2
 
 K1602: your reading accepted: the clause is carried in the ask and suggestions layers only; the run modes' layers do not carry it (DEC-60). R35's wording now says so; merge tranche/T33 into your branch.
+
+## B4 · CHANGE
+
+K1609: inquiry-grammar merged; its three C-2.8 rows make your doctrine.test.mjs:62 (R15) red: skilldoctrine.mjs types 'C-2.8' in TYPED. Merge tranche/T33, read C-2.8 from INQUIRY_GRAMMAR_CHECKS (e.g. STANDARD_LEG_AXIS.check) and drop it from TYPED; run your tests; COMPLETE.
