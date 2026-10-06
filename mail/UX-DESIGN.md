@@ -533,3 +533,12 @@ DEC-157 (Bob, S7, "as you've just described", amending DEC-127):
 ## U84 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
 DEC-158 (design session, on Bob's comment): "Copy a wizard to change it" starts a draft from any approved wizard the member may see (wizard-scripts R3's `from`, a derivative). The copy is the group's own (`origin: group`), a draft until approved under the same grant and checks. The original is unchanged and still offered; a required Civicsmith wizard stays the required one. The copy shows what it is based on, and when the base gets a newer approved version, the group's wizard editors are told once and can bring the change across.
 - Owed (BOB): confirm R3's derivative of a Civicsmith script is a new `origin: group` script recording its base, never a version of the Civicsmith script; the notice to wizard editors when the base changes.
+
+## U85 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-159 (design session, carrying out DEC-82's disclosure and DEC-129 rule 4, on Bob's observation that the screens had no mouseovers):
+- Every mark explains itself on hover, keyboard focus or tap: grades, strengths (with the weakest part and what would raise it), gaps, origin tags, queue kinds, due dates, hints, hunches, the outward tag, button weights, and path and ladder steps.
+- Names of people, offices and documents open a card.
+- One tip at a time, beside the thing, closed by Escape, set as the element's description.
+- `civicsmith.css` gains `.cs-tip` and `.cs-card`.
+- Owed (BOB): the explanations as interface words (translation layer, DEC-157); the tip and card on every member screen when built; each card's facts from the record.
+Also since U84: DEC-157 and DEC-158 posted (U83, U84).
