@@ -562,7 +562,7 @@ next; the assistant checks and advances.
 
 **RULED 2026-10-02 by Bob (DEC-120): wizards, wizard scripts, and drafts in fields.** Any multi-step journey can be
 walked with a wizard (Bob, 2026-10-03: "Let's call guided flows wizards"). A wizard runs from a **wizard script** (the authored step list this design first called a
-recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a wizard on the fly (since K1502, 2026-10-05: where the member has connected their own Claude account; there is no group-wide account).
+recipe) for every group, with no AI and no key; where a group has set a key, the assistant may also plan a wizard on the fly (since K1502, 2026-10-05, and K1755, 2026-10-06: where the member has connected their own Claude account or the group's API key, held by an administrator, is on; there is no group-wide subscription).
 Either way the member works on the real screens, the guide sitting in the docked panel (DEC-90). A step may place a
 **labelled draft** in a field for the member to edit and adopt (as DEC-101 and K1019 allow); the member alone presses the
 act's button, and the act still runs its four beats.
@@ -788,12 +788,13 @@ group cannot defeat can still require it to be shown. Members may keep their own
 published, turned into an observation, hunch or question by their own act.
 
 **Civicsmith without the assistant (Bob, 2026-10-05, K1547).** A member connects the assistant with their own API key or their own
-subscription token, or skips; skipping is a real choice. Every journey and screen is designed for both: without the assistant a
+subscription token, or skips; skipping is a real choice. (K1755, 2026-10-06: a group may also hold one API key at the group level, serving members
+without their own; a group may run with no AI.) Every journey and screen is designed for both: without the assistant a
 member walks the same journeys, with the assistant's steps left out.
 
 **RULED 2026-10-06 by the design session, under Bob's delegation (DEC-139; K1547 left the no-assistant path to design): the rules
 of Civicsmith without the assistant.** (1) Absent, not greyed: no assistant button, panel, tray or "suggested" section appears for a
-member with no account of their own, and nothing invites them again; their settings say "not connected" in one line. (2) "Ask"
+member with no account of their own (and, K1755, none served by the group's API key), and nothing invites them again; their settings say "not connected" in one line. (2) "Ask"
 becomes "Find and count": search, and counts that show their method. (3) Drafts come from the group's own templates, labelled the same
 way, in the same field. (4) A standing question still runs: its search re-runs on schedule and new matches reach the member's queue
 once, as a list, unread by any machine. (5) Every wizard runs the same, from its script. (6) What such a member cannot do (ask in
