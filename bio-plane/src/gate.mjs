@@ -693,7 +693,30 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    1.59.0.
    MINOR, rule 17 moving the stamp for arrivals and a changed composition. ROW_CENSUS (R50) is re-pinned to this tree,
    module tables only: 1162 rows. Rows T32's layers 3–11 change are T33's stamp. */
-export const CATALOG_VERSION = "1.60.0";
+/* 1.61.0 (PROMOTION #32, T34, 2026-10-06; N553, N631, K1718): MINOR. The stamp of T33's rows awaiting it (accepted
+   red at T33's close, K1708) and of T34's layer 1, re-pinned over the tree of `tranche/T34` as this job stamps it.
+   ARRIVED (136): record-core C-102.21–.25 and C-132.1–.4 (K1542, K1545); progressions C-100.24; run-rules C-109.8–.12
+   and C-22.19–.21; standards C-112.21–.32 (K1571); conformance C-113.29–.31 and consequences C-114.21/.22 (K1649);
+   action-grammar C-117.26–.28; setup C-119.5–.10; case-authoring C-120.14–.16 (K1638) and C-136.1; sources
+   C-121.7–.10; action-clocks C-123.4–.6; docket C-129.27/.28 (K1635); duties C-133.1–.36 (34 rows); hypotheses
+   C-134.1–.12 (K1607); answers C-135.1–.12 and inquiry-grammar's three C-2.8 rows (K1608, K1609); capture-requests
+   C-28.20–.22 (K1605); credentials C-29.13–.24 and C-96.19–.21; public-read C-98.11 (K1644).
+   CHANGED (14): C-92.1–.9 and C-92.13, `where` re-pointed from publication to case-tensions, words unchanged;
+   C-113.5 ACT_INCOMPLETE (an act named by its event); C-114.4 AFFECTED_UNKNOWN_KIND (a person a document names; an
+   office by its role and body); C-114.7 MEASURE_INVALID (exact decimals); C-91.1 IDSPACE_UNKNOWN (the spaces listed
+   from the jurisdiction profiles). DEPARTED (1): C-114.5 AFFECTED_INDIVIDUAL.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: C-20.1 (R30, N631) counts a file named in a mechanical
+   promotion's entry as written only when it is new to that promotion's own pre-image snapshot or differs from its
+   copy there, and states a copy it cannot compare as undetermined (a warning, R37), so a monitoring tick that carries
+   a file unchanged adds no envelope error.
+   T34 LAYER 2, re-pinned in place as each merges (BOB's CHANGE): membership (K1752) ARRIVED C-96.22–.38 (17) and
+   DEPARTED C-96.5 ADMINS_FIRST and C-96.10 RESIGN_AT_TWO (retired, never reused); record-core (K1754) ARRIVED
+   C-102.26 TABLE_NAME_INVALID and C-102.27 TABLE_DECLARED (N554); credentials (K1764) ARRIVED C-29.25
+   STANDING_SWITCH_OFF, C-29.26 NO_QUESTION, C-29.27 GROUP_KEY_NOTICE_DUE, CHANGED C-29.19 NO_SECRET, C-29.20 NO_ACCOUNT,
+   C-29.21 UNKNOWN_SWITCH, C-29.24 GRANT_NOT_HELD, and DEPARTED C-29.16 ACCOUNT_LEVEL_MEMBER_ONLY (retired, never reused).
+   ROW_CENSUS (R50) re-pinned to this tree: 1316 rows. Rows a T34 job in layers 3–11 adds or changes are T35's stamp
+   (plan Rules (5) 4). */
+export const CATALOG_VERSION = "1.61.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -785,8 +808,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1162,
-  digest: "2bc34e4652d0f43f89149fecafe493300e9b3806a1a8a4ca3f7e8d040732bc2b" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1316,
+  digest: "5f710da02a024ab7f2b1c477f4094f35dc8735328c6ba2629198b3ed80b4218a" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
@@ -898,7 +921,7 @@ export async function runGate({ bundleId, image, knownIds, hasCapture, registers
   }, { grammars });
   /* R30–R32 (K64): the checks that read a bundle's record of promotions and its release signatures (C-4.2, C-17.2,
      C-18.8, C-20.1) left the catalogue for this module, and run here, after it, over the same image. */
-  const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files,
+  const findings = [...catalogue, ...await recordChecks({ folderName: bundleId, files, raw: image || null,
                                                            releaseRegistry: releaseRegistry || null, sha256 })];
 
   const errors = findings

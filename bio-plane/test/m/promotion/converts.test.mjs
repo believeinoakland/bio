@@ -147,13 +147,15 @@ test("R9 (inquiry): an inquiry's recorded title is the one its `## Question` der
   assert.equal(record.head(Q3).title, "A label");
 });
 
-test("R30 (subresources): C-20.1's mechanical envelope admits data/snapshot-manifest.json, and nothing outside it", async () => {
+test("R30 (subresources; N631): C-20.1's mechanical envelope admits data/snapshot-manifest.json, and nothing written outside it; a file carried unchanged from the pre-image is not written", async () => {
   const hex = (s) => createHash("sha256").update(s).digest("hex");
   const md = (over = {}) => ["---", "id: INFO-2026-0001-a", "object_type: information", 'title: "A"', "current_state: collected",
     "prior_state: null", `created: "${T0}"`, `last_updated: "${over.lu || T0}"`, "state_history: []", "---", "", "## Session Log", ""].join("\n");
-  const image = (name) => {
+  /* `pre`, when given, is the bytes of `name` in k2's own pre-image snapshot (a file k1 held and k2 carried). */
+  const image = (name, pre) => {
     const a = md(), b = md({ lu: T1 });
-    const img = { "bundle.md": b, "_history/bundle_k2.md": a,
+    const copy = pre === undefined ? {} : { [`_history/${name.replace(/(\.[^./]*)?$/, "_k2$1")}`]: pre };
+    const img = { "bundle.md": b, "_history/bundle_k2.md": a, ...copy,
       "_history/promotion_k1.json": JSON.stringify({ base: hex(""), files: [{ name: "bundle.md", sha256: hex(a) }] }),
       "_history/promotion_k2.json": JSON.stringify({ base: hex(a), writer: "mechanical", operation: "monitor-tick",
         files: [{ name: "bundle.md", sha256: hex(b) }, { name, sha256: hex(name) }] }),
@@ -163,13 +165,19 @@ test("R30 (subresources): C-20.1's mechanical envelope admits data/snapshot-mani
           writer: "mechanical", operation: "monitor-tick" }] }) };
     return new Map(Object.entries(img));
   };
-  const c201 = async (name) => (await recordChecks({ folderName: "INFO-2026-0001-a", files: image(name), sha256: async (v) => hex(v) }))
+  const c201 = async (name, pre) => (await recordChecks({ folderName: "INFO-2026-0001-a", files: image(name, pre), sha256: async (v) => hex(v) }))
     .filter((f) => f.check === "C-20.1" && f.severity === "error").map((f) => f.message);
   for (const inside of ["data/snapshot-manifest.json", "data/changes.json", "data/provenance.json", "snapshots/page.html"])
     assert.deepEqual(await c201(inside), [], inside);
   const outside = await c201("data/notes.json");
   assert.equal(outside.length, 1);
   assert.match(outside[0], /wrote 'data\/notes\.json', outside the mechanical envelope \(bundle\.md, snapshots\/, data\/changes\.json, data\/provenance\.json, data\/snapshot-manifest\.json\)/);
+  /* N631: named in the entry but carried from k2's own pre-image unchanged (its copy hashes to what k2 recorded), so
+     not written; changed from that copy, it was written. */
+  assert.deepEqual(await c201("data/dataset.json", "data/dataset.json"), []);
+  const changed = await c201("data/dataset.json", "{\"rows\":[]}");
+  assert.equal(changed.length, 1);
+  assert.match(changed[0], /wrote 'data\/dataset\.json', outside the mechanical envelope/);
 });
 
 test("R27 (ratify-envelope): a reference the corpus does not hold is the gate's C-6.2 error, and ok is false; the same reference held passes it", async () => {
