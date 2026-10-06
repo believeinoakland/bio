@@ -265,3 +265,28 @@ test("R30 over the real events: escalation is registered in the timeline's \"wha
   assert.deepEqual([again.ok, again.reason], [false, "LISTENER_DECLARED"]);
   void DAY;
 });
+
+test("R29 a T33 act (conformance R25) is worded from its event: its kind and its when as events holds it (a day, a span with precision and zone, on or before, placed nowhere, undetermined with why), never a guessed date or an invented description; a pre-T33 act keeps its description and date", () => {
+  const w = seeded();
+  const cases = [
+    [{ start: "2026-03-02T00:00:00Z", end: "2026-03-03T00:00:00Z", precision: "day", zone: "UTC" }, null, "on 2026-03-02 (to the day, UTC)"],
+    [{ start: "2026-03-01T00:00:00Z", end: "2026-04-01T00:00:00Z", precision: "month", zone: "America/Halifax" }, null,
+     "between 2026-03-01T00:00:00Z and 2026-04-01T00:00:00Z (to the month, America/Halifax)"],
+    [{ start: null, end: "2026-03-05T12:00:00Z", precision: "minute" }, null, "on or before 2026-03-05T12:00:00Z (to the minute)"],
+    [null, null, "at no date the record holds (placed nowhere; undetermined)"],
+    ["undetermined", "cache stale", "at a date that is undetermined (cache stale)"],
+  ];
+  for (const [when, why, words] of cases) {
+    const D = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
+    const d = w.determinations.get(D);
+    d.act = { id: "EVT-2026-0001-order", event: "EVT-2026-0001-order", actor: OFFICE.clerk, evidence: ["c1"], when };
+    d.event = { id: "EVT-2026-0001-order", kind: "order", when, ...(why ? { why } : {}) };
+    const r = w.esc.escalationReasonDraft({ determination: D, viewer: V("bob") });
+    assert.equal(r.parts[1].text, `The act determined (EVT-2026-0001-order): the event EVT-2026-0001-order (order), by `
+      + `${OFFICE.clerk.role}, ${OFFICE.clerk.body}, ${words}.`, JSON.stringify(when));
+  }
+  /* pre-T33: the description and date as recorded */
+  const old = w.determine({ project: w.P, outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
+  const r = w.esc.escalationReasonDraft({ determination: old, viewer: V("bob") });
+  assert.match(r.parts[1].text, /: "the act", by Town Clerk, City of Port Ellery, on 2026-09-01\.$/);
+});

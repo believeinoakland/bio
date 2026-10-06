@@ -145,6 +145,21 @@ const quoted = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 /** R29, R17: who assembles the draft: the plane, a machine, so its label is `machine_proposed`. */
 const DRAFTED_BY = "system";
 
+/** R29 (conformance R25, events R9): an act's event's `when` in words, as the record holds it: a day or instant, a span
+ *  with its precision and zone, placed nowhere, or undetermined with why; never a guessed date. */
+function eventWhenWords(w, why) {
+  if (w === null || w === undefined) return "at no date the record holds (placed nowhere; undetermined)";
+  if (!isObj(w)) return `at a date that is undetermined${why ? ` (${why})` : ""}`;
+  const start = str(w.start), end = str(w.end);
+  if (!start && !end) return "at a date the record does not state (undetermined)";
+  /* a day at day precision is held as its half-open span [start, next day): it reads as that day */
+  const oneDay = str(w.precision) === "day" && start && end && Date.parse(end) - Date.parse(start) === DAY_MS;
+  const at = oneDay ? `on ${start.slice(0, 10)}` : !end || end === start ? `on ${start || end}`
+    : !start ? `on or before ${end}` : `between ${start} and ${end}`;
+  const how = [str(w.precision) ? `to the ${str(w.precision)}` : "", str(w.zone)].filter(Boolean).join(", ");
+  return `${at}${how ? ` (${how})` : ""}`;
+}
+
 /** R29: one consequence part (`consequences` R7) in one sentence: what it affects, its measure or that the measure is
  *  undetermined, its period, its state and its causation, as recorded; never a total, never a weight. */
 function consequenceSentence(p) {
@@ -1276,11 +1291,21 @@ export class Escalation {
     const act = actOf(d);
     const actor = isObj(act.actor) && str(act.actor.role) && str(act.actor.body)
       ? `${str(act.actor.role)}, ${str(act.actor.body)}` : "an office the record does not name (undetermined)";
+    /* conformance R25 (T33-70): an act is an event, worded from its kind and its `when` (events R9: `{start, end,
+       precision, zone}`, null when placed nowhere, `undetermined` when its cache is stale); a pre-T33 act keeps its
+       description, date and period (conformance R26). */
+    const ev = isObj(d.event) ? d.event : null;
+    const eventWhen = act.when !== undefined && act.when !== null ? act.when : ev ? ev.when ?? null : null;
     const when = str(act.at) ? `on ${str(act.at)}`
       : isObj(act.period) && str(act.period.from) && str(act.period.to) ? `from ${str(act.period.from)} to ${str(act.period.to)}`
+      : str(act.event) || ev ? eventWhenWords(eventWhen, ev && str(ev.why) ? str(ev.why) : null)
       : "at a date the record does not state (undetermined)";
+    const kind = str(act.kind) || (ev ? str(ev.kind) : "");
+    const what = str(act.description) ? quoted(act.description)
+      : str(act.event) ? `the event ${str(act.event)}${kind ? ` (${kind})` : ""}`
+      : "its description could not be read (undetermined)";
     say(actIdOf(d) ?? D, `The act determined${actIdOf(d) ? ` (${actIdOf(d)})` : ""}: `
-      + `${str(act.description) ? quoted(act.description) : "its description could not be read (undetermined)"}, by ${actor}, ${when}.`);
+      + `${what}, by ${actor}, ${when}.`);
     const held = Array.isArray(d.standards) ? d.standards.filter(isObj) : [];
     for (const standard of pursued) {
       const st = held.find((x) => x.standard === standard);

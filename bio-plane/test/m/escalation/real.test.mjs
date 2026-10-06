@@ -184,3 +184,43 @@ test("R29 over the real conformance, actions and consequences (their published s
   /* quinn, outside the project, is answered conformance's one answer */
   assert.equal(x.esc.escalationReasonDraft({ determination: d.id, viewer: V("quinn") }).reason, "NO_SUCH_DETERMINATION");
 });
+
+/* T33-76 over the real conformance (T33-70, K1654): the act is an event, its actor carrying the office entity the bridge
+   seeds (conformance R25, its `officeEntityOf`). */
+test("R4 R29 R30 over the real conformance: the actor's office entity, filled by the bridge, is resolved through entities; one the bridge does not hold is unresolved and still proposes 1→2; the draft words the act from its event; the timeline source finds the escalation by the act's event and by the actor's entity", () => {
+  const x = real();
+  /* no office entity seeded for the actor yet */
+  const bare = x.w.c.determine(x.input());
+  assert.equal(bare.ok, true, JSON.stringify(bare).slice(0, 300));
+  const o1 = x.esc.escalationOpen({ reason: "Worth pursuing.", determination: bare.id, author: V("pat"), viewer: V("pat") });
+  assert.equal(o1.ok, true, JSON.stringify(o1).slice(0, 300));
+  let r = x.esc.escalationRead({ id: o1.id, viewer: V("pat") });
+  assert.deepEqual([r.actor.state, r.actor.entity_id, r.actor.role], ["unresolved", null, "Director of Parks"]);
+  assert.match(r.actor.why, /names no office entity/);
+  assert.deepEqual(r.proposed.map((p) => [p.from, p.to]), [[1, 2]]);
+  /* the bridge seeds the office: a new determination carries its entity_id, which escalation resolves */
+  const office = x.w.entity("office", "Director of Parks");
+  x.w.offices.set("Director of Parks|Parks Department", office);
+  const d = x.w.c.determine(x.input());
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const held = x.w.c.determinationRead({ id: d.id, viewer: V("pat") });
+  assert.deepEqual([held.act.event, held.act.actor.entity_id], [x.act, office]);
+  const o2 = x.esc.escalationOpen({ reason: "Worth pursuing.", determination: d.id, author: V("pat"), viewer: V("pat") });
+  r = x.esc.escalationRead({ id: o2.id, viewer: V("pat") });
+  assert.deepEqual([r.actor.state, r.actor.entity_id, r.actor.label], ["resolved", office, "Director of Parks"]);
+  /* R29: the act worded from its event, its kind and its when as events holds them; no description is invented */
+  const draft = x.esc.escalationReasonDraft({ determination: d.id, viewer: V("pat") });
+  assert.equal(draft.ok, true, JSON.stringify(draft).slice(0, 300));
+  const actPart = draft.parts[1];
+  assert.equal(actPart.id, held.act.id);
+  assert.match(actPart.text, new RegExp(`the event ${x.act} \\(order\\), by Director of Parks, Parks Department, on `));
+  assert.ok(actPart.text.includes(held.act.when.start.slice(0, 10)), actPart.text);
+  assert.doesNotMatch(actPart.text, /could not be read|does not state/);
+  /* R30: the act's event and the actor's office entity each find the escalation; the first escalation's act has the
+     same event, so it is found by the event too, and not by the office entity it never named */
+  const kinds = (set) => x.esc.timelineSource({ set, viewer: V("pat") }).items.map((i) => [i.ref, i.kind]);
+  assert.deepEqual(kinds([office]), [[o2.id, "open"]]);
+  assert.deepEqual(kinds([x.act]), [[o1.id, "open"], [o2.id, "open"]]);
+  assert.deepEqual(kinds([x.act]).length, 2);
+  assert.deepEqual(x.esc.timelineSource({ set: [x.act], viewer: V("quinn") }).items, [], "quinn, outside the project, sees none");
+});
