@@ -1,6 +1,6 @@
 # case-disclosures (T33)
 
-**Status** · session_017bRszvdvSZrLGuTMUoFyp2 · depth 2 · WORKING · handled B2
+**Status** · session_017bRszvdvSZrLGuTMUoFyp2 · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
