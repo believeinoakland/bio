@@ -58,7 +58,7 @@ Terms. A **workbook** is a held capture of an `.xlsx` file, added to a project, 
 
 ### Invariants
 
-- **R16** Not a gate: no act of any module is refused, delayed or warned because a workbook was not recomputed, differed, has lint findings or lacks a second check. The publication rule that refuses only an undisclosed differing or unbound load-bearing calculation (K1448; DEC-76.4) is `publication`'s, reading R2.
+- **R16** Not a gate: no act of any module is refused, delayed or warned because a workbook was not recomputed, differed, has lint findings or lacks a second check. The publication rule that refuses only an undisclosed differing or unbound load-bearing calculation (K1448; DEC-76.4) is `case-authoring`'s pre-flight (T33-69, C:A-15), reading R2 (wording, K1632).
 - **R17** No macro is run, no external link is followed and no formula is evaluated in this module; the only computation is `sheet-worker`'s and `calc-grammar`'s. No number is stored but the file's cells, the engine's results and the sources' values.
 - **R18** No place is named in behaviour, defaults or outward text. Tables (workbooks, bindings, recomputes, lint notes, method notes, checks) are declared through `record-core.declareTable`, export `yes`, keyed to their project for purge.
 
