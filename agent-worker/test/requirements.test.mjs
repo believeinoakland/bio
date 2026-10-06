@@ -1388,7 +1388,9 @@ section("N53 · the skills doctrine's pins on this member, owned here (agent-har
     [typeof HARNESS[GATE_ADDRESS.modes_export], typeof HARNESS[GATE_ADDRESS.table_export],
      typeof HARNESS[GATE_ADDRESS.first_step_export], typeof HARNESS[GATE_ADDRESS.decision_function],
      Object.prototype.hasOwnProperty.call(CONTROL_FLOW, GATE_ADDRESS.row), GATE_ADDRESS.file],
-    ["object", "object", "string", "function", true, "agent-worker/src/harness.mjs"]);
+    /* T34-32 (N586; K1603, K1615): run-rules' GATE_ADDRESS names agent-harness' file, where the gate's code lives;
+       agent-worker's `src/harness.mjs` is only a re-export until its importers re-point (T35). */
+    ["object", "object", "string", "function", true, "agent-harness/src/harness.mjs"]);
   t("agent-harness R2 (N53): the gate is the first row every run takes, and nothing in it is judged",
     [FIRST_STEP === GATE_ADDRESS.row, CONTROL_FLOW[GATE_ADDRESS.row].judged], [true, null]);
   t("agent-harness R2 (N53): the gate is reached before any bound — an undeployed mode with a spent budget still stops on the mode",

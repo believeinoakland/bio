@@ -1,6 +1,6 @@
 # agent-worker (T34)
 
-**Status** · session_01P2xa8iW7ktRdSZGHjGUVvB · depth 2 · COMPLETE · handled B2
+**Status** · session_01P2xa8iW7ktRdSZGHjGUVvB · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -47,3 +47,19 @@ No test of either module is red today: none drives a live dispatch to this membe
 ## J3 · COMPLETE
 
 T34-39 applied whole (K1755/K1757, K1798, N588, N585's share, the R55 START finding); record's Completion section on `job/T34/agent-worker`. Checks: format, architecture, coverage (50/50), ownership (13 files) all 0 failures. Suites: harness 261/0 (REC100 ×5 cleared), requirements 293/0, cascade 56/0, the rest green, except `ask.test.mjs` 53/4, which wait on upstream merges in L6's order: 3 arms on agent-model's `calls` (T34-38), 1 on answers' `ASK_SCOPE` (T34-36). Bundle rebuilt and fresh. REPORT J2: ai-runs' dispatch and the plane's ask must send K1798's account shape.
+
+## Completion after B3 (CHANGE)
+
+**Applied.** Merged `tranche/T34` (run-rules T34-32, agent-model T34-38, answers T34-36 and the regenerated bundles among it). R44's N53 pin in `requirements.test.mjs` now expects `GATE_ADDRESS.file` `agent-harness/src/harness.mjs`, where the gate's code lives; the exports it checks were already read from agent-harness.
+
+**Tests** (on `738e493817`): agent-worker 140/0; ask 57/0 (the four upstream-dependent arms now green: agent-model's `calls`, answers' list); cascade 56/0; fanout 184/0; harness 261/0; plan 55/0; requirements 293/0 (R45 bundle fresh); versions 20/0; wire-vocabulary 83/0.
+
+**Checks.** format 0 failures; architecture 0 failures; coverage 50 of 50, 0 failures; ownership 2 files changed since the tranche, 0 failures.
+
+**Still open in other modules.** REPORT J2 stands (ai-runs' dispatch and the plane's ask send the account without `level`).
+
+Size (session_01P2xa8iW7ktRdSZGHjGUVvB): test runs 31, module lines 2141
+
+## J4 · COMPLETE
+
+B3 applied: tranche merged, R44's N53 pin names agent-harness/src/harness.mjs as GATE_ADDRESS does. Every suite green on 738e493817 (ask 57/0, requirements 293/0, harness 261/0, the rest unchanged); format, architecture, coverage 50/50, ownership 0 failures. Record's 'Completion after B3'. REPORT J2 still stands.
