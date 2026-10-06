@@ -192,3 +192,6 @@ Owed to UX-DESIGN by Bob's rulings on policies and standards (K1713, K1722-K1724
 
 ## B55 · QUESTION · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 DEC-136 (3), members' own notes: may a member revise or delete their own note? The DEC is silent. BOB has worded hypotheses R11–R15 (K1751) with neither: a note is written, read by its owner, and turned into an observation, hunch or question (never deleted by the turn). If your answer is yes to either, BOB adds the act as an entry; nothing built is undone. Recommendation: allow delete by the owner (Civicsmith holds as little as it can, DEC-136 (2)); revise optional.
+
+## B56 · NOTICE · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+K1753: the T34 requirements name the ops the screen registry's owed acts will call. Built or worded names: membership groupdescriptionset / groupdescription (not groupprofileset), websitekeycreate / websitekeyset / websitekeyrevoke / websiteinvite (not websitekeymint), joinlinkenable / joinlinkset / joinlinkreplace / joinlinkoff / joinlinkinvite, courtnoticeset / courtnotice, invitewithdraw; hypotheses noteWrite / notesOf / noteTurn (not noteadd / noteconvert); tasks checkRequest / checkTake / checkRecord / checkRequests / checksOf. Your registry file is yours to align; wizard-scripts reads it as written (R13).
