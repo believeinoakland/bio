@@ -39,6 +39,7 @@ test("R22 a check (CHK-) is data-defined: line kinds, event roles or money kinds
   assert.equal(w.p.defineCheck({ ...base, condition: { ...base.condition, join: "anything" } }).reason, "BAD_CONDITION");
   assert.equal(w.p.defineCheck({ ...base, denominator: "" }).reason, "NO_DENOMINATOR");
   assert.equal(w.p.defineCheck({ ...base, name: "" }).reason, "NO_NAME");
+  assert.equal(w.p.defineCheck({ ...base, by: null }).reason, "NO_BY", "every check is recorded under its stamped author (N617)");
   const hyp = w.p.defineCheck({ ...base, condition: { ...base.condition, to: { event_role: "decider", note: "HYP-2026-0003" } } });
   assert.equal(hyp.reason, "HYPOTHESIS_NOT_A_FACT");
   assert.equal(w.p.defineCheck({ ...base, denominator: "rests on HYP-2026-0009" }).reason, "HYPOTHESIS_NOT_A_FACT");
@@ -84,7 +85,7 @@ test("R23 evaluateChecks evaluates every switched-on check over the held record 
   assert.deepEqual(res.denominator, { label: SHIPPED_CHECKS[0].denominator, counted: 2 }, "P and R hold a government post");
 });
 
-test("R24 a machine check version's results are answered only once its gate is recorded by an administrator (NO_GOLD_SET; a rate outside 0–1 refused) at a false-alarm rate at most 20%; until then {gated: true, reason} and no result; each result labelled the machine's, layer hypothesis, 'Noticed', with its derivation and denominator; a member's own check shows at once", () => {
+test("R24 a machine check version's results are answered only once its gate is recorded by an administrator (NO_GOLD_SET; a rate outside 0–1 refused) at a false-alarm rate at most 20%; until then {gated: true, reason} and no result; each result labelled the machine's, layer hypothesis, 'Noticed', with its derivation and denominator; a member's own check shows at once; a gate measured again governs and the one it replaced is kept (N617)", () => {
   const w = world();
   door(w);
   const own = w.p.defineCheck({ name: "my door", condition: RD, denominator: "people with a government post", by: ANN });
@@ -105,6 +106,9 @@ test("R24 a machine check version's results are answered only once its gate is r
   assert.equal(w.p.recordCheckGate({ ...gate, falseAlarmRate: 0.3 }).open, false);
   assert.equal(w.p.checkResults({ check: rd.check, viewer: ANN }).checks[0].gated, true, "above 20% stays gated");
   assert.equal(w.p.recordCheckGate({ ...gate, falseAlarmRate: GATE_RATE_MAX }).open, true);
+  const kept = w.rows(`SELECT * FROM interest_check_gate_history WHERE check_id=? ORDER BY replaced_at`, rd.check);
+  assert.deepEqual(kept.map((g) => [g.false_alarm_rate, g.by_actor, g.replaced_by]), [[0.3, BOSS, BOSS]], "the measurement it replaced is kept");
+  assert.equal(w.rows(`SELECT * FROM interest_check_gates WHERE check_id=?`, rd.check).length, 1);
   const open = w.p.checkResults({ check: rd.check, viewer: ANN }).checks[0];
   assert.equal(open.gated, false);
   const res = open.results[0];
@@ -141,4 +145,51 @@ test("R25 a result whose derivation rests on any row the viewer may not see is w
   const inner = w.p.defineCheck({ name: "inner", condition: RD, denominator: "d", project: proj, by: ANN });
   assert.ok(w.p.checkResults({ viewer: ANN }).checks.some((c) => c.check === inner.check));
   assert.ok(!w.p.checkResults({ viewer: OUT }).checks.some((c) => c.check === inner.check));
+});
+
+test("R35 onChecksChanged takes one registration per module (membership's listenerRefusal); after a check is defined, given a new version, or switched on or off in a project, fn({check, project}) is called once, after the act's transaction; a throwing fn never undoes the act; the notice writes nothing", () => {
+  const w = world();
+  const heard = [];
+  assert.equal(w.p.onChecksChanged("", () => 1).reason, "LISTENER_MALFORMED");
+  assert.equal(w.p.onChecksChanged("scheduler", "no").reason, "LISTENER_MALFORMED");
+  assert.equal(w.p.onChecksChanged("scheduler", (n) => heard.push(n)).ok, true);
+  assert.equal(w.p.onChecksChanged("scheduler", () => 1).reason, "LISTENER_DECLARED");
+  const proj = w.project();
+  const one = w.p.defineCheck({ name: "mine", condition: RD, denominator: "d", by: ANN });
+  const inner = w.p.defineCheck({ name: "inner", condition: RD, denominator: "d", project: proj, by: ANN });
+  const v2 = w.p.defineCheck({ check: one.check, name: "mine", condition: RD, denominator: "d2", by: ANN });
+  const rd = shipped(w).check;
+  w.p.switchCheck({ check: rd, project: proj, on: false, by: ANN });
+  w.p.switchCheck({ check: rd, project: proj, on: true, by: ANN });
+  assert.deepEqual(heard, [
+    { check: one.check, project: null }, { check: inner.check, project: proj }, { check: one.check, project: null },
+    { check: rd, project: proj }, { check: rd, project: proj }]);
+  assert.equal(v2.version, 2);
+  /* refused acts tell nobody */
+  w.p.defineCheck({ name: "", condition: RD, denominator: "d", by: ANN });
+  w.p.switchCheck({ check: rd, project: proj, on: false, by: OUT });
+  assert.equal(heard.length, 5);
+  /* after the act's transaction: inside a caller's transaction, told only once it commits, and never when it rolls back */
+  const before = heard.length;
+  w.record.transact(() => {
+    w.p.defineCheck({ name: "held", condition: RD, denominator: "d", by: ANN });
+    assert.equal(heard.length, before, "not while the transaction is open");
+    return { ok: true };
+  });
+  assert.equal(heard.length, before + 1);
+  w.record.transact(() => { w.p.defineCheck({ name: "rolled back", condition: RD, denominator: "d", by: ANN }); return { ok: false, reason: "X" }; });
+  assert.equal(heard.length, before + 1, "a rolled-back act tells nobody");
+  assert.ok(!w.p.listChecks({ viewer: ANN }).checks.some((c) => c.name === "rolled back"));
+  /* a throwing listener never undoes the act, and the notice writes nothing */
+  const counts = (x) => JSON.stringify(["interest_checks", "interest_check_switches", "interest_check_results", "interest_check_cursor"]
+    .map((t) => x.rows(`SELECT COUNT(*) AS n FROM ${t}`)));
+  const loud = world(), quiet = world();
+  loud.p.onChecksChanged("scheduler", () => { throw new Error("scheduler down"); });
+  for (const x of [loud, quiet]) {
+    const r = x.p.defineCheck({ name: "kept", condition: RD, denominator: "d", by: ANN });
+    assert.equal(r.ok, true);
+    assert.equal(x.p.switchCheck({ check: r.check, project: x.project(), on: false, by: ANN }).ok, true);
+    assert.ok(x.p.listChecks({ viewer: ANN }).checks.some((c) => c.check === r.check), "the act stands");
+  }
+  assert.equal(counts(loud), counts(quiet), "a listened act writes exactly what an unlistened one does");
 });

@@ -1,10 +1,12 @@
 /* people (layer 5; T33-36, K1452, K1455, K1483–K1493): the people the record is about, held fully and never judged.
-   `build/requirements/people.md` R1–R33. Identity claims that LINK two person records and never merge them, with the
+   `build/requirements/people.md` R1–R35. Identity claims that LINK two person records and never merge them, with the
    derived identity cluster (R1–R8); dated person facts and their lawful removal (R9–R12); the reads that gather a
    person's positions, career, credentials, interests, statements and acts from their owning modules (R13–R17);
-   staffing as of a date (R18–R19); members' own ties (R20); the protected link from a source to a person (R21); the
-   machine's interest checks, held in the hypothesis layer and shown only past their gate (R22–R25); the connection
-   owner of the identity kinds (R26) and the ops map (R27).
+   staffing as of a date (R18–R19); members' own ties (R20); the protected link from a source to a person (R21) and its
+   internal sight read (R34); the machine's interest checks, held in the hypothesis layer and shown only past their gate
+   (R22–R25), with their arming notice (R35); the connection owner of the identity kinds (R26) and the ops map (R27).
+   CORRECTED FORWARD (R4, R11; N617): every act is stamped (`by`, never null: `NO_BY`), and nothing is edited in place: a
+   replaced source link or gate is kept beside the one that replaced it.
    ONE HOME PER FACT (R30): posts, memberships, credentials, interests and ties are `lines`'; statements and acts are
    `events`'; money is `money`'s; duties are `duties`'. This module reads them through the services it is handed
    (`peopleOf(ctx, deps)`, K61) and stores none of them. NO JUDGMENT ON A PERSON (R29): no score, rank or suspicion is
@@ -69,6 +71,8 @@ const filled = (v) => typeof v === "string" && v.trim() !== "";
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const clean = (v, max = TEXT_MAX) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+/* N617: every act is recorded under the control plane's stamp; a row never carries a null `by`. */
+const noBy = (what) => refuse("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
 const json = (v) => { try { return JSON.parse(v); } catch { return null; } };
 const listOf = (r) => {
   if (!r || r.ok === false) return [];
@@ -131,6 +135,7 @@ export class People {
   #registry; #now; #declared = false;
   #roster = [];          /* R19: {module, fn, seq} in the modules' order */
   #onResult = [];        /* R25: {module, fn, seq} */
+  #onChanged = [];       /* R35: {module, fn, seq} */
 
   constructor(storage, { record, membership, entities, provenance = null, content = null, sources = null, events = null,
                          lines = null, money = null, duties = null, registry = null, now = null } = {}) {
@@ -396,12 +401,13 @@ export class People {
     if (earned.failed)
       return refuse("IDENTITY_GRADE_UNEARNED", `a ${basis} claim earns grade ${BASIS_GRADE[basis]} only when ${earned.failed}; nothing was written`,
                     { condition: earned.failed, basis });
+    if (!filled(by)) return noBy("a claim");
     const grade = BASIS_GRADE[basis];
     const dates = hasEvidence ? [evidence.a?.date, evidence.b?.date].filter((d) => isCalendarDate(d)).sort() : [];
     const [vf, vt] = dates.length === 2 ? dates : [null, null];
     const sentence = People.#why(kind, grade, earned.because);
     const at = this.#now();
-    const stamp = by == null ? null : String(by);
+    const stamp = String(by);
     const out = this.#record.transact(() => {
       const r = this.#record.allocId("IDC", at.slice(0, 4));
       if (!r || r.ok === false) return r;
@@ -471,7 +477,8 @@ export class People {
     if (!c) return refuse("NO_SUCH_CLAIM", "no identity claim with that id is held", { claim_id: claimId ?? null });
     if (c.withdrawn_at)
       return { ok: true, already: true, claim_id: claimId, withdrawn: { by: c.withdrawn_by, at: c.withdrawn_at, reason: c.withdrawn_reason } };
-    const at = this.#now(), stamp = by == null ? null : String(by);
+    if (!filled(by)) return noBy("a withdrawal");
+    const at = this.#now(), stamp = String(by);
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE identity_claims SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE claim_id=?`, stamp, at, why, claimId);
       this.#rebuildCluster();
@@ -674,7 +681,8 @@ export class People {
     if (cite) return refuse(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
     const vv = People.#validity(valid);
     if (vv.refused) return refuse("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
-    const at = this.#now(), stamp = by == null ? null : String(by);
+    if (!filled(by)) return noBy("a person fact");
+    const at = this.#now(), stamp = String(by);
     const table = contact ? "person_contacts" : "person_facts";
     return this.#record.transact(() => {
       const r = this.#record.allocId("PFA", at.slice(0, 4));
@@ -695,7 +703,8 @@ export class People {
     const f = this.#one(`SELECT * FROM ${table} WHERE fact_id=?`, factId);
     if (f.withdrawn_at)
       return { ok: true, already: true, fact_id: factId, withdrawn: { by: f.withdrawn_by, at: f.withdrawn_at, reason: f.withdrawn_reason } };
-    const at = this.#now(), stamp = by == null ? null : String(by);
+    if (!filled(by)) return noBy("a withdrawal");
+    const at = this.#now(), stamp = String(by);
     this.#sql.exec(`UPDATE ${table} SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE fact_id=?`, stamp, at, why, factId);
     return { ok: true, fact_id: factId, withdrawn: { by: stamp, at, reason: why } };
   }
@@ -743,7 +752,16 @@ export class People {
                                        ...(ground === "court_order" ? { order } : {}), ...(ground === "lawful_demand" ? { demandKind } : {}), by: who });
       if (!r || r.ok === false) return r;
       if (target.table === "identity_claims") this.#rebuildCluster();
-      return { ok: true, removed: r.removed, tombstone: r.tombstone, reason: why };
+      /* N617: the link's replaced versions hold the same value, so they go with it, under the same ground */
+      let removed = r.removed;
+      if (target.table === "source_person_links"
+          && this.#one(`SELECT 1 AS x FROM source_person_link_history WHERE source=? AND person=?`, target.key.source, target.key.person)) {
+        const h = this.#record.expunge({ module: MODULE, table: "source_person_link_history", key: target.key, ground,
+                                         ...(ground === "court_order" ? { order } : {}), ...(ground === "lawful_demand" ? { demandKind } : {}), by: who });
+        if (!h || h.ok === false) throw new Error(`people: record-core refused the link's history: ${h && h.reason}`);
+        removed += h.removed;
+      }
+      return { ok: true, removed, tombstone: r.tombstone, reason: why };
     });
   }
   #expungeTarget(id) {
@@ -773,9 +791,12 @@ export class People {
   /* A line as a read answers it, naming the cluster member it is held on (R13). */
   static #lineItem(l, member) {
     return { member, line_id: lineId(l), kind: l.kind, from: lineFrom(l), to: lineTo(l), capacity: l.capacity ?? null,
-             title: l.title ?? l.as_written ?? null, valid: l.valid ?? null, grade: { assertion: l.assertion ?? null, ends: l.ends ?? null },
+             title: People.#title(l), valid: l.valid ?? null, grade: { assertion: l.assertion ?? null, ends: l.ends ?? null },
              citation: l.basis ?? null, ...(People.#through(l) ? { current_through: People.#through(l) } : {}) };
   }
+  /* R15 (N573): a holds line's title as its basis words it (lines' `title`), or null, "not stated"; never one composed
+     from the office or the capacity. */
+  static #title(l) { return l.kind === "holds" && filled(l.title) ? l.title : null; }
   /* lines R21: the day an open-ended holds line is stated current through, as its owner answers it to this viewer. */
   static #through(l) { return isObj(l) && isObj(l.current_through) && filled(l.current_through.day) ? l.current_through.day : null; }
   /* Every unwithdrawn line of the members, of these kinds, from the member's end; `truncated` when an owner's list was cut. */
@@ -865,12 +886,31 @@ export class People {
     if (o) return o.refusal;
     const { cluster, members } = this.#over(entityId, viewer);
     const r = this.#linesOver(members, ["educated_at", "credentialed_by"], viewer);
-    let items = r.items.map((l) => (l.kind === "credentialed_by" ? { ...l, issuer_identifiers: this.#identifiers(l.to) } : l));
+    const schemes = this.#view().identifier_schemes;
+    let items = r.items.map((l) => (l.kind === "credentialed_by" ? { ...l, ...this.#issuerIdentifier(l.to, schemes) } : l));
     let undetermined = [];
     if (at !== null && at !== undefined && at !== "") { const s = People.#atDate(items, at); items = s.held; undetermined = s.undetermined; }
     const c = bounded(People.#byValidity(items), READ_LIST_MAX, r.truncated), u = bounded(undetermined);
     return { ok: true, found: true, entity_id: entityId, cluster, credentials: c.items, undetermined: u.items,
              truncated: { credentials: c.truncated, undetermined: u.truncated }, limit: READ_LIST_MAX };
+  }
+
+  /* R15 (N574): the issuer's scheme identifier as entities holds it (its R43), under a scheme the active profiles name
+     for the issuer's kind (jurisdictions R52, R61), the profile's scheme order first; null with why where the profiles
+     name none or the issuer holds none, never a guess. */
+  #issuerIdentifier(issuer, schemes) {
+    const e = filled(issuer) ? this.#entity(issuer) : null;
+    if (!e) return { issuer_identifier: null, issuer_identifier_why: "the issuer is not a registered entity" };
+    const named = (Array.isArray(schemes) ? schemes : [])
+      .filter((s) => isObj(s) && filled(s.scheme) && Array.isArray(s.entity_kinds) && s.entity_kinds.includes(e.kind)).map((s) => s.scheme);
+    if (!named.length)
+      return { issuer_identifier: null, issuer_identifier_why: `the active jurisdiction profiles name no identifier scheme for an issuer of kind ${e.kind}` };
+    const held = this.#identifiers(issuer).filter((x) => named.includes(x.scheme))
+      .sort((x, y) => (named.indexOf(x.scheme) - named.indexOf(y.scheme)) || x.normal.localeCompare(y.normal));
+    if (!held.length)
+      return { issuer_identifier: null, issuer_identifier_why: `the issuer holds no identifier under ${named.join(", ")}, the scheme${named.length > 1 ? "s" : ""} the active profiles name for its kind` };
+    const one = ({ scheme, id, valid }) => ({ scheme, id, valid });
+    return { issuer_identifier: one(held[0]), ...(held.length > 1 ? { issuer_identifiers: held.map(one) } : {}) };
   }
 
   /** R13, R15: interests held as lines, and the money where the person is payee of income or a gift, or payer of a
@@ -1091,11 +1131,19 @@ export class People {
     if (!ev) return refuse("NO_EVIDENCE", "a link from a source to a person carries its evidence");
     const list = Array.isArray(sight) ? [...new Set(sight.filter(filled).map((s) => (s.startsWith("member:") ? s.slice(7) : s)))] : [];
     if (!list.length) return refuse("NO_SIGHT_LIST", "a link from a source to a person names the members who may read it");
-    const at = this.#now();
-    this.#sql.exec(`INSERT INTO source_person_links (source,person,evidence,sight_json,by_actor,at) VALUES (?,?,?,?,?,?)
-                    ON CONFLICT(source, person) DO UPDATE SET evidence=excluded.evidence, sight_json=excluded.sight_json,
-                    by_actor=excluded.by_actor, at=excluded.at`, source, person, ev, JSON.stringify(list), String(by), at);
-    return { ok: true, source, person, sight: list, at };
+    const at = this.#now(), stamp = String(by);
+    /* N617: a later link of the same pair governs; the one it replaces is kept, with who replaced it and when */
+    return this.#record.transact(() => {
+      const prior = this.#one(`SELECT * FROM source_person_links WHERE source=? AND person=?`, source, person);
+      if (prior) {
+        this.#sql.exec(`INSERT INTO source_person_link_history (source,person,evidence,sight_json,by_actor,at,replaced_by,replaced_at)
+                        VALUES (?,?,?,?,?,?,?,?)`, prior.source, prior.person, prior.evidence, prior.sight_json, prior.by_actor, prior.at, stamp, at);
+        this.#sql.exec(`DELETE FROM source_person_links WHERE source=? AND person=?`, source, person);
+      }
+      this.#sql.exec(`INSERT INTO source_person_links (source,person,evidence,sight_json,by_actor,at) VALUES (?,?,?,?,?,?)`,
+                     source, person, ev, JSON.stringify(list), stamp, at);
+      return { ok: true, source, person, sight: list, at, ...(prior ? { replaced: { by: prior.by_actor, at: prior.at } } : {}) };
+    });
   }
   /* sources R9: a source the linking member may read (its own refusal answers alike for an absent one). */
   #sourceHeld(id, by) {
@@ -1116,6 +1164,24 @@ export class People {
     return { ok: true, count: links.length, links };
   }
 
+  /** R34 (N600): for other modules' code only, never an op and never answered to a viewer: null when no source link to
+   *  `person` is held, else the members every held link to that person admits (the intersection of their sight lists).
+   *  Synchronous; writes nothing; never throws; an unregistered or malformed id answers null. A store it cannot read
+   *  answers [], a link admitting no one: fail closed, never "no link". */
+  sourceLinkSight(person) {
+    if (!filled(person)) return null;
+    try {
+      const rows = this.#rows(`SELECT sight_json FROM source_person_links WHERE person=? ORDER BY source`, person);
+      if (!rows.length) return null;
+      let admitted = null;
+      for (const r of rows) {
+        const list = (Array.isArray(json(r.sight_json)) ? json(r.sight_json) : []).filter(filled);
+        admitted = admitted === null ? [...new Set(list)] : admitted.filter((m) => list.includes(m));
+      }
+      return admitted.sort();
+    } catch { return []; }
+  }
+
   /* ===================================================================== *
    * INTEREST CHECKS (R22–R25; K1491, K1473). The hypothesis layer: never a fact, never stored on a person.
    * ===================================================================== */
@@ -1131,8 +1197,10 @@ export class People {
     const den = clean(denominator, 400);
     if (!den) return refuse("NO_DENOMINATOR", "a check names the set it counts against");
     if (filled(project) && !(this.#record.bundleInfo(project) && this.#record.bundleInfo(project).type === "project")) return noSuchProject(project);
+    if (!filled(by)) return noBy("a check");
     const machine = isMachineIdentity(by) ? 1 : 0;
-    const at = this.#now(), stamp = by == null ? null : String(by);
+    const at = this.#now(), stamp = String(by);
+    const proj = filled(project) ? project : null;
     if (filled(check)) {
       const prior = this.#one(`SELECT MAX(version) AS v, MAX(machine) AS m FROM interest_checks WHERE check_id=?`, check);
       if (!prior || prior.v == null) return refuse("NO_SUCH_CHECK", "no check with that id is held", { check });
@@ -1140,15 +1208,31 @@ export class People {
       this.#sql.exec(`INSERT INTO interest_checks (check_id,version,name,condition_json,denominator,project,machine,by_actor,at)
                       VALUES (?,?,?,?,?,?,?,?,?)`, check, v, n, JSON.stringify(condition), den, filled(project) ? project : null,
                      Number(prior.m) ? 1 : machine, stamp, at);
+      this.#changed(check, proj);
       return { ok: true, check, version: v, at };
     }
-    return this.#record.transact(() => {
+    const out = this.#record.transact(() => {
       const r = this.#record.allocId("CHK", at.slice(0, 4));
       if (!r || r.ok === false) return r;
       this.#sql.exec(`INSERT INTO interest_checks (check_id,version,name,condition_json,denominator,project,machine,by_actor,at)
-                      VALUES (?,1,?,?,?,?,?,?,?)`, r.id, n, JSON.stringify(condition), den, filled(project) ? project : null, machine, stamp, at);
+                      VALUES (?,1,?,?,?,?,?,?,?)`, r.id, n, JSON.stringify(condition), den, proj, machine, stamp, at);
       return { ok: true, check: r.id, version: 1, at };
     });
+    if (out && out.ok) this.#changed(out.check, proj);
+    return out;
+  }
+
+  /** R35 (N605): told once, after the act, that a check was defined, given a new version, or switched in a project, so
+   *  `scheduler` re-arms its wake for R23's consumer. */
+  onChecksChanged(module, fn) { return People.#listen(this.#onChanged, module, fn); }
+  /* R35: each listener called with {check, project} once the act has committed (record-core's `afterCommit`: at once
+     outside a transaction, after the outermost one inside it, never when it rolls back); a throwing one never undoes the
+     act, and the notice writes nothing. */
+  #changed(check, project) {
+    if (!this.#onChanged.length) return;
+    const notice = { check, project: project ?? null };
+    const tell = () => { for (const l of this.#onChanged) { try { l.fn({ ...notice }); } catch { /* the act stands */ } } };
+    if (typeof this.#record.afterCommit === "function") this.#record.afterCommit(tell); else tell();
   }
 
   /** R22: any check switched off (or on again) in one project by a member of that project. */
@@ -1160,6 +1244,7 @@ export class People {
     if (typeof on !== "boolean") return refuse("NO_SWITCH", "a switch says on: true or on: false");
     const at = this.#now();
     this.#sql.exec(`INSERT INTO interest_check_switches (check_id,project,is_on,by_actor,at) VALUES (?,?,?,?,?)`, check, project, on ? 1 : 0, String(by), at);
+    this.#changed(check, project);
     return { ok: true, check, project, on, at };
   }
   #onIn(check, project) {
@@ -1274,10 +1359,19 @@ export class People {
     const rate = Number(falseAlarmRate);
     if (falseAlarmRate === null || falseAlarmRate === "" || !Number.isFinite(rate) || rate < 0 || rate > 1)
       return refuse("BAD_RATE", "a false-alarm rate is a number from 0 to 1");
-    const at = this.#now();
-    this.#sql.exec(`INSERT INTO interest_check_gates (check_id,version,gold_set,false_alarm_rate,by_actor,at) VALUES (?,?,?,?,?,?)
-                    ON CONFLICT(check_id, version) DO UPDATE SET gold_set=excluded.gold_set, false_alarm_rate=excluded.false_alarm_rate,
-                    by_actor=excluded.by_actor, at=excluded.at`, check, Number(version), gold, rate, String(by), at);
+    const at = this.#now(), stamp = String(by), v = Number(version);
+    /* N617: a later measurement governs; the one it replaces is kept, with who replaced it and when */
+    this.#record.transact(() => {
+      const prior = this.#one(`SELECT * FROM interest_check_gates WHERE check_id=? AND version=?`, check, v);
+      if (prior) {
+        this.#sql.exec(`INSERT INTO interest_check_gate_history (check_id,version,gold_set,false_alarm_rate,by_actor,at,replaced_by,replaced_at)
+                        VALUES (?,?,?,?,?,?,?,?)`, check, v, prior.gold_set, prior.false_alarm_rate, prior.by_actor, prior.at, stamp, at);
+        this.#sql.exec(`DELETE FROM interest_check_gates WHERE check_id=? AND version=?`, check, v);
+      }
+      this.#sql.exec(`INSERT INTO interest_check_gates (check_id,version,gold_set,false_alarm_rate,by_actor,at) VALUES (?,?,?,?,?,?)`,
+                     check, v, gold, rate, stamp, at);
+      return { ok: true };
+    });
     const open = this.#gateOpen(c);
     if (open) for (const r of this.#rows(`SELECT result_id FROM interest_check_results WHERE check_id=? AND version=? AND told=0`, check, Number(version)))
       this.#tell(c, r.result_id);

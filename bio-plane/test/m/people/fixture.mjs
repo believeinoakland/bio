@@ -75,11 +75,11 @@ export function world({ profiles = null, deps: over = {}, entitiesOver = null } 
       return r;
     },
     /** A line (lines R1) on ann's testimony, or on a passage of a fenced capture (`fenced`); a `holds` line is held in
-     *  the capacity given (default appointed). Its id. */
-    line(kind, from, to, valid, { capacity, fenced = false } = {}) {
+     *  the capacity given (default appointed), with its title as written when `title` is given. Its id. */
+    line(kind, from, to, valid, { capacity, title, fenced = false } = {}) {
       const basis = fenced ? (() => { const c = w.capture("fenced line", { fenced: true }); return { captureSha: c.captureSha, extent: { kind: "pdf-page", page: 0 } }; })()
         : { statement: `the ${kind} the test states` };
-      const r = lines.recordLine({ kind, from, to, ...(kind === "holds" ? { capacity: capacity ?? "appointed" } : {}),
+      const r = lines.recordLine({ kind, from, to, ...(kind === "holds" ? { capacity: capacity ?? "appointed" } : {}), ...(title ? { title } : {}),
         valid: { precision: "day", zone: "UTC", from: null, to: null, ...valid }, basis, by: ANN });
       if (!r.ok) fail("line", r);
       return r.line_id;

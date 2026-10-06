@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, doc, ANN, OUT, BOSS, MACHINE } from "./fixture.mjs";
-import { TIE_KINDS, ATTRIBUTION_LEVELS } from "../../../src/people/index.mjs";
+import { TIE_KINDS, ATTRIBUTION_LEVELS, peopleOps } from "../../../src/people/index.mjs";
 
 
 test("R20 a member declares only their own tie (MTI-), to a registered entity, of kind employer, relative, business or other, with a note and the attribution level they choose; by is the stamp and no field names another member; a machine is refused; seen only by its member and administrators, any other viewer answered exactly as for no tie; tiesConcerning answers the member's ties to given entities with their levels", () => {
@@ -40,7 +40,7 @@ test("R20 a member declares only their own tie (MTI-), to a registered entity, o
   assert.ok(w.p.tiesOf({ member: "ann", viewer: ANN }).ties.find((t) => t.tie_id === t2.tie_id).withdrawn, "kept, shown withdrawn");
 });
 
-test("R21 a source is linked to a registered person with evidence and a non-empty sight list (NO_SIGHT_LIST); only the listed members read it; every other viewer, every other read and the export answer exactly as if no link were held; being a source is never stated by personAt or any other person read", () => {
+test("R21 a source is linked to a registered person with evidence and a non-empty sight list (NO_SIGHT_LIST); only the listed members read it; every other viewer, every other read and the export answer exactly as if no link were held; being a source is never stated by personAt or any other person read; a later link of the pair governs and the one it replaced is kept (N617)", () => {
   const w = world();
   const p = w.person("Quinn Roe");
   w.S.add("SRC-2026-1234abcd");
@@ -63,6 +63,44 @@ test("R21 a source is linked to a registered person with evidence and a non-empt
     w.p.identityOf({ entityId: p, viewer: ANN }), w.p.interestsOf({ entityId: p, viewer: ANN }), w.p.credentialsOf({ entityId: p, viewer: ANN }),
     w.p.statementsOf({ entityId: p, viewer: ANN }), w.p.samePersonCandidates({ entityId: p, viewer: ANN })]);
   assert.ok(!reads.includes("SRC-2026-1234abcd") && !/\bsource_link|is a source|as a source\b/i.test(reads), "no person read states it, even to a listed member");
+  /* corrected forward: the later link governs; the one it replaced is kept with who replaced it and when */
+  const first = w.one(`SELECT * FROM source_person_links WHERE person=?`, p);
+  const again = w.p.linkSourceToPerson({ ...base, sight: ["member:out"], evidence: "a second letter", by: OUT });
+  assert.equal(again.ok, true);
+  assert.deepEqual(again.replaced, { by: ANN, at: first.at });
+  assert.equal(w.p.sourceLinksOf({ person: p, viewer: ANN }).count, 0, "the later sight list governs");
+  assert.equal(w.p.sourceLinksOf({ person: p, viewer: OUT }).links[0].evidence, "a second letter");
+  const kept = w.rows(`SELECT * FROM source_person_link_history WHERE person=?`, p);
+  assert.equal(kept.length, 1);
+  assert.deepEqual([kept[0].evidence, kept[0].sight_json, kept[0].by_actor, kept[0].replaced_by], ["the same handwriting", JSON.stringify(["ann"]), ANN, OUT]);
+  assert.equal(w.record.declaredTables().find((d) => d.name === "source_person_link_history").export, "never");
+});
+
+test("R34 sourceLinkSight(person) is a synchronous internal read, never an op: null when no link to the person is held (and for an unregistered or malformed id), else the members every held link to that person admits (the intersection of their sight lists); it takes no viewer, writes nothing and never throws", () => {
+  const w = world();
+  const p = w.person("Sol Tran"), q = w.person("Tia Ueda");
+  for (const s of ["SRC-2026-aaaa0001", "SRC-2026-aaaa0002"]) w.S.add(s);
+  assert.equal(w.p.sourceLinkSight(p), null, "no link held");
+  for (const bad of [undefined, null, "", 7, {}, "ENT-2026-9999"]) assert.equal(w.p.sourceLinkSight(bad), null, String(bad));
+  w.p.linkSourceToPerson({ source: "SRC-2026-aaaa0001", person: p, evidence: "e", sight: ["member:ann", "out", "boss"], by: ANN });
+  const r = w.p.sourceLinkSight(p);
+  assert.ok(!(r instanceof Promise), "synchronous");
+  assert.deepEqual(r, ["ann", "boss", "out"]);
+  w.p.linkSourceToPerson({ source: "SRC-2026-aaaa0002", person: p, evidence: "e", sight: ["boss", "ann"], by: ANN });
+  assert.deepEqual(w.p.sourceLinkSight(p), ["ann", "boss"], "with several links, the members every one admits");
+  w.p.linkSourceToPerson({ source: "SRC-2026-aaaa0002", person: q, evidence: "e", sight: ["boss"], by: ANN });
+  assert.deepEqual(w.p.sourceLinkSight(q), ["boss"], "a link that does not admit ann: a list without her, not null");
+  assert.equal(w.p.sourceLinkSight.length, 1, "takes the person only, no viewer");
+  const census = () => JSON.stringify(["source_person_links", "source_person_link_history"].map((t) => w.rows(`SELECT * FROM ${t}`)));
+  const before = census();
+  w.p.sourceLinkSight(p);
+  assert.equal(census(), before, "writes nothing");
+  const ops = peopleOps(w.p, new URL("https://plane.example/"), {});
+  assert.ok(!Object.keys(ops).some((k) => /sight/i.test(k)), "never an op");
+  /* never throws: a store it cannot read answers a link admitting no one, never "no link" (fail closed) */
+  w.st.sql.exec(`ALTER TABLE source_person_links RENAME TO source_person_links_away`);
+  assert.deepEqual(w.p.sourceLinkSight(p), []);
+  w.st.sql.exec(`ALTER TABLE source_person_links_away RENAME TO source_person_links`);
 });
 
 test("R31 sight: the registry is group-wide; a fact follows its document's visibility; identity claims, testimony and check results inside a project the viewer may not see are not answered and not counted; ties and the source link take their own narrowest sight; every withheld item answers exactly as an absent one", () => {
