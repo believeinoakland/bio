@@ -55,6 +55,8 @@ import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
+import { peopleOf } from "../people/index.mjs";
+import { moneyOf } from "../money/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
          RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
@@ -63,10 +65,17 @@ import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attribut
          anonymousTestimonyRefusal } from "./refusals.mjs";
 import { release, examineMember, PLANE_VIEWER } from "./release.mjs";
 import { retire } from "./retire.mjs";
+import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, refusedStop,
+         unreadableStop } from "./schedule.mjs";
+import { copyMaterials } from "./ops.mjs";
+import { verifySshsig, caseRatifyStatement, NS_RATIFY } from "../sshsig.mjs";
+import { assembleCaseContainer } from "../publication/worker.mjs";
+import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 
 export * from "./checks.mjs";
 export { RELEASE_ACK_MAX, CLASS_REASONS } from "./release.mjs";
 export { EDGE_REASON_MAX } from "./retire.mjs";
+export { CHECKED_PARTS, keyFingerprint } from "./schedule.mjs";
 
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
 const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
@@ -102,17 +111,18 @@ export function caseConclusionRowLines(m, c) {
 
 export class Ratification {
   #deps;
+  #holdReader = null;   /* R45: the one reader of litigation holds, registered once at start (`actions`) */
 
   constructor({ storage, record, membership, promotion, host = null, provenance = null, inquiry = null,
                 basisVersions = null, publication = null, retrieval = null, connections = null,
                 credentials = null, contradiction = null, strength = null, reevaluation = null,
-                networkNotices = null } = {}) {
+                networkNotices = null, people = null, money = null, worker = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials,
-                   contradiction, strength, reevaluation, networkNotices };
+                   contradiction, strength, reevaluation, networkNotices, people, money, worker };
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -128,6 +138,8 @@ export class Ratification {
   get networkNotices() {
     return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
+  get people() { return this.#deps.people ||= peopleOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  get money() { return this.#deps.money ||= moneyOf(this.#deps.host); }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
@@ -618,12 +630,26 @@ export class Ratification {
         refusals.push({ ok: false, reason: "GATE_REFUSED", gateVersion: gate ? gate.gateVersion : null,
                         findings: gate && Array.isArray(gate.findings) ? gate.findings : [] });
 
-      return { ok: true, ready: refusals.length === 0, refusals };
+      return { ok: true, ready: refusals.length === 0, refusals, publish_at: this.#publishAtOffer() };
     } catch {
       return { ok: false, reason: "PREFLIGHT_UNDETERMINED",
                detail: "part of what signing would be refused for could not be read, so whether this document can be "
                      + "signed is undetermined; nothing is claimed either way, and nothing was written. Ask again." };
     }
+  }
+
+  /* R44 (DEC-147): whether the ceremony's last step offers "Publish at…", and in which zone: the group's time zone as
+     publication R66 reads it (the active profiles' `time_zone`, `jurisdictions.combine` over record-core's
+     `jurisdiction_profiles`). No zone held offers only "Publish now"; the time is never read as UTC. */
+  #publishAtOffer() {
+    let zone = null;
+    try {
+      const list = this.record.getSetting("jurisdiction_profiles");
+      const c = combineProfiles(Array.isArray(list) ? list : []);
+      const v = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+      zone = typeof v === "string" && v ? v : null;
+    } catch { zone = null; }
+    return zone ? { offered: true, zone } : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" };
   }
 
   /* R35 (DEC-102 items 1, 2; K1074): each roster member's testimony legs on an observation whose level in force for
@@ -657,6 +683,203 @@ export class Ratification {
     const attr = this.publication.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
     return { ok: true, refusal: anonymousTestimonyRefusal(caseId, Number(edition),
                                                           this.#uncorroborated(doc.text, attr)) };
+  }
+
+  /* ===== PUBLISHING AT A SET TIME (DEC-147; R40–R45, R48) ==================================================
+     "Publish at…" signs now and publishes later: the signed statement is the same as "Publish now"'s, the time is not
+     signed, and the edition waits in publication (its R66) until the one publisher this module registers (R43) checks
+     it again at its time and commits it only if nothing changed (R42, R48). */
+
+  /** R45: the reader of litigation holds in place over a project (`actions`, its R58), registered once at start; a
+   *  second is refused. With none, R41's `holds` cannot be read, so `op=publishat` is refused and R42 stops. */
+  registerHoldReader(reader) {
+    if (this.#holdReader)
+      return { ok: false, reason: "HOLD_READER_DECLARED",
+               detail: "a reader of litigation holds is already registered; there is one, registered once at start" };
+    if (!reader || typeof reader.holdsOn !== "function")
+      return { ok: false, reason: "MALFORMED", detail: "registerHoldReader takes {holdsOn({project})}" };
+    this.#holdReader = reader;
+    return { ok: true };
+  }
+
+  /* R41's reads, as signing and the publisher both make them. */
+  #scheduleReads() {
+    const carriage = this.publication.caseCarriage;
+    const reader = this.#holdReader;
+    return {
+      sourcesLapsed: (text, at) => carriage.sourcesLapsed(text, at),
+      acceptedWorkLapsed: (fm, signer) => carriage.acceptedWorkLapsed(fm, signer),
+      tiesConcerning: (a) => this.people.tiesConcerning(a),
+      readFact: (a) => this.money.readFact(a),
+      holdsOn: reader ? (a) => reader.holdsOn(a) : null,
+      stampsOf: (a) => this.publication.stampsOf(a),
+      ratifiedEditions: (caseId) => this.#rows(`SELECT edition FROM case_documents WHERE case_id=? AND ratified_at IS NOT NULL
+                                                ORDER BY edition`, caseId).map((r) => Number(r.edition)),
+    };
+  }
+
+  /* R41 over a plan (the stored document's bytes), at `at`, for the signing member and the verified key. */
+  #checkedNow(plan, signer, keyB64, at) {
+    return checkedOf({ text: plan.doc.text, fm: plan.fm, caseId: plan.id, project: plan.project,
+                       signer: signer === null || signer === undefined ? null : String(signer).replace(/^member:/, ""),
+                       keyB64, at, reads: this.#scheduleReads() });
+  }
+
+  /* publication R66's waiting entry for a case edition, or null (read as the plane, R69). */
+  #waitingEntry(id, ed) {
+    if (typeof this.publication.scheduledEditions !== "function") return null;
+    for (let after = null; ;) {
+      const page = this.publication.scheduledEditions({ case: id, state: "waiting", after, limit: 500 });
+      const list = page && Array.isArray(page.editions) ? page.editions : [];
+      const hit = list.find((e) => Number(e.edition) === ed);
+      if (hit) return hit;
+      if (!page || page.cursor === null || page.cursor === undefined) return null;
+      after = page.cursor;
+    }
+  }
+
+  /* R3 (DEC-147): an edition that waits is answered with publication's PUBLISH_AT_ALREADY_SET, naming its set time. */
+  #waitingRefusal(id, ed) {
+    const w = this.#waitingEntry(id, ed);
+    if (!w) return null;
+    return { ok: false, reason: "PUBLISH_AT_ALREADY_SET", caseId: id, edition: ed, at: w.at ?? null,
+             publish_at: w.publish_at ?? null, waiting: w,
+             detail: `case ${id} edition ${ed} is signed and waits to be published at its set time. To publish it now, `
+                   + `an owner cancels the set time (op=publishatcancel) and signs again. Nothing was written.` };
+  }
+
+  /* R6 for a retry: a complete edition whose container was never assembled (R42's commit without the Worker). */
+  #completedCase(id, ed) {
+    let st = null;
+    try { st = typeof this.publication.caseEditionState === "function" ? this.publication.caseEditionState(id, ed) : null; }
+    catch { st = null; }
+    return st && st.complete && !st.manifest_sha ? { completedCase: st } : {};
+  }
+
+  /** R40: `op=publishat`'s store half. Every refusal R3 answers before its commit writes, in R3's order; then every
+   *  refusal publication's commit would answer for the document now (the commit is made and rolled back, so the answer
+   *  is the commit's own and nothing is written); then SCHEDULE_UNCHECKABLE (C-58.6) when R41 cannot be read; else, in
+   *  this one transaction, publication R66 in place of the commit, its answer relayed as given. The same signature and
+   *  `at` again answer R66's `existed`. Nothing of R3's commit, R36, R37 or R39 happens here: each happens at R42. */
+  publishAt({ caseId, edition, docSha, sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy = null,
+              at = null } = {}) {
+    const id = String(caseId ?? "").trim();
+    const ed = Number(edition);
+    if (!id || !Number.isInteger(ed) || ed < 1 || !docSha || !at || typeof at !== "object")
+      return { ok: false, reason: "MALFORMED" };
+    if (!sigArmored || !attestorKey || !gateVersion)
+      return { ok: false, reason: "CASE_UNSIGNED", caseId: id, edition: ed,
+               detail: `case ${id} edition ${ed} is published at a set time only under a member's signature, and this `
+                     + `request carries none. Nothing was written.` };
+    const signer = attestorMember ?? null;
+    const args = { case: id, edition: ed, docSha, signature: sigArmored, signer, deliveredBy: deliveredBy ?? null,
+                   at: { date: at.date ?? null, time: at.time ?? null }, by: signer };
+    return this.record.transact(() => {
+      const plan = this.#casePlan({ id, ed, docSha, attestorMember: signer, deliveredBy, sigArmored, retry: false });
+      if (!plan.plan) return plan;
+      const waiting = this.#waitingEntry(id, ed);
+      if (waiting) return this.publication.scheduleEdition({ ...args, checked: waiting.checked ?? null });
+      const PASSED = "PUBLISH_AT_COMMIT_WOULD_PASS";
+      const probe = this.record.transact(() => {
+        const c = this.publication.commitCaseEdition(this.#commitArgs(plan, { sigArmored, attestorKey,
+          attestorMember: signer, gateVersion, deliveredBy }, stampInstant("millisecond")));
+        return c && c.ok ? { ok: false, reason: PASSED } : c || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
+      });
+      if (!probe || probe.reason !== PASSED) return probe;
+      const checked = this.#checkedNow(plan, signer, attestorKey, stampInstant("millisecond"));
+      if (!checked.ok) return scheduleUncheckableRefusal(id, ed, checked.unreadable);
+      return this.publication.scheduleEdition({ ...args, checked: checked.checked });
+    });
+  }
+
+  /** R42: the scheduled publisher, registered with publication (its R67, R43 here). At `now`, over the document
+   *  publication holds at the waiting `doc_sha`, it runs again every check signing ran but those that read the arriving
+   *  credential, then reads R41 again and compares it with `checked`. Any refusal, difference or unread part stops it,
+   *  one entry per cause, nothing committed; otherwise it commits as R3 commits and answers `{published: true,
+   *  published_at}`, with R6's assembly, R37's sealed weeks and R39's copy after the commit. Never throws. */
+  async publishScheduled(entry, now) {
+    try { return await this.#publishScheduled(entry || {}, now); }
+    catch (e) { return { stopped: [unreadableStop(`the check itself failed (${String((e && e.message) || e).slice(0, 160)})`)] }; }
+  }
+
+  async #publishScheduled(entry, now) {
+    const id = String(entry.case ?? entry.case_id ?? "").trim();
+    const ed = Number(entry.edition);
+    const docSha = entry.doc_sha ?? entry.docSha ?? null;
+    const sig = entry.signature ?? entry.sig_armored ?? null;
+    const deliveredBy = entry.delivered_by ?? entry.deliveredBy ?? null;
+    const at = typeof now === "number" ? new Date(now).toISOString() : typeof now === "string" && now ? now
+      : stampInstant("millisecond");
+    if (!id || !Number.isInteger(ed) || !docSha || typeof sig !== "string")
+      return { stopped: [unreadableStop("the waiting edition (its case, edition, document or signature)")] };
+    const stopped = [];
+    /* the signature, against the signers active now */
+    const signers = this.credentials.attestingKeys();
+    let attestor = null, keyB64 = null;
+    if (!signers.length)
+      stopped.push(refusedStop({ reason: "NO_SIGNERS", detail: "no active registered signing keys" }));
+    else {
+      const sv = await verifySshsig(sig, caseRatifyStatement(id, ed, docSha), NS_RATIFY, signers.map((k) => k.key_b64));
+      if (!sv.ok) stopped.push(refusedStop({ reason: `SIG_${sv.reason}`, detail: sv.detail }));
+      else { keyB64 = sv.keyB64; attestor = signers.find((k) => k.key_b64 === sv.keyB64)?.member_id ?? null; }
+    }
+    const signer = attestor ?? (entry.signer ? String(entry.signer).replace(/^member:/, "") : null);
+    const hold = { seals: null };
+    const out = this.record.transact(() => {
+      const plan = this.#casePlan({ id, ed, docSha, attestorMember: signer, deliveredBy, sigArmored: sig, retry: false });
+      const late = plan.plan ? null : ["CASE_CONCLUSION_MOVED", "CASE_PRODUCTION_DIVERGED"].includes(plan.reason);
+      if (!plan.plan && !late) stopped.push(refusedStop(plan));
+      const doc = plan.plan ? plan.doc : this.#caseDocumentRow(id, ed);
+      if (doc) {
+        const attr = this.publication.attributionFacts({ text: doc.text, case_id: id, edition: ed });
+        for (const r of [testimonyCaseRefusal(id, ed, attr.legacy), attributionUnchosenRefusal(id, ed, attr),
+                         attributionStaleRefusal(id, ed, attr),
+                         anonymousTestimonyRefusal(id, ed, this.#uncorroborated(doc.text, attr))])
+          if (r) stopped.push(refusedStop(r));
+      }
+      let gateVersion = null;
+      if (doc && doc.doc_sha === docSha) {
+        const fm = parseFrontmatter(doc.text);
+        const prior = this.#one(`SELECT edition, completeness, bias_acknowledgement FROM published_cases
+                                  WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL ORDER BY edition DESC LIMIT 1`, id, ed);
+        const gate = this.#caseGateOver(id, ed, fm, this.#memberBasisAtPins(fm.data || {}), prior);
+        if (!gate || !gate.ok) stopped.push(refusedStop({ reason: "GATE_REFUSED", findings: gate && gate.findings }));
+        else gateVersion = gate.gateVersion;
+      }
+      if (late) stopped.push(refusedStop(plan));
+      if (plan.plan) {
+        const read = this.#checkedNow(plan, signer, keyB64 ?? entry.signer_key ?? null, at);
+        if (!read.ok) stopped.push(unreadableStop(read.unreadable));
+        else for (const d of checkedDiffers(entry.checked, read.checked))
+          stopped.push(d.code === "SCHEDULED_CHECK_REFUSED" ? unreadableStop(`what signing recorded of ${d.part}`)
+                                                             : scheduledStop(d.code, { changed: d.changed }));
+      }
+      if (stopped.length || !plan.plan) return { ok: false, stopped };
+      const done = this.#commitPlan(plan, { sigArmored: sig, attestorKey: keyB64, attestorMember: signer, gateVersion,
+                                            deliveredBy }, hold);
+      if (!done || !done.ok || done.existed) {
+        stopped.push(refusedStop(done && done.existed ? { reason: "CASE_EDITION_ALREADY_RATIFIED" } : done));
+        return { ok: false, stopped };
+      }
+      return done;
+    });
+    if (!out || out.ok === false) return { stopped: out && out.stopped && out.stopped.length ? out.stopped : stopped };
+    /* after the commit, as after R3's: R37's sealed weeks, R39's copy and R6's container; none changes the answer */
+    const after = { seals: hold.seals ? await hold.seals : null };
+    const w = this.#deps.worker;
+    if (w && w.env && w.storeName) {
+      try { after.materials_copied = await copyMaterials(w.env, w.storeName, out.evidenceMaterials || []); }
+      catch (e) { after.materials_copied = { ok: false, reason: "COPY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+      if (out.completedCase && w.stub)
+        try { after.container = await assembleCaseContainer({ env: w.env, stub: w.stub, storeName: w.storeName,
+                                                              cs: out.completedCase, via: "publishscheduled" }); }
+        catch (e) { after.container = { ok: false, reason: "ASSEMBLY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+    } else
+      after.not_done = { materials: (out.evidenceMaterials || []).length, container: !!out.completedCase,
+        detail: "the published bucket is not reachable from here, so the materials held in the evidence store were not "
+              + "copied and a complete edition's container was not assembled; a re-sent op=caseratify with the same "
+              + "signature does both (R39, R6). The edition is published and this answer stands." };
+    return { published: true, published_at: out.ratified_at, caseId: id, edition: ed, after };
   }
 
   /* Each roster member's `basis` at the bytes its `case_roles` row pins (record-core R60), for the case gate's C-2.8
@@ -728,239 +951,269 @@ export class Ratification {
                      + `request carries no signature over case ${id} edition ${ed}, so committing it would `
                      + `mean this plane asserting a group's case on their behalf. Review the case document `
                      + `(op=casedocument) and ratify it (op=caseratify).` };
-    let seals = null;
+    const hold = { seals: null };
     const out = this.record.transact(() => {
-      const doc = this.#caseDocumentRow(id, ed);
-      if (!doc) return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed };
-      if (doc.doc_sha !== docSha)
-        return { ok: false, reason: "CASE_RATIFY_STALE", caseId: id, edition: ed,
-                 expected: doc.doc_sha, got: docSha,
-                 detail: `the case document has changed since it was reviewed. Read it again and re-sign: a `
-                       + `signature over the previous bytes says nothing about these.` };
-      /* OUT OF THE SIGNED BYTES. Parsed here rather than at the control plane
-         for `publish()`'s own reason: the bytes are in this store, and re-reading
-         them at the layer that already verified a hash over them is where the
-         two could come to disagree. Parsed BEFORE the retry check (moved up by
-         REC-137) because both of the authority questions below are asked of the
-         PUBLISHING PROJECT. */
-      const fm = parseFrontmatter(doc.text).data || {};
-      const roster = (Array.isArray(fm.case_findings) ? fm.case_findings : [])
-        .map((x) => String(x ?? "").trim()).filter(Boolean);
-      const rows = (Array.isArray(fm.case_roles) ? fm.case_roles : [])
-        .filter((r) => r && typeof r === "object")
-        .map((r) => ({ target: String(r.target ?? "").trim(), role: String(r.role ?? "").trim(),
-                       version_sha: typeof r.version_sha === "string" ? r.version_sha : null }));
-      const project = typeof fm.case_project === "string" && fm.case_project !== "null"
-        ? fm.case_project.trim() : null;
-      /* ===== REC-137 — WHO AUTHORISES A CASE, AND WHO MAY CARRY IT IN ==================
-         Membership Architecture v2 §7, *"A CASE RATIFICATION: who AUTHORISES it and who
-         may DELIVER it"* (BOB #15, 2026-09-18). Two questions, two answers, asked in this
-         order and BEFORE the idempotent retry below, so a refused deliverer or a
-         non-owner's signature is refused whether or not the edition already stands:
-
-         (1) DELIVERY IS CARRIAGE, NOT DIRECTION (AI Roles §3 rule 4: the record states
-             signer and deliverer apart). A member with a role in the project may deliver,
-             and so may the FOUNDER, as DEC-33's interim publishing route; an enrolled
-             administrator with no role in the project may NOT — administrators direct
-             nothing (§4.9). The member half is REC-134's ONE positional check, consumed
-             and never restated: `deliveredBy` is the control plane's reading of the SESSION
-             ROW (`deliveringPrincipal`, REC-128), `member:<id>` for a member's session —
-             byte-identical to `resolveSession`'s positional identity for that session — and
-             `founder` for the founder's. The founder is told apart HERE by that principal
-             and never by the folded name: a member ENROLLED as `admin` delivers as
-             `member:admin`, is asked, and is not the founder. An ABSENT deliverer is every
-             internal caller (a store-level committer, the legacy arms), not asked, as at
-             every REC-134 act.
-         (2) THE AUTHORITY IS THE SIGNATURE, AND IT MUST BE AN OWNER'S (DEC-72 clause 5:
-             publishing is the project owner's act). Before this the instance-wide signer
-             set was the only authority asked, so any registered signer could commit an
-             owner's case under their own name. Asked through membership's owner predicate, §7's one
-             owner predicate, never a second spelling of it. A case document naming no
-             project has no owner to sign it and is refused by the same rule — DEC-72
-             removed the project-less case, so this is a legacy document, and an absent
-             publisher is not a publisher of none. */
-      /* REC-140: both questions now live in membership's `caseAuthority`, which `op=ratify` asks too for a
-         finding a ratified case pins — MOVED there, not restated, so there is one rule. */
-      const denied = this.membership.caseAuthority({ project, deliveredBy, signer: attestorMember, act: "caseratify",
-                                           subject: `case ${id} edition ${ed}`, extra: { caseId: id, edition: ed } });
-      if (denied) return denied;
-      /* ===== END REC-137 ================================================================ */
-      if (doc.ratified_at) {
-        if (doc.sig_armored === sigArmored)   /* R39: a retry re-copies what the commit held in the evidence store */
-          return { ok: true, existed: true, caseId: id, edition: ed,
-                   evidenceMaterials: evidenceShas(this.publication.heldMaterialsOf?.(id, ed)) };
-        return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
-                 detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
-                       + `edition is a separate document and answers forever — a second attestation over the `
-                       + `same number would leave a reader unable to say who stood behind what they read. `
-                       + `Publish a new edition instead.` };
-      }
-      /* ===== REC-167 / INVESTIGATIVE-SESSION.md §7.1 items 4 and 9 — THE CONCLUSION A PREPARATION
-         RECORDS MUST STILL BE THE ONE ITS PROJECT STANDS ON WHEN IT IS SIGNED ======================
-         WHAT WAS WRONG, measured by REC-157 (M-92): a project concludes, `op=publish` prepares an edition
-         whose document RECORDS that conclusion (REC-135, `case_conclusions:`), the project WITHDRAWS, and
-         this committer still signed the document — the published edition then asserted, as the project's,
-         a conclusion the project had given up before anybody signed. Nothing here re-asked the
-         relationship: `op=publish` asked it once, at preparation, and the window after is exactly where a
-         project's conclusion can move while the finding's bytes and this document do not.
-         SO THIS ASKS, PER ROSTER MEMBER, WHAT `op=publish` ASKS, through the SAME two readers and never a
-         copy of either: (1) `caseConclusionFor` — is the question concluded FOR THE DOCUMENT'S PUBLISHING
-         PROJECT (the NOT_CONCLUDED gate's one reader), and (2) item 9's comparison, the one
-         `editionsRecordingConclusion` makes, asked of THIS ONE DOCUMENT's text — is that conclusion the one the
-         document RECORDS (a project conclusion compared as the dated, authored ENTRY; a no-project one by the
-         pin). Both are `#conclusionsMoved`, which R18's pre-flight asks of the unsigned text too. Concluded-ness ALONE would pass a project that withdrew and concluded again on another
-         claim — the document would then sign claim A for a project standing on claim B — so both are asked.
-         THE VIEWER IS THE SIGNER, who `caseAuthority` just established is an OWNER of the project, so the
-         project's own record is in sight; an owner cannot be told a project it owns "never concluded"
-         for want of sight.
-         ASKED AFTER THE RETRY, deliberately: a ratified edition answers forever (DEC-19 — its conclusion is
-         history once signed), so a byte-identical retry of an edition that already stands still reports
-         `existed`, and this question is asked only of a document about to be signed. ASKED BEFORE ANY
-         WRITE, inside the transaction, so a refusal commits nothing. The route is item 9's: publish again,
-         and the new document records what the project stands on now (REC-157 made that edition reachable). */
-      {
-        const moved = this.#conclusionsMoved(doc.text, project, roster, attestorMember);
-        const refusal = conclusionMovedRefusal(id, ed, project, moved);
-        if (refusal) return refusal;
-      }
-      /* ===== END REC-167 ================================================================ */
-      const now = stampInstant("millisecond");
-      /* CASE-2's INVARIANT, UNCHANGED AND NOW ASKED ONCE. A case does not change
-         hands between editions (DEC-72): the bar is read from the publishing
-         project at act time, so two answers here would be two standards of
-         evidence for one case with nobody having authored either. `cases` is
-         keyed on case_id ALONE precisely so this is a refusal rather than a
-         second row. */
-      /* REC-212 / §3 rule 13 — READ ONCE, so the committed row and this act's answer cannot come apart.
-         `hasOwnProperty` and not truthiness: a document that SAYS UNDETERMINED (`statement_by: null`)
-         and one that says NOTHING (no key, authored before rule 13) are two different facts, and
-         collapsing them would let the second be read as the first. */
-      const stmtWriter = (() => {
-        const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : null;
-        const pub = c && typeof c.author === "string" && c.author.trim() ? c.author.trim() : "(unnamed)";
-        if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by"))
-          return { by: null, stated: "this case document says nothing about who wrote its exclusion "
-                                   + "statement: it was authored before the record told the statement's "
-                                   + "writer apart from the case's publisher (BIO_Publication §3 rule 13), "
-                                   + `and ${pub}, who prepared and published it, is not evidence of either.` };
-        const by = typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
-        if (!by)
-          return { by: null, stated: "UNDETERMINED: this case document states that who wrote its exclusion "
-                                   + "statement could not be established, and it is NOT read off "
-                                   + `${pub}, who prepared and published the case (BIO_Publication §3 rule 13).` };
-        return { by, stated: by === pub
-          ? `${by} wrote this case's exclusion statement, and prepared and published the case — two acts, `
-            + `one member.`
-          : `${by} wrote this case's exclusion statement; ${pub} prepared and published the case — two acts, `
-            + `two names (BIO_Publication §3 rule 13).` };
-      })();
-      const owner = this.#caseOwner(id);
-      if (owner && owner.project_id !== project)
-        return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", caseId: id, edition: ed,
-                 declared: owner.project_id, signed: project,
-                 detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
-                       + `${project}. A case does not change hands between editions (DEC-72).` };
-      /* THE COMMIT, through publication (its R22), in this transaction and from the signed bytes only (R13): the
-         case's owner at its first edition, the edition's scope, completeness and bar, the roster with its roles and
-         pins in the roster's own order (the authored publish order), and the signature, signer and deliverer on the
-         document. A retry with the same signature answers `existed`, another CASE_EDITION_ALREADY_RATIFIED.
-         `deliveredBy` is the control plane's reading of the SESSION and is written as handed — never defaulted to
-         `attestorMember` (REC-128, R12). */
-      const completeness =
-        fm.completeness ? {
-          ...completenessFields(fm),
-          subject_position: fm.completeness.subject_position ?? null,
-          author: fm.completeness.author ?? null,
-          /* REC-212 / §3 rule 13: WHO WROTE THE STATEMENT, committed FROM THE SIGNED BYTES and never
-             from `author` above, who prepared and published the case. THREE STATES, not two, and the
-             sentence beside the name is what tells them apart for a reader of `op=publishedcase`: a
-             name; `null` where this plane established that it could not say (a stated UNDETERMINED);
-             and a document authored before this key existed, which says NOTHING about the writer —
-             and whose publisher's name is not evidence of either. The last two both commit as null,
-             which is why the sentence is committed with them rather than derived by each reader. */
-          statement_by: stmtWriter.by,
-          statement_by_stated: stmtWriter.stated,
-          at: fm.completeness.at ?? null,
-          /* D-150 / §3 rule 11: THE SIGNED LIST, committed from the signed bytes. NULL — never
-             an empty list — for a document authored before acknowledgements were recorded: it
-             says nothing about who else read its statement, which is not the same fact as
-             nobody having done so. */
-          acknowledgements: Array.isArray(fm.completeness_acknowledgements)
-            ? fm.completeness_acknowledgements.filter((a) => a && typeof a === "object")
-                .map((a) => ({ kind: a.kind ?? null, by: a.by ?? null,
-                               recipient: a.recipient === "null" ? null : a.recipient ?? null, at: a.at ?? null,
-                               /* REC-217: a row the publisher's link brought in says so, from the signed bytes. */
-                               ...(typeof a.draft === "string" && a.draft && a.draft !== "null"
-                                 ? { draft: a.draft } : {}) }))
-            : null,
-          /* REC-217 / §3 rule 13 (BOB #33): THE LINK AS SIGNED — the draft the publisher named, who and when —
-             committed from the signed bytes and present only where the document states one. */
-          ...(typeof fm.completeness.draft === "string" && fm.completeness.draft && fm.completeness.draft !== "null"
-            ? { draft: { draft_id: fm.completeness.draft, named_by: fm.completeness.draft_named_by ?? null,
-                         named_at: fm.completeness.draft_named_at ?? null } } : {}),
-          acknowledgements_truncated: Array.isArray(fm.completeness_acknowledgements)
-            ? fm.completeness.acknowledgements_truncated === true : null,
-        } : null;
-      /* D-442 / BIO_Publication_v0_1.md §3 rule 12: A CASE CAN BE COMPLETE THE MOMENT ITS DOCUMENT IS RATIFIED —
-         every member pinned at bytes another case already carried across — and then no op=ratify will ever complete
-         it. The commit answers the edition's state (`state`, read with the group off a member's pinned bytes), so
-         the control plane can assemble the container (`assembleCaseContainer`). */
-      const committed = this.publication.commitCaseEdition({
-        case: id, edition: ed, project, at: now,
-        scope: typeof fm.case_scope === "string" ? fm.case_scope : null,
-        completeness,
-        biasAcknowledgement: typeof fm.bias_acknowledgement === "string" ? fm.bias_acknowledgement : null,
-        bar: fm.required_strength && typeof fm.required_strength === "object" ? fm.required_strength : null,
-        roster: roster.map((m) => {
-          const r = rows.find((x) => x.target === m) || {};
-          return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
-        }),
-        sigArmored, attestorKey, attestorMember: attestorMember ?? null, gateVersion, deliveredBy: deliveredBy ?? null });
-      if (!committed || !committed.ok) return committed || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
-      const evidenceMaterials = evidenceShas(committed.materials ?? this.publication.heldMaterialsOf?.(id, ed));   /* R39 */
-      if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed, evidenceMaterials };
-      /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
-         who ratified it and when; never deleted (set-but-never-clear). */
-      this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
-      /* R36 (DEC-102 item 2): each observation this edition reaches, and each off-the-record capture's attesting member
-         (a row keyed `capture`, publication R60; DEC-119 (3)), whose level in force (stated in the signed bytes, C-92.11)
-         differs from its level at the case's previous ratified edition is told to reevaluation (its R29, R32), in this
-         transaction, once. A first edition, or one the previous edition did not reach, tells nothing. */
-      const prior = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
-                                ORDER BY edition DESC LIMIT 1`, id, ed);
-      const levelsIn = (text) => {
-        const rows = (parseFrontmatter(text).data || {}).observation_attributions;
-        return new Map((Array.isArray(rows) ? rows : []).filter((x) => x && (x.observation || x.capture) && x.level
-          && x.level !== "null").map((x) => [x.observation ? `observation ${x.observation}` : `capture ${x.capture}`,
-                                             String(x.level)]));
-      };
-      const was = prior ? levelsIn(prior.text) : new Map();
-      for (const [k, to] of prior ? levelsIn(doc.text) : []) {
-        const [kind, key] = k.split(" ");
-        if (was.has(k) && was.get(k) !== to)
-          this.reevaluation.levelMoved({ [kind]: key, from: was.get(k), to, case: id, edition: ed, at: now });
-      }
-      const completedCase = committed.state && committed.state.complete && !committed.state.manifest_sha
-        ? committed.state : null;
-      this.record.afterCommit(() => { seals = this.#openSeals(id, ed); });   /* R37 */
-      return { ok: true, caseId: id, edition: ed, project, roster,
-               /* REC-212 / §3 rule 13: BOTH NAMES IN THIS ACT'S ANSWER — who wrote the statement and who prepared and
-                  published the case — from the one read above, so the answer and the committed row are one fact. */
-               statement: { author: fm.completeness && typeof fm.completeness === "object"
-                              ? (fm.completeness.author ?? null) : null,
-                            by: stmtWriter.by, stated: stmtWriter.stated },
-               ...(completedCase ? { completedCase } : {}), evidenceMaterials,
-               members: roster.map((m) => {
-                 const r = rows.find((x) => x.target === m) || {};
-                 return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
-               }),
-               ratified_at: now,
-               /* THE EDITION IS NOT COMPLETE YET AND THAT IS STATED RATHER THAN HIDDEN. The case is committed; every
-                  member still signs its own bytes, because the finding is the unit of truth. `awaiting` is the roster
-                  less what is published at its pin. */
-               awaiting: Array.isArray(committed.awaiting) ? committed.awaiting : [] };
+      const plan = this.#casePlan({ id, ed, docSha, attestorMember, deliveredBy, sigArmored, retry: true });
+      if (!plan.plan) return plan;
+      /* R3 (DEC-147): an edition publication holds waiting (its R66) is not published now: an owner cancels the set
+         time (publication R68) and signs again. Nothing is written. */
+      const waiting = this.#waitingRefusal(id, ed);
+      if (waiting) return waiting;
+      return this.#commitPlan(plan, { sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy }, hold);
     });
-    return seals ? { ...out, seals: await seals } : out;
+    return hold.seals ? { ...out, seals: await hold.seals } : out;
+  }
+
+  /* R3's checks before its commit, in its order, for `op=caseratify`'s commit, `op=publishat` (R40) and the scheduled
+     publisher (R42) alike, inside the caller's transaction: a refusal (or, with `retry`, the same signature's `existed`
+     answer), else the plan `#commitPlan` commits, read from the stored document's bytes only. Without `retry` an edition
+     already ratified is CASE_EDITION_ALREADY_RATIFIED whatever its signature. */
+  #casePlan({ id, ed, docSha, attestorMember, deliveredBy, sigArmored, retry = false }) {
+    const doc = this.#caseDocumentRow(id, ed);
+    if (!doc) return { ok: false, reason: "NO_CASE_DOCUMENT", caseId: id, edition: ed };
+    if (doc.doc_sha !== docSha)
+      return { ok: false, reason: "CASE_RATIFY_STALE", caseId: id, edition: ed,
+               expected: doc.doc_sha, got: docSha,
+               detail: `the case document has changed since it was reviewed. Read it again and re-sign: a `
+                     + `signature over the previous bytes says nothing about these.` };
+    /* OUT OF THE SIGNED BYTES. Parsed here rather than at the control plane
+       for `publish()`'s own reason: the bytes are in this store, and re-reading
+       them at the layer that already verified a hash over them is where the
+       two could come to disagree. Parsed BEFORE the retry check (moved up by
+       REC-137) because both of the authority questions below are asked of the
+       PUBLISHING PROJECT. */
+    const fm = parseFrontmatter(doc.text).data || {};
+    const roster = (Array.isArray(fm.case_findings) ? fm.case_findings : [])
+      .map((x) => String(x ?? "").trim()).filter(Boolean);
+    const rows = (Array.isArray(fm.case_roles) ? fm.case_roles : [])
+      .filter((r) => r && typeof r === "object")
+      .map((r) => ({ target: String(r.target ?? "").trim(), role: String(r.role ?? "").trim(),
+                     version_sha: typeof r.version_sha === "string" ? r.version_sha : null }));
+    const project = typeof fm.case_project === "string" && fm.case_project !== "null"
+      ? fm.case_project.trim() : null;
+    /* ===== REC-137 — WHO AUTHORISES A CASE, AND WHO MAY CARRY IT IN ==================
+       Membership Architecture v2 §7, *"A CASE RATIFICATION: who AUTHORISES it and who
+       may DELIVER it"* (BOB #15, 2026-09-18). Two questions, two answers, asked in this
+       order and BEFORE the idempotent retry below, so a refused deliverer or a
+       non-owner's signature is refused whether or not the edition already stands:
+
+       (1) DELIVERY IS CARRIAGE, NOT DIRECTION (AI Roles §3 rule 4: the record states
+           signer and deliverer apart). A member with a role in the project may deliver,
+           and so may the FOUNDER, as DEC-33's interim publishing route; an enrolled
+           administrator with no role in the project may NOT — administrators direct
+           nothing (§4.9). The member half is REC-134's ONE positional check, consumed
+           and never restated: `deliveredBy` is the control plane's reading of the SESSION
+           ROW (`deliveringPrincipal`, REC-128), `member:<id>` for a member's session —
+           byte-identical to `resolveSession`'s positional identity for that session — and
+           `founder` for the founder's. The founder is told apart HERE by that principal
+           and never by the folded name: a member ENROLLED as `admin` delivers as
+           `member:admin`, is asked, and is not the founder. An ABSENT deliverer is every
+           internal caller (a store-level committer, the legacy arms), not asked, as at
+           every REC-134 act.
+       (2) THE AUTHORITY IS THE SIGNATURE, AND IT MUST BE AN OWNER'S (DEC-72 clause 5:
+           publishing is the project owner's act). Before this the instance-wide signer
+           set was the only authority asked, so any registered signer could commit an
+           owner's case under their own name. Asked through membership's owner predicate, §7's one
+           owner predicate, never a second spelling of it. A case document naming no
+           project has no owner to sign it and is refused by the same rule — DEC-72
+           removed the project-less case, so this is a legacy document, and an absent
+           publisher is not a publisher of none. */
+    /* REC-140: both questions now live in membership's `caseAuthority`, which `op=ratify` asks too for a
+       finding a ratified case pins — MOVED there, not restated, so there is one rule. */
+    const denied = this.membership.caseAuthority({ project, deliveredBy, signer: attestorMember, act: "caseratify",
+                                         subject: `case ${id} edition ${ed}`, extra: { caseId: id, edition: ed } });
+    if (denied) return denied;
+    /* ===== END REC-137 ================================================================ */
+    if (doc.ratified_at) {
+      if (retry && doc.sig_armored === sigArmored)   /* R39: a retry re-copies what the commit held in the evidence store */
+        return { ok: true, existed: true, caseId: id, edition: ed,
+                 evidenceMaterials: evidenceShas(this.publication.heldMaterialsOf?.(id, ed)),
+                 /* R6: and assembles a complete edition's container if the commit's assembly never ran (R42) */
+                 ...this.#completedCase(id, ed) };
+      return { ok: false, reason: "CASE_EDITION_ALREADY_RATIFIED", caseId: id, edition: ed,
+               detail: `case ${id} edition ${ed} is already ratified under a different signature. An `
+                     + `edition is a separate document and answers forever — a second attestation over the `
+                     + `same number would leave a reader unable to say who stood behind what they read. `
+                     + `Publish a new edition instead.` };
+    }
+    /* ===== REC-167 / INVESTIGATIVE-SESSION.md §7.1 items 4 and 9 — THE CONCLUSION A PREPARATION
+       RECORDS MUST STILL BE THE ONE ITS PROJECT STANDS ON WHEN IT IS SIGNED ======================
+       WHAT WAS WRONG, measured by REC-157 (M-92): a project concludes, `op=publish` prepares an edition
+       whose document RECORDS that conclusion (REC-135, `case_conclusions:`), the project WITHDRAWS, and
+       this committer still signed the document — the published edition then asserted, as the project's,
+       a conclusion the project had given up before anybody signed. Nothing here re-asked the
+       relationship: `op=publish` asked it once, at preparation, and the window after is exactly where a
+       project's conclusion can move while the finding's bytes and this document do not.
+       SO THIS ASKS, PER ROSTER MEMBER, WHAT `op=publish` ASKS, through the SAME two readers and never a
+       copy of either: (1) `caseConclusionFor` — is the question concluded FOR THE DOCUMENT'S PUBLISHING
+       PROJECT (the NOT_CONCLUDED gate's one reader), and (2) item 9's comparison, the one
+       `editionsRecordingConclusion` makes, asked of THIS ONE DOCUMENT's text — is that conclusion the one the
+       document RECORDS (a project conclusion compared as the dated, authored ENTRY; a no-project one by the
+       pin). Both are `#conclusionsMoved`, which R18's pre-flight asks of the unsigned text too. Concluded-ness ALONE would pass a project that withdrew and concluded again on another
+       claim — the document would then sign claim A for a project standing on claim B — so both are asked.
+       THE VIEWER IS THE SIGNER, who `caseAuthority` just established is an OWNER of the project, so the
+       project's own record is in sight; an owner cannot be told a project it owns "never concluded"
+       for want of sight.
+       ASKED AFTER THE RETRY, deliberately: a ratified edition answers forever (DEC-19 — its conclusion is
+       history once signed), so a byte-identical retry of an edition that already stands still reports
+       `existed`, and this question is asked only of a document about to be signed. ASKED BEFORE ANY
+       WRITE, inside the transaction, so a refusal commits nothing. The route is item 9's: publish again,
+       and the new document records what the project stands on now (REC-157 made that edition reachable). */
+    {
+      const moved = this.#conclusionsMoved(doc.text, project, roster, attestorMember);
+      const refusal = conclusionMovedRefusal(id, ed, project, moved);
+      if (refusal) return refusal;
+    }
+    /* ===== END REC-167 ================================================================ */
+    /* CASE-2's INVARIANT, UNCHANGED AND NOW ASKED ONCE. A case does not change
+       hands between editions (DEC-72): the bar is read from the publishing
+       project at act time, so two answers here would be two standards of
+       evidence for one case with nobody having authored either. `cases` is
+       keyed on case_id ALONE precisely so this is a refusal rather than a
+       second row. */
+    /* REC-212 / §3 rule 13 — READ ONCE, so the committed row and this act's answer cannot come apart.
+       `hasOwnProperty` and not truthiness: a document that SAYS UNDETERMINED (`statement_by: null`)
+       and one that says NOTHING (no key, authored before rule 13) are two different facts, and
+       collapsing them would let the second be read as the first. */
+    const stmtWriter = (() => {
+      const c = fm.completeness && typeof fm.completeness === "object" ? fm.completeness : null;
+      const pub = c && typeof c.author === "string" && c.author.trim() ? c.author.trim() : "(unnamed)";
+      if (!c || !Object.prototype.hasOwnProperty.call(c, "statement_by"))
+        return { by: null, stated: "this case document says nothing about who wrote its exclusion "
+                                 + "statement: it was authored before the record told the statement's "
+                                 + "writer apart from the case's publisher (BIO_Publication §3 rule 13), "
+                                 + `and ${pub}, who prepared and published it, is not evidence of either.` };
+      const by = typeof c.statement_by === "string" && c.statement_by.trim() ? c.statement_by.trim() : null;
+      if (!by)
+        return { by: null, stated: "UNDETERMINED: this case document states that who wrote its exclusion "
+                                 + "statement could not be established, and it is NOT read off "
+                                 + `${pub}, who prepared and published the case (BIO_Publication §3 rule 13).` };
+      return { by, stated: by === pub
+        ? `${by} wrote this case's exclusion statement, and prepared and published the case — two acts, `
+          + `one member.`
+        : `${by} wrote this case's exclusion statement; ${pub} prepared and published the case — two acts, `
+          + `two names (BIO_Publication §3 rule 13).` };
+    })();
+    const owner = this.#caseOwner(id);
+    if (owner && owner.project_id !== project)
+      return { ok: false, reason: "CASE_PRODUCTION_DIVERGED", caseId: id, edition: ed,
+               declared: owner.project_id, signed: project,
+               detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
+                     + `${project}. A case does not change hands between editions (DEC-72).` };
+    /* THE COMMIT, through publication (its R22), in this transaction and from the signed bytes only (R13): the
+       case's owner at its first edition, the edition's scope, completeness and bar, the roster with its roles and
+       pins in the roster's own order (the authored publish order), and the signature, signer and deliverer on the
+       document. A retry with the same signature answers `existed`, another CASE_EDITION_ALREADY_RATIFIED.
+       `deliveredBy` is the control plane's reading of the SESSION and is written as handed — never defaulted to
+       `attestorMember` (REC-128, R12). */
+    const completeness =
+      fm.completeness ? {
+        ...completenessFields(fm),
+        subject_position: fm.completeness.subject_position ?? null,
+        author: fm.completeness.author ?? null,
+        /* REC-212 / §3 rule 13: WHO WROTE THE STATEMENT, committed FROM THE SIGNED BYTES and never
+           from `author` above, who prepared and published the case. THREE STATES, not two, and the
+           sentence beside the name is what tells them apart for a reader of `op=publishedcase`: a
+           name; `null` where this plane established that it could not say (a stated UNDETERMINED);
+           and a document authored before this key existed, which says NOTHING about the writer —
+           and whose publisher's name is not evidence of either. The last two both commit as null,
+           which is why the sentence is committed with them rather than derived by each reader. */
+        statement_by: stmtWriter.by,
+        statement_by_stated: stmtWriter.stated,
+        at: fm.completeness.at ?? null,
+        /* D-150 / §3 rule 11: THE SIGNED LIST, committed from the signed bytes. NULL — never
+           an empty list — for a document authored before acknowledgements were recorded: it
+           says nothing about who else read its statement, which is not the same fact as
+           nobody having done so. */
+        acknowledgements: Array.isArray(fm.completeness_acknowledgements)
+          ? fm.completeness_acknowledgements.filter((a) => a && typeof a === "object")
+              .map((a) => ({ kind: a.kind ?? null, by: a.by ?? null,
+                             recipient: a.recipient === "null" ? null : a.recipient ?? null, at: a.at ?? null,
+                             /* REC-217: a row the publisher's link brought in says so, from the signed bytes. */
+                             ...(typeof a.draft === "string" && a.draft && a.draft !== "null"
+                               ? { draft: a.draft } : {}) }))
+          : null,
+        /* REC-217 / §3 rule 13 (BOB #33): THE LINK AS SIGNED — the draft the publisher named, who and when —
+           committed from the signed bytes and present only where the document states one. */
+        ...(typeof fm.completeness.draft === "string" && fm.completeness.draft && fm.completeness.draft !== "null"
+          ? { draft: { draft_id: fm.completeness.draft, named_by: fm.completeness.draft_named_by ?? null,
+                       named_at: fm.completeness.draft_named_at ?? null } } : {}),
+        acknowledgements_truncated: Array.isArray(fm.completeness_acknowledgements)
+          ? fm.completeness.acknowledgements_truncated === true : null,
+      } : null;
+    return { plan: true, id, ed, doc, fm, roster, rows, project, stmtWriter, completeness };
+  }
+
+  /* publication R22's commit arguments for a plan, from the signed bytes only (R13), the act's own facts beside them. */
+  #commitArgs({ id, ed, fm, roster, rows, project, completeness }, { sigArmored, attestorKey, attestorMember, gateVersion,
+              deliveredBy }, now) {
+    return {
+      case: id, edition: ed, project, at: now,
+      scope: typeof fm.case_scope === "string" ? fm.case_scope : null,
+      completeness,
+      biasAcknowledgement: typeof fm.bias_acknowledgement === "string" ? fm.bias_acknowledgement : null,
+      bar: fm.required_strength && typeof fm.required_strength === "object" ? fm.required_strength : null,
+      roster: roster.map((m) => {
+        const r = rows.find((x) => x.target === m) || {};
+        return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
+      }),
+      sigArmored, attestorKey, attestorMember: attestorMember ?? null, gateVersion, deliveredBy: deliveredBy ?? null };
+  }
+
+  /* R3's commit of a plan, through publication (its R22), in the caller's transaction, with R3's discharge, R36's
+     telling and R37's sealed weeks held for after the commit (`hold.seals`). */
+  #commitPlan(plan, signing, hold) {
+    const { id, ed, doc, fm, roster, rows, project, stmtWriter } = plan;
+    const { attestorMember } = signing;
+    const now = stampInstant("millisecond");
+    const committed = this.publication.commitCaseEdition(this.#commitArgs(plan, signing, now));
+    if (!committed || !committed.ok) return committed || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
+    const evidenceMaterials = evidenceShas(committed.materials ?? this.publication.heldMaterialsOf?.(id, ed));   /* R39 */
+    if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed, evidenceMaterials };
+    /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
+       who ratified it and when; never deleted (set-but-never-clear). */
+    this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
+    /* R36 (DEC-102 item 2): each observation this edition reaches, and each off-the-record capture's attesting member
+       (a row keyed `capture`, publication R60; DEC-119 (3)), whose level in force (stated in the signed bytes, C-92.11)
+       differs from its level at the case's previous ratified edition is told to reevaluation (its R29, R32), in this
+       transaction, once. A first edition, or one the previous edition did not reach, tells nothing. */
+    const prior = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
+                              ORDER BY edition DESC LIMIT 1`, id, ed);
+    const levelsIn = (text) => {
+      const rows = (parseFrontmatter(text).data || {}).observation_attributions;
+      return new Map((Array.isArray(rows) ? rows : []).filter((x) => x && (x.observation || x.capture) && x.level
+        && x.level !== "null").map((x) => [x.observation ? `observation ${x.observation}` : `capture ${x.capture}`,
+                                           String(x.level)]));
+    };
+    const was = prior ? levelsIn(prior.text) : new Map();
+    for (const [k, to] of prior ? levelsIn(doc.text) : []) {
+      const [kind, key] = k.split(" ");
+      if (was.has(k) && was.get(k) !== to)
+        this.reevaluation.levelMoved({ [kind]: key, from: was.get(k), to, case: id, edition: ed, at: now });
+    }
+    /* D-442 / BIO_Publication_v0_1.md §3 rule 12: A CASE CAN BE COMPLETE THE MOMENT ITS DOCUMENT IS RATIFIED —
+       every member pinned at bytes another case already carried across — and then no op=ratify will ever complete
+       it. The commit answers the edition's state (`state`, read with the group off a member's pinned bytes), so
+       the control plane can assemble the container (`assembleCaseContainer`). */
+    const completedCase = committed.state && committed.state.complete && !committed.state.manifest_sha
+      ? committed.state : null;
+    this.record.afterCommit(() => { hold.seals = this.#openSeals(id, ed); });   /* R37 */
+    return { ok: true, caseId: id, edition: ed, project, roster,
+             /* REC-212 / §3 rule 13: BOTH NAMES IN THIS ACT'S ANSWER — who wrote the statement and who prepared and
+                published the case — from the one read above, so the answer and the committed row are one fact. */
+             statement: { author: fm.completeness && typeof fm.completeness === "object"
+                            ? (fm.completeness.author ?? null) : null,
+                          by: stmtWriter.by, stated: stmtWriter.stated },
+             ...(completedCase ? { completedCase } : {}), evidenceMaterials,
+             members: roster.map((m) => {
+               const r = rows.find((x) => x.target === m) || {};
+               return { bundle_id: m, role: r.role ?? null, version_sha: r.version_sha ?? null };
+             }),
+             ratified_at: now,
+             /* THE EDITION IS NOT COMPLETE YET AND THAT IS STATED RATHER THAN HIDDEN. The case is committed; every
+                member still signs its own bytes, because the finding is the unit of truth. `awaiting` is the roster
+                less what is published at its pin. */
+             awaiting: Array.isArray(committed.awaiting) ? committed.awaiting : [] };
   }
 
   /* R37: `openSeals`' answer, or, when it refuses, throws or rejects, the failure stated; never a throw. */
@@ -1188,6 +1441,10 @@ export function ratificationOf(host, deps) {
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
     record.registerAuditCheck("ratification", (image) => r.audit(image));
+    /* R43 (DEC-147; publication R67): the one publisher of a waiting edition is R42, registered once. */
+    const pub = r.publication;
+    if (typeof pub.registerScheduledPublisher === "function")
+      pub.registerScheduledPublisher({ publishScheduled: (entry, now) => r.publishScheduled(entry, now) });
     const seeded = record.registerMintSeed("ratification", MINT_SEED.map((x) => [...x]));
     if (seeded && seeded.ok === false)
       throw new Error(`ratification: record-core refused its mint seed: ${seeded.reason}`);
@@ -1196,7 +1453,7 @@ export function ratificationOf(host, deps) {
 }
 
 /** R32: the module's store-half ops (K3), spread into the plane's op map (`plane/store.mjs`): `gatefacts` (R7), `ratifygate` (R4's
- *  gate, N417), `casegate` (R2's gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies,
+ *  gate, N417), `casegate` (R2's gate), `caseratify` (R3), `publishat` (R40) and `publish` (R5), the internal hops of the two ceremonies,
  *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
  *  control plane's stamps, read from the query, never from the body. */
 export function ratificationOps(r, url, body) {
@@ -1209,6 +1466,7 @@ export function ratificationOps(r, url, body) {
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: q("secretSha") ?? null }),
     caseratify: () => r.ratifyCaseDocument(b),
+    publishat: () => r.publishAt(b),
     casetestimony: () => r.caseTestimony(b),
     publish: () => r.publish(b),
     release: () => r.release({ handle: q("handle"), acknowledgment: q("acknowledgment"), mitigation: q("mitigation"),

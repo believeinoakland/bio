@@ -60,7 +60,8 @@ const reasons = (pf) => pf.refusals.map((r) => r.reason);
 test("R18: a document its project's owner, holding an attesting key, may sign is ready — no refusal — and the act commits it", async () => {
   const { preflight, act } = await setup();
   for (const signer of ["alice", V("alice")])
-    assert.deepEqual(preflight({ signer }), { ok: true, ready: true, refusals: [] }, signer);
+    assert.deepEqual(preflight({ signer }), { ok: true, ready: true, refusals: [],
+      publish_at: { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" } }, signer);
   for (const viewer of [V("alice"), V("bo"), "admin", V("admin"), null])
     assert.deepEqual(preflight({ viewer }).refusals, [], String(viewer));
   const r = await act();

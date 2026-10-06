@@ -36,7 +36,7 @@ function setup() {
     },
   };
   w.r = ratificationOf(w.host, { storage: w.st, record: w.record, membership: w.membership, promotion: w.promotion,
-                                 retrieval: w.retrieval, contradiction });
+                                 retrieval: w.retrieval, contradiction, publication: {} });
   let k = 0;
   w.info = (id, { criticality = "supporting", files = FULL } = {}) => {
     const res = w.promotion.promote({ bundleId: id, base: null, snapKey: `c${++k}`, author: WHO,
