@@ -6,7 +6,8 @@
  * per (key, day), its count the rows' number (R15, R16: nothing else of the call is kept). Every row of a project's
  * script carries `bundle_id`, its project (record-core R21, R46; K23); an editor grant, a tally and a refusal tally
  * carry none and are cleared by the whole-store purge only. Every name in attribution is held by value beside the id.
- * A Civicsmith script is never a row: it is the library registered at start (R13). */
+ * A Civicsmith script is never a row: it is the library registered at start (R13). A copy's base (R3) and the instant
+ * each newer base version was first found (R26) are rows of their own (T34, DEC-158). */
 
 export const WIZARD_SCRIPTS_SCHEMA = `
 -- R1: A SCRIPT of a project; widened by a 'widened' event (R7).
@@ -102,6 +103,21 @@ CREATE TABLE IF NOT EXISTS wiz_breaks (
   at             TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS wiz_breaks_version ON wiz_breaks (script_id, version, bid);
+-- R1, R3: A COPY's base (DEC-158): the approved version it was copied from, set once.
+CREATE TABLE IF NOT EXISTS wiz_copies (
+  script_id      TEXT PRIMARY KEY,
+  bundle_id      TEXT,
+  based_on       TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+-- R26: THE INSTANT EACH (copy, newer base version) PAIR WAS FIRST FOUND, and nothing else.
+CREATE TABLE IF NOT EXISTS wiz_base_seen (
+  script_id      TEXT NOT NULL,
+  newer          TEXT NOT NULL,
+  bundle_id      TEXT,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (script_id, newer)
+);
 -- R15: ONE ROW PER COUNTED CALL, keyed by version, event, step and day; nothing else.
 CREATE TABLE IF NOT EXISTS wiz_tallies (
   tid            INTEGER PRIMARY KEY,
@@ -130,6 +146,7 @@ export const WIZARD_SCRIPTS_TABLE_CLASSES = Object.freeze([
   ["wiz_scripts", "bundle", false], ["wiz_versions", "bundle", true], ["wiz_revisions", "bundle", true], ["wiz_events", "bundle", false],
   ["wiz_proposals", "bundle", false], ["wiz_editor_grants", "group", false], ["wiz_editor_revocations", "group", false],
   ["wiz_breaks", "bundle", false], ["wiz_tallies", "group", false], ["wiz_refusal_tallies", "group", false],
+  ["wiz_copies", "bundle", false], ["wiz_base_seen", "bundle", false],
 ].map(([name, sight, chain]) => Object.freeze({ name, purge: "clear", expunge: "none", export: "admin-only", sight, derive: "stored",
                                                 version_chain: chain })));
 

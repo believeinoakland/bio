@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T34)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ Two interfaces your users build against now (K1861 (1)); please expose exactly t
 ## B4 · CHANGE
 
 From CONTROL-PLANE #23 (K1863 (7)): the door routes `writinghelp` itself and calls `wizardScriptsOf(ctx).writingHelp({op, field, told, draftHeld, assistant, by, viewer})`, those arguments read from the POST body; `assistant` is `{on: true, account: {kind, level}}`, never the key. The door's refusals (`ASSISTANT_OFF`, the ceilings, the account's) come before your R24 items 2–4 and `WRITING_HELP_NOTHING_TOLD`. Build `writingHelp` to that call.
+
+## B5 · ANSWER · re J3
+
+Merged (K1869). Your J2 reds are routed to plane, op-declarations, affordances and control-plane; (4) and (7) to N701, N702. Keep the session until the layer closes.
