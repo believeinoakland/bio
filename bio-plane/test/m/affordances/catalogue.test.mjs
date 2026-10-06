@@ -32,6 +32,8 @@ const ids = (xs) => xs.map((a) => a.id).sort();
    t33.test.mjs, so the tests below that predate T33 set them aside where they count a closed set. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/affordances/t33.mjs";
 const T33_OPS = new Set([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT), ...Object.keys(T33_NON_ACTS)]);
+/* R45 (K1864): T34's grades and R21's aliases, held to their owners and ops in t34.test.mjs, set aside as T33's are. */
+import { T34_RUNGS, T34_RUNG_ABSENT, OP_ALIASES } from "../../../src/affordances/t34.mjs";
 
 test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
@@ -140,6 +142,9 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   want.terminal.push(...DEC88.terminal);
   /* R40: T33's rungs, each graded in t33.mjs and held there to its owner (t33.test.mjs) */
   for (const [op, r] of Object.entries(T33_RUNGS)) want[r].push(op);
+  /* R45: T34's rungs (t34.mjs), and each alias at its op's rung */
+  for (const [op, r] of Object.entries(T34_RUNGS)) want[r].push(op);
+  for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
   /* negative controls: the same comparison sees a misbanded op and an op left unranked */
@@ -466,13 +471,16 @@ test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved
     /* R37 (T31): wizard-scripts' five drafting and approving acts, as the template acts */
     "wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit", "wizardapprove",
     /* R40 (T33): the ops T33 grades `undetermined` on the same rule (t33.mjs) */
-    ...undeterminedOf(T33_RUNG_ABSENT)];
+    ...undeterminedOf(T33_RUNG_ABSENT),
+    /* R45 (T34): tasks' two, and the aliases of undetermined ops (t34.mjs) */
+    ...undeterminedOf(T34_RUNG_ABSENT),
+    ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
-  assert.equal(undeterminedOf(RUNG_ABSENT).length, 30 + undeterminedOf(T33_RUNG_ABSENT).length,
-    "R27's count reads 30 with R32's, R34's, R35's and R37's five, and R40's beside them");
+  assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 21,
+    "R27's count reads 30 with R32's, R34's, R35's and R37's five, and R40's and R45's beside them");
   /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
   const before78 = ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
     "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",

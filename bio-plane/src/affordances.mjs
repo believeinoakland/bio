@@ -34,20 +34,8 @@
  * it has none, and `unaccounted(opTable)` (R12) answers that TOTAL IN BOTH
  * DIRECTIONS over the control plane's table of ops.
  *
- * CORRECTED 2026-08-08 BY FW-14, and stated rather than quietly reworded. This
- * paragraph used to read *"CAPABILITIES.md measures 7 of 57 mutating ops with a
- * rung assigned by any document … inventing the other 50 here would be the
- * forbidden surface-side map moved one layer down"*. It was RIGHT FOR REC-19 —
- * REC-19 had no licence to assign rungs and refusing to guess was the correct
- * refusal, and it is what routed the question here. Two things about it are now
- * wrong. The FIGURE was never re-measured (the dispatch table declares 84
- * mutating ops, not 57, which is why no count appears in this comment any more —
- * the suite prints it). And the PRINCIPLE has moved on: FW-14's instruction is
- * to derive rungs from what the code already enforces, so a rung read off a
- * refusal the store RAISES is not an invention, it is the enforcement stated.
- * What has NOT changed is the thing that paragraph was protecting: a rung with
- * no backing is still forbidden, and every rung below is asserted against the
- * enforcement or the document that gives it.
+ * FW-14 (2026-08-08) superseded REC-19's refusal to assign rungs: a rung is derived from what the code enforces,
+ * and a rung with no backing is still forbidden.
  *
  * TOTALITY, AND THE DRIFT GUARD. Every op in the control plane's NEEDS table is
  * either an ACT here or named in NON_ACTS with the reason it is not
@@ -61,12 +49,8 @@
  * roster are NON_ACTS with their reasons; several are real acts on OTHER kinds
  * of objects and later items fold them in (REC-15 the publication pre-flight).
  *
- * CORRECTED 2026-08-05 BY REC-24, and stated rather than quietly reworded: this
- * header used to say that an `action` bundle honestly publishes NO acts,
- * because nothing operated one and an empty list was the true answer. It no
- * longer is. `op=actionmove` and `op=actioncorrespond` are object-directed acts
- * on an action, derived below from the SAME imported state table every other act
- * reads, and an action now publishes both.
+ * REC-24 (2026-08-05): an `action` publishes `actionmove` and `actioncorrespond`, derived from the same imported
+ * state table.
  */
 
 /* The record's grammar (record-grammar R1–R3, its R24's pure face): the state machines, read through its vocabulary
@@ -134,6 +118,8 @@ export { affordancesOf, affordancesOps } from "./affordances/facts.mjs";
 export { affordancesAnswer, affordancesOp } from "./affordances/door.mjs";
 /* R40 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./affordances/t33.mjs";
+/* R45 (K1864): the grades and reasons of the ops T34 declares, and R21's aliases (`aliased`, applied below NON_ACTS). */
+import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS, aliased } from "./affordances/t34.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
 import { composedVocabularies } from "./affordances/words.mjs";
 
@@ -198,32 +184,8 @@ import { DISPOSITIONS } from "./inquiry/index.mjs";
 export { REOPENABLE_FROM } from "./promotion/index.mjs";
 import { REOPENABLE_FROM } from "./promotion/index.mjs";
 
-/* REC-35, UI-13's delegation: THE INTENT LAYER'S THREE CLOSED VOCABULARIES, and
- * they live HERE for the reason DISPOSITIONS does — one array, imported by the
- * store that enforces it and published by the op a surface reads, so a set
- * cannot be changed in one place and stay stale in the other.
- *
- * WHY THIS DIRECTION AND NOT THE OTHER (history: the legacy `store.mjs` is retired,
- * and the R6 note below says where each array went). The obvious move was to export them from
- * `store.mjs`, where the refusals were written. That was impossible and not merely
- * unpleasant: `store.mjs` then imported this module (DISPOSITIONS,
- * REOPENABLE_FROM, deriveActs), so publishing from there would close an import
- * cycle — and this file's `VOCABULARIES` is a top-level object literal, so any
- * module that reached `store.mjs` first would evaluate it while the store's
- * bindings were still in the temporal dead zone and crash at load. The
- * enforcement site keeps the refusal; the vocabulary keeps one home. That is
- * exactly the arrangement REC-11 landed for DISPOSITIONS after the same
- * question, and the enforcing modules are the same shape read from the other
- * side (the action vocabularies are `action-grammar`'s, SUBJECT_POSITIONS
- * `ratification`'s, BASIS_ROLES `inquiry`'s: each lives where its check runs and
- * is imported into the publication above).
- *
- * WHAT THEY GATE, and why publishing them is not a convenience. Until this
- * item, a surface offering a subject kind, a relation predicate or a stage's
- * requiredness had no published set to read, so UI-13 harvested them out of the
- * store's own refusal sentence ("… one of a, b, c") — a legitimate DEC-8
- * reading, and a parser standing on the store's WORDING rather than on its
- * DATA. Published, the wording is free to change again. */
+/* REC-35 (UI-13): a closed vocabulary is published as the array its enforcing module refuses against, never
+ * harvested from a refusal's wording; the arrays now live with their owners (R6, below). */
 
 /* 2026-09-14, REC-81: every citation into the content framework in this file
  * names a SECTION rather than a line. The line numbers they carried went stale
@@ -233,7 +195,7 @@ import { REOPENABLE_FROM } from "./promotion/index.mjs";
 
 /* R6 (N49): the entity registry's kinds and safeguard 4's three declared-relation predicates are `entities'`
  * (its R2, R3), and a progression stage's closed requiredness vocabulary (framework 8.2) is `progressions'`, each
- * the array its own write path refuses against, re-exported unchanged. The REC-35 paragraph above is history: the
+ * the array its own write path refuses against, re-exported unchanged: the
  * store no longer holds those refusals, and the arrays moved to the modules that do. */
 export { ENTITY_KINDS, RELATION_KINDS } from "./entities/index.mjs";
 export { STAGE_REQUIREDNESS } from "./progressions/index.mjs";
@@ -429,16 +391,8 @@ export const CONSENT_PROMPT = `${CONSENT_STATEMENT} ${WITHDRAWAL_STATEMENT}`;
  * table, not a fallback — an op reaches `rung: null` only by being named there
  * with a ground.
  *
- * WHAT REPLACED WHAT, stated rather than quietly reworded. The header of this
- * file used to say *"CAPABILITIES.md measures 7 of 57 mutating ops with a rung
- * assigned by any document"* and this block used to say *"do not add a rung
- * without a document that assigns it"*. Both were RIGHT FOR REC-19 and both are
- * now superseded, on FW-14's own instruction to "derive rungs from what the code
- * already enforces": a rung read off a refusal the store RAISES is not a guess,
- * it is the enforcement stated. The figure 57 was also never re-measured — the
- * dispatch table declares 84 mutating ops as of this item, and it is now
- * COUNTED by the suite rather than carried in prose, which is why no number
- * appears in this comment.
+ * FW-14 superseded REC-19's "do not add a rung without a document": rungs are derived from the enforcement, and
+ * the suite counts the mutating ops rather than this comment.
  * =========================================================================== */
 
 /* THE LADDER, low to high, and it is PUBLISHED (vocabularies.rung_ladder) so a
@@ -575,6 +529,8 @@ export const JUSTIFICATION_REFUSALS = [
   /* R43 (K1805, K1807; T34-75): duties and hypotheses now answer an absent reason in their own word for it (duties' re-key,
      N608; hypotheses R2), where they answered NO_REASON; `NO_REASON` stays for the ops that still answer it. */
   "DUTY_NO_REASON", "HYPOTHESIS_NO_REASON",
+  /* R45 (tasks R15): a check's `concern` says why, refused absent or blank. */
+  "CHECK_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -1145,6 +1101,7 @@ export const RUNGS = {
 
   /* ---- R40 (T33-85): T33's ops, graded in ./affordances/t33.mjs. */
   ...T33_RUNGS,
+  ...T34_RUNGS,
 };
 
 
@@ -1343,6 +1300,7 @@ export const RUNG_ABSENT = {
   wizardprogress:       { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
   /* R40 (T33-85): T33's ops, graded in ./affordances/t33.mjs. */
   ...T33_RUNG_ABSENT,
+  ...T34_RUNG_ABSENT,
 };
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1725,7 +1683,7 @@ export const ACTS = [
      record permits the move, not that this caller's parameters will pass — while
      no longer saying it to somebody for whom NO parameter could succeed. The
      per-pair question (may this viewer publish for THIS project) is a different
-     fact and a different item, D-311, argued at NON_ACTS' roster rows below.
+     fact and a different item, D-311, recorded at NON_ACTS' participation block.
      D-311, 2026-09-23: A MACHINE IS NOW WITHHELD `publish`, AND NOT BY THIS CLAUSE. The null above
      still does not narrow here; `deriveActs` withholds every act in `MACHINE_REFUSALS` from a caller
      the store states `actor_is_machine`, because `publishCase()` refuses that class BY NAME
@@ -2117,7 +2075,7 @@ export const ACTS = [
                          && f.project_participant !== false) },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
-     existed (its argument is kept, as history, at NON_ACTS' participation block). It exists now:
+     existed (NON_ACTS' participation block records it). It exists now:
      the store states `f.roster` — the caller's position IN THIS PROJECT, asked of the `by` stamp
      the roster acts themselves receive — and each predicate below is its own act's refusal
      stated as a condition, never D-310's "owner of SOME project":
@@ -2496,55 +2454,9 @@ export const NON_ACTS = {
      caller IS (owner/participant), published today via op=projectparticipants
      and op=projectownerarith.
 
-     ── D-310, 2026-09-10 · THE SEVEN STAY, AND IT IS DECIDED HERE RATHER THAN
-        DEFERRED AGAIN. The sentence this replaces read "folding them into
-        affordances is a later item", which is a NOTE and not an item; it had
-        stood since REC-19 with nothing to pick it up. D-310 put the FIRST
-        position-gate in this file — the `publish` act now consults
-        `f.project_owner` — and gating one act while seven sit here saying
-        "position-enforced by the store" is a consequence across the act
-        catalogue rather than a line, so it is argued, not skipped. THE DECISION
-        IS THAT THEY STAY NON_ACTS; the item that folds them in is **D-311**,
-        which exists so the "later item" is a row somebody can pick up.
-
-     (1) THE TWO CASES ARE NOT THE SAME DEFECT, AND THE DIFFERENCE IS THE
-         RECORD'S OWN RANKING. `publish` was ALREADY in ACTS with an INCOMPLETE
-         derivation: it was offered to callers the store refuses, which is a
-         pre-flight claiming more than the plane will honour — the OVERCLAIM
-         class this whole record ranks above a missing feature. These seven are
-         offered by nothing at all, so no pre-flight is lying about them. A gap
-         is not a disagreement, and DEC-8 is about disagreement.
-     (2) THEY NEED A DIFFERENT FACT, AND DERIVING THEM FROM D-310's WOULD SHIP A
-         CONFUSION THE STORE ALREADY REFUSES. `project_owner` answers "does this
-         viewer own SOME project", which is right for `publish` because the
-         project is a PARAMETER of that act. Here the project IS the target, so
-         the honest fact is the PAIR — `#isProjectOwner(target, viewer)` — and
-         this module's R18 roster test measures the store refusing exactly the
-         mistake the loose fact would make: a member who owns one project,
-         acting on another they merely joined, is refused. Reusing D-310's fact
-         would offer `projectinvite` on EVERY project to anyone who owns any.
-     (3) THEY ARE SEVEN POSITIONS, NOT ONE. `projectjoin` is the INVITEE's act
-         and an invitee is by definition not an owner; `projectleave` is a joined
-         participant's; `projectremove` is an ADMINISTRATOR's (Membership
-         Architecture v2 7.7, which gives removal to administrators alone, and
-         7.7 is also why owners invite but do not remove); `projectownerrescue`
-         has a condition of its own. "Position-enforced by the store" is a
-         summary of seven different rules, and each would have to be derived
-         from the refusal its own op raises — the way every act above was.
-     (4) AND IT IS AN ADDITION WHERE D-310 WAS A NARROWING. The SET of acts this
-         file publishes is something consumers build against: putting seven new
-         acts into it is an I3 change with its own consumers to measure, and
-         pairing it with a narrowing behind one IC row would make neither
-         reviewable. IC-75 carries the narrowing alone, which is what lets a
-         consumer answer it. */
-  /* ── D-311, 2026-09-23 · THE SEVEN LEFT THIS TABLE, on the per-pair fact (2) asked for, and are
-        ACTS now (the roster block at the foot of ACTS). The argument above is KEPT as the record
-        of why they waited, with two corrections stated rather than smoothed: (3)'s "`projectremove`
-        is an ADMINISTRATOR's (… 7.7 … gives removal to administrators alone …)" is v1.4's 7.7,
-        which Membership Architecture v2 REVERSED — the store refuses a non-OWNER (`projectRemove`,
-        NOT_THE_OWNER) and the act is derived from that refusal; and (4)'s pairing worry is met by
-        the addition and the machine narrowing each being stated on its own (the report's IC
-        proposal carries both halves, classified apart). */
+     D-310 (2026-09-10) kept the seven roster acts here until a per-pair fact existed; D-311 (2026-09-23) built it
+     (`f.roster`) and moved them into ACTS (the roster block at its foot), each derived from its own op's refusal
+     (`projectremove` is an OWNER's: Membership Architecture v2 §7.7). */
   projectfork: "creates a NEW project; gated on the create_projects shape, not on the source object's state",
   /* REC-150 (Membership v2 §7.14, the request to join). NOT ACTS, and each for a reason of its own shape:
      the ASK is made at EXISTENCE sight, where no object is before the caller — op=affordances answers a project the
@@ -2919,7 +2831,13 @@ export const NON_ACTS = {
   writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R40 (T33-85): T33's ops, their reasons in ./affordances/t33.mjs. */
   ...T33_NON_ACTS,
+  ...T34_NON_ACTS,
 };
+
+/* R45 (op-declarations R21): each alias takes its op's very rung, absence and reason, so it never differs from its op. */
+Object.assign(RUNGS, aliased(RUNGS));
+Object.assign(RUNG_ABSENT, aliased(RUNG_ABSENT));
+Object.assign(NON_ACTS, aliased(NON_ACTS));
 
 /* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
  *
