@@ -54,3 +54,29 @@ What remains before COMPLETE:
 2. `uses` (architecture, 2 failures now): retrieval gains `events` and `money` (my tests load their schemas; the views read their R37/R19 contracts), and `duties` at its merge. Final uses at COMPLETE: today's list plus events, money, duties.
 
 Users of retrieval re-run (inquiry, citation, basis-versions, strength, intent, ratification, monitoring, scheduler, plane, migrate-released, query-language): all green. Red, and identically red on tranche/T33 @ 00b6cc2dd1's parent: ai-runs R18 (K1514), agent-worker `requirements.test.mjs`, actions R36/R48/R51/R52 ×5, action-clocks R10 ×3 (K1519), control-plane R22, R26, R43. None is retrieval's.
+
+## J6 · COMPLETE
+
+T33-40 complete on job/T33/retrieval (tranche/T33 @ K1585 merged in).
+
+**Entries applied** (T33-40; K1450, K1481; answers B2 = K1563, B3 = K1568, B4, B5 = K1582, B6 = K1585):
+- R68: each T33 field is named to query-language as `{table, key: "bundle_id", col: "value"}`. Route (a), a view over the owner's stated contract, created only when its tables and columns exist (re-checked when SQLite's schema version moves): `cites` (extraction's `reading_refs`), `person`/`post` (entities' `resolutions` + `entities.kind`), `event`/`occurred` (events' `event_attestations` + `event_when_cache`), `kind`/`phase`/`stage`/`basis`/`period`/`fund`/`party` (money's `money_facts` by `source_capture_sha`, withdrawn facts out), `obligor`/`owed_to` (duties' `duties` by `arising_in`, withdrawn duties out). Route (b): `bundle_terms` for `standard`/`holder`, written in the promotion's transaction and by `reproject` from the composition root's `terms` providers. Route (c): a field neither supplies is named to no relation; `searchFields` says `available`/`route`. money's closed words reach compile and `savedForm` through the `money` dep while query-language takes it injected.
+- R69: `zone()` — local-facts' governing `time_zone` for the active profiles, else their combined profile value, else none; passed in every compile's query object.
+- R70: `runSaved({form, owner, viewer, limit})` → `{ok, ids, total, truncated, limit, digest, at, warnings}`; `NOT_YOUR_QUERY` for every viewer but the owner and for an absent form, before anything runs; query-language's `savedForm` refusal passed through; writes nothing.
+- R71: `bundle_projection`, `bundles_fts`, `bundle_terms` declared derived-rebuildable (sight `bundle`), with `rebuildProjection`/`rebuildText`/`rebuildTerms`; the text index rebuilds under its held keys. `selections`, `selection_items` stored, sight `owner`, cleared only by the whole-store purge.
+
+**Deferred:** none.
+
+**Found in other modules:**
+- events R37 names the when-cache `when_cache`; its table is `event_when_cache`. Requirement wording to align (J5).
+- `bundle_projection.action_clock_overdue` is judged when the row is written, so a later `rebuildAndCompare` can differ for an action whose clock passed in between (record-core R77); equal with a pinned clock. Noted, no change (K1568 (3)).
+- plane must hand `retrievalOf(ctx, {terms: {standard, holder}})` (in plane's START, K1568 (1)), and `money` until query-language imports money itself.
+
+**Final uses:** record-grammar, jurisdictions, record-core, membership, promotion, provenance, provenance-routes, capture, extraction, content, entities, local-facts, connections, observation-log, query-language, **events, money, duties** (the three new: R68's views read their contracts; the tests load their schemas).
+
+**Tests and checks** (on HEAD after the K1585 merge):
+- retrieval: `node --test bio-plane/test/m/retrieval/` → tests 134, pass 134, fail 0.
+- users of retrieval re-run: inquiry 170/0, citation 55/0, basis-versions 127/0, strength 115/0, intent 65/0, ratification 204/0, monitoring 111/0, scheduler 66/0, plane 85/0, migrate-released 1/0, query-language 45/0. Red and identically red on tranche/T33 (not retrieval's): ai-runs R18 (K1514), agent-worker `requirements.test.mjs`, actions R36/R48/R51/R52 ×5, action-clocks R10 ×3 (K1519), control-plane R22, R26, R43.
+- `checks/format.mjs`: 0 failures. `checks/coverage.mjs retrieval`: 71 of 71 live ids named, 0 failures. `checks/ownership.mjs retrieval tranche/T33`: 7 files, 0 failures. `checks/architecture.mjs retrieval`: 3 failures, each the missing `uses` edge events, money, duties named above (K1563 (3): uses set at COMPLETE).
+
+Size (session_01KwMzevnkFWbEu7foxwDgaj): test runs 24, module lines 2681
