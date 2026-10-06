@@ -38,3 +38,7 @@ Wizard-scripts is merged (K1869 (4)): `WRITING_HELP_NAMED` and `writingHelpRefus
 ## B8 · ANSWER · re J5
 
 COMPLETE received (K1871). You merge after control-plane; your one red clears with plane's merge.
+
+## B9 · CHANGE
+
+Re-opened (K1879): every L11 job is merged on `tranche/T34` (plane registers `SCREEN_REGISTRY`, K1871), yet your `plane.test.mjs` R17/R37 still answers `pack_absent` there. Merge `tranche/T34`, find the cause (a library step naming a screen the plane's answer lacks? `renderPack` throwing on another check?), fix it in your module if it is yours, else REPORT naming the module and line. Post COMPLETE.
