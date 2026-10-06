@@ -12,7 +12,7 @@ const declared = (mode, declares, broken, fx = fixture(mode)) =>
 const checks = (res) => new Set(res.failures.map((f) => f.check));
 
 test("R9 a conforming owner passes the whole battery", () => {
-  assert.deepEqual(run(), { ok: true, failures: [], inapplicable: [] }, "without a declaration nothing is inapplicable");
+  assert.deepEqual(run(), { ok: true, failures: [] }, "without a declaration nothing is inapplicable, and no inapplicable key is stated");
 });
 
 test("R9 each rule broken is caught and named", () => {
@@ -91,9 +91,9 @@ test("R9 an owner declaring itself group-wide: the fenced arms of sight are inap
   assert.deepEqual(both.inapplicable.map((i) => i.check), ["at", "sight"]);
   assert.ok(checks(declared({ undated: true, groupWide: true }, { undated: true, group_wide: true }, "scope")).has("scope"));
   // A false declaration declares nothing.
-  assert.deepEqual(run(undefined, fixture()).inapplicable, []);
+  assert.equal(Object.hasOwn(run(undefined, fixture()), "inapplicable"), false);
   assert.deepEqual(ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(), fixture: fixture(), declares: { undated: false, group_wide: false } }),
-    { ok: true, failures: [], inapplicable: [] });
+    { ok: true, failures: [] });
 });
 
 test("R9 a malformed declaration is a failure naming why, never a throw", () => {
@@ -102,6 +102,6 @@ test("R9 a malformed declaration is a failure naming why, never a throw", () => 
     assert.equal(r.ok, false, JSON.stringify(declares));
     assert.deepEqual([...checks(r)], ["declares"]);
     assert.ok(r.failures[0].why.length > 10);
-    assert.deepEqual(r.inapplicable, []);
+    assert.equal(Object.hasOwn(r, "inapplicable"), false);
   }
 });

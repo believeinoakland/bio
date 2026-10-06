@@ -27,13 +27,14 @@ const statesDates = (v) => isObj(v) && ((v.from !== null && v.from !== undefined
 /**
  * @param {{owner: string, neighbours: Function, kinds: {kind: string, word: string, class: string}[], fixture: any,
  *   declares?: {undated?: boolean, group_wide?: boolean}}} arg
- * @returns {{ok: boolean, failures: {check: string, why: string}[], inapplicable: {check: string, why: string}[]}}
+ * @returns {{ok: boolean, failures: {check: string, why: string}[], inapplicable?: {check: string, why: string}[]}}
  */
 export function ownerConformance(arg) {
   const failures = [];
   const inapplicable = [];
   const fail = (check, why) => failures.push({ check, why });
-  const done = () => ({ ok: failures.length === 0, failures, inapplicable });
+  // The inapplicable checks are stated only when a declaration made one so; else the answer is {ok, failures} (K1733).
+  const done = () => ({ ok: failures.length === 0, failures, ...(inapplicable.length ? { inapplicable } : {}) });
   const { owner, neighbours, kinds, fixture: fx, declares } = isObj(arg) ? arg : /** @type {any} */ ({});
 
   if (declares !== undefined) {
