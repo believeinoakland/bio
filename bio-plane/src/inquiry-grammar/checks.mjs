@@ -42,8 +42,8 @@ export const LEAD_CHECKS = {
 };
 
 
-/** R7: the rows `inquiry`'s acts mint for the inquiry's own refusals, the lead row (R5) and the imported leg's (R11),
- *  by code. Named with the
+/** R7, R16: the rows `inquiry`'s acts mint for the inquiry's own refusals, the lead row (R5), the imported leg's (R11)
+ *  and the three new leg kinds' (R13–R15), by code. Named with the
  *  reserved `_CHECKS` suffix, so DEC-49 composition (control-plane's `families.mjs`) finds it as a family (K850). */
 export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,
@@ -89,5 +89,28 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
     where: 'src/inquiry-grammar/grammar.mjs importedRefusal > is-imported-leg-form',
     translation: 'A leg on another group\'s finding names that finding and one edition, and nothing else: its '
       + 'grades are that edition\'s. Correct the leg. Nothing was written.',
+  },
+  /* R16 (T33-43; K1447): the three new leg kinds' departures, all C-2.8, each refused by its own site in
+     `./grammar.mjs`. Stamped by promotion's next stamping (T34). */
+  STANDARD_LEG_AXIS: {
+    check: 'C-2.8',
+    where: 'src/inquiry-grammar/grammar.mjs standardLegRefusal > is-standard-leg-axis',
+    translation: 'A leg on a standard rests on the text of that law as the group captured it, so the only grade it '
+      + 'carries is the one that text earns. A connection, a testimony or a hunch is a different kind of claim. '
+      + 'Correct the leg. Nothing was written.',
+  },
+  CALCULATION_LEG_MALFORMED: {
+    check: 'C-2.8',
+    where: 'src/inquiry-grammar/grammar.mjs calculationLegRefusal > is-calculation-leg-form',
+    translation: 'A leg on a calculation names the calculation and nothing else: how strong it is comes from the '
+      + 'figures it was worked from, so the leg states no grade and names no part of its own. Correct the leg. '
+      + 'Nothing was written.',
+  },
+  OCCURRENCE_LEG_MALFORMED: {
+    check: 'C-2.8',
+    where: 'src/inquiry-grammar/grammar.mjs occurrenceLegRefusal > is-occurrence-leg-form',
+    translation: 'A leg on a duty\'s occurrence names the duty and that one occurrence, and nothing else: how strong '
+      + 'it is comes from the law that sets the duty and the dates that started and end it, so the leg states no '
+      + 'grade, names no part, and is not listed among the references. Correct the leg. Nothing was written.',
   },
 });

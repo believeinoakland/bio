@@ -76,6 +76,14 @@ export const CAPTURE_REQUESTS_COUNT_KEYS = Object.freeze(["captureRequests"]);
 /** R18: the two render results `capture` decides after the page was fetched, by their C-83 check (C-83.6, C-83.7). */
 const RENDER_NOT_A_PAGE_CHECK = "C-83.6";
 const RENDER_FAILED_CHECK = "C-83.7";
+/** R46 (T33-51; K1492 (2), (4)): the two kinds of site a run may judge an address to be, each captured only by a
+ *  member's own act in their own browser. */
+export const SITE_KINDS = Object.freeze(["personal", "platform"]);
+/** R46: the one sentence every MEMBER_CAPTURE_ONLY refusal carries, routing the page to the members. */
+export const MEMBER_ROUTE = "Such a page is captured only by a member's own act in their own browser (capture's member "
+  + "capture), never by the daemon: nothing was fetched, and no login is used for it on this instance's behalf.";
+/** R46: the kind of mark a member puts on a host (R41's scope record for a platform), and its one scope. */
+export const PLATFORM_KIND = "platform";
 /** R4: the fields that would make a request a capture. */
 export const CAPTURE_FIELDS = Object.freeze(["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]);
 
@@ -296,6 +304,25 @@ export class CaptureRequests {
         + `serves it.`, { render: null });
     const render = renderRaw === true ? 1 : 0;
 
+    /* R46 (T33-51; K1492 (2), (4)) — THE RUN'S JUDGEMENT OF THE SITE, under its skill's doctrine. A private person's own
+       site, or a person's page on a login-gated platform, is captured only by a member's own act in their own browser,
+       so a request naming either is refused by name and routed to the members BEFORE ANYTHING IS WRITTEN (the standing
+       row of R6 included: no answer of this door says the daemon holds such a page in hand). Absent, null or blank is an
+       ordinary public page; any other value is refused by name, never read as none. */
+    const siteRaw = args.site_kind ?? null;
+    const siteKind = typeof siteRaw === "string" ? siteRaw.trim() : siteRaw;
+    if (siteKind !== null && siteKind !== "") {
+      if (!SITE_KINDS.includes(siteKind))
+        return refusal("CAPTURE_REQUEST_SITE_KIND_UNKNOWN",
+          `site_kind=${shown(siteRaw)} is not a kind this door reads. Send site_kind: "personal" for a private `
+          + `person's own site, "platform" for a page on a platform that asks for a login, or nothing for an `
+          + `ordinary public page.`, { site_kind: null });
+      return memberCaptureOnly({ site_kind: siteKind, address,
+        detail: `${address.slice(0, 80)} was judged ${siteKind === "personal" ? "a private person's own site"
+                                                                         : "a page on a login-gated platform"}. `
+              + MEMBER_ROUTE });
+    }
+
     /* END DEC-49 REGION is-capture-request */
 
     /* R8: the PLANE principal is the caller's stamp (REC-168), the CLAUDE principal the run's: it is the account the
@@ -507,7 +534,7 @@ export class CaptureRequests {
          own vocabulary: LOOKED_INDETERMINATE, `governed` exactly when the reason is this instance's own pacing or
          renderer (D-104's split). */
       const settle = (q, { terminal, code, check, translation, detail, governed, condition, sourceReason = null,
-                           render = null, countAttempt = true, into }) => {
+                           render = null, route = null, countAttempt = true, into }) => {
         this.#sql.exec(
           `UPDATE capture_requests SET state=?, code=?, detail=?, source_reason=?, attempts=attempts+?, updated=? WHERE request=?`,
           terminal ? "refused" : "requested", code, String(detail || "").slice(0, 600), sourceReason,
@@ -520,7 +547,7 @@ export class CaptureRequests {
         (into || (terminal ? refused : held)).push({
           request: q.request, address: q.address, host: q.host, code, check: check ?? null,
           translation: translation ?? null, source_reason: sourceReason, detail: String(detail || ""),
-          ...(render ? { render } : {}) });
+          ...(render ? { render } : {}), ...(route ? { route } : {}) });
       };
 
       /* R40, K103 (3): THE SOURCE TURNED THE REQUEST AWAY, and it says why: a login, a payment, an agent it will not
@@ -615,6 +642,14 @@ export class CaptureRequests {
                         detail: why, governed: true, condition: "render-deferred", countAttempt: false,
                         render: { state: r.renderState || "deferred", content: "undetermined" } });
           }
+        } else if (r.reason === "SOURCE_REFUSED" && r.platform && sourceReasonOf(r.status).reason === "login") {
+          /* R46: a source asking a login on a host a member has marked a platform is not a refusal a supplied login
+             answers (R42 refuses its retry): the page is a member's own to capture, so the row is refused
+             MEMBER_CAPTURE_ONLY and routed to the members, R40's reason kept, the source's answer in the detail. */
+          const m = memberCaptureOnly({ detail: `the source answered HTTP ${r.status} for ${q.address} (login), and `
+                                              + `${q.host} is marked a login-gated platform. ${MEMBER_ROUTE}` });
+          settle(q, { terminal: true, code: m.code, check: m.check, translation: m.translation, detail: m.detail,
+                      sourceReason: "login", route: m.route, governed: false, condition: null, countAttempt: false });
         } else if (r.reason === "SOURCE_REFUSED" && sourceReasonOf(r.status).terminal) {
           settle(q, { ...sourceRefused(q, r), governed: false, condition: null, countAttempt: false });
         } else {
@@ -784,6 +819,10 @@ export class CaptureRequests {
                                                                      target: q.target });
         credential = c && Array.isArray(c.credentials) && c.credentials.length ? c.credentials[0] : null;
       }
+      /* R46: a supplied login never goes to a host a member has marked a login-gated platform: the daemon does not
+         sign in to such a platform on anyone's behalf (K1492 (4)). */
+      const platform = this.#platformMarked(q.host);
+      if (platform && credential && credential.kind === "login") credential = null;
       /* R39 (N262): the capture this module's own record holds of the same address and render; R38: the sweep origin,
          the target inquiry the matched scope and the run with both principals the deeming actor (capture R60, R61). */
       const held = this.#one(
@@ -817,7 +856,7 @@ export class CaptureRequests {
       const renderCode = q.render === 1 && typeof reason === "string"
         && Object.prototype.hasOwnProperty.call(RENDER_CAPTURE_CHECKS, reason) ? reason : null;
       return { ok: false, reason, status: out && Number.isFinite(Number(out.status)) ? Number(out.status) : null,
-               renderCode,
+               renderCode, platform,
                renderState: renderCode && out && out.render && (out.render.state === "waiting" || out.render.state === "deferred")
                  ? out.render.state : null,
                detail: renderCode ? String((out && out.detail) || "").slice(0, 400) : null };
@@ -1108,6 +1147,13 @@ export class CaptureRequests {
                      + "the queue. Nothing was changed." };
     }
     /* END DEC-49 REGION is-capture-request-retry */
+    /* R46: a source that asked a login on a host a member has marked a login-gated platform is not answered with a
+       supplied login: the request is the members' own to capture, and nothing is written. Asked only after the gate
+       above, so an unseen request still answers alike. */
+    if (row.source_reason === "login" && this.#platformMarked(row.host))
+      return memberCaptureOnly({ request, site_kind: PLATFORM_KIND,
+               detail: `${row.host} is marked a login-gated platform, so this request is not retried with a login. `
+                     + `${MEMBER_ROUTE} Nothing was changed.` });
     const nowMs = this.#nowMs();
     const now = stampInstant("second", nowMs);
     const expires = stampInstant("second", nowMs + CAPTURE_REQUEST_TTL_MS);
@@ -1117,6 +1163,106 @@ export class CaptureRequests {
              source_reason: row.source_reason, expires,
              detail: "back in the queue. The drain judges it again and fetches with what a member supplied for this "
                    + "request's scope, if anything." };
+  }
+
+  /* ==================================================================== *
+   * R46 — THE HOSTS A MEMBER HAS MARKED A LOGIN-GATED PLATFORM (R41's scope record, kind `platform`).
+   * ==================================================================== */
+
+  /** R46: whether a standing mark names `host` (exact, lower-cased). A read that fails answers true: a host this
+   *  module cannot say is unmarked is not signed in to. Never throws. */
+  #platformMarked(host) {
+    try {
+      const h = String(host || "").toLowerCase();
+      return !!this.#one(`SELECT 1 AS x FROM capture_request_platforms WHERE host=? AND withdrawn_at IS NULL LIMIT 1`, h);
+    } catch { return true; }
+  }
+
+  /** The person a mark is made or withdrawn by: a member's viewer stamp (`member:<id>`) or the administrator (`admin`,
+   *  or the admin class), never a machine class; else null. */
+  static #marker(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return null;
+    if (gate.member) return gate.member;
+    return viewer === "admin" || viewer === "class:admin" ? "admin" : null;
+  }
+
+  #platformRefused(detail, extra = {}) {
+    /* DEC-49 REGION is-capture-platform-mark */
+    const row = CAPTURE_REQUEST_CHECKS.CAPTURE_PLATFORM_MARK_REFUSED;
+    return { ok: false, reason: "CAPTURE_PLATFORM_MARK_REFUSED", code: "CAPTURE_PLATFORM_MARK_REFUSED", check: row.check,
+             translation: row.translation, detail, ...extra };
+    /* END DEC-49 REGION is-capture-platform-mark */
+  }
+
+  /** R46: a member marks `host` a login-gated platform, for every request (group-wide; no secret is held). A host
+   *  already marked answers its standing mark with `already: true` and writes nothing. Refused
+   *  CAPTURE_PLATFORM_MARK_REFUSED for a viewer who is not a member or the administrator, or a host that is not a bare
+   *  host name. Never throws. */
+  markPlatform(a = {}, { viewer = null } = {}) {
+    try {
+      const args = a && typeof a === "object" ? a : {};
+      const by = CaptureRequests.#marker(viewer);
+      if (!by) return this.#platformRefused("only a member, or the administrator, marks a host a platform. Nothing was written.");
+      const host = platformHost(args.host);
+      if (!host)
+        return this.#platformRefused(`'${text(args.host).slice(0, 80) || "(none)"}' is not a host name (no scheme, path, port `
+                                     + "or user part). Nothing was written.", { host: null });
+      const standing = this.#one(`SELECT * FROM capture_request_platforms WHERE host=? AND withdrawn_at IS NULL LIMIT 1`, host);
+      if (standing) return { ok: true, already: true, mark: CaptureRequests.#markEntry(standing) };
+      const nowMs = this.#nowMs();
+      const at = stampInstant("second", nowMs);
+      let mark = null;
+      for (let i = 0; i < 8 && !mark; i++) {
+        const id = `PLM-${at.replace(/[-:TZ]/g, "")}-${randomHex(6)}`;
+        if (!this.#one(`SELECT 1 AS x FROM capture_request_platforms WHERE mark=?`, id)) mark = id;
+      }
+      this.#sql.exec(`INSERT INTO capture_request_platforms (mark, host, kind, scope, marked_by, marked_at)
+                      VALUES (?, ?, ?, 'group', ?, ?)`, mark, host, PLATFORM_KIND, by, at);
+      return { ok: true, already: false,
+               mark: CaptureRequests.#markEntry(this.#one(`SELECT * FROM capture_request_platforms WHERE mark=?`, mark)) };
+    } catch {
+      return this.#platformRefused("the mark could not be written, and this plane did not record why. Nothing was written.");
+    }
+  }
+
+  /** R46: withdraws the standing mark on `host`; the row stays with who withdrew it and when. A host with no standing
+   *  mark answers `already: true` and writes nothing. Refused as `markPlatform` refuses. Never throws. */
+  unmarkPlatform(a = {}, { viewer = null } = {}) {
+    try {
+      const args = a && typeof a === "object" ? a : {};
+      const by = CaptureRequests.#marker(viewer);
+      if (!by) return this.#platformRefused("only a member, or the administrator, withdraws a platform mark. Nothing was written.");
+      const host = platformHost(args.host);
+      if (!host)
+        return this.#platformRefused(`'${text(args.host).slice(0, 80) || "(none)"}' is not a host name (no scheme, path, port `
+                                     + "or user part). Nothing was written.", { host: null });
+      const standing = this.#one(`SELECT * FROM capture_request_platforms WHERE host=? AND withdrawn_at IS NULL LIMIT 1`, host);
+      if (!standing) return { ok: true, already: true, host };
+      const at = stampInstant("second", this.#nowMs());
+      this.#sql.exec(`UPDATE capture_request_platforms SET withdrawn_at=?, withdrawn_by=? WHERE mark=?`, at, by, standing.mark);
+      return { ok: true, already: false,
+               mark: CaptureRequests.#markEntry(this.#one(`SELECT * FROM capture_request_platforms WHERE mark=?`, standing.mark)) };
+    } catch {
+      return this.#platformRefused("the withdrawal could not be written, and this plane did not record why. Nothing was written.");
+    }
+  }
+
+  /** R46: the marks, standing and withdrawn, oldest first, for any recognised viewer (they are group-wide and hold no
+   *  secret); an absent or unrecognised stamp sees none. Bounded as R23. Never throws. */
+  platformHosts({ viewer = null, limit = null } = {}) {
+    const cap = clamp(limit, CAPTURE_REQUEST_READ_LIMIT, CAPTURE_REQUEST_READ_MAX);
+    try {
+      if (viewerPredicate(viewer).scope === "DENY") return { count: 0, limit: cap, truncated: false, marks: [] };
+      const found = this.#rows(`SELECT * FROM capture_request_platforms ORDER BY marked_at, rowid LIMIT ?`, cap + 1);
+      const marks = found.slice(0, cap).map(CaptureRequests.#markEntry);
+      return { count: marks.length, limit: cap, truncated: found.length > cap, marks };
+    } catch { return { count: 0, limit: cap, truncated: false, marks: [] }; }
+  }
+
+  static #markEntry(r) {
+    return { mark: r.mark, host: r.host, kind: r.kind, scope: r.scope, marked_by: r.marked_by, marked_at: r.marked_at,
+             withdrawn_at: r.withdrawn_at ?? null, withdrawn_by: r.withdrawn_by ?? null };
   }
 }
 
@@ -1139,6 +1285,23 @@ function sweepOutOfScope(detail) {
   /* END DEC-49 REGION is-capture-sweep-scope */
 }
 
+/** R46: the one site of MEMBER_CAPTURE_ONLY (C-28.20), terminal, routing the page to the members (`route: "member"`);
+ *  the door, the drain and the retry each answer through it. `extra` rides beside the refusal's fields. */
+function memberCaptureOnly(extra = {}) {
+  /* DEC-49 REGION is-capture-member-only */
+  const row = CAPTURE_REQUEST_CHECKS.MEMBER_CAPTURE_ONLY;
+  return { ok: false, reason: "MEMBER_CAPTURE_ONLY", code: "MEMBER_CAPTURE_ONLY", check: row.check,
+           translation: row.translation, route: "member", ...extra,
+           detail: String(extra.detail || MEMBER_ROUTE) };
+  /* END DEC-49 REGION is-capture-member-only */
+}
+
+/** A host as a mark names it: a bare host name, lower-cased, no scheme, path, port or user part; else null. */
+function platformHost(v) {
+  const h = typeof v === "string" ? v.trim().toLowerCase() : "";
+  return /^(?=.{1,253}$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(h) ? h : null;
+}
+
 /** R38: the deeming actor of a requested capture's sweep origin: the run and both principals (R10), never a token. */
 function deemingActor(attribution) {
   const a = attribution && attribution.ok ? attribution : null;
@@ -1153,11 +1316,20 @@ function lookAuthority(q) {
     : { authorityKind: "sweep", authority: q && q.request ? String(q.request) : null, actorClass: "plane" };
 }
 
+/** R47 (plan T33, Rules (6); record-core R21): this module's tables with their classes, as declared at creation. */
+export const CAPTURE_REQUESTS_TABLES = Object.freeze([
+  Object.freeze({ name: "capture_requests", keys: Object.freeze(["target"]), clears: Object.freeze(["lead_inquiry"]),
+                  purge: "clear", expunge: "none", export: "admin-only", sight: "bundle", derive: "stored",
+                  version_chain: false }),
+  Object.freeze({ name: "capture_request_platforms", purge: "exempt", expunge: "none", export: "admin-only",
+                  sight: "group", derive: "stored", version_chain: false }),
+]);
+
 const instances = new WeakMap();
 
 /** K61: the one capture-requests instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read
- *  on the first call only (see the class). At creation it declares its table to record-core's purge, keyed to a bundle
- *  by `target` with `lead_inquiry` cleared (R35), registers its figure with record-core's counts (R35), and registers R28 as observation-log's `sweep` resolver (its R13, N39). */
+ *  on the first call only (see the class). At creation it declares its tables to record-core with their classes (R47),
+ *  `capture_requests` keyed to a bundle by `target` with `lead_inquiry` cleared (R35), registers its figure with record-core's counts (R35), and registers R28 as observation-log's `sweep` resolver (its R13, N39). */
 export function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
   let c = instances.get(storage);
@@ -1183,9 +1355,17 @@ export function captureRequestsOf(host, deps = {}) {
     };
     c = new CaptureRequests(storage, d);
     instances.set(storage, c);
-    /* R35: keyed to a bundle by `target` (a bundle's purge deletes its requests), and `lead_inquiry` a pointer a
-       bundle's purge clears where it names the bundle, on rows that stay (record-core R46's `clears` form, K775 (4)). */
-    record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"], clears: ["lead_inquiry"] }]);
+    /* R47, R35 (plan T33, Rules (6)): both tables declared explicitly through record-core's `declareTable` (its R21).
+       `capture_requests` keyed to a bundle by `target` (a bundle's purge deletes its requests), with the sight of the
+       inquiry it names, and `lead_inquiry` a pointer a bundle's purge clears where it names the bundle, on rows that stay
+       (record-core R46's `clears` form, K775 (4)). R46's platform marks are group-wide and hold no secret; resetting the
+       corpus does not lift them (purge-exempt), since a lifted mark would let the daemon sign in to a platform. A
+       refused declaration is thrown: a table purge cannot find would outlive the purge that claims it cleared. */
+    if (typeof record.declareTable === "function") {
+      const declared = record.declareTable(CAPTURE_REQUESTS_MODULE, CAPTURE_REQUESTS_TABLES.map((t) => ({ ...t })));
+      if (declared && declared.ok === false)
+        throw new Error(`capture-requests: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
+    }
     /* R35: the census counts it (record-core R63). A record with no seam (a test's stand-in) is not asked. */
     if (typeof record.registerCounts === "function") {
       const counted = record.registerCounts(CAPTURE_REQUESTS_MODULE, [...CAPTURE_REQUESTS_COUNT_KEYS], (hid) => c.counts(hid));
