@@ -305,6 +305,60 @@ test("R9: a document supplied later that matches a missing file's fingerprint fi
   assert.equal(carried.integrity.documents.unmatched.length, 1);
 });
 
+test("R9 R20 R11 (N599): a supplied document whose SHA-256 is a calculation input's stated hash fills that input when the case file lacks it, absent or carried with other bytes; the calculation recomputes and every finding resting on it re-checks", async () => {
+  const doc = Buffer.from(CALC_INPUT);
+  const filledRight = (r) => {
+    assert.deepEqual(r.calculations.map((c) => [c.calc, c.result, c.differs, c.missing, c.supplied]), [[CALC, "agrees", [], [], [{ input: "pay", sha256: CALC_INPUT_SHA }]]]);
+    assert.deepEqual(results(r), ALL_RECREATED);
+    assert.deepEqual(r.integrity.documents.used, [CALC_INPUT_SHA]);
+    assert.deepEqual(r.integrity.documents.unmatched, []);
+  };
+  /* absent: the manifest does not list the input at all */
+  const absent = caseFile({ withCalculation: true, dropCalcInput: true });
+  assert.equal(byId(await CC.checkCaseFile({ parts: absent.parts }))[A].result, "recreated_in_part");
+  filledRight(await CC.checkCaseFile({ parts: absent.parts, documents: [doc] }));
+  /* listed, but its part does not carry it */
+  const notCarried = caseFile({ withCalculation: true, edit: (b) => { for (const k of [...b.keys()]) if (k.includes(CALC_INPUT_SHA)) b.delete(k); } });
+  filledRight(await CC.checkCaseFile({ parts: notCarried.parts, documents: [doc] }));
+  /* carried with other bytes: the input is filled, and the carried file still reads as differing from the manifest */
+  const other = caseFile({ withCalculation: true, edit: (b) => { for (const k of [...b.keys()]) if (k.includes(CALC_INPUT_SHA)) b.set(k, Buffer.from(CALC_INPUT.replace('"60"', '"6"'))); } });
+  const otherBefore = await CC.checkCaseFile({ parts: other.parts });
+  assert.equal(otherBefore.calculations[0].result, "not_recomputed");
+  assert.equal(byId(otherBefore)[A].result, "recreated_in_part");
+  const otherAfter = await CC.checkCaseFile({ parts: other.parts, documents: [doc] });
+  filledRight(otherAfter);
+  assert.equal(otherAfter.integrity.files.find((f) => f.path.includes(CALC_INPUT_SHA)).state, "differs");
+  assert.equal(otherAfter.integrity.intact, false);
+  /* bytes that are not the input fill nothing and are named; bytes matching an input carried intact are not used */
+  const stranger = await CC.checkCaseFile({ parts: absent.parts, documents: [Buffer.from(CALC_INPUT.replace('"60"', '"61"'))] });
+  assert.equal(stranger.calculations[0].result, "not_recomputed");
+  assert.equal("supplied" in stranger.calculations[0], false);
+  assert.equal(byId(stranger)[A].result, "recreated_in_part");
+  assert.deepEqual(stranger.integrity.documents.used, []);
+  assert.match(stranger.integrity.documents.unmatched[0].detail, /matches no fingerprint this case file records as missing, and no calculation input it lacks/);
+  const intact = await check({ withCalculation: true }, { documents: [doc] });
+  assert.deepEqual([intact.integrity.documents.used, intact.integrity.documents.unmatched.map((u) => u.sha256)], [[], [CALC_INPUT_SHA]]);
+  assert.equal("supplied" in intact.calculations[0], false);
+  /* the filled input recomputes for real: a stated result it does not give differs, and the finding resting on it does not recreate */
+  const row = calcRow();
+  const wrong = await check({ withCalculation: true, dropCalcInput: true, calcRow: { results: { [row.result_key]: { value: "3", sign: "+", precision: "exact" } } } }, { documents: [doc] });
+  assert.equal(wrong.calculations[0].result, "differs");
+  assert.equal(byId(wrong)[A].result, "did_not_recreate");
+  assert.equal(byId(wrong)[C].result, "recreated");
+  /* a method version this checker does not hold: the input is filled, the calculation still not recomputed, naming the version */
+  const later = await check({ withCalculation: true, dropCalcInput: true, calcRow: { method_version: "bio-calc/9" } }, { documents: [doc] });
+  assert.equal(later.calculations[0].result, "not_recomputed");
+  assert.deepEqual(later.calculations[0].missing.map((e) => e.version), ["bio-calc/9"]);
+  assert.deepEqual(later.integrity.documents.used, [CALC_INPUT_SHA]);
+  /* one document filling a missing file and the input together, each named once; R16: the same arguments, the same answer */
+  const both = caseFile({ withCalculation: true, dropCalcInput: true, edit: (b) => b.delete(CG.caseFilePath("document", MINUTES)) });
+  const args = { parts: both.parts, documents: [Buffer.from(MINUTES_BYTES), doc, doc] };
+  const r = await CC.checkCaseFile(args);
+  assert.deepEqual(results(r), ALL_RECREATED);
+  assert.deepEqual(r.integrity.documents.used, [sha(MINUTES_BYTES), CALC_INPUT_SHA]);
+  assert.equal(canonicalJson(r), canonicalJson(await CC.checkCaseFile(args)));
+});
+
 test("R10: the carried complete edition equals the one the rest of the case file renders; a different one differs for the case", async () => {
   const r = await check();
   assert.equal(r.complete_edition.equal, true);

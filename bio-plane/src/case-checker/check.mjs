@@ -5,7 +5,7 @@
  * the integrity of every part and file (R2), the signatures and attestations (R3), the passages (R4), each grade
  * recomputed at the stated method version (R5), the bar (R6), the publication checks (R7), presentability (R8),
  * completion by documents supplied later (R9), the complete edition (R10) and each calculation recomputed by
- * `calc-grammar`'s evaluator (R20), composed into one result per finding (R11). It is built only from pure code: `case-grammar`'s format, `ratification`'s case-document checks
+ * `calc-grammar`'s evaluator (R20), composed into one result per finding (R11). It is built only from pure code: `case-grammar`'s format, `case-catalogue`'s case-document checks
  * (`checks.mjs`), `strength`'s method (`method.mjs`), `content`'s extent grammar, `signatures`' verifier and
  * `calc-grammar`'s evaluator, so the
  * standalone program (R13) is this file and those, bundled. It reads nothing but its arguments, writes nothing, makes
@@ -22,7 +22,7 @@ import { verifySshsig, ratifyStatement, caseRatifyStatement, captureAccountState
          parseSshsig } from "../sshsig.mjs";
 import { contentIdFor, extentRelation } from "../content/extent.mjs";
 import { recomputePair, GRADING_METHOD_VERSIONS } from "../strength/method.mjs";
-import { checkCaseDocument } from "../ratification/checks.mjs";
+import { checkCaseDocument } from "../case-catalogue/checks.mjs";
 import { caseFileManifestCheck, caseFileEntryOf, casePartDigest, CASE_FILE_MANIFEST_PATH, methodOf, materialsOf,
          acceptedWorkOf, standingOf, completeEditionOf, gradingFactsOf, passagesOf, GRADING_FACT_FIELDS,
          PASSAGE_FIELDS, calculationsOf, calculationFileText, provOf, CASE_FILE_PROV_PATH } from "../case-grammar/index.mjs";
@@ -266,19 +266,16 @@ async function check({ parts, documents = [], keys = null }) {
   for (const d of read.departures) caseLevel.differs.push(entry("integrity", "case file", d));
   for (const f of files) if (f.state === "differs") f.entry = entry("integrity", f.path, f.detail, { sha256: f.sha256 });
 
-  /* R9: bytes supplied later fill a gap when their SHA-256 is a missing file's recorded fingerprint. */
-  const used = [], unmatched = [];
+  /* R9: bytes supplied later fill a gap when their SHA-256 is a missing file's recorded fingerprint, or a calculation
+     input's stated SHA-256 that the case file lacks (R20 settles that below, so which documents were used is answered
+     after the calculations). */
+  const supplied = [];
   for (const d of Array.isArray(documents) ? documents : []) {
     const b = asBytes(d);
-    if (!b) { unmatched.push({ sha256: null, bytes: null, detail: "a supplied document is not bytes, so it was not used" }); continue; }
-    const sha = shaOf(b);
-    const gaps = files.filter((f) => f.state === "missing" && f.sha256 === sha);
-    if (!gaps.length) {
-      unmatched.push({ sha256: sha, bytes: b.length, detail: `a supplied document (SHA-256 ${sha}) matches no fingerprint this case file records as missing, so it was not used` });
-      continue;
-    }
-    for (const g of gaps) { g.state = "supplied"; g.content = b; }
-    if (!used.includes(sha)) used.push(sha);
+    if (!b) { supplied.push({ sha: null, bytes: null, used: false }); continue; }
+    const doc = { sha: shaOf(b), bytes: b, used: false };
+    supplied.push(doc);
+    for (const g of files.filter((f) => f.state === "missing" && f.sha256 === doc.sha)) { g.state = "supplied"; g.content = b; doc.used = true; }
   }
   const fileOf = (kind, key, value) => files.find((f) => f.kind === kind && (key === null || f[key] === value)) || null;
   const filesOf = (kind) => files.filter((f) => f.kind === kind);
@@ -501,7 +498,13 @@ async function check({ parts, documents = [], keys = null }) {
   }
 
   /* ---------------------------------------------------------- R20: the calculations */
-  const calculations = fm ? recomputeCalculations(fm, files) : [];
+  const calculations = fm ? recomputeCalculations(fm, files, supplied) : [];
+  const used = [], unmatched = [];
+  for (const doc of supplied) {
+    if (doc.sha === null) unmatched.push({ sha256: null, bytes: null, detail: "a supplied document is not bytes, so it was not used" });
+    else if (!doc.used) unmatched.push({ sha256: doc.sha, bytes: doc.bytes.length, detail: `a supplied document (SHA-256 ${doc.sha}) matches no fingerprint this case file records as missing, and no calculation input it lacks, so it was not used` });
+    else if (!used.includes(doc.sha)) used.push(doc.sha);
+  }
   /* R2, R20: the calculations' PROV-O rendering, when carried, is what `case-grammar` R19 renders from the signed rows. */
   const provFile = files.find((f) => f.path === CASE_FILE_PROV_PATH) || null;
   if (fm && provFile && provFile.content && textOf(provFile.content) !== provOf(calculationsOf(fm)))
@@ -693,8 +696,10 @@ const dedupe = (list) => { const seen = new Set(); return list.filter((e) => { c
 const BIO_CALC = /^bio-calc\/\d+$/;
 
 /** R20: each calculation recomputed by `calc-grammar.evaluate` over the inputs the case file carries, at the method version
- *  its row states. Answers `[{calc, result, differs[], missing[], disclosed?, statement?}]`. Pure; never throws. */
-function recomputeCalculations(fm, files) {
+ *  its row states. An input the case file lacks (absent, or carried with other bytes) is filled by a supplied document
+ *  whose SHA-256 is the input's stated one (R9), which is then marked used and named in the answer's `supplied`.
+ *  Answers `[{calc, result, differs[], missing[], supplied?, disclosed?, statement?}]`. Pure; never throws. */
+function recomputeCalculations(fm, files, supplied = []) {
   const out = [];
   for (const row of calculationsOf(fm)) {
     const calc = str(row.calc) || String(row.calc ?? "");
@@ -711,6 +716,22 @@ function recomputeCalculations(fm, files) {
       out.push({ ...a, result: "not_recomputed", statement: NOT_RECOMPUTED_STATEMENT });
       continue;
     }
+    /* Each input's bytes: the carried file's when they are the bytes its hash names, else a supplied document's (R9). */
+    const hashes = isObj(row.inputs) ? row.inputs : null;
+    const inputBytes = {}, filled = [];
+    for (const [name, sha] of Object.entries(hashes || {})) {
+      const f = sha ? files.find((x) => x.kind === "calculation" && x.input === sha && x.calc === calc)
+        || files.find((x) => x.kind === "calculation" && x.input === sha) : null;
+      const b = f && f.content ? f.content : null;
+      if (b && shaOf(b) === sha) {
+        if (f.state === "supplied") filled.push({ input: name, sha256: sha });    /* a listed file a document filled above */
+        inputBytes[name] = { bytes: b, file: f }; continue;
+      }
+      const doc = sha ? supplied.find((s) => s.sha === sha) : null;
+      if (doc) { doc.used = true; filled.push({ input: name, sha256: sha }); inputBytes[name] = { bytes: doc.bytes, file: f }; }
+      else inputBytes[name] = { bytes: null, file: f };
+    }
+    if (filled.length) a.supplied = filled;
     const held = [version ?? recipeMethod, recipeMethod].find((v) => v !== CALC_METHOD) ?? null;
     if (held !== null) {
       missing.push(entry("calculation", calc, `calculation ${calc} was computed by calculation method ${held}, which this checker does not hold (it holds ${CALC_METHOD})`, { calc, version: held }));
@@ -722,14 +743,11 @@ function recomputeCalculations(fm, files) {
     const rf = files.find((f) => f.kind === "calculation" && f.calc === calc && !f.input) || null;
     if (rf && rf.content && textOf(rf.content) !== calculationFileText(row))
       differs.push(entry("calculation", calc, `calculation ${calc}'s carried file is not the row the signed case document states`, { calc }));
-    const hashes = row.inputs;
     if (!hashes) { differs.push(entry("calculation", calc, `calculation ${calc}'s inputs cannot be read`, { calc })); out.push(settle(a, disclosed)); continue; }
     const bound = {};
     for (const [name, sha] of Object.entries(hashes)) {
-      const f = sha ? files.find((x) => x.kind === "calculation" && x.input === sha && x.calc === calc)
-        || files.find((x) => x.kind === "calculation" && x.input === sha) : null;
-      const b = f && f.content ? f.content : null;
-      if (!b || shaOf(b) !== sha) {
+      const { bytes: b, file: f } = inputBytes[name];
+      if (!b) {
         missing.push(entry("calculation", calc, `input ${name} of calculation ${calc} is not carried${f && f.state === "differs" ? " as the bytes its hash names" : ""}; fetch the file whose SHA-256 is ${sha}`, { calc, input: name, sha256: sha }));
         continue;
       }
