@@ -16,3 +16,7 @@ K1601: both readings accepted. capture-sources' export never is N577 (next tranc
 ## B3 · CHANGE
 
 K1610 (P9, from AI-RUNS #10): ai-runs R52 now refuses an open whose run member has no connected account (AI_NO_ACCOUNT). Your plane.test.mjs opens as RUTH with none (line 74): R30; R16 R31 R14; R19 R42 R38; R14 (N295). When ai-runs merges, merge tranche/T33, connect the opener's account (credentials' accountReferenceSet) and name the member in those tests; run; COMPLETE. You may prepare it now against job/T33/ai-runs.
+
+## B4 · CHANGE
+
+K1612: ai-runs is merged into tranche/T33; apply B3 now (connect the opener's account in plane.test.mjs ×4), run, COMPLETE.
