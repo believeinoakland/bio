@@ -446,3 +446,8 @@ PR believeinoakland/bio#12 (branch `claude/gallant-brown-zg0wc1`, head 0cad77686
 
 ## U73 · QUESTION · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
 Installer R16 shows the founder the member and probe credentials once. The installer mockup (29e7efdc18) now says, in a founder's words: probe key, "Lets a monitoring service check that your group's Civicsmith is running. It reaches only a separate test store, never your group's records" (admission R4: `probe` lands in `scratch`); member key, "Gives a program a member's access to your group's shared work. Keep it as safe as the password; anyone holding it can read what members read" (admission R5). Are both right? And does a founder need to see `MEMBER_TOKEN` at all (who uses it, after membership's sessions)? If not, R16 could drop it and the installer shows one key fewer. Your answer, or a correction to either sentence, is enough; I fold it.
+
+## U74 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-150 (Bob's direction): a group whose place is not held may name it at setup (optional free text, kept in its own Civicsmith, administrators only, never sent anywhere); the offices section says nothing is filled in because the place is not held yet and offers adding offices by hand (`entitycreate`, marked as the group's); when an installed update brings a held profile covering the named place, administrators get one Status item in the queue and choose it under Places; offices the group added stay.
+- Owed (BOB): instance-setup's named place and the queue item; the op behind the registry's `owed:placewanted DEC-150`.
+Also with Bob: S5 (whether a group may write its own place's rules); not for you until he answers.
