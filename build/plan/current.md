@@ -10,7 +10,7 @@
 
 | legacy module (`modules.json`) | in T33 | entry or hard reason |
 |---|---|---|
-| **legacy-ui** (`civicos-ui/`) | stays | Bob's (UX): K633; design paused (K1475). Its half of §7 item 8 (`app.html:19983` sends `{state:"named", name}`) goes to UX-DESIGN by NOTICE; `actions` (T33-61) makes the refusal reach the caller visibly. |
+| **legacy-ui** (`civicos-ui/`) | stays | Bob's (UX): K633; design paused (K1475). Its half of §7 item 8 (`app.html:19983` sends `{state:"named", name}`) goes to UX-DESIGN by NOTICE; `actions` (T33-73) makes the refusal reach the caller visibly. |
 
 **Measured GO (K1506).** Every conditional row reads GO and is in T33 with its conditions: `sheet-worker` ships inactive until the release, builds its own IronCalc wasm with the `xlsx` feature, holds a size and time limit, refuses external links, and records a failed workbook as "not recomputed here", never as a gate; `court-doctypes` reads the CourtListener docket page and the CPUC card, takes Alameda eCourt only as a member's own capture (K1492) with its row shape provisional, and keys the row diff per register; `court-citations` translates reporters-db and courts-db (BSD-2) to JS at build; `budget-doctypes` reads ACFRs from their text layer and budget books with chart labels skipped and image tables through the OCR path or marked unread.
 
@@ -67,7 +67,7 @@
 9. **Accepted reds, by name, at the opening:**
    1. Coverage: every id marked `*(not yet met: T33)*`, until its module's merge.
    2. membership's R83 test (`module-order.test.mjs`), for each module listed but not yet built, until that module's job merges.
-   3. case-checker R13's program SHA test, until case-checker's job (T33-73) regenerates `program.mjs` after case-grammar's (S0-12, C:A-12).
+   3. case-checker R13's program SHA test, until case-checker's job (T33-66) regenerates `program.mjs` after case-grammar's (S0-12, C:A-12).
    4. Importers of a copy-split's source read through its re-export until they are re-pointed. The source's deletion job then removes the copy (docprofile, inquiry, publication, agent-worker).
    5. The UI's DEC-88 tests (Bob's), carried.
 
@@ -83,7 +83,7 @@
 **L8** · 10 jobs. Merge order: case-grammar first (C:A-12, the timeline shape), corpus-export, **case-tensions before publication** (the copy before the deletion), docket after publication, then public-read, case-checker, case-import, case-disclosures, case-authoring.
 **L9** · 8 jobs, `modules.json` order: conformance → consequences → action-grammar → actions → action-clocks → filings → escalation → action-plans.
 **L10** · 3 jobs: monitoring → following → scheduler (scheduler registers the new consumers, so it merges last).
-**L11** · 11 jobs: queue-producers → notice-producers → queue first; then wizard-scripts, affordances, tasks, instance-setup, op-declarations; then control-plane; plane; installer last.
+**L11** · 11 jobs: queue-producers → notice-producers → wizard-scripts, affordances, tasks → queue (it uses tasks and affordances; K1594) → instance-setup, op-declarations; then control-plane; plane; installer last.
 
 ## Entries
 
