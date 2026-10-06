@@ -1,7 +1,8 @@
 /* calculations: the registrations it fills (R19, R20) and the machine's patterns (R22, R23). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, R } from "./fixture.mjs";
+import { seeded, world, V, MACHINE, R } from "./fixture.mjs";
+import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { PATTERNS, GATE_MAX_RATE } from "../../../src/calculations/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -49,8 +50,15 @@ test("R19 at start it registers with duties.registerOccurrenceEvidence; asked {d
 
 test("R20 at start it registers with people.registerRosterSource: for an organisation and a date it answers the rows of tables with roster roles valid at that date, by person key, with the table's sha, and reads no row into a line", async () => {
   const w = seeded();
-  assert.deepEqual(w.people.sources.map((s) => s.module), ["calculations"]);
-  const source = w.people.sources[0].fn;
+  /* asked through people's own read (its R18), which calls each registered roster source synchronously */
+  const source = ({ organisation, at, viewer = V("carol") }) => {
+    const st = w.people.staffingAt({ organisation, at, viewer });
+    assert.equal(st.ok, true, JSON.stringify(st).slice(0, 300));
+    const mine = st.rosters.filter((x) => x.source === "calculations");
+    assert.equal(mine.length, 1, "registered once, at start");
+    assert.equal(mine[0].level, "held as a table, read by calculations");
+    return mine[0].answer;
+  };
   const fields = [{ name: "person", type: "string" }, { name: "org", type: "string" }, { name: "post", type: "string" }];
   const pw = w.entity("Public Works", "body"), lib = w.entity("Library", "body");
   const cw = await w.table(`code,entity\nPW,${pw}\nLIB,${lib}\n`, [{ name: "code", type: "string" }, { name: "entity", type: "string" }],
@@ -60,12 +68,12 @@ test("R20 at start it registers with people.registerRosterSource: for an organis
   const b = await w.table("person,org,post\nP009,PW,Director\n", fields, { roles, vintage: { key: "roster", valid: { from: "2026-01-01", to: "2026-12-31" } } });
   const c = await w.table("person,org,post\nP010,PW,Intern\n", fields, { roles });
   const lines = w.count("calc_tables");
-  const r = await source({ organisation: pw, at: "2025-06-01", viewer: V("carol") });
+  const r = source({ organisation: pw, at: "2025-06-01" });
   assert.deepEqual(r.rows.map((x) => [x.person_key, x.post, x.table]), [["P001", "Director", a.sha], ["P003", "Engineer", a.sha]]);
   assert.deepEqual(r.tables, [a.sha], "the table valid at that date, by its sha; the later vintage is not read");
   assert.ok(r.not_read.some((x) => x.table === c.sha && /no vintage/.test(x.why)), "a table stating no vintage is not read, and says why");
   assert.ok(r.not_read.some((x) => x.table === a.sha && x.row === 3), "an organisation value that resolves to none is stated");
-  assert.equal((await source({ organisation: pw, at: "2026-03-01" })).rows[0].table, b.sha);
+  assert.equal(source({ organisation: pw, at: "2026-03-01" }).rows[0].table, b.sha);
   assert.equal(w.count("calc_tables"), lines, "no row is read into a line, nor anything written");
   assert.match(r.says, /never copied into lines/);
 });
@@ -130,6 +138,14 @@ test("R22 the shipped, data-defined patterns (sequence anomalies, lateness per o
   assert.deepEqual(office.map((o) => [o.subject, o.value.share_met_late.numerator.value, o.value.share_met_late.denominator.value]), [[L.office, "1", "3"]]);
   const proc = of("proceeding_lateness");
   assert.deepEqual(proc.map((o) => [o.subject, o.value.share_met_late.numerator.value, o.value.share_met_late.denominator.value]), [[L.proceeding, "1", "2"]]);
+  /* the flow pattern over the real progressions (merged): its feed's shape read as is; none threaded, none counted */
+  const real = world({ construct: false });
+  const prog = progressionsOf(real.host, { record: real.record, entities: real.entities, events: real.events, standards: real.standards });
+  if (typeof prog.migrate === "function") prog.migrate();
+  real.c = real.build({ progressions: prog });
+  await real.c.runPatterns({ budgetMs: 100000 });
+  const run = real.rows(`SELECT denominator_json FROM calc_pattern_runs WHERE pattern='flow_out_of_order'`).map((r) => JSON.parse(r.denominator_json));
+  assert.deepEqual(run.map((d) => d.n), [0], "the real feed, with no instance threaded: a denominator of none, no result");
   /* every run is recorded with its denominator */
   assert.equal(new Set(w.rows(`SELECT pattern FROM calc_pattern_runs`).map((r) => r.pattern)).size, 5);
 });

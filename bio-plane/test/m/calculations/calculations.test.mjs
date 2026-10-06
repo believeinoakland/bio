@@ -1,7 +1,7 @@
 /* calculations: creating, evaluating, accepting, recomputing and reading a calculation (R4–R11). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, R } from "./fixture.mjs";
+import { seeded, V, MACHINE, R, saved } from "./fixture.mjs";
 import { resultKey, METHOD } from "../../../src/calc-grammar/index.mjs";
 import { INPUT_CHANGED, RECOMPUTE_STATES } from "../../../src/calculations/index.mjs";
 
@@ -105,9 +105,9 @@ test("R5 every share or ratio carries its denominator; a compare is labelled a c
   assert.match(sel.results.says, /counted apart/);
   /* an input out of view at evaluation: members of a frozen set the evaluator may not see */
   const P = w.project("Closed", "alice");
-  const seen = w.document("seen doc"), hidden = w.document("hidden doc", { project: P });
-  w.retrieval.saved.set("contracts", { owner: V("alice"), ids: [seen.bundleId, hidden.bundleId] });
-  const set = await w.c.freezeSet({ query: "contracts", by: V("alice") });
+  w.document("seen doc", { title: "Quokka contract" }); w.document("hidden doc", { project: P, title: "Quokka contract" });
+  const set = await w.c.freezeSet({ query: saved("quokka"), by: V("alice") });
+  assert.equal(set.n, 2, "alice's saved query answers both, under her sight");
   const n = await w.c.evaluate({ inputs: [{ name: "s", set: set.set }], recipe: R([{ op: "count", from: "s", as: "n" }], "n", [{ name: "s", kind: "table" }]), viewer: V("carol") });
   assert.equal(n.results.output.value, "1");
   assert.deepEqual(n.results.out_of_view.map((o) => o.count), [1], "one member out of view, stated, never as zero");

@@ -15,6 +15,10 @@ import { eventsOf } from "../../../src/events/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
 import { dutiesOf } from "../../../src/duties/index.mjs";
+import { peopleOf } from "../../../src/people/index.mjs";
+import { linesOf } from "../../../src/lines/index.mjs";
+import { retrievalOf } from "../../../src/retrieval/index.mjs";
+import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -76,30 +80,6 @@ const SHEET_CHAIN = [{ step: "layer", tier: 1, container: "xlsx", cap: null, mea
 
 const tail = (n) => String(n).padStart(16, "0").replace(/^0/, "a").slice(0, 16);
 
-/** retrieval (its R70): `runSaved({form, owner, viewer})` over answers the test holds. */
-export function retrievalProvider() {
-  const saved = new Map();
-  return { saved,
-    runSaved({ form, owner, viewer }) {
-      if (viewer !== owner) return { ok: false, reason: "NOT_YOUR_QUERY", detail: "no such saved query" };
-      const s = saved.get(typeof form === "string" ? form : JSON.stringify(form));
-      if (!s || s.owner !== owner) return { ok: false, reason: "NOT_YOUR_QUERY", detail: "no such saved query" };
-      return { ok: true, ids: s.ids, total: s.ids.length, truncated: !!s.truncated, digest: sha(JSON.stringify(s.ids)), at: NOW };
-    } };
-}
-
-/** people (its R19): `registerRosterSource(module, source)`. */
-export function peopleProvider() {
-  const sources = [];
-  return { sources,
-    registerRosterSource(module, source) {
-      const r = listenerRefusal(sources, module, source);
-      if (r) return r;
-      sources.push({ module, fn: source });
-      return { ok: true };
-    } };
-}
-
 /** progressions (its R18, R38): the feed the test holds. */
 export function progressionsProvider() {
   const feed = { instances: [] };
@@ -134,6 +114,11 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   const prov = content.provenance;
   prov.migrate();
   content.migrate();
+  /* retrieval, real (K1593), built before any document is promoted so its projection follows every promotion */
+  const obs = observationLogOf(host);
+  if (typeof obs.migrate === "function") obs.migrate();
+  const retrieval = retrievalOf(host, { record, membership, promotion, extraction });
+  if (typeof retrieval.migrate === "function") retrieval.migrate();
   if (profiles !== null) record.setSetting("jurisdiction_profiles", profiles, "admin");
   /* entities, events and standards are the real modules (merged, K1576, K1578); the rest are providers until their merges. */
   const entities = entitiesOf(host, { record, membership, provenance: prov });
@@ -156,8 +141,11 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   };
   const duties = dutiesOf(host, { record, membership, entities, standards, events, money: realMoney, provenance: prov, content, now: () => clock.now });
   if (typeof duties.migrate === "function") duties.migrate();
-  const retrieval = retrievalProvider(), people = peopleProvider(),
-    progressions = progressionsProvider();
+  const lines = linesOf(host, { record });
+  if (typeof lines.migrate === "function") lines.migrate();
+  const people = peopleOf(host, { record, membership, entities, provenance: prov, content, events, money: realMoney, duties, lines });
+  if (typeof people.migrate === "function") people.migrate();
+  const progressions = progressionsProvider();
   const deps = { record, membership, content, provenance: prov, money, entities, standards, retrieval, duties, people, events,
     progressions, now: () => clock.now, clock: () => clock.ms };
   const build = (extra = {}) => calculationsOf(host, { ...deps, ...extra });
@@ -182,11 +170,11 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
     },
     /** A captured document holding `bytes`, filed in `project` when given; its capture recorded as fetched directly
      *  when `direct` (capture grade B, provenance R24). */
-    document(bytes, { project = null, direct = true } = {}) {
+    document(bytes, { project = null, direct = true, title = null } = {}) {
       const name = `doc${++n}`;
       const capSha = sha(bytes), id = `INFO-2026-${String(n).padStart(4, "0")}-${name}`;
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${n}`, author: V("bob"),
-        files: [{ path: "bundle.md", text: infoMd(id, project) }, Buffer.byteLength(bytes) > 400000 ? { path: `snapshots/${name}.csv`, blobSha: capSha, bytes: Buffer.byteLength(bytes) } : { path: `snapshots/${name}.csv`, text: bytes },
+        files: [{ path: "bundle.md", text: infoMd(id, project, title) }, Buffer.byteLength(bytes) > 400000 ? { path: `snapshots/${name}.csv`, blobSha: capSha, bytes: Buffer.byteLength(bytes) } : { path: `snapshots/${name}.csv`, text: bytes },
                 { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(`snapshots/${name}.csv`, capSha, bytes)] }) }],
         meta: { object_type: "information", ...(project ? { project } : {}) },
         register: [{ sha256: capSha, path: `snapshots/${name}.csv`, encoding: "utf8", bytes: Buffer.byteLength(bytes) }] });
@@ -326,11 +314,14 @@ export function seeded(opts) {
   return w;
 }
 
+/** A saved-query form (query-language R30) over titles holding `word`, as retrieval's runSaved takes one. */
+export const saved = (word) => ({ v: 1, q: `title:${word}` });
+
 /** A recipe in calc-grammar's grammar over one table input `t`. */
 export const R = (steps, output, inputs = [{ name: "t", kind: "table" }]) => ({ method: "bio-calc/1", inputs, steps, output });
 
-function infoMd(id, project) {
-  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
+function infoMd(id, project, title) {
+  return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "${title || `Document ${id}`}"`,
           "current_state: collected", "prior_state: null", ...(project ? [`project: ${project}`] : []), `created: "2026-09-27T00:00:00Z"`,
           `last_updated: "2026-09-27T00:00:00Z"`, "references: []", "state_history: []", "criticality: supporting",
           "---", "", "## Summary", "", "A document.", ""].join("\n");

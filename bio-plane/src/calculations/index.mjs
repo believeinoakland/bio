@@ -65,6 +65,7 @@ const CALC_RE = idPattern("CALC");
 const MONEY_RE = idPattern("MNY");
 const READ_LIMIT_MAX = 1000;
 const TABLE_CACHE = 8;
+const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -321,6 +322,9 @@ export class Calculations {
         tableSha, row.bundle_id ?? null, json({ content_id: contentId, capture_sha: row.capture_sha, extent_kind: row.extent_kind }),
         json(schema), json(names), roles ? json(roles) : null, vintage ? vintage.key.trim() : null, vintage ? json(vintage) : null,
         built.rows, bytes.byteLength, json(built.undetermined), built.count, by, at);
+      const text = new TextDecoder().decode(bytes);
+      for (let k = 0, i = 0; i < text.length; k++, i += TEXT_CHUNK)
+        this.sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?,?,?,?)`, tableSha, k, row.bundle_id ?? null, text.slice(i, i + TEXT_CHUNK));
       if (superseded) {
         this.sql.exec(`UPDATE calc_tables SET superseded_by=? WHERE sha=? AND superseded_by IS NULL`, tableSha, superseded);
         this.#stale(superseded, "table_superseded");
@@ -340,21 +344,10 @@ export class Calculations {
   }
 
   /* A held table's rows as calc-grammar reads them, from the evidence store (cached). */
-  async #grammarTable(tableSha) {
-    if (this.#tableCache.has(tableSha)) {
-      const t = this.#tableCache.get(tableSha);
-      this.#tableCache.delete(tableSha); this.#tableCache.set(tableSha, t);
-      return t;
-    }
-    const r = this.#one(`SELECT schema_json, header_json FROM calc_tables WHERE sha=?`, tableSha);
-    if (!r) return null;
-    const ev = this.record.evidenceStore();
-    let text = null;
-    try {
-      const obj = ev ? await ev.get(tableSha) : null;
-      if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
-    } catch { text = null; }
-    if (typeof text !== "string" || shaOf(text) !== tableSha) return null;
+  /* A held table's rows from its text (calc-grammar's table shape), or null. */
+  #fromText(tableSha, text) {
+    const r = this.#one(`SELECT schema_json FROM calc_tables WHERE sha=?`, tableSha);
+    if (!r || typeof text !== "string" || shaOf(text) !== tableSha) return null;
     const fields = parse(r.schema_json).fields;
     const names = fields.map((f) => f.name);
     const rows = [];
@@ -365,12 +358,35 @@ export class Calculations {
       for (let k = 0; k < names.length; k++) o[names[k]] = row[k] ?? "";
       rows.push(o);
     });
-    text = null;
     if (sc.error) return null;
     const t = { ...asGrammarTable(fields, []), rows };
     this.#tableCache.set(tableSha, t);
     while (this.#tableCache.size > TABLE_CACHE) this.#tableCache.delete(this.#tableCache.keys().next().value);
     return t;
+  }
+
+  /* A held table's rows, synchronously: the cache, else the record's chunked copy of its canonical bytes. */
+  #grammarTableSync(tableSha) {
+    if (this.#tableCache.has(tableSha)) {
+      const t = this.#tableCache.get(tableSha);
+      this.#tableCache.delete(tableSha); this.#tableCache.set(tableSha, t);
+      return t;
+    }
+    const chunks = this.#rows(`SELECT chunk FROM calc_table_bytes WHERE sha=? ORDER BY seq`, tableSha);
+    return chunks.length ? this.#fromText(tableSha, chunks.map((c) => c.chunk).join("")) : null;
+  }
+
+  /* A held table's rows: synchronously when held so, else from the evidence store (its bytes, checked by their sha). */
+  async #grammarTable(tableSha) {
+    const t = this.#grammarTableSync(tableSha);
+    if (t) return t;
+    const ev = this.record.evidenceStore();
+    let text = null;
+    try {
+      const obj = ev ? await ev.get(tableSha) : null;
+      if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
+    } catch { text = null; }
+    return this.#fromText(tableSha, text);
   }
 
   /** R1: `readTable({sha, viewer, limit?, after?})`: the table's declaration and a page of its rows. A table whose
@@ -1118,18 +1134,19 @@ export class Calculations {
   }
 
   /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk. */
-  async #resolveParty(spec, value) {
+  #resolveParty(spec, value) {
     if (!value || !String(value).trim()) return { why: "the cell is empty" };
     const entities = this.dep("entities");
     if (spec.scheme) {
       let e = null;
-      try { e = entities ? await entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
+      try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
+      if (e && typeof e.then === "function") e = null;
       if (plain(e) && e.undetermined) return { why: `"${String(value).slice(0, 64)}" through the scheme ${spec.scheme} is undetermined: ${e.why || "more than one entity"}` };
       const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
       return id ? { entity: id } : { why: `"${String(value).slice(0, 64)}" resolves to no registered entity through the scheme ${spec.scheme}` };
     }
     if (spec.crosswalk) {
-      const t = await this.#grammarTable(spec.crosswalk.table);
+      const t = this.#grammarTableSync(spec.crosswalk.table);
       const hit = t ? t.rows.filter((r) => String(r[spec.crosswalk.from]).trim() === String(value).trim()).map((r) => String(r[spec.crosswalk.to]).trim()) : [];
       const ids = [...new Set(hit)];
       if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
@@ -1162,15 +1179,15 @@ export class Calculations {
     for (const i of picked) {
       const row = t.rows[i];
       if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-      const payer = await this.#resolveParty(declared[roles.payer] || {}, row[roles.payer]);
+      const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer]);
       if (!payer.entity) { notWritten.push({ row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why }); continue; }
-      const payee = await this.#resolveParty(declared[roles.payee] || {}, row[roles.payee]);
+      const payee = this.#resolveParty(declared[roles.payee] || {}, row[roles.payee]);
       if (!payee.entity) { notWritten.push({ row: i, reason: "PAYEE_NOT_IDENTIFIED", detail: payee.why }); continue; }
       let fund = null;
       if (typeof roles.fund === "string" && String(row[roles.fund] ?? "").trim()) {
         const spec = declared[roles.fund] || {};
         const raw = String(row[roles.fund]).trim();
-        const r = spec.scheme || spec.crosswalk ? await this.#resolveParty(spec, raw)
+        const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw)
           : idPattern("ENT").test(raw) ? { entity: raw } : { why: `"${raw.slice(0, 64)}" names no registered fund; declare the fund column's scheme or crosswalk` };
         if (!r.entity) { notWritten.push({ row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why }); continue; }
         fund = r.entity;
@@ -1304,8 +1321,9 @@ export class Calculations {
   }
 
   /** R20: `people.registerRosterSource`'s answer for an organisation and a date: the rows of tables with roster roles
-   *  whose vintage is valid at that date, by person key, with the table's sha. No row is read into a line. Async. */
-  async rosterRows({ organisation = null, at = null, viewer = null } = {}) {
+   *  whose vintage is valid at that date, by person key, with the table's sha. No row is read into a line. Synchronous,
+   *  as people asks it (its R18). */
+  rosterRows({ organisation = null, at = null, viewer = null } = {}) {
     if (!str(organisation) || !(typeof at === "string" && isCalendarDate(at.slice(0, 10)))) return { rows: [], tables: [], not_read: [], why: "an organisation and a date are needed" };
     const day = at.slice(0, 10);
     const view = this.#view();
@@ -1321,13 +1339,13 @@ export class Calculations {
       if (v) { try { a = validAt({ valid: { from: v.valid.from ?? null, to: v.valid.to ?? null, precision: "day", zone: "UTC" }, basis: v.basis ?? null }, { value: day, precision: "day", zone: "UTC" }, { view }); } catch { a = "undetermined"; } }
       if (a === "out") continue;
       if (a !== "in") { notRead.push({ table: t.sha, why: v ? `whether its vintage was valid on ${day} is undetermined${a && a.why ? `: ${a.why}` : ""}` : "the table states no vintage, so its validity is not stated" }); continue; }
-      const g = await this.#grammarTable(t.sha);
+      const g = this.#grammarTableSync(t.sha);
       if (!g) { notRead.push({ table: t.sha, why: "the table's bytes are not held" }); continue; }
       tables.push(t.sha);
       const post = col("roster_post"), period = col("roster_period");
       for (let i = 0; i < g.rows.length; i++) {
         const r = g.rows[i];
-        const o = await this.#resolveParty(roles[org], r[org]);
+        const o = this.#resolveParty(roles[org], r[org]);
         if (!o.entity) { if (String(r[org] ?? "").trim()) notRead.push({ table: t.sha, row: i, why: o.why }); continue; }
         if (o.entity !== str(organisation)) continue;
         rows.push({ person_key: String(r[person] ?? ""), ...(post ? { post: String(r[post] ?? "") } : {}), ...(period ? { period: String(r[period] ?? "") } : {}),

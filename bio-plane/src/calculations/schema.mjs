@@ -26,6 +26,15 @@ CREATE TABLE IF NOT EXISTS calc_tables (
   declared_at   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS calc_tables_vintage ON calc_tables(vintage_key, sha);
+-- R1: the canonical bytes again, as UTF-8 text in chunks, beside the evidence store's copy, so a read asked
+-- synchronously (people's roster source, R20) has the rows at hand; the evidence store's bytes are the record's copy.
+CREATE TABLE IF NOT EXISTS calc_table_bytes (
+  sha           TEXT NOT NULL,
+  seq           INTEGER NOT NULL,
+  bundle_id     TEXT,
+  chunk         TEXT NOT NULL,
+  PRIMARY KEY (sha, seq)
+);
 -- R14: a member's adoption of a table's money roles.
 CREATE TABLE IF NOT EXISTS calc_bindings (
   binding_key   TEXT PRIMARY KEY,
@@ -171,6 +180,7 @@ const cls = (name, extra) => Object.freeze({ name, purge: "clear", expunge: "non
 /** R29: the declarations, as record-core's `declareTable` takes them. */
 export const CALCULATIONS_TABLES = Object.freeze([
   cls("calc_tables", { export: "yes", sight: "source", keys: ["bundle_id"] }),
+  cls("calc_table_bytes", { export: "never", sight: "source", keys: ["bundle_id"] }),
   cls("calc_bindings", { export: "yes", sight: "source", keys: ["bundle_id"] }),
   cls("calc_ingests", { export: "yes", sight: "source", keys: ["bundle_id"] }),
   cls("calculations", { export: "yes", sight: "bundle", keys: ["project"] }),

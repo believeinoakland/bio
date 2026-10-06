@@ -1,7 +1,7 @@
 /* calculations: fact-based analysis, draws and counts over the record (R16–R18, R21). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { seeded, V, MACHINE, R } from "./fixture.mjs";
+import { seeded, world, V, MACHINE, R, saved } from "./fixture.mjs";
 import { draw as gDraw, interval } from "../../../src/calc-grammar/index.mjs";
 
 const code = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -94,9 +94,8 @@ test("R18 a draw is over a frozen set (a table's sha or a frozen record set), re
   const noDraw = await w.c.create({ question: "Q", period: PERIOD, kind: "estimate", inputs: [{ name: "s", table: t.sha }], recipe: count, by: V("bob") });
   assert.equal(code(noDraw), "ESTIMATE_WITHOUT_DRAW");
   /* over a frozen record set */
-  const docs = [w.document("one"), w.document("two"), w.document("three")].map((x) => x.bundleId);
-  w.retrieval.saved.set("q", { owner: V("bob"), ids: docs });
-  const set = await w.c.freezeSet({ query: "q", by: V("bob") });
+  const docs = ["one", "two", "three"].map((x) => w.document(x, { title: `Wombat ${x}` }).bundleId);
+  const set = await w.c.freezeSet({ query: saved("wombat"), by: V("bob") });
   const ds = w.c.draw({ set: set.set, n: 2, seed: "x", by: V("bob") });
   assert.deepEqual(ds.sample, gDraw({ frame: [...docs].sort(), n: 2, seed: "x" }).sample);
   assert.equal(ds.set_kind, "set");
@@ -104,28 +103,35 @@ test("R18 a draw is over a frozen set (a table's sha or a frozen record set), re
 
 test("R21 freezeSet freezes the ids a saved query answers for the asking member (retrieval.runSaved) as a record set with its sha, so a count over the record is a recipe over a frozen set with its denominator, reproducible from the set", async () => {
   const w = seeded();
-  const docs = Array.from({ length: 5 }, (_, i) => w.document(`contract ${i}`).bundleId);
-  w.retrieval.saved.set("contracts", { owner: V("bob"), ids: docs });
-  w.retrieval.saved.set("graded", { owner: V("bob"), ids: docs.slice(0, 3) });
-  assert.equal(code(await w.c.freezeSet({ query: "contracts", by: MACHINE })), "MEMBER_ACT_ONLY");
+  const docs = Array.from({ length: 5 }, (_, i) => w.document(`contract ${i}`, { title: i < 3 ? `Numbat contract graded ${i}` : `Numbat contract ${i}` }).bundleId);
+  const P = w.project("Closed", "bob");
+  const hidden = w.document("closed contract", { project: P, title: "Numbat contract closed" }).bundleId;
+  assert.equal(code(await w.c.freezeSet({ query: saved("numbat"), by: MACHINE })), "MEMBER_ACT_ONLY");
   assert.equal(code(await w.c.freezeSet({ query: null, by: V("bob") })), "NO_QUERY");
-  assert.equal(code(await w.c.freezeSet({ query: "contracts", by: V("carol") })), "NOT_YOUR_QUERY", "another member's saved query answers as an absent one");
-  w.retrieval.saved.set("huge", { owner: V("bob"), ids: docs, truncated: true });
-  assert.equal(code(await w.c.freezeSet({ query: "huge", by: V("bob") })), "SET_TOO_LARGE");
-  const all = await w.c.freezeSet({ query: "contracts", by: V("bob") });
-  const part = await w.c.freezeSet({ query: "graded", by: V("bob") });
-  assert.equal(all.n, 5);
-  assert.deepEqual(all.ids, [...docs].sort());
-  assert.equal((await w.c.freezeSet({ query: "contracts", by: V("bob") })).already, true);
+  assert.equal(code(await w.c.freezeSet({ query: "numbat", by: V("bob") })), "NOT_YOUR_QUERY", "retrieval's refusal of what is not a saved-query form, passed through");
+  const forCarol = await w.c.freezeSet({ query: saved("numbat"), by: V("carol") });
+  assert.equal(forCarol.n, 5, "frozen for the asking member, under her sight: the closed project's contract is not hers to see");
+  assert.equal(forCarol.ids.includes(hidden), false);
+  const all = await w.c.freezeSet({ query: saved("numbat"), by: V("bob") });
+  const part = await w.c.freezeSet({ query: saved("graded"), by: V("bob") });
+  assert.equal(all.n, 6);
+  assert.deepEqual(all.ids, [...docs, hidden].sort());
+  assert.equal((await w.c.freezeSet({ query: saved("numbat"), by: V("bob") })).already, true);
+  /* a saved query answering more ids than one set holds is refused, so a denominator is never cut */
+  const big = world({ construct: false });
+  big.member("bob");
+  big.c = big.build({ retrieval: { runSaved: () => ({ ok: true, ids: ["x"], total: 10001, truncated: true }) } });
+  assert.equal(code(await big.c.freezeSet({ query: saved("x"), by: V("bob") })), "SET_TOO_LARGE");
   /* "3 of 5 contracts": a share over the frozen sets, with its denominator */
   const shareOf = R([{ op: "count", from: "part", as: "n" }, { op: "count", from: "all", as: "d" }, { op: "ratio", numerator: "n", denominator: "d", places: 2, mode: "half_even", as: "r" }], "r",
     [{ name: "all", kind: "table" }, { name: "part", kind: "table" }]);
   const c = await w.c.create({ question: "How many contracts at grade B?", period: { from: "2025-01-01", to: "2025-12-31" }, kind: "ratio",
     inputs: [{ name: "all", set: all.set }, { name: "part", set: part.set }], recipe: shareOf, by: V("bob") });
   assert.equal(c.ok, true);
-  assert.deepEqual([c.results.output.numerator.value, c.results.output.denominator.value, c.results.output.value.value], ["3", "5", "0.60"]);
+  assert.deepEqual([c.results.output.numerator.value, c.results.output.denominator.value, c.results.output.value.value], ["3", "6", "0.50"]);
   /* reproducible from the set: the query's answer moving does not move the calculation */
-  w.retrieval.saved.set("graded", { owner: V("bob"), ids: docs });
+  w.document("contract 9", { title: "Numbat contract graded 9" });
+  assert.equal((await w.retrieval.runSaved({ form: saved("graded"), owner: V("bob"), viewer: V("bob") })).ids.length, 4, "the query's answer moved");
   const rc = await w.c.recompute({ calcId: c.calc_id });
   assert.equal(rc.agrees, true);
 });
