@@ -1,5 +1,6 @@
 /* consequences over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   inquiry, strength; inquiry reaches its own connections and entities), on a real SQLite database (node:sqlite) standing
+   inquiry, strength, entities, money, calculations, people; entities built on the host directly, K1619), on a real
+   SQLite database (node:sqlite) standing
    in for a Durable Object's storage, shaped as workerd's (K316: `sql.exec` answers a cursor; K313: a LIKE or GLOB
    pattern over 50 bytes is refused). Two stand-ins the test controls: `conformance`'s `determinationRead`, answering as
    conformance R9 states it (`outcomes`, `superseded_by`, `live`), gated on the project's sight, so a test states a
@@ -16,6 +17,10 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
+import { moneyOf } from "../../../src/money/index.mjs";
+import { peopleOf } from "../../../src/people/index.mjs";
+import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { consequencesModule, Consequences } from "../../../src/consequences/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(Buffer.from(s, "utf8")).digest("hex");
@@ -79,7 +84,7 @@ const EXTRACTION_JOINED = [
 
 /** The world: `alice` owns and has joined project P, and `pat` has joined it; `bob` is a member who has not; `carol`
  *  is an administrator outside P (who sees it). `passages: false` leaves the passage-text read out (R4's "a form not read"). */
-export function world({ passages = true, group = "test-group", superseded = null } = {}) {
+export function world({ passages = true, group = "test-group", superseded = null, people: peopleDep = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -108,13 +113,34 @@ export function world({ passages = true, group = "test-group", superseded = null
   };
   const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
   content.migrate();
-  /* inquiry reaches connections and entities on this host itself (not this module's uses). */
+  /* The profile money reads periods and zones through (the fictional test profile). */
+  record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
+  /* entities on this host, built directly (K1619); inquiry reaches the same instance. */
+  const entities = entitiesOf(host, { record, membership, provenance: prov });
+  entities.migrate();
   const inquiry = inquiryOf(host, { record, membership, promotion, content,
     retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) }, provenance: prov,
     now: () => clock.now });
   inquiry.migrate();
-  inquiry.entities.migrate();
+  /* connections' tables (promotion writes its `refs`): connections is not this module's use, so the architecture check
+     refuses importing it here; it is reached through inquiry's getter, as before K1619 (reported to BOB, T33 J2). */
   inquiry.connections.migrate();
+  /* money, people and calculations, real. What they reach and this module never asks of them (events, lines and
+     duties: a fact's `concerns`, a person's posts and duties) is answered as absent, a port answering null, so no
+     module outside this one's uses is built here. */
+  const none = () => null;
+  let calculations = null;
+  const money = moneyOf(host, { record, membership, entities, provenance: prov, events: none, lines: none, now: () => clock.now,
+    calculations: { bindingOf: (k) => (calculations ? calculations.bindingOf(k) : null) } });
+  money.migrate();
+  /* people's source↔person link names a source `sources` holds (its R9); sources is not this module's use, so a
+     stand-in holds every `SRC-` id. */
+  const sources = { rungOf: ({ source }) => (/^SRC-/.test(String(source)) ? { ok: true, rung: "held" } : { ok: false, reason: "NO_SUCH_SOURCE" }) };
+  const people = peopleOf(host, { record, membership, entities, provenance: prov, content, events: none, money, duties: none,
+                                  lines: none, sources });
+  if (typeof people.migrate === "function") people.migrate();
+  calculations = calculationsOf(host, { record, membership, content, provenance: prov, money, entities, events: none,
+    duties: none, people, now: () => clock.now, clock: () => Date.parse(clock.now) });
   const strength = strengthOf(host, { record, membership,
     inquiry: { basisFor: (id, o) => inquiry.basisFor(id, o), earned: (e, t) => inquiry.earned(e, t), legCapped,
                subjectEntityOf: (id) => inquiry.subjectEntityOf(id) },
@@ -134,13 +160,15 @@ export function world({ passages = true, group = "test-group", superseded = null
   /* inquiry as this module reads it; a test may state which inquiries are superseded (inquiry R16's index). */
   const inq = new Proxy(inquiry, { get: (t, p) => (p === "supersededBy" && superseded
     ? (id) => superseded.get(id) || [] : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
-  const deps = { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq, strength,
+  const deps = { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq, strength, money,
+    calculations, entities, people: peopleDep ? peopleDep(people) : people,
     now: () => clock.now, ...(passages ? { passageText: (id) => texts.get(id) ?? null } : {}) };
   const c = consequencesModule(host, deps);
 
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, inquiry, strength, c, clock, ex, texts, determinations,
+    entities, money, people, calculations,
     /** R15: this module over the same record, with a sight rule that withholds the bundles in `hidden` from `pat`
      *  (and from no one else). membership's rule shows every bundle outside a project to a member (its R43), so a
      *  document or an inquiry is withheld from a reader of a part only through such a rule, as conformance's suite
@@ -197,6 +225,43 @@ export function world({ passages = true, group = "test-group", superseded = null
       const s = w.doc(id, `${text} (${id})`);
       w.receipt(s, address, { via });
       return w.passage(id, s, text);
+    },
+    /** A registered person (entities R1): its entity id. */
+    person(label, aliases = []) {
+      const e = entities.createEntity({ kind: "person", label, aliases, note: "a person the test registers", declaredBy: V("alice") });
+      if (!e.ok) throw new Error(`fixture person refused: ${JSON.stringify(e).slice(0, 300)}`);
+      return e.entity_id;
+    },
+    /** A registered entity of another kind: its entity id. */
+    entity(label, kind = "institution") {
+      const e = entities.createEntity({ kind, label, note: "an entity the test registers", declaredBy: V("alice") });
+      if (!e.ok) throw new Error(`fixture entity refused: ${JSON.stringify(e).slice(0, 300)}`);
+      return e.entity_id;
+    },
+    /** A money fact recorded by alice through the real money module (its R1), its source a fresh document; `id`
+     *  names the document (a project's sight then reaches it through `sighted`). Answers the fact id. */
+    fact(fields = {}, id = `INFO-2026-${String(9000 + ++n)}-ledger`) {
+      w.parties ||= { from: w.entity("The Treasury", "office"), to: w.entity("Harbour Supply") };
+      const s = w.doc(id, `a ledger page ${n}`);
+      w.receipt(s, `example.org/ledger/${n}`);
+      const amount = String(fields.amount ?? "100");
+      const f = { amount, as_read: `$${amount}`, currency: "USD", sign: "+", precision: "exact", kind: "payment",
+        phase: "actual", stage: "paid", basis: "cash", period: { from: "2025-07-01", to: "2026-06-30", precision: "day" },
+        from: { entity: w.parties.from }, to: { entity: w.parties.to },
+        source: { capture_sha: s, extent: { kind: "document" } }, by: V("alice"), ...fields };
+      for (const k of Object.keys(f)) if (f[k] === undefined) delete f[k];
+      const r = money.recordFact(f);
+      if (!r.ok) throw new Error(`fixture money fact refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.fact_id;
+    },
+    /** A calculation over money facts (calculations R4: a `sum` of their amounts, step `total`), created by alice. */
+    async calculation(factIds, { question = "How much was paid?" } = {}) {
+      const recipe = { method: "bio-calc/1", inputs: [{ name: "t", kind: "table" }],
+                       steps: [{ op: "sum", from: "t", field: "amount", as: "total" }], output: "total" };
+      const r = await calculations.create({ question, period: { from: "2025-07-01", to: "2026-06-30" }, kind: "total",
+        inputs: [{ name: "t", money: factIds }], recipe, by: V("alice") });
+      if (!r.ok) throw new Error(`fixture calculation refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.calc_id;
     },
     determination(id, project, outcomes, extra = {}) {
       determinations.set(id, { project, outcomes: Object.entries(outcomes).map(([standard, outcome]) => ({ standard, outcome })),

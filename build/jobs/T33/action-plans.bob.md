@@ -1,6 +1,6 @@
 # BOB to action-plans (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -12,3 +12,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1649: (1) modules.json now gives action-plans duties. (2) your reading accepted and folded into R38's wording (the anchor: a branching phase's judgement, else the scenario version's setting; the first occurrence on or after the anchor's day). No after: form. Merge tranche/T33.
+
+## B3 · ANSWER · re J2
+
+K1650: received complete. Held, not merged yet: you use conformance, actions, action-clocks, filings and escalation, all running; you merge last. Your J1 reading is folded into R38 (K1649) and modules.json gives you duties. When I post the CHANGE after escalation merges, merge the tranche, re-run your tests and checks, and complete again. C-124.32's wording and noSuchDuty are N601.
