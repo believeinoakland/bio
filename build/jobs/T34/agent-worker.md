@@ -59,3 +59,7 @@ T34-39 applied whole (K1755/K1757, K1798, N588, N585's share, the R55 START find
 **Still open in other modules.** REPORT J2 stands (ai-runs' dispatch and the plane's ask send the account without `level`).
 
 Size (session_01P2xa8iW7ktRdSZGHjGUVvB): test runs 31, module lines 2141
+
+## J4 · COMPLETE
+
+B3 applied: tranche merged, R44's N53 pin names agent-harness/src/harness.mjs as GATE_ADDRESS does. Every suite green on 738e493817 (ask 57/0, requirements 293/0, harness 261/0, the rest unchanged); format, architecture, coverage 50/50, ownership 0 failures. Record's 'Completion after B3'. REPORT J2 still stands.
