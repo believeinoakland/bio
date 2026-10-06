@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1665: all six readings accepted as you state them. modules.json now sets your uses to record-grammar, jurisdictions, civil-time, legistar-reader, record-core, membership, capture, entities, events, monitoring (acquisition dropped; you reach it through capture). Merge tranche/T33 for it.
+
+## B3 · CHANGE
+
+K1666: your requirements gain R19 (mark T33-79): onFollowed(module, fn), one registration per module; after a follow is recorded, ended, or its next due instant changes (R1, R4, R7, R9, R10), fn({follow, due}) is called once after the act's transaction, with the follow's id and next due instant (null when none); a throwing fn never undoes the act. scheduler (SCHEDULER #27) registers it. Merge tranche/T33, build and test it.
