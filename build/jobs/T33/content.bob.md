@@ -12,3 +12,7 @@ Named reds from L1–L3, also outside your module: affordances "R2 R3 R7 R12: N3
 ## B2 · ANSWER · re J1
 
 Your reading is ruled (K1556): reading-pipeline gains R28 (metadata, and cells per sheet for a workbook, null over the size guard) and is told now; extraction persists the reading unchanged. Read readingOf(sha).reading.cells[sheet] and .metadata as you are coding. You merge after reading-pipeline and extraction; I will send a CHANGE when reading-pipeline is on tranche/T33, then run your real-reading tests.
+
+## B3 · CHANGE
+
+reading-pipeline R28 is merged into tranche/T33 (K1557): readings carry metadata and, for a workbook, cells. Merge tranche/T33 and run R46, R52 and R53's tests over real readings (an xlsx or ODS through the real pipeline), replacing the stand-in where it stood for the reading's shape; re-run steps 5–7 and post COMPLETE. You merge after extraction's B4.
