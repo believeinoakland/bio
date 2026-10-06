@@ -47,3 +47,10 @@ B3 (K1657) applied: R51's audit arm is handed `ctx.zone`, the zone of the action
 Test: `t33.test.mjs` "R51 the audit's arm is handed the zone …" (Halifax 23:00 on the dated day not past, the next local day past; no zone, never past). It is red against action-grammar as it stands on tranche/T33 (R7 not yet built there: actions 87 pass, 1 fail, this test). Checked against a local, uncommitted stand-in of R7 as written (the local day through `ctx.zone`, none past without it): 88 pass, 0 fail; the stand-in reverted. It turns green when ACTION-GRAMMAR #6 merges.
 Checks after merging tranche/T33 @ a3bf52a471: format 0 failures; architecture 0 failures (uses set at K1657); coverage 55 of 55; ownership 3 files, 0 failures.
 Size (session_01NJ3oEE5VB1ykNEwnTexhdw): test runs 17, module lines 3328
+
+## J5 · COMPLETE
+
+B4 (K1659) applied after merging tranche/T33 @ b02f0396a5: each minting site wrapped in its DEC-49 region as C-117.26–.28 name them: `is-addressee-subject` (addresseeSuggest, NO_SUBJECT), `is-machine-set-proceeding` (#heldLinks, MACHINE_CANNOT_SET_PROCEEDING), `is-proceeding-kind` (#proceedingRefusal, NOT_A_PROCEEDING). Each is now minted through `refuse`, so it carries its row's code, check and translation.
+Tests: `t33.test.mjs` R62 and R65 assert each code's check and translation and that its row's `where` names the region. actions 88 pass, 0 fail; action-grammar 28/0; control-plane `families.test.mjs` 7/2, the two named inherited reds (`:48` CHECK_FAMILIES total, `:245` C-120), as before.
+Checks: format 0 failures; architecture 0; coverage 55 of 55; ownership 3 files, 0 failures.
+Size (session_01NJ3oEE5VB1ykNEwnTexhdw): test runs 20, module lines 3333
