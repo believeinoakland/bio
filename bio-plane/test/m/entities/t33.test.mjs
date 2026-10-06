@@ -5,8 +5,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
-import { entitiesOf, SECTORS, ORGANISATION_KINDS, CONNECTION_KINDS, OWNER_REGISTRATION, TABLE_DECLARATIONS,
-         ENTITIES_TABLES } from "../../../src/entities/index.mjs";
+import { entitiesOf, SECTORS, ORGANISATION_KINDS, CONNECTION_KINDS, CONNECTION_DECLARES, OWNER_REGISTRATION,
+         TABLE_DECLARATIONS, ENTITIES_TABLES } from "../../../src/entities/index.mjs";
+import { combine } from "../../../../jurisdictions/index.mjs";
 import { kindOf, neighbours as registryNeighbours, ownerConformance, checkConnection, BOUNDS, DECLARED_LABEL,
          LOWEST_GRADE, isRecordId } from "../../../src/connection-grammar/index.mjs";
 
@@ -105,7 +106,10 @@ test("R43 addIdentifier refuses, in order and writing nothing, NO_ENTITY, NO_SUC
   assert.equal(w.e.addIdentifier({ ...ok, entityId: "" }).reason, "NO_ENTITY");
   assert.equal(w.e.addIdentifier({ ...ok, entityId: "ENT-2026-0404", scheme: "nope" }).reason, "NO_SUCH_ENTITY");
   const us = w.e.addIdentifier({ ...ok, scheme: "nope", id: "?" });
-  assert.deepEqual([us.reason, us.schemes], ["UNKNOWN_SCHEME", ["ellery_person", "marlow_bar"]]);
+  /* naming the active profiles' identifier_schemes, as jurisdictions' own combine gives them (its R52), never a list held here */
+  const schemes = combine(PE).view.identifier_schemes.map((x) => x.scheme);
+  assert.deepEqual([us.reason, us.schemes], ["UNKNOWN_SCHEME", schemes]);
+  assert.ok(schemes.includes("ellery_person") && schemes.includes("marlow_bar"));
   assert.equal(w.e.addIdentifier({ ...ok, scheme: "proceeding" }).reason, "UNKNOWN_SCHEME", "the reserved scheme is held only through a proceeding's facet");
   assert.equal(world().e.addIdentifier({ ...ok, entityId: world().e.createEntity({ note: NOTE, kind: "person", label: "P" }).entity_id }).reason,
                "NO_SUCH_ENTITY", "(a fresh world's id is not this one's)");
@@ -439,18 +443,46 @@ test("R47 neighbours answers the relations, not withdrawn, with the node at one 
   assert.deepEqual(registryNeighbours({ ...q, node: w2.a, host: host2 }).items.map((i) => i.id), [w2.r1, w2.r2]);
 });
 
-test("R47 R9 connection-grammar's owner-conformance battery runs over this owner: every check passes but the two a dateless, group-wide owner cannot supply (an item in at the date; an item fenced from one member)", () => {
+test("R47 R9 (N560, T34-16) connection-grammar's owner-conformance battery runs over this owner, which declares its kinds undated and group-wide: the answer is ok whole, no failure, the at and sight checks answered inapplicable, the missing viewer still checked", () => {
   const w = related();
-  const fixture = { node: w.a, at: AT, in: w.r1, out: w.r3, undetermined: w.r2, fenced: w.r2,
-                    viewers: { sees: "member:ann", blind: "member:bo" }, expected: [w.r1, w.r2] };
-  const r = ownerConformance({ owner: "entities", kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
-                               neighbours: (a) => w.e.neighbours(a), fixture });
-  const checks = [...new Set(r.failures.map((f) => f.check))].sort();
-  assert.deepEqual(checks, ["at", "sight"], JSON.stringify(r.failures));
-  const at = r.failures.filter((f) => f.check === "at");
-  assert.deepEqual(at.map((f) => f.why), [`${w.r1} (in at the date) is not returned unmarked`], "only the in item: the out (withdrawn) and undetermined arms pass");
-  for (const f of r.failures.filter((x) => x.check === "sight")) assert.match(f.why, /fenced|less the fenced item/);
-  assert.ok(!r.failures.some((f) => /VIEWER_MISSING|no viewer/.test(f.why)), "the missing viewer arm passes");
+  assert.deepEqual(CONNECTION_DECLARES, { undated: true, group_wide: true });
+  assert.ok(Object.isFrozen(CONNECTION_DECLARES));
+  const hub = w.e.createEntity({ note: NOTE, kind: "body", label: "Hub" }).entity_id;
+  for (let i = 0; i <= BOUNDS.hub; i++) {
+    const x = w.e.createEntity({ note: NOTE, kind: "body", label: `Spoke ${i}` }).entity_id;
+    w.e.declareRelation({ relation: "overlaps", fromEntity: hub, toEntity: x, justification: "j", citation: "c" });
+  }
+  /* an undated, group-wide fixture names no in, out, undetermined or fenced item (connection-grammar R9) */
+  const fixture = { node: w.a, at: AT, viewers: { sees: "member:ann", blind: "member:bo" }, expected: [w.r1, w.r2],
+                    hub: { node: hub, at: AT } };
+  const run = (declares) => ownerConformance({ owner: "entities", kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
+                                               neighbours: (a) => w.e.neighbours(a), fixture, declares });
+  const r = run({ ...CONNECTION_DECLARES });
+  assert.deepEqual([r.ok, r.failures], [true, []], JSON.stringify(r.failures));
+  assert.deepEqual(r.inapplicable.map((x) => x.check), ["at", "sight"]);
+  for (const x of r.inapplicable) assert.match(x.why, /^entities declares/);
+  /* negative controls: without the declaration the two checks fail and nothing else does; a declaration the owner's
+     answers belie is caught (an undated owner's item stating a date; a group-wide owner's other viewer short an item) */
+  const bare = run(undefined);
+  assert.equal(bare.ok, false);
+  assert.deepEqual([...new Set(bare.failures.map((f) => f.check))].sort(), ["at", "sight"], JSON.stringify(bare.failures));
+  assert.equal("inapplicable" in bare, false);
+  const dated = ownerConformance({ owner: "entities", kinds: CONNECTION_KINDS.map((k) => ({ ...k })), fixture, declares: CONNECTION_DECLARES,
+    neighbours: (a) => { const n = w.e.neighbours(a); return n.items ? { ...n, items: n.items.map((i) => ({ ...i, valid: { ...i.valid, from: "2020-01-01" } })) } : n; } });
+  assert.ok(dated.failures.some((f) => f.check === "declares" && /states a valid bound/.test(f.why)), JSON.stringify(dated.failures));
+  const fenced = ownerConformance({ owner: "entities", kinds: CONNECTION_KINDS.map((k) => ({ ...k })), fixture, declares: CONNECTION_DECLARES,
+    neighbours: (a) => { const n = w.e.neighbours(a); return a.viewer === "member:bo" && n.items ? { ...n, items: n.items.filter((i) => i.id !== w.r2) } : n; } });
+  assert.ok(fenced.failures.some((f) => f.check === "declares" && /not the complete set/.test(f.why)), JSON.stringify(fenced.failures));
+  /* R6 and R7 directly (K1563 (2)): a relation holds no dates and is marked undetermined at every date; the registry is
+     the group's, every member viewer the same set; a missing viewer refused */
+  for (const at of [AT, "1900-01-01T00:00:00Z", null]) {
+    const got = w.e.neighbours({ node: w.a, at, viewer: "member:ann" }).items;
+    assert.deepEqual(got.map((i) => i.id), [w.r1, w.r2], String(at));
+    assert.ok(got.every((i) => i.valid.from === null && i.valid.to === null && typeof i.undetermined.why === "string"), String(at));
+  }
+  for (const viewer of ["member:ann", "member:bo", "member:outsider"])
+    assert.deepEqual(w.e.neighbours({ node: w.a, at: AT, viewer }).items.map((i) => i.id), [w.r1, w.r2], viewer);
+  assert.equal(w.e.neighbours({ node: w.a, at: AT }).refused, "VIEWER_MISSING");
 });
 
 test("R48 both ends are indexed: one indexed read per end, at most the fan-out per page with next continuing in relation-id order; a node over the hub bound is named hub with no items", () => {

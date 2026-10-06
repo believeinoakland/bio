@@ -4,18 +4,19 @@
  * is a fact about the record, not a fault in the question. The capture refusal answers a document the caller may
  * not see EXACTLY as one the record does not hold: otherwise the judgement is a way to learn that a document exists.
  * R25 (N6, K1): the translations name no local system, office or example value; the spaces and their forms come
- * from the active jurisdiction profiles, and the answer beside a refusal lists them. */
+ * from the active jurisdiction profiles, and the answer beside a refusal lists them. DEC-149 (T34-78): a translation
+ * a member reads names the group's own profiles ("your group's"), never "this instance". */
 export const IDSPACE_CHECKS = Object.freeze({
   IDSPACE_UNKNOWN: Object.freeze({
     check: 'C-91.1',
     where: 'src/entities/index.mjs idMatch > is-idspace-unknown',
     translation: 'That is not an identifier space the record knows how to judge. The answer lists the spaces it '
-      + 'knows, each with the forms this instance\'s jurisdiction profiles give it. Nothing was judged.',
+      + 'knows, each with its forms as your group\'s jurisdiction profiles give them. Nothing was judged.',
   }),
   IDSPACE_VALUE_NOT_IN_SPACE: Object.freeze({
     check: 'C-91.2',
     where: 'src/entities/index.mjs idMatch > is-idspace-value-shape',
-    translation: 'The value given does not have the shape of any form this instance\'s jurisdiction profiles '
+    translation: 'The value given does not have the shape of any form your group\'s jurisdiction profiles '
       + 'give that identifier space, so the record cannot say what it would join. Give the identifier as the '
       + 'document writes it; the answer lists the forms. Nothing was judged.',
   }),
