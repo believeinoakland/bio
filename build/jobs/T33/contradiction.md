@@ -1,6 +1,28 @@
 # contradiction (T33)
 
-**Status** · session_012G7ZSNuwe7LqyENGErA2RC · depth 2 · WORKING · handled B2
+**Status** · session_012G7ZSNuwe7LqyENGErA2RC · depth 2 · RUNNING until 2026-10-06T03:29:56Z (node --test test/system/migrate-released.test.mjs) · handled B2
+
+## Completion (CONTRADICTION #8, T33-48)
+
+**Entries applied** (T33-48; K1470, K1487; BOB's answer K1601 to J1).
+- **R5, R7, R8, R11 — K6, "two amounts for one transfer"** (ladders §5C.4). Two standing money facts with the same payer and payee entities, kind, phase and stage, over overlapping periods, both seen through their source's sight (`sight_bundle`, money R21; R10), read over money's read contract (`money_facts`, its R19); formed when `money.reconcile` finds the amounts differ beyond the coarser figure's precision (K1601 (3)). Each side is `{kind: "money", fact, capture_sha, ref, amount, period, stage}`; reconcile's `differs` travel with the pair and R28's facts carry its reconciliation. An unstated period end is not formed and is counted (`undetermined`, with a note); agreeing amounts are counted (`consistent`). Its ladder: viewer, money fact, same parties, same stage and period, differing amount; last level `shared_transfer`; each sentence in the one table. R14: a money side is its fact id, versioned by the digest of what was compared, living in its source's bundle (purge).
+- **R24 (K1601 (4))**: every K6 candidate is formed, proposable and counted, and withheld `not_shown` with `k6_gate_unmeasured` until its prompt arm is measured (N579), K5's rule (`derive.mjs` `K6_GATE_MEASURED`); the prompt and R3 are unchanged. `candidatesFor` counts withheld K5/K6 candidates as `unmeasured`, with `unmeasured_by_key`.
+- **R9 — documents' own dates**: K4's date is the own date `events` holds for the capture (`datedFactsFor`, under the viewer; one held, several agreeing, or the one the reading states; an "on or before" bound is not a date), never the reading's alone (K1601 (5)); compared by `civil-time.compare`: settled → `date` (with `order`), the same value → `indistinct`, otherwise `order_undetermined`, counted in `undetermined_detail`. The side keeps `date` and adds `date_precision`, `date_zone`. `candidatesFor({entity})` orders by the earlier-dated side's own date through compare: the same date together, an unsettled order apart with the undated (`order_undetermined`, `undated`), never placed by guess.
+- **R58 — the connection owner**: registered at load into the plane's registry (`contradiction`, kind `in_tension_with`, "in tension with", class `derived`); the read takes an optional `host`, else the isolate's one instance, else `OWNER_HOST_AMBIGUOUS` (K1563 (1)). Each candidate not `not_shown` and not `dismissed` whose sides the viewer sees is one derived connection between its sides' nodes (claim → inquiry, leg/extent → its document, money → fact, stance → project), `id` = `derivedId` with the candidate named in `candidate` and `derived.inputs` (K1601 (1), (2)), the lowest grade, `machine_work` with the judgement labelled the machine's, undated (undetermined at any date). The owner-conformance battery runs in `owner.test.mjs`: its only failure is the inapplicable `in` check (K1563 (2)), R6/R7 tested directly.
+- **R59**: the five tables declared through `record-core.declareTable` (`declareTables`; `declarePurge` kept as its old name): purge `clear` by both sides' bundles (opt-ins and responses also by `project_id`), `sight: bundle`, `version_chain: true`, the rest `declarePurge`'s defaults.
+
+**Deferred.** The shown arm of K6 (weight as K4's, its marks, take-up legs on its documents, its connections at the facts) is written and unreachable until N579 measures its prompt arm; one `test.todo` names it.
+
+**Found in another module** (REPORT J2). `conformance`'s `contradiction-cause.test.mjs:206` (R21) goes red: its fixture states a document's date only as the reading's, which T33's R9 no longer reads; its fix is the fixture's (a `dated_facts` row), for conformance's L9 job; proposed as an accepted red by name until then.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/contradiction/*.test.mjs`: tests 127, pass 119, fail 0, todo 8 (K5's seven arms, K488; K6's shown arm, N579).
+- Users of contradiction: ai-runs 55/1, skills 53/1, reevaluation 121/0, publication 109/0, ratification 204/0, case-disclosures 47/1, case-authoring 121/1, conformance 53/1 (J2), affordances 165/2, queue-producers 80/0, control-plane 156/3, plane 85/0 — every red but conformance's named in the START or red on `tranche/T33` (affordances); `test/system/migrate-released.test.mjs`: MIGRATE_RESULT.
+- `format.mjs`: 126 modules, 125 requirements files; 0 failures. `coverage.mjs … contradiction`: 59 of 59 live ids named by a test; 0 failures. `ownership.mjs … contradiction tranche/T33`: OWNERSHIP_RESULT. `architecture.mjs … contradiction`: 7 failures, each an import of a use the requirements name and `modules.json` does not yet list (below).
+
+**For BOB.** Final `uses`: record-grammar, record-core, membership, promotion, extraction, content, entities, inquiry, basis-versions, **connection-grammar, events, money, civil-time** (the four new; `architecture.mjs` reads green once `modules.json` lists them). The `*(not yet met: T33-48)*` marks on R5, R8, R9, R11 and R58, R59 can be struck (BOB's file). Module size 3,681 lines (P6 guard 4,000; T33-48 estimated +200, actual +431, the K6 join and ladder, R9's own dates and order, and the owner).
+
+Size (session_012G7ZSNuwe7LqyENGErA2RC): test runs 16, module lines 3681
 
 ## J1 · QUESTION
 
