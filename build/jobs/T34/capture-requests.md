@@ -24,3 +24,7 @@
 - `format`: 0 failures. `architecture capture-requests`: 0 failures. `coverage capture-requests`: 48 of 48 live ids named, 0 failures. `ownership capture-requests tranche/T34`: 7 files, 0 failures.
 
 Size (session_01NQivx3o1He46wHNbuAEsHJ): test runs 9, module lines 2010
+
+## J1 · COMPLETE
+
+T34-34 (R48 captured-for reader registered into capture R83; N585: the four plane tests connect the opener's account, clearing K1708's capture-requests x4) and T34-86 (DEC-149: BOB's four lines plus C-28.1, .4, .6, .17, .20, MEMBER_ROUTE and the platform mark's details) applied. capture-requests 86/86 pass, capture 127/127. format, architecture, coverage (48/48), ownership: 0 failures. Row census: C-28.1/.4/.6/.8/.16/.17/.20/.21 awaiting stamp. Stale generated bundles and an L3/L4 DEC-149 leftover reported in the record. Record: build/jobs/T34/capture-requests.md, Completion.
