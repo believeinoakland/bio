@@ -128,7 +128,7 @@ test("R9 the six sections, each item naming its record source: facts, the chrono
   assert.equal(fact.claim.conclusion, "The works order was let without the vote the bylaw requires.");
   assert.deepEqual(fact.citations.map((c) => c.target), [DOC]);
   /* chronology: the timeline of the finding's subject (R33, whose own tests read it whole), its two lanes apart */
-  assert.deepEqual([s.chronology.title, s.chronology.marking, s.chronology.set.map((i) => i.id)], ["Chronology", s.facts.marking, [x.SUBJECT]]);
+  assert.deepEqual([s.chronology.title, s.chronology.marking, s.chronology.set.map((i) => i.id)], ["Chronology", s.facts.marking, [x.ACT_EVENT, x.SUBJECT]]);
   assert.deepEqual(Object.keys(s.chronology.lanes), ["world", "ours"]);
   assert.equal(fact.subject_entity, x.SUBJECT, "the entity the finding concerns, from its published bytes");
   /* exhibits: each capture a fact or event cites, with digest, locator, capture time and attestations */
@@ -136,7 +136,7 @@ test("R9 the six sections, each item naming its record source: facts, the chrono
   const docSha = sha(`the text of ${DOC}`), evSha = sha("the text of INFO-2026-0002-ledger");
   assert.deepEqual(Object.keys(ex).sort(), [docSha, evSha].sort());
   assert.deepEqual(ex[docSha].cited_by, [`${A}#1`, `${F}@${CASE}/1`]);
-  assert.deepEqual(ex[evSha].cited_by, [x.D]);
+  assert.deepEqual(ex[evSha].cited_by, [x.D, x.ACT_EVENT].sort(), "the act's evidence and the act's event (R33) cite it");
   assert.equal(ex[evSha].locator, "https://example.org/snapshots/INFO-2026-0002-ledger.txt");
   assert.equal(ex[evSha].captured_at, "2026-09-27T00:00:00Z");
   assert.deepEqual(ex[evSha].attestations.items, x.attestation.attestationsOf(evSha).attestations, "attestation's attestationsOf, never the bundle document");
@@ -216,7 +216,7 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
   /* 2026-03-02 (a Monday) plus 11 business days: the 11th would be Tuesday 17 March, the profile's holiday, so the
      18th. */
   assert.deepEqual([d.claim_act.start.date, d.claim_act.start.source, d.claim_act.date.state, d.claim_act.date.date],
-                   ["2026-03-02", x.D, "determined", "2026-03-18"]);
+                   ["2026-03-02", x.ACT_EVENT, "determined", "2026-03-18"]);
   assert.equal(d.claim_act.date.calendar.status, "unconfirmed", "R30: no member has confirmed the year here");
   assert.equal(d.claim_act.source, "profile:test-filings-deadlines/deadlines/claim_act");
   assert.equal(d.claim_filed.date.state, "undetermined", "no sent entry is recorded");
@@ -244,7 +244,7 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
                           { rule: "claim_cal", applies_to: "claim", days: 2, count: "calendar", starts: "act", citation: "Test Stat. § 9.31", basis: "TEST", status: "researched" }] };
   const x = world({ profiles: [p] });
   /* the act on Wednesday 12 August 2026; the Town Clerk's office alone keeps Friday the 14th */
-  const D = x.determine({ act: { ...x.act, at: "2026-08-12" } });
+  const D = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption", value: "2026-08-12" }) } });
   const clerk = { state: "named", role: "Town Clerk", body: "City of Port Ellery", level: "city" };
   const A = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }], counterparty: clerk });
   const B = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }] });

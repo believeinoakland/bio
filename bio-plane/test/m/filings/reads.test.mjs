@@ -130,7 +130,7 @@ test("R18 every filled value, packet item and chronology event names the record 
   x.event({ value: "2026-04-02", concerns: [x.SUBJECT] });
   x.event({ concerns: [x.SUBJECT] });
   const p3 = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
-  assert.deepEqual([p3.sections.chronology.lanes.world.items.length, p3.sections.chronology.lanes.world.placed_nowhere.length], [1, 1]);
+  assert.deepEqual([p3.sections.chronology.lanes.world.items.length, p3.sections.chronology.lanes.world.placed_nowhere.length], [2, 1], "the act's event and the subject's");
   const s = x.f.counselPacketRead({ id: p3.id, viewer: V("olive") }).sections;
   for (const [name, sec] of Object.entries(s)) {
     /* R33: the chronology's items are its lanes' */
@@ -146,12 +146,12 @@ test("R18 every filled value, packet item and chronology event names the record 
   const dl = s.deadlines.items[0];
   assert.equal(dl.date.state, "undetermined");
   assert.ok(dl.date.why);
-  /* an act stated over a period starts no single day: the chronology reads from the period's start (R33), and a claim
-     deadline starting at the act is undetermined, with why */
-  const Dp = x.determine({ act: { ...x.act, at: undefined, period: { from: "2026-03-01", to: "2026-03-05" } } });
+  /* an act whose event is placed nowhere starts no single day: the chronology reads from the earliest event (R33), and
+     a claim deadline starting at the act is undetermined, with why */
+  const Dp = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption" }) } });
   const P = x.action({ kind: "commitment_claim", legs: [{ target: Dp, kind: "rests_on" }] });
   const pp = x.f.counselPacket({ reason: WHY, action: P, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
-  assert.equal(pp.sections.chronology.from, "2026-03-01");
+  assert.deepEqual([pp.sections.chronology.from, /earliest/.test(pp.sections.chronology.from_says)], [null, true]);
   assert.equal(pp.sections.deadlines.items.find((i) => i.starts === "act")?.date.state ?? "undetermined", "undetermined");
 });
 

@@ -1,6 +1,5 @@
 /* filings — the counsel packet's chronology as a timeline read (R33; EVENTS 2a, K1494). Driven at the module's
-   interface over the real modules, `events` among them. Conformance's act event (its R25) is not yet answered by the
-   real module (T33-70), so a proxy of the real conformance answers it as that requirement states (K1563 (1)). */
+   interface over the real modules, `events` and `conformance` (its R25: the act is an event) among them. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, F, CASE, WHY, sha } from "./fixture.mjs";
@@ -9,22 +8,11 @@ import { CHRONOLOGY_MAX, LANE_WORDS, counselMarking, Filings } from "../../../sr
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const OFFICE_ARM = { state: "named", role: "Selectboard", body: "Port Ellery Selectboard", level: "city" };
 
-/* conformance R25: the determination `D` answers its act's event (`event`, as an object or a bare id). */
-function actEvent(x, event) {
-  const real = x.conformance;
-  return {
-    determinationsFor: (a) => real.determinationsFor(a),
-    determinationRead(a) {
-      const d = real.determinationRead(a);
-      return d && d.ok !== false && d.id === x.D ? { ...d, act: { ...d.act, event } } : d;
-    },
-  };
-}
 const pack = (f, action, who = "olive") => f.counselPacket({ reason: WHY, action, counsel: COUNSEL, author: V(who), viewer: V(who) });
 
 test("R33 the chronology is events' timeline over the act's event, the counterparty office entity and the entities the findings concern, from the act's date to the assembly: the world's lane and each registered source's lane apart, never interleaved, each in events' order; an order undetermined shown with its bounds; an item placed nowhere listed apart; each item naming its record source; an event outside the set or the dates left out", async () => {
   const x = world();
-  const ACT = x.event({ kind: "adoption", value: "2026-03-02" });
+  const ACT = x.ACT_EVENT;   /* the determination's act: an adoption on 2026-03-02 (conformance R25) */
   const e1 = x.event({ value: "2026-03-05", concerns: [x.OFFICE] });
   const e2 = x.event({ kind: "statement", value: "2026-04-10", concerns: [x.SUBJECT] });
   const e3 = x.event({ kind: "payment", value: "2026-04-10T10:00", concerns: [x.SUBJECT] });
@@ -42,7 +30,7 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
   });
   x.events.registerEventSource("test-broken", () => { throw new Error("the source is down"); });
   const A = x.action({ kind: "commitment_claim", counterparty: { ...OFFICE_ARM, entity_id: x.OFFICE } });
-  const f = x.filingsWith({ conformance: actEvent(x, { event_id: ACT, kind: "adoption" }) });
+  const f = x.f;
   const p = pack(f, A);
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
   const ch = p.sections.chronology;
@@ -90,9 +78,7 @@ test("R33 the chronology is events' timeline over the act's event, the counterpa
                    [...[ACT, e1, e2, e3, nowhere].map((id) => [LANE_WORDS.world, id]),
                     ...ch.lanes.ours.sources.flatMap((s) => (s.error ? [[LANE_WORDS.ours, s.error]] : s.items.map((i) => [LANE_WORDS.ours, i.ref])))]);
   assert.equal(e.bytes.split("\n")[e.bytes.split("\n").indexOf("## Chronology") + 2], counselMarking(COUNSEL));
-  /* the act's event named by a bare id reads the same; read back unchanged */
-  const bare = pack(x.filingsWith({ conformance: actEvent(x, ACT) }), A);
-  assert.deepEqual(bare.sections.chronology.set[0], { id: ACT, is: "the act's event", source: x.D });
+  /* read back unchanged */
   assert.deepEqual(f.counselPacketRead({ id: p.id, version: 1, viewer: V("bo") }).sections.chronology, ch);
   /* negative control: without an office entity on the addressee or the act, the set is the act's event and the subject */
   const B = x.action({ kind: "commitment_claim" });
@@ -109,13 +95,13 @@ test("R33 R27 an event of the set the reader may not see is withheld whole, date
   const A = x.action({ kind: "commitment_claim", counterparty: { ...OFFICE_ARM, entity_id: x.OFFICE } });
   const olive = pack(x.f, A, "olive");
   const w = olive.sections.chronology.lanes.world;
-  assert.deepEqual([w.items.map((i) => i.event_id), w.placed_nowhere, w.out_of_view], [[seen], [], true]);
+  assert.deepEqual([w.items.map((i) => i.event_id), w.placed_nowhere, w.out_of_view], [[x.ACT_EVENT, seen], [], true]);
   for (const id of [hidden, hiddenNowhere, hiddenCapture]) assert.equal(JSON.stringify(olive).includes(id), false, `${id} is named nowhere`);
   /* negative control: cy sees the docks' capture */
   const cy = pack(x.f, A, "cy");
   const wc = cy.sections.chronology.lanes.world;
   assert.deepEqual([wc.items.map((i) => i.event_id), wc.placed_nowhere.map((i) => i.event_id), "out_of_view" in wc],
-                   [[seen, hidden], [hiddenNowhere], false]);
+                   [[x.ACT_EVENT, seen, hidden], [hiddenNowhere], false]);
 });
 
 test("R33 a truncated lane says so; a set the record cannot name, a timeline no module answers, and one that refuses are each said in words, never an empty list passed as whole", async () => {
@@ -157,6 +143,6 @@ test("R33 the chronology is assembled into the version and kept: a later event c
   const later = x.event({ value: "2026-05-01", concerns: [x.OFFICE] });
   assert.deepEqual(x.f.counselPacketRead({ id: v1.id, version: 1, viewer: V("olive") }).sections.chronology, v1.sections.chronology);
   const v2 = pack(x.f, A);
-  assert.deepEqual([v2.version, v2.sections.chronology.lanes.world.items.map((i) => i.event_id)], [2, [later]]);
+  assert.deepEqual([v2.version, v2.sections.chronology.lanes.world.items.map((i) => i.event_id)], [2, [x.ACT_EVENT, later]]);
   assert.ok(Filings.render(x.f.counselPacketRead({ id: v1.id, version: 1, viewer: V("olive") })).includes(later) === false);
 });

@@ -154,8 +154,24 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   };
   const S1 = declare({ cite: "P.E.B.L. § 12", kind: "ordinance", issuer: "Port Ellery Selectboard", period: { from: "2020-01-01", to: "2030-12-31" } });
   const S2 = declare({ cite: "MCBC 2025-3", kind: "commitment", issuer: "Marlow County Commission", period: { from: null, to: null } });
-  const act = { description: "the works order let on 2026-03-02", actor: { role: "Selectboard", body: "Port Ellery Selectboard" },
-                at: "2026-03-02", evidence: [evidenceCid] };
+  /* events (layer 5), the real one, on the same host: the act's event (conformance R25) and R33's timeline, whose
+     "what we did" lane holds the sources the later modules registered on it (docket's, at its start) */
+  const events = eventsOf(w.host);
+  events.migrate();
+  /** An event (events R6) of `kind`, attested by a dated fact `value` read from the capture `capture` (default the
+   *  ledger's), concerning `concerns`; with `value` null, attested by the capture alone and so placed nowhere. */
+  const makeEvent = ({ kind = "meeting", value = null, concerns = [], capture = sha(`the text of ${EVID}`), by = V("olive") } = {}) => {
+    const att = value === null ? { captureSha: capture, extent: { kind: "document" } }
+      : { datedFactId: events.recordDatedFact({ captureSha: capture, extent: { kind: "document" }, kind: "meeting", value,
+                                                method: "read by a member", by }).dated_fact.dated_fact_id };
+    const r = events.createEvent({ kind, attestations: [att], concerns, by });
+    if (!r.ok) throw new Error(`fixture event refused: ${JSON.stringify(r).slice(0, 300)}`);
+    return r.event_id;
+  };
+  /* the act: the works order's adoption on 2026-03-02, an event the ledger attests (conformance R25) */
+  const ACT_EVENT = makeEvent({ kind: "adoption", value: "2026-03-02" });
+  const act = { event: ACT_EVENT, actor: { role: "Selectboard", body: "Port Ellery Selectboard" },
+                evidence: [evidenceCid] };
   /** A determination by olive through conformance's R1 (every field `over` replaces); answers its id. */
   const determine = (over = {}) => {
     const stds = over.standards || [{ standard: S1, outcome: "noncompliant" }, { standard: S2, outcome: "compliant" }];
@@ -167,23 +183,10 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
     return r.id;
   };
   const D = determine();
-  /* R33: events (layer 5), the real one, on the same host; its timeline's "what we did" lane holds the sources the
-     later modules registered on it (docket's, at its start) */
-  const events = eventsOf(w.host);
-  events.migrate();
   let n = 0;
   const x = {
-    ...w, w, f, attestation, events, ents, OFFICE, SUBJECT, ELSEWHERE,
-    /** An event (events R6) of `kind`, attested by a dated fact `value` read from the capture `capture` (default the
-     *  ledger's), concerning `concerns`; with `value` null, attested by the capture alone and so placed nowhere. */
-    event({ kind = "meeting", value = null, concerns = [], capture = sha(`the text of ${EVID}`), by = V("olive") } = {}) {
-      const att = value === null ? { captureSha: capture, extent: { kind: "document" } }
-        : { datedFactId: events.recordDatedFact({ captureSha: capture, extent: { kind: "document" }, kind: "meeting", value,
-                                                  method: "read by a member", by }).dated_fact.dated_fact_id };
-      const r = events.createEvent({ kind, attestations: [att], concerns, by });
-      if (!r.ok) throw new Error(`fixture event refused: ${JSON.stringify(r).slice(0, 300)}`);
-      return r.event_id;
-    }, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
+    ...w, w, f, attestation, events, ents, OFFICE, SUBJECT, ELSEWHERE, ACT_EVENT,
+    event: makeEvent, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */
     row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,

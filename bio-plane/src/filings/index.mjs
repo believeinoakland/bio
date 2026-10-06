@@ -322,11 +322,28 @@ export class Filings {
     const seen = (x) => !!(x && x.id);
     return {
       id: str(d.id) || str(id), project: str(d.project), act: isObj(d.act) ? d.act : {},
+      /* conformance R25: the act's event as the viewer reads it (null when withheld or when a pre-T33 act names none) */
+      event: isObj(d.event) ? d.event : null,
       findings: findings.filter(seen), standards: standards.filter(seen),
       withheld: d.out_of_view === true || !findings.every(seen) || !standards.every(seen),
       live: d.live !== false && !str(d.superseded_by), superseded_by: str(d.superseded_by),
       basis_changed: isObj(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null,
     };
+  }
+
+  /* The act's day (conformance R3, R25): its event's `when` read as one local day (a value at day precision or finer),
+     or a pre-T33 act's stated date (R26); null for a band, an undetermined `when` or an event placed nowhere. */
+  static #actDay(act) {
+    const w = isObj(act.when) ? act.when : null;
+    return realDate(act.at) || (w && str(w.value) ? realDate(str(w.value).slice(0, 10)) : null);
+  }
+
+  /* Why the act has no single day, in words (R3's `act_date`, R9's deadlines). */
+  static #actDayWhy(act) {
+    const w = act.when;
+    if (isObj(act.period)) return "the determination states the act over a period, so no single day starts it";
+    if (!w || w === "undetermined") return `the act's event ${w === "undetermined" ? "has an undetermined date" : "is placed nowhere: no record dates it"}`;
+    return "the act's event is dated only within a band, so no single day starts it";
   }
 
   /** R3, R8: the live determination the action rests on (its `rests_on` legs, in leg order), with `hidden` true when one
@@ -408,12 +425,19 @@ export class Filings {
       : "the action rests on no live determination, so the record holds no value for it";
     if (det) {
       const act = det.act || {};
-      out.act = str(act.description) ? { value: str(act.description), source: det.id } : none("the determination states no act");
+      /* conformance R25: a T33 act is its event (named by its kind and id); a pre-T33 act keeps its description (R26) */
+      const evId = str(act.event);
+      const ev = det.event;
+      out.act = str(act.description) ? { value: str(act.description), source: det.id }
+        : evId && ev && str(ev.kind) ? { value: `the ${ev.kind} recorded as ${evId}`, source: evId }
+        : evId ? none("the act's event is not one you may see")
+        : none("the determination states no act");
       const period = isObj(act.period) ? act.period : null;
-      out.act_date = str(act.at) ? { value: str(act.at), source: det.id }
+      const day = Filings.#actDay(act);
+      out.act_date = day ? { value: day, source: str(act.at) ? det.id : evId }
         : period && (str(period.from) || str(period.to))
           ? { value: `${str(period.from) || "undetermined"} to ${str(period.to) || "undetermined"}`, source: det.id }
-          : none("the determination states no date for the act, so it is undetermined");
+          : none(`${Filings.#actDayWhy(act)}, so the act's date is undetermined`);
       /* R27: conformance states only that something was withheld (`det.withheld`), never which list it left, so neither
          list is given as though whole; the why names nothing of what was withheld. */
       const cut = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
@@ -1003,8 +1027,8 @@ export class Filings {
       let start;
       const act = det ? det.act || {} : {};
       if (r.starts === "act")
-        start = realDate(act.at) ? { event: "act", date: act.at, source: det.id }
-          : { event: "act", state: "undetermined", why: det ? "the determination states the act over a period or not at all, so no single day starts the count" : "no live determination states the act" };
+        start = Filings.#actDay(act) ? { event: "act", date: Filings.#actDay(act), source: str(act.at) ? det.id : str(act.event) }
+          : { event: "act", state: "undetermined", why: det ? `${Filings.#actDayWhy(act)}, so no single day starts the count` : "no live determination states the act" };
       else if (r.starts === "received" || r.starts === "filed") {
         const e = first(r.starts === "received" ? "received" : "sent");
         start = e ? { event: r.starts, date: String(e.at).slice(0, 10), source: `${a.id}#${e.ord}` }
@@ -1040,7 +1064,7 @@ export class Filings {
     const actor = isObj(act.actor) ? str(act.actor.entity_id) : null;
     add(cp || actor, "the counterparty office", cp ? a.id : det && det.id);
     for (const f of facts) add(f.subject_entity, "an entity a finding concerns", f.source);
-    const from = realDate(act.at) || (isObj(act.period) ? realDate(act.period.from) : null);
+    const from = Filings.#actDay(act) || (isObj(act.period) ? realDate(act.period.from) : null);
     const to = at.slice(0, 10);
     const base = { title: "Chronology", marking, set, from, to,
                    ...(from ? {} : { from_says: "the act states no date, so the chronology reads from the earliest event of the set" }) };
@@ -1101,7 +1125,7 @@ export class Filings {
       if (!r) { refused = true; return []; }
       return [{ standard: s.id, cite: r.cite ?? null, kind: r.kind ?? null, issuer: r.issuer ?? null,
                 text: Array.isArray(r.text) ? r.text : [], outcome: s.outcome ?? null,
-                in_force: this.#inForce(s.id, realDate(act.at)), source: s.id }];
+                in_force: this.#inForce(s.id, Filings.#actDay(act)), source: s.id }];
     });
     const unseen = { out_of_view: true };
     const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
