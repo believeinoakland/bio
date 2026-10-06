@@ -22,3 +22,10 @@ T33-60 done on `job/T33/case-grammar` @ 2318c6dfc5 (K1448, K1494; readings K1632
 **Deferred:** none.
 **Tests and checks.** `node --test bio-plane/test/m/case-grammar/`: tests 76, pass 76, fail 0. No layer tests (manifest). format: 126 modules, 125 requirements files; 0 failures. architecture: 27 product files, 89 relative imports; 3 failures (the calc-grammar edge). coverage: 20 of 20 live requirement ids named by a test; 0 failures. ownership: 17 files changed by case-grammar between tranche/T33 and HEAD; 0 failures. The `not yet met` marks on R10, R13, R18, R19, R20 are BOB's to strike.
 Size (session_015oXG5f2GZVz111vShMPV1s): test runs 16, module lines 2062
+
+## J3 · COMPLETE
+
+B3 (K1639) applied on `job/T33/case-grammar` @ 7e3a28feb4, after merging `tranche/T33`. R18: `RECOMPUTE_STATUSES` gains `not_recomputed`; `calculationsLines` writes it and `calculationsOf` reads it for a workbook row (`calc` its capture's SHA-256, `inputs` empty, `result_key` null, as no recipe is keyed); its case-file path is `calculations/<capture sha>/calculation.json`; the complete edition states it as `RECOMPUTE_WORDS.not_recomputed` ("not recomputed here: …"), never a gate. Test: "R18 K1639 a workbook row states recompute: not_recomputed …" plus an R14 arm; a status outside the words still reads null.
+**Tests and checks.** case-grammar: tests 77, pass 77, fail 0. format 0 failures; architecture 27 product files, 89 imports, 0 failures (the calc-grammar edge is now declared); coverage 20 of 20, 0 failures; ownership 5 files changed since tranche/T33, 0 failures. Users rerun: public-read 110/110, case-import 75/75, case-checker 26+3 (unchanged from J2: R13 accepted, spec R14 for T33-66, R5 named); case-authoring 119+3, the same three (R29 ×2, R30) on `tranche/T33` without my change, so not this job's.
+**Final uses:** record-grammar, strength, calc-grammar. Deferred: none.
+Size (session_015oXG5f2GZVz111vShMPV1s): test runs 21, module lines 2068
