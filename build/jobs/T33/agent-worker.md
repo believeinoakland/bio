@@ -55,6 +55,6 @@ Smaller choices I will make unless told otherwise: `judgement_source` is `"body"
 - Plane suites naming this member: 15 green; `ai-runs/scheduler.test.mjs` 4/1 (K1514, accepted until ai-runs' job); `system/fleetbundles.test.mjs` and `system/resolveversion.test.mjs` red on the named N575/N578 arms (and the plane bundle, above).
 - `node checks/format.mjs`: 126 modules, 125 requirements files; 0 failures.
 - With `uses` + agent-harness, agent-model, credentials in a working copy of `modules.json` (not committed): `architecture.mjs … agent-worker`: 34 product files, 109 relative imports; 0 failures. `coverage.mjs … agent-worker`: 50 of 50 live ids named by a test; 0 failures. Without that edit, architecture reports the three undeclared edges.
-- `ownership.mjs … agent-worker tranche/T33`: 0 failures.
+- `ownership.mjs … agent-worker tranche/T33`: 22 files changed; 0 failures.
 
 Size (session_01121q68NpD9QHccE6EUQKtV): test runs 30, module lines 2098
