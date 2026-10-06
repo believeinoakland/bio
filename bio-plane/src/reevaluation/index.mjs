@@ -37,7 +37,7 @@
  *                                   `publishedRegistry` (R2's ratified edition, R17's frozen pair) and
  *                                   `publishedCaseRegistry` (R16's case editions, N457).
  *   inquiry        `restingOn`, `restsOnLive`, `supersededBy`, `earned`, `onRaised` (its R13, R16, R17, R42).
- *   content        `noticeForRow`, `passageNotice` (its R29–R31).
+ *   content        `noticeForRow`, `passageNotice` (its R29–R31); `passageAcross` (its R55), R36's grade.
  *   connections    `edgeSevered` (its R22), read through inquiry's `restingOn`.
  *   provenance     `versionChain` (its R17, R18), `onReceipt` (its R47, R25 here).
  *   strength       `strengthOf` (its R1–R5).
@@ -49,11 +49,11 @@
  *                  reference (R1) and the acceptances withdrawn (R31); `publisherMoves` (its R8): the cited cases'
  *                  new editions and withdrawals (R33). `case-import` fills it and tells `acceptanceWithdrawn` after a
  *                  withdrawal commits, `citedCaseMoved` after a docket read that recorded a move commits.
- *   events         `onEventChanged` (its R16) and `eventForAct` (its R21), for R34; `readEvent` (its R26), whether a viewer
- *                  sees an event a leg names (R20).
+ *   events         `onEventChanged` (its R16, the telling's `at` R34's `since`) and `eventForAct` (its R21), for R34;
+ *                  `readEvent` (its R26), whether a viewer sees an event a leg names (R20).
  *   calculations   `onInputChanged` (its R11), for R35.
- *   standards      `standardsIn` (its R8, each standard's instrument key and portion, R18) and `addressesOf` (its R24),
- *                  for R36.
+ *   standards      `standardsWithPortion` and `standardsAt` (its R32: the standards by a portion's content id, and
+ *                  at an instrument key and portion, R18) and `addressesOf` (its R24), for R36.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *   env            the instance bindings: `REEVAL_NOTICE_DELAY_MS` (R25).
  *
@@ -135,12 +135,13 @@ export const CALCULATION_INPUT_CHANGED = "calculation_input_changed";
 const EVENT_REF = /^EVT-/, ACT_REF = /^ACT-/, CALC_REF = /^CALC-/;
 const isRowTarget = (id) => typeof id === "string" && (EVENT_REF.test(id) || ACT_REF.test(id) || CALC_REF.test(id)
   || id.startsWith("occurrence:"));
-/** R36: the standards one page of `standards.standardsIn` is asked for (its R8's most). */
-export const STANDARDS_PAGE = 200;
-/** R36, R21: what a notice raised across addresses says of its grade, which content does not read across addresses. */
-export const ACROSS_UNDETERMINED_WHY = "the newer version is held at another address, and content compares a passage only "
-  + "along one address's version chain, so whether the change touches this passage is undetermined; that is not the "
-  + "same as unaffected";
+/** R34, R21: what `eventChanged` answers when a telling states no instant it can order (events R16 states one). */
+const TELLING_UNTIMED = "the telling states no instant of the change, so it cannot be ordered against a dependent's last "
+  + "write and was not kept; that is not the same as no change";
+/** R36, R21: what a notice raised across addresses says of its grade where content's comparison of the two captures
+ *  (`passageAcross`, its R55) gives no answer. */
+export const ACROSS_UNDETERMINED_WHY = "the newer version is held at another address, and content could not compare the "
+  + "passage with it, so whether the change touches this passage is undetermined; that is not the same as unaffected";
 /** R33: the moves one page of accepted-work's `publisherMoves` is asked for (its R8's most). */
 export const MOVES_PAGE = 200;
 /** R33: the (dependent, move) pairs one `citedCaseDependents` read lists (default and most). */
@@ -1410,11 +1411,14 @@ export class Reevaluation {
   }
 
   /** R34, R8: the listener registered with `events.onEventChanged` (its R16), called after an event's change commits with
-   *  `{eventId, change, …}`. A `when_moved` or `participant_re_resolved` telling about an event some basis leg names
-   *  (itself, or an `ACT-` id aliasing it) is kept as one row (R18: the event, the change and this module's instant; no
+   *  `{eventId, change, at, …}`. A `when_moved` or `participant_re_resolved` telling about an event some basis leg names
+   *  (itself, or an `ACT-` id aliasing it) is kept as one row (R18: the event, the change and the telling's instant; no
    *  value), then told to R8's listeners as `kind: "event_changed"` with the live legs resting on it, direct dependents
-   *  only. Any other change, or a telling nothing rests on, writes nothing. It moves nothing and never throws. */
-  eventChanged({ eventId = null, change = null } = {}) {
+   *  only. The instant is the `at` events states (the instant of the write that made the change, N591), never this
+   *  module's clock, so a dependent written between the change and its telling is ordered by when the event changed. A
+   *  telling stating no readable `at` breaks events' R16 and is not kept, the answer saying why (R21). Any other change,
+   *  or a telling nothing rests on, writes nothing. It moves nothing and never throws. */
+  eventChanged({ eventId = null, change = null, at = null } = {}) {
     try {
       const id = str(eventId);
       if (!id || !EVENT_CHANGES.includes(change)) return { ok: true, kept: false };
@@ -1422,7 +1426,9 @@ export class Reevaluation {
       if (!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?)) LIMIT 1`,
                      JSON.stringify(names)))
         return { ok: true, kept: false, dependents: 0 };
-      const at = this.#when();
+      const told = str(at);
+      if (!told || Number.isNaN(instantOrder(told, told))) return { ok: true, kept: false, why: TELLING_UNTIMED };
+      at = told;
       this.sql.exec(`INSERT INTO reevaluation_event_changes (event_id, change, at) VALUES (?,?,?)`, id, change, at);
       let dependents = [];
       try { dependents = this.#liveLegsOn(names); } catch { dependents = []; }
@@ -2356,7 +2362,7 @@ export class Reevaluation {
     const memo = new Map(), noticeMemo = new Map();
     /* R36: the held standards' portions, read once for the batch and only when it holds a leg; each leg's newer versions
        at other addresses read once per passage. */
-    const across = this.#acrossReader(legs.length > 0);
+    const across = this.#acrossReader(legs.length > 0, memo);
     /* R26: the case half runs once the legs are read to their end, with what is left of this batch's limit. */
     const cases = truncated ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
@@ -2434,7 +2440,8 @@ export class Reevaluation {
         : { kind: "passage", subject: r.content_id, source: "newer_capture", since: when,
             detail: r.across
               ? `a newer version of the same portion of law (${r.across.key}, ${r.across.portion}) is held at another `
-                + `address (${r.newer_capture.slice(0, 12)}); whether it touches this passage is undetermined`
+                + `address (${r.newer_capture.slice(0, 12)}); compared with this passage it grades `
+                + `${r.grade ?? "undetermined"} (${r.affects})`
               : `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades `
                 + `this passage ${r.grade ?? "undetermined"} (${r.affects})`,
             dependents: [{ bundle_id: r.holder, ord: r.ord }],
@@ -2446,67 +2453,63 @@ export class Reevaluation {
     return out;
   }
 
-  /** R36 (X73, K1446): R14's notice across addresses, for one sweep batch. A reference pinned to a held standard's
-   *  portion (its content id is the portion's content id, `standards` R18) has a newer version at another address when
-   *  `standards` holds the same instrument key and portion at another capture, or holds the key and portion a
-   *  member-recorded renumbering or recodification names (`addressesOf`, its R24), and that capture was first retrieved
-   *  after the pinned one (provenance's `captured_locators`, R48) and is held at none of the addresses the pinned
-   *  capture is: an address is never matched to another by its text. Content grades a passage only along one address's
-   *  version chain, so each such version is graded UNDETERMINED by name (R21). `enabled` false reads nothing. Answers
-   *  `{of(row), read()}`: `of` the candidates for one content row, each `{capture_sha, bundle_id, content_id, grade,
-   *  affects, why, across}`; `read` false when the standards could not all be read. Reads only. */
-  #acrossReader(enabled) {
-    let index = null, ok = true;
-    const load = () => {
-      if (index) return index;
-      index = { byPortion: new Map(), byKeyPortion: new Map(), byId: new Map() };
-      const kp = (k, p) => `${k}\u0000${p}`;
-      const push = (map, k, v) => { if (!map.has(k)) map.set(k, []); map.get(k).push(v); };
-      const seen = new Set();
-      let after = null;
-      for (;;) {
-        let page = null;
-        try { page = this.standards.standardsIn({ after, limit: STANDARDS_PAGE, viewer: MACHINE_ADMIN }); } catch { page = null; }
-        if (!page || page.ok === false || !Array.isArray(page.items)) { ok = false; break; }
-        for (const it of page.items) {
-          const key = it && it.instrument && it.instrument.state === "composed" ? str(it.instrument.key) : null;
-          const portion = it && it.portion ? str(it.portion.path) : null;
-          const content = it && it.portion ? str(it.portion.content_id) : null;
-          if (!key || !portion || !content || !str(it.id)) continue;
-          const sd = { id: it.id, key, portion, content };
-          index.byId.set(sd.id, sd);
-          push(index.byPortion, content, sd);
-          push(index.byKeyPortion, kp(key, portion), sd);
-        }
-        const next = typeof page.cursor === "string" ? page.cursor : null;
-        if (!page.truncated || !next || seen.has(next)) break;
-        seen.add(next);
-        after = next;
+  /** R36 (X73, K1446; N589, N590): R14's notice across addresses, for one sweep batch. A reference pinned to a held
+   *  standard's portion (its content id is the portion's content id, `standards` R18) has a newer version at another
+   *  address when `standards` holds the same instrument key and portion at another capture, or holds the key and portion
+   *  a member-recorded renumbering or recodification names (`addressesOf`, its R24), and that capture was first
+   *  retrieved after the pinned one (provenance's `captured_locators`, R48) and is held at none of the addresses the
+   *  pinned capture is: an address is never matched to another by its text. The standards are read where they are
+   *  needed, through `standards.standardsWithPortion` (the passage's own standards) and `standards.standardsAt` (those
+   *  at a key and portion), its R32, never by paging `standardsIn`; an answer `standards` marks `truncated` (or one that
+   *  fails) leaves `read` false, so the sweep says by name that a notice may be missing (R21). Whether the newer version
+   *  is newer and the same work and portion is decided here; how it touches the passage is content's comparison of the
+   *  two captures (`passageAcross`, its R55), its grade, reason and why kept, and `undetermined` by name where it gives
+   *  no answer (R21), never A or B by default. `enabled` false reads nothing. Answers `{of(row), read()}`: `of` the
+   *  candidates for one content row, each `{capture_sha, bundle_id, content_id, grade, affects, across}`. Reads only. */
+  #acrossReader(enabled, memo = new Map()) {
+    let ok = true;
+    const asStandards = (a) => {
+      if (!a || a.ok === false || !Array.isArray(a.items)) { ok = false; return []; }
+      if (a.truncated) ok = false;
+      const out = [];
+      for (const it of a.items) {
+        const key = it ? str(it.instrument) : null;
+        const portion = it && it.portion ? str(it.portion.path) : null;
+        const content = it && it.portion ? str(it.portion.content_id) : null;
+        if (key && portion && content && str(it.id)) out.push({ id: it.id, key, portion, content });
       }
-      index.kp = kp;
-      return index;
+      return out;
     };
-    const memo = new Map();
+    const atMemo = new Map();
+    const at = (key, portion) => {
+      const k = `${key}\u0000${portion}`;
+      if (!atMemo.has(k)) {
+        let a = null;
+        try { a = this.standards.standardsAt({ key, portion, viewer: MACHINE_ADMIN }); } catch { a = null; }
+        atMemo.set(k, asStandards(a));
+      }
+      return atMemo.get(k);
+    };
     const placed = (capture) => {
-      const at = this.#rows(`SELECT address_norm, MIN(first_retrieved) AS first FROM captured_locators WHERE capture_sha=?
-                              GROUP BY address_norm ORDER BY address_norm`, capture);
-      const firsts = at.map((r) => r.first).filter((x) => typeof x === "string" && x).sort();
-      return { addresses: new Set(at.map((r) => r.address_norm).filter(Boolean)), first: firsts[0] ?? null };
+      const rows = this.#rows(`SELECT address_norm, MIN(first_retrieved) AS first FROM captured_locators WHERE capture_sha=?
+                                GROUP BY address_norm ORDER BY address_norm`, capture);
+      const firsts = rows.map((r) => r.first).filter((x) => typeof x === "string" && x).sort();
+      return { addresses: new Set(rows.map((r) => r.address_norm).filter(Boolean)), first: firsts[0] ?? null };
     };
+    const seen = new Map();
     const of = (row) => {
       if (!enabled || !row || !row.content_id) return [];
-      if (memo.has(row.content_id)) return memo.get(row.content_id);
+      if (seen.has(row.content_id)) return seen.get(row.content_id);
       const out = [];
-      memo.set(row.content_id, out);
-      const idx = load();
-      const own = idx.byPortion.get(row.content_id) || [];
+      seen.set(row.content_id, out);
+      let w = null;
+      try { w = this.standards.standardsWithPortion({ contentId: row.content_id, viewer: MACHINE_ADMIN }); } catch { w = null; }
+      const own = asStandards(w);
       if (!own.length) return out;
-      const pinned = placed(row.capture_sha);
       const cands = new Map();
       const add = (from, to, via) => { if (to.id !== from.id && !cands.has(to.content)) cands.set(to.content, { from, to, via }); };
       for (const sd of own) {
-        for (const o of idx.byKeyPortion.get(idx.kp(sd.key, sd.portion)) || [])
-          add(sd, o, { type: "same_instrument", relation: null, effective: null });
+        for (const o of at(sd.key, sd.portion)) add(sd, o, { type: "same_instrument", relation: null, effective: null });
         let a = null;
         try { a = this.standards.addressesOf({ key: sd.key, portion: sd.portion }); } catch { a = null; }
         if (!a || !Array.isArray(a.addresses)) { ok = false; continue; }
@@ -2514,12 +2517,12 @@ export class Reevaluation {
         for (const x of a.addresses) {
           const via = { type: x.via ? x.via.type ?? null : null, relation: x.via ? x.via.relation ?? null : null,
                         effective: x.via ? x.via.effective ?? null : null };
-          const named = idx.byId.get(x.standard);
-          if (named) add(sd, named, via);
-          if (x.key && x.portion) for (const o of idx.byKeyPortion.get(idx.kp(x.key, x.portion)) || []) add(sd, o, via);
+          /* the standard the relation names, and every other held at its key and portion */
+          if (x.key && x.portion) for (const o of at(x.key, x.portion)) add(sd, o, via);
         }
       }
       if (!cands.size) return out;
+      const pinned = placed(row.capture_sha);
       const rows = new Map(this.#rows(`SELECT content_id, capture_sha, bundle_id FROM content
                                         WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
                                       JSON.stringify([...cands.keys()]), cands.size).map((r) => [r.content_id, r]));
@@ -2529,9 +2532,14 @@ export class Reevaluation {
         const there = placed(r.capture_sha);
         if (!there.addresses.size || [...there.addresses].some((x) => pinned.addresses.has(x))) continue;
         if (!there.first || !pinned.first || !laterThan(there.first, pinned.first)) continue;
-        out.push({ capture_sha: r.capture_sha, bundle_id: r.bundle_id, content_id: content, grade: "UNDETERMINED",
-                   affects: "undetermined", why: ACROSS_UNDETERMINED_WHY,
-                   across: { from_standard: from.id, standard: to.id, key: to.key, portion: to.portion, via } });
+        let c = null;
+        try { c = this.content.passageAcross(row, r.capture_sha, memo); } catch { c = null; }
+        const graded = !!c && typeof c === "object" && typeof c.grade === "string" && typeof c.affects === "string";
+        out.push({ capture_sha: r.capture_sha, bundle_id: r.bundle_id, content_id: content,
+                   grade: graded ? c.grade : "UNDETERMINED", affects: graded ? c.affects : "undetermined",
+                   across: { from_standard: from.id, standard: to.id, key: to.key, portion: to.portion, via,
+                             compared: graded, reason: graded ? c.grade_reason ?? null : null,
+                             why: graded ? c.grade_why ?? null : ACROSS_UNDETERMINED_WHY } });
       }
       return out;
     };
@@ -2639,7 +2647,9 @@ export class Reevaluation {
     const seesCapture = this.#captureSeer(viewer);
     const list = rows.slice(0, cap).map((r) => ({ ...this.#noticeView(r), newer_bundle: visible(r.newer_bundle),
       ...(seesCapture(r.newer_capture) ? {} : { newer_capture: null, grade: null, affects: null,
-                                                ...(r.across ? { newer_content: null } : {}) }) }));
+                                                /* R36: content's reason and why read the version withheld */
+                                                ...(r.across ? { newer_content: null, across: { ...parseAcross(r.across),
+                                                  compared: null, reason: null, why: null } } : {}) }) }));
     return { ok: true, notices: list, count: list.length, limit: cap, truncated: rows.length > cap,
              cursor: rows.length > cap ? list[list.length - 1].notice : null, state: st };
   }
