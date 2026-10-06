@@ -257,7 +257,7 @@ console.log("\n--- front page and begin ---");
   t("PKCE method is S256", a.searchParams.get("code_challenge_method"), "S256");
   t("challenge present", (a.searchParams.get("code_challenge") || "").length >= 40, true);
   t("redirect is the registered string, character-exact", a.searchParams.get("redirect_uri"), CFG.REDIRECT);
-  t("scopes are exactly the registered three", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
+  t("scopes are exactly the registered four", a.searchParams.get("scope"), CFG.SCOPES.join(" "));
   t("state travels", (state || "").length >= 20, true);
   t("cookie is HttpOnly", /HttpOnly/i.test(r.headers.get("set-cookie")), true);
   t("cookie is Secure and Lax", /Secure/.test(r.headers.get("set-cookie")) && /SameSite=Lax/.test(r.headers.get("set-cookie")), true);
@@ -332,10 +332,14 @@ console.log("\n--- install: the whole conversation ---");
   /* Was "three secrets set" until DIST-2: REC-33 gave the plane a daemon
      class, and the installer now binds its credential so monitoring runs
      scoped instead of on the root-of-trust ADMIN_TOKEN fallback. */
-  t("four secrets set (DAEMON_TOKEN joined at DIST-2)", secrets.map((s) => s.name).sort(),
-    ["ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
+  /* Five since T33-91: ACCOUNT_SEAL_SECRET (K1541), the key members' own account references are sealed under. */
+  t("five secrets set (DAEMON_TOKEN joined at DIST-2, ACCOUNT_SEAL_SECRET at T33-91)", secrets.map((s) => s.name).sort(),
+    ["ACCOUNT_SEAL_SECRET", "ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
   t("secrets are long", secrets.every((s) => s.text.length >= 40), true);
-  t("secrets are distinct", new Set(secrets.map((s) => s.text)).size, 4);
+  t("secrets are distinct", new Set(secrets.map((s) => s.text)).size, 5);
+  t("the seal secret is not on the success page (K1541: no person ever spends it)",
+    (() => { const v = secrets.find((s) => s.name === "ACCOUNT_SEAL_SECRET")?.text;
+      return v ? body.includes(v) : "ACCOUNT_SEAL_SECRET missing"; })(), false);
   t("no secret is a published value", secrets.some((s) => s.text === PUBLISHED), false);
   /* DIST-2: the daemon credential is the one secret NO human ever spends —
      the plane spends it over SELF — so the success panel must not display it.
@@ -473,7 +477,7 @@ console.log("\n--- install: a refused SELF binding costs the monitoring, never t
     [retry.bindings.some((b) => b.type === "durable_object_namespace"),
      retry.bindings.filter((b) => b.type === "secret_text").length,
      retry.bindings.filter((b) => b.type === "r2_bucket").length,
-     "migrations" in retry], [true, 4, 2, true]);
+     "migrations" in retry], [true, 5, 2, true]);
   t("the group still gets a working copy", body.includes("out-boot"), true);
   t("the page says what was left out and how to get it", body.includes("was refused by Cloudflare"), true);
   t("no token in output", body.includes(TOK), false);

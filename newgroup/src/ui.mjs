@@ -4,7 +4,8 @@
  * R22 (N5, K262; DEC-124): every page names the product, Civicsmith (PRODUCT, the one place the name is written), and
  * speaks to the group installing it: by the name it chose once it has chosen one, as "your group" before. Each says the
  * installer is run by the publisher of Civicsmith releases (PUBLISHER, the line every page carries), and names no third
- * party. R23: the install page states the two prerequisites the install enforces. R35 (DEC-122 (3)): every page loads
+ * party. R23: the install page states the two prerequisites the install enforces, and the Containers permission the
+ * assistant's subscription path needs. R37: the assistant is offered as optional, nothing preselected. R35 (DEC-122 (3)): every page loads
  * nothing from another origin; its typefaces are the device's own (PAGE_CSS's stacks).
  */
 
@@ -35,6 +36,20 @@ ${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name=
   + `<span class="pname">${escText(p.name)}</span> <span class="small pcovers">covers ${p.covers.map(escText).join(", ")}</span></label>`).join("\n")}
 </fieldset>
 <p class="hint">${PROFILES_NONE}</p>`;
+
+/* R37 (K1478 (i), K1502): the assistant, offered as optional with nothing preselected. Each member who wants it connects
+   their own Claude subscription or API key in the copy; the copy holds no Claude account of its own (R36). */
+export const ASSISTANT_OFFER = `The assistant is off unless your group chooses it. Your copy holds no Claude account of
+its own: each member who wants the assistant connects their own Claude subscription or API key inside the copy, and is
+told then that their questions, and the material read to answer them, go to Anthropic under their own account. An
+administrator can change this choice later on your copy.`;
+const assistantBlock = () => `<h2>The assistant</h2>
+<fieldset class="profiles" id="assistant">
+<legend class="small">Offer the assistant on your copy?</legend>
+<label class="choice"><input type="radio" name="assistant" value="on">Yes, offer it to members who connect their own account</label>
+<label class="choice"><input type="radio" name="assistant" value="off">Not now</label>
+</fieldset>
+<p class="hint">${ASSISTANT_OFFER}</p>`;
 
 export const PAGE_CSS = `
 :root{
@@ -132,6 +147,7 @@ ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
+const asOf=()=>{const c=document.querySelector('input[name="assistant"]:checked');return c?{assistant:c.value}:{};};
 const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
   const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
@@ -143,7 +159,7 @@ $("#go").addEventListener("click",async()=>{
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...asOf(),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -173,12 +189,17 @@ copy keeps its evidence in. The installer checks both before it creates
 anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
+<p style="margin:12px 0 0">For the assistant through a member's own Claude
+subscription, the installer also asks the <b>Workers Containers
+permission</b>: that path runs in a container, which Workers Paid includes.
+Without the permission, everything else installs, and members use the
+assistant only with their own API key.</p>
 </div>
 
 <h2>What happens when you press the button</h2>
 <p>Cloudflare will show you a permission screen naming exactly what this
-installer may do in your account: install the software, and set up its
-storage. You approve it there, on Cloudflare's own page, and you can revoke
+installer may do in your account: install the software, set up its
+storage, and set up the assistant's container. You approve it there, on Cloudflare's own page, and you can revoke
 it any time from your Cloudflare dashboard. The permission passes through
 this installer for the seconds the setup takes. This installer has no
 database and nowhere to keep it, and it is never stored.</p>
@@ -189,6 +210,8 @@ that your group can stand up a copy even if the publisher of ${PRODUCT} releases
 disappears.</p>
 
 ${profilesBlock()}
+
+${assistantBlock()}
 
 <h2>Name your copy</h2>`,
   slugLabel: "A short name for your group",
@@ -212,8 +235,11 @@ credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
 organisation AI credential you paste in the optional box below.`,
   blocks: `<h2>What happens when you press the button</h2>
-<p>Cloudflare shows you the same permission screen as at install. You approve
-it on Cloudflare's own page, the new release is placed into your account, and
+<p>Cloudflare shows you the permission screen. If your copy was installed
+before the assistant's container existed, it asks one permission more than
+before, <b>Workers Containers</b>, for the assistant through a member's own
+Claude subscription; without it, everything else updates and members use the
+assistant only with their own API key. You approve it on Cloudflare's own page, the new release is placed into your account, and
 the permission is gone the moment it finishes. Nothing is stored here.</p>
 
 <h2>Which copy</h2>`,

@@ -13,14 +13,14 @@ import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 import { setupPage } from "../../bio-plane/src/setup.mjs";
-import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS } from "../src/ui.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
 import * as jurisdictions from "../../jurisdictions/index.mjs";
 import { TOK, ORIGIN, req, begin, callback, cookieOf, cookieValue, b64url, script, realFetch, jres, run, release,
   SIGNER, STRANGER, armWith, disarm, restoreSigners, sha, bump, CAPABLE_SRC, PRE116_SRC, MEMBER_SRC, bindingOf,
-  parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION } from "./fixture.mjs";
+  parsePage, LIMITS, LIMITS_STATEMENT, UNSTATED_SRC, BUILTIN_LIMITS, DEFAULT_VERSION, DESCRIPTOR, IMAGE, RUNNER } from "./fixture.mjs";
 
 after(restoreSigners);
 const NEXT = bump(RELEASE_VERSION);
@@ -62,7 +62,7 @@ test("R1 GET / serves the install page and GET /update the update page; any othe
   globalThis.fetch = realFetch;
 });
 
-test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in words; a malformed instanceAi refused by name; else PKCE S256, a fresh state, exactly three scopes, the registered redirect, and the 15-minute cookie", async () => {
+test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in words; a malformed instanceAi refused by name; else PKCE S256, a fresh state, exactly the four scopes (the Containers write scope among them), the registered redirect, and the 15-minute cookie; no field carries a Claude credential", async () => {
   for (const bad of ["", "ab", "-abc", "abc-", "Abc", "a_b", "a".repeat(41), "abc.def", "newgroup", 12345, null]) {
     const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: bad }) });
     const j = await r.json();
@@ -84,7 +84,13 @@ test("R2 POST /begin: the slug grammar and the wizard's own name refused 400 in 
   assert.equal(u.origin + u.pathname, CFG.AUTHORIZE);
   assert.deepEqual(Object.fromEntries([...u.searchParams].filter(([k]) => !["state", "code_challenge"].includes(k))), {
     response_type: "code", client_id: CFG.CLIENT_ID, redirect_uri: "https://newgroup.believeinoakland.workers.dev/callback",
-    scope: "workers-scripts.write workers-r2.write account-settings.read", code_challenge_method: "S256" });
+    scope: "workers-scripts.write workers-r2.write account-settings.read containers.write", code_challenge_method: "S256" });
+  assert.deepEqual(CFG.SCOPES, ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write"]);
+  /* R36: a Claude credential sent to /begin is taken nowhere: the cookie holds no trace of it. */
+  const CLAUDE = "sk-ant-oat01-" + "q".repeat(40);
+  const c = await begin("no-claude", "install", { instanceClaude: CLAUDE, claude: CLAUDE });
+  assert.equal(c.j.ok, true);
+  assert.ok(!JSON.stringify(cookieValue(c.cookie)).includes(CLAUDE) && !c.r.headers.get("set-cookie").includes(CLAUDE));
   const saved = cookieValue(a.cookie), savedB = cookieValue(b.cookie);
   const challenge = createHash("sha256").update(saved.v).digest("base64url");
   assert.equal(u.searchParams.get("code_challenge"), challenge, "the challenge is S256 of the cookie's verifier");
@@ -253,13 +259,13 @@ test("R8 `rel`: the repository's release installs only when newer, hashing to it
   restoreSigners();
 });
 
-test("R9 `gen`: four fresh 32-byte random credentials; INSTANCE_AI_TOKEN bound only when the operator supplied a valid one, never generated", async () => {
+test("R9 `gen`: fresh 32-byte random credentials (the four, and the seal secret, K1541); INSTANCE_AI_TOKEN bound only when the operator supplied a valid one, never generated", async () => {
   const a = seen(await run({ slug: "gen-a" })), b = seen(await run({ slug: "gen-b" }));
   const names = (w) => secretsOf(w.planePuts[0]).map((s) => s.name).sort();
-  assert.deepEqual(names(a), ["ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
+  assert.deepEqual(names(a), ["ACCOUNT_SEAL_SECRET", "ADMIN_TOKEN", "DAEMON_TOKEN", "MEMBER_TOKEN", "PROBE_TOKEN"]);
   const values = [...secretsOf(a.planePuts[0]), ...secretsOf(b.planePuts[0])].map((s) => s.text);
   for (const v of values) assert.equal(Buffer.from(v, "base64url").length, 32, "32 random bytes, base64url");
-  assert.equal(new Set(values).size, 8, "distinct within an install and across installs");
+  assert.equal(new Set(values).size, 10, "distinct within an install and across installs");
   const AI = "aik-" + "5".repeat(30);
   const ai = seen(await run({ slug: "gen-ai", ai: AI }));
   assert.deepEqual(secretsOf(ai.planePuts[0]).filter((s) => s.name === "INSTANCE_AI_TOKEN").map((s) => s.text), [AI]);
@@ -285,7 +291,8 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
   assert.deepEqual(by.BROWSER, { type: "browser", name: "BROWSER" });
   for (const name of BINDINGS) assert.equal(by[name], undefined, `${name}: no member present, none bound`);
   assert.equal(by.INSTANCE_AI_TOKEN.type, "secret_text");
-  assert.equal(Object.keys(by).length, 12, "nothing else: " + Object.keys(by).join(","));
+  assert.equal(by.ACCOUNT_SEAL_SECRET.type, "secret_text");
+  assert.equal(Object.keys(by).length, 13, "nothing else: " + Object.keys(by).join(","));
   const held = seen(await run({ slug: "inst-held", pre: { "pdf-worker": [{ type: "plain_text", name: "VERSION", text: "0.1.0" }] } }));
   assert.equal(held.planePuts.length, 0, "an account already holding a member is refused (R32), never bound into an install");
   const shy = seen(await run({ slug: "inst-shy", refuseSelf: true }));
@@ -301,7 +308,7 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
   assert.ok(!no.page.done);
 });
 
-test("R11 `fleet`: members install only from a reachable repository whose signed fleet statement verifies against an armed key and names the plane just installed; each part hashed; an unknown part type refuses that member; every member left out is named; the install never fails over one", async () => {
+test("R11 `fleet`: members install only from a reachable repository whose signed fleet statement verifies against an armed key and names the plane just installed; each part hashed; an unknown part type refuses that member; sheet-worker installs as any member; every member left out is named; the install never fails over one", async () => {
   armWith(SIGNER.line);
   const full = seen(await run({ slug: "fleet-all", rel: await release({ version: NEXT }) }));
   for (const member of MEMBERS) assert.ok(full.acct.has(member), member);
@@ -333,6 +340,11 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
   assert.match(said, /^1 capability worker\(s\) installed \(ocr-worker\); 2 left out: /);
   assert.ok(said.includes("pdf-worker (pdf-worker failed its integrity check)") && said.includes("agent-worker (agent-worker http 404)"), said);
   assert.ok(bytes.page.done, "the install never fails over a member");
+  /* T33-91: sheet-worker installs as any member (inactive until the release that activates it, K1506); a container
+     member is R38's. */
+  const sheet = seen(await run({ slug: "fleet-sheet", rel: await release({ version: NEXT, members: [...MEMBERS, "sheet-worker"] }) }));
+  assert.ok(sheet.acct.has("sheet-worker"));
+  assert.match(sheet.page.label("fleet"), /All 4 capability workers installed and verified: .*sheet-worker/);
   const ocr = full.calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/ocr-worker"));
   assert.equal(ocr.init.body.get("assets/x.wasm").type, "application/wasm", "a part is uploaded under its stated type");
   restoreSigners();
@@ -502,7 +514,8 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   assert.equal("migrations" in m, false);
   assert.deepEqual(m.keep_bindings.slice().sort(), ["durable_object_namespace", "secret_text"]);
   const by = Object.fromEntries(m.bindings.map((b) => [b.name, b]));
-  assert.deepEqual(Object.keys(by).sort(), ["BROWSER", "CAPTURES", "DAEMON_TOKEN", "INSTANCE_AI_TOKEN", "INSTANCE_NAME", "PUBLISHED", "SELF", "VERSION"]);
+  /* K1541: the copy held no seal secret (its settings say so), so the update gives it one. */
+  assert.deepEqual(Object.keys(by).sort(), ["ACCOUNT_SEAL_SECRET", "BROWSER", "CAPTURES", "DAEMON_TOKEN", "INSTANCE_AI_TOKEN", "INSTANCE_NAME", "PUBLISHED", "SELF", "VERSION"]);
   assert.deepEqual([by.VERSION.text, by.INSTANCE_NAME.text, by.SELF.service, by.INSTANCE_AI_TOKEN.text], [DEFAULT_VERSION, "upd", "upd", AI]);
   assert.deepEqual(m.limits, { ...LIMITS }, "the release's limits restated (R20)");
   assert.equal(Buffer.from(by.DAEMON_TOKEN.text, "base64url").length, 32);
@@ -733,7 +746,7 @@ test("R22 every page names Civicsmith and the installing group, by its chosen na
   }
 });
 
-test("R23 the install and invitation pages state the prerequisites the install enforces: Workers Paid and a payment method, and never that no card is needed or storage is optional", async () => {
+test("R23 the install and invitation pages state the prerequisites the install enforces: Workers Paid and a payment method, and for the assistant through a member's own subscription the Containers permission; and never that no card is needed or storage is optional", async () => {
   const home = await text("/");
   for (const [where, page] of [["install page", home], ["invitation page", INVITATION]]) {
     const words = page.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
@@ -741,6 +754,10 @@ test("R23 the install and invitation pages state the prerequisites the install e
     assert.match(words, /\$5 a month/, where);
     assert.match(words, /payment method on the account/, where);
     assert.equal(/no card|card is needed|free Cloudflare account|stays free|optional extra|everything still works/i.test(words), false, where);
+    /* T33-91: for the assistant through a member's own subscription, the Containers permission the install asks (R38). */
+    assert.match(words, /Workers Containers permission/, where);
+    assert.match(words, /member's own Claude subscription/, where);
+    assert.match(words, /only with their own API key/, where);
   }
   const free = seen(await run({ slug: "pre-free", plan: "free" }));
   assert.match(free.page.failed.p, /Workers Paid plan \(\$5\/month\), paid with a payment method on the account/);
@@ -748,6 +765,166 @@ test("R23 the install and invitation pages state the prerequisites the install e
 });
 
 test.todo("R24 an install never shares another copy's buckets and never overwrites its fleet workers in the same account (not yet met: MULTI-INSTANCE-ISOLATION, K102; the buckets and the members have fixed names)");
+
+test("R17 (K1541) an update gives a copy that holds no seal secret a fresh one, keeps one it holds unrestated, and sends none when the copy's settings cannot be read, saying which", async () => {
+  const none = seen(await run({ slug: "seal-none", mode: "update", pre: { "seal-none": planeBase("seal-none") } }));
+  const sent = (w) => w.planePuts.flatMap((p) => (p.meta.bindings || []).filter((b) => b.name === "ACCOUNT_SEAL_SECRET"));
+  assert.equal(sent(none).length, 1);
+  assert.equal(Buffer.from(sent(none)[0].text, "base64url").length, 32);
+  assert.equal(none.raw.includes(sent(none)[0].text), false, "never shown");
+  assert.match(none.page.label("keys"), /now holds the secret that seals each member's own Claude account or API key/);
+  const OLD = { type: "secret_text", name: "ACCOUNT_SEAL_SECRET", text: "seal-kept" };
+  const held = seen(await run({ slug: "seal-held", mode: "update", pre: { "seal-held": [...planeBase("seal-held"), OLD] } }));
+  assert.equal(sent(held).length, 0, "never restated over one held");
+  assert.deepEqual(held.acct.get("seal-held").filter((b) => b.name === "ACCOUNT_SEAL_SECRET"), [OLD], "kept unchanged");
+  assert.match(held.page.label("keys"), /already held the secret .* kept unchanged/);
+  const blind = seen(await run({ slug: "seal-blind", mode: "update", pre: { "seal-blind": planeBase("seal-blind") }, settingsBlind: true }));
+  assert.equal(sent(blind).length, 0, "unknown is not none");
+  assert.equal(blind.page.status("keys"), "no");
+  assert.match(blind.page.label("keys"), /could not be read.*Nothing was sent or removed/s);
+  assert.equal(blind.page.status("up"), "ok", "the update itself proceeds");
+});
+
+/* ------------------------------------------------------------------------------------------------ the assistant and the container member */
+
+test("R36 neither the install nor the update takes, generates, binds or shows a Claude credential; an update removes one held before, and names a removal refused; INSTANCE_AI_TOKEN is unchanged", async () => {
+  const CLAUDE = "sk-ant-oat01-" + "z".repeat(40);
+  const b = await begin("r36-install", "install", { instanceClaude: CLAUDE });
+  const i = seen(await run({ slug: "r36-install", cookie: b.cookie, state: b.state }));
+  for (const put of i.planePuts) assert.equal((put.meta.bindings || []).some((x) => /CLAUDE/.test(x.name)), false);
+  assert.equal(i.raw.includes(CLAUDE), false);
+  assert.match(i.page.label("assist"), /holds no Claude account of its own: each member who wants the assistant connects their own Claude subscription or API key/);
+  /* An update of a copy holding the retired credential removes it, and says so; one holding none deletes nothing. */
+  const pre = [...planeBase("r36-upd"), { type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: CLAUDE }];
+  const u = seen(await run({ slug: "r36-upd", mode: "update", pre: { "r36-upd": pre } }));
+  for (const put of u.planePuts) assert.equal((put.meta.bindings || []).some((x) => x.name === "INSTANCE_CLAUDE_TOKEN"), false, "never restated");
+  assert.deepEqual(u.deleted, ["r36-upd/INSTANCE_CLAUDE_TOKEN"]);
+  assert.equal(u.acct.get("r36-upd").some((x) => x.name === "INSTANCE_CLAUDE_TOKEN"), false, "none left behind");
+  assert.match(u.page.label("keys"), /group-wide Claude credential your copy held was removed/);
+  assert.equal(u.raw.includes(CLAUDE), false);
+  const clean = seen(await run({ slug: "r36-clean", mode: "update", pre: { "r36-clean": planeBase("r36-clean") } }));
+  assert.deepEqual(clean.deleted, []);
+  const stuck = seen(await run({ slug: "r36-stuck", mode: "update", pre: { "r36-stuck": pre.map((x) => x.name === "SELF" ? { ...x, service: "r36-stuck" } : x) }, refuseSecretDelete: true }));
+  assert.equal(stuck.page.status("keys"), "no");
+  assert.match(stuck.page.label("keys"), /removing it was refused .* Remove the secret INSTANCE_CLAUDE_TOKEN/s);
+  assert.ok(!stuck.raw.includes("<i>by the fake</i>"), "the API's words are escaped");
+  /* The organisation `ai` credential is untouched by R36. */
+  const AI = "aik-" + "w".repeat(20);
+  const ai = seen(await run({ slug: "r36-ai", ai: AI }));
+  assert.deepEqual(secretsOf(ai.planePuts[0]).filter((x) => x.name === "INSTANCE_AI_TOKEN").map((x) => x.text), [AI]);
+});
+
+test("R37 the install page offers the assistant as optional, nothing preselected, saying it is off unless chosen and each member connects their own account and is told then; the choice is bound as ASSISTANT_ENABLED for the first boot, none bound when none is made; an update never changes it", async () => {
+  const home = await text("/"), upd = await text("/update");
+  const radios = [...home.matchAll(/<input type="radio" name="assistant" value="([^"]*)"([^>]*)>/g)];
+  assert.deepEqual(radios.map((m) => m[1]), ["on", "off"]);
+  assert.ok(radios.every((m) => !/checked/.test(m[2])), "nothing preselected");
+  assert.ok(home.includes(ASSISTANT_OFFER));
+  const words = ASSISTANT_OFFER.replace(/\s+/g, " ");
+  assert.match(words, /off unless your group chooses it/);
+  assert.match(words, /each member who wants the assistant connects their own Claude subscription or API key inside the copy/);
+  assert.match(words, /told then that their questions, and the material read to answer them, go to Anthropic under their own account/);
+  assert.ok(!upd.includes('type="radio" name="assistant"'), "the update page offers no choice");
+  for (const [v, mode, says] of [["maybe", "install", /choose one of the two, or neither/], [true, "install", /choose one/],
+      ["on", "update", /An update never changes whether your copy offers the assistant/]]) {
+    const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "as-refused", mode, assistant: v }) });
+    assert.deepEqual([r.status, (await r.json()).ok], [400, false], String(v));
+    assert.equal(r.headers.get("set-cookie"), null);
+  }
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  for (const choice of ["on", "off"]) {
+    const b = await begin("as-" + choice, "install", { assistant: choice });
+    const w = seen(await run({ slug: "as-" + choice, rel, cookie: b.cookie, state: b.state }));
+    assert.equal(w.planePuts.length, 2);
+    for (const put of w.planePuts) assert.deepEqual(bindingOf(put, "ASSISTANT_ENABLED"), { type: "plain_text", name: "ASSISTANT_ENABLED", text: choice });
+    assert.match(w.page.label("assist"), choice === "on" ? /You chose to offer the assistant/ : /You chose not to offer the assistant for now, so it is off/);
+  }
+  const n = seen(await run({ slug: "as-none", rel }));
+  for (const put of n.planePuts) assert.equal(bindingOf(put, "ASSISTANT_ENABLED"), null);
+  assert.match(n.page.label("assist"), /No choice was made about the assistant, so it is off/);
+  const u = seen(await run({ slug: "as-upd", mode: "update", rel,
+    pre: { "as-upd": [...planeBase("as-upd"), { type: "plain_text", name: "ASSISTANT_ENABLED", text: "on" }] } }));
+  for (const put of u.planePuts) assert.equal(bindingOf(put, "ASSISTANT_ENABLED"), null, "an update never sends it");
+  restoreSigners();
+});
+
+test("R38 a container member installs only with the Containers scope granted, Workers Paid, and a public image pinned by digest under the default policy, through the Containers API, with its class bound into the members it names; any condition failing leaves it out, named, and the install never fails over it", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT, container: true });
+  const RUNNER_BINDING = { type: "durable_object_namespace", name: "RUNNER", class_name: "AgentRunner", script_name: RUNNER };
+  const runnerOf = (w) => (w.acct.get("agent-worker") || []).filter((b) => b.name === "RUNNER");
+  /* All conditions hold: the Worker with its class's migration, the application with the image under `default`, and
+     agent-worker bound to the class. */
+  const ok = seen(await run({ slug: "box-ok", rel }));
+  const put = ok.calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/" + RUNNER));
+  const meta = JSON.parse(await put.init.body.get("metadata").text());
+  assert.deepEqual(meta.migrations, { new_tag: "v1", new_sqlite_classes: ["AgentRunner"] });
+  assert.equal(put.init.body.get("container.json"), null, "the descriptor is read, never uploaded");
+  assert.deepEqual(ok.apps.map(({ id, ...a }) => a), [{ name: RUNNER, scheduling_policy: "default", instances: 0,
+    max_instances: DESCRIPTOR.max_instances, configuration: { image: IMAGE }, durable_objects: { namespace_id: `ns-${RUNNER}-AgentRunner` } }]);
+  assert.deepEqual(runnerOf(ok), [RUNNER_BINDING]);
+  assert.deepEqual(ok.refused, []);
+  assert.match(ok.page.label("fleet"), /All 4 capability workers installed and verified/);
+  const upload = (w) => w.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u)).map((c) => c.u.split("/scripts/")[1]);
+  assert.ok(upload(ok).indexOf(RUNNER) < upload(ok).indexOf("agent-worker"), "the container before the member bound to it");
+  /* Each condition failing: left out, named, the copy serving the assistant by members' own API keys, the rest installed. */
+  const PAID_NOTE = /your copy offers the assistant only through a member's own API key/;
+  const leftOut = async (why, opts, says) => {
+    const w = seen(await run({ slug: "box-" + why, rel, ...opts }));
+    assert.equal(w.apps.length, 0, why);
+    assert.equal(runnerOf(w).length, 0, `${why}: agent-worker installed without RUNNER`);
+    assert.ok(w.acct.has("agent-worker") && w.acct.has("pdf-worker"), `${why}: the rest installed`);
+    assert.match(w.page.label("fleet"), new RegExp(`left out: ${RUNNER} \\([^;]*${says.source}`), why);
+    assert.match(w.page.label("fleet"), PAID_NOTE, why);
+    assert.ok(w.page.done, `${why}: the install finished`);
+    return w;
+  };
+  await leftOut("noscope", { grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }, /the permission you approved does not include Workers Containers/);
+  /* A token response stating no scope: one read of the Containers API decides. */
+  const asked = seen(await run({ slug: "box-asked", rel, grantedScope: null }));
+  assert.equal(asked.apps.length, 1, "a read that answers means the scope is held");
+  await leftOut("unasked", { grantedScope: null, containers: "read" }, /the permission you approved could not be shown to include Workers Containers \(Authentication error\)/);
+  for (const [why, d, says] of [
+      ["unpinned", { ...DESCRIPTOR, image: "docker.io/civicos/agent-runner:latest" }, /its image is not a public registry image pinned by its sha256 digest/],
+      ["private", { ...DESCRIPTOR, image: "registry.cloudflare.com/acct/agent-runner@sha256:" + "b".repeat(64) }, /its image is not a public registry image/],
+      ["policy", { ...DESCRIPTOR, scheduling_policy: "durable_object" }, /its scheduling policy is not the default one/],
+      ["noclass", { ...DESCRIPTOR, class_name: "" }, /names no class/], ["max", { ...DESCRIPTOR, max_instances: 0 }, /no maximum number of instances/],
+      ["bind", { ...DESCRIPTOR, bind: [{ member: "agent-worker", binding: "runner" }] }, /names its bindings unreadably/],
+      ["garbled", "{not json", /its container description does not parse/]]) {
+    const w = await leftOut(why, { rel: await release({ version: NEXT, container: true, descriptor: d }) }, says);
+    assert.equal(w.calls.some((c) => c.u.includes("/containers/")), false, `${why}: the Containers API untouched`);
+  }
+  const created = await leftOut("refused", { containers: "create" }, /application refused/);
+  assert.ok(created.acct.has(RUNNER), "the Worker uploaded is named, not hidden: the class exists, unused");
+  /* A part type an installer does not know leaves one member out (R11): what an older installer does with this one. */
+  /* The descriptor's hash is covered by the fleet signature: bytes that differ are refused like any part. */
+  const tampered = await release({ version: NEXT, container: true });
+  tampered.assets[`${RUNNER}/container.json`] = JSON.stringify({ ...DESCRIPTOR, image: "docker.io/evil/x@sha256:" + "c".repeat(64) });
+  await leftOut("tampered", { rel: tampered }, /agent-runner container\.json failed its integrity check/);
+  /* An update: re-consent. Without the scope, everything else updates and the container is named; a container held
+     from before keeps its binding; with the scope and Paid, the application is rolled out to the image. */
+  const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
+  const preAll = { "box-upd": planeBase("box-upd"), ...Object.fromEntries(MEMBERS.map((m) => [m, old])), [RUNNER]: old };
+  const noScope = seen(await run({ slug: "box-upd", mode: "update", rel, pre: preAll, preClasses: { [RUNNER]: ["AgentRunner"] },
+    preApps: [{ id: "app9", name: RUNNER }], grantedScope: "workers-scripts.write workers-r2.write account-settings.read" }));
+  assert.equal(noScope.page.status("up"), "ok");
+  assert.match(noScope.page.label("fleet"), /agent-runner \(the permission you approved does not include Workers Containers/);
+  assert.equal(noScope.calls.some((c) => c.u.includes("bio-plan-probe")), false, "no plan probe without the scope");
+  assert.deepEqual(runnerOf(noScope), [RUNNER_BINDING], "a container held from before keeps serving its member");
+  assert.deepEqual(noScope.rollouts, []);
+  const rolled = seen(await run({ slug: "box-upd", mode: "update", rel, pre: preAll, preClasses: { [RUNNER]: ["AgentRunner"] },
+    preApps: [{ id: "app9", name: RUNNER }] }));
+  assert.ok(rolled.calls.some((c) => c.u.includes("bio-plan-probe")), "an update establishes the plan as R6 does");
+  assert.deepEqual(rolled.rollouts.map((r) => [r.id, r.target_configuration.image]), [["app9", IMAGE]]);
+  const rerun = JSON.parse(await rolled.calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/" + RUNNER)).init.body.get("metadata").text());
+  assert.equal("migrations" in rerun, false, "the class's migration is never restated");
+  assert.deepEqual(rolled.refused, []);
+  const free = seen(await run({ slug: "box-upd", mode: "update", rel, pre: preAll, preClasses: { [RUNNER]: ["AgentRunner"] }, plan: "free" }));
+  assert.equal(free.page.status("up"), "ok", "an update never grows a refusal");
+  assert.match(free.page.label("fleet"), /agent-runner \(your account is on Workers Free, and containers need Workers Paid/);
+  restoreSigners();
+});
 
 /* ------------------------------------------------------------------------------------------------ the embed step */
 

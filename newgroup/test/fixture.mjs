@@ -125,16 +125,27 @@ export const BUILTIN_LIMITS = planeLimits(RELEASE_SOURCE);
 export const MEMBER_SRC = "export default { fetch(){ return new Response('member'); } };";
 export const WASM = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
 
+/* R38: the container member's descriptor, the `Container` part the signed fleet statement covers by its hash. */
+export const IMAGE = "docker.io/civicos/agent-runner@sha256:" + "a".repeat(64);
+export const DESCRIPTOR = Object.freeze({ class_name: "AgentRunner", image: IMAGE, scheduling_policy: "default", max_instances: 5,
+  bind: [{ member: "agent-worker", binding: "RUNNER" }] });
+export const RUNNER = "agent-runner";
+
 /* `members`: the fleet's member names (default: the three the plane binds). Options drop the fleet signature, sign it
-   over another set, tamper with a member's bytes, name an unknown part type, or leave the fleet out. */
+   over another set, tamper with a member's bytes, name an unknown part type, or leave the fleet out. `container` adds
+   the container member agent-runner with `descriptor` (an object, or raw text) as its `Container` part. */
 export async function release({ version, src = CAPABLE_SRC, members = FLEET_BINDINGS.map(([m]) => m), sig = "good",
-  fleet = true, fleetSig = "good", tamper = null, badType = null, missing = null, signedMembers = null } = {}) {
+  fleet = true, fleetSig = "good", tamper = null, badType = null, missing = null, signedMembers = null,
+  container = false, descriptor = DESCRIPTOR } = {}) {
   const planeSha = await sha(src);
+  const boxText = typeof descriptor === "string" ? descriptor : JSON.stringify(descriptor);
   const entry = async (member) => ({ member, asset: `${member}.bundled.mjs`, sha256: await sha(MEMBER_SRC),
     bytes: MEMBER_SRC.length, compat: { date: "2026-07-01", flags: [] },
     services: member === "agent-worker" ? [{ binding: "PLANE", service: "bio-plane" }] : [],
     parts: member === "ocr-worker" ? [{ path: "assets/x.wasm", type: badType === member ? "Mystery" : "CompiledWasm",
-      sha256: await sha(WASM), bytes: WASM.length }] : [] });
+      sha256: await sha(WASM), bytes: WASM.length }]
+      : member === RUNNER ? [{ path: "container.json", type: "Container", sha256: await sha(boxText), bytes: boxText.length }] : [] });
+  if (container && !members.includes(RUNNER)) members = [...members, RUNNER];
   const list = await Promise.all(members.map(entry));
   const plane = { sha256: planeSha, bytes: src.length, asset: "bio-plane.bundled.mjs" };
   const signedList = signedMembers ? await Promise.all(signedMembers.map(entry)) : list;
@@ -147,7 +158,7 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
   for (const m of list) {
     assets[m.asset] = m.member === tamper ? "tampered" : MEMBER_SRC;
     if (m.member === missing) delete assets[m.asset];
-    for (const p of m.parts) assets[`${m.member}/${p.path}`] = WASM;
+    for (const p of m.parts) assets[`${m.member}/${p.path}`] = p.type === "Container" ? boxText : WASM;
   }
   return { manifest, assets, version, src };
 }
@@ -157,7 +168,13 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   accounts = [{ id: "A1", name: "Group Account" }], tokenFail = false, accountsFail = false, settingsFail = false,
   plan = "paid", probeDelete = "ok", r2 = "ok", pre = {}, subdomain = "grp", taken = [], subdomainPut = "ok",
   enableFail = false, refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseUpdate = false,
-  lookupFail = [], readBack = "raw", preBuckets = [], rel, copy = {} } = {}) {
+  lookupFail = [], readBack = "raw", preBuckets = [], rel, copy = {},
+  /* R38: the scopes the token response states (null: it states none), and the Containers API. `containers`: "ok", or
+     "read" (every Containers call refused), "create" or "rollout" (that call refused); `preApps` the applications held;
+     `preClasses` the Durable Object classes each pre-existing script holds. `settingsBlind`: settings answer no bindings.
+     `refuseSecretDelete`: a secret's removal refused. */
+  grantedScope = CFG.SCOPES.join(" "), containers = "ok", preApps = [], preClasses = {}, settingsBlind = false,
+  refuseSecretDelete = false } = {}) {
   const signersBefore = [...ARMED_SIGNERS];
   if (rel === undefined) { rel = await release({ version: DEFAULT_VERSION, fleet: false }); armWith(SIGNER.line); }
   const realTimeout = globalThis.setTimeout;
@@ -171,6 +188,9 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      (other bytes on the first read only), "fail" (the read refused). */
   const sources = new Map();
   const reads = [];
+  const classes = new Map(Object.entries(preClasses));
+  const apps = preApps.map((a) => ({ ...a }));
+  const rollouts = [], deleted = [];
   const refused = [], planePuts = [], enabled = new Set();
   let prefix = subdomain;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
@@ -200,6 +220,17 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       refused.push(`${name}:${b.name}->${b.service}`);
       return cferr(`Service binding '${b.name}' references Worker '${b.service}' which was not found`, 400, 10143);
     }
+    /* A cross-script Durable Object binding names a class the other script must hold. */
+    for (const b of explicit) if (b.type === "durable_object_namespace" && b.script_name && b.script_name !== name
+        && !(classes.get(b.script_name) || []).includes(b.class_name)) {
+      refused.push(`${name}:${b.name}->${b.script_name}.${b.class_name}`);
+      return cferr(`Durable Object binding '${b.name}' references class '${b.class_name}' in '${b.script_name}', which was not found`, 400, 10061);
+    }
+    if (meta.migrations?.new_sqlite_classes) {
+      if ((classes.get(name) || []).some((c) => meta.migrations.new_sqlite_classes.includes(c)))
+        return cferr("migration tag precondition failed", 400, 10079);
+      classes.set(name, [...(classes.get(name) || []), ...meta.migrations.new_sqlite_classes]);
+    }
     const kept = (acct.get(name) || []).filter((b) => (meta.keep_bindings || []).includes(b.type)
       && !explicit.some((x) => x.name === b.name));
     acct.set(name, [...explicit, ...kept]);
@@ -216,7 +247,31 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       return p in rel.assets ? new Response(rel.assets[p]) : new Response("gone", { status: 404 });
     } },
     { m: (u) => u === CFG.TOKEN, f: () => tokenFail ? jres({ error: "invalid_grant", error_description: "code spent" }, 400)
-      : jres({ access_token: TOK }) },
+      : jres({ access_token: TOK, ...(grantedScope === null ? {} : { scope: grantedScope }) }) },
+    { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets\/[^/]+$/.test(u) && mth === "DELETE", f: (u) => {
+      const [name, , secret] = u.split("/workers/scripts/")[1].split("/");
+      if (refuseSecretDelete) return cferr("secret removal refused <i>by the fake</i>", 500);
+      acct.set(name, (acct.get(name) || []).filter((b) => b.name !== secret));
+      deleted.push(`${name}/${secret}`);
+      return cfok({});
+    } },
+    { m: (u, mth) => u.includes("/workers/durable_objects/namespaces") && mth === "GET", f: () =>
+      cfok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
+    { m: (u) => u.includes("/containers/applications"), f: (u, init) => {
+      const mth = (init.method || "GET").toUpperCase();
+      if (containers === "read") return cferr("Authentication error", 403, 10000);
+      if (mth === "GET") return cfok(apps);
+      const body = JSON.parse(init.body);
+      if (u.endsWith("/rollouts")) {
+        if (containers === "rollout") return cferr("rollout refused", 500);
+        const id = u.split("/applications/")[1].split("/")[0];
+        rollouts.push({ id, ...body });
+        return cfok({ id: "r" + rollouts.length });
+      }
+      if (containers === "create") return cferr("application refused", 500);
+      apps.push({ id: "app" + (apps.length + 1), ...body });
+      return cfok(apps.at(-1));
+    } },
     { m: (u) => u === `${API}/accounts`, f: () => accountsFail ? cferr("forbidden", 403) : cfok(accounts) },
     { m: (u, mth) => u.includes("/scripts/bio-plan-probe") && mth === "PUT", f: async (u, init) => {
       if (plan === "free") return cferr("CPU limits are not supported for the Free plan.", 400, 100328);
@@ -229,8 +284,11 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       acct.delete("bio-plan-probe"); return cfok({});
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET", f: (u) => {
-      if (settingsFail || lookupFail.includes(u.split("/workers/scripts/")[1].split("/")[0])) return cferr("upstream trouble", 500);
-      return acct.has(u.split("/workers/scripts/")[1].split("/")[0]) ? cfok({}) : cferr("not found", 404);
+      const name = u.split("/workers/scripts/")[1].split("/")[0];
+      if (settingsFail || lookupFail.includes(name)) return cferr("upstream trouble", 500);
+      /* Settings name each binding, a secret by its name and type only. */
+      return acct.has(name) ? cfok(settingsBlind ? {} : { bindings: (acct.get(name) || []).map(({ text, ...b }) => b) })
+        : cferr("not found", 404);
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "GET", f: (u) => {
@@ -293,7 +351,8 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   let out;
   try { out = await callback(`code=GOODCODE&state=${st}`, ck); }
   finally { globalThis.setTimeout = realTimeout; globalThis.fetch = realFetch; armWith(...signersBefore); }
-  return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf, reads };
+  return { ...out, calls, acct, buckets, refused, planePuts, enabled, prefix: () => prefix, membersOf, reads, apps, rollouts,
+    classes, deleted };
 }
 
 /* The binding a plane PUT carried, by name. */
