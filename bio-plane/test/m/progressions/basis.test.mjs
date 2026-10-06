@@ -46,8 +46,8 @@ test("R39 R5: the read answers the standard with standards.inForceAt on the read
   w.clock.now = "2026-09-10T12:00:00.000Z";
   const r = w.p.readProgression({ progressionKey: "proc", viewer: MEMBER });
   assert.deepEqual(r.basis.standard, { standard: STD, portion: null,
-    in_force: { date: "2026-09-10T12:00:00Z", state: "in_force", why: "its period covers the date" } });
-  assert.deepEqual(w.std.asked.at(-1), { standard: STD, portion: null, date: "2026-09-10T12:00:00Z", viewer: MEMBER });
+    in_force: { date: "2026-09-10", state: "in_force", why: "its period covers the date" } });
+  assert.deepEqual(w.std.asked.at(-1), { standard: STD, portion: null, date: "2026-09-10", viewer: MEMBER });
   // the answer follows standards on the next read (a repeal held since), nothing of it is stored
   w.std.held.get(STD).inForce = { state: "not_in_force", why: "repealed on 2026-09-05" };
   assert.deepEqual(w.p.readProgression({ progressionKey: "proc", viewer: MEMBER }).basis.standard.in_force.state, "not_in_force");
@@ -59,4 +59,13 @@ test("R39 R5: the read answers the standard with standards.inForceAt on the read
   const u = w.p.readProgression({ progressionKey: "proc", viewer: MEMBER }).basis.standard.in_force;
   assert.equal(u.state, "undetermined");
   assert.match(u.why, /down/);
+  // the read's date is its local day in the governing zone: just past midnight UTC is still the 10th in the zone
+  w.std.provider.inForceAt = (a) => ({ ok: true, state: "in_force", why: "w", date: a.date });
+  w.clock.now = "2026-09-11T02:00:00.000Z";
+  assert.equal(w.p.readProgression({ progressionKey: "proc", viewer: MEMBER }).basis.standard.in_force.date, "2026-09-10");
+  // no governing zone: the day is undetermined, never the UTC day
+  w.tz.zone = null;
+  const nz = w.p.readProgression({ progressionKey: "proc", viewer: MEMBER }).basis.standard.in_force;
+  assert.deepEqual([nz.date, nz.state], [null, "undetermined"]);
+  assert.match(nz.why, /no time zone governs/);
 });

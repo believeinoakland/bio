@@ -505,7 +505,8 @@ export class Progressions {
     const id = str(standardId);
     let read = null;
     try { read = id ? this.standards.standardRead({ id, viewer }) : null; } catch { read = null; }
-    const held = read && read.ok !== false && (read.found !== false) ? (read.standard || read) : null;
+    const held = read && read.ok !== false && (read.found !== false)
+      ? (read.standard && typeof read.standard === "object" ? read.standard : read) : null;
     if (!held) return STANDARDS.noSuchStandard(id || null);
     const part = portion == null || portion === "" ? null : String(portion).slice(0, 500);
     const holds = held.portion == null ? null : typeof held.portion === "object" ? held.portion.path ?? null : held.portion;
@@ -518,12 +519,19 @@ export class Progressions {
      never stored. */
   #inForce(b, viewer) {
     if (!b || !b.standard) return b;
-    const date = instantOf(Date.parse(this.now()));
+    /* the read's date is its local day in the governing zone (standards R20 takes a day); never a UTC day */
+    const zone = this.#zone();
+    const day = zone.zone ? localDay(instantOf(Date.parse(this.now())), zone.zone) : null;
+    if (typeof day !== "string")
+      return { ...b, standard: { ...b.standard, in_force: { date: null, state: "undetermined",
+               why: `the read's day is undetermined: ${zone.why || "the governing zone is not a zone the runtime knows"}` } } };
+    const date = day;
     let a = null;
     try { a = this.standards.inForceAt({ standard: b.standard.standard, portion: b.standard.portion, date, viewer }); }
     catch (e) { a = { state: "undetermined", why: `standards could not answer: ${String(e && e.message || e).slice(0, 200)}` }; }
-    const state = a && typeof a.state === "string" ? a.state : "undetermined";
-    const why = a && typeof a.why === "string" ? a.why : "standards gave no answer";
+    const state = a && a.ok !== false && typeof a.state === "string" ? a.state : "undetermined";
+    const why = a && a.ok !== false && typeof a.why === "string" ? a.why
+      : `standards gave no answer${a && a.reason ? ` (${a.reason})` : ""}`;
     return { ...b, standard: { ...b.standard, in_force: { date, state, why } } };
   }
 
@@ -1079,7 +1087,10 @@ export class Progressions {
         if (!e || e.found === false || e.ok === false) return none(`the event ${p.event_id} is not held`, "event", p.event_id);
         const w = ev.when;
         if (w == null) return none(`the event ${p.event_id} is placed nowhere: it has no dated attestation`, "event", p.event_id);
-        if (w.undetermined || typeof w !== "object") return none(`the event ${p.event_id}'s date is undetermined: ${w.why || "no why given"}`, "event", p.event_id);
+        if (typeof w !== "object" || w.undetermined)
+          return none(`the event ${p.event_id}'s date is undetermined: ${(typeof w === "object" && w.why) || ev.why || "no why given"}`, "event", p.event_id);
+        if (!["day", "minute", "second", "edtf"].includes(w.precision))
+          return none(`the event ${p.event_id}'s date is held as ${w.precision === "upper_bound" ? "an upper bound only (on or before)" : `'${w.precision}'`}, never its date`, "event", p.event_id);
         const value = typeof w.value === "string" ? w.value : w.start;
         const dz = w.zone || zone.zone;
         if (typeof value !== "string" || typeof w.precision !== "string") return none(`the event ${p.event_id} states no date`, "event", p.event_id);
@@ -1094,6 +1105,7 @@ export class Progressions {
       } else if (facts.length === 1) f = facts[0];
       else return none(facts.length ? `events holds ${facts.length} dated facts for this document; a member names the one that dates this step`
                                      : "events holds no dated fact for this document");
+      if (f.upper_bound) return none(`the dated fact ${f.dated_fact_id} is an upper bound only (on or before), never the date`, "dated_fact", f.dated_fact_id);
       const dz = f.zone || zone.zone;
       if (!dz) return none(`the dated fact ${f.dated_fact_id} states a day and ${zone.why}`, "dated_fact", f.dated_fact_id);
       return { own_date: { value: f.value, precision: f.precision || "day", zone: dz }, own_date_source: "dated_fact",

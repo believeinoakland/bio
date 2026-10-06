@@ -9,6 +9,9 @@ import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
+/* the one answers progressions gives through its upstreams (K1563 (10), K1568 (3)), re-exported for the tests */
+export { noSuchDatedFact } from "../../../src/events/index.mjs";
+export { portionUnknown } from "../../../src/standards/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -77,45 +80,34 @@ export const FIRST_BASIS = "the group's reading of how this body works";
 /** The governing zone the tests' profile gives (local-facts R2). */
 export const ZONE = "America/New_York";
 
-/** What `events` holds, as its reads answer it (R9, R26, R27): dated facts per capture, events with their `when` and
- *  the captures that attest them. */
+/** What `events` holds, in the shapes its reads answer (R9, R26, R27; checked against the real module in
+ *  integration.test.mjs): dated facts per capture, events with their `when` and the captures that attest them. */
 export function eventsWorld() {
   const e = { facts: new Map(), events: new Map(), reads: 0 };
   e.provider = {
-    datedFactsFor: ({ captureSha }) => { e.reads++; return { ok: true, capture_sha: captureSha, facts: [...(e.facts.get(captureSha) || [])] }; },
+    datedFactsFor: ({ captureSha }) => { e.reads++; const f = [...(e.facts.get(captureSha) || [])];
+                                         return { ok: true, capture_sha: captureSha, count: f.length, dated_facts: f }; },
     readEvent: ({ eventId }) => {
       e.reads++;
       const ev = e.events.get(eventId);
-      return ev ? { ok: true, found: true, event: { event_id: eventId, kind: ev.kind || "award", when: ev.when,
-                                                     attestations: ev.captures.map((c, i) => ({ attestation_id: `${eventId}#${i}`, capture_sha: c })) } }
+      return ev ? { ok: true, found: true, event: { event_id: eventId, kind: ev.kind || "award",
+                                                     when: ev.when && typeof ev.when === "object" && ev.when.value === undefined ? { ...ev.when, value: ev.when.start } : ev.when,
+                                                     attestations: ev.captures.map((c, i) => ({ attestation_id: i + 1, form: "extent", dated_fact_id: null, capture_sha: c })) } }
                 : { ok: true, found: false, event_id: eventId };
     },
   };
   return e;
 }
 
-/** standards' one answer for a portion a standard does not hold (K1563 (10)), in its R17 answer's shape, until
- *  standards' job merges and the tests re-point at its export. */
-export function portionUnknown(standardId, portion, extra = null) {
-  return { ...(extra || {}), ok: false, reason: "PORTION_UNKNOWN", code: "PORTION_UNKNOWN", check: "C-112.x",
-           translation: "standards' translation", standard: standardId ?? null, portion: portion ?? null,
-           detail: "no such portion of that standard is held" };
-}
-
-/** events' one answer for a dated fact not held for a capture (its R7; K1568 (3)), in its refusal shape, until events'
- *  job merges and the tests re-point at its export. */
-export function noSuchDatedFact(datedFactId, extra = null) {
-  return { ...(extra || {}), ok: false, reason: "NO_SUCH_DATED_FACT", code: "NO_SUCH_DATED_FACT", check: "C-events.x",
-           translation: "events' translation", dated_fact: datedFactId ?? null, detail: "no such dated fact is held" };
-}
-
 /** What `standards` holds (R5, R20): each standard with its portion and the in-force answer it gives. */
 export function standardsWorld() {
   const s = { held: new Map(), asked: [] };
   s.provider = {
-    standardRead: ({ id }) => (s.held.has(id) ? { ok: true, found: true, standard: { id, ...s.held.get(id) } }
+    standardRead: ({ id }) => (s.held.has(id) ? { ok: true, standard_id: id, ...s.held.get(id),
+                                                portion: s.held.get(id).portion ? { path: s.held.get(id).portion, content_id: "CNT-x" } : null }
                                               : { ok: false, reason: "NO_SUCH_STANDARD" }),
-    inForceAt: (a) => { s.asked.push(a); const h = s.held.get(a.standard); return h ? { ...h.inForce, standard: a.standard } : { state: "undetermined", why: "none" }; },
+    inForceAt: (a) => { s.asked.push(a); const h = s.held.get(a.standard);
+                        return h ? { ok: true, date: a.date, ...h.inForce, standard: a.standard } : { ok: true, state: "undetermined", why: "none" }; },
   };
   return s;
 }
@@ -137,7 +129,7 @@ export function world({ now = "2026-09-01T00:00:00.000Z", nowMs = null, zone = Z
   const ev = eventsWorld(), std = standardsWorld();
   const tz = { zone };
   const p = progressionsOf(host, { record, extraction, provenance, entities: mean.entities_,
-                                   events: ev.provider, standards: std.provider, zoneOf: () => tz.zone, portionUnknown, noSuchDatedFact,
+                                   events: ev.provider, standards: std.provider, zoneOf: () => tz.zone,
                                    now: () => clock.now, nowMs: clock.nowMs == null ? null : () => clock.nowMs });
   p.migrate();
   const w = {
