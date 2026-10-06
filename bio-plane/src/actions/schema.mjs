@@ -168,6 +168,7 @@ CREATE TABLE IF NOT EXISTS action_law_proposals (
   ord         INTEGER NOT NULL,-- position in the proposed list
   level       TEXT NOT NULL,   -- one of LAW_LEVELS, judged before the write
   citation    TEXT NOT NULL,   -- as the proposer wrote it, and never parsed for a rule
+  standard    TEXT,            -- R64: the held standard (STD-) the proposer names with it, or NULL
   proposed_at TEXT NOT NULL,
   PRIMARY KEY (bundle_id, proposed_by, ord)
 );
