@@ -2,11 +2,28 @@
 
 **Status** · session_019WZS24Hy714ZhHvn9X7j5A · depth 2 · WORKING · handled B8
 
-## Progress
+## Completion (CASE-AUTHORING #17)
 
-- **Done** (on K1633, K1634): R30's red fixed through `jurisdictions.list()`; R56's async gather `calculationsAtPublication` before the act (ops `publishcase`, `publishpreflight` async), its judgment in R55's order (`CALCULATION_NOT_DISCLOSED`, C-136.1; `CALCULATIONS_UNREAD` without the gathered facts), the `calculations:` block and a body section; R57's `timeline:` block and body section; R55's people and tie steps and R34's new blockers; R8/R55 through a `caseTensions` dep. Tests: `calculations.test.mjs`, `timeline.test.mjs`, and the touched arms; 137/137.
-- **Upstreams:** case-grammar re-pointed (K1636, and K1642's `not_recomputed`, asserted); case-disclosures re-pointed (K1638; its `parts`, `money_parties`, R27's `[{signer, at}]` stamped from the act); the fixture builds entities, connections, events, lines, money and people on the host (K1619). Still held: case-tensions, merged (K1637) but answering through the provider publication registers only in its deletion job (T33-63), so `caseTensions` stays on publication's re-export until publication merges.
-- **Next:** on publication's merge, point `caseTensions` at `caseTensionsOf(host)` and the fixture at it; re-run steps 5–7; COMPLETE with final uses: calculations, workbooks, events, case-tensions, inquiry-grammar, jurisdictions, and for the fixture entities, connections, lines, money, people.
+**Entries applied.** T33-69 (C:A-15, K1448) whole, on K1633 and K1634:
+- R56: the async gather `calculationsAtPublication` before the act (the ops `publishcase` and `publishpreflight` are async arms; `publishCase` stays synchronous, R18); each calculation a member's chain reaches recomputed then read, each workbook among its captures read and never recomputed; the judgment in R55's order, `CALCULATION_NOT_DISCLOSED` (C-136.1, translation BOB's draft) only for an undisclosed differing or unbound load-bearing one, `CALCULATIONS_UNREAD` without the gathered facts; the `calculations:` block through case-grammar R18 (`not_recomputed` for a workbook, K1642) and a body section.
+- R57: the `timeline:` block through case-grammar R20 from `events.timeline` over the members' subjects and event legs, two lanes, each item with its source, the unsourced left out and counted; a body section.
+- R55: the steps after the flags: R56's judgment, then case-disclosures' `peopleNamed` over the parts this act assembles (its shape), `peopleJudged` (`peopleBases`), `tieAttestationJudged` (the author's `tieAttested: true`, stamped `[{signer, at}]`); the `people:` and `member_ties:` blocks through its renderers. R34's blockers gain all three.
+- R8, R55: `caseRelation` and `attributionStatements` through `case-tensions` (`caseTensionsOf`), after publication's merge (K1643).
+- The red named in START (K1545): R30 reads the places through `jurisdictions.list()`.
+- B6's red: R29's pins widened to C-120.14–.16.
+
+**Deferred.** Nothing in this module. Two findings are scheduled elsewhere (K1639): inquiry admits no `CALC-` leg yet (N576), so R56 is reached end to end only in my tests, which give case-authoring's view of inquiry the legs; `calculations.read` states no SHA-256 for a non-table input (N596), so such a row's `inputs` and `result_key` are written null.
+
+**Found in other modules.** J3 (1)–(4), answered by K1639. Also: affordances' `catalogue.test.mjs` fails 3 on the tranche as on my branch (the named R3/R7/R12 reds, and R19's `ATTRIBUTION_NO_REASON` row, which moved with publication's split); none is this module's.
+
+**Final uses** (for `modules.json`, K1633/K1634): add calculations, workbooks, events, case-tensions, jurisdictions; and, for the fixture's record of people built on the host (K1619), entities, connections, lines, money, people. inquiry-grammar, publication, case-grammar and case-disclosures are already listed.
+
+**Tests and checks** (on `job/T33/case-authoring` after merging `tranche/T33` @ K1643):
+- `node --test bio-plane/test/m/case-authoring/`: tests 137, pass 137, fail 0.
+- review, case-tensions, publication (users and providers of what I changed): pass 155, fail 0. affordances `catalogue.test.mjs`: pass 47, fail 3, identical on the tranche.
+- format: 126 modules, 125 requirements files; 0 failures. coverage: 41 of 41 live ids named; 0 failures. ownership: 13 files; 0 failures. architecture: 11 failures, every one a `uses` edge listed above, set by BOB at the merge.
+
+Size (session_019WZS24Hy714ZhHvn9X7j5A): test runs 27, module lines 3277
 
 ## J1 · QUESTION
 

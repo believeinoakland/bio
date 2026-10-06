@@ -40,8 +40,9 @@
  *   bias                 `biasManifest` (R14).
  *   observations         observation-log's `missingCauseAt` (R17).
  *   reevaluation         `raise` (R15).
- *   publication          `caseRelation`, `storeCaseDocument`, `reauthorSection`, `attributionStatements`,
- *                        `hasCaseStanding`, `reviewProvider` (its R4, R17, R21, R23).
+ *   publication          `storeCaseDocument`, `reauthorSection`, `hasCaseStanding`, `reviewProvider` (its R21, R23).
+ *   caseTensions         `caseRelation`, `attributionStatements` (case-tensions R1, R5; T33-62).
+ *   calculations, workbooks   R56's gather (calculations R8–R10, workbooks R2). events   R57's timeline (its R28–R30).
  *   ratification         `caseConclusionFor`, `editionsRecordingConclusion` (its R1).
  *   networkNotices       `noticeReferenceOf` (its R19; R41, R42: DEC-111).
  *   disclosures          `case-disclosures` (N529, K1333): what a case discloses about what it rests on, asked in R55's
@@ -63,6 +64,7 @@ import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
@@ -200,9 +202,13 @@ export class CaseAuthoring {
   get workbooks() { return this.#deps.workbooks ||= workbooksOf(this.#deps.host); }
   /* R57: the timeline of the members' subjects and the events their legs cite (events R28–R30). */
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
-  /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5), reached through
-     publication's re-export until that split merges (plan Rules (9) item 4); the composition hands in the one instance. */
-  get caseTensions() { return this.#deps.caseTensions ||= this.publication; }
+  /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5): its one instance on
+     this host, whose provider `publication` registers when it is created (publication R61), so publication is reached
+     first. */
+  get caseTensions() {
+    if (!this.#deps.caseTensions) { void this.publication; this.#deps.caseTensions = caseTensionsOf(this.#deps.host); }
+    return this.#deps.caseTensions;
+  }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
