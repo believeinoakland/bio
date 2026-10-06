@@ -6,16 +6,16 @@
    never stores a sequence, an amount, an absence or the group's own acts, and never infers a cause (R39–R42).
    Reached through `eventsOf(ctx)` (K61). Members see these as the timeline (K1462). */
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf, noSha } from "../extraction/index.mjs";
 import { contentOf, canonicalExtent, checkContentExtent } from "../content/index.mjs";
 import { entitiesOf, noEntity, noSuchEntity, gradeRank } from "../entities/index.mjs";
 import { readHooksOf } from "../reading-pipeline/hooks.mjs";
-import { idPattern, isHypothesisId, isMachineIdentity, sha256HexSync, canonicalJson, BASIS_GRADES, TESTIMONY_GRADE }
+import { idPattern, isHypothesisId, isMachineIdentity, sha256HexSync, canonicalJson, TESTIMONY_GRADE }
   from "../record-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { registerOwner, LOWEST_GRADE, BOUNDS } from "../connection-grammar/index.mjs";
+import { registerOwner } from "../connection-grammar/index.mjs";
 import { EVENTS_SCHEMA } from "./schema.mjs";
 import { readDate, whenOf, sequenceOf, spanOfBound, placeAgainst, orderByWhen } from "./time.mjs";
 import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } from "./follow.mjs";
@@ -1006,7 +1006,7 @@ export class Events {
     const r = this.#range(this.#eventsOfEntity(entity, viewer, { kinds: ks }), from, to);
     if (r.bad) return refuse("BAD_DATE", r.bad);
     const b = this.#bounded(r.items, limit);
-    return { ok: true, entity, count: b.items.length, events: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
+    return { ok: true, entity, count: b.items.length + b.placed_nowhere.length, events: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
   }
 
   /** R28–R30: the world's events concerning or involving an explicit set, and, apart, what the group's own modules did. */
@@ -1090,7 +1090,7 @@ export class Events {
     const r = this.#range(items, from, to);
     if (r.bad) return refuse("BAD_DATE", r.bad);
     const b = this.#bounded(r.items, limit);
-    return { ok: true, entity, count: b.items.length, statements: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
+    return { ok: true, entity, count: b.items.length + b.placed_nowhere.length, statements: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
   }
 
   /** R34: the stage of the profile's flow the proceeding's held events reach on `at`, or undetermined with why. */

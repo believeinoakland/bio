@@ -16,7 +16,7 @@ import { Entities } from "../../../src/entities/index.mjs";
 import { readHooksOf } from "../../../src/reading-pipeline/hooks.mjs";
 import { layerChainFor } from "../../../src/reading-pipeline/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
-import { Events } from "../../../src/events/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -108,11 +108,10 @@ export function world({ view = testView(), now = null, profiles = true } = {}) {
   ents.migrate();
   const ids = withIdentifiers(ents, st);
   const hooks = readHooksOf(host);
-  const ev = new Events(st, { record, membership, provenance: prov, extraction: x, content, entities: ents,
+  const ev = eventsOf(host, { record, membership, provenance: prov, extraction: x, content, entities: ents, readHooks: hooks,
                               now: now || (() => new Date(Date.UTC(2026, 9, 1, 0, 0, clock++)).toISOString()),
                               view: typeof view === "function" ? view : () => view });
   ev.migrate();
-  ev.start(hooks);
   for (const [m, role] of [["alice", "member"], ["bob", "member"], ["outsider", "member"], ["root", "admin"]])
     st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', ?, 'active', '2026-01-01', '2026-01-01')`, m, role);
   const w = {
