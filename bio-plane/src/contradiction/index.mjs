@@ -137,8 +137,8 @@ export const CONTRADICTION_KEYS = Object.freeze({
             + "(or, where no passage is named, the same captured document)",
         why: "we read the same text two ways" }),
   K4: Object.freeze({ key: "K4", name: "one entity, two sources of different kind or date", feeds: "world",
-        join: "two cited passages whose documents RESOLVE (established) to the same entity, from "
-            + "different doctypes, or with different dates, AS THEIR READERS STATE THEM",
+        join: "two cited passages whose documents RESOLVE (established) to the same entity, of different doctypes "
+            + "AS THEIR READERS STATE THEM, or with own dates the record holds in a SETTLED ORDER",
         why: "a rule against the act it governs, or one body's statement at one date against its statement at another" }),
   /* N345, DEC-84 item 3: added, not tuned (R18). Two projects' conclusions are plurality, not a defect, until a member
      finds no named difference between them (R24, R34). */
