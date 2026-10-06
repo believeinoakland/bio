@@ -370,8 +370,8 @@ test("R16: checkRequests answers the viewer's own requests newest first, untaken
 test("R16, R9: a request whose target the viewer may no longer see is left out and not counted", () => {
   const w = seeded();
   const keep = ask(w, { now: iso(NOW) });
-  const lost = ask(w, { target: PRJ2, by: "plain", label: null, member: "plain", now: iso(NOW + 1) });
-  const also = ask(w, { target: OTHER, by: "plain", label: null, member: "plain", now: iso(NOW + 2) });
+  const lost = ask(w, { target: PRJ2, by: "plain", label: null, member: "plain", now: iso(NOW + 1000) });
+  const also = ask(w, { target: OTHER, by: "plain", label: null, member: "plain", now: iso(NOW + 2000) });
   assert.deepEqual(w.t.checkRequests({ viewer: "member:plain" }).requests.map((q) => q.request), [also.request, lost.request]);
   w.run(`DELETE FROM project_participants WHERE project_id=? AND member_id='plain'`, PRJ2);
   const after = w.t.checkRequests({ viewer: "member:plain", limit: 1 });
