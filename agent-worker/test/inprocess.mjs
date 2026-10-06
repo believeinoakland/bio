@@ -205,7 +205,7 @@ export async function driveMember() {
   drives.model = recorder();
   await withGlobalFetch(drives.model, () => ask(drives.model, { mode: "check" }, "run", post({
     run_id: "run-421m", store: "scratch", credential: AIK,
-    account: { kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER } })));
+    account: { kind: "apikey", level: "member", secret: CLAUDE_TOKEN, member: MEMBER } })));
 
   /* 3 · PLAN: deployed in this process only, by the edit R42 names, and restored whatever happens. */
   drives.plan = recorder();
@@ -245,7 +245,7 @@ export async function driveMember() {
   drives.ask = recorder();
   await withGlobalFetch(drives.ask, () => ask(drives.ask, { mode: "check", ask: true }, "ask", postAsIs({
     question: "who held the seat in March?", grant: GRANT,
-    account: { kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER } })));
+    account: { kind: "apikey", level: "member", secret: CLAUDE_TOKEN, member: MEMBER } })));
 
   const all = recorder();
   for (const [name, r] of Object.entries(drives)) {

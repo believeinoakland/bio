@@ -1,10 +1,12 @@
-/* R54–R56 — `POST /ask`: ONE MEMBER'S QUESTION, ANSWERED UNDER THAT MEMBER'S GRANT AND ACCOUNT, AND CHECKED BY THE
+/* R54–R56 — `POST /ask`: ONE MEMBER'S QUESTION, ANSWERED UNDER THAT MEMBER'S GRANT AND THE ACCOUNT THAT SERVES THEIR
+ * ASK, AND CHECKED BY THE
  * PLANE BEFORE ANY WORD OF IT IS RETURNED (Q1-4; ladders §9.4 L1; K1450, K1474, K1479, K1502, K1601).
  *
  * WHAT IT IS. A member asks; the plane mints the member a short-lived, read-only `ai` grant (credentials R27) and hands
- * this member the question, the grant and the member's own Claude account reference (R6's shape), with the earlier
- * turns of this one ask, which the member's device holds (nothing is kept here or in the plane, K1450). This member
- * then:
+ * this member the question, the grant and the Claude account that serves that member's ask (R6's shape, as
+ * `credentials.accountFor` answers it: the member's own reference, else the group's API key while held and on, K1755),
+ * with the earlier turns of this one ask, which the member's device holds (nothing is kept here or in the plane,
+ * K1450). An ask the group's key serves is still the member's own ask. This member then:
  *
  *   1. asks the plane whether the member is over their use ceiling (`op=askceiling`, ai-runs R50), before any model
  *      call, relaying a refusal unchanged (R43);
@@ -18,7 +20,8 @@
  *      plane holds for the grant, its R4) and returns ONLY what they pass, with what they withheld named.
  *
  * It writes no run row and no observation; it reports each conversation's `usage` to the plane (`op=askusage`, ai-runs
- * R48's `countAskUsage`), with the number of model calls it took. Progress is streamed as each step begins, and no
+ * R48's `countAskUsage`), with `calls`, the model calls that usage covers, exactly as `agent-model` R6 answers them
+ * (N588; a `calls` it did not state is passed as `null`). Progress is streamed as each step begins, and no
  * progress event carries text the checks have not passed: a step's name, and a read's op, nothing more.
  *
  * THE STREAM (K1601 (5)): NDJSON (`application/x-ndjson`), one object per line, `{event: "step", step}` for
@@ -38,7 +41,7 @@ export const CONVERSATION_MAX = 40;
 const ARG_MAX = 500;
 
 /** The ask's model tools: `read` (only `ASK_OPS`) and `done_reading` for the first conversation; `answer` (answers
- *  R3's shape) for the second; `load_layer` in both, gated by the member's switch (R56). */
+ *  R3's shape) for the second; `load_layer` in both, gated by the switch that governs the ask (R56). */
 export function askTools(layers) {
   const load = {
     name: "load_layer", description: "load one of the skill pack's disclosed layers when the work needs it",
@@ -197,7 +200,7 @@ export async function handleAsk(req, env, deps) {
       for (const e of entries)
         await call("askusage", null, { mode: "ask", model: e.model, usage: e.usage, calls: e.calls });
     };
-    const spend = (got, turnsBefore) => model.spent(got, "ask", meter.turns - turnsBefore);
+    const spend = (got) => model.spent(got, "ask");
     const finish = async (o) => { await emit(o); await writer.close(); };
     const refusedEvent = (code, detail, extra) => ({ event: "refused", ok: false, reason: code, code, detail,
                                                      worker: "agent-worker", ...(extra || {}) });
@@ -226,7 +229,6 @@ export async function handleAsk(req, env, deps) {
 
       /* (3) INTERPRETING, AND READING THROUGH THE GRANT. */
       await emit({ event: "step", step: "interpreting" });
-      let turnsBefore = meter.turns;
       const reading = await converse({
         reference, runner: model.runner, mode: "ask", meter, system, messages, tools: tools.reading,
         finalTool: "done_reading", maxTurns: ASK_DECLARED.turns,
@@ -249,7 +251,7 @@ export async function handleAsk(req, env, deps) {
           return a.refused ? { content, error: true } : { content };
         },
       });
-      spend(reading, turnsBefore);
+      spend(reading);
       await report(reading);
       if (!reading.answer) return await finish(modelEnded(reading));
 
@@ -260,14 +262,13 @@ export async function handleAsk(req, env, deps) {
         `the ask reached its ${bound} bound before it was answered, so nothing is returned.`, { bound }));
       messages.push({ role: "user", content: "Reading is closed. Compose the answer by calling the answer tool, in "
         + "the answers contract, resting every sentence on what was read." });
-      turnsBefore = meter.turns;
       const composed = await converse({
         reference, runner: model.runner, mode: "ask", meter, system, messages, tools: tools.composing,
         finalTool: "answer", maxTurns: ASK_DECLARED.turns,
         onTool: async (name, input) => (name === "load_layer" ? loadLayer(model, input)
           : { content: "reading is closed; answer with the answer tool", error: true }),
       });
-      spend(composed, turnsBefore);
+      spend(composed);
       await report(composed);
       if (!composed.answer) return await finish(modelEnded(composed));
 

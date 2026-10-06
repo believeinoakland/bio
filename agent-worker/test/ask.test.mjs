@@ -4,7 +4,7 @@
  * scripted model API (agent-model's API-key path). Nothing here reads the member's source text.
  *
  * The plane's own lists are imported from their modules: `answers`' `ASK_SCOPE` (its R1) and `credentials'
- * `AI_GRANT_OPS` (its R28), which equals ASK_SCOPE with `rule` left out until N580 (K1603). */
+ * `AI_GRANT_OPS` (its R28), equal since N580 (K1603, K1609), `rule` included. */
 import { readFileSync } from "node:fs";
 import worker from "../src/index.mjs";
 import { ASK_OPS, ASK_PLANE_OPS, PLANE_OPS } from "../src/ops.mjs";
@@ -24,7 +24,10 @@ const section = (s) => console.log(`\n--- ${s} ---`);
 
 const GRANT = "aig-ask-fixture-grant-never-echoed";
 const SECRET = "sk-ant-ask-fixture-key-never-echoed";
-const ACCOUNT = { kind: "apikey", secret: SECRET, member: MEMBER };
+const ACCOUNT = { kind: "apikey", level: "member", secret: SECRET, member: MEMBER };
+/* K1755: the group's API key, serving the same member's ask (credentials R35). */
+const GROUP_SECRET = "sk-ant-ask-group-key-fixture-never-echoed";
+const GROUP = { kind: "apikey", level: "group", secret: GROUP_SECRET, member: MEMBER };
 const AIK = "aik-" + "d".repeat(64);
 const PACK = { id: "investigative-session", version: "pack@ask", resident: { objective: "answer from the record" },
                disclosed: { ask: { body: "closed book" }, suggestions: { body: "labelled suggestions only" } } };
@@ -130,7 +133,10 @@ section("R54 · refusals before any model call, each by its code, as plain JSON"
     ["no grant", () => ask({ grant: undefined }), 401, "NO_GRANT"],
     ["an empty grant", () => ask({ grant: "" }), 401, "NO_GRANT"],
     ["no account", () => ask({ account: undefined }), 409, "NO_ACCOUNT"],
-    ["an account naming no member", () => ask({ account: { kind: "apikey", secret: SECRET } }), 400, "BAD_ACCOUNT"],
+    ["an account naming no member", () => ask({ account: { kind: "apikey", level: "member", secret: SECRET } }), 400, "BAD_ACCOUNT"],
+    ["an account naming no level", () => ask({ account: { kind: "apikey", secret: SECRET, member: MEMBER } }), 400, "BAD_ACCOUNT"],
+    ["the group's account as a subscription", () => ask({ account: { ...GROUP, kind: "subscription" } }), 400, "BAD_ACCOUNT"],
+    ["the group's account with an empty key", () => ask({ account: { ...GROUP, secret: "" } }), 409, "NO_ACCOUNT"],
     ["a namespace no instance holds", () => ask({ store: "biosmoke" }), 400, "NAMESPACE_UNKNOWN"],
     ["a conversation that is not this ask's turns", () => ask({ conversation: [{ role: "system", content: "x" }] }), 400, "BAD_CONVERSATION"],
   ];
@@ -172,15 +178,27 @@ section("R54 · interpret, read through the grant, compose, check, and return on
   t("R54: it writes no run row and no observation: no run op was called",
     r.plane.filter((x) => PLANE_OPS[x.op] && !["affordances", "search", "meaningrows", "standard", "profiles"].includes(x.op)).map((x) => x.op), []);
   const usage = r.plane.filter((x) => x.op === "askusage").map((x) => x.body);
-  t("R54: each conversation's usage is reported for mode ask, with its model, its five figures and its call count",
+  /* agent-model R6: on the API-key path each request answered counts one call, so each conversation's `calls` is the
+     number of requests the model API received for it (reading's offer `done_reading`, composing's `answer`). */
+  const requests = (tool) => r.model.filter((c) => (c.body.tools || []).some((x) => x.name === tool)).length;
+  t("R54 (N588): each conversation's usage is reported for mode ask, with its model, its five figures and its calls "
+    + "exactly as agent-model R6 answers them (one per model call that reached the provider)",
     usage.map((u) => [u.mode, u.model, Object.keys(u.usage), u.calls]),
-    [["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, 4], ["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, 1]]);
+    [["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, requests("done_reading")],
+     ["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, requests("answer")]]);
   t("R54: the turns ran through agent-model under the member's own reference, mode ask's model",
     [[...new Set(r.model.map((c) => c.url))], [...new Set(r.model.map((c) => c.key))], [...new Set(r.model.map((c) => c.body.model))]],
     [[MODEL_ENDPOINT], [SECRET], [MODEL_FOR_MODE.ask]]);
   t("R54: an ask naming no namespace sends none (the plane's default)", r.plane.every((x) => x.store === null), true);
   const named = await ask({ store: "scratch" });
   t("R54: an ask naming one sends it on every call", [...new Set(named.plane.map((x) => x.store))], ["scratch"]);
+  const grp = await ask({ account: GROUP });
+  TRANSCRIPTS.push(grp);
+  t("R54 (K1755): an ask the group's API key serves runs the same way, its turns under the group's key, and is still the "
+    + "member's ask: answered, checked, and its usage reported under the member's grant",
+    [grp.status, last(grp).event, [...new Set(grp.model.map((c) => c.key))], grp.plane.filter((x) => x.op === "askusage").length,
+     [...new Set(grp.plane.map((x) => x.token))]],
+    [200, "answer", [GROUP_SECRET], 2, [GRANT]]);
   const conv = await ask({ conversation: [{ role: "user", content: "earlier question" }, { role: "assistant", content: "earlier answer" }] });
   t("R54: the earlier turns the member's device holds are carried into the conversation, before the question",
     conv.model[0].body.messages.slice(0, 2).map((m) => [m.role, typeof m.content === "string" ? m.content : m.content.map((c) => c.text).join("")]),
@@ -210,8 +228,8 @@ section("R55 · the ask's whole reach is ASK_OPS, equal to answers' ASK_SCOPE an
 {
   const scope = ASK_SCOPE.map((e) => e.op);
   t("R55: ASK_OPS equals answers' ASK_SCOPE, both ways", [ASK_OPS.filter((o) => !scope.includes(o)), scope.filter((o) => !ASK_OPS.includes(o))], [[], []]);
-  t("R55: and credentials' AI_GRANT_OPS, both ways, but answers' `rule`, which that list gains by N580 (K1603)",
-    [ASK_OPS.filter((o) => !AI_GRANT_OPS.includes(o)), AI_GRANT_OPS.filter((o) => !ASK_OPS.includes(o))], [["rule"], []]);
+  t("R55: and credentials' AI_GRANT_OPS, both ways, `rule` included (N580; K1603, K1609)",
+    [ASK_OPS.filter((o) => !AI_GRANT_OPS.includes(o)), AI_GRANT_OPS.filter((o) => !ASK_OPS.includes(o))], [[], []]);
   t("R55: never a sources op, member history, an administrative op, an export, or a write",
     ASK_OPS.filter((o) => /^sources|history|admin|export|purge|suggest|tick|close|propose|capture|set$/.test(o)), []);
   t("R55, R37: an ask's reach is not PLANE_OPS: the run's ops are unchanged, and no write of a run is an ask's op",
@@ -260,18 +278,71 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
   const r = TRANSCRIPTS[TRANSCRIPTS.length - 1];
   t("R58: a run whose member's reference arrived and whose caller supplied no judgements runs its turns, and says so",
     [r.status, JSON.parse(r.text).judgement_source, JSON.parse(r.text).turns_run === r.model.length, r.model.length > 0], [200, "model", true, true]);
-  const entries = r.plane.filter((x) => x.op === "airuntick").flatMap((x) => x.body?.usage || []);
-  t("R58 (ai-runs R48): each tick carries the usage of the model calls since the last, each exactly {mode, model, usage}",
+  const ticks = r.plane.filter((x) => x.op === "airuntick" && x.body?.log !== undefined && x.body?.consume !== undefined);
+  const entries = ticks.flatMap((x) => x.body?.usage || []);
+  t("R26, R58 (N588; ai-runs R48): each tick carries the usage of the conversations since the last, each exactly "
+    + "{mode, model, usage, calls}",
     [entries.length > 0, [...new Set(entries.map((e) => Object.keys(e).join(",")))], [...new Set(entries.map((e) => e.mode))]],
-    [true, ["mode,model,usage"], ["check"]]);
+    [true, ["mode,model,usage,calls"], ["check"]]);
+  t("R26 (N588): `calls` is agent-model R6's, so the calls summed over every entry are the model calls that reached the "
+    + "provider (each API-key request one), never a conversation counted as one",
+    entries.reduce((n, e) => n + (Number.isInteger(e.calls) ? e.calls : NaN), 0), r.model.length);
+  /* R26's other half, on the subscription path: `agent-model` R6's `calls` there is the turns the runner states
+     (`agent-runner` R4's `num_turns`), and `null` where it states none, passed through as `null`, never invented. The
+     runner is driven in this process over its own wire (a fake socket on the Container binding `RUNNER`): each
+     conversation answers its final tool, then ends, stating `num_turns` or not. */
+  const fakeRunner = (numTurns) => {
+    const conversations = [];
+    return { conversations, fetch: async () => {
+      const on = {};
+      const emit = (m) => setTimeout(() => (on.message || []).forEach((f) => f({ data: JSON.stringify(m) })), 0);
+      const ws = {
+        accept() {}, close() {}, addEventListener(type, fn) { (on[type] ||= []).push(fn); },
+        send(text) {
+          const m = JSON.parse(text);
+          if (m.tool_result) return emit({ ok: true, result: "", stop_reason: "end_turn",
+            usage: { input_tokens: 2, output_tokens: 1 }, ...(numTurns === null ? {} : { num_turns: numTurns }) });
+          conversations.push(m);
+          const names = (m.tools || []).map((x) => x.name);
+          const judge = [...String(m.prompt).matchAll(/calling (judge_\w+)/g)].pop()?.[1];
+          const name = names.includes("report") ? "report"
+            : judge && names.includes(judge) ? judge : names.find((n) => n.startsWith("judge_"));
+          emit({ tool_use: { id: `t${conversations.length}`, name,
+                             input: name === "report" ? { state: "LOOKED_ABSENT", summary: "nothing" } : {} } });
+        } };
+      return { status: 101, webSocket: ws };
+    } };
+  };
+  const subRun = async (numTurns) => {
+    const runner = fakeRunner(numTurns);
+    const d = await drive("run", { run_id: "RUN-A", store: "scratch", credential: AIK,
+                                   account: { ...ACCOUNT, kind: "subscription" } }, { env: { RUNNER: runner } });
+    TRANSCRIPTS.push(d);
+    return { d, runner, entries: d.plane.filter((x) => x.op === "airuntick").flatMap((x) => x.body?.usage || []) };
+  };
+  const stated = await subRun(3);
+  t("R26 (N588): on the subscription path each entry's `calls` is the turns the runner stated for that conversation",
+    [stated.d.status, stated.runner.conversations.length > 0, stated.entries.length, [...new Set(stated.entries.map((e) => e.calls))]],
+    [200, true, stated.runner.conversations.length, [3]]);
+  const unstatedRun = await subRun(null);
+  t("R26 (N588): where the runner states none, `calls` is passed as null (which the plane counts as one call), never 0 "
+    + "and never invented here",
+    [unstatedRun.d.status, unstatedRun.entries.length, [...new Set(unstatedRun.entries.map((e) => e.calls))],
+     unstatedRun.entries.every((e) => "calls" in e)],
+    [200, unstatedRun.runner.conversations.length, [null], true]);
+  t("R26: a tick after no conversation carries no `usage`",
+    ticks.filter((x) => !x.body.usage).length > 0 && ticks.filter((x) => x.body.usage).every((x) => x.body.usage.length > 0), true);
   const v = await (await worker.fetch(new Request("http://agent-worker/version"), { VERSION: "ask", PLANE: plane().binding })).json();
   t("R58: GET /version answers the one statement of when model turns run",
-    /exactly when the member's own Claude account reference arrives/.test(v.model_turns ?? ""), true);
+    /exactly when the Claude account that serves the member's act \(the member's own reference, or the group's API key\) arrives/
+      .test(v.model_turns ?? ""), true);
   const all = TRANSCRIPTS;
-  t("R36: no answer or event carried the grant, the ai credential or the member's secret",
-    all.filter((x) => x.text.includes(GRANT) || x.text.includes(SECRET) || x.text.includes(AIK)).length, 0);
-  t("R36: the member's secret went only in the model API's key header: never to the plane, never in a request body",
-    [all.some((x) => x.plane.some((c) => c.raw.includes(SECRET))), all.some((x) => x.model.some((c) => c.raw.includes(SECRET)))], [false, false]);
+  t("R36: no answer or event carried the grant, the ai credential, the member's secret or the group's key",
+    all.filter((x) => [GRANT, SECRET, GROUP_SECRET, AIK].some((v) => x.text.includes(v))).length, 0);
+  t("R36: the member's secret and the group's key went only in the model API's key header: never to the plane, never in "
+    + "a request body",
+    [all.some((x) => x.plane.some((c) => c.raw.includes(SECRET) || c.raw.includes(GROUP_SECRET))),
+     all.some((x) => x.model.some((c) => c.raw.includes(SECRET) || c.raw.includes(GROUP_SECRET)))], [false, false]);
   t("R36: the grant went only to the plane, never to the model", all.some((x) => x.model.some((c) => c.raw.includes(GRANT))), false);
 }
 

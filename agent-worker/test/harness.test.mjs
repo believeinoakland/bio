@@ -1676,22 +1676,37 @@ console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC
     skillVersion: "investigative-session@1", biasManifest: null,
     bounds: [{ bound: "fetches", allowed: 100000, unit: "requests" }], leaseMs: 3600000 };
   /* K1610 (ai-runs R52, K1503): a run opens only on the account of the member whose act starts it, so the opener names
-     Ruth and her own account is connected first, by her act (credentials R22). The plane routes
-     `op=accountreferenceset` and binds the seal secret at L11 (N585); until then this connect is refused and the open
-     refused AI_NO_ACCOUNT, so the five REC100 arms below are red by name (K1614's reading). */
-  const CONNECT = { member: MEMBER, kind: ACCOUNT.kind, secret: ACCOUNT.secret };
+     Ruth and her own account is connected first, by her act (credentials R22). N585 (T34-39; K1614, K1621): the plane
+     routes `op=accountreferenceset` for a member's SESSION, never a deploy token (CLASS_FORBIDDEN), and keeps the
+     reference under the copy's seal secret, so the fixture enrols Ruth with the administrator's token, signs her in,
+     connects her account under her session, and makes every act of hers below (the surfacing project, the question,
+     both opens, each tick) under that session: the run's opener is then the member whose account it carries. */
+  const RUTH_ID = MEMBER.replace(/^member:/, "");
+  const CONNECT = { member: RUTH_ID, kind: ACCOUNT.kind, secret: ACCOUNT.secret };
   const FRONT = `
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.searchParams.get("op") !== "airuntick") return env.MOCK.fetch(req);
     const body = await req.json();
-    const T = env.MEMBER;
+    const real = async (op, tok, b) => {
+      const r = await env.REAL.fetch("http://real/api/?op=" + op + (tok ? "&token=" + tok : ""),
+        b === undefined ? undefined : { method: "POST", body: JSON.stringify(b) });
+      const j = await r.json();
+      return j && typeof j === "object" && "result" in j ? j.result : j;
+    };
+    if (!globalThis.__session) {
+      const id = ${JSON.stringify(RUTH_ID)};
+      const add = await real("memberadd", env.ADMIN, { memberId: id, cover: "c-" + id, role: "admin",
+                                                       capabilities: ["contribute", "publish"] });
+      await real("enroll", null, { invite: add.invite, handle: id, password: id + "-passphrase-1" });
+      globalThis.__session = (await real("login", null, { role: "member:" + id, password: id + "-passphrase-1" })).token;
+      globalThis.__connected = await real("accountreferenceset", globalThis.__session, ${JSON.stringify(CONNECT)});
+    }
+    const T = globalThis.__session;
     const post = (op, b) => env.REAL.fetch("http://real/api/?op=" + op + "&token=" + T,
       { method: "POST", body: JSON.stringify(b) });
     if (!globalThis.__opened) {
-      await env.REAL.fetch("http://real/api/?op=accountreferenceset&token=" + T + "&by=" + encodeURIComponent(${JSON.stringify(MEMBER)}),
-        { method: "POST", body: ${JSON.stringify(JSON.stringify(CONNECT))} });
       /* CORRECTED 2026-09-23 by REC-171 (INVESTIGATIVE-SESSION.md §11 item 5, "Rule 2's reach", BOB #30): the MEMBER
          deploy token's creation of the context question is stamped surfaced_by: agent, so it names a running run the
          token holds, with a surfaces bound, or the plane refuses it SURFACE_NO_RUN. The fixture used to create it
@@ -1713,7 +1728,7 @@ export default {
         bindings: { VERSION: "test" }, serviceBindings: { PLANE: "plane-front" } },
       { name: "plane-front", modules: true, script: FRONT,
         compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
-        bindings: { MEMBER: MEM }, serviceBindings: { MOCK: "plane-mock", REAL: "real-plane" } },
+        bindings: { ADMIN: "adm-rec100-aw" }, serviceBindings: { MOCK: "plane-mock", REAL: "real-plane" } },
       { name: "plane-mock", modules: true, script: PLANE_MOCK,
         compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
         bindings: { MOCK: JSON.stringify(cfg) } },
@@ -1722,7 +1737,9 @@ export default {
         durableObjects: { STORE: { className: "Store", useSQLite: true } },
         r2Buckets: ["CAPTURES", "PUBLISHED"],
         bindings: { ADMIN_TOKEN: "adm-rec100-aw", MEMBER_TOKEN: MEM, PROBE_TOKEN: "prb-rec100-aw",
-                    VERSION: "test", TASK_DRAIN_DELAY_MS: "600000" } },
+                    VERSION: "test", TASK_DRAIN_DELAY_MS: "600000",
+                    /* N585 (credentials R23): the seal secret Ruth's account reference is kept under */
+                    ACCOUNT_SEAL_SECRET: "rec100-aw-seal-secret" } },
     ],
   });
   const realLog = async (mf) => {
