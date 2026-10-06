@@ -12,6 +12,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
+import { standardsOf } from "../../../src/standards/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -133,20 +134,6 @@ export function moneyProvider(record) {
   return m;
 }
 
-/** standards (its R20): `inForceAt({standard, date})` over periods the test holds. */
-export function standardsProvider() {
-  const periods = new Map();
-  return { periods,
-    inForceAt({ standard, date }) {
-      const p = periods.get(standard);
-      if (!p) return { state: "undetermined", why: "no such standard" };
-      if (p.from && date < p.from) return { state: "not_in_force", why: `in force from ${p.from}` };
-      if (p.to && date > p.to) return { state: "not_in_force", why: `in force until ${p.to}` };
-      if (!p.from || !p.to) return { state: "undetermined", why: "a bound is not stated" };
-      return { state: "in_force", why: "within its period" };
-    } };
-}
-
 /** retrieval (its R70): `runSaved({form, owner, viewer})` over answers the test holds. */
 export function retrievalProvider() {
   const saved = new Map();
@@ -227,12 +214,13 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   prov.migrate();
   content.migrate();
   if (profiles !== null) record.setSetting("jurisdiction_profiles", profiles, "admin");
-  /* entities and events are the real modules (merged, K1576); the rest are providers until their merges. */
+  /* entities, events and standards are the real modules (merged, K1576, K1578); the rest are providers until their merges. */
   const entities = entitiesOf(host, { record, membership, provenance: prov });
   if (typeof entities.migrate === "function") entities.migrate();
   const events = eventsOf(host, { record, membership, provenance: prov, extraction, content, entities, now: () => clock.now });
   if (typeof events.migrate === "function") events.migrate();
-  const money = moneyProvider(record), standards = standardsProvider(),
+  const standards = standardsOf(host, { record, membership, promotion, content, events, now: () => clock.now });
+  const money = moneyProvider(record),
     retrieval = retrievalProvider(), duties = dutiesProvider(), people = peopleProvider(),
     progressions = progressionsProvider();
   const deps = { record, membership, content, provenance: prov, money, entities, standards, retrieval, duties, people, events,
@@ -296,6 +284,13 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
       const m = content.mint({ bundleId: d.bundleId, captureSha: d.capSha, extent: { kind: "sheet-range", sheet: "S", range }, mintedBy: V("bob") });
       if (!m.ok) throw new Error(`fixture sheet mint refused: ${JSON.stringify(m).slice(0, 400)}`);
       return m.content_id;
+    },
+    /** A standard declared by bob (standards R1) over a fresh passage, in force over `period`: its id. */
+    standard(period) {
+      const r = standards.standardDeclare({ cite: `Test Bylaw § ${++n}`, kind: "ordinance", issuer: "The Selectboard", text: [w.passage(`bylaw ${n}`)],
+        period, reason: "the group holds the town to its own bylaw", author: V("bob"), viewer: V("bob") });
+      if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 300)}`);
+      return r.id;
     },
     /** A registered person holding the profile's person identifier `id` (entities R43): its entity id. */
     person(label, id = null) {

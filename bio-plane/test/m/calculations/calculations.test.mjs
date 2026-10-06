@@ -122,22 +122,23 @@ test("R6 a threshold is a value or a held standard cited at its version; a stand
   const g = { ...good, kind: "comparison", inputs: [{ name: "t", table: t2.sha }], recipe: cmp };
   const byValue = await w.c.create({ ...g, threshold: { value: "$150" } });
   assert.equal(byValue.results.output.relation, "lower");
-  w.standards.periods.set("STD-2020-0001-x", { from: "2020-01-01", to: "2030-12-31" });
-  w.standards.periods.set("STD-2020-0002-x", { from: "2026-01-01", to: "2030-12-31" });
-  w.standards.periods.set("STD-2020-0003-x", { from: "2020-01-01", to: null });
+  const S1 = w.standard({ from: "2020-01-01", to: "2030-12-31" });
+  const S2 = w.standard({ from: "2026-01-01", to: "2030-12-31" });
+  const S3 = w.standard({ from: "2020-01-01", to: null });
   const fig = w.passage("$150");
-  const inForce = await w.c.create({ ...g, threshold: { standard: "STD-2020-0001-x", figure: fig } });
+  const inForce = await w.c.create({ ...g, threshold: { standard: S1, figure: fig } });
   assert.equal(inForce.ok, true);
   assert.equal((await w.c.read({ calcId: inForce.calc_id, viewer: V("bob") })).threshold.standing.state, "in_force");
-  const notIn = await w.c.create({ ...g, threshold: { standard: "STD-2020-0002-x", figure: fig } });
+  const notIn = await w.c.create({ ...g, threshold: { standard: S2, figure: fig } });
   assert.equal(code(notIn), "THRESHOLD_NOT_IN_FORCE");
-  assert.equal(notIn.standard, "STD-2020-0002-x");
-  const open = await w.c.create({ ...g, threshold: { standard: "STD-2020-0003-x", figure: fig } });
+  assert.equal(notIn.standard, S2);
+  const open = await w.c.create({ ...g, threshold: { standard: S3, figure: fig } });
   assert.equal(open.ok, true);
   const st = (await w.c.read({ calcId: open.calc_id, viewer: V("bob") })).threshold.standing;
   assert.equal(st.state, "undetermined", "stated undetermined with the reason");
   assert.ok(st.why);
-  assert.equal(code(await w.c.create({ ...g, threshold: { standard: "STD-2020-0001-x" } })), "BAD_THRESHOLD", "a threshold states its figure");
+  assert.equal(code(await w.c.create({ ...g, threshold: { standard: S1 } })), "BAD_THRESHOLD", "a threshold states its figure");
+  assert.equal(code(await w.c.create({ ...g, threshold: { standard: "STD-1999-0001-none", figure: fig } })), "NO_SUCH_STANDARD", "a standard not held");
 });
 
 test("R7 evaluate answers what create would store and writes nothing", async () => {

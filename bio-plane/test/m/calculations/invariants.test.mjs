@@ -89,8 +89,8 @@ test("R27 no outward text uses breach, violation, diverted, misused or a score's
   await keep(w.c.create({ ...g, question: "Q", kind: "ranking", terms: { ...terms, quantity: ["a", "b"] }, recipe: rank }));
   await keep(w.c.create({ ...g, question: "Q", kind: "comparison", inputs: [{ name: "a", value: "5" }, { name: "b", value: "6" }],
     recipe: R([{ op: "compare", a: "a", b: "b", as: "c" }], "c", [{ name: "a", kind: "figure" }, { name: "b", kind: "figure" }]) }));
-  w.standards.periods.set("STD-1", { from: "2027-01-01", to: null });
-  await keep(w.c.create({ ...g, question: "Q", kind: "total", threshold: { standard: "STD-1", value: "5" }, recipe: SUM }));
+  const later = w.standard({ from: "2027-01-01", to: null });
+  await keep(w.c.create({ ...g, question: "Q", kind: "total", threshold: { standard: later, value: "5" }, recipe: SUM }));
   await keep(w.c.read({ calcId: c.calc_id, viewer: V("bob") }));
   await keep(w.c.accept({ calcId: c.calc_id, by: V("bob") }));
   await keep(w.c.recompute({ calcId: c.calc_id }));

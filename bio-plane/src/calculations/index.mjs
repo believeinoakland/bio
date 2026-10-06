@@ -603,6 +603,8 @@ export class Calculations {
         standing = { state: "undetermined", why: !dates.length ? "the calculation's period is a key with no stated dates, so whether the standard was in force for it is undetermined" : "the standards module is not reachable here, so whether the standard was in force is undetermined" };
       else {
         const answers = dates.map((date) => { try { return standards.inForceAt({ standard: threshold.standard, ...(threshold.portion ? { portion: threshold.portion } : {}), date, viewer }); } catch (e) { return { state: "undetermined", why: String(e && e.message || e) }; } });
+        const refused = answers.find((a) => a && a.ok === false);
+        if (refused) return no(refused.reason || "NO_SUCH_STANDARD", `the standard cited as the threshold is not one held that you may see: ${refused.detail || refused.why || "standards refused it"}. Nothing was written.`, { standard: threshold.standard });
         const notIn = answers.find((a) => a && a.state === "not_in_force");
         if (notIn) return no("THRESHOLD_NOT_IN_FORCE", `the standard cited as the threshold was not in force for the calculation's period: ${notIn.why}. Nothing was written.`, { standard: threshold.standard });
         const open = answers.find((a) => !a || a.state !== "in_force");
