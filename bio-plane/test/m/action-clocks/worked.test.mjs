@@ -123,6 +123,6 @@ test("R2 worked examples F1–F3 (derived, FOIA 5 U.S.C. §552(a)(6)): 20 workin
   /* F3: from Wed 2026-11-04, Veterans Day and Thanksgiving skipped: Fri 2026-12-04. Negative: 12-03. */
   assert.equal(date(foia, "2026-11-04"), "2026-12-04");
   assert.notEqual(date(foia, "2026-11-04"), "2026-12-03");
-  /* every count states the federal list it read, as the profile holds it (R10). */
-  assert.ok(f1.calendar.years.length && f1.calendar.years.every((y) => y.list === "federal" && y.status === "profile_list"));
+  /* every count states the federal list it read (R10); a pure caller reads no confirmation of it (R12). */
+  assert.ok(f1.calendar.years.length && f1.calendar.years.every((y) => y.list === "federal" && y.status === "not_read"));
 });

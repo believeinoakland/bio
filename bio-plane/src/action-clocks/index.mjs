@@ -8,7 +8,9 @@
  * DEC-94, K613–K615, K624 (3)). T33-74: the count delegates to `civil-time` (`count.mjs`; C-1, C-2, C-4), every day is
  * the local day of the action's jurisdiction (K1444 (iii)), every deadline names its basis kind (R7, K1431), a computed
  * deadline is adopted in one member act (R13, K1440), a member downloads their deadlines as one calendar file (R14,
- * K1451; `ics.mjs`), and the group's own lateness is counted, never a finding about government (R15, D234). An
+ * K1451; `ics.mjs`), and the group's own lateness is counted, never a finding about government (R15, D234). T34-50:
+ * R3 and R5 items carry the zone they were judged in (N609); a named closure list's entry is read at its own local fact
+ * (R12, N562; `count.mjs`). An
  * action's clock is written in its own document (`actions`); this module reads it, proposes entries apart, holds the
  * members' reminders in its own table, and writes the document only through R13's adoption, a member's revision.
  *
@@ -190,7 +192,13 @@ export class ActionClocks {
   #today(explicit = null) { return new Date(this.#nowMs(explicit)).toISOString().slice(0, 10); }
   /* R3, R5, R6 (K1444 (iii); actions R12): the local day of the instance clock in the action's zone (`actionZone`), or
      null when no zone is held: undetermined, never the UTC day. */
-  #localToday(fm, view, explicit = null) { return localDayOf(this.#nowMs(explicit), actionZone(fm, view)); }
+  #localToday(fm, view, explicit = null) { return this.#judged(fm, view, explicit).day; }
+  /* R3, R5 (N609, K1675): the zone an action's day is judged in at this call and that local day, which each item
+     carries so its reader dates and ages it in the zone this module counted in; both null when no zone is held. */
+  #judged(fm, view, explicit = null) {
+    const zone = actionZone(fm, view);
+    return { zone, day: localDayOf(this.#nowMs(explicit), zone) };
+  }
 
   /* R7 (K1431, K1446): what an entry names as its basis: its kind (null when it states none, as every entry written
      before T33-74), its citation, and the kind's own fields; a `rule` naming a held standard answers that standard's
@@ -331,14 +339,16 @@ export class ActionClocks {
    *  the entry's basis (R7). Paged as R1 (`#entryPage`), over every open action in id order: an `overdue` entry is not
    *  in the projection's clock, so no seek narrows it. R7: overdue is derived at the read (`past`), and the stored
    *  status is reported beside it, never in place of it. An action whose zone is not held has its pending entries'
-   *  lateness undetermined: they are left out and counted in `zone_undetermined`. Writes nothing. */
+   *  lateness undetermined: they are left out and counted in `zone_undetermined`. Each item carries `zone`, the zone
+   *  whose local day (`local_day`) it was judged on (N609; null for a stored `overdue` of an action with none held), so
+   *  `queue-producers` R15 dates and ages it in the same zone. Writes nothing. */
   overdueClocks({ after = null, limit = null, viewer = null, now = null } = {}) {
     const asOf = this.#today(now);
     const view = this.#view();
     const max = clampLimit(limit, OVERDUE_CLOCKS_MAX, OVERDUE_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
-    const who = new Map(), day = new Map();
+    const who = new Map(), judged = new Map();
     let undetermined = 0;
     const page = this.#entryPage({
       after, max, actionsMax: OVERDUE_CLOCKS_ACTIONS_MAX,
@@ -348,8 +358,8 @@ export class ActionClocks {
         ...CLOSED_ACTION_STATES, ...gate.args, ...(seekId !== null ? [seekId] : []), n),
       item: (r, i, e) => {
         if (!e || typeof e !== "object") return null;
-        if (!day.has(r.bundle_id)) day.set(r.bundle_id, this.#localToday(this.#heldFm(r.bundle_id) || {}, view, now));
-        const today = day.get(r.bundle_id);
+        if (!judged.has(r.bundle_id)) judged.set(r.bundle_id, this.#judged(this.#heldFm(r.bundle_id) || {}, view, now));
+        const { zone, day: today } = judged.get(r.bundle_id);
         const dated = typeof e.date === "string" && isDay(e.date);
         if (e.status === "pending" && dated && today === null) { undetermined++; return null; }
         const past = dated && today !== null ? e.date < today : today === null ? null : false;
@@ -357,7 +367,7 @@ export class ActionClocks {
         if (!who.has(r.bundle_id)) who.set(r.bundle_id, { project: this.#projectOf(this.#heldFm(r.bundle_id), viewer), created_by: this.#createdBy(r.bundle_id) });
         return { action: r.bundle_id, ord: i, date: typeof e.date === "string" ? e.date : null, basis: e.basis ?? null,
                  text: e.text ?? null, status: e.status, past, ...who.get(r.bundle_id), basis_of: this.#basisOf(e, viewer),
-                 local_day: today };
+                 local_day: today, zone };
       },
     });
     return { ok: true, as_of: asOf, items: page.items, limit: max, actions_limit: OVERDUE_CLOCKS_ACTIONS_MAX,
@@ -566,7 +576,8 @@ export class ActionClocks {
    *  `<action>#<position>#<day>#<member>`, when `truncated`, else null; `after` is a previous page's cursor or an action
    *  id, read as after all that action's reminders. The entry is read as it stands (an entry a later revision removed
    *  or re-dated is answered only while the entry at that position is pending). A day "has come" on the local day of
-   *  `nowMs` in the action's zone (Terms; K1444 (iii)): never the UTC day, and not at all while no zone is held.
+   *  `nowMs` in the action's zone (Terms; K1444 (iii)): never the UTC day, and not at all while no zone is held. Each
+   *  item carries `zone`, the zone whose local day its reminder was judged due on (N609), for `queue-producers` R18.
    *  Writes nothing. */
   remindersDue({ nowMs = null, after = null, limit = null, viewer = null } = {}) {
     const today = this.#today(nowMs);
@@ -574,8 +585,8 @@ export class ActionClocks {
     /* K1444 (iii): a reminder's day has come on the action's local day. The SQL bound is the latest local day any zone
        has reached (UTC+14), each row then judged on its own action's day; an action with no zone held is not due. */
     const bound = new Date(this.#nowMs(nowMs) + 14 * 3600000).toISOString().slice(0, 10);
-    const localDays = new Map();
-    const localOf = (id) => { if (!localDays.has(id)) localDays.set(id, this.#localToday(fmOf(id), view, nowMs)); return localDays.get(id); };
+    const judged = new Map();
+    const judgedOf = (id) => { if (!judged.has(id)) judged.set(id, this.#judged(fmOf(id), view, nowMs)); return judged.get(id); };
     const max = clampLimit(limit, REMINDERS_DUE_MAX, REMINDERS_DUE_MAX);
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
@@ -606,11 +617,11 @@ export class ActionClocks {
         const clock = Array.isArray(fmOf(r.bundle_id).clock) ? fmOf(r.bundle_id).clock : [];
         const e = clock[r.entry];
         if (!e || typeof e !== "object" || e.status !== "pending") continue;
-        const local = localOf(r.bundle_id);
+        const { zone, day: local } = judgedOf(r.bundle_id);
         if (local === null || r.day > local) continue;
         if (items.length === max) { truncated = true; break; }
         items.push({ action: r.bundle_id, ord: r.entry, date: e.date ?? null, basis: e.basis ?? null, text: e.text ?? null,
-                     on: r.day, set_by: r.set_by, project: this.#projectOf(fmOf(r.bundle_id), viewer) });
+                     on: r.day, set_by: r.set_by, project: this.#projectOf(fmOf(r.bundle_id), viewer), zone });
       }
       if (truncated || rows.length <= max || !last) break;
       cur = { sql: `AND (r.bundle_id > ? OR (r.bundle_id = ? AND (r.entry > ? OR (r.entry = ? AND (r.day > ?

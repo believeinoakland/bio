@@ -80,8 +80,8 @@ test("R12 a lapsed confirmation is unconfirmed, naming the day it was made; the 
 test("R12 negative controls: an entry naming no local fact, a factStatus that throws or refuses, or an answer local-facts cannot give is absent with why; nothing is thrown", () => {
   const { w } = setUp();
   const read = clocks.factReader(w.localFacts, M);
-  /* an entry naming no local fact. */
-  for (const h of [null, undefined, 7, "x", {}, { profile: "Not A Profile", year: 2026 }, { ...CLERK26, year: "soon" },
+  /* an entry naming no local fact (a closure list's name local-facts cannot name among them). */
+  for (const h of [{ ...CLERK26, list: "not a list!" }, null, undefined, 7, "x", {}, { profile: "Not A Profile", year: 2026 }, { ...CLERK26, year: "soon" },
                    { ...CLERK26, offices: [] }, { get profile() { throw new Error("x"); } }]) {
     const r = read(h);
     assert.deepEqual([r.status, r.why, r.path], ["absent", "the holiday entry names no local fact", null], String(h));
@@ -116,13 +116,14 @@ test("R12 negative controls: an entry naming no local fact, a factStatus that th
   assert.deepEqual(seen, [{ path: pathOf(CLERK26), viewer: BOB }]);
 });
 
-test("R12 factReader answers null when localFacts has no factStatus, and the count then states its calendar not_read", () => {
+test("R12 factReader answers null when localFacts has no factStatus, and the count then states its calendar not_read, saying so without calling the group's Civicsmith 'this instance' (DEC-149: \"whether your group has confirmed the calendar was not read\")", () => {
   const trap = { get factStatus() { throw new Error("x"); } };
   for (const lf of [null, undefined, {}, { factStatus: "no" }, 3, "x", trap])
     assert.equal(clocks.factReader(lf, M), null, String(lf));
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({}, M) });
   assert.deepEqual([n.date, n.calendar.status, n.calendar.says], ["2026-08-19", "not_read",
-    ["the calendar's confirmation on this instance was not read"]]);
+    ["whether your group has confirmed the calendar was not read"]]);
+  assert.ok(!/this instance|this copy|the plane/.test(JSON.stringify(n.calendar)), "DEC-149");
   /* an instance whose local-facts has no factStatus: the count's own path states not_read too, and counts. */
   const w = world({ override: { "test-port-ellery": officeCalendarProfile() } });
   w.c.localFacts.factStatus = undefined;
