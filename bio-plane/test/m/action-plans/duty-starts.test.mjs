@@ -6,6 +6,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, by, ms } from "./fixture.mjs";
 import { world as dutiesWorld, BOB, CAROL } from "../duties/fixture.mjs";
+import { noSuchDuty, DUTIES_CHECKS } from "../../../src/duties/index.mjs";
+import { ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const at = (w, iso) => { w.clock.now = iso; };
@@ -46,16 +48,45 @@ test("R14 R38: a phase may start on a duty occurrence's state; the form is check
   assert.equal(set(w, [ask(w), next(w, { when_duty: { duty: w.DUT, occurrence: w.OCC } })]).ok, true);
   const foreign = set(w, [ask(w), next(w, { when_duty: { duty: w.DUT, occurrence: "OCC-0000" } })]);
   assert.equal(code(foreign), "PHASE_MALFORMED"); assert.equal(foreign.index, 1);
-  /* NO_SUCH_DUTY, duties' own answer: absent and unseen alike, and nothing written */
+  /* NO_SUCH_DUTY, answered through duties' own site (its R25; N601): absent and unseen alike, with an occurrence named
+     or not, its row and fields duties', never one of this module's, with the phase's index; and nothing written */
   const fenced = w.dw.declare({ project: w.dw.project("carol") }, CAROL).duty_id;
   const before = w.ap.planRead({ id: w.PL, viewer: V("bob") }).scenarios[0].version;
   const absent = set(w, [ask(w), next(w, { when_duty: { duty: "DUT-2026-9999" } })]);
   const unseen = set(w, [ask(w), next(w, { when_duty: { duty: fenced } })]);
-  assert.equal(code(absent), "NO_SUCH_DUTY"); assert.equal(code(unseen), "NO_SUCH_DUTY");
+  assert.deepEqual(absent, noSuchDuty("DUT-2026-9999", { index: 1 }));
+  assert.deepEqual(unseen, noSuchDuty(fenced, { index: 1 }));
+  assert.deepEqual(set(w, [ask(w), next(w, { when_duty: { duty: fenced, occurrence: w.OCC } })]), noSuchDuty(fenced, { index: 1 }));
+  assert.deepEqual(set(w, [next(w, { when_duty: { duty: "DUT-2026-9999", occurrence: w.OCC } })]), noSuchDuty("DUT-2026-9999", { index: 0 }));
   assert.deepEqual({ ...absent, duty_id: null }, { ...unseen, duty_id: null });
-  assert.equal(w.ap.planRead({ id: w.PL, viewer: V("bob") }).scenarios[0].version, before);
+  assert.equal(absent.check, DUTIES_CHECKS.NO_SUCH_DUTY.check); assert.equal(absent.translation, DUTIES_CHECKS.NO_SUCH_DUTY.translation);
+  assert.equal("NO_SUCH_DUTY" in ACTION_PLAN_CHECKS, false, "never minted here");
+  assert.equal(Object.values(ACTION_PLAN_CHECKS).some((r) => r.check === absent.check), false);
+  /* negative control: the same phase on bob's own duty lands */
+  assert.equal(set(w, [ask(w), next(w)]).ok, true);
+  assert.equal(w.ap.planRead({ id: w.PL, viewer: V("bob") }).scenarios[0].version, before + 1);
   /* a machine still schedules nothing (R24) */
   assert.equal(code(set(w, [ask(w), next(w)], { author: MACHINE, viewer: MACHINE })), "MACHINE_CANNOT_SCHEDULE");
+});
+
+test("R14 R38: PHASE_MALFORMED's row, C-124.32, names every form of starts, an obligation's occurrence state among them, in exactly the words worded (K1750)", () => {
+  const w = setup();
+  const WORDS = "A phase has an id, a name, the chosen options it holds, when it starts (at the plan's start, after another phase, "
+    + "on one outcome of another phase's checkpoint, when another matter's track reaches a point, or when an obligation's "
+    + "occurrence reaches a state: met, met late, overdue or undetermined), and may have a checkpoint after 1 to 3,650 days, "
+    + "a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written.";
+  assert.equal(ACTION_PLAN_CHECKS.PHASE_MALFORMED.check, "C-124.32");
+  assert.equal(ACTION_PLAN_CHECKS.PHASE_MALFORMED.translation, WORDS);
+  /* answered so at the interface, for a malformed start of each form, R38's included */
+  for (const starts of ["whenever", { after: 7 }, { branch_of: "ask", when: "maybe" }, { when_subject: { kind: "wish" }, reaches: "resolved" },
+                        { when_duty: { duty: w.DUT }, state: "pending" }, { when_duty: { duty: "ENT-2026-0001" }, state: "met" }]) {
+    const r = set(w, [ask(w), { id: "x", name: "X", options: [], starts }]);
+    assert.equal(code(r), "PHASE_MALFORMED", JSON.stringify(starts));
+    assert.deepEqual([r.check, r.translation, r.index], ["C-124.32", WORDS, 1], JSON.stringify(starts));
+  }
+  /* negative control: each form well made lands */
+  for (const starts of [{ after: "ask" }, { when_subject: w.S1, reaches: "resolved" }, { when_duty: { duty: w.DUT }, state: "met_late" }])
+    assert.equal(set(w, [ask(w), { id: "x", name: "X", options: [], starts }]).ok, true, JSON.stringify(starts));
 });
 
 test("R38: an overdue response activates the next step: derived when read, never stored, and answered as a question with its derivation", () => {
