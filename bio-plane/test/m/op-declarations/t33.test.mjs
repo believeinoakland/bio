@@ -84,10 +84,9 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   /* T34's ops whose owners' L11 jobs build them beside this one (their merges come first in L11's order) */
   placewanted: "instance-setup (T34-81)", placewantedstate: "instance-setup (T34-81)",
   memberlanguageset: "instance-setup (T34-81)", memberlanguage: "instance-setup (T34-81)",
-  groupdescriptiondraft: "instance-setup (T34-90)", startfrom: "wizard-scripts (T34-80)",
-  baseupdates: "wizard-scripts (T34-92)", writinghelp: "wizard-scripts (T34-91)",
-  checkrequest: "tasks (T34-53)", checktake: "tasks (T34-53)", checkrecord: "tasks (T34-53)",
-  checkrequests: "tasks (T34-53)", checksof: "tasks (T34-53)" };
+  groupdescriptiondraft: "instance-setup (T34-90)",
+  /* the door routes it itself, calling wizard-scripts' `writingHelp` with the assistant it resolves (K1863 (7)) */
+  writinghelp: "control-plane (T34-60)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["action-clocks", "actions", "ai-runs", "answers", "calculations",
