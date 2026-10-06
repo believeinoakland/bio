@@ -37,14 +37,16 @@ test("R11: construction builds local-facts and filing-templates, each creating i
   assert.equal(rc.registerMintSeed("filing-templates", []).ok, false);
 });
 
-test("R11, R2: local-facts heads layer 9's block of the construction and filing-templates sits after action-clocks and before filings, as their purge declarations show", async () => {
+test("R11, R2, R21 (T33-28, T33-31): local-facts, now in layer 5, declares before standards and every layer-9 module, and filing-templates sits after action-clocks and before filings, as their purge declarations show", async () => {
   const order = declarers(await store());
   const at = (m) => { const i = order.indexOf(m); assert.notEqual(i, -1, m); return i; };
   for (const m of ["consequences", "action-clocks", "filing-templates", "standards", "filings", "escalation", "action-plans"])
     assert.ok(at("local-facts") < at(m), `local-facts before ${m}`);
   assert.ok(at("action-clocks") < at("filing-templates"), "filing-templates after action-clocks");
   assert.ok(at("filing-templates") < at("filings"), "filing-templates before filings");
-  assert.ok(at("filing-templates") < at("standards"), "filing-templates before standards' declaration, made with filings");
+  /* standards moved to layer 5 (T33-31): after local-facts, before every layer-9 module */
+  for (const m of ["conformance", "consequences", "action-clocks", "filing-templates", "filings"])
+    assert.ok(at("standards") < at(m), `standards before ${m}`);
 });
 
 test("R11, R3: a store written before the two modules opens with their tables, and the library `filings` R26 kept is taken once, as drafts", async () => {

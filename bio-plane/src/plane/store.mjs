@@ -69,6 +69,22 @@ import { dispatch, controlPlaneRoutes } from "../control-plane/dispatch.mjs";
 import { promotionStep } from "../control-plane/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
 import { wizardRegistration } from "./wizards.mjs";
+import { eventsOf, eventsOps } from "../events/index.mjs";
+import { linesOf, linesOps } from "../lines/index.mjs";
+import { moneyOf, moneyOps } from "../money/index.mjs";
+import { moneyChecksOf, moneyChecksOps } from "../money-checks/index.mjs";
+import { dutiesOf, dutiesOps } from "../duties/index.mjs";
+import { peopleOf, peopleOps } from "../people/index.mjs";
+import { exploreOf, exploreOps } from "../explore/index.mjs";
+import { calculationsOf, calculationsOps } from "../calculations/index.mjs";
+import { workbooksOf, workbooksOps } from "../workbooks/index.mjs";
+import { legEarningOf, legEarningOps } from "../leg-earning/index.mjs";
+import { hypothesesOf, hypothesesOps } from "../hypotheses/index.mjs";
+import { answersOf, answersOps } from "../answers/index.mjs";
+import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
+import { followingOf, followingOps } from "../following/index.mjs";
+import { PROJECTION_RELATION } from "../retrieval/index.mjs";
+import { registerReaders, rosterSource, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute } from "./wiring.mjs";
 
 /* The name control-plane's promotion step (its R42) is registered under. */
 const STEP = "control-plane";
@@ -99,6 +115,12 @@ export class Store extends DurableObject {
     this.sql = ctx.storage.sql;
     /* R2. record-core: the evidence bucket and its key prefix, handed over at its first construction. */
     recordOf(ctx, { evidence: env.CAPTURES ?? null, evidencePrefix: () => `${this.#ownNamespace() || "bio"}/captures/` });
+    /* R21 (K1541; credentials R23, R29): credentials holds the Worker secret its seal is derived from, built here before
+       any module reaches it (its instance is one per storage, its deps read on the first call only). Unbound, setting a
+       member's reference is refused ACCOUNT_SEAL_UNAVAILABLE. */
+    credentialsOf(ctx, { sealSecret: env.ACCOUNT_SEAL_SECRET ?? null });
+    /* R22 (T33-12; docprofile R36): the content types registered into docprofile's registry, once, generic last. */
+    registerReaders();
     /* R10 (K861): the stats figures, each owner's registered under its own name (record-core R63), and the plane's own
        stats sight (record-core R65). */
     registerOwnersCounts(ctx);
@@ -130,17 +152,67 @@ export class Store extends DurableObject {
     observationLogOf(ctx).listenTo(contentOf(ctx, { extraction: extractionOf(ctx, { env, promotion, calibration: calibrationOf(ctx) }) }).extraction);
     /* entities (R13): observation-log records each resolution attempt on entities' notice (its R8). */
     observationLogOf(ctx).attachMeaning({ entities: entitiesOf(ctx) });
-    /* retrieval: its projection and text index join every promotion. */
-    const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null) });
+    /* R21 (T33-90; K1563): layer 5's new modules, in the modules' order, each built here with the instances it reads
+       before any other module's factory reaches it (a factory reads its deps on its first call only). events starts at
+       creation (its after-read hook and connection owner); lines reads events' `when` (its R6). */
+    const events = eventsOf(ctx);
+    const lines = linesOf(ctx, { events });
+    /* K1563 (10), K1654: the seeded offices' reads (instance-setup R50), for local-facts here and conformance below. */
+    const offices = officePorts(() => instanceSetupOf(ctx, env));
+    /* local-facts (moved to layer 5, T33-28): its `part_of` walk over lines, and the seeded offices it maps to. */
+    const localFacts = localFactsOf(ctx, { lines, officeOf: offices.officeOf });
+    /* standards (moved to layer 5, T33-31; K1571): its dated reads over events, and the keyed store its citation lookup
+       reads the group's key through (`{credentials, env, governor}`, its R25), the sealed credentials above. */
+    const standards = standardsOf(ctx, { events, keyedStore: () => ({ credentials: credentialsOf(ctx), env,
+                                                                       governor: governorOf(ctx, { env }) }) });
+    /* money (K1573): built before every module that reaches it, with calculations' `bindingOf` as its port
+       (calculations comes later in the order, so the port is asked of its instance when read); its projection step
+       joins the promotion. */
+    const money = moneyOf(ctx, { calculations: { bindingOf: (key) => calculationsOf(ctx).bindingOf(key) } });
+    money.joinPromotion(promotion);
+    /* money-checks, with the progressions the scheduler builds (its environment), so neither loses its deps. */
+    moneyChecksOf(ctx, { money, progressions: progressionsOf(ctx, { env }) });
+    /* duties (K1569): the real services by default, the active combined view by default, and the status of a calendar
+       entry from local-facts (civil-time R9). Before people, whose duties read would otherwise build it bare. */
+    const duties = dutiesOf(ctx, { factOf: dutiesFactOf(() => localFacts) });
+    const people = peopleOf(ctx, { money, duties, events, lines });
+    /* R23 (K1505 (6)): roster-reader's source registered into people (its R19). */
+    people.registerRosterSource("roster-reader", rosterSource());
+    /* explore (K1566): the one read across the registered owners; it holds nothing, so it is kept for the route map. */
+    this.explore = exploreOf(ctx, { events, money });
+    /* retrieval: its projection and text index join every promotion; R21 (K1593): the projected fields' providers,
+       each its owner's rule (`standards.standardsFor`, `lines.holderAt`). */
+    const retrieval = retrievalOf(ctx, { now: () => this.#nowMs(null),
+      terms: retrievalTerms({ standards: () => standards, lines: () => lines, sql: () => this.sql }) });
+    /* calculations (T33-41): over the instances it reads, filling at creation money's change notice, duties'
+       occurrence evidence and people's roster source (its R19, R20). Built before reevaluation, which registers on its
+       input notice. workbooks (K1570) after it, recomputing through SHEET_WORKER. */
+    const calculations = calculationsOf(ctx, { money, duties, people, events, lines, standards, retrieval,
+      entities: entitiesOf(ctx), progressions: progressionsOf(ctx) });
+    workbooksOf(ctx, { provenance, content: contentOf(ctx), calculations,
+                       recompute: sheetRecompute(env, () => this.#ownNamespace() || "bio") });
     registerInquiryGrammar(recordOf(ctx));   /* inquiry-grammar R6 (K812): before basis-versions, whose R43 runs at its sub-slot */
     basisVersionsOf(ctx, { retrieval, acceptedWork });   /* basis-versions registers its projection decoration (its R42) */
     aiRunsOf(ctx, env);   /* ai-runs registers with retrieval, in the modules' order */
+    /* R21 (T33-44, K1619): leg-earning, before inquiry's factory reaches it, with the standards and duties above. */
+    legEarningOf(ctx, { standards, duties });
+    /* R21 (K1607): hypotheses at boot, so its leg check joins the promotion (its R5, R6) and the `hunch` owner, which
+       registered at load, finds its one instance; explore is the instance above (its R6 rederives through it). */
+    hypothesesOf(ctx, { explore: this.explore });
+    /* R21 (K1609; answers R7–R12, R15–R21): the owners its rule services read, the saved query's runner, the account
+       reads, the relation the saved form is checked against (retrieval's projection, K1609) and ai-runs' ceiling. */
+    answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
+      calculations, retrieval, credentials: credentialsOf(ctx), relations: () => ({ projection: PROJECTION_RELATION }),
+      ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }) });
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
        `deps` on the first call only, so created there it would never see `env` (its R25). */
-    reevaluationOf(ctx, { env, acceptedWork });
+    reevaluationOf(ctx, { env, acceptedWork, calculations });
     /* publication (K365): built here, after reevaluation, so its case reads are registered with reevaluation (its R41,
        R43; reevaluation R26) before anything runs. Built lazily, a sweep an alarm reached before any op found none. */
     publicationOf(ctx, { acceptedWork });
+    /* R23 (K1505 (3), K1643; publication R61): case-tensions, which publication's factory builds and registers its
+       provider with (the seven doors), is the one instance per host the route map reaches. */
+    caseTensionsOf(ctx);
     /* R15 (N520; DEC-116): docket, directly after publication in the modules' order, built here with this environment
        (its factory reads its deps on the first call only). At creation it creates and declares its tables to purge
        (whole store only, its R16) and starts, filling reevaluation's docket registration (its R13, reevaluation R30)
@@ -187,8 +259,8 @@ export class Store extends DurableObject {
     /* layer 9, in the modules' order, each registering at start what its factory registers (checks, projections,
        purge, filings' evidence block). standards creates its own tables at construction. R11 (K921): local-facts heads
        the layer, creating its table and declaring it to purge (record-core K23). */
-    const localFacts = localFactsOf(ctx);
-    const conformance = conformanceOf(ctx);
+    /* K1654: conformance names an office's entity through the seeded offices (instance-setup R50). */
+    const conformance = conformanceOf(ctx, { officeEntityOf: offices.officeEntityOf });
     const consequences = consequencesModule(ctx, { conformance });
     actionClocksOf(ctx);   /* action-clocks (K704): after actions, which it reads and which joins the host first (its R9) */
     /* R11 (K921): filing-templates, after action-clocks and before filings: it creates its tables, declares them to purge
@@ -215,6 +287,9 @@ export class Store extends DurableObject {
        Built before the scheduler, whose `gathering-sweep` owner (`linkSweepOf(ctx)`, scheduler R5) then reaches this
        instance, the one per storage (K1210). */
     linkSweepOf(ctx, { monitoring, captureRequests, capture });
+    /* R21 (T33-79): following, after monitoring whose sweep host it reads, built before the scheduler reaches it
+       (scheduler R21's `follow` consumer and its `onFollowed` notice). */
+    followingOf(ctx, { monitoring, events, entities: entitiesOf(ctx), capture });
     /* R19 (N528; DEC-120, DEC-121): wizard-scripts, first in layer 11, built here before every layer-11 reader
        (affordances, queue-producers, control-plane). At creation it creates its tables, declares them to purge (K23) and
        registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
@@ -276,6 +351,17 @@ export class Store extends DurableObject {
     captureRequestsOf(this.ctx).migrate();
     aiRunsOf(this.ctx, this.env).migrate();   /* ai-runs' two late columns and the ai_run_log fold (its R38) */
     entitiesOf(this.ctx).migrate();
+    /* R21 (T33-90): layer 5's new modules' tables, in the modules' order, after entities and before retrieval, whose
+       views read them (each idempotent; money's, people's, events' and lines' factories create none). */
+    eventsOf(this.ctx).migrate();
+    linesOf(this.ctx).migrate();
+    standardsOf(this.ctx).migrate();
+    moneyOf(this.ctx).migrate();
+    moneyChecksOf(this.ctx).migrate();
+    dutiesOf(this.ctx).migrate();
+    peopleOf(this.ctx).migrate();
+    legEarningOf(this.ctx).migrate();   /* `inquiry_basis`, leg-earning's since T33-45 (its R12) */
+    hypothesesOf(this.ctx).migrate();
     contradictionOf(this.ctx).migrate();
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
@@ -347,10 +433,23 @@ export class Store extends DurableObject {
       ...extractionOps(extractionOf(ctx), url, body, env),
       ...connectionsOps(connectionsOf(ctx), url, body, env),
       ...inquiryOps(inquiryOf(ctx), url, body),
+      /* K1619: `basis`, `restson`, `earnedbasis` are leg-earning's, after inquiry's delegating entries so its own win. */
+      ...legEarningOps(legEarningOf(ctx), url),
+      ...hypothesesOps(hypothesesOf(ctx), url, body),   /* K1607 */
       ...citationOps(citationOf(ctx), url),
       ...observationLogOps(observationLogOf(ctx), url, body),
       ...runProductionsOps(runProductionsOf(ctx), url, body),
       ...entitiesOps(entitiesOf(ctx), url, body),
+      /* R21 (T33-90): layer 5's new modules' maps, in the modules' order (control-plane R53 routes them). */
+      ...eventsOps(eventsOf(ctx), url, body),
+      ...linesOps(linesOf(ctx), url, body),
+      ...moneyOps(moneyOf(ctx), url, body),
+      ...moneyChecksOps(moneyChecksOf(ctx), url, body),
+      ...dutiesOps(dutiesOf(ctx), url, body),
+      ...peopleOps(peopleOf(ctx), url, body),
+      ...exploreOps(this.explore, url, body),
+      ...calculationsOps(calculationsOf(ctx), url, body),
+      ...workbooksOps(workbooksOf(ctx), url, body),
       ...contradictionOps(contradictionOf(ctx), url, body),
       ...progressionOps(progressionsOf(ctx), url, body),
       ...intentOps(intentOf(ctx), url, body),
@@ -364,6 +463,8 @@ export class Store extends DurableObject {
       ...caseImportOps(caseImportOf(ctx), url, body),
       /* N483 (K1122): `export` and `exportlog` are corpus-export's (its R6), on the one instance publication created. */
       ...corpusExportOps(corpusExportOf(ctx), (k) => url.searchParams.get(k)),
+      /* K1643: `caseflags` and `attribute` are case-tensions', on the one instance publication's factory made. */
+      ...caseTensionsOps(caseTensionsOf(ctx), url, body),
       ...publicationOps(publicationOf(ctx), url, body),
       /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */
       ...docketOps(docketOf(ctx), url, body),
@@ -382,6 +483,7 @@ export class Store extends DurableObject {
       ...captureRequestsOps(captureRequestsOf(ctx), url, body),
       ...governorRoutes(governorOf(ctx), url, body),
       ...aiRunsOps(aiRunsOf(ctx, env), url, body),
+      ...answersOps(answersOf(ctx), url, body),   /* R21 (K1609) */
       ...retrievalRoutes(retrievalOf(ctx), url, body),
       ...actionsOps(actionsOf(ctx), url, body),
       ...actionClocksOps(actionClocksOf(ctx), url, body),
@@ -396,6 +498,7 @@ export class Store extends DurableObject {
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),
       ...linkSweepOps(linkSweepOf(ctx), url),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
+      ...followingOps(followingOf(ctx), url, body),   /* R21 (T33-79) */
       ...reviewOps(reviewOf(ctx), url, body),
       ...wizardScriptsOps(wizardScriptsOf(ctx), url, body),   /* R19 (N528): the wizard scripts' ops, layer 11 */
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),

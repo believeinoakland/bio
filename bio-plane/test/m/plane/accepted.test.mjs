@@ -113,7 +113,7 @@ test("R17: case-import is built after publication, docket and strength and befor
   assert.ok(at("publication") < at("case-import") && at("docket") < at("case-import"), "after layer 8's earlier modules");
   assert.ok(at("strength") < at("case-import"), "after strength, which it reads");
   assert.ok(at("case-import") < at("case-authoring"), "before case-authoring");
-  assert.ok(at("case-import") < at("local-facts"), "before layer 9");
+  assert.ok(at("case-import") < at("filing-templates"), "before layer 9");
   /* negative control: a table no module declared is free to a probe */
   assert.equal(rc.declarePurge("zz-probe", ["zz_none"]).ok, true);
 });

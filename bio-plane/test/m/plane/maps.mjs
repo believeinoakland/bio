@@ -53,6 +53,20 @@ import { retrievalOf, retrievalRoutes } from "../../../src/retrieval/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../../../src/setup.mjs";
 import { controlPlaneRoutes } from "../../../src/control-plane/dispatch.mjs";
+import { eventsOf, eventsOps } from "../../../src/events/index.mjs";
+import { linesOf, linesOps } from "../../../src/lines/index.mjs";
+import { moneyOf, moneyOps } from "../../../src/money/index.mjs";
+import { moneyChecksOf, moneyChecksOps } from "../../../src/money-checks/index.mjs";
+import { dutiesOf, dutiesOps } from "../../../src/duties/index.mjs";
+import { peopleOf, peopleOps } from "../../../src/people/index.mjs";
+import { exploreOf, exploreOps } from "../../../src/explore/index.mjs";
+import { calculationsOf, calculationsOps } from "../../../src/calculations/index.mjs";
+import { workbooksOf, workbooksOps } from "../../../src/workbooks/index.mjs";
+import { legEarningOf, legEarningOps } from "../../../src/leg-earning/index.mjs";
+import { hypothesesOf, hypothesesOps } from "../../../src/hypotheses/index.mjs";
+import { answersOf, answersOps } from "../../../src/answers/index.mjs";
+import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
+import { followingOf, followingOps } from "../../../src/following/index.mjs";
 
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
@@ -63,10 +77,21 @@ export const MODULE_MAPS = [
   ["extraction", (c, u, b, e) => extractionOps(extractionOf(c), u, b, e)],
   ["connections", (c, u, b, e) => connectionsOps(connectionsOf(c), u, b, e)],
   ["inquiry", (c, u, b) => inquiryOps(inquiryOf(c), u, b)],
+  ["leg-earning", (c, u) => legEarningOps(legEarningOf(c), u)],
+  ["hypotheses", (c, u, b) => hypothesesOps(hypothesesOf(c), u, b)],
   ["citation", (c, u) => citationOps(citationOf(c), u)],
   ["observation-log", (c, u, b) => observationLogOps(observationLogOf(c), u, b)],
   ["run-productions", (c, u, b) => runProductionsOps(runProductionsOf(c), u, b)],
   ["entities", (c, u, b) => entitiesOps(entitiesOf(c), u, b)],
+  ["events", (c, u, b) => eventsOps(eventsOf(c), u, b)],
+  ["lines", (c, u, b) => linesOps(linesOf(c), u, b)],
+  ["money", (c, u, b) => moneyOps(moneyOf(c), u, b)],
+  ["money-checks", (c, u, b) => moneyChecksOps(moneyChecksOf(c), u, b)],
+  ["duties", (c, u, b) => dutiesOps(dutiesOf(c), u, b)],
+  ["people", (c, u, b) => peopleOps(peopleOf(c), u, b)],
+  ["explore", (c, u, b) => exploreOps(exploreOf(c), u, b)],
+  ["calculations", (c, u, b) => calculationsOps(calculationsOf(c), u, b)],
+  ["workbooks", (c, u, b) => workbooksOps(workbooksOf(c), u, b)],
   ["contradiction", (c, u, b) => contradictionOps(contradictionOf(c), u, b)],
   ["progressions", (c, u, b) => progressionOps(progressionsOf(c), u, b)],
   ["intent", (c, u, b) => intentOps(intentOf(c), u, b)],
@@ -77,6 +102,7 @@ export const MODULE_MAPS = [
   ["ratification", (c, u, b) => ratificationOps(ratificationOf(c), u, b)],
   ["case-import", (c, u, b) => caseImportOps(caseImportOf(c), u, b)],
   ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],
+  ["case-tensions", (c, u, b) => caseTensionsOps(caseTensionsOf(c), u, b)],
   ["publication", (c, u, b) => publicationOps(publicationOf(c), u, b)],
   ["docket", (c, u, b) => docketOps(docketOf(c), u, b)],
   ["public-read", (c, u) => publicReadOps(publicReadOf(c), u)],
@@ -90,6 +116,7 @@ export const MODULE_MAPS = [
   ["capture-requests", (c, u, b) => captureRequestsOps(captureRequestsOf(c), u, b)],
   ["host-governor", (c, u, b) => governorRoutes(governorOf(c), u, b)],
   ["ai-runs", (c, u, b, e) => aiRunsOps(aiRunsOf(c, e), u, b)],
+  ["answers", (c, u, b) => answersOps(answersOf(c), u, b)],
   ["retrieval", (c, u, b) => retrievalRoutes(retrievalOf(c), u, b)],
   ["actions", (c, u, b) => actionsOps(actionsOf(c), u, b)],
   ["action-clocks", (c, u, b) => actionClocksOps(actionClocksOf(c), u, b)],
@@ -103,6 +130,7 @@ export const MODULE_MAPS = [
   ["escalation", (c, u, b) => escalationOps(escalationOf(c), u, b)],
   ["monitoring", (c, u, b) => monitoringOps(monitoringOf(c), u, b)],
   ["link-sweep", (c, u) => linkSweepOps(linkSweepOf(c), u)],
+  ["following", (c, u, b) => followingOps(followingOf(c), u, b)],
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
   ["wizard-scripts", (c, u, b) => wizardScriptsOps(wizardScriptsOf(c), u, b)],
   ["instance-setup", (c, u, b, e) => instanceSetupOps(instanceSetupOf(c, e), u, b)],
