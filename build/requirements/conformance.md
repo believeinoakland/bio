@@ -55,7 +55,7 @@ Rows C-113.24–C-113.28 (this module's C-113; N345), with their translations; p
 | row | code | translation |
 |---|---|---|
 | C-113.24 | `NO_SUCH_CONTRADICTION_INQUIRY` | "No question you can see answers to that id as one taken up from a contradiction, so no comparison starts from it. Nothing was written." |
-| C-113.28 | `STANDARD_SIDE_UNNAMED` | "Name which side of the question states what the standard requires, a or b. The plane never chooses it. Nothing was written." |
+| C-113.28 | `STANDARD_SIDE_UNNAMED` | "Name which side of the question states what the standard requires, a or b. Your group's Civicsmith never chooses it. Nothing was written." |
 | C-113.25 | `CAUSE_NOT_EVIDENCED` | "A cause is recorded on a determination only when evidence you can see shows it. A cause not yet shown stays in the question where it is being worked out, and the determination says the cause is not established. Nothing was written." |
 | C-113.26 | `CAUSE_UNSTATED` | "The cause is stated in a sentence of your own, of at most 2,000 characters. Nothing was written." |
 | C-113.27 | `RECOMMENDATION_IS_AN_ACTION` | "A determination records what was required, what was done, and why, and never what should be done. Propose an action instead. Nothing was written." |
