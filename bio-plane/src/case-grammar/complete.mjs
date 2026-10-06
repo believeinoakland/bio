@@ -23,7 +23,13 @@
  * checked without the product, and in the grading method's text, and no colour-scheme declaration (its colours are its
  * own and light already), so a published `/6` case file's edition re-renders byte for byte. A `/7` document renders
  * "Civicsmith" in those three places and declares only the light colour scheme, so a reader's dark setting does not
- * restyle it. */
+ * restyle it.
+ *
+ * THE TIMELINE AND THE CALCULATIONS (C11, K1494; C:A-12, K1448; T33-60). A document carrying R20's `timeline:` block
+ * gains "The timeline" right after the findings (C11: the timeline of its findings), its two lanes as two lists, never
+ * one; a document carrying R18's `calculations:` block gains "The calculations" right after the materials, each
+ * calculation's recipe, inputs, results, recompute status and disclosure. Each is added only when its block is carried,
+ * and the sections are numbered as rendered, so a case file published before T33 re-renders byte for byte. */
 
 import { parseFrontmatter, canonicalJson, createSha256 } from "../record-grammar/index.mjs";
 import { gradingMethodText } from "../strength/method.mjs";
@@ -32,14 +38,28 @@ import { caseTensionsOf } from "./tensions.mjs";
 import { lensOf, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE } from "./edition.mjs";
 import { methodOf, materialsOf, acceptedWorkOf, PAIR_AXES } from "./materials.mjs";
 import { caseFilePath } from "./casefile.mjs";
-import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED } from "./formats.mjs";
+import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentRequiresMaterials } from "./formats.mjs";
 import { gradingFactsOf, passagesOf } from "./facts.mjs";
 import { standingOf } from "./standing.mjs";
+import { calculationsOf } from "./calculations.mjs";
+import { timelineOf } from "./timeline.mjs";
 
 /** R14: the sections, in order, by their headings (the UX stream's words, until it gives them). */
 export const COMPLETE_EDITION_HEADINGS = Object.freeze(["The claims", "The findings", "The documents and observations",
   "What was searched", "The declared bias", "Disclosed contradictions", "Strength", "How grades are worked out",
   "How to check this case yourself"]);
+/** R14 (C11, C:A-12): the two sections a document carrying R20's or R18's block adds, after "The findings" and after
+ *  "The documents and observations" (the UX stream's words, until it gives them). */
+export const TIMELINE_HEADING = "The timeline";
+export const CALCULATIONS_HEADING = "The calculations";
+/** R14 (C11): the timeline's two lanes, by their names in the edition. */
+export const TIMELINE_LANE_WORDS = Object.freeze({ they_did: "What they did", we_did: "What we did" });
+/** R14 (C:A-12): each recompute status in words. */
+export const RECOMPUTE_WORDS = Object.freeze({
+  agrees: "recomputed at publication, and the result agrees with the one stored",
+  differs: "recomputed at publication, and the result differs from the one stored",
+  unbound: "not recomputed at publication: an input it names was not bound",
+});
 /** R14: the sentence the strength section opens with (§5C). */
 export const TWO_STRENGTHS_SENTENCE = "A case has two strengths, never one.";
 /** R14: the plain meaning each grade opens with (DEC-82: a grade tells you how easily someone else could check it,
@@ -273,9 +293,15 @@ export function completeEditionOf(caseFile) {
       p("Recreating a case shows it is intact and consistent. It does not show that it is true."),
     ];
 
-    return page({ product, title: `${said(group, "A group")} · Case ${caseId} · Edition ${edition}`, notice, group, sections: [
-      ...COMPLETE_EDITION_HEADINGS.map((h, i) => `<h2>${esc(`${i + 1}. ${h}`)}</h2>${[claims, findingHtml, materialHtml,
-        searchedHtml, biasHtml, tensionHtml, strengthHtml, methodHtml, checkHtml][i].join("")}`)] });
+    /* C11, C:A-12: the timeline after the findings, the calculations after the materials, each only when carried */
+    const bodies = [claims, findingHtml, materialHtml, searchedHtml, biasHtml, tensionHtml, strengthHtml, methodHtml, checkHtml];
+    const sections = COMPLETE_EDITION_HEADINGS.map((h, i) => [h, bodies[i]]);
+    const v6up = caseDocumentRequiresMaterials(fm);
+    if (v6up && Array.isArray(fm.calculations)) sections.splice(3, 0, [CALCULATIONS_HEADING, calculationsHtml(calculationsOf(fm))]);
+    if (v6up && Array.isArray(fm.timeline)) sections.splice(2, 0, [TIMELINE_HEADING, timelineHtml(timelineOf(fm))]);
+
+    return page({ product, title: `${said(group, "A group")} · Case ${caseId} · Edition ${edition}`, notice, group, sections:
+      sections.map(([h, body], i) => `<h2>${esc(`${i + 1}. ${h}`)}</h2>${body.join("")}`) });
   } catch {
     return page({ product: PRODUCT_NAMES.current, title: "A case file that could not be read", notice: null, group: null,
                   sections: [p("This case file could not be read whole, so nothing of the case is shown from it.")] });
@@ -324,6 +350,34 @@ function chainHtml(finding, facts, accepted, member, depth, seen) {
       + `${said(q.content_id)}).`)}</small></blockquote>`).join("")}`
     : "";
   return legHtml + passageHtml;
+}
+
+/* A value as the edition prints it: a string as written, anything else its canonical JSON. */
+const valueWords = (v, none = "not stated") => (v === null || v === undefined ? none
+  : typeof v === "string" ? v : (() => { try { return canonicalJson(v); } catch { return "an unreadable value"; } })());
+
+/* R20 (C11): the two lanes as two lists, never one; each item with its when and its source. */
+function timelineHtml(t) {
+  return [p("What they did and what we did are two lists, never mixed. Each item shows the record it rests on."),
+    ...["they_did", "we_did"].flatMap((lane) => [`<h3>${esc(TIMELINE_LANE_WORDS[lane])}</h3>`,
+      t[lane].length ? ul(t[lane].map((x) => li(`${valueWords(x.when, "when undetermined")}: ${clause(valueWords(x.label, "an item"))}`
+        + `${x.ref ? ` (${valueWords(x.ref)})` : ""}. Source: ${valueWords(x.source)}.`)))
+        : p("Nothing is stated in this lane.")])];
+}
+
+/* R18 (C:A-12): each calculation, with what it computed from, what it stored, and whether it recomputed. */
+function calculationsHtml(rows) {
+  if (!rows.length) return [p("No calculation is reached by this case's findings.")];
+  return [p("Each calculation is stated so that anyone can run its recipe again on the same inputs. A result is a "
+    + "computed fact, never a judgment."), ...rows.map((c) => `<h3>${esc(said(c.calc))}</h3>${ul([
+    li(`Recipe: ${valueWords(c.recipe)}`),
+    li(`Method version: ${said(c.method_version)}`),
+    ...(c.inputs ? Object.keys(c.inputs).sort().map((n) => li(`Input ${n}: SHA-256 ${c.inputs[n]}`)) : [li("Its inputs are not stated.")]),
+    ...(c.results ? Object.keys(c.results).sort().map((k) => li(`Result ${k}: ${valueWords(c.results[k])}`)) : [li("Its results are not stated.")]),
+    li(`Result key: ${said(c.result_key, "undetermined")}`),
+    li(`It was ${RECOMPUTE_WORDS[c.recompute] ?? "recomputed at publication with an outcome not stated"}.`),
+    ...(c.disclosed ? [li(`The publisher's disclosure: ${c.disclosed}`)] : []),
+  ])}`)];
 }
 
 /* An attestation row in words (R12): an anonymous member is never named. */
