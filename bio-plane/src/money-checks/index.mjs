@@ -15,8 +15,8 @@
  * Nothing here is a fact, a finding about a person, or a score standing for a judgment (K1471, K1473); no result is
  * written anywhere but this module's own tables (R10).
  *
- * Readings this job builds on (job record J1, accepted by K1563): `money` is reached through `deps.money` (its
- * `readFact`, `moneyOf`, `summable`, `committedAgainstPaid`) and its read contract (money R19, named whole by K1563 (4)),
+ * `money` is reached through its services (`readFact`, `moneyOf`, `summable`, `committedAgainstPaid`; J1, K1563)
+ * and its read contract (money R19, named whole by K1563 (4)),
  * read in `#populationFacts` and `#captureOf`; a threshold or share is held by `stateParameter` (R3).
  *
  * REACHED as `moneyChecksOf(host, deps)` (K61): one instance per host, created on the first call with `deps`:
@@ -24,7 +24,7 @@
  *   membership   `membershipOf(host)`: `isAdministrator` (R8).
  *   entities     `entitiesOf(host)`: `readEntity` (an entity's kind: a person is never a subject, R4).
  *   progressions `progressionsOf(host)`: `readInstance` (R1), and its read contract `progression_instances` (its R34).
- *   money        `money`'s provided services (R1, R2, R13); required, since `money` precedes this module.
+ *   money        `moneyOf(host)`: `readFact`, `moneyOf`, `summable`, `committedAgainstPaid` (R1, R2, R13).
  *   now          the clock for the instants written, an ISO string (default: the wall clock).
  *   nowMs        the clock a run's budget is measured on, milliseconds (default: the wall clock). */
 
@@ -34,6 +34,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { viewerPredicate, noSuchProject, notAnAdmin, membershipOf } from "../membership/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
+import { moneyOf } from "../money/index.mjs";
 import { moneyChecksTables, migrateMoneyChecks } from "./schema.mjs";
 import { refusal } from "./checks.mjs";
 
@@ -84,11 +85,22 @@ function strings(v, out = []) {
 
 /* ---- figures (calc-grammar's exact decimals; R2, R3) ---- */
 
-/** A money fact's amount as a calc-grammar figure: exact decimal, sign and precision as money holds them. */
+/** A money fact's amount as a calc-grammar figure, from either of money's two forms: its read (money R8: `amount`
+ *  unsigned, or `{low, high}` for a range, with `sign`) or a row of its read contract (money R19: `amount`, `amount_low`,
+ *  `amount_high` signed). Exact decimals throughout; the sign and precision as money holds them. */
 export function factFigure(f) {
-  const base = { sign: f.sign === "-" ? "-" : "+", currency: f.currency ?? undefined };
-  if (f.precision === "range") return { ...base, precision: "range", low: String(f.low ?? f.amount_low ?? ""), high: String(f.high ?? f.amount_high ?? "") };
-  return { ...base, precision: f.precision || "exact", value: String(f.amount) };
+  const neg = (d) => typeof d === "string" && d.startsWith("-");
+  const abs = (d) => (neg(d) ? d.slice(1) : String(d));
+  const cur = f.currency ? { currency: f.currency } : {};
+  if (f.precision === "range") {
+    if (plain(f.amount)) {
+      const minus = f.sign === "-";
+      const low = minus ? `-${abs(f.amount.high)}` : abs(f.amount.low), high = minus ? `-${abs(f.amount.low)}` : abs(f.amount.high);
+      return { low, high, sign: minus ? "-" : "+", precision: "range", ...cur };
+    }
+    return { low: String(f.amount_low), high: String(f.amount_high), sign: neg(f.amount_low) ? "-" : "+", precision: "range", ...cur };
+  }
+  return { value: abs(f.amount), sign: f.sign === "-" || neg(f.amount) ? "-" : "+", precision: f.precision || "exact", ...cur };
 }
 const isZero = (v) => typeof v === "string" && /^0*(\.0*)?$/.test(v);
 /* The relation of two figures: "lower", "equal", "higher", or `{undetermined, why}` / `{refused, why}`. An approximate
@@ -294,13 +306,18 @@ export class MoneyChecks {
     return MoneyChecks.#answer(check, { ...r, sums, read, ...extra });
   }
 
-  /* money's answers, read in their stated shapes (money R9, R14). */
+  /* money R14's answer: the committed facts, split into those at an award (concerning one of `committed.awards`) and
+     the change orders amending one; the paid facts. Events not wired there leaves the committed side undetermined. */
   #committed(contract, viewer) {
     const r = this.money.committedAgainstPaid({ contract, viewer });
     if (!r || r.ok === false) return { refused: r || { reason: "UNANSWERED" } };
     const c = r.committed || {};
-    return { award: Array.isArray(c.award) ? c.award : [], orders: Array.isArray(c.change_orders) ? c.change_orders : [],
-             paid: Array.isArray(r.paid?.facts) ? r.paid.facts : [] };
+    const paid = Array.isArray(r.paid?.facts) ? r.paid.facts : [];
+    if (c.undetermined) return { award: [], orders: [], paid, undetermined: c.why || "the committed side is undetermined" };
+    const awards = new Set(Array.isArray(c.awards) ? c.awards : []);
+    const facts = Array.isArray(c.facts) ? c.facts : [];
+    const atAward = (f) => (f.concerns || []).some((x) => awards.has(x));
+    return { award: facts.filter(atAward), orders: facts.filter((f) => !atAward(f)), paid };
   }
   #factsOf(entity, viewer, phases = null) {
     const r = this.money.moneyOf({ entity, viewer, limit: NOTICED_MAX, ...(phases ? { phases } : {}) });
@@ -320,7 +337,8 @@ export class MoneyChecks {
       const read = { facts: [...committed, ...cap.paid].map((f) => f.fact_id) };
       const c = this.#sum(committed), p = this.#sum(cap.paid);
       const sums = { committed: MoneyChecks.#sumView(c), paid: MoneyChecks.#sumView(p) };
-      if (c.refused || p.refused) checks.push(MoneyChecks.#answer("paid_above_committed", { refused: c.refused || p.refused, sums, read }));
+      if (cap.undetermined) checks.push(MoneyChecks.#answer("paid_above_committed", { holds: "undetermined", why: cap.undetermined, sums, read }));
+      else if (c.refused || p.refused) checks.push(MoneyChecks.#answer("paid_above_committed", { refused: c.refused || p.refused, sums, read }));
       else if (c.undetermined || p.undetermined) checks.push(MoneyChecks.#answer("paid_above_committed", { holds: "undetermined", why: c.why || p.why, sums, read }));
       else if (c.empty) checks.push(MoneyChecks.#answer("paid_above_committed", { holds: "undetermined", why: "no committed amount is held", sums, read }));
       else checks.push(MoneyChecks.#answer("paid_above_committed", { ...MoneyChecks.#fromRelation(relation(p.figure, c.figure),
@@ -332,7 +350,9 @@ export class MoneyChecks {
       checks.push(this.#differsCheck("signed_differs_from_award", adopted, cap.award,
                                      { facts: [...adopted, ...cap.award].map((f) => f.fact_id) }));
     }
-    checks.push(this.#changeOrderCheck("change_orders_past_share", cap.award, cap.orders, con));
+    checks.push(cap.undetermined
+      ? MoneyChecks.#answer("change_orders_past_share", { holds: "undetermined", why: cap.undetermined, read: { facts: [] } })
+      : this.#changeOrderCheck("change_orders_past_share", cap.award, cap.orders, con));
     return { ok: true, contract: con, label: NOTICED, checks };
   }
 
@@ -370,6 +390,7 @@ export class MoneyChecks {
     {
       const cap = this.#committed(eid, viewer);
       if (cap.refused) checks.push(MoneyChecks.#answer("junction_amendments_past_share", { refused: cap.refused, read: { facts: [] } }));
+      else if (cap.undetermined) checks.push(MoneyChecks.#answer("junction_amendments_past_share", { holds: "undetermined", why: cap.undetermined, read: { facts: [] } }));
       else checks.push(this.#changeOrderCheck("junction_amendments_past_share", cap.award, cap.orders, eid));
     }
     return { ok: true, found: true, progression_key: key, entity_id: eid, label: NOTICED, shown: true, checks };
@@ -537,7 +558,7 @@ export class MoneyChecks {
     const where = ["f.fact_id NOT IN (SELECT fact_id FROM money_withdrawals)"], args = [];
     for (const [k, col] of Object.entries(POPULATION_FILTERS))
       if (population[k]) { where.push(`f.${col} IN (${population[k].map(() => "?").join(",")})`); args.push(...population[k]); }
-    return this.#rows(`SELECT f.fact_id, f.amount, f.sign, f.precision, f.currency, f.kind, f.phase, f.stage, f.basis,
+    return this.#rows(`SELECT f.fact_id, f.amount, f.amount_low, f.amount_high, f.sign, f.precision, f.currency, f.kind, f.phase, f.stage, f.basis,
                               f.period_from, f.period_to, f.from_entity, f.from_fund, f.to_entity, f.to_fund
                          FROM money_facts f WHERE ${where.join(" AND ")} ORDER BY f.fact_id`, ...args);
   }
@@ -780,13 +801,13 @@ export function moneyChecksOf(host, deps) {
   let c = instances.get(host);
   if (!c) {
     const d = deps || {};
-    if (!d.money) throw new TypeError("moneyChecksOf: deps.money (money's services) is required");
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new MoneyChecks({ ...d, storage, record, membership,
                           entities: d.entities || entitiesOf(host, { record, membership }),
-                          progressions: d.progressions || progressionsOf(host, { record }) });
+                          progressions: d.progressions || progressionsOf(host, { record }),
+                          money: d.money || moneyOf(host, { record, membership }) });
     instances.set(host, c);
     c.migrate();
     const declared = record.declareTable("money-checks", moneyChecksTables((scope) => c.rebuild(scope)));

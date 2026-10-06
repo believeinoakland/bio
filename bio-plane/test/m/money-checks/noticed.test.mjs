@@ -8,10 +8,10 @@ const P = "PROJ-2026-0001-alpha";
 function seeded() {
   const w = world();
   w.project(P, ["alice", "bob"]);
-  w.entity("ENT-2026-0010", "institution");
-  w.entity("ENT-2026-0011", "institution");
-  w.fact("MNY-2026-f1", { to: "ENT-2026-0010", amount: "800" });
-  w.fact("MNY-2026-f2", { to: "ENT-2026-0011", amount: "200" });
+  w.entityAs("ENT-2026-0010", "institution");
+  w.entityAs("ENT-2026-0011", "institution");
+  w.factAs("MNY-2026-f1", { to: "ENT-2026-0010", amount: "800" });
+  w.factAs("MNY-2026-f2", { to: "ENT-2026-0011", amount: "200" });
   const d = w.c.defineDetector(shareDetector());
   w.c.runDetectors({ budgetMs: 10_000 });
   return { w, d };
@@ -69,7 +69,7 @@ test("R9 R5: a detector switched off for the project shows nothing there", () =>
 test("R9: bounded 1–500 with truncated; refusals", () => {
   const w = world();
   w.project(P, ["alice"]);
-  for (let i = 0; i < 4; i++) { w.entity(`ENT-2026-002${i}`, "institution"); w.fact(`MNY-2026-g${i}`, { to: `ENT-2026-002${i}`, amount: "100" }); }
+  for (let i = 0; i < 4; i++) { w.entityAs(`ENT-2026-002${i}`, "institution"); w.factAs(`MNY-2026-g${i}`, { to: `ENT-2026-002${i}`, amount: "100" }); }
   const d = w.c.defineDetector(shareDetector({ parameters: [{ name: "share", value: "0.1", citation: "x" }] }));
   w.c.runDetectors({ budgetMs: 10_000 });
   gate(w, d, 0);
@@ -89,17 +89,17 @@ test("R13: a result is answered only to a viewer who may see every input; one in
   w.project("PROJ-2026-0002-hidden", ["bob"]);
   w.member("carol");
   w.bundle("INFO-2026-0001-secret", "information", "PROJ-2026-0002-hidden");
-  w.entity("ENT-2026-0010", "institution");
-  w.entity("ENT-2026-0011", "institution");
-  w.fact("MNY-2026-f1", { to: "ENT-2026-0010", amount: "800" });
-  w.fact("MNY-2026-f2", { to: "ENT-2026-0011", amount: "200", bundle: "INFO-2026-0001-secret" });
+  w.entityAs("ENT-2026-0010", "institution");
+  w.entityAs("ENT-2026-0011", "institution");
+  w.factAs("MNY-2026-f1", { to: "ENT-2026-0010", amount: "800" });
+  w.factAs("MNY-2026-f2", { to: "ENT-2026-0011", amount: "200", bundle: "INFO-2026-0001-secret", by: ADMIN_BOB });
   const d = w.c.defineDetector(shareDetector());
   w.c.runDetectors({ budgetMs: 10_000 });
   gate(w, d, 0.1);
   const alice = w.c.noticed({ project: P, viewer: ALICE });
   assert.deepEqual(alice.items, []);
   assert.equal(alice.truncated, false);
-  assert.equal(JSON.stringify(alice).includes("MNY-2026-f2"), false);
+  assert.equal(JSON.stringify(alice).includes(w.id("MNY-2026-f2")), false);
   /* an administrator sees every bundle (membership R43) and so every input */
   assert.equal(w.c.noticed({ project: P, viewer: ADMIN_BOB }).items.length, 1);
 });

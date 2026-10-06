@@ -34,14 +34,14 @@ test("R4: defineDetector's refusals, each writing nothing", () => {
 
 test("R4: a condition or population naming a person entity is refused SUBJECT_IS_PERSON", () => {
   const w = world();
-  w.entity("ENT-2026-0300", "person");
-  w.entity("ENT-2026-0301", "institution");
+  w.entityAs("ENT-2026-0300", "person");
+  w.entityAs("ENT-2026-0301", "institution");
   const naming = (ent) => ({ ...SHARE_RECIPE, steps: [{ op: "select", as: "mine", from: "facts", where: [{ field: "to_entity", test: "eq", value: ent }] },
     { op: "share", as: "portion", part: "mine", whole: "facts", field: "amount" }, { op: "compare", as: "past", a: "portion", b: "share" }] });
-  const r = w.c.defineDetector(shareDetector({ condition: naming("ENT-2026-0300") }));
+  const r = w.c.defineDetector(shareDetector({ condition: naming(w.id("ENT-2026-0300")) }));
   assert.equal(r.reason, "SUBJECT_IS_PERSON");
-  assert.equal(r.entity, "ENT-2026-0300");
-  assert.equal(w.c.defineDetector(shareDetector({ condition: naming("ENT-2026-0301") })).ok, true);
+  assert.equal(r.entity, w.id("ENT-2026-0300"));
+  assert.equal(w.c.defineDetector(shareDetector({ condition: naming(w.id("ENT-2026-0301")) })).ok, true);
 });
 
 test("R12: no HYP- id is an input, subject or parameter of a check or detector", () => {

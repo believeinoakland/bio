@@ -1,17 +1,28 @@
-/* money-checks over record-core, membership and progressions (the real ones) on a real SQLite database (node:sqlite)
-   standing in for a Durable Object's storage, answering a cursor as workerd does. `money` precedes this module and is
-   built by its own job in the same layer (P10), so what this module reads from it is a stand-in the test controls, in
-   the shapes of money's Provides as this job reads them (money R7–R10, R14, R19 as K1563 (4) names it; job record J1 (3)): its read-contract
-   tables `money_facts`, `money_withdrawals` and `money_concerns`, and `readFact`, `moneyOf`, `summable`,
-   `committedAgainstPaid` over them. `entities` is a stand-in in its Provides' shapes (R5's `readEntity`, R7's `has`).
-   Every test drives money-checks at its interface. */
+/* money-checks over the real modules it reads (K1563 (1), re-pointed after MONEY #1 merged, K1580): record-core,
+   membership, provenance, content, entities, events, lines, money and progressions, on a real SQLite database
+   (node:sqlite) standing in for a Durable Object's storage, answering a cursor as workerd does, with the fictional test
+   profile through jurisdictions. Money facts are recorded by money's own act (`recordFact`, its R1) from held captures;
+   awards and change orders are real events joined by a real `amends` relation (money R14). Every test drives
+   money-checks at its interface. */
 import { DatabaseSync } from "node:sqlite";
-import { recordOf } from "../../../src/record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
+import { createHash } from "node:crypto";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { contentOf } from "../../../src/content/index.mjs";
+import { Entities } from "../../../src/entities/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { Lines } from "../../../src/lines/index.mjs";
+import { createRegistry } from "../../../src/connection-grammar/index.mjs";
+import { Money } from "../../../src/money/index.mjs";
 import { progressionsOf } from "../../../src/progressions/index.mjs";
 import { moneyChecksOf } from "../../../src/money-checks/index.mjs";
 
+export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
+export const ALICE = "member:alice", ADMIN_BOB = "member:bob", MACHINE = "class:daemon";
+export const NOW = "2026-10-06T00:00:00.000Z";
+
 function cursor(rows) {
   let i = 0;
   const c = {
@@ -24,15 +35,15 @@ function cursor(rows) {
 }
 export function storage() {
   const db = new DatabaseSync(":memory:");
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) db.exec(t);
   let n = 0;
-  const sql = {
-    exec(q, ...args) {
+  return {
+    db,
+    sql: { exec(q, ...args) {
       const st = db.prepare(q);
       return cursor(st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []));
-    },
-  };
-  return {
-    db, sql,
+    } },
     transactionSync(fn) {
       const sp = `sp${n++}`;
       db.exec(`SAVEPOINT ${sp}`);
@@ -42,135 +53,137 @@ export function storage() {
   };
 }
 
-export const ALICE = "member:alice", ADMIN_BOB = "member:bob", MACHINE = "class:daemon";
-export const NOW = "2026-10-06T00:00:00.000Z";
-
-/* money's read contract (money R19), as this job reads its columns (J1 (3)). */
-const MONEY_TABLES = `
-CREATE TABLE money_facts (fact_id TEXT PRIMARY KEY, amount TEXT, sign TEXT, precision TEXT, currency TEXT, kind TEXT,
-  phase TEXT, stage TEXT, basis TEXT, period_from TEXT, period_to TEXT, from_entity TEXT, from_fund TEXT,
-  to_entity TEXT, to_fund TEXT, source_capture_sha TEXT);
-CREATE TABLE money_withdrawals (fact_id TEXT PRIMARY KEY, reason TEXT, by TEXT, at TEXT);
-CREATE TABLE money_concerns (fact_id TEXT NOT NULL, concerns TEXT NOT NULL)`;
-
 export function world({ budgetClock = null } = {}) {
   const st = storage();
   const host = { storage: st };
-  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  const record = recordOf(host);
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
-  for (const t of MONEY_TABLES.split(";")) if (t.trim()) st.db.exec(t);
-  const run = (q, ...a) => st.sql.exec(q, ...a).toArray();
-
-  /* entities: kinds by id */
-  const ents = new Map();
-  const entities = {
-    has: (id) => ents.has(id),
-    readEntity: ({ entityId }) => (ents.has(entityId) ? { ok: true, found: true, entity: { entity_id: entityId, ...ents.get(entityId), aliases: [], relations: [] } }
-                                                       : { ok: true, found: false, entity_id: entityId, entity: null }),
-    strongestByCapture: (id) => new Map(resolutions.get(id) || []),
-  };
-  const resolutions = new Map();
-
-  /* money: the stand-in. `meta` holds what money knows from events (award, change order) and the source capture. */
-  const meta = new Map();
-  const seen = (viewer) => { const g = viewerPredicate(viewer); return (b) => !b || !!run(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${g.sql})`, b, ...g.args).length; };
-  const factOf = (id) => {
-    const r = run(`SELECT * FROM money_facts WHERE fact_id=?`, id)[0];
-    if (!r) return null;
-    const m = meta.get(id);
-    return { ...r, concerns: run(`SELECT concerns FROM money_concerns WHERE fact_id=?`, id).map((x) => x.concerns),
-             source: { capture_sha: m.capture, bundle_id: m.bundle }, withdrawn: !!run(`SELECT 1 AS x FROM money_withdrawals WHERE fact_id=?`, id).length };
-  };
-  const calls = { readFact: 0 };
-  const money = {
-    readFact({ factId, viewer }) {
-      calls.readFact++;
-      const f = factOf(factId);
-      if (!f || !seen(viewer)(meta.get(factId).bundle)) return { ok: true, found: false, fact: null };
-      return { ok: true, found: true, fact: f };
-    },
-    moneyOf({ entity, viewer, phases, limit = 100 }) {
-      const ids = run(`SELECT fact_id FROM money_facts WHERE from_entity=? OR to_entity=? OR fact_id IN (SELECT fact_id FROM money_concerns WHERE concerns=?) ORDER BY fact_id`, entity, entity, entity)
-        .map((r) => r.fact_id);
-      const facts = ids.map(factOf).filter((f) => !f.withdrawn && seen(viewer)(meta.get(f.fact_id).bundle) && (!phases || phases.includes(f.phase)));
-      return { ok: true, facts: facts.slice(0, limit), truncated: facts.length > limit };
-    },
-    summable({ factIds }) {
-      const fs = factIds.map(factOf);
-      const dims = [["kind", "SUM_MIXED_KIND"], ["phase", "SUM_MIXED_STAGE"], ["stage", "SUM_MIXED_STAGE"], ["basis", "SUM_MIXED_BASIS"],
-                    ["currency", "SUM_MIXED_CURRENCY"], ["period_from", "SUM_MIXED_PERIOD"], ["period_to", "SUM_MIXED_PERIOD"]];
-      for (const [d, code] of dims) {
-        const other = fs.find((f) => f[d] !== fs[0][d]);
-        if (other) return { ok: false, reason: code, code, facts: [fs[0].fact_id, other.fact_id] };
-      }
-      return { ok: true, interfund: [] };
-    },
-    committedAgainstPaid({ contract, viewer }) {
-      if (!ents.has(contract) || ents.get(contract).kind !== "contract") return { ok: false, reason: "NOT_A_CONTRACT", code: "NOT_A_CONTRACT" };
-      const all = money.moneyOf({ entity: contract, viewer, limit: 500 }).facts;
-      const role = (r) => all.filter((f) => meta.get(f.fact_id).role === r);
-      return { ok: true, contract, committed: { award: role("award"), change_orders: role("change_order") },
-               paid: { facts: all.filter((f) => f.phase === "actual" && f.stage === "paid") } };
-    },
-  };
-
-  const clock = { ms: 0 };
-  const progressions = progressionsOf(host, { record, entities, extraction: { readingOf: () => null },
-                                              provenance: { homeOf: () => null }, now: () => NOW });
+  const promotion = { registerStep: () => ({ ok: true }), registerFact: () => ({ ok: true }), onCommitted: () => ({ ok: true }) };
+  const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });
+  prov.migrate();
+  record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
+  const content = contentOf(host, { record, membership, provenance: prov });
+  content.extraction.migrate();
+  content.migrate();
+  const e = new Entities(st, { record, membership, provenance: prov });
+  e.migrate();
+  let tick = 0;
+  const evClock = () => new Date(Date.UTC(2026, 9, 1, 0, 0, tick++)).toISOString();
+  const ev = eventsOf(host, { record, membership, provenance: prov, content, extraction: content.extraction, entities: e, now: evClock });
+  ev.migrate();
+  const ln = new Lines(st, { record, provenance: prov, content, entities: e, events: ev, registry: createRegistry(), now: evClock });
+  ln.migrate();
+  let mclock = 0;
+  const m = new Money(st, { record, membership, entities: e, provenance: prov, events: ev, lines: ln, calculations: null,
+    now: () => new Date(Date.UTC(2026, 9, 6, 0, 0, mclock++)).toISOString().replace(/\.\d{3}Z$/, "Z") });
+  m.migrate();
+  const progressions = progressionsOf(host, { record, entities: e, extraction: content.extraction, provenance: prov, now: () => NOW });
   progressions.migrate();
-  const c = moneyChecksOf(host, { record, membership, entities, progressions, money, now: () => NOW,
+  const clock = { ms: 0 };
+  const c = moneyChecksOf(host, { record, membership, entities: e, progressions, money: m, now: () => NOW,
                                   nowMs: budgetClock || (() => clock.ms) });
+  const run = (q, ...a) => st.sql.exec(q, ...a).toArray();
+  let caps = 0;
   const w = {
-    st, host, record, membership, c, money, calls, clock, progressions, ents, run,
+    st, host, record, membership, prov, e, ev, m, c, progressions, run,
     count: (t) => run(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     snapshot() {
       const out = {};
       for (const { name } of run(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`)) out[name] = JSON.stringify(run(`SELECT * FROM ${name}`));
       return out;
     },
-    entity(id, kind = "contract") { ents.set(id, { kind, label: id }); },
+    entity(kind, label = `${kind} ${tick++}`) {
+      const r = e.createEntity({ kind, label, note: "registered by the money-checks tests", declaredBy: ALICE });
+      if (!r.ok) throw new Error(`fixture entity refused: ${r.reason}`);
+      return r.entity_id;
+    },
     bundle(id, type = "information", project = null) {
-      st.sql.exec(`INSERT INTO bundles (bundle_id,object_type,group_id,title,current_state,created,last_updated,bundle_sha,project)
+      st.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id,object_type,group_id,title,current_state,created,last_updated,bundle_sha,project)
                    VALUES (?,?,?,?,?,?,?,?,?)`, id, type, "g", id, "collected", NOW, NOW, "x", project);
+      return id;
+    },
+    /** A capture held in a bundle (provenance's register), fetched directly. */
+    held(bundleId = `INFO-2026-${String(++caps).padStart(4, "0")}-cap`, captureSha = sha(`capture ${caps}`), project = null) {
+      w.bundle(bundleId, "information", project);
+      st.sql.exec(`INSERT OR REPLACE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered)
+                   VALUES (?, ?, 'snapshots/x', 'utf8', 1, '2026-09-27T00:00:00Z')`, captureSha, bundleId);
+      prov.recordReceipt({ address: `https://ledger.port-ellery.example/${captureSha.slice(0, 8)}`,
+        addressNorm: `https://ledger.port-ellery.example/${captureSha.slice(0, 8)}`, captureSha, retrieved: "2026-09-27T00:00:00Z" });
+      return captureSha;
     },
     member(id, role = "member") {
-      st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, created, updated) VALUES (?,?,?,?,?,?,?)`,
+      st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, handle, role, status, created, updated) VALUES (?,?,?,?,?,?,?)`,
                   id, id, id, role, "active", NOW, NOW);
     },
     project(id, participants = []) {
       w.bundle(id, "project");
-      for (const m of participants)
-        st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES (?,?,?,?,?)`, id, m, "active", NOW, NOW);
+      for (const p of participants)
+        st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES (?,?,?,?,?)`, id, p, "joined", NOW, NOW);
+      return id;
     },
-    /** A money fact in money's read contract; `role` is what money knows from its events (award, change order). */
-    fact(id, { amount = "100", sign = "+", precision = "exact", currency = "USD", kind = "expenditure", phase = "actual",
-               stage = "encumbered", basis = "budgetary", period = ["2025-07-01", "2026-06-30"], from = "ENT-2026-0001",
-               to = "ENT-2026-0002", concerns = [], role = null, capture = `sha-${id}`, bundle = null } = {}) {
-      st.sql.exec(`INSERT INTO money_facts VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id, amount, sign, precision, currency, kind,
-                  phase, stage, basis, period[0], period[1], from, null, to, null, capture);
-      for (const x of concerns) st.sql.exec(`INSERT INTO money_concerns VALUES (?,?)`, id, x);
-      meta.set(id, { role, capture, bundle });
+    event(kind, concerns = []) {
+      const r = ev.createEvent({ kind, concerns, attestations: [{ testimony: `I saw the ${kind}` }], by: ALICE });
+      if (!r.ok) throw new Error(`fixture event refused: ${r.reason}: ${r.detail}`);
+      return r.event_id ?? r.event?.event_id;
     },
-    withdraw(id) { st.sql.exec(`INSERT INTO money_withdrawals VALUES (?,?,?,?)`, id, "test", ALICE, NOW); },
-    resolve(entityId, captureSha, bundleId, grade = "A") {
-      if (!resolutions.has(entityId)) resolutions.set(entityId, new Map());
-      resolutions.get(entityId).set(captureSha, { capture_sha: captureSha, bundle_id: bundleId, grade });
+    relate(from, to, kind) {
+      const r = ev.relate({ from, to, kind, attestation: { testimony: `the minutes say the ${kind}` }, by: ALICE });
+      if (!r.ok) throw new Error(`fixture relation refused: ${r.reason}: ${r.detail}`);
+    },
+    resolution(captureSha, bundleId, entityId, grade = "A") {
+      st.sql.exec(`INSERT INTO resolutions (capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, resolved_by, at)
+                   VALUES (?, ?, ?, ?, ?, 'test', 'test', 1, 'test', '2026-09-27T00:00:00Z')`, captureSha, bundleId, `r-${entityId}-${captureSha.slice(0, 6)}`, entityId, grade);
     },
   };
   w.member("alice"); w.member("bob", "admin");
+  w.city = w.entity("institution", "City of Port Ellery");
+  w.cap = w.held();
+  /** A money fact recorded by money's own act; `amount` a plain decimal string. */
+  w.rec = (over = {}) => {
+    const { capture = w.cap, ...rest } = over;
+    const amount = rest.amount ?? "100";
+    const r = m.recordFact({ amount, as_read: `$${amount}`, currency: "USD", sign: "+", precision: "exact", kind: "expenditure",
+      phase: "actual", stage: "encumbered", basis: "modified accrual", period: { fiscal: "FY2025-26" },
+      from: { entity: w.city, as_written: "City of Port Ellery" }, to: { entity: w.vendor ?? w.city, as_written: "a payee" },
+      source: { capture_sha: capture, extent: { kind: "pdf-page", page: 1 } }, by: ALICE, ...rest, amount });
+    if (!r.ok) throw new Error(`fixture fact refused: ${r.reason}: ${r.detail}`);
+    return r.fact_id;
+  };
+  w.vendor = w.entity("institution", "Harbour Dredging Co");
+  /* Tests name entities and facts by a label of their own; the real ids are kept here. */
+  const named = new Map();
+  w.id = (name) => named.get(name) ?? name;
+  w.entityAs = (name, kind) => { named.set(name, w.entity(kind, name)); return named.get(name); };
+  /** A fact paid to a named entity; `bundle` files its capture in that bundle (a project's, so hidden). */
+  w.factAs = (name, { to, bundle = null, by = ALICE, ...rest } = {}) => {
+    let capture = w.cap;
+    if (bundle) {
+      const project = run(`SELECT project FROM bundles WHERE bundle_id=?`, bundle)[0]?.project ?? null;
+      st.sql.exec(`DELETE FROM bundles WHERE bundle_id=?`, bundle);
+      capture = w.held(bundle, sha(name), project);
+    }
+    named.set(name, w.rec({ to: { entity: w.id(to), as_written: to }, capture, by, ...rest }));
+    return named.get(name);
+  };
+  w.withdraw = (name) => { const r = m.withdrawFact({ factId: w.id(name), reason: "a test withdraws it", by: ALICE }); if (!r.ok) throw new Error(r.reason); };
   return w;
 }
 
-/** A contract `ENT-2026-0100` with an award commitment, change orders and payments (amounts as strings). */
-export function contract(w, { award = "1000", orders = [], paid = [], adopted = null, id = "ENT-2026-0100" } = {}) {
-  w.entity(id, "contract");
-  w.fact(`MNY-2026-award${id.slice(-4)}000000`, { amount: award, concerns: [id], role: "award" });
-  orders.forEach((a, i) => w.fact(`MNY-2026-order${id.slice(-4)}00000${i}`, { amount: a, concerns: [id], role: "change_order" }));
-  paid.forEach((a, i) => w.fact(`MNY-2026-paid${id.slice(-4)}000000${i}`, { amount: a, stage: "paid", concerns: [id] }));
-  if (adopted !== null) w.fact(`MNY-2026-adopt${id.slice(-4)}000000`, { amount: adopted, phase: "adopted", stage: null, concerns: [id] });
-  return id;
+/** A contract with an award event, change orders amending it, commitments at each, payments and an adopted award. */
+export function contract(w, { award = "1000", orders = [], paid = [], adopted = null } = {}) {
+  const id = w.entity("contract", `Contract ${w.count("entities")}`);
+  const ev = w.event("award", [id]);
+  const facts = { award: w.rec({ amount: award, concerns: [ev] }), orders: [], paid: [] };
+  for (const a of orders) {
+    const co = w.event("other", []);
+    w.relate(co, ev, "amends");
+    facts.orders.push(w.rec({ amount: a, concerns: [co] }));
+  }
+  for (const a of paid) facts.paid.push(w.rec({ amount: a, stage: "paid", concerns: [id] }));
+  if (adopted !== null) facts.adopted = w.rec({ amount: adopted, phase: "adopted", stage: undefined, concerns: [id] });
+  return { id, award: ev, facts };
 }
 
 /** A detector condition: the subject's sum over the population's sum, compared with the parameter `share`. */
