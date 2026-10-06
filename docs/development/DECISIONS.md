@@ -2287,3 +2287,31 @@ response: **Decided by the design session, 2026-10-06, on Bob's comment:** an ac
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `layouts.html` (install; person); `visual-language.html` (acts); `BIO_Interaction_Constructs_v0_1.md` §F.
 owed: (BOB) affordances shows `personexpunge`'s weight as irreversible (with DEC-142's consequence dialog); the installer's short-name step carries the irreversible weight and its permanence statement (installer, instance-setup).
+
+### DEC-144 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (BOB's B55)
+for: bob-session
+question: DEC-136 (3), members' own notes: may a member revise or delete their own note? (BOB worded hypotheses R11–R15, K1751, with neither.)
+why it is Bob's: it is not: detail beneath DEC-136, whose second point (Civicsmith holds as little as it can) answers it; decided by the design session (P17), as BOB recommends.
+provisional: hypotheses R11–R15 (write, read by its owner, turn).
+alternative: notes kept as written (no revise, no delete).
+recommendation: allow both.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06, beneath DEC-136:** a member may **revise** their own note in place (it is theirs, never part of the record; no history is kept) and **delete** it for good, leaving no marker. Only the note's own member can do either; turning a note into an observation, hunch or question does not delete it (the member may then delete it). Drawn on the notes screen of layouts.html ("Revise", "Delete" beside each kept note).
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `BIO_Interaction_Constructs_v0_1.md` §R; `layouts.html` (notes); the screen registry (`owed:noterevise`, `owed:notedelete`).
+owed: (BOB) hypotheses gains a member's own revise and delete of their note (no history, no marker; only its member); the registry's owed acts take the ops BOB names.
+
+### DEC-145 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (BOB's B54: the words owed by Bob's rulings on policies and standards, K1713, K1722–K1724, K1727, K1739, K1740)
+for: bob-session
+question: The words members see for a provision's force; a benchmark beside a binding standard; "cited, not seen" and "not found"; a policy kept from the public by its source; a silent change noticed; a standard's access; a use of discretion with its reason; with care for "policy" (already the group's own, DEC-54) and "practice" (two meanings). And the journeys page's claim that policies are built.
+why it is Bob's: it is not: member words beneath his rulings, as DEC-131's were; decided by the design session (P17) and open to his comment on the brand page.
+provisional: Capability Ladders §6B POLICIES, §6C STANDARDS (tranche/T34); journeys.html §6 and journey 6.
+alternative: the canon's terms as written (requirement, recommendation, permission, mandatory, discretionary, benchmark, cited-not-seen, not-found).
+recommendation: as decided below.
+reversal cost: low (words held in one place, DEC-99).
+response: **Decided by the design session, 2026-10-06:** (1) **Force**, always beside the document's own words: "Requires", "Recommends", "Allows"; for a policy, "Required" or "At the discretion of <office>", with "criteria stated" or "no criteria stated". (2) **Binding or not:** "Standard · binds <body>" beside "Benchmark · not binding on <body>"; a finding against a benchmark says "slower than", "below", never "violated" or "nonconforming" (K1723). (3) **"Cited, not seen"** (who cited it, and where) and **"Looked for, not found"** (the searches made), each beside but never borrowing the look of "Nobody looked" (DEC-86). (4) **A policy kept from the public** (K1740): "Not public", with whose it is to release; never "confidential" (principle 3.11's words). (5) **A silent change** (K1727): a Noticed item, "Changed without notice: the text differs from the copy captured on <date>, and no amendment was announced". (6) **Access** (K1739): "Free to read", "Reading room only", "Behind a paywall". (7) **Discretion** (K1713): "Discretion used by <office>, <date>", with "stated reason: …" or "no reason stated"; patterns across uses are "a pattern in how discretion is used". (8) **"Policy"** always carries its owner ("Public Works policy", "the hauler's policy"); the group's own is "our group's policy". **"Practice"** is not used in Civicsmith's own words: "what the office does", or the pattern above. (9) journeys.html corrected: laws and codes are held section by section (built); policies and standards as kinds of their own are ruled and planned for a later stage.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `brand-and-voice.html` §5 (Use, Avoid); `journeys.html` (journey 6; §6's code row).
+owed: (BOB) these words as the member-facing labels of §6B and §6C's constructs when they are built (T35); the queue's Noticed wording for a silent change.

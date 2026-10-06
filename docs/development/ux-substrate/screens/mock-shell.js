@@ -23,7 +23,7 @@ function assistantPanel(screen, c) {
   const [q, a] = ASSIST[screen] || ASSIST._;
   return `<aside class="cs-dock" aria-label="The assistant">
    <header>${I('machine')}The assistant<span class="spacer"></span><span class="muted mk-small">$0.42 of your $2.00 today</span><button type="button" class="cs-btn" data-tone="quiet" aria-label="Widen">${I('expand')}</button></header>
-   <div class="body"><p class="mk-small muted">Runs on your own Claude account, only for you. It finds, reads and checks; it never concludes, signs or sends.</p>
+   <div class="body"><p class="mk-small muted">Runs on your own Claude account, or on your group's API key where it offers one; only for you. It finds, reads and checks; it never concludes, signs or sends.</p>
     <div class="mk-msg me">${esc(q)}</div>${machine('Mai', `<p>${esc(a)}</p>`)}</div>
    <footer>${field('mk-ask-' + screen, 'Ask about this screen', '', {})}<div class="mk-acts">${btn('airunopen', 'Work on this', { tone: 'primary' })}${btn('suggest', 'Suggest')}${btn('airunclose', 'Stop')}</div></footer></aside>`;
 }

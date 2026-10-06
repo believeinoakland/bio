@@ -12,25 +12,26 @@ screen('install', 'Install Civicsmith', 'setup', 'The installer page: what is ne
   [('bootstrap','Install with this short name'),('selftest','Let it test itself')], [1])
 screen('setup', 'Set up your group\'s copy', 'setup', 'The founder claims the copy, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
-   ('officesseed','Review offices and seats'),('assistantset','Offer the assistant to members'),('aicopyceilingset','Set the copy\'s daily limit'),
+   ('officesseed','Review offices and seats'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the copy\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccess','Record who holds the hosting account'),('memberadd','Invite a member or a second administrator')], [1])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
-  [('owed:groupprofileset DEC-132','Save who your group is'),('owed:groupprofilevisibility DEC-132','Choose who sees it')], [2])
+  [('groupdescriptionset','Save who your group is, and who sees it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
   [('invitelook','Read the invitation'),('owed:memberlanguageset DEC-127','Choose your language'),('enroll','Join with a handle and password')], [3])
 screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What brought you here?".',
   [('projectcreated','Start a project'),('owed:startfrom DEC-129','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
   [('memberadd','Invite a member'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
-   ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('owed:websitekeymint DEC-133','Create a website key'),('owed:joinlinkset DEC-133','Turn the join link on or off')], [16,27])
+   ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
+   ('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('groupswitchset','Set the group key\'s suggestions and standing questions'),('groupkeyremove','Remove the group\'s key')], [16,27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
   [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language')], [3,16])
-screen('connect', 'Connect your Claude account', 'working', 'The member\'s own API key or subscription token, or skip; their daily limit; suggestions on or off (K1502, K1547).',
-  [('disclosureshown','Read what connecting means'),('accountreferenceset','Connect with your own key or token'),('aiceilingset','Set your daily limit'),('accountswitchset','Let the assistant suggest unprompted'),('accountreferenceremove','Disconnect')], [4,17])
+screen('connect', 'Connect your Claude account', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).',
+  [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('accountreferenceset','Connect with your own key or token'),('aiceilingset','Set your daily limit'),('accountswitchset','Let the assistant suggest unprompted'),('accountreferenceremove','Disconnect')], [4,17])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',
-  [('owed:noteadd DEC-136','Write a note'),('owed:noteconvert DEC-136','Turn a note into an observation, hunch or question')], [6])
+  [('notewrite','Write a note'),('noteturn','Turn a note into an observation, hunch or question'),('owed:noterevise DEC-144','Revise your note'),('owed:notedelete DEC-144','Delete your note')], [6])
 screen('translations', 'Translations', 'working', 'The interface\'s words in the group\'s languages (DEC-127).',
   [('owed:translationdraft DEC-127','Ask the assistant to draft'),('owed:translationadopt DEC-127','Adopt a translation')], [3])
 screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, drafts, submitted (DEC-121).',
@@ -54,7 +55,7 @@ screen('project', 'Project', 'working', 'A project\'s home: objective, bar, ques
   [('promote','Open a question'),('strengthbarset','Set the project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; strength against the bar; concluding.',
   [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('withdrawconclusion','Withdraw the conclusion'),
-   ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('owed:checkrequest DEC-135','Ask for a check by expertise'),
+   ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
    ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
   [('ruleanswer','Ask'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])

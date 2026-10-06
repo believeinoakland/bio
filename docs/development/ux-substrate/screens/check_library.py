@@ -8,7 +8,7 @@ Writes registry.json and library.json from registry.src.py and library.src.py, t
     screen; an act the screen lists, or none; `what` and `why` of 1-300 characters; a draft of one of R2's three kinds;
     no draft placed on an act the machine is refused (affordances R7); `start` is the first step's screen; `required`
     only in the Civicsmith library; a side trip names a script in the library; R12's warnings (one step; duplicates).
-Usage: python3 check_library.py [--ref origin/tranche/T33]   (the git ref whose build/requirements is read)
+Usage: python3 check_library.py [--ref origin/tranche/T34]   (the git ref whose build/requirements is read)
 Exit 1 on any failure.
 """
 import json, os, re, subprocess, sys, tarfile, io
@@ -44,7 +44,7 @@ def load(src, name):
     return g[name]
 
 def main():
-    ref = sys.argv[sys.argv.index('--ref') + 1] if '--ref' in sys.argv else 'origin/tranche/T33'
+    ref = sys.argv[sys.argv.index('--ref') + 1] if '--ref' in sys.argv else 'origin/tranche/T34'
     ref, declared, functions = op_universe(ref)
     screens, lib = load('registry.src.py', 'S'), load('library.src.py', 'L')
     fails, warns, owed = [], [], {}

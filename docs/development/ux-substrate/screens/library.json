@@ -75,8 +75,20 @@
       {
        "screen": "setup",
        "act": "assistantset",
-       "what": "Decide whether to offer the assistant to your members.",
-       "why": "Each member who wants it connects their own Claude account. Nothing is shared, and everything works without it."
+       "what": "Choose how members reach the assistant: the group's API key, members' own accounts, both, or no assistant at all.",
+       "why": "The group's key serves members with no account of their own, at the group's cost. A member's own account always comes first. Everything works without it."
+      },
+      {
+       "screen": "setup",
+       "act": "groupkeyset",
+       "what": "If you chose the group's key: paste it here. It is never shown again.",
+       "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account."
+      },
+      {
+       "screen": "setup",
+       "act": "courtnoticeset",
+       "what": "Choose whether members are told what a court can reach.",
+       "why": "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away."
       },
       {
        "screen": "setup",
@@ -468,25 +480,25 @@
      "steps": [
       {
        "screen": "group-identity",
-       "act": "owed:groupprofileset DEC-132",
+       "act": "groupdescriptionset",
        "what": "What kind of group are you? Pick one or more, or describe your own.",
        "why": "It shapes how each member is welcomed. It never limits what anyone can do."
       },
       {
        "screen": "group-identity",
-       "act": "owed:groupprofileset DEC-132",
+       "act": "groupdescriptionset",
        "what": "What do you focus on: issues, places, offices or agencies?",
        "why": "New members see your focus first when they choose where to start."
       },
       {
        "screen": "group-identity",
-       "act": "owed:groupprofileset DEC-132",
+       "act": "groupdescriptionset",
        "what": "Why does the group exist? Say it in your own words.",
        "why": "Your declared bias can start from what you write here."
       },
       {
        "screen": "group-identity",
-       "act": "owed:groupprofilevisibility DEC-132",
+       "act": "groupdescriptionset",
        "what": "Who should see this: members only, or also your public page and the network directory?",
        "why": "Members only is the default. A group that wants to stay unnamed keeps it that way."
       }
@@ -531,7 +543,7 @@
       },
       {
        "screen": "members",
-       "act": "owed:websitekeymint DEC-133",
+       "act": "websitekeycreate",
        "what": "Or let people join through your website: create a website key, or turn on the reusable join link.",
        "why": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap."
       }
@@ -559,8 +571,8 @@
       {
        "screen": "connect",
        "act": null,
-       "what": "The assistant is optional, and serves only you.",
-       "why": "It runs on your own Claude account, never the group's. Everything works without it."
+       "what": "The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.",
+       "why": "Your own account serves only you. Everything works without the assistant."
       },
       {
        "screen": "connect",

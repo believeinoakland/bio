@@ -14,7 +14,7 @@ const J = [
  { n: 5, t: 'Declaring your own ties', who: 'Every member, before they publish', wiz: 'Your ties' },
  { n: 6, t: 'From a problem to a question', who: 'Any member, often a newcomer', steps: [
    { s: 'home', act: 'owed:startfrom DEC-129', say: 'Mai opens the group\'s home and picks "A problem I live with".' },
-   { s: 'notes', act: 'owed:noteadd DEC-136', say: 'She writes the problem in her own words, in a note only she can see.' },
+   { s: 'notes', act: 'notewrite', say: 'She writes the problem in her own words, in a note only she can see.' },
    { s: 'capture', act: 'testify', say: 'She records what she has seen on Seminary Avenue: where, when, and a photo.' },
    { s: 'answers', act: 'ruleanswer', only: 'ai', say: 'She asks the assistant what standard the city set itself. It quotes Administrative Instruction 4.12 from what the group holds, as legal information.' },
    { s: 'finder', act: 'search', only: 'noai', say: 'She searches what the group holds for "pothole" and finds the city\'s own instruction, section by section.' },
@@ -58,7 +58,7 @@ const J = [
  { n: 16, t: 'A professional lends expertise', who: 'A professional member; project owners', steps: [
    { s: 'account', act: 'expertisedeclare', say: 'Ana joins like any member and declares "CPA".' },
    { s: 'members', act: 'expertiseconfirm', say: 'Rosa, an administrator, may confirm it. Confirmation gates nothing.' },
-   { s: 'question', act: 'owed:checkrequest DEC-135', say: 'Dev asks for a check from someone with accounting expertise; it reaches Ana as a To do.' },
+   { s: 'question', act: 'checkrequest', say: 'Dev asks for a check from someone with accounting expertise; it reaches Ana as a To do.' },
    { s: 'calculation', act: 'recordcheck', say: 'Ana reads the calculation and its inputs and records her check.' },
    { s: 'question', act: null, say: 'Her declared, confirmed expertise shows beside her check, so readers know who looked.' } ] },
  { n: 17, t: 'Working with the assistant', who: 'A member with their own Claude account', steps: [
