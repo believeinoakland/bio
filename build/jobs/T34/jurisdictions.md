@@ -46,3 +46,7 @@ Work built and pushed on `job/T34/jurisdictions` on my readings of J1 (90/91 gre
 Also, for **action-clocks**: R61 renames two counterparty bodies to Legistar's forms ("Finance Department", "Office Of The City Auditor"; K1690). action-clocks' `calendar.test.mjs:81–95` still writes the old names inside its own fixtures and stays green, but any data or test keyed on the old body names now finds no office.
 
 Oakland holds no `vote_values` either: the two captured roll calls show only Aye and Excused, not the whole set. A partial list would make events refuse an unlisted value, so none is held (R58: a profile that gives none supplies none).
+
+## J3 · COMPLETE
+
+T34-2 applied with K1729 (R3, R58–R62). jurisdictions 91/91; format, architecture, coverage (62/62), ownership: 0 failures. Branch job/T34/jurisdictions @ 813268441c. The other modules' reds this data causes are J2's (entities R43; events R11, R22, R41; following R2; stale newgroup and plane bundles); the record's Completion has the details.
