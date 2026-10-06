@@ -22,3 +22,7 @@
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 36 product files; 0 failures. `coverage`: 17 of 17 live requirement ids named by a test; 0 failures. `ownership` (tranche/T34): 7 files changed; 0 failures.
 
 Size (session_01BzAACPDBqUy1ozikyzXCLv): test runs 8, module lines 1884
+
+## J1 · COMPLETE
+
+T34-69 applied: R17 met. The member states its limits in its bundle as exactly one string, bio-member-limits/1 cpu_ms=300000, equal to wrangler.jsonc's limits. src/limits.mjs is new; the statement is carried on the default handler (workerd refuses a non-handler named export). It is kept out of contract.mjs so the plane's bundle, which imports contract.mjs, is unchanged and fresh. sheet-worker 36/36; fleetbundles: only the 4 inherited K1708 reds; format, architecture, coverage (17/17) and ownership 0 failures. Nothing deferred; no other module touched or made stale. Merge any time (no upstream). For INSTALLER (T34-71): the statement is a double-quoted literal in the bundle text, read as installer R20 reads the plane's. Details in my record.
