@@ -20,3 +20,23 @@ Findings outside actions (T33-73), against each module's requirements:
   Every other user of actions (action-clocks, filings, action-plans, affordances, queue-producers, queue, instance-setup, control-plane, plane) fails exactly the tests it failed before my change, by name.
 (3) New op `addresseesuggest` (R62, a read for every signed-in class) and the `proceeding` filter of `op=actions`: op-declarations, control-plane and affordances will need them declared (T33-85/88/89).
 (4) Events R30 and duties R16 pass no viewer to a source (N595, as answered); until then actions' two sources answer nothing.
+
+## J3 · COMPLETE
+
+T33-73 applied, on K1649's accepted readings (J1).
+Entries applied:
+- R61 (S0-5/B0.9): `PLAN_ID_RE` is record-grammar's `idPattern("PLN")` core plus the slug; no pattern of actions' own.
+- R12, R25, R33 (C-3, K1444 (iii)): `actionFacts(text, nowMs, place)` reads `clock_overdue` on the office's local day (`civil-time.overdueOn`, side `body`), "close of business" at the close of the office's hours; null with no zone, never UTC. The function registered with retrieval passes the active view. The read, the lifecycle and the mechanical fence use the same local day (no zone: no entry has passed).
+- R15: `BAD_DATE` through `civil-time.isCalendarDate` (2026-02-31 refused).
+- R9 (B1a.14; K1484 row 5): an office arm's `entity_id` names an office entity (a person, another kind or an unheld id is refused, arm named); `actionCreate` fills it from the bridge (one office entity for the role and body with a live `post_in` line), else writes without and says `none`/`ambiguous` in its answer's `addressee`; the read shows the entity (stated, or the bridge at read) and `holder_on_date` from `lines.holderAt`, labelled as who held the office, never the addressee; `as_of_date` is the first sent entry's day, else the creation day.
+- R63 (C-8 plane half): a new `{state: named, name}` is refused `COUNTERPARTY_REFUSED` with findings through `actionCreate`, `op=actioncreate` and `op=promote`; nothing stored; a held one reads as written.
+- R64 (K1446): a governing law (`actionLaws`, `actionLawsPropose`, new column `action_law_proposals.standard`) and a records-request law (`law_standard`) may name a held standard; unseen or malformed answers `standards.noSuchStandard`; the citation stays the member's; the read's `law_standards` gives each with its in-force state on the action's date. A machine states neither.
+- R65 (C1): `proceeding` set/changed by a member only (`MACHINE_CANNOT_SET_PROCEEDING`), an entity of kind proceeding (`entities.noSuchEntity`, `NOT_A_PROCEEDING`); read with `events.proceedingStatusAt` on the action's date; `actionsFor` and `op=actions` filter by it.
+- R62 (A ORG): `addresseeSuggest` / `op=addresseesuggest`: the offices `custodian_of`/`responsible_for` a subject (an entity, or a record through its established resolutions) on the action's date or today, as R9's office arm with the line and both grades; undetermined apart; writes nothing.
+- R66: `eventSource` registered once with `events.registerEventSource`; R67: `triggerSource` registered once with `duties.registerTriggerSource`. Both honour `viewer` and answer nothing without one (N595).
+Deferred: none in this module.
+Found in other modules: J2 (action-grammar rows for NO_SUBJECT, MACHINE_CANNOT_SET_PROCEEDING, NOT_A_PROCEEDING; its ENTITY_ID_RE still four digits; its audit's UTC day; escalation `stages.test.mjs:43` and monitoring `understanding.test.mjs:480` red from the local day; `addresseesuggest` to declare).
+Final uses: record-grammar, jurisdictions, civil-time, record-core, membership, promotion, provenance, content, connections, retrieval, inquiry, conformance, entities, lines, events, standards, duties, action-grammar, capture (adds civil-time, lines, events, standards, duties; architecture's 6 failures are exactly these edges, K1563 (1)).
+Tests (after merging tranche/T33 @ 554876bb8b): actions 87 pass, 0 fail (new `t33.test.mjs`, 12 tests; read/t18 tests re-pinned to R12's local day and R9's narrowing). Users of actions: action-plans 53/0, queue-producers 80/0, queue 113/0; escalation 51/1 and monitoring 110/1 (new, J2 (2)); action-clocks 29/3, filings 58/2, affordances 164/3, instance-setup 90/4, control-plane 155/4, plane 82/3: the same tests by name as on the tranche before my change (the named inherited reds).
+Checks: format 0 failures; architecture 6 failures (the uses edges above); coverage 55 of 55, 0 failures; ownership 7 files, 0 failures.
+Size (session_01NJ3oEE5VB1ykNEwnTexhdw): test runs 14, module lines 3327
