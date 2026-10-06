@@ -24,10 +24,8 @@ export function isZone(zone) {
   return typeof zone === "string" && /^[A-Za-z][A-Za-z0-9_+\-]*(\/[A-Za-z0-9_+\-]+)*$/.test(zone) && formatter(zone) !== null;
 }
 
-/** The zone's offset from UTC, in seconds, at instant `t`. Outside the range the runtime can format, 0 (only an EDTF
- *  year far beyond any calendar reaches there, and its trace says so). */
-export function offsetAt(t, zone) {
-  if (Math.abs(t) > INTL_LIMIT_S - 2 * DAY_S) return 0;
+/* N565: the offset read from the runtime, one `formatToParts` per call. */
+function offsetFromRuntime(t, zone) {
   const parts = formatter(zone).formatToParts(new Date(t * 1000));
   const v = {};
   for (const p of parts) v[p.type] = p.value;
@@ -35,6 +33,44 @@ export function offsetAt(t, zone) {
   if (/^B/.test(v.era || "")) y = 1 - y;
   const wall = dayNumber(y, +v.month, +v.day) * DAY_S + (+v.hour % 24) * 3600 + +v.minute * 60 + +v.second;
   return wall - t;
+}
+
+/* N565: offsets cached per zone, keyed by the UTC hour. An hour whose two ends read the same offset holds that offset
+ * throughout (no zone changes its offset twice within an hour); an hour holding a transition keeps the transition's
+ * second, found once by bisection, and the offsets either side. The cache only remembers what the runtime answered,
+ * so every answer is the one `offsetFromRuntime` gives (R26: the same inputs, the same answer). Bounded per zone. */
+const HOUR_S = 3600;
+const CACHE_LIMIT = 200000;
+const hourCaches = new Map();
+
+function hourOf(h, zone) {
+  let c = hourCaches.get(zone);
+  if (!c) { c = new Map(); hourCaches.set(zone, c); }
+  let e = c.get(h);
+  if (e !== undefined) return e;
+  const t0 = h * HOUR_S, t1 = t0 + HOUR_S;
+  const before = offsetFromRuntime(t0, zone), after = offsetFromRuntime(t1, zone);
+  if (before === after) e = before;
+  else {
+    let lo = t0, hi = t1;                 /* the offset at lo is `before`; at hi it is not */
+    while (hi - lo > 1) {
+      const mid = Math.floor((lo + hi) / 2);
+      if (offsetFromRuntime(mid, zone) === before) lo = mid; else hi = mid;
+    }
+    e = { at: hi, before, after };
+  }
+  if (c.size >= CACHE_LIMIT) c.clear();
+  c.set(h, e);
+  return e;
+}
+
+/** The zone's offset from UTC, in seconds, at instant `t`. Outside the range the runtime can format, 0 (only an EDTF
+ *  year far beyond any calendar reaches there, and its trace says so). */
+export function offsetAt(t, zone) {
+  if (Math.abs(t) > INTL_LIMIT_S - 2 * DAY_S) return 0;
+  if (formatter(zone) === null) return offsetFromRuntime(t, zone);
+  const e = hourOf(Math.floor(t / HOUR_S), zone);
+  return typeof e === "number" ? e : t < e.at ? e.before : e.after;
 }
 
 /** The wall clock, as seconds counted as though UTC, that instant `t` shows in `zone`. */
