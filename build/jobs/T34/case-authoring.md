@@ -28,7 +28,7 @@
    - `acknowledgeStatement` treats a waiting document as open, since it refuses only when `ratified_at` is set.
    - Proposed: a requirement for case-authoring (refuse, or author the edition after it) in a later tranche.
 5. ratification R44: `publish_at` from `caseRatifyPreflight` is not carried into R34's step 5. R34 does not ask for it; this is proposed for when the ceremony's "Publish at…" is placed.
-6. Wording only: R76's Uses still names `inquiry.basisFor`, now leg-earning's R4 behind inquiry's delegate. Several renderers imported from case-grammar, publication, ratification, strength and case-disclosures are not named in those modules' Provides. publication R21 spells `{case}` where the code also takes `caseId`. The `peopleLines`/`memberTieLines` import can move to case-grammar R21 once T34-88 has merged; case-disclosures keeps the names working.
+6. Wording only: case-authoring's Uses still names `inquiry.basisFor`, now leg-earning's R4 behind inquiry's delegate. Several renderers imported from case-grammar, publication, ratification, strength and case-disclosures are not named in those modules' Provides. publication R21 spells `{case}` where the code also takes `caseId`. The `peopleLines`/`memberTieLines` import can move to case-grammar R21 once T34-88 has merged; case-disclosures keeps the names working.
 
 **Tests and checks** (on `job/T34/case-authoring`, `tranche/T34` @ b0d9ba966a merged in):
 - `node --test bio-plane/test/m/case-authoring/`: tests 145, pass 145, fail 0.
