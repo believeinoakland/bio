@@ -1,3 +1,13 @@
 # case-grammar (T33)
 
 **Status** · session_015oXG5f2GZVz111vShMPV1s · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+T33-60's open technical details (requirements' Suggestions), with my best readings; I am building on them now.
+(1) **No `/8`.** R18's `calculations:` and R20's `timeline:` blocks join `/7` (and are read from `/6` and later, as R17's blocks are). No predicate requires them, and each reader answers "none" for a document without its block (R18 an empty list, R20 both lanes empty), so a stored `/7` document reads exactly as before; nothing before T33 could carry a calculation or a timeline, so "none" is true of every stored document. A `/8` would also move R14's product-name rule and case-checker's format set for no gain.
+(2) **Complete edition (R14).** Two sections are added only when the document carries the block, so every `/7` and `/6` case file published before T33 re-renders byte for byte: "The timeline" right after "The findings" (C11: the timeline of its findings; the two lanes as two lists, "What they did" then "What we did", each item with its when and its source), and "The calculations" right after "The documents and observations" (each calculation's recipe in plain JSON, its inputs by name and SHA-256, its results, the recompute status in words and the disclosure). Sections renumber only when present. `COMPLETE_EDITION_HEADINGS` stays the nine; the two new headings are their own constants.
+(3) **R13's `calculation` kind and R19's file.** One kind, `calculation`, at three paths: `calculations/<calc>/calculation.json` (the R18 row, canonical JSON), `calculations/<calc>/inputs/<sha256>` (each input's canonical bytes, named by its hash; the manifest check names an input whose listed SHA-256 is not the one its path names, rule `input_sha`), and `calculations/prov.jsonld` (R19's PROV-O rendering of every row, once per case file). `caseFileEntryOf` answers `{kind: "calculation", calc}`, `{…, calc, input}` or `{…, prov: true}`.
+(4) **R17 follows strength R35's `undetermined`** (K1608): `GRADING_FACT_FIELDS` gains `undetermined`, appended last, so a calculation, standard or occurrence leg carries its reason. A stored document without it reads null.
+(5) **`uses`:** I import `calc-grammar` (`resultKey`, `METHOD`) per my requirements' Uses (T33-60), but `modules.json` lists case-grammar's uses as record-grammar, strength only, so `architecture.mjs` will fail on that edge until BOB adds `calc-grammar` (it is earlier, L1). Final uses: record-grammar, strength, calc-grammar.
+(6) R14 ×3 (K1608): the tests now pin the version the fixture's case document states (`bio-grading/1`), never the constant.
