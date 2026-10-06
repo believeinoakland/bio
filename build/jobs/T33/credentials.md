@@ -88,3 +88,60 @@ Found in other modules (record, 'Found in other modules'): (1) instance-setup ke
 ## J3 · COMPLETE
 
 T33-20 applied: R22-R30 met except R22's subscription arm (held, K1537). Module tests 52/54 here, 54/54 with record-core's declareTable (merges first). Format, architecture, coverage (30/30), ownership 0 failures. Final uses unchanged (record-grammar, record-core, membership). Findings in REPORT J2. Record: build/jobs/T33/credentials.md on job/T33/credentials.
+
+## Completion (CREDENTIALS #4)
+
+**Entries applied.** T33-20b (K1547, K1548), on `tranche/T33` merged at `4708e47b7b`:
+- **R22's subscription arm.** `ACCOUNT_KINDS` is `["apikey", "subscription"]`, frozen. A member's own subscription token (`claude setup-token`) is held by their own act only, through the same `#accountBar` refusals in the same order. It is sealed exactly as the API key (AES-256-GCM, HKDF from `ACCOUNT_SEAL_SECRET`, salt the member, AAD member and kind; K1541 (3)), never shown or exported, and unsealed by `accountReferenceFor` only for that member's own ask, run or standing question, answering `{ok, kind: "subscription", secret}`.
+- One reference per member, of either kind: a token replaces a key and a key replaces a token, the switches kept (R25); removal turns both off.
+- **`ACCOUNT_KIND_NOT_OFFERED` retired** with `HELD_BACK_KINDS`. Its row C-29.18 is removed and its id not reused. An unknown kind stays `UNKNOWN_ACCOUNT_KIND`.
+- **Rows' words.** `UNKNOWN_ACCOUNT_KIND`, `NO_SECRET` and `NO_ACCOUNT` told a member to connect "your own API key"; they now name either kind. Ids and `where`s are unchanged; these rows are still unstamped (T34).
+- `keyedServiceFor` and everything else is unchanged.
+
+**Tests.** The held-back refusal arm is now an acceptance. R22 (both kinds; refusals before the kind; replacement across kinds), R22/R25 (removing a token), R23 (a token's sentinel in no table, answer, log or digest; sealed under member and kind: a token relabelled `apikey` does not open), R24 (a token unsealed only for the member's own acts), and the rows and routes tests (C-29.18 absent; a token set through the route). A mutation check (`ACCOUNT_KINDS` back to `["apikey"]`) fails 6 of them.
+
+**Deferred.** Nothing.
+
+**Found in other modules (REPORT J4).**
+1. **agent-model, ai-runs, agent-worker (L6).** `accountReferenceFor` now also answers `kind: "subscription"`; they must use a subscription token as such (the subscription path through agent-runner needs Workers Paid and the containers scope, K1536 U49 (2)), not as an API key.
+2. **The member's account UI** (whichever module carries the connect form; UX-DESIGN's words). It can now offer the subscription token beside the API key.
+3. **Generated artifact (§14).** `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) still carries the retired row and `HELD_BACK_KINDS`. It is stale from credentials' source; not rebuilt by me.
+
+**Final uses.** record-grammar, record-core, membership. Unchanged.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/credentials/`: tests 54, pass 54, fail 0.
+- Users of credentials, pass/fail:
+
+  | module | result |
+  | --- | --- |
+  | provenance | 89/0 |
+  | attestation | 19/0 |
+  | provenance-routes | 37/0 |
+  | capture-sources | 82/0 |
+  | capture | 120/0 |
+  | bias | 56/0 |
+  | ai-runs | 55/1 (K1514, `scheduler.test.mjs:123`) |
+  | intent | 65/0 |
+  | publication | 109/0 |
+  | docket | 43/0 |
+  | network-notices | 68/0 |
+  | ratification | 204/0 |
+  | case-authoring | 121/1 (K1545, `invariants.test.mjs:124`) |
+  | monitoring | 111/0 |
+  | affordances | 167/0 |
+  | tasks | 71/0 |
+  | queue-producers | 80/0 |
+  | queue | 114/0 |
+  | instance-setup | 90/4 (K1544, `keys.test.mjs` R44 ×4) |
+  | admission | 19/0 |
+  | control-plane | 159/0 |
+  | plane | 86/0 |
+
+- Layer tests: none named in `build/manifest.md`.
+- `node checks/format.mjs`: 126 modules, 125 requirements files; 0 failures.
+- `node checks/architecture.mjs … credentials`: 0 failures.
+- `node checks/coverage.mjs … credentials`: 30 of 30 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs … credentials tranche/T33`: 5 files changed; 0 failures.
+
+Size (session_013T4X8GZR5tPXAUia6wASQV): test runs 5, module lines 1421
