@@ -42,10 +42,16 @@ test("R19 at start it registers with duties.registerOccurrenceEvidence; asked {d
   const hidden = await w.table("days\n4\n", [{ name: "days", type: "integer" }], { by: V("alice") }, { project: P });
   const h = await w.c.create({ question: "Q", period: PERIOD, kind: "span", inputs: [{ name: "t", table: hidden.sha }], recipe: sumDays, evidences: [{ duty: d.dutyId, occurrence: d.key }], by: V("alice") });
   await w.c.accept({ calcId: h.calc_id, by: V("alice") });
+  /* R19 states no order: the answers are matched by what they are, never by place */
   const seen = w.c.occurrenceEvidence({ duty: d.dutyId, occurrence: d.key, viewer: V("carol") });
-  assert.deepEqual(seen.map((x) => !!x.withheld), [false, true]);
-  assert.equal("results" in seen[1], false, "withheld whole");
-  assert.equal(w.c.occurrenceEvidence({ duty: d.dutyId, occurrence: d.key, viewer: V("alice") })[1].calc_id, h.calc_id);
+  assert.equal(seen.length, 2);
+  assert.deepEqual(seen.filter((x) => !x.withheld).map((x) => x.calc_id), [c.calc_id], "carol sees the one resting on what she may see");
+  const withheld = seen.filter((x) => x.withheld);
+  assert.equal(withheld.length, 1, "and the other is answered withheld");
+  assert.equal("results" in withheld[0], false, "withheld whole");
+  assert.equal("calc_id" in withheld[0], false, "not even named");
+  assert.deepEqual(w.c.occurrenceEvidence({ duty: d.dutyId, occurrence: d.key, viewer: V("alice") }).map((x) => x.calc_id).sort(), [c.calc_id, h.calc_id].sort(),
+    "alice sees both");
 });
 
 test("R20 at start it registers with people.registerRosterSource: for an organisation and a date it answers the rows of tables with roster roles valid at that date, by person key, with the table's sha, and reads no row into a line", async () => {

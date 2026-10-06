@@ -1,6 +1,8 @@
 /* calculations: declared tables (R1–R3). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { seeded, V, MACHINE, sha } from "./fixture.mjs";
 import { canonicalCsv, parseCsv, ROLES, MONEY_ROLES, KEY_ROLES, ROSTER_ROLES, TABLE_MAX_BYTES, TABLE_MAX_CELLS }
   from "../../../src/calculations/index.mjs";
@@ -44,7 +46,7 @@ test("R1 declareTable's refusals in order, each with a negative control: NO_SOUR
   assert.equal(w.count("calc_tables"), 0);
   /* the bounds: cells, then bytes */
   const wide = Array.from({ length: 1000 }, (_, i) => `c${i}`);
-  const many = w.csv(`${wide.join(",")}\n${Array.from({ length: 501 }, () => wide.map(() => "1").join(",")).join("\n")}\n`);
+  const many = w.csv(`${wide.join(",")}\n${Array.from({ length: 1001 }, () => wide.map(() => "1").join(",")).join("\n")}\n`);
   const tooMany = await w.c.declareTable({ source: many, schema: { fields: wide.map((name) => ({ name, type: "integer" })) }, header: wide, by: V("bob") });
   assert.equal(code(tooMany), "TABLE_TOO_LARGE");
   assert.equal(tooMany.bound, "cells");
@@ -56,10 +58,30 @@ test("R1 declareTable's refusals in order, each with a negative control: NO_SOUR
   assert.equal(tooBig.max, TABLE_MAX_BYTES);
   assert.equal(w.count("calc_tables"), 0, "nothing written by any refusal");
   /* negative controls: under the cell bound, and the good declaration */
-  const under = w.csv(`${wide.join(",")}\n${Array.from({ length: 500 }, () => wide.map(() => "2").join(",")).join("\n")}\n`);
-  assert.equal(TABLE_MAX_CELLS, 500000, "K1576");
-  assert.equal((await w.c.declareTable({ source: under, schema: { fields: wide.map((name) => ({ name, type: "integer" })) }, header: wide, by: V("bob") })).ok, true, "500,000 cells, the bound itself, is admitted");
+  const under = w.csv(`${wide.join(",")}\n${Array.from({ length: 1000 }, () => wide.map(() => "2").join(",")).join("\n")}\n`);
+  assert.equal(TABLE_MAX_CELLS, 1000000, "N571: back to 1,000,000 over calc-grammar's streamed table (K1576's 500,000 lifted)");
+  assert.equal((await w.c.declareTable({ source: under, schema: { fields: wide.map((name) => ({ name, type: "integer" })) }, header: wide, by: V("bob") })).ok, true, "1,000,000 cells, the bound itself, is admitted");
   assert.equal((await w.c.declareTable(good)).ok, true);
+});
+
+test("R1 a table of 1,000,000 cells, the bound, is declared and evaluated as calc-grammar's streamed table within a Worker's heap: every act runs in a heap capped at 128 MB, and each calculation grows the heap over the held table by a few MB", (t) => {
+  const run = execFileSync(process.execPath, ["--expose-gc", "--max-old-space-size=128", fileURLToPath(new URL("./fixtures/heap.mjs", import.meta.url))],
+    { encoding: "utf8", maxBuffer: 1 << 20, env: { ...process.env, CALC_HEAP_CHILD: "1" } });
+  const out = JSON.parse(run);
+  assert.deepEqual(out.declared, { rows: 100000, cells: 1000000 }, "the bound's own size, declared");
+  t.diagnostic(`held after declaring: ${out.held_mb.toFixed(1)} MB`);
+  for (const [name, a] of Object.entries(out.acts)) {
+    t.diagnostic(`${name}: heap over the held table ${a.growth_mb.toFixed(1)} MB`);
+    assert.equal(a.ok, true, `${name}: ${a.reason}`);
+    assert.ok(a.growth_mb < 35, `${name}: ${a.growth_mb.toFixed(1)} MB, under the 35 MB K1576 measured for 500,000 cells as row objects`);
+  }
+  /* every row read: the answers over all 100,000 rows */
+  assert.deepEqual(out.acts.sum.output, { value: "49950000", sign: "+", precision: "exact" });
+  assert.deepEqual(out.acts.evaluate.output, out.acts.sum.output, "evaluate answers what create stores");
+  assert.equal(out.acts["select and count"].output.value, "5000");
+  assert.equal(out.acts["group by dept"].output.rows, 20);
+  assert.deepEqual(out.acts["group by dept"].output.first.sum, { value: "2450000", sign: "+", precision: "exact" });
+  assert.equal(out.acts.sort.output.first.amount, "999", "a table result over the streamed input, stored as row objects");
 });
 
 function pick(now, before) {
@@ -107,6 +129,16 @@ test("R1 a table is held as canonical RFC 4180 UTF-8 CSV plus its schema, keyed 
   const bare = seeded({ evidence: false });
   const src = bare.csv(CSV);
   assert.equal(code(await bare.c.declareTable({ source: src, schema: { fields: F }, header: HEADER, by: V("bob") })), "SOURCE_NOT_READ");
+});
+
+test("R1 with no evidence store bound a table's bytes cannot be held: refused NO_EVIDENCE_STORE, nothing written, its why naming the group's Civicsmith as your group's Civicsmith, never this instance (DEC-149)", async () => {
+  const w = seeded({ evidence: false });
+  const cells = [["A1", "vendor"], ["B1", "amount"], ["C1", "paid"], ["A2", "Acme"], ["B2", "12"], ["C2", "2025-08-01"]].map(([cell, value]) => ({ source: { cell }, value, type: "s" }));
+  const r = await w.c.declareTable({ source: w.sheet(cells, "A1:C2"), schema: { fields: F }, header: HEADER, by: V("bob") });
+  assert.equal(code(r), "NO_EVIDENCE_STORE");
+  assert.equal(r.detail, "your group's Civicsmith has no evidence store bound, so a table's bytes cannot be held. Nothing was written.");
+  assert.doesNotMatch(r.detail, /\b(this|the) instance\b|\bcopy\b|\bplane\b|\bserver\b/);
+  assert.equal(w.count("calc_tables"), 0);
 });
 
 test("R2 a column may carry a role from the closed lists (money roles, person and entity keys naming how they resolve, roster roles); a declaration is the member's and a machine may not declare one (K1468)", async () => {
