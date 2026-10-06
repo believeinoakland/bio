@@ -176,19 +176,20 @@ test("R14 R16 calculationLegFindings: a leg on a calculation gains one C-2.8 CAL
     assert.deepEqual(run((f) => calculationLegFindings("x", leg, f)), { findings: [], answer: false }, JSON.stringify(leg));
 });
 
-test("R14 in checkInquiryBasis a calculation leg replaces the target arm: listed in references[] it is clean, unlisted C-6.3; role, note, grounds as any leg; lead and theme first; the grade arms silent and no registry asked", () => {
+test("R14 in checkInquiryBasis a calculation leg replaces the target arm: not a reference (K1601), so unlisted it is clean and never C-6.3; role, note, grounds as any leg; lead and theme first; the grade arms silent and no registry asked", () => {
   for (const v of VARIANTS) {
     const [pub, earned] = REGISTRY_VARIANTS[v];
-    assert.deepEqual(ofLegs([{ target: CALC, role: "supports" }, { target: INFO, role: "supports" }], [CALC, INFO], pub, earned), [], v);
+    assert.deepEqual(ofLegs([{ target: CALC, role: "supports" }, { target: INFO, role: "supports" }], [INFO], pub, earned), [], v);
   }
-  assert.deepEqual(shape(ofLegs([{ target: CALC, role: "supports" }], [])), [["C-6.3", null, "basis[0].target"]]);
-  assert.deepEqual(shape(ofLegs([{ target: CALC, role: "maybe", note: 5, grade: "B", grade_axis: "capture", grade_source: "capture" }], [CALC])), [
+  /* a references[] entry naming a calculation is record-grammar's refusal (its references arm), not this module's */
+  assert.deepEqual(ofLegs([{ target: CALC, role: "supports" }], [CALC]), []);
+  assert.deepEqual(shape(ofLegs([{ target: CALC, role: "maybe", note: 5, grade: "B", grade_axis: "capture", grade_source: "capture" }], [])), [
     ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[0].grade"], ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[0].grade_axis"],
     ["C-2.8", "CALCULATION_LEG_MALFORMED", "basis[0].grade_source"], ["C-2.8", null, "basis[0].role"], ["C-2.8", null, "basis[0].note"]]);
-  assert.deepEqual(shape(ofLegs([{ target: CALC, role: "supports", content_id: "LEAD-2026-0101-abc" }], [CALC])), [["C-54.1", "LEAD_NOT_EVIDENCE", "basis[0].content_id"]]);
-  assert.deepEqual(ofLegs([{ target: CALC, role: "supports", theme: "x" }], [CALC]).map((x) => x.check), ["C-81.1"]);
+  assert.deepEqual(shape(ofLegs([{ target: CALC, role: "supports", content_id: "LEAD-2026-0101-abc" }], [])), [["C-54.1", "LEAD_NOT_EVIDENCE", "basis[0].content_id"]]);
+  assert.deepEqual(ofLegs([{ target: CALC, role: "supports", theme: "x" }], []).map((x) => x.check), ["C-81.1"]);
   const AT = "2026-07-01T00:00:00Z";
-  assert.deepEqual(ofLegs([{ target: CALC, role: "supports", ground: "a" }], [CALC], PUBLISHED, EARNED_STD,
+  assert.deepEqual(ofLegs([{ target: CALC, role: "supports", ground: "a" }], [], PUBLISHED, EARNED_STD,
     { grounds: [{ ground: "a", asserted_by: "member:a", at: AT }] }), []);
   /* negative control: a near miss is no calculation, and the target arm answers as before */
   assert.deepEqual(shape(ofLegs([{ target: "CALC-2026-003", role: "supports" }], [])), [["C-2.8", null, "basis[0].target"]]);
@@ -261,7 +262,7 @@ test("R13 R14 R15 through this module's three slot arms (INQUIRY_GRAMMARS): a co
     return shape(all);
   };
   assert.deepEqual(mine(doc([{ target: STD, role: "supports", grade: "B", grade_axis: "capture", grade_source: "capture", target_portion: "s. 3" },
-                             { target: CALC, role: "supports" }, { target: OCC, role: "cuts_against" }], [STD, CALC])), []);
+                             { target: CALC, role: "supports" }, { target: OCC, role: "cuts_against" }], [STD])), []);
   assert.deepEqual(mine(doc([{ target: STD, role: "supports", grade: "C", grade_axis: "connection", grade_source: "hunch" },
                              { target: CALC, role: "supports", grade: "B" }, { target: OCC, role: "supports", content_id: "a".repeat(64) }], [STD, CALC, OCC])), [
     ["C-2.8", "OCCURRENCE_LEG_MALFORMED", "references[2].target"], ["C-2.8", "STANDARD_LEG_AXIS", "basis[0]"],

@@ -612,15 +612,10 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
        complaint about one broken field helps nobody. */
     /* R14, R15 (T33-43): a leg on a calculation or on a duty occurrence is judged by its own arm in the same place and
        on the same terms: its grades are derived (strength, K1447), so every field the grade and extent arms judge is
-       already one departure here. A calculation is a reference like an information target, so C-6.3 asks it; an
-       occurrence is not one. */
+       already one departure here. Neither is a reference (K1601), so C-6.3 asks neither. */
     const imported = importedLegFindings(`basis[${i}]`, leg, findings);
     const calculation = !imported && calculationLegFindings(`basis[${i}]`, leg, findings);
     if (imported || calculation || occurrenceLegFindings(`basis[${i}]`, leg, findings)) {
-      if (calculation && !refTargets.has(leg.target)) {
-        findings.push(f('C-6.3', 'error', `basis[${i}].target '${leg.target}' is not in references[]: an inquiry carrying a basis leg carries the same target as a reference, so the two projections cannot disagree`,
-          [`add a references[] entry for '${leg.target}'`, 'remove the basis leg']));
-      }
       if (!BASIS_ROLES.includes(leg.role)) {
         findings.push(f('C-2.8', 'error', `basis[${i}].role '${leg.role}' is not one of: ${BASIS_ROLES.join(', ')}`));
       }
@@ -1442,10 +1437,12 @@ function importedReferenceFindings(fm, findings) {
  * A CALCULATION (R14) and A DUTY OCCURRENCE (R15). Both are DERIVED: a calculation's grade is its weakest input's
  * capture (each capped by its derivation), an occurrence's is its source text's and its trigger's attestation
  * (`strength`, K1447 (i), (ii)). So a leg on either names it and states no grade, axis or source of its own, and no
- * part: a member's grade there would claim what the record derives. The calculation is a row the leg lists among its
- * references, like an information target; the occurrence is not a thing the record holds a row for until it is read,
- * so it is named by a reference of its own, `occurrence:<DUT id>/<key>`, on R11's pattern, and never listed. Whether
- * the occurrence exists is `inquiry`'s check, reading `duties`. An action is never a leg target (D113).
+ * part: a member's grade there would claim what the record derives. Neither is listed in `references[]` (K1601): a
+ * calculation's id names a row, not a bundle (record-grammar R3), and record-grammar's references arm refuses it there
+ * as it refuses any id that is not a bundle's; the occurrence is not a thing the record holds a row for until it is
+ * read, so it is named by a reference of its own, `occurrence:<DUT id>/<key>`, on R11's pattern, and a `references[]`
+ * entry naming one is refused here. Whether the occurrence exists is `inquiry`'s check, reading `duties`. An action is
+ * never a leg target (D113).
  * ===================================================================== */
 
 /* standards' portion path (its R18): a path within the instrument, at most 200 characters. */
@@ -1509,8 +1506,7 @@ export const CALCULATION_REF_RE = idPattern('CALC');
 
 /** R14: a leg whose target is a calculation's id gains one C-2.8 error CALCULATION_LEG_MALFORMED per departure (a
  *  grade, axis or source; a content id, extent or extent capture), naming the field, and the answer is true; any other
- *  leg (a non-object read as an empty one) gains nothing and the answer is false. Whether the leg is listed in
- *  `references[]` is asked by `checkInquiryBasis`, which holds the document (C-6.3). Pure; never throws. */
+ *  leg (a non-object read as an empty one) gains nothing and the answer is false. Pure; never throws. */
 export function calculationLegFindings(label, leg, findings) {
   const l = leg && typeof leg === 'object' ? leg : {};
   if (typeof l.target !== 'string' || !CALCULATION_REF_RE.test(l.target)) return false;
