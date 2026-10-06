@@ -37,7 +37,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 ### L1
 
 - **T34-1 · record-grammar** · (N568) a `law_relation` subject in `PROPOSAL_STATES` (law relations, court links, treatments), so standards' `lawPropose` labels through it instead of `standard`. (N570) `CALC` minted opaque, as `EVT` and `MNY` are, so no sequential counter tells a reader how many calculations were minted, withheld ones included (DEC-36's withheld-as-absent) · K1571, K1576 · req: `PROPOSAL_STATES` and `ID_TABLE`'s `CALC` form, BOB's wording (no new meaning; DEC-36 governs) · depends —.
-- **T34-2 · jurisdictions** · (N561) two profile vocabulary keys with validate and combine, `vote_values` (`[{value, label, citation}]`, events R11) and `response_statuses` (`[{status, label, citation, basis}]`, duties R1, R4), never a default list. (N569) the Oakland profile's Legistar `PersonId` and `BodyId` schemes (numeric forms). (N574) an identifier scheme for institutions in the held profiles (test-port-ellery, oakland-alameda), so people R15's issuer on a `credentialed_by` line can be held through entities R43 · K1563 (8), K1574, K1592 · req: jurisdictions' profile keys and schemes, BOB's wording (shapes; K1563) · depends T34-1.
+- **T34-2 · jurisdictions** · (N613) counterparty `ids`, `within`, `organisation`; schemes `legistar_body_id`, `legistar_office_record_id`; `member_types`; Oakland's data. (N561) two profile vocabulary keys with validate and combine, `vote_values` (`[{value, label, citation}]`, events R11) and `response_statuses` (`[{status, label, citation, basis}]`, duties R1, R4), never a default list. (N569) the Oakland profile's Legistar `PersonId` and `BodyId` schemes (numeric forms). (N574) an identifier scheme for institutions in the held profiles (test-port-ellery, oakland-alameda), so people R15's issuer on a `credentialed_by` line can be held through entities R43 · K1563 (8), K1574, K1592 · req: jurisdictions' profile keys and schemes, BOB's wording (shapes; K1563) · depends T34-1.
 - **T34-3 · civil-time** · (N565) cache `offsetAt`'s zone offsets per zone, keyed by its transitions or the hour (`formatToParts` per call is most of an explore walk's time). (N603) R9/R16 count on a correction that governs even after a later confirm (local-facts R2, R3), not only while the status reads `corrected` · K1566, K1658 · req: none (efficiency within the existing service) · depends —.
 - **T34-4 · calc-grammar** · (N567) export `relate` (R10) from its index. (N571) a streaming evaluate over a table, not row objects, so calculations R1's cell bound can return to about 1,000,000 · K1569, K1576 · req: the index export and the streaming evaluate, BOB's wording (K1576: a capacity bound) · depends T34-3.
 - **T34-5 · connection-grammar** · (N560) R9's `ownerConformance` takes an owner's declaration that its kinds are undated (no `valid`, so `at` is inapplicable) or group-wide (no fenced item, so `sight` is inapplicable), and reports those checks `inapplicable`, not failed. The `neighbours` contract states the optional `unread: [{what, why}]` (explore R8). *(Conditional, N566: the hub bound's form, per kind or a narrower window, only if T33's release measured council volumes; otherwise see Left out.)* · K1563 (2), K1566 · req: R9 and the `neighbours` contract, BOB's wording (K1563) · depends T34-3.
@@ -46,6 +46,8 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 - **T34-8 · docprofile** · (N549) deletes its seven copied doctypes and their default registration now that `plane` registers `doctypes`' types (T33-90 merged), and re-points its own tests to the seam's stubs · K1513 · req: the default-registration clause K1513 (3) kept until now is retired, BOB's wording · depends —.
 
 **L1 merge order:** record-grammar → jurisdictions → civil-time → calc-grammar → connection-grammar (the engines and the profile first), then bundler → id-spaces (after jurisdictions, whose schemes it reads) → docprofile.
+
+- **T34-64 · roster-reader** · (N614) a store-reading roster source for people R23 · K1683 · req: BOB's wording · depends —.
 
 ### L2
 
@@ -61,9 +63,13 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 - **T34-13 · capture-sources** · (N577) its `capture_credentials` table declared explicitly with `export: "never"` (capture-requests R47's supplied secrets) · K1601 · req: none (a declaration under record-core's R; BOB's wording if its Rs name the table) · depends —.
 - **T34-14 · capture** · (N587, DEC-141) R77 and R79 answer, for each held document, the question it was captured for and its asker when the viewer may see the question; otherwise the whole entry is withheld ("Captured for a question you may not see"). R79 requires a reason when an open question waits on the document, and records the question (a batch: one reason applies to each waiting question). R81's restore records its reason in the same history. capture (L3) cannot use capture-requests (L6), so the question and asker reach it through a seam that capture-requests registers into, which BOB names at the opening (P17, dependency edges) · K1618, K1645 · req: R77, R79, R81, BOB's wording of DEC-141 under K1618 (Bob's) · depends —. **P6:** 3,458 lines.
 
+- **T34-65 · acquisition** · (N615) intake's `doctypeFor` gets the capture's origin · K1683 · req: none · depends —.
+
 ### L4
 
 - **T34-15 · content** · (N589) compares two captures held at different addresses, so a cross-address passage notice can be graded (`passageNotice`/`noticeForRow` grade only within one address's chain today) · K1624 · req: a new provided read, BOB's wording (no new meaning; reevaluation R36 already requires the notice) · depends —. **P6:** 3,683 lines; the job reports if it would pass about 4,000.
+
+- **T34-66 · reading-pipeline** · (N615) `read`'s `doctypeFor` gets the capture's origin · K1683 · req: none · depends —.
 
 ### L5
 
@@ -129,6 +135,8 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 **L9 merge order:** consequences → action-clocks → filings → action-plans (`modules.json` order).
 
+- **T34-67 · actions** · (N611) Provides gains `place()` and `zoneOf` (R12's zone read) · K1681 · req: BOB's wording · depends —.
+
 ### L10
 
 - **T34-51 · scheduler** · (N585) its R12 test connects the opener's account through `op=accountreferenceset` and names the member (ai-runs R52). (N605, user side) registers each arming notice duties, people, money-checks and answers offer · K1614 · req: none · depends —.
@@ -137,10 +145,10 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 - **T34-52 · wizard-scripts** · (N564, DEC-139) registers the screen registry (`docs/development/ux-substrate/screens/registry.json`: 42 screens, 192 acts) as its R13's registry. R2 gains an optional `via`: a side trip into another wizard, returning to the step left · K1565 · req: R2, R13, BOB's wording of DEC-139 · depends —.
 - **T34-53 · tasks** · (N557, DEC-135) "Ask for a check": the owner names a target, an expertise label and an optional note. A task kind addressed by expertise and sight goes only to those who can see the target. The first who accepts takes it, and the others' To do closes, naming who took it. The owner reads an untaken request. *(Check record here if BOB names tasks, Rule 3:)* the check carries the checker's declared expertise and whether an administrator confirmed it; it gates nothing · K1547 · req: new Rs, BOB's wording of DEC-135 (Bob's) · depends T34-10.
-- **T34-54 · queue-producers** · (N609, user side) R15/R18 read the item's `zone`. (N550, DEC-131) R24's member-facing word "signal" becomes "status"; codes are unchanged · K1536 · req: R24, BOB's wording · depends —. **P6:** 3,873 lines; a word change only.
+- **T34-54 · queue-producers** · (N612) splits first (P6), and R6 re-points to `case-tensions`. (N609, user side) R15/R18 read the item's `zone`. (N550, DEC-131) R24's member-facing word "signal" becomes "status"; codes are unchanged · K1536 · req: R24, BOB's wording · depends —. **P6:** 3,873 lines; a word change only.
 - **T34-55 · notice-producers** · (N550) the "Hint" label ("Hint · machine work" on K1491's items) wherever its K1473 signals and K1491 machine checks reach a member · K1536 · req: its label wording, BOB's · depends —.
 - **T34-56 · queue** · (N550) R48 `QUEUE_CLASS_LABELS` CONDITION "Signal" becomes "Status" · K1536 · req: R48, BOB's wording · depends T34-55.
-- **T34-57 · instance-setup** · (N556, DEC-134) asks for the hosting-access record at setup (R11, with membership). Gives the one-time recommendation of a second administrator and its statement of dependence · K1547 · req: new Rs, BOB's wording of DEC-134 · depends T34-10.
+- **T34-57 · instance-setup** · (N613, user side) R50–R52 seed from the real profile, measured. (N556, DEC-134) asks for the hosting-access record at setup (R11, with membership). Gives the one-time recommendation of a second administrator and its statement of dependence · K1547 · req: new Rs, BOB's wording of DEC-134 · depends T34-10.
 - **T34-58 · op-declarations** · (N564) declares the registry's 69 requirement functions' ops by lowercased name · K1565 · req: BOB's wording · depends T34-52.
 - **T34-59 · admission** · (N552, DEC-133) the website key's call and the join link's page (it asks the cover name), each recorded through its door, with the daily cap · K1541 · req: new Rs, BOB's wording of DEC-133 · depends T34-10.
 - **T34-60 · control-plane** · (N552) routes the key's and the link's acts (an administrator's). (N586) `members-pin.test.mjs` names agent-harness' files (and agent-worker's `ops.mjs`) instead of agent-worker's `harness.mjs`/`subsession.mjs` · K1541, K1615 · req: BOB's wording · depends T34-58, T34-59. **P6:** 3,729 lines; wiring only.
@@ -173,7 +181,7 @@ membership 3,356 (four DECs; the guard in T34-10), publication 3,959 (T34-44), q
 
 **Jobs per layer:** L1 8, L2 4, L3 2, L4 1, L5 12, L6 12, L7 2, L8 7, L9 2, L10 1, L11 9. **Total 60 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
 
-**Entries carried:** 58 in `next.md` (50 at this draft's start; N600 added by K1649 while it was written; N601, N602 folded by BOB #120, K1656; N603, K1658; N604, N605, K1666; N606, N607, K1668; N608–N610, K1675–K1679). **48 wholly in T34**: N549, N550, N552–N554, N556–N558, N560–N562, N565, N567–N571, N573–N578, N580–N585, N587–N591, N593–N596, N598–N610. **4 in part**: N551, N564, N586, N597. **6 left out**: N559 and N572 (a dependency not yet built), N563 and N579 (a measurement), N566 (a measurement, unless the release measured it), N592 (a study, not a module job; Bob's ruling first).
+**Entries carried:** 58 in `next.md` (50 at this draft's start; N600 added by K1649 while it was written; N601, N602 folded by BOB #120, K1656; N603, K1658; N604, N605, K1666; N606, N607, K1668; N608–N610, K1675–K1679; N611–N615, K1681–K1683). **48 wholly in T34**: N549, N550, N552–N554, N556–N558, N560–N562, N565, N567–N571, N573–N578, N580–N585, N587–N591, N593–N596, N598–N615. **4 in part**: N551, N564, N586, N597. **6 left out**: N559 and N572 (a dependency not yet built), N563 and N579 (a measurement), N566 (a measurement, unless the release measured it), N592 (a study, not a module job; Bob's ruling first).
 
 **Questions that are Bob's (each with a recommendation):**
 1. **New modules, only if needed (P4).** The group's settings (DEC-132, DEC-136), members' own notes (DEC-136) and the check record (DEC-135) need a home. Recommendation: no new module. Put them in membership, hypotheses and tasks (Rule 3), which is BOB's call. Bring Bob a new module only if membership's P6 guard trips. Then propose a `group-settings` module in L2.
