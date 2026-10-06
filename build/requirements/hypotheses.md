@@ -1,6 +1,6 @@
 # hypotheses — requirements
 
-**Status** · DRAFT by a requirements-drafting worker for BOB #114, 2026-10-05, on `tranche/T32`, for T33 (§5.9); for BOB's review and Bob's approval (a new product module, P17). Layer 6, directly after `inquiry` (plan Rules (2), Choices 5; scope §2). Meaning from the capability ladders §2 CONNECTIONS and "Cross-cutting rulings" (exploration), §10 rows "Hypotheses have a place, never in findings" and "Cause is stated, never inferred", and rulings K1467, K1473, K1487, K1489; entry B1a.13 (`draft-T33-entries-B.md`), plan entry T33-46. Code today: none. Not yet met: every requirement (T33-46).
+**Status** · New product module, layer 6 (plan T33-46; K1467, K1473, K1487, K1489). Reviewed (K1505); met by HYPOTHESES #1 in T33 (K1607).
 
 **Size (P6).** New. Expected 500–700 lines. It is not added to `inquiry` (3,903 lines, P6).
 
