@@ -86,8 +86,8 @@ Terms. An **entry** is `{actor_class, actor, authority_kind, authority, level, s
 - **R26** Each check moves here as an invariant with its test (K6): every C-22 row (`AI_RUN_CHECKS`, which moves here whole, numbers unchanged; K586) and C-54.2–C-54.12. C-54.11 (`LEAD_LOOK_NO_DETAIL`, R17) and C-54.12 (`LEAD_SHARE_NO_REASON`, R16) are new rows of `LEAD_CHECKS`, stamped by 1.53.0 (DEC-88; K1025).
 - **R27** One judgement, one place: every writer's outcome rule, the content-axis rule and the missing-row rule are the pure functions this module exports, and no caller restates one.
 - **R28** No place is named in this module's behaviour or outward text.
-- **R34** (S0-8; B0.5) `LEAD_ID_RE` is built from `record-grammar`'s `idPattern("LEAD")` (`ID_TABLE`, its R46–R47), keeping R14's form (`LEAD-YYYY-MMDD-<12 hex>`) as the core and tail `ID_TABLE` states for `LEAD`, so no copy of the id's shape is held here and every lead minted before T33 stays valid. *(not yet met: T33-30)*
-- **R35** (plan T33, Rules (6)) This module declares every table (`observation_log`, `leads`, `lead_shares`) explicitly through `record-core.declareTable` (its R21), keeping R22–R23: whole-store purge only, `version_chain: true` for the append-only log; their sight governed by R13 (the log) and R15 (a lead and its shares), never wider; the other classes as `declarePurge`'s default form gives them. *(not yet met: T33-30)*
+- **R34** (S0-8; B0.5) `LEAD_ID_RE` is built from `record-grammar`'s `idPattern("LEAD")` (`ID_TABLE`, its R46–R47), keeping R14's form (`LEAD-YYYY-MMDD-<12 hex>`) as the core and tail `ID_TABLE` states for `LEAD`, so no copy of the id's shape is held here and every lead minted before T33 stays valid.
+- **R35** (plan T33, Rules (6)) This module declares every table (`observation_log`, `leads`, `lead_shares`) explicitly through `record-core.declareTable` (its R21), keeping R22–R23: whole-store purge only, `version_chain: true` for the append-only log; their sight governed by R13 (the log) and R15 (a lead and its shares), never wider; the other classes as `declarePurge`'s default form gives them.
 
 ### Satisfies
 
