@@ -83,6 +83,7 @@ Terms. A **subject** is `{kind: "inquiry", inquiry, act?, standards?}` (suspecte
 - `record-grammar`: `isMachineIdentity`, `proposalLabel` (subject `plan_option`); the `PLN-` type registration.
 - `promotion`: `promote` (a plan being a record object; R18's action; R21's check), `registerStep`.
 - `inquiry`: an inquiry's visibility, project and state (R1, R5, R8).
+- `leg-earning`: `projectsDrawingOn` (its R7), read directly, not through inquiry's delegate (plan Rules (9) item 4; K1661). *(not yet met: T33-77)*
 - `strength`: `projectBar`, for `short` support (the project's bar against a finding's strength).
 - `conformance`: `determinationRead`, `determinationsFor`; `noSuchDetermination`.
 - `standards`: `standardRead` (R12's `enforces`).
