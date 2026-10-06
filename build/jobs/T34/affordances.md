@@ -1,6 +1,6 @@
 # affordances (T34)
 
-**Status** · session_01D46sKU6GQxJsbHFhXN1a2o · depth 2 · COMPLETE · handled B8
+**Status** · session_01D46sKU6GQxJsbHFhXN1a2o · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -83,3 +83,48 @@ Still open: the `writingHelpRefused()` read, waiting on the CHANGE after wizard-
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio affordances`: 20 product files, 0 failures. `checks/coverage.mjs bio affordances`: 45 of 45, 0 failures. `checks/ownership.mjs bio affordances tranche/T34`: 13 files, 0 failures.
 
 Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 22, module lines 3945
+
+## J6 · REPORT
+
+Re B9 (K1879). The cause of `pack_absent` is not this module's. I merged `tranche/T34` @ a6c22ceb7e and drove the running plane in Miniflare. `plane` now registers the screens: the untargeted answer carries all 42 of them and 17 offered scripts. `renderPack` (`skillpack.mjs`:541–544, skills R10's `validateWizardScripts`) still throws, on the first offered script whose step names an act its screen does not list. Every such step on this tranche:
+- `WIZ-74328804ddae3503` "Connect your Claude account" (`wizard-scripts/civicsmith-library.mjs`:21), step 3, act `subscriptionsignin` on `connect`;
+- `WIZ-af4c9fafc3713f26` "Translate the interface" (`civicsmith-library.mjs`:28), steps 3–5, acts `translationdraft`, `translationadopt` and `translationconfirm` on `translations` (N669's acts with no op).
+
+Both are optional library scripts. `wizardRegister` (`wizard-scripts/index.mjs`:683–700) re-checks only group scripts (R13), and `requiredFailures` only required ones (R14). So nothing withholds an optional Civicsmith script that fails R12, and `wizardsAt` (R11) offers it. K1869 (2) reads this as harmless ("do not fail R14's required check"), but skills R10 refuses the whole pack on it.
+
+affordances passes `wizard_scripts` through unchanged (R37: "as `wizard-scripts` R11 answers the viewer"), so filtering them here would be a copy of wizard-scripts' rule. The fix is one of these, yours to place:
+- **(a) wizard-scripts:** its offered-script reads withhold a library script that fails R12 against the registration, as R13 does a group one (`civicsmith-library.mjs` stays Bob's approved data).
+- **(b) skills R10:** the pack leaves out a script it cannot validate instead of refusing whole.
+- **(c)** ops for `subscriptionsignin` and the three `translation*` acts (N669; later).
+
+Either (a) or (b) clears `plane.test.mjs`:317 with no change here. Nothing in affordances changed for this: the branch has only the merge.
+
+## J7 · COMPLETE
+
+Re-opened by B9 and done. `tranche/T34` @ a6c22ceb7e is merged, and nothing in affordances changed. The remaining red, `plane.test.mjs`:317 R17/R37 `pack_absent`, is caused by wizard-scripts offering two optional Civicsmith library scripts whose steps name acts with no op (`subscriptionsignin`, `translationdraft`, `translationadopt`, `translationconfirm`). skills R10's `validateWizardScripts` (`skillpack.mjs`:541) refuses the whole pack on them. Modules and lines are in J6.
+
+**Tests and checks**
+- `node --test test/m/affordances/`: tests 203, pass 202, fail 1 (`plane.test.mjs`:317, wizard-scripts or skills per J6).
+- format: 0 failures. architecture: 20 product files, 0 failures. coverage: 45 of 45, 0 failures. ownership: 1 file (the merge), 0 failures.
+
+Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 24, module lines 3945
+
+## J8 · REPORT
+
+B10 is applied (K1883 (1)). `courtnotice` has left `NON_ACTS` and is graded nowhere: it is a plain public read, and R45's test now holds it beside `groupdescription` as ungated. That is committed and pushed.
+
+**control-plane's `totality.test.mjs` is still red after this, and the cause is that test.** With the tranche merged, `unaccounted` over its table answers `stale: [29 aliases]` (`addparticipant` … `withdrawtie`). Line 12 builds the table without the aliases ("an alias is its op, … so the table reads each op once"): `.filter(([op]) => !Object.hasOwn(O.OP_ALIASES, op))`. But `OPS` carries each alias's row (op-declarations `aliasRows`, R21), and affordances R45 (K1864) grades each alias through one frozen table. So filtering the aliases out makes every graded alias read stale.
+
+I ran `unaccounted` over the whole of `O.OPS`, aliases included and nothing filtered. It answers `{unpublished: [], unranked: [], stale: []}`. The fix is control-plane's: drop the alias filter at `totality.test.mjs`:12, and the test goes green with no change here. If you would rather the aliases stay out of both tables, that is an R45 change: affordances drops its alias table, and R45's wording goes with it. Yours to rule. I build to R45 as worded.
+
+My one red remains `plane.test.mjs`:317, `pack_absent`, which is wizard-scripts' (R11, re-opened; J6).
+
+## J9 · COMPLETE
+
+Re-opened by B10 and done. `courtnotice` has left `NON_ACTS` (K1883 (1)), with its test updated. control-plane's `totality.test.mjs` stays red because of its own line 12 alias filter (J8). With that filter dropped, the door's whole op table is clean against affordances.
+
+**Tests and checks**
+- `node --test test/m/affordances/`: tests 203, pass 202, fail 1 (`plane.test.mjs`:317, wizard-scripts' R11, J6).
+- format: 0 failures. architecture: 0 failures. coverage: 45 of 45. ownership: 0 failures.
+
+Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 27, module lines 3944

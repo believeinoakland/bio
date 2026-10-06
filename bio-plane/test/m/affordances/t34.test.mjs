@@ -182,10 +182,12 @@ const R45_WRITES = {
   groupkeyset: "credential", groupkeyremove: "credential", groupkeyswitch: "substrate", groupswitchset: "substrate",
   groupkeynoticeseen: "caller-owned", placewanted: "substrate", memberlanguageset: "caller-owned",
 };
-const R45_READS = ["courtnotice", "checkrequests", "checksof", "groupkeystate", "groupkeynotice", "placewantedstate",
+const R45_READS = ["checkrequests", "checksof", "groupkeystate", "groupkeynotice", "placewantedstate",
   "memberlanguage", "startfrom"];
-/* public, with no NEEDS row (op-declarations R22: `classes: null`): graded where they write, named in no NON_ACTS (R12) */
-const R45_PUBLIC = ["websiteinvite", "joinlinkinvite", "groupdescription"];
+/* public, with no NEEDS row (op-declarations R22: `classes: null`; `courtnotice` a plain read, K1883 (1)): graded where
+   they write, named in no NON_ACTS (R12) */
+const R45_PUBLIC = ["websiteinvite", "joinlinkinvite", "groupdescription", "courtnotice"];
+const UNGATED_READS = ["groupdescription", "courtnotice"];
 const g = (op) => gradeOf(op)?.[1] ?? null;
 test("R45 R3 R7 R12 R19: every op T34 declares in op-declarations R22–R24, R26, R28 and R15 carries the grade read from "
    + "its owner, each gated op its NON_ACTS reason, the public ones none; with their rows nothing is unaccounted; a "
@@ -212,18 +214,20 @@ test("R45 R3 R7 R12 R19: every op T34 declares in op-declarations R22–R24, R26
   const gatedWrites = Object.keys(R45_WRITES).filter((op) => !R45_PUBLIC.includes(op));
   assert.deepEqual(Object.keys(T34_NON_ACTS).sort(), [...gatedWrites, ...R45_READS].sort());
   for (const op of gatedWrites) assert.ok(NON_ACTS[op].length > 30 && !NON_ACTS[op].startsWith("read: "), op);
-  const ALL = [...Object.keys(R45_WRITES), ...R45_READS, "groupdescription"];
+  const ALL = [...Object.keys(R45_WRITES), ...R45_READS, ...UNGATED_READS];
   assert.deepEqual(ALL.filter((op) => published(op) || Object.hasOwn(MACHINE_REFUSALS, op)), []);
   /* R19: checkrecord's code is in the family (its refusal is tasks' R15 test: tasks is later in the order) */
   assert.ok(JUSTIFICATION_REFUSALS.includes("CHECK_NO_REASON"));
   const table = [...Object.keys(R45_WRITES).map((op) => ({ op, mutating: true, gated: !R45_PUBLIC.includes(op) })),
-    ...R45_READS.map((op) => ({ op, mutating: false, gated: true })), { op: "groupdescription", mutating: false, gated: false }];
+    ...R45_READS.map((op) => ({ op, mutating: false, gated: true })),
+    ...UNGATED_READS.map((op) => ({ op, mutating: false, gated: false }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
   /* negative controls */
   assert.notDeepEqual({ ...got, checkrecord: "reversible" }, R45_WRITES);
-  assert.deepEqual(A.unaccounted([{ op: "groupdescription", mutating: false, gated: true }]).unpublished, ["groupdescription"]);
+  for (const op of UNGATED_READS)
+    assert.deepEqual(A.unaccounted([{ op, mutating: false, gated: true }]).unpublished, [op], `${op}, carried gated, is seen`);
 });
 
 test("R45 R12: each of op-declarations R21's 29 aliases takes its op's very grade and reason through one frozen table — "
