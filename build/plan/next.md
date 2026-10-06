@@ -62,6 +62,8 @@
 
 - N579 · `contradiction` · a measured prompt arm for K6 (money) pairs, as K5's: until measured K6 is formed and counted but `not_shown` (CONTRADICTION #8 J1 (4); K1601). **Hard reason:** a measurement (the prompt arm is measured before it is shown).
 
+- N580 · `credentials`, `answers` · `AI_GRANT_OPS` gains `rule` (answers R7's door to every rule service), and answers' copy test returns to equality (ANSWERS #1 J1 (1); K1603). **Hard reason:** the order: credentials (L2) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
