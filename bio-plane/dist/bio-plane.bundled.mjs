@@ -41616,6 +41616,7 @@ function driveHopOf(doc) {
   const h = chain3.find((x) => x && x.drive_file_id && typeof x.export_format === "string");
   return h ? { format: h.export_format } : null;
 }
+var CAPTURE_ORIGIN = "fetch";
 var failed = (doc, docType, basis, extra = {}) => ({
   content_type: docType ? docType.type.key : null,
   reader_version: docType ? docType.type.version ?? null : null,
@@ -41686,7 +41687,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const bytes2 = got.bytes;
   const textRead = !multipart && profile.profiled_from_text === true && bytes2;
   const text7 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes2) : "";
-  const profCtx = { headers, locator, content_type: ct || null, text: text7 };
+  const profCtx = { headers, locator, content_type: ct || null, text: text7, origin: CAPTURE_ORIGIN };
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes2)
@@ -41802,7 +41803,14 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
       ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text));
       if (i2text) {
-        wired = readText(decodeView(i2text), { headers, locator, content_type: ct || null, at: retrieved, ...vw });
+        wired = readText(decodeView(i2text), {
+          headers,
+          locator,
+          content_type: ct || null,
+          at: retrieved,
+          origin: CAPTURE_ORIGIN,
+          ...vw
+        });
         classifiedText = i2text;
       }
       if (i2text && !chain3) chain3 = layerChainFor(i2text, { tier: wiredTier, container: fmt });
@@ -45870,29 +45878,17 @@ var Content = class {
     const allRead = addresses.length > 0 && read3.length === addresses.length && addrRows.length <= cap;
     const newer = newerBySha.size > 0 ? true : allRead ? false : null;
     const fullExtent = extent ? { kind: row8.extent_kind, ...extent } : null;
-    const candidates = [...newerBySha.values()].map((v) => {
-      const test2 = this.#extentTestAcross(fullExtent, v.capture_sha);
-      const g = gradeAcross(row8, fullExtent, this.#unitsOf(row8.capture_sha, memo), this.#unitsOf(v.capture_sha, memo));
-      return {
-        capture_sha: v.capture_sha,
-        bundle_id: v.bundle_id,
-        first_retrieved: v.first_retrieved,
-        extent: test2.holds ? fullExtent : null,
-        matched: test2.holds,
-        reason: test2.reason,
-        why: test2.why,
-        existing_content_id: test2.existing_content_id,
-        grade: g.grade,
-        affects: g.affects,
-        grade_reason: g.reason,
-        grade_why: g.why,
-        found_at: g.found_at,
-        similarity: g.similarity,
-        candidate_only: true,
-        identity: "not_established",
-        says: test2.holds ? "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same passage; extent-match is a sufficient signal for a candidate and never evidence of identity" : "UNDETERMINED: " + test2.why
-      };
-    });
+    const candidates = [...newerBySha.values()].map((v) => ({
+      bundle_id: v.bundle_id,
+      first_retrieved: v.first_retrieved,
+      ...this.#candidateAt(
+        row8,
+        fullExtent,
+        v.capture_sha,
+        memo,
+        "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same passage; extent-match is a sufficient signal for a candidate and never evidence of identity"
+      )
+    }));
     const state = newer === true ? candidates.length && candidates.every((c) => c.matched) ? "newer_capture_matched" : "newer_capture_undetermined" : newer === false ? "no_newer_capture" : "chain_unread";
     const unread = !addresses.length ? "the record holds no address this capture was retrieved from, so its version chain cannot be read" : addrRows.length > cap ? `this capture was seen at more than ${cap} addresses and only ${cap} were asked` : "at least one address's version chain does not hold this capture for you";
     return {
@@ -45912,6 +45908,52 @@ var Content = class {
       says: state === "no_newer_capture" ? null : VERSION_NOTICE_STATES[state],
       why: state === "no_newer_capture" ? "every version chain this capture sits on was read and holds nothing after it" : state === "chain_unread" ? unread : null
     };
+  }
+  /** ONE CANDIDATE (R30, R31), the shape R47's `candidates` and R55's answer share: the extent test asked of capture
+   *  `sha` (nothing minted) and the grade read from both captures' units, `memo` carrying them between calls. `held`
+   *  is the sentence a candidate whose extent holds says. */
+  #candidateAt(row8, fullExtent, sha2, memo, held2) {
+    const test2 = this.#extentTestAcross(fullExtent, sha2);
+    const g = gradeAcross(row8, fullExtent, this.#unitsOf(row8.capture_sha, memo), this.#unitsOf(sha2, memo));
+    return {
+      capture_sha: sha2,
+      extent: test2.holds ? fullExtent : null,
+      matched: test2.holds,
+      reason: test2.reason,
+      why: test2.why,
+      existing_content_id: test2.existing_content_id,
+      grade: g.grade,
+      affects: g.affects,
+      grade_reason: g.reason,
+      grade_why: g.why,
+      found_at: g.found_at,
+      similarity: g.similarity,
+      candidate_only: true,
+      identity: "not_established",
+      says: test2.holds ? held2 : "UNDETERMINED: " + test2.why
+    };
+  }
+  /** R55 (N589, K1624): the passage of a row read through R45's contract (R47's `row`) compared with ONE capture the
+   *  caller found itself, held at another address (reevaluation R36), exactly as R30 and R31 compare it with a newer
+   *  capture on its own chain: one candidate in R47's shape, or null. It reads no version chain and decides neither
+   *  that the capture is newer nor that it holds the same work or portion (the caller does), and asks no sight (the
+   *  caller gates the row and the capture, R37). Null for a row that is not an object, a capture that is not 64
+   *  lowercase hex or is the row's own (a candidate is never the same passage), or a read that fails. Writes nothing;
+   *  never throws. */
+  passageAcross(row8, captureSha, memo = /* @__PURE__ */ new Map()) {
+    if (!isObj7(row8) || typeof captureSha !== "string" || !/^[0-9a-f]{64}$/.test(captureSha) || captureSha === row8.capture_sha) return null;
+    try {
+      const extent = safeJson7(row8.extent);
+      return this.#candidateAt(
+        row8,
+        extent ? { kind: row8.extent_kind, ...extent } : null,
+        captureSha,
+        memo instanceof Map ? memo : /* @__PURE__ */ new Map(),
+        "a CANDIDATE: a passage at the same extent of the capture compared, held at another address. It is not established to be the same passage, nor that capture the same work; extent-match is a sufficient signal for a candidate and never evidence of identity"
+      );
+    } catch {
+      return null;
+    }
   }
   /** R29–R31: one cited passage against the newer captures of its document, for a viewer. An absent or invisible
    *  passage is C-80.3. The chains are the ones this viewer sees, and the answer says so. */
