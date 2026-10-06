@@ -1,6 +1,6 @@
 # lines (T33)
 
-**Status** · session_01UxA8Yv7kHqsFpTvQSvpR4k · depth 2 · WORKING · handled B1
+**Status** · session_01UxA8Yv7kHqsFpTvQSvpR4k · depth 2 · WAITING ON BOB (J1) · handled B1
 
 **Progress** (not an entry) · Built on J1's readings: `bio-plane/src/lines/` (index, vocab, schema; 846 lines) and `bio-plane/test/m/lines/` (24 tests naming R1–R20, all passing). Checks clean with the proposed `paths`/`tests`/`uses` applied locally: format, architecture, coverage 20/20, ownership 0 failures. **Next:** apply BOB's answer to J1; when `entities` and `events` merge into `tranche/T33`, merge them and point the fixture at the real modules; re-run steps 5–6; then COMPLETE.
 
