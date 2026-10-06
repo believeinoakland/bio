@@ -12982,7 +12982,7 @@ function validateInto(p3, errors) {
     if (own2(c, "oversight") && typeof c.oversight !== "boolean") err(`${at32}.oversight`, "VALUE_INVALID", "oversight is true or false");
     basis(at32, c);
   });
-  const kinds2 = /* @__PURE__ */ new Set();
+  const kinds3 = /* @__PURE__ */ new Set();
   const tier3 = /* @__PURE__ */ new Set();
   const venueKinds = /* @__PURE__ */ new Set();
   const templateIds = /* @__PURE__ */ new Set();
@@ -12991,9 +12991,9 @@ function validateInto(p3, errors) {
     if (!entry3(at32, k)) return;
     fields(at32, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at32}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
-    else if (kinds2.has(k.kind)) err(`${at32}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
+    else if (kinds3.has(k.kind)) err(`${at32}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else {
-      kinds2.add(k.kind);
+      kinds3.add(k.kind);
       if (k.tier === 3) tier3.add(k.kind);
     }
     str32(`${at32}.label`, k.label, "label");
@@ -13125,7 +13125,7 @@ function validateInto(p3, errors) {
       "basis"
     ]);
     str32(`${at32}.rule`, d.rule, "rule");
-    if (d.applies_to !== "claim" && !kinds2.has(d.applies_to))
+    if (d.applies_to !== "claim" && !kinds3.has(d.applies_to))
       err(`${at32}.applies_to`, "DEADLINE_KIND_UNKNOWN", `'${String(d.applies_to)}' is neither claim nor a kind of this profile`);
     const legacy = own2(d, "days") && !own2(d, "units") && !own2(d, "amount");
     if (legacy) {
@@ -13585,8 +13585,8 @@ function merge(profiles) {
         s.forms.push(...strip(merged));
       }
       if (space === "enactment" && givers2.some((p3) => own2(p3.spaces[space], "kinds"))) {
-        const kinds2 = [];
-        for (const p3 of givers2) union(kinds2, (p3.spaces[space].kinds || []).map((k) => (({ floor, ...rest }) => rest)(k)), p3.id);
+        const kinds3 = [];
+        for (const p3 of givers2) union(kinds3, (p3.spaces[space].kinds || []).map((k) => (({ floor, ...rest }) => rest)(k)), p3.id);
         const floors = /* @__PURE__ */ new Map();
         for (const p3 of givers2) for (const k of p3.spaces[space].kinds || [])
           if (k.floor) {
@@ -13603,9 +13603,9 @@ function merge(profiles) {
             continue;
           }
           const floor = { ...given[0].value, basis: given[0].basis, profile: given[0].profile, bases: given.map((g) => ({ profile: g.profile, basis: g.basis })) };
-          for (const k of kinds2) if (k.kind === kind) k.floor = clone(floor);
+          for (const k of kinds3) if (k.kind === kind) k.floor = clone(floor);
         }
-        s.kinds = strip(kinds2);
+        s.kinds = strip(kinds3);
       }
       view.spaces[space] = s;
     }
@@ -32444,8 +32444,8 @@ function chainKindFor(chain2, target) {
     if (ext.includes(want) && !byPart.has(key)) byPart.set(key, derivations[i].step);
   }
   if (!byPart.size) return null;
-  const kinds2 = new Set(byPart.values());
-  return kinds2.size === 1 ? [...kinds2][0] : CHAIN_KIND_MIXED;
+  const kinds3 = new Set(byPart.values());
+  return kinds3.size === 1 ? [...kinds3][0] : CHAIN_KIND_MIXED;
 }
 function describeChain(chain2) {
   if (checkChain(chain2)) return "this text's provenance was not recorded";
@@ -43170,7 +43170,7 @@ var Extraction = class _Extraction {
       return k || "undetermined";
     };
     let bytes2 = 0, written = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
-    const kinds2 = /* @__PURE__ */ new Set(), unaddressed = [];
+    const kinds3 = /* @__PURE__ */ new Set(), unaddressed = [];
     const seen = /* @__PURE__ */ new Set();
     const runs = [];
     let run2 = null;
@@ -43221,7 +43221,7 @@ var Extraction = class _Extraction {
       const cut5 = capped.length < full.length || u.wireCut;
       if (cut5) truncatedUnits++;
       const chainKind2 = kindOf4(u.extent);
-      kinds2.add(chainKind2);
+      kinds3.add(chainKind2);
       this.#sql.exec(
         `INSERT INTO capture_text (capture_sha,bundle_id,extent_kind,extent,ref,seq,text,truncated,chain_kind)
          VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -43282,7 +43282,7 @@ var Extraction = class _Extraction {
     const wire = Number.isInteger(wireOverBound) && wireOverBound > 0 ? wireOverBound : 0;
     const offered = ordered2.length + wire;
     const over = overBound + wire;
-    const chainKind = kinds2.size === 1 ? [...kinds2][0] : kinds2.size ? "mixed" : docKind || "undetermined";
+    const chainKind = kinds3.size === 1 ? [...kinds3][0] : kinds3.size ? "mixed" : docKind || "undetermined";
     const state = !offered ? "none" : over || unaddressable ? "partial" : "whole";
     this.#sql.exec(
       `INSERT OR REPLACE INTO capture_text_state (capture_sha,bundle_id,state,offered,written,over_bound,unaddressable,
@@ -44511,13 +44511,13 @@ function unitChainKind(chain2, target) {
     for (const p3 of ext.pages) if (Number.isInteger(p3) && p3 >= 0) pages.add(p3);
   }
   if (!pages.size) return unscoped ? chainKindFor(chain2, 0) : null;
-  const kinds2 = /* @__PURE__ */ new Set();
+  const kinds3 = /* @__PURE__ */ new Set();
   for (const p3 of pages) {
     const k = chainKindFor(chain2, p3);
     if (k == null) return null;
-    kinds2.add(k);
+    kinds3.add(k);
   }
-  return kinds2.size === 1 ? [...kinds2][0] : CHAIN_KIND_MIXED;
+  return kinds3.size === 1 ? [...kinds3][0] : CHAIN_KIND_MIXED;
 }
 
 // src/content/schema.mjs
@@ -56091,10 +56091,10 @@ function reach(v, number, kind = null) {
     if (f17.floor == null) return { reach: "UNDETERMINED", says: `${f17.why}: whether ${n} is inside the record's reach is undetermined` };
     return n >= f17.floor ? { reach: "INSIDE", floor: f17.floor, says: `a ${kind} at or above ${systemName(view, f17.system)}'s first (${f17.floor}): the record can look it up` } : { reach: "OUTSIDE_REACH", floor: f17.floor, says: outsideSays(view, kind, f17) };
   }
-  const kinds2 = [...new Set(kindsOf(view).map((k) => k.kind).filter((k) => typeof k === "string" && k))];
-  if (!kinds2.length)
+  const kinds3 = [...new Set(kindsOf(view).map((k) => k.kind).filter((k) => typeof k === "string" && k))];
+  if (!kinds3.length)
     return { reach: "UNDETERMINED", says: "the active profiles name no enactment kind, so no coverage floor is measured" };
-  const each = kinds2.map((k) => ({ kind: k, ...floorOf(view, conflicts, k) }));
+  const each = kinds3.map((k) => ({ kind: k, ...floorOf(view, conflicts, k) }));
   const known = each.filter((e) => e.floor != null);
   const named = known.map((e) => `${e.kind} ${e.floor}`).join(", ");
   if (known.length && known.every((e) => n < e.floor) && known.length === each.length)
@@ -56602,16 +56602,16 @@ function createRegistry() {
     return e ? { owner: e.owner, word: e.word, class: e.class } : null;
   };
   function registerOwner2(arg) {
-    const { owner, kinds: kinds2, neighbours: neighbours3 } = arg !== null && typeof arg === "object" ? arg : (
+    const { owner, kinds: kinds3, neighbours: neighbours3 } = arg !== null && typeof arg === "object" ? arg : (
       /** @type {any} */
       {}
     );
     if (!filled3(owner)) return refuse5("OWNER_MISSING", "an owner is named by a non-empty string");
     if (byOwner.has(owner)) return refuse5("OWNER_DUPLICATE", `${owner} is already registered`);
     if (typeof neighbours3 !== "function") return refuse5("NEIGHBOURS_MISSING", `${owner} registers no neighbours read`);
-    if (!Array.isArray(kinds2) || kinds2.length === 0) return refuse5("KINDS_MISSING", `${owner} registers no kind`);
+    if (!Array.isArray(kinds3) || kinds3.length === 0) return refuse5("KINDS_MISSING", `${owner} registers no kind`);
     const mine = /* @__PURE__ */ new Set();
-    for (const k of kinds2) {
+    for (const k of kinds3) {
       if (k === null || typeof k !== "object" || !filled3(k.kind)) return refuse5("KIND_MISSING", `a kind of ${owner} is not named`);
       const held = byKind.get(k.kind);
       if (held) return refuse5("KIND_TAKEN", `kind ${k.kind} is held by ${held.owner}`);
@@ -56623,7 +56623,7 @@ function createRegistry() {
       const bad2 = FORBIDDEN_WORDS.find((w) => lower2.includes(w));
       if (bad2) return refuse5("WORD_FORBIDDEN", `kind ${k.kind}'s word "${k.word}" says "${bad2}", which no kind's word may say`);
     }
-    const entry3 = { owner, kinds: kinds2.map((k) => Object.freeze({ kind: k.kind, word: k.word, class: k.class })), neighbours: neighbours3 };
+    const entry3 = { owner, kinds: kinds3.map((k) => Object.freeze({ kind: k.kind, word: k.word, class: k.class })), neighbours: neighbours3 };
     byOwner.set(owner, entry3);
     for (const k of entry3.kinds) byKind.set(k.kind, { owner, word: k.word, class: k.class });
     return { ok: true, owner };
@@ -57725,14 +57725,14 @@ var Entities = class _Entities {
       schemes: schemes.map((s) => s.scheme),
       detail: "an identifier is held in a scheme the instance's active jurisdiction profiles name" + (schemes.length ? `: one of ${schemes.map((s) => s.scheme).join(", ")}` : "; they name none") + ". Nothing was written."
     };
-    const kinds2 = Array.isArray(sch.entity_kinds) ? sch.entity_kinds : [];
-    if (!kinds2.includes(ent.kind)) return {
+    const kinds3 = Array.isArray(sch.entity_kinds) ? sch.entity_kinds : [];
+    if (!kinds3.includes(ent.kind)) return {
       ok: false,
       reason: "SCHEME_NOT_FOR_KIND",
       scheme: sch.scheme,
       kind: ent.kind,
-      entity_kinds: [...kinds2],
-      detail: `the scheme ${sch.scheme} identifies ${kinds2.join(", ") || "no kind"}, not a ${ent.kind}. Nothing was written.`
+      entity_kinds: [...kinds3],
+      detail: `the scheme ${sch.scheme} identifies ${kinds3.join(", ") || "no kind"}, not a ${ent.kind}. Nothing was written.`
     };
     const rec = _Entities.#inScheme(view, sch, id);
     if (!rec) return identifierNotInSpace(view, sch, "id");
@@ -57913,14 +57913,14 @@ var Entities = class _Entities {
     const forum = this.#one(`SELECT entity_id, label FROM entities WHERE entity_id=?`, f17.forum.trim());
     if (!forum) return noSuchEntity(f17.forum.trim(), { field: "forum" });
     const view = this.view();
-    const kinds2 = (Array.isArray(view.proceeding_kinds) ? view.proceeding_kinds : []).filter((k) => k && typeof k.kind === "string");
-    const pk = kinds2.find((k) => k.kind === f17.kind.trim());
+    const kinds3 = (Array.isArray(view.proceeding_kinds) ? view.proceeding_kinds : []).filter((k) => k && typeof k.kind === "string");
+    const pk = kinds3.find((k) => k.kind === f17.kind.trim());
     if (!pk) return {
       ok: false,
       reason: "PROCEEDING_KIND_UNKNOWN",
       kind: f17.kind.trim().slice(0, 80),
-      kinds: kinds2.map((k) => k.kind),
-      detail: "a proceeding's kind is one the instance's active jurisdiction profiles name" + (kinds2.length ? `: one of ${kinds2.map((k) => k.kind).join(", ")}` : "; they name none") + ". Nothing was written."
+      kinds: kinds3.map((k) => k.kind),
+      detail: "a proceeding's kind is one the instance's active jurisdiction profiles name" + (kinds3.length ? `: one of ${kinds3.map((k) => k.kind).join(", ")}` : "; they name none") + ". Nothing was written."
     };
     const sch = this.#schemeOf(view, PROCEEDING_SCHEME);
     const rec = _Entities.#inScheme(view, sch, f17.number);
@@ -58001,10 +58001,10 @@ var Entities = class _Entities {
    *  every date, and marked so). Group-wide (C6, K1489): a member viewer sees every relation, an unrecognised one none,
    *  a missing one is refused. One indexed read per end, a page at a time in relation-id order with `next`; a node over
    *  the hub bound is named `hub` with no items. Writes nothing. */
-  neighbours({ node, kinds: kinds2, at: at32 = null, page: page2 = null, viewer, scope = null } = {}) {
+  neighbours({ node, kinds: kinds3, at: at32 = null, page: page2 = null, viewer, scope = null } = {}) {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-    const want = Array.isArray(kinds2) ? RELATION_KINDS.filter((k) => kinds2.includes(k)) : [...RELATION_KINDS];
+    const want = Array.isArray(kinds3) ? RELATION_KINDS.filter((k) => kinds3.includes(k)) : [...RELATION_KINDS];
     if (typeof node !== "string" || !node || !want.length || viewerPredicate(viewer).scope === "DENY") return { items: [] };
     const inKinds = `relation IN (${want.map(() => "?").join(",")})`;
     const live6 = `withdrawn_at IS NULL AND ${inKinds}`;
@@ -59840,10 +59840,10 @@ function mentionedMethod(pairRule, entityId) {
 }
 function mentionedNeighbours(k, args, { positionOf = () => null } = {}) {
   const a = isObj11(args) ? args : {};
-  const { node, kinds: kinds2, page: page2, viewer } = a;
+  const { node, kinds: kinds3, page: page2, viewer } = a;
   if (viewer === void 0 || viewer === null || viewer === "")
     return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-  if (Array.isArray(kinds2) && !kinds2.includes(MENTIONED_KIND)) return { items: [] };
+  if (Array.isArray(kinds3) && !kinds3.includes(MENTIONED_KIND)) return { items: [] };
   if (typeof node !== "string" || !node || !k.sees(node, viewer)) return { items: [] };
   const keep2 = k.redactor(viewer);
   const rows2 = [...k.sql.exec(
@@ -66417,7 +66417,7 @@ function neighboursOf(k, args) {
   if (a.viewer === void 0 || a.viewer === null || a.viewer === "")
     return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
   const node = typeof a.node === "string" ? a.node : "";
-  const kinds2 = Array.isArray(a.kinds) ? a.kinds.filter((x) => ALL2.includes(x)) : ALL2;
+  const kinds3 = Array.isArray(a.kinds) ? a.kinds.filter((x) => ALL2.includes(x)) : ALL2;
   const sees = (bundleId) => k.sees(bundleId, a.viewer);
   const att = (id) => k.one(`SELECT * FROM event_attestations WHERE attestation_id=?`, id);
   const evGrade = (eventId3) => {
@@ -66449,7 +66449,7 @@ function neighboursOf(k, args) {
   const parts = /^EVT-/.test(node) ? k.rows(`SELECT * FROM event_participants WHERE event_id=? AND superseded_by IS NULL ORDER BY participant_id`, node) : k.rows(`SELECT * FROM event_participants WHERE entity_id=? AND superseded_by IS NULL ORDER BY participant_id`, node);
   for (const p3 of parts) {
     const kind = `event_${p3.role}`;
-    if (!kinds2.includes(kind) || !live6(p3.event_id)) continue;
+    if (!kinds3.includes(kind) || !live6(p3.event_id)) continue;
     const x = att(p3.attestation_id);
     if (!x || !sees(x.bundle_id)) continue;
     push({
@@ -66461,7 +66461,7 @@ function neighboursOf(k, args) {
       grade: { assertion: grade(x.grade), ends: [grade(k.resolutionGrade(p3.entity_id, x)), grade(evGrade(p3.event_id))] }
     }, p3.event_id);
   }
-  if (kinds2.includes("event_concerns")) {
+  if (kinds3.includes("event_concerns")) {
     const cs = /^EVT-/.test(node) ? k.rows(`SELECT * FROM event_concerns WHERE event_id=? OR end_id=? ORDER BY event_id, end_id`, node, node) : k.rows(`SELECT * FROM event_concerns WHERE end_id=? ORDER BY event_id`, node);
     for (const c of cs) {
       if (!live6(c.event_id)) continue;
@@ -66480,7 +66480,7 @@ function neighboursOf(k, args) {
   if (/^EVT-/.test(node))
     for (const r of k.rows(`SELECT * FROM event_relations WHERE (from_event=? OR to_event=?) AND withdrawn_at IS NULL ORDER BY relation_id`, node, node)) {
       const kind = `event_${r.kind}`;
-      if (!kinds2.includes(kind)) continue;
+      if (!kinds3.includes(kind)) continue;
       const x = att(r.attestation_id);
       if (!x || !sees(x.bundle_id)) continue;
       push({
@@ -67772,7 +67772,7 @@ var Events = class _Events {
     return { ok: true, found: true, ...id !== eventId3.trim() ? { alias_of: id, asked: eventId3.trim() } : {}, event: v };
   }
   /* The live events an entity takes part in (with its roles) or which concern it, each with its when, in sight. */
-  #eventsOfEntity(entity2, viewer, { kinds: kinds2 = null, roles: roles2 = null } = {}) {
+  #eventsOfEntity(entity2, viewer, { kinds: kinds3 = null, roles: roles2 = null } = {}) {
     const byEvent = /* @__PURE__ */ new Map();
     for (const p3 of this.#rows(`SELECT event_id, role, attestation_id FROM event_participants WHERE entity_id=? AND superseded_by IS NULL`, entity2)) {
       if (roles2 && !roles2.includes(p3.role)) continue;
@@ -67784,13 +67784,13 @@ var Events = class _Events {
       if (!byEvent.has(c.event_id)) byEvent.set(c.event_id, { roles: /* @__PURE__ */ new Set(), atts: /* @__PURE__ */ new Set(), concerns: false });
       byEvent.get(c.event_id).concerns = true;
     }
-    return this.#itemsFor(byEvent, viewer, kinds2);
+    return this.#itemsFor(byEvent, viewer, kinds3);
   }
-  #itemsFor(byEvent, viewer, kinds2) {
+  #itemsFor(byEvent, viewer, kinds3) {
     const out = [];
     for (const [id, x] of byEvent) {
       const ev = this.#one(`SELECT kind, status, alias_of FROM events WHERE event_id=?`, id);
-      if (!ev || ev.alias_of || kinds2 && !kinds2.includes(ev.kind)) continue;
+      if (!ev || ev.alias_of || kinds3 && !kinds3.includes(ev.kind)) continue;
       const atts = this.#visibleAttestations(id, viewer);
       if (!atts.length) continue;
       const seen = new Set(atts.map((a) => Number(a.attestation_id)));
@@ -67829,9 +67829,9 @@ var Events = class _Events {
     };
   }
   /** R27: the events an entity takes part in or that concern it, ordered by R31, bounded. */
-  eventsFor({ entity: entity2, kinds: kinds2 = null, from = null, to = null, limit = null, viewer = null } = {}) {
+  eventsFor({ entity: entity2, kinds: kinds3 = null, from = null, to = null, limit = null, viewer = null } = {}) {
     if (!said3(entity2)) return noEntity("events are read for one registered subject, named by its id");
-    const ks = Array.isArray(kinds2) && kinds2.length ? kinds2 : typeof kinds2 === "string" && kinds2 ? kinds2.split(",") : null;
+    const ks = Array.isArray(kinds3) && kinds3.length ? kinds3 : typeof kinds3 === "string" && kinds3 ? kinds3.split(",") : null;
     const r = this.#range(this.#eventsOfEntity(entity2, viewer, { kinds: ks }), from, to);
     if (r.bad) return refuse7("BAD_DATE", r.bad);
     const b = this.#bounded(r.items, limit);
@@ -74516,11 +74516,11 @@ var LawRecords = class {
   /** R28 (`connection-grammar` R6–R8): for a standard node, its relations and links valid at `at`; for an event node,
    *  the held standards in force at the event's `when` (R20), each a derived item. Sight: an evidentiary item is
    *  answered only when the viewer may read its passage; a derived one only when the viewer may read the event. */
-  neighbours({ node = null, kinds: kinds2 = null, at: at32 = null, page: page2 = null, viewer, scope = null } = {}) {
+  neighbours({ node = null, kinds: kinds3 = null, at: at32 = null, page: page2 = null, viewer, scope = null } = {}) {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
     const own4 = CONNECTION_KINDS3.map((k) => k.kind);
-    const asked = Array.isArray(kinds2) ? kinds2.filter((k) => own4.includes(k)) : own4;
+    const asked = Array.isArray(kinds3) ? kinds3.filter((k) => own4.includes(k)) : own4;
     const id = typeof node === "string" ? node : "";
     const all = /^EVT-/.test(id) ? this.#eventItems(id, asked, viewer) : this.#standardItems(id, asked, viewer);
     const live6 = [];
@@ -76427,16 +76427,16 @@ function checkRecipe(recipe2) {
   for (const k of Object.keys(recipe2))
     if (!["method", "inputs", "steps", "output"].includes(k)) err("RECIPE_INVALID", null, k, "not a field of a recipe");
   if (recipe2.method !== METHOD) err("METHOD_UNKNOWN", null, "method", `the method must be ${METHOD}`);
-  const kinds2 = /* @__PURE__ */ new Map();
+  const kinds3 = /* @__PURE__ */ new Map();
   if (!Array.isArray(recipe2.inputs)) err("RECIPE_INVALID", null, "inputs", "a list of {name, kind}");
   else recipe2.inputs.forEach((inp, i) => {
     const f17 = `inputs[${i}]`;
     if (!plain(inp) || Object.keys(inp).some((k) => !["name", "kind"].includes(k)))
       return err("RECIPE_INVALID", null, f17, "an input is {name, kind}");
     if (typeof inp.name !== "string" || !NAME.test(inp.name)) return err("RECIPE_INVALID", null, `${f17}.name`, "a name");
-    if (kinds2.has(inp.name)) return err("RECIPE_INVALID", null, `${f17}.name`, `"${inp.name}" is named twice`);
+    if (kinds3.has(inp.name)) return err("RECIPE_INVALID", null, `${f17}.name`, `"${inp.name}" is named twice`);
     if (inp.kind !== "table" && inp.kind !== "figure") return err("RECIPE_INVALID", null, `${f17}.kind`, "table or figure");
-    kinds2.set(inp.name, inp.kind);
+    kinds3.set(inp.name, inp.kind);
   });
   const selections = /* @__PURE__ */ new Map();
   if (!Array.isArray(recipe2.steps) || !recipe2.steps.length) err("RECIPE_INVALID", null, "steps", "a list of one or more steps");
@@ -76445,7 +76445,7 @@ function checkRecipe(recipe2) {
     const bad2 = (field, why) => err("RECIPE_INVALID", label, field, why);
     if (!plain(st)) return bad2(null, "a step is an object");
     if (!OPS.includes(st.op)) {
-      if (typeof st.as === "string" && NAME.test(st.as) && !kinds2.has(st.as)) kinds2.set(st.as, "unknown");
+      if (typeof st.as === "string" && NAME.test(st.as) && !kinds3.has(st.as)) kinds3.set(st.as, "unknown");
       return bad2("op", `one of ${OPS.join(", ")}`);
     }
     const form = FORMS2[st.op];
@@ -76460,12 +76460,12 @@ function checkRecipe(recipe2) {
         bad2(field, "the name of an input or an earlier step");
         continue;
       }
-      if (!kinds2.has(ref)) {
+      if (!kinds3.has(ref)) {
         err("NAME_UNDEFINED", label, field, `"${ref.slice(0, 64)}" is not defined before this step`);
         continue;
       }
       const want = kind.slice(4);
-      const got = kinds2.get(ref);
+      const got = kinds3.get(ref);
       if (got === "unknown") continue;
       if (want === "value" ? !(got === "figure" || got === "ratio") : got !== want)
         bad2(field, `"${ref}" is a ${got}, and ${field} takes a ${want === "value" ? "figure or ratio" : want}`);
@@ -76475,19 +76475,19 @@ function checkRecipe(recipe2) {
         err("JOIN_UNKEYED", label, "space", "a join is keyed through an identifier space or a crosswalk");
       else if (st.space !== void 0 && st.crosswalk !== void 0) bad2("crosswalk", "a join names a space or a crosswalk, not both");
       else if (st.crosswalk && plain(st.crosswalk)) {
-        if (!kinds2.has(st.crosswalk.input)) err("NAME_UNDEFINED", label, "crosswalk.input", `"${String(st.crosswalk.input).slice(0, 64)}" is not defined before this step`);
-        else if (kinds2.get(st.crosswalk.input) !== "table") bad2("crosswalk.input", "a crosswalk is a table");
+        if (!kinds3.has(st.crosswalk.input)) err("NAME_UNDEFINED", label, "crosswalk.input", `"${String(st.crosswalk.input).slice(0, 64)}" is not defined before this step`);
+        else if (kinds3.get(st.crosswalk.input) !== "table") bad2("crosswalk.input", "a crosswalk is a table");
       }
     }
     if (st.op === "share" && typeof st.part === "string" && selections.get(st.part) !== st.whole)
       bad2("part", "a share's part is a select step over its whole");
     if (typeof st.as !== "string" || !NAME.test(st.as)) return bad2("as", "a name");
-    if (kinds2.has(st.as)) return bad2("as", `"${st.as}" is already defined`);
-    kinds2.set(st.as, PRODUCES[st.op]);
+    if (kinds3.has(st.as)) return bad2("as", `"${st.as}" is already defined`);
+    kinds3.set(st.as, PRODUCES[st.op]);
     if (st.op === "select") selections.set(st.as, st.from);
   });
   if (typeof recipe2.output !== "string") err("RECIPE_INVALID", null, "output", "the name of the answering step");
-  else if (!kinds2.has(recipe2.output)) err("NAME_UNDEFINED", null, "output", `"${recipe2.output.slice(0, 64)}" is not defined`);
+  else if (!kinds3.has(recipe2.output)) err("NAME_UNDEFINED", null, "output", `"${recipe2.output.slice(0, 64)}" is not defined`);
   return errors.length ? { ok: false, errors } : { ok: true };
 }
 function tableFault(t) {
@@ -77889,11 +77889,11 @@ var Money = class _Money {
     return best;
   }
   /* ---- R9: an entity's money ---- */
-  moneyOf({ entity: entity2, period, kinds: kinds2, phases, limit, viewer } = {}) {
+  moneyOf({ entity: entity2, period, kinds: kinds3, phases: phases2, limit, viewer } = {}) {
     if (!filled5(entity2)) return noEntity("an entity's money is read by the entity's id (moneyof&entity=ENT-...)");
     const n = Number.parseInt(limit ?? LIST_LIMIT_DEFAULT, 10);
     const lim = Number.isFinite(n) ? Math.min(Math.max(n, 1), LIST_LIMIT_MAX) : LIST_LIMIT_DEFAULT;
-    const ks = toList(kinds2), ps = toList(phases);
+    const ks = toList(kinds3), ps = toList(phases2);
     for (const k of ks) if (!MONEY_KINDS.includes(k)) return refusal11("UNKNOWN_MONEY_KIND", `kind is one of ${list2(MONEY_KINDS)}`);
     for (const p3 of ps) if (!PHASES.includes(p3)) return refusal11("UNKNOWN_PHASE", `phase is one of ${list2(PHASES)}`);
     let q7 = null;
@@ -78254,10 +78254,10 @@ var Money = class _Money {
   }
   static CONNECTION_KINDS = Object.freeze([Object.freeze({ kind: CONNECTION_KIND, word: CONNECTION_WORD, class: "evidentiary" })]);
   /** R16: each fact as one edge from payer to payee (entity, else fund), valid over its period, as of `at`. */
-  neighbours({ node, kinds: kinds2, at: at32, page: page2, viewer } = {}) {
+  neighbours({ node, kinds: kinds3, at: at32, page: page2, viewer } = {}) {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-    if (Array.isArray(kinds2) && !kinds2.includes(CONNECTION_KIND)) return { items: [] };
+    if (Array.isArray(kinds3) && !kinds3.includes(CONNECTION_KIND)) return { items: [] };
     if (!filled5(node)) return { items: [] };
     const g = this.#gate("f.sight_bundle", viewer);
     const rows2 = this.#rows(`SELECT f.* FROM money_facts f WHERE f.withdrawn_at IS NULL
@@ -78415,6 +78415,8 @@ function concernsGate(row4) {
   if (typeof row4.concerns === "string" && isHypothesisId(row4.concerns)) return { code: "HYPOTHESIS_ID", detail: "a hypothesis is never named in a money fact" };
   return null;
 }
+var kinds2 = () => MONEY_KINDS;
+var phases = () => PHASES;
 function ownerNeighbours2(args = {}) {
   const { host, ...rest } = args && typeof args === "object" ? args : {};
   if (host) return moneyOf2(host).neighbours(rest);
@@ -79933,7 +79935,7 @@ var Duties = class _Duties {
     const b = isObj23(a) ? a : {};
     if (b.viewer === void 0 || b.viewer === null || b.viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-    const kinds2 = Array.isArray(b.kinds) ? b.kinds : CONNECTION_KINDS4.map((k) => k.kind);
+    const kinds3 = Array.isArray(b.kinds) ? b.kinds : CONNECTION_KINDS4.map((k) => k.kind);
     const at32 = b.at;
     const zone = this.#zone();
     const all = [];
@@ -79977,7 +79979,7 @@ var Duties = class _Duties {
         });
       }
     }
-    let items = all.filter((c) => kinds2.includes(c.kind) && (c.from === node || c.to === node));
+    let items = all.filter((c) => kinds3.includes(c.kind) && (c.from === node || c.to === node));
     const marked = [];
     for (const c of items) {
       let v;
@@ -83344,11 +83346,11 @@ var Progressions = class _Progressions {
    *  placement names, else the document's bundle, to the instance's entity, with the stage and definition version, its
    *  grade the placement's (R7), `valid` the placement's own date (R37) or unstated. A bundle the viewer may not see is
    *  neither returned nor counted (R13). Synchronous; writes nothing and records no reading. */
-  neighbours({ node, kinds: kinds2 = null, at: at32, page: page2 = null, viewer, scope = null } = {}) {
+  neighbours({ node, kinds: kinds3 = null, at: at32, page: page2 = null, viewer, scope = null } = {}) {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
     void scope;
-    if (Array.isArray(kinds2) && !kinds2.includes(PLACED_KIND)) return { items: [] };
+    if (Array.isArray(kinds3) && !kinds3.includes(PLACED_KIND)) return { items: [] };
     if (typeof node !== "string" || !node) return { items: [] };
     const col = /^ENT-/.test(node) ? "entity_id" : /^EVT-/.test(node) ? "event_id" : "bundle_id";
     const keep2 = this.#redactor(viewer);
@@ -91014,8 +91016,8 @@ function checkActionExtension(ctx, findings) {
   const fm = ctx.fm;
   actionBasisFindings(fm, findings);
   correspondenceFindings(fm, findings);
-  const kinds2 = Array.isArray(ctx.actionKinds) ? ctx.actionKinds : PRODUCT_KINDS;
-  if (!kinds2.includes(fm.action_kind) && !kindReadsAsWritten(fm.action_kind))
+  const kinds3 = Array.isArray(ctx.actionKinds) ? ctx.actionKinds : PRODUCT_KINDS;
+  if (!kinds3.includes(fm.action_kind) && !kindReadsAsWritten(fm.action_kind))
     findings.push(f11("C-2.10", "error", `action_kind '${fm.action_kind}' is not a kind this instance offers`));
   recordsLawFindings(fm, findings);
   if (riskTierState(fm.risk_tier) === null) findings.push(f11("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(", ")}`));
@@ -93832,9 +93834,9 @@ var People = class _People {
     if (!EXPUNGE_GROUNDS.includes(ground) || ground === "court_order" && !filled7(order2))
       return refuse9("EXPUNGE_GROUND_REFUSED", `a value is removed only as unlawful to hold, confidential, under a recorded court order (naming it) or under a lawful demand the jurisdiction lists; anything else is corrected forward by withdrawing it (op=personfactwithdraw, op=identitywithdraw, op=membertiewithdraw)`, { grounds: [...EXPUNGE_GROUNDS], correction: "withdraw" });
     if (ground === "lawful_demand") {
-      const kinds2 = (Array.isArray(this.#view().lawful_demands) ? this.#view().lawful_demands : []).map((d) => d && d.kind).filter(filled7);
-      if (!kinds2.includes(demandKind))
-        return refuse9("DEMAND_KIND_UNLISTED", `the active jurisdiction profiles list no lawful demand of that kind; they list ${kinds2.length ? kinds2.join(", ") : "none"}`, { demand_kinds: kinds2 });
+      const kinds3 = (Array.isArray(this.#view().lawful_demands) ? this.#view().lawful_demands : []).map((d) => d && d.kind).filter(filled7);
+      if (!kinds3.includes(demandKind))
+        return refuse9("DEMAND_KIND_UNLISTED", `the active jurisdiction profiles list no lawful demand of that kind; they list ${kinds3.length ? kinds3.join(", ") : "none"}`, { demand_kinds: kinds3 });
     }
     const why = clean(reason);
     if (!why) return refuse9("NO_REASON", "a removal states its reason");
@@ -93897,13 +93899,13 @@ var People = class _People {
     return isObj27(l) && isObj27(l.current_through) && filled7(l.current_through.day) ? l.current_through.day : null;
   }
   /* Every unwithdrawn line of the members, of these kinds, from the member's end; `truncated` when an owner's list was cut. */
-  #linesOver(members2, kinds2, viewer) {
+  #linesOver(members2, kinds3, viewer) {
     const items = [];
     let truncated3 = false;
     for (const m of members2) {
-      const r = this.#lines.linesOf({ entity: m, kinds: kinds2, direction: "from", limit: READ_LIST_MAX, viewer });
+      const r = this.#lines.linesOf({ entity: m, kinds: kinds3, direction: "from", limit: READ_LIST_MAX, viewer });
       if (r && r.truncated) truncated3 = true;
-      for (const l of listOf3(r)) if (!l.withdrawn && kinds2.includes(l.kind)) items.push(_People.#lineItem(l, m));
+      for (const l of listOf3(r)) if (!l.withdrawn && kinds3.includes(l.kind)) items.push(_People.#lineItem(l, m));
     }
     return { items, truncated: truncated3 };
   }
@@ -94598,10 +94600,10 @@ var People = class _People {
   }
   /** R26: each visible, unwithdrawn claim on `node` as one hop in connection-grammar's shape, evidentiary, its evidence
    *  and grade the claim's. */
-  neighbours({ node, kinds: kinds2 = null, at: at32, page: page2 = null, viewer, scope = null, host: _host = null } = {}) {
+  neighbours({ node, kinds: kinds3 = null, at: at32, page: page2 = null, viewer, scope = null, host: _host = null } = {}) {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-    const want = Array.isArray(kinds2) ? kinds2.filter((k) => CLAIM_KINDS.includes(k)) : [...CLAIM_KINDS];
+    const want = Array.isArray(kinds3) ? kinds3.filter((k) => CLAIM_KINDS.includes(k)) : [...CLAIM_KINDS];
     if (!filled7(node) || this.#denied(viewer) || !want.length) return { items: [] };
     const rows2 = this.#rows(`SELECT * FROM identity_claims WHERE (a=? OR b=?) AND withdrawn_at IS NULL ORDER BY claim_id`, node, node).filter((c) => want.includes(c.kind) && this.#seesProject(c.project, viewer));
     const items = [];
@@ -95948,13 +95950,13 @@ var Calculations = class {
         missing2(plain4(inp) && typeof inp.name === "string" ? inp.name : "(unnamed)");
         break;
       }
-      const kinds2 = KINDS2.filter((k) => inp[k] !== void 0);
-      if (kinds2.length !== 1 || names.has(inp.name)) {
+      const kinds3 = KINDS2.filter((k) => inp[k] !== void 0);
+      if (kinds3.length !== 1 || names.has(inp.name)) {
         missing2(inp.name);
         break;
       }
       names.add(inp.name);
-      const kind = kinds2[0], ref = inp[kind];
+      const kind = kinds3[0], ref = inp[kind];
       if (stringsIn(ref).some(isHypothesisId)) {
         described.push({ name: inp.name, kind, ref, hypothesis: true });
         continue;
@@ -96233,9 +96235,9 @@ var Calculations = class {
       const a = money.find((d) => d.name === "adopted"), b = money.find((d) => d.name === "actual");
       if (!a || !b) return no3("BUDGET_INPUTS", "budget against actuals takes two money inputs, named adopted and actual. Nothing was written.");
       for (const [d, phase] of [[a, "adopted"], [b, "actual"]]) {
-        const phases = [...new Set(bound[d.name].rows.map((r) => r.phase))];
-        if (phases.length !== 1 || phases[0] !== phase)
-          return no3("BUDGET_INPUTS", `the input "${d.name}" holds facts of phase ${phases.join(", ") || "none"}; it holds only ${phase} facts (each total within one phase, R12). Nothing was written.`);
+        const phases2 = [...new Set(bound[d.name].rows.map((r) => r.phase))];
+        if (phases2.length !== 1 || phases2[0] !== phase)
+          return no3("BUDGET_INPUTS", `the input "${d.name}" holds facts of phase ${phases2.join(", ") || "none"}; it holds only ${phase} facts (each total within one phase, R12). Nothing was written.`);
       }
       const periods = [...new Set([...bound.adopted.rows, ...bound.actual.rows].map((r) => r.fiscal_period).filter(Boolean))].sort();
       if (!periods.length) return no3("BUDGET_INPUTS", "no fiscal period could be read for these facts from the profile's fiscal year. Nothing was written.");
@@ -96292,9 +96294,9 @@ var Calculations = class {
     if (!t || !Array.isArray(t.rows)) return null;
     for (const f17 of LINK_KIND_FIELDS) {
       if (!t.fields.some((x) => x.name === f17) || group.by.includes(f17)) continue;
-      const kinds2 = [...new Set(t.rows.map((r) => r[f17]).filter((v) => v !== "" && v != null).map(String))];
-      if (kinds2.length > 1)
-        return no3("SCORE_NOT_A_FACT", `the ranking counts rows of ${kinds2.length} kinds (${kinds2.slice(0, 5).join(", ")}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.`, { field: f17 });
+      const kinds3 = [...new Set(t.rows.map((r) => r[f17]).filter((v) => v !== "" && v != null).map(String))];
+      if (kinds3.length > 1)
+        return no3("SCORE_NOT_A_FACT", `the ranking counts rows of ${kinds3.length} kinds (${kinds3.slice(0, 5).join(", ")}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.`, { field: f17 });
     }
     return null;
   }
@@ -98098,14 +98100,14 @@ function gradingMethodText(version, product = PRODUCT_NAME) {
   if (typeof version !== "string" || !Object.hasOwn(METHOD_TEXT, version)) return null;
   return METHOD_TEXT[version](typeof product === "string" && product.trim() ? product : PRODUCT_NAME);
 }
-function factLeg(l, k, kinds2 = LEG_KINDS) {
+function factLeg(l, k, kinds3 = LEG_KINDS) {
   const o = l && typeof l === "object" ? l : {};
   const target = typeof o.target === "string" ? o.target.trim() : "";
   const s = (v) => typeof v === "string" && v ? v : null;
   return {
     ord: Number.isInteger(o.ord) ? o.ord : k,
     target_id: target,
-    kind: kinds2.includes(o.kind) ? o.kind : "document",
+    kind: kinds3.includes(o.kind) ? o.kind : "document",
     role: typeof o.role === "string" ? o.role : "",
     grade: s(o.grade),
     grade_axis: s(o.grade_axis),
@@ -98130,8 +98132,8 @@ function recomputePair({ legs = [], levels = null, version = null } = {}) {
       detail: "this grading method version is not one this copy holds, so the grade cannot be recomputed here"
     };
   try {
-    const kinds2 = version === V1 ? LEG_KINDS_V1 : LEG_KINDS;
-    const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => factLeg(l, k, kinds2));
+    const kinds3 = version === V1 ? LEG_KINDS_V1 : LEG_KINDS;
+    const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => factLeg(l, k, kinds3));
     const lv = levelsGiven(levels);
     const own4 = (l) => {
       if (l.grade_source === "hunch" || l.grade == null || !STRENGTH_AXES.includes(l.grade_axis)) return null;
@@ -102797,10 +102799,10 @@ var Contradiction = class _Contradiction {
    *  so a chain through it is a lead (connection-grammar R13) and never a basis. A candidate states no dates, so each
    *  item is undetermined at any date asked; it holds no hunch, so `scope` changes nothing. A candidate the viewer may
    *  not see is neither returned nor counted (connection-grammar R7). Writes nothing and records no reader. */
-  neighbours({ node = null, kinds: kinds2 = null, at: _at = null, page: page2 = null, viewer = null, scope: _scope = null } = {}) {
+  neighbours({ node = null, kinds: kinds3 = null, at: _at = null, page: page2 = null, viewer = null, scope: _scope = null } = {}) {
     if (viewer === void 0 || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-    if (Array.isArray(kinds2) && !kinds2.includes(CONNECTION_KIND2)) return { items: [] };
+    if (Array.isArray(kinds3) && !kinds3.includes(CONNECTION_KIND2)) return { items: [] };
     if (typeof node !== "string" || !node.trim()) return { items: [] };
     const n = node.trim();
     const side = (col) => `json_extract(${col}, '$.inquiry') = ? OR json_extract(${col}, '$.project') = ?
@@ -104385,6 +104387,32 @@ CREATE TABLE IF NOT EXISTS reevaluation_capture_level_moves (
   at           TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reevaluation_capture_level_moves_capture ON reevaluation_capture_level_moves (capture_sha, at);
+-- R34 (B1a.11, K1470): AN EVENT'S CHANGE HEARD FROM events.onEventChanged
+-- (its R16): one row per telling of when_moved or participant_re_resolved,
+-- the event, which of the two changed, and the instant this module heard it
+-- (the telling carries none). Kept only when some basis leg names the event,
+-- or an ACT- id aliasing it, when it is told: a telling nothing rests on could
+-- never raise a cause, since the cause needs the telling later than the
+-- dependent's last write. No value is held. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_event_changes (
+  change_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id     TEXT NOT NULL,
+  change       TEXT NOT NULL,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_event_changes_event ON reevaluation_event_changes (event_id, at);
+-- R35 (C:A-10): A CALCULATION'S INPUT CHANGE HEARD FROM
+-- calculations.onInputChanged (its R11): one row per telling, the
+-- calculation, the input that changed, and the instant this module heard it.
+-- Kept only when some basis leg names the calculation, as R34's. No value is
+-- held, and nothing is recomputed here. Append-only.
+CREATE TABLE IF NOT EXISTS reevaluation_input_changes (
+  change_id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  calc_id      TEXT NOT NULL,
+  input        TEXT,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reevaluation_input_changes_calc ON reevaluation_input_changes (calc_id, at);
 -- R25 (N178): WHERE THE NOTICE SWEEP'S PASS STANDS. One row (id 1): the cursor
 -- of the pass part-way (after the last leg a batch read), when that pass began
 -- and when the last complete one began, and the receipt mark: receipt_seq is
@@ -104414,12 +104442,19 @@ var REEVALUATION_TABLES = Object.freeze([
   { name: "reevaluation_level_moves", keys: ["observation"] },
   /* R32: a capture is no bundle, so a single-bundle purge never names one; a whole-store purge clears these. */
   { name: "reevaluation_capture_level_moves", keys: [] },
+  /* R34, R35: an event and a calculation are rows, not bundles, so only a whole-store purge clears these. */
+  { name: "reevaluation_event_changes", keys: [] },
+  { name: "reevaluation_input_changes", keys: [] },
   /* R25: the sweep's one position row is about no bundle, so only a whole-store purge clears it. */
   { name: "reevaluation_sweep", keys: [] }
 ]);
+var NOTICE_COLUMNS = Object.freeze([["newer_content", "TEXT"], ["across", "TEXT"]]);
 function migrateReevaluation(sql) {
   const bare2 = REEVALUATION_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  const have = new Set([...sql.exec(`PRAGMA table_info(reevaluation_notices)`)].map((c) => c.name));
+  for (const [name2, type] of NOTICE_COLUMNS)
+    if (!have.has(name2)) sql.exec(`ALTER TABLE reevaluation_notices ADD COLUMN ${name2} ${type}`);
 }
 
 // src/reevaluation/index.mjs
@@ -104439,6 +104474,15 @@ var DOCKET_KINDS = Object.freeze(["withdrawal", "contested"]);
 var ACCEPTANCE_PAGE = 200;
 var CITED_CASE_MOVED = "cited_case_moved";
 var PUBLISHER_MOVE_KINDS = Object.freeze(["edition", "withdrawal"]);
+var EVENT_CHANGED = "event_changed";
+var EVENT_CHANGES = Object.freeze(["when_moved", "participant_re_resolved"]);
+var CALCULATION_INPUT_CHANGED = "calculation_input_changed";
+var EVENT_REF = /^EVT-/;
+var ACT_REF = /^ACT-/;
+var CALC_REF = /^CALC-/;
+var isRowTarget = (id) => typeof id === "string" && (EVENT_REF.test(id) || ACT_REF.test(id) || CALC_REF.test(id) || id.startsWith("occurrence:"));
+var STANDARDS_PAGE = 200;
+var ACROSS_UNDETERMINED_WHY = "the newer version is held at another address, and content compares a passage only along one address's version chain, so whether the change touches this passage is undetermined; that is not the same as unaffected";
 var MOVES_PAGE = 200;
 var CITED_LIMIT_DEFAULT = 200;
 var CITED_LIMIT_MAX = 200;
@@ -104454,10 +104498,13 @@ var CAUSE_SOURCES = Object.freeze([
   ...DOCKET_KINDS,
   "acceptance",
   CITED_CASE_MOVED,
+  EVENT_CHANGED,
+  CALCULATION_INPUT_CHANGED,
   ...REEVAL_SOURCES,
   "weakened"
 ]);
 var CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on was named wrong was not read and no corrected cause could be derived; that is not the same as none";
+var STANDARDS_UNREAD = "the held standards, or the addresses a provision has been held under, could not all be read, so a notice of a newer version at another address may be missing; that is not the same as none";
 var CASE_PARTS_ABSENT = "no module has registered the cited parts of a case edition, so which cases a project owns was not read and no wp_retraction cause could be derived; that is not the same as none";
 var WORK_PRODUCTS_UNREAD = "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none";
 var WORK_PRODUCT_CASES_PAGE = 200;
@@ -104505,6 +104552,14 @@ function attributionDetail(m) {
   if (m.capture_sha)
     return `the credit level of the member attesting capture ${m.capture_sha.slice(0, 12)} moved from ${m.level_before} to ${m.level_after}${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}: how the member who attests it is identified has changed.`;
   return `the credit level of the observation ${m.observation} moved from ${m.level_before} to ${m.level_after}${m.case_id ? ` in case ${m.case_id}` : ""}${m.edition != null ? ` at edition ${m.edition}` : ""}, at ${m.at}: how the member who gave it is identified has changed.`;
+}
+function parseAcross(v) {
+  try {
+    const o = JSON.parse(v);
+    return o && typeof o === "object" ? o : null;
+  } catch {
+    return null;
+  }
 }
 function moveOf(x) {
   const move = str12(x.move), imp = str12(x.import);
@@ -104563,6 +104618,9 @@ var Reevaluation = class {
     contradiction = null,
     sources = null,
     acceptedWork = null,
+    events = null,
+    calculations = null,
+    standards = null,
     now = null,
     env = null
   } = {}) {
@@ -104570,7 +104628,21 @@ var Reevaluation = class {
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction, sources, acceptedWork };
+    this.#deps = {
+      host,
+      inquiry,
+      content,
+      connections,
+      provenance,
+      strength,
+      basisVersions,
+      contradiction,
+      sources,
+      acceptedWork,
+      events,
+      calculations,
+      standards
+    };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     this.env = env && typeof env === "object" ? env : {};
   }
@@ -104595,6 +104667,15 @@ var Reevaluation = class {
   }
   get sources() {
     return this.#deps.sources ||= sourcesOf(this.#deps.host);
+  }
+  get events() {
+    return this.#deps.events ||= eventsOf(this.#deps.host);
+  }
+  get calculations() {
+    return this.#deps.calculations ||= calculationsOf(this.#deps.host);
+  }
+  get standards() {
+    return this.#deps.standards ||= standardsOf(this.#deps.host);
   }
   get acceptedWork() {
     return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record, promotion: this.promotion });
@@ -104714,6 +104795,7 @@ var Reevaluation = class {
    *  `wp` the answer's work-product reader (`#workProducts`), `dk` its docket reader (`#docket`). */
   #moved(targetId, visible, reg, wp = this.#workProducts(), dk = this.#docket()) {
     if (isRef2(targetId)) return null;
+    if (isRowTarget(targetId)) return null;
     const row4 = this.#targetRow(targetId);
     if (!row4)
       return {
@@ -105852,13 +105934,220 @@ var Reevaluation = class {
     }, out);
     return out;
   }
+  /* ---------------------------------------------------------------- R34, R35: an event or a calculation changed */
+  /* R34: the event an id a leg names stands for: an `EVT-` id itself, or the event `events.eventForAct` answers for an
+     `ACT-` id (its R21); null for any other id, or when events cannot say. Memoised in `memo` for one answer. */
+  #eventOf(id, memo = /* @__PURE__ */ new Map()) {
+    if (memo.has(id)) return memo.get(id);
+    let e = null;
+    if (EVENT_REF.test(id)) e = id;
+    else if (ACT_REF.test(id)) {
+      let a = null;
+      try {
+        a = this.events.eventForAct(id);
+      } catch {
+        a = null;
+      }
+      e = a && a.found === true && typeof a.event_id === "string" && a.event_id ? a.event_id : null;
+    }
+    memo.set(id, e);
+    return e;
+  }
+  /* R34: the ids a basis leg may name for one event: the event and every `ACT-` id a leg names that aliases it. */
+  #namesOfEvent(eventId3) {
+    const acts = this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE target_id LIKE 'ACT-%' ORDER BY target_id`).map((r) => r.target_id);
+    const memo = /* @__PURE__ */ new Map();
+    return [eventId3, ...acts.filter((a) => this.#eventOf(a, memo) === eventId3)];
+  }
+  /* R34, R35: the live legs (R7) resting on any of `targets`, each `{bundle_id, ord, role, state, target}`, as the plane
+     reads them (a listener is the plane's own; no viewer is asked). Direct dependents only: a dependent's own
+     dependents are not walked (Choices 19). */
+  #liveLegsOn(targets) {
+    const live6 = this.#liveOn(targets);
+    const out = [];
+    for (const t of new Set(targets))
+      for (const x of live6.get(t).values())
+        out.push({ bundle_id: x.bundle_id, ord: x.ord, role: x.role ?? null, state: x.state ?? null, target: t });
+    return out.sort((a, b) => (a.bundle_id < b.bundle_id ? -1 : a.bundle_id > b.bundle_id ? 1 : 0) || a.ord - b.ord);
+  }
+  /** R34, R8: the listener registered with `events.onEventChanged` (its R16), called after an event's change commits with
+   *  `{eventId, change, …}`. A `when_moved` or `participant_re_resolved` telling about an event some basis leg names
+   *  (itself, or an `ACT-` id aliasing it) is kept as one row (R18: the event, the change and this module's instant; no
+   *  value), then told to R8's listeners as `kind: "event_changed"` with the live legs resting on it, direct dependents
+   *  only. Any other change, or a telling nothing rests on, writes nothing. It moves nothing and never throws. */
+  eventChanged({ eventId: eventId3 = null, change: change2 = null } = {}) {
+    try {
+      const id = str12(eventId3);
+      if (!id || !EVENT_CHANGES.includes(change2)) return { ok: true, kept: false };
+      const names = this.#namesOfEvent(id);
+      if (!this.#one(
+        `SELECT 1 AS x FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?)) LIMIT 1`,
+        JSON.stringify(names)
+      ))
+        return { ok: true, kept: false, dependents: 0 };
+      const at32 = this.#when();
+      this.sql.exec(`INSERT INTO reevaluation_event_changes (event_id, change, at) VALUES (?,?,?)`, id, change2, at32);
+      let dependents = [];
+      try {
+        dependents = this.#liveLegsOn(names);
+      } catch {
+        dependents = [];
+      }
+      const out = { ok: true, kept: true, at: at32, dependents: dependents.length };
+      this.#tellAfterCommit({
+        kind: EVENT_CHANGED,
+        subject: id,
+        source: EVENT_CHANGED,
+        since: at32,
+        change: change2,
+        detail: `the event ${id} ${change2 === "when_moved" ? "moved in time" : "had a participant re-resolved"}; ${dependents.length ? "what rests on it directly is named" : "nothing live here rests on it"}`,
+        dependents
+      }, out);
+      return out;
+    } catch {
+      return { ok: true, kept: false };
+    }
+  }
+  /** R35, R8: the listener registered with `calculations.onInputChanged` (its R11), called after an input change commits
+   *  with `{calcId, input, cause}`. A telling about a calculation some basis leg names is kept as one row (R18: the
+   *  calculation, the input and this module's instant; no value), then told to R8's listeners as
+   *  `kind: "calculation_input_changed"` with the live legs resting on it, direct dependents only. Nothing is recomputed
+   *  here. A telling nothing rests on writes nothing. It never throws. */
+  inputChanged({ calcId = null, input = null } = {}) {
+    try {
+      const id = str12(calcId);
+      if (!id) return { ok: true, kept: false };
+      if (!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE target_id = ? LIMIT 1`, id))
+        return { ok: true, kept: false, dependents: 0 };
+      const at32 = this.#when();
+      const inp = input == null ? null : String(input);
+      this.sql.exec(`INSERT INTO reevaluation_input_changes (calc_id, input, at) VALUES (?,?,?)`, id, inp, at32);
+      let dependents = [];
+      try {
+        dependents = this.#liveLegsOn([id]);
+      } catch {
+        dependents = [];
+      }
+      const out = { ok: true, kept: true, at: at32, dependents: dependents.length };
+      this.#tellAfterCommit({
+        kind: CALCULATION_INPUT_CHANGED,
+        subject: id,
+        source: CALCULATION_INPUT_CHANGED,
+        since: at32,
+        input: inp,
+        detail: `an input of the calculation ${id}${inp ? ` (${inp})` : ""} changed; the calculation is recomputed only by its own module's act; ${dependents.length ? "what rests on it directly is named" : "nothing live here rests on it"}`,
+        dependents
+      }, out);
+      return out;
+    } catch {
+      return { ok: true, kept: false };
+    }
+  }
+  /** R34, R35: the `event_changed` and `calculation_input_changed` causes on `legs` (`inquiry_basis` rows), for a
+   *  viewer's visible dependents. A live leg (R7) naming an event (or an `ACT-` id `eventForAct` answers as one) carries
+   *  one per kept telling about that event, and a live leg naming a calculation one per kept telling about it, when the
+   *  telling came after the dependent's last write (`bundles.last_updated`). Answers `{byPair}` keyed
+   *  `<dependent>\0<target>`, each list latest telling first, then ord. Reads only; moves nothing (R19). */
+  #heardChanges(legs, visible) {
+    const byPair = /* @__PURE__ */ new Map();
+    const anyEvent = !!this.#one(`SELECT 1 AS x FROM reevaluation_event_changes LIMIT 1`);
+    const anyInput = !!this.#one(`SELECT 1 AS x FROM reevaluation_input_changes LIMIT 1`);
+    if (!anyEvent && !anyInput) return { byPair };
+    const rows2 = legs.filter((l) => l && l.bundle_id && l.target_id && visible(l.bundle_id) !== null && (EVENT_REF.test(l.target_id) || ACT_REF.test(l.target_id) || CALC_REF.test(l.target_id)));
+    if (!rows2.length) return { byPair };
+    const memo = /* @__PURE__ */ new Map();
+    const eventOf = /* @__PURE__ */ new Map();
+    if (anyEvent)
+      for (const t of new Set(rows2.map((l) => l.target_id).filter((t2) => !CALC_REF.test(t2)))) {
+        const e = this.#eventOf(t, memo);
+        if (e) eventOf.set(t, e);
+      }
+    const group = (list4, key) => {
+      const m = /* @__PURE__ */ new Map();
+      for (const x of list4) {
+        if (!m.has(x[key])) m.set(x[key], []);
+        m.get(x[key]).push(x);
+      }
+      return m;
+    };
+    const evIds = [...new Set(eventOf.values())];
+    const evMoves = group(evIds.length ? this.#rows(`SELECT change_id, event_id, change, at FROM reevaluation_event_changes
+      WHERE event_id IN (SELECT value FROM json_each(?)) ORDER BY event_id, change_id`, JSON.stringify(evIds)) : [], "event_id");
+    const calcIds = anyInput ? [...new Set(rows2.map((l) => l.target_id).filter((t) => CALC_REF.test(t)))] : [];
+    const inMoves = group(calcIds.length ? this.#rows(`SELECT change_id, calc_id, input, at FROM reevaluation_input_changes
+      WHERE calc_id IN (SELECT value FROM json_each(?)) ORDER BY calc_id, change_id`, JSON.stringify(calcIds)) : [], "calc_id");
+    const movesOn = (l) => CALC_REF.test(l.target_id) ? inMoves.get(l.target_id) || [] : evMoves.get(eventOf.get(l.target_id)) || [];
+    const deps = [...new Set(rows2.filter((l) => movesOn(l).length).map((l) => l.bundle_id))];
+    if (!deps.length) return { byPair };
+    const written = new Map(this.#rows(
+      `SELECT bundle_id, last_updated FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+      JSON.stringify(deps),
+      deps.length
+    ).map((r) => [r.bundle_id, r.last_updated]));
+    const hits = [];
+    for (const l of rows2)
+      for (const m of movesOn(l))
+        if (laterThan(m.at, written.get(l.bundle_id))) hits.push({ l, m });
+    if (!hits.length) return { byPair };
+    const live6 = this.#liveOn(hits.map((h) => h.l.target_id));
+    for (const { l, m } of hits) {
+      if (!live6.get(l.target_id).has(`${l.bundle_id}\0${l.ord}`)) continue;
+      const pk = `${l.bundle_id}\0${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      if (m.calc_id)
+        byPair.get(pk).push({
+          source: CALCULATION_INPUT_CHANGED,
+          since: m.at,
+          ord: l.ord,
+          calculation: m.calc_id,
+          input: m.input ?? null,
+          detail: `an input of the calculation ${m.calc_id}${m.input ? ` (${m.input})` : ""}, which this leg rests on, changed at ${m.at}. The calculation is recomputed only by its own module's act (at acceptance, at publication and in the checker), never here, and the leg is unchanged; whether this finding still stands is the members' to decide.`
+        });
+      else
+        byPair.get(pk).push({
+          source: EVENT_CHANGED,
+          since: m.at,
+          ord: l.ord,
+          event: m.event_id,
+          change: m.change,
+          ...l.target_id !== m.event_id ? { act: l.target_id } : {},
+          detail: `the event ${m.event_id}${l.target_id !== m.event_id ? ` (named on this leg as ${l.target_id})` : ""}, which this leg rests on, ${m.change === "when_moved" ? "moved in time: when the record places it changed" : "had a participant re-resolved: who the record says took part changed"}, at ${m.at}. Only what rests on the event directly is told; a finding resting on this one takes its own second look. The leg is unchanged; whether this finding still stands is the members' to decide.`
+        });
+    }
+    for (const list4 of byPair.values())
+      list4.sort((a, b) => (a.since < b.since ? 1 : a.since > b.since ? -1 : 0) || a.ord - b.ord);
+    return { byPair };
+  }
+  /* R20 (R34): whether a viewer may see an event a leg names (itself, or an `ACT-` id aliasing it), by events' own read
+     (its R26): an event it does not answer for this viewer is not seen. A machine credential is not filtered. */
+  #eventSeen(id, viewer, memo = /* @__PURE__ */ new Map()) {
+    if (viewerPredicate(viewer).scope === "member") return true;
+    const e = this.#eventOf(id, memo);
+    if (!e) return false;
+    let r = null;
+    try {
+      r = this.events.readEvent({ eventId: e, viewer });
+    } catch {
+      r = null;
+    }
+    return !!r && r.ok !== false && r.found === true;
+  }
+  /* R1, R20: whether a viewer may see a target: a ref through accepted work (R1), an event through events (R34), a
+     bundle through membership; any other row (a calculation, an occurrence) is not seen by a member, since no read here
+     can say it may be (fail closed), and is seen by a machine credential. */
+  #targetSeer(viewer, refs = this.#refSeer(viewer)) {
+    const visible = this.#redactor(viewer);
+    const memo = /* @__PURE__ */ new Map();
+    return (t) => isRef2(t) ? refs.seen(t) : EVENT_REF.test(t) || ACT_REF.test(t) ? this.#eventSeen(t, viewer, memo) : visible(t) !== null;
+  }
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
   /** R1–R6: the re-evaluation obligation, derived on read. With `target`, the dependents of one moved thing (and, R17,
    *  that thing itself if its derivation weakened under a published edition); with none, every id a basis leg names. */
   reevaluations({ target = null, viewer = null } = {}) {
     const t0 = str12(target);
     const refs = this.#refSeer(viewer);
-    if (t0 && (isRef2(t0) ? !refs.seen(t0) : !this.#visible(t0, viewer)))
+    const seenTarget = this.#targetSeer(viewer, refs);
+    if (t0 && !(isRef2(t0) || EVENT_REF.test(t0) || ACT_REF.test(t0) ? seenTarget(t0) : this.#visible(t0, viewer)))
       return { ok: false, reason: "NO_SUCH_BUNDLE", target: t0, ...refs.flags() };
     const targets = t0 ? [t0] : this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis ORDER BY target_id`).map((r) => r.target_id);
     const dependents = t0 ? [t0] : this.#rows(`SELECT DISTINCT bundle_id FROM inquiry_basis ORDER BY bundle_id`).map((r) => r.bundle_id);
@@ -105881,18 +106170,20 @@ var Reevaluation = class {
     const wdr = this.#withdrawn(onTargets, all, dk);
     const acc = this.#acceptanceOn(onTargets, all, aw, viewer);
     const cmv = this.#citedMovedOn(onTargets, all, mv, (ref) => refs.seen(ref));
+    const hrd = this.#heardChanges(onTargets, all);
     const correctedOn = new Set([
       ...corr.byPair.keys(),
       ...srcm.byPair.keys(),
       ...lvlm.byPair.keys(),
       ...wdr.byPair.keys(),
       ...acc.byPair.keys(),
-      ...cmv.byPair.keys()
+      ...cmv.byPair.keys(),
+      ...hrd.byPair.keys()
     ].map((k) => k.slice(k.indexOf("\0") + 1)));
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg, wp, dk);
       if (!moved && !correctedOn.has(t)) continue;
-      if (!t0 && !(moved && moved.held === false) && (isRef2(t) ? !refs.seen(t) : visible(t) === null)) continue;
+      if (!t0 && !(moved && moved.held === false) && !seenTarget(t)) continue;
       if (moved && moved.withheld) withheld = true;
       const own4 = moved ? { state: moved.state, object_type: moved.object_type } : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t) || { state: null, object_type: null };
       const rest = this.inquiry.restingOn(t);
@@ -105933,7 +106224,8 @@ var Reevaluation = class {
           ...lvlm.byPair.get(`${bundleId}\0${t}`) || [],
           ...wdr.byPair.get(`${bundleId}\0${t}`) || [],
           ...acc.byPair.get(`${bundleId}\0${t}`) || [],
-          ...cmv.byPair.get(`${bundleId}\0${t}`) || []
+          ...cmv.byPair.get(`${bundleId}\0${t}`) || [],
+          ...hrd.byPair.get(`${bundleId}\0${t}`) || []
         );
         if (!causes.length) continue;
         place({
@@ -106144,7 +106436,8 @@ var Reevaluation = class {
   }
   /* ---------------------------------------------------------------- R9: the recovery read */
   /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, R17's, and R27's
-   *  `corrected`, R28's `source`, R29's `attribution`, R30's, R31's `acceptance` and R33's `cited_case_moved` causes the finding carries on its
+   *  `corrected`, R28's `source`, R29's `attribution`, R30's, R31's `acceptance`, R33's `cited_case_moved` and R34's and
+   *  R35's `event_changed` and `calculation_input_changed` causes the finding carries on its
    *  own legs, each naming its target, less those a recorded re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
    *  answer as absent. Writes nothing. */
   changesOf({ findings = null, contents = null, viewer = null } = {}) {
@@ -106219,11 +106512,12 @@ var Reevaluation = class {
       ...mv.flags()
     };
   }
-  /* R9, R27 (and R28, R29, R30, R31, R33 `withSource`): the corrected (and source, attribution, withdrawal, contested,
-     acceptance and cited_case_moved) causes the
+  /* R9, R27 (and R28–R31, R33–R35 `withSource`): the corrected (and source, attribution, withdrawal, contested,
+     acceptance, cited_case_moved, event_changed and calculation_input_changed) causes the
      named dependents carry on their own legs, each with its `target`, less those a recorded re-evaluation closed (R16).
      `byDependent` keyed by dependent, in (target, ord, candidate) order, each target's source causes after its corrected
-     ones, its attribution causes after those, then its withdrawal, acceptance and cited_case_moved causes; a contested
+     ones, its attribution causes after those, then its withdrawal, acceptance, cited_case_moved and heard (R34, R35)
+     causes; a contested
      cause names the finding itself
      as its target. */
   #standingCorrected(dependents, viewer, visible, { withSource = false, dk = null, aw = null, mv = null } = {}) {
@@ -106242,7 +106536,8 @@ var Reevaluation = class {
         this.#levelMoves(legs, visible),
         ...dk ? [this.#withdrawn(legs, visible, dk)] : [],
         ...aw ? [this.#acceptanceOn(legs, visible, aw, viewer)] : [],
-        ...mv ? [this.#citedMovedOn(legs, visible, mv, (ref) => refs.seen(ref))] : []
+        ...mv ? [this.#citedMovedOn(legs, visible, mv, (ref) => refs.seen(ref))] : [],
+        this.#heardChanges(legs, visible)
       ];
       for (const moves of moved)
         for (const [k, list4] of moves.byPair) corr.byPair.set(k, [...corr.byPair.get(k) || [], ...list4]);
@@ -106801,6 +107096,7 @@ var Reevaluation = class {
     const rows2 = new Map((ids.length ? this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content
                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length) : []).map((r) => [r.content_id, r]));
     const memo = /* @__PURE__ */ new Map(), noticeMemo = /* @__PURE__ */ new Map();
+    const across = this.#acrossReader(legs.length > 0);
     const cases = truncated3 ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
     const raised = [];
@@ -106819,18 +107115,16 @@ var Reevaluation = class {
           }
           noticeMemo.set(l.content_id, n);
         }
-        if (!n || n.state === "chain_unread") {
-          unread++;
-          continue;
-        }
-        for (const c of n.candidates || []) {
+        const chained = !!n && n.state !== "chain_unread";
+        if (!chained) unread++;
+        for (const c of [...chained ? n.candidates || [] : [], ...across.of(row4)]) {
           if (!RAISED_ON.includes(c.affects)) continue;
           const id = `RN-${sha256HexSync(`${l.holder}\0${l.ord}\0${l.content_id}\0${c.capture_sha}`).slice(0, 24)}`;
           if (this.#one(`SELECT 1 AS x FROM reevaluation_notices WHERE notice_id=?`, id)) continue;
           this.sql.exec(
             `INSERT INTO reevaluation_notices (notice_id, holder, ord, content_id, target_id, capture_sha, newer_capture,
-                                               newer_bundle, grade, affects, raised_at, state)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?, 'open')`,
+                                               newer_bundle, grade, affects, raised_at, state, newer_content, across)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?, 'open', ?, ?)`,
             id,
             l.holder,
             l.ord,
@@ -106841,7 +107135,9 @@ var Reevaluation = class {
             c.bundle_id ?? null,
             c.grade ?? null,
             c.affects,
-            when
+            when,
+            c.across ? c.content_id : null,
+            c.across ? JSON.stringify(c.across) : null
           );
           raised.push({
             notice: id,
@@ -106852,7 +107148,8 @@ var Reevaluation = class {
             capture_sha: row4.capture_sha,
             newer_capture: c.capture_sha,
             grade: c.grade ?? null,
-            affects: c.affects
+            affects: c.affects,
+            ...c.across ? { newer_content: c.content_id, across: c.across } : {}
           });
         }
       }
@@ -106918,6 +107215,7 @@ var Reevaluation = class {
       limit: cap,
       truncated: truncated3,
       cursor,
+      ...across.read() ? {} : { standards_read: false, standards_why: STANDARDS_UNREAD },
       ...cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none" } : {},
       says: "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer capture to that case's owners, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference"
     };
@@ -106939,16 +107237,139 @@ var Reevaluation = class {
         subject: r.content_id,
         source: "newer_capture",
         since: when,
-        detail: `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades this passage ${r.grade ?? "undetermined"} (${r.affects})`,
+        detail: r.across ? `a newer version of the same portion of law (${r.across.key}, ${r.across.portion}) is held at another address (${r.newer_capture.slice(0, 12)}); whether it touches this passage is undetermined` : `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades this passage ${r.grade ?? "undetermined"} (${r.affects})`,
         dependents: [{ bundle_id: r.holder, ord: r.ord }],
         captures: { cited: r.capture_sha, newer: r.newer_capture },
         grade: r.grade,
         affects: r.affects,
-        notice: r.notice
+        notice: r.notice,
+        ...r.across ? { across: r.across, newer_content: r.newer_content } : {}
       };
       this.#tellAfterCommit(told, out);
     }
     return out;
+  }
+  /** R36 (X73, K1446): R14's notice across addresses, for one sweep batch. A reference pinned to a held standard's
+   *  portion (its content id is the portion's content id, `standards` R18) has a newer version at another address when
+   *  `standards` holds the same instrument key and portion at another capture, or holds the key and portion a
+   *  member-recorded renumbering or recodification names (`addressesOf`, its R24), and that capture was first retrieved
+   *  after the pinned one (provenance's `captured_locators`, R48) and is held at none of the addresses the pinned
+   *  capture is: an address is never matched to another by its text. Content grades a passage only along one address's
+   *  version chain, so each such version is graded UNDETERMINED by name (R21). `enabled` false reads nothing. Answers
+   *  `{of(row), read()}`: `of` the candidates for one content row, each `{capture_sha, bundle_id, content_id, grade,
+   *  affects, why, across}`; `read` false when the standards could not all be read. Reads only. */
+  #acrossReader(enabled) {
+    let index = null, ok2 = true;
+    const load = () => {
+      if (index) return index;
+      index = { byPortion: /* @__PURE__ */ new Map(), byKeyPortion: /* @__PURE__ */ new Map(), byId: /* @__PURE__ */ new Map() };
+      const kp = (k, p3) => `${k}\0${p3}`;
+      const push = (map, k, v) => {
+        if (!map.has(k)) map.set(k, []);
+        map.get(k).push(v);
+      };
+      const seen = /* @__PURE__ */ new Set();
+      let after = null;
+      for (; ; ) {
+        let page2 = null;
+        try {
+          page2 = this.standards.standardsIn({ after, limit: STANDARDS_PAGE, viewer: MACHINE_ADMIN });
+        } catch {
+          page2 = null;
+        }
+        if (!page2 || page2.ok === false || !Array.isArray(page2.items)) {
+          ok2 = false;
+          break;
+        }
+        for (const it of page2.items) {
+          const key = it && it.instrument && it.instrument.state === "composed" ? str12(it.instrument.key) : null;
+          const portion = it && it.portion ? str12(it.portion.path) : null;
+          const content = it && it.portion ? str12(it.portion.content_id) : null;
+          if (!key || !portion || !content || !str12(it.id)) continue;
+          const sd = { id: it.id, key, portion, content };
+          index.byId.set(sd.id, sd);
+          push(index.byPortion, content, sd);
+          push(index.byKeyPortion, kp(key, portion), sd);
+        }
+        const next = typeof page2.cursor === "string" ? page2.cursor : null;
+        if (!page2.truncated || !next || seen.has(next)) break;
+        seen.add(next);
+        after = next;
+      }
+      index.kp = kp;
+      return index;
+    };
+    const memo = /* @__PURE__ */ new Map();
+    const placed = (capture) => {
+      const at32 = this.#rows(`SELECT address_norm, MIN(first_retrieved) AS first FROM captured_locators WHERE capture_sha=?
+                              GROUP BY address_norm ORDER BY address_norm`, capture);
+      const firsts = at32.map((r) => r.first).filter((x) => typeof x === "string" && x).sort();
+      return { addresses: new Set(at32.map((r) => r.address_norm).filter(Boolean)), first: firsts[0] ?? null };
+    };
+    const of = (row4) => {
+      if (!enabled || !row4 || !row4.content_id) return [];
+      if (memo.has(row4.content_id)) return memo.get(row4.content_id);
+      const out = [];
+      memo.set(row4.content_id, out);
+      const idx = load();
+      const own4 = idx.byPortion.get(row4.content_id) || [];
+      if (!own4.length) return out;
+      const pinned = placed(row4.capture_sha);
+      const cands = /* @__PURE__ */ new Map();
+      const add2 = (from, to, via) => {
+        if (to.id !== from.id && !cands.has(to.content)) cands.set(to.content, { from, to, via });
+      };
+      for (const sd of own4) {
+        for (const o of idx.byKeyPortion.get(idx.kp(sd.key, sd.portion)) || [])
+          add2(sd, o, { type: "same_instrument", relation: null, effective: null });
+        let a = null;
+        try {
+          a = this.standards.addressesOf({ key: sd.key, portion: sd.portion });
+        } catch {
+          a = null;
+        }
+        if (!a || !Array.isArray(a.addresses)) {
+          ok2 = false;
+          continue;
+        }
+        if (a.truncated) ok2 = false;
+        for (const x of a.addresses) {
+          const via = {
+            type: x.via ? x.via.type ?? null : null,
+            relation: x.via ? x.via.relation ?? null : null,
+            effective: x.via ? x.via.effective ?? null : null
+          };
+          const named = idx.byId.get(x.standard);
+          if (named) add2(sd, named, via);
+          if (x.key && x.portion) for (const o of idx.byKeyPortion.get(idx.kp(x.key, x.portion)) || []) add2(sd, o, via);
+        }
+      }
+      if (!cands.size) return out;
+      const rows2 = new Map(this.#rows(
+        `SELECT content_id, capture_sha, bundle_id FROM content
+                                        WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+        JSON.stringify([...cands.keys()]),
+        cands.size
+      ).map((r) => [r.content_id, r]));
+      for (const [content, { from, to, via }] of [...cands.entries()].sort((x, y) => x[0] < y[0] ? -1 : 1)) {
+        const r = rows2.get(content);
+        if (!r || !r.capture_sha || r.capture_sha === row4.capture_sha) continue;
+        const there = placed(r.capture_sha);
+        if (!there.addresses.size || [...there.addresses].some((x) => pinned.addresses.has(x))) continue;
+        if (!there.first || !pinned.first || !laterThan(there.first, pinned.first)) continue;
+        out.push({
+          capture_sha: r.capture_sha,
+          bundle_id: r.bundle_id,
+          content_id: content,
+          grade: "UNDETERMINED",
+          affects: "undetermined",
+          why: ACROSS_UNDETERMINED_WHY,
+          across: { from_standard: from.id, standard: to.id, key: to.key, portion: to.portion, via }
+        });
+      }
+      return out;
+    };
+    return { of, read: () => ok2 };
   }
   /* R26: R14's case half for one batch: the ratified cases after `afterCase`, one counting one toward `budget`, each
      cited part graded at the capture the edition pinned (its `capture_sha`, K365). Reads only; the caller writes. `cursor` is the last case read when more
@@ -107034,6 +107455,8 @@ var Reevaluation = class {
       closed_at: r.closed_at,
       why: r.why,
       adopted_version: r.adopted_version,
+      /* R36: a notice raised across addresses names the passage there and what links the two addresses. */
+      ...r.across ? { newer_content: r.newer_content ?? null, across: parseAcross(r.across) } : {},
       ...r.kind === "case" ? { case: {
         case: r.holder,
         edition: r.edition,
@@ -107050,12 +107473,12 @@ var Reevaluation = class {
       `SELECT * FROM (
          SELECT 'leg' AS kind, n.notice_id, n.holder, n.ord, n.content_id, n.target_id, n.capture_sha, n.newer_capture,
                 n.newer_bundle, n.grade, n.affects, n.raised_at, n.state, n.closed_by, n.closed_at, n.why,
-                n.adopted_version, NULL AS edition, NULL AS project
+                n.adopted_version, NULL AS edition, NULL AS project, n.newer_content, n.across
            FROM reevaluation_notices n JOIN bundles b ON b.bundle_id = n.holder WHERE (${g.sql})
          UNION ALL
          SELECT 'case' AS kind, c.notice_id, c.case_id, c.ord, NULL, c.part, c.capture_sha, c.newer_capture,
                 c.newer_bundle, c.grade, c.affects, c.raised_at, c.state, c.closed_by, c.closed_at, c.why,
-                NULL, c.edition, c.project
+                NULL, c.edition, c.project, NULL, NULL
            FROM reevaluation_case_notices c
           WHERE ? = 1 OR EXISTS (SELECT 1 FROM json_each(c.owners) o WHERE o.value = ?)
        ) WHERE ${where} ${tail2}`,
@@ -107103,7 +107526,12 @@ var Reevaluation = class {
     const list4 = rows2.slice(0, cap).map((r) => ({
       ...this.#noticeView(r),
       newer_bundle: visible(r.newer_bundle),
-      ...seesCapture(r.newer_capture) ? {} : { newer_capture: null, grade: null, affects: null }
+      ...seesCapture(r.newer_capture) ? {} : {
+        newer_capture: null,
+        grade: null,
+        affects: null,
+        ...r.across ? { newer_content: null } : {}
+      }
     }));
     return {
       ok: true,
@@ -107264,8 +107692,8 @@ var Reevaluation = class {
       extent = null;
     }
     const home = r.newer_bundle || r.target_id;
-    const held = old ? this.#one(`SELECT content_id FROM content WHERE capture_sha=? AND extent=? AND bundle_id=?
-                                   ORDER BY content_id LIMIT 1`, r.newer_capture, old.extent, home) : null;
+    const held = r.newer_content ? { content_id: r.newer_content } : old ? this.#one(`SELECT content_id FROM content WHERE capture_sha=? AND extent=? AND bundle_id=?
+                          ORDER BY content_id LIMIT 1`, r.newer_capture, old.extent, home) : null;
     const when = this.#when();
     const KEEP = [
       "target",
@@ -107330,7 +107758,7 @@ var Reevaluation = class {
     if (!VERSION_NAME_RE.test(name2))
       return this.#refuse("VERSION_ADOPT_UNWRITABLE", `no version name could be formed for ${r.holder}.`, { notice: r.notice_id });
     const line = text6.replace(/\s*[\r\n]+\s*/g, " ");
-    const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}: leg ${r.ord} rests on capture ${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). Every other leg is as the live basis holds it. Why: ${line}`;
+    const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}${r.newer_content ? ", at another address" : ""}: leg ${r.ord} rests on capture ${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). Every other leg is as the live basis holds it. Why: ${line}`;
     const answer = this.record.transact(() => {
       const w = this.basisVersions.appendVersion({
         target: r.holder,
@@ -107443,7 +107871,7 @@ Why: ${line}
     if (!dep || !tgt || !src || !CAUSE_SOURCES.includes(src))
       return noCause(`pass dependent=<the finding looked at>, target=<what moved under it> and source=<one of ${CAUSE_SOURCES.join(", ")}>.`);
     if (!this.#visible(dep, viewer)) return noCause(`no finding by the id '${dep.slice(0, 60)}' is readable here.`);
-    const ob = (isRef2(tgt) ? this.#refSeer(viewer).seen(tgt) : this.#visible(tgt, viewer)) || tgt === dep ? this.reevaluations({ target: tgt, viewer }) : { ok: true, obligations: [] };
+    const ob = this.#targetSeer(viewer)(tgt) || tgt === dep ? this.reevaluations({ target: tgt, viewer }) : { ok: true, obligations: [] };
     const hit = ob.ok ? (ob.obligations || []).find((o) => o.bundle_id === dep && o.target === tgt) : null;
     const cause = hit ? hit.causes.find((c) => c.source === src && (since == null || String(c.since) === String(since))) : null;
     if (!cause)
@@ -107521,6 +107949,8 @@ function reevaluationOf(host, deps) {
     record.registerAuditCheck("reevaluation", (image) => r.audit(image));
     r.provenance.onReceipt("reevaluation", () => r.receiptSeen());
     r.sources.onDisclosure("reevaluation", (move) => r.sourceMoved(move));
+    r.events.onEventChanged("reevaluation", (e) => r.eventChanged(e || {}));
+    r.calculations.onInputChanged("reevaluation", (e) => r.inputChanged(e || {}));
   }
   return r;
 }
@@ -108361,7 +108791,7 @@ function caseFileManifestCheck(manifest) {
     const files = Array.isArray(manifest.files) ? manifest.files : null;
     if (!files) no5("files", "files", "the manifest lists every file of the case file");
     const paths = /* @__PURE__ */ new Set();
-    const kinds2 = /* @__PURE__ */ new Map();
+    const kinds3 = /* @__PURE__ */ new Map();
     const indices = new Set((parts || []).map((p3) => plain5(p3) ? p3.index : null));
     (files || []).forEach((f17, i) => {
       const at32 = `files[${i}]`;
@@ -108379,7 +108809,7 @@ function caseFileManifestCheck(manifest) {
       if (typeof f17.sha256 !== "string" || !HEX646.test(f17.sha256)) no5(`${at32}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f17.sha256)}`);
       if (!Number.isSafeInteger(f17.bytes) || f17.bytes < 0) no5(`${at32}.bytes`, "bytes", `a file's size is a whole number of bytes, and this is ${shown(f17.bytes)}`);
       if (!indices.has(f17.part) || f17.part == null) no5(`${at32}.part`, "part", `a file is in one of the parts listed, and this one names ${shown(f17.part)}`);
-      if (CASE_FILE_KINDS.includes(f17.kind)) kinds2.set(f17.kind, [...kinds2.get(f17.kind) || [], f17]);
+      if (CASE_FILE_KINDS.includes(f17.kind)) kinds3.set(f17.kind, [...kinds3.get(f17.kind) || [], f17]);
     });
     if (files) {
       for (let i = 1; i < files.length; i++)
@@ -108389,10 +108819,10 @@ function caseFileManifestCheck(manifest) {
         }
     }
     if (files) for (const kind of CASE_FILE_SINGLE_KINDS) {
-      const n = (kinds2.get(kind) || []).length;
+      const n = (kinds3.get(kind) || []).length;
       if (n !== 1) no5("files", kind, `a case file carries exactly one ${kind}, and this one lists ${n}`);
     }
-    const doc = (kinds2.get("case_document") || [])[0];
+    const doc = (kinds3.get("case_document") || [])[0];
     if (doc && typeof manifest.case_document_sha === "string" && doc.sha256 !== manifest.case_document_sha)
       no5("case_document_sha", "case_document_sha", "the case document's SHA-256 is the one its file is listed with");
     if (files) (parts || []).forEach((p3, i) => {
@@ -133855,8 +134285,8 @@ function affordancesOps(a, url) {
 
 // src/affordances/door.mjs
 var CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that object right now; rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is null only where the act carries a STATED absence \u2014 read rung_absence for the ground, and vocabularies.rung_absence_grounds for what that ground means; capture_acts are keyed by a capture sha rather than by a record, so they are published with their metadata and never derived against an object's state; set_acts take a selection as `items` under the per-item weight: each item is applied or RETAINED with its own act's reason, and none stops the others";
-function affordancesAnswer({ target = null, facts = null, kinds: kinds2, gate, screens = [], wizard_scripts = [] } = {}) {
-  const vocabularies = vocabulariesFor(kinds2);
+function affordancesAnswer({ target = null, facts = null, kinds: kinds3, gate, screens = [], wizard_scripts = [] } = {}) {
+  const vocabularies = vocabulariesFor(kinds3);
   const dec4 = (a) => decorate(a, gate);
   const capture_acts = CAPTURE_ACTS.map(dec4);
   if (!target) return {
@@ -133906,13 +134336,13 @@ async function affordancesOp(url, stub, {
   const kOut = await doAnswer2(stub.fetch("http://do/actionkinds"));
   if (kOut.refused) return storeRefusal2(kOut);
   if (!kOut.answered) return storeSilent2("affordances", kOut.correlation);
-  const kinds2 = kOut.result?.kinds;
+  const kinds3 = kOut.result?.kinds;
   const answer = (result2) => json11({ ok: true, result: result2, store: storeName, tokenClass: cls2 }, 200);
   if (!target) {
     const sOut = await doAnswer2(stub.fetch(`http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`));
     if (sOut.refused) return storeRefusal2(sOut);
     if (!sOut.answered || !sOut.result) return storeSilent2("affordances", sOut.correlation);
-    return answer(affordancesAnswer({ kinds: kinds2, gate, screens: sOut.result.screens, wizard_scripts: sOut.result.wizard_scripts }));
+    return answer(affordancesAnswer({ kinds: kinds3, gate, screens: sOut.result.screens, wizard_scripts: sOut.result.wizard_scripts }));
   }
   const fOut = await doAnswer2(stub.fetch(
     `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(viewer)}&identity=${encodeURIComponent(identity)}&author=${encodeURIComponent(author ?? "")}&by=${encodeURIComponent(by ?? "")}`
@@ -133921,7 +134351,7 @@ async function affordancesOp(url, stub, {
   if (!fOut.answered) return storeSilent2("affordances", fOut.correlation);
   const facts = fOut.result;
   if (!facts) return storeSilent2("affordances");
-  const result = affordancesAnswer({ target, facts, kinds: kinds2, gate });
+  const result = affordancesAnswer({ target, facts, kinds: kinds3, gate });
   if (result.ok === false)
     return json11({ ...result, store: storeName, tokenClass: cls2 }, result.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
   return answer(result);
@@ -134159,9 +134589,9 @@ var VOCABULARIES = {
   /* R36 (DEC-122 (1)): the acts a phone surface leaves for a larger screen beyond the ladder's own — this module's own. */
   larger_screen_acts: LARGER_SCREEN_ACTS
 };
-function vocabulariesFor(kinds2) {
-  const ok2 = Array.isArray(kinds2) && kinds2.length > 0 && kinds2.every((k) => typeof k === "string" && k.length > 0);
-  return { ...VOCABULARIES, action_kind: ok2 ? kinds2 : PRODUCT_KINDS };
+function vocabulariesFor(kinds3) {
+  const ok2 = Array.isArray(kinds3) && kinds3.length > 0 && kinds3.every((k) => typeof k === "string" && k.length > 0);
+  return { ...VOCABULARIES, action_kind: ok2 ? kinds3 : PRODUCT_KINDS };
 }
 var RUNGS2 = {
   /* ---- irreversible. ONE op, and DEC-19 as amended names it. --------------
@@ -142639,18 +143069,18 @@ var AiRuns = class _AiRuns {
         detail
       };
     };
-    const kinds2 = Object.keys(RUN_CONTEXTS);
+    const kinds3 = Object.keys(RUN_CONTEXTS);
     const type = contextType == null ? "" : String(contextType).trim().toLowerCase();
     const id = contextId == null ? "" : String(contextId).trim();
     if (!type)
       return refusal25(
         "AI_RUNS_NO_CONTEXT_TYPE",
-        `op=airuns answers for ONE context and must be told which kind: contextType=${kinds2.join("|")}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.`
+        `op=airuns answers for ONE context and must be told which kind: contextType=${kinds3.join("|")}. An inquiry and a project are different objects with different membership, so there is no default here that would not be answering about something you did not ask about.`
       );
-    if (!kinds2.includes(type))
+    if (!kinds3.includes(type))
       return refusal25(
         "AI_RUNS_UNKNOWN_CONTEXT_TYPE",
-        `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. The kinds it is attached to: ${kinds2.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.`
+        `no work is attached to anything of the kind ${JSON.stringify(String(contextType).slice(0, 60))}. The kinds it is attached to: ${kinds3.map((k) => `${k} (${RUN_CONTEXTS[k]})`).join("; ")}. Answered as a refusal rather than as an empty list, because an empty list here would say nothing is running in a place the record does not recognise.`
       );
     if (!id)
       return refusal25(
@@ -149499,6 +149929,7 @@ var GOAL = "goal";
 var ASPIRATION_SCOPES = Object.freeze(["group", "project", "member"]);
 var GRADES4 = BASIS_GRADES;
 var TOKEN2 = /^[A-Za-z0-9][A-Za-z0-9._:\/-]{0,199}$/;
+var quotable = (s) => typeof s === "string" && !/["\\\r\n]/.test(s);
 var q2 = (s) => `"${String(s).replace(/["\\\r\n]/g, " ")}"`;
 var parseFm = (text6) => {
   if (typeof text6 !== "string") return null;
@@ -149686,9 +150117,19 @@ function goalDoc({ id, statement, bounds: bounds2, aspiration, author, at: at32 
   ].join("\n");
 }
 var CONDITION_KEY = "objective_condition";
+var AMOUNT_PERIOD_FIELDS = Object.freeze(["from", "to", "precision", "zone", "fiscal", "body"]);
+var AMOUNT_PREFIX = "amount_";
 function conditionLines(c, by, at32) {
   const lines = [`  progression: ${c.progression}`, `  entity: ${c.entity}`, `  relation: ${c.relation ?? "null"}`];
-  for (const [k, v] of Object.entries(c.filter || {})) lines.push(`  filter_${k}: ${v}`);
+  for (const [k, v] of Object.entries(c.filter || {})) {
+    if (k !== "amount") {
+      lines.push(`  filter_${k}: ${v}`);
+      continue;
+    }
+    for (const f17 of ["min", "max", "currency"]) if (v[f17] != null) lines.push(`  ${AMOUNT_PREFIX}${f17}: ${q2(v[f17])}`);
+    for (const f17 of ["kinds", "phases"]) if (v[f17]) lines.push(`  ${AMOUNT_PREFIX}${f17}: [${v[f17].map(q2).join(", ")}]`);
+    for (const f17 of AMOUNT_PERIOD_FIELDS) if (v.period && v.period[f17] != null) lines.push(`  ${AMOUNT_PREFIX}period_${f17}: ${q2(v.period[f17])}`);
+  }
   lines.push(
     `  required_grade: ${c.required.grade ?? "null"}`,
     `  required_stages: [${c.required.stages.join(", ")}]`,
@@ -149703,6 +150144,15 @@ function conditionOf(fm) {
   if (!b || typeof b !== "object" || Array.isArray(b)) return null;
   const filter = {};
   for (const [k, v] of Object.entries(b)) if (k.startsWith("filter_")) filter[k.slice(7)] = v;
+  const amount = {}, period = {};
+  for (const [k, v] of Object.entries(b)) {
+    if (!k.startsWith(AMOUNT_PREFIX)) continue;
+    const f17 = k.slice(AMOUNT_PREFIX.length);
+    if (f17.startsWith("period_")) period[f17.slice(7)] = v;
+    else amount[f17] = v;
+  }
+  if (Object.keys(period).length) amount.period = period;
+  if (Object.keys(amount).length) filter.amount = amount;
   const stages = Array.isArray(b.required_stages) ? b.required_stages.map(String).filter((s) => s !== "") : [];
   return {
     condition: {
@@ -149727,6 +150177,7 @@ var AGEING_DEFAULT_DAYS = 30;
 var PLANE_ACTOR = "plane:intent";
 var PLANE_VIEWER2 = "class:daemon";
 var GAP_KIND = "objective-gap";
+var AMOUNT_FACTS_MAX = LIST_LIMIT_MAX;
 var MEASURE_MAX = 1e3;
 var WATCH_LIMIT_MAX = 1e3;
 var DEPARTURES_MAX = 1e3;
@@ -149763,6 +150214,7 @@ var Intent = class {
     aiRuns = null,
     retrieval = null,
     captureRequests = null,
+    money = null,
     now = null
   } = {}) {
     this.storage = storage;
@@ -149776,6 +150228,7 @@ var Intent = class {
     this.aiRunsRef = aiRuns;
     this.retrievalRef = retrieval;
     this.captureRequests = captureRequests;
+    this.moneyRef = money;
     this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
   }
   #rows(qs, ...a) {
@@ -149792,6 +150245,9 @@ var Intent = class {
      (progressions R16's configured clock) is the one read here, whichever module reached the host first. */
   get progressions() {
     return this.#lazy(this.progressionsRef);
+  }
+  get money() {
+    return this.#lazy(this.moneyRef);
   }
   #when() {
     return second(this.now());
@@ -149959,9 +150415,13 @@ var Intent = class {
   }
   /* R2: the condition's shape, then what it names, in R2's order; null when it is readable and names what exists. */
   #conditionRefusal(c) {
-    const shaped = isObj32(c) && TOKEN2.test(str26(c.progression)) && TOKEN2.test(str26(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj32(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && TOKEN2.test(String(v)))) && isObj32(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN2.test(String(s)))) && isObj32(c.satisfied);
+    const shaped = isObj32(c) && TOKEN2.test(str26(c.progression)) && TOKEN2.test(str26(c.entity)) && (c.relation == null || typeof c.relation === "string" && this.entities.relationKinds().includes(c.relation)) && (c.filter == null || isObj32(c.filter) && Object.entries(c.filter).every(([k, v]) => /^[a-z][a-z0-9_]{0,39}$/.test(k) && (k === "amount" ? amountShape(v).ok : TOKEN2.test(String(v))))) && isObj32(c.required) && (c.required.stages == null || Array.isArray(c.required.stages) && c.required.stages.every((s) => TOKEN2.test(String(s)))) && isObj32(c.satisfied);
     if (!shaped)
-      return refusal19("CONDITION_UNREADABLE", "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id. Nothing was written.");
+      return refusal19(
+        "CONDITION_UNREADABLE",
+        "a condition is {progression, entity, relation?, filter?, required: {grade?, stages?}, satisfied: {share}}, each name a bare key or id; a filter's `amount` is {min?, max?, currency, kinds?, phases?, period?}, with at least one bound, each an exact decimal. Nothing was written.",
+        amountFault(c)
+      );
     const def = this.progressions.readProgression({ progressionKey: str26(c.progression) });
     if (!def || def.ok === false || !def.found)
       return refuseNoSuchProgression(
@@ -150027,6 +150487,7 @@ var Intent = class {
       const bad2 = this.#conditionRefusal(c);
       if (bad2) return bad2;
     }
+    if (c && isObj32(c.filter) && "amount" in c.filter) c.filter = { ...c.filter, amount: amountShape(c.filter.amount).amount };
     const at32 = this.#when();
     let text6 = removeBlock3(p3.doc.text, CONDITION_KEY);
     if (c) text6 = setBlock(text6, CONDITION_KEY, conditionLines(c, str26(author), at32));
@@ -150070,11 +150531,18 @@ Reason: ${bodyText2(why)}`
     for (const eid of threaded) {
       const inst = this.progressions.readInstance({ progressionKey: key, entityId: eid, viewer });
       if (!inst || inst.ok === false || !inst.found) continue;
-      let unevaluable = null, passes = true;
-      for (const [k, v] of Object.entries(cond.filter || {})) {
+      let unevaluable = null, passes = true, amount = null;
+      const filter = isObj32(cond.filter) ? cond.filter : {};
+      for (const [k, v] of Object.entries(filter)) {
         if (k === "entity_kind") {
           if (!inst.entity || inst.entity.kind !== String(v)) passes = false;
-        } else unevaluable = k;
+        } else if (k !== "amount" && unevaluable === null)
+          unevaluable = `the record cannot evaluate the filter '${k}' on this instance`;
+      }
+      if (passes && "amount" in filter) {
+        amount = this.#amount(eid, filter.amount, viewer);
+        if (amount.passes === false) passes = false;
+        else if (amount.passes === null && unevaluable === null) unevaluable = `the amount filter is undetermined: ${amount.why}`;
       }
       if (!passes) continue;
       const row4 = {
@@ -150082,11 +150550,12 @@ Reason: ${bodyText2(why)}`
         entity_label: inst.entity ? inst.entity.label : null,
         grade: inst.grade ?? null,
         grade_determined: inst.grade_determined === true,
-        definition_version: inst.definition_version
+        definition_version: inst.definition_version,
+        ...amount ? { amount } : {}
       };
       matched.push(row4);
       if (unevaluable) {
-        undetermined3.push({ ...row4, why: `the record cannot evaluate the filter '${unevaluable}' on this instance` });
+        undetermined3.push({ ...row4, why: unevaluable });
         continue;
       }
       const placed = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
@@ -150123,6 +150592,90 @@ Reason: ${bodyText2(why)}`
       bundle_id: d.bundle_id ?? null,
       grade: d.grade ?? null
     })) }));
+  }
+  /* R31: one matched instance's `amount` filter, over the money facts `moneyOf` answers for its entity in the named
+     kinds, phases and period, totalled in calc-grammar's exact decimals and compared with the bounds, inclusive.
+     `passes` is true when the total's reading lies within them, false when it lies outside, and null with why when it
+     cannot be settled: a total `summable` refuses, a fact whose period is undetermined, a read `moneyOf` cuts or
+     refuses, a currency other than the filter's, an approximate total or a reading across a bound, or no fact held
+     (never counted as zero). The total is taken under the plane's sight, so every reader's counts are the same (R5); a
+     fact the viewer may not see is listed as null. Derived on read, never stored (R19). */
+  #amount(entityId, amount, viewer) {
+    const a = amountShape(amount).amount;
+    const base2 = { currency: a.currency, min: a.min ?? null, max: a.max ?? null, total: null, facts: [] };
+    const open = (why, extra = {}) => ({ ...base2, ...extra, passes: null, why });
+    const ask2 = {
+      entity: entityId,
+      kinds: a.kinds,
+      phases: a.phases,
+      ...a.period ? { period: a.period } : {},
+      limit: AMOUNT_FACTS_MAX
+    };
+    let read3;
+    try {
+      read3 = this.money.moneyOf({ ...ask2, viewer: PLANE_VIEWER2 });
+    } catch (e) {
+      return open(`money could not answer (${String(e && e.message || e).slice(0, 120)})`);
+    }
+    if (!read3 || read3.ok === false)
+      return open(
+        `money refuses the read (${read3 ? read3.reason : "no answer"}${read3 && read3.detail ? `: ${read3.detail}` : ""})`,
+        read3 && read3.reason ? { code: read3.reason } : {}
+      );
+    const ids = (read3.facts || []).map((f17) => f17.fact_id);
+    const shown3 = this.#factsSeen(ask2, ids, viewer);
+    if (read3.truncated)
+      return open(
+        `more than ${AMOUNT_FACTS_MAX} money facts answer, and one read takes that many, so their total is not taken`,
+        { facts: shown3 }
+      );
+    if ((read3.undetermined || []).length)
+      return open(`${read3.undetermined.length} money fact(s) state a period with no end, so whether they fall in the period named is not settled`, { facts: shown3 });
+    if (!ids.length)
+      return open("the record holds no money fact for this entity in the kinds, phases and period named, so its total is not known; it is never taken as zero");
+    let sum;
+    try {
+      sum = this.money.summable({ factIds: ids, viewer: PLANE_VIEWER2 });
+    } catch (e) {
+      return open(`money could not answer (${String(e && e.message || e).slice(0, 120)})`, { facts: shown3 });
+    }
+    if (!sum || sum.ok !== true)
+      return open(
+        `these facts are not summed (${sum ? sum.reason : "no answer"}${sum && sum.detail ? `: ${sum.detail}` : ""})`,
+        { facts: shown3, ...sum && sum.reason ? { code: sum.reason } : {} }
+      );
+    let total2 = null;
+    for (const f17 of read3.facts) {
+      const fig = figureOfFact2(f17);
+      total2 = total2 === null ? fig : add(total2, fig);
+      if (total2 && total2.refused) return open(`the facts' amounts do not add (${total2.refused}: ${total2.why})`, { facts: shown3 });
+    }
+    const out = { ...base2, total: total2, facts: shown3 };
+    if (total2.currency !== a.currency)
+      return open(
+        `the facts are in ${total2.currency} and the filter names ${a.currency}, so they are not compared`,
+        { total: total2, facts: shown3 }
+      );
+    if (total2.approximate || total2.precision === "approximate")
+      return open("the total is approximate, and an approximate figure settles no comparison", { total: total2, facts: shown3 });
+    const r = readingOf2(total2);
+    const below = a.min != null ? [cmpD(r.hi, dec2(a.min)) < 0, cmpD(r.lo, dec2(a.min)) >= 0] : [false, true];
+    const above = a.max != null ? [cmpD(r.lo, dec2(a.max)) > 0, cmpD(r.hi, dec2(a.max)) <= 0] : [false, true];
+    if (below[0] || above[0]) return { ...out, passes: false };
+    if (below[1] && above[1]) return { ...out, passes: true };
+    return open("the total's reading (a rounded figure or a range) lies across a bound", { total: total2, facts: shown3 });
+  }
+  /* R5, R31: the fact ids beside an instance, each null when the viewer may not see that fact. */
+  #factsSeen(ask2, ids, viewer) {
+    if (viewer == null || viewer === PLANE_VIEWER2 || !ids.length) return ids;
+    let seen;
+    try {
+      seen = this.money.moneyOf({ ...ask2, viewer });
+    } catch {
+      seen = null;
+    }
+    const visible = new Set([...seen && seen.facts || [], ...seen && seen.undetermined || []].map((f17) => f17.fact_id));
+    return ids.map((id) => visible.has(id) ? id : null);
   }
   /** R3–R5: progress on a project's objective, derived on read against its condition and never stored. */
   progress({ project, viewer = null } = {}) {
@@ -150831,7 +151384,11 @@ ${bodyText2(note)}`
           stage_key: g.stage_key,
           required: g.required,
           definition_version: g.definition_version,
-          overdue: !!g.overdue
+          overdue: g.overdue === true,
+          /* progressions R16 (K1444 (ii)): an overdue it cannot settle is counted apart, never as not
+             overdue */
+          overdue_count: Number.isInteger(g.overdue_count) ? g.overdue_count : 0,
+          overdue_undetermined_count: Number.isInteger(g.overdue_undetermined_count) ? g.overdue_undetermined_count : 0
         },
         instances: g.instances || [],
         surfaced_by: g.surfaced_by || "machine"
@@ -151384,6 +151941,60 @@ var safeJson25 = (s) => {
     return null;
   }
 };
+var BOUND = /^-?\d{1,40}(?:\.\d{1,20})?$/;
+var boundOf = (v) => typeof v === "string" && BOUND.test(v.trim()) ? v.trim() : Number.isSafeInteger(v) ? String(v) : null;
+var AMOUNT_KEYS3 = Object.freeze(["min", "max", "currency", "kinds", "phases", "period"]);
+function amountShape(v) {
+  const no5 = (why) => ({ ok: false, why });
+  if (!isObj32(v)) return no5("the amount filter is a map");
+  const extra = Object.keys(v).find((k) => !AMOUNT_KEYS3.includes(k));
+  if (extra !== void 0) return no5(`the amount filter has no field '${String(extra).slice(0, 40)}'`);
+  if (typeof v.currency !== "string" || !TOKEN2.test(v.currency.trim())) return no5("the amount filter names its currency");
+  const out = {};
+  for (const k of ["min", "max"]) {
+    if (v[k] == null) continue;
+    const b = boundOf(v[k]);
+    if (b === null) return no5(`the amount filter's ${k} is an exact decimal, written as a string`);
+    out[k] = b;
+  }
+  if (out.min === void 0 && out.max === void 0) return no5("the amount filter states a min, a max or both");
+  if (out.min !== void 0 && out.max !== void 0 && cmpD(dec2(out.min), dec2(out.max)) > 0)
+    return no5("the amount filter's min is above its max");
+  out.currency = v.currency.trim();
+  for (const [k, closed] of [["kinds", kinds2()], ["phases", phases()]]) {
+    if (v[k] == null) continue;
+    if (!Array.isArray(v[k]) || v[k].some((x) => !closed.includes(x)))
+      return no5(`the amount filter's ${k} are a list of ${closed.join(", ")}`);
+    if (v[k].length) out[k] = [...new Set(v[k])];
+  }
+  if (v.period != null) {
+    if (!isObj32(v.period) || !Object.keys(v.period).length) return no5("the amount filter's period is a map of money's period fields");
+    const p3 = {};
+    for (const [k, x] of Object.entries(v.period)) {
+      if (!AMOUNT_PERIOD_FIELDS.includes(k)) return no5(`a period has no field '${String(k).slice(0, 40)}'`);
+      if (typeof x !== "string" || !x.trim() || !quotable(x)) return no5(`the period's ${k} is a string with no quote or line break`);
+    }
+    for (const k of AMOUNT_PERIOD_FIELDS) if (v.period[k] != null) p3[k] = v.period[k].trim();
+    out.period = p3;
+  }
+  return { ok: true, amount: out };
+}
+function amountFault(c) {
+  const f17 = isObj32(c) && isObj32(c.filter) && "amount" in c.filter ? amountShape(c.filter.amount) : null;
+  return f17 && !f17.ok ? { amount_why: f17.why } : {};
+}
+function figureOfFact2(f17) {
+  const neg = f17.sign === "-";
+  if (isObj32(f17.amount))
+    return {
+      low: neg ? `-${f17.amount.high}` : f17.amount.low,
+      high: neg ? `-${f17.amount.low}` : f17.amount.high,
+      sign: f17.sign,
+      precision: "range",
+      currency: f17.currency
+    };
+  return { value: f17.amount, sign: f17.sign, precision: f17.precision, currency: f17.currency };
+}
 function questionOf(p3) {
   const b = isObj32(p3.basis) ? p3.basis : {};
   if (p3.source === "progressions")
@@ -151435,7 +152046,8 @@ function intentOf(host, deps) {
       inquiry: d.inquiry || (() => inquiryOf(host)),
       aiRuns: d.aiRuns || (() => aiRunsOf(host)),
       retrieval: d.retrieval || (() => retrievalOf(host)),
-      captureRequests: d.captureRequests || (() => captureRequestsOf(host))
+      captureRequests: d.captureRequests || (() => captureRequestsOf(host)),
+      money: d.money || (() => moneyOf2(host))
     });
     instances47.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
@@ -153858,9 +154470,9 @@ var Actions = class _Actions {
     if (law2) return law2;
     const kindMoved = creation || !heldFm || heldFm.action_kind !== nextFm.action_kind;
     if (kindMoved) {
-      const kinds2 = this.kinds();
-      if (!kinds2.includes(nextFm.action_kind))
-        return refuse15("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind this instance offers: one of ${kinds2.join(", ")}. Nothing was written.`, { legal: kinds2 });
+      const kinds3 = this.kinds();
+      if (!kinds3.includes(nextFm.action_kind))
+        return refuse15("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind this instance offers: one of ${kinds3.join(", ")}. Nothing was written.`, { legal: kinds3 });
     }
     if (riskTierState(nextFm.risk_tier) === null)
       return refuse15("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
@@ -159819,8 +160431,8 @@ ${body}` : body;
      token, or the daemon era's `timestamp`) and its co-archive; undetermined when its attestations cannot be read. */
   static #coattested(att) {
     if (att.undetermined) return { coattested: null, coattested_why: `whether it is co-attested is undetermined: ${att.undetermined}` };
-    const kinds2 = new Set(att.items.map((x) => x && x.kind));
-    const stamp3 = kinds2.has("rfc3161") || kinds2.has("timestamp"), archive = kinds2.has("co_archive");
+    const kinds3 = new Set(att.items.map((x) => x && x.kind));
+    const stamp3 = kinds3.has("rfc3161") || kinds3.has("timestamp"), archive = kinds3.has("co_archive");
     return {
       coattested: stamp3 && archive,
       ...stamp3 && archive ? {} : { coattested_why: `the record holds ${stamp3 ? "a trusted timestamp but no co-archive" : archive ? "a co-archive but no trusted timestamp" : "neither a trusted timestamp nor a co-archive"} for it` }
@@ -160579,7 +161191,7 @@ ${inbandBlock(quartet)}`, inband: quartet };
    *  its tier and words; for Tier 3 kinds the standards, the factual basis, the counsel sentence and the legal
    *  organisations; the risk classification in the metadata. Never a template or packet content. */
   #block(dets, v) {
-    const kinds2 = (v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds : []).map((k) => {
+    const kinds3 = (v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds : []).map((k) => {
       const tier = [1, 2, 3].includes(k.tier) ? k.tier : "undetermined";
       const out = { kind: k.kind, label: k.label ?? null, tier, words: TIER_WORDS[tier], source: `profile:${k.profile}/action_kinds/${k.kind}` };
       if (tier === 3) {
@@ -160591,10 +161203,10 @@ ${inbandBlock(quartet)}`, inband: quartet };
       return out;
     });
     const offices = Array.isArray(v.view && v.view.counterparties) ? v.view.counterparties : [];
-    const tier3 = kinds2.some((k) => k.tier === 3);
+    const tier3 = kinds3.some((k) => k.tier === 3);
     return {
-      kinds: kinds2,
-      metadata: { risk_classification: Object.fromEntries(kinds2.map((k) => [k.kind, k.tier])) },
+      kinds: kinds3,
+      metadata: { risk_classification: Object.fromEntries(kinds3.map((k) => [k.kind, k.tier])) },
       determinations: dets.map((d) => {
         const actor = isObj35(d.act && d.act.actor) ? d.act.actor : {};
         const match = offices.find((o) => o.role === actor.role && o.body === actor.body) || null;
@@ -172634,7 +173246,7 @@ var Tasks = class _Tasks {
       if (!citeEdges.has(r.project_id)) citeEdges.set(r.project_id, []);
       citeEdges.get(r.project_id).push(r.kind);
     }
-    const cite = [...citeEdges].find(([pid, kinds2]) => !kinds2.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null)));
+    const cite = [...citeEdges].find(([pid, kinds3]) => !kinds3.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null)));
     if (cite) {
       const o = ownerOf(cite[0]);
       if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this record` };
@@ -173563,13 +174175,13 @@ function addresseeOf(a) {
   if (arm) return { state: "named", kind: arm, role: a.role, organisation: a.organisation };
   return null;
 }
-function checkPhases(phases, { chosen, subjects }) {
-  if (!Array.isArray(phases) || !phases.length || phases.length > PHASES_MAX)
+function checkPhases(phases2, { chosen, subjects }) {
+  if (!Array.isArray(phases2) || !phases2.length || phases2.length > PHASES_MAX)
     return { fault: "malformed", index: null, detail: `phases is a list of 1 to ${PHASES_MAX} phases` };
   const out = [];
   const ids = /* @__PURE__ */ new Set();
-  for (let i = 0; i < phases.length; i++) {
-    const p3 = phases[i];
+  for (let i = 0; i < phases2.length; i++) {
+    const p3 = phases2[i];
     const bad2 = (detail) => ({ fault: "malformed", index: i, detail });
     if (!isObj37(p3)) return bad2("a phase is an object");
     if (!isToken(p3.id) || ids.has(p3.id)) return bad2("a phase has an id of its own, a token used once in the scenario");
@@ -173655,8 +174267,8 @@ function checkPhases(phases, { chosen, subjects }) {
 var ms = (iso5) => typeof iso5 === "string" ? Date.parse(iso5) : NaN;
 var dayOf3 = (msv) => new Date(msv).toISOString().slice(0, 10);
 var iso3 = (msv) => new Date(msv).toISOString().replace(/\.\d{3}Z$/, "Z");
-function phaseTimes(phases, { setAt, judged, track }) {
-  const byId = new Map(phases.map((p3) => [p3.id, p3]));
+function phaseTimes(phases2, { setAt, judged, track }) {
+  const byId = new Map(phases2.map((p3) => [p3.id, p3]));
   const memo = /* @__PURE__ */ new Map();
   const ofPhase = (id) => {
     if (memo.has(id)) return memo.get(id);
@@ -173689,7 +174301,7 @@ function phaseTimes(phases, { setAt, judged, track }) {
       if (t) at32 = ms(t);
       earliest = at32;
     }
-    for (const o of phases) {
+    for (const o of phases2) {
       if (!o.branches) continue;
       for (const [k, v] of Object.entries(o.branches)) {
         if (v !== id) continue;
@@ -173707,11 +174319,11 @@ function phaseTimes(phases, { setAt, judged, track }) {
     memo.set(id, r);
     return r;
   };
-  return new Map(phases.map((p3) => [p3.id, ofPhase(p3.id)]));
+  return new Map(phases2.map((p3) => [p3.id, ofPhase(p3.id)]));
 }
-function unbranched(p3, phases) {
+function unbranched(p3, phases2) {
   if (!p3.checkpoint) return [];
-  return JUDGEMENTS.filter((k) => !(p3.branches && p3.branches[k]) && !phases.some((o) => o.starts && o.starts.branch_of === p3.id && o.starts.when === k));
+  return JUDGEMENTS.filter((k) => !(p3.branches && p3.branches[k]) && !phases2.some((o) => o.starts && o.starts.branch_of === p3.id && o.starts.when === k));
 }
 
 // src/action-plans/index.mjs
@@ -174201,8 +174813,8 @@ var ActionPlans = class {
     if (norm(next.work_kinds) === norm(heldFm.work_kinds)) return null;
     if (isMachine5(c.author))
       return refusal22("MACHINE_CANNOT_SET_WORK_KIND", "a project's kinds of work are set by an owner of the project; a machine credential cannot set or change them. Nothing was written.");
-    const kinds2 = next.work_kinds;
-    const bad2 = kinds2 !== void 0 && kinds2 !== null && (!Array.isArray(kinds2) || kinds2.some((k) => !WORK_KINDS.includes(k)));
+    const kinds3 = next.work_kinds;
+    const bad2 = kinds3 !== void 0 && kinds3 !== null && (!Array.isArray(kinds3) || kinds3.some((k) => !WORK_KINDS.includes(k)));
     if (bad2)
       return refusal22(
         "WORK_KIND_UNKNOWN",
@@ -174607,7 +175219,7 @@ var ActionPlans = class {
      source the viewer may not see is withheld whole; the proposer's own answer is given as stored. */
   #proposalView(r, see = null, viewer = null) {
     const machine3 = r.machine === 1;
-    const kinds2 = machine3 ? this.#runRow(r.run) : null;
+    const kinds3 = machine3 ? this.#runRow(r.run) : null;
     const fields = unjson2(r.fields_json, {});
     let sources = machine3 ? unjson2(r.sources_json, []) : null;
     if (see && Array.isArray(sources)) {
@@ -174628,7 +175240,7 @@ var ActionPlans = class {
         skill_version: r.skill_version ?? null,
         sources,
         disclosure: DISCLOSURE(r.run, r.skill_version),
-        work_kinds: kinds2 && kinds2.work_kinds_json !== null && kinds2.work_kinds_json !== void 0 ? { state: "stated", kinds: unjson2(kinds2.work_kinds_json, []) } : { state: "undetermined", says: "the project's work_kinds when this run opened were not recorded" }
+        work_kinds: kinds3 && kinds3.work_kinds_json !== null && kinds3.work_kinds_json !== void 0 ? { state: "stated", kinds: unjson2(kinds3.work_kinds_json, []) } : { state: "undetermined", says: "the project's work_kinds when this run opened were not recorded" }
       } : {},
       at: r.at,
       adopted: !!r.adopted_option,
@@ -174761,7 +175373,7 @@ var ActionPlans = class {
   }
   /** R14: set one scenario whole, keeping the earlier version in history. */
   scenarioSet(args = {}) {
-    const { plan, scenario, name: name2, phases, author, viewer } = args;
+    const { plan, scenario, name: name2, phases: phases2, author, viewer } = args;
     if (isMachine5(author))
       return refusal22("MACHINE_CANNOT_SCHEDULE", "a scenario is set by a named member; a machine proposes options and never schedules. Nothing was written.");
     const o = this.#openPlan(plan, author, viewer, "scenarioSet");
@@ -174775,9 +175387,9 @@ var ActionPlans = class {
       );
     if (!isLine(name2, TITLE_MAX))
       return refusal22("SCENARIO_NAME_REFUSED", `a scenario's name is 1 to ${TITLE_MAX} characters with no quotation mark, backslash or line break. Nothing was written.`, { max: TITLE_MAX });
-    const ph = this.#scenarioPhases(o.p, phases);
+    const ph = this.#scenarioPhases(o.p, phases2);
     if (!ph.phases) return ph;
-    const keys = refuseKeys(args) || (Array.isArray(phases) ? phases.map((x) => refuseKeys(x)).find(Boolean) : null);
+    const keys = refuseKeys(args) || (Array.isArray(phases2) ? phases2.map((x) => refuseKeys(x)).find(Boolean) : null);
     if (keys) return keys;
     const entry3 = { kind: "scenario_set", scenario: n, name: name2.trim(), phases: ph.phases, author, at: this.now() };
     const w = this.#append(o.p, entry3, { blurb: `Scenario ${n} set` });
@@ -174794,10 +175406,10 @@ var ActionPlans = class {
       at: entry3.at
     };
   }
-  #scenarioPhases(p3, phases) {
+  #scenarioPhases(p3, phases2) {
     const chosen = new Set(this.#options(p3.id).filter((x) => x.disposition === "chosen").map((x) => x.id));
     const subjects = new Map(this.#subjectsOf(p3.id).map((s) => [s.key, s.subject]));
-    const r = checkPhases(phases, { chosen, subjects });
+    const r = checkPhases(phases2, { chosen, subjects });
     if (r.phases) return r;
     const at32 = { index: r.index, ...r.phase ? { phase: r.phase } : {}, ...r.option ? { option: r.option } : {} };
     if (r.fault === "malformed")
@@ -174896,10 +175508,10 @@ var ActionPlans = class {
       leads_to: leads
     };
   }
-  #leadsTo(ph, phases, judged) {
+  #leadsTo(ph, phases2, judged) {
     const out = /* @__PURE__ */ new Set();
     if (ph.branches && ph.branches[judged]) out.add(ph.branches[judged]);
-    for (const o of phases) if (o.starts && o.starts.branch_of === ph.id && o.starts.when === judged) out.add(o.id);
+    for (const o of phases2) if (o.starts && o.starts.branch_of === ph.id && o.starts.when === judged) out.add(o.id);
     return [...out];
   }
   /** R18, R29: start a chosen option: compose its action, promote it, set the reminders asked with the choice, and link
@@ -179907,8 +180519,8 @@ function mutedAsItem(item3, itemMutes) {
   if (!PERSONALLY_MUTABLE_CLASSES.includes(item3.class)) return false;
   return typeof item3.id === "string" && itemMutes.has(item3.id);
 }
-function serializeMutedKinds(kinds2) {
-  return [...new Set((kinds2 || []).filter((k) => typeof k === "string" && k))].sort().join(",");
+function serializeMutedKinds(kinds3) {
+  return [...new Set((kinds3 || []).filter((k) => typeof k === "string" && k))].sort().join(",");
 }
 function parseMutedKinds(text6) {
   if (typeof text6 !== "string" || !text6) return [];
@@ -181209,8 +181821,8 @@ var Queue = class _Queue {
       `SELECT case_id, muted_kinds FROM queue_state WHERE member_id=?`,
       member.trim()
     )) {
-      const kinds2 = parseMutedKinds(r.muted_kinds);
-      if (kinds2.length > 0) out.set(r.case_id, new Set(kinds2));
+      const kinds3 = parseMutedKinds(r.muted_kinds);
+      if (kinds3.length > 0) out.set(r.case_id, new Set(kinds3));
     }
     return out;
   }
@@ -181374,7 +181986,7 @@ var Queue = class _Queue {
   queueMute({
     member = null,
     case: caseId = null,
-    kinds: kinds2 = null,
+    kinds: kinds3 = null,
     item: item3 = null,
     unmute = false,
     viewer = null,
@@ -181388,7 +182000,7 @@ var Queue = class _Queue {
     };
     const mutableKinds = [...Object.keys(QUEUE_CONDITION_KINDS), ...Object.keys(QUEUE_FINDING_KINDS)];
     const itemId = typeof item3 === "string" ? item3.trim() : "";
-    const named = Array.isArray(kinds2) ? kinds2.map((k) => typeof k === "string" ? k.trim() : "").filter(Boolean) : [];
+    const named = Array.isArray(kinds3) ? kinds3.map((k) => typeof k === "string" ? k.trim() : "").filter(Boolean) : [];
     let c = null;
     const subjects = [];
     if (itemId) {
@@ -181922,12 +182534,12 @@ function queueOps(q7, url, body) {
     proposedispose: () => q7.proposeDispose({ ...body || {}, viewer: s("viewer"), identity: s("identity") })
   };
 }
-function queueAnswer(r, { gate, kinds: kinds2 } = {}) {
+function queueAnswer(r, { gate, kinds: kinds3 } = {}) {
   if (!r || r.ok !== true) return { status: 400, refusal: r };
   return { status: 200, result: {
     ...r,
     items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),
-    vocabularies: vocabulariesFor(kinds2)
+    vocabularies: vocabulariesFor(kinds3)
   } };
 }
 
