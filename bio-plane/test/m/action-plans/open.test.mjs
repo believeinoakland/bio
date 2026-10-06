@@ -86,7 +86,7 @@ test("R3: one open plan per subject per project; another project may hold it; cl
   assert.equal(code(dup), "SUBJECT_IN_ACTIVE_PLAN"); assert.equal(dup.plan, a.id);
   assert.equal(open(w, { subjects: [w.S2] }).ok, true, "same determination, another standard");
   /* another project holding the same inquiry */
-  w.drawing.get(w.I).add(w.Q);
+  w.cite(w.I, w.Q);
   w.join(w.Q, "bob");
   assert.equal(open(w, { subjects: [w.SI] }).ok, true);
   assert.equal(w.ap.planOpen({ project: w.Q, subjects: [w.SI], title: "Q's plan", ...by("bob") }).ok, true);
