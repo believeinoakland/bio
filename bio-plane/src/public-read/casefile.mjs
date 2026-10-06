@@ -2,7 +2,7 @@
  * R17; DEC-112 (2), (3); Publication §5C; K1315, K1316). What a published case edition carries so that anybody can check
  * it, and recreate its findings, without this instance: the signed case document and its signature, the complete
  * edition, each finding's published bytes, signature, grading facts and passages, every included material whole with its
- * extracted text, the attestations, and the signing keys. Built once, by the Worker's assembly (`assembleCaseContainer`,
+ * extracted text, the attestations, each calculation with every input it names, and the signing keys. Built once, by the Worker's assembly (`assembleCaseContainer`,
  * `../publication/worker.mjs`), from what the published projection holds (`PublicRead.caseFileFacts`) and the published
  * bucket; served part by part (`op=publishedbytes&sha256=<manifest>&format=zip&part=<n>`).
  *
@@ -67,7 +67,7 @@ const entryCost = (name, bytes) => bytes + utf8(name).length * 2 + 76;
  *  or the signed document's bytes do not hash to its digest: a case file that would leave out what it must carry is
  *  never built. It is a statement inside an act that has committed, never a refusal (R6). `maxBytes` is the part bound
  *  (R5). */
-export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES }) {
+export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES, pathOf = caseFilePath }) {
   const files = [];
   const add = async (path, kind, content) => {
     files.push({ path, kind, sha256: await sha256Hex(content), bytes: content.length, content });
@@ -127,9 +127,24 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     await add(caseFilePath("attestation", [a.row.ref, `${n}-${a.row.by_kind}.json`]), "attestation",
               utf8(canonicalJson({ row: a.row, account: a.account ?? null, held: carried })));
   }
+  /* R23 (C:A-12, C:A-13): each calculation the `calculations:` block lists (`case-grammar` R18), as its row, and each
+     input it names, by the hash the row states and only at it (`case-grammar` R13's `calculation` kind), so the checker
+     recomputes it (`case-checker` R20). An input the published projection does not hold at that hash is named in
+     `unheld` (J1 (1)), never carried under a wrong name. An input two calculations name travels once. */
+  const inputsCarried = new Set();
+  for (const c of facts.calculations || []) {
+    await add(pathOf("calculation", c.row && c.row.calc), "calculation", utf8(canonicalJson(c.row)));
+    for (const i of c.inputs || []) {
+      if (inputsCarried.has(i.sha)) continue;
+      const bytes = await held(i.sha, i.text);
+      if (!bytes) { unheld.push({ ref: (c.row && c.row.calc) ?? null, sha: i.sha ?? null, what: "calculation_input" }); continue; }
+      inputsCarried.add(i.sha);
+      await add(pathOf("calculation_input", i.sha), "calculation_input", bytes);
+    }
+  }
   const unspelled = files.filter((f) => typeof f.path !== "string");
   if (unspelled.length)
-    return notAssembled("a finding id or a material's ref is not one the case file's format can spell as a path",
+    return notAssembled("a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path",
                         { kinds: unspelled.map((f) => f.kind) });
 
   /* The signing keys: the case document's signer's and each finding's, once each, in the order they are met. */

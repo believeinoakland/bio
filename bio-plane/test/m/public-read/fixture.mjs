@@ -5,7 +5,7 @@
    `../../../src/plane/store.mjs`; control-plane's routes reach it), and `storeOps(w, url, body)` is that op map's part
    these ops share: `publicationOps` with `publicReadOps` spread beside it, which a Worker test's stub store answers
    from. */
-import { planeWorld, world as bareWorld } from "../publication/fixture.mjs";
+import { planeWorld, world as bareWorld, caseDoc, V, NOW } from "../publication/fixture.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { caseDocumentRequiresMaterials } from "../../../src/case-grammar/index.mjs";
@@ -65,6 +65,27 @@ export function docketOn({ cases = [] } = {}) {
   return d;
 }
 
+/** Court-order stamps on `publication`'s interface (its R62), until publication's job (T33-63) merges and these tests
+ *  re-point at its `stampEdition` (K1563 (1)): `stamp({case, editions, entry, effect, parts?})` records one stamp per
+ *  named edition, in order, as R62 states it, and `stampsOf({case, edition})` answers an edition's stamps in order. */
+export function stampsOn() {
+  const held = new Map();
+  let n = 0;
+  return {
+    held,
+    stamp({ case: c, editions, entry, effect, parts = null }) {
+      for (const e of editions) {
+        const k = `${c}\u0000${Number(e)}`;
+        if (!held.has(k)) held.set(k, []);
+        held.get(k).push({ case: c, edition: Number(e), effect, parts, entry,
+                           stamped_at: `2026-10-0${1 + (n++ % 8)}T00:00:00Z` });
+      }
+      return { ok: true };
+    },
+    stampsOf({ case: c, edition }) { return [...(held.get(`${c}\u0000${Number(edition)}`) || [])]; },
+  };
+}
+
 /* R58 (`publication`, T28): only a preparation carrying its method and materials commits: `/6`, and from T31 `/7`, identical
    to it in fields (`case-grammar` R1, `caseDocumentRequiresMaterials`; DEC-124). An edition this module's tests prepare in
    an older format is, by that format, one signed before T28, so it is signed as such an edition was (`signLegacy`, the
@@ -93,7 +114,9 @@ export function legacyCaseCommit(w, { case: caseId, edition, project, roster, si
 function withRead(w, opts = {}) {
   signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
-  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
+  w.stamps = opts.stamps || stampsOn();
+  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket, stamps: (q) => w.stamps.stampsOf(q),
+                                ...(opts.caseGrammar ? { caseGrammar: opts.caseGrammar } : {}) });
   w.read = (name, query = {}) => {
     const url = new URL(`http://do/${name}`);
     for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
@@ -131,4 +154,40 @@ export function bucket() {
     async get(k) { const v = m.get(k); return v ? { arrayBuffer: async () => v.buffer.slice(v.byteOffset, v.byteOffset + v.byteLength) } : null; },
     async head(k) { return m.has(k) ? {} : null; },
     async put(k, v) { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); } };
+}
+
+/** T33-65 (R23, R26, R27, R28): a `/6` case edition of `CASE-2026-0001` over F (load-bearing) and G (supporting), signed
+ *  and published, its findings' bytes in the published bucket (`env`). `extra` are front-matter lines added to the signed
+ *  document (a block a test reads through an injected `case-grammar` reader, until case-grammar's T33-60 merges and the
+ *  tests re-point at its writers, K1563 (1)); `opts` reach the world (`caseGrammar`, `stamps`). */
+export function publishedSix({ extra = [], edition = 1, ...opts } = {}) {
+  const CASE = "CASE-2026-0001", F = "INQ-2026-0001", G = "INQ-2026-0002";
+  const w = world(opts);
+  w.member("olive");
+  const proj = w.project("Parks", "olive");
+  w.inquiry(F);
+  w.inquiry(G);
+  const pins = { [F]: w.head(F), [G]: w.head(G) };
+  const env = { PUBLISHED: bucket() };
+  const sign = (ed, lines) => {
+    const text = caseDoc(CASE, ed, { format: "bio-case-document/6", project: proj,
+      method: { grading: "bio-grading/1", checks: "1.57.0" }, materials: [], attestations: [],
+      roles: [{ target: F, version_sha: pins[F], role: "load_bearing" }, { target: G, version_sha: pins[G], role: "supporting" }],
+      strength: [{ target: F, axis: "capture", grade: "A" }, { target: F, axis: "connection", grade: "B" },
+                 { target: G, axis: "capture", grade: "C" }, { target: G, axis: "connection", grade: "C" }] });
+    const ls = text.split("\n");
+    const close = ls.indexOf("---", 1);
+    const doc = [...ls.slice(0, close), ...lines, ...ls.slice(close)].join("\n");
+    const stored = w.p.storeCaseDocument({ case: CASE, edition: ed, text: doc, author: V("olive"), at: NOW });
+    if (!stored.ok) throw new Error(JSON.stringify(stored));
+    const signed = w.signCase(CASE, ed, { project: proj, roster: [{ bundle_id: F, version_sha: pins[F], role: "load_bearing" },
+                                                                 { bundle_id: G, version_sha: pins[G], role: "supporting" }] });
+    if (!signed.ok) throw new Error(JSON.stringify(signed).slice(0, 400));
+    return doc;
+  };
+  const text = sign(1, edition === 1 ? extra : []);
+  if (w.signFinding(F).ok !== true || w.signFinding(G).ok !== true) throw new Error("findings not signed");
+  for (const id of [F, G]) env.PUBLISHED.m.set(`bio/published/${w.head(id)}`, new TextEncoder().encode(w.text(id)));
+  for (let ed = 2; ed <= edition; ed++) sign(ed, ed === edition ? extra : []);
+  return { w, env, proj, pins, text, CASE, F, G };
 }
