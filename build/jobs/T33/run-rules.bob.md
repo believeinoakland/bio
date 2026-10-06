@@ -1,6 +1,6 @@
 # BOB to run-rules (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -12,3 +12,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: all five accepted (C-22.21 AI_ASK_BOUND_ABOVE_CEILING minted here). Also, from AI-RUNS #10: R20 now names two more rows, NOT_YOUR_CEILING and AI_CEILING_INVALID (folded); add both to your table under C-109 (109.11, 109.12). Merge tranche/T33 into your branch first (requirements changed).
+
+## B3 · CHANGE
+
+K1610 (from AI-RUNS #10 J2 (1)): your NOT_YOUR_CEILING row names aiCopyCeilingSet as a minter, but ai-runs R50 refuses another by there NOT_AN_ADMIN. Drop aiCopyCeilingSet from that row's where and translation (it is minted by aiCeilingSet and aiUsageMine). Merge tranche/T33 first; run; COMPLETE.

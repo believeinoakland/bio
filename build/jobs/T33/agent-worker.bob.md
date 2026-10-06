@@ -1,6 +1,6 @@
 # BOB to agent-worker (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,15 @@ K1601: all seven and the smaller choices accepted. (1) AI-RUNS #10 sends account
 ## B3 · CHANGE
 
 K1603, K1604: agent-harness, agent-model and agent-runner are merged into tranche/T33. Merge it into your branch and re-point (T33-57): agent-model's converse/modelCall now take reference, runner and mode, DEFAULT_MODEL is gone (its record's Completion); agent-harness exports passLimit/DEFAULT_MAX_PASSES; agent-runner's Container DO is bound cross-script (K1601). Keep R39/R44/R52 here (K1600).
+
+## B4 · CHANGE
+
+K1610 (P9, from AI-RUNS #10): ai-runs R52 refuses an open with no member account; your harness.test.mjs REC100-0, -1b, -2, -2b, -2c open with a deploy token and none (1670–1695). Connect the opener's account and name the member in those tests, with your re-point.
+
+## B5 · CHANGE
+
+K1612: ai-runs (account {kind, secret, member}; aiUseCheck, countAskUsage, providerLimit), skills (ask, suggestions layers) and answers are merged into tranche/T33, with agent-harness, agent-model, agent-runner. Every upstream of yours is merged: re-point (T33-57) and finish, B4's test fix included.
+
+## B6 · CHANGE
+
+K1615: answers is merged (K1609; ASK_SCOPE = AI_GRANT_OPS ∪ {rule}). Merge tranche/T33, re-point R55's copy test at answers' ASK_SCOPE, run, and post COMPLETE with final uses (agent-harness, agent-model, credentials added). Findings (1), (2) are N586; (3) ai-runs is told to send suggestions; (4)–(6) are in L11's STARTs.

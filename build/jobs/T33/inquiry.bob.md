@@ -25,3 +25,7 @@ K1608 (P9, from INQUIRY-GRAMMAR #6): once inquiry-grammar merges, inquiry-gramma
 ## B5 · CHANGE
 
 K1609: inquiry-grammar is merged into tranche/T33: merge it; R11's new arms can now be driven through a promotion; re-pin grammar.test.mjs:176 to ten rows (B4). leg-earning's merge and the deletion CHANGE follow.
+
+## B6 · CHANGE
+
+K1612: leg-earning is merged into tranche/T33. Merge it and apply T33-45's deletion: retire the moved code (R13–R17, R39's read, the cycle walk) with pointers and re-exports per Rules (9) item 4, re-point R11, R12, R29, R39, R40, R52 and the occurrence check (leg-earning R9), drop inquiry_basis from INQUIRY_TABLES/INQUIRY_PURGE (leg-earning declares it), re-pin grammar.test.mjs:176 to ten rows; run your tests and users'; COMPLETE with final uses.

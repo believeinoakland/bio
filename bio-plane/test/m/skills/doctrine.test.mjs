@@ -43,9 +43,9 @@ function keyedNumbers() {
     for (const row of Object.values(rows)) if (row && typeof row.check === "string") out.add(row.check);
   return out;
 }
-/* The two numbers R15 lets the doctrine type: C-2.8, which has no keyed row, and C-32.6, whose holder
-   (case-authoring) is later in the order (P4; K787 (6), K811). */
-const TYPED = ["C-2.8", "C-32.6"];
+/* The one number R15 lets the doctrine type: C-32.6, whose holder (case-authoring) is later in the order (P4; K787
+   (6), K811). C-2.8 is read from inquiry-grammar's keyed rows since its T33 job (K1609). */
+const TYPED = ["C-32.6"];
 
 /* Every string anywhere inside a value. */
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
@@ -76,7 +76,7 @@ test("R15 every clause judges within JUDGED_ROWS and defers within DEFERRED_ROWS
     }
   }
   assert.deepEqual([...new Set(CLAUSES.flatMap((c) => c.defers))].sort(), [...DEFERRED_ROWS].sort());
-  /* Exactly those two numbers are typed: the doctrine's source holds no other C-number literal, and each typed one
+  /* Exactly that number is typed: the doctrine's source holds no other C-number literal, and each typed one
      is cited. */
   const literals = SRC.flatMap((f) => stringLiterals(read(f))).filter((l) => /^C-\d+\.\d+$/.test(l));
   assert.deepEqual([...new Set(literals)].sort(), [...TYPED].sort(), "the C-numbers typed in the source");
