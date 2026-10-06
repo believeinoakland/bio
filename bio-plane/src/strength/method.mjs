@@ -10,12 +10,16 @@
 
 import { TESTIMONY_GRADE } from "../record-grammar/grades.mjs";
 import { STRENGTH_AXES, DOCUMENT_AXES, DEPTH_BOUND, axisResult } from "./arithmetic.mjs";
+import { DERIVED_KINDS, CAPTURE_ONLY_KINDS } from "./legs.mjs";
 
-/** R31: the version of the grading arithmetic of R1–R5, R29, R30 (with R33's and R34's arms, as built in T28). It
- *  changes whenever any of them changes; a case states it (`case-grammar` R11) and a checker recomputes at it. */
-export const GRADING_METHOD_VERSION = "bio-grading/1";
+/** R31: the version of the grading arithmetic of R1–R5, R29, R30 (with R33's and R34's arms, as built in T28, and since
+ *  T33 the calculation, standard and occurrence legs of R36–R38). It changes whenever any of them changes; a case states
+ *  it (`case-grammar` R11) and a checker recomputes at it. */
+export const GRADING_METHOD_VERSION = "bio-grading/2";
+/* The version T28 published: R1–R5, R29–R34, with no calculation, standard or occurrence leg. */
+const V1 = "bio-grading/1";
 /** R32: every version this module has published, oldest first; `recomputePair` answers for each. */
-export const GRADING_METHOD_VERSIONS = Object.freeze([GRADING_METHOD_VERSION]);
+export const GRADING_METHOD_VERSIONS = Object.freeze([V1, GRADING_METHOD_VERSION]);
 
 /** R29 (DEC-102): the credit levels a caller may state; the first two credit anonymously. */
 export const CREDIT_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
@@ -40,7 +44,8 @@ export function levelsGiven(levels) {
     .filter(([id, lv]) => id && CREDIT_LEVELS.includes(lv))));
 }
 
-const LEG_KINDS = Object.freeze(["document", "observation", "inquiry", "imported"]);
+const LEG_KINDS_V1 = Object.freeze(["document", "observation", "inquiry", "imported"]);
+const LEG_KINDS = Object.freeze([...LEG_KINDS_V1, ...CAPTURE_ONLY_KINDS]);
 /* A leg that inherits an answer (R2, R33): the target is a question or another group's finding, not a document. */
 export const inheritsAnswer = (kind) => kind === "inquiry" || kind === "imported";
 
@@ -63,11 +68,13 @@ const GRADE_LETTERS = new Set(["A", "B", "C", "D"]);
  *    capCapture(leg, stated) `{grade, why}` bounding a stated capture letter by what the record earns (R1), or null
  *    inherit(leg)           for an inheriting leg: `{pair, from, another_groups?, through?}` (the target's answer) or
  *                           `{stopped: why, unknown?}` (the walk could not finish it, R2, R33)
+ *    derive(leg)            for a calculation or occurrence leg (R36, R38): `{grade, why}` on the capture axis, or
+ *                           `{stopped: why}` when its derivation is undetermined
  *    anonymous              Map of leg index → `{corroborated, kind}` (R29, R34)
  *    bound                  the depth bound stated in the answer
  *  Answers `{capture, connection, testimony}`, each `axisResult`. */
-export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inherit, anonymous = new Map(),
-                                             bound = DEPTH_BOUND }) {
+export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inherit, derive = () => null,
+                                             anonymous = new Map(), bound = DEPTH_BOUND }) {
   const members = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
   const exhausted = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
   for (const [i, leg] of legs.entries()) {
@@ -79,6 +86,11 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
     /* R5: a hunch contributes nothing on any axis, whatever it states, and inherits nothing either. */
     const hunch = leg.grade_source === "hunch";
     const anon = anonymous.get(i);
+    /* R36–R38: a calculation, a held standard or a duty occurrence counts on the capture axis only. */
+    if (CAPTURE_ONLY_KINDS.includes(kind)) {
+      captureOnly(leg, kind, site, hunch, { capCapture, derive }, members, exhausted);
+      continue;
+    }
     for (const axis of STRENGTH_AXES) {
       const onAxis = leg.grade_axis === axis;
       /* DEC-21: capture and testimony range over documents, so a grade on either authored on a leg to a question (or to
@@ -159,6 +171,40 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
   return Object.fromEntries(STRENGTH_AXES.map((axis) => [axis, axisResult(axis, members[axis], exhausted[axis], bound)]));
 }
 
+/* R36–R38: one capture-only leg's members. A calculation or an occurrence carries no grade of its own: the walk
+   derives it (`derive`), or names why it cannot (undetermined, unknown rather than low). A held standard's stated capture
+   grade is bounded by what its captured text earns, and a text the record does not hold leaves it undetermined (R37). On
+   connection and testimony it is named and not counted. */
+function captureOnly(leg, kind, site, hunch, { capCapture, derive }, members, exhausted) {
+  const derived = DERIVED_KINDS.includes(kind);
+  for (const axis of STRENGTH_AXES) {
+    if (hunch) { members[axis].push({ ...site, via: "leg", grade: null, why: HUNCH_WHY }); continue; }
+    if (axis !== "capture") {
+      members[axis].push({ ...site, via: derived ? "derived" : "leg", grade: null,
+        why: !derived && leg.grade_axis === axis && leg.grade != null
+          ? `the target is a held standard, so a ${axis} grade on this leg has no referent`
+          : `this leg counts on the capture axis only` });
+      continue;
+    }
+    if (derived) {
+      const d = derive(leg) || { stopped: "nothing here establishes what this leg rests on" };
+      if (d.stopped) exhausted.capture.push({ ...site, via: "derived", grade: null, why: d.stopped, unknown: true });
+      else members.capture.push({ ...site, via: "derived", grade: d.grade ?? null, why: d.why ?? null });
+      continue;
+    }
+    const stated = leg.grade_axis === "capture" ? (leg.grade ?? null) : null;
+    if (stated == null) {
+      members.capture.push({ ...site, via: "leg", grade: null,
+        why: leg.grade == null ? `the leg carries no grade` : `the leg's grade is on the ${leg.grade_axis} axis` });
+      continue;
+    }
+    const capped = capCapture(leg, stated);
+    if (capped && capped.grade == null)
+      exhausted.capture.push({ ...site, via: "leg", grade: null, why: capped.why, unknown: true });
+    else members.capture.push({ ...site, via: "leg", grade: capped ? capped.grade : stated, why: capped ? capped.why : null });
+  }
+}
+
 /* R33 (DEC-92): another group's finding named with its group, case and edition. The words are the UX stream's; until it
    gives them, this plain sentence. The finding's own id, which is that group's and looks like one of this record's, is
    carried in `another_groups.finding` and never in the sentence, so R6's sweep of record ids cannot mistake it. */
@@ -183,7 +229,8 @@ export function anonymityOf(legs, levels, f) {
   const out = new Map();
   if (!levels) return out;
   const levelOf = (k) => (typeof k === "string" && Object.hasOwn(levels, k) ? levels[k] : null);
-  const onDocument = (l) => typeof l.target_id === "string" && l.target_id && !inheritsAnswer(f.kindOf(l));
+  const onDocument = (l) => typeof l.target_id === "string" && l.target_id
+    && ["document", "observation"].includes(f.kindOf(l));
   const judged = legs.map((l) => {
     if (!onDocument(l)) return null;
     if (l.grade_axis === "testimony") {
@@ -228,9 +275,8 @@ export const PRODUCT_NAME = "Civicsmith";
 
 /* Each version's words, as a function of the product's name. With "CivicOS" a version answers, byte for byte, the
    words it answered before T31 (a `bio-case-document/6` edition re-renders identically, `case-grammar` R14). */
-const METHOD_TEXT = Object.freeze({
-  [GRADING_METHOD_VERSION]: (product) => [
-    `How ${product} grades a finding (method ${GRADING_METHOD_VERSION}).`,
+const V1_LINES = (product, version) => [
+    `How ${product} grades a finding (method ${version}).`,
     "",
     "1. Two strengths, never one. A finding has a capture strength (how faithfully the documents it rests on were "
       + "taken in) and a connection strength (how firmly they are tied to what the finding is about), with testimony "
@@ -262,7 +308,30 @@ const METHOD_TEXT = Object.freeze({
       + "name is graded as usual.",
     "8. What is named. Each strength names the leg that sets it, and every leg that does not count, with the reason. "
       + "It also states how many hunches it left out.",
-  ].join("\n"),
+  ];
+/* Version 2 (T33): version 1's rules, unchanged, and the three legs whose capture strength is worked out from what they
+   rest on. Inserted before "What is named", which stays last. */
+const V2_LEGS = [
+  "8. Calculations, held standards and obligations. A leg to a calculation counts for the capture strength only, at the "
+    + "weakest of its inputs' capture strengths, each no stronger than where it came from: a figure quoted from a "
+    + "document by that passage, a money figure by its own grade, a table by its source, another calculation by its own "
+    + "capture strength. The arithmetic of the recipe never weakens it. A value typed in with no captured source is "
+    + "testimony, D. A value another program computed is unknown until that program's agreement has been measured. The "
+    + "method is stated beside the grade and is not graded. A calculation whose result is not accepted, or an input "
+    + "that cannot be read, makes the strength undetermined.",
+  "9. A leg to a held standard counts for the capture strength only, no stronger than the record holds for the text of "
+    + "that standard at the version cited; if the record holds no text at that version, the strength is undetermined.",
+  "10. A leg to one occurrence of an obligation counts for the capture strength only, at the weaker of the text of the "
+    + "rule in force and the record of the date that started it. Whether it was met, late or overdue is stated beside "
+    + "the grade and never changes it. Where any part of how it was worked out is unknown, the strength is undetermined.",
+];
+const METHOD_TEXT = Object.freeze({
+  [V1]: (product) => V1_LINES(product, V1).join("\n"),
+  [GRADING_METHOD_VERSION]: (product) => {
+    const lines = V1_LINES(product, GRADING_METHOD_VERSION);
+    const named = lines.pop().replace(/^8\. /, "11. ");
+    return [...lines, ...V2_LEGS, named].join("\n");
+  },
 });
 
 /** R31: the method of `version` in plain words, complete enough to recompute a grade by hand, naming the product by
@@ -277,12 +346,12 @@ export function gradingMethodText(version, product = PRODUCT_NAME) {
 
 /* One leg's facts as the walk's leg: `{target, kind, role, grade, grade_axis, grade_source, ground, answer?, origins?,
    origins_complete?, captures?, author_key?}`. Anything else is dropped; nothing is read from elsewhere. */
-function factLeg(l, k) {
+function factLeg(l, k, kinds = LEG_KINDS) {
   const o = l && typeof l === "object" ? l : {};
   const target = typeof o.target === "string" ? o.target.trim() : "";
   const s = (v) => (typeof v === "string" && v ? v : null);
   return { ord: Number.isInteger(o.ord) ? o.ord : k, target_id: target,
-           kind: LEG_KINDS.includes(o.kind) ? o.kind : "document",
+           kind: kinds.includes(o.kind) ? o.kind : "document",
            role: typeof o.role === "string" ? o.role : "",
            grade: s(o.grade), grade_axis: s(o.grade_axis), grade_source: s(o.grade_source),
            ground: typeof o.ground === "string" && o.ground.trim() ? o.ground.trim() : null,
@@ -291,7 +360,8 @@ function factLeg(l, k) {
            origins: Array.isArray(o.origins) ? o.origins.map(String) : null,
            origins_complete: o.origins_complete === true,
            captures: Array.isArray(o.captures) ? o.captures.map(String) : [],
-           author_key: s(o.author_key) };
+           author_key: s(o.author_key),
+           undetermined: s(o.undetermined) };
 }
 
 /** R32: the pair (R1–R5, R29, R30, R33, R34) from the facts a case file states for one finding, reading nothing else.
@@ -307,11 +377,12 @@ export function recomputePair({ legs = [], levels = null, version = null } = {})
              versions: [...GRADING_METHOD_VERSIONS],
              detail: "this grading method version is not one this copy holds, so the grade cannot be recomputed here" };
   try {
-    const walkLegs = (Array.isArray(legs) ? legs : []).map(factLeg);
+    const kinds = version === V1 ? LEG_KINDS_V1 : LEG_KINDS;
+    const walkLegs = (Array.isArray(legs) ? legs : []).map((l, k) => factLeg(l, k, kinds));
     const lv = levelsGiven(levels);
     const own = (l) => {
       if (l.grade_source === "hunch" || l.grade == null || !STRENGTH_AXES.includes(l.grade_axis)) return null;
-      if (inheritsAnswer(l.kind)) return null;
+      if (l.kind !== "document" && l.kind !== "observation") return null;
       return l.grade_axis === "testimony" ? TESTIMONY_GRADE : l.grade;
     };
     const anonymous = anonymityOf(walkLegs, lv, {
@@ -323,6 +394,12 @@ export function recomputePair({ legs = [], levels = null, version = null } = {})
       inherit: (l) => (l.answer
         ? { pair: l.answer, from: l.target_id, ...(l.kind === "imported" ? { another_groups: l.another_groups || {} } : {}) }
         : { stopped: "the case file states no answer for what this leg rests on, so it is unknown here", unknown: true }),
+      /* R36–R38: a calculation's or an occurrence's capture grade as the case file states it, or why it is unknown;
+         a standard's stated grade is already its ceiling's, and a stated reason is its unknown text (R37). */
+      derive: (l) => (l.undetermined ? { stopped: l.undetermined }
+        : l.grade ? { grade: l.grade, why: "the capture strength the case file states for what this leg rests on" }
+        : { stopped: "the case file states no capture strength for what this leg rests on, so it is unknown here" }),
+      capCapture: (l) => (l.kind === "standard" && l.undetermined ? { grade: null, why: l.undetermined } : null),
       anonymous });
     return { ok: true, version, depth_bound: DEPTH_BOUND,
              capture: pair.capture, connection: pair.connection, testimony: pair.testimony,

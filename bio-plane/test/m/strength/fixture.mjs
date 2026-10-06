@@ -40,6 +40,8 @@ const VERSION_DDL = `
 CREATE TABLE inquiry_basis_versions (bundle_id TEXT NOT NULL, name TEXT NOT NULL, ord INTEGER NOT NULL DEFAULT 0,
   description TEXT, relationship TEXT, state TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, derived_from TEXT,
   kind TEXT, run TEXT, author TEXT, at TEXT, leg_count INTEGER NOT NULL, PRIMARY KEY (bundle_id, name));
+CREATE TABLE event_attestations (attestation_id INTEGER PRIMARY KEY, event_id TEXT NOT NULL, capture_sha TEXT);
+CREATE TABLE entities (entity_id TEXT PRIMARY KEY, kind TEXT NOT NULL);
 CREATE TABLE inquiry_basis_version_legs (bundle_id TEXT NOT NULL, name TEXT NOT NULL, ord INTEGER NOT NULL,
   target_id TEXT NOT NULL, target_type TEXT NOT NULL, role TEXT NOT NULL, grade TEXT, grade_axis TEXT,
   grade_source TEXT, note TEXT, at TEXT, ground TEXT NOT NULL, PRIMARY KEY (bundle_id, name, ord));
@@ -95,6 +97,45 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
       return { grade: earned.grade, why: `the record can support no more than ${earned.grade} for ${targetId}` };
     },
     subjectEntityOf: (id) => subjects.get(id) ?? null,
+    /* leg-earning R4: the legs naming a target, from the basis the test holds. */
+    restingOn: (targetId) => ({ ok: true, targetId, dependents: [...basis].flatMap(([id, legs]) =>
+      legs.filter((l) => l.target_id === targetId).map((l) => ({ bundle_id: id, ord: l.ord, status: "confirmed" }))) }),
+  };
+  /* T33's layer-5 reads (R12, R36, R38), in the shapes of those modules' Provides: `calculations` R9's grade facts read
+     synchronously (J1 (5)); `duties` R7, R9; `events` R26; `lines` R9, R10; `people` R5; `money` R8. */
+  const calcs = new Map();            // CALC id → {accepted, capture: {grade, why}, inputs, method, viewers?}
+  const duties = new Map();           // DUT id → {source: {kind, standard}, occurrences: [...], viewers?}
+  const events = new Map();           // EVT id → event view
+  const linesHeld = [];               // {line_id, kind, from, to, at: Set of dates held | "undetermined"}
+  const clusters = new Map();         // person → {state, members}
+  const facts = new Map();            // MNY id → fact
+  const sees = (x, viewer) => !x.viewers || viewer == null || viewer === "class:daemon" || x.viewers.includes(viewer);
+  const upstream = {
+    calculations: { gradeFactsOf: ({ calcId, viewer }) => {
+      const c = calcs.get(calcId);
+      return c && sees(c, viewer) ? { found: true, accepted: c.accepted !== false, capture: c.capture, inputs: c.inputs || [],
+                                       method: c.method || { note: null } } : { found: false }; } },
+    duties: {
+      readDuty: ({ dutyId, viewer }) => {
+        const d = duties.get(dutyId);
+        return d && sees(d, viewer) ? { ok: true, found: true, duty: { duty_id: dutyId, source: d.source } } : { ok: true, found: false };
+      },
+      occurrencesOf: ({ dutyId, asOf }) => ({ ok: true, duty_id: dutyId, as_of: asOf, occurrences: (duties.get(dutyId) || {}).occurrences || [] }),
+    },
+    events: { readEvent: ({ eventId }) => (events.has(eventId) ? { ok: true, found: true, event: events.get(eventId) } : { ok: true, found: false }) },
+    lines: {
+      structureAt: ({ entity, at }) => {
+        const mine = linesHeld.filter((l) => l.from === entity || l.to === entity);
+        const view = (l) => ({ line_id: l.line_id, kind: l.kind, from: l.from, to: l.to });
+        return { ok: true, entity, at, truncated: false,
+                 held: mine.filter((l) => l.at !== "undetermined" && l.at.has(at)).map(view),
+                 undetermined: mine.filter((l) => l.at === "undetermined").map((l) => ({ line: view(l), why: "a bound is not stated" })) };
+      },
+      linesOf: ({ entity }) => ({ ok: true, lines: linesHeld.filter((l) => l.from === entity || l.to === entity) }),
+    },
+    people: { identityOf: ({ entityId }) => (clusters.has(entityId) ? { ok: true, found: true, entity_id: entityId, ...clusters.get(entityId) }
+                                                                     : { ok: true, found: true, entity_id: entityId, state: "linked", members: [entityId] }) },
+    money: { readFact: ({ factId }) => (facts.has(factId) ? { ok: true, found: true, fact: facts.get(factId) } : { ok: true, found: false }) },
   };
   /* basis-versions' side: a project's CURRENT (R11). */
   const currents = new Map();         // `${project}|${inquiry}` → version
@@ -131,11 +172,11 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
     },
   };
   const clock = { now };
-  const s = strengthOf(host, { record, membership, inquiry, versions, promotion, retrieval, acceptedWork,
+  const s = strengthOf(host, { record, membership, inquiry, versions, promotion, retrieval, acceptedWork, ...upstream,
                                producingGroup: () => group, now: () => clock.now });
 
   const w = {
-    st, host, record, membership, s, clock, basis, accepted, aw, ceilings, connection, testimony, subjects, currents, calls, steps, fields,
+    st, host, record, membership, s, clock, calcs, duties, events, linesHeld, clusters, facts, basis, accepted, aw, ceilings, connection, testimony, subjects, currents, calls, steps, fields,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     /** One promotion of `id` as promotion runs the registered projections (its R39): inside one transaction, which a
      *  throw after the projection (`fail`) rolls back whole. Answers what the projection answered. */
@@ -207,6 +248,18 @@ export function world({ group = "grp-one", now = "2026-09-28T00:00:00.000Z" } = 
         st.sql.exec(`INSERT INTO captured_locators (address_norm,address,capture_sha,first_retrieved,last_retrieved)
                      VALUES (?,?,?,?,?)`, address, address, sha, now, now);
     },
+    /** An entity of a kind (entities R35's read contract). */
+    entity(id, kind) { st.sql.exec(`INSERT INTO entities (entity_id, kind) VALUES (?,?)`, id, kind); },
+    /** An event (events R26's view) attested by captures (events R37's `event_attestations`). Participants
+     *  `[[entity, role]]`; `within` the events it sits inside; `when` a date or null (placed nowhere). */
+    event(id, { kind = "meeting", when = "2026-03-01", participants = [], within = [], captures = [], grade = "B" } = {}) {
+      events.set(id, { event_id: id, kind, when: when ? { start: when, precision: "day" } : null, within, governing: when ? 1 : null,
+                       attestations: [{ attestation_id: 1, grade }],
+                       participants: participants.map(([entity_id, role]) => ({ entity_id, role })) });
+      for (const sha of captures) st.sql.exec(`INSERT INTO event_attestations (event_id, capture_sha) VALUES (?,?)`, id, sha);
+    },
+    /** A line (lines R10): held at the given dates, or `undetermined` at every date. */
+    line(line_id, kind, from, to, at = []) { linesHeld.push({ line_id, kind, from, to, at: at === "undetermined" ? at : new Set(at) }); },
     /** A member of the group, an administrator or not. */
     member(id, role = "member", status = "active") {
       st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?,?,?,?,?,?)`, id, id, role, status, now, now);
