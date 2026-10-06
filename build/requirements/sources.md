@@ -41,9 +41,9 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - **R15** (K547) `source_knocks` is a read contract for later modules (`reevaluation` R28), as `inquiry` R40's columns are: one row per pulled knock a source stands behind, `(knock_id, source_id, capture_sha, bytes, received)`, written for every pulled knock of the source's pseudonym when the source is minted, and for one pulled later before any act that moves its rung; it holds no value, secret or contact, and its columns keep these names.
 
 **markKeyedResult({captureSha, service, terms, by}), keyedResultOf(captureSha)** (`op=sourcekeyed`; T33-22; K1492 (3), K1449)
-- **R16** `markKeyedResult` records that a capture is a result from a member-keyed outside source (a paid people-search database or another fee-bearing record), reached by the member's own act on their own account under the vendor's terms: `service` names the vendor, `terms` the vendor's terms as the member states them. Only by that member's own act, for a capture whose `actor` (`acquisition` R16) is that member: a machine or absent `by` is refused `MACHINE_CANNOT_MARK`, a capture of another actor `NOT_YOUR_CAPTURE`, an unknown capture `NO_SUCH_CAPTURE`, an empty `service` `NO_SERVICE`; each writes nothing. One capture per act; a mark is appended with `by` and the instant and never edited or removed. *(not yet met: T33-22)*
-- **R17** `keyedResultOf(captureSha)` answers a marked capture's `{member_keyed: true, service, by, at, reproducible_by_public: false, grade_cap}`, else null; never throws. `grade_cap` is one rank below the letter `provenance.captureGrade` answers for that capture, in `BASIS_GRADES`' order (never above it, and D stays D): a reader grading a fact that cites the capture caps its capture axis there, so the result is cited at a lower grade than a public capture of the same page. *(not yet met: T33-22)*
-- **R18** (K1492 (3), (6); K1449: never unattended) No path of this module takes rows in bulk from a member-keyed source: nothing here imports a vendor's records, and a result enters only as one capture marked by R16. No act here runs unattended: a machine credential, a daemon or a scheduled consumer is refused R16's `MACHINE_CANNOT_MARK`. Nothing records what a member searched for: the mark holds the vendor and terms, never a query, a search term or the results the member did not capture. *(not yet met: T33-22)*
+- **R16** `markKeyedResult` records that a capture is a result from a member-keyed outside source (a paid people-search database or another fee-bearing record), reached by the member's own act on their own account under the vendor's terms: `service` names the vendor, `terms` the vendor's terms as the member states them. Only by that member's own act, for a capture whose `actor` (`acquisition` R16) is that member: a machine or absent `by` is refused `MACHINE_CANNOT_MARK`, a capture of another actor `NOT_YOUR_CAPTURE`, an unknown capture `NO_SUCH_CAPTURE`, an empty `service` `NO_SERVICE`; each writes nothing. One capture per act; a mark is appended with `by` and the instant and never edited or removed.
+- **R17** `keyedResultOf(captureSha)` answers a marked capture's `{member_keyed: true, service, by, at, reproducible_by_public: false, grade_cap}`, else null; never throws. `grade_cap` is one rank below the letter `provenance.captureGrade` answers for that capture, in `BASIS_GRADES`' order (never above it, and D stays D): a reader grading a fact that cites the capture caps its capture axis there, so the result is cited at a lower grade than a public capture of the same page.
+- **R18** (K1492 (3), (6); K1449: never unattended) No path of this module takes rows in bulk from a member-keyed source: nothing here imports a vendor's records, and a result enters only as one capture marked by R16. No act here runs unattended: a machine credential, a daemon or a scheduled consumer is refused R16's `MACHINE_CANNOT_MARK`. Nothing records what a member searched for: the mark holds the vendor and terms, never a query, a search term or the results the member did not capture.
 
 ## Private
 
@@ -59,10 +59,10 @@ Terms. A **source** is the person behind a capture that was given to the group r
 
 - **R12** The capturing member is never recorded as the source of what someone else gave them (Membership v2 §1.2): no act here names a capture's `actor` as its source.
 - **R13** Every table here is exempt from purge. A value is never written to a log, an error or a listener payload.
-- **R19** (plan T33, Rules (6)) This module declares every table explicitly through `record-core.declareTable` (its R21), keeping R13's exemption from purge; the tables holding a source's disclosures and stored values (R2, R5), its read log and R16's marks are declared `export: "never"`, as the link from a source to a person is (K1489), their sight being R5's. *(not yet met: T33-22)*
-- **R14** No place is named in this module's behaviour or outward text; C-121.1–C-121.6 are held in its own table.
+- **R19** (plan T33, Rules (6)) This module declares every table explicitly through `record-core.declareTable` (its R21), keeping R13's exemption from purge; the tables holding a source's disclosures and stored values (R2, R5), its read log and R16's marks are declared `export: "never"`, as the link from a source to a person is (K1489), their sight being R5's.
+- **R14** No place is named in this module's behaviour or outward text; C-121.1–C-121.10 are held in its own table.
 
-Rows C-121.1–C-121.6 (R14; N364), a new family, "a source's disclosures", with their translations:
+Rows C-121.1–C-121.10 (R14; N364; C-121.7–.10 K1549), a new family, "a source's disclosures", with their translations:
 
 | row | code | translation |
 |---|---|---|
@@ -72,6 +72,10 @@ Rows C-121.1–C-121.6 (R14; N364), a new family, "a source's disclosures", with
 | C-121.4 | `NO_SIGHT_LIST` | "A detail about a source that is stored can be read only by the members listed for it, and none is listed. List at least one member, or record that the detail is known without storing it. Nothing was written." |
 | C-121.5 | `CONSENT_NOT_STANDING` | "That consent cannot be recorded: the detail it names is not in this source's history, or consent to a wider audience already stands. Nothing was written." |
 | C-121.6 | `SECRET_NOT_RECOGNISED` | "That secret was not recognised, so nothing was recorded. Check it and try again." |
+| C-121.7 | `MACHINE_CANNOT_MARK` | "Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written." |
+| C-121.8 | `NOT_YOUR_CAPTURE` | "Only the member who captured a result can mark it as from their own account on a paid service. Nothing was written." |
+| C-121.9 | `NO_SUCH_CAPTURE` | "No capture the record holds answers to that digest. Nothing was written." |
+| C-121.10 | `NO_SERVICE` | "A result from a paid or account-gated service names the service it came from. Name it. Nothing was written." |
 
 ### Satisfies
 
