@@ -15,6 +15,7 @@ import { join, relative } from "node:path";
 import {
   REPO_ROOT, RECIPE, DEFAULT_EXTERNAL, discoverMembers, optionsFor, buildMember, manifestFrom,
   writeMember, verifyStatic, verifyFresh, freshBuildRunnable, unresolvableSpecifiers, sha256,
+  isContainer, isGuarded, containerDescriptor, imageReference,
 } from "../../../scripts/fleet-bundle.mjs";
 import {
   readGitProvenance, stateOf, contentStateOf, classifyDiscovered, reportProvenance, repoPath,
@@ -533,4 +534,139 @@ test("R10: verifying the repository's own fleet writes nothing", async () => {
   const { manifest, committed } = verifyStatic(m);
   if (freshBuildRunnable(m, manifest).runnable) await verifyFresh(m, committed);
   assert.deepEqual(snapshot(m.abs), before);
+});
+
+/* ------------------------------------------------------------------------ R24 */
+
+const DIGEST = "sha256:" + "0f".repeat(32);
+const IMAGE = { repository: "docker.io/civicos/runner", digest: DIGEST, platform: "linux/amd64", port: 8080, schedulingPolicy: "default" };
+
+/** A container member's marker under `root/dir`, with no Worker bundle unless `bundle` is given. */
+function containerFixture(root, dir, { image = IMAGE, noImage = false, kind = "container", extra = {} } = {}) {
+  mkdirSync(join(root, dir, "src"), { recursive: true });
+  writeFileSync(join(root, dir, "src/entry.mjs"), "export const runner = 1;\n");
+  writeFileSync(join(root, dir, "fleet-member.json"), JSON.stringify({ name: dir, kind, entry: "src/entry.mjs",
+    ...(noImage ? {} : { image }), ...extra }));
+}
+
+test("R24: a marker with kind container and an image block is a container member, listed with its kind and its image; every other member is listed as a worker", () => {
+  const root = tmp("r24");
+  try {
+    fixture(root, "w", { name: "w-worker", vendored: false });
+    containerFixture(root, "runner");
+    containerFixture(root, "no-image", { noImage: true });                   /* says container, states no image */
+    containerFixture(root, "odd-image", { image: "docker.io/x@sha256:0" });       /* an image that is not a block */
+    const got = discoverMembers(root);
+    assert.deepEqual(got.map((m) => [m.name, m.kind, isContainer(m)]),
+      [["no-image", "container", false], ["odd-image", "container", false], ["runner", "container", true], ["w-worker", "worker", false]]);
+    const runner = got.find((m) => m.name === "runner");
+    assert.deepEqual(runner.image, IMAGE, "listed with its image, as its marker states it");
+    assert.equal(runner.entry, "src/entry.mjs");
+    assert.equal(runner.bundle, null);
+    assert.equal(got.find((m) => m.name === "w-worker").image, null, "a worker has no image");
+    assert.equal(got.find((m) => m.name === "no-image").image, null);
+    /* Not bundle-guarded for want of a Worker bundle; a container member that declares one, and every other member, is. */
+    assert.deepEqual(got.map((m) => [m.name, isGuarded(m)]),
+      [["no-image", true], ["odd-image", true], ["runner", false], ["w-worker", true]]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R24: verifyStatic and verifyFresh never report a container member with no Worker bundle stale, unguarded or missing an artifact, and say it is not guarded; one that states no image is still named unguarded", async () => {
+  const root = tmp("r24v");
+  try {
+    containerFixture(root, "runner");
+    containerFixture(root, "no-image", { noImage: true });
+    const [noImage, runner] = discoverMembers(root);
+    const before = snapshot(root);
+    const s = verifyStatic(runner);
+    assert.deepEqual(s, { findings: [], manifest: null, committed: null, guarded: false });
+    const f = await verifyFresh(runner, null);
+    assert.equal(f.checked, false, "nothing was checked, so it is never said to be fresh (R7)");
+    assert.equal(f.guarded, false);
+    assert.equal(f.findings, null);
+    assert.match(f.reason, /^runner: not checked — a container member with no Worker bundle is not bundle-guarded/);
+    assert.deepEqual(snapshot(root), before, "R10: nothing written");
+    const named = verifyStatic(noImage).findings;
+    assert.equal(named.length, 1);
+    assert.match(named[0], /^no-image: declares no `bundle` block/, "a marker that is not a container member's is not exempt");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R24: a container member that declares a Worker bundle is guarded like any member: built, verified, and named stale when its source moves", async () => {
+  const root = tmp("r24b");
+  try {
+    const m0 = fixture(root, "runner", { vendored: false });
+    const marker = JSON.parse(readFileSync(join(m0.abs, "fleet-member.json"), "utf8"));
+    writeFileSync(join(m0.abs, "fleet-member.json"), JSON.stringify({ ...marker, kind: "container", image: IMAGE }));
+    const m = discoverMembers(root)[0];
+    assert.equal(isContainer(m), true);
+    assert.equal(isGuarded(m), true);
+    await writeMember(m);
+    assert.deepEqual(verifyStatic(m).findings, []);
+    const fresh = await verifyFresh(m, readFileSync(join(m.abs, m.bundle.outfile)));
+    assert.deepEqual([fresh.checked, fresh.findings], [true, []]);
+    writeFileSync(join(m.abs, "src/dep.mjs"), "export const N = 9;\n");
+    assert.ok(verifyStatic(m).findings.some((x) => x.includes("STALE") && x.includes("src/dep.mjs")));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R24: the repository's own fleet lists agent-runner as a container member with its image, and only a container member goes unguarded", () => {
+  const got = discoverMembers();
+  const runner = got.find((m) => m.name === "agent-runner");
+  assert.ok(runner, "agent-runner is listed");
+  assert.equal(runner.kind, "container");
+  assert.equal(isContainer(runner), true);
+  assert.equal(runner.image.repository, "docker.io/civicos/agent-runner");
+  assert.deepEqual(got.filter((m) => !isGuarded(m)).map((m) => m.name).filter((n) => n !== "agent-runner"), [],
+    "every other member is guarded");
+  for (const m of got.filter((x) => !isContainer(x))) assert.equal(m.kind, "worker", m.name);
+});
+
+/* ------------------------------------------------------------- R25 (functions) */
+
+test("R25: containerDescriptor writes the part from the marker — class_name, image as <repository>@sha256:<64 hex>, scheduling_policy default, max_instances, bind — and names every field it lacks", () => {
+  const member = (marker, bundle = { entry: "src/index.mjs" }) => ({ name: "runner", bundle, marker });
+  const full = { kind: "container", image: IMAGE, class_name: "AgentRunner", max_instances: 4,
+    bind: [{ member: "agent-worker", binding: "RUNNER" }] };
+  const names = ["agent-worker", "runner"];
+  const d = containerDescriptor(member(full), names);
+  const want = { class_name: "AgentRunner", image: `docker.io/civicos/runner@${DIGEST}`, scheduling_policy: "default",
+    max_instances: 4, bind: [{ member: "agent-worker", binding: "RUNNER" }] };
+  assert.deepEqual(d.descriptor, want);
+  assert.deepEqual(Object.keys(d.descriptor), ["class_name", "image", "scheduling_policy", "max_instances", "bind"]);
+  assert.equal(d.bytes.toString("utf8"), JSON.stringify(want, null, 2) + "\n");
+  assert.equal(containerDescriptor(member({ ...full, image: { ...IMAGE, schedulingPolicy: undefined } }), names).descriptor.scheduling_policy,
+    "default", "an unstated policy is default, the only one the part carries");
+
+  const lacks = (marker, bundle) => containerDescriptor(member(marker, bundle), names).missing;
+  assert.deepEqual(lacks(full, null), ["bundle"]);
+  assert.deepEqual(lacks({ ...full, image: { ...IMAGE, digest: null } }), ["image.digest"]);
+  for (const digest of ["sha256:" + "0f".repeat(31), "sha256:" + "0F".repeat(32), "0f".repeat(32), "sha512:" + "0f".repeat(32)])
+    assert.deepEqual(lacks({ ...full, image: { ...IMAGE, digest } }), ["image.digest"], digest);
+  for (const repository of [undefined, "", "runner", "docker.io/civicos/runner@sha256:x", "Docker.io/x/y"])
+    assert.deepEqual(lacks({ ...full, image: { ...IMAGE, repository } }), ["image.repository"], String(repository));
+  assert.deepEqual(lacks({ ...full, image: undefined }), ["image"]);
+  assert.deepEqual(lacks({ ...full, image: { ...IMAGE, schedulingPolicy: "regional" } }), ["image.schedulingPolicy"]);
+  for (const class_name of [undefined, "", "1Runner", "a-b"])
+    assert.deepEqual(lacks({ ...full, class_name }), ["class_name"], String(class_name));
+  for (const max_instances of [undefined, 0, -1, 1.5, "4"])
+    assert.deepEqual(lacks({ ...full, max_instances }), ["max_instances"], String(max_instances));
+  for (const bind of [undefined, [], [{ member: "no-such", binding: "RUNNER" }], [{ member: "agent-worker" }],
+    [{ member: "agent-worker", binding: "bad-name" }], ["agent-worker"]])
+    assert.deepEqual(lacks({ ...full, bind }), ["bind"], JSON.stringify(bind));
+  assert.deepEqual(lacks({ kind: "container" }, null), ["bundle", "image", "class_name", "max_instances", "bind"],
+    "every field it lacks, each named");
+});
+
+test("R25: imageReference names the image only by digest, in agent-runner R7's form, or names the field that does not say it", () => {
+  assert.deepEqual(imageReference(IMAGE), { reference: `docker.io/civicos/runner@${DIGEST}` });
+  assert.deepEqual(imageReference({ ...IMAGE, repository: "registry.example.test:5000/a/b" }),
+    { reference: `registry.example.test:5000/a/b@${DIGEST}` });
+  assert.deepEqual(imageReference(null), { missing: "image" });
+  assert.deepEqual(imageReference({ ...IMAGE, digest: null }), { missing: "image.digest" });
+  assert.deepEqual(imageReference({ ...IMAGE, repository: "runner" }), { missing: "image.repository" });
+  /* The repository's own marker states no digest until the release publishes the image (T33-D1). */
+  const runner = discoverMembers().find((m) => m.name === "agent-runner");
+  const own = imageReference(runner.image);
+  assert.ok(own.reference ? /@sha256:[0-9a-f]{64}$/.test(own.reference) : own.missing === "image.digest", JSON.stringify(own));
 });

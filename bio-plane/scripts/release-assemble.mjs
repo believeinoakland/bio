@@ -106,7 +106,7 @@ import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import {
-  REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256,
+  REPO_ROOT, discoverMembers, planeMember, verifyFresh, freshBuildRunnable, sha256, isContainer, containerDescriptor,
 } from "./fleet-bundle.mjs";
 /* The statement and its namespace come from the module the INSTALLER also
    imports. Neither side builds the bytes it signs or verifies — see the comment
@@ -134,7 +134,51 @@ const die = (code, msg, detail) => {
 /* ---------------------------------------------------------------- the assets */
 
 const plane = planeMember();
-const members = discoverMembers().filter((m) => m.bundle);
+const discovered = discoverMembers();
+
+/* EVERY DISCOVERED MEMBER IS RELEASED OR REFUSED, NEVER SKIPPED. This filtered to
+   members with a `bundle` until T34, so a member whose block was deleted dropped
+   out of a signed release in silence — D-115's "an instance quietly doing less",
+   one step before the installer. */
+for (const m of discovered) {
+  if (!m.bundle && !isContainer(m))
+    die("NO_ARTIFACT", `${m.name} is a fleet member and declares no \`bundle\` block, so it has no artifact to release.`,
+      "Every member a release names ships a guarded bundle. Restore the member's `bundle` block, rebuild, and commit.");
+}
+
+/* ---- A CONTAINER MEMBER'S DESCRIPTOR (R25; N610, K1678 (1), K1730) ----------
+   The member's Worker bundle is its asset, like any member's; its `container.json`
+   is one more part, so the fleet signature covers the image digest exactly as it
+   covers every other part's bytes. Checked HERE, before any build runs or anything
+   is written: a descriptor the marker cannot state is a release that cannot install
+   its container.
+
+   A CONTAINER MEMBER WITH NO WORKER BUNDLE IS LEFT OUT, BY NAME (K1730), as 0.80.0
+   left agent-runner out (K1705): there is no Worker to host its class, so no
+   installer could run it, and the fleet signature covers only what ships. It is
+   printed, never dropped in silence, and it is the only member a release may omit. */
+const leftOut = discovered.filter((m) => isContainer(m) && !m.bundle);
+for (const m of leftOut)
+  console.log(`left out: ${m.name} — a container member with no Worker bundle to host its class (bundler R24, K1730); `
+    + "the release and its fleet signature do not carry it");
+const containerParts = new Map();
+for (const m of discovered.filter((x) => isContainer(x) && x.bundle)) {
+  const d = containerDescriptor(m, discovered.filter((x) => !leftOut.includes(x)).map((x) => x.name));
+  if (d.missing) {
+    die("CONTAINER_UNDESCRIBED",
+      `${m.name} is a container member and its fleet-member.json does not state ${d.missing.join(", ")}.`,
+      "The release copies the container's descriptor from the member's own marker and never defaults it:\n"
+      + "  image          { repository, digest: \"sha256:<64 hex>\" } — the digest the release wrote when it published the image\n"
+      + "  class_name     the Durable Object class the container runs behind\n"
+      + "  max_instances  a positive integer\n"
+      + "  bind           [{ member, binding }] — each a member this release carries, and the binding it calls the class by\n"
+      + "  image.schedulingPolicy, where stated, \"default\"");
+  }
+  containerParts.set(m.name, { path: "container.json", type: "Container", sha256: sha256(d.bytes),
+    bytes: d.bytes.length, data: d.bytes });
+}
+
+const members = discovered.filter((m) => !leftOut.includes(m));
 const all = [plane, ...members];
 
 function committedArtifact(m) {
@@ -261,6 +305,13 @@ for (const m of all) {
         + "member's own config (FLEET's file), then assemble again.");
     }
     parts.push({ path: rel, type: ptype, sha256: sha256(bytes), bytes: bytes.length, from: abs });
+  }
+  if (containerParts.has(m.name)) {
+    const c = containerParts.get(m.name);
+    if (parts.some((p) => p.path === c.path))
+      die("CONTAINER_UNDESCRIBED", `${m.name} declares an upload part named ${c.path}, which is the container descriptor's own path.`,
+        "Rename the member's part: container.json is written by the release from the marker.");
+    parts.push(c);
   }
   if (parts.length) {
     console.log(`       + ${parts.length} upload part(s): `
@@ -444,7 +495,9 @@ for (const e of entries) {
   for (const part of e.parts || []) {
     const dest = join(RELEASE_DIR, e.member, part.path);
     mkdirSync(dirname(dest), { recursive: true });
-    copyFileSync(part.from, dest);
+    /* A container descriptor is made here from the marker (R25), never a file in the member's tree. */
+    if (part.data) writeFileSync(dest, part.data);
+    else copyFileSync(part.from, dest);
   }
 }
 
