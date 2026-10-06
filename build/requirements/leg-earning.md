@@ -31,6 +31,9 @@ Terms. A **leg**, **registry**, **grade**, **axis** and **source** are as `inqui
 - **R8** For a target that is a held standard (`STD-`, K1447 (iii)), `earned` answers the capture ceiling of the capture holding that standard's text at the version the leg cites (`standards`), with no connection grade and its axis stated; a standard holding no captured text at that version answers undetermined with `STANDARD_NO_TEXT`'s reason, and R2 caps any stated capture grade to it. *(not yet met: T33-44)*
 - **R9** For a target that is a duty occurrence (K1447 (i)), `earned` answers its derivation as `duties.occurrencesOf` states it (the source in force, the trigger date, the due date and the level searched) and no grade of its own: the occurrence leg's grade is derived by `strength` (T33-47), and R2 answers null against it. An occurrence `duties` answers undetermined is earned as undetermined with the reason. *(not yet met: T33-44)*
 
+**The basis table** (K1505 (2); K1601)
+- **R12** `leg-earning` holds `inquiry_basis` with its columns, indexes, names, types and meanings unchanged from `inquiry` (R12, R29, R40 there), as a read contract later modules may join. Its one write, `writeBasis(bundleId, legs)`, replaces an inquiry's legs whole (`target_type` derived from the target's prefix), and R3's backfill sets a leg's `content_id`; nothing else writes it. It is declared explicitly to `record-core` (`declareTable`) with the classes it has today (purge clear, keyed by `bundle_id`; expunge none; export admin-only; sight bundle; stored). *(not yet met: T33-44)*
+
 ## Private
 
 ### Uses
