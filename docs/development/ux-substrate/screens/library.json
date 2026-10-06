@@ -934,14 +934,20 @@
       {
        "screen": "translations",
        "act": "owed:translationdraft DEC-127",
-       "what": "With your own Claude account connected, ask the assistant to draft them. Each is marked \"Draft\".",
-       "why": "Without the assistant, type them yourself."
+       "what": "Where you can reach the assistant, ask it to draft them all. Each is marked \"Draft · the assistant's\".",
+       "why": "Your task becomes finding its errors. Without the assistant, type them yourself."
       },
       {
        "screen": "translations",
        "act": "owed:translationadopt DEC-127",
-       "what": "Check and adopt each one.",
-       "why": "A word becomes the group's only when someone who knows the language adopts it."
+       "what": "Read each draft against the English; keep it or correct it.",
+       "why": "A word becomes the group's only when a granted member who knows the language keeps it."
+      },
+      {
+       "screen": "translations",
+       "act": "owed:translationconfirm DEC-157",
+       "what": "A protected word you changed, or typed without a draft, waits for a second check.",
+       "why": "A second granted speaker, or an administrator reading the assistant's back-translation, confirms it. Until then members see the English."
       }
      ]
     }

@@ -162,8 +162,9 @@ wiz('Use another group\'s case', 'imported', False, [
 wiz('Translate the interface', 'translations', False, [
  ('translations', None, 'Choose the language.', 'Civicsmith\'s own translations come with releases. Your group fills gaps and improves wording.'),
  ('translations', None, 'See the words still untranslated.', 'A missing word shows in English, never blank.'),
- ('translations', 'owed:translationdraft DEC-127', 'With your own Claude account connected, ask the assistant to draft them. Each is marked "Draft".', 'Without the assistant, type them yourself.'),
- ('translations', 'owed:translationadopt DEC-127', 'Check and adopt each one.', 'A word becomes the group\'s only when someone who knows the language adopts it.'),
+ ('translations', 'owed:translationdraft DEC-127', 'Where you can reach the assistant, ask it to draft them all. Each is marked "Draft · the assistant\'s".', 'Your task becomes finding its errors. Without the assistant, type them yourself.'),
+ ('translations', 'owed:translationadopt DEC-127', 'Read each draft against the English; keep it or correct it.', 'A word becomes the group\'s only when a granted member who knows the language keeps it.'),
+ ('translations', 'owed:translationconfirm DEC-157', 'A protected word you changed, or typed without a draft, waits for a second check.', 'A second granted speaker, or an administrator reading the assistant\'s back-translation, confirms it. Until then members see the English.'),
 ], [3])
 
 wiz('Start and send', 'plan', False, [

@@ -137,15 +137,20 @@ SCR.notes = c => ({ rail: 'settings', title: 'Your notes', crumbs: ['Your notes'
   ${acts(btn('notewrite', 'Keep this note', { tone: 'primary' }), btn('noteturn', 'Turn into an observation, hunch or question'))}
   ${sec('Kept', sheet(row(I('case'), '<span class="rec">Ask the crew foreman on 60th what “closed” means to them.</span><span class="meta">4 October · only you</span>', `<span class="mk-acts">${btn('owed:noterevise DEC-144', 'Revise')}${btn('owed:notedelete DEC-144', 'Delete')}</span>`)))}` });
 
-SCR.translations = c => ({ rail: 'settings', title: 'Translations', crumbs: ['Settings', 'Translations'], main: `
+SCR.translations = c => ({ rail: 'settings', title: 'Translations', main: `
   ${h1('Translations', 'The words members see, in your group\'s languages.')}
   ${choice('mk-tl', 'Language', ['Español', 'Tiếng Việt'], 'Español')}
+  ${sec('Who may translate Español', `${sheet(row(I('group'), '<b>Mai</b> · speaks Español', '<span class="muted">granted by Rosa, 2 October</span>') + row(I('group'), '<b>Teo</b> · speaks Español', '<span class="muted">granted by Rosa, 5 October</span>'))}${acts(btn('owed:translationgrant DEC-157', 'Give a member the grant for a language'))}`)}
   <div class="tw"><table class="mk-table"><thead><tr><th>English</th><th>Español</th><th></th></tr></thead><tbody>
-   <tr><td>Undetermined</td><td>Indeterminado</td><td class="muted">from the release</td></tr>
-   <tr><td>Nobody looked</td><td class="mk-draftcell">Nadie buscó</td><td>${c.ai ? origin('machine', 'Draft') : '<span class="muted">untranslated</span>'}</td></tr>
+   <tr><td>Undetermined <span class="mk-tag">Protected</span></td><td>Indeterminado</td><td class="muted">from the release</td></tr>
+   <tr><td>Nobody looked</td><td class="mk-draftcell">Nadie buscó</td><td>${c.ai ? origin('machine', 'Draft · the assistant\'s') : '<span class="muted">typed by Mai</span>'}</td></tr>
+   <tr><td>This tells the office what you are looking at. <span class="mk-tag">Protected</span></td><td class="mk-draftcell">Esto le indica a la oficina lo que está investigando.</td><td><span class="muted">${c.ai ? 'changed from the assistant\'s draft by Mai · needs a second check' : 'typed by Mai · needs a second check'}</span></td></tr>
+   <tr><td>City Clerk <span class="mk-tag">Local name</span></td><td>City Clerk · <span class="muted">la oficina que guarda los registros de la ciudad</span></td><td class="muted">name kept; explanation translated</td></tr>
    <tr><td>Held together</td><td></td><td><span class="muted">untranslated · shown in English</span></td></tr></tbody></table></div>
-  ${acts(c.ai ? btn('owed:translationdraft DEC-127', 'Ask the assistant to draft the 12 missing') : '', btn('owed:translationadopt DEC-127', 'Adopt', { tone: 'primary' }))}
-  ${c.ai ? '' : note('Type each translation yourself; a member who knows the language adopts it.')}` });
+  ${acts(c.ai ? btn('owed:translationdraft DEC-127', 'Ask the assistant to draft the 12 missing') : '', btn('owed:translationadopt DEC-127', 'Keep this word', { tone: 'primary' }), btn('owed:translationconfirm DEC-157', 'Confirm a protected word'), btn('owed:translationrevert DEC-157', 'Undo a change'))}
+  ${note(c.ai ? 'A speaker checks the assistant\'s drafts for errors. A protected word kept as the assistant drafted it shows once kept. Changed from the draft, it shows only after a second granted speaker confirms it, or an administrator confirms it after reading the assistant\'s translation of it back into English; until then members see the English.' : 'Type each word; a member who knows the language keeps it. A protected word shows only after a second granted speaker confirms it; until then members see the English.')}
+  ${sec('Marked wrong by members', `${sheet(row(I('flagged'), '“Reasoned” → “Razonado”', '<span class="muted">Ana: “should be Justificado” · 4 October</span>'))}${note('Any member can mark a word with “this translation looks wrong”; it is listed here for the granted members and the administrators. Every word records who adopted it, when and what it replaced.')}`)}
+  ${sec('Local names', note('Names of offices, laws, programs and places stay as they are, with an explanation in the member\'s language beside them. Where the place publishes an official translation, it comes with the place\'s rules and shows its source. What goes to an office goes in the office\'s language, with a labelled translation beside it for the member.'))}` });
 
 SCR.wizards = c => ({ rail: 'settings', title: 'Wizards', crumbs: ['Settings', 'Wizards'], main: `
   ${h1('Wizards', 'Walk-throughs of the real screens. Civicsmith\'s own come with each release; your group can add its own.')}

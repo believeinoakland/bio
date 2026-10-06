@@ -547,6 +547,21 @@
      "op": "owed:translationadopt DEC-127",
      "label": "Adopt a translation",
      "status": "owed"
+    },
+    {
+     "op": "owed:translationgrant DEC-157",
+     "label": "Give a member the grant for a language",
+     "status": "owed"
+    },
+    {
+     "op": "owed:translationconfirm DEC-157",
+     "label": "Confirm a protected word",
+     "status": "owed"
+    },
+    {
+     "op": "owed:translationrevert DEC-157",
+     "label": "Undo a change",
+     "status": "owed"
     }
    ],
    "journeys": [

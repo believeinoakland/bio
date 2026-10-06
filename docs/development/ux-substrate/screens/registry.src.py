@@ -33,7 +33,7 @@ screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by the
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',
   [('notewrite','Write a note'),('noteturn','Turn a note into an observation, hunch or question'),('owed:noterevise DEC-144','Revise your note'),('owed:notedelete DEC-144','Delete your note'),('owed:writinghelp DEC-153','Help me write this')], [6])
 screen('translations', 'Translations', 'working', 'The interface\'s words in the group\'s languages (DEC-127).',
-  [('owed:translationdraft DEC-127','Ask the assistant to draft'),('owed:translationadopt DEC-127','Adopt a translation')], [3])
+  [('owed:translationdraft DEC-127','Ask the assistant to draft'),('owed:translationadopt DEC-127','Adopt a translation'),('owed:translationgrant DEC-157','Give a member the grant for a language'),('owed:translationconfirm DEC-157','Confirm a protected word'),('owed:translationrevert DEC-157','Undo a change')], [3])
 screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, drafts, submitted (DEC-121).',
   [('wizards','See the library'),('wizarddraft','Record a new wizard'),('wizardrevise','Revise a draft'),('wizardsubmit','Submit for approval'),('wizardapprove','Approve'),('wizardretire','Retire')], [])
 
