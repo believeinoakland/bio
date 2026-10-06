@@ -21,7 +21,7 @@ Four readings I am building on; each is the page's own detail unless you say oth
 
 **Deferred.** None.
 
-**Found elsewhere (REPORT J3).**
+**Found elsewhere (REPORT J2).**
 1. No op reads a group's offices (entities by kind `office`), and `op=profiles` carries no counterparties, so R20 lists only the offices added in the visit and reads "no active profile names an office" as no active profile, or an `offices: []` field if `instance-setup` adds one (J1 (2), B2).
 2. On `tranche/T34` today the door declares none of `joinlinkinvite` (and it is not among the public ops relayed before sign-in), `courtnotice`, `courtnoticeset`, `groupkeyset`, `groupkeyswitch`, `groupkeystate`, `placewanted`, `placewantedstate`, `memberlanguage`, `memberlanguageset`, `groupdescription`, `groupdescriptionset`, `groupdescriptiondraft` (`op-declarations`, `admission`, `control-plane`). Until their L11 jobs route them, the page states the door's refusal for each act. Informational: their entries (T34-81, T34-83, T34-90, K1755) presumably carry them.
 3. No generated artifact made stale: nothing imports this module until instance-setup's T34-57.
