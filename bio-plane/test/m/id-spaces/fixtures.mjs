@@ -103,10 +103,11 @@ export function viewOf(...profiles) {
   return { ...c.view, conflicts: c.conflicts };
 }
 
-/* The five spaces T33 added (R1): the money record's identifiers, a proceeding's number and the person
- * schemes, one form per scheme. They are grafted onto a combined view, in the view's own shape, because the
- * jurisdictions job that teaches `combine` these spaces (its R3, T33-2) merges in this tranche; once it
- * has, `withNewSpaces` is equivalent to combining a profile that holds them. */
+/* The seven spaces T33 and T34 added (R1): the money record's identifiers, a proceeding's number, the person
+ * schemes (one form per scheme), and a body's and an office record's numbers (T34). They are grafted onto a
+ * combined view, in the view's own shape, because `combine` learns `body` and `office` only with the
+ * jurisdictions job that merges in this tranche (its R3, T34-2); `withNewSpaces` is equivalent to combining a
+ * profile that holds them. */
 export const NEW_SPACES = {
   account: { label: "general ledger account", forms: [{ form: "acct-5", pattern: P("(\\d{5})"), normal: [{ group: 1 }], clean: { strip: [P("acct\\.?", "i")], spaces: "remove" }, basis: T }] },
   object: { label: "object code", forms: [{ form: "obj-4", pattern: P("([A-Z]?\\d{4})"), normal: [{ group: 1 }], clean: { spaces: "remove", upper: true }, basis: T }] },
@@ -126,6 +127,14 @@ export const NEW_SPACES = {
       { form: "licence", pattern: P("LIC([A-Z]\\d{6})"), normal: ["LIC", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: T },
       { form: "bar", pattern: P("SBN(\\d{1,6})"), normal: ["SBN", { group: 1, unpad: true }], clean: { strip: [P("bar\\s*no\\.?", "i")], spaces: "remove", upper: true }, basis: T },
     ],
+  },
+  body: {
+    label: "legislative body id",
+    forms: [{ form: "body-id", pattern: P("(\\d{1,6})"), normal: [{ group: 1, unpad: true }], clean: { strip: [P("body\\s*(?:id)?\\s*", "i")], spaces: "remove" }, basis: T }],
+  },
+  office: {
+    label: "office record id",
+    forms: [{ form: "office-record", pattern: P("(\\d{1,7})"), normal: [{ group: 1, unpad: true }], clean: { strip: [P("office\\s*record\\s*(?:id)?\\s*", "i")], spaces: "remove" }, basis: T }],
   },
 };
 export function withNewSpaces(view, spaces = NEW_SPACES) {

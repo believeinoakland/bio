@@ -12,7 +12,7 @@ const H = viewOf(HARBOR);
 const L = viewOf(LAKESHORE);
 const HL = viewOf(HARBOR, LAKESHORE);
 const EMPTY = viewOf();
-const SPACE_NAMES = ["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"];
+const SPACE_NAMES = ["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person", "body", "office"];
 const HN = withNewSpaces(H);
 const LN = withNewSpaces(L, { person: { label: "registrant number", forms: [{ form: "reg", pattern: { re: "R(\\d{4})" }, normal: ["R", { group: 1 }], basis: "TEST" }] } });
 const JUNK = [undefined, null, 0, 1, "", "x", [], {}, NaN, Symbol("s"), () => 1, new Map(), { spaces: 5, systems: "x" },
@@ -34,7 +34,7 @@ const end = (view, space, value, address, name) => ({ rec: recognise(view, space
 
 /* ---------------------------------------------------------------- spaces */
 
-test("R1 spaces lists the nine spaces in order, each with the forms the view supplies and its referent", () => {
+test("R1 spaces lists the eleven spaces in order, each with the forms the view supplies and its referent", () => {
   for (const view of [H, L, HL, EMPTY, HN, LN]) {
     const s = spaces(view);
     assert.deepEqual(s.map((x) => x.space), SPACE_NAMES);
@@ -49,7 +49,7 @@ test("R1 spaces lists the nine spaces in order, each with the forms the view sup
   assert.equal(spaces(H).find((x) => x.space === "project").label, "project or capital improvement number");
   assert.equal(spaces(HL).find((x) => x.space === "project").label, "project or capital improvement number; works number");
   assert.deepEqual(spaces(L).find((x) => x.space === "fund").forms, [], "a space with no form in the view is listed with forms: []");
-  for (const sp of ["account", "object", "vendor", "proceeding", "person"]) {
+  for (const sp of ["account", "object", "vendor", "proceeding", "person", "body", "office"]) {
     assert.deepEqual(spaces(H).find((x) => x.space === sp).forms, [], `${sp}: no form in a view that gives none`);
     assert.equal(spaces(HN).find((x) => x.space === sp).label, NEW_SPACES[sp].label, `${sp}: the view's label`);
   }
@@ -86,6 +86,40 @@ test("R1 the money, proceeding and person spaces recognise from the view's forms
   const proc = judgePair(HN, "proceeding", { rec: recognise(HN, "proceeding", "RG21123456"), system: systemOf(HN, [A.legis]) },
     { rec: recognise(HN, "proceeding", "rg21-123456"), system: systemOf(HN, [auditor]) });
   assert.equal(proc.verdict, "REFERENT_UNREAD", "a proceeding number is judged like any other space");
+});
+
+test("R1 the body and office spaces recognise a body's and an office record's numbers from the view's forms, each its own space", () => {
+  const cases = [["body", "Body ID 0138", "body-id", "138"], ["body", "138", "body-id", "138"], ["office", "Office Record 0042117", "office-record", "42117"],
+    ["office", "42117", "office-record", "42117"]];
+  for (const [sp, v, form, normal] of cases) {
+    const r = recognise(HN, sp, v);
+    assert.deepEqual([r.space, r.form, r.normal], [sp, form, normal], `${sp} ${v}`);
+    assert.ok(!("kind" in r) && !("reach" in r), "only an enactment carries a kind and a reach");
+    assert.equal(recognise(H, sp, v), null, `${sp}: a view with no form for it recognises nothing`);
+  }
+  for (const sp of ["body", "office"]) {
+    const s = spaces(HN).find((x) => x.space === sp);
+    assert.deepEqual([s.referent, s.label, s.forms.map((f) => f.form)], ["reading", NEW_SPACES[sp].label, NEW_SPACES[sp].forms.map((f) => f.form)]);
+    assert.equal(spaces(H).find((x) => x.space === sp).referent, "reading", `${sp}: the referent is a reading in any view`);
+  }
+  assert.deepEqual(spaces(HN).slice(-2).map((x) => x.space), ["body", "office"], "after person, in Provides' order");
+  /* the same digits as a body and as an office record are two spaces: never judged together */
+  const auditor = "https://auditor.harbor.test/1";
+  const b = { rec: recognise(HN, "body", "138"), system: systemOf(HN, [A.legis]) };
+  const o = { rec: recognise(HN, "office", "138"), system: systemOf(HN, [auditor]) };
+  assert.throws(() => judgePair(HN, "body", b, o, "agrees"), TypeError);
+  assert.throws(() => judgePair(HN, "office", b, o, "agrees"), TypeError);
+  /* within its space, a body's number is judged like any other: one system never counts, a reading decides */
+  const e = (sp, v, addr) => ({ rec: recognise(HN, sp, v), system: systemOf(HN, [addr]) });
+  for (const sp of ["body", "office"]) {
+    assert.equal(judgePair(HN, sp, e(sp, "0138", A.legis), e(sp, "138", A.legis2), "agrees").verdict, "SAME_SYSTEM", sp);
+    assert.equal(judgePair(HN, sp, e(sp, "138", A.legis), e(sp, "138", auditor)).verdict, "REFERENT_UNREAD", sp);
+    assert.deepEqual(Object.values(judgePair(HN, sp, e(sp, "138", A.legis), e(sp, "138", auditor), "agrees")).slice(0, 2), ["SHARED", true], sp);
+    assert.equal(judgePair(HN, sp, e(sp, "138", A.legis), e(sp, "139", auditor), "agrees").verdict, "VALUES_DIFFER", sp);
+  }
+  /* another jurisdiction's view gives its own forms */
+  const LB = withNewSpaces(L, { body: { label: "committee code", forms: [{ form: "cmte", pattern: { re: "CM-(\\d{2})" }, normal: ["CM-", { group: 1 }], basis: "TEST" }] } });
+  assert.deepEqual([recognise(LB, "body", "CM-07").normal, recognise(LB, "body", "138"), recognise(LB, "office", "42117")], ["CM-07", null, null]);
 });
 
 test("R2 a space has several forms at once, told apart by the value's shape alone", () => {
@@ -443,7 +477,8 @@ test("R22 counts is true only for SHARED", () => {
   const views = [H, L, HL, HN];
   const vals = { enactment: ["87551", "087551", "87552", "Ordinance No. 12274", "LS-42"], project: ["C329142", "1003439", "W-10001", "07-001"],
                  fund: ["3100", "3101"], parcel: ["11-836-17", "011-0836-017-00", "123 456 789"], account: ["41100", "41101"], object: ["E5310"],
-                 vendor: ["V-12", "V-012", "V-13"], proceeding: ["RG21-123456", "A.24-07-012"], person: ["PID42", "SBN42", "PID042"] };
+                 vendor: ["V-12", "V-012", "V-13"], proceeding: ["RG21-123456", "A.24-07-012"], person: ["PID42", "SBN42", "PID042"],
+                 body: ["138", "0138", "139"], office: ["42117", "42118"] };
   const addrs = [A.legis, A.budget, A.budget2, A.portal, A.county, A.www, "https://clerk.lakeshore.test/", "https://finance.lakeshore.test/"];
   for (const view of views) for (const sp of SPACE_NAMES) for (const a of vals[sp]) for (const b of vals[sp]) {
     const ra = recognise(view, sp, a), rb = recognise(view, sp, b);
@@ -520,7 +555,7 @@ test("R24 no place is named in the module: every service answers from the view a
   assert.equal(systemOf(L, [A.legis]).origin, null);
   const lr = judgePair(L, "parcel", end(L, "parcel", "123 456 789", "https://clerk.lakeshore.test/"), end(L, "parcel", "123456789".replace(/(...)(...)(...)/, "$1 $2 $3"), "https://finance.lakeshore.test/"), "agrees");
   assert.equal(lr.verdict, "SHARED");
-  /* the labels are the view's, and every jurisdiction's space names are the same nine */
+  /* the labels are the view's, and every jurisdiction's space names are the same eleven */
   assert.equal(spaces(L).find((s) => s.space === "enactment").label, "bylaw number");
   assert.deepEqual(spaces(L).map((s) => s.space), spaces(H).map((s) => s.space));
   /* no built-in view survives: the module exports its seven services only (the old adapter under the old names is retired: N105),
