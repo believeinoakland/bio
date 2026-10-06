@@ -1,4 +1,4 @@
-/* installer R1–R35, each at the module's interface: the Worker's routes driven with a request, everything it reaches
+/* installer R1–R40, each at the module's interface: the Worker's routes driven with a request, everything it reaches
  * answered by the fixture's stateful account, repository and copy; the embed step's exported functions; the pages it
  * serves, and the invitation page, as a browser receives them. A requirement not yet met is a `test.todo` naming its
  * cause (build/requirements/installer.md).
@@ -177,7 +177,7 @@ test("R5 `fresh`: an existing script named for the slug is refused and nothing i
   const pre = { "taken-name": [{ type: "plain_text", name: "VERSION", text: "0.1.0" }] };
   const w = seen(await run({ slug: "taken-name", pre }));
   assert.equal(w.page.status("fresh"), "no");
-  assert.match(w.page.failed.h, /A copy named "taken-name" already exists/);
+  assert.match(w.page.failed.h, /An installation named "taken-name" already exists/);
   assert.match(w.page.failed.p, /Nothing was changed/);
   assert.deepEqual(w.acct.get("taken-name"), pre["taken-name"]);
   assert.ok(!w.calls.some((c) => c.method !== "GET" && c.u.startsWith(CFG.API)), "no write of any kind");
@@ -299,7 +299,7 @@ test("R10 `install`: the plane uploaded with STORE (SQLite v1), VERSION, INSTANC
   assert.equal(shy.planePuts.length, 1, "the retry landed");
   assert.equal(bindingOf(shy.planePuts[0], "SELF"), null);
   assert.equal(shy.refused.filter((r) => r.startsWith("inst-shy")).length, 1, "retried exactly once");
-  assert.match(shy.page.label("install"), /re-check documents on its own schedule — was refused by Cloudflare and was left out.*Running the updater on this copy later turns it on/s);
+  assert.match(shy.page.label("install"), /re-check documents on its own schedule — was refused by Cloudflare and was left out.*Running the updater later turns it on/s);
   const no = seen(await run({ slug: "inst-refused", refuseAllPlane: true }));
   assert.equal(no.refused.length, 2, "tried with SELF, then once without");
   assert.equal(no.page.status("install"), "no");
@@ -366,7 +366,7 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   assert.equal(puts[0], "bind-fresh"); assert.equal(puts.at(-1), "bind-fresh");
   assert.deepEqual(puts.slice(1, -1).sort(), MEMBERS.slice().sort(), "act 2 between");
   assert.equal(fresh.planePuts[1].meta.migrations, undefined, "the re-upload takes the update's shape");
-  assert.match(fresh.page.label("bind"), /Your copy is connected to/);
+  assert.match(fresh.page.label("bind"), /Your group's Civicsmith is connected to/);
   /* Members already present: under R32 only an update meets them (R17 runs `bind` as here), so the first act is shown there. */
   const old = [{ type: "plain_text", name: "VERSION", text: "0.1.0" }];
   const had = seen(await run({ slug: "bind-had", mode: "update", rel,
@@ -375,7 +375,7 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   assert.deepEqual(targets(had.planePuts[0].bindings), RIGHT, "act 1 binds every member already present");
   const bad = seen(await run({ slug: "bind-refused", rel, refuseRePut: true }));
   assert.equal(bad.page.status("bind"), "no");
-  assert.match(bad.page.label("bind"), /installed, but connecting your copy to them was refused/);
+  assert.match(bad.page.label("bind"), /installed, but connecting your group's Civicsmith to them was refused/);
   for (const m of MEMBERS) assert.ok(bad.acct.has(m), `${m} stays installed`);
   restoreSigners();
 });
@@ -416,32 +416,32 @@ test("R15 `verify`: op=selftest with the probe credential up to ten tries; a cap
   const all = seen(await run({ slug: "ver-all", rel }));
   assert.equal(all.page.status("verify"), "ok");
   assert.ok(all.calls.some((c) => c.u.includes("op=bootstrap&members=1")));
-  assert.match(all.page.done, /Your copy is running\./);
+  assert.match(all.page.done, /Your group's Civicsmith is running\./);
   const lags = [
-    [{ storeVersion: "0.1.0" }, "your copy&#39;s record store still runs 0.1.0"],
+    [{ storeVersion: "0.1.0" }, "the record store of your group&#39;s Civicsmith still runs 0.1.0"],
     [{ memberVersion: "0.1.0" }, "the capability worker pdf-worker still runs 0.1.0"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, memberVersions: s.members }) }, "record store has not reported its version"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: null, memberVersions: s.members }) }, "record store cannot say which version it runs"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v }) }, "your copy did not report its capability workers"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: "0.1.0", storeVersion: s.v, memberVersions: s.members }) }, "your copy&#39;s address answers 0.1.0"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, memberVersions: s.members }) }, "record store of your group&#39;s Civicsmith has not reported its version"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: null, memberVersions: s.members }) }, "record store of your group&#39;s Civicsmith cannot say which version it runs"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v }) }, "your group&#39;s Civicsmith did not report its capability workers"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: "0.1.0", storeVersion: s.v, memberVersions: s.members }) }, "the address of your group&#39;s Civicsmith answers 0.1.0"],
     [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "SILENT" } } }) }, "cannot get an answer from the capability worker ocr-worker, which this step installed"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "MISNAMED", name: "pdf-worker" } } }) }, "your copy&#39;s connection to ocr-worker reaches a different worker (pdf-worker)"],
-    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "UNBOUND" } } }) }, "ocr-worker was installed, but your copy holds no connection to it"],
-    [{ bootstrap: (q, s) => { const mv = { ...s.members }; delete mv["ocr-worker"]; return jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: mv }); } }, "ocr-worker was installed, but your copy does not know it"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "MISNAMED", name: "pdf-worker" } } }) }, "the connection of your group&#39;s Civicsmith to ocr-worker reaches a different worker (pdf-worker)"],
+    [{ bootstrap: (q, s) => jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: { ...s.members, "ocr-worker": { state: "UNBOUND" } } }) }, "ocr-worker was installed, but your group&#39;s Civicsmith holds no connection to it"],
+    [{ bootstrap: (q, s) => { const mv = { ...s.members }; delete mv["ocr-worker"]; return jres({ ok: true, version: s.v, storeVersion: s.v, memberVersions: mv }); } }, "ocr-worker was installed, but your group&#39;s Civicsmith does not know it"],
   ];
   for (const [copy, named] of lags) {
     const w = seen(await run({ slug: "ver-lag", rel, copy }));
     assert.equal(w.page.status("verify"), "no", named);
     assert.ok(w.page.done.includes(named), named);
-    assert.ok(!w.page.done.includes("Your copy is running."), named);
+    assert.ok(!w.page.done.includes("Your group's Civicsmith is running."), named);
     assert.ok(w.page.done.includes('id="out-boot"'), "the credentials are still handed over");
   }
   const failed = seen(await run({ slug: "ver-failed", rel: await release({ version: NEXT, missing: "ocr-worker" }) }));
-  assert.ok(failed.page.done.includes("ocr-worker could not be installed, so your copy has no OCR_WORKER connection"));
+  assert.ok(failed.page.done.includes("ocr-worker could not be installed, so your group&#39;s Civicsmith has no OCR_WORKER connection"));
   const pre = await release({ version: NEXT, src: PRE116_SRC });
   const inc = seen(await run({ slug: "ver-pre", rel: pre }));
   assert.equal(inc.page.status("verify"), "ok");
-  assert.match(inc.page.label("verify"), /This release cannot report which version your copy's record store or its capability workers are running/);
+  assert.match(inc.page.label("verify"), /This release cannot report which version the record store of your group's Civicsmith or its capability workers are running/);
   assert.ok(!inc.calls.some((c) => c.u.includes("op=bootstrap&members=1")), "nothing to read back");
   restoreSigners();
 });
@@ -462,11 +462,12 @@ test("R16 the final panel shows the address, the one-time password and the membe
   assert.ok(w.raw.includes(`location.href=h.dataset.url+"#boot="+encodeURIComponent(document.getElementById("out-boot").textContent)`));
 });
 
-test("R34 the wizard's last screen shows, before the hand-over to the copy where the founder chooses a password, instance-setup R47's block in DEC-109's words (the same export), and asks for and records no acknowledgement", async () => {
+test("R34 the wizard's last screen shows, before the hand-over to your group's Civicsmith where the founder chooses a password, instance-setup R47's block in DEC-109's words (the same export), and asks for and records no acknowledgement; it names what it hands over to as \"your group's Civicsmith\" (R40)", async () => {
   const escd = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  /* DEC-109's five points, each held in the one export both pages read. */
+  /* DEC-109's five points, each held in the one export both pages read. The words are instance-setup's (R47, which its
+     own T34 job re-words for DEC-149), so each point is read by its meaning, not its exact wording. */
   const S = HOSTING_CONTROL.sentences;
-  for (const [i, says] of [[0, /hosting account .* controls the copy.*replace the one-time password, claim the copy again, read everything in it and lock everyone else out.*no vote of the group's administrators can stop them/s],
+  for (const [i, says] of [[0, /hosting account.*controls.*replace the one-time password.*claim.*again.*read everything.*lock everyone else out.*no vote of the group's administrators can stop them/s],
       [1, /group account.*not anyone's personal login/], [2, /at least one other trusted person/],
       [3, /someone other than the group's administrators hold it/], [4, /same account is the way back in if the password you choose is lost/]])
     assert.match(S[i], says, `point ${i + 1}`);
@@ -481,6 +482,8 @@ test("R34 the wizard's last screen shows, before the hand-over to the copy where
     const done = w.page.done;
     const at = done.indexOf(block), hand = done.indexOf('<button id="handover"');
     assert.ok(at > 0 && hand > at, "the block, whole, before the hand-over");
+    /* R40: the hand-over names what it hands over to as "your group's Civicsmith". */
+    assert.ok(done.includes(`>Go to your group&#39;s Civicsmith and finish setup</button>`), "the hand-over's words");
     assert.equal(done.split(block).length - 1, 1, "shown once");
     for (const s of [HOSTING_CONTROL.heading, ...S]) assert.ok(done.slice(0, hand).includes(escd(s)), s);
     /* The reassurance-only paragraph it replaces is gone. */
@@ -507,7 +510,7 @@ const planeBase = (slug, v = "0.1.0") => [{ type: "durable_object_namespace", na
 test("R17 the update: no script refused unchanged; buckets where possible; the release chosen as R8; the version before read; the credentials, store and buckets kept and the rest restated; a refused upload leaves the copy; fleet, bind, verify as install; a no-op says so", async () => {
   const none = seen(await run({ slug: "upd-none", mode: "update" }));
   assert.equal(none.page.status("find"), "no");
-  assert.match(none.page.failed.h, /No copy named "upd-none" exists/);
+  assert.match(none.page.failed.h, /No installation named "upd-none" exists/);
   assert.ok(!none.calls.some((c) => c.method !== "GET" && c.u.startsWith(CFG.API)));
   const AI = "aik-" + "u".repeat(20);
   const w = seen(await run({ slug: "upd", mode: "update", pre: { upd: planeBase("upd") }, ai: AI }));
@@ -536,11 +539,11 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   for (const member of MEMBERS) assert.ok(fl.acct.has(member), member);
   assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => BINDINGS.includes(b.name)).length, BINDINGS.length);
   assert.equal(fl.page.status("verify"), "ok");
-  assert.match(fl.page.done, /Every part of your copy answers/);
+  assert.match(fl.page.done, /Every part of your group's Civicsmith answers/);
   restoreSigners();
   const same = seen(await run({ slug: "upd-same", mode: "update", pre: { "upd-same": planeBase("upd-same", DEFAULT_VERSION) } }));
   assert.match(same.page.label("up") ?? same.page.events.find((e) => e.id === "up").label, /already runs/);
-  assert.match(same.page.done, /Nothing changed: your copy was already running/);
+  assert.match(same.page.done, /Nothing changed: your group&#39;s Civicsmith was already running/);
   assert.ok(!/<b>Updated (from|to)/.test(same.page.done));
 });
 
@@ -548,13 +551,13 @@ test("R18 an update crossing the first group-recording release (0.71.0) tells th
   const groupCalls = (w) => w.calls.filter((c) => /op=instancegroup/.test(c.u));
   const cross = seen(await run({ slug: "cross", mode: "update", pre: { cross: planeBase("cross", "0.70.0") } }));
   assert.match(cross.page.done, /One thing this update does not do for you/);
-  assert.match(cross.page.done, /Your copy ran 0\.70\.0 before this update/);
+  assert.match(cross.page.done, /Your group&#39;s Civicsmith ran 0\.70\.0 before this update/);
   assert.match(cross.page.done, /GROUP_UNDETERMINED/);
   assert.match(cross.page.done, /POST https:\/\/cross\.grp\.workers\.dev\/api\/\?op=instancegroupseed/);
   assert.match(cross.page.done, /store=scratch/);
-  assert.match(cross.page.done, /A suggestion, not a default: this copy was installed under the name <span class="mono">cross<\/span>/);
+  assert.match(cross.page.done, /A suggestion, not a default: your group&#39;s Civicsmith was installed under the name <span class="mono">cross<\/span>/);
   const fog = seen(await run({ slug: "fog", mode: "update", pre: { fog: planeBase("fog", "0.70.0") }, copy: { before: null } }));
-  assert.match(fog.page.done, /could not read which version your copy ran before this update, so it cannot tell whether this\napplies to you/);
+  assert.match(fog.page.done, /could not read which version your group&#39;s Civicsmith ran before this update, so it cannot tell whether this\napplies to you/);
   const past = seen(await run({ slug: "past", mode: "update", pre: { past: planeBase("past", "0.71.0") } }));
   assert.ok(!past.page.done.includes("op=instancegroupseed"));
   const same = seen(await run({ slug: "same", mode: "update", pre: { same: planeBase("same", DEFAULT_VERSION) } }));
@@ -607,8 +610,8 @@ test("R20 the plane's limits are read from the signed release R8 chose and sent 
     assert.ok(limitsOf(u).every((l) => JSON.stringify(l) === JSON.stringify(want)), stmt);
   }
   /* A verified release stating none, or stating them unreadably, is not used, and the page names why as R8 names a failed one. */
-  const bad = [[UNSTATED_SRC, /states no limits for the plane, so it was NOT used/],
-    [plane("bio-plane-limits/1 subrequests=10000") + ' const b = "bio-plane-limits/1 subrequests=500";', /states the plane's limits unreadably \(it states them 2 different ways\)/],
+  const bad = [[UNSTATED_SRC, /states no limits for your group's Civicsmith to run under, so it was NOT used/],
+    [plane("bio-plane-limits/1 subrequests=10000") + ' const b = "bio-plane-limits/1 subrequests=500";', /states the limits your group's Civicsmith runs under unreadably \(it states them 2 different ways\)/],
     [plane("bio-plane-limits/1 subrequests=10000 cpu_ms=5"), /unreadably .*keys sorted/],
     [plane("bio-plane-limits/1 subrequests=0"), /unreadably/], [plane("bio-plane-limits/1 subrequests=ten"), /unreadably/],
     [plane("bio-plane-limits/1 subrequests=1 subrequests=2"), /unreadably/]];
@@ -624,7 +627,7 @@ test("R20 the plane's limits are read from the signed release R8 chose and sent 
       /* This tree's built-in states none either: the install is refused by name, and nothing exists afterwards. */
       assert.equal(w.page.status("rel"), "no");
       assert.match(w.page.failed.p, /Nothing was created/);
-      assert.match(w.page.failed.p, new RegExp(`built-in release \\(${RELEASE_VERSION.replace(/\./g, "\\.")}\\) states no limits for the plane`));
+      assert.match(w.page.failed.p, new RegExp(`built-in release \\(${RELEASE_VERSION.replace(/\./g, "\\.")}\\) states no limits for your group's Civicsmith`));
       assert.deepEqual([[...w.acct.keys()], [...w.buckets]], [[], []], "no script, no bucket, no probe");
       assert.ok(!w.page.done);
       const u = seen(await run({ slug: "lim-upd", mode: "update", pre: { "lim-upd": planeBase("lim-upd") }, rel }));
@@ -718,9 +721,9 @@ test("R22 every page names Civicsmith and the installing group, by its chosen na
     assert.match(page, /your group/i, `${where} speaks to the group`);
     assert.ok(page.includes("This installer is run by the publisher of Civicsmith releases."), `${where} says the publisher runs it`);
   }
-  assert.match(before["/"], /<title>Set up your group's copy of Civicsmith<\/title>/);
-  assert.match(before["/update"], /<title>Update your copy of Civicsmith<\/title>/);
-  assert.match(before.invitation, /<title>Start your group's copy — Civicsmith<\/title>/);
+  assert.match(before["/"], /<title>Set up your group's Civicsmith<\/title>/);
+  assert.match(before["/update"], /<title>Update your group's Civicsmith<\/title>/);
+  assert.match(before.invitation, /<title>Start your group's own Civicsmith<\/title>/);
   assert.ok(before.invitation.includes('href="https://newgroup.believeinoakland.workers.dev/"'), "the address stays where it runs");
   for (const path of ["/", "/update"]) assert.ok(before[path].includes(`placeholder="${EXAMPLE_SLUG}"`), path);
   const places = jurisdictions.list().flatMap((p) => p.covers).flatMap((c) => c.toLowerCase().split(/\W+/)).filter((x) => x.length > 2);
@@ -759,7 +762,7 @@ test("R23 the install and invitation pages state the prerequisites the install e
     /* T33-91: for the assistant through a member's own subscription, the Containers permission the install asks (R38). */
     assert.match(words, /Workers Containers permission/, where);
     assert.match(words, /member's own Claude subscription/, where);
-    assert.match(words, /only with their own API key/, where);
+    assert.match(words, /used only with an API key: a member's own, or your group's/, where);
   }
   const free = seen(await run({ slug: "pre-free", plan: "free" }));
   assert.match(free.page.failed.p, /Workers Paid plan \(\$5\/month\), paid with a payment method on the account/);
@@ -789,20 +792,26 @@ test("R17 (K1541) an update gives a copy that holds no seal secret a fresh one, 
 
 /* ------------------------------------------------------------------------------------------------ the assistant and the container member */
 
-test("R36 neither the install nor the update takes, generates, binds or shows a Claude credential; an update removes one held before, and names a removal refused; INSTANCE_AI_TOKEN is unchanged", async () => {
-  const CLAUDE = "sk-ant-oat01-" + "z".repeat(40);
-  const b = await begin("r36-install", "install", { instanceClaude: CLAUDE });
+test("R36 neither the install nor the update takes, generates, binds or shows a Claude credential, the group's API key included (set inside the group's Civicsmith by an administrator, K1755); an update removes one held before, and names a removal refused; INSTANCE_AI_TOKEN is unchanged", async () => {
+  const CLAUDE = "sk-ant-oat01-" + "z".repeat(40), KEY = "sk-ant-api03-" + "k".repeat(40);
+  const b = await begin("r36-install", "install", { instanceClaude: CLAUDE, groupKey: KEY, anthropicApiKey: KEY });
+  assert.equal(b.j.ok, true);
+  assert.ok(![CLAUDE, KEY].some((x) => JSON.stringify(cookieValue(b.cookie)).includes(x)), "the cookie keeps neither");
   const i = seen(await run({ slug: "r36-install", cookie: b.cookie, state: b.state }));
-  for (const put of i.planePuts) assert.equal((put.meta.bindings || []).some((x) => /CLAUDE/.test(x.name)), false);
-  assert.equal(i.raw.includes(CLAUDE), false);
-  assert.match(i.page.label("assist"), /holds no Claude account of its own: each member who wants the assistant connects their own Claude subscription or API key/);
+  for (const put of i.planePuts) assert.equal((put.meta.bindings || []).some((x) => /CLAUDE|ANTHROPIC|API_KEY/.test(x.name)), false);
+  for (const put of i.planePuts) assert.equal((put.meta.bindings || []).some((x) => x.text === KEY || x.text === CLAUDE), false);
+  assert.equal(i.raw.includes(CLAUDE) || i.raw.includes(KEY), false);
+  /* The page says where each way to the assistant is set: the group's key by an administrator, a member's own by the member, both inside it. */
+  assert.match(i.page.label("assist"), /This installer takes and binds no Claude account or key/);
+  assert.match(i.page.label("assist"), /your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith/);
+  assert.match(i.page.label("assist"), /each member's own Claude subscription or API key, which the member connects there, or both/);
   /* An update of a copy holding the retired credential removes it, and says so; one holding none deletes nothing. */
   const pre = [...planeBase("r36-upd"), { type: "secret_text", name: "INSTANCE_CLAUDE_TOKEN", text: CLAUDE }];
   const u = seen(await run({ slug: "r36-upd", mode: "update", pre: { "r36-upd": pre } }));
   for (const put of u.planePuts) assert.equal((put.meta.bindings || []).some((x) => x.name === "INSTANCE_CLAUDE_TOKEN"), false, "never restated");
   assert.deepEqual(u.deleted, ["r36-upd/INSTANCE_CLAUDE_TOKEN"]);
   assert.equal(u.acct.get("r36-upd").some((x) => x.name === "INSTANCE_CLAUDE_TOKEN"), false, "none left behind");
-  assert.match(u.page.label("keys"), /group-wide Claude credential your copy held was removed/);
+  assert.match(u.page.label("keys"), /Claude credential an earlier installer bound into your group's Civicsmith was removed/);
   assert.equal(u.raw.includes(CLAUDE), false);
   const clean = seen(await run({ slug: "r36-clean", mode: "update", pre: { "r36-clean": planeBase("r36-clean") } }));
   assert.deepEqual(clean.deleted, []);
@@ -816,7 +825,7 @@ test("R36 neither the install nor the update takes, generates, binds or shows a 
   assert.deepEqual(secretsOf(ai.planePuts[0]).filter((x) => x.name === "INSTANCE_AI_TOKEN").map((x) => x.text), [AI]);
 });
 
-test("R37 the install page offers the assistant as optional, nothing preselected, saying it is off unless chosen and each member connects their own account and is told then; the choice is bound as ASSISTANT_ENABLED for the first boot, none bound when none is made; an update never changes it", async () => {
+test("R37 the install page offers the assistant as optional, nothing preselected, saying it is off unless chosen; that once on it is reached through the group's API key (set by an administrator) or each member's own account (connected by the member), or both, chosen at setup; and that each member is told what goes to Anthropic before their first use; the choice is bound as ASSISTANT_ENABLED for the first boot, none bound when none is made; an update never changes it", async () => {
   const home = await text("/"), upd = await text("/update");
   const radios = [...home.matchAll(/<input type="radio" name="assistant" value="([^"]*)"([^>]*)>/g)];
   assert.deepEqual(radios.map((m) => m[1]), ["on", "off"]);
@@ -824,11 +833,16 @@ test("R37 the install page offers the assistant as optional, nothing preselected
   assert.ok(home.includes(ASSISTANT_OFFER));
   const words = ASSISTANT_OFFER.replace(/\s+/g, " ");
   assert.match(words, /off unless your group chooses it/);
-  assert.match(words, /each member who wants the assistant connects their own Claude subscription or API key inside the copy/);
-  assert.match(words, /told then that their questions, and the material read to answer them, go to Anthropic under their own account/);
+  /* K1755, K1851: the two ways in, both set inside the group's Civicsmith, and the choice among them (or none) at its setup. */
+  assert.match(words, /Once it is on, it is reached through your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith/);
+  assert.match(words, /or through each member's own Claude subscription or API key, which the member connects there, or both/);
+  assert.match(words, /Which of these, or no AI at all, is chosen when your group's Civicsmith is set up/);
+  /* credentials R36: each member told before their first use, under either way. */
+  assert.match(words, /Each member is told what goes to Anthropic before their first use: when they connect their own account, or before their first question under your group's key/);
+  assert.match(words, /This installer takes no Claude credential of any kind/);
   assert.ok(!upd.includes('type="radio" name="assistant"'), "the update page offers no choice");
   for (const [v, mode, says] of [["maybe", "install", /choose one of the two, or neither/], [true, "install", /choose one/],
-      ["on", "update", /An update never changes whether your copy offers the assistant/]]) {
+      ["on", "update", /An update never changes whether your group's Civicsmith offers the assistant/]]) {
     const r = await req("/begin", { method: "POST", body: JSON.stringify({ slug: "as-refused", mode, assistant: v }) });
     assert.deepEqual([r.status, (await r.json()).ok], [400, false], String(v));
     assert.equal(r.headers.get("set-cookie"), null);
@@ -871,7 +885,7 @@ test("R38 a container member installs only with the Containers scope granted, Wo
   const upload = (w) => w.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u)).map((c) => c.u.split("/scripts/")[1]);
   assert.ok(upload(ok).indexOf(RUNNER) < upload(ok).indexOf("agent-worker"), "the container before the member bound to it");
   /* Each condition failing: left out, named, the copy serving the assistant by members' own API keys, the rest installed. */
-  const PAID_NOTE = /your copy offers the assistant only through a member's own API key/;
+  const PAID_NOTE = /your group's Civicsmith offers the assistant only through an API key \(a member's own, or your group's\)/;
   const leftOut = async (why, opts, says) => {
     const w = seen(await run({ slug: "box-" + why, rel, ...opts }));
     assert.equal(w.apps.length, 0, why);
@@ -1100,7 +1114,7 @@ test("R32 until installs are isolated, an install into an account already holdin
   for (const [why, pre, preBuckets, names] of cases) {
     const w = seen(await run({ slug: "one-copy", rel, pre, preBuckets }));
     assert.equal(w.page.status("fresh"), "no", why);
-    assert.match(w.page.failed.p, /One copy per account is supported for now/, why);
+    assert.match(w.page.failed.p, /One installation of Civicsmith per Cloudflare account is supported for now/, why);
     assert.match(w.page.failed.p, names, why);
     assert.match(w.page.failed.p, /Nothing was created or changed/, why);
     assert.ok(!w.calls.some((c) => c.u.includes("bio-plan-probe")), `${why}: refused before the plan probe`);
@@ -1120,11 +1134,11 @@ test("R32 until installs are isolated, an install into an account already holdin
   for (const m of [...MEMBERS, "extra-worker"]) assert.ok(empty.acct.has(m), m);
   assert.equal(empty.page.status("install"), "ok");
   assert.ok(empty.page.done.includes('id="out-boot"'));
-  assert.ok(!empty.page.words.includes("One copy per account"));
+  assert.ok(!empty.page.words.includes("One installation of Civicsmith per"));
   /* An update is not an install: a copy with its buckets and its members is updated, not refused. */
   const up = seen(await run({ slug: "one-upd", mode: "update", rel, preBuckets: ["bio-captures", "bio-published"],
     pre: { "one-upd": planeBase("one-upd"), ...Object.fromEntries(MEMBERS.map((m) => [m, old])) } }));
-  assert.ok(!up.page.words.includes("One copy per account"));
+  assert.ok(!up.page.words.includes("One installation of Civicsmith per"));
   assert.equal(up.page.status("up"), "ok");
   assert.ok(up.page.done && up.planePuts.length >= 1, "the update ran to its end");
   restoreSigners();
@@ -1142,14 +1156,14 @@ test("R33 the install and the update read back the uploaded plane's content and 
     assert.equal(w.planePuts.length, 2, readBack);
     assert.ok(w.reads.filter((n) => n === "rb-ok").length >= 2, `${readBack}: read back after each plane upload`);
     assert.equal(w.page.status("verify"), "ok", readBack);
-    assert.match(w.page.done, /Your copy is running\./, readBack);
+    assert.match(w.page.done, /Your group's Civicsmith is running\./, readBack);
   }
   const reads = [];
   for (const [readBack, named] of [["differ", MISMATCH], ["fail", /could not be read back, so it is not confirmed to be the [0-9.]+ release&#39;s own bytes/]]) {
     const w = seen(await run({ slug: "rb-bad", rel, readBack }));
     reads.push(w.reads.length);
     assert.match(w.page.done, named, readBack);
-    assert.ok(!w.page.done.includes("Your copy is running."), `${readBack}: no success claimed`);
+    assert.ok(!w.page.done.includes("Your group's Civicsmith is running."), `${readBack}: no success claimed`);
     assert.equal(w.page.status("verify"), "no", readBack);
     assert.ok(w.page.done.includes('id="out-boot"'), `${readBack}: the credentials are still handed over`);
     /* With the address silent too, the mismatch is still named. */
@@ -1227,4 +1241,119 @@ test("R35 every page the installer serves, and the invitation page, names no res
   /* A link the reader follows stays: the hosting provider's sign-up, and the installer's own address. */
   assert.ok(INVITATION.includes('<a href="https://dash.cloudflare.com/sign-up"'));
   assert.ok(INVITATION.includes('href="https://newgroup.believeinoakland.workers.dev/"'));
+});
+
+/* ------------------------------------------------------------------------------------------------ a member's own limits */
+
+test("R39 a fleet member's limits are read from its signed bundle (`bio-member-limits/1 …`) and sent exactly at its upload, on install and update, the installer holding no value of its own; a member stating none is uploaded with none; one stating them unreadably is left out, named, and the install never fails over it; the fleet statement is unchanged", async () => {
+  const member = (stmt, q = '"') => `export default { fetch(){ return new Response('member'); } }; export const L = ${q}${stmt}${q};`;
+  const SHEET = "sheet-worker", ALL = [...new Set([...MEMBERS, SHEET])];
+  const putOf = async (w, name) => {
+    const c = w.calls.filter((x) => x.method === "PUT" && x.u.endsWith("/workers/scripts/" + name)).at(-1);
+    return c ? JSON.parse(await c.init.body.get("metadata").text()) : null;
+  };
+  armWith(SIGNER.line);
+  /* Exactly the bundle's statement, in any quote style a bundler prints, on the install and on the update; a member that
+     states none is uploaded with no limits, as before. */
+  for (const [stmt, q, want] of [["bio-member-limits/1 cpu_ms=300000", '"', { cpu_ms: 300000 }],
+      ["bio-member-limits/1 cpu_ms=30000 subrequests=50", "'", { cpu_ms: 30000, subrequests: 50 }], ["bio-member-limits/1 cpu_ms=7", "`", { cpu_ms: 7 }]]) {
+    const rel = await release({ version: NEXT, members: ALL, memberSrc: { [SHEET]: member(stmt, q) + ` const again = "${stmt}";` } });
+    const i = seen(await run({ slug: "mlim-install", rel }));
+    assert.deepEqual((await putOf(i, SHEET)).limits, want, stmt);
+    for (const m of ALL.filter((x) => x !== SHEET)) assert.equal("limits" in (await putOf(i, m)), false, `${m} states none, so none is sent`);
+    assert.match(i.page.label("fleet"), new RegExp(`All ${ALL.length} capability workers installed and verified`), stmt);
+    const u = seen(await run({ slug: "mlim-update", mode: "update", pre: { "mlim-update": planeBase("mlim-update") }, rel }));
+    assert.deepEqual((await putOf(u, SHEET)).limits, want, `update: ${stmt}`);
+  }
+  /* A container member is uploaded with its own limits too (R38's upload). */
+  const boxed = await release({ version: NEXT, container: true, memberSrc: { [RUNNER]: member("bio-member-limits/1 cpu_ms=900") } });
+  const box = seen(await run({ slug: "mlim-box", rel: boxed }));
+  assert.deepEqual((await putOf(box, RUNNER)).limits, { cpu_ms: 900 });
+  /* Unreadable: that member is left out, named with why; every other member installs; the install finishes. */
+  for (const [src, says] of [[member("bio-member-limits/1 cpu_ms=300000") + ' const b = "bio-member-limits/1 cpu_ms=5";', /states its limits unreadably \(it states them 2 different ways\)/],
+      [member("bio-member-limits/1 subrequests=5 cpu_ms=5"), /states its limits unreadably .*keys sorted/], [member("bio-member-limits/1 cpu_ms=0"), /unreadably/],
+      [member("bio-member-limits/1 cpu_ms=lots"), /unreadably/], [member("bio-member-limits/1 cpu_ms=1 cpu_ms=2"), /unreadably/]]) {
+    const w = seen(await run({ slug: "mlim-bad", rel: await release({ version: NEXT, members: ALL, memberSrc: { [SHEET]: src } }) }));
+    assert.ok(!w.acct.has(SHEET), "left out");
+    for (const m of ALL.filter((x) => x !== SHEET)) assert.ok(w.acct.has(m), `${m} still installs`);
+    assert.match(w.page.label("fleet"), new RegExp(`left out: ${SHEET} \\(its bundle states its limits unreadably`));
+    assert.match(w.page.label("fleet"), says);
+    assert.ok(w.page.done, "the install never fails over a member");
+  }
+  /* The two statements are never read as each other: a member's in the plane is not the plane's, a plane's in a member is not the member's. */
+  assert.deepEqual(installer.memberLimits(member("bio-plane-limits/1 subrequests=10000")), { ok: true, limits: null });
+  assert.deepEqual(planeLimits(UNSTATED_SRC + ' const m = "bio-member-limits/1 cpu_ms=300000";'), { ok: false, why: "none" });
+  /* Nothing is added to the fleet statement: the limits ride in the member bytes its hash covers, so the /2 statement an
+     older installer rebuilds is the one signed, and the manifest's keys are as before. */
+  const rel = await release({ version: NEXT, members: ALL, memberSrc: { [SHEET]: member("bio-member-limits/1 cpu_ms=300000") } });
+  assert.deepEqual(Object.keys(rel.manifest).sort(), ["asset", "bytes", "fleet", "fleetSig", "sha256", "sig", "version"]);
+  assert.deepEqual(Object.keys(rel.manifest.fleet.find((m) => m.member === SHEET)).sort(), ["asset", "bytes", "compat", "member", "parts", "services", "sha256"]);
+  restoreSigners();
+  /* The member this tree builds states its limits as this reads them (`sheet-worker` R17), equal to its own
+     `wrangler.jsonc`'s `limits`: built here by the bundler's own recipe, the bytes a release would sign. */
+  const { discoverMembers, buildMember } = await import("../../bio-plane/scripts/fleet-bundle.mjs");
+  const sheet = discoverMembers().find((m) => m.name === SHEET);
+  const built = await buildMember(sheet, { write: false });
+  const cfgLimits = JSON.parse(readFileSync(new URL("../../sheet-worker/wrangler.jsonc", import.meta.url), "utf8").match(/"limits":\s*(\{[^}]*\})/)[1]);
+  assert.deepEqual(installer.memberLimits(built.bytes), { ok: true, limits: cfgLimits });
+});
+
+/* ------------------------------------------------------------------------------------------------ the words members and founders see */
+
+/* R40: a page's member- and founder-facing words: no style or script, no markup; the hosting block (instance-setup's
+   export, R34, its words that module's), codes, binding and field names, and identifiers taken out; and the meanings of
+   "copy" R40 keeps (a release's built-in or repository copy; the Copy buttons) and BOB's kept line ("someone else's
+   servers", K1785) taken out. What is left must never call the group's own Civicsmith a copy, instance, plane or server. */
+const blockText = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const memberWords = (page) => {
+  let t = page.replace(/<style>[\s\S]*?<\/style>/g, " ").replace(/<script>[\s\S]*?<\/script>/g, " ");
+  for (const x of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences]) t = t.split(blockText(x)).join(" ").split(x).join(" ");
+  t = t.replace(/<button class="copy"[^>]*>Copy<\/button>/g, " ").replace(/<[^>]+>/g, " ").replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  t = t.replace(/(repository's|built-in) copy/g, " ").replace(/someone else's servers/g, " ").replace(/number of instances/g, " ");
+  return t.replace(/\b[A-Z][A-Z0-9_]{2,}\b/g, " ").replace(/\S*[-_=/.:]\S*/g, (w) => /[a-z][-_=/.:][a-z]/i.test(w) ? " " : w);
+};
+test("R40 every member- or founder-facing string the installer serves (the install and update pages, every step and refusal, the final panel and last screen, the invitation page) says \"your group's Civicsmith\" or needs no name, never copy, instance, plane or server for it; \"installation\" only where the hosting is the subject", async () => {
+  /* The reading finds each word it is for, and passes the meanings R40 keeps. */
+  for (const bad of ["Your copy is running.", "the plane itself installed", "on this instance", "our servers", "Go to my copy"])
+    assert.match(memberWords(`<p>${bad}</p>`), /\b(copy|instance|plane|servers?)\b/i, bad);
+  for (const fine of ["The repository's copy carries no signature", "the installer used its built-in copy", "the binding INSTANCE_NAME",
+      `<button class="copy" data-copy="out-url">Copy</button>`, "bio-plane.bundled.mjs", "op=instancegroupseed", "someone else's servers"])
+    assert.doesNotMatch(memberWords(`<p>${fine}</p>`), /\b(copy|instance|plane|servers?)\b/i, fine);
+  /* Every page: the install and update pages, a 404, every page the suite above streamed or answered (the progress pages
+     of every install and update with their steps, refusals and panels, the callback's refusals), and the invitation page. */
+  const pages = [await text("/"), await text("/update"), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
+  assert.ok(RAW.length > 40, "the pages this suite rendered");
+  for (const page of pages) {
+    const words = memberWords(page);
+    const hit = words.match(/.{0,60}\b(copy|copies|instance|instances|plane|planes|server|servers)\b.{0,40}/i);
+    assert.equal(hit, null, hit?.[0]);
+  }
+  /* Each changed string by name: the pages' titles, the last screen's hand-over, R32's sentence, R14's address step, the
+     refusal pages, the assistant's words, and the limits' refusal. */
+  const home = await text("/"), upd = await text("/update");
+  for (const [page, want] of [[home, "<title>Set up your group's Civicsmith</title>"], [home, "<h2>Name your group's Civicsmith</h2>"],
+      [upd, "<title>Update your group's Civicsmith</title>"], [upd, "The name your group's Civicsmith was installed under"],
+      [INVITATION, "<title>Start your group's own Civicsmith</title>"], [INVITATION, ">Set up my group's Civicsmith</a>"],
+      [await text("/elsewhere"), "Setting up your group&#39;s Civicsmith."]])
+    assert.ok(page.includes(want), want);
+  assert.match(ASSISTANT_OFFER.replace(/\s+/g, " "), /inside your group's Civicsmith/);
+  const done = seen(await run({ slug: "r40-words" }));
+  assert.ok(done.page.done.includes(">Go to your group&#39;s Civicsmith and finish setup</button>"));
+  assert.match(done.page.done, /<b>Your group's Civicsmith is running\.<\/b>/);
+  assert.match(done.raw, /<title>Setting up your group&#39;s Civicsmith<\/title>/);
+  assert.equal(done.page.events.find((e) => e.k === "step" && e.id === "fleet").label, "Installing the capability workers beside your group's Civicsmith");
+  const one = seen(await run({ slug: "r40-one", preBuckets: ["bio-captures"] }));
+  assert.equal(one.page.failed.h, "Your Cloudflare account already holds an installation of Civicsmith");
+  assert.match(one.page.failed.p, /^One installation of Civicsmith per Cloudflare account is supported for now: /);
+  const up = seen(await run({ slug: "r40-up", mode: "update", pre: { "r40-up": planeBase("r40-up") } }));
+  assert.match(up.raw, /<title>Updating your group&#39;s Civicsmith<\/title>/);
+  assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "find").label, `Finding your group's Civicsmith, installed as "r40-up"`);
+  assert.equal(up.page.events.find((e) => e.k === "step" && e.id === "addr").label, "Finding the address of your group's Civicsmith");
+  assert.ok(up.page.done.includes(">Open your group&#39;s Civicsmith</a>"));
+  /* "Copy" keeps its other meaning: the release the installer carries is still its built-in copy. */
+  armWith(SIGNER.line);
+  const tamper = await release({ version: NEXT, fleet: false }); tamper.assets["bio-plane.bundled.mjs"] = "tampered";
+  const kept = seen(await run({ slug: "r40-kept", rel: tamper }));
+  restoreSigners();
+  assert.match(kept.page.label("rel"), /The repository's copy did not pass its integrity check/);
 });

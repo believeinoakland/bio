@@ -24,11 +24,11 @@ export const PROFILE_CHOICES = Object.freeze(heldProfiles().filter((p) => p.test
   .map(({ id, name, covers }) => Object.freeze({ id, name, covers: Object.freeze([...covers]) })));
 const escText = (s) => String(s).replace(/[&<>"']/g,
   (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-export const PROFILES_NONE = `Choosing none is allowed. Your copy then reads no jurisdiction's local facts (identifier
-forms, publishing systems, laws and their deadlines): every fact that needs one says it is undetermined rather than
-guessing. An administrator can choose profiles later on your copy's setup page.`;
+export const PROFILES_NONE = `Choosing none is allowed. Your group's Civicsmith then reads no jurisdiction's local facts
+(identifier forms, publishing systems, laws and their deadlines): every fact that needs one says it is undetermined
+rather than guessing. An administrator can choose profiles later on its setup page.`;
 const profilesBlock = () => `<h2>Where your group works</h2>
-<p>Your copy reads local facts from jurisdiction profiles. Choose the ones that cover where your group works, in the
+<p>Your group's Civicsmith reads local facts from jurisdiction profiles. Choose the ones that cover where your group works, in the
 order they should be read. None is chosen for you.</p>
 <fieldset class="profiles" id="profiles">
 <legend class="small">Jurisdiction profiles this installer holds</legend>
@@ -37,16 +37,20 @@ ${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name=
 </fieldset>
 <p class="hint">${PROFILES_NONE}</p>`;
 
-/* R37 (K1478 (i), K1502): the assistant, offered as optional with nothing preselected. Each member who wants it connects
-   their own Claude subscription or API key in the copy; the copy holds no Claude account of its own (R36). */
-export const ASSISTANT_OFFER = `The assistant is off unless your group chooses it. Your copy holds no Claude account of
-its own: each member who wants the assistant connects their own Claude subscription or API key inside the copy, and is
-told then that their questions, and the material read to answer them, go to Anthropic under their own account. An
-administrator can change this choice later on your copy.`;
+/* R37 (K1478 (i), K1502, K1755, K1851): the assistant, offered as optional with nothing preselected. Once on, it is
+   reached through the group's API key (set by an administrator inside the group's Civicsmith) or each member's own
+   account (connected there), or both, chosen at its setup (setup-page R18); the installer binds no Claude credential
+   (R36). Each member is told what goes to Anthropic before their first use (instance-setup R54; credentials R36). */
+export const ASSISTANT_OFFER = `The assistant is off unless your group chooses it. Once it is on, it is reached through
+your group's own Anthropic API key, which an administrator sets inside your group's Civicsmith, or through each
+member's own Claude subscription or API key, which the member connects there, or both. Which of these, or no AI at all,
+is chosen when your group's Civicsmith is set up. Each member is told what goes to Anthropic before their first use:
+when they connect their own account, or before their first question under your group's key. This installer takes no
+Claude credential of any kind. An administrator can change this choice later inside your group's Civicsmith.`;
 const assistantBlock = () => `<h2>The assistant</h2>
 <fieldset class="profiles" id="assistant">
-<legend class="small">Offer the assistant on your copy?</legend>
-<label class="choice"><input type="radio" name="assistant" value="on">Yes, offer it to members who connect their own account</label>
+<legend class="small">Offer the assistant in your group's Civicsmith?</legend>
+<label class="choice"><input type="radio" name="assistant" value="on">Yes, offer the assistant</label>
 <label class="choice"><input type="radio" name="assistant" value="off">Not now</label>
 </fieldset>
 <p class="hint">${ASSISTANT_OFFER}</p>`;
@@ -173,27 +177,27 @@ $("#go").addEventListener("click",async()=>{
 
 export const WIZARD_HTML = page({
   mode: "install",
-  title: `Set up your group's copy of ${PRODUCT}`,
-  description: `Install your group's own copy of ${PRODUCT}, the accountability record, into your own Cloudflare account.`,
+  title: `Set up your group's ${PRODUCT}`,
+  description: `Install your group's own ${PRODUCT}, the accountability record, into your own Cloudflare account.`,
   eyebrow: `${PRODUCT} &middot; installer`,
-  lede: `In a few minutes your group will have its own copy of ${PRODUCT}, the
+  lede: `In a few minutes your group will have its own ${PRODUCT}, the
 accountability record, running in your own Cloudflare account. Not an account
 of ours: yours, under your control, from the first second.`,
   blocks: `<div class="card">
 <p style="margin:0"><b>What you need:</b> a Cloudflare account with two
-things turned on. First, the <b>Workers Paid plan</b> ($5 a month): your copy
-does real work, reading documents and assembling evidence, and the free plan's
+things turned on. First, the <b>Workers Paid plan</b> ($5 a month): your group's
+Civicsmith does real work, reading documents and assembling evidence, and the free plan's
 processing allowance is too small for it. Second, a <b>payment method</b> on
 the account: Cloudflare requires one before it turns on the file storage your
-copy keeps its evidence in. The installer checks both before it creates
+group's Civicsmith keeps its evidence in. The installer checks both before it creates
 anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
 <p style="margin:12px 0 0">For the assistant through a member's own Claude
 subscription, the installer also asks the <b>Workers Containers
 permission</b>: that path runs in a container, which Workers Paid includes.
-Without the permission, everything else installs, and members use the
-assistant only with their own API key.</p>
+Without the permission, everything else installs, and the assistant is
+used only with an API key: a member's own, or your group's.</p>
 </div>
 
 <h2>What happens when you press the button</h2>
@@ -206,54 +210,54 @@ database and nowhere to keep it, and it is never stored.</p>
 <p class="small">Prefer to do everything by hand, with nothing passing
 through us at all? The manual path is documented and permanently supported.
 It is slower and uses the Cloudflare dashboard directly, and it exists so
-that your group can stand up a copy even if the publisher of ${PRODUCT} releases
+that your group can stand up its Civicsmith even if the publisher of ${PRODUCT} releases
 disappears.</p>
 
 ${profilesBlock()}
 
 ${assistantBlock()}
 
-<h2>Name your copy</h2>`,
+<h2>Name your group's Civicsmith</h2>`,
   slugLabel: "A short name for your group",
   slugHint: `Lower-case letters, digits, and hyphens. It becomes part of your
 web address, so pick something you are happy to say out loud.`,
   placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
-Already running a copy and looking for the current release? That is
+Already running your group's Civicsmith and looking for the current release? That is
 <a href="/update">a separate page</a>.</p>`,
 });
 
 export const UPDATE_HTML = page({
   mode: "update",
-  title: `Update your copy of ${PRODUCT}`,
-  description: `Bring your group's existing copy of ${PRODUCT} up to the current release.`,
+  title: `Update your group's ${PRODUCT}`,
+  description: `Bring your group's existing ${PRODUCT} up to the current release.`,
   eyebrow: `${PRODUCT} &middot; software update`,
-  lede: `This brings the copy of ${PRODUCT} your group already runs up to the current
+  lede: `This brings your group's ${PRODUCT} up to the current
 release. It changes the software and nothing else: your passwords, your
 credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
 organisation AI credential you paste in the optional box below.`,
   blocks: `<h2>What happens when you press the button</h2>
-<p>Cloudflare shows you the permission screen. If your copy was installed
-before the assistant's container existed, it asks one permission more than
+<p>Cloudflare shows you the permission screen. If your group's Civicsmith was
+installed before the assistant's container existed, it asks one permission more than
 before, <b>Workers Containers</b>, for the assistant through a member's own
-Claude subscription; without it, everything else updates and members use the
-assistant only with their own API key. You approve it on Cloudflare's own page, the new release is placed into your account, and
+Claude subscription; without it, everything else updates and the assistant is
+used only with an API key: a member's own, or your group's. You approve it on Cloudflare's own page, the new release is placed into your account, and
 the permission is gone the moment it finishes. Nothing is stored here.</p>
 
-<h2>Which copy</h2>`,
-  slugLabel: "The name of the copy to update",
-  slugHint: "The first part of your copy's address, before the first dot.",
+<h2>Which installation</h2>`,
+  slugLabel: "The name your group's Civicsmith was installed under",
+  slugHint: "The first part of its address, before the first dot.",
   /* DIST-9 (D-260): the optional organisation `ai` credential. A member mints it ON the copy, so it can only be given
      to an update of that copy; the installer never creates one. type=password: it is a secret, never shown back. */
   extra: `<label for="ai">Organisation AI credential (optional)</label>
-<input id="ai" type="password" autocomplete="off" spellcheck="false" placeholder="leave empty to keep what your copy has">
-<p class="hint">Only if a member of your group minted an organisation AI credential on this copy and you want the copy
-to resume paused assistant runs on its own. It is stored in your copy as a secret and never shown. Left empty, the
-update sends none and keeps any your copy already holds. This installer never creates one.</p>`,
+<input id="ai" type="password" autocomplete="off" spellcheck="false" placeholder="leave empty to keep what it holds">
+<p class="hint">Only if a member of your group minted an organisation AI credential inside your group's Civicsmith and
+you want it to resume paused assistant runs on its own. It is stored there as a secret and never shown. Left empty,
+the update sends none and keeps any it already holds. This installer never creates one.</p>`,
   placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
-Setting up a brand-new copy instead? That is <a href="/">the setup page</a>.</p>`,
+Setting up your group's Civicsmith for the first time instead? That is <a href="/">the setup page</a>.</p>`,
 });
