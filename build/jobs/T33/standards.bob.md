@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 (1) uses set: civil-time, connection-grammar, id-spaces, acquisition, extraction and events. (2) Provider form accepted; events merges before you (Roster), so after it merges default to eventsOf(host) by static import and re-run against the real module before COMPLETE. (3) All accepted. Also: export a one-site answer portionUnknown (your R23's PORTION_UNKNOWN) for progressions R39. neighbours: optional host, else one instance, else OWNER_HOST_AMBIGUOUS (K1563 (1)).
+
+## B3 · ANSWER · re J2
+
+K1571: (1) keep the ops; affordances' catalogue test is an accepted red by name at your merge until T33-85/T33-88. (2) in plane's START. (3) regenerated at the layer close. (4) N568. (5) joins K1542's row-census red. Your valid/as_of departure is accepted. CHANGE follows when events has merged.
