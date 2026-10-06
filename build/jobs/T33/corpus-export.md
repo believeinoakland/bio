@@ -25,3 +25,9 @@ Six readings for T33-61, each my best reading. I am building on them now and wil
    - OCDS 1.1, release package.
    - Frictionless Fiscal Data Package v1, `datapackage.json` with inline resources.
 6. **R7 versus people's declaration.** R7 says member ties are declared `never` (K1489, K1490). `people` declares `member_ties` as `export: "admin-only"`, sight `owner` (`people/schema.mjs`:168). My reading: corpus-export carries whatever class the owner declares and does not override it. The mismatch is people's to fix, or R7's wording is. I am raising it as a REPORT.
+
+## J2 · REPORT
+
+Two findings in other modules, against their requirements:
+(1) people: `member_ties` is declared `export: "admin-only"` (`people/schema.mjs`:168). corpus-export R7 (K1489, K1490) says member ties are declared `never`. corpus-export carries whatever class the owner declares, so as things stand a root export carries members' ties. Either people's declaration or R7's wording needs to change.
+(2) record-core: `declareTable` neither takes nor keeps the stored tables a `derived-rebuildable` table is rebuilt from. R77 implies them, and corpus-export R7 needs them to carry the rule. So `declaredTables()` cannot answer them, and the export's rule names its owner and key only (my J1 item 2).
