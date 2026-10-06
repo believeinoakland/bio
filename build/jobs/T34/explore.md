@@ -36,3 +36,7 @@ Tests and checks:
 - `format`: 0 failures. `architecture explore`: 0 failures. `coverage explore`: 19 of 19 live ids named, 0 failures. `ownership explore tranche/T34`: 5 files, 0 failures.
 
 Size (session_01GwJdLNiEcK1ZBdPfzmRXHC): test runs 7, module lines 753
+
+## J3 · REPORT
+
+hypotheses: `#judgeDerived` (bio-plane/src/hypotheses/index.mjs ~:364) calls `explore.rederive` without `scope`. With explore R19 merged, a leg on a derivation resting on a hunch is refused LEG_NOT_REDERIVED (fail closed, never passed) instead of LEAD_NOT_A_LEG until hypotheses passes the leg's inquiry as `scope: {inquiry}` (hypotheses R6; N582). Generated artifact: the plane bundle is stale from src/explore/ (regenerated at the layer's close).
