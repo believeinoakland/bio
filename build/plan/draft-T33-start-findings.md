@@ -41,3 +41,4 @@
 - **scheduler (L10)** (K1610, K1614): ai-runs R52 reddens `plane.test.mjs` "R12: a run waiting on a request that reaches expired" (no member account); it stays a named red until N585 (the op to connect an account is routed only in L11).
 - **op-declarations, control-plane (L11)** (K1610): ai-runs' `aiUseCheck` and `providerLimit` are answers' and agent-worker's; specs for `aiusage`, `aiceilingset`, `aicopyceilingset` as K1601.
 - **op-declarations, control-plane (L11)** (K1612, from AI-RUNS #10 J3): also `airunverify` (`by` stamped).
+- **installer (L11) and the release (T33-D1)** (K1615, from AGENT-WORKER #9 J2 (6)): a Worker named `agent-runner` exports the `AgentRunner` Container DO class with the image and R10's egress, so agent-worker's cross-script `RUNNER` binding can deploy.

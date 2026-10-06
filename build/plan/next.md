@@ -74,6 +74,8 @@
 
 - N585 · `capture-requests`, `scheduler` · their plane tests that open a run connect the opener's account through `op=accountreferenceset` and name the member (ai-runs R52): capture-requests `plane.test.mjs` ×4 (R30; R16 R31 R14; R19 R42 R38; R14 N295) and scheduler's R12 test (CAPTURE-REQUESTS #11 J3; K1614). **Hard reason:** a dependency not yet built: the op is routed and the seal secret bound only by L11 (op-declarations, control-plane, plane), after both modules' T33 jobs.
 
+- N586 · `agent-harness`, `agent-worker`, `bundler`, `run-rules`, `skills`, `control-plane` · finish the agent-worker split: agent-harness stops exporting `PLANE_OPS`, `NAMESPACES`, `MEANING_ARM` (now agent-worker's `ops.mjs`); control-plane's `members-pin`, run-rules' `GATE_ADDRESS`, skills' doctrine pin and bundler's `fleetbundles.control` name agent-harness' files, then agent-worker's two re-export files (`harness.mjs`, `subsession.mjs`) and its stale negative controls go (AGENT-WORKER #9 J2 (1), (2); K1615). **Hard reason:** several are closed (bundler L1) or later (control-plane L11), and the re-exports must outlive every importer (Rules (9) item 4).
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
