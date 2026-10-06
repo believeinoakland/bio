@@ -2,6 +2,25 @@
 
 **Status** · session_01NjDa7GbJXLCjDHkrNB4LFJ · depth 2 · WORKING · handled B1
 
+## Record (BIAS #10)
+
+**Entries applied.** T34-25 (N551; DEC-132 (5), Bob's; K1541, K1746): R48 `descriptionDraft({viewer})` in `bio-plane/src/bias/index.mjs`. To an active member it answers membership R110's latest self-description (`kinds`, `otherKind`, `focus`, `purpose`, `by`, `at`; never the history), labelled as what the group wrote about itself and offered as a new bias set's opening text, `proposed: true, authored: false`, `statements: []`. With none held, or to any other viewer, it answers `description: null` with one identical answer that says there is nothing to start from. It writes nothing (`installed: false, adopted: false, writes: 0`), sends no lens notice, never moves a lens and never throws. It is built on J1's two readings: the founder counts while claimed, and no op is added.
+
+**Deferred.** None of T34's. R26 stays deferred (K102), as before.
+
+**Found in other modules.** (1) The plane's bundle, `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`, manifest §14), is stale from this change to the plane's source. BOB regenerates it at the layer close; I did not write it. (2) A surface that wants R48 over HTTP needs an op: an arm in `biasOps` (mine to add if BOB asks, J1 (2)), `op-declarations`' credential row and `control-plane`'s routing.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/bias/`: tests 63, pass 62, fail 0, todo 1 (R26, deferred K102).
+- The new file is `description-draft.test.mjs`, five tests naming R48.
+- `checks/format.mjs`: 126 modules, 125 requirements files; 0 failures.
+- `checks/architecture.mjs bias`: 12 product files, 42 relative imports; 0 failures.
+- `checks/coverage.mjs bias`: 48 of 48 live requirement ids named by a test; 0 failures.
+- `checks/ownership.mjs bias tranche/T34`: 3 files changed by bias; 0 failures.
+- No layer tests are named in `build/manifest.md`. No service I already provide was changed: R48 is a new one with no callers yet.
+
+Size (session_01NjDa7GbJXLCjDHkrNB4LFJ): test runs 4, module lines 1915
+
 ## J1 · QUESTION
 
 R48 (`descriptionDraft`), two readings; I am building on both unless you answer otherwise.
