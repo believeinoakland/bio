@@ -52,7 +52,7 @@ Terms.
 
 **completeImportedDocument({import, edition, bytes, by, viewer})** (`op=caseimportdocument`; mutating)
 
-- **R5** It applies R1's first two refusals. Bytes whose SHA-256 matches a material that an edition of this import records as missing are stored, and every finding of that edition is re-checked (R3). A calculation's input (R21) counts as missing here when the case file does not carry it or carries it with bytes that differ from its stated SHA-256 (K1828; as `case-checker` R9 fills it), so supplying its bytes completes the calculation and R21 recreates it. Bytes matching no missing material are `IMPORT_DOCUMENT_NOT_MISSING`, naming the fingerprint they have. Nothing else about the edition changes. (Publication §5C "a fetched document that matches its fingerprint completes it") *(not yet met: T34)*
+- **R5** It applies R1's first two refusals. Bytes whose SHA-256 matches a material that an edition of this import records as missing are stored, and every finding of that edition is re-checked (R3). A calculation's input (R21) counts as missing here when the case file does not carry it or carries it with bytes that differ from its stated SHA-256 (K1828; as `case-checker` R9 fills it), so supplying its bytes completes the calculation and R21 recreates it. Bytes matching no missing material are `IMPORT_DOCUMENT_NOT_MISSING`, naming the fingerprint they have. Nothing else about the edition changes. (Publication §5C "a fetched document that matches its fingerprint completes it")
 
 **acceptImported({import, edition, findings, checked, reason, gaps?, by, viewer})** (`op=importaccept`) **and withdrawAcceptance({import, edition, reason, by, viewer})** (`op=importacceptwithdraw`); mutating, each a reasoned act
 
