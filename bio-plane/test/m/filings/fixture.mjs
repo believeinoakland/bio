@@ -15,6 +15,7 @@ import { actionsOf } from "../../../src/actions/index.mjs";
 import { publicReadOf } from "../../../src/public-read/index.mjs";
 import { attestationOf } from "../../../src/attestation/index.mjs";
 import { LocalFacts } from "../../../src/local-facts/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
 import { FilingTemplates, filingTemplatesOf } from "../../../src/filing-templates/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 
@@ -96,8 +97,21 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   }
   w.doc(DOC);
   attestedDoc(w, EVID);
+  /* R33: the registry's entities (the real entities module): the Selectboard's office, the subject F concerns (its
+     `subject_entity`) and another the chronology's set does not hold, through the world's connections (publication's
+     fixture), the instance inquiry and events read */
+  const ents = w.connections.entities;
+  const entity = (kind, label) => {
+    const r = ents.createEntity({ kind, label, note: "a subject the test registers", declaredBy: V("olive") });
+    if (!r.ok) throw new Error(`fixture entity refused: ${JSON.stringify(r).slice(0, 300)}`);
+    return r.entity_id;
+  };
+  const OFFICE = entity("office", "Selectboard, Port Ellery Selectboard");
+  const SUBJECT = entity("fund", "the harbour works fund");
+  const ELSEWHERE = entity("place", "the old quay");
   w.inquiry(F, { legs: [{ target: DOC }] });
-  w.promote(F, w.text(F).replace("## Conclusion\n", "## Conclusion\n\nThe works order was let without the vote the bylaw requires.\n"));
+  w.promote(F, w.text(F).replace(`id: ${F}\n`, `id: ${F}\nsubject_entity: ${SUBJECT}\n`)
+    .replace("## Conclusion\n", "## Conclusion\n\nThe works order was let without the vote the bylaw requires.\n"));
   const pin = w.head(F);
   /** Edition `edition` of CASE, owned by the project, pinning F, ratified and published. */
   const publishEdition = (edition) => {
@@ -140,8 +154,24 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   };
   const S1 = declare({ cite: "P.E.B.L. § 12", kind: "ordinance", issuer: "Port Ellery Selectboard", period: { from: "2020-01-01", to: "2030-12-31" } });
   const S2 = declare({ cite: "MCBC 2025-3", kind: "commitment", issuer: "Marlow County Commission", period: { from: null, to: null } });
-  const act = { description: "the works order let on 2026-03-02", actor: { role: "Selectboard", body: "Port Ellery Selectboard" },
-                at: "2026-03-02", evidence: [evidenceCid] };
+  /* events (layer 5), the real one, on the same host: the act's event (conformance R25) and R33's timeline, whose
+     "what we did" lane holds the sources the later modules registered on it (docket's, at its start) */
+  const events = eventsOf(w.host);
+  events.migrate();
+  /** An event (events R6) of `kind`, attested by a dated fact `value` read from the capture `capture` (default the
+   *  ledger's), concerning `concerns`; with `value` null, attested by the capture alone and so placed nowhere. */
+  const makeEvent = ({ kind = "meeting", value = null, concerns = [], capture = sha(`the text of ${EVID}`), by = V("olive") } = {}) => {
+    const att = value === null ? { captureSha: capture, extent: { kind: "document" } }
+      : { datedFactId: events.recordDatedFact({ captureSha: capture, extent: { kind: "document" }, kind: "meeting", value,
+                                                method: "read by a member", by }).dated_fact.dated_fact_id };
+    const r = events.createEvent({ kind, attestations: [att], concerns, by });
+    if (!r.ok) throw new Error(`fixture event refused: ${JSON.stringify(r).slice(0, 300)}`);
+    return r.event_id;
+  };
+  /* the act: the works order's adoption on 2026-03-02, an event the ledger attests (conformance R25) */
+  const ACT_EVENT = makeEvent({ kind: "adoption", value: "2026-03-02" });
+  const act = { event: ACT_EVENT, actor: { role: "Selectboard", body: "Port Ellery Selectboard" },
+                evidence: [evidenceCid] };
   /** A determination by olive through conformance's R1 (every field `over` replaces); answers its id. */
   const determine = (over = {}) => {
     const stds = over.standards || [{ standard: S1, outcome: "noncompliant" }, { standard: S2, outcome: "compliant" }];
@@ -155,7 +185,8 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
   const D = determine();
   let n = 0;
   const x = {
-    ...w, w, f, attestation, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
+    ...w, w, f, attestation, events, ents, OFFICE, SUBJECT, ELSEWHERE, ACT_EVENT,
+    event: makeEvent, localFacts: f.localFacts, pr: publicReadOf(w.host, { publication: w.p }), proj, pin, actions, conformance, standards, consequences, groupRef, evidenceCid, S1, S2, D, declare,
     determine, publishEdition, act,
     /* the world's own reads, over the cursor */
     row: (sq, ...a) => [...w.st.sql.exec(sq, ...a)][0] ?? null,
@@ -196,11 +227,11 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
       for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
       return filingsOps(f, url, body)[name]();
     },
-    /** A capture registered in the record (a filing's sent bytes, say): its sha. */
-    capture(id, text) {
+    /** A capture registered in the record (a filing's sent bytes, say), in `project` when one is named: its sha. */
+    capture(id, text, { project = null, author = V("bo") } = {}) {
       const path = `snapshots/${id}.txt`;
-      const res = w.promotion.promote({ bundleId: id, base: null, snapKey: `c-${id}`, author: V("bo"),
-        files: [{ path: "bundle.md", text: infoMd(id) }, { path, text },
+      const res = w.promotion.promote({ bundleId: id, base: null, snapKey: `c-${id}`, author,
+        files: [{ path: "bundle.md", text: infoMd(id, project) }, { path, text },
                 { path: "data/provenance.json", text: JSON.stringify({ documents: [provDoc(path, text)] }) }],
         meta: { object_type: "information" }, register: [{ sha256: sha(text), path, encoding: "utf8", bytes: Buffer.byteLength(text) }] });
       if (!res.ok) throw new Error(`fixture capture refused: ${JSON.stringify(res).slice(0, 300)}`);
@@ -271,8 +302,9 @@ function attestedDoc(w, id) {
                          retrieved: "2026-09-27T00:00:00Z" });
 }
 
-function infoMd(id) {
+function infoMd(id, project = null) {
   return ["---", `id: ${id}`, "object_type: information", "schema: information@1", `title: "Document ${id}"`,
+          ...(project ? [`project: ${project}`] : []),
           "current_state: collected", "prior_state: null", `created: "2026-09-27T00:00:00Z"`,
           `last_updated: "2026-09-27T00:00:00Z"`, "references: []", "state_history: []", "criticality: supporting",
           "---", "", "## Summary", "", "A document.", ""].join("\n");

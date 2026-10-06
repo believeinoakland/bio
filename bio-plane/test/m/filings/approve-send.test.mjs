@@ -127,15 +127,17 @@ test("R7 R30 the sending is one `sent` correspondence entry on the action, held 
   assert.deepEqual(s.proposed.clocks.map((c) => [c.rule, c.starts, c.offered.ok, c.offered.proposal.rule]),
                    [["records_answer", "received", true, "records_answer"]]);
   assert.equal(x.read(B).current_state, "planned");
-  /* R30: an offered entry counted in business days states the calendar's status as action-clocks R10 states it */
+  /* R30: an offered entry counted in business days states the calendar's status as action-clocks R10 states it. The
+     receipt is counted from the group's own first `sent` entry, 12 March (action-clocks C-1), never a `received` one. */
   const C = x.action({ kind: "records_request", risk_tier: 2, law: "Test Stat. § 1.100" });
-  assert.equal(x.actions.actionCorrespond({ target: C, direction: "received", at: "2026-03-12", account: "the clerk wrote",
+  assert.equal(x.actions.actionCorrespond({ target: C, direction: "sent", at: "2026-03-12", account: "the request, emailed",
                                             author: V("bo"), viewer: V("bo") }).ok, true);
   const d3 = x.f.filingPrepare({ action: C, preparer: V("bo"), viewer: V("bo") });
   await approve(x, d3.id);
   const s3 = x.f.filingRecordSent({ filing: d3.id, at: "2026-09-29", account: "emailed", author: V("bo"), viewer: V("bo") });
   const offered = s3.proposed.clocks[0].offered.proposal;
-  assert.deepEqual([offered.entry.date, offered.calendar.status], ["2026-03-20", "unconfirmed"], "17 March a holiday; no member confirmed 2026");
+  assert.deepEqual([offered.entry.date, offered.calendar.status], ["2026-03-19", "unconfirmed"],
+                   "from Thursday 12 March, five business days on the profile's calendar (only Sunday is the weekend): 13, 14, 16, 18 and 19, the 17th a holiday; no member confirmed 2026");
   assert.deepEqual(x.read(B).clock, x.read(B).clock.filter((c) => c.text !== "records_answer"), "the offer is not on the clock");
 });
 
