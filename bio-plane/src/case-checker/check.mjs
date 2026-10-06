@@ -5,7 +5,7 @@
  * the integrity of every part and file (R2), the signatures and attestations (R3), the passages (R4), each grade
  * recomputed at the stated method version (R5), the bar (R6), the publication checks (R7), presentability (R8),
  * completion by documents supplied later (R9), the complete edition (R10) and each calculation recomputed by
- * `calc-grammar`'s evaluator (R20), composed into one result per finding (R11). It is built only from pure code: `case-grammar`'s format, `ratification`'s case-document checks
+ * `calc-grammar`'s evaluator (R20), composed into one result per finding (R11). It is built only from pure code: `case-grammar`'s format, `case-catalogue`'s case-document checks
  * (`checks.mjs`), `strength`'s method (`method.mjs`), `content`'s extent grammar, `signatures`' verifier and
  * `calc-grammar`'s evaluator, so the
  * standalone program (R13) is this file and those, bundled. It reads nothing but its arguments, writes nothing, makes
@@ -22,7 +22,7 @@ import { verifySshsig, ratifyStatement, caseRatifyStatement, captureAccountState
          parseSshsig } from "../sshsig.mjs";
 import { contentIdFor, extentRelation } from "../content/extent.mjs";
 import { recomputePair, GRADING_METHOD_VERSIONS } from "../strength/method.mjs";
-import { checkCaseDocument } from "../ratification/checks.mjs";
+import { checkCaseDocument } from "../case-catalogue/checks.mjs";
 import { caseFileManifestCheck, caseFileEntryOf, casePartDigest, CASE_FILE_MANIFEST_PATH, methodOf, materialsOf,
          acceptedWorkOf, standingOf, completeEditionOf, gradingFactsOf, passagesOf, GRADING_FACT_FIELDS,
          PASSAGE_FIELDS, calculationsOf, calculationFileText, provOf, CASE_FILE_PROV_PATH } from "../case-grammar/index.mjs";
