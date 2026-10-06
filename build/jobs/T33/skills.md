@@ -53,3 +53,15 @@ Size (session_01GmSBs9c4ZXTh8Wo9f4QZWg): test runs 10, module lines 2192
 ## J3 · COMPLETE
 
 T33-52 done on job/T33/skills, with tranche/T33 merged in. Built: R33 legal_lookup, R34 ask, R35 suggestions (per K1601 and K1602). K1516 fixed: R28's red was K1500's re-wording of Action §4 rules 6 and 10, so both are re-quoted. Skills' tests 67/67. format, architecture, coverage (35/35) and ownership: 0 failures each. bio-plane.bundled.mjs is stale (BOB regenerates it at layer close). Details in the record's Completion section.
+
+## Re-opened by B4 (K1609)
+
+`C-2.8` is now read from `inquiry-grammar`'s keyed rows (`INQUIRY_GRAMMAR_CHECKS.STANDARD_LEG_AXIS.check`) and is no longer typed in the source. The R15 test's `TYPED` set is now `["C-32.6"]` alone. R15's wording ("except C-2.8, which has no keyed row") no longer matches the code; that is BOB's fold.
+
+**Tests and checks**, after merging `tranche/T33`:
+- `node --test bio-plane/test/m/skills/`: 67 tests, 67 pass, 0 fail.
+- format: 0 failures.
+- architecture: 0 failures.
+- coverage and ownership: reported in the COMPLETE entry.
+
+Size (session_01GmSBs9c4ZXTh8Wo9f4QZWg): test runs 12, module lines 2193
