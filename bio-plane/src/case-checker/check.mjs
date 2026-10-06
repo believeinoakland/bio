@@ -25,8 +25,7 @@ import { recomputePair, GRADING_METHOD_VERSIONS } from "../strength/method.mjs";
 import { checkCaseDocument } from "../ratification/checks.mjs";
 import { caseFileManifestCheck, caseFileEntryOf, casePartDigest, CASE_FILE_MANIFEST_PATH, methodOf, materialsOf,
          acceptedWorkOf, standingOf, completeEditionOf, gradingFactsOf, passagesOf, GRADING_FACT_FIELDS,
-         PASSAGE_FIELDS } from "../case-grammar/index.mjs";
-import * as caseGrammar from "../case-grammar/index.mjs";
+         PASSAGE_FIELDS, calculationsOf, calculationFileText, provOf, CASE_FILE_PROV_PATH } from "../case-grammar/index.mjs";
 import { evaluate, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
 import { CATALOG_VERSION } from "../gate.mjs";
 import { readStoredZip, asBytes } from "./zip.mjs";
@@ -150,7 +149,8 @@ function readParts(parts) {
     const e = entryOf(f.path) || {};
     return { path: str(f.path) || "", kind: str(f.kind) || "", sha256: str(f.sha256) || "",
              bytes: Number.isSafeInteger(f.bytes) ? f.bytes : null, content: null, state: "missing",
-             part: Number.isSafeInteger(f.part) ? f.part : null, finding: str(e.finding), ref: str(e.ref), detail: null };
+             part: Number.isSafeInteger(f.part) ? f.part : null, finding: str(e.finding), ref: str(e.ref),
+             calc: str(e.calc), input: str(e.input), detail: null };
   });
   /* Which given ZIP is which listed part: the one carrying every file the manifest puts in it. */
   const partOf = new Map();
@@ -501,7 +501,11 @@ async function check({ parts, documents = [], keys = null }) {
   }
 
   /* ---------------------------------------------------------- R20: the calculations */
-  const calculations = fm ? await recomputeCalculations(fm, files) : [];
+  const calculations = fm ? recomputeCalculations(fm, files) : [];
+  /* R2, R20: the calculations' PROV-O rendering, when carried, is what `case-grammar` R19 renders from the signed rows. */
+  const provFile = files.find((f) => f.path === CASE_FILE_PROV_PATH) || null;
+  if (fm && provFile && provFile.content && textOf(provFile.content) !== provOf(calculationsOf(fm)))
+    caseLevel.differs.push(entry("calculation", provFile.path, "the calculations' provenance file the case file carries is not the rendering of the calculations the signed case document states"));
 
   /* ---------------------------------------------------------- per finding */
   const bar = fm && isObj(fm.required_strength) ? fm.required_strength : null;
@@ -686,40 +690,13 @@ const dedupe = (list) => { const seen = new Set(); return list.filter((e) => { c
 
 /* ============================================================ the calculations (R20) */
 
-/* R20: the case document's `calculations:` rows (`case-grammar` R18), each list or map field read back from the canonical
-   JSON its flat row carries. `case-grammar.calculationsOf` is the one reader; until that module's T33 job is merged, the
-   same reading of its R18 is done here (K1563 (1)). */
-function calculationRows(fm) {
-  let rows;
-  if (typeof caseGrammar.calculationsOf === "function") rows = caseGrammar.calculationsOf(fm);
-  else rows = Array.isArray(fm.calculations) ? fm.calculations : [];
-  const list = Array.isArray(rows) ? rows : isObj(rows) && Array.isArray(rows.rows) ? rows.rows : [];
-  return list.filter(isObj).map((r) => {
-    const out = { ...r };
-    for (const k of ["recipe", "inputs", "results"])
-      if (typeof out[k] === "string" && /^[[{]/.test(out[k].trim())) { try { out[k] = JSON.parse(out[k]); } catch { /* kept as given */ } }
-    return out;
-  });
-}
-
-/* R20: a row's inputs as `{name: sha256}`, from a map or a list of `{name, sha256}`; null when unreadable. */
-function inputHashesOf(inputs) {
-  if (isObj(inputs)) return Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, str(v) || (isObj(v) ? str(v.sha256) : null)]));
-  if (Array.isArray(inputs)) {
-    const out = {};
-    for (const i of inputs) { if (!isObj(i) || !str(i.name)) return null; out[i.name] = str(i.sha256) || str(i.sha); }
-    return out;
-  }
-  return null;
-}
-
 const BIO_CALC = /^bio-calc\/\d+$/;
 
 /** R20: each calculation recomputed by `calc-grammar.evaluate` over the inputs the case file carries, at the method version
  *  its row states. Answers `[{calc, result, differs[], missing[], disclosed?, statement?}]`. Pure; never throws. */
-async function recomputeCalculations(fm, files) {
+function recomputeCalculations(fm, files) {
   const out = [];
-  for (const row of calculationRows(fm)) {
+  for (const row of calculationsOf(fm)) {
     const calc = str(row.calc) || String(row.calc ?? "");
     const differs = [], missing = [];
     const a = { calc, result: "agrees", differs, missing };
@@ -740,11 +717,17 @@ async function recomputeCalculations(fm, files) {
       out.push(settle(a, disclosed));
       continue;
     }
-    const hashes = inputHashesOf(row.inputs);
+    /* The row's file (`calculations/<calc>/calculation.json`) must say what the signed row states: only the document is
+       signed. */
+    const rf = files.find((f) => f.kind === "calculation" && f.calc === calc && !f.input) || null;
+    if (rf && rf.content && textOf(rf.content) !== calculationFileText(row))
+      differs.push(entry("calculation", calc, `calculation ${calc}'s carried file is not the row the signed case document states`, { calc }));
+    const hashes = row.inputs;
     if (!hashes) { differs.push(entry("calculation", calc, `calculation ${calc}'s inputs cannot be read`, { calc })); out.push(settle(a, disclosed)); continue; }
     const bound = {};
     for (const [name, sha] of Object.entries(hashes)) {
-      const f = sha ? files.find((x) => x.kind === "calculation" && x.sha256 === sha) : null;
+      const f = sha ? files.find((x) => x.kind === "calculation" && x.input === sha && x.calc === calc)
+        || files.find((x) => x.kind === "calculation" && x.input === sha) : null;
       const b = f && f.content ? f.content : null;
       if (!b || shaOf(b) !== sha) {
         missing.push(entry("calculation", calc, `input ${name} of calculation ${calc} is not carried${f && f.state === "differs" ? " as the bytes its hash names" : ""}; fetch the file whose SHA-256 is ${sha}`, { calc, input: name, sha256: sha }));

@@ -50,7 +50,7 @@ export const CALC_RECIPE = { method: "bio-calc/1", inputs: [{ name: "pay", kind:
 export const CALC_INPUT = canonicalJson({ fields: [{ name: "days", type: "integer" }], rows: [{ days: "10" }, { days: "45" }, { days: "60" }] });
 export const CALC_INPUT_SHA = sha(CALC_INPUT);
 /** R20: the path a calculation's input travels at (`case-grammar` R13's `calculation` kind). */
-export const calcInputPath = (calc, inputSha) => CG.caseFilePath("calculation", [calc, inputSha]) ?? `calculations/${calc}/${inputSha}`;
+export const calcInputPath = (calc, inputSha) => CG.caseFilePath("calculation", [calc, inputSha]);
 /** R20: a calculation's row as `case-grammar` R18 states it, as the act computed it. `over` changes one field. */
 export function calcRow(over = {}) {
   const inputs = { pay: CALC_INPUT_SHA };
@@ -59,9 +59,6 @@ export function calcRow(over = {}) {
   return { calc: CALC, recipe: CALC_RECIPE, inputs, method_version: CALC_METHOD, results: { [key]: result }, result_key: key,
            recompute: "agrees", disclosed: null, ...over };
 }
-const calcLines = (list) => (typeof CG.calculationsLines === "function" ? CG.calculationsLines(list)
-  : list.length ? ["calculations:", ...list.flatMap((r) => Object.entries(r).map(([k, v], i) =>
-      `${i ? "   " : "  -"} ${k}: ${v === null ? "null" : typeof v === "object" ? `'${canonicalJson(v)}'` : q(v)}`))] : []);
 export const ACCOUNT = "I pulled it from the records office's box on the 3rd.";
 export const MEMO_ACCOUNT = "A clerk handed me this memo in person.";
 
@@ -125,7 +122,7 @@ export function caseDocument({ format = "bio-case-document/6", pairs, bar = { de
     ...CG.materialBlockLines({ materials, attestations }),
     ...CG.acceptedWorkBlockLines({ rows: accepted, flags: [] }),
     ...CG.gradingFactsLines(Object.entries(facts).flatMap(([finding, f]) => f.legs.map((l, ord) => ({ finding, ord, ...l })))),
-    ...calcLines(calculations),
+    ...CG.calculationsLines(calculations),
     ...CG.passagesLines(Object.entries(passages).flatMap(([finding, list]) => list.map((p, ord) => ({ finding, ord, ...p })))),
     "completeness:", '  statement: "the 2019 permits are not covered"', "  author: alice", "  statement_by: bob",
     '  at: "2026-09-28T00:00:00Z"', "  subject_position: not_sought", '  subject_justification: "the office is closed until October"',
@@ -173,6 +170,9 @@ export function caseFiles(opts = {}) {
   put("extracted_text", MEMO, extracted(MEMO_UNITS));
   put("observation", OBS, OBS_TEXT);
   const calculations = opts.calculations || (opts.withCalculation ? [calcRow(opts.calcRow)] : []);
+  /* each row's file, its inputs by their hashes and the PROV-O rendering, as `public-read` R23 packs them */
+  for (const row of calculations) put("calculation", row.calc, CG.calculationFileText(row));
+  if (calculations.length) put("calculation", "prov", CG.provOf(calculations));
   if (calculations.length && !opts.dropCalcInput) texts.set(calcInputPath(CALC, CALC_INPUT_SHA), opts.calcInput ?? CALC_INPUT);
   const materials = [
     { ref: MINUTES, kind: "document", sha: MINUTES_SHA, text_sha: sha(extracted(MINUTES_UNITS)), origin: "https://records.example/minutes.pdf",
@@ -222,7 +222,7 @@ export function caseFile(opts = {}) {
   const n = opts.parts || 1;
   const bytesOf = new Map([...texts].map(([p, t]) => [p, Buffer.from(t, "utf8")]));
   const listedOf = () => [...bytesOf.keys()].sort().map((path, i) => ({ path, sha256: sha(bytesOf.get(path)), bytes: bytesOf.get(path).length,
-    part: (i % n) + 1, kind: (CG.caseFileEntryOf(path) || { kind: "calculation" }).kind }));
+    part: (i % n) + 1, kind: CG.caseFileEntryOf(path).kind }));
   const pre = manifestFor(listedOf(), opts);
   const ce = CG.completeEditionOf({ format: pre.format, group: pre.group, case: pre.case, edition: pre.edition,
     case_document_sha: pre.case_document_sha, keys: pre.keys,

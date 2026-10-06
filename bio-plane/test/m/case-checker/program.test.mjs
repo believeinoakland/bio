@@ -46,11 +46,12 @@ test("R13: nothing to install and no network: the program imports only Node's ow
     assert.equal(CC.PROGRAM.includes(net), false, net);
 });
 
-test("R13 R16: run offline from an empty directory, the program prints each finding's result first and then the same answer checkCaseFile gives on the same parts, byte-identical", async () => {
+test("R13 R16 R20: run offline from an empty directory, the program prints each finding's result first and then the same answer checkCaseFile gives on the same parts, byte-identical", async () => {
   const dir = mkdtempSync(join(tmpdir(), "case-checker-"));
   try {
     writeFileSync(join(dir, "case-checker.mjs"), CC.PROGRAM);
-    const cf = caseFile({ parts: 2, withImported: true, edit: (b) => b.delete(CG.caseFilePath("document", MINUTES)) });
+    /* R20 in the program: the calculation is recomputed by the bundled evaluator, offline */
+    const cf = caseFile({ parts: 2, withImported: true, withCalculation: true, edit: (b) => b.delete(CG.caseFilePath("document", MINUTES)) });
     cf.parts.forEach((p, i) => writeFileSync(join(dir, `part${i + 1}.zip`), p));
     writeFileSync(join(dir, "minutes.pdf"), MINUTES_BYTES);
     writeFileSync(join(dir, "keys.txt"), `# the group's published keys\n${["group", "alice", "bob"].map((k) => keyFor(k).line).join("\n")}\n`);
@@ -67,6 +68,7 @@ test("R13 R16: run offline from an empty directory, the program prints each find
       assert.equal(canonicalJson(JSON.parse(json)), canonicalJson(expected));
     }
     assert.match(run("part1.zip", "part2.zip").split("\n")[0], new RegExp(`^${A}: Recreated in part$`));
+    assert.equal(JSON.parse(run("part1.zip", "part2.zip").replace(/^[^{]*/s, "")).calculations[0].result, "agrees");
     /* a file it cannot read: exit status 2, saying so */
     assert.throws(() => run("nope.zip"), (e) => e.status === 2 && /could not read nope\.zip/.test(e.stdout));
     assert.throws(() => run(), (e) => e.status === 2 && /usage:/.test(e.stdout));

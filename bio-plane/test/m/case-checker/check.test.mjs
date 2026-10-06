@@ -408,7 +408,9 @@ test("R20 R11: a stated result or result key that recomputes differently differs
   assert.equal(byId(wrong)[A].result, "did_not_recreate");
   assert.ok(has(byId(wrong)[A].differs, "calculation", /result is stated as .*"3".* and it recomputes to .*"2"/));
   assert.equal(byId(wrong)[C].result, "recreated");      /* C's chain rests on no calculation */
-  const key = await check({ withCalculation: true, calcRow: { result_key: sha("another key"), results: { [sha("another key")]: row.results[row.result_key] } } });
+  /* case-grammar's writer keys every row itself, so a stated key that does not recompute is a document changed after */
+  const key = await check({ withCalculation: true, calcRow: { results: { [sha("another key")]: row.results[row.result_key] } },
+    mutate: (t) => t.set(CG.caseFilePath("case_document"), t.get(CG.caseFilePath("case_document")).replace(`result_key: '"${row.result_key}"'`, `result_key: '"${sha("another key")}"'`)) });
   assert.ok(key.calculations[0].differs.some((e) => e.result === "result_key" && e.stated === sha("another key") && e.recomputed === row.result_key));
   assert.equal(byId(key)[A].result, "did_not_recreate");
   /* a recipe the evaluator refuses does not recompute */
@@ -468,6 +470,12 @@ test("R20 (K1448): a workbook, or a value from a third party's engine, is not_re
     assert.match(c.statement, /recomputed by the publishing copy's engine/);
     assert.deepEqual([c.differs, c.missing], [[], []]);
   }
+  /* the carried row file and the PROV-O rendering must say what the signed rows state: only the document is signed */
+  const rowLies = await check({ withCalculation: true, mutate: (t) => t.set(CG.caseFilePath("calculation", CALC), CG.calculationFileText(calcRow({ disclosed: "x" }))) });
+  assert.ok(has(byId(rowLies)[A].differs, "calculation", /carried file is not the row the signed case document states/));
+  assert.equal(byId(rowLies)[C].result, "recreated");
+  const provLies = await check({ withCalculation: true, mutate: (t) => t.set(CG.caseFilePath("calculation", "prov"), CG.provOf([])) });
+  assert.ok(provLies.findings.every((f) => has(f.differs, "calculation", /provenance file .* is not the rendering/)));
   /* a chain resting on a calculation the document does not list differs */
   const unlisted = await check({ withCalculation: true, calculations: [] });
   assert.ok(has(byId(unlisted)[A].differs, "calculation", /rests on calculation CALC-2026-0001-late, which the case document's calculations do not list/));
