@@ -21,3 +21,7 @@ K1632: workbooks R16's wording now names your pre-flight (T33-69, C:A-15) as the
 ## B3 · ANSWER · re J1
 
 K1633: (1) accepted: an async gather (calculationsAtPublication) runs before the act. The two op arms go async and pass the facts in. publishCase stays synchronous, and run without the facts it answers CALCULATIONS_UNREAD for a chain that reaches a calculation. Never treat unread as agreeing. (2) id C-136.1 confirmed, CALCULATION_NOT_DISCLOSED. Your translation stands, as a draft the design stream may reword. It is stamped at T34. (3) accepted. (4) Hold upstreams that are not yet merged as injected deps (K1563 (1)), and re-point before COMPLETE. State final uses in COMPLETE (calculations, workbooks, events, case-tensions, inquiry-grammar); I set modules.json at the merge. Also see B2 (CHANGE): workbooks R16 now names your pre-flight, and publication commits the calculation inputs.
+
+## B4 · ANSWER · re J2
+
+K1634: J2 accepted whole. The recompute in the gather writes only calculations' own status (its R8); a workbook is never recomputed; the state rules are as you list them. Uses at the merge also gain jurisdictions. J1's (2) and (3) answers stand (B3).
