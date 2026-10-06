@@ -1,9 +1,8 @@
 /* retrieval: T33's fields, the local day, the saved query and the declared tables (R68–R71, T33-40), at the interface.
  *
- * The owners' tables the fields' views read stand in here under their owners' names and columns as this module reads
- * them (`fields.mjs`): entities' `entities` and `resolutions` and extraction's `reading_refs` from their owners'
- * schemas (the fixture); events' `event_attestations` and `event_when_cache`, money's `money_facts` and
- * `money_withdrawals`, duties' `duties` from the column text here, written as their owners write them. */
+ * The owners' tables the fields' views read (`fields.mjs`) are their owners' own schemas: entities' `entities` and
+ * `resolutions` and extraction's `reading_refs` (the fixture); events' `event_attestations` and `event_when_cache`,
+ * money's `money_facts` and `money_withdrawals`, duties' `duties` (here), written as their owners write them. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
@@ -12,12 +11,7 @@ import * as QL from "../../../src/query.mjs";
 import { FIELDS, IDS_MAX } from "../../../src/query.mjs";
 import { EVENTS_SCHEMA } from "../../../src/events/index.mjs";
 import { MONEY_SCHEMA } from "../../../src/money/index.mjs";
-
-/* duties' table stands in, by the columns its R20 states (K1563), until duties merges; events' and money's are their
-   owners' own schemas. */
-const DUTIES_STAND_IN = `
-CREATE TABLE IF NOT EXISTS duties (duty_id TEXT PRIMARY KEY, modality TEXT, obligor TEXT, obligee TEXT, arising_in TEXT);
-`;
+import { DUTIES_SCHEMA } from "../../../src/duties/index.mjs";
 
 /* INFO-1 (capture c1), INFO-2 (c2), INFO-3 (no capture), and a project only ann sees (c3). c1 names a person and an
    office and cites a code section; c2 an institution; c3 the same person and section. */
@@ -43,7 +37,7 @@ function corpus({ owners = true, deps = {} } = {}) {
 function addOwners(w, { c1, c2, c3 }) {
   w.st.db.exec(EVENTS_SCHEMA);
   w.st.db.exec(MONEY_SCHEMA);
-  w.st.db.exec(DUTIES_STAND_IN);
+  w.st.db.exec(DUTIES_SCHEMA);
   const x = (q, ...a) => w.st.sql.exec(q, ...a);
   const T = "2026-01-01T00:00:00Z";
   const att = (ev, c) => x(`INSERT INTO event_attestations (event_id, form, capture_sha, extent, at) VALUES (?, 'extent', ?, '{}', ?)`, ev, c.sha, T);
@@ -60,7 +54,11 @@ function addOwners(w, { c1, c2, c3 }) {
   fact("MNY-2", c2, "revenue", "adopted", null, "modified accrual", "2024-07-01", "2025-06-30", "ENT-O", null, "FUND-2");
   x(`INSERT INTO money_withdrawals (fact_id, reason, at) VALUES ('MNY-2', 'misread', ?)`, T);
   fact("MNY-3", c3, "expenditure", "actual", "paid", "cash", "2025-07-01", "2026-06-30", "ENT-X", "ENT-P", "FUND-1");
-  x(`INSERT INTO duties VALUES ('DUT-1', 'duty', 'ENT-X', 'ENT-P', ?)`, c2.sha);
+  const duty = (id, obligor, obligee, c, withdrawn = null) => x(
+    `INSERT INTO duties (duty_id, modality, obligor, obligee, arising_in, version, adopted_by, adopted_at, clause, withdrawn_at)
+     VALUES (?, 'duty', ?, ?, ?, 1, 'member:ann', ?, 'clause 1', ?)`, id, obligor, obligee, c.sha, T, withdrawn);
+  duty("DUT-1", "ENT-X", "ENT-P", c2);
+  duty("DUT-2", "ENT-O", "ENT-X", c1, T);
 }
 
 const ids = (w, q, viewer) => w.retrieval.search({ q, viewer, mode: "ids", facets: false }).ids.slice().sort();
@@ -115,7 +113,7 @@ test("R68: event and occurred read events' attestations through the captures a b
     ["basis:cash", ["INFO-1"], ["INFO-1", proj]], ['basis:"modified accrual"', [], []], ["phase:adopted", [], []],
     ["fund:FUND-1", ["INFO-1"], ["INFO-1", proj]], ["fund:FUND-2", [], []],
     ["party:ENT-P", ["INFO-1"], ["INFO-1", proj]], ["party:ENT-X", ["INFO-1"], ["INFO-1", proj]], ["party:ENT-O", [], []],
-    ["obligor:ENT-X", ["INFO-2"], ["INFO-2"]], ["owed_to:ENT-P", ["INFO-2"], ["INFO-2"]], ["owed_to:ENT-X", [], []],
+    ["obligor:ENT-X", ["INFO-2"], ["INFO-2"]], ["owed_to:ENT-P", ["INFO-2"], ["INFO-2"]], ["owed_to:ENT-X", [], []], ["obligor:ENT-O", [], []],
   ];
   for (const [q, vera, ann] of cases) {
     assert.deepEqual(ids(w, q, V("vera")), vera.slice().sort(), `${q} for vera`);

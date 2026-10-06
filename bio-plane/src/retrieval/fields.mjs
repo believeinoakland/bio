@@ -57,10 +57,11 @@ const moneyOf = (field, cols) => viaCapture(field, "money",
   cols.map((c) => `SELECT g.bundle_id AS bundle_id, f.${c} AS value FROM money_facts f
                      JOIN register g ON g.capture_sha = f.source_capture_sha
                     WHERE f.${c} IS NOT NULL AND f.fact_id NOT IN (SELECT fact_id FROM money_withdrawals)`).join(" UNION "));
-/* A party of the duties arising in a bundle's captures (duties R20, K1563: `arising_in`). */
-const dutyOf = (field, col) => viaCapture(field, "duties", { duties: ["duty_id", "arising_in", col] },
+/* A party of the duties arising in a bundle's captures (duties R20, K1563: `arising_in`), a withdrawn duty left out
+   (R20's withdrawal, `withdrawn_at`). */
+const dutyOf = (field, col) => viaCapture(field, "duties", { duties: ["duty_id", "arising_in", "withdrawn_at", col] },
   `SELECT DISTINCT g.bundle_id AS bundle_id, d.${col} AS value FROM duties d
-     JOIN register g ON g.capture_sha = d.arising_in WHERE d.${col} IS NOT NULL`);
+     JOIN register g ON g.capture_sha = d.arising_in WHERE d.${col} IS NOT NULL AND d.withdrawn_at IS NULL`);
 
 export const FIELD_VIEWS = Object.freeze([
   /* extraction's `reading_refs` (its map §3): what a bundle's readings cite, as read and as recognised. */
