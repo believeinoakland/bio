@@ -38,3 +38,7 @@ Best readings, carrying on with them unless you answer otherwise:
 - With the registered empty paths, coverage sees 0 of 8 (accepted red 1, until the merge).
 
 Size (session_01W6zutnM3TH8jmQ47V6r9ga): test runs 9, module lines 1857
+
+## J2 · COMPLETE
+
+T33-54 applied: new module agent-harness, copied from agent-worker's harness.mjs and subsession.mjs (1,857 lines), plus passLimit/DEFAULT_MAX_PASSES for R3 (J1, K1600). 30 tests pass (three negative controls run); format, architecture, coverage (8/8) and ownership 0 failures, the last three with my paths set in a scratch modules.json. For modules.json: paths ["agent-harness/src/"], tests ["agent-harness/test/"], uses []. REPORT in the record: run-rules' GATE_ADDRESS/DEPLOYMENT_SEQUENCE (and skills' doctrine pin) name agent-worker/src/harness.mjs, so they move to agent-harness at T33-57, and until then MODES exists in two files; T33-57 can use passLimit. The record's Completion section has the rest.
