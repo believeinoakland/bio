@@ -18,11 +18,10 @@ test("R4: defineDetector's refusals, each writing nothing", () => {
     [{ condition: { ...SHARE_RECIPE, output: "portion" } }, "BAD_RECIPE"],
     [{ condition: { ...SHARE_RECIPE, inputs: [...SHARE_RECIPE.inputs, { name: "other", kind: "table" }] } }, "BAD_RECIPE"],
     [{ parameters: [] }, "BAD_RECIPE"],
-    [{ parameters: [{ name: "share", value: "0.5", citation: "" }] }, "NO_CITATION"],
+    [{ parameters: [{ name: "share", value: "0.5", citation: "" }] }, "MONEY_CHECK_NO_CITATION"],
     [{ parameters: [{ name: "share", value: "half", citation: "x" }] }, "BAD_VALUE"],
     [{ denominator: " " }, "NO_DENOMINATOR"],
     [{ derivation: "" }, "NO_DERIVATION"],
-    [{ by: MACHINE }, "MEMBER_ACT_ONLY"],
     [{ detectorId: "md-none" }, "NO_SUCH_DETECTOR"],
   ];
   for (const [over, code] of cases) assert.equal(w.c.defineDetector(shareDetector(over)).reason, code, code);
@@ -30,6 +29,25 @@ test("R4: defineDetector's refusals, each writing nothing", () => {
   /* calc-grammar's refusal is carried with its step */
   const r = w.c.defineDetector(shareDetector({ condition: { ...SHARE_RECIPE, method: "bio-calc/9" } }));
   assert.equal(r.errors[0].code, "METHOD_UNKNOWN");
+});
+
+test("R4: an author that is not a member (a machine credential, class:<cls>, or none) is refused MEMBER_ACT_ONLY before any other refusal, writing nothing", () => {
+  const w = world();
+  const before = w.snapshot();
+  const broken = { label: "", population: null, condition: null, parameters: "x", denominator: "", derivation: "", detectorId: "md-none" };
+  for (const by of [MACHINE, "class:shipped", "class:probe", "class:daemon", "", "  ", null, undefined]) {
+    for (const over of [{}, broken]) {
+      const r = w.c.defineDetector(shareDetector({ ...over, by }));
+      assert.equal(r.reason, "MEMBER_ACT_ONLY", `${String(by)} ${JSON.stringify(over)}`);
+      assert.equal(r.ok, false);
+    }
+  }
+  const bare = w.c.defineDetector({ label: "x" });
+  assert.equal(bare.reason, "MEMBER_ACT_ONLY");
+  assert.equal(w.c.defineDetector().reason, "MEMBER_ACT_ONLY");
+  assert.deepEqual(w.snapshot(), before);
+  /* a member's own definition passes the same gate */
+  assert.equal(w.c.defineDetector(shareDetector()).ok, true);
 });
 
 test("R4: a condition or population naming a person entity is refused SUBJECT_IS_PERSON", () => {
@@ -92,6 +110,8 @@ test("R5: switchDetector is a member's act per project; off raises nothing for i
   assert.equal(w.c.switchDetector(base).ok, true);
   const sw = (viewer) => w.c.detectors({ viewer }).detectors.find((x) => x.detector_id === d.detector_id).switches;
   assert.deepEqual(sw(ALICE), [{ project: "PROJ-2026-0001-a", on: false }]);
+  /* with no act a detector is off in a project (R6, N607) */
+  assert.equal(w.c.detectors({ viewer: ALICE }).detectors.find((x) => x.detector_id === d.detector_id).default_switch, "off");
   assert.equal(w.c.switchDetector({ ...base, on: true }).ok, true);
   assert.deepEqual(sw(ALICE), [{ project: "PROJ-2026-0001-a", on: true }]);
   assert.equal(w.count("money_detector_switches"), 2);
@@ -117,4 +137,32 @@ test("R11: the ops map has one arm per act and read, reading the stamps the cont
   const ops2 = moneyChecksOps(w.c, new URL("https://x/?project=PROJ-2026-0001-a"), { viewer: "admin" });
   w.project("PROJ-2026-0001-a", ["bob"]);
   assert.equal(ops2.moneynoticed().reason, "NO_SUCH_PROJECT");
+});
+
+test("R11 (N618): op=moneydetectorsrun runs only for the machine (class:daemon) or an administrator; anyone else is refused NOT_AN_ADMIN and nothing runs", () => {
+  const w = world();
+  w.entityAs("ENT-2026-0010", "institution");
+  w.entityAs("ENT-2026-0011", "institution");
+  w.factAs("MNY-2026-f1", { to: "ENT-2026-0010", amount: "700" });
+  w.factAs("MNY-2026-f2", { to: "ENT-2026-0011", amount: "100" });
+  w.switchOn(w.c.defineDetector(shareDetector()).detector_id);
+  const url = new URL("https://x/");
+  const before = w.snapshot();
+  for (const by of [ALICE, "member:carol", "class:probe", "class:shipped", "", null, undefined, "admin-ish"]) {
+    const r = moneyChecksOps(w.c, url, { by, budgetMs: 10_000 }).moneydetectorsrun();
+    assert.equal(r.reason, "NOT_AN_ADMIN", String(by));
+    assert.equal(r.ok, false);
+  }
+  assert.equal(moneyChecksOps(w.c, url, null).moneydetectorsrun().reason, "NOT_AN_ADMIN");
+  assert.deepEqual(w.snapshot(), before);
+  const machine = moneyChecksOps(w.c, url, { by: MACHINE, budgetMs: 10_000 }).moneydetectorsrun();
+  assert.equal(machine.ok, true);
+  assert.equal(machine.written, 1);
+  const admin = moneyChecksOps(w.c, url, { by: ADMIN_BOB }).moneydetectorsrun();
+  assert.equal(admin.ok, true);
+  assert.equal(admin.unchanged, 1);
+  assert.equal(admin.budget_ms, 1000);
+  /* the guard reads the author before the budget: a member's bad budget is still NOT_AN_ADMIN */
+  assert.equal(moneyChecksOps(w.c, url, { by: ALICE, budgetMs: 0 }).moneydetectorsrun().reason, "NOT_AN_ADMIN");
+  assert.equal(moneyChecksOps(w.c, url, { by: MACHINE, budgetMs: 0 }).moneydetectorsrun().reason, "NO_BUDGET");
 });

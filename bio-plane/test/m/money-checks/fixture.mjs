@@ -167,6 +167,13 @@ export function world({ budgetClock = null } = {}) {
     named.set(name, w.rec({ to: { entity: w.id(to), as_written: to }, capture, by, ...rest }));
     return named.get(name);
   };
+  /** R5: switches a detector on for a project (the project made, with alice and bob in it, if not held). */
+  w.switchOn = (detectorId, project = "PROJ-2026-0001-alpha") => {
+    if (!run(`SELECT 1 AS x FROM bundles WHERE bundle_id=?`, project).length) w.project(project, ["alice", "bob"]);
+    const r = w.c.switchDetector({ detectorId, project, on: true, by: ALICE });
+    if (!r.ok) throw new Error(`fixture switch refused: ${r.reason}`);
+    return r;
+  };
   w.withdraw = (name) => { const r = m.withdrawFact({ factId: w.id(name), reason: "a test withdraws it", by: ALICE }); if (!r.ok) throw new Error(r.reason); };
   return w;
 }

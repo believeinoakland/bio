@@ -21,7 +21,7 @@
  *
  * REACHED as `moneyChecksOf(host, deps)` (K61): one instance per host, created on the first call with `deps`:
  *   record       `recordOf(host)`: `transact`, `declareTable`.
- *   membership   `membershipOf(host)`: `isAdministrator` (R8).
+ *   membership   `membershipOf(host)`: `isAdministrator` (R8, R11).
  *   entities     `entitiesOf(host)`: `readEntity` (an entity's kind: a person is never a subject, R4).
  *   progressions `progressionsOf(host)`: `readInstance` (R1), and its read contract `progression_instances` (its R34).
  *   money        `moneyOf(host)`: `readFact`, `moneyOf`, `summable`, `committedAgainstPaid` (R1, R2, R13).
@@ -31,7 +31,7 @@
 import { isHypothesisId, isMachineIdentity, idPattern, sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
 import { checkRecipe, evaluate, parseFigure, add, subtract, multiply, divide } from "../calc-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { viewerPredicate, noSuchProject, notAnAdmin, membershipOf } from "../membership/index.mjs";
+import { viewerPredicate, noSuchProject, notAnAdmin, membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { moneyOf } from "../money/index.mjs";
@@ -43,6 +43,10 @@ export { MONEY_CHECKS_CHECKS } from "./checks.mjs";
 
 /** R9 (K1504): the false-alarm rate at or under which a detector version's results may be shown. */
 export const GATE_MAX = "0.2";
+/** R6 (N604): the run's stated default budget, as `duties` and `people` state theirs. */
+export const DETECTORS_DEFAULT_BUDGET_MS = 1000;
+/** R11 (N618): the machine's stamp that may run the detectors through the op, besides an administrator. */
+export const DETECTORS_RUNNER = "class:daemon";
 /** R9: the bounds of `noticed`. */
 export const NOTICED_DEFAULT = 100, NOTICED_MAX = 500;
 /** R1, R2, R9: the one label every check and shown result carries: the machine's, a question. */
@@ -131,6 +135,7 @@ export class MoneyChecks {
     this.money = money;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.nowMs = typeof nowMs === "function" ? nowMs : () => Date.now();
+    this.listeners = [];
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -197,14 +202,14 @@ export class MoneyChecks {
     if (!member) return refusal("MEMBER_ACT_ONLY", { by: by ?? null });
     const ck = str(check), nm = str(name), cite = str(citation), con = str(contract);
     if (!ck) return refusal("NO_CHECK");
-    if (!CHECK_PARAMETERS[ck]) return refusal("UNKNOWN_CHECK", { check: ck, checks: Object.keys(CHECK_PARAMETERS) });
-    if (!CHECK_PARAMETERS[ck][nm]) return refusal("UNKNOWN_PARAMETER", { check: ck, name: nm || null, parameters: { ...CHECK_PARAMETERS[ck] } });
+    if (!CHECK_PARAMETERS[ck]) return refusal("UNKNOWN_CHECK", { check_key: ck, checks: Object.keys(CHECK_PARAMETERS) });
+    if (!CHECK_PARAMETERS[ck][nm]) return refusal("UNKNOWN_PARAMETER", { check_key: ck, name: nm || null, parameters: { ...CHECK_PARAMETERS[ck] } });
     const v = typeof value === "number" ? String(value) : str(value);
-    if (!v) return refusal("NO_VALUE", { check: ck, name: nm });
-    if ([v, cite, con].some(isHypothesisId)) return refusal("HYPOTHESIS_NOT_INPUT", { check: ck, name: nm });
+    if (!v) return refusal("NO_VALUE", { check_key: ck, name: nm });
+    if ([v, cite, con].some(isHypothesisId)) return refusal("HYPOTHESIS_NOT_INPUT", { check_key: ck, name: nm });
     const ok = nm === "share" ? shareFigure(v) !== null : v.length <= LABEL_MAX;
-    if (!ok) return refusal("BAD_VALUE", { check: ck, name: nm, takes: CHECK_PARAMETERS[ck][nm] });
-    if (!cite) return refusal("NO_CITATION", { check: ck, name: nm });
+    if (!ok) return refusal("BAD_VALUE", { check_key: ck, name: nm, takes: CHECK_PARAMETERS[ck][nm] });
+    if (!cite) return refusal("MONEY_CHECK_NO_CITATION", { check_key: ck, name: nm });
     if (con && !this.entities.has(con)) return noSuchEntity(con);
     const at = this.now();
     return this.record.transact(() => {
@@ -217,7 +222,7 @@ export class MoneyChecks {
   parameters({ check, contract = null } = {}) {
     const ck = str(check), con = str(contract);
     if (!ck) return refusal("NO_CHECK");
-    if (!CHECK_PARAMETERS[ck]) return refusal("UNKNOWN_CHECK", { check: ck, checks: Object.keys(CHECK_PARAMETERS) });
+    if (!CHECK_PARAMETERS[ck]) return refusal("UNKNOWN_CHECK", { check_key: ck, checks: Object.keys(CHECK_PARAMETERS) });
     const rows = this.#rows(`SELECT seq, name, contract, value, citation, by, at FROM money_check_params
                                WHERE check_key=? AND contract IN ('', ?) ORDER BY seq`, ck, con);
     const governing = new Set(Object.keys(CHECK_PARAMETERS[ck]).map((n) => this.#param(ck, n, con)?.seq).filter(Boolean));
@@ -446,7 +451,7 @@ export class MoneyChecks {
       if (p.value === null && shipped) { list.push({ name: p.name, value: null, citation: null }); continue; }
       const f = parseFigure(typeof p.value === "number" ? String(p.value) : str(p.value));
       if (!f || f.refused) return { code: "BAD_VALUE", why: `the parameter "${p.name}" is a figure` };
-      if (!str(p.citation)) return { code: "NO_CITATION", why: p.name };
+      if (!str(p.citation)) return { code: "MONEY_CHECK_NO_CITATION", why: p.name };
       list.push({ name: p.name, value: str(String(p.value)), citation: str(p.citation).slice(0, TEXT_MAX) });
     }
     return { list };
@@ -500,15 +505,40 @@ export class MoneyChecks {
     if (!this.#projectSeen(pid, MoneyChecks.#viewerOf(member))) return noSuchProject(pid);
     if (on !== true && on !== false) return refusal("NO_SWITCH");
     const at = this.now();
-    return this.record.transact(() => {
+    const was = this.#switchedOn(did, pid);
+    const done = this.record.transact(() => {
       this.#append("money_detector_switches", { detector_id: did, project_id: pid, on_: on ? 1 : 0, by: str(by), at });
       return { ok: true, detector_id: did, project: pid, on, by: str(by), at };
     });
+    /* R16: after the act's transaction, and only when it turned the detector on where it was off. */
+    if (done && done.ok && on && !was) this.#tell({ detector_id: did, project: pid });
+    return done;
   }
-  /* R5: on unless the latest act for the project switched it off. */
+  /* R5, R6 (N607): on only when the latest act for the project switched it on; with no act, off. */
   #switchedOn(did, pid) {
     const r = this.#one(`SELECT on_ FROM money_detector_switches WHERE detector_id=? AND project_id=? ORDER BY seq DESC LIMIT 1`, did, pid);
-    return !r || r.on_ === 1;
+    return !!r && r.on_ === 1;
+  }
+  /* R6 (N607): the detectors switched on for at least one project, each by its latest act there. */
+  #switchedAnywhere() {
+    return new Set(this.#rows(`SELECT s.detector_id FROM money_detector_switches s
+                                 WHERE s.on_ = 1 AND s.seq = (SELECT max(seq) FROM money_detector_switches x
+                                                              WHERE x.detector_id = s.detector_id AND x.project_id = s.project_id)`)
+      .map((r) => r.detector_id));
+  }
+
+  /** R16 (N605, K1666): one listener per module, told `{detector_id, project}` after a detector is switched on for a
+   *  project where it was off, so `scheduler` arms its `money-detectors` wake at once. A malformed or second
+   *  registration is refused through `membership.listenerRefusal` (its R81). */
+  onDetectorSwitchedOn(module, fn) {
+    const refused = listenerRefusal(this.listeners, module, fn);
+    if (refused) return refused;
+    this.listeners.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R16: each listener once; one that throws never undoes the act, nor stops the others. */
+  #tell(notice) {
+    for (const l of this.listeners) { try { l.fn({ ...notice }); } catch { /* the act stands (R16) */ } }
   }
   #gate(did, version) {
     return this.#one(`SELECT gold_set, false_alarm_rate, by, at FROM money_detector_gates WHERE detector_id=? AND version=?
@@ -523,6 +553,18 @@ export class MoneyChecks {
     return this.#rows(`SELECT v.* , d.origin FROM money_detector_versions v JOIN money_detectors d ON d.detector_id=v.detector_id
                          WHERE v.version = (SELECT max(version) FROM money_detector_versions x WHERE x.detector_id=v.detector_id)
                          ORDER BY v.detector_id`);
+  }
+  /* R6 (N607): the current versions a run works over: those of detectors switched on for at least one project. */
+  #live() {
+    const on = this.#switchedAnywhere();
+    return this.#current().filter((v) => on.has(v.detector_id));
+  }
+  /** R11 (N618): may `by` run the detectors through the op: the machine (`class:daemon`) or an administrator. */
+  mayRun(by) {
+    const b = str(by);
+    if (b === DETECTORS_RUNNER) return true;
+    const member = MoneyChecks.#memberOf(b);
+    return !!member && !!this.membership.isAdministrator(member);
   }
   static #versionView(v) {
     return { version: v.version, label: v.label, population: parse(v.population), condition: parse(v.condition),
@@ -543,7 +585,7 @@ export class MoneyChecks {
       const projects = this.#rows(`SELECT DISTINCT project_id FROM money_detector_switches WHERE detector_id=? ORDER BY project_id`, d.detector_id)
         .map((r) => r.project_id).filter((p) => this.#projectSeen(p, viewer));
       out.push({ detector_id: d.detector_id, origin: d.origin, by: d.by, at: d.at, versions,
-                 switches: projects.map((p) => ({ project: p, on: this.#switchedOn(d.detector_id, p) })), default_switch: "on" });
+                 switches: projects.map((p) => ({ project: p, on: this.#switchedOn(d.detector_id, p) })), default_switch: "off" });
     }
     return { ok: true, detectors: out };
   }
@@ -635,16 +677,18 @@ export class MoneyChecks {
                     inputs: json(inputs.map((id) => ({ fact_id: id, held_by: "money" }))) } };
   }
 
-  /** R6: runs each detector's current version over the facts held, within `budgetMs`, from `cursor`. Each subject's
-   *  result is written keyed by (detector, version, subject, inputs), so an unchanged rerun writes nothing; a subject
-   *  that no longer raises, and a superseded version, lose their rows (the table is a derived cache, R13). */
+  /** R6: runs the current version of each detector switched on for at least one project over the facts held, within
+   *  `budgetMs` (its stated default without one), from `cursor`. Each subject's result is written keyed by (detector,
+   *  version, subject, inputs), so an unchanged rerun writes nothing; a subject that no longer raises, a superseded
+   *  version, and a detector switched on nowhere (N607: run over nothing) lose their rows (a derived cache, R13). */
   runDetectors({ budgetMs, cursor = null } = {}) {
-    const budget = Number(budgetMs);
-    if (!Number.isFinite(budget) || budget <= 0) return refusal("NO_BUDGET");
+    const given = budgetMs !== undefined && budgetMs !== null;
+    if (given && !(typeof budgetMs === "number" && Number.isFinite(budgetMs) && budgetMs > 0)) return refusal("NO_BUDGET", { budget_ms: budgetMs });
+    const budget = given ? budgetMs : DETECTORS_DEFAULT_BUDGET_MS;
     const start = this.nowMs();
     const from = cursor ? parse(cursor) : null;
-    const stats = { written: 0, unchanged: 0, raised: 0, skipped: {}, persons_skipped: 0, detectors: 0 };
-    const current = this.#current();
+    const stats = { written: 0, unchanged: 0, raised: 0, skipped: {}, persons_skipped: 0, detectors: 0, budget_ms: budget };
+    const current = this.#live();
     const live = new Set(current.map((v) => `${v.detector_id}#${v.version}`));
     this.record.transact(() => {
       for (const r of this.#rows(`SELECT result_key, detector_id, version FROM money_detector_results`))
@@ -686,7 +730,7 @@ export class MoneyChecks {
   /** R13 (record-core R77): the results table rebuilt from the detectors and the facts, as rows; writes nothing. */
   rebuild(scope = null) {
     const rows = [];
-    for (const v of this.#current()) {
+    for (const v of this.#live()) {
       if (scope && scope.detector_id && scope.detector_id !== v.detector_id) continue;
       const { subjects, facts } = this.#subjects(v);
       for (const s of subjects) { const e = MoneyChecks.#evaluateSubject(v, s, facts); if (e.row) rows.push(e.row); }
@@ -787,7 +831,9 @@ export function moneyChecksOps(c, url, body) {
     moneydetectordefine: () => c.defineDetector(b),
     moneydetectorswitch: () => c.switchDetector(b),
     moneydetectors: () => c.detectors({ viewer: q("viewer") }),
-    moneydetectorsrun: () => c.runDetectors({ budgetMs: b.budgetMs, cursor: b.cursor ?? null }),
+    /* R11 (N618): the machine's or an administrator's; anyone else is refused and nothing runs. */
+    moneydetectorsrun: () => (c.mayRun(b.by) ? c.runDetectors({ budgetMs: b.budgetMs, cursor: b.cursor ?? null })
+                                             : notAnAdmin(b.by ?? null, "running the money detectors")),
     moneydetectorgate: () => c.recordGate(b),
     moneynoticed: () => c.noticed({ project: q("project"), viewer: q("viewer"), limit: q("limit") }),
   };

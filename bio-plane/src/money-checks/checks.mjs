@@ -1,8 +1,11 @@
 /* money-checks' refusals (requirements: `build/requirements/money-checks.md`). Each code is minted here, once, with
- * one sentence a member reads and the requirement it answers to (DEC-49's pattern: a missing sentence throws, loudly).
- * R14: no sentence says "violation", "breach", "conflict" or "suspicious", ranks a person or names a place. */
+ * one sentence a member reads (DEC-49's pattern: a missing sentence throws, loudly); the requirement each answers to is
+ * named beside it. R15 (N608, K1679; DEC-49 arm A): a code is held once, so a missing citation is this module's own
+ * `MONEY_CHECK_NO_CITATION` (`NO_CITATION` is record-grammar's), and `check` is the catalogue id promotion stamps, null
+ * until then (as `events`' rows), never a requirement's name. R14: no sentence says "violation", "breach", "conflict"
+ * or "suspicious", ranks a person or names a place. */
 
-const row = (req, translation) => Object.freeze({ check: `money-checks ${req}`, translation });
+const row = (_req, translation) => Object.freeze({ check: null, translation });
 
 export const MONEY_CHECKS_CHECKS = Object.freeze({
   NO_CONTRACT: row("R2", "Amount checks are asked of one contract, named by its entity id. Nothing was checked."),
@@ -11,7 +14,7 @@ export const MONEY_CHECKS_CHECKS = Object.freeze({
   UNKNOWN_PARAMETER: row("R3", "That check reads no parameter of that name; the answer lists the ones it reads. Nothing was recorded."),
   NO_VALUE: row("R3", "A parameter is stated with its value. Nothing was recorded."),
   BAD_VALUE: row("R3", "The value does not read as this parameter's kind of value; the answer says what it takes. Nothing was recorded."),
-  NO_CITATION: row("R3", "A threshold or share is stated with its citation: a held standard, or your own word for it. Nothing was recorded."),
+  MONEY_CHECK_NO_CITATION: row("R3", "A threshold or share is stated with its citation: a held standard, or your own word for it. Nothing was recorded."),
   MEMBER_ACT_ONLY: row("R5", "This is a member's act, taken in a member's own name; a machine credential cannot take it. Nothing was changed."),
   NO_LABEL: row("R4", "A detector is defined with a label that says what it looks for. Nothing was defined."),
   NO_POPULATION: row("R4", "A detector is defined with the population of money facts it runs over. Nothing was defined."),
@@ -30,9 +33,10 @@ export const MONEY_CHECKS_CHECKS = Object.freeze({
   BAD_LIMIT: row("R9", "A limit is a whole number from 1 to 500. Nothing was read."),
 });
 
-/** The refusal for `code`, with the caller's fields beside it; a code with no sentence is a defect and throws. */
+/** The refusal for `code`, with the caller's fields beside it; the row's own fields (`check` among them, R15) are never
+ *  the caller's. A code with no sentence is a defect and throws. */
 export function refusal(code, fields = {}) {
   const r = MONEY_CHECKS_CHECKS[code];
   if (!r) throw new Error(`money-checks: ${code} has no row with a sentence (DEC-49)`);
-  return { ok: false, reason: code, code, check: r.check, translation: r.translation, ...fields };
+  return { ...fields, ok: false, reason: code, code, check: r.check, translation: r.translation };
 }

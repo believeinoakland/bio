@@ -13,6 +13,7 @@ function seeded() {
   w.factAs("MNY-2026-f1", { to: "ENT-2026-0010", amount: "800" });
   w.factAs("MNY-2026-f2", { to: "ENT-2026-0011", amount: "200" });
   const d = w.c.defineDetector(shareDetector());
+  w.switchOn(d.detector_id, P);
   w.c.runDetectors({ budgetMs: 10_000 });
   return { w, d };
 }
@@ -57,9 +58,11 @@ test("R9: nothing is shown before a rate is recorded, or above 20%; at or under 
   assert.deepEqual(w.c.noticed({ project: P, viewer: ALICE }).items, []);
 });
 
-test("R9 R5: a detector switched off for the project shows nothing there", () => {
+test("R9 R5: a detector switched off for the project, or never switched on there, shows nothing there", () => {
   const { w, d } = seeded();
   gate(w, d, 0.1);
+  w.project("PROJ-2026-0003-beta", ["alice"]);
+  assert.deepEqual(w.c.noticed({ project: "PROJ-2026-0003-beta", viewer: ALICE }).items, []);
   w.c.switchDetector({ detectorId: d.detector_id, project: P, on: false, by: ALICE });
   assert.deepEqual(w.c.noticed({ project: P, viewer: ALICE }).items, []);
   w.c.switchDetector({ detectorId: d.detector_id, project: P, on: true, by: ALICE });
@@ -71,6 +74,7 @@ test("R9: bounded 1–500 with truncated; refusals", () => {
   w.project(P, ["alice"]);
   for (let i = 0; i < 4; i++) { w.entityAs(`ENT-2026-002${i}`, "institution"); w.factAs(`MNY-2026-g${i}`, { to: `ENT-2026-002${i}`, amount: "100" }); }
   const d = w.c.defineDetector(shareDetector({ parameters: [{ name: "share", value: "0.1", citation: "x" }] }));
+  w.switchOn(d.detector_id, P);
   w.c.runDetectors({ budgetMs: 10_000 });
   gate(w, d, 0);
   const r = w.c.noticed({ project: P, viewer: ALICE, limit: 3 });
@@ -94,6 +98,7 @@ test("R13: a result is answered only to a viewer who may see every input; one in
   w.factAs("MNY-2026-f1", { to: "ENT-2026-0010", amount: "800" });
   w.factAs("MNY-2026-f2", { to: "ENT-2026-0011", amount: "200", bundle: "INFO-2026-0001-secret", by: ADMIN_BOB });
   const d = w.c.defineDetector(shareDetector());
+  w.switchOn(d.detector_id, P);
   w.c.runDetectors({ budgetMs: 10_000 });
   gate(w, d, 0.1);
   const alice = w.c.noticed({ project: P, viewer: ALICE });
