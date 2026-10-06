@@ -2,7 +2,7 @@
  *
  * The owners' tables the fields' views read stand in here under their owners' names and columns as this module reads
  * them (`fields.mjs`): entities' `entities` and `resolutions` and extraction's `reading_refs` from their owners'
- * schemas (the fixture); events' `event_attestations` and `when_cache`, money's `money_facts` and
+ * schemas (the fixture); events' `event_attestations` and `event_when_cache`, money's `money_facts` and
  * `money_withdrawals`, duties' `duties` from the column text here, written as their owners write them. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,13 +10,12 @@ import { world, V, MACHINE } from "./fixture.mjs";
 import { FIELD_VIEWS, TERM_FIELDS, RETRIEVAL_TABLES, SAVED_LIMIT_DEFAULT } from "../../../src/retrieval/index.mjs";
 import * as QL from "../../../src/query.mjs";
 import { FIELDS, IDS_MAX } from "../../../src/query.mjs";
+import { EVENTS_SCHEMA } from "../../../src/events/index.mjs";
+import { MONEY_SCHEMA } from "../../../src/money/index.mjs";
 
-const OWNER_TABLES = `
-CREATE TABLE IF NOT EXISTS event_attestations (attestation_id TEXT PRIMARY KEY, event_id TEXT NOT NULL, capture_sha TEXT);
-CREATE TABLE IF NOT EXISTS when_cache (event_id TEXT PRIMARY KEY, start TEXT, end TEXT, precision TEXT, zone TEXT);
-CREATE TABLE IF NOT EXISTS money_facts (fact_id TEXT PRIMARY KEY, source_capture_sha TEXT, kind TEXT, phase TEXT, stage TEXT,
-  basis TEXT, period_from TEXT, period_to TEXT, from_entity TEXT, to_entity TEXT, from_fund TEXT, to_fund TEXT);
-CREATE TABLE IF NOT EXISTS money_withdrawals (fact_id TEXT PRIMARY KEY, reason TEXT);
+/* duties' table stands in, by the columns its R20 states (K1563), until duties merges; events' and money's are their
+   owners' own schemas. */
+const DUTIES_STAND_IN = `
 CREATE TABLE IF NOT EXISTS duties (duty_id TEXT PRIMARY KEY, modality TEXT, obligor TEXT, obligee TEXT, arising_in TEXT);
 `;
 
@@ -42,19 +41,25 @@ function corpus({ owners = true, deps = {} } = {}) {
 }
 
 function addOwners(w, { c1, c2, c3 }) {
-  w.st.db.exec(OWNER_TABLES);
+  w.st.db.exec(EVENTS_SCHEMA);
+  w.st.db.exec(MONEY_SCHEMA);
+  w.st.db.exec(DUTIES_STAND_IN);
   const x = (q, ...a) => w.st.sql.exec(q, ...a);
-  x(`INSERT INTO event_attestations VALUES ('A1', 'EVT-1', ?)`, c2.sha);
-  x(`INSERT INTO event_attestations VALUES ('A2', 'EVT-2', ?)`, c3.sha);
-  x(`INSERT INTO when_cache VALUES ('EVT-1', '2026-03-15T17:00:00Z', NULL, 'minute', 'UTC')`);
-  x(`INSERT INTO when_cache VALUES ('EVT-2', '2026-04-01T17:00:00Z', NULL, 'minute', 'UTC')`);
-  x(`INSERT INTO money_facts VALUES ('MNY-1', ?, 'expenditure', 'actual', 'paid', 'cash', '2025-07-01', '2026-06-30',
-       'ENT-X', 'ENT-P', 'FUND-1', NULL)`, c1.sha);
-  x(`INSERT INTO money_facts VALUES ('MNY-2', ?, 'revenue', 'adopted', NULL, 'modified accrual', '2024-07-01', '2025-06-30',
-       'ENT-O', NULL, 'FUND-2', NULL)`, c2.sha);
-  x(`INSERT INTO money_withdrawals VALUES ('MNY-2', 'misread')`);
-  x(`INSERT INTO money_facts VALUES ('MNY-3', ?, 'expenditure', 'actual', 'paid', 'cash', '2025-07-01', '2026-06-30',
-       'ENT-X', 'ENT-P', 'FUND-1', NULL)`, c3.sha);
+  const T = "2026-01-01T00:00:00Z";
+  const att = (ev, c) => x(`INSERT INTO event_attestations (event_id, form, capture_sha, extent, at) VALUES (?, 'extent', ?, '{}', ?)`, ev, c.sha, T);
+  att("EVT-1", c2); att("EVT-2", c3);
+  x(`INSERT INTO event_attestations (event_id, form, serves, statement, at) VALUES ('relation:EVT-1', 'testimony', 'relation', 'said so', ?)`, T);
+  x(`INSERT INTO event_when_cache (event_id, start, end, precision, zone) VALUES ('EVT-1', '2026-03-15T17:00:00Z', NULL, 'minute', 'UTC')`);
+  x(`INSERT INTO event_when_cache (event_id, start, end, precision, zone) VALUES ('EVT-2', '2026-04-01T17:00:00Z', NULL, 'minute', 'UTC')`);
+  const fact = (id, c, kind, phase, stage, basis, from, to, fe, te, ff) => x(
+    `INSERT INTO money_facts (fact_id, amount, sign, precision, as_read, currency, kind, phase, stage, basis, period_from, period_to,
+       period_precision, period_zone, period_start, period_end, from_entity, to_entity, from_fund, source_capture_sha, method, at)
+     VALUES (?, '10.00', '+', 'exact', '$10', 'USD', ?, ?, ?, ?, ?, ?, 'day', 'UTC', ?, ?, ?, ?, ?, ?, 'typed', ?)`,
+    id, kind, phase, stage, basis, from, to, from, to, fe, te, ff, c.sha, T);
+  fact("MNY-1", c1, "expenditure", "actual", "paid", "cash", "2025-07-01", "2026-06-30", "ENT-X", "ENT-P", "FUND-1");
+  fact("MNY-2", c2, "revenue", "adopted", null, "modified accrual", "2024-07-01", "2025-06-30", "ENT-O", null, "FUND-2");
+  x(`INSERT INTO money_withdrawals (fact_id, reason, at) VALUES ('MNY-2', 'misread', ?)`, T);
+  fact("MNY-3", c3, "expenditure", "actual", "paid", "cash", "2025-07-01", "2026-06-30", "ENT-X", "ENT-P", "FUND-1");
   x(`INSERT INTO duties VALUES ('DUT-1', 'duty', 'ENT-X', 'ENT-P', ?)`, c2.sha);
 }
 

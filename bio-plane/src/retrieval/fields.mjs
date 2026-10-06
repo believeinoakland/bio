@@ -70,14 +70,14 @@ export const FIELD_VIEWS = Object.freeze([
   entityOf("person", "person"),
   entityOf("post", "office"),
   /* events R37 (K1563): an event a bundle's captures attest (`event_attestations`), and that event's `when` (its start,
-     `when_cache`). */
+     `event_when_cache`, the table events R37 calls its `when_cache`). */
   viaCapture("event", "events", { event_attestations: ["event_id", "capture_sha"] },
     `SELECT DISTINCT g.bundle_id AS bundle_id, a.event_id AS value FROM event_attestations a
        JOIN register g ON g.capture_sha = a.capture_sha`),
-  viaCapture("occurred", "events", { event_attestations: ["event_id", "capture_sha"], when_cache: ["event_id", "start"] },
+  viaCapture("occurred", "events", { event_attestations: ["event_id", "capture_sha"], event_when_cache: ["event_id", "start"] },
     `SELECT DISTINCT g.bundle_id AS bundle_id, w.start AS value FROM event_attestations a
        JOIN register g ON g.capture_sha = a.capture_sha
-       JOIN when_cache w ON w.event_id = a.event_id WHERE w.start IS NOT NULL`),
+       JOIN event_when_cache w ON w.event_id = a.event_id WHERE w.start IS NOT NULL`),
   moneyOf("kind", ["kind"]),
   moneyOf("phase", ["phase"]),
   moneyOf("stage", ["stage"]),
