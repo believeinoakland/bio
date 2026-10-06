@@ -1,6 +1,6 @@
 # Plan T34
 
-**Status** · OPEN, opened by BOB #122 2026-10-06 (K1721), from `main` @ `454e5852e9` with the closed `tranche/T33`'s build state; drafted for BOB #119, folded through N631. Bob's meter at the opening: 62% (K1704).
+**Status** · OPEN · BOB #122 · session_01BfWGmptr1oa19TrFe7ptKr · depth 1
 
 **BOB #119 note (K1651).** Drafted before N601 (K1650) was added; N601 and N602 folded by BOB #120 (K1656). Homes for DEC-132/135/136 per the draft (membership, hypotheses, tasks), BOB's under P17, unless membership's size guard trips. To be reviewed against `next.md` at T33's close before it becomes `next.md`'s T34 plan.
 
