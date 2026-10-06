@@ -29,3 +29,27 @@ Two points on T33-77 (R38), both needed before COMPLETE; I carry on with the rea
 - `ownership: 5 files changed by action-plans between tranche/T33 and HEAD; 0 failures`.
 
 Size (session_01HZzMgFGmXynYpFRSjTXJZH): test runs 7, module lines 2789
+
+## J3 · COMPLETE
+
+**B4 applied.** I merged `tranche/T33` (06a8819cca), with conformance, consequences, actions, action-clocks, filings and escalation merged into it. T33-77 is met as in J2, under R38's wording folded at K1649. No code change was needed after the merge.
+
+**Re-pointing (K1563 (1)).** No stand-in in my tests was taken for an upstream that had not merged. `duties` is the only upstream new in this job, and the tests already drive the real module through its own test world.
+- The real `actions` and `action-clocks` already run in my fixture, so R18, R29 and R37 create real actions and set real reminders against the merged code.
+- The other stand-ins predate T33: inquiry, strength, conformance, standards, escalation, filings and ai-runs. They exist so the tests control those modules' facts. I checked their shapes against the merged modules' requirements: `determinationRead`/`determinationsFor`, `escalationsFor`/`escalationRead`, `availableActions`, `standardRead`, `projectBar` and ai-runs' `runFor`/`boundOf`/`consumeBound`/`registerOpenCheck`/`onRunOpened` are unchanged in what action-plans reads.
+
+**Found (for BOB).** action-plans reads `projectsDrawingOn` through inquiry's instance (`inquiryOf(host)`). Since T33-45 that is a delegate to `leg-earning` R7, which inquiry keeps "for importers not yet re-pointed" (plan Rules (9) item 4). Re-pointing action-plans to `leg-earning` needs `leg-earning` in its `uses` and in its requirements' Uses. That is BOB's to rule; the change in code is one line. Until then it works unchanged through the delegate. The earlier findings stand as N601.
+
+**Tests.**
+- `node --test bio-plane/test/m/action-plans/`: tests 61, pass 61, fail 0.
+- My users' tests, on my branch and on a clean `tranche/T33` worktree, with identical results (no new red): affordances pass 164, fail 3; queue-producers pass 80, fail 0; control-plane pass 155, fail 4; plane pass 82, fail 3.
+- Every one of those fails is a named red in B1: affordances' N364 ops, its 62 ops and `catalogue.test.mjs` R19; control-plane's R26 sources ops, the R43/R22 fence pin and `families.test.mjs` ×2; plane's docket/store/notices registrations.
+- No layer tests (manifest).
+
+**Checks** (committed state, after the merge):
+- `format: 126 modules, 125 requirements files; 0 failures`
+- `architecture: 17 product files, 54 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 38 of 38 live requirement ids named by a test; 0 failures`
+- `ownership: 5 files changed by action-plans between tranche/T33 and HEAD; 0 failures`
+
+Size (session_01HZzMgFGmXynYpFRSjTXJZH): test runs 14, module lines 2789
