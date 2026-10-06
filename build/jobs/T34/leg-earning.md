@@ -22,3 +22,7 @@ Size (session_01FTMB4PQTNsZdpTB6CYLNQL): test runs 6, module lines 1349
 ## J1 · REPORT
 
 Found outside leg-earning while applying T34-86 (details in my record's Completion): (1) inquiry test/m/inquiry/earned.test.mjs:29 doesNotMatch(/as this instance fetched them/) on leg-earning's why is now vacuous; suggest /fetched them/. (2) provenance (L3, closed) index.mjs:899, :905 captureGrade why says 'this instance fetched these bytes' — member-facing, DEC-149, no T34 share; for N664's T35 list. (3) Stale generated artifacts (§14): bio-plane/dist/bio-plane.bundled.mjs and release/bio-plane.bundled.mjs carry the old wording. Also: BOB's grep named :715, :725; four more of the same kind in leg-earning (:616, :648, :705, :785) were applied under the entry's 'every member-facing string'.
+
+## J2 · COMPLETE
+
+T34-86 applied: six member-facing strings in index.mjs now say your group's Civicsmith; words.test.mjs names each (R1, R8). Module 47/47; inquiry, strength, action-plans green; format, architecture, coverage (12/12), ownership 0 failures. Record's Completion has the detail; J1 the outside findings.
