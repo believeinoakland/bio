@@ -106,11 +106,15 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
   /* holds: the litigation holds over the case's project (R45) and every court-order stamp on any of its editions */
   {
     let holds;
-    if (!reads.holdsOn) unreadable.push({ part: "holds", what: "the litigation holds: no hold reader is registered (R45)" });
+    if (!project) holds = { held: false };   /* a document naming no project is refused before here (R3) */
+    else if (!reads.holdsOn) unreadable.push({ part: "holds", what: "the litigation holds: no hold reader is registered (R45)" });
     else {
+      /* actions R69: `{held: true, since, recorded_by}` or `{held: false}`, null when the read could not complete */
       const h = ask("holds", "the litigation holds", () => reads.holdsOn({ project }));
-      holds = h === undefined ? undefined : listOf(h, "holds");
-      if (holds === null) { unreadable.push({ part: "holds", what: "the litigation holds" }); holds = undefined; }
+      if (h !== undefined && (!h || typeof h !== "object" || typeof h.held !== "boolean"))
+        unreadable.push({ part: "holds", what: "the litigation holds" });
+      else if (h !== undefined)
+        holds = h.held ? { held: true, since: h.since ?? null, recorded_by: h.recorded_by ?? null } : { held: false };
     }
     const editions = ask("holds", "the case's ratified editions", () => reads.ratifiedEditions(caseId));
     const stamps = [];
@@ -121,7 +125,7 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
       else if (list !== undefined) stamps.push({ edition, stamps: list });
     }
     if (!unreadable.some((u) => u.part === "holds") && holds !== undefined)
-      parts.holds = { holds: [...holds].sort(byJson), stamps };
+      parts.holds = { project: holds, stamps };
   }
 
   parts.signer_key = keyFingerprint(keyB64);
@@ -136,7 +140,7 @@ function itemsOf(part, json) {
   if (part === "sources" && v) return [...(v.sources || []).map((r) => canonicalJson({ source: r })),
                                        ...(v.accepted_work || []).map((r) => canonicalJson({ accepted_work: r }))];
   if (part === "ties" && Array.isArray(v)) return v.flatMap((m) => (m.ties || []).map((t) => canonicalJson({ member: m.member, tie: t.tie_id, withdrawn: t.withdrawn })));
-  if (part === "holds" && v) return [...(v.holds || []).map((h) => canonicalJson({ hold: h })),
+  if (part === "holds" && v) return [canonicalJson({ hold: v.project ?? null }),
                                      ...(v.stamps || []).flatMap((e) => (e.stamps || []).map((s) => canonicalJson({ edition: e.edition, stamp: s })))];
   return [canonicalJson(v)];
 }

@@ -43,6 +43,7 @@ function storeRefused(out, { json, storeRefusal }) {
  *  control plane's `ctx` (the union both handlers read); any other op is not this module's, and answers null. */
 export function ratificationOp(op, req, stub, ctx) {
   if (op === "caseratify") return caseRatifyOp(req, stub, ctx);
+  if (op === "publishat") return publishAtOp(req, stub, ctx);
   if (op === "ratify") return ratifyOp(req, stub, ctx);
   return null;
 }
@@ -52,7 +53,14 @@ export function ratificationOp(op, req, stub, ctx) {
      different is the SUBJECT — this act commits the CASE's own assertions, out
      of the case document, which is the signature those facts had nowhere to
      move to before this item. */
-export async function caseRatifyOp(req, stub, ctx) {
+export async function caseRatifyOp(req, stub, ctx) { return caseCeremony(req, stub, ctx, false); }
+
+/** R40 (DEC-147): `op=publishat`, "Publish at…": `op=caseratify`'s payload and `at: {date, time}`, every refusal
+ *  `op=caseratify` answers before its commit, byte for byte and in its order (`MALFORMED` also covering an absent `at`),
+ *  and then the store half (`publishat`), which calls publication R66 in place of the commit and answers as it does. */
+export async function publishAtOp(req, stub, ctx) { return caseCeremony(req, stub, ctx, true); }
+
+async function caseCeremony(req, stub, ctx, later) {
   const { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights } = ctx;
   const assembleCaseContainer = ctx.assembleCaseContainer || assembleContainer;
@@ -78,6 +86,10 @@ export async function caseRatifyOp(req, stub, ctx) {
       return json({ ok: false, reason: "MALFORMED",
                     detail: "caseratify requires caseId, edition (integer), expectedSha, and sig "
                           + "(armored SSH signature over the case document's sha)" }, 400);
+    if (later && (!body.at || typeof body.at !== "object" || Array.isArray(body.at)))
+      return json({ ok: false, reason: "MALFORMED",
+                    detail: "publishat requires caseId, edition (integer), expectedSha, sig (armored SSH signature over "
+                          + "the case document's sha) and at ({date: YYYY-MM-DD, time: HH:MM}, in the group's time zone)" }, 400);
 
     const factsOut = await doAnswer(stub.fetch(
       `http://do/casedocfacts?case=${encodeURIComponent(body.caseId)}`
@@ -154,6 +166,25 @@ export async function caseRatifyOp(req, stub, ctx) {
        never the session); the SESSION ROW says who delivered (a member, or the founder, DEC-33), never the signature
        and never `sessMember`. REC-125's fence above guarantees a session here, so `sessRights` is the row. */
     const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=caseratify */
+    if (later) {
+      /* R40: the store half runs R3's refusals before its commit, publication's commit's own (made and rolled back), R41
+         (C-58.6), and then publication R66 in place of the commit; its answer is relayed as given. A silence refuses:
+         whether anything was written is the store's to say, and nothing here claims it. */
+      const sOut = await doAnswer(stub.fetch("http://do/publishat", {
+        method: "POST", body: JSON.stringify({
+          caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha,
+          sigArmored: body.sig, attestorKey: sv.keyB64, attestorMember: attestor?.member_id ?? null,
+          gateVersion: gate.gateVersion, deliveredBy, at: { date: body.at.date ?? null, time: body.at.time ?? null } }) }));
+      if (sOut.refused) return storeRefused(sOut, relay);
+      if (!sOut.answered) return storeSilent("publishat/schedule", sOut.correlation);
+      const sr = sOut.result || {};
+      if (!sr.ok)
+        return json({ ok: false, ...(sr.reason ? sr : { reason: "PUBLISH_AT_FAILED", detail: sr }),
+                      store: storeName, tokenClass: cls }, 409);
+      return json({ ok: true, ...sr, gateVersion: gate.gateVersion,
+                    attestor: { member: attestor?.member_id ?? null, key_b64: sv.keyB64 },
+                    deliveredBy: delivererOf(deliveredBy), store: storeName, tokenClass: cls });
+    }
     const out = await doAnswer(stub.fetch("http://do/caseratify", {
       method: "POST", body: JSON.stringify({
         caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha,

@@ -630,12 +630,26 @@ export class Ratification {
         refusals.push({ ok: false, reason: "GATE_REFUSED", gateVersion: gate ? gate.gateVersion : null,
                         findings: gate && Array.isArray(gate.findings) ? gate.findings : [] });
 
-      return { ok: true, ready: refusals.length === 0, refusals };
+      return { ok: true, ready: refusals.length === 0, refusals, publish_at: this.#publishAtOffer() };
     } catch {
       return { ok: false, reason: "PREFLIGHT_UNDETERMINED",
                detail: "part of what signing would be refused for could not be read, so whether this document can be "
                      + "signed is undetermined; nothing is claimed either way, and nothing was written. Ask again." };
     }
+  }
+
+  /* R44 (DEC-147): whether the ceremony's last step offers "Publish at…", and in which zone: the group's time zone as
+     publication R66 reads it (the active profiles' `time_zone`, `jurisdictions.combine` over record-core's
+     `jurisdiction_profiles`). No zone held offers only "Publish now"; the time is never read as UTC. */
+  #publishAtOffer() {
+    let zone = null;
+    try {
+      const list = this.record.getSetting("jurisdiction_profiles");
+      const c = combineProfiles(Array.isArray(list) ? list : []);
+      const v = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+      zone = typeof v === "string" && v ? v : null;
+    } catch { zone = null; }
+    return zone ? { offered: true, zone } : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" };
   }
 
   /* R35 (DEC-102 items 1, 2; K1074): each roster member's testimony legs on an observation whose level in force for
@@ -1427,6 +1441,10 @@ export function ratificationOf(host, deps) {
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
     record.registerAuditCheck("ratification", (image) => r.audit(image));
+    /* R43 (DEC-147; publication R67): the one publisher of a waiting edition is R42, registered once. */
+    const pub = r.publication;
+    if (typeof pub.registerScheduledPublisher === "function")
+      pub.registerScheduledPublisher({ publishScheduled: (entry, now) => r.publishScheduled(entry, now) });
     const seeded = record.registerMintSeed("ratification", MINT_SEED.map((x) => [...x]));
     if (seeded && seeded.ok === false)
       throw new Error(`ratification: record-core refused its mint seed: ${seeded.reason}`);
@@ -1435,7 +1453,7 @@ export function ratificationOf(host, deps) {
 }
 
 /** R32: the module's store-half ops (K3), spread into the plane's op map (`plane/store.mjs`): `gatefacts` (R7), `ratifygate` (R4's
- *  gate, N417), `casegate` (R2's gate), `caseratify` (R3) and `publish` (R5), the internal hops of the two ceremonies,
+ *  gate, N417), `casegate` (R2's gate), `caseratify` (R3), `publishat` (R40) and `publish` (R5), the internal hops of the two ceremonies,
  *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
  *  control plane's stamps, read from the query, never from the body. */
 export function ratificationOps(r, url, body) {
@@ -1448,6 +1466,7 @@ export function ratificationOps(r, url, body) {
                                  docSha: b.docSha ?? q("docSha"), viewer: q("viewer") ?? null,
                                  secretSha: q("secretSha") ?? null }),
     caseratify: () => r.ratifyCaseDocument(b),
+    publishat: () => r.publishAt(b),
     casetestimony: () => r.caseTestimony(b),
     publish: () => r.publish(b),
     release: () => r.release({ handle: q("handle"), acknowledgment: q("acknowledgment"), mitigation: q("mitigation"),
