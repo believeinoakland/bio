@@ -120,7 +120,7 @@ test("R16: through the wait source — an outstanding request extends the lease;
   assert.equal((await w3.runs.wake(at("00:00:10"))).held, 25);
 });
 
-test("R18, R52 (K1514): a woken run is dispatched only when its principal is the instance's organisation ai credential, on record and unrevoked, carrying its own member's account reference and no instance account; otherwise the decision is withheld and named (NO_ACCOUNT when the member holds none); the call is bounded and no secret enters the record", async () => {
+test("R18, R52 (K1514, K1615): a woken run is dispatched only when its principal is the instance's organisation ai credential, on record and unrevoked, carrying its own member's account reference and no instance account; otherwise the decision is withheld and named (NO_ACCOUNT when the member holds none); the call is bounded and no secret enters the record", async () => {
   const TOKEN = "instance-ai-secret-value-7f3c";
   const bound = (w, store = "bio") => { w.ctx.id = { equals: (x) => x === `id:${store}` }; };
   const env = (aw, extra = {}) => ({ AGENT_WORKER: aw, INSTANCE_AI_TOKEN: TOKEN, INSTANCE_CLAUDE_TOKEN: "claude-account-x",
@@ -154,7 +154,7 @@ test("R18, R52 (K1514): a woken run is dispatched only when its principal is the
   assert.equal(aw.calls.length, 1);
   /* the run member's own reference (credentials R24), and no instance Claude account, whatever the copy's bindings hold */
   assert.deepEqual(aw.calls[0].body, { run_id: "R1", store: "bio", credential: TOKEN,
-                                       account: { kind: "apikey", secret: "secret-of-ann", member: "member:ann" } });
+                                       account: { kind: "apikey", secret: "secret-of-ann", member: "member:ann", suggestions: false } });
   for (const secret of [TOKEN, "secret-of-ann", "claude-account-x"]) {
     assert.equal(JSON.stringify(w1.rows(`SELECT * FROM observation_log`)).includes(secret), false, "no secret enters the record");
     assert.equal(JSON.stringify(w1.rows(`SELECT * FROM ai_runs`)).includes(secret), false);
@@ -163,7 +163,13 @@ test("R18, R52 (K1514): a woken run is dispatched only when its principal is the
   /* a subscription token travels as a subscription, never re-labelled an API key (K1553) */
   const sub = await setup(env(aw), { principal: stamp, kind: "subscription" });
   assert.equal((await decision(sub)).dispatch.state, "DISPATCHED");
-  assert.deepEqual(aw.calls[1].body.account, { kind: "subscription", secret: "subscription-secret-of-ann", member: "member:ann" });
+  assert.deepEqual(aw.calls[1].body.account, { kind: "subscription", secret: "subscription-secret-of-ann", member: "member:ann",
+                                               suggestions: false });
+  /* K1615 (agent-worker R56): the member's own suggestions switch rides with the reference — on when they turned it on */
+  const on = await setup(env(aw), { principal: stamp });
+  assert.equal(on.credentials.accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  assert.equal((await decision(on)).dispatch.state, "DISPATCHED");
+  assert.equal(aw.calls[2].body.account.suggestions, true);
   /* every withheld ground, each named, none calling the binding */
   const calls = aw.calls.length;
   const gone = await setup(env(aw), { principal: stamp });
