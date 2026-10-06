@@ -4,7 +4,10 @@
    split (K624 (1)), the share the moved tests need: retrieval's projection table is made by retrieval's own `migrate()`
    (its R61, K354) and its clock column written after each promotion from `actions`' registered facts (its R12), as
    retrieval's step would; conformance is a stand-in answering `determinationRead` (its R9 shape) from `w.determinations`
-   (id → {project, sees: [viewers]}), and content a stand-in presenting no capture; local-facts is the real one (R10, R11). Every test drives `action-clocks` at its interface. */
+   (id → {project, sees: [viewers]}), and content a stand-in presenting no capture; local-facts is the real one (R10, R11),
+   and so are promotion (R13's revision) and standards (R7, R13; created on first use). `override` maps a profile id to
+   a profile object the instance resolves in its place (both this module and local-facts take `combine`, local-facts
+   `get`), so a test can run on a variant of the test profile. Every test drives `action-clocks` at its interface. */
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
@@ -13,7 +16,9 @@ import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { localFactsOf } from "../../../src/local-facts/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
+import { standardsOf } from "../../../src/standards/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
+import { combine, get } from "../../../../jurisdictions/index.mjs";
 import { DatabaseSync } from "node:sqlite";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -74,7 +79,18 @@ export const CP = ["counterparty:", "  state: named", "  role: Town Clerk", "  b
 export const CLK = (d, st = "pending", text = "t") => [`  - text: "${text}"`, '    description: "d"', `    date: ${d}`,
   "    basis: Act s.2", `    status: ${st}`];
 
-export function world({ profiles = ["test-port-ellery"] } = {}) {
+/** The test profile with every closure-list selector taken off its deadlines: its business count then reads the office
+ *  calendar (jurisdictions R43), as R10 and R11 describe. Its id is the test profile's own. */
+export function officeCalendarProfile() {
+  const p = structuredClone(get("test-port-ellery"));
+  p.deadlines = p.deadlines.map((d) => { const { closures, observed, ...rest } = d; return rest; });
+  return p;
+}
+
+export function world({ profiles = ["test-port-ellery"], override = null } = {}) {
+  const over = override && typeof override === "object" ? override : {};
+  const combineOver = (ids) => combine((Array.isArray(ids) ? ids : []).map((id) => (typeof id === "string" && over[id] ? over[id] : id)));
+  const getOver = (id) => (typeof id === "string" && over[id] ? over[id] : get(id));
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -115,11 +131,21 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
     return d && d.sees.includes(viewer) ? { ok: true, id, project: d.project } : { ok: false, reason: "NO_SUCH_DETERMINATION" };
   } };
   /* local-facts, the real one (R10, R11): a member's confirmations are recorded through its `factConfirm`. */
-  const localFacts = localFactsOf(host, { record, membership, now: () => new Date(clock.ms).toISOString() });
-  const c = actionClocksOf(host, { record, membership, actions, conformance, localFacts, now: () => clock.ms });
+  const localFacts = localFactsOf(host, { record, membership, now: () => new Date(clock.ms).toISOString(), combine: combineOver,
+                                          get: getOver });
+  const c = actionClocksOf(host, { record, membership, promotion, actions, conformance, localFacts, combine: combineOver,
+                                   now: () => clock.ms });
   let n = 0;
   const w = {
     st, host, record, membership, promotion, actions, localFacts, c, clock, determinations,
+    /** The real standards module on this host (R7, R13), created on first use; its text's content ids resolve, through a
+     *  content stand-in, to the document `INFO-2026-0099-std`, which the first call promotes. */
+    standards: () => {
+      if (!record.head("INFO-2026-0099-std")) w.doc("INFO-2026-0099-std");
+      const content = { contentRow: (cid) => (String(cid).startsWith("CNT-") ? { bundle_id: "INFO-2026-0099-std", content_id: cid } : null),
+                        standings: () => [], passageNotice: () => null };
+      return standardsOf(host, { record, membership, promotion, content: () => content, now: () => new Date(clock.ms).toISOString() });
+    },
     rows: (q, ...x) => st.sql.exec(q, ...x).toArray(),
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
     fm: (id) => { const t = w.text(id); return t ? parseFrontmatter(t).data : null; },
