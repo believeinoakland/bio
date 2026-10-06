@@ -18,3 +18,7 @@ From ADMISSION #4 (K1861 (6)): admission gains `queryGate(url, op)` (never refus
 ## B3 · ANSWER · re J1
 
 All five readings accepted (K1863 (7)). The alias export is `OP_ALIASES` (op-declarations told). Wizard-scripts and instance-setup are told their arguments come from the POST body.
+
+## B4 · CHANGE
+
+From AFFORDANCES #21 (N630, K1717; K1864 (1)): `json()` (`index.mjs`:218) answers with `JSON.stringify(…, null, 1)`; 63 of `op=affordances`' 258 KB is that indentation. Answer compact JSON (no indentation) from the door. Whitespace only; no reader depends on it. If a test pins the indented bytes, re-pin it.
