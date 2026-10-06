@@ -3,7 +3,7 @@
 **Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/cpu.mjs`,
 `bio-plane/src/tokens.mjs`. No row of the old plan and no entry in `build/plan/next.md` targets this
 module; every requirement below is met by the code as it stands. N63 folded by a drafting worker for BOB #43,
-2026-09-26: R26 (`unattendedCredential`, K90 (2)); met by RUNTIME-LIMITS #2 (T8, K227). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-6 (entry C Q0-7 as K1502 re-scoped it): there is no group-wide Claude account, so the copy binds no Claude credential and `INSTANCE_CLAUDE_TOKEN` is retired. R13, R17 and R23 amended; R14 and R15 retired (R13 now answers every `env` alike, so neither can hold); not yet met (T33-6).
+2026-09-26: R26 (`unattendedCredential`, K90 (2)); met by RUNTIME-LIMITS #2 (T8, K227). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-6 (entry C Q0-7 as K1502 re-scoped it): there is no group-wide Claude account, so the copy binds no Claude credential and `INSTANCE_CLAUDE_TOKEN` is retired. R13, R17 and R23 amended; R14 and R15 retired (R13 now answers every `env` alike, so neither can hold); not yet met (T33-6). T34's K1755 fold, by a drafting worker for BOB #123 on `tranche/T34`, 2026-10-06 (K1755: an administrator may hold one Anthropic API key for the group's copy, in `credentials`' sealed table, so "no group-wide Claude account" no longer holds; the copy still binds no Claude credential in its environment): R13's `detail`, R23 and Satisfies amended; not yet met (T34).
 
 ## Public
 
@@ -75,9 +75,9 @@ set a credential.
 **instanceClaudeStatus(env) → Promise\<{level: "instance", configured, reason, detail}\>**
 - **R13** (K1502) Answers `{level: "instance", configured: false, reason: CASCADE_UNSET, detail: <string>}`
   for every `env`, whatever it carries, `INSTANCE_CLAUDE_TOKEN` included: the group's copy binds no Claude
-  credential, and `detail` says that each member who wants the assistant connects their own Claude account
-  or API key (`credentials`). It reads no binding for a Claude credential, and `INSTANCE_CLAUDE_BINDING` is
-  no longer exported.
+  credential in its environment, and `detail` says that the assistant is reached through a member's own
+  Claude account or API key or the group's API key, each held in `credentials` (K1755), never a binding. It reads no binding for a Claude credential, and `INSTANCE_CLAUDE_BINDING` is
+  no longer exported. *(not yet met: T34)*
 - **R14** *(retired: K1502, T33-6; the instance-level Claude credential is retired and R13 answers every `env` alike)*
 - **R15** *(retired: K1502, T33-6; no `env` gives `configured: true`, R13)*
 - **R16** `detail` is `null` exactly when `configured` is `true`, otherwise a string; the return value
@@ -127,7 +127,7 @@ set a credential.
   only by already being present on the `env` object the caller passes at each call; nothing exported here
   can create, change or clear it (DS-3, D-260 §6: minting and setting an account credential is a member act
   elsewhere, never a plane write path). No Claude credential is read from `env` at all (R13, R17; K1502): a
-  member's own account reference is `credentials`'.
+  member's own account reference and the group's API key are `credentials`' (K1755). *(not yet met: T34)*
 - **R24** `report()` never states a duration for synchronous work: `measured_ms` is always `null`, and
   `note` says why, rather than reporting a zero that would read as a measurement.
 - **R25** No place is named in this module (`build/layers.md`, "No jurisdiction in the product"). It holds
@@ -143,8 +143,9 @@ of either file — this module owns no C-numbered check today.
   publication like every other token.
 - `BIO_Assistant_and_AI_Roles_v0_1.md` §6, D-260 (RULED by BOB #22, 2026-09-21): publication of a
   credential's value is revocation.
-- K1502 and K1503 (`BIO_Assistant_and_AI_Roles_v0_1.md` §6 as amended): no group-wide or project-wide
-  Claude account; the group's copy binds no Claude credential (R13, R17, R23).
+- K1502 and K1503 (`BIO_Assistant_and_AI_Roles_v0_1.md` §6 as amended), with K1755: no project-wide
+  Claude account and no group-wide subscription; the group's API key, when held, is `credentials`'; the
+  group's copy binds no Claude credential in its environment (R13, R17, R23).
 - The CPU-measurement half (`makeMeter`, `burn`, `cpuProbe`) rests on no canon design section; it is
   runtime instrumentation the code itself records discovering (2026-07-29: a Worker cannot time its own
   synchronous compute, so consumption is counted in work and the ceiling is found by a checkpointed
