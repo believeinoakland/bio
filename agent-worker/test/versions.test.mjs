@@ -38,6 +38,7 @@
  */
 
 /* D-186: owns $TMPDIR for this process and removes it on exit. */
+import { ACCOUNT, MEMBER, ACCOUNT_SECRET, withAccount } from "./account.mjs";
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync } from "node:fs";
@@ -45,8 +46,8 @@ import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { PLANE_OPS } from "../src/harness.mjs";
-import { documentHoldings, holdingsNote } from "../src/subsession.mjs";
+import { PLANE_OPS } from "../src/ops.mjs";
+import { documentHoldings, holdingsNote } from "../../agent-harness/src/subsession.mjs";
 import { meaningRowsBranch } from "./plane-meaning.mjs";
 
 let pass = 0, fail = 0;
@@ -162,6 +163,7 @@ export default {
     if (op === "airun")
       return Response.json({ ok: true, result: { session: {
         id: url.searchParams.get("run"), mode: "check", status: "running",
+        principal: { plane: "member:ruth", claude: "member:ruth" },
         context: { type: "inquiry", id: "INQ-1" }, max_passes: 1,
         budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
                  { bound: "subsessions", allowed: 50, consumed: 0 },
@@ -276,7 +278,7 @@ console.log("\n--- B1 · the fixture ARMED, read off the REAL plane before the r
     (hits?.hits || []).map((h) => h.title).filter((x) => x === TITLE).length, 5);
 }
 
-const runOp = (body) => mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(body) });
+const runOp = (body) => mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(withAccount(body)) });
 const base = { run_id: "run-d220", store: STORE, credential: AIK };
 
 /* The DOCUMENT level's sub-session cites every capture of the council calendar,

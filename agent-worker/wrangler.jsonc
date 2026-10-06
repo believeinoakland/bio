@@ -61,12 +61,13 @@
   "workers_dev": false,
   "preview_urls": false,
 
-  // THE NARROWEST BINDING THAT DOES THE JOB (fleet rule 3, I6/I8), and here that
-  // is EXACTLY ONE. The member reads and writes nothing itself: everything it
-  // learns, it learns by asking the plane, under a credential the plane hands it
-  // per call. So there is:
+  // THE NARROWEST BINDINGS THAT DO THE JOB (fleet rule 3, I6/I8; R35): the plane,
+  // and the agent runner's Container (below). The member reads and writes nothing
+  // itself: everything it learns, it learns by asking the plane, under a credential
+  // the plane hands it per call. So there is:
   //
-  //   NO durable_objects (STORE)  — it structurally CANNOT write the record.
+  //   NO STORE Durable Object     — it structurally CANNOT write the record (its one
+  //                                Durable Object binding is the runner's container).
   //   NO r2_buckets              — not CAPTURES, and above all not PUBLISHED.
   //                                Every Worker holding a PUBLISHED binding is one
   //                                more component inside the ratification fence.
@@ -85,6 +86,19 @@
   "services": [
     { "binding": "PLANE", "service": "bio-plane" }
   ],
+
+  // R35 (Q0-4; K1502, K1601 (6)) — THE ONE OTHER BINDING: the Container Durable Object through which `agent-model`
+  // reaches `agent-runner`, Claude Code in a container, for a member's SUBSCRIPTION path. Bound cross-script, so this
+  // member defines no Durable Object class and depends on nothing from npm; the class (`AgentRunner`), its container
+  // image and its egress (`api.anthropic.com` only, agent-runner R10) are declared by the script that serves it. The
+  // container is passed no plane binding, credential or address: every tool call it relays is performed HERE, through
+  // `PLANE`, under the call's own credential or grant (agent-model R7). Like `PLANE`, its `script_name` is templated
+  // from the instance by the installer.
+  "durable_objects": {
+    "bindings": [
+      { "name": "RUNNER", "class_name": "AgentRunner", "script_name": "agent-runner" }
+    ]
+  },
 
   "observability": { "enabled": true }
 }

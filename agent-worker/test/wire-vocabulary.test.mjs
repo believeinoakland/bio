@@ -64,8 +64,8 @@
 /* D-186: owns $TMPDIR for this process and removes it on exit. */
 import "../../bio-plane/test/sandbox.mjs";
 
-import { LEVELS, REPORTING_LEVEL, emptyLevelCandidates } from "../src/harness.mjs";
-import { REPORT_KEYS, checkReport } from "../src/subsession.mjs";
+import { LEVELS, REPORTING_LEVEL, emptyLevelCandidates } from "../../agent-harness/src/harness.mjs";
+import { REPORT_KEYS, checkReport } from "../../agent-harness/src/subsession.mjs";
 /* T19 (rule 1): the version-name grammar and the placeholder predicate are basis-versions' (its R1). */
 import { VERSION_NAME_RE, isBoilerplate } from "../../bio-plane/src/basis-versions/index.mjs";
 /* N155 (K674, K679): the suggestion's kinds and levels are run-productions', the catalogue's copy going at T19. */

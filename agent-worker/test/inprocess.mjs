@@ -20,7 +20,10 @@
  * THIS PROCESS ONLY, by the edit R42 names, and restored) — plus the refusals before any plane call and the two other
  * routes. NOT a `.test.mjs`: an instrument the suites share, not a suite. */
 import worker from "../src/index.mjs";
-import { MODES, PLANE_OPS } from "../src/harness.mjs";
+import { MODES } from "../../agent-harness/src/harness.mjs";
+import { ASK_OPS, ASK_PLANE_OPS } from "../src/ops.mjs";
+import { MEMBER, withAccount } from "./account.mjs";
+import { PLANE_OPS } from "../src/ops.mjs";
 
 export const AIK = "aik-" + "e".repeat(64);
 export const AIK_SECOND = "aik-" + "f".repeat(64);
@@ -67,7 +70,7 @@ function planeStub(rec, cfg) {
       case "airun": return ok({ run: u.searchParams.get("run"), found: true, session: {
         id: u.searchParams.get("run"), mode: cfg.mode, status: S.status, plan: cfg.mode === "plan" ? PLAN_ID : null,
         context: cfg.mode === "plan" ? { type: "project", id: PROJECT, questions: [] } : { type: "inquiry", id: "INQ-421" },
-        max_passes: 1, principal: { plane: "member:ruth", claude: cfg.payer ?? null, ref: null, skill: PACK_VERSION },
+        max_passes: 1, principal: { plane: "member:ruth", claude: cfg.payer ?? MEMBER, ref: null, skill: PACK_VERSION },
         state: S.state, budget: WIDE.map((b) => ({ ...b, consumed: 0, unit: null })) } });
       case "airunlog": return ok({ run: u.searchParams.get("run"), found: true, entries: [], limit: 200, truncated: false });
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),
@@ -100,7 +103,17 @@ function planeStub(rec, cfg) {
       case "publishededitions": return ok({ id: u.searchParams.get("id"), editions: [] });
       case "profiles": return ok({ profiles: [], view: { deadlines: [], venues: [], legal_organisations: [] } });
       case "optionpropose": S.proposals.push(body); return ok({ ok: true, proposal: `PRP-${S.proposals.length}` });
-      default: return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
+      /* R54 — the ask's own calls (K1601 (3)), and its reads: every op of ASK_OPS answers when the drive is an ask. */
+      case "askceiling":
+        return cfg.ceilingReached
+          ? ok({ ok: false, reason: "AI_USE_CEILING_REACHED", code: "AI_USE_CEILING_REACHED", check: "C-22.30",
+                 translation: "You have reached today's limit." })
+          : ok({ ok: true, reached: false });
+      case "askcheck": return ok({ ok: true, answer: { ...(body?.answer || {}), checked: true },
+                                   withheld: cfg.withheld || [] });
+      case "askusage": return ok({ ok: true, counted: true });
+      default:
+        if (cfg.ask && ASK_OPS.includes(op)) return ok({ op, rows: [] }); return Response.json({ ok: false, error: "unknown op: " + op }, { status: 400 });
     }
   };
   return new Proxy({ fetch: handle }, {
@@ -127,13 +140,23 @@ function envFor(rec, cfg, vars = {}) {
 export const SUBSESSION_LIMIT = 5;
 function modelAnswer(body) {
   const names = (body.tools || []).map((x) => x.name);
+  /* R54: the ask's two conversations. Reading: a read outside ASK_OPS (refused here, R55), one inside, then done. */
+  if (names.includes("done_reading")) {
+    const results = body.messages.filter((m) => Array.isArray(m.content) && m.content.some((b) => b.type === "tool_result")).length;
+    if (results === 0) return { content: [{ type: "tool_use", id: "a0", name: "read", input: { op: "sources", args: {} } }] };
+    if (results === 1) return { content: [{ type: "tool_use", id: "a1", name: "read", input: { op: "search", args: { q: "minutes" } } }] };
+    return { content: [{ type: "tool_use", id: "a2", name: "done_reading", input: { question_as_read: "who held the seat" } }] };
+  }
+  if (names.includes("answer"))
+    return { content: [{ type: "tool_use", id: "a3", name: "answer", input: { question_as_read: "who held the seat",
+      clarifying: null, summary: "not held", sentences: [], label: "machine work" } }] };
   const last = body.messages[body.messages.length - 1];
   const answered = Array.isArray(last?.content) && last.content.some((b) => b.type === "tool_result");
   if (names.includes("report") && !answered)
     return { content: [{ type: "tool_use", id: "q", name: "meaningrows", input: { rows: "leg", q: "", limit: SUBSESSION_LIMIT } }] };
   if (names.includes("report"))
     return { content: [{ type: "tool_use", id: "r", name: "report", input: { state: "LOOKED_ABSENT", summary: "nothing" } }] };
-  const prompt = [...body.messages].reverse().find((m) => m.role === "user" && typeof m.content === "string");
+  const prompt = [...body.messages].reverse().map((m) => (m.role !== "user" ? null : typeof m.content === "string" ? { content: m.content } : Array.isArray(m.content) && m.content.find((c) => c.type === "text") ? { content: m.content.filter((c) => c.type === "text").map((c) => c.text).join("") } : null)).find((m) => m && /judge_/.test(m.content));
   const step = (/Answer by calling judge_([a-z]+)/.exec(prompt ? prompt.content : "") || [])[1] || "";
   return { content: [{ type: "tool_use", id: "j", name: `judge_${step}`, input: {} }] };
 }
@@ -157,7 +180,9 @@ async function ask(rec, cfg, path, init, vars) {
   rec.answers.push({ path, status: res.status, out, text });
   return { status: res.status, out };
 }
-const post = (body) => ({ method: "POST", body: typeof body === "string" ? body : JSON.stringify(body) });
+const post = (body) => ({ method: "POST", body: typeof body === "string" ? body : JSON.stringify(withAccount(body)) });
+const postAsIs = (body) => ({ method: "POST", body: JSON.stringify(body) });
+export const GRANT = "aig-inprocess-grant-never-echoed";
 
 /** THE DRIVES, each recorded on its own and together. `drives` maps a name to its recording. */
 export async function driveMember() {
@@ -178,9 +203,9 @@ export async function driveMember() {
 
   /* 2 · MODEL: an account resolves and no judgements are supplied, so turns run (R40) under the pack (R48). */
   drives.model = recorder();
-  await withGlobalFetch(drives.model, () => ask(drives.model, { mode: "check", payer: "project" }, "run", post({
+  await withGlobalFetch(drives.model, () => ask(drives.model, { mode: "check" }, "run", post({
     run_id: "run-421m", store: "scratch", credential: AIK,
-    claude_accounts: { project: { token: CLAUDE_TOKEN, ref: "the-project-account" } } })));
+    account: { kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER } })));
 
   /* 3 · PLAN: deployed in this process only, by the edit R42 names, and restored whatever happens. */
   drives.plan = recorder();
@@ -215,8 +240,16 @@ export async function driveMember() {
     await ask(e, { mode: "check" }, "nope", { method: "GET" });
   });
 
+  /* 6 · R54: AN ASK, under its grant and the member's own account; kept apart from `all`, because an ask's reach is not
+     PLANE_OPS (R37, R55). */
+  drives.ask = recorder();
+  await withGlobalFetch(drives.ask, () => ask(drives.ask, { mode: "check", ask: true }, "ask", postAsIs({
+    question: "who held the seat in March?", grant: GRANT,
+    account: { kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER } })));
+
   const all = recorder();
-  for (const r of Object.values(drives)) {
+  for (const [name, r] of Object.entries(drives)) {
+    if (name === "ask") continue;
     r.envKeys.forEach((k) => all.envKeys.add(k));
     r.planeProps.forEach((k) => all.planeProps.add(k));
     all.forbiddenTouched.push(...r.forbiddenTouched);
@@ -224,5 +257,5 @@ export async function driveMember() {
     all.globalFetches.push(...r.globalFetches);
     all.answers.push(...r.answers);
   }
-  return { drives, all, declared: Object.keys(PLANE_OPS) };
+  return { drives, all, declared: Object.keys(PLANE_OPS), declaredAsk: [...ASK_OPS, ...Object.keys(ASK_PLANE_OPS)] };
 }
