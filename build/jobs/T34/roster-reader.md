@@ -29,3 +29,7 @@ No row bound: each roster's rows are answered whole, as R12 states (people bound
 ## J2 · REPORT
 
 `plane` (not mine): `bio-plane/src/plane/wiring.mjs` `rosterSource()` still registers the "held as a table, not read" source (`ROSTER_NOT_READ`), and `store.mjs:183` registers it into `people`. To meet people R18 with roster-reader R12, plane composes `reads({organisation, viewer})` from the store (captures placed as `staff_roster` or `org_chart` whose stated organisation resolves to the entity; calculations' tables with R6's roles), in J1's shape, and registers `rosterSource(reads)` imported from `roster-reader/index.mjs`. Its `test/m/plane/t33.test.mjs` (lines 280–287) asserts the old source and moves with it; the plane bundle goes stale when plane imports it.
+
+## J3 · COMPLETE
+
+T34-64 applied: R12 `rosterSource(reads)` (`roster-reader/source.mjs`). Tests 22/22; format, architecture, coverage (12 of 12) and ownership 0 failures. Built on J1's readings (open); an ANSWER that changes them re-opens me. Plane's wiring to it is REPORT J2. Final `uses`: docprofile. Details in my record's Completion.
