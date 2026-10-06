@@ -25,6 +25,6 @@
 - `format`: 127 modules, 126 requirements files; 0 failures.
 - `architecture filing-templates`: 10 product files, 32 relative imports (0 naming no tracked file, not judged); 0 failures.
 - `coverage filing-templates`: 25 of 25 live requirement ids named by a test; 0 failures.
-- `ownership filing-templates tranche/T34`: run after the commit, below.
+- `ownership filing-templates tranche/T34`: 4 files changed by filing-templates between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01ArRabMRmWtTqbg1miUXqa9): test runs 10, module lines 1719
