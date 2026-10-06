@@ -104,8 +104,10 @@ test("R21 R3 R5 under the real case-checker: a carried calculation recreates her
   const done = await w3.ci.completeImportedDocument({ import: r3.import, edition: 2, bytes: new TextEncoder().encode(CALC_INPUT),
                                                       by: V("bob"), viewer: V("bob") });
   assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
-  /* recreated here; case-checker R20 recomputes only over inputs the case file carries (its R9 fills materials, not a
-     calculation's inputs), so its answer stays not_recomputed and is recorded as not agreeing with this copy's */
+  /* recreated here. The checker's own answer is recorded beside, with whether it agrees: whether case-checker fills a
+     calculation's input from a supplied document is its R9's (T34-47), so either of its answers is read, never trusted */
   assert.equal(done.recreation.calculations[0].result, "recreated");
-  assert.deepEqual(done.recreation.calculations[0].checker, { result: "not_recomputed", agrees_with_this_copy: false });
+  const k = done.recreation.calculations[0].checker;
+  assert.ok(["agrees", "not_recomputed"].includes(k.result), JSON.stringify(k));
+  assert.deepEqual(k, { result: k.result, agrees_with_this_copy: k.result === "agrees" });
 });
