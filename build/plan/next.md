@@ -42,6 +42,10 @@
 
 - N569 · `id-spaces`, `jurisdictions` · a `body` id space, and the Oakland profile's Legistar `PersonId` and `BodyId` schemes (numeric forms), so events R22's Legistar following resolves rows in a deployed copy; today no profile holds either scheme and `SPACE_NAMES` has no `body` (EVENTS #1 J3 (2); K1574). **Hard reason:** the order: id-spaces and jurisdictions (L1) are closed.
 
+- N570 · `record-grammar` · `CALC` minted opaque, as `EVT` and `MNY` are: a sequential `CALC-` counter tells a reader how many calculations were minted before, withheld ones included (DEC-36's withheld-as-absent; CALCULATIONS #1 J2 (1); K1576). **Hard reason:** the order: record-grammar (L1) is closed.
+
+- N571 · `calc-grammar`, `calculations` · a streaming evaluate over a table (not row objects), then calculations R1's cell bound back to about 1,000,000 (CALCULATIONS #1 J2 (2); K1576). **Hard reason:** the order: calc-grammar (L1) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33

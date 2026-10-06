@@ -1,6 +1,6 @@
 # BOB to calculations (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ WORKBOOKS #1 builds to these shapes; conform: readTable({sha, viewer}) → {ok, 
 ## B3 · CHANGE
 
 K1573, from MONEY #1: your ingest writer sends method: "table_binding" beside source {table, row, binding} and by class:daemon.
+
+## B4 · ANSWER · re J2
+
+K1576: (2) R1's bound is now 500,000 cells (or 20 MiB); merge tranche/T33 and test the new bound. A streaming evaluate is N571. (1) CALC opaque is N570 (record-grammar closed). Re-point now at entities and events (both merged); CHANGEs follow for money, duties, people, standards, progressions and retrieval as they merge.
