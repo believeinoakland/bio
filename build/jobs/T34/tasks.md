@@ -38,3 +38,7 @@ Readings of R3, R13–R17 I am building on; each is BOB's to change. None stops 
 - `checks/format.mjs`: 129 modules, 128 requirements files; 0 failures. `checks/architecture.mjs … tasks`: 9 product files, 35 relative imports; 0 failures. `checks/coverage.mjs … tasks`: 17 of 17 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … tasks tranche/T34`: 6 files changed; 0 failures.
 
 Size (session_011DdbtwJUhTwJan4dKnywad): test runs 38, module lines 1379
+
+## J2 · COMPLETE
+
+T34-53 applied: Ask for a check (R3, R13–R17) on J1's readings (B2). checkRequest/checkTake/checkRecord, checkRequests/checksOf; To dos are check-requested tasks per addressee; one take wins (conditional write); taker's To do closes only by the record (CHECK_CLOSES_BY_RECORD), never forwarded (CHECK_NOT_FORWARDED). Family C-138 (15 rows, awaiting stamp). Four append-only tables declared to the whole-store purge; the drained-task unique index narrowed to exclude check-requested. tasks 95/95; format, architecture, coverage (17/17), ownership (6 files) 0 failures. New red for control-plane T34-60: families.test.mjs:515 pins tasks' rows to the old four. Five new ops await op-declarations R23 / control-plane R55 (adds to the inherited R53 red). queue R1 to class check-requested. Details in the record.
