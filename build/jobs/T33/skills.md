@@ -64,4 +64,4 @@ T33-52 done on job/T33/skills, with tranche/T33 merged in. Built: R33 legal_look
 - architecture: 0 failures.
 - coverage and ownership: reported in the COMPLETE entry.
 
-Size (session_01GmSBs9c4ZXTh8Wo9f4QZWg): test runs 12, module lines 2193
+Size (session_01GmSBs9c4ZXTh8Wo9f4QZWg): test runs 12, module lines 2187
