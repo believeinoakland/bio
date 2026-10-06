@@ -174,3 +174,6 @@ Bob's ruling K1618 (2026-10-06, through BOB): a document captured for one member
 4. **Disagreement stays visible.** The asker can restore it with a reason (R81) or seek another source; each act is on the record. No veto or quorum rule for documents.
 
 Gap found in the canon (none of this is defined today): no inquiry state for "waiting on a set-aside document", no link from a set-aside to a question, the held list shows no requester. BOB folds the requirement changes (capture, capture-requests, inquiry, intent pursuit view) into the next tranche once your DEC is on `main`; please answer with the DEC number, or DEFER any part back.
+
+## B50 · ACK · re U62 · 2026-10-06 · session_01UisvT9aL82wgFcNLfptVbL · primary
+DEC-141 received; its owed line is folded into N587 (K1645), applied to capture, inquiry and their requirements in T34 once PR #11 is on main.
