@@ -107,9 +107,9 @@ test("R5: side-corrected, one per (dependent, candidate) correctedDependents ans
   assert.ok(!w.read("alice").items.some((i) => i.kind === "side-corrected"));
 });
 
-test("R6: tension-after-publication, one per (case, candidate) caseTensions answers for each project the member owns, to those owners and nobody else", () => {
+test("R6: tension-after-publication, one per (case, candidate) case-tensions' caseTensions answers (its R4, was publication R50; N612) for each project the member owns, to those owners and nobody else", () => {
   const asked = [];
-  const w = world({ publication: { caseTensions: (a) => { asked.push(a.project);
+  const w = world({ caseTensions: { caseTensions: (a) => { asked.push(a.project);
     return { ok: true, cursor: null, cases: a.project !== "PRJ-1" ? [] : [{ case: "CASE-1", edition: 2, project: "PRJ-1",
       tensions: [{ case: "CASE-1", edition: 2, member: "INQ-1", candidate: "c1", state: "open", a: claim("INQ-1", "p"), b: claim("INQ-2", "q"), depth: 1 },
                  { case: "CASE-1", edition: 2, member: "INQ-3", candidate: "c1", state: "open", depth: 1 },
@@ -134,7 +134,9 @@ test("R6: tension-after-publication, one per (case, candidate) caseTensions answ
   assert.deepEqual(asked, []);
   assert.ok(!w.read(null, "class:admin").items.some((i) => i.kind === "tension-after-publication"), "nor a machine");
   // it leaves when a later edition discloses it or the candidate resolves
-  w.fakes.publication.caseTensions = () => ({ ok: true, cursor: null, cases: [] });
+  assert.equal(typeof w.fakes.publication.caseTensions, "undefined", "N612: read from case-tensions, never publication");
+  assert.equal(t1.basis.source, "case-tensions.caseTensions");
+  w.fakes.caseTensions.caseTensions = () => ({ ok: true, cursor: null, cases: [] });
   assert.ok(!w.read("owner").items.some((i) => i.kind === "tension-after-publication"));
 });
 
