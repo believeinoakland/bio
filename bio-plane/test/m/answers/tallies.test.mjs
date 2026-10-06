@@ -77,7 +77,7 @@ test("R24 its rows are held in its own table with their translations: the four c
   assert.equal(new Set(checks).size, checks.length);
   for (const [code, r] of Object.entries(ANSWERS_CHECKS)) {
     assert.ok(Object.isFrozen(r), code);
-    assert.match(r.check, /^C-134\.\d+$/);
+    assert.match(r.check, /^C-135\.\d+$/);
     assert.ok(r.translation && r.translation.length > 20, code);
     assert.match(r.where, /^src\/answers\//);
   }

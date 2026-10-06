@@ -1,11 +1,11 @@
 /* answers' refusal rows (requirements: `build/requirements/answers.md`, R24). DEC-49: every refusal this module answers
- * carries its code, its row and the member's translation. A new module: its rows are a new family, C-134 (the next free
- * after duties' C-133; J1 (3)), awaiting promotion's stamp (row-census, plan T33 Rules (9)); a change to any row moves
+ * carries its code, its row and the member's translation. A new module: its rows are a new family, C-135 (the next free
+ * after hypotheses' C-134; B3, K1607), awaiting promotion's stamp (row-census, plan T33 Rules (9)); a change to any row moves
  * `CATALOG_VERSION` at that stamp (rule 17). `NOT_AN_ADMIN` is membership's (its R84) and the saved-query refusals are
  * query-language's (its R30): answered through them, never minted here. No translation names a place (R25). */
 
 const at = (fn, region) => `src/answers/${fn} > ${region}`;
-const row = (n, fn, region, translation) => Object.freeze({ check: `C-134.${n}`, where: at(fn, region), translation });
+const row = (n, fn, region, translation) => Object.freeze({ check: `C-135.${n}`, where: at(fn, region), translation });
 
 export const ANSWERS_CHECKS = Object.freeze({
   ANSWER_MALFORMED: row(1, "check.mjs checkAnswer", "is-answer-shape",
