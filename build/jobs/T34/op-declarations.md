@@ -91,3 +91,7 @@ T34-58, T34-83, T34-90–T34-92 applied; R6, R15, R20–R29 met; K1764's red cle
 - `ownership: 6 files changed by op-declarations between tranche/T34 and HEAD; 0 failures`.
 
 Size (session_01VhQZpv5UDgJCR2CivgwuJZ): test runs 22, module lines 3024
+
+## J5 · COMPLETE
+
+B5 done: merged tranche/T34; R15's and R6's tests read wizard-scripts' and tasks' merged maps (R15's text names its ops and states no count, so no re-wording). op-declarations 84/0; format, architecture, coverage 29/29, ownership 0 failures. Against the tranche: control-plane r53-routes:58 (K1807) green; new reds r53-routes:75 (T34 OP_STAMPS ops, control-plane T34-60) and totality:13 (accepted in B4). writinghelp is named as the door's own route (K1863 (7)). Details in my record.
