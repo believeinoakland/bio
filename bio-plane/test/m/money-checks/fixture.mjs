@@ -1,7 +1,7 @@
 /* money-checks over record-core, membership and progressions (the real ones) on a real SQLite database (node:sqlite)
    standing in for a Durable Object's storage, answering a cursor as workerd does. `money` precedes this module and is
    built by its own job in the same layer (P10), so what this module reads from it is a stand-in the test controls, in
-   the shapes of money's Provides as this job reads them (money R7–R10, R14, R19; job record J1 (3)): its read-contract
+   the shapes of money's Provides as this job reads them (money R7–R10, R14, R19 as K1563 (4) names it; job record J1 (3)): its read-contract
    tables `money_facts`, `money_withdrawals` and `money_concerns`, and `readFact`, `moneyOf`, `summable`,
    `committedAgainstPaid` over them. `entities` is a stand-in in its Provides' shapes (R5's `readEntity`, R7's `has`).
    Every test drives money-checks at its interface. */
@@ -49,7 +49,7 @@ export const NOW = "2026-10-06T00:00:00.000Z";
 const MONEY_TABLES = `
 CREATE TABLE money_facts (fact_id TEXT PRIMARY KEY, amount TEXT, sign TEXT, precision TEXT, currency TEXT, kind TEXT,
   phase TEXT, stage TEXT, basis TEXT, period_from TEXT, period_to TEXT, from_entity TEXT, from_fund TEXT,
-  to_entity TEXT, to_fund TEXT);
+  to_entity TEXT, to_fund TEXT, source_capture_sha TEXT);
 CREATE TABLE money_withdrawals (fact_id TEXT PRIMARY KEY, reason TEXT, by TEXT, at TEXT);
 CREATE TABLE money_concerns (fact_id TEXT NOT NULL, concerns TEXT NOT NULL)`;
 
@@ -148,8 +148,8 @@ export function world({ budgetClock = null } = {}) {
     fact(id, { amount = "100", sign = "+", precision = "exact", currency = "USD", kind = "expenditure", phase = "actual",
                stage = "encumbered", basis = "budgetary", period = ["2025-07-01", "2026-06-30"], from = "ENT-2026-0001",
                to = "ENT-2026-0002", concerns = [], role = null, capture = `sha-${id}`, bundle = null } = {}) {
-      st.sql.exec(`INSERT INTO money_facts VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id, amount, sign, precision, currency, kind,
-                  phase, stage, basis, period[0], period[1], from, null, to, null);
+      st.sql.exec(`INSERT INTO money_facts VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, id, amount, sign, precision, currency, kind,
+                  phase, stage, basis, period[0], period[1], from, null, to, null, capture);
       for (const x of concerns) st.sql.exec(`INSERT INTO money_concerns VALUES (?,?)`, id, x);
       meta.set(id, { role, capture, bundle });
     },

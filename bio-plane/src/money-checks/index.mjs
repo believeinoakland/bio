@@ -15,9 +15,9 @@
  * Nothing here is a fact, a finding about a person, or a score standing for a judgment (K1471, K1473); no result is
  * written anywhere but this module's own tables (R10).
  *
- * Readings this job builds on (job record J1, pending BOB's answer): `money` is reached through `deps.money` (its
- * `readFact`, `moneyOf`, `summable`, `committedAgainstPaid`) and its read contract (money R19), read in ONE place,
- * `#populationFacts`; a threshold or share is held by `stateParameter` (R3).
+ * Readings this job builds on (job record J1, accepted by K1563): `money` is reached through `deps.money` (its
+ * `readFact`, `moneyOf`, `summable`, `committedAgainstPaid`) and its read contract (money R19, named whole by K1563 (4)),
+ * read in `#populationFacts` and `#captureOf`; a threshold or share is held by `stateParameter` (R3).
  *
  * REACHED as `moneyChecksOf(host, deps)` (K61): one instance per host, created on the first call with `deps`:
  *   record       `recordOf(host)`: `transact`, `declareTable`.
@@ -356,7 +356,7 @@ export class MoneyChecks {
       else {
         const shas = (stage) => new Set(placements.filter((p) => p.stage_key === stage).map((p) => p.capture_sha));
         const awardShas = shas(as.value), signedShas = shas(ss.value);
-        const facts = this.#factsOf(eid, viewer).map((f) => ({ f, sha: this.#captureOf(f, viewer) }));
+        const facts = this.#factsOf(eid, viewer).map((f) => ({ f, sha: this.#captureOf(f) }));
         const award = facts.filter((x) => awardShas.has(x.sha)).map((x) => x.f);
         const signed = facts.filter((x) => signedShas.has(x.sha)).map((x) => x.f);
         const read = { facts: [...award, ...signed].map((f) => f.fact_id),
@@ -375,15 +375,12 @@ export class MoneyChecks {
     return { ok: true, found: true, progression_key: key, entity_id: eid, label: NOTICED, shown: true, checks };
   }
 
-  /* The capture a fact's source extent is in (money R2, R8), or null. */
-  #captureOf(fact, viewer) {
-    const own = fact && fact.source && (fact.source.capture_sha || fact.source.sha256);
+  /* The capture a fact's source extent is in: money R19's `source_capture_sha` (K1563 (4)), or null. */
+  #captureOf(fact) {
+    const own = fact && (fact.source_capture_sha || (fact.source && fact.source.capture_sha));
     if (own) return own;
-    try {
-      const r = this.money.readFact({ factId: fact.fact_id, viewer });
-      const s = r && r.fact && r.fact.source;
-      return s ? s.capture_sha || s.sha256 || null : null;
-    } catch { return null; }
+    const r = this.#one(`SELECT source_capture_sha FROM money_facts WHERE fact_id=?`, fact.fact_id);
+    return r ? r.source_capture_sha || null : null;
   }
 
   /* ===================================================================== *
