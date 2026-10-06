@@ -1,6 +1,6 @@
 # connections (T33)
 
-**Status** · session_01MhqJwCndhjhNCVnEjDphvL · depth 2 · COMPLETE · handled B1
+**Status** · session_01MhqJwCndhjhNCVnEjDphvL · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
