@@ -26,3 +26,7 @@ R83's `fn({document, viewer})` does not say what `document` is. My reading, whic
 - `format`: 0 failures. `architecture capture`: 0 failures. `coverage capture`: 57 of 57 ids named, 0 failures. `ownership capture tranche/T34`: 0 failures.
 
 Size (session_01QNQot9KaFLXjjqCENA7QuC): test runs 10, module lines 3576
+
+## J2 · REPORT
+
+acquisition (wording only): profileOf's comment and origin.test.mjs's header say "member" is for bytes a member supplied by their own act, "an upload or a knock". Under K1773 (B3) no knock is a member's own act under their session today (op=knock carries no session, capture R30), so capture's pull passes "fetch". The comment should drop "or a knock", or name the case where a knock would be one. No behaviour is affected.
