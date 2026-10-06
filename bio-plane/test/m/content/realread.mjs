@@ -1,12 +1,11 @@
 /* content's tests over REAL readings (B3, K1557): a real workbook's bytes read by the real format entry through the real
    `reading-pipeline.read` (its R28 carries the entry's `cells` and `metadata` on the reading), the reading then handed
    to content as extraction's `readingOf` answers it (extraction persists the reading unchanged, its R19, R30). Only the
-   persisting table is stood in. The workbook is assembled here: a STORED (uncompressed) zip with the parts an .xlsx
+   persisting table is stood in, and no jurisdiction view is passed (a workbook's cells and metadata read none). The workbook is assembled here: a STORED (uncompressed) zip with the parts an .xlsx
    needs, so every byte the reader reads is stated in this file. */
 import { crc32 } from "node:zlib";
 import { createHash } from "node:crypto";
 import { read } from "../../../src/reading-pipeline/index.mjs";
-import { combine } from "../../../../jurisdictions/index.mjs";
 
 const PREFIX = "bio/captures/";
 const enc = (s) => (typeof s === "string" ? new TextEncoder().encode(s) : s);
@@ -80,7 +79,7 @@ export async function readReal(bytes, { format, ct, fromText = false }) {
     provenance_chain: [{ who: "instance t", asserts: "served", via: "direct", bound: false }],
     capture: { sha256: digest, bytes: u8.length, content_type: ct, transport: { http_headers: [["content-type", ct]] } },
   };
-  const out = await read(document, { evidence, env: {}, storeName: "bio", view: combine([]).view, planeVersion: null,
+  const out = await read(document, { evidence, env: {}, storeName: "bio", view: null, planeVersion: null,
                                      liveCalibration: null });
   return { ...out, digest };
 }
