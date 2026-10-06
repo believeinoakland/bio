@@ -36,3 +36,9 @@ Size (session_01Wskzz89u9YtWxzo9XZyHmv): test runs 16, module lines 3294
 T34-29 and T34-86 applied; details in my record's Completion section. R11: `CALC-` legs read through `calculations.calcStatusOf` (not held or hidden: NO_SUCH_CALCULATION, the two alike; not accepted or unreadable: CALCULATION_NOT_ACCEPTED). R58: `documentWaits` over `capture.heldActsOf`, driven in tests through the real capture. R4's derived-leg share (references[] and the division's rebuild). DEC-149: the one string, with a test.
 
 Tests: inquiry 173 pass, 2 fail, 1 todo. The 2 reds are R4's derived-connection leg, waiting on inquiry-grammar's R17 merge (its target arm still refuses the 64-hex id); they go green with no change here once it lands. Checks: format, architecture, coverage (49/49), ownership all 0 failures. Users run as regression, all green. `bio-plane/dist/bio-plane.bundled.mjs` is stale against this source (regenerate at layer close).
+
+## Completion of B3 (CHANGE, K1799)
+
+`test/m/inquiry/earned.test.mjs` R6: the negative arm now excludes `/fetched them/` (any fetch wording, the measured route's DEC-149 sentence "as your group's Civicsmith fetched them" among them), and a new positive arm asserts the measured route (A) carries that sentence, so the negative arm can fail. Merged `tranche/T34` first. Tests: inquiry 176, pass 173, fail 2 (the same two R4 derived-leg tests waiting on `inquiry-grammar` R17), todo 1. Checks: format, architecture, coverage (49 of 49), ownership: 0 failures each.
+
+Size (session_01Wskzz89u9YtWxzo9XZyHmv): test runs 19, module lines 3294
