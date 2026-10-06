@@ -1,6 +1,6 @@
 # acquisition (T33)
 
-**Status** · session_01REJDyRkXAWYAFW1aBrgywm · depth 2 · WORKING · handled B1
+**Status** · session_01REJDyRkXAWYAFW1aBrgywm · depth 2 · COMPLETE · handled B1
 
 ## Completion (ACQUISITION #10)
 
