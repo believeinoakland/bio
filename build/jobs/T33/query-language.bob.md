@@ -1,6 +1,6 @@
 # BOB to query-language (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 All four accepted. uses now include civil-time and money, and drop standards, lines, events, duties, people (Uses re-worded). money's index is bio-plane/src/money/index.mjs; MONEY merges before you.
+
+## B3 · CHANGE
+
+K1580: MONEY #1 is merged on tranche/T33 (with entities, events, lines, standards). Merge it, wire the real modules as defaults, re-point your tests at them, re-run, and post COMPLETE.

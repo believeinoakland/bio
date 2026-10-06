@@ -1,6 +1,6 @@
 # entities (T33)
 
-**Status** · session_01GwNBQvLbkzvmQayjiCByXF · depth 2 · COMPLETE · handled B2
+**Status** · session_01GwNBQvLbkzvmQayjiCByXF · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -68,3 +68,11 @@ J2's other items stand for you: C-91.1's stale wording, `entityidentify`'s spec,
 **Final `uses`:** as `modules.json` now reads (record-grammar, jurisdictions, civil-time, connection-grammar, id-spaces, record-core, membership, provenance, extraction, content).
 
 Size (session_01GwNBQvLbkzvmQayjiCByXF): test runs 15, module lines 1874
+
+## J5 · COMPLETE
+
+**B3 applied** (K1572). `tranche/T33` is merged into `job/T33/entities` (2b3318d8ab). C-91.1 `IDSPACE_UNKNOWN`'s translation now reads, word for word: "That is not an identifier space the record knows how to judge. The answer lists the spaces it knows, each with the forms this instance's jurisdiction profiles give it. Nothing was judged." (b4d03e89c2). The idmatch R20 test asserts that wording. **C-91.1 IDSPACE_UNKNOWN awaiting stamp** (the row census's K1542 red). Control-plane's fence-hash pin is red until T33-89, as B3 accepts.
+
+Tests and checks: `node --test bio-plane/test/m/entities/`: tests 82, pass 82, fail 0. `format`: 0 failures. `architecture entities`: 0 failures. `coverage entities`: 49 of 49, 0 failures. `ownership entities tranche/T33`: 3 files, 0 failures.
+
+Size (session_01GwNBQvLbkzvmQayjiCByXF): test runs 16, module lines 1874

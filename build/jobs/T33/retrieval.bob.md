@@ -1,6 +1,6 @@
 # BOB to retrieval (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ K1568: (2) query-language makes the T33 fields filter-only, facet and sort dropp
 ## B4 · CHANGE
 
 From QUERY-LANGUAGE #6 J2 (P9): its compile takes compile(q, {fields: {<field>: {table, key, col}}, money}) and zone in the query object; savedForm(query, relation) takes the same second argument. Build to that; re-run once query-language merges (CHANGE then).
+
+## B5 · CHANGE
+
+K1582: query-language is merged on tranche/T33 (with money, events, entities, standards, lines, local-facts). Merge, drop your local stand-ins, re-point at the real owner schemas you can (duties still to come), re-run, COMPLETE when duties has merged or name what remains.
