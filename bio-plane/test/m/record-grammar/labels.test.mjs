@@ -21,7 +21,7 @@ test("R38 lawProposalState: blank is unstated, a machine identity machine_propos
 test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195's own, each with the three states' sentences", () => {
   assert.ok(Object.isFrozen(PROPOSAL_STATES));
   assert.deepEqual(Object.keys(PROPOSAL_STATES), ["governing_laws", "standard", "comparison", "filing_draft", "theory",
-    "plan_option", "communication", "template", "edition_statement", "escalation_reason", "wizard"]);
+    "plan_option", "communication", "template", "edition_statement", "escalation_reason", "wizard", "law_relation"]);
   assert.ok(PROPOSAL_STATES.governing_laws === LAW_PROPOSAL_STATES);
   const said = new Set();
   for (const [subject, t] of Object.entries(PROPOSAL_STATES)) {
@@ -30,11 +30,11 @@ test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195'
     if (subject !== "governing_laws") assert.ok(Object.isFrozen(t), subject);
     assert.match(t.machine_proposed, /machine work, labelled as machine work/, subject);
   }
-  assert.equal(said.size, 11 * 3, "no two sentences are the same");
+  assert.equal(said.size, 12 * 3, "no two sentences are the same");
 });
 
 const SUBJECTS = ["governing_laws", "standard", "comparison", "filing_draft", "theory", "plan_option", "communication", "template",
-  "edition_statement", "escalation_reason", "wizard"];
+  "edition_statement", "escalation_reason", "wizard", "law_relation"];
 
 test("R42 PROPOSAL_STATES.template: after communication, frozen, three sentences of wording proposed for a filing template, machine work never drafts, reviews or approves", () => {
   assert.equal(Object.keys(PROPOSAL_STATES).indexOf("template"), 7);
@@ -92,14 +92,44 @@ test("R45 PROPOSAL_STATES.wizard: after escalation_reason, frozen, steps propose
   newSubject("wizard", "escalation_reason", /proposed these steps for a wizard script/,
     /not a script's steps until its author adopts them into a version/);
   assert.match(PROPOSAL_STATES.wizard.machine_proposed, /it is a draft, which can propose steps and can never draft, submit or approve a script/);
-  /* The tables before it are unchanged in number and order (R42's eight first, then R43's and R44's), and it is last. */
+  /* The tables before it are unchanged in number and order (R42's eight first, then R43's and R44's); R49's follows it. */
   assert.deepEqual(Object.keys(PROPOSAL_STATES), SUBJECTS);
-  assert.equal(Object.keys(PROPOSAL_STATES).at(-1), "wizard");
+  assert.equal(Object.keys(PROPOSAL_STATES).at(-2), "wizard");
 });
 
-test("R38 R42 R44 R45 proposalLabel's RangeError for an unknown subject names all eleven subjects, in order", () => {
-  assert.equal(SUBJECTS.length, 11);
-  for (const s of ["templates", "edition", "escalation", "Edition_statement", "escalation_reasons", "wizards", "Wizard", "__proto__"])
+test("R49 PROPOSAL_STATES.law_relation: after wizard and last, frozen, a law relation, court link or treatment proposed, not one the record holds until a member records it; machine work can propose one and never record one", () => {
+  const keys = Object.keys(PROPOSAL_STATES);
+  assert.equal(keys.indexOf("law_relation"), keys.indexOf("wizard") + 1);
+  assert.equal(keys.at(-1), "law_relation");
+  const t = PROPOSAL_STATES.law_relation;
+  assert.ok(Object.isFrozen(t));
+  assert.deepEqual(Object.keys(t), STATES3);
+  for (const s of STATES3) {
+    assert.match(t[s], /law relation, court link or treatment/, s);
+    assert.match(t[s], /not one the record holds until a member records it themselves/, s);
+  }
+  assert.match(t.machine_proposed, /^a machine credential proposed /);
+  assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it can propose one and it can never record one\./);
+  assert.match(t.member_proposed, /^a member proposed /);
+  assert.match(t.member_proposed, /It is a proposal and not one the record holds .*the record holds who proposed it$/);
+  assert.match(t.unstated, /^the record does not say who proposed /);
+  /* It names what was proposed, never a standard: standards' lawPropose labels through it, not through `standard`. */
+  for (const s of STATES3) assert.doesNotMatch(t[s], /standard/, s);
+  for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
+    const state = lawProposalState(w);
+    assert.deepEqual(proposalLabel(w, "law_relation"), { by: w ?? null, state, machine_work: state === "machine_proposed", says: t[state] });
+  }
+  assert.deepEqual(proposalLabel("token:skill", "law_relation"),
+    { by: "token:skill", state: "machine_proposed", machine_work: true, says: t.machine_proposed });
+  /* The other tables and their sentences are unchanged: the eleven before it, pinned by the tests above, and `standard`
+     still the standard's own sentences. */
+  assert.match(PROPOSAL_STATES.standard.machine_proposed, /^a machine credential proposed this standard\./);
+});
+
+test("R38 R42 R44 R45 R49 proposalLabel's RangeError for an unknown subject names all twelve subjects, in order", () => {
+  assert.equal(SUBJECTS.length, 12);
+  for (const s of ["templates", "edition", "escalation", "Edition_statement", "escalation_reasons", "wizards", "Wizard", "__proto__",
+    "law_relations", "Law_relation", "law", "court_link", "treatment"])
     assert.throws(() => proposalLabel("a", s), (e) => e instanceof RangeError
       && e.message === `proposalLabel: '${s}' is not a proposal subject; one of ${SUBJECTS.join(", ")}`, s);
 });

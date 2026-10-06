@@ -140,7 +140,24 @@ const REBUILD = "Run `node bio-plane/scripts/bundles.mjs` from the repository ro
    A member opts INTO a bundle by carrying a `bundle` block. A member without one
    is not a defect and is not silently skipped either — the gate names it, so a
    `bundle` block DELETED is visible rather than being a member that quietly
-   stops being guarded. */
+   stops being guarded.
+
+   A CONTAINER MEMBER (bundler R24; N578, K1601) is the one exception, and it is
+   stated by its own marker, never inferred: `"kind": "container"` AND an `image`
+   block. Its deliverable is an image, named by digest, not a Worker bundle, so it
+   is listed with its kind and its image and is not bundle-guarded for want of
+   one. A marker that says `container` and states no image is not a container
+   member: it falls through to the ordinary rule and is named as unguarded. A
+   container member that DOES declare a `bundle` (the Worker hosting its class,
+   T34-74) is guarded like any member. */
+export function isContainer(member) {
+  return !!member && member.kind === "container" && !!member.image && typeof member.image === "object";
+}
+
+/** Does the bundle guard (R6, R7, R21, R22) cover this member? Every member but a
+ *  container member with no Worker bundle (R24). */
+export const isGuarded = (member) => !isContainer(member) || !!member.bundle;
+
 export function discoverMembers(repoRoot = REPO_ROOT) {
   const out = [];
   for (const dir of readdirSync(repoRoot).filter((d) => !d.startsWith("."))) {
@@ -156,12 +173,16 @@ export function discoverMembers(repoRoot = REPO_ROOT) {
     let meta;
     try { meta = JSON.parse(text); }
     catch (e) { throw new Error(`fleet member marker ${marker} is not valid JSON: ${e.message}`); }
+    const image = meta.kind === "container" && meta.image && typeof meta.image === "object" ? meta.image : null;
     out.push({
       dir,
       name: meta.name || dir,
       abs: join(repoRoot, dir),
       entry: meta.entry || (meta.bundle && meta.bundle.entry) || null,
       bundle: meta.bundle || null,
+      kind: typeof meta.kind === "string" && meta.kind ? meta.kind : "worker",
+      image,
+      marker: meta,
     });
   }
   /* Code-point order, then the directory: the same list on every machine and
@@ -208,6 +229,59 @@ export function planeMember(repoRoot = REPO_ROOT) {
       external: [...DEFAULT_EXTERNAL],
     },
   };
+}
+
+/* ---- A CONTAINER MEMBER'S DESCRIPTOR (bundler R25; N610, K1678 (1)) ----------
+ *
+ * The one part a container member carries beyond its Worker bundle: what the
+ * installer needs to create (or roll out) the Containers application and bind its
+ * class into the members that call it. It is COPIED from the member's own marker,
+ * never defaulted (IC-82's copy-never-default condition, one part over), so a
+ * field the marker does not state is a refusal naming that field. The image is
+ * named only by digest, in agent-runner R7's own form, because an install that
+ * names a tag installs whatever the tag points at that day. */
+const DIGEST = /^sha256:[0-9a-f]{64}$/;
+const REPOSITORY = /^[a-z0-9.-]+(:[0-9]+)?\/[a-z0-9._/-]+$/;
+const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+
+/** `<repository>@sha256:<64 hex>` from a container member's `image` block, or
+ *  `{missing}` naming the first field that does not say it. Shared by the release
+ *  (R25) and the deploy (R26), so the two cannot name the image differently. */
+export function imageReference(image) {
+  if (!image || typeof image !== "object") return { missing: "image" };
+  if (typeof image.repository !== "string" || !REPOSITORY.test(image.repository) || image.repository.includes("@"))
+    return { missing: "image.repository" };
+  if (typeof image.digest !== "string" || !DIGEST.test(image.digest)) return { missing: "image.digest" };
+  return { reference: `${image.repository}@${image.digest}` };
+}
+
+/** The `container.json` part for a container member: `{descriptor, bytes}`, or
+ *  `{missing: [field, …]}` naming every field the marker does not state in the
+ *  form the part needs. `memberNames` are the fleet's members, which `bind` must
+ *  name. */
+export function containerDescriptor(member, memberNames = []) {
+  const meta = (member && member.marker) || {};
+  const missing = [];
+  if (!member || !member.bundle) missing.push("bundle");
+  const img = imageReference(meta.image);
+  if (img.missing) missing.push(img.missing);
+  const policy = meta.image && meta.image.schedulingPolicy;
+  if (policy !== undefined && policy !== "default") missing.push("image.schedulingPolicy");
+  if (typeof meta.class_name !== "string" || !IDENTIFIER.test(meta.class_name)) missing.push("class_name");
+  if (!Number.isInteger(meta.max_instances) || meta.max_instances < 1) missing.push("max_instances");
+  const bindOk = Array.isArray(meta.bind) && meta.bind.length > 0 && meta.bind.every((b) =>
+    b && typeof b === "object" && typeof b.member === "string" && memberNames.includes(b.member)
+    && typeof b.binding === "string" && IDENTIFIER.test(b.binding));
+  if (!bindOk) missing.push("bind");
+  if (missing.length) return { missing };
+  const descriptor = {
+    class_name: meta.class_name,
+    image: img.reference,
+    scheduling_policy: "default",
+    max_instances: meta.max_instances,
+    bind: meta.bind.map((b) => ({ member: b.member, binding: b.binding })),
+  };
+  return { descriptor, bytes: Buffer.from(JSON.stringify(descriptor, null, 2) + "\n") };
 }
 
 /** The three repository-relative paths a guarded member stands on. */
@@ -418,6 +492,10 @@ export function verifyStatic(member) {
   const findings = [];
   const add = (what) => findings.push(`${member.name}: ${what}`);
 
+  /* R24: a container member with no Worker bundle has no artifact to be stale. It
+     is listed, and `guarded: false` says so, so no caller reads it as checked. */
+  if (!isGuarded(member)) return { findings, manifest: null, committed: null, guarded: false };
+
   if (!member.bundle) {
     add("declares no `bundle` block in fleet-member.json, so nothing guards its artifact. "
       + "Every fleet member commits a guarded bundle (FL-9, BOB 2026-09-10).");
@@ -593,6 +671,10 @@ export function freshBuildRunnable(member, manifest) {
  *  does not build here, `{ checked: false, reason, findings: null, built: null }`: it could not check,
  *  and there is no empty list of findings a caller could read as fresh. */
 export async function verifyFresh(member, committed) {
+  /* R24: nothing to rebuild, and that is neither stale nor fresh. */
+  if (!isGuarded(member))
+    return { checked: false, guarded: false, findings: null, built: null,
+      reason: `${member.name}: not checked — a container member with no Worker bundle is not bundle-guarded (bundler R24)` };
   let manifest = null;
   try { manifest = JSON.parse(readFileSync(join(member.abs, member.bundle.manifest), "utf8")); }
   catch { /* no manifest to read: the build itself is the test of what is installed */ }

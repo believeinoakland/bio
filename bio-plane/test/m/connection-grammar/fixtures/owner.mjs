@@ -34,8 +34,15 @@ export function guess(id, from, to, scope = INQUIRY, v = IN) {
   return { id, from, to, kind: "sample_guess", owner: "sample", valid: v, evidence: [], grade: null, derived: null, label: HUNCH_LABEL, scope };
 }
 
-/** The owner's held connections, each with who may see it (`seen_by`, absent for everyone). */
-export function held() {
+/** An undated validity: the owner states no dates (R9's `undated` declaration). */
+export const UNDATED = Object.freeze({ from: null, to: null, precision: "day", zone: ZONE });
+
+/**
+ * The owner's held connections, each with who may see it (`seen_by`, absent for everyone). `undated`: every validity
+ * states no dates; `groupWide`: nothing is fenced (R9's declarations).
+ * @param {{undated?: boolean, groupWide?: boolean}} [mode]
+ */
+export function held(mode = {}) {
   const rows = [
     tie("c-in", NODE, "ENT-2026-0002"),
     tie("c-out", NODE, "ENT-2026-0003", valid("2020-01-01", "2021-01-01")),
@@ -47,22 +54,32 @@ export function held() {
   ];
   for (let i = 0; i < 250; i++) rows.push(tie(`c-bulk-${String(i).padStart(4, "0")}`, NODE, `ENT-2026-${String(1000 + i)}`));
   for (let i = 0; i < 1001; i++) rows.push(tie(`h-${String(i).padStart(4, "0")}`, HUB, `ENT-2026-${String(3000 + i)}`));
-  return rows;
-}
-
-/** The fixture that goes with `held()`. */
-export function fixture() {
-  const visible = held().filter((c) => (c.from === NODE || c.to === NODE) && c.id !== "c-out");
-  return { node: NODE, at: AT, in: "c-in", out: "c-out", undetermined: "c-undetermined", viewers: { sees: "alice", blind: "bob" },
-    fenced: "c-fenced", expected: visible.map((c) => c.id), scope: INQUIRY, hunch: "c-guess", hub: { node: HUB, at: AT } };
+  return rows.map(({ seen_by, ...c }) => ({ ...c, ...(mode.undated ? { valid: { ...UNDATED } } : {}),
+    ...(seen_by && !mode.groupWide ? { seen_by } : {}) }));
 }
 
 /**
- * An owner's `neighbours`; `broken` names the one rule it breaks.
- * @param {string} [broken]
+ * The fixture that goes with `held(mode)`. An undated owner names no connection in, out or undetermined at the date;
+ * a group-wide owner names no fenced item.
+ * @param {{undated?: boolean, groupWide?: boolean}} [mode]
  */
-export function makeNeighbours(broken) {
-  const rows = held();
+export function fixture(mode = {}) {
+  const visible = held(mode).filter((c) => (c.from === NODE || c.to === NODE) && (mode.undated || c.id !== "c-out"));
+  const fx = { node: NODE, at: AT, in: "c-in", out: "c-out", undetermined: "c-undetermined", viewers: { sees: "alice", blind: "bob" },
+    fenced: "c-fenced", expected: visible.map((c) => c.id), scope: INQUIRY, hunch: "c-guess", hub: { node: HUB, at: AT } };
+  if (mode.undated) { delete fx.in; delete fx.out; delete fx.undetermined; }
+  if (mode.groupWide) delete fx.fenced;
+  return fx;
+}
+
+/**
+ * An owner's `neighbours`; `broken` names the one rule it breaks; `mode` as `held`, and `unread`, a list it adds to
+ * every answer at the fixture's node (R20).
+ * @param {string} [broken]
+ * @param {{undated?: boolean, groupWide?: boolean, unread?: unknown}} [mode]
+ */
+export function makeNeighbours(broken, mode = {}) {
+  const rows = held(mode);
   let calls = 0;
   const strip = ({ seen_by, ...c }) => c;
   return function neighbours({ node, kinds, at, page, viewer, scope }) {
@@ -96,6 +113,7 @@ export function makeNeighbours(broken) {
     const items = set.slice(start, start + size);
     const end = start + size;
     if (broken === "paging" && start > 0) return { items: items.slice(1) };
-    return end < set.length ? { items, next: end } : { items };
+    const unread = mode.unread !== undefined && node === NODE ? { unread: mode.unread } : {};
+    return end < set.length ? { items, next: end, ...unread } : { items, ...unread };
   };
 }
