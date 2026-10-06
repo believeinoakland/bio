@@ -16,7 +16,7 @@ import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHE
    order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
 import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
          aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
-         projectCreationGate } from "../admission/index.mjs";
+         projectCreationGate, queryGate } from "../admission/index.mjs";
 /* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
    one reader of a code's row (`families.mjs`). */
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
@@ -831,6 +831,9 @@ export function makeFetch(hooks = {}) {
     const refused = (r) => json(r.body, r.status);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return refused(unknownNamespace);
+    /* R28 (K1861 (6)): admission's query gate, which never refuses: what an op may take only from the body (a door's key,
+       link and cover; the group key) and a public door's `token` leave the URL before anything reads it (R54, R56). */
+    queryGate(url, op);
     const presentedAi = await aiCredentialPresented(url, env, doAnswer);
     if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
@@ -945,21 +948,22 @@ export function makeFetch(hooks = {}) {
           method: "POST", body: JSON.stringify(body) })), op);
       }
       /* R54 (membership R101, R104; admission R17): the group website's and the join page's calls, answered as the
-         invitation's two steps are, from `bio` (admission R3 pins them: `store=scratch` was refused above). Only the body's
-         key (or link), cover and the website's approver cross, nothing of whoever called, and the one-time invitation is
-         relayed once, never kept here (R30). */
+         invitation's two steps are, from the store the caller names (admission R3 lists them among the public ops that
+         address `scratch`: each namespace holds its own key and link). Only the body's key (or link), cover and the
+         website's approver cross, nothing of whoever called, and the one-time invitation is relayed once, never kept
+         here (R30). */
       if (op === "websiteinvite" || op === "joinlinkinvite") {
         const b = await req.json().catch(() => null);
         const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
         const pass = op === "websiteinvite" ? { key: o.key, cover: o.cover, approvedBy: o.approvedBy } : { link: o.link, cover: o.cover };
-        return relayAnswer(stub.fetch(new Request(`http://do/${op}`, { method: "POST", body: JSON.stringify(pass) })), op);
+        return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, { method: "POST", body: JSON.stringify(pass) })), op);
       }
       /* R54 (membership R110): the group's self-description, the viewer read as admission's `readerOf` reads who is asking
-         (`""` for no one), so the public receives only what membership answers the public. */
+         (`""` for no one) in the store the caller names, so the public receives only what membership answers the public. */
       if (op === "groupdescription") {
-        const reader = await caseReader(url, env, "bio", presentedAi.cred);
+        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-        return relayAnswer(stub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
+        return relayAnswer(invStub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
@@ -2096,9 +2100,7 @@ export function makeFetch(hooks = {}) {
        so a caller's `by` names nobody and a machine credential is refused there NOT_AN_ADMIN. */
     if (MEMBERSHIP_ADMIN_ACTS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
-    /* R56 (admission R19, credentials R33): the group's key is read from the body alone, so one sent in the query never
-       reaches the store's address; the call then answers as credentials answers an empty key. */
-    if (op === "groupkeyset") inner.searchParams.delete("key");
+
     if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* N364: the own-key acts (membership R89, R90), capture's pull, re-attestation and account (R65, R68, R69) and

@@ -40,7 +40,7 @@ test("R54, R30 (membership R101, R104; admission R17): `websiteinvite` and `join
   const { env, S } = world({ answer: answering(["websiteinvite", "joinlinkinvite"], once) });
   for (const op of ["websiteinvite", "joinlinkinvite"]) {
     assert.equal(OPS[op]?.classes, null, `${op} is public`);
-    for (const [token, params] of [[undefined, {}], [S.ann, {}], [env.ADMIN_TOKEN, {}]]) {
+    for (const [token, params] of [[undefined, {}], [S.ann, {}], [env.ADMIN_TOKEN, {}], [undefined, { store: "scratch" }]]) {
       env.calls.length = 0;
       const sent = op === "websiteinvite"
         ? { key: "wk-body", cover: "Pat", approvedBy: "front desk", by: FORGED, viewer: FORGED, actorMemberId: FORGED }
@@ -54,12 +54,8 @@ test("R54, R30 (membership R101, R104; admission R17): `websiteinvite` and `join
       assert.deepEqual(inner[0].params, {}, `${op}: nothing from the query`);
       assert.deepEqual(inner[0].body, op === "websiteinvite" ? { key: "wk-body", cover: "Pat", approvedBy: "front desk" }
                                                              : { link: "jl-body", cover: "Pat" });
-      assert.equal(inner[0].ns, "bio");
+      assert.equal(inner[0].ns, params.store === "scratch" ? "scratch" : "bio");
     }
-    /* the group's own doors answer from the one record: a `store=scratch` is refused by admission's pin (R3), nothing sent */
-    env.calls.length = 0;
-    refused(await call(env, { op, method: "POST", params: { store: "scratch" }, body: {} }), 400, "NAMESPACE_PINNED", "C-78.2");
-    assert.deepEqual(opCalls(env), []);
   }
   /* a store that does not answer is a silence, never a success (R23, R24) */
   const silent = world({ answer: (c) => (c.route === "websiteinvite" ? new Response("no", { status: 500 }) : null) });
@@ -69,12 +65,13 @@ test("R54, R30 (membership R101, R104; admission R17): `websiteinvite` and `join
 test("R54 (membership R110; admission R16): `groupdescription` is public and reaches membership with the viewer admission's `readerOf` reads — `\"\"` for no one, `admin` for the founder, `member:<id>` for a member, `class:<cls>` for a binding class — never the caller's own `viewer` (negative control: a forged viewer is not read)", async () => {
   const { env, S } = world({ answer: answering(["groupdescription"], { description: null }) });
   assert.equal(OPS.groupdescription?.classes, null);
-  for (const [token, want] of [[undefined, ""], ["not-a-token", ""], [S.founder, "admin"], [S.ann, "member:ann"], [env.ADMIN_TOKEN, "class:admin"]]) {
+  for (const [token, want, store] of [[undefined, ""], ["not-a-token", ""], [S.founder, "admin"], [S.ann, "member:ann"],
+                                      [env.ADMIN_TOKEN, "class:admin"], [env.PROBE_TOKEN, "class:probe", "scratch"], [undefined, "", "scratch"]]) {
     env.calls.length = 0;
-    const r = await call(env, { op: "groupdescription", token, params: { viewer: FORGED } });
+    const r = await call(env, { op: "groupdescription", token, params: { viewer: FORGED, ...(store ? { store } : {}) } });
     assert.deepEqual([r.status, r.json.ok, r.json.result], [200, true, { description: null }], String(token));
     const [inner] = opCalls(env).filter((c) => c.route === "groupdescription");
-    assert.deepEqual(inner.params, { viewer: want }, String(token));
+    assert.deepEqual([inner.params, inner.ns], [{ viewer: want }, store ?? "bio"], String(token));
   }
 });
 
@@ -352,4 +349,21 @@ test("R55 (op-declarations R21; K1863 (7)): every alias `OP_ALIASES` declares is
   }
   assert.ok(compared > 10, String(compared));
   refused(await call(env, { op: "nosuchaliasorop", token: S.ann }), 400, "UNKNOWN_OP", "C-69.1");
+});
+
+test("R28, R54, R56 (admission R17, R19; K1861 (6)): admission's query gate runs after R1 and before anything reads the URL — a public door's `token` is never looked up and its key, link and cover never reach the store from the query; `groupkeyset`'s key in the query never does — and a `store=` naming no namespace is still R1's refusal first (negative control: the session's token on `groupkeyset` is still read)", async () => {
+  const { env, S } = world();
+  env.calls.length = 0;
+  const d = await call(env, { op: "websiteinvite", token: S.ann, method: "POST", params: { key: "q-key", cover: "q-cover" }, body: {} });
+  assert.equal(d.status, 200, d.text.slice(0, 200));
+  assert.deepEqual(env.calls.map((c) => c.route), ["websiteinvite"], "no session lookup for a public door's token");
+  assert.deepEqual(env.calls[0].body, {});
+  env.calls.length = 0;
+  const g = await call(env, { op: "groupkeyset", token: S.founder, method: "POST", params: { key: "q-key" }, body: { key: "b-key" } });
+  assert.equal(g.status, 200);
+  assert.ok(env.calls.some((c) => c.route === "session"), "the session is read");
+  const [inner] = opCalls(env);
+  assert.deepEqual([Object.hasOwn(inner.params, "key"), inner.body.key], [false, "b-key"]);
+  refused(await call(env, { op: "groupkeyset", token: S.founder, method: "POST", params: { store: "nowhere", key: "q" }, body: {} }),
+          400, "NAMESPACE_UNKNOWN", "C-78.1");
 });
