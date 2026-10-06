@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · ANSWER · re J1
 
 K1798: (1) modules.json inquiry uses now has capture and calculations on tranche/T34: merge it. (2) Your reading of R58's bound stands (more than 200 refused whole, TOO_MANY_QUESTIONS; duplicates answered once).
+
+## B3 · CHANGE
+
+From LEG-EARNING #2 J1 (K1799): leg-earning's why strings no longer say 'this instance' (DEC-149), so test/m/inquiry/earned.test.mjs:29's doesNotMatch(/as this instance fetched them/) is now vacuous; make it /fetched them/ (or what it meant to exclude). Deal with it in this job.
