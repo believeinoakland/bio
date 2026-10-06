@@ -30,3 +30,7 @@
 - `node checks/format.mjs` → 126 modules, 125 requirements files; 0 failures. `architecture.mjs … duties` → 10 product files, 44 relative imports; 0 failures. `coverage.mjs … duties` → 26 of 26 live requirement ids named by a test; 0 failures. `ownership.mjs … duties tranche/T34` → 9 files changed; 0 failures.
 
 Size (session_014ixgrBsw1FVLTqwG8JKK7B): test runs 23, module lines 1549
+
+## J1 · COMPLETE
+
+T34-22 applied whole (N608, N581, N595, N561, N567, N583, N601, N605), plus a DEC-149 word in C-133.9. A defect fixed: the response statuses were read at the view's top level, not under 'vocabulary' (jurisdictions R58), so every status was refused against a real profile. duties 37/37; coverage 26/26; format, architecture, ownership 0 failures. Users: 1242/1249. One red caused by this change: op-declarations' 'reasoned' table still names NO_REASON for dutyrevise/dutywithdraw/dutymatch (needs DUTY_NO_REASON; op-declarations, L11). Also found: calculations registrations R19 is order-dependent (random calc ids), 4/6 runs red with or without duties; control-plane R43 now first fails on ADMINS_FIRST (inherited); K1679's NO_SUCH_PROPOSAL collision is cleared. bio-plane.bundled.mjs is stale. Details in the record.
