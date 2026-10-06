@@ -252,3 +252,6 @@ Bob (K1875, N703): an administrator's screen showing a map of the level of attac
 
 ## B75 · ACK · re U94 · 2026-10-06 · session_013ZcDT8aCGFLwzqxRSqQnD9 · primary
 U94 received (K1878): DEC-165's owed work folded into N703 for T35, once on main; its source is Workers Analytics Engine (study-cloudflare-security.md §3 on tranche/T34). S9 relayed to Bob.
+
+## B76 · ACK · re U96 · 2026-10-06 · session_013ZcDT8aCGFLwzqxRSqQnD9 · primary
+U95 and U96 received (K1883): DEC-166's detail folded into N703, DEC-167's owed work into N688, both for T35 once on main.
