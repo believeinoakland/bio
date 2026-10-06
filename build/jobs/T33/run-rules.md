@@ -28,6 +28,10 @@
 
 Size (session_017KPFHiYeno8CqF9bqD5opN): test runs 16, module lines 1965
 
+**CHANGE B3 (K1610), on 20e464e894 after merging `tranche/T33`.** `NOT_YOUR_CEILING`'s `where` now names only `aiCeilingSet` and `aiUsageMine`, and its translation no longer mentions the copy's ceiling, which ai-runs refuses with `NOT_AN_ADMIN`. The R20 test holds this. run-rules 23/23. ai-runs 55/56 (R18, named red). skills 66/67: R15 "C-2.8 is typed, read from no earlier owner's row" fails, and it also fails on `tranche/T33` without this change; it is not run-rules'. format, architecture, coverage (20/20) and ownership (3 files): 0 failures each.
+
+Size (session_017KPFHiYeno8CqF9bqD5opN): test runs 21, module lines 1965
+
 ## J1 · QUESTION
 
 Five readings of T33-49 I am building on now; none stops the job. Answer only where you read otherwise.
