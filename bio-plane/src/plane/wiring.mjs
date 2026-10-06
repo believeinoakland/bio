@@ -102,3 +102,13 @@ export function sheetRecompute(env, storeName) {
     return r.json();
   };
 }
+
+/** K1832 (ratification R42, R39, R6): the Worker's reach ratification is handed, so a scheduled edition's commit, run on
+ *  the object at its time, copies its materials and assembles its container in-process, as `op=caseratify` does in the
+ *  Worker: the environment (its buckets), a stub whose `fetch` is this object's own door (`door`, the class's `fetch`,
+ *  answering through control-plane's frame as a stub of the object would), and the store's name, the object's own
+ *  namespace read when asked. */
+export function ratificationWorker({ env, door, namespace }) {
+  return { env, stub: { fetch: (u, init) => door(u instanceof Request ? u : new Request(u, init)) },
+           get storeName() { return namespace(); } };
+}

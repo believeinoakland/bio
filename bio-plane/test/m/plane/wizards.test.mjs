@@ -2,18 +2,19 @@
    object's storage first in layer 11, its migration runs in R3's pass, its tables are declared to purge, its ops map is
    routed through control-plane's door, and before the first request it is registered (its R13) with the screen registry
    and the Civicsmith library the bundle carries, the member op table (`op-declarations`' `OPS`), the acts a machine is
-   refused (`affordances`' `MACHINE_REFUSALS`) and the labelled machine drafts (`case-authoring` R39's). The release
+   refused (`affordances`' `MACHINE_REFUSALS`), the labelled machine drafts (`case-authoring` R39's, and since T34
+   `groupdescriptiondraft` and `writinghelp`, DEC-152, DEC-153) and the acts `affordances` grades `irreversible`. The release
    suite, holding `requiredFailures` empty for that registration, is `release.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { store } from "./fixture.mjs";
-import { MACHINE_DRAFTS, wizardRegistration } from "../../../src/plane/wizards.mjs";
+import { MACHINE_DRAFTS, wizardRegistration, irreversibleActs } from "../../../src/plane/wizards.mjs";
 import { SCREENS } from "../../../src/plane/screens.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
-import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY } from "../../../src/wizard-scripts/index.mjs";
-import { MACHINE_REFUSALS } from "../../../src/affordances.mjs";
+import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
+import { MACHINE_REFUSALS, RUNGS } from "../../../src/affordances.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const WZ = [...WIZARD_SCRIPTS_TABLES];
@@ -56,7 +57,7 @@ test("R19, R3: a store written before wizard-scripts opens with its tables, and 
   assert.deepEqual(shape(await store({ db })), was);
 });
 
-test("R19: before the first request it is registered once with the bundle's screens and library, the member op table, the acts a machine is refused and the labelled machine drafts", async () => {
+test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registered once with the bundle's screens and library, the member op table, the acts a machine is refused, the labelled machine drafts (groupdescriptiondraft and writinghelp among them) and the irreversible acts", async () => {
   const x = await store();
   const w = wizardScriptsOf(x.ctx);
   /* once: a second registration is refused, so the plane's stands */
@@ -64,10 +65,21 @@ test("R19: before the first request it is registered once with the bundle's scre
   assert.equal(again.ok, false);
   assert.equal(again.reason, "WIZARD_ALREADY_REGISTERED");
   /* the registration is exactly R19's parts */
-  assert.deepEqual(wizardRegistration(), { screens: SCREENS, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
-                                           machineDrafts: ["whatchangedpropose", "escalationreasondraft"], library: CIVICSMITH_LIBRARY });
-  assert.deepEqual(MACHINE_DRAFTS, ["whatchangedpropose", "escalationreasondraft"]);
-  assert.deepEqual(w.registeredScreens(), SCREENS.map((s) => ({ id: s.id, acts: [...s.acts] })), "the bundle's screens");
+  const drafts = ["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp"];
+  const graded = Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible");
+  assert.deepEqual(wizardRegistration(), { screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
+                                           machineDrafts: drafts, irreversible: graded, library: CIVICSMITH_LIBRARY });
+  assert.deepEqual(MACHINE_DRAFTS, drafts);
+  /* the irreversible acts are affordances' grading, read whole (publish among them), never a copy of it */
+  assert.ok(graded.includes("publish"), graded.join());
+  assert.deepEqual(irreversibleActs(), graded);
+  assert.deepEqual(irreversibleActs({ a: "irreversible", b: "reasoned", c: "irreversible" }), ["a", "c"], "follows the grading it is given");
+  /* the registry's screens (K1869 (2)), each with at least the acts it carries (an owed act whose op is declared is
+     registered as well, wizard-scripts R13) */
+  const held = w.registeredScreens();
+  assert.deepEqual(held.map((s) => s.id), SCREEN_REGISTRY.map((s) => s.id), "the registry's screens (K1869 (2))");
+  for (const s of SCREEN_REGISTRY)
+    for (const a of s.acts) assert.ok(held.find((h) => h.id === s.id).acts.includes(a), `${s.id}: ${a}`);
   assert.deepEqual(new Set(w.reg.ops), new Set(Object.keys(OPS)), "the member op table");
   assert.deepEqual(w.reg.library.map((e) => e.id), CIVICSMITH_LIBRARY.map((e) => e.id), "the Civicsmith library");
   /* behaviour through the door (`op=wizardcheck`, wizard-scripts R12) over what was registered */
@@ -81,11 +93,19 @@ test("R19: before the first request it is registered once with the bundle's scre
   /* the acts a machine is refused: a draft from the script's own words is never placed on one */
   assert.ok((await check([step({ act: refused, draft: { text: "words" } })])).includes("WIZARD_STEP_CONCLUDES"));
   assert.ok(!(await check([step({ act: "zz-not-refused", draft: { text: "words" } })])).includes("WIZARD_STEP_CONCLUDES"));
-  /* the labelled machine drafts: each registered one is allowed, even on a refused act; any other is refused */
+  /* the labelled machine drafts: each registered one is allowed; case-authoring's even on a refused act, while the
+     assistant's writing help (groupdescriptiondraft, writinghelp) is never placed on an act refused to a machine or
+     graded irreversible (wizard-scripts R24, over what was registered); any other draft is refused */
+  const help = ["groupdescriptiondraft", "writinghelp"];
   for (const op of MACHINE_DRAFTS) {
-    const c = await check([step({ act: refused, draft: { machine: op } })]);
-    assert.ok(!c.includes("WIZARD_DRAFT_REFUSED") && !c.includes("WIZARD_STEP_CONCLUDES"), `${op}: ${c}`);
+    const on = await check([step({ act: refused, draft: { machine: op } })]);
+    const off = await check([step({ act: "zz-not-refused", draft: { machine: op } })]);
+    assert.ok(!off.includes("WIZARD_DRAFT_REFUSED") && !off.includes("WIZARD_STEP_CONCLUDES"), `${op}: ${off}`);
+    assert.equal(on.includes("WIZARD_STEP_CONCLUDES"), help.includes(op), `${op} on ${refused}: ${on}`);
+    assert.ok(!on.includes("WIZARD_DRAFT_REFUSED"), `${op}: ${on}`);
   }
+  for (const act of irreversibleActs())
+    assert.ok((await check([step({ act, draft: { machine: "writinghelp" } })])).includes("WIZARD_STEP_CONCLUDES"), `irreversible ${act}`);
   assert.ok((await check([step({ draft: { machine: "zz-not-a-draft" } })])).includes("WIZARD_DRAFT_REFUSED"));
   /* the screens: one the registry does not hold is unknown, never guessed (R24) */
   assert.ok((await check([step({})])).includes("WIZARD_SCREEN_UNKNOWN"));
