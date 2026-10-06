@@ -2,6 +2,13 @@
 
 **Status** · session_01Y1URYHRYBVXZLpDjSMzS7r · depth 2 · WORKING · handled B2
 
+## Progress (T33-67)
+
+- **Applied** (commit on `job/T33/case-import`): R21, R3's per-calculation record, and R4's calculation bullet. Each row of the case document's `calculations:` block is recreated by `calc-grammar` (`evaluate`, `resultKey`, `METHOD`) over the carried inputs, found by the SHA-256 the row states and checked against it. It is recorded `recreated`, `differs` (naming each result: the source's value and the recomputed one) or `not_recreated` (each missing input, an input differing from its hash, an unheld method version, or an evaluation calc-grammar refuses). This runs at the import and at each completion, in a new table, `case_import_calculations`, declared to the purge with the others (R12, R13). Beside each one sit the source's statement, labelled as the source's (`SOURCE_CALCULATION`), and case-checker's own R20 answer with `agrees_with_this_copy`. A missing input is a missing material for R5. No record row, `CALC-` or money fact is written (tested by a snapshot of every table outside the module's own). Readings J1 (1) and (2) accepted by BOB (B2, K1633).
+- **Waiting on upstream merges (K1563 (1)):** `case-grammar` (T33-60: `calculationsOf`, the `calculation` kind's path) and `case-checker` (T33-66: R20's `calculations`). Until then the module reads R18's rows with its own `calculationRowsOf`, which is coded to R18. When `case-grammar.calculationsOf` exists the module uses it automatically. The fixture carries inputs at `caseFilePath("calculation", …)` once that path is spelled. After both merge: merge `tranche/T33`, re-run the tests on the real modules (add a `realChecker` case with calculations), then COMPLETE.
+- **Tests so far:** `node --test bio-plane/test/m/case-import/` 83 pass, 0 fail. Users' tests (plane watch/accepted, case-disclosures, case-authoring, control-plane r49/r52, op-declarations t28/t31, affordances t31): unchanged before and after, only the named reds (case-disclosures R21, case-authoring R30).
+- **Checks:** format 0 failures; coverage 21/21, 0 failures; ownership 0 failures; architecture 1 failure (the `calc-grammar` import, not yet in `uses`: BOB sets it at the merge, K1633).
+
 ## J1 · QUESTION
 
 Two readings of R21 (T33-67), both on my best reading; I carry on with them unless you answer otherwise.
