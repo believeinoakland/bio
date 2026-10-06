@@ -1,8 +1,6 @@
 # answers — requirements
 
-> **DRAFT by a requirements-drafting worker for BOB #114, not reviewed.** 2026-10-05, on `tranche/T32` (P18), for T33's opening (§5.9). Not yet in `build/requirements/`.
-
-**Status** · New module (K1439; `plan/draft-T33-plan.md` T33-53, Rule 3; entries C Q1-1 and C:B-3; scope §1 QUESTIONS: Q1, Q3 rule services, L5 standing questions). Layer 6, after `skills`, before `agent-harness` (L6: … skills → answers → agent-harness → agent-model → agent-runner → agent-worker). Its meaning is the ladders' (§2 QUESTIONS and "Cross-cutting rulings", §9.4 L1 and L3, §9.5 L5, §10) and the rulings K1450, K1474, K1479, K1481, K1500, K1502, K1504. All requirements are new and not yet met (T33-53). Built switched off (Rule 7): the AI half of standing questions (R24) until the 150-question bar is met (M-Q9, T33-D10).
+**Status** · Reviewed (K1505; banner cleared K1599). New module (K1439; `plan/draft-T33-plan.md` T33-53, Rule 3; entries C Q1-1 and C:B-3; scope §1 QUESTIONS: Q1, Q3 rule services, L5 standing questions). Layer 6, after `skills`, before `agent-harness` (L6: … skills → answers → agent-harness → agent-model → agent-runner → agent-worker). Its meaning is the ladders' (§2 QUESTIONS and "Cross-cutting rulings", §9.4 L1 and L3, §9.5 L5, §10) and the rulings K1450, K1474, K1479, K1481, K1500, K1502, K1504. All requirements are new and not yet met (T33-53). Built switched off (Rule 7): the AI half of standing questions (R24) until the 150-question bar is met (M-Q9, T33-D10).
 
 **Size (P6).** About 1,500–2,500 lines (entries C P6 table; ladders §9.4 L1). Under 4,000.
 

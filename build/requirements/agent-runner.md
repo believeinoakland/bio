@@ -1,8 +1,6 @@
 # agent-runner — requirements
 
-> **DRAFT by a requirements-drafting worker for BOB #114, not reviewed.** 2026-10-05, on `tranche/T32` (P18), for T33's opening (§5.9). Not yet in `build/requirements/`.
-
-**Status** · New module and new fleet member (K617, K1439; `plan/draft-T33-plan.md` T33-56; entries C Q0-3; `measures-T33/assistant-substrate.md` §2 M-Q4 GO (relay), §3 M-Q8). Layer 6, after `agent-model`, before `agent-worker`. A container image: a Dockerfile and a Node entry over `@anthropic-ai/claude-agent-sdk`, which runs Claude Code unmodified as its own process (K1429, K1502). It is the only member with an npm dependency and a Node runtime. All requirements are new and not yet met (T33-56); its live start and reliability are measured after the release at T33's close (M-Q1, M-Q2; T33-D1).
+**Status** · Reviewed (K1505; banner cleared K1599). New module and new fleet member (K617, K1439; `plan/draft-T33-plan.md` T33-56; entries C Q0-3; `measures-T33/assistant-substrate.md` §2 M-Q4 GO (relay), §3 M-Q8). Layer 6, after `agent-model`, before `agent-worker`. A container image: a Dockerfile and a Node entry over `@anthropic-ai/claude-agent-sdk`, which runs Claude Code unmodified as its own process (K1429, K1502). It is the only member with an npm dependency and a Node runtime. All requirements are new and not yet met (T33-56); its live start and reliability are measured after the release at T33's close (M-Q1, M-Q2; T33-D1).
 
 **Size (P6).** About 300–500 lines (entries C P6 table).
 

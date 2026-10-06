@@ -1,8 +1,6 @@
 # agent-model — requirements
 
-> **DRAFT by a requirements-drafting worker for BOB #114, not reviewed.** 2026-10-05, on `tranche/T32` (P18), for T33's opening (§5.9). Not yet in `build/requirements/`.
-
-**Status** · New module, split from `agent-worker` by copy (K617, K1439; `plan/draft-T33-plan.md` T33-55; entries C Q0-1 seam (iii) and Q0-2), then extended. R1 is `agent-worker` R40, amended as T33-55 and K1502 rule (the member's own reference; the model per mode by measurement). R2–R10 are new: the two providers (K1429, K1502), caching and `usage` (ladders §9.4 Q0), and the conversation `model.mjs` performs today, which no `agent-worker` requirement states (its R40, R41 and D-611 rest on it). Layer 6, after `agent-harness`, before `agent-runner`. Whether `agent-worker` keeps R40 re-worded (T33-57 names "R35 and R40 per audit") or retires it as moved here is open (Suggestions).
+**Status** · Reviewed (K1505; banner cleared K1599). New module, split from `agent-worker` by copy (K617, K1439; `plan/draft-T33-plan.md` T33-55; entries C Q0-1 seam (iii) and Q0-2), then extended. R1 is `agent-worker` R40, amended as T33-55 and K1502 rule (the member's own reference; the model per mode by measurement). R2–R10 are new: the two providers (K1429, K1502), caching and `usage` (ladders §9.4 Q0), and the conversation `model.mjs` performs today, which no `agent-worker` requirement states (its R40, R41 and D-611 rest on it). Layer 6, after `agent-harness`, before `agent-runner`. Whether `agent-worker` keeps R40 re-worded (T33-57 names "R35 and R40 per audit") or retires it as moved here is open (Suggestions).
 
 | old (`agent-worker`) | new | |
 |---|---|---|
