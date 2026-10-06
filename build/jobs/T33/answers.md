@@ -52,3 +52,7 @@ Findings outside my module (my record, "Found in other modules"):
 3. credentials R27: `aiGrantMint` refuses a non-member `by`, so a standing question's AI half has no grant path (J1 (5)).
 4. Wiring owed: plane (`answersOf(host, deps)`, `ceilingRefusal` from ai-runs, `relations`), control-plane/op-declarations (ops `rule`, `answercheck`, `asktallies`, `ruleservicesswitch`, `standingset`, `standing`, `standingend`, `standinganswers`, `standingaiswitch`), scheduler (`standingDue`/`standingWake`/`standingTick`), agent-worker (`/ask` through `logRead` and `check`; `registerStandingAnswerer`).
 5. row-census red (Rules (9) 7) grows by C-134.1–C-134.12, for promotion's stamp.
+
+## J3 · COMPLETE
+
+T33-53 complete. Code `bio-plane/src/answers/` (1,316 lines), tests `bio-plane/test/m/answers/` (31/31). Checks with paths set locally: format, architecture (15 files), coverage 25/25, ownership (16 files): 0 failures. Final uses: record-grammar, jurisdictions, civil-time, calc-grammar, record-core, membership, credentials, content, entities, events, lines, observation-log, standards, duties, people, query-language, retrieval, calculations. Rule services and the standing AI half ship switched off. Findings in J2. Record: build/jobs/T33/answers.md.
