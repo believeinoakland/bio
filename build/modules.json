@@ -81,7 +81,7 @@
     {"id": "capture-requests", "layer": 6, "paths": ["bio-plane/src/capture-requests/"], "tests": ["bio-plane/test/m/capture-requests/"], "uses": ["record-grammar", "record-core", "promotion", "membership", "runtime-limits", "host-governor", "capture-sources", "capture", "acquisition", "observation-log", "inquiry", "ai-runs", "run-rules"]},
     {"id": "skills", "layer": 6, "paths": ["bio-plane/src/skilldoctrine.mjs", "bio-plane/src/skillpack.mjs"], "tests": ["bio-plane/test/m/skills/"], "uses": ["record-grammar", "observation-log", "strength", "contradiction", "ai-runs", "run-rules", "run-productions", "basis-versions", "inquiry-grammar"]},
     {"id": "answers", "layer": 6, "paths": [], "tests": [], "uses": ["retrieval", "query-language", "observation-log", "strength", "inquiry", "skills", "run-rules", "ai-runs", "calculations", "standards", "lines", "events", "money", "duties", "people", "explore", "jurisdictions", "civil-time", "entities", "membership", "record-core"]},
-    {"id": "agent-harness", "layer": 6, "paths": [], "tests": [], "uses": ["runtime-limits"]},
+    {"id": "agent-harness", "layer": 6, "paths": ["agent-harness/src/"], "tests": ["agent-harness/test/"], "uses": []},
     {"id": "agent-model", "layer": 6, "paths": [], "tests": [], "uses": ["runtime-limits"]},
     {"id": "agent-runner", "layer": 6, "paths": [], "tests": [], "uses": []},
     {"id": "agent-worker", "layer": 6, "paths": ["agent-worker/"], "tests": ["agent-worker/test/"], "uses": ["record-grammar", "test-support", "bundler", "runtime-limits", "query-language", "retrieval", "ai-runs", "run-rules", "run-productions", "skills", "basis-versions", "capture-requests"]},
