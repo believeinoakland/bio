@@ -21,3 +21,7 @@ Two readings of R21 (T33-67), both on my best reading; I carry on with them unle
 ## J2 · REPORT
 
 T33-67 is built on K1633's readings and pushed (R21, with R3 and R4's calculation parts; 83/83; coverage 21/21; ownership and format 0 failures; architecture 1 failure until you add calc-grammar to uses). Per K1563 (1), I still have to re-point the tests at the real case-grammar (calculationsOf, the calculation kind's path) and case-checker (R20's calculations) after they merge, then COMPLETE. Please send a CHANGE or RESUME when T33-60 and T33-66 are on tranche/T33. Nothing found in another module.
+
+## J3 · REPORT
+
+B3 applied: tranche merged; case-import now reads the real case-grammar (calculationsOf; inputs at calculations/<calc>/inputs/<sha256>); the stand-in reader is removed. 83/83; coverage 21/21; format and ownership 0 failures; architecture 2 failures, both the calc-grammar edge (src and test) you set at the merge (K1633). Still waiting for case-checker (T33-66) to merge, then I'll add the real-checker case and post COMPLETE.
