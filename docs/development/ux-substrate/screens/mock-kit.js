@@ -56,12 +56,16 @@ const hint = t => `<span class="cs-hint">${I('hint')}${esc(t || 'Hint · machine
 const pathm = cur => `<span class="cs-path">${['Working', 'Shared for review', 'Published'].map((s, i) => `<span${i === cur ? ' aria-current="step"' : ''}>${s}</span>`).join('<i>→</i>')}</span>`;
 const ladder = (k, steps, on, pend = []) => `<div class="cs-ladder" data-ladder="${k}">${steps.map((s, i) => `<span class="${i < on ? 'on' : ''}${pend.includes(i) ? ' pend' : ''}">${esc(s)}</span>`).join('')}</div>`;
 // DEC-153: wherever a member writes in their own words (a `rec` field), the assistant can help when it is reachable;
-// never on an act the assistant is refused, never where a labelled draft already fills the field, and not on the
-// group's own description, which has its own guided draft (DEC-152).
+// never in a field stating a member's reason for an act (`reason`, K1841), never on an act the assistant is refused
+// (affordances R7) or a signed or irreversible one (weight 4 or 5: publishing, at once or at a set time, signing, attesting),
+// never where a labelled draft already fills the field, and not on the group's own description, which has its own guided
+// draft (DEC-152). With the member's suggestions switch off it works only from what they typed (K1841 (2)).
 const WRITE_ACT = 'owed:writinghelp DEC-153';
-const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'caseratify', 'personexpunge', 'bootstrap', 'groupdescriptionset']);
+const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'inquirydivide', 'inquiryground',
+  'actionmove', 'actioncorrespond', 'actionlaws', 'actionrisktier', 'versionaccept', 'versionreject', 'versionconsider', 'versionrevert',
+  'versionhide', 'versioncurrent', 'contradictionresolve', 'caseratify', 'personexpunge', 'bootstrap', 'groupdescriptionset']);
 let WRITE_ON = false;
-const writeHelp = o => WRITE_ON && o.rec && !o.draft && !WRITE_REFUSED.has(o.act || '') ? `<div class="mk-acts">${btn(WRITE_ACT, 'Help me write this', { w: 1 })}</div>` : '';
+const writeHelp = o => WRITE_ON && o.rec && !o.reason && !o.draft && !WRITE_REFUSED.has(o.act || '') && !((WEIGHT[key(o.act || '')] || 0) >= 4) ? `<div class="mk-acts">${btn(WRITE_ACT, 'Help me write this', { w: 1 })}</div>` : '';
 function field(id, label, value = '', o = {}) {
   const tag = o.area ? 'textarea' : 'input';
   const cls = `cs-input${o.rec ? ' rec' : ''}${o.draft ? ' cs-draft' : ''}`;

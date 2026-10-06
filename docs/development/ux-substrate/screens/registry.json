@@ -64,9 +64,9 @@
     {
      "op": "profilesset",
      "label": "Choose places and languages",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -83,7 +83,7 @@
      "status": "declared",
      "modules": [
       "entities",
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -96,7 +96,8 @@
      "label": "Choose how members reach the assistant",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "instance-setup",
+      "setup-page"
      ]
     },
     {
@@ -104,7 +105,7 @@
      "label": "Hold the group's API key",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -112,7 +113,7 @@
      "label": "Switch the group's key on or off",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -128,7 +129,7 @@
      "label": "Choose whether members are told what a court can reach",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -161,9 +162,10 @@
     {
      "op": "groupdescriptionset",
      "label": "Save who your group is, and who sees it",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "instance-setup",
+      "setup-page"
      ]
     },
     {
@@ -187,7 +189,7 @@
      "label": "Read the invitation",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -200,7 +202,7 @@
      "label": "Join with a handle and password",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     }
    ],
@@ -316,7 +318,7 @@
      "label": "Hold the group's API key",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -324,7 +326,7 @@
      "label": "Switch the group's key on or off",
      "status": "declared",
      "modules": [
-      "instance-setup"
+      "setup-page"
      ]
     },
     {
@@ -875,11 +877,6 @@
      "modules": [
       "capture"
      ]
-    },
-    {
-     "op": "owed:writinghelp DEC-153",
-     "label": "Help me write this",
-     "status": "owed"
     }
    ],
    "journeys": [
@@ -2179,7 +2176,7 @@
      "status": "declared",
      "modules": [
       "control-plane",
-      "instance-setup"
+      "setup-page"
      ]
     },
     {

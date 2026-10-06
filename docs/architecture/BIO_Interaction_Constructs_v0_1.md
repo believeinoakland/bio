@@ -601,6 +601,10 @@ first Civicsmith library (DEC-121 (1)), the welcome wizard as a first version.
 reachable, offers "Help me write this": it works only from what the member tells it and what the group holds, never adds a fact
 (for an observation it only helps word what the member saw), and its words arrive labelled "Draft · the assistant's, asked by
 <handle>", saved only when the member keeps them. Never on an act the assistant is refused or an irreversible one.
+**RULED 2026-10-06 by Bob through the development process (K1841, folded here):** never in a field that states a member's
+reason for an act (the Roles canon's rule 1: the machine never writes a member's reason); offered in descriptive own-words
+fields (a note, an observation, a request, a scope, what changed). With the member's suggestions switch off it works only from
+what the member typed; with it on it may also draw on what the group holds (rule 7).
 
 **THE ASSISTANT HOLDS NO COPY OF THE RULES -- it asks the plane, and DEC-8 already governs
 this.** *A surface may render a refusal it received from the plane; it may never compute one*,
