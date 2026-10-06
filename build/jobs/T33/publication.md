@@ -1,6 +1,6 @@
 # publication (T33)
 
-**Status** · session_01NzjiMp4zjfAgrLGoEk8GYf · depth 2 · WORKING · handled B0
+**Status** · session_01NzjiMp4zjfAgrLGoEk8GYf · depth 2 · WAITING ON BOB (J1) · handled B0
 
 ## J1 · QUESTION
 
