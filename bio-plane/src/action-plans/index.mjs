@@ -8,7 +8,7 @@
  * model (its index.mjs and doc.mjs).
  *
  * WHAT IT DECIDES, AND WHAT IT NEVER DOES. Every fact about a matter is read through the module that owns it (an
- * inquiry's state and the projects drawing on it through `inquiry` and record-core, a determination through
+ * inquiry's state through record-core and the projects drawing on it through `leg-earning`, a determination through
  * `conformance`, a standard through `standards`, an action through `actions`, an escalation through `escalation`, what
  * is available through `filings`, the project's bar through `strength`); support, liveness, phase starts and the checks
  * are derived when read, never stored (R8, R15, R19). A machine proposes (R11, R31) and nothing else (R24, R33): every
@@ -32,7 +32,7 @@
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `livePaths`, `declarePurge`;
  *                                   `inSight`, `sight`, `existenceAct`, `projectAuthority`, `memberFacts`; `promote`,
  *                                   `registerStep`.
- *   inquiry        `projectsDrawingOn` (R1: the projects drawing on an inquiry).
+ *   legEarning     `projectsDrawingOn` (its R7; R1: the projects drawing on an inquiry), read directly (K1661).
  *   strength       `projectBar` (Terms: `short` support).
  *   conformance    `determinationRead`, `determinationsFor` (R1, R5, R8); its `noSuchDetermination`.
  *   standards      `standardRead` (R12's `enforces`, R19).
@@ -47,7 +47,7 @@
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { inquiryOf } from "../inquiry/index.mjs";
+import { legEarningOf } from "../leg-earning/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
@@ -106,8 +106,8 @@ export class ActionPlans {
     this.now = deps.now || (() => stampInstant("second"));
   }
 
-  /* The providers, reached when first needed (layers 6–9). */
-  get inquiry() { return this.#dep("inquiry"); }
+  /* The providers, reached when first needed (layers 5–9). */
+  get legEarning() { return this.#dep("legEarning"); }
   get strength() { return this.#dep("strength"); }
   get conformance() { return this.#dep("conformance"); }
   get standards() { return this.#dep("standards"); }
@@ -190,7 +190,7 @@ export class ActionPlans {
     return { state: h.currentState };
   }
   #inquiryOfProject(id, project) {
-    const list = this.inquiry.projectsDrawingOn(id) || [];
+    const list = this.legEarning.projectsDrawingOn(id) || [];
     return list.includes(project);
   }
   #determination(id, viewer) {
@@ -1859,7 +1859,7 @@ export function actionPlansOf(host, deps) {
     const base = { record, membership, promotion };
     const lazy = (name, make) => (d[name] !== undefined ? d[name] : () => make());
     i = new ActionPlans({ ...d, storage, record, membership, promotion,
-      inquiry: lazy("inquiry", () => inquiryOf(host, base)),
+      legEarning: lazy("legEarning", () => legEarningOf(host, base)),
       strength: lazy("strength", () => strengthOf(host, base)),
       conformance: lazy("conformance", () => conformanceOf(host, base)),
       standards: lazy("standards", () => standardsOf(host, base)),
