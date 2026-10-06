@@ -25,3 +25,31 @@ Two things for BOB, both outside my paths:
 (2) Generated artifact made stale (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` (owned by not_product) bundles connections' source (CONNECTIONS_TABLES, the declareTable call, the new mentioned.mjs). To be regenerated at the layer close.
 
 Requirement wording, if J1 (4) stands: R36's purge list and R67's group-sight list would each gain `connection_derivations` (whole-store only; sight group).
+
+## J3 · COMPLETE
+
+T33-29 applied, on my best readings in J1 (no answer yet; a CHANGE re-opens the job).
+
+Entries applied:
+- R62: `src/connections/mentioned.mjs`. The owner `connections` registers at load into connection-grammar's default registry: kind `mentioned_together`, word "mentioned together", class `derived`. The registered read takes the store from a `host` argument, which R19 passes through, else from the isolate's one instance; otherwise it refuses `OWNER_HOST_AMBIGUOUS` or `OWNER_NOT_READY`. `k.neighbours(args)` is the per-instance read. The battery runs over my own fixture, with only the inapplicable "in at the date" check failing (J1 (1)).
+- R63: one item per (document pair, entity), from/to in sorted order, `derivedId` over the pair rule through the entity at the derivation time (J1 (3)). Each item has evidence (the two determining references with positions) and `valid` unstated, always marked undetermined. Sight: a hidden document is neither an item nor counted, and a hidden node answers `{items: []}`. The read never derives and writes nothing.
+- R64: new table `connection_derivations`, written by `derive` in its transaction. Items through a capped entity carry `truncated`; the answer carries `truncated` and `bounds` (J1 (4)).
+- R65: an entity with more than 32 visible documents goes in `hubs: [{entity, set_size, why}]`. `hub` is used only above BOUNDS.hub, with no items. A set from 250 to 1,000 states `set_size` and `says` (J1 (2)).
+- R66: `THEME_ID_RE` and `THEME_REF_RE` are built from `idPattern("THEME")`.
+- R67: all 11 tables declared through `declareTable` with their classes; `declarePurge` is no longer used.
+
+Deferred: none.
+
+Other modules (J2): modules.json lacks the edge connections → connection-grammar (BOB's); `bio-plane.bundled.mjs` is stale (layer close). For explore: to reach this owner through the default registry, pass `host`.
+
+Tests and checks:
+- `node --test test/m/connections/`: tests 117, pass 117, fail 0 (10 new in owner.test.mjs).
+- Wider: record-core, content mint, connection-grammar, sources invariants, observation-log, inquiry-grammar, test/system: 272 tests, 270 pass, 2 fail.
+  - row-census: K1542's named red, also red on tranche/T33.
+  - fleetbundles: the bio-plane bundle is stale from my source. It is green on tranche/T33 and regenerates at the layer close.
+- format: 0 failures. coverage: 67 of 67 ids named, 0 failures. ownership: 6 files, 0 failures.
+- architecture: 3 failures, all the missing `uses` edge to connection-grammar (J2).
+
+Final uses: record-grammar, subresources, text-chain, record-core, membership, promotion, provenance, capture, extraction, content, entities, connection-grammar.
+
+Size (session_01MhqJwCndhjhNCVnEjDphvL): test runs 12, module lines 2905
