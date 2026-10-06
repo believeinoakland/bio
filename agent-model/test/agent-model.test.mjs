@@ -116,6 +116,20 @@ test("R1 the model per mode comes from MODEL_FOR_MODE only; the call runs under 
     assert.equal(r.log.sent[0].model, MODEL_FOR_MODE[mode]);
     assert.ok(r.log.sent[0].system.includes("RESIDENT-LAYER-MARK"));
   }
+  /* The reference that serves the act, as credentials.accountFor answers it (K1755): the member's own, with or
+     without its level, or the group's API key; each is the one the turn runs under. */
+  const GROUP_KEY = "sk-ant-api03-GROUPKEY-0000";
+  for (const reference of [{ kind: "apikey", level: "member", key: KEY }, { kind: "apikey", level: "group", key: GROUP_KEY }]) {
+    replies.push(json(200, message([toolUse("t1", "answer", { v: "g" })])));
+    const got = await converse(conv({ reference }));
+    assert.deepEqual(got.answer, { v: "g" });
+    assert.equal(calls.at(-1).init.headers["x-api-key"], reference.key);
+    assert.equal(calls.at(-1).body.model, MODEL_FOR_MODE.check);
+  }
+  const rm = fakeRunner([() => [{ tool_use: { id: "u1", name: "answer", input: { v: "m" } } }], () => [end()]]);
+  assert.deepEqual((await converse(conv({ reference: { ...SUB, level: "member" }, runner: rm.ns }))).answer, { v: "m" });
+  assert.deepEqual(rm.log.sent[0].credential, { kind: "subscription", secret: TOKEN });
+  assert.match((await modelCall(undefined, BODY)).refused.message, /group's API key/);
   /* A mode the table does not hold is refused before any call; so is a key of Object's prototype. */
   for (const mode of ["investigate-all", "toString", undefined]) {
     const n = calls.length;
@@ -401,6 +415,88 @@ test("R6 a conversation ends on the final tool, on stopped turns or bytes before
                    { planeSilent: { detail: "p" } });
 });
 
+test("R6 every answer carrying usage carries calls: on the apikey path each request answered with an outcome counts one and a stopped one none; on the subscription path the runner's num_turns, null where it states none", async () => {
+  /* apikey: an answer after a tool round is two calls, equal to the requests the provider saw. */
+  let n = calls.length;
+  replies.push(json(200, message([toolUse("a", "lookup")])));
+  replies.push(json(200, message([toolUse("b", "answer", { v: 1 })])));
+  const two = await converse(conv());
+  assert.deepEqual([two.calls, calls.length - n], [2, 2]);
+  /* exhausted: every request. */
+  n = calls.length;
+  for (let i = 0; i < 3; i += 1) replies.push(json(200, message([{ type: "text", text: "talk" }])));
+  const ex = await converse(conv({ maxTurns: 3 }));
+  assert.deepEqual([ex.exhausted, ex.calls, calls.length - n], [true, 3, 3]);
+  /* stopped: the request the meter stopped counts none; before any request, calls is 0. */
+  replies.push(json(200, message([toolUse("a", "lookup")])));
+  const st = await converse(conv({ meter: meter(1) }));
+  assert.deepEqual([st.stopped, st.calls], ["turns", 1]);
+  const s0 = await converse(conv({ meter: meter(0) }));
+  assert.deepEqual([s0.stopped, s0.calls], ["turns", 0]);
+  const b0 = await converse(conv({ meter: meter(100, 10) }));
+  assert.deepEqual([b0.stopped, b0.calls], ["bytes", 0]);
+  /* refused: the refused request reached the provider and counts; a request that threw never reached it. */
+  replies.push(json(200, message([toolUse("a", "lookup")])));
+  replies.push(json(429, { type: "error", error: { type: "rate_limit_error", message: "slow" } }));
+  const rf = await converse(conv());
+  assert.deepEqual([rf.refused.status, rf.calls], [429, 2]);
+  replies.push(json(200, message([toolUse("a", "lookup")])));
+  replies.push({ throws: "offline" });
+  const sl = await converse(conv());
+  assert.ok(sl.silent);
+  assert.equal(sl.calls, 1);
+  replies.push({ raw: "<html>", status: 502 });
+  const nj = await converse(conv());
+  assert.deepEqual([!!nj.silent, nj.calls], [true, 1], "a non-JSON answer reached the provider");
+  /* Every ending of the apikey path that carries usage carries calls. */
+  for (const got of [two, ex, st, s0, b0, rf, sl, nj]) assert.ok("usage" in got && "calls" in got);
+
+  /* subscription: one conversation's num_turns as the runner states it. */
+  const r = fakeRunner([() => [{ tool_use: { id: "u1", name: "lookup", input: {} } }],
+    () => [{ tool_use: { id: "u2", name: "answer", input: { v: 1 } } }], () => [end({ num_turns: 3 })]]);
+  const sa = await converse(conv({ reference: SUB, runner: r.ns }));
+  assert.deepEqual([sa.answer, sa.calls], [{ v: 1 }, 3]);
+  /* Two conversations (a model that ends without answering is asked again): their counts summed. Each connection
+     runs the script from its start, so the stated counts come from a list read in turn. */
+  const counted = (list) => { let i = 0; return fakeRunner([() => [end({ result: "hm", num_turns: list[i++] })]]); };
+  const talk = counted([2, 1]);
+  const tk = await converse(conv({ reference: SUB, runner: talk.ns, maxTurns: 2 }));
+  assert.deepEqual([tk.exhausted, tk.calls, talk.log.opened], [true, 3, 2]);
+  /* The runner states none: null, never 0, and a sum over a part with none is null. */
+  for (const num_turns of [undefined, null, "3", -1, 1.5]) {
+    const u = fakeRunner([() => [end({ num_turns })]]);
+    const got = await converse(conv({ reference: SUB, runner: u.ns, maxTurns: 1 }));
+    assert.equal(got.calls, null, String(num_turns));
+  }
+  const mixed = counted([2, undefined]);
+  assert.equal((await converse(conv({ reference: SUB, runner: mixed.ns, maxTurns: 2 }))).calls, null);
+  /* A conversation that ended with no end message stated nothing: null. */
+  assert.equal((await converse(conv({ reference: SUB, runner: fakeRunner([() => ["close"]]).ns }))).calls, null);
+  const ac = fakeRunner([() => [{ tool_use: { id: "u", name: "answer", input: {} } }, "close"]]);
+  const acg = await converse(conv({ reference: SUB, runner: ac.ns }));
+  assert.ok(acg.answer);
+  assert.equal(acg.calls, null);
+  const rb = fakeRunner([() => [{ tool_use: { id: "b1", name: "lookup", input: {} } }]]);
+  const sb = await converse(conv({ reference: SUB, runner: rb.ns, meter: meter(100, 1500), onTool: async () => ({ content: "y".repeat(3000) }) }));
+  assert.deepEqual([sb.stopped, sb.calls], ["bytes", null]);
+  /* The runner's own endings: refused and MAX_TURNS carry its count; a request stopped before any connection, 0. */
+  const sdk = await converse(conv({ reference: SUB, runner: fakeRunner([() => [{ ok: false, code: "SDK_ERROR", detail: "x", num_turns: 2 }]]).ns }));
+  assert.deepEqual([sdk.refused.type, sdk.calls], ["SDK_ERROR", 2]);
+  const mx = await converse(conv({ reference: SUB, runner: fakeRunner([() => [{ ok: false, code: "MAX_TURNS", detail: "l", num_turns: 12 }]]).ns }));
+  assert.deepEqual([mx.exhausted, mx.calls], [true, 12]);
+  const z = fakeRunner();
+  const sz = await converse(conv({ reference: SUB, runner: z.ns, meter: meter(0) }));
+  assert.deepEqual([sz.stopped, sz.calls, z.log.opened], ["turns", 0, 0]);
+  const up = await converse(conv({ reference: SUB, runner: { fetch: async () => new Response("no", { status: 503 }) } }));
+  assert.deepEqual([up.refused.type, up.calls], ["RUNNER_REFUSED", null]);
+  const thr = await converse(conv({ reference: SUB, runner: { fetch: async () => { throw new Error("gone"); } } }));
+  assert.deepEqual([!!thr.silent, thr.calls], [true, 0], "a binding that threw reached no runner");
+  for (const got of [sa, tk, acg, sb, sdk, mx, sz, up, thr]) assert.ok("usage" in got && "calls" in got);
+  /* A refusal before any call carries neither. */
+  const pre = await converse(conv({ reference: undefined }));
+  assert.ok(!("usage" in pre) && !("calls" in pre));
+});
+
 /* ------------------------------------------------------------------ R7 */
 
 test("R7 on the subscription path only the named tools are offered, each relayed call is performed by onTool with its result sent back on the same connection, and R6's endings hold", async () => {
@@ -538,7 +634,8 @@ test("R9 it reads no environment variable or binding for a credential: with keys
   globalThis.env = env;
   const r = fakeRunner([() => [end()]]);
   try {
-    for (const ref of [undefined, null, {}, { kind: "apikey" }, { kind: "subscription" }]) {
+    for (const ref of [undefined, null, {}, { kind: "apikey" }, { kind: "subscription" }, { kind: "apikey", level: "group" },
+                       { level: "group" }]) {
       assert.equal((await modelCall(ref, BODY, { runner: r.ns, env })).refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
       assert.equal((await converse(conv({ reference: ref, runner: r.ns, env }))).refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
     }
@@ -572,4 +669,46 @@ test("R10 it reaches no address but MODEL_ENDPOINT and the runner binding, and n
                LOAD_LAYER(["law"]), r.log.sent);
   const text = JSON.stringify(outward);
   assert.doesNotMatch(text, /oakland|alameda|california|san francisco|berkeley/i);
+});
+
+/* ------------------------------------------------------------------ R11 */
+
+test("R11 a group-level reference is the group's API key, sent exactly as a member's: only with kind apikey; a group reference of another kind, or a level other than member or group, is refused with no call", async () => {
+  const GKEY = "sk-ant-api03-SENTINELGROUP-0000";
+  /* Sent exactly as a member's key: the same address, headers and body, cache marks included, the same usage. */
+  const sent = [];
+  const answers = [];
+  for (const reference of [{ kind: "apikey", key: GKEY }, { kind: "apikey", level: "member", key: GKEY }, { kind: "apikey", level: "group", key: GKEY }]) {
+    calls.length = 0;
+    replies.push(json(200, message([{ type: "text", text: "a" }])));
+    answers.push(await modelCall(reference, BODY));
+    replies.push(json(200, message([toolUse("a", "lookup")])));
+    replies.push(json(200, message([toolUse("b", "answer", { v: 1 })])));
+    answers.push(await converse(conv({ reference })));
+    sent.push(calls.map((c) => ({ url: c.url, headers: c.init.headers, body: c.init.body })));
+  }
+  assert.equal(sent[0].length, 3);
+  assert.deepEqual(sent[2], sent[0]);
+  assert.deepEqual(sent[1], sent[0]);
+  assert.equal(sent[2][0].headers["x-api-key"], GKEY);
+  assert.ok(sent[2].every((c) => !c.body.includes(GKEY) && c.url === MODEL_ENDPOINT));
+  assert.deepEqual(JSON.parse(sent[2][0].body).system.at(-1).cache_control, { type: "ephemeral" });
+  assert.deepEqual(answers[4], answers[0]);
+  assert.deepEqual(answers[5], answers[1]);
+  assert.deepEqual(answers[5].usage, answers[1].usage);
+  assert.ok(!JSON.stringify(answers).includes(GKEY), "kept as any secret is (R8)");
+
+  /* Refused, no call: a group reference of another kind; a level that is neither member nor group. */
+  calls.length = 0;
+  const r = fakeRunner([() => [end()]]);
+  const bad = [{ kind: "subscription", level: "group", token: TOKEN }, { kind: "subscription", level: "group", key: GKEY },
+    { kind: "other", level: "group", key: GKEY }, { level: "group", key: GKEY },
+    { kind: "apikey", level: "admin", key: GKEY }, { kind: "apikey", level: "", key: GKEY }, { kind: "apikey", level: null, key: GKEY },
+    { kind: "apikey", level: "GROUP", key: GKEY }, { kind: "subscription", level: "operator", token: TOKEN }];
+  for (const reference of bad) {
+    assert.equal((await modelCall(reference, BODY, { runner: r.ns })).refused.type, "ACCOUNT_REFERENCE_UNUSABLE", JSON.stringify(reference));
+    assert.equal((await converse(conv({ reference, runner: r.ns }))).refused.type, "ACCOUNT_REFERENCE_UNUSABLE");
+  }
+  assert.equal(calls.length, 0);
+  assert.equal(r.log.opened, 0);
 });

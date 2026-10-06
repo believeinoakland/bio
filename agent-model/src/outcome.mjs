@@ -23,6 +23,14 @@ export function sumUsage(a, b) {
   return Object.fromEntries(USAGE_FIGURES.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
 }
 
+/** R6 — the number of model calls a runner states for one conversation: a whole number, else `null` (never 0). */
+export function callsOf(stated) {
+  return Number.isInteger(stated) && stated >= 0 ? stated : null;
+}
+
+/** R6 — calls summed over a conversation's parts; a part whose count is unknown makes the sum unknown. */
+export const sumCalls = (a, b) => (a == null || b == null ? null : a + b);
+
 /** R8 — a provider's or runtime's words never carry the secret back out, even if they echo it. */
 export function scrub(text, secret, max) {
   let s = String(text ?? "");
