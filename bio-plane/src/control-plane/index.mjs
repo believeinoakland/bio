@@ -1996,7 +1996,8 @@ export function makeFetch(hooks = {}) {
     /* R28: an op whose handler is a module's, reached through plane's hooks, answers here, after the R14 fences and R16;
        undefined falls through to the forward. */
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
-      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
+      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
+      grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
     if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is

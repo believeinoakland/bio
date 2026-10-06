@@ -139,7 +139,11 @@ test("R53 (K1601, K1674; credentials R28): a token no session or credential hold
   const hooks = { publicOp: async () => M.json({ ok: true }), publicInstanceGroup: async () => ({ answered: true, result: {} }),
                   gatedOp: async (ctx) => { log.push(ctx); return M.json({ ok: true, result: { catalog: [] } }); } };
   assert.equal((await call(env, { op: "affordances", token: GRANT, hooks })).status, 200);
-  assert.deepEqual([log[0].cls, log[0].viaSession, log[0].aiCred.principal, log[0].aiCred.grant], ["ai", false, "member:ann", GRANT]);
+  assert.deepEqual([log[0].cls, log[0].viaSession, log[0].aiCred.principal, log[0].aiCred.grant, log[0].grantMember],
+                   ["ai", false, "member:ann", GRANT, "member:ann"]);
+  /* K1684: grantMember is a grant's alone (negative control: a session's hook context carries none) */
+  await call(env, { op: "affordances", token: S.ann, hooks });
+  assert.equal(log.at(-1).grantMember, undefined);
   const notAuth = await call(env, { op: "search", token: hex64() });
   refused(notAuth, 401, "NOT_AUTHENTICATED", notAuth.json.check);
   for (const [op, params] of [["affordances", { target: "INQ-1" }], ["cite", {}], ["whoami", {}]]) {
