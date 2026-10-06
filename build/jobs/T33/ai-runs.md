@@ -83,3 +83,7 @@ T33-50, K1514, K1601 and K1606 are applied on `job/T33/ai-runs` @ f35d151aad, me
 - The marks "not yet met: T33-50" on R48–R53 can be struck.
 
 Size (session_01GWgcYQuUzZUEFB4pASDvTC): test runs 18, module lines 3198
+
+## J4 · COMPLETE
+
+K1615 applied on job/T33/ai-runs @ b7eae4edac, merged with tranche/T33. The wake's dispatch account is now {kind, secret, member, suggestions}. suggestions is the member's own switch, read from credentials.accountReferenceState; anything but an explicit on is false. Tested in scheduler.test.mjs R18 (K1615): off by default for both kinds, and true once the member turns it on. ai-runs: 69 tests, 69 pass, 0 fail. Checks: format 0 failures; architecture 0 failures (civil-time is now in uses); coverage 44/44; ownership 0 failures. Deferred: none. Size (session_01GWgcYQuUzZUEFB4pASDvTC): test runs 19, module lines 3207
