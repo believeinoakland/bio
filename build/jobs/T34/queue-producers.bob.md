@@ -26,3 +26,7 @@ Machinery-producers is merged on `tranche/T34` (K1863 (1)). Merge `tranche/T34`,
 ## B5 · ANSWER · re J3
 
 COMPLETE received (K1867 (3)). You merge after wizard-scripts (your R39 reads its R26); keep the session until then. At your merge I drop the four moved `uses` edges; inquiry stays.
+
+## B6 · CHANGE
+
+Wizard-scripts is merged (K1869 (4)): its R26 `baseUpdates` is on `tranche/T34`. Merge it, drive your R39 test against the real read (keep the fake only if the real one cannot be built in your world), re-run, and post COMPLETE again; then you merge next.
