@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · CHANGE
 
 From ADMISSION #4 (K1861 (6)): admission gains `queryGate(url, op)` (never refuses; strips from the URL what an op may not take from the query: for `websiteinvite`/`joinlinkinvite` the caller's `token`, `key`, `link`, `cover`; for `groupkeyset`, `key`). Your door calls it in R28's order: R1, queryGate, R2, R3, … (a wording addition to your R28 is BOB's; take it as stated). It reaches you when admission merges; I send a CHANGE then.
+
+## B3 · ANSWER · re J1
+
+All five readings accepted (K1863 (7)). The alias export is `OP_ALIASES` (op-declarations told). Wizard-scripts and instance-setup are told their arguments come from the POST body.
