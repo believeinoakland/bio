@@ -100,6 +100,19 @@ CREATE TABLE IF NOT EXISTS source_person_links (
   PRIMARY KEY (source, person)
 );
 CREATE INDEX IF NOT EXISTS source_person_links_person ON source_person_links(person);
+-- A source link corrected forward (N617): a later link of the same source to the same person governs, and the one it
+-- replaced is kept here with who replaced it and when. Read by no viewer; removed with its link by expunge (R12).
+CREATE TABLE IF NOT EXISTS source_person_link_history (
+  source        TEXT NOT NULL,
+  person        TEXT NOT NULL,
+  evidence      TEXT NOT NULL,
+  sight_json    TEXT NOT NULL,
+  by_actor      TEXT,
+  at            TEXT NOT NULL,
+  replaced_by   TEXT NOT NULL,
+  replaced_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS source_person_link_history_pair ON source_person_link_history(source, person);
 -- INTEREST CHECKS (R22): data-defined, each change a new version, every version kept. machine 1 for the shipped checks
 -- (K1491), whose results are shown only past their gate (R24).
 CREATE TABLE IF NOT EXISTS interest_checks (
@@ -133,6 +146,19 @@ CREATE TABLE IF NOT EXISTS interest_check_gates (
   at               TEXT NOT NULL,
   PRIMARY KEY (check_id, version)
 );
+-- A gate measured again (N617): the later measurement governs, and the one it replaced is kept here with who replaced it
+-- and when.
+CREATE TABLE IF NOT EXISTS interest_check_gate_history (
+  check_id         TEXT NOT NULL,
+  version          INTEGER NOT NULL,
+  gold_set         TEXT NOT NULL,
+  false_alarm_rate REAL NOT NULL,
+  by_actor         TEXT,
+  at               TEXT NOT NULL,
+  replaced_by      TEXT NOT NULL,
+  replaced_at      TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS interest_check_gate_history_version ON interest_check_gate_history(check_id, version);
 -- THE CHECKS' OWN RESULT TABLE (R23): each match with its cited derivation and its denominator; never a person's row.
 -- result_id is the SHA-256 of the check, version and derivation, so a re-evaluation finds the same match.
 CREATE TABLE IF NOT EXISTS interest_check_results (
@@ -165,11 +191,14 @@ export const PEOPLE_TABLES = Object.freeze([
   { name: "person_facts", keys: [], ...base, expunge: "tombstone", export: "yes", sight: "source" },
   { name: "person_contacts", keys: [], ...base, expunge: "tombstone", export: "never", sight: "source" },
   { name: "identity_claims", keys: ["project"], ...base, expunge: "tombstone", export: "yes", sight: "bundle" },
-  { name: "member_ties", keys: [], ...base, expunge: "tombstone", export: "admin-only", sight: "owner" },
+  /* K1490, corpus-export R7 (N594): a member's own ties never leave the copy */
+  { name: "member_ties", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
   { name: "source_person_links", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
+  { name: "source_person_link_history", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
   { name: "interest_checks", keys: ["project"], ...base, expunge: "none", export: "admin-only", sight: "group", version_chain: true },
   { name: "interest_check_switches", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group", version_chain: true },
   { name: "interest_check_gates", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group" },
+  { name: "interest_check_gate_history", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group" },
   { name: "interest_check_results", keys: ["project"], ...base, expunge: "none", export: "admin-only", sight: "bundle" },
   { name: "interest_check_cursor", keys: [], ...base, expunge: "none", export: "never", sight: "group" },
 ]);

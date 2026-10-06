@@ -33,6 +33,7 @@ test("R1 claimIdentity refuses in order NO_ENDS, SELF_CLAIM, NO_SUCH_ENTITY nami
     [{ ...base, evidence: null, note: "" }, "NO_EVIDENCE"], [{ ...base, evidence: {}, note: "" }, "NO_EVIDENCE"],
     [{ ...base, note: "  " }, "NO_NOTE"],
     [{ ...base, evidence: { ...ev, identifier: { scheme: "ellery_person", id: "P002" } } }, "IDENTITY_GRADE_UNEARNED"],
+    [{ ...base, by: null }, "NO_BY"],
   ];
   for (const [args, reason] of cases) {
     const r = w.p.claimIdentity(args);
@@ -125,7 +126,7 @@ test("R3 a machine may record only an identifier claim from source-native data w
   assert.equal(w.one(`SELECT by_actor FROM identity_claims WHERE claim_id=?`, ok.claim_id).by_actor, MACHINE, "named as the machine (DEC-52)");
 });
 
-test("R4 a claim is never edited or deleted: withdrawIdentityClaim refuses NO_REASON and NO_SUCH_CLAIM, a repeat answers already, the withdrawn claim links nothing, and no entities row, alias or resolution moves", () => {
+test("R4 a claim is never edited or deleted: withdrawIdentityClaim refuses NO_REASON and NO_SUCH_CLAIM, and NO_BY with no stamp, a repeat answers already, the withdrawn claim links nothing, and no entities row, alias or resolution moves", () => {
   const w = world();
   const { a, b, ev } = pair(w);
   const before = JSON.stringify(w.rows(`SELECT * FROM entities ORDER BY entity_id`)) + JSON.stringify(w.rows(`SELECT * FROM entity_aliases ORDER BY entity_id, alias_norm`));
@@ -133,6 +134,8 @@ test("R4 a claim is never edited or deleted: withdrawIdentityClaim refuses NO_RE
   assert.deepEqual(w.p.identityOf({ entityId: a, viewer: ANN }).members, [a, b].sort());
   assert.equal(w.p.withdrawIdentityClaim({ claimId: c.claim_id, reason: " ", by: ANN }).reason, "NO_REASON");
   assert.equal(w.p.withdrawIdentityClaim({ claimId: "IDC-2026-nope", reason: "x", by: ANN }).reason, "NO_SUCH_CLAIM");
+  for (const by of [null, undefined, ""]) assert.equal(w.p.withdrawIdentityClaim({ claimId: c.claim_id, reason: "x", by }).reason, "NO_BY");
+  assert.deepEqual(w.p.identityOf({ entityId: a, viewer: ANN }).members, [a, b].sort(), "an unstamped withdrawal changes nothing");
   const wd = w.p.withdrawIdentityClaim({ claimId: c.claim_id, reason: "wrong filer", by: ANN });
   assert.equal(wd.ok, true);
   assert.deepEqual(Object.keys(wd.withdrawn).sort(), ["at", "by", "reason"]);

@@ -73,34 +73,47 @@ test("R14 personAt refuses NO_ENTITY and NO_DATE and answers names and life fact
   assert.equal(w.p.personAt({ entityId: p, at: "2020-06-01", viewer: null }).ok, false, "fails closed with no viewer");
 });
 
-test("R15 careerOf answers every holds line of the cluster in validity order with capacity, title as written, bounds, grade and citation; credentialsOf the educated_at and credentialed_by lines, each credential with its issuer's scheme identifier; interestsOf the owns_interest_in lines and the money where the person is payee of income or a gift or payer of a contribution", () => {
-  /* No held profile has a scheme for an issuing institution (they identify persons only), so the issuer's identifier is
-     answered by entities R44's read over the real registry, laid on for this one entity. */
-  let issuer = null;
-  const BAR_ID = { scheme: "marlow_bar_issuer", id: "BAR-ISSUER-1", normal: "BAR-ISSUER-1", valid: null, withdrawn: null };
-  const w = world({ entitiesOver: (real) => {
-    const o = {};
-    for (const k of ["has", "readEntity", "entitiesByAlias", "entityByIdentifier", "createEntity"]) o[k] = real[k].bind(real);
-    o.identifiersOf = (e) => (e === issuer ? { ok: true, entity_id: e, identifiers: [BAR_ID] } : real.identifiersOf(e));
-    return o;
-  } });
+test("R15 careerOf answers every holds line of the cluster in validity order with capacity, title as written (lines' title, null when not stated, never composed), bounds, grade and citation; credentialsOf the educated_at and credentialed_by lines, each credential with its issuer's scheme identifier as entities holds it under a scheme the active profiles name for the issuer's kind, else null with why; interestsOf the owns_interest_in lines and the money where the person is payee of income or a gift or payer of a contribution", () => {
+  const w = world();
   const { a, b } = linked(w);
   const gov = w.entity("office", "Clerk"), co = w.entity("institution", "Harbour Co");
-  const l2 = w.line("holds", b, co, span("2015-01-01", "2019-12-31"), { capacity: "officer or director" });
+  const l2 = w.line("holds", b, co, span("2015-01-01", "2019-12-31"), { capacity: "officer or director", title: "Vice-President, Harbour Operations" });
   const l1 = w.line("holds", a, gov, span("2010-01-01", "2014-12-31"), { capacity: "elected" });
   const l0 = w.line("holds", a, w.entity("institution", "Early Co"), span(null, null));
   w.line("educated_at", a, w.entity("institution", "Marlow College"), span("1990-01-01", "1994-06-01"));
-  const bar = issuer = w.entity("institution", "Marlow Bar");
+  /* the test profile names `port_ellery_registry` for institutions (jurisdictions R61); none for a movement */
+  const bar = w.entity("institution", "Marlow Bar"), board = w.entity("institution", "Licensing Board"), guild = w.entity("movement", "Pilots' Guild");
+  w.identify(bar, "port_ellery_registry", "MR0042");
   const cred = w.line("credentialed_by", b, bar, span("1996-01-01", "2026-12-31"));
+  const bare = w.line("credentialed_by", a, board, span("1997-01-01", "2026-12-31"));
+  const guilded = w.line("credentialed_by", a, guild, span("1998-01-01", "2026-12-31"));
   const career = w.p.careerOf({ entityId: a, viewer: ANN }).career;
   assert.deepEqual(career.map((x) => x.line_id), [l1, l2, l0], "validity order, unstated last");
   assert.equal(career[1].capacity, "officer or director");
   for (const x of career) assert.ok("grade" in x && "citation" in x && "valid" in x && "title" in x);
+  assert.equal(career[1].title, "Vice-President, Harbour Operations", "the title as the line's basis words it");
+  assert.deepEqual([career[0].title, career[2].title], [null, null], "not stated: null, never composed from the office or capacity");
   const creds = w.p.credentialsOf({ entityId: a, viewer: ANN }).credentials;
-  assert.deepEqual(creds.map((x) => x.kind).sort(), ["credentialed_by", "educated_at"]);
-  assert.deepEqual(creds.find((x) => x.line_id === cred).issuer_identifiers.map((i) => i.id), ["BAR-ISSUER-1"]);
+  assert.deepEqual(creds.map((x) => x.kind).sort(), ["credentialed_by", "credentialed_by", "credentialed_by", "educated_at"]);
+  const held = creds.find((x) => x.line_id === cred);
+  assert.deepEqual(held.issuer_identifier, { scheme: "port_ellery_registry", id: "MR0042", valid: null }, "as entities holds it");
+  assert.equal(held.issuer_identifier_why, undefined);
+  const none = creds.find((x) => x.line_id === bare);
+  assert.equal(none.issuer_identifier, null);
+  assert.match(none.issuer_identifier_why, /holds no identifier under port_ellery_registry/);
+  const unnamed = creds.find((x) => x.line_id === guilded);
+  assert.equal(unnamed.issuer_identifier, null);
+  assert.match(unnamed.issuer_identifier_why, /name no identifier scheme for an issuer of kind movement/);
+  assert.ok(!("issuer_identifier" in creds.find((x) => x.kind === "educated_at")));
+  /* with no profile active, no scheme is named: null with why, never a guess */
+  const w0 = world({ profiles: [] });
+  const p0 = w0.person("Uli Penn"), i0 = w0.entity("institution", "Marlow Bar");
+  w0.line("credentialed_by", p0, i0, span("1996-01-01", "2026-12-31"));
+  const c0 = w0.p.credentialsOf({ entityId: p0, viewer: ANN }).credentials[0];
+  assert.equal(c0.issuer_identifier, null);
+  assert.match(c0.issuer_identifier_why, /name no identifier scheme/);
   const asOf = w.p.credentialsOf({ entityId: a, at: "2000-01-01", viewer: ANN }).credentials;
-  assert.deepEqual(asOf.map((x) => x.line_id), [cred]);
+  assert.deepEqual(asOf.map((x) => x.line_id).sort(), [cred, bare, guilded].sort());
   const share = w.line("owns_interest_in", a, co, span("2016-01-01", "2016-12-31"));
   const party = (entity) => ({ entity });
   const inc = w.fact({ kind: "income", from: party(co), to: party(a), amount: "1000.00" });

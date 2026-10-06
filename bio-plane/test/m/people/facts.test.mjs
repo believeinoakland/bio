@@ -27,6 +27,7 @@ test("R9 recordPersonFact records one PFA- fact (kind closed: name, birth, death
   assert.equal(w.p.recordPersonFact(cases[7][0]).bound, "from");
   assert.equal(w.p.recordPersonFact(cases[8][0]).bound, "to");
   assert.match(w.p.recordPersonFact({ ...base, kind: "x" }).detail, new RegExp(FACT_KINDS.join(", ")));
+  assert.equal(w.p.recordPersonFact({ ...base, by: null }).reason, "NO_BY", "every fact is recorded under its stamped author (N617)");
   assert.equal(w.one(`SELECT COUNT(*) AS n FROM person_facts`).n, 0);
   for (const kind of ["name", "birth", "death", "locality"]) {
     const r = w.p.recordPersonFact({ ...base, kind });
@@ -67,7 +68,7 @@ test("R10 an address or contact is recorded only by a member's act (a machine wr
   assert.deepEqual(forOut.map((f) => f.fact_id), [a.fact_id], "the fenced capture's contact is not answered");
 });
 
-test("R11 a wrong fact is corrected forward: withdrawPersonFact refuses NO_REASON and NO_SUCH_FACT, keeps the fact and marks it withdrawn with who, when and why; a repeat answers already", () => {
+test("R11 a wrong fact is corrected forward: withdrawPersonFact refuses NO_REASON and NO_SUCH_FACT, and NO_BY with no stamp, keeps the fact and marks it withdrawn with who, when and why; a repeat answers already", () => {
   const w = world();
   const p = w.person("Lea Ng");
   const c = w.capture("c");
@@ -75,6 +76,8 @@ test("R11 a wrong fact is corrected forward: withdrawPersonFact refuses NO_REASO
   const k = w.p.recordPersonFact({ person: p, kind: "address", value: "2 Dock Rd", valid, citation: doc(c), by: ANN });
   assert.equal(w.p.withdrawPersonFact({ factId: f.fact_id, reason: "", by: ANN }).reason, "NO_REASON");
   assert.equal(w.p.withdrawPersonFact({ factId: "PFA-2026-none", reason: "x", by: ANN }).reason, "NO_SUCH_FACT");
+  for (const by of [null, undefined, " "]) assert.equal(w.p.withdrawPersonFact({ factId: f.fact_id, reason: "x", by }).reason, "NO_BY");
+  assert.equal(w.one(`SELECT withdrawn_at FROM person_facts WHERE fact_id=?`, f.fact_id).withdrawn_at, null, "an unstamped withdrawal writes nothing");
   for (const id of [f.fact_id, k.fact_id]) {
     const r = w.p.withdrawPersonFact({ factId: id, reason: "misread the year", by: ANN });
     assert.deepEqual([r.ok, r.withdrawn.by, r.withdrawn.reason], [true, ANN, "misread the year"]);
@@ -92,6 +95,7 @@ test("R12 expunge removes the value of a PFA-, IDC-, MTI- or source link and lea
   const claim = w.p.claimIdentity({ a: p, b: q, kind: "same_as", basis: "testimony", note: "n", by: ANN });
   const tie = w.p.declareTie({ entity: p, kind: "relative", note: "my aunt", attribution: "group", by: ANN });
   w.S.add("SRC-2026-0001x");
+  w.p.linkSourceToPerson({ source: "SRC-2026-0001x", person: p, evidence: "she said so", sight: ["ann", "boss"], by: ANN });
   w.p.linkSourceToPerson({ source: "SRC-2026-0001x", person: p, evidence: "she said so", sight: ["ann"], by: ANN });
   const ok = { ground: "unlawful", reason: "held unlawfully", by: BOSS };
   assert.equal(w.p.expunge({ ...ok, id: fact.fact_id, by: ANN }).reason, "NOT_AN_ADMIN");
@@ -113,9 +117,12 @@ test("R12 expunge removes the value of a PFA-, IDC-, MTI- or source link and lea
   const r2 = w.p.expunge({ ...ok, id: claim.claim_id, ground: "court_order", order: "Order 2026-77" });
   assert.equal(r2.tombstone.order, "Order 2026-77");
   assert.equal(w.p.expunge({ ...ok, id: tie.tie_id, ground: "confidential" }).ok, true);
-  assert.equal(w.p.expunge({ ...ok, id: { source: "SRC-2026-0001x", person: p } }).ok, true);
+  const link = w.p.expunge({ ...ok, id: { source: "SRC-2026-0001x", person: p } });
+  assert.equal(link.ok, true);
+  assert.equal(link.removed, 2, "the link and the version it replaced");
+  assert.equal(w.one(`SELECT COUNT(*) AS n FROM source_person_link_history`).n, 0, "no replaced version keeps the removed value");
   const t = w.record.tombstones({});
-  assert.equal(t.tombstones.length, 4);
+  assert.equal(t.tombstones.length, 5);
   for (const s of t.tombstones) { assert.ok(s.ground && s.at && s.by && s.key); }
   const all = JSON.stringify([w.p.personAt({ entityId: p, at: "2024-01-01", viewer: BOSS }), w.p.identityOf({ entityId: p, viewer: BOSS }),
     w.p.tiesOf({ member: "ann", viewer: ANN }), w.p.sourceLinksOf({ person: p, viewer: ANN })]);
@@ -124,16 +131,18 @@ test("R12 expunge removes the value of a PFA-, IDC-, MTI- or source link and lea
   assert.deepEqual(w.record.rebuildAndCompare("people", "identity_cluster"), { same: true });
 });
 
-test("R33 every table is declared explicitly through record-core's declareTable with the classes the requirement names: person_facts export yes, its contact table never, identity_claims yes with sight by project, member_ties admin-only, source_person_links never, the checks and their results admin-only, the cluster derived-rebuildable; rows naming a bundle are keyed to it", () => {
+test("R33 every table is declared explicitly through record-core's declareTable with the classes the requirement names: person_facts export yes, its contact table never, identity_claims yes with sight by project, member_ties never (K1490), source_person_links never, the checks and their results admin-only, the cluster derived-rebuildable; rows naming a bundle are keyed to it", () => {
   const w = world();
   const d = Object.fromEntries(w.record.declaredTables().filter((x) => x.module === "people").map((x) => [x.name, x]));
-  const want = { person_facts: "yes", person_contacts: "never", identity_claims: "yes", member_ties: "admin-only",
-                 source_person_links: "never", interest_checks: "admin-only", interest_check_results: "admin-only" };
+  const want = { person_facts: "yes", person_contacts: "never", identity_claims: "yes", member_ties: "never",
+                 source_person_links: "never", source_person_link_history: "never", interest_checks: "admin-only",
+                 interest_check_gates: "admin-only", interest_check_gate_history: "admin-only", interest_check_results: "admin-only" };
   for (const [t, ex] of Object.entries(want)) assert.equal(d[t].export, ex, t);
   assert.equal(d.identity_claims.sight, "bundle");
   assert.deepEqual(d.identity_claims.keys, ["project"]);
   assert.equal(d.identity_cluster.derive, "derived-rebuildable");
-  for (const t of ["person_facts", "person_contacts", "identity_claims", "member_ties", "source_person_links"]) assert.equal(d[t].expunge, "tombstone", t);
+  for (const t of ["person_facts", "person_contacts", "identity_claims", "member_ties", "source_person_links", "source_person_link_history"])
+    assert.equal(d[t].expunge, "tombstone", t);
   assert.deepEqual(Object.keys(d).sort(), [...PEOPLE_TABLES.map((t) => t.name), "identity_cluster"].sort());
   /* a project's purge clears what is keyed to it and nothing else */
   const p = w.person("Zed"), q = w.person("Zed");
