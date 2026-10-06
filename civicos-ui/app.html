@@ -906,7 +906,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 <!-- ============ WORKING SPACE ============ -->
 <div id="work">
   <div class="masthead">
-    <div class="brand"><button class="mback hidden" id="mback" onclick="navBack()" title="back to where you were, at the same place on the page">&larr;</button><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp" data-group="silent">This copy could not read its group just now</span></div>
+    <div class="brand"><button class="mback hidden" id="mback" onclick="navBack()" title="back to where you were, at the same place on the page">&larr;</button><button class="railtog" id="railtog" title="collapse or expand the rail" onclick="railToggle()">&#9776;</button><span class="wm">Civic<span class="os">OS</span></span><span class="mid">&middot;</span><span class="grp" id="m-grp" data-group="silent">Could not read this group just now</span></div>
     <div class="right">
       <div class="msearch"><svg width="14" height="14" viewBox="0 0 20 20" style="color:var(--muted);flex:none"><use href="#i-search"/></svg><input id="m-search" placeholder="search the record" oninput="sxSync('m')" onkeydown="if(event.key==='Enter')quickSearch()"><span class="sx hidden" id="sx-m" onclick="sxClear('m')" title="clear">&times;</span></div>
       <button class="btn hidden" id="m-fresh" style="padding:5px 12px;font-size:12.5px" onclick="location.reload()" title="a newer CivicOS build is live; reload to run it">Updated &middot; reload</button><div class="handle" id="m-handle">&mdash;</div>
@@ -919,7 +919,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 
   <div class="fence">
     <div class="fl">Working record &middot; not public</div>
-    <div class="idstr" id="m-idstr" data-group="silent">This copy could not read its group just now</div>
+    <div class="idstr" id="m-idstr" data-group="silent">Could not read this group just now</div>
   </div>
 </div>
 
@@ -928,7 +928,7 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
   <div class="pub-mast">
     <div class="l">
       <div class="mono-square" id="p-mono" data-group="silent"></div>
-      <div><div class="gname" id="p-gname" data-group="silent">This copy could not read its group just now</div><div class="gid" id="p-gid"></div></div>
+      <div><div class="gname" id="p-gname" data-group="silent">Could not read this group just now</div><div class="gid" id="p-gid"></div></div>
     </div>
     <div class="links"><a onclick="pubList()" style="cursor:pointer">Case files</a><a onclick="pubVerifyPanel()" style="cursor:pointer">Verify</a><span id="p-back"></span></div>
   </div>
@@ -1004,8 +1004,8 @@ setInterval(buildCheck, 5*60*1000);
    space reads through `apiQ`, holding NOTHING — its public-read seam, so a stranger's header and a
    signed-in member's header on the public page are the same answer. */
 const GROUP_WORDS = {
-  none:   "No group is recorded for this copy yet",
-  silent: "This copy could not read its group just now",
+  none:   "No group is recorded yet",
+  silent: "Could not read this group just now",
 };
 const GROUP_VERDICTS = ["verified", "absent", "mismatched", "undetermined"];
 function groupFromAnswer(r){
@@ -1150,7 +1150,7 @@ async function apiQ(op, params, body){
 async function rec(op, params={}){
   const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
   const r = await fetch(`${PLANE.base}/api/?${q}`);
-  const j = await r.json().catch(()=>({ok:false,error:"the plane did not return JSON"}));
+  const j = await r.json().catch(()=>({ok:false,error:"your group's Civicsmith did not answer in a form this page can read"}));
   if(!r.ok || j.ok===false) throw j;
   return j;
 }
@@ -1201,7 +1201,7 @@ async function recPost(op, body, params={}){
   const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
   const r = await fetch(`${PLANE.base}/api/?${q}`,
     {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body||{})});
-  const j = await r.json().catch(()=>({ok:false,error:"the plane did not return JSON"}));
+  const j = await r.json().catch(()=>({ok:false,error:"your group's Civicsmith did not answer in a form this page can read"}));
   if(!r.ok || j.ok===false) throw j;
   return j;
 }
@@ -1339,7 +1339,7 @@ function listSig(list){ return list.map(b=>b.bundle_id+"|"+b.current_state+"|"+b
    code stays beside it where one was sent. */
 function teach(el, err){
   const words = refusalWords(err);
-  const msg = err && (words || err.reason) ? [err.reason, words].filter(Boolean).join(" · ") : "Could not reach the plane. If this is a local file against a remote plane, that plane must allow cross-origin reads.";
+  const msg = err && (words || err.reason) ? [err.reason, words].filter(Boolean).join(" · ") : "Could not reach your group's Civicsmith. If this page is a local file opened against a remote Civicsmith, that Civicsmith must allow cross-origin reads.";
   el.innerHTML = esc(msg); el.classList.remove("hidden");
 }
 
@@ -2099,7 +2099,7 @@ const SEMANTICS = {
         enables:["write and revise its statements","offer it as proposed"],
         forbids:[["adopting it","a set is offered as proposed before anybody adopts it"]], next:["proposed","retired"] },
       proposed: { chip:"proposed", mark:"P", meaning:"Offered for adoption, and still in force over nothing. This is the step where its pattern statements carry their citations and it says what it does not enforce.",
-        enables:["read the statements and what they rest on","adopt it for this instance or for a project","send it back to draft"],
+        enables:["read the statements and what they rest on","adopt it for your group or for a project","send it back to draft"],
         forbids:[["being in force","a proposed set governs nothing: adopting is an authored act, and the set must stand at adopted as well"]], next:["draft","adopted","retired"] },
       adopted:  { chip:"adopted", mark:"A", good:true, meaning:"In force for the scope that adopted it, at the revision pinned when it was adopted. It says what it does not check, because the countable half of a standard is rarely the half that protects.",
         enables:["read the effective set in force, its hash and its residue","retire it"],
@@ -2117,7 +2117,7 @@ const SEMANTICS = {
   flags: {
     reeval:      { chip:"re-evaluate", mark:"\u21BB", meaning:"Something this depends on changed; a member should look again." },
     annotations: { chip:"annotations", mark:"A", meaning:"Members have open annotations on this item." },
-    monitored:   { chip:"monitored", mark:"M",  meaning:"The plane re-checks the live source on a schedule and flags drift." },
+    monitored:   { chip:"monitored", mark:"M",  meaning:"The live source is re-checked on a schedule, and drift is flagged." },
   },
 };
 /* One legacy vocabulary, two spellings: the SAME object, so the two cannot
@@ -2198,7 +2198,7 @@ const SURFACES = {
   },
   record: {
     routes: ["screen:record"],
-    purpose: "The whole record as rows: every bundle the instance holds, with its type and its state.",
+    purpose: "The whole record as rows: every bundle your group's Civicsmith holds, with its type and its state.",
     levels: ["documents"],
     acts: [],
     reads: ["list"],
@@ -2252,7 +2252,7 @@ const SURFACES = {
   },
   members: {
     routes: ["screen:members"],
-    purpose: "Who holds what in this instance: the roster, each member's capabilities, and the invitations outstanding — and, for an administrator's session, the custodial acts over membership and signing keys.",
+    purpose: "Who holds what in your group's Civicsmith: the roster, each member's capabilities, and the invitations outstanding — and, for an administrator's session, the custodial acts over membership and signing keys.",
     levels: [],
     /* D-134: the four custodial acts this surface performs for an administrator — `memberadd`,
        `memberset`, `signeradd`, `signerset` — are not in the plane's OBJECT-act catalogue (`ACTS` is
@@ -2337,7 +2337,7 @@ const SURFACES = {
   },
   published: {
     routes: ["hash:published"],
-    purpose: "The cases this instance has published, readable by somebody holding no credential at all.",
+    purpose: "The cases this group's Civicsmith has published, readable by somebody holding no credential at all.",
     levels: ["meaning"],
     acts: [],
     reads: ["publishedcase"],
@@ -2351,14 +2351,14 @@ const SURFACES = {
      writes here, each reached from the page. */
   "review-copy": {
     routes: ["hash:draft", "hash:reviewcopy"],
-    purpose: "A draft of a case shown, before and without publication, to the people it is addressed to, inside this record: marked as what it is, as complete as it can be, and listing in the publish gates' own words what a publication would still need. Its editors draft it; its project's owner gives and withdraws access; members and recipients comment. Nothing on it leaves the instance.",
+    purpose: "A draft of a case shown, before and without publication, to the people it is addressed to, inside this record: marked as what it is, as complete as it can be, and listing in the publish gates' own words what a publication would still need. Its editors draft it; its project's owner gives and withdraws access; members and recipients comment. Nothing on it leaves your group's Civicsmith.",
     levels: ["meaning", "documents"],
     acts: [],
     reads: ["casedraft", "reviewcopy", "reviewgrant", "reviewrevoke", "reviewcomment", "statementack"],
   },
   "published-case": {
     routes: ["hash:case"],
-    purpose: "One published case at one edition, with the plane's own account of why it carries no single case-level strength and of what its index does and does not resolve.",
+    purpose: "One published case at one edition, with this group's Civicsmith's own account of why it carries no single case-level strength and of what its index does and does not resolve.",
     levels: ["meaning", "documents"],
     acts: [],
     reads: ["publishedcase", "publishedmanifest"],
@@ -2562,7 +2562,7 @@ const GLOSSARY = {
   "FY":         "Fiscal year: the twelve-month period a government budgets and reports by, which need not match the calendar year. It is usually named for the year it ends in; the government's own documents give its dates.",
   "sha256":     "A cryptographic fingerprint of a file. If even one byte changes, the fingerprint changes, so matching fingerprints mean identical bytes.",
   "RFC 3161":   "A trusted-timestamp standard: an independent authority attests that these exact bytes existed no later than a certain moment.",
-  "SSHSIG":     "OpenSSH's signature format. The plane's releases are signed with it, and anyone can check a signature with stock ssh-keygen.",
+  "SSHSIG":     "OpenSSH's signature format. Civicsmith's releases are signed with it, and anyone can check a signature with stock ssh-keygen.",
   "manifest":   "The published list of everything in a ratified case file, with the hash of each item, so anyone can verify any part independently.",
   "frontmatter":"The structured header a bundle.md carries: its state, hashes, and provenance, machine-readable and human-readable at once.",
   "provenance": "Where a document came from: who issued it, where it was retrieved, when, and under what authority.",
@@ -7246,7 +7246,7 @@ function mergeManifest(prior, fresh){
 async function reviseWithCapture(id, img, acq, mergedManifest){
   const snap = acq.snapshot || {};
   const doc = acq.document;
-  if(!doc || !snap.manifest_sha256) return { ok:false, why:"The plane returned no manifest for the completed capture." };
+  if(!doc || !snap.manifest_sha256) return { ok:false, why:"Your group's Civicsmith returned no manifest for the completed capture." };
   const lease = await recR("lease", { id });
   const base = lease && lease.base;
   const now = new Date().toISOString().split(".")[0] + "Z";
@@ -13439,7 +13439,7 @@ function finderPassagePanelHtml(p){
   /* AN ARM THE PLANE DOES NOT PUBLISH IS ABSENT AND SAYS SO ONCE. Not a zero,
      not an apology, and not a refusal this surface composed. */
   if(p && p.armUnpublished)
-    return head + `<p class="subj-note">This record does not publish a way to search what its captured documents SAY, so this route was not asked. It is not empty; it was never a question this plane could answer.</p>`;
+    return head + `<p class="subj-note">This record does not publish a way to search what its captured documents SAY, so this route was not asked. It is not empty; it was never a question your group's Civicsmith could answer.</p>`;
   if(!p || !p.asked)
     return head + `<p class="subj-note">Not asked: nothing you typed is a term this route can answer.</p>`;
   if(p.err) return head + actRefusalHtml(p.err);
@@ -13930,7 +13930,7 @@ async function doRelease(ids){
 /* The plane's refusals name offenders and reasons; carry that voice, never
    translate it into "something went wrong". */
 function releaseRefusal(e){
-  const head = esc([e.reason, e.error].filter(Boolean).join(" \u00b7 ") || "The plane refused.");
+  const head = esc([e.reason, e.error].filter(Boolean).join(" \u00b7 ") || "Your group's Civicsmith refused.");
   /* UI-73: the sentence under the head is `refusalWords` (DEC-49's canned
      translation first); when it fell through to `error`, the head already
      carries it and it is not printed twice. */
@@ -14188,7 +14188,7 @@ function disposeReceipt(res, ctx){
   $("#dlg").innerHTML =
     `<div class="dz-receipt">
        <div class="dz-rhead">${esc(humanKind(disposeStateWord(to)))}.</div>
-       <p class="dz-rlede">The plane recorded the act. It now reads as <span class="chip ${esc(to)}">${esc(to)}</span> in the record, and its Session Log carries your name and your reason. It is kept, and can be re-triaged.</p>
+       <p class="dz-rlede">Your group's Civicsmith recorded the act. It now reads as <span class="chip ${esc(to)}">${esc(to)}</span> in the record, and its Session Log carries your name and your reason. It is kept, and can be re-triaged.</p>
        <div class="dz-rgrid">
          <div class="kv"><span class="k">Question</span><span class="v">${esc((ctx&&ctx.title)||ids[0])} <span class="id">${esc(ids[0])}</span></span></div>
          <div class="kv"><span class="k">Now</span><span class="v plain">${esc(to)}</span></div>
@@ -14295,7 +14295,7 @@ function ballotDivergenceHtml(table){
   }).join("");
   return `<div class="bl-tbl"><div class="bl-cap">How the threshold changes with the number of owners</div>
     <table class="bl-arith"><thead><tr><th>Owners</th><th>To remove one</th><th>Why</th><th></th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="bl-note">At <b>two</b> owners this parts company with the administrator rule, where a removal at two is impossible. Here the departing owner is one of the two votes &mdash; a resignation with the other&rsquo;s assent. That row is the one a shared implementation gets wrong, so it is shown, in the plane&rsquo;s own words, not hidden.</p></div>`;
+    <p class="bl-note">At <b>two</b> owners this parts company with the administrator rule, where a removal at two is impossible. Here the departing owner is one of the two votes &mdash; a resignation with the other&rsquo;s assent. That row is the one a shared implementation gets wrong, so it is shown, in your group&rsquo;s Civicsmith&rsquo;s own words, not hidden.</p></div>`;
 }
 
 /* THE PRE-FLIGHT — pure, so the harness can prove it, and its arithmetic gates
@@ -14784,7 +14784,7 @@ function keysHtml(signers){
     return `<tr><td class="ttl">${esc(name)}${k.comment?`<div class="mm-cover">${esc(k.comment)}</div>`:""}</td>`
       + `<td class="mono">${esc(fp)}&hellip;</td>`
       + `<td>${k.status==="revoked"?`<span class="chip flag">Revoked</span>`:`<span class="chip verified">Active</span>`}`
-      + `${k.attests?"":` <span class="chip collected" title="This instance would refuse a signature from this key right now.">cannot sign now</span>`}</td>`
+      + `${k.attests?"":` <span class="chip collected" title="Your group's Civicsmith would refuse a signature from this key right now.">cannot sign now</span>`}</td>`
       + `<td class="mm-cover">set by ${esc(k.status_by||"not recorded")}</td>`
       + `<td>${keyActHtml(k)}</td></tr>`;
   }).join("");
@@ -16198,9 +16198,9 @@ function queueFeedHtml(){
     const st = queueFeedState(f.id);
     if(st.state === "answered") return "";
     if(st.state === "absent")
-      return `<div class="q-feed absent" data-feed="${esc(f.id)}"><b>This op is not on this plane.</b> ${esc(f.what)} — the read this needs is not registered on the plane this instance talks to. That is not a failure and there is nothing to retry: asking again asks the same plane the same question. No count is shown for it. <span class="q-feed-why">${esc(st.why||"")}</span></div>`;
+      return `<div class="q-feed absent" data-feed="${esc(f.id)}"><b>This op is not on your group's Civicsmith.</b> ${esc(f.what)} — the read this needs is not registered on your group's Civicsmith. That is not a failure and there is nothing to retry: asking again asks the same Civicsmith the same question. No count is shown for it. <span class="q-feed-why">${esc(st.why||"")}</span></div>`;
     if(st.state === "failed")
-      return `<div class="q-feed failed" data-feed="${esc(f.id)}"><b>This feed failed: ${esc(f.label)}.</b> ${esc(f.what)} — and the record could not answer, so NO COUNT is shown for it rather than a wrong one. The plane's own reason: <span class="q-feed-why">${esc(st.why||"the plane gave none")}</span><button class="tbtn q-retry" data-retry="${esc(f.id)}">Retry this feed</button></div>`;
+      return `<div class="q-feed failed" data-feed="${esc(f.id)}"><b>This feed failed: ${esc(f.label)}.</b> ${esc(f.what)} — and the record could not answer, so NO COUNT is shown for it rather than a wrong one. The reason your group's Civicsmith gave: <span class="q-feed-why">${esc(st.why||"none")}</span><button class="tbtn q-retry" data-retry="${esc(f.id)}">Retry this feed</button></div>`;
     return `<div class="q-feed pending" data-feed="${esc(f.id)}">${esc(f.label)} has not answered yet, so nothing is claimed about it.</div>`;
   }).join("");
 }
@@ -16215,7 +16215,7 @@ function queueFeedYield(id){
 function queueAllClearHtml(){
   if(!QUEUE_FEEDS.every(f => queueFeedState(f.id).state === "answered")) return "";
   if(QUEUE_FEEDS.some(f => queueFeedYield(f.id) > 0)) return "";
-  return `<div class="q-allclear"><b>Nothing needs anybody right now.</b> Every feed this surface reads answered, and every one of them was empty. An all-clear is itself a claim, so it is withheld whenever a feed failed, is missing from this plane, or has not answered yet: a quiet screen and a screen that could not ask are different facts, and only one of them is good news.</div>`;
+  return `<div class="q-allclear"><b>Nothing needs anybody right now.</b> Every feed this surface reads answered, and every one of them was empty. An all-clear is itself a claim, so it is withheld whenever a feed failed, is missing from your group's Civicsmith, or has not answered yet: a quiet screen and a screen that could not ask are different facts, and only one of them is good news.</div>`;
 }
 
 /* Q12, SETTLED: narration is SURFACE-scoped and PLANE-SOURCED — one sentence,
@@ -16472,7 +16472,7 @@ function taskErr(id, e){
   /* UI-73: the plane's sentence through `refusalWords` — which also stops an
      `error`-only refusal rendering BLANK here, as the old `[reason, detail]`
      join did while its guard admitted `error`. */
-  const msg = [e && e.reason, refusalWords(e)].filter(Boolean).join(" · ") || "The plane did not accept that.";
+  const msg = [e && e.reason, refusalWords(e)].filter(Boolean).join(" · ") || "Your group's Civicsmith did not accept that.";
   if(host) host.textContent = msg;
 }
 
@@ -19124,7 +19124,7 @@ function attestPreflight({ sha, held, hasStorage }){
   const storage  = hasStorage !== false;
   const isHeld   = held !== false;
   const gates = [
-    { id:"storage", title:"This instance can store evidence", pass:storage },
+    { id:"storage", title:"Your group's Civicsmith can store evidence", pass:storage },
     { id:"sha",     title:"A capture hash to attest",         pass:goodSha },
     { id:"held",    title:"The capture is in the record",     pass:goodSha && isHeld },
   ];
@@ -19338,7 +19338,7 @@ function attestDone(id){ closeDialog(); RECORD_CACHE = null; if(id) openBundle(i
 /* A refusal renders in the PLANE'S OWN VOICE, offenders named, nothing written
    — the same rule as release and dispose. */
 function attestRefusalHtml(e){
-  const head = esc([e&&e.reason, e&&e.error].filter(Boolean).join(" · ") || "The plane refused, and stored nothing.");
+  const head = esc([e&&e.reason, e&&e.error].filter(Boolean).join(" · ") || "Your group's Civicsmith refused, and stored nothing.");
   /* UI-73: as `releaseRefusal` — `refusalWords` chooses the sentence. */
   const words = refusalWords(e);
   const detail = (words && words !== (e&&e.error)) ? `<div style="margin-top:4px">${esc(words)}</div>` : "";
@@ -19681,7 +19681,7 @@ function addActRepaint(){
    grade reaches the member the way every other grade in this application does —
    INTERPOLATED from the value the record published, on the document itself,
    after there is a capture to grade. */
-const ADD_CAPTURE_TEACH = `<div class="teach" style="margin-top:14px"><b>What gets recorded.</b> The plane
+const ADD_CAPTURE_TEACH = `<div class="teach" style="margin-top:14px"><b>What gets recorded.</b> Your group's Civicsmith
         fetches what the address serves at that moment, hashes the bytes as they arrive, and records the
         address, the instant it was retrieved and who you say issued it as three separate claims rather
         than one. What none of that settles is whether the document is true, or whether its issuer is the
@@ -19726,7 +19726,7 @@ async function renderAdd(){
     <div id="a-doc">
       <h2 class="sec" style="margin-top:26px">The document, if there is one</h2>
       <p class="lede" style="margin-top:0">Leave this empty for something you know rather than
-        something you hold. Give an address and the plane fetches it, hashes it at receipt, and
+        something you hold. Give an address and your group's Civicsmith fetches it, hashes it at receipt, and
         records who published it and when it was retrieved as separate claims from the capture itself.</p>
       <label class="fld" for="a-loc">Address of the document</label>
       <input class="txt" id="a-loc" placeholder="https://&hellip;" oninput="addValidate()">
@@ -20412,7 +20412,7 @@ function errPane(e, crumbHtml){
   /* UI-73, FOUND BY THE CLASS SWEEP beside `teach()` — the same line, one pane
      over: the plane's sentence is `refusalWords`', never `detail` read here. */
   const words = refusalWords(e);
-  const msg = e && (words || e.reason) ? [e.reason, words].filter(Boolean).join(" · ") : "Could not reach the plane.";
+  const msg = e && (words || e.reason) ? [e.reason, words].filter(Boolean).join(" · ") : "Could not reach this group's Civicsmith.";
   return `${crumbHtml||""}<div class="teach" style="margin:8px 0">${esc(msg)}</div>`;
 }
 
@@ -24853,7 +24853,7 @@ function notifNoDispositionHtml(it){
 function notifClassLine(cls, deferred, counts, haveCounts){
   const key = String(cls || "").toLowerCase();
   if(deferred.includes(cls))
-    return "<b>" + esc(queueClassLabel(cls)) + "</b> — nothing on this plane raises one of these yet. This part of the "
+    return "<b>" + esc(queueClassLabel(cls)) + "</b> — nothing in your group's Civicsmith raises one of these yet. This part of the "
          + "list being empty says nothing about the world; it says nobody has built the thing that "
          + "would look.";
   if(!haveCounts || !Object.prototype.hasOwnProperty.call(counts, key))
@@ -25025,7 +25025,7 @@ function notifAbsenceHtml(){
   const haveCounts = !!(d.counts && typeof d.counts === "object");
   return '<div class="q-levels"><b>What this list can and cannot be empty about.</b> '
     + 'An empty stretch of a list is not one fact but two — the record looked and found nothing, or '
-    + 'nothing on this plane looks yet — and which one is true is said here per class rather than '
+    + 'nothing in your group\'s Civicsmith looks yet — and which one is true is said here per class rather than '
     + 'left to be inferred from a quiet screen.'
     + '<ul class="q-levels-list">'
     + classes.map(c => '<li>' + notifClassLine(c, deferred, counts, haveCounts) + '</li>').join("")

@@ -90,7 +90,9 @@ const SECOND = "harbour-watch-coalition";
 const LITERALS = [/believe[\s_-]*in[\s_-]*oakland/i, /believeinoakland\.org/i];
 const hasLiteral = (t) => LITERALS.some(re => re.test(String(t || "")));
 const NONE_RE = /\bno group\b.*\brecorded\b/i;          // the absence, said in words (not pinned to one spelling)
-const SILENT_RE = /could not read (its|the) group/i;    // the silence, said as a silence
+/* DEC-149 (T34-87, LEGACY-UI #2): "This copy could not read its group" became "Could not read this group" (a stranger on the
+   public page is shown it too, K1821 (2)), so "this" joins the determiners; still a silence, never a name. */
+const SILENT_RE = /could not read (its|the|this) group/i;    // the silence, said as a silence
 
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 async function memberSession(mf){
