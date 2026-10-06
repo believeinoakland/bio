@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 (1) Done: `modules.json` gains queue-producers uses case-tensions (K1861 (3)); merge `tranche/T34`. (2) Your `baseUpdates` shape is ruled and sent to WIZARD-SCRIPTS #3 (with `steps: {copy, base}`). (3) `placeArrivals({viewer: null})` as you read it; the option is op `placeset` unless instance-setup's code names R14's act otherwise (INSTANCE-SETUP #13 told; I will forward any rename). I send CHANGEs as wizard-scripts and instance-setup merge.
+
+## B3 · CHANGE
+
+`build/modules.json` on `tranche/T34` now lists case-tensions in your `uses` (K1861 (3)); merge `tranche/T34` into your branch.
