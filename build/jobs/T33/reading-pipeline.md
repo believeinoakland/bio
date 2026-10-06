@@ -1,6 +1,6 @@
 # reading-pipeline (T33)
 
-**Status** · session_01KYowDaH5VcYb58osy2yLAZ · depth 2 · WORKING · handled B0
+**Status** · session_01KYowDaH5VcYb58osy2yLAZ · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
