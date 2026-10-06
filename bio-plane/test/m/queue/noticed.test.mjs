@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, NOW, iso, byId } from "./world.mjs";
 import { Queue, QUEUE_MINT_CHECKS } from "../../../src/queue/index.mjs";
 import { classOfKind, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS } from "../../../src/queuestate.mjs";
+import { noticeProducersOf } from "../../../src/notice-producers/index.mjs";
 
 const HOUR = 3600000;
 const item = (id, kind, cls, subjects, a, extra = {}) => ({ id, class: cls, kind, subject: { kind: "bundle", id: subjects[0] ?? null },
@@ -223,4 +224,37 @@ test("R22: a date's snooze lapses for the consumer at that local day's start, no
   const it = byId(w.q.queueFeed({ member: "alice", viewer: "member:alice", nowMs: NOW + 6 * HOUR }))["TASK-2026-0009-a"];
   assert.equal(it.snoozed.until, "2026-09-01T07:00:00.000Z");
   assert.equal(byId(w.q.queueFeed({ member: "alice", viewer: "member:alice", nowMs: NOW + 7 * HOUR }))["TASK-2026-0009-a"].snoozed, undefined);
+});
+
+test("R51, R7, R11, R12, R14, R49: the real notice-producers' items (its R4, R6) reach the feed, homed, minted, offered, muted and sorted by due", () => {
+  const asked = {};
+  const w = world({}, { notices: (host, { membership }) => noticeProducersOf(host, { membership,
+    people: { checkResults: () => ({ ok: true, results: [] }), listChecks: () => ({ checks: [] }) },
+    moneyChecks: { noticed: () => ({ ok: true, results: [] }) },
+    duties: { dutiesOf: () => ({ ok: true, duties: [] }), occurrencesOf: () => ({ ok: true, occurrences: [] }) },
+    answers: { standingAnswersFor: (a) => { asked.answers = a; return { ok: true, cursor: null, entries: [
+      { question: { id: "STQ-1", question: "who signed the lease?" }, run: "r1", at: iso(NOW - HOUR), finds: { ids: ["DOC-2"] },
+        answer: null, held_back: "ai_off", label: "machine work, from your standing question" }] }; } },
+    inquiry: { datedWaits: (a) => { asked.inquiry = a; return { ok: true, zone: "America/Los_Angeles", waits: [
+      { inquiry: "INQ-1", index: 0, text: "the auditor's reply", description: "from the City", date: "2026-08-31",
+        state: "due", set_by: "member:alice", set_at: iso(NOW - 9 * 86400000) }] }; } } }) });
+  w.member("alice"); w.member("bob");
+  w.bundle("DOC-2"); w.bundle("INQ-1", "inquiry"); w.leg("INQ-1", "DOC-2");
+  w.bundle("PRJ-A", "project"); w.join("PRJ-A", "alice"); w.cite("PRJ-A", "INQ-1");
+  const f = w.q.queueFeed({ member: "alice", viewer: "member:alice", sort: "due" });
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 400));
+  assert.deepEqual(asked.answers.member, "member:alice"); assert.equal(asked.inquiry.viewer, "member:alice");
+  assert.deepEqual(f.items.map((i) => i.id), ["OBLIGATION::inquiry-recheck-due::INQ-1::2026-08-31", "FINDING::standing-answer::STQ-1::r1"]);
+  assert.deepEqual(f.notice_producers.failed, []);
+  const [wait, ans] = f.items;
+  assert.deepEqual(wait.case.ancestors.map((a) => a.id), ["INQ-1", "PRJ-A"], "the wait's inquiry and every ancestor R7's walk reaches");
+  assert.deepEqual([wait.disposition.instead, ans.disposition.instead], ["waitlook", "queuemute"]);
+  assert.ok(wait.options.some((o) => o.id === "waitlook"));
+  // the answer is the author's to quiet; the wait is never muted
+  assert.equal(w.q.queueMute({ member: "alice", viewer: "member:alice", item: ans.id }).ok, true);
+  assert.equal(w.q.queueMute({ member: "alice", viewer: "member:alice", item: wait.id }).reason, "KIND_NOT_PERSONAL");
+  const g = w.q.queueFeed({ member: "alice", viewer: "member:alice" });
+  assert.deepEqual(g.items.map((i) => i.id), [wait.id]); assert.deepEqual(g.mute.suppressed.map((s) => s.id), [ans.id]);
+  // a member with no wait and no question reads none; a machine credential reads none (its R1)
+  assert.equal(w.q.queueFeed({ member: null, viewer: "class:admin" }).items.length, 0);
 });

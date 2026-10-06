@@ -48,6 +48,7 @@ import { schedulerOf, viewZone } from "../scheduler/index.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
+import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { affordancesOf, deriveActs, decorate, vocabulariesFor, PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem, serializeMutedKinds, parseMutedKinds,
@@ -123,7 +124,7 @@ export class Queue {
     "caseImport", "wizardScripts"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
   /* R51 (T33-83): `notice-producers`, read beside `queue-producers`. */
-  get #notices() { return this.#dep("notices", () => null); /* PENDING-NP: noticeProducersOf(this.#host) at its merge */ }
+  get #notices() { return this.#dep("notices", () => noticeProducersOf(this.#host)); }
 
   /** R21, R22 (K1444 (iii)): the instance profile's time zone, or null when none is held: the caller's `deps.zone`, else
    *  scheduler's `viewZone` over record-core's active jurisdiction profiles. Never throws; never the UTC day in its

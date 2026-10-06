@@ -27,7 +27,9 @@ function cursor(rows) {
 }
 
 /** `bare`: the instance is reached before any table exists (a store's first boot); `w.boot()` then creates them. */
-export function world(fakes = {}, { bare = false } = {}) {
+/** `notices`: `(host, {membership, record}) => provider`, in place of the `notices` fake (the real `noticeProducersOf`, its
+ *  own providers faked by the test; K1563 (1)). */
+export function world(fakes = {}, { bare = false, notices = null } = {}) {
   const db = new DatabaseSync(":memory:");
   const statements = [];
   let sp = 0;
@@ -63,6 +65,7 @@ export function world(fakes = {}, { bare = false } = {}) {
   if (!bare) boot();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
+  if (typeof notices === "function") F.notices = notices(host, { membership, record });
   /* `tasks` real (its R6 is what the feed reads), over the capture and provenance fakes; its table made at boot. */
   const tasks = tasksOf(host, { record, membership, start: false, now: () => w.now, capture: F.capture, provenance: F.provenance });
   if (!bare) tasks.migrate();
