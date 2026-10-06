@@ -115,8 +115,7 @@ function withRead(w, opts = {}) {
   signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
   w.stamps = opts.stamps || stampsOn();
-  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket, stamps: (q) => w.stamps.stampsOf(q),
-                                ...(opts.caseGrammar ? { caseGrammar: opts.caseGrammar } : {}) });
+  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket, stamps: (q) => w.stamps.stampsOf(q) });
   w.read = (name, query = {}) => {
     const url = new URL(`http://do/${name}`);
     for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
@@ -158,8 +157,8 @@ export function bucket() {
 
 /** T33-65 (R23, R26, R27, R28): a `/6` case edition of `CASE-2026-0001` over F (load-bearing) and G (supporting), signed
  *  and published, its findings' bytes in the published bucket (`env`). `extra` are front-matter lines added to the signed
- *  document (a block a test reads through an injected `case-grammar` reader, until case-grammar's T33-60 merges and the
- *  tests re-point at its writers, K1563 (1)); `opts` reach the world (`caseGrammar`, `stamps`). */
+ *  document (a block in `case-grammar`'s own spelling, `calculationsLines`, `timelineLines`); `opts` reach the world
+ *  (`stamps`). */
 export function publishedSix({ extra = [], edition = 1, ...opts } = {}) {
   const CASE = "CASE-2026-0001", F = "INQ-2026-0001", G = "INQ-2026-0002";
   const w = world(opts);

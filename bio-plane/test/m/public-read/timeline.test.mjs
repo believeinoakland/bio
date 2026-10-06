@@ -1,16 +1,16 @@
 /* public-read — the published timeline (T33-65; C11, K1494): R27. `publishedCase` answers the edition's timeline as its
    signed document froze it (`publication` R63; `case-grammar.timelineOf`, its R20): the two lanes apart and never
    interleaved, each item with its `when` as held and its source, an item placed nowhere listed apart; nothing is read
-   from `events`. The block is read through an injected `case-grammar.timelineOf` until case-grammar's T33-60 merges and
-   these tests re-point at its writer (K1563 (1)). */
+   from `events`. The block is written by `case-grammar`'s one writer (`timelineLines`, its R20) as `case-authoring` writes
+   it, and read back by the module through `timelineOf`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { publishedSix } from "./fixture.mjs";
 import { TIMELINE_SENTENCE } from "../../../src/public-read/index.mjs";
+import { timelineLines } from "../../../src/case-grammar/index.mjs";
 
-const CG = { calculationsOf: () => [],
-             timelineOf: (fm) => (fm && fm.x_timeline ? JSON.parse(fm.x_timeline) : { they_did: [], we_did: [] }) };
-const line = (t) => `x_timeline: '${JSON.stringify(t)}'`;
+/* written as case-authoring writes it: the rows of both lanes, in any order, to case-grammar's one writer */
+const line = (t) => timelineLines([...t.we_did, ...t.they_did]);
 const THEY = [
   { lane: "they_did", ord: 0, when: { date: "2026-03-04", precision: "day" }, label: "The council approved the contract",
     ref: "EVT-2026-0001", source: { capture: "a".repeat(64) } },
@@ -23,7 +23,7 @@ const WE = [
     ref: "CASE-2026-0001#2", source: { entry: "CASE-2026-0001#2" } }];
 
 test("R27 publishedCase answers the timeline as signed: the two lanes apart, each item in its own order with its when as held and its source, an item placed nowhere listed apart", () => {
-  const { w } = publishedSix({ extra: [line({ they_did: THEY, we_did: WE })], caseGrammar: CG });
+  const { w } = publishedSix({ extra: line({ they_did: THEY, we_did: WE }) });
   const c = w.read("publishedcase", { id: "CASE-2026-0001" });
   assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
   const pick = (i) => [i.ord, i.when, i.label, i.ref, i.source];
@@ -40,7 +40,7 @@ test("R27 publishedCase answers the timeline as signed: the two lanes apart, eac
 });
 
 test("R27 each edition answers its own frozen timeline (nothing read live); a document without the block answers both lanes empty", () => {
-  const { w } = publishedSix({ edition: 2, extra: [line({ they_did: THEY.slice(0, 1), we_did: [] })], caseGrammar: CG });
+  const { w } = publishedSix({ edition: 2, extra: line({ they_did: THEY.slice(0, 1), we_did: [] }) });
   const one = w.read("publishedcase", { id: "CASE-2026-0001", edition: 1 });
   const two = w.read("publishedcase", { id: "CASE-2026-0001", edition: 2 });
   assert.equal(two.ok, true, JSON.stringify(two).slice(0, 300));

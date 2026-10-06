@@ -27,8 +27,6 @@
  *   storage        the Durable Object's storage (default: the host's).
  *   stamps         `publication.stampsOf({case, edition})` (its R62): an edition's court-order stamps in order, for R28
  *                  (default: `publication`'s; T33-63).
- *   caseGrammar    `case-grammar`'s `calculationsOf` (its R18) and `timelineOf` (its R20), for R23, R26 and R27
- *                  (default: the module itself; T33-60).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
@@ -38,8 +36,7 @@ import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
-import * as caseGrammarNs from "../case-grammar/index.mjs";
-import { caseFilePath } from "../case-grammar/index.mjs";
+import { caseFilePath, calculationsOf, timelineOf } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
@@ -155,12 +152,11 @@ export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
   #publicReads = new Map(); // R18: name -> {module, params, read}, each name registered once
 
-  constructor({ storage, publication, docket, stamps = null, caseGrammar = caseGrammarNs } = {}) {
+  constructor({ storage, publication, docket, stamps = null } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
     this.docket = docket;
     this.stamps = stamps || ((q) => (typeof publication.stampsOf === "function" ? publication.stampsOf(q) : []));
-    this.caseGrammar = caseGrammar;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1265,8 +1261,7 @@ export class PublicRead {
      every output labelled a computed fact. `[]` for a document without the block. */
   /* R23, R26: the document's `calculations:` rows as `case-grammar` reads them (its R18); `[]` without the block. */
   #calculationRows(fm) {
-    const rows = typeof this.caseGrammar.calculationsOf === "function" ? this.caseGrammar.calculationsOf(fm) : [];
-    return (Array.isArray(rows) ? rows : []).filter((r) => r && typeof r === "object");
+    return calculationsOf(fm).filter((r) => r && typeof r === "object");
   }
 
   #calculationsOf(fm) {
@@ -1290,7 +1285,7 @@ export class PublicRead {
      `events`: the two lanes apart, each in its own order, each item with its `when` as held and its source; an item placed
      nowhere listed apart, in its lane. Both lanes empty for a document without the block. */
   #timelineOf(fm) {
-    const t = typeof this.caseGrammar.timelineOf === "function" ? this.caseGrammar.timelineOf(fm) : null;
+    const t = timelineOf(fm);
     const lane = (name) => (t && Array.isArray(t[name]) ? t[name] : []).filter((i) => i && typeof i === "object")
       .map((i) => ({ ord: i.ord ?? null, when: i.when ?? null, label: i.label ?? null, ref: i.ref ?? null,
                      source: i.source ?? null }));
@@ -1508,8 +1503,7 @@ export function publicReadOf(host, deps) {
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     const docket = d.docket || docketOf(host);
-    r = new PublicRead({ storage, publication, docket, stamps: d.stamps || null,
-                         ...(d.caseGrammar ? { caseGrammar: d.caseGrammar } : {}) });
+    r = new PublicRead({ storage, publication, docket, stamps: d.stamps || null });
     instances.set(host, r);
   }
   return r;

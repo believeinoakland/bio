@@ -19,8 +19,8 @@
  * for its size and nothing is left out. */
 
 import { canonicalJson } from "../record-grammar/index.mjs";
-import { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf }
-  from "../case-grammar/index.mjs";
+import { CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
+         provOf } from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
 
 const enc = new TextEncoder();
@@ -67,7 +67,7 @@ const entryCost = (name, bytes) => bytes + utf8(name).length * 2 + 76;
  *  or the signed document's bytes do not hash to its digest: a case file that would leave out what it must carry is
  *  never built. It is a statement inside an act that has committed, never a refusal (R6). `maxBytes` is the part bound
  *  (R5). */
-export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES, pathOf = caseFilePath }) {
+export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES }) {
   const files = [];
   const add = async (path, kind, content) => {
     files.push({ path, kind, sha256: await sha256Hex(content), bytes: content.length, content });
@@ -127,21 +127,23 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     await add(caseFilePath("attestation", [a.row.ref, `${n}-${a.row.by_kind}.json`]), "attestation",
               utf8(canonicalJson({ row: a.row, account: a.account ?? null, held: carried })));
   }
-  /* R23 (C:A-12, C:A-13): each calculation the `calculations:` block lists (`case-grammar` R18), as its row, and each
-     input it names, by the hash the row states and only at it (`case-grammar` R13's `calculation` kind), so the checker
-     recomputes it (`case-checker` R20). An input the published projection does not hold at that hash is named in
-     `unheld` (J1 (1)), never carried under a wrong name. An input two calculations name travels once. */
-  const inputsCarried = new Set();
-  for (const c of facts.calculations || []) {
-    await add(pathOf("calculation", c.row && c.row.calc), "calculation", utf8(canonicalJson(c.row)));
+  /* R23 (C:A-12, C:A-13; K1632): each calculation the `calculations:` block lists (`case-grammar` R18), as its row
+     (`calculationFileText`, the one spelling), and each input it names under it, by the hash the row states and only at
+     it (`case-grammar` R13's `calculation` kind: `calculations/<calc>/inputs/<sha256>`), so the checker recomputes it
+     (`case-checker` R20); and, once, the calculations' PROV-O rendering (`provOf`, its R19). An input the published
+     projection does not hold at that hash (`publication` R22 commits them at publish) is named in `unheld`, never
+     carried under a wrong name. */
+  const calcs = facts.calculations || [];
+  for (const c of calcs) {
+    const calc = c.row && c.row.calc;
+    await add(caseFilePath("calculation", calc), "calculation", utf8(calculationFileText(c.row) ?? ""));
     for (const i of c.inputs || []) {
-      if (inputsCarried.has(i.sha)) continue;
       const bytes = await held(i.sha, i.text);
-      if (!bytes) { unheld.push({ ref: (c.row && c.row.calc) ?? null, sha: i.sha ?? null, what: "calculation_input" }); continue; }
-      inputsCarried.add(i.sha);
-      await add(pathOf("calculation_input", i.sha), "calculation_input", bytes);
+      if (!bytes) { unheld.push({ ref: calc ?? null, sha: i.sha ?? null, what: "calculation_input" }); continue; }
+      await add(caseFilePath("calculation", [calc, i.sha]), "calculation", bytes);
     }
   }
+  if (calcs.length) await add(caseFilePath("calculation", "prov"), "calculation", utf8(provOf(calcs.map((c) => c.row))));
   const unspelled = files.filter((f) => typeof f.path !== "string");
   if (unspelled.length)
     return notAssembled("a finding id, a material's ref or a calculation's id is not one the case file's format can spell as a path",
