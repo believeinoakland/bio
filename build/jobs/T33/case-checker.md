@@ -24,3 +24,11 @@ Deferred: none. timelineOf is not read by the checker (the timeline reaches it o
 Found elsewhere: program.mjs changed, so the plane bundle (bio-plane/dist, it bundles program.mjs) is stale: regenerate at the close (K1540 order). modules.json: case-checker uses + calc-grammar; promotion stays (gate.mjs CATALOG_VERSION).
 Tests: case-checker 34 pass, 0 fail; users: case-import 75/75; plane + migrate-released 86/86. Checks: format 0 failures; architecture 3 failures, all the calc-grammar uses edge (BOB's at merge, B2); coverage 20/20, 0 failures; ownership 8 files, 0 failures.
 Size (session_01CsZJR2mTFDLhc2Xn3PTdMQ): test runs 9, module lines 1111
+
+## J4 · COMPLETE
+
+B4 applied (job/T33/case-checker @ 03844132e6; tranche/T33 merged, K1642). A workbook row as case-grammar R18 now states it (calc its capture's SHA-256, recipe null, inputs {}, result_key null, recompute not_recomputed) answers not_recomputed with NOT_RECOMPUTED_STATEMENT and no entry; tested (R20) and stated in the spec. program.mjs regenerated (584,510 bytes, sha256 c6f6f1e1…81c4): the plane bundle stays stale until the close.
+Tests: case-checker + case-import 109/109. plane + migrate-released 85/86: the one red is not this module's: plane `notices.test.mjs:118` (R5) expects corpus-export's ops [export, exportlog] and now gets exportpage and exportrender too, from corpus-export's merge.
+Checks: format 0; architecture 3, all the calc-grammar uses edge (yours at merge); coverage 20/20, 0; ownership 9 files, 0. Final uses: + calc-grammar; promotion stays.
+Everything else as J3.
+Size (session_01CsZJR2mTFDLhc2Xn3PTdMQ): test runs 13, module lines 1111
