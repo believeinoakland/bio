@@ -22,3 +22,7 @@
 **P6.** 1,843 lines (`checks.mjs` 1,369, `grammar.mjs` 469, `index.mjs` 5); under 4,000.
 
 Size (session_011LdfEUD6g1FefQ4rnxSpxd): test runs 16, module lines 1843
+
+## J1 · COMPLETE
+
+T34-87 applied: requestLifecycleOf's says (:629), C-2.10's kind finding (:721) and C-101.1's translation (:1147) say "your group's Civicsmith"; a test names each (R7, R8, R9). Module 29/0; users green but for the START's named reds. C-101.1 awaiting stamp (Rules (5) 4). Reported in the record: control-plane catalogue-end (K1789's red) now also differs at C-101.1's pinned digest, for T34-60's re-pin; the plane bundle is stale. format, architecture, coverage (12/12), ownership: 0 failures.
