@@ -2487,3 +2487,17 @@ response: **Bob, 2026-10-06:** first "S7: If the/a administrator has assistant c
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the Translations screen and wizard; S7); `journeys.html` (the wizard card); `brand-and-voice.html` (V4); BIO_Interaction_Constructs_v0_1.md §L.
 owed: (BOB) the translation layer's grant per language and member; the protected-word set and its second check (a second granted speaker, or an administrator with the assistant's back-translation); the record of each adopted word with one-act undo; members' "looks wrong" marks; local names held with their explanations and official translations in the place's rules (jurisdictions), never translated as ordinary words; outward communications in the office's language with a labelled translation for the member; the ops behind the registry's `owed:translationgrant`, `owed:translationconfirm` and `owed:translationrevert DEC-157`.
+
+### DEC-158 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's Wizards screen: "Can/does it make sense for an existing wizard to be duplicated and modified?")
+for: bob-session
+question: Whether a group may copy a wizard, its own or Civicsmith's, and change the copy.
+why it is Bob's: it is not: design detail beneath DEC-121 (groups add their own wizards and cannot change Civicsmith's) and wizard-scripts R3 (a draft `from` an approved version the author may see, "a derivative"); decided by the design session (P17) and reported.
+provisional: wizard-scripts R3's `from`; DEC-121 (1), (9); DEC-148.
+alternative: no copying (a group re-records from nothing).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06:** (1) yes: on the Wizards screen, "Copy a wizard to change it" starts a draft from any approved wizard the member may see, Civicsmith's or the group's; (2) the copy is the group's own wizard (`origin: group`), a draft until approved like any wizard the group writes, under the same editor grant and checks; (3) the original is unchanged and still offered; a required Civicsmith wizard stays the required one, and a group's copy never replaces it; (4) the copy shows what it is based on ("based on Civicsmith's 'Get a record'"); when the original gets a newer approved version, the group's wizard editors are told once and can see what changed and bring it across.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the Wizards screen).
+owed: (BOB) confirm that R3's derivative of a Civicsmith script creates a new script with `origin: group` (never a version of the Civicsmith script), recording what it was based on; a notice to the group's wizard editors when the base gets a newer approved version.
