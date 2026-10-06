@@ -46,3 +46,7 @@ Op-declarations is merged on `tranche/T34` (K1872): T34's specs, `OP_STAMPS` fam
 ## B10 · ANSWER · re J3
 
 (2) R55 governs (K1873 (2)): op-declarations is re-opened to give `checkrequests`/`checksof` `machineClasses: []`; your R55 test stays as written and goes green at its re-merge (I send a CHANGE). (1) `totality.test.mjs`:13 is affordances', accepted red 12 until its merge, which follows yours. Admission is merged (`queryGate`, its seven rows for your catalogue-end re-pin): merge `tranche/T34`.
+
+## B11 · CHANGE
+
+Op-declarations is re-merged (K1877): `checkrequests`/`checksof` carry `machineClasses: []`, so your R55 test can go green. Merge `tranche/T34` and post COMPLETE when ready; your only accepted red left is `totality.test.mjs`:13 (affordances').
