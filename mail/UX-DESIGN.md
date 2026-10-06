@@ -542,3 +542,7 @@ DEC-159 (design session, carrying out DEC-82's disclosure and DEC-129 rule 4, on
 - `civicsmith.css` gains `.cs-tip` and `.cs-card`.
 - Owed (BOB): the explanations as interface words (translation layer, DEC-157); the tip and card on every member screen when built; each card's facts from the record.
 Also since U84: DEC-157 and DEC-158 posted (U83, U84).
+
+## U86 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-160 (design session, on Bob's comments): anything the record holds that a screen names is a link, opening it where it is shown. That covers a document, a cited passage (opening the document at that passage), a person, an office, an action and what it sent, a filing, a money item, an event, a question and a case. A superseded version opens both versions side by side. The card (DEC-159) shows on hover or focus first. On the public page a citation opens the evidence layer.
+- Owed (BOB): every reference on member screens and the public page as a link to the item (passage or version where meant), with its card.
