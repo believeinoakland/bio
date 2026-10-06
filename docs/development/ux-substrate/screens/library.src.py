@@ -18,10 +18,10 @@ def wiz(name, start, required, steps, journeys, note=''):
 
 wiz('Set up and claim', 'install', True, [
  ('install', None, 'Check you have what is needed: a Cloudflare account and about twenty minutes.', 'The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up.'),
- ('install', 'bootstrap', 'Choose your group\'s short name, then install.', 'It appears in addresses and signatures and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
+ ('install', 'bootstrap', 'Choose your group\'s short name, then install. It is not the group\'s name: you choose that next, and can change it.', 'The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
  ('install', 'selftest', 'Let your copy test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves your copy works before anyone relies on it.'),
  ('setup', 'claim', 'Claim your copy with the one-time password, then choose your own password.', 'Only the person holding the one-time password can become the first administrator.'),
- ('setup', 'groupnameset', 'Name the group, and add its logo if it has one.', 'The group\'s name heads everything it publishes; Civicsmith is credited quietly at the foot.'),
+ ('setup', 'groupnameset', 'Name the group as people should read it, and add its logo if it has one.', 'The group\'s name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures.'),
  ('setup', 'groupdomainset', 'Verify the group\'s web address.', 'Readers can then confirm that a published case really comes from your group.'),
  ('setup', 'profilesset', 'Choose the places whose rules apply, and the languages your members use.', 'Deadlines, holidays and offices come from these places, never from Civicsmith itself.'),
  ('setup', 'officesseed', 'Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.', 'Requests go to offices by role, so correct anything before members rely on it.'),

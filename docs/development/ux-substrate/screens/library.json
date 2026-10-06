@@ -27,8 +27,8 @@
       {
        "screen": "install",
        "act": "bootstrap",
-       "what": "Choose your group's short name, then install.",
-       "why": "It appears in addresses and signatures and can never change. A group that wants to stay unnamed picks one that reveals nothing."
+       "what": "Choose your group's short name, then install. It is not the group's name: you choose that next, and can change it.",
+       "why": "The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing."
       },
       {
        "screen": "install",
@@ -45,8 +45,8 @@
       {
        "screen": "setup",
        "act": "groupnameset",
-       "what": "Name the group, and add its logo if it has one.",
-       "why": "The group's name heads everything it publishes; Civicsmith is credited quietly at the foot."
+       "what": "Name the group as people should read it, and add its logo if it has one.",
+       "why": "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures."
       },
       {
        "screen": "setup",
