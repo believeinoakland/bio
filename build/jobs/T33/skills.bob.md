@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1601: all six accepted, and the R28 re-quote (wording only). affordances publishing answer_checks is in its START (L11); no REPORT needed.
+
+## B3 · ANSWER · re J2
+
+K1602: your reading accepted: the clause is carried in the ask and suggestions layers only; the run modes' layers do not carry it (DEC-60). R35's wording now says so; merge tranche/T33 into your branch.
