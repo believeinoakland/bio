@@ -46,6 +46,8 @@
 
 - N571 · `calc-grammar`, `calculations` · a streaming evaluate over a table (not row objects), then calculations R1's cell bound back to about 1,000,000 (CALCULATIONS #1 J2 (2); K1576). **Hard reason:** the order: calc-grammar (L1) is closed.
 
+- N572 · the module that runs wizards (BOB names it when the wizard runner is built) · DEC-140 (UX-DESIGN U61; K1591): the wizard guide's "Show me where" on every step that names a control, shortcut Alt+Shift+W (changeable in the member's settings): scrolls the control into view, redraws the ring, moves keyboard focus; under reduced motion scrolls and focuses without animating. No requirement change. **Hard reason:** DEC-140 is not on `main` until PR #11 merges at T33's close, and the wizard runner is not yet built.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
