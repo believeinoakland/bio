@@ -459,3 +459,8 @@ DEC-151 (Bob, "S5: A for now, but the B capabilities should be recorded as somet
 ## U76 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
 DEC-152 (Bob's direction: "Can the administrator use the assistant to help compose the text asked for on this screen? I hope so."): on "Who your group is", where a member reaches the assistant, "Ask the assistant to help write this" asks a few questions and drafts the focus and the reasons into their fields, each labelled "Draft · the assistant's, asked by <handle>"; nothing is saved until the administrator edits and keeps it (K1364); it runs on the account serving the administrator (K1755), within its limit.
 - Owed (BOB): the op behind the registry's `owed:groupdescriptiondraft DEC-152` (a machine draft, wizard-scripts R13; the assistant's roles), kept only by the administrator's act.
+
+## U77 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+Design detail, on Bob's comment: joining (enrolment from an invitation or the join link) asks for the new password twice, as instance-setup R22 already asks of a claim; the two must match before the act is sent. The claim screen now draws R22's two fields.
+- Owed (BOB): R22's "typed twice alike" extended to `enroll`'s page, if not already.
+Also folded: B59 (the member key's help now says the live checks use it).
