@@ -1,6 +1,6 @@
 # explore (T34)
 
-**Status** · session_01GwJdLNiEcK1ZBdPfzmRXHC · depth 2 · COMPLETE · handled B1
+**Status** · session_01GwJdLNiEcK1ZBdPfzmRXHC · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
