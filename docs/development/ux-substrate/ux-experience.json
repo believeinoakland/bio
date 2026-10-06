@@ -84,7 +84,8 @@
   "neededIntro": [
    "These are the decisions about what members and readers see and do that only you can make. Each one opens to a full brief, written to stand on its own: what you are asked to decide; the basics you need, explained from scratch; how it works today; the problem and why it matters; a worked example with named people; what is already fixed and why; the choices, each traced through the same example with its gains, costs and what it commits you to; the trade-off in a sentence; a recommendation with its main risk; sample replies; and, at the end, the words used. Take them in any order; the table shows which are quick.",
    "To answer, reply with the number and your ruling, for example “25: as recommended” or “34: Matters”. A question is just as welcome as a ruling. Each ruling is recorded, folded into the design documents, and this page is updated in the same change."
-  ]
+  ],
+  "journeysSettled": "The design phase's step 3 settled the journeys on 2026-10-06 (DEC-128 to DEC-137): docs/development/ux-substrate/journeys.html holds twenty-seven journeys and seventeen wizards, re-checked against T33, and supersedes journeyExperience below as the design's journey list; journeyExperience stays as the requirement-derived step detail."
  },
  "audiences": [
   {
