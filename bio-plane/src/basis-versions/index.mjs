@@ -497,7 +497,7 @@ export class BasisVersions {
                        withdraws_at: s(r.withdraws_at), reason: s(r.reason) ?? "" });
       } else {
         history.push({ ...base, act: "unrecognised", state: "undetermined", recorded_act: act,
-                       detail: "this entry names an act this plane does not know, so what the project "
+                       detail: "this entry names an act your group's Civicsmith does not know, so what the project "
                              + "stood on after it is undetermined rather than guessed." });
       }
     }
@@ -1006,8 +1006,8 @@ export class BasisVersions {
     if (fals && noFals)
       return { ok: false, reason: "FALSIFIER_AND_NONE_STATED", ...concludeRow("FALSIFIER_AND_NONE_STATED"),
                detail: "you have both stated a falsifier and asked to record that none was stated. Those are "
-                     + "two different claims about this finding and the plane will not choose between them. "
-                     + "Send the falsifier, or send no_falsifier=1 with the falsifier empty." };
+                     + "two different claims about this finding and your group's Civicsmith will not choose "
+                     + "between them. Send the falsifier, or send no_falsifier=1 with the falsifier empty." };
     /* END DEC-49 REGION is-conclude-answer */
     for (const [name, v] of [["conclusion", concl], ["falsifier", fals], ["commentary", comm]])
       if (v.length > VERSION_REASON_MAX || /["\\\r\n]/.test(v))
@@ -1261,8 +1261,8 @@ export class BasisVersions {
                  : rec.stance.act === "withdrawn"
                  ? `${pid}'s latest act on ${target} was already a withdrawal (${rec.stance.at || "undated"}), so `
                    + "it stands on no conclusion to withdraw. Its history is unchanged."
-                 : `${pid}'s latest entry on ${target} is one this plane cannot read, so what it stands on is `
-                   + "undetermined and a withdrawal would be withdrawing a guess." };
+                 : `${pid}'s latest entry on ${target} is one your group's Civicsmith cannot read, so what it `
+                   + "stands on is undetermined and a withdrawal would be withdrawing a guess." };
     /* END DEC-49 REGION is-withdraw-stance */
     const when = this.now();
     const w = this.#setProjectConclusion(projRow, target, {
