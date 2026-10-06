@@ -17,7 +17,7 @@ Terms. A **statement** is `{id, kind, subject, text, justification, citations?, 
 **checkBiasSet(fm, files) → findings** (the gate and the write path run it through `promotion`, K31)
 - **R1** Only a bundle whose type normalises to `bias` is judged; any other answers no findings.
 - **R2** C-26.1: no `statements[]`; an entry that is not an object; no id; an id repeated in the bundle; a kind not `scrutiny`, `inference` or `pattern`; neither text nor `nullifies`.
-- **R3** C-26.2: a subject that is not a registry key (`ENT-YYYY-NNNN`; since T33 an `ENT-` id as `record-grammar`'s `idPattern("ENT")` reads it, `ID_TABLE`, so `ENT-2026-10000` is a registry key and `ENT-2026-999` is not; this module holds no copy of the pattern; S0-9, T33-38). C-26.3: no justification, on every kind, a nullification included. *(not yet met: T33-38)*
+- **R3** C-26.2: a subject that is not a registry key (`ENT-YYYY-NNNN`; since T33 an `ENT-` id as `record-grammar`'s `idPattern("ENT")` reads it, `ID_TABLE`, so `ENT-2026-10000` is a registry key and `ENT-2026-999` is not; this module holds no copy of the pattern; S0-9, T33-38). C-26.3: no justification, on every kind, a nullification included.
 - **R4** C-26.4: a `pattern` statement with no non-empty citation, in a set not at `draft`.
 - **R5** C-26.5: text that assigns a truth verdict wholesale (everything or all from a subject is false, lies or fabricated) or calls a speaker a liar or never credible. Strong scrutiny language without a verdict passes.
 - **R6** C-26.6: a statement carrying `required_strength` or `bar`, or text setting a threshold (a count of sources, a grade floor): a bar, not a lens.
@@ -96,7 +96,7 @@ Terms. A **statement** is `{id, kind, subject, text, justification, citations?, 
 - **R30** `bias_statements` carries `bundle_id`, and `bias_adoptions` both `bundle_id` and the project id; both are declared to record-core's purge (K23). `bias_debts` and `bias_debt_settlements` are keyed by work product and purged with it (whole-store today); `bias_debt_sweeps` is an instance setting.
 - **R31** One predicate, one place: the verdict and bar predicates R5 and R6 use for a member's statement are the ones R20 uses for the machine's proposal.
 - **R32** No place is named in this module's behaviour or outward text.
-- **R47** (plan T33, Rules (6)) This module declares its five tables explicitly through `record-core.declareTable` (its R21), keeping R30's purge (`bias_statements` and `bias_adoptions` keyed to their bundle, with that bundle's sight; the debts, settlements and sweeps whole-store, `sight: "group"`); the other classes as `declarePurge`'s default form gives them. *(not yet met: T33-38)*
+- **R47** (plan T33, Rules (6)) This module declares its five tables explicitly through `record-core.declareTable` (its R21), keeping R30's purge (`bias_statements` and `bias_adoptions` keyed to their bundle, with that bundle's sight; the debts, settlements and sweeps whole-store, `sight: "group"`); the other classes as `declarePurge`'s default form gives them.
 
 ### Satisfies
 
