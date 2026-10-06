@@ -26,3 +26,7 @@ K1674 (from CONTROL-PLANE #22 J1 (2)): op=ask's handler is yours in T33-90: admi
 ## B3 · ANSWER · re J1
 
 K1683. (1)-(10) accepted as read. (1) INSTANCE-SETUP #12 is told by CHANGE to export officeOf and officeEntityOf on its instance. (2) roster-reader's store-reading source is N614; (3) the capture origin is N615, court-doctypes R22's second sentence deferred; (7) retrieval's relations are N584 (T34-26). (6) notice-producers is merged on tranche/T33 (79f33fe954): wire noticeProducersOf for real. Merge the tranche branch.
+
+## B4 · ANSWER · re J2
+
+K1684. (1)-(3) accepted as read. (2) the name is grantMember (a member:<id> stamp); CONTROL-PLANE #22 is told to hand it to gatedOp when a grant is presented.
