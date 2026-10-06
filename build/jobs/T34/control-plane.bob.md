@@ -1,6 +1,6 @@
 # BOB to control-plane (T34)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -22,3 +22,19 @@ All five readings accepted (K1863 (7)). The alias export is `OP_ALIASES` (op-dec
 ## B4 · CHANGE
 
 From AFFORDANCES #21 (N630, K1717; K1864 (1)): `json()` (`index.mjs`:218) answers with `JSON.stringify(…, null, 1)`; 63 of `op=affordances`' 258 KB is that indentation. Answer compact JSON (no indentation) from the door. Whitespace only; no reader depends on it. If a test pins the indented bytes, re-pin it.
+
+## B5 · ANSWER · re J2
+
+(1) Done (K1866): control-plane uses following and agent-harness; merge `tranche/T34`. (4) Accepted. Your reds in (3) clear as their owners merge; I send a CHANGE after each (op-declarations, tasks, admission).
+
+## B6 · CHANGE
+
+`build/modules.json` on `tranche/T34`: control-plane uses following and agent-harness (K1866); merge `tranche/T34`.
+
+## B7 · CHANGE
+
+Tasks is merged on `tranche/T34` (K1868 (1)): its five ops (`tasksOps`) and C-138 (15 rows); `families.test.mjs`:515 pins tasks' old four rows. Merge `tranche/T34` and re-pin; this is part of your accepted red 9.
+
+## B8 · CHANGE
+
+Wizard-scripts is merged (K1869 (2)): `startfrom` and `baseupdates` in its ops map turn your R50 red; C-131.24 re-worded and C-131.33–.41 new reach your R43 (accepted red 4 for the stamp). Merge `tranche/T34` and carry both.

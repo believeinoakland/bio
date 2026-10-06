@@ -10,8 +10,8 @@ const kindOf = (d) => (d === undefined || d === null ? undefined : Object.keys(d
 /* What R11 answers on one screen, in R21's form: each script's own fields, its steps with a draft named by kind only. */
 const asR11 = (x, screen, viewer) => x.wizardsAt({ screen, viewer }).scripts.map((s) => ({
   id: s.id, version: s.version, name: s.name, start: screen,
-  steps: s.steps.map((t) => ({ screen: t.screen, act: t.act, what: t.what, why: t.why, ...(t.draft ? { draft: kindOf(t.draft) } : {}) })),
-  origin: LIBRARY.some((l) => l.id === s.id) ? "civicsmith" : "group", ...(s.draft ? { draft: true } : {}) }));
+  steps: s.steps.map((t) => ({ screen: t.screen, act: t.act, what: t.what, why: t.why, via: t.via ?? null, ...(t.draft ? { draft: kindOf(t.draft) } : {}) })),
+  origin: LIBRARY.some((l) => l.id === s.id) ? "civicsmith" : "group", based_on: null, ...(s.draft ? { draft: true } : {}) }));
 
 /* A world with every case R11 distinguishes: offered scripts of P (one with each draft kind), of Q, a group-wide one,
    the library's, a submitted, a withdrawn and a retired version, an updated version, a broken one, and drafts of
@@ -40,7 +40,7 @@ function rich() {
   return { w, drafts, onFiling, old, n2, wide, retired, sub, gone, mine, alices, qs };
 }
 
-test("R21 wizardRegistry answers every registered screen and, for each, exactly the scripts R11 answers to that viewer on it, each {id, version, name, start, steps: [{screen, act, what, why}], origin}, the viewer's own drafts marked draft: true, for every viewer", () => {
+test("R21 wizardRegistry answers every registered screen and, for each, exactly the scripts R11 answers to that viewer on it, each {id, version, name, start, steps: [{screen, act, what, why, via}], origin, based_on}, the viewer's own drafts marked draft: true, for every viewer", () => {
   const x = rich();
   const { w } = x;
   for (const viewer of VIEWERS) {
@@ -65,11 +65,12 @@ test("R21 wizardRegistry answers every registered screen and, for each, exactly 
   assert.deepEqual(w.wz.wizardRegistry({ viewer: "nobody" }).screens.flatMap((s) => s.scripts), [], "a viewer the rule admits to nothing");
   /* the shape of one entry */
   const mine = w.wz.wizardRegistry({ viewer: F }).screens.find((s) => s.id === "publish").scripts.find((s) => s.version === x.mine.version);
-  assert.deepEqual(Object.keys(mine).sort(), ["draft", "id", "name", "origin", "start", "steps", "version"]);
+  assert.deepEqual(Object.keys(mine).sort(), ["based_on", "draft", "id", "name", "origin", "start", "steps", "version"]);
   assert.deepEqual([mine.id, mine.name, mine.start, mine.origin, mine.draft], [x.mine.script, "Frank's draft", "publish", "group", true]);
   const lib = w.wz.wizardRegistry({ viewer: F }).screens.find((s) => s.id === "case-home").scripts.find((s) => s.id === LIBRARY[0].id);
   assert.deepEqual([lib.origin, lib.version, lib.name, "draft" in lib], ["civicsmith", `${LIBRARY[0].id}@2`, "Start a case", false]);
-  assert.deepEqual(lib.steps, LIBRARY[0].steps.map((s) => ({ screen: s.screen, act: s.act, what: s.what, why: s.why })));
+  assert.deepEqual(lib.steps, LIBRARY[0].steps.map((s) => ({ screen: s.screen, act: s.act, what: s.what, why: s.why, via: null })));
+  assert.equal(lib.based_on, null);
 });
 
 test("R21 a step's draft is named by its kind only, never its text, its template or its op; a step with no draft carries no draft key", () => {
@@ -77,7 +78,7 @@ test("R21 a step's draft is named by its kind only, never its text, its template
   const r = w.wz.wizardRegistry({ viewer: F });
   const e = r.screens.find((s) => s.id === "case-home").scripts.find((s) => s.version === drafts.version);
   assert.deepEqual(e.steps.map((s) => s.draft), ["text", "template", "machine"]);
-  for (const s of e.steps) assert.deepEqual(Object.keys(s).sort(), ["act", "draft", "screen", "what", "why"]);
+  for (const s of e.steps) assert.deepEqual(Object.keys(s).sort(), ["act", "draft", "screen", "via", "what", "why"]);
   const plain = r.screens.find((s) => s.id === "case-home").scripts.find((s) => s.id === LIBRARY[0].id);
   for (const s of plain.steps) assert.equal("draft" in s, false);
   const scripts = (x) => JSON.stringify(x.screens.map((sc) => sc.scripts));   /* the screens' acts name ops by right */
