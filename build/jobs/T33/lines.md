@@ -1,6 +1,6 @@
 # lines (T33)
 
-**Status** · session_01UxA8Yv7kHqsFpTvQSvpR4k · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_01UxA8Yv7kHqsFpTvQSvpR4k · depth 2 · COMPLETE · handled B3
 
 
 ## Completion
