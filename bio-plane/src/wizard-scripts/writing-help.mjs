@@ -11,6 +11,9 @@ export const HELP_NAMED_REFUSED = Object.freeze(["release", "conclude", "withdra
  *  `publication` R68, `affordances` R42), and `groupdescriptionset`, which keeps its own guided draft (`instance-setup`
  *  R65; DEC-153 (4)). */
 export const HELP_SET_TIME_REFUSED = Object.freeze(["publishat", "publishatmove", "publishatcancel", "groupdescriptionset"]);
+/** R24 item 2: this module's named list, frozen: DEC-153 (4)'s acts, then the set-time publishing acts and
+ *  `groupdescriptionset` (B3, K1861 (1): affordances R44 reads it through `writingHelpRefused`). */
+export const WRITING_HELP_NAMED = Object.freeze([...HELP_NAMED_REFUSED, ...HELP_SET_TIME_REFUSED]);
 /** R25: the acts whose field records what the member saw, where the draft words only what the member told it (DEC-153
  *  (2): "testimony stays the witness's"). The registry's capture and notes screens hold one such act today. */
 export const FIRSTHAND_ACTS = Object.freeze(["testify"]);
@@ -23,7 +26,7 @@ const nameSet = (v) => new Set(v instanceof Set ? [...v] : Array.isArray(v) ? v.
 /** R24 item 2: every act the assistant never helps word, from a registration's `machineRefused` and `irreversible` (read
  *  as registered) and this module's named lists. */
 export function helpRefusedActs({ machineRefused = [], irreversible = [] } = {}) {
-  return new Set([...nameSet(machineRefused), ...nameSet(irreversible), ...HELP_NAMED_REFUSED, ...HELP_SET_TIME_REFUSED]);
+  return new Set([...nameSet(machineRefused), ...nameSet(irreversible), ...WRITING_HELP_NAMED]);
 }
 
 /** R24 item 3: whether `field` is where an act sends the member's reason (the `reason` a reasoned act requires, or any

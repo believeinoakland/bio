@@ -7,7 +7,7 @@ import { seeded, registration, V, MACHINE, STEPS, step, SCREENS, OPS, MACHINE_RE
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 
 const F = V("frank");
-const ON = { on: true, account: "ACC-1" };
+const ON = { on: true, account: { kind: "own", level: "member" } };   /* as the door resolves it: never the key (B4) */
 const row = (c) => wz.WIZARD_SCRIPTS_CHECKS[c];
 const refused = (r, c, why = "") => {
   assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation], [false, c, c, row(c).check, row(c).translation], `${why} ${JSON.stringify(r).slice(0, 300)}`);
@@ -42,6 +42,12 @@ test("R24 writingHelpAt, in order: ASSISTANT_OFF and AI_NO_ACCOUNT without the a
   assert.deepEqual(at({ draftHeld: false }), { offered: true });
   assert.deepEqual(wz.HELP_NAMED_REFUSED, NAMED);
   assert.deepEqual(wz.HELP_SET_TIME_REFUSED, ["publishat", "publishatmove", "publishatcancel", "groupdescriptionset"]);
+  assert.deepEqual(wz.WRITING_HELP_NAMED, [...NAMED, "publishat", "publishatmove", "publishatcancel", "groupdescriptionset"]);
+  assert.ok(Object.isFrozen(wz.WRITING_HELP_NAMED));
+  /* the refused acts as read through affordances (B3): the named list, and the two sets as registered, in order */
+  assert.deepEqual(w.wz.writingHelpRefused(), { named: wz.WRITING_HELP_NAMED, machine_refused: [...MACHINE_REFUSED, "inquirydivide"],
+                                                 irreversible: ["publish", "publishat", "publishatmove", "newirreversible"] });
+  assert.deepEqual(seeded({ register: false }).wz.writingHelpRefused(), { named: wz.WRITING_HELP_NAMED, machine_refused: [], irreversible: [] });
   /* pure: before registration only the named lists hold; never throws, writes nothing */
   const w0 = seeded({ register: false });
   assert.deepEqual(w0.wz.writingHelpAt({ op: "filingapprove", field: "text", assistant: ON }), { offered: true }, "registered sets are read as registered");
@@ -91,7 +97,7 @@ test("R25 a read is refused while the serving account's suggestions switch is of
   assert.deepEqual(fh.withheld.map((x) => x.sentence), ["The minutes say 3 May."]);
 });
 
-test("R27 writingHelp answers R24's refusals in order, then WRITING_HELP_NOTHING_TOLD (told empty or over 4,000), and past every refusal ASSISTANT_DRAFT_UNAVAILABLE, the field unchanged, writing nothing; the assistant is the door's, never the caller's", () => {
+test("R27 writingHelp answers R24's refusals in order, then WRITING_HELP_NOTHING_TOLD (told empty or over 4,000), and past every refusal ASSISTANT_DRAFT_UNAVAILABLE, the field unchanged, writing nothing; the door calls it with its own assistant", () => {
   const w = helped();
   const before = w.snapshot();
   const ask = (x) => w.wz.writingHelp({ op: "notewrite", field: "text", told: "The gate was locked.", assistant: ON, by: F, viewer: F, ...x });
@@ -109,12 +115,9 @@ test("R27 writingHelp answers R24's refusals in order, then WRITING_HELP_NOTHING
   refused(ask({ told: "x".repeat(4000) }), "ASSISTANT_DRAFT_UNAVAILABLE", "4,000 is within");
   assert.equal(wz.TOLD_MAX, 4000);
   assert.deepEqual(w.snapshot(), before, "writes nothing");
-  /* through the op table: the stamps from the query, the assistant from the door, the body's own copy never */
-  const url = new URL(`https://x/?op=writinghelp&author=${encodeURIComponent(F)}&viewer=${encodeURIComponent(F)}`);
-  const body = { op: "notewrite", field: "text", told: "The gate was locked.", assistant: ON };
-  assert.equal(wz.wizardScriptsOps(w.wz, url, body).writinghelp().code, "ASSISTANT_OFF", "an assistant in the body is not the door's");
-  refused(wz.wizardScriptsOps(w.wz, url, body, { assistant: ON }).writinghelp(), "ASSISTANT_DRAFT_UNAVAILABLE");
-  refused(wz.wizardScriptsOps(w.wz, url, { ...body, field: "reason" }, { assistant: ON }).writinghelp(), "WRITING_HELP_REASON_FIELD");
+  /* the door routes the op itself and calls writingHelp (B4): no arm of the op table serves it */
+  assert.equal("writinghelp" in wz.wizardScriptsOps(w.wz, new URL(`https://x/?viewer=${encodeURIComponent(F)}`), {}), false);
+  for (const odd of [undefined, null, 3]) assert.equal(w.wz.writingHelp(odd).code, "ASSISTANT_OFF", "never throws");
 });
 
 test("R12 a step carrying {machine: writinghelp} or {machine: groupdescriptiondraft} on an act R24 refuses is WIZARD_STEP_CONCLUDES, the registered-draft exception not reaching them; on an own-words act they pass; R13 registers irreversible and both drafts", () => {

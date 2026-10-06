@@ -36,7 +36,7 @@ import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES, WIZARD_SCRIPTS_MIN
 import { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
 import { SCREEN_REGISTRY } from "./screen-registry.mjs";
 import { FRONT_DOORS } from "./front-doors.mjs";
-import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX } from "./writing-help.mjs";
+import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED } from "./writing-help.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
@@ -44,7 +44,7 @@ export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE } from "./civicsmith-libr
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
 export { FRONT_DOORS } from "./front-doors.mjs";
 export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
-         TOLD_MAX } from "./writing-help.mjs";
+         WRITING_HELP_NAMED, TOLD_MAX } from "./writing-help.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies */
 
@@ -1285,17 +1285,18 @@ export class WizardScripts {
     const editors = this.#rows(`SELECT DISTINCT g.member FROM wiz_editor_grants g WHERE NOT EXISTS
                                   (SELECT 1 FROM wiz_editor_revocations r WHERE r.grant_id=g.grant_id) ORDER BY g.member`)
       .map((r) => r.member).filter(sees);
-    if (editors.length) return { recipients: editors, as: "editors" };
+    if (editors.length) return editors;
     const owners = (s.widened ? this.#call(() => this.membership.activeAdmins(), []) : this.#call(() => this.membership.projectOwners(s.project), [])) || [];
-    return { recipients: [...new Set(owners)].filter(sees).sort(), as: "approvers" };
+    return [...new Set(owners)].filter(sees).sort();
   }
 
-  /** R26 (`op=baseupdates`; for `queue-producers` R39): each pair (copy, newer base version) of a copy the viewer may see,
-   *  offered or holding a draft, whose base has a version approved after the one its `based_on` names, `{copy, name,
-   *  copy_version, copy_steps, base, base_name, based_on, newer, newer_steps, project, recipients, recipients_are, at}`
-   *  (`at` the instant the pair was first found, the one thing this writes), each pair once, at most 500 per page in
-   *  (instant, copy, newer) order after `after` (a previous page's `cursor`). Nothing is applied to a copy: the change is
-   *  brought across only by a member's own revision (R4's `adopt: {base}`). */
+  /** R26 (`op=baseupdates`; for `queue-producers` R39; the shape B3, K1861 (1)): each pair (copy, newer base version) of
+   *  a copy the viewer may see, offered or holding a draft, whose base has a version approved after the one its
+   *  `based_on` names, `{copy, copy_version, name, project, base, base_name, based_on, base_version, found_at, recipients:
+   *  [member ids], steps: {copy, base}}` (`found_at` the instant the pair was first found, the one thing this writes),
+   *  each pair once, at most 500 per page in (instant, copy, base version) order after `after` (a previous page's
+   *  `cursor`), with `cursor` and `truncated`. Nothing is applied to a copy: the change is brought across only by a
+   *  member's own revision (R4's `adopt: {base}`). */
   baseUpdates({ after = null, limit = null, viewer = null } = {}) {
     const max = clamp(limit, PAGE_MAX, PAGE_MAX);
     const at = this.#when();
@@ -1311,11 +1312,10 @@ export class WizardScripts {
         const events = this.#events(s.id);
         const drafts = this.#numbers(s.id).filter((k) => this.#stateOf(events, k) === "draft");
         const cv = this.#offeredNumber(s, events) ?? drafts[drafts.length - 1];
-        const who = this.#copyRecipients(s, base);
         pairs.push({ key: `${seen.at}|${s.id}|${nv}`, entry: {
-          copy: s.id, name: s.name, copy_version: versionId(s.id, cv), copy_steps: this.#steps(s, cv), base: base.id, base_name: base.name,
-          based_on: versionId(on.script, on.version), newer: nv, newer_steps: this.#steps(base, n),
-          project: isObj(s.scope) ? s.scope.project : null, recipients: who.recipients, recipients_are: who.as, at: seen.at } });
+          copy: s.id, copy_version: versionId(s.id, cv), name: s.name, project: isObj(s.scope) ? s.scope.project : null, base: base.id,
+          base_name: base.name, based_on: versionId(on.script, on.version), base_version: nv, found_at: seen.at,
+          recipients: this.#copyRecipients(s, base), steps: { copy: this.#steps(s, cv), base: this.#steps(base, n) } } });
       }
     }
     pairs.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
@@ -1323,7 +1323,7 @@ export class WizardScripts {
     const rest = from ? pairs.filter((p) => p.key > from) : pairs;
     const page = rest.slice(0, max);
     const truncated = rest.length > max;
-    return { ok: true, entries: page.map((p) => p.entry), limit: max, truncated, cursor: truncated && page.length ? page[page.length - 1].key : null };
+    return { ok: true, entries: page.map((p) => p.entry), cursor: truncated && page.length ? page[page.length - 1].key : null, truncated };
   }
 
   /* ================================================================ R24, R27: writing help */
@@ -1335,10 +1335,20 @@ export class WizardScripts {
     return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused);
   }
 
+  /** R24 (in-process; B3, K1861 (1): `affordances` R44 reads it through `op=affordancescreens`): the acts the assistant
+   *  never helps word, `{named, machine_refused, irreversible}`: `named` this module's frozen list, the other two as
+   *  handed to `wizardRegister`, in registration order (`[]` before registration). */
+  writingHelpRefused() {
+    const reg = this.reg;
+    return { named: WRITING_HELP_NAMED, machine_refused: reg ? [...reg.machineRefused] : [], irreversible: reg ? [...reg.irreversible] : [] };
+  }
+
   /** R27 (`op=writinghelp`): a member's request for a labelled draft in one own-words field: R24's refusals, then
    *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
-   *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The ceiling refusals are the door's (`control-plane` R57). Writes
-   *  nothing. */
+   *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The door routes the op itself and calls this with the POST body's
+   *  `{op, field, told, draftHeld}`, its own `assistant` (`{on, account: {kind, level}}`, never the key) and the stamps
+   *  (B4, K1863 (7)); its refusals (`ASSISTANT_OFF`, the account's, the ceilings) come first (`control-plane` R57).
+   *  Writes nothing. */
   writingHelp(args = {}) {
     const { op = null, field = null, told = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
     const at = this.writingHelpAt({ op, field, draftHeld, assistant });
@@ -1517,11 +1527,11 @@ export function wizardScriptsOwns(t) {
 }
 
 /** The module's ops (the `filingTemplatesOps` pattern): `author` and `viewer` are the control plane's stamps (`author`
- *  stands for R3, R4, R6's author, R5's proposer, R7–R9's `by` and R27's `by`), read from the query and never from the
- *  body, so a caller's own copy never wins. `door` is what the door resolves per act and never the caller: R27's
- *  `assistant`, `{on, account}` (`control-plane` R57). `op-declarations` declares them (its R15, R28, R29),
- *  `control-plane` routes and stamps them (its R50, R57) and `plane` composes them (its R19). */
-export function wizardScriptsOps(m, url, body, door = null) {
+ *  stands for R3, R4, R6's author, R5's proposer and R7–R9's `by`), read from the query and never from the body, so a
+ *  caller's own copy never wins. `op-declarations` declares them (its R15, R28), `control-plane` routes and stamps them
+ *  (its R50, R57) and `plane` composes them (its R19). `writinghelp` is not here: the door routes it itself and calls
+ *  `writingHelp` with its own `assistant` (R27; B4, K1863 (7)). */
+export function wizardScriptsOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   const has = (k) => url.searchParams.has(k);
   const b = body && typeof body === "object" ? body : {};
@@ -1533,8 +1543,6 @@ export function wizardScriptsOps(m, url, body, door = null) {
     wizardrevise: () => m.wizardRevise({ version: pick("version"), steps: b.steps, adopt: pick("adopt"), author: q("author"), ...stamps }),
     startfrom: () => m.startFrom({ ...stamps }),
     baseupdates: () => m.baseUpdates({ after: q("after"), limit: q("limit"), ...stamps }),
-    writinghelp: () => m.writingHelp({ op: b.op ?? null, field: b.field ?? null, told: b.told ?? null, draftHeld: b.draftHeld ?? false,
-      assistant: isObj(door) ? door.assistant ?? null : null, by: q("author"), ...stamps }),
     wizardpropose: () => m.wizardPropose({ project: pick("project"), script: pick("script"), steps: b.steps, why: b.why ?? null,
       run: pick("run"), model: pick("model"), proposer: q("author"), ...stamps }),
     wizardsubmit: () => m.wizardSubmit({ version: pick("version"), author: q("author"), ...stamps }),

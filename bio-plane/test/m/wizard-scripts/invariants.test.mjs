@@ -77,7 +77,7 @@ test("R19 a machine writes only a proposal: it never drafts, revises, submits, a
   const url = new URL("https://x/?viewer=member%3Afrank");
   assert.deepEqual(Object.keys(wz.wizardScriptsOps(w.wz, url, {})).sort(), ["baseupdates", "startfrom", "wizardapprove", "wizardcandidates",
     "wizardcheck", "wizarddraft", "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress", "wizardpropose", "wizardread", "wizardretire",
-    "wizardrevise", "wizards", "wizardsat", "wizardsubmit", "wizarduse", "writinghelp"]);
+    "wizardrevise", "wizards", "wizardsat", "wizardsubmit", "wizarduse"]);
   /* the stamps come from the query, never the body: a body naming an author does not act as one */
   const sneaky = wz.wizardScriptsOps(w.wz, new URL(`https://x/?author=${encodeURIComponent(MACHINE)}&viewer=${encodeURIComponent(MACHINE)}`),
                                      { version: d.version, author: F, by: F, steps: STEPS }).wizardsubmit();

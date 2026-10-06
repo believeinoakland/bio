@@ -143,24 +143,26 @@ test("R26 baseUpdates lists each (copy, newer base version) once, with both vers
   const copyBefore = read(w, cp.version, B).version;
   const r = w.wz.baseUpdates({ viewer: MACHINE });
   const mine = (x) => ({ ...x, entries: x.entries.filter((e) => e.copy === cp.script) });
-  assert.deepEqual(mine(r), { ok: true, limit: 500, truncated: false, cursor: null, entries: [{
-    copy: cp.script, name: "Copy", copy_version: cp.version, copy_steps: STEPS, base: base.script, base_name: "Base", based_on: base.version,
-    newer: n2.version, newer_steps: [STEPS[1], STEPS[0]], project: w.P, recipients: ["alice", "bob"], recipients_are: "approvers",
-    at: "2026-10-06T00:00:00Z" }] }, "the withdrawn copy is neither offered nor a draft");
+  assert.deepEqual(mine(r), { ok: true, truncated: false, cursor: null, entries: [{
+    copy: cp.script, copy_version: cp.version, name: "Copy", project: w.P, base: base.script, base_name: "Base", based_on: base.version,
+    base_version: n2.version, found_at: "2026-10-06T00:00:00Z", recipients: ["alice", "bob"],
+    steps: { copy: STEPS, base: [STEPS[1], STEPS[0]] } }] }, "the withdrawn copy is neither offered nor a draft (B3's shape exactly)");
+  assert.deepEqual(Object.keys(r), ["ok", "entries", "cursor", "truncated"]);
   assert.deepEqual(read(w, cp.version, B).version, copyBefore, "nothing applied to the copy");
   /* once: the instant first found stays; nothing else is written */
   w.clock.now = "2026-10-07T00:00:00Z";
   const snap = w.snapshot();
-  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.map((e) => e.at), ["2026-10-06T00:00:00Z", "2026-10-06T00:00:00Z"]);
+  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.map((e) => e.found_at), ["2026-10-06T00:00:00Z", "2026-10-06T00:00:00Z"]);
   assert.deepEqual(w.snapshot(), snap, "a pair already found writes nothing");
   assert.equal(w.count("wiz_base_seen"), 2, "one per pair: the two live copies");
   /* the editors: a live grant held by a member who may see the copy; dave holds one and cannot see P */
   w.wz.wizardEditorGrant({ member: "dave", by: E });
-  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.find((e) => e.copy === cp.script).recipients, ["alice", "bob"], "dave cannot see P");
+  const rec = () => w.wz.baseUpdates({ viewer: MACHINE }).entries.find((e) => e.copy === cp.script).recipients;
+  assert.deepEqual(rec(), ["alice", "bob"], "dave cannot see P: the approvers");
   const g = w.wz.wizardEditorGrant({ member: "frank", by: E });
-  assert.deepEqual([w.wz.baseUpdates({ viewer: MACHINE }).entries.find((e) => e.copy === cp.script).recipients, w.wz.baseUpdates({ viewer: MACHINE }).entries.find((e) => e.copy === cp.script).recipients_are], [["frank"], "editors"]);
+  assert.deepEqual(rec(), ["frank"], "the editors");
   w.wz.wizardEditorRevoke({ grant: g.grant, by: E });
-  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.find((e) => e.copy === cp.script).recipients_are, "approvers", "revoked");
+  assert.deepEqual(rec(), ["alice", "bob"], "revoked: the approvers again");
   /* a copy of the newer version, later; paging in (instant, copy) order */
   const ordered = [cp.script, cp2.script].sort();
   w.clock.now = "2026-10-08T00:00:00Z";
@@ -168,7 +170,7 @@ test("R26 baseUpdates lists each (copy, newer base version) once, with both vers
   const cp3 = w.wz.wizardDraft({ project: w.P, copy: n2.version, name: "Third", author: F, viewer: F });
   w.wz.wizardSubmit({ version: n3.version, author: F, viewer: F }); w.wz.wizardApprove({ version: n3.version, by: A, viewer: A });
   const all = w.wz.baseUpdates({ viewer: MACHINE }).entries;
-  assert.deepEqual(all.map((e) => [e.copy, e.newer, e.at]), [
+  assert.deepEqual(all.map((e) => [e.copy, e.base_version, e.found_at]), [
     ...ordered.map((c) => [c, n2.version, "2026-10-06T00:00:00Z"]),
     ...[...ordered.map((c) => [c, n3.version]), [cp3.script, n3.version]].sort((x, y) => (x[0] < y[0] ? -1 : 1)).map((x) => [...x, "2026-10-08T00:00:00Z"])],
     "each newer version is a pair of its own; the copy of version 2 is behind only version 3");
@@ -176,7 +178,7 @@ test("R26 baseUpdates lists each (copy, newer base version) once, with both vers
   assert.deepEqual([p1.entries.map((e) => e.copy), p1.truncated], [[ordered[0]], true]);
   assert.deepEqual(w.wz.baseUpdates({ after: p1.cursor, viewer: MACHINE }).entries.map((e) => e.copy), all.slice(1).map((e) => e.copy));
   assert.deepEqual(w.wz.baseUpdates({ viewer: D }).entries, [], "a viewer who cannot see P");
-  assert.equal(w.wz.baseUpdates({ limit: 9999, viewer: MACHINE }).limit, 500);
+  assert.equal(w.wz.baseUpdates({ limit: 9999, viewer: MACHINE }).entries.length, all.length);
   /* an approved copy is listed with its offered version; through the op table */
   w.wz.wizardSubmit({ version: cp2.version, author: F, viewer: F }); w.wz.wizardApprove({ version: cp2.version, by: A, viewer: A });
   const url = new URL(`https://x/?op=baseupdates&viewer=${encodeURIComponent(MACHINE)}`);
@@ -205,7 +207,7 @@ test("R20 R10 R26 a copy whose base the viewer may not see shows it is a copy an
   w.wz.wizardSubmit({ version: n2.version, author: F, viewer: F }); w.wz.wizardApprove({ version: n2.version, by: D, viewer: D });
   assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.map((e) => [e.copy, e.recipients]), [[cp.script, []]]);
   w.wz.wizardEditorGrant({ member: "frank", by: E });
-  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.map((e) => [e.recipients, e.recipients_are]), [[["frank"], "editors"]]);
+  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.map((e) => e.recipients), [["frank"]]);
   assert.deepEqual(w.wz.baseUpdates({ viewer: A }).entries, [], "alice sees the copy, not its base: no pair names it to her");
   assert.equal(w.wz.baseUpdates({ viewer: F }).entries.length, 1);
 });
