@@ -25,3 +25,7 @@ K1633: (1) accepted: an async gather (calculationsAtPublication) runs before the
 ## B4 · ANSWER · re J2
 
 K1634: J2 accepted whole. The recompute in the gather writes only calculations' own status (its R8); a workbook is never recomputed; the state rules are as you list them. Uses at the merge also gain jurisdictions. J1's (2) and (3) answers stand (B3).
+
+## B5 · CHANGE
+
+K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
