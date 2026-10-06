@@ -2,6 +2,35 @@
 
 **Status** · session_012cCBykexVjuaQ82HEkMok3 · depth 2 · WORKING · handled B3
 
+**Completion** (INSTALLER #7, 2026-10-06)
+
+- **Entries applied:** T33-91, as K1678 settled it.
+  - R2 asks four scopes, the fourth `containers.write`, read from Cloudflare's live scope list on 2026-10-06 (M-Q8 (a)).
+  - R9, R10 and R16: `ACCOUNT_SEAL_SECRET` is the fifth fresh credential, never shown.
+  - R11: container members first. sheet-worker installs as any member.
+  - R17: the seal secret is bound on an update only where the settings list none. An update with unreadable settings sends nothing and names it. Re-consent to the fourth scope.
+  - R23: the install, update and invitation pages state the Containers permission.
+  - R36: no Claude credential is taken, bound or shown, and an update deletes a held `INSTANCE_CLAUDE_TOKEN` (a refused delete is named).
+  - R37: the assistant is offered on the install page (two choices, none preselected) and bound as `ASSISTANT_ENABLED` on/off, install only.
+  - R38: the `Container` descriptor part (`container.json`, covered by the fleet signature through its hash) installs through the Containers API (namespace, application create or rollout) only with the scope, Workers Paid (probed on an update, never refusing it) and a public digest-pinned image under `default`. Its class is bound cross-script into the members it names, and a container held from before keeps its bindings. Every failure is named, and the install never fails over it.
+  - DEPLOY.md names the fourth scope and when to register it.
+- **Re-pointed** at instance-setup's merged `FLEET_BINDINGS` (five members, K1690). The tests derive every member count from it, so its five pins pass on the real list.
+- **Deferred:** none of mine. R13 and R24 stay todo (MULTI-INSTANCE-ISOLATION, not T33).
+- **Found elsewhere** (J2, routed by K1686):
+  - The OAuth client must register `containers.write` before this installer deploys (a release step).
+  - Members' limits are not in the signed release, so sheet-worker's cpu_ms 300,000 is not sent (N621).
+  - agent-runner's image name carries the old product name (a release step).
+  - The Containers API calls are deploy-gated (M-Q2).
+  - bundler's emission of the descriptor part is N610.
+- **Tests and checks run, on the merged tranche:**
+  - `node test/embed.test.mjs`: embed 23 passed, 0 failed.
+  - `node test/wizard.test.mjs`: wizard 208 passed, 0 failed.
+  - `node --test test/requirements.test.mjs`: 37 pass, 0 fail, 2 todo.
+  - `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs`: 1 pass, 0 fail.
+  - Negative controls run, each failing exactly its own arm: R38's conditions forced true fails R38; the seal secret restated whatever is held fails R17 (K1541).
+  - format: 0 failures. architecture: 0 failures. coverage: 38 of 38 live ids named, 0 failures. ownership: 9 files, 0 failures.
+- Size (session_012cCBykexVjuaQ82HEkMok3): test runs 22, module lines 2277
+
 ## J1 · QUESTION
 
 Five readings I am building on now (T33-91); each is mine to change if you answer otherwise. Measured first (M-Q8 (a), the Suggestions' one `GET /client/v4/oauth/scopes`, 2026-10-06): the scope exists, id `containers.write` ("Workers Containers Write"); R2's fourth scope is that id.
