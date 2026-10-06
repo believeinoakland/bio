@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SEmEip2dMnNBFgsXF9Tids · primary · since 2026-10-06
-**Read** · handled BOB B51
+**Read** · handled BOB B53
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -376,3 +376,13 @@ The dialog states:
 The member confirms with a reason naming the law or order. The rung stays reasoned, its name honest.
 Folded: BIO_Interaction_Constructs_v0_1.md §F; layouts.html (person screen); the screen registry names `personexpunge` (was the function `expunge`). On branch claude/gallant-brown-zg0wc1 @ 99f33256, restarted from main @ e879c270 after PR #11 merged; a new PR follows.
 Owed (DEC-142's owed: line): affordances' named exception with this consequence statement.
+
+## U64 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-143 (the design session, on Bob's comment that the group's short name "isn't just reasoned - it's irreversable"). An act that can never be undone shows the Irreversible weight (five pips) on its button, whatever rung it otherwise has. Two such acts lie outside the publication ceremony:
+- the installer's choice of the group's short name;
+- `personexpunge`.
+Neither is a publication, so each opens the full dialog stating it is permanent. DEC-87's rule that publishing goes only through the ceremony is unchanged. DEC-142 amended.
+Folded: BIO_Interaction_Constructs_v0_1.md §F; layouts.html (install; person); visual-language.html (acts). On branch claude/gallant-brown-zg0wc1 (PR #12) @ 5d6493a9.
+Owed (DEC-143's owed: line):
+- affordances shows `personexpunge`'s weight as irreversible, with DEC-142's dialog;
+- the installer's short-name step carries the irreversible weight and its permanence statement.
