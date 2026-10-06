@@ -659,12 +659,12 @@ export class Calculations {
     if (kind === "ranking") {
       const q = terms ? terms.quantity : undefined;
       if (Array.isArray(q) && q.length > 1)
-        return no("SCORE_NOT_A_FACT", "a ranking orders by one stated, measured quantity; several measures composed into one score are refused (K1471, K1473). Nothing was written.");
+        return no("SCORE_NOT_A_FACT", "a ranking orders by one stated, measured quantity; several measures composed into one figure are refused (K1471, K1473). Nothing was written.");
       const quantity = Array.isArray(q) ? q[0] : q;
       if (!str(quantity) || !str(terms.scope) || !terms.period)
         return no("RANKING_TERMS", "a ranking names its quantity, its scope and its period in its terms. Nothing was written.");
       if (JUDGMENT_WORDS.test(String(quantity)))
-        return no("SCORE_NOT_A_FACT", `"${String(quantity).slice(0, 80)}" names a judgment, not a measured quantity; a score standing for importance, suspicion, significance or severity is never a ranking (K1471, K1473). Nothing was written.`);
+        return no("SCORE_NOT_A_FACT", "the quantity named stands for a judgment, not a measured quantity; a figure standing for importance, suspicion, significance or severity never orders a ranking (K1471, K1473). Nothing was written.");
       if (!recipe || !Array.isArray(recipe.steps)) return null;
       const last = recipe.steps.find((s) => plain(s) && s.as === recipe.output);
       if (!last || last.op !== "sort") return no("NOT_A_RANKING", "a ranking's answer is a sort by its one stated quantity. Nothing was written.");
