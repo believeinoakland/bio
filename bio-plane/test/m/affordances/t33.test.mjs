@@ -101,8 +101,13 @@ const T33 = {
 /* The ops T33's requirements name whose owners serve them in process but whose route arm is the wiring jobs' (op-declarations
    R17, K1601; instance-setup R50, R53): graded now so the table is total when they are routed. */
 const UNROUTED = { clockpropose: "reversible", capturerequestplatformmark: "reversible",
-  capturerequestplatformunmark: "reversible", officesseed: "substrate", assistantset: "substrate" };
-const UNROUTED_READS = ["platformhosts"];
+  capturerequestplatformunmark: "reversible", officesseed: "substrate", assistantset: "substrate",
+  /* B3 (K1689): the ops op-declarations declares beside them */
+  seatsseed: "substrate", disclosureshown: "caller-owned", ask: "caller-owned", askusage: "observational" };
+const UNROUTED_READS = ["capturerequestplatformhosts", "assistantstate", "disclosureof",
+  "standardinforce" /* layer 9's read, gated since T33 (K1689) */];
+/* A write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): ranked, never named in NON_ACTS (R12). */
+const UNGATED_WRITES = ["askusage"];
 /* R27's `reversible`: the published act of the owner that takes each result back. */
 const TAKEN_BACK_BY = {
   eventgovern: "eventgovern", eventrelate: "eventrelationwithdraw", linerecord: "linewithdraw", moneyrecord: "moneywithdraw",
@@ -152,7 +157,8 @@ test("R40 R3 R27: every write T33 adds carries the grade R27's rule gives it —
   for (const [op, e] of Object.entries(T33_RUNG_ABSENT)) assert.equal(RUNG_ABSENT[op], e, op);
   for (const [op, why] of Object.entries(T33_NON_ACTS)) assert.equal(NON_ACTS[op], why, op);
   assert.deepEqual([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT)].sort(), Object.keys(ALL_WRITES).sort());
-  assert.deepEqual(Object.keys(T33_NON_ACTS).sort(), [...Object.keys(ALL_WRITES), ...ALL_READS].sort());
+  assert.deepEqual(Object.keys(T33_NON_ACTS).sort(),
+    [...Object.keys(ALL_WRITES).filter((op) => !UNGATED_WRITES.includes(op)), ...ALL_READS].sort());
   /* negative control */
   assert.notDeepEqual({ ...got, linewithdraw: "reversible" }, ALL_WRITES);
 });
@@ -178,7 +184,8 @@ test("R40 R7: every T33 op carries its NON_ACTS reason — each read `read: …;
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]), op);
     assert.equal(gradeOf(op), null, op);
   }
-  for (const op of Object.keys(ALL_WRITES)) {
+  for (const op of UNGATED_WRITES) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
+  for (const op of Object.keys(ALL_WRITES).filter((op) => !UNGATED_WRITES.includes(op))) {
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 30, op);
     assert.ok(!NON_ACTS[op].startsWith("read: ") && !NON_ACTS[op].startsWith("capture-directed:"), op);
   }
@@ -190,7 +197,7 @@ test("R40 R7: every T33 op carries its NON_ACTS reason — each read `read: …;
 
 test("R40 R12 R24: with the control plane's rows for them (op-declarations R17–R20: every write mutating with a NEEDS "
    + "row, every read a NEEDS row of null) nothing is unaccounted; carried by no row each reads stale; one left out is seen", () => {
-  const table = [...Object.keys(ALL_WRITES).map((op) => ({ op, mutating: true, gated: true })),
+  const table = [...Object.keys(ALL_WRITES).map((op) => ({ op, mutating: true, gated: !UNGATED_WRITES.includes(op) })),
     ...ALL_READS.map((op) => ({ op, mutating: false, gated: true }))];
   const all = new Set(table.map((t) => t.op));
   const r = A.unaccounted(table);

@@ -547,16 +547,17 @@ const LAYER9_ABSENT = {
   checkpointrecord: "undetermined", optionstart: "undetermined",
   reminderset: "caller-owned", reminderanswer: "caller-owned",
 };
-const LAYER9_READS = ["standard", "standards", "standardinforce", "determination", "determinations", "comparison",
+const LAYER9_READS = ["standard", "standards", "determination", "determinations", "comparison",
   "comparisonfacts" /* conformance R21 (N345), an ungated read like `comparison` */,
   "consequence", "consequencesof", "addressed", "counselpacketread", "filingsfor", "availableactions", "escalation",
   "escalationsdue", "action", "actions" /* K709: actions R47 */,
   "plan", "plans", "planproposals" /* K727: action-plans R6, R7, R34 */];
-const LAYER9_GATED_READS = ["optionstartpreview" /* N490: action-plans R37 */];
+const LAYER9_GATED_READS = ["optionstartpreview" /* N490: action-plans R37 */,
+  "standardinforce" /* K1689: gated since T33, a NEEDS row of null (op-declarations) */];
 /* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
 const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, "action", "actions"];
 test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
-   + "20 ungated reads none, its one gated read (optionstartpreview, N490) a `read:` reason and no rung, and the op maps "
+   + "19 ungated reads none, its two gated reads (optionstartpreview, N490; standardinforce, K1689) a `read:` reason and no rung, and the op maps "
    + "hold exactly those 62 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, K902; K992: `templates` is "
    + "filing-templates')", () => {
   const url = new URL("http://x/");
@@ -567,10 +568,11 @@ test("R3 R7 R12: layer 9's 41 mutating ops each carry a NON_ACTS reason and thei
   assert.deepEqual(ACTIONS_NEW.filter((op) => !actions.includes(op)), [], "actions' op map holds K709's four and K902's actionhold");
   /* R40 (K1571, K1658): standards' and action-clocks' T33 ops are graded in t33.mjs and held there (t33.test.mjs) */
   const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION,
-               ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)].filter((op) => !T33_OPS.has(op));
+               ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)]
+               .filter((op) => !T33_OPS.has(op) || LAYER9_GATED_READS.includes(op));
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
   assert.equal(mutating.length, 41);
-  assert.equal(LAYER9_READS.length, 20);
+  assert.equal(LAYER9_READS.length, 19);
   assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
   for (const op of mutating) {
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
