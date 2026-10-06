@@ -1,10 +1,10 @@
 /* wizard-scripts over the modules it uses, the real ones (record-core, membership, filing-templates, record-grammar) on
    a real SQLite database (node:sqlite) standing in for a Durable Object's storage, answering as workerd's does (a
    cursor). Members and project participations are rows of membership's own tables, written as its acts would leave
-   them; a project is a real bundle committed through record-core. The screen registry and the Civicsmith library are
-   test ones (the real registry ships with the new interface; the library is empty until the UX stream writes it), and
-   the jurisdiction profile is the test profile, whose records-request template filing-templates offers. Every test
-   drives `wizard-scripts` at its interface. */
+   them; a project is a real bundle committed through record-core. The screen registry and the Civicsmith library here
+   are test ones, small enough to reason about (the carried ones, SCREEN_REGISTRY and CIVICSMITH_LIBRARY, are tested in
+   library.test.mjs), and the jurisdiction profile is the test profile, whose records-request template filing-templates
+   offers. Every test drives `wizard-scripts` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";

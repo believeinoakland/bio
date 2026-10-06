@@ -186,3 +186,26 @@ test("R26 baseUpdates lists each (copy, newer base version) once, with both vers
   w.wz.wizardRetire({ script: cp2.script, reason: "done", by: A, viewer: A });
   assert.ok(!w.wz.baseUpdates({ viewer: MACHINE }).entries.some((e) => e.copy === cp2.script));
 });
+
+test("R20 R10 R26 a copy whose base the viewer may not see shows it is a copy and names neither the base's version nor its name; its recipients are only members who may see both", () => {
+  const w = seeded();
+  w.join(w.Q, "frank");                                   /* frank is in P and Q; alice and bob only in P */
+  const qbase = approved(w, { who: "frank", by: "dave", name: "Q's secret", project: w.Q });
+  const cp = w.wz.wizardDraft({ project: w.P, copy: qbase.version, name: "Into P", author: F, viewer: F });
+  assert.equal(cp.ok, true);
+  assert.deepEqual(read(w, cp.version, F).script.based_on, { version: qbase.version, name: "Q's secret" }, "frank sees Q");
+  assert.deepEqual(read(w, cp.version, A).script.based_on, { version: null, name: null }, "alice does not");
+  assert.ok(!JSON.stringify(read(w, cp.version, A)).includes("Q's secret"));
+  assert.ok(!JSON.stringify(read(w, cp.version, A)).includes(qbase.script));
+  w.wz.wizardSubmit({ version: cp.version, author: F, viewer: F }); w.wz.wizardApprove({ version: cp.version, by: A, viewer: A });
+  assert.ok(!JSON.stringify(w.wz.wizardRegistry({ viewer: A })).includes("Q's secret"));
+  assert.ok(!JSON.stringify(w.wz.wizards({ viewer: A })).includes("Q's secret"));
+  /* the base moves on: P's owners cannot see it, so nobody is told but those who can */
+  const n2 = w.wz.wizardDraft({ from: qbase.version, author: F, viewer: F });
+  w.wz.wizardSubmit({ version: n2.version, author: F, viewer: F }); w.wz.wizardApprove({ version: n2.version, by: D, viewer: D });
+  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.map((e) => [e.copy, e.recipients]), [[cp.script, []]]);
+  w.wz.wizardEditorGrant({ member: "frank", by: E });
+  assert.deepEqual(w.wz.baseUpdates({ viewer: MACHINE }).entries.map((e) => [e.recipients, e.recipients_are]), [[["frank"], "editors"]]);
+  assert.deepEqual(w.wz.baseUpdates({ viewer: A }).entries, [], "alice sees the copy, not its base: no pair names it to her");
+  assert.equal(w.wz.baseUpdates({ viewer: F }).entries.length, 1);
+});

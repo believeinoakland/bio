@@ -445,12 +445,13 @@ export class WizardScripts {
     return e ? { id: e.id, origin: "civicsmith", name: e.name, project: null, bundle_id: null, scope: "group",
                  required: e.required, widened: null, retired: null, created_at: e.approved.at ?? "", entry: e, based_on: null } : null;
   }
-  /* R1, R10, R21: a script's `based_on` with its base's name, `{version, name}`, or null (DEC-158 (4)). */
-  #basedOn(s) {
+  /* R1, R10, R21: a script's `based_on` with its base's name, `{version, name}`, or null (DEC-158 (4)). A base the viewer
+     may not see is named by neither (R20): the copy still shows it is one, `{version: null, name: null}`. */
+  #basedOn(s, viewer) {
     if (!s || !s.based_on) return null;
     const p = parseVersionId(s.based_on);
     const b = p ? this.#groupScript(p.script) || this.#libraryScript(p.script) : null;
-    return { version: s.based_on, name: b ? b.name : null };
+    return b && this.#canSee(b, viewer) ? { version: s.based_on, name: b.name } : { version: null, name: null };
   }
   /* R20: a project's script is seen by whoever may see its project; a group or Civicsmith script by every member. */
   #canSee(s, viewer) {
@@ -566,8 +567,8 @@ export class WizardScripts {
       recorded: parse(v.recorded), created_at: v.created_at, broken: this.#isBroken(s.id, n),
     };
   }
-  #head(s, extra = {}) {
-    return { id: s.id, origin: s.origin, name: s.name, scope: s.scope, required: s.required, based_on: this.#basedOn(s),
+  #head(s, viewer, extra = {}) {
+    return { id: s.id, origin: s.origin, name: s.name, scope: s.scope, required: s.required, based_on: this.#basedOn(s, viewer),
              ...(s.widened ? { widened: s.widened } : {}), ...(s.retired ? { retired: s.retired } : {}), ...extra };
   }
   /* R4: a revision's adoption: a proposal (`adopted`), or a newer version of a copy's base (`adopted_base`). */
@@ -1152,7 +1153,7 @@ export class WizardScripts {
       else if (st === "broken") pick = s.origin === "group" ? numbers.filter((n) => this.#isBroken(s.id, n)) : [];
       else pick = s.retired ? [] : numbers.filter((n) => stateOf(n) === st);
       if (!pick.length) continue;
-      out.push(this.#head(s, { versions: pick.slice().reverse().map((n) => this.#listed(this.#versionView(s, n, events), s)) }));
+      out.push(this.#head(s, viewer, { versions: pick.slice().reverse().map((n) => this.#listed(this.#versionView(s, n, events), s)) }));
     }
     return { ok: true, state: st || "offered", scripts: out.slice(0, WIZARDS_MAX), truncated: out.length > WIZARDS_MAX };
   }
@@ -1171,7 +1172,7 @@ export class WizardScripts {
     const adopted = s.origin === "civicsmith" ? [] : this.#rows(`SELECT DISTINCT p.* FROM wiz_proposals p JOIN wiz_revisions r ON r.adopted=p.proposal_id
                                  WHERE r.script_id=? AND r.version=? ORDER BY p.proposal_id`, s.id, n)
       .map((p) => ({ id: p.proposal_id, sha: p.sha, why: p.why, at: p.at, label: WizardScripts.#label(p.proposer) }));
-    return { ok: true, script: this.#head(s, { start: startOf(view.steps) }), version: { ...view, proposals_adopted: adopted },
+    return { ok: true, script: this.#head(s, viewer, { start: startOf(view.steps) }), version: { ...view, proposals_adopted: adopted },
              offered: this.#offeredNumber(s, events) === n };
   }
 
@@ -1224,7 +1225,7 @@ export class WizardScripts {
       const start = startOf(x.steps);
       if (!byStart.has(start)) byStart.set(start, []);
       byStart.get(start).push({ id: x.s.id, version: versionId(x.s.id, x.n), name: x.s.name, start,
-                                steps: x.steps.map(WizardScripts.#bareStep), origin: x.s.origin, based_on: this.#basedOn(x.s),
+                                steps: x.steps.map(WizardScripts.#bareStep), origin: x.s.origin, based_on: this.#basedOn(x.s, viewer),
                                 ...(x.draft ? { draft: true } : {}) });
     }
     const screens = this.registeredScreens().map((sc) => ({ ...sc, scripts: byStart.get(sc.id) || [] }));
@@ -1267,7 +1268,7 @@ export class WizardScripts {
       const events = this.#events(s.id);
       const live = this.#offeredNumber(s, events) !== null || this.#numbers(s.id).some((n) => this.#stateOf(events, n) === "draft");
       const base = this.#groupScript(on.script) || this.#libraryScript(on.script);
-      if (!live || !base) continue;
+      if (!live || !base || !this.#canSee(base, viewer)) continue;   /* R20: no pair names a base the viewer may not see */
       const bev = base.origin === "civicsmith" ? [] : this.#events(base.id);
       const numbers = base.origin === "civicsmith" ? [base.entry.version] : this.#numbers(base.id);
       const newer = numbers.filter((n) => n > on.version
@@ -1277,14 +1278,16 @@ export class WizardScripts {
     return out;
   }
   /* R26: the copy's recipients: its wizard editors (members with a live editor grant who may see it), else its approvers
-     (R7's right: an owner of its project, or the administrators for a group-wide copy). BOB's reading (P17). */
-  #copyRecipients(s) {
+     (R7's right: an owner of its project, or the administrators for a group-wide copy). BOB's reading (P17). Each must
+     also see the base, so no one is told of a script they may not see (R20) or asked to adopt what R4 would refuse. */
+  #copyRecipients(s, base) {
+    const sees = (m) => this.#canSee(s, `member:${m}`) && this.#canSee(base, `member:${m}`);
     const editors = this.#rows(`SELECT DISTINCT g.member FROM wiz_editor_grants g WHERE NOT EXISTS
                                   (SELECT 1 FROM wiz_editor_revocations r WHERE r.grant_id=g.grant_id) ORDER BY g.member`)
-      .map((r) => r.member).filter((m) => this.#canSee(s, `member:${m}`));
+      .map((r) => r.member).filter(sees);
     if (editors.length) return { recipients: editors, as: "editors" };
     const owners = (s.widened ? this.#call(() => this.membership.activeAdmins(), []) : this.#call(() => this.membership.projectOwners(s.project), [])) || [];
-    return { recipients: [...new Set(owners)].sort(), as: "approvers" };
+    return { recipients: [...new Set(owners)].filter(sees).sort(), as: "approvers" };
   }
 
   /** R26 (`op=baseupdates`; for `queue-producers` R39): each pair (copy, newer base version) of a copy the viewer may see,
@@ -1308,7 +1311,7 @@ export class WizardScripts {
         const events = this.#events(s.id);
         const drafts = this.#numbers(s.id).filter((k) => this.#stateOf(events, k) === "draft");
         const cv = this.#offeredNumber(s, events) ?? drafts[drafts.length - 1];
-        const who = this.#copyRecipients(s);
+        const who = this.#copyRecipients(s, base);
         pairs.push({ key: `${seen.at}|${s.id}|${nv}`, entry: {
           copy: s.id, name: s.name, copy_version: versionId(s.id, cv), copy_steps: this.#steps(s, cv), base: base.id, base_name: base.name,
           based_on: versionId(on.script, on.version), newer: nv, newer_steps: this.#steps(base, n),
