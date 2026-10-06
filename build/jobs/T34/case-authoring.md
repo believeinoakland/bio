@@ -54,3 +54,5 @@ Size (session_014q5tbRsMqLZiMWfEsHugGb): test runs 11, module lines 3315
 ## J2 · COMPLETE
 
 T34-48 done: N596 (every calculation input's hash from calculations' read) and DEC-149's 13 rows; two document-text flaws fixed in this module (a cut or unread timeline is stated; workbook rows in their own words). 145/145; format, architecture, coverage, ownership clean. Row census red gains C-136.1 (J1 item 1); the plane bundle is stale (J1 item 2). Record: Completion (CASE-AUTHORING #18), head d354f3eb9a.
+
+**B2 (CHANGE, K1828), pending:** once case-disclosures merges into `tranche/T34` (BOB says when), merge it here and update `preflight.test.mjs`' R29 pin of C-120.8 to "rests on material your group's Civicsmith does not hold whole, …"; accepted red 7 until then.
