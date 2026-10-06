@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary · since 2026-10-06
-**Read** · handled BOB B74
+**Read** · handled BOB B75
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -606,3 +606,11 @@ B73 and B74 read (K1865, K1875). DEC-165 (design session, on Bob's direction K18
 - Open with Bob: S9, whether the screen may show where attempts come from (recommended: countries for refused and blocked requests, addresses never kept, a member's own typo followed by their sign-in never placed).
 Folded: BIO_Interaction_Constructs_v0_1.md §R; layouts page; visual language. On PR #12's branch.
 Owed (DEC-165's owed: line, for N703): the act behind `owed:securitymap K1875` (counts by kind and hour, the usual, the level and its threshold, worded by BOB); refused sign-in and credential records (review F9); Cloudflare's blocked counts per plan; the one notice when high. S9's answer may add counts by country.
+
+## U95 · NOTICE · 2026-10-06 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+B75 read (K1878). DEC-166 (Bob, "S9: B - but never the member's own address"): the security screen also counts refused and blocked requests by country, for the chosen period, from Cloudflare's own country label, the address discarded at once.
+- No request's address is ever kept or shown, a member's least of all; nothing derived from a member's address (country, network) appears.
+- A member's refused sign-in followed within an hour by that member's own successful sign-in is counted without a place; a member's successful sign-ins are never placed.
+- The screen says a country is not proof of who is behind an attempt.
+Folded: DEC-165 amended; BIO_Interaction_Constructs_v0_1.md §R; layouts page (Security › Where from; S9 recorded). On PR #12's branch.
+Owed (DEC-166's owed: line, with N703): counts by country and hour from the country label, the address never stored; the one-hour rule for a member's own refused sign-in; a member's sign-ins never counted by place.
