@@ -91,3 +91,14 @@ session_01XaKEVPm9N9a9f7CAG1p53m,job,monitoring,16822365,267025,6515,30694,,10,3
 session_01BkUvhz4itmkyoN9rN3Wowv,job,following,36445728,350304,268,118841,,26,1035
 session_01FP2K16KmLSM3py4LR1p71s,job,scheduler,21617306,265331,699,70098,,22,585
 session_01VhG3zdu31G1dw7bzWyoyjb,BOB-final,,56508928,422601,30102,95642,,,
+session_01Wn5K5a2uihWZxsspmLhjpn,job,queue-producers,19668722,299137,156,52584,,15,3974
+session_017yxbe6zCxuzAzivuMU5Rbw,job,notice-producers,24201943,588711,206,80200,,19,1265
+session_01GwQ6qYqhSUdnc9rhz4jD2Q,job,queue,19104518,499925,6545,50157,,7,2930
+session_01VHaQRnU4iXXj7mFCXhSWZB,job,wizard-scripts,12431973,258280,622,25887,,9,1629
+session_01AfNbyRvRpNFntg82yANhuQ,job,affordances,56347887,1208959,481,184570,,11,3895
+session_01HrkD2bfzn2ME5gxfzK8eEK,job,tasks,5053037,147038,72,14713,,6,1995
+session_01RowoPV5ZyJHusShpyq9FEj,job,instance-setup,42170301,415978,272,108480,,24,3700
+session_01BLy9wpCWCj7n1UuSHwbkir,job,op-declarations,47080725,1318747,8452,147553,,13,2914
+session_01UETyjcyNgjnaiAejJzFVhk,job,control-plane,54810322,459055,19719,103475,,16,3824
+session_017zKzx7PmN8FK2VvvFACCgN,job,plane,108943368,1821857,8457,265720,,21,968
+session_012cCBykexVjuaQ82HEkMok3,job,installer,29232357,378688,1208,75593,,22,2277
