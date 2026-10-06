@@ -29,7 +29,8 @@ import { actionsOps } from "../../../src/actions/index.mjs";
 import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 
-const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, OP_FAMILIES, OP_KINDS, FAMILY_OPS, ASK_GRANT_OPS } = O;
+const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, OP_FAMILIES, OP_KINDS, FAMILY_OPS, ASK_GRANT_OPS,
+        OP_STAMPS } = O;
 const MP = ["admin", "member", "probe"];
 const plain = (s) => ({ ...s, ...(Array.isArray(s.classes) ? { classes: [...s.classes] } : {}),
                         ...(Array.isArray(s.machineClasses) ? { machineClasses: [...s.machineClasses] } : {}) });
@@ -64,7 +65,9 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
    answers' `ask`), instance-setup builds its two (T33-87). */
 const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturerequestplatformmark: "control-plane (T33-89)",
   capturerequestplatformunmark: "control-plane (T33-89)", capturerequestplatformhosts: "control-plane (T33-89)",
-  ask: "control-plane (T33-89)", officesseed: "instance-setup (T33-87)", assistantset: "instance-setup (T33-87)" };
+  ask: "control-plane (T33-89)", officesseed: "instance-setup (T33-87)", seatsseed: "instance-setup (T33-87)",
+  assistantset: "instance-setup (T33-87)", assistantstate: "instance-setup (T33-87)",
+  disclosureshown: "instance-setup (T33-87)", disclosureof: "instance-setup (T33-87)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["action-clocks", "actions", "ai-runs", "answers", "calculations",
@@ -73,7 +76,8 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "member", "open", "own", "ownread", "proposal", "read", "tally"]);
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
-    for (const v of [f, f.kinds, f.acts, f.proposals, f.reads]) assert.ok(Object.isFrozen(v), owner);
+    for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
+    for (const op of Object.keys(f.extra)) assert.ok(Object.hasOwn(f.kinds, op), `${owner}: an extra stamp on ${op}, no op`);
     assert.equal(f.owner, owner);
     assert.ok(typeof f.cite === "string" && f.cite.length > 3, owner);
     for (const st of [f.actor, f.proposer].filter(Boolean)) {
@@ -217,6 +221,43 @@ test("R19, R4: every family read is stamped with the viewer, and the owner reads
     }
   }
   assert.ok(checked >= 70, `${checked} reads`);
+});
+
+/* K1674, K1683: the stamp interface — op → keys from the closed set the control plane implements once each. */
+const STAMP_KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session"];
+const keyOf = (st) => (!st || st.key === "viewer" ? null : st.key === "by" ? (st.at === "body" ? "bodyBy" : "by") : st.key);
+
+test("R19, R4, R5 (K1674, K1683): OP_STAMPS maps every op this module declares for T33 — each family op, the ask's three plane ops, exportpage and moneydetectorsrun, and no other — to frozen stamp keys from the closed set viewer, by, bodyBy, author, proposer, member, session: viewer on every family op, the family's actor key on each act (by at the query, bodyBy at the body), its proposer key on each proposal, the family's extras, the grant's member as viewer on the ask ops (negative control: a drifted key is seen)", () => {
+  assert.ok(Object.isFrozen(OP_STAMPS));
+  assert.deepEqual(Object.keys(OP_STAMPS).sort(), [...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun"].sort());
+  for (const [op, keys] of Object.entries(OP_STAMPS)) {
+    assert.ok(Object.isFrozen(keys) && Array.isArray(keys), op);
+    assert.equal(new Set(keys).size, keys.length, op);
+    for (const k of keys) assert.ok(STAMP_KEYS.includes(k), `${op}: ${k}`);
+    assert.ok(Object.hasOwn(OPS, op), op);
+  }
+  for (const f of Object.values(OP_FAMILIES)) for (const op of Object.keys(f.kinds)) {
+    const who = f.acts.includes(op) ? keyOf(f.actor) : f.proposals.includes(op) ? keyOf(f.proposer) : null;
+    assert.deepEqual([...OP_STAMPS[op]].sort(), [...new Set(["viewer", ...(who ? [who] : []), ...(f.extra[op] ?? [])])].sort(), op);
+  }
+  /* the shapes the control plane named (K1674): query by, body by, the viewer alone, author, member and session */
+  assert.deepEqual([...OP_STAMPS.eventcreate], ["viewer", "by"]);
+  assert.deepEqual([...OP_STAMPS.moneyrecord], ["viewer", "bodyBy"]);
+  assert.deepEqual([...OP_STAMPS.tabledeclare], ["viewer"]);
+  assert.deepEqual([...OP_STAMPS.clockadopt], ["viewer", "author"]);
+  assert.deepEqual([...OP_STAMPS.clockpropose], ["viewer", "proposer"]);
+  assert.deepEqual([...OP_STAMPS.dutypropose], ["viewer", "by"]);
+  assert.deepEqual([...OP_STAMPS.aigrantmint], ["viewer", "by", "member", "session"]);
+  assert.deepEqual([...OP_STAMPS.accountreference], ["viewer", "member"]);
+  assert.deepEqual([...OP_STAMPS.ask], ["viewer", "member"]);
+  for (const op of ASK_GRANT_OPS) assert.deepEqual([...OP_STAMPS[op]], ["viewer"], op);
+  assert.deepEqual([...OP_STAMPS.exportpage], []);
+  assert.deepEqual([...OP_STAMPS.moneydetectorsrun], []);
+  for (const op of OP_FAMILIES.lines.reads) assert.deepEqual([...OP_STAMPS[op]], ["viewer"], op);
+  /* no pre-T33 op is in it: their stamps are the act lists' */
+  for (const op of ["promote", "standarddeclare", "actionpressure", "docketpost"]) assert.ok(!Object.hasOwn(OP_STAMPS, op), op);
+  /* negative control */
+  assert.notDeepEqual([...OP_STAMPS.linerecord], ["viewer", "by"]);
 });
 
 test("R17: clockpropose any credential's, as actionlawspropose (admin, member, probe, mutating, no machineClasses), proposer and viewer stamped; clockadopt a member's (machineClasses []), contribute, author and viewer stamped; clocksics a read; addresseesuggest a read; exportrender a member's stamped viewer (K1640); officesseed and assistantset an administrator's own session, by stamped", () => {
