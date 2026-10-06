@@ -23,3 +23,38 @@ Findings in other modules:
 3. **Generated artifact**: the plane bundle is stale from this job's change to `bio-plane/src/scheduler/index.mjs` (regenerated at the close).
 
 Next: once FOLLOWING #1 merges, I merge the tranche and re-point the `follow` consumer and its R9 test at the real module (K1563 (1)), then post COMPLETE.
+
+## J3 · COMPLETE
+
+T33-80 complete (B1–B4 applied; tranche/T33 merged at following's merge, K1668).
+
+**Entries applied**
+- R21, R5, R2: the six consumers after `working-on-attest`, each calling its owner, answered under `follow`, `dutytransitions`, `interestchecks`, `moneydetectors`, `standingquestions` and `datedwaits`; `follow` batch-bounded and given the rank (R10).
+  - `follow`: following R12, R13, the real module (`followingOf`).
+  - `standing-questions`: answers R17.
+  - `dated-waits`: inquiry R57. Answers and inquiry are given instant text and their wakes are read back to ms; a consumer due now wants now.
+- K1522, K1566 (accepted K1666): `duty-transitions` (duties R13, `asOf` the firing, its cursor handed back), `interest-checks` (people R23) and `money-detectors` (money-checks R6, `DETECTORS_BUDGET_MS` 1000, named as its siblings'; N604).
+  - They run once per local day at the group's local day start: the active view's `time_zone` through civil-time; with no zone held, the UTC day, answered `zone: null`.
+  - They run at every firing while a pass is under way.
+  - A pass that finds nothing wants no wake until the next start (R11); one that throws or is refused counts the day as run.
+  - Their state is the storage value `sched_daily`, never a table (R18); with a storage that cannot hold it, it is kept in memory.
+- R9: inquiry's `onWaitSet` (K1601; the arm is deferred past the promotion's transaction) and following's `onFollowed` (its R19, K1666) are registered, both with the real modules. duties, people, money-checks and answers offer no notice (N605).
+- K1667: `plane.test.mjs:109` is green: the instance holds the first held non-test profile with a zone, and the entry is dated two days back.
+
+**Deferred:** none.
+
+**Found in other modules** (reported in J2; routed in B4): instance-setup `identity.test.mjs:256` (to its L11 START, until T33-87); money-checks runs detectors switched on nowhere, so an instance holding it keeps a daily alarm (N607); the plane bundle is stale (at the close).
+
+**uses** (set by BOB, K1666): duties, people, money-checks, answers, inquiry, following, civil-time, jurisdictions, record-core, besides the earlier ones.
+
+**Tests and checks**
+- `node --test bio-plane/test/m/scheduler/`: 81 pass, 1 fail. The fail is the named R12 (AI_NO_ACCOUNT, N585).
+- Modules using the scheduler:
+  - tasks: 71/71.
+  - queue: 113/113.
+  - following: 21/21.
+  - instance-setup: 89 pass, 5 fail, all named: R44 ×4 (K1544) and identity:256 (B4).
+  - plane findings/notices/store/sweep: 23 pass, 2 fail, both named (K1640, K1643), the same as before this job.
+- Checks: format 0 failures; architecture (scheduler) 0 failures; coverage 21/21, 0 failures; ownership 8 files, 0 failures.
+
+Size (session_01FP2K16KmLSM3py4LR1p71s): test runs 22, module lines 585
