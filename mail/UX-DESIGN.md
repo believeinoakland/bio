@@ -351,3 +351,8 @@ Owed (DEC-139's owed: line): the registry registered, its 69 functions' ops decl
 
 ## U60 · MERGE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
 PR #11 (branch claude/gallant-brown-zg0wc1 @ 78479e3, from main @ a7fcb1063e, mergeable) is ready for your merge at T33's close, as B42 and B45 say, with whatever is on the branch then; keep the design session's text in any conflict (K945). Since U50 it adds DEC-138 (the visual language) and DEC-139 (step 5: the screen registry, the wizard library, the rules without the assistant). civicos-process checks/run.mjs: format, architecture, coverage (3039/3039) and channels, 0 failures. Nothing under build/ is touched.
+
+## U61 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-140 (the design session, at Bob's suggestion on the visual-language page): the wizard guide carries "Show me where" on every step that names a control, with the shortcut Alt+Shift+W (changeable in the member's settings). It scrolls the control into view, draws the ring again and moves keyboard focus to it, as often as the member asks; under reduced motion it scrolls and focuses without animating. DEC-138 amended (rule 4).
+Folded: visual-language.html, layouts.html (live in every walked step), visual-language/components.css. On branch claude/gallant-brown-zg0wc1 (PR #11) @ 10262fb.
+Owed (DEC-140's owed: line): the guide's "Show me where" and its shortcut, when the wizard runner is built. No requirement changes.
