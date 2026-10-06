@@ -180,7 +180,7 @@ Terms.
   - §7, the slug as the group's public identity.
 - `docs/architecture/BIO_Complete_Roadmap_v5.md` §11, "Inter-group awareness".
 - `docs/architecture/BIO_Design_Requirements_v2.md`, requirements 9 and 10.
-- `docs/development/NOTIFICATIONS.md`: the item contract (`queue-producers` R27).
+- `docs/development/NOTIFICATIONS.md`: the item contract (`machinery-producers` R5, was `queue-producers` R27; K1850).
 - DEC-111; DEC-49 (catalogue rows); DEC-80; K1019; K1031.
 
 ### Suggestions

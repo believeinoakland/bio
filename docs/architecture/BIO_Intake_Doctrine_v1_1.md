@@ -79,6 +79,12 @@ follows the v1.0 record below.
 
 # Revision history
 
+**Revision note, October 6, 2026.** One ruling of Bob's (K1852), Section 3:
+a file inside a captured archive is part of it and carries its grade and
+co-attestation unchanged when cut out unambiguously; otherwise it is not
+filed; archives open automatically within limits; a file's later direct
+capture may earn more, beside the first.
+
 **Revision note (v1.2), July 27, 2026.** One operator ruling, Section 4:
 what verification asserts (appears-to-be-what-it-claims, never accuracy),
 and batch ratification legitimized by volume plus homogeneity of the
@@ -412,6 +418,21 @@ recorded honestly as attempted and unavailable, and material carrying it
 inherits a lower ceiling for external distribution rather than a papered
 gap. The checker surfaces crucial material lacking verifiable
 co-attestation as an advisory finding when the M2' machinery lands.
+
+**Members of a captured archive (Bob, 2026-10-06; K1852).** A file inside a
+captured archive (a ZIP) is part of that archive, not derived from it. When
+it can be cut out unambiguously (its size and checksum agree with the
+archive's own index, and the index and the file's header agree), it is filed
+as a capture of its own under its own digest, and it carries the archive's
+capture grade and co-attestation unchanged: never stronger, never weaker.
+Anyone can repeat the cut with stock tools and confirm the digest, so
+Section 3b holds. A file that cannot be cut out unambiguously (corrupt,
+ambiguous, encrypted, or over a published limit) is not filed at all, and
+the reason is named; it is never filed at a lower letter. Archives are
+opened automatically on capture, within published limits, and their files
+are held for review beside the archive under Section 4's release rules. A
+file may later earn a higher grade only by its own capture through another
+route, landed beside the first by the accretive rule; nothing is regraded.
 
 # 3a. Member-original records (added draft 0.3)
 

@@ -109,11 +109,11 @@ Terms. A **tick** is one check of one monitored document. A **look** is the obse
   **Settled readings of R67, R68** (MONITORING #14's question, K1392): (1) `watched` is `{due, read, unreadable, governed, failed}`: `due` a count (as R19's `gathered.due`); each list's entries are `{import, docket, …}`, `read` carrying case-import's `outcome`, `new_entries`, `new_moves`, `new_refused`, `unreadable` its reason, `failed` the refusal's reason or the throw; a watch claimed by an unfinished tick is neither read nor listed and keeps the epoch open as a skipped address does (R21). (2) Each docket read attempted, a governed one included, spends one of R19's 50. (3) A watch whose docket address is not a public https locator is not fetched and is recorded `unreadable`, reason `fetch_failed` (R36). (4) Paused, `cadenceWake` also looks again one archive interval on while any watch is in force, and the paused tick's `watched` states `due` with empty lists. (5) A 200 JSON `{ok: true, result}` whose `result` is an object with an `entries` list is `read`, its entry carrying case-import's recorded outcome (`unreadable`, `not_this_case`, included).
 
 **What reaches members** (NOTIFICATIONS.md, the catalogue and the item contract)
-- **R31** Its reads give the items `queue-producers` publishes in the item contract, with their options:
+- **R31** Its reads give the items `queue-producers` and `machinery-producers` publish in the item contract, with their options:
   - `source-modified` and `source-removed` (FINDING), one for each flagged tick, from R48 (`queue-producers` R2);
-  - `archive-fallback-eligible` (CONDITION), one for each eligible address, from R47;
-  - `monitoring-recheck-due` (CONDITION), one for each monitored address overdue by more than its interval or unscheduled, from R16 and R32 (`queue-producers` R3);
-  - the five sweep conditions of link-sweep R11 (CONDITION; `queue-producers` R26).
+  - `archive-fallback-eligible` (CONDITION), one for each eligible address, from R47 (`machinery-producers` R2, was `queue-producers` R3; K1850);
+  - `monitoring-recheck-due` (CONDITION), one for each monitored address overdue by more than its interval or unscheduled, from R16 and R32 (`machinery-producers` R2, was `queue-producers` R3; K1850);
+  - the five sweep conditions of link-sweep R11 (CONDITION; `machinery-producers` R4, was `queue-producers` R26; K1850).
 
   This module publishes no item itself, and `queue` reads them. (A32; K1038; K1036 (8))
 - **R32** `monitoring({viewer})` answers every monitored address the viewer may see with its R15–R16 row, the unscheduled among them, so a document that is not being checked is visible without waiting for a tick.
