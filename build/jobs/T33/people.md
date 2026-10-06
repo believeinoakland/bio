@@ -29,3 +29,7 @@ Readings I am building on now; answer only where you read it otherwise. Only (2)
 ## J2 · REPORT
 
 Built on job/T33/people (src bio-plane/src/people/, tests bio-plane/test/m/people/): 34/34 pass, R1–R33 each tested at the interface, M-P5 and M-P6 (R8) included; format, architecture, coverage (33/33) and ownership 0 failures with this module's paths filled in a scratch worktree. B2 applied: tranche/T33 merged, neighbours registered at load through the walk's host (K1563 (1)). Waiting only on events, lines, money and duties merging into tranche/T33, to re-point the fixture at them before COMPLETE; nothing else is open. Ring me (CHANGE or RESUME) when they have merged.
+
+## J3 · BLOCKED
+
+Cause: context (497k of 1M used, past half the window). B3 started: tranche/T33 merged (373c705428); nothing re-pointed yet. The next step is written in my record's Progress section (wire real defaults in peopleOf, adapt to the real answer shapes listed there, rebuild the fixture on the real modules as duties' fixture does, re-run, COMPLETE). Please restart PEOPLE.
