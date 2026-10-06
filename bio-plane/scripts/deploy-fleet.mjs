@@ -43,7 +43,15 @@
  * decision has to be revisited deliberately, with FLEET told. It is NOT decided
  * here; see D-297.)
  *
- * usage (bundler R19, R20; moved from the old process's `tools/` in T19), from the repository root:
+ * A CONTAINER MEMBER (bundler R26; N624, K1705) deploys the same way, with one step
+ * before it: its image, named by digest in its own marker, is pulled and pushed to
+ * Cloudflare's registry with the account's token (the project's own copy; a group's
+ * copy pulls from the public registry by digest at install, M-Q8), and the generated
+ * config's `containers[].image` names that pushed copy. A token that cannot reach
+ * Containers is refused by name before anything is pulled, pushed or deployed —
+ * 0.80.0 shipped without its container for exactly that (K1705 (3)).
+ *
+ * usage (bundler R19, R20, R26; moved from the old process's `tools/` in T19), from the repository root:
  *   node bio-plane/scripts/deploy-fleet.mjs <member> --instance <slug>
  *   node bio-plane/scripts/deploy-fleet.mjs agent-worker --instance biosmoke7 --dry-run
  */
@@ -52,6 +60,7 @@ import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseJsonc } from "./jsonc.mjs";   /* R11: one parser, shared with release-assemble.mjs */
+import { imageReference } from "./fleet-bundle.mjs";   /* R25/R26: one reading of a container's image */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const argv = process.argv.slice(2);
@@ -88,6 +97,12 @@ if (!existsSync(join(memberDir, "fleet-member.json"))) {
     "civicos-ui/deploy-ui.mjs. This tool deploys only members that declare themselves one.");
 }
 
+let marker;
+try { marker = JSON.parse(readFileSync(join(memberDir, "fleet-member.json"), "utf8")); }
+catch (e) { die("UNPARSEABLE_CONFIG", `${member}/fleet-member.json did not parse.`, String(e.message)); }
+/* R24's definition, from the member's own marker: `kind: "container"` and an `image` block. */
+const CONTAINER = marker.kind === "container" && !!marker.image && typeof marker.image === "object";
+
 const cfgPath = join(memberDir, "wrangler.jsonc");
 if (!existsSync(cfgPath)) die("NO_CONFIG", `"${member}" has no wrangler.jsonc.`);
 let cfg;
@@ -123,6 +138,25 @@ if (!cfg.account_id) {
     "error to notice (CLAUDE.md, measured 2026-07-31).");
 }
 
+/* R26: what a container member deploys is stated by its own files before any request: the image by digest in its
+   marker, and the container in its own config. Neither is defaulted. */
+let image = null;
+if (CONTAINER) {
+  const img = imageReference(marker.image);
+  if (img.missing) {
+    die("CONTAINER_UNDESCRIBED",
+      `${member} is a container member and its fleet-member.json does not state ${img.missing} as `
+      + "`<repository>` and `sha256:<64 hex>`.",
+      "The image is deployed only by digest. The release writes the digest when it publishes the image.");
+  }
+  if (!Array.isArray(cfg.containers) || !cfg.containers.length) {
+    die("CONTAINER_UNDESCRIBED", `${member} is a container member and its wrangler.jsonc declares no \`containers\`.`,
+      "Its Worker would deploy with no container behind its class. The member's own config states the container.");
+  }
+  image = img.reference;
+  console.log(`image    : ${image}`);
+}
+
 /* PRE-FLIGHT: every service target must EXIST, checked before the upload rather
    than discovered as Cloudflare's 10143. This is D-292 turned from a note into a
    guard: the refusal names the missing worker and what to do, instead of a
@@ -155,7 +189,59 @@ for (const svc of cfg.services || []) {
   console.log(`preflight: ${svc.service} exists`);
 }
 
-if (DRY) { console.log("\n--dry-run: nothing was deployed."); process.exit(0); }
+/* R26: THE TOKEN MUST REACH CONTAINERS, asked of the account before anything is pulled, pushed or deployed. A deploy
+   that found out at `wrangler containers push` would have half-applied nothing and said nothing useful; 0.80.0's
+   cut met it as wrangler's bare "Authentication error" (K1705 (3)). */
+if (CONTAINER) {
+  const unreachable = (why) => die("CONTAINERS_UNREACHABLE",
+    `the token cannot reach Containers in account ${cfg.account_id} (${why}).`,
+    "The account's API token lacks Containers access: it needs the Containers edit permission\n"
+    + "(`containers.write`) on this account, and the account needs Workers Paid. Nothing was pushed or deployed.");
+  let r;
+  try {
+    r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${cfg.account_id}/containers/applications`,
+      { headers: { authorization: `Bearer ${TOKEN}` } });
+  } catch (e) { unreachable(`no answer: ${e.message}`); }
+  if (!r.ok) unreachable(`http ${r.status}`);
+  console.log(`preflight: Containers reachable in ${cfg.account_id}`);
+}
+
+if (DRY) { console.log(`\n--dry-run: nothing was ${CONTAINER ? "pushed or " : ""}deployed.`); process.exit(0); }
+
+/* Wrangler is a devDependency of `bio-plane` ONLY — no fleet member installs
+   it, and none should: a second copy is a second version to drift. So the
+   binary is resolved by PATH rather than by `npx`, which searches the CWD's
+   own node_modules and fails from a member directory with
+   "npx canceled due to missing packages" (measured 2026-09-10, this tool's
+   first real run). The CWD still has to be the member's directory so wrangler
+   resolves `main` and the module graph from there. */
+const wrangler = join(ROOT, "bio-plane", "node_modules", ".bin", "wrangler");
+const cfEnv = { ...process.env, CLOUDFLARE_API_TOKEN: TOKEN, CLOUDFLARE_ACCOUNT_ID: cfg.account_id };
+
+/* R26: THE PROJECT'S OWN COPY OF THE IMAGE, pushed to Cloudflare's registry. The image is pulled BY DIGEST and tagged
+   by its digest, so what is pushed is exactly the image the marker names and a re-run pushes the same tag. A failed
+   step exits with its own status, and nothing is deployed after it. */
+if (CONTAINER) {
+  const digest = marker.image.digest;
+  const tag = `${member}:${digest.slice("sha256:".length, "sha256:".length + 12)}`;
+  const steps = [
+    ["docker", ["pull", image], `pull ${image}`],
+    ["docker", ["tag", image, tag], `tag it ${tag}`],
+    [wrangler, ["containers", "push", tag], `push ${tag} to Cloudflare's registry`],
+  ];
+  for (const [cmd, args, what] of steps) {
+    console.log(`\ncontainer: ${what}`);
+    try { execFileSync(cmd, args, { cwd: memberDir, stdio: "inherit", env: cfEnv }); }
+    catch (e) {
+      console.error(`\ncontainer: ${what} FAILED: ${e.message}`);
+      console.error("Nothing was deployed.");
+      process.exit(Number.isInteger(e.status) && e.status !== 0 ? e.status : 1);
+    }
+  }
+  const pushed = `registry.cloudflare.com/${cfg.account_id}/${tag}`;
+  cfg.containers = cfg.containers.map((c) => ({ ...c, image: pushed }));
+  console.log(`container: the generated config deploys ${pushed}`);
+}
 
 /* The generated config is a TEMP FILE beside the member's own, so wrangler
    resolves `main` relative to the same directory. The tracked config is never
@@ -165,14 +251,6 @@ let status = 1;   /* wrangler's own exit status on failure (R20), 1 when it gave
 try {
   writeFileSync(genPath, JSON.stringify(cfg, null, 2) + "\n");
   console.log(`\ngenerated: ${member}/.wrangler.deploy.generated.json (temporary)`);
-  /* Wrangler is a devDependency of `bio-plane` ONLY — no fleet member installs
-     it, and none should: a second copy is a second version to drift. So the
-     binary is resolved by PATH rather than by `npx`, which searches the CWD's
-     own node_modules and fails from a member directory with
-     "npx canceled due to missing packages" (measured 2026-09-10, this tool's
-     first real run). The CWD still has to be the member's directory so wrangler
-     resolves `main` and the module graph from there. */
-  const wrangler = join(ROOT, "bio-plane", "node_modules", ".bin", "wrangler");
   if (!existsSync(wrangler)) {
     throw new Error(`wrangler not found at ${wrangler} — run npm ci in bio-plane/ first ` +
       "(a fresh worktree has no node_modules; CLAUDE.md's measured trap).");

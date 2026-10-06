@@ -171,7 +171,11 @@ function withRenamed(path, body) {
   }
 }
 
-const AGENT_HARNESS = join(REPO, "agent-worker/src/harness.mjs");
+/* RE-POINTED 2026-10-06 (BUNDLER #8, T34-6; N586, K1615): the harness moved to `agent-harness` in T33's split, and
+   agent-worker's own `src/harness.mjs` is a re-export file its build no longer reaches, so an arm appended there would
+   move no input and arm nothing. The arm's subject is the same: a NON-entry module of agent-worker's build, now
+   reached across trees, whose source moves while the artifact does not. */
+const AGENT_HARNESS = join(REPO, "agent-harness/src/harness.mjs");
 const PDF_ENTRY = join(REPO, "pdf-worker/src/index.mjs");
 const PLANE_PDFSTRUCT = join(PLANE, "src/pdfstructure.mjs");
 const AGENT_ARTIFACT = join(REPO, "agent-worker/dist/agent-worker.bundled.mjs");
@@ -213,13 +217,14 @@ const ARMS = {
 
   1: {
     label: "(1) THE ARM THIS ITEM EXISTS FOR — a member's SOURCE moves and its artifact does not. "
-      + "Append one export to agent-worker/src/harness.mjs and do NOT rebuild.",
+      + "Append one export to agent-harness/src/harness.mjs (agent-worker's harness, across trees) and do NOT rebuild.",
     run: () => withAppended(AGENT_HARNESS, SUFFIX, () => {
       const r = report("1", runSuite(), {
-        mustFail: "exit non-zero, NAMING `agent-worker` and `src/harness.mjs`, from BOTH the input-hash arm and the byte-identity arm",
+        mustFail: "exit non-zero, NAMING `agent-worker` and `../agent-harness/src/harness.mjs`, from the input-hash arm "
+          + "(the byte-identity arm may hold: esbuild tree-shakes an unused export out of a non-entry module)",
         mustNot: "pdf-worker's own assertions, which have nothing to do with this file",
       });
-      console.log(`     names member+file: ${named(r, "agent-worker:", "src/harness.mjs")}`);
+      console.log(`     names member+file: ${named(r, "agent-worker:", "../agent-harness/src/harness.mjs")}`);
       console.log(`     says STALE BUNDLE: ${named(r, "STALE BUNDLE")}`);
       return r;
     }),

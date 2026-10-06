@@ -19,6 +19,7 @@
    (10c) **OVER-STRICTNESS, AND IT ASSERTS THE MATCHER'S DECLARED BLIND SPOT RATHER THAN PROMISING IT** — append a plain COMMENT to the guard naming `npm run build` unescaped -> **96 pass, 0 fail, exit 0**. The TOTAL arm's stated reach is the backtick-ESCAPED spelling inside a template literal, which is what a remedy looks like and what a comment is not; this arm is that sentence driven instead of asserted.
    ---- ARM 9 (FLEET #4 on BOB #29's diagnosis, 2026-09-23), APPENDED. **BASELINE 91 pass / 0 fail, exit 0.** (9) **THE INSTALL LAYOUT** — remove the `preserveSymlinks: true,` line from `optionsFor` in `scripts/fleet-bundle.mjs` and build through a SYMLINKED `pdf-worker/node_modules` (ambient in a worktree sharing another install; otherwise the harness parks the real directory and symlinks it) -> **84 pass, 7 FAIL, exit 1**: all four `… preserves symlinks …` recipe assertions, and pdf-worker's byte-identity, manifest-sha and comment-only assertions. agent-worker, ocr-worker and bio-plane byte arms held (none vendors from `node_modules`). Run on BOTH layouts, same tally; both restores verified by content and sha256. With the flag dropped on a REAL install (no symlink) the tally is **87 pass, 4 FAIL**, the four recipe assertions only, measured the same day: the byte arm cannot see the defect there, which is why they exist.
    ---- M0-152 (2026-09-25), arm 5(b) CORRECTED and two arms APPENDED beside it — no other arm edited. [All three RETIRED in T20 with `tools/gates.mjs`, their whole subject; the record below is of the runs as made.] **(5b) READ THE GATE, NOT A RESTATEMENT OF IT.** Until M0-152, (5b) decided "doc-facing?" itself, `includes(<the prose directory>)` over this suite and its driver read WHOLE, comments included — the rule as it stood before M0-143 made `gates.mjs` read every file as CODE (comments blanked by `walkfloor.mjs` `stripComments`) and follow the tools a suite names in code, so the arm and the gate disagreed the moment either file grew such a comment, and the arm never saw the edge rule. It now runs `gates.mjs --explain` and reads the derived line; `--explain` prints that line in EVERY class since M0-152 (it printed only for DOCS, so a code diff — this control's own — left nothing to read). **BASELINE (5b), clean tree at this commit: class TARGETED (the branch's own committed diff is code — the case the old DOCS-only printing left unreadable), doc-facing false; driver baseline 91 pass / 0 fail, arm 5 (a) tree UNCHANGED, (c) coverage exit 0.** (5b-comment) **THE ROW'S NEGATIVE CONTROL** — append a comment naming the prose directory to this suite -> class TARGETED, **the gate says false, the superseded whole-file read says true: they DISAGREE**, as declared. (5b-code) **OVER-LENIENCY** — append CODE whose string names it -> the gate says **true**, so the verdict is not false for free. **THE ENABLING CHANGE DISARMED** (`|| EXPLAIN` removed from `gates.mjs`, restored sha256- and cmp-identical at 106,257 B): (5b-comment) reads the gate's verdict **null** and `held: false`, and `gates.test.mjs` fails EXACTLY "M0-152: ...and `--explain` prints the SAME derived doc-facing set there" (125 pass, 1 FAIL).
+   ---- RE-POINTED 2026-10-06 (BUNDLER #8, T34-6; N586): arm (1) now appends to `agent-harness/src/harness.mjs`, where T33's split moved agent-worker's harness (its own `src/harness.mjs` is a re-export file the build no longer reaches). Run alone on the T34 tree: **111 pass, 1 FAIL, exit 1**, naming `agent-worker` and `../agent-harness/src/harness.mjs` with STALE BUNDLE; the byte-identity arm held (tree-shaken, as declared above); restored by content and sha256.
    ======================================================================== */
 /* THE FLEET'S BUILD GUARD (FL-9, BOB 2026-09-10, answering DIST's DELEGATION).
  *
@@ -77,7 +78,7 @@ import { join } from "node:path";
 import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
-  planeMember, assetsOf, optionsFor,
+  planeMember, assetsOf, optionsFor, isContainer, isGuarded,
 } from "../../scripts/fleet-bundle.mjs";
 import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../scripts/embed-signpage.mjs";
 
@@ -109,8 +110,13 @@ const GUARDED_FLOOR = 4;
 const members = discoverMembers(REPO_ROOT);
 
 console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them is GUARDED ---");
+/* T34-6 (BUNDLER #8; N578, bundler R24): `agent-runner` is the fleet's first CONTAINER member — its deliverable is an
+   image named by digest, not a Worker bundle — so it is discovered and listed here, and not bundle-guarded below. */
 t("members discovered by their own marker file, never a list kept here",
-  members.map((m) => m.name), ["agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"]);
+  members.map((m) => m.name), ["agent-runner", "agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"]);
+t("agent-runner is listed as a container member, with its image (R24)",
+  members.filter(isContainer).map((m) => [m.name, m.kind, m.image.repository]),
+  [["agent-runner", "container", "docker.io/civicos/agent-runner"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
@@ -130,8 +136,10 @@ if (reproducible !== counted)
   console.log(`        ${counted} guarded member(s) counted; ${reproducible} of them stand on files in the commit`);
 t(`at least ${GUARDED_FLOOR} REPRODUCIBLE member(s) declare a committed bundle (the floor — a member DIRECTORY deleted is invisible to any per-member check, and a phantom one must not satisfy it)`,
   reproducible >= GUARDED_FLOOR, true);
+/* R24: the one exemption is a container member with no Worker bundle, stated by its own marker; a marker that merely
+   drops its `bundle` block is still named here. */
 t("every discovered member declares one — a member with no `bundle` block is NAMED, never silently unguarded",
-  members.filter((m) => !m.bundle).map((m) => m.name), []);
+  members.filter((m) => !m.bundle && isGuarded(m)).map((m) => m.name), []);
 
 /* The committed bytes are taken HERE, before a single build runs anywhere in
    this file. Everything downstream compares against this snapshot. */
@@ -207,14 +215,23 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      its five own modules, the plane's `tokens.mjs` (runtime-limits) and run-rules with observation-log's `checks.mjs` and
      `vocabulary.mjs` through it (`build/manifest.md`'s artifact table). The 153-input pin, accepted red since T18 (K641),
      retired with the inputs it named; docprofile's moved files (N441) left this list with them. */
-  t("agent-worker's 13 inputs are all recorded — its five own modules, the plane's denylist, and run-rules with what it imports",
+  /* RE-PINNED 2026-10-06 (BUNDLER #8, T34-6; N575, K1598, K1708): 13 -> 20 inputs, from the committed manifest this
+     suite reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). The agent-worker split (T33,
+     K1615) moved the harness to `agent-harness` and the model calls to `agent-model`, both reached across trees, and
+     added the member's own `ask.mjs` and `ops.mjs`; observation-log's `checks.mjs` brings record-grammar's `ids.mjs`
+     and `actors.mjs` (T33-30). `src/harness.mjs`, `src/model.mjs` and `src/subsession.mjs` left: the first and last
+     are re-export files the build no longer reaches (N586), the second moved to agent-model. */
+  t("agent-worker's 20 inputs are all recorded — its four own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
+     "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
+     "../agent-model/src/apikey.mjs", "../agent-model/src/model.mjs", "../agent-model/src/outcome.mjs",
+     "../agent-model/src/subscription.mjs",
      "../bio-plane/src/observation-log/checks.mjs", "../bio-plane/src/observation-log/vocabulary.mjs",
+     "../bio-plane/src/record-grammar/actors.mjs", "../bio-plane/src/record-grammar/ids.mjs",
      "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
-     "../bio-plane/src/tokens.mjs", "src/cascade.mjs", "src/harness.mjs",
-     "src/index.mjs", "src/model.mjs", "src/subsession.mjs",
+     "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/index.mjs", "src/ops.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);

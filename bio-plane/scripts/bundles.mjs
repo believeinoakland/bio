@@ -118,8 +118,15 @@ export function artifactState(member) {
 export async function guardedBundles(repoRoot, { plane = true } = {}) {
   const lib = await library();
   const root = repoRoot || lib.REPO_ROOT;
-  const all = [...lib.discoverMembers(root), ...(plane ? [lib.planeMember(root)] : [])];
+  /* A container member with no Worker bundle (R24) has no bundle to survey; `run` names it as listed, not guarded. */
+  const all = [...lib.discoverMembers(root).filter(lib.isGuarded), ...(plane ? [lib.planeMember(root)] : [])];
   return all.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** The members discovery lists that the bundle guard does not cover (R24). */
+export async function unguardedMembers(repoRoot) {
+  const lib = await library();
+  return lib.discoverMembers(repoRoot || lib.REPO_ROOT).filter((m) => !lib.isGuarded(m));
 }
 
 /** Ask the dependency-free arm of the gate about every guarded bundle. */
@@ -144,6 +151,10 @@ export function rebuildMember(member, { log = console.log } = {}) {
 export async function run({ repoRoot = null, check = false, plane = true, log = console.log } = {}) {
   const members = await guardedBundles(repoRoot, { plane });
   log(`bundles: ${members.length} guarded bundle(s) — ${members.map((m) => m.name).join(", ")}`);
+  const listed = await unguardedMembers(repoRoot);
+  if (listed.length)
+    log(`bundles: ${listed.length} container member(s) listed, not bundle-guarded (no Worker bundle) — `
+      + listed.map((m) => m.name).join(", "));
 
   const before = await survey(members);
   for (const r of before) for (const f of r.findings) log(`         ! ${f}`);

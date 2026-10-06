@@ -5,10 +5,11 @@
  *
  * Scenario: { subdomain, scripts: { <name>: { body?, settings?, settingsStatus?, scriptStatus? } },
  *             put: "accept" | "ignore", settingsAfterPut?: object, serving: { <name>: string },
- *             servingAfterPut?: "version" | "never", unreachable?: [<substring>] }
+ *             servingAfterPut?: "version" | "never", unreachable?: [<substring>], containers?: <status> }
  * A script with no entry does not exist (404). A PUT the scenario accepts stores the uploaded module as
  * the script's body, the metadata's limits as its settings (unless `settingsAfterPut` says otherwise),
- * and, unless `servingAfterPut` is "never", the metadata's VERSION as what the instance serves. */
+ * and, unless `servingAfterPut` is "never", the metadata's VERSION as what the instance serves. The account's
+ * Containers applications (R26) answer `containers` (403 when the scenario names none: a token without the scope). */
 import { readFileSync, appendFileSync } from "node:fs";
 
 const file = process.env.BUNDLER_STUB;
@@ -43,6 +44,11 @@ globalThis.fetch = async (input, init = {}) => {
   if (/\/workers\/subdomain$/.test(path)) {
     log(entry);
     return S.subdomain ? json(200, { success: true, result: { subdomain: S.subdomain } }) : json(500, { success: false });
+  }
+  if (/\/containers\/applications$/.test(path)) {
+    log(entry);
+    const st = S.containers ?? 403;
+    return st === 200 ? json(200, { success: true, result: [] }) : json(st, { success: false, errors: [{ code: 10000, message: "Authentication error" }] });
   }
   if ((m = path.match(/\/workers\/scripts\/([^/]+)\/settings$/))) {
     log(entry);
