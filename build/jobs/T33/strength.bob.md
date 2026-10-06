@@ -20,3 +20,7 @@ K1608: (a) uses edges set at your COMPLETE (state them there). (b) named at your
 ## B4 · CHANGE
 
 K1609: inquiry-grammar is merged into tranche/T33; re-point the occurrence spelling to its parseOccurrenceRef. leg-earning follows; a CHANGE when it merges.
+
+## B5 · CHANGE
+
+K1612: leg-earning is merged into tranche/T33 (inquiry-grammar too, K1609). Merge it and re-point earned, legCapped, basisFor and restingOn to leg-earning; run; COMPLETE with final uses (events, lines, money, people, duties, calculations, leg-earning as you need them).

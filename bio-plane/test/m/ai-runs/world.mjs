@@ -73,11 +73,13 @@ function cursor(rows) {
   return c;
 }
 
+export const SEAL = "test-seal-secret-for-ai-runs";
+
 /** inquiry's R49 as this module reaches it (K674): a stub at the interface, answering from `migrated` by question id,
  *  null otherwise; inquiry builds the real one in this layer. */
 export const inquiryStub = (migrated = {}) => ({ migratedSurfacing: (id) => migrated[id] ?? null });
 
-export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined } = {}) {
+export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined, zone = null } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) {
     const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
@@ -99,7 +101,7 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   const record = recordOf(ctx); record.migrate();
   const membership = membershipOf(ctx, { record }); membership.migrate();
   /* credentials (K789): the founder's claim, members' passwords and the AI credentials R18 reads are its (its R1–R15). */
-  const credentials = credentialsOf(ctx, { record, membership }); credentials.migrate();
+  const credentials = credentialsOf(ctx, { record, membership, sealSecret: SEAL }); credentials.migrate();
   const promotion = promotionOf(ctx, { record, membership });
   /* each fact by the module that registers it in the plane, answering as an empty record does */
   for (const [f, m, v] of [["producingGroup", "instance-setup", "test-group"], ["citedBy", "connections", []], ["caseMember", "publication", false]])
@@ -110,7 +112,9 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   observationLogOf(ctx, { extraction: null, provenance: null }).migrate();
   connectionsOf(ctx, { env }).migrate();
   const bias = biasOf(ctx, { env });
-  retrievalOf(ctx).migrate();
+  /* `zone`: the group's governing time zone as retrieval answers it (its R69), from an active profile's `time_zone`. */
+  if (zone) record.setSetting("jurisdiction_profiles", ["zone-profile"], "admin");
+  retrievalOf(ctx, zone ? { combine: () => ({ ok: true, view: { time_zone: { value: zone } } }), localFacts: null } : undefined).migrate();
   const runs = aiRunsOf(ctx, env, { inquiry, ...(deployedModes ? { deployedModes } : {}) });
   runs.migrate();
   let k = 0;
@@ -130,15 +134,24 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
       if (type === "project") membership.reindexProjectSight(id);
       return id;
     },
-    /* Members: the founder claims (viewer `admin`), a second administrator, then members enrolled to active. */
+    /* Members: the founder claims (viewer `admin`), a second administrator, then members enrolled to active, each
+       connecting their own account by their own act (credentials R22), unless listed in `noAccount`. */
     async group(...members) {
+      const opts = members.length && typeof members[members.length - 1] === "object" ? members.pop() : {};
       await credentials.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
       for (const [id, role] of [["second", "admin"], ...members.map((m) => [m, "member"])]) {
         const a = await membership.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: null, by: "admin" });
         if (!a.ok) throw new Error(`memberAdd ${id}: ${JSON.stringify(a)}`);
         await membership.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
+        if (!(opts.noAccount || []).includes(id)) await w.account(id);
       }
       return w;
+    },
+    /** A member connects their own account (credentials R22): an API key unless `kind` says otherwise. */
+    async account(id, kind = "apikey", secret = `secret-of-${id}`) {
+      const r = await credentials.accountReferenceSet({ member: `member:${id}`, kind, secret, by: `member:${id}` });
+      if (!r.ok) throw new Error(`account ${id}: ${JSON.stringify(r)}`);
+      return r;
     },
     /** A project owned by `owner`, with `joined` members joined and `invited` ones only invited. */
     project(id, owner, { joined = [], invited = [], discoverable = false } = {}) {
@@ -199,9 +212,14 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   return w;
 }
 
-/** An open's arguments, well formed unless overridden: an organisation credential's run over `INQ`. */
+/** An open's arguments, well formed unless overridden: an organisation credential's run over `INQ`, started by ann's
+ *  act and carried by her account (R52). */
 export const OPEN = (over = {}) => ({ run: "R1", contextType: "inquiry", contextId: INQ, principalPlane: ORG,
-  principalClaude: "instance", skillVersion: "bio@1", viewer: "admin", at: T0, ...over });
+  principalClaude: ANN, skillVersion: "bio@1", viewer: "admin", at: T0, ...over });
+
+/** One model call's figures, as `agent-model` R5 states them. */
+export const USAGE = (over = {}) => ({ input_tokens: 1000, output_tokens: 200, cache_read_input_tokens: 0,
+  cache_creation_input_tokens: 0, total_cost_usd: 0.012, ...over });
 
 /** An `agent-worker` binding that counts its calls and answers as told. */
 export function agentWorker(answer = { status: 200, body: { ok: true } }) {
