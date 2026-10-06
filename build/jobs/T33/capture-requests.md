@@ -33,3 +33,7 @@ New codes, both C-28: C-28.20 `MEMBER_CAPTURE_ONLY`, C-28.21 `CAPTURE_REQUEST_SI
 **Final uses.** Unchanged from `modules.json`.
 
 Size (session_01PteGwVmTyfNd1Hjkgzqp9q): test runs 16, module lines 1959
+
+## J2 · COMPLETE
+
+T33-51 done: R46 (site_kind refused MEMBER_CAPTURE_ONLY, C-28.20, routed to members; C-28.21 unknown kind; platform marks in capture_request_platforms with C-28.22; no supplied login to a marked host; login refusal there and its retry routed to members) and R47 (both tables declared through declareTable). Module tests 80/0; users' tests green; format, architecture, coverage (47/47), ownership all 0 failures. Row-census red gains C-28.20–.22. Record has the details.
