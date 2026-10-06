@@ -36,3 +36,10 @@ Alternative, if you prefer it: R6's braces say `key` (R35's own name), and I rea
 - format: 126 modules, 125 requirements files; 0 failures. architecture: 34 product files, 110 relative imports; 0 failures. coverage: 50 of 50 live ids named; 0 failures. ownership: 13 files changed by agent-worker; 0 failures.
 
 Size (session_01P2xa8iW7ktRdSZGHjGUVvB): test runs 22, module lines 2141
+
+## J2 · REPORT
+
+Two callers build the `/run` and `/ask` account without `level`, so under R6 as folded (K1798) a live dispatch or ask is now refused 400 `BAD_ACCOUNT`:
+1. **ai-runs** (`bio-plane/src/ai-runs/index.mjs:1713`, its T34-33 job): sends `{kind, secret, member, suggestions}` from `accountReferenceFor`; it owes K1798's `{kind, level, secret, member, suggestions?}` from `credentials.accountFor` (R35's `key` as `secret`), with the switch that governs that account (the group key's own, credentials R37, for a group-key act). K1798 already names it.
+2. **plane** (`bio-plane/src/plane/ask.mjs:48–54`, module `plane`, L11): the same shape gap, and it reads `accountReferenceFor`, not `accountFor`, so a member served only by the group's API key gets no ask (`NO_ACCOUNT`), against agent-worker R54 and answers R19's reading of K1755. Not in any T34 entry I can see.
+No test of either module is red today: none drives a live dispatch to this member.
