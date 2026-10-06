@@ -1,6 +1,6 @@
 # BOB to agent-runner (T33)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -9,3 +9,11 @@ Copy-split order: agent-harness (T33-54) → agent-model (T33-55) → agent-runn
 Conventions (K1563 (1), `build/rulings.md`): a new module's host factory is `<camelName>Of(host)`; an upstream not yet merged is taken as an injected dep coded to its requirements, and you re-point your tests at the real module after that module merges, before COMPLETE; an owner's `neighbours` registered with connection-grammar takes an optional `host` passed through, else the isolate's one instance, else refuses `OWNER_HOST_AMBIGUOUS`.
 Merge order in L6: inquiry-grammar first; leg-earning before inquiry (the copy before the deletion); hypotheses after inquiry; strength and contradiction next; run-rules → ai-runs; skills → answers; agent-harness → agent-model → agent-runner before agent-worker (the copies before the deletion; answers before agent-worker's `/ask`). All L6 jobs run at once (P10): a downstream job codes against its upstream's approved requirements and merges after it.
 Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their merges), 2 (membership's order test, until T33-19a), 3 (case-checker R13's program SHA, until case-checker's job, T33-66), 4 (importers of a copy-split's source, until re-pointed), 5 (the UI's DEC-88 tests, Bob's). Named reds still open, all outside your module: ai-runs R18 `scheduler.test.mjs:123` (K1514, until ai-runs' T33 job); skills "R28 the action_planning layer", red on `main` too (K1516, until skills' T33 job); intent `invariants.test.mjs:200` "R15 R16 (N179) … BIO_NOW_MS" (K1568, K1586, until T33-58); case-disclosures R21 `seam.test.mjs:93` (K1545, until T33-68); case-authoring R30 `invariants.test.mjs:124` (K1545, until T33-69); action-clocks `calendar.test.mjs` R10 ×3 (K1519, until T33-74); filings `packet.test.mjs` R9, R30 (K1519, until T33-75); affordances "R2 R3 R7 R12: N364's ops" (K1550) and `catalogue.test.mjs` "R3 R7 R12 … 62 ops" (K1571), until T33-85 and T33-88; control-plane's R26 test of sources' ops (K1550), its "R43, R22 … every published fence" hash pin (K1572) and `families.test.mjs:48` "CHECK_FAMILIES is total" (K1581), all until T33-89; instance-setup `keys.test.mjs` R44 ×4 (K1544, until T33-87); `test/system/fleetbundles.test.mjs` "agent-worker's 13 inputs" (K1598, until N575 in T34); `test/system/row-census.test.mjs`, the rows awaiting promotion's stamp (N553): record-core's 9, C-112.21–C-112.32, C-91.1 and C-133.1–C-133.36 less .13 and .28 (K1542, K1545, K1571, K1572, K1585).
+
+## B2 · CHANGE
+
+K1600: your Provides (Terms) now names the connection: a WebSocket the caller opens with fetch("https://agent-runner/conversation", {headers: {Upgrade: "websocket"}}); its first message is the conversation request; relays, results and R4's end travel on it. Merge tranche/T33 into your branch and serve that path. AGENT-MODEL #1 codes to it: it counts each tool_result it sends as a turn, reads {ok:false, code:"MAX_TURNS"} as exhausted and any other {ok:false} as refused.
+
+## B3 · ANSWER · re J1
+
+K1601: (1) accepted: port 8080, GET /conversation with the upgrade; it matches your Provides (K1600) and AGENT-MODEL #1's reading. (2) accepted: kind container with an image block, no bundle; fleetbundles' red names agent-runner until N578 (bundler, next tranche), accepted by name at merge; no REPORT needed. (3) accepted. (4) accepted: docker.io/civicos/agent-runner as the placeholder the release confirms.

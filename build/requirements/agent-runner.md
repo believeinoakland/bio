@@ -12,7 +12,7 @@ The container in which a member's Claude subscription runs a model conversation 
 
 ### Provides
 
-Terms. The **caller** is `agent-model`'s subscription provider, through the Container Durable Object. A **conversation request** is `{credential: {kind, secret}, model, system, prompt, tools: [{name, description, input_schema}], max_turns}`. A **relay** is `{tool_use: {id, name, input}}` sent to the caller, answered by `{tool_result: {id, content, is_error?}}`.
+Terms. The **caller** is `agent-model`'s subscription provider, through the Container Durable Object. A **conversation request** is `{credential: {kind, secret}, model, system, prompt, tools: [{name, description, input_schema}], max_turns}`. A **relay** is `{tool_use: {id, name, input}}` sent to the caller, answered by `{tool_result: {id, content, is_error?}}`. The **connection** is a WebSocket the caller opens with `fetch("https://agent-runner/conversation", {headers: {Upgrade: "websocket"}})`; its first message is the conversation request, and relays, results and the end (R4) travel on it (K1600).
 
 **The conversation** (one per connection)
 - **R1** (K1502) For each conversation request it runs one Agent SDK query with Claude Code unmodified and not in bare mode, with built-in tools off (`tools: []`), no settings source (`settingSources: []`), no session persistence (`persistSession: false`), `strictMcpConfig: true`, no skills, and `maxTurns` set from `max_turns`; the options are checked by a test that captures them at the SDK boundary. *(not yet met: T33-56)*
