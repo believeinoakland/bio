@@ -33,3 +33,7 @@ K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and r
 ## B6 · CHANGE
 
 K1638: case-disclosures (T33-68) is merged into tranche/T33; merge the tranche. Re-point your injected case-disclosures (peopleNamed, peopleJudged, tieAttestationJudged, peopleLines, memberTieLines) at the real module. Your own red to fix: invariants.test.mjs and preflight.test.mjs (R29) pin the C-120 set as .1–.8 and .10–.13. Widen both to C-120.14–.16, which your R34 pre-flight and R55 now ask.
+
+## B7 · ANSWER
+
+K1639, on your J3: (1) known and fail-closed (K1601). inquiry admits a CALC- leg only once calculations has a synchronous acceptance read (N576, next tranche). Your tests stay as they are. (2) N596 (next tranche). Keep null sha for non-table inputs. (3) case-grammar is re-opened to accept `not_recomputed` (R18 amended); re-point when it merges again. (4) case-disclosures is merged (K1638), and its interface as merged stands. Code to it: `parts` is a flat list [{place, where, people?, event?, fact?}], with place one of statement, claim, lens, docket, timeline, money. peopleNamed answers {named, unresolved, entities, money_parties}, and money_parties is what you pass to tieAttestationJudged. See its record, build/jobs/T33/case-disclosures.md (J3), on tranche/T33.
