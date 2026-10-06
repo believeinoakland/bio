@@ -70,7 +70,9 @@ const WIZARD_AUTHOR_ACTIONS = Object.freeze(["wizarddraft", "wizardrevise", "wiz
 const WIZARD_PROPOSAL_ACTIONS = Object.freeze(["wizardpropose"]);
 const WIZARD_VIEWER_OPS = Object.freeze(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
                                          "wizardpropose", "wizards", "wizardread", "wizardsat", "wizarduse",
-                                         "wizardcandidates", "wizardcheck"]);
+                                         "wizardcandidates", "wizardcheck",
+                                         /* T34 (wizard-scripts R23, R26; op-declarations R15, R28): the two reads it adds */
+                                         "startfrom", "baseupdates"]);
 
 /* R54 (DEC-133, DEC-136, DEC-132; op-declarations R22): membership's T34 administrator acts, routed through
    `membershipOps` by the general forward with `by` stamped below; the doors and the two reads are answered above. */
