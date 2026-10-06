@@ -17,6 +17,7 @@ import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { biasOf } from "../../../src/bias/index.mjs";
 import { inquiryOf, inquiryFindings } from "../../../src/inquiry/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
+import { captureOf } from "../../../src/capture/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -55,14 +56,15 @@ export const LEGACY_BUNDLE_COLUMNS = ["inquiry_basis_count INTEGER", "inquiry_su
 const STRENGTH_COLUMNS = ["inquiry_capture_strength TEXT", "inquiry_capture_state TEXT", "inquiry_connection_strength TEXT",
                           "inquiry_connection_state TEXT"];
 
-/** `realRetrieval`: the real retrieval module over the same storage (its selections, its projection's decorations,
+/** `calculations`: a stand-in for calculations' status read (R11, its R31). `capture`: the real capture module (R58).
+ *  `realRetrieval`: the real retrieval module over the same storage (its selections, its projection's decorations,
  *  its search), instead of the stand-in whose selections the test controls. `legacyColumns`: `bundles` as a store
  *  written before T18 holds it (R36's move). `bias`: the real bias module over the same storage, migrated, with this
  *  module's findings registered with it as `plane` registers them (R53, `inquiryFindings`). `view`: the active
  *  jurisdiction view the dated waits read their time zone from (R55, R57), a function; absent, the record's own. */
 export function world({ caseMembers = new Set(), published = null, group = "test-group", realRetrieval = false,
                         legacyColumns = false, bias: withBias = false, view = undefined, standards: withStandards = false,
-                        duties = undefined } = {}) {
+                        duties = undefined, calculations = undefined, capture: withCapture = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -111,15 +113,19 @@ export function world({ caseMembers = new Set(), published = null, group = "test
     record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
     standards = standardsOf(host, { record, membership, promotion, content, events: () => null, now: () => clock.now });
   }
+  /* R58: the real capture module on the same host (its R79, R81, R84), which a test drives through its own acts */
+  const held = withCapture ? captureOf(host, { record, provenance: prov }) : null;
+  if (held) held.migrate();
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval, provenance: prov,
                               now: () => clock.now, ...(view !== undefined ? { view } : {}),
+                              ...(calculations !== undefined ? { calculations } : {}), ...(held ? { capture: held } : {}),
                               ...(standards ? { standards } : {}), ...(duties !== undefined ? { duties } : {}) });
   k.migrate();
   if (bias) bias.registerWorkProducts("finding", inquiryFindings(host, bias));
   const raisedCalls = [];
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, bias, standards, extraction, content, entities, connections, retrieval, k, clock, selections, raisedCalls,
+    st, host, record, membership, promotion, prov, bias, standards, held, extraction, content, entities, connections, retrieval, k, clock, selections, raisedCalls,
     caseMembers, groupRef,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
