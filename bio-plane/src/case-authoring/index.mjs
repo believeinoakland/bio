@@ -86,7 +86,8 @@ export { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from
 export { CASE_AUTHORING_SCHEMA, CASE_AUTHORING_TABLES } from "./schema.mjs";
 export { searchedSection, SEARCHED_LEVEL_OUTCOMES } from "./searched.mjs";
 export { caseDocumentText, statementSha, withheldWriterStated, fmSafe, ackFrontmatterLines, ackBodyLines,
-         ACK_PROSE_HEAD, CASE_CITATION_WORDS, CEREMONY_HIGHLIGHT_SENTENCE, CALCULATION_STATE_WORDS } from "./document.mjs";
+         ACK_PROSE_HEAD, CASE_CITATION_WORDS, CEREMONY_HIGHLIGHT_SENTENCE, CALCULATION_STATE_WORDS, WORKBOOK_STATE_WORDS }
+  from "./document.mjs";
 /* N529 (K1333): what moved to `case-disclosures`, re-exported for this module's importers (`affordances`, `review`,
    `plane` and their tests) so the split asks nothing of them: the C-120 family (R29) and the disclosure constants and
    renderers this module's document writes (R14). Each is case-disclosures' one spelling, never a copy. */
@@ -438,10 +439,14 @@ export class CaseAuthoring {
         if (normalizeType(OBJECT_TYPES[str(leg.target_id).split("-")[0]]) === "event") set.push(str(leg.target_id));
     }
     const ids = [...new Set(set)];
-    const out = { set: ids, rows: [], left_out: 0 };
+    /* `cut` names each lane events answered `truncated` (its R29, R30: cut at its limit), so the document says the list
+       stops there rather than reading as whole; `unread` is a read that failed, stated rather than read as empty. */
+    const out = { set: ids, rows: [], left_out: 0, cut: [], unread: null };
     if (!ids.length) return out;
     const read = this.events.timeline({ set: ids, viewer });
     if (!read || read.ok === false) return { ...out, unread: read ? read.reason ?? "TIMELINE_UNREAD" : "TIMELINE_UNREAD" };
+    if (read.world && read.world.truncated === true) out.cut.push("they_did");
+    for (const src of (read.ours && read.ours.sources) || []) if (src && src.truncated === true) out.cut.push(`we_did:${src.source}`);
     let ord = 0;
     for (const it of [...((read.world && read.world.items) || []), ...((read.world && read.world.placed_nowhere) || [])]) {
       const ev = this.events.readEvent({ eventId: it.event_id, viewer });
@@ -985,7 +990,8 @@ export class CaseAuthoring {
       grading: findingFacts.grading, passages: findingFacts.passages,
       /* R56, R57: case-grammar's blocks (its R18, R20); R55: case-disclosures' people and member-ties blocks (its R28). */
       calculations: calcJ.rows, calculationsBlock: calculationsLines(calcJ.rows),
-      timeline: timeline.rows, timelineLeftOut: timeline.left_out, timelineBlock: timelineLines(timeline.rows),
+      timeline: timeline.rows, timelineLeftOut: timeline.left_out, timelineCut: timeline.cut, timelineUnread: timeline.unread,
+      timelineBlock: timelineLines(timeline.rows),
       peopleBlock: peopleLines(peopleJ.rows), memberTiesBlock: memberTieLines(tiesJ.rows),
     });
     const docBytes = new TextEncoder().encode(docText);

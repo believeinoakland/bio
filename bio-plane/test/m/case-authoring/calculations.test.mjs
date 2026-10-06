@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CALCULATION_STATE_WORDS, DISCLOSED_WITHOUT_WORDS }
+import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CALCULATION_STATE_WORDS, WORKBOOK_STATE_WORDS, DISCLOSED_WITHOUT_WORDS }
   from "../../../src/case-authoring/index.mjs";
 import { calculationsOf } from "../../../src/case-grammar/index.mjs";
 
@@ -97,6 +97,7 @@ test("R56: op=publish recomputes and reads each calculation a member's chain rea
   assert.deepEqual(rows[0].results, { t: { value: "12", precision: "exact" } });
   const body = bodyOf(docOf(w, ok));
   assert.ok(body.includes(`- ${C1}: ${CALCULATION_STATE_WORDS.differs}. Disclosed by the group: ${WORDS}`));
+  assert.equal(body.includes("Each workbook below"), false, "no workbook, no workbook sentence");
 });
 
 test("R56: a load-bearing calculation with an unbound input (calculations R9's grade facts) is unbound, and needs disclosure as one that differs; a differing state outranks unbound", async () => {
@@ -174,7 +175,11 @@ test("R56 (K1570, K1594): a workbook among the captures a member rests on is rea
   const row = calcs(w, ok)[0];
   /* case-grammar R18's fourth status, a workbook not recomputed here (K1639 (3), K1642), never a gate */
   assert.deepEqual([row.calc, row.recompute, row.disclosed, row.method_version], [cap, "not_recomputed", null, "IronCalc 0.5"]);
-  assert.ok(bodyOf(docOf(w, ok)).includes(`- ${cap}: ${CALCULATION_STATE_WORDS.not_recomputed}.`));
+  /* workbooks R8: read, never recomputed here, and stated as agreement between engines, never accuracy */
+  const body = bodyOf(docOf(w, ok));
+  assert.ok(body.includes(`- ${cap}: ${WORKBOOK_STATE_WORDS.not_recomputed} (IronCalc 0.5).`), body.slice(body.indexOf("## Calc"), body.indexOf("## Calc") + 900));
+  assert.match(body, /Each workbook below was read when the case was published and not recomputed then\. .*agreement between two engines, never a check that the figures are right/);
+  for (const words of Object.values(WORKBOOK_STATE_WORDS)) assert.doesNotMatch(words, /recomputed at publication/);
 });
 
 test("R56, R55: the calculations judgment is asked after case-disclosures' flags and before the people the case names (R55's order): a case refused on both answers the calculation first", async () => {

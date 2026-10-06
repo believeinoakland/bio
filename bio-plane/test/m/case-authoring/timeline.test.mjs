@@ -172,3 +172,25 @@ test("R55 (case-disclosures R27): the signer — the publishing owner — attest
   assert.equal(pre.first.code, "PERSON_BASIS_UNRECORDED");
   assert.ok(pre.blockers.some((b) => b.code === "TIE_ATTESTATION_MISSING"), JSON.stringify(pre.blockers).slice(0, 300));
 });
+
+test("R57, R26: a lane events cut at its limit (truncated) is stated as stopping at its bound, never read as whole; a timeline read that fails is stated as not read, never as empty", () => {
+  const cutEvents = eventsStandIn();
+  const real = cutEvents.timeline;
+  cutEvents.timeline = (a) => { const r = real(a); return { ...r, world: { ...r.world, truncated: true },
+    ours: { ...r.ours, sources: r.ours.sources.map((s) => (s.source === "docket" ? { ...s, truncated: true } : s)) } }; };
+  const c = setup({ events: cutEvents });
+  const body = bodyOf(docOf(c.w, publish(c.w, c.P)));
+  assert.ok(body.includes("The list of what they did stops at its bound: the record holds more than this case lists."));
+  assert.ok(body.includes("What we did, from docket, stops at its bound: that source holds more than this case lists."));
+  /* negative control: nothing cut, nothing said of a bound */
+  const whole = setup();
+  assert.equal(bodyOf(docOf(whole.w, publish(whole.w, whole.P))).includes("stops at its bound"), false);
+  /* a read that fails */
+  const failing = { ...eventsStandIn(), timeline: () => ({ ok: false, reason: "NO_SET" }) };
+  const f = setup({ events: failing });
+  const fr = publish(f.w, f.P);
+  assert.equal(fr.ok, true, JSON.stringify(fr).slice(0, 300));
+  const fb = bodyOf(docOf(f.w, fr));
+  assert.ok(fb.includes("The timeline could not be read when this case was published (NO_SET). It is stated as not read, not as empty"));
+  assert.deepEqual(timelineBodyLines([], 0, { cut: [] }), [], "nothing to say, no section");
+});
