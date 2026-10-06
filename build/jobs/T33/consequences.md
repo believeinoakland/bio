@@ -20,3 +20,30 @@ Findings outside consequences, for routing. None of them blocks this job.
 (3) calculations (N576): a synchronous sight and read of a calculation (strength's `gradeFactsOf` shape answering `found`). Until then R15 withholds a calculation operand from every member viewer, even the part's author, and its value and grade stand. The answer to the act that records it also withholds it from its own author.
 (4) people (N600): `sourceLinkSight(person)`. Until then R16 shows a person only to a viewer some link lists. My tests stand it in over people's own table, and the fail-closed fallback is tested against the real people.
 (5) calc-grammar R3 is proved by its own figures test (its one stated difference: "(-5)" is refused as two signs, which the deleted parser read as -5). No consequences caller depended on that form.
+
+## J3 · COMPLETE
+
+**Entries applied.** T33-71 in full.
+- B1b.6 and C:A-11, R2: `figures.mjs` is deleted. Figures are read by calc-grammar's `parseFigure`, and sum, difference, product and ratio are calc-grammar's `add`, `subtract`, `multiply` and `divide`. A ratio uses RATIO_DEFAULT (12 places, half even), and the part states it. Operands are `{content, figure}`, `{money}` (`money.readFact`, the amount as held, its reading grade) and `{calculation, key}` (`calculations.read`, a step of its results or `output`, the capture axis of its grade facts). calc-grammar's `UNIT_MISMATCH` and money's summation codes (`summable`, asked for sums and differences over two or more facts) pass through with their owners' codes, and nothing is written.
+- Terms and R1: values are exact decimal strings. A string or a JS number is read through calc-grammar; `MEASURE_INVALID` covers values that do not read, and reversed ranges compared exactly. Stored numbers are read as exact decimals and never rewritten (K1649 (1)).
+- R10: kind `person` with `{entity, named_in}`. `AFFECTED_NOT_A_PERSON` is C-114.22 and `AFFECTED_PERSON_NOT_NAMED` is C-114.21; a passage names the person when it holds the label or a live alias, folded. `AFFECTED_INDIVIDUAL` (C-114.5) is retired.
+- R16: a person is withheld whole (`{kind: person}`, `out_of_view: true`) from a viewer who may not see the passage's capture, or whom a protected source's link does not admit. That is fail closed until people's `sourceLinkSight` (N600). The person never enters the CONS- document or title.
+- R15 covers money and calculation operands; a calculation is fail closed until calculations' synchronous read (N576).
+- An act naming a calculation operand answers a promise, which the plane frame awaits. Every other act and read stays synchronous.
+- Schema: `consequence_operands` gains `kind`, `result_key` and `exact`, added by ALTER to existing tables.
+
+**Final uses:** record-grammar, record-core, membership, promotion, provenance, content, inquiry, strength, conformance, entities, calc-grammar, money, calculations, people (as modules.json, K1649).
+
+**Deferred:** none in consequences. The fail-closed arms of R15 and R16 lift when N576 and N600 land; each has a test for today's behaviour and one for the service.
+
+**Found elsewhere:** J2 (plane's stale bundle; K1619 against the architecture check for connections; N576, N600; calc-grammar R3's "(-5)").
+
+**Tests and checks**
+- `node --test test/m/consequences/`: tests 38, pass 38, fail 0 (six files; `person.test.mjs` is new).
+- The suites of consequences' users (filings, escalation, affordances, control-plane, plane, actions, op-declarations): 656 tests, 12 fail. All 12 also fail on `tranche/T33` @ ac0df40 and are named reds; none is new.
+- format: 126 modules, 125 requirements files; 0 failures.
+- architecture: 11 product files, 49 relative imports; 0 failures.
+- coverage: 1 module, 16 of 16 live requirement ids named by a test; 0 failures.
+- ownership: 12 files changed by consequences between tranche/T33 and HEAD; 0 failures.
+
+Size (session_01RYCDtWu8Z5BpxAe2DjCh9W): test runs 17, module lines 1438
