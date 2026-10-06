@@ -21,7 +21,8 @@ import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
 import { readCaseFile } from "../../../src/case-checker/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
-import { caseFilePath, casePartDigest, CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH } from "../../../src/case-grammar/index.mjs";
+import { caseFilePath, casePartDigest, CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CALCULATION_FIELDS }
+  from "../../../src/case-grammar/index.mjs";
 
 /* as workerd binds: an ArrayBuffer is a BLOB (node:sqlite takes it as a typed array), and a BLOB reads back as an
    ArrayBuffer */
@@ -118,19 +119,17 @@ export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar
           "---", "", `# Case ${caseId}`, note, ""].join("\n");
 }
 
-/** `case-grammar` R18's `calculations:` block, flat rows, each list or map value its canonical JSON in one quoted value. */
+/** `case-grammar` R18's `calculations:` block as a document carries it, each value its canonical JSON in one quoted value
+ *  (`case-grammar`'s one spelling, written field by field here so a test can state a row the writer would not: a forged
+ *  key or value). */
 export function calculationsBlock(rows) {
-  const v = (x) => (x === null || x === undefined ? "null" : typeof x === "string" ? `'${x}'` : `'${canonicalJson(x)}'`);
-  return ["calculations:", ...rows.flatMap((r) => [`  - calc: ${r.calc}`, `    recipe: ${v(r.recipe)}`, `    inputs: ${v(r.inputs)}`,
-    `    method_version: ${v(r.method_version)}`, `    results: ${v(r.results)}`, `    result_key: ${v(r.result_key)}`,
-    `    recompute: ${v(r.recompute)}`, `    disclosed: ${v(r.disclosed)}`])];
+  const exact = (v) => (v === null || v === undefined ? "null" : `'${canonicalJson(v).replace(/'/g, "\\u0027")}'`);
+  return ["calculations:", ...rows.flatMap((r) => CALCULATION_FIELDS.map((f, i) => `${i ? "   " : "  -"} ${f}: ${exact(r[f])}`))];
 }
 
-/** A carried calculation input's path and kind (`case-grammar` R13's `calculation` kind; a material path until that
- *  kind's path is spelled). */
-export function calcInputAt(name) {
-  const p = caseFilePath("calculation", name);
-  return p ? { path: p, kind: "calculation" } : { path: caseFilePath("document", name), kind: "document" };
+/** A carried calculation input's path (`case-grammar` R13's `calculation` kind: `calculations/<calc>/inputs/<sha256>`). */
+export function calcInputAt(calc, hash) {
+  return { path: caseFilePath("calculation", [calc, hash]), kind: "calculation" };
 }
 
 /** A case file's parts, as `public-read` R23 writes one (`case-grammar` R13: `caseFilePath` paths, files in path order,
@@ -146,7 +145,8 @@ export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, len
     { path: at("complete_edition"), kind: "complete_edition", bytes: bytes(`<!doctype html><title>${caseId}</title>`) },
     ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id])) })),
     ...documents.map((d) => ({ path: at("document", d.name), kind: "document", bytes: d.bytes })),
-    ...calcInputs.map((d) => ({ ...calcInputAt(d.name), bytes: d.bytes, ...(d.listedAs ? { listedAs: d.listedAs } : {}) })),
+    ...calcInputs.map((d) => ({ ...calcInputAt(d.calc ?? "CALC-2026-0007", sha(d.listedAs ?? d.bytes)), bytes: d.bytes,
+                                ...(d.listedAs ? { listedAs: d.listedAs } : {}) })),
   ].sort((a, b) => (a.path < b.path ? -1 : 1));
   const rest = files.filter((x) => x.kind !== "case_document" && x.kind !== "case_signature");
   const partOf = (f) => (!split || !rest.includes(f) ? 1 : 2 + rest.indexOf(f));

@@ -38,8 +38,6 @@
  *   reevaluation    `acceptanceWithdrawn` (its R31; R7), `citedCaseMoved` (its R33; R18).
  *   checkCaseFile   `case-checker.checkCaseFile` (its R1), pure; it answers a promise. Default: case-checker's own.
  *   caseFileManifestCheck   `case-grammar.caseFileManifestCheck` (its R13), pure.
- *   caseCalculationsOf      `case-grammar.calculationsOf` (its R18): the case document's `calculations:` rows, pure.
- *                           Default: case-grammar's own, else `calculationRowsOf` below, coded to its R18.
  *   now             the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
  * The words a member sees (the origin marks, "another group's", the statement that recreating is not endorsing) are the
@@ -198,19 +196,6 @@ export const CALC_RESULTS = Object.freeze(["recreated", "differs", "not_recreate
 const CHECKER_CALC = { agrees: "recreated", differs: "differs", not_recomputed: "not_recreated" };
 /* The most bytes one carried input is read as (a table within a Worker's heap, as `calculations` R1 bounds a table). */
 export const CALC_INPUT_MAX = 20 * 1024 * 1024;
-const jsonOf = (v) => { if (typeof v !== "string") return v ?? null; try { return JSON.parse(v); } catch { return v; } };
-
-/** `case-grammar` R18's rows, read from a case document's front matter as that requirement spells them: one row per
- *  calculation, flat, each list or map value its canonical JSON in one quoted value. The stand-in until `case-grammar`
- *  provides `calculationsOf`; a document without the block answers an empty list. Pure; never throws. */
-export function calculationRowsOf(fm) {
-  try {
-    const rows = isObj(fm) && Array.isArray(fm.calculations) ? fm.calculations : [];
-    return rows.filter(isObj).map((r) => ({ calc: r.calc ?? null, recipe: jsonOf(r.recipe), inputs: jsonOf(r.inputs),
-      method_version: r.method_version ?? null, results: jsonOf(r.results), result_key: r.result_key ?? null,
-      recompute: r.recompute ?? null, disclosed: jsonOf(r.disclosed) }));
-  } catch { return []; }
-}
 
 /* R21: a row's inputs as `[{name, sha}]` (a list of `{name, sha256}` or a `{name: sha}` map), or null. */
 function inputsOfRow(v) {
@@ -365,9 +350,6 @@ export class CaseImport {
   get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record }); }
   get #checkCaseFile() { return this.#deps.checkCaseFile || checkCaseFile; }
   get #manifestCheck() { return this.#deps.caseFileManifestCheck || caseGrammar.caseFileManifestCheck; }
-  get #caseCalculationsOf() {
-    return this.#deps.caseCalculationsOf || (typeof caseGrammar.calculationsOf === "function" ? caseGrammar.calculationsOf : calculationRowsOf);
-  }
 
   migrate() { migrateCaseImport(this.sql); }
 
@@ -521,8 +503,7 @@ export class CaseImport {
     const listed = new Map(CaseImport.#manifestFiles(manifest).map((f) => [f.path, f.sha]));
     const doc = files.find((f) => f.kind === "case_document" && f.content instanceof Uint8Array);
     const fm = doc ? this.#call(() => parseFrontmatter(new TextDecoder().decode(doc.content)).data) : null;
-    const fn = this.#caseCalculationsOf;
-    const rows = isObj(fm) ? this.#call(() => fn(fm), []) : [];
+    const rows = isObj(fm) ? this.#call(() => caseGrammar.calculationsOf(fm), []) : [];
     return recreateCalculations({ rows: Array.isArray(rows) ? rows : [], documents,
       files: files.filter(isObj).map((f) => ({ path: f.path, sha256: listed.get(f.path) ?? null,
                                                 content: f.content instanceof Uint8Array ? f.content : null, detail: f.detail ?? null })) });

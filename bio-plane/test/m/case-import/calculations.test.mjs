@@ -47,6 +47,9 @@ test("R21 R3 a carried calculation whose results and result key recompute equal 
   assert.deepEqual(c.recomputed.output, s.output);
   assert.equal(c.recomputed.output.value, "1500.50", "the recipe is evaluated, not echoed: Acme's two payments");
   assert.equal(w.count("case_import_calculations"), 1, "recorded per calculation at the import (R3)");
+  assert.deepEqual(w.rows(`SELECT path, kind FROM case_import_files WHERE kind='calculation'`),
+                   [{ path: `calculations/CALC-2026-0007/inputs/${TABLE_SHA}`, kind: "calculation" }],
+                   "the input travels as case-grammar R13's `calculation` kind, named by its hash");
   assert.ok(CALC_RESULTS.includes(c.result));
 });
 
