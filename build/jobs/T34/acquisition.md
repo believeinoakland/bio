@@ -19,6 +19,6 @@
 - `node --test bio-plane/test/m/acquisition/`: tests 88, pass 88, fail 0 (new `origin.test.mjs`, 4 tests named R17 (N615)).
 - `node --test bio-plane/test/m/capture/` (the other `profileOf` caller): tests 118, pass 118, fail 0.
 - Layer tests: none named in `build/manifest.md`.
-- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 15 product files, 59 relative imports; 0 failures. `coverage`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership`: see below (run after commit).
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 15 product files, 59 relative imports; 0 failures. `coverage`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership`: 4 files changed by acquisition between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01JnE9bHgWiNuuBC1kUAXAsw): test runs 9, module lines 1812
