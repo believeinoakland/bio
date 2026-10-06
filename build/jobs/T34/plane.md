@@ -15,3 +15,23 @@ Findings outside plane (none changed by me):
 2. **membership** R83 `module-order.test.mjs` is red on the tranche (2 tests): `MODULE_ORDER` lacks `case-catalogue` (K1824), `machinery-producers` (K1850) and `setup-page` (K1851). Today none of the three registers a step or listener, so nothing is mis-ranked (plane's R2/R10 test now checks exactly that); a later registration by any of them would rank last (promotion R39).
 3. **Generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` is stale from this job's source (regenerated at the layer's close).
 4. **ratification/actions order (fixed in plane, for the record):** `actionsOf` reaches `ratificationOf(ctx)` for its hold reader (actions R69), so ratification was first built there, bare. The plane now builds ratification with its `worker` immediately before `actions`, so the reach K1832 asks for is the one it holds. No full scheduled-publish run on the composed store drives R42's after-commit steps end to end (no fixture builds a signed waiting edition on the real store); ratification's own `schedule.test.mjs` covers the publisher, and plane's `t34.test.mjs` covers the reach it hands.
+
+## J3 · COMPLETE
+
+**Entries applied (T34-76, R19's T34 share, T34-87's rows, accepted red 8):**
+1. (K1806) `plane/ask.mjs` asks `credentials.accountFor` and carries agent-worker R6's shape `{kind, level, secret, member, suggestions}`; the member's own switch is read for a `member`-level account, and a `group`-level one carries `suggestions: false` (K1798). A member served by the group key can ask once the key is held and on and the notice read.
+2. (N625, K1683) `wrangler.jsonc` binds `SHEET_WORKER` → `sheet-worker`.
+3. (N584; K1788, K1803) answers' `relations` dep dropped (and the `PROJECTION_RELATION` import): answers reads retrieval's `relations()` and `zone()` itself.
+4. (K1832, accepted red 8) `store.test.mjs` R2/R10: a `modules.json` module absent from the step order is not asked for a rank and must hold no step on a constructed store (case-catalogue, setup-page, machinery-producers today). Cleared.
+5. (K1832) `ratificationOf(ctx, {worker})` with `ratificationWorker({env, door, namespace})` (`wiring.mjs`): the env, a stub whose `fetch` is the object's own door, and `storeName` read from the namespace. Built before `actions`, which otherwise builds ratification bare (found by tracing construction).
+6. R19 (DEC-152, DEC-153): `MACHINE_DRAFTS` gains `groupdescriptiondraft` and `writinghelp`; the registration hands `irreversible`, read from affordances' `RUNGS` at registration (so `publishat`/`publishatmove` join when affordances' R42 merges).
+7. R2/R21 splits (B2, K1863 (3)): setup-page pure, no line; machinery-producers merged and read: every dep defaults lazily to its module's per-host instance and it registers nothing, so no line.
+8. DEC-149 (T34-87): `ask.mjs:36` "your group's Civicsmith has no assistant bound to it. Nothing was asked."; `screens.mjs` record, members and published purposes say "your group's Civicsmith". No check translation changed (no catalogue version move). `wizards`/`wiring`' operator-facing `NO_ENGINE` ("not bound to this plane") left as operator text.
+
+**Deferred:** none in plane. When wizard-scripts merges with R13's `irreversible`, its own tests drive R24's refused set; plane's R19 test checks the registration's parts.
+
+**Other modules:** see J2 (bundler deploybindings ×2 red from the binding; membership R83 red; plane bundle stale).
+
+**Tests and checks** (on the branch with `tranche/T34` @ machinery-producers' merge): `node --test test/m/plane/` 114 pass, 0 fail; wrangler readers elsewhere green (scheduler 5, capture 2, bundler release 34, control-plane limits 1, reevaluation mv5 1, resolveversion 1, newgroup 37+1+1); bundler `deploybindings` 35 passed, 2 failed (J2 1). `format`: 0 failures; `architecture plane`: 0 failures; `coverage plane`: 24 of 24, 0 failures; `ownership plane tranche/T34`: 13 files, 0 failures. P6: `src/plane/` 1,000 lines.
+
+Size (session_016j2cQUCpdP2bQzqEqTf8Co): test runs 7, module lines 1000
