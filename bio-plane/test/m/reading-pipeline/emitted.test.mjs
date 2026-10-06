@@ -6,6 +6,12 @@ import assert from "node:assert/strict";
 import { emittedFieldsOf } from "../../../src/reading-pipeline/index.mjs";
 import { getFormat } from "../../../src/formats.mjs";
 import { fresh, hold, doc, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 
 const META = { author: "A. Clerk", lastModifiedBy: "B. Deputy", created: "2026-01-02T03:04:05Z", modified: "2026-02-03T04:05:06Z",
                source: "docProps/core.xml" };

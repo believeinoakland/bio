@@ -13,6 +13,12 @@ import { deflateSync } from "node:zlib";
 import { Miniflare } from "miniflare";
 import { fresh, hold, doc, member } from "./fixture.mjs";
 import { ocrWorkerDef } from "../../../../ocr-worker/test/memberworker.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 
 /* ---- PDF bytes, as the old suites assembled them ---- */
 function pdf(objs) {

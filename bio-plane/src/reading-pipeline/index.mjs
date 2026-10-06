@@ -875,6 +875,9 @@ function driveHopOf(doc) {
   return h ? { format: h.export_format } : null;
 }
 
+/* N615 (K1773): the origin of the bytes of every capture `read` is handed (see `readInner`). */
+const CAPTURE_ORIGIN = "fetch";
+
 const failed = (doc, docType, basis, extra = {}) => ({
   content_type: docType ? docType.type.key : null, reader_version: docType ? (docType.type.version ?? null) : null,
   read_from_text: false, found: false, entities: [], facts: {}, at: doc && typeof doc.retrieved === "string" ? doc.retrieved : null,
@@ -944,7 +947,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const bytes = got.bytes;
   const textRead = !multipart && profile.profiled_from_text === true && bytes;
   const text = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
-  const profCtx = { headers, locator, content_type: ct || null, text };
+  /* N615 (K1683, K1773): every recogniser is handed the capture's origin, `"member"` only for bytes a member supplied by
+     their own act outside the copy. The document records none: every capture it can be is a fetch the copy made, a
+     member session's request included (acquisition, K1775), or a knock, which carries no member session (capture R30,
+     K1776). So it is `"fetch"`, never read off `capture.actor_class` or the request's `origin`, and a content type read
+     only from a member's own capture (court-doctypes R2) never matches here, as it never matches at intake. */
+  const profCtx = { headers, locator, content_type: ct || null, text, origin: CAPTURE_ORIGIN };
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes)
@@ -1045,7 +1053,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
       ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text));
       if (i2text) {
-        wired = readText(decodeView(i2text), { headers, locator, content_type: ct || null, at: retrieved, ...vw });
+        wired = readText(decodeView(i2text), { headers, locator, content_type: ct || null, at: retrieved, origin: CAPTURE_ORIGIN,
+                                               ...vw });
         classifiedText = i2text;
       }
       if (i2text && !chain) chain = layerChainFor(i2text, { tier: wiredTier, container: fmt });

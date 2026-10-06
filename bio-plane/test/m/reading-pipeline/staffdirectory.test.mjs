@@ -11,6 +11,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fresh, hold, doc, sha } from "./fixture.mjs";
 import pdfWorker from "../../../../pdf-worker/src/index.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737: docprofile registers no content type of its own, so this suite registers doctypes' readers, as the plane's
+   store does. */
+registerDoctypes(registerDoctype);
 
 const FX = (f) => new Uint8Array(readFileSync(new URL(`./fixtures/${f}`, import.meta.url)));
 const DIR = FX("nss-staff-directory-2022-06-14.pdf");
