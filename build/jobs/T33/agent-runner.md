@@ -48,3 +48,7 @@ Also keeping both R2 arms (`subscription`, `apikey`) as the requirement states.
 - No layer tests are named in the manifest.
 
 Size (session_01N1t3rme7vXuC6u3GdZF3Jt): test runs 10, module lines 809
+
+## J2 · COMPLETE
+
+T33-56 done: R1–R11 met, B2 (K1600) and B3 (K1601) applied. paths agent-runner/, tests agent-runner/test/, uses none. 14/14; format, architecture, coverage 11/11, ownership 0 failures (paths set in a working copy). The real SDK smoke: Claude Code starts with these options; a bogus token answers SDK_ERROR 401, secret not echoed. Beyond fleetbundles (N578), my marker also reddens resolveversion.test.mjs ARM 7b (member count): same cause, for N578. Deferred: base image digest (registry 429 here; the release pins it); R10's egress list is in the manifest for the deploying side to apply. Details in my record.
