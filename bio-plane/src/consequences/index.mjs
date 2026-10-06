@@ -2,9 +2,11 @@
  * Roadmap v5 §5 Operational Principle 6; Functional Architecture v3 Layer 2 Function 4 and Layer 3 Function 5).
  *
  * For one standard's noncompliant outcome of a live determination (`conformance`), a PART records who or what is
- * affected (a class, a fund, a program, a service, a body; never a person, R10), the measure and the period, in one of
- * three states that are never composed (R11): COMPUTED, the module's own arithmetic over figures the cited passages
- * hold, graded by the weakest operand capture (R2, DEC-21); ASSESSED, a member's stated value with a rationale and
+ * affected (a class, a fund, a program, a service, a body, or a person a document names, R10, R16), the measure and the
+ * period, in one of three states that are never composed (R11): COMPUTED, `calc-grammar`'s exact arithmetic over the
+ * figures the cited passages hold, money facts and calculation outputs, graded by the weakest operand (R2, DEC-21);
+ * every value is an exact decimal, never a floating-point number (Terms; C:A-11: this module holds no parser);
+ * ASSESSED, a member's stated value with a rationale and
  * what it rests on (R3); UNDETERMINED, with why, never read as zero (R4). That the harm follows from the act is a
  * finding: a part names the inquiry that concluded it, or its causation is `unproven`, stated and never refused or
  * graded low (R5, R12; DEC-14's discipline, applied to the government's act); a part whose measure is zero claims no
@@ -23,12 +25,23 @@
  *                  a `conformance`, every determination reads as absent (fail closed). Its module-level
  *                  `noSuchDetermination` and `determinationSuperseded` (its R19, R20) answer those two conditions
  *                  (R1, R7, R9; N309): this module mints neither code.
- *   content        `contentRow` (R2's operands, R9's evidence), `passageNotice` (R8).
+ *   content        `contentRow` (R2's operands, R9's evidence, R10's passage), `passageNotice` (R8).
  *   passageText    `(contentId) → text | null`, the passage an operand's figure is read from (R2); default
  *                  `content.passageText` (content R46), whose null is "held in a form not read" (R4).
  *   provenance     `captureGrade` (R2, K171 (8)).
  *   inquiry        `supersededBy`, `stateHistory` (R5, R8).
  *   strength       `inquiryStrength` (R5).
+ *   money          `readFact` (R2's money operands and their grade; R15's sight), `summable` (R2: a total across
+ *                  money facts it refuses is refused by its code); default `moneyOf(host)`.
+ *   calculations   `read` (R2's calculation outputs, named by calculation and result key, and the capture axis of their
+ *                  grade facts, its R9); default `calculationsOf(host)`. Its `read` answers a promise, so an act naming
+ *                  a calculation operand answers one too; every other act and every read stays synchronous, and R15
+ *                  asks a calculation's sight through a synchronous `gradeFactsOf` where calculations provides one,
+ *                  else withholds the operand from every viewer (fail closed).
+ *   entities       `readEntity` (R10: the person entity, its label and aliases); default `entitiesOf(host)`.
+ *   people         the source↔person link's sight (R10, R16): `sourceLinkSight(person)` where people provides it,
+ *                  else `sourceLinksOf({person, viewer})`, through which a person is shown only to a viewer a link
+ *                  lists (fail closed); default `peopleOf(host)`.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * READ CONTRACTS it joins in its own SQL: none. Its own tables are `./schema.mjs`. */
@@ -41,19 +54,26 @@ import { contentOf } from "../content/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
+import { moneyOf } from "../money/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
+import { peopleOf } from "../people/index.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { BASIS_GRADES } from "../record-grammar/grades.mjs";
-import { OPS, parseFigure, passageHolds, compute, addMeasures } from "./figures.mjs";
+import { OPS, RATIO_ROUNDING, exactOf, isZero, order, readFigure, passageHolds, compute, measureOfFigure,
+         addMeasures } from "./measures.mjs";
 import { CONSEQUENCES_TABLES, migrateConsequences } from "./schema.mjs";
 import { CONSEQUENCES_CHECKS } from "./checks.mjs";
 
-export { OPS, parseFigure, passageHolds, compute, addMeasures } from "./figures.mjs";
+export { OPS, RATIO_ROUNDING, exactOf } from "./measures.mjs";
 export { CONSEQUENCES_SCHEMA, CONSEQUENCES_TABLES } from "./schema.mjs";
 export { CONSEQUENCES_CHECKS } from "./checks.mjs";
 
-/** Terms: who or what is affected (R10: no person value). */
-export const AFFECTED_KINDS = Object.freeze(["class", "fund", "program", "service", "body", "other"]);
+/** Terms: who or what is affected (R10: a person only as a document names them). */
+export const AFFECTED_KINDS = Object.freeze(["class", "fund", "program", "service", "body", "person", "other"]);
+/** R2: what an operand is: a figure in a cited passage, a money fact, or a calculation's output. */
+export const OPERAND_KINDS = Object.freeze(["content", "money", "calculation"]);
 /** Terms: what a measure counts. */
 export const UNITS = Object.freeze(["money", "benefits", "services", "time", "count"]);
 /** Terms: the three states of a part, never composed (R11). */
@@ -74,10 +94,6 @@ export const RATIONALE_MAX = 2000;
 /** R6, R9: the longest reason a revision or an addressed record carries (conformance R7's bound). */
 export const REASON_MAX = 500;
 
-/* R10: a kind, or a key, that would single out a person. Refused by name, before it could be read as `other`. */
-const PERSON_KINDS = new Set(["person", "persons", "individual", "individuals", "human", "resident", "citizen",
-  "member", "employee", "official", "named_person", "name"]);
-const PERSON_KEYS = ["name", "person", "individual", "personal_name", "full_name"];
 /* A causation inquiry has concluded when its state is one of these (inquiry R1: `published` is read, never entered). */
 const CONCLUDED = new Set(["concluded", "published"]);
 const INTERNAL = `${MACHINE_CLASS_PREFIX}admin`;
@@ -89,9 +105,14 @@ const json = (v) => (v == null ? null : JSON.stringify(v));
 const parse = (s) => { if (s == null) return null; try { return JSON.parse(s); } catch { return null; } };
 const machine = (who) => !str(who) || isMachineIdentity(str(who));
 const second = (iso) => String(iso).replace(/\.\d+Z$/, "Z");
+const fold = (t) => String(t).normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 const HEX64 = /^[0-9a-f]{64}$/;
 const DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
+
+/* R10: an entity's live aliases, as entities' read answers them (`{alias, withdrawn}`). */
+const aliasesOf = (ent) => (Array.isArray(ent.aliases) ? ent.aliases : [])
+  .filter((a) => isObj(a) ? !a.withdrawn : typeof a === "string").map((a) => (isObj(a) ? a.alias : a));
 
 /* DEC-49: every refusal carries its code, its C-114 row and the member's translation (`./checks.mjs`). */
 function refuse(code, detail, extra = {}) {
@@ -129,35 +150,43 @@ function basisUnreadable(why, extra = {}) {
   return refuse("BASIS_UNREADABLE", `${why}.${NOTHING}`, extra);
 }
 
+/** R2: a refusal R2 answers by its owner's code (calc-grammar's `UNIT_MISMATCH`; money's summation codes): the code
+ *  and the owner's words stand, with this act's ending; no row of this module's is attached (DEC-49: the code is
+ *  theirs). */
+function foreignRefusal(code, why, extra = {}) {
+  return { ok: false, reason: code, code, detail: `${String(why ?? "").replace(/\.?\s*$/, "")}.${NOTHING}`, ...extra };
+}
+
 /* ===================================================================== *
  * THE TERMS, CHECKED (R1's shape refusals, R10). Pure.
  * ===================================================================== */
 
-/** R1, R10: an affected is `{kind, description, role?}`; answers the canonical form or a refusal. */
+/** R1, R10: an affected is `{kind, description, role?, person?}`; answers the canonical form or a refusal. Its shape
+ *  only: whether a person's entity is a person, and whether the passage names them, is the module's (`#checkPerson`).
+ *  A role is an office, `{role, body}`; a `person` belongs to kind `person` alone, `{entity, named_in}` (R10). */
 export function checkAffected(a) {
   const o = isObj(a) ? a : {};
   const kind = str(o.kind) ? o.kind.trim().toLowerCase() : null;
-  /* R10: a person's kind or name, on the affected or its role, is refused before anything else about the affected; a
-     role that is not a whole office, once the kind and description are known. Each code has this one site. */
-  const personKey = [o, isObj(o.role) ? o.role : {}].flatMap((x) => PERSON_KEYS.filter((k) => x[k] != null && x[k] !== ""));
-  const halfRole = o.role != null && (!isObj(o.role) || !str(o.role.role) || !str(o.role.body));
-  const unknown = !isObj(a) || !kind || !AFFECTED_KINDS.includes(kind) || !str(o.description);
-  const individual = isObj(a) && ((kind && PERSON_KINDS.has(kind)) || personKey.length || (halfRole && !unknown));
-  if (individual)
-    return refuse("AFFECTED_INDIVIDUAL", `people are counted as a class or named in their official role, never singled `
-      + `out${personKey.length ? ` (the affected carries ${personKey.join(", ")})` : ""}${halfRole && !personKey.length
-        ? " (a role is an office, {role, body}: the office and the body it belongs to)" : ""}: record a class (kind "class") `
-      + `or an office (role {role, body}). Nothing was written.`, { kind: kind ?? null });
-  if (unknown)
-    return refuse("AFFECTED_UNKNOWN_KIND", `${!kind || !AFFECTED_KINDS.includes(kind) ? `${isObj(a) ? `"${String(o.kind ?? "")}" `
-      + "is not a kind of affected" : "an affected is {kind, description, role?}"}` : "an affected is described"}: kind `
-      + `one of ${AFFECTED_KINDS.join(", ")}, with a description. Nothing was written.`, { kind: kind ?? null });
+  const unknown = (why) => refuse("AFFECTED_UNKNOWN_KIND", `${why}: kind one of ${AFFECTED_KINDS.join(", ")}, with a `
+    + "description; an office is {role, body}, and a person {entity, named_in}. Nothing was written.", { kind: kind ?? null });
+  if (!isObj(a)) return unknown("an affected is {kind, description, role?, person?}");
+  if (!kind || !AFFECTED_KINDS.includes(kind)) return unknown(`"${String(o.kind ?? "")}" is not a kind of affected`);
+  if (!str(o.description)) return unknown("an affected is described");
+  if (o.role != null && (!isObj(o.role) || !str(o.role.role) || !str(o.role.body)))
+    return unknown("a role is an office, {role, body}: the office and the body it belongs to");
+  if (o.person != null && kind !== "person") return unknown(`a person is named only on kind "person", and this is ${kind}`);
   const role = o.role != null ? { role: o.role.role.trim(), body: o.role.body.trim() } : null;
-  return { ok: true, affected: { kind, description: o.description.trim(), ...(role ? { role } : {}) } };
+  const out = { kind, description: o.description.trim(), ...(role ? { role } : {}) };
+  if (kind === "person") {
+    const p = isObj(o.person) ? o.person : {};
+    out.person = { entity: str(p.entity), named_in: str(p.named_in) };
+  }
+  return { ok: true, affected: out };
 }
 
-/** R1: a measure is `{unit, currency?, value | range}`; answers the canonical form (value and range both optional here:
- *  which a state needs is R2–R4's) or a refusal. */
+/** R1: a measure is `{unit, currency?, value | range}`, each value an exact decimal read through `calc-grammar`, never
+ *  a floating-point number (Terms); answers the canonical form, values as signed decimal strings (value and range both
+ *  optional here: which a state needs is R2–R4's), or a refusal. */
 export function checkMeasure(m) {
   if (m == null) return { ok: true, measure: null };
   if (!isObj(m) || !str(m.unit) || !UNITS.includes(m.unit.trim()))
@@ -174,17 +203,29 @@ export function checkMeasure(m) {
   if (hasValue && hasRange) return bad("a measure carries a value or a range, not both");
   const out = { unit, ...(str(m.currency) ? { currency: m.currency.trim().toUpperCase() } : {}) };
   if (hasValue) {
-    if (typeof m.value !== "number" || !Number.isFinite(m.value)) return bad("the value is not a finite number");
-    out.value = m.value;
+    const v = exactOf(m.value);
+    if (v === null) return bad("the value does not read as an exact decimal, such as 1200.50");
+    out.value = v;
   }
   if (hasRange) {
-    const [low, high] = Array.isArray(m.range) ? m.range : isObj(m.range) ? [m.range.low, m.range.high] : [];
-    if (typeof low !== "number" || !Number.isFinite(low) || typeof high !== "number" || !Number.isFinite(high))
-      return bad("a range's bounds are two finite numbers, {low, high}");
-    if (low > high) return bad("the range is reversed: its low bound is above its high bound");
+    const [low0, high0] = Array.isArray(m.range) ? m.range : isObj(m.range) ? [m.range.low, m.range.high] : [];
+    const low = exactOf(low0); const high = exactOf(high0);
+    if (low === null || high === null) return bad("a range's bounds are two exact decimals, {low, high}");
+    if (order(low, high) > 0) return bad("the range is reversed: its low bound is above its high bound");
     out.range = { low, high };
   }
   return { ok: true, measure: out };
+}
+
+/** A measure as recorded, answered with exact decimal strings: one recorded before T33 held numbers, read now as the
+ *  exact decimals of their shortest form (the row is never rewritten, R6, R13). */
+export function measureAsHeld(m) {
+  if (!isObj(m)) return m ?? null;
+  const d = (x) => (typeof x === "number" ? exactOf(x) ?? String(x) : x);
+  const out = { ...m };
+  if (m.value !== undefined && m.value !== null) out.value = d(m.value);
+  if (isObj(m.range)) out.range = { low: d(m.range.low), high: d(m.range.high) };
+  return out;
 }
 
 /** R1: a period is `{from, to}`, two dates (or instants), `from` not after `to`. */
@@ -200,9 +241,10 @@ export function checkPeriod(p) {
 
 /** R5 (N257): a measure of zero, value 0 or range [0, 0], states that the part did no harm. */
 export function isZeroMeasure(m) {
-  if (!isObj(m)) return false;
-  if (typeof m.value === "number") return m.value === 0;
-  return isObj(m.range) && m.range.low === 0 && m.range.high === 0;
+  const h = measureAsHeld(m);
+  if (!isObj(h)) return false;
+  if (h.value !== undefined && h.value !== null) return isZero(h.value);
+  return isObj(h.range) && isZero(h.range.low) && isZero(h.range.high);
 }
 
 /* R5 (N257, K283): a zero measure answers causation `not_applicable`: there is no harm whose following from the act
@@ -221,12 +263,14 @@ export class Consequences {
   #deps;
 
   constructor({ storage, record, membership, promotion, host = null, conformance = null, content = null,
-                provenance = null, inquiry = null, strength = null, passageText = null, now = null } = {}) {
+                provenance = null, inquiry = null, strength = null, money = null, calculations = null, entities = null,
+                people = null, passageText = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, conformance, content, provenance, inquiry, strength, passageText };
+    this.#deps = { host, conformance, content, provenance, inquiry, strength, money, calculations, entities, people,
+                   passageText };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -236,6 +280,10 @@ export class Consequences {
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
   get conformance() { return this.#deps.conformance ||= (this.#deps.host ? conformanceOf(this.#deps.host) : null); }
+  get money() { return this.#deps.money ||= (this.#deps.host ? moneyOf(this.#deps.host) : null); }
+  get calculations() { return this.#deps.calculations ||= (this.#deps.host ? calculationsOf(this.#deps.host) : null); }
+  get entities() { return this.#deps.entities ||= (this.#deps.host ? entitiesOf(this.#deps.host) : null); }
+  get people() { return this.#deps.people ||= (this.#deps.host ? peopleOf(this.#deps.host) : null); }
 
   migrate() { migrateConsequences(this.sql); }
 
@@ -345,6 +393,73 @@ export class Consequences {
                   { unknown: unknown.map((x) => (typeof x === "string" ? x : null)) });
   }
 
+  /* R10: a person named as affected is a registered `person` entity (AFFECTED_NOT_A_PERSON, an absent one alike), and
+     `named_in` is content of a held capture the author may see whose passage names them: its text holds the entity's
+     label or a live alias, white space and case folded (AFFECTED_PERSON_NOT_NAMED). Null when both hold. */
+  #checkPerson(person, who) {
+    let e = null;
+    try { e = person.entity ? this.entities.readEntity({ entityId: person.entity, viewer: who }) : null; } catch { e = null; }
+    const ent = e && e.ok !== false && e.found !== false ? e.entity : null;
+    if (!ent || ent.kind !== "person")
+      return refuse("AFFECTED_NOT_A_PERSON", `${person.entity ? `${person.entity} is not a person this record holds`
+        : "an affected person names the person entity"}: a harmed person is a registered person entity.${NOTHING}`,
+        { entity: person.entity ?? null });
+    const notNamed = (why) => refuse("AFFECTED_PERSON_NOT_NAMED", `${why}: a person is recorded as affected only as a `
+      + `document in the record names them.${NOTHING}`, { entity: person.entity, named_in: person.named_in ?? null });
+    if (!person.named_in) return notNamed("no passage naming the person is given (named_in)");
+    const row = HEX64.test(person.named_in) ? this.content.contentRow(person.named_in) : null;
+    if (!row || !this.membership.inSight(row.bundle_id, who)) return notNamed("named_in is not content of a held capture you may see");
+    const text = this.#passageText(person.named_in);
+    const names = [ent.label, ...aliasesOf(ent)].filter((x) => str(x)).map(fold);
+    if (text === null || !names.some((n) => fold(text).includes(n)))
+      return notNamed(`the passage ${text === null ? "is held in a form this module does not read, so it cannot be shown to name"
+        : "does not name"} the person (${str(ent.label) ?? person.entity})`);
+    return null;
+  }
+
+  /* R16 (DEC-78): whether the viewer may be answered the person a part names: the passage naming them is in a capture
+     the viewer may see, and, when the record holds the person as a protected source, the link's sight admits the
+     viewer. An internal caller (no viewer) is not asked. people's `sourceLinkSight(person)` answers the link's sight
+     (null when no link is held); without it, only a viewer `sourceLinksOf` lists is admitted (fail closed). */
+  #seesPerson(person, viewer) {
+    if (viewer === null || viewer === undefined) return true;
+    if (!isObj(person) || !person.entity) return false;
+    const row = person.named_in ? this.content.contentRow(person.named_in) : null;
+    if (!row || !this.membership.inSight(row.bundle_id, viewer)) return false;
+    const member = /^member:(.+)$/.exec(viewer)?.[1] ?? (viewer === "admin" ? "admin" : null);
+    const p = this.people;
+    try {
+      if (p && typeof p.sourceLinkSight === "function") {
+        const sight = p.sourceLinkSight(person.entity);
+        if (sight === null || sight === undefined) return true;
+        return Array.isArray(sight) && !!member && sight.includes(member);
+      }
+      const links = p ? p.sourceLinksOf({ person: person.entity, viewer }) : null;
+      return !!links && links.ok !== false && Array.isArray(links.links) && links.links.length > 0;
+    } catch { return false; }
+  }
+
+  /* R15: whether the viewer may see a money fact (money's own sight, its R21: an unseen fact reads as absent). */
+  #seesFact(id, who) {
+    try {
+      const f = this.money ? this.money.readFact({ factId: id, viewer: who }) : null;
+      return !!f && f.ok !== false && f.found !== false;
+    } catch { return false; }
+  }
+
+  /* R15: whether the viewer may see a calculation (calculations R10: one with an input the viewer may not see is
+     withheld whole). Asked synchronously through `gradeFactsOf`; a calculations without it, or answering a promise, is
+     answered as unseen (fail closed). An internal caller is not asked. */
+  #seesCalculation(id, who) {
+    if (who === INTERNAL) return true;
+    const c = this.calculations;
+    try {
+      if (!c || typeof c.gradeFactsOf !== "function") return false;
+      const g = c.gradeFactsOf({ calcId: id, viewer: who });
+      return !!g && typeof g.then !== "function" && g.ok !== false && g.found !== false;
+    } catch { return false; }
+  }
+
   /* R1, R9: a member acting on a part has joined the determination's project (K171 (11): membership's refusal,
      translated); null when the author has, or the part is in no project. */
   #participantRefusal(project, author, act) {
@@ -373,17 +488,19 @@ export class Consequences {
     if (next) return alreadySuperseded(old.bundle_id, next);
     const bad = reasonRefusal(reason); if (bad) return bad;
     const pick = (k, stored) => (k in args ? args[k] : stored);
-    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map((o) => ({ content: o.content_id, figure: o.figure })) }
+    const oldBasis = old.op ? { op: old.op, operands: this.#operands(old.bundle_id).map(operandAsGiven) }
       : old.state === "assessed" ? { rationale: old.rationale, rests_on: parse(old.rests_on) || [] }
       : { why: old.undetermined_code };
     return this.#record({
       determination: old.determination, standard: old.standard,
-      affected: pick("affected", parse(old.affected)), measure: pick("measure", parse(old.measure)),
+      affected: pick("affected", parse(old.affected)), measure: pick("measure", measureAsHeld(parse(old.measure))),
       period: pick("period", parse(old.period)), basis: pick("basis", oldBasis),
       causation: pick("causation", old.causation), author, viewer,
     }, { supersedes: old.bundle_id, reason: reason.trim() });
   }
 
+  /* R1–R6. Synchronous, except that a basis naming a calculation operand reads it through `calculations.read`, which
+     answers a promise: then the act answers a promise of the same answer. */
   #record({ determination = null, standard = null, affected = null, measure = null, period = null, basis = null,
             causation = null, author = null, viewer = null } = {}, rev) {
     const who = viewer ?? (str(author) || null);
@@ -400,12 +517,17 @@ export class Consequences {
        (K171 (9)), and a machine may record nothing else (R3, below). K171 (11): membership's refusal, translated. */
     if (!byMachine) { const denied = this.#participantRefusal(d.project, author, "consequenceRecord"); if (denied) return denied; }
     const a = checkAffected(affected); if (!a.ok) return a;
+    if (a.affected.kind === "person") { const bad = this.#checkPerson(a.affected.person, who ?? INTERNAL); if (bad) return bad; }
     const m = checkMeasure(measure); if (!m.ok) return m;
     const p = checkPeriod(period); if (!p.ok) return p;
 
     const b = this.#basis(basis, m.measure, who, byMachine);
-    if (!b.ok) return b;
+    const land = (b2) => (b2.ok ? this.#land({ d, standard, a, p, b: b2, causation, author, byMachine, who, rev }) : b2);
+    return b && typeof b.then === "function" ? b.then(land) : land(b);
+  }
 
+  /* R1–R6: the part written, once every check has passed. */
+  #land({ d, standard, a, p, b, causation, author, byMachine, who, rev }) {
     /* R5: the causation, as it reads when recorded; nothing recomputes it (R8). A zero measure claims no harm, so it
        has no causation to prove (N257). */
     const cause = isZeroMeasure(b.measure) ? zeroCausation(causation) : this.#causationNow(causation, who);
@@ -428,14 +550,16 @@ export class Consequences {
         b.undeterminedWhy ?? null, cause.inquiry, cause.state, cause.why, byMachine ? 1 : 0, str(author) ?? "", at,
         rev ? rev.supersedes : null, rev ? rev.reason : null);
       (b.operands || []).forEach((o, i) => this.sql.exec(`INSERT INTO consequence_operands (part_id, ord, content_id,
-          figure, number, capture_sha, grade, route, determined, basis) VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        id, i, o.content, o.figure ?? null, o.number ?? null, o.capture_sha ?? null, o.grade ?? null, o.route ?? null,
-        o.determined ? 1 : 0, o.basis ?? null));
+          figure, number, capture_sha, grade, route, determined, basis, kind, result_key, exact)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id, i, o.ref, o.figure ?? null, null, o.capture_sha ?? null, o.grade ?? null, o.route ?? null,
+        o.determined ? 1 : 0, o.basis ?? null, o.kind, o.key ?? null, json(o.exact)));
       return { ok: true, id, part: this.#answer(this.#one(`SELECT * FROM consequence_parts WHERE bundle_id=?`, id), who) };
     });
   }
 
-  /* R2–R4: what the basis makes of the part: its state, measure and the fields that state carries, or a refusal. */
+  /* R2–R4: what the basis makes of the part: its state, measure and the fields that state carries, or a refusal (or a
+     promise of either, R2's calculation operands). */
   #basis(basis, measure, who, byMachine) {
     const computation = isObj(basis) && ("op" in basis || "operands" in basis);
     if (computation) return this.#computation(basis, measure, who);
@@ -464,52 +588,105 @@ export class Consequences {
              doc: { undetermined: code } };
   }
 
-  /* R2, R4: a computation over the record. The value is this module's arithmetic over the figures the passages hold;
-     an operand not held, or a figure its passage does not hold, leaves the computation lacking it (undetermined). */
+  /* R2, R4: a computation over the record. Each operand is read for its figure and grade (`#readOperand`); the value is
+     calc-grammar's exact arithmetic over them. An operand not held, or a figure its passage does not hold, leaves the
+     computation lacking it (undetermined); calc-grammar's and money's refusals are the act's. */
   #computation(basis, measure, who) {
     const op = str(basis.op);
     if (!op || !OPS.includes(op))
       return basisUnreadable(`a computation names its op, one of ${OPS.join(", ")}`, { op: basis.op ?? null });
-    if (!Array.isArray(basis.operands) || basis.operands.some((o) => !isObj(o) || !str(o.content)))
-      return basisUnreadable("a computation's operands are a list of {content, figure}: the content id whose passage "
-                             + "holds the figure, and the figure as read");
-    const operands = [];
-    let lacking = null;
-    for (const [i, raw] of basis.operands.entries()) {
-      const o = { content: raw.content.trim(), figure: typeof raw.figure === "string" ? raw.figure : raw.figure == null
-        ? null : String(raw.figure) };
-      const row = this.content.contentRow(o.content);
-      if (!row || !this.membership.inSight(row.bundle_id, who ?? INTERNAL)) {
-        lacking ||= { code: "not_in_record", why: `operand ${i} names content this record does not hold, or that you `
-                                                   + "may not see" };
-        operands.push(o); continue;
-      }
-      o.capture_sha = row.capture_sha;
+    const given = Array.isArray(basis.operands) ? basis.operands.map(operandOf) : null;
+    if (!given || given.some((o) => !o))
+      return basisUnreadable("a computation's operands are a list, each {content, figure} (the content id whose passage "
+        + "holds the figure, and the figure as read), {money} (a money fact) or {calculation, key} (a calculation's "
+        + "result, named by its key)");
+    const read = given.map((o, i) => this.#readOperand(o, i, op, who));
+    const fault = read.find((r) => r && r.ok === false);
+    if (fault) return fault;
+    if (read.some((r) => r && typeof r.then === "function"))
+      return Promise.all(read).then((all) => {
+        const late = all.find((r) => r.ok === false);
+        return late || this.#finish(op, all, measure, who);
+      });
+    return this.#finish(op, read, measure, who);
+  }
+
+  /* R2: one operand read: `{ok: true, kind, ref, key?, figure?, exact?, fig?, capture_sha?, grade, route, determined,
+     basis, lacking?}`, a refusal (a figure as read that calc-grammar does not read), or for a calculation operand a
+     promise of either. */
+  #readOperand(o, i, op, who) {
+    const base = { ok: true, kind: o.kind, ref: o.ref, ...(o.key ? { key: o.key } : {}),
+                   ...(o.kind === "content" ? { figure: o.figure } : {}) };
+    const lacking = (code, why) => ({ ...base, grade: null, route: null, determined: false, basis: null,
+                                      lacking: { code, why: `operand ${i} ${why}` } });
+    if (o.kind === "content") {
+      const row = this.content.contentRow(o.ref);
+      if (!row || !this.membership.inSight(row.bundle_id, who ?? INTERNAL))
+        return lacking("not_in_record", "names content this record does not hold, or that you may not see");
       const g = this.provenance.captureGrade(row.capture_sha) || {};
-      Object.assign(o, { grade: g.grade ?? null, route: g.route ?? null, determined: !!g.determined, basis: g.basis ?? null });
-      if (op !== "count") {
-        if (o.figure == null || !String(o.figure).trim()) {
-          lacking ||= { code: "not_in_record", why: `operand ${i} states no figure as read` };
-        } else {
-          const f = parseFigure(o.figure);
-          if (!f.ok) return basisUnreadable(`operand ${i}: ${f.why}`, { operand: i });
-          const text = this.#passageText(o.content);
-          if (text === null)
-            lacking ||= { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` };
-          else if (!passageHolds(text, o.figure))
-            lacking ||= { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` };
-          else Object.assign(o, { number: f.number, decimals: f.decimals });
-        }
-      }
-      operands.push(o);
+      const out = { ...base, capture_sha: row.capture_sha, grade: g.grade ?? null, route: g.route ?? null,
+                    determined: !!g.determined, basis: g.basis ?? null };
+      if (op === "count") return out;
+      if (o.figure == null || !String(o.figure).trim())
+        return { ...out, lacking: { code: "not_in_record", why: `operand ${i} states no figure as read` } };
+      const f = readFigure(o.figure);
+      if (!f.ok) return basisUnreadable(`operand ${i}: ${f.why}`, { operand: i });
+      const text = this.#passageText(o.ref);
+      if (text === null)
+        return { ...out, lacking: { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` } };
+      if (!passageHolds(text, o.figure))
+        return { ...out, lacking: { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` } };
+      return { ...out, fig: f.figure, exact: measureOfFigure(f.figure) };
     }
-    const stored = operands.map(({ decimals, ...o }) => o);
-    const docOps = stored.map((o) => ({ content: o.content, figure: o.figure }));
-    if (!lacking && !measure)
-      lacking = { code: "not_assessed", why: NO_UNIT };
+    if (o.kind === "money") {
+      let r = null;
+      try { r = this.money ? this.money.readFact({ factId: o.ref, viewer: who ?? INTERNAL }) : null; } catch { r = null; }
+      const fact = r && r.ok !== false && r.found !== false ? r.fact : null;
+      if (!fact) return lacking("not_in_record", "names a money fact this record does not hold, or that you may not see");
+      const grade = isObj(fact.grade) ? fact.grade.reading ?? null : null;
+      const out = { ...base, grade, route: "money fact", determined: grade !== null,
+                    basis: grade ? `its reading grade, ${grade}` : "its reading grade is not stated" };
+      if (fact.withdrawn) return { ...out, lacking: { code: "not_in_record", why: `operand ${i}'s money fact is withdrawn and never counted` } };
+      if (op === "count") return out;
+      const fig = factFigure(fact);
+      return fig ? { ...out, fig, exact: measureOfFigure(fig) }
+        : { ...out, lacking: { code: "form_not_read", why: `operand ${i}'s money fact holds no amount this module reads` } };
+    }
+    /* A calculation's output, named by its key; calculations R9's capture axis is its grade. */
+    const settle = (r) => {
+      const c = r && r.ok !== false && r.found !== false ? r : null;
+      if (!c) return lacking("not_in_record", "names a calculation this record does not hold, or that you may not see");
+      const cap = isObj(c.grade) && isObj(c.grade.capture) ? c.grade.capture : {};
+      const out = { ...base, grade: cap.grade ?? null, route: "calculation", determined: !!cap.grade,
+                    basis: cap.why ?? null };
+      if (op === "count") return out;
+      const fig = resultFigure(c.results, o.key);
+      return fig ? { ...out, fig, exact: measureOfFigure(fig) }
+        : { ...out, lacking: { code: "not_computable", why: `operand ${i}'s calculation holds no figure under the key "${o.key}"` } };
+    };
+    let r;
+    try { r = this.calculations ? this.calculations.read({ calcId: o.ref, viewer: who ?? INTERNAL }) : null; } catch { r = null; }
+    return r && typeof r.then === "function" ? r.then(settle, () => settle(null)) : settle(r);
+  }
+
+  /* R2, R4: the computation finished over its read operands. */
+  #finish(op, operands, measure, who) {
+    const stored = operands.map(({ ok, fig, lacking, ...o }) => o);
+    const docOps = stored.map(operandAsGiven);
+    const missing = operands.find((o) => o.lacking);
+    let lacking = missing ? missing.lacking : null;
+    if (!lacking && !measure) lacking = { code: "not_assessed", why: NO_UNIT };
     let result = null;
     if (!lacking) {
-      result = compute(op, operands);
+      /* R2: a total across money facts money refuses is refused by its code (its R10). */
+      const facts = operands.filter((o) => o.kind === "money").map((o) => o.ref);
+      if ((op === "sum" || op === "difference") && facts.length > 1 && this.money) {
+        let s = null;
+        try { s = this.money.summable({ factIds: facts, viewer: who ?? INTERNAL }); } catch { s = null; }
+        if (s && s.ok === false) return foreignRefusal(s.code || s.reason, s.detail, { ...(s.facts ? { facts: s.facts } : {}) });
+      }
+      result = compute(op, operands.map((o) => o.fig));
+      if (!result.ok && result.refused) return foreignRefusal(result.refused, `calc-grammar refuses the computation: ${result.why}`);
       if (!result.ok && result.code === "operands_extra") return basisUnreadable(result.why);
       if (!result.ok) lacking = { code: result.code === "operand_missing" ? "not_in_record" : "not_computable", why: result.why };
     }
@@ -518,22 +695,34 @@ export class Consequences {
       return { ok: true, state: "undetermined", op, measure: unitOnly, operands: stored,
                undeterminedCode: lacking.code, undeterminedWhy: `${UNDETERMINED_WHY[lacking.code]}: ${lacking.why}`,
                doc: { op, operands: docOps, undetermined: lacking.code } };
-    /* DEC-21: the part's grade is its weakest operand's capture grade, named; one undetermined operand leaves it
+    /* R2: the result's dimensions are calc-grammar's; they must be the measure's (a currency only on money, the
+       measure's currency when it names one; no other unit). */
+    const r = measureOfFigure(result.figure);
+    const dims = r.unit !== undefined ? `unit ${r.unit}` : r.currency !== undefined ? `currency ${r.currency}` : null;
+    if (r.unit !== undefined || (r.currency !== undefined && (measure.unit !== "money"
+        || (measure.currency && measure.currency !== r.currency))))
+      return foreignRefusal("UNIT_MISMATCH", `the operands' result is in ${dims}, and the measure is of ${measure.unit}`
+        + `${measure.currency ? ` in ${measure.currency}` : ""}`);
+    const value = r.range ? { range: r.range } : { value: r.value };
+    const currency = measure.currency ?? r.currency;
+    /* DEC-21: the part's grade is its weakest operand's grade, named; one undetermined operand leaves it
        undetermined, naming that operand. */
     const rank = (g) => BASIS_GRADES.indexOf(g);
     const open = stored.findIndex((o) => !o.grade);
     let grade = null; let gradeWhy;
     if (open >= 0) {
-      gradeWhy = `operand ${open}'s capture grade is undetermined (${stored[open].basis ?? stored[open].route ?? "no route"}), `
+      gradeWhy = `operand ${open}'s ${GRADE_OF[stored[open].kind]} is undetermined (${stored[open].basis ?? stored[open].route ?? "no route"}), `
                + "so the weakest link is not known";
     } else {
       const w = stored.reduce((acc, o, i) => (rank(o.grade) > rank(stored[acc].grade) ? i : acc), 0);
       grade = stored[w].grade;
-      gradeWhy = `the weakest operand is ${w} (content ${stored[w].content}), whose capture grade is ${grade} `
+      gradeWhy = `the weakest operand is ${w} (${NAMED[stored[w].kind]} ${stored[w].ref}), whose ${GRADE_OF[stored[w].kind]} is ${grade} `
                + `(${stored[w].route}); a computation is as strong as its weakest figure (DEC-21)`;
     }
-    return { ok: true, state: "computed", op, measure: { ...unitOnly, value: result.value }, value: { value: result.value },
-             grade, gradeWhy, operands: stored, doc: { op, operands: docOps, value: result.value, grade } };
+    const exact = { ...value, precision: r.precision, ...(r.approximate ? { approximate: true } : {}),
+                    ...(op === "ratio" ? { rounding: RATIO_ROUNDING } : {}) };
+    return { ok: true, state: "computed", op, measure: { ...unitOnly, ...(currency ? { currency } : {}), ...value },
+             value: exact, grade, gradeWhy, operands: stored, doc: { op, operands: docOps, value: exact, grade } };
   }
 
   #operands(id) {
@@ -561,21 +750,39 @@ export class Consequences {
   #answer(r, viewer) {
     const who = viewer ?? INTERNAL;
     let withheld = false;
+    /* R16: a person the part names is answered only to a viewer who may see the passage naming them and whom a
+       protected source's link admits; to any other, `{kind: person}` alone. */
+    let affected = parse(r.affected);
+    if (isObj(affected) && affected.kind === "person" && !this.#seesPerson(affected.person, viewer)) {
+      affected = { kind: "person" };
+      withheld = true;
+    }
     const out = { id: r.bundle_id, determination: r.determination, standard: r.standard, project: r.project,
-      affected: parse(r.affected), measure: parse(r.measure), period: parse(r.period), state: r.state,
+      affected, measure: measureAsHeld(parse(r.measure)), period: parse(r.period), state: r.state,
       author: r.author || null, at: r.at, supersedes: r.supersedes, reason: r.reason,
       superseded_by: this.#successor(r.bundle_id) };
     /* Each operand's place among the operands answered, by its recorded place; a withheld one has none. */
     const place = new Map();
     if (r.state === "computed" || r.op) {
       const ops = this.#operands(r.bundle_id).flatMap((o) => {
-        const row = this.content.contentRow(o.content_id);
-        if (!row || !this.membership.inSight(row.bundle_id, who)) { withheld = true; return []; }
+        const kind = o.kind || "content";
+        let seen;
+        if (kind === "money") seen = this.#seesFact(o.content_id, who);
+        else if (kind === "calculation") seen = this.#seesCalculation(o.content_id, who);
+        else { const row = this.content.contentRow(o.content_id); seen = !!row && this.membership.inSight(row.bundle_id, who); }
+        if (!seen) { withheld = true; return []; }
         place.set(o.ord, place.size);
-        return [{ content: o.content_id, figure: o.figure, number: o.number, capture: o.capture_sha,
+        const exact = parse(o.exact) || (o.number !== null && o.number !== undefined
+          ? { value: exactOf(o.number) ?? String(o.number) } : null);
+        return [{ kind, ...operandAsGiven(o), ...(exact ? (exact.range ? { range: exact.range } : { value: exact.value }) : {}),
+                  ...(exact && exact.precision ? { precision: exact.precision } : {}),
+                  ...(kind === "content" ? { capture: o.capture_sha } : {}),
                   grade: o.grade, route: o.route, determined: !!o.determined }];
       });
-      out.computation = { op: r.op, operands: ops };
+      const v = parse(r.value);
+      out.computation = { op: r.op, operands: ops,
+        ...(isObj(v) && v.precision ? { precision: v.precision } : {}), ...(isObj(v) && v.rounding ? { rounding: v.rounding } : {}),
+        says: "calc-grammar's exact arithmetic over the operands, never the author's and never floating point" };
     }
     if (r.state === "computed") {
       out.grade = { grade: r.grade, determined: r.grade !== null, why: gradeWhyFor(r, place) };
@@ -633,7 +840,7 @@ export class Consequences {
     const causes = [];
     if (r.op) {
       for (const o of this.#operands(r.bundle_id)) {
-        if (!place.has(o.ord)) continue;
+        if (!place.has(o.ord) || (o.kind || "content") !== "content") continue;
         let n = null;
         try { n = this.content.passageNotice({ contentId: o.content_id, viewer: who }); } catch { n = null; }
         const at = place.get(o.ord);
@@ -763,6 +970,64 @@ export class Consequences {
 }
 
 /* ===================================================================== *
+ * R2: OPERANDS
+ * ===================================================================== */
+
+/* What R2's grade sentences call each kind of operand and its grade. */
+const NAMED = Object.freeze({ content: "content", money: "money fact", calculation: "calculation" });
+const GRADE_OF = Object.freeze({ content: "capture grade", money: "reading grade", calculation: "capture axis" });
+
+/* R2: an operand as given, `{content, figure}`, `{money}` or `{calculation, key}`, to `{kind, ref, figure?, key?}`;
+   null when it is none of them. */
+function operandOf(raw) {
+  if (!isObj(raw)) return null;
+  const kinds = OPERAND_KINDS.filter((k) => raw[k] !== undefined);
+  if (kinds.length !== 1 || !str(raw[kinds[0]])) return null;
+  const kind = kinds[0];
+  const ref = raw[kind].trim();
+  if (kind === "content")
+    return { kind, ref, figure: typeof raw.figure === "string" ? raw.figure : raw.figure == null ? null : String(raw.figure) };
+  if (kind === "calculation") return str(raw.key) ? { kind, ref, key: raw.key.trim() } : null;
+  return { kind, ref };
+}
+
+/* R2, R6: an operand as it was given, from a stored row (`consequence_operands`) or a read one, so a revision carries
+   it and the part's document states it. A row before T33 is a content operand. */
+function operandAsGiven(o) {
+  const kind = o.kind || "content";
+  const ref = o.ref ?? o.content_id;
+  if (kind === "content") return { content: ref, figure: o.figure ?? null };
+  if (kind === "calculation") return { calculation: ref, key: o.key ?? o.result_key };
+  return { money: ref };
+}
+
+/* R2: a money fact's amount as held (money R8: unsigned, with its sign; a range's bounds unsigned) as a calc-grammar
+   figure in its currency; null when it holds none. */
+function factFigure(f) {
+  const cur = str(f.currency) ? { currency: f.currency } : {};
+  const neg = f.sign === "-";
+  if (isObj(f.amount)) {
+    const { low, high } = f.amount;
+    if (!str(low) || !str(high)) return null;
+    return { low: neg ? `-${high}` : low, high: neg ? `-${low}` : high, sign: neg ? "-" : "+", precision: "range", ...cur };
+  }
+  if (!str(f.amount)) return null;
+  const precision = ["exact", "rounded", "approximate"].includes(f.precision) ? f.precision : "exact";
+  return { value: f.amount, sign: neg && !isZero(f.amount) ? "-" : "+", precision, ...cur };
+}
+
+/* R2: a calculation's result named by its key (a step of its results, or `output`) as a calc-grammar figure: a figure,
+   or a ratio's value; null when the key names no figure (a table, a comparison, or an undetermined value). */
+function resultFigure(results, key) {
+  if (!isObj(results) || !str(key)) return null;
+  const steps = isObj(results.steps) ? results.steps : {};
+  let x = key === "output" && !(key in steps) ? results.output : steps[key];
+  for (let i = 0; i < 3 && isObj(x) && !isFigure(x); i++) x = x.value;
+  return isFigure(x) ? x : null;
+}
+const isFigure = (x) => isObj(x) && typeof x.precision === "string" && (typeof x.value === "string" || typeof x.low === "string");
+
+/* ===================================================================== *
  * R15: THE SENTENCES A PART RECORDED ABOUT ITS OPERANDS, AS ONE VIEWER READS THEM
  * ===================================================================== */
 
@@ -803,13 +1068,20 @@ function undeterminedWhyFor(r, place, withheld) {
  * THE PART'S DOCUMENT (R14): a `CONS-` record object, one state `recorded`.
  * ===================================================================== */
 
+/* R16 (DEC-78): a person the part names never enters its document or title, which are fenced by the project's sight
+   alone; the part's own reads answer them, to a viewer R16 admits. */
+const PERSON_IN_TABLE = "a person a document names: answered by this module's reads only to a viewer who may see the "
+  + "passage naming them (R16)";
+
 function titleOf(p) {
+  if (p.affected.kind === "person") return "person: named in the record";
   return `${p.affected.kind}: ${p.affected.description}`.replace(/\s+/g, " ").slice(0, 110);
 }
 
 function partDoc(id, p) {
   const { causation, ...rest } = p;
-  const body = { ...rest, causation: { state: causation.state, inquiry: causation.inquiry } };
+  const body = { ...rest, causation: { state: causation.state, inquiry: causation.inquiry },
+                 ...(p.affected.kind === "person" ? { affected: { kind: "person", says: PERSON_IN_TABLE } } : {}) };
   return ["---", `id: ${id}`, "object_type: consequence", "schema: consequence@1", `title: ${q(titleOf(p))}`,
     "current_state: recorded", "prior_state: null", `created: ${q(p.at)}`, `last_updated: ${q(p.at)}`,
     /* R13, promotion R53: the part belongs to its determination's project, so membership R43 fences the object too. */

@@ -24,7 +24,7 @@ test("R3: a member's assessment carries the value or range, rationale, what it r
   const r = w.c.consequenceRecord({ ...w.base, basis: { rationale: "the schedule shows fewer hours", rests_on: [w.cid] } });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.equal(r.part.state, "assessed");
-  assert.deepEqual(r.part.measure.range, { low: 10, high: 20 });
+  assert.deepEqual(r.part.measure.range, { low: "10", high: "20" }, "exact decimals, never floating-point numbers");
   assert.deepEqual(r.part.assessment.rests_on, [w.cid]);
   assert.equal(r.part.assessment.by, V("alice"));
   assert.equal(r.part.assessment.at, "2026-09-28T01:00:00Z");
@@ -114,7 +114,7 @@ test("R5 R12 (N257): a part whose measure is zero answers causation not_applicab
   const b = w.figure("INFO-2026-0003-b", "Restored 5,000");
   const comp = w.c.consequenceRecord({ ...w.base, measure: { unit: "money" },
     basis: { op: "difference", operands: [{ content: a, figure: "5,000" }, { content: b, figure: "5,000" }] } });
-  assert.deepEqual([comp.part.state, comp.part.measure.value, comp.part.causation.state], ["computed", 0, "not_applicable"]);
+  assert.deepEqual([comp.part.state, comp.part.measure.value, comp.part.causation.state], ["computed", "0", "not_applicable"]);
   /* Negative controls: a value or a range that is not zero is unproven with no concluded inquiry; an undetermined part
      has no measure to be zero. */
   for (const measure of [{ unit: "count", value: 1 }, { unit: "count", value: -2 }, { unit: "time", range: { low: 0, high: 4 } }])

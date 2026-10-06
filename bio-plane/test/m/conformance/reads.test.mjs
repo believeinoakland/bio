@@ -13,23 +13,33 @@ const refused = (r, code) => {
 };
 const quiet = (w, fn) => { const before = w.snapshot(); const r = fn(); assert.deepEqual(w.snapshot(), before, "a read writes nothing"); return r; };
 
-test("R9 R19: determinationRead answers R1's fields, the per-standard outcomes, each finding's pinned edition with its frozen pair beside its live pair per axis (never composed), the author and time, the links and R10's flag", () => {
-  const { w, proj, pin, std, ev, input } = scene();
+test("R9 R19 R25: determinationRead answers R1's fields, the act's event with who took part, the per-standard outcomes, each finding's pinned edition with its frozen pair beside its live pair per axis (never composed), the author and time, the links and R10's flag", () => {
+  const { w, proj, pin, std, ev, act, signer, input } = scene();
   const d = w.c.determine(input({ questions: [{ question: "Was a sign posted?" }] }));
   const r = quiet(w, () => w.c.determinationRead({ id: d.id, viewer: V("pat") }));
   assert.equal(r.ok, true);
   assert.deepEqual([r.id, r.project, r.author, r.at, r.supersedes, r.superseded_by, r.live, r.basis_changed],
     [d.id, proj, V("olive"), "2026-09-28T01:00:00Z", null, null, true, null]);
   /* the one shape (K248): exactly these keys, which consequences, actions, filings and escalation read */
-  assert.deepEqual(Object.keys(r).sort(), ["act", "at", "author", "basis_changed", "cause", "cause_says", "findings", "id",
+  assert.deepEqual(Object.keys(r).sort(), ["act", "at", "author", "basis_changed", "cause", "cause_says", "event", "findings", "id",
     "live", "ok", "outcomes", "outcomes_differ", "outcomes_differ_says", "project", "proposal", "questions", "reason",
     "standards", "superseded_by", "supersedes"]);
   /* N345: no cause stated reads "cause not established" (R22); one standard, so the outcomes do not differ (R9) */
   assert.deepEqual([r.cause, r.cause_says, r.outcomes_differ, r.outcomes_differ_says],
     [null, "cause not established", false, null]);
   assert.deepEqual(r.outcomes, [{ standard: std, outcome: "noncompliant" }]);
-  assert.deepEqual(r.act, { id: d.act.id, description: input().act.description,
-    actor: { role: "Director of Parks", body: "Parks Department" }, at: "2026-03-02", period: null, evidence: [ev.content] });
+  assert.deepEqual(r.act, { id: act, event: act,
+    actor: { role: "Director of Parks", body: "Parks Department", entity_id: null,
+             entity_why: "no office entity is held for this role and body, so the actor stands as the office's role and body only" },
+    evidence: [ev.content], when: { start: "2026-03-02T00:00:00Z", end: "2026-03-03T00:00:00Z", precision: "day", zone: "UTC",
+                                    value: "2026-03-02" } });
+  /* R25: the act's event as events reads it, and the signer beside it as who took part, never the actor */
+  assert.deepEqual([r.event.id, r.event.kind, r.event.when.value], [act, "order", "2026-03-02"]);
+  assert.equal(r.event.attestations.length, 1);
+  assert.deepEqual(r.event.participants.map((p) => [p.entity_id, p.role, p.attestation.attestation_id]),
+    [[signer, "signatory", r.event.attestations[0].attestation_id]]);
+  assert.match(r.event.participants_say, /never the actor/);
+  assert.equal(JSON.stringify(r.act).includes(signer), false, "the person is never the actor");
   assert.deepEqual(r.standards, [{ standard: std, outcome: "noncompliant", in_force: "in_force", in_force_why: null,
     rows: [{ requires: "thirty days' public notice before a closure", did: "closed with no notice", reading: "diverges",
              content: [ev.content] }], disagreement: null }]);
@@ -252,13 +262,14 @@ test("R10: reevaluation's notice is recorded once per cause, and one that names 
 });
 
 test("R11 R15: determinationsFor lists at most 200 a page in id order (a lower limit honoured, a higher not), truncated by reading one past, with its filters, and only determinations in projects the viewer sees", () => {
-  const { w, proj, std, input } = scene();
+  const { w, proj, std, ev, input } = scene();
   const second = w.standard("Parks Code 12.08.040", { period: { from: "2020-01-01", to: "2030-12-31" } });
   const a = w.c.determine(input());
-  const b = w.c.determine(input({ act: { id: a.act.id }, supersedes: a.id, reason: "restated",
+  const b = w.c.determine(input({ supersedes: a.id, reason: "restated",
     standards: [{ standard: second, outcome: "compliant" }],
     rows: [{ standard: second, requires: "a sign", did: "a sign", reading: "aligns" }] }));
-  const c = w.c.determine(input({ standards: [{ standard: std, outcome: "unclear" }], questions: [{ question: "Q?" }] }));
+  const c = w.c.determine(input({ act: { ...input().act, event: w.event(ev) }, standards: [{ standard: std, outcome: "unclear" }],
+                                  questions: [{ question: "Q?" }] }));
   const ids = (x) => x.items.map((i) => i.id);
   const all = quiet(w, () => w.c.determinationsFor({ viewer: V("pat") }));
   assert.deepEqual([ids(all), all.truncated, all.limit, all.cursor], [[a.id, b.id, c.id], false, DETERMINATIONS_PAGE_MAX, null]);
