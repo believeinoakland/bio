@@ -1,5 +1,5 @@
 /* agent-harness (T33-54): copied from `agent-worker/src/subsession.mjs` with no change of meaning (agent-harness R5, R7,
- * R8). The suites this header names are agent-worker's until T33-57. */
+ * R8, R9). The suites this header names are agent-worker's. */
 /* FL-5 / IS-9(a) — THE SUB-SESSION CONTRACTS: WHAT GOES OUT, AND WHAT MAY COME
  * BACK. Pure, for the same recorded reason `harness.mjs` is pure.
  *
@@ -164,10 +164,11 @@ export const CITATION_KEYS = { address: true };
  *
  * "The parent holds the only write and the only manifest" is the plan row's
  * sentence, and this is the half of it a suite can measure: every op here must be
- * one this member's `PLANE_OPS` declares `mutating: false`, checked by
- * `test/fanout.test.mjs` rather than against this comment, and control-plane pins
- * that declaration op by op to the plane's own table (N402). An op that turns
- * mutating fails a suite rather than a sub-session quietly gaining a write.
+ * one `agent-worker`'s `PLANE_OPS` (its `ops.mjs`) declares `mutating: false`,
+ * checked by its `test/fanout.test.mjs` rather than against this comment, and
+ * control-plane pins that declaration op by op to the plane's own table (N402). An
+ * op that turns mutating fails a suite rather than a sub-session quietly gaining a
+ * write.
  *
  * IT GRANTS NOTHING, exactly as `PLANE_OPS` grants nothing (D-199 (2)): what a
  * credential may reach is a row a MEMBER authored, read at the plane's gate by

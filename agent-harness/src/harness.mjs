@@ -1,7 +1,9 @@
 /* agent-harness (T33-54): copied from `agent-worker/src/harness.mjs` with no change of meaning; its requirements are
- * `build/requirements/agent-harness.md` R1–R8, tested in `agent-harness/test/`. The suites this header names
- * (`test/harness.test.mjs` and the like) are agent-worker's, which drive the Worker shell, until T33-57. R3's default
- * pass limit (`passLimit`) is held here since this copy. */
+ * `build/requirements/agent-harness.md` R1–R9, tested in `agent-harness/test/`. The suites this header names
+ * (`test/harness.test.mjs` and the like) are agent-worker's, which drive the Worker shell. R3's default pass limit
+ * (`passLimit`) is held here since this copy. The run's plane ops, its namespaces and its meaning arm (`PLANE_OPS`,
+ * `NAMESPACES`, `MEANING_ARM`) are `agent-worker`'s, declared once in its `ops.mjs`; this module exports none of them
+ * (R9, T34-37). */
 /* FL-3 / IS-9 — THE RUN HARNESS, AS A DETERMINISTIC CONTROL FLOW TABLE.
  *
  * `INVESTIGATIVE-SESSION.md` §14b.4 is the whole item in one sentence: *"do not
@@ -52,10 +54,11 @@
  *                                           rest of the queue (D-452). See the
  *                                           F10 block below — this is the row
  *                                           the item is named for
- *   query-never-load ...................... PLANE_OPS. The meaning-grain read is
- *                                           PL-9's `op=meaningrows` and this
- *                                           item CONSUMES it; no op in the set
- *                                           returns document bytes
+ *   query-never-load ...................... `agent-worker`'s `PLANE_OPS` (its
+ *                                           `ops.mjs`, R9 here). The meaning-
+ *                                           grain read is PL-9's `op=meaningrows`
+ *                                           and this item CONSUMES it; no op in
+ *                                           the set returns document bytes
  *   versions as formed, never batched ..... `submit` takes ONE candidate off the
  *                                           head of the queue. There is no
  *                                           submit-all and no batch shape to
@@ -149,13 +152,6 @@
  * normally has and the reason D-113's purge list is this project's stock
  * example. */
 export const LEVELS = ["meaning", "content", "document", "internet"];
-
-/* D-462, R4 — THE NAMESPACES THIS MEMBER NAMES TO THE PLANE: EXACTLY `bio` OR `scratch`, case-sensitive (a Durable
- * Object name is an exact string). The plane's set is not per instance (`namespaceGate` holds it in code), so "no such
- * namespace exists" is the same fact on every instance this member can be bound to. It is a COPY, because a fleet
- * member cannot import the plane, and it is EXPORTED with `PLANE_OPS` (R37) so control-plane pins both against its own
- * namespace gate and op table (N402): the day the plane gains a namespace, that pin goes red. */
-export const NAMESPACES = Object.freeze(["bio", "scratch"]);
 
 /* THE SAME FOUR LEVELS IN THE SPELLING A `level-empty` SUGGESTION IS WRITTEN
  * IN — and the two vocabularies DISAGREE ON ONE MEMBER, which is D-323's
@@ -264,86 +260,6 @@ export const NOT_OUR_BOUNDS = {
   lease: "the plane's heartbeat — a run that stopped heartbeating DIED rather than finished, and only "
        + "something outside the run can observe that (PL-5's `ai-run-reap` consumer)",
 };
-
-/* THE OPS THIS HARNESS MAY NAME, AND WHY EACH ONE IS HERE.
- *
- * PINNED AS AN EXACT SET IN THE SUITE, FLOOR AND CEILING BOTH, exactly as FL-2
- * pinned `{whoami}`: a call this member gains is a call somebody decided to give
- * it, and a call it loses is visible too.
- *
- * **THE SCOPE IS STILL NEVER EVALUATED HERE.** D-199 (2): what an agent may
- * reach is a row a MEMBER AUTHORED, read from the record at the plane's gate by
- * `aiTaskScope`. This set is not an allow-list and grants nothing — naming an op
- * the credential does not declare gets a refusal from the plane, which this
- * member passes through verbatim. It is a DECLARATION of what the table's rows
- * do, so the suite can pin it.
- *
- * QUERY, NEVER LOAD (§14b.1): the run holds the inquiry, its versions and its
- * working set, and reaches everything else by ASKING. The meaning-grain read is
- * PL-9's `op=meaningrows` and this item CONSUMES it — it builds no second
- * reader, which is D-15's one-compiler rule and D-222's option C as shipped.
- * **No op in this set returns document bytes**, and the suites assert that
- * over the set itself rather than against this comment; control-plane pins
- * the set, op by op, to the plane's own table (N402). */
-export const PLANE_OPS = {
-  whoami:         { mutating: false, why: "who the plane says this credential is (FL-2's round trip, kept)" },
-  airun:          { mutating: false, why: "the run object: its conditions, its live budget" },
-  airunlog:       { mutating: false, why: "§14b.7 — a RESUMED run reads its own log and continues" },
-  airunspawn:     { mutating: false, why: "PL-12's spawn payload; the search half has no manifest field to read" },
-  meaningrows:    { mutating: false, why: "PL-9 / D-222 option C — the meaning-grain read. CONSUMED, never rebuilt" },
-  basisversions:  { mutating: false, why: "PL-1's version set — what DEDUP compares against, read before any write" },
-  search:         { mutating: false, why: "D-220 — which held record a citation names, and the source address its bytes name" },
-  versionchain:   { mutating: false, why: "D-220 / PL-10 — every version at that address, so a document is counted ONCE" },
-  affordances:    { mutating: false, why: "R48 — what the plane publishes, which the skill pack is rendered from before any model turn" },
-  /* R51, R53 (K660) — MODE `plan`'s reads, under the run's credential and nothing else. Their op names are held in
-     `PLAN_READS` below, beside the rows that call them. */
-  plan:              { mutating: false, why: "R51 — the run's action plan: its subjects, options and proposals (action-plans R6)" },
-  plans:             { mutating: false, why: "R51 — the earlier plans of the SAME project, as the plane answers them (action-plans R7)" },
-  determination:     { mutating: false, why: "R51 — a determined subject's determination (conformance.determinationRead)" },
-  standard:          { mutating: false, why: "R51 — a subject's standard and its text (standards.standardRead)" },
-  consequencesof:    { mutating: false, why: "R51 — the consequences recorded for a determined outcome (consequences)" },
-  availableactions:  { mutating: false, why: "R51 — the actions a determination makes available (filings.availableActions)" },
-  publishededitions: { mutating: false, why: "R51 — a suspected subject's inquiry, as its findings stand published" },
-  profiles:          { mutating: false, why: "R51 — the active jurisdiction profiles (jurisdictions.combine), read once" },
-  airuntick:      { mutating: true,  why: "log-always and budget spend, through the plane's own producer" },
-  suggest:        { mutating: true,  why: "PL-3 — ONE version, as formed. The only write that reaches the record" },
-  capturerequest: { mutating: true,  why: "PL-4 — the internet level REQUESTS acquisition; it does not perform it" },
-  airunclose:     { mutating: true,  why: "the ordinary exit, naming the bound (C-22.5)" },
-  optionpropose:  { mutating: true,  why: "R52 — mode `plan`'s one write: ONE proposal to the run's plan, as formed (action-plans R11, R31)" },
-};
-
-/** THE MEANING ARM THIS MEMBER READS AT — D-276, AND IT IS A DECLARATION RATHER
- *  THAN A DEFAULT, BECAUSE THE PLANE REFUSES DEFAULTS.
- *
- *  `op=meaningrows` will not choose an arm for a caller. C-23.1's own words:
- *  *"Each reads a different table and answers a different question, so there is
- *  no default that would not be answering something you did not ask."* The
- *  member's meaning reader used to carry `rows = "legs"` as a DEFAULT PARAMETER,
- *  which put that choice back exactly where the plane had refused to leave it —
- *  and put it there in a spelling the record does not hold.
- *
- *  WHY `leg`, AND IT WAS ESTABLISHED BY DRIVING THE REAL PLANE RATHER THAN
- *  ASSUMED. The compiler holds THREE arms resolving to TWO tables: `leg` reads
- *  `inquiry_basis`, one row per LEG of an inquiry's basis, while `resolves` and
- *  `concerns` BOTH read `resolutions` and project the identical row — they
- *  differ only in which bare word their BUNDLE-grain selector takes, which is a
- *  distinction in the `q` language and not in what `rows=` returns. A resolution
- *  is a reference in a capture resolving to a registered subject: the reading
- *  half's grain, and not what this member does. THIS RUN FORMS VERSIONS OF A
- *  BASIS — its context is an inquiry, `dedup` reads `op=basisversions`, `submit`
- *  writes through `op=suggest`. The legs ARE what it composes against.
- *
- *  IT LIVES HERE, BESIDE `PLANE_OPS`, AND NOT IN THE WORKER: a named export of a
- *  STRING from a Worker entry module is refused by workerd at startup
- *  (*"Incorrect type for map entry … not of type 'function or ExportedHandler'"*
- *  — measured), so a constant the suite must import cannot sit there. This is
- *  the file that already declares what this member may name at the plane, which
- *  is where a declaration of HOW it names it belongs.
- *
- *  THE VALUE THAT WAS HERE — `"legs"`, plural — IS AN ARM THE PLANE DOES NOT
- *  HOLD. Every call carrying it was refused `MEANING_ROWS_UNKNOWN_ARM` (C-23.2)
- *  and the refusal was written into an observation entry as a zero. */
-export const MEANING_ARM = "leg";
 
 /* ---------------------------------------------------------------- THE TABLE
  *
