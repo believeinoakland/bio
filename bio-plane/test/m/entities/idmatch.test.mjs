@@ -22,11 +22,12 @@ test("R20 the spaces and forms are id-spaces', over the view jurisdictions.combi
   const w = pair();
   const u = w.e.idMatch({ space: "cms", a: "1" });
   assert.equal(u.reason, "IDSPACE_UNKNOWN");
-  /* id-spaces' nine (its R1, T33-9; K1515), in its order, read from its own spaces() over the view */
-  assert.deepEqual(u.spaces, ["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"]);
+  /* every space id-spaces lists (its R1), in its order, read from its own spaces() over the view: never a list held here */
   assert.deepEqual(u.spaces, idSpaces(w.e.view()).map((s) => s.space));
+  assert.ok(u.spaces.length > 0 && u.spaces.includes("project"));
+  /* K1572: no fixed list of spaces in the sentence; DEC-149 (T34-78): the group's own profiles, never "this instance" */
   assert.equal(u.translation, "That is not an identifier space the record knows how to judge. The answer lists the spaces it knows, "
-    + "each with the forms this instance's jurisdiction profiles give it. Nothing was judged.", "K1572: no fixed list of spaces in the sentence");
+    + "each with its forms as your group's jurisdiction profiles give them. Nothing was judged.");
   assert.equal(w.e.idMatch({ space: "apn", a: "1/2" }).reason, "IDSPACE_UNKNOWN", "the old names are gone (N6)");
   assert.equal(w.e.idMatch({}).reason, "IDSPACE_UNKNOWN");
   const r = w.e.idMatch({ space: " Project ", a: "wo 0001" });

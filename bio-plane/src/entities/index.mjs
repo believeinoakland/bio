@@ -47,6 +47,10 @@ export const PROCEEDING_SCHEME = "proceeding";
 export const CONNECTION_OWNER = "entities";
 export const CONNECTION_KINDS = Object.freeze(RELATION_KINDS.map((kind) =>
   Object.freeze({ kind, word: kind.replace(/_/g, " "), class: "declared" })));
+/* R47 (N560, K1563 (2); connection-grammar R9): what this owner declares to the conformance battery. Its kinds are
+   undated (a relation holds no dates, so none is in or out at a date) and group-wide (the registry is the group's, C6,
+   K1489, so no item is fenced from one member); the battery answers those two checks `inapplicable`, never failed. */
+export const CONNECTION_DECLARES = Object.freeze({ undated: true, group_wide: true });
 
 /* R33 (REC-51, K76 (3), K147): the grade rank DERIVED from the catalogue's own strongest-first order, never
    restated; a higher number is a stronger grade, and a value that is no grade has no rank. Read by `connections`,
@@ -171,7 +175,7 @@ function identifierNotInSpace(view, sch, field) {
   return { ok: false, reason: "IDENTIFIER_NOT_IN_SPACE", field, scheme: sch.scheme, space: sch.space, forms,
            detail: `the ${field} has the shape of no form of the ${S ? S.label : sch.space} space`
                  + (sch.form ? ` the scheme names (${sch.form})` : "")
-                 + (forms.length ? "" : "; the instance's active jurisdiction profiles give it no form") + ". Nothing was written." };
+                 + (forms.length ? "" : "; your group's active jurisdiction profiles give it no form") + ". Nothing was written." };
 }
 /* R43, R45: another entity holds the scheme identifier with a validity that overlaps or is unstated. */
 const identifierTaken = (scheme, normal, holder) => ({ ok: false, reason: "IDENTIFIER_TAKEN", scheme, normal, holder,
@@ -676,7 +680,7 @@ export class Entities {
     const sch = typeof scheme === "string" && scheme !== PROCEEDING_SCHEME ? this.#schemeOf(view, scheme) : null;
     if (!sch) return { ok: false, reason: "UNKNOWN_SCHEME", scheme: typeof scheme === "string" ? scheme.slice(0, 80) : null,
       schemes: schemes.map((s) => s.scheme),
-      detail: "an identifier is held in a scheme the instance's active jurisdiction profiles name"
+      detail: "an identifier is held in a scheme your group's active jurisdiction profiles name"
             + (schemes.length ? `: one of ${schemes.map((s) => s.scheme).join(", ")}` : "; they name none") + ". Nothing was written." };
     const kinds = Array.isArray(sch.entity_kinds) ? sch.entity_kinds : [];
     if (!kinds.includes(ent.kind)) return { ok: false, reason: "SCHEME_NOT_FOR_KIND", scheme: sch.scheme, kind: ent.kind,
@@ -810,7 +814,7 @@ export class Entities {
     const kinds = (Array.isArray(view.proceeding_kinds) ? view.proceeding_kinds : []).filter((k) => k && typeof k.kind === "string");
     const pk = kinds.find((k) => k.kind === f.kind.trim());
     if (!pk) return { ok: false, reason: "PROCEEDING_KIND_UNKNOWN", kind: f.kind.trim().slice(0, 80), kinds: kinds.map((k) => k.kind),
-      detail: "a proceeding's kind is one the instance's active jurisdiction profiles name"
+      detail: "a proceeding's kind is one your group's active jurisdiction profiles name"
             + (kinds.length ? `: one of ${kinds.map((k) => k.kind).join(", ")}` : "; they name none") + ". Nothing was written." };
     const sch = this.#schemeOf(view, PROCEEDING_SCHEME);
     const rec = Entities.#inScheme(view, sch, f.number);
@@ -1455,7 +1459,7 @@ export class Entities {
         .flatMap((s) => labelTerms(s && s.term)))];
       if (!t.length)
         return { ok: true, determined: false, from, terms: [], sql: null, plan: null,
-                 why: "no terms were given and the instance's active jurisdiction profiles hold no search terms, so "
+                 why: "no terms were given and your group's active jurisdiction profiles hold no search terms, so "
                     + "there is nothing to explain; no term is assumed" };
     }
     t = t.slice(0, 24);
@@ -1535,7 +1539,7 @@ export class Entities {
     if (!ra || (pair && !rb))
       return idspaceRefusal("IDSPACE_VALUE_NOT_IN_SPACE", { space: sp, forms: S.forms.map((f) => f.form), profiles,
         detail: `${!ra ? "a" : "b"} has the shape of no form of the ${S.label}`
-              + (S.forms.length ? "" : "; the instance's active jurisdiction profiles give this space no form") });
+              + (S.forms.length ? "" : "; your group's active jurisdiction profiles give this space no form") });
     /* END DEC-49 REGION is-idspace-value-shape */
     /* R21: no assessor vintage is held in the record, so a parcel's standing is judged over none and reads
        UNDETERMINED saying so — never "no such parcel". */
