@@ -1,6 +1,7 @@
-/* acquisition R17 with N615 (K1683): intake's `doctypeFor` is handed the capture's origin, `"member"` exactly when the
-   capture's `actor_class` is `member` and `"fetch"` otherwise, so a content type read only from a member's own capture
-   (court-doctypes R2's `ecourt_roa`) can tell. Checked at the module's interface: through `acquire` (fixture.mjs `run`)
+/* acquisition R17 with N615 (K1683, K1773): intake's `doctypeFor` is handed the capture's origin. Every arm of
+   `acquire` is a fetch the copy makes, a member session's request included, so it hands `"fetch"`; `"member"` is only
+   for bytes a member supplied by their own act (an upload or a knock), which a caller states through `profileOf`. So a
+   content type read only from a member's own capture (court-doctypes R2's `ecourt_roa`) never matches a fetch. Checked at the module's interface: through `acquire` (fixture.mjs `run`)
    and the exported `profileOf`, over a probe content type that reports the origin it was handed and a member-only type
    that matches as court-doctypes R2 does (`ctx.origin` `"member"`, else refused with its why). Both are test-local,
    registered through docprofile's `registerDoctype`; this file is its own test process. */
@@ -34,21 +35,21 @@ const html = (body) => `<!doctype html><html><head><title>t</title></head><body>
 const served = (body) => () => new Response(body, { headers: { "content-type": "text/html; charset=utf-8" } });
 const PROBE_AT = "https://records.example/probe";
 
-test("R17 (N615): a member session's capture hands doctypeFor the origin \"member\", every other caller's \"fetch\", matching R16's actor_class", async () => {
+test("R17 (N615): every acquire hands doctypeFor the origin \"fetch\", a member session's request included, whatever R16's actor_class", async () => {
   const cases = [
-    [{ cls: "member", member: true, sessMember: "m1" }, "member", "member"],
-    [{ cls: "probe", member: false, sessMember: null }, "fetch", "session"],
-    [{ cls: "admin", member: false, sessMember: null }, "fetch", "daemon"],
+    [{ cls: "member", member: true, sessMember: "m1" }, "member"],
+    [{ cls: "probe", member: false, sessMember: null }, "session"],
+    [{ cls: "admin", member: false, sessMember: null }, "daemon"],
   ];
-  for (const [opts, origin, actorClass] of cases) {
+  for (const [opts, actorClass] of cases) {
     seen.length = 0;
     const r = await run(world(), { [PROBE_AT]: served(html(`<p>${MARK}</p>`)) }, { locator: PROBE_AT }, opts);
     assert.equal(r.status, 200, JSON.stringify(opts));
     const d = r.body.document;
     assert.equal(d.capture.actor_class, actorClass);
     assert.equal(d.profile.content_type, "origin_probe");
-    assert.ok(seen.length >= 1 && seen.every((o) => o === origin), `${JSON.stringify(opts)} → ${JSON.stringify(seen)}`);
-    assert.deepEqual(d.profile.content_type_signals, [`origin ${JSON.stringify(origin)}`]);
+    assert.ok(seen.length >= 1 && seen.every((o) => o === "fetch"), `${JSON.stringify(opts)} → ${JSON.stringify(seen)}`);
+    assert.deepEqual(d.profile.content_type_signals, ['origin "fetch"']);
   }
 });
 
@@ -79,17 +80,17 @@ const ROA_AT = "https://court.example/case/MC-24-0123";
 const ROA = html("<h2>Register of Actions</h2><table><tr><th>Date</th><th>Description</th></tr>"
   + "<tr><td>01/05/2024</td><td>Complaint filed</td></tr></table>");
 
-test("R17 (N615): a type read only from a member's own capture matches a member session's capture and not a fetch of the same bytes", async () => {
-  const profiled = async (opts) => {
+test("R17 (N615): a type read only from a member's own capture never matches an acquire, a member session's included, and matches the same bytes profiled as member-supplied", async () => {
+  for (const opts of [{ cls: "member", member: true, sessMember: "m1" }, { cls: "probe", member: false, sessMember: null },
+                      { cls: "admin", member: false, sessMember: null }]) {
     const r = await run(world(), { [ROA_AT]: served(ROA) }, { locator: ROA_AT }, opts);
     assert.equal(r.status, 200);
-    return r.body.document.profile;
-  };
-  const mine = await profiled({ cls: "member", member: true, sessMember: "m1" });
-  assert.equal(mine.content_type, "member_only_register");
-  assert.deepEqual(mine.content_type_signals, ["a register of actions", "a member's own capture"]);
-  for (const opts of [{ cls: "probe", member: false, sessMember: null }, { cls: "admin", member: false, sessMember: null }]) {
-    const fetched = await profiled(opts);
-    assert.notEqual(fetched.content_type, "member_only_register", JSON.stringify(opts));
+    assert.notEqual(r.body.document.profile.content_type, "member_only_register", JSON.stringify(opts));
   }
+  const bytes = Buffer.from(ROA);
+  const ev = { get: async (k) => (k === sha(bytes) ? new Response(bytes) : null) };
+  const supplied = await profileOf({ ev, sha: sha(bytes), ct: "text/html", total: bytes.length, locator: ROA_AT,
+                                     retrieved: "2026-10-06T12:00:00Z", origin: "member" });
+  assert.equal(supplied.content_type, "member_only_register");
+  assert.deepEqual(supplied.content_type_signals, ["a register of actions", "a member's own capture"]);
 });
