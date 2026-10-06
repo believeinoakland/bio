@@ -3,7 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, infoMd } from "./fixture.mjs";
-import { checkGatheringGrammar, GATHERING_CHECKS } from "../../../src/monitoring/index.mjs";
+import { checkGatheringGrammar, GATHERING_CHECKS, GATH_ID_RE } from "../../../src/monitoring/index.mjs";
+import { idPattern } from "../../../src/record-grammar/index.mjs";
 
 const REQ = { id: "GATH-2026-0001-minutes", target: { text: "the council minutes", description: "every meeting's minutes" },
               locators: ["https://records.example.org/minutes"], authority: "Town Clerk", criticality: "crucial",
@@ -82,4 +83,31 @@ test("R42 C-18.5 runs in the audit through record-core's registration, over a qu
   const off = (a.offenders || []).find((o) => o.bundleId === rid);
   assert.ok(off, JSON.stringify(a).slice(0, 400));
   assert.ok(off.errors.some((e) => e.check === "C-18.5" && /status must be one of/.test(e.detail)));
+});
+
+test("R69 the gathering id C-18.5 tests is the core record-grammar's one id table answers for GATH (idPattern), then the request's slug: a counter of four or more digits is accepted, every id valid before stays valid, and every finding on a file written before T33 is byte-identical", () => {
+  const core = idPattern("GATH");
+  assert.ok(core instanceof RegExp);
+  /* the id table's core and the slug: every id C-18.5 accepts has a GATH core idPattern accepts */
+  for (const id of ["GATH-2026-0001-minutes", "GATH-2026-9999-a-b-c", "GATH-1999-0042-x1"]) {
+    assert.equal(GATH_ID_RE.test(id), true, `${id}, valid before T33, stays valid`);
+    assert.equal(core.test(id.split("-").slice(0, 3).join("-")), true);
+  }
+  /* the counter has no ceiling: the 10,000th id and beyond are accepted, at the write as in the grammar */
+  for (const id of ["GATH-2026-10000-minutes", "GATH-2026-123456789-x"]) {
+    assert.equal(GATH_ID_RE.test(id), true, id);
+    assert.deepEqual(findingsOf({ requests: [{ ...REQ, id }] }), [], id);
+  }
+  const w = world();
+  assert.equal(w.promote("INFO-2026-0620-wide", infoMd("INFO-2026-0620-wide", "https://records.example.org/w"),
+    { files: [gj({ requests: [{ ...REQ, id: "GATH-2026-10000-minutes" }] })] }).ok, true, "a five-digit counter lands");
+  /* the controls: a counter under four digits, no slug, another prefix, a bad slug, an upper-case slug */
+  for (const id of ["GATH-2026-999-minutes", "GATH-2026-0001", "GATH-26-0001-minutes", "TASK-2026-0001-minutes",
+                    "GATH-2026-0001-", "GATH-2026-0001-Minutes", "GATH-2026-0001-a--b", "gath-2026-0001-a", "", undefined]) {
+    assert.equal(GATH_ID_RE.test(id || ""), false, String(id));
+    const f = findingsOf({ requests: [{ ...REQ, id }] });
+    /* the finding a pre-T33 file drew is byte-identical */
+    assert.deepEqual(f, [{ check: "C-18.5", severity: "error",
+      message: `gathering.json requests[0].id '${id}' does not match the GATH grammar` }], String(id));
+  }
 });
