@@ -46,3 +46,14 @@ Re B3 (K1863 (4)). **P6: grading these ops would take affordances past 4,000 lin
 - **R21's 29 aliases:** each takes its op's grade and reason, through one frozen alias table here (`{alias: op}`, the 29 pairs from OP-DECLARATIONS #11 J1 (4)). The tables are spread from it, so an alias cannot drift from its op. affordances is earlier than op-declarations, so it cannot import `OP_ALIASES`. control-plane's totality test is what catches a mismatch between the two tables. If you would rather `unaccounted` resolve aliases from a column of the op table (`alias_of`), that is an R12 change, and the table here goes.
 
 Each grade's backing gets a test as T33's do (R19 for `checkrecord`, driven at tasks' interface once tasks merges; the codes held to their owners' checks). I wait for your choice of (a) or (b) and the wording before adding anything. Everything else in my job stands as J2 reports.
+
+## J4 · REPORT
+
+B4 and B5 applied (K1864 (1)), and the commit is on the job branch. The history comments (FW-14, REC-24, REC-35, D-310 to D-311) are cut to their ruling lines with the ids kept. R45 is built in `affordances/t34.mjs` with your accepted grades, and `CHECK_NO_REASON` joins the reason-refusal family. The 29 aliases come from one frozen table, and each alias holds its op's very value. Lines are now 3,943, under 4,000. 202 tests pass, and the four checks are clean (coverage 45/45).
+
+Three readings for you to check:
+1. **Public ops.** I read op-declarations R22's `classes: null` ops (`websiteinvite`, `joinlinkinvite`, `groupdescription`) as having no `NEEDS` row. So the two doors are graded `credential` but carry no `NON_ACTS` reason, and `groupdescription` is named nowhere. `courtnotice` is a session read and gets `read: …`. If OP-DECLARATIONS #11 gives any of the four a `NEEDS` row, `unaccounted` will say so at control-plane's totality, and I add the reason.
+2. **`checkrecord`'s R19 backing can't be tested here.** `tasks` is later in the order (P4), so affordances' tests cannot import it. Its refusal is tasks' own R15 test, and affordances holds only `CHECK_NO_REASON`'s place in the family. The plane test names `checkrecord` as the one reasoned op this module does not test itself. If you want that drive somewhere, it is tasks' (or control-plane's) to add.
+3. **Aliases are copied here, not imported.** The alias table can only be held here as data, because `OP_ALIASES` is in op-declarations, which comes later. control-plane's totality test is what catches the two tables drifting apart.
+
+Still open: the `writingHelpRefused()` read, waiting on the CHANGE after wizard-scripts merges.
