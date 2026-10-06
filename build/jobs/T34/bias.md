@@ -1,6 +1,6 @@
 # bias (T34)
 
-**Status** · session_01NjDa7GbJXLCjDHkrNB4LFJ · depth 2 · COMPLETE · handled B1
+**Status** · session_01NjDa7GbJXLCjDHkrNB4LFJ · depth 2 · COMPLETE · handled B2
 
 ## Record (BIAS #10)
 
