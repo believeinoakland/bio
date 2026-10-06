@@ -51,6 +51,11 @@ const DOC_CONN = "INFO-2026-2200-connection-c";
 const LEFTOUT = "INFO-2026-2200-left-out";
 const T0 = "2026-09-28T00:30:00Z", T1 = "2026-09-28T01:00:00Z", T2 = "2026-09-29T01:00:00Z";
 const BAR = { declared: true, capture: "B", connection: "C" };
+/* R29: a case edition's two dates as publication holds them on its row (its R70, R40; K1826). */
+const datesOf = (w, caseId, edition) => {
+  const r = w.row(`SELECT signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`, caseId, edition);
+  return { signed_at: r.signed_at, published_at: r.published_at };
+};
 const STMT1 = "This case covers the FY2024 sewer fund transfer only, on the documents in hand at edition 1.";
 const STMT2 = "This case covers the FY2024 transfer and, as of edition 2, the FY2023 comparison memo.";
 const COMPLETENESS1 = { statement: STMT1, subject_position: "sought_and_answered",
@@ -133,7 +138,7 @@ test("R3 (blocks 1-2) the public read answers the case, with each finding's own 
   assert.deepEqual(s.files.filter((p) => p.kind === "capture").map((p) => [p.path, p.finding, p.sha256, p.bytes]),
                    [[`${F}/snapshots/memo.bin`, F, CAP_SHA, 512]], "every part with its sha and bytes, namespaced by finding");
   assert.ok(s.files.every((p) => /^[0-9a-f]{64}$/.test(p.sha256)), "every part answerable by hash");
-  assert.deepEqual([s.editions, s.edition_index], [[1], [{ edition: 1, ratified_at: T1, manifest_sha: manifestSha, withdrawn: null }]]);
+  assert.deepEqual([s.editions, s.edition_index], [[1], [{ edition: 1, ratified_at: T1, manifest_sha: manifestSha, ...datesOf(w, CASE, 1), withdrawn: null }]]);
   /* The case's own id answers the same case, without `asked`. */
   const byCase = w.read("publishedcase", { id: CASE });
   assert.deepEqual([byCase.caseId, "asked" in byCase], [CASE, false]);
@@ -217,8 +222,8 @@ test("R3, R1 (block 5) a second edition: each edition's hash resolves to its own
                    "each edition keeps its own signature");
   assert.deepEqual([byHash1.ratified_at, byHash2.ratified_at], [T1, T2]);
   assert.deepEqual([byHash1.document.sig_armored, byHash2.document.sig_armored], [SIG(1), SIG(2)]);
-  assert.deepEqual(byHash1.edition_index, [{ edition: 1, ratified_at: T1, manifest_sha: m1, withdrawn: null },
-                                           { edition: 2, ratified_at: T2, manifest_sha: m2, withdrawn: null }]);
+  assert.deepEqual(byHash1.edition_index, [{ edition: 1, ratified_at: T1, manifest_sha: m1, ...datesOf(w, CASE, 1), withdrawn: null },
+                                           { edition: 2, ratified_at: T2, manifest_sha: m2, ...datesOf(w, CASE, 2), withdrawn: null }]);
   /* Through the Worker: the hash (any case) resolves the same way, and edition 1's body is edition 1's bytes. */
   const w1 = await anonCase(w, env, { sha256: pin1.toUpperCase() });
   assert.deepEqual([w1.edition, w1.findings[0].body.from_sha], [1, pin1]);
@@ -303,8 +308,8 @@ test("R3 (block 8, M0-11) the loose branch: ratified bytes in no case answer, wi
   const keysOf = (o) => Object.keys(o).filter((k) => k !== "asked").sort();
   assert.deepEqual(keysOf(c), keysOf(caseAns), "the two branches answer one key set: one success return");
   assert.ok(keysOf(c).length >= 18, "and the key set is not empty");
-  assert.deepEqual(Object.keys(caseAns.edition_index[0]).sort(), ["edition", "manifest_sha", "ratified_at", "withdrawn"],
-                   "a case edition's row carries its withdrawal stamp or null (R20)");
+  assert.deepEqual(Object.keys(caseAns.edition_index[0]).sort(), ["edition", "manifest_sha", "published_at", "ratified_at", "signed_at", "withdrawn"],
+                   "a case edition's row carries its withdrawal stamp or null (R20) and its two dates (R29)");
   assert.deepEqual([c.withdrawn, c.docket_last_entry], [null, null], "a loose bundle is not a case and has no docket (R20)");
   assert.deepEqual([c.case_detail === caseAns.case_detail, c.graph_detail === caseAns.graph_detail], [true, true]);
   assert.match(c.graph_detail, /serves\[\] is what this surface may hand over/);

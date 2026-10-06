@@ -10,6 +10,7 @@ import { seeded, post, CASE } from "../docket/fixture.mjs";
 import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 import { publicReadDoorOp } from "../../../src/public-read/door.mjs";
 import { docketOf } from "../../../src/docket/index.mjs";
+import { publicationT34 } from "./fixture.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const doAnswer = async (res) => { const r = await res; const out = await r.json();
@@ -20,6 +21,7 @@ const HELPERS = { json, doAnswer, storeRefusal: (out) => json(out.reply.body, ou
 
 function served() {
   const w = seeded();
+  publicationT34({ st: w.st, p: w.publication ?? w.p });
   const pr = publicReadOf(w.host);
   const read = (name, query = {}) => {
     const url = new URL(`http://do/${name}`);

@@ -1,6 +1,7 @@
 /* public-read — A COURT ORDER'S EFFECT ON WHAT IS SERVED (requirements: `build/requirements/public-read.md` R28; K1480,
- * K1493, K1522; `publication` R62, `docket` R25). Pure: given an edition's stamps (`publication.stampsOf`, in order) and
- * the edition's items (each a hash with the paths it is known by), it answers what the public read withholds and the
+ * K1493, K1522; `publication` R62, R64, `docket` R25). Pure: given an edition's stamps (as `publication.stampsOf`
+ * answers them, in order; read for every edition at once through its `stampedEditions`) and the edition's items (each a
+ * hash with the paths it is known by), it answers what the public read withholds and the
  * order each withholding rests on. Nothing here deletes anything: the edition and its bytes stay held (`publication`
  * R24); only what is served changes, and every withholding is stated where the bytes would have appeared.
  *

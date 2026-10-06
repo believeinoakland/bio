@@ -18,9 +18,10 @@
  *
  * REACHED as `publicReadOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. `deps`:
- *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `stampsOf` (its
- *                  R62, for R28), and its
- *                  storage, whose tables it reads under its R40 (default: `publicationOf(host)`).
+ *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55),
+ *                  `stampedEditions` (its R64, for R28: one read of every stamped edition), and its storage, whose
+ *                  tables it reads under its R40, `published_cases`' `signed_at` and `published_at` among them (its R70,
+ *                  for R29; K1826) (default: `publicationOf(host)`).
  *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14, and its R24's `captures: "omit"`)
  *                  and `docketFeed` (its R15), for R20, R21 and R25:
  *                  the docket's public answers, which this module serves and never composes (N520; default:
@@ -553,7 +554,9 @@ export class PublicRead {
                  cases: cms }, index.bySha.get(r.bundle_sha));
       }),
       cases: this.#rows(
-      `SELECT case_id, edition, scope, ratified_at, manifest_sha FROM published_cases
+      /* R29 (DEC-147 (5); `publication` R70, K1826): each case edition's `signed_at` and `published_at`, as publication
+         holds them on the row, read in this one query. */
+      `SELECT case_id, edition, scope, ratified_at, signed_at, published_at, manifest_sha FROM published_cases
        ORDER BY case_id, edition`)
       .map((c) => withheldCase({ ...c, findings: this.#rows(
         `SELECT bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
@@ -595,7 +598,7 @@ export class PublicRead {
       const cm = this.publication.soleCase(cms);
       const cid = cm ? cm.case_id : null;
       const c = cm ? this.#one(
-        `SELECT scope, completeness, bias_acknowledgement, bar, manifest_sha
+        `SELECT scope, completeness, bias_acknowledgement, bar, manifest_sha, signed_at, published_at
          FROM published_cases WHERE case_id=? AND edition=?`,
         cm.case_id, cm.edition) : null;
       /* R28: an edition an order withholds whole states no case content here; a finding whose bytes are withheld
@@ -608,6 +611,10 @@ export class PublicRead {
                   reported from there — one manifest per case per edition,
                   naming every member finding's parts. */
                manifest_sha: c ? (c.manifest_sha ?? null) : null,
+               /* R29: when the sole case edition was signed and when it was published (`publication` R70); null where
+                  the finding serves several cases, as the case fields above; a finding in no case is unchanged. */
+               ...(cms.length ? { signed_at: c ? (c.signed_at ?? null) : null, published_at: c ? (c.published_at ?? null) : null }
+                              : {}),
                scope: c && !caseWhole ? (c.scope ?? null) : null,
                bias_acknowledgement: c && !caseWhole ? (c.bias_acknowledgement ?? null) : null,
                completeness: c && c.completeness && !caseWhole ? JSON.parse(c.completeness) : null,
@@ -771,8 +778,8 @@ export class PublicRead {
        never followed -- REC-17 renders the obligation from exactly this).
        Editions are over the CONTAINER, which DEC-44 makes their natural home. */
     const editions = theCase
-      ? this.#rows(`SELECT edition, ratified_at, manifest_sha FROM published_cases WHERE case_id=? ORDER BY edition`,
-                   theCase)
+      ? this.#rows(`SELECT edition, ratified_at, manifest_sha, signed_at, published_at FROM published_cases
+                    WHERE case_id=? ORDER BY edition`, theCase)
       : this.#rows(`SELECT edition, ratified_at FROM published_bundles WHERE bundle_id=? ORDER BY edition`,
                    state.findings[0].bundle_id);
 
@@ -782,7 +789,8 @@ export class PublicRead {
        bytes, each file of the manifest, the manifest itself. A whole edition withheld answers its identity, its editions
        and its orders, and none of its content. */
     const cRow = theCase
-      ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
+      ? this.#one(`SELECT manifest, signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed)
+      : null;
     const manifestHeld = cRow && cRow.manifest ? safeJson(cRow.manifest) : null;
     const index = this.#withheldIndex();
     const mine = theCase ? index.editions.get(`${theCase}\u0000${Number(ed)}`) : null;
@@ -1011,6 +1019,11 @@ export class PublicRead {
                 `convert-multifinding.test.mjs`; `op=ratify`'s is the control
                 plane's. */
              completeness: whole ? null : state.completeness, ratified_at: state.ratified_at,
+             /* R29 (DEC-147 (5)): when this edition was signed and when it was published, exactly as `publication` R70
+                holds them on its row (one instant for both for an edition published at signing or before T34); each
+                `edition_index` entry carries its own. Null on the loose branch, which is no case edition. Neither is in
+                the case file's bytes (R23). */
+             signed_at: cRow ? (cRow.signed_at ?? null) : null, published_at: cRow ? (cRow.published_at ?? null) : null,
              complete: state.complete, awaiting: state.awaiting,
              ...(asked ? { asked } : {}),
              findings,
@@ -1189,10 +1202,14 @@ export class PublicRead {
 
   /* ---------------------------------------------------------------- R28: a court order's stamp, served */
 
-  /* R28: an edition's stamps as `publication` answers them (its R62), in order; `[]` for none. */
-  #stampsOf(caseId, edition) {
-    const s = this.publication.stampsOf({ case: caseId, edition: Number(edition) });
-    return Array.isArray(s) ? s : s && Array.isArray(s.stamps) ? s.stamps : [];
+  /* R28 (N598, K1644): every edition holding a stamp, with its stamps in order, in one read (`publication.stampedEditions`,
+     its R64), keyed `case NUL edition`; an edition with none is not listed. */
+  #stampedEditions() {
+    const s = this.publication.stampedEditions();
+    const out = new Map();
+    for (const e of s && Array.isArray(s.editions) ? s.editions : [])
+      if (e && Array.isArray(e.stamps) && e.stamps.length) out.set(`${e.case}\u0000${Number(e.edition)}`, e.stamps);
+    return out;
   }
 
   /* R28: every item of a case edition that the public read serves bytes for, each a hash with the paths it is known by:
@@ -1219,13 +1236,15 @@ export class PublicRead {
 
   /* R28: what every court order in force withholds, read at this call: `editions` each stamped case edition's
      withholding (keyed `case NUL edition`), `bySha` each withheld hash with the orders that withhold it. A hash is one
-     object, so bytes an order withholds under one edition are withheld wherever they would be served (J1 (5)). Only an
-     edition with a stamp is opened. */
+     object, so bytes an order withholds under one edition are withheld wherever they would be served (J1 (5)). The
+     stamps are one read (`#stampedEditions`); only an edition with a stamp is opened. */
   #withheldIndex() {
     const editions = new Map(), bySha = new Map();
+    const stamped = this.#stampedEditions();
+    if (!stamped.size) return { editions, bySha };
     for (const e of this.#rows(`SELECT case_id, edition, manifest_sha, manifest FROM published_cases ORDER BY case_id, edition`)) {
-      const stamps = this.#stampsOf(e.case_id, e.edition);
-      if (!stamps.length) continue;
+      const stamps = stamped.get(`${e.case_id}\u0000${Number(e.edition)}`);
+      if (!stamps) continue;
       const state = this.publication.caseEditionState(e.case_id, Number(e.edition));
       const w = withholdingOf(e.case_id, stamps,
                               this.#editionItems(e.case_id, state, e.manifest_sha, safeJson(e.manifest)), docketAddress);
