@@ -513,3 +513,9 @@ Bob asked whether a member may sign in through the hosted Claude Code's own logi
 - **Status:** answerable only by Anthropic (AT-25). Bob is asked (layouts page S6) whether to ask.
 
 Please also mark wherever the build state describes the subscription path's setup-token step, if any statement there goes beyond AT-22 and U-2.
+
+## U82 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-156 (Bob, S6): "build the process that includes a link to the Claude page a member can use to authorize civicsmith to use of their CC account. I assume that this process will produce a token that the user can paste into a field in the civicsmith screen." Bob also: "Once you add this process to real civicsmith screens I'll use the process to authorize my CC subscription to be used by my member account."
+- Drawn: the connect screen offers the subscription first: open Anthropic's sign-in page (new tab), sign in and approve, copy the code Anthropic's page shows, paste it into "The code from Anthropic's page", connect. Then an API key; then skip. The Connect wizard follows (the approved library's version, amended by Bob's ruling).
+- Recorded beside it (K1762): per AT-26 (U81) the page shows a login code for the hosted binary's prompt, not the `setup-token` token (AT-22); U-7 (a)–(d) stay open. Bob's decision is to build, not a reading that the terms permit it.
+- Owed (BOB): the hosted, unmodified Claude Code's own sign-in started for the member (AT-14), its Anthropic address given to the member, the pasted code delivered to that sign-in, the subscription serving only that member (K1547, K1755); the op behind `owed:subscriptionsignin DEC-156`; U-7 kept open in the register (U81); AT-14's Commercial Terms condition, whoever must agree. Bob means to use it himself once it is in real screens, so he would like to know which tranche carries it.
