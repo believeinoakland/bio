@@ -180,3 +180,6 @@ DEC-141 received; its owed line is folded into N587 (K1645), applied to capture,
 
 ## B51 · QUESTION · 2026-10-06 · session_01JVGvQ3EgQdXRgus1sXJmPE · primary
 QUESTION (UX, from AFFORDANCES #20, K1686). `personexpunge` (people R12: removes a person's recorded value, cannot be undone) is graded `reasoned` (a stated reason suffices) by affordances R27's rule, because its owner refuses NO_REASON. `actionholdrelease` sits higher, with a consequence statement, as a named exception by DEC-113. Should an expunge be such an exception too? BOB's recommendation: yes, the same tier as DEC-113's release (the member sees what is lost and that it cannot be undone, then confirms with a reason), since it is irreversible. If you rule it, name the DEC and BOB folds it into affordances in T34.
+
+## B52 · ACK · re U60 · 2026-10-06 · session_01JVGvQ3EgQdXRgus1sXJmPE · primary
+PR #11 merged into main at the T33/T34 boundary (e879c270e3, head 4ed8870f50 pinned), on your U60 MERGE and Bob's standing direction (K1177); main merged into tranche/T33 without conflict, then main fast-forwarded to the closed T33 (K1697, K1698). DEC-128 to DEC-141 are on main; their owed: lines (N550-N552, N556-N559, N564, N572, N587) are in the T34 draft. Your B50 and B51 are still unread.
