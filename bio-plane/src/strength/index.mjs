@@ -45,12 +45,14 @@
  * call that hands `retrieval` in, whenever it comes (the plane store's, at boot), as basis-versions takes it; a host with no
  * retrieval (a test's) is not given one, which would join retrieval's projection to every promotion there.
  * `deps`:
- *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `declarePurge`.
+ *   record       `recordOf(host)` unless given: `readFile` (a project's bundle.md, R14), `declareTable`, and the
+ *                derived-cache convention's `rebuildDerived`, `readDerived`, `markStale` (its R21, R77; R39).
  *   membership   `membershipOf(host)` unless given: `inSight(id, viewer)` (R6, R22), `isAdministrator(id)` (R15).
- *   inquiry      `basisFor(id) → {legs}`, `earned(subject, targets) → {earned: {capture, connection, testimony},
- *                subject_entity, subject_known}`, `legCapped(stated, earned, targetId)`, `subjectEntityOf(id)` (its
- *                R13, R14, R16), and `onGrounded(module, fn)` (its R42) when it offers one. Default: `inquiryOf(host)`
- *                with the module's own `legCapped`, reached lazily as the other modules are (N218).
+ *   inquiry      the walk's one reader: `basisFor(id) → {legs}`, `earned(subject, targets) → {earned: {capture,
+ *                connection, testimony}, subject_entity, subject_known}`, `legCapped(stated, earned, targetId)` and
+ *                `restingOn(id)` (leg-earning R1, R2, R4), `subjectEntityOf(id)` and `onGrounded(module, fn)` (inquiry's,
+ *                its R42) when it offers one. Default: `legEarningOf(host)` with its module-level `legCapped`, and
+ *                `inquiryOf(host)`, each reached lazily as the other modules are (N218; K1612).
  *   acceptedWork `acceptedFinding({ref, edition, viewer})` (accepted-work R2; R33). Default: `acceptedWorkOf(host)`,
  *                reached lazily on the first ref read (K1307); with nothing registered there, a ref reads `{absent: true}`.
  *   versions     `currentOf(project, inquiry, viewer) → {version} | null` (basis-versions R11). Default:
@@ -72,7 +74,8 @@
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { promotionOf, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
-import { inquiryOf, legCapped } from "../inquiry/index.mjs";
+import { inquiryOf } from "../inquiry/index.mjs";
+import { legEarningOf, legCapped } from "../leg-earning/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { basisVersionsOf, BASIS_VERSION_LEGS_MAX, VERSION_MACHINE } from "../basis-versions/index.mjs";
 import { BASIS_GRADES, TESTIMONY_GRADE, normalizeType, OBJECT_TYPES, BUNDLE_ID_RE, parseFrontmatter,
@@ -150,10 +153,13 @@ export function barAxisWords(bar) {
     .join(", ");
 }
 
-/* N218: `inquiry`'s instance as the walk reads it, its module-level `legCapped` (R14) beside its methods. */
-function inquiryReader(k) {
-  return { basisFor: (id, o) => k.basisFor(id, o), earned: (s, t) => k.earned(s, t), legCapped,
-           subjectEntityOf: (id) => k.subjectEntityOf(id), onGrounded: (m, fn) => k.onGrounded(m, fn) };
+/* N218, T33 (K1612): the reads the walk makes as one reader: the earned registry, the cap and the resting-on reads from
+   `leg-earning` (its R1, R2, R4, with its module-level `legCapped`), and the subject and the grouping act's slot from
+   `inquiry` (its R13's subject, R42), each module reached on first use. */
+function inquiryReader(earning, inquiry) {
+  return { basisFor: (id, o) => earning().basisFor(id, o), earned: (s, t) => earning().earned(s, t), legCapped,
+           restingOn: (id) => earning().restingOn(id),
+           subjectEntityOf: (id) => inquiry().subjectEntityOf(id), onGrounded: (m, fn) => inquiry().onGrounded(m, fn) };
 }
 
 export class Strength {
@@ -176,7 +182,8 @@ export class Strength {
   /* The providers reached lazily (K61, N218): each is created on the same host on first use, unless a caller passed
      its own. A test may replace one by assignment. */
   get inquiry() {
-    return this.#deps.inquiry ||= inquiryReader(inquiryOf(this.#deps.host, { record: this.record, membership: this.membership }));
+    const opts = { record: this.record, membership: this.membership };
+    return this.#deps.inquiry ||= inquiryReader(() => legEarningOf(this.#deps.host, opts), () => inquiryOf(this.#deps.host, opts));
   }
   set inquiry(v) { this.#deps.inquiry = v; }
   /* R33: accepted-work's read (its R2), on the same host, reached on the first ref read (K1307). */

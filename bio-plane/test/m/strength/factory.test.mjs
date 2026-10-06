@@ -155,3 +155,21 @@ test("R33 (K1307): with no acceptedWork given, a ref is read through accepted-wo
   assert.deepEqual([after.capture.grade, after.connection.grade], ["C", "B"]);
   assert.deepEqual(asked[0], { ref: REF, edition: 4, viewer: null });
 });
+
+test("R1, R37, R39 (K1612): with no reader given, the earned registry, the cap and the resting-on read are leg-earning's own (its R1, R2, R4, R8), on the same host", async () => {
+  const { legEarningOf, legCapped } = await import("../../../src/leg-earning/index.mjs");
+  const h = bareHost();
+  const s = strengthOf(h.host);
+  assert.equal(s.inquiry.legCapped, legCapped, "leg-earning's module-level cap");
+  /* A held standard the record holds no text of: leg-earning R8 earns it undetermined, so the leg is undetermined (R37). */
+  h.bundle("INQ-2026-0001-a", "inquiry");
+  h.leg("INQ-2026-0001-a", 0, "STD-2026-0001", "standard", { grade: "B", axis: "capture", source: "capture" });
+  const earned = legEarningOf(h.host).earned(null, ["STD-2026-0001"]);
+  assert.equal(earned.earned.capture["STD-2026-0001"].grade ?? null, null, JSON.stringify(earned).slice(0, 300));
+  const p = s.strengthOf("INQ-2026-0001-a");
+  assert.equal(p.capture.state, "undetermined", JSON.stringify(p.capture).slice(0, 300));
+  /* The resting-on read is leg-earning's: the inquiry resting on a target is found there. */
+  const dependents = s.inquiry.restingOn("STD-2026-0001").dependents.map((d) => d.bundle_id);
+  assert.deepEqual(dependents, legEarningOf(h.host).restingOn("STD-2026-0001").dependents.map((d) => d.bundle_id));
+  assert.deepEqual(dependents, ["INQ-2026-0001-a"]);
+});

@@ -10,7 +10,7 @@ import { world, MACHINE, ADMIN, REASON } from "./fixture.mjs";
 import { analystHits, ATOMS, CONNECTIVES, NOUNS, RESIDUE, residueAnchored, DEC32_ENTRY } from "./vocabulary.mjs";
 import { STRENGTH_AXES, VERSION_STRENGTH_CHECKS, PARTITION_INDEPENDENCE_CHECKS,
          STRENGTH_BAR_CHECKS } from "../../../src/strength/index.mjs";
-import { legCapped } from "../../../src/inquiry/index.mjs";
+import { legCapped } from "../../../src/leg-earning/index.mjs";
 
 const PROSE_KEYS = ["detail", "why", "filter", "note"];
 
@@ -29,7 +29,7 @@ function clean(corpus) {
   const hits = corpus.flatMap(([where, s]) => analystHits(s).map((h) => `${where}: "${h.token}" (${h.why}) in: ${s}`));
   assert.deepEqual(hits, [], "an analyst's word reaches a member");
 }
-/* A world whose capture bound is inquiry's own `legCapped`, so its sentences are the ones a member reads. */
+/* A world whose capture bound is leg-earning's own `legCapped` (its R2), so its sentences are the ones a member reads. */
 function real(opts) {
   const w = world(opts);
   w.s.inquiry = { ...w.s.inquiry, legCapped };
