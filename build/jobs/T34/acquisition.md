@@ -34,3 +34,7 @@ Tranche merged. Origin is now `"member"` only for bytes a member supplied by the
 Re-run: acquisition 88/88 (0 fail); capture 118/118 (0 fail); format 0 failures; architecture 15 files, 59 imports, 0 failures; coverage 37/37, 0 failures; ownership 2 files changed, 0 failures.
 
 Size (session_01JnE9bHgWiNuuBC1kUAXAsw): test runs 12, module lines 1814
+
+## J3 · COMPLETE
+
+B2 applied (K1773): every acquire arm hands doctypeFor origin "fetch" (a member session's request included); profileOf's optional origin kept for member-supplied bytes. Tests re-written to that rule; acquisition 88/88, capture 118/118; format, architecture, coverage 37/37, ownership 0 failures. Still yours to route: capture R65's knock pull passes no origin and, under K1773, should pass "member".
