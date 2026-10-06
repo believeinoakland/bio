@@ -42,17 +42,20 @@ screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by 
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
    ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint')], [19,23])
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
-  [('search','Search'),('select','Hold these together'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('countask','Count')], [6,7])
+  [('search','Search'),('select','Hold these together'),('owed:findin DEC-164','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('countask','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
   [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('owed:writinghelp DEC-153','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
   [('heldcaptures','See held captures'),('release','Vouch for them'),('heldsetaside','Set aside with a reason'),('heldrestore','Restore')], [15])
 screen('document', 'Document', 'working', 'One captured document: its copy, grade note, passages, versions and what cites it.',
-  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Claim the same person'),('monitor','Watch for changes')], [7,15,23])
+  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Claim the same person'),('monitor','Watch for changes'),('owed:findin DEC-164','Find in this')], [7,15,23])
+screen('find-in', 'Find in this', 'working', 'One control on a document, a held set or a project: pick what to find; each result cites its passage and becomes a fact only by a member\'s own act (DEC-164, K1468).',
+  [('owed:findin DEC-164','Find in this'),('standingquestionset','Keep finding this as documents arrive'),('recordpersonfact','Add a fact from this passage'),('recorddatedfact','Record a dated fact'),
+   ('standarddeclare','Hold this as a standard'),('recordfact','Read into a money fact'),('tabledeclare','Declare the table'),('cite','Cite in the question'),('search','See all in Find')], [6,10])
 
 # --- projects and questions
 screen('project', 'Project', 'working', 'A project\'s home: objective, bar, questions, stage, plans, members.',
-  [('promote','Open a question'),('strengthbarset','Set the project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
+  [('promote','Open a question'),('owed:findin DEC-164','Find in this project'),('strengthbarset','Set the project\'s bar'),('projectinvite','Invite a member to the project'),('projectjoin','Join'),('planopen','Plan what to do')], [6,9,15])
 screen('question', 'Question', 'working', 'A question and what supports it or cuts against it; strength against the bar; concluding.',
   [('cite','Cite a passage'),('sever','Remove a citation'),('reinstate','Reinstate'),('narrow','Narrow the question'),('conclude','Conclude'),('withdrawconclusion','Withdraw the conclusion'),
    ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),

@@ -1,4 +1,4 @@
-/* Civicsmith mockups: the 42 screens of the registry (registry.src.py), each a function of the context
+/* Civicsmith mockups: the 43 screens of the registry (registry.src.py), each a function of the context
    c = {ai: the member has connected their own Claude account, v: a variant name}. Sample data is invented:
    the group Lakeshore Tenants, its members Rosa (founder), Dev, Mai (new), Ana (an accountant) and Teo (a reporter). */
 'use strict';
@@ -184,7 +184,7 @@ SCR.finder = c => ({ rail: 'find', title: 'Find', main: `
     row('<input type="checkbox" checked aria-label="pick">', '<b class="rec">Pothole repair policy, Administrative Instruction 4.12</b><span class="meta">' + grade('capture', 'B') + ' passage 3: "within seven calendar days"</span>', '') +
     row('<input type="checkbox" aria-label="pick">', '<b class="rec">Report to council: street maintenance performance</b><span class="meta">' + grade('capture', 'C') + ' public archive copy</span>', ''))}
   ${gapm('nobody', '<b>Nobody looked</b> in the 2024 council minutes for this yet. ') } ${btn('frontier', 'See where nobody looked')} ${btn('countask', 'Count')}
-  <div class="cs-hold mk-hold">${I('hold')}<span><span class="n">2 documents held together</span><span class="drift"> · until 16:40 today</span></span><span class="acts">${btn('select', 'Hold these together')}${btn('selectionrelease', 'Let the set go')}</span></div>` });
+  <div class="cs-hold mk-hold">${I('hold')}<span><span class="n">2 documents held together</span><span class="drift"> · until 16:40 today</span></span><span class="acts">${btn('select', 'Hold these together')}${btn('owed:findin DEC-164', 'Find in these', { icon: 'search' })}${btn('selectionrelease', 'Let the set go')}</span></div>` });
 
 SCR.capture = c => ({ rail: 'add', title: 'Add', main: `
   ${h1('Add to the record', 'A document from an address or a file, a photo, or what you saw yourself.')}
@@ -209,16 +209,57 @@ SCR.held = c => ({ rail: 'add', title: 'Held captures', crumbs: ['Add', 'Held ca
 SCR.document = c => ({ rail: 'projects', title: 'Document', crumbs: ['Pothole repairs', 'Documents', 'Administrative Instruction 4.12'], main: `
   <div class="mk-doc-h">${h1('<span class="rec">Pothole repair policy, Administrative Instruction 4.12</span>', 'Public Works · revised 2023 · captured by Dev from oaklandca.gov, 2 October 2026')}${pathm(0)}</div>
   <div class="row">${grade('capture', 'B', 'Capture')}${btn('gradenote', 'Why B?')}<span class="id">fingerprint 3b9f…c210</span></div>
+  ${acts(btn('owed:findin DEC-164', 'Find in this', { icon: 'search' }))}
   ${sec('Passages', `<blockquote class="mk-passage rec" data-act="cite">"3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting."</blockquote>${acts(btn('cite', 'Cite this passage', { tone: 'primary' }))}
     <blockquote class="mk-passage rec">"5. Repairs are recorded as closed when the crew reports the work complete."</blockquote>`)}
   ${sec('People it names', `${sheet(row(I('subject'), 'L. Chen, Director of Public Works', btn('identityclaim', 'Claim the same person')))}`)}
   ${sec('This copy', acts(btn('release', 'Vouch for this copy'), btn('attest', 'Attest'), btn('monitor', 'Watch for changes'), btn('retire', 'Retire')))}
   ${c.ai ? machine('Mai', '<p>This instruction sets the seven-day standard. The city\'s 2026 performance report counts reports "closed", which passage 5 defines as the crew reporting the work complete, not an inspection.</p>') : ''}` });
 
+/* DEC-164: "Find in this", one control on a document, a held set and a project. Search finds words as written, figures,
+   dates, requirement words and names the group already follows; it records nothing. Each result becomes a fact only by the
+   act that already makes one, from its passage, by a member (K1468). The assistant's proposals are drawn as later (K1627). */
+const FIND_ST = { doc: 'a', set: 'b', project: 'c' };
+const found = () => origin('search', 'Found by search');
+const frow = (what, where, act) => row(found(), `<span class="rec">${what}</span><span class="meta">${where}</span>`, act);
+const fsec = (t, n, inner) => sec(`${t} <span class="muted">· ${n}</span>`, inner);
+const NOTHING = t => `<p class="mk-note"><b>Nothing here.</b> ${t}</p>`;
+SCR['find-in'] = c => { const st = FIND_ST[c.v] || 'a'; const sel = v => v === st ? ' selected' : ''; return { rail: 'projects', title: 'Find in this', st, main: `
+  ${h1('Find in this', 'Pick what to look for. Every result shows where it was found. Nothing is recorded until you record it.')}
+  <div class="cs-field" data-act="owed:findin DEC-164"><label for="mk-fscope">Look in</label><span class="help">Set by where you opened it: a document, the documents you are holding together, or a whole project.</span><select id="mk-fscope" class="cs-input" onchange="this.closest('main').dataset.st=this.value"><option value="a"${sel('a')}>This document: Administrative Instruction 4.12</option><option value="b"${sel('b')}>The 2 documents you are holding together</option><option value="c"${sel('c')}>Everything in Pothole repairs (14 documents)</option></select></div>
+  ${checks('What to find', [['People and offices your group follows', true], ['Money figures', true], ['Dates and deadlines', true], ['Requirements: what someone shall or must do', true], ['Events in minutes and agendas', false], ['A name or term', true]])}
+  ${field('mk-fterm', 'The name or term', 'closed', { help: 'Matched as Find matches words: as written, in every passage.' })}
+  ${choice('mk-ffor', 'For which question (optional)', ['None yet', 'Is the city repairing reported potholes within seven days?', 'Does "closed" in the city\'s records mean "repaired"?'], 'Is the city repairing reported potholes within seven days?', { help: 'Kept with anything you record from here, so others can see why it was looked for.' })}
+  ${acts(btn('owed:findin DEC-164', 'Find', { tone: 'primary', icon: 'search' }), btn('standingquestionset', 'Keep finding this as documents arrive'))}
+  <div class="st st-a">
+   ${fsec('People and offices', 1, sheet(frow('"The Director shall repair each reported pothole…"', 'Director of Public Works, held today by L. Chen · Administrative Instruction 4.12 · passage 3', btn('recordpersonfact', 'Add a fact from this passage'))))}
+   ${fsec('Dates and deadlines', 2, sheet(frow('"within seven calendar days of the report"', 'a period, counted from each report · passage 3', btn('standarddeclare', 'Hold this as a standard')) + frow('"Revised 2023"', 'the document\'s own date · heading', btn('recorddatedfact', 'Record a dated fact'))))}
+   ${fsec('Requirements', 1, sheet(frow('"The Director shall repair each reported pothole within seven calendar days of the report, weather permitting."', 'passage 3', origin('accepted', 'Held as a standard by Mai on 3 October'))))}
+   ${fsec('Money figures', 0, NOTHING('This document has no money figures.'))}
+   ${fsec('"closed"', 1, sheet(frow('"Repairs are recorded as <b>closed</b> when the crew reports the work complete."', 'passage 5', btn('cite', 'Cite in the question'))))}
+  </div>
+  <div class="st st-b">
+   ${fsec('Dates and deadlines', 2, sheet(frow('"Reported" and "Closed": two date columns, 903 rows each', 'Public Works work orders, FY2025 · a table: its dates are counted through a calculation, never read in one by one', btn('tabledeclare', 'Declare the table')) + frow('"within seven calendar days of the report"', 'Administrative Instruction 4.12 · passage 3', btn('standarddeclare', 'Hold this as a standard'))))}
+   ${fsec('People and offices', 1, sheet(frow('"The Director shall repair…"', 'Director of Public Works · Administrative Instruction 4.12 · passage 3', btn('recordpersonfact', 'Add a fact from this passage'))))}
+   ${fsec('Requirements', 1, sheet(frow('"…shall repair each reported pothole within seven calendar days…"', 'Administrative Instruction 4.12 · passage 3', origin('accepted', 'Held as a standard by Mai on 3 October'))))}
+   ${fsec('Money figures', 0, NOTHING('Neither document has money figures.'))}
+   ${fsec('"closed"', 2, sheet(frow('"Closed": a column of the work orders', 'Public Works work orders, FY2025 · 903 rows', btn('tabledeclare', 'Declare the table')) + frow('"Repairs are recorded as <b>closed</b> when the crew reports the work complete."', 'Administrative Instruction 4.12 · passage 5', btn('cite', 'Cite in the question'))))}
+  </div>
+  <div class="st st-c">
+   ${fsec('People and offices', 3, sheet(frow('L. Chen', 'named in 6 of the 14 documents · first in Report to council: street maintenance performance · passage 2', btn('recordpersonfact', 'Add a fact from this passage')) + frow('Director of Public Works', 'named in 9 documents · Administrative Instruction 4.12 · passage 3', btn('recordpersonfact', 'Add a fact from this passage')) + frow('City Administrator', 'named in 2 documents · Report to council: street maintenance performance · passage 1', btn('recordpersonfact', 'Add a fact from this passage'))))}
+   ${fsec('Money figures', 1, sheet(frow('"$4.2 million for street maintenance in FY2025"', 'Report to council: street maintenance performance · passage 7', btn('recordfact', 'Read into a money fact'))))}
+   ${fsec('Dates and deadlines', 3, sheet(frow('"within seven calendar days of the report"', 'Administrative Instruction 4.12 · passage 3', btn('standarddeclare', 'Hold this as a standard')) + frow('"reported on 12 September and marked closed on 15 September"', 'Mai\'s observation, 4 October · testimony, grade D', btn('recorddatedfact', 'Record a dated fact')) + frow('"Reported" and "Closed": two date columns, 903 rows each', 'Public Works work orders, FY2025 · a table', btn('tabledeclare', 'Declare the table'))))}
+   ${fsec('Requirements', 1, sheet(frow('"…shall repair each reported pothole within seven calendar days…"', 'Administrative Instruction 4.12 · passage 3', origin('accepted', 'Held as a standard by Mai on 3 October'))))}
+   ${fsec('"closed"', 37, sheet(frow('"Repairs are recorded as <b>closed</b> when the crew reports the work complete."', 'Administrative Instruction 4.12 · passage 5', btn('cite', 'Cite in the question')) + frow('"90% of reported potholes were <b>closed</b> within seven days"', 'Report to council: street maintenance performance · passage 4', btn('cite', 'Cite in the question'))) + acts(btn('search', 'See all 37 in Find')))}
+  </div>
+  ${note('Search finds words as written, figures, dates and the names of people and offices your group already follows. A name it doesn\'t follow yet is found only as a word: open the passage and add the person yourself.')}
+  ${c.ai ? sec('Proposed by the assistant', `<p class="mk-note"><b>Not in the first release.</b> Switched on once it has been measured: at your request, and for a question you name, the assistant will also propose people, events and money figures that search can't match, such as "K. Osei, Deputy Director" in the council report, a person your group doesn't follow yet. Each is labelled machine work, graded no higher than its method earns, and becomes a fact only by the same acts, by a member.</p>${sheet(row(origin('machine', 'Proposed by the assistant'), '<span class="muted">"K. Osei, Deputy Director, presented the report" · Report to council: street maintenance performance · passage 2</span>', '<span class="muted">later</span>'))}`) : ''}` }; };
+
 /* ---------------- projects and questions ---------------- */
 SCR.project = c => ({ rail: 'projects', title: 'Pothole repairs', crumbs: ['Projects', 'Pothole repairs'], main: `
   <div class="mk-titlerow">${h1('Pothole repairs', 'Is the city repairing reported potholes as its own policy requires?')}${wizmark(2, 'Your first question · Check a claim')}</div>
   <div class="mk-grid2"><div>${ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 1)}</div><div class="row">${btn('strengthbarset', 'Set the project\'s bar')}<span class="muted">Bar: B/B</span></div></div>
+  ${acts(btn('owed:findin DEC-164', 'Find in this project', { icon: 'search' }))}
   ${sec('Questions', sheet(
     row(I('question'), `<span class="rec">Is the city repairing reported potholes within seven days?</span><span class="meta">${strength('B', 'C', '<b>Short on connection</b> · bar B/B', null, 'the link between report #4471 and the work order (C, matched by street address only). A work-order number on both would raise it to B')}</span>`, '') +
     row(I('question'), `<span class="rec">Does "closed" in the city's records mean "repaired"?</span><span class="meta">${gapm('unrated', '<b>Unrated</b> · rests on nothing yet')}</span>`, '')) +

@@ -743,6 +743,11 @@
      ]
     },
     {
+     "op": "owed:findin DEC-164",
+     "label": "Find in these",
+     "status": "owed"
+    },
+    {
      "op": "selectionrelease",
      "label": "Let the set go",
      "status": "declared",
@@ -948,12 +953,100 @@
       "capture-sources",
       "monitoring"
      ]
+    },
+    {
+     "op": "owed:findin DEC-164",
+     "label": "Find in this",
+     "status": "owed"
     }
    ],
    "journeys": [
     7,
     15,
     23
+   ]
+  },
+  {
+   "id": "find-in",
+   "name": "Find in this",
+   "frame": "working",
+   "purpose": "One control on a document, a held set or a project: pick what to find; each result cites its passage and becomes a fact only by a member's own act (DEC-164, K1468).",
+   "acts": [
+    {
+     "op": "owed:findin DEC-164",
+     "label": "Find in this",
+     "status": "owed"
+    },
+    {
+     "op": "standingquestionset",
+     "label": "Keep finding this as documents arrive",
+     "status": "function",
+     "modules": [
+      "answers"
+     ]
+    },
+    {
+     "op": "recordpersonfact",
+     "label": "Add a fact from this passage",
+     "status": "function",
+     "modules": [
+      "people"
+     ]
+    },
+    {
+     "op": "recorddatedfact",
+     "label": "Record a dated fact",
+     "status": "function",
+     "modules": [
+      "events"
+     ]
+    },
+    {
+     "op": "standarddeclare",
+     "label": "Hold this as a standard",
+     "status": "function",
+     "modules": [
+      "standards"
+     ]
+    },
+    {
+     "op": "recordfact",
+     "label": "Read into a money fact",
+     "status": "function",
+     "modules": [
+      "money"
+     ]
+    },
+    {
+     "op": "tabledeclare",
+     "label": "Declare the table",
+     "status": "declared",
+     "modules": [
+      "calculations"
+     ]
+    },
+    {
+     "op": "cite",
+     "label": "Cite in the question",
+     "status": "declared",
+     "modules": [
+      "capture",
+      "citation"
+     ]
+    },
+    {
+     "op": "search",
+     "label": "See all in Find",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "retrieval"
+     ]
+    }
+   ],
+   "journeys": [
+    6,
+    10
    ]
   },
   {
@@ -970,6 +1063,11 @@
       "control-plane",
       "promotion"
      ]
+    },
+    {
+     "op": "owed:findin DEC-164",
+     "label": "Find in this project",
+     "status": "owed"
     },
     {
      "op": "strengthbarset",

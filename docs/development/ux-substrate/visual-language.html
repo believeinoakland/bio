@@ -378,6 +378,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-origin[data-origin="unevaluated"] { color: var(--c-elsewhere); background: transparent; border: 1px dashed var(--c-elsewhere); }
 .cs-origin[data-origin="accepted"]    { color: var(--c-accent);    background: var(--c-accent-tint); border: 3px double var(--c-accent); padding-block: 0; }
 .cs-origin[data-origin="flagged"]     { color: var(--c-signal);    background: var(--c-signal-tint); border: 1px solid var(--c-signal); }
+.cs-origin[data-origin="search"]      { color: var(--c-ink);       background: transparent; border: 1px solid var(--c-rule); }  /* DEC-164: found by search, nothing recorded */
 .cs-machinework { padding: var(--s-3); background: var(--c-machine-tint); border: 1px dotted var(--c-machine); display: grid; gap: var(--s-2); }
 .cs-machinework .by { font-size: var(--t-xs); color: var(--c-machine); display: flex; gap: 6px; align-items: center; font-weight: 600; }
 
@@ -880,7 +881,9 @@ body:not(.show-src) .src { display: none; }
 <span class="cs-origin" data-origin="unevaluated"><svg class="i" aria-hidden="true"><use href="#i-unevaluated"/></svg>Not yet evaluated</span>
 <span class="cs-origin" data-origin="accepted"><svg class="i" aria-hidden="true"><use href="#i-accepted"/></svg>Accepted by our group</span>
 <span class="cs-origin" data-origin="flagged"><svg class="i" aria-hidden="true"><use href="#i-flagged"/></svg>Flagged by our group</span>
+<span class="cs-origin" data-origin="search"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg>Found by search</span>
 </div>
+<p class="cap">“Found by search” (DEC-164) marks a match Civicsmith found in what the group holds, by matching words, figures, dates or names it already follows. It is neutral on purpose: nothing is recorded until a member records it.</p>
 <div class="cols2">
 <div class="cs-edge" data-origin="machine" style="background:var(--c-surface);border:var(--hair);padding-block:12px;padding-right:12px"><p class="rec" style="font-size:var(--t-md)">I found three passages that may support this question. They're suggestions until you accept one.</p><p style="font-size:var(--t-xs);color:var(--c-machine);font-weight:600;margin-top:6px">Machine work · the assistant, at Rosa's request</p></div>
 <div class="cs-edge" data-origin="accepted" style="background:var(--c-surface);border:var(--hair);padding-block:12px;padding-right:12px"><p class="rec" style="font-size:var(--t-md)">The lease's rent schedule was amended twice without a council vote.</p><p style="font-size:var(--t-xs);color:var(--c-ink-2);margin-top:6px"><b>Accepted by our group</b> · West Oakland Neighbors' Edition 2 · by Dev, 2 October</p></div>

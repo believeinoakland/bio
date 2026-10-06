@@ -1,6 +1,12 @@
 /* The per-screen references (DEC-160, widened 6 October): for each screen, the things it names, what each is, and why it
    matters to what the member is doing there. Merged into REFS from mock-shell.js; GLOBAL_REFS cover things named everywhere. */
 const SCREEN_REFS = {
+  "find-in": [
+    ["Report to council: street maintenance performance","document","<b>Report to council: street maintenance performance</b> · 2026 · capture B · the city's own account of its repair times","Where the money figure and the claim about closed reports were found."],
+    ["Public Works work orders, FY2025","document","<b>Public Works work orders, FY2025</b> · CSV, 903 rows · captured from the city's open-data portal","A table: its dates are counted through a calculation, not recorded one by one."],
+    ["Mai's observation, 4 October","document","<b>Mai's observation, 4 October</b> · testimony, grade D · what she saw at 6012 Seminary Ave","Its dates are hers, as she recorded them."],
+    ["K. Osei",null,"<b>K. Osei</b> · named in the council report · a person your group does not follow yet","Search does not know this name; the assistant's proposals, later, would."]
+  ],
   "install": [
     ["Cloudflare account",null,"<b>Cloudflare account</b> · the hosting account · your group's Civicsmith and all its records live in it · the free plan is enough to start","Whoever can sign in to it controls everything, so use a group account rather than a personal login."],
     ["Workers Paid",null,"<b>Workers Paid</b> · Cloudflare's paid plan · $5 a month, with a payment method · can be added later","Needed only for recomputing members' spreadsheets and for members signing in with a Claude subscription."],
@@ -394,6 +400,7 @@ const SCREEN_HELP = {
   finder: 'Find what your group holds, or look outside for something it doesn\'t yet. Capture what you find into the record.',
   capture: 'Add something to the record: a document from its address, a file, or what you saw yourself, in your own words.',
   held: 'Captures waiting for a member to vouch for them before they enter the record. Release them, or set them aside with a reason.',
+  'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
   document: 'One document as captured: its grade, its passages, its versions and what cites it. Cite a passage from here.',
   project: 'A project: its questions, their strength against the project\'s bar, its members and its stage. Open a question or a plan from here.',
   question: 'One question: what supports it and what cuts against it, its strength against the bar, and what would change the answer.',

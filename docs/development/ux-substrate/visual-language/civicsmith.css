@@ -355,6 +355,7 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-origin[data-origin="unevaluated"] { color: var(--c-elsewhere); background: transparent; border: 1px dashed var(--c-elsewhere); }
 .cs-origin[data-origin="accepted"]    { color: var(--c-accent);    background: var(--c-accent-tint); border: 3px double var(--c-accent); padding-block: 0; }
 .cs-origin[data-origin="flagged"]     { color: var(--c-signal);    background: var(--c-signal-tint); border: 1px solid var(--c-signal); }
+.cs-origin[data-origin="search"]      { color: var(--c-ink);       background: transparent; border: 1px solid var(--c-rule); }  /* DEC-164: found by search, nothing recorded */
 .cs-machinework { padding: var(--s-3); background: var(--c-machine-tint); border: 1px dotted var(--c-machine); display: grid; gap: var(--s-2); }
 .cs-machinework .by { font-size: var(--t-xs); color: var(--c-machine); display: flex; gap: 6px; align-items: center; font-weight: 600; }
 

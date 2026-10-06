@@ -29,7 +29,7 @@ const WEIGHT = {
   retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
   release:4, attest:4, caseratify:4, docketpost:4, signerregisterown:4, claim:4, docketfile:2,
-  publish:5, owed_publishat:5,
+  publish:5, owed_publishat:5, owed_findin:1,
 };
 const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'owed_publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
 const key = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0] : op;
@@ -49,7 +49,7 @@ const ref = (text, go, tip, cls = '') => `<a href="#" class="cs-ref${cls ? ' ' +
 const card = (text, tip) => `<span class="cs-card" tabindex="0" data-tip="${esc(tip)}">${text}</span>`;
 const strength = (c, n, phrase, t, weak) => `<span class="cs-strength"${weak ? ` data-weak="${esc(weak)}"` : ''}>${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
 const gapm = (k, html) => `<span class="cs-gap" data-gap="${k}">${I({undetermined:'undetermined', withheld:'withheld', unrated:'unrated', nobody:'nobody', refused:'refused'}[k])}<span>${html}</span></span>`;
-const origin = (k, t) => `<span class="cs-origin" data-origin="${k}">${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged'}[k])}${esc(t)}</span>`;
+const origin = (k, t) => `<span class="cs-origin" data-origin="${k}">${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged', search:'search'}[k])}${esc(t)}</span>`;
 const kindm = k => `<span class="cs-kind" data-kind="${k}">${I(k === 'todo' ? 'todo' : k)}${{todo:'To do', noticed:'Noticed', status:'Status'}[k]}</span>`;
 const due = (s, t) => `<span class="cs-due"${s ? ` data-due="${s}"` : ''}>${I(s === 'met' ? 'accepted' : 'clock')}${esc(t)}</span>`;
 const hint = t => `<span class="cs-hint">${I('hint')}${esc(t || 'Hint · machine work')}</span>`;

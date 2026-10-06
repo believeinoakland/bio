@@ -54,6 +54,7 @@ const PATH = {
   doorbell: ['Lakeshore Tenants', 'Hand material over'], published: ['Lakeshore Tenants', 'Published cases', 'The Coliseum lease'],
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'],
+  'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
   'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], account: ['Settings', 'Your account'],
   connect: ['Settings', 'The assistant and your account'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
   translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'],
