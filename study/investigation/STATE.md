@@ -2,7 +2,7 @@
 
 | phase | unit | state | output |
 | --- | --- | --- | --- |
-| 0 | P0 | partial | `notes/P0.md` |
+| 0 | P0 | done | `notes/P0.md` |
 | 1 | C1 | done | `notes/C1.md` |
 | 1 | C2 | done | `notes/C2.md` |
 | 1 | C3 | done | `notes/C3.md` |
@@ -11,14 +11,14 @@
 | 1 | C6 | done | `notes/C6.md` |
 | 1 | D1 | done | `notes/D1.md` |
 | 1 | D2 | done | `notes/D2.md` |
-| 1 | M1 | partial | `notes/M1.md` |
-| 1 | M2 | partial | `notes/M2.md` |
-| 1 | M3 | partial | `notes/M3.md` |
-| 1 | M4 | partial | `notes/M4.md` |
+| 1 | M1 | done | `notes/M1.md` |
+| 1 | M2 | done | `notes/M2.md` |
+| 1 | M3 | done | `notes/M3.md` |
+| 1 | M4 | done | `notes/M4.md` |
 | 1b | B1 | partial | `research/B1.md` |
-| 1b | B2 | partial | `research/B2.md` |
-| 1b | B3 | partial | `research/B3.md` |
-| 1b | B4 | partial | `research/B4.md` |
+| 1b | B2 | done | `research/B2.md` |
+| 1b | B3 | done | `research/B3.md` |
+| 1b | B4 | done | `research/B4.md` |
 | 1b | B5 | partial | `research/B5.md` |
 | 2 | A-READING | missing | `studies/READING.md` |
 | 2 | A-PLANNING | missing | `studies/PLANNING.md` |
