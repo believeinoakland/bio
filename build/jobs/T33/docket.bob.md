@@ -1,6 +1,6 @@
 # BOB to docket (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ K1632: (1)–(3) accepted. With publication's answer, R25 is amended on tranche/
 ## B3 · CHANGE
 
 K1637: case-tensions (T33-62) is merged into tranche/T33. Merge the tranche and import caseTensionsOf (R9 (c)) in place of the injected one. Publication (T33-63) is still running; re-point at its stampEdition and registerOrderSource once it merges.
+
+## B4 · CHANGE
+
+K1643: publication (T33-63) is merged into tranche/T33. Merge the tranche. Register courtOrderOf with publication.registerOrderSource at start (publication R62; until then every stamp is STAMP_NO_ORDER), and call stampEdition inside the transaction that posts a court-order entry (editions a list or "all"). Read publication's public part as merged, then complete.

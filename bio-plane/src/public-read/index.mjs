@@ -18,7 +18,8 @@
  *
  * REACHED as `publicReadOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. `deps`:
- *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), and its
+ *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `stampsOf` (its
+ *                  R62, for R28), and its
  *                  storage, whose tables it reads under its R40 (default: `publicationOf(host)`).
  *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14, and its R24's `captures: "omit"`)
  *                  and `docketFeed` (its R15), for R20, R21 and R25:
@@ -34,8 +35,10 @@ import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
+import { caseFilePath, calculationsOf, timelineOf } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { rowOf } from "./checks.mjs";
+import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS,
          DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
@@ -93,6 +96,56 @@ const HEX64 = /^[0-9a-f]{64}$/;
 /* R21: the fixed address a case's docket is served at (its feed's is `op=docketfeed&case=`). */
 export const docketAddress = (caseId) => `op=docketpublic&case=${encodeURIComponent(caseId)}`;
 export const LENS_NO_DOCUMENT_SENTENCE = "no signed case document is held for this edition, so it states no lens here";
+
+/* R28: a finding row whose bytes an order in force withholds: its id and hash stay (both public), its title, frozen
+   from those bytes, is not served, and the withholding is stated with its orders. Unchanged when nothing withholds it. */
+const withheldRow = (row, orders) => (orders && orders.length
+  ? { ...row, title: null, withheld: { orders, detail: WITHHELD_SENTENCE } } : row);
+/* R28: a case edition row with its stamps, if any (`court_orders`); an edition withheld whole states no scope, bias
+   acknowledgement (nor the other content keys named) and says why. Unchanged when the edition has no stamp. */
+function withheldCase(row, index, content) {
+  const w = index.editions.get(`${row.case_id}\u0000${Number(row.edition)}`);
+  if (!w) return row;
+  const out = { ...row, court_orders: w.orders };
+  if (!w.whole) return out;
+  for (const k of ["scope", "bias_acknowledgement", ...content]) if (Object.hasOwn(out, k)) out[k] = null;
+  return { ...out, withheld: { whole: true, detail: WITHHELD_SENTENCE } };
+}
+
+/* R26 (D275; `calc-grammar` R10): every calculation output is a computed fact, never a finding. */
+export const COMPUTED_FACT = "computed fact";
+export const CALC_DISCLOSED_SENTENCE = "this calculation did not agree when recomputed, or an input was not bound, and the "
+  + "publisher disclosed that in the words beside it";
+export const CALC_UNDISCLOSED_SENTENCE = "this calculation did not agree when recomputed, or an input was not bound, and "
+  + "the signed document states no disclosure of it";
+export const SHARE_NO_DENOMINATOR_SENTENCE = "the signed document states no denominator for this share, so what it is a "
+  + "share of is undetermined";
+export const TIMELINE_SENTENCE = "the timeline as the case document froze it at signing: what they did and what we did, "
+  + "apart and never interleaved, each item with its source; an item that could be placed at no time is listed apart";
+/* R23: the SHA-256 of each input a `calculations:` row names (`case-grammar` R18: each input's name and hash), whether
+   the row lists them as `[{name, sha256}]` or as `{name: sha256}`, in the row's order, each once. */
+function inputHashes(inputs) {
+  const shas = Array.isArray(inputs) ? inputs.map((i) => (i && typeof i === "object" ? (i.sha256 ?? i.sha) : i))
+    : inputs && typeof inputs === "object" ? Object.values(inputs).map((i) => (i && typeof i === "object" ? (i.sha256 ?? i.sha) : i))
+    : [];
+  return [...new Set(shas.map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX64.test(s)))];
+}
+/* R27: an item `case-grammar` R20 writes as placed nowhere. */
+const isNowhere = (when) => when === "nowhere" || !!(when && typeof when === "object" && when.nowhere === true);
+/* R26: one output, as signed, with its denominator lifted beside it (`calc-grammar` R8: `ratio` and `share` carry
+   `{numerator, denominator, value}`); a group's results are answered as signed, each element likewise. */
+function outputOf(key, result) {
+  const one = (v) => {
+    if (!v || typeof v !== "object" || Array.isArray(v)) return { result: v ?? null };
+    const share = Object.hasOwn(v, "numerator") || Object.hasOwn(v, "denominator") || v.op === "share" || v.op === "ratio";
+    if (!share) return { result: v };
+    return { result: v, numerator: v.numerator ?? null, denominator: v.denominator ?? null,
+             ...(v.denominator == null ? { denominator_detail: SHARE_NO_DENOMINATOR_SENTENCE } : {}) };
+  };
+  if (Array.isArray(result))
+    return { key, groups: result.map((g) => ({ ...one(g), label: COMPUTED_FACT })), label: COMPUTED_FACT };
+  return { key, ...one(result), label: COMPUTED_FACT };
+}
 
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
@@ -277,6 +330,8 @@ export class PublicRead {
    *  exactly as op=verify already works. */
   publishedManifest() {
     const byCase = this.#frozenPairsByCase();
+    /* R28: what the court orders in force withhold, stated on the rows below (`withheldRow`, `withheldCase`). */
+    const index = this.#withheldIndex();
     return { ok: true, scope: "published",
       /* REC-49, and it is CONDUCT's determination enacted rather than a
          convenience: EVERY RATIFIED FINDING CARRIES ITS OWN FROZEN PAIR HERE,
@@ -324,8 +379,9 @@ export class PublicRead {
              is byte-identical to what it was: an added key on an agreeing row would be a flag
              that is not true. */
           const pinned = byCase.get(`${r.bundle_id}\u0000${r.bundle_sha}`);
-          if (!pinned || new Set(pinned.map((p) => JSON.stringify(p.strength))).size < 2) return row;
-          return { ...row, strength: null, strengthUndetermined: "CASES_DISAGREE", strengthByCase: pinned };
+          const held = withheldRow(row, index.bySha.get(r.bundle_sha));
+          if (!pinned || new Set(pinned.map((p) => JSON.stringify(p.strength))).size < 2) return held;
+          return { ...held, strength: null, strengthUndetermined: "CASES_DISAGREE", strengthByCase: pinned };
         }),
       /* REC-44: the CASES, beside the findings rather than instead of them. The
          findings are what carry a signature and a frozen pair; the case is what
@@ -356,7 +412,7 @@ export class PublicRead {
                 c.manifest_sha, c.manifest, k.project_id
          FROM published_cases c LEFT JOIN cases k ON k.case_id = c.case_id
          ORDER BY c.case_id, c.edition`)
-        .map((c) => ({ ...c, bar: c.bar ? safeJson(c.bar) : null })),
+        .map((c) => withheldCase({ ...c, bar: c.bar ? safeJson(c.bar) : null }, index, ["manifest"])),
       /* CASE-1 / DEC-72: the member's PINNED VERSION and its AUTHORED ROLE travel
          with the roster row, because they are what the roster row now IS —
          (finding id, version hash, role, ordinal). Both are null until CASE-2
@@ -470,6 +526,7 @@ export class PublicRead {
      divergence from DATA-MODEL 2.4.4 — so a public index is not N+1 reads of
      the bytes to learn what each case is called. */
   publishedList() {
+    const index = this.#withheldIndex();
     return { bundles: this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, delivered_by, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`)
@@ -491,16 +548,16 @@ export class PublicRead {
       .map((r) => {
         const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
         const sole = this.publication.soleCase(cms);
-        return { ...r, delivered_by: this.#deliveredBy(r),
+        return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
                  case_id: sole ? sole.case_id : null, case_edition: sole ? sole.edition : null,
-                 cases: cms };
+                 cases: cms }, index.bySha.get(r.bundle_sha));
       }),
       cases: this.#rows(
       `SELECT case_id, edition, scope, ratified_at, manifest_sha FROM published_cases
        ORDER BY case_id, edition`)
-      .map((c) => ({ ...c, findings: this.#rows(
+      .map((c) => withheldCase({ ...c, findings: this.#rows(
         `SELECT bundle_id FROM published_case_members WHERE case_id=? AND edition=? ORDER BY ord`,
-        c.case_id, c.edition).map((m) => m.bundle_id) })) };
+        c.case_id, c.edition).map((m) => m.bundle_id) }, index, [])) };
   }
 
   /* One case, every edition it has ever had, each with its OWN signature,
@@ -513,6 +570,7 @@ export class PublicRead {
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
               delivered_by, gate_version, sig_armored, strength, required
        FROM published_bundles WHERE bundle_id=? ORDER BY edition`, bundleId);
+    const index = this.#withheldIndex();
     /* REC-44: `completeness` is no longer here and that is the correction — it
        is a CASE assertion, so it is fetched from the case each edition belongs
        to rather than repeated on every member finding of it. */
@@ -540,18 +598,23 @@ export class PublicRead {
         `SELECT scope, completeness, bias_acknowledgement, bar, manifest_sha
          FROM published_cases WHERE case_id=? AND edition=?`,
         cm.case_id, cm.edition) : null;
-      return { ...r, delivered_by: this.#deliveredBy(r),
+      /* R28: an edition an order withholds whole states no case content here; a finding whose bytes are withheld
+         states no title. */
+      const caseWhole = !!(cm && (index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`) || {}).whole);
+      return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
                case_id: cid, case_edition: cm ? cm.edition : null, cases: cms,
                bar: c && c.bar ? safeJson(c.bar) : null,
                /* The container's manifest is the CASE edition's, so it is
                   reported from there — one manifest per case per edition,
                   naming every member finding's parts. */
                manifest_sha: c ? (c.manifest_sha ?? null) : null,
-               scope: c ? (c.scope ?? null) : null,
-               bias_acknowledgement: c ? (c.bias_acknowledgement ?? null) : null,
-               completeness: c && c.completeness ? JSON.parse(c.completeness) : null,
+               scope: c && !caseWhole ? (c.scope ?? null) : null,
+               bias_acknowledgement: c && !caseWhole ? (c.bias_acknowledgement ?? null) : null,
+               completeness: c && c.completeness && !caseWhole ? JSON.parse(c.completeness) : null,
+               ...(caseWhole ? { case_withheld: { orders: index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`).orders,
+                                                  detail: WITHHELD_SENTENCE } } : {}),
                strength: r.strength ? JSON.parse(r.strength) : null,
-               required: r.required ? JSON.parse(r.required) : null };
+               required: r.required ? JSON.parse(r.required) : null }, index.bySha.get(r.bundle_sha));
     }) };
   }
 
@@ -713,6 +776,22 @@ export class PublicRead {
       : this.#rows(`SELECT edition, ratified_at FROM published_bundles WHERE bundle_id=? ORDER BY edition`,
                    state.findings[0].bundle_id);
 
+    /* R28 (K1480, K1493; `publication` R62): the court orders in force, read at this call. This edition's own stamps are
+       served beside it; bytes any order in force withholds (`#withheldIndex`) are not served, and their withholding is
+       stated where they would appear: the signed document (and everything this answer reads from it), each finding's
+       bytes, each file of the manifest, the manifest itself. A whole edition withheld answers its identity, its editions
+       and its orders, and none of its content. */
+    const cRow = theCase
+      ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
+    const manifestHeld = cRow && cRow.manifest ? safeJson(cRow.manifest) : null;
+    const index = this.#withheldIndex();
+    const mine = theCase ? index.editions.get(`${theCase}\u0000${Number(ed)}`) : null;
+    const whole = !!(mine && mine.whole);
+    const withheldBy = (sha) => (typeof sha === "string" && index.bySha.get(sha)) || null;
+    const docWithheld = !!(state.document && (whole || withheldBy(state.document.doc_sha)));
+    const manifestWithheld = whole || !!withheldBy(state.manifest_sha);
+    const heldDocument = docWithheld ? null : state.document;
+
     /* The graph, PER FINDING. published_edges is keyed from the finding that
        cited, so a case of two findings has two graphs and they are not merged:
        merging them would attribute one finding's citations to the other, and
@@ -764,6 +843,14 @@ export class PublicRead {
                                                manifest_sha: manifestOf(x.case_id, x.edition) })),
                       manifest_sha: tm ? manifestOf(tm.case_id, tm.edition) : null });
       }
+      /* R28: a finding whose bytes an order withholds keeps its id and hash; its title (frozen from those bytes) and
+         its graph are not served, and the withholding is stated on it. */
+      const by = withheldBy(fnd.bundle_sha);
+      if (by)
+        return { ...fnd, title: null, serves: [], names: [], unresolved: [],
+                 division: { parent: null, siblings: [], detail: WITHHELD_SENTENCE },
+                 parts: (fnd.parts || []).map((p) => ({ ...p, withheld: true })),
+                 withheld: { orders: by, detail: WITHHELD_SENTENCE } };
       return { ...fnd, serves, names, unresolved,
                division: {
                  parent: names.find((n) => n.kind === "division_parent")?.to ?? null,
@@ -777,24 +864,43 @@ export class PublicRead {
     /* R3 (N345): THE TENSIONS THE SIGNED DOCUMENT DISCLOSED, read from its bytes and never live; each member's own
        sentences beside it. A document before /5 answers null with its sentence (R13); no signed document, or no case,
        discloses nothing here and says so. */
-    const disclosed = state.document && typeof state.document.text === "string"
-      ? caseTensionsOf(state.document.text)
+    const disclosed = heldDocument && typeof heldDocument.text === "string"
+      ? caseTensionsOf(heldDocument.text)
       : { tensions: null, highlighted: null, members: {}, unread: null,
-          detail: theCase ? "no signed case document is held for this edition, so it states no disclosure here"
-                          : "this is not a case, so it discloses no contradiction" };
+          detail: docWithheld ? WITHHELD_SENTENCE
+            : theCase ? "no signed case document is held for this edition, so it states no disclosure here"
+                      : "this is not a case, so it discloses no contradiction" };
     for (const f of findings) f.tensions = disclosed.tensions === null ? null : disclosed.members[f.bundle_id] || [];
     /* R3 (N364; `case-grammar` R1): the `captures:` and `sources:` blocks as signed, from the same bytes and never live: what
        the document states of a source is what `publishableAt` answered at the commit (`publication` R51), and nothing is added. */
-    const blocks = state.document && typeof state.document.text === "string"
-      ? caseDocumentBlocks(state.document.text)
+    const blocks = heldDocument && typeof heldDocument.text === "string"
+      ? caseDocumentBlocks(heldDocument.text)
       : { captures: null, sources: null,
-          detail: theCase ? "no signed case document is held for this edition, so it states no capture or source here"
-                          : "this is not a case, so it states no capture or source" };
-    const cRow = theCase
-      ? this.#one(`SELECT manifest FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed) : null;
-    const manifest = cRow && cRow.manifest ? JSON.parse(cRow.manifest) : null;
-    const signed = signedParts(state.document);
-    const said = this.#editionStatements(signed, theCase, ed, editions);
+          detail: docWithheld ? WITHHELD_SENTENCE
+            : theCase ? "no signed case document is held for this edition, so it states no capture or source here"
+                      : "this is not a case, so it states no capture or source" };
+    const manifest = manifestWithheld ? null : manifestHeld;
+    const signed = signedParts(heldDocument);
+    const said = this.#editionStatements(signed, theCase, ed, editions, { docWithheld, index });
+    /* R26, R27: the calculations and the timeline, read from the signed document only. */
+    const calculations = signed ? this.#calculationsOf(signed.fm) : docWithheld ? null : [];
+    const timeline = signed ? this.#timelineOf(signed.fm)
+      : docWithheld ? null
+      : { they_did: [], we_did: [], placed_nowhere: { they_did: [], we_did: [] }, detail: TIMELINE_SENTENCE };
+    /* R28: the files the manifest lists, each marked where an order withholds it. A case file's manifest lists its
+       files (`files`, `case-grammar` R13); a container from before T28 lists its parts. */
+    const listed = manifestHeld && Array.isArray(manifestHeld.files) ? manifestHeld.files
+      : manifestHeld && Array.isArray(manifestHeld.parts) ? manifestHeld.parts : [];
+    const files = listed.map((p) => ({ path: p.path, sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null,
+                                       finding: p.finding ?? null,
+                                       ...(Number.isInteger(p.part) ? { part: p.part } : {}),
+                                       ...(withheldBy(p.sha256) ? { withheld: true } : {}) }));
+    const withheldFiles = files.filter((f) => f.withheld).map((f) => f.path);
+    const withheldFindings = findings.filter((f) => f.withheld).map((f) => f.bundle_id);
+    const withheld = whole || docWithheld || manifestWithheld || withheldFiles.length || withheldFindings.length
+      ? { whole, document: docWithheld, manifest: manifestWithheld, findings: withheldFindings, files: withheldFiles,
+          detail: WITHHELD_SENTENCE }
+      : null;
     /* R22 (DEC-112 (4)(1)): each member's standing, `case-grammar.standingOf` over its role, the bar and its frozen pair,
        all three read from the signed document only; null where the document states no member blocks (or there is
        none). It composes no case-level strength (R11): one line per member, never one for the case. */
@@ -815,7 +921,11 @@ export class PublicRead {
              /* R3 (DEC-101; Publication §5A): what changed in this edition, at the top, and the successor's statement
                 beside the pointer to it; both read from signed documents, never live. */
              what_changed: said.what_changed, successor: said.successor,
-             scope: state.scope,
+             /* R28: this edition's court-order stamps, each linked to the docket entry that names its order, and what
+                they withhold; `[]` and null when none. */
+             court_orders: mine ? mine.orders : [],
+             withheld,
+             scope: whole ? null : state.scope,
              /* CASE-5 / DEC-72 clause 2, ON THE ANONYMOUS PUBLIC READ, which is
                 the surface the whole ruling is FOR. Clause 4's design sentence
                 is *"each claim's own derived strength displayed beside the case's
@@ -840,13 +950,14 @@ export class PublicRead {
                + "was published before a case carried its own standard, or no bar was ever declared — in "
                + "which case the case claims no cleared standard and says so, because undetermined is "
                + "first-class here and is never rounded to a number nobody chose.",
-             bias_acknowledgement: state.bias_acknowledgement ?? null,
+             bias_acknowledgement: whole ? null : (state.bias_acknowledgement ?? null),
              /* R3 (DEC-103): the lens this edition was produced under, read from its signed document, never live. */
              lens: said.lens, lens_fingerprint: said.lens_fingerprint, lens_detail: said.lens_detail,
              /* D-712: THE SIGNED CASE DOCUMENT, SERVED. `caseEditionState` builds `document` for exactly this read (the
                 ratify path and the public read must not be able to disagree), and this return picks its fields by
                 name (IC-22), so it names it. NULL UNTIL RATIFIED, never a partial; null on the loose branch. */
-             document: state.document ?? null,
+             document: docWithheld ? { withheld: true, doc_sha: state.document.doc_sha ?? null, detail: WITHHELD_SENTENCE }
+                                   : (state.document ?? null),
              /* IC-22, 2026-08-05 (UI-40): `opened` IS NOT PUBLISHED HERE. It was
                 the instant the case edition was opened, and NOTHING read it —
                 re-measured across the whole repository rather than inherited
@@ -899,7 +1010,7 @@ export class PublicRead {
                 `convert-publishedcase.test.mjs` and the container's by
                 `convert-multifinding.test.mjs`; `op=ratify`'s is the control
                 plane's. */
-             completeness: state.completeness, ratified_at: state.ratified_at,
+             completeness: whole ? null : state.completeness, ratified_at: state.ratified_at,
              complete: state.complete, awaiting: state.awaiting,
              ...(asked ? { asked } : {}),
              findings,
@@ -907,6 +1018,9 @@ export class PublicRead {
              /* K499: the member legs the conflict read could not examine, stated by the document; null where it states none. */
              tensions_unread: disclosed.unread,
              captures: blocks.captures, sources: blocks.sources,
+             /* R26 (C:A-15): each calculation, its outputs labelled computed facts with their denominators; R27 (C11): the
+                timeline, its two lanes apart. Both null where an order withholds the document they are read from. */
+             calculations, timeline,
              method: six ? methodOf(signed.fm) : null, materials: six ? materialsOf(signed.fm) : null,
              blocks_detail: blocks.detail
                ?? "each capture a member rests on, with its grade and co-attestation, and what may be told of the source "
@@ -920,9 +1034,7 @@ export class PublicRead {
              /* R8: the evidence package's block, computed at this read by the module that provides it. */
              evidence_package: this.#evidencePackage(theCase, ed, findings),
              manifest_sha: state.manifest_sha, manifest,
-             files: (manifest && Array.isArray(manifest.parts) ? manifest.parts : []).map(
-               (p) => ({ path: p.path, sha256: p.sha256, kind: p.kind, bytes: p.bytes ?? null,
-                         finding: p.finding ?? null })),
+             files,
              editions: editions.map((e) => e.edition),
              /* R20: each case edition's row carries its own stamp, or null, so a reader of any edition sees which
                 stand withdrawn; a loose bundle's rows are not a case's editions and are unchanged. */
@@ -1011,6 +1123,10 @@ export class PublicRead {
                                               signature: account.signature } : null,
                  held };
       });
+    /* R23 (C:A-12): each `calculations:` row (`case-grammar` R18) with each input it names by its SHA-256, and the input's
+       text where `publication` holds it inline (its R57); the rest are read from the published bucket by hash. */
+    const calculations = this.#calculationRows(doc.fm).map((row) => ({ row,
+      inputs: inputHashes(row.inputs).map((sha) => ({ sha, text: text(sha) })) }));
     return { ok: true, case: c, edition: ed, format: doc.fm.format ?? null, ratified_at: state.ratified_at,
              bar: state.bar ?? null,
              document: { doc_sha: state.document.doc_sha, text: state.document.text,
@@ -1020,7 +1136,7 @@ export class PublicRead {
              findings,
              grading: Object.fromEntries(findings.map((f) => [f.bundle_id, grading.get(f.bundle_id) || []])),
              passages: Object.fromEntries(findings.map((f) => [f.bundle_id, passages.get(f.bundle_id) || []])),
-             materials, attestations };
+             materials, attestations, calculations };
   }
 
   /* R3 (DEC-101, DEC-103; K1019): THE EDITION'S OWN STATEMENTS, from its signed document through `case-grammar`'s
@@ -1031,7 +1147,7 @@ export class PublicRead {
      and its parts: the acknowledgement, each statement with its justification, printed citations and withheld count
      in the document's order, and the closing sentences the document prints. A withheld citation is a count; nothing
      names it. Without the blocks, `lens` is null and `lens_fingerprint` is the frozen manifest's `statements_sha`. */
-  #editionStatements(doc, theCase, ed, editions) {
+  #editionStatements(doc, theCase, ed, editions, { docWithheld = false, index = null } = {}) {
     const wc = doc && Number(ed) > 1 ? whatChangedOf(doc.fm, doc.body) : null;
     const what_changed = wc ? { statement: wc.statement, began_as: wc.began_as, draft: wc.draft,
                                 adopted_as_drafted: wc.adopted_as_drafted } : null;
@@ -1039,9 +1155,14 @@ export class PublicRead {
     const next = theCase ? editions.map((e) => Number(e.edition)).filter((n) => n > Number(ed)).sort((a, b) => a - b)[0]
                          : undefined;
     if (next !== undefined) {
-      const nd = signedParts((this.publication.caseEditionState(theCase, next) || {}).document);
+      const ndoc = (this.publication.caseEditionState(theCase, next) || {}).document;
+      /* R28: a successor whose document an order withholds is pointed to, and its statement is not quoted. */
+      const held = !(ndoc && index && (index.bySha.has(ndoc.doc_sha)
+        || (index.editions.get(`${theCase}\u0000${next}`) || {}).whole));
+      const nd = held ? signedParts(ndoc) : null;
       const nwc = nd ? whatChangedOf(nd.fm, nd.body) : null;
-      successor = { edition: next, statement: nwc ? nwc.statement : null };
+      successor = { edition: next, statement: nwc ? nwc.statement : null,
+                    ...(held ? {} : { withheld: true, detail: WITHHELD_SENTENCE }) };
     }
     const l = doc ? lensOf(doc.fm) : null;
     if (l) {
@@ -1055,7 +1176,8 @@ export class PublicRead {
                        closing: print ? LENS_CLOSING_SENTENCES.filter((c) => print.includes(c)) : [],
                        print } };
     }
-    if (!doc) return { what_changed, successor, lens: null, lens_fingerprint: null, lens_detail: LENS_NO_DOCUMENT_SENTENCE };
+    if (!doc) return { what_changed, successor, lens: null, lens_fingerprint: null,
+                       lens_detail: docWithheld ? WITHHELD_SENTENCE : LENS_NO_DOCUMENT_SENTENCE };
     const bm = doc.fm.bias_manifest && typeof doc.fm.bias_manifest === "object" ? doc.fm.bias_manifest : null;
     const sha = bm && typeof bm.statements_sha === "string" && /^[0-9a-f]{64}$/.test(bm.statements_sha)
       ? bm.statements_sha : null;
@@ -1063,6 +1185,114 @@ export class PublicRead {
     return { what_changed, successor, lens: null, lens_fingerprint: sha,
              lens_detail: sha ? LENS_FINGERPRINT_SENTENCE
                : noneInForce ? LENS_NONE_IN_FORCE_SENTENCE : LENS_FINGERPRINT_UNDETERMINED_SENTENCE };
+  }
+
+  /* ---------------------------------------------------------------- R28: a court order's stamp, served */
+
+  /* R28: an edition's stamps as `publication` answers them (its R62), in order; `[]` for none. */
+  #stampsOf(caseId, edition) {
+    const s = this.publication.stampsOf({ case: caseId, edition: Number(edition) });
+    return Array.isArray(s) ? s : s && Array.isArray(s.stamps) ? s.stamps : [];
+  }
+
+  /* R28: every item of a case edition that the public read serves bytes for, each a hash with the paths it is known by:
+     the signed case document, the case file's or container's manifest and every file it lists, and each member finding's
+     bytes and parts. */
+  #editionItems(caseId, state, manifestSha, manifest) {
+    const items = [];
+    const doc = state && state.document;
+    if (doc && HEX64.test(String(doc.doc_sha ?? "")))
+      items.push({ sha256: doc.doc_sha, paths: [caseFilePath("case_document"), ...this.#rows(
+        `SELECT path FROM published_shas WHERE sha256=? AND bundle_id=?`, doc.doc_sha, caseId).map((r) => r.path)] });
+    if (HEX64.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
+    const files = manifest && Array.isArray(manifest.files) ? manifest.files
+      : manifest && Array.isArray(manifest.parts) ? manifest.parts : [];
+    for (const f of files) if (f && typeof f.sha256 === "string") items.push({ sha256: f.sha256, paths: [f.path] });
+    for (const f of (state && state.findings) || []) {
+      if (typeof f.bundle_sha === "string")
+        items.push({ sha256: f.bundle_sha, paths: [f.bundle_id, `${f.bundle_id}/bundle.md`, caseFilePath("finding", f.bundle_id)] });
+      for (const p of f.parts || []) if (p && typeof p.sha256 === "string")
+        items.push({ sha256: p.sha256, paths: [f.bundle_id, `${f.bundle_id}/${p.path}`] });
+    }
+    return items;
+  }
+
+  /* R28: what every court order in force withholds, read at this call: `editions` each stamped case edition's
+     withholding (keyed `case NUL edition`), `bySha` each withheld hash with the orders that withhold it. A hash is one
+     object, so bytes an order withholds under one edition are withheld wherever they would be served (J1 (5)). Only an
+     edition with a stamp is opened. */
+  #withheldIndex() {
+    const editions = new Map(), bySha = new Map();
+    for (const e of this.#rows(`SELECT case_id, edition, manifest_sha, manifest FROM published_cases ORDER BY case_id, edition`)) {
+      const stamps = this.#stampsOf(e.case_id, e.edition);
+      if (!stamps.length) continue;
+      const state = this.publication.caseEditionState(e.case_id, Number(e.edition));
+      const w = withholdingOf(e.case_id, stamps,
+                              this.#editionItems(e.case_id, state, e.manifest_sha, safeJson(e.manifest)), docketAddress);
+      editions.set(`${e.case_id}\u0000${Number(e.edition)}`, w);
+      for (const [sha, orders] of w.withheld) {
+        const prev = bySha.get(sha) || [];
+        bySha.set(sha, [...prev, ...orders.map((o) => ({ case: e.case_id, edition: Number(e.edition), ...o }))]);
+      }
+    }
+    return { editions, bySha };
+  }
+
+  /** R28 (`op=withheld&sha256=<hash>[,<hash>…]`, for the Worker's `op=publishedbytes`; internal, routed by no door): of
+   *  the hashes asked, each a court order in force withholds, with each order (its case, edition, effect, parts and
+   *  docket entry). `{ok: true, withheld: {<sha256>: [order…]}}`; a hash nothing withholds is not listed. Writes nothing. */
+  withheldOf(shas) {
+    const want = (Array.isArray(shas) ? shas : String(shas ?? "").split(","))
+      .map((s) => String(s).trim().toLowerCase()).filter((s) => HEX64.test(s));
+    if (!want.length) return { ok: true, withheld: {} };
+    const { bySha } = this.#withheldIndex();
+    return { ok: true, withheld: Object.fromEntries(want.filter((s) => bySha.has(s)).map((s) => [s, bySha.get(s)])) };
+  }
+
+  /* ---------------------------------------------------------------- R26, R27: calculations and the timeline */
+
+  /* R26 (C:A-15; D275): each calculation the signed document carries (`case-grammar.calculationsOf`, its R18), read from
+     the document only, never recomputed: its question where the row states one, its outputs by key, each as signed (a
+     count or share carries its denominator beside it inside the result, `calc-grammar` R8), lifted beside it, and a share
+     whose row states no denominator answers `denominator: null` with the sentence that it is undetermined, never a share
+     alone), its method version, its recompute status, the publisher's disclosure beside a differing or unbound one, and
+     every output labelled a computed fact. `[]` for a document without the block. */
+  /* R23, R26: the document's `calculations:` rows as `case-grammar` reads them (its R18); `[]` without the block. */
+  #calculationRows(fm) {
+    return calculationsOf(fm).filter((r) => r && typeof r === "object");
+  }
+
+  #calculationsOf(fm) {
+    return this.#calculationRows(fm).map((r) => {
+      const recipe = typeof r.recipe === "string" ? safeJson(r.recipe) : r.recipe && typeof r.recipe === "object" ? r.recipe : null;
+      const results = r.results && typeof r.results === "object" ? r.results : {};
+      const outputs = Object.keys(results).sort().map((key) => outputOf(key, results[key]));
+      const flagged = r.recompute === "differs" || r.recompute === "unbound";
+      return { calc: r.calc ?? null,
+               question: typeof r.question === "string" ? r.question
+                 : recipe && typeof recipe.question === "string" ? recipe.question : null,
+               outputs, result_key: r.result_key ?? null, method_version: r.method_version ?? null,
+               recompute: r.recompute ?? null,
+               disclosed: r.disclosed ?? null,
+               ...(flagged ? { disclosure_detail: r.disclosed != null ? CALC_DISCLOSED_SENTENCE : CALC_UNDISCLOSED_SENTENCE } : {}),
+               label: COMPUTED_FACT };
+    });
+  }
+
+  /* R27 (C11; `publication` R63): the edition's timeline as signed (`case-grammar.timelineOf`, its R20), never read from
+     `events`: the two lanes apart, each in its own order, each item with its `when` as held and its source; an item placed
+     nowhere listed apart, in its lane. Both lanes empty for a document without the block. */
+  #timelineOf(fm) {
+    const t = timelineOf(fm);
+    const lane = (name) => (t && Array.isArray(t[name]) ? t[name] : []).filter((i) => i && typeof i === "object")
+      .map((i) => ({ ord: i.ord ?? null, when: i.when ?? null, label: i.label ?? null, ref: i.ref ?? null,
+                     source: i.source ?? null }));
+    const placed = (items) => items.filter((i) => !isNowhere(i.when));
+    const nowhere = (items) => items.filter((i) => isNowhere(i.when));
+    const they = lane("they_did"), we = lane("we_did");
+    return { they_did: placed(they), we_did: placed(we),
+             placed_nowhere: { they_did: nowhere(they), we_did: nowhere(we) },
+             detail: TIMELINE_SENTENCE };
   }
 
   /* REC-128 — THE ONE READ CHOKEPOINT FOR WHO DELIVERED A RATIFICATION. Every
@@ -1297,5 +1527,7 @@ export function publicReadOps(r, url) {
     docketfeed: () => r.docketFeed(q("case")),
     /* R23: what a case edition's case file carries, for the Worker's assembly (R6); internal, routed by no door. */
     casefilefacts: () => r.caseFileFacts(q("caseId"), q("edition")),
+    /* R28: which of these hashes a court order in force withholds, for the Worker's `publishedbytes`; internal. */
+    withheld: () => r.withheldOf(q("sha256")),
   };
 }

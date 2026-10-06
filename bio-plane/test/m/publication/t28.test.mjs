@@ -1,13 +1,13 @@
 /* publication — what a case carries at its commit (T28): its materials held by SHA-256 (R57; DEC-112, K1315, K1316), a
    pre-/6 preparation refused (R58, C-122.2; a /7 one read as /6, N538), another group's accepted work re-read (R59, C-122.3, C-122.4; N522), the
-   attesting member's credit for off-the-record material (R60; DEC-119 (3)), and the manifest's files registered (R15,
-   K1315). `accepted-work` is the real module, with a stand-in registered as case-import registers; extraction's units
-   and capture's actors are the fixture's stand-ins. Driven at the module's interface. */
+   manifest's files registered (R15, K1315). The attesting member's credit for off-the-record material (R60) moved to
+   `case-tensions` (its R7, T33-62) with its tests. `accepted-work` is the real module, with a stand-in registered as
+   case-import registers; extraction's units are the fixture's stand-in. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, caseDoc, V, SIG, NOW, sha } from "./fixture.mjs";
-import { CASE_SOURCES_CHECKS, ATTRIBUTION_ACT_CHECKS } from "../../../src/publication/checks.mjs";
-import { extractedTextOf, unnamedSourceStatement } from "../../../src/case-grammar/index.mjs";
+import { CASE_SOURCES_CHECKS } from "../../../src/publication/checks.mjs";
+import { extractedTextOf } from "../../../src/case-grammar/index.mjs";
 
 const F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes", CASE = "CASE-2026-0001";
 const roster = (roles) => roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha, role: "load_bearing" }));
@@ -233,97 +233,6 @@ test("R57 (K1315) the timestamp tokens an included document's provenance names a
   const r = w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
   assert.deepEqual(r.materials, [{ sha: sha(body), held: "inline" }, { sha: sha(token), held: "inline" }]);
   assert.deepEqual(w.p.publishedMaterialText(sha(token)), { found: true, sha256: sha(token), kind: "attestation", text: token });
-});
-
-/* ---------------------------------------------------------------- R60 */
-
-const CAP = sha("the knocked bytes");
-const WITHHELD = (capture) => ({ capture, stated: unnamedSourceStatement({ capture, received: NOW }), basis: null });
-
-/* ann attested CAP, off the record; the case document states its source as Withheld and carries the attribution run. */
-function offRecord({ sources = [WITHHELD(CAP)] } = {}) {
-  const b = base();
-  b.w.knock(CAP);   /* the pulled knock behind CAP, so the Withheld row stands at the commit (R51) */
-  b.w.actors.set(CAP, [V("ann")]);
-  b.w.prepare(CASE, 1, { project: b.proj, roles: b.roles, blocks: { sources }, attributions: [],
-    materials: [{ ref: "INFO-2026-0009-knocked", kind: "document", sha: CAP, text_sha: null, origin: null, archived_copy: null,
-                  included: false, rests_under: "supporting" }],
-    attestations: [ATTESTED("cover", "Cover ann", "SIG-ANN"), { ref: "INFO-2026-0009-knocked", by_kind: "group", by: "test-group",
-                   level: null, at: NOW, signature: "case", recorded_in: null }] });
-  return b;
-}
-const REASON = "Credit the group for what I brought in.";
-const ATTESTED = (level, by, signature) => ({ ref: "INFO-2026-0009-knocked", by_kind: "member", by, level, at: NOW, signature,
-                                              recorded_in: null });
-const attributeCapture = (w, { by = "ann", level = "group", capture = CAP, edition = 1, reason = REASON } = {}) =>
-  w.op("attribute", { by }, { caseId: CASE, edition, capture, level, reason });
-
-test("R60 attributeObservation takes capture in place of observation: the capture's attesting member chooses, per case, capture and edition, dated, with its reason; attributionInForce, attributionStatements and attributionFacts answer it keyed by the capture's SHA-256", () => {
-  const { w, proj, roles } = offRecord();
-  const r = attributeCapture(w, { level: "cover" });
-  assert.deepEqual([r.ok, r.capture, r.observation, r.level, r.shown, r.reason, r.existed], [true, CAP, null, "cover", "Cover ann", REASON, false]);
-  assert.deepEqual(w.rows(`SELECT case_id, edition, capture_sha, level, chosen_by, reason FROM capture_attributions`),
-                   [{ case_id: CASE, edition: 1, capture_sha: CAP, level: "cover", chosen_by: "ann", reason: REASON }]);
-  assert.match(w.row(`SELECT chosen_at FROM capture_attributions`).chosen_at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
-  assert.equal(w.count("observation_attributions"), 0, "never an observation's row");
-  const inForce = w.p.attributionInForce(CASE, 3, CAP);
-  assert.deepEqual([inForce.level, inForce.edition, inForce.chosen_by], ["cover", 1, "ann"], "a later edition inherits it");
-  assert.deepEqual(w.p.attributionStatements(CASE, 1, proj, [CAP]), [{ capture: CAP, level: "cover", shown: "Cover ann", chosen_at_edition: 1, why: null }]);
-  assert.deepEqual(w.p.attributionStatements(CASE, 1, proj).map((x) => x.capture), [CAP], "the edition's own document reaches it");
-  const facts = w.p.attributionFacts(w.row(`SELECT case_id, edition, text FROM case_documents`));
-  assert.deepEqual([facts.reached, facts.legacy], [[CAP], []], "beside the observations; legacy asks of observations only");
-  assert.deepEqual(facts.current.map((c) => [c.capture, c.level]), [[CAP, "cover"]]);
-  /* the run is re-authored and states it under `capture` (K1315), so the owner signs the level */
-  const text = w.row(`SELECT text FROM case_documents`).text;
-  assert.ok(text.includes(`  - capture: ${CAP}`), text.slice(0, 400));
-  const after = w.p.attributionFacts(w.row(`SELECT case_id, edition, text FROM case_documents`));
-  assert.deepEqual(after.stated.map((s) => [s.capture, s.level]), [[CAP, "cover"]]);
-  /* K1317: the attesting member's row in the attestations section states the chosen level, and the group's row is kept */
-  const rowsNow = () => w.p.caseDocumentFacts(CASE, 1, V("olive")).doc.text.split("material_attestations:")[1].split("\n---")[0];
-  assert.ok(rowsNow().includes('level: "cover"') || rowsNow().includes("level: cover"), rowsNow());
-  assert.ok(rowsNow().includes("Cover ann") && rowsNow().includes("SIG-ANN") && rowsNow().includes("test-group"));
-  const grp = attributeCapture(w, { level: "group", reason: "group now" });
-  assert.equal(grp.attestations.reauthored, true);
-  assert.ok(!rowsNow().includes("Cover ann") && !rowsNow().includes("SIG-ANN") && !rowsNow().includes("h_ann"),
-            "at group: no handle, cover or signature");
-  assert.ok(rowsNow().includes("test-group"), "the group's own row is kept");
-  /* each level publishes the attesting member's own value, never the member id */
-  for (const level of ["group", "project", "name"]) {
-    const x = attributeCapture(w, { level, reason: `now ${level}` });
-    assert.equal(x.shown, { group: "test-group", project: proj, name: "h_ann" }[level]);
-    assert.equal(JSON.stringify(w.p.attributionStatements(CASE, 1, proj, [CAP])).includes('"ann"'), false);
-  }
-  /* signed: attributionStatedFor reads the capture row */
-  assert.equal(w.p.attributionStatedFor(CAP), false);
-  w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
-  assert.equal(w.p.attributionStatedFor(CAP), true);
-});
-
-test("R60 the same refusals: C-92.4 for a capture the edition does not state as Withheld, C-92.5 for anyone not its attesting member, C-92.6, C-92.8, C-92.9; each writes nothing", () => {
-  const T = ATTRIBUTION_ACT_CHECKS;
-  for (const [label, sources, capture] of [["not stated", [], CAP], ["a basis stated", [{ capture: CAP, stated: "attribute role: clerk", basis: "consent" }], CAP],
-                                            ["not a SHA-256", [WITHHELD(CAP)], "INFO-2026-0001-minutes"], ["another capture", [WITHHELD(CAP)], sha("other")]]) {
-    const { w } = offRecord({ sources });
-    const before = w.snapshot(["capture_attributions", "case_documents"]);
-    expectRow(attributeCapture(w, { capture }), "ATTRIBUTION_NOT_AN_OBSERVATION", T);
-    assert.deepEqual(w.snapshot(["capture_attributions", "case_documents"]), before, label);
-  }
-  const { w: w0 } = offRecord();
-  expectRow(attributeCapture(w0, { edition: 7 }), "ATTRIBUTION_NOT_AN_OBSERVATION", T);
-  const { w, proj, roles } = offRecord();
-  const before = w.snapshot(["capture_attributions", "case_documents"]);
-  expectRow(attributeCapture(w, { by: "bo" }), "ATTRIBUTION_NOT_THE_AUTHOR", T);
-  w.actors.set(CAP, []);
-  expectRow(attributeCapture(w), "ATTRIBUTION_NOT_THE_AUTHOR", T);
-  w.actors.set(CAP, [V("ann")]);
-  w.st.sql.exec(`UPDATE members SET status='revoked' WHERE member_id='ann'`);
-  expectRow(attributeCapture(w), "ATTRIBUTION_AUTHOR_NOT_ACTIVE", T);
-  w.st.sql.exec(`UPDATE members SET status='active', handle=NULL WHERE member_id='ann'`);
-  expectRow(attributeCapture(w, { level: "name" }), "ATTRIBUTION_NAME_NO_HANDLE", T);
-  expectRow(attributeCapture(w, { reason: " " }), "ATTRIBUTION_NO_REASON", T);
-  assert.deepEqual(w.snapshot(["capture_attributions", "case_documents"]), before, "nothing written");
-  w.signCase(CASE, 1, { project: proj, roster: roster(roles) });
-  expectRow(attributeCapture(w), "ATTRIBUTION_EDITION_RATIFIED", T);
 });
 
 /* ---------------------------------------------------------------- R15 (K1315) */

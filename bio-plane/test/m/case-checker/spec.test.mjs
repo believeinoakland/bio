@@ -16,15 +16,19 @@ test("R14: the specification of bio-case-file/1 is held with this module, its ve
   assert.match(SPEC, /^# The case file, format bio-case-file\/1\n/);
 });
 
-test("R14: it states every field, kind and rule a checker needs, from case-grammar R11–R13 and R16–R17", () => {
+test("R14 R20: it states every field, kind and rule a checker needs, from case-grammar R11–R13 and R16–R18", () => {
   const words = [
     ...CG.CASE_FILE_MANIFEST_FIELDS, ...CG.CASE_FILE_KEY_FIELDS, ...CG.CASE_FILE_PART_FIELDS, ...CG.CASE_FILE_FILE_FIELDS,
     ...CG.CASE_FILE_KINDS, ...CG.METHOD_FIELDS, ...CG.MATERIAL_FIELDS, ...CG.MATERIAL_ATTESTATION_FIELDS, ...CG.ATTESTATION_BY_KINDS,
-    ...CG.ACCEPTED_WORK_FIELDS, ...CG.MATERIAL_KINDS, ...CG.MATERIAL_RESTS_UNDER, ...STRENGTH_AXES,
+    ...CG.ACCEPTED_WORK_FIELDS, ...CG.GRADING_FACT_FIELDS, ...CG.PASSAGE_FIELDS, ...CG.CALCULATION_FIELDS, ...CG.RECOMPUTE_STATUSES,
+    ...CG.TIMELINE_FIELDS, ...CG.TIMELINE_LANES, ...CG.MATERIAL_KINDS, ...CG.MATERIAL_RESTS_UNDER, ...STRENGTH_AXES,
     CG.CASE_FILE_MANIFEST_PATH, CG.GROUP_ATTESTATION_SIGNATURE,
     "case_id", "case_edition", "case_findings", "case_roles", "case_strength", "required_strength", "capture_accounts",
     "observation_attributions", "content_id", "capture_sha", "extent", "chain", "quoted", "legs", "answer",
     "load_bearing", "supporting", "recreated", "recreated_in_part", "did_not_recreate", "bio-ratify", "ssh-ed25519",
+    /* R20: the calculations block (case-grammar R18) and its answers */
+    "calculations", "calc", "recipe", "inputs", "method_version", "results", "result_key", "recompute", "disclosed", "bio-calc/1",
+    "agrees", "differs", "unbound", "not_recomputed", "calculation", "timeline",
   ];
   const missing = [...new Set(words)].filter((w) => !named(w));
   assert.deepEqual(missing, []);
@@ -33,12 +37,19 @@ test("R14: it states every field, kind and rule a checker needs, from case-gramm
                    CG.caseFilePath("finding", "<finding>"), CG.caseFilePath("finding_signature", "<finding>"),
                    CG.caseFilePath("grading_facts", "<finding>"), CG.caseFilePath("passages", "<finding>")].filter(Boolean))
     assert.ok(SPEC.includes(p), p);
+  /* the calculation kind's three paths, and the rule that an input is named by its SHA-256 (case-grammar R13, R18, R19) */
+  const H = "a".repeat(64);
+  for (const p of [CG.caseFilePath("calculation", "CALC-1").replace("CALC-1", "<calc>"),
+                   CG.caseFilePath("calculation", ["CALC-1", H]).replace("CALC-1", "<calc>").replace(H, "<sha256>"),
+                   CG.caseFilePath("calculation", "prov")])
+    assert.ok(SPEC.includes(p), p);
+  assert.match(SPEC, /named by its SHA-256 \(the manifest lists it with that SHA-256, or it departs: the input_sha rule\)/);
   for (const s of ["bio-ratify-case <case_id> <case_edition> <case_document_sha>", "bio-ratify <finding id> <version_sha>",
                    "bio-capture-account <capture sha>"]) assert.ok(SPEC.includes(s), s);
   /* the checks, one numbered rule each: integrity, signatures, passages, grades, the bar, publication checks,
-     presentability, completion, the complete edition, another group's work */
+     presentability, completion, the complete edition, another group's work, calculations (R20) */
   for (const h of ["Integrity", "Signatures", "Passages", "Grades", "The bar", "Publication checks", "Presentability", "Completion",
-                   "The complete edition", "Another group's work"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
+                   "The complete edition", "Another group's work", "Calculations"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
   /* the case document formats it reads, and the product name the complete edition renders by format (DEC-124) */
   for (const w of ["bio-case-document/7", "bio-case-document/6", "CivicOS", "Civicsmith"]) assert.ok(named(w), w);
   assert.match(SPEC, /`bio-case-document\/6` document, or an earlier one, renders `CivicOS`, and a `bio-case-document\/7` document renders `Civicsmith`/);

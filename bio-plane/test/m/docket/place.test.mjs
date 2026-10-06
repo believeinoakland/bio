@@ -185,8 +185,10 @@ test("R6 every kind carries only R6's fields, and no member's name, handle or id
   add(await post(w, { kind: "take-back", edition: 2, takesBack: 6, reason: "Placed twice." }));
   add(await post(w, { kind: "standing-withdrawn", edition: 1, grant: 1, reason: "The union asked to stop." }));
   add(await post(w, { kind: "withdrawal", edition: 1, reason: "Edition 1 overstated the totals." }));
+  add(await post(w, { kind: "court-order", order: { effect: "seal", editions: [1, 2], parts: ["Exhibit 3"] }, capture: w.bare.sha,
+                      reason: "The court sealed Exhibit 3." }));
   const ALLOWED = new Set(["format", "group", "case", "seq", "previous", "shelf", "kind", "edition", "date", "received", "from", "capture",
-                           "summary", "what_changed", "reason", "holder", "answers", "takes_back"]);
+                           "summary", "what_changed", "reason", "holder", "answers", "takes_back", "order"]);
   assert.deepEqual(seen.map((j) => j.kind).sort(), [...ENTRY_KINDS].sort(), "every kind was published");
   for (const j of seen) {
     for (const k of Object.keys(j)) assert.ok(ALLOWED.has(k), `${j.kind} carries ${k}`);
@@ -206,6 +208,9 @@ test("R6 every kind carries only R6's fields, and no member's name, handle or id
   assert.equal(by("standing-granted").holder, "The Tenants' Union");
   assert.deepEqual([by("standing-withdrawn").holder, by("standing-withdrawn").answers], ["The Tenants' Union", 1]);
   assert.equal(by("take-back").takes_back, 6);
+  assert.deepEqual([by("court-order").edition, by("court-order").order], [2, { effect: "seal", editions: [1, 2], parts: ["Exhibit 3"] }],
+                   "R25: the order as signed; the entry's edition the highest it names");
+  assert.deepEqual(by("court-order").capture, { sha256: w.bare.sha, origin: w.bare.origin, archived: null }, "the order itself, captured");
   assert.equal(by("reaction").from, "The Daily Example");
   assert.equal(by("response").from, SUBJECT_NAME, "the subject's canonical name as the registry holds it");
   seen.forEach((j, i) => assert.equal(j.seq, i + 1, "seq 1, 2, … per case"));

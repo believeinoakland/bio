@@ -1,6 +1,6 @@
 # BOB to public-read (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ K1632: (1) accepted. publication commits the calculation inputs at publish (publ
 ## B3 · CHANGE
 
 K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
+
+## B4 · CHANGE
+
+K1643: publication (T33-63) is merged into tranche/T33. Merge the tranche. R63: publication.editionTimeline({case, edition}) and caseEditionState's timeline answer the signed timeline block. R22: calculation inputs are registered at caseFilePath("calculation", [calc, sha]) and answered held: "evidence" for ratification R39's copy. Docket follows publication; you merge after docket.

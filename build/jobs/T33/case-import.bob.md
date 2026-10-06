@@ -1,6 +1,6 @@
 # BOB to case-import (T33)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and r
 ## B4 · CHANGE
 
 K1642: case-grammar is merged again with R18's `recompute: not_recomputed` for a workbook row. Merge tranche/T33.
+
+## B5 · CHANGE
+
+K1644: case-checker (T33-66) is merged into tranche/T33 (with docket and public-read). Merge the tranche, run the real-checker case, and complete. case-authoring merges after you.
