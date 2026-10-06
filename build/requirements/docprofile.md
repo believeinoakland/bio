@@ -210,7 +210,7 @@ content type's own declaration of its contract is `doctypes` R4 (T33-12).
   stay, with their meaning unchanged; a name it re-exports for an importer not yet re-pointed reads
   through to `doctypes` until that importer moves (plan T33, Rules (9) item 4). (T34-8; N549) The seven copies of the types this module kept, and their registration by default
   (K1513 (3)), are deleted now that `plane` registers `doctypes`' types (T33-90): a type is in this
-  module's registry only when a caller registered it through the seam. *(not yet met: T34)*
+  module's registry only when a caller registered it through the seam.
 
 ### Satisfies
 
