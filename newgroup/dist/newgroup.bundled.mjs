@@ -1,5 +1,6 @@
 // ../jurisdictions/profiles/oakland-alameda.mjs
 var R = String.raw;
+var CITY = { label: "City of Oakland", kind: "institution", ids: [] };
 var oakland_alameda_default = {
   id: "oakland-alameda",
   name: "City of Oakland and Alameda County",
@@ -86,6 +87,32 @@ var oakland_alameda_default = {
       forms: [
         {
           form: "legistar-person",
+          pattern: { re: R`^(\d{1,7})$` },
+          normal: [{ group: 1 }],
+          clean: { spaces: "remove" },
+          basis: "2026-10-05 legistar-events"
+        }
+      ]
+    },
+    /* A Legistar BodyId and OfficeRecordId (`/v1/oakland/bodies`, 151 bodies, 1–283; `/v1/oakland/officerecords`, 1,262
+       records, 1–1552; read 2026-10-05, legistar-events §7): a body's number and one seat's holding (N569, N613). */
+    body: {
+      label: "body number in the legislative record",
+      forms: [
+        {
+          form: "legistar-body",
+          pattern: { re: R`^(\d{1,6})$` },
+          normal: [{ group: 1 }],
+          clean: { spaces: "remove" },
+          basis: "2026-10-05 legistar-events"
+        }
+      ]
+    },
+    office: {
+      label: "office record number in the legislative record",
+      forms: [
+        {
+          form: "legistar-office-record",
           pattern: { re: R`^(\d{1,7})$` },
           normal: [{ group: 1 }],
           clean: { spaces: "remove" },
@@ -343,6 +370,13 @@ var oakland_alameda_default = {
       { pattern: { re: R`Life\s+Enrichment\s+Committee`, flags: "i" }, organisation: "life_enrichment_committee", basis: "2026-10-05 legistar-events" },
       { pattern: { re: R`Public\s+Works\s+(?:(?:&|and)\s+Transportation\s+)?Committee`, flags: "i" }, organisation: "public_works_committee", basis: "2026-10-05 legistar-events" }
     ],
+    /* Legistar's office records (1,262, read 2026-10-05): MemberType `Member` 1,135, `Chair` 126. On the Council's own body
+       every holder is a councilmember, elected (Charter §200); on other bodies the same types carry councilmembers, other
+       bodies' members and appointees alike (the Port's, the school board's, the county's), so no entry there (K1729). */
+    member_types: [
+      { member_type: "Member", organisation: "city_council", capacity: "elected", basis: "2026-10-05 legistar-events, 2026-10-05 time-law" },
+      { member_type: "Chair", organisation: "city_council", capacity: "elected", basis: "2026-10-05 legistar-events, 2026-10-05 time-law" }
+    ],
     /* The City's own rosters and organisation charts (roster-reader's fixtures, 15 documents read 2026-10-05; K1517).
        A term column's header is left unnamed. */
     roster_words: [
@@ -480,15 +514,36 @@ var oakland_alameda_default = {
      are absent, undetermined (R27, K925). Each office rests on its primary source (time-law §2): Charter §504(e)
      (an appointed Director of Finance), Charter §200 (eight elected Councilmembers), Penal Code §§888, 925a (the
      grand jury, which may examine any city's books), Charter §403(1) (the elected City Auditor), Cal. Const. art. V
-     §11 (the elected Controller). */
+     §11 (the elected Controller). The City's three offices carry their Legistar BodyId (`/v1/oakland/bodies`, read
+     2026-10-05): the Council's own body (1, "Meeting of the Oakland City Council", whose variants the body-variant map
+     names `city_council`), and the Auditor's and Finance's Requestor bodies, whose names are written here as Legistar
+     gives them (16, 171; K1690). No source read gives the City an identifier in a scheme this profile holds, so `within`
+     names it with none. No office record measured is a counterparty's (they are the Council's and committees' seats). */
   counterparties: [
-    { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "2026-10-05 time-law" },
-    { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "2026-10-05 time-law" },
+    {
+      role: "Controller",
+      body: "Finance Department",
+      level: "city",
+      elected: false,
+      ids: { body: { scheme: "legistar_body_id", id: "171" } },
+      within: CITY,
+      basis: "2026-10-05 time-law, 2026-10-05 legistar-events"
+    },
+    {
+      role: "City Council",
+      body: "Oakland City Council",
+      level: "city",
+      elected: true,
+      ids: { body: { scheme: "legistar_body_id", id: "1" } },
+      within: CITY,
+      organisation: "city_council",
+      basis: "2026-10-05 time-law, 2026-10-05 legistar-events"
+    },
     { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "2026-10-05 time-law" },
     /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
     {
       role: "City Auditor",
-      body: "Office of the City Auditor, City of Oakland",
+      body: "Office Of The City Auditor",
       level: "city",
       elected: true,
       oversight: true,
@@ -497,7 +552,9 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "M-192"
       },
-      basis: "2026-10-05 time-law"
+      ids: { body: { scheme: "legistar_body_id", id: "16" } },
+      within: CITY,
+      basis: "2026-10-05 time-law, 2026-10-05 legistar-events"
     },
     { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "2026-10-05 time-law" }
   ],
@@ -729,7 +786,8 @@ var oakland_alameda_default = {
       basis: "2026-10-05 time-law"
     }
   ],
-  /* Legistar's PersonId, the register that issues it (legistar-events §1; B1b.4). */
+  /* Legistar's PersonId, BodyId and OfficeRecordId, the register that issues them (legistar-events §1, §7; B1b.4, N569,
+     N613). An office record is one seat's holding: person × body × dates, the source's own key. */
   identifier_schemes: [
     {
       scheme: "legistar_person_id",
@@ -737,6 +795,24 @@ var oakland_alameda_default = {
       entity_kinds: ["person"],
       space: "person",
       form: "legistar-person",
+      systems: ["oakland.legistar"],
+      basis: "2026-10-05 legistar-events"
+    },
+    {
+      scheme: "legistar_body_id",
+      label: "Legistar BodyId",
+      entity_kinds: ["body"],
+      space: "body",
+      form: "legistar-body",
+      systems: ["oakland.legistar"],
+      basis: "2026-10-05 legistar-events"
+    },
+    {
+      scheme: "legistar_office_record_id",
+      label: "Legistar OfficeRecordId",
+      entity_kinds: ["office"],
+      space: "office",
+      form: "legistar-office-record",
       systems: ["oakland.legistar"],
       basis: "2026-10-05 legistar-events"
     }
@@ -1099,6 +1175,16 @@ var test_port_ellery_default = {
       { form: "minute-person", pattern: { re: R2`^P(\d{3})$`, flags: "i" }, normal: ["P", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
       { form: "bar-number", pattern: { re: R2`^BAR(\d{5})$`, flags: "i" }, normal: ["BAR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }
     ] },
+    /* T34 (R62): a body's and a seat's numbers in the minute book, and an institution's in the county registry */
+    body: { label: "minute-book body number", forms: [
+      { form: "minute-body", pattern: { re: R2`^B-?(\d{2})$`, flags: "i" }, normal: ["B-", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }
+    ] },
+    office: { label: "minute-book seat number", forms: [
+      { form: "minute-seat", pattern: { re: R2`^SEAT-?(\d{3})$`, flags: "i" }, normal: ["SEAT-", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }
+    ] },
+    institution: { label: "county registry number", forms: [
+      { form: "marlow-registry", pattern: { re: R2`^MR(\d{4})$`, flags: "i" }, normal: ["MR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }
+    ] },
     parcel: {
       label: "lot and block number",
       forms: [
@@ -1278,6 +1364,23 @@ var test_port_ellery_default = {
     ],
     staff_titles: [
       { pattern: { re: R2`\b(?:Town\s+Reeve|Harbour\s+Master|Deputy\s+Clerk)\b`, flags: "i" }, basis: "TEST" }
+    ],
+    /* T34 (R58, R60, R62) */
+    vote_values: [
+      { value: "content", label: "Content", citation: "P.E.B.L. \xA7 5(1)", basis: "TEST" },
+      { value: "not_content", label: "Not content", citation: "P.E.B.L. \xA7 5(1)", basis: "TEST" },
+      { value: "abstains", label: "Abstains", citation: "P.E.B.L. \xA7 5(2)", basis: "TEST" }
+    ],
+    response_statuses: [
+      { status: "implemented", label: "Implemented", citation: "Test Stat. \xA7 3.40", basis: "TEST" },
+      { status: "in_hand", label: "In hand", citation: "Test Stat. \xA7 3.40", basis: "TEST" },
+      { status: "declined", label: "Will not be implemented", citation: "Test Stat. \xA7 3.41", basis: "TEST" }
+    ],
+    member_types: [
+      { member_type: "Selectperson", capacity: "elected", basis: "TEST" },
+      { member_type: "Co-opted Member", capacity: "appointed", basis: "TEST" },
+      /* for one body only, read before the entry for all bodies (K1729) */
+      { member_type: "Co-opted Member", organisation: "harbour_commission", capacity: "elected", basis: "TEST" }
     ]
   },
   practice: { minutes_due_days: { value: 30, count: "calendar", closures: "town", basis: "TEST" } },
@@ -1322,7 +1425,16 @@ var test_port_ellery_default = {
       ], status: "researched", basis: "TEST" },
       basis: "TEST"
     },
-    { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
+    {
+      role: "Selectboard",
+      body: "Port Ellery Selectboard",
+      level: "city",
+      elected: true,
+      ids: { office: { scheme: "ellery_seat", id: "SEAT-001" }, body: { scheme: "ellery_body", id: "B-01" } },
+      within: { label: "City of Port Ellery", kind: "institution", ids: [{ scheme: "port_ellery_registry", id: "MR0001" }] },
+      organisation: "selectboard",
+      basis: "TEST"
+    },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
     { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" }
   ],
@@ -1567,7 +1679,34 @@ var test_port_ellery_default = {
       systems: ["ellery.minutes"],
       basis: "TEST"
     },
-    { scheme: "marlow_bar", label: "Marlow bar number", entity_kinds: ["person"], space: "person", form: "bar-number", basis: "TEST" }
+    { scheme: "marlow_bar", label: "Marlow bar number", entity_kinds: ["person"], space: "person", form: "bar-number", basis: "TEST" },
+    {
+      scheme: "ellery_body",
+      label: "minute-book body number",
+      entity_kinds: ["body"],
+      space: "body",
+      form: "minute-body",
+      systems: ["ellery.minutes"],
+      basis: "TEST"
+    },
+    {
+      scheme: "ellery_seat",
+      label: "minute-book seat number",
+      entity_kinds: ["office"],
+      space: "office",
+      form: "minute-seat",
+      systems: ["ellery.minutes"],
+      basis: "TEST"
+    },
+    /* N574: an issuer of credentials, held through entities R43 */
+    {
+      scheme: "port_ellery_registry",
+      label: "Marlow County registry of institutions",
+      entity_kinds: ["institution"],
+      space: "institution",
+      form: "marlow-registry",
+      basis: "TEST"
+    }
   ],
   classification_schemes: [
     { scheme: "ellery_funds", label: "ledger funds", kind: "fund", codes: [{ code: "100-01", label: "General" }, { code: "200-01", label: "Harbour" }], basis: "TEST" },
@@ -1681,7 +1820,7 @@ var test_port_ellery_default = {
 };
 
 // ../bio-plane/src/record-grammar/ids.mjs
-var row = (prefix, owner, form = "sequential") => Object.freeze({ prefix, owner, form });
+var row = (prefix, owner, form = "sequential", legacy) => Object.freeze(legacy ? { prefix, owner, form, legacy } : { prefix, owner, form });
 var ID_TABLE = Object.freeze([
   /* R1's bundle prefixes, each with the module whose record it names. */
   row("INFO", "capture"),
@@ -1738,15 +1877,24 @@ var ID_TABLE = Object.freeze([
   row("MSR", "money"),
   row("HYP", "hypotheses"),
   row("DUT", "duties"),
-  row("CALC", "calculations"),
+  /* T34-1 (N570, K1576; DEC-36's withheld-as-absent): `CALC` is opaque, as `EVT` and `MNY` are. A sequential counter
+     told its reader how many calculations had been minted before it, withheld ones included, which is exactly what
+     withheld-as-absent forbids a reader to learn. Its row carries `legacy: 'sequential'` (K1728), the form still READ
+     as valid and never minted, as `STATES`' `legacy` states are read and never a destination: a copy on 0.80.0 holds
+     calculations minted sequentially, and every reader keeps reading them through `idPattern`. Minting follows `form`
+     alone (record-core). */
+  row("CALC", "calculations", "opaque", "sequential"),
   row("STQ", "answers")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
-var FORM = new Map(ID_TABLE.map((e) => [e.prefix, e.form]));
-var coreOf = (prefix) => `${prefix}-${YEAR}-${CORE[FORM.get(prefix)]}`;
+var ROW = new Map(ID_TABLE.map((e) => [e.prefix, e]));
+var coreOf = (prefix) => {
+  const { form, legacy } = ROW.get(prefix);
+  return `${prefix}-${YEAR}-${legacy ? `(?:${CORE[form]}|${CORE[legacy]})` : CORE[form]}`;
+};
 function idPattern(prefix) {
-  return typeof prefix === "string" && FORM.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
+  return typeof prefix === "string" && ROW.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
 }
 var HYP_RE = idPattern("HYP");
 var ID_PREFIXES = Object.freeze([
@@ -2275,6 +2423,15 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential proposed these steps for a wizard script. That is machine work, labelled as machine work: it is a draft, which can propose steps and can never draft, submit or approve a script. They are not a script's steps until its author adopts them into a version",
     member_proposed: "a member proposed these steps for a wizard script. It is a proposal and not a script's steps until its author adopts them into a version, and the record holds who proposed it",
     unstated: "the record does not say who proposed these steps for a wizard script, and they are not a script's steps until its author adopts them into a version"
+  }),
+  /* N568 (K1571; T34, R49): a law relation, a court link or a treatment proposed beside the record (standards R23, R26,
+     R27, R30) is not one the record holds until a member records it themselves, and a machine can propose one and never
+     record one (K1443). Before this subject, standards' `lawPropose` labelled through `standard`, whose sentences speak
+     of a standard and misnamed what was proposed. */
+  law_relation: Object.freeze({
+    machine_proposed: "a machine credential proposed this law relation, court link or treatment. That is machine work, labelled as machine work: it can propose one and it can never record one. It is not one the record holds until a member records it themselves",
+    member_proposed: "a member proposed this law relation, court link or treatment. It is a proposal and not one the record holds until a member records it themselves, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this law relation, court link or treatment, and it is not one the record holds until a member records it themselves"
   })
 });
 
@@ -2370,7 +2527,20 @@ var SECTIONS = Object.freeze([
   "lawful_demands",
   "recurrences"
 ]);
-var SPACES = Object.freeze(["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"]);
+var SPACES = Object.freeze([
+  "enactment",
+  "project",
+  "fund",
+  "parcel",
+  "account",
+  "object",
+  "vendor",
+  "proceeding",
+  "person",
+  "body",
+  "office",
+  "institution"
+]);
 var VOCABULARY = Object.freeze([
   "furniture",
   "bodies",
@@ -2394,8 +2564,18 @@ var VOCABULARY = Object.freeze([
   "budget_book_titles",
   "financial_headings",
   "fiscal_year_forms",
-  "budget_headers"
+  "budget_headers",
+  /* T34 (R58, R60): the values a vote is recorded in, a response's reported statuses, the MemberType map. Data, not patterns. */
+  "vote_values",
+  "response_statuses",
+  "member_types"
 ]);
+var DATA_VOCABULARY = Object.freeze({
+  vote_values: ["value", "label", "citation", "basis"],
+  response_statuses: ["status", "label", "citation", "basis"],
+  member_types: ["member_type", "capacity", "organisation", "basis"]
+});
+var MEMBER_CAPACITIES = Object.freeze(["elected", "appointed"]);
 var LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
 var COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
 var SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);

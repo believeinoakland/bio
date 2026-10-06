@@ -735,7 +735,7 @@ var ASK_PLANE_OPS = Object.freeze({
 });
 
 // ../bio-plane/src/record-grammar/ids.mjs
-var row = (prefix, owner, form = "sequential") => Object.freeze({ prefix, owner, form });
+var row = (prefix, owner, form = "sequential", legacy) => Object.freeze(legacy ? { prefix, owner, form, legacy } : { prefix, owner, form });
 var ID_TABLE = Object.freeze([
   /* R1's bundle prefixes, each with the module whose record it names. */
   row("INFO", "capture"),
@@ -792,15 +792,24 @@ var ID_TABLE = Object.freeze([
   row("MSR", "money"),
   row("HYP", "hypotheses"),
   row("DUT", "duties"),
-  row("CALC", "calculations"),
+  /* T34-1 (N570, K1576; DEC-36's withheld-as-absent): `CALC` is opaque, as `EVT` and `MNY` are. A sequential counter
+     told its reader how many calculations had been minted before it, withheld ones included, which is exactly what
+     withheld-as-absent forbids a reader to learn. Its row carries `legacy: 'sequential'` (K1728), the form still READ
+     as valid and never minted, as `STATES`' `legacy` states are read and never a destination: a copy on 0.80.0 holds
+     calculations minted sequentially, and every reader keeps reading them through `idPattern`. Minting follows `form`
+     alone (record-core). */
+  row("CALC", "calculations", "opaque", "sequential"),
   row("STQ", "answers")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
-var FORM = new Map(ID_TABLE.map((e) => [e.prefix, e.form]));
-var coreOf = (prefix) => `${prefix}-${YEAR}-${CORE[FORM.get(prefix)]}`;
+var ROW = new Map(ID_TABLE.map((e) => [e.prefix, e]));
+var coreOf = (prefix) => {
+  const { form, legacy } = ROW.get(prefix);
+  return `${prefix}-${YEAR}-${legacy ? `(?:${CORE[form]}|${CORE[legacy]})` : CORE[form]}`;
+};
 function idPattern(prefix) {
-  return typeof prefix === "string" && FORM.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
+  return typeof prefix === "string" && ROW.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
 }
 var HYP_RE = idPattern("HYP");
 var ID_PREFIXES = Object.freeze([
