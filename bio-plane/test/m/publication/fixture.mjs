@@ -17,7 +17,8 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { publicationOf, publicationOps, captureBlockLines, sourceBlockLines } from "../../../src/publication/index.mjs";
 import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
-import { materialsLines, materialAttestationLines, acceptedWorkBlockLines } from "../../../src/case-grammar/index.mjs";
+import { materialsLines, materialAttestationLines, acceptedWorkBlockLines, calculationsLines,
+         timelineLines } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -282,12 +283,14 @@ export function world({ group = "test-group", workerd = false, contradiction = n
  *  row's and sentence's fields written as given (a string quoted), `unread` ({target, legs}, K499) when given.
  *  `blocks`: `{captures?, sources?}`, R20's /5 blocks through `captureBlockLines` and
  *  `sourceBlockLines`. `materials`, `attestations`: /6's rows (case-grammar R12); `acceptedWork`, `acceptedWorkFlags`: its
- *  R16 rows, written when given. */
+ *  R16 rows, written when given. `calculations`, `timeline`: its R18 and R20 rows (T33), written with its line builders
+ *  when given. */
 export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findings = null, strength = [], excluded = [],
                                            attributions = null, citations = [], tensions = null, format = null,
                                            excludes = "Nothing else.", ack = false, blocks = null,
                                            method = { grading: "grading/1", checks: "1.0.0" }, materials = [],
-                                           attestations = [], acceptedWork = null, acceptedWorkFlags = null } = {}) {
+                                           attestations = [], acceptedWork = null, acceptedWorkFlags = null,
+                                           calculations = null, timeline = null } = {}) {
   format ??= "bio-case-document/6";
   const v6 = format === "bio-case-document/6" || format === "bio-case-document/7";
   const scalar = (v) => (v === null || v === undefined ? "null" : typeof v === "string" ? `"${v}"` : String(v));
@@ -324,6 +327,8 @@ export function caseDoc(caseId, edition, { project = "PROJ-1", roles = [], findi
     ...(v6 ? materialsLines(materials) : []),
     ...(v6 ? materialAttestationLines(attestations) : []),
     ...(acceptedWork || acceptedWorkFlags ? acceptedWorkBlockLines({ rows: acceptedWork || [], flags: acceptedWorkFlags || [] }) : []),
+    ...(calculations ? calculationsLines(calculations) : []),
+    ...(timeline ? timelineLines(timeline) : []),
     "---"];
   const body = ["", "## Scope", "", "The question.", "",
     ...(ack ? ["**Who else read this statement.** Nobody yet.", ""] : []),
