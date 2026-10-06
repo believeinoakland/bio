@@ -34,8 +34,8 @@ import { contentOf } from "../content/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { combine as combineProfiles, SPACES } from "../../../jurisdictions/index.mjs";
 import { CALCULATIONS_TABLES, migrateCalculations } from "./schema.mjs";
-import { TABLE_MAX_BYTES, TABLE_MAX_CELLS, MONEY_ROLES, parseCsv, canonicalCsv, utf8, shaOf, schemaFault,
-  readHeader, rolesFault, vintageFault, shapeRows, asGrammarTable } from "./tables.mjs";
+import { TABLE_MAX_BYTES, TABLE_MAX_CELLS, MONEY_ROLES, scanCsv, shaOf, schemaFault, readHeader, rolesFault,
+  vintageFault, tableBuilder, asGrammarTable } from "./tables.mjs";
 import { PATTERNS, GATE_MAX_RATE, runPattern } from "./patterns.mjs";
 
 export { CALCULATIONS_SCHEMA, CALCULATIONS_TABLES } from "./schema.mjs";
@@ -239,10 +239,8 @@ export class Calculations {
       } catch { text = null; }
     }
     if (typeof text !== "string") return { fault: "the source's text is not held: the passage was not read, or its capture's bytes are not in the evidence store" };
-    if (utf8(text).byteLength > TABLE_MAX_BYTES * 2) return { tooLarge: true };
-    const p = parseCsv(text);
-    if (p.error) return { fault: `the source does not read as CSV: ${p.error}` };
-    return { rows: p.rows };
+    if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: true };
+    return { text };
   }
 
   /** R1–R3: `declareTable({source, schema, header, roles?, vintage?, by})`. `source` is a content id (a CSV
@@ -277,15 +275,20 @@ export class Calculations {
     const src = await this.#sourceRows(row);
     if (src.tooLarge) return no("TABLE_TOO_LARGE", `the source is over the bound of ${TABLE_MAX_BYTES} bytes (20 MiB). Nothing was written.`, { bound: "bytes", max: TABLE_MAX_BYTES });
     if (src.fault) return no("SOURCE_NOT_READ", `${src.fault}. Nothing was written.`, { content_id: contentId });
-    const cells = src.rows.reduce((n, r) => n + r.length, 0);
-    if (cells > TABLE_MAX_CELLS) return no("TABLE_TOO_LARGE", `the source holds ${cells} cells, over the bound of ${TABLE_MAX_CELLS}. Nothing was written.`, { bound: "cells", max: TABLE_MAX_CELLS });
-    const shaped = shapeRows(src.rows, names, schema.fields);
-    if (shaped.fault) return no("BAD_SCHEMA", `the source does not fit the declared header: ${shaped.fault.why}. Nothing was written.`, { field: shaped.fault.field });
-    if (shaped.rows.length * names.length > TABLE_MAX_CELLS) return no("TABLE_TOO_LARGE", `the table holds over ${TABLE_MAX_CELLS} cells. Nothing was written.`, { bound: "cells", max: TABLE_MAX_CELLS });
-    const text = canonicalCsv(names, shaped.rows);
-    const bytes = utf8(text);
-    if (bytes.byteLength > TABLE_MAX_BYTES) return no("TABLE_TOO_LARGE", `the canonical table is ${bytes.byteLength} bytes, over the bound of ${TABLE_MAX_BYTES} (20 MiB). Nothing was written.`, { bound: "bytes", max: TABLE_MAX_BYTES });
-    const tableSha = shaOf(text);
+    const tb = tableBuilder(names, schema.fields);
+    if (src.rows) for (const r of src.rows) tb.push(r);
+    else {
+      const sc = scanCsv(src.text, (r) => tb.push(r));
+      src.text = null;
+      if (sc.error) return no("SOURCE_NOT_READ", `the source does not read as CSV: ${sc.error}. Nothing was written.`, { content_id: contentId });
+    }
+    const built = tb.finish();
+    if (built.fault) return no("BAD_SCHEMA", `the source does not fit the declared header: ${built.fault.why}. Nothing was written.`, { field: built.fault.field });
+    if (built.tooLarge) return no("TABLE_TOO_LARGE", built.tooLarge.bound === "cells"
+      ? `the table holds over ${TABLE_MAX_CELLS} cells, the bound. Nothing was written.`
+      : `the canonical table is over ${TABLE_MAX_BYTES} bytes (20 MiB), the bound. Nothing was written.`, { bound: built.tooLarge.bound, max: built.tooLarge.max });
+    const bytes = built.bytes;
+    const tableSha = built.sha;
     const held = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
     if (held) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
     const ev = this.record.evidenceStore();
@@ -299,7 +302,7 @@ export class Calculations {
                      VALUES (?,?,?,?,?,?,?,?,NULL,?,?,?,?,?,?)`,
         tableSha, row.bundle_id ?? null, json({ content_id: contentId, capture_sha: row.capture_sha, extent_kind: row.extent_kind }),
         json(schema), json(names), roles ? json(roles) : null, vintage ? vintage.key.trim() : null, vintage ? json(vintage) : null,
-        shaped.rows.length, bytes.byteLength, json(shaped.undetermined), shaped.count, by, at);
+        built.rows, bytes.byteLength, json(built.undetermined), built.count, by, at);
       if (superseded) {
         this.sql.exec(`UPDATE calc_tables SET superseded_by=? WHERE sha=? AND superseded_by IS NULL`, tableSha, superseded);
         this.#stale(superseded, "table_superseded");
@@ -307,7 +310,6 @@ export class Calculations {
       return { ok: true };
     });
     if (!out.ok) return out;
-    this.#tableCache.set(tableSha, asGrammarTable(schema.fields, shaped.rows));
     return { ok: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
   }
 
@@ -335,10 +337,19 @@ export class Calculations {
       if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
     } catch { text = null; }
     if (typeof text !== "string" || shaOf(text) !== tableSha) return null;
-    const p = parseCsv(text);
-    if (p.error) return null;
     const fields = parse(r.schema_json).fields;
-    const t = asGrammarTable(fields, p.rows.slice(1).map((row) => fields.map((_, k) => row[k] ?? "")));
+    const names = fields.map((f) => f.name);
+    const rows = [];
+    let header = true;
+    const sc = scanCsv(text, (row) => {
+      if (header) { header = false; return; }
+      const o = {};
+      for (let k = 0; k < names.length; k++) o[names[k]] = row[k] ?? "";
+      rows.push(o);
+    });
+    text = null;
+    if (sc.error) return null;
+    const t = { ...asGrammarTable(fields, []), rows };
     this.#tableCache.set(tableSha, t);
     while (this.#tableCache.size > TABLE_CACHE) this.#tableCache.delete(this.#tableCache.keys().next().value);
     return t;
@@ -354,7 +365,15 @@ export class Calculations {
     const from = Math.max(0, Number.isInteger(Number(after)) ? Number(after) : 0);
     const t = await this.#grammarTable(r.sha);
     const header = parse(r.header_json);
+    const src = parse(r.source_json);
+    const crow = src ? this.content.contentRow(src.content_id) : null;
+    let cg = null;
+    try { cg = crow ? this.provenance.captureGrade(crow.capture_sha) : null; } catch { cg = null; }
+    const g = crow ? this.#contentGrade(crow) : { grade: null, why: "the table's source is not held" };
     return { ok: true, found: true, ...this.#tableAnswer(r),
+      table: { sha: r.sha, fields: parse(r.schema_json).fields, rows: t ? t.rows.map((x) => Object.fromEntries(header.map((h) => [h, String(x[h] ?? "")]))) : null,
+        grade_facts: { capture_grade: cg && isGrade(cg.grade) ? cg.grade : null, derivation: crow && isGrade(crow.derivation_cap) ? crow.derivation_cap : null,
+          grade: g.grade, why: g.why } },
       page: t ? { after: from, limit: lim, rows: t.rows.slice(from, from + lim).map((x) => header.map((h) => x[h])),
         truncated: from + lim < t.rows.length } : { rows: null, why: "the table's bytes are not held in the evidence store" } };
   }
@@ -735,7 +754,8 @@ export class Calculations {
     const e = evaluateRecipe(r, bound, opts);
     if (e.refused) return no(e.refused, `calc-grammar refused the recipe: ${e.why}${e.step ? ` (step ${e.step})` : ""}. Nothing was written.`, { step: e.step ?? null, ...(e.errors ? { errors: e.errors } : {}) });
     const counted = e.trace.filter((t) => t.undetermined.length).map((t) => ({ step: t.step, op: t.op, rows: t.undetermined.length, set_aside: t.undetermined.slice(0, 50) }));
-    const results = { output: e.result, undetermined_rows: e.undetermined_rows, counted_apart: counted,
+    const steps = Object.fromEntries(e.trace.map((t) => [t.step, t.step === r.output ? e.result : t.output]));
+    const results = { output: e.result, steps, undetermined_rows: e.undetermined_rows, counted_apart: counted,
       ...(b.apart.withdrawn.length && { withdrawn_apart: b.apart.withdrawn }),
       ...(b.apart.out_of_view.length && { out_of_view: b.apart.out_of_view }),
       ...(interfund.length && { interfund }),
@@ -764,6 +784,8 @@ export class Calculations {
       results.interval = { ...iv, confidence, frame_size: dr.frame_size, sample_size: dr.n, successes: x, seed: dr.seed,
         says: "an estimate over a recorded random draw, read as a mechanical draw, not the machine choosing what to look into" };
     }
+    const figures = Object.fromEntries(b.inputs.filter((d) => d.kind === "figure" || d.kind === "value").map((d) => [d.name, bound[d.name]]));
+    if (Object.keys(figures).length) results.inputs_bound = figures;
     const key = resultKey(r, hashes);
     return { ok: true, recipe: r, results, result_key: key, inputs: b.inputs, refs: b.refs, threshold: th.held ?? null };
   }
@@ -780,12 +802,13 @@ export class Calculations {
     if (!str(question)) return no("NO_QUESTION", "a calculation states the question it answers. Nothing was written.");
     const p = periodOf(period);
     if (!p) return no("NO_PERIOD", "a calculation states its period: {from, to}, each a date YYYY-MM-DD or null (not both), or a period key. Nothing was written.");
+    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer: by });
+    if (!c.ok) return c;
+    /* after R4's ordered refusals, the fields it adds: */
     if (project !== null && project !== undefined && (!str(project) || !this.#sees(project, by)))
       return no("NO_SUCH_PROJECT", "no project answers to that id here, or it is not one you may see. Nothing was written.", { project });
     if (evidences !== null && evidences !== undefined && !(Array.isArray(evidences) && evidences.every((x) => plain(x) && str(x.duty) && str(x.occurrence))))
       return no("BAD_EVIDENCES", "evidences name the duty occurrences a calculation measures, each {duty, occurrence}. Nothing was written.");
-    const c = await this.#compute({ kind, recipe, inputs, threshold, period: p, terms, viewer: by });
-    if (!c.ok) return c;
     const at = this.now();
     const year = at.slice(0, 4);
     let calcId = null;
@@ -959,7 +982,19 @@ export class Calculations {
     if (!str(calcId)) return no("NO_CALC", "a calculation is read by its id.");
     const c = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId));
     if (!c || !(await this.#visible(c, viewer))) return { ok: true, found: false, calc_id: str(calcId) };
-    return { ok: true, found: true, calc_id: c.calc_id, project: c.project, question: c.question, terms: parse(c.terms_json),
+    const results = parse(c.results_json);
+    const inputs = (parse(c.inputs_json) || []).map((i) => {
+      if (i.table !== undefined) return { name: i.name, kind: "table", sha: i.table };
+      if (i.figure !== undefined || i.value !== undefined) {
+        const step = (results && results.inputs_bound && results.inputs_bound[i.name]) || null;
+        return { name: i.name, kind: "figure", figure: step, ...(i.figure !== undefined ? { content_id: i.figure } : { as_read: i.value }) };
+      }
+      const kind = ["money", "calculation", "set", "draw"].find((k) => i[k] !== undefined);
+      return { name: i.name, kind, [kind]: i[kind] };
+    });
+    const calculation = { calc_id: c.calc_id, question: c.question, period: parse(c.period_json), recipe: parse(c.recipe_json),
+      method_version: c.method_version, result_key: c.result_key, inputs, results: results ? results.steps || {} : {} };
+    return { ok: true, found: true, calculation, calc_id: c.calc_id, project: c.project, question: c.question, terms: parse(c.terms_json),
       period: parse(c.period_json), kind: c.kind, inputs: parse(c.inputs_json), threshold: parse(c.threshold_json),
       evidences: parse(c.evidences_json), result_key: c.result_key, results: parse(c.results_json), computed_at: c.computed_at,
       method_version: c.method_version, method_note: c.method_note ?? null, recompute_status: c.recompute_status,
@@ -1052,7 +1087,11 @@ export class Calculations {
   /** R14: the binding money reads to check a machine-written fact's source (money R4). */
   bindingOf(key) {
     const b = typeof key === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, key) : null;
-    return b ? { adopted: true, binding: b.binding_key, table: b.table_sha, roles: parse(b.roles_json), adopted_by: b.adopted_by, adopted_at: b.adopted_at } : null;
+    if (!b) return null;
+    const t = this.#one(`SELECT source_json FROM calc_tables WHERE sha=?`, b.table_sha);
+    const src = t ? parse(t.source_json) : null;
+    return { adopted: true, binding: b.binding_key, table: b.table_sha, roles: parse(b.roles_json), capture_sha: src ? src.capture_sha ?? null : null,
+      adopted_by: b.adopted_by, adopted_at: b.adopted_at };
   }
 
   /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk. */

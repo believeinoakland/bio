@@ -84,6 +84,12 @@ test("R1 a table is held as canonical RFC 4180 UTF-8 CSV plus its schema, keyed 
   const read = await w.c.readTable({ sha: r.sha, viewer: V("carol") });
   assert.equal(read.found, true);
   assert.deepEqual(read.page.rows, [["Acme", "1,200.50", "2025-08-01"], ["Beta", "n/a", "2025-09-31"], ["Gamma, Inc.", "300", "2025-10-02"]], "held as written: n/a is not zero and the impossible date is not moved");
+  assert.deepEqual(read.table.fields, F, "the shape workbooks reads (K1563 (6))");
+  assert.deepEqual(read.table.rows[0], { vendor: "Acme", amount: "1,200.50", paid: "2025-08-01" });
+  assert.equal(read.table.grade_facts.capture_grade, "B");
+  assert.equal(read.table.grade_facts.grade, "B");
+  const absentTable = await w.c.readTable({ sha: "0".repeat(64), viewer: V("carol") });
+  assert.equal(absentTable.found, false);
   /* the same table from a source with a different line ending and no header row is the same table */
   const again = await w.c.declareTable({ source: w.csv("Acme,\"1,200.50\",2025-08-01\r\nBeta,n/a,2025-09-31\r\n\"Gamma, Inc.\",300,2025-10-02"), schema: { fields: F }, header: HEADER, by: V("bob") });
   assert.equal(again.sha, r.sha);

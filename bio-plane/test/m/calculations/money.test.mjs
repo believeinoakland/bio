@@ -88,6 +88,8 @@ test("R14 adoptBinding records a member's adoption of a table's money roles; ing
   assert.equal(b.ok, true);
   assert.equal(w.c.adoptBinding({ table: t.sha, roles: bindRoles, by: V("carol") }).already, true);
   assert.deepEqual(w.c.bindingOf(b.binding).adopted, true, "money reads the adoption (its R4)");
+  assert.equal(w.c.bindingOf(b.binding).capture_sha, t.source.capture_sha, "with the capture the table was read from (K1563 (6))");
+  assert.equal(w.c.bindingOf(b.binding).table, t.sha);
   assert.equal(w.c.bindingOf("nope"), null);
   /* ingestMoney's refusals */
   assert.equal(code(await w.c.ingestMoney({ binding: b.binding, rows: [0], by: MACHINE })), "MEMBER_ACT_ONLY", "only at a member's request");

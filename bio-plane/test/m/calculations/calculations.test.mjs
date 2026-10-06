@@ -65,6 +65,14 @@ test("R4 create records the calculation with its question, terms, period, inputs
   assert.deepEqual(read.inputs, good.inputs);
   assert.deepEqual(read.grade.method.recipe, SUM);
   assert.equal(read.results.output.undetermined, true, "one amount reads as no figure, so the total is undetermined");
+  assert.deepEqual(read.calculation, { calc_id: r.calc_id, question: good.question, period: PERIOD, recipe: SUM, method_version: METHOD,
+    result_key: r.result_key, inputs: [{ name: "t", kind: "table", sha: t.sha }], results: { total: read.results.output } }, "the shape workbooks reads (K1563 (6))");
+  const fig = w.passage("$12");
+  const withFig = await w.c.create({ ...good, kind: "difference", inputs: [...good.inputs, { name: "k", figure: fig }],
+    recipe: R([{ op: "sum", from: "t", field: "amount", as: "s" }, { op: "round", of: "k", places: 0, mode: "half_even", as: "k0" }], "k0", [{ name: "t", kind: "table" }, { name: "k", kind: "figure" }]) });
+  const rf = await w.c.read({ calcId: withFig.calc_id, viewer: V("bob") });
+  assert.deepEqual(rf.calculation.inputs[1], { name: "k", kind: "figure", figure: { value: "12", sign: "+", precision: "exact", currency: "USD" }, content_id: fig });
+  assert.deepEqual(Object.keys(rf.calculation.results), ["s", "k0"]);
   const n = w.rows(`SELECT * FROM calc_inputs WHERE calc_id=?`, r.calc_id);
   assert.deepEqual(n.map((x) => [x.input_name, x.input_kind, x.ref]), [["t", "table", t.sha]]);
   assert.equal(code(await w.c.create({ ...good, project: "PROJ-2026-0099-none" })), "NO_SUCH_PROJECT");

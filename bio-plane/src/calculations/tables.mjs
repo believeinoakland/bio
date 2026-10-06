@@ -6,7 +6,7 @@
 
 import { FIELD_TYPES, parseFigure } from "../calc-grammar/index.mjs";
 import { isCalendarDate } from "../civil-time/index.mjs";
-import { sha256HexSync } from "../record-grammar/index.mjs";
+import { sha256HexSync, createSha256 } from "../record-grammar/index.mjs";
 
 /** R1: the bounds of a table, in bytes of canonical CSV and in cells. */
 export const TABLE_MAX_BYTES = 20 * 1024 * 1024;
@@ -32,42 +32,63 @@ const SHA = /^[0-9a-f]{64}$/;
 
 // ---- RFC 4180 ----
 
-/** Reads CSV text into rows of strings (RFC 4180: quoted fields, doubled quotes, CRLF or LF line ends, a leading BOM
- *  dropped). `{rows}` or `{error}` naming the first fault. Never throws. */
-export function parseCsv(text) {
+/** Reads CSV text row by row (RFC 4180: quoted fields, doubled quotes, CRLF or LF line ends, a leading BOM dropped),
+ *  handing each row, a list of strings, to `onRow` as it is read, so a large table is never held twice. `{rows}` (the
+ *  count) or `{error}` naming the first fault. Never throws, unless `onRow` does. */
+export function scanCsv(text, onRow) {
   if (typeof text !== "string") return { error: "the source is not text" };
-  let s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-  const rows = [];
-  let row = [], field = "", i = 0, quoted = false, started = false;
-  const endField = () => { row.push(field); field = ""; started = false; };
-  const endRow = () => { endField(); rows.push(row); row = []; };
-  while (i < s.length) {
-    const c = s[i];
-    if (quoted) {
-      if (c === '"') {
-        if (s[i + 1] === '"') { field += '"'; i += 2; continue; }
-        quoted = false; i++;
-        if (i < s.length && s[i] !== "," && s[i] !== "\n" && s[i] !== "\r")
-          return { error: `a quoted field on line ${rows.length + 1} is followed by text before its separator` };
-        continue;
+  const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+  const n = s.length;
+  let i = 0, count = 0, row = [];
+  if (!n) return { rows: 0 };
+  for (;;) {
+    let field;
+    if (s.charCodeAt(i) === 34) {
+      const parts = [];
+      let j = i + 1;
+      for (;;) {
+        const q = s.indexOf('"', j);
+        if (q < 0) return { error: "a quoted field is not closed" };
+        parts.push(s.slice(j, q));
+        if (s.charCodeAt(q + 1) === 34) { parts.push('"'); j = q + 2; continue; }
+        i = q + 1;
+        break;
       }
-      field += c; i++; continue;
+      field = parts.join("");
+      const c = s.charCodeAt(i);
+      if (i < n && c !== 44 && c !== 10 && c !== 13)
+        return { error: `a quoted field on line ${count + 1} is followed by text before its separator` };
+    } else {
+      let j = i;
+      while (j < n) {
+        const c = s.charCodeAt(j);
+        if (c === 44 || c === 10 || c === 13) break;
+        if (c === 34) return { error: `a quote opens inside an unquoted field on line ${count + 1}` };
+        j++;
+      }
+      field = s.slice(i, j);
+      i = j;
     }
-    if (c === '"') {
-      if (started || field.length) return { error: `a quote opens inside an unquoted field on line ${rows.length + 1}` };
-      quoted = true; started = true; i++; continue;
-    }
-    if (c === ",") { endField(); i++; continue; }
-    if (c === "\r" || c === "\n") {
-      endRow();
-      i += c === "\r" && s[i + 1] === "\n" ? 2 : 1;
+    row.push(field);
+    if (i >= n) { onRow(row); return { rows: count + 1 }; }
+    if (s.charCodeAt(i) === 44) {
+      i++;
+      if (i >= n) { row.push(""); onRow(row); return { rows: count + 1 }; }
       continue;
     }
-    field += c; started = true; i++;
+    i += s.charCodeAt(i) === 13 && s.charCodeAt(i + 1) === 10 ? 2 : 1;
+    onRow(row);
+    count++;
+    row = [];
+    if (i >= n) return { rows: count };
   }
-  if (quoted) return { error: "a quoted field is not closed" };
-  if (field.length || started || row.length) endRow();
-  return { rows };
+}
+
+/** Reads CSV text into rows of strings (`scanCsv`, every row kept). `{rows}` or `{error}`. Never throws. */
+export function parseCsv(text) {
+  const rows = [];
+  const r = scanCsv(text, (row) => rows.push(row));
+  return r.error ? r : { rows };
 }
 
 const needsQuote = (v) => /[",\r\n]/.test(v);
@@ -80,7 +101,6 @@ export function canonicalCsv(header, rows) {
   return `${lines.join("\r\n")}\r\n`;
 }
 
-export const utf8 = (s) => new TextEncoder().encode(s);
 export const shaOf = (text) => sha256HexSync(text);
 
 // ---- the schema ----
@@ -188,37 +208,82 @@ export function cellFault(field, raw) {
   }
 }
 
-/** R1: from the source's rows, the table: the header row dropped when it repeats the declared header; each row
- *  padded with empty cells to the header's width; the cells that do not read as their types listed. `{rows,
- *  undetermined, count}` or `{fault}`. */
-export function shapeRows(sourceRows, header, fields) {
-  const same = (r) => r.length >= header.length && header.every((h, i) => String(r[i] ?? "").trim() === h)
-    && r.slice(header.length).every((x) => String(x ?? "").trim() === "");
-  const body = sourceRows.length && same(sourceRows[0]) ? sourceRows.slice(1) : sourceRows.slice();
-  while (body.length && body[body.length - 1].every((x) => String(x ?? "").trim() === "")) body.pop();
-  const rows = [];
+/** R1: the table built row by row from the source's rows (`push`), then `finish()`: the header row dropped when it
+ *  repeats the declared header; each row padded with empty cells to the header's width; trailing empty rows dropped;
+ *  the cells that do not read as their types listed; the canonical bytes (`canonicalCsv`'s, line by line) and their
+ *  SHA-256, made as the rows arrive so the rows are never held whole. `finish()` answers `{bytes, sha, rows,
+ *  undetermined, count}`, or `{fault}` / `{tooLarge}`. */
+export function tableBuilder(header, fields, { maxCells = TABLE_MAX_CELLS, maxBytes = TABLE_MAX_BYTES } = {}) {
+  const enc = new TextEncoder();
+  const hash = createSha256();
+  const chunks = [];
+  let lines = [], size = 0, rows = 0, cells = 0, count = 0, first = true, fault = null, tooLarge = null, blank = [];
   const undetermined = [];
-  let count = 0;
-  for (let i = 0; i < body.length; i++) {
-    const r = body[i].map((x) => (x === null || x === undefined ? "" : String(x)));
-    if (r.length > header.length && r.slice(header.length).some((x) => x.trim() !== ""))
-      return { fault: { field: null, why: `data row ${i + 1} has ${r.length} cells, and the header ${header.length}` } };
-    const row = header.map((_, k) => r[k] ?? "");
-    fields.forEach((f, k) => {
-      const why = cellFault(f, row[k]);
-      if (why) {
-        count++;
-        if (undetermined.length < UNDETERMINED_LISTED) undetermined.push({ row: i, column: f.name, why });
+  const width = header.length;
+  const flush = () => {
+    if (!lines.length) return;
+    const b = enc.encode(lines.join(""));
+    lines = [];
+    hash.update(b);
+    chunks.push(b);
+    size += b.byteLength;
+    if (size > maxBytes && !tooLarge) tooLarge = { bound: "bytes", max: maxBytes, got: size };
+  };
+  const line = (r) => { lines.push(`${r.map((v) => csvField(v)).join(",")}\r\n`); if (lines.length >= 4096) flush(); };
+  line(header);
+  const take = (r) => {
+    if (r.length > width && r.slice(width).some((x) => x.trim() !== "")) {
+      fault = fault || { field: null, why: `data row ${rows + 1} has ${r.length} cells, and the header ${width}` };
+      return;
+    }
+    const row = new Array(width);
+    for (let k = 0; k < width; k++) row[k] = r[k] ?? "";
+    for (let k = 0; k < width; k++) {
+      const why = cellFault(fields[k], row[k]);
+      if (why) { count++; if (undetermined.length < UNDETERMINED_LISTED) undetermined.push({ row: rows, column: fields[k].name, why }); }
+    }
+    cells += width;
+    if (cells > maxCells && !tooLarge) tooLarge = { bound: "cells", max: maxCells, got: cells };
+    line(row);
+    rows++;
+  };
+  return {
+    push(raw) {
+      if (fault || tooLarge) return;
+      const r = raw.map((x) => (x === null || x === undefined ? "" : String(x)));
+      if (first) {
+        first = false;
+        const same = r.length >= width && header.every((h, i) => r[i].trim() === h) && r.slice(width).every((x) => x.trim() === "");
+        if (same) return;
       }
-    });
-    rows.push(row);
-  }
-  return { rows, undetermined, count };
+      if (r.every((x) => x.trim() === "")) { blank.push(r); return; }
+      for (const b of blank) take(b);
+      blank = [];
+      take(r);
+    },
+    finish() {
+      if (fault) return { fault };
+      flush();
+      if (tooLarge) return { tooLarge };
+      const bytes = new Uint8Array(size);
+      let at = 0;
+      for (const c of chunks) { bytes.set(c, at); at += c.byteLength; }
+      chunks.length = 0;
+      return { bytes, sha: hash.hex(), rows, undetermined, count };
+    },
+  };
 }
 
 /** A held table's rows as calc-grammar reads a table: `{fields, rows: [{<name>: cell}]}`. */
-export function asGrammarTable(fields, rows) {
+export function asGrammarTable(fields, rows, from = 0) {
+  const names = fields.map((f) => f.name);
+  const out = new Array(Math.max(0, rows.length - from));
+  for (let i = from; i < rows.length; i++) {
+    const r = rows[i], o = {};
+    for (let k = 0; k < names.length; k++) o[names[k]] = r[k] ?? "";
+    out[i - from] = o;
+    rows[i] = null;   /* each source row is let go as its object is made, so the two are never held whole at once */
+  }
   return { fields: fields.map((f) => ({ name: f.name, type: f.type, ...(f.unit && { unit: f.unit }),
-    ...(f.currency && { currency: f.currency }), ...(f.zone && { zone: f.zone }) })),
-    rows: rows.map((r) => Object.fromEntries(fields.map((f, k) => [f.name, r[k]]))) };
+    ...(f.currency && { currency: f.currency }), ...(f.zone && { zone: f.zone }) })), rows: out };
 }
