@@ -3,7 +3,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, V } from "../answers/fixture.mjs";
-import { producers, reader, ofKind, sentences } from "./fixture.mjs";
+import { producers, reader, ofKind, sentences, notHintFailures } from "./fixture.mjs";
+import { HINT_MARK, NoticeProducers } from "../../../src/notice-producers/index.mjs";
 
 const BOB = V("bob");
 const KIND = "standing-answer";
@@ -56,7 +57,7 @@ test("R4: the detail names the new finds and the answer as answers holds it, or 
   const it = ofKind(read("bob", { now: w.clock.now }), KIND)[0];
   assert.deepEqual(it.basis.held_back, { condition: "switch_off", switch: "copy" });
   assert.equal(it.basis.answer, null);
-  assert.match(it.detail, /did not answer, because the assistant's half of standing questions is switched off on this copy/);
+  assert.match(it.detail, /did not answer, because the assistant's half of standing questions is switched off in your group's Civicsmith/);
   for (const s of sentences(it)) assert.doesNotMatch(s, /\{|condition|switch_off/, s);
   /* an answer held is stated with it */
   const { NoticeProducers } = await import("../../../src/notice-producers/index.mjs");
@@ -85,4 +86,21 @@ test("R4: answers' pages are followed to their bound, and a cut is stated in fac
   assert.equal(asked, 5);
   assert.equal(ofKind(r, KIND).length, 1000);
   assert.deepEqual(r.facts.standing_answer, { bound: 1000, truncated: true });
+});
+
+test("R11: a standing answer is no hint: it carries no \"Hint · machine work\" mark and never calls itself a hint or a signal", async () => {
+  const { w, read } = await setup(1);
+  const items = ofKind(read("bob", { now: w.clock.now }), KIND);
+  assert.equal(items.length, 1);
+  assert.deepEqual(notHintFailures(items[0], HINT_MARK), []);
+});
+
+test("R4 (DEC-149, T34-87): what held the AI half back calls the group's Civicsmith \"your group's Civicsmith\", never this copy, plane, instance or server", () => {
+  /* index.mjs:357 and :360 as BOB's rows name them */
+  assert.equal(NoticeProducers.heldBackWords({ condition: "switch_off", switch: "copy" }),
+               "the assistant's half of standing questions is switched off in your group's Civicsmith");
+  assert.equal(NoticeProducers.heldBackWords({ condition: "not_deployed" }), "the assistant is not available in your group's Civicsmith");
+  for (const h of [null, {}, { condition: "switch_off", switch: "copy" }, { condition: "switch_off", switch: "member" }, { condition: "no_account" },
+                   { condition: "ceiling" }, { condition: "not_deployed" }, { condition: "other" }])
+    assert.doesNotMatch(NoticeProducers.heldBackWords(h), /\b(this (copy|instance|plane)|the plane|server)\b/i, JSON.stringify(h));
 });

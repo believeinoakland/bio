@@ -28,7 +28,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
   - each homed through `homesOf(subjectIds)` and carrying `options` from `optionsOf(subjectIds)`, both passed in by `queue-producers` R8 (`queue` R7's walk and R12's options);
   - no item carries `disposition` or `catalogue_id`.
 
-  It writes nothing. *(not yet met: T34)*
+  It writes nothing.
 
 **The producers**
 - **R2** (was `queue-producers` R3) CONDITIONs, derived on read and writing nothing:
@@ -39,13 +39,13 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
   - **archive-fallback-eligible**, per address `monitoring.archiveEligible` answers (its R47: what the next tick would find; K406 Q2).
   - **monitoring-recheck-due**, per monitored address that `monitoring({viewer})` (monitoring R32) answers overdue by more than its interval, or unscheduled (monitoring R16, R31) (N229).
 
-  *(not yet met: T34)*
+ 
 - **R3** (was `queue-producers` R22; DEC-95 (1); K1019) Each `capture-completed-unattended` item (R2) carries, in its detail, the grade note of each capture it names. These are the same words a member present at the capture would have read (`ACQUIRE_GRADE_NOTE`, exported by `capture`, as its R76 answers them).
   - A capture is named, and held, by its `register` row under the item's bundle (`provenance` R48). At most 8 are named, the option bound (as `queue-producers` R2's).
   - For a capture request, the capture is the request's own `capture_sha`.
   - A capture the viewer may not see carries no note.
 
-  K1105: `gradeNoteOf` is asynchronous and the read is not; reading synchronously is its answer. *(not yet met: T34)*
+  K1105: `gradeNoteOf` is asynchronous and the read is not; reading synchronously is its answer.
 - **R4** (was `queue-producers` R26; link-sweep R11, monitoring R63 before N506's split; K1036 (8)) CONDITIONs, one for each condition that `link-sweep.sweepConditions` answers the viewer:
   - the kinds are `sweep-held-backlog`, `sweep-yield-anomaly`, `sweep-seed-unreachable`, `sweep-redirect-out-of-scope` and `sweep-silent`;
   - each is keyed `CONDITION::<kind>::<bundle>#<id>`;
@@ -53,13 +53,13 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
   - its subject is the sweep's bundle, its `age` runs from `since`, and its `detail` comes from the condition;
   - it leaves when the condition leaves.
 
-  The items' words are the UX design stream's (NOTIFICATIONS.md item contract; `docs/development/ux-substrate/ux-experience.json` UC-035). *(not yet met: T34)*
+  The items' words are the UX design stream's (NOTIFICATIONS.md item contract; `docs/development/ux-substrate/ux-experience.json` UC-035).
 - **R5** (was `queue-producers` R27; `network-notices` R12, R13; DEC-111, K1031) CONDITIONs for the owners of a project with an open notice (`membership` R65):
   - `notice-attestation-missed`: a `monthly` attestation was missed for want of an instance key (`network-notices` R13). It leaves when one is issued;
   - `notice-lapse-near`: a lapse is due within 7 days. It leaves on a revision, a stop or the lapse;
   - `notice-project-closed`: the project closed while the notice was open. It leaves after 30 days, or on an owner's stop, which may add a handoff.
 
-  Each is keyed `CONDITION::<kind>::<notice>`. *(not yet met: T34)*
+  Each is keyed `CONDITION::<kind>::<notice>`.
 
 **The words members see** (DEC-107, DEC-131; H15, H19)
 - **R9** (copy of `queue-producers` R24, which stays) Every member-facing sentence this module answers calls a CONDITION item a "status", never a "condition" or a "signal".
@@ -67,7 +67,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
   - "signal" leaves member text (DEC-131).
   - The internal codes, kinds and item ids are unchanged (`CONDITION`, `CONDITION::…`).
 
-  *(not yet met: T34)*
+ 
 
 ## Private
 
@@ -88,10 +88,10 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 
 ### Invariants
 
-- **R6** (copy of `queue-producers` R11) No answer names a bundle the viewer may not see, and no count reveals one (REC-30, DEC-36). *(not yet met: T34)*
-- **R7** (copy of `queue-producers` R12) A CONDITION earns an item only where a member's act can change it (NOTIFICATIONS, the item contract). *(not yet met: T34)*
-- **R8** (copy of `queue-producers` R13) No place is named in this module's behaviour or outward text. *(not yet met: T34)*
-- **R10** (copy of `queue-producers` R36, its R27 share; C-3b; K1444 (iii)) Every day this module derives or compares is the local day in the zone, through `civil-time` (`localDay`, `span`), never the UTC day computed in this module. This covers R5's lapse and closing windows, and an item's `age` counted in days. The zone is `actions.zoneOf(actions.place())`. With no zone held, the day and the `age` are undetermined, stated, and never computed on UTC. *(not yet met: T34)*
+- **R6** (copy of `queue-producers` R11) No answer names a bundle the viewer may not see, and no count reveals one (REC-30, DEC-36).
+- **R7** (copy of `queue-producers` R12) A CONDITION earns an item only where a member's act can change it (NOTIFICATIONS, the item contract).
+- **R8** (copy of `queue-producers` R13) No place is named in this module's behaviour or outward text.
+- **R10** (copy of `queue-producers` R36, its R27 share; C-3b; K1444 (iii)) Every day this module derives or compares is the local day in the zone, through `civil-time` (`localDay`, `span`), never the UTC day computed in this module. This covers R5's lapse and closing windows, and an item's `age` counted in days. The zone is `actions.zoneOf(actions.place())`. With no zone held, the day and the `age` are undetermined, stated, and never computed on UTC.
 
 ### Satisfies
 
