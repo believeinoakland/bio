@@ -17,7 +17,30 @@
 
 **B3 (conformance merged, K1654):** tranche merged; `real.test.mjs` re-pointed at the real conformance's actor `entity_id` (bridge-filled and unfilled) and act event (R4, R29, R30). R29's draft now words a T33 act from its event (kind and `when`: a day, a span with precision and zone, on or before, placed nowhere, undetermined with why), a pre-T33 act keeping its description and date (structure.test.mjs R29).
 
-**Next:** after actions (T33-73) merges (B-CHANGE to come), re-point R12's real tests at its counterparty `entity_id`, then COMPLETE.
+**B4 (actions merged, K1657):** tranche merged. R6's clock trigger now passes the place to `actionFacts` (actions' `place()`, else the combined view), so a clock entry is past on the office's local day (and its close of business); the trigger's first-met instant is the earliest second actions' own rule answers overdue (not the UTC day after), and with no zone held the read notes the clock undetermined and never triggers on it (`stages.test.mjs` R6 re-pointed: Halifax, met from 2026-09-21T03:00Z). R29's "date passed without a response" reads each pending entry by `actions.actionOverdue` at the office's local day, saying undetermined where no zone is held (draft tests re-pointed). `real.test.mjs` R12 re-pointed at the real actions' `counterparty.entity_id` with the real lines on the host: refused by the profile's flag with no line, lands with an `oversees` line held, the read naming it and offering the office as a target.
+
+## Completion
+
+**Entries applied:** T33-76 whole: R4 (actor resolved to its office entity), R12 (oversight by `oversees`/`appoints` lines, one `part_of` hop, the profile flag as fallback; stage-7 targets offered), R30 (`registerEventSource` at start; the timeline source). With B3 and B4: real conformance's act event and actor entity, R29's act worded from its event, actions R12's local day in R6 and R29.
+
+**Deferred:** none.
+
+**Found in other modules:**
+- `events` R30: a source is called without the viewer, so escalation's "what we did" items are empty for members until N595 (K1649).
+- `monitoring` `understanding.test.mjs:480` R50 (deadlineRecheckDue) is red on the tranche with and without this job's change: actions' local-day rule (T33-73) moved the day an entry passes; monitoring's.
+- The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) is stale from this module's source change (§14, BOB's at the close).
+
+**Final uses:** record-grammar, jurisdictions, record-core, membership, promotion, conformance, consequences, actions, filings, action-grammar, entities, lines, events (as `modules.json`).
+
+**Tests and checks:**
+- escalation: `ℹ tests 61 · pass 61 · fail 0`
+- dependants: monitoring `pass 110 · fail 1` (R50, inherited from actions' merge, red without this change too); action-plans `pass 53 · fail 0`; actions `pass 87 · fail 0`; conformance `pass 64 · fail 0`
+- `format: 126 modules, 125 requirements files; 0 failures`
+- `architecture: 15 product files, 62 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 30 of 30 live requirement ids named by a test; 0 failures`
+- `ownership: 5 files changed by escalation between tranche/T33 and HEAD; 0 failures`
+
+Size (session_01ETyuL5PqrdR1iBsRpTxXn3): test runs 22, module lines 2101
 
 ## J1 · QUESTION
 

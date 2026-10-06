@@ -171,7 +171,9 @@ test("R29 over the real conformance, actions and consequences (their published s
   const held = x.w.c.determinationRead({ id: d.id, viewer: V("pat") });
   const row = held.standards[0].rows[0];
   const before = x.w.record.head(N).bundleSha;
-  const r = x.esc.escalationReasonDraft({ determination: d.id, nowMs: Date.parse("2026-10-11T00:00:00Z"), viewer: V("pat") });
+  /* actions R12 (T33-73): the date is past on the office's local day, which needs the zone of an active profile */
+  x.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
+  const r = x.esc.escalationReasonDraft({ determination: d.id, nowMs: Date.parse("2026-10-11T12:00:00Z"), viewer: V("pat") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   assert.deepEqual(r.parts.map((p) => p.id), [d.id, held.act.id, x.std, N, N, N, d.id]);
   assert.equal(r.parts[2].text, `Standard ${x.std} is breached: it requires "${row.requires}"; the act did "${row.did}" `
@@ -223,4 +225,57 @@ test("R4 R29 R30 over the real conformance: the actor's office entity, filled by
   assert.deepEqual(kinds([x.act]), [[o1.id, "open"], [o2.id, "open"]]);
   assert.deepEqual(kinds([x.act]).length, 2);
   assert.deepEqual(x.esc.timelineSource({ set: [x.act], viewer: V("quinn") }).items, [], "quinn, outside the project, sees none");
+});
+
+/* T33-76 over the real actions (T33-73, K1657): a stage-7 act addressed to an office by its `counterparty.entity_id`
+   (actions R9), the lines read through the real `lines` on the same host. */
+test("R12 over the real actions and conformance: an oversight request to an office the profile marks not an oversight body is refused with no line held, and lands once that office holds an oversees line to the actor's office entity on the day, the read naming the line; the stage-7 read offers that office as a target", () => {
+  const x = real();
+  x.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
+  const parks = x.w.entity("office", "Director of Parks");
+  x.w.offices.set("Director of Parks|Parks Department", parks);
+  const d = x.w.c.determine(x.input());
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const pat = { author: V("pat"), viewer: V("pat") };
+  const E = x.esc.escalationOpen({ reason: "Worth pursuing.", determination: d.id, ...pat }).id;
+  const go = (to) => { const r = x.esc.escalationAdvance({ id: E, to, reason: `to ${to}`, ...pat }); assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400)); };
+  let k = 0;
+  const make = (id, cp) => {
+    const md = ["---", `id: ${id}`, "object_type: action", `title: ${id}`, "current_state: planned",
+      'created: "2026-09-28T01:00:00Z"', 'last_updated: "2026-09-28T01:00:00Z"', "action_kind: other",
+      "counterparty:", "  state: named", `  role: ${cp.role}`, `  body: ${cp.body}`, ...(cp.entity_id ? [`  entity_id: ${cp.entity_id}`] : []),
+      "breach: true", "action_basis:", `  - target: ${d.id}`, "    kind: rests_on", "---", "", "An act.", ""].join("\n");
+    const r = x.w.promotion.promote({ bundleId: id, base: null, snapKey: `20260928T010000Z_000000e${++k}`, ...pat,
+      files: [{ path: "bundle.md", text: md }], meta: { object_type: "action" } });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+    return id;
+  };
+  go(2);
+  const N = make("ACTN-2026-0001-notice", { role: "Director of Parks", body: "Parks Department" });
+  assert.equal(x.esc.escalationAttach({ reason: "The notice.", id: E, action: N, ...pat }).ok, true);
+  x.esc.actions.actionCorrespond({ target: N, direction: "sent", at: "2026-09-02", account: "we wrote", ...pat });
+  go(3);
+  const reply = x.esc.actions.actionCorrespond({ target: N, direction: "received", at: "2026-09-12", account: "refused", ...pat });
+  go(4);
+  assert.equal(x.esc.escalationEvaluate({ id: E, response: { action: N, ord: reply.ord }, reading: "denied", reason: "Refused.", ...pat }).ok, true);
+  go(7);
+  /* the real lines on this host (reached by escalation's default), its tables laid down as the plane's start does */
+  x.esc.lines.migrate();
+  /* the harbour board: the profile marks it not an oversight body (oversight: false) */
+  const harbour = x.w.entity("office", "Harbour District Board");
+  const A = make("ACTN-2026-0002-oversight", { role: "Harbour District Board", body: "Port Ellery Harbour District", entity_id: harbour });
+  const held = x.esc.actions.actionRead({ id: A, viewer: V("pat") });
+  assert.equal(held.counterparty.entity_id, harbour, "actions R9 answers the office's entity");
+  const attach = () => x.esc.escalationAttach({ reason: "Ask the board to oversee.", id: E, action: A, purpose: "oversight_request",
+                                                standards: [x.std], ...pat });
+  assert.equal(attach().reason, "COUNTERPARTY_NOT_OVERSIGHT", "no line held: the profile's flag refuses");
+  const line = x.esc.lines.recordLine({ kind: "oversees", from: harbour, to: parks, valid: { from: "2020-01-01", to: "2030-12-31" },
+                                        basis: { statement: "the district's charter" }, by: V("pat") });
+  assert.equal(line.ok, true, JSON.stringify(line).slice(0, 300));
+  const r = attach();
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  const read = x.esc.escalationRead({ id: E, viewer: V("pat") });
+  const item = read.actions.find((a) => a.action === A);
+  assert.deepEqual([item.oversight.state, item.oversight.lines.map((l) => l.line.line_id)], ["held", [line.line_id]]);
+  assert.deepEqual(read.targets.offices.map((o) => [o.entity, o.line.line_id]), [[harbour, line.line_id]]);
 });

@@ -68,7 +68,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
-import { Actions, actionsOf, actionFacts, noSuchAction } from "../actions/index.mjs";
+import { Actions, actionsOf, actionFacts, actionOverdue, localToday, zoneOf, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, proposalLabel } from "../record-grammar/index.mjs";
@@ -144,6 +144,20 @@ const dayOf = (v) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.
 const quoted = (v) => `"${String(v).trim().replace(/\s*\n\s*/g, " ")}"`;
 /** R29, R17: who assembles the draft: the plane, a machine, so its label is `machine_proposed`. */
 const DRAFTED_BY = "system";
+
+/** R2, R6 (actions R12, T33-73): the instant a clock entry was first past, by actions' own rule at the office's local
+ *  day (and its close of business where the basis says so): the earliest second at which `actionFacts` answers it
+ *  overdue, found by halving between two days before its date and `nowMs`, so the age is a fact of the record. */
+function overdueSince(text, date, nowMs, place) {
+  const past = (t) => (actionFacts(text, t, place) || {}).clock_overdue === true;
+  let lo = Math.floor((instantMs(date) - 2 * DAY_MS) / 1000), hi = Math.ceil(nowMs / 1000);
+  if (past(lo * 1000)) return lo * 1000;
+  while (hi - lo > 1) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (past(mid * 1000)) hi = mid; else lo = mid;
+  }
+  return hi * 1000;
+}
 
 /** R29 (conformance R25, events R9): an act's event's `when` in words, as the record holds it: a day or instant, a span
  *  with its precision and zone, placed nowhere, or undetermined with why; never a guessed date. */
@@ -241,6 +255,12 @@ export class Escalation {
     const ids = this.record.getSetting("jurisdiction_profiles");
     const c = combine(Array.isArray(ids) ? ids : []);
     return c.ok ? c.view : null;
+  }
+
+  /* actions R12: the place its clock rule reads (actions' own `place()`, else the combined view), or null. */
+  #place() {
+    try { if (typeof this.actions.place === "function") return this.actions.place(); } catch { /* fall through */ }
+    return this.#view();
   }
 
   /* ===================================================================== *
@@ -342,6 +362,8 @@ export class Escalation {
         + `only by a live compliant determination of the same act for every standard pursued (escalationEnd)`
       : `no evaluation ${scope} reads denied, partial or none`);
 
+    /* actions R12 (T33-73): a clock entry is past on the office's local day, so its rule reads the place (the view) */
+    const place = e.stage === 3 ? this.#place() : null;
     if (e.stage === 1) {
       /* R4: the determination is live, and its act's actor is an office. */
       const d = this.conformance.determinationRead({ id: e.determination, viewer });
@@ -374,12 +396,16 @@ export class Escalation {
           if (reply) alts.push({ ms: Math.max(instantMs(s.entry.at), instantMs(reply.at)),
                                  ids: [a.action, `${a.action}#${s.entry.ord}`, `${a.action}#${reply.ord}`] });
         }
-        const facts = actionFacts(this.#text(a.action), nowMs) || {};
+        const facts = actionFacts(this.#text(a.action), nowMs, place) || {};
         if (!facts.clock_next)
           notes.push({ action: a.action, says: "this notification action has no pending clock entry, so stage 3 never "
                        + "triggers by time on it; a member states a clock entry, with its basis, on the action" });
         else if (facts.clock_overdue)
-          alts.push({ ms: instantMs(facts.clock_next) + DAY_MS, ids: [a.action], clock: facts.clock_next });
+          alts.push({ ms: overdueSince(this.#text(a.action), facts.clock_next, nowMs, place), ids: [a.action], clock: facts.clock_next });
+        else if (facts.clock_overdue === null)
+          notes.push({ action: a.action, says: "whether this action's clock entry is past is undetermined (actions R12: no "
+                       + "time zone is held for the office's local day, or the entry's day cannot be read), so stage 3 is "
+                       + "not triggered by time on it" });
       }
       edge(4, alts, acts.length ? "no reply or no-response entry follows the sent entry, and no clock entry is past"
                                 : "no notification action is attached at stage 2");
@@ -1324,7 +1350,9 @@ export class Escalation {
     const listed = this.#actionsResting(D, viewer);
     if (!listed) say(D, "The actions resting on the determination could not be read (undetermined).");
     else {
-      const today = new Date(at).toISOString().slice(0, 10);
+      /* actions R12 (T33-73): the office's local day, through actions' own rule and zone */
+      const place = this.#place();
+      const today = localToday(at, zoneOf(place));
       let shown = 0;
       for (const id of listed) {
         const a = this.actions.actionRead({ id, viewer, now: at });
@@ -1342,9 +1370,17 @@ export class Escalation {
           say(id, `Action ${id}'s clock entry ${what ? quoted(what) : "(its text undetermined)"} is due `
             + `${date ?? "on a date the record does not state (undetermined)"}, on the basis `
             + `${str(c.basis) ? quoted(c.basis) : "the record does not state (undetermined)"}, ${str(c.status) || "its status undetermined"}.`);
-          /* actions R12's rule: a pending entry is past once the UTC day after its date has begun. */
-          if (c.status === "pending" && date && date < today)
-            say(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today}.`);
+          /* actions R12's rule, entry by entry: past once the office's local day after it has begun (or its close of
+             business, where the basis says so); undetermined, and said, where no zone is held. */
+          if (c.status === "pending" && date) {
+            let past = null;
+            try { past = actionOverdue({ counterparty: a.counterparty, clock: [c] }, at, place); } catch { past = null; }
+            if (past === true)
+              say(id, `The date ${date} on action ${id} passed without a response: the entry is still pending on ${today ?? "the day of reading"}.`);
+            else if (past === null)
+              say(id, `Whether the date ${date} on action ${id} has passed is undetermined: no time zone is held for the `
+                + "office's local day.");
+          }
         }
       }
       if (!shown) say(D, "No action resting on the determination is recorded.");
