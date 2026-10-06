@@ -17,6 +17,11 @@
 
 Size (session_0126RaWsKDwYb2AVQaFGQ3gF): test runs 2, module lines 1597
 
+
+**CHANGE B2 (K1737), re-opened and completed again.** The seam test registers doctypes' seven types through `registerDoctypes(registerDoctype)` before the roster types, since docprofile registers none by default (T34-8). `doctypes` added to `uses` by BOB (B3, K1738). After merging tranche/T34 (`f71f6d929a`, docprofile merged): tests 22, pass 22, fail 0; format `126 modules, 125 requirements files; 0 failures`; architecture `15 product files, 31 relative imports (0 naming no tracked file, not judged); 0 failures`; coverage `12 of 12 live requirement ids named by a test; 0 failures`; ownership `2 files changed by roster-reader between tranche/T34 and HEAD; 0 failures`. Final `uses`: docprofile, doctypes (tests).
+
+Size (session_0126RaWsKDwYb2AVQaFGQ3gF): test runs 4, module lines 1599
+
 ## J1 · QUESTION
 
 R12, two readings I am building on (carrying on meanwhile):
