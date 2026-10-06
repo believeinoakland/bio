@@ -144,7 +144,7 @@ export async function release({ version, src = CAPABLE_SRC, members = FLEET_BIND
     services: member === "agent-worker" ? [{ binding: "PLANE", service: "bio-plane" }] : [],
     parts: member === "ocr-worker" ? [{ path: "assets/x.wasm", type: badType === member ? "Mystery" : "CompiledWasm",
       sha256: await sha(WASM), bytes: WASM.length }]
-      : member === RUNNER ? [{ path: "container.json", type: "Container", sha256: await sha(boxText), bytes: boxText.length }] : [] });
+      : member === RUNNER && container ? [{ path: "container.json", type: "Container", sha256: await sha(boxText), bytes: boxText.length }] : [] });
   if (container && !members.includes(RUNNER)) members = [...members, RUNNER];
   const list = await Promise.all(members.map(entry));
   const plane = { sha256: planeSha, bytes: src.length, asset: "bio-plane.bundled.mjs" };

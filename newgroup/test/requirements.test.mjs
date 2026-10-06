@@ -313,7 +313,7 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
   const full = seen(await run({ slug: "fleet-all", rel: await release({ version: NEXT }) }));
   for (const member of MEMBERS) assert.ok(full.acct.has(member), member);
   assert.deepEqual(full.acct.get("agent-worker").find((b) => b.name === "PLANE"), { type: "service", name: "PLANE", service: "fleet-all" });
-  assert.match(full.page.label("fleet"), /All 3 capability workers installed and verified/);
+  assert.match(full.page.label("fleet"), new RegExp(`All ${MEMBERS.length} capability workers installed and verified`));
   const noneOf = async (why, opts, says, runOpts = {}) => {
     const w = seen(await run({ slug: "fleet-" + why, rel: opts && await release({ version: NEXT, ...opts }), ...runOpts }));
     for (const member of MEMBERS) assert.ok(!w.acct.has(member), `${why}: ${member} not installed`);
@@ -337,14 +337,15 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
   const bytes = seen(await run({ slug: "fleet-hash", rel: await release({ version: NEXT, tamper: "pdf-worker", missing: "agent-worker" }) }));
   assert.ok(!bytes.acct.has("pdf-worker") && !bytes.acct.has("agent-worker") && bytes.acct.has("ocr-worker"));
   const said = bytes.page.label("fleet");
-  assert.match(said, /^1 capability worker\(s\) installed \(ocr-worker\); 2 left out: /);
+  const rest = MEMBERS.filter((m) => m !== "pdf-worker" && m !== "agent-worker");
+  assert.ok(said.startsWith(`${rest.length} capability worker(s) installed (${rest.join(", ")}); 2 left out: `), said);
   assert.ok(said.includes("pdf-worker (pdf-worker failed its integrity check)") && said.includes("agent-worker (agent-worker http 404)"), said);
   assert.ok(bytes.page.done, "the install never fails over a member");
   /* T33-91: sheet-worker installs as any member (inactive until the release that activates it, K1506); a container
      member is R38's. */
-  const sheet = seen(await run({ slug: "fleet-sheet", rel: await release({ version: NEXT, members: [...MEMBERS, "sheet-worker"] }) }));
+  const sheet = seen(await run({ slug: "fleet-sheet", rel: await release({ version: NEXT, members: [...new Set([...MEMBERS, "sheet-worker"])] }) }));
   assert.ok(sheet.acct.has("sheet-worker"));
-  assert.match(sheet.page.label("fleet"), /All 4 capability workers installed and verified: .*sheet-worker/);
+  assert.match(sheet.page.label("fleet"), new RegExp(`All ${new Set([...MEMBERS, "sheet-worker"]).size} capability workers installed and verified: .*sheet-worker`));
   const ocr = full.calls.find((c) => c.method === "PUT" && c.u.endsWith("/scripts/ocr-worker"));
   assert.equal(ocr.init.body.get("assets/x.wasm").type, "application/wasm", "a part is uploaded under its stated type");
   restoreSigners();
@@ -357,7 +358,7 @@ test("R12 `bind`: the plane bound first to the members already present, then the
   const targets = (bindings) => Object.fromEntries(BINDINGS.map((b) => [b, (bindings || []).find((x) => x.name === b)?.service ?? null]));
   const fresh = seen(await run({ slug: "bind-fresh", rel }));
   assert.equal(fresh.planePuts.length, 2);
-  assert.deepEqual(targets(fresh.planePuts[0].bindings), { AGENT_WORKER: null, PDF_WORKER: null, OCR_WORKER: null }, "act 1: none present");
+  assert.deepEqual(targets(fresh.planePuts[0].bindings), Object.fromEntries(BINDINGS.map((b) => [b, null])), "act 1: none present");
   assert.deepEqual(targets(fresh.planePuts[1].bindings), RIGHT, "act 3: every member");
   assert.deepEqual(fresh.refused, [], "never a binding to a worker not yet there");
   const puts = fresh.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u) && !c.u.endsWith("bio-plan-probe"))
@@ -445,7 +446,7 @@ test("R15 `verify`: op=selftest with the probe credential up to ten tries; a cap
   restoreSigners();
 });
 
-test("R16 the final panel shows the address, the one-time password and the member and probe credentials once; never DAEMON_TOKEN, INSTANCE_AI_TOKEN or the Cloudflare token; it hands over with the one-time password in the fragment", async () => {
+test("R16 the final panel shows the address, the one-time password and the member and probe credentials once; never DAEMON_TOKEN, ACCOUNT_SEAL_SECRET, INSTANCE_AI_TOKEN or the Cloudflare token; it hands over with the one-time password in the fragment", async () => {
   const AI = "aik-" + "c".repeat(24);
   const w = seen(await run({ slug: "panel", ai: AI }));
   const s = Object.fromEntries(secretsOf(w.planePuts[0]).map((b) => [b.name, b.text]));
@@ -453,7 +454,8 @@ test("R16 the final panel shows the address, the one-time password and the membe
   assert.equal(count(w.raw, s.ADMIN_TOKEN), 1);
   assert.equal(count(w.raw, s.MEMBER_TOKEN), 1);
   assert.equal(count(w.raw, s.PROBE_TOKEN), 1);
-  for (const hidden of [s.DAEMON_TOKEN, s.INSTANCE_AI_TOKEN, TOK]) assert.equal(w.raw.includes(hidden), false);
+  for (const hidden of [s.DAEMON_TOKEN, s.ACCOUNT_SEAL_SECRET, s.INSTANCE_AI_TOKEN, TOK]) assert.equal(w.raw.includes(hidden), false);
+  assert.equal(typeof s.ACCOUNT_SEAL_SECRET, "string", "the seal secret was bound (K1541)");
   assert.match(w.page.done, /id="out-url">https:\/\/panel\.grp\.workers\.dev</);
   assert.match(w.page.done, /id="out-boot">/);
   assert.match(w.page.done, /<button id="handover" data-url="https:\/\/panel\.grp\.workers\.dev\/">/);
@@ -532,7 +534,7 @@ test("R17 the update: no script refused unchanged; buckets where possible; the r
   armWith(SIGNER.line);
   const fl = seen(await run({ slug: "upd-fleet", mode: "update", pre: { "upd-fleet": planeBase("upd-fleet") }, rel: await release({ version: NEXT }) }));
   for (const member of MEMBERS) assert.ok(fl.acct.has(member), member);
-  assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => BINDINGS.includes(b.name)).length, 3);
+  assert.deepEqual(fl.planePuts.at(-1).bindings.filter((b) => BINDINGS.includes(b.name)).length, BINDINGS.length);
   assert.equal(fl.page.status("verify"), "ok");
   assert.match(fl.page.done, /Every part of your copy answers/);
   restoreSigners();
@@ -644,7 +646,7 @@ test("R20 the plane's limits are read from the signed release R8 chose and sent 
   const keys = Object.keys(rel.manifest).sort();
   assert.deepEqual(keys, ["asset", "bytes", "fleet", "fleetSig", "sha256", "sig", "version"]);
   const w = seen(await run({ slug: "lim-fleet", rel }));
-  assert.match(w.page.label("fleet"), /All 3 capability workers installed and verified/);
+  assert.match(w.page.label("fleet"), new RegExp(`All ${MEMBERS.length} capability workers installed and verified`));
   restoreSigners();
 });
 test("R21 the install offers the held non-test jurisdiction profiles by name and coverage, none preselected, and binds the chosen ids as JURISDICTION_PROFILES; choosing none is allowed and said; an update never changes them", async () => {
@@ -865,7 +867,7 @@ test("R38 a container member installs only with the Containers scope granted, Wo
     max_instances: DESCRIPTOR.max_instances, configuration: { image: IMAGE }, durable_objects: { namespace_id: `ns-${RUNNER}-AgentRunner` } }]);
   assert.deepEqual(runnerOf(ok), [RUNNER_BINDING]);
   assert.deepEqual(ok.refused, []);
-  assert.match(ok.page.label("fleet"), /All 4 capability workers installed and verified/);
+  assert.match(ok.page.label("fleet"), new RegExp(`All ${new Set([...MEMBERS, RUNNER]).size} capability workers installed and verified`));
   const upload = (w) => w.calls.filter((c) => c.method === "PUT" && /\/workers\/scripts\/[^/]+$/.test(c.u)).map((c) => c.u.split("/scripts/")[1]);
   assert.ok(upload(ok).indexOf(RUNNER) < upload(ok).indexOf("agent-worker"), "the container before the member bound to it");
   /* Each condition failing: left out, named, the copy serving the assistant by members' own API keys, the rest installed. */

@@ -1337,8 +1337,8 @@ async function d116Install(slug, reply) {
    binding's TARGET by name, and the fake plane reads such a binding MISNAMED, so the verify step names it too. */
 console.log("\n--- DIST-6: the installed plane is bound to every member installed beside it, on install AND update ---");
 const PLANE_FLEET = FLEET_BINDINGS;
-t("PIN: instance-setup's FLEET_BINDINGS names three members (else this section tests nothing)",
-  PLANE_FLEET.length, 3);
+t("PIN: instance-setup's FLEET_BINDINGS names at least the three members (else this section tests nothing)",
+  ["agent-worker", "pdf-worker", "ocr-worker"].every((m) => PLANE_FLEET.some(([x]) => x === m)), true);
 t("PIN: the installer exports no member binding table of its own (R30: imported, never copied)",
   "MEMBER_BINDINGS" in NG, false);
 const repoSrc6 = "export default { fetch(){ return Response.json({ storeVersion: 'y', memberVersions: {} }); } }; export class Store {}; export const S = \"" + LIM + "\";";
