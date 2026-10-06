@@ -18,3 +18,7 @@
 **Checks** (from `civicos-process`): `format: 126 modules, 125 requirements files; 0 failures`; `architecture: 7 product files, 13 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 12 of 12 live requirement ids named by a test; 0 failures`; `ownership: 3 files changed by action-grammar between tranche/T33 and HEAD; 0 failures` (the code, its test and this record).
 
 Size (session_019ZPA869n1maeYjDhwTzrT3): test runs 4, module lines 1799
+
+## J1 · COMPLETE
+
+T33-72 applied: R12 met. ENTITY_ID_RE is record-grammar's idPattern('ENT'); ENT-2026-10000 accepted, ENT-2026-999 refused, golden corpus byte-identical. action-grammar 26/0 (negative control 25/1 on the old pattern); dependants' only reds are START's named inherited ones, same counts without my change. format, architecture, coverage (12/12), ownership: 0 failures. No generated artifact staled; nothing found in other modules. Please clear R12's not-yet-met marker. Details in the record's Completion.
