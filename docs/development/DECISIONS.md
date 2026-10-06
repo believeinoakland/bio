@@ -2559,3 +2559,17 @@ response: **Bob, 2026-10-06: "S8: B".** Ruled: (1) two levels: **Marks and names
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the masthead control, the account setting, the viewer's switch; section 7, S8); `screens/mock-refs.js` (`SCREEN_HELP`, `RAIL_HELP`, level 2).
 owed: (BOB) the member's explanation level (a per-member setting, default Guidance, the one-month question); the masthead control and Alt+Shift+I; each element's level (marks and references 1, screen, section and rail guidance 2); the guidance texts as interface words (translation layer, DEC-157); the op behind the registry's `owed:infolevelset DEC-162`.
+
+### DEC-163 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob: "why doesn't, for example, a mouseover of 'Lakeshore Tenants' show? … go through EVERY type of element, every context, and ask 'Why shouldn't there be a mouseover and/or clickover for this?'")
+for: bob-session
+question: Which types of element explain themselves or open something, at which information level (DEC-162), and why the rest do not.
+why it is Bob's: it is not: carrying out his direction and DEC-159 to DEC-162; decided by the design session (P17) and reported.
+provisional: explanations and references only in a screen's main area.
+alternative: everything explains itself (no reasons for exceptions).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06**, element type by element type, the table on the layouts page ("Explained where it appears"): yes, at marks-and-names level, for the group's name (masthead and public page head, opening "Who your group is"), the queue count and the member's initial (opening their screens), the band, the path's steps (links with their cards), named things in any text, shared names, every mark and a button's weight pips, the public page's signature and credit; yes, at guidance level, for search, the assistant button and the guidance switch, the rail and phone tabs, the screen heading, row icons (what kind of thing), wizard marks and the steps of a set-up or ceremony; no, with the reason stated, for labelling section headings (the content is beneath), a button's label (label and pips say it; heavy acts open a dialog), field labels (help printed beneath), list options (browsers cannot), plain dates and counts (deadlines and data counts are already marks or names), the words of quotations and members' own words (evidence stays untouched; names in them still get cards), and the assistant panel and wizard guide (they are explanations). On the 42 screens, 1,663 elements explain themselves.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` ("Explained where it appears"); `screens/mock-shell.js` (`decorate`).
+owed: (BOB) the shell's elements as listed, at their levels, when the screens are built; the exceptions kept as stated.

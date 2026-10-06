@@ -164,7 +164,37 @@ function attachRefs(id, html) {
 }
 // DEC-155: the rail's width, the member's own (184px by default; 64px is icons only); kept per member and device.
 const railW = () => window.CS_RAILW || 184;
-function render(screenId, c) {
+
+// DEC-163: every element type, decided once (the table on the layouts page): explanations and links added to the whole frame
+// (masthead, path, rail and tabs, wizard marks, step lists, row icons, the published page's head and foot), not only the
+// screen's main area. Level 1 (marks and names) always; level 2 (guidance) when the member has guidance on (DEC-162).
+const GROUP_CARD = '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · checks whether the city keeps its own rules and promises · 6 members<span class=more>Click to see who your group is.</span>';
+const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · a tenants\' group near the Oakland Coliseum · checks whether the city keeps its own rules and promises · its published cases are signed by its project owners';
+const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organisation the record follows', group: 'An office, a member or a group', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
+const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'person', Settings: 'account' };
+function decorate(html, id, c) {
+  if (typeof document === 'undefined') return html;
+  const t = document.createElement('template'); t.innerHTML = html; const R = t.content;
+  const set = (el, tip, lvl, go) => { if (!el || el.dataset.tip) return; el.dataset.tip = tip; if (lvl) el.dataset.level = lvl; if (go) el.dataset.goto = go; };
+  set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
+  set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your group holds, documents, questions, people and more. Press / to start typing.', 2);
+  set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.', 2);
+  set(R.querySelector('.cs-mast .cs-kind'), '<b>4 items wait on you</b> in your queue: 2 to do, 1 noticed, 1 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
+  set(R.querySelector('.mk-avatar'), '<b>You: Mai</b> · member of Lakeshore Tenants · works on Pothole repairs<span class=more>Click for your account and settings.</span>', 1, 'account');
+  R.querySelectorAll('.mk-crumbs a').forEach(a => { const x = a.textContent.trim(); const g = (typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).find(r => r[0] === x);
+    if (g) set(a, tipOf(g[2], null, g[1]), 1, g[1]); else set(a, `Back to <b>${x}</b>.`, 2, CRUMB_GO[x]); });
+  R.querySelectorAll('.cs-tabs a').forEach(a => { const k = Object.keys(RAIL_HELP).find(k => a.textContent.trim().toLowerCase().startsWith(k === 'find' ? 'find' : k)); if (k) set(a, RAIL_HELP[k], 2); else if (/more/i.test(a.textContent)) set(a, '<b>More</b>: projects, people and settings.', 2); });
+  R.querySelectorAll('.cs-wizmark').forEach(w => { set(w, `<b>${w.textContent.trim()}</b>: ${w.getAttribute('title')}. A wizard walks you through this screen step by step; it points at the real control and never presses it.`, 2); w.removeAttribute('title'); });
+  R.querySelectorAll('.mk-steps li').forEach(li => set(li, li.classList.contains('done') ? `<b>${li.textContent}</b>: done.` : li.getAttribute('aria-current') ? `<b>${li.textContent}</b>: you are here.` : `<b>${li.textContent}</b>: still to do. You can leave and come back; nothing is lost.`, 2));
+  R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
+  set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
+  set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
+  set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
+  set(R.querySelector('.mk-setuphead .mk-wordmark'), '<b>Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises.', 2);
+  return t.innerHTML;
+}
+function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
+function renderFrame(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
   WRITE_ON = false;

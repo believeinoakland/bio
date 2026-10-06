@@ -833,6 +833,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <section id="explain">
 <h2 class="sec">Explained where it appears</h2>
 <p class="intro">Every mark on every screen opens its meaning on hover, keyboard focus or tap: grades, strengths, gaps, origin tags, queue kinds, due dates, hints, the weight of every button, and the steps of the path and the ladders. Every mark on the 42 screens carries its explanation, and about 425 names of things the record holds carry a card saying what each is and why it matters on that screen; a click opens it. A question's strength names its weakest part and what would raise it. Names of people, offices and documents (dotted underline) open a card. An explanation waits until the pointer rests for half a second, stays while the pointer is on it, and closes half a second after the pointer leaves; keyboard focus and a tap open it at once (DEC-161). Try it on any screen in the viewer above (DEC-159; your rule 4 of the wide path; the measures map's disclosure, DEC-82).</p>
+<div class="tw" style="margin-top:12px"><table class="mk-table"><thead><tr><th>Element</th><th>Explains itself?</th><th>What it says, or why not</th></tr></thead><tbody><tr><td>The group's name (masthead, public page head)</td><td>Yes · names</td><td>Your group's card; a click opens “Who your group is”. On the public page, only what is public.</td></tr><tr><td>Search, the assistant button, the guidance switch</td><td>Yes · guidance</td><td>What each does; the assistant's says which account serves you.</td></tr><tr><td>The queue count and your initial (masthead)</td><td>Yes · names</td><td>How many items wait and of which kinds; your account. Each opens its screen.</td></tr><tr><td>The band under the masthead</td><td>Yes · marks</td><td>Who can see what you are working on here.</td></tr><tr><td>The rail and the phone tabs</td><td>Yes · guidance</td><td>What each section holds.</td></tr><tr><td>The path</td><td>Yes</td><td>Each step back is a link with its card; the last step is the screen itself.</td></tr><tr><td>The screen's heading</td><td>Yes · guidance</td><td>What the screen is and what you can do there.</td></tr><tr><td>Section headings that name a thing (a project in the queue)</td><td>Yes · names</td><td>Its card, with why it matters here.</td></tr><tr><td>Section headings that only label (“Before you start”)</td><td>No</td><td>What they introduce sits directly beneath them; a tip would repeat it.</td></tr><tr><td>Names of things the record holds, in any text</td><td>Yes · names</td><td>What it is and why it matters here; a click opens it.</td></tr><tr><td>Members, people, offices, projects named anywhere</td><td>Yes · names</td><td>One shared card wherever they appear.</td></tr><tr><td>Grades, strengths, gaps, origin tags, queue kinds, due dates, hints</td><td>Yes · marks</td><td>What the mark means; a strength names its weakest part.</td></tr><tr><td>A button's weight pips</td><td>Yes · marks</td><td>How much the act weighs and what that means.</td></tr><tr><td>A button's label</td><td>No</td><td>The label says the act and the pips say its weight; an act that sends, signs or cannot be undone opens a dialog that explains it in full.</td></tr><tr><td>Row icons</td><td>Yes · guidance</td><td>What kind of thing the row is (a document, a person, an event).</td></tr><tr><td>Wizard marks (“1 wizard starts here”)</td><td>Yes · guidance</td><td>Which wizards, and what a wizard does.</td></tr><tr><td>Steps of a set-up or ceremony</td><td>Yes · guidance</td><td>Done, you are here, or still to do.</td></tr><tr><td>Field labels</td><td>No</td><td>Their help is printed under them, where it is needed while typing.</td></tr><tr><td>Options in a list</td><td>No</td><td>A browser can't show tips on list options; the field's help explains the choice.</td></tr><tr><td>Plain dates and plain counts (“6 members”)</td><td>No</td><td>They mean what they say; a date that is a deadline is a due-date mark, and a count from data is a named calculation.</td></tr><tr><td>The signature and “Made with Civicsmith” (public page foot)</td><td>Yes · names</td><td>How anyone can check the signature; what Civicsmith is and that it neither wrote nor checked the case.</td></tr><tr><td>Text inside quotations and a member's own words</td><td>Names only</td><td>Names in them get their cards; the words themselves are evidence and stay untouched.</td></tr><tr><td>The assistant panel and the wizard guide</td><td>No (beyond their marks)</td><td>Each is itself an explanation; the marks inside them still explain themselves.</td></tr></tbody></table></div><p class="intro" style="margin-top:8px">“Marks” and “names” are always on; “guidance” shows when a member has guidance on (DEC-162). On the 42 screens, 1,663 elements explain themselves (DEC-163).</p>
 </section>
 
 <section id="noai">
@@ -1616,7 +1617,37 @@ function attachRefs(id, html) {
 }
 // DEC-155: the rail's width, the member's own (184px by default; 64px is icons only); kept per member and device.
 const railW = () => window.CS_RAILW || 184;
-function render(screenId, c) {
+
+// DEC-163: every element type, decided once (the table on the layouts page): explanations and links added to the whole frame
+// (masthead, path, rail and tabs, wizard marks, step lists, row icons, the published page's head and foot), not only the
+// screen's main area. Level 1 (marks and names) always; level 2 (guidance) when the member has guidance on (DEC-162).
+const GROUP_CARD = '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · checks whether the city keeps its own rules and promises · 6 members<span class=more>Click to see who your group is.</span>';
+const GROUP_PUBLIC = '<b>Lakeshore Tenants</b> · a tenants\' group near the Oakland Coliseum · checks whether the city keeps its own rules and promises · its published cases are signed by its project owners';
+const ICON_KIND = { capture: 'A document or a capture', subject: 'A person or organisation the record follows', group: 'An office, a member or a group', question: 'A question', finding: 'A finding', case: 'A case', plan: 'A plan or an action', timeline: 'An event', money: 'A money item', clock: 'Something with a time limit', camera: 'A photo', changed: 'Something that changed', tension: 'Two things that disagree', hold: 'Held, not yet in the record', signed: 'Signed', wizard: 'A wizard' };
+const CRUMB_GO = { Home: 'home', Queue: 'queue', Find: 'finder', Add: 'capture', Projects: 'project', People: 'person', Settings: 'account' };
+function decorate(html, id, c) {
+  if (typeof document === 'undefined') return html;
+  const t = document.createElement('template'); t.innerHTML = html; const R = t.content;
+  const set = (el, tip, lvl, go) => { if (!el || el.dataset.tip) return; el.dataset.tip = tip; if (lvl) el.dataset.level = lvl; if (go) el.dataset.goto = go; };
+  set(R.querySelector('.cs-mast .grp'), GROUP_CARD, 1, 'group-identity');
+  set(R.querySelector('.mk-mastsearch'), '<b>Search</b>: everything your group holds, documents, questions, people and more. Press / to start typing.', 2);
+  set(R.querySelector('.cs-mast [aria-label="The assistant"]'), '<b>The assistant</b>: opens beside your work. It answers only from what your group holds, on the account that serves you, and never concludes, signs or sends.', 2);
+  set(R.querySelector('.cs-mast .cs-kind'), '<b>4 items wait on you</b> in your queue: 2 to do, 1 noticed, 1 status.<span class=more>Click to open your queue.</span>', 1, 'queue');
+  set(R.querySelector('.mk-avatar'), '<b>You: Mai</b> · member of Lakeshore Tenants · works on Pothole repairs<span class=more>Click for your account and settings.</span>', 1, 'account');
+  R.querySelectorAll('.mk-crumbs a').forEach(a => { const x = a.textContent.trim(); const g = (typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).find(r => r[0] === x);
+    if (g) set(a, tipOf(g[2], null, g[1]), 1, g[1]); else set(a, `Back to <b>${x}</b>.`, 2, CRUMB_GO[x]); });
+  R.querySelectorAll('.cs-tabs a').forEach(a => { const k = Object.keys(RAIL_HELP).find(k => a.textContent.trim().toLowerCase().startsWith(k === 'find' ? 'find' : k)); if (k) set(a, RAIL_HELP[k], 2); else if (/more/i.test(a.textContent)) set(a, '<b>More</b>: projects, people and settings.', 2); });
+  R.querySelectorAll('.cs-wizmark').forEach(w => { set(w, `<b>${w.textContent.trim()}</b>: ${w.getAttribute('title')}. A wizard walks you through this screen step by step; it points at the real control and never presses it.`, 2); w.removeAttribute('title'); });
+  R.querySelectorAll('.mk-steps li').forEach(li => set(li, li.classList.contains('done') ? `<b>${li.textContent}</b>: done.` : li.getAttribute('aria-current') ? `<b>${li.textContent}</b>: you are here.` : `<b>${li.textContent}</b>: still to do. You can leave and come back; nothing is lost.`, 2));
+  R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
+  set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
+  set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
+  set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
+  set(R.querySelector('.mk-setuphead .mk-wordmark'), '<b>Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises.', 2);
+  return t.innerHTML;
+}
+function render(screenId, c) { return decorate(renderFrame(screenId, c), screenId, c); }
+function renderFrame(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
   WRITE_ON = false;
@@ -2376,7 +2407,7 @@ function journeySteps(j, ai) {
   function hide() { clearTimeout(showT); clearTimeout(hideT); if (cur) cur.removeAttribute('aria-describedby'); cur = null; tip.hidden = true; }
   function target(e) { var t = e.target; return t && t.closest ? t.closest(SEL) : null; }
   function mark(root) { (root || document).querySelectorAll('.mk-page ' + SEL.split(',').join(',.mk-page ')).forEach(function (el) {
-    if (!el.matches('button,a,input,select,textarea') && !el.closest('button') && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); }); }
+    if (!el.matches('button,a,input,select,textarea,svg') && !el.closest('button') && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); }); }
   document.addEventListener('mouseover', function (e) {
     if (tip.contains(e.target)) { clearTimeout(hideT); return; }               /* the tip itself is hoverable (WCAG 1.4.13) */
     var el = target(e); if (el && !el.closest('.mk-page')) el = null;
