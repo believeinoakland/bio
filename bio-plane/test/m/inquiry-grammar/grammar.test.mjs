@@ -217,14 +217,16 @@ test("R5 the row: this module's LEAD_CHECKS is exactly {LEAD_NOT_EVIDENCE: C-54.
   for (const r of Object.values(OBSERVATION_LEAD_CHECKS)) assert.notEqual(r.check, "C-54.1");
 });
 
-test("R7 R16 INQUIRY_GRAMMAR_CHECKS: the ten rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (stamped by 1.50.0); IMPORTED_LEG_MALFORMED (C-21.3) is new, its translation BOB's draft; the three T33 leg rows (C-2.8) follow (R16, t33.test.mjs); the table has one name", async () => {
+test("R7 R16 INQUIRY_GRAMMAR_CHECKS: the eleven rows, each {check, where, translation}, number and translation unchanged; the five inquiry mints keep their `where`; LEAD_NOT_EVIDENCE's names the site that raises it now (stamped by 1.50.0); IMPORTED_LEG_MALFORMED (C-21.3) is new, its translation BOB's draft; the three T33 leg rows and T34's derived-connection row (C-2.8) follow (R16, t33.test.mjs, t34.test.mjs); the table has one name", async () => {
   assert.ok(Object.isFrozen(INQUIRY_GRAMMAR_CHECKS));
   assert.deepEqual(Object.keys(INQUIRY_GRAMMAR_CHECKS),
                    ["LEAD_NOT_EVIDENCE", "NOT_INQUIRIES", "SELF_BASIS", "BASIS_CYCLE", "MACHINE_CANNOT_DIVIDE", "MACHINE_CANNOT_GROUND",
-                    "IMPORTED_LEG_MALFORMED", "STANDARD_LEG_AXIS", "CALCULATION_LEG_MALFORMED", "OCCURRENCE_LEG_MALFORMED"]);
+                    "IMPORTED_LEG_MALFORMED", "STANDARD_LEG_AXIS", "CALCULATION_LEG_MALFORMED", "OCCURRENCE_LEG_MALFORMED",
+                    "DERIVED_LEG_MALFORMED"]);
   const numbers = { LEAD_NOT_EVIDENCE: "C-54.1", NOT_INQUIRIES: "C-33.13", SELF_BASIS: "C-33.22", BASIS_CYCLE: "C-33.23",
                     MACHINE_CANNOT_DIVIDE: "C-32.7", MACHINE_CANNOT_GROUND: "C-32.8", IMPORTED_LEG_MALFORMED: "C-21.3",
-                    STANDARD_LEG_AXIS: "C-2.8", CALCULATION_LEG_MALFORMED: "C-2.8", OCCURRENCE_LEG_MALFORMED: "C-2.8" };
+                    STANDARD_LEG_AXIS: "C-2.8", CALCULATION_LEG_MALFORMED: "C-2.8", OCCURRENCE_LEG_MALFORMED: "C-2.8",
+                    DERIVED_LEG_MALFORMED: "C-2.8" };
   const imported = INQUIRY_GRAMMAR_CHECKS.IMPORTED_LEG_MALFORMED;
   assert.deepEqual(Object.keys(imported), ["check", "where", "translation"]);
   assert.equal(imported.check, "C-21.3");
@@ -234,7 +236,7 @@ test("R7 R16 INQUIRY_GRAMMAR_CHECKS: the ten rows, each {check, where, translati
   for (const [k, row] of Object.entries(INQUIRY_GRAMMAR_CHECKS)) {
     assert.deepEqual(Object.keys(row), ["check", "where", "translation"], k);
     assert.equal(row.check, numbers[k], k);
-    if (!(k in GOLDEN.rows) && !(k in GOLDEN.LEAD_CHECKS)) continue;   // new since the move: R11's above, R16's in t33
+    if (!(k in GOLDEN.rows) && !(k in GOLDEN.LEAD_CHECKS)) continue;   // new since the move: R11's above, R16's in t33 and t34
     const was = k === "LEAD_NOT_EVIDENCE" ? GOLDEN.LEAD_CHECKS[k] : GOLDEN.rows[k];
     assert.equal(row.translation, was.translation, k);
     if (k !== "LEAD_NOT_EVIDENCE") assert.equal(row.where, was.where, k);

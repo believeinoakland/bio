@@ -43,7 +43,7 @@ export const LEAD_CHECKS = {
 
 
 /** R7, R16: the rows `inquiry`'s acts mint for the inquiry's own refusals, the lead row (R5), the imported leg's (R11)
- *  and the three new leg kinds' (R13–R15), by code. Named with the
+ *  and the four new leg kinds' (R13–R15, R17), by code. Named with the
  *  reserved `_CHECKS` suffix, so DEC-49 composition (control-plane's `families.mjs`) finds it as a family (K850). */
 export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
   LEAD_NOT_EVIDENCE: LEAD_CHECKS.LEAD_NOT_EVIDENCE,
@@ -112,5 +112,15 @@ export const INQUIRY_GRAMMAR_CHECKS = Object.freeze({
     translation: 'A leg on a duty\'s occurrence names the duty and that one occurrence, and nothing else: how strong '
       + 'it is comes from the law that sets the duty and the dates that started and end it, so the leg states no '
       + 'grade, names no part, and is not listed among the references. Correct the leg. Nothing was written.',
+  },
+  /* R16, R17 (T34-28; N582): a leg on a derived connection's departures, C-2.8, refused by `derivedLegRefusal` in
+     `./grammar.mjs`. Stamped by promotion's next stamping (T35). */
+  DERIVED_LEG_MALFORMED: {
+    check: 'C-2.8',
+    where: 'src/inquiry-grammar/grammar.mjs derivedLegRefusal > is-derived-leg-form',
+    translation: 'A leg on a connection the record worked out names that connection and the five facts it was worked '
+      + 'out from: what kind it is, its two ends, the date it holds as of, and the method. Its name must be the one '
+      + 'those five give, and it states no grade or part of its own: how strong it is comes from the links it was '
+      + 'worked out over. Correct the leg. Nothing was written.',
   },
 });

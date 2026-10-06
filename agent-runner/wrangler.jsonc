@@ -1,0 +1,46 @@
+{
+  "$schema": "../bio-plane/node_modules/wrangler/config-schema.json",
+  "name": "agent-runner",
+
+  // PINNED: the repository decides the account, never the machine's wrangler session (CLAUDE.md).
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+
+  // R12: the committed bundle of src/worker.mjs deploys (built by `npm run build`, guarded by bundler R24).
+  "main": "dist/agent-runner.bundled.mjs",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // The release's version site (resolve-version ARM 7c), as every member's: a stamp, not a credential or address.
+  "vars": { "VERSION": "0.79.0" },
+
+  // Reachable only through the Durable Object binding of its caller (agent-worker's RUNNER, script `agent-runner`):
+  // no public address of its own.
+  "workers_dev": false,
+  "preview_urls": false,
+
+  // R13: the container behind the class. The image is named only as <repository>@sha256:<64 hex>; the release writes
+  // the digest here and into fleet-member.json's `image.digest` when it publishes the image (T33-D1). Until then it
+  // reads UNPUBLISHED, and bundler's deploy refuses the member (its R25/R26). R10's egress is not a field of this
+  // block (wrangler's container schema is closed): it is declared in fleet-member.json `egress` and applied by the
+  // class (src/worker.mjs).
+  "containers": [
+    {
+      "class_name": "AgentRunner",
+      "image": "docker.io/civicos/agent-runner@sha256:UNPUBLISHED",
+      "max_instances": 10
+    }
+  ],
+
+  // The class's own Durable Object binding and migration (containers need SQLite-backed storage). No other binding,
+  // secret or variable: the Worker holds no credential and knows no plane (R8, R12).
+  "durable_objects": {
+    "bindings": [
+      { "name": "AGENT_RUNNER", "class_name": "AgentRunner" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["AgentRunner"] }
+  ],
+
+  "observability": { "enabled": true }
+}

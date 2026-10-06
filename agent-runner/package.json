@@ -5,9 +5,12 @@
   "version": "0.79.0",
   "description": "The container in which a member's own Claude account runs one model conversation, with only relayed tools.",
   "main": "src/entry.mjs",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node src/entry.mjs",
+    "build": "node scripts/build.mjs",
     "test": "node --test test/"
   },
   "dependencies": {
@@ -15,5 +18,8 @@
     "@anthropic-ai/sdk": "0.131.0",
     "@modelcontextprotocol/sdk": "1.32.1",
     "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/containers": "0.3.7"
   }
 }

@@ -42,6 +42,8 @@ test('R2 the credential is only in that query\'s environment, which replaces the
     const { calls, sdk } = stubSdk(async (call) => { dirDuring = existsSync(call.options.env.CLAUDE_CONFIG_DIR); return success(); });
     const r = await startRunner(sdk);
     process.env.AGENT_RUNNER_TEST_LEAK = 'process-only';
+    const ca0 = process.env.NODE_EXTRA_CA_CERTS;
+    delete process.env.NODE_EXTRA_CA_CERTS;
     try {
       const { final } = await conversation(r.base, request({ credential: { kind, secret: SECRET } }));
       assert.equal(final.ok, true);
@@ -55,7 +57,16 @@ test('R2 the credential is only in that query\'s environment, which replaces the
       assert.ok(env.CLAUDE_CONFIG_DIR.startsWith(r.tmpRoot));
       assert.ok(dirDuring, 'the config directory exists while the query runs');
       await until(() => !existsSync(env.CLAUDE_CONFIG_DIR));
-    } finally { delete process.env.AGENT_RUNNER_TEST_LEAK; await r.stop(); }
+      // the one variable passed from the process: the container CA's path (R10's egress), when the image sets it
+      process.env.NODE_EXTRA_CA_CERTS = '/etc/cloudflare/certs/cloudflare-containers-ca.crt';
+      await conversation(r.base, request({ credential: { kind, secret: SECRET } }));
+      assert.deepEqual(Object.keys(calls[1].options.env).sort(), [...Object.keys(env), 'NODE_EXTRA_CA_CERTS'].sort());
+      assert.equal(calls[1].options.env.NODE_EXTRA_CA_CERTS, process.env.NODE_EXTRA_CA_CERTS);
+    } finally {
+      delete process.env.AGENT_RUNNER_TEST_LEAK;
+      if (ca0 === undefined) delete process.env.NODE_EXTRA_CA_CERTS; else process.env.NODE_EXTRA_CA_CERTS = ca0;
+      await r.stop();
+    }
   }
 });
 

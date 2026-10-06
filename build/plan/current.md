@@ -154,7 +154,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 ### L10
 
-- **T34-51 · scheduler** · (N662, DEC-147; K1790) a consumer over publication R67's `publishWake` and `publishDue`, so a waiting edition is taken at its time. (N585) its R12 test connects the opener's account through `op=accountreferenceset` and names the member (ai-runs R52). (N605, user side) registers each arming notice duties, people, money-checks and answers offer · K1614 · req: none · depends —.
+- **T34-51 · scheduler** · (ANSWERS #2, K1803) registers with answers' `onStandingSet` (its R27) to re-arm the `standing-questions` wake at once. (N662, DEC-147; K1790) a consumer over publication R67's `publishWake` and `publishDue`, so a waiting edition is taken at its time. (N585) its R12 test connects the opener's account through `op=accountreferenceset` and names the member (ai-runs R52). (N605, user side) registers each arming notice duties, people, money-checks and answers offer · K1614 · req: none · depends —.
 
 - **T34-70 · following** · (N620) its own checks family, `NO_SUCH_ADDRESS` re-keyed · K1686 · req: none · depends —.
 
@@ -180,7 +180,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 - **T34-71 · installer** · (N621, user side) sends a member's stated limits at upload · K1686 · req: R20, BOB's wording · depends T34-69.
 - **T34-75 · affordances** · (N662, DEC-147; K1790) grades `publishat` (and its move) `irreversible`, as `publish`. (N630) measures `op=affordances`' answer (232 KB, was 18 KB, +92 ms) against what the app reads once per session and trims or splits it if the size is not needed (K1717) · K1432 · req: none · depends —.
-- **T34-76 · plane** · (N625) `wrangler.jsonc` declares the `SHEET_WORKER` service binding (K1683). (N584, plane's share; RETRIEVAL #12 J1, K1788) `plane/store.mjs`:208 wires `answers` with `relations: () => retrieval.relations()` (retrieval R72) and `zone: () => retrieval.zone()`, instead of the projection alone · K1705 · req: none · depends —.
+- **T34-76 · plane** · (N625) `wrangler.jsonc` declares the `SHEET_WORKER` service binding (K1683). (N584, plane's share; RETRIEVAL #12 J1, K1788; ANSWERS #2, K1803) `plane/store.mjs` ~:207's `relations: () => ({projection: PROJECTION_RELATION})` dep to answers is dropped: answers now reads retrieval's `relations()` and `zone()` itself · K1705 · req: none · depends —.
 - **T34-77 · legacy-ui** · (N628) `queue-recipients.test.mjs`: members connect their own account before opening runs, and the NOBODY fixture and §3 (a run by the machine credential, impossible under K1481) are retired; `several-cases-choice.test.mjs`: Q's `basis: [LEDGER]` dropped and `publish` sends `tieAttested: true` (test-only; the DEC-88 shares stay N487's) · K1708 · req: none · depends —.
 
 ## Left out of T34 (one hard reason each)
