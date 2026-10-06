@@ -7,3 +7,4 @@
 - record-core (T34-9): `t33.test.mjs` R76 pins the opaque set as five and R62's `mintExhausted` has no sentence for `calculation`; red since record-grammar's merge (CALC opaque, K1728, K1732); this job updates them.
 - calculations (T34-27): `calculations.test.mjs:49` (R4) expects a sequential fresh `CALC-` id; red since record-grammar's merge (K1732); this job expects the opaque form.
 - standards (T34-21): `law.mjs:312` labels law proposals through `standard`; record-grammar R49's `law_relation` subject is now there (K1732).
+- entities (T34-16): with id-spaces' twelve spaces (K1729), R20's literal list is three short; drop the literal (ID-SPACES #4 J4).
