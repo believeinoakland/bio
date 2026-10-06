@@ -38,6 +38,6 @@ T34-87 (DEC-149; K1811, K1821, B2): seven translations re-worded, nothing else c
 - `node --test bio-plane/test/m/admission/`: tests 23, pass 23, fail 0. No layer tests are named in the manifest.
 - Users of admission: `node --test bio-plane/test/m/control-plane/`: tests 168, pass 163, fail 5, all red on the tranche as above.
 - `row-census.test.mjs` is red under accepted red 4; my seven rows are listed above as awaiting stamp.
-- `format`: 129 modules, 0 failures. `architecture`: 10 product files, 0 failures. `coverage`: 19 of 19 live ids, 0 failures. `ownership`: see the commit's run.
+- `format`: 129 modules, 0 failures. `architecture`: 10 product files, 0 failures. `coverage`: 19 of 19 live ids, 0 failures. `ownership`: 7 files changed, 0 failures.
 
 Size (session_01881r9vqe42oZehxYxDvLfc): test runs 9, module lines 882
