@@ -717,6 +717,9 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; } .cs-ref:hover { color: var(--c-accent-strong, var(--c-accent)); }
 .mk-hintd { margin-top: 4px; } .mk-hintd summary { cursor: pointer; list-style: none; } .mk-hintd summary::-webkit-details-marker { display: none; } .mk-hintd[open] { border-left: 2px dotted var(--c-rule-strong); padding-left: 10px; } .mk-dl dt { font-weight: 600; font-size: var(--t-sm); margin-top: 8px; } .mk-dl dd { margin: 2px 0 0; font-size: var(--t-sm); }
 .mk-tag { display: inline-block; font: 600 var(--t-xs)/1.4 var(--f-sans); color: var(--c-ink-2); border: var(--hair); padding: 0 5px; border-radius: 2px; margin-left: 4px; white-space: nowrap; }
+.mk-where { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; font-size: var(--t-sm); }
+.mk-where .bar { height: 12px; width: var(--w); background: color-mix(in srgb, var(--c-signal) 45%, var(--c-surface)); border: 1px solid var(--c-signal); }
+.mk-where .n { font-variant-numeric: tabular-nums; color: var(--c-ink-2); }
 .mk-ifelse { display: none; } main.mk-else .mk-ifelse { display: block; }
 .mk-ifother { display: none; } main.mk-other .mk-ifother { display: block; } main.mk-other .mk-ifheld { display: none; }
 .foot { margin-top: 48px; padding-top: 14px; border-top: var(--hair); color: var(--c-muted); font-size: var(--t-sm); }
@@ -789,7 +792,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <div class="meta3">
 <div><b>How to use it</b>Pick a journey, a wizard or a screen in the viewer below, then step through. Switch between with and without the assistant, desktop and phone, light and dark, at the top.</div>
 <div><b>What is real</b>Every button carries the act it would perform and its weight; every wizard step names a screen and an act from the requirements, checked. The data is invented: Lakeshore Tenants, its members Rosa, Dev, Mai, Ana and Teo.</div>
-<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). Connecting a Claude subscription without a command line is ruled too (DEC-156). Who may translate the interface is ruled too (DEC-157). Information levels are ruled too (DEC-162). <b>One question is open for you: S9, whether the security screen may show where attempts come from (section 7).</b> Everything else is design detail, decided and listed in section 6.</div>
+<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). Connecting a Claude subscription without a command line is ruled too (DEC-156). Who may translate the interface is ruled too (DEC-157). Information levels are ruled too (DEC-162). Where the security screen's attempts come from is ruled too (DEC-166). Everything else is design detail, decided and listed in section 6.</div>
 </div>
 </header>
 <nav class="idx" aria-label="Sections">
@@ -906,24 +909,22 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <tr><td>A document set aside while a question waits on it</td><td>Your ruling through the development process: the held list shows whose question each document was captured for (withheld whole if you may not see it); setting one aside asks why, saying whose question waits; the asker sees “Waiting: … set aside by Ben: ‘wrong year’” on the question, never as a notification, and may restore it with a reason or find another source (DEC-141).</td></tr>
 <tr><td>Weights on every act</td><td>Every button in every mockup carries its pips and name; acts whose weight is not yet set are shown as reasoned.</td></tr>
 <tr><td>Find in this (DEC-164)</td><td>One control on a document, a held set and a project. The member picks what to find; every result shows its passage, labelled “Found by search”; nothing is recorded until a member records it with the act that makes that kind of fact. “Keep finding this” reruns it as documents arrive. The assistant’s proposals are drawn as later.</td></tr>
-<tr><td>The security screen (DEC-165, on your direction K1875)</td><td>Settings › Security, administrators only. A period chosen from the last hour to the last 30 days or set dates; the level in a word (Ordinary, Raised, High) against the group's own usual, with one plain sentence; a grid of kinds by hour; totals with the usual and the busiest hour; counts only. Administrators are told in their queue once, when the level becomes high, never as a routine count. What is counted, the usual and the threshold are worded by the development process.</td></tr>
+<tr><td>The security screen (DEC-165, on your direction K1875; countries by your ruling DEC-166)</td><td>Settings › Security, administrators only. A period chosen from the last hour to the last 30 days or set dates; the level in a word (Ordinary, Raised, High) against the group's own usual, with one plain sentence; a grid of kinds by hour; totals with the usual and the busiest hour; counts only, and counts by country, never an address. Administrators are told in their queue once, when the level becomes high, never as a routine count. What is counted, the usual and the threshold are worded by the development process.</td></tr>
 </tbody></table></div>
 </section>
 
 <section id="question">
 <h2 class="sec">7. For you</h2>
-<div class="qbrief" id="q-s9">
-<h3>S9. The security screen: may it show where attempts come from?</h3>
-<p><b>The issue.</b> You asked for a screen where administrators see “a map of some kind indicating the level of attack” over a period they choose (6 October, through the development process). It is drawn: Settings › Security, administrators only. It shows the level against the group's usual, and a grid of kinds by hour: refused sign-ins, refused keys and links, requests coming too fast, requests Cloudflare blocked, refused hand-overs. As drawn, it is <b>counts only</b>: it never says who tried or where from. Whether it may say <i>where from</i> is yours, because the same record would also say where your own members are.</p>
-<p><b>How it works today.</b> Nothing records sign-ins or refused sign-ins at all; the security review found that gap, and the counting is being added. Cloudflare tells your group's Civicsmith the country and the address of every request, on every plan. Nothing keeps either today.</p>
-<p><b>An example.</b> At 01:00 on Tuesday, 214 sign-ins are refused in an hour, most for the handle “rosa”. At 07:30, Mai, on a family visit in Manila, mistypes her password twice and then signs in. With places shown, Rosa's screen would read “Refused sign-ins: 470, from 3 countries: Netherlands 466, Philippines 2, United States 2”, and Rosa could work out that Mai is in the Philippines.</p>
-<div class="cols2" style="margin-top:8px">
-<div class="cell"><h4>A · Counts only (as drawn)</h4><p><b>Gains:</b> nothing about anyone's whereabouts reaches anyone; only counts are kept. <b>Costs:</b> an administrator cannot tell one persistent source from many, and there is no map in the geographic sense.</p></div>
-<div class="cell"><h4>B · Countries, never a member's own</h4><p>Refused and blocked requests are counted by country, shown as a map and a list for the period. Addresses are never kept. A refused sign-in followed within an hour by that member's own successful sign-in is counted without a place, so a member's typos never place them. <b>Gains:</b> a real map; shows when an attack comes from one place. <b>Costs:</b> a country is weak evidence (anyone can borrow another country's address); one more thing to explain.</p></div>
-<div class="cell"><h4>C · Addresses and the handles tried</h4><p>Each refused request's address and the handle it tried, kept for 30 days. <b>Gains:</b> the hosting account's holder can block an address in Cloudflare; a member can be told their account is being tried. <b>Costs:</b> addresses are personal data about members as well as attackers; what is kept, a court can ask for (principle 3.11); more to protect.</p></div>
-</div>
-<p><b>Recommendation: B.</b> It gives you the map you described while keeping members' whereabouts out of it, and keeps nothing a court could use to locate anyone. <b>Risk:</b> an administrator may read a country as proof of who is behind an attack; the screen will say it is not.</p>
-<p><b>How to answer:</b> “S9: A”, “S9: B” or “S9: C”, or tell me what you'd change.</p>
+<div class="qbrief" id="q-s9" style="border-left-color:var(--c-accent)">
+<h3>S9. Where attempts come from: B, recorded</h3>
+<p>Your answer, 6 October: “S9: B - but never the member's own address”. Recorded as DEC-166 and drawn in the security screen's “Where from”:</p>
+<ul class="mk-list">
+<li>Refused and blocked requests are counted by the country Cloudflare reports, for the period chosen, as a ranked list.</li>
+<li>No address is ever kept or shown, and a member's least of all: nothing derived from it (country, network) appears either.</li>
+<li>A member who mistypes a password and then signs in within the hour is counted without a country; a member's sign-ins are never placed.</li>
+<li>The screen says a country is not proof of who is behind an attempt.</li>
+</ul>
+<p>I read “never the member's own address” as covering both the member's network address and the whereabouts it reveals. Tell me if you meant more or less.</p>
 </div>
 <div class="qbrief" id="q-s8" style="border-left-color:var(--c-accent)">
 <h3>S8. Information levels: B, recorded</h3>
@@ -1209,7 +1210,10 @@ SCR.security = c => ({ rail: 'settings', title: 'Security', main: `
     <tr><td>Requests over the limit</td><td>2,320</td><td>15</td><td>01:00–02:00, 1,260</td></tr>
     <tr><td>Blocked by Cloudflare</td><td>390</td><td>20</td><td>01:00–02:00, 310</td></tr>
     <tr><td>Refused hand-overs</td><td>0</td><td>1</td><td>none</td></tr></tbody></table></div>
-    ${note('Counts only. Nothing here says who tried or where from, and nothing your group holds is shown.')}`)}
+    ${note('Counts only. Nothing here says who tried, and nothing your group holds is shown.')}`)}
+  ${sec('Where from', `<div class="mk-where">${[['Netherlands', 2610], ['Germany', 330], ['United States', 160], ['Singapore', 61], ['4 other countries', 28]].map(([k, n]) => `<span class="k">${k}</span><span class="bar" style="--w:${Math.max(1, Math.round(n / 2610 * 100))}%" aria-hidden="true"></span><span class="n">${n.toLocaleString('en-US')}</span>`).join('')}</div>
+    <p class="mk-small muted" style="margin:0">Refused sign-ins and keys, and requests turned away or blocked, by the country Cloudflare reports for them.</p>
+    ${note('A country is not proof of who is behind an attempt: anyone can borrow an address in another country. No address is ever kept or shown, and a member\'s own sign-ins are never placed: a mistyped password followed by the member signing in is counted without a country.')}`)}
   ${sec('When you are told', `${sheet(row(kindm('noticed'), '<b>Security</b> · sign-in refusals far above the usual and still going on, all refused so far<span class="meta">sent to administrators once, at 01:40, when the level became high · not sent again while it lasted</span>', ''))}${note('Administrators are told only when the level is high, never as a routine count. The notice opens this screen at that period.')}`)}
   ${sec('What you can do', `<p class="mk-small">A member who fears their password is weak can change it in ${ref('Your account', 'account', '<b>Your account</b> · each member\'s own handle, password and signing key', 'Where a member changes their password.')}. An administrator can turn off the reusable join link or the group\'s key in ${ref('Members', 'members', '<b>Members</b> · everyone in the group and what each may do', 'Where the join link and the group\'s key are switched.')}. Whoever holds the hosting account can tighten Cloudflare\'s own settings there.</p>`)}` });
 

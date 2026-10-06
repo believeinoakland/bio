@@ -2590,6 +2590,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` 
 owed: (BOB) the act behind the registry's `owed:findin DEC-164`: a find over a scope (a capture, a selection or enumerated set, a project's holdings, within the viewer's gate) by kind, returning each match with its extent and nothing recorded; `op=search` has no scope today and no recogniser for amounts, dates or requirement words in free text, so those matchers are new, deterministic, and held per language (DEC-99); names through `readingname` (entities R17); events through the doctype readers. A standing question over the same scope. Each recording act accepting the found extent as its citation (people R9, events R1, money R2, standards, `cite`), with the optional question kept beside it. The "Found by search" origin mark (`components.css`).
 
 ### DEC-165 · answered
+amended: 2026-10-06 · DEC-166 (Bob, "S9: B"): counts by country for refused and blocked requests; never a member's own address.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process also runs on his primary account since K1428) (Bob's direction through the development process, K1875: "Perhaps there should be a screen admins can go to to see a map of some kind indicating the level of 'attack' the instance experiences during a selectable quantum of time"; K1874 (Q5): notices only when risk is heightened; B74 hands the drawing to the design stream)
 for: bob-session
 question: How the administrators' security screen and its notice are drawn.
@@ -2602,3 +2603,17 @@ response: **Decided by the design session, 2026-10-06.** (1) Settings › Securi
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (screen "Security"; section 6; S9 in section 7); `screens/mock-screens.js` (`SCR.security`); `visual-language/components.css` (`cs-risk`, `cs-heat`); `BIO_Interaction_Constructs_v0_1.md` §R.
 owed: (BOB, N703) the act behind `owed:securitymap K1875`: counts by kind and hour for a period, the group's usual, the level and its threshold, kept as counts only (no address, no handle) unless S9 rules otherwise; records of refused sign-ins and refused credentials (security review F9); Cloudflare's blocked-request counts where the plan supplies them (the study, K1875); the administrators' notice, once per episode, only when the level is high.
+
+### DEC-166 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process also runs on his primary account since K1428) (S9 on the layouts page, after DEC-165)
+for: bob
+question: Whether the administrators' security screen may show where attempts come from.
+why it is Bob's: who may see what: the record that places an attacker would also place the group's members.
+provisional: DEC-165, counts only.
+alternative: A, counts only; C, addresses and the handles tried, kept 30 days.
+recommendation: B, countries for refused and blocked requests, addresses never kept, a member's own sign-in never placed.
+reversal cost: low (counts by country can be dropped; nothing personal is kept).
+response: **Bob, 2026-10-06: "S9: B - but never the member's own address".** Ruled: (1) refused and blocked requests are counted by country, per hour, and shown for the chosen period as a ranked list with bars (the "where from" of the security screen), with the words "A country is not proof of who is behind an attempt"; (2) no request's address is ever kept or shown, a member's least of all: a member's address and anything derived from it (country, network) never appear on the screen or in a record; (3) so a refused sign-in for a member's handle that the member follows within an hour with their own successful sign-in is counted without a place, and a member's successful sign-ins are never counted by place; (4) countries come from Cloudflare's own label for the request, read and counted at once, the address discarded. Bob's words "never the member's own address" are read as covering both the member's network address and the whereabouts it reveals; he may narrow or widen that.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; S9 on `docs/development/ux-substrate/layouts.html`; `screens/mock-screens.js` (`SCR.security`, "Where from"); `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB, N703) counts by country and hour for refused and blocked requests, from Cloudflare's country label, the address never stored; the one-hour rule that keeps a member's own refused sign-in followed by their sign-in from being placed; a member's successful sign-ins never counted by place.
