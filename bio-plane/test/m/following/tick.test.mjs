@@ -49,7 +49,7 @@ test("R13 a tick reads at most 50 due subjects, oldest due first or in the rank'
   const rank = (items) => { offered = items; return [...items].reverse(); };
   const t3 = await w.f.followTick(T0 + DAY + 5000, rank);
   assert.equal(offered.length, 55);
-  assert.deepEqual(offered[0], { kind: "follow:register", id: "follow:1", waitingSince: T0 + DAY });
+  assert.deepEqual([offered[0].kind, offered[0].id, offered[0].waitingSince], ["follow:register", "follow:1", T0 + DAY]);
   assert.deepEqual(t3.read.slice(0, 3).map((r) => r.follow), [55, 54, 53]);
   /* a throwing rank leaves the order read */
   const t4 = await w.f.followTick(T0 + 3 * DAY, () => { throw new Error("x"); });
@@ -69,7 +69,7 @@ test("R13 a tick reads at most 50 due subjects, oldest due first or in the rank'
   assert.equal((await w2.f.followTick(T0 + 2000)).busy, true);
   w2.sweepHost.running.delete("following");
   /* paused: nothing read, and it says so */
-  w2.paused = true;
+  w2.pause(true);
   const p = await w2.f.followTick(T0 + 2 * DAY);
   assert.equal(p.paused.paused, true);
   assert.equal(p.read.length + p.captured.length, 0);
@@ -134,4 +134,44 @@ test("R17 its tables are declared with their classes; a person query's follow ta
   assert.equal(w.f.followPersonQuery({ register: "ellery.licences", scheme: "ellery_licence", value: "L-00042", address: "https://licences.ellery.example/search?licence=L-00042",
                                        home: "INFO-2026-0002-a", author: OUTSIDER, viewer: OUTSIDER }).reason, "NO_SUCH_HOME");
   assert.equal(MACHINE, "class:daemon");
+});
+
+test("R19 onFollowed: one registration per module; after a follow is recorded, ended, or its next due instant changes, fn({follow, due}) is called once after the act; a throwing fn never undoes the act", async () => {
+  const w = world();
+  const told = [];
+  assert.equal(w.f.onFollowed("scheduler", "not a function").reason, "LISTENER_MALFORMED");
+  assert.equal(w.f.onFollowed("", () => {}).reason, "LISTENER_MALFORMED");
+  assert.equal(w.f.onFollowed("scheduler", (x) => told.push(x)).ok, true);
+  assert.equal(w.f.onFollowed("scheduler", () => {}).reason, "LISTENER_DECLARED");
+  assert.equal(w.f.onFollowed("queue", () => { throw new Error("a listener that fails"); }).ok, true);
+  /* recorded: due now (never read) */
+  const r = reg(w, 1);
+  assert.equal(r.ok, true, "the throwing listener does not undo the act");
+  assert.deepEqual(told, [{ follow: 1, due: "2026-10-06T12:00:00Z" }]);
+  /* a refused act tells nothing */
+  reg(w, 2, { author: MACHINE });
+  assert.equal(told.length, 1);
+  /* read: the next due instant moved a day on */
+  w.serve(REG(1), "a");
+  await w.f.followTick(T0);
+  assert.deepEqual(told.at(-1), { follow: 1, due: "2026-10-07T12:00:00Z" });
+  assert.equal(told.length, 2);
+  /* a failed read does not move it: nothing told */
+  const g = reg(w, 3);
+  await w.f.followTick(T0 + 1000);
+  assert.equal(told.filter((x) => x.follow === g.follow).length, 1, "only its recording");
+  /* ended: no next due */
+  w.f.unfollow({ follow: 1, author: MEMBER });
+  assert.deepEqual(told.at(-1), { follow: 1, due: null });
+  assert.equal(w.rows(`SELECT ended_at FROM follows WHERE follow_id=1`)[0].ended_at !== null, true);
+  /* a per-meeting watch: its link, and each capture taken, tell the watch's next capture */
+  const b = body(w);
+  w.bundle("INFO-2026-0100-agenda");
+  w.watched.push({ bundle: "INFO-2026-0100-agenda", address: "https://ellery.example/agenda" });
+  w.f.perMeetingBody({ address: "https://ellery.example/agenda", body: b, notice: "notice_of_sitting", author: MEMBER, viewer: MEMBER });
+  assert.deepEqual(told.at(-1), { follow: "per_meeting:https://ellery.example/agenda", due: "2026-10-12T10:00:00Z" });
+  w.t = Date.parse("2026-10-12T10:00:00Z");
+  await w.f.followTick(w.t);
+  assert.deepEqual(told.filter((x) => String(x.follow).startsWith("per_meeting:")).at(-1),
+                   { follow: "per_meeting:https://ellery.example/agenda", due: "2026-11-09T11:00:00Z" });
 });

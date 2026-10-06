@@ -23,7 +23,7 @@
  *   bytes(sha)           a capture's bytes (default: record-core's evidence store). */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
@@ -87,7 +87,7 @@ export function followingOf(host, deps = {}) {
 }
 
 export class Following {
-  #sql; #declared = false;
+  #sql; #declared = false; #listeners = [];
 
   constructor({ storage, record, membership, now, view, bytes, capture, entities, events, monitoring }) {
     this.#sql = storage.sql;
@@ -134,6 +134,32 @@ export class Following {
     try { const o = await store.get(sha); return o ? new Uint8Array(await o.arrayBuffer()) : null; } catch { return null; }
   }
 
+  /** R19 (K1666): one listener per module, told `{follow, due}` after a follow is recorded, ended, or its next due
+   *  instant changes, so `scheduler` re-arms its wake. A malformed or second registration is refused through
+   *  `membership.listenerRefusal`. */
+  onFollowed(module, fn) {
+    const refused = listenerRefusal(this.#listeners, module, fn);
+    if (refused) return refused;
+    this.#listeners.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R19: each listener once, after the act; one that throws never undoes it, nor stops the others. */
+  #tell(follow, due) {
+    for (const l of this.#listeners) { try { l.fn({ follow, due }); } catch { /* the act stands (R19) */ } }
+  }
+  /* R19: a follow's next due instant as R12 computes it (null when it is ended). */
+  #nextDue(id) {
+    const f = this.#follow(id);
+    if (!f || f.ended_at) return null;
+    const iv = MONITOR_CADENCE_MS[f.cadence] ?? MONITOR_CADENCE_MS.daily;
+    return f.last_read ? instant(ms(f.last_read) + iv) : instant(this.now());
+  }
+  /* R19: a per-meeting watch's next capture instant, or null when it is unscheduled. */
+  #meetingDue(address) {
+    const m = this.#meetingPlan(this.now()).find((x) => x.address === address);
+    return m && !m.unscheduled ? m.due_at : null;
+  }
+
   /* ===================================================================== *
    * THE ACTS (R1, R7–R10; R4's link). Each refuses in order and writes nothing when it refuses.
    * ===================================================================== */
@@ -152,6 +178,7 @@ export class Following {
     this.#sql.exec(`INSERT INTO follows (kind, subject, home, author, from_day, until_day, cadence, gated, at) VALUES (?,?,?,?,?,?,?,?,?)`,
                    kind, JSON.stringify(subject), home, author, from, until, cadence, gated ? JSON.stringify(gated) : null, at);
     const id = Number(this.#one(`SELECT max(follow_id) AS n FROM follows`).n);
+    this.#tell(id, at);
     return { ok: true, follow: id, kind, at, ...(kind === "register" && !subject.render ? { form: "static", note: STATIC_ONLY } : {}) };
   }
   /* R8: an account or fee gate as declared by the following member; anything else is a public register. */
@@ -193,6 +220,7 @@ export class Following {
     if (row.ended_at) return { ok: true, already: true, follow: row.follow_id, ended_at: row.ended_at };
     const at = instant(this.now());
     this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=? WHERE follow_id=?`, at, author, row.follow_id);
+    this.#tell(Number(row.follow_id), null);
     return { ok: true, follow: row.follow_id, ended_at: at };
   }
   #follow(id) { const n = Number(id); return Number.isSafeInteger(n) ? this.#one(`SELECT * FROM follows WHERE follow_id=?`, n) : null; }
@@ -275,6 +303,7 @@ export class Following {
     const at = instant(this.now());
     this.#sql.exec(`INSERT INTO per_meeting_links (address, bundle_id, body, notice, author, at) VALUES (?,?,?,?,?,?)`,
                    sub.address, sub.bundle, body.trim(), said(notice) ? notice.trim() : null, author, at);
+    this.#tell(`per_meeting:${sub.address}`, this.#meetingDue(sub.address));
     return { ok: true, address: sub.address, body: body.trim(), notice: said(notice) ? notice.trim() : null, at };
   }
 
@@ -410,6 +439,7 @@ export class Following {
     if (!b.ok) return { read: { subject: `meeting:${x.address}`, outcome }, failed: [{ ...entry, reason: b.reason || "the check did not answer" }] };
     this.#sql.exec(`INSERT OR REPLACE INTO per_meeting_captures (address, meeting, bundle_id, due_at, taken_at, lateness_ms, outcome) VALUES (?,?,?,?,?,?,?)`,
                    x.address, x.meeting, x.bundle, x.due_at, taken, lateness, outcome);
+    this.#tell(`per_meeting:${x.address}`, this.#meetingDue(x.address));
     return { read: { subject: `meeting:${x.address}`, outcome: "captured", lateness_ms: lateness }, captured: [{ kind: "per_meeting", ...entry }] };
   }
 
@@ -428,7 +458,10 @@ export class Following {
     else r = await this.#readRegister(f, subject, nowMs);
     /* a failed read stays due (its epoch stays open, so this tick's retry reads it again only under a fresh epoch) */
     if (r.outcome === "failed") this.#sql.exec(`UPDATE follows SET last_outcome=? WHERE follow_id=?`, r.outcome, f.follow_id);
-    else this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, at, r.outcome, f.follow_id);
+    else {
+      this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, at, r.outcome, f.follow_id);
+      this.#tell(Number(f.follow_id), this.#nextDue(f.follow_id));
+    }
     return r;
   }
 
@@ -567,6 +600,7 @@ export class Following {
       title: `Refreshed by its member: ${s.address}` });
     if (t.failed) return refuse("NOT_READ", t.failed.reason);
     this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, instant(this.now()), t.same ? "unchanged" : "captured", f.follow_id);
+    this.#tell(Number(f.follow_id), this.#nextDue(f.follow_id));
     return { ok: true, follow: Number(f.follow_id), capture: t.sha, unchanged: t.same, reproducible_by_public: false, note: NOT_PUBLIC };
   }
 

@@ -19,6 +19,7 @@ import { Entities } from "../../../src/entities/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { followingOf } from "../../../src/following/index.mjs";
+import { monitoringOf, MONITOR_PAUSE_SETTING } from "../../../src/monitoring/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? s : Buffer.from(s)).digest("hex");
 export const MACHINE = "class:daemon";
@@ -87,9 +88,14 @@ export function world({ view = testView(), now = T0 } = {}) {
   record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const x = new Extraction(st, { record, membership, promotion: promotionStub() });
+  /* the real monitoring (its R65 host: pause, epoch, claim, running, ranked, and the landing through promotion) */
+  const w0 = { t: now };
+  const mon = monitoringOf(host, { record, membership, env: {}, now: () => w0.t, intent: null, publication: null });
+  const promotion = mon.promotion;
+  promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
+  const x = new Extraction(st, { record, membership, promotion });
   x.migrate();
-  const prov = provenanceOf(host, { record, membership, promotion: promotionStub(), now: () => "2026-10-01T00:00:00Z" });
+  const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-10-01T00:00:00Z" });
   prov.migrate();
   const ents = new Entities(st, { record, membership, provenance: prov });
   ents.migrate();
@@ -103,7 +109,7 @@ export function world({ view = testView(), now = T0 } = {}) {
   for (const [m, role] of [["alice", "member"], ["bob", "member"], ["outsider", "member"], ["root", "admin"]])
     st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', ?, 'active', '2026-01-01', '2026-01-01')`, m, role);
 
-  const w = { st, host, record, membership, x, ents, ev, view, t: now,
+  const w = { st, host, record, membership, x, prov, ents, ev, view, mon, promotion, get t() { return w0.t; }, set t(v) { w0.t = v; },
     rows: (q, ...a) => [...st.sql.exec(q, ...a)], one: (q, ...a) => [...st.sql.exec(q, ...a)][0] || null };
 
   /* ---- what bytes the network serves, and what capture did ---- */
@@ -121,49 +127,29 @@ export function world({ view = testView(), now = T0 } = {}) {
       const s = sha(bytes);
       w.store.set(s, bytes);
       if (q.heldSha === s) return { status: 200, body: { ok: true, existed: true, unchanged: true, capture: { sha256: s } } };
-      return { status: 200, body: { ok: true, existed: false, document: { locator: q.locator, retrieved: new Date(w.t).toISOString(), file: `snapshots/${s.slice(0, 12)}`,
-        capture: { sha256: s, bytes: bytes.length, content_type: "application/json", method: q.render ? "rendered" : "direct",
+      const retrieved = new Date(w.t).toISOString().replace(/\.\d{3}Z$/, "Z");
+      return { status: 200, body: { ok: true, existed: false, document: { locator: q.locator, retrieved, file: `snapshots/${s.slice(0, 12)}`,
+        authority_state: "undetermined", authority_basis: `${retrieved}: fetched for a follow; no authority asserted`,
+        origin: { kind: "named_request" }, attestation_attempts: [],
+        provenance_chain: [{ who: "instance test (Civicsmith/0.0.0)", asserts: `these bytes were served for ${q.locator} at ${retrieved}`, bound: false, via: "direct" }],
+        capture: { method: q.render ? "rendered" : "direct", grade: "B", actor_class: opts.member ? "member" : "daemon", actor: opts.sessMember || null,
+                   sha256: s, encoding: "binary", bytes: bytes.length, content_type: "application/json",
                    ...(q.credential ? { credentialed: { kind: q.credential.kind }, reproducible_by_public: false } : {}) } } } };
     },
   };
 
-  /* ---- monitoring's host (its R65), its schedule (R16) and its check (R1–R10) ---- */
-  w.paused = false;
+  /* ---- monitoring: its real host (R65), with `schedule` (R16's unscheduled per_meeting rows, which need retrieval's
+     projection, a module following does not use) and `monitor` (R1–R10, monitoring's own tests') standing in ---- */
   w.landed = [];
   w.watched = [];            /* {bundle, address}: per_meeting subjects */
   w.monitored = [];
-  const epochs = new Map(), claims = new Set(), running = new Set();
-  let bundles = 0;
-  const sweepHost = Object.freeze({
-    paused: () => (w.paused ? { paused: true, by: "member:root", at: "2026-10-01T00:00:00Z" } : { paused: false }),
-    openEpoch: (c, nowMs, stale) => { const e = epochs.get(c); if (e !== undefined && nowMs - e < stale) return e; epochs.set(c, nowMs);
-      for (const k of [...claims]) if (k.startsWith(`${c}|`) && !k.startsWith(`${c}|${nowMs}|`)) claims.delete(k); return nowMs; },
-    claim: (c, subject, e) => { const k = `${c}|${e}|${subject}`; if (claims.has(k)) return false; claims.add(k); return true; },
-    closeEpoch: (c, e) => { epochs.delete(c); for (const k of [...claims]) if (k.startsWith(`${c}|${e}|`)) claims.delete(k); },
-    running,
-    ranked: (list, item, rank, nowMs) => {
-      if (typeof rank !== "function") return list;
-      let order;
-      try { order = rank(list.map(item), nowMs); } catch { return list; }
-      if (!Array.isArray(order)) return list;
-      const byId = new Map(list.map((e) => [item(e).id, e]));
-      const out = order.map((o) => byId.get(o.id)).filter(Boolean);
-      return [...out, ...list.filter((e) => !out.includes(e))];
-    },
-    land: (request, filed, at, say) => {
-      const id = `INFO-2026-${String(++bundles).padStart(4, "0")}-followed`;
-      const home = request.bundle ? w.one(`SELECT project FROM bundles WHERE bundle_id=?`, request.bundle) : null;
-      w.bundle(id, { project: home ? home.project || "" : "" });
-      const doc = filed.doc;
-      st.sql.exec(`INSERT OR REPLACE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, ?, ?, 'binary', ?, ?)`,
-                  doc.capture.sha256, id, doc.file, doc.capture.bytes, at);
-      if (doc.reading) x.writeReading({ bundleId: id, captureSha: doc.capture.sha256, reading: doc.reading });
-      w.landed.push({ request, filed, at, say, bundle: id });
-      return { ok: true, bundle_id: id, state: "collected" };
-    },
-    gate: () => null,
-    recheckMs: () => 3600000,
-  });
+  const real = mon.sweepHost();
+  const sweepHost = Object.freeze({ ...real, land: (request, filed, at, say) => {
+    const r = real.land(request, filed, at, say);
+    w.landed.push({ request, filed, at, say, bundle: r && r.bundle_id, answer: r });
+    return r;
+  } });
+  w.pause = (on) => record.setSetting(MONITOR_PAUSE_SETTING, on ? { paused: true, by: "class:admin", at: "2026-10-01T00:00:00Z" } : { paused: false }, "class:admin");
   const monitoring = {
     sweepHost: () => sweepHost,
     schedule: () => ({ due: [], scheduled: [], unscheduled: w.watched.map((s) => ({ bundle: s.bundle, address: s.address, frequency: "per_meeting",
