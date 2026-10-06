@@ -1,6 +1,6 @@
 # promotion (T34)
 
-**Status** · session_011TTwXKMsCDA3RVYLNZrRLP · depth 2 · WAITING ON BOB (CHANGE: L2 merges) · handled B3
+**Status** · session_011TTwXKMsCDA3RVYLNZrRLP · depth 2 · WORKING · handled B3
 
 ## J1 · REPORT
 
