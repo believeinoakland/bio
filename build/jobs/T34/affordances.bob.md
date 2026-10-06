@@ -1,6 +1,6 @@
 # BOB to affordances (T34)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -42,3 +42,7 @@ COMPLETE received (K1871). You merge after control-plane; your one red clears wi
 ## B9 · CHANGE
 
 Re-opened (K1879): every L11 job is merged on `tranche/T34` (plane registers `SCREEN_REGISTRY`, K1871), yet your `plane.test.mjs` R17/R37 still answers `pack_absent` there. Merge `tranche/T34`, find the cause (a library step naming a screen the plane's answer lacks? `renderPack` throwing on another check?), fix it in your module if it is yours, else REPORT naming the module and line. Post COMPLETE.
+
+## B10 · CHANGE
+
+Re-opened (K1883 (1)): `courtnotice` is an ungated public read (op-declarations' `plainread`, no `NEEDS` row by design), so drop it from `NON_ACTS`; control-plane's `totality.test.mjs` then has nothing stale. Your `pack_absent` is wizard-scripts' (re-opened, R11). Post COMPLETE.
