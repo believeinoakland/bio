@@ -207,7 +207,7 @@ membership 3,356 (four DECs; the guard in T34-10), publication 3,959 (T34-44), q
 
 ## Summary
 
-**Jobs per layer:** L1 8, L2 4, L3 2, L4 1, L5 12, L6 12, L7 2, L8 7, L9 2, L10 1, L11 9. **Total 60 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
+**Jobs per layer:** L1 8, L2 4, L3 2, L4 1, L5 12, L6 12, L7 2, L8 8 (ratification added, K1790), L9 2, L10 1, L11 9. **Total 61 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
 
 **Entries carried:** 58 in `next.md` (50 at this draft's start; N600 added by K1649 while it was written; N601, N602 folded by BOB #120, K1656; N603, K1658; N604, N605, K1666; N606, N607, K1668; N608–N610, K1675–K1679; N611–N615, K1681–K1683; N616, K1685; N617–N621, K1686; N622, K1690). **48 wholly in T34**: N549, N550, N552–N554, N556–N558, N560–N562, N565, N567–N571, N573–N578, N580–N585, N587–N591, N593–N596, N598–N622. **4 in part**: N551, N564, N586, N597. **6 left out**: N559 and N572 (a dependency not yet built), N563 and N579 (a measurement), N566 (a measurement, unless the release measured it), N592 (a study, not a module job; Bob's ruling first).
 
