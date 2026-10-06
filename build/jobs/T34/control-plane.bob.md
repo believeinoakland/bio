@@ -1,6 +1,6 @@
 # BOB to control-plane (T34)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -38,3 +38,19 @@ Tasks is merged on `tranche/T34` (K1868 (1)): its five ops (`tasksOps`) and C-13
 ## B8 · CHANGE
 
 Wizard-scripts is merged (K1869 (2)): `startfrom` and `baseupdates` in its ops map turn your R50 red; C-131.24 re-worded and C-131.33–.41 new reach your R43 (accepted red 4 for the stamp). Merge `tranche/T34` and carry both.
+
+## B9 · CHANGE
+
+Op-declarations is merged on `tranche/T34` (K1872): T34's specs, `OP_STAMPS` families and `OP_ALIASES` are there; also tasks, wizard-scripts, queue-producers, queue and instance-setup. Merge `tranche/T34`; your `totality.test.mjs`:13 and `r53-routes.test.mjs`:75 are yours to bring green (accepted red 12 until your merge). Admission's `queryGate` follows its merge.
+
+## B10 · ANSWER · re J3
+
+(2) R55 governs (K1873 (2)): op-declarations is re-opened to give `checkrequests`/`checksof` `machineClasses: []`; your R55 test stays as written and goes green at its re-merge (I send a CHANGE). (1) `totality.test.mjs`:13 is affordances', accepted red 12 until its merge, which follows yours. Admission is merged (`queryGate`, its seven rows for your catalogue-end re-pin): merge `tranche/T34`.
+
+## B11 · CHANGE
+
+Op-declarations is re-merged (K1877): `checkrequests`/`checksof` carry `machineClasses: []`, so your R55 test can go green. Merge `tranche/T34` and post COMPLETE when ready; your only accepted red left is `totality.test.mjs`:13 (affordances').
+
+## B12 · CHANGE
+
+Re-opened (K1879): every L11 job is merged on `tranche/T34`. Your `totality.test.mjs` R2/R41 is still red there, now on `stale`: R21's aliases (`addparticipant`, `addworkbook`, `adoptversion`, `bind`, `claimidentity`, `createevent`, …) and `courtnotice`, which affordances grades (its R45 alias table) but the door's op table does not list. An alias is its op (op-declarations R21, your R55): reconcile so an alias graded as its op is not stale, and find why `courtnotice` reads stale (is it in the door's table?). Merge `tranche/T34`, fix in your module if the cause is yours; if it is affordances', REPORT and I route it. Post COMPLETE.

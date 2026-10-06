@@ -258,14 +258,17 @@ test("R16: a FINDING's basis names its source and derivation; a member's mute le
   assert.ok(byId(w.feed("bob"))[id], "bob's feed still carries it: only a recorded disposition removes it for the team");
 });
 
-test("R17: the control plane's decoration: every option through affordances.decorate with the gate, vocabularies over actions' kinds; a refusal is 400", () => {
+test("R17: the control plane's decoration: every option through affordances.decorate with the gate, and no vocabularies; a refusal is 400", () => {
   const gate = { needs: (op) => (op === "cite" ? "contribute" : null), mode: () => "session" };
   const r = { ok: true, items: [{ id: "x", options: [{ id: "cite", label: "Cite", weight: "report" }] }, { id: "y" }] };
-  const a = queueAnswer(r, { gate, kinds: ["records_request", "other"] });
+  const a = queueAnswer(r, { gate });
   assert.equal(a.status, 200);
   assert.deepEqual(a.result.items[0].options, [decorate({ id: "cite", label: "Cite", weight: "report" }, gate)]);
   assert.deepEqual(a.result.items[1].options, []);
-  assert.deepEqual(a.result.vocabularies.action_kind, ["records_request", "other"]);
+  // K1717, K1863: op=affordances publishes the vocabularies once; the queue's answer attaches none, kinds given or not
+  assert.equal("vocabularies" in a.result, false);
+  assert.equal("vocabularies" in queueAnswer(r, { gate, kinds: ["records_request"] }).result, false);
+  assert.deepEqual(Object.keys(a.result).sort(), Object.keys(r).sort(), "the store's answer, its options decorated, and nothing added");
   const refused = queueAnswer({ ok: false, reason: "NO_SUCH_KIND" }, { gate });
   assert.equal(refused.status, 400); assert.equal(refused.refusal.reason, "NO_SUCH_KIND");
 });
@@ -367,11 +370,13 @@ test("R40: a snoozed case's lapse is published in mute and each of its items is 
   assert.equal(byId(w.feed(null, "class:admin"))["TASK-2026-0001-a"].snoozed, undefined);
 });
 
-test("R48 (N301; DEC-107): class_labels are exactly To do, Noticed and Signal; the codes are unchanged", () => {
+test("R48 (N301; DEC-107, DEC-131): class_labels are exactly To do, Noticed and Status; the codes are unchanged", () => {
   const w = world();
   w.bundle("INF-1"); w.task("TASK-2026-0001-a", "INF-1");
   const f = w.feed(null, "class:admin");
-  assert.deepEqual(f.class_labels, { OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Signal" });
+  assert.deepEqual(f.class_labels, { OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Status" });
+  // negative control (DEC-131, K1536): the status label is no longer "Signal"
+  assert.ok(!Object.values(f.class_labels).includes("Signal"));
   assert.deepEqual(f.class_labels, QUEUE_CLASS_LABELS);
   assert.ok(Object.isFrozen(QUEUE_CLASS_LABELS));
   // the codes: the classes, an item's class and the counts keep their names

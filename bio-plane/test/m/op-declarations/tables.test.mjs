@@ -37,11 +37,11 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   /* The public surface is exactly the ops that gate themselves. */
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
     ["activitymethod", "bootstrap", "casechecker", "casedocument", "casefilespec", "caseflags", "claim", "docketfeed",
-     "docketpublic", "enroll",
+     "docketpublic", "enroll", "groupdescription",
      "groupidentity", "groupkeyspublic",
-     "instancegroup", "invitelook", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
+     "instancegroup", "invitelook", "joinlinkinvite", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
      "publishedcase", "publishedmanifest", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
-     "templatecomments", "templateread", "templatereview", "verify"]);
+     "templatecomments", "templateread", "templatereview", "verify", "websiteinvite"]);
   /* Inherited names are no op. */
   for (const k of ["toString", "constructor", "__proto__", "hasOwnProperty"]) assert.ok(!Object.hasOwn(OPS, k), k);
 });

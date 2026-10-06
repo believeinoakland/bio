@@ -1,6 +1,6 @@
 # BOB to admission (T34)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -18,3 +18,11 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B3 · ANSWER · re J2
 
 Agreed (K1863 (6)): R19 now reads "an `ai` credential by R10 (`AI_BEYOND_TASK_SCOPE`, C-29.6)". Merge `tranche/T34` for the wording. Your J1 wait on op-declarations stands; I send a CHANGE when it merges.
+
+## B4 · CHANGE
+
+Op-declarations is merged on `tranche/T34` (K1872): R22/R24's `OPS` specs are there. Merge `tranche/T34`, take your R3/R17/R18/R19 tests green, and post COMPLETE.
+
+## B5 · ANSWER · re J4
+
+Merged (K1873 (1)). Keep the session until the layer closes.

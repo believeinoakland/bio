@@ -565,10 +565,10 @@ function sha256HexSync(str39) {
 var INQUIRY_TITLE_MAX = 120;
 var deriveInquiryTitle = (question) => {
   const line = String(question == null ? "" : question).split("\n").map((s) => s.trim()).find((s) => s !== "") || "";
-  const flat = line.replace(/\s+/g, " ");
-  if (flat === "") return null;
-  if (flat.length <= 120) return flat;
-  const cut7 = flat.slice(0, 120);
+  const flat2 = line.replace(/\s+/g, " ");
+  if (flat2 === "") return null;
+  if (flat2.length <= 120) return flat2;
+  const cut7 = flat2.slice(0, 120);
   const at34 = cut7.lastIndexOf(" ");
   return (at34 > 0 ? cut7.slice(0, at34) : cut7) + "\u2026";
 };
@@ -1337,14 +1337,14 @@ async function checkQueueAndBase(ctx, findings) {
   if (man.target && man.target !== ctx.folderName) {
     findings.push(f2("C-16.1", "error", `manifest target '${man.target}' does not match record '${ctx.folderName}'`));
   }
-  const listed = /* @__PURE__ */ new Set();
+  const listed2 = /* @__PURE__ */ new Set();
   if (Array.isArray(man.files)) {
     for (const entry3 of man.files) {
       if (!entry3 || !entry3.name || !entry3.sha256) {
         findings.push(f2("C-16.1", "error", `manifest files entry ${JSON.stringify(entry3)} lacks name+sha256`));
         continue;
       }
-      listed.add(entry3.name + ".pending");
+      listed2.add(entry3.name + ".pending");
       const pending = ctx.files.get(entry3.name + ".pending");
       if (!pending) {
         findings.push(f2("C-16.2", "error", `package file '${entry3.name}.pending' listed in manifest is missing`, ["discard the package with a finding to the producing author", "re-produce the package from the originating session outputs"]));
@@ -1357,7 +1357,7 @@ async function checkQueueAndBase(ctx, findings) {
     }
   }
   for (const p3 of pendingFiles) {
-    if (!listed.has(p3)) findings.push(f2("C-16.4", "error", `pending file '${p3}' is not listed in the manifest`, ["complete consumption or discard with reason"]));
+    if (!listed2.has(p3)) findings.push(f2("C-16.4", "error", `pending file '${p3}' is not listed in the manifest`, ["complete consumption or discard with reason"]));
   }
   if (typeof man.created === "string" && ISO_TS_RE.test(man.created)) {
     const ageDays = ((ctx.nowMs ?? Date.now()) - Date.parse(man.created)) / 864e5;
@@ -2805,11 +2805,11 @@ async function captureSubresources({
     settle2(item3, rec);
   }
   const resolve = (ref, kind) => {
-    const trimmed = String(ref || "").trim();
-    if (!trimmed) return null;
+    const trimmed2 = String(ref || "").trim();
+    if (!trimmed2) return null;
     if (kind === "script") return PLACEHOLDER_MISSING;
-    const abs = refToUrl.has(trimmed) ? refToUrl.get(trimmed) : (() => {
-      const c = classifyRef(trimmed, base2, isPublic);
+    const abs = refToUrl.has(trimmed2) ? refToUrl.get(trimmed2) : (() => {
+      const c = classifyRef(trimmed2, base2, isPublic);
       return c.ok ? c.url : null;
     })();
     if (abs === null) return PLACEHOLDER_MISSING;
@@ -8165,7 +8165,7 @@ async function manifestIntraLinks(bytes2, container2, contentXml, undetermined3)
       if (typeof href === "string" && href) fonts.add(normalizePartName(href.replace(/^(?:\.\/)+/, "")));
     }
   }
-  const listed = [];
+  const listed2 = [];
   const seen = /* @__PURE__ */ new Set();
   for (const fe of elementsNested(root.inner, "file-entry")) {
     const path = fe.attrs["full-path"];
@@ -8179,7 +8179,7 @@ async function manifestIntraLinks(bytes2, container2, contentXml, undetermined3)
       if (dot > name2.lastIndexOf("/") && IMAGE_MIME_BY_EXT[name2.slice(dot + 1).toLowerCase()]) continue;
     }
     if (fonts.has(name2)) continue;
-    listed.push({ name: name2, encrypted: elementsNested(fe.inner, "encryption-data", 1).length > 0 });
+    listed2.push({ name: name2, encrypted: elementsNested(fe.inner, "encryption-data", 1).length > 0 });
   }
   const undeterminedLink = (why, name2) => ({
     partition: "undetermined",
@@ -8188,14 +8188,14 @@ async function manifestIntraLinks(bytes2, container2, contentXml, undetermined3)
     source: null
   });
   let total2 = 0;
-  for (const l2 of listed) {
+  for (const l2 of listed2) {
     if (l2.encrypted) continue;
     const e2 = container2.byName.get(l2.name) ?? container2.entries.find((x) => normalizePartName(x.name) === l2.name);
     if (e2) total2 += e2.uncompressedSize;
   }
   const g = sizeGuard(total2);
   const links = [];
-  for (const { name: name2, encrypted } of listed) {
+  for (const { name: name2, encrypted } of listed2) {
     if (encrypted) {
       links.push(undeterminedLink("embedding_encrypted", name2));
       continue;
@@ -14788,33 +14788,33 @@ function makeLocator(segments) {
   };
 }
 function readText(supplied2, ctx = {}) {
-  const flat = flattenText(supplied2);
-  const named = flat.reasons.length ? `: ${flat.reasons.join(", ")}` : "";
-  if (!flat.chars) {
+  const flat2 = flattenText(supplied2);
+  const named = flat2.reasons.length ? `: ${flat2.reasons.join(", ")}` : "";
+  if (!flat2.chars) {
     return {
       determined: false,
       partial: false,
       chars: 0,
-      undetermined: flat.undetermined,
-      reasons: flat.reasons,
-      why: flat.undetermined > 0 ? `the text of this document is undetermined (${flat.undetermined} undecodable region(s)${named}); a reading over text nobody decoded would be an invented one` : "no text was supplied, so no reading was attempted"
+      undetermined: flat2.undetermined,
+      reasons: flat2.reasons,
+      why: flat2.undetermined > 0 ? `the text of this document is undetermined (${flat2.undetermined} undecodable region(s)${named}); a reading over text nobody decoded would be an invented one` : "no text was supplied, so no reading was attempted"
     };
   }
-  if (flat.undetermined > flat.chars) {
+  if (flat2.undetermined > flat2.chars) {
     return {
       determined: false,
       partial: true,
-      chars: flat.chars,
-      undetermined: flat.undetermined,
-      reasons: flat.reasons,
-      why: `the tier that produced this text could not decode most of it (${flat.undetermined} undetermined against ${flat.chars} decoded${named}); a reading over the fragment would silently misrepresent the document`
+      chars: flat2.chars,
+      undetermined: flat2.undetermined,
+      reasons: flat2.reasons,
+      why: `the tier that produced this text could not decode most of it (${flat2.undetermined} undetermined against ${flat2.chars} decoded${named}); a reading over the fragment would silently misrepresent the document`
     };
   }
-  const dctx = { ...ctx, text: flat.text };
+  const dctx = { ...ctx, text: flat2.text };
   const stack = identify(dctx);
   const doctype = doctypeFor({ ...dctx, handler: stack.handler, kind: stack.kind });
   let parsed = null, parse_error = null;
-  const locate = makeLocator(flat.segments);
+  const locate = makeLocator(flat2.segments);
   if (typeof doctype.type.parse === "function") {
     try {
       const alsoSatisfies2 = () => (doctype.also || []).map((x) => x.key);
@@ -14833,26 +14833,26 @@ function readText(supplied2, ctx = {}) {
   } else {
     parse_error = `the ${doctype.type.key} content type declares no reader`;
   }
-  const partial = flat.undetermined > 0;
+  const partial = flat2.undetermined > 0;
   return {
     determined: true,
     partial,
-    chars: flat.chars,
-    undetermined: flat.undetermined,
-    reasons: flat.reasons,
-    text_from: flat.source,
+    chars: flat2.chars,
+    undetermined: flat2.undetermined,
+    reasons: flat2.reasons,
+    text_from: flat2.source,
     /* FW-17: WHETHER POSITION WAS AVAILABLE AT ALL, so the caller can state the
        absence on the reading's basis rather than leaving a null column looking
        like a reader that did not bother. `position_parts` is the map's size —
        a floor on what a reader could have said — and `position_why` is the
        producer-side reason when there is none. */
-    position_parts: flat.segments.length,
-    position_why: flat.position_why || null,
+    position_parts: flat2.segments.length,
+    position_why: flat2.position_why || null,
     stack,
     doctype,
     parsed,
     parse_error,
-    why: partial ? `read over a PARTIAL decode, stated: ${flat.undetermined} undetermined region(s)/code point(s)${named} beside ${flat.chars} decoded characters` : `read over a full decode (${flat.chars} characters)`
+    why: partial ? `read over a PARTIAL decode, stated: ${flat2.undetermined} undetermined region(s)/code point(s)${named} beside ${flat2.chars} decoded characters` : `read over a full decode (${flat2.chars} characters)`
   };
 }
 
@@ -17762,11 +17762,11 @@ var RecordCore = class _RecordCore {
    *  (`GRAMMAR_DECLARED`, naming the holder). An accepted registration answers `{ok: true, module, ids}`. */
   registerGrammar(module, { ids, arm } = {}) {
     const named = typeof module === "string" && module.trim() !== "";
-    const listed = Array.isArray(ids) && ids.length > 0 && ids.every((id) => typeof id === "string" && C_ID.test(id));
-    const partial = listed ? EXTENSION_ARMS.find((a) => a.ids.some((id) => ids.includes(id)) && !a.ids.every((id) => ids.includes(id))) : null;
-    const slotIds = new Set(listed ? EXTENSION_ARMS.filter((a) => a.ids.every((id) => ids.includes(id))).flatMap((a) => a.ids) : []);
+    const listed2 = Array.isArray(ids) && ids.length > 0 && ids.every((id) => typeof id === "string" && C_ID.test(id));
+    const partial = listed2 ? EXTENSION_ARMS.find((a) => a.ids.some((id) => ids.includes(id)) && !a.ids.every((id) => ids.includes(id))) : null;
+    const slotIds = new Set(listed2 ? EXTENSION_ARMS.filter((a) => a.ids.every((id) => ids.includes(id))).flatMap((a) => a.ids) : []);
     let clash = null;
-    if (named && listed) {
+    if (named && listed2) {
       if (this.#grammars.some((g) => g.module === module)) clash = { heldBy: module };
       for (let i = 0; !clash && i < ids.length; i++) {
         if (ids.indexOf(ids[i]) < i) {
@@ -17777,7 +17777,7 @@ var RecordCore = class _RecordCore {
         if (g && !slotIds.has(ids[i])) clash = { id: ids[i], heldBy: g.module };
       }
     }
-    if (!named || !listed || typeof arm !== "function" || partial)
+    if (!named || !listed2 || typeof arm !== "function" || partial)
       return rowRefusal2(
         "GRAMMAR_MALFORMED",
         partial ? `the grammar claims part of ${partial.name}, whose ids are ${partial.ids.join(", ")}; a slot is claimed whole. Nothing was registered.` : "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.",
@@ -23396,10 +23396,10 @@ var snapCopyPath = (path, key) => {
 async function writtenBy(e2, x, { files, raw, sha256: sha2562 }) {
   const name2 = x && x.name;
   const copy = snapCopyPath(String(name2), e2.key);
-  const listed = Array.isArray(e2.snapshotted) ? e2.snapshotted.includes(name2) : null;
+  const listed2 = Array.isArray(e2.snapshotted) ? e2.snapshotted.includes(name2) : null;
   const ref = raw && raw[copy] && typeof raw[copy] === "object" ? raw[copy] : null;
   const held2 = files.has(copy) || ref !== null;
-  if (!held2) return listed ? { undetermined: "the pre-image snapshot lists it, but the image holds no copy" } : { wrote: true };
+  if (!held2) return listed2 ? { undetermined: "the pre-image snapshot lists it, but the image holds no copy" } : { wrote: true };
   const was = files.has(copy) ? await sha2562(files.get(copy)) : ref.sha256 || ref.blobSha || null;
   const now = typeof x.sha256 === "string" && x.sha256 ? x.sha256 : null;
   if (!was) return { undetermined: "its pre-image copy states no digest" };
@@ -27646,8 +27646,8 @@ var derBoolean = (v) => new Uint8Array([1, 1, v ? 255 : 0]);
 function derInteger(bytes2) {
   let i = 0;
   while (i < bytes2.length - 1 && bytes2[i] === 0 && (bytes2[i + 1] & 128) === 0) i++;
-  const trimmed = bytes2.slice(i);
-  return tlv(2, trimmed[0] & 128 ? cat2(new Uint8Array([0]), trimmed) : trimmed);
+  const trimmed2 = bytes2.slice(i);
+  return tlv(2, trimmed2[0] & 128 ? cat2(new Uint8Array([0]), trimmed2) : trimmed2);
 }
 var derIntegerSmall = (n) => derInteger(new Uint8Array([n]));
 var OID_SHA256 = new Uint8Array([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, 1]);
@@ -30012,7 +30012,7 @@ var DISPATCH_CHECKS = {
   UNKNOWN_OP: {
     check: "C-69.1",
     where: "src/control-plane/index.mjs fetch > is-unknown-op",
-    translation: "This copy has no operation by that name. A copy running an older or newer version can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
+    translation: "This group's Civicsmith has no operation by that name. A version older or newer than this one can have a different set of operations, and a misspelt name reads the same way. Nothing was changed."
   },
   /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
      `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
@@ -30022,7 +30022,7 @@ var DISPATCH_CHECKS = {
   STORE_DID_NOT_ANSWER: {
     check: "C-69.2",
     where: "src/control-plane/index.mjs storeSilent > is-store-silent",
-    translation: "This copy of the record could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did."
+    translation: "This group's Civicsmith could not consult its own records just now, so nothing in this reply is a statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your request was meant to change something, look before repeating it, because this reply cannot say whether it did."
   },
   /* D-629 (R25, C-69.3) — THE WORKER DOOR THREW. It had no outermost catch (the platform's own error page); the stack is
      now logged server-side under a CORRELATION id, and the caller receives the code, this sentence and the id, nothing
@@ -30032,7 +30032,7 @@ var DISPATCH_CHECKS = {
   PLANE_INTERNAL_ERROR: {
     check: "C-69.3",
     where: "src/control-plane/index.mjs planeInternalAnswer > is-plane-internal-error",
-    translation: "This copy failed while handling the request, before it could produce an answer. That is a fault in this copy, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in this copy's logs under the reference given with this answer."
+    translation: "This group's Civicsmith failed while handling the request, before it could produce an answer. That is a fault in this group's Civicsmith, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in its logs under the reference given with this answer."
   },
   /* D-629 (R25, C-69.4) — THE STORE'S DOOR THREW. Its outermost catch answered `String(e.stack)` for any throw on any op
      (file paths, line numbers and constraint text, public ops included). It came with the store's door (N333, K412);
@@ -30041,7 +30041,7 @@ var DISPATCH_CHECKS = {
   STORE_INTERNAL_ERROR: {
     check: "C-69.4",
     where: "src/control-plane/dispatch.mjs internalAnswer > is-store-internal-error",
-    translation: "This copy failed inside its own record while carrying out the request, so no answer was produced. That is a fault in this copy, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in this copy's logs under the reference given with this answer."
+    translation: "This group's Civicsmith failed inside its own record while carrying out the request, so no answer was produced. That is a fault in this group's Civicsmith, not a statement about what the record holds or about your request; whether any part of it took effect is not known from here. The administrator can find the details in its logs under the reference given with this answer."
   },
   /* DEC-113 (R46, C-69.5; K1252, K1253) — A PURGE THAT WOULD REACH HELD MATERIAL. While a litigation hold stands, the
      store's door refuses every purge of the real record that would reach what the hold preserves: the whole store while
@@ -30051,24 +30051,24 @@ var DISPATCH_CHECKS = {
   PURGE_HOLD_IN_PLACE: {
     check: "C-69.5",
     where: "src/control-plane/dispatch.mjs purgeHoldRefusal > is-purge-hold-in-place",
-    translation: "This copy is preserving records under a litigation hold, and this removal would reach material the hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold stands waits until the hold is released."
+    translation: "Your group's Civicsmith is preserving records under a litigation hold, and this removal would reach material the hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold stands waits until the hold is released."
   }
 };
 var BOOTSTRAP_CHECKS = {
   BOOTSTRAP_CREDENTIAL_UNSET: {
     check: "C-68.2",
     where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
-    translation: "This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed."
+    translation: "Your group's Civicsmith has no administrator token set, so it cannot be claimed yet. Whoever installed it sets one in the hosting account. Nothing was changed."
   },
   BOOTSTRAP_CREDENTIAL_PUBLISHED: {
     check: "C-68.3",
     where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
-    translation: "This copy's administrator token is a value published in the project's public repository, so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a fresh one in the hosting account. Nothing was changed."
+    translation: "The administrator token of your group's Civicsmith is a value published in the project's public repository, so it can never be used to claim it: anyone can read it. Whoever installed your group's Civicsmith sets a fresh one in the hosting account. Nothing was changed."
   },
   BOOTSTRAP_CREDENTIAL_MISMATCH: {
     check: "C-68.4",
     where: "src/control-plane/index.mjs fetch > is-bootstrap-claim",
-    translation: "The administrator token given does not match the one this copy holds, so the copy was not claimed. Nothing was changed."
+    translation: "The administrator token given does not match the one your group's Civicsmith holds, so it was not claimed. Nothing was changed."
   }
 };
 var REPLAY_CHECKS = {
@@ -30089,7 +30089,7 @@ var REPLAY_CHECKS = {
   REPLAY_UNVERIFIED: {
     check: "C-66.6",
     where: "src/control-plane/index.mjs fetch > is-promote-replay-verified",
-    translation: "This save says it is a replay of the record's own history, and the plane could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved."
+    translation: "This save says it is a replay of the record's own history, and your group's Civicsmith could not check that against the history it holds: the replay must name the provenance file for this document, already uploaded, whose records list this document and exactly this version of it. A replay is excused from the rules a new save must meet only when that check succeeds. Nothing was saved."
   }
 };
 var REQUIRED_ARGUMENT_CHECKS = {
@@ -33030,8 +33030,8 @@ function coversImagePlacement(e2, container2) {
   const want = norm3(e2.rect);
   const same3 = (r) => norm3(r).every((v, i) => Math.abs(v - want[i]) <= 1e-3 + 1e-9);
   if (onPage.some((x) => same3(x.rect))) return null;
-  const listed = onPage.slice(0, 6).map((x) => `[${norm3(x.rect).join(", ")}]`).join(" ");
-  return `page ${e2.page} of this capture paints ${onPage.length} image(s)${onPage.length ? ` (${listed}${onPage.length > 6 ? " \u2026" : ""})` : ""} and none at [${want.join(", ")}], the rectangle the extent names`;
+  const listed2 = onPage.slice(0, 6).map((x) => `[${norm3(x.rect).join(", ")}]`).join(" ");
+  return `page ${e2.page} of this capture paints ${onPage.length} image(s)${onPage.length ? ` (${listed2}${onPage.length > 6 ? " \u2026" : ""})` : ""} and none at [${want.join(", ")}], the rectangle the extent names`;
 }
 
 // src/connections/checks.mjs
@@ -36517,12 +36517,12 @@ function decodeMmr(d, p3, end2, w, h) {
 }
 function decodeRefinement(mq, ctx, w, h, template, ref, dx, dy, tpgron, at34) {
   const bm = bitmap(w, h);
-  const D = bm.d, R5 = ref.d, rw = ref.w, rh = ref.h;
+  const D = bm.d, R6 = ref.d, rw = ref.w, rh = ref.h;
   if (template === 0) {
     if (at34[1] > 0 || at34[1] === 0 && at34[0] >= 0) throw corrupt("refinement adaptive pixel is not yet decoded");
   }
   const g = (x, y) => x < 0 || x >= w || y < 0 || y >= h ? 0 : D[y * w + x];
-  const r = (x, y) => x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R5[y * rw + x];
+  const r = (x, y) => x < 0 || x >= rw || y < 0 || y >= rh ? 0 : R6[y * rw + x];
   const ctxOf = template === 0 ? (x, y) => {
     const i = x - dx, j = y - dy;
     return g(x - 1, y) | g(x + 1, y - 1) << 1 | g(x, y - 1) << 2 | g(x + at34[0], y + at34[1]) << 3 | r(i + 1, j + 1) << 4 | r(i, j + 1) << 5 | r(i - 1, j + 1) << 6 | r(i + 1, j) << 7 | r(i, j) << 8 | r(i - 1, j) << 9 | r(i + 1, j - 1) << 10 | r(i, j - 1) << 11 | r(i + at34[2], j + at34[3]) << 12;
@@ -38013,7 +38013,7 @@ var LevelRows = class {
     return m % this.R * this.rw;
   }
   arrive() {
-    const k = this.k++, { rw, rh, sw, casx, casy, irr, S: S3, R: R5, buf, line } = this;
+    const k = this.k++, { rw, rh, sw, casx, casy, irr, S: S3, R: R6, buf, line } = this;
     if (k < rh) {
       const low = (k & 1) === casy;
       const A = low ? this.prev : this.lh, B = low ? this.hl : this.hh;
@@ -38023,7 +38023,7 @@ var LevelRows = class {
       for (let i = 0; i < sw; i++) line[casx ? 2 * i + 1 : 2 * i] = a[ao + i];
       for (let i = 0; i < rw - sw; i++) line[casx ? 2 * i : 2 * i + 1] = b[bo + i];
       (irr ? idwt97 : idwt53)(line, rw, casx);
-      const o = k % R5 * rw;
+      const o = k % R6 * rw;
       if (rh === 1) {
         if (!irr && casy) for (let i = 0; i < rw; i++) buf[o + i] = Math.trunc(line[i] / 2);
         else buf.set(line, o);
@@ -38036,7 +38036,7 @@ var LevelRows = class {
     for (let s = 1; s <= S3; s++) {
       const j = k - s;
       if (j < 0 || j >= rh || (j & 1) !== (s & 1 ? casy : 1 - casy)) continue;
-      const o = j % R5 * rw, up = j > 0 ? (j - 1) % R5 * rw : -1, dn = j + 1 < rh ? (j + 1) % R5 * rw : -1;
+      const o = j % R6 * rw, up = j > 0 ? (j - 1) % R6 * rw : -1, dn = j + 1 < rh ? (j + 1) % R6 * rw : -1;
       if (irr) {
         const c = LIFT97[s - 1];
         if (up < 0) for (let i = 0; i < rw; i++) buf[o + i] = f32(buf[o + i] + f32(f32(buf[dn + i] + buf[dn + i]) * c));
@@ -40966,10 +40966,10 @@ async function readingProvenance({
     out.pages_why = out.why;
     return out;
   }
-  const flat = flattenText(text7);
-  out.text_from = flat.source;
-  out.text_chars = flat.text.length;
-  out.text_sha256 = flat.text.length ? await sha256Hex9(flat.text) : null;
+  const flat2 = flattenText(text7);
+  out.text_from = flat2.source;
+  out.text_chars = flat2.text.length;
+  out.text_sha256 = flat2.text.length ? await sha256Hex9(flat2.text) : null;
   const byKey = /* @__PURE__ */ new Map();
   const credit = (t2, engine, page2, fallback = null) => {
     const member = t2 == null ? fallback : TIER_MEMBERS[t2] ?? null;
@@ -41011,7 +41011,7 @@ async function readingProvenance({
   } else {
     out.pages_why = "this text carries no per-page grain (its producer itemised no pages), so a re-read that differs is attributed to the document, not to a page";
     const c = chainTierOf(chain3, -1);
-    if (flat.text.length) credit(
+    if (flat2.text.length) credit(
       c && c.tier != null ? c.tier : out.text_tier,
       c && c.engine,
       null,
@@ -42796,9 +42796,9 @@ var Extraction = class _Extraction {
         if (!e2 || e2.key == null && e2.kind == null) continue;
         const ref = typeof e2.ref === "string" && e2.ref ? e2.ref : `${e2.kind == null ? "" : e2.kind}:${e2.key == null ? "" : e2.key}`;
         const all = Array.isArray(e2.occurrences) ? e2.occurrences : [];
-        const listed = all.slice(0, OCCURRENCES_PER_REF);
-        const places = (e2.source || !listed.length ? [e2.source] : []).concat(listed).map(readingSource);
-        if (all.length > listed.length) places.push(null);
+        const listed2 = all.slice(0, OCCURRENCES_PER_REF);
+        const places = (e2.source || !listed2.length ? [e2.source] : []).concat(listed2).map(readingSource);
+        if (all.length > listed2.length) places.push(null);
         const wrote = /* @__PURE__ */ new Set();
         for (const pos of places) {
           const occ = readingOccurrenceKey(pos);
@@ -61049,7 +61049,7 @@ var Connections = class _Connections {
     const byForm = named ? reads.filter((x) => x.pos_ref === named) : [];
     const pick3 = named != null ? reads.find((x) => x.occurrence === named) || (byForm.length === 1 ? byForm[0] : null) : reads.length <= 1 ? reads[0] || null : null;
     const occCut = reads.length > OCCURRENCES_PER_REF;
-    const listed = () => (occCut ? reads.slice(0, OCCURRENCES_PER_REF) : reads).map((x) => ({
+    const listed2 = () => (occCut ? reads.slice(0, OCCURRENCES_PER_REF) : reads).map((x) => ({
       occurrence: x.occurrence,
       position: readingSourceFromColumns(x.pos_kind, x.pos, x.pos_ref)
     }));
@@ -61080,7 +61080,7 @@ var Connections = class _Connections {
           entity_id: entityId,
           ref: mention.ref,
           occurrence: named,
-          occurrences: listed(),
+          occurrences: listed2(),
           limit: OCCURRENCES_PER_REF,
           truncated: occCut
         }
@@ -61093,7 +61093,7 @@ var Connections = class _Connections {
           capture: capture2,
           entity_id: entityId,
           ref: mention.ref,
-          occurrences: listed(),
+          occurrences: listed2(),
           limit: OCCURRENCES_PER_REF,
           truncated: occCut
         }
@@ -61109,7 +61109,7 @@ var Connections = class _Connections {
       b_capture_sha: bSha,
       entity_id: entityId,
       side,
-      occurrences: listed(),
+      occurrences: listed2(),
       limit: OCCURRENCES_PER_REF,
       truncated: occCut,
       chosen: {
@@ -76905,11 +76905,11 @@ function extendView(parent, field, cellOf) {
     pick: (idx) => each(parent.pick(idx))
   };
 }
-function joinView(L3, R5, fields, li2, rj) {
-  const merge2 = (l2, r) => [...L3.asArray(l2), ...R5.asArray(r)];
+function joinView(L3, R6, fields, li2, rj) {
+  const merge2 = (l2, r) => [...L3.asArray(l2), ...R6.asArray(r)];
   function* scan() {
     if (!li2.length) return;
-    const right = R5.pick(rj);
+    const right = R6.pick(rj);
     let p3 = 0;
     let i = 0;
     for (const lrow of L3.scan()) {
@@ -76923,7 +76923,7 @@ function joinView(L3, R5, fields, li2, rj) {
   }
   function* pick3(idx) {
     const left2 = L3.pick(idx.map((k) => li2[k]));
-    const right = R5.pick(idx.map((k) => rj[k]));
+    const right = R6.pick(idx.map((k) => rj[k]));
     for (let k = 0; k < idx.length; k++) yield merge2(left2.next().value, right.next().value);
   }
   return { fields, streamed: true, size: li2.length, reader: readers(fields), scan, pick: pick3, asArray: (row9) => row9 };
@@ -77505,9 +77505,9 @@ var RUN = {
   },
   join(st, env, opts) {
     const L3 = env.table(st.left);
-    const R5 = env.table(st.right);
+    const R6 = env.table(st.right);
     const lf = fieldOf(L3, st.on.left, st.as, "the join's left field");
-    const rf = fieldOf(R5, st.on.right, st.as, "the join's right field");
+    const rf = fieldOf(R6, st.on.right, st.as, "the join's right field");
     const set = [];
     let keyOf5;
     if (st.space !== void 0) {
@@ -77544,9 +77544,9 @@ var RUN = {
       };
     }
     const index2 = /* @__PURE__ */ new Map();
-    const readRight = R5.reader(rf.name);
+    const readRight = R6.reader(rf.name);
     let j = 0;
-    for (const row9 of R5.scan()) {
+    for (const row9 of R6.scan()) {
       const v = readRight(row9);
       if (empty(v)) set.push({ side: "right", row: j, why: `"${rf.name}" is empty` });
       else {
@@ -77560,8 +77560,8 @@ var RUN = {
       }
       j += 1;
     }
-    const fields = [...L3.fields, ...R5.fields.map((f17) => ({ ...f17, name: `${st.right}.${f17.name}` }))];
-    const streamed = L3.streamed || R5.streamed;
+    const fields = [...L3.fields, ...R6.fields.map((f17) => ({ ...f17, name: `${st.right}.${f17.name}` }))];
+    const streamed = L3.streamed || R6.streamed;
     const li2 = [];
     const rj = [];
     const rows3 = [];
@@ -77580,14 +77580,14 @@ var RUN = {
             continue;
           }
           const out = { ...lrow };
-          const rrow = R5.list[m];
-          for (const f17 of R5.fields) out[`${st.right}.${f17.name}`] = rrow[f17.name];
+          const rrow = R6.list[m];
+          for (const f17 of R6.fields) out[`${st.right}.${f17.name}`] = rrow[f17.name];
           rows3.push(out);
         }
       }
       i += 1;
     }
-    return { kind: "table", value: streamed ? joinView(L3, R5, fields, li2, rj) : objectTable(fields, rows3), inputRows: L3.size + R5.size, set };
+    return { kind: "table", value: streamed ? joinView(L3, R6, fields, li2, rj) : objectTable(fields, rows3), inputRows: L3.size + R6.size, set };
   },
   sort(st, env) {
     const t2 = env.table(st.from);
@@ -83261,10 +83261,10 @@ var Calculations = class {
     });
     const inside = judged.filter((j) => j.answer === "in");
     const open = judged.filter((j) => j.answer !== "in" && j.answer !== "out");
-    const listed = judged.map((j) => ({ sha: j.sha, valid: j.valid, superseded_by: j.superseded_by, at: typeof j.answer === "string" ? j.answer : "undetermined", ...typeof j.answer === "string" ? {} : { why: j.answer.why } }));
-    if (inside.length === 1 && !open.length) return { ok: true, key: str7(key), at: at34, state: "determined", table: inside[0].sha, vintages: listed };
+    const listed2 = judged.map((j) => ({ sha: j.sha, valid: j.valid, superseded_by: j.superseded_by, at: typeof j.answer === "string" ? j.answer : "undetermined", ...typeof j.answer === "string" ? {} : { why: j.answer.why } }));
+    if (inside.length === 1 && !open.length) return { ok: true, key: str7(key), at: at34, state: "determined", table: inside[0].sha, vintages: listed2 };
     const why = inside.length > 1 ? `${inside.length} vintages are each valid on ${at34}, and none is chosen between them` : open.length ? `whether ${open.map((j) => j.sha.slice(0, 12)).join(", ")} ${open.length > 1 ? "were" : "was"} valid on ${at34} is undetermined: ${open.map((j) => j.answer.why).join("; ")}` : `no vintage under "${str7(key)}" is valid on ${at34}`;
-    return { ok: true, key: str7(key), at: at34, state: "undetermined", table: null, why, vintages: listed };
+    return { ok: true, key: str7(key), at: at34, state: "undetermined", table: null, why, vintages: listed2 };
   }
   /* ===================================================================== *
    * BINDING INPUTS (R4, R5, R9, R10, R12)
@@ -96065,9 +96065,9 @@ var Sources = class _Sources {
     if (!reader || !this.#source(source2)) return noSuchSource(source2);
     const all = this.#rows(`SELECT source_id AS source, entry_id AS entry, reader, at FROM source_reads WHERE source_id = ? ORDER BY seq`, source2);
     if (this.#isAdmin(reader)) return { ok: true, source: source2, scope: "all", log: all };
-    const listed = new Set(this.#rows(`SELECT s.entry_id FROM source_sight s JOIN source_entries e ON e.entry_id = s.entry_id
+    const listed2 = new Set(this.#rows(`SELECT s.entry_id FROM source_sight s JOIN source_entries e ON e.entry_id = s.entry_id
                                         WHERE e.source_id = ? AND s.member_id = ?`, source2, reader).map((r) => r.entry_id));
-    return { ok: true, source: source2, scope: "listed", log: all.filter((r) => listed.has(r.entry)) };
+    return { ok: true, source: source2, scope: "listed", log: all.filter((r) => listed2.has(r.entry)) };
   }
   /* ---- the ladder (R9) ---- */
   /** R9: the rung and the entries it rests on, from the current (unsuperseded) entries. A hostile claim never raises
@@ -103974,12 +103974,12 @@ var Contradiction = class _Contradiction {
       };
     };
     const period = (f17) => f17 ? { from: f17.period_from, to: f17.period_to, precision: f17.period_precision, zone: f17.period_zone } : null;
-    const figure2 = (f17) => f17 ? { as_read: f17.as_read, precision: f17.precision, currency: f17.currency } : null;
+    const figure3 = (f17) => f17 ? { as_read: f17.as_read, precision: f17.precision, currency: f17.currency } : null;
     const parties = (f17) => f17 ? [f17.from_entity, f17.to_entity].filter(Boolean) : null;
     const facts = [
       fact("time_or_occasion", "accounting_period", period(fa), period(fb)),
       fact("observer_or_method", "basis", fa ? fa.basis : null, fb ? fb.basis : null),
-      fact("meaning", "figure_as_read", figure2(fa), figure2(fb)),
+      fact("meaning", "figure_as_read", figure3(fa), figure3(fb)),
       fact("observer_or_method", "capture", this.#shown(row9.a)?.capture_sha ?? null, this.#shown(row9.b)?.capture_sha ?? null),
       fact("subject", "parties", parties(fa), parties(fb))
     ];
@@ -107974,15 +107974,15 @@ var Reevaluation = class {
       }
       if (deps.length < CORRECTED_LIMIT_MAX) break;
     }
-    const listed = entries.slice(0, cap);
+    const listed2 = entries.slice(0, cap);
     const truncated3 = entries.length > cap;
     return {
       ok: true,
-      entries: listed,
-      count: listed.length,
+      entries: listed2,
+      count: listed2.length,
       limit: cap,
       truncated: truncated3,
-      cursor: truncated3 ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].candidate}` : null,
+      cursor: truncated3 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].candidate}` : null,
       wrote: false,
       corrections_read: read3,
       ...read3 ? {} : { corrections_why: CORRECTIONS_UNREAD },
@@ -108031,15 +108031,15 @@ var Reevaluation = class {
     const cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0;
     const entries = [...byKey.values()].filter((e2) => e2.dependent > aDep || e2.dependent === aDep && e2.entry > aEntry).sort((a, b) => cmp(a.dependent, b.dependent) || cmp(a.entry, b.entry));
     for (const e2 of entries) e2.legs.sort((a, b) => cmp(a.target, b.target) || a.ord - b.ord);
-    const listed = entries.slice(0, cap);
+    const listed2 = entries.slice(0, cap);
     const truncated3 = entries.length > cap;
     return {
       ok: true,
-      entries: listed,
-      count: listed.length,
+      entries: listed2,
+      count: listed2.length,
       limit: cap,
       truncated: truncated3,
-      cursor: truncated3 ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].entry}` : null,
+      cursor: truncated3 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].entry}` : null,
       wrote: false,
       ...dk.flags(),
       says: "each finding listed rests on a member finding of a case edition withdrawn on its docket, or is a member finding of an edition a filed response contests; nothing was moved or regraded, no docket entry is evidence, and a recorded re-evaluation closes the cause"
@@ -108205,15 +108205,15 @@ var Reevaluation = class {
     const aIdx = aMove ? order3.has(aMove) ? order3.get(aMove) : Infinity : -1;
     const entries = [...byKey.values()].filter((e2) => e2.dependent > aDep || e2.dependent === aDep && order3.get(e2.move) > aIdx).sort((a, b) => cmp(a.dependent, b.dependent) || order3.get(a.move) - order3.get(b.move));
     for (const e2 of entries) e2.legs.sort((a, b) => cmp(a.target, b.target) || a.ord - b.ord);
-    const listed = entries.slice(0, cap);
+    const listed2 = entries.slice(0, cap);
     const truncated3 = entries.length > cap;
     return {
       ok: true,
-      entries: listed,
-      count: listed.length,
+      entries: listed2,
+      count: listed2.length,
       limit: cap,
       truncated: truncated3,
-      cursor: truncated3 ? `${listed[listed.length - 1].dependent}#${listed[listed.length - 1].move}` : null,
+      cursor: truncated3 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].move}` : null,
       wrote: false,
       ...mv.flags(),
       ...refs.flags(),
@@ -108416,19 +108416,19 @@ var Reevaluation = class {
       };
     });
     for (const a of all) out[a.verdict]++;
-    const listed = all.slice(from, from + cap);
+    const listed2 = all.slice(from, from + cap);
     return {
       ok: true,
       affected: all.length,
       wrong: out.wrong,
       right: out.right,
       undetermined: out.undetermined,
-      bundles: listed,
-      count: listed.length,
+      bundles: listed2,
+      count: listed2.length,
       total: all.length,
       limit: cap,
       offset: from,
-      truncated: from + listed.length < all.length,
+      truncated: from + listed2.length < all.length,
       wrote: false,
       note: "read-only: every body stays as written (BOB #31, 2026-09-23 22:22Z); this answer is the correction. 'undetermined' is the chain unable to check a sentence, never evidence it was right."
     };
@@ -119854,8 +119854,8 @@ var PublicRead = class {
     const said7 = this.#editionStatements(signed3, theCase, ed, editions, { docWithheld, index: index2 });
     const calculations = signed3 ? this.#calculationsOf(signed3.fm) : docWithheld ? null : [];
     const timeline = signed3 ? this.#timelineOf(signed3.fm) : docWithheld ? null : { they_did: [], we_did: [], placed_nowhere: { they_did: [], we_did: [] }, detail: TIMELINE_SENTENCE };
-    const listed = manifestHeld && Array.isArray(manifestHeld.files) ? manifestHeld.files : manifestHeld && Array.isArray(manifestHeld.parts) ? manifestHeld.parts : [];
-    const files = listed.map((p3) => ({
+    const listed2 = manifestHeld && Array.isArray(manifestHeld.files) ? manifestHeld.files : manifestHeld && Array.isArray(manifestHeld.parts) ? manifestHeld.parts : [];
+    const files = listed2.map((p3) => ({
       path: p3.path,
       sha256: p3.sha256,
       kind: p3.kind,
@@ -129260,11 +129260,11 @@ function crossFoot(ix) {
   }
   const rowsets = [...groups.values()].filter((g) => g[0].dir === "row" && g.length >= 2);
   const colsets = [...groups.values()].filter((g) => g[0].dir === "col" && g.length >= 2);
-  for (const R5 of rowsets) for (const C2 of colsets) {
-    const sheet = R5[0].f.sheet;
+  for (const R6 of rowsets) for (const C2 of colsets) {
+    const sheet = R6[0].f.sheet;
     if (C2[0].f.sheet !== sheet) continue;
-    const rows3 = R5.map((l2) => l2.line), cols = C2.map((l2) => l2.line);
-    const rFrom = C2[0].from, rTo = C2[0].to, cFrom = R5[0].from, cTo = R5[0].to;
+    const rows3 = R6.map((l2) => l2.line), cols = C2.map((l2) => l2.line);
+    const rFrom = C2[0].from, rTo = C2[0].to, cFrom = R6[0].from, cTo = R6[0].to;
     if (!rows3.every((x) => x >= rFrom && x <= rTo) || !cols.every((x) => x >= cFrom && x <= cTo)) continue;
     if (rows3.length !== rTo - rFrom + 1 || cols.length !== cTo - cFrom + 1) continue;
     const total2 = (ls) => {
@@ -129276,11 +129276,11 @@ function crossFoot(ix) {
       }
       return acc;
     };
-    const a = total2(R5), b = total2(C2);
+    const a = total2(R6), b = total2(C2);
     if (!a || !b || sameDecimal(a, b)) continue;
-    const corner = cellName(C2[0].f.r, R5[0].f.c);
+    const corner = cellName(C2[0].f.r, R6[0].f.c);
     const show2 = (x) => `${x.sign === "-" ? "-" : ""}${x.value}`;
-    out.push({ kind: "cross_foot", cell: `${sheet}!${corner}`, detail: `the row totals in column ${cellName(1, R5[0].f.c).replace(/1$/, "")} add to ${show2(a)}, the column totals in row ${C2[0].f.r} to ${show2(b)}, over ${cellName(rFrom, cFrom)}:${cellName(rTo, cTo)}` });
+    out.push({ kind: "cross_foot", cell: `${sheet}!${corner}`, detail: `the row totals in column ${cellName(1, R6[0].f.c).replace(/1$/, "")} add to ${show2(a)}, the column totals in row ${C2[0].f.r} to ${show2(b)}, over ${cellName(rFrom, cFrom)}:${cellName(rTo, cTo)}` });
   }
   return out;
 }
@@ -132140,14 +132140,14 @@ function recreateOne(row9, ord, byContent, byStated) {
     }
     let b = byContent.get(inp.sha);
     if (!b) {
-      const listed = byStated.get(inp.sha);
-      missing2.push(listed ? {
+      const listed2 = byStated.get(inp.sha);
+      missing2.push(listed2 ? {
         input: inp.name,
         sha: inp.sha,
-        carried: listed.got,
-        path: listed.path,
+        carried: listed2.got,
+        path: listed2.path,
         why: "the file carried for this input differs from its hash",
-        ...listed.detail ? { detail: listed.detail } : {}
+        ...listed2.detail ? { detail: listed2.detail } : {}
       } : { input: inp.name, sha: inp.sha, why: "the case file does not carry this input; bytes with this SHA-256 complete it" });
       continue;
     }
@@ -132417,7 +132417,7 @@ var CaseImport = class _CaseImport {
   /* R21: the edition's carried calculations recreated, from its case document's `calculations:` rows (`case-grammar`
      R18), over its files (each with the SHA-256 its manifest states) and the documents supplied for it. */
   #calculationsOf(files, manifest, documents) {
-    const listed = new Map(_CaseImport.#manifestFiles(manifest).map((f17) => [f17.path, f17.sha]));
+    const listed2 = new Map(_CaseImport.#manifestFiles(manifest).map((f17) => [f17.path, f17.sha]));
     const doc = files.find((f17) => f17.kind === "case_document" && f17.content instanceof Uint8Array);
     const fm = doc ? this.#call(() => parseFrontmatter(new TextDecoder().decode(doc.content)).data) : null;
     const rows3 = isObj32(fm) ? this.#call(() => calculationsOf2(fm), []) : [];
@@ -132426,7 +132426,7 @@ var CaseImport = class _CaseImport {
       documents,
       files: files.filter(isObj32).map((f17) => ({
         path: f17.path,
-        sha256: listed.get(f17.path) ?? null,
+        sha256: listed2.get(f17.path) ?? null,
         content: f17.content instanceof Uint8Array ? f17.content : null,
         detail: f17.detail ?? null
       }))
@@ -132479,7 +132479,7 @@ var CaseImport = class _CaseImport {
         "the manifest departs from the case-file format",
         { departures: ["the manifest does not name its group, case and edition"] }
       );
-    const listed = new Map(_CaseImport.#manifestFiles(read3.manifest).map((f17) => [f17.path, f17]));
+    const listed2 = new Map(_CaseImport.#manifestFiles(read3.manifest).map((f17) => [f17.path, f17]));
     const files = (Array.isArray(read3.files) ? read3.files : []).filter((f17) => isObj32(f17) && str27(f17.path) && f17.content instanceof Uint8Array);
     const docFile = files.find((f17) => f17.kind === "case_document");
     const docBytes = docFile ? docFile.content : null;
@@ -132563,7 +132563,7 @@ var CaseImport = class _CaseImport {
           str27(f17.kind),
           shaOf6(f17.content),
           f17.content.length,
-          listed.get(f17.path)?.part ?? 0
+          listed2.get(f17.path)?.part ?? 0
         );
       this.#recordCheck(importId, who2.edition, answer, { cause: "import", by: k.member, at: at34, published, calcs });
       return { ok: true };
@@ -133225,7 +133225,7 @@ var CaseImport = class _CaseImport {
       seen.add(served(r.seq === null ? null : Number(r.seq), r.digest, r.json, r.signature));
       if (r.status === "verified") verified.set(Number(r.seq), r.digest);
     }
-    const listed = this.#listedKeys(i.import_id);
+    const listed2 = this.#listedKeys(i.import_id);
     const seqOf = (e2) => isObj32(e2) && Number.isInteger(e2.seq) && e2.seq > 0 ? e2.seq : null;
     const ordered2 = list6.map((e2, n) => ({ e: e2, n })).sort((a, b) => (seqOf(a.e) ?? Infinity) - (seqOf(b.e) ?? Infinity) || a.n - b.n);
     const out = [];
@@ -133279,7 +133279,7 @@ var CaseImport = class _CaseImport {
       } catch {
         statement = null;
       }
-      let v = statement && signature ? await verifySshsig(signature, statement, NS_DOCKET, listed) : { ok: false, reason: "MALFORMED" };
+      let v = statement && signature ? await verifySshsig(signature, statement, NS_DOCKET, listed2) : { ok: false, reason: "MALFORMED" };
       let keyListed = v.ok === true;
       if (!v.ok && v.reason === "UNKNOWN_KEY" && v.keyB64) {
         v = await verifySshsig(signature, statement, NS_DOCKET, [v.keyB64]);
@@ -134125,7 +134125,7 @@ function acceptedWorkRow(leg2, parsed, acceptance, edition, found2) {
     reason: acceptance.reason ?? null
   };
 }
-function flagsJudged(reads, listed) {
+function flagsJudged(reads, listed2) {
   const failed3 = [];
   const open = [];
   for (const r of reads) {
@@ -134154,8 +134154,8 @@ function flagsJudged(reads, listed) {
   return {
     failed: failed3,
     open,
-    undisclosed: open.filter((f17) => !listed.byFlag.has(f17.flag)),
-    notStanding: [...listed.byFlag.values()].filter((d) => !standing.has(d.flag))
+    undisclosed: open.filter((f17) => !listed2.byFlag.has(f17.flag)),
+    notStanding: [...listed2.byFlag.values()].filter((d) => !standing.has(d.flag))
   };
 }
 
@@ -134541,25 +134541,25 @@ var CaseDisclosures = class {
    *  `{refusals, entries, unread, byCandidate}`: the list's own malformation or C-120.3 alone, else C-120.1 and C-120.2
    *  in that order, each once; `op=publish` answers the first, `case-authoring` R34's pre-flight lists them all. */
   tensionsJudged(prepared, viewer, tensionsDisclosed) {
-    const listed = this.#disclosuresListed(tensionsDisclosed);
-    if (listed.ok === false) return { refusals: [listed], entries: [], unread: [], byCandidate: /* @__PURE__ */ new Map() };
+    const listed2 = this.#disclosuresListed(tensionsDisclosed);
+    if (listed2.ok === false) return { refusals: [listed2], entries: [], unread: [], byCandidate: /* @__PURE__ */ new Map() };
     const read3 = this.tensionsRead(prepared, viewer);
-    if (read3.ok === false) return { refusals: [read3], entries: [], unread: [], byCandidate: listed.byCandidate };
+    if (read3.ok === false) return { refusals: [read3], entries: [], unread: [], byCandidate: listed2.byCandidate };
     const refusals = [];
-    const undisclosed = read3.entries.filter((e2) => !listed.byCandidate.has(e2.candidate));
+    const undisclosed = read3.entries.filter((e2) => !listed2.byCandidate.has(e2.candidate));
     if (undisclosed.length)
       refusals.push(disclosureRefusal("TENSION_NOT_DISCLOSED", {
         undisclosed: undisclosed.map((e2) => this.#namedInRefusal(e2)),
         detail: `${undisclosed.length} unresolved conflict(s) on what this case rests on are not disclosed (` + undisclosed.map((e2) => `${e2.candidate} on ${e2.finding}` + (e2.unseen_other_side ? `, ${NOT_SHOWN_WORDS}` : "")).join("; ") + `). A case is published with its conflicts disclosed, never refused because one exists (DEC-76 item 4): list each in tensionsDisclosed, or resolve it first. Nothing was published.`
       }));
     const standing = new Set(read3.entries.map((e2) => e2.candidate));
-    const notStanding = [...listed.byCandidate.values()].filter((d) => !standing.has(d.candidate));
+    const notStanding = [...listed2.byCandidate.values()].filter((d) => !standing.has(d.candidate));
     if (notStanding.length)
       refusals.push(disclosureRefusal("DISCLOSURE_NOT_STANDING", {
         not_standing: notStanding.map((d) => ({ candidate: d.candidate, ord: d.ord })),
         detail: `${notStanding.map((d) => d.candidate).join(", ")} is not an unresolved conflict on this case's findings at the bytes this act pins: it may have been resolved since, or it names nothing this case rests on. Read the list again (op=publishtensions). Nothing was published.`
       }));
-    return { refusals, entries: read3.entries, unread: read3.unread, byCandidate: listed.byCandidate };
+    return { refusals, entries: read3.entries, unread: read3.unread, byCandidate: listed2.byCandidate };
   }
   /** R2 — WHAT EACH MEMBER RESTS ON, AS CAPTURES, ONE LEVEL DEEP (as `case-authoring` R29 and R1 read): each document leg of the
    *  member's basis at the bytes this act pins, either role, names its content row's capture, else every capture its
@@ -134860,8 +134860,8 @@ var CaseDisclosures = class {
    *  not listed C-120.11, naming each, and a listed one not open C-120.13. Never refused because a flag is open. Answers
    *  `{refusals, open, byFlag}`. */
   flagsJudged(editions, flagsDisclosed) {
-    const listed = flagsListed(flagsDisclosed);
-    if (listed.ok === false) return { refusals: [listed], open: [], byFlag: /* @__PURE__ */ new Map() };
+    const listed2 = flagsListed(flagsDisclosed);
+    if (listed2.ok === false) return { refusals: [listed2], open: [], byFlag: /* @__PURE__ */ new Map() };
     const reads = editions.map((e2) => {
       let answer;
       try {
@@ -134871,7 +134871,7 @@ var CaseDisclosures = class {
       }
       return { ...e2, answer };
     });
-    const j = flagsJudged(reads, listed);
+    const j = flagsJudged(reads, listed2);
     const refusals = [];
     if (j.failed.length)
       return {
@@ -134880,7 +134880,7 @@ var CaseDisclosures = class {
           detail: `the flags on another group's work this case rests on could not be read whole (` + j.failed.map((f17) => `edition ${f17.edition} of import ${f17.import}: ${f17.why}`).join("; ") + `), so what this case must disclose is not known. Try again. Nothing was published.`
         })],
         open: [],
-        byFlag: listed.byFlag
+        byFlag: listed2.byFlag
       };
     if (j.undisclosed.length)
       refusals.push(disclosureRefusal("FLAG_NOT_DISCLOSED", {
@@ -134892,7 +134892,7 @@ var CaseDisclosures = class {
         not_standing: j.notStanding.map((d) => ({ flag: d.flag, ord: d.ord })),
         detail: `${j.notStanding.map((d) => d.flag).join(", ")} is not an open flag on work this case rests on: it may have been cleared since. Read the list again (op=publishpreflight). Nothing was published.`
       }));
-    return { refusals, open: j.open, byFlag: listed.byFlag };
+    return { refusals, open: j.open, byFlag: listed2.byFlag };
   }
   /** R4 (DEC-78 item 5): what may be stated of the source of each capture given to the group rather than fetched. The
    *  capture's source is found through `sources.sourceOf` (a capture no source stands behind, a fetched one, has none,
@@ -135088,13 +135088,13 @@ var CaseDisclosures = class {
    *  whose basis stands: the places named, the basis kind and its citation, the owner's words; never a judgment of the
    *  person, never a person fact. */
   peopleJudged(named, peopleBases, viewer) {
-    const listed = basesListed(peopleBases);
-    if (listed.ok === false) return { refusals: [listed], rows: [] };
+    const listed2 = basesListed(peopleBases);
+    if (listed2.ok === false) return { refusals: [listed2], rows: [] };
     const persons = named && Array.isArray(named.named) ? named.named : [];
     const keyOf5 = /* @__PURE__ */ new Map();
     for (const p3 of persons) for (const m of [p3.person, ...Array.isArray(p3.members) ? p3.members : []]) keyOf5.set(m, p3.person);
     const basisOf2 = /* @__PURE__ */ new Map();
-    for (const d of listed.byPerson.values()) {
+    for (const d of listed2.byPerson.values()) {
       const key = keyOf5.get(d.person);
       if (key !== void 0 && !basisOf2.has(key)) basisOf2.set(key, d);
     }
@@ -135419,7 +135419,7 @@ var CaseDisclosures = class {
   } = {}) {
     const who2 = author, when = at34;
     const byCapture = selfAttested instanceof Map ? selfAttested : selfAttested && selfAttested.byCapture instanceof Map ? selfAttested.byCapture : /* @__PURE__ */ new Map();
-    const factsOf3 = (sha2) => {
+    const factsOf4 = (sha2) => {
       if (!facts.has(sha2)) facts.set(sha2, this.captureFacts(sha2));
       return facts.get(sha2);
     };
@@ -135429,7 +135429,7 @@ var CaseDisclosures = class {
     };
     const accountsCarried = /* @__PURE__ */ new Set();
     const captures = resting.map((r) => {
-      const { accounts_read, ...f17 } = factsOf3(r.capture);
+      const { accounts_read, ...f17 } = factsOf4(r.capture);
       const ack = byCapture.get(r.capture) || null;
       const first = !accountsCarried.has(r.capture);
       accountsCarried.add(r.capture);
@@ -135462,7 +135462,7 @@ var CaseDisclosures = class {
         project,
         group,
         at: when,
-        facts: factsOf3,
+        facts: factsOf4,
         origin: (sha2) => withheld.has(sha2) ? null : (this.#one(`SELECT address FROM captured_locators WHERE capture_sha=?
                          AND address NOT LIKE 'knock:%' ORDER BY first_retrieved, address LIMIT 1`, sha2) || {}).address ?? null,
         registered: (sha2) => this.#one(`SELECT bundle_id, registered FROM register WHERE capture_sha=?`, sha2),
@@ -136516,7 +136516,7 @@ var CaseAuthoring = class {
       field,
       detail: `${field} is a list of {calc, words?}: each names a calculation (or a workbook's capture) by its id, and its words, when given, are at most ${COMPLETENESS_MAX3} characters with no quote, backslash or line break`
     } });
-    const listed = /* @__PURE__ */ new Map();
+    const listed2 = /* @__PURE__ */ new Map();
     if (calculationsDisclosed != null) {
       if (!Array.isArray(calculationsDisclosed)) return bad2("calculationsDisclosed");
       for (let i = 0; i < calculationsDisclosed.length; i++) {
@@ -136525,7 +136525,7 @@ var CaseAuthoring = class {
         if (e2.words !== void 0 && e2.words !== null && (typeof e2.words !== "string" || e2.words.length > COMPLETENESS_MAX3 || /["\\\r\n]/.test(e2.words)))
           return bad2(`calculationsDisclosed[${i}].words`);
         const k = str29(e2.calc);
-        if (!listed.has(k)) listed.set(k, e2.words == null ? "" : String(e2.words).trim());
+        if (!listed2.has(k)) listed2.set(k, e2.words == null ? "" : String(e2.words).trim());
       }
     }
     const reached = this.#calculationsReached(prepared);
@@ -136541,12 +136541,12 @@ var CaseAuthoring = class {
     const rows3 = [], undisclosed = [], money = [];
     const judge = (calc, members2, state, row9) => {
       const needs = loadBearing(members2) && (state === "differs" || state === "unbound");
-      if (needs && !listed.has(calc)) undisclosed.push({ calc, members: members2, recompute: state });
+      if (needs && !listed2.has(calc)) undisclosed.push({ calc, members: members2, recompute: state });
       rows3.push({
         calc,
         ...row9,
         recompute: state,
-        disclosed: needs && listed.has(calc) ? listed.get(calc) || DISCLOSED_WITHOUT_WORDS : null
+        disclosed: needs && listed2.has(calc) ? listed2.get(calc) || DISCLOSED_WITHOUT_WORDS : null
       });
     };
     for (const f17 of facts && facts.calculations || []) {
@@ -136858,7 +136858,7 @@ var CaseAuthoring = class {
     if (disclosed.refusal) return disclosed.refusal;
     const { tensionsJ, resting, facts, selfJ, reached, accepted, flagsJ, calcJ, timeline, lens: lensRead, peopleJ, tiesJ } = disclosed;
     const read3 = { entries: tensionsJ.entries, unread: tensionsJ.unread };
-    const listed = { byCandidate: tensionsJ.byCandidate };
+    const listed2 = { byCandidate: tensionsJ.byCandidate };
     const belongs = /* @__PURE__ */ new Map();
     for (const id of members2) {
       const rs = this.#rows(
@@ -137161,7 +137161,7 @@ var CaseAuthoring = class {
       /* R55: each tension entry, the owner's words marked as the owner's, acknowledged by the `author` stamp at this act. */
       tensions: read3.entries.map((e2) => ({
         ...e2,
-        words: listed.byCandidate.get(e2.candidate).words,
+        words: listed2.byCandidate.get(e2.candidate).words,
         acknowledged_by: who2,
         acknowledged_at: when
       })),
@@ -137251,7 +137251,7 @@ var CaseAuthoring = class {
       /* R55: what the document discloses, as it states it (R33: a highlighted one carries its seen side only). */
       tensions: read3.entries.map((e2) => ({
         ...e2,
-        words: listed.byCandidate.get(e2.candidate).words,
+        words: listed2.byCandidate.get(e2.candidate).words,
         acknowledged_by: who2,
         acknowledged_at: when
       })),
@@ -138364,7 +138364,7 @@ case_project: ${project}
     const byPublisher = (r) => !!(exceptAuthor && r.acknowledger_kind === "participant" && r.acknowledger === exceptAuthor);
     const byTheWriter = (r) => !!(writer && writer.by && r.acknowledger_kind === "participant" && r.acknowledger === writer.by && !byPublisher(r));
     const undeterminedWithheld = (r) => !!(writer && writer.by === null && r.acknowledger_kind === "participant" && !byPublisher(r));
-    const listed = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
+    const listed2 = all.filter((r) => !byPublisher(r) && !byTheWriter(r) && !undeterminedWithheld(r));
     const writerBy = writer && typeof writer.by === "string" ? writer.by : null;
     const writerUndetermined = writer && writer.by === null ? 1 : 0;
     const unboundRow = unallocated ? null : this.#one(
@@ -138396,7 +138396,7 @@ case_project: ${project}
       statementSha: sha2,
       truncated: truncated3,
       link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null } : null,
-      boundByLink: linked ? listed.filter((r) => r.case_id == null).length : 0,
+      boundByLink: linked ? listed2.filter((r) => r.case_id == null).length : 0,
       byAuthor: all.filter(byPublisher).length,
       byWriter,
       withheldWriterUndetermined,
@@ -138407,7 +138407,7 @@ case_project: ${project}
       /* R19: each row carries its acknowledger's words, null on one recorded before DEC-88. The document's
          lines (`ackFrontmatterLines`, `ackBodyLines`) print the fields they always printed, so the signed
          acknowledgement lines are unchanged. */
-      rows: listed.map((r) => ({
+      rows: listed2.map((r) => ({
         kind: r.acknowledger_kind,
         by: r.acknowledger,
         recipient: r.recipient ?? null,
@@ -139516,8 +139516,8 @@ var FilingTemplates = class _FilingTemplates {
         "a kind is lower-case letters, digits and underscores, beginning with a letter",
         { kind: typeof kind === "string" ? kind.slice(0, 60) : null }
       );
-    const listed = Array.isArray(profiles2) ? profiles2 : [];
-    for (const p3 of listed) {
+    const listed2 = Array.isArray(profiles2) ? profiles2 : [];
+    for (const p3 of listed2) {
       const held2 = this.#profile(p3);
       if (held2 && !this.#kindIn(held2, kind))
         return refuse13("TEMPLATE_KIND_UNKNOWN", `the profile '${p3}' holds no action kind '${kind}'`, { kind, profile: p3 });
@@ -139525,8 +139525,8 @@ var FilingTemplates = class _FilingTemplates {
     if (!TEMPLATE_USES2.includes(use))
       return refuse13("TEMPLATE_USE_REFUSED", "a template's use is file or brief", { use: typeof use === "string" ? use.slice(0, 20) : null });
     if (profiles2 !== "general") {
-      if (!listed.length) return refuse13("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
-      const missing2 = listed.find((p3) => !this.#profile(p3));
+      if (!listed2.length) return refuse13("TEMPLATE_PROFILE_UNKNOWN", "a template names the profiles it is written for, or general", { profile: null });
+      const missing2 = listed2.find((p3) => !this.#profile(p3));
       if (missing2) return refuse13("TEMPLATE_PROFILE_UNKNOWN", `no profile '${missing2.slice(0, 60)}' is held`, { profile: missing2.slice(0, 60) });
     }
     if (use === "file" && this.#tierOf(kind, profiles2) === 3)
@@ -141049,12 +141049,12 @@ var Citation = class {
     let text7 = setScalar5(spliced, "last_updated", `"${when}"`);
     const ids = [...sel.members].sort();
     const shown3 = ids.slice(0, CITE_LOG_SAMPLE);
-    const listed = shown3.join(", ") + (ids.length > shown3.length ? `, and ${ids.length - shown3.length} more` : "");
+    const listed2 = shown3.join(", ") + (ids.length > shown3.length ? `, and ${ids.length - shown3.length} more` : "");
     text7 = appendSessionLog4(
       text7,
       `### Session ${when} | ${verb} ${ids.length} citation${ids.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}
-Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
+Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why}.
 `
     );
     const bytes2 = new TextEncoder().encode(text7);
@@ -141456,16 +141456,16 @@ Changes: cites edges to ${listed} moved to '${to}'. Reason: ${why}.
     }
     let text7 = setScalar5(spliced, "last_updated", `"${when}"`);
     const shown3 = add2.slice(0, CITE_LOG_SAMPLE);
-    const listed = shown3.join(", ") + (add2.length > shown3.length ? `, and ${add2.length - shown3.length} more` : "");
+    const listed2 = shown3.join(", ") + (add2.length > shown3.length ? `, and ${add2.length - shown3.length} more` : "");
     const ungraded = filled15.filter((l2) => !l2.grade).length;
     const graded = filled15.length - ungraded;
     const setMovedNote = answerChanged(sel.drift, sel.moved) ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
     text7 = appendSessionLog4(text7, ontoInquiry ? `### Session ${when} | Rested this question on ${add2.length} record${add2.length === 1 ? "" : "s"} (${rl}) | ${author || "member"}
 Trigger: selection ${handle}${setMovedNote}
-Changes: basis legs added for ${listed}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
+Changes: basis legs added for ${listed2}, each with role ${rl}. Grades: ${graded} filled from the record's own resolutions to this question's subject; ${ungraded} left undetermined and stated.${nt ? ` Note: ${nt}.` : ""}
 ` : `### Session ${when} | Cited ${add2.length} Information record${add2.length === 1 ? "" : "s"} | ${author || "member"}
 Trigger: selection ${handle}${setMovedNote}
-Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
+Changes: cites edges added to ${listed2}.${nt ? ` Note: ${nt}.` : ""}
 `);
     const bytes2 = new TextEncoder().encode(text7);
     if (bytes2.length > INLINE_MAX) {
@@ -141593,7 +141593,7 @@ __export(checks_exports43, {
   WIZARD_SCRIPTS_CHECKS: () => WIZARD_SCRIPTS_CHECKS,
   rowOf: () => rowOf12
 });
-var at19 = (fn, region) => `src/wizard-scripts/index.mjs ${fn} > ${region}`;
+var at19 = (fn, region, file = "index.mjs") => `src/wizard-scripts/${file} ${fn} > ${region}`;
 var WIZARD_SCRIPTS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DRAFT_WIZARD: {
     check: "C-131.1",
@@ -141713,7 +141713,7 @@ var WIZARD_SCRIPTS_CHECKS = Object.freeze({
   WIZARD_DRAFT_REFUSED: {
     check: "C-131.24",
     where: at19("checkScript", "is-wizard-check"),
-    translation: "A step's draft is the script's own words, a filing template offered here, or a labelled machine draft the instance registers, and this one is none of them."
+    translation: "A step's draft is the script's own words, a filing template offered here, or a labelled machine draft your group's Civicsmith registers, and this one is none of them."
   },
   WIZARD_STEP_CONCLUDES: {
     check: "C-131.25",
@@ -141754,6 +141754,53 @@ var WIZARD_SCRIPTS_CHECKS = Object.freeze({
     check: "C-131.32",
     where: at19("wizardEditorRevoke", "is-wizard-editor-grant"),
     translation: "There is no editor grant by that id."
+  },
+  /* T34 (T34-52; DEC-139 (4)): a side trip that would not return. */
+  WIZARD_VIA_REFUSED: {
+    check: "C-131.33",
+    where: at19("checkScript", "is-wizard-check"),
+    translation: "A step's side trip goes to another wizard offered here that never leads back to this one, so the member always returns to the step they left. This one does not."
+  },
+  /* T34 (T34-90, T34-91; DEC-152, DEC-153; K1837, K1841): writing help in a member's own words. BOB's drafts. */
+  WRITING_HELP_REFUSED: {
+    check: "C-131.34",
+    where: at19("writingHelpAt", "is-writing-help", "writing-help.mjs"),
+    translation: "The assistant does not help word this: it is an act the assistant may never take, or one that cannot be undone. The words here are yours alone."
+  },
+  WRITING_HELP_REASON_FIELD: {
+    check: "C-131.35",
+    where: at19("writingHelpAt", "is-writing-help", "writing-help.mjs"),
+    translation: "The assistant never words your reason for an act: your reasons are yours alone. Nothing was changed."
+  },
+  WRITING_HELP_DRAFT_HELD: {
+    check: "C-131.36",
+    where: at19("writingHelpAt", "is-writing-help", "writing-help.mjs"),
+    translation: "This field already holds a draft. Keep it, edit it or clear it before asking the assistant."
+  },
+  WRITING_HELP_NOTHING_TOLD: {
+    check: "C-131.37",
+    where: at19("writingHelp", "is-writing-help-request"),
+    translation: "Tell the assistant what you want to say first: it works only from what you tell it and what your group holds."
+  },
+  WRITING_HELP_FACT_ADDED: {
+    check: "C-131.38",
+    where: at19("checkDraft", "is-writing-help-check", "writing-help.mjs"),
+    translation: "A sentence was left out because it said something you did not tell the assistant and your group's record does not hold."
+  },
+  WRITING_HELP_SUGGESTIONS_OFF: {
+    check: "C-131.39",
+    where: at19("checkDraft", "is-writing-help-check", "writing-help.mjs"),
+    translation: "Your suggestions are switched off, so the assistant works only from what you typed and reads nothing your group holds."
+  },
+  WRITING_HELP_FIRSTHAND_READ: {
+    check: "C-131.40",
+    where: at19("checkDraft", "is-writing-help-check", "writing-help.mjs"),
+    translation: "For what you saw yourself, the assistant only helps word what you told it, and reads nothing else."
+  },
+  ASSISTANT_DRAFT_UNAVAILABLE: {
+    check: "C-131.41",
+    where: at19("writingHelp", "is-writing-help-request"),
+    translation: "The assistant cannot draft this yet. Write it in your own words; nothing was changed."
   }
 });
 function rowOf12(code) {
@@ -141855,6 +141902,21 @@ CREATE TABLE IF NOT EXISTS wiz_breaks (
   at             TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS wiz_breaks_version ON wiz_breaks (script_id, version, bid);
+-- R1, R3: A COPY's base (DEC-158): the approved version it was copied from, set once.
+CREATE TABLE IF NOT EXISTS wiz_copies (
+  script_id      TEXT PRIMARY KEY,
+  bundle_id      TEXT,
+  based_on       TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+-- R26: THE INSTANT EACH (copy, newer base version) PAIR WAS FIRST FOUND, and nothing else.
+CREATE TABLE IF NOT EXISTS wiz_base_seen (
+  script_id      TEXT NOT NULL,
+  newer          TEXT NOT NULL,
+  bundle_id      TEXT,
+  at             TEXT NOT NULL,
+  PRIMARY KEY (script_id, newer)
+);
 -- R15: ONE ROW PER COUNTED CALL, keyed by version, event, step and day; nothing else.
 CREATE TABLE IF NOT EXISTS wiz_tallies (
   tid            INTEGER PRIMARY KEY,
@@ -141883,7 +141945,9 @@ var WIZARD_SCRIPTS_TABLE_CLASSES = Object.freeze([
   ["wiz_editor_revocations", "group", false],
   ["wiz_breaks", "bundle", false],
   ["wiz_tallies", "group", false],
-  ["wiz_refusal_tallies", "group", false]
+  ["wiz_refusal_tallies", "group", false],
+  ["wiz_copies", "bundle", false],
+  ["wiz_base_seen", "bundle", false]
 ].map(([name2, sight, chain3]) => Object.freeze({
   name: name2,
   purge: "clear",
@@ -141904,8 +141968,207 @@ function migrateWizardScripts(sql) {
   for (const s of bare4.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
 }
 
+// src/wizard-scripts/data.mjs
+var LIBRARY_APPROVED = Object.freeze({ by: "Bob", at: "2026-10-06" });
+var REQUIRED_NAMES = Object.freeze(["Set up and claim", "Welcome a new member", "Publication ceremony"]);
+function deepFreeze2(v) {
+  if (v && typeof v === "object" && !Object.isFrozen(v)) {
+    for (const k of Object.keys(v)) deepFreeze2(v[k]);
+    Object.freeze(v);
+  }
+  return v;
+}
+
 // src/wizard-scripts/civicsmith-library.mjs
-var CIVICSMITH_LIBRARY = Object.freeze([]);
+var CIVICSMITH_LIBRARY_SOURCE = deepFreeze2({ "commit": "d129238bf3", "path": "docs/development/ux-substrate/screens/library.json", "sha256": "02653a7a88e01facc716119cdc408a7849141432fed67910b8146268b3aa844e" });
+var CIVICSMITH_LIBRARY = deepFreeze2([
+  { "id": "WIZ-c887066cc553dd41", "name": "Set up and claim", "start": "install", "origin": "civicsmith", "scope": "group", "required": true, "version": 1, "steps": [{ "screen": "install", "act": null, "what": "Check you have what is needed: a Cloudflare account and about twenty minutes.", "why": "The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up." }, { "screen": "install", "act": "bootstrap", "what": "Choose your group's short name, then install. It is not the group's name: you choose that next, and can change it.", "why": "The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing." }, { "screen": "install", "act": "selftest", "what": "Let your group's Civicsmith test itself. Allow it to run the assistant's container if you are asked.", "why": "The test proves it works before anyone relies on it." }, { "screen": "install", "act": null, "what": "Save the one-time password somewhere safe, such as a password manager, then continue.", "why": "It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one." }, { "screen": "setup", "act": "claim", "what": "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.", "why": "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent." }, { "screen": "setup", "act": "groupnameset", "what": "Name the group as people should read it, and add its logo if it has one.", "why": "The group's name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures." }, { "screen": "setup", "act": "groupdomainset", "what": "If your group has a website, verify its address (optional): place the small file Civicsmith gives you on the site.", "why": "Readers can then confirm that a published case really comes from your group. The public page names the site, so a group that wants to stay unnamed skips this." }, { "screen": "setup", "act": "profilesset", "what": "Choose the places whose rules apply, and the languages your members use.", "why": "Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself." }, { "screen": "setup", "act": "officesseed", "what": "Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.", "why": "Requests go to offices by role, so correct anything before members rely on it." }, { "screen": "setup", "act": null, "what": "Read who in the group will see facts about people.", "why": "Facts from public documents follow those documents; a project's own notes about a person stay inside the project." }, { "screen": "setup", "act": "assistantset", "what": "Read what the assistant is (and open More about this if you want the detail), then choose: the group's API key, members' own accounts, both, or none.", "why": "The group's key serves members with no account of their own, at the group's cost. A member's own account always comes first. Everything works without it." }, { "screen": "setup", "act": "groupkeyset", "what": "If you chose the group's key: paste it here. It is never shown again.", "why": "It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group's account." }, { "screen": "setup", "act": "courtnoticeset", "what": "Choose whether members are told what a court can reach.", "why": "A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away." }, { "screen": "setup", "act": "hostingaccess", "what": "Record who holds the hosting account.", "why": "If you are ever unreachable, this is how the group gets back in." }, { "screen": "setup", "act": "memberadd", "what": "Invite your first members, and a second administrator now or later.", "why": "With one administrator the group depends on one person. A second means it is never stuck." }, { "screen": "group-identity", "act": null, "what": "Optional: say who your group is. You will come back here when you finish or stop.", "why": "It shapes how each member is welcomed. It locks nothing and is never required.", "via": "WIZ-4d42b0233d48913f" }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-7db08189cc0e58c3", "name": "Welcome a new member", "start": "join", "origin": "civicsmith", "scope": "group", "required": true, "version": 1, "steps": [{ "screen": "join", "act": "memberlanguageset", "what": "Choose your language.", "why": "Everything that follows should be in words you read easily. It starts from your device's setting." }, { "screen": "join", "act": "enroll", "what": "Choose a handle and a password.", "why": "The record shows your handle on your work. It needn't be your legal name: a known name lends credibility, a pen name shields you, and administrators still know who you are." }, { "screen": "home", "act": null, "what": "This is your group's home: what it is working on, and what is waiting on you.", "why": "Come back here whenever you lose your place." }, { "screen": "question", "act": null, "what": `Two things to know first: a question's strength against its project's bar, and "Undetermined".`, "why": "You will see these everywhere. Every other mark is explained where you meet it, one tap away." }, { "screen": "connect", "act": null, "what": "Optional: connect your own Claude account, or skip.", "why": "The assistant serves only you, and every journey works without it.", "via": "WIZ-74328804ddae3503" }, { "screen": "ties", "act": null, "what": "Optional: tell the group about your own ties.", "why": "Only you and the administrators see them, and they let a case disclose a tie honestly.", "via": "WIZ-e2731f1813a43b89" }, { "screen": "home", "act": "startfrom", "what": "Take a first step: join a project, capture a document, or record what you saw.", "why": "One small act is enough to begin. Nothing here has to be done in order." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-426b9c2e8b128b6b", "name": "Publication ceremony", "start": "ceremony", "origin": "civicsmith", "scope": "group", "required": true, "version": 1, "steps": [{ "screen": "ceremony", "act": "publishpreflight", "what": "Check what you are publishing: the case, its edition and its scope.", "why": "Publishing is permanent. This is the last look before it." }, { "screen": "ceremony", "act": "publishpreflight", "what": "Check each finding's strength against the bar, and anything still open.", "why": "A reader sees each finding's strengths. Anything still open is disclosed, never hidden." }, { "screen": "case-editor", "act": "statementack", "what": "Read what the case leaves out, and who acknowledged it.", "why": "Saying what a case does not cover is part of its honesty." }, { "screen": "case-editor", "act": "attribute", "what": "Check each person the case names, with the reason they matter to a finding.", "why": "A case cannot be signed while any reason is missing." }, { "screen": "ceremony", "act": "publishtensions", "what": "Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.", "why": "Readers must see what the case could not settle." }, { "screen": "ceremony", "act": null, "what": "Read the group's declared bias as it will appear.", "why": "Every published case carries the lens it was made through." }, { "screen": "ceremony", "act": null, "what": "Preview the public page as a stranger will see it.", "why": "This is how a reader with no account meets your work." }, { "screen": "ceremony", "act": "publish", "what": "Each member publishing confirms they have no undeclared tie to anyone the case concerns.", "why": "Including anyone paid in its money. A tie disclosed is a strength; one found later is not." }, { "screen": "ceremony", "act": "caseratify", "what": "Sign with your key.", "why": "Publishing is permanent. Corrections come as a new edition, never by changing this one." }, { "screen": "ceremony", "act": "publishat", "what": "Publish now, or choose the time it becomes public, such as when a story citing it runs.", "why": "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-cb0ad18a17a04233", "name": "Get a record", "start": "finder", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "finder", "act": "search", "what": "Look first: is the record already public? Search what your group holds and where the office publishes.", "why": "Much is public already. A copy from the office's own site holds up better than one found elsewhere." }, { "screen": "capture", "act": "acquire", "what": "If you find it, capture it from its address. Then you are done.", "why": "Capturing keeps a fingerprinted copy that cannot change under you." }, { "screen": "request", "act": "addresseesuggest", "what": "If not, choose the office that holds the records.", "why": "The request goes to the office by its role, so it reaches whoever holds the post that day. You will see who that is." }, { "screen": "request", "act": "actioncreate", "what": "Say plainly what records you want.", "why": "A clear description is harder to refuse, or to answer only in part." }, { "screen": "request", "act": "actionlaws", "what": "Choose the law the request goes under, from your group's places.", "why": "The law sets the office's deadline. Where a faster kind of request fits, it is offered." }, { "screen": "request", "act": "communicationprepare", "what": "Read the draft request and edit it until it is yours.", "why": "The wizard only drafts. The words that are sent are yours.", "draft": { "template": "@records-request" } }, { "screen": "request", "act": "filingapprove", "what": "Approve the text.", "why": "Approving is kept apart from sending, so you can stop between them." }, { "screen": "request", "act": "filingrecordsent", "what": "Send it the way the office accepts requests, then record that you sent it.", "why": "Sending tells the office what your group is looking at. Recording the send starts the clock." }, { "screen": "due-date", "act": "clockadopt", "what": "Confirm the due date worked out from the law. Download it to your calendar if you like.", "why": "You can see exactly how it was counted, and challenge it." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-33b5887790b7561b", "name": "Check a claim", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture the claim where the city made it: a budget, a report to council, a press release.", "why": "The claim itself is your first piece of evidence." }, { "screen": "document", "act": "cite", "what": "Point at the words that make the claim.", "why": "Every later step refers back to exactly what was said." }, { "screen": "project", "act": "promote", "what": "Open the question: do the city's own records support the claim?", "why": "A claim cannot be checked; a question can be answered, or shown undetermined." }, { "screen": "question", "act": "narrow", "what": "Pin down what the claim's words mean: what counts, and over what period. If the city never says, record that.", "why": "A share means nothing until you know what was counted. A gap is recorded as undetermined, with its reason." }, { "screen": "finder", "act": "search", "what": "Get the city's own records behind the claim: online, or by request.", "why": "The claim should be checked against the city's own data, not anyone's impression.", "via": "WIZ-cb0ad18a17a04233" }, { "screen": "calculation", "act": "calculationcreate", "what": "Work it out with the built-in calculation, or bind your own spreadsheet to the captured records.", "why": "The method is shown with the result, so anyone can check it." }, { "screen": "calculation", "act": "calculationdraw", "what": "Plan a spot-check: a recorded random draw picks which records members visit.", "why": "A draw anyone can repeat means no one can say you picked the worst cases." }, { "screen": "capture", "act": "testify", "what": "Members visit and record what they find, with place, date and photo.", "why": "Firsthand checks test whether the records match the street." }, { "screen": "question", "act": "conclude", "what": "Conclude with what the evidence supports, and say what would change it.", "why": "A conclusion that names what would change it is one others can trust." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-86b7f4007e3b0e3c", "name": "Your first question", "start": "project", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "project", "act": null, "what": "What drew you in? A problem you live with, a person, a payment or contract, or something you read.", "why": "Any of these is a good start. Civicsmith offers a first step from each." }, { "screen": "project", "act": "promote", "what": "Say what you want to know, as a question.", "why": "A question is something the record can answer: yes, no, or undetermined, and why." }, { "screen": "finder", "act": "search", "what": "Find or capture a document that bears on it.", "why": "Every answer rests on documents anyone could check." }, { "screen": "document", "act": "cite", "what": "Point at the passage that matters.", "why": "Citing a passage, not a whole document, shows exactly what you rely on." }, { "screen": "question", "act": "cite", "what": "Say whether it supports the question or cuts against it.", "why": "Evidence against is kept as carefully as evidence for." }, { "screen": "question", "act": null, "what": "See the question's strength against the project's bar, and what would raise it.", "why": "Strength is two grades, never one score: how well the documents are held and how firmly they are linked." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-4d42b0233d48913f", "name": "Say who your group is", "start": "group-identity", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "group-identity", "act": "groupdescriptionset", "what": "What kind of group are you? Pick one or more, or describe your own.", "why": "It shapes how each member is welcomed. It never limits what anyone can do." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "What do you focus on: issues, places, offices or agencies?", "why": "New members see your focus first when they choose where to start." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "Why does the group exist? Say it in your own words.", "why": "Your declared bias can start from what you write here." }, { "screen": "group-identity", "act": "groupdescriptionset", "what": "Who should see this: members only, or also your public page and the network directory?", "why": "Members only is the default. A group that wants to stay unnamed keeps it that way." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-8e7e2fac33d069f8", "name": "Invite a member", "start": "members", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "members", "act": "memberadd", "what": "Who: their handle, and the cover the group knows them by. Not a legal name.", "why": "The record never needs a legal name. Administrators keep the cover so they know who is who." }, { "screen": "members", "act": "membercaps", "what": "What they may do. Contributing is the default.", "why": "Give only what the person needs; you can change it later." }, { "screen": "members", "act": null, "what": "Send the link yourself. It works once and expires after seven days.", "why": "Civicsmith sends no email, so the link reaches them only through you." }, { "screen": "members", "act": "websitekeycreate", "what": "Or let people join through your website: create a website key, or turn on the reusable join link.", "why": "Anyone let through can see the group's shared work, so each comes with limits and a daily cap." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-74328804ddae3503", "name": "Connect your Claude account", "start": "connect", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "connect", "act": null, "what": "The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.", "why": "Your own account serves only you. Everything works without the assistant." }, { "screen": "connect", "act": "disclosureshown", "what": "Read what connecting means.", "why": "Your questions, and what is read to answer them, go to Anthropic under your own account." }, { "screen": "connect", "act": "subscriptionsignin", "what": "To connect your Claude subscription, open Anthropic's sign-in page, sign in and approve. Or use an API key, or skip.", "why": "You sign in on Anthropic's own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open." }, { "screen": "connect", "act": "accountreferenceset", "what": "Copy the code Anthropic's page shows you, paste it here, and connect.", "why": "Your subscription then serves only your own questions. You can disconnect at any time." }, { "screen": "connect", "act": "aiceilingset", "what": "Set your daily limit.", "why": "It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group." }, { "screen": "connect", "act": "accountswitchset", "what": "Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.", "why": "Some members want suggestions; others want quiet." }, { "screen": "connect", "act": "accountreferenceremove", "what": "You can disconnect at any time, here.", "why": "Disconnecting removes the key or token from your group's Civicsmith." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-e2731f1813a43b89", "name": "Your ties", "start": "ties", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "ties", "act": "declaretie", "what": "List your employer, relatives, and businesses you have an interest in.", "why": "A case concerning any of them can then disclose the tie honestly." }, { "screen": "ties", "act": null, "what": "Only you and the administrators can see this.", "why": "Your ties never appear in a case unless one concerns it, and then only as you choose." }, { "screen": "ties", "act": "declaretie", "what": "For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as \u201Ca member of the group\u201D.", "why": "Readers learn of the tie either way; not naming you protects you while keeping the case honest." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-a15d174f7a2c1dc5", "name": "Follow a proceeding", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture a filing, or the court's register page.", "why": "The proceeding is registered from what it says about itself." }, { "screen": "proceeding", "act": "registerproceeding", "what": "Register the proceeding from its caption: the court, the number, and a neutral label.", "why": "A neutral label keeps your own view out of the record's name for it." }, { "screen": "proceeding", "act": "recordline", "what": "Add the parties by role.", "why": "Roles say who is suing, who is sued, and who is deciding." }, { "screen": "proceeding", "act": "followregister", "what": "Follow its register: on a schedule, or by your own capture where the register needs a login.", "why": "New filings are flagged, so nothing arrives unseen." }, { "screen": "proceeding", "act": "declare", "what": "Hold each order's requirements as obligations, with their reply dates.", "why": "An order is a standard the office must meet. Its dates go into your queue." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-df0b5c4d0ffcdde7", "name": "Follow the money", "start": "capture", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "capture", "act": "acquire", "what": "Capture the budget, financial report or contract.", "why": "Every figure must point back to where it was printed." }, { "screen": "money", "act": "recordfact", "what": "Read just the figures you need, each with its stage and period.", "why": "Proposed, adopted, committed and paid are different facts. Mixing them is how money stories go wrong." }, { "screen": "money", "act": "createset", "what": "Start a money trail.", "why": "A trail gathers the figures one question needs." }, { "screen": "money", "act": "include", "what": "Include or leave out each item, with a reason.", "why": "Your reasons show a reader why the trail adds up the way it does." }, { "screen": "money", "act": "reconcile", "what": "Compare two sources of one figure, or what was committed against what was paid.", "why": "Differences in basis, period or rounding are named, not hidden." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-9f2b79390d6940a0", "name": "Build a timeline", "start": "timeline", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "timeline", "act": "createevent", "what": "Record an event from a cited passage: what, when, and how precisely you know the date.", "why": "Every event points at its source. A date you only know roughly is recorded as rough." }, { "screen": "timeline", "act": "addparticipant", "what": "Add who took part and in what role: decided, signed, voted.", "why": "Roles are what make an event useful to a finding." }, { "screen": "timeline", "act": "relate", "what": "Link events: made under, answered, amended.", "why": "Links let a reader follow one thread through the record." }, { "screen": "timeline", "act": "hypothesishold", "what": "Keep a suspected cause as a hunch, never as a fact.", "why": "A hunch is marked as yours and is never evidence." }, { "screen": "timeline", "act": null, "what": "Review the two lanes before the case is signed: what they did, and what we did.", "why": "The timeline is frozen into the case when it is signed." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-55930f07cb4e9499", "name": "Keep asking this", "start": "answers", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "answers", "act": "standingquestionset", "what": "Choose how often to check, and until when.", "why": "An end date is required, so no question runs forever." }, { "screen": "answers", "act": null, "what": "The search runs on schedule. With the assistant connected, it reads only what is new, on your account and within your limit.", "why": "Without the assistant, new matches arrive as a list for you to read." }, { "screen": "queue", "act": null, "what": "The answer reaches your queue once.", "why": "Only you see it; it is never shared." }, { "screen": "answers", "act": "standingquestionend", "what": "Stop it any time.", "why": "Stopping is immediate, and nothing further is checked." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-4cdbd26939d4cc6d", "name": "Use another group's case", "start": "imported", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "imported", "act": "caseimport", "what": "Import the case into its own read-only project.", "why": "Another group's work stays marked as theirs, and cannot be edited." }, { "screen": "imported", "act": null, "what": "Civicsmith recreates each finding and calculation from the case file. Watch each one's mark.", "why": "Recreated, recreated in part, or did not recreate: you never rely on what you could not check." }, { "screen": "imported", "act": "importaccept", "what": "Accept what recreated, with a reason.", "why": "Accepting names one edition and changes no grade." }, { "screen": "imported", "act": "importwatch", "what": "Watch the publisher's docket for new editions and corrections.", "why": "Anything relying on the case is told when it changes." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-af4c9fafc3713f26", "name": "Translate the interface", "start": "translations", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "translations", "act": null, "what": "Choose the language.", "why": "Civicsmith's own translations come with releases. Your group fills gaps and improves wording." }, { "screen": "translations", "act": null, "what": "See the words still untranslated.", "why": "A missing word shows in English, never blank." }, { "screen": "translations", "act": "translationdraft", "what": `Where you can reach the assistant, ask it to draft them all. Each is marked "Draft \xB7 the assistant's".`, "why": "Your task becomes finding its errors. Without the assistant, type them yourself." }, { "screen": "translations", "act": "translationadopt", "what": "Read each draft against the English; keep it or correct it.", "why": "A word becomes the group's only when a granted member who knows the language keeps it." }, { "screen": "translations", "act": "translationconfirm", "what": "A protected word you changed, or typed without a draft, waits for a second check.", "why": "A second granted speaker, or an administrator reading the assistant's back-translation, confirms it. Until then members see the English." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } },
+  { "id": "WIZ-a8c349d7d71b6bb0", "name": "Start and send", "start": "plan", "origin": "civicsmith", "scope": "group", "required": false, "version": 1, "steps": [{ "screen": "plan", "act": "optiondispose", "what": "Choose the option, and say when to be reminded.", "why": "Choosing records why this option, now." }, { "screen": "start-send", "act": "optionstartpreview", "what": "See what starting does, and anything that would stop it.", "why": "Refusals are shown before anything runs." }, { "screen": "start-send", "act": "optionstart", "what": "Start the action, addressed to the office by role.", "why": "The office's holder that day is shown, so you know who will read it." }, { "screen": "start-send", "act": "communicationprepare", "what": "Prepare what is sent. A template or draft is labelled until you make it yours.", "why": "The words that leave the group are always a member's.", "draft": { "template": "@communication" } }, { "screen": "start-send", "act": "filingapprove", "what": "Approve the text.", "why": "Approving is kept apart from sending, so you can stop between them." }, { "screen": "start-send", "act": "filingrecordsent", "what": "Send it, then record that you sent it.", "why": "This tells the office what your group is looking at, and starts the clock." }, { "screen": "due-date", "act": "reminderset", "what": "The due date and next checkpoint go into your queue. A next step can wait on the reply.", "why": "If no reply comes, the next step is ready without anyone remembering." }], "author": "civicsmith", "approved": { "by": "Bob", "at": "2026-10-06" } }
+]);
+
+// src/wizard-scripts/screen-registry.mjs
+var SCREEN_REGISTRY_SOURCE = deepFreeze2({ "commit": "d129238bf3", "path": "docs/development/ux-substrate/screens/registry.json", "sha256": "2371aadfdc91153dcf2dd6bf02c2d30e148c4f5f20d92b9ded202322884588aa" });
+var SCREEN_REGISTRY = deepFreeze2([
+  { "id": "install", "name": "Install Civicsmith", "purpose": "The installer page: what is needed, the short name, installing the signed release into the group's own account.", "acts": ["bootstrap", "selftest"], "owed": [] },
+  { "id": "setup", "name": "Become your group's first administrator", "purpose": "The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.", "acts": ["claim", "groupnameset", "groupdomainset", "profilesset", "officesseed", "entitycreate", "assistantset", "groupkeyset", "groupkeyswitch", "aicopyceilingset", "courtnoticeset", "hostingaccess", "memberadd"], "owed": [{ "op": "placewanted", "dec": "DEC-150", "at": 6 }] },
+  { "id": "group-identity", "name": "Who your group is", "purpose": "Kinds, focus and purpose, and who sees them (DEC-132).", "acts": ["groupdescriptionset"], "owed": [{ "op": "groupdescriptiondraft", "dec": "DEC-152", "at": 1 }] },
+  { "id": "join", "name": "Your invitation", "purpose": "The invitation link opens here: language, handle, password.", "acts": ["invitelook", "enroll"], "owed": [{ "op": "memberlanguageset", "dec": "DEC-127", "at": 1 }] },
+  { "id": "home", "name": "Your group's home", "purpose": 'What the group is working on, what waits on you, and "What brought you here?".', "acts": ["projectcreated"], "owed": [{ "op": "startfrom", "dec": "DEC-129", "at": 1 }] },
+  { "id": "members", "name": "Members", "purpose": "The roster: invitations, capabilities, expertise, administrators, joining through the website.", "acts": ["memberadd", "membercaps", "memberset", "adminendorse", "adminremove", "expertiseconfirm", "invitewithdraw", "websitekeycreate", "joinlinkenable", "groupkeyset", "groupkeyswitch", "groupswitchset", "groupkeyremove"], "owed": [] },
+  { "id": "account", "name": "Your account", "purpose": "Handle, password, language, expertise, signing key, theme.", "acts": ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown"], "owed": [{ "op": "memberlanguageset", "dec": "DEC-127", "at": 4 }, { "op": "infolevelset", "dec": "DEC-162", "at": 4 }] },
+  { "id": "connect", "name": "The assistant and your account", "purpose": "The member's own API key or subscription token, or the group's key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).", "acts": ["groupkeynoticeseen", "disclosureshown", "accountreferenceset", "aiceilingset", "accountswitchset", "accountreferenceremove"], "owed": [{ "op": "subscriptionsignin", "dec": "DEC-156", "at": 2 }] },
+  { "id": "ties", "name": "Your ties", "purpose": "The member's own ties, seen only by them and administrators (K1490).", "acts": ["declaretie", "withdrawtie"], "owed": [] },
+  { "id": "notes", "name": "Your notes", "purpose": "A member's own notes, seen only by them (DEC-136).", "acts": ["notewrite", "noteturn"], "owed": [{ "op": "noterevise", "dec": "DEC-144", "at": 2 }, { "op": "notedelete", "dec": "DEC-144", "at": 2 }, { "op": "writinghelp", "dec": "DEC-153", "at": 2 }] },
+  { "id": "translations", "name": "Translations", "purpose": "The interface's words in the group's languages (DEC-127).", "acts": [], "owed": [{ "op": "translationdraft", "dec": "DEC-127", "at": 0 }, { "op": "translationadopt", "dec": "DEC-127", "at": 0 }, { "op": "translationgrant", "dec": "DEC-157", "at": 0 }, { "op": "translationconfirm", "dec": "DEC-157", "at": 0 }, { "op": "translationrevert", "dec": "DEC-157", "at": 0 }] },
+  { "id": "wizards", "name": "Wizards", "purpose": "The group's wizard library: offered, drafts, submitted (DEC-121).", "acts": ["wizards", "wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire"], "owed": [] },
+  { "id": "queue", "name": "Your queue", "purpose": "To do, Noticed and Status, grouped by case (DEC-110, DEC-131).", "acts": ["taskresolve", "taskforward", "proposedispose", "queuesnooze", "queuemute", "adoptversion", "keepversion", "reminderanswer", "promote"], "owed": [] },
+  { "id": "finder", "name": "Find", "purpose": "Search what the group holds; hold a set together; see where nobody looked.", "acts": ["search", "select", "selectionrelease", "frontier", "countask"], "owed": [] },
+  { "id": "capture", "name": "Add", "purpose": "Capture a document from an address or a file, photograph a handout, or record what you saw.", "acts": ["acquire", "capture", "testify", "capturerequest", "monitor"], "owed": [{ "op": "writinghelp", "dec": "DEC-153", "at": 5 }] },
+  { "id": "held", "name": "Held captures", "purpose": "Captures not yet vouched for, per member and project (DEC-97).", "acts": ["heldcaptures", "release", "heldsetaside", "heldrestore"], "owed": [{ "op": "writinghelp", "dec": "DEC-153", "at": 4 }] },
+  { "id": "document", "name": "Document", "purpose": "One captured document: its copy, grade note, passages, versions and what cites it.", "acts": ["gradenote", "release", "cite", "retire", "attest", "identityclaim", "monitor"], "owed": [] },
+  { "id": "project", "name": "Project", "purpose": "A project's home: objective, bar, questions, stage, plans, members.", "acts": ["promote", "strengthbarset", "projectinvite", "projectjoin", "planopen"], "owed": [] },
+  { "id": "question", "name": "Question", "purpose": "A question and what supports it or cuts against it; strength against the bar; concluding.", "acts": ["cite", "sever", "reinstate", "narrow", "conclude", "withdrawconclusion", "hypothesishold", "planopen", "checkrequest", "heldrestore", "search"], "owed": [] },
+  { "id": "answers", "name": "Ask", "purpose": "Ask in plain words (with the assistant) or by search (without); keep asking.", "acts": ["ruleanswer", "search", "standingquestionset", "standingquestionend"], "owed": [] },
+  { "id": "assistant", "name": "The assistant panel", "purpose": "Docked beside the screen it serves; runs only on the member's own account.", "acts": ["airunopen", "suggest", "airunclose"], "owed": [] },
+  { "id": "person", "name": "Person", "purpose": "Positions, career, credentials, memberships, interests, statements; same person?", "acts": ["person", "recordpersonfact", "claimidentity", "withdrawidentityclaim", "followregister", "personexpunge"], "owed": [] },
+  { "id": "timeline", "name": "Timeline", "purpose": "What they did and what we did, in two lanes (K1462, K1494).", "acts": ["createevent", "addparticipant", "relate", "recorddatedfact", "hypothesishold"], "owed": [] },
+  { "id": "money", "name": "Money trail", "purpose": "Money facts with stage and period; a trail; reconciling sources (K1457, K1468).", "acts": ["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain"], "owed": [] },
+  { "id": "calculation", "name": "Calculation", "purpose": "A computed fact with its method, or a member's spreadsheet bound to the record.", "acts": ["calculationcreate", "tabledeclare", "calculationdraw", "addworkbook", "bind", "recordcheck", "calculationaccept"], "owed": [] },
+  { "id": "explore", "name": "Explore connections", "purpose": "Chains between a start and an end, each step cited and graded (K1469, K1487).", "acts": ["explore", "explorepreset", "exploreverify", "connectionassert", "promote"], "owed": [] },
+  { "id": "proceeding", "name": "Proceeding", "purpose": "A court case or regulatory proceeding: parties, register, orders and their dates.", "acts": ["registerproceeding", "recordline", "followregister", "declare", "courtlink"], "owed": [] },
+  { "id": "due-date", "name": "How this date was worked out", "purpose": "A due date's basis and counting; confirm it; download it (K1431, K1444).", "acts": ["deadlinecompute", "clockadopt", "reminderset"], "owed": [] },
+  { "id": "standard", "name": "Standard", "purpose": "A requirement the city set itself, held and searchable.", "acts": ["standarddeclare", "standardadopt", "lawrelate"], "owed": [] },
+  { "id": "plan", "name": "Action plan", "purpose": "The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).", "acts": ["plansubjectadd", "optionadd", "optionpropose", "optionadopt", "optiondispose", "scenarioset", "checkpointrecord", "optionstartpreview", "planclose"], "owed": [] },
+  { "id": "start-send", "name": "Start and send", "purpose": "The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).", "acts": ["optionstartpreview", "optionstart", "communicationprepare", "filingprepare", "filingapprove", "filingrecordsent"], "owed": [] },
+  { "id": "request", "name": "Request records", "purpose": "A records request: the office by role, what is wanted, the law, the text, approving and recording the send.", "acts": ["addresseesuggest", "actioncreate", "actionlaws", "communicationprepare", "filingapprove", "filingrecordsent"], "owed": [] },
+  { "id": "action", "name": "Action", "purpose": "One action: replies, deadlines, pressure, holds.", "acts": ["actionmove", "actioncorrespond", "actionpressure", "reminderset", "actionhold"], "owed": [] },
+  { "id": "matter", "name": "Matter", "purpose": "One government act: determination, consequences, escalation, actions.", "acts": ["escalationopen", "escalationadvance", "declinetoescalate", "escalationend"], "owed": [] },
+  { "id": "case-editor", "name": "Case", "purpose": "Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.", "acts": ["casedraft", "whatchangedpropose", "statementack", "attribute"], "owed": [{ "op": "writinghelp", "dec": "DEC-153", "at": 4 }] },
+  { "id": "review-copy", "name": "Review copy", "purpose": "A named outsider's revocable view of the draft.", "acts": ["reviewgrant", "reviewrevoke", "reviewcomment"], "owed": [] },
+  { "id": "ceremony", "name": "Publication ceremony", "purpose": "The required wizard: checks, disclosures, ties confirmed, preview, signing.", "acts": ["publishpreflight", "publishtensions", "caseratify", "publish"], "owed": [{ "op": "publishat", "dec": "DEC-147", "at": 4 }] },
+  { "id": "published", "name": "Published case", "purpose": "The public page: findings, strengths, timeline, people named, evidence; checkable without the group.", "acts": ["verify", "publishedcase"], "owed": [] },
+  { "id": "imported", "name": "Another group's case", "purpose": "An imported case in its read-only project, recreated finding by finding.", "acts": ["caseimport", "importaccept", "importflag", "importwatch"], "owed": [] },
+  { "id": "docket", "name": "Docket", "purpose": "The case's public docket: corrections, withdrawals, court orders.", "acts": ["docketfile", "docketpost"], "owed": [] },
+  { "id": "inbox", "name": "Inbox", "purpose": "Material handed in through the doorbell.", "acts": ["inboxpull", "inboxresolve", "sourcelink"], "owed": [] },
+  { "id": "doorbell", "name": "Hand material to the group", "purpose": "The doorbell page for someone outside, with no account.", "acts": ["knock"], "owed": [] }
+]);
+
+// src/wizard-scripts/front-doors.mjs
+var FRONT_DOORS = Object.freeze([]);
+
+// src/wizard-scripts/writing-help.mjs
+var HELP_NAMED_REFUSED = Object.freeze([
+  "release",
+  "conclude",
+  "withdrawconclusion",
+  "reopen",
+  "caseratify",
+  "publish",
+  "personexpunge",
+  "bootstrap"
+]);
+var HELP_SET_TIME_REFUSED = Object.freeze(["publishat", "publishatmove", "publishatcancel", "groupdescriptionset"]);
+var WRITING_HELP_NAMED = Object.freeze([...HELP_NAMED_REFUSED, ...HELP_SET_TIME_REFUSED]);
+var FIRSTHAND_ACTS = Object.freeze(["testify"]);
+var TOLD_MAX = 4e3;
+var nameSet = (v) => new Set(v instanceof Set ? [...v] : Array.isArray(v) ? v.filter((x) => typeof x === "string") : v && typeof v === "object" ? Object.keys(v) : []);
+function helpRefusedActs({ machineRefused = [], irreversible = [] } = {}) {
+  return /* @__PURE__ */ new Set([...nameSet(machineRefused), ...nameSet(irreversible), ...WRITING_HELP_NAMED]);
+}
+function isReasonField(field) {
+  return typeof field === "string" && /reason$/i.test(field.trim());
+}
+function writingHelpAt(args = {}, refused3 = helpRefusedActs()) {
+  try {
+    const { op = null, field = null, draftHeld = false, assistant = null } = args && typeof args === "object" ? args : {};
+    const a = assistant && typeof assistant === "object" ? assistant : {};
+    if (a.on !== true) return { offered: false, code: "ASSISTANT_OFF" };
+    if (!a.account) return { offered: false, code: "AI_NO_ACCOUNT" };
+    if (typeof op !== "string" || !op.trim() || refused3.has(op.trim())) return { offered: false, code: "WRITING_HELP_REFUSED" };
+    if (isReasonField(field)) return { offered: false, code: "WRITING_HELP_REASON_FIELD" };
+    if (draftHeld === true || draftHeld && typeof draftHeld === "object") return { offered: false, code: "WRITING_HELP_DRAFT_HELD" };
+    return { offered: true };
+  } catch {
+    return { offered: false, code: "WRITING_HELP_REFUSED" };
+  }
+}
+var MONTHS3 = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "sept",
+  "oct",
+  "nov",
+  "dec",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday"
+];
+var MONTH_RE = new RegExp(`\\b(${MONTHS3.join("|")})\\b`, "gi");
+var FIGURE_RE = /\d(?:[\d,.]*\d)?/g;
+var QUOTE_RE = /"([^"]+)"|“([^”]+)”/g;
+var WORD_RE = /[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ'’-]*/g;
+var flat = (s) => s.toLowerCase().replace(/\s+/g, " ").trim();
+var figure2 = (s) => s.replace(/,/g, "").replace(/\.$/, "");
+function sentencesOf(text7) {
+  return String(text7).split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter(Boolean);
+}
+function factsOf3(sentence2) {
+  const s = String(sentence2);
+  const facts = [];
+  for (const m of s.matchAll(QUOTE_RE)) facts.push({ kind: "quotation", value: m[1] ?? m[2] });
+  const bare4 = s.replace(QUOTE_RE, " ");
+  for (const m of bare4.matchAll(FIGURE_RE)) facts.push({ kind: "figure", value: figure2(m[0]) });
+  for (const m of bare4.matchAll(MONTH_RE)) facts.push({ kind: "date", value: m[1].toLowerCase() });
+  const words4 = [...bare4.matchAll(WORD_RE)].map((m) => m[0]);
+  words4.forEach((w, i) => {
+    if (!/^[A-ZÀ-Þ]/.test(w) || w === "I" || MONTHS3.includes(w.toLowerCase())) return;
+    if (i === 0 && !(words4[1] && /^[A-ZÀ-Þ]/.test(words4[1]) && words4[1] !== "I")) return;
+    facts.push({ kind: "name", value: w.replace(/['’]s$/, "") });
+  });
+  return facts;
+}
+function heldIn(fact, sources) {
+  const text7 = sources.join("\n");
+  if (fact.kind === "quotation") return flat(text7).includes(flat(fact.value));
+  if (fact.kind === "figure") return [...text7.matchAll(FIGURE_RE)].some((m) => figure2(m[0]) === fact.value);
+  if (fact.kind === "date") return [...text7.matchAll(MONTH_RE)].some((m) => m[1].toLowerCase() === fact.value);
+  return new RegExp(`(^|[^A-Za-z\\u00C0-\\u024F])${fact.value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z\\u00DF-\\u024F])`).test(text7);
+}
+var asTexts = (v) => typeof v === "string" ? [v] : Array.isArray(v) ? v.map((x) => typeof x === "string" ? x : x && typeof x === "object" && typeof x.text === "string" ? x.text : null).filter((x) => typeof x === "string") : [];
+function checkDraft(text7, opts = {}) {
+  try {
+    const { told = [], readLog = [], firsthand = false, suggestions = false, askedBy = null } = opts && typeof opts === "object" ? opts : {};
+    const read3 = asTexts(readLog);
+    const sources = [...asTexts(told), ...read3];
+    const kept = [], withheld = [];
+    if (read3.length && suggestions !== true) return { ok: false, code: "WRITING_HELP_SUGGESTIONS_OFF" };
+    if (read3.length && firsthand === true) return { ok: false, code: "WRITING_HELP_FIRSTHAND_READ" };
+    for (const sentence2 of typeof text7 === "string" ? sentencesOf(text7) : []) {
+      if (factsOf3(sentence2).every((f17) => heldIn(f17, sources))) kept.push(sentence2);
+      else withheld.push({ sentence: sentence2, code: "WRITING_HELP_FACT_ADDED" });
+    }
+    return { ok: true, text: kept.join(" "), withheld, label: { kind: "machine", asked_by: typeof askedBy === "string" ? askedBy : null } };
+  } catch {
+    return { ok: false, code: "WRITING_HELP_FACT_ADDED" };
+  }
+}
 
 // src/wizard-scripts/index.mjs
 var WIZARD_STATES = Object.freeze(["draft", "submitted", "approved", "updated", "withdrawn"]);
@@ -141913,6 +142176,8 @@ var WIZARD_ORIGINS = Object.freeze(["civicsmith", "group", "imported"]);
 var WIZARD_EVENTS = Object.freeze(["start", "step", "finish"]);
 var WIZARDS_STATES_LISTED = Object.freeze(["draft", "submitted", "withdrawn", "retired", "broken", "proposed"]);
 var DRAFT_SOURCES = Object.freeze(["text", "template", "machine"]);
+var STEP_KEYS = Object.freeze(["screen", "act", "what", "why", "draft", "via"]);
+var HELP_DRAFTS = Object.freeze(["writinghelp", "groupdescriptiondraft"]);
 var WIZARD_NAME_MAX = 200;
 var STEP_TEXT_MAX = 300;
 var DRAFT_TEXT_MAX = 4e3;
@@ -141944,12 +142209,13 @@ var clamp6 = (v, dflt, max) => {
 };
 var truthy = (v) => v === true || v === "true" || v === "1" || v === 1;
 var OFFERED2 = Object.freeze(["approved"]);
+var BASE_ADOPTION = "base:";
 function withRow6(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string" || r.check) return r;
   const row9 = rowOf12(r.reason);
   return row9 ? { ...r, code: r.code ?? r.reason, check: row9.check, translation: row9.translation } : r;
 }
-var refuse14 = (code, detail, extra) => withRow6({ ok: false, reason: code, detail, ...extra || {} });
+var refuse14 = (code, detail, extra) => withRow6({ ok: false, reason: code, code, detail, ...extra || {} });
 var versionId2 = (script, version) => `${script}@${version}`;
 function parseVersionId2(v) {
   const m = typeof v === "string" ? VERSION_RE2.exec(v.trim()) : null;
@@ -141972,6 +142238,7 @@ function canonicalStep(s) {
     why: typeof o.why === "string" ? o.why : ""
   };
   if (o.draft !== void 0 && o.draft !== null) out.draft = canonicalDraft(o.draft) ?? o.draft;
+  if (o.via !== void 0 && o.via !== null && o.via !== "") out.via = typeof o.via === "string" ? o.via.trim() : o.via;
   return out;
 }
 function canonicalSteps(steps) {
@@ -141987,9 +142254,10 @@ function stepShape(steps) {
   if (steps.length > STEPS_MAX) return { step: null, why: `a script has at most ${STEPS_MAX} steps` };
   for (let i = 0; i < steps.length; i++) {
     const s = steps[i], n = i + 1;
-    if (!isObj34(s)) return { step: n, why: "a step is {screen, act, what, why, draft?}" };
-    const extra = Object.keys(s).find((k) => !["screen", "act", "what", "why", "draft"].includes(k));
-    if (extra) return { step: n, why: `a step carries only screen, act, what, why and draft, not '${extra.slice(0, 40)}'` };
+    if (!isObj34(s)) return { step: n, why: "a step is {screen, act, what, why, draft?, via?}" };
+    const extra = Object.keys(s).find((k) => !STEP_KEYS.includes(k));
+    if (extra) return { step: n, why: `a step carries only screen, act, what, why, draft and via, not '${extra.slice(0, 40)}'` };
+    if (s.via !== void 0 && s.via !== null && s.via !== "" && !oneLine5(s.via, NAME_FIELD_MAX)) return { step: n, why: "a side trip names a script by its id" };
     if (!oneLine5(s.screen, NAME_FIELD_MAX)) return { step: n, why: "a step names its screen" };
     if (s.act !== void 0 && s.act !== null && !oneLine5(s.act, NAME_FIELD_MAX)) return { step: n, why: "an act is an op's name, or none" };
     for (const k of ["what", "why"])
@@ -142003,7 +142271,7 @@ function stepShape(steps) {
   }
   return null;
 }
-var nameSet = (v) => {
+var nameSet2 = (v) => {
   if (v instanceof Set) return new Set([...v].filter((x) => typeof x === "string"));
   if (Array.isArray(v)) return new Set(v.map((x) => typeof x === "string" ? x : isObj34(x) ? x.op ?? x.name ?? null : null).filter((x) => typeof x === "string"));
   if (isObj34(v)) return new Set(Object.keys(v));
@@ -142018,44 +142286,87 @@ function libraryEntry(e2) {
     required: e2.required === true,
     version: Number.isFinite(n) && n >= 1 ? n : 1,
     steps: canonicalSteps(e2.steps),
+    author: str31(e2.author) ?? "civicsmith",
     approved: isObj34(e2.approved) ? { by: e2.approved.by ?? null, at: e2.approved.at ?? null } : { by: null, at: null }
   });
 }
-function normaliseRegistration({ screens = [], ops = null, machineRefused = [], machineDrafts = [], library = [] } = {}) {
+function screenActs(s, ops) {
+  const acts = Array.isArray(s.acts) ? [...s.acts] : [...nameSet2(s.acts)];
+  const owed = (Array.isArray(s.owed) ? s.owed : []).filter((o) => isObj34(o) && typeof o.op === "string" && ops && ops.has(o.op));
+  owed.slice().sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0)).forEach((o, i) => {
+    acts.splice(Math.min(Math.max(Number(o.at) || 0, 0), acts.length - i) + i, 0, o.op);
+  });
+  return nameSet2(acts);
+}
+function normaliseRegistration({
+  screens = [],
+  ops = null,
+  machineRefused = [],
+  machineDrafts = [],
+  irreversible = [],
+  library = []
+} = {}) {
+  const opSet = ops === null || ops === void 0 ? null : nameSet2(ops);
   const sc = /* @__PURE__ */ new Map();
   for (const s of Array.isArray(screens) ? screens : [])
-    if (isObj34(s) && str31(s.id) && !sc.has(str31(s.id))) sc.set(str31(s.id), nameSet(s.acts));
+    if (isObj34(s) && str31(s.id) && !sc.has(str31(s.id))) sc.set(str31(s.id), screenActs(s, opSet));
   const lib = [];
   for (const e2 of Array.isArray(library) ? library : []) {
     const x = libraryEntry(e2);
     if (x && !lib.some((y) => y.id === x.id)) lib.push(x);
   }
-  return {
+  const reg = {
     screens: sc,
-    ops: ops === null || ops === void 0 ? null : nameSet(ops),
-    machineRefused: nameSet(machineRefused),
-    machineDrafts: nameSet(machineDrafts),
+    ops: opSet,
+    machineRefused: nameSet2(machineRefused),
+    machineDrafts: nameSet2(machineDrafts),
+    irreversible: nameSet2(irreversible),
     library: lib
   };
+  reg.helpRefused = helpRefusedActs(reg);
+  return reg;
 }
 var finding3 = (code, step, detail, extra) => {
   const row9 = WIZARD_SCRIPTS_CHECKS[code];
   return { code, step, check: row9.check, translation: row9.translation, detail, ...extra || {} };
 };
+function viaRefusal(via, self, steps, offered) {
+  if (typeof via !== "string" || !via.trim()) return "a side trip names a script by its id";
+  if (self !== null && via === self) return "a side trip cannot go to the script itself";
+  if (!offered.has(via)) return `no script '${via.slice(0, 80)}' is offered here to go to`;
+  const seen = /* @__PURE__ */ new Set(), queue = [via];
+  const graph = (id) => id === self ? steps : offered.get(id) || [];
+  while (queue.length) {
+    const id = queue.shift();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    for (const t2 of graph(id)) {
+      const next = isObj34(t2) && typeof t2.via === "string" ? t2.via : null;
+      if (next === null) continue;
+      if (self !== null && next === self) return `the side trip to '${via.slice(0, 80)}' leads back to this script, so it would never return`;
+      queue.push(next);
+    }
+  }
+  return null;
+}
 function checkScript(steps, {
   screens = [],
   ops = null,
   machineRefused = [],
   machineDrafts = [],
+  irreversible = [],
   offered = [],
-  templateOffered = null
+  templateOffered = null,
+  self = null
 } = {}) {
   const reg = screens instanceof Map ? {
     screens,
-    ops: ops instanceof Set || ops === null ? ops : nameSet(ops),
-    machineRefused: nameSet(machineRefused),
-    machineDrafts: nameSet(machineDrafts)
-  } : normaliseRegistration({ screens, ops, machineRefused, machineDrafts });
+    ops: ops instanceof Set || ops === null ? ops : nameSet2(ops),
+    machineRefused: nameSet2(machineRefused),
+    machineDrafts: nameSet2(machineDrafts)
+  } : normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible });
+  reg.helpRefused = helpRefusedActs({ machineRefused: reg.machineRefused, irreversible: irreversible instanceof Set ? irreversible : nameSet2(irreversible) });
+  const offeredById = new Map((Array.isArray(offered) ? offered : []).filter((o) => isObj34(o) && typeof o.id === "string" && o.id !== self).map((o) => [o.id, Array.isArray(o.steps) ? o.steps : []]));
   const refusals = [], warnings = [];
   if (!Array.isArray(steps) || !steps.length) {
     refusals.push(finding3("WIZARD_NO_STEPS", null, "a script has at least one step"));
@@ -142074,8 +142385,18 @@ function checkScript(steps, {
       const d = canonicalDraft(s.draft);
       const ok2 = !!d && (d.text !== void 0 ? textUpTo2(d.text, DRAFT_TEXT_MAX) : d.template !== void 0 ? typeof templateOffered === "function" ? safe2(() => templateOffered(d.template)) === true : true : reg.machineDrafts.has(d.machine));
       if (!ok2) refusals.push(finding3("WIZARD_DRAFT_REFUSED", n, !d ? "a draft is one of {text}, {template} or {machine}" : d.template !== void 0 ? `no filing template '${d.template.slice(0, 80)}' is offered here` : d.machine !== void 0 ? `'${d.machine.slice(0, 80)}' is not a registered machine draft` : `a draft's text is 1 to ${DRAFT_TEXT_MAX} characters`));
-      const allowed = !!d && d.machine !== void 0 && reg.machineDrafts.has(d.machine);
-      if (typeof s.act === "string" && reg.machineRefused.has(s.act) && !allowed)
+    }
+    if (s.via !== void 0 && s.via !== null && s.via !== "") {
+      const why = viaRefusal(s.via, typeof self === "string" ? self : null, steps, offeredById);
+      if (why) refusals.push(finding3("WIZARD_VIA_REFUSED", n, why));
+    }
+    if (s.draft !== void 0 && s.draft !== null) {
+      const d = canonicalDraft(s.draft);
+      const help = !!d && d.machine !== void 0 && HELP_DRAFTS.includes(d.machine);
+      const allowed = !!d && d.machine !== void 0 && reg.machineDrafts.has(d.machine) && !help;
+      if (typeof s.act === "string" && help && reg.helpRefused.has(s.act))
+        refusals.push(finding3("WIZARD_STEP_CONCLUDES", n, `the assistant never helps word the act '${s.act}': it is refused to a machine or cannot be undone`));
+      else if (typeof s.act === "string" && reg.machineRefused.has(s.act) && !allowed && !help)
         refusals.push(finding3("WIZARD_STEP_CONCLUDES", n, `the act '${s.act}' is refused to a machine: no draft is placed on it but a registered labelled machine draft`));
     }
   });
@@ -142229,6 +142550,7 @@ var WizardScripts = class _WizardScripts {
                                   AND event=? ORDER BY eid LIMIT 1`, r.script_id, e2);
     const end2 = (e2) => e2 ? { by: { id: e2.actor, name: e2.actor_name }, at: e2.at, ...parse9(e2.detail) || {} } : null;
     const w = ev("widened"), x = ev("retired");
+    const c = this.#one(`SELECT based_on FROM wiz_copies WHERE script_id=?`, r.script_id);
     return {
       id: r.script_id,
       origin: "group",
@@ -142240,7 +142562,8 @@ var WizardScripts = class _WizardScripts {
       widened: end2(w),
       retired: end2(x),
       created_at: r.created_at,
-      created_by: { id: r.created_by, name: r.created_name }
+      created_by: { id: r.created_by, name: r.created_name },
+      based_on: c ? c.based_on : null
     };
   }
   #libraryScript(id) {
@@ -142256,8 +142579,17 @@ var WizardScripts = class _WizardScripts {
       widened: null,
       retired: null,
       created_at: e2.approved.at ?? "",
-      entry: e2
+      entry: e2,
+      based_on: null
     } : null;
+  }
+  /* R1, R10, R21: a script's `based_on` with its base's name, `{version, name}`, or null (DEC-158 (4)). A base the viewer
+     may not see is named by neither (R20): the copy still shows it is one, `{version: null, name: null}`. */
+  #basedOn(s, viewer) {
+    if (!s || !s.based_on) return null;
+    const p3 = parseVersionId2(s.based_on);
+    const b = p3 ? this.#groupScript(p3.script) || this.#libraryScript(p3.script) : null;
+    return b && this.#canSee(b, viewer) ? { version: s.based_on, name: b.name } : { version: null, name: null };
   }
   /* R20: a project's script is seen by whoever may see its project; a group or Civicsmith script by every member. */
   #canSee(s, viewer) {
@@ -142372,7 +142704,7 @@ var WizardScripts = class _WizardScripts {
         steps: this.#steps(s, n),
         sha: stepsSha(e2.steps),
         state: "approved",
-        author: { name: e2.approved.by },
+        author: { name: e2.author },
         contributors: [],
         derived_from: null,
         approved: { by: { name: e2.approved.by }, at: e2.approved.at },
@@ -142404,23 +142736,29 @@ var WizardScripts = class _WizardScripts {
       updated_by: up ? versionId2(s.id, (parse9(up.detail) || {}).by) : null,
       ended: wd ? { ending: "withdrawn", by: by(wd), at: wd.at, reason: (parse9(wd.detail) || {}).reason ?? null } : s.retired ? { ending: "retired", ...s.retired } : null,
       submitted: sub ? { by: by(sub), at: sub.at } : null,
-      revisions: this.#rows(`SELECT sha, author, author_name, adopted, at FROM wiz_revisions WHERE script_id=? AND version=? ORDER BY rid`, s.id, n).map((r) => ({ sha: r.sha, by: { id: r.author, name: r.author_name }, ...r.adopted ? { adopted: r.adopted } : {}, at: r.at })),
+      revisions: this.#rows(`SELECT sha, author, author_name, adopted, at FROM wiz_revisions WHERE script_id=? AND version=? ORDER BY rid`, s.id, n).map((r) => ({ sha: r.sha, by: { id: r.author, name: r.author_name }, ..._WizardScripts.#adoptedView(r.adopted), at: r.at })),
       recorded: parse9(v.recorded),
       created_at: v.created_at,
       broken: this.#isBroken(s.id, n)
     };
   }
-  static #head(s, extra = {}) {
+  #head(s, viewer, extra = {}) {
     return {
       id: s.id,
       origin: s.origin,
       name: s.name,
       scope: s.scope,
       required: s.required,
+      based_on: this.#basedOn(s, viewer),
       ...s.widened ? { widened: s.widened } : {},
       ...s.retired ? { retired: s.retired } : {},
       ...extra
     };
+  }
+  /* R4: a revision's adoption: a proposal (`adopted`), or a newer version of a copy's base (`adopted_base`). */
+  static #adoptedView(a) {
+    if (!a) return {};
+    return a.startsWith(BASE_ADOPTION) ? { adopted_base: a.slice(BASE_ADOPTION.length) } : { adopted: a };
   }
   /* ================================================================ proposals (R5) */
   /* A proposal the viewer may see (one for a script as its script; one for a project as its project), or null. */
@@ -142454,6 +142792,12 @@ var WizardScripts = class _WizardScripts {
       if (src) lists.push(this.#steps(src, p3.version));
     }
     for (const r of this.#rows(`SELECT DISTINCT adopted FROM wiz_revisions WHERE script_id=? AND version=? AND adopted IS NOT NULL`, s.id, n)) {
+      if (r.adopted.startsWith(BASE_ADOPTION)) {
+        const b = parseVersionId2(r.adopted.slice(BASE_ADOPTION.length));
+        const src = b ? this.#groupScript(b.script) || this.#libraryScript(b.script) : null;
+        if (src) lists.push(this.#steps(src, b.version));
+        continue;
+      }
       const p3 = this.#one(`SELECT steps FROM wiz_proposals WHERE proposal_id=?`, r.adopted);
       if (p3) lists.push(parse9(p3.steps) || []);
     }
@@ -142483,7 +142827,7 @@ var WizardScripts = class _WizardScripts {
       return !!r && r.ok === true;
     };
     const offered = this.#offeredScripts(viewer).filter((x) => x.s.id !== self).map((x) => ({ id: x.s.id, steps: x.steps }));
-    return checkScript(steps, { ...reg, offered, templateOffered });
+    return checkScript(steps, { ...reg, offered, templateOffered, self });
   }
   /* The offered scripts `viewer` may see, each `{s, n, steps}`. */
   #offeredScripts(viewer) {
@@ -142505,9 +142849,16 @@ var WizardScripts = class _WizardScripts {
    *  machine drafts and the Civicsmith library, once per construction, before the first request. Every offered group
    *  script is checked again: one that fails is recorded `broken` with its first refusal, one that passes again is
    *  recorded as returned. */
-  wizardRegister({ screens = [], ops = null, machineRefused = [], machineDrafts = [], library = [] } = {}) {
+  wizardRegister({
+    screens = SCREEN_REGISTRY,
+    ops = null,
+    machineRefused = [],
+    machineDrafts = [],
+    irreversible = [],
+    library = CIVICSMITH_LIBRARY
+  } = {}) {
     if (this.reg) return refuse14("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
-    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, library });
+    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library });
     const broken = [], returned = [];
     const at34 = this.#when();
     for (const r of this.#rows(`SELECT script_id FROM wiz_scripts ORDER BY created_at, script_id`)) {
@@ -142544,7 +142895,8 @@ var WizardScripts = class _WizardScripts {
     }
     return { ok: true, screens: this.reg.screens.size, library: this.reg.library.length, broken, returned };
   }
-  /** R13 (for `affordances` R37): the screen registry as registered, `[{id, acts}]`; `[]` before registration. */
+  /** R13 (for `affordances` R37): the screen registry as registered, `[{id, acts}]` (an owed act among them once its op is
+   *  declared); `[]` before registration. */
   registeredScreens() {
     return [...this.#registration().screens].map(([id, acts]) => ({ id, acts: [...acts] }));
   }
@@ -142604,13 +142956,22 @@ var WizardScripts = class _WizardScripts {
     return null;
   }
   /** R3 (`op=wizarddraft`): a new script and its first draft, from a recording, a proposal or (with a live editor grant)
-   *  nothing; or a new draft version of the script `from` names (an approved version, or a proposal for the script). */
-  wizardDraft({ project = null, name: name2 = null, recorded = void 0, from = null, author = null, viewer = null } = {}) {
+   *  nothing; or a new draft version of the script `from` names (an approved version, or a proposal for the script); or,
+   *  with `copy`, a new script of the project copied from any approved version the author may see, recording its base
+   *  (`based_on`; DEC-158), its pairs the draft's recorded pairs, its base unchanged and still offered. */
+  wizardDraft({ project = null, name: name2 = null, recorded = void 0, from = null, copy = null, author = null, viewer = null } = {}) {
     const machine3 = this.#machine("draft", author);
     if (machine3) return machine3;
     const recording = recorded !== void 0 && recorded !== null;
-    let source2 = null, target = null, proj = str31(project);
-    if (from !== null && from !== void 0 && from !== "") {
+    const given2 = (v) => v !== null && v !== void 0 && v !== "";
+    let source2 = null, target = null, proj = str31(project), base2 = null;
+    if (given2(copy)) {
+      const r = parseVersionId2(copy) ? this.#resolve(copy, viewer) : null;
+      const st = r ? r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n) : null;
+      if (st !== "approved") return this.#noWizard(copy);
+      base2 = r;
+      source2 = { copy: versionId2(r.s.id, r.n), steps: this.#steps(r.s, r.n) };
+    } else if (given2(from)) {
       if (parseVersionId2(from)) {
         const r = this.#resolve(from, viewer);
         const st = r ? r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n) : null;
@@ -142632,15 +142993,16 @@ var WizardScripts = class _WizardScripts {
     if (!proj || !this.#joined(proj, member)) return this.#scope(target, "a script is drafted by a joined participant of its project");
     if (!recording && !source2 && !this.#liveGrant(member))
       return this.#notGranted("a blank start needs the advanced editor, which an administrator grants");
-    if (recording) {
-      if (source2) return refuse14("WIZARD_STEP_REFUSED", "a draft starts from a recording or from a source, not both", { step: null });
+    if (recording || base2 && given2(from)) {
+      if (source2) return refuse14("WIZARD_STEP_REFUSED", "a draft starts from one of a recording, a source or a copy", { step: null });
       const bad2 = this.#recordingRefusal(recorded);
       if (bad2) return bad2;
     }
-    if (!target && !oneLine5(name2, WIZARD_NAME_MAX))
+    const named = base2 && !given2(name2) ? base2.s.name.slice(0, WIZARD_NAME_MAX) : name2;
+    if (!target && !oneLine5(named, WIZARD_NAME_MAX))
       return refuse14("WIZARD_NAME_REFUSED", `a script is named in one line of 1 to ${WIZARD_NAME_MAX} characters`, { max: WIZARD_NAME_MAX });
-    const pairs = recording ? recorded.map((s) => ({ screen: s.screen.trim(), act: str31(s.act) })) : null;
-    const steps = canonicalSteps(pairs ? pairs.map((p3) => ({ ...p3, what: "", why: "" })) : source2 ? source2.steps : []);
+    const pairs = recording ? recorded.map((s) => ({ screen: s.screen.trim(), act: str31(s.act) })) : base2 ? source2.steps.map((s) => ({ screen: s.screen, act: s.act ?? null })) : null;
+    const steps = canonicalSteps(recording ? pairs.map((p3) => ({ ...p3, what: "", why: "" })) : source2 ? source2.steps : []);
     const at34 = this.#when();
     const who2 = this.#nameOf(member);
     return this.record.transact(() => {
@@ -142649,12 +143011,13 @@ var WizardScripts = class _WizardScripts {
         sid = this.#mint("WIZ", at34.slice(0, 4));
         if (!sid) return mintExhausted("WIZ");
         this.sql.exec(`INSERT INTO wiz_scripts (script_id, bundle_id, project, name, created_by, created_name, created_at)
-                       VALUES (?,?,?,?,?,?,?)`, sid, proj, proj, name2.trim(), member, who2, at34);
+                       VALUES (?,?,?,?,?,?,?)`, sid, proj, proj, named.trim(), member, who2, at34);
+        if (base2) this.sql.exec(`INSERT INTO wiz_copies (script_id, bundle_id, based_on, at) VALUES (?,?,?,?)`, sid, proj, source2.copy, at34);
       }
       const bundle = target ? target.bundle_id : proj;
       const n = (target ? Math.max(0, ...this.#numbers(sid)) : 0) + 1;
       this.sql.exec(`INSERT INTO wiz_versions (script_id, version, bundle_id, author, author_name, recorded, derived_from, created_at)
-                     VALUES (?,?,?,?,?,?,?,?)`, sid, n, bundle, member, who2, pairs ? json7(pairs) : null, source2 ? json7(source2.derived) : null, at34);
+                     VALUES (?,?,?,?,?,?,?,?)`, sid, n, bundle, member, who2, pairs ? json7(pairs) : null, source2 && source2.derived ? json7(source2.derived) : null, at34);
       const sha2 = stepsSha(steps);
       this.sql.exec(`INSERT INTO wiz_revisions (script_id, version, bundle_id, steps, sha, author, author_name, adopted, at)
                      VALUES (?,?,?,?,?,?,?,?,?)`, sid, n, bundle, json7(steps), sha2, member, who2, source2 && source2.proposal ? source2.proposal : null, at34);
@@ -142664,7 +143027,8 @@ var WizardScripts = class _WizardScripts {
         version: versionId2(sid, n),
         sha: sha2,
         state: "draft",
-        ...source2 ? { derived_from: source2.derived } : {},
+        ...source2 && source2.derived ? { derived_from: source2.derived } : {},
+        ...base2 ? { based_on: source2.copy } : {},
         says: "a draft: only its author runs it, and it is offered to no one until it is submitted and approved"
       };
     });
@@ -142685,10 +143049,14 @@ var WizardScripts = class _WizardScripts {
     const state = this.#stateOf(this.#events(s.id), n);
     if (state !== "draft") return this.#notADraft(s, n, state);
     const adopting = adopt !== null && adopt !== void 0 && adopt !== "";
-    const p3 = adopting ? this.#proposal(adopt, viewer) : null;
-    if (adopting && (!p3 || (p3.script_id ? p3.script_id !== s.id : p3.project !== s.project))) return this.#noWizard(adopt);
-    const body = steps !== void 0 && steps !== null ? steps : p3 ? parse9(p3.steps) || [] : void 0;
-    if (Array.isArray(body) && !this.#liveGrant(member) && !_WizardScripts.#within(body.filter(isObj34), this.#allowedPairs(s, n, p3 ? [parse9(p3.steps) || []] : [])))
+    const fromBase = adopting && isObj34(adopt);
+    const b = fromBase ? this.#newerBase(s, adopt.base, viewer) : null;
+    if (fromBase && !b) return this.#noWizard(typeof adopt.base === "string" ? adopt.base : null);
+    const p3 = adopting && !fromBase ? this.#proposal(adopt, viewer) : null;
+    if (adopting && !fromBase && (!p3 || (p3.script_id ? p3.script_id !== s.id : p3.project !== s.project))) return this.#noWizard(adopt);
+    const taken = p3 ? parse9(p3.steps) || [] : b ? b.steps : null;
+    const body = steps !== void 0 && steps !== null ? steps : taken ?? void 0;
+    if (Array.isArray(body) && !this.#liveGrant(member) && !_WizardScripts.#within(body.filter(isObj34), this.#allowedPairs(s, n, taken ? [taken] : [])))
       return this.#notGranted("without the advanced editor a revision may reword, delete or reorder the steps, never add one");
     const bad2 = stepShape(body);
     if (bad2) return this.#stepRefusal(bad2);
@@ -142696,16 +143064,37 @@ var WizardScripts = class _WizardScripts {
     const who2 = this.#nameOf(member);
     const canon4 = canonicalSteps(body);
     const sha2 = stepsSha(canon4);
-    this.sql.exec(`INSERT INTO wiz_revisions (script_id, version, bundle_id, steps, sha, author, author_name, adopted, at)
-                   VALUES (?,?,?,?,?,?,?,?,?)`, s.id, n, s.bundle_id, json7(canon4), sha2, member, who2, p3 ? p3.proposal_id : null, at34);
+    this.sql.exec(
+      `INSERT INTO wiz_revisions (script_id, version, bundle_id, steps, sha, author, author_name, adopted, at)
+                   VALUES (?,?,?,?,?,?,?,?,?)`,
+      s.id,
+      n,
+      s.bundle_id,
+      json7(canon4),
+      sha2,
+      member,
+      who2,
+      p3 ? p3.proposal_id : b ? `${BASE_ADOPTION}${b.version}` : null,
+      at34
+    );
     return {
       ok: true,
       version: versionId2(s.id, n),
       sha: sha2,
       state: "draft",
       ...p3 ? { adopted: p3.proposal_id } : {},
+      ...b ? { adopted_base: b.version } : {},
       revisions: this.#one(`SELECT COUNT(*) AS c FROM wiz_revisions WHERE script_id=? AND version=?`, s.id, n).c
     };
+  }
+  /* R4 (DEC-158 (4)): a newer approved version of the base of the copy `s` (one approved after the version its `based_on`
+     names, `updated` since or not) that the viewer may see, `{version, steps}`; or null. */
+  #newerBase(s, asked, viewer) {
+    const on = s.based_on ? parseVersionId2(s.based_on) : null;
+    const r = on && typeof asked === "string" ? this.#resolve(asked, viewer) : null;
+    if (!r || r.s.id !== on.script || r.n <= on.version) return null;
+    const st = r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n);
+    return ["approved", "updated"].includes(st) ? { version: versionId2(r.s.id, r.n), steps: this.#steps(r.s, r.n) } : null;
   }
   /* ================================================================ R5: wizardPropose */
   /** R5 (`op=wizardpropose`): any credential proposes steps, for a project or for a named script, stored apart and
@@ -143066,7 +143455,7 @@ var WizardScripts = class _WizardScripts {
       else if (st === "broken") pick3 = s.origin === "group" ? numbers.filter((n) => this.#isBroken(s.id, n)) : [];
       else pick3 = s.retired ? [] : numbers.filter((n) => stateOf2(n) === st);
       if (!pick3.length) continue;
-      out.push(_WizardScripts.#head(s, { versions: pick3.slice().reverse().map((n) => this.#listed(this.#versionView(s, n, events), s)) }));
+      out.push(this.#head(s, viewer, { versions: pick3.slice().reverse().map((n) => this.#listed(this.#versionView(s, n, events), s)) }));
     }
     return { ok: true, state: st || "offered", scripts: out.slice(0, WIZARDS_MAX), truncated: out.length > WIZARDS_MAX };
   }
@@ -143084,7 +143473,7 @@ var WizardScripts = class _WizardScripts {
                                  WHERE r.script_id=? AND r.version=? ORDER BY p.proposal_id`, s.id, n).map((p3) => ({ id: p3.proposal_id, sha: p3.sha, why: p3.why, at: p3.at, label: _WizardScripts.#label(p3.proposer) }));
     return {
       ok: true,
-      script: _WizardScripts.#head(s, { start: startOf(view.steps) }),
+      script: this.#head(s, viewer, { start: startOf(view.steps) }),
       version: { ...view, proposals_adopted: adopted },
       offered: this.#offeredNumber(s, events) === n
     };
@@ -143128,10 +143517,11 @@ var WizardScripts = class _WizardScripts {
   /* ================================================================ R21: wizardRegistry */
   /** R21 (in-process; the registry form, Q1-7): for `answers`' explain and walk-through reads and `affordances`'
    *  no-target answer, every registered screen `{id, acts, scripts}`, each script as R11 answers it to `viewer` on that
-   *  screen, `{id, version, name, start, steps: [{screen, act, what, why, draft?}], origin}` (and `draft: true` for the
-   *  viewer's own draft), a step's `draft` its kind alone (`text`, `template` or `machine`), never its words, template
-   *  or op. Before registration `{registered: false, screens: []}`. Needs no AI credential and no key; runs nothing,
-   *  records no use and writes nothing. */
+   *  screen, `{id, version, name, start, steps: [{screen, act, what, why, via, draft?}], origin, based_on}` (and `draft:
+   *  true` for the viewer's own draft), a step's `via` its side trip's script id or null (DEC-139 (4)), its `draft` its
+   *  kind alone (`text`, `template` or `machine`), never its words, template or op, and `based_on` R1's with its base's
+   *  name or null (DEC-158 (4)). Before registration `{registered: false, screens: []}`. Needs no AI credential and no
+   *  key; runs nothing, records no use and writes nothing. */
   wizardRegistry({ viewer = null } = {}) {
     if (!this.reg) return { ok: true, registered: false, screens: [] };
     const byStart = /* @__PURE__ */ new Map();
@@ -143145,6 +143535,7 @@ var WizardScripts = class _WizardScripts {
         start,
         steps: x.steps.map(_WizardScripts.#bareStep),
         origin: x.s.origin,
+        based_on: this.#basedOn(x.s, viewer),
         ...x.draft ? { draft: true } : {}
       });
     }
@@ -143155,7 +143546,134 @@ var WizardScripts = class _WizardScripts {
   static #bareStep(s) {
     const o = isObj34(s) ? s : {};
     const kind = o.draft !== void 0 && o.draft !== null ? Object.keys(canonicalDraft(o.draft) || {})[0] ?? null : null;
-    return { screen: o.screen ?? null, act: o.act ?? null, what: o.what ?? "", why: o.why ?? "", ...kind ? { draft: kind } : {} };
+    return {
+      screen: o.screen ?? null,
+      act: o.act ?? null,
+      what: o.what ?? "",
+      why: o.why ?? "",
+      via: typeof o.via === "string" ? o.via : null,
+      ...kind ? { draft: kind } : {}
+    };
+  }
+  /* ================================================================ R23: startFrom */
+  /** R23 (`op=startfrom`; DEC-129 (7), (2)): the first steps a member may take from the group's home: the offered
+   *  scripts this viewer may start (R11) of the Civicsmith library that are not required, and of the group's own, each
+   *  `{id, version, name, start}`, and `doors`, the design stream's front doors naming offered scripts only (a door
+   *  with none left out; `[]` until given). Needs no AI credential and no key; starts nothing, records no use, writes
+   *  nothing. */
+  startFrom({ viewer = null } = {}) {
+    const scripts = this.#offeredScripts(viewer).filter((x) => !(x.s.origin === "civicsmith" && x.s.required)).map((x) => ({ id: x.s.id, version: versionId2(x.s.id, x.n), name: x.s.name, start: startOf(x.steps) }));
+    const ids = new Set(scripts.map((x) => x.id));
+    const doors = FRONT_DOORS.map((d) => ({ door: d.door, scripts: (Array.isArray(d.scripts) ? d.scripts : []).filter((id) => ids.has(id)) })).filter((d) => d.scripts.length);
+    return { ok: true, scripts, doors };
+  }
+  /* ================================================================ R26: baseUpdates */
+  /* R26: the copies the viewer may see that are offered or hold a draft, each with the versions of its base approved
+     after the one `based_on` names: `[{s, base, on, newer: [n]}]`. */
+  #copiesBehind(viewer) {
+    const out = [];
+    for (const r of this.#rows(`SELECT script_id, based_on FROM wiz_copies ORDER BY script_id`)) {
+      const s = this.#script(r.script_id, viewer);
+      const on = parseVersionId2(r.based_on);
+      if (!s || s.retired || !on) continue;
+      const events = this.#events(s.id);
+      const live7 = this.#offeredNumber(s, events) !== null || this.#numbers(s.id).some((n) => this.#stateOf(events, n) === "draft");
+      const base2 = this.#groupScript(on.script) || this.#libraryScript(on.script);
+      if (!live7 || !base2 || !this.#canSee(base2, viewer)) continue;
+      const bev = base2.origin === "civicsmith" ? [] : this.#events(base2.id);
+      const numbers = base2.origin === "civicsmith" ? [base2.entry.version] : this.#numbers(base2.id);
+      const newer = numbers.filter((n) => n > on.version && (base2.origin === "civicsmith" || ["approved", "updated"].includes(this.#stateOf(bev, n))));
+      if (newer.length) out.push({ s, base: base2, on, newer });
+    }
+    return out;
+  }
+  /* R26: the copy's recipients: its wizard editors (members with a live editor grant who may see it), else its approvers
+     (R7's right: an owner of its project, or the administrators for a group-wide copy). BOB's reading (P17). Each must
+     also see the base, so no one is told of a script they may not see (R20) or asked to adopt what R4 would refuse. */
+  #copyRecipients(s, base2) {
+    const sees = (m) => this.#canSee(s, `member:${m}`) && this.#canSee(base2, `member:${m}`);
+    const editors = this.#rows(`SELECT DISTINCT g.member FROM wiz_editor_grants g WHERE NOT EXISTS
+                                  (SELECT 1 FROM wiz_editor_revocations r WHERE r.grant_id=g.grant_id) ORDER BY g.member`).map((r) => r.member).filter(sees);
+    if (editors.length) return editors;
+    const owners2 = (s.widened ? this.#call(() => this.membership.activeAdmins(), []) : this.#call(() => this.membership.projectOwners(s.project), [])) || [];
+    return [...new Set(owners2)].filter(sees).sort();
+  }
+  /** R26 (`op=baseupdates`; for `queue-producers` R39; the shape B3, K1861 (1)): each pair (copy, newer base version) of
+   *  a copy the viewer may see, offered or holding a draft, whose base has a version approved after the one its
+   *  `based_on` names, `{copy, copy_version, name, project, base, base_name, based_on, base_version, found_at, recipients:
+   *  [member ids], steps: {copy, base}}` (`found_at` the instant the pair was first found, the one thing this writes),
+   *  each pair once, at most 500 per page in (instant, copy, base version) order after `after` (a previous page's
+   *  `cursor`), with `cursor` and `truncated`. Nothing is applied to a copy: the change is brought across only by a
+   *  member's own revision (R4's `adopt: {base}`). */
+  baseUpdates({ after = null, limit = null, viewer = null } = {}) {
+    const max = clamp6(limit, PAGE_MAX3, PAGE_MAX3);
+    const at34 = this.#when();
+    const pairs = [];
+    for (const { s, base: base2, on, newer } of this.#copiesBehind(viewer)) {
+      for (const n of newer) {
+        const nv = versionId2(base2.id, n);
+        let seen = this.#one(`SELECT at FROM wiz_base_seen WHERE script_id=? AND newer=?`, s.id, nv);
+        if (!seen) {
+          this.sql.exec(`INSERT INTO wiz_base_seen (script_id, newer, bundle_id, at) VALUES (?,?,?,?)`, s.id, nv, s.bundle_id, at34);
+          seen = { at: at34 };
+        }
+        const events = this.#events(s.id);
+        const drafts = this.#numbers(s.id).filter((k) => this.#stateOf(events, k) === "draft");
+        const cv = this.#offeredNumber(s, events) ?? drafts[drafts.length - 1];
+        pairs.push({ key: `${seen.at}|${s.id}|${nv}`, entry: {
+          copy: s.id,
+          copy_version: versionId2(s.id, cv),
+          name: s.name,
+          project: isObj34(s.scope) ? s.scope.project : null,
+          base: base2.id,
+          base_name: base2.name,
+          based_on: versionId2(on.script, on.version),
+          base_version: nv,
+          found_at: seen.at,
+          recipients: this.#copyRecipients(s, base2),
+          steps: { copy: this.#steps(s, cv), base: this.#steps(base2, n) }
+        } });
+      }
+    }
+    pairs.sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+    const from = str31(after);
+    const rest = from ? pairs.filter((p3) => p3.key > from) : pairs;
+    const page2 = rest.slice(0, max);
+    const truncated3 = rest.length > max;
+    return { ok: true, entries: page2.map((p3) => p3.entry), cursor: truncated3 && page2.length ? page2[page2.length - 1].key : null, truncated: truncated3 };
+  }
+  /* ================================================================ R24, R27: writing help */
+  /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
+   *  `{offered: false, code}`, against the registration's refused and irreversible acts. Writes nothing; never throws. */
+  writingHelpAt(args = {}) {
+    const { op = null, field = null, draftHeld = false, assistant = null } = isObj34(args) ? args : {};
+    return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused);
+  }
+  /** R24 (in-process; B3, K1861 (1): `affordances` R44 reads it through `op=affordancescreens`): the acts the assistant
+   *  never helps word, `{named, machine_refused, irreversible}`: `named` this module's frozen list, the other two as
+   *  handed to `wizardRegister`, in registration order (`[]` before registration). */
+  writingHelpRefused() {
+    const reg = this.reg;
+    return { named: WRITING_HELP_NAMED, machine_refused: reg ? [...reg.machineRefused] : [], irreversible: reg ? [...reg.irreversible] : [] };
+  }
+  /** R27 (`op=writinghelp`): a member's request for a labelled draft in one own-words field: R24's refusals, then
+   *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
+   *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The door routes the op itself and calls this with the POST body's
+   *  `{op, field, told, draftHeld}`, its own `assistant` (`{on, account: {kind, level}}`, never the key) and the stamps
+   *  (B4, K1863 (7)); its refusals (`ASSISTANT_OFF`, the account's, the ceilings) come first (`control-plane` R57).
+   *  Writes nothing. */
+  writingHelp(args = {}) {
+    const { op = null, field = null, told = null, draftHeld = false, assistant = null } = isObj34(args) ? args : {};
+    const at34 = this.writingHelpAt({ op, field, draftHeld, assistant });
+    if (!at34.offered) return refuse14(at34.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
+    const text7 = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
+    if (!text7.trim() || text7.length > TOLD_MAX)
+      return refuse14("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
+    return refuse14(
+      "ASSISTANT_DRAFT_UNAVAILABLE",
+      "the assistant's draft is not served yet: nothing was drafted and the field is unchanged",
+      { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()) }
+    );
   }
   /** R12 (`op=wizardcheck`): `checkScript` against the registration, for any credential, `ai` included. Writes nothing. */
   wizardCheck({ steps = void 0, viewer = null } = {}) {
@@ -143298,7 +143816,10 @@ for (const m of [
   "wizardUse",
   "wizardCandidates",
   "submittedFor",
-  "wizardRegistry"
+  "wizardRegistry",
+  "startFrom",
+  "baseUpdates",
+  "writingHelp"
 ]) {
   const fn = WizardScripts.prototype[m];
   WizardScripts.prototype[m] = function(...a) {
@@ -143334,10 +143855,13 @@ function wizardScriptsOps(m, url, body) {
       name: pick3("name"),
       recorded: b.recorded,
       from: pick3("from"),
+      copy: pick3("copy"),
       author: q10("author"),
       ...stamps
     }),
     wizardrevise: () => m.wizardRevise({ version: pick3("version"), steps: b.steps, adopt: pick3("adopt"), author: q10("author"), ...stamps }),
+    startfrom: () => m.startFrom({ ...stamps }),
+    baseupdates: () => m.baseUpdates({ after: q10("after"), limit: q10("limit"), ...stamps }),
     wizardpropose: () => m.wizardPropose({
       project: pick3("project"),
       script: pick3("script"),
@@ -143577,7 +144101,7 @@ var AffordanceFacts = class {
       const at34 = w.wizardsAt({ screen: id, viewer });
       for (const s of at34 && Array.isArray(at34.scripts) ? at34.scripts : []) if (s.draft !== true) wizard_scripts.push(s);
     }
-    return { ok: true, screens, wizard_scripts };
+    return { ok: true, screens, wizard_scripts, writing_help_refused: w.writingHelpRefused() };
   }
 };
 var instances46 = /* @__PURE__ */ new WeakMap();
@@ -145122,7 +145646,15 @@ function answersOf(host, deps) {
 
 // src/affordances/door.mjs
 var CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that object right now; rung is the weight ladder (vocabularies.rung_ladder, low to high, IRREVERSIBLE at the top per DEC-19 with vocabularies.rung_correction_path beside it) and is null only where the act carries a STATED absence \u2014 read rung_absence for the ground, and vocabularies.rung_absence_grounds for what that ground means; capture_acts are keyed by a capture sha rather than by a record, so they are published with their metadata and never derived against an object's state; set_acts take a selection as `items` under the per-item weight: each item is applied or RETAINED with its own act's reason, and none stops the others";
-function affordancesAnswer({ target = null, facts = null, kinds: kinds3, gate, screens = [], wizard_scripts = [] } = {}) {
+function affordancesAnswer({
+  target = null,
+  facts = null,
+  kinds: kinds3,
+  gate,
+  screens = [],
+  wizard_scripts = [],
+  writing_help_refused = null
+} = {}) {
   const vocabularies = vocabulariesFor(kinds3);
   const dec4 = (a) => decorate(a, gate);
   const capture_acts = CAPTURE_ACTS.map(dec4);
@@ -145146,7 +145678,11 @@ function affordancesAnswer({ target = null, facts = null, kinds: kinds3, gate, s
     screens: Array.isArray(screens) ? screens : [],
     wizard_scripts: Array.isArray(wizard_scripts) ? wizard_scripts : [],
     /* K1601: `answers`' check family `{CODE: {check, translation}}`, the very object its table holds, for the pack. */
-    answer_checks: ANSWERS_CHECKS
+    answer_checks: ANSWERS_CHECKS,
+    /* R44 (DEC-153; K1861 (1)): the acts on which `wizard-scripts` R24 (item 2) refuses writing help, as that module holds
+       and registers them (`writingHelpRefused()`: `{named, machine_refused, irreversible}`), passed through unchanged so
+       no surface keeps a copy (R21); null only where no answer was handed in. */
+    writing_help_refused: writing_help_refused ?? null
   };
   if (!facts || facts.ok !== true) return { ok: false, ...facts };
   return {
@@ -145172,23 +145708,25 @@ async function affordancesOp(url, stub, {
   cls: cls3
 }) {
   const target = url.searchParams.get("target");
-  const kOut = await doAnswer2(stub.fetch("http://do/actionkinds"));
+  const second3 = target ? `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(viewer)}&identity=${encodeURIComponent(identity)}&author=${encodeURIComponent(author ?? "")}&by=${encodeURIComponent(by ?? "")}` : `http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`;
+  const [kOut, out] = await Promise.all([doAnswer2(stub.fetch("http://do/actionkinds")), doAnswer2(stub.fetch(second3))]);
   if (kOut.refused) return storeRefusal2(kOut);
   if (!kOut.answered) return storeSilent2("affordances", kOut.correlation);
   const kinds3 = kOut.result?.kinds;
   const answer = (result3) => json17({ ok: true, result: result3, store: storeName, tokenClass: cls3 }, 200);
+  if (out.refused) return storeRefusal2(out);
   if (!target) {
-    const sOut = await doAnswer2(stub.fetch(`http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`));
-    if (sOut.refused) return storeRefusal2(sOut);
-    if (!sOut.answered || !sOut.result) return storeSilent2("affordances", sOut.correlation);
-    return answer(affordancesAnswer({ kinds: kinds3, gate, screens: sOut.result.screens, wizard_scripts: sOut.result.wizard_scripts }));
+    if (!out.answered || !out.result) return storeSilent2("affordances", out.correlation);
+    return answer(affordancesAnswer({
+      kinds: kinds3,
+      gate,
+      screens: out.result.screens,
+      wizard_scripts: out.result.wizard_scripts,
+      writing_help_refused: out.result.writing_help_refused
+    }));
   }
-  const fOut = await doAnswer2(stub.fetch(
-    `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(viewer)}&identity=${encodeURIComponent(identity)}&author=${encodeURIComponent(author ?? "")}&by=${encodeURIComponent(by ?? "")}`
-  ));
-  if (fOut.refused) return storeRefusal2(fOut);
-  if (!fOut.answered) return storeSilent2("affordances", fOut.correlation);
-  const facts = fOut.result;
+  if (!out.answered) return storeSilent2("affordances", out.correlation);
+  const facts = out.result;
   if (!facts) return storeSilent2("affordances");
   const result2 = affordancesAnswer({ target, facts, kinds: kinds3, gate });
   if (result2.ok === false)
@@ -145235,11 +145773,11 @@ var T33_RUNGS = {
   dutydeclare: "reversible",
   // dutywithdraw takes it back
   dutyrevise: "reasoned",
-  // NO_REASON (duties R6: a new version with its reason)
+  // DUTY_NO_REASON (duties R6: a new version with its reason)
   dutywithdraw: "reasoned",
-  // NO_REASON (duties R6)
+  // DUTY_NO_REASON (duties R6)
   dutymatch: "reasoned",
-  // NO_REASON (duties R12: an event meets an occurrence, with why)
+  // DUTY_NO_REASON (duties R12: an event meets an occurrence, with why)
   dutytransition: "reasoned",
   // NO_CAUSE (duties R13: a member's statement of an occurrence's state names its cause)
   /* people (R1, R4, R9, R11, R12, R20, R21, R22) */
@@ -145265,9 +145803,9 @@ var T33_RUNGS = {
   hypothesishold: "reversible",
   // hypothesiswithdraw takes it back
   hypothesisrevise: "reasoned",
-  // NO_REASON (hypotheses R2)
+  // HYPOTHESIS_NO_REASON (hypotheses R2)
   hypothesiswithdraw: "reasoned",
-  // NO_REASON (hypotheses R2)
+  // HYPOTHESIS_NO_REASON (hypotheses R2)
   /* calculations (R14, R23) */
   moneyingest: "reasoned",
   // NO_REASON (calculations R14: every row of a binding at once asks why; named rows ask none, `triage`'s shape)
@@ -145346,6 +145884,10 @@ var T33_RUNG_ABSENT = {
   /* people */
   interestcheckdefine: { ground: "undetermined", is: "a member or the machine defines an interest check, or a new version of one, with its condition and denominator; earlier versions kept, and a machine's results shown only once gated (people R22)" },
   interestcheckgate: { ground: "substrate", is: "an administrator records a check version's false-alarm rate measured on a named gold set; results show only at or under the gate (people R24)" },
+  /* hypotheses (R43; R11, R13): a member's own note, answered to its author alone, and a turn recorded on it; what a turn
+     makes is its owner's act, graded there */
+  notewrite: { ground: "caller-owned", is: "a member writes a note of their own, answered to that member alone; never a record id, never cited, published or counted (hypotheses R11)" },
+  noteturn: { ground: "caller-owned", is: "the note's author records that the note became an observation, a hunch or a question their own act made (hypotheses R13)" },
   /* calculations */
   tabledeclare: { ground: "undetermined", is: "a member declares a table from a captured source, with its schema, roles and vintage; superseded only by a later declaration naming it (calculations R1\u2013R3)" },
   bindingadopt: { ground: "undetermined", is: "a member adopts a table's money-role mapping, which the ingest writer reads (calculations R14)" },
@@ -145497,6 +146039,10 @@ var T33_NON_ACTS = {
   hypothesisrevise: "hypothesis-directed: keyed by hypothesis; a new statement with its reason, the history kept",
   hypothesiswithdraw: "hypothesis-directed: keyed by hypothesis; keeps it, shown withdrawn",
   hypotheses: R4("one hypothesis, or an inquiry's, each labelled a hypothesis with its history"),
+  /* R43: a member's own notes */
+  notewrite: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+  noteturn: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+  notes: R4("a member's own notes, to that member alone"),
   /* calculations */
   tabledeclare: "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle",
   bindingadopt: "table-directed: keyed by (table, roles); writes calculations' rows and moves no bundle",
@@ -145602,6 +146148,105 @@ var T33_NON_ACTS = {
   standardinforce: R4("whether one standard was in force on a date, with why")
 };
 
+// src/affordances/t34.mjs
+var R5 = (s) => `read: ${s}; writes nothing`;
+var ROSTER_DOOR = (s) => `roster governance: ${s}; the subject is who may join, not a bundle`;
+var T34_RUNGS = {
+  /* tasks R15: a `concern` asks its reason (CHECK_NO_REASON), a `check` none — `triage`'s shape (K212) */
+  checkrecord: "reasoned"
+  // CHECK_NO_REASON (tasks R15)
+};
+var T34_RUNG_ABSENT = {
+  /* membership R98–R105: who may join, as memberadd and knock */
+  invitewithdraw: { ground: "credential", is: "an administrator withdraws an unused invitation, the member becoming revoked (membership R98)" },
+  websitekeycreate: { ground: "credential", is: "an administrator creates the one live key the group's website invites members with, its scope, daily cap and expiry (membership R99)" },
+  websitekeyset: { ground: "credential", is: "an administrator changes the live website key's scope, cap or expiry, appended (membership R100)" },
+  websitekeyrevoke: { ground: "credential", is: "an administrator revokes the website key; the invitations it made stay as they are (membership R100)" },
+  joinlinkenable: { ground: "credential", is: "an administrator turns on the one join link, its scope, daily cap and expiry (membership R102)" },
+  joinlinkset: { ground: "credential", is: "an administrator changes the live join link's settings, appended (membership R103)" },
+  joinlinkreplace: { ground: "credential", is: "an administrator replaces the join link, the old one dead at once (membership R103)" },
+  joinlinkoff: { ground: "credential", is: "an administrator switches the join link off (membership R103)" },
+  websiteinvite: { ground: "credential", is: "the group's website, holding the key, invites one person under a cover name (membership R101)" },
+  joinlinkinvite: { ground: "credential", is: "a person holding the join link asks to be invited under a cover name (membership R104)" },
+  /* membership R107, R109: the group's settings and its words for itself, as groupnameset */
+  courtnoticeset: { ground: "substrate", is: "an administrator records whether members are told what a court can reach, appended; it moves no document, claim or grade (membership R107)" },
+  groupdescriptionset: { ground: "substrate", is: "an administrator records the group's own description of itself and who may read it, appended; a presentation value in no signed bytes (membership R109)" },
+  /* tasks R13, R14, on R27's rule: no reason is asked and no published act takes either back */
+  checkrequest: { ground: "undetermined", is: "a project owner asks a member, or the members declaring an expertise, to check one held object (tasks R13)" },
+  checktake: { ground: "undetermined", is: "a member who may see the object takes a check request, once; another's take is refused (tasks R14)" },
+  /* credentials R33, R36, R37: the group's key, as keyedserviceset; its switches, as keyedserviceswitch */
+  groupkeyset: { ground: "credential", is: "an administrator sets the group's sealed assistant key, never answered (credentials R33)" },
+  groupkeyremove: { ground: "credential", is: "an administrator removes the group's assistant key (credentials R33)" },
+  groupkeyswitch: { ground: "substrate", is: "an administrator switches the group's assistant key on or off; it moves no document, claim or grade (credentials R33)" },
+  groupswitchset: { ground: "substrate", is: "an administrator sets one of the group's assistant switches; it moves no document, claim or grade (credentials R37)" },
+  groupkeynoticeseen: { ground: "caller-owned", is: "records that a member saw the notice of the group's key, for that member alone (credentials R36)" },
+  /* instance-setup R60, R64: an administrator's setting, as officesseed; a member's own language, as accountswitchset */
+  placewanted: { ground: "substrate", is: "an administrator records the place the group wants its profile for; it moves no document, claim or grade (instance-setup R60)" },
+  memberlanguageset: { ground: "caller-owned", is: "a member sets the language the interface speaks to them (instance-setup R64)" }
+};
+var T34_NON_ACTS = {
+  invitewithdraw: ROSTER_DOOR("an administrator's withdrawal of an invitation"),
+  websitekeycreate: ROSTER_DOOR("the website's key, an administrator's"),
+  websitekeyset: ROSTER_DOOR("the website's key, an administrator's"),
+  websitekeyrevoke: ROSTER_DOOR("the website's key, an administrator's"),
+  joinlinkenable: ROSTER_DOOR("the join link, an administrator's"),
+  joinlinkset: ROSTER_DOOR("the join link, an administrator's"),
+  joinlinkreplace: ROSTER_DOOR("the join link, an administrator's"),
+  joinlinkoff: ROSTER_DOOR("the join link, an administrator's"),
+  courtnoticeset: "the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object",
+  groupdescriptionset: "the group's description of itself \u2014 the subject is the group's identity, not a bundle; an administrator's",
+  courtnotice: R5("the group's court-notice setting and its history"),
+  checkrequest: "check-directed: keyed by a held object and its addressees, reached from the object; writes tasks' rows and moves no bundle",
+  checktake: "check-directed: keyed by a check request, reached from the member's To do; writes tasks' rows and moves no bundle",
+  checkrecord: "check-directed: keyed by a check request its taker holds; a check, or a concern with its reason, appended once",
+  checkrequests: R5("the check requests the viewer made, each with who took it and its record"),
+  checksof: R5("the checks recorded on one object the viewer may see"),
+  groupkeyset: "credential governance: the group's assistant key, an administrator's; never answered",
+  groupkeyremove: "credential governance: the group's assistant key, an administrator's",
+  groupkeyswitch: "the copy's configuration: whether the group's assistant key is on; an administrator's, not an act on an object",
+  groupswitchset: "the copy's configuration: one of the group's assistant switches; an administrator's, not an act on an object",
+  groupkeystate: R5("whether the group's assistant key is held and on, the whole state to an administrator"),
+  groupkeynotice: R5("the notice of the group's key for the session's own member"),
+  groupkeynoticeseen: "personal state, keyed by member: the notice of the group's key seen by them",
+  placewanted: "the instance's configuration: the place the group wants its profile for; an administrator's",
+  placewantedstate: R5("the place the group wants its profile for, and whether one is held"),
+  memberlanguageset: "personal state, keyed by member: the language the interface speaks to them",
+  memberlanguage: R5("a member's own interface language"),
+  startfrom: R5("the wizard scripts a new member may start from")
+};
+var OP_ALIASES = Object.freeze({
+  signerregisterown: "signerregister",
+  signerrevokeown: "signerrevoke",
+  declaretie: "membertie",
+  withdrawtie: "membertiewithdraw",
+  adoptversion: "versionadopt",
+  keepversion: "versionkeep",
+  strengthbarset: "strengthbar",
+  ruleanswer: "rule",
+  standingquestionset: "standingset",
+  standingquestionend: "standingend",
+  recordpersonfact: "personfact",
+  claimidentity: "identityclaim",
+  withdrawidentityclaim: "identitywithdraw",
+  expunge: "personexpunge",
+  createevent: "eventcreate",
+  addparticipant: "participantadd",
+  relate: "eventrelate",
+  recorddatedfact: "datedfact",
+  recordfact: "moneyrecord",
+  createset: "moneysetcreate",
+  include: "moneysetinclude",
+  exclude: "moneysetexclude",
+  reconcile: "moneyreconcile",
+  addworkbook: "workbookadd",
+  bind: "workbookbind",
+  recordcheck: "workbooksecondcheck",
+  recordline: "linerecord",
+  declare: "dutydeclare",
+  filingrecordsent: "filingsent"
+});
+var aliased = (table4) => Object.fromEntries(Object.entries(OP_ALIASES).filter(([, op]) => Object.hasOwn(table4, op)).map(([a, op]) => [a, table4[op]]));
+
 // src/affordances/words.mjs
 var MONEY_WORDS2 = Object.freeze({
   proposed: "proposed",
@@ -145688,7 +146333,7 @@ var RUNG_ABSENCE_GROUNDS = {
   credential: "the subject is WHO MAY ACT, not what the record says. Adding a member, minting a machine credential or moving a project's roster changes who can write; it writes nothing the record asserts. The ladder grades acts on the record, and these are one layer beneath it.",
   "caller-owned": "the subject is the caller's own server-side or personal state \u2014 a selection is a lease the credential that made it owns, a mute is one member's preference about their own feed. None of it is in the record, so undoing it costs the record nothing and claims nothing to anybody.",
   observational: "the act records WHAT WAS OBSERVED, not what anybody decided. There is nothing to reverse: an observation is corrected by observing again, and the earlier observation stays true of the moment it was made.",
-  undetermined: "THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG. No document assigns one and no refusal in the plane establishes one, so the honest answer is that it is UNDETERMINED \u2014 stated, never guessed (CLAUDE.md: undetermined is first-class and must be STATED). Do not read this as 'light'. Several of these are weighty, and the reason they are undetermined is that the ladder as it stands has no rung for an act that is CORRECTED FORWARD but is not signed."
+  undetermined: "THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG. No document assigns one and no refusal establishes one, so the honest answer is that it is UNDETERMINED \u2014 stated, never guessed (CLAUDE.md: undetermined is first-class and must be STATED). Do not read this as 'light'. Several of these are weighty, and the reason they are undetermined is that the ladder as it stands has no rung for an act that is CORRECTED FORWARD but is not signed."
 };
 var CONSEQUENCE_STATEMENTS = Object.freeze({
   attribute: Object.freeze({
@@ -145907,10 +146552,13 @@ function vocabulariesFor(kinds3) {
   return { ...VOCABULARIES, action_kind: ok2 ? kinds3 : PRODUCT_KINDS, ...composedVocabularies() };
 }
 var RUNGS2 = {
-  /* ---- irreversible. ONE op, and DEC-19 as amended names it. --------------
-     Derived, not spelled: the suite finds it as the op whose DO route is the
-     publishing path, so renaming either half fails rather than drifts. */
+  /* ---- irreversible. The op that publishes, as DEC-19 as amended names it, and (R42; DEC-147) the two that set when a
+     signed case edition goes public: the set time is weighed as publishing itself, and moving it sets again. */
   publish: "irreversible",
+  publishat: "irreversible",
+  // ratification R40 · signs now; publishes at the set time if every check passes again
+  publishatmove: "irreversible",
+  // publication R68 · sets again when the signed edition goes public
   /* ---- attested: signed or countersigned, and correctable only by a further
      act that is itself signed. Constructs:275. Both require an authority the
      group does not hold alone — a registered signer's key, a timestamp
@@ -146313,8 +146961,13 @@ var RUNGS2 = {
   // importunwatch takes it back
   importunwatch: "reversible",
   // importwatch takes it back
+  /* ---- R42 (DEC-147): cancelling a set time publishes nothing, and the edition returns to an unsigned preparation
+     (publication R68); a new signing, published now (`caseratify`) or at a time (`publishat`), takes it back. */
+  publishatcancel: "reversible",
+  // caseratify or publishat signs it again
   /* ---- R40 (T33-85): T33's ops, graded in ./affordances/t33.mjs. */
-  ...T33_RUNGS
+  ...T33_RUNGS,
+  ...T34_RUNGS
 };
 var RUNG_ABSENT = {
   /* ---- substrate: how a chosen act lands, or how the store maintains itself. */
@@ -146498,7 +147151,8 @@ var RUNG_ABSENT = {
   wizardeditorrevoke: { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress: { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
   /* R40 (T33-85): T33's ops, graded in ./affordances/t33.mjs. */
-  ...T33_RUNG_ABSENT
+  ...T33_RUNG_ABSENT,
+  ...T34_RUNG_ABSENT
 };
 var CAPTURE_ACTS = [
   /* op=attest. The verb is "co-attest" because the group is not the only
@@ -146785,7 +147439,7 @@ var ACTS = [
        record permits the move, not that this caller's parameters will pass — while
        no longer saying it to somebody for whom NO parameter could succeed. The
        per-pair question (may this viewer publish for THIS project) is a different
-       fact and a different item, D-311, argued at NON_ACTS' roster rows below.
+       fact and a different item, D-311, recorded at NON_ACTS' participation block.
        D-311, 2026-09-23: A MACHINE IS NOW WITHHELD `publish`, AND NOT BY THIS CLAUSE. The null above
        still does not narrow here; `deriveActs` withholds every act in `MACHINE_REFUSALS` from a caller
        the store states `actor_is_machine`, because `publishCase()` refuses that class BY NAME
@@ -147243,7 +147897,7 @@ var ACTS = [
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
-     existed (its argument is kept, as history, at NON_ACTS' participation block). It exists now:
+     existed (NON_ACTS' participation block records it). It exists now:
      the store states `f.roster` — the caller's position IN THIS PROJECT, asked of the `by` stamp
      the roster acts themselves receive — and each predicate below is its own act's refusal
      stated as a condition, never D-310's "owner of SOME project":
@@ -147646,55 +148300,9 @@ var NON_ACTS = {
        caller IS (owner/participant), published today via op=projectparticipants
        and op=projectownerarith.
   
-       ── D-310, 2026-09-10 · THE SEVEN STAY, AND IT IS DECIDED HERE RATHER THAN
-          DEFERRED AGAIN. The sentence this replaces read "folding them into
-          affordances is a later item", which is a NOTE and not an item; it had
-          stood since REC-19 with nothing to pick it up. D-310 put the FIRST
-          position-gate in this file — the `publish` act now consults
-          `f.project_owner` — and gating one act while seven sit here saying
-          "position-enforced by the store" is a consequence across the act
-          catalogue rather than a line, so it is argued, not skipped. THE DECISION
-          IS THAT THEY STAY NON_ACTS; the item that folds them in is **D-311**,
-          which exists so the "later item" is a row somebody can pick up.
-  
-       (1) THE TWO CASES ARE NOT THE SAME DEFECT, AND THE DIFFERENCE IS THE
-           RECORD'S OWN RANKING. `publish` was ALREADY in ACTS with an INCOMPLETE
-           derivation: it was offered to callers the store refuses, which is a
-           pre-flight claiming more than the plane will honour — the OVERCLAIM
-           class this whole record ranks above a missing feature. These seven are
-           offered by nothing at all, so no pre-flight is lying about them. A gap
-           is not a disagreement, and DEC-8 is about disagreement.
-       (2) THEY NEED A DIFFERENT FACT, AND DERIVING THEM FROM D-310's WOULD SHIP A
-           CONFUSION THE STORE ALREADY REFUSES. `project_owner` answers "does this
-           viewer own SOME project", which is right for `publish` because the
-           project is a PARAMETER of that act. Here the project IS the target, so
-           the honest fact is the PAIR — `#isProjectOwner(target, viewer)` — and
-           this module's R18 roster test measures the store refusing exactly the
-           mistake the loose fact would make: a member who owns one project,
-           acting on another they merely joined, is refused. Reusing D-310's fact
-           would offer `projectinvite` on EVERY project to anyone who owns any.
-       (3) THEY ARE SEVEN POSITIONS, NOT ONE. `projectjoin` is the INVITEE's act
-           and an invitee is by definition not an owner; `projectleave` is a joined
-           participant's; `projectremove` is an ADMINISTRATOR's (Membership
-           Architecture v2 7.7, which gives removal to administrators alone, and
-           7.7 is also why owners invite but do not remove); `projectownerrescue`
-           has a condition of its own. "Position-enforced by the store" is a
-           summary of seven different rules, and each would have to be derived
-           from the refusal its own op raises — the way every act above was.
-       (4) AND IT IS AN ADDITION WHERE D-310 WAS A NARROWING. The SET of acts this
-           file publishes is something consumers build against: putting seven new
-           acts into it is an I3 change with its own consumers to measure, and
-           pairing it with a narrowing behind one IC row would make neither
-           reviewable. IC-75 carries the narrowing alone, which is what lets a
-           consumer answer it. */
-  /* ── D-311, 2026-09-23 · THE SEVEN LEFT THIS TABLE, on the per-pair fact (2) asked for, and are
-        ACTS now (the roster block at the foot of ACTS). The argument above is KEPT as the record
-        of why they waited, with two corrections stated rather than smoothed: (3)'s "`projectremove`
-        is an ADMINISTRATOR's (… 7.7 … gives removal to administrators alone …)" is v1.4's 7.7,
-        which Membership Architecture v2 REVERSED — the store refuses a non-OWNER (`projectRemove`,
-        NOT_THE_OWNER) and the act is derived from that refusal; and (4)'s pairing worry is met by
-        the addition and the machine narrowing each being stated on its own (the report's IC
-        proposal carries both halves, classified apart). */
+       D-310 (2026-09-10) kept the seven roster acts here until a per-pair fact existed; D-311 (2026-09-23) built it
+       (`f.roster`) and moved them into ACTS (the roster block at its foot), each derived from its own op's refusal
+       (`projectremove` is an OWNER's: Membership Architecture v2 §7.7). */
   projectfork: "creates a NEW project; gated on the create_projects shape, not on the source object's state",
   /* REC-150 (Membership v2 §7.14, the request to join). NOT ACTS, and each for a reason of its own shape:
      the ASK is made at EXISTENCE sight, where no object is before the caller — op=affordances answers a project the
@@ -148056,9 +148664,24 @@ var NON_ACTS = {
   wizarduse: "read: a script's unattributed daily use tallies by version and day, to its project's owners and its version's author; writes nothing",
   wizardcandidates: "read: where offered scripts' step counts drop most and which acts are refused most, never a member, case, target or project; writes nothing",
   wizardcheck: "read: the checks every wizard script passes, run over a list of steps against the registered screens, naming each refusal's step; reached by any credential, and writes nothing",
+  /* R37 (DEC-158 (4); K1818): the copies whose base has a newer approved version, a read for the wizard editors. */
+  baseupdates: "read: each copy of a wizard script whose base has a newer approved version, with both versions' steps, for the group's wizard editors; writes nothing",
+  /* R42 (DEC-147; N662): publishing at a set time. A case edition is keyed by (case, edition), never a bundle state
+     `affordanceFacts` describes, so each is reached from the ceremony, the case or the owner's queue. */
+  publishat: "case-directed: keyed by a case edition (case, edition), reached from the publication ceremony's last step; signs now and publishes at the set time only if every check passes again then",
+  publishatmove: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
+  publishatcancel: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
+  publishschedule: "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
+  /* R44 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
+  groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
+  writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R40 (T33-85): T33's ops, their reasons in ./affordances/t33.mjs. */
-  ...T33_NON_ACTS
+  ...T33_NON_ACTS,
+  ...T34_NON_ACTS
 };
+Object.assign(RUNGS2, aliased(RUNGS2));
+Object.assign(RUNG_ABSENT, aliased(RUNG_ABSENT));
+Object.assign(NON_ACTS, aliased(NON_ACTS));
 var PER_ITEM_ACTS = [
   /* REC-205: `item_keys` is the act's three IDENTITY SHAPES and is now ENFORCED as well as published —
      record-core's `perItem` is handed this very array by the acting module (tasks', queue's) and refuses to let a shared value of ONE shape reach an
@@ -148217,6 +148840,60 @@ var frozenTable = (t2) => {
   return Object.freeze(t2);
 };
 var frozenList = (a) => Object.freeze(a);
+var OP_ALIASES2 = Object.freeze({
+  signerregisterown: "signerregister",
+  signerrevokeown: "signerrevoke",
+  // credentials (membership R89, R90)
+  declaretie: "membertie",
+  withdrawtie: "membertiewithdraw",
+  recordpersonfact: "personfact",
+  // people
+  claimidentity: "identityclaim",
+  withdrawidentityclaim: "identitywithdraw",
+  expunge: "personexpunge",
+  adoptversion: "versionadopt",
+  keepversion: "versionkeep",
+  // reevaluation
+  strengthbarset: "strengthbar",
+  // strength
+  ruleanswer: "rule",
+  standingquestionset: "standingset",
+  standingquestionend: "standingend",
+  // answers
+  createevent: "eventcreate",
+  addparticipant: "participantadd",
+  relate: "eventrelate",
+  // events
+  recorddatedfact: "datedfact",
+  recordfact: "moneyrecord",
+  createset: "moneysetcreate",
+  include: "moneysetinclude",
+  // money
+  exclude: "moneysetexclude",
+  reconcile: "moneyreconcile",
+  addworkbook: "workbookadd",
+  bind: "workbookbind",
+  recordcheck: "workbooksecondcheck",
+  // workbooks
+  recordline: "linerecord",
+  // lines
+  declare: "dutydeclare",
+  // duties
+  filingrecordsent: "filingsent"
+  // filings
+});
+var ALIAS_PAIRS = Object.entries(OP_ALIASES2);
+var withAliases = (a) => [...a, ...ALIAS_PAIRS.filter(([al, op]) => a.includes(op) && !a.includes(al)).map(([al]) => al)];
+var listed = (a) => frozenList(withAliases(a));
+var aliasRows = (t2) => {
+  for (const [al, op] of ALIAS_PAIRS) if (Object.hasOwn(t2, op))
+    t2[al] = Array.isArray(t2[op]) ? frozenList([...t2[op]]) : t2[op] && typeof t2[op] === "object" ? {
+      ...t2[op],
+      ...Array.isArray(t2[op].classes) ? { classes: [...t2[op].classes] } : {},
+      ...Array.isArray(t2[op].machineClasses) ? { machineClasses: [...t2[op].machineClasses] } : {}
+    } : t2[op];
+  return t2;
+};
 var MEMBER_PROBE = ["admin", "member", "probe"];
 var SESSION_KINDS = ["admin", "member"];
 var OP_KINDS = Object.freeze({
@@ -148227,7 +148904,22 @@ var OP_KINDS = Object.freeze({
   proposal: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: true }, needs: "contribute" }),
   tally: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: true }, needs: null }),
   read: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: null }),
-  ownread: Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: false }, needs: null })
+  ownread: Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: false }, needs: null }),
+  /* T34 (R22, R25, R28): an administrator's roster act, `hostingaccessset`'s spec (the operator's bearer reaches it and
+     the owner asks the roster, NOT_AN_ADMIN; K1749); a member's act or read whose classes name `probe` and whose
+     `machineClasses: []` refuses every bearer — `publishact` on the publication surface (`publish`), `sessionact` on
+     the member's own settings (no working capability), `sessionread` a read. */
+  roster: Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: ["admin", "probe"], mutating: true }, needs: null }),
+  publishact: Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: [], mutating: true }, needs: "publish" }),
+  sessionact: Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: [], mutating: true }, needs: null }),
+  sessionread: Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: [], mutating: false }, needs: null }),
+  /* T34 (R22): what is stamped nothing — a public door that gates itself by what its body carries (`door`), a public
+     read (`public`), and a read of the group's own published setting (`plainread`). Each has NO `NEEDS` row
+     (`needs: undefined`), and a public one is in no session set: every caller reaches it. A family's extras still
+     stamp it (R22's `groupdescription` reads who is asking from `viewer`). */
+  door: Object.freeze({ spec: { classes: null, mutating: true }, needs: void 0, public: true, stamped: false }),
+  public: Object.freeze({ spec: { classes: null, mutating: false }, needs: void 0, public: true, stamped: false }),
+  plainread: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: void 0, stamped: false })
 });
 var QUERY = (key) => Object.freeze({ key, at: "query" });
 var BODY = (key) => Object.freeze({ key, at: "body" });
@@ -148371,12 +149063,17 @@ var OP_FAMILIES = Object.freeze({
     exploreverify: "read",
     exploretimeline: "read"
   } }),
-  /* hypotheses R7: a hypothesis held, revised and withdrawn by a member (MACHINE_CANNOT_HYPOTHESISE, R1, R2, K1473). */
-  hypotheses: family({ owner: "hypotheses", cite: "hypotheses R7", actor: BODY("by"), ops: {
+  /* hypotheses R7: a hypothesis held, revised and withdrawn by a member (MACHINE_CANNOT_HYPOTHESISE, R1, R2, K1473);
+     since T34 (K1807; its R11–R13) a member's own note written and turned, the body's `by` its author, and the notes
+     read, the viewer stamped. */
+  hypotheses: family({ owner: "hypotheses", cite: "hypotheses R7, R11\u2013R13; K1807", actor: BODY("by"), ops: {
     hypothesishold: "member",
     hypothesisrevise: "member",
     hypothesiswithdraw: "member",
-    hypotheses: "read"
+    hypotheses: "read",
+    notewrite: "member",
+    noteturn: "member",
+    notes: "read"
   } }),
   /* calculations R24 (C:A-16): its actor is the stamped viewer. Declaring a table, adopting a binding, ingesting money,
      accepting a calculation, recording a set and switching a pattern refuse a machine (MEMBER_ACT_ONLY, R2, R8, R14,
@@ -148467,7 +149164,8 @@ var OP_FAMILIES = Object.freeze({
   /* credentials (K1544; R20): the member's own account reference, its switches and the ask grant, set by the member
      alone (MACHINE_CANNOT_HOLD_ACCOUNT, NOT_YOUR_ACCOUNT, R22–R27), never an administrator for another member;
      `aigrantmint` also reads the session's own `member` and `session` (R27); the keyed services an administrator's
-     (R29). No spec admits a group- or project-level credential: none exists (K1502). */
+     (R29). No spec admits a project-level Claude credential or a group subscription: neither exists (K1502, K1755);
+     the group's API key is reached only through R24's acts below. */
   credentials: family({
     owner: "credentials",
     cite: "credentials R22\u2013R29; K1544; R20",
@@ -148487,7 +149185,17 @@ var OP_FAMILIES = Object.freeze({
       keyedserviceset: "admin",
       keyedserviceswitch: "admin",
       accountreference: "ownread",
-      keyedservices: "read"
+      keyedservices: "read",
+      /* T34 (R24; credentials R33, R34, R36, R37; K1755, K1764): the group's API key, set, removed, switched and its
+         switches set by an administrator's own session (NOT_AN_ADMIN); its state a session's read; the notice a member's
+         own, read by the viewer and marked seen by the session's own `by`. None is on `AI_GRANT_OPS`. */
+      groupkeyset: "admin",
+      groupkeyremove: "admin",
+      groupkeyswitch: "admin",
+      groupswitchset: "admin",
+      groupkeystate: "ownread",
+      groupkeynotice: "ownread",
+      groupkeynoticeseen: "own"
     }
   }),
   /* sources (K1550): marking a capture as from a keyed service, its capturer's own act (MACHINE_CANNOT_MARK, R16, R18). */
@@ -148534,34 +149242,112 @@ var OP_FAMILIES = Object.freeze({
   } }),
   /* instance-setup (R17; K1683, its op names): seeding the offices and the seats and setting the assistant, an
      administrator's own session (R50, R52, R53); the disclosure shown, a member's own record (R54); the assistant's
-     state a read, and a member's disclosure their own read. */
-  "instance-setup": family({ owner: "instance-setup", cite: "instance-setup R50, R52\u2013R54; R17; K1683", actor: QUERY("by"), ops: {
-    officesseed: "admin",
-    seatsseed: "admin",
-    assistantset: "admin",
-    disclosureshown: "own",
-    assistantstate: "read",
-    disclosureof: "ownread"
-  } })
+     state a read, and a member's disclosure their own read. T34: the unheld place, an administrator's act and read
+     (R26; its R60, NOT_AN_ADMIN); the member's screen language, their own act (`machineClasses: []`) and the read
+     (R28; its R64); the group's description drafted for its administrator, a session's labelled draft writing nothing,
+     `by` and `viewer` stamped (R29; its R65, DEC-152; K1837). */
+  "instance-setup": family({
+    owner: "instance-setup",
+    cite: "instance-setup R50, R52\u2013R54, R60, R64, R65; R17, R26, R28, R29; K1683",
+    actor: QUERY("by"),
+    extra: { groupdescriptiondraft: ["by"] },
+    ops: {
+      officesseed: "admin",
+      seatsseed: "admin",
+      assistantset: "admin",
+      disclosureshown: "own",
+      assistantstate: "read",
+      disclosureof: "ownread",
+      placewanted: "admin",
+      placewantedstate: "ownread",
+      memberlanguageset: "sessionact",
+      memberlanguage: "read",
+      groupdescriptiondraft: "ownread"
+    }
+  }),
+  /* T34 (R22; membership R98–R110, DEC-133, DEC-134, DEC-136; K1749): the group's settings. The administrator's acts
+     take `hostingaccessset`'s spec (`roster`; NOT_AN_ADMIN is membership's own answer, a bearer's included), `by`
+     from the query; the website's and the join page's doors are public, stamped nothing, the key or link read from the
+     body (admission R17); the court notice a plain read, stamped nothing; the description a public read, `viewer`
+     set so a member reads the whole record. `checkaddressees` is a store-internal route and declared nowhere (R6). */
+  membership: family({
+    owner: "membership",
+    cite: "membership R98\u2013R110; R22; K1749",
+    actor: QUERY("by"),
+    extra: { groupdescription: ["viewer"] },
+    ops: {
+      invitewithdraw: "roster",
+      websitekeycreate: "roster",
+      websitekeyset: "roster",
+      websitekeyrevoke: "roster",
+      joinlinkenable: "roster",
+      joinlinkset: "roster",
+      joinlinkreplace: "roster",
+      joinlinkoff: "roster",
+      courtnoticeset: "roster",
+      groupdescriptionset: "roster",
+      websiteinvite: "door",
+      joinlinkinvite: "door",
+      courtnotice: "plainread",
+      groupdescription: "public"
+    }
+  }),
+  /* T34 (R23; tasks R13–R16, DEC-135): asking for a check, taking it and recording it, a member's (MACHINE_CANNOT_CHECK),
+     `by` from the query; the two reads, the viewer stamped, also a member session's only (K1873). */
+  tasks: family({ owner: "tasks", cite: "tasks R13\u2013R16; R23; K1873", actor: QUERY("by"), ops: {
+    checkrequest: "member",
+    checktake: "member",
+    checkrecord: "member",
+    checkrequests: "ownread",
+    checksof: "ownread"
+  } }),
+  /* T34 (R25; publication R68, R69, DEC-147): moving and cancelling a set publish time, on the publication surface
+     (`publish`), `by` from the query; the schedule a member session's read. `publishat` itself is `caseratify`'s
+     ceremony, declared beside it in `OPS`. */
+  publication: family({ owner: "publication", cite: "publication R68, R69; R25; K1784", actor: QUERY("by"), ops: {
+    publishatmove: "publishact",
+    publishatcancel: "publishact",
+    publishschedule: "sessionread"
+  } }),
+  /* T34 (R15, R28, R29; wizard-scripts R23, R26, R27; DEC-129, DEC-153, DEC-158 (4)): the first steps from the home, a
+     read; the copies whose base has a newer version, a member session's read; writing help, a session's labelled draft
+     writing nothing, `by` and `viewer` stamped (K1837). wizard-scripts' T31 ops are declared in `OPS` below. */
+  "wizard-scripts": family({
+    owner: "wizard-scripts",
+    cite: "wizard-scripts R23, R26, R27; R15, R28, R29; K1818",
+    actor: QUERY("by"),
+    extra: { writinghelp: ["by"] },
+    ops: {
+      startfrom: "read",
+      baseupdates: "ownread",
+      writinghelp: "ownread"
+    }
+  })
 });
 var FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f17) => Object.keys(f17.kinds)));
+var FAMILY_SESSION_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f17) => Object.keys(f17.kinds).filter((op) => !OP_KINDS[f17.kinds[op]].public)));
 var FAMILY_SPECS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f17) => Object.entries(f17.kinds).map(([op, k]) => {
   const s = OP_KINDS[k].spec;
-  return [op, { classes: [...s.classes], ...s.machineClasses ? { machineClasses: [...s.machineClasses] } : {}, mutating: s.mutating }];
+  return [op, {
+    classes: s.classes ? [...s.classes] : null,
+    ...s.machineClasses ? { machineClasses: [...s.machineClasses] } : {},
+    mutating: s.mutating
+  }];
 })));
-var FAMILY_NEEDS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f17) => Object.entries(f17.kinds).map(([op, k]) => [op, OP_KINDS[k].needs])));
+var FAMILY_NEEDS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f17) => Object.entries(f17.kinds).filter(([, k]) => OP_KINDS[k].needs !== void 0).map(([op, k]) => [op, OP_KINDS[k].needs])));
 var ASK_GRANT_OPS = frozenList(["askceiling", "askcheck", "askusage"]);
 var stampKey = (st) => !st || st.key === "viewer" ? null : st.key === "by" ? st.at === "body" ? "bodyBy" : "by" : st.key;
-var OP_STAMPS = Object.freeze(Object.fromEntries([
+var OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
   ...Object.values(OP_FAMILIES).flatMap((f17) => Object.keys(f17.kinds).map((op) => {
+    if (OP_KINDS[f17.kinds[op]].stamped === false) return [op, frozenList([...f17.extra[op] ?? []])];
     const who2 = f17.acts.includes(op) ? stampKey(f17.actor) : f17.proposals.includes(op) ? stampKey(f17.proposer) : null;
     return [op, frozenList([.../* @__PURE__ */ new Set(["viewer", ...who2 ? [who2] : [], ...f17.extra[op] ?? []])])];
   })),
   ...ASK_GRANT_OPS.map((op) => [op, frozenList(["viewer"])]),
   ["exportpage", frozenList([])],
   ["moneydetectorsrun", frozenList([])]
-]));
-var OPS3 = frozenTable({
+])));
+var OPS3 = frozenTable(aliasRows({
   //  op          class allowed              mutating
   selftest: { classes: ["admin", "member", "probe"], mutating: false },
   livefire: { classes: ["admin", "probe"], mutating: true },
@@ -148858,6 +149644,10 @@ var OPS3 = frozenTable({
      caseratify is gated as ratify. */
   casedocument: { classes: null, mutating: false },
   caseratify: { classes: ["admin", "member", "probe"], mutating: true },
+  /* T34 (R25; ratification R40, DEC-147): the ceremony's last act with a set date and time, `caseratify`'s gate — its
+     classes, its `NEEDS` row (`publish`) and both session sets — and a member session's only (`machineClasses: []`);
+     `at` is a body field, as ratification reads the ceremony's whole body. */
+  publishat: { classes: ["admin", "member", "probe"], machineClasses: [], mutating: true },
   /* REC-126 (§6A): the review copy — authoring, issuing and revoking gated, the store refusing a machine; reading and
      commenting ungated for a grant's holder. */
   casedraft: { classes: ["admin", "member", "probe"], mutating: true },
@@ -149348,8 +150138,8 @@ var OPS3 = frozenTable({
   askusage: { classes: ["admin", "member"], machineClasses: [], mutating: true },
   /* T33 (R17–R20): every family's ops, each from its one entry in `OP_FAMILIES` above. */
   ...FAMILY_SPECS
-});
-var RETRIEVAL_READS = frozenList([
+}));
+var RETRIEVAL_READS = listed([
   "search",
   "searchfields",
   "searchindexcheck",
@@ -149357,9 +150147,9 @@ var RETRIEVAL_READS = frozenList([
   "selectionlist",
   "meaningrows"
 ]);
-var READING_READS = frozenList(["reading", "readingref", "readingname", "textprovenance", "textattest"]);
-var EDGE_ACTIONS = frozenList(["cite", "sever", "reinstate", "linkproject"]);
-var STATE_ACTIONS = frozenList([
+var READING_READS = listed(["reading", "readingref", "readingname", "textprovenance", "textattest"]);
+var EDGE_ACTIONS = listed(["cite", "sever", "reinstate", "linkproject"]);
+var STATE_ACTIONS = listed([
   "dispose",
   "retire",
   "release",
@@ -149369,10 +150159,10 @@ var STATE_ACTIONS = frozenList([
   "inquirydivide",
   "withdrawconclusion"
 ]);
-var ACTION_ACTIONS = frozenList(["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"]);
-var DECLARATION_ACTIONS = frozenList(["strengthbar"]);
-var STRUCTURE_ACTIONS = frozenList(["inquiryground"]);
-var VERSION_ACTIONS = frozenList([
+var ACTION_ACTIONS = listed(["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"]);
+var DECLARATION_ACTIONS = listed(["strengthbar"]);
+var STRUCTURE_ACTIONS = listed(["inquiryground"]);
+var VERSION_ACTIONS = listed([
   "versionaccept",
   "versionreject",
   "versionconsider",
@@ -149380,7 +150170,7 @@ var VERSION_ACTIONS = frozenList([
   "versioncurrent",
   "versionhide"
 ]);
-var PROJECT_ACTIONS = frozenList([
+var PROJECT_ACTIONS = listed([
   "projectinvite",
   "projectjoin",
   "projectleave",
@@ -149397,20 +150187,20 @@ var PROJECT_ACTIONS = frozenList([
   "projectrequestwithdraw",
   "projectrequestanswer"
 ]);
-var GOVERNANCE_ACTIONS = frozenList(["adminendorse", "adminremove", "membercaps"]);
-var IDENTITY_ACTIONS = frozenList(["groupnameset", "groupdomainset"]);
-var CUSTODIAL_ACTIONS = frozenList(["memberadd", "memberset", "signeradd", "signerset"]);
-var ROSTER_SELF_ACTIONS = frozenList(["adminresign", "hostingaccessset", "memberpairingset"]);
-var OWN_KEY_ACTIONS = frozenList(["signerregister", "signerrevoke"]);
-var CAPTURE_MEMBER_ACTIONS = frozenList(["inboxpull", "reattest", "captureaccount", "heldsetaside", "heldrestore"]);
-var CAPTURE_VIEWER_ACTIONS = frozenList(["heldsetaside", "heldrestore"]);
-var CAPTURE_READS = frozenList(["heldcaptures", "gradenote", "doorbelltally"]);
-var SOURCE_ACTIONS = frozenList(["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"]);
-var SOURCE_READS = frozenList(["sourceof", "sourcerung", "sourcereadlog"]);
-var PROVENANCE_JUDGEMENT_ACTIONS = frozenList(["provenancechain", "provenanceroute"]);
-var CALIBRATION_WRITE_ACTIONS = frozenList(["calibrate", "calibrationsubject", "calibrationsignal"]);
-var EXPERTISE_ACTIONS = frozenList(["expertisedeclare", "expertiseconfirm"]);
-var REGISTRY_ACTIONS = frozenList([
+var GOVERNANCE_ACTIONS = listed(["adminendorse", "adminremove", "membercaps"]);
+var IDENTITY_ACTIONS = listed(["groupnameset", "groupdomainset"]);
+var CUSTODIAL_ACTIONS = listed(["memberadd", "memberset", "signeradd", "signerset"]);
+var ROSTER_SELF_ACTIONS = listed(["adminresign", "hostingaccessset", "memberpairingset"]);
+var OWN_KEY_ACTIONS = listed(["signerregister", "signerrevoke"]);
+var CAPTURE_MEMBER_ACTIONS = listed(["inboxpull", "reattest", "captureaccount", "heldsetaside", "heldrestore"]);
+var CAPTURE_VIEWER_ACTIONS = listed(["heldsetaside", "heldrestore"]);
+var CAPTURE_READS = listed(["heldcaptures", "gradenote", "doorbelltally"]);
+var SOURCE_ACTIONS = listed(["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"]);
+var SOURCE_READS = listed(["sourceof", "sourcerung", "sourcereadlog"]);
+var PROVENANCE_JUDGEMENT_ACTIONS = listed(["provenancechain", "provenanceroute"]);
+var CALIBRATION_WRITE_ACTIONS = listed(["calibrate", "calibrationsubject", "calibrationsignal"]);
+var EXPERTISE_ACTIONS = listed(["expertisedeclare", "expertiseconfirm"]);
+var REGISTRY_ACTIONS = listed([
   "entitycreate",
   "entityalias",
   "relationdeclare",
@@ -149421,9 +150211,9 @@ var REGISTRY_ACTIONS = frozenList([
   "entitybyalias",
   "relation"
 ]);
-var TASK_ACTIONS = frozenList(["taskforward", "taskresolve"]);
-var QUEUE_ACTIONS = frozenList(["queuemute", "queuesnooze"]);
-var AI_RUN_ACTIONS = frozenList([
+var TASK_ACTIONS = listed(["taskforward", "taskresolve"]);
+var QUEUE_ACTIONS = listed(["queuemute", "queuesnooze"]);
+var AI_RUN_ACTIONS = listed([
   "airunopen",
   "airuntick",
   "airunclose",
@@ -149451,9 +150241,9 @@ var AI_RUN_ACTIONS = frozenList([
   /* N345 (contradiction R37): the run's recommendation, for `contradictionpropose`'s reason. */
   "contradictionrecommend"
 ]);
-var RUN_VERB_ACTIONS = frozenList(["airunopen", "airuntick", "airunclose"]);
-var RUN_PRODUCTION_ACTIONS = frozenList(["suggest", "extractpropose", "capturerequest", "contradictionpropose", "contradictionrecommend"]);
-var POSITIONAL_ACTS = frozenList([
+var RUN_VERB_ACTIONS = listed(["airunopen", "airuntick", "airunclose"]);
+var RUN_PRODUCTION_ACTIONS = listed(["suggest", "extractpropose", "capturerequest", "contradictionpropose", "contradictionrecommend"]);
+var POSITIONAL_ACTS = listed([
   "cite",
   "sever",
   "reinstate",
@@ -149464,9 +150254,9 @@ var POSITIONAL_ACTS = frozenList([
   "withdrawconclusion",
   "linkproject"
 ]);
-var BIAS_ACTIONS = frozenList(["biasadopt"]);
-var BIAS_DEBT_ACTIONS = frozenList(["biasdebtresolve"]);
-var INTENT_ACTIONS = frozenList([
+var BIAS_ACTIONS = listed(["biasadopt"]);
+var BIAS_DEBT_ACTIONS = listed(["biasdebtresolve"]);
+var INTENT_ACTIONS = listed([
   "objectivecondition",
   "goaldeclare",
   "goallink",
@@ -149478,7 +150268,7 @@ var INTENT_ACTIONS = frozenList([
   "triage",
   "workobjective"
 ]);
-var INTENT_READS = frozenList([
+var INTENT_READS = listed([
   "objectiveprogress",
   "objectivegaps",
   "goal",
@@ -149487,14 +150277,14 @@ var INTENT_READS = frozenList([
   "pursuit",
   "intentproposals"
 ]);
-var REEVALUATION_ACTIONS = frozenList(["versionadopt", "versionkeep", "reevaluationrecord"]);
-var STANDARDS_ACTIONS = frozenList(["standarddeclare", "standardpropose", "standardadopt"]);
-var STANDARDS_READS = frozenList(["standard", "standards", "standardinforce"]);
-var CONFORMANCE_ACTIONS = frozenList(["determine", "comparisonpropose"]);
-var CONFORMANCE_READS = frozenList(["determination", "determinations", "comparison", "comparisonfacts"]);
-var CONSEQUENCES_ACTIONS = frozenList(["consequencerecord", "consequencerevise", "addressedrecord"]);
-var CONSEQUENCES_READS = frozenList(["consequence", "consequencesof", "addressed"]);
-var FILINGS_ACTIONS = frozenList([
+var REEVALUATION_ACTIONS = listed(["versionadopt", "versionkeep", "reevaluationrecord"]);
+var STANDARDS_ACTIONS = listed(["standarddeclare", "standardpropose", "standardadopt"]);
+var STANDARDS_READS = listed(["standard", "standards", "standardinforce"]);
+var CONFORMANCE_ACTIONS = listed(["determine", "comparisonpropose"]);
+var CONFORMANCE_READS = listed(["determination", "determinations", "comparison", "comparisonfacts"]);
+var CONSEQUENCES_ACTIONS = listed(["consequencerecord", "consequencerevise", "addressedrecord"]);
+var CONSEQUENCES_READS = listed(["consequence", "consequencesof", "addressed"]);
+var FILINGS_ACTIONS = listed([
   "filingprepare",
   "filingapprove",
   "filingsent",
@@ -149504,8 +150294,8 @@ var FILINGS_ACTIONS = frozenList([
   "communicationprepare",
   "templatesave"
 ]);
-var FILINGS_READS = frozenList(["counselpacketread", "filingsfor", "availableactions"]);
-var FILING_TEMPLATES_ACTIONS = frozenList([
+var FILINGS_READS = listed(["counselpacketread", "filingsfor", "availableactions"]);
+var FILING_TEMPLATES_ACTIONS = listed([
   "templatedraft",
   "templaterevise",
   "templatesubmit",
@@ -149514,14 +150304,14 @@ var FILING_TEMPLATES_ACTIONS = frozenList([
   "templateapprove",
   "templateretire"
 ]);
-var FILING_TEMPLATES_READS = frozenList(["templates"]);
-var TEMPLATE_PROPOSAL_ACTIONS = frozenList(["templatepropose"]);
-var TEMPLATE_DOOR_ACTIONS = frozenList(["templatereview", "templatecomment"]);
-var TEMPLATE_DOOR_READS = frozenList(["templateread", "templatecomments"]);
-var GRANT_SECRET_ACTIONS = frozenList(["reviewgrant", "templatereviewgrant"]);
-var LOCAL_FACTS_ACTIONS = frozenList(["factconfirm"]);
-var LOCAL_FACTS_READS = frozenList(["factstatus", "factsdue"]);
-var ESCALATION_ACTIONS = frozenList([
+var FILING_TEMPLATES_READS = listed(["templates"]);
+var TEMPLATE_PROPOSAL_ACTIONS = listed(["templatepropose"]);
+var TEMPLATE_DOOR_ACTIONS = listed(["templatereview", "templatecomment"]);
+var TEMPLATE_DOOR_READS = listed(["templateread", "templatecomments"]);
+var GRANT_SECRET_ACTIONS = listed(["reviewgrant", "templatereviewgrant"]);
+var LOCAL_FACTS_ACTIONS = listed(["factconfirm"]);
+var LOCAL_FACTS_READS = listed(["factstatus", "factsdue"]);
+var ESCALATION_ACTIONS = listed([
   "escalationopen",
   "escalationattach",
   "escalationevaluate",
@@ -149532,11 +150322,11 @@ var ESCALATION_ACTIONS = frozenList([
   "escalationresume",
   "declinetoescalate"
 ]);
-var ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalationstatus", "escalationreasondraft"]);
-var ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold", "actionholdrelease"]);
-var ACTIONS_READS = frozenList(["action", "actions", "actionholdpreview", "projectholds"]);
-var ACTION_CLOCKS_ACTIONS = frozenList(["reminderset", "reminderanswer"]);
-var ACTION_PLANS_ACTIONS = frozenList([
+var ESCALATION_READS = listed(["escalation", "escalationsdue", "escalationstatus", "escalationreasondraft"]);
+var ACTIONS_ACTIONS = listed(["actioncreate", "actionpressure", "actionhold", "actionholdrelease"]);
+var ACTIONS_READS = listed(["action", "actions", "actionholdpreview", "projectholds"]);
+var ACTION_CLOCKS_ACTIONS = listed(["reminderset", "reminderanswer"]);
+var ACTION_PLANS_ACTIONS = listed([
   "planopen",
   "plansubjectadd",
   "plansubjectremove",
@@ -149549,10 +150339,10 @@ var ACTION_PLANS_ACTIONS = frozenList([
   "optionstart",
   "planclose"
 ]);
-var ACTION_PLANS_READS = frozenList(["plan", "plans", "planproposals"]);
-var ACTION_PLANS_PREVIEWS = frozenList(["optionstartpreview"]);
-var PLAN_PROPOSAL_ACTIONS = frozenList(["optionpropose"]);
-var CONTRADICTION_ACTIONS = frozenList([
+var ACTION_PLANS_READS = listed(["plan", "plans", "planproposals"]);
+var ACTION_PLANS_PREVIEWS = listed(["optionstartpreview"]);
+var PLAN_PROPOSAL_ACTIONS = listed(["optionpropose"]);
+var CONTRADICTION_ACTIONS = listed([
   "contradictiondismiss",
   "contradictionclarify",
   "contradictiontakeup",
@@ -149560,27 +150350,27 @@ var CONTRADICTION_ACTIONS = frozenList([
   "contradictionoptin",
   "contradictionrespond"
 ]);
-var CONTRADICTION_READS = frozenList([
+var CONTRADICTION_READS = listed([
   "contradictioncandidates",
   "contradictiontensions",
   "contradictionfacts",
   "contradictionnotices",
   "contradictionresponses"
 ]);
-var MONITORING_ACTIONS = frozenList(["addressfrequencyset"]);
-var LINK_SWEEP_READS = frozenList(["sweeps"]);
-var WHAT_CHANGED_PROPOSAL_ACTIONS = frozenList(["whatchangedpropose"]);
-var WHAT_CHANGED_READS = frozenList(["whatchangeddrafts"]);
-var NETWORK_NOTICES_ACTIONS = frozenList(["noticepost"]);
-var NETWORK_NOTICES_READS = frozenList(["noticeprepare", "notices", "directorysubmission"]);
-var NETWORK_NOTICES_BY = frozenList(["noticeprepare", "noticepost"]);
-var NETWORK_NOTICES_PUBLIC_READS = frozenList(["activitymethod", "noticespublic", "groupkeyspublic"]);
-var DOCKET_ACTIONS = frozenList(["docketfile", "docketpressure", "docketdecline", "docketpost"]);
-var DOCKET_READS = frozenList(["docket", "docketprepare", "docketinvitation"]);
-var DOCKET_AUTHOR = frozenList(["docketfile", "docketpressure"]);
-var DOCKET_BY = frozenList(["docketprepare", "docketdecline", "docketpost"]);
-var DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
-var CASE_IMPORT_ACTIONS = frozenList([
+var MONITORING_ACTIONS = listed(["addressfrequencyset"]);
+var LINK_SWEEP_READS = listed(["sweeps"]);
+var WHAT_CHANGED_PROPOSAL_ACTIONS = listed(["whatchangedpropose"]);
+var WHAT_CHANGED_READS = listed(["whatchangeddrafts"]);
+var NETWORK_NOTICES_ACTIONS = listed(["noticepost"]);
+var NETWORK_NOTICES_READS = listed(["noticeprepare", "notices", "directorysubmission"]);
+var NETWORK_NOTICES_BY = listed(["noticeprepare", "noticepost"]);
+var NETWORK_NOTICES_PUBLIC_READS = listed(["activitymethod", "noticespublic", "groupkeyspublic"]);
+var DOCKET_ACTIONS = listed(["docketfile", "docketpressure", "docketdecline", "docketpost"]);
+var DOCKET_READS = listed(["docket", "docketprepare", "docketinvitation"]);
+var DOCKET_AUTHOR = listed(["docketfile", "docketpressure"]);
+var DOCKET_BY = listed(["docketprepare", "docketdecline", "docketpost"]);
+var DOCKET_PUBLIC_READS = listed(["docketpublic", "docketfeed"]);
+var CASE_IMPORT_ACTIONS = listed([
   "caseimport",
   "caseimportdocument",
   "importaccept",
@@ -149590,8 +150380,8 @@ var CASE_IMPORT_ACTIONS = frozenList([
   "importwatch",
   "importunwatch"
 ]);
-var CASE_IMPORT_READS = frozenList(["importedcases", "importedcase"]);
-var CASE_IMPORT_BY = frozenList([
+var CASE_IMPORT_READS = listed(["importedcases", "importedcase"]);
+var CASE_IMPORT_BY = listed([
   "caseimport",
   "caseimportdocument",
   "importaccept",
@@ -149601,8 +150391,8 @@ var CASE_IMPORT_BY = frozenList([
   "importwatch",
   "importunwatch"
 ]);
-var CASE_CHECKER_PUBLIC_READS = frozenList(["casechecker", "casefilespec"]);
-var WIZARD_SCRIPTS_ACTIONS = frozenList([
+var CASE_CHECKER_PUBLIC_READS = listed(["casechecker", "casefilespec"]);
+var WIZARD_SCRIPTS_ACTIONS = listed([
   "wizarddraft",
   "wizardrevise",
   "wizardsubmit",
@@ -149610,13 +150400,13 @@ var WIZARD_SCRIPTS_ACTIONS = frozenList([
   "wizardretire",
   "wizardpropose"
 ]);
-var WIZARD_SCRIPTS_AUTHOR = frozenList(["wizarddraft", "wizardrevise", "wizardsubmit"]);
-var WIZARD_SCRIPTS_BY = frozenList(["wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
-var WIZARD_PROPOSAL_ACTIONS = frozenList(["wizardpropose"]);
-var WIZARD_PROGRESS_ACTIONS = frozenList(["wizardprogress"]);
-var WIZARD_SCRIPTS_READS = frozenList(["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates"]);
-var WIZARD_CHECK_READS = frozenList(["wizardcheck"]);
-var QUERY_AUTHOR_ACTIONS = frozenList([
+var WIZARD_SCRIPTS_AUTHOR = listed(["wizarddraft", "wizardrevise", "wizardsubmit"]);
+var WIZARD_SCRIPTS_BY = listed(["wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
+var WIZARD_PROPOSAL_ACTIONS = listed(["wizardpropose"]);
+var WIZARD_PROGRESS_ACTIONS = listed(["wizardprogress"]);
+var WIZARD_SCRIPTS_READS = listed(["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates"]);
+var WIZARD_CHECK_READS = listed(["wizardcheck"]);
+var QUERY_AUTHOR_ACTIONS = listed([
   ...CONFORMANCE_ACTIONS,
   ...CONSEQUENCES_ACTIONS,
   ...FILINGS_ACTIONS,
@@ -149628,14 +150418,14 @@ var QUERY_AUTHOR_ACTIONS = frozenList([
   ...MONITORING_ACTIONS,
   ...ACTION_PLANS_PREVIEWS
 ]);
-var ACTION_LAYER_ACTIONS = frozenList([
+var ACTION_LAYER_ACTIONS = listed([
   ...STANDARDS_ACTIONS,
   ...QUERY_AUTHOR_ACTIONS,
   ...PLAN_PROPOSAL_ACTIONS,
   ...TEMPLATE_PROPOSAL_ACTIONS,
   ...LOCAL_FACTS_ACTIONS
 ]);
-var ACTION_LAYER_READS = frozenList([
+var ACTION_LAYER_READS = listed([
   ...STANDARDS_READS,
   ...CONFORMANCE_READS,
   ...CONSEQUENCES_READS,
@@ -149648,7 +150438,7 @@ var ACTION_LAYER_READS = frozenList([
   ...LINK_SWEEP_READS
 ]);
 var PLAN_RUN_SCOPE = Object.freeze({
-  reads: frozenList([
+  reads: listed([
     "plan",
     "plans",
     "determination",
@@ -149658,10 +150448,10 @@ var PLAN_RUN_SCOPE = Object.freeze({
     "publishededitions",
     "profiles"
   ]),
-  writes: frozenList(["optionpropose", "airuntick", "airunclose"])
+  writes: listed(["optionpropose", "airuntick", "airunclose"])
 });
-var RECOGNISER_ACTIONS = frozenList(["resolve", "resolvetestify", "resolutions", "concerns"]);
-var PROGRESSION_ACTIONS = frozenList([
+var RECOGNISER_ACTIONS = listed(["resolve", "resolvetestify", "resolutions", "concerns"]);
+var PROGRESSION_ACTIONS = listed([
   "connect",
   "connections",
   "progressiondefine",
@@ -149675,7 +150465,7 @@ var PROGRESSION_ACTIONS = frozenList([
   "captureprogressions"
 ]);
 var SESSION_OPS = Object.freeze({
-  member: frozenSet([
+  member: frozenSet(withAliases([
     "promote",
     "lease",
     "allocid",
@@ -149688,6 +150478,7 @@ var SESSION_OPS = Object.freeze({
        A session op for `ratify`'s own reason — the attestation carries
        a member's name for as long as the record lasts. */
     "caseratify",
+    "publishat",
     /* CPDF-10: attesting that a transcription matches the image is a
        MEMBER act — a person's testimony, carrying their name for as
        long as the record lasts. It is a session op before it is
@@ -149926,7 +150717,7 @@ var SESSION_OPS = Object.freeze({
     "aicredentialrevoke",
     /* T33 (R17–R20): every op of every family, in BOTH sets — an enrolled administrator's session is a
        `member` kind (D-136), and the owner or the roster decides the rest. */
-    ...FAMILY_OPS,
+    ...FAMILY_SESSION_OPS,
     /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. A
        session op before anything else, on `aicredentialmint`'s
        reasoning: each is attributed to the person who performed it,
@@ -149934,8 +150725,8 @@ var SESSION_OPS = Object.freeze({
     "casedraft",
     "reviewgrant",
     "reviewrevoke"
-  ]),
-  admin: frozenSet([
+  ])),
+  admin: frozenSet(withAliases([
     "promote",
     "lease",
     "allocid",
@@ -149945,6 +150736,7 @@ var SESSION_OPS = Object.freeze({
     "monitor",
     "ratify",
     "caseratify",
+    "publishat",
     "attesttext",
     "contentmint",
     /* SK-8: the READ half of the EXTRACT role. `extractpropose` is
@@ -150064,13 +150856,13 @@ var SESSION_OPS = Object.freeze({
     "profilesset",
     "aicredentialmint",
     "aicredentialrevoke",
-    ...FAMILY_OPS,
+    ...FAMILY_SESSION_OPS,
     "casedraft",
     "reviewgrant",
     "reviewrevoke"
-  ])
+  ]))
 });
-var NEEDS = Object.freeze({
+var NEEDS = Object.freeze(aliasRows({
   /* contribute: create and revise bundles in the working corpus (5). */
   promote: "contribute",
   lease: "contribute",
@@ -150429,6 +151221,8 @@ var NEEDS = Object.freeze({
      finding — it is the act that commits what the group is publishing, one
      altitude up. A member who may not publish may not sign a case either. */
   caseratify: "publish",
+  /* T34 (R25): setting a publish time is the ceremony's last act, `caseratify`'s surface. */
+  publishat: "publish",
   /* REC-14: authoring a case carries the SAME capability as ratifying one, and
      deliberately not `contribute`. Concluding says what the record shows;
      publishing puts the group's name on it and states, in the group's voice,
@@ -150933,7 +151727,7 @@ var NEEDS = Object.freeze({
      stale (its R12), K516's precedent. */
   exportpage: null,
   moneydetectorsrun: null
-});
+}));
 var ACT_GATE = Object.freeze({
   needs: (id) => (Object.hasOwn(NEEDS, id) ? NEEDS[id] : null) ?? null,
   mode: (id) => SESSION_OPS.member.has(id) ? "session" : SESSION_OPS.admin.has(id) ? "admin-session" : "machine"
@@ -150953,7 +151747,7 @@ var UNATTENDED_BY_DECISION = Object.freeze({
   reevaluationraise: "build/rulings.md K199 (BOB #51), reevaluation R14: 'R14's notices are raised by a bounded sweep raiseNotices({limit, after}) (op reevaluationraise, admin and daemon)', which scheduler or monitoring calls.",
   /* T33: the detectors' run (money-checks R6) and the ask's usage count (K1601), each addressed to a credential. */
   moneydetectorsrun: "build/requirements/money-checks.md R6 (K1566): the machine's detectors run as a bounded sweep runDetectors({budgetMs, cursor}) that the scheduler fires; no member starts it.",
-  askusage: `build/rulings.md K1601 (AGENT-WORKER #9 J1 (3), (4)): under an ai grant the control plane admits, outside AI_GRANT_OPS, op=askusage (POST {mode:"ask", model, usage} per call), with the grant's member as viewer.`,
+  askusage: 'build/rulings.md K1601 (AGENT-WORKER #9 J1 (3), (4)): under an ai grant the control plane admits, outside AI_GRANT_OPS, op=askusage (POST {mode:"ask", model, usage} per call; `calls` beside `usage` since K1798, K1805, so an ask of N calls counts N), with the grant\'s member as viewer.',
   reproject: "BIO_Membership_Architecture_v2.md \xA74.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed because a deploy runs the bounded pass once at construction and a large store may need more than one' \u2014 a deploy's maintenance pass, addressed to the operator's credential."
 });
 
@@ -150973,7 +151767,7 @@ var ADMISSION_CHECKS = {
   NOT_AUTHENTICATED: {
     check: "C-38.1",
     where: "src/admission/index.mjs admit > is-admission",
-    translation: "Nothing in this request said who you are. Sign in, or send a credential this instance issued, and try again."
+    translation: "Nothing in this request said who you are. Sign in, or send a credential this group's Civicsmith issued, and try again."
   },
   /* WRONG CREDENTIAL, NOT INSUFFICIENT CREDENTIAL, and the difference is worth a
      sentence: this is not a rung on a ladder the caller can climb. A credential
@@ -151004,7 +151798,7 @@ var ADMISSION_CHECKS = {
   MACHINE_CREDENTIAL_REQUIRED: {
     check: "C-38.3",
     where: "src/admission/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued. This instance holds a recorded decision to that effect and names it beside this message."
+    translation: "This operation is performed by an unattended writer, not by a person at a browser. A signed-in session cannot do it; it needs a machine credential an administrator has issued. Your group's Civicsmith holds a recorded decision to that effect and names it beside this message."
   },
   /* D-270 / BOB #17, 2026-09-19. THE SECOND OF THE SESSION GATE'S THREE
      OUTCOMES, and the one the plane could ALWAYS have said: it is about the
@@ -151053,7 +151847,7 @@ var ADMISSION_CHECKS = {
   SESSION_ROUTE_NOT_RECORDED: {
     check: "C-38.8",
     where: "src/admission/index.mjs sessionOpGate > is-session-op-gate",
-    translation: "No signed-in session reaches this operation, and this instance holds no recorded decision saying it is not meant for a person. That is a gap in the record rather than a rule you have run into, and it is worth reporting as one."
+    translation: "No signed-in session reaches this operation, and your group's Civicsmith holds no recorded decision saying it is not meant for a person. That is a gap in the record rather than a rule you have run into, and it is worth reporting as one."
   },
   /* Section 8.1. THE ONE PLACE IN THIS SYSTEM WHERE BEING THE FOUNDER IS NOT
      ENOUGH, and the translation says so, because a member refused here will
@@ -151094,7 +151888,7 @@ var NAMESPACE_CHECKS = {
   NAMESPACE_UNKNOWN: {
     check: "C-78.1",
     where: "src/admission/index.mjs namespaceGate > is-namespace-gate",
-    translation: "This request named a part of the record that does not exist on this copy, so nothing was read or changed. A copy has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
+    translation: "This request named a part of the record that does not exist in your group's Civicsmith, so nothing was read or changed. It has two: the record itself, and a scratch area kept apart for testing. The name must match one of them exactly; the names are listed beside this message."
   },
   /* D-461 (C-78.2): the scratch area named on a public operation that only ever answers from the record itself.
      Twelve such operations used to answer from the record while the caller believed it was in scratch — one of
@@ -151141,7 +151935,7 @@ var AI_SCOPE_CHECKS = {
   AI_SCOPE_UNKNOWN_OP: {
     check: "C-29.8",
     where: "src/admission/index.mjs aiScopeDeclaration > is-ai-scope-declaration",
-    translation: "The list of things this credential may change names something this instance does not do. An entry nothing recognises would sit in the record looking like a permission while meaning nothing, so it is refused rather than stored."
+    translation: "The list of things this credential may change names something your group's Civicsmith does not do. An entry nothing recognises would sit in the record looking like a permission while meaning nothing, so it is refused rather than stored."
   },
   /* THE SHAPE FENCE, AND PL-4'S DELEGATED CONSTRAINT DISCHARGED. Not a list of
      forbidden ops — a property of the op: can a MEMBER reach it. The unattended
@@ -151187,7 +151981,7 @@ var OPERATOR_FENCE_CHECKS = {
   OPERATOR_TOKEN_CANNOT_GOVERN: {
     check: "C-32.17",
     where: "src/admission/index.mjs bearerFence > is-operator-governance-act",
-    translation: "Endorsing an administrator, voting to remove one, and setting what a member may do are things the group holds a named administrator answerable for, and the record names who did them. The credential that asked here is one of the operator's access tokens for this copy, not a person: it holds no place on the roster, so it cannot be one of the administrators whose agreement the rule requires. Sign in as that administrator and do it from there."
+    translation: "Endorsing an administrator, voting to remove one, and setting what a member may do are things the group holds a named administrator answerable for, and the record names who did them. The credential that asked here is one of the operator's access tokens for your group's Civicsmith, not a person: it holds no place on the roster, so it cannot be one of the administrators whose agreement the rule requires. Sign in as that administrator and do it from there."
   }
 };
 var GROUP_IDENTITY_FENCE_CHECKS = {
@@ -151196,7 +151990,7 @@ var GROUP_IDENTITY_FENCE_CHECKS = {
   GROUP_IDENTITY_NEEDS_SESSION: {
     check: "C-64.4",
     where: "src/admission/index.mjs bearerFence > is-group-identity-session",
-    translation: "The name this group shows the public, and the web address it claims, are set by one of its administrators, and the record names who set each one. The credential that asked here is one of the operator's access tokens for this copy, not a person, so it cannot be that administrator. Sign in as the administrator and set it from there. Nothing was changed."
+    translation: "The name this group shows the public, and the web address it claims, are set by one of its administrators, and the record names who set each one. The credential that asked here is one of the operator's access tokens for your group's Civicsmith, not a person, so it cannot be that administrator. Sign in as the administrator and set it from there. Nothing was changed."
   }
 };
 
@@ -151227,7 +152021,15 @@ function namespaceGate(url) {
     namespaces: [...NAMESPACES2]
   } };
 }
-var SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);
+var SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze([
+  "invitelook",
+  "enroll",
+  "instancegroup",
+  "groupidentity",
+  "websiteinvite",
+  "joinlinkinvite",
+  "groupdescription"
+]);
 function pinnedNamespaceGate(url, op, spec) {
   if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
   if (url.searchParams.get("store") !== SCRATCH) return null;
@@ -151240,6 +152042,18 @@ function pinnedNamespaceGate(url, op, spec) {
     asked: SCRATCH,
     pinned: "bio"
   } };
+}
+var PUBLIC_DOORS = Object.freeze(["joinlinkinvite", "websiteinvite"]);
+var BODY_ONLY_FIELDS = Object.freeze({
+  websiteinvite: Object.freeze(["cover", "key"]),
+  joinlinkinvite: Object.freeze(["cover", "link"]),
+  groupkeyset: Object.freeze(["key"])
+});
+function queryGate(url, op) {
+  const fields = Object.hasOwn(BODY_ONLY_FIELDS, op) ? BODY_ONLY_FIELDS[op] : [];
+  for (const k of fields) url.searchParams.delete(k);
+  if (PUBLIC_DOORS.includes(op)) url.searchParams.delete("token");
+  return null;
 }
 function confinedNamespaceGate(url, cred) {
   if (!cred || cred.confinedTo !== SCRATCH) return null;
@@ -156023,8 +156837,8 @@ var AiRuns = class _AiRuns {
    *  is written. It never ends a run: an exhausted bound ends it at the next tick (R12). */
   consumeBound(run2, bound, n) {
     const b = String(bound ?? "");
-    const figure2 = typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
-    const bad2 = checkConsume([[b, figure2 ? 0 : n]], { seed: false });
+    const figure3 = typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+    const bad2 = checkConsume([[b, figure3 ? 0 : n]], { seed: false });
     if (bad2) return bad2;
     if (n === 0) return null;
     this.#transact(() => {
@@ -157701,7 +158515,7 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
       ...gate.args,
       EXTRACT_RATIO_DOCUMENTS_MAX + 1
     ).map((x) => x.bundle_id);
-    const listed = rows3.slice(0, n).map((x) => ({
+    const listed2 = rows3.slice(0, n).map((x) => ({
       run: x.run,
       bundle_id: x.bundle_id,
       capture_sha: x.capture_sha,
@@ -157744,10 +158558,10 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
         documents: scopeDocs.length,
         documents_capped: docs.length > EXTRACT_RATIO_DOCUMENTS_MAX
       },
-      count: listed.length,
+      count: listed2.length,
       limit: n,
       truncated: rows3.length > n,
-      proposals: listed,
+      proposals: listed2,
       instrument: mintRatio({ minted, cited })
     };
   }
@@ -160077,9 +160891,144 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
   }
 }
 
-// src/link-sweep/checks.mjs
+// src/following/checks.mjs
 var checks_exports60 = {};
 __export(checks_exports60, {
+  FOLLOWING_CHECKS: () => FOLLOWING_CHECKS,
+  followRefusal: () => followRefusal
+});
+var at30 = (fn, region) => `src/following/index.mjs ${fn} > ${region}`;
+var row6 = (n, fn, region, translation) => Object.freeze({ check: `C-137.${n}`, where: at30(fn, region), translation });
+var FOLLOWING_CHECKS = Object.freeze({
+  MACHINE_CANNOT_FOLLOW: row6(
+    1,
+    "#actorRefusal",
+    "is-follow-member",
+    "A follow, and the body a watch is captured before, is a member's own act; the machine follows nothing of its own accord. Nothing was written."
+  ),
+  NO_SUCH_HOME: row6(
+    2,
+    "#actorRefusal",
+    "is-follow-home",
+    "A follow lives in the project of a bundle you may see, named as its home; no such bundle was named. Nothing was written."
+  ),
+  NO_SUCH_BODY: row6(
+    3,
+    "followBody",
+    "is-follow-body",
+    "No body by that id is registered that you may see. Nothing was written."
+  ),
+  NO_LEGISTAR_ID: row6(
+    4,
+    "followBody",
+    "is-follow-legistar",
+    "That body holds no identifier in a scheme the active jurisdiction profiles name for Legistar, so its records cannot be read there. Nothing was written."
+  ),
+  BAD_PERIOD: row6(
+    5,
+    "followBody",
+    "is-follow-period",
+    "A follow names the days it covers: a first day, and a last day not before it, or none. Nothing was written."
+  ),
+  BAD_FOLLOW_CADENCE: row6(
+    6,
+    "#cadence",
+    "is-follow-cadence",
+    "A follow is read daily, weekly or monthly. Choose one of these. Nothing was written."
+  ),
+  NO_SUCH_FOLLOW: row6(
+    7,
+    "#follow",
+    "is-follow-held",
+    "No follow of that kind that you may see is held under that id. Nothing was changed."
+  ),
+  NOT_THE_AUTHOR: row6(
+    8,
+    "unfollow",
+    "is-follow-author",
+    "A follow is ended only by the member who made it. Nothing was changed."
+  ),
+  NO_LOCATOR: row6(
+    9,
+    "followRegister",
+    "is-follow-locator",
+    "A register or a portal is followed at a public https address. Nothing was written."
+  ),
+  BAD_RENDER: row6(
+    10,
+    "followRegister",
+    "is-follow-render",
+    "Whether the register is re-rendered is yes or no. Nothing was written."
+  ),
+  BAD_GATE: row6(
+    11,
+    "#gated",
+    "is-follow-gate",
+    "A register behind an account or a fee is declared as one or the other, and one that charges a fee names its price, so you see it before any refresh. Nothing was written."
+  ),
+  PERSON_QUERY_NOT_NAMED: row6(
+    12,
+    "followPersonQuery",
+    "is-person-query-named",
+    "A person is followed only through one register's own query for one identifier you name, in a scheme the active profiles list for that register, at the register's own address for it, in your project; a query by name alone or across registers is not followed. Nothing was written."
+  ),
+  NO_KEY: row6(
+    13,
+    "followPortal",
+    "is-portal-key",
+    "A portal follow declares the field that keys its rows. Nothing was written."
+  ),
+  NO_SUCH_MEETING_ADDRESS: row6(
+    14,
+    "perMeetingBody",
+    "is-meeting-address",
+    "No address you may see is watched per meeting, so no body's meetings can be named for it. Nothing was written."
+  ),
+  NO_SUCH_SNAPSHOT: row6(
+    15,
+    "snapshotDiff",
+    "is-snapshot-held",
+    "Each snapshot is named by its number among this portal follow's snapshots; one named is not held. Nothing was changed."
+  ),
+  NOT_GATED: row6(
+    16,
+    "refreshRegister",
+    "is-refresh-gated",
+    "A public register is read on its schedule; a member's refresh is only for one behind an account or a fee. Nothing was read."
+  ),
+  NOT_THE_FOLLOWER: row6(
+    17,
+    "refreshRegister",
+    "is-refresh-follower",
+    "Only the member who follows this register refreshes it, with their own credential. Nothing was read."
+  ),
+  PRICE_FIRST: row6(
+    18,
+    "refreshRegister",
+    "is-refresh-price",
+    "This register charges a fee; the refresh runs only once its price, as shown, is accepted. Nothing was read."
+  ),
+  NO_CREDENTIAL: row6(
+    19,
+    "refreshRegister",
+    "is-refresh-credential",
+    "A register behind an account is read with your own credential, and none was given. Nothing was read."
+  ),
+  NOT_READ: row6(
+    20,
+    "refreshRegister",
+    "is-refresh-read",
+    "The register could not be read; the reason is beside this. Nothing was changed."
+  )
+});
+function followRefusal(code, detail, extra = {}) {
+  const r = FOLLOWING_CHECKS[code];
+  return { ok: false, reason: code, code, check: r ? r.check : null, translation: r ? r.translation : null, detail, ...extra };
+}
+
+// src/link-sweep/checks.mjs
+var checks_exports61 = {};
+__export(checks_exports61, {
   SWEEP_BOUNDS: () => SWEEP_BOUNDS,
   SWEEP_CADENCES: () => SWEEP_CADENCES,
   SWEEP_CHECKS: () => SWEEP_CHECKS,
@@ -160381,21 +161330,21 @@ function cut5(text7) {
 var isCut = (text7) => typeof text7 === "string" && text7.length > MATCH_TEXT_MAX && Array.from(text7).length > MATCH_TEXT_MAX;
 
 // src/link-sweep/checks.mjs
-var at30 = (fn, region, file) => `src/link-sweep/${file}.mjs ${fn} > ${region}`;
+var at31 = (fn, region, file) => `src/link-sweep/${file}.mjs ${fn} > ${region}`;
 var SWEEP_CHECKS = Object.freeze({
   SWEEP_TERM_REFUSED: Object.freeze({
     check: "C-18.16",
-    where: at30("sweepGrammar", "is-sweep-term", "checks"),
+    where: at31("sweepGrammar", "is-sweep-term", "checks"),
     translation: "This was not saved: a search term of a sweep is a pattern the record cannot match safely. A term may be plain words or a simple pattern between slashes, without references back to an earlier part, look-aheads or look-behinds. The findings beside this name the term and what in it was refused. Nothing was changed."
   }),
   SWEEP_NOT_A_MEMBER: Object.freeze({
     check: "C-18.17",
-    where: at30("sweepFence", "is-sweep-member", "sweep"),
+    where: at31("sweepFence", "is-sweep-member", "sweep"),
     translation: "This was not saved: a sweep is added, removed or changed only by a named member. An assistant or a machine may stop a sweep by unratifying it, and nothing more. Nothing was changed."
   }),
   SWEEP_RATIFY_NOT_AN_OWNER: Object.freeze({
     check: "C-18.18",
-    where: at30("sweepFence", "is-sweep-owner", "sweep"),
+    where: at31("sweepFence", "is-sweep-owner", "sweep"),
     translation: "This was not saved: a sweep is ratified, and a ratified sweep is changed, only by an owner of the project its list belongs to. Ask an owner of that project; anyone may still stop the sweep by unratifying it. Nothing was changed."
   })
 });
@@ -160500,37 +161449,38 @@ function sweepGrammar(s, ids) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports61 = {};
-__export(checks_exports61, {
+var checks_exports62 = {};
+__export(checks_exports62, {
+  CHECK_REQUEST_CHECKS: () => CHECK_REQUEST_CHECKS,
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
   TASK_ACTOR_CHECKS: () => TASK_ACTOR_CHECKS,
   checkInboxGrammar: () => checkInboxGrammar
 });
-var at31 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
+var at32 = (fn, region) => `src/tasks/index.mjs ${fn} > ${region}`;
 var QUEUE_MACHINE_CHECKS = Object.freeze({
   MACHINE_CANNOT_FORWARD: Object.freeze({
     check: "C-32.10",
-    where: at31("taskForward", "is-machine-forward"),
+    where: at32("taskForward", "is-machine-forward"),
     translation: "Forwarding hands an obligation to a named person, and deciding who is better placed to answer it is a judgement about people rather than about records. The credential that asked here is an automated one: it can surface the work and route it as it arrives, and cannot re-address it. Sign in to forward it."
   }),
   MACHINE_CANNOT_RESOLVE: Object.freeze({
     check: "C-32.11",
-    where: at31("taskResolve", "is-machine-resolve"),
+    where: at32("taskResolve", "is-machine-resolve"),
     translation: "Closing an obligation says the thing the record asked for has been answered, and somebody has to be willing to say that. The credential that asked here is an automated one \u2014 it may surface the work and prepare what it needs, and closing work that is nobody's is still closing it. Sign in to resolve it."
   })
 });
 var TASK_ACTOR_CHECKS = Object.freeze({
   TASK_NOT_YOURS: Object.freeze({
     check: "C-76.1",
-    where: at31("#refuseNotYours", "is-task-actor-fence"),
+    where: at32("#refuseNotYours", "is-task-actor-fence"),
     translation: "This task is not yours to act on: it is with another member now, so nothing was done to it. The record says below who holds it. Ask them, or an administrator, if it still needs you."
   })
 });
 var QUEUE_INBOX_CHECKS = Object.freeze({
   INBOX_REFUSED: Object.freeze({
     check: "C-19.2",
-    where: at31("inboxCheck", "is-inbox-refused"),
+    where: at32("inboxCheck", "is-inbox-refused"),
     translation: "This was not saved: the list of tasks it carries is not written the way the record writes tasks, so a member could be shown something in it that the record cannot vouch for. The findings beside this say which entries and what is wrong with each. Nothing was changed."
   })
 });
@@ -160646,29 +161596,122 @@ function checkInboxGrammar(ctx, findings) {
     }
   }
 }
+var checkRow = (n, fn, region, translation) => Object.freeze({ check: `C-138.${n}`, where: at32(fn, region), translation });
+var CHECK_REQUEST_CHECKS = Object.freeze({
+  MACHINE_CANNOT_CHECK: checkRow(
+    1,
+    "#refuseMachineCheck",
+    "is-machine-check",
+    "Asking for a check, taking one and recording one are each a person's act, and the credential that asked here is an automated one. Nothing was written. Sign in as a member to do this."
+  ),
+  NO_SUCH_CHECK_TARGET: checkRow(
+    2,
+    "checkRequest",
+    "is-check-target",
+    "There is nothing here you can ask a check on: the item is not in the group's record, or it is not one you can see. Nothing was written."
+  ),
+  CHECK_NOT_AN_OWNER: checkRow(
+    3,
+    "checkRequest",
+    "is-check-owner",
+    "Only an owner of the project this item belongs to can ask for a check on it. Nothing was written. Ask one of the project's owners to ask for it."
+  ),
+  CHECK_ADDRESS_ONE: checkRow(
+    4,
+    "checkRequest",
+    "is-check-address",
+    "A check is asked either of everyone who has declared an expertise, or of one member you name, and this request named neither or both. Nothing was written. Choose one."
+  ),
+  CHECK_MEMBER_REFUSED: checkRow(
+    5,
+    "checkRequest",
+    "is-check-member",
+    "The member you named cannot be asked: they are not an active member, or they cannot see this item. Nothing was written. Ask by expertise, or name another member."
+  ),
+  CHECK_NOTE_TOO_LONG: checkRow(
+    6,
+    "checkRequest",
+    "is-check-note",
+    "The note is longer than 1,000 characters. Nothing was written. Shorten it and ask again."
+  ),
+  NO_SUCH_CHECK_REQUEST: checkRow(
+    7,
+    "#requestFor",
+    "is-check-request",
+    "There is no request for a check here that you can act on. Nothing was written."
+  ),
+  CHECK_ALREADY_TAKEN: checkRow(
+    8,
+    "checkTake",
+    "is-check-taken",
+    "Someone else has already taken this check, so it is theirs now. Nothing was written. The answer says who took it and when."
+  ),
+  CHECK_NOT_YOURS: checkRow(
+    9,
+    "checkRecord",
+    "is-check-taker",
+    "Only the member who took this check can record it. Nothing was written. Take it first if no one has."
+  ),
+  CHECK_VERDICT_UNKNOWN: checkRow(
+    10,
+    "checkRecord",
+    "is-check-verdict",
+    "A check is recorded either as checked or as a concern, and this was neither. Nothing was written."
+  ),
+  CHECK_NO_REASON: checkRow(
+    11,
+    "checkRecord",
+    "is-check-reason",
+    "A concern needs its reason, so the owner and the group can see what to look at. Nothing was written. Say what concerns you and record it again."
+  ),
+  CHECK_REASON_TOO_LONG: checkRow(
+    12,
+    "checkRecord",
+    "is-check-reason-length",
+    "The reason is longer than 4,000 characters. Nothing was written. Shorten it and record it again."
+  ),
+  CHECK_ALREADY_RECORDED: checkRow(
+    13,
+    "checkRecord",
+    "is-check-recorded",
+    "This check has already been recorded, and a request holds one check. Nothing was written. The answer shows the record that stands."
+  ),
+  CHECK_NOT_FORWARDED: checkRow(
+    14,
+    "taskForward",
+    "is-check-not-forwarded",
+    "A request for a check is not handed on: it goes to everyone with the expertise who can see the item, or to the member its owner named. Nothing was changed. Anyone who can see the item may take it."
+  ),
+  CHECK_CLOSES_BY_RECORD: checkRow(
+    15,
+    "taskResolve",
+    "is-check-closes-by-record",
+    "You took this check, so this To do closes when you record the check or a concern. Nothing was changed."
+  )
+});
 
 // src/queue/checks.mjs
-var checks_exports62 = {};
-__export(checks_exports62, {
+var checks_exports63 = {};
+__export(checks_exports63, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
 });
-var at32 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
+var at33 = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 var QUEUE_MINT_CHECKS = Object.freeze({
   NO_CLASS: Object.freeze({
     check: "C-31.1",
-    where: at32("queueFeed", "is-queue-mint"),
+    where: at33("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it does not say what sort of item it is, and showing it without that would put an entry in front of you that nobody can act on. Nothing has been lost and nothing about the record has changed \u2014 this is a fault on our side, not something you did."
   }),
   NO_SUCH_KIND: Object.freeze({
     check: "C-31.2",
-    where: at32("queueFeed", "is-queue-mint"),
+    where: at33("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is described in a word this record does not know, so there is no sentence to show you in place of it. Rather than showing you a line you could not read, the list refuses whole. Nothing has been lost."
   }),
   KIND_MISCLASSED: Object.freeze({
     check: "C-31.3",
-    where: at32("queueFeed", "is-queue-mint"),
+    where: at33("queueFeed", "is-queue-mint"),
     translation: "Your list could not be assembled: something on it is filed one way and described another, and the difference decides whether setting it aside is a private choice of yours or a change to the record everyone shares. That is not a difference to guess at, so the list refuses until it is right. Nothing has been lost."
   })
 });
@@ -160676,27 +161719,27 @@ var QUEUE_ACT_CHECKS = Object.freeze({
   /* REC-64 / C-33.27: an OBLIGATION is never muted (R19, R31). */
   KIND_NOT_PERSONAL: Object.freeze({
     check: "C-33.27",
-    where: at32("queueMute", "is-mute-class"),
+    where: at33("queueMute", "is-mute-class"),
     translation: "Setting this aside would be a change everybody sees rather than a private choice of yours, and that is a decision the group takes together rather than one this control makes. The kinds you can quiet for yourself are listed beside the refusal."
   }),
   /* REC-205 / C-33.44: a CONDITION or an OBLIGATION named to the dispose act (R28). The translation names the act that
      does reach the item, since a member holding a selection needs the next move. N301: what the record NOTICED. */
   CLASS_NOT_DISPOSED: Object.freeze({
     check: "C-33.44",
-    where: at32("proposeDispose", "is-dispose-class"),
-    translation: "This is not something the record disposes of. Deferring and dismissing are decisions about something the record NOTICED \u2014 its own question \u2014 and this item is a different kind of thing: a signal is a fact about our machinery that you quiet for yourself, and a to-do is work a named person owes and leaves every list when it is done. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
+    where: at33("proposeDispose", "is-dispose-class"),
+    translation: "This is not something the record disposes of. Deferring and dismissing are decisions about something the record NOTICED \u2014 its own question \u2014 and this item is a different kind of thing: a status item is a fact about our machinery that you quiet for yourself, and a to-do is work a named person owes and leaves every list when it is done. Nothing about it was changed, and it is still in your list. The answer names the act that does reach it."
   }),
   /* R29 (D-623) / C-33.50: the project arm with no project, and the bridge's FINDING key (R27, R28). One code, one
      sentence at both sites: setting a noticed item aside is one team's decision, and the team was not named. */
   NO_PROJECT_SCOPE: Object.freeze({
     check: "C-33.50",
-    where: at32("#noProjectScope", "is-dispose-scope"),
+    where: at33("#noProjectScope", "is-dispose-scope"),
     translation: "Setting this aside is a decision one project takes for its own list, and no project was named for it. Choose the project you are acting for (the item lists the ones it is filed under) and ask again. Nothing was written, and no team's list moved."
   }),
   /* R49 (DEC-110 (1)) / C-33.51: the feed asked for in an order it does not keep, refused before anything is read. */
   QUEUE_SORT_UNKNOWN: Object.freeze({
     check: "C-33.51",
-    where: at32("queueFeed", "is-queue-sort"),
+    where: at33("queueFeed", "is-queue-sort"),
     translation: "Your list cannot be put in that order. It can be sorted by when each item was added, by when it is due, by case or by kind, or left in its usual order, grouped by case. Nothing was read or changed; ask again with one of those."
   })
 });
@@ -160714,6 +161757,10 @@ __export(setup_exports, {
   GROUP_DOMAIN_CHECKS_MAX: () => GROUP_DOMAIN_CHECKS_MAX,
   GROUP_DOMAIN_RE: () => GROUP_DOMAIN_RE,
   GROUP_DOMAIN_RECHECK_MS: () => GROUP_DOMAIN_RECHECK_MS,
+  GROUP_DRAFT_ANSWERS_MAX: () => GROUP_DRAFT_ANSWERS_MAX,
+  GROUP_DRAFT_ANSWER_MAX: () => GROUP_DRAFT_ANSWER_MAX,
+  GROUP_FOCUS_MAX: () => GROUP_FOCUS_MAX,
+  GROUP_PURPOSE_MAX: () => GROUP_PURPOSE_MAX,
   GROUP_SLUG_RE: () => GROUP_SLUG_RE,
   GROUP_WELL_KNOWN_MAX_BYTES: () => GROUP_WELL_KNOWN_MAX_BYTES,
   GROUP_WELL_KNOWN_PATH: () => GROUP_WELL_KNOWN_PATH,
@@ -160728,6 +161775,7 @@ __export(setup_exports, {
   LEGACY_PROBE_RUN: () => LEGACY_PROBE_RUN,
   LEGISTAR_SCHEMES: () => LEGISTAR_SCHEMES,
   NO_GROUP_RECORDED: () => NO_GROUP_RECORDED,
+  PLACE_NAME_MAX: () => PLACE_NAME_MAX,
   PUBLIC_GROUP_PROJECTIONS: () => PUBLIC_GROUP_PROJECTIONS,
   RUNTIME_ASYMMETRY: () => RUNTIME_ASYMMETRY,
   SEED_MACHINE: () => SEED_MACHINE,
@@ -160741,12 +161789,2035 @@ __export(setup_exports, {
   instanceSetupOf: () => instanceSetupOf,
   instanceSetupOp: () => instanceSetupOp,
   instanceSetupOps: () => instanceSetupOps,
+  isLanguageTag: () => isLanguageTag,
   memberVersions: () => memberVersions,
   publicInstanceGroup: () => publicInstanceGroup,
   runtimeOp: () => runtimeOp,
   selftest: () => selftest,
   setupPage: () => setupPage
 });
+
+// src/setup-page/index.mjs
+var FIRST_STATE_JSON = JSON.stringify(
+  Object.fromEntries(Object.entries(STATES).map(([t2, s]) => [t2, s.legal[0]]))
+);
+var HEADINGS_JSON = JSON.stringify(HEADINGS);
+var RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
+var COUNTERPARTY_LEVELS_OPTIONS = COUNTERPARTY_LEVELS.map((l2) => '<option value="' + String(l2).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]) + '">' + String(l2).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]) + "</option>").join("");
+var escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">Which group this is could not be read just now</p>';
+var verifiedDay = (x) => typeof x === "string" && /^\d{4}-\d\d-\d\d/.test(x) ? x.slice(0, 10) : null;
+function groupLine(read3) {
+  const r = read3 && read3.answered === true && read3.result && read3.result.ok === true ? read3.result : null;
+  if (r && typeof r.group === "string" && r.group) {
+    const name2 = typeof r.display_name === "string" && r.display_name.trim() ? r.display_name : null;
+    const day2 = verifiedDay(r.domain_verified_at);
+    const domain = typeof r.domain === "string" && r.domain && day2 ? r.domain : null;
+    return '<p class="eyebrow" id="instance-group" data-group="recorded">' + (name2 ? '<span class="name">' + escGroup(name2) + "</span> &middot; " : "") + '<span class="slug">' + escGroup(r.group) + "</span> &middot; your group's Civicsmith" + (domain ? ' &middot; <span class="domain">' + escGroup(domain) + '</span> verified <time datetime="' + escGroup(day2) + '">' + escGroup(day2) + "</time>" : "") + "</p>";
+  }
+  if (r && r.group === null)
+    return '<p class="eyebrow" id="instance-group" data-group="none">No group is recorded here yet</p>';
+  return GROUP_LINE_UNREAD;
+}
+var hostingBlock = (p3) => `<div class="card" id="${p3}-ha">
+    <p style="margin:0 0 10px"><b>Who holds the hosting account?</b> Name the people who can sign in to the
+    Cloudflare account your group's Civicsmith runs in. The record keeps your group's answer as you give it.</p>
+    <p class="small" id="${p3}-ha-now"></p>
+    <label for="${p3}-ha-holders">Who holds it</label>
+    <input id="${p3}-ha-holders">
+    <p class="hint">One or more people, named as your group knows them.</p>
+    <label for="${p3}-ha-note">A note (optional)</label>
+    <input id="${p3}-ha-note">
+    <div class="actions"><button id="${p3}-ha-set">Record who holds it</button></div>
+    <p class="err" id="${p3}-ha-err"></p>
+  </div>`;
+var courtBlock = (p3) => `<div class="card" id="${p3}-cn">
+    <p style="margin:0 0 10px"><b>Are your members told what a court can reach?</b> Some work is unlikely ever to
+    draw a court order. Journalists, lawyers and auditors may have protections others lack, such as shield laws or
+    privilege. A group doing work that could draw one should make sure its members understand the risk.</p>
+    <p class="small" id="${p3}-cn-now"></p>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+      <input type="radio" name="${p3}-cn" id="${p3}-cn-tell" value="tell" style="width:auto;margin-top:4px">
+      <span>Tell our members</span></label>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+      <input type="radio" name="${p3}-cn" id="${p3}-cn-dont" value="dont" style="width:auto;margin-top:4px">
+      <span>Don't</span></label>
+    <p class="hint">Leaving this unchosen records nothing, and reads as not telling.</p>
+    <div class="actions"><button id="${p3}-cn-set">Record this choice</button></div>
+    <p class="err" id="${p3}-cn-err"></p>
+  </div>`;
+var AI_CHOICES = [
+  ["group", "<b>The group's API key.</b> One Anthropic API key, held by the group, serves every member who has no account of their own."],
+  ["own", "<b>Members' own accounts.</b> Each member who wants the assistant connects their own Claude subscription or API key."],
+  ["both", "<b>Both.</b> The group's API key serves members with no account of their own; members may connect their own."],
+  ["none", "<b>No AI.</b> Your group's Civicsmith without the assistant."]
+];
+var aiBlock = (p3) => `<div class="card" id="${p3}-ai">
+    <p style="margin:0 0 10px"><b>How do your group's members reach the assistant?</b> Nothing is chosen for you,
+    whatever the installer recorded, and leaving this unchosen changes nothing.</p>
+    <p class="small" id="${p3}-ai-now"></p>
+    ${AI_CHOICES.map(([v, words4]) => `<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+      <input type="radio" name="${p3}-ai" id="${p3}-ai-${v}" value="${v}" style="width:auto;margin-top:4px">
+      <span>${words4}</span></label>`).join("\n    ")}
+    <div id="${p3}-ai-keybox" hidden>
+      <label for="${p3}-ai-key">The group's Anthropic API key</label>
+      <input id="${p3}-ai-key" type="password" autocomplete="off" spellcheck="false">
+      <p class="hint">Sent once, in the request's body only. It is held sealed and never shown again, not even here.</p>
+    </div>
+    <div class="actions"><button id="${p3}-ai-set">Record this choice</button></div>
+    <p class="err" id="${p3}-ai-err"></p>
+  </div>`;
+var languageBlock = (p3) => `<div class="card" id="${p3}">
+    <p class="small" style="margin:0 0 6px" id="${p3}-now"></p>
+    <label for="${p3}-tag" style="margin-top:0">Language for the screens</label>
+    <input id="${p3}-tag" spellcheck="false" placeholder="en, es, zh-Hant">
+    <p class="hint">A language tag. Each word is shown in it where a translation is held, and in English where none is.
+    Leave it empty to follow your device's setting.</p>
+    <div class="actions"><button id="${p3}-set">Use this language</button></div>
+    <p class="err" id="${p3}-err"></p>
+  </div>`;
+var HOSTING_SLOT = "<!--hosting-control-->";
+var PAGE_HTML = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Your accountability record</title>
+<style>
+:root{
+  --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
+  --verdigris:#2F6F62; --verdigris-dk:#1F4F45;
+  --signal:#B3441E; --rule:#C6CBBF; --muted:#5C6B66;
+  --body:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+  font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+main{max-width:640px;margin:0 auto;padding:56px 22px 80px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--verdigris);margin:0 0 14px}
+.eyebrow .slug,.eyebrow .name,.eyebrow .domain{text-transform:none;letter-spacing:.04em}
+h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,38px);
+  line-height:1.1;margin:0 0 16px;letter-spacing:-.01em}
+h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:28px 0 10px}
+p{margin:0 0 15px;max-width:60ch}
+.small{font-size:14.5px;color:var(--muted)}
+.card{border:1px solid var(--rule);background:#F6F7F2;padding:20px 22px;margin:0 0 18px}
+.notice{border-left:3px solid var(--signal);background:#F8EFE9;padding:16px 18px;margin:0 0 18px}
+.okbox{border-left:3px solid var(--verdigris);background:#EDF3F0;padding:16px 18px;margin:0 0 18px}
+label{display:block;font-weight:600;font-size:14.5px;margin:14px 0 6px}
+input{width:100%;padding:11px 13px;font-family:var(--mono);font-size:14.5px;
+  border:1px solid var(--rule);background:#fff;color:var(--ink);border-radius:0}
+input:focus-visible,button:focus-visible{outline:2px solid var(--verdigris);outline-offset:2px}
+.hint{font-size:13.5px;color:var(--muted);margin:6px 0 0}
+button{margin-top:18px;padding:12px 22px;font-size:15.5px;font-weight:600;cursor:pointer;
+  background:var(--verdigris);color:#fff;border:1px solid var(--verdigris-dk)}
+button:hover{background:var(--verdigris-dk)}
+button:disabled{opacity:.55;cursor:default}
+.err{color:var(--signal);font-size:14.5px;margin-top:12px;min-height:1.4em}
+.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--rule);font-size:14.5px}
+.kv:first-of-type{border-top:0}
+.kv .k{color:var(--muted);min-width:150px}
+.kv .v{font-family:var(--mono);font-size:13.5px;word-break:break-all}
+section{display:none} section.on{display:block}
+main.wide{max-width:860px}
+.crumb{font-family:var(--mono);font-size:12.5px;margin:0 0 18px}
+.crumb a{color:var(--verdigris);text-decoration:none;cursor:pointer}
+.crumb a:hover{text-decoration:underline}
+table.rec{width:100%;border-collapse:collapse;font-size:14.5px;margin:6px 0 22px}
+table.rec th{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);text-align:left;font-weight:600;padding:6px 10px 6px 0;border-bottom:1px solid var(--rule)}
+table.rec td{padding:9px 10px 9px 0;border-bottom:1px solid var(--rule);vertical-align:baseline}
+table.rec tr.row{cursor:pointer}
+table.rec tr.row:hover td{background:#F6F7F2}
+.bid{font-family:var(--mono);font-size:13px;color:var(--verdigris-dk)}
+.chip{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;padding:2px 8px;border:1px solid var(--rule);color:var(--muted);background:#F6F7F2}
+.chip.verified,.chip.ratified{color:#fff;background:var(--verdigris);border-color:var(--verdigris-dk)}
+.chip.elevated,.chip.forming{color:var(--signal);border-color:var(--signal);background:#F8EFE9}
+.md h2{font-size:19px;margin:26px 0 8px}
+.md h3{font-family:var(--body);font-weight:700;font-size:15.5px;margin:20px 0 6px}
+.md p{margin:0 0 12px}
+.md ul{margin:0 0 12px;padding-left:22px}
+.md li{margin:0 0 4px}
+.md code{font-family:var(--mono);font-size:13px;background:var(--paper-2);padding:1px 4px}
+.md .revnote{border-left:3px solid var(--signal);background:#F8EFE9;padding:10px 14px;margin:0 0 16px;font-size:14px}
+.filelink{color:var(--verdigris);text-decoration:none}
+.filelink:hover{text-decoration:underline}
+.histbtn{background:none;border:none;padding:0;margin:0;font:inherit;color:var(--verdigris);cursor:pointer;text-decoration:none}
+.histbtn:hover{text-decoration:underline}
+.mono{font-family:var(--mono);font-size:12.5px}
+.dim{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+${GROUP_LINE_UNREAD}
+
+<section id="s-loading" class="on">
+  <h1>One moment</h1>
+  <p class="small">Checking the state of this group's Civicsmith.</p>
+</section>
+
+<section id="s-unarmed">
+  <h1>This group's Civicsmith has no one-time password yet</h1>
+  <p>Before anyone can claim it, a bootstrap credential has to exist. Sign in
+  to the Cloudflare account this group's Civicsmith runs in, open this worker's settings,
+  and set a long random value called <b>ADMIN_TOKEN</b>. Then reload this
+  page.</p>
+  <p class="small">If it was set but this page still says otherwise, the value
+  in place is one that has been published before and this software refuses to
+  accept it. Set a fresh one.</p>
+</section>
+
+<section id="s-claim">
+  <h1>Claim this group's Civicsmith</h1>
+  <p>This runs in your organization's own Cloudflare account. Claiming it
+  spends the one-time password and replaces it with a password you choose.
+  The one-time password stops working the moment this succeeds.</p>
+  <div id="rearm-note" class="notice" hidden>
+    <p style="margin:0"><b>Recovery mode.</b> The one-time password was
+    replaced in the Cloudflare dashboard, so the previous claim is retired and
+    this group's Civicsmith can be claimed again. Nothing stored in the record is affected.</p>
+  </div>
+  ${HOSTING_SLOT}
+  <div id="claim-form">
+  <label for="boot">One-time password</label>
+  <input id="boot" autocomplete="off" spellcheck="false">
+  <p class="hint">From the installer's final screen, or the ADMIN_TOKEN value
+  set in the Cloudflare dashboard.</p>
+  <label for="pw1">Choose your password</label>
+  <input id="pw1" type="password" autocomplete="new-password">
+  <p class="hint">At least 12 characters. Store it in a password manager.</p>
+  <label for="pw2">Type it again</label>
+  <input id="pw2" type="password" autocomplete="new-password">
+  <button id="do-claim">Claim this group's Civicsmith</button>
+  <p class="err" id="claim-err"></p>
+  </div>
+  <!-- R15\u2013R18 (DEC-134, DEC-136 (1), K1755): once the claim succeeds, in the same section and only here, the
+       recommendation of a second administrator with its statement of dependence (R16), then three choices the founder
+       may leave unanswered: who holds the hosting account (R15), whether members are told what a court can reach
+       (R17), and how members reach the assistant (R18). Nothing is gated on any of them. -->
+  <div id="claim-after" hidden>
+    <div class="okbox"><p style="margin:0">Claimed. The one-time password no longer works, and you are signed in
+    as the administrator.</p></div>
+    <div class="notice" id="cl-second">
+      <p style="margin:0 0 8px"><b>We recommend adding a second administrator.</b> So your group is never stuck when
+      one person is away, and so no one person holds everything, add at least one more administrator under Members and
+      keys.</p>
+      <p style="margin:0">While your group has one administrator, it depends on that person, and on whoever holds the
+      hosting account.</p>
+    </div>
+    <p class="small">Three choices follow. Each can be left for later, and each can be changed at any time under
+    Members and keys.</p>
+    ${hostingBlock("cl")}
+    ${courtBlock("cl")}
+    ${aiBlock("cl")}
+    <div class="actions"><button id="claim-on">Go on to your group's Civicsmith</button></div>
+  </div>
+</section>
+
+<section id="s-login">
+  <h1>Sign in</h1>
+  <p>This group's Civicsmith is claimed. Members sign in with their own name and password.
+  Leave the name empty to sign in as the administrator.</p>
+  <label for="lwho">Your member name</label>
+  <input id="lwho" autocomplete="username" placeholder="leave empty for administrator">
+  <label for="lpw">Password</label>
+  <input id="lpw" type="password" autocomplete="current-password">
+  <button id="do-login">Sign in</button>
+  <p class="err" id="login-err"></p>
+  <p class="small">Lost the password? Sign in to Cloudflare, replace the
+  ADMIN_TOKEN value in this worker's settings, and reload this page to claim
+  it again.</p>
+</section>
+
+<section id="s-panel">
+  <h1>Your group's Civicsmith is healthy</h1>
+  <div class="okbox"><p style="margin:0" id="panel-lede">Signed in as
+  administrator.</p></div>
+  <div class="card">
+    <div class="kv"><span class="k">Software version</span><span class="v" id="p-version"></span></div>
+    <div class="kv"><span class="k">Claimed</span><span class="v" id="p-claimed"></span></div>
+    <!-- REC-41, 2026-08-05: the label read "Roles with passwords" and the value
+         has always been filled from WHO \u2014 the ONE role that is signed in, never
+         a roster. It was a label describing op=bootstrap's roles field over a
+         value that never came from it, and with that field now removed it could
+         never become true. Corrected to what the row actually shows rather than
+         deleted: a member seeing which identity this session holds is the point
+         of the row. -->
+    <div class="kv"><span class="k">Signed in as</span><span class="v" id="p-roles"></span></div>
+    <div class="kv"><span class="k">Session expires</span><span class="v" id="p-expires"></span></div>
+  </div>
+  ${languageBlock("ln")}
+  <div class="actions" style="margin:22px 0 6px">
+    <button id="go-browse">Browse the record</button>
+    <button id="go-new">Add something new</button>
+    <button id="go-inbox">Review the inbox</button>
+    <button id="go-members" hidden>Members and keys</button>
+  </div>
+  <!-- R13 (N10, K102): which jurisdiction profiles this copy reads its local facts from. Shown by name to every
+       signed-in member; the choice is offered only to a session that administers, among every held profile that
+       is not a test profile, with NOTHING PRESELECTED; the change is warned about before it is sent, and choosing
+       none is allowed and says what it means. -->
+  <h2>Where your group's Civicsmith reads local facts from</h2>
+  <div class="card" id="pf-active"><p class="small" style="margin:0">Reading the profiles&hellip;</p></div>
+  <div id="pf-choose" hidden>
+    <p class="small">Choose the jurisdiction profiles your group's Civicsmith reads its local facts from, in the order they
+    should be read. Nothing is chosen for you, and choosing none is allowed.</p>
+    <div class="card" id="pf-choices"></div>
+    <div class="actions"><button id="pf-review">Review this change</button></div>
+    <div class="notice" id="pf-warn" hidden>
+      <p id="pf-warn-text"></p>
+      <button id="pf-confirm">Make this change</button> <button id="pf-cancel">Keep things as they are</button>
+    </div>
+    <p class="err" id="pf-err"></p>
+    <!-- R19 (DEC-150 (1)): a place no held profile covers, named by an administrator and held only here. -->
+    <div class="card" id="pw">
+      <p class="small" style="margin:0 0 6px" id="pw-now"></p>
+      <label for="pw-name" style="margin-top:0">Name a place not yet listed</label>
+      <input id="pw-name">
+      <p class="hint">Where your group works, if no profile above covers it. It stays in your group's Civicsmith and is
+      sent nowhere.</p>
+      <div class="actions"><button id="pw-set">Name this place</button></div>
+      <p class="err" id="pw-err"></p>
+    </div>
+  </div>
+  <!-- R20 (DEC-150 (2)): when no active profile names an office, the offices section says why nothing is filled in and
+       offers an administrator adding the group's own offices, each the administrator's act, marked as the group's. -->
+  <div id="of" hidden>
+    <h2>Offices</h2>
+    <div class="card"><p class="small" style="margin:0" id="of-why"></p><div id="of-list"></div></div>
+    <div id="of-add" hidden>
+      <label for="of-label">Add an office: its name</label>
+      <input id="of-label" placeholder="City Clerk, County Auditor">
+      <label for="of-note">Who or what this office is, in your own words</label>
+      <input id="of-note">
+      <div class="actions"><button id="of-set">Add this office</button></div>
+      <p class="err" id="of-err"></p>
+    </div>
+  </div>
+  <!-- R24 (instance-setup R53; K1502, K1478 (i), K1755): whether the assistant is on, shown to every member; the switch
+       only to an administrator, saying what it will do before it is pressed. -->
+  <h2>The assistant</h2>
+  <div class="card" id="as-state"><p class="small" style="margin:0">Reading whether the assistant is on&hellip;</p></div>
+  <div id="as-choose" hidden>
+    <p class="small">The assistant is optional. A member reaches it through their own Claude subscription or API key,
+    or through the group's API key while an administrator has it on, and is told first that their questions and the
+    material read to answer them go to Anthropic. While it is off, no question is put to it and nothing runs.</p>
+    <p class="small" id="as-what"></p>
+    <div class="actions"><button id="as-toggle"></button></div>
+    <p class="err" id="as-err"></p>
+  </div>
+  <h2>What this page is, and is not</h2>
+  <p>This page opens the record for reading, takes in new material, and
+  publishes what the group has ratified. Signing in with a password lets you
+  write into the working record. Publishing something to the world needs more
+  than a password: it needs a signature from a key the group has registered,
+  which you make on the signing page and paste in. Deleting anything is not
+  possible from here at all.</p>
+  <p class="small">To update the software later, return to the installer and
+  choose the update option. Updates never touch your passwords or your record.</p>
+</section>
+
+<section id="s-browse">
+  <p class="crumb"><a id="crumb-panel">Your group's Civicsmith</a> &rsaquo; Record</p>
+  <h1>The record</h1>
+  <p class="small" id="browse-summary"></p>
+  <div id="browse-body"><p class="small">Loading the record&hellip;</p></div>
+</section>
+
+<section id="s-bundle">
+  <p class="crumb"><a id="crumb-panel2">Your group's Civicsmith</a> &rsaquo; <a id="crumb-browse">Record</a> &rsaquo; <span id="crumb-id" class="mono"></span></p>
+  <h1 id="b-title" style="font-size:clamp(22px,3.4vw,30px)"></h1>
+  <div class="card" id="b-facts"></div>
+  <div id="b-md" class="md"></div>
+  <h2>Files in this record</h2>
+  <div class="card" id="b-files"></div>
+  <h2>History</h2>
+  <p class="small">Every revision this record has ever had. The record is
+  append-only: nothing here can be edited or removed.</p>
+  <div class="card" id="b-history"></div>
+  <div id="b-ratify"></div>
+</section>
+
+<section id="s-new">
+  <p class="crumb"><a class="crumb-home">Your group's Civicsmith</a> &rsaquo; New</p>
+  <h1>Add something new</h1>
+  <p class="small">This adds a record to the working record. Nothing here is
+  public: the working record has never been published and cannot be read by
+  anyone without a password.</p>
+  <label for="n-type">What kind of thing is this?</label>
+  <!-- The Action option is BACK, 2026-08-05 (UI-19). It was removed on
+       2026-08-04 by UI-15 because REC-23 had stopped both intake surfaces
+       writing a placeholder counterparty, which is the honest gate, and the
+       consequence was that an action written from this form left the catalog
+       with exactly one error - C-2.10 naming the counterparty nobody authored.
+       Offering a kind whose every instance is refused is present-and-refused,
+       which Membership Architecture v2 section 5 forbids. The condition that
+       note set is now met: the fieldset below is REC-23's radio pair, a named
+       counterparty or NOT DETERMINED YET with a written basis, no third option
+       and no default, and mdFor takes the values from the member. An action
+       written here draws zero findings; one written with nothing authored still
+       draws exactly C-2.10, because this page will not invent an addressee to
+       get past its own gate. BOTH INTAKE SURFACES OR NEITHER: app.html carries
+       the same option and the same pair. -->
+  <select id="n-type">
+    <option value="information">Information</option>
+    <option value="inquiry">Question</option>
+    <option value="project">Project</option>
+    <option value="action">Action</option>
+  </select>
+  <label for="n-title" id="n-title-label">Title</label>
+  <input id="n-title" placeholder="what this is about">
+  <label for="n-body" id="n-body-label">What do you know?</label>
+  <textarea id="n-body" rows="14" placeholder="Write it plainly. Markdown headings and lists work."></textarea>
+  <div id="n-src">
+    <div class="card">
+      <p style="margin:0 0 10px"><b>Is there a document behind this?</b> Give its web address and
+      your group's Civicsmith will fetch it, hash it at the moment it arrives, keep the bytes, and record where
+      it came from. Leave both blank if you are writing down something you know rather than
+      capturing something published.</p>
+      <label for="n-loc">Web address of the document</label>
+      <input id="n-loc" placeholder="https://..." spellcheck="false">
+      <p class="hint">Must be an https address on a public site. Your group's Civicsmith will not fetch anything else.</p>
+      <label for="n-auth">Who issued it?</label>
+      <input id="n-auth" placeholder="City Auditor, Public Works Department, a named newspaper">
+      <p class="hint">Who issued the document and how faithfully it was captured are two separate
+      claims. Both get recorded, and neither stands in for the other.</p>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:14px">
+        <input type="checkbox" id="n-arch" style="width:auto;margin-top:4px">
+        <span>Also ask a public web archive to keep its own copy.
+        <span class="dim">This is stronger evidence, because an archive nobody in this group controls
+        can show what the page said. It is also public: anyone watching that archive can see that
+        someone asked for this page. Leave it off if being seen to look would matter.</span></span>
+      </label>
+    </div>
+  </div>
+  <!-- UI-19 / REC-23: WHO THIS IS ADDRESSED TO. An action reaches outside this
+       group and touches somebody who never agreed to be in it, so the record
+       either names them or says plainly that it does not know yet. TWO options
+       and no third, and NOTHING PRESELECTED - a default here would be this page
+       answering the question on the member's behalf, which is the placeholder
+       defect one field down and in a nicer coat. -->
+  <div id="n-act">
+    <div class="card">
+      <p style="margin:0 0 10px"><b>Who is this addressed to?</b> An action asks something of somebody
+      outside this group. The record either names them, or states that it does not know yet and says
+      what is known so far. There is no third answer and nothing is filled in for you.</p>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+        <input type="radio" name="n-cp" id="n-cp-named" value="named" style="width:auto;margin-top:4px">
+        <span>A named counterparty: an office</span></label>
+      <!-- R5 (N235; actions R9, jurisdictions R24): a named counterparty is an OFFICE, stated by its official role
+           and the body it belongs to, never a bare name and never a person. The level is optional and nothing is
+           preselected: its words are the product's vocabulary of an office's level, injected, never written here. -->
+      <div id="n-cp-name-box" hidden style="margin:6px 0 10px 26px">
+        <label for="n-cp-role">The office: its official role</label>
+        <input id="n-cp-role" placeholder="Clerk, Auditor, Director of Public Works">
+        <label for="n-cp-body">The body that office belongs to</label>
+        <input id="n-cp-body" placeholder="the council, the county, a named department">
+        <label for="n-cp-level">Its level of government (optional)</label>
+        <select id="n-cp-level"><option value="">Not stated</option>${COUNTERPARTY_LEVELS_OPTIONS}</select>
+        <p class="hint">An office, never a person: whoever holds the role is reached through the role.</p>
+      </div>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
+        <input type="radio" name="n-cp" id="n-cp-undet" value="undetermined" style="width:auto;margin-top:4px">
+        <span>Not determined yet, and here is why</span></label>
+      <div id="n-cp-basis-box" hidden style="margin:6px 0 10px 26px">
+        <label for="n-cp-basis">What is known so far, and what would settle it</label>
+        <textarea id="n-cp-basis" rows="4"></textarea>
+      </div>
+      <p class="hint">This action will not be sent while this is undetermined.</p>
+    </div>
+    <!-- D-483 / D-182 (BIO_Case_Making_v0_1.md section 2, RULED by BOB #21): THE RISK TIER, ASKED
+         RATHER THAN ASSUMED. This page wrote risk_tier: undetermined because it had no control to
+         ask with, which is honest and is also a missing affordance: a member who HAS assessed the
+         action had no way to say so here. The control is that way round and no further - NOTHING IS
+         PRESELECTED, because a preselected tier is this page assessing legal exposure on the
+         member's behalf, which is the overclaim D-182 exists to have removed. Leaving it alone still
+         writes undetermined.
+         THE CHOICES AND THEIR WORDS ARE NOT WRITTEN HERE. They are rendered from the injected
+         vocabulary below (REC-38's pattern, as the counterparty pair is not): a tier's MEANING is
+         the sentence, so a surface that wrote its own three labels would be deciding what 2 means.
+         The container is empty in the source on purpose - if the vocabulary ever stops arriving, a
+         member is offered nothing rather than offered a stale copy of it. -->
+    <div class="card" id="n-risk">
+      <p style="margin:0 0 10px"><b>How risky is it to file this?</b> This is the one field on an
+      action that carries legal exposure, so only a member can set it and nothing is filled in for
+      you. Choose one if you have assessed it, and leave it alone if you have not.</p>
+      <div id="n-risk-choices"></div>
+      <p class="hint" id="n-risk-unset"></p>
+    </div>
+  </div>
+  <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
+  <p class="err" id="n-err"></p>
+</section>
+
+<section id="s-edit">
+  <p class="crumb"><a class="crumb-home">Your group's Civicsmith</a> &rsaquo; <a id="e-back">Record</a> &rsaquo; Edit</p>
+  <h1>Revise this</h1>
+  <p class="small">Saving adds a revision. The version you are replacing stays in
+  the history forever; nothing is overwritten and nothing is lost.</p>
+  <div class="card"><div class="kv"><span class="k">Record</span><span class="v mono" id="e-id"></span></div></div>
+  <label for="e-body">The record</label>
+  <textarea id="e-body" rows="20" spellcheck="false"></textarea>
+  <div class="actions" style="margin-top:16px"><button id="e-save">Save a revision</button></div>
+  <p class="err" id="e-err"></p>
+</section>
+
+<section id="s-inbox">
+  <p class="crumb"><a class="crumb-home">Your group's Civicsmith</a> &rsaquo; Inbox</p>
+  <h1>The inbox</h1>
+  <p class="small">Material left by people outside the group. Nothing here is part
+  of the record, and nothing here has been examined. Treat every item as
+  unverified until the group has checked it.</p>
+  <div id="inbox-body"><p class="small">Loading&hellip;</p></div>
+</section>
+
+<section id="s-members">
+  <p class="crumb"><a class="crumb-home">Your group's Civicsmith</a> &rsaquo; Members</p>
+  <h1>Members and keys</h1>
+  <p class="small">Members sign in with a handle they choose and a password they
+  choose. You assign each one a cover, which is the label you tell them apart by
+  and is not a legal name. Only administrators see cover and handle together, and
+  publishing the pairing is a separate decision either of you can make. Registered
+  keys are what allow a member to publish; a password alone never can.</p>
+  <h2>Members</h2>
+  <div class="card" id="m-list"></div>
+  <label for="m-id">Add a member: the name they will sign in with</label>
+  <input id="m-id">
+  <p class="hint">Lowercase, no spaces. Anything you type is tidied to fit.</p>
+  <label for="m-name">A cover to tell them apart by</label>
+  <input id="m-name">
+  <p class="hint">This is a label for your own use, not a legal name, and it is not
+  a form to fill in truthfully. "The CPA from Tuesday" and "volunteer-7" are as
+  valid as anything else. Only administrators ever see it, and only they can see
+  which handle it belongs to. If your group is working under any real pressure,
+  choose covers that would tell an outsider nothing.</p>
+  <div class="actions" style="margin-top:12px"><button id="m-add">Invite them</button></div>
+  <p class="err" id="m-err"></p>
+  <div id="m-invite"></div>
+  <h2>Registered keys</h2>
+  <div class="card" id="k-list"></div>
+  <div class="card">
+    <p style="margin:0 0 10px"><b>Where a key comes from.</b> Each member makes their own
+    on the signing page of your group's Civicsmith. It runs entirely in their browser and sends nothing
+    anywhere. It gives them two things: a private key they keep, and a public key they
+    hand to you for this box. You cannot sign anything with what goes in this box, which
+    is why it is safe to email it or read it aloud.</p>
+    <p style="margin:0"><a class="filelink" id="k-open" href="/sign" target="_blank" rel="noopener">Open the signing page</a>
+    &middot; on it, press <b>Generate my keys</b>, then copy the <b>ratification</b> public key.</p>
+  </div>
+  <label for="k-key">Their ratification public key</label>
+  <textarea id="k-key" rows="3" spellcheck="false"></textarea>
+  <p class="hint">One line. It starts with <span class="mono">ssh-ed25519</span> and ends with
+  <span class="mono">bio-ratify</span>.</p>
+  <div id="k-read"></div>
+  <label for="k-who">Belongs to which member</label>
+  <input id="k-who">
+  <div class="actions" style="margin-top:12px"><button id="k-add">Register this key</button></div>
+  <p class="err" id="k-err"></p>
+  <!-- R15, R17, R18: the claim section's settings, each with its current record, offered to an administrator at any
+       time. -->
+  <h2>Your group's settings</h2>
+  ${hostingBlock("mk")}
+  ${courtBlock("mk")}
+  ${aiBlock("mk")}
+  <!-- R23 (DEC-152; K1837): who your group is, its focus and purpose (membership R109), with the assistant's help offered
+       only while the assistant is on. A draft fills the fields with its label; nothing is kept until the administrator
+       keeps it. -->
+  <h2>Who your group is</h2>
+  <div class="card" id="gd">
+    <p class="small" style="margin:0 0 6px" id="gd-now"></p>
+    <div id="gd-help" hidden>
+      <p style="margin:0 0 6px"><b>Ask the assistant to help write this.</b> Answer a few questions; the assistant drafts
+      your focus and purpose from your answers into the fields below. Nothing is kept until you keep it.</p>
+      <label for="gd-q1">What does your group work on?</label>
+      <textarea id="gd-q1" rows="2"></textarea>
+      <label for="gd-q2">Who does your group work with, or for?</label>
+      <textarea id="gd-q2" rows="2"></textarea>
+      <label for="gd-q3">Why does your group exist: what do you want to change?</label>
+      <textarea id="gd-q3" rows="2"></textarea>
+      <div class="actions"><button id="gd-ask">Ask the assistant to help write this</button></div>
+      <p class="err" id="gd-ask-err"></p>
+    </div>
+    <p class="small" id="gd-label" hidden></p>
+    <label for="gd-focus">Your group's focus</label>
+    <textarea id="gd-focus" rows="3"></textarea>
+    <label for="gd-purpose">Why your group exists</label>
+    <textarea id="gd-purpose" rows="5"></textarea>
+    <div class="actions"><button id="gd-keep">Keep these words</button></div>
+    <p class="err" id="gd-err"></p>
+  </div>
+  <h2>Your language</h2>
+  ${languageBlock("mln")}
+</section>
+
+<section id="s-enroll">
+  <h1>Join this group</h1>
+  <p id="en-lede">You were invited. Choose the name the record will show, and a password.</p>
+  <div class="card" id="en-who" hidden></div>
+  <!-- R2 (DEC-133 (6); membership R104): a join link asks first the name the person chooses for the group to know them
+       by, and sends it with the link in op=joinlinkinvite's body; the invitation answered opens the form below. -->
+  <div id="en-join" hidden>
+    <label for="jn-cover">The name you want this group to know you by</label>
+    <input id="jn-cover" spellcheck="false">
+    <p class="hint">It need not be your legal name. The group's administrators see it beside your handle.</p>
+    <div class="actions" style="margin-top:12px"><button id="jn-go">Ask to join</button></div>
+    <p class="err" id="jn-err"></p>
+  </div>
+  <div id="en-form">
+  <label for="en-handle">Your handle</label>
+  <input id="en-handle" spellcheck="false" placeholder="lowercase letters, digits and dashes">
+  <p class="hint">This is what the record shows: the author of anything you write, and the
+  name other members see. It is yours, not the label the administrator used to invite you.</p>
+  <label for="en-pw">Choose a password (12 characters or more)</label>
+  <input id="en-pw" type="password" autocomplete="new-password">
+  <label for="en-pw2">Type it again</label>
+  <input id="en-pw2" type="password" autocomplete="new-password">
+  <!-- R22 (DEC-127 (1)): the language for the screens, chosen before joining and starting from the device's setting;
+       sent once the new member is signed in. -->
+  <label for="en-lang">Language for the screens</label>
+  <input id="en-lang" spellcheck="false">
+  <p class="hint">Filled in from your device's setting. Each word is shown in this language where a translation is
+  held, and in English where none is. You can change it at any time.</p>
+  <div class="actions" style="margin-top:12px"><button id="en-go">Set it</button></div>
+  <p class="err" id="en-err"></p>
+  </div>
+</section>
+
+</main>
+<script>
+const $ = (s)=>document.querySelector(s);
+const show = (id)=>{document.querySelectorAll("section").forEach(x=>x.classList.remove("on"));$(id).classList.add("on");};
+const api = async (op, body)=>{
+  const r = await fetch("/api/?op="+op, body ? {method:"POST",body:JSON.stringify(body)} : undefined);
+  return r.json();
+};
+let boot0 = null;
+/* R2: an enrolment that cannot go on states why, and the form is hidden. */
+function enrolDead(words){
+  $("#en-lede").textContent = words;
+  document.querySelectorAll("#s-enroll label, #s-enroll input, #s-enroll .hint, #en-go, #en-form, #en-join, #jn-go")
+    .forEach((x) => { x.hidden = true; });
+  show("#s-enroll");
+}
+/* R2: the invitation an invitelook answered, shown as who the person was invited as, and the form opened. */
+function enrolShow(w){
+  $("#en-who").hidden = false;
+  $("#en-who").innerHTML = '<div class="kv"><span class="k">Invited as</span><span class="v">'
+    + escH(w.cover) + '</span></div>'
+    + '<div class="kv"><span class="k">Role</span><span class="v">' + escH(w.role) + '</span></div>'
+    + '<div class="kv"><span class="k">You can</span><span class="v">'
+    + escH((w.capabilities || []).join(", ") || "read") + '</span></div>';
+  $("#en-join").hidden = true;
+  $("#en-form").hidden = false;
+  /* R22: the language starts from the device's setting. */
+  if (!$("#en-lang").value) $("#en-lang").value = (navigator && navigator.language) || "";
+  show("#s-enroll");
+}
+const NOT_LIVE_INVITE = "This invitation link is not live. An invitation is used up the "
+  + "moment someone joins with it. Ask whoever invited you for a new one.";
+async function state(){
+  /* The wizard hands over with the one-time password in the URL fragment.
+     Fragments never reach any server. Strip it immediately either way. */
+  const join = location.hash.match(/join=([^&]+)/);
+  if (join) {
+    /* R2 (DEC-133 (6)): a join link rides the fragment, is stripped at once, and leaves the browser only in
+       op=joinlinkinvite's body, with the name the person chooses. */
+    JOIN = decodeURIComponent(join[1]);
+    history.replaceState({}, "", location.pathname);
+    $("#en-lede").textContent = "You followed this group's join link. First, say what the group should call you.";
+    $("#en-join").hidden = false;
+    $("#en-form").hidden = true;
+    show("#s-enroll"); return;
+  }
+  const inv = location.hash.match(/invite=([^&]+)/);
+  if (inv) {
+    /* An invited member arrives by link. The code rides the fragment, which
+       never reaches any server, and is stripped immediately either way. The
+       screen this reveals existed since 0.4.0 with nothing able to show it
+       (DEBT D-14). */
+    /* The token IS the credential and carries nothing else. The previous link
+       was memberId:code, so anyone who saw a leaked or archived one learned who
+       had been invited. */
+    INVITE = decodeURIComponent(inv[1]);
+    history.replaceState({}, "", location.pathname);
+    const look = await api("invitelook", { invite: INVITE });
+    if (!look.result || !look.result.ok) { enrolDead(NOT_LIVE_INVITE); return; }
+    enrolShow(look.result); return;
+  }
+  const m = location.hash.match(/boot=([^&]+)/);
+  if (m) boot0 = decodeURIComponent(m[1]);
+  if (location.hash) history.replaceState({}, "", location.pathname);
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("bio-session") || "null");
+    if (saved && saved.t && (!saved.e || saved.e > Date.now())) {
+      SESSION = saved.t;
+      WHO = saved.w || "admin";
+      const probe = await fetch("/api/?op=stats&token="+saved.t);
+      if (probe.ok) {
+        const b2 = await api("bootstrap");
+        window.__ver = b2.version || "";
+        panel({ token: saved.t, expires: saved.e }, saved.c || b2.consumedAt);
+        return;
+      }
+      SESSION = null; sessionStorage.removeItem("bio-session");
+    }
+  } catch {}
+  let b;
+  try { b = await api("bootstrap"); }
+  catch(e){ $("#s-loading h1").textContent = "This group's Civicsmith is not answering";
+    $("#s-loading .small").textContent = "The page loaded but the record behind it did not respond. Wait a moment and reload."; return; }
+  window.__ver = b.version || "";
+  if (b.claimed) { show("#s-login"); return; }
+  if (!b.bootstrapConfigured) { show("#s-unarmed"); return; }
+  if (b.rearmed) $("#rearm-note").hidden = false;
+  if (boot0) $("#boot").value = boot0;
+  show("#s-claim");
+}
+/* R2: the join link's one call, before sign-in: the link and the chosen name in the body, and the invitation answered
+   opens enrolment as #invite= does. A refusal says the link is not live, or the group's daily limit is reached. */
+$("#jn-go").addEventListener("click", async ()=>{
+  const e = $("#jn-err"); e.textContent = "";
+  const cover = $("#jn-cover").value.trim();
+  if (!cover) { e.textContent = "Say what the group should call you. It need not be your legal name."; return; }
+  $("#jn-go").disabled = true;
+  try {
+    const r = await api("joinlinkinvite", { link: JOIN, cover });
+    const res = r && r.result;
+    if (!res || res.ok === false || !res.invite) {
+      const why = (res && res.reason) || (r && r.reason);
+      if (why === "JOIN_LINK_DAILY_CAP") { enrolDead("This group has reached its daily limit for joining by link. "
+        + "Try the link again tomorrow, or ask someone in the group for an invitation."); return; }
+      if (why === "NO_COVER") { e.textContent = "Say what the group should call you. It need not be your legal name."; return; }
+      enrolDead("This join link is not live. It may have been switched off or replaced. "
+        + "Ask someone in the group for the current link or an invitation.");
+      return; }
+    INVITE = res.invite; JOIN = null;
+    const look = await api("invitelook", { invite: INVITE });
+    if (!look.result || !look.result.ok) { enrolDead(NOT_LIVE_INVITE); return; }
+    $("#en-lede").textContent = "You can join. Choose the name the record will show, and a password.";
+    enrolShow(look.result);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#jn-go").disabled = false; }
+});
+$("#do-claim").addEventListener("click", async ()=>{
+  const e = $("#claim-err"); e.textContent = "";
+  const bootstrapToken = $("#boot").value.trim();
+  const p1 = $("#pw1").value, p2 = $("#pw2").value;
+  if (!bootstrapToken) { e.textContent = "The one-time password is empty."; return; }
+  if (p1.length < 12) { e.textContent = "The password needs at least 12 characters."; return; }
+  if (p1 !== p2) { e.textContent = "The two passwords do not match."; return; }
+  $("#do-claim").disabled = true;
+  try {
+    const r = await api("claim", { bootstrapToken, password: p1 });
+    if (r.error) { e.textContent = r.error + "."; return; }
+    if (r.result && r.result.ok === false) {
+      e.textContent = r.result.reason === "ALREADY_CLAIMED"
+        ? "This group's Civicsmith was already claimed. If that was not you, replace ADMIN_TOKEN in the Cloudflare dashboard and reload."
+        : "Refused: " + r.result.reason;
+      return;
+    }
+    const l = await api("login", { role: "admin", password: p1 });
+    if (!l.result || !l.result.token) { panel(l.result, r.result.consumedAt); return; }
+    /* R15\u2013R18: signed in, and kept in the claim's section for its three choices and the one recommendation. */
+    WHO = "admin";
+    signIn(l.result, r.result.consumedAt);
+    CLAIMED = { login: l.result, at: r.result.consumedAt };
+    $("#claim-form").hidden = true;
+    $("#claim-after").hidden = false;
+    showSettings("cl");
+  } catch(err){ e.textContent = "The claim did not go through: " + err.message; }
+  finally { $("#do-claim").disabled = false; }
+});
+$("#do-login").addEventListener("click", async ()=>{
+  const e = $("#login-err"); e.textContent = "";
+  $("#do-login").disabled = true;
+  try {
+    const who = $("#lwho").value.trim();
+    const role = who ? "member:" + who : "admin";
+    const l = await api("login", { role, password: $("#lpw").value });
+    /* REC-41, 2026-08-05. THIS BRANCH WAS THE DISCLOSURE, not a courtesy.
+       It read the refusal's reason code and answered NO_SUCH_ROLE with "No
+       member by that name has set a password on this copy yet." \u2014 which told
+       any anonymous visitor, on the instance's own front door and in plainer
+       words than the plane itself used, whether a guessed name holds a
+       credential here. op=login's two codes are now one (SIGN_IN_REFUSED) and
+       there is nothing left to branch on; this renders the plane's own
+       sentence, which names both possibilities and says the record does not
+       report which. DEC-8: a surface renders what it received and never
+       composes a refusal of its own. The fallback is kept for a refusal that
+       somehow arrives without a detail, and it is deliberately the LESS
+       specific of the two old strings. */
+    if (!l.result || !l.result.ok) {
+      e.textContent = (l.result && l.result.detail)
+        || "That name and password were not accepted."; return; }
+    WHO = who || "admin";
+    const b = await api("bootstrap");
+    panel(l.result, b.consumedAt);
+  } catch(err){ e.textContent = "Sign-in did not go through: " + err.message; }
+  finally { $("#do-login").disabled = false; }
+});
+let SESSION = null;
+let WHO = "admin";
+let JOIN = null;
+let CLAIMED = null;
+/* Membership Architecture v2 section 5: a capability a member does not hold is
+   ABSENT from their interface, not present and refused. The plane refuses it
+   too, because a hidden control is a courtesy and not a boundary, but the
+   absence is the part section 5 actually asks for.
+
+   Read from op=whoami rather than kept as a second copy of the rules here. A
+   copy would drift, and the one that drifted would be this one. Starts EMPTY so
+   a failed or in-flight whoami hides everything rather than showing controls
+   that will refuse: fail closed. */
+let CAPS = new Set();
+const can = (c)=>CAPS.has(c);
+/* R4: whether this session ADMINISTERS, as op=whoami reports it (the founder and every enrolled administrator),
+   never inferred from the name signed in with. Starts false, so the members section is absent until whoami says. */
+let ADMIN = false;
+let INVITE = null;
+/* Everything section 5 hides, in ONE place, so a control cannot be added later
+   in a screen that forgot to ask. Called before whoami answers as well as after,
+   so the window between showing the panel and hearing back shows nothing the
+   member may not use. */
+function applyCaps(){
+  $("#go-new").hidden = !can("contribute");
+  $("#go-members").hidden = !ADMIN;
+  const t = $("#n-type");
+  if (t) for (const o of t.options) if (o.value === "project") o.hidden = !can("create_projects");
+}
+
+/* The session kept for this tab, without showing the panel (the claim's section shows its choices first, R15). */
+function signIn(login, claimedAt){
+  if (login && login.token) {
+    SESSION = login.token;
+    try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
+  }
+}
+function panel(login, claimedAt){
+  signIn(login, claimedAt);
+  ADMIN = false;
+  applyCaps();
+  rec("whoami").then((r)=>{
+    CAPS = new Set(r && r.result && Array.isArray(r.result.capabilities) ? r.result.capabilities : []);
+    ADMIN = !!(r && r.result && r.result.administer === true);
+    applyCaps();
+    openProfiles();
+    openAssistant();
+    showLanguage("ln");
+  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); openAssistant(); showLanguage("ln"); });
+  $("#panel-lede").textContent = WHO === "admin"
+    ? "Signed in as administrator." : "Signed in as " + WHO + ".";
+  $("#p-version").textContent = window.__ver || "unknown";
+  $("#p-claimed").textContent = claimedAt ? new Date(claimedAt).toLocaleString() : "just now";
+  $("#p-roles").textContent = WHO;
+  $("#p-expires").textContent = login && login.expires ? new Date(login.expires).toLocaleString() : "";
+  show("#s-panel");
+}
+
+/* ---- the record, read-only through the signed-in session ---- */
+const rec = async (op, params={})=>{
+  const q = new URLSearchParams({ op, token: SESSION, ...params });
+  const r = await fetch("/api/?"+q.toString());
+  if (r.status === 401) { SESSION = null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
+  return r.json();
+};
+const escH = (x)=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const TYPES = [["information","Information"],["inquiry","Questions"],["project","Projects"],["action","Actions"]];
+const fmtWhen = (iso)=>{ const d=new Date(iso); return isNaN(d)?escH(iso):d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
+const chip = (st)=>'<span class="chip '+escH(st)+'">'+escH(st)+"</span>";
+
+async function openBrowse(){
+  show("#s-browse");
+  let list;
+  try { list = (await rec("list")).result || []; } catch { return; }
+  const by = {};
+  for (const b of list) (by[b.object_type] ||= []).push(b);
+  $("#browse-summary").textContent = list.length + " records. Everything below is read-only; the record can only be changed through the gated tools.";
+  let html = "";
+  for (const [t, label] of TYPES){
+    const rows = by[t] || []; delete by[t];
+    if (!rows.length) continue;
+    html += "<h2>"+label+" ("+rows.length+")</h2><table class=\\"rec\\"><tr><th>Record</th><th>State</th><th>Updated</th></tr>";
+    for (const b of rows)
+      html += '<tr class="row" data-id="'+escH(b.bundle_id)+'"><td><span class="bid">'+escH(b.bundle_id)+'</span><br><span class="dim">'+escH(b.title||"")+"</span></td><td>"+chip(b.current_state)+"</td><td class=\\"dim\\">"+fmtWhen(b.last_updated)+"</td></tr>";
+    html += "</table>";
+  }
+  for (const t of Object.keys(by)){
+    html += "<h2>"+escH(t)+" ("+by[t].length+")</h2><table class=\\"rec\\">";
+    for (const b of by[t]) html += '<tr class="row" data-id="'+escH(b.bundle_id)+'"><td><span class="bid">'+escH(b.bundle_id)+"</span></td><td>"+chip(b.current_state)+"</td><td class=\\"dim\\">"+fmtWhen(b.last_updated)+"</td></tr>";
+    html += "</table>";
+  }
+  $("#browse-body").innerHTML = html || "<p>The record is empty.</p>";
+  document.querySelectorAll("#browse-body tr.row").forEach(r=>r.addEventListener("click",()=>openBundle(r.dataset.id)));
+}
+
+/* Frontmatter split and a small, honest markdown rendering: headings, bold,
+   lists, code spans, paragraphs. Anything else stays visible as written. */
+function splitFm(text){
+  const m = /^---\\n([\\s\\S]*?)\\n---\\n?/.exec(text);
+  if (!m) return { fm:{}, body:text };
+  const fm = {};
+  for (const line of m[1].split("\\n")){
+    const kv = /^([A-Za-z_][A-Za-z0-9_]*):\\s*(.*)$/.exec(line);
+    if (kv) fm[kv[1]] = kv[2].replace(/^"|"$/g,"");
+  }
+  return { fm, body:text.slice(m[0].length) };
+}
+function mdRender(md){
+  const lines = md.split("\\n");
+  let out = "", inList = false, para = [];
+  const flush = ()=>{ if (para.length){ out += "<p>"+inline(para.join(" "))+"</p>"; para=[]; } };
+  const endList = ()=>{ if (inList){ out += "</ul>"; inList=false; } };
+  const inline = (t)=>escH(t).replace(/\\*\\*([^*]+)\\*\\*/g,"<b>$1</b>").replace(/\`([^\`]+)\`/g,"<code>$1</code>");
+  for (const raw of lines){
+    const l = raw.replace(/\\s+$/,"");
+    if (/^###\\s+/.test(l)){ flush(); endList(); out += "<h3>"+inline(l.replace(/^###\\s+/,""))+"</h3>"; }
+    else if (/^##\\s+/.test(l)){ flush(); endList(); out += "<h2>"+inline(l.replace(/^##\\s+/,""))+"</h2>"; }
+    else if (/^[-*]\\s+/.test(l)){ flush(); if(!inList){ out += "<ul>"; inList=true; } out += "<li>"+inline(l.replace(/^[-*]\\s+/,""))+"</li>"; }
+    else if (l === ""){ flush(); endList(); }
+    else para.push(l);
+  }
+  flush(); endList();
+  return out;
+}
+
+let CURRENT = { id:null, img:null };
+async function openBundle(id){
+  show("#s-bundle");
+  $("#crumb-id").textContent = id;
+  $("#b-title").textContent = id;
+  $("#b-facts").innerHTML = ""; $("#b-md").innerHTML = "<p class=\\"small\\">Loading&hellip;</p>";
+  $("#b-files").innerHTML = ""; $("#b-history").innerHTML = "";
+  let img;
+  try { img = (await rec("image", { id })).result; } catch { return; }
+  if (!img){ $("#b-md").innerHTML = "<p>This record was not found.</p>"; return; }
+  CURRENT = { id, img };
+  renderBundle(id, img, null);
+}
+/* R6 (D-719; State Rules section 6): the history reads in WRITE order, never the caller-chosen snap key, whose
+   lexical order is not a clock. The image carries each entry's write-order rank as seq; when EVERY entry carries a
+   distinct integer one the list follows it, else it is listed by key and the page says which order it shows. */
+function historyOrder(raw){
+  const list = Array.isArray(raw) ? raw.filter(e=>e && typeof e === "object") : [];
+  const seqs = list.map(e=>e.seq);
+  const write = list.length > 0 && seqs.every(v=>Number.isSafeInteger(v)) && new Set(seqs).size === list.length;
+  return write ? { order:"write", entries: list.slice().sort((a,b)=>a.seq-b.seq) }
+    : { order:"key", entries: list.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key))) };
+}
+function renderBundle(id, img, revisionKey){
+  const liveText = typeof img["bundle.md"] === "string" ? img["bundle.md"] : "";
+  /* Canonical snapshot path: the key lives in the filename, not a directory. */
+  const revPath = revisionKey ? "_history/bundle_"+revisionKey+".md" : null;
+  const revText = revPath && typeof img[revPath] === "string" ? img[revPath] : null;
+  const { fm, body } = splitFm(revText ?? liveText);
+  $("#b-title").textContent = fm.title || id;
+  const facts = [["State", fm.current_state ? chip(fm.current_state) : ""],
+    ["Last updated", fm.last_updated ? fmtWhen(fm.last_updated) : ""],
+    ["Created", fm.created ? fmtWhen(fm.created) : ""],
+    ["Criticality", escH(fm.criticality||"")]]
+    .filter(([,v])=>v);
+  $("#b-facts").innerHTML = facts.map(([k,v])=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+"</span></div>").join("");
+  $("#b-md").innerHTML =
+    (revText !== null ? '<div class="revnote">Viewing a historical revision ('+escH(revisionKey)+'). <button class="histbtn" id="back-live">Back to the live record</button></div>' : "")
+    + mdRender(body);
+  const bl = $("#back-live"); if (bl) bl.addEventListener("click",()=>renderBundle(id, img, null));
+  ratifyPanel(id, liveText, revText !== null);
+
+  const files = Object.keys(img).filter(k=>!k.startsWith("_history/")).sort();
+  $("#b-files").innerHTML = files.map(k=>{
+    const v = img[k];
+    if (typeof v === "string")
+      return '<div class="kv"><span class="k">'+escH(k)+'</span><span class="v dim">'+v.length.toLocaleString()+" chars</span></div>";
+    const dl = k.split("/").pop();
+    return '<div class="kv"><span class="k">'+escH(k)+'</span><span class="v"><a class="filelink" href="/api/?op=capture&sha256='+escH(v.blobSha||v.sha256)+"&token="+encodeURIComponent(SESSION)+"&dl="+encodeURIComponent(dl)+'">download</a> <span class="dim mono">'+escH((v.sha256||v.blobSha||"").slice(0,12))+"&hellip;</span></span></div>";
+  }).join("") || "<p class=\\"small\\" style=\\"margin:0\\">No files.</p>";
+
+  let entries = [];
+  try { entries = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; } catch {}
+  const hist = historyOrder(entries);
+  entries = hist.entries;
+  $("#b-history").innerHTML = (entries.length ? '<p class="small" style="margin-top:0">'
+    + (hist.order === "write" ? "Listed in the order they were written, oldest first."
+      : "Listed by snapshot key: your group's Civicsmith does not carry the order they were written, and key order is not necessarily the order they were written.")
+    + "</p>" : "") + entries.map(e=>{
+    const viewable = typeof img["_history/bundle_"+e.key+".md"] === "string";
+    return '<div class="kv"><span class="k mono">'+escH(e.key)+'</span><span class="v">'
+      + escH(e.kind||"") + " by " + escH(e.author||"unknown") + ' <span class="dim">' + fmtWhen(e.created) + "</span> "
+      + (viewable ? '<button class="histbtn" data-rev="'+escH(e.key)+'">view</button>' : "")
+      + "</span></div>";
+  }).join("") || "<p class=\\"small\\" style=\\"margin:0\\">Created in a single revision; nothing has been superseded.</p>";
+  document.querySelectorAll("#b-history .histbtn[data-rev]").forEach(x=>x.addEventListener("click",()=>renderBundle(id, img, x.dataset.rev)));
+  document.querySelector("main").classList.add("wide");
+}
+$("#go-browse").addEventListener("click", openBrowse);
+$("#crumb-panel").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
+$("#crumb-panel2").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
+$("#crumb-browse").addEventListener("click", openBrowse);
+
+/* ---- publishing: the one action a password alone cannot take ----
+   Ratifying copies this exact revision into the published record, where
+   anyone can check a hash against it. It needs a signature made with a
+   registered key, so the authority to publish is held by people, not by
+   whoever is holding a session. */
+async function ratifyPanel(id, liveText, historical){
+  const box = $("#b-ratify");
+  if (historical) { box.innerHTML = ""; return; }
+  /* No publish capability, no publish surface. Before this the panel was drawn
+     for everyone and the member was stopped at the end of it, by the absence of
+     a signing key rather than by the capability, which is the key doing the
+     capability's job. */
+  if (!can("publish")) { box.innerHTML = ""; return; }
+  const sha = await sha256Text(liveText);
+  box.innerHTML = "<h2>Publish this</h2>"
+    + '<p class="small">Publishing puts this revision where the public can verify it by hash. '
+    + "It cannot be undone: a published hash answers forever, even after later revisions.</p>"
+    + '<div class="card"><div class="kv"><span class="k">Record</span><span class="v mono">'+escH(id)+"</span></div>"
+    + '<div class="kv"><span class="k">This revision</span><span class="v mono">'+escH(sha)+"</span></div></div>"
+    + '<p class="small">Open the <a class="filelink" href="/sign" target="_blank" rel="noopener">signing page</a>, '
+    + "unlock your key, choose Sign a ratification, paste in those two values, and paste what it "
+    + "hands back into the box below.</p>"
+    + '<textarea id="r-sig" rows="6" spellcheck="false" placeholder="-----BEGIN SSH SIGNATURE-----"></textarea>'
+    + '<div class="actions" style="margin-top:12px"><button id="r-go">Publish it</button>'
+    + ' <button id="r-edit">Revise instead</button></div><p class="err" id="r-err"></p>';
+  $("#r-edit").addEventListener("click", ()=>openEdit(id, liveText));
+  $("#r-go").addEventListener("click", async ()=>{
+    const e = $("#r-err"); e.textContent = "";
+    const sig = $("#r-sig").value.trim();
+    if (!sig) { e.textContent = "Paste the signature from the signing page."; return; }
+    $("#r-go").disabled = true;
+    try {
+      const r = await post("ratify", { bundleId: id, expectedSha: sha, sig });
+      if (r.ok) {
+        box.innerHTML = '<div class="okbox"><p style="margin:0">Published, attested by '
+          + escH(r.attestor||"a registered key") + ". " + escH(r.published.shas)
+          + " hashes are now publicly verifiable.</p></div>";
+        return; }
+      e.textContent = ratifyWhy(r);
+    } catch(err){ e.textContent = "That did not go through: " + err.message; }
+    finally { const g=$("#r-go"); if (g) g.disabled = false; }
+  });
+}
+function ratifyWhy(r){
+  const why = r.reason || r.error || "unknown";
+  if (why === "RATIFY_STALE") return "Someone saved a newer revision while you were signing. Reload this record and sign the new hash.";
+  if (why === "NO_SIGNERS") return "No keys are registered in your group's Civicsmith yet, so nothing can be published. An administrator registers keys under Members and keys.";
+  if (why === "SIG_UNKNOWN_KEY") return "That signature was made with a key this group has not registered, or one that has been revoked.";
+  if (why === "SIG_BAD_SIGNATURE") return "That signature does not match this record and hash. Sign the exact values shown above.";
+  if (why === "SIG_NAMESPACE") return "That signature was made for something other than ratification. Use the Sign a ratification tab.";
+  if (why === "MALFORMED") return "That does not look like a signature. Copy the whole block, including the BEGIN and END lines.";
+  if (why === "GATE_REFUSED") return "The checks refused this record: "
+    + (r.findings||[]).map(f=>f.check + (f.where ? " (" + f.where + ")" : "")).join(", ")
+    + ". Publishing is blocked until those are fixed.";
+  return "Refused: " + why;
+}
+
+/* ---- intake: writing into the working record from this page ----
+   Every write below goes through the same gated API a machine caller uses.
+   Authorship is stamped by the server from the session, so nothing typed
+   here can claim to be someone else. */
+const NL = String.fromCharCode(10);
+const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
+/* From the record grammar's tables (record-grammar R32, R35), not from memory. */
+const FIRST_STATE = ${FIRST_STATE_JSON};
+const HEADINGS = ${HEADINGS_JSON};
+/* information@1 for typed intake, deliberately. The @2 contract makes the
+   intake provenance register mandatory (C-18.1), and a register describes
+   captured DOCUMENTS: locator, authority, capture method, grade, hash. A member
+   typing what they know has no document, so @2 would demand a register with
+   nothing honest to put in it. Material arriving WITH a document is @2 and
+   carries custody, which is the capture path (PLAN.md S-5), not this one. */
+/* information@1 for a member writing down what they know, because the @2
+   contract makes the intake provenance register mandatory and a register
+   describes captured DOCUMENTS. The moment a document IS captured the bundle is
+   @2 and carries the register, which is the honest distinction rather than a
+   version preference. */
+const SCHEMA_OF = { information:"information@1", inquiry:"inquiry@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
+const schemaFor = (type, hasDoc)=> type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
+const post = async (op, body)=>{
+  const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
+    { method:"POST", body: JSON.stringify(body) });
+  if (r.status === 401) { SESSION=null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
+  return r.json();
+};
+const sha256Text = async (text)=>{
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+};
+/* REC-178: a file's bytes is the length of its UTF-8 encoding, never text.length (UTF-16 units). The plane
+   computes it over what it holds and stores that; this sends the same figure. */
+const utf8Len = (text)=> new TextEncoder().encode(text).length;
+const stamp = ()=>{
+  const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+  let r = ""; const h = "0123456789abcdef";
+  const bytes = crypto.getRandomValues(new Uint8Array(4));
+  for (const x of bytes) r += h[x>>4] + h[x&15];
+  return d + "_" + r;
+};
+/* A conformant bundle.md. Fifteen core fields, because C-2.2 fires once per
+   missing one and the previous version wrote four; the canonical heading set for
+   the type, because C-3.1 refuses both a missing heading and an unexpected one;
+   and the per-type extension fields each type's own check requires. The first
+   prose section carries what the member wrote, and the rest are present and
+   empty, which is what the catalog asks for. */
+const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
+  /* REC-141: a PROJECT's id is minted by the plane, which writes it into these bytes and refuses
+     bytes already carrying one, so a project's document is sent with no id line (id is null). */
+  /* D-436: and NO group line, for the same kind of reason. The producing group is the instance's
+     one recorded value, and the plane writes it into every document it creates; this page wrote a
+     literal slug here, true of one instance and false of every other. On a copy that records no
+     group yet, the plane refuses the save by name (C-64.1) rather than supply one. */
+  const fm = ["---",...(id === null ? [] : ["id: "+id]),"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
+    "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
+    "created: "+now,"last_updated: "+now,
+    "produced_by:","  mode: assisted","  capability_tier: session",
+    "references: []","state_history: []",
+    "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
+    "  source: null","visuals: []"];
+  if (type === "information") fm.push(
+    "criticality: supporting","source_status: unchanged",
+    /* D-62: the captured document's own hash, in the frontmatter, because C-2.7
+       makes a well-formed content_hash an ENTRY REQUIREMENT for verified and the
+       release flow reads the frontmatter and nothing else. Found live: this
+       mdFor omitted it even when a document was attached, so the first bundle a
+       member wrote with a capture could never have been released, and its bytes
+       were unfindable through the search layer's hash: facet, which reads this
+       field (defeating the D-60 duplicate detection). Absent for typed intake,
+       where there is no document and inventing one would be a lie. */
+    ...(src && src.content_hash ? ["content_hash: sha256:"+src.content_hash] : []),
+    "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
+    "monitoring:","  enabled: false","  frequency: none");
+  if (type === "inquiry" || type === "focus" || type === "problem") fm.push(
+    "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
+    "    description: A member set no specific trigger at creation; replace this with a real one.");
+  if (type === "project") fm.push("objective: "+JSON.stringify(title));
+  /* D-130 / REC-23 / UI-19, 2026-08-05. The counterparty placeholder used to be
+     pushed here too - D-130 named only civicos-ui/app.html, this was the SECOND
+     emission site - and REC-23 took it out, leaving the field ABSENT and the
+     gate naming the gap. UI-19 gives
+     this page the radio pair, so the value arrives FROM THE MEMBER through
+     act.counterparty and nothing here invents one.
+
+     CALLED WITHOUT act THIS ARM STILL WRITES NO COUNTERPARTY, permanently and
+     on purpose: a bundle written by a caller that collected no answer draws
+     exactly C-2.10, which is the honest one error, and the R5 test in
+     test/m/setup-page/page.test.mjs asserts BOTH directions so a future
+     default cannot pass by inventing one.
+
+     action_kind is "other" HERE ONLY, and it is not a chooser this page hides:
+     "other" is the catalog's own token for an ask that is not one of the named
+     kinds, which is exactly what a page offering no kind control has been told.
+     The app's intake reads the published action_kind vocabulary and lets the
+     member say; this page is the installer's minimal intake and does not.
+     risk_tier is WRITTEN undetermined (D-182, BOB #21): this page asks no
+     tier, so no member stated one, and the old default of 1 told a member the
+     action was safe to file freely when nobody had assessed it. Only a
+     member's authored act sets 1, 2 or 3; the words are the plane's, published
+     as vocabularies.risk_tiers.
+     (No backticks in this comment: it lives inside the PAGE_HTML template
+     literal, and a stray pair here parses fine under node --check and then
+     fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
+  if (type === "action") {
+    /* D-483: the tier the member chose, or undetermined when they chose none - and undetermined is
+       WRITTEN either way, never omitted, because an absent key and a stated undetermined must read
+       the same and only one of them says so in the bytes. riskTierState is the plane's own reader
+       (injected above), so what is written here is what the plane will read back. */
+    const tier = riskTierState(act && act.risk_tier !== null && act.risk_tier !== undefined
+      ? act.risk_tier : undefined);
+    fm.push("action_kind: other","risk_tier: " + (tier === null ? "undetermined" : tier));
+    const cp = act && act.counterparty;
+    /* The state the member chose is written even when the field beside it is
+       empty: a member who answered "not determined yet" and wrote nothing has
+       left a requirement unmet, and C-2.10 says so precisely. Dropping the
+       block would hand them the vaguer refusal for a question they answered. */
+    /* R5 (N235): a named counterparty is written as actions R9 requires, an office by its role and body and,
+       when the member stated one, its level; never a bare name, which R9 refuses on creation. */
+    if (cp && cp.state === "named")
+      fm.push("counterparty:","  state: named",
+              ...(String(cp.role || "").trim() ? ["  role: " + JSON.stringify(String(cp.role).trim())] : []),
+              ...(String(cp.body || "").trim() ? ["  body: " + JSON.stringify(String(cp.body).trim())] : []),
+              ...(String(cp.level || "").trim() ? ["  level: " + String(cp.level).trim()] : []));
+    else if (cp && cp.state === "undetermined")
+      fm.push("counterparty:","  state: undetermined",
+              ...(String(cp.basis || "").trim() ? ["  basis: " + JSON.stringify(String(cp.basis).trim())] : []));
+  }
+  fm.push("---","");
+  const heads = HEADINGS[type] || ["## Summary"];
+  const out = fm.slice();
+  heads.forEach((h,i)=>{ out.push(h,""); if (i===0) out.push(body,""); });
+  return out.join(NL);
+};
+
+/* The bundle's files, with the captured document beside the record and the
+   provenance register naming it. C-18.1 wants the register to point at a file
+   that exists in the bundle, so the document is registered as a blob reference
+   and the register entry names the same path. */
+async function docFiles(text, doc, textSha){
+  const files = [{ path:"bundle.md", text, bytes:utf8Len(text), sha256:textSha }];
+  if (!doc) return files;
+  const prov = JSON.stringify({ documents: [doc] }, null, 1);
+  files.push({ path:"data/provenance.json", text: prov, bytes: utf8Len(prov),
+               sha256: await sha256Text(prov) });
+  if (Array.isArray(doc.parts) && doc.parts.length) {
+    /* A parted document has no single file: each part is registered separately
+       and the catalog verifies the whole by streaming them. Registering a
+       phantom whole would name bytes the store does not hold. */
+    for (const p of doc.parts)
+      files.push({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes });
+  } else {
+    files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
+                 bytes: doc.capture.bytes });
+  }
+  /* The timestamp token is evidence too, so it lives in the bundle rather than
+     only in the store. A token nobody can find is a token nobody will check. */
+  for (const a of (doc.attestations || []))
+    files.push({ path: a.file, blobSha: a.sha256, sha256: a.sha256, bytes: a.bytes });
+  return files;
+}
+function acquireWhy(a){
+  const why = a.reason || a.error || "unknown";
+  if (why === "BAD_LOCATOR") return "That address cannot be fetched. It must be an https address on a public site: not a plain http address, not an address on this machine, and not one carrying a username or password.";
+  /* D-110: the mapping for a missing-authority refusal was deleted here. D-97
+     (0.47.0) removed that refusal: a caller who cannot name the issuing party
+     now leaves the capture honestly undetermined rather than being forced to
+     invent an authority to get past the door. Explaining a refusal the plane no
+     longer makes is a copy of an overturned rule in the surface a member reads,
+     so no reason string for it survives \u2014 not even in this comment. */
+  if (why === "SOURCE_REFUSED") return "The site answered with an error (" + a.status + "). The address may be wrong, or the document may no longer be published there.";
+  if (why === "FETCH_FAILED") return "The site could not be reached just now. Nothing was written.";
+  if (why === "EMPTY") return "The site returned an empty document, so there was nothing to keep.";
+  if (why === "TOO_LARGE") return "That document is too large to capture this way (" + a.bytes + " bytes). Large documents are captured in parts.";
+  return "The document could not be captured: " + why;
+}
+
+/* ---- create ---- */
+/* C-16: a Question has ONE authored field, the question itself. No Title
+   control and no second gating field: the title is DERIVED from the question
+   (the rule is record-grammar's, R30, and is embedded verbatim below, so
+   this page and the store's projection cannot drift), and a gate that
+   pressures a member into writing what they do not know is a bug in the
+   gate. */
+const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
+/* D-483: the tier vocabulary and the plane's own reader of it, injected verbatim (the deriveInquiryTitle
+   pattern one line up, for its reason: the page and the plane cannot drift if they are the same code).
+   THE SETTABLE TIERS ARE DERIVED, NOT LISTED. A member may author exactly the values riskTierState reads
+   back as themselves; undetermined is not among them, because it is what the record says when NO member
+   has stated a tier, and offering it as a choice would let a member author the absence of their own
+   assessment. If the catalogue ever grows a fourth tier this control grows with it; if it grew one the
+   plane would refuse, this control would not offer it. */
+const RISK_TIERS = ${RISK_TIERS_JSON};
+const riskTierState = ${riskTierState.toString()};
+const SETTABLE_TIERS = Object.keys(RISK_TIERS).filter((k)=> riskTierState(Number(k)) === Number(k));
+/* The words are the vocabulary's, escaped because they are rendered as markup and nothing else about
+   their provenance makes them safe to interpolate raw. */
+const renderRiskTiers = ()=>{
+  const box = $("#n-risk-choices");
+  if (box) box.innerHTML = SETTABLE_TIERS.map((k)=>
+    '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">'
+    + '<input type="radio" name="n-risk" id="n-risk-' + escH(k) + '" value="' + escH(k)
+    + '" style="width:auto;margin-top:4px">'
+    + '<span>' + escH(RISK_TIERS[k]) + '</span></label>').join("");
+  /* What leaving it alone WILL write, in the plane's sentence for it rather than this page's. */
+  const unset = $("#n-risk-unset");
+  if (unset) unset.textContent = "Leave this alone and the record will say: " + RISK_TIERS.undetermined;
+};
+renderRiskTiers();
+/* null means NO MEMBER CHOSE, which mdFor writes as undetermined. A value the vocabulary does not hold
+   cannot arrive from the control above; if one ever did it would be nobody stating a tier the plane
+   accepts, so it reads as no choice here rather than being passed through to the bytes. */
+const chosenRiskTier = ()=>{
+  const el = $("input[name=n-risk]:checked");
+  const st = riskTierState(el ? Number(el.value) : undefined);
+  return st === "undetermined" || st === null ? null : st;
+};
+const syncNewForm = ()=>{
+  const t = $("#n-type").value;
+  const isQ = t === "inquiry";
+  $("#n-title").hidden = isQ; $("#n-title-label").hidden = isQ;
+  $("#n-body-label").textContent = isQ ? "What do you want to know?" : "What do you know?";
+  /* UI-19: the counterparty pair belongs to an action and to nothing else, and
+     a document has no source panel to fill in when it is one. */
+  if ($("#n-act")) $("#n-act").hidden = t !== "action";
+  if ($("#n-src")) $("#n-src").hidden = t === "action";
+  syncCounterparty();
+};
+/* The pair reveals exactly one field, and only after the member has answered.
+   Neither is shown by default, because a visible empty field is a suggestion. */
+const syncCounterparty = ()=>{
+  const named = $("#n-cp-named") && $("#n-cp-named").checked;
+  const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
+  if ($("#n-cp-name-box")) $("#n-cp-name-box").hidden = !named;
+  if ($("#n-cp-basis-box")) $("#n-cp-basis-box").hidden = !undet;
+};
+if ($("#n-cp-named")) $("#n-cp-named").addEventListener("change", syncCounterparty);
+if ($("#n-cp-undet")) $("#n-cp-undet").addEventListener("change", syncCounterparty);
+$("#n-type").addEventListener("change", syncNewForm);
+$("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; syncNewForm(); show("#s-new"); });
+$("#n-save").addEventListener("click", async ()=>{
+  const e = $("#n-err"); e.textContent = "";
+  const type = $("#n-type").value, body = $("#n-body").value.trim();
+  const title = type === "inquiry" ? (deriveInquiryTitle(body) || "") : $("#n-title").value.trim();
+  if (type === "inquiry") {
+    if (!body) { e.textContent = "Ask the question."; return; }
+  } else {
+    if (!title) { e.textContent = "Give it a title."; return; }
+    if (!body) { e.textContent = "Write something in the body."; return; }
+  }
+  /* UI-19: what THIS FORM has collected, never a rule about the record. C-2.10
+     is the rule and it says so in its own words at the gate if anything gets
+     past here; all this does is decline to send an action with the question
+     unanswered, because an empty control has nothing to send. */
+  let act = null;
+  if (type === "action") {
+    const named = $("#n-cp-named") && $("#n-cp-named").checked;
+    const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
+    const role = ($("#n-cp-role") ? $("#n-cp-role").value.trim() : "");
+    const office = ($("#n-cp-body") ? $("#n-cp-body").value.trim() : "");
+    const level = ($("#n-cp-level") ? $("#n-cp-level").value.trim() : "");
+    const bs = ($("#n-cp-basis") ? $("#n-cp-basis").value.trim() : "");
+    if (!named && !undet) { e.textContent = "Say who this is addressed to, or that it is not determined yet."; return; }
+    if (named && (!role || !office)) { e.textContent = "Name the office: its official role and the body it belongs to."; return; }
+    if (undet && !bs) { e.textContent = "Say what is known so far, and what would settle it."; return; }
+    /* D-483: the tier goes with the counterparty because both are the member's answers and neither is
+       this form's. No refusal beside it: a member who assessed nothing has answered honestly, and a gate
+       that stopped them here would press them into stating the one value nobody assessed. */
+    act = { counterparty: named ? { state:"named", role, body:office, ...(level ? { level } : {}) } : { state:"undetermined", basis:bs },
+            risk_tier: chosenRiskTier() };
+  }
+  $("#n-save").disabled = true;
+  try {
+    const year = String(new Date().getFullYear());
+    /* REC-141 (Membership v2 section 7): a new project names no id. The plane mints it and answers with
+       it; a creation that names one is refused. Every other type still allocates its own. */
+    const minted = type === "project";
+    const a = minted ? null : await rec("allocid", { prefix: PREFIX[type], year });
+    let id = minted ? null : a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+    const state = FIRST_STATE[type];
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    /* Capture first, because a failed fetch should not leave a half-made bundle
+       in the record. If the document cannot be had, nothing is written and the
+       member is told what the source did. */
+    const loc = ($("#n-loc") ? $("#n-loc").value.trim() : "");
+    const auth = ($("#n-auth") ? $("#n-auth").value.trim() : "");
+    let doc = null;
+    if (loc) {
+      if (!auth) { e.textContent = "Say who issued the document as well as where it lives."; return; }
+      const acq = await post("acquire", { locator: loc, authority: auth });
+      if (!acq.ok) { e.textContent = acquireWhy(acq); return; }
+      doc = acq.document;
+      /* Co-attestation happens now, while the capture is fresh, because a
+         timestamp is a claim about WHEN and one obtained later says less. A
+         failure here does not stop the bundle: the attempts are recorded either
+         way, and a register showing a failed attempt is a different and more
+         honest claim than one showing none. */
+      const wantArchive = !!($("#n-arch") && $("#n-arch").checked);
+      const att = await post("attest", { sha256: doc.capture.sha256, locator: loc, archive: wantArchive });
+      doc.attestation_attempts = (att.attempts || []);
+      if (att.attestation) doc.attestations = [att.attestation];
+      if (att.archive) doc.co_archive = att.archive;
+    }
+    const text = mdFor(id, type, state, title, body, now, !!doc,
+      doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
+    const r = await post("promote", {
+      ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: WHO,
+      meta: { object_type:type, title, current_state:state, created:now, last_updated:now },
+      files: await docFiles(text, doc, await sha256Text(text)),
+      register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
+                        ? doc.parts.map((p) => ({ sha256: p.sha256, path: p.file,
+                                                  encoding: "binary", bytes: p.bytes }))
+                        : [{ sha256: doc.capture.sha256, path: doc.file,
+                             encoding: doc.capture.encoding, bytes: doc.capture.bytes }]),
+                       ...(doc.attestations || []).map((a) => ({
+                         sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
+    });
+    if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
+    if (minted) id = r.result.bundleId;
+    $("#n-title").value = ""; $("#n-body").value = "";
+    if ($("#n-loc")) { $("#n-loc").value = ""; $("#n-auth").value = ""; }
+    openBundle(id);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#n-save").disabled = false; }
+});
+
+/* ---- revise ---- */
+let EDIT_ID = null;
+let EDIT_IMAGE = null;
+async function openEdit(id, text){
+  EDIT_ID = id; $("#e-err").textContent = "";
+  $("#e-id").textContent = id; $("#e-body").value = text;
+  show("#s-edit");
+}
+$("#e-back").addEventListener("click", ()=>openBundle(EDIT_ID));
+/* Prepare a revision. Pure, so it can be tested against the check catalog
+   without a browser.
+ *
+ * Three things the catalog requires of any revision, none of which the earlier
+ * save path did:
+ *   last_updated moves, in the DOCUMENT and not only in the promote metadata,
+ *     because C-12.1 and C-13.1 read the frontmatter and nothing else;
+ *   created is PRESERVED, because overwriting it with the save time destroys
+ *     when the thing was actually created and no history holds it elsewhere;
+ *   a Session Log entry is appended, because C-13.2 refuses a bundle whose
+ *     last_updated moved with nothing recorded, and C-5.1 refuses one whose
+ *     prior entries went missing, so the entry is added rather than replacing.
+ */
+function reviseText(text, who, now){
+  const parts = splitFm(text);
+  const lines = text.split(NL);
+  let out = [], inFm = false, seenFence = 0, wroteUpdated = false;
+  for (const line of lines){
+    if (line === "---" && seenFence < 2){ seenFence++; inFm = seenFence === 1; out.push(line); continue; }
+    if (seenFence === 1 && /^last_updated:/.test(line)){ out.push("last_updated: " + now); wroteUpdated = true; continue; }
+    if (seenFence === 1 && /^created:/.test(line) && parts.fm.created){ out.push("created: " + parts.fm.created); continue; }
+    out.push(line);
+  }
+  if (!wroteUpdated){
+    /* No last_updated at all: put one at the end of the frontmatter rather than
+       silently leaving the document unable to pass C-2.2. */
+    const at = out.lastIndexOf("---");
+    if (at > 0) out.splice(at, 0, "last_updated: " + now);
+  }
+  let body = out.join(NL);
+  const entry = ["### Session " + now, "", "Revised by " + who + ".", ""].join(NL);
+  const i = body.indexOf("## Session Log");
+  if (i < 0){
+    body = body + NL + "## Session Log" + NL + NL + entry;
+  } else {
+    /* Insert at the END of the Session Log section, before whatever heading
+       follows it, so earlier entries keep their order and their place. */
+    const rest = body.indexOf(NL + "## ", i + 1);
+    const cut = rest === -1 ? body.length : rest + 1;
+    body = body.slice(0, cut) + entry + body.slice(cut);
+  }
+  return body;
+}
+
+/* Every file the bundle has, other than the one being edited, handed back
+   unchanged. promote writes a whole image, so a save that mentions only
+   bundle.md deletes the provenance register and every capture beside it. */
+async function carryForward(id, exclude){
+  const img = (await rec("image", { id })).result || {};
+  const out = [];
+  for (const [path, v] of Object.entries(img)){
+    if (path === exclude || path.indexOf("_history/") === 0) continue;
+    if (typeof v === "string") out.push({ path, text: v, bytes: utf8Len(v), sha256: await sha256Text(v) });
+    else out.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
+  }
+  return out;
+}
+$("#e-save").addEventListener("click", async ()=>{
+  const e = $("#e-err"); e.textContent = "";
+  const text = $("#e-body").value;
+  const fmv = splitFm(text).fm;
+  if (!fmv.id) { e.textContent = "The record must keep its heading block, including its id line."; return; }
+  $("#e-save").disabled = true;
+  try {
+    const lease = await rec("lease", { id: EDIT_ID });
+    if (!lease.result || lease.result.ok === false) {
+      e.textContent = "Someone else is editing this right now (" + (lease.result&&lease.result.heldBy) + ")."; return; }
+    const now = new Date().toISOString().split(".")[0] + "Z";
+    const revised = reviseText(text, WHO, now);
+    const r = await post("promote", {
+      /* The lease returns a field named base. Reading baseSha sent undefined,
+         which the store correctly refused as a stale write, so no revision
+         through this page had ever succeeded. */
+      bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
+      meta: { object_type: fmv.object_type, title: fmv.title || EDIT_ID,
+              current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
+      files: [{ path:"bundle.md", text: revised, bytes: utf8Len(revised), sha256: await sha256Text(revised) },
+              ...(await carryForward(EDIT_ID, "bundle.md"))],
+      register: [],
+    });
+    if (!r.result || !r.result.ok) {
+      const why = (r.result && r.result.reason) || r.error || "unknown";
+      if (why === "FILES_DROPPED") {
+        e.textContent = "Saving would have removed files this record holds ("
+          + (r.result.paths || []).join(", ") + "). Nothing was saved.";
+        return; }
+      e.textContent = (why === "CAS_STALE" || why === "STALE")
+        ? "Someone saved a newer version while you were writing. Open it again and redo your change."
+        : "Refused: " + why;
+      return; }
+    openBundle(EDIT_ID);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#e-save").disabled = false; }
+});
+
+/* ---- the inbox ---- */
+$("#go-inbox").addEventListener("click", openInbox);
+async function openInbox(){
+  show("#s-inbox");
+  const r = await rec("inbox");
+  const rows = (r.result && r.result.inbox) || [];
+  if (!rows.length) { $("#inbox-body").innerHTML = '<p class="small">Nothing has been left at the door.</p>'; return; }
+  $("#inbox-body").innerHTML = rows.map((k,i)=>
+    '<div class="card"><div class="kv"><span class="k mono">'+escH(k.knock_id)+'</span><span class="v">'
+    + chip(k.status) + ' <span class="dim">' + fmtWhen(k.received) + "</span></span></div>"
+    + '<div class="kv"><span class="k">Hash</span><span class="v mono">'+escH(k.sha256)+"</span></div>"
+    + '<div class="kv"><span class="k">Size</span><span class="v">'+escH(k.bytes)+" bytes</span></div>"
+    + (k.note ? '<div class="kv"><span class="k">Note</span><span class="v">'+escH(k.note)+"</span></div>" : "")
+    + (k.contact ? '<div class="kv"><span class="k">Contact</span><span class="v">'+escH(k.contact)+"</span></div>" : "")
+    + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
+    /* Reading the inbox is not gated; ACTING on it is. A member with view
+       rights sees what arrived and cannot disposition it. */
+    /* R11 (DEC-88 (2); capture R32): handling a knock either way is the member's
+       reasoned act, so each card asks for the reason beside its two buttons and
+       sends it with the knock and the status. */
+    + (can("contribute")
+      ? '<label for="ir-'+i+'">Your reason for handling it this way</label>'
+        + '<input id="ir-'+i+'" class="ireason">'
+        + '<div class="actions" style="margin-top:10px">'
+        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
+        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
+        + '<p class="err" id="ierr-'+i+'"></p>'
+      : "") + "</div>").join("");
+  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", ()=>inboxResolve(b.dataset)));
+}
+/* R11: nothing is posted without a reason; a refusal is shown in the plane's own
+   words (its translation, else its detail) and the knock is left as it was. */
+async function inboxResolve(d){
+  const e = $("#ierr-"+d.i); e.textContent = "";
+  const reason = $("#ir-"+d.i).value;
+  if (!reason.trim()) { e.textContent = "Write your reason first. Taking a knock up or setting it aside is recorded with the reason you give."; return; }
+  let r;
+  try { r = await post("inboxresolve", { knockId: d.id, status: d.to, reason }); }
+  catch(err){ e.textContent = "That did not go through: " + err.message; return; }
+  const res = r && r.result && typeof r.result === "object" ? r.result : r;
+  if (!r || r.ok === false || !res || res.ok === false) {
+    const why = (res && (res.translation || res.detail)) || (r && (r.translation || r.detail || r.error));
+    e.textContent = why || ("Refused: " + ((res && res.reason) || (r && r.reason) || "unknown"));
+    return; }
+  openInbox();
+}
+
+/* ---- members and keys ---- */
+$("#go-members").addEventListener("click", openMembers);
+async function openMembers(){
+  show("#s-members"); $("#m-err").textContent=""; $("#k-err").textContent="";
+  showSettings("mk"); showGroupDescription(); showLanguage("mln");
+  const m = await rec("memberlist");
+  const rows = (m.result && m.result.members) || [];
+  $("#m-list").innerHTML = rows.length ? rows.map(x=>
+    '<div class="kv"><span class="k mono">'+escH(x.member_id)+'</span><span class="v">'
+    + escH(x.cover||"") + " " + chip(x.status)
+    + (x.invite_pending ? ' <span class="dim">invitation not used yet</span>' : "")
+    + ' <button class="mbtn" data-id="'+escH(x.member_id)+'" data-to="'
+    + (x.status==="revoked"?"active":"revoked") + '">'
+    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
+    : '<p class="small" style="margin:0">No members yet.</p>';
+  document.querySelectorAll("#m-list .mbtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("memberset", { memberId: b.dataset.id, status: b.dataset.to }); openMembers();
+  }));
+  const k = await rec("signerlist");
+  const keys = (k.result && k.result.signers) || [];
+  $("#k-list").innerHTML = keys.length ? keys.map(x=>
+    '<div class="kv"><span class="k">'+escH(x.member_id)+'</span><span class="v"><span class="mono dim">'
+    + escH(String(x.key_b64).slice(0,24)) + "&hellip;</span> " + chip(x.status)
+    + (x.attests === false ? ' <span class="dim">' + escH(signerWhy(x)) + "</span>" : "")
+    + ' <button class="kbtn" data-key="'+escH(x.key_b64)+'" data-to="'
+    + (x.status==="revoked"?"active":"revoked") + '">'
+    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
+    : '<p class="small" style="margin:0">No keys registered. Until a key is registered, nothing can be published.</p>';
+  document.querySelectorAll("#k-list .kbtn").forEach(b=>b.addEventListener("click", async ()=>{
+    await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
+  }));
+}
+/* D-158: this list renders the key's own status, which is the administrator's own
+   revocation switch and NOT whether the key can sign. A key whose member never
+   enrolled used to read active here while the instance refused everything signed
+   with it \u2014 the page telling the administrator more than the plane would honour.
+   op=signerlist now carries the derived fact and the stored one behind it, and
+   each sentence below names a STORED fact rather than a state invented to cover
+   it. The last line is the undetermined branch and says so out loud: an older
+   plane sends no attests field at all, so this renders nothing rather than
+   guessing, which is the caller-side of the same rule. */
+function signerWhy(x){
+  const w = x && x.attests_why;
+  if (w === "key_revoked") return "revoked \u2014 cannot sign";
+  if (w === "member_invited" || w === "member_proposed") return "this member has not enrolled yet, so this key cannot sign";
+  if (w === "member_revoked") return "this member has been revoked, so this key cannot sign";
+  if (w === "member_absent") return "no member on the roster holds this key, so it cannot sign";
+  return "this key cannot sign, and your group's Civicsmith has not been told why";
+}
+function memberWhy(res, wanted){
+  const why = (res && res.reason) || "unknown";
+  if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
+    + (wanted ? "Try " + wanted + "." : "");
+  if (why === "NO_COVER") return "Give a cover as well as a sign-in name: a label you will recognise them by. It does not have to be their real name.";
+  if (why === "EXISTS") return "There is already a member with that name.";
+  if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
+  /* D-158, on UI-72's rule: a refusal carrying the plane's OWN canned sentence
+     reaches the administrator in THAT sentence instead of as the bare code.
+     Placed AFTER the four sentences above so nothing this page already says
+     changes, and before the fallback so the next code with a translation needs
+     no edit here. */
+  if (res && typeof res.translation === "string" && res.translation) return res.translation;
+  return "Refused: " + why;
+}
+$("#m-add").addEventListener("click", async ()=>{
+  const e = $("#m-err"); e.textContent = ""; $("#m-invite").innerHTML = "";
+  const wanted = $("#m-id").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
+  $("#m-id").value = wanted;
+  const r = await post("memberadd", { memberId: wanted, cover: $("#m-name").value.trim() });
+  if (!r.result || !r.result.ok) { e.textContent = memberWhy(r.result, wanted); return; }
+  /* A link, not a bare code. The code rides the URL fragment, which never
+     reaches any server, and the enrolment screen it opens had no reachable
+     path at all before this (DEBT D-14). */
+  /* The token alone. Nothing about who it addresses rides in the URL, so a
+     leaked or archived link reveals neither the group nor the invitee, and it
+     resolves to nothing once it has been used. */
+  const link = location.origin + location.pathname + "#invite="
+    + encodeURIComponent(r.result.invite);
+  $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Send '
+    + escH(wanted) + ' this link. It works once, it is not shown again, and it '
+    + 'goes nowhere after it has been used.</p>'
+    + '<p class="mono" style="margin:8px 0 0;word-break:break-all">' + escH(link) + "</p></div>";
+  $("#m-id").value = ""; $("#m-name").value = "";
+  openMembers();
+});
+/* Echo the pasted key back in words. A person pasting 80 opaque characters
+   deserves to be told what the machine thinks they just handed it, BEFORE
+   they commit it. */
+function describeKey(line){
+  const t = String(line||"").trim().split(/\\s+/).filter(function(x){ return x; });
+  if (t.length < 2 || t[0] !== "ssh-ed25519" || !/^AAAA/.test(t[1]))
+    return { ok:false, why:"That does not look like a public key line. It should be one line starting with ssh-ed25519." };
+  const label = t.slice(2).join(" ");
+  if (label === "bio-release")
+    return { ok:false, why:"That is the RELEASE key, which signs software. This box wants the ratification key, the one labelled bio-ratify." };
+  return { ok:true, label: label || "(no label)", fp: t[1].slice(0,16) };
+}
+/* D-605: what op=signeradd is sent for a pasted key LINE. The op takes the line's
+   base64 field alone as keyB64 (Store#signerAdd refuses anything else BAD_KEY), so
+   the line is split, as the member UI's custodial dialog splits it (D-134): the
+   second token is the key, and whatever follows it, the label, is the comment.
+   Before D-605 the whole line went as keyB64 and every registration from this
+   page was refused. Anything that is not such a line is sent as it was pasted,
+   and the plane says what it makes of it. */
+function signerAddBody(line, who){
+  const raw = String(line||"").trim();
+  const t = raw.split(/\\s+/).filter(function(x){ return x; });
+  const isLine = t.length >= 2 && t[0] === "ssh-ed25519";
+  const body = { keyB64: isLine ? t[1] : raw, memberId: String(who||"").trim().toLowerCase() };
+  const label = isLine ? t.slice(2).join(" ") : "";
+  if (label) body.comment = label;
+  return body;
+}
+$("#k-key").addEventListener("input", ()=>{
+  const v = $("#k-key").value.trim();
+  if (!v) { $("#k-read").innerHTML = ""; return; }
+  const d = describeKey(v);
+  $("#k-read").innerHTML = d.ok
+    ? '<p class="small" style="color:var(--verdigris-dk)">Reads as a ratification key labelled <b>'
+      + escH(d.label) + '</b>, beginning <span class="mono">' + escH(d.fp) + "</span>.</p>"
+    : '<p class="err" style="min-height:0">' + escH(d.why) + "</p>";
+});
+$("#k-add").addEventListener("click", async ()=>{
+  const e = $("#k-err"); e.textContent = "";
+  const d = describeKey($("#k-key").value);
+  if (!d.ok) { e.textContent = d.why; return; }
+  const r = await post("signeradd", signerAddBody($("#k-key").value, $("#k-who").value));
+  if (!r.result || !r.result.ok) {
+    e.textContent = r.result && r.result.reason === "BAD_KEY"
+      ? "That is not a public key this system can read. Copy the whole line from the signing page."
+      : memberWhy(r.result);
+    return; }
+  $("#k-key").value = ""; $("#k-who").value = ""; openMembers();
+});
+
+/* ---- the jurisdiction profiles (R13; instance-setup R12, R14) ----
+   Shown by name to every signed-in member. The choice is offered only to a session that administers, with nothing
+   preselected: the order a member ticks them is the order they are read. A change is warned about before it is
+   sent, and choosing none is allowed and says what it means. */
+let PF_ORDER = [];
+async function openProfiles(){
+  let r = null;
+  try { r = await rec("profiles"); } catch { r = null; }
+  const res = r && r.result;
+  if (!res || res.ok !== true) {
+    $("#pf-active").innerHTML = '<p class="small" style="margin:0">Your group&#39;s Civicsmith could not read its jurisdiction profiles just now.</p>';
+    $("#pf-choose").hidden = true; return;
+  }
+  const act = Array.isArray(res.profiles) ? res.profiles : [];
+  $("#pf-active").innerHTML = (act.length
+    ? act.map((p,i)=>'<div class="kv"><span class="k">'+(i+1)+'. '+escH(p.name || p.id)+'</span><span class="v">'
+        + escH((p.covers||[]).join(", ")) + "</span></div>").join("")
+    : '<p class="small" style="margin:0">No profile is active: your group&#39;s Civicsmith reads no local facts, and every one is answered as undetermined.'
+        + (res.boot && res.boot.why ? " At install, " + escH(res.boot.why) + ", so nothing was recorded." : "") + "</p>")
+    + ((res.conflicts||[]).length ? '<p class="small" style="margin:8px 0 0">The active profiles disagree on '
+        + (res.conflicts.length) + " fact" + (res.conflicts.length === 1 ? "" : "s") + ", and each is left unread rather than chosen between.</p>" : "");
+  /* R20: the offices section, when no active profile names an office; R19's place named in it. */
+  if (profilesNameNoOffice(res)) { if (ADMIN) await showPlace(); showOffices(); } else $("#of").hidden = true;
+  if (!ADMIN) { $("#pf-choose").hidden = true; return; }
+  showPlace();
+  PF_ORDER = [];
+  $("#pf-warn").hidden = true; $("#pf-err").textContent = "";
+  const choices = Array.isArray(res.choices) ? res.choices : [];
+  $("#pf-choices").innerHTML = choices.length ? choices.map(p=>
+    '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">'
+    + '<input type="checkbox" class="pf-pick" value="'+escH(p.id)+'" style="width:auto;margin-top:4px">'
+    + '<span>'+escH(p.name || p.id)+' <span class="dim">'+escH((p.covers||[]).join(", "))+'</span></span></label>').join("")
+    : '<p class="small" style="margin:0">Your group&#39;s Civicsmith holds no profile to choose.</p>';
+  document.querySelectorAll("#pf-choices .pf-pick").forEach(x=>x.addEventListener("change", ()=>{
+    PF_ORDER = PF_ORDER.filter(v=>v !== x.value);
+    if (x.checked) PF_ORDER.push(x.value);
+    $("#pf-warn").hidden = true;
+  }));
+  $("#pf-choose").hidden = false;
+}
+function profilesWarning(order, choices){
+  const name = (id)=>{ const p = (choices||[]).find(c=>c.id === id); return p && p.name ? p.name : id; };
+  return order.length
+    ? "From now on, your group's Civicsmith reads its local facts from " + order.map(name).join(", then ")
+      + ". Local facts will read differently from then on: what the record already holds is unchanged, but anything read after this is read from these profiles."
+    : "You chose no profile. From now on your group's Civicsmith reads no local facts, and every one is answered as undetermined. Local facts will read differently from then on.";
+}
+$("#pf-review").addEventListener("click", async ()=>{
+  const r = await rec("profiles").catch(()=>null);
+  $("#pf-warn-text").textContent = profilesWarning(PF_ORDER, r && r.result && r.result.choices);
+  $("#pf-warn").hidden = false;
+});
+$("#pf-cancel").addEventListener("click", ()=>{ $("#pf-warn").hidden = true; });
+$("#pf-confirm").addEventListener("click", async ()=>{
+  const e = $("#pf-err"); e.textContent = "";
+  $("#pf-confirm").disabled = true;
+  try {
+    const r = await post("profilesset", { profiles: PF_ORDER.slice() });
+    const res = r && (r.result || r);
+    if (!res || res.ok !== true) { e.textContent = (res && (res.translation || res.detail)) || (r && r.error) || "The change was not made."; return; }
+    openProfiles();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#pf-confirm").disabled = false; }
+});
+
+/* ---- the assistant (R24; instance-setup R53) ----
+   Every signed-in member sees whether it is on; only a session that administers is offered the switch, which says
+   what it will do before it is pressed. A read that did not answer says so and offers nothing. */
+let AS_ON = null;
+async function openAssistant(){
+  let r = null;
+  try { r = await rec("assistantstate"); } catch { r = null; }
+  const res = r && r.result;
+  if (!res || res.ok !== true || typeof res.on !== "boolean") {
+    AS_ON = null;
+    $("#as-state").innerHTML = '<p class="small" style="margin:0">Your group&#39;s Civicsmith could not read whether the assistant is on just now.</p>';
+    $("#as-choose").hidden = true; return;
+  }
+  AS_ON = res.on;
+  $("#gd-help").hidden = !res.on;
+  $("#as-state").innerHTML = '<p class="small" style="margin:0">'
+    + (res.on ? "The assistant is on for your group's Civicsmith." : "The assistant is off for your group's Civicsmith.")
+    + (res.set_at ? " Last set by " + escH(res.set_by) + " on " + fmtWhen(res.set_at) + "." : "") + "</p>";
+  if (!ADMIN) { $("#as-choose").hidden = true; return; }
+  $("#as-err").textContent = "";
+  $("#as-toggle").textContent = res.on ? "Switch the assistant off" : "Switch the assistant on";
+  $("#as-what").textContent = res.on
+    ? "Switching it off means no question is put to the assistant and nothing runs, for every member, until an administrator switches it on again."
+    : "Switching it on lets every member reached by an account ask the assistant: their own, or the group's API key while it is on.";
+  $("#as-choose").hidden = false;
+}
+$("#as-toggle").addEventListener("click", async ()=>{
+  const e = $("#as-err"); e.textContent = "";
+  if (AS_ON === null) return;
+  $("#as-toggle").disabled = true;
+  try {
+    const r = await post("assistantset", { on: !AS_ON });
+    const res = r && (r.result || r);
+    if (!res || res.ok !== true) { e.textContent = (res && (res.translation || res.detail)) || (r && r.error) || "The change was not made."; return; }
+    openAssistant();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#as-toggle").disabled = false; }
+});
+
+/* ---- the group's settings: the claim section's acts (R15, R17, R18), offered again in members and keys ----
+   One code for both places: P is the block's prefix, cl in the claim section and mk in members and keys. Each act is
+   the signed-in administrator's own (the plane stamps who), each refusal is stated in the plane's own words, and a
+   block left alone records nothing. */
+const ID = (P, x)=>"#" + P + "-" + x;
+/* A refusal's words, the plane's own (its translation, else its detail), or null when the answer is not a refusal. */
+const refusalOf = (r)=>{
+  const res = r && r.result && typeof r.result === "object" ? r.result : r;
+  if (r && r.ok !== false && res && res.ok !== false) return null;
+  return (res && (res.translation || res.detail)) || (r && (r.translation || r.detail || r.error))
+    || ("Refused: " + ((res && res.reason) || (r && r.reason) || "unknown"));
+};
+const resultOf = (r)=> r && r.result && typeof r.result === "object" ? r.result : null;
+const checkedOf = (name, values)=>{ for (const v of values) { const x = $("#" + name + "-" + v); if (x && x.checked) return v; } return null; };
+/* R15: the current hosting-access record, or that none is recorded. */
+async function showHosting(P){
+  let h = null;
+  try { h = resultOf(await rec("hostingaccess")); } catch { h = null; }
+  const now = $(ID(P, "ha-now"));
+  if (!h || h.ok === false) { now.textContent = "Who holds the hosting account could not be read just now."; return; }
+  const c = h.current;
+  now.textContent = c ? "Recorded: " + c.holders + (c.note ? " (" + c.note + ")" : "") + ", by " + (c.recorded_by || "an administrator")
+    + (c.at ? " on " + new Date(c.at).toLocaleDateString() : "") + "." : "No one is recorded as holding the hosting account yet.";
+}
+async function hostingSet(P){
+  const e = $(ID(P, "ha-err")); e.textContent = "";
+  const note = $(ID(P, "ha-note")).value.trim();
+  $(ID(P, "ha-set")).disabled = true;
+  try {
+    const r = await post("hostingaccessset", { holders: $(ID(P, "ha-holders")).value, note: note || null });
+    const why = refusalOf(r);
+    if (why) { e.textContent = why; return; }
+    $(ID(P, "ha-holders")).value = ""; $(ID(P, "ha-note")).value = "";
+    showHosting(P);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $(ID(P, "ha-set")).disabled = false; }
+}
+/* R17: the current choice; unchosen reads as not telling. */
+const COURT_NOW = { tell: "Your members are told what a court can reach.", dont: "Your members are not told what a court can reach." };
+async function showCourt(P){
+  let c = null;
+  try { c = resultOf(await rec("courtnotice")); } catch { c = null; }
+  $(ID(P, "cn-now")).textContent = !c || !("choice" in c) ? "Whether members are told could not be read just now."
+    : COURT_NOW[c.choice] || "Nobody has chosen yet, which reads as not telling.";
+}
+async function courtSet(P){
+  const e = $(ID(P, "cn-err")); e.textContent = "";
+  const choice = checkedOf(P + "-cn", ["tell", "dont"]);
+  if (!choice) { e.textContent = "Choose one, or leave this unchosen: nothing is recorded until you do."; return; }
+  $(ID(P, "cn-set")).disabled = true;
+  try {
+    const why = refusalOf(await post("courtnoticeset", { choice }));
+    if (why) { e.textContent = why; return; }
+    showCourt(P);
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $(ID(P, "cn-set")).disabled = false; }
+}
+/* R18: the current state, from instance-setup's switch and the group key's state (never the key). */
+async function showAi(P){
+  let a = null, k = null;
+  try { a = resultOf(await rec("assistantstate")); } catch { a = null; }
+  try { k = resultOf(await rec("groupkeystate")); } catch { k = null; }
+  const parts = [];
+  parts.push(!a || typeof a.on !== "boolean" ? "Whether the assistant is on could not be read just now."
+    : a.on ? "The assistant is on for your group's Civicsmith." : "The assistant is off for your group's Civicsmith.");
+  if (k && typeof k.held === "boolean")
+    parts.push(k.held ? "The group's API key is held, and " + (k.on ? "on" : "off") + "." : "No group API key is held.");
+  else if (k && typeof k.on === "boolean") parts.push("The group's API key is " + (k.on ? "on" : "off") + ".");
+  $(ID(P, "ai-now")).textContent = parts.join(" ");
+}
+function aiKeyBox(P){
+  const c = checkedOf(P + "-ai", ["group", "own", "both", "none"]);
+  $(ID(P, "ai-keybox")).hidden = !(c === "group" || c === "both");
+}
+async function aiSet(P){
+  const e = $(ID(P, "ai-err")); e.textContent = "";
+  const choice = checkedOf(P + "-ai", ["group", "own", "both", "none"]);
+  if (!choice) { e.textContent = "Choose one, or leave this unchosen: nothing changes until you do."; return; }
+  const wantsKey = choice === "group" || choice === "both";
+  /* the key is read once and the field emptied at once: it is never shown again, not even here */
+  const key = wantsKey ? $(ID(P, "ai-key")).value.trim() : "";
+  $(ID(P, "ai-key")).value = "";
+  if (wantsKey && !key) { e.textContent = "Paste the group's Anthropic API key to use it."; return; }
+  $(ID(P, "ai-set")).disabled = true;
+  try {
+    let why = refusalOf(await post("assistantset", { on: choice !== "none" }));
+    if (why) { e.textContent = why; return; }
+    if (wantsKey) {
+      why = refusalOf(await post("groupkeyset", { key }));
+      if (why) { e.textContent = why; showAi(P); return; }
+      why = refusalOf(await post("groupkeyswitch", { on: true }));
+      if (why) { e.textContent = why; showAi(P); return; }
+    }
+    showAi(P);
+    openAssistant();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $(ID(P, "ai-set")).disabled = false; }
+}
+function showSettings(P){ showHosting(P); showCourt(P); showAi(P); }
+for (const P of ["cl", "mk"]) {
+  $(ID(P, "ha-set")).addEventListener("click", ()=>hostingSet(P));
+  $(ID(P, "cn-set")).addEventListener("click", ()=>courtSet(P));
+  $(ID(P, "ai-set")).addEventListener("click", ()=>aiSet(P));
+  for (const v of ["group", "own", "both", "none"]) $(ID(P, "ai-" + v)).addEventListener("change", ()=>aiKeyBox(P));
+}
+$("#claim-on").addEventListener("click", ()=>{
+  $("#claim-after").hidden = true; $("#claim-form").hidden = false;
+  panel(CLAIMED && CLAIMED.login, CLAIMED && CLAIMED.at);
+});
+
+/* ---- a member's language for the screens (R22) ----
+   The member's own act, on the panel (ln) and in members and keys (mln); the field starts from the device's setting
+   until the member has chosen, and an empty field clears the choice so the device's setting governs again. */
+async function showLanguage(P){
+  let r = null;
+  try { r = resultOf(await rec("memberlanguage")); } catch { r = null; }
+  const now = $("#" + P + "-now");
+  if (!r || !("language" in r)) { now.textContent = "Your language could not be read just now."; return; }
+  now.textContent = r.language ? "Your screens use " + r.language + "." : "Your screens follow your device's setting.";
+  $("#" + P + "-tag").value = r.language || (navigator && navigator.language) || "";
+}
+async function languageSet(P, tag){
+  const e = $("#" + P + "-err"); e.textContent = "";
+  const t = String(tag || "").trim();
+  try {
+    const why = refusalOf(await post("memberlanguageset", { language: t || null }));
+    if (why) { e.textContent = why; return false; }
+    showLanguage(P);
+    return true;
+  } catch(err){ e.textContent = "That did not go through: " + err.message; return false; }
+}
+for (const P of ["ln", "mln"]) $("#" + P + "-set").addEventListener("click", ()=>languageSet(P, $("#" + P + "-tag").value));
+
+/* ---- Places: a place not yet listed (R19) ---- */
+async function showPlace(){
+  let r = null;
+  try { r = resultOf(await rec("placewantedstate")); } catch { r = null; }
+  PLACE = r && typeof r.name === "string" && r.name ? r.name : null;
+  $("#pw-now").textContent = PLACE ? "Named: " + PLACE + ". Administrators will be told when an update brings it." : "";
+  return PLACE;
+}
+let PLACE = null;
+$("#pw-set").addEventListener("click", async ()=>{
+  const e = $("#pw-err"); e.textContent = "";
+  const name = $("#pw-name").value.trim();
+  if (!name) { e.textContent = "Write the place's name."; return; }
+  $("#pw-set").disabled = true;
+  try {
+    const why = refusalOf(await post("placewanted", { name }));
+    if (why) { e.textContent = why; return; }
+    $("#pw-name").value = "";
+    await showPlace();
+    if (!$("#of").hidden) showOffices();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#pw-set").disabled = false; }
+});
+
+/* ---- the offices section (R20) ----
+   Shown when no active profile names an office: it says nothing is filled in because Civicsmith does not hold the
+   group's place yet, names the place an administrator named (R19), and offers an administrator adding the group's own
+   offices through op=entitycreate, each the administrator's own act, with no profile as its basis. Every office added
+   here is listed marked as added by the group. */
+let OFFICES = [];
+function profilesNameNoOffice(res){
+  if (!res || res.ok !== true) return false;
+  if (Array.isArray(res.offices)) return res.offices.length === 0;
+  return !(Array.isArray(res.profiles) && res.profiles.length);
+}
+function showOffices(){
+  $("#of").hidden = false;
+  $("#of-why").textContent = "Nothing is filled in here because Civicsmith does not hold your group's place yet"
+    + (PLACE ? " (" + PLACE + ")" : "") + ". "
+    + (ADMIN ? "You can add your group's offices yourself; each is marked as added by your group."
+             : "An administrator can add your group's offices; each is marked as added by your group.");
+  $("#of-list").innerHTML = OFFICES.map((o)=>'<div class="kv"><span class="k">' + escH(o.label)
+    + '</span><span class="v"><span class="chip">added by your group</span></span></div>').join("");
+  $("#of-add").hidden = !ADMIN;
+}
+$("#of-set").addEventListener("click", async ()=>{
+  const e = $("#of-err"); e.textContent = "";
+  const label = $("#of-label").value.trim(), note = $("#of-note").value.trim();
+  if (!label) { e.textContent = "Name the office."; return; }
+  if (!note) { e.textContent = "Say in your own words who or what this office is."; return; }
+  $("#of-set").disabled = true;
+  try {
+    const r = await post("entitycreate", { kind: "office", label, note });
+    const why = refusalOf(r);
+    if (why) { e.textContent = why; return; }
+    const res = resultOf(r) || {};
+    OFFICES.push({ entity_id: res.entity_id || null, label: res.label || label });
+    $("#of-label").value = ""; $("#of-note").value = "";
+    showOffices();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#of-set").disabled = false; }
+});
+
+/* ---- who your group is (R23) ----
+   The focus and purpose an administrator keeps (membership R109), and, only while the assistant is on, the act of
+   asking it to help write them (op=groupdescriptiondraft): a draft fills the fields with its label and nothing is kept
+   until the administrator keeps it. A refusal, ASSISTANT_DRAFT_UNAVAILABLE among them, is stated in its own words and
+   the fields are left as they were. */
+let GD_LAST = null;
+async function showGroupDescription(){
+  let r = null;
+  try { r = resultOf(await rec("groupdescription")); } catch { r = null; }
+  GD_LAST = r && r.description ? r.description : null;
+  $("#gd-now").textContent = !r ? "Who your group is could not be read just now."
+    : GD_LAST ? "Last kept by " + (GD_LAST.by || "an administrator") + (GD_LAST.at ? " on " + new Date(GD_LAST.at).toLocaleDateString() : "") + "."
+    : "Nothing is written yet. It is optional.";
+  $("#gd-focus").value = (GD_LAST && GD_LAST.focus) || "";
+  $("#gd-purpose").value = (GD_LAST && GD_LAST.purpose) || "";
+  $("#gd-label").hidden = true; $("#gd-label").textContent = "";
+}
+const GD_QUESTIONS = [["gd-q1", "What does your group work on?"], ["gd-q2", "Who does your group work with, or for?"],
+  ["gd-q3", "Why does your group exist: what do you want to change?"]];
+$("#gd-ask").addEventListener("click", async ()=>{
+  const e = $("#gd-ask-err"); e.textContent = "";
+  const answers = GD_QUESTIONS.map(([id, question])=>({ question, text: $("#" + id).value.trim() }));
+  $("#gd-ask").disabled = true;
+  try {
+    const r = await post("groupdescriptiondraft", { answers });
+    const why = refusalOf(r);
+    if (why) { e.textContent = why; return; }
+    const d = resultOf(r) || {};
+    const f = d.focus && typeof d.focus.text === "string" ? d.focus : null;
+    const pu = d.purpose && typeof d.purpose.text === "string" ? d.purpose : null;
+    if (!f && !pu) { e.textContent = "The assistant answered no draft. Nothing was changed."; return; }
+    if (f) $("#gd-focus").value = f.text;
+    if (pu) $("#gd-purpose").value = pu.text;
+    const by = (f && f.label && f.label.asked_by) || (pu && pu.label && pu.label.asked_by) || WHO;
+    $("#gd-label").textContent = "Draft \xB7 the assistant's, asked by " + by;
+    $("#gd-label").hidden = false;
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#gd-ask").disabled = false; }
+});
+$("#gd-keep").addEventListener("click", async ()=>{
+  const e = $("#gd-err"); e.textContent = "";
+  /* R109 appends a whole record: the kinds and the visibility already kept travel with the new words unchanged. */
+  const last = GD_LAST || {};
+  const body = { kinds: Array.isArray(last.kinds) ? last.kinds : [], otherKind: last.otherKind || null,
+    visibility: last.visibility || "members", focus: $("#gd-focus").value, purpose: $("#gd-purpose").value };
+  $("#gd-keep").disabled = true;
+  try {
+    const why = refusalOf(await post("groupdescriptionset", body));
+    if (why) { e.textContent = why; return; }
+    showGroupDescription();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#gd-keep").disabled = false; }
+});
+
+/* ---- enrolment, for an invited member with no password yet ---- */
+$("#en-go").addEventListener("click", async ()=>{
+  const e = $("#en-err"); e.textContent = "";
+  /* R3 (U77): the new password is asked twice, and nothing is sent while the two differ. */
+  const pw = $("#en-pw").value;
+  if (pw !== $("#en-pw2").value) { e.textContent = "The two passwords do not match."; return; }
+  const r = await api("enroll", { invite: INVITE,
+    handle: $("#en-handle").value.trim().toLowerCase(), password: pw });
+  if (!r.result || !r.result.ok) {
+    const why = r.result && r.result.reason;
+    e.textContent = why === "PASSWORD_TOO_SHORT" ? "The password needs at least 12 characters."
+      : why === "HANDLE_TAKEN" ? "Someone already uses that handle. Choose another."
+      : why === "NO_HANDLE" ? "Choose a handle. It is the name the record will show."
+      : why === "BAD_HANDLE" ? "A handle is lowercase letters, digits and dashes, at least two characters."
+      : "This invitation link is not live. Ask whoever invited you for a new one.";
+    return; }
+  /* R22: signed in with the password just set, then the language chosen before joining is sent as the member's own
+     act. If the sign-in does not go through, the sign-in form is shown with the handle filled in, as before. */
+  const handle = r.result.memberId;
+  let l = null;
+  try { l = await api("login", { role: "member:" + handle, password: pw }); } catch { l = null; }
+  if (!l || !l.result || !l.result.ok || !l.result.token) {
+    $("#lwho").value = handle; $("#lpw").value = ""; show("#s-login"); return; }
+  WHO = handle;
+  const b = await api("bootstrap").catch(()=>({}));
+  panel(l.result, b && b.consumedAt);
+  await languageSet("ln", $("#en-lang").value);
+});
+document.querySelectorAll(".crumb-home").forEach(a=>a.addEventListener("click", ()=>{
+  document.querySelector("main").classList.remove("wide"); show("#s-panel"); }));
+
+state();
+</script>
+</body>
+</html>`;
 
 // src/capture-requests/schema.mjs
 var CAPTURE_REQUESTS_SCHEMA = `
@@ -166388,13 +169459,13 @@ var Conformance = class _Conformance {
     const side = typeof standardSide === "string" ? standardSide : null;
     if (side !== "a" && side !== "b")
       return refusal23("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or b: your group's Civicsmith never chooses it. Nothing was written.", { contradiction: from.inquiry });
-    let listed = null;
+    let listed2 = null;
     try {
-      listed = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer });
+      listed2 = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer });
     } catch {
-      listed = null;
+      listed2 = null;
     }
-    const cand = listed && Array.isArray(listed.candidates) ? listed.candidates.find((x) => x && x.candidate === from.candidate) : null;
+    const cand = listed2 && Array.isArray(listed2.candidates) ? listed2.candidates.find((x) => x && x.candidate === from.candidate) : null;
     if (!cand || !isObj36(cand.a) || !isObj36(cand.b)) return this.#contradictionInquiry(null, viewer);
     const fact = (x) => ({
       kind: x.kind ?? null,
@@ -168370,14 +171441,14 @@ Reason: ${why}
         return refusal28("DUE_NOT_A_DATE", has3("DUE_NOT_A_DATE").message, all);
     }
     const cited = life.due_cite;
-    const listed = governingLawsOf(fm).laws.map((l2) => l2.citation);
-    const onList = cited ? listed.includes(cited) : true;
+    const listed2 = governingLawsOf(fm).laws.map((l2) => l2.citation);
+    const onList = cited ? listed2.includes(cited) : true;
     if (!onList) {
       this.#releaseLease(target, who2);
       return refusal28(
         "DUE_CITE_NOT_GOVERNING",
         `due_cite '${cited.slice(0, 60)}' is not one of this action's stated governing laws`,
-        { governing_laws: listed }
+        { governing_laws: listed2 }
       );
     }
     let text7 = _Actions.#spliceCorrespondence(liveMd.content, entryFm);
@@ -169401,15 +172472,15 @@ Reason: ${why}
     ));
     const liveMd = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, target);
     const fm = liveMd && liveMd.content !== null ? parseFrontmatter(liveMd.content).data || {} : null;
-    const listed = governingLawsOf(fm);
+    const listed2 = governingLawsOf(fm);
     return {
       ok: true,
       target,
       weight: "single",
       proposal: { ...lawProposalLabel(who2), at: at34, laws: entries },
-      governing_laws: listed,
+      governing_laws: listed2,
       evidence: false,
-      says: `${entries.length} citation${entries.length === 1 ? " is" : "s are"} proposed for this action. This is not the action's list of governing laws and did not change it: that list ${listed.state === "stated" ? `is ${listed.laws.length} law(s) stated by a member` : "is UNDETERMINED"}, and only a member's own act states it.`
+      says: `${entries.length} citation${entries.length === 1 ? " is" : "s are"} proposed for this action. This is not the action's list of governing laws and did not change it: that list ${listed2.state === "stated" ? `is ${listed2.laws.length} law(s) stated by a member` : "is UNDETERMINED"}, and only a member's own act states it.`
     };
   }
   /* REC-24 (g): write the `responds_to` edge onto the CAPTURED REPLY, pointing
@@ -172325,9 +175396,9 @@ function readFigure2(text7) {
   if (f17.refused) return { ok: false, why: f17.why };
   return { ok: true, figure: f17 };
 }
-function passageHolds(text7, figure2) {
-  if (typeof text7 !== "string" || typeof figure2 !== "string") return false;
-  const f17 = fold5(figure2);
+function passageHolds(text7, figure3) {
+  if (typeof text7 !== "string" || typeof figure3 !== "string") return false;
+  const f17 = fold5(figure3);
   return f17 !== "" && fold5(text7).includes(f17);
 }
 function compute(op, figures2) {
@@ -177617,13 +180688,13 @@ var Escalation = class _Escalation {
       const force = st.in_force === "in_force" ? "It was in force at the act's date." : `Whether it was in force at the act's date is undetermined${str36(st.in_force_why) ? ` (${str36(st.in_force_why)})` : ""}.`;
       say(standard2, `Standard ${standard2} is breached: ${basis}. ${force}${str36(st.disagreement) ? ` The determination states: ${str36(st.disagreement)}.` : ""}`);
     }
-    const listed = this.#actionsResting(D, viewer);
-    if (!listed) say(D, "The actions resting on the determination could not be read (undetermined).");
+    const listed2 = this.#actionsResting(D, viewer);
+    if (!listed2) say(D, "The actions resting on the determination could not be read (undetermined).");
     else {
       const place = this.#place();
       const today2 = localToday(at34, zoneOf(place));
       let shown3 = 0;
-      for (const id of listed) {
+      for (const id of listed2) {
         const a = this.actions.actionRead({ id, viewer, now: at34 });
         if (!a || a.ok === false) continue;
         shown3++;
@@ -184018,136 +187089,6 @@ function diffRows(before2, after, key) {
   return { added, removed, changed, undetermined: undetermined3 };
 }
 
-// src/following/checks.mjs
-var at33 = (fn, region) => `src/following/index.mjs ${fn} > ${region}`;
-var row6 = (n, fn, region, translation) => Object.freeze({ check: `C-137.${n}`, where: at33(fn, region), translation });
-var FOLLOWING_CHECKS = Object.freeze({
-  MACHINE_CANNOT_FOLLOW: row6(
-    1,
-    "#actorRefusal",
-    "is-follow-member",
-    "A follow, and the body a watch is captured before, is a member's own act; the machine follows nothing of its own accord. Nothing was written."
-  ),
-  NO_SUCH_HOME: row6(
-    2,
-    "#actorRefusal",
-    "is-follow-home",
-    "A follow lives in the project of a bundle you may see, named as its home; no such bundle was named. Nothing was written."
-  ),
-  NO_SUCH_BODY: row6(
-    3,
-    "followBody",
-    "is-follow-body",
-    "No body by that id is registered that you may see. Nothing was written."
-  ),
-  NO_LEGISTAR_ID: row6(
-    4,
-    "followBody",
-    "is-follow-legistar",
-    "That body holds no identifier in a scheme the active jurisdiction profiles name for Legistar, so its records cannot be read there. Nothing was written."
-  ),
-  BAD_PERIOD: row6(
-    5,
-    "followBody",
-    "is-follow-period",
-    "A follow names the days it covers: a first day, and a last day not before it, or none. Nothing was written."
-  ),
-  BAD_FOLLOW_CADENCE: row6(
-    6,
-    "#cadence",
-    "is-follow-cadence",
-    "A follow is read daily, weekly or monthly. Choose one of these. Nothing was written."
-  ),
-  NO_SUCH_FOLLOW: row6(
-    7,
-    "#follow",
-    "is-follow-held",
-    "No follow of that kind that you may see is held under that id. Nothing was changed."
-  ),
-  NOT_THE_AUTHOR: row6(
-    8,
-    "unfollow",
-    "is-follow-author",
-    "A follow is ended only by the member who made it. Nothing was changed."
-  ),
-  NO_LOCATOR: row6(
-    9,
-    "followRegister",
-    "is-follow-locator",
-    "A register or a portal is followed at a public https address. Nothing was written."
-  ),
-  BAD_RENDER: row6(
-    10,
-    "followRegister",
-    "is-follow-render",
-    "Whether the register is re-rendered is yes or no. Nothing was written."
-  ),
-  BAD_GATE: row6(
-    11,
-    "#gated",
-    "is-follow-gate",
-    "A register behind an account or a fee is declared as one or the other, and one that charges a fee names its price, so you see it before any refresh. Nothing was written."
-  ),
-  PERSON_QUERY_NOT_NAMED: row6(
-    12,
-    "followPersonQuery",
-    "is-person-query-named",
-    "A person is followed only through one register's own query for one identifier you name, in a scheme the active profiles list for that register, at the register's own address for it, in your project; a query by name alone or across registers is not followed. Nothing was written."
-  ),
-  NO_KEY: row6(
-    13,
-    "followPortal",
-    "is-portal-key",
-    "A portal follow declares the field that keys its rows. Nothing was written."
-  ),
-  NO_SUCH_MEETING_ADDRESS: row6(
-    14,
-    "perMeetingBody",
-    "is-meeting-address",
-    "No address you may see is watched per meeting, so no body's meetings can be named for it. Nothing was written."
-  ),
-  NO_SUCH_SNAPSHOT: row6(
-    15,
-    "snapshotDiff",
-    "is-snapshot-held",
-    "Each snapshot is named by its number among this portal follow's snapshots; one named is not held. Nothing was changed."
-  ),
-  NOT_GATED: row6(
-    16,
-    "refreshRegister",
-    "is-refresh-gated",
-    "A public register is read on its schedule; a member's refresh is only for one behind an account or a fee. Nothing was read."
-  ),
-  NOT_THE_FOLLOWER: row6(
-    17,
-    "refreshRegister",
-    "is-refresh-follower",
-    "Only the member who follows this register refreshes it, with their own credential. Nothing was read."
-  ),
-  PRICE_FIRST: row6(
-    18,
-    "refreshRegister",
-    "is-refresh-price",
-    "This register charges a fee; the refresh runs only once its price, as shown, is accepted. Nothing was read."
-  ),
-  NO_CREDENTIAL: row6(
-    19,
-    "refreshRegister",
-    "is-refresh-credential",
-    "A register behind an account is read with your own credential, and none was given. Nothing was read."
-  ),
-  NOT_READ: row6(
-    20,
-    "refreshRegister",
-    "is-refresh-read",
-    "The register could not be read; the reason is beside this. Nothing was changed."
-  )
-});
-function followRefusal(code, detail, extra = {}) {
-  const r = FOLLOWING_CHECKS[code];
-  return { ok: false, reason: code, code, check: r ? r.check : null, translation: r ? r.translation : null, detail, ...extra };
-}
-
 // src/following/index.mjs
 var FOLLOWING_MODULE = "following";
 var FOLLOW_CONSUMER = "following";
@@ -186005,13 +188946,13 @@ var FLEET_BINDINGS = [
   ["agent-runner", "AGENT_RUNNER"]
 ];
 var HOSTING_CONTROL = Object.freeze({
-  heading: "Before you choose a password: who controls this copy",
+  heading: "Before you choose a password: who controls your group's Civicsmith",
   sentences: Object.freeze([
-    "Whoever can sign in to the hosting account this copy runs in (its Cloudflare account) controls the copy. They can replace the one-time password, claim the copy again, read everything in it and lock everyone else out, and no vote of the group's administrators can stop them.",
+    "Whoever can sign in to the hosting account your group's Civicsmith runs in (its Cloudflare account) controls it. They can replace the one-time password, claim it again, read everything in it and lock everyone else out, and no vote of the group's administrators can stop them.",
     "Use a group account for it, not anyone's personal login.",
     "Add at least one other trusted person to that account.",
     "Where possible, let someone other than the group's administrators hold it.",
-    "The same account is the way back in if the password you choose is lost: sign in to it, replace the ADMIN_TOKEN value in this worker's settings, and the copy can be claimed again."
+    "The same account is the way back in if the password you choose is lost: sign in to it, replace the ADMIN_TOKEN value in this worker's settings, and your group's Civicsmith can be claimed again."
   ])
 });
 var escBlock = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -186020,1540 +188961,10 @@ function hostingControlBlock(cls3 = "notice") {
 }
 
 // src/setup.mjs
-var FIRST_STATE_JSON = JSON.stringify(
-  Object.fromEntries(Object.entries(STATES).map(([t2, s]) => [t2, s.legal[0]]))
-);
-var HEADINGS_JSON = JSON.stringify(HEADINGS);
-var RISK_TIERS_JSON = JSON.stringify(RISK_TIERS);
-var COUNTERPARTY_LEVELS_OPTIONS = COUNTERPARTY_LEVELS.map((l2) => '<option value="' + String(l2).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]) + '">' + String(l2).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]) + "</option>").join("");
-var escGroup = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-var GROUP_LINE_UNREAD = '<p class="eyebrow" id="instance-group" data-group="unread">This copy could not read its group just now</p>';
-var verifiedDay = (x) => typeof x === "string" && /^\d{4}-\d\d-\d\d/.test(x) ? x.slice(0, 10) : null;
-function groupLine(read3) {
-  const r = read3 && read3.answered === true && read3.result && read3.result.ok === true ? read3.result : null;
-  if (r && typeof r.group === "string" && r.group) {
-    const name2 = typeof r.display_name === "string" && r.display_name.trim() ? r.display_name : null;
-    const day2 = verifiedDay(r.domain_verified_at);
-    const domain = typeof r.domain === "string" && r.domain && day2 ? r.domain : null;
-    return '<p class="eyebrow" id="instance-group" data-group="recorded">' + (name2 ? '<span class="name">' + escGroup(name2) + "</span> &middot; " : "") + '<span class="slug">' + escGroup(r.group) + "</span> &middot; group instance" + (domain ? ' &middot; <span class="domain">' + escGroup(domain) + '</span> verified <time datetime="' + escGroup(day2) + '">' + escGroup(day2) + "</time>" : "") + "</p>";
-  }
-  if (r && r.group === null)
-    return '<p class="eyebrow" id="instance-group" data-group="none">No group is recorded for this copy yet</p>';
-  return GROUP_LINE_UNREAD;
-}
+var SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice"));
 function setupPage(read3) {
   return SETUP_HTML.replace(GROUP_LINE_UNREAD, () => groupLine(read3));
 }
-var SETUP_HTML = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>Your accountability record</title>
-<style>
-:root{
-  --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
-  --verdigris:#2F6F62; --verdigris-dk:#1F4F45;
-  --signal:#B3441E; --rule:#C6CBBF; --muted:#5C6B66;
-  --body:system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:ui-monospace,Menlo,Consolas,monospace;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
-  font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
-main{max-width:640px;margin:0 auto;padding:56px 22px 80px}
-.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--verdigris);margin:0 0 14px}
-.eyebrow .slug,.eyebrow .name,.eyebrow .domain{text-transform:none;letter-spacing:.04em}
-h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(28px,4.2vw,38px);
-  line-height:1.1;margin:0 0 16px;letter-spacing:-.01em}
-h2{font-family:Georgia,serif;font-weight:600;font-size:20px;margin:28px 0 10px}
-p{margin:0 0 15px;max-width:60ch}
-.small{font-size:14.5px;color:var(--muted)}
-.card{border:1px solid var(--rule);background:#F6F7F2;padding:20px 22px;margin:0 0 18px}
-.notice{border-left:3px solid var(--signal);background:#F8EFE9;padding:16px 18px;margin:0 0 18px}
-.okbox{border-left:3px solid var(--verdigris);background:#EDF3F0;padding:16px 18px;margin:0 0 18px}
-label{display:block;font-weight:600;font-size:14.5px;margin:14px 0 6px}
-input{width:100%;padding:11px 13px;font-family:var(--mono);font-size:14.5px;
-  border:1px solid var(--rule);background:#fff;color:var(--ink);border-radius:0}
-input:focus-visible,button:focus-visible{outline:2px solid var(--verdigris);outline-offset:2px}
-.hint{font-size:13.5px;color:var(--muted);margin:6px 0 0}
-button{margin-top:18px;padding:12px 22px;font-size:15.5px;font-weight:600;cursor:pointer;
-  background:var(--verdigris);color:#fff;border:1px solid var(--verdigris-dk)}
-button:hover{background:var(--verdigris-dk)}
-button:disabled{opacity:.55;cursor:default}
-.err{color:var(--signal);font-size:14.5px;margin-top:12px;min-height:1.4em}
-.kv{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--rule);font-size:14.5px}
-.kv:first-of-type{border-top:0}
-.kv .k{color:var(--muted);min-width:150px}
-.kv .v{font-family:var(--mono);font-size:13.5px;word-break:break-all}
-section{display:none} section.on{display:block}
-main.wide{max-width:860px}
-.crumb{font-family:var(--mono);font-size:12.5px;margin:0 0 18px}
-.crumb a{color:var(--verdigris);text-decoration:none;cursor:pointer}
-.crumb a:hover{text-decoration:underline}
-table.rec{width:100%;border-collapse:collapse;font-size:14.5px;margin:6px 0 22px}
-table.rec th{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--muted);text-align:left;font-weight:600;padding:6px 10px 6px 0;border-bottom:1px solid var(--rule)}
-table.rec td{padding:9px 10px 9px 0;border-bottom:1px solid var(--rule);vertical-align:baseline}
-table.rec tr.row{cursor:pointer}
-table.rec tr.row:hover td{background:#F6F7F2}
-.bid{font-family:var(--mono);font-size:13px;color:var(--verdigris-dk)}
-.chip{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;
-  text-transform:uppercase;padding:2px 8px;border:1px solid var(--rule);color:var(--muted);background:#F6F7F2}
-.chip.verified,.chip.ratified{color:#fff;background:var(--verdigris);border-color:var(--verdigris-dk)}
-.chip.elevated,.chip.forming{color:var(--signal);border-color:var(--signal);background:#F8EFE9}
-.md h2{font-size:19px;margin:26px 0 8px}
-.md h3{font-family:var(--body);font-weight:700;font-size:15.5px;margin:20px 0 6px}
-.md p{margin:0 0 12px}
-.md ul{margin:0 0 12px;padding-left:22px}
-.md li{margin:0 0 4px}
-.md code{font-family:var(--mono);font-size:13px;background:var(--paper-2);padding:1px 4px}
-.md .revnote{border-left:3px solid var(--signal);background:#F8EFE9;padding:10px 14px;margin:0 0 16px;font-size:14px}
-.filelink{color:var(--verdigris);text-decoration:none}
-.filelink:hover{text-decoration:underline}
-.histbtn{background:none;border:none;padding:0;margin:0;font:inherit;color:var(--verdigris);cursor:pointer;text-decoration:none}
-.histbtn:hover{text-decoration:underline}
-.mono{font-family:var(--mono);font-size:12.5px}
-.dim{color:var(--muted)}
-</style>
-</head>
-<body>
-<main>
-${GROUP_LINE_UNREAD}
-
-<section id="s-loading" class="on">
-  <h1>One moment</h1>
-  <p class="small">Checking the state of this copy.</p>
-</section>
-
-<section id="s-unarmed">
-  <h1>This copy has no one-time password yet</h1>
-  <p>Before anyone can claim it, a bootstrap credential has to exist. Sign in
-  to the Cloudflare account this copy runs in, open this worker's settings,
-  and set a long random value called <b>ADMIN_TOKEN</b>. Then reload this
-  page.</p>
-  <p class="small">If it was set but this page still says otherwise, the value
-  in place is one that has been published before and this software refuses to
-  accept it. Set a fresh one.</p>
-</section>
-
-<section id="s-claim">
-  <h1>Claim your copy</h1>
-  <p>This runs in your organization's own Cloudflare account. Claiming it
-  spends the one-time password and replaces it with a password you choose.
-  The one-time password stops working the moment this succeeds.</p>
-  <div id="rearm-note" class="notice" hidden>
-    <p style="margin:0"><b>Recovery mode.</b> The one-time password was
-    replaced in the Cloudflare dashboard, so the previous claim is retired and
-    this copy can be claimed again. Nothing stored in the record is affected.</p>
-  </div>
-  <!-- R47 (DEC-109, K1038): who really controls this copy, said before a password is chosen, in the words held once
-       in setup-fleet.mjs for this page and the installer's last screen. Nothing asks for or records an acknowledgement. -->
-  ${hostingControlBlock("notice")}
-  <label for="boot">One-time password</label>
-  <input id="boot" autocomplete="off" spellcheck="false">
-  <p class="hint">From the installer's final screen, or the ADMIN_TOKEN value
-  set in the Cloudflare dashboard.</p>
-  <label for="pw1">Choose your password</label>
-  <input id="pw1" type="password" autocomplete="new-password">
-  <p class="hint">At least 12 characters. Store it in a password manager.</p>
-  <label for="pw2">Type it again</label>
-  <input id="pw2" type="password" autocomplete="new-password">
-  <button id="do-claim">Claim this copy</button>
-  <p class="err" id="claim-err"></p>
-</section>
-
-<section id="s-login">
-  <h1>Sign in</h1>
-  <p>This copy is claimed. Members sign in with their own name and password.
-  Leave the name empty to sign in as the administrator.</p>
-  <label for="lwho">Your member name</label>
-  <input id="lwho" autocomplete="username" placeholder="leave empty for administrator">
-  <label for="lpw">Password</label>
-  <input id="lpw" type="password" autocomplete="current-password">
-  <button id="do-login">Sign in</button>
-  <p class="err" id="login-err"></p>
-  <p class="small">Lost the password? Sign in to Cloudflare, replace the
-  ADMIN_TOKEN value in this worker's settings, and reload this page to claim
-  the copy again.</p>
-</section>
-
-<section id="s-panel">
-  <h1>Your copy is healthy</h1>
-  <div class="okbox"><p style="margin:0" id="panel-lede">Signed in as
-  administrator.</p></div>
-  <div class="card">
-    <div class="kv"><span class="k">Software version</span><span class="v" id="p-version"></span></div>
-    <div class="kv"><span class="k">Claimed</span><span class="v" id="p-claimed"></span></div>
-    <!-- REC-41, 2026-08-05: the label read "Roles with passwords" and the value
-         has always been filled from WHO \u2014 the ONE role that is signed in, never
-         a roster. It was a label describing op=bootstrap's roles field over a
-         value that never came from it, and with that field now removed it could
-         never become true. Corrected to what the row actually shows rather than
-         deleted: a member seeing which identity this session holds is the point
-         of the row. -->
-    <div class="kv"><span class="k">Signed in as</span><span class="v" id="p-roles"></span></div>
-    <div class="kv"><span class="k">Session expires</span><span class="v" id="p-expires"></span></div>
-  </div>
-  <div class="actions" style="margin:22px 0 6px">
-    <button id="go-browse">Browse the record</button>
-    <button id="go-new">Add something new</button>
-    <button id="go-inbox">Review the inbox</button>
-    <button id="go-members" hidden>Members and keys</button>
-  </div>
-  <!-- R15 (N10, K102): which jurisdiction profiles this copy reads its local facts from. Shown by name to every
-       signed-in member; the choice is offered only to a session that administers, among every held profile that
-       is not a test profile, with NOTHING PRESELECTED; the change is warned about before it is sent, and choosing
-       none is allowed and says what it means. -->
-  <h2>Where this copy's local facts come from</h2>
-  <div class="card" id="pf-active"><p class="small" style="margin:0">Reading the profiles&hellip;</p></div>
-  <div id="pf-choose" hidden>
-    <p class="small">Choose the jurisdiction profiles this copy reads its local facts from, in the order they
-    should be read. Nothing is chosen for you, and choosing none is allowed.</p>
-    <div class="card" id="pf-choices"></div>
-    <div class="actions"><button id="pf-review">Review this change</button></div>
-    <div class="notice" id="pf-warn" hidden>
-      <p id="pf-warn-text"></p>
-      <button id="pf-confirm">Make this change</button> <button id="pf-cancel">Keep things as they are</button>
-    </div>
-    <p class="err" id="pf-err"></p>
-  </div>
-  <!-- R53 (K1502, K1478 (i)): the assistant is optional for the copy, off unless an administrator chooses it, offered
-       here and changeable later. Enabling it binds no account: each member connects their own. -->
-  <h2>The assistant</h2>
-  <div class="card" id="as-state"><p class="small" style="margin:0">Reading whether the assistant is on&hellip;</p></div>
-  <div id="as-choose" hidden>
-    <p class="small">The assistant is optional. This copy holds no account for it: each member who wants it connects
-    their own Claude account or API key, and is told first that their questions and the material read to answer them
-    go to Anthropic under their own account. While it is off, no question is put to it and nothing runs.</p>
-    <div class="actions"><button id="as-toggle"></button></div>
-    <p class="err" id="as-err"></p>
-  </div>
-  <h2>What this page is, and is not</h2>
-  <p>This page opens the record for reading, takes in new material, and
-  publishes what the group has ratified. Signing in with a password lets you
-  write into the working record. Publishing something to the world needs more
-  than a password: it needs a signature from a key the group has registered,
-  which you make on the signing page and paste in. Deleting anything is not
-  possible from here at all.</p>
-  <p class="small">To update the software later, return to the installer and
-  choose the update option. Updates never touch your passwords or your record.</p>
-</section>
-
-<section id="s-browse">
-  <p class="crumb"><a id="crumb-panel">This copy</a> &rsaquo; Record</p>
-  <h1>The record</h1>
-  <p class="small" id="browse-summary"></p>
-  <div id="browse-body"><p class="small">Loading the record&hellip;</p></div>
-</section>
-
-<section id="s-bundle">
-  <p class="crumb"><a id="crumb-panel2">This copy</a> &rsaquo; <a id="crumb-browse">Record</a> &rsaquo; <span id="crumb-id" class="mono"></span></p>
-  <h1 id="b-title" style="font-size:clamp(22px,3.4vw,30px)"></h1>
-  <div class="card" id="b-facts"></div>
-  <div id="b-md" class="md"></div>
-  <h2>Files in this record</h2>
-  <div class="card" id="b-files"></div>
-  <h2>History</h2>
-  <p class="small">Every revision this record has ever had. The record is
-  append-only: nothing here can be edited or removed.</p>
-  <div class="card" id="b-history"></div>
-  <div id="b-ratify"></div>
-</section>
-
-<section id="s-new">
-  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; New</p>
-  <h1>Add something new</h1>
-  <p class="small">This adds a record to the working record. Nothing here is
-  public: the working record has never been published and cannot be read by
-  anyone without a password.</p>
-  <label for="n-type">What kind of thing is this?</label>
-  <!-- The Action option is BACK, 2026-08-05 (UI-19). It was removed on
-       2026-08-04 by UI-15 because REC-23 had stopped both intake surfaces
-       writing a placeholder counterparty, which is the honest gate, and the
-       consequence was that an action written from this form left the catalog
-       with exactly one error - C-2.10 naming the counterparty nobody authored.
-       Offering a kind whose every instance is refused is present-and-refused,
-       which Membership Architecture v2 section 5 forbids. The condition that
-       note set is now met: the fieldset below is REC-23's radio pair, a named
-       counterparty or NOT DETERMINED YET with a written basis, no third option
-       and no default, and mdFor takes the values from the member. An action
-       written here draws zero findings; one written with nothing authored still
-       draws exactly C-2.10, because this page will not invent an addressee to
-       get past its own gate. BOTH INTAKE SURFACES OR NEITHER: app.html carries
-       the same option and the same pair. -->
-  <select id="n-type">
-    <option value="information">Information</option>
-    <option value="inquiry">Question</option>
-    <option value="project">Project</option>
-    <option value="action">Action</option>
-  </select>
-  <label for="n-title" id="n-title-label">Title</label>
-  <input id="n-title" placeholder="what this is about">
-  <label for="n-body" id="n-body-label">What do you know?</label>
-  <textarea id="n-body" rows="14" placeholder="Write it plainly. Markdown headings and lists work."></textarea>
-  <div id="n-src">
-    <div class="card">
-      <p style="margin:0 0 10px"><b>Is there a document behind this?</b> Give its web address and
-      this copy will fetch it, hash it at the moment it arrives, keep the bytes, and record where
-      it came from. Leave both blank if you are writing down something you know rather than
-      capturing something published.</p>
-      <label for="n-loc">Web address of the document</label>
-      <input id="n-loc" placeholder="https://..." spellcheck="false">
-      <p class="hint">Must be an https address on a public site. This copy will not fetch anything else.</p>
-      <label for="n-auth">Who issued it?</label>
-      <input id="n-auth" placeholder="City Auditor, Public Works Department, a named newspaper">
-      <p class="hint">Who issued the document and how faithfully it was captured are two separate
-      claims. Both get recorded, and neither stands in for the other.</p>
-      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:14px">
-        <input type="checkbox" id="n-arch" style="width:auto;margin-top:4px">
-        <span>Also ask a public web archive to keep its own copy.
-        <span class="dim">This is stronger evidence, because an archive nobody in this group controls
-        can show what the page said. It is also public: anyone watching that archive can see that
-        someone asked for this page. Leave it off if being seen to look would matter.</span></span>
-      </label>
-    </div>
-  </div>
-  <!-- UI-19 / REC-23: WHO THIS IS ADDRESSED TO. An action reaches outside this
-       group and touches somebody who never agreed to be in it, so the record
-       either names them or says plainly that it does not know yet. TWO options
-       and no third, and NOTHING PRESELECTED - a default here would be this page
-       answering the question on the member's behalf, which is the placeholder
-       defect one field down and in a nicer coat. -->
-  <div id="n-act">
-    <div class="card">
-      <p style="margin:0 0 10px"><b>Who is this addressed to?</b> An action asks something of somebody
-      outside this group. The record either names them, or states that it does not know yet and says
-      what is known so far. There is no third answer and nothing is filled in for you.</p>
-      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
-        <input type="radio" name="n-cp" id="n-cp-named" value="named" style="width:auto;margin-top:4px">
-        <span>A named counterparty: an office</span></label>
-      <!-- R24 (N235; actions R9, jurisdictions R24): a named counterparty is an OFFICE, stated by its official role
-           and the body it belongs to, never a bare name and never a person. The level is optional and nothing is
-           preselected: its words are the product's vocabulary of an office's level, injected, never written here. -->
-      <div id="n-cp-name-box" hidden style="margin:6px 0 10px 26px">
-        <label for="n-cp-role">The office: its official role</label>
-        <input id="n-cp-role" placeholder="Clerk, Auditor, Director of Public Works">
-        <label for="n-cp-body">The body that office belongs to</label>
-        <input id="n-cp-body" placeholder="the council, the county, a named department">
-        <label for="n-cp-level">Its level of government (optional)</label>
-        <select id="n-cp-level"><option value="">Not stated</option>${COUNTERPARTY_LEVELS_OPTIONS}</select>
-        <p class="hint">An office, never a person: whoever holds the role is reached through the role.</p>
-      </div>
-      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">
-        <input type="radio" name="n-cp" id="n-cp-undet" value="undetermined" style="width:auto;margin-top:4px">
-        <span>Not determined yet, and here is why</span></label>
-      <div id="n-cp-basis-box" hidden style="margin:6px 0 10px 26px">
-        <label for="n-cp-basis">What is known so far, and what would settle it</label>
-        <textarea id="n-cp-basis" rows="4"></textarea>
-      </div>
-      <p class="hint">This action will not be sent while this is undetermined.</p>
-    </div>
-    <!-- D-483 / D-182 (BIO_Case_Making_v0_1.md section 2, RULED by BOB #21): THE RISK TIER, ASKED
-         RATHER THAN ASSUMED. This page wrote risk_tier: undetermined because it had no control to
-         ask with, which is honest and is also a missing affordance: a member who HAS assessed the
-         action had no way to say so here. The control is that way round and no further - NOTHING IS
-         PRESELECTED, because a preselected tier is this page assessing legal exposure on the
-         member's behalf, which is the overclaim D-182 exists to have removed. Leaving it alone still
-         writes undetermined.
-         THE CHOICES AND THEIR WORDS ARE NOT WRITTEN HERE. They are rendered from the injected
-         vocabulary below (REC-38's pattern, as the counterparty pair is not): a tier's MEANING is
-         the sentence, so a surface that wrote its own three labels would be deciding what 2 means.
-         The container is empty in the source on purpose - if the vocabulary ever stops arriving, a
-         member is offered nothing rather than offered a stale copy of it. -->
-    <div class="card" id="n-risk">
-      <p style="margin:0 0 10px"><b>How risky is it to file this?</b> This is the one field on an
-      action that carries legal exposure, so only a member can set it and nothing is filled in for
-      you. Choose one if you have assessed it, and leave it alone if you have not.</p>
-      <div id="n-risk-choices"></div>
-      <p class="hint" id="n-risk-unset"></p>
-    </div>
-  </div>
-  <div class="actions" style="margin-top:16px"><button id="n-save">Create it</button></div>
-  <p class="err" id="n-err"></p>
-</section>
-
-<section id="s-edit">
-  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; <a id="e-back">Record</a> &rsaquo; Edit</p>
-  <h1>Revise this</h1>
-  <p class="small">Saving adds a revision. The version you are replacing stays in
-  the history forever; nothing is overwritten and nothing is lost.</p>
-  <div class="card"><div class="kv"><span class="k">Record</span><span class="v mono" id="e-id"></span></div></div>
-  <label for="e-body">The record</label>
-  <textarea id="e-body" rows="20" spellcheck="false"></textarea>
-  <div class="actions" style="margin-top:16px"><button id="e-save">Save a revision</button></div>
-  <p class="err" id="e-err"></p>
-</section>
-
-<section id="s-inbox">
-  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Inbox</p>
-  <h1>The inbox</h1>
-  <p class="small">Material left by people outside the group. Nothing here is part
-  of the record, and nothing here has been examined. Treat every item as
-  unverified until the group has checked it.</p>
-  <div id="inbox-body"><p class="small">Loading&hellip;</p></div>
-</section>
-
-<section id="s-members">
-  <p class="crumb"><a class="crumb-home">This copy</a> &rsaquo; Members</p>
-  <h1>Members and keys</h1>
-  <p class="small">Members sign in with a handle they choose and a password they
-  choose. You assign each one a cover, which is the label you tell them apart by
-  and is not a legal name. Only administrators see cover and handle together, and
-  publishing the pairing is a separate decision either of you can make. Registered
-  keys are what allow a member to publish; a password alone never can.</p>
-  <h2>Members</h2>
-  <div class="card" id="m-list"></div>
-  <label for="m-id">Add a member: the name they will sign in with</label>
-  <input id="m-id">
-  <p class="hint">Lowercase, no spaces. Anything you type is tidied to fit.</p>
-  <label for="m-name">A cover to tell them apart by</label>
-  <input id="m-name">
-  <p class="hint">This is a label for your own use, not a legal name, and it is not
-  a form to fill in truthfully. "The CPA from Tuesday" and "volunteer-7" are as
-  valid as anything else. Only administrators ever see it, and only they can see
-  which handle it belongs to. If your group is working under any real pressure,
-  choose covers that would tell an outsider nothing.</p>
-  <div class="actions" style="margin-top:12px"><button id="m-add">Invite them</button></div>
-  <p class="err" id="m-err"></p>
-  <div id="m-invite"></div>
-  <h2>Registered keys</h2>
-  <div class="card" id="k-list"></div>
-  <div class="card">
-    <p style="margin:0 0 10px"><b>Where a key comes from.</b> Each member makes their own
-    on this copy's signing page. It runs entirely in their browser and sends nothing
-    anywhere. It gives them two things: a private key they keep, and a public key they
-    hand to you for this box. You cannot sign anything with what goes in this box, which
-    is why it is safe to email it or read it aloud.</p>
-    <p style="margin:0"><a class="filelink" id="k-open" href="/sign" target="_blank" rel="noopener">Open the signing page</a>
-    &middot; on it, press <b>Generate my keys</b>, then copy the <b>ratification</b> public key.</p>
-  </div>
-  <label for="k-key">Their ratification public key</label>
-  <textarea id="k-key" rows="3" spellcheck="false"></textarea>
-  <p class="hint">One line. It starts with <span class="mono">ssh-ed25519</span> and ends with
-  <span class="mono">bio-ratify</span>.</p>
-  <div id="k-read"></div>
-  <label for="k-who">Belongs to which member</label>
-  <input id="k-who">
-  <div class="actions" style="margin-top:12px"><button id="k-add">Register this key</button></div>
-  <p class="err" id="k-err"></p>
-</section>
-
-<section id="s-enroll">
-  <h1>Join this group</h1>
-  <p id="en-lede">You were invited. Choose the name the record will show, and a password.</p>
-  <div class="card" id="en-who" hidden></div>
-  <label for="en-handle">Your handle</label>
-  <input id="en-handle" spellcheck="false" placeholder="lowercase letters, digits and dashes">
-  <p class="hint">This is what the record shows: the author of anything you write, and the
-  name other members see. It is yours, not the label the administrator used to invite you.</p>
-  <label for="en-pw">Choose a password (12 characters or more)</label>
-  <input id="en-pw" type="password" autocomplete="new-password">
-  <div class="actions" style="margin-top:12px"><button id="en-go">Set it</button></div>
-  <p class="err" id="en-err"></p>
-</section>
-
-</main>
-<script>
-const $ = (s)=>document.querySelector(s);
-const show = (id)=>{document.querySelectorAll("section").forEach(x=>x.classList.remove("on"));$(id).classList.add("on");};
-const api = async (op, body)=>{
-  const r = await fetch("/api/?op="+op, body ? {method:"POST",body:JSON.stringify(body)} : undefined);
-  return r.json();
-};
-let boot0 = null;
-async function state(){
-  /* The wizard hands over with the one-time password in the URL fragment.
-     Fragments never reach any server. Strip it immediately either way. */
-  const inv = location.hash.match(/invite=([^&]+)/);
-  if (inv) {
-    /* An invited member arrives by link. The code rides the fragment, which
-       never reaches any server, and is stripped immediately either way. The
-       screen this reveals existed since 0.4.0 with nothing able to show it
-       (DEBT D-14). */
-    /* The token IS the credential and carries nothing else. The previous link
-       was memberId:code, so anyone who saw a leaked or archived one learned who
-       had been invited. */
-    INVITE = decodeURIComponent(inv[1]);
-    history.replaceState({}, "", location.pathname);
-    const look = await api("invitelook", { invite: INVITE });
-    if (!look.result || !look.result.ok) {
-      $("#en-lede").textContent = "This invitation link is not live. An invitation is used up the "
-        + "moment someone joins with it. Ask whoever invited you for a new one.";
-      document.querySelectorAll("#s-enroll label, #s-enroll input, #s-enroll .hint, #en-go")
-        .forEach((x) => { x.hidden = true; });
-      show("#s-enroll"); return;
-    }
-    const w = look.result;
-    $("#en-who").hidden = false;
-    $("#en-who").innerHTML = '<div class="kv"><span class="k">Invited as</span><span class="v">'
-      + escH(w.cover) + '</span></div>'
-      + '<div class="kv"><span class="k">Role</span><span class="v">' + escH(w.role) + '</span></div>'
-      + '<div class="kv"><span class="k">You can</span><span class="v">'
-      + escH((w.capabilities || []).join(", ") || "read") + '</span></div>';
-    show("#s-enroll"); return;
-  }
-  const m = location.hash.match(/boot=([^&]+)/);
-  if (m) boot0 = decodeURIComponent(m[1]);
-  if (location.hash) history.replaceState({}, "", location.pathname);
-  try {
-    const saved = JSON.parse(sessionStorage.getItem("bio-session") || "null");
-    if (saved && saved.t && (!saved.e || saved.e > Date.now())) {
-      SESSION = saved.t;
-      WHO = saved.w || "admin";
-      const probe = await fetch("/api/?op=stats&token="+saved.t);
-      if (probe.ok) {
-        const b2 = await api("bootstrap");
-        window.__ver = b2.version || "";
-        panel({ token: saved.t, expires: saved.e }, saved.c || b2.consumedAt);
-        return;
-      }
-      SESSION = null; sessionStorage.removeItem("bio-session");
-    }
-  } catch {}
-  let b;
-  try { b = await api("bootstrap"); }
-  catch(e){ $("#s-loading h1").textContent = "This copy is not answering";
-    $("#s-loading .small").textContent = "The page loaded but the record behind it did not respond. Wait a moment and reload."; return; }
-  window.__ver = b.version || "";
-  if (b.claimed) { show("#s-login"); return; }
-  if (!b.bootstrapConfigured) { show("#s-unarmed"); return; }
-  if (b.rearmed) $("#rearm-note").hidden = false;
-  if (boot0) $("#boot").value = boot0;
-  show("#s-claim");
-}
-$("#do-claim").addEventListener("click", async ()=>{
-  const e = $("#claim-err"); e.textContent = "";
-  const bootstrapToken = $("#boot").value.trim();
-  const p1 = $("#pw1").value, p2 = $("#pw2").value;
-  if (!bootstrapToken) { e.textContent = "The one-time password is empty."; return; }
-  if (p1.length < 12) { e.textContent = "The password needs at least 12 characters."; return; }
-  if (p1 !== p2) { e.textContent = "The two passwords do not match."; return; }
-  $("#do-claim").disabled = true;
-  try {
-    const r = await api("claim", { bootstrapToken, password: p1 });
-    if (r.error) { e.textContent = r.error + "."; return; }
-    if (r.result && r.result.ok === false) {
-      e.textContent = r.result.reason === "ALREADY_CLAIMED"
-        ? "This copy was already claimed. If that was not you, replace ADMIN_TOKEN in the Cloudflare dashboard and reload."
-        : "Refused: " + r.result.reason;
-      return;
-    }
-    const l = await api("login", { role: "admin", password: p1 });
-    panel(l.result, r.result.consumedAt);
-  } catch(err){ e.textContent = "The claim did not go through: " + err.message; }
-  finally { $("#do-claim").disabled = false; }
-});
-$("#do-login").addEventListener("click", async ()=>{
-  const e = $("#login-err"); e.textContent = "";
-  $("#do-login").disabled = true;
-  try {
-    const who = $("#lwho").value.trim();
-    const role = who ? "member:" + who : "admin";
-    const l = await api("login", { role, password: $("#lpw").value });
-    /* REC-41, 2026-08-05. THIS BRANCH WAS THE DISCLOSURE, not a courtesy.
-       It read the refusal's reason code and answered NO_SUCH_ROLE with "No
-       member by that name has set a password on this copy yet." \u2014 which told
-       any anonymous visitor, on the instance's own front door and in plainer
-       words than the plane itself used, whether a guessed name holds a
-       credential here. op=login's two codes are now one (SIGN_IN_REFUSED) and
-       there is nothing left to branch on; this renders the plane's own
-       sentence, which names both possibilities and says the record does not
-       report which. DEC-8: a surface renders what it received and never
-       composes a refusal of its own. The fallback is kept for a refusal that
-       somehow arrives without a detail, and it is deliberately the LESS
-       specific of the two old strings. */
-    if (!l.result || !l.result.ok) {
-      e.textContent = (l.result && l.result.detail)
-        || "That name and password were not accepted."; return; }
-    WHO = who || "admin";
-    const b = await api("bootstrap");
-    panel(l.result, b.consumedAt);
-  } catch(err){ e.textContent = "Sign-in did not go through: " + err.message; }
-  finally { $("#do-login").disabled = false; }
-});
-let SESSION = null;
-let WHO = "admin";
-/* Membership Architecture v2 section 5: a capability a member does not hold is
-   ABSENT from their interface, not present and refused. The plane refuses it
-   too, because a hidden control is a courtesy and not a boundary, but the
-   absence is the part section 5 actually asks for.
-
-   Read from op=whoami rather than kept as a second copy of the rules here. A
-   copy would drift, and the one that drifted would be this one. Starts EMPTY so
-   a failed or in-flight whoami hides everything rather than showing controls
-   that will refuse: fail closed. */
-let CAPS = new Set();
-const can = (c)=>CAPS.has(c);
-/* R23: whether this session ADMINISTERS, as op=whoami reports it (the founder and every enrolled administrator),
-   never inferred from the name signed in with. Starts false, so the members section is absent until whoami says. */
-let ADMIN = false;
-let INVITE = null;
-/* Everything section 5 hides, in ONE place, so a control cannot be added later
-   in a screen that forgot to ask. Called before whoami answers as well as after,
-   so the window between showing the panel and hearing back shows nothing the
-   member may not use. */
-function applyCaps(){
-  $("#go-new").hidden = !can("contribute");
-  $("#go-members").hidden = !ADMIN;
-  const t = $("#n-type");
-  if (t) for (const o of t.options) if (o.value === "project") o.hidden = !can("create_projects");
-}
-
-function panel(login, claimedAt){
-  if (login && login.token) {
-    SESSION = login.token;
-    try { sessionStorage.setItem("bio-session", JSON.stringify({ t: login.token, e: login.expires || 0, c: claimedAt || "", w: WHO })); } catch {}
-  }
-  ADMIN = false;
-  applyCaps();
-  rec("whoami").then((r)=>{
-    CAPS = new Set(r && r.result && Array.isArray(r.result.capabilities) ? r.result.capabilities : []);
-    ADMIN = !!(r && r.result && r.result.administer === true);
-    applyCaps();
-    openProfiles();
-    openAssistant();
-  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); openAssistant(); });
-  $("#panel-lede").textContent = WHO === "admin"
-    ? "Signed in as administrator." : "Signed in as " + WHO + ".";
-  $("#p-version").textContent = window.__ver || "unknown";
-  $("#p-claimed").textContent = claimedAt ? new Date(claimedAt).toLocaleString() : "just now";
-  $("#p-roles").textContent = WHO;
-  $("#p-expires").textContent = login && login.expires ? new Date(login.expires).toLocaleString() : "";
-  show("#s-panel");
-}
-
-/* ---- the record, read-only through the signed-in session ---- */
-const rec = async (op, params={})=>{
-  const q = new URLSearchParams({ op, token: SESSION, ...params });
-  const r = await fetch("/api/?"+q.toString());
-  if (r.status === 401) { SESSION = null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
-  return r.json();
-};
-const escH = (x)=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-const TYPES = [["information","Information"],["inquiry","Questions"],["project","Projects"],["action","Actions"]];
-const fmtWhen = (iso)=>{ const d=new Date(iso); return isNaN(d)?escH(iso):d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); };
-const chip = (st)=>'<span class="chip '+escH(st)+'">'+escH(st)+"</span>";
-
-async function openBrowse(){
-  show("#s-browse");
-  let list;
-  try { list = (await rec("list")).result || []; } catch { return; }
-  const by = {};
-  for (const b of list) (by[b.object_type] ||= []).push(b);
-  $("#browse-summary").textContent = list.length + " records. Everything below is read-only; the record can only be changed through the gated tools.";
-  let html = "";
-  for (const [t, label] of TYPES){
-    const rows = by[t] || []; delete by[t];
-    if (!rows.length) continue;
-    html += "<h2>"+label+" ("+rows.length+")</h2><table class=\\"rec\\"><tr><th>Record</th><th>State</th><th>Updated</th></tr>";
-    for (const b of rows)
-      html += '<tr class="row" data-id="'+escH(b.bundle_id)+'"><td><span class="bid">'+escH(b.bundle_id)+'</span><br><span class="dim">'+escH(b.title||"")+"</span></td><td>"+chip(b.current_state)+"</td><td class=\\"dim\\">"+fmtWhen(b.last_updated)+"</td></tr>";
-    html += "</table>";
-  }
-  for (const t of Object.keys(by)){
-    html += "<h2>"+escH(t)+" ("+by[t].length+")</h2><table class=\\"rec\\">";
-    for (const b of by[t]) html += '<tr class="row" data-id="'+escH(b.bundle_id)+'"><td><span class="bid">'+escH(b.bundle_id)+"</span></td><td>"+chip(b.current_state)+"</td><td class=\\"dim\\">"+fmtWhen(b.last_updated)+"</td></tr>";
-    html += "</table>";
-  }
-  $("#browse-body").innerHTML = html || "<p>The record is empty.</p>";
-  document.querySelectorAll("#browse-body tr.row").forEach(r=>r.addEventListener("click",()=>openBundle(r.dataset.id)));
-}
-
-/* Frontmatter split and a small, honest markdown rendering: headings, bold,
-   lists, code spans, paragraphs. Anything else stays visible as written. */
-function splitFm(text){
-  const m = /^---\\n([\\s\\S]*?)\\n---\\n?/.exec(text);
-  if (!m) return { fm:{}, body:text };
-  const fm = {};
-  for (const line of m[1].split("\\n")){
-    const kv = /^([A-Za-z_][A-Za-z0-9_]*):\\s*(.*)$/.exec(line);
-    if (kv) fm[kv[1]] = kv[2].replace(/^"|"$/g,"");
-  }
-  return { fm, body:text.slice(m[0].length) };
-}
-function mdRender(md){
-  const lines = md.split("\\n");
-  let out = "", inList = false, para = [];
-  const flush = ()=>{ if (para.length){ out += "<p>"+inline(para.join(" "))+"</p>"; para=[]; } };
-  const endList = ()=>{ if (inList){ out += "</ul>"; inList=false; } };
-  const inline = (t)=>escH(t).replace(/\\*\\*([^*]+)\\*\\*/g,"<b>$1</b>").replace(/\`([^\`]+)\`/g,"<code>$1</code>");
-  for (const raw of lines){
-    const l = raw.replace(/\\s+$/,"");
-    if (/^###\\s+/.test(l)){ flush(); endList(); out += "<h3>"+inline(l.replace(/^###\\s+/,""))+"</h3>"; }
-    else if (/^##\\s+/.test(l)){ flush(); endList(); out += "<h2>"+inline(l.replace(/^##\\s+/,""))+"</h2>"; }
-    else if (/^[-*]\\s+/.test(l)){ flush(); if(!inList){ out += "<ul>"; inList=true; } out += "<li>"+inline(l.replace(/^[-*]\\s+/,""))+"</li>"; }
-    else if (l === ""){ flush(); endList(); }
-    else para.push(l);
-  }
-  flush(); endList();
-  return out;
-}
-
-let CURRENT = { id:null, img:null };
-async function openBundle(id){
-  show("#s-bundle");
-  $("#crumb-id").textContent = id;
-  $("#b-title").textContent = id;
-  $("#b-facts").innerHTML = ""; $("#b-md").innerHTML = "<p class=\\"small\\">Loading&hellip;</p>";
-  $("#b-files").innerHTML = ""; $("#b-history").innerHTML = "";
-  let img;
-  try { img = (await rec("image", { id })).result; } catch { return; }
-  if (!img){ $("#b-md").innerHTML = "<p>This record was not found.</p>"; return; }
-  CURRENT = { id, img };
-  renderBundle(id, img, null);
-}
-/* R25 (D-719; State Rules section 6): the history reads in WRITE order, never the caller-chosen snap key, whose
-   lexical order is not a clock. The image carries each entry's write-order rank as seq; when EVERY entry carries a
-   distinct integer one the list follows it, else it is listed by key and the page says which order it shows. */
-function historyOrder(raw){
-  const list = Array.isArray(raw) ? raw.filter(e=>e && typeof e === "object") : [];
-  const seqs = list.map(e=>e.seq);
-  const write = list.length > 0 && seqs.every(v=>Number.isSafeInteger(v)) && new Set(seqs).size === list.length;
-  return write ? { order:"write", entries: list.slice().sort((a,b)=>a.seq-b.seq) }
-    : { order:"key", entries: list.slice().sort((a,b)=>String(a.key).localeCompare(String(b.key))) };
-}
-function renderBundle(id, img, revisionKey){
-  const liveText = typeof img["bundle.md"] === "string" ? img["bundle.md"] : "";
-  /* Canonical snapshot path: the key lives in the filename, not a directory. */
-  const revPath = revisionKey ? "_history/bundle_"+revisionKey+".md" : null;
-  const revText = revPath && typeof img[revPath] === "string" ? img[revPath] : null;
-  const { fm, body } = splitFm(revText ?? liveText);
-  $("#b-title").textContent = fm.title || id;
-  const facts = [["State", fm.current_state ? chip(fm.current_state) : ""],
-    ["Last updated", fm.last_updated ? fmtWhen(fm.last_updated) : ""],
-    ["Created", fm.created ? fmtWhen(fm.created) : ""],
-    ["Criticality", escH(fm.criticality||"")]]
-    .filter(([,v])=>v);
-  $("#b-facts").innerHTML = facts.map(([k,v])=>'<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+"</span></div>").join("");
-  $("#b-md").innerHTML =
-    (revText !== null ? '<div class="revnote">Viewing a historical revision ('+escH(revisionKey)+'). <button class="histbtn" id="back-live">Back to the live record</button></div>' : "")
-    + mdRender(body);
-  const bl = $("#back-live"); if (bl) bl.addEventListener("click",()=>renderBundle(id, img, null));
-  ratifyPanel(id, liveText, revText !== null);
-
-  const files = Object.keys(img).filter(k=>!k.startsWith("_history/")).sort();
-  $("#b-files").innerHTML = files.map(k=>{
-    const v = img[k];
-    if (typeof v === "string")
-      return '<div class="kv"><span class="k">'+escH(k)+'</span><span class="v dim">'+v.length.toLocaleString()+" chars</span></div>";
-    const dl = k.split("/").pop();
-    return '<div class="kv"><span class="k">'+escH(k)+'</span><span class="v"><a class="filelink" href="/api/?op=capture&sha256='+escH(v.blobSha||v.sha256)+"&token="+encodeURIComponent(SESSION)+"&dl="+encodeURIComponent(dl)+'">download</a> <span class="dim mono">'+escH((v.sha256||v.blobSha||"").slice(0,12))+"&hellip;</span></span></div>";
-  }).join("") || "<p class=\\"small\\" style=\\"margin:0\\">No files.</p>";
-
-  let entries = [];
-  try { entries = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; } catch {}
-  const hist = historyOrder(entries);
-  entries = hist.entries;
-  $("#b-history").innerHTML = (entries.length ? '<p class="small" style="margin-top:0">'
-    + (hist.order === "write" ? "Listed in the order they were written, oldest first."
-      : "Listed by snapshot key: this copy of the record does not carry the order they were written, and key order is not necessarily the order they were written.")
-    + "</p>" : "") + entries.map(e=>{
-    const viewable = typeof img["_history/bundle_"+e.key+".md"] === "string";
-    return '<div class="kv"><span class="k mono">'+escH(e.key)+'</span><span class="v">'
-      + escH(e.kind||"") + " by " + escH(e.author||"unknown") + ' <span class="dim">' + fmtWhen(e.created) + "</span> "
-      + (viewable ? '<button class="histbtn" data-rev="'+escH(e.key)+'">view</button>' : "")
-      + "</span></div>";
-  }).join("") || "<p class=\\"small\\" style=\\"margin:0\\">Created in a single revision; nothing has been superseded.</p>";
-  document.querySelectorAll("#b-history .histbtn[data-rev]").forEach(x=>x.addEventListener("click",()=>renderBundle(id, img, x.dataset.rev)));
-  document.querySelector("main").classList.add("wide");
-}
-$("#go-browse").addEventListener("click", openBrowse);
-$("#crumb-panel").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
-$("#crumb-panel2").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
-$("#crumb-browse").addEventListener("click", openBrowse);
-
-/* ---- publishing: the one action a password alone cannot take ----
-   Ratifying copies this exact revision into the published record, where
-   anyone can check a hash against it. It needs a signature made with a
-   registered key, so the authority to publish is held by people, not by
-   whoever is holding a session. */
-async function ratifyPanel(id, liveText, historical){
-  const box = $("#b-ratify");
-  if (historical) { box.innerHTML = ""; return; }
-  /* No publish capability, no publish surface. Before this the panel was drawn
-     for everyone and the member was stopped at the end of it, by the absence of
-     a signing key rather than by the capability, which is the key doing the
-     capability's job. */
-  if (!can("publish")) { box.innerHTML = ""; return; }
-  const sha = await sha256Text(liveText);
-  box.innerHTML = "<h2>Publish this</h2>"
-    + '<p class="small">Publishing puts this revision where the public can verify it by hash. '
-    + "It cannot be undone: a published hash answers forever, even after later revisions.</p>"
-    + '<div class="card"><div class="kv"><span class="k">Record</span><span class="v mono">'+escH(id)+"</span></div>"
-    + '<div class="kv"><span class="k">This revision</span><span class="v mono">'+escH(sha)+"</span></div></div>"
-    + '<p class="small">Open the <a class="filelink" href="/sign" target="_blank" rel="noopener">signing page</a>, '
-    + "unlock your key, choose Sign a ratification, paste in those two values, and paste what it "
-    + "hands back into the box below.</p>"
-    + '<textarea id="r-sig" rows="6" spellcheck="false" placeholder="-----BEGIN SSH SIGNATURE-----"></textarea>'
-    + '<div class="actions" style="margin-top:12px"><button id="r-go">Publish it</button>'
-    + ' <button id="r-edit">Revise instead</button></div><p class="err" id="r-err"></p>';
-  $("#r-edit").addEventListener("click", ()=>openEdit(id, liveText));
-  $("#r-go").addEventListener("click", async ()=>{
-    const e = $("#r-err"); e.textContent = "";
-    const sig = $("#r-sig").value.trim();
-    if (!sig) { e.textContent = "Paste the signature from the signing page."; return; }
-    $("#r-go").disabled = true;
-    try {
-      const r = await post("ratify", { bundleId: id, expectedSha: sha, sig });
-      if (r.ok) {
-        box.innerHTML = '<div class="okbox"><p style="margin:0">Published, attested by '
-          + escH(r.attestor||"a registered key") + ". " + escH(r.published.shas)
-          + " hashes are now publicly verifiable.</p></div>";
-        return; }
-      e.textContent = ratifyWhy(r);
-    } catch(err){ e.textContent = "That did not go through: " + err.message; }
-    finally { const g=$("#r-go"); if (g) g.disabled = false; }
-  });
-}
-function ratifyWhy(r){
-  const why = r.reason || r.error || "unknown";
-  if (why === "RATIFY_STALE") return "Someone saved a newer revision while you were signing. Reload this record and sign the new hash.";
-  if (why === "NO_SIGNERS") return "No keys are registered on this copy yet, so nothing can be published. An administrator registers keys under Members and keys.";
-  if (why === "SIG_UNKNOWN_KEY") return "That signature was made with a key this group has not registered, or one that has been revoked.";
-  if (why === "SIG_BAD_SIGNATURE") return "That signature does not match this record and hash. Sign the exact values shown above.";
-  if (why === "SIG_NAMESPACE") return "That signature was made for something other than ratification. Use the Sign a ratification tab.";
-  if (why === "MALFORMED") return "That does not look like a signature. Copy the whole block, including the BEGIN and END lines.";
-  if (why === "GATE_REFUSED") return "The checks refused this record: "
-    + (r.findings||[]).map(f=>f.check + (f.where ? " (" + f.where + ")" : "")).join(", ")
-    + ". Publishing is blocked until those are fixed.";
-  return "Refused: " + why;
-}
-
-/* ---- intake: writing into the working record from this page ----
-   Every write below goes through the same gated API a machine caller uses.
-   Authorship is stamped by the server from the session, so nothing typed
-   here can claim to be someone else. */
-const NL = String.fromCharCode(10);
-const PREFIX = { information:"INFO", inquiry:"INQ", focus:"FOCUS", problem:"PROB", project:"PROJ", action:"ACTN" };
-/* From the record grammar's tables (record-grammar R32, R35), not from memory. */
-const FIRST_STATE = ${FIRST_STATE_JSON};
-const HEADINGS = ${HEADINGS_JSON};
-/* information@1 for typed intake, deliberately. The @2 contract makes the
-   intake provenance register mandatory (C-18.1), and a register describes
-   captured DOCUMENTS: locator, authority, capture method, grade, hash. A member
-   typing what they know has no document, so @2 would demand a register with
-   nothing honest to put in it. Material arriving WITH a document is @2 and
-   carries custody, which is the capture path (PLAN.md S-5), not this one. */
-/* information@1 for a member writing down what they know, because the @2
-   contract makes the intake provenance register mandatory and a register
-   describes captured DOCUMENTS. The moment a document IS captured the bundle is
-   @2 and carries the register, which is the honest distinction rather than a
-   version preference. */
-const SCHEMA_OF = { information:"information@1", inquiry:"inquiry@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
-const schemaFor = (type, hasDoc)=> type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
-const post = async (op, body)=>{
-  const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
-    { method:"POST", body: JSON.stringify(body) });
-  if (r.status === 401) { SESSION=null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
-  return r.json();
-};
-const sha256Text = async (text)=>{
-  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
-};
-/* REC-178: a file's bytes is the length of its UTF-8 encoding, never text.length (UTF-16 units). The plane
-   computes it over what it holds and stores that; this sends the same figure. */
-const utf8Len = (text)=> new TextEncoder().encode(text).length;
-const stamp = ()=>{
-  const d = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
-  let r = ""; const h = "0123456789abcdef";
-  const bytes = crypto.getRandomValues(new Uint8Array(4));
-  for (const x of bytes) r += h[x>>4] + h[x&15];
-  return d + "_" + r;
-};
-/* A conformant bundle.md. Fifteen core fields, because C-2.2 fires once per
-   missing one and the previous version wrote four; the canonical heading set for
-   the type, because C-3.1 refuses both a missing heading and an unexpected one;
-   and the per-type extension fields each type's own check requires. The first
-   prose section carries what the member wrote, and the rest are present and
-   empty, which is what the catalog asks for. */
-const mdFor = (id, type, state, title, body, now, hasDoc, src, act)=>{
-  /* REC-141: a PROJECT's id is minted by the plane, which writes it into these bytes and refuses
-     bytes already carrying one, so a project's document is sent with no id line (id is null). */
-  /* D-436: and NO group line, for the same kind of reason. The producing group is the instance's
-     one recorded value, and the plane writes it into every document it creates; this page wrote a
-     literal slug here, true of one instance and false of every other. On a copy that records no
-     group yet, the plane refuses the save by name (C-64.1) rather than supply one. */
-  const fm = ["---",...(id === null ? [] : ["id: "+id]),"object_type: "+type,"schema: "+schemaFor(type, hasDoc),
-    "title: "+JSON.stringify(title),"current_state: "+state,"prior_state: null",
-    "created: "+now,"last_updated: "+now,
-    "produced_by:","  mode: assisted","  capability_tier: session",
-    "references: []","state_history: []",
-    "annotations_open: 0","reeval_pending:","  flag: false","  since: null",
-    "  source: null","visuals: []"];
-  if (type === "information") fm.push(
-    "criticality: supporting","source_status: unchanged",
-    /* D-62: the captured document's own hash, in the frontmatter, because C-2.7
-       makes a well-formed content_hash an ENTRY REQUIREMENT for verified and the
-       release flow reads the frontmatter and nothing else. Found live: this
-       mdFor omitted it even when a document was attached, so the first bundle a
-       member wrote with a capture could never have been released, and its bytes
-       were unfindable through the search layer's hash: facet, which reads this
-       field (defeating the D-60 duplicate detection). Absent for typed intake,
-       where there is no document and inventing one would be a lie. */
-    ...(src && src.content_hash ? ["content_hash: sha256:"+src.content_hash] : []),
-    "source:","  locator: in hand","  authority: member-entered","  retrieved: "+now,
-    "monitoring:","  enabled: false","  frequency: none");
-  if (type === "inquiry" || type === "focus" || type === "problem") fm.push(
-    "surfaced_by: human","recheck_triggers:","  - text: Revisit this",
-    "    description: A member set no specific trigger at creation; replace this with a real one.");
-  if (type === "project") fm.push("objective: "+JSON.stringify(title));
-  /* D-130 / REC-23 / UI-19, 2026-08-05. The counterparty placeholder used to be
-     pushed here too - D-130 named only civicos-ui/app.html, this was the SECOND
-     emission site - and REC-23 took it out, leaving the field ABSENT and the
-     gate naming the gap. UI-19 gives
-     this page the radio pair, so the value arrives FROM THE MEMBER through
-     act.counterparty and nothing here invents one.
-
-     CALLED WITHOUT act THIS ARM STILL WRITES NO COUNTERPARTY, permanently and
-     on purpose: a bundle written by a caller that collected no answer draws
-     exactly C-2.10, which is the honest one error, and the R24 test in
-     test/m/instance-setup/page.test.mjs asserts BOTH directions so a future
-     default cannot pass by inventing one.
-
-     action_kind is "other" HERE ONLY, and it is not a chooser this page hides:
-     "other" is the catalog's own token for an ask that is not one of the named
-     kinds, which is exactly what a page offering no kind control has been told.
-     The app's intake reads the published action_kind vocabulary and lets the
-     member say; this page is the installer's minimal intake and does not.
-     risk_tier is WRITTEN undetermined (D-182, BOB #21): this page asks no
-     tier, so no member stated one, and the old default of 1 told a member the
-     action was safe to file freely when nobody had assessed it. Only a
-     member's authored act sets 1, 2 or 3; the words are the plane's, published
-     as vocabularies.risk_tiers.
-     (No backticks in this comment: it lives inside the SETUP_HTML template
-     literal, and a stray pair here parses fine under node --check and then
-     fails at Miniflare's module parse. CLAUDE.md's trap, met again.) */
-  if (type === "action") {
-    /* D-483: the tier the member chose, or undetermined when they chose none - and undetermined is
-       WRITTEN either way, never omitted, because an absent key and a stated undetermined must read
-       the same and only one of them says so in the bytes. riskTierState is the plane's own reader
-       (injected above), so what is written here is what the plane will read back. */
-    const tier = riskTierState(act && act.risk_tier !== null && act.risk_tier !== undefined
-      ? act.risk_tier : undefined);
-    fm.push("action_kind: other","risk_tier: " + (tier === null ? "undetermined" : tier));
-    const cp = act && act.counterparty;
-    /* The state the member chose is written even when the field beside it is
-       empty: a member who answered "not determined yet" and wrote nothing has
-       left a requirement unmet, and C-2.10 says so precisely. Dropping the
-       block would hand them the vaguer refusal for a question they answered. */
-    /* R24 (N235): a named counterparty is written as actions R9 requires, an office by its role and body and,
-       when the member stated one, its level; never a bare name, which R9 refuses on creation. */
-    if (cp && cp.state === "named")
-      fm.push("counterparty:","  state: named",
-              ...(String(cp.role || "").trim() ? ["  role: " + JSON.stringify(String(cp.role).trim())] : []),
-              ...(String(cp.body || "").trim() ? ["  body: " + JSON.stringify(String(cp.body).trim())] : []),
-              ...(String(cp.level || "").trim() ? ["  level: " + String(cp.level).trim()] : []));
-    else if (cp && cp.state === "undetermined")
-      fm.push("counterparty:","  state: undetermined",
-              ...(String(cp.basis || "").trim() ? ["  basis: " + JSON.stringify(String(cp.basis).trim())] : []));
-  }
-  fm.push("---","");
-  const heads = HEADINGS[type] || ["## Summary"];
-  const out = fm.slice();
-  heads.forEach((h,i)=>{ out.push(h,""); if (i===0) out.push(body,""); });
-  return out.join(NL);
-};
-
-/* The bundle's files, with the captured document beside the record and the
-   provenance register naming it. C-18.1 wants the register to point at a file
-   that exists in the bundle, so the document is registered as a blob reference
-   and the register entry names the same path. */
-async function docFiles(text, doc, textSha){
-  const files = [{ path:"bundle.md", text, bytes:utf8Len(text), sha256:textSha }];
-  if (!doc) return files;
-  const prov = JSON.stringify({ documents: [doc] }, null, 1);
-  files.push({ path:"data/provenance.json", text: prov, bytes: utf8Len(prov),
-               sha256: await sha256Text(prov) });
-  if (Array.isArray(doc.parts) && doc.parts.length) {
-    /* A parted document has no single file: each part is registered separately
-       and the catalog verifies the whole by streaming them. Registering a
-       phantom whole would name bytes the store does not hold. */
-    for (const p of doc.parts)
-      files.push({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes });
-  } else {
-    files.push({ path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256,
-                 bytes: doc.capture.bytes });
-  }
-  /* The timestamp token is evidence too, so it lives in the bundle rather than
-     only in the store. A token nobody can find is a token nobody will check. */
-  for (const a of (doc.attestations || []))
-    files.push({ path: a.file, blobSha: a.sha256, sha256: a.sha256, bytes: a.bytes });
-  return files;
-}
-function acquireWhy(a){
-  const why = a.reason || a.error || "unknown";
-  if (why === "BAD_LOCATOR") return "That address cannot be fetched. It must be an https address on a public site: not a plain http address, not an address on this machine, and not one carrying a username or password.";
-  /* D-110: the mapping for a missing-authority refusal was deleted here. D-97
-     (0.47.0) removed that refusal: a caller who cannot name the issuing party
-     now leaves the capture honestly undetermined rather than being forced to
-     invent an authority to get past the door. Explaining a refusal the plane no
-     longer makes is a copy of an overturned rule in the surface a member reads,
-     so no reason string for it survives \u2014 not even in this comment. */
-  if (why === "SOURCE_REFUSED") return "The site answered with an error (" + a.status + "). The address may be wrong, or the document may no longer be published there.";
-  if (why === "FETCH_FAILED") return "The site could not be reached just now. Nothing was written.";
-  if (why === "EMPTY") return "The site returned an empty document, so there was nothing to keep.";
-  if (why === "TOO_LARGE") return "That document is too large to capture this way (" + a.bytes + " bytes). Large documents are captured in parts.";
-  return "The document could not be captured: " + why;
-}
-
-/* ---- create ---- */
-/* C-16: a Question has ONE authored field, the question itself. No Title
-   control and no second gating field: the title is DERIVED from the question
-   (the rule is record-grammar's, R30, and is embedded verbatim below, so
-   this page and the store's projection cannot drift), and a gate that
-   pressures a member into writing what they do not know is a bug in the
-   gate. */
-const deriveInquiryTitle = ${deriveInquiryTitle.toString()};
-/* D-483: the tier vocabulary and the plane's own reader of it, injected verbatim (the deriveInquiryTitle
-   pattern one line up, for its reason: the page and the plane cannot drift if they are the same code).
-   THE SETTABLE TIERS ARE DERIVED, NOT LISTED. A member may author exactly the values riskTierState reads
-   back as themselves; undetermined is not among them, because it is what the record says when NO member
-   has stated a tier, and offering it as a choice would let a member author the absence of their own
-   assessment. If the catalogue ever grows a fourth tier this control grows with it; if it grew one the
-   plane would refuse, this control would not offer it. */
-const RISK_TIERS = ${RISK_TIERS_JSON};
-const riskTierState = ${riskTierState.toString()};
-const SETTABLE_TIERS = Object.keys(RISK_TIERS).filter((k)=> riskTierState(Number(k)) === Number(k));
-/* The words are the vocabulary's, escaped because they are rendered as markup and nothing else about
-   their provenance makes them safe to interpolate raw. */
-const renderRiskTiers = ()=>{
-  const box = $("#n-risk-choices");
-  if (box) box.innerHTML = SETTABLE_TIERS.map((k)=>
-    '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">'
-    + '<input type="radio" name="n-risk" id="n-risk-' + escH(k) + '" value="' + escH(k)
-    + '" style="width:auto;margin-top:4px">'
-    + '<span>' + escH(RISK_TIERS[k]) + '</span></label>').join("");
-  /* What leaving it alone WILL write, in the plane's sentence for it rather than this page's. */
-  const unset = $("#n-risk-unset");
-  if (unset) unset.textContent = "Leave this alone and the record will say: " + RISK_TIERS.undetermined;
-};
-renderRiskTiers();
-/* null means NO MEMBER CHOSE, which mdFor writes as undetermined. A value the vocabulary does not hold
-   cannot arrive from the control above; if one ever did it would be nobody stating a tier the plane
-   accepts, so it reads as no choice here rather than being passed through to the bytes. */
-const chosenRiskTier = ()=>{
-  const el = $("input[name=n-risk]:checked");
-  const st = riskTierState(el ? Number(el.value) : undefined);
-  return st === "undetermined" || st === null ? null : st;
-};
-const syncNewForm = ()=>{
-  const t = $("#n-type").value;
-  const isQ = t === "inquiry";
-  $("#n-title").hidden = isQ; $("#n-title-label").hidden = isQ;
-  $("#n-body-label").textContent = isQ ? "What do you want to know?" : "What do you know?";
-  /* UI-19: the counterparty pair belongs to an action and to nothing else, and
-     a document has no source panel to fill in when it is one. */
-  if ($("#n-act")) $("#n-act").hidden = t !== "action";
-  if ($("#n-src")) $("#n-src").hidden = t === "action";
-  syncCounterparty();
-};
-/* The pair reveals exactly one field, and only after the member has answered.
-   Neither is shown by default, because a visible empty field is a suggestion. */
-const syncCounterparty = ()=>{
-  const named = $("#n-cp-named") && $("#n-cp-named").checked;
-  const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
-  if ($("#n-cp-name-box")) $("#n-cp-name-box").hidden = !named;
-  if ($("#n-cp-basis-box")) $("#n-cp-basis-box").hidden = !undet;
-};
-if ($("#n-cp-named")) $("#n-cp-named").addEventListener("change", syncCounterparty);
-if ($("#n-cp-undet")) $("#n-cp-undet").addEventListener("change", syncCounterparty);
-$("#n-type").addEventListener("change", syncNewForm);
-$("#go-new").addEventListener("click", ()=>{ $("#n-err").textContent=""; syncNewForm(); show("#s-new"); });
-$("#n-save").addEventListener("click", async ()=>{
-  const e = $("#n-err"); e.textContent = "";
-  const type = $("#n-type").value, body = $("#n-body").value.trim();
-  const title = type === "inquiry" ? (deriveInquiryTitle(body) || "") : $("#n-title").value.trim();
-  if (type === "inquiry") {
-    if (!body) { e.textContent = "Ask the question."; return; }
-  } else {
-    if (!title) { e.textContent = "Give it a title."; return; }
-    if (!body) { e.textContent = "Write something in the body."; return; }
-  }
-  /* UI-19: what THIS FORM has collected, never a rule about the record. C-2.10
-     is the rule and it says so in its own words at the gate if anything gets
-     past here; all this does is decline to send an action with the question
-     unanswered, because an empty control has nothing to send. */
-  let act = null;
-  if (type === "action") {
-    const named = $("#n-cp-named") && $("#n-cp-named").checked;
-    const undet = $("#n-cp-undet") && $("#n-cp-undet").checked;
-    const role = ($("#n-cp-role") ? $("#n-cp-role").value.trim() : "");
-    const office = ($("#n-cp-body") ? $("#n-cp-body").value.trim() : "");
-    const level = ($("#n-cp-level") ? $("#n-cp-level").value.trim() : "");
-    const bs = ($("#n-cp-basis") ? $("#n-cp-basis").value.trim() : "");
-    if (!named && !undet) { e.textContent = "Say who this is addressed to, or that it is not determined yet."; return; }
-    if (named && (!role || !office)) { e.textContent = "Name the office: its official role and the body it belongs to."; return; }
-    if (undet && !bs) { e.textContent = "Say what is known so far, and what would settle it."; return; }
-    /* D-483: the tier goes with the counterparty because both are the member's answers and neither is
-       this form's. No refusal beside it: a member who assessed nothing has answered honestly, and a gate
-       that stopped them here would press them into stating the one value nobody assessed. */
-    act = { counterparty: named ? { state:"named", role, body:office, ...(level ? { level } : {}) } : { state:"undetermined", basis:bs },
-            risk_tier: chosenRiskTier() };
-  }
-  $("#n-save").disabled = true;
-  try {
-    const year = String(new Date().getFullYear());
-    /* REC-141 (Membership v2 section 7): a new project names no id. The plane mints it and answers with
-       it; a creation that names one is refused. Every other type still allocates its own. */
-    const minted = type === "project";
-    const a = minted ? null : await rec("allocid", { prefix: PREFIX[type], year });
-    let id = minted ? null : a.result.id + "-" + title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
-    const state = FIRST_STATE[type];
-    const now = new Date().toISOString().split(".")[0] + "Z";
-    /* Capture first, because a failed fetch should not leave a half-made bundle
-       in the record. If the document cannot be had, nothing is written and the
-       member is told what the source did. */
-    const loc = ($("#n-loc") ? $("#n-loc").value.trim() : "");
-    const auth = ($("#n-auth") ? $("#n-auth").value.trim() : "");
-    let doc = null;
-    if (loc) {
-      if (!auth) { e.textContent = "Say who issued the document as well as where it lives."; return; }
-      const acq = await post("acquire", { locator: loc, authority: auth });
-      if (!acq.ok) { e.textContent = acquireWhy(acq); return; }
-      doc = acq.document;
-      /* Co-attestation happens now, while the capture is fresh, because a
-         timestamp is a claim about WHEN and one obtained later says less. A
-         failure here does not stop the bundle: the attempts are recorded either
-         way, and a register showing a failed attempt is a different and more
-         honest claim than one showing none. */
-      const wantArchive = !!($("#n-arch") && $("#n-arch").checked);
-      const att = await post("attest", { sha256: doc.capture.sha256, locator: loc, archive: wantArchive });
-      doc.attestation_attempts = (att.attempts || []);
-      if (att.attestation) doc.attestations = [att.attestation];
-      if (att.archive) doc.co_archive = att.archive;
-    }
-    const text = mdFor(id, type, state, title, body, now, !!doc,
-      doc && doc.capture ? { content_hash: doc.capture.sha256 } : null, act);
-    const r = await post("promote", {
-      ...(minted ? {} : { bundleId: id }), base: null, snapKey: stamp(), author: WHO,
-      meta: { object_type:type, title, current_state:state, created:now, last_updated:now },
-      files: await docFiles(text, doc, await sha256Text(text)),
-      register: doc ? [...(Array.isArray(doc.parts) && doc.parts.length
-                        ? doc.parts.map((p) => ({ sha256: p.sha256, path: p.file,
-                                                  encoding: "binary", bytes: p.bytes }))
-                        : [{ sha256: doc.capture.sha256, path: doc.file,
-                             encoding: doc.capture.encoding, bytes: doc.capture.bytes }]),
-                       ...(doc.attestations || []).map((a) => ({
-                         sha256: a.sha256, path: a.file, encoding: "binary", bytes: a.bytes }))] : [],
-    });
-    if (!r.result || !r.result.ok) { e.textContent = "Refused: " + ((r.result&&r.result.reason)||r.error||"unknown"); return; }
-    if (minted) id = r.result.bundleId;
-    $("#n-title").value = ""; $("#n-body").value = "";
-    if ($("#n-loc")) { $("#n-loc").value = ""; $("#n-auth").value = ""; }
-    openBundle(id);
-  } catch(err){ e.textContent = "That did not go through: " + err.message; }
-  finally { $("#n-save").disabled = false; }
-});
-
-/* ---- revise ---- */
-let EDIT_ID = null;
-let EDIT_IMAGE = null;
-async function openEdit(id, text){
-  EDIT_ID = id; $("#e-err").textContent = "";
-  $("#e-id").textContent = id; $("#e-body").value = text;
-  show("#s-edit");
-}
-$("#e-back").addEventListener("click", ()=>openBundle(EDIT_ID));
-/* Prepare a revision. Pure, so it can be tested against the check catalog
-   without a browser.
- *
- * Three things the catalog requires of any revision, none of which the earlier
- * save path did:
- *   last_updated moves, in the DOCUMENT and not only in the promote metadata,
- *     because C-12.1 and C-13.1 read the frontmatter and nothing else;
- *   created is PRESERVED, because overwriting it with the save time destroys
- *     when the thing was actually created and no history holds it elsewhere;
- *   a Session Log entry is appended, because C-13.2 refuses a bundle whose
- *     last_updated moved with nothing recorded, and C-5.1 refuses one whose
- *     prior entries went missing, so the entry is added rather than replacing.
- */
-function reviseText(text, who, now){
-  const parts = splitFm(text);
-  const lines = text.split(NL);
-  let out = [], inFm = false, seenFence = 0, wroteUpdated = false;
-  for (const line of lines){
-    if (line === "---" && seenFence < 2){ seenFence++; inFm = seenFence === 1; out.push(line); continue; }
-    if (seenFence === 1 && /^last_updated:/.test(line)){ out.push("last_updated: " + now); wroteUpdated = true; continue; }
-    if (seenFence === 1 && /^created:/.test(line) && parts.fm.created){ out.push("created: " + parts.fm.created); continue; }
-    out.push(line);
-  }
-  if (!wroteUpdated){
-    /* No last_updated at all: put one at the end of the frontmatter rather than
-       silently leaving the document unable to pass C-2.2. */
-    const at = out.lastIndexOf("---");
-    if (at > 0) out.splice(at, 0, "last_updated: " + now);
-  }
-  let body = out.join(NL);
-  const entry = ["### Session " + now, "", "Revised by " + who + ".", ""].join(NL);
-  const i = body.indexOf("## Session Log");
-  if (i < 0){
-    body = body + NL + "## Session Log" + NL + NL + entry;
-  } else {
-    /* Insert at the END of the Session Log section, before whatever heading
-       follows it, so earlier entries keep their order and their place. */
-    const rest = body.indexOf(NL + "## ", i + 1);
-    const cut = rest === -1 ? body.length : rest + 1;
-    body = body.slice(0, cut) + entry + body.slice(cut);
-  }
-  return body;
-}
-
-/* Every file the bundle has, other than the one being edited, handed back
-   unchanged. promote writes a whole image, so a save that mentions only
-   bundle.md deletes the provenance register and every capture beside it. */
-async function carryForward(id, exclude){
-  const img = (await rec("image", { id })).result || {};
-  const out = [];
-  for (const [path, v] of Object.entries(img)){
-    if (path === exclude || path.indexOf("_history/") === 0) continue;
-    if (typeof v === "string") out.push({ path, text: v, bytes: utf8Len(v), sha256: await sha256Text(v) });
-    else out.push({ path, blobSha: v.blobSha, sha256: v.sha256, bytes: v.bytes });
-  }
-  return out;
-}
-$("#e-save").addEventListener("click", async ()=>{
-  const e = $("#e-err"); e.textContent = "";
-  const text = $("#e-body").value;
-  const fmv = splitFm(text).fm;
-  if (!fmv.id) { e.textContent = "The record must keep its heading block, including its id line."; return; }
-  $("#e-save").disabled = true;
-  try {
-    const lease = await rec("lease", { id: EDIT_ID });
-    if (!lease.result || lease.result.ok === false) {
-      e.textContent = "Someone else is editing this right now (" + (lease.result&&lease.result.heldBy) + ")."; return; }
-    const now = new Date().toISOString().split(".")[0] + "Z";
-    const revised = reviseText(text, WHO, now);
-    const r = await post("promote", {
-      /* The lease returns a field named base. Reading baseSha sent undefined,
-         which the store correctly refused as a stale write, so no revision
-         through this page had ever succeeded. */
-      bundleId: EDIT_ID, base: lease.result.base, snapKey: stamp(), author: WHO,
-      meta: { object_type: fmv.object_type, title: fmv.title || EDIT_ID,
-              current_state: fmv.current_state, created: fmv.created || now, last_updated: now },
-      files: [{ path:"bundle.md", text: revised, bytes: utf8Len(revised), sha256: await sha256Text(revised) },
-              ...(await carryForward(EDIT_ID, "bundle.md"))],
-      register: [],
-    });
-    if (!r.result || !r.result.ok) {
-      const why = (r.result && r.result.reason) || r.error || "unknown";
-      if (why === "FILES_DROPPED") {
-        e.textContent = "Saving would have removed files this record holds ("
-          + (r.result.paths || []).join(", ") + "). Nothing was saved.";
-        return; }
-      e.textContent = (why === "CAS_STALE" || why === "STALE")
-        ? "Someone saved a newer version while you were writing. Open it again and redo your change."
-        : "Refused: " + why;
-      return; }
-    openBundle(EDIT_ID);
-  } catch(err){ e.textContent = "That did not go through: " + err.message; }
-  finally { $("#e-save").disabled = false; }
-});
-
-/* ---- the inbox ---- */
-$("#go-inbox").addEventListener("click", openInbox);
-async function openInbox(){
-  show("#s-inbox");
-  const r = await rec("inbox");
-  const rows = (r.result && r.result.inbox) || [];
-  if (!rows.length) { $("#inbox-body").innerHTML = '<p class="small">Nothing has been left at the door.</p>'; return; }
-  $("#inbox-body").innerHTML = rows.map((k,i)=>
-    '<div class="card"><div class="kv"><span class="k mono">'+escH(k.knock_id)+'</span><span class="v">'
-    + chip(k.status) + ' <span class="dim">' + fmtWhen(k.received) + "</span></span></div>"
-    + '<div class="kv"><span class="k">Hash</span><span class="v mono">'+escH(k.sha256)+"</span></div>"
-    + '<div class="kv"><span class="k">Size</span><span class="v">'+escH(k.bytes)+" bytes</span></div>"
-    + (k.note ? '<div class="kv"><span class="k">Note</span><span class="v">'+escH(k.note)+"</span></div>" : "")
-    + (k.contact ? '<div class="kv"><span class="k">Contact</span><span class="v">'+escH(k.contact)+"</span></div>" : "")
-    + (k.resolved_by ? '<div class="kv"><span class="k">Handled by</span><span class="v">'+escH(k.resolved_by)+"</span></div>" : "")
-    /* Reading the inbox is not gated; ACTING on it is. A member with view
-       rights sees what arrived and cannot disposition it. */
-    /* R48 (DEC-88 (2); capture R32): handling a knock either way is the member's
-       reasoned act, so each card asks for the reason beside its two buttons and
-       sends it with the knock and the status. */
-    + (can("contribute")
-      ? '<label for="ir-'+i+'">Your reason for handling it this way</label>'
-        + '<input id="ir-'+i+'" class="ireason">'
-        + '<div class="actions" style="margin-top:10px">'
-        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="pulled">Mark as taken up</button> '
-        + '<button class="ibtn" data-i="'+i+'" data-id="'+escH(k.knock_id)+'" data-to="discarded">Set aside</button></div>'
-        + '<p class="err" id="ierr-'+i+'"></p>'
-      : "") + "</div>").join("");
-  document.querySelectorAll("#inbox-body .ibtn").forEach(b=>b.addEventListener("click", ()=>inboxResolve(b.dataset)));
-}
-/* R48: nothing is posted without a reason; a refusal is shown in the plane's own
-   words (its translation, else its detail) and the knock is left as it was. */
-async function inboxResolve(d){
-  const e = $("#ierr-"+d.i); e.textContent = "";
-  const reason = $("#ir-"+d.i).value;
-  if (!reason.trim()) { e.textContent = "Write your reason first. Taking a knock up or setting it aside is recorded with the reason you give."; return; }
-  let r;
-  try { r = await post("inboxresolve", { knockId: d.id, status: d.to, reason }); }
-  catch(err){ e.textContent = "That did not go through: " + err.message; return; }
-  const res = r && r.result && typeof r.result === "object" ? r.result : r;
-  if (!r || r.ok === false || !res || res.ok === false) {
-    const why = (res && (res.translation || res.detail)) || (r && (r.translation || r.detail || r.error));
-    e.textContent = why || ("Refused: " + ((res && res.reason) || (r && r.reason) || "unknown"));
-    return; }
-  openInbox();
-}
-
-/* ---- members and keys ---- */
-$("#go-members").addEventListener("click", openMembers);
-async function openMembers(){
-  show("#s-members"); $("#m-err").textContent=""; $("#k-err").textContent="";
-  const m = await rec("memberlist");
-  const rows = (m.result && m.result.members) || [];
-  $("#m-list").innerHTML = rows.length ? rows.map(x=>
-    '<div class="kv"><span class="k mono">'+escH(x.member_id)+'</span><span class="v">'
-    + escH(x.cover||"") + " " + chip(x.status)
-    + (x.invite_pending ? ' <span class="dim">invitation not used yet</span>' : "")
-    + ' <button class="mbtn" data-id="'+escH(x.member_id)+'" data-to="'
-    + (x.status==="revoked"?"active":"revoked") + '">'
-    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
-    : '<p class="small" style="margin:0">No members yet.</p>';
-  document.querySelectorAll("#m-list .mbtn").forEach(b=>b.addEventListener("click", async ()=>{
-    await post("memberset", { memberId: b.dataset.id, status: b.dataset.to }); openMembers();
-  }));
-  const k = await rec("signerlist");
-  const keys = (k.result && k.result.signers) || [];
-  $("#k-list").innerHTML = keys.length ? keys.map(x=>
-    '<div class="kv"><span class="k">'+escH(x.member_id)+'</span><span class="v"><span class="mono dim">'
-    + escH(String(x.key_b64).slice(0,24)) + "&hellip;</span> " + chip(x.status)
-    + (x.attests === false ? ' <span class="dim">' + escH(signerWhy(x)) + "</span>" : "")
-    + ' <button class="kbtn" data-key="'+escH(x.key_b64)+'" data-to="'
-    + (x.status==="revoked"?"active":"revoked") + '">'
-    + (x.status==="revoked"?"reinstate":"revoke") + "</button></span></div>").join("")
-    : '<p class="small" style="margin:0">No keys registered. Until a key is registered, nothing can be published.</p>';
-  document.querySelectorAll("#k-list .kbtn").forEach(b=>b.addEventListener("click", async ()=>{
-    await post("signerset", { keyB64: b.dataset.key, status: b.dataset.to }); openMembers();
-  }));
-}
-/* D-158: this list renders the key's own status, which is the administrator's own
-   revocation switch and NOT whether the key can sign. A key whose member never
-   enrolled used to read active here while the instance refused everything signed
-   with it \u2014 the page telling the administrator more than the plane would honour.
-   op=signerlist now carries the derived fact and the stored one behind it, and
-   each sentence below names a STORED fact rather than a state invented to cover
-   it. The last line is the undetermined branch and says so out loud: an older
-   plane sends no attests field at all, so this renders nothing rather than
-   guessing, which is the caller-side of the same rule. */
-function signerWhy(x){
-  const w = x && x.attests_why;
-  if (w === "key_revoked") return "revoked \u2014 cannot sign";
-  if (w === "member_invited" || w === "member_proposed") return "this member has not enrolled yet, so this key cannot sign";
-  if (w === "member_revoked") return "this member has been revoked, so this key cannot sign";
-  if (w === "member_absent") return "no member on the roster holds this key, so it cannot sign";
-  return "this key cannot sign, and this copy has not been told why";
-}
-function memberWhy(res, wanted){
-  const why = (res && res.reason) || "unknown";
-  if (why === "BAD_MEMBER_ID") return "A member name is lowercase letters, digits and dashes, at least two characters. "
-    + (wanted ? "Try " + wanted + "." : "");
-  if (why === "NO_COVER") return "Give a cover as well as a sign-in name: a label you will recognise them by. It does not have to be their real name.";
-  if (why === "EXISTS") return "There is already a member with that name.";
-  if (why === "NO_SUCH_MEMBER") return "There is no member by that name. Add them first, then register their key.";
-  /* D-158, on UI-72's rule: a refusal carrying the plane's OWN canned sentence
-     reaches the administrator in THAT sentence instead of as the bare code.
-     Placed AFTER the four sentences above so nothing this page already says
-     changes, and before the fallback so the next code with a translation needs
-     no edit here. */
-  if (res && typeof res.translation === "string" && res.translation) return res.translation;
-  return "Refused: " + why;
-}
-$("#m-add").addEventListener("click", async ()=>{
-  const e = $("#m-err"); e.textContent = ""; $("#m-invite").innerHTML = "";
-  const wanted = $("#m-id").value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
-  $("#m-id").value = wanted;
-  const r = await post("memberadd", { memberId: wanted, cover: $("#m-name").value.trim() });
-  if (!r.result || !r.result.ok) { e.textContent = memberWhy(r.result, wanted); return; }
-  /* A link, not a bare code. The code rides the URL fragment, which never
-     reaches any server, and the enrolment screen it opens had no reachable
-     path at all before this (DEBT D-14). */
-  /* The token alone. Nothing about who it addresses rides in the URL, so a
-     leaked or archived link reveals neither the group nor the invitee, and it
-     resolves to nothing once it has been used. */
-  const link = location.origin + location.pathname + "#invite="
-    + encodeURIComponent(r.result.invite);
-  $("#m-invite").innerHTML = '<div class="okbox"><p style="margin:0">Send '
-    + escH(wanted) + ' this link. It works once, it is not shown again, and it '
-    + 'goes nowhere after it has been used.</p>'
-    + '<p class="mono" style="margin:8px 0 0;word-break:break-all">' + escH(link) + "</p></div>";
-  $("#m-id").value = ""; $("#m-name").value = "";
-  openMembers();
-});
-/* Echo the pasted key back in words. A person pasting 80 opaque characters
-   deserves to be told what the machine thinks they just handed it, BEFORE
-   they commit it. */
-function describeKey(line){
-  const t = String(line||"").trim().split(/\\s+/).filter(function(x){ return x; });
-  if (t.length < 2 || t[0] !== "ssh-ed25519" || !/^AAAA/.test(t[1]))
-    return { ok:false, why:"That does not look like a public key line. It should be one line starting with ssh-ed25519." };
-  const label = t.slice(2).join(" ");
-  if (label === "bio-release")
-    return { ok:false, why:"That is the RELEASE key, which signs software. This box wants the ratification key, the one labelled bio-ratify." };
-  return { ok:true, label: label || "(no label)", fp: t[1].slice(0,16) };
-}
-/* D-605: what op=signeradd is sent for a pasted key LINE. The op takes the line's
-   base64 field alone as keyB64 (Store#signerAdd refuses anything else BAD_KEY), so
-   the line is split, as the member UI's custodial dialog splits it (D-134): the
-   second token is the key, and whatever follows it, the label, is the comment.
-   Before D-605 the whole line went as keyB64 and every registration from this
-   page was refused. Anything that is not such a line is sent as it was pasted,
-   and the plane says what it makes of it. */
-function signerAddBody(line, who){
-  const raw = String(line||"").trim();
-  const t = raw.split(/\\s+/).filter(function(x){ return x; });
-  const isLine = t.length >= 2 && t[0] === "ssh-ed25519";
-  const body = { keyB64: isLine ? t[1] : raw, memberId: String(who||"").trim().toLowerCase() };
-  const label = isLine ? t.slice(2).join(" ") : "";
-  if (label) body.comment = label;
-  return body;
-}
-$("#k-key").addEventListener("input", ()=>{
-  const v = $("#k-key").value.trim();
-  if (!v) { $("#k-read").innerHTML = ""; return; }
-  const d = describeKey(v);
-  $("#k-read").innerHTML = d.ok
-    ? '<p class="small" style="color:var(--verdigris-dk)">Reads as a ratification key labelled <b>'
-      + escH(d.label) + '</b>, beginning <span class="mono">' + escH(d.fp) + "</span>.</p>"
-    : '<p class="err" style="min-height:0">' + escH(d.why) + "</p>";
-});
-$("#k-add").addEventListener("click", async ()=>{
-  const e = $("#k-err"); e.textContent = "";
-  const d = describeKey($("#k-key").value);
-  if (!d.ok) { e.textContent = d.why; return; }
-  const r = await post("signeradd", signerAddBody($("#k-key").value, $("#k-who").value));
-  if (!r.result || !r.result.ok) {
-    e.textContent = r.result && r.result.reason === "BAD_KEY"
-      ? "That is not a public key this system can read. Copy the whole line from the signing page."
-      : memberWhy(r.result);
-    return; }
-  $("#k-key").value = ""; $("#k-who").value = ""; openMembers();
-});
-
-/* ---- the jurisdiction profiles (R12, R15) ----
-   Shown by name to every signed-in member. The choice is offered only to a session that administers, with nothing
-   preselected: the order a member ticks them is the order they are read. A change is warned about before it is
-   sent, and choosing none is allowed and says what it means. */
-let PF_ORDER = [];
-async function openProfiles(){
-  let r = null;
-  try { r = await rec("profiles"); } catch { r = null; }
-  const res = r && r.result;
-  if (!res || res.ok !== true) {
-    $("#pf-active").innerHTML = '<p class="small" style="margin:0">This copy could not read its jurisdiction profiles just now.</p>';
-    $("#pf-choose").hidden = true; return;
-  }
-  const act = Array.isArray(res.profiles) ? res.profiles : [];
-  $("#pf-active").innerHTML = (act.length
-    ? act.map((p,i)=>'<div class="kv"><span class="k">'+(i+1)+'. '+escH(p.name || p.id)+'</span><span class="v">'
-        + escH((p.covers||[]).join(", ")) + "</span></div>").join("")
-    : '<p class="small" style="margin:0">No profile is active: this copy reads no local facts, and every one is answered as undetermined.'
-        + (res.boot && res.boot.why ? " At install, " + escH(res.boot.why) + ", so nothing was recorded." : "") + "</p>")
-    + ((res.conflicts||[]).length ? '<p class="small" style="margin:8px 0 0">The active profiles disagree on '
-        + (res.conflicts.length) + " fact" + (res.conflicts.length === 1 ? "" : "s") + ", and each is left unread rather than chosen between.</p>" : "");
-  if (!ADMIN) { $("#pf-choose").hidden = true; return; }
-  PF_ORDER = [];
-  $("#pf-warn").hidden = true; $("#pf-err").textContent = "";
-  const choices = Array.isArray(res.choices) ? res.choices : [];
-  $("#pf-choices").innerHTML = choices.length ? choices.map(p=>
-    '<label style="display:flex;gap:8px;align-items:flex-start;font-weight:400">'
-    + '<input type="checkbox" class="pf-pick" value="'+escH(p.id)+'" style="width:auto;margin-top:4px">'
-    + '<span>'+escH(p.name || p.id)+' <span class="dim">'+escH((p.covers||[]).join(", "))+'</span></span></label>').join("")
-    : '<p class="small" style="margin:0">This copy holds no profile to choose.</p>';
-  document.querySelectorAll("#pf-choices .pf-pick").forEach(x=>x.addEventListener("change", ()=>{
-    PF_ORDER = PF_ORDER.filter(v=>v !== x.value);
-    if (x.checked) PF_ORDER.push(x.value);
-    $("#pf-warn").hidden = true;
-  }));
-  $("#pf-choose").hidden = false;
-}
-function profilesWarning(order, choices){
-  const name = (id)=>{ const p = (choices||[]).find(c=>c.id === id); return p && p.name ? p.name : id; };
-  return order.length
-    ? "From now on, this copy reads its local facts from " + order.map(name).join(", then ")
-      + ". Local facts will read differently from then on: what the record already holds is unchanged, but anything read after this is read from these profiles."
-    : "You chose no profile. From now on this copy reads no local facts, and every one is answered as undetermined. Local facts will read differently from then on.";
-}
-$("#pf-review").addEventListener("click", async ()=>{
-  const r = await rec("profiles").catch(()=>null);
-  $("#pf-warn-text").textContent = profilesWarning(PF_ORDER, r && r.result && r.result.choices);
-  $("#pf-warn").hidden = false;
-});
-$("#pf-cancel").addEventListener("click", ()=>{ $("#pf-warn").hidden = true; });
-$("#pf-confirm").addEventListener("click", async ()=>{
-  const e = $("#pf-err"); e.textContent = "";
-  $("#pf-confirm").disabled = true;
-  try {
-    const r = await post("profilesset", { profiles: PF_ORDER.slice() });
-    const res = r && (r.result || r);
-    if (!res || res.ok !== true) { e.textContent = (res && (res.translation || res.detail)) || (r && r.error) || "The change was not made."; return; }
-    openProfiles();
-  } catch(err){ e.textContent = "That did not go through: " + err.message; }
-  finally { $("#pf-confirm").disabled = false; }
-});
-
-/* ---- the assistant (R53) ----
-   Every signed-in member sees whether it is on; only a session that administers is offered the switch, which says
-   what it will do before it is pressed. A read that did not answer says so and offers nothing. */
-let AS_ON = null;
-async function openAssistant(){
-  let r = null;
-  try { r = await rec("assistantstate"); } catch { r = null; }
-  const res = r && r.result;
-  if (!res || res.ok !== true || typeof res.on !== "boolean") {
-    AS_ON = null;
-    $("#as-state").innerHTML = '<p class="small" style="margin:0">This copy could not read whether the assistant is on just now.</p>';
-    $("#as-choose").hidden = true; return;
-  }
-  AS_ON = res.on;
-  $("#as-state").innerHTML = '<p class="small" style="margin:0">'
-    + (res.on ? "The assistant is on for this copy." : "The assistant is off for this copy.")
-    + (res.set_at ? " Last set by " + escH(res.set_by) + " on " + fmtWhen(res.set_at) + "." : "") + "</p>";
-  if (!ADMIN) { $("#as-choose").hidden = true; return; }
-  $("#as-err").textContent = "";
-  $("#as-toggle").textContent = res.on ? "Switch the assistant off" : "Switch the assistant on";
-  $("#as-choose").hidden = false;
-}
-$("#as-toggle").addEventListener("click", async ()=>{
-  const e = $("#as-err"); e.textContent = "";
-  if (AS_ON === null) return;
-  $("#as-toggle").disabled = true;
-  try {
-    const r = await post("assistantset", { on: !AS_ON });
-    const res = r && (r.result || r);
-    if (!res || res.ok !== true) { e.textContent = (res && (res.translation || res.detail)) || (r && r.error) || "The change was not made."; return; }
-    openAssistant();
-  } catch(err){ e.textContent = "That did not go through: " + err.message; }
-  finally { $("#as-toggle").disabled = false; }
-});
-
-/* ---- enrolment, for an invited member with no password yet ---- */
-$("#en-go").addEventListener("click", async ()=>{
-  const e = $("#en-err"); e.textContent = "";
-  const r = await api("enroll", { invite: INVITE,
-    handle: $("#en-handle").value.trim().toLowerCase(), password: $("#en-pw").value });
-  if (!r.result || !r.result.ok) {
-    const why = r.result && r.result.reason;
-    e.textContent = why === "PASSWORD_TOO_SHORT" ? "The password needs at least 12 characters."
-      : why === "HANDLE_TAKEN" ? "Someone already uses that handle. Choose another."
-      : why === "NO_HANDLE" ? "Choose a handle. It is the name the record will show."
-      : why === "BAD_HANDLE" ? "A handle is lowercase letters, digits and dashes, at least two characters."
-      : "This invitation link is not live. Ask whoever invited you for a new one.";
-    return; }
-  $("#lwho").value = r.result.memberId; $("#lpw").value = "";
-  show("#s-login");
-});
-document.querySelectorAll(".crumb-home").forEach(a=>a.addEventListener("click", ()=>{
-  document.querySelector("main").classList.remove("wide"); show("#s-panel"); }));
-
-state();
-</script>
-</body>
-</html>`;
 var MEMBER_VERSION_WAIT_MS = 4e3;
 async function memberVersions(env) {
   const out = {};
@@ -187599,7 +189010,7 @@ var INSTANCE_SETUP_CHECKS = Object.freeze({
   GROUP_ALREADY_RECORDED: {
     check: "C-64.3",
     where: "src/setup.mjs instanceGroupSeed > is-instance-group-seed",
-    translation: "This copy's group is already recorded, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed."
+    translation: "Your group's Civicsmith has its group recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed."
   },
   GROUP_IDENTITY_NOT_ADMIN: {
     check: "C-64.5",
@@ -187620,7 +189031,7 @@ var INSTANCE_SETUP_CHECKS = Object.freeze({
   PROFILES_NOT_ADMIN: {
     check: "C-119.1",
     where: "src/setup.mjs profilesSet > is-profiles-admin",
-    translation: "Only one of the group's administrators, signed in as themselves, can choose which jurisdiction profiles this copy reads its local facts from. Nothing was changed."
+    translation: "Only one of the group's administrators, signed in as themselves, can choose which jurisdiction profiles your group's Civicsmith reads its local facts from. Nothing was changed."
   },
   NOT_A_LIST: {
     check: "C-119.2",
@@ -187630,18 +189041,18 @@ var INSTANCE_SETUP_CHECKS = Object.freeze({
   UNKNOWN_PROFILE: {
     check: "C-119.3",
     where: "src/setup.mjs profilesSet > is-profiles-list",
-    translation: "This copy holds no jurisdiction profile by that name, so it cannot read local facts from it. Choose among the profiles it offers. Nothing was changed."
+    translation: "Your group's Civicsmith holds no jurisdiction profile by that name, so it cannot read local facts from it. Choose among the profiles it offers. Nothing was changed."
   },
   PROFILE_IS_TEST: {
     check: "C-119.4",
     where: "src/setup.mjs profilesSet > is-profiles-list",
-    translation: "That profile is made up for testing: its facts describe no real place, so a copy never reads local facts from it. Nothing was changed."
+    translation: "That profile is made up for testing: its facts describe no real place, so no group's Civicsmith reads local facts from it. Nothing was changed."
   },
   /* R53–R55 (K1502, K1478 (i), D311): the assistant, optional for the copy, and each member's disclosure. */
   ASSISTANT_OFF: {
     check: "C-119.5",
     where: "src/setup.mjs assistantGate > is-assistant-on",
-    translation: "The assistant is switched off for this copy, so no question is put to it and nothing runs. One of the group's administrators can switch it on. Nothing was asked."
+    translation: "The assistant is switched off for your group's Civicsmith, so no question is put to it and nothing runs. One of the group's administrators can switch it on. Nothing was asked."
   },
   ASSISTANT_SWITCH_MALFORMED: {
     check: "C-119.6",
@@ -187668,12 +189079,59 @@ var INSTANCE_SETUP_CHECKS = Object.freeze({
     check: "C-119.8",
     where: "src/setup.mjs disclosureShown > is-disclosure-shown",
     translation: "A shown disclosure is recorded with the member it was shown to and the version of its words. One of them is missing. Nothing was recorded."
+  },
+  /* R60 (DEC-150 (1)): the name of a place the group works in that no held profile covers. */
+  PLACE_NAME_MALFORMED: {
+    check: "C-64.8",
+    where: "src/setup.mjs placeWantedSet > is-place-name",
+    translation: "A place your group works in is named in plain words: some text, at most 200 characters, on one line. It is kept only in your group's Civicsmith and sent nowhere. Nothing was changed."
+  },
+  /* R65 (DEC-152): the assistant's draft of the group's focus and purpose, from the administrator's answers. */
+  GROUP_DRAFT_NO_ANSWERS: {
+    check: "C-64.9",
+    where: "src/setup.mjs groupDescriptionDraft > is-group-draft-answers",
+    translation: "Tell the assistant a little about your group first: it drafts only from what you tell it and what your group already holds. Nothing was saved."
+  },
+  GROUP_DRAFT_ANSWERS_MALFORMED: {
+    check: "C-64.10",
+    where: "src/setup.mjs groupDescriptionDraft > is-group-draft-answers",
+    translation: "The assistant drafts from your answers to its questions: a short list of answers, each at most 1,000 characters. Nothing was saved."
+  },
+  /* R64 (DEC-127 (1)): the language a member chooses for the screens, the member's own act. */
+  MACHINE_CANNOT_SET_LANGUAGE: {
+    check: "C-119.11",
+    where: "src/setup.mjs memberLanguageSet > is-member-language",
+    translation: "The language your screens are shown in is your own choice, made from your own signed-in session, never by another member or a machine. Nothing was changed."
+  },
+  LANGUAGE_MALFORMED: {
+    check: "C-119.12",
+    where: "src/setup.mjs memberLanguageSet > is-member-language",
+    translation: "A language is chosen by its standard tag, like en, es or zh-Hant, and what was sent is not one. Nothing was changed."
   }
 });
 var refusal26 = (code, detail, extra) => {
   const row9 = INSTANCE_SETUP_CHECKS[code];
   return { ok: false, reason: code, code, check: row9.check, translation: row9.translation, detail, ...extra || {} };
 };
+var scriptRefusal = (code, detail) => {
+  const row9 = WIZARD_SCRIPTS_CHECKS[code] || {};
+  return { ok: false, reason: code, code, check: row9.check ?? null, translation: row9.translation ?? null, detail };
+};
+var draftUnavailable = (detail) => scriptRefusal("ASSISTANT_DRAFT_UNAVAILABLE", detail);
+var draftRefused = (checked) => checked && typeof checked.code === "string" ? scriptRefusal(checked.code, "the draft did not pass the check that it adds no fact, so nothing is offered.") : draftUnavailable("the draft could not be checked, so nothing is offered.");
+var PLACE_NAME_MAX = 200;
+var GROUP_DRAFT_ANSWERS_MAX = 20;
+var GROUP_DRAFT_ANSWER_MAX = 1e3;
+var GROUP_FOCUS_MAX = 1e3;
+var GROUP_PURPOSE_MAX = 4e3;
+function isLanguageTag(v) {
+  if (typeof v !== "string" || !v || v.length > 255 || /\s|,/.test(v)) return false;
+  try {
+    return Intl.getCanonicalLocales(v).length === 1;
+  } catch {
+    return false;
+  }
+}
 var INSTANCE_SETUP_TABLES = Object.freeze([
   "instance_group",
   "group_identity_history",
@@ -187682,7 +189140,11 @@ var INSTANCE_SETUP_TABLES = Object.freeze([
   "cpu_probe_runs",
   "cpu_probe_steps",
   "assistant_switch",
-  "assistant_disclosures"
+  "assistant_disclosures",
+  "place_wanted",
+  "place_seen",
+  "place_arrivals",
+  "member_languages"
 ]);
 var TABLE_CLASSES = Object.freeze({
   instance_group: { export: "admin-only", version_chain: false },
@@ -187692,9 +189154,15 @@ var TABLE_CLASSES = Object.freeze({
   cpu_probe_runs: { export: "admin-only", version_chain: false },
   cpu_probe_steps: { export: "admin-only", version_chain: false },
   assistant_switch: { export: "admin-only", version_chain: true },
-  assistant_disclosures: { export: "never", version_chain: true }
+  assistant_disclosures: { export: "never", version_chain: true },
+  /* R60, R62 (DEC-150): the place the group named, held only in its own Civicsmith, never exported (R60). */
+  place_wanted: { export: "never", version_chain: true },
+  place_seen: { export: "never", version_chain: false },
+  place_arrivals: { export: "never", version_chain: true },
+  /* R64 (DEC-127 (1)): each member's own choice of language, appended. */
+  member_languages: { export: "admin-only", version_chain: true }
 });
-var INSTANCE_SETUP_SEED_TABLES = Object.freeze(["seed_entities", "seed_lines", "seed_offices"]);
+var INSTANCE_SETUP_SEED_TABLES = Object.freeze(["seed_entities", "seed_lines", "seed_offices", "seed_bodies"]);
 var INSTANCE_SETUP_TABLE_DECLARATIONS = Object.freeze([
   ...INSTANCE_SETUP_TABLES.map((name2) => Object.freeze({
     name: name2,
@@ -187834,6 +189302,51 @@ CREATE TABLE IF NOT EXISTS seed_offices (
   seeded_at      TEXT NOT NULL,
   PRIMARY KEY (profile, role, body)
 );
+-- R50, R51: each profile body seeded under the profile's own identifier for it (ids.body), with or without its office,
+-- so R51 finds the body a Legistar body is matched to even where the profile gives its office no identifier.
+CREATE TABLE IF NOT EXISTS seed_bodies (
+  profile      TEXT NOT NULL,
+  role         TEXT NOT NULL,
+  body         TEXT NOT NULL,
+  entry        TEXT NOT NULL,
+  body_entity  TEXT NOT NULL,
+  seeded_at    TEXT NOT NULL,
+  PRIMARY KEY (profile, role, body)
+);
+-- R60 (DEC-150 (1)): the place the group works in that no held profile covers, named by an administrator; the latest row
+-- is the name, and a row with name NULL clears it. Held only here: nothing reads it outward. Append-only.
+CREATE TABLE IF NOT EXISTS place_wanted (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  name    TEXT,
+  set_by  TEXT NOT NULL,
+  set_at  TEXT NOT NULL
+);
+-- R62 (DEC-150 (3)): the held profiles as last compared (at the set of a name, then at each start), one row.
+CREATE TABLE IF NOT EXISTS place_seen (
+  id        INTEGER PRIMARY KEY CHECK (id = 1),
+  profiles  TEXT NOT NULL,
+  seen_at   TEXT NOT NULL
+);
+-- R62: each held profile found matching the named place that was not held before, recorded once per name (place_seq,
+-- the place_wanted row it matched); it leaves when the profile is made active or the name is cleared or changed.
+CREATE TABLE IF NOT EXISTS place_arrivals (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  place_seq  INTEGER NOT NULL,
+  name       TEXT NOT NULL,
+  profile    TEXT NOT NULL,
+  found_at   TEXT NOT NULL,
+  left_at    TEXT,
+  left_why   TEXT,
+  UNIQUE (place_seq, profile)
+);
+-- R64 (DEC-127 (1)): the language each member chose for the screens, by their own act; the latest row per member is the
+-- choice, and a row with language NULL clears it. Append-only.
+CREATE TABLE IF NOT EXISTS member_languages (
+  seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+  member    TEXT NOT NULL,
+  language  TEXT,
+  set_at    TEXT NOT NULL
+);
 -- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
 -- the disclosure's version, who recorded it and when. Append-only.
 CREATE TABLE IF NOT EXISTS assistant_disclosures (
@@ -187933,6 +189446,9 @@ var InstanceSetup = class _InstanceSetup {
   #capture() {
     return this.#deps.capture ?? captureOf(this.#ctx, { env: this.#env });
   }
+  #queueProducers() {
+    return this.#deps.queueProducers ?? null;
+  }
   #fetch(...a) {
     return (this.#deps.fetch ?? globalThis.fetch)(...a);
   }
@@ -187961,6 +189477,8 @@ var InstanceSetup = class _InstanceSetup {
     if (!cols.includes("unit")) this.#sql.exec(`ALTER TABLE runtime_observations ADD COLUMN unit TEXT`);
     for (const r of this.#rows(`SELECT metric FROM runtime_observations WHERE unit IS NULL`))
       this.#sql.exec(`UPDATE runtime_observations SET unit = ? WHERE metric = ?`, unitOfMetric(r.metric), r.metric);
+    this.#sql.exec(`INSERT OR IGNORE INTO seed_bodies (profile, role, body, entry, body_entity, seeded_at)
+                    SELECT profile, role, body, entry, body_entity, seeded_at FROM seed_offices`);
     if (this.#rows(`PRAGMA table_info(cpu_probe)`).length) {
       const old = this.#rows(`SELECT step, elapsed_ms, iterations, at FROM cpu_probe ORDER BY step`);
       if (old.length && !this.#one(`SELECT run FROM cpu_probe_runs WHERE run = ?`, LEGACY_PROBE_RUN)) {
@@ -188024,6 +189542,12 @@ var InstanceSetup = class _InstanceSetup {
       }
     }
     try {
+      out.places = this.#comparePlaces();
+    } catch (e2) {
+      out.places = { compared: false, detail: `the place could not be compared: ${String(e2 && e2.message || e2).slice(0, 200)}` };
+    }
+    out.arrivals = this.#registerArrivals();
+    try {
       out.armed = await this.#scheduler().start();
     } catch {
       out.armed = null;
@@ -188031,6 +189555,16 @@ var InstanceSetup = class _InstanceSetup {
     return out;
   }
   /* ---- R1–R4: the producing group ---- */
+  /* R62: `placeArrivals` registered once with `queue-producers` (its R38; K31's pattern), read as the plane. */
+  #registerArrivals() {
+    const qp = this.#queueProducers();
+    if (!qp || typeof qp.registerPlaceArrivals !== "function") return { ok: false, detail: "no producers to register with" };
+    try {
+      return qp.registerPlaceArrivals(({ viewer = null } = {}) => this.placeArrivals({ viewer }));
+    } catch (e2) {
+      return { ok: false, detail: String(e2 && e2.message || e2).slice(0, 200) };
+    }
+  }
   /** R1: THE ONE READER — the recorded slug, or null. It reads the store and nothing else, never `env`. */
   producingGroup() {
     const r = this.#one(`SELECT slug FROM instance_group WHERE id=1`);
@@ -188123,7 +189657,7 @@ var InstanceSetup = class _InstanceSetup {
     if (!by || !this.#membership().isAdministrator(by))
       return refusal26(
         "GROUP_IDENTITY_NOT_ADMIN",
-        "setting the group's display name or claiming its domain is an administrator's act (Publication \xA77), and the plane stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.",
+        "setting the group's display name or claiming its domain is an administrator's act (Publication \xA77), and your group's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This caller is not one of the active administrators.",
         { by: by ?? null }
       );
     return null;
@@ -188253,7 +189787,7 @@ var InstanceSetup = class _InstanceSetup {
       return {
         verdict: "undetermined",
         status: null,
-        detail: `the fetch of ${path} did not complete, and this plane did not record why`
+        detail: `the fetch of ${path} did not complete, and why was not recorded`
       };
     const status = res.status;
     try {
@@ -188283,11 +189817,11 @@ var InstanceSetup = class _InstanceSetup {
     const inst = isObject && typeof f17.instance === "string" ? instanceAddress(f17.instance) : null;
     const grp = isObject && typeof f17.group === "string" ? f17.group.trim() : null;
     if (inst === address && grp === slug2)
-      return { verdict: "verified", status, detail: `${path} names this instance (${address}) and its slug (${slug2})` };
+      return { verdict: "verified", status, detail: `${path} names your group's Civicsmith (${address}) and its slug (${slug2})` };
     return {
       verdict: "mismatched",
       status,
-      detail: !isObject ? `${path} is not the JSON object this plane reads ({ instance, group })` : `${path} names instance ${JSON.stringify(inst ?? f17.instance ?? null).slice(0, 120)} and group ${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug2}`
+      detail: !isObject ? `${path} is not the JSON object your group's Civicsmith reads ({ instance, group })` : `${path} gives the address ${JSON.stringify(inst ?? f17.instance ?? null).slice(0, 120)} and the group ${JSON.stringify(grp).slice(0, 60)}; your group's Civicsmith is ${address} and its slug is ${slug2}`
     };
   }
   /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest
@@ -188367,7 +189901,7 @@ var InstanceSetup = class _InstanceSetup {
     const { ids, unknown, tests } = this.#checkProfileList(raw.split(",").map((s) => s.trim()).filter(Boolean));
     const unique = [...new Set(ids)];
     let why = null;
-    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which this copy does not hold`;
+    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your group's Civicsmith does not hold`;
     else if (tests.length) why = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
     const core = this.#record();
     if (why) {
@@ -188400,7 +189934,7 @@ var InstanceSetup = class _InstanceSetup {
       choices
     };
     if (!ids.length) {
-      out.detail = "no active profile: this copy reads no local facts, which is valid, and every fact that needs one is answered as undetermined until an administrator chooses";
+      out.detail = "no active profile: your group's Civicsmith reads no local facts, which is valid, and every fact that needs one is answered as undetermined until an administrator chooses";
       const note = core.getSetting(_InstanceSetup.PROFILES_BOOT_NOTE);
       if (note && note.recorded === false && typeof note.why === "string")
         out.boot = { recorded: false, why: note.why, bound: note.bound ?? null };
@@ -188412,19 +189946,20 @@ var InstanceSetup = class _InstanceSetup {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return refusal26(
         "PROFILES_NOT_ADMIN",
-        "choosing the jurisdiction profiles is an administrator's act, and the plane stamps who is asking from the signed-in session. This caller is not one of the active administrators.",
+        "choosing the jurisdiction profiles is an administrator's act, and your group's Civicsmith stamps who is asking from the signed-in session. This caller is not one of the active administrators.",
         { by: by ?? null }
       );
     if (!Array.isArray(profiles2))
       return refusal26("NOT_A_LIST", "the profiles are sent as a list of profile ids, in the order they are read; an empty list chooses none. Nothing was changed.");
     const { ids, unknown, tests } = this.#checkProfileList(profiles2);
     if (unknown.length)
-      return refusal26("UNKNOWN_PROFILE", `this copy holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. Nothing was changed.`, { profiles: unknown });
+      return refusal26("UNKNOWN_PROFILE", `your group's Civicsmith holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. Nothing was changed.`, { profiles: unknown });
     if (tests.length)
       return refusal26("PROFILE_IS_TEST", `${tests.join(", ")} ${tests.length > 1 ? "are profiles" : "is a profile"} made up for testing. Nothing was changed.`, { profiles: tests });
     const unique = [...new Set(ids)];
     const set = this.#record().setSetting("jurisdiction_profiles", unique, by);
     if (!set || set.ok !== true) return set;
+    this.#leaveArrivals("the profile was made active", this.#iso(), unique);
     return {
       ...this.profiles(),
       set_by: by,
@@ -188585,16 +190120,10 @@ var InstanceSetup = class _InstanceSetup {
         const where = { profile, entry: entry3, role, body };
         const ids = cp && cp.ids && typeof cp.ids === "object" ? cp.ids : {};
         const officeId = _InstanceSetup.#ident(ids.office), bodyId = _InstanceSetup.#ident(ids.body);
-        if (!officeId || !bodyId) {
-          put2(
-            { state: "unseeded", why: `the profile names no identifier for this ${!officeId ? "office (ids.office)" : "body (ids.body)"}, so nothing is seeded for it: an office is seeded only under the profile's own identifier, never by its name` },
-            { what: "office", ...where }
-          );
-          return;
-        }
         const source2 = { profile, entry: entry3 };
         const cite = `jurisdiction profile ${profile}, ${entry3}${cp.basis ? ` (basis: ${cp.basis})` : ""}`;
-        const b = this.#seedEntity({
+        const noIdent = (what, field) => ({ state: "unseeded", why: `the profile names no identifier for this ${what} (${field}), so it is not seeded: an entity is seeded only under the profile's own identifier, never by its name` });
+        const b = bodyId ? this.#seedEntity({
           p: p3,
           ident: bodyId,
           kind: "body",
@@ -188603,9 +190132,21 @@ var InstanceSetup = class _InstanceSetup {
           source: source2,
           row: `${profile}/${entry3}/body`,
           note: `The body the office "${role}" belongs to, as the active ${cite} names it; seeded at setup.`
-        });
-        put2(b, { what: "body", ...where, ident: bodyId });
-        const o = this.#seedEntity({
+        }) : noIdent("body", "ids.body");
+        put2(b, { what: "body", ...where, ...bodyId ? { ident: bodyId } : {} });
+        const bodyHeld = !!b.entity_id && b.state !== "unseeded";
+        if (bodyHeld)
+          this.#sql.exec(
+            `INSERT INTO seed_bodies (profile, role, body, entry, body_entity, seeded_at)
+                          VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
+            profile,
+            role,
+            body,
+            entry3,
+            b.entity_id,
+            this.#iso()
+          );
+        const o = officeId ? this.#seedEntity({
           p: p3,
           ident: officeId,
           kind: "office",
@@ -188613,39 +190154,38 @@ var InstanceSetup = class _InstanceSetup {
           source: source2,
           row: `${profile}/${entry3}/office`,
           note: `An office an action may be addressed to, as the active ${cite} names it; seeded at setup.`
-        });
-        put2(o, { what: "office", ...where, ident: officeId });
-        if (!o.entity_id || !b.entity_id || o.state === "unseeded" || b.state === "unseeded") {
-          put2(
-            { state: "unseeded", why: "its office or its body is not held under its identifier, so the line has no identified ends" },
-            { what: "post_in", ...where }
+        }) : noIdent("office", "ids.office");
+        put2(o, { what: "office", ...where, ...officeId ? { ident: officeId } : {} });
+        const officeHeld = !!o.entity_id && o.state !== "unseeded";
+        if (officeHeld)
+          this.#sql.exec(
+            `INSERT INTO seed_offices (profile, role, body, entry, office_entity, body_entity, seeded_at)
+                          VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
+            profile,
+            role,
+            body,
+            entry3,
+            o.entity_id,
+            bodyHeld ? b.entity_id : "",
+            this.#iso()
           );
-          return;
-        }
-        this.#sql.exec(
-          `INSERT INTO seed_offices (profile, role, body, entry, office_entity, body_entity, seeded_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
-          profile,
-          role,
-          body,
-          entry3,
-          o.entity_id,
-          b.entity_id,
-          this.#iso()
-        );
         const zone = zoneOf2(p3) ? { zone: zoneOf2(p3) } : null;
         const rule = (ids2) => ({ rule: "a jurisdiction profile's office entry, seeded at setup", source: source2, ids: ids2 });
-        put2(
-          this.#seedLine({
-            key: `post_in|${o.entity_id}|${b.entity_id}|${profile}`,
-            kind: "post_in",
-            from: o.entity_id,
-            to: b.entity_id,
-            valid: zone,
-            basis: rule({ from: officeId, to: bodyId })
-          }),
-          { what: "post_in", ...where }
-        );
+        if (officeHeld && bodyHeld)
+          put2(
+            this.#seedLine({
+              key: `post_in|${o.entity_id}|${b.entity_id}|${profile}`,
+              kind: "post_in",
+              from: o.entity_id,
+              to: b.entity_id,
+              valid: zone,
+              basis: rule({ from: officeId, to: bodyId })
+            }),
+            { what: "post_in", ...where }
+          );
+        else if (officeHeld || bodyHeld)
+          put2({ state: "unseeded", why: `its ${officeHeld ? "body" : "office"} is not held under an identifier, so the line has only one identified end` }, { what: "post_in", ...where });
+        if (!bodyHeld) return;
         const within3 = cp.within && typeof cp.within === "object" ? cp.within : null;
         const withinId = within3 ? _InstanceSetup.#ident(within3.ids) : null;
         if (!within3) {
@@ -188756,8 +190296,9 @@ var InstanceSetup = class _InstanceSetup {
         const hits = [...forms].filter((f17) => groups.has(f17));
         const entry3 = `counterparties[${i}]`;
         const role = typeof cp.role === "string" ? cp.role.trim() : "";
+        const organisation = [cp.organisation, read3.organisation, hits.length === 1 && hits[0].startsWith("organisation:") ? hits[0].slice("organisation:".length) : null].find((o) => typeof o === "string" && o) ?? null;
         if (hits.length === 1) {
-          out.push({ profile, entry: entry3, role, body, matched: true, form: hits[0], bodies: groups.get(hits[0]) });
+          out.push({ profile, entry: entry3, role, body, matched: true, form: hits[0], organisation, bodies: groups.get(hits[0]) });
           return;
         }
         const terms = normAlias(body).split(/[^\p{L}\p{N}]+/u).filter((t2) => t2.length > 2);
@@ -188859,7 +190400,7 @@ var InstanceSetup = class _InstanceSetup {
       }
       const { p: p3 } = active.find((a) => a.id === m.profile);
       const sch = _InstanceSetup.#scheme(p3, LEGISTAR_SCHEMES.body);
-      const office = this.#one(`SELECT body_entity FROM seed_offices WHERE profile = ? AND role = ? AND body = ?`, m.profile, m.role, m.body);
+      const office = this.#one(`SELECT body_entity FROM seed_bodies WHERE profile = ? AND role = ? AND body = ?`, m.profile, m.role, m.body);
       const match = {
         profile: m.profile,
         entry: m.entry,
@@ -188870,7 +190411,7 @@ var InstanceSetup = class _InstanceSetup {
       };
       out.matches.push(match);
       if (!office) {
-        match.why = "the profile's body is not seeded (R50: the profile names no identifier for it), so its BodyIds are held on no entity";
+        match.why = "the profile's body is not seeded (R50: the profile names no identifier for it, ids.body), so its BodyIds are held on no entity";
         continue;
       }
       if (!sch) {
@@ -188893,7 +190434,14 @@ var InstanceSetup = class _InstanceSetup {
           r = got && got.ok === true ? { state: got.already ? "already" : "seeded", entity_id: office.body_entity } : { state: "unseeded", why: `the registry refused the identifier: ${got && (got.reason || got.detail)}` };
           if (r.state !== "unseeded") {
             this.#ledgerEntity(ident, office.body_entity, "body", m.body, { capture: bodiesCap.sha, row: b.source });
-            seatBodies.set(b.BodyId, { entity: office.body_entity, p: p3, profile: m.profile, label: m.body, ident });
+            seatBodies.set(b.BodyId, {
+              entity: office.body_entity,
+              p: p3,
+              profile: m.profile,
+              label: m.body,
+              ident,
+              organisation: m.organisation
+            });
           }
         }
         put2(r, { what: "body_identifier", profile: m.profile, body: m.body, ident });
@@ -188969,14 +190517,15 @@ var InstanceSetup = class _InstanceSetup {
         out.same_names.push({ PersonId: f17.PersonId, name: name2, same_name_as: others });
       put2(person, { what: "person", ...where });
       if (!person.entity_id || person.state === "unseeded") continue;
-      const map = (sb.p.vocabulary && Array.isArray(sb.p.vocabulary.member_types) ? sb.p.vocabulary.member_types : []).find((x) => x && x.member_type === memberType);
+      const types2 = (sb.p.vocabulary && Array.isArray(sb.p.vocabulary.member_types) ? sb.p.vocabulary.member_types : []).filter((x) => x && x.member_type === memberType);
+      const map = (sb.organisation ? types2.find((x) => x.organisation === sb.organisation) : null) ?? types2.find((x) => x.organisation === void 0 || x.organisation === null);
       const capacity = map && CAPACITIES.includes(map.capacity) ? map.capacity : null;
       if (!capacity) {
         out.holders_undetermined.push({
           ...where,
           person: person.entity_id,
           seat: seat.entity_id,
-          why: `the profile maps no capacity for the MemberType ${JSON.stringify(memberType)}, so the holder's capacity is undetermined and no holds line is recorded`
+          why: `the profile maps no capacity for the MemberType ${JSON.stringify(memberType)}${sb.organisation ? ` on ${sb.organisation}` : " on this body"} or on all bodies, so the holder's capacity is undetermined and no holds line is recorded`
         });
         continue;
       }
@@ -189031,7 +190580,7 @@ var InstanceSetup = class _InstanceSetup {
       on: false,
       set_by: null,
       set_at: null,
-      detail: "the assistant has never been switched on for this copy, so it is off"
+      detail: "the assistant has never been switched on for your group's Civicsmith, so it is off"
     };
   }
   /** R53, op=assistantset: an administrator switches the assistant on or off for this copy. `by` is the control
@@ -189039,7 +190588,7 @@ var InstanceSetup = class _InstanceSetup {
    *  chose what and when. */
   assistantSet({ on = void 0, by = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "switching the assistant on or off for this copy");
+      return notAnAdmin(by ?? null, "switching the assistant on or off for your group's Civicsmith");
     if (typeof on !== "boolean")
       return refusal26("ASSISTANT_SWITCH_MALFORMED", "`on` is true (switch the assistant on) or false (switch it off). Nothing was changed.");
     const at34 = this.#iso();
@@ -189050,7 +190599,7 @@ var InstanceSetup = class _InstanceSetup {
       set_by: by,
       set_at: at34,
       history: this.#rows(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq`).map((r) => ({ on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at })),
-      note: on ? "the assistant is on for this copy. The copy holds no account of its own: each member who wants it connects their own Claude account or API key, and is shown the disclosure first." : "the assistant is off for this copy: no ask is put to it and no run starts. Nothing already recorded is changed or ended."
+      note: on ? "the assistant is on for your group's Civicsmith. Switching it on binds no account: each member who wants it is served by their own Claude account or API key, connected by their own act, or by the group's Anthropic API key, which an administrator sets, switches and removes; each is told first where their questions go." : "the assistant is off for your group's Civicsmith: no ask is put to it and no run starts. Nothing already recorded is changed or ended."
     };
   }
   /** R55: null while the assistant is on; otherwise the refusal every ask and every run answers, whoever asks and
@@ -189060,7 +190609,7 @@ var InstanceSetup = class _InstanceSetup {
     if (st.on === true) return null;
     return refusal26(
       "ASSISTANT_OFF",
-      st.set_at ? `an administrator switched the assistant off for this copy on ${st.set_at}; no ask is put to it and no run starts.` : "the assistant has never been switched on for this copy; no ask is put to it and no run starts.",
+      st.set_at ? `an administrator switched the assistant off for your group's Civicsmith on ${st.set_at}; no ask is put to it and no run starts.` : "the assistant has never been switched on for your group's Civicsmith; no ask is put to it and no run starts.",
       { set_by: st.set_by, set_at: st.set_at }
     );
   }
@@ -189103,6 +190652,218 @@ var InstanceSetup = class _InstanceSetup {
       shown_at: null,
       detail: m ? "no disclosure at this version is recorded as shown to this member" : "the request names no member, so no disclosure is recorded as shown"
     };
+  }
+  /* =====================================================================
+   * A PLACE NOT YET HELD (R60, R62; DEC-150). An administrator may name the place the group works in when no held
+   * profile covers it. The name is held only here: no public read, notice, submission, edition, export or request to
+   * another host carries it, and it is never a profile, a jurisdiction or a local fact. At each start, a held profile
+   * that matches it and was not held before is recorded once as an arrival, which `queue-producers` (its R38) raises to
+   * the administrators as one Status item through the read this module registers; it leaves when that profile is made
+   * active (R14) or the name is cleared or changed.
+   * ===================================================================== */
+  #placeCurrent() {
+    return this.#one(`SELECT seq, name, set_by, set_at FROM place_wanted ORDER BY seq DESC LIMIT 1`) || null;
+  }
+  /* The held profiles a place can arrive as: every held profile that is not a test profile, by id. */
+  #heldPlaceIds() {
+    return this.#juris().list().filter((p3) => p3 && p3.test !== true && typeof p3.id === "string").map((p3) => p3.id);
+  }
+  #seePlaces(at34) {
+    this.#sql.exec(
+      `INSERT INTO place_seen (id, profiles, seen_at) VALUES (1, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET profiles = excluded.profiles, seen_at = excluded.seen_at`,
+      JSON.stringify(this.#heldPlaceIds()),
+      at34
+    );
+  }
+  #leaveArrivals(why, at34, profiles2 = null) {
+    for (const r of this.#rows(`SELECT seq, profile FROM place_arrivals WHERE left_at IS NULL`))
+      if (!profiles2 || profiles2.includes(r.profile))
+        this.#sql.exec(`UPDATE place_arrivals SET left_at = ?, left_why = ? WHERE seq = ?`, at34, why, r.seq);
+  }
+  /* R62: a profile matches the named place when its name or one of its covers, folded as extraction's term fold, is
+     exactly the name folded the same way. */
+  static #placeMatches(p3, name2) {
+    const want = normAlias(name2);
+    return !!want && [p3 && p3.name, ...p3 && Array.isArray(p3.covers) ? p3.covers : []].some((x) => typeof x === "string" && normAlias(x) === want);
+  }
+  /** R60, op=placewanted: an administrator names the place the group works in that no held profile covers, or clears
+   *  it with `name: null`. `by` is the control plane's stamp (R29). Each set or clear is appended with who and when. */
+  placeWantedSet({ name: name2 = void 0, by = null } = {}) {
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return notAnAdmin(by ?? null, "naming the place your group works in");
+    let value = null;
+    if (name2 !== null) {
+      const s = typeof name2 === "string" ? name2.trim() : "";
+      const chars = [...s].length;
+      if (!s || chars > PLACE_NAME_MAX || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
+        return refusal26("PLACE_NAME_MALFORMED", `${s ? `a name of ${chars} characters` : "the request names no place, and one is named as"} one line of 1 to ${PLACE_NAME_MAX} characters with no control characters; null clears it. Nothing was changed.`);
+      value = s;
+    }
+    const at34 = this.#iso();
+    const before2 = this.#placeCurrent();
+    this.#sql.exec(`INSERT INTO place_wanted (name, set_by, set_at) VALUES (?, ?, ?)`, value, by, at34);
+    if (before2 && before2.name !== null && before2.name !== value)
+      this.#leaveArrivals(value === null ? "the name was cleared" : "the name was changed", at34);
+    this.#seePlaces(at34);
+    return {
+      ok: true,
+      name: value,
+      set_by: by,
+      set_at: at34,
+      history: this.#rows(`SELECT name, set_by, set_at FROM place_wanted ORDER BY seq`).map((r) => ({ ...r })),
+      note: value === null ? "no place is named. Nothing about it was ever sent anywhere." : "the name is kept only in your group's Civicsmith and sent nowhere. When an installed update brings a profile for it, the administrators are told once and may choose it under Places."
+    };
+  }
+  /** R60, op=placewantedstate: the named place, to an administrator only, with R62's open arrivals as `matches`. */
+  placeWanted({ viewer = null } = {}) {
+    if (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer))
+      return notAnAdmin(viewer ?? null, "reading the place your group named");
+    const cur = this.#placeCurrent();
+    return {
+      ok: true,
+      name: cur ? cur.name : null,
+      set_by: cur ? cur.set_by : null,
+      set_at: cur ? cur.set_at : null,
+      matches: this.placeArrivals({ viewer }).arrivals
+    };
+  }
+  /** R62: `{ok, arrivals}`, the open arrivals (those that have not left), each with the profile's name and covers: to
+   *  an administrator, and to the plane's own in-process read (`viewer: null`, as `queue-producers` R38 reads it, which
+   *  addresses its item to the administrators); `arrivals: []` to anyone else. Writes nothing; never throws. */
+  placeArrivals({ viewer = null } = {}) {
+    try {
+      if (viewer !== null && viewer !== void 0 && (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer))) return { ok: true, arrivals: [] };
+      return { ok: true, arrivals: this.#rows(`SELECT name, profile, found_at FROM place_arrivals WHERE left_at IS NULL ORDER BY seq`).map((r) => {
+        const p3 = this.#juris().get(r.profile);
+        return {
+          name: r.name,
+          profile: r.profile,
+          profile_name: p3 ? p3.name ?? null : null,
+          covers: p3 && Array.isArray(p3.covers) ? [...p3.covers] : [],
+          found_at: r.found_at
+        };
+      }) };
+    } catch {
+      return { ok: true, arrivals: [] };
+    }
+  }
+  /* R62, at each start with a place named: every held non-test profile matching the name, not held at the last compare
+     (or at the set), and not active, is recorded once as an arrival; then the profiles held now are what the next start
+     compares against. */
+  #comparePlaces() {
+    const cur = this.#placeCurrent();
+    if (!cur || cur.name === null) return { compared: false };
+    const at34 = this.#iso();
+    const seenRow = this.#one(`SELECT profiles FROM place_seen WHERE id = 1`);
+    let seen = null;
+    try {
+      seen = seenRow ? JSON.parse(seenRow.profiles) : null;
+    } catch {
+      seen = null;
+    }
+    const active = new Set(this.#activeIds());
+    let found2 = 0;
+    if (Array.isArray(seen))
+      for (const id of this.#heldPlaceIds()) {
+        if (seen.includes(id) || active.has(id) || !_InstanceSetup.#placeMatches(this.#juris().get(id), cur.name)) continue;
+        const r = this.#rows(`INSERT INTO place_arrivals (place_seq, name, profile, found_at) VALUES (?, ?, ?, ?)
+                              ON CONFLICT(place_seq, profile) DO NOTHING RETURNING seq`, cur.seq, cur.name, id, at34);
+        found2 += r.length;
+      }
+    this.#seePlaces(at34);
+    return { compared: true, arrived: found2 };
+  }
+  #activeIds() {
+    const set = this.#record().getSetting("jurisdiction_profiles");
+    return Array.isArray(set) ? set.filter((x) => typeof x === "string") : [];
+  }
+  /* =====================================================================
+   * A MEMBER'S LANGUAGE (R64; DEC-127 (1)). The language a member chooses for the screens, by their own act; the screens
+   * show each word in it where a translation is held and in English where none is. `null` clears the choice.
+   * ===================================================================== */
+  /** R64, op=memberlanguageset: `by` (the control plane's stamp) is the member, and nobody sets it for another. */
+  memberLanguageSet({ language = void 0, by = null } = {}) {
+    const who2 = typeof by === "string" ? by.trim() : "";
+    if (!who2 || /^class:/.test(who2))
+      return refusal26("MACHINE_CANNOT_SET_LANGUAGE", "the language of the screens is set by the member, from their own signed-in session. Nothing was changed.", { by: by ?? null });
+    let tag2 = null;
+    if (language !== null) {
+      tag2 = typeof language === "string" ? language.trim() : "";
+      if (!isLanguageTag(tag2))
+        return refusal26("LANGUAGE_MALFORMED", `${tag2 ? `'${tag2.slice(0, 40)}' is not` : "the request names no language, and one is chosen as"} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.`);
+    }
+    const at34 = this.#iso();
+    this.#sql.exec(`INSERT INTO member_languages (member, language, set_at) VALUES (?, ?, ?)`, who2, tag2, at34);
+    return {
+      ok: true,
+      member: who2,
+      language: tag2,
+      set_at: at34,
+      note: tag2 === null ? "no language is chosen: the screens follow your device's setting again." : "the screens show each word in this language where a translation is held, and in English where none is."
+    };
+  }
+  /** R64, op=memberlanguage: the viewer's own choice, `{language, set_at}`, and nobody else's. Writes nothing. */
+  memberLanguage({ viewer = null } = {}) {
+    const who2 = typeof viewer === "string" ? viewer.trim() : "";
+    let r = null;
+    try {
+      r = who2 && !/^class:/.test(who2) ? this.#one(`SELECT language, set_at FROM member_languages WHERE member = ? ORDER BY seq DESC LIMIT 1`, who2) : null;
+    } catch {
+      r = null;
+    }
+    return { ok: true, language: r ? r.language ?? null : null, set_at: r ? r.set_at : null };
+  }
+  /* =====================================================================
+   * THE ASSISTANT DRAFTS THE GROUP'S DESCRIPTION (R65; DEC-152, K1818, K1837, K1841 (2)). On "Who your group is", an
+   * administrator answers a few questions and asks for a labelled draft of the group's focus and purpose
+   * (`membership` R109). It writes nothing: the words become the group's only when the administrator keeps them through
+   * `op=groupdescriptionset`. The draft is built from the answers and, while the suggestions switch of the account that
+   * serves the administrator is on, what the group holds, and it passes `wizard-scripts`' no-added-fact check. In T34
+   * there is no model turn (N686): past every refusal the op answers `ASSISTANT_DRAFT_UNAVAILABLE`.
+   * ===================================================================== */
+  /** R65, op=groupdescriptiondraft, which the door routes itself and calls here in-process (control-plane R57): `by` and
+   *  `viewer` are its stamps (R29) and `assistant` is `{on, account}` as it resolved them (never the key); `answers` is
+   *  the request's. The refusals, in order: NOT_AN_ADMIN, ASSISTANT_OFF, the door's account and
+   *  ceiling codes (answered there), GROUP_DRAFT_ANSWERS_MALFORMED or GROUP_DRAFT_NO_ANSWERS; then the draft, or, while
+   *  no model turn exists, ASSISTANT_DRAFT_UNAVAILABLE. */
+  async groupDescriptionDraft({ answers = void 0, assistant = null, viewer = null, by = null } = {}) {
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return notAnAdmin(by ?? null, "asking the assistant to draft your group's description");
+    const off = this.assistantGate();
+    if (off) return off;
+    if (assistant && typeof assistant === "object" && assistant.on === false)
+      return refusal26("ASSISTANT_OFF", "the assistant is not on for this request, so no question is put to it.");
+    const given2 = Array.isArray(answers) && answers.length <= GROUP_DRAFT_ANSWERS_MAX ? answers : null;
+    if (!given2 || given2.some((a) => !a || typeof a !== "object" || typeof a.question !== "string" || typeof a.text !== "string" || [...a.text].length > GROUP_DRAFT_ANSWER_MAX))
+      return refusal26("GROUP_DRAFT_ANSWERS_MALFORMED", `the answers are a list of at most ${GROUP_DRAFT_ANSWERS_MAX} {question, text}, each text at most ${GROUP_DRAFT_ANSWER_MAX} characters. Nothing was saved.`);
+    if (given2.every((a) => !a.text.trim()))
+      return refusal26("GROUP_DRAFT_NO_ANSWERS", "every answer is empty, so there is nothing to draft from. Nothing was saved.");
+    const unavailable = () => draftUnavailable("the assistant's turn that drafts the group's description is not built yet, so nothing was drafted and the fields are as they were.");
+    const turn = this.#deps.groupDraftTurn;
+    if (typeof turn !== "function") return unavailable();
+    const account = assistant && typeof assistant === "object" ? assistant.account ?? null : null;
+    const suggestions = !!(account && account.suggestions === true);
+    let got = null;
+    try {
+      got = await turn({ answers: given2.map((a) => ({ question: a.question, text: a.text })), account, holdings: suggestions });
+    } catch {
+      got = null;
+    }
+    if (!got || typeof got !== "object") return unavailable();
+    const told = given2.map((a) => a.text);
+    const readLog = Array.isArray(got.readLog) ? got.readLog : [];
+    const out = { ok: true, withheld: [] };
+    for (const [field, max] of [["focus", GROUP_FOCUS_MAX], ["purpose", GROUP_PURPOSE_MAX]]) {
+      const text7 = typeof got[field] === "string" ? got[field] : "";
+      const checked = checkDraft(text7, { told, readLog, firsthand: false, suggestions, askedBy: by });
+      if (!checked || checked.ok !== true) return draftRefused(checked);
+      if ([...checked.text].length > max) return unavailable();
+      out[field] = { text: checked.text, label: { kind: "machine", asked_by: by } };
+      out.withheld.push(...(checked.withheld || []).map((w) => ({ field, ...w })));
+    }
+    out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
+    return out;
   }
   /* =====================================================================
    * THE INSTANCE'S OWN LIMITS (K98; R33–R40). What runs here COST, measured, and where the CPU ceiling lies, found
@@ -189292,7 +191053,11 @@ function instanceSetupOps(m, url, body) {
     disclosureshown: () => m.disclosureShown({ ...body || {}, by: q10("by") }),
     disclosureof: () => m.disclosureOf({ member: q10("member") ?? (body || {}).member, version: q10("version") ?? (body || {}).version }),
     officesseed: () => m.officesSeed({ ...body || {}, boot: false, by: q10("by") }),
-    seatsseed: () => m.seatsSeed({ ...body || {}, by: q10("by") })
+    seatsseed: () => m.seatsSeed({ ...body || {}, by: q10("by") }),
+    placewanted: () => m.placeWantedSet({ ...body || {}, by: q10("by") }),
+    placewantedstate: () => m.placeWanted({ viewer: q10("viewer") }),
+    memberlanguageset: () => m.memberLanguageSet({ ...body || {}, by: q10("by") }),
+    memberlanguage: () => m.memberLanguage({ viewer: q10("viewer") })
   };
 }
 function notAnswered(out, op, { json: json17, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
@@ -189560,10 +191325,11 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/escalation/checks.mjs", checks_exports57],
   ["src/action-plans/checks.mjs", checks_exports58],
   ["src/monitoring/checks.mjs", checks_exports59],
-  ["src/link-sweep/checks.mjs", checks_exports60],
+  ["src/following/checks.mjs", checks_exports60],
+  ["src/link-sweep/checks.mjs", checks_exports61],
   ["src/wizard-scripts/checks.mjs", checks_exports43],
-  ["src/tasks/checks.mjs", checks_exports61],
-  ["src/queue/checks.mjs", checks_exports62],
+  ["src/tasks/checks.mjs", checks_exports62],
+  ["src/queue/checks.mjs", checks_exports63],
   ["src/setup.mjs", setup_exports],
   ["src/admission/checks.mjs", checks_exports45],
   ["src/control-plane/checks.mjs", checks_exports7]
@@ -190004,7 +191770,22 @@ var WIZARD_VIEWER_OPS = Object.freeze([
   "wizardsat",
   "wizarduse",
   "wizardcandidates",
-  "wizardcheck"
+  "wizardcheck",
+  /* T34 (wizard-scripts R23, R26; op-declarations R15, R28): the two reads it adds */
+  "startfrom",
+  "baseupdates"
+]);
+var MEMBERSHIP_ADMIN_ACTS = Object.freeze([
+  "invitewithdraw",
+  "websitekeycreate",
+  "websitekeyset",
+  "websitekeyrevoke",
+  "joinlinkenable",
+  "joinlinkset",
+  "joinlinkreplace",
+  "joinlinkoff",
+  "courtnoticeset",
+  "groupdescriptionset"
 ]);
 var PAGE_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
 function withPagePolicy(res) {
@@ -190112,7 +191893,7 @@ async function caseReader(url, env, storeName, presentedAi) {
   const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
-var json14 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o), null, 1), {
+var json14 = (o, status = 200) => new Response(JSON.stringify(dec49Attach(o)), {
   status,
   headers: { "content-type": "application/json", "access-control-allow-origin": "*" }
 });
@@ -190134,7 +191915,7 @@ function dec49Attach(o) {
   return o;
 }
 var STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
-var STORE_SILENT_DETAIL = "this instance could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused \u2014 those are answers, and this is the absence of one. The question stands unanswered; ask again.";
+var STORE_SILENT_DETAIL = "this group's Civicsmith could not consult its own record, so nothing here is a statement about the record. It is NOT a claim that what you asked for is absent, unpublished, unknown or refused \u2014 those are answers, and this is the absence of one. The question stands unanswered; ask again.";
 async function doAnswer(res) {
   let r = null, out = null;
   try {
@@ -190429,6 +192210,7 @@ function makeFetch(hooks = {}) {
     const path = url.pathname.replace(/^\/api\/?/, "/");
     let op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const askedOp = op;
+    if (Object.hasOwn(OP_ALIASES2, op)) op = OP_ALIASES2[op];
     let spec = Object.hasOwn(OPS3, op) ? OPS3[op] : void 0;
     let resolving = false;
     if (op === "inboxresolve" && req.method === "POST") {
@@ -190454,6 +192236,7 @@ function makeFetch(hooks = {}) {
     const refused3 = (r) => json14(r.body, r.status);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return refused3(unknownNamespace);
+    queryGate(url, op);
     const presentedAi = await aiCredentialPresented(url, env, doAnswer);
     if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
@@ -190551,6 +192334,17 @@ function makeFetch(hooks = {}) {
           method: "POST",
           body: JSON.stringify(body2)
         })), op);
+      }
+      if (op === "websiteinvite" || op === "joinlinkinvite") {
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        const pass = op === "websiteinvite" ? { key: o.key, cover: o.cover, approvedBy: o.approvedBy } : { link: o.link, cover: o.cover };
+        return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, { method: "POST", body: JSON.stringify(pass) })), op);
+      }
+      if (op === "groupdescription") {
+        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred);
+        if (reader.silent) return storeSilent(reader.silent, reader.correlation);
+        return relayAnswer(invStub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
       }
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub: stub2 });
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
@@ -190855,6 +192649,8 @@ function makeFetch(hooks = {}) {
     if (op === "projectrequests")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`);
     if (op === "profilesset")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`);
+    if (MEMBERSHIP_ADMIN_ACTS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`);
     if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`);
@@ -191164,7 +192960,7 @@ function makeFetch(hooks = {}) {
            nothing here kept it — losing it means minting another and revoking
            this one, which leaves both acts on the record where they belong. */
         token: secret,
-        tokenIsShownOnce: "This is the only time this instance will show this value. It is not stored and cannot be recovered \u2014 the record holds the credential's NAME and who created it, never the value. If it is lost, withdraw this credential and create another."
+        tokenIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is not stored and cannot be recovered \u2014 the record holds the credential's NAME and who created it, never the value. If it is lost, withdraw this credential and create another."
       }, store: storeName, tokenClass: cls3 }, 200);
     }
     if (op === "reviewgrant") {
@@ -191178,7 +192974,7 @@ function makeFetch(hooks = {}) {
       return json14({ ok: true, result: {
         ...issued.result,
         secret,
-        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
+        secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
         read: "op=reviewcopy&secret=<the value above>"
       }, store: storeName, tokenClass: cls3 }, 200);
     }
@@ -191193,7 +192989,7 @@ function makeFetch(hooks = {}) {
       return json14({ ok: true, result: {
         ...issued.result,
         secret,
-        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
+        secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw this grant and open another.",
         read: "op=templateread&secret=<the value above>"
       }, store: storeName, tokenClass: cls3 }, 200);
     }
@@ -191276,7 +193072,7 @@ async function publicationDoorOp(op, url, stub, {
 }
 
 // src/tasks/schema.mjs
-var TASKS_TABLES = Object.freeze(["tasks"]);
+var TASKS_TABLES = Object.freeze(["tasks", "check_requests", "check_todos", "check_takes", "check_records"]);
 var TASKS_SCHEMA = `-- ---- D-98: the task inbox, and the queue that makes auto-creation safe ----
 
 -- The inbox itself, the tasks array of data/inbox.json persisted. WORKING store
@@ -191311,7 +193107,57 @@ CREATE INDEX IF NOT EXISTS tasks_refers ON tasks(refers_to);
 -- flight, which is the flood the dedup exists to prevent. Only 'resolved' is
 -- exempt, because a subject that comes back undetermined after being resolved
 -- is genuinely new and not a duplicate of a closed one.
-CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique ON tasks(refers_to, kind) WHERE status IN ('open', 'forwarded');
+--
+-- T34 (DEC-135, R14): a check request's To do is one task per addressee, kind
+-- 'check-requested', on the same target, so the dedup covers every OTHER kind.
+-- The index of before T34 (all kinds) is dropped and this one, narrower, made.
+DROP INDEX IF EXISTS tasks_live_unique;
+CREATE UNIQUE INDEX IF NOT EXISTS tasks_live_unique_drained ON tasks(refers_to, kind)
+  WHERE status IN ('open', 'forwarded') AND kind <> 'check-requested';
+
+-- ---- T34, DEC-135: "Ask for a check" (R13-R17). Append-only: rows are inserted and never updated or deleted. ----
+
+-- R13: the request, as the owner made it, with the number addressed at that instant.
+CREATE TABLE IF NOT EXISTS check_requests (
+  request    TEXT PRIMARY KEY,
+  target     TEXT NOT NULL,
+  label      TEXT,
+  member     TEXT,
+  note       TEXT,
+  by         TEXT NOT NULL,
+  at         TEXT NOT NULL,
+  addressed  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS check_requests_by ON check_requests(by, at);
+-- R14: which task is whose To do for which request (an addressee's, or a taker's made at the take).
+CREATE TABLE IF NOT EXISTS check_todos (
+  request    TEXT NOT NULL,
+  member     TEXT NOT NULL,
+  task       TEXT NOT NULL,
+  at         TEXT NOT NULL,
+  PRIMARY KEY (request, member, task)
+);
+-- R14: the take, at most one per request: the primary key makes the second taker's write fail, so exactly one succeeds.
+CREATE TABLE IF NOT EXISTS check_takes (
+  request    TEXT PRIMARY KEY,
+  taker      TEXT NOT NULL,
+  handle     TEXT,
+  at         TEXT NOT NULL
+);
+-- R15: the check or reasoned concern, at most one per request.
+CREATE TABLE IF NOT EXISTS check_records (
+  check_id   TEXT PRIMARY KEY,
+  request    TEXT NOT NULL UNIQUE,
+  target     TEXT NOT NULL,
+  checker    TEXT NOT NULL,
+  handle     TEXT,
+  label      TEXT,
+  expertise  TEXT,
+  verdict    TEXT NOT NULL,
+  reason     TEXT,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS check_records_target ON check_records(target, at);
 `;
 
 // src/tasks/index.mjs
@@ -191324,13 +193170,29 @@ var clampLimit4 = (limit, dflt, max) => {
   return Number.isFinite(n) ? Math.max(1, Math.min(max, n)) : dflt;
 };
 var asQuery = (q10) => q10 && typeof q10 === "object" && !Array.isArray(q10) ? q10 : {};
+var CHECK_TASK_KIND = "check-requested";
+var CHECK_VERDICTS = Object.freeze(["check", "concern"]);
+var CHECK_NOTE_MAX = 1e3;
+var CHECK_REASON_MAX = 4e3;
+var normLabel = (label) => String(label ?? "").trim().replace(/\s+/g, " ").slice(0, 120);
+var trimmed = (v) => {
+  const t2 = v === null || v === void 0 ? "" : String(v).trim();
+  return t2 || null;
+};
+var opaque = (prefix) => {
+  const A = "abcdefghijklmnopqrstuvwxyz0123456789", u = new Uint8Array(16);
+  crypto.getRandomValues(u);
+  return `${prefix}-${[...u].map((b) => A[b % 36]).join("")}`;
+};
 var Tasks = class _Tasks {
   #host;
   #deps;
   #env;
   #clock;
+  #storage;
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
+    this.#storage = storage;
     this.sql = storage.sql;
     this.#deps = deps || {};
     this.#env = deps && deps.env || {};
@@ -191866,6 +193728,11 @@ var Tasks = class _Tasks {
       };
     const row9 = this.#one(`SELECT * FROM tasks WHERE id=?`, id);
     if (!row9) return { ok: false, reason: "NO_SUCH_TASK" };
+    if (row9.kind === CHECK_TASK_KIND)
+      return _Tasks.#checkRefusal(
+        "CHECK_NOT_FORWARDED",
+        "a request for a check is never forwarded: anyone who can see its subject may take it; nothing was changed"
+      );
     if (row9.status === "resolved") return { ok: false, reason: "ALREADY_RESOLVED", detail: "a resolved task is not forwarded; a new determination opens a new task" };
     const fenced = this.#refuseNotYours(row9, actor, "forward");
     if (fenced) return fenced;
@@ -191921,6 +193788,17 @@ var Tasks = class _Tasks {
     const fenced = this.#refuseNotYours(row9, actor, "resolve");
     if (fenced) return fenced;
     const at34 = now && ISO_TS_RE.test(now) ? now : stampInstant("second", this.#nowMs());
+    if (row9.kind === CHECK_TASK_KIND) {
+      const link = this.#one(`SELECT c.request, k.taker FROM check_todos c LEFT JOIN check_takes k ON k.request = c.request
+                                WHERE c.task=?`, id);
+      if (link && link.taker && link.taker === row9.assignee)
+        return _Tasks.#checkRefusal(
+          "CHECK_CLOSES_BY_RECORD",
+          "this To do is the check its holder took, and it closes when the check or a concern is recorded; nothing was changed"
+        );
+      this.#closeTodo({ task: id, history: row9.history }, { at: at34, event: "resolved", actor });
+      return { ok: true, id, status: "resolved", resolved_at: at34 };
+    }
     const task = this.#taskOf(row9);
     task.history.push({ at: at34, event: "resolved", actor });
     task.status = "resolved";
@@ -191935,6 +193813,348 @@ var Tasks = class _Tasks {
       id
     );
     return { ok: true, id, status: "resolved", resolved_at: at34 };
+  }
+  /* ------------------------------------------------------------------ "Ask for a check" (R13–R17; DEC-135, Bob's)
+     A request (R13) is addressed at its instant to every member membership R106 answers for its label and target, or to
+     the one member its owner names; each addressee holds a To do, a task of kind `check-requested` on the target (R14),
+     which R2 and R6 answer as any task, behind the same gate (R9). The first take wins; the others' To do closes naming
+     the taker. The taker records a check or a reasoned concern (R15), which gates nothing. Every row is appended in this
+     module's own tables and never overwritten (R17). Sight is membership R80's `inSight`, for `by` as `member:<by>`. */
+  /** One refusal of C-138 (R17), with its row's check and translation (DEC-49). */
+  static #checkRefusal(code, detail, extra = {}) {
+    const row9 = CHECK_REQUEST_CHECKS[code];
+    return { ...extra, ok: false, reason: code, code, check: row9.check, translation: row9.translation, detail };
+  }
+  /** R13–R15, Design Requirement 12: only a member asks, takes or checks. An empty `by` or a machine stamp is refused by
+   *  shape, before anything is read. */
+  #refuseMachineCheck(by) {
+    if (typeof by === "string" && by && !isMachineStamp(by)) return null;
+    return _Tasks.#checkRefusal(
+      "MACHINE_CANNOT_CHECK",
+      "asking for a check, taking one and recording one are a member's acts, and this caller is no member's session"
+    );
+  }
+  /** R14, R15: the request `request` names, when it exists, `by` is an active member and the target is in `by`'s sight;
+   *  else `NO_SUCH_CHECK_REQUEST`, one answer for each. */
+  #requestFor(request, by) {
+    const row9 = typeof request === "string" && request ? this.#one(`SELECT * FROM check_requests WHERE request=?`, request) : null;
+    const facts = row9 ? this.#membership.memberFacts(by) : null;
+    if (row9 && facts && facts.status === "active" && this.#membership.inSight(row9.target, `member:${by}`)) return { row: row9, facts };
+    return { refused: _Tasks.#checkRefusal(
+      "NO_SUCH_CHECK_REQUEST",
+      "no request for a check answers to that id that you can act on; nothing was written"
+    ) };
+  }
+  /** The instant an act is at: the given one when it is an ISO instant, else the instance's clock. */
+  #instant(now) {
+    return now && ISO_TS_RE.test(now) ? now : stampInstant("second", this.#nowMs());
+  }
+  /** One synchronous unit: the storage's transaction when it has one (a Durable Object's), else the call itself. */
+  #atomically(fn) {
+    return this.#storage && typeof this.#storage.transactionSync === "function" ? this.#storage.transactionSync(fn) : fn();
+  }
+  /** R14: a To do for `member` on the request: a task of kind `check-requested` on the target, open, role `member`,
+   *  linked to the request. Throws a MINT_EXHAUSTED marker when no TASK id can be drawn, which the caller's transaction
+   *  turns into R62's answer with nothing written. */
+  #addTodo(req, member, at34) {
+    this.seedLedger();
+    const id = this.#record.mintOpaqueId(
+      "TASK",
+      at34.slice(0, 4),
+      "-check",
+      (x) => !!this.#one(`SELECT 1 AS x FROM tasks WHERE id=?`, x)
+    );
+    if (!id) throw Object.assign(new Error("MINT_EXHAUSTED"), { exhausted: true });
+    const subject = req.label ? `A check is asked: ${req.label}` : "A check is asked of you by name";
+    this.sql.exec(
+      `INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, subject_desc, locators,
+                          assignee, assignee_role, status, created, resolved_at, history)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      id,
+      CHECK_TASK_KIND,
+      req.target,
+      null,
+      subject,
+      req.note ?? null,
+      null,
+      member,
+      "member",
+      "open",
+      at34,
+      null,
+      JSON.stringify([{ at: at34, event: "created", actor: req.by }])
+    );
+    this.sql.exec(`INSERT INTO check_todos (request, member, task, at) VALUES (?,?,?,?)`, req.request, member, id, at34);
+    return id;
+  }
+  /** R14, R15: the request's To dos that are still open, each `{task, member, history}`. */
+  #openTodos(request) {
+    return this.#rows(`SELECT t.id AS task, c.member AS member, t.history AS history FROM check_todos c
+                         JOIN tasks t ON t.id = c.task WHERE c.request=? AND t.status <> 'resolved' ORDER BY t.id`, request);
+  }
+  /** Close one To do, appending `entry` to its history (R14's `taken`, R15's `resolved`). */
+  #closeTodo(todo, entry3) {
+    let history = [];
+    try {
+      history = JSON.parse(todo.history);
+    } catch {
+      history = [];
+    }
+    history.push(entry3);
+    this.sql.exec(`UPDATE tasks SET status='resolved', resolved_at=?, history=? WHERE id=?`, entry3.at, JSON.stringify(history), todo.task);
+  }
+  /** R13: ask for a check on `target`, by expertise `label` or of the named `member`, with an optional `note`. */
+  checkRequest({ target = null, label, member, note = null, by = null, now = null } = {}) {
+    const machine3 = this.#refuseMachineCheck(by);
+    if (machine3) return machine3;
+    const info = typeof target === "string" && target ? this.#record.bundleInfo(target) : null;
+    if (!info || !this.#membership.inSight(target, `member:${by}`))
+      return _Tasks.#checkRefusal(
+        "NO_SUCH_CHECK_TARGET",
+        "no item you can see answers to that id, so there is nothing to ask a check on; nothing was written"
+      );
+    const project = info.type === "project" ? target : info.project;
+    if (!project || !this.#membership.isProjectOwner(project, by))
+      return _Tasks.#checkRefusal(
+        "CHECK_NOT_AN_OWNER",
+        "a check is asked by an owner of the project the item belongs to; nothing was written"
+      );
+    const byLabel = label !== null && label !== void 0, byName = member !== null && member !== void 0;
+    if (byLabel === byName)
+      return _Tasks.#checkRefusal(
+        "CHECK_ADDRESS_ONE",
+        "a check is addressed by an expertise label or to one named member, exactly one of the two; nothing was written"
+      );
+    let addressees;
+    if (byLabel) {
+      const found2 = this.#membership.checkAddressees({ target, label });
+      if (!Array.isArray(found2)) return found2;
+      addressees = found2.map((a) => a.memberId);
+    } else {
+      const facts = typeof member === "string" && member ? this.#membership.memberFacts(member) : null;
+      if (!facts || facts.status !== "active" || !this.#membership.inSight(target, `member:${member}`))
+        return _Tasks.#checkRefusal(
+          "CHECK_MEMBER_REFUSED",
+          "the member named is not an active member who can see the item; nothing was written"
+        );
+      addressees = [member];
+    }
+    const text7 = trimmed(note);
+    if (text7 && text7.length > CHECK_NOTE_MAX)
+      return _Tasks.#checkRefusal(
+        "CHECK_NOTE_TOO_LONG",
+        `the note is over ${CHECK_NOTE_MAX} characters once trimmed; nothing was written`,
+        { max: CHECK_NOTE_MAX }
+      );
+    const at34 = this.#instant(now);
+    const req = {
+      request: opaque("chkreq"),
+      target,
+      label: byLabel ? normLabel(label) : null,
+      member: byName ? member : null,
+      note: text7,
+      by,
+      at: at34
+    };
+    try {
+      this.#atomically(() => {
+        this.sql.exec(
+          `INSERT INTO check_requests (request, target, label, member, note, by, at, addressed) VALUES (?,?,?,?,?,?,?,?)`,
+          req.request,
+          req.target,
+          req.label,
+          req.member,
+          req.note,
+          req.by,
+          req.at,
+          addressees.length
+        );
+        for (const m of addressees) this.#addTodo(req, m, at34);
+      });
+    } catch (e2) {
+      if (e2 && e2.exhausted) return mintExhausted("TASK");
+      throw e2;
+    }
+    return { ok: true, request: req.request, at: at34, addressed: addressees.length };
+  }
+  /** R14: take the request. Exactly one take succeeds: the take is one conditional write under the request's key. */
+  checkTake({ request = null, by = null, now = null } = {}) {
+    const machine3 = this.#refuseMachineCheck(by);
+    if (machine3) return machine3;
+    const { row: req, facts, refused: refused3 } = this.#requestFor(request, by);
+    if (refused3) return refused3;
+    const held2 = this.#one(`SELECT taker, handle, at FROM check_takes WHERE request=?`, req.request);
+    if (held2 && held2.taker === by) return { ok: true, already: true, request: req.request, taken: { handle: held2.handle, at: held2.at } };
+    if (held2)
+      return _Tasks.#checkRefusal(
+        "CHECK_ALREADY_TAKEN",
+        `this check was taken by ${held2.handle ?? "another member"} at ${held2.at}`,
+        { taken: { handle: held2.handle ?? null, at: held2.at } }
+      );
+    const at34 = this.#instant(now);
+    const handle = facts.handle ?? null;
+    let todo = null;
+    try {
+      todo = this.#atomically(() => {
+        this.sql.exec(`INSERT OR IGNORE INTO check_takes (request, taker, handle, at) VALUES (?,?,?,?)`, req.request, by, handle, at34);
+        const won = this.#one(`SELECT taker FROM check_takes WHERE request=?`, req.request);
+        if (!won || won.taker !== by) return null;
+        let mine = null;
+        for (const t2 of this.#openTodos(req.request)) {
+          if (t2.member === by) {
+            mine = mine || t2.task;
+            continue;
+          }
+          this.#closeTodo(t2, { at: at34, event: "taken", actor: by, handle });
+        }
+        return mine || this.#addTodo({ ...req }, by, at34);
+      });
+    } catch (e2) {
+      if (e2 && e2.exhausted) return mintExhausted("TASK");
+      throw e2;
+    }
+    if (!todo) return this.checkTake({ request, by, now });
+    return { ok: true, request: req.request, target: req.target, taken: { handle, at: at34 }, todo };
+  }
+  /** R15: the taker records a check or a reasoned concern; one record per request; it gates nothing. */
+  checkRecord({ request = null, verdict = null, reason = null, by = null, now = null } = {}) {
+    const machine3 = this.#refuseMachineCheck(by);
+    if (machine3) return machine3;
+    const { row: req, facts, refused: refused3 } = this.#requestFor(request, by);
+    if (refused3) return refused3;
+    const take = this.#one(`SELECT taker FROM check_takes WHERE request=?`, req.request);
+    if (!take || take.taker !== by)
+      return _Tasks.#checkRefusal("CHECK_NOT_YOURS", "a check is recorded by the member who took the request; nothing was written");
+    if (!CHECK_VERDICTS.includes(verdict))
+      return _Tasks.#checkRefusal(
+        "CHECK_VERDICT_UNKNOWN",
+        "the verdict is `check` or `concern`; nothing was written",
+        { verdicts: [...CHECK_VERDICTS] }
+      );
+    const why = trimmed(reason);
+    if (verdict === "concern" && !why)
+      return _Tasks.#checkRefusal("CHECK_NO_REASON", "a concern is recorded with its reason; nothing was written");
+    if (why && why.length > CHECK_REASON_MAX)
+      return _Tasks.#checkRefusal(
+        "CHECK_REASON_TOO_LONG",
+        `the reason is over ${CHECK_REASON_MAX} characters once trimmed; nothing was written`,
+        { max: CHECK_REASON_MAX }
+      );
+    const first = this.#one(`SELECT * FROM check_records WHERE request=?`, req.request);
+    if (first)
+      return _Tasks.#checkRefusal(
+        "CHECK_ALREADY_RECORDED",
+        "this request's check is already recorded; nothing was written",
+        { record: _Tasks.#recordOf(first) }
+      );
+    const at34 = this.#instant(now);
+    let expertise = null;
+    if (req.label) {
+      const list6 = this.#membership.expertiseList({ memberId: by });
+      const cur = list6 && Array.isArray(list6.expertise) ? list6.expertise.find((x) => x.label === req.label) : null;
+      expertise = cur && cur.state === "confirmed" ? "confirmed" : cur && cur.state === "declared" ? "self-declared" : null;
+    }
+    const rec = {
+      check: opaque("chk"),
+      request: req.request,
+      target: req.target,
+      checker: by,
+      handle: facts.handle ?? null,
+      label: req.label ?? null,
+      expertise,
+      verdict,
+      reason: why,
+      at: at34
+    };
+    this.#atomically(() => {
+      this.sql.exec(
+        `INSERT INTO check_records (check_id, request, target, checker, handle, label, expertise, verdict, reason, at)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        rec.check,
+        rec.request,
+        rec.target,
+        rec.checker,
+        rec.handle,
+        rec.label,
+        rec.expertise,
+        rec.verdict,
+        rec.reason,
+        rec.at
+      );
+      for (const t2 of this.#openTodos(req.request))
+        if (t2.member === by) this.#closeTodo(t2, { at: at34, event: "resolved", actor: by });
+    });
+    return { ok: true, ...rec };
+  }
+  static #recordOf(r) {
+    return {
+      check: r.check_id,
+      request: r.request,
+      target: r.target,
+      checker: r.checker,
+      handle: r.handle ?? null,
+      label: r.label ?? null,
+      expertise: r.expertise ?? null,
+      verdict: r.verdict,
+      reason: r.reason ?? null,
+      at: r.at
+    };
+  }
+  /** R16: the requests the viewer made, newest first, those whose target the viewer may no longer see left out and not
+   *  counted, at most `limit` (1–500, default 200) with `truncated` and `next` (the id to pass as `after`). */
+  checkRequests(q10 = {}) {
+    const { viewer = null, after = null, limit = 200 } = asQuery(q10);
+    const cap = clampLimit4(limit, 200, 500);
+    const none = { ok: true, requests: [], limit: cap, truncated: false, next: null };
+    try {
+      const me = viewerPredicate(viewer).member;
+      if (!me) return none;
+      let rows3 = this.#rows(`SELECT * FROM check_requests WHERE by=? ORDER BY at DESC, request DESC`, me);
+      if (typeof after === "string" && after) {
+        const i = rows3.findIndex((r) => r.request === after);
+        rows3 = i >= 0 ? rows3.slice(i + 1) : [];
+      }
+      const seen = [];
+      for (const r of rows3) {
+        if (!this.#membership.inSight(r.target, viewer)) continue;
+        seen.push(r);
+        if (seen.length > cap) break;
+      }
+      const page2 = seen.slice(0, cap);
+      return {
+        ok: true,
+        limit: cap,
+        truncated: seen.length > cap,
+        next: seen.length > cap ? page2[page2.length - 1].request : null,
+        requests: page2.map((r) => {
+          const take = this.#one(`SELECT handle, at FROM check_takes WHERE request=?`, r.request);
+          const rec = this.#one(`SELECT * FROM check_records WHERE request=?`, r.request);
+          return {
+            request: r.request,
+            target: r.target,
+            label: r.label ?? null,
+            member: r.member ?? null,
+            note: r.note ?? null,
+            at: r.at,
+            addressed: Number(r.addressed),
+            taken: take ? { handle: take.handle ?? null, at: take.at } : null,
+            check: rec ? _Tasks.#recordOf(rec) : null
+          };
+        })
+      };
+    } catch {
+      return none;
+    }
+  }
+  /** R16: every check recorded on `target`, oldest first; a target the viewer may not see answers `[]`. */
+  checksOf(q10 = {}) {
+    const { target = null, viewer = null } = asQuery(q10);
+    try {
+      if (!this.#membership.inSight(target, viewer)) return [];
+      return this.#rows(`SELECT * FROM check_records WHERE target=? ORDER BY at, check_id`, target).map((r) => _Tasks.#recordOf(r));
+    } catch {
+      return [];
+    }
   }
   static PER_ITEM_MAX = PER_ITEM_MAX;
   /* affordances.mjs: ONE number, published as set_acts[].max_items */
@@ -191980,7 +194200,7 @@ function tasksOf(ctx, deps = {}) {
     OF8.set(storage, t2);
     const record = deps && deps.record || recordOf(ctx);
     t2.seedLedger();
-    const held2 = record.declarePurge("tasks", [{ name: "tasks", keys: [] }]);
+    const held2 = record.declarePurge("tasks", TASKS_TABLES.map((name2) => ({ name: name2, keys: [] })));
     if (held2 && held2.ok === true) {
       record.registerCounts("tasks", [...Tasks.COUNT_KEYS], (hid) => t2.counts(hid));
       record.registerAuditCheck("tasks", (image) => t2.audit(image));
@@ -192008,7 +194228,21 @@ function tasksOps(t2, url, body) {
       viewer: s("viewer")
     }),
     taskforward: () => t2.taskForward(body || {}),
-    taskresolve: () => t2.taskResolve(body || {})
+    taskresolve: () => t2.taskResolve(body || {}),
+    /* R13–R16 (T34; DEC-135): the stamps (`by`, `viewer`) from the query, read after the body so a body's copy never wins
+       (R10); the request's own fields from the body. op-declarations R23 declares these and control-plane R55 routes them. */
+    checkrequest: () => t2.checkRequest({
+      target: body?.target,
+      label: body?.label,
+      member: body?.member,
+      note: body?.note,
+      by: s("by"),
+      viewer: s("viewer")
+    }),
+    checktake: () => t2.checkTake({ request: body?.request, by: s("by") }),
+    checkrecord: () => t2.checkRecord({ request: body?.request, verdict: body?.verdict, reason: body?.reason, by: s("by") }),
+    checkrequests: () => t2.checkRequests({ viewer: s("viewer"), after: s("after"), limit: s("limit") }),
+    checksof: () => t2.checksOf({ target: s("target"), viewer: s("viewer") })
   };
 }
 
@@ -194660,6 +196894,1116 @@ function actionPlansOps(m, url, body) {
   };
 }
 
+// src/machinery-producers/index.mjs
+var UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
+var MachineryProducers = class _MachineryProducers {
+  #host;
+  #deps;
+  /* The read's two functions (R1), held for one synchronous `conditionItems` call and cleared after it. */
+  #homesFn = null;
+  #optionsFn = null;
+  /* R10: the instance's zone, read once per `conditionItems` call (undefined until asked) and cleared after it. */
+  #zone = void 0;
+  constructor({ host, storage, deps = {} } = {}) {
+    this.#host = host;
+    this.sql = storage.sql;
+    this.#deps = deps || {};
+  }
+  /* ------------------------------------------------------------------ the providers (Uses), reached lazily */
+  #dep(name2, make) {
+    if (!(name2 in this.#deps) || this.#deps[name2] === void 0) this.#deps[name2] = make();
+    return this.#deps[name2];
+  }
+  get #record() {
+    return this.#dep("record", () => recordOf(this.#host));
+  }
+  get #membership() {
+    return this.#dep("membership", () => membershipOf(this.#host));
+  }
+  get #governor() {
+    return this.#dep("governor", () => governorOf(this.#host));
+  }
+  get #provenance() {
+    return this.#dep("provenance", () => provenanceOf(this.#host));
+  }
+  get #capture() {
+    return this.#dep("capture", () => captureOf(this.#host));
+  }
+  get #captureRequests() {
+    return this.#dep("captureRequests", () => captureRequestsOf(this.#host));
+  }
+  get #monitoring() {
+    return this.#dep("monitoring", () => monitoringOf(this.#host));
+  }
+  get #actions() {
+    return this.#dep("actions", () => actionsOf(this.#host));
+  }
+  get #networkNotices() {
+    return this.#dep("networkNotices", () => networkNoticesOf(this.#host));
+  }
+  /* N506: a sweep's statuses are link-sweep's (its R11), split from monitoring. */
+  get #linkSweep() {
+    return this.#dep("linkSweep", () => linkSweepOf(this.#host));
+  }
+  #rows(q10, ...a) {
+    return [...this.sql.exec(q10, ...a)];
+  }
+  #one(q10, ...a) {
+    const r = this.#rows(q10, ...a);
+    return r.length ? r[0] : null;
+  }
+  /* ------------------------------------------------------------------ the viewer gate (membership R43, R80)
+     membership offers the ONE predicate (`viewerPredicate`) and the one-id answer (`inSight`), so this module compiles
+     its own gate from the predicate, as queue did. A machine credential (`scope: member`) is not filtered; an absent or
+     unrecognised viewer compiles to DENY. */
+  #bundleGate(col, viewer) {
+    if (typeof col !== "string" || !/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(col))
+      throw new Error(`REFUSED: the D-15 bundle gate needs a QUALIFIED column (got ${col}). An unqualified name binds to \`bundles\` inside the gate's own subquery and passes everything.`);
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return { sql: `${GATE_MARK} 1=1`, args: [] };
+    if (gate.scope === "DENY") return { sql: gate.sql, args: [] };
+    return {
+      sql: `${GATE_MARK} (${col} IS NULL OR EXISTS (SELECT 1 FROM bundles b
+              WHERE b.bundle_id = ${col} AND (${gate.sql})))`,
+      args: gate.args
+    };
+  }
+  /** The same question of ONE id, memoised per read: the id when the viewer sees it (membership R80), else null. */
+  #bundleRedactor(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "member") return (id) => id ?? null;
+    if (gate.scope === "DENY") return (id) => id ? null : id ?? null;
+    const memo = /* @__PURE__ */ new Map();
+    return (id) => {
+      if (!id) return id ?? null;
+      if (!memo.has(id)) memo.set(id, this.#membership.inSight(id, viewer));
+      return memo.get(id) ? id : null;
+    };
+  }
+  /* queue's R7 walk and R12 options, as this read was handed them (R1). */
+  #homesOf(subjectIds) {
+    return this.#homesFn ? this.#homesFn(subjectIds || []) : { ...UNGROUPED };
+  }
+  #optionsOf(subjectIds) {
+    return this.#optionsFn ? this.#optionsFn(subjectIds || []) || [] : [];
+  }
+  /* ------------------------------------------------------------------ R10: the local day, through civil-time
+     Every day this module derives or compares is a local day in the instance's zone (`civil-time` R1, R7, R24), never
+     the UTC day; with no zone held, the day and the age are undetermined, stated, never counted on UTC (K1444 (iii)). */
+  /** The zone `actions` R12 reads (`zoneOf` over `actions.place()`: the active profiles' combined view's `time_zone`),
+   *  held for the length of one read; null when none is held, or when the runtime does not know it. R5's windows. */
+  #instanceZone() {
+    if (this.#zone === void 0) {
+      let z = null;
+      try {
+        const a = this.#actions;
+        z = zoneOf(a && typeof a.place === "function" ? a.place() : null);
+      } catch {
+        z = null;
+      }
+      this.#zone = _MachineryProducers.#knownZone(z);
+    }
+    return this.#zone;
+  }
+  static #knownZone(z) {
+    if (typeof z !== "string" || !z.trim()) return null;
+    try {
+      return typeof localDay("2000-01-01T00:00:00Z", z.trim()) === "string" ? z.trim() : null;
+    } catch {
+      return null;
+    }
+  }
+  /** The local day of a day or an instant in `zone`: a `YYYY-MM-DD` is already a local day and is answered as it is;
+   *  an instant is read in the zone (civil-time R1). Null when neither, or when the instant needs a zone none holds. */
+  static #localDayOf(v, zone) {
+    const raw = typeof v === "string" ? v.trim() : "";
+    if (isCalendarDate(raw)) return raw;
+    if (!raw || !zone) return null;
+    try {
+      const d = localDay(raw, zone);
+      return typeof d === "string" ? d : null;
+    } catch {
+      return null;
+    }
+  }
+  /** The first instant of a local day (`edge` "start") or the first instant after it ("end") in `zone` (civil-time R7). */
+  static #dayEdge(day2, zone, edge) {
+    if (!zone || !isCalendarDate(day2)) return null;
+    try {
+      const r = dayRange(day2, day2, zone);
+      return r && typeof r[edge] === "string" ? r[edge] : null;
+    } catch {
+      return null;
+    }
+  }
+  /** The local day of the read's instant in `zone`. */
+  static #today(now, zone) {
+    if (!zone) return null;
+    try {
+      const d = localDay(stampInstant("second", now), zone);
+      return typeof d === "string" ? d : null;
+    } catch {
+      return null;
+    }
+  }
+  /** R10: the whole local days from `from` to `to` (civil-time R24's `span`), never fewer than none; null when unknown. */
+  static #daysBetween(from, to, zone) {
+    if (!zone || !isCalendarDate(from) || !isCalendarDate(to)) return null;
+    if (to < from) return 0;
+    try {
+      const s = span({ value: from, precision: "day", zone }, { value: to, precision: "day", zone }, { unit: "days" });
+      return s && Number.isFinite(s.min) ? Math.max(0, s.min) : null;
+    } catch {
+      return null;
+    }
+  }
+  static ZONE_UNDETERMINED = "no time zone is held for it by your group's Civicsmith, so the local day it is counted from is undetermined; it is never counted on the UTC day";
+  /** R10: an item's `age` from a day or an instant, counted on local days in `zone`: a day ages from its first local
+   *  instant, an instant from itself; `days` the whole local days since. With no zone held it is undetermined
+   *  (`zone_undetermined`); with nothing readable, undetermined for `reason`. */
+  static #localAge(v, zone, now, reason, detail) {
+    const raw = typeof v === "string" ? v.trim() : "";
+    const day2 = isCalendarDate(raw);
+    const readable = day2 || raw !== "" && Number.isFinite(Date.parse(raw));
+    if (!readable) return { state: "undetermined", reason, detail };
+    if (!zone) return { state: "undetermined", reason: "zone_undetermined", detail: _MachineryProducers.ZONE_UNDETERMINED };
+    const since = day2 ? _MachineryProducers.#dayEdge(raw, zone, "start") : raw;
+    const from = _MachineryProducers.#localDayOf(raw, zone);
+    const sinceMs = since ? Date.parse(since) : NaN;
+    if (!Number.isFinite(sinceMs) || !from) return { state: "undetermined", reason, detail };
+    return {
+      state: "determined",
+      since,
+      ms: Math.max(0, now - sinceMs),
+      days: _MachineryProducers.#daysBetween(from, _MachineryProducers.#today(now, zone), zone)
+    };
+  }
+  /* ------------------------------------------------------------------ the bounds */
+  /** Which object types can BE a case (queue's R7 vocabulary, through normalizeType): an inquiry or a project. */
+  static QUEUE_CASE_TYPES = ["inquiry", "project"];
+  /** How many subject bundles one item names (queue-producers R2: at most 8), the bound queue's options read under too. */
+  static QUEUE_OPTION_SUBJECTS_MAX = 8;
+  /** R2: how many SUBJECT documents one CONDITION may gather before the gathering is reported `subject_bound`.
+   *  Sixteen: twice the option bound, because a home set is cheaper than an affordances derivation. */
+  static QUEUE_CONDITION_SUBJECTS_MAX = 16;
+  /** The prefix the control plane stamps on a MACHINE credential's `author`, `token:<class>`, imported from
+   *  record-grammar so the stamp and the read are the same string (REC-46); what `capture-completed-unattended` reads. */
+  static QUEUE_MACHINE_AUTHOR_PREFIX = MACHINE_AUTHOR_PREFIX;
+  /** N95: the page `manifestByAuthor` is read in (record-core R53's bound). */
+  static QUEUE_UNATTENDED_PAGE = 200;
+  /** The page `#ownedProjects` reads projects in (queue-producers' bound of the same name). */
+  static QUEUE_OBJECTIVE_GAP_PAGE = 200;
+  static DAY_MS = 864e5;
+  /* ================================================================== R1 · conditionItems
+   * queue-producers' ONE read of this module (its R8, where `#queueConditions` stood). Every producer here is a pure
+   * read; the items are R2's in catalogue order, then R4's and R5's. queue sorts before it cuts (its R6, R49), so the
+   * published order is unchanged. */
+  conditionItems({ member = null, viewer = null, now = null, homesOf = null, optionsOf = null } = {}) {
+    const me = typeof member === "string" && member.trim() ? member.trim() : null;
+    const at34 = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : Date.now();
+    this.#homesFn = typeof homesOf === "function" ? homesOf : null;
+    this.#optionsFn = typeof optionsOf === "function" ? optionsOf : null;
+    this.#zone = void 0;
+    try {
+      return { items: [
+        /* R2, R3: the machinery's own conditions. */
+        ...this.#queueConditions(viewer, at34),
+        /* R4, R5 (K1036 (8); DEC-111): a sweep that needs a member's look; a working-on notice that needs its owners'. */
+        ...this.#conditionsSweep(me, viewer, at34),
+        ...this.#conditionsNotice(me, viewer, at34)
+      ] };
+    } finally {
+      this.#homesFn = null;
+      this.#optionsFn = null;
+      this.#zone = void 0;
+    }
+  }
+  /* ================== REC-32 · the CONDITION half of the feed =======   *
+   * WHAT A CONDITION IS, and it is the reason this class exists separately: a
+   * fact about OUR OWN MACHINERY rather than about the world (NOTIFICATIONS.md,
+   * "The classes"). An overdue set of minutes is evidence about a public body;
+   * a governor holding a host is a limitation of our own run. Merging them
+   * would let our plumbing dilute the record's findings, which is the one thing
+   * the three-class split exists to prevent.
+   *
+   * DERIVED ON READ, NO TABLE, NO STORED STATE — the REC-20 precedent, and here
+   * it is not a shortcut but the only correct shape. Every one of these facts is
+   * ALREADY state on the producing subsystem's own row: the governor's
+   * `cooloff_until`, the capture session's existence and expiry, the manifest's
+   * author. A stored copy would be a second record of one fact and would go
+   * stale the instant the fact resolved — which is exactly the failure this
+   * item's negative control produces on purpose.
+   *
+   * SO RESOLUTION NEEDS NO MECHANISM. A condition clears when its underlying
+   * fact stops being true, for EVERY member at once, because there is nothing
+   * per-member to clear: the hold expires, the session is dropped, a member
+   * authors the document again. That is DEC-16's one-state-N-homes rule
+   * inherited rather than re-implemented, and it is why muting (personal) and
+   * resolving (shared) can sit on the same item without colliding.
+   *
+   * EACH KIND IS ONE WHOSE DATA IS ALREADY HERE (R2's six, R4's five, R5's three).
+   * Each is built because its producing subsystem already writes the fact
+   * down, and nothing here invents one. NOTHING IS COUPLED TO A MONITOR TICK:
+   * a later producer adds kinds, it does not change these.
+   *
+   * THE VIEWER POSTURE IS REC-30'S, arm for arm:
+   *   - a condition ABOUT A BUNDLE the viewer may not see is WITHHELD WHOLE and
+   *     with no count, the posture an OBLIGATION about an invisible subject
+   *     takes — a count here would say a project exists;
+   *   - a condition about something that is NOT a bundle (a host, an
+   *     unregistered capture) stands for every member, because it names no
+   *     bundle to withhold; what is gated is which DOCUMENTS sit behind it;
+   *   - the homes come from `homesOf` (queue R7), so an ancestor the viewer may not
+   *     see is `undetermined`/`out_of_view` and never silently dropped.
+   * ======================================================================== */
+  /** The home set for a condition, with the ONE extra way a condition's walk can
+   *  come back incomplete that an obligation's cannot.
+   *
+   *  An obligation and a finding both start from a bounded, known set of
+   *  subjects. A condition about a HOST does not: the documents it concerns are
+   *  every document captured from that host. So the subject gathering carries
+   *  R2's discipline too — a bound, and an EXHAUSTED bound reported as
+   *  `subject_bound` rather than as a quietly shorter home set. Same rule as
+   *  `depth_bound`, same reason, and deliberately a DIFFERENT word, because
+   *  "we stopped walking up" and "we stopped gathering subjects" are different
+   *  facts and a surface should be able to say which happened. */
+  #conditionHomes(subjectIds, viewer, bounded2 = false) {
+    const homes = this.#homesOf(subjectIds);
+    if (!bounded2) return homes;
+    return {
+      ...homes,
+      state: "undetermined",
+      ungrouped: false,
+      reasons: [.../* @__PURE__ */ new Set([...homes.reasons, "subject_bound"])].sort()
+    };
+  }
+  /** Which documents in this record came from a HOST, viewer-gated and bounded.
+   *
+   *  `captured_locators` is the store's own index of "what we retrieved from
+   *  what address", written unconditionally for every capture, and `register`
+   *  is the trust root that says which bundle those bytes were registered
+   *  under. The join is the honest path from a host to the documents a member
+   *  is actually working on; site_assets would answer a narrower question (what
+   *  a host SERVED as furniture) and reuse_verdicts a narrower one still.
+   *
+   *  AN ADDRESS BELONGS TO THE HOST WHEN IT BEGINS WITH ONE OF FOUR PREFIXES, since normalizeAddress keeps the
+   *  scheme and a non-default port: `https://<host>/`, `http://<host>/`, `https://<host>:`, `http://<host>:`. Each
+   *  prefix is asked as a RANGE over the text, `prefix <= address_norm < upper`, where `upper` is the prefix with
+   *  its last character (`/` or `:`) raised by one: under SQLite's binary collation that is exactly "begins with",
+   *  and it is a seek on the `address_norm` key. No LIKE or GLOB pattern is built (N270): a pattern grows with the
+   *  host, and workerd refuses one over 50 bytes (K313), so a long hostname failed the whole read on the plane. */
+  #conditionBundlesForHost(host, viewer) {
+    const cap = _MachineryProducers.QUEUE_CONDITION_SUBJECTS_MAX;
+    if (typeof host !== "string" || !host) return { ids: [], bounded: false };
+    const seen = this.#bundleGate("r.bundle_id", viewer);
+    const prefixes = [`https://${host}/`, `http://${host}/`, `https://${host}:`, `http://${host}:`];
+    const ranges = prefixes.flatMap((p3) => [p3, p3.slice(0, -1) + String.fromCharCode(p3.charCodeAt(p3.length - 1) + 1)]);
+    const rows3 = this.#rows(
+      `SELECT DISTINCT r.bundle_id FROM captured_locators cl
+         JOIN register r ON r.capture_sha = cl.capture_sha
+        WHERE (${prefixes.map(() => "(cl.address_norm >= ? AND cl.address_norm < ?)").join(" OR ")})
+          AND (${seen.sql})
+        ORDER BY r.bundle_id LIMIT ?`,
+      ...ranges,
+      ...seen.args,
+      cap + 1
+    );
+    const ids = rows3.map((r) => r.bundle_id);
+    return { ids: ids.slice(0, cap), bounded: ids.length > cap };
+  }
+  /** `governor-holding-host` (D-103, and D-95 which built the governor).
+   *
+   *  THE FACT IS THE GOVERNOR'S OWN, read at the same predicate the governor
+   *  itself admits on: `cooloff_until > now` is the exact test `governorAdmit`
+   *  applies before refusing with `cooling_off`, and the one the capture path
+   *  applies before stopping a page's remaining subresources. This derivation does not
+   *  restate the rule, it asks it.
+   *
+   *  WHY IT EARNS AN ITEM AT ALL (NOTIFICATIONS.md rule 4 — a CONDITION is
+   *  status until a member can change it): because the member's conclusion
+   *  changes. "The source is down" and "we are pacing ourselves" are different
+   *  facts about the world and about us, and D-104 is explicit that they must be
+   *  distinguishable. A member who cannot tell them apart will either wait for
+   *  a source that is fine or chase a publisher who did nothing.
+   *
+   *  IT RESOLVES BY THE HOLD ENDING, and for everyone at once. There is no act
+   *  to take and none is offered: `options[]` are the acts available on the
+   *  DOCUMENTS behind it, derived exactly as every other item's are. */
+  #conditionsGovernorHolding(viewer, now) {
+    const out = [];
+    for (const r of this.#governor.governorHolding({ now })) {
+      const subj = this.#conditionBundlesForHost(r.host, viewer);
+      const refusedAt = Number(r.last_refusal_at);
+      out.push({
+        id: `CONDITION::governor-holding-host::${r.host}`,
+        class: "CONDITION",
+        kind: "governor-holding-host",
+        case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
+        subject: {
+          kind: "host",
+          id: null,
+          host: r.host,
+          bundles: subj.ids.slice(0, _MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX)
+        },
+        summary: `our own pacing is holding ${r.host}: captures from it are PACED, not broken`,
+        detail: `the per-host governor is in cool-off for ${r.host} for another ${Math.max(0, r.cooloff_until - now)}ms after ${r.refusals} consecutive refusal${r.refusals === 1 ? "" : "s"}` + (r.last_refusal_status ? ` (last status ${r.last_refusal_status})` : "") + ". Nothing about the source is being claimed here.",
+        basis: {
+          source: "host_governor",
+          host: r.host,
+          cooloff_until: r.cooloff_until,
+          retry_in_ms: Math.max(0, r.cooloff_until - now),
+          refusals: r.refusals,
+          last_refusal_status: r.last_refusal_status ?? null,
+          last_refusal_at: Number.isFinite(refusedAt) ? refusedAt : null,
+          appetite_per_min: r.appetite_per_min ?? null,
+          granted: r.granted,
+          refused_total: r.refused_total,
+          detail: "a status is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it."
+        },
+        age: Number.isFinite(refusedAt) && refusedAt > 0 ? {
+          state: "determined",
+          since: new Date(refusedAt).toISOString(),
+          ms: Math.max(0, now - refusedAt)
+        } : {
+          state: "undetermined",
+          reason: "no_refusal_instant",
+          detail: "the governor row is in cool-off but carries no instant for the refusal that started it, so how long this has been true is not derivable"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf(subj.ids)
+      });
+    }
+    return out;
+  }
+  /** `partial-capture-outstanding` (CAPTURE-SCALING; the subresource ceiling).
+   *
+   *  THE FACT IS THE LEDGER'S OWN. `capture_sessions` is a work list with an
+   *  expiry: a row exists exactly when a capture ran out of subrequest budget
+   *  with support material still outstanding, and the capture path DROPS it the
+   *  moment nothing is left. So "a capture did not finish" is the existence of
+   *  an unexpired row and nothing else.
+   *
+   *  THIS READ DOES NOT PRUNE. `saveCaptureSession` and `loadCaptureSession`
+   *  delete expired rows on the way past, which is right for a write path and
+   *  wrong for this one: op=queue REPORTS and never mutates. An expired session
+   *  is filtered by the same instant comparison instead, in the same stamp
+   *  format those two methods write.
+   *
+   *  WHAT IT IS ABOUT. The primary capture is COMPLETE from the first tick and
+   *  its bytes are in the store; what is outstanding is support material. If
+   *  those bytes were registered under a bundle, that bundle is the subject and
+   *  the ordinary viewer posture applies — invisible subject, withheld whole. If
+   *  they were not, the session names no bundle at all (the intake doctrine's
+   *  own words), so there is nothing to withhold and the item stands ungrouped
+   *  about a capture rather than about a document. */
+  #conditionsPartialCapture(viewer, now) {
+    const out = [];
+    const nowIso = stampInstant("second", now);
+    const redact = this.#bundleRedactor(viewer);
+    for (const s of this.#capture.liveCaptureSessions(nowIso)) {
+      const r = { ...s, primary_sha: s.primarySha };
+      const home = this.#provenance.homeOf(r.primary_sha);
+      const bundleId = home ? home.bundleId : null;
+      if (bundleId && redact(bundleId) === null) continue;
+      let outstanding = null, discovered = null, spent = null, parsed = true;
+      const st = r.state;
+      if (st && typeof st === "object") {
+        outstanding = Array.isArray(st.queue) ? st.queue.length : null;
+        discovered = Number.isFinite(st.discovered) ? st.discovered : null;
+        spent = Number.isFinite(st.spent) ? st.spent : null;
+      } else parsed = false;
+      const createdMs = Date.parse(r.created);
+      out.push({
+        id: `CONDITION::partial-capture-outstanding::${r.session}`,
+        class: "CONDITION",
+        kind: "partial-capture-outstanding",
+        case: this.#conditionHomes(bundleId ? [bundleId] : [], viewer),
+        subject: bundleId ? { kind: "bundle", id: bundleId, capture_sha: r.primary_sha, locator: r.locator } : { kind: "capture", id: null, capture_sha: r.primary_sha, locator: r.locator },
+        summary: `the capture of ${r.locator} did not finish: support material is still outstanding`,
+        detail: `the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick ${r.ticks}, expires ${r.expires}).`,
+        basis: {
+          source: "capture_sessions",
+          session: r.session,
+          locator: r.locator,
+          primary_sha: r.primary_sha,
+          bundle_id: bundleId,
+          ticks: r.ticks,
+          created: r.created,
+          updated: r.updated,
+          expires: r.expires,
+          outstanding: parsed ? outstanding : null,
+          discovered: parsed ? discovered : null,
+          spent: parsed ? spent : null,
+          state_readable: parsed,
+          detail: "the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires."
+        },
+        age: Number.isFinite(createdMs) ? { state: "determined", since: r.created, ms: Math.max(0, now - createdMs) } : {
+          state: "undetermined",
+          reason: "unparseable_created",
+          detail: "the session row carries a created stamp this producer cannot read as an instant"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: bundleId ? this.#optionsOf([bundleId]) : []
+      });
+    }
+    return out;
+  }
+  /** R3 (DEC-95 (1); K1105): the grade note of each capture an unattended item names, the words `op=acquire`'s answer
+   *  carries (`ACQUIRE_GRADE_NOTE`, capture's export, as its R76 answers them), read synchronously. A capture is named,
+   *  and held, by its `register` row (provenance R48): those under the item's bundle, at most the option bound (queue-producers R2), or a
+   *  request's own digest. A capture the viewer may not see (its register row's bundle out of sight) carries none. */
+  #gradeNotes({ bundle = null, sha: sha2 = null }, visible) {
+    const rows3 = bundle ? this.#rows(
+      `SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.bundle_id=? ORDER BY r.capture_sha LIMIT ?`,
+      bundle,
+      _MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX
+    ) : typeof sha2 === "string" && sha2 ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.capture_sha=?`, sha2.toLowerCase()) : [];
+    return rows3.filter((r) => visible(r.bundle_id) !== null).map((r) => ({ capture_sha: r.capture_sha, note: ACQUIRE_GRADE_NOTE }));
+  }
+  /** R3: the detail's sentence carrying the notes, the same words for each capture, said once with the captures named. */
+  static #gradeNoteSentence(notes) {
+    if (!notes.length) return "";
+    const byNote = /* @__PURE__ */ new Map();
+    for (const n of notes) byNote.set(n.note, [...byNote.get(n.note) || [], n.capture_sha]);
+    return [...byNote].map(([note, shas]) => ` The grade note of ${shas.length === 1 ? "the capture" : "the captures"} it names (${shas.map((x) => x.slice(0, 12)).join(", ")}), as a member present would have read it: ${note}`).join("");
+  }
+  /** `capture-completed-unattended` (D-61, closed by REC-2).
+   *
+   *  THE FACT IS THE MANIFEST'S OWN, and REC-2 is what made it exist. Before
+   *  REC-2 an unattended writer could not take a lease at all, so a daemon
+   *  could not finish a capture a member walked away from; REC-2's answer was a
+   *  NAMED machine actor, `token:<class>`, stamped by the control plane with the
+   *  caller's own value deleted first. That stamp lands on `manifest.author`,
+   *  and it is the only durable trace of an unattended write anywhere in this
+   *  store.
+   *
+   *  THE CONDITION IS THE SEQUENCE, NOT THE STAMP. A document written only ever
+   *  by a machine was never walked away from by anybody — the whole intake path
+   *  runs on a machine credential. What D-61 describes is a PERSON's document
+   *  finished by a daemon, so the test is: the LATEST snapshot was machine
+   *  written, and an EARLIER one was authored by a person. Both halves are
+   *  required and the basis names both.
+   *
+   *  IT RESOLVES WHEN THE MEMBER COMES BACK — that is, when a person authors the
+   *  document again and the latest snapshot is theirs. Shared, like every other
+   *  condition here, because it is a property of the manifest and not of a
+   *  reader.
+   *
+   *  ORDERING. `created` is the DOCUMENT's own time (promote records
+   *  meta.last_updated, never the wall clock — C-12.1 depends on that). The
+   *  tiebreak is `rowid DESC`, the store's own write order, because `snap_key`
+   *  is an opaque caller-chosen string and its lexical order is not a clock: two
+   *  snapshots stamped at the same instant would otherwise be ordered by a hash.
+   *  #revisionKind reads the latest manifest entry by this SAME order since
+   *  D-171 (it tiebroke on `snap_key DESC` until then, and named the wrong
+   *  writer on a tie); the two sites agree on purpose. */
+  #conditionsCaptureUnattended(viewer, now) {
+    const out = [];
+    const visible = this.#bundleRedactor(viewer);
+    const page2 = _MachineryProducers.QUEUE_UNATTENDED_PAGE;
+    const found2 = [];
+    for (let after = ""; ; ) {
+      const r = this.#record.manifestByAuthor({ authorPrefix: _MachineryProducers.QUEUE_MACHINE_AUTHOR_PREFIX, after, limit: page2 });
+      for (const b of r.bundles) if (visible(b.bundleId) !== null) found2.push(b);
+      if (!r.cursor || r.bundles.length < page2) break;
+      after = r.cursor;
+    }
+    for (const m of found2) {
+      const b = { bundle_id: m.bundleId };
+      const latest3 = m.latest ? { ...m.latest, snap_key: m.latest.snapKey } : null;
+      if (!latest3 || !String(latest3.author || "").startsWith(_MachineryProducers.QUEUE_MACHINE_AUTHOR_PREFIX))
+        continue;
+      const started = m.firstOther ? { ...m.firstOther, snap_key: m.firstOther.snapKey } : null;
+      if (!started) continue;
+      const createdMs = Date.parse(latest3.created);
+      const title = this.#record.bundleInfo(b.bundle_id);
+      const notes = this.#gradeNotes({ bundle: b.bundle_id }, visible);
+      out.push({
+        id: `CONDITION::capture-completed-unattended::${b.bundle_id}`,
+        class: "CONDITION",
+        kind: "capture-completed-unattended",
+        case: this.#conditionHomes([b.bundle_id], viewer),
+        subject: { kind: "bundle", id: b.bundle_id },
+        summary: `${title && title.title ? title.title : b.bundle_id} was completed by an unattended writer after ${started.author} left it`,
+        detail: `${started.author} authored this document and an unattended writer (${latest3.author}) wrote the most recent revision, which is the shape D-61 describes: a capture a member walked away from has completed. Nothing is claimed about whether the result is right.` + _MachineryProducers.#gradeNoteSentence(notes),
+        basis: {
+          source: "manifest",
+          bundle_id: b.bundle_id,
+          completed_by: latest3.author,
+          completed_snap_key: latest3.snap_key,
+          completed_created: latest3.created,
+          completed_kind: latest3.kind,
+          writer: latest3.writer ?? null,
+          operation: latest3.operation ?? null,
+          started_by: started.author,
+          started_snap_key: started.snap_key,
+          started_created: started.created,
+          grade_notes: notes,
+          detail: "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again."
+        },
+        age: Number.isFinite(createdMs) ? { state: "determined", since: latest3.created, ms: Math.max(0, now - createdMs) } : {
+          state: "undetermined",
+          reason: "unparseable_created",
+          detail: "the manifest entry carries a created stamp this producer cannot read as an instant"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([b.bundle_id])
+      });
+    }
+    return out;
+  }
+  /** `capture-completed-unattended` (D-61) — ITS SECOND PRODUCER, and PL-4's
+   *  completion notification.
+   *
+   *  THE DESIGN SAYS *"extend the subscriber, do not invent a channel"* (§4, on
+   *  the pursue session waiting on a capture), and this is that: the SAME
+   *  catalogued kind, the same class, a different subject and a different basis.
+   *  A second producer for one kind is not novel — `C-27.13` has two, and PL-3's
+   *  own control arm 6 turns on the distinction.
+   *
+   *  WHY THE FIRST PRODUCER CANNOT COVER THIS CASE, stated rather than left to
+   *  be discovered. `#conditionsCaptureUnattended` requires an EARLIER manifest
+   *  entry authored by a PERSON — its whole condition is "a person's document
+   *  finished by a daemon". A requested capture was never a person's document:
+   *  the run asked for a URL nobody had captured. So the walk finds no `started`
+   *  row and correctly emits nothing, and the member waiting on this capture
+   *  would be told nothing at all.
+   *
+   *  WHAT IT NAMES: BOTH PRINCIPALS, through the one composer the drain used. A
+   *  row whose attribution cannot be composed emits NO ITEM — a notification
+   *  that could not say whose act it was would be the defect DEC-27(b) names,
+   *  surfaced to a member.
+   *
+   *  RECORDED FOR THE NEXT READER: the plan row and INVESTIGATIVE-SESSION.md §4
+   *  both call this "the existing FINDING-class slug". IT IS NOT ONE.
+   *  `queuestate.mjs` has classed `capture-completed-unattended` as a CONDITION
+   *  since REC-32 and has a live producer for it. It is built here as the
+   *  CONDITION it actually is rather than reclassified to match the prose: a
+   *  kind's class decides whether leaving the list is a personal mute or an
+   *  authored record act (D-125, DEC-16), and moving one to match a sentence in
+   *  a plan would be changing doctrine to fix a citation. The discrepancy is
+   *  reported rather than silently absorbed. */
+  #conditionsCaptureRequested(viewer, now) {
+    const out = [];
+    const visible = this.#bundleRedactor(viewer);
+    for (const r of this.#captureRequests.completed({ viewer }).requests) {
+      const attribution = r.attribution;
+      if (!attribution.ok) continue;
+      const capturedMs = Date.parse(r.captured_at);
+      const notes = this.#gradeNotes({ sha: r.capture_sha }, visible);
+      out.push({
+        id: `CONDITION::capture-completed-unattended::${r.request}`,
+        class: "CONDITION",
+        kind: "capture-completed-unattended",
+        case: this.#conditionHomes([r.target], viewer),
+        subject: { kind: "capture_request", id: r.request },
+        summary: `${r.address} was captured by the daemon at the investigative session's request`,
+        detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT an entry of that document into the leg of a claim: it lands at 'collected' and never higher, and nothing about the record's conclusions has moved.` + _MachineryProducers.#gradeNoteSentence(notes),
+        basis: {
+          source: "capture_requests",
+          request: r.request,
+          run: r.run,
+          inquiry: r.target,
+          address: r.address,
+          host: r.host,
+          purpose: r.purpose,
+          ua_mode: r.ua_mode,
+          capture_sha: r.capture_sha,
+          captured_at: r.captured_at,
+          grade_notes: notes,
+          attribution,
+          detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself."
+        },
+        age: Number.isFinite(capturedMs) ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) } : {
+          state: "undetermined",
+          reason: "unparseable_captured_at",
+          detail: "the request row carries a completion stamp this producer cannot read as an instant"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([r.target])
+      });
+    }
+    return out;
+  }
+  /** A home set made of the named cases themselves (each at depth 0, when this viewer sees it and it is a case) and
+   *  every ancestor above them (queue R7): for an item that is ABOUT a case rather than about a document under one.
+   *  `walkFrom` (R4) names the subjects the walk starts from when they are not the cases themselves: a sweep's
+   *  item is homed under its project at depth 0 and under whatever its bundle's own walk reaches. */
+  #homesAt(caseIds, viewer, walkFrom = caseIds) {
+    const up = this.#homesOf(walkFrom);
+    const gate = viewerPredicate(viewer);
+    const own5 = [];
+    for (const id of [...new Set((caseIds || []).filter((x) => typeof x === "string" && x))]) {
+      const row9 = this.#one(
+        `SELECT b.bundle_id, b.object_type, b.current_state, b.title FROM bundles b
+          WHERE b.bundle_id=? AND (${gate.sql})`,
+        id,
+        ...gate.args
+      );
+      if (!row9) continue;
+      const ty = normalizeType(row9.object_type);
+      if (!_MachineryProducers.QUEUE_CASE_TYPES.includes(ty)) continue;
+      const spec = vocabFor(STATES, row9.object_type);
+      const edges = spec && spec.edges ? spec.edges : null;
+      const terminal = edges && Object.prototype.hasOwnProperty.call(edges, row9.current_state) ? edges[row9.current_state].length === 0 : null;
+      own5.push({ id: row9.bundle_id, type: ty, title: row9.title ?? null, state: row9.current_state ?? null, terminal, depth: 0 });
+    }
+    const ancestors = [...own5, ...up.ancestors.filter((a) => !own5.some((o) => o.id === a.id))].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    return { ...up, ancestors, ungrouped: up.state === "determined" && ancestors.length === 0 };
+  }
+  /** The documents captured at one address (provenance R48's read contract), viewer-gated and bounded as
+   *  `#conditionBundlesForHost` is. */
+  #conditionBundlesForAddress(addressNorm, viewer) {
+    const cap = _MachineryProducers.QUEUE_CONDITION_SUBJECTS_MAX;
+    const seen = this.#bundleGate("r.bundle_id", viewer);
+    const ids = this.#rows(
+      `SELECT DISTINCT r.bundle_id FROM captured_locators cl JOIN register r ON r.capture_sha = cl.capture_sha
+        WHERE cl.address_norm = ? AND (${seen.sql}) ORDER BY r.bundle_id LIMIT ?`,
+      addressNorm,
+      ...seen.args,
+      cap + 1
+    ).map((r) => r.bundle_id);
+    return { ids: ids.slice(0, cap), bounded: ids.length > cap };
+  }
+  /** `archive-fallback-eligible` (N229, N330; monitoring R47; capture R8): one CONDITION per address
+   *  `monitoring.archiveEligible` answers, what the next archive tick would find eligible (K406 Q2), asked as the tick
+   *  asks and writing nothing. Its bound, whether it cut, and the daemon's pause are published on each item: a pause
+   *  never empties the list, since eligibility is capture's fact about our attempts. */
+  #conditionsArchiveEligible(viewer, now) {
+    const page2 = this.#monitoring.archiveEligible(now) || {};
+    const list6 = page2.ok !== false && Array.isArray(page2.eligible) ? page2.eligible : [];
+    const out = [];
+    for (const r of list6) {
+      const address = r && typeof r.address === "string" && r.address ? r.address : null;
+      if (!address) continue;
+      const subj = this.#conditionBundlesForAddress(address, viewer);
+      const sinceMs = Date.parse(r.first_failure_since ?? "");
+      out.push({
+        id: `CONDITION::archive-fallback-eligible::${address}`,
+        class: "CONDITION",
+        kind: "archive-fallback-eligible",
+        case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
+        subject: {
+          kind: "address",
+          id: null,
+          address,
+          bundles: subj.ids.slice(0, _MachineryProducers.QUEUE_OPTION_SUBJECTS_MAX)
+        },
+        summary: `${address} has stopped answering often enough that its archived copy may be fetched instead`,
+        detail: "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
+        basis: {
+          source: "monitoring.archiveEligible",
+          address,
+          reachability: r.reachability ?? null,
+          bound: { limit: page2.limit ?? null, truncated: page2.truncated === true },
+          paused: page2.paused ?? null,
+          detail: "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again."
+        },
+        age: Number.isFinite(sinceMs) ? { state: "determined", since: r.first_failure_since, ms: Math.max(0, now - sinceMs) } : {
+          state: "undetermined",
+          reason: "no_first_failure",
+          detail: "the failing run carries no first-failure instant this producer can read"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf(subj.ids)
+      });
+    }
+    return out;
+  }
+  /** `monitoring-recheck-due` (N229; monitoring R16, R31, R32): one CONDITION per monitored address monitoring's plan
+   *  shows this viewer as overdue by more than its own interval, or unscheduled (no interval can be derived), so a
+   *  document that is not being checked is visible. A document never checked is due now and is not yet overdue. */
+  #conditionsRecheckDue(viewer, now) {
+    const plan = this.#monitoring.monitoring({ viewer, now });
+    const out = [];
+    for (const r of plan && Array.isArray(plan.items) ? plan.items : []) {
+      const dueMs = r.due_at ? Date.parse(r.due_at) : NaN;
+      const overdue = r.state === "due" && Number.isFinite(dueMs) && Number.isFinite(r.interval_ms) && now - dueMs > r.interval_ms;
+      if (!(overdue || r.state === "unscheduled")) continue;
+      const key = r.address || r.bundle;
+      out.push({
+        id: `CONDITION::monitoring-recheck-due::${key}`,
+        class: "CONDITION",
+        kind: "monitoring-recheck-due",
+        case: this.#conditionHomes([r.bundle], viewer),
+        subject: { kind: "address", id: r.bundle, address: r.address ?? null },
+        summary: overdue ? `${r.address || r.bundle} is overdue for its check by more than its own interval` : `${r.address || r.bundle} is monitored and has no check scheduled`,
+        detail: overdue ? `it was due at ${r.due_at} and is checked every ${Math.round(r.interval_ms / 36e5)} hours; the check has not run since. Nothing about the source is claimed here.` : `no interval can be derived for it (${r.reason || "no reason recorded"}), so no check is scheduled.`,
+        basis: {
+          source: "monitoring",
+          state: r.state,
+          bundle: r.bundle,
+          address: r.address ?? null,
+          frequency: r.frequency ?? null,
+          due_at: r.due_at ?? null,
+          interval_ms: r.interval_ms ?? null,
+          reason: r.reason ?? null,
+          truncated: plan.truncated === true,
+          detail: "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set."
+        },
+        age: overdue ? { state: "determined", since: r.due_at, ms: Math.max(0, now - dueMs) } : {
+          state: "undetermined",
+          reason: "unscheduled",
+          detail: "an unscheduled address has no instant it fell due"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([r.bundle])
+      });
+    }
+    return out;
+  }
+  /** R2's generators, in catalogue order. Every one of them is a pure read. */
+  #queueConditions(viewer, now) {
+    return [
+      ...this.#conditionsGovernorHolding(viewer, now),
+      ...this.#conditionsPartialCapture(viewer, now),
+      ...this.#conditionsCaptureUnattended(viewer, now),
+      ...this.#conditionsCaptureRequested(viewer, now),
+      ...this.#conditionsRenderDeferred(viewer, now),
+      ...this.#conditionsArchiveEligible(viewer, now),
+      ...this.#conditionsRecheckDue(viewer, now)
+    ];
+  }
+  /** `render-deferred` (D-523; BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24 by BOB #33").
+   *
+   *  THE FACT IS THE REQUEST ROW'S OWN: a request that asked for the page as a visitor saw it (`render = 1`) and
+   *  carries a C-83 code. While it is `requested` the drain is HOLDING it under that code (D-491) and asks again on
+   *  every tick until its `expires`; once `expired` the drain has RELEASED it and the render never happened. Both
+   *  are shown, under one kind, because they are one fact at two moments and a member who saw the first must be
+   *  able to see how it ended — an item that simply vanished at expiry would be the silent drop the ruling forbids.
+   *
+   *  THE REASON IS C-83's OWN, in DEC-49 words: the code, its C-number and the canned translation are read off the
+   *  family that minted them and never re-typed here, so the sentence a member reads is the one the plane refuses
+   *  with. C-83.3 and C-83.4 say different things — one that this instance cannot render at all, the other that
+   *  today's allowance is committed — and collapsing them into "deferred" would tell a member to wait for a
+   *  renderer that is not coming.
+   *
+   *  A CONDITION: our renderer, our allowance and our pacing hold it, so it is a fact about our machinery and never
+   *  about the page, and a member may mute it for themselves (D-125's item form). It offers no act of its own; the
+   *  options are the acts on the question the request was asked under, derived as every other item's are.
+   *
+   *  GATED AT THE TARGET through `#bundleGate`, exactly as the completion notification one producer up is: a
+   *  request under a question the viewer cannot see is absent from their feed as it is from op=capturerequests. */
+  #conditionsRenderDeferred(viewer, now) {
+    const out = [];
+    for (const r of this.#captureRequests.rendersHeld({ viewer }).requests) {
+      const row9 = renderHoldReason(r.code);
+      const words4 = row9.translation || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
+      const released = r.state === "expired";
+      const sinceMs = Date.parse(r.requested_at);
+      out.push({
+        id: `CONDITION::render-deferred::${r.request}`,
+        class: "CONDITION",
+        kind: "render-deferred",
+        case: this.#conditionHomes([r.target], viewer),
+        subject: { kind: "capture_request", id: r.request },
+        summary: released ? `the render of ${r.address} was never performed: it was held until its request expired, and what the page showed is UNDETERMINED` : `a render of ${r.address} is waiting: ${words4}`,
+        detail: released ? `${words4} The request expired at ${r.expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.` : `${words4} The request is held and asked again on every tick until ${r.expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.`,
+        basis: {
+          source: "capture_requests",
+          request: r.request,
+          run: r.run,
+          inquiry: r.target,
+          address: r.address,
+          host: r.host,
+          render: released ? { state: "expired", content: "undetermined" } : { state: "deferred", content: "undetermined" },
+          code: r.code,
+          check: row9.check,
+          translation: row9.translation,
+          attempts: r.attempts,
+          expires: r.expires,
+          updated: r.updated,
+          plane_detail: r.detail ?? null,
+          detail: "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw."
+        },
+        age: Number.isFinite(sinceMs) ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) } : {
+          state: "undetermined",
+          reason: "unparseable_requested_at",
+          detail: "the request row carries a request stamp this producer cannot read as an instant"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([r.target])
+      });
+    }
+    return out;
+  }
+  /** The projects this viewer sees that the member OWNS (membership R65), in id order, at most `cap`. */
+  #ownedProjects(me, viewer, cap) {
+    const gate = viewerPredicate(viewer);
+    const out = [];
+    let after = "", truncated3 = false;
+    for (; ; ) {
+      const rows3 = this.#rows(
+        `SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id > ? AND (${gate.sql})
+          ORDER BY b.bundle_id LIMIT ?`,
+        after,
+        ...gate.args,
+        _MachineryProducers.QUEUE_OBJECTIVE_GAP_PAGE
+      );
+      for (const r of rows3) {
+        const owners2 = this.#membership.projectOwners(r.bundle_id) || [];
+        if (!owners2.includes(me)) continue;
+        if (out.length === cap) {
+          truncated3 = true;
+          break;
+        }
+        out.push(r.bundle_id);
+      }
+      if (truncated3 || rows3.length < _MachineryProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
+      after = rows3[rows3.length - 1].bundle_id;
+    }
+    return { projects: out, bound: cap, truncated: truncated3 };
+  }
+  /* ======================================================================
+   * K1036 (8) · R4 — A SWEEP THAT NEEDS A MEMBER'S LOOK (link-sweep R8, R11; monitoring R60, R63 before N506).
+   * DEC-111, K1031 · R5 — A WORKING-ON NOTICE THAT NEEDS ITS OWNERS' (network-notices R12, R13, R22).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
+   * first read after the fact stops holding. The items' words are the UX design stream's to set (NOTIFICATIONS.md, the
+   * item contract; `ux-experience.json` UC-035): the sentences here say the fact plainly and claim nothing beyond it.
+   * ====================================================================== */
+  /** R4: the five kinds `link-sweep.sweepConditions` answers (its R11), as link-sweep exports them. */
+  static SWEEP_CONDITION_KINDS = SWEEP_CONDITION_KINDS;
+  /** R5: how many owned projects one read asks `network-notices` about; the window `notice-lapse-near` opens in before
+   *  a lapse, and how long `notice-project-closed` stands after the closing. */
+  static QUEUE_NOTICE_PROJECTS = 50;
+  static NOTICE_LAPSE_NEAR_DAYS = 7;
+  static NOTICE_CLOSED_DAYS = 30;
+  /** R5: the act that answers a notice (network-notices R6, R11): a new revision, or a stop with an optional handoff. */
+  static NOTICE_REVISE = Object.freeze({ id: "noticeprepare", label: "Revise this notice, or stop it", weight: "single" });
+  static NOTICE_STOP = Object.freeze({ id: "noticeprepare", label: "Stop this notice, with a handoff if you want one", weight: "single" });
+  /** R4's sentences, one per kind, each saying what the condition's `detail` gives and nothing more. */
+  static #sweepWords(kind, d, title) {
+    const n = (v) => Number.isFinite(Number(v)) ? Number(v) : "an undetermined number of";
+    const list6 = (xs, f17) => Array.isArray(xs) && xs.length ? xs.map(f17).join("; ") : "none named";
+    switch (kind) {
+      case "sweep-held-backlog":
+        return {
+          summary: `the sweep ${title} is held: its captures awaiting review have reached its limit`,
+          detail: `${n(d.backlog)} of its captures are still awaiting review, at or over its backlog limit of ${n(d.limit)}. It runs again when members review or set aside enough of them.`
+        };
+      case "sweep-yield-anomaly":
+        return {
+          summary: `the sweep ${title} filed an unusual number of documents on its last run`,
+          detail: `its last run filed ${n(d.filed)} against a median of ${n(d.median)} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.`
+        };
+      case "sweep-seed-unreachable":
+        return {
+          summary: `a listing page the sweep ${title} reads failed on its last run`,
+          detail: `on its last run these could not be fetched: ${list6(d.seeds, (x) => String(x && x.seed))}. The sweep's other pages were read; each one's reachability is on the basis.`
+        };
+      case "sweep-redirect-out-of-scope":
+        return {
+          summary: `the sweep ${title} met a redirect outside its sources on its last run`,
+          detail: `on its last run these addresses redirected outside the sweep's sources, and nothing at the target was fetched: ${list6(d.redirects, (x) => x && typeof x === "object" ? `${x.address ?? "an address"} to ${x.target ?? "an undetermined target"}` : String(x))}.`
+        };
+      default:
+        return {
+          summary: `the sweep ${title} has filed nothing on its last ${n(d.runs)} runs`,
+          detail: `its last ${n(d.runs)} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.`
+        };
+    }
+  }
+  /** `sweep-*` (R4; link-sweep R11, K1036 (8), N506): one CONDITION per condition `link-sweep.sweepConditions` answers the
+   *  viewer, keyed `CONDITION::<kind>::<bundle>#<id>`, to the members of the sweep's project (joined or leaving,
+   *  membership R74) who may see its bundle and to nobody else: a caller with no member is none of them, and a sweep in
+   *  no project has no members. Its subject the sweep's bundle, homed under the project at depth 0 and the bundle's own
+   *  walk; its `age` from the condition's `since`; its `detail` the condition's, carried whole on the basis and said in
+   *  the sentence. It leaves when the condition leaves (the read no longer answers it). */
+  #conditionsSweep(me, viewer, now) {
+    if (!me) return [];
+    const r = this.#linkSweep.sweepConditions({ viewer, now });
+    const list6 = r && r.ok !== false && Array.isArray(r.conditions) ? r.conditions : [];
+    const visible = this.#bundleRedactor(viewer);
+    const joined2 = /* @__PURE__ */ new Map();
+    const out = [];
+    for (const c of list6) {
+      if (!c || typeof c.sweep !== "string" || !_MachineryProducers.SWEEP_CONDITION_KINDS.includes(c.kind)) continue;
+      const hash = c.sweep.indexOf("#");
+      if (hash <= 0 || hash === c.sweep.length - 1) continue;
+      const bundle = c.sweep.slice(0, hash), sweepId = c.sweep.slice(hash + 1);
+      if (visible(bundle) === null) continue;
+      const info = this.#record.bundleInfo(bundle);
+      const project = info ? info.type === "project" ? info.id : info.project : null;
+      if (!project) continue;
+      if (!joined2.has(project)) {
+        const p3 = this.#membership.participation(project, me);
+        joined2.set(project, !!(p3 && (p3.state === "joined" || p3.state === "leaving")));
+      }
+      if (!joined2.get(project)) continue;
+      const d = c.detail && typeof c.detail === "object" ? c.detail : {};
+      const title = info && info.title ? `"${info.title}" (${sweepId})` : c.sweep;
+      const words4 = _MachineryProducers.#sweepWords(c.kind, d, title);
+      const sinceMs = Date.parse(c.since ?? "");
+      out.push({
+        id: `CONDITION::${c.kind}::${c.sweep}`,
+        class: "CONDITION",
+        kind: c.kind,
+        case: this.#homesAt([project], viewer, [bundle]),
+        subject: { kind: "bundle", id: bundle, sweep: c.sweep, sweep_id: sweepId, project },
+        summary: words4.summary,
+        detail: words4.detail,
+        basis: {
+          source: "link-sweep.sweepConditions",
+          sweep: c.sweep,
+          bundle,
+          sweep_id: sweepId,
+          project,
+          kind: c.kind,
+          since: c.since ?? null,
+          condition: d,
+          recipients_rule: "project_members_who_see_the_bundle",
+          detail: "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding."
+        },
+        age: Number.isFinite(sinceMs) ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) } : {
+          state: "undetermined",
+          reason: "no_condition_instant",
+          detail: "the sweep's status carries no instant this producer can read"
+        },
+        assignee: null,
+        assignee_role: null,
+        options: this.#optionsOf([bundle])
+      });
+    }
+    return out;
+  }
+  /** `notice-attestation-missed`, `notice-lapse-near` and `notice-project-closed` (R5; network-notices R12, R13, R22;
+   *  DEC-111, K1031, K1100): for each project the member owns (membership R65), at most 50 in id order, the project's
+   *  notices as `network-notices.noticesOf` answers the viewer, and per notice:
+   *  - an open notice whose latest `monthly` missed for want of an instance key has had no `monthly` issued since;
+   *  - an open notice whose lapse date (a lapse running) is at most 7 days away;
+   *  - a notice whose project closed while it was open (status `closed`; an owner's stop makes it `stopped`), for 30
+   *    days from the closing.
+   *  Each keyed `CONDITION::<kind>::<notice>`, to the project's owners and to nobody else: a caller with no member, or
+   *  a member who owns none, is told nothing. Each leaves on the first read after its fact stops holding. */
+  #conditionsNotice(me, viewer, now) {
+    if (!me) return [];
+    const scope = this.#ownedProjects(me, viewer, _MachineryProducers.QUEUE_NOTICE_PROJECTS);
+    const DAY5 = _MachineryProducers.DAY_MS;
+    const zone = this.#instanceZone();
+    const today2 = _MachineryProducers.#today(now, zone);
+    const out = [];
+    for (const project of scope.projects) {
+      const r = this.#networkNotices.noticesOf({ project, viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.notices)) continue;
+      const owners2 = this.#membership.projectOwners(project) || [];
+      const title = (this.#record.bundleInfo(project) || {}).title || project;
+      const item3 = (kind, n, { since, summary: summary2, detail, facts, options }) => {
+        out.push({
+          id: `CONDITION::${kind}::${n.notice}`,
+          class: "CONDITION",
+          kind,
+          case: this.#homesAt([project], viewer),
+          subject: { kind: "notice", id: n.notice, project, status: n.status },
+          summary: summary2,
+          detail,
+          basis: {
+            source: "network-notices.noticesOf",
+            notice: n.notice,
+            project,
+            status: n.status,
+            ...facts,
+            recipients_rule: "project_owners",
+            zone,
+            bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
+            detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding."
+          },
+          age: _MachineryProducers.#localAge(
+            since,
+            zone,
+            now,
+            "no_notice_instant",
+            "the notice carries no instant this producer can read for when this began"
+          ),
+          assignee: null,
+          assignee_role: null,
+          recipients: [...owners2],
+          options
+        });
+      };
+      for (const n of r.notices) {
+        if (!n || typeof n.notice !== "string" || !n.notice) continue;
+        const atts = Array.isArray(n.attestations) ? n.attestations : [];
+        const instant5 = (a) => Date.parse(a && (a.published_at || _MachineryProducers.#dayEdge(a.as_of, zone, "start")) || "");
+        if (n.status === "open") {
+          const misses = Array.isArray(n.missed_monthlies) ? n.missed_monthlies.filter((m) => m && m.month) : [];
+          const miss = misses.at(-1);
+          if (miss) {
+            const missMs = Date.parse(miss.at ?? "");
+            const since = atts.some((a) => a.kind === "monthly" && (Number.isFinite(missMs) && Number.isFinite(instant5(a)) ? instant5(a) > missMs : String(a.as_of || "").slice(0, 7) > miss.month));
+            if (!since)
+              item3("notice-attestation-missed", n, {
+                since: miss.at ?? null,
+                summary: `the monthly attestation of ${title}'s working-on notice for ${miss.month} was not issued`,
+                detail: "no instance key was bound when it fell due, so your group's Civicsmith could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
+                facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
+                options: this.#optionsOf([project])
+              });
+          }
+          const lapse = typeof n.lapse_date === "string" && isCalendarDate(n.lapse_date.slice(0, 10)) ? n.lapse_date.slice(0, 10) : null;
+          const opens = lapse ? _MachineryProducers.#addDays(lapse, -_MachineryProducers.NOTICE_LAPSE_NEAR_DAYS) : null;
+          const reached = today2 || _MachineryProducers.#today(now, "Etc/GMT-14");
+          if (opens && reached && opens <= reached) {
+            item3("notice-lapse-near", n, {
+              since: opens,
+              summary: `${title}'s working-on notice will lapse on ${n.lapse_date.slice(0, 10)}`,
+              detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
+              facts: {
+                lapse_date: n.lapse_date.slice(0, 10),
+                window_days: _MachineryProducers.NOTICE_LAPSE_NEAR_DAYS,
+                level: n.level ?? null
+              },
+              options: [_MachineryProducers.NOTICE_REVISE]
+            });
+          }
+        } else if (n.status === "closed") {
+          const closed = atts.find((a) => a && a.kind === "closed");
+          const since = closed ? closed.published_at || (isCalendarDate(closed.as_of) ? closed.as_of : null) : null;
+          const closedDay = _MachineryProducers.#localDayOf(since, zone);
+          const closedMs = Date.parse(closed && closed.published_at || "");
+          const stands = closedDay && today2 ? _MachineryProducers.#daysBetween(closedDay, today2, zone) < _MachineryProducers.NOTICE_CLOSED_DAYS : !Number.isFinite(closedMs) || now - closedMs < _MachineryProducers.NOTICE_CLOSED_DAYS * DAY5;
+          if (stands) {
+            item3("notice-project-closed", n, {
+              since,
+              summary: `${title} closed while its working-on notice was open`,
+              detail: "your group's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another group or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
+              facts: { closed_at: since, window_days: _MachineryProducers.NOTICE_CLOSED_DAYS },
+              options: [_MachineryProducers.NOTICE_STOP]
+            });
+          }
+        }
+      }
+    }
+    return out;
+  }
+  /** A calendar day `n` days from `day` in the proleptic Gregorian calendar: arithmetic on the date's own numbers, no
+   *  instant and no zone (civil-time R6's calendar). */
+  static #addDays(day2, n) {
+    if (!isCalendarDate(day2)) return null;
+    const [y, m, d] = day2.split("-").map(Number);
+    const t2 = /* @__PURE__ */ new Date(0);
+    t2.setUTCFullYear(y, m - 1, d + n);
+    const yy = t2.getUTCFullYear();
+    return `${yy < 0 ? "-" : ""}${String(Math.abs(yy)).padStart(4, "0")}-${String(t2.getUTCMonth() + 1).padStart(2, "0")}-${String(t2.getUTCDate()).padStart(2, "0")}`;
+  }
+};
+var OF9 = /* @__PURE__ */ new WeakMap();
+function machineryProducersOf(ctx, deps = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let p3 = OF9.get(storage);
+  if (!p3) {
+    p3 = new MachineryProducers({ host: ctx, storage, deps: { ...deps || {} } });
+    OF9.set(storage, p3);
+  }
+  return p3;
+}
+
 // src/queue-producers/proposals.mjs
 var CARDINALITY_EXCEEDED = "cardinality_exceeded";
 var plural = (n, one4, many) => n === 1 ? one4 : many;
@@ -194823,7 +198167,7 @@ function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMa
 }
 
 // src/queue-producers/index.mjs
-var UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
+var UNGROUPED2 = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
 var QueueProducers = class _QueueProducers {
   #host;
   #deps;
@@ -194851,14 +198195,8 @@ var QueueProducers = class _QueueProducers {
   get #credentials() {
     return this.#dep("credentials", () => credentialsOf(this.#host));
   }
-  get #governor() {
-    return this.#dep("governor", () => governorOf(this.#host));
-  }
   get #provenance() {
     return this.#dep("provenance", () => provenanceOf(this.#host));
-  }
-  get #capture() {
-    return this.#dep("capture", () => captureOf(this.#host));
   }
   get #captureRequests() {
     return this.#dep("captureRequests", () => captureRequestsOf(this.#host));
@@ -194912,12 +198250,10 @@ var QueueProducers = class _QueueProducers {
   get #corpusExport() {
     return this.#dep("corpusExport", () => corpusExportOf(this.#host));
   }
-  get #networkNotices() {
-    return this.#dep("networkNotices", () => networkNoticesOf(this.#host));
-  }
-  /* N506: a sweep's signals are link-sweep's (its R11), split from monitoring. */
-  get #linkSweep() {
-    return this.#dep("linkSweep", () => linkSweepOf(this.#host));
+  /* K1850: the CONDITIONs about our own machinery are machinery-producers' (its R1–R5, was this module's R3, R22, R26, R27),
+     built over this module's own deps, so whatever a caller injected here reaches it too. */
+  get #machinery() {
+    return this.#dep("machinery", () => machineryProducersOf(this.#host, this.#deps));
   }
   /* N520: a case's required core is docket's (its R9). */
   get #docket() {
@@ -194931,6 +198267,16 @@ var QueueProducers = class _QueueProducers {
   get #wizardScripts() {
     return this.#dep("wizardScripts", () => wizardScriptsOf(this.#host));
   }
+  /* N612 (K1505 (1)): a case's tensions after publication are case-tensions' (its R4, was publication R50). Its provider is
+     registered by publication at start (K1505 (3)), so publication is reached first, as case-authoring does. */
+  get #caseTensions() {
+    return this.#dep("caseTensions", () => {
+      void this.#publication;
+      return caseTensionsOf2(this.#host);
+    });
+  }
+  /* R38: the read instance-setup registers at start (its R62), or null while none is. */
+  #placeArrivals = null;
   #rows(q10, ...a) {
     return [...this.sql.exec(q10, ...a)];
   }
@@ -194985,7 +198331,7 @@ var QueueProducers = class _QueueProducers {
   }
   /* queue's R7 walk and R12 options, as this read was handed them (R8). */
   #homesOf(subjectIds) {
-    return this.#homesFn ? this.#homesFn(subjectIds || []) : { ...UNGROUPED };
+    return this.#homesFn ? this.#homesFn(subjectIds || []) : { ...UNGROUPED2 };
   }
   #optionsOf(subjectIds) {
     return this.#optionsFn ? this.#optionsFn(subjectIds || []) || [] : [];
@@ -195066,7 +198412,7 @@ var QueueProducers = class _QueueProducers {
       return null;
     }
   }
-  static ZONE_UNDETERMINED = "no time zone is held for it on this instance, so the local day it is counted from is undetermined; it is never counted on the UTC day";
+  static ZONE_UNDETERMINED = "no time zone is held for it in your group's Civicsmith, so the local day it is counted from is undetermined; it is never counted on the UTC day";
   /** R36: an item's `age` from a day or an instant, counted on local days in `zone`: a day ages from its first local
    *  instant, an instant from itself; `days` the whole local days since. With no zone held it is undetermined
    *  (`zone_undetermined`); with nothing readable, undetermined for `reason`. */
@@ -195092,17 +198438,11 @@ var QueueProducers = class _QueueProducers {
   static QUEUE_CASE_TYPES = ["inquiry", "project"];
   /** How many subject bundles one item names (R2: at most 8), the bound queue's options read under too. */
   static QUEUE_OPTION_SUBJECTS_MAX = 8;
-  /** R3: how many SUBJECT documents one CONDITION may gather before the gathering is reported `subject_bound`.
-   *  Sixteen: twice the option bound, because a home set is cheaper than an affordances derivation. */
-  static QUEUE_CONDITION_SUBJECTS_MAX = 16;
-  /** The prefix the control plane stamps on a MACHINE credential's `author`, `token:<class>`, imported from
-   *  record-grammar so the stamp and the read are the same string (REC-46); what `capture-completed-unattended` reads. */
-  static QUEUE_MACHINE_AUTHOR_PREFIX = MACHINE_AUTHOR_PREFIX;
   /** R9: the lead's inquiry-grain act, take it up (cite into that inquiry); queue decorates it (its R17) and adds the
    *  set-aside at its mint, where the disposition is known (its R18). */
   static LEAD_TAKE_UP = Object.freeze({ id: "cite", label: "Take it up under this question", weight: "report" });
-  /** N95: the page `manifestByAuthor` is read in (record-core R53's bound). */
-  static QUEUE_UNATTENDED_PAGE = 200;
+  /** K1850: the five sweep kinds, now machinery-producers' (its R4), kept here as an alias for this module's readers. */
+  static SWEEP_CONDITION_KINDS = MachineryProducers.SWEEP_CONDITION_KINDS;
   /* ================================================================== R8 · feedItems
    * queue's ONE read of this module. Every producer here is a pure read, called in the order queue's feed assembled
    * them before the split, so the items and their order are what queue minted from its own producers; queue sorts,
@@ -195146,7 +198486,14 @@ var QueueProducers = class _QueueProducers {
       const gaps = this.#findingsObjectiveGap(me, viewer, at34);
       items.push(...gaps);
       items.push(...this.#findingsSourceFlagged(viewer, at34));
-      items.push(...this.#queueConditions(viewer, at34));
+      const machinery = this.#machinery.conditionItems({
+        member: me,
+        viewer,
+        now: at34,
+        homesOf: this.#homesFn || void 0,
+        optionsOf: this.#optionsFn || void 0
+      });
+      items.push(...machinery && Array.isArray(machinery.items) ? machinery.items : []);
       const scope = this.#contradictionProjects(me, viewer);
       items.push(...this.#contradictionItems(scope, viewer, at34));
       items.push(...this.#findingsSideCorrected(viewer, at34));
@@ -195162,14 +198509,15 @@ var QueueProducers = class _QueueProducers {
       items.push(...this.#obligationsTemplateReview(me, viewer, at34));
       items.push(...this.#obligationsLocalFactDue(me, viewer, at34));
       items.push(...this.#obligationsAttributionUnchosen(me, viewer, at34));
-      items.push(...this.#conditionsSweep(me, viewer, at34));
-      items.push(...this.#conditionsNotice(me, viewer, at34));
       items.push(...this.#obligationsDocketCoreDue(me, viewer, at34));
       items.push(...this.#findingsDocketDependents(viewer, at34));
       items.push(...this.#findingsCitedCaseMoved(viewer, at34));
       items.push(...this.#watchItems(me, viewer, at34));
       items.push(...this.#findingsWizardBroken(me, viewer, at34));
       items.push(...this.#obligationsWizardApproval(me, viewer, at34));
+      items.push(...this.#scheduledEditionItems(me, viewer, at34));
+      items.push(...this.#conditionsPlaceArrived(me, viewer, at34));
+      items.push(...this.#findingsWizardBaseUpdated(me, viewer, at34));
       return {
         items,
         facts: {
@@ -195187,420 +198535,6 @@ var QueueProducers = class _QueueProducers {
       this.#optionsFn = null;
       this.#zone = void 0;
     }
-  }
-  /* ================== REC-32 · the CONDITION half of the feed =======   *
-   * WHAT A CONDITION IS, and it is the reason this class exists separately: a
-   * fact about OUR OWN MACHINERY rather than about the world (NOTIFICATIONS.md,
-   * "The classes"). An overdue set of minutes is evidence about a public body;
-   * a governor holding a host is a limitation of our own run. Merging them
-   * would let our plumbing dilute the record's findings, which is the one thing
-   * the three-class split exists to prevent.
-   *
-   * DERIVED ON READ, NO TABLE, NO STORED STATE — the REC-20 precedent, and here
-   * it is not a shortcut but the only correct shape. Every one of these facts is
-   * ALREADY state on the producing subsystem's own row: the governor's
-   * `cooloff_until`, the capture session's existence and expiry, the manifest's
-   * author. A stored copy would be a second record of one fact and would go
-   * stale the instant the fact resolved — which is exactly the failure this
-   * item's negative control produces on purpose.
-   *
-   * SO RESOLUTION NEEDS NO MECHANISM. A condition clears when its underlying
-   * fact stops being true, for EVERY member at once, because there is nothing
-   * per-member to clear: the hold expires, the session is dropped, a member
-   * authors the document again. That is DEC-16's one-state-N-homes rule
-   * inherited rather than re-implemented, and it is why muting (personal) and
-   * resolving (shared) can sit on the same item without colliding.
-   *
-   * THREE KINDS, AND THEY ARE THE THREE WHOSE DATA IS ALREADY HERE. The
-   * catalogue names eleven CONDITION kinds (queuestate.mjs holds the
-   * vocabulary, transcribed from NOTIFICATIONS.md and still the single
-   * authority). These three are built because their producing subsystems
-   * already write the fact down; the other eight wait on producers that do not
-   * exist yet, and nothing here invents one. NOTHING IS COUPLED TO A MONITOR
-   * TICK: a later capture-fact producer adds kinds, it does not change these.
-   *
-   * THE VIEWER POSTURE IS REC-30'S, arm for arm:
-   *   - a condition ABOUT A BUNDLE the viewer may not see is WITHHELD WHOLE and
-   *     with no count, the posture an OBLIGATION about an invisible subject
-   *     takes — a count here would say a project exists;
-   *   - a condition about something that is NOT a bundle (a host, an
-   *     unregistered capture) stands for every member, because it names no
-   *     bundle to withhold; what is gated is which DOCUMENTS sit behind it;
-   *   - the homes come from `homesOf` (queue R7), so an ancestor the viewer may not
-   *     see is `undetermined`/`out_of_view` and never silently dropped.
-   * ======================================================================== */
-  /** The home set for a condition, with the ONE extra way a condition's walk can
-   *  come back incomplete that an obligation's cannot.
-   *
-   *  An obligation and a finding both start from a bounded, known set of
-   *  subjects. A condition about a HOST does not: the documents it concerns are
-   *  every document captured from that host. So the subject gathering carries
-   *  R3's discipline too — a bound, and an EXHAUSTED bound reported as
-   *  `subject_bound` rather than as a quietly shorter home set. Same rule as
-   *  `depth_bound`, same reason, and deliberately a DIFFERENT word, because
-   *  "we stopped walking up" and "we stopped gathering subjects" are different
-   *  facts and a surface should be able to say which happened. */
-  #conditionHomes(subjectIds, viewer, bounded2 = false) {
-    const homes = this.#homesOf(subjectIds);
-    if (!bounded2) return homes;
-    return {
-      ...homes,
-      state: "undetermined",
-      ungrouped: false,
-      reasons: [.../* @__PURE__ */ new Set([...homes.reasons, "subject_bound"])].sort()
-    };
-  }
-  /** Which documents in this record came from a HOST, viewer-gated and bounded.
-   *
-   *  `captured_locators` is the store's own index of "what we retrieved from
-   *  what address", written unconditionally for every capture, and `register`
-   *  is the trust root that says which bundle those bytes were registered
-   *  under. The join is the honest path from a host to the documents a member
-   *  is actually working on; site_assets would answer a narrower question (what
-   *  a host SERVED as furniture) and reuse_verdicts a narrower one still.
-   *
-   *  AN ADDRESS BELONGS TO THE HOST WHEN IT BEGINS WITH ONE OF FOUR PREFIXES, since normalizeAddress keeps the
-   *  scheme and a non-default port: `https://<host>/`, `http://<host>/`, `https://<host>:`, `http://<host>:`. Each
-   *  prefix is asked as a RANGE over the text, `prefix <= address_norm < upper`, where `upper` is the prefix with
-   *  its last character (`/` or `:`) raised by one: under SQLite's binary collation that is exactly "begins with",
-   *  and it is a seek on the `address_norm` key. No LIKE or GLOB pattern is built (N270): a pattern grows with the
-   *  host, and workerd refuses one over 50 bytes (K313), so a long hostname failed the whole read on the plane. */
-  #conditionBundlesForHost(host, viewer) {
-    const cap = _QueueProducers.QUEUE_CONDITION_SUBJECTS_MAX;
-    if (typeof host !== "string" || !host) return { ids: [], bounded: false };
-    const seen = this.#bundleGate("r.bundle_id", viewer);
-    const prefixes = [`https://${host}/`, `http://${host}/`, `https://${host}:`, `http://${host}:`];
-    const ranges = prefixes.flatMap((p3) => [p3, p3.slice(0, -1) + String.fromCharCode(p3.charCodeAt(p3.length - 1) + 1)]);
-    const rows3 = this.#rows(
-      `SELECT DISTINCT r.bundle_id FROM captured_locators cl
-         JOIN register r ON r.capture_sha = cl.capture_sha
-        WHERE (${prefixes.map(() => "(cl.address_norm >= ? AND cl.address_norm < ?)").join(" OR ")})
-          AND (${seen.sql})
-        ORDER BY r.bundle_id LIMIT ?`,
-      ...ranges,
-      ...seen.args,
-      cap + 1
-    );
-    const ids = rows3.map((r) => r.bundle_id);
-    return { ids: ids.slice(0, cap), bounded: ids.length > cap };
-  }
-  /** `governor-holding-host` (D-103, and D-95 which built the governor).
-   *
-   *  THE FACT IS THE GOVERNOR'S OWN, read at the same predicate the governor
-   *  itself admits on: `cooloff_until > now` is the exact test `governorAdmit`
-   *  applies before refusing with `cooling_off`, and the one the capture path
-   *  applies before stopping a page's remaining subresources. This derivation does not
-   *  restate the rule, it asks it.
-   *
-   *  WHY IT EARNS AN ITEM AT ALL (NOTIFICATIONS.md rule 4 — a CONDITION is
-   *  status until a member can change it): because the member's conclusion
-   *  changes. "The source is down" and "we are pacing ourselves" are different
-   *  facts about the world and about us, and D-104 is explicit that they must be
-   *  distinguishable. A member who cannot tell them apart will either wait for
-   *  a source that is fine or chase a publisher who did nothing.
-   *
-   *  IT RESOLVES BY THE HOLD ENDING, and for everyone at once. There is no act
-   *  to take and none is offered: `options[]` are the acts available on the
-   *  DOCUMENTS behind it, derived exactly as every other item's are. */
-  #conditionsGovernorHolding(viewer, now) {
-    const out = [];
-    for (const r of this.#governor.governorHolding({ now })) {
-      const subj = this.#conditionBundlesForHost(r.host, viewer);
-      const refusedAt = Number(r.last_refusal_at);
-      out.push({
-        id: `CONDITION::governor-holding-host::${r.host}`,
-        class: "CONDITION",
-        kind: "governor-holding-host",
-        case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
-        subject: {
-          kind: "host",
-          id: null,
-          host: r.host,
-          bundles: subj.ids.slice(0, _QueueProducers.QUEUE_OPTION_SUBJECTS_MAX)
-        },
-        summary: `our own pacing is holding ${r.host}: captures from it are PACED, not broken`,
-        detail: `the per-host governor is in cool-off for ${r.host} for another ${Math.max(0, r.cooloff_until - now)}ms after ${r.refusals} consecutive refusal${r.refusals === 1 ? "" : "s"}` + (r.last_refusal_status ? ` (last status ${r.last_refusal_status})` : "") + ". Nothing about the source is being claimed here.",
-        basis: {
-          source: "host_governor",
-          host: r.host,
-          cooloff_until: r.cooloff_until,
-          retry_in_ms: Math.max(0, r.cooloff_until - now),
-          refusals: r.refusals,
-          last_refusal_status: r.last_refusal_status ?? null,
-          last_refusal_at: Number.isFinite(refusedAt) ? refusedAt : null,
-          appetite_per_min: r.appetite_per_min ?? null,
-          granted: r.granted,
-          refused_total: r.refused_total,
-          detail: "a signal is a fact about OUR OWN machinery (D-103/D-95): this instance's governor is holding the host, which is distinguishable from the source being unreachable and must not be read as evidence about the publisher. It clears for every member when the hold expires; there is no act that ends it."
-        },
-        age: Number.isFinite(refusedAt) && refusedAt > 0 ? {
-          state: "determined",
-          since: new Date(refusedAt).toISOString(),
-          ms: Math.max(0, now - refusedAt)
-        } : {
-          state: "undetermined",
-          reason: "no_refusal_instant",
-          detail: "the governor row is in cool-off but carries no instant for the refusal that started it, so how long this has been true is not derivable"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf(subj.ids)
-      });
-    }
-    return out;
-  }
-  /** `partial-capture-outstanding` (CAPTURE-SCALING; the subresource ceiling).
-   *
-   *  THE FACT IS THE LEDGER'S OWN. `capture_sessions` is a work list with an
-   *  expiry: a row exists exactly when a capture ran out of subrequest budget
-   *  with support material still outstanding, and the capture path DROPS it the
-   *  moment nothing is left. So "a capture did not finish" is the existence of
-   *  an unexpired row and nothing else.
-   *
-   *  THIS READ DOES NOT PRUNE. `saveCaptureSession` and `loadCaptureSession`
-   *  delete expired rows on the way past, which is right for a write path and
-   *  wrong for this one: op=queue REPORTS and never mutates. An expired session
-   *  is filtered by the same instant comparison instead, in the same stamp
-   *  format those two methods write.
-   *
-   *  WHAT IT IS ABOUT. The primary capture is COMPLETE from the first tick and
-   *  its bytes are in the store; what is outstanding is support material. If
-   *  those bytes were registered under a bundle, that bundle is the subject and
-   *  the ordinary viewer posture applies — invisible subject, withheld whole. If
-   *  they were not, the session names no bundle at all (the intake doctrine's
-   *  own words), so there is nothing to withhold and the item stands ungrouped
-   *  about a capture rather than about a document. */
-  #conditionsPartialCapture(viewer, now) {
-    const out = [];
-    const nowIso = stampInstant("second", now);
-    const redact = this.#bundleRedactor(viewer);
-    for (const s of this.#capture.liveCaptureSessions(nowIso)) {
-      const r = { ...s, primary_sha: s.primarySha };
-      const home = this.#provenance.homeOf(r.primary_sha);
-      const bundleId = home ? home.bundleId : null;
-      if (bundleId && redact(bundleId) === null) continue;
-      let outstanding = null, discovered = null, spent = null, parsed = true;
-      const st = r.state;
-      if (st && typeof st === "object") {
-        outstanding = Array.isArray(st.queue) ? st.queue.length : null;
-        discovered = Number.isFinite(st.discovered) ? st.discovered : null;
-        spent = Number.isFinite(st.spent) ? st.spent : null;
-      } else parsed = false;
-      const createdMs = Date.parse(r.created);
-      out.push({
-        id: `CONDITION::partial-capture-outstanding::${r.session}`,
-        class: "CONDITION",
-        kind: "partial-capture-outstanding",
-        case: this.#conditionHomes(bundleId ? [bundleId] : [], viewer),
-        subject: bundleId ? { kind: "bundle", id: bundleId, capture_sha: r.primary_sha, locator: r.locator } : { kind: "capture", id: null, capture_sha: r.primary_sha, locator: r.locator },
-        summary: `the capture of ${r.locator} did not finish: support material is still outstanding`,
-        detail: `the primary document is captured and its bytes are in the store; the platform's subrequest ceiling was reached before its support material was fetched, and the remainder is parked for another tick (tick ${r.ticks}, expires ${r.expires}).`,
-        basis: {
-          source: "capture_sessions",
-          session: r.session,
-          locator: r.locator,
-          primary_sha: r.primary_sha,
-          bundle_id: bundleId,
-          ticks: r.ticks,
-          created: r.created,
-          updated: r.updated,
-          expires: r.expires,
-          outstanding: parsed ? outstanding : null,
-          discovered: parsed ? discovered : null,
-          spent: parsed ? spent : null,
-          state_readable: parsed,
-          detail: "the ledger is SCRATCH and not record: it names a work list with an expiry, the primary capture is complete from the first tick, and the row is dropped by the capture path itself when nothing is left. It therefore clears for every member when the capture finishes or the session expires."
-        },
-        age: Number.isFinite(createdMs) ? { state: "determined", since: r.created, ms: Math.max(0, now - createdMs) } : {
-          state: "undetermined",
-          reason: "unparseable_created",
-          detail: "the session row carries a created stamp this producer cannot read as an instant"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: bundleId ? this.#optionsOf([bundleId]) : []
-      });
-    }
-    return out;
-  }
-  /** R22 (DEC-95 (1); K1105): the grade note of each capture an unattended item names, the words `op=acquire`'s answer
-   *  carries (`ACQUIRE_GRADE_NOTE`, capture's export, as its R76 answers them), read synchronously. A capture is named,
-   *  and held, by its `register` row (provenance R48): those under the item's bundle, at most R2's option bound, or a
-   *  request's own digest. A capture the viewer may not see (its register row's bundle out of sight) carries none. */
-  #gradeNotes({ bundle = null, sha: sha2 = null }, visible) {
-    const rows3 = bundle ? this.#rows(
-      `SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.bundle_id=? ORDER BY r.capture_sha LIMIT ?`,
-      bundle,
-      _QueueProducers.QUEUE_OPTION_SUBJECTS_MAX
-    ) : typeof sha2 === "string" && sha2 ? this.#rows(`SELECT r.capture_sha, r.bundle_id FROM register r WHERE r.capture_sha=?`, sha2.toLowerCase()) : [];
-    return rows3.filter((r) => visible(r.bundle_id) !== null).map((r) => ({ capture_sha: r.capture_sha, note: ACQUIRE_GRADE_NOTE }));
-  }
-  /** R22: the detail's sentence carrying the notes, the same words for each capture, said once with the captures named. */
-  static #gradeNoteSentence(notes) {
-    if (!notes.length) return "";
-    const byNote = /* @__PURE__ */ new Map();
-    for (const n of notes) byNote.set(n.note, [...byNote.get(n.note) || [], n.capture_sha]);
-    return [...byNote].map(([note, shas]) => ` The grade note of ${shas.length === 1 ? "the capture" : "the captures"} it names (${shas.map((x) => x.slice(0, 12)).join(", ")}), as a member present would have read it: ${note}`).join("");
-  }
-  /** `capture-completed-unattended` (D-61, closed by REC-2).
-   *
-   *  THE FACT IS THE MANIFEST'S OWN, and REC-2 is what made it exist. Before
-   *  REC-2 an unattended writer could not take a lease at all, so a daemon
-   *  could not finish a capture a member walked away from; REC-2's answer was a
-   *  NAMED machine actor, `token:<class>`, stamped by the control plane with the
-   *  caller's own value deleted first. That stamp lands on `manifest.author`,
-   *  and it is the only durable trace of an unattended write anywhere in this
-   *  store.
-   *
-   *  THE CONDITION IS THE SEQUENCE, NOT THE STAMP. A document written only ever
-   *  by a machine was never walked away from by anybody — the whole intake path
-   *  runs on a machine credential. What D-61 describes is a PERSON's document
-   *  finished by a daemon, so the test is: the LATEST snapshot was machine
-   *  written, and an EARLIER one was authored by a person. Both halves are
-   *  required and the basis names both.
-   *
-   *  IT RESOLVES WHEN THE MEMBER COMES BACK — that is, when a person authors the
-   *  document again and the latest snapshot is theirs. Shared, like every other
-   *  condition here, because it is a property of the manifest and not of a
-   *  reader.
-   *
-   *  ORDERING. `created` is the DOCUMENT's own time (promote records
-   *  meta.last_updated, never the wall clock — C-12.1 depends on that). The
-   *  tiebreak is `rowid DESC`, the store's own write order, because `snap_key`
-   *  is an opaque caller-chosen string and its lexical order is not a clock: two
-   *  snapshots stamped at the same instant would otherwise be ordered by a hash.
-   *  #revisionKind reads the latest manifest entry by this SAME order since
-   *  D-171 (it tiebroke on `snap_key DESC` until then, and named the wrong
-   *  writer on a tie); the two sites agree on purpose. */
-  #conditionsCaptureUnattended(viewer, now) {
-    const out = [];
-    const visible = this.#bundleRedactor(viewer);
-    const page2 = _QueueProducers.QUEUE_UNATTENDED_PAGE;
-    const found2 = [];
-    for (let after = ""; ; ) {
-      const r = this.#record.manifestByAuthor({ authorPrefix: _QueueProducers.QUEUE_MACHINE_AUTHOR_PREFIX, after, limit: page2 });
-      for (const b of r.bundles) if (visible(b.bundleId) !== null) found2.push(b);
-      if (!r.cursor || r.bundles.length < page2) break;
-      after = r.cursor;
-    }
-    for (const m of found2) {
-      const b = { bundle_id: m.bundleId };
-      const latest3 = m.latest ? { ...m.latest, snap_key: m.latest.snapKey } : null;
-      if (!latest3 || !String(latest3.author || "").startsWith(_QueueProducers.QUEUE_MACHINE_AUTHOR_PREFIX))
-        continue;
-      const started = m.firstOther ? { ...m.firstOther, snap_key: m.firstOther.snapKey } : null;
-      if (!started) continue;
-      const createdMs = Date.parse(latest3.created);
-      const title = this.#record.bundleInfo(b.bundle_id);
-      const notes = this.#gradeNotes({ bundle: b.bundle_id }, visible);
-      out.push({
-        id: `CONDITION::capture-completed-unattended::${b.bundle_id}`,
-        class: "CONDITION",
-        kind: "capture-completed-unattended",
-        case: this.#conditionHomes([b.bundle_id], viewer),
-        subject: { kind: "bundle", id: b.bundle_id },
-        summary: `${title && title.title ? title.title : b.bundle_id} was completed by an unattended writer after ${started.author} left it`,
-        detail: `${started.author} authored this document and an unattended writer (${latest3.author}) wrote the most recent revision, which is the shape D-61 describes: a capture a member walked away from has completed. Nothing is claimed about whether the result is right.` + _QueueProducers.#gradeNoteSentence(notes),
-        basis: {
-          source: "manifest",
-          bundle_id: b.bundle_id,
-          completed_by: latest3.author,
-          completed_snap_key: latest3.snap_key,
-          completed_created: latest3.created,
-          completed_kind: latest3.kind,
-          writer: latest3.writer ?? null,
-          operation: latest3.operation ?? null,
-          started_by: started.author,
-          started_snap_key: started.snap_key,
-          started_created: started.created,
-          grade_notes: notes,
-          detail: "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again."
-        },
-        age: Number.isFinite(createdMs) ? { state: "determined", since: latest3.created, ms: Math.max(0, now - createdMs) } : {
-          state: "undetermined",
-          reason: "unparseable_created",
-          detail: "the manifest entry carries a created stamp this producer cannot read as an instant"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([b.bundle_id])
-      });
-    }
-    return out;
-  }
-  /** `capture-completed-unattended` (D-61) — ITS SECOND PRODUCER, and PL-4's
-   *  completion notification.
-   *
-   *  THE DESIGN SAYS *"extend the subscriber, do not invent a channel"* (§4, on
-   *  the pursue session waiting on a capture), and this is that: the SAME
-   *  catalogued kind, the same class, a different subject and a different basis.
-   *  A second producer for one kind is not novel — `C-27.13` has two, and PL-3's
-   *  own control arm 6 turns on the distinction.
-   *
-   *  WHY THE FIRST PRODUCER CANNOT COVER THIS CASE, stated rather than left to
-   *  be discovered. `#conditionsCaptureUnattended` requires an EARLIER manifest
-   *  entry authored by a PERSON — its whole condition is "a person's document
-   *  finished by a daemon". A requested capture was never a person's document:
-   *  the run asked for a URL nobody had captured. So the walk finds no `started`
-   *  row and correctly emits nothing, and the member waiting on this capture
-   *  would be told nothing at all.
-   *
-   *  WHAT IT NAMES: BOTH PRINCIPALS, through the one composer the drain used. A
-   *  row whose attribution cannot be composed emits NO ITEM — a notification
-   *  that could not say whose act it was would be the defect DEC-27(b) names,
-   *  surfaced to a member.
-   *
-   *  RECORDED FOR THE NEXT READER: the plan row and INVESTIGATIVE-SESSION.md §4
-   *  both call this "the existing FINDING-class slug". IT IS NOT ONE.
-   *  `queuestate.mjs` has classed `capture-completed-unattended` as a CONDITION
-   *  since REC-32 and has a live producer for it. It is built here as the
-   *  CONDITION it actually is rather than reclassified to match the prose: a
-   *  kind's class decides whether leaving the list is a personal mute or an
-   *  authored record act (D-125, DEC-16), and moving one to match a sentence in
-   *  a plan would be changing doctrine to fix a citation. The discrepancy is
-   *  reported rather than silently absorbed. */
-  #conditionsCaptureRequested(viewer, now) {
-    const out = [];
-    const visible = this.#bundleRedactor(viewer);
-    for (const r of this.#captureRequests.completed({ viewer }).requests) {
-      const attribution = r.attribution;
-      if (!attribution.ok) continue;
-      const capturedMs = Date.parse(r.captured_at);
-      const notes = this.#gradeNotes({ sha: r.capture_sha }, visible);
-      out.push({
-        id: `CONDITION::capture-completed-unattended::${r.request}`,
-        class: "CONDITION",
-        kind: "capture-completed-unattended",
-        case: this.#conditionHomes([r.target], viewer),
-        subject: { kind: "capture_request", id: r.request },
-        summary: `${r.address} was captured by the daemon at the investigative session's request`,
-        detail: `${attribution.statement}. The capture is an entry of a document to the store and NOT an entry of that document into the leg of a claim: it lands at 'collected' and never higher, and nothing about the record's conclusions has moved.` + _QueueProducers.#gradeNoteSentence(notes),
-        basis: {
-          source: "capture_requests",
-          request: r.request,
-          run: r.run,
-          inquiry: r.target,
-          address: r.address,
-          host: r.host,
-          purpose: r.purpose,
-          ua_mode: r.ua_mode,
-          capture_sha: r.capture_sha,
-          captured_at: r.captured_at,
-          grade_notes: notes,
-          attribution,
-          detail: "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself."
-        },
-        age: Number.isFinite(capturedMs) ? { state: "determined", since: r.captured_at, ms: Math.max(0, now - capturedMs) } : {
-          state: "undetermined",
-          reason: "unparseable_captured_at",
-          detail: "the request row carries a completion stamp this producer cannot read as an instant"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([r.target])
-      });
-    }
-    return out;
   }
   /** PL-15 / D-213 — WHAT THE RECORD CAN SAY ABOUT A CAPTURED DOCUMENT'S PLACE
    *  IN A CASE, MEASURED, and the reason it is measured rather than asserted.
@@ -196367,7 +199301,7 @@ var QueueProducers = class _QueueProducers {
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
         summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} records, ${r.files} files`,
-        detail: `An export of the ${r.scope} left this instance with the root-of-trust credential (Membership v2 \xA78.1). It is row ${r.seq} of the append-only export log` + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; nobody else is. The log is the record of it and nothing here changes the log.`,
+        detail: `An export of the ${r.scope} left your group's Civicsmith with the root-of-trust credential (Membership v2 \xA78.1). It is row ${r.seq} of the append-only export log` + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; nobody else is. The log is the record of it and nothing here changes the log.`,
         basis: {
           source: "export_log",
           seq: r.seq,
@@ -196613,191 +199547,11 @@ var QueueProducers = class _QueueProducers {
     }
     return out;
   }
-  /** The documents captured at one address (provenance R48's read contract), viewer-gated and bounded as
-   *  `#conditionBundlesForHost` is. */
-  #conditionBundlesForAddress(addressNorm, viewer) {
-    const cap = _QueueProducers.QUEUE_CONDITION_SUBJECTS_MAX;
-    const seen = this.#bundleGate("r.bundle_id", viewer);
-    const ids = this.#rows(
-      `SELECT DISTINCT r.bundle_id FROM captured_locators cl JOIN register r ON r.capture_sha = cl.capture_sha
-        WHERE cl.address_norm = ? AND (${seen.sql}) ORDER BY r.bundle_id LIMIT ?`,
-      addressNorm,
-      ...seen.args,
-      cap + 1
-    ).map((r) => r.bundle_id);
-    return { ids: ids.slice(0, cap), bounded: ids.length > cap };
-  }
-  /** `archive-fallback-eligible` (N229, N330; monitoring R47; capture R8): one CONDITION per address
-   *  `monitoring.archiveEligible` answers, what the next archive tick would find eligible (K406 Q2), asked as the tick
-   *  asks and writing nothing. Its bound, whether it cut, and the daemon's pause are published on each item: a pause
-   *  never empties the list, since eligibility is capture's fact about our attempts. */
-  #conditionsArchiveEligible(viewer, now) {
-    const page2 = this.#monitoring.archiveEligible(now) || {};
-    const list6 = page2.ok !== false && Array.isArray(page2.eligible) ? page2.eligible : [];
-    const out = [];
-    for (const r of list6) {
-      const address = r && typeof r.address === "string" && r.address ? r.address : null;
-      if (!address) continue;
-      const subj = this.#conditionBundlesForAddress(address, viewer);
-      const sinceMs = Date.parse(r.first_failure_since ?? "");
-      out.push({
-        id: `CONDITION::archive-fallback-eligible::${address}`,
-        class: "CONDITION",
-        kind: "archive-fallback-eligible",
-        case: this.#conditionHomes(subj.ids, viewer, subj.bounded),
-        subject: {
-          kind: "address",
-          id: null,
-          address,
-          bundles: subj.ids.slice(0, _QueueProducers.QUEUE_OPTION_SUBJECTS_MAX)
-        },
-        summary: `${address} has stopped answering often enough that its archived copy may be fetched instead`,
-        detail: "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
-        basis: {
-          source: "monitoring.archiveEligible",
-          address,
-          reachability: r.reachability ?? null,
-          bound: { limit: page2.limit ?? null, truncated: page2.truncated === true },
-          paused: page2.paused ?? null,
-          detail: "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again."
-        },
-        age: Number.isFinite(sinceMs) ? { state: "determined", since: r.first_failure_since, ms: Math.max(0, now - sinceMs) } : {
-          state: "undetermined",
-          reason: "no_first_failure",
-          detail: "the failing run carries no first-failure instant this producer can read"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf(subj.ids)
-      });
-    }
-    return out;
-  }
-  /** `monitoring-recheck-due` (N229; monitoring R16, R31, R32): one CONDITION per monitored address monitoring's plan
-   *  shows this viewer as overdue by more than its own interval, or unscheduled (no interval can be derived), so a
-   *  document that is not being checked is visible. A document never checked is due now and is not yet overdue. */
-  #conditionsRecheckDue(viewer, now) {
-    const plan = this.#monitoring.monitoring({ viewer, now });
-    const out = [];
-    for (const r of plan && Array.isArray(plan.items) ? plan.items : []) {
-      const dueMs = r.due_at ? Date.parse(r.due_at) : NaN;
-      const overdue = r.state === "due" && Number.isFinite(dueMs) && Number.isFinite(r.interval_ms) && now - dueMs > r.interval_ms;
-      if (!(overdue || r.state === "unscheduled")) continue;
-      const key = r.address || r.bundle;
-      out.push({
-        id: `CONDITION::monitoring-recheck-due::${key}`,
-        class: "CONDITION",
-        kind: "monitoring-recheck-due",
-        case: this.#conditionHomes([r.bundle], viewer),
-        subject: { kind: "address", id: r.bundle, address: r.address ?? null },
-        summary: overdue ? `${r.address || r.bundle} is overdue for its check by more than its own interval` : `${r.address || r.bundle} is monitored and has no check scheduled`,
-        detail: overdue ? `it was due at ${r.due_at} and is checked every ${Math.round(r.interval_ms / 36e5)} hours; the check has not run since. Nothing about the source is claimed here.` : `no interval can be derived for it (${r.reason || "no reason recorded"}), so no check is scheduled.`,
-        basis: {
-          source: "monitoring",
-          state: r.state,
-          bundle: r.bundle,
-          address: r.address ?? null,
-          frequency: r.frequency ?? null,
-          due_at: r.due_at ?? null,
-          interval_ms: r.interval_ms ?? null,
-          reason: r.reason ?? null,
-          truncated: plan.truncated === true,
-          detail: "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set."
-        },
-        age: overdue ? { state: "determined", since: r.due_at, ms: Math.max(0, now - dueMs) } : {
-          state: "undetermined",
-          reason: "unscheduled",
-          detail: "an unscheduled address has no instant it fell due"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([r.bundle])
-      });
-    }
-    return out;
-  }
   /** The bounds the new producers read under (R2): reevaluation's largest page; R2's fifty projects. The monitored
    *  documents and the archive addresses are bounded by monitoring's reads (its R47, R48), which publish their bounds. */
   static QUEUE_NOTICES_MAX = 1e3;
   static QUEUE_OBJECTIVE_GAP_PROJECTS = 50;
   static QUEUE_OBJECTIVE_GAP_PAGE = 200;
-  /** The four generators, in catalogue order, and the ONE place a CONDITION
-   *  item is minted. Every one of them is a pure read. */
-  #queueConditions(viewer, now) {
-    return [
-      ...this.#conditionsGovernorHolding(viewer, now),
-      ...this.#conditionsPartialCapture(viewer, now),
-      ...this.#conditionsCaptureUnattended(viewer, now),
-      ...this.#conditionsCaptureRequested(viewer, now),
-      ...this.#conditionsRenderDeferred(viewer, now),
-      ...this.#conditionsArchiveEligible(viewer, now),
-      ...this.#conditionsRecheckDue(viewer, now)
-    ];
-  }
-  /** `render-deferred` (D-523; BOB #33 RULED 2026-09-24 19:54Z, CLIENT-RENDERED.md "RULED 2026-09-24 by BOB #33").
-   *
-   *  THE FACT IS THE REQUEST ROW'S OWN: a request that asked for the page as a visitor saw it (`render = 1`) and
-   *  carries a C-83 code. While it is `requested` the drain is HOLDING it under that code (D-491) and asks again on
-   *  every tick until its `expires`; once `expired` the drain has RELEASED it and the render never happened. Both
-   *  are shown, under one kind, because they are one fact at two moments and a member who saw the first must be
-   *  able to see how it ended — an item that simply vanished at expiry would be the silent drop the ruling forbids.
-   *
-   *  THE REASON IS C-83's OWN, in DEC-49 words: the code, its C-number and the canned translation are read off the
-   *  family that minted them and never re-typed here, so the sentence a member reads is the one the plane refuses
-   *  with. C-83.3 and C-83.4 say different things — one that this instance cannot render at all, the other that
-   *  today's allowance is committed — and collapsing them into "deferred" would tell a member to wait for a
-   *  renderer that is not coming.
-   *
-   *  A CONDITION: our renderer, our allowance and our pacing hold it, so it is a fact about our machinery and never
-   *  about the page, and a member may mute it for themselves (D-125's item form). It offers no act of its own; the
-   *  options are the acts on the question the request was asked under, derived as every other item's are.
-   *
-   *  GATED AT THE TARGET through `#bundleGate`, exactly as the completion notification one producer up is: a
-   *  request under a question the viewer cannot see is absent from their feed as it is from op=capturerequests. */
-  #conditionsRenderDeferred(viewer, now) {
-    const out = [];
-    for (const r of this.#captureRequests.rendersHeld({ viewer }).requests) {
-      const row9 = renderHoldReason(r.code);
-      const words4 = row9.translation || `The last thing recorded against it (${r.code || "no code"}) has no catalogued sentence.`;
-      const released = r.state === "expired";
-      const sinceMs = Date.parse(r.requested_at);
-      out.push({
-        id: `CONDITION::render-deferred::${r.request}`,
-        class: "CONDITION",
-        kind: "render-deferred",
-        case: this.#conditionHomes([r.target], viewer),
-        subject: { kind: "capture_request", id: r.request },
-        summary: released ? `the render of ${r.address} was never performed: it was held until its request expired, and what the page showed is UNDETERMINED` : `a render of ${r.address} is waiting: ${words4}`,
-        detail: released ? `${words4} The request expired at ${r.expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.` : `${words4} The request is held and asked again on every tick until ${r.expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.`,
-        basis: {
-          source: "capture_requests",
-          request: r.request,
-          run: r.run,
-          inquiry: r.target,
-          address: r.address,
-          host: r.host,
-          render: released ? { state: "expired", content: "undetermined" } : { state: "deferred", content: "undetermined" },
-          code: r.code,
-          check: row9.check,
-          translation: row9.translation,
-          attempts: r.attempts,
-          expires: r.expires,
-          updated: r.updated,
-          plane_detail: r.detail ?? null,
-          detail: "a signal is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw."
-        },
-        age: Number.isFinite(sinceMs) ? { state: "determined", since: r.requested_at, ms: Math.max(0, now - sinceMs) } : {
-          state: "undetermined",
-          reason: "unparseable_requested_at",
-          detail: "the request row carries a request stamp this producer cannot read as an instant"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([r.target])
-      });
-    }
-    return out;
-  }
   /** D-86: the OBLIGATION items the sweep raised, for `queueFeed`. Synchronous, like every producer there. The
    *  row is gated by `#bundleGate` over the run's `context_id` — the predicate `aiRunRead` compiles for the run
    *  itself, so an item about a run is shown exactly to the readers of that run. A member who is not a recipient
@@ -196849,7 +199603,7 @@ var QueueProducers = class _QueueProducers {
    *
    * Each reads the fact its owning module offers and restates none of it: the candidates shown on a project
    * (`contradiction` R25), the notices on a project's own side (its R50), the dependents resting on a side named wrong
-   * (`reevaluation` R27) and the tensions a published case did not disclose (`publication` R50). Each is derived on
+   * (`reevaluation` R27) and the tensions a published case did not disclose (`case-tensions` R4). Each is derived on
    * read and writes nothing, and each follows its provider's cursor under a stated bound of pages.
    *
    * WHAT THE PROVIDER WITHHOLDS STAYS WITHHELD. `candidatesFor` answers only a candidate whose two sides the viewer
@@ -196860,7 +199614,7 @@ var QueueProducers = class _QueueProducers {
    *  are followed per project before the read is stated cut. */
   static QUEUE_CONTRADICTION_PROJECTS = 50;
   static QUEUE_CONTRADICTION_PAGES = 20;
-  /** R6: how many owned projects `tension-after-publication` asks `publication` about. */
+  /** R6: how many owned projects `tension-after-publication` asks `case-tensions` about. */
   static QUEUE_TENSION_PROJECTS = 50;
   /** R5: the page `reevaluation.correctedDependents` is read in (its R27's largest). */
   static QUEUE_CORRECTED_PAGE = 200;
@@ -197062,8 +199816,8 @@ var QueueProducers = class _QueueProducers {
     }
     return { projects: out, bound: cap, truncated: truncated3 };
   }
-  /** `tension-after-publication` (R6; N345, DEC-84 item 13): one FINDING per (case, candidate) `publication`
-   *  `caseTensions({project})` answers (its R50), for each project the member owns, at most 50. It goes to those
+  /** `tension-after-publication` (R6; N345, DEC-84 item 13): one FINDING per (case, candidate) `case-tensions`
+   *  `caseTensions({project})` answers (its R4, was publication R50; N612), for each project the member owns, at most 50. It goes to those
    *  owners and to nobody else: a caller with no member, or a member who owns no project, gets none. It leaves when a
    *  later edition discloses it or the candidate resolves (the read no longer answers it). */
   #findingsTensionAfterPublication(me, viewer, now) {
@@ -197080,7 +199834,7 @@ var QueueProducers = class _QueueProducers {
           cut7 = true;
           break;
         }
-        const r = this.#publication.caseTensions({ project, after });
+        const r = this.#caseTensions.caseTensions({ project, after });
         if (!r || r.ok !== true || !Array.isArray(r.cases)) break;
         for (const c of r.cases) {
           for (const t2 of c && Array.isArray(c.tensions) ? c.tensions : []) {
@@ -197115,7 +199869,7 @@ var QueueProducers = class _QueueProducers {
         summary: `a finding case ${c.case} published rests on a conflict found since its edition ${c.edition ?? ""}`.trim(),
         detail: "a contradiction on what this published case's findings rest on, one level deep, was found after its latest edition and is not disclosed there. The signed edition does not change: a later edition discloses or resolves it.",
         basis: {
-          source: "publication.caseTensions",
+          source: "case-tensions.caseTensions",
           case: c.case,
           edition: c.edition ?? null,
           project,
@@ -197131,7 +199885,7 @@ var QueueProducers = class _QueueProducers {
             pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
             pages_truncated: cut7
           },
-          detail: "a tension after publication is publication's (its R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength."
+          detail: "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is told to the project's owners and to nobody else, and it composes no strength."
         },
         age: {
           state: "undetermined",
@@ -197792,9 +200546,9 @@ var QueueProducers = class _QueueProducers {
   #obligationsLocalFactDue(me, viewer, now) {
     if (!me) return [];
     const read3 = this.#actionClocks.calendarFactsRead({ viewer, now });
-    const listed = read3 && read3.ok !== false && Array.isArray(read3.paths) ? read3.paths : [];
+    const listed2 = read3 && read3.ok !== false && Array.isArray(read3.paths) ? read3.paths : [];
     const readers2 = /* @__PURE__ */ new Map();
-    for (const p3 of listed) {
+    for (const p3 of listed2) {
       if (!p3 || typeof p3.path !== "string" || !p3.path) continue;
       const acts = (Array.isArray(p3.actions) ? p3.actions : []).filter((a) => a && typeof a === "object" && typeof a.action === "string" && a.action);
       if (acts.length) readers2.set(p3.path, acts);
@@ -197944,227 +200698,6 @@ var QueueProducers = class _QueueProducers {
           recipients: [me],
           options: [_QueueProducers.ATTRIBUTE_CHOOSE]
         });
-      }
-    }
-    return out;
-  }
-  /* ======================================================================
-   * K1036 (8) · R26 — A SWEEP THAT NEEDS A MEMBER'S LOOK (link-sweep R8, R11; monitoring R60, R63 before N506).
-   * DEC-111, K1031 · R27 — A WORKING-ON NOTICE THAT NEEDS ITS OWNERS' (network-notices R12, R13, R22).
-   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
-   * first read after the fact stops holding. The items' words are the UX design stream's to set (NOTIFICATIONS.md, the
-   * item contract; `ux-experience.json` UC-035): the sentences here say the fact plainly and claim nothing beyond it.
-   * ====================================================================== */
-  /** R26: the five kinds `link-sweep.sweepConditions` answers (its R11), as link-sweep exports them. */
-  static SWEEP_CONDITION_KINDS = SWEEP_CONDITION_KINDS;
-  /** R27: how many owned projects one read asks `network-notices` about; the window `notice-lapse-near` opens in before
-   *  a lapse, and how long `notice-project-closed` stands after the closing. */
-  static QUEUE_NOTICE_PROJECTS = 50;
-  static NOTICE_LAPSE_NEAR_DAYS = 7;
-  static NOTICE_CLOSED_DAYS = 30;
-  /** R27: the act that answers a notice (network-notices R6, R11): a new revision, or a stop with an optional handoff. */
-  static NOTICE_REVISE = Object.freeze({ id: "noticeprepare", label: "Revise this notice, or stop it", weight: "single" });
-  static NOTICE_STOP = Object.freeze({ id: "noticeprepare", label: "Stop this notice, with a handoff if you want one", weight: "single" });
-  /** R26's sentences, one per kind, each saying what the condition's `detail` gives and nothing more. */
-  static #sweepWords(kind, d, title) {
-    const n = (v) => Number.isFinite(Number(v)) ? Number(v) : "an undetermined number of";
-    const list6 = (xs, f17) => Array.isArray(xs) && xs.length ? xs.map(f17).join("; ") : "none named";
-    switch (kind) {
-      case "sweep-held-backlog":
-        return {
-          summary: `the sweep ${title} is held: its captures awaiting review have reached its limit`,
-          detail: `${n(d.backlog)} of its captures are still awaiting review, at or over its backlog limit of ${n(d.limit)}. It runs again when members review or set aside enough of them.`
-        };
-      case "sweep-yield-anomaly":
-        return {
-          summary: `the sweep ${title} filed an unusual number of documents on its last run`,
-          detail: `its last run filed ${n(d.filed)} against a median of ${n(d.median)} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.`
-        };
-      case "sweep-seed-unreachable":
-        return {
-          summary: `a listing page the sweep ${title} reads failed on its last run`,
-          detail: `on its last run these could not be fetched: ${list6(d.seeds, (x) => String(x && x.seed))}. The sweep's other pages were read; each one's reachability is on the basis.`
-        };
-      case "sweep-redirect-out-of-scope":
-        return {
-          summary: `the sweep ${title} met a redirect outside its sources on its last run`,
-          detail: `on its last run these addresses redirected outside the sweep's sources, and nothing at the target was fetched: ${list6(d.redirects, (x) => x && typeof x === "object" ? `${x.address ?? "an address"} to ${x.target ?? "an undetermined target"}` : String(x))}.`
-        };
-      default:
-        return {
-          summary: `the sweep ${title} has filed nothing on its last ${n(d.runs)} runs`,
-          detail: `its last ${n(d.runs)} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.`
-        };
-    }
-  }
-  /** `sweep-*` (R26; link-sweep R11, K1036 (8), N506): one CONDITION per condition `link-sweep.sweepConditions` answers the
-   *  viewer, keyed `CONDITION::<kind>::<bundle>#<id>`, to the members of the sweep's project (joined or leaving,
-   *  membership R74) who may see its bundle and to nobody else: a caller with no member is none of them, and a sweep in
-   *  no project has no members. Its subject the sweep's bundle, homed under the project at depth 0 and the bundle's own
-   *  walk; its `age` from the condition's `since`; its `detail` the condition's, carried whole on the basis and said in
-   *  the sentence. It leaves when the condition leaves (the read no longer answers it). */
-  #conditionsSweep(me, viewer, now) {
-    if (!me) return [];
-    const r = this.#linkSweep.sweepConditions({ viewer, now });
-    const list6 = r && r.ok !== false && Array.isArray(r.conditions) ? r.conditions : [];
-    const visible = this.#bundleRedactor(viewer);
-    const joined2 = /* @__PURE__ */ new Map();
-    const out = [];
-    for (const c of list6) {
-      if (!c || typeof c.sweep !== "string" || !_QueueProducers.SWEEP_CONDITION_KINDS.includes(c.kind)) continue;
-      const hash = c.sweep.indexOf("#");
-      if (hash <= 0 || hash === c.sweep.length - 1) continue;
-      const bundle = c.sweep.slice(0, hash), sweepId = c.sweep.slice(hash + 1);
-      if (visible(bundle) === null) continue;
-      const info = this.#record.bundleInfo(bundle);
-      const project = info ? info.type === "project" ? info.id : info.project : null;
-      if (!project) continue;
-      if (!joined2.has(project)) {
-        const p3 = this.#membership.participation(project, me);
-        joined2.set(project, !!(p3 && (p3.state === "joined" || p3.state === "leaving")));
-      }
-      if (!joined2.get(project)) continue;
-      const d = c.detail && typeof c.detail === "object" ? c.detail : {};
-      const title = info && info.title ? `"${info.title}" (${sweepId})` : c.sweep;
-      const words4 = _QueueProducers.#sweepWords(c.kind, d, title);
-      const sinceMs = Date.parse(c.since ?? "");
-      out.push({
-        id: `CONDITION::${c.kind}::${c.sweep}`,
-        class: "CONDITION",
-        kind: c.kind,
-        case: this.#homesAt([project], viewer, [bundle]),
-        subject: { kind: "bundle", id: bundle, sweep: c.sweep, sweep_id: sweepId, project },
-        summary: words4.summary,
-        detail: words4.detail,
-        basis: {
-          source: "link-sweep.sweepConditions",
-          sweep: c.sweep,
-          bundle,
-          sweep_id: sweepId,
-          project,
-          kind: c.kind,
-          since: c.since ?? null,
-          condition: d,
-          recipients_rule: "project_members_who_see_the_bundle",
-          detail: "a sweep's signal is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding."
-        },
-        age: Number.isFinite(sinceMs) ? { state: "determined", since: c.since, ms: Math.max(0, now - sinceMs) } : {
-          state: "undetermined",
-          reason: "no_condition_instant",
-          detail: "the sweep's signal carries no instant this producer can read"
-        },
-        assignee: null,
-        assignee_role: null,
-        options: this.#optionsOf([bundle])
-      });
-    }
-    return out;
-  }
-  /** `notice-attestation-missed`, `notice-lapse-near` and `notice-project-closed` (R27; network-notices R12, R13, R22;
-   *  DEC-111, K1031, K1100): for each project the member owns (membership R65), at most 50 in id order, the project's
-   *  notices as `network-notices.noticesOf` answers the viewer, and per notice:
-   *  - an open notice whose latest `monthly` missed for want of an instance key has had no `monthly` issued since;
-   *  - an open notice whose lapse date (a lapse running) is at most 7 days away;
-   *  - a notice whose project closed while it was open (status `closed`; an owner's stop makes it `stopped`), for 30
-   *    days from the closing.
-   *  Each keyed `CONDITION::<kind>::<notice>`, to the project's owners and to nobody else: a caller with no member, or
-   *  a member who owns none, is told nothing. Each leaves on the first read after its fact stops holding. */
-  #conditionsNotice(me, viewer, now) {
-    if (!me) return [];
-    const scope = this.#ownedProjects(me, viewer, _QueueProducers.QUEUE_NOTICE_PROJECTS);
-    const DAY5 = _QueueProducers.DAY_MS;
-    const zone = this.#instanceZone();
-    const today2 = _QueueProducers.#today(now, zone);
-    const out = [];
-    for (const project of scope.projects) {
-      const r = this.#networkNotices.noticesOf({ project, viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.notices)) continue;
-      const owners2 = this.#membership.projectOwners(project) || [];
-      const title = (this.#record.bundleInfo(project) || {}).title || project;
-      const item3 = (kind, n, { since, summary: summary2, detail, facts, options }) => {
-        out.push({
-          id: `CONDITION::${kind}::${n.notice}`,
-          class: "CONDITION",
-          kind,
-          case: this.#homesAt([project], viewer),
-          subject: { kind: "notice", id: n.notice, project, status: n.status },
-          summary: summary2,
-          detail,
-          basis: {
-            source: "network-notices.noticesOf",
-            notice: n.notice,
-            project,
-            status: n.status,
-            ...facts,
-            recipients_rule: "project_owners",
-            zone,
-            bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
-            detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding."
-          },
-          age: _QueueProducers.#localAge(
-            since,
-            zone,
-            now,
-            "no_notice_instant",
-            "the notice carries no instant this producer can read for when this began"
-          ),
-          assignee: null,
-          assignee_role: null,
-          recipients: [...owners2],
-          options
-        });
-      };
-      for (const n of r.notices) {
-        if (!n || typeof n.notice !== "string" || !n.notice) continue;
-        const atts = Array.isArray(n.attestations) ? n.attestations : [];
-        const instant5 = (a) => Date.parse(a && (a.published_at || _QueueProducers.#dayEdge(a.as_of, zone, "start")) || "");
-        if (n.status === "open") {
-          const misses = Array.isArray(n.missed_monthlies) ? n.missed_monthlies.filter((m) => m && m.month) : [];
-          const miss = misses.at(-1);
-          if (miss) {
-            const missMs = Date.parse(miss.at ?? "");
-            const since = atts.some((a) => a.kind === "monthly" && (Number.isFinite(missMs) && Number.isFinite(instant5(a)) ? instant5(a) > missMs : String(a.as_of || "").slice(0, 7) > miss.month));
-            if (!since)
-              item3("notice-attestation-missed", n, {
-                since: miss.at ?? null,
-                summary: `the monthly attestation of ${title}'s working-on notice for ${miss.month} was not issued`,
-                detail: "no instance key was bound when it fell due, so this copy could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
-                facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
-                options: this.#optionsOf([project])
-              });
-          }
-          const lapse = typeof n.lapse_date === "string" && isCalendarDate(n.lapse_date.slice(0, 10)) ? n.lapse_date.slice(0, 10) : null;
-          const opens = lapse ? _QueueProducers.#addDays(lapse, -_QueueProducers.NOTICE_LAPSE_NEAR_DAYS) : null;
-          const reached = today2 || _QueueProducers.#today(now, "Etc/GMT-14");
-          if (opens && reached && opens <= reached) {
-            item3("notice-lapse-near", n, {
-              since: opens,
-              summary: `${title}'s working-on notice will lapse on ${n.lapse_date.slice(0, 10)}`,
-              detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
-              facts: {
-                lapse_date: n.lapse_date.slice(0, 10),
-                window_days: _QueueProducers.NOTICE_LAPSE_NEAR_DAYS,
-                level: n.level ?? null
-              },
-              options: [_QueueProducers.NOTICE_REVISE]
-            });
-          }
-        } else if (n.status === "closed") {
-          const closed = atts.find((a) => a && a.kind === "closed");
-          const since = closed ? closed.published_at || (isCalendarDate(closed.as_of) ? closed.as_of : null) : null;
-          const closedDay = _QueueProducers.#localDayOf(since, zone);
-          const closedMs = Date.parse(closed && closed.published_at || "");
-          const stands = closedDay && today2 ? _QueueProducers.#daysBetween(closedDay, today2, zone) < _QueueProducers.NOTICE_CLOSED_DAYS : !Number.isFinite(closedMs) || now - closedMs < _QueueProducers.NOTICE_CLOSED_DAYS * DAY5;
-          if (stands) {
-            item3("notice-project-closed", n, {
-              since,
-              summary: `${title} closed while its working-on notice was open`,
-              detail: "this copy signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another group or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
-              facts: { closed_at: since, window_days: _QueueProducers.NOTICE_CLOSED_DAYS },
-              options: [_QueueProducers.NOTICE_STOP]
-            });
-          }
-        }
       }
     }
     return out;
@@ -198425,7 +200958,7 @@ var QueueProducers = class _QueueProducers {
               pages_bound: _QueueProducers.QUEUE_CONTRADICTION_PAGES,
               truncated: cut7
             },
-            detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another group's finding at an edition whose publisher has since listed a later edition or withdrawn it on its docket, a verified entry this copy read. It is read here, never raised, and nothing was regraded."
+            detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another group's finding at an edition whose publisher has since listed a later edition or withdrawn it on its docket, a verified entry your group's Civicsmith read. It is read here, never raised, and nothing was regraded."
           },
           age: Number.isFinite(sinceMs) ? { state: "determined", since: e2.since, ms: Math.max(0, now - sinceMs) } : {
             state: "undetermined",
@@ -198496,7 +201029,7 @@ var QueueProducers = class _QueueProducers {
         case: this.#homesOf([]),
         subject: subjectOf(e2),
         summary: `the publisher's docket for ${whose(e2)}, which you follow, lists ${kindWords}`,
-        detail: `Entry ${e2.seq} of the docket, ${kindWords}${e2.date ? `, dated ${e2.date}` : ""}, was read and verified by this copy. Its signing key ${e2.key_listed === false ? "is not" : "is"} among the keys the imported case file lists.` + _QueueProducers.#entryWords({ ...e2, key_listed: null }) + (e2.move ? " Anything here resting on an edition it moves is told to its own members as well." : " It is not a new edition or a withdrawal, so nothing resting on the case is re-evaluated for it.") + " This is told once.",
+        detail: `Entry ${e2.seq} of the docket, ${kindWords}${e2.date ? `, dated ${e2.date}` : ""}, was read and verified by your group's Civicsmith. Its signing key ${e2.key_listed === false ? "is not" : "is"} among the keys the imported case file lists.` + _QueueProducers.#entryWords({ ...e2, key_listed: null }) + (e2.move ? " Anything here resting on an edition it moves is told to its own members as well." : " It is not a new edition or a withdrawal, so nothing resting on the case is re-evaluated for it.") + " This is told once.",
         basis: {
           source: "case-import.watchItems",
           import: e2.import,
@@ -198552,7 +201085,7 @@ var QueueProducers = class _QueueProducers {
         kind: "cited-docket-entry-refused",
         case: this.#homesOf([]),
         subject: subjectOf(e2),
-        summary: `an entry on the publisher's docket for ${whose(e2)}, which you follow, failed this copy's checks`,
+        summary: `an entry on the publisher's docket for ${whose(e2)}, which you follow, failed the checks your group's Civicsmith makes`,
         detail: _QueueProducers.#refusedWords(e2, seq, [failed3]),
         basis: {
           source: "case-import.watchItems",
@@ -198689,7 +201222,7 @@ var QueueProducers = class _QueueProducers {
           ...withdrawn ? { refusal: refusal28 ? { code: refusal28.code ?? null, check: refusal28.check ?? null, translation: words4 } : null } : {}
         },
         summary: withdrawn ? `the wizard script ${name2} no longer matches the screens and is withdrawn until it is fixed` : `the wizard script ${name2} matches the screens again and is offered again`,
-        detail: withdrawn ? `It is not offered to members while it fails its checks${words4 ? `. The first thing it failed: ${words4}` : ""}. A new version that passes them, approved as before, returns it. This is told once.` : "It passed its checks again when this copy started, and members are offered it as before. This is told once.",
+        detail: withdrawn ? `It is not offered to members while it fails its checks${words4 ? `. The first thing it failed: ${words4}` : ""}. A new version that passes them, approved as before, returns it. This is told once.` : "It passed its checks again when your group's Civicsmith started, and members are offered it as before. This is told once.",
         basis: {
           source: "wizard-scripts.brokenScripts",
           script: x.script,
@@ -198770,37 +201303,305 @@ var QueueProducers = class _QueueProducers {
     }
     return out;
   }
-  static DAY_MS = 864e5;
-  /** A calendar day `n` days from `day` in the proleptic Gregorian calendar: arithmetic on the date's own numbers, no
-   *  instant and no zone (civil-time R6's calendar). */
-  static #addDays(day2, n) {
-    if (!isCalendarDate(day2)) return null;
-    const [y, m, d] = day2.split("-").map(Number);
-    const t2 = /* @__PURE__ */ new Date(0);
-    t2.setUTCFullYear(y, m - 1, d + n);
-    const yy = t2.getUTCFullYear();
-    return `${yy < 0 ? "-" : ""}${String(Math.abs(yy)).padStart(4, "0")}-${String(t2.getUTCMonth() + 1).padStart(2, "0")}-${String(t2.getUTCDate()).padStart(2, "0")}`;
+  /* ======================================================================
+   * DEC-147 · R37 — A CASE EDITION SIGNED TO PUBLISH AT A SET TIME (publication R66–R69; N662, K1784, K1785).
+   * DEC-150 (3) · R38 — A HELD PROFILE FOR THE PLACE THE GROUP NAMED (instance-setup R62; N665).
+   * DEC-158 (4) · R39 — A COPIED WIZARD WHOSE BASE HAS A NEWER APPROVED VERSION (wizard-scripts R26; N679, K1818).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
+   * first read after the fact stops holding; what is told once is raised once and leaves by its recipient's disposition.
+   * ====================================================================== */
+  /** R37: the acts that answer a waiting edition (publication R68): moving its time, or cancelling it. */
+  static PUBLISH_AT_MOVE = Object.freeze({ id: "publishatmove", label: "Move the time it publishes", weight: "single" });
+  static PUBLISH_AT_CANCEL = Object.freeze({ id: "publishatcancel", label: "Cancel publishing it at that time", weight: "single" });
+  /** R37: each state's class and kind (publication R67, R69); a cancelled edition earns no item. */
+  static SCHEDULED_KINDS = Object.freeze({
+    waiting: Object.freeze(["CONDITION", "edition-scheduled"]),
+    published: Object.freeze(["FINDING", "edition-published-as-scheduled"]),
+    stopped: Object.freeze(["FINDING", "scheduled-edition-stopped"])
+  });
+  /** R38: the act that answers an arrival (instance-setup R14, `op=profilesset`): choosing the profile under Places. */
+  static PLACE_CHOOSE = Object.freeze({ id: "profilesset", label: "Choose this profile under Places", weight: "single" });
+  /** R39: the acts a copy's editors are offered (wizard-scripts R4, R26): seeing what changed (both versions, read), and
+   *  bringing it across by their own revision (`adopt: {base}`). */
+  static WIZARD_BASE_READ = Object.freeze({ id: "wizardread", label: "See what changed in the wizard it was copied from", weight: "single" });
+  static WIZARD_BASE_ADOPT = Object.freeze({ id: "wizardrevise", label: "Bring the change across to your copy", weight: "single" });
+  /** A person's id, never a machine credential's. */
+  static #person(x) {
+    return typeof x === "string" && x.trim() !== "" && !x.startsWith(MACHINE_AUTHOR_PREFIX) && !x.startsWith(MACHINE_CLASS_PREFIX);
+  }
+  /** R37: "<date>, <time>" as set, in the group's zone as R69 carries it, never converted (R36); null when unreadable. */
+  static #setTime(at34) {
+    const a = at34 && typeof at34 === "object" ? at34 : {};
+    return isCalendarDate(a.date) && typeof a.time === "string" && /^\d{2}:\d{2}$/.test(a.time) ? `${a.date}, ${a.time}` : null;
+  }
+  /** An instant's age, or undetermined for `reason`. */
+  static #instantAge(v, now, reason, detail) {
+    const ms5 = typeof v === "string" && v ? Date.parse(v) : NaN;
+    return Number.isFinite(ms5) ? { state: "determined", since: v, ms: Math.max(0, now - ms5) } : { state: "undetermined", reason, detail };
+  }
+  /** `edition-scheduled`, `edition-published-as-scheduled` and `scheduled-edition-stopped` (R37; publication R66–R69;
+   *  DEC-147 (2), (3), (5)): for each case edition `publication.scheduledEditions` answers read as the plane (its R69),
+   *  paged by its cursor, items to the member who set its time and to the case's project's owners (membership R65), and
+   *  to nobody else: a caller with no member is none of them. Each item's subject is the case edition, homed under the
+   *  case's project (none when it has none), and a project this viewer may not see yields no item (R11).
+   *  - while it is `waiting`, one CONDITION keyed `CONDITION::edition-scheduled::<case>@<edition>`, its summary
+   *    "Signed · publishes <date, time>" as set, in the group's zone, never converted (R36); offering the move and the
+   *    cancel; a moved time changes its words, never its key; it leaves when the edition leaves `waiting`;
+   *  - once `published`, one FINDING keyed `FINDING::edition-published-as-scheduled::<case>@<edition>`, naming the set time
+   *    and the instant published;
+   *  - once `stopped`, one FINDING keyed `FINDING::scheduled-edition-stopped::<case>@<edition>`, naming each reason in its
+   *    own translation and saying nothing was published and publishing needs a new signing.
+   *  The two findings are raised once and leave by their recipient's disposition (DEC-69, DEC-70). A cancelled edition
+   *  earns no item. */
+  #scheduledEditionItems(me, viewer, now) {
+    if (!me || typeof this.#publication.scheduledEditions !== "function") return [];
+    const page2 = this.#actionPages((after) => {
+      const r = this.#publication.scheduledEditions({ after });
+      return r && Array.isArray(r.editions) ? { ...r, items: r.editions, truncated: !!r.cursor } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const owners2 = /* @__PURE__ */ new Map();
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const e2 of page2.items) {
+      const k = e2 ? _QueueProducers.SCHEDULED_KINDS[e2.state] : null;
+      if (!k || typeof e2.case !== "string" || !e2.case || !Number.isInteger(Number(e2.edition)) || e2.edition === null) continue;
+      const project = typeof e2.project === "string" && e2.project ? e2.project : null;
+      if (project && visible(project) === null) continue;
+      const key = project || "";
+      if (!owners2.has(key)) owners2.set(key, project ? this.#membership.projectOwners(project) || [] : []);
+      const setter = _QueueProducers.#person(e2.set_by) ? e2.set_by : null;
+      const recipients = [.../* @__PURE__ */ new Set([...setter ? [setter] : [], ...owners2.get(key)])];
+      if (!recipients.includes(me)) continue;
+      const [cls3, kind] = k;
+      const edition = Number(e2.edition);
+      const id = `${cls3}::${kind}::${e2.case}@${edition}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const at34 = e2.at && typeof e2.at === "object" ? e2.at : {};
+      const when = _QueueProducers.#setTime(at34) || "a time that cannot be read";
+      const zone = typeof at34.zone === "string" && at34.zone ? at34.zone : null;
+      const which = `case ${e2.case}, edition ${edition}`;
+      const moves = Array.isArray(e2.moves) ? e2.moves : [];
+      const reasons = (Array.isArray(e2.reasons) ? e2.reasons : []).filter((x) => x && typeof x === "object").map((x) => ({ code: x.code ?? null, translation: typeof x.translation === "string" ? x.translation : null }));
+      let summary2, detail, age, options;
+      if (kind === "edition-scheduled") {
+        summary2 = `Signed \xB7 publishes ${when} \xB7 ${which}`;
+        detail = `This edition is signed and waits to publish on ${when}${zone ? ` (${zone})` : ""}, the group's own time. Nothing of it is public until then. At that time every check it passed at signing is run again, and it is published only if nothing has changed. An owner of the case's project may move the time or cancel it` + (moves.length ? `; its time has been moved ${moves.length === 1 ? "once" : `${moves.length} times`}` : "") + ".";
+        age = _QueueProducers.#instantAge(e2.signed_at, now, "no_signing_instant", "the edition carries no signing instant this producer can read");
+        options = [_QueueProducers.PUBLISH_AT_MOVE, _QueueProducers.PUBLISH_AT_CANCEL];
+      } else if (kind === "edition-published-as-scheduled") {
+        summary2 = `${which} was published at its set time, ${when}`;
+        detail = `It was signed to publish on ${when}${zone ? ` (${zone})` : ""} and was published ${typeof e2.outcome_at === "string" && e2.outcome_at ? `at ${e2.outcome_at}` : "at an instant that cannot be read"}, after every check it passed at signing ran again and passed. This is told once.`;
+        age = _QueueProducers.#instantAge(e2.outcome_at, now, "no_outcome_instant", "the edition carries no publishing instant this producer can read");
+        options = [];
+      } else {
+        const said7 = reasons.map((x) => x.translation || `a reason with no recorded words (${x.code || "no code"})`);
+        summary2 = `${which} was not published at its set time, ${when}`;
+        detail = `When its time came, the check stopped it: ${said7.length ? said7.join(" ") : "no reason was recorded."} Nothing was published. Publishing this edition needs a new signing. This is told once.`;
+        age = _QueueProducers.#instantAge(e2.outcome_at, now, "no_outcome_instant", "the edition carries no stopping instant this producer can read");
+        options = [];
+      }
+      out.push({
+        id,
+        class: cls3,
+        kind,
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: { kind: "case_edition", id: `${e2.case}@${edition}`, case: e2.case, edition, project },
+        summary: summary2,
+        detail,
+        basis: {
+          source: "publication.scheduledEditions",
+          case: e2.case,
+          edition,
+          project,
+          state: e2.state,
+          at: { date: at34.date ?? null, time: at34.time ?? null, zone },
+          publish_at: e2.publish_at ?? null,
+          signed_at: e2.signed_at ?? null,
+          signer: e2.signer ?? null,
+          set_by: e2.set_by ?? null,
+          moves,
+          outcome_at: e2.outcome_at ?? null,
+          ...kind === "scheduled-edition-stopped" ? { reasons } : {},
+          recipients_rule: "setter_and_project_owners",
+          bound: { pages_bound: _QueueProducers.QUEUE_ACTION_PAGES, truncated: page2.truncated },
+          detail: "a scheduled edition is publication's (its R66\u2013R69): its time as set, in the group's zone, and its outcome, read here as the plane and never stored. It goes to the member who set the time and to the case's project's owners, and to nobody else (DEC-147)."
+        },
+        age,
+        assignee: null,
+        assignee_role: null,
+        recipients,
+        options
+      });
+    }
+    return out;
+  }
+  /** R38 (DEC-150 (3); instance-setup R62): the one door through which `instance-setup` registers, once at start, its
+   *  `placeArrivals` read (a function, or an object offering `placeArrivals`), K31's pattern since it comes later in
+   *  layer 11. A second registration is refused `PLACE_ARRIVALS_REGISTERED`, a read that is neither
+   *  `PLACE_ARRIVALS_MALFORMED`: programming errors answered to the caller, never a member's refusal. */
+  registerPlaceArrivals(read3) {
+    const fn = typeof read3 === "function" ? read3 : read3 && typeof read3 === "object" && typeof read3.placeArrivals === "function" ? (a) => read3.placeArrivals(a) : null;
+    if (!fn)
+      return { ok: false, reason: "PLACE_ARRIVALS_MALFORMED", detail: "the registered read is placeArrivals, a function" };
+    if (this.#placeArrivals)
+      return { ok: false, reason: "PLACE_ARRIVALS_REGISTERED", detail: "the read of a named place's arrivals is registered once at start, and it was" };
+    this.#placeArrivals = fn;
+    return { ok: true };
+  }
+  /** `place-profile-arrived` (R38; instance-setup R62; DEC-150 (3)): with a read registered (none: no item), for each
+   *  arrival it answers read as the plane, one CONDITION keyed `CONDITION::place-profile-arrived::<profile>`, to every
+   *  active administrator (membership R64, R86) and to nobody else, with no project home. It names the place the group
+   *  named and the held profile's name and coverage, and offers choosing it under Places (instance-setup R14). Raised once
+   *  per arrival; it leaves when the arrival leaves (the profile made active, or the name cleared or changed). */
+  #conditionsPlaceArrived(me, viewer, now) {
+    if (!this.#placeArrivals || !me || !this.#isAdminMember(me)) return [];
+    let r;
+    try {
+      r = this.#placeArrivals({ viewer: null });
+    } catch {
+      return [];
+    }
+    const list6 = Array.isArray(r) ? r : r && r.ok !== false && Array.isArray(r.arrivals) ? r.arrivals : [];
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    let admins = null;
+    for (const a of list6) {
+      if (!a || typeof a !== "object") continue;
+      const held2 = a.profile && typeof a.profile === "object" ? a.profile : null;
+      const profile = held2 ? held2.id ?? held2.profile ?? null : a.profile;
+      if (typeof profile !== "string" || !profile) continue;
+      const id = `CONDITION::place-profile-arrived::${profile}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      if (admins === null) admins = this.#activeAdmins();
+      const place = typeof a.name === "string" && a.name.trim() ? a.name.trim() : null;
+      const pname = (held2 ? held2.name : a.profile_name) ?? null;
+      const covers2 = held2 ? held2.covers : a.covers;
+      const coverage = Array.isArray(covers2) ? covers2.filter((x) => typeof x === "string" && x) : [];
+      const named = typeof pname === "string" && pname ? pname : profile;
+      out.push({
+        id,
+        class: "CONDITION",
+        kind: "place-profile-arrived",
+        case: this.#homesOf([]),
+        subject: { kind: "place_profile", id: profile, name: pname ?? null, covers: coverage, place },
+        summary: `a profile for ${place ? `"${place}"` : "the place your group named"} is now held: ${named}`,
+        detail: `An installed update brought a profile that matches the place your group named${place ? `, "${place}"` : ""}: ${named}${coverage.length ? `, which covers ${coverage.join(", ")}` : ""}. An administrator may choose it under Places; the offices your group added stay. This status is told once, and it leaves when the profile is chosen or the place's name is cleared or changed.`,
+        basis: {
+          source: "instance-setup.placeArrivals",
+          profile,
+          profile_name: pname ?? null,
+          covers: coverage,
+          place,
+          found_at: a.found_at ?? null,
+          recipients_rule: "administrators",
+          raised_to: admins,
+          detail: "an arrival is instance-setup's fact (its R62): a held profile matching the place the group named, first found at a start, read here through the read it registered and never stored. It goes to every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves."
+        },
+        age: _QueueProducers.#instantAge(a.found_at, now, "no_found_instant", "the arrival carries no instant this producer can read"),
+        assignee: null,
+        assignee_role: null,
+        recipients: [...admins],
+        options: [_QueueProducers.PLACE_CHOOSE]
+      });
+    }
+    return out;
+  }
+  /** `wizard-base-updated` (R39; wizard-scripts R26; DEC-158 (4), K1818): one FINDING per entry and recipient
+   *  `wizard-scripts.baseUpdates` answers (a copy whose base has a newer approved version, to the copy's wizard editors as
+   *  it names them), paged by its cursor, keyed `FINDING::wizard-base-updated::<copy>::<base version>::<member>`, to that
+   *  recipient and to nobody else: a caller with no member is none of them. Its subject the copy, naming the copy's name,
+   *  its base's name and the base's new version, homed under the copy's project, a project this viewer may not see
+   *  yielding none (R11); offering to see what changed and to bring it across by the member's own revision (wizard-scripts
+   *  R4's `adopt: {base}`). Raised once and never repeated; it leaves when its recipient disposes of it (DEC-69, DEC-70). */
+  #findingsWizardBaseUpdated(me, viewer, now) {
+    if (!me || typeof this.#wizardScripts.baseUpdates !== "function") return [];
+    const page2 = this.#actionPages((after) => {
+      const r = this.#wizardScripts.baseUpdates({ after, viewer });
+      return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const seen = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const x of page2.items) {
+      if (!x || typeof x.copy !== "string" || !x.copy || x.base_version === void 0 || x.base_version === null || x.base_version === "") continue;
+      const recipients = (Array.isArray(x.recipients) ? x.recipients : []).filter((m) => _QueueProducers.#person(m));
+      if (!recipients.includes(me)) continue;
+      const project = typeof x.project === "string" && x.project ? x.project : null;
+      if (project && visible(project) === null) continue;
+      const baseVersion = String(x.base_version);
+      const id = `FINDING::wizard-base-updated::${x.copy}::${baseVersion}::${me}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const name2 = typeof x.name === "string" && x.name ? `"${x.name}"` : x.copy;
+      const baseName = typeof x.base_name === "string" && x.base_name ? `"${x.base_name}"` : "the wizard it was copied from";
+      out.push({
+        id,
+        class: "FINDING",
+        kind: "wizard-base-updated",
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: {
+          kind: "wizard",
+          id: x.copy,
+          name: x.name ?? null,
+          copy_version: x.copy_version ?? null,
+          base: x.base ?? null,
+          base_name: x.base_name ?? null,
+          based_on: x.based_on ?? null,
+          base_version: baseVersion,
+          project
+        },
+        summary: `${baseName} has a newer approved version, ${baseVersion}, than your group's copy ${name2} was made from`,
+        detail: `Your group's copy ${name2} was made from ${x.based_on ? `version ${x.based_on} of ` : ""}${baseName}, and version ${baseVersion} of it has since been approved. See what changed between the two; you may bring the change across to your copy by your own revision, and nothing is changed in your copy unless you do. This is told once.`,
+        basis: {
+          source: "wizard-scripts.baseUpdates",
+          copy: x.copy,
+          copy_version: x.copy_version ?? null,
+          name: x.name ?? null,
+          project,
+          base: x.base ?? null,
+          base_name: x.base_name ?? null,
+          based_on: x.based_on ?? null,
+          base_version: baseVersion,
+          found_at: x.found_at ?? null,
+          ...x.steps && typeof x.steps === "object" ? { steps: x.steps } : {},
+          recipients_rule: "copy_editors",
+          raised_to: recipients,
+          bound: { pages_bound: _QueueProducers.QUEUE_ACTION_PAGES, truncated: page2.truncated },
+          detail: "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and version and read here, never stored. It goes to each of the copy's wizard editors it names, once (DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4)."
+        },
+        age: _QueueProducers.#instantAge(x.found_at, now, "no_found_instant", "the entry carries no instant this producer can read"),
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [_QueueProducers.WIZARD_BASE_READ, _QueueProducers.WIZARD_BASE_ADOPT]
+      });
+    }
+    return out;
   }
 };
-var OF9 = /* @__PURE__ */ new WeakMap();
+var OF10 = /* @__PURE__ */ new WeakMap();
 function queueProducersOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let p3 = OF9.get(storage);
+  let p3 = OF10.get(storage);
   if (!p3) {
     p3 = new QueueProducers({ host: ctx, storage, deps: { ...deps || {} } });
-    OF9.set(storage, p3);
+    OF10.set(storage, p3);
   }
   return p3;
 }
 
 // src/notice-producers/index.mjs
-var UNGROUPED2 = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
+var UNGROUPED3 = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
 var NOTICED_LABEL = "noticed";
+var HINT_MARK = "Hint \xB7 machine work";
 var GATE_RATE_MAX2 = 0.2;
 var NOTICE_PROJECTS_MAX = 50;
 var STANDING_PAGES_MAX = 5;
 var DUTIES_MAX = 500;
-var TAKE_UP = Object.freeze({ id: "hypothesishold", label: "Take it up as your own hunch or hypothesis", weight: "single" });
+var TAKE_UP = Object.freeze({ id: "hypothesishold", label: "Take this hint up as your own hunch or hypothesis", weight: "single" });
 var WAIT_LOOK = Object.freeze({ id: "waitlook", label: "Record that you looked", weight: "single" });
 var NOTICE_KINDS = Object.freeze({
   "interest-check-noticed": "FINDING",
@@ -198875,7 +201676,7 @@ var NoticeProducers = class _NoticeProducers {
     return [...this.sql.exec(q10, ...a)];
   }
   #homesOf(ids) {
-    return this.#homesFn ? this.#homesFn(ids || []) : { ...UNGROUPED2 };
+    return this.#homesFn ? this.#homesFn(ids || []) : { ...UNGROUPED3 };
   }
   #optionsOf(ids) {
     return this.#optionsFn ? this.#optionsFn(ids || []) || [] : [];
@@ -199025,10 +201826,11 @@ var NoticeProducers = class _NoticeProducers {
         label: NOTICED_LABEL,
         layer: "hypothesis",
         by: "the machine's",
+        mark: HINT_MARK,
         case: this.#homesAt(ps, viewer),
         subject: { kind: "interest_check_result", id: x.result_id, check: c.check, version: c.version, name: c.name ?? x.name ?? null },
-        summary: `Noticed: a pattern the check "${c.name ?? c.check}" finds in held facts`,
-        detail: `Noticed by a check, the machine's, in the hypothesis layer. The check's condition is data: ${condition ? JSON.stringify(condition) : "as its definition states"}. It is counted against ${den.label || "its stated set"}${Number.isFinite(den.counted) ? ` (${den.counted} counted on the last full pass)` : ""}, and its derivation cites every row it rests on. It is a pattern worth a look: never a finding, never a basis for a claim, and it says nothing about anyone. Dispose of it, or take it up as your own hunch or hypothesis.`,
+        summary: `${HINT_MARK}: a pattern the check "${c.name ?? c.check}" finds in held facts`,
+        detail: `${HINT_MARK}. A check noticed this hint, the machine's work, in the hypothesis layer. The check's condition is data: ${condition ? JSON.stringify(condition) : "as its definition states"}. It is counted against ${den.label || "its stated set"}${Number.isFinite(den.counted) ? ` (${den.counted} counted on the last full pass)` : ""}, and its derivation cites every row it rests on. This hint is a pattern worth a look: never a finding, never a basis for a claim, and it says nothing about anyone. Dispose of it, or take it up as your own hunch or hypothesis.`,
         basis: {
           source: "people.checkResults",
           check: c.check,
@@ -199075,7 +201877,7 @@ var NoticeProducers = class _NoticeProducers {
       }
     }
     const items = [];
-    const figure2 = (f17) => f17 && typeof f17 === "object" ? f17.value ?? null : f17 ?? null;
+    const figure3 = (f17) => f17 && typeof f17 === "object" ? f17.value ?? null : f17 ?? null;
     for (const [id, { projects: ps, x }] of byKey) {
       items.push({
         id,
@@ -199084,6 +201886,7 @@ var NoticeProducers = class _NoticeProducers {
         label: NOTICED_LABEL,
         layer: "hypothesis",
         by: "the machine's",
+        mark: HINT_MARK,
         case: this.#homesAt(ps, viewer),
         subject: {
           kind: "money_detector_result",
@@ -199092,8 +201895,8 @@ var NoticeProducers = class _NoticeProducers {
           version: x.version,
           about: x.subject ?? null
         },
-        summary: `Noticed: a pattern the detector "${x.detector_label ?? x.detector_id}" finds in held money facts`,
-        detail: `Noticed by a detector, the machine's, in the hypothesis layer: ${figure2(x.numerator) ?? "a part"} of ${figure2(x.denominator) ?? "its stated population"}, by the derivation it cites over each input. It is a pattern worth a look: never a finding, never a basis for a claim, and it says nothing about anyone. Dispose of it, or take it up as your own hunch or hypothesis.`,
+        summary: `${HINT_MARK}: a pattern the detector "${x.detector_label ?? x.detector_id}" finds in held money facts`,
+        detail: `${HINT_MARK}. A detector noticed this hint, the machine's work, in the hypothesis layer: ${figure3(x.numerator) ?? "a part"} of ${figure3(x.denominator) ?? "its stated population"}, by the derivation it cites over each input. This hint is a pattern worth a look: never a finding, never a basis for a claim, and it says nothing about anyone. Dispose of it, or take it up as your own hunch or hypothesis.`,
         basis: {
           source: "money-checks.noticed",
           detector: x.detector_id,
@@ -199171,13 +201974,14 @@ var NoticeProducers = class _NoticeProducers {
     }
     return { items, facts: { truncated: truncated3 } };
   }
-  /** R4: what held the AI half back (answers R19), in plain words: the switch, the account or the ceiling's refusal. */
+  /** R4: what held the AI half back (answers R19), in plain words: the switch, the account or the ceiling's refusal.
+   *  The group's Civicsmith is "your group's Civicsmith" to the member (DEC-149, T34-87). */
   static heldBackWords(h) {
     if (!h || typeof h !== "object") return "it was held back";
-    if (h.condition === "switch_off") return h.switch === "member" ? "your own switch for standing questions is off" : "the assistant's half of standing questions is switched off on this copy";
+    if (h.condition === "switch_off") return h.switch === "member" ? "your own switch for standing questions is off" : "the assistant's half of standing questions is switched off in your group's Civicsmith";
     if (h.condition === "no_account") return "you have no account of your own set for the assistant";
     if (h.condition === "ceiling") return filled12(h.translation) ? h.translation.replace(/\.$/, "") : "your own use limit is reached";
-    if (h.condition === "not_deployed") return "the assistant is not available on this copy";
+    if (h.condition === "not_deployed") return "the assistant is not available in your group's Civicsmith";
     return filled12(h.translation) ? h.translation.replace(/\.$/, "") : "it was held back";
   }
   /* ================================================================== R5 · duty occurrences come due (duties R7–R11)
@@ -199332,13 +202136,13 @@ var NoticeProducers = class _NoticeProducers {
     return { items, facts: {} };
   }
 };
-var OF10 = /* @__PURE__ */ new WeakMap();
+var OF11 = /* @__PURE__ */ new WeakMap();
 function noticeProducersOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let p3 = OF10.get(storage);
+  let p3 = OF11.get(storage);
   if (!p3) {
     p3 = new NoticeProducers({ host, storage, deps });
-    OF10.set(storage, p3);
+    OF11.set(storage, p3);
   }
   return p3;
 }
@@ -199408,7 +202212,11 @@ var QUEUE_OBLIGATION_KINDS = {
   /* T33-83 (R1; K1505 (15), K1594 (3); inquiry R54–R57): a dated wait a member set on an inquiry has come round. The
      member set it for themselves, so it is theirs to answer, never muted: by recording a look (R12's door,
      op=waitlook), a new date or the wait removed. Its producer is `notice-producers`' (its R6). */
-  "inquiry-recheck-due": "a date you set to look again at a question has come; look again (op=waitlook), set a new date or remove the wait \u2014 LIVE: notice-producers R6"
+  "inquiry-recheck-due": "a date you set to look again at a question has come; look again (op=waitlook), set a new date or remove the wait \u2014 LIVE: notice-producers R6",
+  /* T34-53 (R1; tasks R14, DEC-135 (2)): a project owner asked for a check, by an expertise the member declared or by
+     name, on something they can see. A task in `tasks` (R8 reads it as any task), so it leaves by its own act and never
+     by a mute: taken and recorded (op=checktake, op=checkrecord), or left (op=taskresolve closes this member's own). */
+  "check-requested": "a project owner asked for a check, by an expertise you declared or by name, on something you can see; take it (op=checktake), or leave it (DEC-135) \u2014 LIVE: tasks R14"
 };
 var QUEUE_FINDING_KINDS = {
   "missing_predecessor": "a required predecessor stage is absent (D-73) \u2014 LIVE: queue-producers/proposals.mjs",
@@ -199682,7 +202490,7 @@ CREATE TABLE IF NOT EXISTS finding_dispositions (
 `;
 
 // src/queue/index.mjs
-var QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Signal" });
+var QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Status" });
 var QUEUE_SORTS = Object.freeze(["added", "due", "case", "kind"]);
 var clampLimit5 = (limit, dflt, max) => {
   const n = limit === null || limit === void 0 || limit === "" ? NaN : Math.floor(Number(limit));
@@ -199893,7 +202701,7 @@ var Queue = class _Queue {
    *  sorts on one value of the item; an item without it goes after those with it, and items without it, and ties, keep
    *  R6's order among themselves.
    *    default, `case`  the item's nearest home ancestor (`case.ancestors`, the least depth, then id), ordered by that
-   *                     depth, then that id; within one case R6's order is to-dos, then noticed, then signals, then id.
+   *                     depth, then that id; within one case R6's order is to-dos, then noticed, then status items, then id.
    *                     DEC-110 (3)'s default IS grouping by case; the two part when its collapsing (DEC-110 (2)) lands.
    *    `added`          newest first, by when the item arose: its `age.since`, else `now` less `age.ms`.
    *    `due`            soonest first, by its `due` (`YYYY-MM-DD`, queue-producers R25).
@@ -200268,7 +203076,10 @@ var Queue = class _Queue {
     "attribution-unchosen": " This one is a case edition being prepared that reaches an observation you authored, keyed by the edition and the observation rather than by a task: it leaves when you choose a credit level for it (op=attribute), or when the edition no longer reaches it, or is signed or replaced.",
     "docket-core-due": " This one is an item the docket of a case you manage must list, keyed by the case, the item's kind and what it refers to rather than by a task: it stays until it is done, and it leaves when you place it on the docket (op=docketprepare prepares the entry) or, for a submission, decline it with a reason (op=docketdecline), or when it is otherwise placed, receipted or disclosed.",
     "wizard-approval-requested": " This one is a wizard script's version submitted for your approval, keyed by the version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version is withdrawn or its script retired.",
-    "inquiry-recheck-due": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and the date rather than by a task, and it is yours alone: it leaves when you record that you looked (op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes."
+    "inquiry-recheck-due": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and the date rather than by a task, and it is yours alone: it leaves when you record that you looked (op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
+    /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
+       member's own; taking it and recording the check are its other ways out. */
+    "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays open to the others asked. Once someone takes it, everyone else's closes, naming who took it."
   });
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
    *  answers what a finding rests on being marked wrong (N345), a case edition it rests on being withdrawn or
@@ -200347,7 +203158,7 @@ var Queue = class _Queue {
         key: null,
         reason: "a_condition_is_acknowledged_or_muted",
         instead: "queuemute",
-        detail: "a signal is a fact about our own machinery, and the only thing a member does to it is acknowledge or QUIET it \u2014 personally, with the signal persisting and every other member still seeing it."
+        detail: "a status item is a fact about our own machinery, and the only thing a member does to it is acknowledge or QUIET it \u2014 personally, with the status item persisting and every other member still seeing it."
       };
     if (item3.kind === "standing-answer")
       return {
@@ -200391,7 +203202,7 @@ var Queue = class _Queue {
            a surface holding this block has every argument for. */
         definition_version: dv,
         requires: ["definitionVersion"],
-        detail: "this finding carries the identity the disposition act is keyed on, so Adopt, Defer and Dismiss are acts a member can actually complete. Send `definitionVersion` with the act \u2014 the version published here, which is the one this finding was derived against: a decision binds the declared flow the member READ, and one naming a version that has since been revised is refused DEFINITION_MOVED so the member can look again (framework \xA78.2, REC-211). The act still checks the pair against the definition tables (NO_SUCH_PROGRESSION, BAD_STAGE) \u2014 this says the item has an identity, not that the identity is valid, and those are different claims. THE SCOPE IS `instance` AND THAT IS A CLAIM ABOUT THE SUBJECT, NOT A DEFAULT (D-266, DEC-16): a progression stage is a fact about the SHARED record, so one act clears this finding under every case it appears in, which is dedup rather than one team silencing another."
+        detail: "this finding carries a progression stage, the identity the disposition act is keyed on, so Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a fact about the shared record, so one act clears it under every case (D-266, DEC-16)."
       };
     const homes = (item3.case && Array.isArray(item3.case.ancestors) ? item3.case.ancestors : []).filter((a) => a && a.type === "project" && typeof a.id === "string" && a.id.trim()).map((a) => a.id.trim()).sort();
     const fid = typeof item3.id === "string" && item3.id.trim() ? item3.id.trim() : null;
@@ -200408,7 +203219,7 @@ var Queue = class _Queue {
         ...acts,
         reason: "no_project_scope",
         instead: null,
-        detail: "this finding carries no progression stage, so a disposition of it is a JUDGMENT-LAYER act and is scoped to one project's feed (D-266, \xA77/D-216, R5) \u2014 and this item is filed under no project this viewer can see, so there is nothing for the decision to be recorded under. That is a bound on the SCOPE and not on the finding's identity: nothing here says the act is meaningless, only that this read found no team whose feed it would govern. WHAT DECLINING MEANS FOR A FINDING RECOMPUTED ON EVERY READ IS NOT OPEN: a disposition is keyed on the finding's STABLE IDENTITY, it stands until it is re-triaged whether or not the fact still fires, and it AGES the finding out of the open list instead of deleting it (D-79)."
+        detail: "this finding carries no progression stage, so its disposition is one project's judgment, scoped to that team's feed (D-266, \xA77/D-216), and it is filed under no project you can see: there is no team to record a decision for. A decision, where one can be made, ages the finding out of the team's open list until it is re-triaged, and deletes nothing (D-79)."
       };
     return {
       available: true,
@@ -200420,7 +203231,7 @@ var Queue = class _Queue {
       projects: homes,
       requires: ["project", "finding"],
       ...acts,
-      detail: "this finding carries no progression stage, and that is what makes its disposition a JUDGMENT-LAYER act rather than a fact about the shared record (D-266's scoping ruling, 2026-08-10: a dismissal is scoped to the key's own subject). A stance is expressly one project's own property (\xA77, D-216) and R5 makes forks at the judgment layer legitimate, so ONE TEAM'S DISMISSAL GOVERNS THAT TEAM'S FEED AND NOTHING ELSE \u2014 the same boundary this feed already enforces by refusing to offer op=versioncurrent across projects. `key` is null DELIBERATELY: the acting project is yours to name, and a plane that defaulted one where this item has several homes would be choosing whose judgment the record carries. Send `project` (one of `projects`) and `finding` beside your disposition and reason. The decision AGES this finding out of your team's open list and stands until it is re-triaged (D-79) \u2014 it deletes nothing, and it moves no other team's feed by even one item."
+      detail: "this finding carries no progression stage, so its disposition is a judgment-layer act, and a stance is one project's own property (\xA77, D-216): one team's decision governs that team's feed and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting project is yours to name) and `finding` with your disposition and reason. The decision ages the finding out of that team's open list until it is re-triaged, and deletes nothing (D-79)."
     };
   }
   /** R46 (N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13; DEC-85): the doors of the contradiction kinds, or null for any
@@ -200632,7 +203443,7 @@ var Queue = class _Queue {
       if (classOfKind(it.kind) !== it.class)
         return refusal28(
           "KIND_MISCLASSED",
-          `'${String(it.kind).slice(0, 60)}' is catalogued as "${QUEUE_CLASS_LABELS[classOfKind(it.kind)]}" and this item mints it as "${QUEUE_CLASS_LABELS[it.class]}". That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a signal would let one member silence a task the record believes reached a person, and minting a signal's kind as something noticed would make a fact about our own machinery undismissable.`,
+          `'${String(it.kind).slice(0, 60)}' is catalogued as "${QUEUE_CLASS_LABELS[classOfKind(it.kind)]}" and this item mints it as "${QUEUE_CLASS_LABELS[it.class]}". That is not a spelling mistake, it is a change of doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would let one member silence a task the record believes reached a person, and minting a status item's kind as something noticed would make a fact about our own machinery undismissable.`,
           {
             id: it.id ?? null,
             kind: it.kind ?? null,
@@ -200705,7 +203516,7 @@ var Queue = class _Queue {
           disposed_by: decided.map((p3) => ({
             id: p3,
             reason: "disposed_by_that_project",
-            detail: "this team decided this finding at the judgment layer, so it is no longer in their open list. It is still live for the teams named above, and their feed was not touched by that act (D-266, \xA77/D-216). Stated rather than performed silently: a home set that is quietly shorter is indistinguishable from nobody caring (DEC-16)."
+            detail: "this team decided this finding at the judgment layer, so it has left their open list; it is still live for the teams named above, whose feed that act did not touch (D-266)."
           }))
         };
         it.disposition = {
@@ -200818,7 +203629,7 @@ var Queue = class _Queue {
         snoozed_until: Object.fromEntries([...snoozes.entries()].sort()),
         suppressed,
         suppressed_count: suppressed.length,
-        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A signal or a noticed item can be here, quieted by case over the kinds you named or by its own id (`scope`); a to-do never can, because it leaves every list only when it is DONE. A quieted noticed item is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps."
+        detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed from the record and nothing here left another member's queue. A status item or a noticed item can be here, quieted by case over the kinds you named or by its own id (`scope`); a to-do never can, because it leaves every list only when it is DONE. A quieted noticed item is still open for the team and in op=proposals: it leaves the team's list only when it is adopted, deferred or dismissed, an act the record keeps."
       },
       /* D-266. The other half of the sentence `mute` has just finished — a
          FINDING leaves this list when it is dismissed, and here is every one
@@ -201138,7 +203949,7 @@ var Queue = class _Queue {
           reason: "UNKNOWN_KIND",
           ...sb.item ? { item: sb.item } : { kind: sb.kind },
           case: c ? c.id : null,
-          detail: sb.item ? "no queue item by that id is one this plane can classify: a noticed item's or a signal's id begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is not the same as forbidden, and this refusal is the first rather than the second." : "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
+          detail: sb.item ? "no queue item by that id is one this plane can classify: a noticed item's or a status item's id begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is not the same as forbidden, and this refusal is the first rather than the second." : "the notification catalogue does not name that kind. Unknown is not the same as forbidden, and this refusal is the first rather than the second.",
           available: mutableKinds
         };
       if (!PERSONALLY_MUTABLE_CLASSES.includes(sb.cls))
@@ -201223,7 +204034,7 @@ var Queue = class _Queue {
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches the kinds of signals and noticed items, never a to-do. Nothing left the record, nothing left another member's queue, no disposition was written, and a to-do on this case still reaches you: a to-do leaves every list only when it is DONE, which is record state."
+      detail: "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing left the record, nothing left another member's queue, no disposition was written, and a to-do on this case still reaches you: a to-do leaves every list only when it is DONE, which is record state."
     };
   }
   /** op=queuesnooze — defer a case's re-notification, for one member, until an
@@ -201500,7 +204311,7 @@ var Queue = class _Queue {
         kind: keyKind,
         /* R28 (K607): the same per-kind door R12 publishes on the item. */
         instead: keyClass === "CONDITION" ? "queuemute" : _Queue.doorOf(keyKind),
-        detail: `this names ${keyClass === "CONDITION" ? "a signal" : "a to-do"}, and ${keyClass === "CONDITION" ? "a signal" : "a to-do"} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its \`disposition.instead\`. Nothing was written. The rest of a selection is unaffected \u2014 under the per-item weight this item alone is kept, carrying this reason.`
+        detail: `this names ${keyClass === "CONDITION" ? "a status item" : "a to-do"}, and ${keyClass === "CONDITION" ? "a status item" : "a to-do"} is not DISPOSED: a disposition is an authored record act on something the record noticed, and op=queue publishes the act that does reach this item as its \`disposition.instead\`. Nothing was written. The rest of a selection is unaffected \u2014 under the per-item weight this item alone is kept, carrying this reason.`
       };
     }
     if (keyClass === "FINDING")
@@ -201639,13 +204450,13 @@ var Queue = class _Queue {
     };
   }
 };
-var OF11 = /* @__PURE__ */ new WeakMap();
+var OF12 = /* @__PURE__ */ new WeakMap();
 function queueOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let q10 = OF11.get(storage);
+  let q10 = OF12.get(storage);
   if (!q10) {
     q10 = new Queue({ host: ctx, storage, deps: { ...deps || {} } });
-    OF11.set(storage, q10);
+    OF12.set(storage, q10);
     const record = deps && deps.record || recordOf(ctx);
     record.declarePurge("queue", [
       { name: "queue_state", keys: ["case_id"] },
@@ -201675,12 +204486,11 @@ function queueOps(q10, url, body) {
     proposedispose: () => q10.proposeDispose({ ...body || {}, viewer: s("viewer"), identity: s("identity") })
   };
 }
-function queueAnswer(r, { gate, kinds: kinds3 } = {}) {
+function queueAnswer(r, { gate } = {}) {
   if (!r || r.ok !== true) return { status: 400, refusal: r };
   return { status: 200, result: {
     ...r,
-    items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),
-    vocabularies: vocabulariesFor(kinds3)
+    items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) }))
   } };
 }
 
@@ -201709,10 +204519,7 @@ async function queueFeedOp(url, store, {
   if (!qOut.answered) return storeSilent2("queue", qOut.correlation);
   const r = qOut.result;
   if (!r) return storeSilent2("queue");
-  const qkOut = await doAnswer2(store.fetch("http://do/actionkinds"));
-  if (qkOut.refused) return storeRefusal2(qkOut);
-  if (!qkOut.answered) return storeSilent2("queue", qkOut.correlation);
-  const a = queueAnswer(r, { gate, kinds: qkOut.result?.kinds });
+  const a = queueAnswer(r, { gate });
   if (a.status !== 200) return json17({ ok: false, ...a.refusal, store: storeName, tokenClass: cls3 }, a.status);
   return json17({ ok: true, result: a.result, store: storeName, tokenClass: cls3 }, 200);
 }
@@ -201912,7 +204719,7 @@ async function askOp({ req, url, env, viaSession, sessMember, grantMember }) {
 async function askOnObject(ctx, env, { member, session = null, grant = null, question, conversation, store = null }) {
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
-    return json15({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "no assistant member is bound to this plane. Nothing was asked." }, 503);
+    return json15({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
   const off = instanceSetupOf(ctx, env).assistantGate();
   if (off) return json15(off, 403);
   const c = credentialsOf(ctx);
@@ -201922,21 +204729,22 @@ async function askOnObject(ctx, env, { member, session = null, grant = null, que
     if (!g || g.ok !== true) return json15(g, 403);
     token = g.token;
   }
-  let ref = await c.accountReferenceFor({ member, act: { kind: "ask", member } });
+  let ref = await c.accountFor({ member, act: { kind: "ask", member } });
   if (!ref || ref.ok !== true) return json15(ref, 409);
   let suggestions = false;
-  try {
-    const st = c.accountReferenceState({ member, viewer: member });
-    suggestions = !!(st && st.ok === true && st.suggestions === true);
-  } catch {
-    suggestions = false;
-  }
+  if (ref.level === "member")
+    try {
+      const st = c.accountReferenceState({ member, viewer: member });
+      suggestions = !!(st && st.ok === true && st.suggestions === true);
+    } catch {
+      suggestions = false;
+    }
   const out = JSON.stringify({
     question,
     ...conversation !== void 0 ? { conversation } : {},
     ...store ? { store } : {},
     grant: token,
-    account: { kind: ref.kind, secret: ref.secret, member, suggestions }
+    account: { kind: ref.kind, level: ref.level, secret: ref.key, member, suggestions }
   });
   ref = null;
   let res;
@@ -203275,6 +206083,18 @@ function underGrant(store, url, op, body, answer) {
   const { grant: _g, viewer, ...args } = Object.fromEntries(url.searchParams);
   return store.logRead({ grant, op, args: { ...args, ...body && typeof body === "object" ? body : {} }, answer, viewer });
 }
+async function assistantFor(ctx, by, adminOnly) {
+  const member = typeof by === "string" && by ? by : null;
+  if (adminOnly && !membershipOf(ctx).isAdministrator(member && member.startsWith("member:") ? member.slice(7) : member))
+    return { refusal: notAnAdmin(member, "asking the assistant to draft the group's description") };
+  const off = instanceSetupOf(ctx).assistantGate();
+  if (off) return { refusal: off };
+  const use = aiRunsOf(ctx).aiUseCheck({ member });
+  if (use) return { refusal: use };
+  const account = await credentialsOf(ctx).accountFor({ member, act: { kind: "ask", member } });
+  if (!account || account.ok !== true) return { refusal: account || { ok: false, reason: "NO_ACCOUNT" } };
+  return { assistant: { on: true, account: { kind: account.kind, level: account.level } } };
+}
 async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
@@ -203327,8 +206147,33 @@ function controlPlaneRoutes(ctx, url, body) {
        before any model call (ai-runs R50's `aiUseCheck`; `{ok: true}` when under it), each call's use counted as an
        ask's (its R48), and the answer checked over the grant's read log (answers R4). */
     askceiling: () => aiRunsOf(ctx).aiUseCheck({ member: q10("viewer") }) ?? { ok: true },
-    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q10("viewer"), mode: "ask", usage: b.usage ?? null }),
+    /* K1798 (ai-runs R48): `calls`, the model calls the usage covers, so an ask of N calls counts N (absent, one). */
+    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q10("viewer"), mode: "ask", usage: b.usage ?? null, calls: b.calls }),
     askcheck: () => answersOf(ctx).check({ answer: b.answer ?? null, grant: q10("grant"), viewer: q10("viewer"), mode: "ask" }),
+    /* R57: the two drafts, routed here over their owners' map entries (plane spreads this map last), the assistant
+       resolved first (`assistantFor`); the handler's own arguments from the body, the stamps from the query, and a
+       caller's `assistant` never read. */
+    groupdescriptiondraft: async () => {
+      const a = await assistantFor(ctx, q10("by"), true);
+      return a.refusal ?? instanceSetupOf(ctx).groupDescriptionDraft({
+        answers: b.answers,
+        assistant: a.assistant,
+        viewer: q10("viewer"),
+        by: q10("by")
+      });
+    },
+    writinghelp: async () => {
+      const a = await assistantFor(ctx, q10("by"), false);
+      return a.refusal ?? wizardScriptsOf(ctx).writingHelp({
+        op: b.op,
+        field: b.field,
+        told: b.told,
+        draftHeld: b.draftHeld,
+        assistant: a.assistant,
+        by: q10("by"),
+        viewer: q10("viewer")
+      });
+    },
     inboxpullfile: () => pullAndFile(
       {
         capture: captureOf(ctx),
@@ -203415,7 +206260,7 @@ var SCREENS = Object.freeze([
     "record",
     "Your accountability record",
     ["list", "search"],
-    "The whole record as rows: every bundle the instance holds, with its type and its state."
+    "The whole record as rows: every bundle your group's Civicsmith holds, with its type and its state."
   ),
   screen(
     "finder",
@@ -203461,7 +206306,7 @@ var SCREENS = Object.freeze([
     "members",
     "Members & governance",
     ["memberlist", "adminarith", "signerlist", "memberadd", "memberset", "signeradd", "signerset"],
-    "Who holds what in this instance: the roster, each member's capabilities, and the invitations outstanding."
+    "Who holds what in your group's Civicsmith: the roster, each member's capabilities, and the invitations outstanding."
   ),
   screen(
     "add",
@@ -203553,7 +206398,7 @@ var SCREENS = Object.freeze([
     "published",
     "Case files",
     ["publishedmanifest", "verify"],
-    "The cases this instance has published, readable by somebody holding no credential at all."
+    "The cases your group's Civicsmith has published, readable by somebody holding no credential at all."
   ),
   screen(
     "review-copy",
@@ -203604,12 +206449,14 @@ var SCREENS = Object.freeze([
 ]);
 
 // src/plane/wizards.mjs
-var MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft"]);
+var MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp"]);
+var irreversibleActs = (rungs = RUNGS2) => Object.keys(rungs).filter((op) => rungs[op] === "irreversible");
 var wizardRegistration = () => ({
-  screens: SCREENS,
+  screens: SCREEN_REGISTRY,
   ops: OPS3,
   machineRefused: Object.keys(MACHINE_REFUSALS),
   machineDrafts: MACHINE_DRAFTS,
+  irreversible: irreversibleActs(),
   library: CIVICSMITH_LIBRARY
 });
 
@@ -204929,8 +207776,8 @@ function finding4(code, detail, extra = {}) {
 function derivationOf(leg2) {
   if (!isObj44(leg2)) return null;
   if (isObj44(leg2.derivation)) return leg2.derivation;
-  const flat = Object.fromEntries(["kind", "from", "to", "as_of", "method"].map((k) => [k, leg2[`derivation_${k}`]]));
-  return Object.values(flat).some((v) => v !== void 0) ? flat : null;
+  const flat2 = Object.fromEntries(["kind", "from", "to", "as_of", "method"].map((k) => [k, leg2[`derivation_${k}`]]));
+  return Object.values(flat2).some((v) => v !== void 0) ? flat2 : null;
 }
 function stringsIn2(v, out = []) {
   if (typeof v === "string") out.push(v);
@@ -205060,19 +207907,19 @@ var meeting_calendar_default = {
     for (const row9 of scope.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || []) {
       const id = /MeetingDetail\.aspx\?ID=(\d+)/i.exec(row9);
       if (!id) continue;
-      const flat = row9.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      const flat2 = row9.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
       const docs = {};
       for (const d of row9.match(/View\.ashx\?M=([A-Za-z]+)&ID=(\d+)[^"'\s]*/gi) || []) {
         const c = /M=([A-Za-z]+)&ID=(\d+)/i.exec(d);
         const kind = { A: "agenda", M: "minutes", AADA: "agenda", MADA: "minutes", IC: "packet" }[c[1].toUpperCase()];
         if (kind && !docs[kind]) docs[kind] = c[2];
       }
-      const when = parseDate2(flat);
-      const body = flat.split(/\d{1,2}\/\d{1,2}\/\d{4}/)[0].replace(/^[*\s]+/, "").replace(/[\s-]*\b(?:CANCELL?ED|RESCHEDULED)\b[\s-]*/gi, " ").trim();
-      entities2.push(entity(id[1], "meeting", flat.slice(0, 160), {
+      const when = parseDate2(flat2);
+      const body = flat2.split(/\d{1,2}\/\d{1,2}\/\d{4}/)[0].replace(/^[*\s]+/, "").replace(/[\s-]*\b(?:CANCELL?ED|RESCHEDULED)\b[\s-]*/gi, " ").trim();
+      entities2.push(entity(id[1], "meeting", flat2.slice(0, 160), {
         body,
         date: iso5(when),
-        status: /\bCANCELL?ED\b/i.test(flat) ? "cancelled" : /\bRESCHEDULED\b/i.test(flat) ? "rescheduled" : "scheduled",
+        status: /\bCANCELL?ED\b/i.test(flat2) ? "cancelled" : /\bRESCHEDULED\b/i.test(flat2) ? "rescheduled" : "scheduled",
         agenda: docs.agenda || null,
         minutes: docs.minutes || null
       }));
@@ -205345,18 +208192,18 @@ var meeting_minutes_default = {
    *  prose. So NONE of the shared signals appears below, and family (1) is a RATE. */
   detect(ctx) {
     const t2 = String(ctx.text || "");
-    const flat = flatten(t2);
+    const flat2 = flatten(t2);
     const signals = [];
     const named = selfNaming(t2, MINUTES_MASTHEAD);
     const furniture = named >= FURNITURE_RECURS;
     if (furniture) signals.push(`names itself as minutes on ${named} lines, which is page furniture`);
     else if (named) signals.push(`names itself as minutes once (${named}), which a reference also does`);
-    const motion = MOTION_MADE.test(flat) && MOTION_RESULT.test(flat);
+    const motion = MOTION_MADE.test(flat2) && MOTION_RESULT.test(flat2);
     if (motion) signals.push("motions made, seconded and carried or failed");
-    const tallies = (flat.match(new RegExp(TALLY_LABEL.source, "gi")) || []).length;
+    const tallies = (flat2.match(new RegExp(TALLY_LABEL.source, "gi")) || []).length;
     if (tallies >= 2) signals.push(`${tallies} roll-call vote tally label(s)`);
     const outcome = motion || tallies >= 2;
-    const frame = CONVENED.test(flat) && ADJOURNED.test(flat);
+    const frame = CONVENED.test(flat2) && ADJOURNED.test(flat2);
     if (frame) signals.push("a meeting that convened and adjourned at stated times");
     const roster = selfNaming(t2, ROSTER_LABEL) >= 2;
     if (roster) signals.push("an attendance roster");
@@ -205401,7 +208248,7 @@ var meeting_minutes_default = {
       offsets.push(last);
     }
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
-    const flat = flatten(raw);
+    const flat2 = flatten(raw);
     const filePats = minutesFileLines(ctx);
     const isMinutesFurniture = minutesFurniture(ctx);
     const bodyEnds = vocabPatterns(ctx, "bodies", LINE_END);
@@ -205433,8 +208280,8 @@ var meeting_minutes_default = {
       }
     }
     const body_why = body ? null : !bodyEnds.length ? "no active jurisdiction profile says how a body is named, so which body met is not read" : "no single line of this document names the body at the rate a running header does, so which body met is not stated here rather than guessed from one line";
-    const convened = clockOf(flat, CONVENED);
-    const adjourned = clockOf(flat, ADJOURNED);
+    const convened = clockOf(flat2, CONVENED);
+    const adjourned = clockOf(flat2, ADJOURNED);
     let status = null;
     for (const l2 of lines2) {
       const m = MINUTES_MASTHEAD.exec(l2);
@@ -205632,7 +208479,7 @@ var agendaFurniture = (ctx) => {
   const local = vocabPatterns(ctx, "furniture");
   return (l2) => FURNITURE.some((re) => re.test(l2)) || anyMatch(local, l2);
 };
-var MONTHS3 = {
+var MONTHS4 = {
   january: 0,
   february: 1,
   march: 2,
@@ -205649,7 +208496,7 @@ var MONTHS3 = {
 var parseLongDate = (s) => {
   const m = /([A-Za-z]+) (\d{1,2}), (\d{4})/.exec(String(s || ""));
   if (!m) return null;
-  const mo = MONTHS3[m[1].toLowerCase()];
+  const mo = MONTHS4[m[1].toLowerCase()];
   if (mo == null) return null;
   return new Date(Date.UTC(+m[3], mo, +m[2])).toISOString().slice(0, 10);
 };
@@ -205875,8 +208722,8 @@ var HEADING_MAX = 64;
 var SIGNOFF = /\bRespectfully\s+submitted\b/i;
 var PREPARED = /\bPrepared\s+by\s*:/i;
 var reportTitlePatterns = (ctx) => vocabPatterns(ctx, "report_titles");
-function memoHeader(flat) {
-  const hits = [...flat.matchAll(MEMO_LABEL)].map((m) => ({ i: m.index, k: m[1].toUpperCase() }));
+function memoHeader(flat2) {
+  const hits = [...flat2.matchAll(MEMO_LABEL)].map((m) => ({ i: m.index, k: m[1].toUpperCase() }));
   for (let a = 0; a < hits.length; a++) {
     if (hits[a].i > 2500) break;
     const seen = /* @__PURE__ */ new Map();
@@ -205890,7 +208737,7 @@ function memoHeader(flat) {
       const at34 = {};
       for (const [k, i] of seen) {
         const next = all.find((x) => x > i);
-        const rest = flat.slice(i, next != null ? Math.min(next, i + 200) : i + 160).replace(/^\s*\w+\s*:\s*/, "");
+        const rest = flat2.slice(i, next != null ? Math.min(next, i + 200) : i + 160).replace(/^\s*\w+\s*:\s*/, "");
         at34[k.toLowerCase()] = rest.trim() || null;
       }
       return { fields: at34, labels: seen.size, span: hits[b].i - hits[a].i, at: hits[a].i };
@@ -205935,13 +208782,13 @@ var staff_report_default = {
    *  appears as a heading in one set of minutes. */
   detect(ctx) {
     const t2 = String(ctx.text || "");
-    const flat = flatten(t2);
+    const flat2 = flatten(t2);
     const signals = [];
-    const memo = memoHeader(flat);
+    const memo = memoHeader(flat2);
     if (memo) signals.push(`a memorandum header of ${memo.labels} labels in ${memo.span} characters at the top`);
     const secs = reportSections(t2, reportSectionPatterns(ctx));
     if (secs.length) signals.push(`${secs.length} report template section heading(s)`);
-    const signoff = SIGNOFF.test(flat) || PREPARED.test(flat);
+    const signoff = SIGNOFF.test(flat2) || PREPARED.test(flat2);
     if (signoff) signals.push("a staff sign-off");
     const titles = reportTitlePatterns(ctx);
     const titled = String(t2).split(/\r?\n/).some((l2) => titles.some((re) => re.test(l2.trim())));
@@ -205969,9 +208816,9 @@ var staff_report_default = {
    *  reference this reader never saw must not read as one the document lacks. */
   parse(ctx) {
     const raw = String(ctx.text || "");
-    const flat = flatten(raw);
+    const flat2 = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
-    const memo = memoHeader(flat);
+    const memo = memoHeader(flat2);
     const f17 = memo && memo.fields || {};
     const sections = reportSectionPatterns(ctx);
     const secs = reportSections(raw, sections);
@@ -205995,7 +208842,7 @@ var staff_report_default = {
         let best = null;
         for (const e2 of vocabulary(ctx, "recommendation_openers")) {
           const re = vocabRegex(e2.pattern, (s) => `(?<![A-Za-z0-9])(?:${s})(?![A-Za-z0-9])[^.]{0,500}\\.`);
-          const m = re && re.exec(flat);
+          const m = re && re.exec(flat2);
           if (m && (!best || m.index < best.index)) best = m;
         }
         if (best) recommendation = best[0].trim();
@@ -206041,7 +208888,7 @@ var staff_report_default = {
       date: f17.date || null,
       recommendation,
       sections: secs.length,
-      signed_off: SIGNOFF.test(flat) || PREPARED.test(flat),
+      signed_off: SIGNOFF.test(flat2) || PREPARED.test(flat2),
       also_satisfies: alsoSatisfies(ctx, "staff_report"),
       at: ctx.at || null
     };
@@ -206537,9 +209384,9 @@ var RECITAL = /\bWHEREAS\b/gi;
 var regCaptions = (ctx) => enactmentPatterns(ctx, { blankNumber: true });
 var CODIFYING = /\b(?:is\s+hereby\s+(?:amended|added|repealed|deleted)|hereby\s+(?:amended|repealed)|Municipal\s+Code\s+(?:Section|Chapter))\b/gi;
 var regBodyEnds = (ctx) => vocabPatterns(ctx, "bodies", (re) => `(?:${re})[^A-Za-z0-9]{0,40}$`);
-function ownCaption(flat, captions, bodies) {
-  for (const { m, tag: tag2 } of allMatches(captions, flat)) {
-    const before2 = flat.slice(Math.max(0, m.index - 120), m.index);
+function ownCaption(flat2, captions, bodies) {
+  for (const { m, tag: tag2 } of allMatches(captions, flat2)) {
+    const before2 = flat2.slice(Math.max(0, m.index - 120), m.index);
     if (anyMatch(bodies, before2) || anyMatch(bodies, before2.toUpperCase()))
       return { m, kind: tag2.kind, number: enactmentNumber(tag2.forms, m.groups && m.groups.num) };
   }
@@ -206641,18 +209488,18 @@ var regulation_default = {
    *  no enacting formula at all. */
   detect(ctx) {
     const t2 = String(ctx.text || "");
-    const flat = flatten(t2);
+    const flat2 = flatten(t2);
     const signals = [];
-    const enacting = ENACTING.test(flat);
+    const enacting = ENACTING.test(flat2);
     if (enacting) signals.push("an enacting formula in the operative voice");
-    const recitals = (flat.match(RECITAL) || []).length;
+    const recitals = (flat2.match(RECITAL) || []).length;
     if (recitals >= 2) signals.push(`a recital chain of ${recitals} WHEREAS clause(s)`);
-    const caption = allMatches(regCaptions(ctx), flat).length > 0;
+    const caption = allMatches(regCaptions(ctx), flat2).length > 0;
     if (caption) signals.push("an instrument caption");
-    const codify = (flat.match(CODIFYING) || []).length + allMatches(codePatterns(ctx), flat).length;
+    const codify = (flat2.match(CODIFYING) || []).length + allMatches(codePatterns(ctx), flat2).length;
     if (codify) signals.push(`${codify} codification phrase(s)`);
     const heads = codeHeads(ctx, t2);
-    if ((heads.first || heads.count >= 2) && !ownCaption(flat, regCaptions(ctx), regBodyEnds(ctx))) {
+    if ((heads.first || heads.count >= 2) && !ownCaption(flat2, regCaptions(ctx), regBodyEnds(ctx))) {
       signals.push(`${heads.count} section heading(s) of ${heads.label}`);
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     }
@@ -206683,15 +209530,15 @@ var regulation_default = {
    *  not a fact here and `number` being null is reported as exactly what it is. */
   parse(ctx) {
     const raw = String(ctx.text || "");
-    const flat = flatten(raw);
+    const flat2 = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
-    const enacts = ENACTING.test(flat);
-    const cap = ownCaption(flat, regCaptions(ctx), regBodyEnds(ctx));
+    const enacts = ENACTING.test(flat2);
+    const cap = ownCaption(flat2, regCaptions(ctx), regBodyEnds(ctx));
     const number = cap && cap.number ? cap.number : null;
-    const instrument = cap ? cap.kind : /\bORDAIN/i.test(flat) ? "ordinance" : null;
+    const instrument = cap ? cap.kind : /\bORDAIN/i.test(flat2) ? "ordinance" : null;
     let title = null;
     if (cap) {
-      const after = flat.slice(cap.m.index + cap.m[0].length, cap.m.index + cap.m[0].length + 2500);
+      const after = flat2.slice(cap.m.index + cap.m[0].length, cap.m.index + cap.m[0].length + 2500);
       const blanks = vocabPatterns(ctx, "template_blanks", null, "g");
       for (const s of after.split(/(?<=\.)\s+/)) {
         const t2 = s.trim();
@@ -206707,7 +209554,7 @@ var regulation_default = {
         break;
       }
     }
-    const recitals = (flat.match(RECITAL) || []).length;
+    const recitals = (flat2.match(RECITAL) || []).length;
     const entities2 = [];
     const seen = /* @__PURE__ */ new Map();
     const take = (key, kind, label, facts, offset) => {
@@ -207173,7 +210020,7 @@ function namedAs(selfLines, kind) {
   return { as, only_other: selfLines.length > 0 && !as.length };
 }
 var MONTH = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
-var MONTHS4 = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+var MONTHS5 = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 var DATE_IN_ROWS = new RegExp(`\\b${MONTH}\\.?\\s+\\d{1,2}\\b|\\b\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}\\b`, "gi");
 var FULL_DATE = new RegExp(`\\b(${MONTH})\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b|\\b(\\d{1,2})[/.-](\\d{1,2})[/.-](\\d{2,4})\\b|\\b(${MONTH})\\.?,?\\s+(\\d{4})\\b`, "i");
 function datesIn(text7) {
@@ -207187,7 +210034,7 @@ function statedDate(lines2) {
     const text7 = m[0];
     const offset = x.offset + m.index;
     if (m[1]) {
-      const mo2 = MONTHS4.indexOf(m[1].slice(0, 3).toLowerCase()) + 1;
+      const mo2 = MONTHS5.indexOf(m[1].slice(0, 3).toLowerCase()) + 1;
       return { text: text7, date: `${m[3]}-${pad2(mo2)}-${pad2(m[2])}`, precision: "day", offset };
     }
     if (m[4]) {
@@ -207200,7 +210047,7 @@ function statedDate(lines2) {
         ...y ? {} : { why: "the line states a two-digit year, which is not expanded" }
       };
     }
-    const mo = MONTHS4.indexOf(m[7].slice(0, 3).toLowerCase()) + 1;
+    const mo = MONTHS5.indexOf(m[7].slice(0, 3).toLowerCase()) + 1;
     return { text: text7, date: `${m[8]}-${pad2(mo)}`, precision: "month", offset };
   }
   return null;
@@ -209409,6 +212256,15 @@ function sheetRecompute(env, storeName) {
     return r.json();
   };
 }
+function ratificationWorker({ env, door, namespace }) {
+  return {
+    env,
+    stub: { fetch: (u, init) => door(u instanceof Request ? u : new Request(u, init)) },
+    get storeName() {
+      return namespace();
+    }
+  };
+}
 
 // src/plane/store.mjs
 var STEP = "control-plane";
@@ -209492,7 +212348,6 @@ var Store = class extends DurableObject {
       calculations,
       retrieval,
       credentials: credentialsOf(ctx),
-      relations: () => ({ projection: PROJECTION_RELATION }),
       ceilingRefusal: (member, at34) => aiRunsOf(ctx, env).aiUseCheck({ member, at: at34 }),
       /* K1690 (instance-setup R55): the copy's assistant switch, read before any model turn. */
       assistantGate: () => instanceSetupOf(ctx, env).assistantGate(),
@@ -209505,10 +212360,14 @@ var Store = class extends DurableObject {
     const docket = docketOf(ctx, { env });
     publicReadOf(ctx, { docket });
     networkNoticesOf(ctx, { env, attestation, docket });
+    ratificationOf(ctx, { worker: ratificationWorker({
+      env,
+      door: (req) => this.fetch(req),
+      namespace: () => this.#ownNamespace() || "bio"
+    }) });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
-    ratificationOf(ctx);
     strengthOf(ctx, { retrieval, acceptedWork });
     registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
@@ -209552,9 +212411,14 @@ var Store = class extends DurableObject {
       answers: answersOf(ctx),
       inquiry: inquiryOf(ctx)
     });
-    queueOf(ctx, { env, filingTemplates, localFacts, docket, caseImport, noticeProducers }).migrate();
+    const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers };
+    const queueProducers = queueProducersOf(ctx, Object.fromEntries(
+      Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== void 0).map((k) => [k, queueDeps[k]])
+    ));
+    queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
-    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
+    const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
+    ctx.blockConcurrencyWhile(async () => instanceSetup.start());
   }
   /* R3: record-core's `RECORD_SCHEMA` first, then each owner's `migrate()` in this order. */
   #migrate() {

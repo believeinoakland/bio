@@ -1,5 +1,5 @@
-/* control-plane: THE RECORD STORE'S DOOR (R25–R27, R46, R53). `dispatch(req, store)` is the one frame every Durable Object
-   request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
+/* control-plane: THE RECORD STORE'S DOOR (R25–R27, R46, R53, R57). `dispatch(req, store)` is the one frame every Durable
+   Object request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
    `store.routes(url, body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable
    project (R27), a purge's hold check (R46), the `{ok: true, result}` envelope, and the one catch (R25). Moved from
    legacy-store's `Store.fetch` at control-plane's extraction (built T12, K93; re-applied T13 by N333). The Durable Object
@@ -18,6 +18,8 @@ import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { askAdmits } from "../answers/scope.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
+import { membershipOf, notAnAdmin } from "../membership/index.mjs";
+import { instanceSetupOf } from "../setup.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
 import { pullAndFile } from "./pull.mjs";
 
@@ -221,6 +223,25 @@ function underGrant(store, url, op, body, answer) {
   return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer });
 }
 
+/* R57 (DEC-152, DEC-153; K1755, K1837): THE ASSISTANT, RESOLVED PER ACT BEFORE A DRAFT'S HANDLER. For the stamped member
+   `by`, in this order: an administrator's own act (`groupdescriptiondraft`) refuses anyone else membership's
+   `NOT_AN_ADMIN` (its R84); instance-setup's switch, `ASSISTANT_OFF` (its R55); ai-runs' check before any model call,
+   `AI_NO_ACCOUNT` and the two ceilings (its R50, R52); then the account credentials answers for the member's act (its
+   R35), any other refusal of it relayed as given. Admitted, the handler receives `{on, account: {kind, level}}`: which
+   account serves, never the key, which stays in credentials. */
+async function assistantFor(ctx, by, adminOnly) {
+  const member = typeof by === "string" && by ? by : null;
+  if (adminOnly && !membershipOf(ctx).isAdministrator(member && member.startsWith("member:") ? member.slice(7) : member))
+    return { refusal: notAnAdmin(member, "asking the assistant to draft the group's description") };
+  const off = instanceSetupOf(ctx).assistantGate();
+  if (off) return { refusal: off };
+  const use = aiRunsOf(ctx).aiUseCheck({ member });
+  if (use) return { refusal: use };
+  const account = await credentialsOf(ctx).accountFor({ member, act: { kind: "ask", member } });
+  if (!account || account.ok !== true) return { refusal: account || { ok: false, reason: "NO_ACCOUNT" } };
+  return { assistant: { on: true, account: { kind: account.kind, level: account.level } } };
+}
+
 /* R26: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R27;
    `store.namespace()` (the object's own name, plane R2) and `store.purgeHeld({bundleId})` (`actions`' R60 reader, plane
    R14), each a function asked at a purge and never before, for R46. */
@@ -264,7 +285,7 @@ export async function dispatch(req, store) {
    its map (`by` spread, then overridden, as `signeradd`); R50's unattributed refusal count (`wizardrefusaltally`, the
    Worker's tally of a refusal it answered to a member's session, handed to `wizard-scripts.tallyRefusal` with the op and
    the code alone; store-internal, op-declarations R6, so no caller reaches it, as capture's `doorbellrefused`); and R36's pull, a route of its own beside capture's `inboxpull`, which the Worker's
-   `op=inboxpull` (and `op=inboxresolve` at `pulled`) addresses. */
+   `op=inboxpull` (and `op=inboxresolve` at `pulled`) addresses; and R57's two drafts. */
 export function controlPlaneRoutes(ctx, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
@@ -291,8 +312,22 @@ export function controlPlaneRoutes(ctx, url, body) {
        before any model call (ai-runs R50's `aiUseCheck`; `{ok: true}` when under it), each call's use counted as an
        ask's (its R48), and the answer checked over the grant's read log (answers R4). */
     askceiling: () => aiRunsOf(ctx).aiUseCheck({ member: q("viewer") }) ?? { ok: true },
-    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q("viewer"), mode: "ask", usage: b.usage ?? null }),
+    /* K1798 (ai-runs R48): `calls`, the model calls the usage covers, so an ask of N calls counts N (absent, one). */
+    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q("viewer"), mode: "ask", usage: b.usage ?? null, calls: b.calls }),
     askcheck: () => answersOf(ctx).check({ answer: b.answer ?? null, grant: q("grant"), viewer: q("viewer"), mode: "ask" }),
+    /* R57: the two drafts, routed here over their owners' map entries (plane spreads this map last), the assistant
+       resolved first (`assistantFor`); the handler's own arguments from the body, the stamps from the query, and a
+       caller's `assistant` never read. */
+    groupdescriptiondraft: async () => {
+      const a = await assistantFor(ctx, q("by"), true);
+      return a.refusal ?? instanceSetupOf(ctx).groupDescriptionDraft({ answers: b.answers, assistant: a.assistant,
+                                                                       viewer: q("viewer"), by: q("by") });
+    },
+    writinghelp: async () => {
+      const a = await assistantFor(ctx, q("by"), false);
+      return a.refusal ?? wizardScriptsOf(ctx).writingHelp({ op: b.op, field: b.field, told: b.told, draftHeld: b.draftHeld,
+                                                             assistant: a.assistant, by: q("by"), viewer: q("viewer") });
+    },
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),

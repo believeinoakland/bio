@@ -17,7 +17,9 @@ const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "
   /* T31 (queue-producers R33, DEC-121 (1)) */
   "wizard-approval-requested",
   /* T33-83 (notice-producers R6; K1505 (15), K1594 (3)) */
-  "inquiry-recheck-due"];
+  "inquiry-recheck-due",
+  /* T34-53 (tasks R14; DEC-135 (2)) */
+  "check-requested"];
 /* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
    docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */
@@ -94,6 +96,10 @@ test("R1: every catalogued kind answers its class, anything else null, and every
   // K921: the review request and the local fact say what is owed, each with its own door
   assert.match(QUEUE_OBLIGATION_KINDS["template-review-requested"], /a member asked you to review a filing template's version/);
   assert.match(QUEUE_OBLIGATION_KINDS["local-fact-due"], /a holiday calendar or office hours one of the group's deadlines reads is unconfirmed or due for confirmation/);
+  // DEC-135 (2): the check request says who asked, by what, on what, and the member's two answers
+  assert.match(QUEUE_OBLIGATION_KINDS["check-requested"], /a project owner asked for a check, by an expertise you declared or by name, on something you can see; take it \(op=checktake\), or leave it/);
+  for (const v of ["check-request", "check-requested ", "CHECK-REQUESTED", "check_requested", "OBLIGATION::check-requested"])
+    assert.equal(classOfKind(v), null, v);
   // DEC-102 item 3: the unchosen credit level says what the edition reaches and what the member does
   assert.match(QUEUE_OBLIGATION_KINDS["attribution-unchosen"], /a case edition being prepared reaches an observation you authored and you have chosen no credit level for it; choose one/);
   assert.match(QUEUE_CONDITION_KINDS["action-clock-overdue"], /deadline on one of the group's actions passed while its entry is still pending/);

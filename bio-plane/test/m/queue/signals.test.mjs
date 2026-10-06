@@ -61,7 +61,7 @@ test("R1, R5, R11, R12: each sweep-* and notice-* signal is minted as a CONDITIO
     assert.equal(it.disposition.instead, "queuemute", id);
     assert.ok(Array.isArray(it.options), id);
   }
-  assert.equal(f.class_labels.CONDITION, "Signal");
+  assert.equal(f.class_labels.CONDITION, "Status");
   assert.ok(f.classes.includes("CONDITION"));
   // the notices go to the owners: bob sees the same three; a member of no project, and a machine reader, see none
   assert.deepEqual(signals(w.feed("bob")), [...SWEEP_IDS, ...NOTICE_IDS].sort());

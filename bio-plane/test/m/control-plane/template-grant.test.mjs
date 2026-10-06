@@ -125,7 +125,7 @@ test("R44: every caller the grant does not admit receives filing-templates' dead
   /* one answer, whoever built it (the door for a stranger, the module for a dead secret) and whichever door was asked */
   assert.equal(texts.size, 1, [...texts].join("\n----\n"));
   const [text] = texts;
-  assert.equal(text, JSON.stringify({ ok: false, ...noTemplateGrant() }, null, 1));
+  assert.equal(text, JSON.stringify({ ok: false, ...noTemplateGrant() }));   /* compact since N630 (K1864 (1)) */
   const body = JSON.parse(text);
   assert.deepEqual([body.ok, body.reason, body.code, body.check], [false, "NO_TEMPLATE_GRANT", "NO_TEMPLATE_GRANT", "C-125.17"]);
   assert.equal(typeof body.translation, "string");

@@ -92,6 +92,17 @@ function busy(extra = {}) {
       { case: "CASE-D", kind: "response", ref: "DKT-2026-0001", edition: 1, since: iso(NOW - 7) }] }) },
     ...extra,
   });
+  /* R37: an edition waiting, one published, one stopped (publication R69); R39: a copy whose base moved (wizard-scripts R26) */
+  const ed = (c, state, over = {}) => ({ case: c, edition: 1, project: "PRJ-A", state, signer: "KEY-1", set_by: "alice", signed_at: iso(NOW - 9),
+    at: { date: "2026-09-03", time: "09:30", zone: "UTC" }, publish_at: "2026-09-03T09:30:00Z", moves: [], outcome_at: null, reasons: null, ...over });
+  w.fakes.publication.scheduledEditions = () => ({ ok: true, limit: 500, cursor: null, editions: [ed("CASE-SW", "waiting"),
+    ed("CASE-SP", "published", { outcome_at: iso(NOW - 2) }),
+    ed("CASE-SS", "stopped", { outcome_at: iso(NOW - 1), reasons: [{ code: "X", translation: "A source changed after it was signed." }] })] });
+  w.fakes.wizardScripts.baseUpdates = () => ({ ok: true, cursor: null, truncated: false, entries: [{ copy: "WIZ-C", name: "Copy",
+    project: "PRJ-A", base: "WIZ-1", base_name: "File", based_on: "WIZ-1@1", base_version: "WIZ-1@2", found_at: iso(NOW - 3), recipients: ["alice"] }] });
+  /* R38: instance-setup's read, registered at start */
+  w.p.registerPlaceArrivals(() => ({ ok: true, arrivals: [{ name: "Riverton", profile: "us-xx-riverton", profile_name: "City of Riverton",
+    covers: ["Riverton"], found_at: iso(NOW - 4) }] }));
   w.member("alice", { role: "admin" });
   w.bundle("INQ-S", "inquiry"); w.bundle("INQ-A", "inquiry"); w.bundle("INF-1");
   w.bundle("PRJ-A", "project"); w.bundle("PRJ-B", "project");
@@ -120,7 +131,9 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
                    "template-review-requested", "local-fact-due", "litigation-hold-released", "docket-core-due",
                    "edition-withdrawn", "edition-contested", "cited-newer-edition", "cited-edition-withdrawn",
                    "followed-case-entry", "cited-docket-entry-refused", "cited-docket-unreadable",
-                   "wizard-withdrawn", "wizard-restored", "wizard-approval-requested"])
+                   "wizard-withdrawn", "wizard-restored", "wizard-approval-requested",
+                   "edition-scheduled", "edition-published-as-scheduled", "scheduled-edition-stopped", "place-profile-arrived",
+                   "wizard-base-updated"])
     assert.ok(kinds.has(k), k);
   for (const it of r.items) {
     assert.ok(!("disposition" in it), `${it.id}: the mint's`);
@@ -149,6 +162,11 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   assert.deepEqual(m["FINDING::edition-contested::INF-1::DKT-2026-0002"].options, [{ id: "opt", on: ["INF-1"] }]);
   assert.deepEqual(m["OBLIGATION::template-review-requested::TPL-1@1::alice"].options.map((o) => o.id), ["templatereview"]);
   assert.deepEqual(m["OBLIGATION::local-fact-due::profile:p/holidays/2026/*::unconfirmed"].options.map((o) => o.id), ["factconfirm", "opt"]);
+  /* R37's, R38's and R39's own acts (publication R68; instance-setup R14; wizard-scripts R4) */
+  assert.deepEqual(m["CONDITION::edition-scheduled::CASE-SW@1"].options.map((o) => o.id), ["publishatmove", "publishatcancel"]);
+  assert.deepEqual(m["CONDITION::place-profile-arrived::us-xx-riverton"].options.map((o) => o.id), ["profilesset"]);
+  assert.deepEqual(m["FINDING::wizard-base-updated::WIZ-C::WIZ-1@2::alice"].options.map((o) => o.id), ["wizardread", "wizardrevise"]);
+  assert.deepEqual(m["CONDITION::edition-scheduled::CASE-SW@1"].case.ancestors.map((a) => a.id), ["PRJ-A"]);
   // the homes are the walk's: the stance item is homed under both projects drawing on the question
   assert.deepEqual(m["FINDING::stance-changed-here-not-elsewhere::INQ-S::PRJ-A"].case.ancestors.map((a) => a.id), ["PRJ-A", "PRJ-B"]);
   // the facts, and one proposalsFeed read for both the findings and the dispositions
@@ -225,7 +243,7 @@ test("R11: no answer names a bundle the viewer may not see, and no count reveals
       [{ id: "PRJ-A", title: "A", current: { version: "v1", at: iso(NOW), by: "alice" } },
        ...(viewer === "member:alice" ? [] : [{ id: HID, title: "H", current: { version: "v2", at: iso(NOW), by: "x" } }])],
       { bound: 32, truncated: false }) },
-    publication: { caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
+    caseTensions: { caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
       tensions: [{ case: "CASE-1", edition: 1, member: HID, candidate: "cand-h", state: "open", depth: 1 }], resolved_since: [] }] }) },
   });
   w.member("alice"); w.bundle(HID, "project"); w.bundle("INF-V"); w.bundle("INQ-S", "inquiry"); w.bundle("PRJ-A", "project");
@@ -260,6 +278,10 @@ test("R12: a CONDITION earns an item only where a member's act can change it: it
   for (const it of conds) {
     /* R35: a signal about a watch (no document behind it) is changed by the watch's own acts: set its address again, end it */
     if (it.subject.kind === "import") { assert.deepEqual(it.options.map((o) => o.id), ["importwatch", "importunwatch"], it.id); continue; }
+    /* R37: a waiting edition is changed by its owners' acts on its time: move it, cancel it (publication R68) */
+    if (it.subject.kind === "case_edition") { assert.deepEqual(it.options.map((o) => o.id), ["publishatmove", "publishatcancel"], it.id); continue; }
+    /* R38: an arrival is changed by an administrator's choosing it under Places (instance-setup R14) */
+    if (it.subject.kind === "place_profile") { assert.deepEqual(it.options.map((o) => o.id), ["profilesset"], it.id); continue; }
     const docs = it.subject.kind === "bundle" || it.subject.kind === "action" ? [it.subject.id] : it.subject.bundles
       || (it.subject.kind === "capture_request" || it.subject.kind === "address" ? null : []);
     if (docs) assert.deepEqual(it.options, docs.length ? [{ id: "opt", on: docs }] : [], it.id);
@@ -298,9 +320,9 @@ function everyKind() {
       docketDependents: () => DOCKET_DEPENDENTS, citedCaseDependents: CITED_DEPENDENTS },
     corpusExport: { exportLog: () => ({ ok: true, limit: 200, truncated: false,
                      exports: [{ seq: 1, at: iso(NOW), scope: "working-corpus", bundles: 1, files: 1, note: null }] }) },
-    publication: { caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
-                     tensions: [{ candidate: "CC-D", member: "INF-1", state: "open", depth: 1 }] }] }),
-                   caseDocumentFacts: (c, e) => ({ ok: true, doc: { case_id: c, edition: e, authored_at: iso(NOW), sig_armored: null },
+    caseTensions: { caseTensions: () => ({ ok: true, cursor: null, cases: [{ case: "CASE-1", edition: 1, project: "PRJ-A",
+                     tensions: [{ candidate: "CC-D", member: "INF-1", state: "open", depth: 1 }] }] }) },
+    publication: { caseDocumentFacts: (c, e) => ({ ok: true, doc: { case_id: c, edition: e, authored_at: iso(NOW), sig_armored: null },
                      attribution: { current: [{ observation: "OBS-1", level: null }] } }) },
   });
   w.bundle("OBS-1", "observation");
@@ -323,7 +345,7 @@ function memberWords(item) {
   return out;
 }
 
-test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says 'obligation' or 'condition'; the codes, kinds and ids are unchanged", () => {
+test("R24 (DEC-107; DEC-131; H15, H19): no member-facing sentence of any item kind says 'obligation' or 'condition', and no summary, detail or option says 'signal'; the codes, kinds and ids are unchanged", () => {
   const r = everyKind().read("alice");
   const kinds = new Set(r.items.map((i) => i.kind));
   for (const k of ["contradiction-duty", "contradiction-lead", "contradiction-plurality", "contradiction-duty-unseen",
@@ -331,12 +353,19 @@ test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says '
                    "render-deferred", "plan-checkpoint-due", "objective-gap", "template-review-requested", "local-fact-due",
                    "attribution-unchosen", "litigation-hold-released", "docket-core-due", "edition-withdrawn", "edition-contested",
                    "cited-newer-edition", "cited-edition-withdrawn", "followed-case-entry", "cited-docket-entry-refused",
-                   "cited-docket-unreadable", "wizard-withdrawn", "wizard-restored", "wizard-approval-requested"])
+                   "cited-docket-unreadable", "wizard-withdrawn", "wizard-restored", "wizard-approval-requested",
+                   "edition-scheduled", "edition-published-as-scheduled", "scheduled-edition-stopped", "place-profile-arrived",
+                   "wizard-base-updated"])
     assert.ok(kinds.has(k), `the world produces ${k}`);
-  assert.ok(kinds.size >= 44, `every kind this module produces (${[...kinds].sort().join(", ")})`);
+  assert.ok(kinds.size >= 49, `every kind this module produces (${[...kinds].sort().join(", ")})`);
+  /* negative control: the check catches the word it forbids */
+  for (const bad of ["a signal", "Signals of the sweep", "SIGNAL"]) assert.match(bad, /\bsignals?\b/i);
   for (const it of r.items) {
     for (const [key, s] of memberWords(it))
       assert.doesNotMatch(s, /\b(obligation|condition)s?\b/i, `${it.id} ${key}: "${s}"`);
+    /* DEC-131: a CONDITION item is a "status" in member text, never a "signal": its summary, detail and options' words */
+    for (const [key, s] of [["summary", it.summary], ["detail", it.detail], ...(it.options || []).map((o) => ["option", o && o.label])])
+      if (typeof s === "string") assert.doesNotMatch(s, /\bsignals?\b/i, `${it.id} ${key}: "${s}"`);
     /* the codes unchanged: the classes, and ids keyed by them */
     assert.ok(["OBLIGATION", "FINDING", "CONDITION"].includes(it.class), it.id);
     assert.ok(it.id.startsWith(`${it.class}::`), it.id);
@@ -345,11 +374,41 @@ test("R24 (DEC-107; H15, H19): no member-facing sentence of any item kind says '
   assert.equal(m["CONDITION::governor-holding-host::h.example"].class, "CONDITION");
   assert.equal(m["OBLIGATION::contradiction::CC-D"].class, "OBLIGATION");
   assert.equal(m["OBLIGATION::contradiction-unseen::CN-D"].kind, "contradiction-duty-unseen");
-  /* the re-keyed words: a signal is our own machinery's fact, said as a signal */
-  assert.match(m["CONDITION::governor-holding-host::h.example"].basis.detail, /^a signal is a fact about OUR OWN machinery/);
-  assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a signal is a fact about OUR OWN machinery/);
+  /* the re-keyed words (DEC-131): a fact about our own machinery is a status, as machinery-producers answers it (its R9) */
+  assert.match(m["CONDITION::governor-holding-host::h.example"].basis.detail, /^a status is a fact about OUR OWN machinery/);
+  assert.match(m["CONDITION::render-deferred::CR-R"].basis.detail, /^a status is a fact about OUR OWN machinery/);
   assert.match(m["FINDING::contradiction::CC-L"].detail, /asks nothing of you: dismiss it or take it up/);
   assert.match(m["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].detail, /records whether what it set was met/);
+  /* R38: the place's arrival calls itself a status (DEC-131) */
+  assert.match(m["CONDITION::place-profile-arrived::us-xx-riverton"].detail, /This status is told once/);
+});
+
+test("T34-87 (DEC-149; K1784, K1811): each member-facing string that called the group's Civicsmith 'this instance' or 'this copy' says 'your group's Civicsmith'", () => {
+  const r = everyKind().read("alice");
+  const m = byId(r);
+  const YOURS = /your group's Civicsmith/;
+  const OLD = /\b(this|the) (instance|copy|plane)\b|\bserver\b/i;
+  const said = [];
+  /* index.mjs :218, the undetermined age's sentence (R36), as a reader with no zone held is told it */
+  const w = everyKind();
+  w.fakes.actions.place = () => ({ time_zone: null });
+  const unzoned = byId(w.read("alice"))["OBLIGATION::plan-checkpoint-due::PLN-1::1::p"].age;
+  said.push(["the undetermined age (R36)", unzoned.detail]);
+  /* :1623, export-performed's detail */
+  said.push(["export-performed", m["FINDING::export-performed::1"].detail]);
+  /* :3487, the cited-case finding's derivation, "a verified entry this copy read" */
+  said.push(["cited-newer-edition", m[`FINDING::cited-newer-edition::INQ-S::${"c".repeat(64)}#1`].basis.detail]);
+  /* :3560, the followed entry's detail; :3612, the refused entry's summary */
+  said.push(["followed-case-entry", m[`FINDING::followed-case-entry::${"c".repeat(64)}#3`].detail]);
+  said.push(["cited-docket-entry-refused", m[`FINDING::cited-docket-entry-refused::${"c".repeat(64)}#4`].summary]);
+  /* :3741, the restored wizard's detail */
+  said.push(["wizard-restored", m[`FINDING::wizard-restored::WIZ-1@1::${iso(NOW - 5)}`].detail]);
+  assert.equal(said.length, 6, "every row of draft-T34-dec149.md that stays in this module");
+  for (const [what, s] of said) {
+    assert.equal(typeof s, "string", what);
+    assert.match(s, YOURS, `${what}: "${s}"`);
+    assert.doesNotMatch(s, OLD, `${what}: "${s}"`);
+  }
 });
 
 test("R28 (DEC-114): no member-facing sentence of any item kind calls what an action plan addresses a 'subject'; the item key `subject`, the codes and kinds are unchanged", () => {

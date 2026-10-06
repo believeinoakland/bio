@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R53). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+/* control-plane: THE INSTANCE'S DOOR (R1–R57). The Worker's HTTP entry — routing, the stamps, the answer's decoration
    and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -16,7 +16,7 @@ import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHE
    order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
 import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
          aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
-         projectCreationGate } from "../admission/index.mjs";
+         projectCreationGate, queryGate } from "../admission/index.mjs";
 /* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
    one reader of a code's row (`families.mjs`). */
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
@@ -42,8 +42,9 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          TEMPLATE_DOOR_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS,
          NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR,
          DOCKET_BY } from "../op-declarations/index.mjs";
-/* R53 (K1674): the stamps T33's ops declare, op → keys (op-declarations R17–R20). */
-import { OP_STAMPS } from "../op-declarations/index.mjs";
+/* R53 (K1674): the stamps T33's ops declare, op → keys (op-declarations R17–R20); R55 (K1863 (7)): the registry's
+   aliases, alias → op (its R21). */
+import { OP_STAMPS, OP_ALIASES } from "../op-declarations/index.mjs";
 /* R53 (K1601, K1674): an ask's grant reads only its list (credentials R28). */
 import { AI_GRANT_OPS } from "../credentials/index.mjs";
 
@@ -70,7 +71,14 @@ const WIZARD_AUTHOR_ACTIONS = Object.freeze(["wizarddraft", "wizardrevise", "wiz
 const WIZARD_PROPOSAL_ACTIONS = Object.freeze(["wizardpropose"]);
 const WIZARD_VIEWER_OPS = Object.freeze(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
                                          "wizardpropose", "wizards", "wizardread", "wizardsat", "wizarduse",
-                                         "wizardcandidates", "wizardcheck"]);
+                                         "wizardcandidates", "wizardcheck",
+                                         /* T34 (wizard-scripts R23, R26; op-declarations R15, R28): the two reads it adds */
+                                         "startfrom", "baseupdates"]);
+
+/* R54 (DEC-133, DEC-136, DEC-132; op-declarations R22): membership's T34 administrator acts, routed through
+   `membershipOps` by the general forward with `by` stamped below; the doors and the two reads are answered above. */
+const MEMBERSHIP_ADMIN_ACTS = Object.freeze(["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke",
+  "joinlinkenable", "joinlinkset", "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"]);
 
 /* R51 (DEC-122 (3); N528): the policy every `text/html` response this door serves carries, so a browser loads no script,
    style, font, image or connection from another origin and sends nothing elsewhere. Both pages are single files with
@@ -214,8 +222,9 @@ async function caseReader(url, env, storeName, presentedAi) {
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
 
+/* N630 (K1717, K1864 (1)): compact JSON, no indentation, so no answer carries whitespace it does not need. */
 const json = (o, status = 200) =>
-  new Response(JSON.stringify(dec49Attach(o), null, 1), {
+  new Response(JSON.stringify(dec49Attach(o)), {
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
   });
 
@@ -369,7 +378,7 @@ function dec49Attach(o) {
    diagnostic a stranger cannot act on is not worth one. */
 const STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
 const STORE_SILENT_DETAIL =
-  "this instance could not consult its own record, so nothing here is a statement about the record. "
+  "this group's Civicsmith could not consult its own record, so nothing here is a statement about the record. "
   + "It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are "
   + "answers, and this is the absence of one. The question stands unanswered; ask again.";
 
@@ -788,6 +797,9 @@ export function makeFetch(hooks = {}) {
     const path = url.pathname.replace(/^\/api\/?/, "/");
     let op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const askedOp = op;   /* R50: the op the caller asked, before R36's re-route */
+    /* R55 (op-declarations R21): a requirement function's name that aliases an op is that op, before every gate: its
+       handler, its stamps and its answer, so the two answer alike. */
+    if (Object.hasOwn(OP_ALIASES, op)) op = OP_ALIASES[op];
     let spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
     /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
        any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
@@ -819,6 +831,9 @@ export function makeFetch(hooks = {}) {
     const refused = (r) => json(r.body, r.status);
     const unknownNamespace = namespaceGate(url);
     if (unknownNamespace) return refused(unknownNamespace);
+    /* R28 (K1861 (6)): admission's query gate, which never refuses: what an op may take only from the body (a door's key,
+       link and cover; the group key) and a public door's `token` leave the URL before anything reads it (R54, R56). */
+    queryGate(url, op);
     const presentedAi = await aiCredentialPresented(url, env, doAnswer);
     if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
@@ -931,6 +946,24 @@ export function makeFetch(hooks = {}) {
         const body = await req.json().catch(() => ({}));
         return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, {
           method: "POST", body: JSON.stringify(body) })), op);
+      }
+      /* R54 (membership R101, R104; admission R17): the group website's and the join page's calls, answered as the
+         invitation's two steps are, from the store the caller names (admission R3 lists them among the public ops that
+         address `scratch`: each namespace holds its own key and link). Only the body's key (or link), cover and the
+         website's approver cross, nothing of whoever called, and the one-time invitation is relayed once, never kept
+         here (R30). */
+      if (op === "websiteinvite" || op === "joinlinkinvite") {
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        const pass = op === "websiteinvite" ? { key: o.key, cover: o.cover, approvedBy: o.approvedBy } : { link: o.link, cover: o.cover };
+        return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, { method: "POST", body: JSON.stringify(pass) })), op);
+      }
+      /* R54 (membership R110): the group's self-description, the viewer read as admission's `readerOf` reads who is asking
+         (`""` for no one) in the store the caller names, so the public receives only what membership answers the public. */
+      if (op === "groupdescription") {
+        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred);
+        if (reader.silent) return storeSilent(reader.silent, reader.correlation);
+        return relayAnswer(invStub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
@@ -2062,6 +2095,12 @@ export function makeFetch(hooks = {}) {
     /* K407: who set the instance's profiles, the session's member; instance-setup refuses a `by` that is no administrator. */
     if (op === "profilesset")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R54 (op-declarations R22; membership R84): an administrator's T34 acts on the group's doors and settings, whose
+       `by` membership asks `isAdministrator` of as a member id: the custodial acts' expression, after any declared stamp,
+       so a caller's `by` names nobody and a machine credential is refused there NOT_AN_ADMIN. */
+    if (MEMBERSHIP_ADMIN_ACTS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+
     if (ROSTER_SELF_ACTIONS.includes(op))
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
     /* N364: the own-key acts (membership R89, R90), capture's pull, re-attestation and account (R65, R68, R69) and
@@ -2888,7 +2927,7 @@ export function makeFetch(hooks = {}) {
            nothing here kept it — losing it means minting another and revoking
            this one, which leaves both acts on the record where they belong. */
         token: secret,
-        tokenIsShownOnce: "This is the only time this instance will show this value. It is not stored "
+        tokenIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is not stored "
           + "and cannot be recovered — the record holds the credential's NAME and who created it, "
           + "never the value. If it is lost, withdraw this credential and create another.",
       }, store: storeName, tokenClass: cls }, 200);
@@ -2913,7 +2952,7 @@ export function makeFetch(hooks = {}) {
       return json({ ok: true, result: {
         ...issued.result,
         secret,
-        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a "
+        secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a "
           + "fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and "
           + "COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
         read: "op=reviewcopy&secret=<the value above>",
@@ -2935,7 +2974,7 @@ export function makeFetch(hooks = {}) {
       return json({ ok: true, result: {
         ...issued.result,
         secret,
-        secretIsShownOnce: "This is the only time this instance will show this value. It is stored only as a "
+        secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a "
           + "fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, "
           + "COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw "
           + "this grant and open another.",

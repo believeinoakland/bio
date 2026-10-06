@@ -939,10 +939,10 @@ const keep = (where, html) => { PHASES.push([where, html]); return html; };
   const h1 = keep("a class the plane declares it does not produce yet", q(c1));
   ok("§4 A DEFERRED CLASS SAYS NOBODY HAS BUILT THE THING THAT WOULD LOOK — silence there is not "
      + "evidence about the world",
-     /nothing on this plane raises one of these yet/.test(h1)
+     /nothing in your group's Civicsmith raises one of these yet/.test(h1)
      && /it says nobody has built the thing that would look/.test(h1));
   ok("§4 and the class it says that about is the one the RECORD named as deferred",
-     /<b>CONDITION<\/b> — nothing on this plane raises one of these yet/.test(h1));
+     /<b>CONDITION<\/b> — nothing in your group's Civicsmith raises one of these yet/.test(h1));
   ok("§4 a class that answered with none says the record LOOKED and raised none — a different sentence "
      + "from the one above, for a different fact",
      /<b>OBLIGATION<\/b> — the record looked and raised none/.test(h1));

@@ -26,7 +26,7 @@ paste the entire contents of `dist/newgroup.bundled.mjs`. Deploy.
 ## 3. Verify the page
 
 Open `https://newgroup.believeinoakland.workers.dev/`. You should see "Set
-up your group's copy". Press Continue with a made-up name and no sign-in
+up your group's Civicsmith". Press Continue with a made-up name and no sign-in
 will start only if the page shows an error; if the button sends you to
 `dash.cloudflare.com` with a permission screen, the front half works.
 

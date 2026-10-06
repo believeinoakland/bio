@@ -10,7 +10,7 @@
  *
  * N301 (K356): the class `FINDING` keeps its code and its meaning and is shown to members as **Noticed**; "finding" is
  * reserved for a concluded question. So no translation below calls a queue item a finding. R48 (DEC-107): nor a to-do an
- * obligation, nor a signal a condition. R49 (DEC-110 (1)): `QUEUE_SORT_UNKNOWN` is C-33.51, the row after C-33.50. */
+ * obligation, nor a status item a condition or a signal (DEC-131). R49 (DEC-110 (1)): `QUEUE_SORT_UNKNOWN` is C-33.51, the row after C-33.50. */
 
 const at = (fn, region) => `src/queue/index.mjs ${fn} > ${region}`;
 
@@ -62,7 +62,7 @@ export const QUEUE_ACT_CHECKS = Object.freeze({
     where: at("proposeDispose", "is-dispose-class"),
     translation: 'This is not something the record disposes of. Deferring and dismissing are decisions '
       + 'about something the record NOTICED — its own question — and this item is a different kind of thing: a '
-      + 'signal is a fact about our machinery that you quiet for yourself, and a to-do is work '
+      + 'status item is a fact about our machinery that you quiet for yourself, and a to-do is work '
       + 'a named person owes and leaves every list when it is done. Nothing about it was changed, and '
       + 'it is still in your list. The answer names the act that does reach it.',
   }),

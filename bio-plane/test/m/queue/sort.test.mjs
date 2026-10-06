@@ -145,7 +145,7 @@ test("R49: the op arm passes the query's sort to queueFeed, and op=queue's door 
   await queueFeedOp(new URL("http://plane/?op=queue&sort=added&limit=3"), store, helpers);
   assert.equal(asked[0].searchParams.get("sort"), "added");
   await queueFeedOp(new URL("http://plane/?op=queue"), store, helpers);
-  assert.equal(asked[2].searchParams.has("sort"), false, "absent stays absent");
+  assert.equal(asked[1].searchParams.has("sort"), false, "absent stays absent");
   // a refusal from the store reaches the caller with status 400 (R17)
   const refusing = { ...helpers, doAnswer: async (route) => ({ answered: true,
     result: route === "queue" ? { ok: false, reason: "QUEUE_SORT_UNKNOWN", check: "C-33.51" } : { kinds: [] } }) };

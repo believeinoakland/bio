@@ -16,7 +16,8 @@ const MAP = Object.keys(wizardScriptsOps(null, new URL("http://do/"), null));
 const AUTHOR = ["wizarddraft", "wizardrevise", "wizardsubmit"];
 const APPROVER = ["wizardapprove", "wizardretire"];
 const ADMIN = ["wizardeditorgrant", "wizardeditorrevoke"];
-const READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck"];
+const READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck",
+               "startfrom", "baseupdates"];   /* T34 (K1869 (2); wizard-scripts R23, R26): its two new reads */
 const ALL = [...AUTHOR, ...APPROVER, ...ADMIN, "wizardpropose", "wizardprogress", ...READS];
 const STAMP_NAMES = [...new Set([...QUERY_STAMPS, "proposedBy", "proposer", "principal", "owner", "member", "mintedBy", "secretSha"])];
 

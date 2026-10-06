@@ -82,20 +82,31 @@ test("R2: before the first request every module's start registrations are held, 
   for (const t of ["tasks", "queue_state"]) assert.ok(names.includes(t), `table ${t}`);
 });
 
-test("R2, R10 (K1416; control-plane R42): control-plane's step ranks after every module of layers 1-10 and before every later module of `build/modules.json`, directly before the first layer-11 module, so checks and refusals keep their order", async () => {
+test("R2, R10 (K1416, K1832; control-plane R42): control-plane's step ranks after every module of layers 1-10 and before every later module of `build/modules.json`, directly before the first layer-11 module, so checks and refusals keep their order; a pure module the order does not rank holds no step", async () => {
   const file = JSON.parse(readFileSync(new URL("../../../../build/modules.json", import.meta.url), "utf8"));
   const mods = (file.modules || file).filter((m) => m.id !== STEP);
   const at = STEP_ORDER.indexOf(STEP);
   assert.equal(STEP_ORDER.filter((m) => m === STEP).length, 1, "the step is ranked once");
+  const x = await store();
+  /* K1832: a module the plane builds nothing for (a pure library, such as case-catalogue) is not asked for a rank; it
+     holds no step on the constructed store, so nothing of it is ranked last (promotion R39). Every module that is
+     ranked is ranked by its layer. */
+  const unranked = [];
   for (const m of mods) {
-    assert.ok(STEP_ORDER.includes(m.id), `${m.id} is in the step order`);
+    if (!STEP_ORDER.includes(m.id)) {
+      unranked.push(m.id);
+      assert.equal(promotionOf(x.ctx).registerStep(m.id, {}).ok, true, `${m.id} is not ranked, so it holds no step`);
+      continue;
+    }
     if (m.layer <= 10) assert.ok(STEP_ORDER.indexOf(m.id) < at, `${m.id} (layer ${m.layer}) ranks before the step`);
     else assert.ok(STEP_ORDER.indexOf(m.id) > at, `${m.id} (layer ${m.layer}) ranks after the step`);
   }
+  assert.ok(unranked.length < mods.length / 10, `few modules unranked: ${unranked.join()}`);
   assert.equal(STEP_ORDER[at + 1], mods.find((m) => m.layer > 10).id, "directly before the first layer-11 module");
   assert.deepEqual(STEP_ORDER.filter((m) => m !== STEP), MODULE_ORDER.filter((m) => m !== STEP), "otherwise the modules' order");
+  /* negative control: a ranked module that registers a step holds it (refused a second) */
+  assert.equal(promotionOf(x.ctx).registerStep("ratification", {}).ok, false);
   /* Observed on a promotion: probes registered either side of it see its testimony check run between them. */
-  const x = await store();
   instanceSetupOf(x.ctx).instanceGroupSeed({ slug: "oak-watch", author: "admin" });
   const seen = [];
   for (const m of ["scheduler", "wizard-scripts", "affordances"]) promotionOf(x.ctx).registerStep(m, { check: () => { seen.push(m); return null; } });
