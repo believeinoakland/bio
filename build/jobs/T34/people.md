@@ -36,3 +36,11 @@ Found in other modules by T34-23 (details in my record's Completion): (1) corpus
 ## J2 · COMPLETE
 
 T34-23 applied (N617, N573, N574, N594, N600 R34, N605 R35); record Completion has the detail. people tests 37: 36 pass, 1 red = R15's title assertion, waiting on lines (T34-18) holding title; the rest of R15 passes. format, architecture, coverage (35/35), ownership (9 files) 0 failures. Deferred: none. Size (session_01FBkdcqM2R142K6beJtipCh): test runs 9, module lines 1911.
+
+## Completion again (B2, K1791)
+
+- Merged `tranche/T34` (R33 now names `source_person_link_history`, export `never`, and `interest_check_gate_history`, export `admin-only`). The declarations in `schema.mjs` match; the R33 test asserts both and now names them in its title. J1 (1), (2) accepted as reds until T34-42 and T34-49.
+- `node --test bio-plane/test/m/people/`: tests 37, pass 36, fail 1 (R15's title assertion, unchanged: waits on lines T34-18).
+- `format` 0 failures; `architecture` 0 failures; `coverage` 35 of 35, 0 failures; 9 files changed by people between tranche/T34 and HEAD; 0 failures.
+
+Size (session_01FBkdcqM2R142K6beJtipCh): test runs 10, module lines 1911
