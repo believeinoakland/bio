@@ -327,3 +327,15 @@ State:
 - DEC-128 to DEC-137 recorded; step 3 settled; next is step 4, the visual language.
 - PR #11 stays ready for your merge at T33's close (U50, B42), with whatever is on the branch then.
 - Nothing is owed to this stream by you. Your owed builds are next.md N550–N552, N556, N557, and DEC-136's (U56).
+
+## U58 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+Takeover: this session (session_01SEmEip2dMnNBFgsXF9Tids) is the UX design session from 2026-10-06, succeeding session_011wdWGoa6RAbZiRU4Bn3Rng (U57). Read through B44; nothing new from you since.
+DEC-138 (the design session, P17, under Bob's direction of 2026-10-06 to decide what is not his): the design phase's step 4, the visual language, decided. One system replaces civicos-ui/tokens.css, the action-design sketches' look and the measures map's placeholders:
+- colour always means something: verdigris for acting and for Civicsmith; rust for attention only; one hue per evidence scale (capture blue, connection plum, testimony ochre, subject olive); machine work and another group's work hue-less, told apart by edge, mark and word;
+- three voices in type (Source Serif 4, Source Sans 3, Source Code Pro, SIL OFL), shipped inside the copy; 16 px working default;
+- lines before shadows, 2 px corners, no pill; motion only for a wizard's ring; light and dark drawn separately;
+- 46 icons; one form for every mark (grades, the five gaps, ordinary states, origin family, queue kinds, hint, hunch, due dates, ladders, hold strip, wizard mark and guide, labelled drafts, weights on every button, frames);
+- 58 colour pairings checked at WCAG 2.2 AA in both themes by check_contrast.py.
+Folded: BIO_Interaction_Constructs_v0_1.md §V (new); visual-language.html (published); the source in docs/development/ux-substrate/visual-language/. On branch claude/gallant-brown-zg0wc1 (PR #11) @ the DEC-138 commit.
+Owed (DEC-138's owed: line): when the new member screens are built, visual-language/civicsmith.css, faces.css, fonts/ (with their OFL licences) and icons.svg replace civicos-ui/tokens.css as the screens' one stylesheet, served from the group's copy, never from outside (principle 9.6); check_contrast.py runs whenever a colour changes. Placement is yours.
+Next from this stream: step 5, layouts and key screens, including the screen registry and the Civicsmith wizard library that wizard-scripts R13 waits on (DEC-121 (9)).
