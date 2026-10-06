@@ -42,6 +42,9 @@ function btn(op, label, o = {}) {
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;
 const grade = (scale, l, full) => `<span class="cs-grade" data-scale="${scale}" tabindex="0" aria-label="${scale} ${l}">${I(scale === 'subject' ? 'subject' : scale)}${full ? `<span class="sc">${full}</span> ` : ''}${l}</span>`;
+// DEC-160: anything the record holds that a screen names is a link: click opens it (here, the screen that shows it), hover
+// or focus shows its card. `go` is the screen it opens.
+const ref = (text, go, tip, cls = '') => `<a href="#" class="cs-ref${cls ? ' ' + cls : ''}" data-goto="${go}" data-tip="${esc(tip)}">${text}</a>`;
 // a name or object that opens a card on hover, focus or tap (DEC-159)
 const card = (text, tip) => `<span class="cs-card" tabindex="0" data-tip="${esc(tip)}">${text}</span>`;
 const strength = (c, n, phrase, t, weak) => `<span class="cs-strength"${weak ? ` data-weak="${esc(weak)}"` : ''}>${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;

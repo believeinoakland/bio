@@ -689,6 +689,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-more p { font-weight: 400; margin: 4px 0; }
 .st { display: none; } main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e { display: block; }
 .mk-mockctl { border: 1px dashed var(--c-rule-strong); padding: 6px 10px; font-size: var(--t-sm); color: var(--c-muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .mk-mockctl select { width: auto; max-width: 100%; font-size: var(--t-sm); padding: 2px 6px; }
+.cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; } .cs-ref:hover { color: var(--c-accent-strong, var(--c-accent)); }
 .mk-tag { display: inline-block; font: 600 var(--t-xs)/1.4 var(--f-sans); color: var(--c-ink-2); border: var(--hair); padding: 0 5px; border-radius: 2px; margin-left: 4px; white-space: nowrap; }
 .mk-ifelse { display: none; } main.mk-else .mk-ifelse { display: block; }
 .mk-ifother { display: none; } main.mk-other .mk-ifother { display: block; } main.mk-other .mk-ifheld { display: none; }
@@ -965,6 +966,9 @@ function btn(op, label, o = {}) {
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;
 const grade = (scale, l, full) => `<span class="cs-grade" data-scale="${scale}" tabindex="0" aria-label="${scale} ${l}">${I(scale === 'subject' ? 'subject' : scale)}${full ? `<span class="sc">${full}</span> ` : ''}${l}</span>`;
+// DEC-160: anything the record holds that a screen names is a link: click opens it (here, the screen that shows it), hover
+// or focus shows its card. `go` is the screen it opens.
+const ref = (text, go, tip, cls = '') => `<a href="#" class="cs-ref${cls ? ' ' + cls : ''}" data-goto="${go}" data-tip="${esc(tip)}">${text}</a>`;
 // a name or object that opens a card on hover, focus or tap (DEC-159)
 const card = (text, tip) => `<span class="cs-card" tabindex="0" data-tip="${esc(tip)}">${text}</span>`;
 const strength = (c, n, phrase, t, weak) => `<span class="cs-strength"${weak ? ` data-weak="${esc(weak)}"` : ''}>${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
@@ -1168,9 +1172,9 @@ SCR.queue = c => ({ rail: 'queue', title: 'Your queue', main: `
   ${h1('Your queue', '6 items · grouped by case · <a href="#" onclick="return false">sort by time due</a>')}
   ${note('Three kinds: <b>To do</b> needs your act; <b>Noticed</b> is something the record found that nobody has judged; <b>Status</b> tells you where something stands. <span class="muted">(Shown once.)</span>')}
   ${sec('The Coliseum lease', sheet(
-    row(kindm('todo'), `Decide on a newer version of <span class="rec">the 2024 lease amendment</span> you cited<span class="meta"><span class="cs-changed">${I('changed')}Changed 3 October</span>${btn('adoptversion', 'Adopt the newer version')}${btn('keepversion', 'Keep the version you cited')}</span>`, due('near', 'Due Friday')) +
+    row(kindm('todo'), `Decide on a newer version of ${ref('<span class="rec">the 2024 lease amendment</span>', 'document', '<b>Lease amendment, March 2024</b> · Coliseum lease · captured from the city&#39;s site, capture B · the city posted a newer version on 3 October · cited in 2 findings of Edition 2<span class=more>Click to open the document, with the two versions side by side.</span>')} you cited<span class="meta"><span class="cs-changed">${I('changed')}Changed 3 October</span>${btn('adoptversion', 'Adopt the newer version')}${btn('keepversion', 'Keep the version you cited')}</span>`, due('near', 'Due Friday')) +
     row(kindm('noticed'), `Two documents give different dates for the rent adjustment<span class="meta"><span class="cs-tension">${I('tension')}In tension</span>${btn('taskresolve', 'Open both')}</span>`, '') +
-    row(kindm('status'), `The city's reply to "Demand to rescind" was due 9 October; no reply recorded<span class="meta">${btn('reminderanswer', 'Remind me again on…')}</span>`, due('overdue', 'Overdue'))))}
+    row(kindm('status'), `The city's reply to ${ref('“Demand to rescind”', 'action', '<b>Demand to rescind</b> · a letter the group sent the City Administrator on 19 September · reply due 9 October (the group&#39;s own window) · no reply recorded<span class=more>Click to open the action and what was sent.</span>')} was due 9 October; no reply recorded<span class="meta">${btn('reminderanswer', 'Remind me again on…')}</span>`, due('overdue', 'Overdue'))))}
   ${sec('Pothole repairs', sheet(
     row(kindm('todo'), `Ana asked you to check a calculation: <span class="rec">812 of 903 reports closed within 7 days</span><span class="meta">${btn('taskresolve', 'Open the check')}${btn('taskforward', 'Forward to a member')}</span>`, due('', 'Due 16 October')) +
     row(kindm('noticed'), `A council member disclosed income from a firm whose contract they voted on<span class="meta">${hint()}<span>matched disclosures to votes · 1 of 212 votes · false alarms 12%</span>${btn('proposedispose', 'Dismiss with a reason')}</span>`, '') +
@@ -1230,7 +1234,7 @@ SCR.question = c => ({ rail: 'projects', title: 'Question', crumbs: ['Pothole re
   ${h1('<span class="rec">Is the city repairing reported potholes within seven days?</span>', 'Opened by Dev, 3 October · Pothole repairs')}
   <div class="mk-strengthbox"><div>${strength('B', 'C', '<b>Short on connection</b> · bar B/B', null, 'the link between report #4471 and the work order (C, matched by street address only). A work-order number on both would raise it to B')}</div><p class="mk-note">Strength is two grades, never one score. <a href="#" onclick="return false">What raises it</a>: a link the source itself makes, or a shared identifier.</p>${gapm('undetermined', '<b>Undetermined</b>, because the city does not define "closed" in the report.')}</div>
   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px"><span class="cs-wait">${I('clock')}Waiting: the 2024 budget PDF was set aside by Ben: <span class="rec">"wrong year"</span></span>${acts(btn('heldrestore', 'Restore it, with a reason'), btn('search', 'Find another source'))}<span class="mk-small muted">Set aside by Ben, 6 October · each act stays on the record</span></div>
-  ${sec('Supports', sheet(row(grade('capture', 'B'), '<span class="rec">"…within seven calendar days of the report…"</span><span class="meta">' + card('Administrative Instruction 4.12', '<b>Pothole repair policy, Administrative Instruction 4.12</b> · City of Oakland, Public Works · captured from the city&#39;s site 12 September 2026, capture B · current version · cited in 2 questions') + ', passage 3 · cited by Dev</span>', btn('sever', 'Remove')) + row(grade('capture', 'B'), '<span class="rec">812 of 903 reports closed within 7 days</span><span class="meta">computed fact · method shown · checked by Ana</span>', btn('reinstate', 'Reinstate'))) + acts(btn('cite', 'Cite a passage', { tone: 'primary' })))}
+  ${sec('Supports', sheet(row(grade('capture', 'B'), '<span class="rec">"…within seven calendar days of the report…"</span><span class="meta">' + ref('Administrative Instruction 4.12', 'document', '<b>Pothole repair policy, Administrative Instruction 4.12</b> · City of Oakland, Public Works · captured from the city&#39;s site 12 September 2026, capture B · current version · cited in 2 questions<span class=more>Click to open it at passage 3.</span>') + ', passage 3 · cited by Dev</span>', btn('sever', 'Remove')) + row(grade('capture', 'B'), '<span class="rec">812 of 903 reports closed within 7 days</span><span class="meta">computed fact · method shown · checked by Ana</span>', btn('reinstate', 'Reinstate'))) + acts(btn('cite', 'Cite a passage', { tone: 'primary' })))}
   ${sec('Cuts against', sheet(row(grade('testimony', 'D'), '<span class="rec">"…marked closed on 15 September is still open, about 60 cm across."</span><span class="meta">Mai\'s observation, 4 October</span>', '')))}
   ${sec('Hunches', `<span class="cs-hunch">${I('hunch')}Hunch · Dev's</span> <span class="rec">Crews may be closing reports when they inspect, not when they repair.</span>${acts(btn('hypothesishold', 'Keep a hunch'))}`)}
   ${sec('Concluding', `${acts(btn('narrow', 'Narrow the question'), btn('conclude', 'Conclude'), btn('withdrawconclusion', 'Withdraw the conclusion'))}${acts(btn('checkrequest', 'Ask for a check by expertise'), btn('planopen', 'Plan what to do'))}`)}` });
@@ -1261,7 +1265,7 @@ SCR.person = c => ({ rail: 'people', title: 'Person', crumbs: ['People', 'L. Che
 SCR.timeline = c => ({ rail: 'projects', title: 'Timeline', crumbs: ['The Coliseum lease', 'Timeline'], main: `
   <div class="mk-titlerow">${h1('Timeline', 'The Coliseum lease')}${wizmark(1, 'Build a timeline')}</div>
   <div class="mk-lanes"><div class="mk-lanehead">What they did</div><div class="mk-lanehead">What we did</div>
-   <div class="mk-ev"><span class="mk-date">12 Jan 2024</span><b>Council approves lease amendment 1</b><span>decided: Council · ${grade('capture', 'B')}</span></div><div></div>
+   <div class="mk-ev"><span class="mk-date">12 Jan 2024</span><b>${ref('Council approves lease amendment 1', 'document', '<b>Council minutes, 12 January 2024</b>, item 7 · capture B · the vote: 5 for, 2 against<span class=more>Click to open the minutes at the passage cited.</span>')}</b><span>decided: Council · ${grade('capture', 'B')}</span></div><div></div>
    <div class="mk-ev"><span class="mk-date">March 2024 <i>(month known)</i></span><b>Rent adjusted without a vote</b><span>signed: City Administrator · ${grade('capture', 'B')}</span></div><div></div>
    <div></div><div class="mk-ev us"><span class="mk-date">4 Sep 2026</span><b>We requested the rent schedules</b><span>${due('met', 'Answered 18 Sep')}</span></div>
    <div class="mk-ev"><span class="mk-date">18 Sep 2026</span><b>City Clerk releases schedules</b><span>answered our request</span></div><div></div></div>
@@ -1290,7 +1294,7 @@ SCR.explore = c => ({ rail: 'people', title: 'Explore connections', crumbs: ['Pe
   ${checks('Follow', [['Positions and memberships', true], ['Money', true], ['Took part', true], ['Mentioned together', false], ['Same person?', false]])}
   ${acts(btn('explore', 'Explore', { tone: 'primary' }), btn('explorepreset', 'Use a preset'))}
   ${sec('Chains found: 2', sheet(
-    row(grade('connection', 'B'), '<b>J. Ortega</b> → voted for → <b>Lease amendment 1</b> → paid under → <b>$1.2M to Bayline Properties</b><span class="meta">weakest step B · each step cited</span>', btn('exploreverify', 'Check this chain')) +
+    row(grade('connection', 'B'), '<b>' + ref('J. Ortega', 'person', '<b>J. Ortega</b> · Council District 3 since 2023, from Legistar') + '</b> → voted for → <b>' + ref('Lease amendment 1', 'document', '<b>Lease amendment 1</b> · approved 12 January 2024 · Council minutes, item 7') + '</b> → paid under → <b>' + ref('$1.2M to Bayline Properties', 'money', '<b>$1.2M to Bayline Properties</b> · paid FY2024 · from the city&#39;s annual financial report, capture B') + '</b><span class="meta">weakest step B · each step cited</span>', btn('exploreverify', 'Check this chain')) +
     row(grade('connection', 'D'), '<b>J. Ortega</b> → <i>declared, not evidenced</i> → <b>Bayline Properties</b><span class="meta">a lead, not a finding</span>', btn('connectionassert', 'Attach a source to this step'))))}
   ${gapm('undetermined', '<b>Stopped at the limit</b>, undetermined beyond four steps.')}
   ${acts(btn('promote', 'Open a question from this chain'))}` });
@@ -1827,7 +1831,8 @@ function journeySteps(j, ai) {
   document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });
   document.addEventListener('focusout', hide);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
-  document.addEventListener('click', function (e) { var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
+  document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }
+    var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
   window.addEventListener('scroll', hide, true);
   new MutationObserver(function () { mark(); }).observe(document.body, { childList: true, subtree: true });
   mark(); window.CS_TIP = { tipFor: tipFor, SEL: SEL };

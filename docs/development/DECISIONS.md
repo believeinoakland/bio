@@ -2515,3 +2515,17 @@ response: **Decided by the design session, 2026-10-06:** (1) every mark explains
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `visual-language/components.css` and `visual-language.html` §6a; `layouts.html` (every screen, and its "Explained where it appears" section); BIO_Interaction_Constructs_v0_1.md §V.
 owed: (BOB) the explanations as interface words (held with the translation layer, DEC-127, DEC-157), the tip and card on every member screen when built, and each card's facts from the record (an office's holder today, a person's position and source, a document's capture and citations).
+
+### DEC-160 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comments on the layouts page's queue: "Can the user click here to see the document or citation, as appropriate?" on "the 2024 lease amendment"; "Can the member go to the demand document by clicking here?" on "Demand to rescind")
+for: bob-session
+question: Whether everything the record holds that a screen names can be opened from where it is named.
+why it is Bob's: it is not: navigation beneath his rulings (DEC-82's "a click on a grade opens that scale's ladder"; DEC-159's cards); decided by the design session (P17) and reported.
+provisional: names drawn as plain text in the mockups.
+alternative: links only on detail screens.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06:** (1) anything the record holds that a screen names (a document, a cited passage, a person, an office, an action and what it sent, a filing, a money item, an event, a question, a case) is a link: a click opens it where it is shown, a cited passage opening its document at that passage and a superseded version opening both versions side by side; (2) its card (DEC-159) shows on hover or focus first, so a member can see what it is without leaving; (3) links are underlined in the action colour, distinct from the dotted underline of a name that only opens a card; (4) on the public page the same holds for what the case discloses, a citation opening the evidence layer.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the queue, the timeline, the exploration chain, the question's citation; `screens/mock-kit.js` `ref`).
+owed: (BOB) every reference on a member screen and the public page as a link to the item it names (with the passage or version where one is meant), with its card.

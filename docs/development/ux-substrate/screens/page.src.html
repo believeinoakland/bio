@@ -189,6 +189,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-more p { font-weight: 400; margin: 4px 0; }
 .st { display: none; } main:not([data-st]) .st-a, main[data-st="a"] .st-a, main[data-st="b"] .st-b, main[data-st="c"] .st-c, main[data-st="d"] .st-d, main[data-st="e"] .st-e { display: block; }
 .mk-mockctl { border: 1px dashed var(--c-rule-strong); padding: 6px 10px; font-size: var(--t-sm); color: var(--c-muted); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .mk-mockctl select { width: auto; max-width: 100%; font-size: var(--t-sm); padding: 2px 6px; }
+.cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; } .cs-ref:hover { color: var(--c-accent-strong, var(--c-accent)); }
 .mk-tag { display: inline-block; font: 600 var(--t-xs)/1.4 var(--f-sans); color: var(--c-ink-2); border: var(--hair); padding: 0 5px; border-radius: 2px; margin-left: 4px; white-space: nowrap; }
 .mk-ifelse { display: none; } main.mk-else .mk-ifelse { display: block; }
 .mk-ifother { display: none; } main.mk-other .mk-ifother { display: block; } main.mk-other .mk-ifheld { display: none; }
@@ -488,7 +489,8 @@ const REG = {{REG}};
   document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });
   document.addEventListener('focusout', hide);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
-  document.addEventListener('click', function (e) { var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
+  document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }
+    var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
   window.addEventListener('scroll', hide, true);
   new MutationObserver(function () { mark(); }).observe(document.body, { childList: true, subtree: true });
   mark(); window.CS_TIP = { tipFor: tipFor, SEL: SEL };
