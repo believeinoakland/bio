@@ -38,3 +38,13 @@ Two things outside case-import that T34-87 touches (detail in my record's Comple
 ## J2 · COMPLETE
 
 T34-87 applied: the six DEC-149 member-facing strings (C-130.3, C-130.5, C-130.7; R19's NO_MOVE_SEEN; R21's method-version and input-bound reasons) say "your group's Civicsmith"; the two operator-facing rows stay. voice.test.mjs names each changed string. case-import tests 87/0; format, architecture, coverage (21/21), ownership: 0 failures. Nothing deferred. Branch job/T34/case-import; record has the summary lines and Size.
+
+## B2 · CHANGE (T34-94, K1828): R5's missing calculation input
+
+**Applied.** `tranche/T34` merged. `index.mjs` `completeImportedDocument`: every calculation input R21 records as missing (named by its stated SHA-256) is a missing material, whether the case file lacks it or carries it with other bytes; the `!m.carried` exclusion is gone. Test `calculations.test.mjs` "R5 R21 an input carried with bytes that differ from its stated hash is missing…": the carried (tampered) bytes are refused `IMPORT_DOCUMENT_NOT_MISSING` writing nothing; bytes matching the stated hash complete it and the calculation recreates (1500.50); the same bytes again are no longer missing.
+
+**Finding (for BOB).** At the interface this case already completed before the change: `case-checker.readCaseFile` (its R19) answers `content: null` for a file whose bytes differ from its row, so `carried` was always null and the old gate let it through. The `!m.carried` exclusion could only bite for a caller passing differing bytes as content to `recreateCalculations` directly. The change removes that dependence on the reader, so R5 holds as worded whatever the reader answers; the new test passes before and after (no red-to-green shown, honestly stated). R5's `*(not yet met: T34)*` marker is BOB's to clear.
+
+**Tests and checks.** case-import tests 88/88, 0 fail; format 0 failures; architecture 0 failures; coverage 21 of 21; ownership 6 files, 0 failures.
+
+Size (session_01Gt9dFgm1CoVHKEB1yihSb6): test runs 9, module lines 1853
