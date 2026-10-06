@@ -57012,12 +57012,12 @@ var IDSPACE_CHECKS = Object.freeze({
   IDSPACE_UNKNOWN: Object.freeze({
     check: "C-91.1",
     where: "src/entities/index.mjs idMatch > is-idspace-unknown",
-    translation: "That is not an identifier space the record knows how to judge. The answer lists the spaces it knows, each with the forms this instance's jurisdiction profiles give it. Nothing was judged."
+    translation: "That is not an identifier space the record knows how to judge. The answer lists the spaces it knows, each with its forms as your group's jurisdiction profiles give them. Nothing was judged."
   }),
   IDSPACE_VALUE_NOT_IN_SPACE: Object.freeze({
     check: "C-91.2",
     where: "src/entities/index.mjs idMatch > is-idspace-value-shape",
-    translation: "The value given does not have the shape of any form this instance's jurisdiction profiles give that identifier space, so the record cannot say what it would join. Give the identifier as the document writes it; the answer lists the forms. Nothing was judged."
+    translation: "The value given does not have the shape of any form your group's jurisdiction profiles give that identifier space, so the record cannot say what it would join. Give the identifier as the document writes it; the answer lists the forms. Nothing was judged."
   }),
   IDSPACE_CAPTURE_NOT_HELD: Object.freeze({
     check: "C-91.3",
@@ -57109,6 +57109,7 @@ var SECTOR_UNDETERMINED = "undetermined";
 var PROCEEDING_SCHEME = "proceeding";
 var CONNECTION_OWNER = "entities";
 var CONNECTION_KINDS = Object.freeze(RELATION_KINDS.map((kind) => Object.freeze({ kind, word: kind.replace(/_/g, " "), class: "declared" })));
+var CONNECTION_DECLARES = Object.freeze({ undated: true, group_wide: true });
 var gradeRank = Object.freeze(Object.fromEntries(BASIS_GRADES.map((g, i) => [g, BASIS_GRADES.length - i])));
 var isEstablished = (grade2) => grade2 === "A" || grade2 === "B";
 var MEANING_LIMIT_DEFAULT = 500;
@@ -57237,7 +57238,7 @@ function identifierNotInSpace(view, sch, field) {
     scheme: sch.scheme,
     space: sch.space,
     forms,
-    detail: `the ${field} has the shape of no form of the ${S3 ? S3.label : sch.space} space` + (sch.form ? ` the scheme names (${sch.form})` : "") + (forms.length ? "" : "; the instance's active jurisdiction profiles give it no form") + ". Nothing was written."
+    detail: `the ${field} has the shape of no form of the ${S3 ? S3.label : sch.space} space` + (sch.form ? ` the scheme names (${sch.form})` : "") + (forms.length ? "" : "; your group's active jurisdiction profiles give it no form") + ". Nothing was written."
   };
 }
 var identifierTaken = (scheme, normal, holder2) => ({
@@ -57864,7 +57865,7 @@ var Entities = class _Entities {
       reason: "UNKNOWN_SCHEME",
       scheme: typeof scheme === "string" ? scheme.slice(0, 80) : null,
       schemes: schemes.map((s) => s.scheme),
-      detail: "an identifier is held in a scheme the instance's active jurisdiction profiles name" + (schemes.length ? `: one of ${schemes.map((s) => s.scheme).join(", ")}` : "; they name none") + ". Nothing was written."
+      detail: "an identifier is held in a scheme your group's active jurisdiction profiles name" + (schemes.length ? `: one of ${schemes.map((s) => s.scheme).join(", ")}` : "; they name none") + ". Nothing was written."
     };
     const kinds3 = Array.isArray(sch.entity_kinds) ? sch.entity_kinds : [];
     if (!kinds3.includes(ent.kind)) return {
@@ -58061,7 +58062,7 @@ var Entities = class _Entities {
       reason: "PROCEEDING_KIND_UNKNOWN",
       kind: f17.kind.trim().slice(0, 80),
       kinds: kinds3.map((k) => k.kind),
-      detail: "a proceeding's kind is one the instance's active jurisdiction profiles name" + (kinds3.length ? `: one of ${kinds3.map((k) => k.kind).join(", ")}` : "; they name none") + ". Nothing was written."
+      detail: "a proceeding's kind is one your group's active jurisdiction profiles name" + (kinds3.length ? `: one of ${kinds3.map((k) => k.kind).join(", ")}` : "; they name none") + ". Nothing was written."
     };
     const sch = this.#schemeOf(view, PROCEEDING_SCHEME);
     const rec = _Entities.#inScheme(view, sch, f17.number);
@@ -58917,7 +58918,7 @@ var Entities = class _Entities {
           terms: [],
           sql: null,
           plan: null,
-          why: "no terms were given and the instance's active jurisdiction profiles hold no search terms, so there is nothing to explain; no term is assumed"
+          why: "no terms were given and your group's active jurisdiction profiles hold no search terms, so there is nothing to explain; no term is assumed"
         };
     }
     t2 = t2.slice(0, 24);
@@ -59022,7 +59023,7 @@ var Entities = class _Entities {
         space: sp,
         forms: S3.forms.map((f17) => f17.form),
         profiles: profiles2,
-        detail: `${!ra ? "a" : "b"} has the shape of no form of the ${S3.label}` + (S3.forms.length ? "" : "; the instance's active jurisdiction profiles give this space no form")
+        detail: `${!ra ? "a" : "b"} has the shape of no form of the ${S3.label}` + (S3.forms.length ? "" : "; your group's active jurisdiction profiles give this space no form")
       });
     const shown3 = (r) => ({
       value: r.value,
@@ -59971,6 +59972,7 @@ var Themes = class _Themes {
 var MENTIONED_OWNER = "connections";
 var MENTIONED_KIND = "mentioned_together";
 var MENTIONED_KINDS = Object.freeze([Object.freeze({ kind: MENTIONED_KIND, word: "mentioned together", class: "derived" })]);
+var MENTIONED_DECLARES = Object.freeze({ undated: true });
 var CO_MENTION_HUB = 32;
 var WARN_BAND = 250;
 var VALID = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
@@ -66355,6 +66357,8 @@ function meeting(k, held2, row8, f17, scope, out) {
     } else out.unchanged++;
     k.setWhen(eventId3);
   }
+  if (!k.one(`SELECT 1 AS x FROM event_concerns WHERE event_id=? AND end_id=?`, eventId3, scope.body))
+    k.insert("event_concerns", { event_id: eventId3, end_id: scope.body, by_actor: MACHINE, at: k.now() });
   keepSource(k, row8.key, "event", eventId3, {
     ...facts,
     agenda: prior && JSON.parse(prior.facts).agenda || facts.agenda,
@@ -66444,13 +66448,13 @@ function vote(k, held2, row8, f17, out) {
     out.unresolved.push({ row: row8.source, key: row8.key, source_row: { PersonId: f17.PersonId ?? null }, why: "its PersonId resolves to no registered entity" });
     return;
   }
-  const bad2 = k.voteRefusal(f17.value);
-  if (bad2) {
-    out.unresolved.push({ row: row8.source, key: row8.key, why: bad2.detail, refusal: bad2.reason });
+  const m = k.voteMatch(typeof f17.value === "string" ? f17.value : f17.value == null ? "" : String(f17.value));
+  if (!m.ok) {
+    out.unresolved.push({ row: row8.source, key: row8.key, why: m.detail, refusal: m.reason });
     return;
   }
   const aid = rowAttestation(k, eventId3, held2, row8);
-  const p3 = participant(k, eventId3, ent, "voted", aid, String(f17.value).trim());
+  const p3 = participant(k, eventId3, ent, "voted", aid, m.value);
   if (p3.added) out.written.push({ key: row8.key, event_id: eventId3, participant_id: p3.id });
   else out.unchanged++;
   keepSource(k, row8.key, "participant", String(p3.id), { value: f17.value }, held2.sha);
@@ -66822,6 +66826,7 @@ var Events = class _Events {
   #sources = [];
   #started = false;
   #migrated = false;
+  #actAt = null;
   constructor(storage, {
     record,
     membership = null,
@@ -66841,6 +66846,10 @@ var Events = class _Events {
   }
   #rows(q10, ...a) {
     return [...this.#sql.exec(q10, ...a)];
+  }
+  /* R16: the one instant of the act running (every row it writes and every telling of it carry it), else the clock's. */
+  #instant() {
+    return this.#actAt ?? this.#now();
   }
   #one(q10, ...a) {
     const r = this.#rows(q10, ...a);
@@ -66879,8 +66888,9 @@ var Events = class _Events {
     return { ok: true };
   }
   /** R40 (record-core R21, R77): every table declared with its classes. The tables of facts read from captures are
-   *  seen as their capture is (`source`); the `when_cache` is derived-rebuildable, its rule `#rebuildWhen`; the
-   *  opt-in set is group-wide; nothing here is expunged but by its capture's purge. */
+   *  seen as their capture is (`source`); the `when_cache` is derived-rebuildable, its rule `#rebuildWhen` over the tables
+   *  it names in `from` (record-core R77); the opt-in set is group-wide; nothing here is expunged but by its capture's
+   *  purge. */
   declareTables() {
     const t2 = (name2, cls3) => ({
       name: name2,
@@ -66899,7 +66909,13 @@ var Events = class _Events {
       t2("event_concerns", { keys: [] }),
       t2("event_participants", { keys: [] }),
       t2("event_relations", { keys: [] }),
-      t2("event_when_cache", { keys: [], derive: "derived-rebuildable", key: ["event_id"], rebuild: (scope) => this.#rebuildWhen(scope) }),
+      t2("event_when_cache", {
+        keys: [],
+        derive: "derived-rebuildable",
+        key: ["event_id"],
+        rebuild: (scope) => this.#rebuildWhen(scope),
+        from: ["events", "event_attestations", "event_choices", "dated_facts"]
+      }),
       t2("event_choices", { keys: [], version_chain: true }),
       t2("event_aliases", { keys: [], sight: "group" }),
       t2("event_changes", { keys: [], version_chain: true }),
@@ -67023,7 +67039,7 @@ var Events = class _Events {
       grade: this.#captureGrade(sha2),
       upper_bound: upperBound ? 1 : 0,
       by_actor: stamp(by),
-      at: this.#now()
+      at: this.#instant()
     };
     this.#insert("dated_facts", row8);
     return { ok: true, dated_fact: this.#factView(row8) };
@@ -67061,7 +67077,7 @@ var Events = class _Events {
     if (!Array.isArray(captureClasses) || !captureClasses.every(said3))
       return refuse7("NO_CLASSES", "the opt-in set is a list of capture classes (content-type keys), empty for none");
     const classes = [...new Set(captureClasses.map((c) => c.trim()))].sort();
-    const at33 = this.#now();
+    const at33 = this.#instant();
     this.#sql.exec(`INSERT INTO event_read_optin (classes, by_actor, at) VALUES (?,?,?)`, JSON.stringify(classes), stamp(by), at33);
     return {
       ok: true,
@@ -67247,7 +67263,7 @@ var Events = class _Events {
       event_id: serves === "relation" ? `relation:${eventId3}` : eventId3,
       serves,
       by_actor: stamp(by),
-      at: this.#now()
+      at: this.#instant()
     });
   }
   /* R6: a concerns end, an entity or another event; a hypothesis id is never held (R39). */
@@ -67275,18 +67291,32 @@ var Events = class _Events {
     if (role === "voted") return this.#voteRefusal(voteValue);
     return null;
   }
-  /* R11: the vote values the profile names; with none held, the value is kept as written and marked unchecked. */
+  /* R11: the active profiles' vote values (`jurisdictions` R58, `vocabulary.vote_values`); null when none are held. This
+     module holds no list of its own. */
+  #voteEntries() {
+    const voc = this.view().vocabulary;
+    const list6 = isObj15(voc) && Array.isArray(voc.vote_values) ? voc.vote_values.filter((x) => isObj15(x) && said3(x.value)) : [];
+    return list6.length ? list6 : null;
+  }
   #voteValues() {
-    const v = this.view();
-    const list6 = Array.isArray(v.vote_values) ? v.vote_values : v.vocabulary && Array.isArray(v.vocabulary.vote_values) ? v.vocabulary.vote_values : null;
-    return list6 ? list6.map((x) => isObj15(x) ? x.value : x).filter(said3) : null;
+    const e2 = this.#voteEntries();
+    return e2 ? e2.map((x) => x.value) : null;
+  }
+  /* R11: the value held for a vote, or a refusal. A member's value is matched on `value`; a value an import reads from a
+     source (`fromSource`, R22) that is no entry's `value` is matched exactly on an entry's `label`, and that entry's
+     `value` is held (K1788). With none held, the value is kept as written, unchecked. */
+  #voteMatch(voteValue, { fromSource = false } = {}) {
+    if (!said3(voteValue)) return refuse7("NO_VOTE_VALUE", "a vote is held with the value the record states");
+    const v = voteValue.trim(), entries = this.#voteEntries();
+    if (!entries) return { ok: true, value: v };
+    const hit = entries.find((x) => x.value === v) || (fromSource ? entries.find((x) => x.label === v) : null);
+    if (hit) return { ok: true, value: hit.value };
+    const values = entries.map((x) => x.value);
+    return refuse7("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
   }
   #voteRefusal(voteValue) {
-    if (!said3(voteValue)) return refuse7("NO_VOTE_VALUE", "a vote is held with the value the record states");
-    const values = this.#voteValues();
-    if (values && !values.includes(voteValue.trim()))
-      return refuse7("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
-    return null;
+    const m = this.#voteMatch(voteValue);
+    return m.ok ? null : m;
   }
   /** R6: an event held with at least one attestation, its concerns and its participants, in one transaction. */
   createEvent({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
@@ -67313,7 +67343,7 @@ var Events = class _Events {
         return refuse7("NO_ATTESTATION", "a participant names the attestation that states it, by its index in attestations");
     }
     return this.#tx(() => {
-      const at33 = this.#now();
+      const at33 = this.#instant();
       const id = this.#record.allocId("EVT", at33.slice(0, 4));
       if (!id || !id.id) return id;
       const eventId3 = id.id;
@@ -67343,18 +67373,25 @@ var Events = class _Events {
       return { ok: true, event_id: eventId3, attestation_ids: attIds };
     });
   }
-  /* The transaction every act runs in: a store-gate refusal or a listener that throws fails the whole write. */
+  /* The transaction every act runs in: a store-gate refusal or a listener that throws fails the whole write. The act
+     takes one instant at its start (R16): its rows and every telling of it carry that instant. */
   #tx(fn) {
-    return this.#record.transact(() => {
-      try {
-        return fn();
-      } catch (e2) {
-        if (e2 && e2.refusal) return e2.refusal;
-        if (e2 instanceof ListenerFailure)
-          return refuse7("LISTENER_FAILED", `the write was undone because ${e2.module}'s listener failed: ${e2.message}`, { module: e2.module });
-        throw e2;
-      }
-    });
+    const outer = this.#actAt === null;
+    if (outer) this.#actAt = this.#now();
+    try {
+      return this.#record.transact(() => {
+        try {
+          return fn();
+        } catch (e2) {
+          if (e2 && e2.refusal) return e2.refusal;
+          if (e2 instanceof ListenerFailure)
+            return refuse7("LISTENER_FAILED", `the write was undone because ${e2.module}'s listener failed: ${e2.message}`, { module: e2.module });
+          throw e2;
+        }
+      });
+    } finally {
+      if (outer) this.#actAt = null;
+    }
   }
   /** R7: one more attestation of a held event. */
   attest({ eventId: eventId3, attestation, by = null } = {}) {
@@ -67402,7 +67439,7 @@ var Events = class _Events {
         a.attestation_id,
         said3(reason) ? reason.trim().slice(0, REASON_MAX2) : null,
         stamp(by),
-        this.#now()
+        this.#instant()
       );
       const w = this.#setWhen(id);
       return { ok: true, event_id: id, governing: Number(a.attestation_id), when: w.after };
@@ -67465,13 +67502,15 @@ var Events = class _Events {
     }
     return { moved: true, after: a };
   }
+  /* R16: told after commit, with `at`, the instant of the write that made the change, the same for every listener. */
   #tell(change2) {
     const fns = [...this.#onChanged];
     if (!fns.length) return;
+    const told = { ...change2, at: this.#instant() };
     this.#record.afterCommit(() => {
       for (const l2 of fns) {
         try {
-          l2.fn({ ...change2 });
+          l2.fn({ ...told });
         } catch {
         }
       }
@@ -67527,7 +67566,7 @@ var Events = class _Events {
         vote_value: role === "voted" ? voteValue.trim() : null,
         attestation_id: aid,
         by_actor: stamp(by),
-        at: this.#now()
+        at: this.#instant()
       });
       return { ok: true, event_id: id, participant_id: pid, attestation_id: aid };
     });
@@ -67546,7 +67585,7 @@ var Events = class _Events {
     if (isHypothesisId(entityId)) return refuse7("HYPOTHESIS_ID", "a hypothesis is never a participant (K1467)");
     if (!this.#ents.has(entityId)) return noSuchEntity(entityId);
     return this.#tx(() => {
-      const at33 = this.#now();
+      const at33 = this.#instant();
       const pid = this.#insert("event_participants", {
         event_id: p3.event_id,
         entity_id: entityId,
@@ -67584,7 +67623,7 @@ var Events = class _Events {
     if (!a) return noSuchEvent(absorb ?? null, { end: "absorb" });
     if (k === a) return refuse7("SAME_EVENT", "an event is not merged into itself");
     return this.#tx(() => {
-      const at33 = this.#now(), why = reason.trim().slice(0, REASON_MAX2);
+      const at33 = this.#instant(), why = reason.trim().slice(0, REASON_MAX2);
       const g = this.#governing(k);
       if (g) this.#sql.exec(
         `INSERT INTO event_choices (event_id, attestation_id, reason, by_actor, at) VALUES (?,?,?,?,?)`,
@@ -67638,7 +67677,7 @@ var Events = class _Events {
     if (left2 <= ids.length) return refuse7("SPLIT_EMPTIES", "a split leaves at least one attestation on the event it splits");
     const ev = this.#one(`SELECT * FROM events WHERE event_id=?`, id);
     return this.#tx(() => {
-      const at33 = this.#now(), why = reason.trim().slice(0, REASON_MAX2);
+      const at33 = this.#instant(), why = reason.trim().slice(0, REASON_MAX2);
       const nid = this.#record.allocId("EVT", at33.slice(0, 4));
       if (!nid || !nid.id) return nid;
       this.#insert("events", { event_id: nid.id, kind: ev.kind, status: ev.status, where_text: ev.where_text, by_actor: stamp(by), at: at33, alias_of: null });
@@ -67681,7 +67720,7 @@ var Events = class _Events {
   onWhenChanged(module, fn) {
     return this.#listen(this.#onWhen, module, fn, { slot: "onWhenChanged" });
   }
-  /** R16: run after commit, for `when_moved` and `participant_re_resolved` (and merges and splits). */
+  /** R16: run after commit, for `when_moved` and `participant_re_resolved` (and merges and splits), with `at`. */
   onEventChanged(module, fn) {
     return this.#listen(this.#onChanged, module, fn, { slot: "onEventChanged" });
   }
@@ -67747,7 +67786,7 @@ var Events = class _Events {
     if (prior) return { ok: true, already: true, relation_id: Number(prior.relation_id) };
     return this.#tx(() => {
       const aid = this.#addAttestation(f17, x.row, by, "relation");
-      const rid = this.#insert("event_relations", { from_event: f17, to_event: t2, kind, attestation_id: aid, by_actor: stamp(by), at: this.#now() });
+      const rid = this.#insert("event_relations", { from_event: f17, to_event: t2, kind, attestation_id: aid, by_actor: stamp(by), at: this.#instant() });
       return { ok: true, relation: this.#relationView(this.#one(`SELECT * FROM event_relations WHERE relation_id=?`, rid), "class:admin") };
     });
   }
@@ -67760,7 +67799,7 @@ var Events = class _Events {
     this.#sql.exec(
       `UPDATE event_relations SET withdrawn_actor=?, withdrawn_at=?, withdrawn_why=? WHERE relation_id=?`,
       stamp(by),
-      this.#now(),
+      this.#instant(),
       reason.trim().slice(0, REASON_MAX2),
       r.relation_id
     );
@@ -67797,7 +67836,7 @@ var Events = class _Events {
     const held2 = this.#one(`SELECT event_id FROM event_aliases WHERE alias=?`, actId.trim());
     if (held2 && held2.event_id === id) return { ok: true, already: true, act_id: actId.trim(), event_id: id };
     if (held2) return refuse7("ACT_ALIASED", "that act already names another event", { event_id: held2.event_id });
-    this.#sql.exec(`INSERT INTO event_aliases (alias, event_id, by_actor, at) VALUES (?,?,?,?)`, actId.trim(), id, stamp(by), this.#now());
+    this.#sql.exec(`INSERT INTO event_aliases (alias, event_id, by_actor, at) VALUES (?,?,?,?)`, actId.trim(), id, stamp(by), this.#instant());
     return { ok: true, act_id: actId.trim(), event_id: id };
   }
   eventForAct(actId) {
@@ -67848,14 +67887,15 @@ var Events = class _Events {
   }
   #participantView(p3, viewer, attById) {
     const a = attById.get(Number(p3.attestation_id)) || this.#one(`SELECT * FROM event_attestations WHERE attestation_id=?`, p3.attestation_id);
+    const checked = p3.role === "voted" && this.#voteValues() !== null;
     return {
       participant_id: Number(p3.participant_id),
       entity_id: p3.entity_id,
       role: p3.role,
       ...p3.role === "voted" ? {
         vote_value: p3.vote_value,
-        vote_value_checked: this.#voteValues() !== null,
-        ...this.#voteValues() === null ? { vote_value_why: "no active jurisdiction profile names vote values, so the value is kept as the record writes it" } : {}
+        vote_value_checked: checked,
+        ...checked ? {} : { vote_value_why: "no active jurisdiction profile names vote values, so the value is kept as the record writes it" }
       } : {},
       attestation_id: Number(p3.attestation_id),
       grades: { attestation: a ? a.grade : null, resolution: this.#resolutionGrade(p3.entity_id, a) },
@@ -68002,16 +68042,17 @@ var Events = class _Events {
           } : { ...it, of: [id] });
         }
       }
-      const r = this.#range([...items.values()], from, to);
+      const all = [...items.values()];
+      const r = this.#range(all.filter((i) => i.when), from, to);
       if (r.bad) return refuse7("BAD_DATE", r.bad);
-      const b = this.#bounded(r.items, limit);
+      const b = this.#bounded([...r.items, ...all.filter((i) => !i.when)], limit);
       answer.world = { label: "what they did", items: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
     }
     if (want.includes("ours")) {
       const cap = clamp2(limit);
       answer.ours = { label: "what we did", sources: this.#sources.map((s) => {
         try {
-          const got = s.fn({ set: ids, from, to, limit: cap });
+          const got = s.fn({ set: ids, from, to, limit: cap, viewer });
           const list6 = Array.isArray(got) ? got : got && Array.isArray(got.items) ? got.items : [];
           const items = list6.filter(isObj15).map((x) => ({ at: x.at ?? null, label: x.label ?? null, ref: x.ref ?? null, kind: x.kind ?? null }));
           const zone = this.zone();
@@ -68021,7 +68062,11 @@ var Events = class _Events {
           });
           const o = orderByWhen(withWhen, (x) => `${x.ref}`);
           const all = [...o.placed, ...o.nowhere.map((x) => ({ ...x, placed_nowhere: true }))];
-          return { source: s.module, items: all.slice(0, cap).map(({ when, ...x }) => x), truncated: all.length > cap };
+          return {
+            source: s.module,
+            items: all.slice(0, cap).map(({ when, ...x }) => x),
+            truncated: all.length > cap || isObj15(got) && got.truncated === true
+          };
         } catch (e2) {
           return { source: s.module, error: String(e2 && e2.message || e2).slice(0, 200) };
         }
@@ -68134,7 +68179,7 @@ var Events = class _Events {
     return {
       rows: (q10, ...a) => this.#rows(q10, ...a),
       one: (q10, ...a) => this.#one(q10, ...a),
-      now: () => this.#now(),
+      now: () => this.#instant(),
       view: () => this.view(),
       zone: () => this.zone(),
       extraction: this.#extraction,
@@ -68154,9 +68199,9 @@ var Events = class _Events {
       visibleAttestations: (e2, v) => this.#visibleAttestations(e2, v),
       resolutionGrade: (en, a) => this.#resolutionGrade(en, a),
       captureGrade: (s) => this.#captureGrade(s),
-      voteRefusal: (v) => this.#voteRefusal(v),
+      voteMatch: (v) => this.#voteMatch(v, { fromSource: true }),
       tell: (c) => this.#tell(c),
-      allocEvent: () => this.#record.allocId("EVT", this.#now().slice(0, 4))
+      allocEvent: () => this.#record.allocId("EVT", this.#instant().slice(0, 4))
     };
   }
 };
@@ -68207,6 +68252,7 @@ CREATE TABLE IF NOT EXISTS lines (
   to_entity    TEXT NOT NULL,
   role         TEXT,
   capacity     TEXT,
+  title        TEXT,              -- holds only: the post's title as the basis words it, kept as written (T34, N573)
   valid_json   TEXT NOT NULL,     -- the validity as given: {from, to, precision, zone}
   from_event   TEXT,              -- an event bound's event, so R6 finds the lines it bounds
   to_event     TEXT,
@@ -68256,6 +68302,7 @@ CREATE TABLE IF NOT EXISTS line_withdrawals (
   at       TEXT NOT NULL
 );
 `;
+var LINES_ADDITIVE_COLUMNS = Object.freeze([["lines", "title", "TEXT"]]);
 var LINES_TABLES = Object.freeze(["lines", "line_bound_cache", "line_withdrawals", "line_current_through"]);
 
 // src/lines/vocab.mjs
@@ -68491,6 +68538,8 @@ var Lines = class _Lines {
       const t2 = st.trim();
       if (t2) this.#sql.exec(t2);
     }
+    for (const [table4, column, decl] of LINES_ADDITIVE_COLUMNS)
+      if (!this.#rows(`PRAGMA table_info(${table4})`).some((c) => c.name === column)) this.#sql.exec(`ALTER TABLE ${table4} ADD COLUMN ${column} ${decl}`);
     if (this.#migrated) return { ok: true, already: true };
     const must = (what, r) => {
       if (r && (r.ok === false || r.refused)) throw new Error(`lines: ${what} refused: ${r.reason || r.refused} ${r.detail || r.why || ""}`);
@@ -68900,7 +68949,7 @@ var Lines = class _Lines {
     return { refusal: refuse8("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
   }
   /* ---- recordLine (R1–R5) ---- */
-  recordLine({ kind, from, to, role, capacity, valid, basis, by } = {}) {
+  recordLine({ kind, from, to, role, capacity, title, valid, basis, by } = {}) {
     const k = typeof kind === "string" ? kind.trim() : "";
     if (!LINE_KINDS.includes(k))
       return refuse8(
@@ -68930,6 +68979,10 @@ var Lines = class _Lines {
       if (!CAPACITIES.includes(capacity)) return refuse8("UNKNOWN_CAPACITY", `a capacity is one of ${CAPACITIES.join(", ")}`, { capacities: [...CAPACITIES] });
     } else if (capacity !== void 0 && capacity !== null && capacity !== "")
       return refuse8("BAD_CAPACITY", "only a holds line carries a capacity");
+    if (title !== void 0 && title !== null) {
+      if (k !== "holds") return refuse8("BAD_TITLE", "only a holds line carries a title");
+      if (!filled4(title)) return refuse8("BAD_TITLE", "a title is the post's title as the basis words it, a non-blank string");
+    }
     const b = this.#basis(basis, by);
     if (b.refusal) return b.refusal;
     const v = isObj16(valid) ? valid : {};
@@ -68974,6 +69027,7 @@ var Lines = class _Lines {
       to_entity: to,
       role: filled4(role) ? role : null,
       capacity: k === "holds" ? capacity : null,
+      title: k === "holds" && filled4(title) ? title : null,
       valid_json: json2(norm3),
       from_event: isObj16(norm3.from) ? norm3.from.event : null,
       to_event: isObj16(norm3.to) ? norm3.to.event : null,
@@ -69034,6 +69088,7 @@ var Lines = class _Lines {
       to: line.to_entity,
       role: line.role ?? null,
       capacity: line.capacity ?? null,
+      title: line.title ?? null,
       valid: cache.stale ? { undetermined: true, why: "cache stale" } : this.#validFor(line, cache),
       bounds: {
         given: given2,
@@ -69329,7 +69384,7 @@ var LOCAL_FACTS_CHECKS = Object.freeze({
   NO_SUCH_FACT: {
     check: "C-126.2",
     where: at6("noSuchFact", "is-fact-named"),
-    translation: "No local fact of this instance's active jurisdiction profiles answers to that path. A path names one profile's holiday year, an office's hours or the time zone. Nothing was written."
+    translation: "No local fact of the active jurisdiction profiles answers to that path. A path names one profile's holiday year (of its office calendar or of a named closure list), an office's hours or the time zone. Nothing was written."
   },
   FACT_ACT_REFUSED: {
     check: "C-126.3",
@@ -69390,6 +69445,7 @@ function migrateLocalFacts(sql) {
 var LOCAL_FACT_KINDS = Object.freeze(["holidays", "hours", "time_zone"]);
 var PROFILE_RE = /^[a-z0-9][a-z0-9-]*$/;
 var YEAR_RE = /^\d{4}$/;
+var LIST_RE = /^[a-z][a-z0-9_]*$/;
 var PATH_MAX = 1e3;
 var enc = (s) => encodeURIComponent(s);
 var name = (s) => typeof s === "string" && s.trim() !== "" && s === s.trim();
@@ -69406,6 +69462,10 @@ function officesToken(offices) {
   if (t2.some((x) => x === null)) return null;
   return [...new Set(t2)].sort().join(",");
 }
+function listToken(list6) {
+  if (list6 === void 0 || list6 === null) return "";
+  return typeof list6 === "string" && LIST_RE.test(list6) ? `list=${list6}` : null;
+}
 function factPath(parts) {
   try {
     if (!isObj17(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
@@ -69415,9 +69475,10 @@ function factPath(parts) {
     else if (fact === "holidays") {
       const y = typeof parts.year === "number" ? String(parts.year) : parts.year;
       if (typeof y !== "string" || !YEAR_RE.test(y)) return null;
+      const l2 = listToken(parts.list);
       const o = officesToken(parts.offices);
-      if (o === null) return null;
-      p3 = `${profile}/holidays/${y}${o ? `/${o}` : ""}`;
+      if (o === null || l2 === null) return null;
+      p3 = `${profile}/holidays/${y}${l2 ? `/${l2}` : ""}${o ? `/${o}` : ""}`;
     } else if (fact === "hours") {
       const of = parts.office;
       if (!isObj17(of)) return null;
@@ -69445,11 +69506,17 @@ function parseFactPath(path) {
     const [profile, fact] = seg;
     let parts = null;
     if (fact === "time_zone" && seg.length === 2) parts = { profile, fact };
-    else if (fact === "holidays" && (seg.length === 3 || seg.length === 4)) {
+    else if (fact === "holidays" && seg.length >= 3 && seg.length <= 5) {
       parts = { profile, fact, year: Number(seg[2]) };
-      if (seg.length === 4) {
+      let rest = seg.slice(3);
+      if (rest.length && rest[0].startsWith("list=")) {
+        parts.list = rest[0].slice(5);
+        rest = rest.slice(1);
+      }
+      if (rest.length > 1) return null;
+      if (rest.length === 1) {
         const offices = [];
-        for (const t2 of seg[3].split(",")) {
+        for (const t2 of rest[0].split(",")) {
           const m = /^(role|venue)=(.+)$/.exec(t2);
           const v = m && dec(m[2]);
           if (v === null || !m) return null;
@@ -69507,7 +69574,8 @@ var dayIn = (instant5, zone) => {
   }
 };
 var givers = (x, own5) => own5 ? [own5] : [x.profile, ...(x.bases || []).map((b) => b.profile)].filter(Boolean);
-var officeCalendar = (h) => isObj18(h) && (h.list === void 0 || h.list === null);
+var listOf = (h) => isObj18(h) && typeof h.list === "string" ? h.list : null;
+var sameEntry = (e2, parts) => isObj18(e2) && Number(e2.year) === parts.year && listOf(e2) === (parts.list ?? null) && officesToken(e2.offices) === officesToken(parts.offices);
 function factIn(p3, parts, own5 = null) {
   if (!isObj18(p3)) return null;
   const mine = (x) => givers(x, own5).includes(parts.profile);
@@ -69516,8 +69584,7 @@ function factIn(p3, parts, own5 = null) {
     return isObj18(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
   }
   if (parts.fact === "holidays") {
-    const key = officesToken(parts.offices);
-    const h = (Array.isArray(p3.holidays) ? p3.holidays : []).find((e2) => officeCalendar(e2) && Number(e2.year) === parts.year && officesToken(e2.offices) === key && mine(e2));
+    const h = (Array.isArray(p3.holidays) ? p3.holidays : []).find((e2) => sameEntry(e2, parts) && mine(e2));
     if (!h) return null;
     const days = (h.days || []).map((d) => ({ date: d.date, name: d.name })).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
     return { value: days, status: h.status, basis: h.basis };
@@ -69538,7 +69605,13 @@ function factsOf(p3) {
   if (!isObj18(p3)) return out;
   if (isObj18(p3.time_zone)) out.push({ profile: p3.id, fact: "time_zone" });
   for (const h of Array.isArray(p3.holidays) ? p3.holidays : [])
-    if (officeCalendar(h)) out.push({ profile: p3.id, fact: "holidays", year: Number(h.year), ...h.offices ? { offices: h.offices } : {} });
+    if (isObj18(h)) out.push({
+      profile: p3.id,
+      fact: "holidays",
+      year: Number(h.year),
+      ...listOf(h) ? { list: h.list } : {},
+      ...h.offices ? { offices: h.offices } : {}
+    });
   for (const c of Array.isArray(p3.counterparties) ? p3.counterparties : [])
     if (isObj18(c) && isObj18(c.hours)) out.push({ profile: p3.id, fact: "hours", office: { role: c.role, body: c.body } });
   for (const k of Array.isArray(p3.action_kinds) ? p3.action_kinds : [])
@@ -69552,8 +69625,7 @@ function withValue(p3, parts, value) {
     q10.time_zone.value = value;
   } else if (parts.fact === "holidays") {
     if (!Array.isArray(value)) return null;
-    const key = officesToken(parts.offices);
-    const h = q10.holidays.find((e2) => officeCalendar(e2) && Number(e2.year) === parts.year && officesToken(e2.offices) === key);
+    const h = q10.holidays.find((e2) => sameEntry(e2, parts));
     h.days = clone2(value);
   } else {
     if (!isObj18(value) || Object.keys(value).join() !== "weekly") return null;
@@ -69704,7 +69776,7 @@ var LocalFacts = class _LocalFacts {
     const today2 = dayIn(this.#instant(), zone);
     const confirmedAt = latest3 && latest3.act === "confirm" ? latest3.at : null;
     const confirmed = confirmedAt ? dayIn(confirmedAt, zone) : null;
-    const undetermined3 = today2 === null ? { undetermined: true, why: `the profile ${parts.profile} holds no time zone this instance can read, so its local days, and this fact's horizon, are undetermined` } : null;
+    const undetermined3 = today2 === null ? { undetermined: true, why: `the profile ${parts.profile} holds no time zone that can be read, so its local days, and this fact's horizon, are undetermined` } : null;
     if (parts.fact === "holidays") {
       const y = parts.year, due_from = `${y - 1}-11-01`, lapses_on2 = `${y + 1}-01-01`;
       if (undetermined3)
@@ -69801,7 +69873,8 @@ var LocalFacts = class _LocalFacts {
   /* ===================================================================== *
    * R2: factStatus
    * ===================================================================== */
-  /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first. */
+  /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first.
+   *  The list's `note` is member-facing (DEC-149): it names the group's Civicsmith, never "this instance". */
   factStatus(a = {}) {
     const b = isObj18(a) ? a : {};
     const active = this.#active();
@@ -69818,7 +69891,7 @@ var LocalFacts = class _LocalFacts {
       ok: true,
       facts,
       count: facts.length,
-      note: "corrections and disputes come first, for a member to report for a profile fix; this instance transmits nothing"
+      note: "corrections and disputes come first, for a member to report for a profile fix; your group's Civicsmith transmits nothing"
     };
   }
   /* Every fact of the active profiles, once each, with its status. */
@@ -69929,7 +70002,7 @@ var LocalFacts = class _LocalFacts {
       const named = typeof office === "string" ? office : typeof office.role === "string" ? office.role : office.venue !== void 0 ? { venue: office.venue } : null;
       const tok3 = named === null ? null : officesToken([named]);
       if (!tok3) return null;
-      const entries = factsOf(p3).filter((f17) => f17.fact === "holidays" && f17.year === year && f17.offices && (officesToken(f17.offices) || "").split(",").includes(tok3)).map((f17) => factPath(f17)).filter(Boolean).sort();
+      const entries = factsOf(p3).filter((f17) => f17.fact === "holidays" && f17.year === year && !f17.list && f17.offices && (officesToken(f17.offices) || "").split(",").includes(tok3)).map((f17) => factPath(f17)).filter(Boolean).sort();
       return entries[0] || null;
     };
     const fallback = (why, followed2 = []) => {
@@ -72331,9 +72404,22 @@ var Retrieval = class _Retrieval {
     };
     return Object.freeze({ projection: PROJECTION_RELATION, fields: Object.freeze(fields), ...money });
   }
-  /** R68, R69: every compile this module runs: the relations, and the governing zone (`query-language` R27). */
-  #compile(input) {
-    return compile4({ ...input, zone: this.zone() }, this.#relations());
+  /** R72 (N584; K1609): the relations every compile this module runs names (`query-language` R26's `fields`, each
+   *  `{table, key, col}`, with the projection and money's words beside them), as a run compiles with them at this
+   *  moment, frozen, so `answers`' saved-form check (its R15) compiles a form against the T33 fields a run reads.
+   *  Synchronous; writes nothing but the views R68 already keeps; never throws: a read that fails answers the relations
+   *  R61–R62 name. */
+  relations() {
+    try {
+      return this.#relations();
+    } catch {
+      return this.#via;
+    }
+  }
+  /** R68, R69: every compile this module runs: the relations, and the governing zone (`query-language` R27). A caller
+   *  that checks a form first (R70) hands the zone and relations it checked with, so the check and the run are one. */
+  #compile(input, zone = this.zone(), relations2 = this.relations()) {
+    return compile4({ ...input, zone }, relations2);
   }
   /* ---- sight ---- */
   /** Whether `viewer` may see bundle `id` (membership R43), memoised per call site. A machine credential sees every
@@ -73295,7 +73381,8 @@ var Retrieval = class _Retrieval {
     };
     const isForm = !!form && typeof form === "object" && !Array.isArray(form) && form.v === 1 && typeof form.q === "string";
     if (!isForm || typeof owner !== "string" || !owner || typeof viewer !== "string" || viewer !== owner) return notYours;
-    const saved = typeof savedForm === "function" ? savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir }, this.#relations()) : { ok: true };
+    const zone = this.zone(), relations2 = this.relations();
+    const saved = typeof savedForm === "function" ? savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir, zone }, relations2) : { ok: true };
     if (!saved || saved.ok !== true) return saved && typeof saved === "object" ? saved : notYours;
     const asked = Number(limit);
     const cap = limit == null || !Number.isFinite(asked) || asked < 1 ? SAVED_LIMIT_DEFAULT : Math.min(IDS_MAX, Math.floor(asked));
@@ -73305,7 +73392,7 @@ var Retrieval = class _Retrieval {
       sort: form.sort ?? null,
       dir: form.dir ?? null,
       viewer
-    });
+    }, zone, relations2);
     const tally = { applied: 0 };
     const total2 = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const all = this.runQuery(plan.statements.ids(), tally).map((r) => r.bundle_id);
@@ -73940,6 +74027,8 @@ function migrateStandards(sql) {
   const cols = [...sql.exec(`PRAGMA table_info(standards)`)].map((c) => c.name);
   if (!cols.includes("reason")) sql.exec(`ALTER TABLE standards ADD COLUMN reason TEXT`);
   for (const [c, type] of T33_COLUMNS) if (!cols.includes(c)) sql.exec(`ALTER TABLE standards ADD COLUMN ${c} ${type}`);
+  sql.exec(`CREATE INDEX IF NOT EXISTS standards_instrument ON standards(instrument, portion_path, standard_id)`);
+  sql.exec(`CREATE INDEX IF NOT EXISTS standards_portion_content ON standards(portion_content, standard_id)`);
 }
 
 // src/standards/instrument.mjs
@@ -74036,6 +74125,10 @@ function referenceKey(view, ref) {
 function sourceCopy(view, source2) {
   const code = codeOf(view, source2);
   return code && ["official", "codifier", "undetermined"].includes(code.copy) ? code.copy : "undetermined";
+}
+var PORTION_PATH_MAX = 200;
+function isPortionPath(value) {
+  return typeof value === "string" && value.trim() !== "" && [...value].length <= PORTION_PATH_MAX;
 }
 var foldCite = (s) => String(s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
 
@@ -74348,7 +74441,7 @@ var LawRecords = class {
       const id = this.#id("lprop", { what, fields, at: at33 });
       this.k.sql.exec(`INSERT INTO law_proposals (proposal_id, what, fields_json, why, proposed_by, proposed_at)
                        VALUES (?,?,?,?,?,?)`, id, what, JSON.stringify(fields), why, who2, at33);
-      const label = proposalLabel(who2, "standard");
+      const label = proposalLabel(who2, "law_relation");
       return {
         ok: true,
         proposal: {
@@ -74360,6 +74453,7 @@ var LawRecords = class {
           by: label.by,
           state: label.state,
           machine_work: label.machine_work,
+          label: label.says,
           adopted_as: null
         },
         recorded: false,
@@ -75160,7 +75254,7 @@ var Standards = class {
     let portion = null;
     if (a.portion != null) {
       const p3 = a.portion;
-      if (!isObj22(p3) || Object.keys(p3).some((k) => k !== "path" && k !== "content_id") || typeof p3.path !== "string" || !p3.path.trim() || p3.path.length > 200 || typeof p3.content_id !== "string")
+      if (!isObj22(p3) || Object.keys(p3).some((k) => k !== "path" && k !== "content_id") || !isPortionPath(p3.path) || typeof p3.content_id !== "string")
         return bad2("portion", "is {path, content_id}: a path within the instrument of at most 200 characters and the content id of its extent");
       if (!texts.includes(p3.content_id.trim()))
         return refusal9("STANDARD_PORTION_NOT_IN_TEXT", `${p3.content_id.slice(0, 80)} is not one of this standard's text passages. Nothing was written.`, { content_id: p3.content_id.slice(0, 80) });
@@ -75613,6 +75707,49 @@ var Standards = class {
       cursor: truncated3 ? page2[page2.length - 1].r.standard_id : null,
       ...date ? { at: date, says: `standards in force on ${date}, or whose period does not decide it (stated undetermined); a standard whose period excludes the date is left out` } : {}
     };
+  }
+  /* ===================================================================== *
+   * R32: READS BY KEY AND PORTION, AND BY A PORTION'S CONTENT ID (N590)
+   * ===================================================================== */
+  /** R32: the held standards whose instrument key is `key` (its versions), with `portion` only those recording that
+   *  portion path. `{ok, items, truncated}`, in id order, at most `PAGE_MAX`; a viewer naming no member reads none; a
+   *  blank key answers none. Writes nothing. */
+  standardsAt({ key = null, portion = null, viewer = null } = {}) {
+    const k = str5(key);
+    if (!k) return { ok: true, items: [], truncated: false };
+    const p3 = portion == null || portion === "" ? null : String(portion);
+    return this.#versionsWhere(
+      p3 === null ? "s.instrument=?" : "s.instrument=? AND s.portion_path=?",
+      p3 === null ? [k] : [k, p3],
+      viewer
+    );
+  }
+  /** R32: the held standards whose portion's content id is `contentId`, as `standardsAt` answers them. */
+  standardsWithPortion({ contentId = null, viewer = null } = {}) {
+    const c = str5(contentId);
+    if (!c) return { ok: true, items: [], truncated: false };
+    return this.#versionsWhere("s.portion_content=?", [c], viewer);
+  }
+  /* R32's one read: the rows the condition admits that the viewer may read (R8's gate), one past the cap. */
+  #versionsWhere(cond, args, viewer) {
+    const gate = viewerPredicate(viewer);
+    const rows2 = this.#rows(
+      `SELECT s.standard_id, s.instrument, s.portion_path, s.portion_content, s.period_from, s.period_to,
+                               s.supersedes FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
+                             WHERE (${gate.sql}) AND ${cond} ORDER BY s.standard_id LIMIT ?`,
+      ...gate.args,
+      ...args,
+      PAGE_MAX + 1
+    );
+    const items = rows2.slice(0, PAGE_MAX).map((r) => ({
+      id: r.standard_id,
+      instrument: r.instrument ?? null,
+      portion: r.portion_path ? { path: r.portion_path, content_id: r.portion_content } : null,
+      period: { from: r.period_from ?? null, to: r.period_to ?? null },
+      supersedes: r.supersedes ?? null,
+      superseded_by: this.#successorOf(r.standard_id)
+    }));
+    return { ok: true, items, truncated: rows2.length > PAGE_MAX };
   }
   /* ===================================================================== *
    * R21: THE REVERSE INDEX (LAW N4)
@@ -79069,7 +79206,7 @@ var DUTIES_CHECKS = Object.freeze({
     9,
     "fieldRefusal",
     "is-duty-trigger",
-    "An obligation says what starts it: an event concerning someone, a repeating schedule, an item a part of this copy records (such as a request the group sent), or a stated date. This is none of them. Nothing was written."
+    "An obligation says what starts it: an event concerning someone, a repeating schedule, an item the group's own work records (such as a request the group sent), or a stated date. This is none of them. Nothing was written."
   ),
   BAD_RECURRENCE: row2(
     10,
@@ -79120,7 +79257,9 @@ var DUTIES_CHECKS = Object.freeze({
     "is-duty-extent",
     "A reported status quotes a passage of a captured document the record holds. The passage named is not held. Nothing was written."
   ),
-  MEMBER_ACT_ONLY: row2(
+  /* C-133.19, .21 and .24 are this module's own codes (R2, K1679; DEC-49 arm A: one code, one condition): the bare
+     `MEMBER_ACT_ONLY`, `NO_REASON` and `NO_SUCH_PROPOSAL` are other families' for other conditions. */
+  DUTY_MEMBER_ACT_ONLY: row2(
     19,
     "memberOnly",
     "is-duty-member",
@@ -79132,7 +79271,7 @@ var DUTIES_CHECKS = Object.freeze({
     "is-duty-clause",
     "Adopting an obligation names the clause it rests on, in the member's own words. None was given. Nothing was written."
   ),
-  NO_REASON: row2(
+  DUTY_NO_REASON: row2(
     21,
     "noReason",
     "is-duty-reason",
@@ -79150,7 +79289,7 @@ var DUTIES_CHECKS = Object.freeze({
     "is-duty-held",
     "No obligation you can see answers to that id. Nothing was written."
   ),
-  NO_SUCH_PROPOSAL: row2(
+  DUTY_NO_SUCH_PROPOSAL: row2(
     24,
     "adopt",
     "is-duty-proposal",
@@ -79364,7 +79503,7 @@ function walk(v, fn, key = null) {
 }
 function memberOnly(by, act2) {
   if (isMember2(by)) return null;
-  return refusal12("MEMBER_ACT_ONLY", `${act2} is a member's own act; the machine may only propose.`, { by: said4(by) ? str6(by) : null });
+  return refusal12("DUTY_MEMBER_ACT_ONLY", `${act2} is a member's own act; the machine may only propose.`, { by: said4(by) ? str6(by) : null });
 }
 function noClause(clause2) {
   if (said4(clause2) && clause2.length <= CLAUSE_MAX) return null;
@@ -79372,14 +79511,34 @@ function noClause(clause2) {
 }
 function noReason(reason) {
   if (said4(reason) && reason.length <= REASON_MAX7) return null;
-  return refusal12("NO_REASON", `give your reason, in 1 to ${REASON_MAX7} characters.`, { max: REASON_MAX7 });
+  return refusal12("DUTY_NO_REASON", `give your reason, in 1 to ${REASON_MAX7} characters.`, { max: REASON_MAX7 });
 }
 function noDuty() {
   return refusal12("NO_DUTY", "an obligation is named by its id (DUT-...).");
 }
-function noSuchDuty(dutyId) {
-  return refusal12("NO_SUCH_DUTY", "no obligation you can see answers to that id.", { duty_id: typeof dutyId === "string" ? dutyId.slice(0, 80) : null });
+var NO_SUCH_DUTY_DETAIL = "no obligation you can see answers to that id";
+var NO_SUCH_DUTY_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "duty_id", "detail"]);
+function noSuchDuty(dutyId, extra = null) {
+  let own5 = [];
+  try {
+    if (extra && typeof extra === "object" && !Array.isArray(extra))
+      own5 = Object.entries(extra).filter(([k]) => !NO_SUCH_DUTY_FIXED.has(k));
+  } catch {
+    own5 = [];
+  }
+  const row8 = DUTIES_CHECKS.NO_SUCH_DUTY;
+  return {
+    ok: false,
+    reason: "NO_SUCH_DUTY",
+    code: "NO_SUCH_DUTY",
+    check: row8.check,
+    translation: row8.translation,
+    duty_id: dutyId ?? null,
+    ...Object.fromEntries(own5),
+    detail: NO_SUCH_DUTY_DETAIL
+  };
 }
+var OCCURRENCE_KEY_RE = Object.freeze(/^OCC-[0-9a-f]{32}$/);
 var Duties = class _Duties {
   #sources = [];
   /* R16: [{module, fn}] */
@@ -79387,6 +79546,8 @@ var Duties = class _Duties {
   /* the used modules' services, each an instance or a function answering it on first use */
   #evidence = [];
   /* R12: [{module, fn}] */
+  #tracked = [];
+  /* R26: [{module, fn}] */
   constructor({
     storage,
     record,
@@ -79440,6 +79601,11 @@ var Duties = class _Duties {
   }
   get content() {
     return this.#dep("content");
+  }
+  /* N581: the viewer this module's reads of other modules carry: the caller's own, or `SYSTEM_VIEWER` for an internal
+     read (`INTERNAL`) or an act's own checks (no viewer). */
+  static #reader(viewer) {
+    return viewer === INTERNAL || viewer === null || viewer === void 0 ? SYSTEM_VIEWER2 : viewer;
   }
   #rows(q10, ...a) {
     return [...this.sql.exec(q10, ...a)];
@@ -79508,7 +79674,7 @@ var Duties = class _Duties {
   #standard(id, viewer = null) {
     if (!said4(id) || !this.standards) return null;
     try {
-      const r = this.standards.standardRead({ id, viewer: viewer ?? SYSTEM_VIEWER2 });
+      const r = this.standards.standardRead({ id, viewer: _Duties.#reader(viewer) });
       return r && r.ok !== false ? r : null;
     } catch {
       return null;
@@ -79517,7 +79683,7 @@ var Duties = class _Duties {
   #event(id, viewer = null) {
     if (!said4(id) || !this.events) return null;
     try {
-      const r = this.events.readEvent({ eventId: id, viewer: viewer ?? SYSTEM_VIEWER2 });
+      const r = this.events.readEvent({ eventId: id, viewer: _Duties.#reader(viewer) });
       return r && r.ok !== false && r.found !== false ? r.event || r : null;
     } catch {
       return null;
@@ -79526,7 +79692,7 @@ var Duties = class _Duties {
   #fact(id, viewer = null) {
     if (!said4(id) || !this.money) return null;
     try {
-      const r = this.money.readFact({ factId: id, viewer: viewer ?? SYSTEM_VIEWER2 });
+      const r = this.money.readFact({ factId: id, viewer: _Duties.#reader(viewer) });
       return r && r.ok !== false && r.found !== false ? r.fact || r : null;
     } catch {
       return null;
@@ -79590,7 +79756,8 @@ var Duties = class _Duties {
       if (!(proc2 && proc2.kind === "proceeding") && !home)
         return refusal12("ARISING_IN_NOT_HELD", "arising_in names a registered proceeding or a held capture.", { arising_in: said4(ai) ? ai.slice(0, 80) : null });
     }
-    const statuses = Array.isArray(view.response_statuses) ? view.response_statuses.map((x) => x && x.status).filter(said4) : [];
+    const held2 = view.vocabulary && Array.isArray(view.vocabulary.response_statuses) ? view.vocabulary.response_statuses : [];
+    const statuses = held2.map((x) => x && x.status).filter(said4);
     for (const rs of Array.isArray(f17.reported_status) ? f17.reported_status : f17.reported_status === void 0 ? [] : [f17.reported_status]) {
       if (!isObj24(rs) || !statuses.includes(rs.status))
         return refusal12("UNKNOWN_REPORTED_STATUS", statuses.length ? `a reported status is one of the profile's response vocabulary: ${statuses.join(", ")}.` : "the active jurisdiction profiles hold no response vocabulary, so no status can be quoted.", { statuses });
@@ -79795,7 +79962,7 @@ var Duties = class _Duties {
     const c = noClause(b.clause);
     if (c) return c;
     const p3 = this.#one(`SELECT * FROM duty_proposals WHERE proposal_id=?`, Number(b.proposalId));
-    if (!p3) return refusal12("NO_SUCH_PROPOSAL", "no proposal answers to that id.", { proposal_id: b.proposalId ?? null });
+    if (!p3) return refusal12("DUTY_NO_SUCH_PROPOSAL", "no proposal answers to that id.", { proposal_id: b.proposalId ?? null });
     if (p3.adopted_duty) return refusal12("ALREADY_ADOPTED", "the proposal was adopted.", { duty_id: p3.adopted_duty });
     const fields = safeJson14(p3.fields_json);
     const r = this.fieldRefusal(fields);
@@ -79817,7 +79984,7 @@ var Duties = class _Duties {
   /* R3: allocates `DUT-<year>-NNNN`, records who, when and the clause, version 1. */
   #adoptFields(fields, { by, clause: clause2, proposal }) {
     const at33 = this.#stamp();
-    return this.record.transact(() => {
+    return this.#told(() => this.record.transact(() => {
       const alloc = this.record.allocId("DUT", at33.slice(0, 4));
       if (!alloc || !alloc.id) return alloc;
       const id = alloc.id;
@@ -79839,7 +80006,7 @@ var Duties = class _Duties {
       if (g) return g;
       if (proposal !== null) this.sql.exec(`UPDATE duty_proposals SET adopted_duty=? WHERE proposal_id=? AND adopted_duty IS NULL`, id, proposal);
       return { ok: true, duty_id: id, version: 1, adopted_by: by, at: at33, clause: clause2.trim(), proposal_id: proposal, tracked: true };
-    });
+    }));
   }
   /* ===================================================================== *
    * R6: revise, withdraw
@@ -79861,7 +80028,7 @@ var Duties = class _Duties {
     const r = this.fieldRefusal(next);
     if (r) return r;
     const at33 = this.#stamp();
-    return this.record.transact(() => {
+    return this.#told(() => this.record.transact(() => {
       const v = d.version + 1;
       const g = this.#write("duty_versions", { duty_id: d.duty_id, version: v, fields_json: canonicalJson(next), reason: b.reason.trim(), by_member: str6(b.by), at: at33 });
       if (g) return g;
@@ -79876,7 +80043,7 @@ var Duties = class _Duties {
         d.duty_id
       );
       return { ok: true, duty_id: d.duty_id, version: v, prior_version: d.version, by: str6(b.by), at: at33, reason: b.reason.trim() };
-    });
+    }));
   }
   /** R6: a withdrawn duty remains, shown withdrawn, and derives no further occurrences. */
   withdraw(a = {}) {
@@ -79890,7 +80057,7 @@ var Duties = class _Duties {
     if (!d) return noSuchDuty(b.dutyId);
     if (d.withdrawn_at) return { ok: true, already: true, duty_id: d.duty_id, withdrawn_at: d.withdrawn_at, withdrawn_by: d.withdrawn_by };
     const at33 = this.#stamp();
-    return this.record.transact(() => {
+    return this.#told(() => this.record.transact(() => {
       this.sql.exec(
         `UPDATE duties SET withdrawn_at=?, withdrawn_by=?, withdraw_reason=? WHERE duty_id=? AND withdrawn_at IS NULL`,
         at33,
@@ -79899,7 +80066,32 @@ var Duties = class _Duties {
         d.duty_id
       );
       return { ok: true, duty_id: d.duty_id, withdrawn_at: at33, withdrawn_by: str6(b.by), reason: b.reason.trim() };
-    });
+    }));
+  }
+  /* ===================================================================== *
+   * R26: the arming notice
+   * ===================================================================== */
+  /** R26 (N605, K1666): one listener per module, told `{duty}` (the duty's id) once, after a duty is adopted, declared,
+   *  revised or withdrawn, so `scheduler` re-arms its wake for R13's consumer. A malformed or second registration is
+   *  refused through `membership.listenerRefusal`. */
+  onDutyTracked(module, fn) {
+    const r = listenerRefusal(this.#tracked, module, fn, { slot: "duty_tracked" });
+    if (r) return r;
+    this.#tracked.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R26: runs the act (its transaction whole), then tells each listener once when it stood; a listener that throws
+     never undoes the act, nor stops the others, and the notice writes nothing. */
+  #told(act2) {
+    const r = act2();
+    if (r && r.ok === true && said4(r.duty_id))
+      for (const l2 of this.#tracked) {
+        try {
+          l2.fn({ duty: r.duty_id });
+        } catch {
+        }
+      }
+    return r;
   }
   /** R20 (K1563): the capture a duty's source item rests on, for the read contract's `arising_in`; else null. */
   static capturedIn(fields) {
@@ -79939,7 +80131,7 @@ var Duties = class _Duties {
     if (!this.standards || typeof this.standards.inForceAt !== "function")
       return { state: "undetermined", why: "the standards service is not available to answer whether the source is in force" };
     try {
-      const r = this.standards.inForceAt({ standard: src.standard, portion: src.portion, date, viewer });
+      const r = this.standards.inForceAt({ standard: src.standard, portion: src.portion, date, viewer: _Duties.#reader(viewer) });
       if (!r || !r.state) return { state: "undetermined", why: "the standard's in-force answer was not given" };
       return { state: r.state, why: r.why ?? null, ...r.version ? { version: r.version } : {} };
     } catch (e2) {
@@ -80036,7 +80228,7 @@ var Duties = class _Duties {
     if (t2.kind === "event") {
       let r = null;
       try {
-        r = this.events ? this.events.eventsFor({ entity: t2.entity, kinds: [t2.event_kind], from, to, limit: LIST_MAX, viewer: viewer === INTERNAL || !viewer ? SYSTEM_VIEWER2 : viewer }) : null;
+        r = this.events ? this.events.eventsFor({ entity: t2.entity, kinds: [t2.event_kind], from, to, limit: LIST_MAX, viewer: _Duties.#reader(viewer) }) : null;
       } catch (e2) {
         errors.push({ source: "events", error: String(e2 && e2.message || e2).slice(0, 200) });
       }
@@ -80073,7 +80265,7 @@ var Duties = class _Duties {
       else {
         let items;
         try {
-          items = s.fn({ duty: { duty_id: dutyId, version, ...clone3(fields) }, from, to });
+          items = s.fn({ duty: { duty_id: dutyId, version, ...clone3(fields) }, from, to, viewer: _Duties.#reader(viewer) });
         } catch (e2) {
           errors.push({ source: t2.source, error: String(e2 && e2.message || e2).slice(0, 200) });
           items = [];
@@ -80179,7 +80371,7 @@ var Duties = class _Duties {
       occ.evidence.push({ kind: "exception", exception: ex ?? null, by: latest3.by_member, at: latest3.at, reason: latest3.reason });
       state = { state: "discharged", why: `a held exception applies, as ${latest3.by_member} recorded on ${latest3.at.slice(0, 10)}` };
     } else if (latest3 && latest3.event_id) {
-      const ev = this.#event(latest3.event_id, viewer === INTERNAL ? null : viewer);
+      const ev = this.#event(latest3.event_id, viewer);
       const when = ev ? this.#whenOf(ev) : { undetermined: true, why: "the matched event is not readable" };
       occ.evidence.push({
         kind: "event",
@@ -80196,7 +80388,7 @@ var Duties = class _Duties {
       for (const { module, fn } of this.#evidence) {
         let got;
         try {
-          got = fn({ duty: { duty_id: d.duty_id, version: d.version, ...clone3(fields) }, occurrence: { key, trigger: occ.trigger, due: occ.due } });
+          got = fn({ duty: { duty_id: d.duty_id, version: d.version, ...clone3(fields) }, occurrence: { key, trigger: occ.trigger, due: occ.due }, viewer: _Duties.#reader(viewer) });
         } catch (e2) {
           occ.evidence.push({ kind: "measured", source: module, error: String(e2 && e2.message || e2).slice(0, 200) });
           continue;
@@ -80254,7 +80446,7 @@ var Duties = class _Duties {
       return noSuchEvent(null, { exception: b.exception });
     if (exception === null && !this.#event(b.eventId, b.viewer ?? null)) return noSuchEvent(said4(b.eventId) ? b.eventId.slice(0, 80) : null);
     const at33 = this.#stamp();
-    if (!said4(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, at33))
+    if (!said4(b.occurrenceKey) || !OCCURRENCE_KEY_RE.test(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, at33))
       return refusal12("NO_SUCH_OCCURRENCE", "no occurrence of this obligation answers to that key.", { occurrence_key: said4(b.occurrenceKey) ? b.occurrenceKey.slice(0, 80) : null });
     return this.record.transact(() => {
       const g = this.#write("duty_matches", {
@@ -80348,7 +80540,7 @@ var Duties = class _Duties {
     const d = this.#one(`SELECT * FROM duties WHERE duty_id=?`, b.dutyId);
     if (!d) return noSuchDuty(b.dutyId);
     const fields = this.#fieldsOf(d.duty_id, d.version);
-    if (!said4(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, b.asOf))
+    if (!said4(b.occurrenceKey) || !OCCURRENCE_KEY_RE.test(b.occurrenceKey) || !this.#occurrenceAt(d, fields, b.occurrenceKey, b.asOf))
       return refusal12("NO_SUCH_OCCURRENCE", "no occurrence of this obligation answers to that key.", { occurrence_key: said4(b.occurrenceKey) ? b.occurrenceKey.slice(0, 80) : null });
     const at33 = this.#stamp();
     return this.record.transact(() => {
@@ -80462,7 +80654,7 @@ var Duties = class _Duties {
     for (const ent of scope) {
       let r;
       try {
-        r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX, viewer: b.viewer ?? SYSTEM_VIEWER2 });
+        r = this.money.moneyOf({ entity: ent, period: b.period ?? null, limit: LIST_MAX, viewer: _Duties.#reader(b.viewer) });
       } catch (e2) {
         undetermined3.push({ entity: ent, why: String(e2 && e2.message || e2).slice(0, 200) });
         continue;
@@ -82368,7 +82560,7 @@ var placementOf = (p3) => ({
   event_id: p3.event_id ?? null,
   dated_fact_id: p3.dated_fact_id ?? null
 });
-var listOf = (a, ...names) => Array.isArray(a) ? a : a && typeof a === "object" ? names.map((n) => a[n]).find(Array.isArray) || [] : [];
+var listOf2 = (a, ...names) => Array.isArray(a) ? a : a && typeof a === "object" ? names.map((n) => a[n]).find(Array.isArray) || [] : [];
 var Progressions = class _Progressions {
   constructor({
     storage,
@@ -83348,7 +83540,7 @@ var Progressions = class _Progressions {
         e2 = null;
       }
       const held2 = e2 && e2.ok !== false && e2.found !== false ? e2.event || e2 : null;
-      const atts = held2 ? listOf(held2.attestations, "items") : [];
+      const atts = held2 ? listOf2(held2.attestations, "items") : [];
       const attests = atts.some((x) => x && (x.capture_sha === cs || x.dated_fact && x.dated_fact.capture_sha === cs));
       if (!attests)
         return refusal13(
@@ -83360,7 +83552,7 @@ var Progressions = class _Progressions {
     if (df) {
       let facts = [];
       try {
-        facts = listOf(this.events.datedFactsFor({ captureSha: cs, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items");
+        facts = listOf2(this.events.datedFactsFor({ captureSha: cs, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items");
       } catch {
         facts = [];
       }
@@ -83607,7 +83799,7 @@ var Progressions = class _Progressions {
         if (!dz2) return none(`the event ${p3.event_id}'s date states no zone and ${zone.why}`, "event", p3.event_id);
         return { own_date: { value, precision: w.precision, zone: dz2 }, own_date_source: "event", own_date_ref: p3.event_id, own_date_why: null };
       }
-      const facts = listOf(this.events.datedFactsFor({ captureSha: p3.capture_sha, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items");
+      const facts = listOf2(this.events.datedFactsFor({ captureSha: p3.capture_sha, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items");
       let f17 = null;
       if (p3.dated_fact_id) {
         f17 = facts.find((x) => x && x.dated_fact_id === p3.dated_fact_id) || null;
@@ -93345,6 +93537,19 @@ CREATE TABLE IF NOT EXISTS source_person_links (
   PRIMARY KEY (source, person)
 );
 CREATE INDEX IF NOT EXISTS source_person_links_person ON source_person_links(person);
+-- A source link corrected forward (N617): a later link of the same source to the same person governs, and the one it
+-- replaced is kept here with who replaced it and when. Read by no viewer; removed with its link by expunge (R12).
+CREATE TABLE IF NOT EXISTS source_person_link_history (
+  source        TEXT NOT NULL,
+  person        TEXT NOT NULL,
+  evidence      TEXT NOT NULL,
+  sight_json    TEXT NOT NULL,
+  by_actor      TEXT,
+  at            TEXT NOT NULL,
+  replaced_by   TEXT NOT NULL,
+  replaced_at   TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS source_person_link_history_pair ON source_person_link_history(source, person);
 -- INTEREST CHECKS (R22): data-defined, each change a new version, every version kept. machine 1 for the shipped checks
 -- (K1491), whose results are shown only past their gate (R24).
 CREATE TABLE IF NOT EXISTS interest_checks (
@@ -93378,6 +93583,19 @@ CREATE TABLE IF NOT EXISTS interest_check_gates (
   at               TEXT NOT NULL,
   PRIMARY KEY (check_id, version)
 );
+-- A gate measured again (N617): the later measurement governs, and the one it replaced is kept here with who replaced it
+-- and when.
+CREATE TABLE IF NOT EXISTS interest_check_gate_history (
+  check_id         TEXT NOT NULL,
+  version          INTEGER NOT NULL,
+  gold_set         TEXT NOT NULL,
+  false_alarm_rate REAL NOT NULL,
+  by_actor         TEXT,
+  at               TEXT NOT NULL,
+  replaced_by      TEXT NOT NULL,
+  replaced_at      TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS interest_check_gate_history_version ON interest_check_gate_history(check_id, version);
 -- THE CHECKS' OWN RESULT TABLE (R23): each match with its cited derivation and its denominator; never a person's row.
 -- result_id is the SHA-256 of the check, version and derivation, so a re-evaluation finds the same match.
 CREATE TABLE IF NOT EXISTS interest_check_results (
@@ -93407,11 +93625,14 @@ var PEOPLE_TABLES = Object.freeze([
   { name: "person_facts", keys: [], ...base, expunge: "tombstone", export: "yes", sight: "source" },
   { name: "person_contacts", keys: [], ...base, expunge: "tombstone", export: "never", sight: "source" },
   { name: "identity_claims", keys: ["project"], ...base, expunge: "tombstone", export: "yes", sight: "bundle" },
-  { name: "member_ties", keys: [], ...base, expunge: "tombstone", export: "admin-only", sight: "owner" },
+  /* K1490, corpus-export R7 (N594): a member's own ties never leave the copy */
+  { name: "member_ties", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
   { name: "source_person_links", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
+  { name: "source_person_link_history", keys: [], ...base, expunge: "tombstone", export: "never", sight: "owner" },
   { name: "interest_checks", keys: ["project"], ...base, expunge: "none", export: "admin-only", sight: "group", version_chain: true },
   { name: "interest_check_switches", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group", version_chain: true },
   { name: "interest_check_gates", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group" },
+  { name: "interest_check_gate_history", keys: [], ...base, expunge: "none", export: "admin-only", sight: "group" },
   { name: "interest_check_results", keys: ["project"], ...base, expunge: "none", export: "admin-only", sight: "bundle" },
   { name: "interest_check_cursor", keys: [], ...base, expunge: "none", export: "never", sight: "group" }
 ]);
@@ -93477,7 +93698,7 @@ function conditionError(c) {
     return `the condition's hops is a whole number from 0 to ${HOPS_MAX}, through ${HOP_KINDS.join(" or ")} only`;
   return null;
 }
-var listOf2 = (r) => {
+var listOf3 = (r) => {
   if (!r || r.ok === false) return [];
   for (const k of ["items", "lines", "events", "facts", "duties"]) if (Array.isArray(r[k])) return r[k];
   return Array.isArray(r) ? r : [];
@@ -93490,7 +93711,7 @@ var roleNames = (roles2) => Array.isArray(roles2) ? roles2.map((r) => isObj27(r)
 function factsAt(readers2, entity2, sel, viewer) {
   const out = [];
   if (sel.line !== void 0) {
-    for (const l2 of listOf2(readers2.lines.linesOf({ entity: entity2, kinds: [sel.line], direction: "from", limit: 500, viewer }))) {
+    for (const l2 of listOf3(readers2.lines.linesOf({ entity: entity2, kinds: [sel.line], direction: "from", limit: 500, viewer }))) {
       if (l2.withdrawn || (l2.from ?? l2.from_entity) !== entity2) continue;
       const to = l2.to ?? l2.to_entity;
       if (sel.sector !== void 0 && !readers2.sectorIs(to, sel.sector)) continue;
@@ -93506,7 +93727,7 @@ function factsAt(readers2, entity2, sel, viewer) {
     }
   } else if (sel.event_role !== void 0) {
     const r = readers2.events.eventsFor({ entity: entity2, limit: 500, viewer });
-    for (const e2 of [...listOf2(r), ...r && Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []]) {
+    for (const e2 of [...listOf3(r), ...r && Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []]) {
       if (!roleNames(e2.roles).includes(sel.event_role)) continue;
       const w = isObj27(e2.when) ? e2.when : {};
       out.push({
@@ -93519,7 +93740,7 @@ function factsAt(readers2, entity2, sel, viewer) {
       });
     }
   } else if (sel.money !== void 0) {
-    for (const f17 of listOf2(readers2.money.moneyOf({ entity: entity2, kinds: [sel.money], limit: 500, viewer }))) {
+    for (const f17 of listOf3(readers2.money.moneyOf({ entity: entity2, kinds: [sel.money], limit: 500, viewer }))) {
       const payer = partyEntity(f17.from), payee = partyEntity(f17.to);
       const mine = sel.side === "payer" ? payer : payee;
       if (mine !== entity2) continue;
@@ -93542,7 +93763,7 @@ function reach2(readers2, entity2, hops, viewer) {
   for (let h = 0; h < hops; h++) {
     const next = [];
     for (const p3 of frontier) {
-      for (const l2 of listOf2(readers2.lines.linesOf({ entity: p3, kinds: [...HOP_KINDS], limit: 500, viewer }))) {
+      for (const l2 of listOf3(readers2.lines.linesOf({ entity: p3, kinds: [...HOP_KINDS], limit: 500, viewer }))) {
         if (l2.withdrawn) continue;
         const a = l2.from ?? l2.from_entity, b = l2.to ?? l2.to_entity;
         const other = a === p3 ? b : a;
@@ -93559,10 +93780,10 @@ function joined(readers2, cf, ct, join, viewer) {
   if (!filled6(cf) || !filled6(ct)) return null;
   if (join === "same") return cf === ct ? [] : null;
   const starts = [[cf, []]];
-  for (const l2 of listOf2(readers2.lines.linesOf({ entity: cf, kinds: ["post_in", "part_of"], direction: "from", limit: 500, viewer })))
+  for (const l2 of listOf3(readers2.lines.linesOf({ entity: cf, kinds: ["post_in", "part_of"], direction: "from", limit: 500, viewer })))
     if (!l2.withdrawn) starts.push([l2.to ?? l2.to_entity, [{ module: "lines", id: lineId(l2) }]]);
   for (const [s, via] of starts) {
-    for (const l2 of listOf2(readers2.lines.linesOf({ entity: s, kinds: join.lines, direction: "from", limit: 500, viewer }))) {
+    for (const l2 of listOf3(readers2.lines.linesOf({ entity: s, kinds: join.lines, direction: "from", limit: 500, viewer }))) {
       if (!l2.withdrawn && (l2.to ?? l2.to_entity) === ct) return [...via, { module: "lines", id: lineId(l2) }];
     }
   }
@@ -93647,6 +93868,7 @@ var filled7 = (v) => typeof v === "string" && v.trim() !== "";
 var isObj28 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var clean = (v, max = TEXT_MAX2) => typeof v === "string" ? v.trim().slice(0, max) : "";
 var refuse9 = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+var noBy = (what) => refuse9("NO_BY", `${what} is recorded under the act's stamped author (by); with none, nothing was written`);
 var json3 = (v) => {
   try {
     return JSON.parse(v);
@@ -93654,7 +93876,7 @@ var json3 = (v) => {
     return null;
   }
 };
-var listOf3 = (r) => {
+var listOf4 = (r) => {
   if (!r || r.ok === false) return [];
   for (const k of ["items", "lines", "events", "facts", "duties", "statements", "identifiers"]) if (Array.isArray(r[k])) return r[k];
   return Array.isArray(r) ? r : [];
@@ -93719,6 +93941,8 @@ var People = class _People {
   /* R19: {module, fn, seq} in the modules' order */
   #onResult = [];
   /* R25: {module, fn, seq} */
+  #onChanged = [];
+  /* R35: {module, fn, seq} */
   constructor(storage, {
     record,
     membership,
@@ -93925,7 +94149,7 @@ var People = class _People {
     } catch {
       r = null;
     }
-    return listOf3(r).filter((x) => isObj28(x) && !x.withdrawn && filled7(x.scheme) && (filled7(x.id) || filled7(x.normal))).map((x) => ({
+    return listOf4(r).filter((x) => isObj28(x) && !x.withdrawn && filled7(x.scheme) && (filled7(x.id) || filled7(x.normal))).map((x) => ({
       scheme: x.scheme,
       id: x.id ?? x.normal,
       normal: String(x.normal ?? x.id).trim().toLowerCase(),
@@ -94060,12 +94284,13 @@ var People = class _People {
         `a ${basis} claim earns grade ${BASIS_GRADE[basis]} only when ${earned.failed}; nothing was written`,
         { condition: earned.failed, basis }
       );
+    if (!filled7(by)) return noBy("a claim");
     const grade2 = BASIS_GRADE[basis];
     const dates = hasEvidence ? [evidence.a?.date, evidence.b?.date].filter((d) => isCalendarDate(d)).sort() : [];
     const [vf, vt] = dates.length === 2 ? dates : [null, null];
     const sentence2 = _People.#why(kind, grade2, earned.because);
     const at33 = this.#now();
-    const stamp3 = by == null ? null : String(by);
+    const stamp3 = String(by);
     const out = this.#record.transact(() => {
       const r = this.#record.allocId("IDC", at33.slice(0, 4));
       if (!r || r.ok === false) return r;
@@ -94151,7 +94376,8 @@ var People = class _People {
     if (!c) return refuse9("NO_SUCH_CLAIM", "no identity claim with that id is held", { claim_id: claimId ?? null });
     if (c.withdrawn_at)
       return { ok: true, already: true, claim_id: claimId, withdrawn: { by: c.withdrawn_by, at: c.withdrawn_at, reason: c.withdrawn_reason } };
-    const at33 = this.#now(), stamp3 = by == null ? null : String(by);
+    if (!filled7(by)) return noBy("a withdrawal");
+    const at33 = this.#now(), stamp3 = String(by);
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE identity_claims SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE claim_id=?`, stamp3, at33, why, claimId);
       this.#rebuildCluster();
@@ -94358,7 +94584,7 @@ var People = class _People {
   }
   /* R7: what a person's record holds for the comparison: names, identifiers, posts and life facts. */
   #profile(id, viewer) {
-    const posts = listOf3(this.#lines ? this.#lines.linesOf({ entity: id, kinds: ["holds"], direction: "from", limit: READ_LIST_MAX, viewer }) : null).filter((l2) => !l2.withdrawn).map((l2) => ({ line_id: lineId2(l2), to: lineTo(l2) }));
+    const posts = listOf4(this.#lines ? this.#lines.linesOf({ entity: id, kinds: ["holds"], direction: "from", limit: READ_LIST_MAX, viewer }) : null).filter((l2) => !l2.withdrawn).map((l2) => ({ line_id: lineId2(l2), to: lineTo(l2) }));
     const life = this.#rows(`SELECT fact_id, kind, value, capture_sha FROM person_facts WHERE person=? AND kind IN ('birth','death')
                              AND withdrawn_at IS NULL ORDER BY fact_id`, id).filter((f17) => this.#seesCapture(f17.capture_sha, viewer));
     return { names: this.#names(id), identifiers: this.#identifiers(id), posts, life };
@@ -94405,7 +94631,8 @@ var People = class _People {
     if (cite) return refuse9(cite.reason, cite.detail, cite.code ? { code: cite.code, check: cite.check, translation: cite.translation } : {});
     const vv = _People.#validity(valid);
     if (vv.refused) return refuse9("BAD_VALIDITY", `the validity's ${vv.refused} is refused: ${vv.why}`, { bound: vv.refused });
-    const at33 = this.#now(), stamp3 = by == null ? null : String(by);
+    if (!filled7(by)) return noBy("a person fact");
+    const at33 = this.#now(), stamp3 = String(by);
     const table4 = contact ? "person_contacts" : "person_facts";
     return this.#record.transact(() => {
       const r = this.#record.allocId("PFA", at33.slice(0, 4));
@@ -94435,7 +94662,8 @@ var People = class _People {
     const f17 = this.#one(`SELECT * FROM ${table4} WHERE fact_id=?`, factId2);
     if (f17.withdrawn_at)
       return { ok: true, already: true, fact_id: factId2, withdrawn: { by: f17.withdrawn_by, at: f17.withdrawn_at, reason: f17.withdrawn_reason } };
-    const at33 = this.#now(), stamp3 = by == null ? null : String(by);
+    if (!filled7(by)) return noBy("a withdrawal");
+    const at33 = this.#now(), stamp3 = String(by);
     this.#sql.exec(`UPDATE ${table4} SET withdrawn_by=?, withdrawn_at=?, withdrawn_reason=? WHERE fact_id=?`, stamp3, at33, why, factId2);
     return { ok: true, fact_id: factId2, withdrawn: { by: stamp3, at: at33, reason: why } };
   }
@@ -94495,7 +94723,21 @@ var People = class _People {
       });
       if (!r || r.ok === false) return r;
       if (target.table === "identity_claims") this.#rebuildCluster();
-      return { ok: true, removed: r.removed, tombstone: r.tombstone, reason: why };
+      let removed = r.removed;
+      if (target.table === "source_person_links" && this.#one(`SELECT 1 AS x FROM source_person_link_history WHERE source=? AND person=?`, target.key.source, target.key.person)) {
+        const h = this.#record.expunge({
+          module: MODULE2,
+          table: "source_person_link_history",
+          key: target.key,
+          ground,
+          ...ground === "court_order" ? { order: order3 } : {},
+          ...ground === "lawful_demand" ? { demandKind } : {},
+          by: who2
+        });
+        if (!h || h.ok === false) throw new Error(`people: record-core refused the link's history: ${h && h.reason}`);
+        removed += h.removed;
+      }
+      return { ok: true, removed, tombstone: r.tombstone, reason: why };
     });
   }
   #expungeTarget(id) {
@@ -94528,12 +94770,17 @@ var People = class _People {
       from: lineFrom(l2),
       to: lineTo(l2),
       capacity: l2.capacity ?? null,
-      title: l2.title ?? l2.as_written ?? null,
+      title: _People.#title(l2),
       valid: l2.valid ?? null,
       grade: { assertion: l2.assertion ?? null, ends: l2.ends ?? null },
       citation: l2.basis ?? null,
       ..._People.#through(l2) ? { current_through: _People.#through(l2) } : {}
     };
+  }
+  /* R15 (N573): a holds line's title as its basis words it (lines' `title`), or null, "not stated"; never one composed
+     from the office or the capacity. */
+  static #title(l2) {
+    return l2.kind === "holds" && filled7(l2.title) ? l2.title : null;
   }
   /* lines R21: the day an open-ended holds line is stated current through, as its owner answers it to this viewer. */
   static #through(l2) {
@@ -94546,7 +94793,7 @@ var People = class _People {
     for (const m of members2) {
       const r = this.#lines.linesOf({ entity: m, kinds: kinds3, direction: "from", limit: READ_LIST_MAX, viewer });
       if (r && r.truncated) truncated3 = true;
-      for (const l2 of listOf3(r)) if (!l2.withdrawn && kinds3.includes(l2.kind)) items.push(_People.#lineItem(l2, m));
+      for (const l2 of listOf4(r)) if (!l2.withdrawn && kinds3.includes(l2.kind)) items.push(_People.#lineItem(l2, m));
     }
     return { items, truncated: truncated3 };
   }
@@ -94595,7 +94842,7 @@ var People = class _People {
     for (const m of members2) {
       const r = this.#duties ? this.#duties.dutiesOf({ entity: m, as: "obligor", at: day2, limit: READ_LIST_MAX, viewer }) : null;
       if (r && r.truncated) dutiesTruncated = true;
-      for (const x of listOf3(r)) {
+      for (const x of listOf4(r)) {
         if (x.withdrawn) continue;
         const state = isObj28(x.in_force) ? x.in_force.state : null;
         if (state === "not_in_force") continue;
@@ -94637,7 +94884,8 @@ var People = class _People {
     if (o) return o.refusal;
     const { cluster, members: members2 } = this.#over(entityId, viewer);
     const r = this.#linesOver(members2, ["educated_at", "credentialed_by"], viewer);
-    let items = r.items.map((l2) => l2.kind === "credentialed_by" ? { ...l2, issuer_identifiers: this.#identifiers(l2.to) } : l2);
+    const schemes = this.#view().identifier_schemes;
+    let items = r.items.map((l2) => l2.kind === "credentialed_by" ? { ...l2, ...this.#issuerIdentifier(l2.to, schemes) } : l2);
     let undetermined3 = [];
     if (at33 !== null && at33 !== void 0 && at33 !== "") {
       const s = _People.#atDate(items, at33);
@@ -94655,6 +94903,21 @@ var People = class _People {
       truncated: { credentials: c.truncated, undetermined: u.truncated },
       limit: READ_LIST_MAX
     };
+  }
+  /* R15 (N574): the issuer's scheme identifier as entities holds it (its R43), under a scheme the active profiles name
+     for the issuer's kind (jurisdictions R52, R61), the profile's scheme order first; null with why where the profiles
+     name none or the issuer holds none, never a guess. */
+  #issuerIdentifier(issuer, schemes) {
+    const e2 = filled7(issuer) ? this.#entity(issuer) : null;
+    if (!e2) return { issuer_identifier: null, issuer_identifier_why: "the issuer is not a registered entity" };
+    const named = (Array.isArray(schemes) ? schemes : []).filter((s) => isObj28(s) && filled7(s.scheme) && Array.isArray(s.entity_kinds) && s.entity_kinds.includes(e2.kind)).map((s) => s.scheme);
+    if (!named.length)
+      return { issuer_identifier: null, issuer_identifier_why: `the active jurisdiction profiles name no identifier scheme for an issuer of kind ${e2.kind}` };
+    const held2 = this.#identifiers(issuer).filter((x) => named.includes(x.scheme)).sort((x, y) => named.indexOf(x.scheme) - named.indexOf(y.scheme) || x.normal.localeCompare(y.normal));
+    if (!held2.length)
+      return { issuer_identifier: null, issuer_identifier_why: `the issuer holds no identifier under ${named.join(", ")}, the scheme${named.length > 1 ? "s" : ""} the active profiles name for its kind` };
+    const one3 = ({ scheme, id, valid }) => ({ scheme, id, valid });
+    return { issuer_identifier: one3(held2[0]), ...held2.length > 1 ? { issuer_identifiers: held2.map(one3) } : {} };
   }
   /** R13, R15: interests held as lines, and the money where the person is payee of income or a gift, or payer of a
    *  contribution. Facts, never a total. */
@@ -94674,7 +94937,7 @@ var People = class _People {
     for (const m of members2) {
       const q10 = this.#money ? this.#money.moneyOf({ entity: m, kinds: ["income", "gift", "contribution"], limit: READ_LIST_MAX, viewer }) : null;
       if (q10 && q10.truncated) moneyTruncated = true;
-      for (const f17 of listOf3(q10)) {
+      for (const f17 of listOf4(q10)) {
         if (f17.withdrawn) continue;
         const payee = partyEntity2(f17.to), payer = partyEntity2(f17.from);
         const side = (f17.kind === "income" || f17.kind === "gift") && payee === m ? "payee" : f17.kind === "contribution" && payer === m ? "payer" : null;
@@ -94726,7 +94989,7 @@ var People = class _People {
       for (const r of as) if (!held2.as.includes(r)) held2.as.push(r);
       byId.set(id, held2);
     };
-    const all = (r) => [...listOf3(r), ...r && Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []];
+    const all = (r) => [...listOf4(r), ...r && Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []];
     for (const m of members2) {
       const s = this.#events.statementsOf({ entity: m, from, to, limit: READ_LIST_MAX, viewer });
       if (s && s.truncated) truncated3 = true;
@@ -94810,14 +95073,14 @@ var People = class _People {
     if (at33 === void 0 || at33 === null || at33 === "") return refuse9("NO_DATE", "staffing is read as of a date (at)");
     const units = [organisation];
     const s = this.#lines.structureAt({ entity: organisation, at: at33, kinds: ["part_of"], viewer });
-    const parts = isObj28(s) ? Array.isArray(s.held) ? s.held : listOf3(s) : [];
+    const parts = isObj28(s) ? Array.isArray(s.held) ? s.held : listOf4(s) : [];
     for (const l2 of parts) if (l2.kind === "part_of" && lineTo(l2) === organisation && filled7(lineFrom(l2)) && !units.includes(lineFrom(l2))) units.push(lineFrom(l2));
     const held2 = [], undetermined3 = [];
     let truncated3 = false;
     for (const u2 of units) {
       const r = this.#lines.linesOf({ entity: u2, kinds: ["holds"], direction: "to", limit: READ_LIST_MAX, viewer });
       if (r && r.truncated) truncated3 = true;
-      for (const l2 of listOf3(r)) {
+      for (const l2 of listOf4(r)) {
         if (l2.withdrawn || l2.kind !== "holds" || lineTo(l2) !== u2) continue;
         const j = _People.#judge(l2.valid, at33, _People.#through(l2));
         const item3 = {
@@ -94947,11 +95210,25 @@ var People = class _People {
     if (!ev) return refuse9("NO_EVIDENCE", "a link from a source to a person carries its evidence");
     const list6 = Array.isArray(sight) ? [...new Set(sight.filter(filled7).map((s) => s.startsWith("member:") ? s.slice(7) : s))] : [];
     if (!list6.length) return refuse9("NO_SIGHT_LIST", "a link from a source to a person names the members who may read it");
-    const at33 = this.#now();
-    this.#sql.exec(`INSERT INTO source_person_links (source,person,evidence,sight_json,by_actor,at) VALUES (?,?,?,?,?,?)
-                    ON CONFLICT(source, person) DO UPDATE SET evidence=excluded.evidence, sight_json=excluded.sight_json,
-                    by_actor=excluded.by_actor, at=excluded.at`, source2, person, ev, JSON.stringify(list6), String(by), at33);
-    return { ok: true, source: source2, person, sight: list6, at: at33 };
+    const at33 = this.#now(), stamp3 = String(by);
+    return this.#record.transact(() => {
+      const prior = this.#one(`SELECT * FROM source_person_links WHERE source=? AND person=?`, source2, person);
+      if (prior) {
+        this.#sql.exec(`INSERT INTO source_person_link_history (source,person,evidence,sight_json,by_actor,at,replaced_by,replaced_at)
+                        VALUES (?,?,?,?,?,?,?,?)`, prior.source, prior.person, prior.evidence, prior.sight_json, prior.by_actor, prior.at, stamp3, at33);
+        this.#sql.exec(`DELETE FROM source_person_links WHERE source=? AND person=?`, source2, person);
+      }
+      this.#sql.exec(
+        `INSERT INTO source_person_links (source,person,evidence,sight_json,by_actor,at) VALUES (?,?,?,?,?,?)`,
+        source2,
+        person,
+        ev,
+        JSON.stringify(list6),
+        stamp3,
+        at33
+      );
+      return { ok: true, source: source2, person, sight: list6, at: at33, ...prior ? { replaced: { by: prior.by_actor, at: prior.at } } : {} };
+    });
   }
   /* sources R9: a source the linking member may read (its own refusal answers alike for an absent one). */
   #sourceHeld(id, by) {
@@ -94970,6 +95247,25 @@ var People = class _People {
     const links = rows2.filter((r) => !!v && (json3(r.sight_json) || []).includes(v)).map((r) => ({ source: r.source, person: r.person, evidence: r.evidence, sight: json3(r.sight_json), by: r.by_actor, at: r.at }));
     return { ok: true, count: links.length, links };
   }
+  /** R34 (N600): for other modules' code only, never an op and never answered to a viewer: null when no source link to
+   *  `person` is held, else the members every held link to that person admits (the intersection of their sight lists).
+   *  Synchronous; writes nothing; never throws; an unregistered or malformed id answers null. A store it cannot read
+   *  answers [], a link admitting no one: fail closed, never "no link". */
+  sourceLinkSight(person) {
+    if (!filled7(person)) return null;
+    try {
+      const rows2 = this.#rows(`SELECT sight_json FROM source_person_links WHERE person=? ORDER BY source`, person);
+      if (!rows2.length) return null;
+      let admitted = null;
+      for (const r of rows2) {
+        const list6 = (Array.isArray(json3(r.sight_json)) ? json3(r.sight_json) : []).filter(filled7);
+        admitted = admitted === null ? [...new Set(list6)] : admitted.filter((m) => list6.includes(m));
+      }
+      return admitted.sort();
+    } catch {
+      return [];
+    }
+  }
   /* ===================================================================== *
    * INTEREST CHECKS (R22–R25; K1491, K1473). The hypothesis layer: never a fact, never stored on a person.
    * ===================================================================== */
@@ -94984,8 +95280,10 @@ var People = class _People {
     const den = clean(denominator, 400);
     if (!den) return refuse9("NO_DENOMINATOR", "a check names the set it counts against");
     if (filled7(project) && !(this.#record.bundleInfo(project) && this.#record.bundleInfo(project).type === "project")) return noSuchProject(project);
+    if (!filled7(by)) return noBy("a check");
     const machine3 = isMachineIdentity(by) ? 1 : 0;
-    const at33 = this.#now(), stamp3 = by == null ? null : String(by);
+    const at33 = this.#now(), stamp3 = String(by);
+    const proj = filled7(project) ? project : null;
     if (filled7(check2)) {
       const prior = this.#one(`SELECT MAX(version) AS v, MAX(machine) AS m FROM interest_checks WHERE check_id=?`, check2);
       if (!prior || prior.v == null) return refuse9("NO_SUCH_CHECK", "no check with that id is held", { check: check2 });
@@ -95003,15 +95301,40 @@ var People = class _People {
         stamp3,
         at33
       );
+      this.#changed(check2, proj);
       return { ok: true, check: check2, version: v, at: at33 };
     }
-    return this.#record.transact(() => {
+    const out = this.#record.transact(() => {
       const r = this.#record.allocId("CHK", at33.slice(0, 4));
       if (!r || r.ok === false) return r;
       this.#sql.exec(`INSERT INTO interest_checks (check_id,version,name,condition_json,denominator,project,machine,by_actor,at)
-                      VALUES (?,1,?,?,?,?,?,?,?)`, r.id, n, JSON.stringify(condition), den, filled7(project) ? project : null, machine3, stamp3, at33);
+                      VALUES (?,1,?,?,?,?,?,?,?)`, r.id, n, JSON.stringify(condition), den, proj, machine3, stamp3, at33);
       return { ok: true, check: r.id, version: 1, at: at33 };
     });
+    if (out && out.ok) this.#changed(out.check, proj);
+    return out;
+  }
+  /** R35 (N605): told once, after the act, that a check was defined, given a new version, or switched in a project, so
+   *  `scheduler` re-arms its wake for R23's consumer. */
+  onChecksChanged(module, fn) {
+    return _People.#listen(this.#onChanged, module, fn);
+  }
+  /* R35: each listener called with {check, project} once the act has committed (record-core's `afterCommit`: at once
+     outside a transaction, after the outermost one inside it, never when it rolls back); a throwing one never undoes the
+     act, and the notice writes nothing. */
+  #changed(check2, project) {
+    if (!this.#onChanged.length) return;
+    const notice = { check: check2, project: project ?? null };
+    const tell = () => {
+      for (const l2 of this.#onChanged) {
+        try {
+          l2.fn({ ...notice });
+        } catch {
+        }
+      }
+    };
+    if (typeof this.#record.afterCommit === "function") this.#record.afterCommit(tell);
+    else tell();
   }
   /** R22: any check switched off (or on again) in one project by a member of that project. */
   switchCheck({ check: check2, project, on, by = null } = {}) {
@@ -95022,6 +95345,7 @@ var People = class _People {
     if (typeof on !== "boolean") return refuse9("NO_SWITCH", "a switch says on: true or on: false");
     const at33 = this.#now();
     this.#sql.exec(`INSERT INTO interest_check_switches (check_id,project,is_on,by_actor,at) VALUES (?,?,?,?,?)`, check2, project, on ? 1 : 0, String(by), at33);
+    this.#changed(check2, project);
     return { ok: true, check: check2, project, on, at: at33 };
   }
   #onIn(check2, project) {
@@ -95163,10 +95487,25 @@ var People = class _People {
     const rate = Number(falseAlarmRate);
     if (falseAlarmRate === null || falseAlarmRate === "" || !Number.isFinite(rate) || rate < 0 || rate > 1)
       return refuse9("BAD_RATE", "a false-alarm rate is a number from 0 to 1");
-    const at33 = this.#now();
-    this.#sql.exec(`INSERT INTO interest_check_gates (check_id,version,gold_set,false_alarm_rate,by_actor,at) VALUES (?,?,?,?,?,?)
-                    ON CONFLICT(check_id, version) DO UPDATE SET gold_set=excluded.gold_set, false_alarm_rate=excluded.false_alarm_rate,
-                    by_actor=excluded.by_actor, at=excluded.at`, check2, Number(version), gold, rate, String(by), at33);
+    const at33 = this.#now(), stamp3 = String(by), v = Number(version);
+    this.#record.transact(() => {
+      const prior = this.#one(`SELECT * FROM interest_check_gates WHERE check_id=? AND version=?`, check2, v);
+      if (prior) {
+        this.#sql.exec(`INSERT INTO interest_check_gate_history (check_id,version,gold_set,false_alarm_rate,by_actor,at,replaced_by,replaced_at)
+                        VALUES (?,?,?,?,?,?,?,?)`, check2, v, prior.gold_set, prior.false_alarm_rate, prior.by_actor, prior.at, stamp3, at33);
+        this.#sql.exec(`DELETE FROM interest_check_gates WHERE check_id=? AND version=?`, check2, v);
+      }
+      this.#sql.exec(
+        `INSERT INTO interest_check_gates (check_id,version,gold_set,false_alarm_rate,by_actor,at) VALUES (?,?,?,?,?,?)`,
+        check2,
+        v,
+        gold,
+        rate,
+        stamp3,
+        at33
+      );
+      return { ok: true };
+    });
     const open = this.#gateOpen(c);
     if (open) for (const r of this.#rows(`SELECT result_id FROM interest_check_results WHERE check_id=? AND version=? AND told=0`, check2, Number(version)))
       this.#tell(c, r.result_id);
@@ -95387,7 +95726,10 @@ CREATE TABLE IF NOT EXISTS calculations (
   accepted_by   TEXT,
   accepted_at   TEXT,
   created_by    TEXT NOT NULL,
-  created_at    TEXT NOT NULL
+  created_at    TEXT NOT NULL,
+  -- R9: each input's SHA-256 of its canonical bytes, by name, as the result key was computed over them (T34; null on
+  -- a calculation created before)
+  input_shas_json TEXT
 );
 -- R11, R19: what each calculation names, for the change notices and the occurrence evidence.
 CREATE TABLE IF NOT EXISTS calc_inputs (
@@ -95506,14 +95848,19 @@ var CALCULATIONS_TABLES = Object.freeze([
   cls("calc_pattern_switches", { export: "admin-only", sight: "bundle", keys: ["project"], version_chain: true }),
   cls("calc_pattern_cursor", { export: "never", sight: "group", keys: [] })
 ]);
+var ADDED2 = Object.freeze([["calculations", "input_shas_json", "TEXT"]]);
 function migrateCalculations(sql) {
   const bare4 = CALCULATIONS_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
   for (const s of bare4.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  for (const [table4, column, decl] of ADDED2) {
+    const have = [...sql.exec(`PRAGMA table_info(${table4})`)].map((r) => r.name);
+    if (have.length && !have.includes(column)) sql.exec(`ALTER TABLE ${table4} ADD COLUMN ${column} ${decl}`);
+  }
 }
 
 // src/calculations/tables.mjs
 var TABLE_MAX_BYTES = 20 * 1024 * 1024;
-var TABLE_MAX_CELLS = 5e5;
+var TABLE_MAX_CELLS = 1e6;
 var UNDETERMINED_LISTED = 200;
 var MONEY_ROLES = Object.freeze([
   "amount",
@@ -95543,7 +95890,7 @@ var RESOLVED_ROLES = Object.freeze([
 var plain2 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var FIELD_NAME = /^[^\u0000-\u001f]{1,200}$/;
 var SHA = /^[0-9a-f]{64}$/;
-function scanCsv(text7, onRow) {
+function* csvScan(text7) {
   if (typeof text7 !== "string") return { error: "the source is not text" };
   const s = text7.charCodeAt(0) === 65279 ? text7.slice(1) : text7;
   const n = s.length;
@@ -95583,23 +95930,31 @@ function scanCsv(text7, onRow) {
     }
     row8.push(field);
     if (i >= n) {
-      onRow(row8);
+      yield row8;
       return { rows: count2 + 1 };
     }
     if (s.charCodeAt(i) === 44) {
       i++;
       if (i >= n) {
         row8.push("");
-        onRow(row8);
+        yield row8;
         return { rows: count2 + 1 };
       }
       continue;
     }
     i += s.charCodeAt(i) === 13 && s.charCodeAt(i + 1) === 10 ? 2 : 1;
-    onRow(row8);
+    yield row8;
     count2++;
     row8 = [];
     if (i >= n) return { rows: count2 };
+  }
+}
+function scanCsv(text7, onRow) {
+  const it = csvScan(text7);
+  for (; ; ) {
+    const s = it.next();
+    if (s.done) return s.value;
+    onRow(s.value);
   }
 }
 var needsQuote = (v) => /[",\r\n]/.test(v);
@@ -95771,22 +96126,34 @@ function tableBuilder(header2, fields, { maxCells = TABLE_MAX_CELLS, maxBytes = 
     }
   };
 }
-function asGrammarTable(fields, rows2, from = 0) {
-  const names = fields.map((f17) => f17.name);
-  const out = new Array(Math.max(0, rows2.length - from));
-  for (let i = from; i < rows2.length; i++) {
-    const r = rows2[i], o = {};
-    for (let k = 0; k < names.length; k++) o[names[k]] = r[k] ?? "";
-    out[i - from] = o;
-    rows2[i] = null;
+var grammarField = (f17) => ({
+  name: f17.name,
+  type: f17.type,
+  ...f17.unit && { unit: f17.unit },
+  ...f17.currency && { currency: f17.currency },
+  ...f17.zone && { zone: f17.zone }
+});
+function textTable(fields, text7, size) {
+  const held2 = fields.map(grammarField);
+  const names = held2.map((f17) => f17.name);
+  function* arrays() {
+    let header2 = true;
+    for (const row8 of csvScan(text7)) {
+      if (header2) {
+        header2 = false;
+        continue;
+      }
+      yield row8;
+    }
   }
-  return { fields: fields.map((f17) => ({
-    name: f17.name,
-    type: f17.type,
-    ...f17.unit && { unit: f17.unit },
-    ...f17.currency && { currency: f17.currency },
-    ...f17.zone && { zone: f17.zone }
-  })), rows: out };
+  function* objects7() {
+    for (const row8 of arrays()) {
+      const o = {};
+      for (let k = 0; k < names.length; k++) o[names[k]] = row8[k] ?? "";
+      yield o;
+    }
+  }
+  return { fields: held2, size, text: text7, arrays, objects: objects7, streamed: () => ({ fields: held2, rows: arrays }) };
 }
 
 // src/calculations/patterns.mjs
@@ -96052,7 +96419,7 @@ var SHA2 = /^[0-9a-f]{64}$/;
 var CALC_RE = idPattern("CALC");
 var MONEY_RE = idPattern("MNY");
 var READ_LIMIT_MAX = 1e3;
-var TABLE_CACHE = 8;
+var TABLE_CACHE_CHARS = 24 * 1024 * 1024;
 var TEXT_CHUNK = 512 * 1024;
 var str9 = (v) => typeof v === "string" ? v.trim() : "";
 var plain4 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -96147,6 +96514,17 @@ function lineage(recipe2) {
   }
   return of;
 }
+function rowObjects(v) {
+  if (!plain4(v) || !Array.isArray(v.fields) || typeof v.rows !== "function") return v;
+  const names = v.fields.map((f17) => f17.name);
+  const rows2 = [];
+  for (const row8 of v.rows()) {
+    const o = {};
+    for (let k = 0; k < names.length; k++) o[names[k]] = row8[k];
+    rows2.push(o);
+  }
+  return { fields: v.fields, rows: rows2 };
+}
 function firstDifference(a, b, path = "results") {
   if (canonicalJson(a ?? null) === canonicalJson(b ?? null)) return null;
   if (plain4(a) && plain4(b)) {
@@ -96169,7 +96547,7 @@ var Calculations = class {
   #patternListeners = [];
   // R23: {module, fn}
   #tableCache = /* @__PURE__ */ new Map();
-  // sha → grammar table, the last few read
+  // sha → held table (`textTable`), the last few read, within TABLE_CACHE_CHARS
   constructor({
     storage,
     record,
@@ -96315,7 +96693,7 @@ var Calculations = class {
     const held2 = this.#one(`SELECT sha FROM calc_tables WHERE sha=?`, tableSha);
     if (held2) return { ok: true, already: true, ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, tableSha)) };
     const ev = this.record.evidenceStore();
-    if (!ev) return no3("NO_EVIDENCE_STORE", "this instance has no evidence store bound, so a table's bytes cannot be held. Nothing was written.");
+    if (!ev) return no3("NO_EVIDENCE_STORE", "your group's Civicsmith has no evidence store bound, so a table's bytes cannot be held. Nothing was written.");
     try {
       await ev.put(tableSha, bytes2);
     } catch (e2) {
@@ -96375,32 +96753,21 @@ var Calculations = class {
       declared_at: r.declared_at
     };
   }
-  /* A held table's rows as calc-grammar reads them, from the evidence store (cached). */
-  /* A held table's rows from its text (calc-grammar's table shape), or null. */
+  /* A held table from its canonical text (`textTable`: read row by row, never held as row objects), or null. */
   #fromText(tableSha, text7) {
-    const r = this.#one(`SELECT schema_json FROM calc_tables WHERE sha=?`, tableSha);
+    const r = this.#one(`SELECT schema_json, rows FROM calc_tables WHERE sha=?`, tableSha);
     if (!r || typeof text7 !== "string" || shaOf(text7) !== tableSha) return null;
-    const fields = parse2(r.schema_json).fields;
-    const names = fields.map((f17) => f17.name);
-    const rows2 = [];
-    let header2 = true;
-    const sc = scanCsv(text7, (row8) => {
-      if (header2) {
-        header2 = false;
-        return;
-      }
-      const o = {};
-      for (let k = 0; k < names.length; k++) o[names[k]] = row8[k] ?? "";
-      rows2.push(o);
-    });
-    if (sc.error) return null;
-    const t2 = { ...asGrammarTable(fields, []), rows: rows2 };
+    const t2 = textTable(parse2(r.schema_json).fields, text7, r.rows);
     this.#tableCache.set(tableSha, t2);
-    while (this.#tableCache.size > TABLE_CACHE) this.#tableCache.delete(this.#tableCache.keys().next().value);
+    let chars = 0;
+    for (const k of [...this.#tableCache.keys()].reverse()) {
+      chars += this.#tableCache.get(k).text.length;
+      if (chars > TABLE_CACHE_CHARS && k !== tableSha) this.#tableCache.delete(k);
+    }
     return t2;
   }
-  /* A held table's rows, synchronously: the cache, else the record's chunked copy of its canonical bytes. */
-  #grammarTableSync(tableSha) {
+  /* A held table, synchronously: the cache, else the record's chunked copy of its canonical bytes. */
+  #heldTableSync(tableSha) {
     if (this.#tableCache.has(tableSha)) {
       const t2 = this.#tableCache.get(tableSha);
       this.#tableCache.delete(tableSha);
@@ -96410,9 +96777,9 @@ var Calculations = class {
     const chunks = this.#rows(`SELECT chunk FROM calc_table_bytes WHERE sha=? ORDER BY seq`, tableSha);
     return chunks.length ? this.#fromText(tableSha, chunks.map((c) => c.chunk).join("")) : null;
   }
-  /* A held table's rows: synchronously when held so, else from the evidence store (its bytes, checked by their sha). */
-  async #grammarTable(tableSha) {
-    const t2 = this.#grammarTableSync(tableSha);
+  /* A held table: synchronously when held so, else from the evidence store (its bytes, checked by their sha). */
+  async #heldTable(tableSha) {
+    const t2 = this.#heldTableSync(tableSha);
     if (t2) return t2;
     const ev = this.record.evidenceStore();
     let text7 = null;
@@ -96432,8 +96799,9 @@ var Calculations = class {
     if (!r || !this.#sees(r.bundle_id, viewer)) return { ok: true, found: false, sha: str9(tableSha) };
     const lim = Math.max(1, Math.min(READ_LIMIT_MAX, Number.isInteger(Number(limit)) ? Number(limit) : 100));
     const from = Math.max(0, Number.isInteger(Number(after)) ? Number(after) : 0);
-    const t2 = await this.#grammarTable(r.sha);
+    const t2 = await this.#heldTable(r.sha);
     const header2 = parse2(r.header_json);
+    const rows2 = t2 ? [...t2.objects()].map((x) => Object.fromEntries(header2.map((h) => [h, String(x[h] ?? "")]))) : null;
     const src = parse2(r.source_json);
     const crow = src ? this.content.contentRow(src.content_id) : null;
     let cg = null;
@@ -96450,7 +96818,7 @@ var Calculations = class {
       table: {
         sha: r.sha,
         fields: parse2(r.schema_json).fields,
-        rows: t2 ? t2.rows.map((x) => Object.fromEntries(header2.map((h) => [h, String(x[h] ?? "")]))) : null,
+        rows: rows2,
         grade_facts: {
           capture_grade: cg && isGrade(cg.grade) ? cg.grade : null,
           derivation: crow && isGrade(crow.derivation_cap) ? crow.derivation_cap : null,
@@ -96461,8 +96829,8 @@ var Calculations = class {
       page: t2 ? {
         after: from,
         limit: lim,
-        rows: t2.rows.slice(from, from + lim).map((x) => header2.map((h) => x[h])),
-        truncated: from + lim < t2.rows.length
+        rows: rows2.slice(from, from + lim).map((x) => header2.map((h) => x[h])),
+        truncated: from + lim < rows2.length
       } : { rows: null, why: "the table's bytes are not held in the evidence store" }
     };
   }
@@ -96570,7 +96938,7 @@ var Calculations = class {
       const r = plain4(f17.grade) ? f17.grade.reading : f17.grade;
       return isGrade(r) ? g === null ? r : weaker4(g, r) : g === null ? void 0 : g;
     }, null);
-    const hash = sha({ facts: facts.map((f17) => ({
+    const held2 = { facts: facts.map((f17) => ({
       id: f17.fact_id,
       amount: figureOfFact(f17),
       currency: f17.currency ?? null,
@@ -96580,8 +96948,8 @@ var Calculations = class {
       basis: f17.basis ?? null,
       period: f17.period ?? null,
       buys: buys(f17)
-    })), withdrawn: withdrawn.map((w) => w.fact_id) });
-    return { table: table4, facts, withdrawn, hash, grade: grade2 === void 0 ? null : grade2, currencies };
+    })), withdrawn: withdrawn.map((w) => w.fact_id) };
+    return { table: table4, facts, withdrawn, held: held2, grade: grade2 === void 0 ? null : grade2, currencies };
   }
   /* A content row's capture grade, capped by its derivation (K1447 (ii)). */
   #contentGrade(row8) {
@@ -96598,8 +96966,9 @@ var Calculations = class {
     why = cap && grade2 !== capture2 ? `capture ${capture2}, capped by its derivation at ${cap}` : `capture ${capture2}${cap ? `, its derivation capped at ${cap}` : ""}`;
     return { grade: grade2, why };
   }
-  /* R4: each input bound for `viewer`. `{ok: false}` with NO_SUCH_INPUT or HYPOTHESIS_NOT_A_FACT, or
-     `{bound, hashes, refs, inputs, apart}`. */
+  /* R4, R9: each input bound for `viewer`. `{ok: false}` with NO_SUCH_INPUT or HYPOTHESIS_NOT_A_FACT, or
+     `{bound, hashes, canon, refs, inputs, apart}`: `hashes` each input's SHA-256 of its canonical bytes as it was
+     computed over (a table's canonical CSV; else the canonical JSON `canon` holds, null where it cannot be rebuilt). */
   async #bind(inputs, viewer, { threshold = null } = {}) {
     const KINDS2 = ["table", "money", "figure", "value", "calculation", "set", "draw"];
     const hyps = [];
@@ -96607,7 +96976,11 @@ var Calculations = class {
     if (threshold) {
       for (const s of stringsIn(threshold)) if (isHypothesisId(s)) hyps.push(s);
     }
-    const bound = {}, hashes = {}, refs = [], described = [], apart = { withdrawn: [], out_of_view: [] };
+    const bound = {}, hashes = {}, canon4 = {}, refs = [], described = [], apart = { withdrawn: [], out_of_view: [] };
+    const held2 = (name2, v) => {
+      canon4[name2] = canonicalJson(v);
+      hashes[name2] = sha256HexSync(canon4[name2]);
+    };
     const names = /* @__PURE__ */ new Set();
     let refused3 = null;
     const missing2 = (name2, ref) => {
@@ -96636,7 +97009,7 @@ var Calculations = class {
           missing2(inp.name, String(ref));
           break;
         }
-        const t2 = await this.#grammarTable(r.sha);
+        const t2 = await this.#heldTable(r.sha);
         if (!t2) {
           missing2(inp.name, r.sha);
           break;
@@ -96644,7 +97017,7 @@ var Calculations = class {
         const src = parse2(r.source_json);
         const crow = this.content.contentRow(src.content_id);
         const g = crow ? this.#contentGrade(crow) : { grade: null, why: "the source's content row is not held" };
-        bound[inp.name] = t2;
+        bound[inp.name] = t2.streamed();
         hashes[inp.name] = r.sha;
         refs.push({ name: inp.name, kind, ref: r.sha });
         described.push({ name: inp.name, kind, ref: r.sha, grade: g.grade, why: g.why, roles: parse2(r.roles_json) });
@@ -96663,7 +97036,7 @@ var Calculations = class {
           break;
         }
         bound[inp.name] = m.table;
-        hashes[inp.name] = m.hash;
+        held2(inp.name, m.held);
         for (const id of ids) refs.push({ name: inp.name, kind, ref: id });
         apart.withdrawn.push(...m.withdrawn.map((w) => ({ input: inp.name, ...w })));
         described.push({
@@ -96700,7 +97073,7 @@ var Calculations = class {
         delete fig.as_read;
         const g = this.#contentGrade(row8);
         bound[inp.name] = fig;
-        hashes[inp.name] = sha({ content: ref, figure: fig });
+        held2(inp.name, { content: ref, figure: fig });
         refs.push({ name: inp.name, kind, ref });
         described.push({ name: inp.name, kind, ref, as_read: f17.as_read, grade: g.grade, why: g.why });
       } else if (kind === "value") {
@@ -96712,7 +97085,7 @@ var Calculations = class {
         const fig = { ...f17 };
         delete fig.as_read;
         bound[inp.name] = fig;
-        hashes[inp.name] = sha({ value: fig });
+        held2(inp.name, { value: fig });
         described.push({
           name: inp.name,
           kind,
@@ -96724,7 +97097,7 @@ var Calculations = class {
         });
       } else if (kind === "calculation") {
         const c = typeof ref === "string" && CALC_RE.test(ref) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, ref) : null;
-        if (!c || !await this.#visible(c, viewer)) {
+        if (!c || !this.#visible(c, viewer)) {
           missing2(inp.name, String(ref));
           break;
         }
@@ -96738,9 +97111,12 @@ var Calculations = class {
           refused3 = no3("FIGURE_NOT_READ", `the calculation "${ref}" answers no figure or table an input can take. Nothing was written.`, { input: inp.name, ref });
           break;
         }
-        const axis = await this.#gradeFacts(c, viewer);
+        const axis = this.#gradeFacts(c);
+        const pre = parse2(c.input_shas_json);
+        const text7 = pre ? canonicalJson({ recipe: parse2(c.recipe_json), inputs: pre, method_version: c.method_version }) : null;
         bound[inp.name] = b;
         hashes[inp.name] = c.result_key;
+        canon4[inp.name] = text7 && sha256HexSync(text7) === c.result_key ? text7 : null;
         refs.push({ name: inp.name, kind, ref });
         described.push({ name: inp.name, kind, ref, grade: axis.capture.grade, why: `its own capture axis: ${axis.capture.why}` });
       } else if (kind === "set") {
@@ -96753,7 +97129,11 @@ var Calculations = class {
         const seen = ids.filter((id) => this.#sees(id, viewer));
         if (seen.length !== ids.length) apart.out_of_view.push({ input: inp.name, count: ids.length - seen.length, why: "members of the frozen set out of your view at evaluation, counted apart and never as zero" });
         bound[inp.name] = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
-        hashes[inp.name] = s.set_sha;
+        held2(inp.name, ids);
+        if (hashes[inp.name] !== s.set_sha) {
+          hashes[inp.name] = s.set_sha;
+          canon4[inp.name] = null;
+        }
         refs.push({ name: inp.name, kind, ref: s.set_sha });
         described.push({
           name: inp.name,
@@ -96774,19 +97154,29 @@ var Calculations = class {
         let table4;
         if (d.set_kind === "table") {
           const r = this.#one(`SELECT bundle_id FROM calc_tables WHERE sha=?`, d.set_sha);
-          const t2 = r && this.#sees(r.bundle_id, viewer) ? await this.#grammarTable(d.set_sha) : null;
+          const t2 = r && this.#sees(r.bundle_id, viewer) ? await this.#heldTable(d.set_sha) : null;
           if (!t2) {
             missing2(inp.name, d.set_sha);
             break;
           }
-          table4 = { fields: t2.fields, rows: sample.map((k) => t2.rows[Number(k)]).filter(Boolean) };
+          const at33 = new Map(sample.map((k) => [Number(k), null]));
+          let i = 0;
+          for (const o of t2.objects()) {
+            if (at33.has(i)) at33.set(i, o);
+            i++;
+          }
+          table4 = { fields: t2.fields, rows: sample.map((k) => at33.get(Number(k))).filter(Boolean) };
         } else {
           const seen = sample.filter((id) => this.#sees(id, viewer));
           if (seen.length !== sample.length) apart.out_of_view.push({ input: inp.name, count: sample.length - seen.length, why: "drawn members out of your view at evaluation, counted apart" });
           table4 = { fields: [{ name: "id", type: "string" }], rows: seen.map((id) => ({ id })) };
         }
         bound[inp.name] = table4;
-        hashes[inp.name] = d.draw_key;
+        held2(inp.name, { set: d.set_sha, kind: d.set_kind, seed: d.seed, n: d.n, method: d.method });
+        if (hashes[inp.name] !== d.draw_key) {
+          hashes[inp.name] = d.draw_key;
+          canon4[inp.name] = null;
+        }
         refs.push({ name: inp.name, kind, ref: d.draw_key });
         described.push({
           name: inp.name,
@@ -96801,7 +97191,7 @@ var Calculations = class {
     }
     if (refused3) return refused3;
     if (hyps.length) return no3("HYPOTHESIS_NOT_A_FACT", `"${hyps[0]}" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.`, { hypothesis: hyps[0] });
-    return { ok: true, bound, hashes, refs, inputs: described, apart };
+    return { ok: true, bound, hashes, canon: canon4, refs, inputs: described, apart };
   }
   /* R6: the threshold, as a figure bound under the name `threshold`, with its standing. */
   #threshold(threshold, period, viewer) {
@@ -96960,10 +97350,16 @@ var Calculations = class {
       const r = evaluate(prefix, bound, opts);
       t2 = r && r.result;
     }
-    if (!t2 || !Array.isArray(t2.rows)) return null;
+    if (!t2 || !Array.isArray(t2.fields) || !(Array.isArray(t2.rows) || typeof t2.rows === "function")) return null;
     for (const f17 of LINK_KIND_FIELDS) {
-      if (!t2.fields.some((x) => x.name === f17) || group.by.includes(f17)) continue;
-      const kinds3 = [...new Set(t2.rows.map((r) => r[f17]).filter((v) => v !== "" && v != null).map(String))];
+      const k = t2.fields.findIndex((x) => x.name === f17);
+      if (k < 0 || group.by.includes(f17)) continue;
+      const seen = /* @__PURE__ */ new Set();
+      for (const r of Array.isArray(t2.rows) ? t2.rows : t2.rows()) {
+        const v = Array.isArray(t2.rows) ? r[f17] : r[k];
+        if (v !== "" && v != null) seen.add(String(v));
+      }
+      const kinds3 = [...seen];
       if (kinds3.length > 1)
         return no3("SCORE_NOT_A_FACT", `the ranking counts rows of ${kinds3.length} kinds (${kinds3.slice(0, 5).join(", ")}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.`, { field: f17 });
     }
@@ -96991,9 +97387,11 @@ var Calculations = class {
     }
     const bound = { ...b.bound };
     const hashes = { ...b.hashes };
+    const canon4 = { ...b.canon };
     if (th.figure) {
       bound.threshold = th.figure;
-      hashes.threshold = sha({ threshold: th.held });
+      canon4.threshold = canonicalJson({ threshold: th.held });
+      hashes.threshold = sha256HexSync(canon4.threshold);
     }
     const view = this.#view();
     const opts = { resolveId: (space, v) => {
@@ -97025,6 +97423,7 @@ var Calculations = class {
       });
     }
     const e2 = evaluate(r, bound, opts);
+    if (!e2.refused) e2.result = rowObjects(e2.result);
     if (e2.refused) return no3(e2.refused, `calc-grammar refused the recipe: ${e2.why}${e2.step ? ` (step ${e2.step})` : ""}. Nothing was written.`, { step: e2.step ?? null, ...e2.errors ? { errors: e2.errors } : {} });
     const counted = e2.trace.filter((t2) => t2.undetermined.length).map((t2) => ({ step: t2.step, op: t2.op, rows: t2.undetermined.length, set_aside: t2.undetermined.slice(0, 50) }));
     const steps = Object.fromEntries(e2.trace.map((t2) => [t2.step, t2.step === r.output ? e2.result : t2.output]));
@@ -97069,7 +97468,7 @@ var Calculations = class {
     const figures2 = Object.fromEntries(b.inputs.filter((d) => d.kind === "figure" || d.kind === "value").map((d) => [d.name, bound[d.name]]));
     if (Object.keys(figures2).length) results.inputs_bound = figures2;
     const key = resultKey(r, hashes);
-    return { ok: true, recipe: r, results, result_key: key, inputs: b.inputs, refs: b.refs, threshold: th.held ?? null };
+    return { ok: true, recipe: r, results, result_key: key, hashes, canon: canon4, inputs: b.inputs, refs: b.refs, threshold: th.held ?? null };
   }
   /* ===================================================================== *
    * CALCULATIONS (R4–R11)
@@ -97099,6 +97498,17 @@ var Calculations = class {
       return no3("NO_SUCH_PROJECT", "no project answers to that id here, or it is not one you may see. Nothing was written.", { project });
     if (evidences !== null && evidences !== void 0 && !(Array.isArray(evidences) && evidences.every((x) => plain4(x) && str9(x.duty) && str9(x.occurrence))))
       return no3("BAD_EVIDENCES", "evidences name the duty occurrences a calculation measures, each {duty, occurrence}. Nothing was written.");
+    const ev = this.record.evidenceStore();
+    if (ev) {
+      for (const [name2, text7] of Object.entries(c.canon)) {
+        if (typeof text7 !== "string") continue;
+        try {
+          await ev.put(c.hashes[name2], new TextEncoder().encode(text7));
+        } catch (e2) {
+          return no3("EVIDENCE_WRITE_FAILED", `the input "${name2}"'s bytes could not be stored: ${String(e2 && e2.message || e2).slice(0, 200)}. Nothing was written.`, { input: name2 });
+        }
+      }
+    }
     const at33 = this.now();
     const year = at33.slice(0, 4);
     let calcId = null;
@@ -97109,8 +97519,8 @@ var Calculations = class {
       this.sql.exec(
         `INSERT INTO calculations (calc_id, project, question, terms_json, period_json, kind, recipe_json, inputs_json,
                        threshold_json, method_version, method_note, evidences_json, result_key, results_json, computed_at,
-                       recompute_status, recompute_json, accepted_by, accepted_at, created_by, created_at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'unchecked',NULL,NULL,NULL,?,?)`,
+                       recompute_status, recompute_json, accepted_by, accepted_at, created_by, created_at, input_shas_json)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'unchecked',NULL,NULL,NULL,?,?,?)`,
         calcId,
         project ? str9(project) : null,
         str9(question),
@@ -97127,7 +97537,8 @@ var Calculations = class {
         json4(c.results),
         at33,
         by,
-        at33
+        at33,
+        json4(c.hashes)
       );
       for (const ref of c.refs)
         this.sql.exec(
@@ -97233,20 +97644,31 @@ var Calculations = class {
     };
   }
   /** R8: `accept({calcId, by})`: a member's act; recomputes first and is refused CALC_RECOMPUTE_DIFFERS, naming the
-   *  differing result, when the recompute differs from what is stored. */
+   *  differing result, when the recompute differs from what is stored. A refused accept writes nothing, its recompute
+   *  status and recompute record included (N619); an agreeing one writes the recompute and the acceptance at once. */
   async accept({ calcId = null, by = null } = {}) {
     if (!stamped(by) || isMachine3(by)) return no3("MEMBER_ACT_ONLY", "accepting a calculation is a member's act. Nothing was written.");
     const c = str9(calcId) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str9(calcId)) : null;
-    if (!c || !await this.#visible(c, by)) return no3("NO_SUCH_CALCULATION", "no calculation answers to that id here, or it is not one you may see. Nothing was written.");
+    if (!c || !this.#visible(c, by)) return no3("NO_SUCH_CALCULATION", "no calculation answers to that id here, or it is not one you may see. Nothing was written.");
     if (c.accepted_by) return { ok: true, already: true, calc_id: c.calc_id, accepted_by: c.accepted_by, accepted_at: c.accepted_at };
-    const r = await this.recompute({ calcId: c.calc_id });
-    if (!r.agrees) return no3("CALC_RECOMPUTE_DIFFERS", `the recompute differs from what is stored at ${r.differing ? r.differing.path : "its results"}, so the calculation is not accepted. Nothing was accepted.`, { calc_id: c.calc_id, differing: r.differing ?? null });
+    const r = await this.#recomputeRow(c);
+    if (!r.agrees) return no3("CALC_RECOMPUTE_DIFFERS", `the recompute differs from what is stored at ${r.differing ? r.differing.path : "its results"}, so the calculation is not accepted. Nothing was written.`, { calc_id: c.calc_id, differing: r.differing ?? null });
     const at33 = this.now();
-    this.record.transact(() => {
-      this.sql.exec(`UPDATE calculations SET accepted_by=?, accepted_at=? WHERE calc_id=? AND accepted_by IS NULL`, by, at33, c.calc_id);
+    const out = this.record.transact(() => {
+      const now = this.#one(`SELECT accepted_by, accepted_at FROM calculations WHERE calc_id=?`, c.calc_id);
+      if (now && now.accepted_by) return { ok: true, already: now };
+      this.sql.exec(
+        `UPDATE calculations SET recompute_status='agrees', recompute_json=?, accepted_by=?, accepted_at=? WHERE calc_id=?`,
+        json4({ at: at33, result_key: r.result_key ?? null, differing: null }),
+        by,
+        at33,
+        c.calc_id
+      );
+      this.#appendRecompute(c.calc_id, c.project, "agrees", r.result_key ?? null, null, at33);
       this.#appendRecompute(c.calc_id, c.project, "accepted", c.result_key, { by }, at33);
       return { ok: true };
     });
+    if (out.already) return { ok: true, already: true, calc_id: c.calc_id, accepted_by: out.already.accepted_by, accepted_at: out.already.accepted_at };
     return { ok: true, calc_id: c.calc_id, accepted_by: by, accepted_at: at33, recompute_status: "agrees" };
   }
   /* R10: may `viewer` see every input (and the project) of this calculation? */
@@ -97299,7 +97721,7 @@ var Calculations = class {
     for (const inp of inputs) {
       if (!plain4(inp)) continue;
       if (inp.value !== void 0) {
-        per.push({ name: inp.name, kind: "value", grade: TESTIMONY, unbound: true, why: "an unbound input is testimony (D)" });
+        per.push({ name: inp.name, kind: "value", ref: inp.value, grade: TESTIMONY, unbound: true, why: "an unbound input is testimony (D)" });
         continue;
       }
       if (inp.table !== void 0) {
@@ -97373,17 +97795,20 @@ var Calculations = class {
   async read({ calcId = null, viewer = null } = {}) {
     if (!str9(calcId)) return no3("NO_CALC", "a calculation is read by its id.");
     const c = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str9(calcId));
-    if (!c || !await this.#visible(c, viewer)) return { ok: true, found: false, calc_id: str9(calcId) };
+    if (!c || !this.#visible(c, viewer)) return { ok: true, found: false, calc_id: str9(calcId) };
     const results = parse2(c.results_json);
+    const shas = parse2(c.input_shas_json) || {};
+    const shaOfInput = (name2, fallback = null) => typeof shas[name2] === "string" ? shas[name2] : fallback;
     const inputs = (parse2(c.inputs_json) || []).map((i) => {
-      if (i.table !== void 0) return { name: i.name, kind: "table", sha: i.table };
+      if (i.table !== void 0) return { name: i.name, kind: "table", sha: shaOfInput(i.name, i.table) };
       if (i.figure !== void 0 || i.value !== void 0) {
         const step = results && results.inputs_bound && results.inputs_bound[i.name] || null;
-        return { name: i.name, kind: "figure", figure: step, ...i.figure !== void 0 ? { content_id: i.figure } : { as_read: i.value } };
+        return { name: i.name, kind: "figure", figure: step, ...i.figure !== void 0 ? { content_id: i.figure } : { as_read: i.value }, sha: shaOfInput(i.name) };
       }
       const kind = ["money", "calculation", "set", "draw"].find((k) => i[k] !== void 0);
-      return { name: i.name, kind, [kind]: i[kind] };
+      return { name: i.name, kind, [kind]: i[kind], sha: shaOfInput(i.name) };
     });
+    if (typeof shas.threshold === "string") inputs.push({ name: "threshold", kind: "threshold", sha: shas.threshold });
     const calculation = {
       calc_id: c.calc_id,
       question: c.question,
@@ -97418,9 +97843,39 @@ var Calculations = class {
       accepted_at: c.accepted_at ?? null,
       created_by: c.created_by,
       created_at: c.created_at,
-      grade: await this.#gradeFacts(c),
+      grade: this.#gradeFacts(c),
       says: "results are recomputed at acceptance, at publication and in the checker, never on a read"
     };
+  }
+  /** R30 (N576): `gradeFactsOf({calcId, viewer})`, synchronously: R9's grade facts as `read` answers them, with whether
+   *  the acceptance is recorded: `{found: true, accepted, capture, inputs, method}`. A calculation not held, one R10
+   *  withholds from the viewer, and a call without a viewer each answer `{found: false}`, identically. Recomputes
+   *  nothing, writes nothing, never throws. */
+  gradeFactsOf(args = {}) {
+    try {
+      const { calcId = null, viewer = null } = plain4(args) ? args : {};
+      const c = str9(calcId) && stamped(viewer) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str9(calcId)) : null;
+      if (!c || !this.#visible(c, viewer)) return { found: false };
+      const g = this.#gradeFacts(c);
+      return { found: true, accepted: !!c.accepted_by, capture: g.capture, inputs: g.inputs, method: g.method };
+    } catch {
+      return { found: false };
+    }
+  }
+  /** R31 (N576): `calcStatusOf({calcId, viewer})`, synchronously: `{held, visible, accepted}`, for other modules'
+   *  synchronous checks. `visible` is R10's admission of the viewer (false without one); `accepted` is false when not
+   *  visible. A caller answers a viewer a calculation not `visible` exactly as one not `held`. Writes nothing; never
+   *  throws. */
+  calcStatusOf(args = {}) {
+    try {
+      const { calcId = null, viewer = null } = plain4(args) ? args : {};
+      const c = str9(calcId) ? this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str9(calcId)) : null;
+      if (!c) return { held: false, visible: false, accepted: false };
+      const visible = stamped(viewer) && this.#visible(c, viewer) === true;
+      return { held: true, visible, accepted: visible && !!c.accepted_by };
+    } catch {
+      return { held: false, visible: false, accepted: false };
+    }
   }
   /* ===================================================================== *
    * CHANGE NOTICES (R11)
@@ -97444,8 +97899,8 @@ var Calculations = class {
   #stale(ref, cause) {
     try {
       const at33 = this.now();
-      const calcs = this.#rows(`SELECT DISTINCT i.calc_id, c.project, c.recompute_status FROM calc_inputs i
-                                 JOIN calculations c ON c.calc_id = i.calc_id WHERE i.ref=? ORDER BY i.calc_id`, ref);
+      const calcs = this.#rows(`SELECT c.calc_id, c.project, c.recompute_status FROM calculations c
+                                 WHERE c.calc_id IN (SELECT calc_id FROM calc_inputs WHERE ref=?) ORDER BY c.created_at, c.rowid`, ref);
       for (const c of calcs) {
         this.sql.exec(`UPDATE calculations SET recompute_status='stale' WHERE calc_id=?`, c.calc_id);
         this.#appendRecompute(c.calc_id, c.project, "stale", null, { input: ref, cause }, at33);
@@ -97544,8 +97999,11 @@ var Calculations = class {
       return id ? { entity: id } : { why: `"${String(value).slice(0, 64)}" resolves to no registered entity through the scheme ${spec.scheme}` };
     }
     if (spec.crosswalk) {
-      const t2 = this.#grammarTableSync(spec.crosswalk.table);
-      const hit = t2 ? t2.rows.filter((r) => String(r[spec.crosswalk.from]).trim() === String(value).trim()).map((r) => String(r[spec.crosswalk.to]).trim()) : [];
+      const t2 = this.#heldTableSync(spec.crosswalk.table);
+      const hit = [];
+      if (t2) {
+        for (const r of t2.objects()) if (String(r[spec.crosswalk.from]).trim() === String(value).trim()) hit.push(String(r[spec.crosswalk.to]).trim());
+      }
       const ids = [...new Set(hit)];
       if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
       return { why: ids.length > 1 ? `"${String(value).slice(0, 64)}" maps to ${ids.length} entities in the crosswalk` : `"${String(value).slice(0, 64)}" is not in the crosswalk, or maps to no entity id` };
@@ -97559,13 +98017,13 @@ var Calculations = class {
     if (!stamped(by) || isMachine3(by)) return no3("MEMBER_ACT_ONLY", "money facts are read from a table only at a member's request (K1468). Nothing was written.");
     const b = typeof binding === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, binding) : null;
     if (!b || !this.#sees(b.bundle_id, by)) return no3("NO_SUCH_BINDING", "no adopted binding answers to that key here, or it is not one you may see. Nothing was written.");
-    const t2 = await this.#grammarTable(b.table_sha);
+    const t2 = await this.#heldTable(b.table_sha);
     if (!t2) return no3("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
     let picked;
     if (rows2 === "all") {
       if (!str9(reason)) return no3("NO_REASON", "taking every row of a table is the rare case; state the reason (K1468). Nothing was written.");
-      picked = t2.rows.map((_, i) => i);
-    } else if (Array.isArray(rows2) && rows2.length && rows2.every((n) => Number.isSafeInteger(n) && n >= 0)) picked = [...new Set(rows2)].sort((x, y) => x - y);
+      picked = Array.from({ length: t2.size }, (_, i) => i);
+    } else if (Array.isArray(rows2) && rows2.length && rows2.every((n2) => Number.isSafeInteger(n2) && n2 >= 0)) picked = [...new Set(rows2)].sort((x, y) => x - y);
     else return no3("NO_ROWS", 'name the rows to read into money facts, by number, or every row with rows: "all" and a reason. Nothing was written.');
     const money = this.dep("money");
     if (!money || typeof money.recordFact !== "function") return no3("MONEY_NOT_REACHABLE", "the money module is not reachable here. Nothing was written.");
@@ -97573,8 +98031,15 @@ var Calculations = class {
     const declared2 = parse2(this.#one(`SELECT roles_json FROM calc_tables WHERE sha=?`, b.table_sha).roles_json) || {};
     const val5 = (row8, role) => typeof roles2[role] === "string" ? String(row8[roles2[role]] ?? "").trim() : roles2[role] ? roles2[role].value : null;
     const written2 = [], notWritten = [];
+    const want = new Set(picked);
+    const rowAt = /* @__PURE__ */ new Map();
+    let n = 0;
+    for (const o of t2.objects()) {
+      if (want.has(n)) rowAt.set(n, o);
+      n++;
+    }
     for (const i of picked) {
-      const row8 = t2.rows[i];
+      const row8 = rowAt.get(i);
       if (!row8) {
         notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" });
         continue;
@@ -97786,7 +98251,7 @@ var Calculations = class {
     const key = plain4(occurrence) ? occurrence.key ?? occurrence.occurrence_key ?? null : occurrence;
     if (!str9(dutyId) || !str9(key)) return [];
     const out = [];
-    for (const c of this.#rows(`SELECT * FROM calculations WHERE accepted_by IS NOT NULL AND evidences_json IS NOT NULL ORDER BY calc_id`)) {
+    for (const c of this.#rows(`SELECT * FROM calculations WHERE accepted_by IS NOT NULL AND evidences_json IS NOT NULL ORDER BY created_at, rowid`)) {
       const ev = parse2(c.evidences_json) || [];
       if (!ev.some((e2) => e2.duty === dutyId && e2.occurrence === key)) continue;
       if (viewer !== null && !this.#visible(c, viewer)) {
@@ -97838,15 +98303,16 @@ var Calculations = class {
         notRead.push({ table: t2.sha, why: v ? `whether its vintage was valid on ${day2} is undetermined${a && a.why ? `: ${a.why}` : ""}` : "the table states no vintage, so its validity is not stated" });
         continue;
       }
-      const g = this.#grammarTableSync(t2.sha);
+      const g = this.#heldTableSync(t2.sha);
       if (!g) {
         notRead.push({ table: t2.sha, why: "the table's bytes are not held" });
         continue;
       }
       tables.push(t2.sha);
       const post = col("roster_post"), period = col("roster_period");
-      for (let i = 0; i < g.rows.length; i++) {
-        const r = g.rows[i];
+      let i = -1;
+      for (const r of g.objects()) {
+        i++;
         const o = this.#resolveParty(roles2[org], r[org]);
         if (!o.entity) {
           if (String(r[org] ?? "").trim()) notRead.push({ table: t2.sha, row: i, why: o.why });
@@ -124461,6 +124927,72 @@ var Bias = class _Bias {
       truncated: bars.length > cap || statements.length > cap || residue.length > cap
     };
   }
+  /* ---------------------------------------------------------------- R48: the group's self-description as a draft */
+  /* Who R48 offers the draft to: a member whose status is `active` (membership R68), or the founder, in either of
+     R43's spellings, exactly while the instance is claimed (membership R64). Everyone else, a machine credential
+     included, is answered as if no description were held. */
+  #activeMember(viewer) {
+    const v = typeof viewer === "string" ? viewer : "";
+    if (v === "admin") return this.#membership.isAdministrator("admin");
+    const id = this.#membership.positionalMember(v);
+    if (!id) return false;
+    if (id === "admin") return this.#membership.isAdministrator("admin");
+    const facts = this.#membership.memberFacts(id);
+    return !!facts && facts.status === "active";
+  }
+  /** R48 (DEC-132 (5); N551, K1541) — THE GROUP'S OWN WORDS, OFFERED AS WHERE A DECLARED BIAS MAY START. Where the
+   *  group has a stake in what it investigates, its declared bias can start from what it wrote about itself
+   *  (membership R110's latest record), and it stays the group's own act: this proposes no statement, subject or
+   *  justification (R2–R7 are the member's to write) and moves nothing along R8's machine or R11's adoption. It
+   *  writes nothing, installs and adopts nothing, never changes a lens in force, and never throws. A viewer who is
+   *  not an active member is answered exactly as if no description were held, so the answer says nothing about
+   *  whether one exists. */
+  descriptionDraft({ viewer = null } = {}) {
+    const none = {
+      ok: true,
+      description: null,
+      offered: false,
+      proposed: false,
+      authored: false,
+      statements: [],
+      installed: false,
+      adopted: false,
+      writes: 0,
+      stated: "there is no description of the group to start a declared bias from: a member writes the set's statements, each with its subject and justification, from the beginning"
+    };
+    let d = null;
+    try {
+      if (!this.#activeMember(viewer)) return none;
+      const got = this.#membership.groupDescription({ viewer });
+      d = got && isObj29(got.description) ? got.description : null;
+    } catch {
+      return none;
+    }
+    if (!d) return none;
+    const text7 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
+    const description = {
+      kinds: Array.isArray(d.kinds) ? d.kinds.filter((k) => typeof k === "string") : [],
+      otherKind: text7(d.otherKind),
+      focus: text7(d.focus),
+      purpose: text7(d.purpose),
+      by: typeof d.by === "string" ? d.by : null,
+      at: typeof d.at === "string" ? d.at : null
+    };
+    return {
+      ok: true,
+      description,
+      offered: true,
+      proposed: true,
+      authored: false,
+      statements: [],
+      installed: false,
+      adopted: false,
+      writes: 0,
+      label: "what the group wrote about itself",
+      offers: "the opening text of a new bias set the member authors",
+      stated: "this is the group's own description of itself, offered as the opening text of a declared bias. Nothing here is a statement: a member writes each statement, names its subject in the registry and justifies it, offers the set as 'proposed', and the group adopts it with a member's name on it. Nothing has been written and no lens has changed."
+    };
+  }
   /* ---------------------------------------------------------------- R33–R41: the bias debt */
   /** R33: a later module's work products, by kind. `source` is `{list(after, limit) → keys in ascending order
    *  (synchronous), read(key) → Promise<null | {context: {type, id}, principal, lens: {basis, statements_sha} | null,
@@ -127734,12 +128266,12 @@ async function check({ parts, documents = [], keys = null }) {
   const signedFacts = fm ? gradingFactsOf(fm) : null;
   const signedPassages = fm ? passagesOf(fm) : null;
   const factsDiffer = /* @__PURE__ */ new Set(), passagesDiffer = /* @__PURE__ */ new Set();
-  const listOf5 = (raw, key) => Array.isArray(raw) ? raw : isObj30(raw) && Array.isArray(raw[key]) ? raw[key] : null;
+  const listOf6 = (raw, key) => Array.isArray(raw) ? raw : isObj30(raw) && Array.isArray(raw[key]) ? raw[key] : null;
   for (let i = 0; i < findingIds.length; i++) {
     const id = findingIds[i];
     const gf = fileOf("grading_facts", "finding", id);
     const raw = gf && gf.content ? jsonOf2(gf.content) : null;
-    const fileLegs = raw === void 0 ? void 0 : raw === null ? null : listOf5(raw, "legs") ?? void 0;
+    const fileLegs = raw === void 0 ? void 0 : raw === null ? null : listOf6(raw, "legs") ?? void 0;
     let fx;
     if (signedFacts) {
       const docLegs = signedFacts[id] || [];
@@ -127941,7 +128473,7 @@ async function check({ parts, documents = [], keys = null }) {
     }
     const pf = fileOf("passages", "finding", id);
     if (pf && !pf.content) put2(fileGap(pf, id, `finding ${id}'s passages`));
-    const fileRows = pf && pf.content ? listOf5(jsonOf2(pf.content), "passages") : pf ? [] : [];
+    const fileRows = pf && pf.content ? listOf6(jsonOf2(pf.content), "passages") : pf ? [] : [];
     const rows2 = signedPassages ? signedPassages[id] || [] : fileRows;
     if (signedPassages && pf && pf.content && (fileRows === null || !sameRows(fileRows, rows2, PASSAGE_FIELDS)))
       differs.push(entry2("passage", id, `finding ${id}'s carried passages are not the passages the signed case document states`));
@@ -135375,7 +135907,7 @@ var clamp5 = (v, dflt, max) => {
   const n = Math.floor(Number(v));
   return v !== null && v !== void 0 && v !== "" && Number.isFinite(n) ? Math.min(Math.max(n, 1), max) : dflt;
 };
-var listOf4 = (v) => (Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : []).map((x) => String(x ?? "").trim()).filter(Boolean);
+var listOf5 = (v) => (Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : []).map((x) => String(x ?? "").trim()).filter(Boolean);
 var OFFERED = Object.freeze(["approved", "updated"]);
 function withRow5(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string" || r.check) return r;
@@ -135809,7 +136341,7 @@ var FilingTemplates = class _FilingTemplates {
   /* ================================================================ the judges (R1, R2, R12) */
   #parseProfiles(v) {
     if (v === "general") return "general";
-    const l2 = listOf4(v);
+    const l2 = listOf5(v);
     return l2.length === 1 && l2[0] === "general" ? "general" : l2;
   }
   /* R1: the template's own fields, in R1's order. */
@@ -136128,7 +136660,7 @@ var FilingTemplates = class _FilingTemplates {
     const events = this.#events(t2.id);
     const state = this.#stateOf(events, n);
     if (state !== "draft") return this.#notADraft(t2, n, state);
-    const asked = [...new Set(listOf4(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
+    const asked = [...new Set(listOf5(reviewers).map((x) => x.includes(":") ? x : `member:${x}`))];
     const ids = [];
     for (const a of asked) {
       const id = this.#member(a);
@@ -148287,7 +148819,7 @@ __export(checks_exports46, {
   MONEY_CHECKS_CHECKS: () => MONEY_CHECKS_CHECKS,
   refusal: () => refusal19
 });
-var row4 = (req, translation) => Object.freeze({ check: `money-checks ${req}`, translation });
+var row4 = (_req, translation) => Object.freeze({ check: null, translation });
 var MONEY_CHECKS_CHECKS = Object.freeze({
   NO_CONTRACT: row4("R2", "Amount checks are asked of one contract, named by its entity id. Nothing was checked."),
   NO_CHECK: row4("R3", "A parameter belongs to a named check. Nothing was recorded."),
@@ -148295,7 +148827,7 @@ var MONEY_CHECKS_CHECKS = Object.freeze({
   UNKNOWN_PARAMETER: row4("R3", "That check reads no parameter of that name; the answer lists the ones it reads. Nothing was recorded."),
   NO_VALUE: row4("R3", "A parameter is stated with its value. Nothing was recorded."),
   BAD_VALUE: row4("R3", "The value does not read as this parameter's kind of value; the answer says what it takes. Nothing was recorded."),
-  NO_CITATION: row4("R3", "A threshold or share is stated with its citation: a held standard, or your own word for it. Nothing was recorded."),
+  MONEY_CHECK_NO_CITATION: row4("R3", "A threshold or share is stated with its citation: a held standard, or your own word for it. Nothing was recorded."),
   MEMBER_ACT_ONLY: row4("R5", "This is a member's act, taken in a member's own name; a machine credential cannot take it. Nothing was changed."),
   NO_LABEL: row4("R4", "A detector is defined with a label that says what it looks for. Nothing was defined."),
   NO_POPULATION: row4("R4", "A detector is defined with the population of money facts it runs over. Nothing was defined."),
@@ -148316,7 +148848,7 @@ var MONEY_CHECKS_CHECKS = Object.freeze({
 function refusal19(code, fields = {}) {
   const r = MONEY_CHECKS_CHECKS[code];
   if (!r) throw new Error(`money-checks: ${code} has no row with a sentence (DEC-49)`);
-  return { ok: false, reason: code, code, check: r.check, translation: r.translation, ...fields };
+  return { ...fields, ok: false, reason: code, code, check: r.check, translation: r.translation };
 }
 
 // src/hypotheses/checks.mjs
@@ -178273,6 +178805,8 @@ function migrateMoneyChecks(sql) {
 
 // src/money-checks/index.mjs
 var GATE_MAX = "0.2";
+var DETECTORS_DEFAULT_BUDGET_MS = 1e3;
+var DETECTORS_RUNNER = "class:daemon";
 var NOTICED_DEFAULT = 100;
 var NOTICED_MAX = 500;
 var NOTICED = "Noticed";
@@ -178365,6 +178899,7 @@ var MoneyChecks = class _MoneyChecks {
     this.money = money;
     this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
     this.nowMs = typeof nowMs === "function" ? nowMs : () => Date.now();
+    this.listeners = [];
   }
   #rows(q10, ...a) {
     return [...this.sql.exec(q10, ...a)];
@@ -178443,14 +178978,14 @@ var MoneyChecks = class _MoneyChecks {
     if (!member) return refusal19("MEMBER_ACT_ONLY", { by: by ?? null });
     const ck = str34(check2), nm = str34(name2), cite = str34(citation), con = str34(contract);
     if (!ck) return refusal19("NO_CHECK");
-    if (!CHECK_PARAMETERS[ck]) return refusal19("UNKNOWN_CHECK", { check: ck, checks: Object.keys(CHECK_PARAMETERS) });
-    if (!CHECK_PARAMETERS[ck][nm]) return refusal19("UNKNOWN_PARAMETER", { check: ck, name: nm || null, parameters: { ...CHECK_PARAMETERS[ck] } });
+    if (!CHECK_PARAMETERS[ck]) return refusal19("UNKNOWN_CHECK", { check_key: ck, checks: Object.keys(CHECK_PARAMETERS) });
+    if (!CHECK_PARAMETERS[ck][nm]) return refusal19("UNKNOWN_PARAMETER", { check_key: ck, name: nm || null, parameters: { ...CHECK_PARAMETERS[ck] } });
     const v = typeof value === "number" ? String(value) : str34(value);
-    if (!v) return refusal19("NO_VALUE", { check: ck, name: nm });
-    if ([v, cite, con].some(isHypothesisId)) return refusal19("HYPOTHESIS_NOT_INPUT", { check: ck, name: nm });
+    if (!v) return refusal19("NO_VALUE", { check_key: ck, name: nm });
+    if ([v, cite, con].some(isHypothesisId)) return refusal19("HYPOTHESIS_NOT_INPUT", { check_key: ck, name: nm });
     const ok2 = nm === "share" ? shareFigure(v) !== null : v.length <= LABEL_MAX;
-    if (!ok2) return refusal19("BAD_VALUE", { check: ck, name: nm, takes: CHECK_PARAMETERS[ck][nm] });
-    if (!cite) return refusal19("NO_CITATION", { check: ck, name: nm });
+    if (!ok2) return refusal19("BAD_VALUE", { check_key: ck, name: nm, takes: CHECK_PARAMETERS[ck][nm] });
+    if (!cite) return refusal19("MONEY_CHECK_NO_CITATION", { check_key: ck, name: nm });
     if (con && !this.entities.has(con)) return noSuchEntity(con);
     const at33 = this.now();
     return this.record.transact(() => {
@@ -178462,7 +178997,7 @@ var MoneyChecks = class _MoneyChecks {
   parameters({ check: check2, contract = null } = {}) {
     const ck = str34(check2), con = str34(contract);
     if (!ck) return refusal19("NO_CHECK");
-    if (!CHECK_PARAMETERS[ck]) return refusal19("UNKNOWN_CHECK", { check: ck, checks: Object.keys(CHECK_PARAMETERS) });
+    if (!CHECK_PARAMETERS[ck]) return refusal19("UNKNOWN_CHECK", { check_key: ck, checks: Object.keys(CHECK_PARAMETERS) });
     const rows2 = this.#rows(`SELECT seq, name, contract, value, citation, by, at FROM money_check_params
                                WHERE check_key=? AND contract IN ('', ?) ORDER BY seq`, ck, con);
     const governing = new Set(Object.keys(CHECK_PARAMETERS[ck]).map((n) => this.#param(ck, n, con)?.seq).filter(Boolean));
@@ -178731,7 +179266,7 @@ var MoneyChecks = class _MoneyChecks {
       }
       const f17 = parseFigure(typeof p3.value === "number" ? String(p3.value) : str34(p3.value));
       if (!f17 || f17.refused) return { code: "BAD_VALUE", why: `the parameter "${p3.name}" is a figure` };
-      if (!str34(p3.citation)) return { code: "NO_CITATION", why: p3.name };
+      if (!str34(p3.citation)) return { code: "MONEY_CHECK_NO_CITATION", why: p3.name };
       list6.push({ name: p3.name, value: str34(String(p3.value)), citation: str34(p3.citation).slice(0, TEXT_MAX4) });
     }
     return { list: list6 };
@@ -178791,15 +179326,42 @@ var MoneyChecks = class _MoneyChecks {
     if (!this.#projectSeen(pid, _MoneyChecks.#viewerOf(member))) return noSuchProject(pid);
     if (on !== true && on !== false) return refusal19("NO_SWITCH");
     const at33 = this.now();
-    return this.record.transact(() => {
+    const was = this.#switchedOn(did, pid);
+    const done = this.record.transact(() => {
       this.#append("money_detector_switches", { detector_id: did, project_id: pid, on_: on ? 1 : 0, by: str34(by), at: at33 });
       return { ok: true, detector_id: did, project: pid, on, by: str34(by), at: at33 };
     });
+    if (done && done.ok && on && !was) this.#tell({ detector_id: did, project: pid });
+    return done;
   }
-  /* R5: on unless the latest act for the project switched it off. */
+  /* R5, R6 (N607): on only when the latest act for the project switched it on; with no act, off. */
   #switchedOn(did, pid) {
     const r = this.#one(`SELECT on_ FROM money_detector_switches WHERE detector_id=? AND project_id=? ORDER BY seq DESC LIMIT 1`, did, pid);
-    return !r || r.on_ === 1;
+    return !!r && r.on_ === 1;
+  }
+  /* R6 (N607): the detectors switched on for at least one project, each by its latest act there. */
+  #switchedAnywhere() {
+    return new Set(this.#rows(`SELECT s.detector_id FROM money_detector_switches s
+                                 WHERE s.on_ = 1 AND s.seq = (SELECT max(seq) FROM money_detector_switches x
+                                                              WHERE x.detector_id = s.detector_id AND x.project_id = s.project_id)`).map((r) => r.detector_id));
+  }
+  /** R16 (N605, K1666): one listener per module, told `{detector_id, project}` after a detector is switched on for a
+   *  project where it was off, so `scheduler` arms its `money-detectors` wake at once. A malformed or second
+   *  registration is refused through `membership.listenerRefusal` (its R81). */
+  onDetectorSwitchedOn(module, fn) {
+    const refused3 = listenerRefusal(this.listeners, module, fn);
+    if (refused3) return refused3;
+    this.listeners.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R16: each listener once; one that throws never undoes the act, nor stops the others. */
+  #tell(notice) {
+    for (const l2 of this.listeners) {
+      try {
+        l2.fn({ ...notice });
+      } catch {
+      }
+    }
   }
   #gate(did, version) {
     return this.#one(`SELECT gold_set, false_alarm_rate, by, at FROM money_detector_gates WHERE detector_id=? AND version=?
@@ -178814,6 +179376,18 @@ var MoneyChecks = class _MoneyChecks {
     return this.#rows(`SELECT v.* , d.origin FROM money_detector_versions v JOIN money_detectors d ON d.detector_id=v.detector_id
                          WHERE v.version = (SELECT max(version) FROM money_detector_versions x WHERE x.detector_id=v.detector_id)
                          ORDER BY v.detector_id`);
+  }
+  /* R6 (N607): the current versions a run works over: those of detectors switched on for at least one project. */
+  #live() {
+    const on = this.#switchedAnywhere();
+    return this.#current().filter((v) => on.has(v.detector_id));
+  }
+  /** R11 (N618): may `by` run the detectors through the op: the machine (`class:daemon`) or an administrator. */
+  mayRun(by) {
+    const b = str34(by);
+    if (b === DETECTORS_RUNNER) return true;
+    const member = _MoneyChecks.#memberOf(b);
+    return !!member && !!this.membership.isAdministrator(member);
   }
   static #versionView(v) {
     return {
@@ -178849,7 +179423,7 @@ var MoneyChecks = class _MoneyChecks {
         at: d.at,
         versions,
         switches: projects.map((p3) => ({ project: p3, on: this.#switchedOn(d.detector_id, p3) })),
-        default_switch: "on"
+        default_switch: "off"
       });
     }
     return { ok: true, detectors: out };
@@ -178966,16 +179540,18 @@ var MoneyChecks = class _MoneyChecks {
       inputs: json12(inputs.map((id) => ({ fact_id: id, held_by: "money" })))
     } };
   }
-  /** R6: runs each detector's current version over the facts held, within `budgetMs`, from `cursor`. Each subject's
-   *  result is written keyed by (detector, version, subject, inputs), so an unchanged rerun writes nothing; a subject
-   *  that no longer raises, and a superseded version, lose their rows (the table is a derived cache, R13). */
+  /** R6: runs the current version of each detector switched on for at least one project over the facts held, within
+   *  `budgetMs` (its stated default without one), from `cursor`. Each subject's result is written keyed by (detector,
+   *  version, subject, inputs), so an unchanged rerun writes nothing; a subject that no longer raises, a superseded
+   *  version, and a detector switched on nowhere (N607: run over nothing) lose their rows (a derived cache, R13). */
   runDetectors({ budgetMs, cursor = null } = {}) {
-    const budget = Number(budgetMs);
-    if (!Number.isFinite(budget) || budget <= 0) return refusal19("NO_BUDGET");
+    const given2 = budgetMs !== void 0 && budgetMs !== null;
+    if (given2 && !(typeof budgetMs === "number" && Number.isFinite(budgetMs) && budgetMs > 0)) return refusal19("NO_BUDGET", { budget_ms: budgetMs });
+    const budget = given2 ? budgetMs : DETECTORS_DEFAULT_BUDGET_MS;
     const start = this.nowMs();
     const from = cursor ? parse15(cursor) : null;
-    const stats = { written: 0, unchanged: 0, raised: 0, skipped: {}, persons_skipped: 0, detectors: 0 };
-    const current2 = this.#current();
+    const stats = { written: 0, unchanged: 0, raised: 0, skipped: {}, persons_skipped: 0, detectors: 0, budget_ms: budget };
+    const current2 = this.#live();
     const live7 = new Set(current2.map((v) => `${v.detector_id}#${v.version}`));
     this.record.transact(() => {
       for (const r of this.#rows(`SELECT result_key, detector_id, version FROM money_detector_results`))
@@ -179019,7 +179595,7 @@ var MoneyChecks = class _MoneyChecks {
   /** R13 (record-core R77): the results table rebuilt from the detectors and the facts, as rows; writes nothing. */
   rebuild(scope = null) {
     const rows2 = [];
-    for (const v of this.#current()) {
+    for (const v of this.#live()) {
       if (scope && scope.detector_id && scope.detector_id !== v.detector_id) continue;
       const { subjects, facts } = this.#subjects(v);
       for (const s of subjects) {
@@ -179141,7 +179717,8 @@ function moneyChecksOps(c, url, body) {
     moneydetectordefine: () => c.defineDetector(b),
     moneydetectorswitch: () => c.switchDetector(b),
     moneydetectors: () => c.detectors({ viewer: q10("viewer") }),
-    moneydetectorsrun: () => c.runDetectors({ budgetMs: b.budgetMs, cursor: b.cursor ?? null }),
+    /* R11 (N618): the machine's or an administrator's; anyone else is refused and nothing runs. */
+    moneydetectorsrun: () => c.mayRun(b.by) ? c.runDetectors({ budgetMs: b.budgetMs, cursor: b.cursor ?? null }) : notAnAdmin(b.by ?? null, "running the money detectors"),
     moneydetectorgate: () => c.recordGate(b),
     moneynoticed: () => c.noticed({ project: q10("project"), viewer: q10("viewer"), limit: q10("limit") })
   };
@@ -201598,27 +202175,36 @@ function sharedSet(ctx, reader, { kind, node, span: span3, a, b }) {
 
 // src/explore/rederive.mjs
 var DAY4 = /^\d{4}-\d{2}-\d{2}$/;
+var DERIVED_ID = /^[0-9a-f]{64}$/;
 var no5 = (why, extra = {}) => ({ ok: true, matches: false, why, ...extra });
+var INPUT_NOT_READ = "no connection by this id is read at either end of the derivation for this viewer within this scope, so what it rests on is not settled";
 function rederive(ctx, arg) {
   const a = isObj41(arg) ? arg : {};
   const r0 = viewerRefusal(a.viewer) || nodeRefusal(a.from, "from", true) || nodeRefusal(a.to, "to", true);
   if (r0) return r0;
+  if (a.scope !== void 0 && a.scope !== null && !(isObj41(a.scope) && filled13(a.scope.inquiry))) {
+    return refuse19("BAD_SCOPE", "a scope is {inquiry}: the inquiry the leg naming the derived connection belongs to");
+  }
+  const scope = a.scope ? a.scope.inquiry : null;
   for (const f17 of ["kind", "as_of", "method", "id"]) if (!filled13(a[f17])) return no5(`${f17} is not stated, so the derivation cannot be recomputed`);
   const entry3 = ctx.registry.kindOf(a.kind);
   if (!entry3) return no5(`no owner registered the kind ${a.kind}`);
   if (entry3.class !== "derived") return no5(`${a.kind} is of class ${entry3.class}, not a derived kind`);
   const recomputed = derivedId({ kind: a.kind, from: a.from, to: a.to, as_of: a.as_of, method: a.method });
   const at33 = DAY4.test(a.as_of) ? { value: a.as_of, precision: "day", zone: "UTC" } : a.as_of;
-  const reader = makeReader(ctx, { at: at33, viewer: a.viewer, scope: null });
+  const reader = makeReader(ctx, { at: at33, viewer: a.viewer, scope });
   const items = reader.read(entry3.owner, a.from, [a.kind]);
   if (!items) {
-    const why = reader.s.refusals[0] ? `${entry3.owner} refused: ${reader.s.refusals[0].why}` : reader.s.hubs[0] ? `${a.from} is ${reader.s.hubs[0].words}` : "the read used its time budget";
-    return no5(why, { recomputed_id: recomputed });
+    const why2 = reader.s.refusals[0] ? `${entry3.owner} refused: ${reader.s.refusals[0].why}` : reader.s.hubs[0] ? `${a.from} is ${reader.s.hubs[0].words}` : "the read used its time budget";
+    return no5(why2, { recomputed_id: recomputed });
   }
   const held2 = items.find((h) => h.kind === a.kind && isObj41(h.derived) && h.derived.method === a.method && h.derived.as_of === a.as_of && (h.from === a.from && h.to === a.to || h.from === a.to && h.to === a.from));
   if (!held2) return no5(`${entry3.owner} holds no ${a.kind} between ${a.from} and ${a.to} by ${a.method} as of ${a.as_of}`, { recomputed_id: recomputed });
   const rests = restsOn(ctx, reader, held2, [a.from, a.to]);
-  const matches2 = recomputed === a.id && held2.id === recomputed;
+  const undetermined3 = rests.filter((r) => r.undetermined);
+  const idsMatch = recomputed === a.id && held2.id === recomputed;
+  const matches2 = idsMatch && !undetermined3.length;
+  const why = !idsMatch ? recomputed !== a.id ? "the id asked is not the id its parameters derive" : "the owner's held id is not the id its parameters derive" : undetermined3.length ? `${undetermined3.length} of the hops it rests on ${undetermined3.length === 1 ? "is" : "are"} not read, so it cannot be re-derived` : null;
   return {
     ok: true,
     matches: matches2,
@@ -201626,10 +202212,21 @@ function rederive(ctx, arg) {
     id: a.id,
     held_id: held2.id,
     derivation: held2.derived,
+    scope: a.scope ?? null,
     rests_on: rests,
     declared_or_hunch: rests.some((r) => r.class === "declared" || r.class === "hunch"),
-    ...matches2 ? {} : { why: recomputed !== a.id ? "the id asked is not the id its parameters derive" : "the owner's held id is not the id its parameters derive" }
+    ...undetermined3.length ? { undetermined: true } : {},
+    ...why ? { why } : {}
   };
+}
+function inputOf(input, ends) {
+  if (isObj41(input)) {
+    const id = [input.connection, input.id].find(filled13);
+    return id ? { id, hop: !ends.includes(id) } : { id: null, hop: false };
+  }
+  if (!filled13(input)) return { id: null, hop: false };
+  if (ends.includes(input)) return { id: input, hop: false };
+  return { id: input, hop: isRecordId(input) || DERIVED_ID.test(input) };
 }
 function restsOn(ctx, reader, held2, ends) {
   const inputs = Array.isArray(held2.derived.inputs) ? held2.derived.inputs : [];
@@ -201641,9 +202238,11 @@ function restsOn(ctx, reader, held2, ends) {
     }
   }
   return inputs.map((input) => {
-    const id = typeof input === "string" ? input : isObj41(input) ? input.id ?? input.source : null;
+    const { id, hop } = inputOf(input, ends);
     const h = id ? byId.get(id) : void 0;
-    return h ? { input: id, connection: h, class: ctx.registry.kindOf(h.kind)?.class ?? null } : { input: id ?? input, class: null };
+    if (h) return { input: id, connection: h, class: ctx.registry.kindOf(h.kind)?.class ?? null };
+    if (hop) return { input: id, class: null, undetermined: true, why: INPUT_NOT_READ };
+    return { input: id ?? input, class: null };
   });
 }
 
@@ -201665,7 +202264,7 @@ function timelineOver(ctx, arg) {
   if (!Array.isArray(a.set) || a.set.length === 0) return refuse19("NO_SET", "a timeline is over a set of record ids the caller names");
   const events = typeof ctx.events === "function" ? ctx.events() : ctx.events;
   const money = typeof ctx.money === "function" ? ctx.money() : ctx.money;
-  if (!events || typeof events.timeline !== "function") return refuse19("NOT_AVAILABLE", "events is not wired into this instance, so no timeline can be read");
+  if (!events || typeof events.timeline !== "function") return refuse19("NOT_AVAILABLE", "your group's Civicsmith has no events record connected, so no timeline can be read");
   const t2 = events.timeline({ set: a.set, from: a.from ?? null, to: a.to ?? null, viewer: a.viewer });
   if (isRefusal3(t2) || isObj41(t2) && t2.ok === false) return t2;
   const out = [];
@@ -201692,7 +202291,7 @@ function timelineOver(ctx, arg) {
       })), ...m.truncated ? { truncated: true } : {} });
     }
   }
-  return { ok: true, set: a.set, timeline: t2, money: out, ...wired ? {} : { money_note: "money is not wired into this instance, so no payer or payee is shown" } };
+  return { ok: true, set: a.set, timeline: t2, money: out, ...wired ? {} : { money_note: "your group's Civicsmith has no money record connected, so no payer or payee is shown" } };
 }
 
 // src/explore/ops.mjs
