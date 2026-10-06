@@ -94967,7 +94967,7 @@ function requestLifecycleOf(fm, today2) {
     entries: chain3,
     passed_unanswered: chain3.filter((c) => c.due && c.due.status === "passed_unanswered").map((c) => c.ord),
     as_of: day2,
-    says: "Each entry is dated as recorded and names the entry it follows. The plane derives only the days between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no judgement about the body."
+    says: "Each entry is dated as recorded and names the entry it follows. Your group's Civicsmith derives only the days between entries and whether a STATED due date passed with nothing following it; it encodes no law's clock and states no judgement about the body."
   };
 }
 function consequenceState(fm) {
@@ -95033,7 +95033,7 @@ function checkActionExtension(ctx, findings) {
   correspondenceFindings(fm, findings);
   const kinds3 = Array.isArray(ctx.actionKinds) ? ctx.actionKinds : PRODUCT_KINDS;
   if (!kinds3.includes(fm.action_kind) && !kindReadsAsWritten(fm.action_kind))
-    findings.push(f11("C-2.10", "error", `action_kind '${fm.action_kind}' is not a kind this instance offers`));
+    findings.push(f11("C-2.10", "error", `action_kind '${fm.action_kind}' is not a kind your group's Civicsmith offers`));
   recordsLawFindings(fm, findings);
   if (riskTierState(fm.risk_tier) === null) findings.push(f11("C-2.10", "error", `risk_tier '${fm.risk_tier}' is not one of ${Object.keys(RISK_TIERS).join(", ")}`));
   counterpartyFindings(fm, findings);
@@ -95316,10 +95316,12 @@ var RECORDS_LAW_FENCE_CHECKS = {
   }
 };
 var ACTION_CATALOGUE_CHECKS = {
+  /* T34-87 (DEC-149, K1811): the translation says "your group's Civicsmith" where it said "this instance"; a changed
+     translation, awaiting T35's stamp (plan Rules (5) 4). */
   ACTION_KIND_UNKNOWN: {
     check: "C-101.1",
     where: "src/actions/index.mjs #writeArms > is-promote-action-kind",
-    translation: `An action is one of the kinds this instance offers: a records request, a request for comment, "other", and the kinds the group's jurisdiction profile lists. This write named another kind, so nothing was written. Choose one of the listed kinds, or "other".`
+    translation: `An action is one of the kinds your group's Civicsmith offers: a records request, a request for comment, "other", and the kinds the group's jurisdiction profile lists. This write named another kind, so nothing was written. Choose one of the listed kinds, or "other".`
   },
   RISK_TIER_REFUSED: {
     check: "C-101.2",
@@ -138693,7 +138695,7 @@ var FILING_TEMPLATE_CHECKS = Object.freeze({
   TEMPLATE_PROFILE_UNKNOWN: {
     check: "C-125.3",
     where: at18("#shapeRefusal", "is-template-shape"),
-    translation: "A template is written for jurisdiction profiles this instance holds, or for none in particular (general), and a profile named is not held."
+    translation: "A template is written for jurisdiction profiles your group's Civicsmith holds, or for none in particular (general), and a profile named is not held."
   },
   TEMPLATE_BLANK_UNKNOWN: {
     check: "C-125.4",
@@ -138753,7 +138755,7 @@ var FILING_TEMPLATE_CHECKS = Object.freeze({
   GRANT_NO_SECRET: {
     check: "C-125.15",
     where: at18("templateReviewGrant", "is-template-grant"),
-    translation: "A review grant opens by a secret link the instance makes, and none was made for this request. Nothing was granted."
+    translation: "A review grant opens by a secret link your group's Civicsmith makes, and none was made for this request. Nothing was granted."
   },
   NO_SUCH_GRANT: {
     check: "C-125.16",
@@ -139875,7 +139877,7 @@ var FilingTemplates = class _FilingTemplates {
       );
     const s = typeof secretSha === "string" ? secretSha.trim() : "";
     if (!SHA_RE4.test(s) || this.#one(`SELECT 1 AS x FROM tpl_grants WHERE secret_sha=?`, s))
-      return refuse13("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: the control plane makes the secret");
+      return refuse13("GRANT_NO_SECRET", "no fresh secret digest was stamped for this grant: your group's Civicsmith makes the secret");
     const at33 = this.#when();
     return this.record.transact(() => {
       const id = this.#mint("TRG", at33.slice(0, 4));
@@ -159083,7 +159085,7 @@ var CONFORMANCE_CHECKS = Object.freeze({
   STANDARD_SIDE_UNNAMED: {
     check: "C-113.28",
     where: at24("comparisonFacts", "is-standard-side-named"),
-    translation: "Name which side of the question states what the standard requires, a or b. The plane never chooses it. Nothing was written."
+    translation: "Name which side of the question states what the standard requires, a or b. Your group's Civicsmith never chooses it. Nothing was written."
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: "C-113.21",
@@ -159238,7 +159240,7 @@ var FILINGS_CHECKS = Object.freeze({
   MACHINE_CANNOT_FILE: {
     check: "C-115.13",
     where: at26("filingRecordSent", "is-filing-sent"),
-    translation: "Only a named member can record that a filing was sent. The instance sends nothing itself."
+    translation: "Only a named member can record that a filing was sent. Your group's Civicsmith sends nothing itself."
   },
   NOT_APPROVED: {
     check: "C-115.14",
@@ -159585,7 +159587,7 @@ var ESCALATION_CHECKS = Object.freeze({
   PROVIDER_UNAVAILABLE: {
     check: "C-116.44",
     where: at27("refuseProviderUnavailable", "is-provider-present"),
-    translation: "Part of the record this answer depends on cannot be read on this instance yet, so nothing is answered in its place. Nothing was written."
+    translation: "Part of the record this answer depends on cannot be read by your group's Civicsmith yet, so nothing is answered in its place. Nothing was written."
   }
 });
 function refusal24(code, detail, extra) {
@@ -159763,7 +159765,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   PHASE_MALFORMED: {
     check: "C-124.32",
     where: at28("#scenarioPhases", "is-phase-shaped"),
-    translation: "A phase has an id, a name, the chosen options it holds, when it starts (at the plan's start, after another phase, on one outcome of another phase's checkpoint, or when another matter's track reaches a point), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written."
+    translation: "A phase has an id, a name, the chosen options it holds, when it starts (at the plan's start, after another phase, on one outcome of another phase's checkpoint, when another matter's track reaches a point, or when an obligation's occurrence reaches a state: met, met late, overdue or undetermined), and may have a checkpoint after 1 to 3,650 days, a condition of up to 500 characters and the phase each judgement leads to. The phase named was not so. Nothing was written."
   },
   PHASE_OPTION_NOT_CHOSEN: {
     check: "C-124.33",
@@ -159893,7 +159895,7 @@ var ACTION_PLAN_CHECKS = Object.freeze({
   PLAN_PROVIDER_UNAVAILABLE: {
     check: "C-124.57",
     where: at28("refuseProviderUnavailable", "is-provider-present"),
-    translation: "An action plan reads matters, actions and runs held by other parts of the record, and one of them is not on this instance yet, so the plan is not answered in part. Nothing was written."
+    translation: "An action plan reads matters, actions and runs held by other parts of the record, and one of them is not in your group's Civicsmith yet, so the plan is not answered in part. Nothing was written."
   }
 });
 function refusal25(code, detail, extra) {
@@ -166385,7 +166387,7 @@ var Conformance = class _Conformance {
     if (!from.ok) return from;
     const side = typeof standardSide === "string" ? standardSide : null;
     if (side !== "a" && side !== "b")
-      return refusal23("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or b: the plane never chooses it. Nothing was written.", { contradiction: from.inquiry });
+      return refusal23("STANDARD_SIDE_UNNAMED", "name which side of the question states what the standard requires, a or b: your group's Civicsmith never chooses it. Nothing was written.", { contradiction: from.inquiry });
     let listed = null;
     try {
       listed = this.contradiction.candidatesFor({ on: { candidate: from.candidate }, viewer });
@@ -166976,7 +166978,7 @@ function noSuchAction(actionId, extra = null) {
     detail: NO_SUCH_ACTION_DETAIL
   };
 }
-var CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of this instance by member id, and this one names none. Nothing was written.";
+var CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of your group by member id, and this one names none. Nothing was written.";
 var CONTACT_NOT_A_MEMBER_FIXED = /* @__PURE__ */ new Set(["ok", "reason", "code", "check", "translation", "detail"]);
 function contactNotAMember(extra = null) {
   let own5 = [];
@@ -167011,10 +167013,14 @@ function instantOf2(nowMs) {
   return new Date(Math.floor((Number.isFinite(n) ? n : 0) / 1e3) * 1e3).toISOString().replace(".000Z", "Z");
 }
 function zoneOf(place) {
-  if (typeof place === "string") return place.trim() || null;
-  const tz = place && typeof place === "object" ? place.time_zone : null;
-  const v = tz && typeof tz === "object" ? tz.value : tz;
-  return typeof v === "string" && v.trim() ? v.trim() : null;
+  try {
+    if (typeof place === "string") return place.trim() || null;
+    const tz = place && typeof place === "object" ? place.time_zone : null;
+    const v = tz && typeof tz === "object" ? tz.value : tz;
+    return typeof v === "string" && v.trim() ? v.trim() : null;
+  } catch {
+    return null;
+  }
 }
 function localToday(nowMs, zone) {
   if (!zone) return null;
@@ -167219,8 +167225,9 @@ var Actions = class _Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R12 (K1444 (iii)): the active profiles' combined view, the place a clock is read in (its `time_zone`, its
-   *  offices' hours), or null. Never throws. */
+  /** R12, R68 (K1444 (iii); N611, K1681): the active profiles' combined view as they stand at the call (K1649), the
+   *  place a clock is read in (its `time_zone`, its offices' hours), or null when none can be read. Provided to
+   *  `retrieval` and `queue-producers` with `zoneOf`, so none spells its own. Writes nothing; never throws. */
   place() {
     try {
       return this.#view();
@@ -167477,7 +167484,7 @@ var Actions = class _Actions {
     if (kindMoved) {
       const kinds3 = this.kinds();
       if (!kinds3.includes(nextFm.action_kind))
-        return refuse15("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind this instance offers: one of ${kinds3.join(", ")}. Nothing was written.`, { legal: kinds3 });
+        return refuse15("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your group's Civicsmith offers: one of ${kinds3.join(", ")}. Nothing was written.`, { legal: kinds3 });
     }
     if (riskTierState(nextFm.risk_tier) === null)
       return refuse15("RISK_TIER_REFUSED", `risk_tier '${String(nextFm.risk_tier).slice(0, 20)}' is not 1, 2, 3 or undetermined. Nothing was written.`, { legal: Object.keys(RISK_TIERS) });
@@ -167752,7 +167759,7 @@ var Actions = class _Actions {
     if (superseded) return determinationSuperseded(superseded.id, superseded.by);
     return refuse15(
       "ACTION_NO_DETERMINATION",
-      readable ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. None of its legs names one. Nothing was written." : "an action recorded for a breach rests on a conformance determination, and no determination can be read on this instance yet, so none could be found. Nothing was written.",
+      readable ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. None of its legs names one. Nothing was written." : "an action recorded for a breach rests on a conformance determination, and no determination can be read on your group's Civicsmith yet, so none could be found. Nothing was written.",
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" }
     );
   }
@@ -168716,6 +168723,20 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       const e2 = earliest2.get(p3);
       return e2 ? { project: p3, held: true, since: e2.at, recorded_by: e2.stated_by } : { project: p3, held: false };
     }) };
+  }
+  /** R69 (K1830; ratification R45): R58's answer for one project, read as the plane (whatever the viewer): `{held:
+   *  true, since, recorded_by}` (the earliest `in_place` statement, among holds still in place, recording it) or
+   *  `{held: false}` after reading every hold; `null` when the read cannot complete (no project named, or the holds
+   *  unreadable). Names no action, entry or reason. Writes nothing; never throws. */
+  holdsOn(args = {}) {
+    try {
+      const p3 = args && typeof args.project === "string" ? args.project.trim() : "";
+      if (!p3) return null;
+      const e2 = this.#standing().find((r) => r.project === p3);
+      return e2 ? { held: true, since: e2.at, recorded_by: e2.stated_by } : { held: false };
+    } catch {
+      return null;
+    }
   }
   /** R59 (DEC-113; for `queue-producers` R29): every `released` statement that ended a hold in place, on an action the
    *  viewer may see, with the hold's placers and the projects it restarted that the viewer sees; at most 500 per page in
@@ -170332,6 +170353,16 @@ function actionsOf(host, deps) {
       if (r && r.ok === false && r.module !== "actions")
         throw new Error(`actions: capture refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
     }
+    let ratification = null;
+    if (d.ratification !== null && (d.ratification || d.env)) {
+      try {
+        ratification = d.ratification || ratificationOf(host);
+      } catch {
+        ratification = null;
+      }
+    }
+    if (ratification && typeof ratification.registerHoldReader === "function")
+      ratification.registerHoldReader({ holdsOn: (args) => a.holdsOn(args) });
   }
   return a;
 }
@@ -170592,7 +170623,8 @@ var holidayFact = (h) => ({
   profile: h.profile ?? null,
   fact: "holidays",
   year: Number(h.year),
-  ...Array.isArray(h.offices) ? { offices: h.offices } : {}
+  ...Array.isArray(h.offices) ? { offices: h.offices } : {},
+  ...isListEntry(h) ? { list: h.list } : {}
 });
 function officeHours2(view, offices) {
   const out = [];
@@ -170643,13 +170675,6 @@ function factReader(localFacts, viewer) {
   }
   if (typeof read3 !== "function") return null;
   return (h) => {
-    let list6 = false;
-    try {
-      list6 = isListEntry(h);
-    } catch {
-      list6 = false;
-    }
-    if (list6) return { path: null, status: "absent", why: "a closure list's entry is not a local fact" };
     let path = null;
     try {
       path = factPath(holidayFact(h));
@@ -170686,29 +170711,27 @@ function calendarStated2(calls, readable) {
     basis: h.basis ?? null,
     ...f17.status === "corrected" ? { corrected_by: f17.by ?? null, corrected_at: f17.at ?? null } : {}
   }));
+  if (!readable) return { status: "not_read", years, says: ["whether your group has confirmed the calendar was not read"] };
   const says = [];
-  for (const { h, f: f17 } of calls) if (f17.status === "profile_list")
-    says.push(`counted on the closure list '${h.list}' for ${h.year} as the profile holds it (${h.basis ?? "no source stated"}); a closure list is not confirmed on this instance`);
-  if (!readable) return { status: "not_read", years, says: ["the calendar's confirmation on this instance was not read", ...says] };
-  for (const { f: f17 } of calls) {
+  for (const { h, f: f17 } of calls) {
+    const which = isListEntry(h) ? `: the closure list '${h.list}', ${h.year}` : "";
     if (f17.status === "unconfirmed")
-      says.push(`counted on an unconfirmed calendar (${f17.basis ?? "no source stated"}, ${f17.last_at ?? "never confirmed here"})`);
-    else if (f17.status === "corrected") says.push(`counted on a calendar ${f17.says ?? `corrected locally by ${f17.by}, ${f17.at}`}`);
+      says.push(`counted on an unconfirmed calendar (${f17.basis ?? "no source stated"}, ${f17.last_at ?? "never confirmed here"})${which}`);
+    else if (f17.status === "corrected") says.push(`counted on a calendar ${f17.says ?? `corrected locally by ${f17.by}, ${f17.at}`}${which}`);
   }
   const st = calls.map((c) => c.f.status);
-  const status = st.some((s) => s === "unconfirmed" || s === "profile_list") ? "unconfirmed" : st.some((s) => s === "corrected") ? "corrected" : "confirmed";
+  const status = st.some((s) => s === "unconfirmed") ? "unconfirmed" : st.some((s) => s === "corrected") ? "corrected" : "confirmed";
   return { status, years, says };
 }
-function recorder(factOf, cache = /* @__PURE__ */ new Map()) {
+function recorder(factOf, cache) {
   const calls = [];
   const readable = typeof factOf === "function";
   const read3 = (h) => {
     let f17 = cache.get(h);
     if (!f17) {
-      if (isListEntry(h)) f17 = { path: null, status: "profile_list" };
-      else if (!readable) f17 = { path: null, status: "not_read" };
-      else f17 = askOnce(factOf, h);
+      f17 = readable ? askOnce(factOf, h) : { path: null, status: "not_read" };
       f17 = { ...f17, basis: h && h.basis !== void 0 ? h.basis : f17.basis };
+      cache.set(h, f17);
     }
     calls.push({ h, f: f17 });
     return f17;
@@ -170723,18 +170746,6 @@ function askOnce(factOf, h) {
     f17 = { status: "absent", why: `the reader failed${e2 && e2.message ? `: ${String(e2.message).slice(0, 200)}` : ""}` };
   }
   return f17 && typeof f17 === "object" ? f17 : { status: "absent", why: "the reader gave no answer" };
-}
-function governedView(view, factOf) {
-  const cache = /* @__PURE__ */ new Map();
-  if (typeof factOf !== "function" || !Array.isArray(view.holidays)) return { view, cache };
-  const holidays = view.holidays.map((h) => {
-    if (!isObj37(h) || isListEntry(h)) return h;
-    const f17 = { ...askOnce(factOf, h), basis: h.basis };
-    const g = f17.corrected === true && Array.isArray(f17.value) ? { ...h, days: f17.value } : h;
-    cache.set(g, f17);
-    return g;
-  });
-  return { view: { ...view, holidays }, cache };
 }
 var dayOf3 = (dt2) => dt2 && typeof dt2.value === "string" ? dt2.value.slice(0, 10) : null;
 var earliestDay = (due2) => due2 && Array.isArray(due2.candidates) ? dayOf3(due2.candidates[0]) : dayOf3(due2);
@@ -170760,11 +170771,11 @@ function computeDeadline(d, fm, view, { factOf = null } = {}) {
     const anchor = { value: start, precision: "day", zone };
     const reads = rule.count === "business" || rule.units === "business_hours" || rule.roll === true || isObj37(rule.extension) && rule.extension.count === "business";
     const base2 = { ...rule, observed: void 0 };
-    const governed = reads ? governedView(v, factOf) : { view: v, cache: /* @__PURE__ */ new Map() };
-    const rec = recorder(factOf, governed.cache);
+    const cache = /* @__PURE__ */ new Map();
+    const rec = recorder(factOf, cache);
     let r;
     try {
-      r = evaluateRule({ rule: base2, anchor, view: governed.view, office, factOf: rec.read });
+      r = evaluateRule({ rule: base2, anchor, view: v, office, factOf: rec.read });
     } catch (x) {
       r = { undetermined: true, code: "RULE_INVALID", why: `the rule cannot be counted: ${textOf5(x && x.message) || "a malformed rule"}` };
     }
@@ -170790,9 +170801,9 @@ function computeDeadline(d, fm, view, { factOf = null } = {}) {
         o = evaluateRule({
           rule: { ...base2, closures: rule.observed.closures },
           anchor,
-          view: governed.view,
+          view: v,
           office,
-          factOf: recorder(factOf, governed.cache).read
+          factOf: recorder(factOf, cache).read
         });
       } catch {
         o = { undetermined: true, why: "the practice calendar cannot be counted" };
@@ -171110,7 +171121,13 @@ var ActionClocks = class {
   /* R3, R5, R6 (K1444 (iii); actions R12): the local day of the instance clock in the action's zone (`actionZone`), or
      null when no zone is held: undetermined, never the UTC day. */
   #localToday(fm, view, explicit = null) {
-    return localDayOf(this.#nowMs(explicit), actionZone(fm, view));
+    return this.#judged(fm, view, explicit).day;
+  }
+  /* R3, R5 (N609, K1675): the zone an action's day is judged in at this call and that local day, which each item
+     carries so its reader dates and ages it in the zone this module counted in; both null when no zone is held. */
+  #judged(fm, view, explicit = null) {
+    const zone = actionZone(fm, view);
+    return { zone, day: localDayOf(this.#nowMs(explicit), zone) };
   }
   /* R7 (K1431, K1446): what an entry names as its basis: its kind (null when it states none, as every entry written
      before T33-74), its citation, and the kind's own fields; a `rule` naming a held standard answers that standard's
@@ -171291,14 +171308,16 @@ var ActionClocks = class {
    *  the entry's basis (R7). Paged as R1 (`#entryPage`), over every open action in id order: an `overdue` entry is not
    *  in the projection's clock, so no seek narrows it. R7: overdue is derived at the read (`past`), and the stored
    *  status is reported beside it, never in place of it. An action whose zone is not held has its pending entries'
-   *  lateness undetermined: they are left out and counted in `zone_undetermined`. Writes nothing. */
+   *  lateness undetermined: they are left out and counted in `zone_undetermined`. Each item carries `zone`, the zone
+   *  whose local day (`local_day`) it was judged on (N609; null for a stored `overdue` of an action with none held), so
+   *  `queue-producers` R15 dates and ages it in the same zone. Writes nothing. */
   overdueClocks({ after = null, limit = null, viewer = null, now = null } = {}) {
     const asOf = this.#today(now);
     const view = this.#view();
     const max = clampLimit2(limit, OVERDUE_CLOCKS_MAX, OVERDUE_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
-    const who2 = /* @__PURE__ */ new Map(), day2 = /* @__PURE__ */ new Map();
+    const who2 = /* @__PURE__ */ new Map(), judged = /* @__PURE__ */ new Map();
     let undetermined3 = 0;
     const page2 = this.#entryPage({
       after,
@@ -171315,8 +171334,8 @@ var ActionClocks = class {
       ),
       item: (r, i, e2) => {
         if (!e2 || typeof e2 !== "object") return null;
-        if (!day2.has(r.bundle_id)) day2.set(r.bundle_id, this.#localToday(this.#heldFm(r.bundle_id) || {}, view, now));
-        const today2 = day2.get(r.bundle_id);
+        if (!judged.has(r.bundle_id)) judged.set(r.bundle_id, this.#judged(this.#heldFm(r.bundle_id) || {}, view, now));
+        const { zone, day: today2 } = judged.get(r.bundle_id);
         const dated = typeof e2.date === "string" && isDay3(e2.date);
         if (e2.status === "pending" && dated && today2 === null) {
           undetermined3++;
@@ -171335,7 +171354,8 @@ var ActionClocks = class {
           past,
           ...who2.get(r.bundle_id),
           basis_of: this.#basisOf(e2, viewer),
-          local_day: today2
+          local_day: today2,
+          zone
         };
       }
     });
@@ -171616,16 +171636,17 @@ var ActionClocks = class {
    *  `<action>#<position>#<day>#<member>`, when `truncated`, else null; `after` is a previous page's cursor or an action
    *  id, read as after all that action's reminders. The entry is read as it stands (an entry a later revision removed
    *  or re-dated is answered only while the entry at that position is pending). A day "has come" on the local day of
-   *  `nowMs` in the action's zone (Terms; K1444 (iii)): never the UTC day, and not at all while no zone is held.
+   *  `nowMs` in the action's zone (Terms; K1444 (iii)): never the UTC day, and not at all while no zone is held. Each
+   *  item carries `zone`, the zone whose local day its reminder was judged due on (N609), for `queue-producers` R18.
    *  Writes nothing. */
   remindersDue({ nowMs = null, after = null, limit = null, viewer = null } = {}) {
     const today2 = this.#today(nowMs);
     const view = this.#view();
     const bound = new Date(this.#nowMs(nowMs) + 14 * 36e5).toISOString().slice(0, 10);
-    const localDays = /* @__PURE__ */ new Map();
-    const localOf4 = (id) => {
-      if (!localDays.has(id)) localDays.set(id, this.#localToday(fmOf(id), view, nowMs));
-      return localDays.get(id);
+    const judged = /* @__PURE__ */ new Map();
+    const judgedOf = (id) => {
+      if (!judged.has(id)) judged.set(id, this.#judged(fmOf(id), view, nowMs));
+      return judged.get(id);
     };
     const max = clampLimit2(limit, REMINDERS_DUE_MAX, REMINDERS_DUE_MAX);
     const gate = viewerPredicate(viewer);
@@ -171664,7 +171685,7 @@ var ActionClocks = class {
         const clock2 = Array.isArray(fmOf(r.bundle_id).clock) ? fmOf(r.bundle_id).clock : [];
         const e2 = clock2[r.entry];
         if (!e2 || typeof e2 !== "object" || e2.status !== "pending") continue;
-        const local = localOf4(r.bundle_id);
+        const { zone, day: local } = judgedOf(r.bundle_id);
         if (local === null || r.day > local) continue;
         if (items.length === max) {
           truncated3 = true;
@@ -171678,7 +171699,8 @@ var ActionClocks = class {
           text: e2.text ?? null,
           on: r.day,
           set_by: r.set_by,
-          project: this.#projectOf(fmOf(r.bundle_id), viewer)
+          project: this.#projectOf(fmOf(r.bundle_id), viewer),
+          zone
         });
       }
       if (truncated3 || rows3.length <= max || !last) break;
@@ -172834,23 +172856,20 @@ var Consequences = class {
   }
   /* R16 (DEC-78): whether the viewer may be answered the person a part names: the passage naming them is in a capture
      the viewer may see, and, when the record holds the person as a protected source, the link's sight admits the
-     viewer. An internal caller (no viewer) is not asked. people's `sourceLinkSight(person)` answers the link's sight
-     (null when no link is held); without it, only a viewer `sourceLinksOf` lists is admitted (fail closed). */
+     viewer. An internal caller (no viewer) is not asked. people's `sourceLinkSight(person)` (its R34, N600) answers the
+     link's sight: null when no link is held, so the capture's sight alone decides; else the members every held link
+     admits. A person withheld for a link is answered exactly as for a capture the viewer may not see (R16). Without
+     people here to answer, whether a link is held is not known, and the person is withheld (fail closed). */
   #seesPerson(person, viewer) {
     if (viewer === null || viewer === void 0) return true;
     if (!isObj38(person) || !person.entity) return false;
     const row8 = person.named_in ? this.content.contentRow(person.named_in) : null;
     if (!row8 || !this.membership.inSight(row8.bundle_id, viewer)) return false;
     const member = /^member:(.+)$/.exec(viewer)?.[1] ?? (viewer === "admin" ? "admin" : null);
-    const p3 = this.people;
     try {
-      if (p3 && typeof p3.sourceLinkSight === "function") {
-        const sight = p3.sourceLinkSight(person.entity);
-        if (sight === null || sight === void 0) return true;
-        return Array.isArray(sight) && !!member && sight.includes(member);
-      }
-      const links = p3 ? p3.sourceLinksOf({ person: person.entity, viewer }) : null;
-      return !!links && links.ok !== false && Array.isArray(links.links) && links.links.length > 0;
+      const sight = this.people.sourceLinkSight(person.entity);
+      if (sight === null) return true;
+      return Array.isArray(sight) && !!member && sight.includes(member);
     } catch {
       return false;
     }
@@ -172864,18 +172883,19 @@ var Consequences = class {
       return false;
     }
   }
-  /* R15: whether the viewer may see a calculation (calculations R10: one with an input the viewer may not see is
-     withheld whole). Asked synchronously through `gradeFactsOf`; a calculations without it, or answering a promise, is
-     answered as unseen (fail closed). An internal caller is not asked. */
+  /* R2, R15 (N576): whether a calculation is held and visible to `who`, through calculations' synchronous
+     `calcStatusOf` (its R31; R10: one with an input the viewer may not see is withheld whole). One not visible is
+     answered exactly as one not held. An internal caller is not asked. */
   #seesCalculation(id, who2) {
     if (who2 === INTERNAL3) return true;
-    const c = this.calculations;
+    return this.#calcStatus(id, who2).visible;
+  }
+  #calcStatus(id, who2) {
     try {
-      if (!c || typeof c.gradeFactsOf !== "function") return false;
-      const g = c.gradeFactsOf({ calcId: id, viewer: who2 });
-      return !!g && typeof g.then !== "function" && g.ok !== false && g.found !== false;
+      const s = this.calculations ? this.calculations.calcStatusOf({ calcId: id, viewer: who2 }) : null;
+      return { held: !!s && s.held === true, visible: !!s && s.held === true && s.visible === true };
     } catch {
-      return false;
+      return { held: false, visible: false };
     }
   }
   /* R1, R9: a member acting on a part has joined the determination's project (K171 (11): membership's refusal,
@@ -173122,26 +173142,26 @@ var Consequences = class {
       const row8 = this.content.contentRow(o.ref);
       if (!row8 || !this.membership.inSight(row8.bundle_id, who2 ?? INTERNAL3))
         return lacking("not_in_record", "names content this record does not hold, or that you may not see");
-      const g = this.provenance.captureGrade(row8.capture_sha) || {};
-      const out = {
+      const g2 = this.provenance.captureGrade(row8.capture_sha) || {};
+      const out2 = {
         ...base2,
         capture_sha: row8.capture_sha,
-        grade: g.grade ?? null,
-        route: g.route ?? null,
-        determined: !!g.determined,
-        basis: g.basis ?? null
+        grade: g2.grade ?? null,
+        route: g2.route ?? null,
+        determined: !!g2.determined,
+        basis: g2.basis ?? null
       };
-      if (op === "count") return out;
+      if (op === "count") return out2;
       if (o.figure == null || !String(o.figure).trim())
-        return { ...out, lacking: { code: "not_in_record", why: `operand ${i} states no figure as read` } };
+        return { ...out2, lacking: { code: "not_in_record", why: `operand ${i} states no figure as read` } };
       const f17 = readFigure2(o.figure);
       if (!f17.ok) return basisUnreadable(`operand ${i}: ${f17.why}`, { operand: i });
       const text7 = this.#passageText(o.ref);
       if (text7 === null)
-        return { ...out, lacking: { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` } };
+        return { ...out2, lacking: { code: "form_not_read", why: `operand ${i}'s passage is held in a form this module does not read` } };
       if (!passageHolds(text7, o.figure))
-        return { ...out, lacking: { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` } };
-      return { ...out, fig: f17.figure, exact: measureOfFigure(f17.figure) };
+        return { ...out2, lacking: { code: "not_in_record", why: `operand ${i}'s passage does not hold the figure "${o.figure}"` } };
+      return { ...out2, fig: f17.figure, exact: measureOfFigure(f17.figure) };
     }
     if (o.kind === "money") {
       let r2 = null;
@@ -173153,36 +173173,40 @@ var Consequences = class {
       const fact = r2 && r2.ok !== false && r2.found !== false ? r2.fact : null;
       if (!fact) return lacking("not_in_record", "names a money fact this record does not hold, or that you may not see");
       const grade2 = isObj38(fact.grade) ? fact.grade.reading ?? null : null;
-      const out = {
+      const out2 = {
         ...base2,
         grade: grade2,
         route: "money fact",
         determined: grade2 !== null,
         basis: grade2 ? `its reading grade, ${grade2}` : "its reading grade is not stated"
       };
-      if (fact.withdrawn) return { ...out, lacking: { code: "not_in_record", why: `operand ${i}'s money fact is withdrawn and never counted` } };
-      if (op === "count") return out;
+      if (fact.withdrawn) return { ...out2, lacking: { code: "not_in_record", why: `operand ${i}'s money fact is withdrawn and never counted` } };
+      if (op === "count") return out2;
       const fig = factFigure(fact);
-      return fig ? { ...out, fig, exact: measureOfFigure(fig) } : { ...out, lacking: { code: "form_not_read", why: `operand ${i}'s money fact holds no amount this module reads` } };
+      return fig ? { ...out2, fig, exact: measureOfFigure(fig) } : { ...out2, lacking: { code: "form_not_read", why: `operand ${i}'s money fact holds no amount this module reads` } };
     }
+    const viewer = who2 ?? INTERNAL3;
+    const absent = () => lacking("not_in_record", "names a calculation this record does not hold, or that you may not see");
+    if (!this.#calcStatus(o.ref, viewer).visible) return absent();
+    let g = null;
+    try {
+      g = this.calculations.gradeFactsOf({ calcId: o.ref, viewer });
+    } catch {
+      g = null;
+    }
+    if (!isObj38(g) || g.found !== true) return absent();
+    const cap = isObj38(g.capture) ? g.capture : {};
+    const out = { ...base2, grade: cap.grade ?? null, route: "calculation", determined: !!cap.grade, basis: cap.why ?? null };
+    if (op === "count") return out;
     const settle2 = (r2) => {
       const c = r2 && r2.ok !== false && r2.found !== false ? r2 : null;
-      if (!c) return lacking("not_in_record", "names a calculation this record does not hold, or that you may not see");
-      const cap = isObj38(c.grade) && isObj38(c.grade.capture) ? c.grade.capture : {};
-      const out = {
-        ...base2,
-        grade: cap.grade ?? null,
-        route: "calculation",
-        determined: !!cap.grade,
-        basis: cap.why ?? null
-      };
-      if (op === "count") return out;
+      if (!c) return absent();
       const fig = resultFigure(c.results, o.key);
       return fig ? { ...out, fig, exact: measureOfFigure(fig) } : { ...out, lacking: { code: "not_computable", why: `operand ${i}'s calculation holds no figure under the key "${o.key}"` } };
     };
     let r;
     try {
-      r = this.calculations ? this.calculations.read({ calcId: o.ref, viewer: who2 ?? INTERNAL3 }) : null;
+      r = this.calculations.read({ calcId: o.ref, viewer });
     } catch {
       r = null;
     }
@@ -174118,7 +174142,7 @@ var Filings = class _Filings {
   #view() {
     const ids = this.#call(() => this.profiles());
     if (!Array.isArray(ids) || !ids.length)
-      return { view: null, conflicts: [], why: "no jurisdiction profile is active on this instance" };
+      return { view: null, conflicts: [], why: "your group's Civicsmith has no active jurisdiction profile" };
     const c = combine(ids);
     if (!c || !c.ok) return { view: null, conflicts: [], why: "the active jurisdiction profiles do not combine" };
     return { view: c.view, conflicts: c.conflicts || [], why: null };
@@ -174359,7 +174383,7 @@ var Filings = class _Filings {
       g = g.value;
     }
     const v = str35(g);
-    return v ? { value: v, source: SOURCE } : { why: "no producing group is recorded for this instance" };
+    return v ? { value: v, source: SOURCE } : { why: "no producing group is recorded" };
   }
   /* R1, R8, R23: the one answer for an action that is resolved or abandoned: nothing is prepared for it. */
   #closed(a) {
@@ -174798,7 +174822,7 @@ ${body}` : body;
       bytes: bytes2,
       inband,
       disclosure: d.disclosure ?? null,
-      says: "approved by the member named: the text is theirs. The instance transmits nothing; a member files it by the venue's own means and records that it was sent"
+      says: "approved by the member named: the text is theirs. Your group's Civicsmith transmits nothing; a member files it by the venue's own means and records that it was sent"
     };
   }
   /* ---------------------------------------------------------------- R7: filingRecordSent */
@@ -175120,8 +175144,8 @@ ${body}` : body;
      date (or, with none, the earliest `when` among them) to the packet's assembly. The world's lane ("what they did")
      and the registered sources' lane ("what we did") are kept apart, each in events' order, never interleaved; an item
      whose order is undetermined carries events' `order` with its bounds. An item placed nowhere has no `when` to fall
-     within the dates, so the placed-nowhere items are read without them and listed apart. Each item names its record
-     source (R18). R27: an event of the set the reader may not see is left out, never stood in for, and the lane states
+     within the dates, and events' dated read lists it apart all the same (its R29; N602), so one read answers both.
+     Each item names its record source (R18). R27: an event of the set the reader may not see is left out, never stood in for, and the lane states
      `out_of_view: true`, read against the plane's own read. */
   #chronology(a, det, facts, viewer, at33, marking) {
     const act2 = det ? det.act || {} : {};
@@ -175156,20 +175180,20 @@ ${body}` : body;
     const ids = set.map((x) => x.id);
     const read3 = (who2, o) => this.#call(() => t2.timeline({ set: ids, limit: CHRONOLOGY_MAX, viewer: who2, ...o }));
     const dated = read3(viewer, { from, to });
-    const loose = read3(viewer, { lanes: ["world"] });
-    if (!dated || dated.ok === false || !dated.world || !loose || loose.ok === false || !loose.world)
+    if (!dated || dated.ok === false || !dated.world)
       return {
         ...empty2(`the timeline could not be read${dated && dated.reason ? ` (${dated.reason})` : ""}, so the chronology is undetermined`),
         unread: true
       };
-    const seen = new Set([...dated.world.items, ...loose.world.placed_nowhere].map((i) => i.event_id));
-    const plane2 = [read3(MACHINE_READER, { from, to, lanes: ["world"] }), read3(MACHINE_READER, { lanes: ["world"] })];
-    const hidden = !plane2.every((p3) => p3 && p3.ok !== false && p3.world) || [...plane2[0].world.items, ...plane2[1].world.placed_nowhere].some((i) => !seen.has(i.event_id));
+    const lane = (r) => [...r.world.items || [], ...r.world.placed_nowhere || []];
+    const seen = new Set(lane(dated).map((i) => i.event_id));
+    const plane2 = read3(MACHINE_READER, { from, to, lanes: ["world"] });
+    const hidden = !plane2 || plane2.ok === false || !plane2.world || lane(plane2).some((i) => !seen.has(i.event_id));
     const world = {
       label: LANE_WORDS.world,
-      items: dated.world.items.map((i) => ({ ...i, source: i.event_id })),
-      placed_nowhere: loose.world.placed_nowhere.map((i) => ({ ...i, placed_nowhere: true, source: i.event_id })),
-      truncated: !!(dated.world.truncated || loose.world.truncated),
+      items: (dated.world.items || []).map((i) => ({ ...i, source: i.event_id })),
+      placed_nowhere: (dated.world.placed_nowhere || []).map((i) => ({ ...i, placed_nowhere: true, source: i.event_id })),
+      truncated: !!dated.world.truncated,
       ...hidden ? { out_of_view: true } : {}
     };
     if (world.truncated) world.says = `more events than the ${CHRONOLOGY_MAX} this lane lists are held: the lane is truncated`;
@@ -193415,18 +193439,21 @@ var ActionPlans = class {
       at33
     );
   }
-  /* R38: each phase started by a duty occurrence's state names a held duty the author may see, answered through
-     duties' own refusal (NO_SUCH_DUTY, one answer for absent and unseen), and an occurrence named is one of its own
-     (else R14's malformed fault, minted at its one site). `{phases}`, duties' refusal, or a fault. */
+  /* R38: each phase started by a duty occurrence's state names a held duty the author may see, else NO_SUCH_DUTY,
+     answered through duties' own site (`noSuchDuty`, its R25; N601), one answer for absent and unseen, with the phase's
+     index; and an occurrence named is one of its own (else R14's malformed fault, minted at its one site). `{phases}`,
+     a refusal, or a fault. */
   #dutyPhases(phases2, viewer) {
     const asOf = this.now();
     for (let i = 0; i < phases2.length; i++) {
       const s = phases2[i].starts;
       if (!isObj41(s) || !s.when_duty) continue;
       const { duty, occurrence } = s.when_duty;
-      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf6(msOf2(asOf) + 731 * DAY_MS5), viewer: dutyViewer(viewer) });
-      if (!ok(r)) return r;
+      const held2 = this.duties.readDuty({ dutyId: duty, viewer: dutyViewer(viewer) });
+      if (!ok(held2) || held2.found !== true) return noSuchDuty(duty, { index: i });
       if (occurrence === void 0) continue;
+      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf6(msOf2(asOf) + 731 * DAY_MS5), viewer: dutyViewer(viewer) });
+      if (!ok(r)) return r.code === "NO_SUCH_DUTY" ? noSuchDuty(duty, { index: i }) : r;
       const keys = new Set((r.occurrences || []).map((x) => x.key));
       for (const t2 of (this.duties.transitionsOf({ dutyId: duty, viewer: dutyViewer(viewer) }) || {}).transitions || []) keys.add(t2.occurrence_key);
       if (!keys.has(occurrence))
