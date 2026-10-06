@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · CHANGE
 
 K1828: case-disclosures' DEC-149 change re-words C-120.8's translation to 'rests on material your group's Civicsmith does not hold whole, …' (case-disclosures R22). Your bio-plane/test/m/case-authoring/preflight.test.mjs R29 (~line 75) pins the old words: once case-disclosures is merged into tranche/T34 (BOB will tell you), merge tranche/T34 and update that assertion to the new translation. Until then it is accepted red 7 (plan Rules (5)).
+
+## B3 · CHANGE
+
+K1834: case-disclosures is merged into tranche/T34. As B2 says: merge tranche/T34 into your branch, update preflight.test.mjs R29's pin of C-120.8 to the new translation ('rests on material your group's Civicsmith does not hold whole, …'), run your tests, and record completion again.
