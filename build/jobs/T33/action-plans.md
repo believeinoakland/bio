@@ -53,3 +53,24 @@ Size (session_01HZzMgFGmXynYpFRSjTXJZH): test runs 7, module lines 2789
 - `ownership: 5 files changed by action-plans between tranche/T33 and HEAD; 0 failures`
 
 Size (session_01HZzMgFGmXynYpFRSjTXJZH): test runs 14, module lines 2789
+
+## J4 · COMPLETE
+
+**B5 applied (K1661).** I merged `tranche/T33`. modules.json and my Uses now list `leg-earning`. action-plans now reads `projectsDrawingOn` from `leg-earning` (its R7) through `legEarningOf(host)`, its `legEarning` dep, in place of inquiry's delegate (`#inquiryOfProject`, R1's `SUBJECT_NOT_OF_PROJECT`). The inquiry import is gone; an inquiry's state is still read from record-core as before. Commit edfd8e929c.
+
+**Tests re-pointed.** The inquiry stand-in is replaced by the real `leg-earning`. A project draws on an inquiry through a `cites` row in `refs` (`w.cite`), as connections' projection writes it.
+- Of leg-earning's own deps, R7 reads only `connections.edgeSevered`, so the fixture gives it `edgeSevered: () => false` and an unused `content`. Severing is leg-earning's and connections' to test.
+- Building real content and connections here would declare their tables, and would put connections in action-plans' uses, which my module does not read.
+- The R1 tests, including a second project drawing on the inquiry (`open.test.mjs`), now run through the real R7.
+
+**Tests.**
+- `node --test bio-plane/test/m/action-plans/`: tests 61, pass 61, fail 0.
+- My users, unchanged from the tranche baseline in J3 (only B1's named reds): affordances pass 164, fail 3; queue-producers pass 80, fail 0; control-plane pass 155, fail 4; plane pass 82, fail 3.
+
+**Checks:**
+- `format: 126 modules, 125 requirements files; 0 failures`
+- `architecture: 17 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 38 of 38 live requirement ids named by a test; 0 failures`
+- `ownership: 6 files changed by action-plans between tranche/T33 and HEAD; 0 failures`
+
+Size (session_01HZzMgFGmXynYpFRSjTXJZH): test runs 20, module lines 2789
