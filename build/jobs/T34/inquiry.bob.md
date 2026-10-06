@@ -15,3 +15,7 @@ K1798: (1) modules.json inquiry uses now has capture and calculations on tranche
 ## B3 · CHANGE
 
 From LEG-EARNING #2 J1 (K1799): leg-earning's why strings no longer say 'this instance' (DEC-149), so test/m/inquiry/earned.test.mjs:29's doesNotMatch(/as this instance fetched them/) is now vacuous; make it /fetched them/ (or what it meant to exclude). Deal with it in this job.
+
+## B4 · CHANGE
+
+inquiry-grammar is merged into tranche/T34 (K1803): merge it. Its R16 adds the check row DERIVED_LEG_MALFORMED, so your test/m/inquiry/grammar.test.mjs:176 (R38 R4) must expect it; and your R4 derived-leg pair should now go green. Record completion again.
