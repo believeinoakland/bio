@@ -20,3 +20,7 @@ Your neighbours takes an optional host passed through, else the isolate's one in
 ## B3 · CHANGE
 
 K1568: export a one-site answer noSuchDatedFact for your R7's NO_SUCH_DATED_FACT; progressions answers through it (one home for the code).
+
+## B4 · CHANGE
+
+K1569: also export a one-site answer noSuchEvent for your NO_SUCH_EVENT (beside noSuchDatedFact, B3); duties answers through it.
