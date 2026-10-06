@@ -37,3 +37,16 @@ Size (session_01PteGwVmTyfNd1Hjkgzqp9q): test runs 16, module lines 1959
 ## J2 · COMPLETE
 
 T33-51 done: R46 (site_kind refused MEMBER_CAPTURE_ONLY, C-28.20, routed to members; C-28.21 unknown kind; platform marks in capture_request_platforms with C-28.22; no supplied login to a marked host; login refusal there and its retry routed to members) and R47 (both tables declared through declareTable). Module tests 80/0; users' tests green; format, architecture, coverage (47/47), ownership all 0 failures. Row-census red gains C-28.20–.22. Record has the details.
+
+## J3 · QUESTION · re B3
+
+Re B3 (K1610). I prepared against job/T33/ai-runs: merged it with my branch in a scratch worktree and ran plane.test.mjs. As you said, all four plane tests fail with AI_NO_ACCOUNT (C-109.10) at RUTH's airunopen.
+
+The fix B3 names is not possible yet in the running plane (Miniflare):
+1. `op=accountreferenceset` answers 400 UNKNOWN_OP (C-69.1). credentials has the handler, but no op-declarations row routes it (0 rows on job/T33/ai-runs and on tranche/T33). Its own comment leaves routing to op-declarations and control-plane (Q0-10).
+2. Even with a route, `credentialsOf` in the plane is built with no `sealSecret` (no caller passes one). So `accountReferenceSet` would refuse ACCOUNT_SEAL_UNAVAILABLE.
+Both are L11 work: op-declarations, control-plane and plane. A test that writes `account_references` into the Durable Object's storage would test outside the interface, so I won't do that.
+
+My reading: until plane routes the op and binds the seal (L11), those four plane tests are a named red after ai-runs merges: capture-requests `plane.test.mjs` R30; R16 R31 R14; R19 R42 R38; R14 (N295), AI_NO_ACCOUNT. When L11 lands, I or capture-requests' next job connect RUTH through `op=accountreferenceset` and name the member. My in-process tests use a stand-in run sight and are unaffected (80/0 on my branch).
+
+Should I (a) leave the code as is and you accept the named red, or (b) wait to do the change until op-declarations and plane have merged in L11?
