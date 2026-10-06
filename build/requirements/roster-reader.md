@@ -1,6 +1,6 @@
 # roster-reader — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1504, Choices 2; scope §2: later readers each in their own sibling module, never back into `docprofile` or `doctypes`), layer 1 after `legistar-reader`. Plan entry T33-15 (B §(d) PEOPLE 2b; C2 row 12, K1484). Every id is not yet met.
+**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1504, Choices 2; scope §2: later readers each in their own sibling module, never back into `docprofile` or `doctypes`), layer 1 after `legistar-reader`. Plan entry T33-15 (B §(d) PEOPLE 2b; C2 row 12, K1484). Every id is not yet met. T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-64 (N614; K1505 (6), K1683): R12 (a store-reading roster source for `people.staffingAt`) added; not yet met (T34).
 
 **Size (P6).** About 500–800 lines.
 
@@ -25,6 +25,9 @@ Reads rosters, organisation charts and staff directories for who is in an organi
 **directoryPersonRefs(entities) → `[{contact_key, name?, match_grade, why}]`**. `entities` are a `staff_directory` reading's `contact` entities.
 - **R7** For each contact entry the reference stays keyed by its address (`contact_key`), and the person's name is read from the entry's `line` only when, with the address, phone and title words removed, exactly one name-shaped span remains; otherwise no `name`, with why (a two-column line may hold two people's text). A name read here carries `match_grade: "C"`, a name alone, and can never resolve a person above grade C (K1484 row 12; K1488).
 
+**rosterSource(reads) → source** (N614; K1505 (6), K1683; `people` R18, R19)
+- **R12** Answers a roster source `({organisation, at, viewer}) → {level, rosters, organisation, at, why?}` for `people.registerRosterSource`, in place of the one `plane` registers that answers "held as a table, not read". `reads({organisation, viewer})` is the store's read handed in by the composition root (this module holds no store): it answers the held roster documents and roster tables of that organisation that `viewer` may see. The source reads each, a document by R2 and a table's columns by R6, and answers it in `rosters` as `{source, as_of, rows}`, each row `{name?, title?, unit?, start?, end?, employee_id?, source}` as the roster states it, a contact column never read (R4); `level` is "held as a table, read by roster-reader". It states each roster's own `as_of` and never states that a row's person held the post at `at` (R10). With no held roster it answers `rosters: []` with why; when `reads` is absent or fails, `level` "held as a table, not read" with why. It writes nothing and never throws. *(not yet met: T34)*
+
 ## Private
 
 ### Uses
@@ -47,5 +50,6 @@ Reads rosters, organisation charts and staff directories for who is in an organi
 ### Suggestions
 
 - **For `calculations` and `people`**: the roster source `calculations` registers for `staffingAt` reads a captured table with R6's roles; that edge (`calculations` or `people` using `roster-reader`) is not in the plan's `uses` and is BOB's to add.
+- **R12's reads (T34-64).** `plane` composes `reads` from the store: the captures `doctypeFor` placed as `staff_roster` or `org_chart` whose stated organisation resolves to the entity, and the tables `calculations` holds with R6's roles; that choice is `plane`'s, at its composition.
 - **For `entities`**: the grade-C ceiling of R7 is the resolution cascade's (a name alone is C); entities applies it to a reference R7 produces.
 - The fixtures are in the bucket the staff directory was measured on (`staff-directory.mjs` header: a board roster, a committee roster, org charts); the job fetches and captures them.

@@ -1,6 +1,6 @@
 # sheet-worker — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T33` (open), for BOB's review. New fleet member (a standalone Worker on the `ocr-worker` precedent), layer 1, last in the layer (plan Rules (2)). Plan entry T33-18 (C §(c) ANALYSIS L3; K1448), entered on GO with conditions (K1506; `measures-T33/courts-workbooks.md` §3): it ships inactive until enabled after the release, builds its own IronCalc wasm with the `xlsx` feature, holds a size and a time limit, refuses external links, and answers a failure as "not recomputed here", never as a verdict. Every id is new and not yet met (T33-18). Code today: none.
+**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T33` (open), for BOB's review. New fleet member (a standalone Worker on the `ocr-worker` precedent), layer 1, last in the layer (plan Rules (2)). Plan entry T33-18 (C §(c) ANALYSIS L3; K1448), entered on GO with conditions (K1506; `measures-T33/courts-workbooks.md` §3): it ships inactive until enabled after the release, builds its own IronCalc wasm with the `xlsx` feature, holds a size and a time limit, refuses external links, and answers a failure as "not recomputed here", never as a verdict. Every id is new and not yet met (T33-18). Code today: none. T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-69 (N621; K1536, K1686): R17 (its limits stated in its bundle, covered by the signed release) added; not yet met (T34).
 
 **Size (P6).** About 800–1,200 lines with tests, plus the vendored wasm (about 2.3 MB raw), which is a generated artifact (PROCESS-MECHANICS §14).
 
@@ -52,6 +52,7 @@ A standalone Cloudflare Worker, reached only through the plane's `SHEET_WORKER` 
 - **R14** `MAX_UNZIPPED_BYTES`, `MAX_CELLS` and `TIME_BUDGET_MS` are fixed constants measured at the job on the deployed runtime's limits, and the member's configuration declares its CPU limit (bundler R15). A workbook above a bound is refused, never partly recomputed.
 - **R15** Tested on corpus workbooks (`measures-T33/courts-workbooks.md` §3): workbooks with no external links that agree whole, give every value equal to the cached one (numbers to a relative 1e-9); one fixture per refusal (an external link, over a bound) and per `cause` (`HYPERLINK`, an `@` range, an iterating workbook, array-lifted `TRIM` in `SUMPRODUCT`). The job re-measures cell and workbook agreement on the 111 link-free workbooks with this build and records the figures for `workbooks`' method note.
 - **R16** No place is named in this module's behaviour; the same bytes and settings give the same answer in any instance.
+- **R17** (N621; K1686; `installer` R20's model) The member states its limits in its own bundle, so the signed release's bytes cover them: exactly one distinct string `bio-member-limits/1 <key>=<positive integer> …`, one pair per key of its configuration's `limits` (keys sorted, single spaces), which survives bundling as written and equals that configuration: today `bio-member-limits/1 cpu_ms=300000` (K1536). *(not yet met: T34)*
 
 ### Satisfies
 
