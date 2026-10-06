@@ -41,3 +41,7 @@ Architecture's 7 failures are these five edges, until they are set at the merge.
 - `format`: 0 failures. `architecture`: 7 failures (the edges above). `coverage`: 31 of 31 live ids. `ownership`: 0 failures.
 
 Size (session_01HwKBgK9AA2JTXEF7K2WRpT): test runs 24, module lines 2119
+
+## J2 · COMPLETE
+
+T33-58 applied (R4, R31 over the real money; J1 as B2 answered). The named red is green: the fixture dates the need through the real events (B2 (6)). intent 73/73. Users 662/668, every failure on the START's named list. format, coverage (31/31) and ownership are clean. architecture has 7 failures, all on the uses edges to set at the merge: money and calc-grammar (code); events, extraction and content (fixture only). Details are in the Record of completion, on job/T33/intent @ d8f2aa421a.
