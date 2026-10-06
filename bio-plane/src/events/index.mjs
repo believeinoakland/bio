@@ -17,11 +17,42 @@ import { idPattern, isHypothesisId, isMachineIdentity, sha256HexSync, canonicalJ
 import { combine } from "../../../jurisdictions/index.mjs";
 import { registerOwner } from "../connection-grammar/index.mjs";
 import { EVENTS_SCHEMA } from "./schema.mjs";
+import { EVENT_CHECKS } from "./checks.mjs";
 import { readDate, whenOf, sequenceOf, spanOfBound, placeAgainst, orderByWhen } from "./time.mjs";
 import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } from "./follow.mjs";
 import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
 
-export { EVENTS_SCHEMA };
+export { EVENTS_SCHEMA, EVENT_CHECKS };
+
+/* K1569 (R6, R11, R14, R17, R21): THE ONE ANSWER TO ONE CONDITION, no event with the id asked is held (an alias resolves
+   to its kept event first). Every act of any module answering it answers through here (duties among them). `extra` adds
+   a caller's own fields (such as `end`) and never replaces these. Writes nothing and never throws. */
+const NO_SUCH_EVENT_DETAIL = "no event with that id is held; an event is created with op=eventcreate before anything can name it";
+const NO_SUCH_DATED_FACT_DETAIL = "no dated fact with that id is held where the asker can see it; a document's date is held with op=datedfact";
+const own = (extra, fixed) => {
+  try {
+    return extra && typeof extra === "object" && !Array.isArray(extra)
+      ? Object.fromEntries(Object.entries(extra).filter(([k]) => !fixed.has(k))) : {};
+  } catch { return {}; }
+};
+const FIXED_EVENT = new Set(["ok", "reason", "code", "check", "translation", "event_id", "detail"]);
+export function noSuchEvent(eventId, extra = null) {
+  /* DEC-49 REGION is-event-held */
+  const row = EVENT_CHECKS.NO_SUCH_EVENT;
+  return { ok: false, reason: "NO_SUCH_EVENT", code: "NO_SUCH_EVENT", check: row.check, translation: row.translation,
+           event_id: typeof eventId === "string" ? eventId : null, ...own(extra, FIXED_EVENT), detail: NO_SUCH_EVENT_DETAIL };
+  /* END DEC-49 REGION is-event-held */
+}
+/* K1568 (R7): THE ONE ANSWER TO ONE CONDITION, no dated fact with the id asked is held where the asker can see it
+   (absent and out of sight alike). progressions answers through it. Writes nothing and never throws. */
+const FIXED_FACT = new Set(["ok", "reason", "code", "check", "translation", "dated_fact_id", "detail"]);
+export function noSuchDatedFact(datedFactId, extra = null) {
+  /* DEC-49 REGION is-dated-fact-held */
+  const row = EVENT_CHECKS.NO_SUCH_DATED_FACT;
+  return { ok: false, reason: "NO_SUCH_DATED_FACT", code: "NO_SUCH_DATED_FACT", check: row.check, translation: row.translation,
+           dated_fact_id: typeof datedFactId === "string" ? datedFactId : null, ...own(extra, FIXED_FACT), detail: NO_SUCH_DATED_FACT_DETAIL };
+  /* END DEC-49 REGION is-dated-fact-held */
+}
 
 /* ---- the closed vocabularies (Provides, Terms) ---- */
 export const DATED_KINDS = Object.freeze(["meeting", "adopted", "effective", "signed", "entered", "issued", "published",
@@ -383,7 +414,7 @@ export class Events {
     if (!isObj(a)) return refuse("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
     if (a.datedFactId !== undefined) {
       const f = said(a.datedFactId) ? this.#one(`SELECT * FROM dated_facts WHERE dated_fact_id=?`, a.datedFactId.trim()) : null;
-      if (!f || !this.#sees(f.bundle_id, by)) return refuse("NO_SUCH_DATED_FACT", "no dated fact with that id is held where you can see it");
+      if (!f || !this.#sees(f.bundle_id, by)) return noSuchDatedFact(typeof a.datedFactId === "string" ? a.datedFactId : null);
       return { ok: true, row: { form: "dated_fact", dated_fact_id: f.dated_fact_id, capture_sha: f.capture_sha, extent: f.extent,
         source_row: f.source_row, statement: null, value: f.value, precision: f.precision, zone: f.zone,
         bundle_id: f.bundle_id, grade: f.grade, upper_bound: f.upper_bound } };
@@ -433,7 +464,7 @@ export class Events {
   #concernRefusal(end) {
     if (!said(end)) return noEntity("an event concerns a registered subject or another event, named by its id");
     if (isHypothesisId(end)) return refuse("HYPOTHESIS_ID", "a hypothesis is never what an event concerns (K1467)");
-    if (EVT_RE.test(end)) return this.has(end) ? null : refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: end });
+    if (EVT_RE.test(end)) return this.has(end) ? null : noSuchEvent(end);
     const e = this.#ents;
     return e && e.has(end) ? null : noSuchEntity(end, { end: "concerns" });
   }
@@ -519,7 +550,7 @@ export class Events {
   /** R7: one more attestation of a held event. */
   attest({ eventId, attestation, by = null } = {}) {
     const id = this.#resolve(eventId);
-    if (!id) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: eventId ?? null });
+    if (!id) return noSuchEvent(eventId ?? null);
     const r = this.#attestationFrom(attestation, by);
     if (!r.ok) return r;
     const same = this.#sameAttestation(id, r.row);
@@ -541,7 +572,7 @@ export class Events {
   /** R8: a member chooses which dated attestation governs; each choice is kept with who, when and why. */
   chooseGoverning({ eventId, attestationId, reason = null, by = null } = {}) {
     const id = this.#resolve(eventId);
-    if (!id) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: eventId ?? null });
+    if (!id) return noSuchEvent(eventId ?? null);
     const a = this.#one(`SELECT * FROM event_attestations WHERE attestation_id=? AND event_id=? AND serves='event'`, Number(attestationId), id);
     if (!a) return refuse("NO_SUCH_ATTESTATION", "that event holds no such attestation");
     if (a.value == null) return refuse("ATTESTATION_UNDATED", "an attestation with no date of its own cannot govern when the event happened");
@@ -626,7 +657,7 @@ export class Events {
   /** R11: one participant, on an attestation the event holds (its id) or one given here. */
   addParticipant({ eventId, entityId, role, attestation, voteValue = null, by = null } = {}) {
     const id = this.#resolve(eventId);
-    if (!id) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: eventId ?? null });
+    if (!id) return noSuchEvent(eventId ?? null);
     const r = this.#participantRefusal({ entityId, role, attestation, voteValue });
     if (r) return r;
     let attRow = null, attId = null;
@@ -689,8 +720,8 @@ export class Events {
     const m = this.#memberAct(by); if (m) return m;
     if (!said(reason)) return refuse("NO_REASON", "a merge says why the two records are one happening");
     const k = this.#resolve(keep), a = this.#resolve(absorb);
-    if (!k) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: keep ?? null, end: "keep" });
-    if (!a) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: absorb ?? null, end: "absorb" });
+    if (!k) return noSuchEvent(keep ?? null, { end: "keep" });
+    if (!a) return noSuchEvent(absorb ?? null, { end: "absorb" });
     if (k === a) return refuse("SAME_EVENT", "an event is not merged into itself");
     return this.#tx(() => {
       const at = this.#now(), why = reason.trim().slice(0, REASON_MAX);
@@ -725,7 +756,7 @@ export class Events {
     const m = this.#memberAct(by); if (m) return m;
     if (!said(reason)) return refuse("NO_REASON", "a split says why one record held two happenings");
     const id = this.#resolve(eventId);
-    if (!id) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: eventId ?? null });
+    if (!id) return noSuchEvent(eventId ?? null);
     const ids = Array.isArray(attestations) ? [...new Set(attestations.map(Number))] : [];
     if (!ids.length) return refuse("NO_ATTESTATION", "a split names the attestations that move to the new event");
     for (const x of ids)
@@ -799,8 +830,8 @@ export class Events {
     if (isHypothesisId(from) || isHypothesisId(to)) return refuse("HYPOTHESIS_ID", "a hypothesis is never an end of an event's relation (K1467)");
     const f = this.#resolve(from), t = this.#resolve(to);
     if (f && t && f === t) return refuse("SELF_RELATION", "a relation is between two distinct events");
-    if (!f) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: from, end: "from" });
-    if (!t) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: to, end: "to" });
+    if (!f) return noSuchEvent(from, { end: "from" });
+    if (!t) return noSuchEvent(to, { end: "to" });
     if (attestation === undefined || attestation === null) return refuse("NO_ATTESTATION", "every relation is cited");
     const machine = isMachineIdentity(by);
     if (kind === "stated_cause") {
@@ -855,7 +886,7 @@ export class Events {
   aliasAct({ actId, eventId, by = null } = {}) {
     if (!said(actId) || !ACT_RE.test(actId.trim())) return refuse("NO_ACT", "an act is named by its ACT- id");
     const id = this.#resolve(eventId);
-    if (!id) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: eventId ?? null });
+    if (!id) return noSuchEvent(eventId ?? null);
     const held = this.#one(`SELECT event_id FROM event_aliases WHERE alias=?`, actId.trim());
     if (held && held.event_id === id) return { ok: true, already: true, act_id: actId.trim(), event_id: id };
     if (held) return refuse("ACT_ALIASED", "that act already names another event", { event_id: held.event_id });
@@ -1062,7 +1093,7 @@ export class Events {
   /** R31: before, after or undetermined with why; computed on each read, never stored. */
   sequence({ a, b, viewer = "class:admin" } = {}) {
     const ia = this.#resolve(a), ib = this.#resolve(b);
-    if (!ia || !ib) return refuse("NO_SUCH_EVENT", "no event with that id is held", { event_id: !ia ? a ?? null : b ?? null });
+    if (!ia || !ib) return noSuchEvent(!ia ? a ?? null : b ?? null);
     const wa = this.#whenRead(ia), wb = this.#whenRead(ib);
     if (wa.when === "undetermined" || wb.when === "undetermined") return { ok: true, a: ia, b: ib, answer: "undetermined", why: "cache stale" };
     const s = sequenceOf(wa.when, wb.when);

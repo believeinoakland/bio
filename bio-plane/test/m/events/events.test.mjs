@@ -218,3 +218,32 @@ test("R39 one home per fact at the store's gate: no amount, no payer or payee, n
   for (let i = 0; i < 5; i++) w.event({ value: `2026-0${i + 1}-15` });
   assert.deepEqual(w.record.rebuildAndCompare("events", "event_when_cache"), { same: true });
 });
+
+test("R6 R7 the one-site answers noSuchEvent and noSuchDatedFact (K1568, K1569): reason and code, the row's translation, the id as asked, one fixed detail; extra adds and never replaces; every act answers through them; never throws", async () => {
+  const { noSuchEvent, noSuchDatedFact, EVENT_CHECKS } = await import("../../../src/events/index.mjs");
+  for (const [fn, code, idKey] of [[noSuchEvent, "NO_SUCH_EVENT", "event_id"], [noSuchDatedFact, "NO_SUCH_DATED_FACT", "dated_fact_id"]]) {
+    const a = fn("X-1");
+    assert.deepEqual([a.ok, a.reason, a.code, a[idKey], a.translation], [false, code, code, "X-1", EVENT_CHECKS[code].translation]);
+    assert.ok(a.detail && !/oakland|alameda/i.test(a.translation + a.detail));
+    const b = fn("X-1", { end: "to", reason: "OTHER", code: "Y", detail: "d", ok: true, [idKey]: "Z" });
+    assert.deepEqual({ ...b }, { ...a, end: "to" });
+    for (const extra of [null, 7, "s", [1], new Proxy({}, { ownKeys() { throw new Error("hostile"); } })]) assert.equal(fn("X", extra).code, code);
+    assert.equal(fn(undefined)[idKey], null);
+  }
+  const w = world();
+  const e = w.event({ value: "2026-01-01" }).event_id;
+  const ghost = "EVT-2026-aaaaaaaaaaaaaaaa";
+  const answers = [
+    w.ev.attest({ eventId: ghost, attestation: { testimony: "t" }, by: MEMBER }),
+    w.ev.chooseGoverning({ eventId: ghost, attestationId: 1, by: MEMBER }),
+    w.ev.addParticipant({ eventId: ghost, by: MEMBER }),
+    w.ev.mergeEvents({ keep: e, absorb: ghost, reason: "r", by: MEMBER }),
+    w.ev.splitEvent({ eventId: ghost, attestations: [1], reason: "r", by: MEMBER }),
+    w.ev.relate({ from: e, to: ghost, kind: "answers", attestation: { testimony: "t" }, by: MEMBER }),
+    w.ev.aliasAct({ actId: "ACT-2026-0001", eventId: ghost, by: MEMBER }),
+    w.ev.sequence({ a: e, b: ghost }),
+    w.ev.createEvent({ kind: "meeting", attestations: [{ testimony: "t" }], concerns: [ghost], by: MEMBER }),
+  ];
+  for (const a of answers) assert.deepEqual({ ...a, end: undefined }, { ...noSuchEvent(ghost), end: undefined });
+  assert.deepEqual(w.ev.attest({ eventId: e, attestation: { datedFactId: "nope" }, by: MEMBER }), noSuchDatedFact("nope"));
+});
