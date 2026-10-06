@@ -50,3 +50,5 @@ Both are L11 work: op-declarations, control-plane and plane. A test that writes 
 My reading: until plane routes the op and binds the seal (L11), those four plane tests are a named red after ai-runs merges: capture-requests `plane.test.mjs` R30; R16 R31 R14; R19 R42 R38; R14 (N295), AI_NO_ACCOUNT. When L11 lands, I or capture-requests' next job connect RUTH through `op=accountreferenceset` and name the member. My in-process tests use a stand-in run sight and are unaffected (80/0 on my branch).
 
 Should I (a) leave the code as is and you accept the named red, or (b) wait to do the change until op-declarations and plane have merged in L11?
+
+**After B3–B5.** B3 (K1610) asked plane.test.mjs to connect the opener's account once ai-runs merged. The running plane cannot do that yet: `op=accountreferenceset` is UNKNOWN_OP (no op-declarations row), and plane builds credentials with no seal secret (J3). BOB answered (a) (B5, K1614): the code stays as is, and plane.test.mjs R30; R16 R31 R14; R19 R42 R38; R14 (N295) are a named red, AI_NO_ACCOUNT, until N585 (T34). B4 was superseded by B5.
