@@ -5,8 +5,8 @@
 ## Progress
 
 - **Done** (on K1633, K1634): R30's red fixed through `jurisdictions.list()`; R56's async gather `calculationsAtPublication` before the act (ops `publishcase`, `publishpreflight` async), its judgment in R55's order (`CALCULATION_NOT_DISCLOSED`, C-136.1; `CALCULATIONS_UNREAD` without the gathered facts), the `calculations:` block and a body section; R57's `timeline:` block and body section; R55's people and tie steps and R34's new blockers; R8/R55 through a `caseTensions` dep. Tests: `calculations.test.mjs`, `timeline.test.mjs`, and the touched arms; 137/137.
-- **Upstreams held as injected deps (K1563 (1)):** case-grammar's `calculationsLines`/`timelineLines` (`test/m/case-authoring/upstream.mjs`, used only where the real module lacks the name), case-disclosures' R24–R28 (`withPeople`), case-tensions (publication's re-export).
-- **Next:** on each upstream's merge (CHANGE), merge `tranche/T33`, point `caseTensions` at `caseTensionsOf`, drop `upstream.mjs`'s stand-ins, re-point the fixture at the real modules (and build `entities`/`connections` on the host, K1619, if the fixture is touched), re-run steps 5–7, post COMPLETE with final uses: calculations, workbooks, events, case-tensions, inquiry-grammar, jurisdictions.
+- **Upstreams:** case-grammar re-pointed (K1636); case-disclosures re-pointed (K1638; its `parts`, `money_parties`, R27's `[{signer, at}]` stamped from the act); the fixture builds entities, connections, events, lines, money and people on the host (K1619). Still held: case-tensions (publication's re-export, `caseTensions` dep); case-grammar's `not_recomputed` (K1639 (3): the block writes null until it merges again; the body states it).
+- **Next:** on case-grammar's re-merge, assert `recompute: "not_recomputed"` in `calculations.test.mjs`'s workbook arm; on case-tensions' merge, point `caseTensions` at `caseTensionsOf(host)` and the fixture at it; re-run steps 5–7; COMPLETE with final uses: calculations, workbooks, events, case-tensions, inquiry-grammar, jurisdictions, and for the fixture entities, connections, lines, money, people.
 
 ## J1 · QUESTION
 
