@@ -8,7 +8,7 @@ import { hiddenBundles } from "../../../src/membership/index.mjs";
 
 const OPS = ["readingname", "readingnameplan", "entitycreate", "entityalias", "relationdeclare", "aliaswithdraw",
              "relationwithdraw", "resolutiondefect", "entity", "entitybyalias", "relation", "resolutions", "concerns",
-             "idmatch", "resolve", "resolvetestify"];
+             "idmatch", "resolve", "resolvetestify", "entityidentify"];
 
 /* A world with a registry, a reading, resolutions, a relation and a defect report, the same every time it is built. */
 function seeded() {
@@ -16,6 +16,7 @@ function seeded() {
   const a = w.e.createEntity({ note: "a subject the test registers", kind: "office", label: "Harbour Office", aliases: ["ho:1"], declaredBy: MACHINE }).entity_id;
   const b = w.e.createEntity({ note: "a subject the test registers", kind: "body", label: "Port Board" }).entity_id;
   const rel = w.e.declareRelation({ relation: "member_of", fromEntity: a, toEntity: b, justification: "j", citation: "c" }).relation_id;
+  w.e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat Marlow" });
   w.read("INFO-1", sha("ops"), [{ kind: "ho", key: "1", label: "x" }, { kind: "q", key: "2", label: "Harbour Office" },
                                  { kind: "q", key: "3", label: "Port Board" }]);
   w.e.resolve({ captureSha: sha("ops"), ref: "ho:1", resolvedBy: MACHINE });
@@ -23,11 +24,12 @@ function seeded() {
   w.held("INFO-2", sha("held"), ["https://minutes.port-ellery.example/a/1"]);
   return { ...w, a, b, rel };
 }
-const dump = (w) => ["entities", "entity_aliases", "entity_relations", "resolutions", "resolution_defects"]
+const dump = (w) => ["entities", "entity_aliases", "entity_relations", "resolutions", "resolution_defects", "entity_identifiers",
+                     "entity_sectors", "entity_proceedings"]
   .map((t) => w.rows(`SELECT * FROM ${t}`));
 const url = (q) => new URL(`https://do.invalid/?${new URLSearchParams(q)}`);
 
-test("R40 entitiesOps holds exactly the fourteen ops it held and resolve and resolvetestify, each a function of no arguments", () => {
+test("R40 R43 entitiesOps holds exactly the fourteen ops it held, resolve and resolvetestify, and R43's entityidentify, each a function of no arguments", () => {
   const { e } = seeded();
   const map = entitiesOps(e, url({}), {});
   assert.deepEqual(Object.keys(map).sort(), [...OPS].sort());
@@ -82,6 +84,9 @@ test("R40 every arm answers what its named service answers, reading its paramete
     ["resolvetestify", (s) => [{}, { captureSha: sha("ops"), ref: "q:3", entityId: s.a, basis: " " }],
                        (e, s) => e.testify({ captureSha: sha("ops"), ref: "q:3", entityId: s.a, basis: " " })],
     ["resolvetestify", () => [{}, null], (e) => e.testify({})],
+    ["entityidentify", () => [{}, { entityId: "ENT-2026-0003", scheme: "marlow_bar", id: "bar12345", basis: "the bar's roll", by: "member:ann" }],
+                       (e) => e.addIdentifier({ entityId: "ENT-2026-0003", scheme: "marlow_bar", id: "bar12345", basis: "the bar's roll", by: "member:ann" })],
+    ["entityidentify", () => [{}, null], (e) => e.addIdentifier({})],
   ];
   assert.deepEqual([...new Set(cases.map(([op]) => op))].sort(), [...OPS].sort(), "every op is driven");
   for (const [op, input, direct] of cases) {
@@ -111,7 +116,7 @@ test("R41 the four figures are registered once at start through record-core's re
   const e = entitiesOf(host, { record: s.record, membership: s.membership, provenance: s.prov });
   assert.equal(entitiesOf(host), e, "one instance per storage, so one registration");
   assert.deepEqual(Entities.COUNT_KEYS, ["entities", "entityAliases", "entityRelations", "resolutions"]);
-  const want = { entities: 2, entityAliases: 3, entityRelations: 1, resolutions: 1 };
+  const want = { entities: 3, entityAliases: 4, entityRelations: 1, resolutions: 1 };
   const all = s.record.counts(null);
   for (const [k, v] of Object.entries(want)) assert.equal(all[k], v, k);
   assert.deepEqual(e.counts(null), want);
@@ -126,7 +131,7 @@ test("R41 with hid, resolutions leaves out the rows whose bundle is hidden; the 
   s.read("PROJ-2026-0001-x", sha("hid"), [{ kind: "ho", key: "1", label: "Port Board" }, { kind: "z", key: "9", label: "Port Board" }]);
   s.e.resolve({ captureSha: sha("hid") });
   const whole = s.e.counts(null);
-  assert.deepEqual(whole, { entities: 2, entityAliases: 3, entityRelations: 1, resolutions: 3 });
+  assert.deepEqual(whole, { entities: 3, entityAliases: 4, entityRelations: 1, resolutions: 3 });
   const before = dump(s);
   const outsider = s.e.counts(hiddenBundles("member:outsider"));
   assert.deepEqual(outsider, { ...whole, resolutions: 1 }, "the hidden project's two resolutions are left out");

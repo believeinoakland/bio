@@ -1,6 +1,6 @@
 # BOB to money (T33)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ All seven readings accepted. Additions (K1563):
 ## B3 · CHANGE
 
 K1569: export a one-site answer noSuchFact for your NO_SUCH_FACT (entities' noSuchEntity pattern); duties and others answer through it.
+
+## B4 · CHANGE
+
+K1577: entities, events and lines are merged on tranche/T33. Merge, wire eventsOf/linesOf as defaults, re-point your tests at the real modules, re-run, COMPLETE.

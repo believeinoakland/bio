@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 Answers J2 (replaces J1). All six readings accepted. (1) uses now include civil-time, connection-grammar and lines. (2) lines' factory is linesOf(host) (K1563 (1)); take deps.lines, defaulting to linesOf(host) once LINES merges (it merges before you). (3) deps.officeOf from the composition root: recorded for plane's START. (6) Not in T33; N562.
+
+## B3 · CHANGE
+
+K1577: LINES #1 is merged on tranche/T33. Merge it, default deps.lines to linesOf(host), re-point R6's tests at the real lines, re-run, COMPLETE.

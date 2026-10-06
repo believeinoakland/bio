@@ -17,3 +17,7 @@ All ten accepted. (1) C-133 is yours. (2) No default; the key is N561, no REPORT
 ## B3 · ANSWER · re J2
 
 K1569: (1) N567 (calc-grammar is closed); import from decimal.mjs until then. (2) money exports noSuchFact and events noSuchEvent; answer through them after they merge and retire C-133.13, C-133.28. (3) In plane's START. Your uses are set at your merge. CHANGE follows when entities, standards, events, lines and money are merged.
+
+## B4 · CHANGE
+
+K1580: MONEY #1 is merged on tranche/T33 (with entities, events, lines, standards). Merge it, wire the real modules as defaults, re-point your tests at them, re-run, and post COMPLETE.
