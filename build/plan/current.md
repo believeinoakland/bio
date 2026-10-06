@@ -113,7 +113,9 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 - **T34-73 · run-productions** · (N627) the fixture's stub `inquiry_basis` mirrors leg-earning's columns (test-only) · K1708 · req: none · depends —.
 - **T34-74 · agent-runner** · (N624) defines the `AgentRunner` Worker and declares its container in its own wrangler config (base image pinned by digest, R10's egress), so agent-worker's `RUNNER` binding resolves · K1705 · req: new Rs, BOB's wording of K1604/T33-D1 · depends —. Its deploy needs Containers readable by the account's token (Bob's act if not; asked when reached).
 
-**L6 merge order:** inquiry-grammar first; inquiry, hypotheses and strength (on calculations' read); run-rules, capture-requests, skills, answers; then **agent-harness → agent-model → agent-worker → ai-runs**. ai-runs moves last, because it states the usage that agent-model answers and agent-worker carries (N588).
+- **T34-86 · leg-earning, inquiry, basis-versions, strength, run-rules, capture-requests (DEC-149's L6 share)** · (N664, DEC-149; named for T34 by K1784) as T34-78: every member-facing string that calls the group's Civicsmith "this instance", "this copy" or "this plane" says "your group's Civicsmith" or is reworded to need no name. Found by BOB's grep at L6's START: leg-earning `index.mjs`:715, :725; inquiry `index.mjs`:963; basis-versions `index.mjs`:500 (`checks.mjs`:944's "the copy of the document" is a document's copy and stays); strength `method.mjs`:378; run-rules `checks.mjs`:315; capture-requests `checks.mjs`:172, :266, :336 and `index.mjs`:472. Strings addressed to the model or to an operator (agent-harness' and agent-worker's op `why`s, ai-runs' principal note) are not member-facing and stay · K1784, K1797 · req: none (DEC-149 cited; a test names each changed string) · depends —. leg-earning and basis-versions join L6 for this share alone.
+
+**L6 merge order:** inquiry-grammar first; leg-earning and basis-versions (T34-86 only) at any point; inquiry, hypotheses and strength (on calculations' read); run-rules, capture-requests, skills, answers; then **agent-harness → agent-model → agent-worker → ai-runs**. ai-runs moves last, because it states the usage that agent-model answers and agent-worker carries (N588).
 
 ### L7
 
@@ -207,7 +209,7 @@ membership 3,356 (four DECs; the guard in T34-10), publication 3,959 (T34-44), q
 
 ## Summary
 
-**Jobs per layer:** L1 8, L2 4, L3 2, L4 1, L5 12, L6 12, L7 2, L8 8 (ratification added, K1790), L9 2, L10 1, L11 9. **Total 61 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
+**Jobs per layer** (recounted by K1797 from the entries): L1 8, L2 4, L3 2, L4 1, L5 13, L6 16 (leg-earning and basis-versions added by K1797), L7 2, L8 8 (ratification added, K1790), L9 5, L10 2, L11 13. **Total 74 jobs.** Add one (affordances, L11) if BOB places the list of terms there, and drop one (intent) if its START finds nothing owed.
 
 **Entries carried:** 58 in `next.md` (50 at this draft's start; N600 added by K1649 while it was written; N601, N602 folded by BOB #120, K1656; N603, K1658; N604, N605, K1666; N606, N607, K1668; N608–N610, K1675–K1679; N611–N615, K1681–K1683; N616, K1685; N617–N621, K1686; N622, K1690). **48 wholly in T34**: N549, N550, N552–N554, N556–N558, N560–N562, N565, N567–N571, N573–N578, N580–N585, N587–N591, N593–N596, N598–N622. **4 in part**: N551, N564, N586, N597. **6 left out**: N559 and N572 (a dependency not yet built), N563 and N579 (a measurement), N566 (a measurement, unless the release measured it), N592 (a study, not a module job; Bob's ruling first).
 
