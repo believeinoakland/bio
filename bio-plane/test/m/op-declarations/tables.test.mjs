@@ -86,8 +86,9 @@ test("R3: SESSION_OPS is {member, admin}, two sets of op names each with a spec;
 
 test("R3: UNATTENDED_BY_DECISION maps only ops no session reaches, each to the citation of the recorded decision, and holds no op without one", () => {
   const ops = Object.keys(UNATTENDED_BY_DECISION);
-  assert.deepEqual(ops.sort(), ["capturerequestdrain", "cpuprobe", "instancegroupseed", "livefire", "purge",
-                                "reevaluationraise", "reproject", "taskdrain"]);
+  /* T33 (R19, R20): the detectors' run (money-checks R6) and the ask's usage count (K1601) join them. */
+  assert.deepEqual(ops.sort(), ["askusage", "capturerequestdrain", "cpuprobe", "instancegroupseed", "livefire",
+                                "moneydetectorsrun", "purge", "reevaluationraise", "reproject", "taskdrain"]);
   for (const op of ops) {
     assert.ok(Object.hasOwn(OPS, op), op);
     assert.equal(OPS[op].mutating, true, op);
