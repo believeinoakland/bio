@@ -134,7 +134,7 @@ test("R40, R3: R3's refusals before its commit are op=publishat's (MALFORMED, CA
   assert.equal(at({ ...s.body, edition: 4 }).reason, "NO_CASE_DOCUMENT");
   assert.equal(at({ ...s.body, docSha: "e".repeat(64) }).reason, "CASE_RATIFY_STALE");
   const notOwner = at({ ...s.body, attestorMember: "bo" });
-  assert.deepEqual(notOwner, s.w.op("caseratify", {}, { ...s.body, attestorMember: "bo" }), "caseAuthority's own refusal");
+  assert.deepEqual(notOwner, await s.w.op("caseratify", {}, { ...s.body, attestorMember: "bo" }), "caseAuthority's own refusal");
   assert.equal(notOwner.reason, "CASE_SIGNER_NOT_AN_OWNER");
   s.w.bv.conc.delete(s.w.key(s.P, Q1));
   assert.equal(at(s.body).reason, "CASE_CONCLUSION_MOVED");
@@ -241,10 +241,13 @@ test("R42, R48: at its time, with nothing changed, the publisher commits as R3 c
 });
 
 test("R42, R46: a source, a signer's tie or a hold that changed since signing stops it, one entry per cause naming what changed (C-58.7, C-58.8, C-58.9), nothing committed", async () => {
-  const s = await setup({ raw: peopleLines([{ person: "ENT-2026-0001-p", places: "claim x", basis: "public_role", citation: "c", words: null }]) });
+  const s = await setup({ raw: [...peopleLines([{ person: "ENT-2026-0001-p", places: "claim x", basis: "public_role", citation: "c", words: null }]),
+    "sources:", "  - capture: " + "c".repeat(64), '    stated: "a source told us"', "    basis: consent"] });
   let lapsed = false;
-  const carriage = { sourcesLapsed: () => (lapsed ? [{ capture: null, stated: null, basis: null }] : []),
-                     acceptedWorkLapsed: () => null };
+  const real = s.w.realPub.caseCarriage;
+  const ROW = { capture: "c".repeat(64), stated: "a source told us", basis: "consent" };
+  const carriage = new Proxy(real, { get: (t, k) => (k === "sourcesLapsed" ? () => (lapsed ? [ROW] : [])
+    : k === "acceptedWorkLapsed" ? () => null : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
   Object.defineProperty(s.w.realPub, "caseCarriage", { value: carriage, configurable: true });
   assert.equal(s.w.op("publishat", {}, s.body).ok, true);
   const checked = s.scheduled[0].checked;
@@ -266,6 +269,8 @@ test("R42, R46: a source, a signer's tie or a hold that changed since signing st
   s.w.hold = { held: true };
   out = await s.w.r.publishScheduled(s.entry(checked), LATER);
   assert.deepEqual(out.stopped.map((x) => x.check), ["C-58.7", "C-58.8", "C-58.9"]);
+  assert.deepEqual(out.stopped[0].changed, [{ was: { source: { ...ROW, standing: true } } }, { now: { source: { ...ROW, standing: false } } }],
+                   "the source is named, as the document names it");
   nothingCommitted(s.w);
   /* negative control: back as signed, it publishes */
   lapsed = false; s.w.ties.set("alice", []); s.w.hold = { held: false };
