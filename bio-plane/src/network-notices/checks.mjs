@@ -1,7 +1,8 @@
 /* network-notices' refusal rows (requirements: `build/requirements/network-notices.md` R1, R4, R6, R11; DEC-49).
  * A new family, C-127 (BOB's ruling at review, K1119), arrived at T23 and stamped by 1.54.0 (promotion's T24 job).
  * The words a member reads before posting (the warning, the caution, the ceremony) are the UX design stream's (K1031);
- * these rows only say why an act was refused and that nothing was published. */
+ * these rows only say why an act was refused and that nothing was published. A member reads the group's own
+ * installation named "your group's Civicsmith", never "this copy" (DEC-149, T34-87). */
 
 const at = (fn, region) => `src/network-notices/index.mjs ${fn} > ${region}`;
 
@@ -22,13 +23,13 @@ export const NETWORK_NOTICE_CHECKS = Object.freeze({
   },
   NOTICE_NO_GROUP_SLUG: {
     check: "C-127.4", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "This copy has no group name recorded, and a notice is never anonymous. Record the group's name "
+    translation: "Your group has no name recorded yet, and a notice is never anonymous. Record the group's name "
       + "first. Nothing was published.",
   },
   NOTICE_NO_INSTANCE_KEY: {
     check: "C-127.5", where: at("#callerRefusal", "is-notice-caller"),
-    translation: "This copy holds no signing key of its own, so it cannot sign the activity level a notice is always "
-      + "published with. The operator binds one. Nothing was published.",
+    translation: "Your group's Civicsmith holds no signing key of its own, so it cannot sign the activity level a "
+      + "notice is always published with. The operator binds one. Nothing was published.",
   },
   NOTICE_WORDING_MALFORMED: {
     check: "C-127.6", where: at("#fieldRefusal", "is-notice-fields"),
@@ -60,8 +61,8 @@ export const NETWORK_NOTICE_CHECKS = Object.freeze({
   },
   NOTICE_STALE: {
     check: "C-127.12", where: at("postNotice", "is-notice-post"),
-    translation: "This copy holds no prepared notice from you with this fingerprint, or it was prepared more than an "
-      + "hour ago. Prepare it again and sign what it shows. Nothing was published.",
+    translation: "Your group's Civicsmith holds no prepared notice from you with this fingerprint, or it was prepared "
+      + "more than an hour ago. Prepare it again and sign what it shows. Nothing was published.",
   },
   NOTICE_SIGNATURE_REFUSED: {
     check: "C-127.13", where: at("postNotice", "is-notice-post"),
