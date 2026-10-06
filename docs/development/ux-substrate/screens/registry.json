@@ -421,8 +421,13 @@
      ]
     },
     {
+     "op": "owed:subscriptionsignin DEC-156",
+     "label": "Open Anthropic's sign-in page",
+     "status": "owed"
+    },
+    {
      "op": "accountreferenceset",
-     "label": "Connect with your own key or token",
+     "label": "Connect with your own subscription or key",
      "status": "function",
      "modules": [
       "credentials"

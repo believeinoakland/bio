@@ -1,37 +1,6 @@
-<div class="qbrief" id="q-s6">
-<h3>S6. Using a Claude subscription without a command line</h3>
-<p><b>What you are asked:</b> whether to ask Anthropic how a member can connect their own Claude Pro or Max subscription to Civicsmith without a command line.</p>
-<p><b>Why it is yours:</b> it means a request to Anthropic on Civicsmith's behalf, and the answer decides how Civicsmith is built.</p>
-<h4>How it works today</h4>
-<p>Many members have a Claude plan and aren't technical. Today, connecting that plan means installing Claude Code on their own computer and typing <span class="id">claude setup-token</span>, so most of them won't connect it, though they would use it if connecting were easy. An API key is made entirely in a web browser. The screen now puts the API key first and suggests asking a technical member for five minutes' help.</p>
-<h4>Whether a member can sign in through the hosted Claude Code's own login: checked on 6 October</h4>
-<p>I read Anthropic's two pages live today. The quotes are being added to the development process's terms record (as AT-26, AT-27 and open question U-7). <b>The answer: the pages do not settle it. They permit part of it, and leave four points open that only Anthropic can answer.</b></p>
-<p><b>How it would work.</b> The group's Civicsmith runs Anthropic's unmodified Claude Code. The member opens Anthropic's sign-in page in their own browser and signs in. Because Claude Code runs in a container, the browser then shows a login code, which must be entered at Claude Code's own "Paste code here if prompted" prompt (AT-26). Claude Code then stores the sign-in in its own credentials file in the group's container (AT-27).</p>
-<p><b>What the pages allow.</b></p>
-<ul class="mk-list">
-<li>The Claude Code program must be "installed and run as published by Anthropic" (AT-14).</li>
-<li>Each member uses "their own … Claude subscription plan credentials", and the use is billed to them (AT-15).</li>
-<li>Sign-in "must complete through Anthropic's own flow" (AT-17).</li>
-<li>Anthropic does not "prevent an end user from signing in to the unmodified Claude Code binary with their own Claude subscription, including where a platform hosts Claude Code" (AT-18).</li>
-</ul>
-<p><b>What the pages leave open.</b></p>
-<ul class="mk-list">
-<li>(a) If a Civicsmith screen takes the login code and passes it to Claude Code, is that "collect[ing] … or intermediat[ing] Claude.ai credentials or session tokens", which developers may not do (AT-17)? The same question applies if the screen only carries the member's keystrokes to Claude Code's own prompt.</li>
-<li>(b) Is a Civicsmith button that starts the sign-in "offer[ing] Claude.ai login into their own applications", which Anthropic does not permit (AT-16)? Or is it the member signing in to the unmodified program, which is allowed (AT-18)?</li>
-<li>(c) Is the sign-in that Claude Code writes in the group's container the developer "stor[ing]" it (AT-17)?</li>
-<li>(d) Who must agree to Anthropic's Commercial Terms as the one "running Claude Code in your products" (AT-14): each group, or Civicsmith's makers?</li>
-</ul>
-<p>Anthropic's own page answers questions like this with: "For questions about permitted authentication methods for your use case, please contact sales" (AT-25).</p>
-<h4>An example</h4>
-<p>Ana has a Claude Pro plan and uses it on her phone every day. She would like the assistant in Civicsmith to use it too. She won't install Claude Code and type a command, so today she uses the group's key, or goes without.</p>
-<h4>The choices</h4>
-<div class="qopts">
-<div><b>A. Keep the screen as now drawn, and don't ask</b><span>The API key comes first, made in a browser. The subscription path stays as it is, with plain steps and "ask a member to help".</span><span><b style="font:inherit;font-weight:700">Gains:</b> nothing in the terms is in doubt.</span><span><b style="font:inherit;font-weight:700">Costs:</b> members like Ana don't connect the plan they already pay for.</span></div>
-<div><b>B. Ask Anthropic</b><span>Someone who speaks for Civicsmith asks Anthropic's sales team one written question. It covers the hosted Claude Code sign-in with points (a) to (d), and whether a "Sign in with Claude" button could be approved (AT-19's "unless previously approved"). Meanwhile the screen stays as in A.</span><span><b style="font:inherit;font-weight:700">Gains:</b> a clear answer to build on; if it is yes, any member with a plan connects in a minute.</span><span><b style="font:inherit;font-weight:700">Costs:</b> a request sent outside, with an uncertain answer and timing; it tells Anthropic about Civicsmith before its first release.</span></div>
-<div><b>C. Build the hosted sign-in without asking</b><span><b style="font:inherit;font-weight:700">Costs:</b> points (a) to (d) stay unanswered, and the record would rest on a reading the pages don't support. I don't recommend it.</span></div>
-</div>
-<p class="qrec"><b>Recommendation: B.</b> I can draft the question for you to send, quoting each term. <b>Risk:</b> Anthropic may say no, or take time. A still works in the meantime, and the group's key covers members without their own account where the group offers it.</p>
-<p class="answer">Reply, for example: “S6: B, draft it” · “S6: A” · or a question.</p>
+<div class="qbrief" id="q-s6" style="border-left-color:var(--c-accent)">
+<h3>S6. Using a Claude subscription without a command line: build it, recorded</h3>
+<p>Your answer, 6 October: “S6: build the process that includes a link to the Claude page a member can use to authorize civicsmith to use of their CC account. I assume that this process will produce a token that the user can paste into a field in the civicsmith screen.” Recorded as DEC-156 and drawn in the connect screen and its wizard. A member opens Anthropic's sign-in page from Civicsmith, signs in and approves, and Anthropic's page shows a code. The member pastes the code into a field on the Civicsmith screen and connects. The four points Anthropic's pages leave open (U-7) stay recorded as open, beside your decision to build.</p>
 </div>
 <div class="qbrief" id="q-s5" style="border-left-color:var(--c-accent)">
 <h3>S5. A group whose place Civicsmith doesn't know yet: A for now, recorded</h3>

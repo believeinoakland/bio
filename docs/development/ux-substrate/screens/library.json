@@ -595,15 +595,15 @@
       },
       {
        "screen": "connect",
-       "act": "accountreferenceset",
-       "what": "Connect with your own Claude API key or your own subscription token. Or skip.",
-       "why": "Either serves only you. Skipping is a real choice: every journey stays open."
+       "act": "owed:subscriptionsignin DEC-156",
+       "what": "To connect your Claude subscription, open Anthropic's sign-in page, sign in and approve. Or use an API key, or skip.",
+       "why": "You sign in on Anthropic's own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open."
       },
       {
        "screen": "connect",
        "act": "accountreferenceset",
-       "what": "For a subscription token: on your own computer, open a terminal, run claude setup-token, sign in, and paste what it prints here.",
-       "why": "The token is made by Anthropic's own sign-in on your computer. Civicsmith never sees your password."
+       "what": "Copy the code Anthropic's page shows you, paste it here, and connect.",
+       "why": "Your subscription then serves only your own questions. You can disconnect at any time."
       },
       {
        "screen": "connect",

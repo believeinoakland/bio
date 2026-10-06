@@ -108,8 +108,8 @@ wiz('Invite a member', 'members', False, [
 wiz('Connect your Claude account', 'connect', False, [
  ('connect', None, 'The assistant is optional. If your group offers its API key, you can use it already; your own account, if you connect one, always comes first.', 'Your own account serves only you. Everything works without the assistant.'),
  ('connect', 'disclosureshown', 'Read what connecting means.', 'Your questions, and what is read to answer them, go to Anthropic under your own account.'),
- ('connect', 'accountreferenceset', 'Connect with your own Claude API key or your own subscription token. Or skip.', 'Either serves only you. Skipping is a real choice: every journey stays open.'),
- ('connect', 'accountreferenceset', 'For a subscription token: on your own computer, open a terminal, run claude setup-token, sign in, and paste what it prints here.', 'The token is made by Anthropic\'s own sign-in on your computer. Civicsmith never sees your password.'),
+ ('connect', 'owed:subscriptionsignin DEC-156', 'To connect your Claude subscription, open Anthropic\'s sign-in page, sign in and approve. Or use an API key, or skip.', 'You sign in on Anthropic\'s own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open.'),
+ ('connect', 'accountreferenceset', 'Copy the code Anthropic\'s page shows you, paste it here, and connect.', 'Your subscription then serves only your own questions. You can disconnect at any time.'),
  ('connect', 'aiceilingset', 'Set your daily limit.', 'It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group.'),
  ('connect', 'accountswitchset', 'Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.', 'Some members want suggestions; others want quiet.'),
  ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s Civicsmith.'),
