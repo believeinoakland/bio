@@ -21,6 +21,6 @@
 **Tests and checks run** (on `job/T34/id-spaces` after merging `tranche/T34` @ 9b3322ac45):
 - `node --test bio-plane/test/m/id-spaces/`: tests 32, pass 32, fail 0 (a new R1 test for `body` and `office`; R22's sweep covers both).
 - Users of id-spaces: court-doctypes 24/0; record-core 126/0 and `stats-disclosure.test.mjs` 1/0; entities 82 pass, 1 fail (R20 above); standards 47/0; calculations 31/0; jurisdictions 81/0.
-- `format`: 126 modules, 125 requirements files; 0 failures. `architecture id-spaces`: 3 product files, 5 relative imports; 0 failures. `coverage id-spaces`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership id-spaces tranche/T34`: see the commit after this one's check (3 code files and this record; 0 failures).
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture id-spaces`: 3 product files, 5 relative imports; 0 failures. `coverage id-spaces`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership id-spaces tranche/T34`: 4 files changed (3 code files and this record); 0 failures.
 
 Size (session_01M4x59wQhwN7AXzMLPTFvn1): test runs 4, module lines 1477
