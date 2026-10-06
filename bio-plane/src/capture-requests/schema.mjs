@@ -1,6 +1,6 @@
 /* capture-requests' table (requirements: `build/requirements/capture-requests.md`, R35; K4, K23). Moved out of the
  * legacy `schema.mjs` at this module's extraction, with the comments that record why it is shaped as it is:
- * `capture_requests` and its three indexes. Its three additive columns (`lead_inquiry`, `run_woken_at`, `render`)
+ * `capture_requests` and its indexes, and R46's `capture_request_platforms`. Its three additive columns (`lead_inquiry`, `run_woken_at`, `render`)
  * are in the table as created and are added to a store that predates them by `migrateCaptureRequests`, with R40's
  * `source_reason` and R45's `sweep`. The table is keyed to a bundle by `target` for purge (R35). */
 
@@ -149,6 +149,26 @@ CREATE INDEX IF NOT EXISTS capture_requests_renders ON capture_requests(render, 
 -- R39 (N262): the drain finds the capture this table holds of an address (and
 -- render flag) to fetch conditionally on, by one indexed read per fired row.
 CREATE INDEX IF NOT EXISTS capture_requests_address ON capture_requests(address, render, state, captured_at);
+-- R46 (T33-51; K1492 (2), (4)): THE HOSTS A MEMBER HAS MARKED A LOGIN-GATED
+-- PLATFORM, R41's scope record for a platform (kind 'platform'). A page on such
+-- a host is captured only by a member's own act in their own browser: the drain
+-- never sends a supplied login to a marked host, and a source asking a login
+-- there is refused MEMBER_CAPTURE_ONLY and routed to the members, never retried
+-- with a login. A mark is GROUP-WIDE (a platform is a platform for every
+-- request) and holds NO SECRET: the host, who marked it and when. Withdrawn, the
+-- row stays with who withdrew it and when, so the record says why a request
+-- was routed while the mark stood. At most one standing mark per host.
+CREATE TABLE IF NOT EXISTS capture_request_platforms (
+  mark              TEXT PRIMARY KEY, -- PLM-<instant>-<random>, minted here
+  host              TEXT NOT NULL,    -- exact, lower-cased: never a parent domain or another subdomain
+  kind              TEXT NOT NULL,    -- 'platform'
+  scope             TEXT NOT NULL,    -- 'group'
+  marked_by         TEXT NOT NULL,    -- the member (or 'admin') who marked it
+  marked_at         TEXT NOT NULL,
+  withdrawn_at      TEXT,
+  withdrawn_by      TEXT
+);
+CREATE INDEX IF NOT EXISTS capture_request_platforms_host ON capture_request_platforms(host, withdrawn_at);
 `;
 
 /** The columns added after the table was first created, each added to a store that predates it. A legacy row's value

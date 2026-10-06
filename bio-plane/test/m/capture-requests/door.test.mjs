@@ -217,7 +217,7 @@ test("R9 the door makes no outbound request of any kind and runs no conduct or a
   assert.deepEqual(touched, []);
 });
 
-test("R34 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.19, each row frozen, naming a region of this module and a translation; C-28.5 and C-28.12 stay unallocated and C-28.13 is acquisition's", () => {
+test("R34 R46 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.22, each row frozen, naming a region of this module and a translation; C-28.5 and C-28.12 stay unallocated and C-28.13 is acquisition's", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(CATALOGUE).map(([k, r]) => [k, r.check])), {
     CAPTURE_REQUEST_NO_RUN: "C-28.1", CAPTURE_REQUEST_NOT_PUBLIC: "C-28.2", CAPTURE_REQUEST_NOT_AN_INQUIRY: "C-28.3",
     CAPTURE_REQUEST_CARRIES_A_CAPTURE: "C-28.4", CAPTURE_CONDUCT_UA_ILLEGIBLE: "C-28.6",
@@ -225,7 +225,8 @@ test("R34 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.19, each r
     CAPTURE_CONDUCT_TICK_SPENT: "C-28.10", CAPTURE_ATTRIBUTION_ONE_PRINCIPAL: "C-28.11",
     CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY: "C-28.14", CAPTURE_REQUEST_LEAD_IS_THE_TARGET: "C-28.15",
     CAPTURE_REQUEST_RENDER_MALFORMED: "C-28.16", CAPTURE_FETCH_FAILED: "C-28.17", CAPTURE_REQUEST_NOT_RETRYABLE: "C-28.18",
-    CAPTURE_SWEEP_OUT_OF_SCOPE: "C-28.19",
+    CAPTURE_SWEEP_OUT_OF_SCOPE: "C-28.19", MEMBER_CAPTURE_ONLY: "C-28.20", CAPTURE_REQUEST_SITE_KIND_UNKNOWN: "C-28.21",
+    CAPTURE_PLATFORM_MARK_REFUSED: "C-28.22",
   });
   assert.equal(Object.isFrozen(CATALOGUE), true);
   for (const [code, r] of Object.entries(CATALOGUE)) {
@@ -236,7 +237,7 @@ test("R34 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.19, each r
   }
   const door = ["CAPTURE_REQUEST_NO_RUN", "CAPTURE_REQUEST_NOT_PUBLIC", "CAPTURE_REQUEST_NOT_AN_INQUIRY",
                 "CAPTURE_REQUEST_CARRIES_A_CAPTURE", "CAPTURE_REQUEST_LEAD_NOT_AN_INQUIRY",
-                "CAPTURE_REQUEST_LEAD_IS_THE_TARGET", "CAPTURE_REQUEST_RENDER_MALFORMED"];
+                "CAPTURE_REQUEST_LEAD_IS_THE_TARGET", "CAPTURE_REQUEST_RENDER_MALFORMED", "CAPTURE_REQUEST_SITE_KIND_UNKNOWN"];
   for (const code of door) assert.match(CATALOGUE[code].where, / captureRequest > is-capture-request$/, code);
   assert.equal("CAPTURE_NOT_DRAINING" in CATALOGUE, false, "C-28.13 is acquisition's (its R1)");
 });
