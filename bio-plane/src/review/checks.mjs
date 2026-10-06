@@ -111,7 +111,7 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
   REVIEW_DRAFT_TOO_LARGE: {
     check: 'C-87.7',
     where: at('#draft', 'is-review-draft-too-large'),
-    translation: 'This draft\'s arguments are larger than the plane will store: the limit is 64 KiB, the same '
+    translation: 'This draft\'s arguments are larger than your group\'s Civicsmith will store: the limit is 64 KiB, the same '
       + 'size publishing the case would accept. Nothing was saved. Material this large belongs in the '
       + 'documents and content the case rests on rather than in the draft itself.',
   },
