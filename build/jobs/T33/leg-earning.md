@@ -2,6 +2,20 @@
 
 **Status** · session_01CungHbe3DYiUeE2x5T2Yr7 · depth 2 · WORKING · handled B2
 
+## Work (T33-44)
+
+**For `modules.json` (BOB writes at merge).** `paths` `bio-plane/src/leg-earning/`; `tests` `bio-plane/test/m/leg-earning/`; `uses` record-grammar, text-chain, record-core, membership, promotion, provenance, extraction, content, entities, connections, standards, duties, inquiry-grammar. (J1 (7) corrected: `extraction` stays, for the `readings` and `reading_text_source` read contract R1 and R8 read; dropped: progressions, observation-log, retrieval, bias, accepted-work.)
+
+**Applied.** T33-44: the module created by copy from `inquiry` (`index.mjs` lines as J1 names them; `schema.mjs`'s `inquiry_basis`), no change of meaning; R12 (K1601) the table, `writeBasis` and the declaration (`declareTable("leg-earning", …)`, classes as inquiry gave them); R8 (STD- ceiling) and R9 (occurrence derivation) as J1 (4), (5). Improvements made in passing: the one-capture rule (route, then `captureBound`) is now one helper, `#captureLetter`, shared by R1's document read and R8's standard read (no second copy of the rule); `earnedBasis` bounds targets by `EARNED_TARGETS_MAX` (the literal 200 it held beside the constant). `earnedBasis` reads the subject from the document's bytes (J1 (3)). Exports: `legEarningOf`, `LegEarning`, `legCapped`, `legEarningOps`, `legEarningOwns`, `LEG_EARNING_TABLES`, `LEG_EARNING_SCHEMA`, `migrateLegEarning`, `LEG_BACKFILL_MAX`, `EARNED_TARGETS_MAX`, `PROJECTS_DRAWING_MAX`, `AUTHORED_ROUTE_BASES`.
+
+**Changed from J1 (5).** R9 reads `duties.occurrencesOf` as `class:daemon`, not duties' `INTERNAL`: through `INTERNAL`, duties' `inForce` passes the symbol to `standards.inForceAt`, which answers nothing, so every derivation's `source_in_force` reads undetermined ("the standard's in-force answer was not given"). Reported (J2); R8's standard read is also `class:daemon`.
+
+**Waiting.** R9's occurrence reference parser is `inquiry-grammar`'s `parseOccurrenceRef` (its R15, T33-43, not yet merged): the code takes the real one as soon as `inquiry-grammar` exports it (`import * as inquiryGrammar`), else the injected dep; the tests inject a stand-in coded to R15's form (`occurrence:<DUT id>/<key>`). After T33-43 merges: merge `tranche/T33`, drop the stand-in from `held.test.mjs`, re-run steps 5–6, post COMPLETE.
+
+**Tests and checks (this commit).** `node --test test/m/leg-earning/`: 45 pass, 0 fail (earned 13, capture-bound 7, earned-basis 7, reads 9, table 5, held 4). `node --test test/m/inquiry/`: 170 pass, 0 fail (unchanged). With the `modules.json` row above applied locally and restored: format 0 failures; architecture 9 product files, 43 imports, 0 failures; coverage 12 of 12 after K1601's R12 (11 of 11 before); ownership 0 failures.
+
+**Deferred.** Nothing in this module. For T33-45 (inquiry): drop `inquiry_basis` from `INQUIRY_TABLES`/`INQUIRY_PURGE` in the commit that re-points its projection to `writeBasis` (record-core refuses a table declared twice, `TABLE_DECLARED`, refusing the whole declaration).
+
 ## J1 · QUESTION
 
 **Seam confirmed against the code** (`bio-plane/src/inquiry/index.mjs` on `tranche/T33`): `legCapped` (l.121), `projectsDrawingOn` (1153), `restsOnLive` (1197), `earned` (2370), `earnedForDoc` (2713), `cyclePath` with `#basisReach` (2734), `basisFor` (2760), `restingOn` (2775), `earnedBasis` (2858) with what they need: `ensureLegContent` and `#backfillLegContent` (R3's backfill), `#legVersions` (REC-220), `AUTHORED_ROUTE_BASES`, `LEG_BACKFILL_MAX`, `EARNED_TARGETS_MAX`, `PROJECTS_DRAWING_MAX`; and, per K1505 (2), `inquiry_basis` (schema.mjs: the table, its four indexes, the additive `ground`/`content_id` columns) with its read contract and one write. Code: `bio-plane/src/leg-earning/` (index.mjs, schema.mjs); tests `bio-plane/test/m/leg-earning/`. Host factory `legEarningOf(host, deps)`. Inquiry is not touched (T33-45 deletes and re-points).
