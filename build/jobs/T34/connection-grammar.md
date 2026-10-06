@@ -1,6 +1,6 @@
 # connection-grammar (T34)
 
-**Status** · session_018zeFM5yr82fH5eXANSqAd8 · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_018zeFM5yr82fH5eXANSqAd8 · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
