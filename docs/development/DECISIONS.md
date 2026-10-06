@@ -2373,3 +2373,17 @@ response: **Bob, 2026-10-06: "S4: B".** Ruled: members and founders say **"your 
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; brand-and-voice.html §2.2 and §5; every design page and the screens, wizards and registry in `docs/development/ux-substrate/`; BIO_Interaction_Constructs_v0_1.md §L.
 owed: (BOB) every member-facing string that says "copy" for the group's Civicsmith, in the requirements and the code (instance-setup's claim page, installer's last screen, membership's and credentials' messages, the court sentence of DEC-136's owed setting); the term entry: "Your group's Civicsmith: Civicsmith installed in a Cloudflare account your group controls. Your group's records are held there and nowhere else."
+
+### DEC-150 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's setup screen, "Offices and seats, filled in for you")
+for: bob
+question: What a group whose place Civicsmith holds no rules for meets at setup, where the offices and seats would be filled in, and whether it is told when its place arrives.
+why it is Bob's: a new thing Civicsmith does (recording a place it does not hold and telling administrators when an update brings it) (P17); Bob directed it.
+provisional: instance-setup R12–R15 (the places are chosen among held profiles, none preselected; choosing none is allowed and stated); officesseed fills offices only from a held place.
+alternative: an empty list with no explanation; asking for the place outside the group (S5's C, an outward act).
+recommendation: as Bob directed.
+reversal cost: low.
+response: **Bob, 2026-10-06:** "If the user just specified a unique place civicsmith doesn't know anything about, then this list of offices and seats won't be populated yet. So there should be some fallback text that explains that and tells the new administrator that they'll received a notification once the system has this information for them to select from." Ruled as he directs. **Design session's details (P17), Bob may change any:** (1) under Places, a group whose place is not listed may name it (free text, optional), kept in its own Civicsmith, seen by administrators, never sent anywhere; (2) the offices section then says nothing is filled in because Civicsmith does not hold that place yet, and offers adding the group's offices itself (`entitycreate`), each marked as added by the group; (3) when an update brings a place matching the name, administrators are told once in their queue (Status) and can choose it under Places; offices the group added stay. Whether a group may write its own place's rules is S5, still with Bob.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the setup screen; S5); `journeys.html` (journey 1).
+owed: (BOB) instance-setup: the named place (an administrator's act, held locally, never exported to the network) and the queue item when an installed update brings a held profile covering it; the op behind the registry's `owed:placewanted DEC-150`.

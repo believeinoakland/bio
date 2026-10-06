@@ -12,7 +12,7 @@ screen('install', 'Install Civicsmith', 'setup', 'The installer page: what is ne
   [('bootstrap','Install with this short name'),('selftest','Let it test itself')], [1])
 screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
-   ('officesseed','Review offices and seats'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the group\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
+   ('officesseed','Review offices and seats'),('entitycreate','Add an office yourself'),('owed:placewanted DEC-150','Name a place not yet listed'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the group\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccess','Record who holds the hosting account'),('memberadd','Invite a member or a second administrator')], [1])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
   [('groupdescriptionset','Save who your group is, and who sees it')], [2])

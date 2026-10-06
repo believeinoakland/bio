@@ -78,6 +78,19 @@
      ]
     },
     {
+     "op": "entitycreate",
+     "label": "Add an office yourself",
+     "status": "declared",
+     "modules": [
+      "entities"
+     ]
+    },
+    {
+     "op": "owed:placewanted DEC-150",
+     "label": "Name a place not yet listed",
+     "status": "owed"
+    },
+    {
      "op": "assistantset",
      "label": "Choose how members reach the assistant",
      "status": "declared",
