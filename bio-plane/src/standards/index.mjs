@@ -26,8 +26,8 @@
  *   combine      `jurisdictions.combine` (default); a test passes its own, which resolves profiles it wrote by id.
  *   now          the module's clock, an ISO instant (default: the wall clock).
  *   events       `events`' instance, or a function answering it (R19, R20, R28: an event's `when`, through its
- *                `readEvent({eventId, viewer})`, events R26). `events` is built in the same layer (T33-26): until one is
- *                wired, an event bound or node answers undetermined, saying so, never a default.
+ *                `readEvent({eventId, viewer})`, events R26); `eventsOf(host)` by default (K1563 (1), K1574). Without
+ *                one, an event bound or node answers undetermined, saying so, never a default.
  *   keyedStore   the store `acquisition.citationLookup` reads the group's key through (R25: `{credentials, env,
  *                governor}`), or a function answering it; absent, the keyed lookup answers that it is off.
  *   citationLookup, recognise   test seams: `acquisition.citationLookup` and `id-spaces.recogniseCitations` by default.
@@ -47,7 +47,8 @@ import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { combine as combineProfiles, SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
-import { validAt } from "../civil-time/index.mjs";
+import { validAt, localDay } from "../civil-time/index.mjs";
+import { eventsOf } from "../events/index.mjs";
 import { registerOwner, isRecordId } from "../connection-grammar/index.mjs";
 import { citationLookup as acquisitionCitationLookup } from "../acquisition/index.mjs";
 import { recogniseCitations } from "../idspaces.mjs";
@@ -78,6 +79,8 @@ const DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "reason", "text", 
 export const COPY_STATES = Object.freeze(["official", "codifier", "undetermined"]);
 /** R21: the reverse index's page, clamped. */
 export const FOR_LIMIT_MAX = 500, FOR_LIMIT_DEFAULT = 100;
+/* R20: the viewer an internal read (no viewer named) asks `events` as: the machine's stamp (DEC-52). */
+const INTERNAL_READER = "class:daemon";
 /* R21: the most reference rows one reverse read scans; past it the answer says it is truncated. */
 const SCAN_FOR = 5000;
 const PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
@@ -541,15 +544,26 @@ export class Standards {
     if (!ev || typeof ev.readEvent !== "function")
       return { day: null, why: `the event ${eventId} cannot be read here: the events module is not wired to standards` };
     let r;
-    try { r = ev.readEvent({ eventId, viewer: viewer ?? undefined }); } catch { r = null; }
+    /* a caller that names no viewer is internal and is not asked sight (membership's terms); events fails closed on an
+       absent viewer, so the internal read is asked as the machine's stamp, which sees every bundle (membership R43) and
+       only reads */
+    try { r = ev.readEvent({ eventId, viewer: viewer ?? INTERNAL_READER }); } catch { r = null; }
     if (!r || r.ok === false || r.found === false)
       return { day: null, why: `the event ${eventId} is not held, or may not be read` };
     const w = r.when !== undefined ? r.when : r.event ? r.event.when : undefined;
     if (!w || w === "undetermined" || w.undetermined)
       return { day: null, why: `the event ${eventId} has no when the record can read (${w && w.why ? w.why : "placed nowhere"})` };
-    if (w.precision === "edtf") return { day: null, why: `the event ${eventId}'s when is a band (${w.start}), not a day` };
-    const v = edge === "end" ? w.end ?? w.start : w.start;
-    const d = typeof v === "string" ? v.slice(0, 10) : null;
+    if (w.precision === "edtf") return { day: null, why: `the event ${eventId}'s when is a band (${w.value ?? w.start}), not a day` };
+    if (w.precision === "upper_bound")
+      return { day: null, why: `the event ${eventId}'s when is an upper bound only ("on or before"), not a day` };
+    /* events R9: `start` and `end` are the half-open span of instants the when covers, in its zone; the edge's day is
+       the local day of its first or last instant */
+    let d = null;
+    try {
+      const at = edge === "end" ? (typeof w.end === "string" ? new Date(Date.parse(w.end) - 1000).toISOString().replace(/\.\d{3}Z$/, "Z") : null)
+        : w.start;
+      d = typeof at === "string" && typeof w.zone === "string" ? localDay(at, w.zone) : null;
+    } catch { d = null; }
     return isDate(d) ? { day: d, why: null } : { day: null, why: `the event ${eventId}'s when states no day at its ${edge}` };
   }
 
@@ -1136,7 +1150,7 @@ export function standardsOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     s = new Standards({ ...d, storage, record, membership, promotion,
                         content: d.content || (() => contentOf(host, { record, membership })),
-                        events: d.events || null });
+                        events: d.events || (() => eventsOf(host, { record, membership })) });
     instances.set(host, s);
     current = s;
     constructed++;

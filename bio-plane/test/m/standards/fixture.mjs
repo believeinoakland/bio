@@ -12,6 +12,8 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { readHooksOf } from "../../../src/reading-pipeline/hooks.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
@@ -125,15 +127,37 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
   content.migrate();
   if (profiles !== null) record.setSetting("jurisdiction_profiles", profiles, "admin");
   const byId = new Map(written.map((p) => [p.id, p]));
+  /* the real events module over the same host (K1574); `events: "none"` wires none, to show what standards answers then */
+  const ev = events === "none" ? null : events || eventsOf(host, { record, membership, content, extraction, provenance: prov,
+                                                                   readHooks: readHooksOf(host), now: () => clock.now });
+  if (ev && ev !== events) ev.migrate();
   /* R16: the instance is constructed and never migrated by its caller. `construct: false` leaves it to the test. */
   const build = () => standardsOf(host, { record, membership, promotion, content, now: () => clock.now,
                                           combine: combineWith || ((ids) => combine(ids.map((id) => byId.get(id) ?? id))),
-                                          ...(events ? { events } : {}), ...(keyedStore ? { keyedStore } : {}),
+                                          events: () => ev, ...(keyedStore ? { keyedStore } : {}),
                                           ...(citationLookup ? { citationLookup } : {}) });
   const s = construct ? build() : null;
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, s, clock, ex, build,
+    st, host, record, membership, promotion, prov, content, s, clock, ex, build, events: ev,
+    /** A held event (events R6) attested by a member's testimony, dated `value` (a day, or `{value, precision, zone}`)
+     *  or undated; or, with `fencedTo`, by a dated fact of a document in a project of that member's (events R1, R7). */
+    event({ value = null, kind = "meeting", by = V("bob"), fencedTo = null } = {}) {
+      if (fencedTo) {
+        const P = w.project(`Fence ${++n}`, fencedTo);
+        const p = w.passage();
+        st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, P, p.bundleId);
+        const f = ev.recordDatedFact({ captureSha: p.capSha, extent: { kind: "pdf-page", page: 0 }, kind: "meeting", value,
+                                       method: "a member's reading", by: V(fencedTo) });
+        if (!f.ok) throw new Error(`fixture dated fact refused: ${JSON.stringify(f).slice(0, 300)}`);
+        const e = ev.createEvent({ kind, attestations: [{ datedFactId: f.dated_fact.dated_fact_id }], by: V(fencedTo) });
+        if (!e.ok) throw new Error(`fixture event refused: ${JSON.stringify(e).slice(0, 300)}`);
+        return e.event_id;
+      }
+      const e = ev.createEvent({ kind, attestations: [{ testimony: "I was there.", ...(value !== null ? { value } : {}) }], by });
+      if (!e.ok) throw new Error(`fixture event refused: ${JSON.stringify(e).slice(0, 300)}`);
+      return e.event_id;
+    },
     rows: (q, ...a) => st.rows(q, ...a),
     count: (t) => st.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },

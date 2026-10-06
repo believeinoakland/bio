@@ -6,24 +6,14 @@ import { seeded, V, REASON } from "./fixture.mjs";
 import { IN_FORCE_STATES } from "../../../src/standards/index.mjs";
 
 const EV = (s) => `EVT-2026-${s.padEnd(16, "0").slice(0, 16)}`;
-/* events' readEvent: a `when` per event, `null` for one placed nowhere, a fenced event refused to all but bob */
-function eventsOf(whens, fenced = new Set()) {
-  return {
-    readEvent: ({ eventId, viewer }) => {
-      if (!Object.hasOwn(whens, eventId) || (fenced.has(eventId) && viewer !== V("bob"))) return { ok: true, found: false };
-      return { ok: true, found: true, event: { id: eventId }, when: whens[eventId] };
-    },
-  };
-}
-const day = (d) => ({ start: d, end: d, precision: "day", zone: "UTC" });
 
 test("R20 inForceAt for one standard answers {state, why, standard, version} through civil-time.validAt over its period: a bound given as an enactment event is read from the event's when; an event with no when, a band, one not held or no events module wired answers undetermined with why; never a default; it writes nothing and never throws", () => {
-  const whens = { [EV("enact")]: day("2020-03-01"), [EV("nowhen")]: null, [EV("band")]: { start: "2020-03", precision: "edtf", zone: "UTC" },
-                  [EV("repeal")]: { start: "2024-06-30T10:00", end: "2024-06-30T11:00", precision: "minute", zone: "UTC" } };
-  const w = seeded({ events: eventsOf(whens) });
+  const w = seeded();
+  const ev = { enact: w.event({ value: "2020-03-01" }), repeal: w.event({ value: { value: "2024-06-30T10:00", precision: "minute", zone: "UTC" } }),
+               nowhen: w.event(), band: w.event({ value: { value: "2020-03", precision: "edtf", zone: "UTC" } }), absent: EV("absent") };
   const plain = w.declare({ period: { from: "2020-01-01", to: "2020-12-31" } }).id;
   const byEvent = w.declare({ period: { from: null, to: null },
-                              period_basis: { from: { event: EV("enact"), edge: "start" }, to: { event: EV("repeal"), edge: "end" } } }).id;
+                              period_basis: { from: { event: ev.enact, edge: "start" }, to: { event: ev.repeal, edge: "end" } } }).id;
   const before = w.snapshot();
   const r = w.s.inForceAt({ standard: plain, date: "2020-06-01" });
   assert.deepEqual([r.ok, r.state, r.standard, r.version.from, r.version.to], [true, "in_force", plain, "2020-01-01", "2020-12-31"]);
@@ -32,15 +22,15 @@ test("R20 inForceAt for one standard answers {state, why, standard, version} thr
                    ["not_in_force", "in_force", "in_force", "not_in_force"], "the events' days bound the period");
   assert.match(w.s.inForceAt({ standard: byEvent, date: "2022-01-01" }).why, /2020-03-01 to 2024-06-30/);
   assert.deepEqual(w.snapshot(), before, "the reads write nothing");
-  for (const [ev, says] of [[EV("nowhen"), /no when the record can read/], [EV("band"), /a band/], [EV("absent"), /not held, or may not be read/]]) {
-    const s = w.declare({ period: null, period_basis: { from: { event: ev, edge: "start" } } }).id;
+  for (const [e, says] of [[ev.nowhen, /no when the record can read/], [ev.band, /a band/], [ev.absent, /not held, or may not be read/]]) {
+    const s = w.declare({ period: null, period_basis: { from: { event: e, edge: "start" } } }).id;
     const a = w.s.inForceAt({ standard: s, date: "2022-01-01" });
-    assert.equal(a.state, "undetermined", ev);
-    assert.match(a.why, says, ev);
+    assert.equal(a.state, "undetermined", e);
+    assert.match(a.why, says, e);
   }
   /* no events module wired: an event bound is undetermined, saying so */
-  const bare = seeded();
-  const s = bare.declare({ period: null, period_basis: { from: { event: EV("enact"), edge: "start" } } }).id;
+  const bare = seeded({ events: "none" });
+  const s = bare.declare({ period: null, period_basis: { from: { event: ev.enact, edge: "start" } } }).id;
   assert.match(bare.s.inForceAt({ standard: s, date: "2022-01-01" }).why, /events module is not wired/);
   /* refusals and robustness */
   assert.equal(w.s.inForceAt({ date: "2020-01-01" }).reason, "STANDARD_NO_ID");
@@ -76,8 +66,8 @@ test("R20 with an instrument key, the version whose period covers the date answe
 });
 
 test("R20 an adopted temporal relation bounds the period of the version it amends, repeals, renumbers or recodifies at its effective date (the day before), naming it; a withdrawn one bounds nothing; an effective event is read from its when", () => {
-  const whens = { [EV("act")]: day("2022-07-01") };
-  const w = seeded({ events: eventsOf(whens) });
+  const w = seeded();
+  const act = w.event({ value: "2022-07-01", kind: "enactment" });
   const oldText = w.passage().contentId, amending = w.passage().contentId;
   const old = w.declare({ text: [oldText], period: { from: "2010-01-01", to: null } }).id;
   const neu = w.declare({ cite: "PEBL § 40", text: [amending], period: { from: "2020-01-01", to: null } }).id;
@@ -97,7 +87,7 @@ test("R20 an adopted temporal relation bounds the period of the version it amend
   w.s.lawWithdraw({ relation: rel.relation.id, reason: "recorded against the wrong section", author: V("carol") });
   assert.equal(w.s.inForceAt({ standard: old, date: "2021-01-01" }).state, "undetermined");
   /* an effective enactment event */
-  w.s.lawRelate({ type: "repeals", from: neu, to: old, citation: amending, effective: { event: EV("act"), edge: "start" },
+  w.s.lawRelate({ type: "repeals", from: neu, to: old, citation: amending, effective: { event: act, edge: "start" },
                   reason: REASON, author: V("bob"), viewer: V("bob") });
   assert.deepEqual(["2022-06-30", "2022-07-01"].map((date) => w.s.inForceAt({ standard: old, date }).state), ["in_force", "not_in_force"]);
 });
@@ -121,10 +111,10 @@ test("R20 a date after a codifier copy's current_through with no later version h
 });
 
 test("R7 inForce is R20's alias: for every case it answers exactly inForceAt's state and why, in the shape its callers read ({ok, id, date, state, why}); its refusals unchanged", () => {
-  const whens = { [EV("e")]: day("2021-05-05") };
-  const w = seeded({ events: eventsOf(whens) });
+  const w = seeded();
+  const e = w.event({ value: "2021-05-05" });
   const ids = [w.declare({ period: { from: "2020-01-01", to: "2020-12-31" } }).id, w.declare({ period: { from: "2020-01-01", to: null } }).id,
-               w.declare({ period: null }).id, w.declare({ period: null, period_basis: { from: { event: EV("e"), edge: "start" } } }).id];
+               w.declare({ period: null }).id, w.declare({ period: null, period_basis: { from: { event: e, edge: "start" } } }).id];
   for (const id of ids)
     for (const date of ["2019-01-01", "2020-06-01", "2021-05-05", "2030-01-01"]) {
       const a = w.s.inForce(id, date), b = w.s.inForceAt({ standard: id, date });

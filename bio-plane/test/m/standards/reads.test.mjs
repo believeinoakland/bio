@@ -103,10 +103,8 @@ test("R25 resolveCourtCitation answers verified only when a held capture the vie
 
 /* A world for the owner: two statutes related, a court link, a fenced relation, an event provider. */
 function ownerWorld() {
-  const whens = { [EV("meeting")]: { start: "2022-05-05", end: "2022-05-05", precision: "day", zone: "UTC" },
-                  [EV("fenced")]: { start: "2022-05-05", end: "2022-05-05", precision: "day", zone: "UTC" } };
-  const w = seeded({ events: { readEvent: ({ eventId, viewer }) => (!Object.hasOwn(whens, eventId) || (eventId === EV("fenced") && viewer !== V("alice"))
-    ? { ok: true, found: false } : { ok: true, found: true, when: whens[eventId] }) } });
+  const w = seeded();
+  const meeting = w.event({ value: "2022-05-05" }), fenced = w.event({ value: "2022-05-05", fencedTo: "alice" });
   const P = w.project("Private", "alice");
   const t = () => w.passage().contentId;
   const st = [t(), t(), t(), t(), t()];
@@ -135,7 +133,7 @@ function ownerWorld() {
   ids.fenced = rel("defines", fencedFrom, node, hidden.contentId, undefined, "alice");
   const withdrawn = rel("excepts", inside, node, st[1]);
   w.s.lawWithdraw({ relation: withdrawn, reason: "recorded twice", author: V("bob") });
-  return { w, node, ids, withdrawn, open, inside };
+  return { w, node, ids, withdrawn, open, inside, meeting, fenced };
 }
 
 test("R28 the module registers once at load as a connection owner of its law-relation kinds and court links (evidentiary) and \"in force at an event's date\" (derived), each with its members' word; for a standard node, neighbours answers its relations and links valid at `at`, an undetermined one marked so, withdrawn ones not at all, a fenced one only to who may read its passage; the owner-conformance battery passes", () => {
@@ -169,33 +167,33 @@ test("R28 the module registers once at load as a connection owner of its law-rel
 });
 
 test("R28 for an event node, neighbours answers the held standards in force at the event's when (R20), each a derived item with its method and connection-grammar's derivedId, an undetermined in-force answer marked so; an event the viewer may not read, or none, answers nothing", () => {
-  const { w } = ownerWorld();
+  const { w, meeting, fenced } = ownerWorld();
   const at = "2022-05-05T18:00:00Z", day = "2022-05-05";
-  const a = w.s.neighbours({ node: EV("meeting"), at, viewer: V("carol") });
+  const a = w.s.neighbours({ node: meeting, at, viewer: V("carol") });
   const reg = createRegistry();
   const own = connectionOwnerOf(w.s);
   assert.equal(reg.registerOwner(own).ok, true);
-  assert.equal(reg.neighbours({ owner: CONNECTION_OWNER, node: EV("meeting"), at, viewer: V("carol") }).items.length, a.items.length,
+  assert.equal(reg.neighbours({ owner: CONNECTION_OWNER, node: meeting, at, viewer: V("carol") }).items.length, a.items.length,
                "the registry judges the answer conforming");
   const ids = new Set(a.items.map((i) => i.to));
   assert.ok(a.items.length >= 5, JSON.stringify(a).slice(0, 600));
   for (const i of a.items) {
     assert.equal(i.kind, "in_force_at_event");
-    assert.deepEqual(i.derived, { method: IN_FORCE_METHOD, inputs: [EV("meeting"), i.to], as_of: day });
-    assert.equal(i.id, derivedId({ kind: i.kind, from: EV("meeting"), to: i.to, as_of: day, method: IN_FORCE_METHOD }));
+    assert.deepEqual(i.derived, { method: IN_FORCE_METHOD, inputs: [meeting, i.to], as_of: day });
+    assert.equal(i.id, derivedId({ kind: i.kind, from: meeting, to: i.to, as_of: day, method: IN_FORCE_METHOD }));
     assert.equal(i.in_force.state, w.s.inForceAt({ standard: i.to, date: day }).state);
     assert.ok(i.in_force.state !== "not_in_force");
     assert.equal(reg.checkConnection(i).ok, true, JSON.stringify(reg.checkConnection(i)));
   }
   /* a standard not in force on the event's date is not answered */
   const gone = w.declare({ cite: "PEBL § 90", period: { from: "2010-01-01", to: "2011-01-01" } }).id;
-  assert.ok(!w.s.neighbours({ node: EV("meeting"), at, viewer: V("carol") }).items.some((i) => i.to === gone));
+  assert.ok(!w.s.neighbours({ node: meeting, at, viewer: V("carol") }).items.some((i) => i.to === gone));
   assert.ok(!ids.has(gone));
   /* undetermined in force: returned, marked */
   const open = a.items.find((i) => i.in_force.state === "undetermined");
   assert.ok(open && open.undetermined && open.undetermined.why, "an undetermined in-force answer is marked");
-  assert.deepEqual(w.s.neighbours({ node: EV("fenced"), at, viewer: V("carol") }).items, [], "an event the viewer may not read");
-  assert.ok(w.s.neighbours({ node: EV("fenced"), at, viewer: V("alice") }).items.length > 0);
+  assert.deepEqual(w.s.neighbours({ node: fenced, at, viewer: V("carol") }).items, [], "an event the viewer may not read");
+  assert.ok(w.s.neighbours({ node: fenced, at, viewer: V("alice") }).items.length > 0);
   assert.deepEqual(w.s.neighbours({ node: EV("nothing"), at, viewer: V("carol") }).items, []);
 });
 
