@@ -37,3 +37,18 @@ Measured on `job/T33/content` (tranche/T33 merged at 1cb3158218):
 - `format`: 0 failures. `architecture content`: 22 files, 0 failures. `coverage content`: 54 of 54 live ids named, 0 failures. `ownership content tranche/T33`: 5 files, 0 failures.
 
 Size (session_0163Apu7btH1Rwvt1F7kyCNq): test runs 9, module lines 3683
+
+## J3 · COMPLETE
+
+**B3 applied.** `tranche/T33` merged (63b0c1373d, reading-pipeline R28 in). R46, R52, R53 and R31's sheet arm are now tested over **real readings**: a workbook assembled in `test/m/content/realread.mjs` (a stored zip: shared strings, a stored decimal `0.10`, a formula `B1+B2` with cached `999`, an empty cell, a second sheet, core properties), read by the real xlsx entry through the real `reading-pipeline.read`, and handed to content as extraction's `readingOf` answers it (extraction persists the reading unchanged, its R19/R30). Only the persisting table is stood in. A hand-stated reading remains only for what the pipeline no longer writes: a reading stored before R28 (no `cells`/`metadata`) and a sheet over the guard (`cells: null`). R53 runs on a real xlsx with and without `docProps/core.xml`, a real CSV (`none_held`: the registry counts csv as a parts-walking container, R42, and csv states no metadata, office-readers R31) and a real HTML capture (`not_office`). New: a reader-undetermined cell (a shared-string index the table lacks) has no text (R46). No module source changed in B3; commits 68f5258d9b, plus one dropping the jurisdiction view from the helper.
+
+**One check needs you (modules.json is yours):** `architecture content` fails once: `test/m/content/realread.mjs` imports `reading-pipeline` (`read`), which content's `uses` does not declare. It is the edge B3 asks for (real readings through the real pipeline); reading-pipeline is earlier in layer 4, so P4 holds. Please add `reading-pipeline` to content's `uses` (test-only need), or say if you want the tests to take the reading another way.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/content/`: tests 123, pass 123, fail 0 (`office.test.mjs`: R52 ×3, R46 ×2, R53, R31).
+- The 22 using modules: not re-run in B3, because no provided service changed since J2's run (same failure set as base, all named in B1).
+- `format`: 0 failures. `architecture content`: 1 failure, above. `coverage content`: 54 of 54, 0 failures. `ownership content tranche/T33`: 6 files, 0 failures.
+
+**Final `uses`:** content's, plus `reading-pipeline` for its tests (above).
+
+Size (session_0163Apu7btH1Rwvt1F7kyCNq): test runs 14, module lines 3683
