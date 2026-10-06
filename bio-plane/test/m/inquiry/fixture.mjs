@@ -16,6 +16,7 @@ import { connectionsOf } from "../../../src/connections/index.mjs";
 import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { biasOf } from "../../../src/bias/index.mjs";
 import { inquiryOf, inquiryFindings } from "../../../src/inquiry/index.mjs";
+import { standardsOf } from "../../../src/standards/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -60,7 +61,7 @@ const STRENGTH_COLUMNS = ["inquiry_capture_strength TEXT", "inquiry_capture_stat
  *  module's findings registered with it as `plane` registers them (R53, `inquiryFindings`). `view`: the active
  *  jurisdiction view the dated waits read their time zone from (R55, R57), a function; absent, the record's own. */
 export function world({ caseMembers = new Set(), published = null, group = "test-group", realRetrieval = false,
-                        legacyColumns = false, bias: withBias = false, view = undefined } = {}) {
+                        legacyColumns = false, bias: withBias = false, view = undefined, standards: withStandards = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -103,14 +104,21 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   if (realRetrieval) retrieval.migrate();
   const bias = withBias ? biasOf(host, { record, membership, promotion, entities: null }) : null;
   if (bias) bias.migrate();
+  /* R11: the real standards module on the same host, over the test profile (its R1's cite recognition), with no events */
+  let standards = null;
+  if (withStandards) {
+    record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
+    standards = standardsOf(host, { record, membership, promotion, content, events: () => null, now: () => clock.now });
+  }
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval, provenance: prov,
-                              now: () => clock.now, ...(view !== undefined ? { view } : {}) });
+                              now: () => clock.now, ...(view !== undefined ? { view } : {}),
+                              ...(standards ? { standards } : {}) });
   k.migrate();
   if (bias) bias.registerWorkProducts("finding", inquiryFindings(host, bias));
   const raisedCalls = [];
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, bias, extraction, content, entities, connections, retrieval, k, clock, selections, raisedCalls,
+    st, host, record, membership, promotion, prov, bias, standards, extraction, content, entities, connections, retrieval, k, clock, selections, raisedCalls,
     caseMembers, groupRef,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -172,6 +180,19 @@ export function world({ caseMembers = new Set(), published = null, group = "test
     },
     listen() {
       k.onRaised("reevaluation", (a) => { raisedCalls.push(a); return [{ bundle_id: "DEP", ord: 0, target: a.target }]; });
+    },
+    /** R11: a standard declared by `by` over a document-extent passage of a fresh document, with `fields` over these. */
+    standard(fields = {}, by = "member:bob") {
+      const id = `INFO-2026-${String(9000 + ++n)}-law`;
+      const [cap] = w.doc(id, [`the text of the bylaw ${n}`]);
+      const m = content.mint({ bundleId: id, captureSha: cap, extent: { kind: "document" }, mintedBy: by });
+      if (!m.ok) throw new Error(`fixture mint refused: ${JSON.stringify(m).slice(0, 300)}`);
+      const r = standards.standardDeclare({ cite: "PEBL § 12", kind: "ordinance", issuer: "Port Ellery Selectboard",
+        reason: "The group holds the selectboard to its own bylaw.", text: [m.content_id],
+        period: { from: "2020-01-01", to: "2030-12-31" }, author: by, viewer: by,
+        ...(typeof fields === "function" ? fields(m.content_id) : fields) });
+      if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.id;
     },
     select(handle, members, extra = {}) { selections.set(handle, { members, ...extra }); },
     fm: (id) => parseFm(w.text(id)),
