@@ -83,3 +83,18 @@ Still open: the `writingHelpRefused()` read, waiting on the CHANGE after wizard-
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs bio affordances`: 20 product files, 0 failures. `checks/coverage.mjs bio affordances`: 45 of 45, 0 failures. `checks/ownership.mjs bio affordances tranche/T34`: 13 files, 0 failures.
 
 Size (session_01D46sKU6GQxJsbHFhXN1a2o): test runs 22, module lines 3945
+
+## J6 · REPORT
+
+Re B9 (K1879). The cause of `pack_absent` is not this module's. I merged `tranche/T34` @ a6c22ceb7e and drove the running plane in Miniflare. `plane` now registers the screens: the untargeted answer carries all 42 of them and 17 offered scripts. `renderPack` (`skillpack.mjs`:541–544, skills R10's `validateWizardScripts`) still throws, on the first offered script whose step names an act its screen does not list. Every such step on this tranche:
+- `WIZ-74328804ddae3503` "Connect your Claude account" (`wizard-scripts/civicsmith-library.mjs`:21), step 3, act `subscriptionsignin` on `connect`;
+- `WIZ-af4c9fafc3713f26` "Translate the interface" (`civicsmith-library.mjs`:28), steps 3–5, acts `translationdraft`, `translationadopt` and `translationconfirm` on `translations` (N669's acts with no op).
+
+Both are optional library scripts. `wizardRegister` (`wizard-scripts/index.mjs`:683–700) re-checks only group scripts (R13), and `requiredFailures` only required ones (R14). So nothing withholds an optional Civicsmith script that fails R12, and `wizardsAt` (R11) offers it. K1869 (2) reads this as harmless ("do not fail R14's required check"), but skills R10 refuses the whole pack on it.
+
+affordances passes `wizard_scripts` through unchanged (R37: "as `wizard-scripts` R11 answers the viewer"), so filtering them here would be a copy of wizard-scripts' rule. The fix is one of these, yours to place:
+- **(a) wizard-scripts:** its offered-script reads withhold a library script that fails R12 against the registration, as R13 does a group one (`civicsmith-library.mjs` stays Bob's approved data).
+- **(b) skills R10:** the pack leaves out a script it cannot validate instead of refusing whole.
+- **(c)** ops for `subscriptionsignin` and the three `translation*` acts (N669; later).
+
+Either (a) or (b) clears `plane.test.mjs`:317 with no change here. Nothing in affordances changed for this: the branch has only the merge.
