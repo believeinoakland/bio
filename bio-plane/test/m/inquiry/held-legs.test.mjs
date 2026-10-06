@@ -46,17 +46,68 @@ test("R4 a standard's leg is graded on the capture axis only: a connection axis 
   assert.ok(codes(r).includes("STANDARD_LEG_AXIS"), JSON.stringify(r).slice(0, 400));
 });
 
-test("R11 K1601 a calculation's leg is refused fail-closed: whether it is held, visible and accepted cannot be confirmed here, so it is never passed on trust; nothing is written; a replay is exempt", () => {
-  const w = setup();
-  const r = leg(w, { target: "CALC-2026-0001" }, { refs: [] });
+/* R11 (T34-29; N576, N596, K1601, K1639): a calculation's leg is read through calculations' synchronous status read (its
+   R31), as the promotion's author sees it. A stand-in answers it here, so the test controls what the record holds. */
+const CALC = "CALC-2026-0001", CALC2 = "CALC-2026-ab12cd34ef56ab12";
+const calcs = (table, asked = []) => ({ calcStatusOf: (a) => { asked.push(a); const f = table[a.calcId];
+  return typeof f === "function" ? f(a) : f ?? { held: false, visible: false, accepted: false }; } });
+const calcWorld = (table, asked) => { const w = world({ standards: true, calculations: calcs(table, asked) }); w.member("alice"); return w; };
+const calcLeg = (w, target = CALC, extra = {}) => leg(w, { target }, { refs: [], ...extra });
+
+test("R11 T34-29 a held, visible, accepted calculation is a leg (either id form record-grammar reads), asked of calcStatusOf with the promotion's author as viewer; never in references[]", () => {
+  const asked = [];
+  const w = calcWorld({ [CALC]: { held: true, visible: true, accepted: true }, [CALC2]: { held: true, visible: true, accepted: true } }, asked);
+  const r = w.promote(Q, inquiryMd(Q, { legs: [{ target: CALC }, { target: CALC2 }], refs: [] }), null, { author: V("alice") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  assert.deepEqual(w.k.basisFor(Q).legs.map((l) => l.target_id), [CALC, CALC2]);
+  assert.deepEqual(asked.map((a) => [a.calcId, a.viewer]), [[CALC, V("alice")], [CALC2, V("alice")]]);
+});
+
+test("R11 T34-29 DEC-36 a calculation not held, or held and not visible to the author, is refused as an unknown target is (BASIS_REFUSED, NO_SUCH_CALCULATION), the two answered identically; nothing is written", () => {
+  const w = calcWorld({ [CALC]: { held: false, visible: false, accepted: false } });
+  const absent = calcLeg(w);
+  const w2 = calcWorld({ [CALC]: { held: true, visible: false, accepted: false } });
+  const hidden = calcLeg(w2);
+  assert.deepEqual([absent.reason, codes(absent)], ["BASIS_REFUSED", ["NO_SUCH_CALCULATION"]]);
+  assert.deepEqual(hidden, absent, "a hidden calculation answers exactly as an absent one");
+  assert.equal(absent.findings[0].check, "C-2.8");
+  assert.match(absent.findings[0].detail, /basis\[0\]/);
+  assert.equal(w.record.head(Q), null); assert.equal(w2.record.head(Q), null);
+});
+
+test("R11 T34-29 a held, visible calculation whose acceptance is not recorded is CALCULATION_NOT_ACCEPTED naming the leg; nothing is written", () => {
+  const w = calcWorld({ [CALC]: { held: true, visible: true, accepted: false } });
+  const r = calcLeg(w);
   assert.deepEqual([r.ok, r.reason, codes(r)], [false, "BASIS_REFUSED", ["CALCULATION_NOT_ACCEPTED"]]);
   assert.equal(r.findings[0].check, "C-2.8");
-  assert.match(r.findings[0].detail, /cannot be confirmed here/);
+  assert.match(r.findings[0].detail, /basis\[0\].*acceptance is not recorded/);
   assert.equal(w.record.head(Q), null);
-  /* the grammar judges the shape first: a graded calculation leg is its CALCULATION_LEG_MALFORMED */
-  const graded = leg(w, { target: "CALC-2026-0001", grade: "B", grade_axis: "capture", grade_source: "capture" }, { refs: [] });
+});
+
+test("R11 K1601 fail closed: a status read that throws, answers another shape, or answers nothing refuses the leg as CALCULATION_NOT_ACCEPTED, never passes it", () => {
+  for (const f of [() => { throw new Error("boom"); }, () => null, () => ({ held: "yes", visible: true, accepted: true }),
+                   () => ({ held: true, visible: true }), () => Promise.resolve({ held: true, visible: true, accepted: true })]) {
+    const w = calcWorld({ [CALC]: f });
+    const r = calcLeg(w);
+    assert.deepEqual([r.ok, r.reason, codes(r)], [false, "BASIS_REFUSED", ["CALCULATION_NOT_ACCEPTED"]], String(f));
+    assert.match(r.findings[0].detail, /could not be read/);
+    assert.equal(w.record.head(Q), null);
+  }
+  const w = world({ standards: true, calculations: { other: () => true } }); w.member("alice");
+  assert.deepEqual(codes(calcLeg(w)), ["CALCULATION_NOT_ACCEPTED"], "a module offering no status read");
+});
+
+test("R11 T34-29 with the real calculations module on the host, a calculation the record does not hold is NO_SUCH_CALCULATION", () => {
+  const w = setup();
+  const r = calcLeg(w);
+  assert.deepEqual([r.reason, codes(r)], ["BASIS_REFUSED", ["NO_SUCH_CALCULATION"]]);
+});
+
+test("R11 the grammar judges a calculation leg's shape first (CALCULATION_LEG_MALFORMED); a replay is exempt from the record's check", () => {
+  const w = calcWorld({});
+  const graded = leg(w, { target: CALC, grade: "B", grade_axis: "capture", grade_source: "capture" }, { refs: [] });
   assert.ok(codes(graded).includes("CALCULATION_LEG_MALFORMED"), JSON.stringify(graded).slice(0, 400));
-  assert.equal(w.promote(Q, inquiryMd(Q, { legs: [{ target: "CALC-2026-0001" }], refs: [] }), null, { replay: true }).ok, true);
+  assert.equal(w.promote(Q, inquiryMd(Q, { legs: [{ target: CALC }], refs: [] }), null, { replay: true }).ok, true);
 });
 
 /* An occurrence leg (inquiry-grammar R15) is judged through leg-earning's earned (its R9), over duties' `occurrencesOf`

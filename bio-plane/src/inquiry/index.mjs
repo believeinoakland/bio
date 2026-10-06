@@ -1,7 +1,8 @@
 /* inquiry — the one recursive object of case-making (requirements: `build/requirements/inquiry.md`). A question, which
  * gathers evidence and other inquiries as the legs of its basis, and may reach a conclusion. This module holds the
  * inquiry's lifecycle and its grammar (the public face of `inquiry-grammar`'s rules, `./grammar.mjs`), the basis legs, the
- * ground partition (DEC-32), the exclusions a completeness statement names, supersession and division, and dated waits.
+ * ground partition (DEC-32), the exclusions a completeness statement names, supersession and division, dated waits and
+ * the documents a question waits on that were set aside (R58).
  * What the record can earn for a leg and which questions rest on a target (the earned registry, the resting-on reads,
  * the cycle walk and `inquiry_basis` with its one write) are `leg-earning`'s since T33 (K617, K1505): this module asks
  * it, and re-exports its names and reads for importers not yet re-pointed (plan Rules (9) item 4). It holds no version of a basis, no conclusion and no
@@ -45,6 +46,8 @@ import { entitiesOf } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { legEarningOf, legCapped, PROJECTS_DRAWING_MAX } from "../leg-earning/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
+import { captureOf } from "../capture/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
@@ -80,6 +83,11 @@ const agentOf = (v) => {
 };
 /** R54, R55: the states that end every wait on an inquiry (nothing is awaited on a question no longer worked). */
 export const WAIT_ENDING_STATES = Object.freeze(["concluded", "divided", "dismissed"]);
+/** R58: the most questions one call reads the document waits of (a question's screen asks one, its project's list
+ *  that list's ids), the page of capture R84 read per statement, and the most pages read for one question. */
+export const DOCUMENT_WAITS_MAX = 200;
+const HELD_ACTS_PAGE = 1000;
+const HELD_ACTS_PAGES_MAX = 50;
 /** R56: the longest note a look carries. */
 export const LOOK_NOTE_MAX = 500;
 /** R55: a member's own stamp, as the control plane writes it. */
@@ -205,14 +213,14 @@ export class Inquiry {
   #deps;
 
   constructor({ storage, record, membership, promotion, content, connections = null, entities = null, retrieval = null,
-                provenance = null, standards = null, duties = null, legEarning = null, bias = null, host = null, view = null, now } = {}) {
+                provenance = null, standards = null, duties = null, legEarning = null, calculations = null, capture = null, bias = null, host = null, view = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.content = content;
-    this.#deps = { connections, entities, retrieval, provenance, standards, duties, legEarning, host };
+    this.#deps = { connections, entities, retrieval, provenance, standards, duties, legEarning, calculations, capture, host };
     this.#bias = bias;
     this.#view = typeof view === "function" ? view : null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
@@ -234,6 +242,10 @@ export class Inquiry {
   }
   /* R11: the held standards a leg may rest on (reached on first use; the host has built it at start). */
   get standards() { return this.#deps.standards ||= (this.#deps.host ? standardsOf(this.#deps.host) : null); }
+  /* R11 (T34-29): whether a `CALC-` is held, visible and accepted (calculations R31), reached on first use. */
+  get calculations() { return this.#deps.calculations ||= (this.#deps.host ? calculationsOf(this.#deps.host) : null); }
+  /* R58 (T34-29): the set-asides and restores recorded with a question (capture R84), reached on first use. */
+  get capture() { return this.#deps.capture ||= (this.#deps.host ? captureOf(this.#deps.host) : null); }
   /** R53: the bias instance a finding's lens is read from, bound once (the first binding holds); null until bound. */
   bindBias(bias) { if (!this.#bias && bias && typeof bias.biasManifest === "function") this.#bias = bias; return this.#bias; }
 
@@ -478,9 +490,10 @@ export class Inquiry {
   /* R11 (T33-45): the new leg kinds' record checks, after the grammar (`inquiry-grammar` R13–R15) judged their shape.
      An occurrence whose duty `duties` does not hold, or does not derive, is NO_SUCH_OCCURRENCE (leg-earning R9).
      A `STD-` target the record does not hold, or the promotion's author may not see, is refused as an unknown target
-     is; a `target_portion` the standard does not hold is PORTION_UNKNOWN. A `CALC-` target is refused fail-closed:
-     whether a calculation is held, visible and accepted cannot be read synchronously here (`calculations` offers no
-     such read in T33, N576; K1601), so the leg is never passed on trust. */
+     is; a `target_portion` the standard does not hold is PORTION_UNKNOWN. A `CALC-` target is read through
+     `calculations.calcStatusOf` (its R31; T34-29): not held or not visible, NO_SUCH_CALCULATION, the two answered alike
+     (DEC-36); held and visible but not accepted, CALCULATION_NOT_ACCEPTED; a read that throws, answers another shape or
+     cannot be reached refuses the leg as CALCULATION_NOT_ACCEPTED, never passes it (fail closed, K1601). */
   #heldLegFindings(legs, viewer) {
     const out = [];
     /* an occurrence leg: whether `duties` holds its duty and derives it, read through leg-earning's earned (its R9), once
@@ -509,12 +522,36 @@ export class Inquiry {
           out.push({ check: "C-2.8", code: "NO_SUCH_OCCURRENCE", target: t,
                      detail: `basis[${i}] rests on ${t}, which the record does not hold: ${e && e.why ? e.why
                        : "no duty the record holds derives it"}` });
-      } else if (/^CALC-/.test(t))
-        out.push({ check: "C-2.8", code: "CALCULATION_NOT_ACCEPTED", target: t,
-                   detail: `basis[${i}] rests on the calculation ${t}, and whether it is held, visible to you and `
-                         + `accepted cannot be confirmed here, so the leg is refused rather than passed on trust` });
+      } else if (CALCULATION_REF_RE.test(t) || /^CALC-/.test(t)) {
+        /* R11 (T34-29; N576, N596, K1601, K1639): calculations' synchronous status read (its R31), as the author sees it */
+        const s = this.#calcStatus(t, viewer);
+        if (s === null)
+          out.push({ check: "C-2.8", code: "CALCULATION_NOT_ACCEPTED", target: t,
+                     detail: `basis[${i}] rests on the calculation ${t}, and whether it is held, visible to you and `
+                           + `accepted could not be read, so the leg is refused rather than passed on trust` });
+        else if (!s.held || !s.visible)
+          /* DEC-36: a calculation the author may not see is answered exactly as one the record does not hold */
+          out.push({ check: "C-2.8", code: "NO_SUCH_CALCULATION", target: t,
+                     detail: `basis[${i}] rests on ${t}, which this record does not hold as a calculation you may read` });
+        else if (!s.accepted)
+          out.push({ check: "C-2.8", code: "CALCULATION_NOT_ACCEPTED", target: t,
+                     detail: `basis[${i}] rests on the calculation ${t}, whose acceptance is not recorded: a `
+                           + `calculation is a leg once a member has accepted it` });
+      }
     });
     return out;
+  }
+
+  /* R11 (calculations R31): `{held, visible, accepted}`, each a boolean, or null when the read cannot be had (no
+     calculations module, a throw, or any other shape): the caller fails closed on null. */
+  #calcStatus(calcId, viewer) {
+    try {
+      const calc = this.calculations;
+      if (!calc || typeof calc.calcStatusOf !== "function") return null;
+      const s = calc.calcStatusOf({ calcId, viewer });
+      if (!s || typeof s !== "object" || ["held", "visible", "accepted"].some((k) => typeof s[k] !== "boolean")) return null;
+      return { held: s.held, visible: s.visible, accepted: s.accepted };
+    } catch { return null; }
   }
 
   /* R50 (REC-179 / C-66.5, INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
@@ -960,7 +997,7 @@ export class Inquiry {
                      ...(state === "looked" ? { looked_at: w.looked_at, ...(w.look_note ? { note: w.look_note } : {}) } : {}),
                      ...(state === "ended" ? { inquiry_state: w.current_state } : {}),
                      ...(state === "undetermined"
-                       ? { why: "no time zone is held for this instance's profile, so the local day the wait falls due on "
+                       ? { why: "no time zone is held for your group's Civicsmith, so the local day the wait falls due on "
                               + "cannot be read (it is never read as the UTC day)" } : {}) });
       }
       return { ok: true, member: m, as_of: at, zone, waits };
@@ -1030,6 +1067,71 @@ export class Inquiry {
       }
       return { marked };
     } catch { return { marked: [] }; }
+  }
+
+  /* ---------------------------------------------------------------- R58: a document a question waits on, set aside */
+
+  /** R58 (T34-29; N587; DEC-141 (3), (4), K1618, K1645): for each id of `questions` (at most `DOCUMENT_WAITS_MAX`, read
+   *  once each, in the order given) naming an inquiry `viewer` may see, the wait "a document it waits on was set aside",
+   *  read through `capture.heldActsOf` (its R84): `waits`, one `{document, by, reason, at}` per document whose latest
+   *  act recorded with the question is a set-aside and is set aside now, that set-aside's, oldest first; and `history`,
+   *  every set-aside and restore recorded with the question, in order. A question at an ending state (R55's) answers its
+   *  history and no wait. An id naming no inquiry, or one the viewer may not see, is left out exactly as an absent one;
+   *  no viewer answers nothing (R33). A read of capture's that fails answers the question `undetermined`, with why, never
+   *  as no wait. It is never a queue item, a notification, a scheduler's or a notice-producer's (DEC-94, K1618). Writes
+   *  nothing; never throws. */
+  documentWaits(args = {}) {
+    try {
+      const { questions = null, viewer = null } = args && typeof args === "object" ? args : {};
+      if (typeof viewer !== "string" || !viewer.trim()) return { ok: true, questions: [] };
+      const ids = [...new Set((Array.isArray(questions) ? questions : []).filter((q) => typeof q === "string" && q))];
+      if (ids.length > DOCUMENT_WAITS_MAX)
+        return { ok: false, reason: "TOO_MANY_QUESTIONS", bound: DOCUMENT_WAITS_MAX, asked: ids.length,
+                 detail: `a call reads the waits of at most ${DOCUMENT_WAITS_MAX} questions; ask the list in parts. `
+                       + "Nothing was read." };
+      const out = [];
+      for (const id of ids) {
+        const b = this.#one(`SELECT bundle_id, object_type, current_state FROM bundles WHERE bundle_id=?`, id);
+        if (!b || normalizeType(b.object_type) !== "inquiry" || this.membership.inSight(id, viewer) !== true) continue;
+        out.push(this.#documentWait(id, b.current_state, viewer));
+      }
+      return { ok: true, questions: out };
+    } catch { return { ok: true, questions: [] }; }
+  }
+
+  /* R58: one question's wait and history, read whole from capture page by page (its R84's bound). */
+  #documentWait(id, inquiryState, viewer) {
+    const undetermined = (why) => ({ question: id, inquiry_state: inquiryState, state: "undetermined", waits: null,
+                                     history: null, why });
+    let capture = null;
+    try { capture = this.capture; } catch { capture = null; }
+    if (!capture || typeof capture.heldActsOf !== "function")
+      return undetermined("the documents set aside for this question could not be read: no capture module answers here");
+    const acts = [], setAside = new Map();
+    for (let after = null, pages = 0; ; pages++) {
+      let r;
+      try { r = capture.heldActsOf({ question: id, viewer, limit: HELD_ACTS_PAGE, after }); } catch { r = null; }
+      if (!r || r.ok !== true || !Array.isArray(r.acts))
+        return undetermined(`the documents set aside for this question could not be read${r && typeof r.reason === "string"
+          ? ` (${r.reason})` : ""}, so whether it waits on one is not known`);
+      acts.push(...r.acts.filter((a) => a && typeof a === "object"));
+      for (const d of (Array.isArray(r.documents) ? r.documents : []))
+        if (d && typeof d.document === "string") setAside.set(d.document, d.set_aside === true);
+      if (!r.truncated || typeof r.next !== "string" || !r.next) break;
+      if (pages >= HELD_ACTS_PAGES_MAX)
+        return undetermined("this question's history of set-asides is longer than can be read at once, so whether it waits on a document is not known");
+      after = r.next;
+    }
+    const history = acts.map((a) => ({ document: a.document, act: a.act, reason: a.reason ?? null, by: a.author ?? null,
+                                       at: a.at ?? null }));
+    const latest = new Map();
+    for (const h of history) latest.set(h.document, h);
+    if (WAIT_ENDING_STATES.includes(inquiryState))
+      return { question: id, inquiry_state: inquiryState, state: "ended", waits: [], history };
+    const waits = [...latest.values()].filter((h) => h.act === "set_aside" && setAside.get(h.document) === true)
+      .map((h) => ({ document: h.document, by: h.by, reason: h.reason, at: h.at }))
+      .sort((x, y) => (String(x.at) < String(y.at) ? -1 : String(x.at) > String(y.at) ? 1 : 0));
+    return { question: id, inquiry_state: inquiryState, state: waits.length ? "waiting" : "none", waits, history };
   }
 
   /** R52 (1) (K861, plane R10): this module's share of the instance's figures, exported for `plane` to register under
