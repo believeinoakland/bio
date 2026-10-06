@@ -2,7 +2,7 @@
    promotion, provenance), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage, answering
    as workerd's does (a cursor, and its LIKE/GLOB cap; K313, K316). What actions registers with retrieval, the
    capture content presents for a document (R11), connections' `refs` projection
-   (R25's `responses`) are stand-ins the test controls; conformance is the real module (it brings reevaluation and
+   (R25's `responses`) and ratification's hold-reader registration (R69) are stand-ins the test controls; conformance is the real module (it brings reevaluation and
    inquiry, whose columns on `bundles` are added here), or a stand-in in its R9 shape where a test passes one (R8). Every test drives
    `actions` at its interface. */
 import { createHash } from "node:crypto";
@@ -102,13 +102,15 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
   prov.migrate();
   const captures = new Map();
-  const reg = { facts: [], decorations: [] };
+  const reg = { facts: [], decorations: [], holdReaders: [] };
+  /* ratification R45's registration (R69), recorded as the test reads it; t34's R69 test boots the real one */
+  const ratification = { registerHoldReader: (r) => (reg.holdReaders.push(r), { ok: true }) };
   const retrievalStub = retrieval ? {
     registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
     registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return { ok: true }; },
   } : null;
   const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
-                              content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms, ...deps });
+                              content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms, ratification, ...deps });
   /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the
      store's boot migrates them. */
   if (!conformance) {

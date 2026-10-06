@@ -11,8 +11,10 @@
  * REACHED as `actionsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
  * R7, R11, R33), action-grammar's audit arm with record-core (R51), its facts and projection decoration with retrieval (R12,
- * R25; retrieval R53, R56), and its litigation-hold reader with capture (R55; capture R32). The holds also answer
- * whether a purge would reach held material (R60), which the control plane asks before every purge (its R46).
+ * R25; retrieval R53, R56), its litigation-hold reader with capture (R55; capture R32), and its reader of the holds over
+ * a project with ratification (R69; ratification R45). The holds also answer whether a purge would reach held material
+ * (R60), which the control plane asks before every purge (its R46). `place()` and `zoneOf` give R12's zone to other
+ * modules (R68: retrieval, queue-producers).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
  *                                   `declarePurge`, `registerAuditCheck`, `getSetting`, `bundleInfo`; `viewerPredicate`,
@@ -24,6 +26,7 @@
  *                  `determinationSuperseded` (its R20), through which R8 answers a superseded determination (N312).
  *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
  *   capture        `registerReader` (its R32): the litigation-hold reader (R55); `null` registers none.
+ *   ratification   `registerHoldReader` (its R45): the reader of holds over a project (R69); `null` registers none.
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
  *
@@ -38,6 +41,7 @@ import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { ratificationOf } from "../ratification/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
@@ -146,7 +150,7 @@ export function noSuchAction(actionId, extra = null) {
    write answers it through here, and so does every later module asking it (`action-plans` R18), so
    `CONTACT_NOT_A_MEMBER` is minted at one site with its one row (C-117.11). The detail is this write's own fixed
    sentence; `extra` adds a caller's fields beside these and never replaces one. Writes nothing and never throws. */
-const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of this instance by member id, and this one names none. "
+const CONTACT_NOT_A_MEMBER_DETAIL = "contact names a member of your group by member id, and this one names none. "
   + "Nothing was written.";
 const CONTACT_NOT_A_MEMBER_FIXED = new Set(["ok", "reason", "code", "check", "translation", "detail"]);
 export function contactNotAMember(extra = null) {
@@ -185,13 +189,16 @@ export function instantOf(nowMs) {
   const n = Number(nowMs);
   return new Date(Math.floor((Number.isFinite(n) ? n : 0) / 1000) * 1000).toISOString().replace(".000Z", "Z");
 }
-/** R12 (K1444 (iii)): the zone a view gives the action's office: the view's `time_zone`, or null when none is held
- *  (or the active profiles disagree, so it is withheld). A string is read as the zone itself. */
+/** R12, R68 (N611, K1681): the IANA zone a place states: a view's (`place()`'s) `time_zone` value, or null when it
+ *  states none (none held, or the active profiles disagree, so it is withheld). A string is read as the zone itself.
+ *  The one spelling of R12's zone read, provided to `retrieval` and `queue-producers`. Writes nothing; never throws. */
 export function zoneOf(place) {
-  if (typeof place === "string") return place.trim() || null;
-  const tz = place && typeof place === "object" ? place.time_zone : null;
-  const v = tz && typeof tz === "object" ? tz.value : tz;
-  return typeof v === "string" && v.trim() ? v.trim() : null;
+  try {
+    if (typeof place === "string") return place.trim() || null;
+    const tz = place && typeof place === "object" ? place.time_zone : null;
+    const v = tz && typeof tz === "object" ? tz.value : tz;
+    return typeof v === "string" && v.trim() ? v.trim() : null;
+  } catch { return null; }
 }
 /** R12, R25 (K1444 (iii)): the local day of `nowMs` in `zone`, or null with no zone or an unreadable one. */
 export function localToday(nowMs, zone) {
@@ -346,8 +353,9 @@ export class Actions {
     const c = combine(ids);
     return c && c.ok ? c.view : null;
   }
-  /** R12 (K1444 (iii)): the active profiles' combined view, the place a clock is read in (its `time_zone`, its
-   *  offices' hours), or null. Never throws. */
+  /** R12, R68 (K1444 (iii); N611, K1681): the active profiles' combined view as they stand at the call (K1649), the
+   *  place a clock is read in (its `time_zone`, its offices' hours), or null when none can be read. Provided to
+   *  `retrieval` and `queue-producers` with `zoneOf`, so none spells its own. Writes nothing; never throws. */
   place() {
     try { return this.#view(); } catch { return null; }
   }
@@ -575,8 +583,8 @@ export class Actions {
     if (kindMoved) {
       const kinds = this.kinds();
       if (!kinds.includes(nextFm.action_kind))
-        return refuse("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind this `
-          + `instance offers: one of ${kinds.join(", ")}. Nothing was written.`, { legal: kinds });
+        return refuse("ACTION_KIND_UNKNOWN", `action_kind '${String(nextFm.action_kind).slice(0, 40)}' is not a kind your `
+          + `group's Civicsmith offers: one of ${kinds.join(", ")}. Nothing was written.`, { legal: kinds });
     }
     /* END DEC-49 REGION is-promote-action-kind */
     /* DEC-49 REGION is-promote-tier-vocabulary */
@@ -910,7 +918,7 @@ export class Actions {
       ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. "
         + "None of its legs names one. Nothing was written."
       : "an action recorded for a breach rests on a conformance determination, and no determination can be read on "
-        + "this instance yet, so none could be found. Nothing was written.",
+        + "your group's Civicsmith yet, so none could be found. Nothing was written.",
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" });
     /* END DEC-49 REGION is-breach-determination */
   }
@@ -1728,6 +1736,19 @@ export class Actions {
       const e = earliest.get(p);
       return e ? { project: p, held: true, since: e.at, recorded_by: e.stated_by } : { project: p, held: false };
     }) };
+  }
+
+  /** R69 (K1830; ratification R45): R58's answer for one project, read as the plane (whatever the viewer): `{held:
+   *  true, since, recorded_by}` (the earliest `in_place` statement, among holds still in place, recording it) or
+   *  `{held: false}` after reading every hold; `null` when the read cannot complete (no project named, or the holds
+   *  unreadable). Names no action, entry or reason. Writes nothing; never throws. */
+  holdsOn(args = {}) {
+    try {
+      const p = args && typeof args.project === "string" ? args.project.trim() : "";
+      if (!p) return null;
+      const e = this.#standing().find((r) => r.project === p);
+      return e ? { held: true, since: e.at, recorded_by: e.stated_by } : { held: false };
+    } catch { return null; }
   }
 
   /** R59 (DEC-113; for `queue-producers` R29): every `released` statement that ended a hold in place, on an action the
@@ -3006,6 +3027,16 @@ export function actionsOf(host, deps) {
       if (r && r.ok === false && r.module !== "actions")
         throw new Error(`actions: capture refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
     }
+    /* R69 (K1830; ratification R45): once per host, the reader of holds over a project that publishing at a set time
+       records and checks again. Ratification is reached on the host when the composition root starts this module with
+       its environment (the plane, which builds ratification next), or given; a host on which it cannot be created
+       registers nothing there, and a reader already held (`HOLD_READER_DECLARED`) stands. */
+    let ratification = null;
+    if (d.ratification !== null && (d.ratification || d.env)) {
+      try { ratification = d.ratification || ratificationOf(host); } catch { ratification = null; }
+    }
+    if (ratification && typeof ratification.registerHoldReader === "function")
+      ratification.registerHoldReader({ holdsOn: (args) => a.holdsOn(args) });
   }
   return a;
 }
