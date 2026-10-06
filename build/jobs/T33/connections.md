@@ -53,3 +53,7 @@ Tests and checks:
 Final uses: record-grammar, subresources, text-chain, record-core, membership, promotion, provenance, capture, extraction, content, entities, connection-grammar.
 
 Size (session_01MhqJwCndhjhNCVnEjDphvL): test runs 12, module lines 2905
+
+## J4 · COMPLETE
+
+B2 applied: tranche/T33 @ e07becea merged in. BOB accepted all four J1 readings, so the code is unchanged. After the merge: node --test test/m/connections/ tests 117, pass 117, fail 0. format 0 failures; architecture 0 failures (22 files, 80 imports; the connection-grammar edge is now in uses); coverage 67 of 67, 0 failures; ownership 6 files, 0 failures. The plane bundle stays stale until the layer close (J2 (2)). Size (session_01MhqJwCndhjhNCVnEjDphvL): test runs 13, module lines 2905
