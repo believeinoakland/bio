@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R32; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R37; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -12,7 +12,7 @@
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
-import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../record-grammar/index.mjs";
+import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE } from "../record-grammar/index.mjs";
 import { civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS,
          SWEEP_SCOPE_CHECKS } from "./checks.mjs";
 import { captureSubresources, normalizeAddress, normalizeCitation } from "../subresources.mjs";
@@ -34,6 +34,8 @@ import { attest } from "../attestation/index.mjs";
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
 export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, firstHopWho, CAPTURE_REQUEST_ARM_CHECKS,
          DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
+/* R36, R37 (T33-21, K1449): the keyed-service fetch path and its first client. */
+export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL } from "./keyed.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -237,6 +239,29 @@ const ARCHIVE = WAYBACK_MEMENTO;
 const MEMENTO_TRIES = 4;
 const MEMENTO_HOPS = 5;
 
+/** R35: the instant a caller asks the archive about. Absent, the lookup asks for now, as before (`{ok, at: null}`); an
+ *  instant (record-grammar's `ISO_TS_RE`, to the second, a real moment) is `{ok, at, ms, timestamp}`; anything else is
+ *  `MEMENTO_BAD_ASKED_DATE`, refused before anything is fetched. */
+function askedInstant(at) {
+  if (at === undefined || at === null) return { ok: true, at: null, ms: null };
+  const ms = typeof at === "string" && ISO_TS_RE.test(at) ? Date.parse(at) : NaN;
+  if (!Number.isFinite(ms) || new Date(ms).toISOString().replace(/\.\d+Z$/, "Z") !== at)
+    return { ok: false, status: 400, payload: { ok: false, reason: "MEMENTO_BAD_ASKED_DATE", at: typeof at === "string" ? at.slice(0, 40) : null,
+      detail: "`at` names the moment asked about as an instant to the second, YYYY-MM-DDTHH:MM:SSZ; nothing was fetched" } };
+  return { ok: true, at, ms, timestamp: at.replace(/[-:TZ]/g, "") };
+}
+
+/** R35: what a lookup for a past instant states beside the memento it chose, so a memento from another moment is never
+ *  presented as the page at `at`: the instant asked for, the memento's own datetime, and how far apart they are. */
+function askedReading(asked, chosen) {
+  if (!asked || !asked.at) return null;
+  const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked.ms) / 1000);
+  return { asked_at: asked.at, memento_datetime: chosen.archived_at, apart_seconds: apart,
+           asked_note: apart === 0 ? `the memento is of ${chosen.archived_at}, the instant asked about`
+             : `the memento is of ${chosen.archived_at}, ${apart} seconds ${Date.parse(chosen.archived_at) < asked.ms ? "before" : "after"} `
+               + `the instant asked about (${asked.at}); it is not the page at ${asked.at}` };
+}
+
 /* A body not read is released, never awaited: a cancellation the source does not acknowledge must not hold the act. */
 const cancelBody = (res) => { try { res?.body?.cancel?.()?.catch?.(() => {}); } catch { /* the source may already be gone */ } };
 const hostOf = (u) => { try { return new URL(u).host; } catch { return String(u); } };
@@ -288,10 +313,11 @@ function replayed(res, ahead, reader) {
   return { status: res.status, ok: res.ok, url: res.url, headers: res.headers, body: { getReader: () => ({ read, cancel }), cancel } };
 }
 
-/** R3, R32: find a memento of `address` the way RFC 7089 offers one, every request through the host governor. The
- *  TimeGate is asked first, with `Accept-Datetime` now (the fallback fires because the document cannot be reached NOW,
- *  so the newest memento is the answer to the question asked); when it gives no usable memento, the TimeMap is read
- *  and its candidates are fetched newest first. Each memento is fetched in its raw form (the descriptor's `raw`, else
+/** R3, R32, R35: find a memento of `address` the way RFC 7089 offers one, every request through the host governor. The
+ *  TimeGate is asked first, with `Accept-Datetime` at the instant asked about, `asked.ms` (R35), else now (the fallback
+ *  fires because the document cannot be reached NOW, so the newest memento is the answer to the question asked); when
+ *  it gives no usable memento, the TimeMap is read and its candidates are fetched nearest the instant asked about
+ *  first, else newest first. Each memento is fetched in its raw form (the descriptor's `raw`, else
  *  as given), redirects being answers, never followed silently. A memento that is not a 200 is hashed and kept as a
  *  row `selectCapture` refuses by its own words. A 200 is handed to the caller's `take({res, answer, locator})`,
  *  which reads as much of its body as the choice needs: `{row}` when `selectCapture` refuses the memento over the
@@ -299,7 +325,7 @@ function replayed(res, ahead, reader) {
  *  to end the lookup with that answer; anything else is the memento taken, answered with its answer and the rows
  *  refused before it, so the caller hashes (and, capturing, stores) the very bytes the choice is made over
  *  (`chooseMemento`). Every refusal is an answer `{ok: false, status, payload}`. */
-async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", take } = {}) {
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", asked = null, take } = {}) {
   const ends = mementoEndpoints(ARCHIVE, address);
   if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
   const considered = [], rows = [], tried = new Set();
@@ -352,7 +378,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
     }
   };
   /* The TimeGate. */
-  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(Date.now()) });
+  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked && asked.at ? asked.ms : Date.now()) });
   if (tg.fail) return tg.fail;
   if (tg.res.status === 429 || tg.res.status >= 500) { cancelBody(tg.res); return archiveRefused(tg.res, "TimeGate"); }
   const ga = readMementoAnswer({ url: ends.timegate, status: tg.res.status, headers: tg.res.headers });
@@ -372,7 +398,13 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
   if (!map.ok) return { ok: false, status: 502, payload: { ok: false, reason: map.reason, detail: map.detail, considered, address } };
   const cands = timeMapCandidates(map);
   considered.push(...cands.considered);
-  for (const cand of cands.ok ? cands.candidates.slice(0, MEMENTO_TRIES) : []) {
+  /* R35: nearest the instant asked about first, the earlier of two equally near first; each still chosen by
+     selectCapture over the bytes received. With no instant, the TimeMap's own order, newest first. */
+  const near = (m) => Math.abs(Date.parse(m.archived_at) - asked.ms);
+  const ordered = !cands.ok ? [] : asked && asked.at
+    ? [...cands.candidates].sort((a, b) => near(a) - near(b) || (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0))
+    : cands.candidates;
+  for (const cand of ordered.slice(0, MEMENTO_TRIES)) {
     const m = await tryMemento(cand.uri);
     if (!m.next) return m.fail || m;
   }
@@ -390,22 +422,27 @@ function nothingUsable(sel, considered, address) {
 /** R32: the choice over the bytes received. The memento's row is `mementoRow` over this call's digest of them, the
  *  choice `selectCapture`'s (R29–R31 as written, an empty body refused by its own reason), the hop `mementoHop`'s,
  *  every fact from what the archive answered and the bytes received, never from a caller (D-112). */
-function chooseMemento(m, sha, bytes, address) {
+function chooseMemento(m, sha, bytes, address, asked = null) {
   const sel = selectCapture([mementoRow(m.answer, { sha256: sha, bytes }), ...m.rows]);
   if (!sel.ok) return nothingUsable(sel, m.considered, address);
-  return { ok: true, chosen: sel.chosen, rejected: [...sel.rejected, ...m.considered], usable_count: sel.usable_count,
-           hop: mementoHop(sel.chosen, m.locator, { archive: ARCHIVE, answer: m.answer }) };
+  /* R35: the hop states the instant asked about beside the memento's own datetime */
+  const reading = askedReading(asked, sel.chosen);
+  return { ok: true, chosen: sel.chosen, rejected: [...sel.rejected, ...m.considered], usable_count: sel.usable_count, reading,
+           hop: { ...mementoHop(sel.chosen, m.locator, { archive: ARCHIVE, answer: m.answer }), ...(reading || {}) } };
 }
 
-/** R3, R32: `archiveLookup({address})` decides and reports what the archive arm would do, without capturing: the
- *  chosen memento's bytes are fetched and hashed, and kept nowhere. */
-export async function archiveLookup(cap, { address } = {}) {
+/** R3, R32, R35: `archiveLookup({address, at})` decides and reports what the archive arm would do, without capturing:
+ *  the chosen memento's bytes are fetched and hashed, and kept nowhere. With `at`, the memento is sought for that
+ *  instant and the answer states it beside the memento's own datetime. */
+export async function archiveLookup(cap, { address, at } = {}) {
   if (typeof address !== "string" || !isPublicHttpsLocator(address))
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
+  const asked = askedInstant(at);
+  if (!asked.ok) return { status: asked.status, body: asked.payload };
   const el = await archiveEligibility(cap, address);
   if (!el.ok) return { status: el.status, body: el.payload };
   /* Each 200 memento is hashed whole; one selectCapture refuses over its bytes (N510: an empty one) is passed over. */
-  const m = await mementoLookup(cap, address, { take: async ({ res, answer, locator }) => {
+  const m = await mementoLookup(cap, address, { asked, take: async ({ res, answer, locator }) => {
     const h = await hashBody(res);
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
@@ -415,13 +452,13 @@ export async function archiveLookup(cap, { address } = {}) {
     return selectCapture([row]).ok ? { sha: h.sha, bytes: h.bytes } : { row };
   } });
   if (!m.ok) return { status: m.status, body: m.payload };
-  const c = chooseMemento(m, m.sha, m.bytes, address);
+  const c = chooseMemento(m, m.sha, m.bytes, address, asked);
   if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
-    ok: true, address, eligible_because: el.reach.basis, chosen: c.chosen,
+    ok: true, address, eligible_because: el.reach.basis, chosen: c.chosen, ...(c.reading || {}),
     /* Every memento considered and why it was not used: "nothing suitable" alone is unauditable. */
     rejected: c.rejected, usable_count: c.usable_count, retrieval_locator: m.locator, provenance_hop: c.hop,
-    capture_with: { op: "acquire", via: "archive.org", address },
+    capture_with: { op: "acquire", via: "archive.org", address, ...(asked.at ? { at: asked.at } : {}) },
     note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, "
         + "because the hop that reaches the record must be built by the same call that fetched the memento" } };
 }
@@ -520,7 +557,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R3, R32, D-112: the archive arm names the DOCUMENT and lets the plane find the memento, inside the same call that
      files the bytes, so the eligibility fence cannot be walked around and the hop is built from what the archive
      answered this call. A monitoring path: admin, probe and daemon only. */
-  let archiveHopRecorded = null, archiveAddress = null, archiveAsked = null;
+  let archiveHopRecorded = null, archiveAddress = null, archiveAsked = null, archiveAt = null;
   if (body.via === "archive.org") {
     if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
       return answer(403, { ok: false, reason: "NOT_PERMITTED", op, via: "archive.org",
@@ -530,6 +567,9 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
       return answer(400, { ok: false, reason: "BAD_ADDRESS",
         detail: "an archive-sourced capture names the document address, not a replay locator" });
+    /* R35: the instant asked about, refused before anything is fetched when it is not one */
+    archiveAt = askedInstant(body.at);
+    if (!archiveAt.ok) return answer(archiveAt.status, archiveAt.payload);
     const el = await archiveEligibility(cap, addr);
     if (!el.ok) return answer(el.status, el.payload);
     archiveAsked = addr;
@@ -691,7 +731,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   if (archiveAsked) {
     /* N510: the body's first bytes are read ahead, unconsumed; a memento with none is refused by selectCapture's own
        words over its row and the lookup goes on to the next candidate, so nothing of it reaches the store. */
-    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", take: async ({ res, answer }) => {
+    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res, answer }) => {
       const p = await peekBody(res);
       if (p.failed) return { fail: archiveBroke(p.failed) };
       /* its row's digest is the empty-body digest, which selectCapture refuses by R29's own reason */
@@ -902,7 +942,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let sha = whole.hex();
   /* R32: the memento is chosen over the bytes just received (an empty one was passed over before any byte was stored, N510). */
   if (archiveMemento) {
-    const c = chooseMemento(archiveMemento, sha, total, archiveAsked);
+    const c = chooseMemento(archiveMemento, sha, total, archiveAsked, archiveAt);
     if (!c.ok) return answer(c.status, c.payload);
     archiveHopRecorded = c.hop;
     await noteOutcome("success", res.status);
