@@ -7,7 +7,8 @@
    `reading-pipeline` (N513, T25). The tables are this module's own (`schema.mjs`), declared to record-core's purge here (R49). T19 layer 4:
    the testimony path's index as a projection in `provenance`'s slot (R65), the figures through record-core's
    `registerCounts` and `textIndexOk` (R67), and N26's migration of stored `.docx` readings (R66). T20 layer 4: N439's
-   migration of stored `.pptx` readings (R68), run by the same machine as N26's. */
+   migration of stored `.pptx` readings (R68), run by the same machine as N26's. T33 layer 4: every reading's commit
+   calls `reading-pipeline.afterRead` once (R69, T33-23a). */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { calibrationOf } from "../calibration/index.mjs";
@@ -27,6 +28,7 @@ import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
+import * as pipeline from "../reading-pipeline/index.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
          readingFromWire, decodeView, textCountsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
          compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../reading-pipeline/index.mjs";
@@ -355,13 +357,14 @@ export function extractionOf(ctx, opts = {}) {
 
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
-  #testified = false; #counted = false; #host = null; #migrationRun = null;
+  #testified = false; #counted = false; #host = null; #migrationRun = null; #afterRead = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
-                         env = {} } = {}) {
+                         env = {}, afterRead = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.#host = host;
+    this.#afterRead = typeof afterRead === "function" ? afterRead : null;
     this.core = record;
     this.membership = membership;
     this.calibration = calibration;
@@ -694,8 +697,38 @@ export class Extraction {
       const listeners = {};
       for (const l of this.#listeners)
         listeners[l.module] = l.fn({ bundleId, captureSha: sha, reading, chainBefore, chainAfter, unitsBefore, indexed, author });
-      return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed" };
+      const afterRead = this.#holdAfterRead(sha, reading);
+      return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed", afterRead };
     });
+  }
+
+  /** R69 (T33-23a, K1521; reading-pipeline R26, record-core R66): held with `afterCommit`, so it runs once, just after
+   *  the outermost transaction holding this write has committed (the promotion's, for R20), and never when it rolls
+   *  back. `reading-pipeline.afterRead` (or the one handed in) is called with the capture class, the reading's
+   *  content-type key (null when it names none, so no hook runs), and the reading as written; the hooks run in
+   *  `MODULE_ORDER` there. Answers a promise of `{ran, failed}`, the refusals reported with the reading: a hook's
+   *  failure, or `afterRead`'s own, never undoes the committed reading. The run is handed to the object's
+   *  `waitUntil`, so a hook finishes. Null when no `afterRead` is reachable. */
+  #holdAfterRead(captureSha, reading) {
+    const fn = this.#afterRead || (typeof pipeline.afterRead === "function" ? pipeline.afterRead : null);
+    if (!fn || !this.core || typeof this.core.afterCommit !== "function") return null;
+    const captureClass = typeof reading.content_type === "string" && reading.content_type ? reading.content_type : null;
+    const written = JSON.parse(JSON.stringify(reading));
+    let settle;
+    const answer = new Promise((r) => { settle = r; });
+    this.core.afterCommit(() => {
+      const run = (async () => {
+        try {
+          const a = await fn({ captureSha, captureClass, reading: written, committed: true });
+          return { ran: Array.isArray(a && a.ran) ? a.ran : [], failed: Array.isArray(a && a.failed) ? a.failed : [] };
+        } catch (e) {
+          return { ran: [], failed: [{ module: "reading-pipeline", error: String(e && e.message ? e.message : e) }] };
+        }
+      })();
+      if (this.#host && typeof this.#host.waitUntil === "function") this.#host.waitUntil(run);
+      settle(run);
+    });
+    return answer;
   }
 
   /* D-536 (R23): every distinct reading kept in arrival order, keyed by the digest of its JSON, before the row is
@@ -1376,10 +1409,12 @@ export class Extraction {
             : null;
           if (out) {
             this.recordComposed(reading, sha);
+            /* R69: the after-read hooks' outcome, reported with the reading. */
+            const afterRead = out.afterRead ? await out.afterRead : null;
             const ls = Object.values(out.listeners || {});
             const staled = ls.reduce((n, l) => n + (l && Number.isInteger(l.staled) ? l.staled : 0), 0);
             const observed = (ls.find((l) => l && l.observed) || {}).observed ?? null;
-            w = { ok: true, staled, observed, compared: out.kept ? out.kept.compared : null,
+            w = { ok: true, staled, observed, compared: out.kept ? out.kept.compared : null, afterRead,
                   indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound } };
           }
         } catch { w = { ok: false }; }
@@ -1398,6 +1433,7 @@ export class Extraction {
                      text_tier: reading.text_tier },
           staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null,
           compared: w.compared ?? null,
+          after_read: w.afterRead ?? null,
           candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below "
                     + "what this instance's fleet can read; this one is re-read now",
         };
