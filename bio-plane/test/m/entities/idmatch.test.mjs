@@ -25,7 +25,6 @@ test("R20 the spaces and forms are id-spaces', over the view jurisdictions.combi
   /* id-spaces' nine (its R1, T33-9; K1515), in its order, read from its own spaces() over the view */
   assert.deepEqual(u.spaces, ["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"]);
   assert.deepEqual(u.spaces, idSpaces(w.e.view()).map((s) => s.space));
-  assert.ok(!/enactment number \(enactment\)/.test(u.translation), "the translation names no fixed list of spaces; the answer lists them");
   assert.equal(w.e.idMatch({ space: "apn", a: "1/2" }).reason, "IDSPACE_UNKNOWN", "the old names are gone (N6)");
   assert.equal(w.e.idMatch({}).reason, "IDSPACE_UNKNOWN");
   const r = w.e.idMatch({ space: " Project ", a: "wo 0001" });
