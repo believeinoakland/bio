@@ -21,7 +21,7 @@ import { isHypothesisId, isMachineIdentity, ISO_TS_RE } from "../record-grammar/
 import { validAt, bounds as dtBounds, compare } from "../civil-time/index.mjs";
 import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { LINES_SCHEMA, LINES_TABLES } from "./schema.mjs";
+import { LINES_SCHEMA, LINES_TABLES, LINES_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { LINE_KINDS, STRUCTURE_KINDS, PEOPLE_KINDS, PROCEEDING_KINDS, CAPACITIES, ROLES, END_KINDS, OWNER,
          CONNECTION_KINDS, connectionKind, lineKindOf, PARTY_ROLES, OCDS_PARTY_ROLES } from "./vocab.mjs";
 
@@ -130,6 +130,8 @@ export class Lines {
   migrate() {
     const bare = LINES_SCHEMA.split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    for (const [table, column, decl] of LINES_ADDITIVE_COLUMNS)
+      if (!this.#rows(`PRAGMA table_info(${table})`).some((c) => c.name === column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
     if (this.#migrated) return { ok: true, already: true };
     const must = (what, r) => {
       if (r && (r.ok === false || r.refused)) throw new Error(`lines: ${what} refused: ${r.reason || r.refused} ${r.detail || r.why || ""}`);
@@ -470,7 +472,7 @@ export class Lines {
 
   /* ---- recordLine (R1–R5) ---- */
 
-  recordLine({ kind, from, to, role, capacity, valid, basis, by } = {}) {
+  recordLine({ kind, from, to, role, capacity, title, valid, basis, by } = {}) {
     const k = typeof kind === "string" ? kind.trim() : "";
     if (!LINE_KINDS.includes(k))
       return refuse("UNKNOWN_LINE_KIND", `a line's kind is one of ${LINE_KINDS.join(", ")}; money given or received is a money fact, never a line`,
@@ -494,6 +496,11 @@ export class Lines {
       if (!CAPACITIES.includes(capacity)) return refuse("UNKNOWN_CAPACITY", `a capacity is one of ${CAPACITIES.join(", ")}`, { capacities: [...CAPACITIES] });
     } else if (capacity !== undefined && capacity !== null && capacity !== "")
       return refuse("BAD_CAPACITY", "only a holds line carries a capacity");
+    /* T34 (N573): a holds line's title as its basis words it, kept exactly as written, never normalised or mapped. */
+    if (title !== undefined && title !== null) {
+      if (k !== "holds") return refuse("BAD_TITLE", "only a holds line carries a title");
+      if (!filled(title)) return refuse("BAD_TITLE", "a title is the post's title as the basis words it, a non-blank string");
+    }
     const b = this.#basis(basis, by);
     if (b.refusal) return b.refusal;
     /* R3 */
@@ -533,6 +540,7 @@ export class Lines {
     const ends = { from: endGrade(from, idFrom), to: endGrade(to, idTo) };
     const at = this.#now();
     const row = { kind: k, from_entity: from, to_entity: to, role: filled(role) ? role : null, capacity: k === "holds" ? capacity : null,
+                  title: k === "holds" && filled(title) ? title : null,
                   valid_json: json(norm), from_event: isObj(norm.from) ? norm.from.event : null, to_event: isObj(norm.to) ? norm.to.event : null,
                   basis_form: b.form, basis_json: json(b.basis), capture_sha: b.captureSha, sight_bundle: b.sight,
                   recorded_at: b.recordedAt ?? null, asserted_by: by, assertion: b.assertion, end_from: ends.from, end_to: ends.to, at };
@@ -581,7 +589,7 @@ export class Lines {
     const label = Lines.#recordedLabel(basis, line.recorded_at);
     return {
       line_id: line.line_id, kind: line.kind, from: line.from_entity, to: line.to_entity, role: line.role ?? null,
-      capacity: line.capacity ?? null,
+      capacity: line.capacity ?? null, title: line.title ?? null,
       valid: cache.stale ? { undetermined: true, why: "cache stale" } : this.#validFor(line, cache),
       bounds: { given, cached: cache.held ? { from: cache.held.from_instant ?? null, to: cache.held.to_instant ?? null,
                                               from_precision: cache.held.from_precision ?? null, to_precision: cache.held.to_precision ?? null,

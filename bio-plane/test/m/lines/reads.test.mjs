@@ -37,7 +37,7 @@ test("R8 withdrawLine refuses NO_REASON and NO_SUCH_LINE; a repeat answers alrea
   assert.equal(w.l.holderAt({ office: o, at: "2022-01-01", viewer: ANN }).line.line_id, fixed);
 });
 
-test("R9 readLine: NO_LINE for an empty id, found false for an absent one, otherwise every field, its basis and citation, both grade axes, its bounds as given and cached, its withdrawal; linesOf by end, oldest first, bounded 1–500 (default 100) with truncated", () => {
+test("R9 readLine: NO_LINE for an empty id, found false for an absent one, otherwise every field (a holds line's title among them), its basis and citation, both grade axes, its bounds as given and cached, its withdrawal; linesOf by end, oldest first, bounded 1–500 (default 100) with truncated", () => {
   const w = world();
   const o = w.ent("office", "Harbour Master"), b = w.ent("body", "Port Board");
   assert.equal(w.l.readLine({ lineId: "", viewer: ANN }).reason, "NO_LINE");
@@ -48,8 +48,8 @@ test("R9 readLine: NO_LINE for an empty id, found false for an absent one, other
                              basis: { captureSha: s, extent: { kind: "document" } }, by: ANN });
   const line = w.l.readLine({ lineId: r.line_id, viewer: ANN }).line;
   assert.deepEqual(Object.keys(line).sort(), ["asserted_by", "assertion", "at", "basis", "bounds", "capacity", "citation", "ends", "from",
-                                              "kind", "line_id", "role", "to", "valid", "withdrawn"].sort());
-  assert.deepEqual([line.kind, line.from, line.to, line.role, line.capacity], ["reports_to", o, b, "functional", null]);
+                                              "kind", "line_id", "role", "title", "to", "valid", "withdrawn"].sort());
+  assert.deepEqual([line.kind, line.from, line.to, line.role, line.capacity, line.title], ["reports_to", o, b, "functional", null, null]);
   assert.deepEqual(line.basis, { form: "passage", captureSha: s, extent: { kind: "document" } });
   assert.equal(line.citation, `capture ${s}`);
   assert.equal(line.assertion, w.prov.captureGrade(s).grade, "the assertion is the capture's grade");
@@ -74,6 +74,14 @@ test("R9 readLine: NO_LINE for an empty id, found false for an absent one, other
   assert.equal(w.l.linesOf({ entity: b, kinds: ["reports_to"], viewer: ANN }).count, 1);
   assert.equal(w.l.linesOf({ entity: b, kinds: ["knows"], viewer: ANN }).reason, "UNKNOWN_LINE_KIND");
   assert.equal(w.l.linesOf({ viewer: ANN }).reason, "NO_ENTITY");
+  /* a holds line's title, as written, in readLine and linesOf alike; null where none is stated */
+  const ada = w.ent("person", "Ada Example");
+  const titled = w.say("holds", ada, o, { capacity: "appointed", title: "Harbour Master and Pilot" });
+  const untitled = w.say("holds", ada, o, { capacity: "interim" });
+  assert.equal(w.l.readLine({ lineId: titled, viewer: ANN }).line.title, "Harbour Master and Pilot");
+  const held = w.l.linesOf({ entity: o, kinds: ["holds"], viewer: ANN }).lines;
+  assert.deepEqual(held.map((x) => [x.line_id, x.title]), [[titled, "Harbour Master and Pilot"], [untitled, null]]);
+  for (const x of held) assert.deepEqual(Object.keys(x).sort(), Object.keys(w.l.readLine({ lineId: x.line_id, viewer: ANN }).line).sort());
 });
 
 test("R10 structureAt answers the structure lines at either end judged at the date: in held, undetermined listed apart with why (no stated bound, a band straddling the date, an unresolved event bound), out not answered; NO_DATE without a date", () => {

@@ -8,7 +8,7 @@ import { LINE_KINDS, CAPACITIES, ROLES } from "../../../src/lines/index.mjs";
 const T = { statement: "I attended the meeting where this was said" };
 const count = (w) => w.one(`SELECT COUNT(*) AS n FROM lines`).n;
 
-test("R1 recordLine refuses in order: UNKNOWN_LINE_KIND (naming the closed list, the detail saying money is a money fact), NO_ENDS, SELF_LINE, NO_SUCH_ENTITY per end, BAD_ROLE, NO_CAPACITY/UNKNOWN_CAPACITY/BAD_CAPACITY, NO_BASIS and each basis form's own refusal; a refusal writes nothing", () => {
+test("R1 recordLine refuses in order: UNKNOWN_LINE_KIND (naming the closed list, the detail saying money is a money fact), NO_ENDS, SELF_LINE, NO_SUCH_ENTITY per end, BAD_ROLE, NO_CAPACITY/UNKNOWN_CAPACITY/BAD_CAPACITY, BAD_TITLE, NO_BASIS and each basis form's own refusal; a refusal writes nothing", () => {
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master"), b = w.ent("body", "Port Board");
   const u = w.l.recordLine({ kind: "gave_to", from: p, to: o, basis: T, by: ANN });
@@ -28,6 +28,11 @@ test("R1 recordLine refuses in order: UNKNOWN_LINE_KIND (naming the closed list,
   assert.equal(w.l.recordLine({ kind: "holds", from: p, to: o, basis: T, by: ANN }).reason, "NO_CAPACITY");
   assert.equal(w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "king", basis: T, by: ANN }).reason, "UNKNOWN_CAPACITY");
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, capacity: "elected", basis: T, by: ANN }).reason, "BAD_CAPACITY");
+  assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, capacity: "elected", title: 7, by: ANN }).reason, "BAD_CAPACITY", "capacity before title");
+  assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, title: "Harbour Master", by: ANN }).reason, "BAD_TITLE", "a title on a kind other than holds, before the basis");
+  assert.equal(w.l.recordLine({ kind: "seat_on", from: o, to: b, title: "", basis: T, by: ANN }).reason, "BAD_TITLE", "even a blank one");
+  for (const title of ["", "   ", 12, ["Mayor"], { text: "Mayor" }, true])
+    assert.equal(w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "elected", title, by: ANN }).reason, "BAD_TITLE", JSON.stringify(title));
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, by: ANN }).reason, "NO_BASIS");
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, basis: { what: 1 }, by: ANN }).reason, "NO_BASIS");
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, basis: { statement: "  " }, by: ANN }).reason, "NO_STATEMENT");
@@ -56,6 +61,37 @@ test("R1 otherwise it allocates LIN-<year>-<16-char tail> and writes the line wi
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, basis: { captureSha: s, extent: { kind: "document" } }, by: ANN }).ok, true);
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: b, basis: { rule: "profile office", source: { profile: "test-port-ellery", entry: 0 } }, by: ANN }).ok, true);
   assert.equal(count(w), 3);
+});
+
+test("R1 a holds line's title is held exactly as written, never normalised or mapped to a capacity; absent, it answers title null; a store made before the title gains the column at boot", () => {
+  const w = world();
+  const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master");
+  const s = w.held("INFO-2026-0001", sha("oath of office"));
+  const written = "  Acting Harbour-Master  (Interim) ";
+  const r = w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "elected", title: written,
+                             basis: { captureSha: s, extent: { kind: "document" } }, by: ANN });
+  assert.equal(r.ok, true);
+  const line = w.l.readLine({ lineId: r.line_id, viewer: ANN }).line;
+  assert.deepEqual([line.title, line.capacity], [written, "elected"], "as written, the capacity apart and unchanged by it");
+  assert.equal(w.l.readLine({ lineId: w.say("holds", p, o, { capacity: "appointed" }), viewer: ANN }).line.title, null, "not stated");
+  assert.equal(w.l.readLine({ lineId: w.say("holds", p, o, { capacity: "acting", title: null }), viewer: ANN }).line.title, null, "null is not stated");
+  assert.equal(w.l.readLine({ lineId: w.say("part_of", o, w.ent("body", "Port Board")), viewer: ANN }).line.title, null, "a kind that takes none");
+  for (const basis of [{ statement: "I am the Deputy Clerk" }, { rule: "profile office", source: { profile: "test-port-ellery", entry: 0 } }]) {
+    const t = w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "employee", title: "Deputy Clerk", basis, by: ANN });
+    assert.equal(w.l.readLine({ lineId: t.line_id, viewer: ANN }).line.title, "Deputy Clerk", Object.keys(basis)[0]);
+  }
+  /* a store made before T34: its lines table has no title column; boot adds it, and the old lines answer null */
+  const old = world();
+  const op = old.ent("person", "Ben Example"), oo = old.ent("office", "Port Warden");
+  const before = old.say("holds", op, oo, { capacity: "elected" });
+  old.st.sql.exec(`ALTER TABLE lines DROP COLUMN title`);
+  assert.ok(!old.rows(`PRAGMA table_info(lines)`).some((c) => c.name === "title"), "the old shape");
+  const again = old.l;
+  assert.equal(again.migrate().ok, true, "every boot runs the schema and its added columns");
+  assert.ok(old.rows(`PRAGMA table_info(lines)`).some((c) => c.name === "title"));
+  assert.equal(again.readLine({ lineId: before, viewer: ANN }).line.title, null);
+  const after = again.recordLine({ kind: "holds", from: op, to: oo, capacity: "elected", title: "Port Warden", basis: T, by: ANN });
+  assert.equal(again.readLine({ lineId: after.line_id, viewer: ANN }).line.title, "Port Warden");
 });
 
 test("R2 seat_on runs from an office to a body only (SEAT_ON_ENDS); party_to's to and both ends of appeal_of, consolidated_with and remanded_to are proceedings (PROCEEDING_ENDS); other kinds take any registered kinds", () => {
