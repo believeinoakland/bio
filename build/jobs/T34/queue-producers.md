@@ -59,3 +59,20 @@ T34-54, T34-82, T34-92 and this module's T34-87 rows: all applied. B1–B4 handl
 - format: 0 failures. architecture: 0 failures. coverage: 35 of 35 live ids named, 0 failures. ownership: 8 files, 0 failures.
 
 **Size (session_012tuSfiT13aFdZLyebrLHE1):** test runs 12, module lines 3,429.
+
+## J4 · COMPLETE
+
+B6 applied: `tranche/T34` merged (wizard-scripts included). Head: see the push after this entry on `job/T34/queue-producers`.
+
+- R39 now has a test against wizard-scripts' real `baseUpdates` (`wizard.test.mjs`, "R39 against wizard-scripts itself"). In it a base is approved, bob copies it, and a newer base version is approved. Each of the copy's approvers is told once, named in R26's recipients; the item carries both step lists and ages from R26's `found_at`. Nobody else is told. Once an editor grant exists, only the editor is told.
+- The real shape matches B2's ruling field for field; no code change was needed. The fake-based R39 arms stay for the hidden-project and paging cases, labelled as such.
+- Everything else is as J3 reported (entries, deferred: none, findings elsewhere).
+
+**Tests and checks**
+- queue-producers: 80 pass, 0 fail.
+- machinery-producers + queue + plane `watch.test.mjs`: 151 pass, 0 fail.
+- format: 0 failures. architecture: 0 failures. coverage: 35 of 35, 0 failures. ownership: 11 files, 0 failures.
+
+**`uses` edges no code imports:** `host-governor`, `capture`, `link-sweep`, `network-notices`. Per B5, `inquiry` stays.
+
+**Size (session_012tuSfiT13aFdZLyebrLHE1):** test runs 15, module lines 3,429.
