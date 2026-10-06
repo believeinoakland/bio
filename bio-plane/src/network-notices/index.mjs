@@ -97,8 +97,9 @@ export const OUTWARD_ACT_WARNING = Object.freeze({
 });
 /** R2 (K1031 (4)): the caution's code; it never refuses, and its words are the UX design stream's. */
 export const CAUTION_TWO_OPEN = "two_open_without_published_work";
-/** R21: how the copy's own keys are labelled. */
-export const COPY_KEY_LABEL = "this copy's key";
+/** R21: how the keys of the group's own Civicsmith are labelled. The public reads it with no credential, so it names
+ *  the group's Civicsmith rather than "your group's", and never "this copy" (DEC-149, T34-87). */
+export const COPY_KEY_LABEL = "the group's Civicsmith key";
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 /* R15: the user agent the timestamp requests carry, naming the product (DEC-124). */
@@ -253,7 +254,8 @@ export class NetworkNotices {
     const slug = this.#slug();
     if (!slug) return { refusal: refuse("NOTICE_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous notices") };
     if (!(await this.#keyBound()))
-      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", "no instance key is bound, and a notice is never published without its signed level") };
+      return { refusal: refuse("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published "
+        + "without its signed level") };
     /* END DEC-49 REGION is-notice-caller */
     return { pid, member, slug };
   }
@@ -389,7 +391,8 @@ export class NetworkNotices {
     const att = this.#attestation({ nid: held.nid, pid: held.pid, kind: "posted", asOfMs: nowMs,
                                     revisionDigest: held.digest, revisionStatus: held.revision.status });
     const signed = await this.#sign(att.digest);
-    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", "no instance key is bound, and a notice is never published without its signed level");
+    if (!signed) return refuse("NOTICE_NO_INSTANCE_KEY", "your group's Civicsmith holds no signing key of its own, and a notice is never published "
+        + "without its signed level");
     const out = this.record.transact(() => {
       const latest = this.#latestRevision(held.nid);
       if ((latest ? latest.revision : 0) !== held.n - 1 || (held.firstRevision && this.#notice(held.nid)))
