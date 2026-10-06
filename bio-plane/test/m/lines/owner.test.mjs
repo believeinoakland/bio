@@ -2,9 +2,11 @@
    map (R16) and the read contract (R17). */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { world, ANN } from "./fixture.mjs";
-import { ownerConformance, createRegistry, BOUNDS } from "../../../src/connection-grammar/index.mjs";
-import { Lines, linesOps, kinds, capacities, roles, CONNECTION_KINDS, LINE_KINDS, CAPACITIES, ROLES } from "../../../src/lines/index.mjs";
+import { ownerConformance, createRegistry, BOUNDS, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
+import { Lines, linesOps, ownerNeighbours, kinds, capacities, roles, CONNECTION_KINDS, LINE_KINDS, CAPACITIES, ROLES } from "../../../src/lines/index.mjs";
 
 const AT = "2022-06-15T12:00:00Z";
 
@@ -119,4 +121,28 @@ test("R17 the table of lines (line_id, kind, from_entity, to_entity, capacity, w
   assert.equal(w.one(`SELECT reason FROM line_withdrawals WHERE line_id=?`, id).reason, "wrong person");
   assert.ok(Lines);
   assert.ok(createRegistry);
+});
+
+test("R14 (K1563 (1)) the owner is registered once at load into the default registry; its neighbours takes the host the registry passes through, else the isolate's one instance, else refuses OWNER_HOST_AMBIGUOUS", () => {
+  assert.ok(defaultRegistry.owners().some((o) => o.owner === "lines" && o.kinds.length === CONNECTION_KINDS.length));
+  const a = world(), b = world();
+  const oa = a.ent("office", "Harbour Master"), ba = a.ent("body", "Port Board");
+  const id = a.say("part_of", oa, ba, { valid: { from: "2010-01-01", to: "2030-12-31" } });
+  const viaHost = defaultRegistry.neighbours({ owner: "lines", host: { storage: a.st }, node: oa, kinds: ["line:part_of"], at: AT, viewer: ANN, scope: null });
+  assert.deepEqual(viaHost.items.map((i) => i.id), [id]);
+  assert.deepEqual(defaultRegistry.neighbours({ owner: "lines", host: { storage: b.st }, node: oa, at: AT, viewer: ANN, scope: null }).items, []);
+  assert.equal(ownerNeighbours({ node: oa, at: AT, viewer: ANN }).refused, "OWNER_HOST_AMBIGUOUS", "several instances and no host");
+  assert.equal(ownerNeighbours({ host: { storage: {} }, node: oa, at: AT, viewer: ANN }).refused, "OWNER_HOST_AMBIGUOUS", "a host with no instance");
+  /* an isolate with one instance answers without a host */
+  const fixture = fileURLToPath(new URL("./fixture.mjs", import.meta.url));
+  const src = fileURLToPath(new URL("../../../src/connection-grammar/index.mjs", import.meta.url));
+  const out = execFileSync(process.execPath, ["--input-type=module", "-e", `
+    const { world, ANN } = await import(${JSON.stringify(fixture)});
+    const { defaultRegistry } = await import(${JSON.stringify(src)});
+    const w = world(); const o = w.ent("office", "A"), b = w.ent("body", "B");
+    const id = w.say("part_of", o, b, { valid: { from: "2010-01-01", to: "2030-12-31" } });
+    const r = defaultRegistry.neighbours({ owner: "lines", node: o, at: "${AT}", viewer: ANN, scope: null });
+    console.log(JSON.stringify([id, r.items.map((i) => i.id)]));`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  const [one, got] = JSON.parse(out.trim().split("\n").pop());
+  assert.deepEqual(got, [one]);
 });

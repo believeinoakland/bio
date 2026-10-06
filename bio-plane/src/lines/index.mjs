@@ -62,6 +62,24 @@ export const capacities = () => CAPACITIES;
 export const roles = (kind) => (LINE_KINDS.includes(kind) ? ROLES[kind] ?? Object.freeze([]) : null);
 
 const instances = new WeakMap();
+/* K1563 (1): every instance made in this isolate, so the owner registered at load finds the one there is. */
+const live = new Set();
+const storageOf = (host) => (host && host.storage ? host.storage : host);
+
+/** R14, K1563 (1): the `neighbours` the owner registers at load. The registry passes `host` through unchanged: with a
+ *  host, that host's instance answers; without one, the isolate's one instance; otherwise `OWNER_HOST_AMBIGUOUS`. */
+export function ownerNeighbours(args) {
+  const a = isObj(args) ? args : {};
+  const { host, ...rest } = a;
+  let l = null;
+  if (host !== undefined && host !== null) l = instances.get(storageOf(host)) ?? null;
+  else if (live.size === 1) l = [...live][0];
+  if (!l) return { refused: "OWNER_HOST_AMBIGUOUS",
+                   why: host ? "no lines instance is made over that host" : `${live.size} lines instances are made in this isolate and the read names no host` };
+  return l.neighbours(rest);
+}
+/* R14: registered once, at load, into the registry the plane wires. */
+defaultRegistry.registerOwner({ owner: OWNER, kinds: [...CONNECTION_KINDS], neighbours: ownerNeighbours });
 
 /** K61: one instance per storage. `opts.entities` and `opts.events` are the services lines reads its ends and event
  *  bounds through; `opts.registry` the connection registry it registers into (the default the plane wires). */
@@ -91,6 +109,8 @@ export class Lines {
     this.#events = events;
     this.#registry = registry;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
+    if (!instances.has(storage)) instances.set(storage, this);
+    live.add(this);
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -99,7 +119,7 @@ export class Lines {
   /* ---- boot (R6, R14, R18, R19) ---- */
 
   /** The tables, their declaration (R19), the store gate (R18), the one `onWhenChanged` registration (R6) and the one
-   *  connection-owner registration (R14), at every boot, idempotent. A refusal of any registration is a defect of the
+   *  connection-owner registration into a registry other than the default (R14), at every boot, idempotent. A refusal of any registration is a defect of the
    *  wiring and throws. */
   migrate() {
     const bare = LINES_SCHEMA.split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
@@ -112,7 +132,8 @@ export class Lines {
     must("registerStoreGate", this.#record.registerStoreGate(OWNER, "lines", (row) => Lines.gateCheck(row)));
     if (this.#events && typeof this.#events.onWhenChanged === "function")
       must("onWhenChanged", this.#events.onWhenChanged(OWNER, (change) => this.#whenChanged(change)));
-    if (this.#registry && !(this.#registry.owners().some((o) => o.owner === OWNER)))
+    /* A registry other than the default (a test's own) is registered here, bound to this instance. */
+    if (this.#registry && this.#registry !== defaultRegistry && !(this.#registry.owners().some((o) => o.owner === OWNER)))
       must("registerOwner", this.#registry.registerOwner({ owner: OWNER, kinds: [...CONNECTION_KINDS],
                                                            neighbours: (a) => this.neighbours(a) }));
     this.#migrated = true;
