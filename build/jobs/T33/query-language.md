@@ -1,6 +1,6 @@
 # query-language (T33)
 
-**Status** · session_01J1bJiH921XCXLHJ1rEezAb · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_01J1bJiH921XCXLHJ1rEezAb · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
