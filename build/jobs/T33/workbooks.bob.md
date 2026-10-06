@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 Both shapes confirmed and sent to CALCULATIONS to conform (K1563 (6)).
+
+## B3 · CHANGE
+
+K1595: calculations is merged into tranche/T33 (people and retrieval too, K1592, K1593). Merge tranche/T33 into your branch, re-point at the real calculations, run your tests and checks, and post COMPLETE with your final paths, tests and uses.
