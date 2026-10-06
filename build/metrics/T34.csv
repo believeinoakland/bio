@@ -1,0 +1,11 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_01P1fesUg99Ba4Qk6NUET8mr,job,civil-time,7277280,117139,6707,19444,,9,1386
+session_01X5UrDpK4HmWSTEDUK3KEDX,job,record-grammar,6716240,126048,100,26160,,9,2396
+session_01YTvAT51C3xVL8xjXQASm1A,job,jurisdictions,18466685,338430,148,60456,,10,5426
+session_01RfhvynYE7q2SRyDdV5krf8,job,calc-grammar,10905342,212046,124,76305,,11,1343
+session_018zeFM5yr82fH5eXANSqAd8,job,connection-grammar,6412963,137043,596,23772,,9,649
+session_01FJffd6B15P17amC4kMWkAK,job,bundler,15210027,261726,140,62524,,16,2666
+session_01M4x59wQhwN7AXzMLPTFvn1,job,id-spaces,6807493,138006,6467,18822,,7,1511
+session_01FhABQBQrCTES1CMo1uBCh3,job,docprofile,14231911,201370,7272,60356,,12,2176
+session_0126RaWsKDwYb2AVQaFGQ3gF,job,roster-reader,8020772,153268,112,27436,,4,1599
+session_01BzAACPDBqUy1ozikyzXCLv,job,sheet-worker,7635216,151405,104,20264,,8,1884
