@@ -8,9 +8,12 @@ import { M, O, world, call, opCalls, aik, cred } from "./harness.mjs";
 import { PLANE_OPS as AGENT_OPS, NAMESPACES as AGENT_NAMESPACES } from "../../../../agent-worker/src/harness.mjs";
 import { SUBSESSION_OPS } from "../../../../agent-worker/src/subsession.mjs";
 import { PLANE_OPS as OCR_OPS, NAMESPACES as OCR_NAMESPACES } from "../../../../ocr-worker/src/contract.mjs";
+/* T33 (K1531, K1570): sheet-worker, the fleet member workbooks' recompute reaches through `SHEET_WORKER` (its R11: it
+   calls no op, and names the door's namespaces). */
+import { PLANE_OPS as SHEET_OPS, NAMESPACES as SHEET_NAMESPACES } from "../../../../sheet-worker/src/contract.mjs";
 
 const { OPS, AI_RUN_ACTIONS, PLAN_RUN_SCOPE } = O;
-const MEMBERS = [["agent-worker", AGENT_OPS], ["ocr-worker", OCR_OPS]];
+const MEMBERS = [["agent-worker", AGENT_OPS], ["ocr-worker", OCR_OPS], ["sheet-worker", SHEET_OPS]];
 
 test("R2 (N402, K683): every op a fleet member calls is in the op table with the member's own mutating flag; every write agent-worker makes is an AI-run act or plan mode's one write (optionpropose, in op-declarations' plan-mode scope); its sub-session scope reads only; search, basisversions and versionchain are member-class reads", () => {
   assert.ok(Object.keys(AGENT_OPS).length > 10);
@@ -54,8 +57,9 @@ test("R2 (N402): an agent credential naming the member's writes reaches every op
   }
 });
 
-test("R2 (N413): every fleet member's namespace set equals the door's own, exactly and in order", () => {
+test("R2 (N413; K1531): every fleet member's namespace set equals the door's own, exactly and in order — sheet-worker's among them, which calls no op of the door (its R11)", () => {
+  assert.deepEqual(Object.keys(SHEET_OPS), []);
   assert.deepEqual([...M.NAMESPACES], ["bio", "scratch"]);
-  for (const [member, set] of [["agent-worker", AGENT_NAMESPACES], ["ocr-worker", OCR_NAMESPACES]])
+  for (const [member, set] of [["agent-worker", AGENT_NAMESPACES], ["ocr-worker", OCR_NAMESPACES], ["sheet-worker", SHEET_NAMESPACES]])
     assert.deepEqual([...set], [...M.NAMESPACES], member);
 });
