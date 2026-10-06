@@ -33,10 +33,18 @@ import { proposalLabel } from "../record-grammar/labels.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { WIZARD_SCRIPTS_CHECKS, rowOf } from "./checks.mjs";
 import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES, WIZARD_SCRIPTS_MINT_SEED, migrateWizardScripts } from "./schema.mjs";
+import { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
+import { SCREEN_REGISTRY } from "./screen-registry.mjs";
+import { FRONT_DOORS } from "./front-doors.mjs";
+import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX } from "./writing-help.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
-export { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
+export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE } from "./civicsmith-library.mjs";
+export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
+export { FRONT_DOORS } from "./front-doors.mjs";
+export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
+         TOLD_MAX } from "./writing-help.mjs";
 
 /* ---------------------------------------------------------------- the vocabularies */
 
@@ -50,6 +58,10 @@ export const WIZARD_EVENTS = Object.freeze(["start", "step", "finish"]);
 export const WIZARDS_STATES_LISTED = Object.freeze(["draft", "submitted", "withdrawn", "retired", "broken", "proposed"]);
 /** R2: a draft's three sources. */
 export const DRAFT_SOURCES = Object.freeze(["text", "template", "machine"]);
+/** R2: a step's keys (`via`, a side trip, since T34; DEC-139 (4)). */
+export const STEP_KEYS = Object.freeze(["screen", "act", "what", "why", "draft", "via"]);
+/** R13, R24: the two machine drafts whose exception for a refused act R12 does not grant (DEC-153 (4); K1818). */
+export const HELP_DRAFTS = Object.freeze(["writinghelp", "groupdescriptiondraft"]);
 
 /* ---------------------------------------------------------------- bounds */
 
@@ -76,6 +88,9 @@ const textUpTo = (v, max, min = 1) => typeof v === "string" && v.trim().length >
 const clamp = (v, dflt, max) => { const n = Math.floor(Number(v)); return v !== null && v !== undefined && v !== "" && Number.isFinite(n) ? Math.min(Math.max(n, 1), max) : dflt; };
 const truthy = (v) => v === true || v === "true" || v === "1" || v === 1;
 const OFFERED = Object.freeze(["approved"]);
+/* R4: how a revision that took a copy's base's newer version records it in `wiz_revisions.adopted` (a proposal id never
+   starts so). */
+const BASE_ADOPTION = "base:";
 
 /* DEC-49: a refusal of this module's own carries its code, its row and the member's translation; one another module
    answered (membership's `NOT_AN_ADMIN`) passes through as it came. */
@@ -105,13 +120,15 @@ function canonicalDraft(d) {
   if (keys[0] === "text") return typeof v === "string" ? { text: v } : null;
   return typeof v === "string" && v.trim() ? { [keys[0]]: v.trim() } : null;
 }
-/* A step in canonical form: R2's five keys in R2's order, `act` null when none, `draft` only when present. */
+/* A step in canonical form: R2's keys in R2's order, `act` null when none, `draft` and `via` only when present (so a
+   step without them hashes as it did before `via`, T34). */
 function canonicalStep(s) {
   const o = isObj(s) ? s : {};
   const out = { screen: typeof o.screen === "string" ? o.screen : null,
                 act: typeof o.act === "string" && o.act !== "" ? o.act : null,
                 what: typeof o.what === "string" ? o.what : "", why: typeof o.why === "string" ? o.why : "" };
   if (o.draft !== undefined && o.draft !== null) out.draft = canonicalDraft(o.draft) ?? o.draft;
+  if (o.via !== undefined && o.via !== null && o.via !== "") out.via = typeof o.via === "string" ? o.via.trim() : o.via;
   return out;
 }
 /** R1: the steps in canonical form, as stored and hashed. */
@@ -129,9 +146,10 @@ function stepShape(steps) {
   if (steps.length > STEPS_MAX) return { step: null, why: `a script has at most ${STEPS_MAX} steps` };
   for (let i = 0; i < steps.length; i++) {
     const s = steps[i], n = i + 1;
-    if (!isObj(s)) return { step: n, why: "a step is {screen, act, what, why, draft?}" };
-    const extra = Object.keys(s).find((k) => !["screen", "act", "what", "why", "draft"].includes(k));
-    if (extra) return { step: n, why: `a step carries only screen, act, what, why and draft, not '${extra.slice(0, 40)}'` };
+    if (!isObj(s)) return { step: n, why: "a step is {screen, act, what, why, draft?, via?}" };
+    const extra = Object.keys(s).find((k) => !STEP_KEYS.includes(k));
+    if (extra) return { step: n, why: `a step carries only screen, act, what, why, draft and via, not '${extra.slice(0, 40)}'` };
+    if (s.via !== undefined && s.via !== null && s.via !== "" && !oneLine(s.via, NAME_FIELD_MAX)) return { step: n, why: "a side trip names a script by its id" };
     if (!oneLine(s.screen, NAME_FIELD_MAX)) return { step: n, why: "a step names its screen" };
     if (s.act !== undefined && s.act !== null && !oneLine(s.act, NAME_FIELD_MAX)) return { step: n, why: "an act is an op's name, or none" };
     for (const k of ["what", "why"])
@@ -160,18 +178,33 @@ function libraryEntry(e) {
   const n = Math.floor(Number(e.version));
   return Object.freeze({ id: str(e.id), name: typeof e.name === "string" ? e.name : "", required: e.required === true,
                          version: Number.isFinite(n) && n >= 1 ? n : 1, steps: canonicalSteps(e.steps),
+                         author: str(e.author) ?? "civicsmith",
                          approved: isObj(e.approved) ? { by: e.approved.by ?? null, at: e.approved.at ?? null } : { by: null, at: null } });
+}
+/* R13: a screen's registered acts: its `acts`, and each `owed` act whose op the member op table declares, at its place
+   in the file's order (DEC-148; K1785); with no op table, no owed act is registered. */
+function screenActs(s, ops) {
+  const acts = Array.isArray(s.acts) ? [...s.acts] : [...nameSet(s.acts)];
+  const owed = (Array.isArray(s.owed) ? s.owed : []).filter((o) => isObj(o) && typeof o.op === "string" && ops && ops.has(o.op));
+  owed.slice().sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0)).forEach((o, i) => {
+    acts.splice(Math.min(Math.max(Number(o.at) || 0, 0), acts.length - i) + i, 0, o.op);
+  });
+  return nameSet(acts);
 }
 /** R13: a registration's parts, normalised: the screens by id, the ops (null when none was given), the acts a machine is
  *  refused, the labelled machine drafts and the library. */
-export function normaliseRegistration({ screens = [], ops = null, machineRefused = [], machineDrafts = [], library = [] } = {}) {
+export function normaliseRegistration({ screens = [], ops = null, machineRefused = [], machineDrafts = [], irreversible = [],
+                                        library = [] } = {}) {
+  const opSet = ops === null || ops === undefined ? null : nameSet(ops);
   const sc = new Map();
   for (const s of Array.isArray(screens) ? screens : [])
-    if (isObj(s) && str(s.id) && !sc.has(str(s.id))) sc.set(str(s.id), nameSet(s.acts));
+    if (isObj(s) && str(s.id) && !sc.has(str(s.id))) sc.set(str(s.id), screenActs(s, opSet));
   const lib = [];
   for (const e of Array.isArray(library) ? library : []) { const x = libraryEntry(e); if (x && !lib.some((y) => y.id === x.id)) lib.push(x); }
-  return { screens: sc, ops: ops === null || ops === undefined ? null : nameSet(ops), machineRefused: nameSet(machineRefused),
-           machineDrafts: nameSet(machineDrafts), library: lib };
+  const reg = { screens: sc, ops: opSet, machineRefused: nameSet(machineRefused), machineDrafts: nameSet(machineDrafts),
+                irreversible: nameSet(irreversible), library: lib };
+  reg.helpRefused = helpRefusedActs(reg);
+  return reg;
 }
 
 /* ================================================================ R12: checkScript */
@@ -181,15 +214,41 @@ const finding = (code, step, detail, extra) => {
   return { code, step, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 };
 
+/* R12's WIZARD_VIA_REFUSED: why a side trip from the script `self` (its steps `steps`) to `via` would not return, or null.
+   `offered` maps each offered script's id to its steps; a side trip whose own steps lead back to `self` through `via`,
+   however far, never returns (DEC-139 (4)). */
+function viaRefusal(via, self, steps, offered) {
+  if (typeof via !== "string" || !via.trim()) return "a side trip names a script by its id";
+  if (self !== null && via === self) return "a side trip cannot go to the script itself";
+  if (!offered.has(via)) return `no script '${via.slice(0, 80)}' is offered here to go to`;
+  const seen = new Set(), queue = [via];
+  const graph = (id) => (id === self ? steps : offered.get(id) || []);
+  while (queue.length) {
+    const id = queue.shift();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    for (const t of graph(id)) {
+      const next = isObj(t) && typeof t.via === "string" ? t.via : null;
+      if (next === null) continue;
+      if (self !== null && next === self) return `the side trip to '${via.slice(0, 80)}' leads back to this script, so it would never return`;
+      queue.push(next);
+    }
+  }
+  return null;
+}
+
 /** R12 (pure; `op=wizardcheck`): the refusals and warnings of a step list against a registration, each naming its step
  *  (from 1; null for the list). `templateOffered(ref)`, when given, says whether a `{template}` draft names a version
- *  filing-templates offers (its R25); `offered` is the offered scripts, `[{id, steps}]`, for `WIZARD_DUPLICATE`. Never
- *  throws on a list; never writes. */
-export function checkScript(steps, { screens = [], ops = null, machineRefused = [], machineDrafts = [], offered = [],
-                                     templateOffered = null } = {}) {
+ *  filing-templates offers (its R25); `offered` is the offered scripts, `[{id, steps}]`, for `WIZARD_DUPLICATE` and a
+ *  step's side trip (`via`); `self` the id of the script checked, if it has one. Never throws on a list; never writes. */
+export function checkScript(steps, { screens = [], ops = null, machineRefused = [], machineDrafts = [], irreversible = [], offered = [],
+                                     templateOffered = null, self = null } = {}) {
   const reg = screens instanceof Map ? { screens, ops: ops instanceof Set || ops === null ? ops : nameSet(ops),
                                          machineRefused: nameSet(machineRefused), machineDrafts: nameSet(machineDrafts) }
-    : normaliseRegistration({ screens, ops, machineRefused, machineDrafts });
+    : normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible });
+  reg.helpRefused = helpRefusedActs({ machineRefused: reg.machineRefused, irreversible: irreversible instanceof Set ? irreversible : nameSet(irreversible) });
+  const offeredById = new Map((Array.isArray(offered) ? offered : []).filter((o) => isObj(o) && typeof o.id === "string" && o.id !== self)
+    .map((o) => [o.id, Array.isArray(o.steps) ? o.steps : []]));
   const refusals = [], warnings = [];
   /* DEC-49 REGION is-wizard-check */
   if (!Array.isArray(steps) || !steps.length) {
@@ -214,8 +273,18 @@ export function checkScript(steps, { screens = [], ops = null, machineRefused = 
       if (!ok) refusals.push(finding("WIZARD_DRAFT_REFUSED", n, !d ? "a draft is one of {text}, {template} or {machine}"
         : d.template !== undefined ? `no filing template '${d.template.slice(0, 80)}' is offered here`
         : d.machine !== undefined ? `'${d.machine.slice(0, 80)}' is not a registered machine draft` : `a draft's text is 1 to ${DRAFT_TEXT_MAX} characters`));
-      const allowed = !!d && d.machine !== undefined && reg.machineDrafts.has(d.machine);
-      if (typeof s.act === "string" && reg.machineRefused.has(s.act) && !allowed)
+    }
+    if (s.via !== undefined && s.via !== null && s.via !== "") {
+      const why = viaRefusal(s.via, typeof self === "string" ? self : null, steps, offeredById);
+      if (why) refusals.push(finding("WIZARD_VIA_REFUSED", n, why));
+    }
+    if (s.draft !== undefined && s.draft !== null) {
+      const d = canonicalDraft(s.draft);
+      const help = !!d && d.machine !== undefined && HELP_DRAFTS.includes(d.machine);
+      const allowed = !!d && d.machine !== undefined && reg.machineDrafts.has(d.machine) && !help;
+      if (typeof s.act === "string" && help && reg.helpRefused.has(s.act))
+        refusals.push(finding("WIZARD_STEP_CONCLUDES", n, `the assistant never helps word the act '${s.act}': it is refused to a machine or cannot be undone`));
+      else if (typeof s.act === "string" && reg.machineRefused.has(s.act) && !allowed && !help)
         refusals.push(finding("WIZARD_STEP_CONCLUDES", n, `the act '${s.act}' is refused to a machine: no draft is placed on it but a registered labelled machine draft`));
     }
   });
@@ -235,12 +304,13 @@ function safe(fn) { try { return fn(); } catch { return null; } }
 /** R14 (pure; the plane's release suite): each required script of the library that R12 refuses, with its first
  *  refusal; `[]` when every one passes. A `{template}` draft is judged by shape only: no filing template is held at
  *  release. */
-export function requiredFailures({ screens = [], ops = null, machineRefused = [], machineDrafts = [], library = [] } = {}) {
-  const reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, library });
+export function requiredFailures({ screens = [], ops = null, machineRefused = [], machineDrafts = [], irreversible = [], library = [] } = {}) {
+  const reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library });
+  const offered = reg.library.map((e) => ({ id: e.id, steps: e.steps }));
   const out = [];
   for (const e of reg.library) {
     if (!e.required) continue;
-    const { refusals } = checkScript(e.steps, reg);
+    const { refusals } = checkScript(e.steps, { ...reg, offered, self: e.id });
     if (refusals.length) out.push({ id: e.id, version: versionId(e.id, e.version), name: e.name, refusal: refusals[0] });
   }
   return out;
@@ -365,14 +435,22 @@ export class WizardScripts {
                                   AND event=? ORDER BY eid LIMIT 1`, r.script_id, e);
     const end = (e) => (e ? { by: { id: e.actor, name: e.actor_name }, at: e.at, ...(parse(e.detail) || {}) } : null);
     const w = ev("widened"), x = ev("retired");
+    const c = this.#one(`SELECT based_on FROM wiz_copies WHERE script_id=?`, r.script_id);
     return { id: r.script_id, origin: "group", name: r.name, project: r.project, bundle_id: r.bundle_id,
              scope: w ? "group" : { project: r.project }, required: false, widened: end(w), retired: end(x),
-             created_at: r.created_at, created_by: { id: r.created_by, name: r.created_name } };
+             created_at: r.created_at, created_by: { id: r.created_by, name: r.created_name }, based_on: c ? c.based_on : null };
   }
   #libraryScript(id) {
     const e = this.#registration().library.find((x) => x.id === id);
     return e ? { id: e.id, origin: "civicsmith", name: e.name, project: null, bundle_id: null, scope: "group",
-                 required: e.required, widened: null, retired: null, created_at: e.approved.at ?? "", entry: e } : null;
+                 required: e.required, widened: null, retired: null, created_at: e.approved.at ?? "", entry: e, based_on: null } : null;
+  }
+  /* R1, R10, R21: a script's `based_on` with its base's name, `{version, name}`, or null (DEC-158 (4)). */
+  #basedOn(s) {
+    if (!s || !s.based_on) return null;
+    const p = parseVersionId(s.based_on);
+    const b = p ? this.#groupScript(p.script) || this.#libraryScript(p.script) : null;
+    return { version: s.based_on, name: b ? b.name : null };
   }
   /* R20: a project's script is seen by whoever may see its project; a group or Civicsmith script by every member. */
   #canSee(s, viewer) {
@@ -466,7 +544,7 @@ export class WizardScripts {
     if (s.origin === "civicsmith") {
       const e = s.entry;
       return { id: versionId(s.id, n), script: s.id, version: n, steps: this.#steps(s, n), sha: stepsSha(e.steps), state: "approved",
-               author: { name: e.approved.by }, contributors: [], derived_from: null,
+               author: { name: e.author }, contributors: [], derived_from: null,
                approved: { by: { name: e.approved.by }, at: e.approved.at }, updated_by: null, ended: null, submitted: null,
                revisions: [], recorded: null, created_at: e.approved.at, broken: false };
     }
@@ -484,13 +562,18 @@ export class WizardScripts {
         : s.retired ? { ending: "retired", ...s.retired } : null,
       submitted: sub ? { by: by(sub), at: sub.at } : null,
       revisions: this.#rows(`SELECT sha, author, author_name, adopted, at FROM wiz_revisions WHERE script_id=? AND version=? ORDER BY rid`, s.id, n)
-        .map((r) => ({ sha: r.sha, by: { id: r.author, name: r.author_name }, ...(r.adopted ? { adopted: r.adopted } : {}), at: r.at })),
+        .map((r) => ({ sha: r.sha, by: { id: r.author, name: r.author_name }, ...WizardScripts.#adoptedView(r.adopted), at: r.at })),
       recorded: parse(v.recorded), created_at: v.created_at, broken: this.#isBroken(s.id, n),
     };
   }
-  static #head(s, extra = {}) {
-    return { id: s.id, origin: s.origin, name: s.name, scope: s.scope, required: s.required,
+  #head(s, extra = {}) {
+    return { id: s.id, origin: s.origin, name: s.name, scope: s.scope, required: s.required, based_on: this.#basedOn(s),
              ...(s.widened ? { widened: s.widened } : {}), ...(s.retired ? { retired: s.retired } : {}), ...extra };
+  }
+  /* R4: a revision's adoption: a proposal (`adopted`), or a newer version of a copy's base (`adopted_base`). */
+  static #adoptedView(a) {
+    if (!a) return {};
+    return a.startsWith(BASE_ADOPTION) ? { adopted_base: a.slice(BASE_ADOPTION.length) } : { adopted: a };
   }
 
   /* ================================================================ proposals (R5) */
@@ -530,6 +613,12 @@ export class WizardScripts {
       if (src) lists.push(this.#steps(src, p.version));
     }
     for (const r of this.#rows(`SELECT DISTINCT adopted FROM wiz_revisions WHERE script_id=? AND version=? AND adopted IS NOT NULL`, s.id, n)) {
+      if (r.adopted.startsWith(BASE_ADOPTION)) {
+        const b = parseVersionId(r.adopted.slice(BASE_ADOPTION.length));
+        const src = b ? this.#groupScript(b.script) || this.#libraryScript(b.script) : null;
+        if (src) lists.push(this.#steps(src, b.version));
+        continue;
+      }
       const p = this.#one(`SELECT steps FROM wiz_proposals WHERE proposal_id=?`, r.adopted);
       if (p) lists.push(parse(p.steps) || []);
     }
@@ -560,7 +649,7 @@ export class WizardScripts {
       return !!r && r.ok === true;
     };
     const offered = this.#offeredScripts(viewer).filter((x) => x.s.id !== self).map((x) => ({ id: x.s.id, steps: x.steps }));
-    return checkScript(steps, { ...reg, offered, templateOffered });
+    return checkScript(steps, { ...reg, offered, templateOffered, self });
   }
   /* The offered scripts `viewer` may see, each `{s, n, steps}`. */
   #offeredScripts(viewer) {
@@ -584,11 +673,12 @@ export class WizardScripts {
    *  machine drafts and the Civicsmith library, once per construction, before the first request. Every offered group
    *  script is checked again: one that fails is recorded `broken` with its first refusal, one that passes again is
    *  recorded as returned. */
-  wizardRegister({ screens = [], ops = null, machineRefused = [], machineDrafts = [], library = [] } = {}) {
+  wizardRegister({ screens = SCREEN_REGISTRY, ops = null, machineRefused = [], machineDrafts = [], irreversible = [],
+                   library = CIVICSMITH_LIBRARY } = {}) {
     /* DEC-49 REGION is-wizard-register */
     if (this.reg) return refuse("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
     /* END DEC-49 REGION is-wizard-register */
-    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, library });
+    this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library });
     const broken = [], returned = [];
     const at = this.#when();
     for (const r of this.#rows(`SELECT script_id FROM wiz_scripts ORDER BY created_at, script_id`)) {
@@ -613,7 +703,8 @@ export class WizardScripts {
     return { ok: true, screens: this.reg.screens.size, library: this.reg.library.length, broken, returned };
   }
 
-  /** R13 (for `affordances` R37): the screen registry as registered, `[{id, acts}]`; `[]` before registration. */
+  /** R13 (for `affordances` R37): the screen registry as registered, `[{id, acts}]` (an owed act among them once its op is
+   *  declared); `[]` before registration. */
   registeredScreens() {
     return [...this.#registration().screens].map(([id, acts]) => ({ id, acts: [...acts] }));
   }
@@ -669,13 +760,22 @@ export class WizardScripts {
   }
 
   /** R3 (`op=wizarddraft`): a new script and its first draft, from a recording, a proposal or (with a live editor grant)
-   *  nothing; or a new draft version of the script `from` names (an approved version, or a proposal for the script). */
-  wizardDraft({ project = null, name = null, recorded = undefined, from = null, author = null, viewer = null } = {}) {
+   *  nothing; or a new draft version of the script `from` names (an approved version, or a proposal for the script); or,
+   *  with `copy`, a new script of the project copied from any approved version the author may see, recording its base
+   *  (`based_on`; DEC-158), its pairs the draft's recorded pairs, its base unchanged and still offered. */
+  wizardDraft({ project = null, name = null, recorded = undefined, from = null, copy = null, author = null, viewer = null } = {}) {
     const machine = this.#machine("draft", author);
     if (machine) return machine;
     const recording = recorded !== undefined && recorded !== null;
-    let source = null, target = null, proj = str(project);
-    if (from !== null && from !== undefined && from !== "") {
+    const given = (v) => v !== null && v !== undefined && v !== "";
+    let source = null, target = null, proj = str(project), base = null;
+    if (given(copy)) {
+      const r = parseVersionId(copy) ? this.#resolve(copy, viewer) : null;
+      const st = r ? (r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n)) : null;
+      if (st !== "approved") return this.#noWizard(copy);
+      base = r;
+      source = { copy: versionId(r.s.id, r.n), steps: this.#steps(r.s, r.n) };
+    } else if (given(from)) {
       if (parseVersionId(from)) {
         const r = this.#resolve(from, viewer);
         const st = r ? (r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n)) : null;
@@ -697,17 +797,19 @@ export class WizardScripts {
     if (!proj || !this.#joined(proj, member)) return this.#scope(target, "a script is drafted by a joined participant of its project");
     if (!recording && !source && !this.#liveGrant(member))
       return this.#notGranted("a blank start needs the advanced editor, which an administrator grants");
-    if (recording) {
-      if (source) return refuse("WIZARD_STEP_REFUSED", "a draft starts from a recording or from a source, not both", { step: null });
+    if (recording || (base && given(from))) {
+      if (source) return refuse("WIZARD_STEP_REFUSED", "a draft starts from one of a recording, a source or a copy", { step: null });
       const bad = this.#recordingRefusal(recorded);
       if (bad) return bad;
     }
+    const named = base && !given(name) ? base.s.name.slice(0, WIZARD_NAME_MAX) : name;
     /* DEC-49 REGION is-wizard-draft */
-    if (!target && !oneLine(name, WIZARD_NAME_MAX))
+    if (!target && !oneLine(named, WIZARD_NAME_MAX))
       return refuse("WIZARD_NAME_REFUSED", `a script is named in one line of 1 to ${WIZARD_NAME_MAX} characters`, { max: WIZARD_NAME_MAX });
     /* END DEC-49 REGION is-wizard-draft */
-    const pairs = recording ? recorded.map((s) => ({ screen: s.screen.trim(), act: str(s.act) })) : null;
-    const steps = canonicalSteps(pairs ? pairs.map((p) => ({ ...p, what: "", why: "" })) : source ? source.steps : []);
+    const pairs = recording ? recorded.map((s) => ({ screen: s.screen.trim(), act: str(s.act) }))
+      : base ? source.steps.map((s) => ({ screen: s.screen, act: s.act ?? null })) : null;
+    const steps = canonicalSteps(recording ? pairs.map((p) => ({ ...p, what: "", why: "" })) : source ? source.steps : []);
     const at = this.#when();
     const who = this.#nameOf(member);
     return this.record.transact(() => {
@@ -716,17 +818,18 @@ export class WizardScripts {
         sid = this.#mint("WIZ", at.slice(0, 4));
         if (!sid) return mintExhausted("WIZ");
         this.sql.exec(`INSERT INTO wiz_scripts (script_id, bundle_id, project, name, created_by, created_name, created_at)
-                       VALUES (?,?,?,?,?,?,?)`, sid, proj, proj, name.trim(), member, who, at);
+                       VALUES (?,?,?,?,?,?,?)`, sid, proj, proj, named.trim(), member, who, at);
+        if (base) this.sql.exec(`INSERT INTO wiz_copies (script_id, bundle_id, based_on, at) VALUES (?,?,?,?)`, sid, proj, source.copy, at);
       }
       const bundle = target ? target.bundle_id : proj;
       const n = (target ? Math.max(0, ...this.#numbers(sid)) : 0) + 1;
       this.sql.exec(`INSERT INTO wiz_versions (script_id, version, bundle_id, author, author_name, recorded, derived_from, created_at)
-                     VALUES (?,?,?,?,?,?,?,?)`, sid, n, bundle, member, who, pairs ? json(pairs) : null, source ? json(source.derived) : null, at);
+                     VALUES (?,?,?,?,?,?,?,?)`, sid, n, bundle, member, who, pairs ? json(pairs) : null, source && source.derived ? json(source.derived) : null, at);
       const sha = stepsSha(steps);
       this.sql.exec(`INSERT INTO wiz_revisions (script_id, version, bundle_id, steps, sha, author, author_name, adopted, at)
                      VALUES (?,?,?,?,?,?,?,?,?)`, sid, n, bundle, json(steps), sha, member, who, source && source.proposal ? source.proposal : null, at);
       return { ok: true, script: sid, version: versionId(sid, n), sha, state: "draft",
-               ...(source ? { derived_from: source.derived } : {}),
+               ...(source && source.derived ? { derived_from: source.derived } : {}), ...(base ? { based_on: source.copy } : {}),
                says: "a draft: only its author runs it, and it is offered to no one until it is submitted and approved" };
     });
   }
@@ -748,11 +851,15 @@ export class WizardScripts {
     const state = this.#stateOf(this.#events(s.id), n);
     if (state !== "draft") return this.#notADraft(s, n, state);
     const adopting = adopt !== null && adopt !== undefined && adopt !== "";
-    const p = adopting ? this.#proposal(adopt, viewer) : null;
-    if (adopting && (!p || (p.script_id ? p.script_id !== s.id : p.project !== s.project))) return this.#noWizard(adopt);
-    const body = steps !== undefined && steps !== null ? steps : p ? parse(p.steps) || [] : undefined;
+    const fromBase = adopting && isObj(adopt);
+    const b = fromBase ? this.#newerBase(s, adopt.base, viewer) : null;
+    if (fromBase && !b) return this.#noWizard(typeof adopt.base === "string" ? adopt.base : null);
+    const p = adopting && !fromBase ? this.#proposal(adopt, viewer) : null;
+    if (adopting && !fromBase && (!p || (p.script_id ? p.script_id !== s.id : p.project !== s.project))) return this.#noWizard(adopt);
+    const taken = p ? parse(p.steps) || [] : b ? b.steps : null;
+    const body = steps !== undefined && steps !== null ? steps : taken ?? undefined;
     if (Array.isArray(body) && !this.#liveGrant(member)
-        && !WizardScripts.#within(body.filter(isObj), this.#allowedPairs(s, n, p ? [parse(p.steps) || []] : [])))
+        && !WizardScripts.#within(body.filter(isObj), this.#allowedPairs(s, n, taken ? [taken] : [])))
       return this.#notGranted("without the advanced editor a revision may reword, delete or reorder the steps, never add one");
     const bad = stepShape(body);
     if (bad) return this.#stepRefusal(bad);
@@ -761,9 +868,21 @@ export class WizardScripts {
     const canon = canonicalSteps(body);
     const sha = stepsSha(canon);
     this.sql.exec(`INSERT INTO wiz_revisions (script_id, version, bundle_id, steps, sha, author, author_name, adopted, at)
-                   VALUES (?,?,?,?,?,?,?,?,?)`, s.id, n, s.bundle_id, json(canon), sha, member, who, p ? p.proposal_id : null, at);
+                   VALUES (?,?,?,?,?,?,?,?,?)`, s.id, n, s.bundle_id, json(canon), sha, member, who,
+                  p ? p.proposal_id : b ? `${BASE_ADOPTION}${b.version}` : null, at);
     return { ok: true, version: versionId(s.id, n), sha, state: "draft", ...(p ? { adopted: p.proposal_id } : {}),
+             ...(b ? { adopted_base: b.version } : {}),
              revisions: this.#one(`SELECT COUNT(*) AS c FROM wiz_revisions WHERE script_id=? AND version=?`, s.id, n).c };
+  }
+
+  /* R4 (DEC-158 (4)): a newer approved version of the base of the copy `s` (one approved after the version its `based_on`
+     names, `updated` since or not) that the viewer may see, `{version, steps}`; or null. */
+  #newerBase(s, asked, viewer) {
+    const on = s.based_on ? parseVersionId(s.based_on) : null;
+    const r = on && typeof asked === "string" ? this.#resolve(asked, viewer) : null;
+    if (!r || r.s.id !== on.script || r.n <= on.version) return null;
+    const st = r.s.origin === "civicsmith" ? "approved" : this.#stateOf(this.#events(r.s.id), r.n);
+    return ["approved", "updated"].includes(st) ? { version: versionId(r.s.id, r.n), steps: this.#steps(r.s, r.n) } : null;
   }
 
   /* ================================================================ R5: wizardPropose */
@@ -1033,7 +1152,7 @@ export class WizardScripts {
       else if (st === "broken") pick = s.origin === "group" ? numbers.filter((n) => this.#isBroken(s.id, n)) : [];
       else pick = s.retired ? [] : numbers.filter((n) => stateOf(n) === st);
       if (!pick.length) continue;
-      out.push(WizardScripts.#head(s, { versions: pick.slice().reverse().map((n) => this.#listed(this.#versionView(s, n, events), s)) }));
+      out.push(this.#head(s, { versions: pick.slice().reverse().map((n) => this.#listed(this.#versionView(s, n, events), s)) }));
     }
     return { ok: true, state: st || "offered", scripts: out.slice(0, WIZARDS_MAX), truncated: out.length > WIZARDS_MAX };
   }
@@ -1052,7 +1171,7 @@ export class WizardScripts {
     const adopted = s.origin === "civicsmith" ? [] : this.#rows(`SELECT DISTINCT p.* FROM wiz_proposals p JOIN wiz_revisions r ON r.adopted=p.proposal_id
                                  WHERE r.script_id=? AND r.version=? ORDER BY p.proposal_id`, s.id, n)
       .map((p) => ({ id: p.proposal_id, sha: p.sha, why: p.why, at: p.at, label: WizardScripts.#label(p.proposer) }));
-    return { ok: true, script: WizardScripts.#head(s, { start: startOf(view.steps) }), version: { ...view, proposals_adopted: adopted },
+    return { ok: true, script: this.#head(s, { start: startOf(view.steps) }), version: { ...view, proposals_adopted: adopted },
              offered: this.#offeredNumber(s, events) === n };
   }
 
@@ -1093,10 +1212,11 @@ export class WizardScripts {
 
   /** R21 (in-process; the registry form, Q1-7): for `answers`' explain and walk-through reads and `affordances`'
    *  no-target answer, every registered screen `{id, acts, scripts}`, each script as R11 answers it to `viewer` on that
-   *  screen, `{id, version, name, start, steps: [{screen, act, what, why, draft?}], origin}` (and `draft: true` for the
-   *  viewer's own draft), a step's `draft` its kind alone (`text`, `template` or `machine`), never its words, template
-   *  or op. Before registration `{registered: false, screens: []}`. Needs no AI credential and no key; runs nothing,
-   *  records no use and writes nothing. */
+   *  screen, `{id, version, name, start, steps: [{screen, act, what, why, via, draft?}], origin, based_on}` (and `draft:
+   *  true` for the viewer's own draft), a step's `via` its side trip's script id or null (DEC-139 (4)), its `draft` its
+   *  kind alone (`text`, `template` or `machine`), never its words, template or op, and `based_on` R1's with its base's
+   *  name or null (DEC-158 (4)). Before registration `{registered: false, screens: []}`. Needs no AI credential and no
+   *  key; runs nothing, records no use and writes nothing. */
   wizardRegistry({ viewer = null } = {}) {
     if (!this.reg) return { ok: true, registered: false, screens: [] };
     const byStart = new Map();
@@ -1104,7 +1224,8 @@ export class WizardScripts {
       const start = startOf(x.steps);
       if (!byStart.has(start)) byStart.set(start, []);
       byStart.get(start).push({ id: x.s.id, version: versionId(x.s.id, x.n), name: x.s.name, start,
-                                steps: x.steps.map(WizardScripts.#bareStep), origin: x.s.origin, ...(x.draft ? { draft: true } : {}) });
+                                steps: x.steps.map(WizardScripts.#bareStep), origin: x.s.origin, based_on: this.#basedOn(x.s),
+                                ...(x.draft ? { draft: true } : {}) });
     }
     const screens = this.registeredScreens().map((sc) => ({ ...sc, scripts: byStart.get(sc.id) || [] }));
     return { ok: true, registered: true, screens };
@@ -1113,7 +1234,117 @@ export class WizardScripts {
   static #bareStep(s) {
     const o = isObj(s) ? s : {};
     const kind = o.draft !== undefined && o.draft !== null ? Object.keys(canonicalDraft(o.draft) || {})[0] ?? null : null;
-    return { screen: o.screen ?? null, act: o.act ?? null, what: o.what ?? "", why: o.why ?? "", ...(kind ? { draft: kind } : {}) };
+    return { screen: o.screen ?? null, act: o.act ?? null, what: o.what ?? "", why: o.why ?? "", via: typeof o.via === "string" ? o.via : null,
+             ...(kind ? { draft: kind } : {}) };
+  }
+
+  /* ================================================================ R23: startFrom */
+
+  /** R23 (`op=startfrom`; DEC-129 (7), (2)): the first steps a member may take from the group's home: the offered
+   *  scripts this viewer may start (R11) of the Civicsmith library that are not required, and of the group's own, each
+   *  `{id, version, name, start}`, and `doors`, the design stream's front doors naming offered scripts only (a door
+   *  with none left out; `[]` until given). Needs no AI credential and no key; starts nothing, records no use, writes
+   *  nothing. */
+  startFrom({ viewer = null } = {}) {
+    const scripts = this.#offeredScripts(viewer).filter((x) => !(x.s.origin === "civicsmith" && x.s.required))
+      .map((x) => ({ id: x.s.id, version: versionId(x.s.id, x.n), name: x.s.name, start: startOf(x.steps) }));
+    const ids = new Set(scripts.map((x) => x.id));
+    const doors = FRONT_DOORS.map((d) => ({ door: d.door, scripts: (Array.isArray(d.scripts) ? d.scripts : []).filter((id) => ids.has(id)) }))
+      .filter((d) => d.scripts.length);
+    return { ok: true, scripts, doors };
+  }
+
+  /* ================================================================ R26: baseUpdates */
+
+  /* R26: the copies the viewer may see that are offered or hold a draft, each with the versions of its base approved
+     after the one `based_on` names: `[{s, base, on, newer: [n]}]`. */
+  #copiesBehind(viewer) {
+    const out = [];
+    for (const r of this.#rows(`SELECT script_id, based_on FROM wiz_copies ORDER BY script_id`)) {
+      const s = this.#script(r.script_id, viewer);
+      const on = parseVersionId(r.based_on);
+      if (!s || s.retired || !on) continue;
+      const events = this.#events(s.id);
+      const live = this.#offeredNumber(s, events) !== null || this.#numbers(s.id).some((n) => this.#stateOf(events, n) === "draft");
+      const base = this.#groupScript(on.script) || this.#libraryScript(on.script);
+      if (!live || !base) continue;
+      const bev = base.origin === "civicsmith" ? [] : this.#events(base.id);
+      const numbers = base.origin === "civicsmith" ? [base.entry.version] : this.#numbers(base.id);
+      const newer = numbers.filter((n) => n > on.version
+        && (base.origin === "civicsmith" || ["approved", "updated"].includes(this.#stateOf(bev, n))));
+      if (newer.length) out.push({ s, base, on, newer });
+    }
+    return out;
+  }
+  /* R26: the copy's recipients: its wizard editors (members with a live editor grant who may see it), else its approvers
+     (R7's right: an owner of its project, or the administrators for a group-wide copy). BOB's reading (P17). */
+  #copyRecipients(s) {
+    const editors = this.#rows(`SELECT DISTINCT g.member FROM wiz_editor_grants g WHERE NOT EXISTS
+                                  (SELECT 1 FROM wiz_editor_revocations r WHERE r.grant_id=g.grant_id) ORDER BY g.member`)
+      .map((r) => r.member).filter((m) => this.#canSee(s, `member:${m}`));
+    if (editors.length) return { recipients: editors, as: "editors" };
+    const owners = (s.widened ? this.#call(() => this.membership.activeAdmins(), []) : this.#call(() => this.membership.projectOwners(s.project), [])) || [];
+    return { recipients: [...new Set(owners)].sort(), as: "approvers" };
+  }
+
+  /** R26 (`op=baseupdates`; for `queue-producers` R39): each pair (copy, newer base version) of a copy the viewer may see,
+   *  offered or holding a draft, whose base has a version approved after the one its `based_on` names, `{copy, name,
+   *  copy_version, copy_steps, base, base_name, based_on, newer, newer_steps, project, recipients, recipients_are, at}`
+   *  (`at` the instant the pair was first found, the one thing this writes), each pair once, at most 500 per page in
+   *  (instant, copy, newer) order after `after` (a previous page's `cursor`). Nothing is applied to a copy: the change is
+   *  brought across only by a member's own revision (R4's `adopt: {base}`). */
+  baseUpdates({ after = null, limit = null, viewer = null } = {}) {
+    const max = clamp(limit, PAGE_MAX, PAGE_MAX);
+    const at = this.#when();
+    const pairs = [];
+    for (const { s, base, on, newer } of this.#copiesBehind(viewer)) {
+      for (const n of newer) {
+        const nv = versionId(base.id, n);
+        let seen = this.#one(`SELECT at FROM wiz_base_seen WHERE script_id=? AND newer=?`, s.id, nv);
+        if (!seen) {
+          this.sql.exec(`INSERT INTO wiz_base_seen (script_id, newer, bundle_id, at) VALUES (?,?,?,?)`, s.id, nv, s.bundle_id, at);
+          seen = { at };
+        }
+        const events = this.#events(s.id);
+        const drafts = this.#numbers(s.id).filter((k) => this.#stateOf(events, k) === "draft");
+        const cv = this.#offeredNumber(s, events) ?? drafts[drafts.length - 1];
+        const who = this.#copyRecipients(s);
+        pairs.push({ key: `${seen.at}|${s.id}|${nv}`, entry: {
+          copy: s.id, name: s.name, copy_version: versionId(s.id, cv), copy_steps: this.#steps(s, cv), base: base.id, base_name: base.name,
+          based_on: versionId(on.script, on.version), newer: nv, newer_steps: this.#steps(base, n),
+          project: isObj(s.scope) ? s.scope.project : null, recipients: who.recipients, recipients_are: who.as, at: seen.at } });
+      }
+    }
+    pairs.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+    const from = str(after);
+    const rest = from ? pairs.filter((p) => p.key > from) : pairs;
+    const page = rest.slice(0, max);
+    const truncated = rest.length > max;
+    return { ok: true, entries: page.map((p) => p.entry), limit: max, truncated, cursor: truncated && page.length ? page[page.length - 1].key : null };
+  }
+
+  /* ================================================================ R24, R27: writing help */
+
+  /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
+   *  `{offered: false, code}`, against the registration's refused and irreversible acts. Writes nothing; never throws. */
+  writingHelpAt({ op = null, field = null, draftHeld = false, assistant = null } = {}) {
+    return writingHelpAt({ op, field, draftHeld, assistant }, this.#registration().helpRefused);
+  }
+
+  /** R27 (`op=writinghelp`): a member's request for a labelled draft in one own-words field: R24's refusals, then
+   *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
+   *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The ceiling refusals are the door's (`control-plane` R57). Writes
+   *  nothing. */
+  writingHelp({ op = null, field = null, told = null, draftHeld = false, assistant = null } = {}) {
+    const at = this.writingHelpAt({ op, field, draftHeld, assistant });
+    if (!at.offered) return refuse(at.code, "the assistant does not help word this field", { op: typeof op === "string" ? op.slice(0, 80) : null });
+    const text = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
+    /* DEC-49 REGION is-writing-help-request */
+    if (!text.trim() || text.length > TOLD_MAX)
+      return refuse("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
+    return refuse("ASSISTANT_DRAFT_UNAVAILABLE", "the assistant's draft is not served yet: nothing was drafted and the field is unchanged",
+                  { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()) });
+    /* END DEC-49 REGION is-writing-help-request */
   }
 
   /** R12 (`op=wizardcheck`): `checkScript` against the registration, for any credential, `ai` included. Writes nothing. */
@@ -1247,7 +1478,8 @@ export class WizardScripts {
 /* The reads and acts answer their own refusals with code, check and translation (DEC-49). */
 for (const m of ["wizardRegister", "brokenScripts", "wizardDraft", "wizardRevise", "wizardPropose", "wizardSubmit", "wizardApprove",
                  "wizardEditorGrant", "wizardEditorRevoke", "wizardRetire", "wizards", "wizardRead", "wizardsAt", "wizardCheck",
-                 "wizardProgress", "wizardUse", "wizardCandidates", "submittedFor", "wizardRegistry"]) {
+                 "wizardProgress", "wizardUse", "wizardCandidates", "submittedFor", "wizardRegistry", "startFrom", "baseUpdates",
+                 "writingHelp"]) {
   const fn = WizardScripts.prototype[m];
   WizardScripts.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
@@ -1280,10 +1512,11 @@ export function wizardScriptsOwns(t) {
 }
 
 /** The module's ops (the `filingTemplatesOps` pattern): `author` and `viewer` are the control plane's stamps (`author`
- *  stands for R3, R4, R6's author, R5's proposer and R7–R9's `by`), read from the query and never from the body, so a
- *  caller's own copy never wins. `op-declarations` declares them (its R15), `control-plane` routes and stamps them (its
- *  R50) and `plane` composes them (its R19). */
-export function wizardScriptsOps(m, url, body) {
+ *  stands for R3, R4, R6's author, R5's proposer, R7–R9's `by` and R27's `by`), read from the query and never from the
+ *  body, so a caller's own copy never wins. `door` is what the door resolves per act and never the caller: R27's
+ *  `assistant`, `{on, account}` (`control-plane` R57). `op-declarations` declares them (its R15, R28, R29),
+ *  `control-plane` routes and stamps them (its R50, R57) and `plane` composes them (its R19). */
+export function wizardScriptsOps(m, url, body, door = null) {
   const q = (k) => url.searchParams.get(k);
   const has = (k) => url.searchParams.has(k);
   const b = body && typeof body === "object" ? body : {};
@@ -1291,8 +1524,12 @@ export function wizardScriptsOps(m, url, body) {
   const stamps = { viewer: q("viewer") };
   return {
     wizarddraft: () => m.wizardDraft({ project: pick("project"), name: pick("name"), recorded: b.recorded, from: pick("from"),
-      author: q("author"), ...stamps }),
+      copy: pick("copy"), author: q("author"), ...stamps }),
     wizardrevise: () => m.wizardRevise({ version: pick("version"), steps: b.steps, adopt: pick("adopt"), author: q("author"), ...stamps }),
+    startfrom: () => m.startFrom({ ...stamps }),
+    baseupdates: () => m.baseUpdates({ after: q("after"), limit: q("limit"), ...stamps }),
+    writinghelp: () => m.writingHelp({ op: b.op ?? null, field: b.field ?? null, told: b.told ?? null, draftHeld: b.draftHeld ?? false,
+      assistant: isObj(door) ? door.assistant ?? null : null, by: q("author"), ...stamps }),
     wizardpropose: () => m.wizardPropose({ project: pick("project"), script: pick("script"), steps: b.steps, why: b.why ?? null,
       run: pick("run"), model: pick("model"), proposer: q("author"), ...stamps }),
     wizardsubmit: () => m.wizardSubmit({ version: pick("version"), author: q("author"), ...stamps }),
