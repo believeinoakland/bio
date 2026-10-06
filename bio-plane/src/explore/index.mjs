@@ -18,6 +18,7 @@ export { PRESET_RULES, OVERLAP_SENTENCE } from './presets.mjs';
 export { PATH_ORDER, QUANTITY_OF_PATH } from './walk.mjs';
 export { HUB_WORDS, PAGE_LIMIT } from './reader.mjs';
 export { LEAD_SENTENCE } from './answer.mjs';
+export { INPUT_NOT_READ } from './rederive.mjs';
 
 /** The time budget every exploration answers with (R5): connection-grammar's default, provisional until M-X1b. */
 export const TIME_BUDGET_MS = BOUNDS.time_budget_ms;

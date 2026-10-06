@@ -1,9 +1,9 @@
 /* explore at its interface: re-deriving a derived connection (R12), the timeline over a set (R13), the ops map (R14). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { exploreOf, exploreOps } from "../../../src/explore/index.mjs";
+import { exploreOf, exploreOps, INPUT_NOT_READ } from "../../../src/explore/index.mjs";
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
-import { AT, ent, conn, world, byOwner, makeStore } from "./fixtures/owners.mjs";
+import { AT, INQUIRY, ent, conn, world, byOwner, makeStore } from "./fixtures/owners.mjs";
 import { seeded, ANN } from "../money/fixture.mjs";
 
 const V = "alice";
@@ -12,7 +12,7 @@ const A = ent(1), B = ent(2), C = ent(3);
 test("R12 rederive recomputes a derived connection through its owner and answers whether its derived id equals the id, with the hops it rests on and whether any is declared or a hunch; it never guesses and writes nothing", () => {
   const declared = conn("member_of", A, C, { id: "decl-1" });
   const tie = conn("line:part_of", A, B, { id: "tie-1" });
-  const d = conn("mentioned_together", A, B, { as_of: "2026-02-01", method: "co-mention", inputs: ["tie-1", "decl-1", "INFO-2026-0001-a-source"] });
+  const d = conn("mentioned_together", A, B, { as_of: "2026-02-01", method: "co-mention", inputs: ["tie-1", "decl-1", { source: "INFO-2026-0001-a-source" }] });
   const store = makeStore();
   const { registry } = world(byOwner([declared, tie, d]), { store });
   const x = exploreOf(null, { registry });
@@ -22,7 +22,7 @@ test("R12 rederive recomputes a derived connection through its owner and answers
   assert.equal(ok.matches, true);
   assert.equal(ok.recomputed_id, derivedId({ kind: args.kind, from: A, to: B, as_of: args.as_of, method: args.method }));
   assert.deepEqual(ok.derivation, d.derived);
-  assert.deepEqual(ok.rests_on.map((r) => [r.input, r.class]), [["tie-1", "evidentiary"], ["decl-1", "declared"], ["INFO-2026-0001-a-source", null]]);
+  assert.deepEqual(ok.rests_on.map((r) => [r.input, r.class]), [["tie-1", "evidentiary"], ["decl-1", "declared"], [{ source: "INFO-2026-0001-a-source" }, null]]);
   assert.equal(ok.declared_or_hunch, true);
   // A tampered id.
   const bad = x.rederive({ ...args, id: "0".repeat(64) });
@@ -69,7 +69,7 @@ test("R13 timelineOver composes the real events.timeline over the set with the p
   assert.equal(x.timelineOver({ set: [s.contract] }).refused, "VIEWER_MISSING");
   assert.equal(x.timelineOver({ inquiry: "INQ-2026-0001-a-question", viewer }).refused, "NO_SET");
   assert.equal(exploreOf(null, {}).timelineOver({ set: [s.contract], viewer }).refused, "NOT_AVAILABLE");
-  assert.match(exploreOf(null, { events: s.ev }).timelineOver({ set: [s.contract], viewer }).money_note, /money is not wired/);
+  assert.match(exploreOf(null, { events: s.ev }).timelineOver({ set: [s.contract], viewer }).money_note, /no money record connected/);
   // events' own refusal is answered as it is.
   assert.equal(x.timelineOver({ set: [s.contract], from: "not a date", viewer }).reason, "BAD_DATE");
 });
@@ -91,4 +91,67 @@ test("R14 exploreOps publishes route arms for explore, explorepreset, explorever
   assert.equal(exploreOps(x, url, { preset: "rank" }).explorepreset().refused, "UNKNOWN_PRESET");
   assert.equal(exploreOps(x, url, { kind: "nope", from: A, to: B, as_of: "2026-01-01", method: "m", id: "x" }).exploreverify().matches, false);
   assert.equal(exploreOps(x, url, { set: [A] }).exploretimeline().ok, true);
+});
+
+test("R19 rederive reads the derivation's ends and the hops its inputs name with the leg's inquiry as scope: a hunch of that inquiry the viewer may see is reported as a hunch (a lead); an input it cannot read is undetermined with one reason that reveals nothing, and the answer is then matches false, never true", () => {
+  const D = ent(4), E = ent(5);
+  const hunch = conn("hunch_tie", A, C, { id: "HYP-2026-0001-a-hunch" });
+  const fenced = conn("line:part_of", A, D, { id: "LIN-2026-0000000000fence1", seen_by: ["bob"] });
+  const tie = conn("line:part_of", A, B, { id: "tie-1" });
+  const mk = (inputs, method) => conn("mentioned_together", A, B, { method, inputs });
+  const onHunch = mk(["tie-1", "HYP-2026-0001-a-hunch"], "on-hunch");
+  const onFenced = mk(["LIN-2026-0000000000fence1"], "on-fenced");
+  const onAbsent = mk([{ connection: "f".repeat(64) }], "on-absent");
+  // Inputs that name no hop: the ends, a record object, a value the method names (duties' occurrence key).
+  const onValues = mk([A, B, { entity: E }, { end: B, capture: "a".repeat(64) }, "2026-05-01#3"], "on-values");
+  const store = makeStore();
+  const { registry } = world(byOwner([hunch, fenced, tie, onHunch, onFenced, onAbsent, onValues]), { store });
+  const x = exploreOf(null, { registry });
+  const before = store.snapshot();
+  const ask = (d, extra = {}) => x.rederive({ kind: "mentioned_together", from: A, to: B, as_of: d.derived.as_of, method: d.derived.method, id: d.id, viewer: V, ...extra });
+
+  // Within the leg's inquiry the hunch is read and reported as a hunch: the connection rests on a lead.
+  const inScope = ask(onHunch, { scope: { inquiry: INQUIRY } });
+  assert.equal(inScope.matches, true);
+  assert.equal(inScope.undetermined, undefined);
+  assert.deepEqual(inScope.scope, { inquiry: INQUIRY });
+  assert.deepEqual(inScope.rests_on.map((r) => [r.input, r.class]), [["tie-1", "evidentiary"], ["HYP-2026-0001-a-hunch", "hunch"]]);
+  assert.equal(inScope.declared_or_hunch, true);
+  // Without scope, or in another inquiry, the hunch is not read: undetermined, matches false.
+  for (const extra of [{}, { scope: null }, { scope: { inquiry: "INQ-2026-0002-another" } }]) {
+    const r = ask(onHunch, extra);
+    assert.equal(r.ok, true);
+    assert.equal(r.matches, false, JSON.stringify(extra));
+    assert.equal(r.undetermined, true);
+    assert.deepEqual(r.rests_on[1], { input: "HYP-2026-0001-a-hunch", class: null, undetermined: true, why: INPUT_NOT_READ });
+    assert.match(r.why, /not read, so it cannot be re-derived/);
+  }
+  // A hop withheld from the viewer and one no owner holds answer the same, naming nothing the viewer may not see.
+  const withheld = ask(onFenced, { scope: { inquiry: INQUIRY } }), absent = ask(onAbsent, { scope: { inquiry: INQUIRY } });
+  for (const r of [withheld, absent]) {
+    assert.equal(r.matches, false);
+    assert.equal(r.undetermined, true);
+    assert.equal(r.rests_on[0].why, INPUT_NOT_READ);
+    assert.equal(r.rests_on[0].connection, undefined);
+    assert.ok(!JSON.stringify(r).includes(D), "the withheld hop's far end is not named");
+  }
+  assert.equal(ask(onFenced, { viewer: "bob" }).matches, true, "the viewer who may see it reads it");
+  // Ends, records and values are not hops: nothing undetermined.
+  const values = ask(onValues);
+  assert.equal(values.matches, true);
+  assert.ok(values.rests_on.every((r) => !r.undetermined));
+  // A tampered id stays not a match even when every input is read.
+  assert.equal(ask(onHunch, { scope: { inquiry: INQUIRY }, id: "0".repeat(64) }).matches, false);
+  // A malformed scope is refused.
+  for (const scope of ["INQ-2026-0001-a-question", { inquiry: "" }, []]) assert.equal(ask(onHunch, { scope }).refused, "BAD_SCOPE");
+  assert.equal(store.snapshot(), before, "nothing written");
+});
+
+test("DEC-149 (T34-78) the timeline's member-facing refusal and note call the group's Civicsmith by name, never the instance", () => {
+  const none = exploreOf(null, {}).timelineOver({ set: [A], viewer: V });
+  assert.equal(none.refused, "NOT_AVAILABLE");
+  assert.equal(none.why, "your group's Civicsmith has no events record connected, so no timeline can be read");
+  const noMoney = exploreOf(null, { events: { timeline: () => ({ ok: true, world: { items: [] }, ours: { sources: [] } }) } }).timelineOver({ set: [A], viewer: V });
+  assert.equal(noMoney.money_note, "your group's Civicsmith has no money record connected, so no payer or payee is shown");
+  for (const t of [none.why, noMoney.money_note]) assert.doesNotMatch(t, /\b(this instance|the instance|copy|plane|server)\b/);
 });

@@ -29,7 +29,7 @@ export function timelineOver(ctx, arg) {
   if (!Array.isArray(a.set) || a.set.length === 0) return refuse('NO_SET', 'a timeline is over a set of record ids the caller names');
   const events = typeof ctx.events === 'function' ? ctx.events() : ctx.events;
   const money = typeof ctx.money === 'function' ? ctx.money() : ctx.money;
-  if (!events || typeof events.timeline !== 'function') return refuse('NOT_AVAILABLE', 'events is not wired into this instance, so no timeline can be read');
+  if (!events || typeof events.timeline !== 'function') return refuse('NOT_AVAILABLE', 'your group\'s Civicsmith has no events record connected, so no timeline can be read');
   const t = events.timeline({ set: a.set, from: a.from ?? null, to: a.to ?? null, viewer: a.viewer });
   if (isRefusal(t) || (isObj(t) && t.ok === false)) return t;
   const out = [];
@@ -44,5 +44,5 @@ export function timelineOver(ctx, arg) {
         ...(f.stage ? { stage: f.stage } : {}), source: f.source, citation: f.citation, grade: f.grade })), ...(m.truncated ? { truncated: true } : {}) });
     }
   }
-  return { ok: true, set: a.set, timeline: t, money: out, ...(wired ? {} : { money_note: 'money is not wired into this instance, so no payer or payee is shown' }) };
+  return { ok: true, set: a.set, timeline: t, money: out, ...(wired ? {} : { money_note: 'your group\'s Civicsmith has no money record connected, so no payer or payee is shown' }) };
 }
