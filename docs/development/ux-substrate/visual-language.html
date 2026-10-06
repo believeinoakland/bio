@@ -510,6 +510,25 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; }
 .cs-ref:hover, .cs-ref:focus-visible { color: var(--c-accent-strong); }
 
+/* ============================================================
+   The security screen (K1875, DEC-165): the level against the group's usual, and a map of kinds over time.
+   Rust is attention, so it marks only what is above the usual; the highest step is also textured, and every cell
+   names its count on hover, focus or tap, so colour is never the only signal.
+   ============================================================ */
+.cs-risk { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; font: 700 var(--t-xs)/1.25 var(--f-sans);
+           letter-spacing: var(--track-caps); text-transform: uppercase; border-radius: var(--r-1); border: 1.5px solid var(--c-rule-strong); color: var(--c-ink-2); }
+.cs-risk[data-risk="raised"] { border-color: var(--c-signal); color: var(--c-signal); }
+.cs-risk[data-risk="high"]   { border-color: var(--c-signal); background: var(--c-signal); color: var(--c-sheet); }
+.cs-heat { display: grid; grid-template-columns: minmax(96px, 190px) repeat(var(--n, 24), minmax(0, 1fr)); gap: 2px; align-items: center; font-size: var(--t-xs); }
+.cs-heat .k { padding-right: var(--s-2); color: var(--c-ink-2); line-height: 1.25; }
+.cs-heat .t { color: var(--c-muted); font-size: 11px; text-align: left; white-space: nowrap; overflow: visible; }
+.cs-heat i { display: block; height: 22px; background: var(--c-surface); border: 1px solid var(--c-rule); }
+.cs-heat i[data-x="1"] { background: color-mix(in srgb, var(--c-signal) 20%, var(--c-surface)); border-color: color-mix(in srgb, var(--c-signal) 40%, var(--c-rule)); }
+.cs-heat i[data-x="2"] { background: color-mix(in srgb, var(--c-signal) 50%, var(--c-surface)); border-color: var(--c-signal); }
+.cs-heat i[data-x="3"] { background: var(--c-signal) repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--c-sheet) 40%, transparent) 3px 5px); border-color: var(--c-signal); }
+.cs-heatkey { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); align-items: center; font-size: var(--t-xs); color: var(--c-ink-2); }
+.cs-heatkey i { display: inline-block; width: 16px; height: 12px; vertical-align: -2px; margin-right: 4px; border: 1px solid var(--c-rule); background: var(--c-surface); }
+
 /* Layout of this page: a reading document drawn in the visual language it describes; a sticky index; each section a band of
    live specimens. The design-phase pages use Google's copy of the same faces only as a fallback; the product ships its own. */
 html, body { background: var(--c-ground); }
@@ -908,6 +927,13 @@ body:not(.show-src) .src { display: none; }
 <div class="row"><span class="cs-hunch"><svg class="i" aria-hidden="true"><use href="#i-hunch"/></svg>Hunch · Mai's</span><span style="font-size:var(--t-sm);color:var(--c-ink-2)">A member's hunch is marked as theirs; a hint is the machine's. Neither is ever evidence.</span></div>
 <div class="row"><span class="cs-due"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Due 14 October</span><span class="cs-due" data-due="near"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Due in 2 days</span><span class="cs-due" data-due="overdue"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg>Overdue since 9 October</span><span class="cs-due" data-due="met"><svg class="i" aria-hidden="true"><use href="#i-accepted"/></svg>Met, 8 October</span><span class="cs-changed"><svg class="i" aria-hidden="true"><use href="#i-changed"/></svg>Newer version</span></div>
 <p class="cap">The three kinds are told apart by icon and word, not colour, so the eye goes to the dates and the work. As a date nears its mark turns rust (display only); “Overdue” is the one thing said unasked, once.</p>
+</div>
+
+<h3>How hard the group is being tried: the level and the hour grid</h3>
+<div class="spec">
+<div class="row"><span class="cs-risk">Ordinary</span><span class="cs-risk" data-risk="raised">Raised</span><span class="cs-risk" data-risk="high">High</span></div>
+<div class="cs-heatkey"><span><i></i>at or below the usual</span><span><i style="background:color-mix(in srgb, var(--c-signal) 20%, var(--c-surface))"></i>up to 5 times the usual</span><span><i style="background:color-mix(in srgb, var(--c-signal) 50%, var(--c-surface))"></i>5 to 50 times</span><span><i style="background:var(--c-signal) repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--c-sheet) 40%, transparent) 3px 5px)"></i>over 50 times</span></div>
+<p class="cap">The security screen's two marks (DEC-165): the level always in a word, rust only when above the group's usual, filled when high; each hour's square names its count and the usual, and the highest step is textured as well as coloured, so colour is never the only signal.</p>
 </div>
 
 <h3>Bars show progress</h3>

@@ -390,6 +390,7 @@ const SCREEN_HELP = {
   join: 'Your invitation to join a group. Choose your language, the name the group will know you by, and a password.',
   home: 'Your group\'s home: what it is working on and what is waiting on you. Start here each day.',
   members: 'Everyone in your group and what each may do. Administrators invite members, set what they may do, and see who holds the hosting account.',
+  security: 'Administrators only: how hard your group\'s Civicsmith is being tried, by kind and by hour, against its own usual. Counts only; nothing names who tried.',
   account: 'Your own settings: your handle, password, signing key, language and expertise.',
   connect: 'Whether and how the assistant serves you: on your group\'s key, your own Claude account, or not at all. Set your limit and suggestions here.',
   ties: 'Your own ties to people or organisations the group may look into. Only you and the administrators see this list.',

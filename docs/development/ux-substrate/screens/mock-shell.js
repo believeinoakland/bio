@@ -55,7 +55,7 @@ const PATH = {
   home: ['Home'], queue: ['Queue'], 'due-date': ['Queue', 'Due date'], inbox: ['Queue', 'Inbox'],
   finder: ['Find'], capture: ['Add'], held: ['Add', 'Held captures'],
   'find-in': ['Projects', 'Pothole repairs', 'Find in this'],
-  'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], account: ['Settings', 'Your account'],
+  'group-identity': ['Settings', 'Who your group is'], members: ['Settings', 'Members'], security: ['Settings', 'Security'], account: ['Settings', 'Your account'],
   connect: ['Settings', 'The assistant and your account'], ties: ['Settings', 'Your ties'], notes: ['Settings', 'Your notes'],
   translations: ['Settings', 'Translations'], wizards: ['Settings', 'Wizards'],
   person: ['People', 'Person'], explore: ['People', 'Person', 'Explore connections'],

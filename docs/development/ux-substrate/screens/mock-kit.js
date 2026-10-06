@@ -29,7 +29,7 @@ const WEIGHT = {
   retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
   release:4, attest:4, caseratify:4, docketpost:4, signerregisterown:4, claim:4, docketfile:2,
-  publish:5, owed_publishat:5, owed_findin:1,
+  publish:5, owed_publishat:5, owed_findin:1, owed_securitymap:1,
 };
 const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'owed_publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
 const key = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0] : op;

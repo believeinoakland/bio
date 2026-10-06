@@ -1,4 +1,4 @@
-/* Civicsmith mockups: the 43 screens of the registry (registry.src.py), each a function of the context
+/* Civicsmith mockups: the 44 screens of the registry (registry.src.py), each a function of the context
    c = {ai: the member has connected their own Claude account, v: a variant name}. Sample data is invented:
    the group Lakeshore Tenants, its members Rosa (founder), Dev, Mai (new), Ana (an accountant) and Teo (a reporter). */
 'use strict';
@@ -95,6 +95,43 @@ SCR.members = c => ({ rail: 'settings', title: 'Members', crumbs: ['Settings', '
   ${sec('Joining through your website', `${note('Let your website invite people: an open form, or an application someone approves. Anyone let through can see the group\'s shared work.')}${acts(btn('websitekeycreate', 'Create a website key'), btn('joinlinkenable', 'Turn on the reusable join link'))}`)}
   ${sec('The group\'s API key', `<div class="row"><span class="cs-due" data-due="met">${I('accepted')}Held · on · set by Rosa, 6 October</span><span class="muted">$31.40 this month · Mai $12.10 · Dev $9.80 · 4 others $9.50</span></div>${note('Administrators see spending by member, never what was asked.')}${checks('Under the group\'s key', [['Members may switch on unprompted suggestions', false], ['Members may keep standing questions', true]], { act: 'groupswitchset' })}${acts(btn('groupswitchset', 'Save'), btn('groupkeyset', 'Replace the key'), btn('groupkeyswitch', 'Switch it off'), btn('groupkeyremove', 'Remove the key'))}`)}
   ${sec('Administrators', acts(btn('memberset', 'Change a member\'s status'), btn('adminendorse', 'Endorse an administrator'), btn('adminremove', 'Remove an administrator')))}` });
+
+/* K1875 (Bob) and K1874 (Q5), drawn by DEC-165: an administrator's view of how hard the group's Civicsmith is being
+   tried, over a period they choose. Counts only, by kind and by hour, against the group's usual; nothing names a source.
+   Administrators are told in their queue only when the level is high (K1874). */
+const HEAT = (() => {
+  const hrs = Array.from({ length: 24 }, (_, i) => (23 + i) % 24);
+  const lab = h => `${String(h).padStart(2, '0')}:00`;
+  const rows = [
+    ['Refused sign-ins', 'refused sign-ins', 3, { 2: [214, 3], 3: [188, 2], 4: [61, 2], 9: [4, 1], 15: [3, 1] }],
+    ['Refused keys and links', 'refused keys and links (an expired invitation, a wrong website key, a revoked agent credential)', 0, { 3: [9, 1] }],
+    ['Requests over the limit', 'requests turned away for coming too fast', 0, { 2: [1260, 3], 3: [940, 2], 4: [120, 1] }],
+    ['Blocked by Cloudflare', 'requests Cloudflare blocked before they reached your group\'s Civicsmith (where your plan reports it)', 1, { 1: [40, 1], 2: [310, 2], 13: [22, 1], 20: [18, 1] }],
+    ['Refused hand-overs', 'hand-overs refused at the doorbell (too many, too large)', 0, {}],
+  ];
+  const usual = { 'Refused sign-ins': 3, 'Refused keys and links': 1, 'Requests over the limit': 15, 'Blocked by Cloudflare': 20, 'Refused hand-overs': 1 };
+  const cell = (k, what, j, d) => { const h = hrs[j]; const [n, x] = d[j] || [0, 0]; const tip = `<b>${k}</b>, ${lab(h)}–${lab((h + 1) % 24)}${j < 1 ? ' Monday' : ' Tuesday'}: <b>${n}</b> ${what}. Usual for an hour: about ${Math.max(1, Math.round(usual[k] / 24 * 10) / 10)}.`;
+    return `<i data-x="${x}" tabindex="0" role="img" aria-label="${esc(tip.replace(/<[^>]+>/g, ''))}" data-tip="${esc(tip)}"></i>`; };
+  return `<div class="cs-heat" style="--n:24" role="group" aria-label="Refused and blocked requests by hour, the last 24 hours">
+    <span></span>${hrs.map((h, j) => `<span class="t">${j % 6 === 0 ? lab(h) : ''}</span>`).join('')}
+    ${rows.map(([k, what, _, d]) => `<span class="k">${k}</span>${hrs.map((_, j) => cell(k, what, j, d)).join('')}`).join('')}</div>
+    <div class="cs-heatkey"><span><i></i>at or below the usual</span><span><i style="background:color-mix(in srgb, var(--c-signal) 20%, var(--c-surface))"></i>up to 5 times the usual</span><span><i style="background:color-mix(in srgb, var(--c-signal) 50%, var(--c-surface))"></i>5 to 50 times</span><span><i style="background:var(--c-signal) repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--c-sheet) 40%, transparent) 3px 5px)"></i>over 50 times</span></div>`;
+})();
+SCR.security = c => ({ rail: 'settings', title: 'Security', main: `
+  ${h1('Security', 'How hard your group\'s Civicsmith is being tried, against its usual. Only administrators see this.')}
+  <div class="row" style="gap:12px;align-items:end;flex-wrap:wrap">${choice('mk-sp', 'Period', ['The last hour', 'The last 24 hours', 'The last 7 days', 'The last 30 days', 'Choose the dates…'], 'The last 24 hours', { act: 'owed:securitymap K1875' })}${acts(btn('owed:securitymap K1875', 'Show', { icon: 'search' }))}</div>
+  <div class="cs-sheet" style="padding:14px 16px;display:grid;gap:8px"><div class="row" style="gap:10px"><span class="cs-risk" data-risk="raised" tabindex="0" style="margin-right:4px" data-tip="<b>Raised</b>: well above your group's usual at some point in the period, and nothing got through. <b>High</b>: well above the usual and still going on, or something unusual got through; only then are administrators told, in their queue. <b>Ordinary</b>: around the usual.">Raised</span><b>Someone tried hard to sign in on Tuesday night. Every attempt was refused.</b></div>
+   <p class="mk-small" style="margin:0">Refused sign-ins were about 70 times the usual between 01:00 and 04:00, with requests coming too fast turned away at the same time. It was high from 01:40 to 03:50, when administrators were told once. No new key, credential or administrator was made in the period.</p></div>
+  ${sec('By kind and by hour', HEAT + note('Each square is one hour. Hover, focus or tap one for its count and the usual. “Usual” is your group\'s own median for the same hour over the four weeks before.'))}
+  ${sec('Totals for the period', `<div class="tw"><table class="mk-table"><thead><tr><th>Kind</th><th>This period</th><th>Usual</th><th>Busiest hour</th></tr></thead><tbody>
+    <tr><td>Refused sign-ins</td><td>470</td><td>3</td><td>01:00–02:00, 214</td></tr>
+    <tr><td>Refused keys and links</td><td>9</td><td>1</td><td>02:00–03:00, 9</td></tr>
+    <tr><td>Requests over the limit</td><td>2,320</td><td>15</td><td>01:00–02:00, 1,260</td></tr>
+    <tr><td>Blocked by Cloudflare</td><td>390</td><td>20</td><td>01:00–02:00, 310</td></tr>
+    <tr><td>Refused hand-overs</td><td>0</td><td>1</td><td>none</td></tr></tbody></table></div>
+    ${note('Counts only. Nothing here says who tried or where from, and nothing your group holds is shown.')}`)}
+  ${sec('When you are told', `${sheet(row(kindm('noticed'), '<b>Security</b> · sign-in refusals far above the usual and still going on, all refused so far<span class="meta">sent to administrators once, at 01:40, when the level became high · not sent again while it lasted</span>', ''))}${note('Administrators are told only when the level is high, never as a routine count. The notice opens this screen at that period.')}`)}
+  ${sec('What you can do', `<p class="mk-small">A member who fears their password is weak can change it in ${ref('Your account', 'account', '<b>Your account</b> · each member\'s own handle, password and signing key', 'Where a member changes their password.')}. An administrator can turn off the reusable join link or the group\'s key in ${ref('Members', 'members', '<b>Members</b> · everyone in the group and what each may do', 'Where the join link and the group\'s key are switched.')}. Whoever holds the hosting account can tighten Cloudflare\'s own settings there.</p>`)}` });
 
 SCR.account = c => ({ rail: 'settings', title: 'Your account', crumbs: ['Settings', 'Your account'], main: `
   ${h1('Your account', 'mai.k · member since 6 October 2026')}

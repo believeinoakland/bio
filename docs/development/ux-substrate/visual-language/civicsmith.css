@@ -486,3 +486,22 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-tip .why { display: block; margin-top: 4px; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; }
 .cs-ref:hover, .cs-ref:focus-visible { color: var(--c-accent-strong); }
+
+/* ============================================================
+   The security screen (K1875, DEC-165): the level against the group's usual, and a map of kinds over time.
+   Rust is attention, so it marks only what is above the usual; the highest step is also textured, and every cell
+   names its count on hover, focus or tap, so colour is never the only signal.
+   ============================================================ */
+.cs-risk { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; font: 700 var(--t-xs)/1.25 var(--f-sans);
+           letter-spacing: var(--track-caps); text-transform: uppercase; border-radius: var(--r-1); border: 1.5px solid var(--c-rule-strong); color: var(--c-ink-2); }
+.cs-risk[data-risk="raised"] { border-color: var(--c-signal); color: var(--c-signal); }
+.cs-risk[data-risk="high"]   { border-color: var(--c-signal); background: var(--c-signal); color: var(--c-sheet); }
+.cs-heat { display: grid; grid-template-columns: minmax(96px, 190px) repeat(var(--n, 24), minmax(0, 1fr)); gap: 2px; align-items: center; font-size: var(--t-xs); }
+.cs-heat .k { padding-right: var(--s-2); color: var(--c-ink-2); line-height: 1.25; }
+.cs-heat .t { color: var(--c-muted); font-size: 11px; text-align: left; white-space: nowrap; overflow: visible; }
+.cs-heat i { display: block; height: 22px; background: var(--c-surface); border: 1px solid var(--c-rule); }
+.cs-heat i[data-x="1"] { background: color-mix(in srgb, var(--c-signal) 20%, var(--c-surface)); border-color: color-mix(in srgb, var(--c-signal) 40%, var(--c-rule)); }
+.cs-heat i[data-x="2"] { background: color-mix(in srgb, var(--c-signal) 50%, var(--c-surface)); border-color: var(--c-signal); }
+.cs-heat i[data-x="3"] { background: var(--c-signal) repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--c-sheet) 40%, transparent) 3px 5px); border-color: var(--c-signal); }
+.cs-heatkey { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); align-items: center; font-size: var(--t-xs); color: var(--c-ink-2); }
+.cs-heatkey i { display: inline-block; width: 16px; height: 12px; vertical-align: -2px; margin-right: 4px; border: 1px solid var(--c-rule); background: var(--c-surface); }

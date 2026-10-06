@@ -1,3 +1,16 @@
+<div class="qbrief" id="q-s9">
+<h3>S9. The security screen: may it show where attempts come from?</h3>
+<p><b>The issue.</b> You asked for a screen where administrators see “a map of some kind indicating the level of attack” over a period they choose (6 October, through the development process). It is drawn: Settings › Security, administrators only. It shows the level against the group's usual, and a grid of kinds by hour: refused sign-ins, refused keys and links, requests coming too fast, requests Cloudflare blocked, refused hand-overs. As drawn, it is <b>counts only</b>: it never says who tried or where from. Whether it may say <i>where from</i> is yours, because the same record would also say where your own members are.</p>
+<p><b>How it works today.</b> Nothing records sign-ins or refused sign-ins at all; the security review found that gap, and the counting is being added. Cloudflare tells your group's Civicsmith the country and the address of every request, on every plan. Nothing keeps either today.</p>
+<p><b>An example.</b> At 01:00 on Tuesday, 214 sign-ins are refused in an hour, most for the handle “rosa”. At 07:30, Mai, on a family visit in Manila, mistypes her password twice and then signs in. With places shown, Rosa's screen would read “Refused sign-ins: 470, from 3 countries: Netherlands 466, Philippines 2, United States 2”, and Rosa could work out that Mai is in the Philippines.</p>
+<div class="cols2" style="margin-top:8px">
+<div class="cell"><h4>A · Counts only (as drawn)</h4><p><b>Gains:</b> nothing about anyone's whereabouts reaches anyone; only counts are kept. <b>Costs:</b> an administrator cannot tell one persistent source from many, and there is no map in the geographic sense.</p></div>
+<div class="cell"><h4>B · Countries, never a member's own</h4><p>Refused and blocked requests are counted by country, shown as a map and a list for the period. Addresses are never kept. A refused sign-in followed within an hour by that member's own successful sign-in is counted without a place, so a member's typos never place them. <b>Gains:</b> a real map; shows when an attack comes from one place. <b>Costs:</b> a country is weak evidence (anyone can borrow another country's address); one more thing to explain.</p></div>
+<div class="cell"><h4>C · Addresses and the handles tried</h4><p>Each refused request's address and the handle it tried, kept for 30 days. <b>Gains:</b> the hosting account's holder can block an address in Cloudflare; a member can be told their account is being tried. <b>Costs:</b> addresses are personal data about members as well as attackers; what is kept, a court can ask for (principle 3.11); more to protect.</p></div>
+</div>
+<p><b>Recommendation: B.</b> It gives you the map you described while keeping members' whereabouts out of it, and keeps nothing a court could use to locate anyone. <b>Risk:</b> an administrator may read a country as proof of who is behind an attack; the screen will say it is not.</p>
+<p><b>How to answer:</b> “S9: A”, “S9: B” or “S9: C”, or tell me what you'd change.</p>
+</div>
 <div class="qbrief" id="q-s8" style="border-left-color:var(--c-accent)">
 <h3>S8. Information levels: B, recorded</h3>
 <p>Your answer, 6 October: “S8: B”. Recorded as DEC-162. There are two levels:</p>

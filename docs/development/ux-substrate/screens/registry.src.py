@@ -24,6 +24,8 @@ screen('members', 'Members', 'working', 'The roster: invitations, capabilities, 
   [('memberadd','Invite a member'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
    ('adminremove','Remove an administrator'),('expertiseconfirm','Confirm declared expertise'),('invitewithdraw','Withdraw an unused invitation'),('websitekeycreate','Create a website key'),('joinlinkenable','Turn on the reusable join link'),
    ('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('groupswitchset','Set the group key\'s suggestions and standing questions'),('groupkeyremove','Remove the group\'s key')], [16,27])
+screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
+  [('owed:securitymap K1875','Show the level for a period')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
   [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('owed:memberlanguageset DEC-127','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
 screen('connect', 'The assistant and your account', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).',

@@ -352,6 +352,22 @@
    ]
   },
   {
+   "id": "security",
+   "name": "Security",
+   "frame": "working",
+   "purpose": "Administrators only: how hard the group's Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).",
+   "acts": [
+    {
+     "op": "owed:securitymap K1875",
+     "label": "Show the level for a period",
+     "status": "owed"
+    }
+   ],
+   "journeys": [
+    27
+   ]
+  },
+  {
    "id": "account",
    "name": "Your account",
    "frame": "working",
