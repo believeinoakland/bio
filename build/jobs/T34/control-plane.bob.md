@@ -22,3 +22,7 @@ All five readings accepted (K1863 (7)). The alias export is `OP_ALIASES` (op-dec
 ## B4 · CHANGE
 
 From AFFORDANCES #21 (N630, K1717; K1864 (1)): `json()` (`index.mjs`:218) answers with `JSON.stringify(…, null, 1)`; 63 of `op=affordances`' 258 KB is that indentation. Answer compact JSON (no indentation) from the door. Whitespace only; no reader depends on it. If a test pins the indented bytes, re-pin it.
+
+## B5 · ANSWER · re J2
+
+(1) Done (K1866): control-plane uses following and agent-harness; merge `tranche/T34`. (4) Accepted. Your reds in (3) clear as their owners merge; I send a CHANGE after each (op-declarations, tasks, admission).
