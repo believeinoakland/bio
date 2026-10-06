@@ -1,7 +1,7 @@
 /* sources' tables (requirements: `build/requirements/sources.md`; K509 (1): new, nothing moved). A source's history is
  * append-only: an entry, a consent, a withdrawal and a read are each a row written once and never updated or removed
  * (DEC-78 item 5: a dated, attributed history, never one overwritten field). Every table is declared to record-core's
- * purge as exempt (R13): a source's history outlives any purge of the record. A value is held only in
+ * purge as exempt (R13), each with its classes (R19): a source's history outlives any purge of the record. A value is held only in
  * `source_entries.value`, read only by the members `source_sight` lists (R5). The knocker secret is never held; only
  * the digest and pseudonym capture answers (capture R66). */
 
@@ -74,11 +74,36 @@ CREATE TABLE IF NOT EXISTS source_reads (
   at             TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS source_reads_source ON source_reads(source_id, seq);
+-- R16: a capture marked as a member-keyed result, by the member who captured it. Appended once, never edited or removed;
+-- the latest mark of a capture is the one read (R17). It holds the vendor and the terms as stated, never a query, a
+-- search term or a result the member did not capture (R18).
+CREATE TABLE IF NOT EXISTS source_keyed_marks (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  capture_sha    TEXT NOT NULL,
+  service        TEXT NOT NULL,
+  terms          TEXT,
+  by             TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS source_keyed_marks_capture ON source_keyed_marks(capture_sha, seq);
 `;
 
-/** R13: every table, all exempt from purge. */
-export const SOURCES_TABLES = Object.freeze(["sources", "source_knocks", "source_entries", "source_sight",
-                                             "source_consents", "source_reads"]);
+/** R13, R19: every table, declared explicitly through record-core's `declareTable` (its R21), each exempt from purge
+ *  (R13) and never expunged. What names or describes a person (a source's digest, its disclosures and stored values,
+ *  who may read them, the reads, the consents' evidence, the keyed marks) is never exported (K1489); the knock
+ *  receipts, which hold no value (R15), go to administrators only. A table that only appends is a version chain. */
+const CLASSES = (exportClass, sight, versionChain) =>
+  ({ purge: "exempt", expunge: "none", export: exportClass, sight, derive: "stored", version_chain: versionChain });
+export const SOURCES_TABLE_CLASSES = Object.freeze([
+  { name: "sources", ...CLASSES("never", "group", false) },
+  { name: "source_knocks", ...CLASSES("admin-only", "group", false) },
+  { name: "source_entries", ...CLASSES("never", "source", true) },
+  { name: "source_sight", ...CLASSES("never", "source", false) },
+  { name: "source_consents", ...CLASSES("never", "source", true) },
+  { name: "source_reads", ...CLASSES("never", "source", false) },
+  { name: "source_keyed_marks", ...CLASSES("never", "source", true) },
+].map((e) => Object.freeze(e)));
+export const SOURCES_TABLES = Object.freeze(SOURCES_TABLE_CLASSES.map((e) => e.name));
 
 export function migrateSources(sql) {
   const bare = SOURCES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");

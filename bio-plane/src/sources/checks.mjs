@@ -35,6 +35,26 @@ export const SOURCES_CHECKS = Object.freeze({
     check: 'C-121.6', where: at("secretNotRecognised", "is-secret-recognised"),
     translation: 'That secret was not recognised, so nothing was recorded. Check it and try again.',
   }),
+  /* R16 (T33-22; K1492 (3), K1449): marking a member-keyed result. */
+  MACHINE_CANNOT_MARK: Object.freeze({
+    check: 'C-121.7', where: at("machineCannotMark", "is-member-marking"),
+    translation: 'Only a member, acting for themselves, can mark a result from a paid or account-gated service; no '
+      + 'machine, scheduled task or unattended process can. Nothing was written.',
+  }),
+  NOT_YOUR_CAPTURE: Object.freeze({
+    check: 'C-121.8', where: at("notYourCapture", "is-own-capture"),
+    translation: 'Only the member who captured a result can mark it as from their own account on a paid service. '
+      + 'Nothing was written.',
+  }),
+  NO_SUCH_CAPTURE: Object.freeze({
+    check: 'C-121.9', where: at("noSuchCapture", "is-capture-held"),
+    translation: 'No capture the record holds answers to that digest. Nothing was written.',
+  }),
+  NO_SERVICE: Object.freeze({
+    check: 'C-121.10', where: at("noService", "is-service-named"),
+    translation: 'A result from a paid or account-gated service names the service it came from. Name it. Nothing was '
+      + 'written.',
+  }),
 });
 
 /* Each code's one site. The refusal is written whole inside its region, its code a string literal, so the DEC-49
@@ -92,3 +112,37 @@ export function secretNotRecognised() {
   /* END DEC-49 REGION is-secret-recognised */
 }
 export const SECRET_NOT_RECOGNISED_ANSWER = secretNotRecognised();
+
+/* R16: the refusals of a mark. None carries the terms, the service or anything else the member sent (R18). */
+export function machineCannotMark() {
+  /* DEC-49 REGION is-member-marking */
+  return { ok: false, reason: "MACHINE_CANNOT_MARK", code: "MACHINE_CANNOT_MARK",
+           check: ROW.MACHINE_CANNOT_MARK.check, translation: ROW.MACHINE_CANNOT_MARK.translation,
+           detail: "the mark is made only by an active member's own act; this stamp names none, so nothing was written" };
+  /* END DEC-49 REGION is-member-marking */
+}
+
+export function notYourCapture(captureSha) {
+  /* DEC-49 REGION is-own-capture */
+  return { ok: false, reason: "NOT_YOUR_CAPTURE", code: "NOT_YOUR_CAPTURE",
+           check: ROW.NOT_YOUR_CAPTURE.check, translation: ROW.NOT_YOUR_CAPTURE.translation,
+           detail: "the capture's actor is not the member marking it, so nothing was written", captureSha };
+  /* END DEC-49 REGION is-own-capture */
+}
+
+export function noSuchCapture(captureSha) {
+  /* DEC-49 REGION is-capture-held */
+  return { ok: false, reason: "NO_SUCH_CAPTURE", code: "NO_SUCH_CAPTURE",
+           check: ROW.NO_SUCH_CAPTURE.check, translation: ROW.NO_SUCH_CAPTURE.translation,
+           detail: "no capture held in the record answers to that digest (one capture, named by its 64-hex digest, per act), "
+             + "so nothing was written", captureSha };
+  /* END DEC-49 REGION is-capture-held */
+}
+
+export function noService(field, detail) {
+  /* DEC-49 REGION is-service-named */
+  return { ok: false, reason: "NO_SERVICE", code: "NO_SERVICE",
+           check: ROW.NO_SERVICE.check, translation: ROW.NO_SERVICE.translation,
+           detail, field };
+  /* END DEC-49 REGION is-service-named */
+}
