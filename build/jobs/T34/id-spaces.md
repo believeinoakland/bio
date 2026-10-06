@@ -37,6 +37,6 @@ T34-7 applied: R1, eleven spaces, body and office after person, referent reading
 
 Merged `tranche/T34` (R1 amended, `ae810bb389`). R1: twelve spaces, `institution` after `office` (the order jurisdictions R3 gives; id-spaces' Provides sentence still names eleven, a wording gap reported in J3), one form per institution scheme as `person`, `referent` `reading`. A new R1 test: each scheme a form, two schemes' numbers `FORMS_UNJOINED` unless a captured crosswalk joins them, an institution's number never judged with a person's; R22's sweep covers it. The fixture grafts `institution` with `body` and `office` (two made-up schemes, basis `TEST`) until jurisdictions' T34-2 merges.
 
-Re-run (after the merge): id-spaces 33/33. Users: court-doctypes 24/0; record-core 126/0; `stats-disclosure` 1/0; entities 81 pass, 1 fail (R20's literal list, as J1, now eleven short of twelve); standards 47/0; calculations 31/0; jurisdictions 81/0. `format` 0 failures; `architecture id-spaces` 0 failures; `coverage id-spaces` 28 of 28, 0 failures; `ownership id-spaces tranche/T34`: below.
+Re-run (after the merge): id-spaces 33/33. Users: court-doctypes 24/0; record-core 126/0; `stats-disclosure` 1/0; entities 81 pass, 1 fail (R20's literal list, as J1, now eleven short of twelve); standards 47/0; calculations 31/0; jurisdictions 81/0. `format` 0 failures; `architecture id-spaces` 0 failures; `coverage id-spaces` 28 of 28, 0 failures; `ownership id-spaces tranche/T34`: 4 files changed; 0 failures.
 
-Size (session_01M4x59wQhwN7AXzMLPTFvn1): test runs 7, module lines 1507
+Size (session_01M4x59wQhwN7AXzMLPTFvn1): test runs 7, module lines 1511
