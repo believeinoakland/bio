@@ -1,15 +1,18 @@
-/* roster-reader through docprofile's real registry seam, as `plane` wires it: `registerRosterTypes`
- * given docprofile's `registerDoctype`, then a captured document read with `readText`, the entry the
- * reading pipeline calls. Its own file because the registration is process-wide. */
+/* roster-reader through docprofile's real registry seam, as `plane` wires it: doctypes' seven types
+ * first (docprofile registers none by default, its R36; K1737), then `registerRosterTypes`, both given
+ * docprofile's `registerDoctype`, then a captured document read with `readText`, the entry the reading
+ * pipeline calls. Its own file because the registration is process-wide. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerDoctype, readText, doctypeFor, doctypes, CONFIDENCE } from "../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../doctypes/index.mjs";
 import { registerRosterTypes } from "../index.mjs";
 import { ROSTER_DOCS, FW18, FIRST } from "./fixtures.mjs";
 
 const D = ROSTER_DOCS.documents;
 
 test("R1 R3 through docprofile's seam: both types register, and readText recognises and reads the measured documents", () => {
+  registerDoctypes(registerDoctype);
   const results = [];
   registerRosterTypes((t) => { const r = registerDoctype(t); results.push(r); return r; });
   assert.deepEqual(results.map((r) => [r.ok, r.key]), [[true, "staff_roster"], [true, "org_chart"]]);
