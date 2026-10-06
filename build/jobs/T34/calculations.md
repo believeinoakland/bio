@@ -1,6 +1,6 @@
 # calculations (T34)
 
-**Status** · session_01Mw67tJ7nrb4VadYNLsCpUT · depth 2 · WORKING · handled B2
+**Status** · session_01Mw67tJ7nrb4VadYNLsCpUT · depth 2 · COMPLETE · handled B2
 
 ## Completion (CALCULATIONS #2, T34-27 and calculations' share of T34-78)
 
