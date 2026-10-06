@@ -1,0 +1,266 @@
+
+/* ============================================================
+   Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+.cs { font: 400 var(--t-md)/var(--lh-ui) var(--f-sans); color: var(--c-ink); background: var(--c-ground);
+      font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+.cs :focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.cs a { color: var(--c-accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.cs a:hover { color: var(--c-accent-strong); }
+.cs svg.i { width: 16px; height: 16px; flex: none; vertical-align: -3px; }
+.cs .rec { font-family: var(--f-serif); font-optical-sizing: auto; }      /* words people wrote */
+.cs .id { font-family: var(--f-mono); font-size: .9em; letter-spacing: 0; } /* identifiers machines check */
+.cs .eyebrow { font: 600 var(--t-xs)/1.2 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+.cs .muted { color: var(--c-muted); }
+.cs h1, .cs h2, .cs h3 { margin: 0; text-wrap: balance; line-height: var(--lh-tight); }
+.cs .t-title { font: 600 var(--t-2xl)/var(--lh-tight) var(--f-sans); }
+.cs .t-record { font: 600 var(--t-xl)/1.3 var(--f-serif); }
+.cs .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ============================================================
+   Frames: where you are (principles 5.1–5.4, DEC-106, DEC-112)
+   working: paper ground, the group's masthead, the standing band
+   published: the clean sheet, the group's name large, no band
+   imported: the working frame with another group's band and double edge
+   ============================================================ */
+.cs-frame { background: var(--c-ground); color: var(--c-ink); min-width: 0; }
+.cs-frame[data-frame="published"] { background: var(--c-sheet); }
+.cs-mast { display: flex; align-items: center; gap: var(--s-3); min-height: var(--mast); padding-inline: var(--s-4);
+           border-bottom: var(--hair); background: var(--c-ground-2); }
+.cs-mast .grp { font: 600 var(--t-lg)/1.2 var(--f-serif); }
+.cs-mast .grp img, .cs-mast .logo { height: 24px; width: auto; }
+.cs-mast .spacer { flex: 1; }
+.cs-band { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-3); padding: 6px var(--s-4);
+           font-size: var(--t-sm); border-bottom: var(--hair); background: var(--c-ground-2); color: var(--c-ink-2); }
+.cs-band b { font-weight: 600; color: var(--c-ink); }
+.cs-band[data-band="working"]   { background: var(--c-ground-2); }
+.cs-band[data-band="review"]    { background: var(--c-signal-tint); color: var(--c-ink); border-bottom-color: var(--c-signal); }
+.cs-band[data-band="review"] svg { color: var(--c-signal); }
+.cs-band[data-band="imported"]  { background: var(--c-elsewhere-tint); color: var(--c-ink); border-bottom: 3px double var(--c-elsewhere); }
+.cs-band[data-band="imported"] svg { color: var(--c-elsewhere); }
+.cs-band[data-band="published"] { display: none; } /* the published frame never carries the working band */
+.cs-pubhead { padding: var(--s-6) var(--s-4) var(--s-4); border-bottom: 2px solid var(--c-ink); }
+.cs-pubhead .grp { font: 600 var(--t-3xl)/1.1 var(--f-serif); letter-spacing: -.01em; }
+.cs-pubfoot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-2); padding: var(--s-3) var(--s-4);
+              border-top: var(--hair); font-size: var(--t-xs); color: var(--c-muted); }
+.cs-credit { display: inline-flex; align-items: center; gap: 6px; color: var(--c-muted); }
+.cs-credit svg { height: 14px; width: auto; color: var(--c-accent); }
+.cs-credit b { font: 600 var(--t-sm) var(--f-sans); color: var(--c-ink); letter-spacing: -.005em; }
+
+/* path to publication marker (DEC-106) */
+.cs-path { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: var(--t-xs); color: var(--c-muted); }
+.cs-path span { padding: 1px 6px; border: 1px solid transparent; border-radius: var(--r-1); }
+.cs-path span[aria-current] { border-color: currentColor; color: var(--c-ink); font-weight: 600; }
+.cs-path i { font-style: normal; }
+
+/* the origin edge: who made this, at a glance (DEC-90, DEC-92); ours carries none */
+.cs-edge { position: relative; padding-left: var(--s-4); }
+.cs-edge::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.cs-edge[data-origin="machine"]::before   { border-left: 3px dotted var(--c-machine); }
+.cs-edge[data-origin="elsewhere"]::before,
+.cs-edge[data-origin="unevaluated"]::before { border-left: 3px double var(--c-elsewhere); width: 4px; }
+.cs-edge[data-origin="accepted"]::before  { border-left: 3px double var(--c-accent); width: 4px; }
+.cs-edge[data-origin="flagged"]::before   { border-left: 3px double var(--c-signal); width: 4px; }
+
+/* ============================================================
+   Surfaces
+   ============================================================ */
+.cs-sheet { background: var(--c-surface); border: var(--hair); }
+.cs-row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-1) var(--s-3); align-items: start;
+          padding: var(--s-3) var(--s-4); border-bottom: var(--hair); background: var(--c-surface); min-width: 0; }
+.cs-row:last-child { border-bottom: 0; }
+.cs-row > * { min-width: 0; }
+.cs-row .meta { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-3); align-items: center; font-size: var(--t-sm); color: var(--c-muted); }
+.cs-section { display: grid; gap: var(--s-3); }
+.cs-section > h2 { font: 600 var(--t-xs)/1.2 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
+
+/* ============================================================
+   Acts and their weight (principles 4.1–4.6, DEC-87, the measures map's pips)
+   ============================================================ */
+.cs-btn { display: inline-flex; align-items: center; gap: var(--s-2); min-height: 40px; padding: 7px 14px;
+          font: 600 var(--t-md)/1.2 var(--f-sans); border-radius: var(--r-1); border: 1.5px solid var(--c-ink);
+          background: transparent; color: var(--c-ink); cursor: pointer; text-decoration: none; white-space: nowrap;
+          transition: background-color var(--d-1) var(--ease); }
+.cs-btn:hover { background: var(--c-ground-2); }
+.cs-btn[data-tone="primary"] { background: var(--c-accent); border-color: var(--c-accent); color: var(--c-on-accent); }
+.cs-btn[data-tone="primary"]:hover { background: var(--c-accent-strong); border-color: var(--c-accent-strong); }
+.cs-btn[data-tone="quiet"] { border-color: transparent; color: var(--c-accent); padding-inline: 8px; }
+.cs-btn[data-tone="quiet"]:hover { background: var(--c-accent-tint); }
+.cs-btn[disabled] { opacity: 1; color: var(--c-muted); border-color: var(--c-rule-strong); background: transparent; cursor: not-allowed; }
+.cs-btn .w { display: inline-flex; align-items: center; gap: 5px; padding-left: var(--s-2); margin-left: 2px;
+             border-left: 1px solid currentColor; font: 500 var(--t-xs)/1 var(--f-sans); letter-spacing: .02em; }
+.cs-btn[data-tone="primary"] .w { border-left-color: color-mix(in srgb, var(--c-on-accent) 55%, transparent); }
+.cs-pips { display: inline-flex; gap: 2px; }
+.cs-pips i { width: 6px; height: 6px; border-radius: 50%; border: 1.25px solid currentColor; }
+.cs-pips i.on { background: currentColor; }
+.cs-tag-outward { display: inline-flex; align-items: center; gap: 4px; font: 600 var(--t-xs)/1 var(--f-sans); color: var(--c-signal); }
+/* reasoned acts open a reason field in place */
+.cs-reason { display: grid; gap: var(--s-2); padding: var(--s-3); border: var(--hair); border-left: 3px solid var(--c-ink); background: var(--c-surface); }
+/* terminal, signed and outward acts open a full dialog: what ends, who signs */
+.cs-dialog { background: var(--c-sheet); border: var(--hair-strong); box-shadow: var(--shadow-float); padding: var(--s-5); display: grid; gap: var(--s-4); max-width: 560px; }
+.cs-dialog .ends { padding: var(--s-3); background: var(--c-ground-2); border-left: 3px solid var(--c-ink); }
+
+/* ============================================================
+   Fields; labelled drafts (principle 6.4, DEC-120 G5)
+   ============================================================ */
+.cs-field { display: grid; gap: 6px; min-width: 0; }
+.cs-field > label { font-weight: 600; }
+.cs-field .help { font-size: var(--t-sm); color: var(--c-muted); }
+.cs-input { width: 100%; min-height: 44px; padding: 9px 11px; font: 400 var(--t-md)/1.4 var(--f-sans); color: var(--c-ink);
+            background: var(--c-sheet); border: 1.5px solid var(--c-rule-strong); border-radius: var(--r-1); }
+textarea.cs-input { min-height: 96px; resize: vertical; }
+.cs-input.rec { font: 400 var(--t-lg)/1.5 var(--f-serif); }
+.cs-draft { border-style: dashed; border-color: var(--c-machine); background: var(--c-machine-tint); }
+.cs-draftlabel { display: inline-flex; align-items: center; gap: 5px; font: 600 var(--t-xs)/1 var(--f-sans); color: var(--c-machine); }
+
+/* ============================================================
+   Evidence: letters grade it (DEC-82). One shape for every scale;
+   the scale's colour and icon name the scale; the letter gives the value.
+   ============================================================ */
+.cs-grade { display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px 3px 5px; border: 1.5px solid currentColor;
+            border-radius: var(--r-1); font: 700 var(--t-sm)/1 var(--f-sans); white-space: nowrap; cursor: help; }
+.cs-grade svg { width: 13px; height: 13px; }
+.cs-grade[data-scale="capture"]    { color: var(--c-capture);    background: var(--c-capture-tint); }
+.cs-grade[data-scale="connection"] { color: var(--c-connection); background: var(--c-connection-tint); }
+.cs-grade[data-scale="testimony"]  { color: var(--c-testimony);  background: var(--c-testimony-tint); }
+.cs-grade[data-scale="subject"]    { color: var(--c-subject);    background: var(--c-subject-tint); }
+.cs-grade .sc { font-weight: 500; font-size: var(--t-xs); }
+.cs-strength { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.cs-strength .phrase { font-size: var(--t-sm); color: var(--c-ink-2); }
+.cs-strength .phrase b { color: var(--c-ink); }
+
+/* ============================================================
+   What we don't know: five gaps, five looks, never an error (DEC-86)
+   ============================================================ */
+.cs-gap { display: inline-flex; align-items: flex-start; gap: 6px; font-size: var(--t-sm); line-height: 1.35; color: var(--c-ink); }
+.cs-gap svg { margin-top: 1px; }
+.cs-gap b { font-weight: 700; }
+.cs-gap[data-gap="undetermined"] { padding: 3px 8px; border: 1.5px dashed var(--c-ink-2); border-radius: var(--r-1); }
+.cs-gap[data-gap="withheld"]     { padding: 4px 8px; background: var(--c-ground-2); border-left: 4px solid var(--c-ink); }
+.cs-gap[data-gap="unrated"]      { padding: 3px 7px 3px 5px; border: 1.5px solid var(--c-rule-strong); border-radius: var(--r-1); color: var(--c-ink-2); }
+.cs-gap[data-gap="nobody"]       { padding: 3px 8px; border: 1.5px dotted var(--c-ink-2); border-radius: var(--r-1); }
+.cs-gap[data-gap="refused"]      { display: flex; padding: var(--s-2) var(--s-3); background: var(--c-signal-tint); border-left: 3px solid var(--c-signal); }
+.cs-gap[data-gap="refused"] svg { color: var(--c-signal); }
+
+/* ordinary states: one vocabulary (DEC-98) */
+.cs-state { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-4); color: var(--c-muted); font-size: var(--t-md); }
+.cs-state[data-state="failed"] { color: var(--c-ink); border-top: var(--hair); }
+.cs-state[data-state="loading"] .bar { flex: 0 0 64px; height: 3px; background: var(--c-rule); position: relative; overflow: hidden; }
+.cs-state[data-state="loading"] .bar::after { content: ""; position: absolute; inset: 0; width: 40%; background: var(--c-muted); }
+.cs-wait { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-sm); color: var(--c-ink-2); }
+
+/* ============================================================
+   Who made this: the origin family (DEC-90, DEC-92, DEC-96)
+   ============================================================ */
+.cs-origin { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 5px; border-radius: var(--r-1);
+             font: 600 var(--t-xs)/1.25 var(--f-sans); white-space: nowrap; }
+.cs-origin svg { width: 13px; height: 13px; }
+.cs-origin[data-origin="machine"]     { color: var(--c-machine);   background: var(--c-machine-tint); border: 1px dotted var(--c-machine); }
+.cs-origin[data-origin="elsewhere"]   { color: var(--c-elsewhere); background: var(--c-elsewhere-tint); border: 3px double var(--c-elsewhere); padding-block: 0; }
+.cs-origin[data-origin="unevaluated"] { color: var(--c-elsewhere); background: transparent; border: 1px dashed var(--c-elsewhere); }
+.cs-origin[data-origin="accepted"]    { color: var(--c-accent);    background: var(--c-accent-tint); border: 3px double var(--c-accent); padding-block: 0; }
+.cs-origin[data-origin="flagged"]     { color: var(--c-signal);    background: var(--c-signal-tint); border: 1px solid var(--c-signal); }
+.cs-machinework { padding: var(--s-3); background: var(--c-machine-tint); border: 1px dotted var(--c-machine); display: grid; gap: var(--s-2); }
+.cs-machinework .by { font-size: var(--t-xs); color: var(--c-machine); display: flex; gap: 6px; align-items: center; font-weight: 600; }
+
+/* recreation of an imported finding (principle 5.4) */
+.cs-recreate { display: inline-flex; align-items: center; gap: 5px; font: 600 var(--t-xs)/1.25 var(--f-sans); padding: 2px 7px; border-radius: var(--r-1); }
+.cs-recreate[data-r="pending"] { border: 1px dashed var(--c-elsewhere); color: var(--c-elsewhere); }
+.cs-recreate[data-r="yes"]     { border: 1.5px solid var(--c-elsewhere); color: var(--c-elsewhere); background: var(--c-elsewhere-tint); }
+.cs-recreate[data-r="part"]    { border: 1.5px solid var(--c-elsewhere); color: var(--c-elsewhere); background: linear-gradient(90deg, var(--c-elsewhere-tint) 50%, transparent 50%); }
+.cs-recreate[data-r="no"]      { border: 1.5px solid var(--c-signal); color: var(--c-signal); }
+
+/* ============================================================
+   The queue's three kinds, the hint, the hunch (DEC-110, DEC-131, K1491)
+   ============================================================ */
+.cs-kind { display: inline-flex; align-items: center; gap: 5px; font: 700 var(--t-xs)/1 var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; }
+.cs-kind[data-kind="todo"]    { color: var(--c-ink); }
+.cs-kind[data-kind="noticed"] { color: var(--c-ink-2); }
+.cs-kind[data-kind="status"]  { color: var(--c-muted); }
+.cs-hint { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 5px; font: 600 var(--t-xs)/1.25 var(--f-sans);
+           color: var(--c-machine); background: var(--c-machine-tint); border: 1px dotted var(--c-machine); border-radius: var(--r-1); }
+.cs-hunch { display: inline-flex; align-items: center; gap: 4px; font: italic 500 var(--t-xs)/1.25 var(--f-sans); color: var(--c-ink-2);
+            border-bottom: 1.5px dotted var(--c-ink-2); }
+
+/* deadlines: display changes as a date nears; only "Overdue" is said unasked (DEC-94) */
+.cs-due { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; font: 600 var(--t-xs)/1.25 var(--f-sans);
+          border-radius: var(--r-1); border: 1px solid var(--c-rule-strong); color: var(--c-ink-2); white-space: nowrap; }
+.cs-due[data-due="near"]    { border-color: var(--c-signal); color: var(--c-signal); }
+.cs-due[data-due="overdue"] { border-color: var(--c-signal); background: var(--c-signal); color: var(--c-sheet); }
+.cs-due[data-due="met"]     { border-color: var(--c-accent); color: var(--c-accent); }
+
+/* change and tension (principles 3.8, DEC-77) */
+.cs-changed { display: inline-flex; align-items: center; gap: 5px; font: 600 var(--t-xs)/1.25 var(--f-sans); color: var(--c-signal); }
+.cs-tension { display: inline-flex; align-items: center; gap: 5px; font: 600 var(--t-xs)/1.25 var(--f-sans); color: var(--c-ink);
+              padding: 2px 7px; border: 1.5px solid var(--c-ink); border-radius: var(--r-1); background: var(--c-surface); }
+
+/* ============================================================
+   Bars show progress: each ladder its own hue and texture (DEC-79, DEC-82)
+   ============================================================ */
+.cs-ladder { display: flex; flex-wrap: wrap; gap: 3px; }
+.cs-ladder > span { flex: 1 1 80px; min-width: 0; padding: 5px 8px; font: 600 var(--t-xs)/1.2 var(--f-sans); color: var(--c-ink);
+                    border: 1.5px solid var(--c-rule); background: transparent; border-radius: var(--r-1); }
+.cs-ladder > span:not(.on) { color: var(--c-muted); }
+.cs-ladder[data-ladder="stage"] > .on { border-color: var(--c-stage); background: color-mix(in srgb, var(--c-stage) 22%, var(--c-surface)); }
+.cs-ladder[data-ladder="ready"] > .on { border-color: var(--c-ready); background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c-ready) 26%, var(--c-surface)) 0 6px, color-mix(in srgb, var(--c-ready) 12%, var(--c-surface)) 6px 12px); }
+.cs-ladder[data-ladder="ident"] > .on { border: 1.5px dotted var(--c-ident); background: color-mix(in srgb, var(--c-ident) 18%, var(--c-surface)); }
+.cs-ladder > .pend { border-style: dashed; border-color: var(--c-rule-strong); }
+.cs-ladder > .closed { border-color: var(--c-stage); background: var(--c-surface); }
+
+/* ============================================================
+   The hold strip: a set held together and the acts on it (§S, UI-25)
+   ============================================================ */
+.cs-hold { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); padding: var(--s-3) var(--s-4);
+           background: var(--c-sheet); border: var(--hair-strong); border-top: 3px solid var(--c-ink); box-shadow: var(--shadow-float); }
+.cs-hold .n { font-weight: 700; }
+.cs-hold .drift { font-size: var(--t-sm); color: var(--c-muted); }
+.cs-hold .acts { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-left: auto; }
+
+/* ============================================================
+   The dock: the assistant panel and the wizard guide (DEC-90, principle 6.3)
+   docked at the side on wide screens, at the bottom on narrow ones; never floating
+   ============================================================ */
+.cs-dock { background: var(--c-surface); border-left: var(--hair-strong); display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; }
+.cs-dock > header { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-3); border-bottom: var(--hair); font-weight: 600; }
+.cs-dock > header .spacer { flex: 1; }
+.cs-dock > .body { overflow: auto; padding: var(--s-3); display: grid; gap: var(--s-3); align-content: start; min-height: 0; }
+.cs-dock > footer { border-top: var(--hair); padding: var(--s-2) var(--s-3); display: grid; gap: var(--s-2); }
+.cs-wizard { display: grid; gap: var(--s-2); padding: var(--s-3); border: var(--hair); border-top: 3px solid var(--c-accent); background: var(--c-sheet); }
+.cs-wizard .step { font-size: var(--t-xs); color: var(--c-muted); display: flex; gap: 6px; align-items: center; font-weight: 600; }
+.cs-wizard .what { font-weight: 600; font-size: var(--t-lg); line-height: 1.3; }
+.cs-wizard .why { color: var(--c-ink-2); font-size: var(--t-sm); }
+.cs-wizard .why::before { content: "Why: "; font-weight: 700; color: var(--c-ink); }
+.cs-wizard .nav { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
+.cs-target { outline: 3px solid var(--c-accent); outline-offset: 3px; position: relative; }
+.cs-target-label { display: inline-flex; align-items: center; gap: 5px; font: 600 var(--t-xs)/1 var(--f-sans); color: var(--c-accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .cs-target { animation: cs-ring 600ms var(--ease) 1; }
+  @keyframes cs-ring { from { outline-offset: 9px; outline-color: transparent; } to { outline-offset: 3px; } }
+}
+/* the wizard mark: where wizards start (principle 6.7) */
+.cs-wizmark { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 6px; border: 1px solid var(--c-accent); border-radius: var(--r-1);
+              color: var(--c-accent); font: 600 var(--t-xs)/1.2 var(--f-sans); background: transparent; cursor: pointer; }
+.cs-wizmark:hover { background: var(--c-accent-tint); }
+
+/* ============================================================
+   The application shell: desktop and phone (step 5)
+   ============================================================ */
+.cs-shell { display: grid; grid-template-columns: var(--rail) minmax(0,1fr); grid-template-rows: auto auto minmax(0,1fr); min-height: 100%; }
+.cs-shell.with-dock { grid-template-columns: var(--rail) minmax(0,1fr) var(--dock); }
+.cs-shell > .cs-mast, .cs-shell > .cs-band { grid-column: 1 / -1; }
+.cs-rail { border-right: var(--hair); padding: var(--s-3) var(--s-2); display: grid; gap: 2px; align-content: start; background: var(--c-ground); }
+.cs-rail a { display: flex; align-items: center; gap: var(--s-2); padding: 8px 10px; color: var(--c-ink-2); text-decoration: none; border-radius: var(--r-1); font-weight: 500; }
+.cs-rail a[aria-current] { background: var(--c-surface); color: var(--c-ink); font-weight: 700; box-shadow: inset 3px 0 0 var(--c-accent); }
+.cs-rail a .count { margin-left: auto; font-size: var(--t-xs); color: var(--c-muted); }
+.cs-main { padding: var(--s-5) var(--s-5) var(--s-7); display: grid; gap: var(--s-5); align-content: start; min-width: 0; }
+.cs-tabs { display: none; }
+@media (max-width: 760px) {
+  .cs-shell, .cs-shell.with-dock { grid-template-columns: minmax(0,1fr); }
+  .cs-rail { display: none; }
+  .cs-main { padding: var(--s-4) var(--s-4) calc(var(--s-8) + env(safe-area-inset-bottom, 0px)); }
+  .cs-shell.with-dock .cs-dock { border-left: 0; border-top: var(--hair-strong); max-height: 55vh; }
+  .cs-tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-top: var(--hair); background: var(--c-ground-2); }
+  .cs-tabs a { display: grid; justify-items: center; gap: 2px; padding: 6px 2px calc(6px + env(safe-area-inset-bottom, 0px)); font-size: 11.5px; color: var(--c-ink-2); text-decoration: none; min-height: var(--tap); }
+  .cs-tabs a[aria-current] { color: var(--c-ink); font-weight: 700; box-shadow: inset 0 3px 0 var(--c-accent); }
+}

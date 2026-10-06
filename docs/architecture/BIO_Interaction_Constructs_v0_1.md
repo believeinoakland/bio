@@ -1,6 +1,6 @@
 # BIO interaction constructs — v0.2 (v0.1 derivation retained below)
 
-**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** **BRAND AND VOICE APPROVED (DEC-125): pointer beside the design principles.** **§L GAINED TRANSLATION BY GROUPS (DEC-127).** **§R ADDED, WHO WE DESIGN FOR AND THE WIDE PATH (DEC-128, DEC-129), THE WELCOME FITS THE GROUP (DEC-132); §T GAINED A CHECK ASKED BY EXPERTISE (DEC-135); §R GAINED WHAT A COURT CAN REACH AND MEMBERS' NOTES (DEC-136) AND THE PRODUCT WITHOUT THE ASSISTANT (K1547); EVERY WIZARD WRITTEN (DEC-130, beside DEC-121); THE QUEUE'S THIRD KIND IS "STATUS" AND A MACHINE SIGNAL IS A "HINT" (DEC-131); A WIZARD PLANNED BY THE ASSISTANT RUNS ON THE MEMBER'S OWN CLAUDE ACCOUNT (K1502).** as of 2026-10-06.
+**Status** · The member-facing interaction shapes for M8: QUEUE and ACT as the two constructs, the rung ladder of authored acts, UNDETERMINED as a display primitive, and the v0.1 derivation of seven candidates retained below as the TYPES inside the two. "v0.2 (v0.1 derivation retained below)", "Written 2026-07-31 (session BOB) at Bob's direction"; revision 0.2 was the session's same-day answer to Bob's challenge on construct count, not a ruling; four dated rulings are embedded (DEC-8, DEC-16, DEC-27, DEC-36) plus DEC-19's correction and FW-14's. Partially complete: the v0.2 shape is stated, its falsifier ("build T and one act, then re-read this") has no recorded re-read, and the filename says v0_1 while the body says v0.2. §P's accountability rule is BUILT for an agent-surfaced QUESTION (D-82, 2026-09-23: one marker wherever a question is listed or shown), beside UI-5's derived marker for a finding. §S's bulk half is BUILT for the acts whose items are NOT bundles, as ONE call carrying the member's enumerated set under the `per-item` weight — the queue's (D-126, IC-235) and `op=resolve` over captured documents (D-291, IC-247, on BOB #32's ruling of 2026-09-23 23:30Z naming §S); §S's body still describes only the bundle LEASE (`op=select`) and says nothing of that second shape. **§M GAINED THE MEASURES MAP (Bob, 2026-09-29, DEC-82): letters grade evidence, bars show progress, weights mark acts.** **§U GAINED ITS TREATMENT (DEC-86): one "Undetermined" component with a mandatory reason, four visibly distinct neighbours.** **§F GAINED FRICTION MATCHES WEIGHT (DEC-87): friction escalates with an act's rung.** **§U GAINED EMPTY, LOADING, FAILED AND WAITING (DEC-98): one vocabulary everywhere.** **§L ADDED, ACCESS AND LANGUAGE (DEC-99): WCAG 2.2 AA for every screen and the published case.** **§W ADDED, WORKING AND PUBLISHED (DEC-106): two spaces, in-between items banded, a path marker on each item.** **BRAND AND VOICE APPROVED (DEC-125): pointer beside the design principles.** **§L GAINED TRANSLATION BY GROUPS (DEC-127).** **§R ADDED, WHO WE DESIGN FOR AND THE WIDE PATH (DEC-128, DEC-129), THE WELCOME FITS THE GROUP (DEC-132); §T GAINED A CHECK ASKED BY EXPERTISE (DEC-135); §R GAINED WHAT A COURT CAN REACH AND MEMBERS' NOTES (DEC-136) AND THE PRODUCT WITHOUT THE ASSISTANT (K1547); EVERY WIZARD WRITTEN (DEC-130, beside DEC-121); THE QUEUE'S THIRD KIND IS "STATUS" AND A MACHINE SIGNAL IS A "HINT" (DEC-131); A WIZARD PLANNED BY THE ASSISTANT RUNS ON THE MEMBER'S OWN CLAUDE ACCOUNT (K1502); §V ADDED, THE VISUAL LANGUAGE (DEC-138).** as of 2026-10-06.
 
 **Place in the system** · Owns construct 12 of `BIO_System_Design.md` §3 (member surfaces): it governs M8 (`docs/development/MILESTONES.md`; the UI area's governing design per `QUEUE.md`), hands queue content to `docs/development/NOTIFICATIONS.md`, and its pre-flight rule (DEC-8) is what the assistant construct and every act surface rest on. Distinct from `CONSTRUCTS.md`, the content inventory — the name collision is stated in the document.
 
@@ -34,6 +34,7 @@
 - [M · THE MEASURES MAP — how every scale reads, approved by Bob 2026-09-29 (DEC-82)](#m-the-measures-map-how-every-scale-reads-approved-by-bob-2026-09-29-dec-82)
 - [L · ACCESS AND LANGUAGE — the standard every screen meets (Bob, 2026-10-01, DEC-99)](#l-access-and-language-the-standard-every-screen-meets-bob-2026-10-01-dec-99)
 - [W · WORKING AND PUBLISHED — the fence a member can always see (Bob, 2026-10-01, DEC-106)](#w-working-and-published-the-fence-a-member-can-always-see-bob-2026-10-01-dec-106)
+- [V · THE VISUAL LANGUAGE — one look for every screen and the published case (the design session, 2026-10-06, DEC-138)](#v-the-visual-language-one-look-for-every-screen-and-the-published-case-the-design-session-2026-10-06-dec-138)
 - [What this changes about how M8 is built](#what-this-changes-about-how-m8-is-built)
 
 ---
@@ -783,6 +784,33 @@ subscription token, or skips; skipping is a real choice. Every journey and scree
 member walks the same journeys, with the assistant's steps left out.
 
 The journeys themselves (step 3 of the design phase, settled 2026-10-06: DEC-128 to DEC-137) are in `docs/development/ux-substrate/journeys.html`.
+
+## V · THE VISUAL LANGUAGE — one look for every screen and the published case (the design session, 2026-10-06, DEC-138)
+
+**RULED 2026-10-06 by the design session, under Bob's delegation (DEC-138): the design phase's step 4.** One visual language replaces
+the three that grew up apart (`civicos-ui/tokens.css`, whose source `BIO_Design_Language_v0_2.md` is lost; the action-design sketches'
+look; the measures map's placeholder colours). Its source is `docs/development/ux-substrate/visual-language/` (`palette.json` and
+`check_contrast.py`, `tokens.head.css` and `components.css` built by `build.py` into `civicsmith.css`, `faces.css` and `fonts/`,
+`icons.svg`); it is shown, rendered, in `docs/development/ux-substrate/visual-language.html`. Its rules:
+1. **Colour always means something.** Verdigris (the patina on a brass plumb bob, DEC-126) is the one colour for acting and for
+   Civicsmith itself; rust is attention only (a clock, a changed source, a refusal, something visible outside the group); each evidence
+   scale has its own hue (capture blue, connection plum, testimony ochre, subject match olive; §M: colour names the scale, never the
+   value); machine work and another group's work carry no hue and are told apart by edge (dotted; double), mark and word (§P, DEC-92).
+2. **Three voices in type**, one open-licensed family shipped inside the group's copy (principle 9.6): a serif for words people wrote
+   (the group's questions, findings and cases; quoted passages), a sans for Civicsmith's own words, a monospaced face only for
+   identifiers a machine checks. Sixteen pixels is the working default and the size of every field; numbers are tabular.
+3. **Lines before shadows; nearly square corners; no pill.** A shadow means lifted above the work: a dialog, a menu, the hold strip.
+4. **Still until the member is needed** (principle 7.2): state changes take 120–200 ms; the one movement is a wizard's ring drawn once
+   onto the control it points at; none at all under reduced motion.
+5. **Never colour alone** (principle 8.2): every colour has a word or an icon; every pairing meets WCAG 2.2 AA in light and dark (§L),
+   checked by `check_contrast.py` whenever a colour changes.
+
+The marks each have one form: grades and strength (§M); the five gaps, each its own outline and sentence (§U); the ordinary states (§U);
+the origin family and recreation status (§P, DEC-92, DEC-112); the queue's To do, Noticed and Status, the hint and the hunch (DEC-110,
+DEC-131); due dates, which change display as they near, and "Overdue" said once (DEC-94); changed and in-tension marks; the three
+ladders' hues and textures (§M); the hold strip (§S); the wizard mark, a walked path (never a gear), the docked guide and its ring
+(DEC-121); a labelled draft's dashed field (DEC-120 G5); every button's weight, pips and name (§F); the three frames and the
+path-to-publication marker (§W). Exact screens are the design phase's step 5.
 
 ## What this changes about how M8 is built
 
