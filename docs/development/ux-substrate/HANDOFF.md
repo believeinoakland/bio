@@ -79,7 +79,7 @@ You are the UX design session for Civicsmith (named CivicOS until DEC-124, 2026-
      - type, colour, shape, motion, light and dark, icons;
      - the marks: grades, weights, origin, states, the queue's To do / Noticed / Status, the hint, the hold strip, and the wizard mark (not a gear).
 
-     It builds on the plumb-bob mark (`marks/civicsmith-plumb-bob.svg`, DEC-126). Everything ships inside the group's copy, with no outside fonts (principle 9.6, DEC-122). It must meet WCAG 2.2 AA (DEC-99), and colour is never the only signal. The "Design System" artifact type is available (Artifact `quickstart`, intent "other").
+     It builds on the plumb-bob mark (`marks/civicsmith-plumb-bob.svg`, DEC-126). Everything ships inside the group's Civicsmith, with no outside fonts (principle 9.6, DEC-122). It must meet WCAG 2.2 AA (DEC-99), and colour is never the only signal. The "Design System" artifact type is available (Artifact `quickstart`, intent "other").
   5. **Layouts and key screens.** In this order of work:
      - frames (working, published, imported), grid, phone and desktop;
      - rendered mockups walking the journeys, each also drawn without the assistant (K1547);
@@ -110,7 +110,7 @@ You are the UX design session for Civicsmith (named CivicOS until DEC-124, 2026-
 | The new name (decided, DEC-124) | `new-name.html` | https://claude.ai/artifact/Fmr6rVd7GMifYDRaWcV7s8 |
 | Journeys (step 3, draft, partly answered) | `journeys.html` (edit it directly) | https://claude.ai/artifact/9hNPVCMcT8eyewWqKXfgSu |
 | Visual language (step 4, decided, DEC-138) | `visual-language.html`, built by `visual-language/build_page.py` | https://claude.ai/artifact/QuvX7DzX7XbxS6SQG4MtT1 |
-| Screens (step 5, drafted, DEC-139; S1, S2 open) | `layouts.html`, built by `screens/build_page.py` | https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv |
+| Screens (step 5, DEC-139; library approved DEC-148; S1, S4 ruled DEC-147, DEC-149) | `layouts.html`, built by `screens/build_page.py` | https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv |
 | Measures map (approved, DEC-82) | `measures-map.html` | https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni |
 
 From a new session, `read` a page (Artifact `read` with its `url`) before republishing to it, then publish with `url`; and watch each page you will receive comments on (`ArtifactComments` `watch` with its `url`). The design-phase pages share one look (the old design language's tokens: paper ground, Source Serif 4 for judgement, Source Sans 3 for plain speech, Source Code Pro for fact) as a reading format only; step 4 decides the product's look.

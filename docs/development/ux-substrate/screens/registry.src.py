@@ -7,12 +7,12 @@ def screen(id, name, frame, purpose, acts, journeys):
     S.append(dict(id=id, name=name, frame=frame, purpose=purpose,
                   acts=[dict(op=a[0], label=a[1]) for a in acts], journeys=journeys))
 
-# --- the group's copy: setting up, joining, accounts
+# --- the group's Civicsmith: setting up, joining, accounts
 screen('install', 'Install Civicsmith', 'setup', 'The installer page: what is needed, the short name, installing the signed release into the group\'s own account.',
   [('bootstrap','Install with this short name'),('selftest','Let it test itself')], [1])
-screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims the copy, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
+screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
-   ('officesseed','Review offices and seats'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the copy\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
+   ('officesseed','Review offices and seats'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the group\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccess','Record who holds the hosting account'),('memberadd','Invite a member or a second administrator')], [1])
 screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpose, and who sees them (DEC-132).',
   [('groupdescriptionset','Save who your group is, and who sees it')], [2])
@@ -99,7 +99,7 @@ screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, wh
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, signing.',
-  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie')], [15,24])
+  [('publishpreflight','Check before publishing'),('publishtensions','See what must be disclosed'),('caseratify','Sign with your key'),('publish','Publish, with your confirmation of no undeclared tie'),('owed:publishat DEC-147','Publish at a set time, checked again then')], [15,24])
 screen('published', 'Published case', 'published', 'The public page: findings, strengths, timeline, people named, evidence; checkable without the group.',
   [('verify','Check the signature'),('publishedcase','Read the case')], [26])
 screen('imported', 'Another group\'s case', 'imported', 'An imported case in its read-only project, recreated finding by finding.',

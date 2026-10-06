@@ -2176,6 +2176,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/journeys.html`
 owed: (BOB) the "Ask for a check" act (owner; target; expertise label; note); a task kind for a check request addressed by expertise and sight, taken by the first who accepts; the check record carrying the checker's declared expertise and its confirmation state; the owner's read of an untaken request. (Design session) the act's screen and the check's display in step 5.
 
 ### DEC-136 · answered
+amended: 2026-10-06 · DEC-149: the court sentence reads "Your group's Civicsmith keeps this from the public…" (Bob's S4: B).
 raised: 2026-10-04 · the UX design session with Bob on his primary account (session_011wdWGoa6RAbZiRU4Bn3Rng, carrying the journeys page drafted by session_01JZtUsAKpStQoiwF6rzqsyJ; the development process also runs on his primary account since K1428) (the design phase's step 3, journeys: question J11, where a member's first words go, widened by Bob to what a court can reach)
 for: bob
 question: Whether members may keep notes only they can see; and how Civicsmith tells members that a court order the group cannot defeat can expose anything in the group's copy that is not public.
@@ -2218,6 +2219,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/visual-languag
 owed: (BOB) when the new member screens are built: `docs/development/ux-substrate/visual-language/civicsmith.css`, `faces.css`, `fonts/` (with their OFL licences) and `icons.svg` replace `civicos-ui/tokens.css` as the screens' one stylesheet, served from the group's copy, never from outside (principle 9.6); `check_contrast.py` runs whenever a colour changes (placement of the files and the check is BOB's). (Design session) step 5's layouts and key screens drawn in it; the measures map's specimens redrawn.
 
 ### DEC-139 · answered
+amended: 2026-10-06 · DEC-148: the library approved by Bob (S2); DEC-147 adds the ceremony's set-time step.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the design phase's step 5, layouts and key screens, which Bob asked the session on 2026-10-06 to carry out, every wizard written and walked through the mockups and every journey also drawn for a member without the assistant)
 for: bob-session
 question: The design detail of step 5: the frames, grid and phone and desktop layouts; the assistant panel; the screens the journeys walk; the screen registry and the Civicsmith wizard library in the form `wizard-scripts` sets; the rules of the product without the assistant (K1547 left that path to design, B44).
@@ -2329,3 +2331,45 @@ response: **Decided by the design session, 2026-10-06:** (1) Civicsmith is descr
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `brand-and-voice.html` §2 (the credit); the layouts page's installer (`screens/mock-screens.js`); BIO_Interaction_Constructs_v0_1.md §L (brand and voice).
 owed: (BOB) the line as the installer's and the credit page's description when they are built (installer, public-read).
+
+### DEC-147 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the layouts page's question S1; the gap "publishing at a set time" in journeys.html §6, from DEC-128's amendment for newsrooms)
+for: bob
+question: May a group sign a case now and have it published later, at a time it sets, so a newsroom's case goes public when the story citing it runs?
+why it is Bob's: a new capability, and it changes when publishing happens (today the moment an owner signs; DEC-19, DEC-80) (P17).
+provisional: a case is public when its owner signs; an embargoed advance copy is a review copy that never leaves the group's Civicsmith (Publication §6A); signing needs a laptop or desktop (DEC-122).
+alternative: A, keep publishing at signing (a newsroom publishes early or someone is at a laptop at the hour); C, sign beforehand and release with one tap on a phone at the hour (someone must still act; widens what a phone may do beyond DEC-122).
+recommendation: B.
+reversal cost: medium (a new waiting state of a signed edition, its check and its notices).
+response: **Bob, 2026-10-06: "S1: B".** Ruled: (1) the publication ceremony's last step offers "Publish now" or "Publish at…" a date and local time the owner sets; (2) the signed edition waits in the group's Civicsmith, not public, and is shown as "Signed · publishes <date, time>" on the case and in the owner's queue; (3) at that time Civicsmith checks again, as at signing; if anything changed since signing (a source the case rests on, a publishing member's confirmation of no undeclared tie, a hold), it does not publish and tells the owner once; (4) until then the owner can cancel or move the time; (5) when it goes public the owner's queue says so once, and the public page shows when the edition was signed and when it was published. **Design session's details (P17), Bob may change any:** the time is the group's local time (civil-time); the set time is weighted Irreversible like publishing itself.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the Publication ceremony screen and wizard; section 7); `journeys.html` (journey 15, the ceremony wizard, §6); BIO_Interaction_Constructs_v0_1.md §A.
+owed: (BOB) a requirement for publication (the scheduled edition: its state, the check at the set time, cancel and move, the two dates on the public page) and its queue items; the op the ceremony's set-time act names (`owed:publishat` in the screen registry).
+
+### DEC-148 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the layouts page's question S2)
+for: bob
+question: Whether the seventeen wizard scripts of DEC-139 are the first Civicsmith library.
+why it is Bob's: the library Civicsmith ships with every release is approved by Bob; groups add their own but cannot change it (DEC-121 (1)) (P17).
+provisional: the scripts as data (`docs/development/ux-substrate/screens/library.json`), walked through the mockups (DEC-139).
+alternative: approve some and send the rest back.
+recommendation: approve, the welcome wizard as a first version.
+reversal cost: low (a script is revised as a new version, wizard-scripts R1).
+response: **Bob, 2026-10-06: "S2: approved".** The seventeen scripts as they stand on 6 October, including the day's changes from his comments (the group's two names, the one-time password saved and where it comes from, publishing at a set time, DEC-147), are the first Civicsmith library; the three required ones are Set up and claim, Welcome a new member and the Publication ceremony; the welcome wizard is approved as a first version, its final words revised once the new screens are in use (DEC-91).
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `screens/library.json` (its note); `layouts.html` section 7; BIO_Interaction_Constructs_v0_1.md §P.
+owed: (BOB) the library as the Civicsmith library wizard-scripts ships (origin `civicsmith`), with its owed acts declared as ops (the screen registry's `owed:` lines).
+
+### DEC-149 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comments on the layouts page: "Is 'copy' the right word to use when referring to a group's instance?"; question S4)
+for: bob
+question: What members and founders call one group's own Civicsmith (an instance), in place of "your group's copy".
+why it is Bob's: the word is in the voice standard he approved (DEC-125, brand-and-voice §2.2) and in a sentence he approved word for word (DEC-136's court notice).
+provisional: "your group's copy (of Civicsmith)" (DEC-124, DEC-109, brand-and-voice §2.2).
+alternative: A, keep "copy" (it also means a review copy and, to a newsroom, a story's text); C, "workspace" (sounds hosted by a company; already names the working screens); D, "installation", "server" or "instance" (technical).
+recommendation: B, "your group's Civicsmith".
+reversal cost: low (words held in one place, DEC-99).
+response: **Bob, 2026-10-06: "S4: B".** Ruled: members and founders say **"your group's Civicsmith"** (as people say "our Slack"); "installation" only where the hosting is the subject (the installer, who holds the hosting account); never "copy", "instance", "plane" or "server" for it. "Copy" keeps only its other meanings: a review copy, a copy of a document. Where "Civicsmith" could mean the software or one group's installation, the sentence is reworded. DEC-136's court sentence reads: "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly."
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; brand-and-voice.html §2.2 and §5; every design page and the screens, wizards and registry in `docs/development/ux-substrate/`; BIO_Interaction_Constructs_v0_1.md §L.
+owed: (BOB) every member-facing string that says "copy" for the group's Civicsmith, in the requirements and the code (instance-setup's claim page, installer's last screen, membership's and credentials' messages, the court sentence of DEC-136's owed setting); the term entry: "Your group's Civicsmith: Civicsmith installed in a Cloudflare account your group controls. Your group's records are held there and nowhere else."

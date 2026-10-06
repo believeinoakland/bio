@@ -35,7 +35,7 @@
    "id": "setup",
    "name": "Become your group's first administrator",
    "frame": "setup",
-   "purpose": "The founder claims the copy, names the group, reviews offices and seats, offers the assistant and records the hosting account.",
+   "purpose": "The founder claims it, names the group, reviews offices and seats, offers the assistant and records the hosting account.",
    "acts": [
     {
      "op": "claim",
@@ -103,7 +103,7 @@
     },
     {
      "op": "aicopyceilingset",
-     "label": "Set the copy's daily limit",
+     "label": "Set the group's daily limit",
      "status": "function",
      "modules": [
       "ai-runs"
@@ -1973,6 +1973,11 @@
       "case-authoring",
       "review"
      ]
+    },
+    {
+     "op": "owed:publishat DEC-147",
+     "label": "Publish at a set time, checked again then",
+     "status": "owed"
     }
    ],
    "journeys": [

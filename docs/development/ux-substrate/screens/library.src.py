@@ -19,7 +19,7 @@ def wiz(name, start, required, steps, journeys, note=''):
 wiz('Set up and claim', 'install', True, [
  ('install', None, 'Check you have what is needed: a Cloudflare account and about twenty minutes.', 'The free plan works. Workers Paid ($5 a month) adds recomputing spreadsheets and signing in with a Claude subscription. No Claude account is needed to set up.'),
  ('install', 'bootstrap', 'Choose your group\'s short name, then install. It is not the group\'s name: you choose that next, and can change it.', 'The short name is the fixed label in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.'),
- ('install', 'selftest', 'Let your copy test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves your copy works before anyone relies on it.'),
+ ('install', 'selftest', 'Let your group\'s Civicsmith test itself. Allow it to run the assistant\'s container if you are asked.', 'The test proves it works before anyone relies on it.'),
  ('install', None, 'Save the one-time password somewhere safe, such as a password manager, then continue.', 'It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one.'),
  ('setup', 'claim', 'Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.', 'Only the person holding the one-time password can become the first administrator. Once you claim, it is spent.'),
  ('setup', 'groupnameset', 'Name the group as people should read it, and add its logo if it has one.', 'The group\'s name heads everything it publishes and can change at any time; the short name you chose at install stays fixed in addresses and signatures.'),
@@ -55,6 +55,7 @@ wiz('Publication ceremony', 'ceremony', True, [
  ('ceremony', None, 'Preview the public page as a stranger will see it.', 'This is how a reader with no account meets your work.'),
  ('ceremony', 'publish', 'Each member publishing confirms they have no undeclared tie to anyone the case concerns.', 'Including anyone paid in its money. A tie disclosed is a strength; one found later is not.'),
  ('ceremony', 'caseratify', 'Sign with your key.', 'Publishing is permanent. Corrections come as a new edition, never by changing this one.'),
+ ('ceremony', 'owed:publishat DEC-147', 'Publish now, or choose the time it becomes public, such as when a story citing it runs.', 'At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.'),
 ], [15, 24])
 
 wiz('Get a record', 'finder', False, [
@@ -109,9 +110,9 @@ wiz('Connect your Claude account', 'connect', False, [
  ('connect', 'disclosureshown', 'Read what connecting means.', 'Your questions, and what is read to answer them, go to Anthropic under your own account.'),
  ('connect', 'accountreferenceset', 'Connect with your own Claude API key or your own subscription token. Or skip.', 'Either serves only you. Skipping is a real choice: every journey stays open.'),
  ('connect', 'accountreferenceset', 'For a subscription token: on your own computer, open a terminal, run claude setup-token, sign in, and paste what it prints here.', 'The token is made by Anthropic\'s own sign-in on your computer. Civicsmith never sees your password.'),
- ('connect', 'aiceilingset', 'Set your daily limit.', 'It caps what the assistant can spend on your account each day. An administrator may set a lower one for the copy.'),
+ ('connect', 'aiceilingset', 'Set your daily limit.', 'It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group.'),
  ('connect', 'accountswitchset', 'Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.', 'Some members want suggestions; others want quiet.'),
- ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s copy.'),
+ ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s Civicsmith.'),
 ], [4, 17])
 
 wiz('Your ties', 'ties', False, [
