@@ -1,4 +1,4 @@
-/* tasks — the obligation inbox (requirements: `build/requirements/tasks.md`, R1–R11).
+/* tasks — the obligation inbox (requirements: `build/requirements/tasks.md`, R1–R12).
  * Split out of `queue` at T16 (N363; Bob's K507, seams K531, `build/plan/draft-N363-queue-split.md`): tasks routed from
  * captures whose authority is undetermined, drained from capture's queue under the task grammar (C-19.1), listed to the
  * members who may see their subjects, and forwarded or resolved by their assignee, anyone when unassigned, or an
@@ -22,7 +22,7 @@
  * The ops are `tasksOps`' entries, which control-plane's routes spread into the plane's one map.
  */
 
-import { isMachineStamp, isPublicHttpsLocator } from "../record-grammar/index.mjs";
+import { isMachineStamp, isPublicHttpsLocator, ISO_TS_RE as ISO_INSTANT } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, perItem, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
@@ -36,8 +36,6 @@ import { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInbox
 
 export { TASKS_SCHEMA, TASKS_TABLES, tasksOwns } from "./schema.mjs";
 export { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar } from "./checks.mjs";
-
-const ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 
 /* The id suffix the TASK grammar requires: lowercase alphanumeric groups joined
    by single dashes, never empty, never leading or trailing dashes. Derived from
