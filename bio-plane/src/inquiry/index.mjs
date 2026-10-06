@@ -42,6 +42,7 @@ import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
 import { entitiesOf, gradeRank } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
 import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
@@ -229,14 +230,14 @@ export class Inquiry {
   #deps;
 
   constructor({ storage, record, membership, promotion, content, connections = null, entities = null, retrieval = null,
-                provenance = null, bias = null, host = null, view = null, now } = {}) {
+                provenance = null, standards = null, bias = null, host = null, view = null, now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.content = content;
-    this.#deps = { connections, entities, retrieval, provenance, host };
+    this.#deps = { connections, entities, retrieval, provenance, standards, host };
     this.#bias = bias;
     this.#view = typeof view === "function" ? view : null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
@@ -247,6 +248,8 @@ export class Inquiry {
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
+  /* R11: the held standards a leg may rest on (reached on first use; the host has built it at start). */
+  get standards() { return this.#deps.standards ||= (this.#deps.host ? standardsOf(this.#deps.host) : null); }
   /** R53: the bias instance a finding's lens is read from, bound once (the first binding holds); null until bound. */
   bindBias(bias) { if (!this.#bias && bias && typeof bias.biasManifest === "function") this.#bias = bias; return this.#bias; }
 
@@ -384,6 +387,9 @@ export class Inquiry {
       if (basisLegs.length) {
         const cerrs = this.content.citationRefusals(basisLegs, (i) => `basis[${i}]`, this.content.citationPlan(basisLegs));
         if (cerrs.length) return { ok: false, reason: "BASIS_REFUSED", findings: cerrs };
+        /* R11 (T33-45; K1447 (ii), (iii)): what the record holds behind a held standard's or a calculation's leg. */
+        const hf = this.#heldLegFindings(basisLegs, c.author);
+        if (hf.length) return { ok: false, reason: "BASIS_REFUSED", findings: hf };
       }
     }
     /* REC-18: a subject entity the registry does not hold. */
@@ -482,6 +488,33 @@ export class Inquiry {
       /* END DEC-49 REGION is-candidate-taken-up */
     }
     return this.#surfacedByCarried(c);
+  }
+
+  /* R11 (T33-45): the new leg kinds' record checks, after the grammar (`inquiry-grammar` R13, R14) judged their shape.
+     A `STD-` target the record does not hold, or the promotion's author may not see, is refused as an unknown target
+     is; a `target_portion` the standard does not hold is PORTION_UNKNOWN. A `CALC-` target is refused fail-closed:
+     whether a calculation is held, visible and accepted cannot be read synchronously here (`calculations` offers no
+     such read in T33, N576; K1601), so the leg is never passed on trust. */
+  #heldLegFindings(legs, viewer) {
+    const out = [];
+    legs.forEach((leg, i) => {
+      const t = typeof leg.target === "string" ? leg.target.trim() : "";
+      if (/^STD-/.test(t)) {
+        let r = null;
+        try { r = this.standards ? this.standards.standardRead({ id: t, viewer }) : null; } catch { r = null; }
+        if (!r || r.ok !== true)
+          out.push({ check: "C-2.8", code: (r && r.reason) || "NO_SUCH_STANDARD", target: t,
+                     detail: `basis[${i}] rests on ${t}, which this record does not hold as a standard you may read` });
+        else if (typeof leg.target_portion === "string" && (!r.portion || r.portion.path !== leg.target_portion.trim()))
+          out.push({ check: "C-2.8", code: "PORTION_UNKNOWN", target: t, portion: leg.target_portion,
+                     detail: `basis[${i}] names the portion '${fmSafe(leg.target_portion)}' of ${t}, which that standard `
+                           + `does not hold${r.portion ? ` (it holds ${fmSafe(r.portion.path)})` : ""}` });
+      } else if (/^CALC-/.test(t))
+        out.push({ check: "C-2.8", code: "CALCULATION_NOT_ACCEPTED", target: t,
+                   detail: `basis[${i}] rests on the calculation ${t}, and whether it is held, visible to you and `
+                         + `accepted cannot be confirmed here, so the leg is refused rather than passed on trust` });
+    });
+    return out;
   }
 
   /* R50 (REC-179 / C-66.5, INVESTIGATIVE-SESSION.md §11 item 5, rule 2's reach): A REVISION CARRIES `surfaced_by`
