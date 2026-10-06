@@ -614,3 +614,12 @@ B75 read (K1878). DEC-166 (Bob, "S9: B - but never the member's own address"): t
 - The screen says a country is not proof of who is behind an attempt.
 Folded: DEC-165 amended; BIO_Interaction_Constructs_v0_1.md §R; layouts page (Security › Where from; S9 recorded). On PR #12's branch.
 Owed (DEC-166's owed: line, with N703): counts by country and hour from the country label, the address never stored; the one-hour rule for a member's own refused sign-in; a member's sign-ins never counted by place.
+
+## U96 · NOTICE · 2026-10-06 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+DEC-167 (design session, the surfaces B72 asked for under K1852): a captured archive's screen.
+- A summary of what was found when it opened: filed and held for review beside it, already held, not filed, folders.
+- Every entry with its state: filed (the archive's grade, never stronger or weaker), already held (a second sighting, one home), a folder (listed), two entries sharing a name (each by its number), or not filed with the reason in plain words (password-locked, over a limit, and the refusals BOB names).
+- Names as the archive states them, never used as a place to write. Vouch for or set aside picked files (the held list's acts); a filter for those not filed. A higher grade only by the file's own capture, beside the first.
+- An archive refused whole says why and stays captured as it arrived. Held captures shows the archive with its files beside it; Add says a ZIP opens as it is captured.
+Folded: BIO_Interaction_Constructs_v0_1.md §S; layouts page (screen "Archive"). On PR #12's branch.
+Owed (DEC-167's owed: line, with N688): the read behind `owed:archivelist K1852` (entries, states, refusals by name in member words); the held list grouping an archive's files; vouching and setting aside across picked files.
