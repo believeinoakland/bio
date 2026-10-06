@@ -16,6 +16,8 @@ import { tasksOf, tasksOps } from "../tasks/index.mjs";
 import { affordancesOf, affordancesOps } from "../affordances.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { askAdmits } from "../answers/scope.mjs";
+import { answersOf } from "../answers/index.mjs";
+import { aiRunsOf } from "../ai-runs/index.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
 import { pullAndFile } from "./pull.mjs";
 
@@ -285,6 +287,12 @@ export function controlPlaneRoutes(ctx, url, body) {
     /* R53 (K1674): the Worker's question whether a token is a live ask grant admitting the op (credentials R28),
        store-internal as `wizardrefusaltally`. */
     aigrantadmit: () => credentialsOf(ctx).aiGrantAdmit({ token: b.token, op: b.op, write: b.write }),
+    /* R53 (K1685; agent-worker R54): the ask's own calls, each its owner's, the member the stamped viewer: the ceiling
+       before any model call (ai-runs R50's `aiUseCheck`; `{ok: true}` when under it), each call's use counted as an
+       ask's (its R48), and the answer checked over the grant's read log (answers R4). */
+    askceiling: () => aiRunsOf(ctx).aiUseCheck({ member: q("viewer") }) ?? { ok: true },
+    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q("viewer"), mode: "ask", usage: b.usage ?? null }),
+    askcheck: () => answersOf(ctx).check({ answer: b.answer ?? null, grant: q("grant"), viewer: q("viewer"), mode: "ask" }),
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
