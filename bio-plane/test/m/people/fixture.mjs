@@ -8,7 +8,6 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
-import { Extraction } from "../../../src/extraction/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { Entities } from "../../../src/entities/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
@@ -67,8 +66,6 @@ export function world({ profiles = ["test-port-ellery"] } = {}) {
   const membership = membershipOf(host, { record });
   membership.migrate();
   const promotion = promotionStub();
-  const x = new Extraction(st, { record, membership, promotion });
-  x.migrate();
   const prov = provenanceOf(host, { record, membership, promotion, now: () => "2026-09-27T00:00:00Z" });
   prov.migrate();
   if (profiles) record.setSetting("jurisdiction_profiles", profiles, "test");
