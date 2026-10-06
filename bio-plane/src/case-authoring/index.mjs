@@ -135,6 +135,11 @@ const str = (v) => String(v ?? "").trim();
 /** R56: what a `calculations:` row's `disclosed` states when the publisher listed a calculation that needed disclosure
  *  and gave no words of their own (case-grammar R18: null would read as "none was needed"). */
 export const DISCLOSED_WITHOUT_WORDS = "disclosed by the publisher, without words of their own";
+/* R56 (N596; calculations R9): a `calculations:` row's inputs, each `{name, sha256}` as `read` states it in
+   `calculation.inputs` (`sha`, the lowercase hex SHA-256 of the input's canonical bytes), null where it states none. */
+const inputsHashed = (r) => (r.calculation && Array.isArray(r.calculation.inputs) ? r.calculation.inputs : [])
+  .filter((x) => x && typeof x === "object")
+  .map((x) => ({ name: x.name ?? null, sha256: typeof x.sha === "string" ? x.sha : null }));
 /** R56: how deep a member's chain is followed through inquiry legs to the calculations it reaches. */
 const CHAIN_DEPTH_MAX = 16;
 /** R55 (case-disclosures R24): an entity id in an authored sentence, record-grammar's one spelling of it. */
@@ -361,9 +366,11 @@ export class CaseAuthoring {
       for (const x of inputs) if (x.money !== undefined) money.push(...(Array.isArray(x.money) ? x.money : [x.money]));
       judge(f.calc, f.members, differs ? "differs" : unbound ? "unbound" : "agrees", {
         recipe: r.calculation ? r.calculation.recipe ?? null : null,
-        /* case-grammar R18: each input's name and SHA-256; `read` states the hash of a table's canonical bytes only
-           (reported, J3 (2)), so a row naming another input is written with its inputs undetermined (null). */
-        inputs: inputs.map((x) => ({ name: x.name ?? null, sha256: typeof x.table === "string" ? x.table : null })),
+        /* case-grammar R18: each input's name and SHA-256 as `read` states it (calculations R9; N596): every input's
+           canonical bytes, a figure, money, another calculation, a set, a draw or the threshold as well as a table, so
+           publication commits them (its R22). One created before T34 states only its tables' hashes: its others are null,
+           and case-grammar writes the row's inputs undetermined rather than half-stated. */
+        inputs: inputsHashed(r),
         method_version: r.method_version ?? null,
         results: r.calculation ? r.calculation.results ?? null : null,
         result_key: r.result_key ?? null });
@@ -381,7 +388,7 @@ export class CaseAuthoring {
     if (undisclosed.length)
       return { refusal: actRefusal("CALCULATION_NOT_DISCLOSED", { calculations: undisclosed,
         detail: `${undisclosed.map((u) => `${u.calc} (${u.recompute}; ${u.members.join(", ")})`).join("; ")}: a load-bearing `
-              + "finding rests on a calculation that gives a different result when this instance recomputes it, or on "
+              + "finding rests on a calculation that gives a different result when your group's Civicsmith recomputes it, or on "
               + "an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, "
               + "with your own words if you choose, and the published case states it. A disclosed one never blocks "
               + "(DEC-76 item 4). Nothing was written." }), rows, money };
@@ -539,7 +546,7 @@ export class CaseAuthoring {
       return { ok: false, reason: "NO_SCOPE",
                detail: "a published case states its own SCOPE — what brought these findings together and what "
                      + "question the case as a whole answers. It is authored by the group and never derived "
-                     + "from the findings' titles: a scope this plane wrote is not a scope the group made "
+                     + "from the findings' titles: a scope your group's Civicsmith wrote is not a scope the group made "
                      + "(DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT." };
     if (!back)
       return { ok: false, reason: "NO_BIAS_ACKNOWLEDGEMENT",
@@ -1223,7 +1230,7 @@ export class CaseAuthoring {
                        + `today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the `
                        + `stance). Conclude it again for this project (op=conclude&project=${proj}). `
                      : conc.why === "project_stance_undetermined"
-                     ? `${proj}'s latest entry about this question names an act this plane does not know, so `
+                     ? `${proj}'s latest entry about this question names an act your group's Civicsmith does not know, so `
                        + `what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. `
                      : `${proj} has not concluded this question. A conclusion belongs to the project's `
                        + `relationship with the inquiry (§7.1): another team's conclusion, and a conclusion `
@@ -1871,13 +1878,13 @@ export class CaseAuthoring {
     if (kind === "participant" && (authorFromDraft || authorStatedUndetermined) && !statementAuthor)
       return ack("STATEMENT_ACK_AUTHOR_UNDETERMINED",
                  (authorFromDraft
-                   ? `this draft records no author for its exclusion statement: it was written before the `
-                   + `plane stamped one, and who wrote the sentence that now stands is UNDETERMINED. `
+                   ? `this draft records no author for its exclusion statement: it was written before your `
+                   + `group's Civicsmith stamped one, and who wrote the sentence that now stands is UNDETERMINED. `
                    : `this case document states that who wrote its exclusion statement could not be `
                    + `established, so the author of the sentence is UNDETERMINED — and it is not the member `
                    + `named as the case's author, who prepared and published it (BIO_Publication §3 rule 13). `)
-                   + `An acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and the `
-                   + `plane cannot tell here whether you are the first — reading the draft's last editor `
+                   + `An acknowledgement is a SECOND person's reading (BIO_Publication §3 rule 11), and your `
+                   + `group's Civicsmith cannot tell here whether you are the first — reading the draft's last editor `
                    + `would attribute the statement to whoever last touched any part of it. `
                    + (authorFromDraft
                      ? `An editor of this project saves the statement again (op=casedraft with statement=), `
@@ -2152,8 +2159,8 @@ export class CaseAuthoring {
         if (!stamp)
           return { by: null, from: "named_draft_unrecorded",
                    stated: `UNDETERMINED: ${publisher} named draft ${namedDraft.draft_id} as this case's draft, and `
-                         + `that draft records no author for this sentence — it was written before the plane stamped `
-                         + `one — so who wrote the bytes this case publishes cannot be established. ${notFromAuthor} `
+                         + `that draft records no author for this sentence — it was written before drafts recorded `
+                         + `their authors — so who wrote the bytes this case publishes cannot be established. ${notFromAuthor} `
                          + `An editor who saves the statement again records who wrote the bytes that stand.` };
         return { by: stamp, from: "named_draft",
                  stated: stamp === publisher
@@ -2185,7 +2192,7 @@ export class CaseAuthoring {
     if (unreadable.length)
       return { by: null, from: "draft_unreadable",
                stated: `UNDETERMINED: ${unreadable.length} draft(s) of ${project} at this case identity `
-                     + `(${unreadable.join(", ")}) hold arguments this plane cannot read, so whether this `
+                     + `(${unreadable.join(", ")}) hold arguments that cannot be read, so whether this `
                      + `sentence was written in one of them, and by whom, cannot be established. ${notFromAuthor}` };
     if (!matches.length)
       return { by: publisher, from: "this_act",
@@ -2195,7 +2202,7 @@ export class CaseAuthoring {
     if (matches.some((d) => !d.statement_by))
       return { by: null, from: "draft_unrecorded",
                stated: `UNDETERMINED: the draft this sentence stands in (${matches.map((d) => d.draft_id)
-                     .join(", ")}) records no author — it was written before the plane stamped one — so who `
+                     .join(", ")}) records no author — it was written before drafts recorded their authors — so who `
                      + `wrote the bytes this case publishes cannot be established. ${notFromAuthor} An editor `
                      + `who saves the statement again records who wrote the bytes that stand.` };
     const names = [...new Set(matches.map((d) => d.statement_by))];

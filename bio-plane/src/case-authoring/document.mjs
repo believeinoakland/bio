@@ -510,20 +510,20 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     ...(lens.in_force
       ? [`This case was produced under the bias set in force for ${lens.scope_id} when it was published, `
-         + "computed by the plane and frozen here. A lens adopted afterwards does not change this "
+         + "computed then and frozen here. A lens adopted afterwards does not change this "
          + "document: the manifest names the revisions this case was made under, not the ones in force now.",
          "",
          ...lens.bundles.map((x) => `- ${x.bundle_id} (${x.scope}) at revision ${x.revision}`),
          "",
          `Hash of the effective statement set: ${lens.statements_sha}.`,
          ...(lens.lock_violations
-           ? ["", `${lens.lock_violations} project override(s) named a LOCKED instance statement and were `
-                 + "refused their effect; the instance statement stands in the set hashed above."]
+           ? ["", `${lens.lock_violations} project override(s) named a LOCKED group-wide statement and were `
+                 + "refused their effect; the group-wide statement stands in the set hashed above."]
            : [])]
       : lens.in_force === null
       ? [`THE MANIFEST IS UNDETERMINED for ${lens.scope_id}: ${lens.stated}. Nothing is claimed either way.`]
       : [`NO MANIFEST WAS IN FORCE for ${lens.scope_id} when this case was published: no bias set stood `
-         + "adopted for this instance or this project. That is stated, not left blank — it is a different "
+         + "adopted for the group or this project. That is stated, not left blank — it is a different "
          + "fact from a lens with nothing in it."]),
     /* REC-219 / §3 rule 18: the second fact, in prose, when there is something to say. */
     ...(pending.length
@@ -581,7 +581,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
 }
 
 /** R56 (C:A-15; DEC-76.4): the calculations section, in words a reader reads: each calculation and workbook the case's
- *  findings rest on, what this instance's recompute found at publication, and the owner's words where one differs or
+ *  findings rest on, what the recompute at publication found, and the owner's words where one differs or
  *  rests on an unbound input. No section when the findings reach none. */
 export const CALCULATION_STATE_WORDS = Object.freeze({
   agrees: "recomputed at publication, and the result agrees with the one stored",
@@ -592,7 +592,7 @@ export const CALCULATION_STATE_WORDS = Object.freeze({
 export function calculationBodyLines(rows) {
   if (!rows || !rows.length) return [];
   return ["## Calculations This Case Rests On", "",
-    "Each calculation below was recomputed by this instance when the case was published, never on a later read. A "
+    "Each calculation below was recomputed when the case was published, never on a later read. A "
     + "result that differs, or an input typed in with no source, is disclosed here by the group and does not stop "
     + "publication.", "",
     ...rows.map((r) => `- ${r.calc}: ${CALCULATION_STATE_WORDS[r.recompute] ?? r.recompute}.`

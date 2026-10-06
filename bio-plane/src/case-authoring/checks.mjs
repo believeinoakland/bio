@@ -36,13 +36,14 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
   },
   /* R56 (C:A-15; DEC-76.4; T33-69): a load-bearing finding's calculation that differs on recompute or rests on an
      unbound input, not disclosed. A new row of this module's table (R29); its id and words are BOB's (J1 (2), as
-     proposed until answered); promotion stamps it with T33's other new rows (T34, K1504). */
+     proposed until answered); promotion stamps it with T33's other new rows (T34, K1504). Its translation names the
+     group's Civicsmith as DEC-149 asks (T34-48), so the row waits for promotion's next stamp. */
   CALCULATION_NOT_DISCLOSED: {
     check: 'C-136.1',
     where: at('#calculationsJudged', 'is-calculation-disclosed'),
-    translation: 'A calculation a load-bearing finding rests on gives a different result when the instance recomputes '
-      + 'it, or rests on a figure typed in without a source, and this publication does not say so. List it with your '
-      + 'own words, and publish again; the published case will state it. Nothing was published.',
+    translation: 'A calculation a load-bearing finding rests on gives a different result when your group\'s Civicsmith '
+      + 'recomputes it, or rests on a figure typed in without a source, and this publication does not say so. List it '
+      + 'with your own words, and publish again; the published case will state it. Nothing was published.',
   },
 });
 
