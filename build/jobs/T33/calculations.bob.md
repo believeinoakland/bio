@@ -26,3 +26,7 @@ K1576: (2) R1's bound is now 500,000 cells (or 20 MiB); merge tranche/T33 and te
 ## B5 · CHANGE
 
 K1578: entities, events, lines and standards are merged on tranche/T33; re-point at those now. money, duties, people, progressions and retrieval follow.
+
+## B6 · CHANGE
+
+K1580: money is merged too; re-point at it.
