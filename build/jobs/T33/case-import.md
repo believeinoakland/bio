@@ -1,3 +1,11 @@
 # case-import (T33)
 
 **Status** · session_01Y1URYHRYBVXZLpDjSMzS7r · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Two readings of R21 (T33-67), both on my best reading; I carry on with them unless you answer otherwise.
+
+(1) **Which evaluator.** R21 says the recipe "is evaluated by `calculations.evaluate`". But `calculations.evaluate` (its R7, as built) binds only inputs held in *this* group's record (a declared table by sha in `calc_tables`, `MNY-` facts, content figures, a `CALC-`) under a stamped viewer. A case file's inputs are carried bytes, not held here, and declaring them as tables would write record rows, which R21 itself forbids. My reading: recreate with the evaluator `calculations.evaluate` runs, `calc-grammar`'s own `checkRecipe`, `evaluate`, `resultKey` and `METHOD`, over the carried input files bound by name. That writes nothing and keeps the same arithmetic. So case-import's final `uses` gain **calc-grammar** (layer 1) and not `calculations`; `modules.json` lists neither today. The other way would be a CHANGE to `calculations` (an `evaluate` over inline inputs), which is another module's job.
+
+(2) **The carried inputs' bytes.** `case-grammar` R13/R18 say each input "travel[s] as the file its input hash names", "the canonical bytes calc-grammar evaluates". My reading: the rows come from the signed case document's `calculations:` block (`case-grammar.calculationsOf`). Each input is found as any file of the case file (or a document supplied later, R5) whose SHA-256 is the hash the row names. Its bytes are the canonical JSON (record-grammar's) of the value calc-grammar binds: a table `{fields, rows}` or a figure. `inputs` may be a list of `{name, sha256}` or a `{name: sha}` map. "Every result agrees" means: `result_key` recomputes equal (`calc-grammar.resultKey(recipe, {name: sha}, {methodVersion})`), and the recomputed `output` and each named step equal what `results` states. A calc's input that is absent is also a material an edition records as missing, so R5 accepts bytes matching it. I record case-checker's own per-calculation answer (its R20) beside mine, with whether the two agree. `case-grammar` (T33-60) and `case-checker` (T33-66) are not merged, so `calculationsOf` is an injected dep coded to R18 until they merge, per K1563 (1).
