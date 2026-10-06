@@ -30,3 +30,7 @@ Size (session_01SnQPPnjMsxKG92GWzPZpV8): test runs 5, module lines 1878
 ## J1 · REPORT
 
 Three findings outside entities, from T34-78 (DEC-149): (1) promotion: C-91.1 IDSPACE_UNKNOWN and C-91.2 IDSPACE_VALUE_NOT_IN_SPACE translations changed to say "your group's jurisdiction profiles"; row-census.test.mjs is red naming exactly these two (green before), awaiting stamp until T35's promotion job (plan Rules (5) item 4). (2) control-plane: catalogue-end.test.mjs pins C-91.1's and C-91.2's translation digests (rows-before-r43.json) and needs a re-pin as K1572's C-91.1 had (CONTROL-PLANE #22); it is already red on tranche/T34 before this job (ADMINS_FIRST lost its row). (3) Generated artifact stale (§14): bio-plane/dist/bio-plane.bundled.mjs bundles src/entities/.
+
+## J2 · COMPLETE
+
+T34-16 applied: CONNECTION_DECLARES {undated, group_wide}; the battery test asserts ok whole, at and sight inapplicable, with negative controls, and R6/R7 directly. T34-78 (DEC-149) share applied: the plan's four strings plus three more of the same pattern (index.mjs 813, 1458, 1538) say "your group's"; dec149.test.mjs names each. The two named reds (R20, R43 literal lists) fixed. entities 88/88. format, architecture, coverage (49/49), ownership 0 failures. Deferred none. Findings: REPORT J1 (row census and catalogue-end pins for C-91.1/.2; plane bundle stale). Record: build/jobs/T34/entities.md, Completion.
