@@ -40,7 +40,7 @@ Terms.
 **withdrawFact({factId, reason, by}), readFact({factId, viewer}), moneyOf({entity, period?, kinds?, phases?, limit, viewer})**
 - **R7** `withdrawFact` refuses `NO_REASON`, `NO_SUCH_FACT`; a repeat answers `already: true`. A withdrawn fact remains, shown withdrawn with who, when and why, and R9–R16 never count it. Nothing is deleted; a fact's adjustments and the facts citing it as source are answered beside it. *(not yet met: T33-33)*
 - **R8** `readFact` answers `NO_FACT` for an empty id and `found: false` for an absent one; otherwise every field, both grades, its source with its citation, its adjustments and its withdrawal. *(not yet met: T33-33)*
-- **R9** `moneyOf` answers the facts in which the entity is a party (as entity or fund) or which concern it, filtered by period (`civil-time` overlap, undetermined ones listed apart), kinds and phases, ordered by period then id, bounded 1–500 (default 100) with `truncated`. It answers facts and never a total. *(not yet met: T33-33)*
+- **R9** `moneyOf` answers the facts in which the entity is a party (as entity or fund) or which concern it (`entity` may be any id a fact's `concerns` may name, an `EVT-` or `LIN-` among them, K1563), filtered by period (`civil-time` overlap, undetermined ones listed apart), kinds and phases, ordered by period then id, bounded 1–500 (default 100) with `truncated`. It answers facts and never a total. *(not yet met: T33-33)*
 
 **summable({factIds})** — the summation rule
 - **R10** Answers `{ok: true, interfund}` when every fact shares one kind, one phase (and, for actuals, one stage), one basis, one currency and one period; otherwise the refusal naming the first dimension that differs and two facts that differ on it, with `calc-grammar`'s codes (its R13): `SUM_MIXED_KIND`, `SUM_MIXED_STAGE` (phase or stage), `SUM_MIXED_BASIS`, `SUM_MIXED_CURRENCY`, `SUM_MIXED_PERIOD`. `interfund` lists each transfer between two funds, flagged so a city-wide sum can net it. It computes and stores no total: a total is a `CALC-`. *(not yet met: T33-33)*
@@ -69,7 +69,7 @@ Terms.
 
 **The ops map; the read contract**
 - **R18** The module publishes `moneyOps(money, url, body)`, one route arm per act and read above, on `entities` R40's pattern; every write goes through R1's one append site, stamped by the control plane. *(not yet met: T33-33)*
-- **R19** The money facts table (`fact_id`, `amount`, `currency`, `kind`, `phase`, `stage`, `basis`, `period_from`, `period_to`, parties' `entity` and `fund`, withdrawal) is a stated read contract on the terms of `record-core` R37 (`money-checks`, `calculations`, `query-language`); every write stays this module's. *(not yet met: T33-33)*
+- **R19** The table `money_facts` (`fact_id`, `amount`, `currency`, `sign`, `kind`, `phase`, `stage`, `basis`, `period_from`, `period_to`, `from_entity`, `from_fund`, `to_entity`, `to_fund`, `source_capture_sha`: the capture the fact's source extent is in, or the capture a source table was read from, else null), `money_withdrawals` (`fact_id`) and `money_concerns` (`fact_id`, `concerns`: one row per id the fact concerns) are a stated read contract (K1563) on the terms of `record-core` R37 (`money-checks`, `calculations`, `query-language`); every write stays this module's. *(not yet met: T33-33)*
 
 ## Private
 

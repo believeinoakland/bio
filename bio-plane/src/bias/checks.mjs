@@ -7,10 +7,12 @@
 
 import { normalizeType } from "../record-grammar/types.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
+import { idPattern } from "../record-grammar/ids.mjs";
 import { PROMOTION_ROW_CHECKS } from "../promotion/checks.mjs";
 
-/* C-26.2's key shape (R3), a subject registry key. Record-grammar exports no such pattern, so it is spelled once here. */
-const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
+/* C-26.2's key shape (R3), a subject registry key: an `ENT-` id as record-grammar's `ID_TABLE` states it, read through
+   its `idPattern` and never copied here (T33-38, S0-9), so `ENT-2026-10000` is a key and `ENT-2026-999` is not. */
+const ENTITY_ID_RE = idPattern('ENT');
 
 /* The catalogue's finding shape, `{check, severity, message, repairs?}`. */
 function f(check, severity, message, repairs) {
@@ -162,7 +164,7 @@ function checkBiasExtension(ctx, findings) {
     const subject = s.subject === undefined || s.subject === null ? '' : String(s.subject).trim();
     if (!subject || !ENTITY_ID_RE.test(subject)) {
       findings.push(f('C-26.2', 'error',
-        `${at} subject '${subject.slice(0, 40) || '(absent)'}' is not a subject registry key (ENT-YYYY-NNNN)`,
+        `${at} subject '${subject.slice(0, 40) || '(absent)'}' is not a subject registry key (an ENT- id)`,
         ['point subject at an entry in the subject registry (op=entitycreate / op=entitybyalias)']));
     }
 

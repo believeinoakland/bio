@@ -64,7 +64,7 @@ Terms.
 
 **The ops map; the read contract**
 - **R19** The module publishes `dutiesOps(duties, url, body)`, one route arm per act and read above; one append site, stamped by the control plane. *(not yet met: T33-35)*
-- **R20** The duties table (`duty_id`, `modality`, `obligor`, `obligee`, version, withdrawal) and the transitions table are a stated read contract on the terms of `record-core` R37 (`query-language`'s `obligor:`/`owed_to:`, `action-plans`, `strength`'s occurrence legs); every write stays this module's. *(not yet met: T33-35)*
+- **R20** The duties table (`duty_id`, `modality`, `obligor`, `obligee`, `arising_in`: the capture the duty's source item rests on, else null (K1563), version, withdrawal) and the transitions table are a stated read contract on the terms of `record-core` R37 (`query-language`'s `obligor:`/`owed_to:`, `action-plans`, `strength`'s occurrence legs); every write stays this module's. *(not yet met: T33-35)*
 
 ## Private
 
