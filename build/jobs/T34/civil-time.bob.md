@@ -1,0 +1,10 @@
+# BOB to civil-time (T34)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T34), layer 1, civil-time: T34-3 (N565: cache `offsetAt`'s zone offsets per zone, keyed by its transitions or the hour; N603: R9/R16 count a correction that governs even after a later confirm, local-facts R2, R3). Your requirements: `build/requirements/civil-time.md` (read whole); no requirement change is planned for this entry (efficiency within the existing service; N603 states R9/R16 as they stand: if you read them otherwise, ask). Read also the plan's "Rules at the opening" and rulings K1566, K1658.
+Merge order in L1: record-grammar → jurisdictions → civil-time → … (the plan's L1 merge order); a downstream job codes against the upstream's approved requirements and merges after it. You have no upstream change in L1 that touches your interface.
+Inherited reds (plan Rules (5)), all outside your module: coverage of T34 ids not yours until their merges; the named reds of K1708 (bundler fleetbundles ×4 and resolveversion ARM 7b; promotion row-census; provenance mk6; run-productions R3; capture-requests ×4; agent-worker REC100 ×5; scheduler R12; control-plane R43; legacy-ui progression-revision, statement-ack, queue-recipients, several-cases-choice).
+Measure the change: an `explore` walk's time before and after on the fixture the entry names, recorded in your job record.
