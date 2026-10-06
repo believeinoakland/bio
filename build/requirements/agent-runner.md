@@ -15,19 +15,19 @@ The container in which a member's Claude subscription runs a model conversation 
 Terms. The **caller** is `agent-model`'s subscription provider, through the Container Durable Object. A **conversation request** is `{credential: {kind, secret}, model, system, prompt, tools: [{name, description, input_schema}], max_turns}`. A **relay** is `{tool_use: {id, name, input}}` sent to the caller, answered by `{tool_result: {id, content, is_error?}}`. The **connection** is a WebSocket the caller opens with `fetch("https://agent-runner/conversation", {headers: {Upgrade: "websocket"}})`; its first message is the conversation request, and relays, results and the end (R4) travel on it (K1600).
 
 **The conversation** (one per connection)
-- **R1** (K1502) For each conversation request it runs one Agent SDK query with Claude Code unmodified and not in bare mode, with built-in tools off (`tools: []`), no settings source (`settingSources: []`), no session persistence (`persistSession: false`), `strictMcpConfig: true`, no skills, and `maxTurns` set from `max_turns`; the options are checked by a test that captures them at the SDK boundary. *(not yet met: T33-56)*
-- **R2** (K1429, K1502) The credential reaches Claude Code only in the environment of that one query, which replaces the process environment whole: `CLAUDE_CODE_OAUTH_TOKEN` for `kind: "subscription"`, `ANTHROPIC_API_KEY` for `kind: "apikey"`, with `CLAUDE_CONFIG_DIR` a fresh temporary directory removed when the query ends. A request with no credential, another `kind` or an empty secret answers `{ok: false, code: "NO_CREDENTIAL"}` and starts nothing. *(not yet met: T33-56)*
-- **R3** (M-Q4 relay; K1474 (i)) The only tools the model can see are those the request names, each an in-process MCP tool whose handler sends a relay to the caller over the same connection and returns the caller's `tool_result` as the tool's result, unchanged. The runner performs no tool's effect itself. *(not yet met: T33-56)*
-- **R4** The conversation's end is answered on the connection as `{ok: true, result, stop_reason, num_turns, usage}` with `usage` `{input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens, total_cost_usd}` as the SDK states them (`null` where it states none), or `{ok: false, code, detail}` (detail at most 300 characters) when the SDK errors, the caller's connection closes, or `max_turns` is reached (`code: "MAX_TURNS"`); a closed connection aborts the query. *(not yet met: T33-56)*
+- **R1** (K1502) For each conversation request it runs one Agent SDK query with Claude Code unmodified and not in bare mode, with built-in tools off (`tools: []`), no settings source (`settingSources: []`), no session persistence (`persistSession: false`), `strictMcpConfig: true`, no skills, and `maxTurns` set from `max_turns`; the options are checked by a test that captures them at the SDK boundary.
+- **R2** (K1429, K1502) The credential reaches Claude Code only in the environment of that one query, which replaces the process environment whole: `CLAUDE_CODE_OAUTH_TOKEN` for `kind: "subscription"`, `ANTHROPIC_API_KEY` for `kind: "apikey"`, with `CLAUDE_CONFIG_DIR` a fresh temporary directory removed when the query ends. A request with no credential, another `kind` or an empty secret answers `{ok: false, code: "NO_CREDENTIAL"}` and starts nothing.
+- **R3** (M-Q4 relay; K1474 (i)) The only tools the model can see are those the request names, each an in-process MCP tool whose handler sends a relay to the caller over the same connection and returns the caller's `tool_result` as the tool's result, unchanged. The runner performs no tool's effect itself.
+- **R4** The conversation's end is answered on the connection as `{ok: true, result, stop_reason, num_turns, usage}` with `usage` `{input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens, total_cost_usd}` as the SDK states them (`null` where it states none), or `{ok: false, code, detail}` (detail at most 300 characters) when the SDK errors, the caller's connection closes, or `max_turns` is reached (`code: "MAX_TURNS"`); a closed connection aborts the query.
 
 **`GET /version`**
-- **R5** Answers 200 `{ok: true, name: "agent-runner", version}`, the version the image was built with. *(not yet met: T33-56)*
+- **R5** Answers 200 `{ok: true, name: "agent-runner", version}`, the version the image was built with.
 
 **Anything else**
-- **R6** Any other path or method answers 404 `UNKNOWN`. *(not yet met: T33-56)*
+- **R6** Any other path or method answers 404 `UNKNOWN`.
 
 **The fleet member**
-- **R7** (M-Q8) The fleet manifest (`fleet-member.json`) names the image by a digest-pinned reference, its surface (R1–R5) and its build recipe, so an install names exactly one image. *(not yet met: T33-56)*
+- **R7** (M-Q8) The fleet manifest (`fleet-member.json`) names the image by a digest-pinned reference, its surface (R1–R5) and its build recipe, so an install names exactly one image.
 
 ## Private
 
@@ -37,10 +37,10 @@ None. It imports no module of this repository and reaches the plane only through
 
 ### Invariants
 
-- **R8** (K1429; `agent-worker` R36) It holds no credential: the secret arrives per request and is never written to disk, logged or echoed; no answer, relay, error or log line carries it. A test with a sentinel secret finds it in no output and no file under the image's writable paths after the query. *(not yet met: T33-56)*
-- **R9** Nothing survives a conversation: no file is written outside its temporary directory (R2), which is gone when the query ends, and a second request on a fresh connection sees nothing of the first. *(not yet met: T33-56)*
-- **R10** Its only egress is `api.anthropic.com`; it opens no other outbound connection, and reads no file, page or address a tool did not relay (the closed book, K1474 (i); the injection fence). *(not yet met: T33-56)*
-- **R11** No place is named in its behaviour or outward text. *(not yet met: T33-56)*
+- **R8** (K1429; `agent-worker` R36) It holds no credential: the secret arrives per request and is never written to disk, logged or echoed; no answer, relay, error or log line carries it. A test with a sentinel secret finds it in no output and no file under the image's writable paths after the query.
+- **R9** Nothing survives a conversation: no file is written outside its temporary directory (R2), which is gone when the query ends, and a second request on a fresh connection sees nothing of the first.
+- **R10** Its only egress is `api.anthropic.com`; it opens no other outbound connection, and reads no file, page or address a tool did not relay (the closed book, K1474 (i); the injection fence).
+- **R11** No place is named in its behaviour or outward text.
 
 ### Satisfies
 
