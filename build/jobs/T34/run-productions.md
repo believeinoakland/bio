@@ -16,6 +16,6 @@
 **Tests and checks.**
 - run-productions: 39 pass, 0 fail (was 38/1, with R3 red).
 - Layer tests: none are named in `build/manifest.md`. No service I provide changed, so no user module's tests needed re-running.
-- `format`: 126 modules, 125 requirements files; 0 failures. `architecture run-productions`: 8 product files, 41 relative imports; 0 failures. `coverage run-productions`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership run-productions tranche/T34`: 0 failures.
+- `format`: 126 modules, 125 requirements files; 0 failures. `architecture run-productions`: 8 product files, 41 relative imports; 0 failures. `coverage run-productions`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership run-productions tranche/T34`: 3 files changed; 0 failures.
 
 Size (session_01XYgGBGhRvjEuFN3iKFUv7K): test runs 4, module lines 1358
