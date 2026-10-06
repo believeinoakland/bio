@@ -1,7 +1,7 @@
 /* network-notices: what a member, and the public, read the group's own installation called (DEC-149, T34-87; K1784,
    K1811). Members read "your group's Civicsmith", or a sentence that needs no name; nothing this module answers calls it
-   "this copy", "this instance", "this plane", "the plane" or a server. The public's key label names the group's
-   Civicsmith, never "your group's" (a stranger reads it) and never "copy". Each changed string is driven through the
+   "this copy", "this instance", "this plane", "the plane" or a server. The public's key label says this group's
+   Civicsmith (K1833), never "your group's" (a stranger reads it) and never "copy". Each changed string is driven through the
    refusal or the read that answers it, and checked whole. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -69,17 +69,17 @@ test("R4 (DEC-149) NOTICE_STALE says your group's Civicsmith holds no prepared n
                stale.translation);
 });
 
-test("R21 (DEC-149) groupKeysPublic labels each key of the group's own Civicsmith as the group's Civicsmith key, never this copy's, nor your group's to a stranger", async () => {
+test("R21 (DEC-149) groupKeysPublic labels each key of the group's own Civicsmith as this group's Civicsmith key, never this copy's, nor your group's to a stranger", async () => {
   const w = seeded();
   await post(w);
   const keys = w.nn.groupKeysPublic();
-  assert.equal(nn.COPY_KEY_LABEL, "the group's Civicsmith key");
+  assert.equal(nn.COPY_KEY_LABEL, "this group's Civicsmith key");
   assert.equal(keys.copy.length, 1);
-  assert.equal(keys.copy[0].label, "the group's Civicsmith key");
+  assert.equal(keys.copy[0].label, "this group's Civicsmith key");
   for (const k of keys.copy) assert.doesNotMatch(k.label, /copy|instance|plane|server|your/i);
   noOldName(keys, "groupkeyspublic");
   /* served the same with no credential (public-read R18) */
-  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), ["the group's Civicsmith key"]);
+  assert.deepEqual(w.publicRead.publicRead("groupkeyspublic", {}).result.copy.map((k) => k.label), ["this group's Civicsmith key"]);
 });
 
 test("R1 R4 R21 (DEC-149) no row, refusal or answer of this module calls the group's Civicsmith this copy, this instance or the plane", async () => {

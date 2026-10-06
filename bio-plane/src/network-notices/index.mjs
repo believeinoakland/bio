@@ -97,9 +97,9 @@ export const OUTWARD_ACT_WARNING = Object.freeze({
 });
 /** R2 (K1031 (4)): the caution's code; it never refuses, and its words are the UX design stream's. */
 export const CAUTION_TWO_OPEN = "two_open_without_published_work";
-/** R21: how the keys of the group's own Civicsmith are labelled. The public reads it with no credential, so it names
- *  the group's Civicsmith rather than "your group's", and never "this copy" (DEC-149, T34-87). */
-export const COPY_KEY_LABEL = "the group's Civicsmith key";
+/** R21: how the keys of the group's own Civicsmith are labelled. The public reads it with no credential, so it says
+ *  "this group's Civicsmith", never "your group's" nor "this copy" (DEC-149, K1821, K1833). */
+export const COPY_KEY_LABEL = "this group's Civicsmith key";
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 /* R15: the user agent the timestamp requests carry, naming the product (DEC-124). */
