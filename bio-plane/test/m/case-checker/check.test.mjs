@@ -461,11 +461,14 @@ test("R20: a row the document discloses as differing or unbound is answered with
 });
 
 test("R20 (K1448): a workbook, or a value from a third party's engine, is not_recomputed with the sentence that the publishing copy's engine recomputed it, never as agreeing", async () => {
-  for (const over of [{ recipe: { kind: "workbook", sheet: "Totals", cell: "B4" }, method_version: "ironcalc/0.5" },
+  for (const over of [/* a workbook row as case-grammar R18 states it (K1639): its capture's SHA-256, no recipe, no inputs, no key */
+                      { calc: sha("a workbook"), recipe: null, inputs: {}, results: {}, method_version: "ironcalc/0.5", recompute: "not_recomputed" },
+                      { recipe: { kind: "workbook", sheet: "Totals", cell: "B4" }, method_version: "ironcalc/0.5" },
                       { method_version: "ironcalc/0.5" }]) {
     const r = await check({ withCalculation: true, calcRow: over });
     const c = r.calculations[0];
     assert.equal(c.result, "not_recomputed");
+    if (over.calc) assert.equal(byId(r)[C].result, "recreated");
     assert.equal(c.statement, CC.NOT_RECOMPUTED_STATEMENT);
     assert.match(c.statement, /recomputed by the publishing copy's engine/);
     assert.deepEqual([c.differs, c.missing], [[], []]);
