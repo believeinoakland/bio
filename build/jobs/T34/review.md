@@ -1,6 +1,6 @@
 # review (T34)
 
-**Status** · session_01JqykuKX2yyLGrRsyibnAgi · depth 2 · COMPLETE · handled B1
+**Status** · session_01JqykuKX2yyLGrRsyibnAgi · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
