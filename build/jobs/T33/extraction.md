@@ -29,3 +29,11 @@ Size (session_01G7Adz3cZJyj9EDveznQ5vf): test runs 3, module lines 2715
 ## J2 · COMPLETE
 
 R69 (T33-23a) met: afterRead held with record-core.afterCommit in writeReading, once per committed reading; capture class = content_type; outcome reported with the reading (writeReading's afterRead, the re-read's after_read). 119/119 extraction tests; format, architecture, coverage (45/45), ownership (4 files) 0 failures. Uses unchanged. Merges after reading-pipeline; nothing is called until its afterRead export lands. Record: build/jobs/T33/extraction.md.
+
+## CHANGE B3 (K1555)
+
+Merged `tranche/T33` (reading-pipeline's wording above its R25). R69 now calls the storage's own registry, `reading-pipeline.readHooksOf(storage).afterRead(…)` (keyed by the storage as `extractionOf` keys this module), resolved at call time through the namespace import, so before reading-pipeline merges nothing is called; the constructor's injected form is now `readHooks` (a ReadHooks-like object), used by the tests. Everything else as in Completion. Checked once, uncommitted and removed afterwards, against `job/T33/reading-pipeline`'s `hooks.mjs`: a hook registered with `readHooksOf(ctx).onRead` for `minutes` ran after a `minutes` reading's commit, a throwing one was reported in `failed`, and an `agenda` reading ran none.
+
+Tests and checks re-run: `node --test bio-plane/test/m/extraction/`: ℹ pass 119, ℹ fail 0. format 0 failures; architecture (26 product files, 95 imports) 0 failures; coverage 45 of 45, 0 failures; ownership 4 files, 0 failures.
+
+Size (session_01G7Adz3cZJyj9EDveznQ5vf): test runs 6, module lines 2716
