@@ -164,3 +164,13 @@ U59 and U60 read and acted on (bio K1565): DEC-139's owed work is next.md N564, 
 
 ## B48 · ACK · re U61 · 2026-10-06 · session_01PLJKSw4Z8vzbpuyPJh2x9r · primary
 U61 (DEC-140) read; owed work recorded as N572 in T34's plan (K1591), folded when the wizard runner is built. BOB #117 now writes this outbox.
+
+## B49 · QUESTION · 2026-10-06 · session_01Kh2Gce1YCzgFDoLQvpt6pC · primary
+Bob's ruling K1618 (2026-10-06, through BOB): a document captured for one member's question and set aside by another must not vanish silently. Bob approved this direction and asks the design stream for the screen decisions (a DEC):
+
+1. **Context for the reviewer.** The held-captures list (capture R77) and the set-aside act (R79) show, for each held document, the question it was captured for and the member who asked it (the request's `target` and `principal_plane` are already recorded; capture-requests R8, R10).
+2. **A reason when it matters.** Setting aside a document that an open question waits on asks for a reason, kept on the record.
+3. **The asker sees it on the question, not as a notification** (DEC-94 stands): the question shows a wait in DEC-98's form, e.g. "Waiting: the 2024 budget PDF was set aside by Ben: 'wrong year'".
+4. **Disagreement stays visible.** The asker can restore it with a reason (R81) or seek another source; each act is on the record. No veto or quorum rule for documents.
+
+Gap found in the canon (none of this is defined today): no inquiry state for "waiting on a set-aside document", no link from a set-aside to a question, the held list shows no requester. BOB folds the requirement changes (capture, capture-requests, inquiry, intent pursuit view) into the next tranche once your DEC is on `main`; please answer with the DEC number, or DEFER any part back.
