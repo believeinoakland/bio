@@ -8,7 +8,7 @@ import { HUNCH_KINDS, ownerNeighbours } from "../../../src/hypotheses/index.mjs"
 
 const AT = "2026-10-01T12:00:00Z";
 
-test("R4 the module registers as the owner of the kind hunch, class hunch, in the registry the plane wires and once in a test's own; its neighbours passes the owner-conformance battery, the only failure the inapplicable at check of an undated kind (K1563 (2))", () => {
+test("R4 the module registers as the owner of the kind hunch, class hunch, in the registry the plane wires and once in a test's own; its neighbours passes the owner-conformance battery, declaring its kind undated so the at check is inapplicable (connection-grammar R9; K1563 (2))", () => {
   assert.deepEqual(defaultRegistry.kindOf("hunch"), { owner: "hypotheses", word: "a member's hunch", class: "hunch" });
   const w = world();
   assert.deepEqual(w.registry.owners(), [{ owner: "hypotheses", kinds: [{ kind: "hunch", word: "a member's hunch", class: "hunch" }] }]);
@@ -20,8 +20,10 @@ test("R4 the module registers as the owner of the kind hunch, class hunch, in th
   w.h.withdraw({ hypothesisId: gone, reason: "wrong", by: ANN });
   const r = ownerConformance({ owner: "hypotheses", neighbours: (a) => w.h.neighbours(a), kinds: [...HUNCH_KINDS],
     fixture: { node: E1, at: AT, in: hunch, out: gone, undetermined: hunch, viewers: { sees: ANN, blind: OUTSIDER },
-               fenced: hunch, expected: [hunch], scope: inq, hunch } });
-  assert.deepEqual(r.failures, [{ check: "at", why: `${hunch} (in at the date) is not returned unmarked` }]);
+               fenced: hunch, expected: [hunch], scope: inq, hunch }, declares: { undated: true } });
+  assert.deepEqual(r.failures, [], JSON.stringify(r.failures));
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.inapplicable.map((x) => x.check), ["at"], "a hunch states no period, so the at rule cannot be shown (K1563 (2))");
   /* R6/R7 directly: every hop undetermined at every date, the fenced one only to who may see its inquiry */
   for (const at of [AT, "1990-01-01T00:00:00Z", { value: "2026-10-01", precision: "day", zone: "UTC" }]) {
     const a = w.registry.neighbours({ owner: "hypotheses", node: E1, at, viewer: ANN, scope: inq });

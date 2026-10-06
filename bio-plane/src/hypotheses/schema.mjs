@@ -33,3 +33,32 @@ CREATE INDEX IF NOT EXISTS hypothesis_revisions_bundle ON hypothesis_revisions (
 `;
 
 export const HYPOTHESES_TABLES = Object.freeze(["hypotheses", "hypothesis_revisions"]);
+
+/* A member's own notes (R11–R15; DEC-136 (2), (3)). A note is keyed by a number of its own (`note_id`), never a record
+   id, so no leg, reference, citation, connection, search or count names one (R14). `member_notes` holds the words as
+   kept, never changed; `member_note_turns` each turn of a note into an observation, a hunch or a question, appended;
+   `member_note_told` the one time a member was answered the court statement (R11). Each is its author's alone. */
+export const NOTES_SCHEMA = `
+CREATE TABLE IF NOT EXISTS member_notes (
+  note_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  member        TEXT NOT NULL,      -- the member who kept it; the only one answered it
+  text          TEXT NOT NULL,      -- the member's words, as kept
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS member_notes_of ON member_notes (member, note_id);
+CREATE TABLE IF NOT EXISTS member_note_turns (
+  seq           INTEGER PRIMARY KEY AUTOINCREMENT,
+  note_id       INTEGER NOT NULL,
+  member        TEXT NOT NULL,
+  turned_into   TEXT NOT NULL,      -- observation | hunch | question
+  made_id       TEXT NOT NULL,      -- the id the member's act answered
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS member_note_turns_of ON member_note_turns (note_id, seq);
+CREATE TABLE IF NOT EXISTS member_note_told (
+  member        TEXT PRIMARY KEY,
+  at            TEXT NOT NULL
+);
+`;
+
+export const NOTES_TABLES = Object.freeze(["member_notes", "member_note_turns", "member_note_told"]);

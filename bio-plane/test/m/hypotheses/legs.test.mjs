@@ -3,7 +3,7 @@
    evidentiary kind. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, INQ, E1, E2, E3 } from "./fixture.mjs";
+import { world, ANN, OUTSIDER, INQ, E1, E2, E3 } from "./fixture.mjs";
 import { createRegistry, derivedId, DECLARED_LABEL, LOWEST_GRADE } from "../../../src/connection-grammar/index.mjs";
 import { exploreOf } from "../../../src/explore/index.mjs";
 
@@ -120,25 +120,94 @@ test("R6 a hunch hop in the chain is a lead; explore failing, throwing or absent
   }
 });
 
-test("R6 a calculation leg whose inputs name a derived connection is checked as that connection; one naming a hypothesis is refused; one with neither, and any calculation when no input read is wired, passes", () => {
+test("R6 a leg's derived connection is re-derived with the leg's inquiry as scope: one resting on a hunch of that inquiry is a lead, LEAD_NOT_A_LEG naming the hunch; without the inquiry's scope it cannot be re-derived, never passed", () => {
+  const { registry } = standIns();
+  const explore = exploreOf(undefined, { registry });
+  const asked = [];
+  const w = world({ registry, explore: { rederive: (a) => { asked.push(a.scope ?? null); return explore.rederive(a); } } });
+  assert.equal(w.promote(INQ, []).ok, true, "the inquiry, held through a promotion");
+  const hunch = w.hold({ about: { from: E1, to: E3 } });
+  const c = { from: E1, to: E2, kind: "std-der-hunch", owner: "std-der2", valid: VALID, evidence: [{ source: "derivation" }],
+              grade: { assertion: "B", ends: ["B", "B"] }, derived: { method: METHOD, inputs: [hunch], as_of: AS_OF } };
+  c.id = derivedId({ kind: c.kind, from: E1, to: E2, as_of: AS_OF, method: METHOD });
+  registry.registerOwner({ owner: "std-der2", kinds: [{ kind: "std-der-hunch", word: "linked through a hunch", class: "derived" }],
+                           neighbours: ({ node }) => ({ items: [c].filter((x) => x.from === node || x.to === node) }) });
+  const leg = derivedLeg(c);
+  /* the check every promotion runs passes the promoted inquiry as the scope */
+  const r = w.promote(INQ, [leg]);
+  assert.equal(r.reason, "BASIS_REFUSED", JSON.stringify(r).slice(0, 400));
+  assert.deepEqual(r.findings.map((f) => [f.code, f.check, f.ord, f.target, f.hop]), [["LEAD_NOT_A_LEG", "C-134.11", 0, c.id, hunch]]);
+  assert.deepEqual(asked.at(-1), { inquiry: INQ });
+  /* the read itself, with and without the inquiry */
+  assert.deepEqual(w.h.legRefusals({ legs: [leg], viewer: ANN, inquiry: INQ }).map((f) => [f.code, f.hop]), [["LEAD_NOT_A_LEG", hunch]]);
+  assert.deepEqual(w.h.legRefusals({ legs: [leg], viewer: ANN }).map((f) => f.code), ["LEG_NOT_REDERIVED"], "no scope: the hunch is not read, so the chain is not settled");
+  assert.equal(asked.at(-1), null, "no scope is passed without an inquiry");
+  /* another inquiry's scope does not see the hunch: refused, never passed */
+  w.bundle("INQ-2026-0002-other");
+  assert.deepEqual(w.h.legRefusals({ legs: [leg], viewer: ANN, inquiry: "INQ-2026-0002-other" }).map((f) => f.code), ["LEG_NOT_REDERIVED"]);
+  /* a viewer who may not see the inquiry: refused, never passed */
+  const fenced = w.fenced("INQ-2026-0009-hidden");
+  w.hold({ inquiry: fenced, about: { from: E1, to: E3 } });
+  assert.deepEqual(w.h.legRefusals({ legs: [leg], viewer: OUTSIDER, inquiry: fenced }).map((f) => f.code), ["LEG_NOT_REDERIVED"]);
+  /* negative control: an evidentiary derivation passes in scope */
+  const ev = standIns();
+  const w2 = world({ registry: ev.registry, explore: exploreOf(undefined, { registry: ev.registry }) });
+  w2.bundle(INQ);
+  assert.deepEqual(w2.h.legRefusals({ legs: [derivedLeg(ev.onEv)], viewer: ANN, inquiry: INQ }), []);
+});
+
+test("R6 a calculation leg (either CALC- form) is read synchronously through calculations.gradeFactsOf with the promotion's author: an input naming a hypothesis is HYPOTHESIS_NOT_A_LEG; one naming a derived connection is judged as a leg on it; a calculation not found, or a read that throws or answers no such shape, is LEG_NOT_REDERIVED, never passed", () => {
   const { registry, onEv, onDec } = standIns();
-  const inputs = {
-    "CALC-2026-0001": [{ name: "t", table: "c".repeat(64) }],
-    "CALC-2026-0002": [{ name: "link", connection: onDec.id, derivation: { kind: onDec.kind, from: E1, to: E2, as_of: AS_OF, method: METHOD } }],
-    "CALC-2026-0003": [{ name: "link", connection: onEv.id, derivation_kind: onEv.kind, derivation_from: E1, derivation_to: E2, derivation_as_of: AS_OF, derivation_method: METHOD }],
-    "CALC-2026-0004": [{ name: "h", set: ["HYP-2026-0007"] }],
-    "CALC-2026-0005": [{ name: "link", connection: "e".repeat(64), derivation: { kind: "x" } }],
+  const dv = (c) => ({ kind: c.kind, from: E1, to: E2, as_of: AS_OF, method: METHOD });
+  const OPAQUE = "CALC-2026-abcdefgh12345678";
+  const facts = (inputs) => ({ found: true, accepted: true, capture: { grade: "B", why: "w" }, inputs, method: { recipe: {}, method_version: "1" } });
+  const held = {
+    "CALC-2026-0001": facts([{ name: "t", kind: "table", ref: "c".repeat(64), grade: "B", why: "w" },
+                             { name: "f", kind: "figure", ref: "d".repeat(64), grade: "B", why: "w" },
+                             { name: "s", kind: "set", ref: "e".repeat(64), grade: null, not_graded: true, why: "w" },
+                             { name: "v", kind: "value", ref: 12, grade: "D", why: "w" }]),
+    "CALC-2026-0002": facts([{ name: "link", kind: "value", ref: onDec.id, derivation: dv(onDec), grade: "D", why: "w" }]),
+    "CALC-2026-0003": facts([{ name: "link", kind: "value", ref: onEv.id, derivation: dv(onEv), grade: "D", why: "w" }]),
+    "CALC-2026-0004": facts([{ name: "h", kind: "set", ref: ["ENT-2026-0001", " HYP-2026-0007"], grade: null, why: "w" }]),
+    "CALC-2026-0005": facts([{ name: "link", kind: "value", ref: onEv.id, grade: "D", why: "w" }]),
+    "CALC-2026-0006": facts([{ name: "m", kind: "money", ref: "HYP-2026-0008", grade: null, why: "w" }]),
+    [OPAQUE]: facts([{ name: "link", kind: "value", ref: onDec.id, derivation: dv(onDec), grade: "D", why: "w" }]),
+    "CALC-2026-0007": "throw",
+    "CALC-2026-0008": Promise.resolve(facts([])),
+    "CALC-2026-0009": { found: true },
+    "CALC-2026-0010": null,
   };
-  const w = world({ registry, explore: exploreOf(undefined, { registry }), calculationInputs: (id) => inputs[id] ?? null });
-  const codes = (calc) => w.h.legRefusals({ legs: [{ target: calc }], viewer: ANN }).map((f) => f.code);
-  assert.deepEqual(codes("CALC-2026-0001"), []);
+  const viewers = [];
+  const calculations = { gradeFactsOf: ({ calcId, viewer }) => {
+    viewers.push(viewer);
+    const f = Object.hasOwn(held, calcId) ? held[calcId] : { found: false };
+    if (f === "throw") throw new Error("boom");
+    return f;
+  } };
+  const w = world({ registry, explore: exploreOf(undefined, { registry }), calculations });
+  const codes = (calc, viewer = ANN) => w.h.legRefusals({ legs: [{ target: calc }], viewer, inquiry: INQ }).map((f) => f.code);
+  assert.deepEqual(codes("CALC-2026-0001"), [], "a table's, a figure's and a set's sha are not connections; a value is no id");
   assert.deepEqual(codes("CALC-2026-0002"), ["LEAD_NOT_A_LEG"]);
-  assert.deepEqual(codes("CALC-2026-0003"), []);
+  assert.deepEqual(codes("CALC-2026-0003"), [], "an evidentiary derivation passes");
   assert.deepEqual(codes("CALC-2026-0004"), ["HYPOTHESIS_NOT_A_LEG"]);
-  assert.deepEqual(codes("CALC-2026-0005"), ["LEG_NOT_REDERIVED"]);
-  assert.deepEqual(codes("CALC-2026-0404"), [], "a calculation with no inputs read");
-  const r = w.promote("INQ-2026-0002-q", [{ target: "CALC-2026-0002" }]);
-  assert.deepEqual([r.reason, r.findings[0].code, r.findings[0].target], ["BASIS_REFUSED", "LEAD_NOT_A_LEG", "CALC-2026-0002"]);
+  assert.deepEqual(codes("CALC-2026-0005"), ["LEG_NOT_REDERIVED"], "an input whose derivation the answer does not carry");
+  assert.deepEqual(codes("CALC-2026-0006"), ["HYPOTHESIS_NOT_A_LEG"], "a hypothesis in any input's reference");
+  assert.deepEqual(codes(OPAQUE), ["LEAD_NOT_A_LEG"], "the opaque form is read too");
+  for (const calc of ["CALC-2026-0404", "CALC-2026-0007", "CALC-2026-0008", "CALC-2026-0009", "CALC-2026-0010"]) {
+    const f = w.h.legRefusals({ legs: [{ target: calc }], viewer: ANN });
+    assert.deepEqual(f.map((x) => [x.code, x.check, x.target]), [["LEG_NOT_REDERIVED", "C-134.12", calc]], calc);
+    assert.ok(f[0].detail.includes(calc));
+  }
+  assert.deepEqual(codes("CALC-2026-0003", null), ["LEG_NOT_REDERIVED"], "no viewer: the read answers not found, refused");
+  /* through a promotion: the author is the viewer, and the finding names the leg */
+  viewers.length = 0;
+  const r = w.promote("INQ-2026-0002-q", [{ target: "INFO-2026-0001-doc" }, { target: "CALC-2026-0004" }], { author: "member:outsider" });
+  assert.deepEqual([r.reason, r.findings[0].code, r.findings[0].ord, r.findings[0].target], ["BASIS_REFUSED", "HYPOTHESIS_NOT_A_LEG", 1, "CALC-2026-0004"]);
+  assert.deepEqual(viewers, ["member:outsider"]);
+  assert.equal(w.promote("INQ-2026-0003-q", [{ target: "CALC-2026-0001" }]).ok, true, "the negative control lands");
+  /* the arm always asks: a calculations instance that answers nothing refuses, and none reachable refuses */
+  const none = world({ calculations: {} });
+  assert.deepEqual(none.h.legRefusals({ legs: [{ target: "CALC-2026-0001" }], viewer: ANN }).map((f) => f.code), ["LEG_NOT_REDERIVED"]);
   const bare = world();
-  assert.deepEqual(bare.h.legRefusals({ legs: [{ target: "CALC-2026-0002" }], viewer: ANN }), []);
+  assert.deepEqual(bare.h.legRefusals({ legs: [{ target: "CALC-2026-0002" }], viewer: ANN }).map((f) => f.code), ["LEG_NOT_REDERIVED"]);
 });
