@@ -7,11 +7,13 @@ export const CONSEQUENCES_SCHEMA = `
 -- R1–R6, R14: ONE ROW PER PART, the part's bundle id its key. determination,
 -- standard and project are the breach it is recorded against (the project is
 -- the determination's, read when recorded, so every read gates on it, R13).
--- affected, measure and period are the canonical JSON of what was recorded;
--- state is computed, assessed or undetermined. value is the module's own
--- arithmetic for a computed part (JSON: {value} or {range}), grade its weakest
--- operand's capture letter (null when undetermined) and grade_why the named
--- weakest link; op the computation. rationale and rests_on are an assessment's;
+-- affected, measure and period are the canonical JSON of what was recorded
+-- (a measure's values signed decimal strings since T33);
+-- state is computed, assessed or undetermined. value is a computed part's
+-- value, calc-grammar's arithmetic (JSON: {value} or {range}, signed decimal
+-- strings; a row before T33 may hold numbers, read as exact decimals), grade
+-- its weakest operand's letter (null when undetermined) and grade_why the
+-- named weakest link; op the computation. rationale and rests_on are an assessment's;
 -- undetermined_why an undetermined part's reason code and words. causation is
 -- the inquiry named (or null) and causation_state what it was when recorded
 -- (established or unproven; not_applicable for a zero measure, N257),
@@ -45,10 +47,19 @@ CREATE TABLE IF NOT EXISTS consequence_parts (
   reason            TEXT
 );
 CREATE INDEX IF NOT EXISTS consequence_parts_determination ON consequence_parts (determination, standard);
--- R2: A COMPUTED PART'S OPERANDS, in order: the content id, the figure as the
--- author read it, the number this module parsed from it, the capture the
--- passage is of, and that capture's grade (provenance.captureGrade) as it read
--- when recorded: grade (null when undetermined), route, determined, basis.
+-- R2: A COMPUTED PART'S OPERANDS, in order. kind is content, money or
+-- calculation (null on a row recorded before T33: content). content_id holds
+-- the operand's id: the content id whose passage holds the figure, the money
+-- fact (MNY-) or the calculation (CALC-), with result_key the calculation's
+-- result named. figure is the figure as the author read it (a content
+-- operand's), exact its value as calc-grammar read it (JSON: {value} or
+-- {range}, signed decimal strings, with precision and currency), number the
+-- float a row recorded before T33 held (never written since: a value is never
+-- a floating-point number). capture_sha is the capture a content operand's
+-- passage is of; grade (null when undetermined), route, determined and basis
+-- the operand's grade as it read when recorded (a content operand's capture
+-- grade, provenance.captureGrade; a money fact's reading grade; a
+-- calculation's capture axis).
 CREATE TABLE IF NOT EXISTS consequence_operands (
   part_id      TEXT NOT NULL,
   ord          INTEGER NOT NULL,
@@ -60,6 +71,9 @@ CREATE TABLE IF NOT EXISTS consequence_operands (
   route        TEXT,
   determined   INTEGER NOT NULL DEFAULT 0,
   basis        TEXT,
+  kind         TEXT,
+  result_key   TEXT,
+  exact        TEXT,
   PRIMARY KEY (part_id, ord)
 );
 -- R9: A MEMBER'S ADDRESSED RECORD, one row per act, append-only; the latest by
@@ -84,7 +98,14 @@ export const CONSEQUENCES_TABLES = Object.freeze([
   Object.freeze({ name: "consequence_addressed", keys: Object.freeze(["part_id"]) }),
 ]);
 
+/* The columns T33 added to `consequence_operands` (R2's money and calculation operands, exact values), added to a table
+   created before them. */
+const OPERAND_COLUMNS_T33 = Object.freeze([["kind", "TEXT"], ["result_key", "TEXT"], ["exact", "TEXT"]]);
+
 export function migrateConsequences(sql) {
   const bare = CONSEQUENCES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const stmt of bare.split(";")) if (stmt.trim()) sql.exec(stmt.trim());
+  const have = new Set([...sql.exec(`PRAGMA table_info(consequence_operands)`)].map((r) => r.name));
+  for (const [col, type] of OPERAND_COLUMNS_T33)
+    if (!have.has(col)) sql.exec(`ALTER TABLE consequence_operands ADD COLUMN ${col} ${type}`);
 }

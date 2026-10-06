@@ -5,8 +5,11 @@
    stand-ins the test controls. The ceremonies that publish a case (`case-authoring`, `ratification`) are played through
    publication's R21 and R22, exactly as those modules call them. A contradiction candidate is formed by contradiction's
    own pairing and proposed through its door, a run gate standing in for `ai-runs`; `basis-versions`, which it reaches
-   for a duty's reach and a question's conclusion, is a stand-in built from its stated interface. Every test drives
-   `conformance` at its interface. */
+   for a duty's reach and a question's conclusion, is a stand-in built from its stated interface. T33-70: the real
+   `entities` (the actor's office entity, the participants) and `events` (the act is an event, with its dated facts and
+   participants; a document's own date is a dated fact, which contradiction reads, K1610). The bridge (instance-setup
+   R50) is the test's `offices` map, given as conformance's `officeEntityOf`. Every test drives `conformance` at its
+   interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -19,6 +22,7 @@ import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -138,6 +142,12 @@ export function world({ group = "test-group" } = {}) {
   const strength = strengthOf(host, { record, membership, now,
     inquiry: { basisFor: (id, o) => k.basisFor(id, o), earned: (e, t) => k.earned(e, t), legCapped,
                subjectEntityOf: (id) => k.subjectEntityOf(id) } });
+  /* the registry and the world's events, the real modules on this host (layer 5); the view gives events its zone */
+  const entities = k.entities;
+  const view = { time_zone: { value: "UTC" } };
+  const events = eventsOf(host, { record, membership, content, extraction: ex.provider, provenance: content.provenance,
+                                  entities, readHooks: {}, view: () => view, now });
+  events.migrate();
   const reevaluation = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, strength, now });
   reevaluation.basisVersions.migrate();
   const publication = publicationOf(host, { record, membership, promotion, inquiry: k, now });
@@ -167,11 +177,14 @@ export function world({ group = "test-group" } = {}) {
   /* ai-runs' gate, standing in: the one run `RUN` is running, and anyone may propose under it. */
   contradiction.registerRunGate("test", (id) => (id === RUN ? { found: true, running: true, refusal: null }
                                                             : { found: false, running: false, refusal: null }));
+  /* the bridge, standing in for instance-setup R50: "role|body" → the office entity seeded for it */
+  const offices = new Map();
   const c = conformanceOf(host, { record, membership, promotion, content, inquiry: k, strength, reevaluation,
-                                  publication, standards, contradiction, now });
+                                  publication, standards, contradiction, events, entities, now,
+                                  officeEntityOf: ({ role, body }) => offices.get(`${role}|${body}`) ?? null });
   const w = {
     st, host, record, membership, promotion, content, k, strength, reevaluation, publication, standards, contradiction, c,
-    clock, ex,
+    clock, ex, entities, events, offices, view,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
@@ -243,7 +256,35 @@ export function world({ group = "test-group" } = {}) {
         st.sql.exec(`INSERT OR REPLACE INTO readings (capture_sha, bundle_id, content_type, reading) VALUES (?,?,?,?)`,
                     cp.sha, id, doctype, JSON.stringify({ content_type: doctype, ...(date ? { date } : {}) }));
       }
-      return { doc: id, cap: cp, content: w.passage(id, cp.sha) };
+      const out = { doc: id, cap: cp, content: w.passage(id, cp.sha) };
+      /* the reader's date is also the document's own as events holds it (a dated fact, its R1), which contradiction's
+         own dates read (its K4; K1610) */
+      if (date) out.dated = w.dated(out, date);
+      return out;
+    },
+    /** A document's own date, `value`, as events holds it: a member's dated fact at the evidence's passage (its R1). */
+    dated(ev, value, { kind = "issued" } = {}) {
+      const r = events.recordDatedFact({ captureSha: ev.cap.sha, extent: { kind: "pdf-page", page: 1 }, kind, value,
+                                         method: "a member's reading of the document", by: V("alice") });
+      if (!r.ok) throw new Error(`fixture dated fact refused: ${JSON.stringify(r).slice(0, 300)}`);
+      return r.dated_fact.dated_fact_id;
+    },
+    /** An entity of the registry (`office`, `person`, …), declared by a member. */
+    entity(kind, label) {
+      const r = entities.createEntity({ kind, label, note: `The ${kind} ${label}, registered for the test.`,
+                                        declaredBy: V("olive") });
+      if (!r.ok) throw new Error(`fixture entity refused: ${JSON.stringify(r).slice(0, 300)}`);
+      return r.entity_id;
+    },
+    /** An event the record attests: by `ev`'s dated fact at `date` (or its passage, undated, when `date` is null), with
+     *  `participants` `[{entityId, role}]` stated by the same attestation. Answers its id. */
+    event(ev, { kind = "order", date = "2026-03-02", participants = [], by = V("olive") } = {}) {
+      const attestation = date ? { datedFactId: w.dated(ev, date) }
+                               : { captureSha: ev.cap.sha, extent: { kind: "pdf-page", page: 1 } };
+      const r = events.createEvent({ kind, attestations: [attestation],
+                                     participants: participants.map((p) => ({ ...p, attestation: 0 })), by });
+      if (!r.ok) throw new Error(`fixture event refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r.event_id;
     },
     /** A contradiction taken up as a question (contradiction R35): two passages, one a rule and one an act, legs of one
      *  inquiry that supports with the first and cuts against with the second (K1); the pair proposed `record` under the
@@ -406,14 +447,16 @@ export function scene(opts = {}) {
   w.inquiry(F, { legs: [{ target: DOC }] });
   const pin = w.publish(F, proj);
   const std = w.standard("Parks Code 12.08.030", { period: { from: "2020-01-01", to: "2030-12-31" } });
+  /* the act: the closure order, an event dated 2026-03-02 by the evidence, signed by a person (a participant) */
+  const signer = w.entity("person", "Jane Roe");
+  const act = w.event(ev, { participants: [{ entityId: signer, role: "signatory" }] });
   /** A valid determination of the scene's act (every field `over` replaces). */
   const input = (over = {}) => ({
     project: proj, author: V("olive"), viewer: V("olive"),
-    act: { description: "The parks department closed the east playground without the notice the code requires",
-           actor: { role: "Director of Parks", body: "Parks Department" }, at: "2026-03-02", evidence: [ev.content] },
+    act: { event: act, actor: { role: "Director of Parks", body: "Parks Department" }, evidence: [ev.content] },
     findings: [F], standards: [{ standard: std, outcome: "noncompliant" }],
     rows: [{ standard: std, requires: "thirty days' public notice before a closure", did: "closed with no notice",
              reading: "diverges", content: [ev.content] }],
     ...over });
-  return { w, proj, ev, pin, std, input };
+  return { w, proj, ev, pin, std, input, act, signer };
 }

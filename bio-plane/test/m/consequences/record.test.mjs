@@ -1,5 +1,5 @@
-/* consequences R1, R10, R13, R14: recording a part, its refusals in order, people never singled out, the reads gated
-   on the project's sight, append-only tables declared to purge, and the part a `CONS-` record object. */
+/* consequences R1, R10, R13, R14: recording a part, its refusals in order, a person only as a document names them, the
+   reads gated on the project's sight, append-only tables declared to purge, and the part a `CONS-` record object. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
@@ -39,15 +39,21 @@ test("R1: a valid part lands; each refusal holds in the requirement's order, wit
     assert.deepEqual(r, want, `${want.code} is conformance's answer, whole`);
     assert.deepEqual(w.snapshot(), before, `${want.code} writes nothing`);
   }
+  const notAPerson = w.entity("Harbour Supply");
+  const doe = w.person("Jordan Doe");
+  const elsewhere = w.figure("INFO-2026-0007-roll", "The roll names nobody");
   const cases = [
     ["CONSEQUENCE_NOT_NONCOMPLIANT", { standard: S2, author: V("carol"), ...bad }],
     ["CONSEQUENCE_NOT_NONCOMPLIANT", { standard: "STD-2026-0099-unnamed", author: V("carol"), ...bad }],
     /* carol, an administrator, sees the project and has not joined it: seeing is not acting (membership R55). */
     ["CONSEQUENCE_NOT_A_PARTICIPANT", { author: V("carol"), ...bad }],
     ["AFFECTED_UNKNOWN_KIND", { ...bad }],
-    ["AFFECTED_INDIVIDUAL", { affected: { kind: "person", description: "a named resident" }, measure: bad.measure, period: bad.period }],
+    ["AFFECTED_NOT_A_PERSON", { affected: { kind: "person", description: "a vendor", person: { entity: notAPerson, named_in: "x" } },
+                                measure: bad.measure, period: bad.period }],
+    ["AFFECTED_PERSON_NOT_NAMED", { affected: { kind: "person", description: "a resident", person: { entity: doe, named_in: elsewhere } },
+                                    measure: bad.measure, period: bad.period }],
     ["MEASURE_UNKNOWN_UNIT", { measure: bad.measure, period: bad.period }],
-    ["MEASURE_INVALID", { measure: { unit: "money", value: Infinity }, period: bad.period }],
+    ["MEASURE_INVALID", { measure: { unit: "money", value: "twelve" }, period: bad.period }],
     ["PERIOD_INVALID", { period: bad.period }],
   ];
   for (const [code, over] of cases) {
@@ -78,15 +84,31 @@ test("R1: a valid part lands; each refusal holds in the requirement's order, wit
   const Dl = w.determination("CONF-2026-0005-live", w.P, { [S]: "noncompliant" });
   assert.equal(w.c.consequenceRecord({ ...w.base, determination: Dl }).ok, true);
   /* MEASURE_INVALID's arms: a range bound not finite, a reversed range, a currency on a unit other than money. */
-  for (const measure of [{ unit: "count", range: { low: 1, high: NaN } }, { unit: "count", range: { low: 5, high: 2 } },
-                         { unit: "time", currency: "USD", value: 3 }, { unit: "money", value: "12" }])
+  /* MEASURE_INVALID's arms: a value or a range bound that does not read as an exact decimal through calc-grammar (not
+     finite, an exponent, a currency mark, a qualifier, a range, words), a reversed range (compared exactly: 0.3 is not
+     below 0.1 + 0.2's 0.3), a currency on a unit other than money. */
+  for (const measure of [{ unit: "count", range: { low: 1, high: NaN } }, { unit: "money", value: Infinity }, { unit: "money", value: 1e21 },
+                         { unit: "money", value: "$12" }, { unit: "count", value: "about 12" }, { unit: "count", value: "3 to 4" },
+                         { unit: "count", value: "12%" }, { unit: "count", value: true }, { unit: "count", range: { low: "5", high: "2" } },
+                         { unit: "count", range: { low: "0.30000000000000001", high: "0.3" } },
+                         { unit: "time", currency: "USD", value: 3 }])
     assert.equal(w.c.consequenceRecord({ ...w.base, measure }).reason, "MEASURE_INVALID", JSON.stringify(measure));
+  /* Negative controls: a decimal string or a JavaScript number, each read as the exact decimal it prints; a range whose
+     bounds are equal. */
+  for (const [measure, want] of [[{ unit: "money", value: "1,200.50" }, { value: "1200.50" }], [{ unit: "money", value: 0.1 }, { value: "0.1" }],
+                                 [{ unit: "money", value: "(40)" }, { value: "-40" }], [{ unit: "count", range: [0.3, "0.30"] }, { range: { low: "0.3", high: "0.30" } }]]) {
+    const r = w.c.consequenceRecord({ ...w.base, measure });
+    assert.equal(r.ok, true, JSON.stringify([measure, r]));
+    assert.deepEqual("value" in want ? { value: r.part.measure.value } : { range: r.part.measure.range }, want, JSON.stringify(measure));
+  }
   /* PERIOD_INVALID's arms: missing, unreadable, reversed. */
   for (const period of [null, { from: "2026-01-01" }, { from: "soon", to: "later" }, { from: "2026-06-01", to: "2026-01-01" }])
     assert.equal(w.c.consequenceRecord({ ...w.base, period }).reason, "PERIOD_INVALID", JSON.stringify(period));
   /* Negative controls: every kind and every unit lands; a range and a currency on money land. */
+  const named = w.figure("INFO-2026-0008-list", "The list names Jordan Doe");
   for (const kind of AFFECTED_KINDS)
-    assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind, description: `a ${kind}` } }).ok, true, kind);
+    assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind, description: `a ${kind}`,
+      ...(kind === "person" ? { person: { entity: doe, named_in: named } } : {}) } }).ok, true, kind);
   for (const unit of UNITS)
     assert.equal(w.c.consequenceRecord({ ...w.base, measure: { unit, range: { low: 1, high: 2 } } }).ok, true, unit);
 });
@@ -111,27 +133,60 @@ test("R1 R3 (K171 (9)): a machine's computed part answers no project authority; 
   }
 });
 
-test("R10: people are a class or an office, never singled out", () => {
+test("R10: people are a class or an office, or a person a document in the record names; a kind is one of the list", () => {
   const w = setup();
-  for (const kind of ["person", "individual", "resident", "employee", "PERSON"])
+  /* A kind outside the list, a role that is half an office, or a person named on a kind other than person, is refused. */
+  for (const kind of ["individual", "resident", "employee", "planet"])
     assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind, description: "someone" } }).reason,
-                 "AFFECTED_INDIVIDUAL", kind);
-  /* A name on the affected or on its role singles a person out, whatever the kind says. */
-  assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind: "class", description: "tenants", name: "J. Doe" } }).reason,
-               "AFFECTED_INDIVIDUAL");
+                 "AFFECTED_UNKNOWN_KIND", kind);
   assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind: "body", description: "the office",
-    role: { role: "director", body: "parks department", person: "J. Doe" } } }).reason, "AFFECTED_INDIVIDUAL");
-  /* A role is an office {role, body}; half of one is refused. */
-  assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind: "body", description: "the office",
-    role: { role: "director" } } }).reason, "AFFECTED_INDIVIDUAL");
-  /* Negative controls: a class of people, and an office. */
+    role: { role: "director" } } }).reason, "AFFECTED_UNKNOWN_KIND");
+  const doe = w.person("Jordan Doe", ["J. Doe"]);
+  const roll = w.figure("INFO-2026-0001-roll", "The waiting list names Jordan  DOE among those cut");
+  assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind: "class", description: "tenants",
+    person: { entity: doe, named_in: roll } } }).reason, "AFFECTED_UNKNOWN_KIND");
+  /* Negative controls: a class of people, an office, and a person a passage names (white space and case folded). */
   const cls = w.c.consequenceRecord({ ...w.base, affected: { kind: "class", description: "families on the waiting list" } });
   assert.equal(cls.ok, true);
   const office = w.c.consequenceRecord({ ...w.base, affected: { kind: "body", description: "the department",
     role: { role: "director", body: "parks department" } } });
   assert.equal(office.ok, true);
   assert.deepEqual(office.part.affected.role, { role: "director", body: "parks department" });
-  assert.equal(AFFECTED_KINDS.includes("person"), false);
+  const named = w.c.consequenceRecord({ ...w.base, affected: { kind: "person", description: "a resident cut from the list",
+    person: { entity: doe, named_in: roll } } });
+  assert.equal(named.ok, true, JSON.stringify(named));
+  assert.match(named.id, /-person$/);
+  /* Held as the document names them (read internally: what a viewer is answered is R16's, person.test.mjs). */
+  assert.deepEqual(w.c.consequenceRead({ id: named.id }).part.affected, { kind: "person", description: "a resident cut from the list",
+                                                                          person: { entity: doe, named_in: roll } });
+  /* An alias the entity holds names them too; the passage must hold the label or an alias. */
+  const alias = w.figure("INFO-2026-0002-memo", "Memo: J. Doe was removed");
+  assert.equal(w.c.consequenceRecord({ ...w.base, affected: { kind: "person", description: "r", person: { entity: doe, named_in: alias } } }).ok, true);
+  /* Refusals, each with nothing written: an entity that is not a person, or not held; no passage, a passage not held,
+     or one that does not name them. */
+  const vendor = w.entity("Harbour Supply");
+  const cases = [
+    ["AFFECTED_NOT_A_PERSON", { entity: vendor, named_in: roll }], ["AFFECTED_NOT_A_PERSON", { entity: "ENT-2026-nobody", named_in: roll }],
+    ["AFFECTED_NOT_A_PERSON", { named_in: roll }], ["AFFECTED_NOT_A_PERSON", null],
+    ["AFFECTED_PERSON_NOT_NAMED", { entity: doe }], ["AFFECTED_PERSON_NOT_NAMED", { entity: doe, named_in: "f".repeat(64) }],
+    ["AFFECTED_PERSON_NOT_NAMED", { entity: doe, named_in: w.figure("INFO-2026-0003-other", "The list names Pat Roe") }],
+  ];
+  for (const [code, person] of cases) {
+    const before = w.snapshot();
+    const r = w.c.consequenceRecord({ ...w.base, affected: { kind: "person", description: "someone", ...(person ? { person } : {}) } });
+    assert.equal(r.reason, code, JSON.stringify([person, r]));
+    assert.deepEqual([r.check, r.translation], [CONSEQUENCES_CHECKS[code].check, CONSEQUENCES_CHECKS[code].translation]);
+    assert.deepEqual(w.snapshot(), before);
+  }
+  assert.deepEqual([CONSEQUENCES_CHECKS.AFFECTED_PERSON_NOT_NAMED.check, CONSEQUENCES_CHECKS.AFFECTED_NOT_A_PERSON.check],
+                   ["C-114.21", "C-114.22"]);
+  /* AFFECTED_INDIVIDUAL is retired, its row with it (C-114.5 is not reused). */
+  assert.equal("AFFECTED_INDIVIDUAL" in CONSEQUENCES_CHECKS, false);
+  assert.equal(Object.values(CONSEQUENCES_CHECKS).some((r) => r.check === "C-114.5"), false);
+  assert.equal(AFFECTED_KINDS.includes("person"), true);
+  /* The person never enters the part's record object, fenced by the project's sight alone (R16, DEC-78). */
+  const md = w.record.readFile(named.id, "bundle.md").text;
+  assert.equal(md.includes(doe) || md.includes(roll) || /doe/i.test(md), false);
 });
 
 test("R13: parts, revisions and addressed records are append-only, declared to purge, and unseen parts read as absent", () => {

@@ -31,8 +31,8 @@ test("R1 R13: a machine or empty author is refused first; a member who has joine
   assert.equal(w.c.determine(input({ author: V("pat"), viewer: V("pat") })).ok, true, "a joined participant");
 });
 
-test("R1: refusals in R1's order, each asked only once the ones before it pass", () => {
-  const { w, proj, std, ev } = scene();
+test("R1 R25: refusals in R1's order, each asked only once the ones before it pass", () => {
+  const { w, proj, std, ev, act, signer } = scene();
   const unpublished = "INQ-2026-0002-unpublished";
   w.inquiry(unpublished);
   /* every part wrong at once; each step mends the one refused, so the next in R1's order answers */
@@ -41,8 +41,10 @@ test("R1: refusals in R1's order, each asked only once the ones before it pass",
   const steps = [
     ["MACHINE_CANNOT_DETERMINE", { author: V("olive") }],
     ["NO_SUCH_PROJECT", { project: proj }],
-    ["ACT_INCOMPLETE", { act: { description: "Closed the playground", actor: { role: "Director", body: "Parks" },
-                                 at: "2026-03-02", evidence: [ev.content] } }],
+    ["ACT_NO_EVENT", { act: { event: "EVT-2026-9999", actor: { entity_id: signer } } }],
+    ["NO_SUCH_EVENT", { act: { event: act, actor: { entity_id: signer } } }],
+    ["ACTOR_NOT_AN_OFFICE", { act: { event: act } }],
+    ["ACT_INCOMPLETE", { act: { event: act, actor: { role: "Director", body: "Parks" }, evidence: [ev.content] } }],
     ["NO_FINDINGS", { findings: [unpublished] }],
     ["FINDING_NOT_PUBLISHED", { findings: [F] }],
     ["NO_STANDARDS", { standards: [{ standard: "STD-2026-0099-none" }] }],
@@ -100,24 +102,18 @@ test("R1: DETERMINATION_NOT_A_PARTICIPANT (K380's rename, row C-113.3) for an au
   assert.equal(w.c.determine(input({ author: V("pat"), viewer: V("pat") })).ok, true);
 });
 
-test("R1: ACT_INCOMPLETE names the missing or unreadable part: description, actor role and body, date or period, evidence, content not held, an act id this project never determined", () => {
+test("R1 R25: ACT_INCOMPLETE names the missing or unreadable part: actor role and body, evidence, content not held; the act takes no description or date of its own", () => {
   const { w, ev, input } = scene();
   const base = input().act;
   const cases = [
-    [{ ...base, description: "  " }, "description"],
     [{ ...base, actor: { role: "Director" } }, "actor"],
     [{ ...base, actor: { body: "Parks" } }, "actor"],
     [{ ...base, actor: "Jane Doe" }, "actor"],
-    [{ ...base, at: undefined }, "at"],
-    [{ ...base, at: "March 2" }, "at"],
-    [{ ...base, at: "2026-02-30" }, "at"],
-    [{ ...base, at: undefined, period: { from: "2026-03-01" } }, "period"],
-    [{ ...base, at: undefined, period: { from: "2026-03-05", to: "2026-03-01" } }, "period"],
+    [{ ...base, actor: undefined }, "actor"],
     [{ ...base, evidence: [] }, "evidence"],
     [{ ...base, evidence: undefined }, "evidence"],
     [{ ...base, evidence: [ev.content, ""] }, "evidence"],
     [{ ...base, evidence: ["f".repeat(64)] }, "evidence"],
-    [{ id: "ACT-2026-0099" }, "id"],
   ];
   for (const [act, part] of cases) {
     const r = nothing(w, () => w.c.determine(input({ act })));
@@ -125,8 +121,10 @@ test("R1: ACT_INCOMPLETE names the missing or unreadable part: description, acto
     assert.equal(r.part, part, JSON.stringify(act));
   }
   assert.deepEqual(w.c.determine(input({ act: { ...base, evidence: ["f".repeat(64)] } })).unresolved, ["f".repeat(64)]);
-  /* a period with both ends is a date */
-  assert.equal(w.c.determine(input({ act: { ...base, at: undefined, period: { from: "2026-03-01", to: "2026-03-05" } } })).ok, true);
+  /* a description, date or period sent beside the event is not the act's: its date is the event's when (R3) */
+  const ok = w.c.determine(input({ act: { ...base, description: "something else", at: "1999-01-01" } }));
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.deepEqual([ok.act.when.value, "description" in ok.act, "at" in ok.act], ["2026-03-02", false, false]);
 });
 
 test("R1 R2 R14: a determination rests on findings this project published in a ratified case edition, and pins that edition and version", () => {
@@ -174,8 +172,8 @@ test("R1 R2 R14: a determination rests on findings this project published in a r
   }
 });
 
-test("R1 R3 R14: each standard is one the record holds, read through standards.inForce at the act's date or each end of its period: not in force refused, undetermined accepted and stated", () => {
-  const { w, std, input } = scene();
+test("R1 R3 R14: each standard is one the record holds, read through standards.inForceAt at the act event's when (each end of a band): not in force refused, undetermined accepted and stated", () => {
+  const { w, std, ev, input } = scene();
   refused(nothing(w, () => w.c.determine(input({ standards: [] }))), "NO_STANDARDS");
   for (const standard of ["STD-2026-0099-none", F, ""]) {
     const r = nothing(w, () => w.c.determine(input({ standards: [{ standard, outcome: "compliant" }] })));
@@ -201,9 +199,9 @@ test("R1 R3 R14: each standard is one the record holds, read through standards.i
     refused(r, "STANDARD_NOT_IN_FORCE");
     assert.deepEqual([r.standard, r.date], [s, "2026-03-02"]);
   }
-  /* a period: each end is read; out of force at either end is refused */
+  /* a band: each end is read; out of force at either end is refused */
   const endsMid = w.standard("Sunset Code 5", { period: { from: "2020-01-01", to: "2026-03-03" } });
-  const act = { ...input().act, at: undefined, period: { from: "2026-03-01", to: "2026-03-05" } };
+  const act = { ...input().act, event: w.event(ev, { date: { value: "2026-03-01/2026-03-05", precision: "edtf", zone: "UTC" } }) };
   const r = w.c.determine(input({ act, standards: [{ standard: endsMid, outcome: "compliant" }],
                                   rows: [{ standard: endsMid, requires: "x", did: "y", reading: "aligns" }] }));
   refused(r, "STANDARD_NOT_IN_FORCE");
@@ -273,7 +271,7 @@ test("R5: a compliant determination carries exactly a noncompliant one's obligat
   const { w, std, input } = scene();
   const nc = w.c.determine(input());
   const act = { id: nc.act.id };
-  const c = w.c.determine(input({ act, standards: [{ standard: std, outcome: "compliant" }],
+  const c = w.c.determine(input({ standards: [{ standard: std, outcome: "compliant" }],
                                   rows: [{ ...input().rows[0], reading: "aligns" }] }));
   assert.equal(c.ok, true);
   const shape = (x) => JSON.stringify(Object.keys(x).sort());
@@ -285,7 +283,8 @@ test("R5: a compliant determination carries exactly a noncompliant one's obligat
   for (const outcome of ["compliant", "noncompliant"]) {
     refused(w.c.determine(input({ standards: [{ standard: std, outcome }], rows: [] })), "ROWS_INCOMPLETE");
     refused(w.c.determine(input({ standards: [{ standard: std, outcome }], findings: [] })), "NO_FINDINGS");
-    refused(w.c.determine(input({ standards: [{ standard: std, outcome }], act: { description: "x" } })), "ACT_INCOMPLETE");
+    refused(w.c.determine(input({ standards: [{ standard: std, outcome }], act: { ...input().act, evidence: [] } })), "ACT_INCOMPLETE");
+    refused(w.c.determine(input({ standards: [{ standard: std, outcome }], act: { description: "x" } })), "ACT_NO_EVENT");
   }
   /* the same reads answer both */
   const list = w.c.determinationsFor({ act: act.id, viewer: V("pat") });
@@ -371,15 +370,18 @@ test("R6: the determination and every inquiry it opens land together or not at a
     "no row, no manifest entry, no id spent");
 });
 
-test("R7 R19 R20: a determination is never edited; a later one names the act by its id; supersedes names an earlier determination of the same act in the same project, once, with a reason, and both reads name the link", () => {
-  const { w, proj, std, input } = scene();
+test("R7 R19 R20 R25: a determination is never edited; the same act is the same event; supersedes names an earlier determination of the same act in the same project, once, with a reason, and both reads name the link", () => {
+  const { w, proj, std, ev, act, input } = scene();
   const first = w.c.determine(input());
-  assert.match(first.act.id, /^ACT-2026-\d{4}$/);
-  /* the act named by id: the act as recorded, whatever else is sent beside the id */
-  const again = w.c.determine(input({ act: { id: first.act.id, description: "something else" } }));
+  /* the act is its event: no ACT- id is minted (R26) */
+  assert.deepEqual([first.act.id, first.act.event], [act, act]);
+  assert.deepEqual(w.rows(`SELECT bundle_id FROM bundles WHERE bundle_id LIKE 'ACT-%'`), []);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM determinations WHERE act_id LIKE 'ACT-%'`).n, 0);
+  /* the same act is the event's equality: another determination of it names the same act, whatever else is sent */
+  const again = w.c.determine(input({ act: { ...input().act, description: "something else" } }));
   assert.deepEqual(again.act, first.act);
-  /* the same act is the id's equality, never the description's */
-  const twin = w.c.determine(input());
+  /* another event is another act, even with the same office, evidence and date */
+  const twin = w.c.determine(input({ act: { ...input().act, event: w.event(ev) } }));
   assert.notEqual(twin.act.id, first.act.id);
   /* N233, R23: an absent reason is CONFORMANCE_NO_REASON; CONFORMANCE_BAD_REASON the malformed code (over REASON_MAX,
      or not text) */
@@ -388,7 +390,8 @@ test("R7 R19 R20: a determination is never edited; a later one names the act by 
   for (const reason of ["x".repeat(REASON_MAX + 1), 42, ["why"], { why: "x" }])
     refused(nothing(w, () => w.c.determine(input({ supersedes: first.id, reason }))), "CONFORMANCE_BAD_REASON");
   assert.notEqual(CONFORMANCE_CHECKS.CONFORMANCE_NO_REASON.translation, CONFORMANCE_CHECKS.CONFORMANCE_BAD_REASON.translation);
-  const other = w.c.determine(input({ act: { id: twin.act.id }, supersedes: first.id, reason: "the act was misdated" }));
+  const other = w.c.determine(input({ act: { ...input().act, event: twin.act.id }, supersedes: first.id,
+                                     reason: "the act was misdated" }));
   refused(other, "SUPERSEDES_ANOTHER_ACT");
   assert.deepEqual([other.act, other.predecessor_act], [twin.act.id, first.act.id]);
   const none = w.c.determine(input({ supersedes: "CONF-2026-0099-determination", reason: "r" }));
@@ -405,7 +408,8 @@ test("R7 R19 R20: a determination is never edited; a later one names the act by 
   /* the supersession: the act carried from the predecessor, the reason recorded, the earlier one readable */
   const firstText = w.text(first.id);
   /* a reason at the bound is accepted (a determination of another act, superseded once, is the control) */
-  const bound = w.c.determine(input({ act: { id: twin.act.id }, supersedes: twin.id, reason: "r".repeat(REASON_MAX) }));
+  const bound = w.c.determine(input({ act: { ...input().act, event: twin.act.id }, supersedes: twin.id,
+                                     reason: "r".repeat(REASON_MAX) }));
   assert.deepEqual([bound.ok, bound.reason], [true, "r".repeat(REASON_MAX)]);
   const next = w.c.determine(input({ act: undefined, supersedes: first.id, reason: "a second notice rule applies",
                                      standards: [{ standard: std, outcome: "compliant" }],

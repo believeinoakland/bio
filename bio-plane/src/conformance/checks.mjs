@@ -14,7 +14,10 @@
  * `CONFORMANCE_BAD_REASON` (C-113.17) (N233, K264); R23 (N433, K766): this module's own codes, each row's number and
  * translation unchanged, so neither shares a name with progressions' `NO_REASON` (C-100.18) or `BAD_REASON` (C-100.21)
  * (DEC-49). N345 adds C-113.24–C-113.27 (R12's contradiction link, R22's cause and recommendation) and C-113.28 (R21's
- * side, named by the member), stamped in `CATALOG_VERSION` 1.46.0 (T16). */
+ * side, named by the member), stamped in `CATALOG_VERSION` 1.46.0 (T16). T33-70 (K1465, K1485) adds C-113.29
+ * `ACT_NO_EVENT`, C-113.30 `ACTOR_NOT_AN_OFFICE` and C-113.31 `ACT_NOT_AN_EVENT` (R25, R26), stamped by promotion in T34;
+ * `NO_SUCH_EVENT` is events' one row, relayed through its `noSuchEvent`. C-113.5's translation no longer names a date:
+ * the act's date is its event's `when`. */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -36,8 +39,23 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   ACT_INCOMPLETE: {
     check: 'C-113.5', where: at("#actOf", "is-act-complete"),
-    translation: 'A government act is named by what was done, the office that did it (its role and body, never a '
-      + 'person), when, and the record that shows it. A part is missing or unreadable. Nothing was written.',
+    translation: 'A government act is named by its event, the office that did it (its role and body, never a '
+      + 'person), and the record that shows it. A part is missing or unreadable. Nothing was written.',
+  },
+  ACT_NO_EVENT: {
+    check: 'C-113.29', where: at("#actOf", "is-act-event-named"),
+    translation: 'A government act is the event that records what was done. Name the event. Nothing was written.',
+  },
+  ACT_NOT_AN_EVENT: {
+    check: 'C-113.31', where: at("#actOf", "is-act-aliased"),
+    translation: 'That act was recorded before acts were events, and no event is linked to it yet. A member links it to '
+      + 'its event first; then it can be determined again. Nothing was written.',
+  },
+  ACTOR_NOT_AN_OFFICE: {
+    check: 'C-113.30', where: at("#actOf", "is-actor-office"),
+    translation: 'The actor of a government act is an office, named by its role and body. The entity named is not an '
+      + 'office. The people who decided, wrote, signed or carried out the act are recorded as its event\'s participants, '
+      + 'never as its actor. Nothing was written.',
   },
   NO_FINDINGS: {
     check: 'C-113.6', where: at("#pinFindings", "is-finding-named"),
