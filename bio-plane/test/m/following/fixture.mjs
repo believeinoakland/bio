@@ -153,7 +153,7 @@ export function world({ view = testView(), now = T0 } = {}) {
   const monitoring = {
     sweepHost: () => sweepHost,
     schedule: () => ({ due: [], scheduled: [], unscheduled: w.watched.map((s) => ({ bundle: s.bundle, address: s.address, frequency: "per_meeting",
-      reason: "cadence is a meeting schedule this plane does not hold" })) }),
+      reason: "cadence is a meeting schedule your group's Civicsmith does not hold" })) }),
     async monitor({ bundleId }) { w.monitored.push({ bundleId, at: w.t }); return { status: 200, body: { ok: true, status: "unchanged", capture: { sha256: sha(`m${w.monitored.length}`) } } }; },
   };
   w.bundle = (id, { type = "information", project = "" } = {}) => {
