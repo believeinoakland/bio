@@ -17,7 +17,8 @@
  * side, named by the member), stamped in `CATALOG_VERSION` 1.46.0 (T16). T33-70 (K1465, K1485) adds C-113.29
  * `ACT_NO_EVENT`, C-113.30 `ACTOR_NOT_AN_OFFICE` and C-113.31 `ACT_NOT_AN_EVENT` (R25, R26), stamped by promotion in T34;
  * `NO_SUCH_EVENT` is events' one row, relayed through its `noSuchEvent`. C-113.5's translation no longer names a date:
- * the act's date is its event's `when`. */
+ * the act's date is its event's `when`. DEC-149 (T34-87): C-113.28 names the group's Civicsmith as "your group's
+ * Civicsmith", never "the plane"; awaiting stamp until T35's promotion job (plan T34, Rules (5) item 4). */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -154,8 +155,8 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   STANDARD_SIDE_UNNAMED: {
     check: 'C-113.28', where: at("comparisonFacts", "is-standard-side-named"),
-    translation: 'Name which side of the question states what the standard requires, a or b. The plane never chooses '
-      + 'it. Nothing was written.',
+    translation: 'Name which side of the question states what the standard requires, a or b. Your group\'s Civicsmith '
+      + 'never chooses it. Nothing was written.',
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: 'C-113.21', where: at("check", "is-determination-act"),
