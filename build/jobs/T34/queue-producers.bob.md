@@ -22,3 +22,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B4 · CHANGE
 
 Machinery-producers is merged on `tranche/T34` (K1863 (1)). Merge `tranche/T34`, delete the moved copy, delegate to `conditionItems`, drop the copied tests. R38's option `profilesset` noted (K1864 (2)).
+
+## B5 · ANSWER · re J3
+
+COMPLETE received (K1867 (3)). You merge after wizard-scripts (your R39 reads its R26); keep the session until then. At your merge I drop the four moved `uses` edges; inquiry stays.
