@@ -1,6 +1,6 @@
 # events — requirements
 
-**Status** · New product module, layer 5, directly after `entities` and before `lines` (plan T33, Rules (2); K1470). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §2 EVENTS, §5B.4 (L1 at stage 1a, L2 and the duty half of L3 at stage 2a, L3 relations at stage 2b), the reads of §5B.5 that T33 carries (`whoWasSent`, statements in order, edit acts from office metadata), and rulings K1443, K1444, K1462, K1464, K1465, K1467, K1468, K1470, K1487, K1489, K1494. Plan entry T33-26 (B1a.2 whole; B §(d) EVENTS 2a, 2b, 3; scope §1 EVENTS). Measures: `measures-T33/legistar-events.md` M-V1, M-V2, M-V3 (all GO). Every requirement is new and not yet met (T33-26). R38 is CONDITIONAL on `measures-T33/courts-workbooks.md` reading GO (Rule 5). For BOB's review and Bob's approval (a product module, P17).
+**Status** · New product module, layer 5, directly after `entities` and before `lines` (plan T33, Rules (2); K1470). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §2 EVENTS, §5B.4 (L1 at stage 1a, L2 and the duty half of L3 at stage 2a, L3 relations at stage 2b), the reads of §5B.5 that T33 carries (`whoWasSent`, statements in order, edit acts from office metadata), and rulings K1443, K1444, K1462, K1464, K1465, K1467, K1468, K1470, K1487, K1489, K1494. Plan entry T33-26 (B1a.2 whole; B §(d) EVENTS 2a, 2b, 3; scope §1 EVENTS). Measures: `measures-T33/legistar-events.md` M-V1, M-V2, M-V3 (all GO). Every requirement is new; all met at T33-26 (K1574). R38 is CONDITIONAL on `measures-T33/courts-workbooks.md` reading GO (Rule 5). For BOB's review and Bob's approval (a product module, P17).
 
 **Size (P6).** About 2,400–2,900 lines at this scope (constructs-2 §4.1; B §(c)). Under 4,000.
 
@@ -93,7 +93,7 @@ Terms.
 - **R37** The tables of events (`event_id`, `kind`, `status`), the `when_cache` (`event_id`, `start`, `end`, `precision`, `zone`) `event_participants` (`event_id`, `entity_id`, `role`) and `event_attestations` (`event_id`, `capture_sha`: each capture an attestation of the event cites, K1563) are a stated read contract on the terms of `record-core` R37: a later module may join them in its own SQL, and every write to them stays this module's.
 
 **A register row as an event (CONDITIONAL on courts-workbooks GO)**
-- **R38** A court register row read by the court doctypes, with an entry id the source assigns, becomes a `filing` or `order` event of the proceeding, written as R22 writes, only for a proceeding a member follows. *(not yet met: T33-26, CONDITIONAL)*
+- **R38** A court register row read by the court doctypes, with an entry id the source assigns, becomes a `filing` or `order` event of the proceeding, written as R22 writes, only for a proceeding a member follows.
 
 ## Private
 
