@@ -55,3 +55,19 @@ R19's wizard test now also drives R24's help refusal over what was registered: `
 **Checks:** format 0, architecture plane 0, coverage plane 24/24 0, ownership plane tranche/T34 14 files 0. P6: `src/plane/` 1,013 lines.
 
 Size (session_016j2cQUCpdP2bQzqEqTf8Co): test runs 12, module lines 1013
+
+## J5 · COMPLETE
+
+B6 applied (K1870). `door.test.mjs` drives instance-setup's four new routes:
+- `placewanted?by=admin` POST `{name}`
+- `placewantedstate?viewer=admin`
+- `memberlanguageset?by=member:nobody` POST `{language}`
+- `memberlanguage?viewer=member:nobody`
+
+The test holds `instanceSetupOps` at 24 routes and every route driven through the door. On `job/T34/plane` alone this test is red until instance-setup merges. So are B4's test (waiting on queue-producers and instance-setup) and release R19 ×2 (waiting on op-declarations).
+
+On a scratch merge of plane + `job/T34/queue-producers` + `job/T34/instance-setup` + `job/T34/op-declarations` as fetched now: `node --test test/m/plane/` 115 pass, 0 fail.
+
+Checks: format 0, architecture plane 0, coverage plane 24/24 0, ownership plane tranche/T34 0.
+
+Size (session_016j2cQUCpdP2bQzqEqTf8Co): test runs 15, module lines 1013
