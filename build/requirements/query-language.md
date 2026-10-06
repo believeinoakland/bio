@@ -53,7 +53,7 @@ Terms. A **query** `q` is a string. A **plan** is `compile`'s answer: `{ast, war
 
 - `membership`: `viewerPredicate`, `GATE_MARK` (R9).
 - `civil-time`: local-day bounds and calendar validation (R27; T33-39).
-- `standards`, `lines`, `events`, `money`, `duties`, `people`: their closed words for R28's fields; their tables only through the relations `retrieval` names (R29; T33-39).
+- `money`: `kinds()`, `phases()`, `stages()`, `bases()`, the closed words of R28's money fields (T33-39). The other T33 fields have no closed words and reach their owners' tables only through the relations `retrieval` names (R29; K1563).
 - `text-chain`: `STEP_KINDS` (R6) and `MACHINE_READ_KINDS` (its R91), which this module re-exports and never lists (N104, K143).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K804–K808).
 - The statements name tables other modules own, as read contracts: `bundles` (`record-core` R37, `group_id` and `prior_state` included, N287) and the projection relation its caller names (R25), `content` (`content`), `capture_text`, `capture_text_fts` and `readings` (`extraction`), `resolutions` (`entities`), `register` (`provenance` R48), `observation_log` (`observation-log`), and `inquiry_basis`, `inquiry_basis_version_legs` (`inquiry`, `basis-versions`, layer 6; see Suggestions).
