@@ -33,15 +33,14 @@
  *   strength       `inquiryStrength` (R5).
  *   money          `readFact` (R2's money operands and their grade; R15's sight), `summable` (R2: a total across
  *                  money facts it refuses is refused by its code); default `moneyOf(host)`.
- *   calculations   `read` (R2's calculation outputs, named by calculation and result key, and the capture axis of their
- *                  grade facts, its R9); default `calculationsOf(host)`. Its `read` answers a promise, so an act naming
- *                  a calculation operand answers one too; every other act and every read stays synchronous, and R15
- *                  asks a calculation's sight through a synchronous `gradeFactsOf` where calculations provides one,
- *                  else withholds the operand from every viewer (fail closed).
+ *   calculations   `calcStatusOf` and `gradeFactsOf` (its R31, R30; N576): whether a calculation operand is held
+ *                  and visible to the author or viewer, and the capture axis of its grade facts (R2, R15); `read` (R2's
+ *                  calculation outputs, named by calculation and result key); default `calculationsOf(host)`. Its
+ *                  `read` answers a promise, so an act naming a calculation operand the author may see answers one
+ *                  too; every other act and every read stays synchronous.
  *   entities       `readEntity` (R10: the person entity, its label and aliases); default `entitiesOf(host)`.
- *   people         the source↔person link's sight (R10, R16): `sourceLinkSight(person)` where people provides it,
- *                  else `sourceLinksOf({person, viewer})`, through which a person is shown only to a viewer a link
- *                  lists (fail closed); default `peopleOf(host)`.
+ *   people         `sourceLinkSight(person)` (its R34; N600): the source↔person link's sight, null when no link is
+ *                  held (R10, R16); default `peopleOf(host)`.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * READ CONTRACTS it joins in its own SQL: none. Its own tables are `./schema.mjs`. */
@@ -419,23 +418,20 @@ export class Consequences {
 
   /* R16 (DEC-78): whether the viewer may be answered the person a part names: the passage naming them is in a capture
      the viewer may see, and, when the record holds the person as a protected source, the link's sight admits the
-     viewer. An internal caller (no viewer) is not asked. people's `sourceLinkSight(person)` answers the link's sight
-     (null when no link is held); without it, only a viewer `sourceLinksOf` lists is admitted (fail closed). */
+     viewer. An internal caller (no viewer) is not asked. people's `sourceLinkSight(person)` (its R34, N600) answers the
+     link's sight: null when no link is held, so the capture's sight alone decides; else the members every held link
+     admits. A person withheld for a link is answered exactly as for a capture the viewer may not see (R16). Without
+     people here to answer, whether a link is held is not known, and the person is withheld (fail closed). */
   #seesPerson(person, viewer) {
     if (viewer === null || viewer === undefined) return true;
     if (!isObj(person) || !person.entity) return false;
     const row = person.named_in ? this.content.contentRow(person.named_in) : null;
     if (!row || !this.membership.inSight(row.bundle_id, viewer)) return false;
     const member = /^member:(.+)$/.exec(viewer)?.[1] ?? (viewer === "admin" ? "admin" : null);
-    const p = this.people;
     try {
-      if (p && typeof p.sourceLinkSight === "function") {
-        const sight = p.sourceLinkSight(person.entity);
-        if (sight === null || sight === undefined) return true;
-        return Array.isArray(sight) && !!member && sight.includes(member);
-      }
-      const links = p ? p.sourceLinksOf({ person: person.entity, viewer }) : null;
-      return !!links && links.ok !== false && Array.isArray(links.links) && links.links.length > 0;
+      const sight = this.people.sourceLinkSight(person.entity);
+      if (sight === null) return true;
+      return Array.isArray(sight) && !!member && sight.includes(member);
     } catch { return false; }
   }
 
@@ -447,17 +443,19 @@ export class Consequences {
     } catch { return false; }
   }
 
-  /* R15: whether the viewer may see a calculation (calculations R10: one with an input the viewer may not see is
-     withheld whole). Asked synchronously through `gradeFactsOf`; a calculations without it, or answering a promise, is
-     answered as unseen (fail closed). An internal caller is not asked. */
+  /* R2, R15 (N576): whether a calculation is held and visible to `who`, through calculations' synchronous
+     `calcStatusOf` (its R31; R10: one with an input the viewer may not see is withheld whole). One not visible is
+     answered exactly as one not held. An internal caller is not asked. */
   #seesCalculation(id, who) {
     if (who === INTERNAL) return true;
-    const c = this.calculations;
+    return this.#calcStatus(id, who).visible;
+  }
+
+  #calcStatus(id, who) {
     try {
-      if (!c || typeof c.gradeFactsOf !== "function") return false;
-      const g = c.gradeFactsOf({ calcId: id, viewer: who });
-      return !!g && typeof g.then !== "function" && g.ok !== false && g.found !== false;
-    } catch { return false; }
+      const s = this.calculations ? this.calculations.calcStatusOf({ calcId: id, viewer: who }) : null;
+      return { held: !!s && s.held === true, visible: !!s && s.held === true && s.visible === true };
+    } catch { return { held: false, visible: false }; }
   }
 
   /* R1, R9: a member acting on a part has joined the determination's project (K171 (11): membership's refusal,
@@ -652,20 +650,27 @@ export class Consequences {
       return fig ? { ...out, fig, exact: measureOfFigure(fig) }
         : { ...out, lacking: { code: "form_not_read", why: `operand ${i}'s money fact holds no amount this module reads` } };
     }
-    /* A calculation's output, named by its key; calculations R9's capture axis is its grade. */
+    /* A calculation's output, named by its key (N576): whether it is held and visible to the author, and its grade
+       (the capture axis of its grade facts), are read synchronously (calculations R31, R30); one not held or not
+       visible is an operand not in the record (R4). Only its value waits on `read`. */
+    const viewer = who ?? INTERNAL;
+    const absent = () => lacking("not_in_record", "names a calculation this record does not hold, or that you may not see");
+    if (!this.#calcStatus(o.ref, viewer).visible) return absent();
+    let g = null;
+    try { g = this.calculations.gradeFactsOf({ calcId: o.ref, viewer }); } catch { g = null; }
+    if (!isObj(g) || g.found !== true) return absent();
+    const cap = isObj(g.capture) ? g.capture : {};
+    const out = { ...base, grade: cap.grade ?? null, route: "calculation", determined: !!cap.grade, basis: cap.why ?? null };
+    if (op === "count") return out;
     const settle = (r) => {
       const c = r && r.ok !== false && r.found !== false ? r : null;
-      if (!c) return lacking("not_in_record", "names a calculation this record does not hold, or that you may not see");
-      const cap = isObj(c.grade) && isObj(c.grade.capture) ? c.grade.capture : {};
-      const out = { ...base, grade: cap.grade ?? null, route: "calculation", determined: !!cap.grade,
-                    basis: cap.why ?? null };
-      if (op === "count") return out;
+      if (!c) return absent();
       const fig = resultFigure(c.results, o.key);
       return fig ? { ...out, fig, exact: measureOfFigure(fig) }
         : { ...out, lacking: { code: "not_computable", why: `operand ${i}'s calculation holds no figure under the key "${o.key}"` } };
     };
     let r;
-    try { r = this.calculations ? this.calculations.read({ calcId: o.ref, viewer: who ?? INTERNAL }) : null; } catch { r = null; }
+    try { r = this.calculations.read({ calcId: o.ref, viewer }); } catch { r = null; }
     return r && typeof r.then === "function" ? r.then(settle, () => settle(null)) : settle(r);
   }
 

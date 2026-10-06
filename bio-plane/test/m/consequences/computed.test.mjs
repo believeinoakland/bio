@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
-import { OPS, RATIO_ROUNDING, exactOf } from "../../../src/consequences/index.mjs";
+import { OPS, RATIO_ROUNDING, exactOf, Consequences } from "../../../src/consequences/index.mjs";
 
 const S = "STD-2026-0001-law";
 
@@ -166,18 +166,81 @@ test("R2: a calculation's output, named by calculation and result key, is an ope
   assert.deepEqual([nokey.part.state, nokey.part.undetermined.code], ["undetermined", "not_computable"]);
   const absent = await w.rec({ op: "sum", operands: [{ calculation: "CALC-2026-0999", key: "total" }] });
   assert.deepEqual([absent.part.state, absent.part.undetermined.code], ["undetermined", "not_in_record"]);
-  /* Read internally the operand is shown; to a member it is withheld until calculations answers its sight
-     synchronously (gradeFactsOf), and the value and grade stand (R15, fail closed). */
+  /* Read internally the operand is shown, and so to every member calculations admits (its R31, R10): alice, who created
+     it, and pat, who has joined P and may see its inputs; never withheld for want of a synchronous read (N576). */
   const internal = w.c.consequenceRead({ id: r.id }).part;
   assert.deepEqual(internal.computation.operands.map((o) => [o.kind, o.calculation, o.key, o.value]),
                    [["calculation", calc, "total", "1500000.75"]]);
   assert.match(internal.grade.why, new RegExp(`calculation ${calc}\\), whose capture axis is B`));
-  const alice = w.c.consequenceRead({ id: r.id, viewer: V("alice") }).part;
-  assert.equal(typeof w.calculations.gradeFactsOf === "function" ? alice.out_of_view : true, true);
-  assert.deepEqual([alice.measure.value, alice.grade.grade], ["1500000.75", "B"]);
+  for (const v of ["alice", "pat"]) {
+    assert.deepEqual(w.calculations.calcStatusOf({ calcId: calc, viewer: V(v) }).visible, true, v);
+    const seen = w.c.consequenceRead({ id: r.id, viewer: V(v) }).part;
+    assert.equal("out_of_view" in seen, false, v);
+    assert.deepEqual(seen, internal, `${v} is answered the part whole`);
+  }
   /* A refusal before any read stays synchronous. */
   const refused = w.rec({ op: "sum", operands: [{ calculation: calc, key: "total" }] }, { author: V("carol") });
   assert.equal(refused.reason, "CONSEQUENCE_NOT_A_PARTICIPANT");
+});
+
+/* calculations as this module reads it, with its synchronous reads answering a calculation not visible to the viewers in
+   `hide`, and its capture axis `grade` where given; every other read as it is. */
+function fencedCalculations(w, { hide = new Set(), grade = null } = {}) {
+  return new Proxy(w.calculations, { get: (t, p) => {
+    if (p === "calcStatusOf")
+      return (a) => (hide.has(a.viewer) ? { held: true, visible: false, accepted: false } : t.calcStatusOf(a));
+    if (p === "gradeFactsOf")
+      return (a) => { if (hide.has(a.viewer)) return { found: false };
+                      const g = t.gradeFactsOf(a); return grade && g.found ? { ...g, capture: { grade, why: "the test's grade" } } : g; };
+    return typeof t[p] === "function" ? t[p].bind(t) : t[p];
+  } });
+}
+
+test("R2 (N576): a calculation operand's sight and grade are calculations' synchronous reads; one not visible to the author is not in the record", async () => {
+  const w = setup();
+  const f1 = w.fact({ amount: "1250000.50" });
+  const calc = await w.calculation([f1]);
+  const over = (calculations) => new Consequences({ storage: w.st, host: w.host, record: w.record, membership: w.membership,
+    promotion: w.promotion, conformance: { determinationRead: (a) => w.c.conformance.determinationRead(a) }, content: w.content,
+    provenance: w.prov, inquiry: w.inquiry, strength: w.strength, money: w.money, calculations, entities: w.entities,
+    people: w.people, passageText: (id) => w.texts.get(id) ?? null });
+  /* Its grade is gradeFactsOf's capture (its R30), the weakest named by it. */
+  const graded = await over(fencedCalculations(w, { grade: "C" })).consequenceRecord({ ...w.base,
+    basis: { op: "sum", operands: [{ calculation: calc, key: "total" }] } });
+  assert.deepEqual([graded.part.state, graded.part.measure.value, graded.part.grade.grade], ["computed", "1250000.50", "C"]);
+  assert.deepEqual(graded.part.computation.operands.map((o) => [o.grade, o.route]), [["C", "calculation"]]);
+  /* Held, but answered not visible to alice: an operand not in the record, answered as an absent one, synchronously. */
+  const hid = over(fencedCalculations(w, { hide: new Set([V("alice")]) }));
+  const unseen = hid.consequenceRecord({ ...w.base, basis: { op: "sum", operands: [{ calculation: calc, key: "total" }] } });
+  assert.equal(typeof unseen.then, "undefined", "nothing waits on read for a calculation the author may not see");
+  const absent = await w.rec({ op: "sum", operands: [{ calculation: "CALC-2026-0999", key: "total" }] });
+  assert.deepEqual([unseen.part.state, unseen.part.undetermined.code], ["undetermined", "not_in_record"]);
+  assert.equal(unseen.part.undetermined.why, absent.part.undetermined.why, "not visible is answered exactly as not held");
+  /* Negative control: pat, visible, records it computed. */
+  const pat = await hid.consequenceRecord({ ...w.base, author: V("pat"),
+    basis: { op: "sum", operands: [{ calculation: calc, key: "total" }] } });
+  assert.deepEqual([pat.part.state, pat.part.measure.value], ["computed", "1250000.50"]);
+});
+
+test("R15 (N576): a calculation operand leaves the operands exactly when calcStatusOf answers it not visible to the viewer", async () => {
+  const w = setup();
+  const f1 = w.fact({ amount: "1250000.50" });
+  const f2 = w.fact({ amount: "250000.25" });
+  const calc = await w.calculation([f1]);
+  const r = await w.rec({ op: "sum", operands: [{ calculation: calc, key: "total" }, { money: f2 }] });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const fenced = new Consequences({ storage: w.st, host: w.host, record: w.record, membership: w.membership,
+    promotion: w.promotion, content: w.content, provenance: w.prov, inquiry: w.inquiry, strength: w.strength,
+    money: w.money, calculations: fencedCalculations(w, { hide: new Set([V("pat")]) }), entities: w.entities,
+    people: w.people, passageText: (id) => w.texts.get(id) ?? null });
+  const alice = fenced.consequenceRead({ id: r.id, viewer: V("alice") }).part;
+  assert.deepEqual(alice.computation.operands.map((o) => o.kind), ["calculation", "money"]);
+  assert.equal("out_of_view" in alice, false);
+  const pat = fenced.consequenceRead({ id: r.id, viewer: V("pat") }).part;
+  assert.deepEqual(pat.computation.operands.map((o) => [o.kind, o.money]), [["money", f2]], "no null in its place");
+  assert.equal(pat.out_of_view, true);
+  assert.equal(JSON.stringify(pat).includes(calc), false, "the calculation is not named");
+  assert.deepEqual([pat.measure.value, pat.grade.grade], [alice.measure.value, alice.grade.grade], "value and grade stand");
 });
 
 test("R2: each operand carries its grade; the part's grade is the weakest, named (DEC-21)", () => {
