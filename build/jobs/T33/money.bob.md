@@ -1,6 +1,6 @@
 # BOB to money (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,11 @@ All seven readings accepted. Additions (K1563):
 - Machine-written facts from a canonical table row (calculations R14): source {table, row, binding}, by class:daemon, parties {entity, as_written}; check the binding through calculations.bindingOf(key) → {adopted, table, roles, capture_sha} | null, injected until calculations merges (it merges after you, so your test uses a stand-in in that shape).
 - Events' shape: I have told EVENTS your assumed readEvent/eventsFor shapes; it confirms or names its own at COMPLETE.
 - query-language imports kinds(), phases(), stages(), bases() from bio-plane/src/money/index.mjs; keep those exports there.
+
+## B3 · CHANGE
+
+K1569: export a one-site answer noSuchFact for your NO_SUCH_FACT (entities' noSuchEntity pattern); duties and others answer through it.
+
+## B4 · CHANGE
+
+K1577: entities, events and lines are merged on tranche/T33. Merge, wire eventsOf/linesOf as defaults, re-point your tests at the real modules, re-run, COMPLETE.
