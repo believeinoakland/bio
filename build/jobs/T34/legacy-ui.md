@@ -23,3 +23,7 @@
 - `checks/format.mjs`: 129 modules, 0 failures. `architecture.mjs legacy-ui`: 0 failures. `coverage.mjs legacy-ui`: 0 of 0 ids (no requirements file, K633), 0 failures. `ownership.mjs legacy-ui tranche/T34`: 8 files, 0 failures.
 
 Size (session_01Tt8vMBj5jdqRcKeLtADYYr): test runs 17, module lines 27229
+
+## J1 · COMPLETE
+
+T34-77 and T34-87 applied (record: Completion). several-cases-choice green (15/0). queue-recipients: account and C-22.19 shares cleared; it stays red on one fixture line only, biasadopt refused C-26.21 (DEC-88, N487's share as your START keeps it). With a reason added in a scratch copy it reads 12/0, so the fix is one line if you move it here. DEC-149: 33 of 36 rows re-worded, the 3 review-copy rows (:26107, :26122, :26148) kept, every change named by the new dec149-wording.test.mjs. legacy-ui 33 pass / 3 fail (N487: progression-revision, statement-ack, queue-recipients). Checks: format, architecture, coverage and ownership all 0 failures.
