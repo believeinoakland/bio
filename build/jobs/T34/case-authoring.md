@@ -50,3 +50,7 @@ Size (session_014q5tbRsMqLZiMWfEsHugGb): test runs 11, module lines 3315
    - Proposed: a requirement for case-authoring (refuse, or author the edition after it) in a later tranche.
 5. ratification R44: `publish_at` from `caseRatifyPreflight` is not carried into R34's step 5. R34 does not ask for it; this is proposed for when the ceremony's "Publish at…" is placed.
 6. Wording only: case-authoring's Uses still names `inquiry.basisFor`, now leg-earning's R4 behind inquiry's delegate. Several renderers imported from case-grammar, publication, ratification, strength and case-disclosures are not named in those modules' Provides. publication R21 spells `{case}` where the code also takes `caseId`. The `peopleLines`/`memberTieLines` import can move to case-grammar R21 once T34-88 has merged; case-disclosures keeps the names working.
+
+## J2 · COMPLETE
+
+T34-48 done: N596 (every calculation input's hash from calculations' read) and DEC-149's 13 rows; two document-text flaws fixed in this module (a cut or unread timeline is stated; workbook rows in their own words). 145/145; format, architecture, coverage, ownership clean. Row census red gains C-136.1 (J1 item 1); the plane bundle is stale (J1 item 2). Record: Completion (CASE-AUTHORING #18), head d354f3eb9a.
