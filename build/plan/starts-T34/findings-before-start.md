@@ -4,3 +4,6 @@
 - action-clocks (T34-50): civil-time's offset cache landed (K1726); its `governedView` can go.
 - agent-runner (T34-74): bundler's REPORT of the fields its `fleet-member.json` lacks for a container member (`bundle`, `class_name`, `max_instances`, `bind`, a pinned digest), K1730.
 - installer (T34-71): sheet-worker's limits statement is a double-quoted literal `bio-member-limits/1 cpu_ms=300000` in its bundle text, on the default handler (SHEET-WORKER #2 J1, K1731); read as installer R20 reads the plane's.
+- record-core (T34-9): `t33.test.mjs` R76 pins the opaque set as five and R62's `mintExhausted` has no sentence for `calculation`; red since record-grammar's merge (CALC opaque, K1728, K1732); this job updates them.
+- calculations (T34-27): `calculations.test.mjs:49` (R4) expects a sequential fresh `CALC-` id; red since record-grammar's merge (K1732); this job expects the opaque form.
+- standards (T34-21): `law.mjs:312` labels law proposals through `standard`; record-grammar R49's `law_relation` subject is now there (K1732).
