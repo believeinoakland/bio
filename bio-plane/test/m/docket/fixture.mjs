@@ -5,9 +5,11 @@
    a case and its editions are rows of publication's tables (its R40), written as its commit would leave them; a capture
    is a register row with its origin locator (provenance R48), homed on an Information bundle whose `data/provenance.json`
    states its co-archive and origin (attestation R7, acquisition R21), with its bytes in a stubbed evidence bucket.
-   Three neighbours are stand-ins the test controls, each answering exactly the service docket reads: `inquiry`'s
-   `subjectEntityOf` (its R43), `entities`' `readEntity` (its R5) and `publication`'s `caseTensions` (its R50); and
-   `reevaluation` is a recorder of `registerDocket` and `docketActed` (its R30), which can be made to throw. The group slug
+   Neighbours are stand-ins the test controls, each answering exactly the service docket reads: `inquiry`'s
+   `subjectEntityOf` (its R43), `entities`' `readEntity` (its R5), `case-tensions`' `caseTensions` (its R4; injected
+   until T33-62 merges, K1563 (1)) and `publication`'s `stampEdition` (its R62; injected until T33-63 merges), a recorder
+   that checks its edition and order as R62 does and can be made to refuse or throw; and `reevaluation` is a recorder of
+   `registerDocket` and `docketActed` (its R30), which can be made to throw. `events` is the real module (its R30). The group slug
    is the fact `producingGroup` (promotion R40), registered as instance-setup does. Every test drives `docket` at its
    interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -20,6 +22,7 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { attestationOf } from "../../../src/attestation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
 import { docketOf } from "../../../src/docket/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { NS_DOCKET, docketStatement } from "../../../src/sshsig.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
@@ -106,14 +109,29 @@ export function world({ slug = SLUG, before = null } = {}) {
         aliases: [{ alias: `alias of ${entityId}`, canonical: false }, { alias: names.get(entityId), canonical: true }] } }
     : { ok: true, found: false, entity_id: entityId, entity: null }) };
   const tensions = { list: [], asked: [] };
-  const publication = { caseTensions: (q) => { tensions.asked.push(q);
+  const caseTensions = { caseTensions: (q) => { tensions.asked.push(q);
     return { ok: true, cases: tensions.list.length ? [{ case: CASE, edition: tensions.edition ?? 1, tensions: tensions.list }] : [], cursor: null }; } };
+  /* publication R62 as its requirement words it: a stamp per named ratified edition, linked to a posted court-order
+     entry of the case, read inside the post's transaction (the entry's row is already written when it is called). */
+  const stamps = { list: [], calls: [], refuse: null, throws: false };
+  const publication = { stampEdition(q) {
+    stamps.calls.push(q);
+    if (stamps.throws) throw new Error("stamp store down");
+    if (stamps.refuse) return { ok: false, reason: stamps.refuse, detail: "refused by the stand-in" };
+    const ratified = new Set([...st.sql.exec(`SELECT edition FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, q.case)].map((r) => Number(r.edition)));
+    if (!Array.isArray(q.editions) || !q.editions.length || !q.editions.every((e) => ratified.has(e))) return { ok: false, reason: "NO_SUCH_CASE_EDITION" };
+    const seq = Number(String(q.entry).split("#").pop());
+    const row = [...st.sql.exec(`SELECT kind FROM docket_entries WHERE case_id=? AND seq=?`, q.case, seq)][0];
+    if (!row || row.kind !== "court-order") return { ok: false, reason: "STAMP_NO_ORDER" };
+    for (const edition of q.editions) stamps.list.push({ case: q.case, edition, effect: q.effect, parts: q.parts ?? null, entry: q.entry, stamped_at: iso(clock.now) });
+    return { ok: true, stamped: q.editions.length };
+  } };
   const reeval = { registrations: [], acted: [], throws: false,
     registerDocket(module, fns) { reeval.registrations.push({ module, fns }); return { ok: true, module }; },
     docketActed(q) { reeval.acted.push(q); if (reeval.throws) throw new Error("listener down"); return { ok: true, told: true }; } };
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval,
+    st, host, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval, stamps,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, for "nothing written" and "byte-identical" (the record's own and every module's here). */
@@ -181,8 +199,9 @@ export function world({ slug = SLUG, before = null } = {}) {
     },
   };
   if (typeof before === "function") before(w);
+  w.events = eventsOf(host, { record, membership, provenance, now: () => clock.now });
   w.docket = docketOf(host, { record, membership, credentials, promotion, provenance, attestation, inquiry, entities,
-                              reevaluation: reeval, publication, now: () => clock.now });
+                              reevaluation: reeval, publication, caseTensions, events: w.events, now: () => clock.now });
   return w;
 }
 
