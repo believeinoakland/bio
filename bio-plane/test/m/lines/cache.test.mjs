@@ -5,13 +5,12 @@ import assert from "node:assert/strict";
 import { world, ANN } from "./fixture.mjs";
 
 const T = { statement: "I attended the swearing-in" };
-const HFX = "America/Halifax";
 
-test("R6 bound_cache holds each bound resolved: a value as given, an event bound as the event's when edge, null when the event has no when; one onWhenChanged registration moves every bounded line's cache inside the event's transaction", () => {
+test("R6 bound_cache holds each bound resolved: a value as given, an event bound as the event's when edge, null when the event has no when; one onWhenChanged registration moves every bounded line's cache inside the event's transaction, on the real events", () => {
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master");
-  const sworn = w.events.create({ start: "2021-03-04", end: "2021-03-04", precision: "day", zone: HFX });
-  const left = w.events.create(null);
+  const sworn = w.event("2021-03-04");
+  const left = w.event();
   const r = w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "appointed",
                              valid: { from: { event: sworn, edge: "start" }, to: { event: left, edge: "end" } }, basis: T, by: ANN });
   assert.equal(r.ok, true);
@@ -21,18 +20,22 @@ test("R6 bound_cache holds each bound resolved: a value as given, an event bound
   assert.deepEqual([w.one(`SELECT from_instant, to_instant FROM line_bound_cache WHERE line_id=?`, v.line_id)].map((c) => [c.from_instant, c.to_instant])[0],
                    ["2019-02-01", "2019-06-30"]);
   /* the event moves: the cache moves with it, in the event's transaction */
-  w.events.move(sworn, { start: "2021-04-01", end: "2021-04-01", precision: "day", zone: HFX });
+  assert.equal(w.move(sworn, "2021-04-01").ok, true);
   assert.equal(cache().from_instant, "2021-04-01");
-  w.events.move(left, { start: "2024-06-30T17:00", end: "2024-06-30T17:00", precision: "minute", zone: HFX });
-  assert.deepEqual([cache().to_instant, cache().to_precision], ["2024-06-30T17:00", "minute"]);
-  /* a failed event write rolls the cache back with it */
-  assert.throws(() => w.events.move(sworn, { start: "2022-01-01", end: "2022-01-01", precision: "day", zone: HFX }, { fail: true }));
+  assert.equal(w.move(left, "2024-06-30").ok, true);
+  assert.deepEqual([cache().to_instant, cache().to_precision, cache().to_zone], ["2024-06-30", "day", "America/Halifax"]);
+  assert.equal(w.l.holderAt({ office: o, at: "2024-06-30", viewer: ANN }).holder, p, "a to-bound reads through the event's whole day");
+  assert.equal(w.l.holderAt({ office: o, at: "2024-07-01", viewer: ANN }).undetermined, "no line covers the date");
+  /* a failed event write rolls the cache back with it: a later module's listener throws, so events undoes the move */
+  let boom = false;
+  assert.equal(w.ev.onWhenChanged("local-facts", () => { if (boom) throw new Error("this listener fails"); }).ok, true);
+  boom = true;
+  assert.equal(w.move(sworn, "2022-01-01").reason, "LISTENER_FAILED");
   assert.equal(cache().from_instant, "2021-04-01");
   assert.deepEqual(w.record.rebuildAndCompare("lines", "line_bound_cache"), { same: true });
   /* one registration: a second is refused */
-  assert.equal(w.events.listeners.filter((x) => x.module === "lines").length, 1);
   assert.equal(w.l.migrate().already, true);
-  assert.equal(w.events.onWhenChanged("lines", () => {}).reason, "LISTENER_DECLARED");
+  assert.equal(w.ev.onWhenChanged("lines", () => {}).reason, "LISTENER_DECLARED");
 });
 
 test("R7 a read of a line whose bound_cache differs from its rebuild fails closed: valid undetermined, why 'cache stale', and it is counted by neither structureAt nor holderAt", () => {
@@ -61,4 +64,34 @@ test("R7 a read of a line whose bound_cache differs from its rebuild fails close
   assert.equal(w.l.readLine({ lineId: s.line_id, viewer: ANN }).line.valid.why, "cache stale");
   w.st.sql.exec(`DELETE FROM line_bound_cache WHERE line_id=?`, h.line_id);
   assert.equal(w.l.readLine({ lineId: h.line_id, viewer: ANN }).line.valid.why, "cache stale");
+});
+
+test("R6 (K1563 (1)) linesOf(host) is the one instance per host, wired by default to that host's real events, entities and content: its event bounds are read through that host's events", async () => {
+  const { storage, ANN: who } = await import("./fixture.mjs");
+  const { recordOf } = await import("../../../src/record-core/index.mjs");
+  const { membershipOf } = await import("../../../src/membership/index.mjs");
+  const { provenanceOf } = await import("../../../src/provenance/index.mjs");
+  const { contentOf } = await import("../../../src/content/index.mjs");
+  const { entitiesOf } = await import("../../../src/entities/index.mjs");
+  const { eventsOf } = await import("../../../src/events/index.mjs");
+  const { linesOf } = await import("../../../src/lines/index.mjs");
+  const host = { storage: storage() };
+  const record = recordOf(host); record.migrate();
+  record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "test");
+  membershipOf(host, { record }).migrate();
+  provenanceOf(host).migrate();
+  const content = contentOf(host); content.extraction.migrate(); content.migrate();
+  const ents = entitiesOf(host); ents.migrate();
+  const ev = eventsOf(host); ev.migrate();
+  const l = linesOf(host);
+  assert.equal(linesOf(host), l, "one instance per host");
+  l.migrate();
+  const p = ents.createEntity({ kind: "person", label: "Ada Example", note: "a person", declaredBy: who }).entity_id;
+  const o = ents.createEntity({ kind: "office", label: "Harbour Master", note: "an office", declaredBy: who }).entity_id;
+  const e = ev.createEvent({ kind: "meeting", attestations: [{ testimony: "I was at the swearing-in", statement: "I was at the swearing-in" }], by: who });
+  assert.equal(e.ok, true, JSON.stringify(e));
+  const r = l.recordLine({ kind: "holds", from: p, to: o, capacity: "appointed", valid: { from: { event: e.event_id, edge: "start" } },
+                           basis: { statement: "sworn in that day" }, by: who });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.match(l.readLine({ lineId: r.line_id, viewer: who }).line.valid.from.event, /^EVT-/);
 });

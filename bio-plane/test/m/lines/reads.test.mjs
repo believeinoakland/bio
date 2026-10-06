@@ -42,9 +42,8 @@ test("R9 readLine: NO_LINE for an empty id, found false for an absent one, other
   const o = w.ent("office", "Harbour Master"), b = w.ent("body", "Port Board");
   assert.equal(w.l.readLine({ lineId: "", viewer: ANN }).reason, "NO_LINE");
   assert.deepEqual(w.l.readLine({ lineId: "LIN-2026-aaaaaaaaaaaaaaaa", viewer: ANN }), { ok: true, found: false, line_id: "LIN-2026-aaaaaaaaaaaaaaaa" });
-  const s = w.held("INFO-2026-0001", sha("org chart"));
-  w.entities.resolve(s, o, "B");
-  w.entities.resolve(s, o, "A");
+  const s = w.held("INFO-2026-0001", sha("org chart"), { refs: [{ kind: "office", key: "Harbour Master", label: "Harbour Master", ref: "Harbour Master" }] });
+  assert.equal(w.ents.resolve({ captureSha: s, resolvedBy: MACHINE }).ok, true);
   const r = w.l.recordLine({ kind: "reports_to", from: o, to: b, role: "functional", valid: { from: "2020-01-01" },
                              basis: { captureSha: s, extent: { kind: "document" } }, by: ANN });
   const line = w.l.readLine({ lineId: r.line_id, viewer: ANN }).line;
@@ -54,7 +53,7 @@ test("R9 readLine: NO_LINE for an empty id, found false for an absent one, other
   assert.deepEqual(line.basis, { form: "passage", captureSha: s, extent: { kind: "document" } });
   assert.equal(line.citation, `capture ${s}`);
   assert.equal(line.assertion, w.prov.captureGrade(s).grade, "the assertion is the capture's grade");
-  assert.deepEqual(line.ends, { from: "A", to: "D" }, "the office's strongest resolution in the capture; the body is not resolved there");
+  assert.deepEqual(line.ends, { from: "A", to: "D" }, "the office resolves in the capture by its alias; the body is not resolved there");
   assert.deepEqual(line.bounds.given, { from: "2020-01-01", to: null, precision: "day", zone: "America/Halifax" });
   assert.equal(line.bounds.cached.from, "2020-01-01");
   assert.equal(line.withdrawn, null);
@@ -85,7 +84,7 @@ test("R10 structureAt answers the structure lines at either end judged at the da
   w.say("part_of", o, d, { valid: { from: "2000-01-01", to: "2009-12-31" } });             /* out */
   const open = w.say("reports_to", o, b, { valid: { from: "2015-01-01" } });              /* no end stated */
   const band = w.say("oversees", b, o, { valid: { from: "2022-06-15T10:00", to: "2030-01-01T00:00", precision: "minute" } }); /* the day straddles it */
-  const e = w.events.create(null);
+  const e = w.event();
   const ev = w.say("appoints", b, o, { valid: { from: { event: e, edge: "start" }, to: "2030-01-01" } });
   w.say("belongs_to", p, b, { valid: { from: "2010-01-01", to: "2030-12-31" } });        /* not a structure kind */
   const r = w.l.structureAt({ entity: o, at: "2022-06-15", viewer: ANN });
@@ -146,7 +145,7 @@ test("R12 a holder is a person entity, the same entity across every role it has 
   const a = w.l.holderAt({ office: o1, at: "2012-01-01", viewer: ANN }), b = w.l.holderAt({ office: o2, at: "2018-01-01", viewer: ANN });
   assert.equal(a.holder, ada);
   assert.equal(b.holder, ada, "the same entity in both roles");
-  assert.equal(w.entities.readEntity({ entityId: a.holder }).entity.kind, "person");
+  assert.equal(w.ents.readEntity({ entityId: a.holder }).entity.kind, "person");
   assert.match(a.holder, /^ENT-/, "an entity id, never a name");
 });
 

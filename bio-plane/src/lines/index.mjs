@@ -14,8 +14,9 @@
 import { recordOf } from "../record-core/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { canonicalExtent, checkContentExtent } from "../content/index.mjs";
-import { noSuchEntity, noEntity } from "../entities/index.mjs";
+import { canonicalExtent, checkContentExtent, contentOf } from "../content/index.mjs";
+import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
+import { eventsOf } from "../events/index.mjs";
 import { isHypothesisId, isMachineIdentity, ISO_TS_RE } from "../record-grammar/index.mjs";
 import { validAt, bounds as dtBounds, compare } from "../civil-time/index.mjs";
 import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
@@ -81,15 +82,20 @@ export function ownerNeighbours(args) {
 /* R14: registered once, at load, into the registry the plane wires. */
 defaultRegistry.registerOwner({ owner: OWNER, kinds: [...CONNECTION_KINDS], neighbours: ownerNeighbours });
 
-/** K61: one instance per storage. `opts.entities` and `opts.events` are the services lines reads its ends and event
- *  bounds through; `opts.registry` the connection registry it registers into (the default the plane wires). */
+/** K61, K1563 (1): one instance per storage, `linesOf(host)`. `opts` is read on the first call only: `record`,
+ *  `provenance`, `content`, `entities` and `events` (each its module's instance for `ctx` when not given: the services
+ *  lines reads its passages, ends and event bounds through), `registry` (a connection registry other than the default,
+ *  for a test) and `now` (a clock). */
 export function linesOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let l = instances.get(storage);
   if (!l) {
     const record = opts.record ?? recordOf(ctx);
     l = new Lines(storage, { ...opts, record,
-                             provenance: opts.provenance ?? provenanceOf(ctx) });
+                             provenance: opts.provenance ?? provenanceOf(ctx),
+                             content: opts.content ?? contentOf(ctx),
+                             entities: opts.entities ?? entitiesOf(ctx),
+                             events: opts.events ?? eventsOf(ctx) });
     instances.set(storage, l);
   }
   return l;
@@ -206,9 +212,7 @@ export class Lines {
     if (!isObj(ident) || !filled(ident.scheme) || !filled(ident.id) || typeof this.#entities.entityByIdentifier !== "function") return null;
     try {
       const r = this.#entities.entityByIdentifier({ scheme: ident.scheme, id: ident.id });
-      if (typeof r === "string") return r;
-      if (isObj(r)) return r.entity_id ?? (isObj(r.entity) ? r.entity.entity_id : null) ?? null;
-      return null;
+      return isObj(r) && !r.undetermined && filled(r.entity_id) ? r.entity_id : null;
     } catch { return null; }
   }
   /* An end's resolution grade in a capture: its strongest resolution there, or null when it is not resolved there. */
@@ -222,8 +226,8 @@ export class Lines {
 
   /* ---- bounds (R3, R6) ---- */
 
-  /* An event's `when`, read through `events` (its R26), as `{start, end, precision, zone}`; null when the event has no
-     `when`, undefined when no such event is held. */
+  /* An event's `when`, read through `events` (its R26): `{start, end, precision, zone, value}`, `start` and `end` the
+     instants of its span; null when the event has no `when` (or it reads stale), undefined when no such event is held. */
   #when(eventId) {
     if (!this.#events || typeof this.#events.readEvent !== "function") return undefined;
     let a;
@@ -231,7 +235,7 @@ export class Lines {
     if (!a || a.ok === false || a.found === false) return undefined;
     const ev = isObj(a.event) ? a.event : a;
     const w = ev.when;
-    return isObj(w) && !w.undetermined && (w.start != null || w.end != null) ? w : null;
+    return isObj(w) && !w.undetermined && (w.value != null || w.end != null) ? w : null;
   }
 
   /* R3: a bound as given, read into `null`, a value string at the validity's precision, or `{event, edge}`; or a
@@ -262,16 +266,23 @@ export class Lines {
   }
 
   /* R6: a bound's resolved value: a value as given; an event bound as that event's `when` edge (`override` stands in
-     for one event's `when` while it changes); null ("not stated") when the event has no `when`. */
+     for one event's `when` while it changes); null ("not stated") when the event has no `when`. An edge is the event's
+     own date-time, which a `from` reads from its first instant and a `to` through its last (a day is never its
+     midnight, K1464). An event known only "on or before" an instant (events R24's upper bound) has no start, and its
+     end is that instant. A `when` held with no zone has no span, so it resolves nothing. */
   #resolve(b, valid, override) {
-    if (b === null) return { v: null, p: null, z: null };
+    const none = { v: null, p: null, z: null };
+    if (b === null) return none;
     if (typeof b === "string") return { v: b, p: valid.precision, z: valid.zone };
     const w = override && override.eventId === b.event ? override.after : this.#when(b.event);
-    if (!isObj(w)) return { v: null, p: null, z: null };
-    const v = b.edge === "start" ? w.start : w.end;
-    if (v === null || v === undefined) return { v: null, p: null, z: null };
-    return { v: String(v), p: PRECISIONS.includes(w.precision) ? w.precision : valid.precision, z: filled(w.zone) ? w.zone : valid.zone };
+    if (!isObj(w)) return none;
+    if (w.precision === "upper_bound")
+      return b.edge === "end" && typeof w.end === "string" && ISO_TS_RE.test(w.end) ? { v: w.end, p: "instant", z: "UTC" } : none;
+    if (!filled(w.value) || !filled(w.zone) || !PRECISIONS.includes(w.precision)) return none;
+    return { v: w.value, p: w.precision, z: w.zone };
   }
+  /* A resolved bound as civil-time reads it: an instant string, or a date-time. */
+  static #dt(v, p, z) { return p === "instant" ? v : { value: v, precision: p, zone: z }; }
   #cacheRow(lineId, valid, override = null) {
     const f = this.#resolve(valid.from, valid, override), t = this.#resolve(valid.to, valid, override);
     return { line_id: lineId, from_instant: f.v, to_instant: t.v, precision: valid.precision, zone: valid.zone,
@@ -317,7 +328,7 @@ export class Lines {
       if (b === null || typeof b === "string") return b;
       const v = cache.held ? cache.held[`${which}_instant`] : null;
       return v === null || v === undefined || cache.stale ? { event: b.event, edge: b.edge }
-        : { event: b.event, edge: b.edge, at: { value: v, precision: cache.held[`${which}_precision`], zone: cache.held[`${which}_zone`] } };
+        : { event: b.event, edge: b.edge, at: Lines.#dt(v, cache.held[`${which}_precision`], cache.held[`${which}_zone`]) };
     };
     return { from: side(valid.from, "from"), to: side(valid.to, "to"), precision: valid.precision, zone: valid.zone };
   }
@@ -455,8 +466,8 @@ export class Lines {
     if (probe.from_instant !== null && probe.to_instant !== null) {
       let c;
       try {
-        c = compare({ value: probe.from_instant, precision: probe.from_precision, zone: probe.from_zone },
-                    { value: probe.to_instant, precision: probe.to_precision, zone: probe.to_zone });
+        c = compare(Lines.#dt(probe.from_instant, probe.from_precision, probe.from_zone),
+                    Lines.#dt(probe.to_instant, probe.to_precision, probe.to_zone));
       } catch { c = null; }
       if (c === "after") return refuse("BOUNDS_REVERSED", "the validity's from is after its to");
     }

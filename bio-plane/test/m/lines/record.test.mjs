@@ -81,7 +81,7 @@ test("R3 bounds: BOUND_BOTH, NO_SUCH_EVENT, BAD_EDGE, BAD_DATE (civil-time's cal
   const w = world();
   const o = w.ent("office", "Harbour Master"), b = w.ent("body", "Port Board");
   const rec = (valid) => w.l.recordLine({ kind: "part_of", from: o, to: b, valid, basis: T, by: ANN });
-  const e = w.events.create({ start: "2021-03-04", end: "2021-03-04", precision: "day", zone: "America/Halifax" });
+  const e = w.event("2021-03-04");
   assert.equal(rec({ from: { value: "2020-01-01", event: e, edge: "start" } }).reason, "BOUND_BOTH");
   assert.equal(rec({ from: { event: "EVT-2026-zzzzzzzzzzzzzzzz", edge: "start" } }).reason, "NO_SUCH_EVENT");
   assert.equal(rec({ from: { event: e, edge: "middle" } }).reason, "BAD_EDGE");
@@ -107,14 +107,14 @@ test("R4 the machine records a line only from a system rule whose two ends its s
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master"), b = w.ent("body", "Port Board");
   const s = w.held("INFO-2026-0001", sha("legistar officerecords"));
-  w.entities.identify(p, "legistar-person", "101");
-  w.entities.identify(b, "legistar-body", "7");
+  w.identify(p, "ellery_person", "P101");
+  w.identify(b, "test_org", "7");
   const base = { kind: "belongs_to", from: p, to: b, by: MACHINE };
   assert.equal(w.l.recordLine({ ...base, basis: T }).reason, "MACHINE_NEEDS_IDENTIFIERS", "testimony");
   assert.equal(w.l.recordLine({ ...base, basis: { captureSha: s, extent: { kind: "document" } } }).reason, "MACHINE_NEEDS_IDENTIFIERS", "a passage");
   assert.equal(w.l.recordLine({ ...base, basis: { rule: "seat", source: s } }).reason, "MACHINE_NEEDS_IDENTIFIERS", "no identifiers");
-  const ids = { from: { scheme: "legistar-person", id: "101" }, to: { scheme: "legistar-body", id: "7" } };
-  assert.equal(w.l.recordLine({ ...base, basis: { rule: "seat", source: s, ids: { ...ids, to: { scheme: "legistar-body", id: "8" } } } }).reason,
+  const ids = { from: { scheme: "ellery_person", id: "P101" }, to: { scheme: "test_org", id: "7" } };
+  assert.equal(w.l.recordLine({ ...base, basis: { rule: "seat", source: s, ids: { ...ids, to: { scheme: "test_org", id: "8" } } } }).reason,
                "MACHINE_NEEDS_IDENTIFIERS", "an identifier naming no end");
   assert.equal(w.l.recordLine({ ...base, to: o, basis: { rule: "seat", source: s, ids } }).reason, "MACHINE_NEEDS_IDENTIFIERS", "an identifier naming another entity");
   const r = w.l.recordLine({ ...base, basis: { rule: "seat", source: s, ids } });
@@ -127,9 +127,9 @@ test("R5 a line whose basis is a register row records the source's own record in
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master");
   const s = w.held("INFO-2026-0001", sha("officerecords page"));
-  w.entities.identify(p, "legistar-person", "101");
-  w.entities.identify(o, "legistar-office", "55");
-  const basis = { rule: "seat", source: s, system: "Legistar", ids: { from: { scheme: "legistar-person", id: "101" }, to: { scheme: "legistar-office", id: "55" } } };
+  w.identify(p, "ellery_person", "P101");
+  w.identify(o, "test_org", "55");
+  const basis = { rule: "seat", source: s, system: "Legistar", ids: { from: { scheme: "ellery_person", id: "P101" }, to: { scheme: "test_org", id: "55" } } };
   assert.equal(w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "elected", basis, by: MACHINE }).reason, "NO_BASIS", "a register row states its instant");
   assert.equal(w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "elected", basis: { ...basis, recorded_at: "yesterday" }, by: MACHINE }).reason, "NO_BASIS");
   const r = w.l.recordLine({ kind: "holds", from: p, to: o, capacity: "elected", valid: { from: "2023-01-09" },

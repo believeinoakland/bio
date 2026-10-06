@@ -44,14 +44,14 @@ test("R18 holderAt has no second implementation in any module, structure is neve
   assert.deepEqual(holders, ["lines.Lines"]);
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master"), b = w.ent("body", "Port Board");
-  const e = w.events.create({ start: "2020-01-01", end: "2020-01-01", precision: "day", zone: "America/Halifax" });
+  const e = w.event("2020-01-01");
   for (const k of ["part_of", "post_in", "reports_to", "oversees", "appoints", "funds", "acts_for", "responsible_for", "custodian_of", "successor_of"])
     w.say(k, o, b, { valid: { from: { event: e, edge: "start" }, to: "2030-01-01" } });
   w.say("holds", p, o, { capacity: "elected", valid: { from: "2020-01-01" } });
   w.say("seat_on", o, b);
   assert.equal(w.one(`SELECT COUNT(*) AS n FROM entity_relations`).n, 0);
-  assert.equal(w.entities.readEntity({ entityId: o, viewer: ANN }).entity.relations.length, 0);
-  w.events.move(e, { start: "2019-05-05", end: "2019-05-05", precision: "day", zone: "America/Halifax" });
+  assert.equal(w.ents.readEntity({ entityId: o, viewer: ANN }).entity.relations.length, 0);
+  assert.equal(w.move(e, "2019-05-05").ok, true);
   w.l.withdrawLine({ lineId: w.l.linesOf({ entity: o, viewer: ANN }).lines[0].line_id, reason: "dup", by: ANN });
   assert.deepEqual(w.record.rebuildAndCompare("lines", "line_bound_cache"), { same: true });
 });
