@@ -27,6 +27,26 @@
 
 Size (session_01KYowDaH5VcYb58osy2yLAZ): test runs 5, module lines 1400
 
+## Completion of B3 (CHANGE, K1556)
+
+**Applied.** R28 (T33-24; C:A-5; K1556), after merging `tranche/T33`:
+- `emittedFieldsOf(i2text)` (new, exported beside R23's pieces so extraction's re-read can compose the same rule): `metadata` is the entry's `metadata` object as emitted, else null; for a text with a `sheets` list, `cells` is `{<sheet name>: that sheet's cells list as emitted, or null}`. Lists are the entry's own, never copied or changed. A sheet with no string `name` gets no key, since any key would be made up here.
+- `read` assigns it to every reading composed from an entry's text. The early failed readings and `read`'s catch carry `metadata: null` and no `cells`, so every reading carries `metadata`.
+- `pieces.test.mjs`'s over-strictness pin (R2 R15): the pinned whole-answer digest now leaves out the two keys R28 adds on purpose, and asserts them; every other byte stays pinned to the same digests.
+
+**Deferred.** None.
+
+**Found in other modules.**
+- `extraction`'s re-read composes readings from R23's pieces, so it carries R28's keys only if it calls `emittedFieldsOf` (for EXTRACTION #13, with K1556's "persists the reading unchanged").
+- `bio-plane/dist/bio-plane.bundled.mjs` (`not_product`) stays stale, as already reported.
+
+**Tests and checks:**
+- Module tests and the other `tests` paths: tests 85, pass 85, fail 0, skipped 0 (new: `emitted.test.mjs`, 4 tests).
+- The user module's tests, `test/m/extraction/`: 112, pass 112, fail 0, the same with and without this change.
+- `format` 0 failures; `architecture` 23 product files, 0 failures; `coverage` 28 of 28; `ownership` 6 files, 0 failures.
+
+Size (session_01KYowDaH5VcYb58osy2yLAZ): test runs 10, module lines 1426
+
 ## J1 · QUESTION
 
 T33-23, R25–R27: where the after-read registry lives. My best reading, which I am building on now.
