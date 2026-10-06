@@ -82,7 +82,8 @@
      "label": "Add an office yourself",
      "status": "declared",
      "modules": [
-      "entities"
+      "entities",
+      "instance-setup"
      ]
     },
     {
@@ -197,9 +198,9 @@
     {
      "op": "enroll",
      "label": "Join with a handle and password",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "membership"
+      "instance-setup"
      ]
     }
    ],
@@ -2000,6 +2001,7 @@
      "label": "Sign with your key",
      "status": "declared",
      "modules": [
+      "publication",
       "ratification"
      ]
     },
