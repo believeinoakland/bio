@@ -113,3 +113,12 @@ New reds in other modules from this job, each owed by an L11 job (the base `tran
 5. **control-plane R43** (inherited red) now also sees C-131.24 re-worded (DEC-149) and C-131.33–.41 new, awaiting stamp (accepted red 4).
 6. **Stale generated artifact:** the plane bundle.
 7. **filing-templates (no red):** the library's two `{template}` drafts name templates by name (`@records-request`, `@communication`). R25 resolves templates by id only. A by-name lookup is filing-templates' if wanted.
+
+## J3 · COMPLETE
+
+wizard-scripts T34 complete on `job/T34/wizard-scripts`. I applied T34-52, T34-80, T34-92, the layer-11 share of T34-90 and T34-91, and T34-87's row, then B3 and B4 as written.
+- Tests: wizard-scripts 62 pass, 0 fail.
+- Checks: format, architecture, coverage (27 of 27) and ownership all pass with 0 failures.
+- Size: 2,261 lines.
+- The record's Completion lists the details I decided, for `rulings.md`, and one item deferred: templates are named by name.
+- The new reds in other modules are in J2.
