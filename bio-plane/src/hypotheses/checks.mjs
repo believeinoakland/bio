@@ -4,7 +4,7 @@
  * Each row is `{check, where, translation}`, family C-134, minted here. The acts' rows (R1, R2) are this module's own
  * answers, under codes of its own (N608, DEC-49 arm A: `HYPOTHESIS_NO_STATEMENT`, `HYPOTHESIS_NO_REASON`, numbers and
  * translations unchanged); the leg rows (R5, R6) are carried inside `BASIS_REFUSED` by the check this module registers
- * with `promotion`; the notes' rows (R11, R13; T34) answer a member's own notes. Rows changed or added in T34 await
+ * with `promotion`; the notes' rows (R11, R13; T34, K1807) answer a member's own notes. Rows changed or added in T34 await
  * `promotion`'s next stamp. No translation names a place. This file imports nothing. */
 
 const act = (fn) => `src/hypotheses/index.mjs ${fn}`;
@@ -47,4 +47,6 @@ export const HYPOTHESES_CHECKS = {
     translation: "A note becomes an observation, a hunch or a question. Nothing was written." },
   NOTE_TURN_NOT_MADE: { check: "C-134.18", where: act("noteTurn"),
     translation: "Name what you made from this note by the record's own id: the observation or the question your act made. Nothing was written." },
+  NOTE_TOO_LONG_FOR_HUNCH: { check: "C-134.19", where: act("noteTurn"),
+    translation: "This note is longer than a hunch can hold. Hold a shorter hunch in your own words, and keep the note as it is. Nothing was written, and nothing was cut." },
 };

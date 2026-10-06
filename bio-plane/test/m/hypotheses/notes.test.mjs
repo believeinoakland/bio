@@ -101,7 +101,7 @@ test("R12 notesOf answers the viewer's own notes, newest first, each {note, text
   assert.deepEqual(strip(w.h.notesOf({ viewer: OUTSIDER })), strip(fresh.h.notesOf({ viewer: OUTSIDER })));
 });
 
-test("R13 noteTurn records a turn into a hunch (held by R1's hold with the note's text, R1's refusals unchanged and nothing recorded when hold refuses), an observation or a question (named in made, a record id); refusals in order, each writing nothing; the note itself is unchanged and stays its author's", () => {
+test("R13 noteTurn records a turn into a hunch (held by R1's hold with the note's text, R1's refusals unchanged and nothing recorded when hold refuses), an observation or a question (named in made, a record id); refusals in order, each writing nothing, NOTE_TOO_LONG_FOR_HUNCH for a note past R1's bound, never cut; the note itself is unchanged and stays its author's", () => {
   const w = world();
   w.bundle(INQ);
   const words = "E1 and E2 seem to act together.";
@@ -132,6 +132,19 @@ test("R13 noteTurn records a turn into a hunch (held by R1's hold with the note'
   /* observation and question: made must be a record id */
   for (const made of [undefined, null, "", "not an id", 7, "HYP"]) expect({ note, into: "observation", by: ANN, made }, "NOTE_TURN_NOT_MADE");
   assert.equal(row("NOTE_TURN_NOT_MADE").check, "C-134.18");
+  /* K1807: a note past R1's statement bound is refused for a hunch, naming the bound, never cut; the same note may
+     still become an observation or a question, and one exactly at the bound is held whole */
+  const long = w.h.noteWrite({ text: "x".repeat(4001), by: ANN }).note;
+  const hk = { inquiry: INQ, kind: "relation", about: { from: E1, to: E2 } };
+  const tooLong = expect({ note: long, into: "hunch", by: ANN, hunch: hk }, "NOTE_TOO_LONG_FOR_HUNCH");
+  assert.deepEqual([tooLong.check, tooLong.max_characters, tooLong.characters], ["C-134.19", 4000, 4001]);
+  assert.ok(tooLong.detail.includes("4000"));
+  assert.deepEqual(w.h.notesOf({ viewer: ANN }).notes.find((x) => x.note === long).turned, [], "nothing recorded on the note");
+  assert.equal(w.h.noteTurn({ note: long, into: "question", by: ANN, made: "INQ-2026-0005-q" }).ok, true);
+  const edge = w.h.noteWrite({ text: `  ${"y".repeat(4000)}  `, by: ANN }).note;
+  const whole = w.h.noteTurn({ note: edge, into: "hunch", by: ANN, hunch: hk });
+  assert.equal(whole.ok, true, JSON.stringify(whole).slice(0, 200));
+  assert.equal(w.h.read({ hypothesisId: whole.id, viewer: ANN }).hypothesis.statement, "y".repeat(4000), "held whole");
   /* the turns */
   const h = w.h.noteTurn({ note, into: "hunch", by: ANN, hunch: { inquiry: INQ, kind: "relation", about: { from: E1, to: E2 } } });
   assert.equal(h.ok, true, JSON.stringify(h));
@@ -146,7 +159,7 @@ test("R13 noteTurn records a turn into a hunch (held by R1's hold with the note'
   assert.deepEqual(n.turned.map((t) => [t.into, t.id]), [["hunch", h.id], ["observation", "INFO-2026-0001-doc"], ["question", "INQ-2026-0002-why"]]);
   assert.ok(n.turned.every((t, i, a) => typeof t.at === "string" && (i === 0 || a[i - 1].at <= t.at)));
   /* never deleted by the turn, and still its author's alone */
-  assert.equal(count(w), 1);
+  assert.equal(count(w), 3, "every note kept, none deleted by a turn");
   assert.deepEqual(w.h.notesOf({ viewer: OUTSIDER }).notes, []);
   /* the hunch carries nothing of the note but the words: its history names no note */
   assert.ok(!JSON.stringify(held).includes(`"note"`));

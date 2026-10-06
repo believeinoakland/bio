@@ -388,8 +388,9 @@ export class Hypotheses {
   }
 
   /** R13: `noteTurn({note, into, by, hunch?, made?})` records that a note became an observation, a hunch or a question,
-   *  by its author's own act: a hunch is held here (R1); an observation or a question is made by its owner's act and
-   *  named in `made`. The note itself is unchanged and stays its author's alone. */
+   *  by its author's own act: a hunch is held here (R1), a note past R1's statement bound refused, never cut (K1807);
+   *  an observation or a question is made by its owner's act and named in `made`. The note itself is unchanged and
+   *  stays its author's alone. */
   noteTurn({ note = null, into = null, by = null, hunch = null, made = null } = {}) {
     const member = this.#noteMember(by);
     if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author turns it");
@@ -403,6 +404,11 @@ export class Hypotheses {
       return { ok: true, note: noteId, into, id, at };
     };
     if (into === "hunch") {
+      /* K1807: R1's statement bound is never reached by cutting the member's words: such a turn is refused. */
+      const length = n.text.trim().length;
+      if (length > STATEMENT_MAX)
+        return refuse("NOTE_TOO_LONG_FOR_HUNCH", `a hunch's statement holds at most ${STATEMENT_MAX} characters, and this note is ${length}`,
+                      { max_characters: STATEMENT_MAX, characters: length, note: noteId });
       const h = isObj(hunch) ? hunch : {};
       return this.#record.transact(() => {
         const r = this.hold({ inquiry: h.inquiry ?? null, kind: h.kind ?? null, about: h.about ?? null, statement: n.text, by });
