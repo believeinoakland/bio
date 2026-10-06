@@ -791,8 +791,9 @@ export class CaseImport {
     const e = this.#edition(importId, edition);
     const missing = new Set();
     if (e) for (const r of this.#resultsOf(e.import_id, Number(e.edition))) for (const m of r.missing) fingerprintsOf(m, missing);
-    /* R21: a carried calculation's input the case file lacks is a missing material too, named by the hash its row states */
-    if (e) for (const c of this.#calcsOf(e.import_id, Number(e.edition))) for (const m of c.missing) if (isObj(m) && isSha(m.sha) && !m.carried) missing.add(m.sha);
+    /* R5, R21 (K1828): a calculation's input the case file lacks, or carries with bytes other than its stated hash, is a
+       missing material too, named by the hash its row states (as `case-checker` R9 fills it) */
+    if (e) for (const c of this.#calcsOf(e.import_id, Number(e.edition))) for (const m of c.missing) if (isObj(m) && isSha(m.sha)) missing.add(m.sha);
     /* DEC-49 REGION is-import-document */
     if (!b || !e || !missing.has(sha))
       return refuse("IMPORT_DOCUMENT_NOT_MISSING", "the bytes match no material this imported edition records as missing",
