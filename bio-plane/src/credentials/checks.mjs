@@ -103,8 +103,8 @@ export const CREDENTIALS_CHECKS = Object.freeze({
   }),
 });
 
-/* T33-20 (K1502, K1450, K1449): each member's own Claude account reference (R22–R26), the ask grant (R27–R28) and the
-   group's keyed services (R29). New rows, stamped by promotion in T34 (plan T33, "Choices settled"). The account
+/* T33-20 (K1502, K1450, K1449): each member's own Claude account reference (R22–R25), the ask grant (R27–R28, R31,
+   R32) and the group's keyed services (R29); T34 (K1755): the group's API key (R33–R37). New rows, stamped by promotion in T34 (plan T33, "Choices settled"). The account
    refusals R22 names are minted in one region, `#accountBar`, which every act on a reference and the grant's mint
    consume. */
 export const ACCOUNT_CHECKS = Object.freeze({
@@ -123,11 +123,8 @@ export const ACCOUNT_CHECKS = Object.freeze({
     check: 'C-29.15', where: at("#accountBar", "is-account-own-act"),
     translation: 'Only an active member of this group can connect a Claude account. Nothing was changed.',
   }),
-  ACCOUNT_LEVEL_MEMBER_ONLY: Object.freeze({
-    check: 'C-29.16', where: at("#accountBar", "is-account-own-act"),
-    translation: 'A Claude account is held by one member for their own questions. There is no account for the whole '
-      + 'group, a project or this copy of the software. Nothing was changed.',
-  }),
+  /* C-29.16 (ACCOUNT_LEVEL_MEMBER_ONLY) is retired with R26 (K1755, K1756, T34): the group's API key is R33's own act;
+     its id is not reused. */
   UNKNOWN_ACCOUNT_KIND: Object.freeze({
     check: 'C-29.17', where: at("accountReferenceSet", "is-account-kind"),
     translation: 'That is not a kind of Claude account this group can hold. Connect your own API key or your own '
@@ -135,17 +132,20 @@ export const ACCOUNT_CHECKS = Object.freeze({
   }),
   /* C-29.18 (ACCOUNT_KIND_NOT_OFFERED) is retired with K1537's hold (K1547, T33-20b); its id is not reused. */
   NO_SECRET: Object.freeze({
-    check: 'C-29.19', where: at("accountReferenceSet", "is-account-kind"),
+    check: 'C-29.19', where: at("#noSecret", "is-secret-given"),
     translation: 'No key or token was given, so there is nothing to connect. Nothing was changed.',
   }),
+  /* T34 (K1755, K1757): the words name the group's key, since a member with no account of their own is served by it
+     while it is on (R35). */
   NO_ACCOUNT: Object.freeze({
     check: 'C-29.20', where: at("#noAccount", "is-account-held"),
-    translation: 'You have not connected a Claude account, so the assistant cannot work for you. Connect your own API '
-      + 'key or your own Claude subscription token to use it. Nothing was changed.',
+    translation: 'No Claude account serves you here: you have not connected your own, and the group\'s own key is not '
+      + 'switched on. Connect your own API key or your own Claude subscription token, or ask an administrator about '
+      + 'the group\'s key. Nothing was changed.',
   }),
   UNKNOWN_SWITCH: Object.freeze({
-    check: 'C-29.21', where: at("accountSwitchSet", "is-account-switch"),
-    translation: 'That is not one of your assistant\'s switches. There are two: suggestions, and standing questions. '
+    check: 'C-29.21', where: at("#switchName", "is-account-switch"),
+    translation: 'That is not one of the assistant\'s switches. There are two: suggestions, and standing questions. '
       + 'Nothing was changed.',
   }),
   ACCOUNT_SEAL_UNAVAILABLE: Object.freeze({
@@ -159,9 +159,26 @@ export const ACCOUNT_CHECKS = Object.freeze({
       + 'change anything. This request was outside them. Nothing was read or changed.',
   }),
   GRANT_NOT_HELD: Object.freeze({
-    check: 'C-29.24', where: at("aiGrantAdmit", "is-grant-op"),
+    check: 'C-29.24', where: at("#grantNotHeld", "is-grant-held"),
     translation: 'This ask\'s permission to read has ended: it lasts a short while, and ends when you sign out. Ask '
       + 'again. Nothing was read.',
+  }),
+  /* T34 (T34-11; K1609, K1755, K1757): R32's two refusals and R36's. New rows, stamped by promotion (T34-12). */
+  STANDING_SWITCH_OFF: Object.freeze({
+    check: 'C-29.25', where: at("aiGrantMintStanding", "is-standing-grant"),
+    translation: 'Standing questions are switched off for the Claude account that would answer this one, so the '
+      + 'assistant did not look. Whoever holds that account can switch standing questions on. Nothing was read or '
+      + 'changed.',
+  }),
+  NO_QUESTION: Object.freeze({
+    check: 'C-29.26', where: at("aiGrantMintStanding", "is-standing-grant"),
+    translation: 'A standing question needs its words, and none were given. Nothing was read or changed.',
+  }),
+  GROUP_KEY_NOTICE_DUE: Object.freeze({
+    check: 'C-29.27', where: at("#noticeDue", "is-group-key-notice-seen"),
+    translation: 'Before the assistant answers you under the group\'s account, read one short notice: your questions, '
+      + 'and the material read to answer them, go to Anthropic under the group\'s API account. Confirm you have read '
+      + 'it, then ask again. Nothing was sent.',
   }),
 });
 

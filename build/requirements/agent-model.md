@@ -1,6 +1,6 @@
 # agent-model — requirements
 
-**Status** · Reviewed (K1505; banner cleared K1599). New module, split from `agent-worker` by copy (K617, K1439; `plan/draft-T33-plan.md` T33-55; entries C Q0-1 seam (iii) and Q0-2), then extended. R1 is `agent-worker` R40, amended as T33-55 and K1502 rule (the member's own reference; the model per mode by measurement). R2–R10 are new: the two providers (K1429, K1502), caching and `usage` (ladders §9.4 Q0), and the conversation `model.mjs` performs today, which no `agent-worker` requirement states (its R40, R41 and D-611 rest on it). Layer 6, after `agent-harness`, before `agent-runner`. Whether `agent-worker` keeps R40 re-worded (T33-57 names "R35 and R40 per audit") or retires it as moved here is open (Suggestions). T34's fold, by a requirements worker for BOB #123 on `tranche/T34`, 2026-10-06, from plan entry T34-38 (N588; K1621): R6 amended (every `converse` answer carrying `usage` also carries `calls`, the number of model calls that usage sums, so a caller counts calls, not conversations); wording of BOB's, no new meaning; not yet met (T34).
+**Status** · Reviewed (K1505; banner cleared K1599). New module, split from `agent-worker` by copy (K617, K1439; `plan/draft-T33-plan.md` T33-55; entries C Q0-1 seam (iii) and Q0-2), then extended. R1 is `agent-worker` R40, amended as T33-55 and K1502 rule (the member's own reference; the model per mode by measurement). R2–R10 are new: the two providers (K1429, K1502), caching and `usage` (ladders §9.4 Q0), and the conversation `model.mjs` performs today, which no `agent-worker` requirement states (its R40, R41 and D-611 rest on it). Layer 6, after `agent-harness`, before `agent-runner`. Whether `agent-worker` keeps R40 re-worded (T33-57 names "R35 and R40 per audit") or retires it as moved here is open (Suggestions). T34's fold, by a requirements worker for BOB #123 on `tranche/T34`, 2026-10-06, from plan entry T34-38 (N588; K1621): R6 amended (every `converse` answer carrying `usage` also carries `calls`, the number of model calls that usage sums, so a caller counts calls, not conversations); wording of BOB's, no new meaning; not yet met (T34). T34's K1755 fold, by a drafting worker for BOB #123 on `tranche/T34`, 2026-10-06 (K1755: an Anthropic API key at the group level, held in `credentials`' sealed table, serves members with no account of their own): the Purpose and Terms amended (the reference is the account `credentials.accountFor` answers for the act, the member's own or the group's key); R1 and R9 amended; R11 (a group-level reference is an API key, sent as a member's is) added; not yet met (T34).
 
 | old (`agent-worker`) | new | |
 |---|---|---|
@@ -13,13 +13,13 @@
 
 ### Purpose
 
-How a model turn reaches Claude. Given one member's own account reference, it sends a conversation's turns either to the Messages API (an API key) or to Claude Code running unmodified in the `agent-runner` container (a Claude subscription), returns each turn's outcome and its `usage`, and keeps the segment within its turn and byte bounds. It holds no credential: the reference arrives per call and is never kept.
+How a model turn reaches Claude. Given the account reference that serves one member's act (the member's own, or the group's API key, K1755), it sends a conversation's turns either to the Messages API (an API key) or to Claude Code running unmodified in the `agent-runner` container (a Claude subscription), returns each turn's outcome and its `usage`, and keeps the segment within its turn and byte bounds. It holds no credential: the reference arrives per call and is never kept.
 
 ### Provides
 
-Terms. An **account reference** is `{kind: "apikey", key}` or `{kind: "subscription", token}`, one member's own (K1502); its secret is the `key` or `token`. A **meter** is `segmentMeter({turnsBound, bytesBound})`'s plain object. An **outcome** is exactly one of `{result}`, `{silent: {detail}}`, `{refused: {status, type, message}}`.
+Terms. An **account reference** is `{kind: "apikey", key}` or `{kind: "subscription", token}`, one member's own (K1502) or, for an `apikey` only, the group's (K1755), with its `level` (`member` or `group`) as `credentials.accountFor` answers it (its R35); its secret is the `key` or `token`. A **meter** is `segmentMeter({turnsBound, bytesBound})`'s plain object. An **outcome** is exactly one of `{result}`, `{silent: {detail}}`, `{refused: {status, type, message}}`.
 
-- **R1** (was `agent-worker` R40, amended; K1502) A run's model turns run under the account reference of the member whose act started the run (a standing question's, its author's), with the skill pack the run names, within the segment bound. The model a turn asks for is the one `MODEL_FOR_MODE` names for the run's mode, set by measurement (M-Q1, M-Q9); no request body or judgement chooses it, and changing an entry is a reviewed edit (as `agent-worker` R42).
+- **R1** (was `agent-worker` R40, amended; K1502, K1755) A run's model turns run under the account reference that serves the act of the member who started the run (a standing question's, its author's): that member's own, or the group's API key, as `credentials.accountFor` answers it for that act (its R35), with the skill pack the run names, within the segment bound. The model a turn asks for is the one `MODEL_FOR_MODE` names for the run's mode, set by measurement (M-Q1, M-Q9); no request body or judgement chooses it, and changing an entry is a reviewed edit (as `agent-worker` R42). *(not yet met: T34)*
 
 **modelCall(reference, request, {runner?}) → outcome** (one turn)
 - **R2** (K1429, K1502) The provider follows the reference's `kind`: `apikey` sends the turn to the Messages API at `MODEL_ENDPOINT`, the key in the `x-api-key` header and nowhere else; `subscription` sends it to `agent-runner` through the Container Durable Object binding passed as `runner`, the token in the request's credential field and nowhere else. A reference that is absent, of another `kind`, or with an empty secret answers `refused` with type `ACCOUNT_REFERENCE_UNUSABLE`, and a `subscription` reference with no `runner` answers `refused` with type `RUNNER_NOT_CONFIGURED`; neither makes any call.
@@ -40,15 +40,16 @@ Terms. An **account reference** is `{kind: "apikey", key}` or `{kind: "subscript
 ### Invariants
 
 - **R8** (`agent-worker` R36; K1429, K1502) A reference's secret is used for the one call it came with and kept nowhere: no module state, log, answer, outcome, `usage` or error carries it. A test passes a sentinel secret and finds it in no returned value and no console output, and a second call without a reference makes no call.
-- **R9** (K1502: the group's copy binds no Claude credential) It reads no environment variable or binding for a credential: with a key present in `env` (`INSTANCE_CLAUDE_TOKEN` included) and no reference, every call is refused by R2 and nothing is sent.
+- **R9** (K1502, K1755: the group's copy binds no Claude credential in its environment; the group's API key lives in `credentials`' sealed table and arrives per call as a reference, R11) It reads no environment variable or binding for a credential: with a key present in `env` (`INSTANCE_CLAUDE_TOKEN` included) and no reference, every call is refused by R2 and nothing is sent. *(not yet met: T34)*
 - **R10** No place is named in its behaviour or outward text, and it reaches no address but `MODEL_ENDPOINT` and the `runner` binding.
+- **R11** (K1755) A reference of `level` `group` is the group's API key: it is taken only with `kind` `apikey` and sent exactly as a member's `apikey` reference is (R2, R4, R5), kept as R8 keeps any; a `group` reference of any other `kind`, or a `level` present and other than `member` or `group`, answers `refused` with type `ACCOUNT_REFERENCE_UNUSABLE` and makes no call. *(not yet met: T34)*
 
 ### Satisfies
 
 - `docs/architecture/BIO_Capability_Ladders_v0_1.md` §2 QUESTIONS (the member's own reference; `usage` recorded from stage 0), §2 "Cross-cutting rulings" (the member's own account), §9.4 (Q0: the subscription path through the Agent SDK, the API-key path through the Messages API, `cache_control`, `usage`; the cost paragraph), §10 "A module fits in one reading".
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6 (K1502's re-scope).
 - `docs/development/INVESTIGATIVE-SESSION.md` §14a (a separate process through the same interface).
-- DEC-55; K1429, K1450, K1502, K1503; D-611.
+- DEC-55; K1429, K1450, K1502, K1503, K1755; D-611.
 
 ### Suggestions
 

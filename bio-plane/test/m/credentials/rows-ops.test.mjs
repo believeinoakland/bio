@@ -81,24 +81,27 @@ test("R12 R15 the AI credential routes: `who` and `secretSha` from the query ove
   assert.equal(w.ops("tokenId=t1&who=ann").aicredentialrevoke().already, false);
   assert.deepEqual(Object.keys(w.ops()).sort(), ["accountreference", "accountreferenceremove", "accountreferenceset",
     "accountswitchset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
-    "bootstrap", "claim", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "session", "setpassword",
-    "signeradd", "signerlist", "signerset"]);
+    "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
+    "groupkeyswitch", "groupswitchset", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "session",
+    "setpassword", "signeradd", "signerlist", "signerset"]);
 });
 
-test("R22 R23 R24 R25 R26 R27 R28 R29 the T33-20 rows: each id once, across every family, each where naming its one site, frozen", async () => {
+test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 the T33-20 and T34 rows: each id once, across every family, each where naming its one site, frozen; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
   const { ACCOUNT_CHECKS, KEYED_SERVICE_CHECKS } = await import("../../../src/credentials/index.mjs");
   const want = {
     MACHINE_CANNOT_HOLD_ACCOUNT: ["C-29.13", W("#accountBar", "is-account-own-act")],
     NOT_YOUR_ACCOUNT: ["C-29.14", W("#notYours", "is-account-theirs")],
     ACCOUNT_MEMBER_NOT_ACTIVE: ["C-29.15", W("#accountBar", "is-account-own-act")],
-    ACCOUNT_LEVEL_MEMBER_ONLY: ["C-29.16", W("#accountBar", "is-account-own-act")],
     UNKNOWN_ACCOUNT_KIND: ["C-29.17", W("accountReferenceSet", "is-account-kind")],
-    NO_SECRET: ["C-29.19", W("accountReferenceSet", "is-account-kind")],
+    NO_SECRET: ["C-29.19", W("#noSecret", "is-secret-given")],
     NO_ACCOUNT: ["C-29.20", W("#noAccount", "is-account-held")],
-    UNKNOWN_SWITCH: ["C-29.21", W("accountSwitchSet", "is-account-switch")],
+    UNKNOWN_SWITCH: ["C-29.21", W("#switchName", "is-account-switch")],
     ACCOUNT_SEAL_UNAVAILABLE: ["C-29.22", W("#sealRefusal", "is-seal-bound")],
     GRANT_OP_REFUSED: ["C-29.23", W("aiGrantAdmit", "is-grant-op")],
-    GRANT_NOT_HELD: ["C-29.24", W("aiGrantAdmit", "is-grant-op")],
+    GRANT_NOT_HELD: ["C-29.24", W("#grantNotHeld", "is-grant-held")],
+    STANDING_SWITCH_OFF: ["C-29.25", W("aiGrantMintStanding", "is-standing-grant")],
+    NO_QUESTION: ["C-29.26", W("aiGrantMintStanding", "is-standing-grant")],
+    GROUP_KEY_NOTICE_DUE: ["C-29.27", W("#noticeDue", "is-group-key-notice-seen")],
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
     KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
     KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],
@@ -117,6 +120,28 @@ test("R22 R23 R24 R25 R26 R27 R28 R29 the T33-20 rows: each id once, across ever
   const ids = [SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, CREDENTIALS_CHECKS, ...fresh].flatMap((f) => Object.values(f).map((r) => r.check));
   assert.equal(new Set(ids).size, ids.length, "one row per id across the module");
   assert.ok(!ids.includes("C-29.18"), "C-29.18, the held-back kind's row, is retired and not reused (K1547)");
+  assert.ok(!ids.includes("C-29.16") && !("ACCOUNT_LEVEL_MEMBER_ONLY" in ACCOUNT_CHECKS), "C-29.16 retired with R26 (K1756), not reused");
+});
+
+test("R33 R34 R36 R37 the group key's routes: `by` and `viewer` from the query over the body; the key from the body only and never answered; the notice for the session's own member", async () => {
+  const w = await world().group("ann");
+  assert.equal((await w.ops("by=ann", { key: "sk-route-group", by: "admin" }).groupkeyset()).reason, "NOT_AN_ADMIN",
+    "the stamp wins over the body's `by`");
+  const set = await w.ops("by=second&key=sk-from-query", { key: "sk-route-group" }).groupkeyset();
+  assert.deepEqual(Object.keys(set).sort(), ["ok", "set_at"]);
+  assert.deepEqual(w.ops("by=admin", { on: true, by: "ann" }).groupkeyswitch(), { ok: true, on: true });
+  assert.deepEqual(w.ops("by=admin", { switch: "standing", on: true }).groupswitchset(), { ok: true, switch: "standing", on: true });
+  const full = w.ops("viewer=second").groupkeystate();
+  assert.deepEqual([full.held, full.on, full.by, full.standing], [true, true, "second", true]);
+  assert.deepEqual(w.ops("viewer=ann").groupkeystate(), { ok: true, on: true });
+  assert.equal(w.ops("viewer=ann").groupkeynotice().due, true);
+  assert.equal(w.ops("by=ann", { member: "second" }).groupkeynoticeseen().ok, true, "recorded for the stamped member, never the body's");
+  assert.deepEqual([w.ops("viewer=ann").groupkeynotice().due, w.ops("viewer=second").groupkeynotice().due], [false, true]);
+  const served = await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } });
+  assert.equal(served.key, "sk-route-group", "the body's key, never the query's");
+  assert.deepEqual(w.ops("by=ann", { by: "admin" }).groupkeyremove().reason, "NOT_AN_ADMIN");
+  assert.deepEqual(w.ops("by=admin").groupkeyremove(), { ok: true, removed: true });
+  assert.ok(!JSON.stringify([set, full]).includes("sk-route-group"));
 });
 
 test("R22 R23 R25 R27 R29 the T33-20 routes: `by`, `viewer`, `member` and `session` from the query over the body; the secret from the body only; never answered back", async () => {

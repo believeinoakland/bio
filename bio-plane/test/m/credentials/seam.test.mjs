@@ -108,10 +108,12 @@ test("R18 every credentials table is declared exempt from purge, and a whole-sto
   assert.equal((await w.c.keyedServiceSet({ service: "courtlistener", key: "cl-key", by: "second" })).ok, true);
   const sess = w.row(`SELECT token FROM sessions WHERE role='member:second'`).token;
   assert.equal((await w.c.aiGrantMint({ member: "second", by: "second", session: sess })).ok, true);
+  assert.equal((await w.c.groupKeySet({ key: "sk-group", by: "second" })).ok, true);
+  assert.equal(w.c.groupKeyNoticeSeen({ member: "second", by: "second" }).ok, true);
   const count = () => Object.fromEntries(CREDENTIALS_EXEMPT_TABLES.map((t) => [t, w.row(`SELECT COUNT(*) AS n FROM ${t}`).n]));
   const before = count();
   assert.deepEqual(before, { credentials: 2, sessions: 1, bootstrap: 1, signers: 1, ai_credentials: 1,
-    account_references: 1, keyed_services: 1, ai_grants: 1 });
+    account_references: 1, keyed_services: 1, ai_grants: 1, group_key: 1, group_key_acts: 1, group_key_notices: 1 });
   assert.equal(w.rc.purge({}).ok, true);
   assert.deepEqual(count(), before, "a whole-store purge clears none of them");
   assert.equal(w.rc.purge({ bundleId: "second" }).ok, true);
@@ -119,7 +121,7 @@ test("R18 every credentials table is declared exempt from purge, and a whole-sto
   assert.equal((await w.c.login({ role: "member:second", password: PASSWORD("second") })).ok, true);
 });
 
-test("R18 R30 the declaration: every table declared once by credentials through declareTable, with its classes; any refusal is thrown", () => {
+test("R18 R30 R34 the declaration: every table declared once by credentials through declareTable, with its classes; any refusal is thrown", () => {
   const w = world();
   const mine = [...w.core.declared.entries()].filter(([, d]) => d.module === "credentials");
   assert.deepEqual(mine.map(([n]) => n).sort(), [...CREDENTIALS_EXEMPT_TABLES].sort(), "every table this module owns, and only those");
@@ -128,9 +130,13 @@ test("R18 R30 the declaration: every table declared once by credentials through 
     assert.deepEqual([cls[t].purge, cls[t].expunge, cls[t].derive, cls[t].version_chain], ["exempt", "none", "stored", false], t);
   /* R30: account references, keyed-service keys, password hashes, sessions and AI credentials (and the ask grants) never
      exported; account references seen by their owner alone */
-  for (const t of ["account_references", "keyed_services", "credentials", "sessions", "ai_credentials", "ai_grants"])
+  for (const t of ["account_references", "keyed_services", "credentials", "sessions", "ai_credentials", "ai_grants",
+                   "group_key", "group_key_acts", "group_key_notices"])
     assert.equal(cls[t].export, "never", t);
   assert.equal(cls.account_references.sight, "owner");
+  /* R34: the group key never exported; record-core's R21 offers no administrator sight, so its tables are the group's
+     and the key is answered by no read (K1760) */
+  assert.deepEqual([cls.group_key.export, cls.group_key.sight], ["never", "group"]);
   assert.deepEqual(CREDENTIALS_TABLES.map((t) => t.name), CREDENTIALS_EXEMPT_TABLES);
   /* once */
   assert.equal(w.c.declareTables(), false, "once");
