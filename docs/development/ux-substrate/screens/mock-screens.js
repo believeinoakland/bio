@@ -8,7 +8,7 @@ const SCR = {};
 /* ---------------- the group's copy: installing, setting up, joining ---------------- */
 SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
   <div class="mk-setuphead"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span></div>
-  ${h1('Install your group\'s copy', 'Free software for civic groups. Your group\'s copy runs in your own Cloudflare account; nobody else holds your work.')}
+  ${h1('Install Civicsmith for your group', 'Free software for civic groups. It runs in a Cloudflare account your group controls; nobody else holds your group\'s work. You will become its first administrator in the next part.')}
   ${sec('Before you start', `<ul class="mk-list"><li>A Cloudflare account. The free plan works.</li><li>About twenty minutes.</li><li>Workers Paid ($5 a month, with a payment method) adds recomputing members' spreadsheets and signing in with a Claude subscription. You can add it later.</li><li>No Claude account is needed to set up.</li></ul>`)}
   ${sec('Your group\'s short name', `${field('mk-slug', 'Short name', 'lakeshore-tenants', { help: 'Lower-case letters, digits and hyphens. It appears in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.' })}
    <div class="cs-dialog" style="max-width:none;box-shadow:none"><b>“lakeshore-tenants” is permanent</b><div class="ends">Your short name is in every address of your group's copy and beside every signature your members make. It can never be changed, by you or anyone, without starting a new copy.</div>${acts(btn('bootstrap', 'Install with this short name', { tone: 'primary' }))}</div>`)}
@@ -16,7 +16,7 @@ SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
 
 SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `
   <div class="mk-setuphead"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span><span class="muted">lakeshore-tenants</span></div>
-  ${h1('Set up your group\'s copy', 'Seven short parts. You can leave and come back; nothing is lost.')}
+  ${h1('Become your group\'s first administrator', 'You are not a member of anything yet. Claim what you just installed with the one-time password and it becomes yours to run; then name your group and choose its places. Seven short parts; you can leave and come back.')}
   <ol class="mk-steps"><li class="done">Claim</li><li class="done">Name</li><li aria-current="step">Places</li><li>Offices</li><li>People</li><li>The assistant</li><li>Administrators</li></ol>
   ${sec('Claim your copy', `${field('mk-otp', 'One-time password', '••••••••••••', { help: 'From the installer. It works once.' })}${acts(btn('claim', 'Claim this copy', { tone: 'primary' }))}`)}
   ${sec('Your group', `${field('mk-gname', 'Group name', 'Lakeshore Tenants')}<div class="mk-logo">${I('add')} Add your logo (optional)</div>${acts(btn('groupnameset', 'Save the name'))}

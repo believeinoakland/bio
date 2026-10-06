@@ -33,7 +33,7 @@
   },
   {
    "id": "setup",
-   "name": "Set up your group's copy",
+   "name": "Become your group's first administrator",
    "frame": "setup",
    "purpose": "The founder claims the copy, names the group, reviews offices and seats, offers the assistant and records the hosting account.",
    "acts": [

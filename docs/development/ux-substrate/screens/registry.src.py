@@ -10,7 +10,7 @@ def screen(id, name, frame, purpose, acts, journeys):
 # --- the group's copy: setting up, joining, accounts
 screen('install', 'Install Civicsmith', 'setup', 'The installer page: what is needed, the short name, installing the signed release into the group\'s own account.',
   [('bootstrap','Install with this short name'),('selftest','Let it test itself')], [1])
-screen('setup', 'Set up your group\'s copy', 'setup', 'The founder claims the copy, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
+screen('setup', 'Become your group\'s first administrator', 'setup', 'The founder claims the copy, names the group, reviews offices and seats, offers the assistant and records the hosting account.',
   [('claim','Claim with the one-time password'),('groupnameset','Name the group'),('groupdomainset','Verify the web address'),('profilesset','Choose places and languages'),
    ('officesseed','Review offices and seats'),('assistantset','Choose how members reach the assistant'),('groupkeyset','Hold the group\'s API key'),('groupkeyswitch','Switch the group\'s key on or off'),('aicopyceilingset','Set the copy\'s daily limit'),('courtnoticeset','Choose whether members are told what a court can reach'),
    ('hostingaccess','Record who holds the hosting account'),('memberadd','Invite a member or a second administrator')], [1])
