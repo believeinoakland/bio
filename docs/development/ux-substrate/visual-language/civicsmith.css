@@ -480,3 +480,6 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 .cs-tip[hidden] { display: none; }
 [data-tip] { cursor: help; } [data-tip]:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
 .cs-card { text-decoration: underline dotted var(--c-rule-strong); text-underline-offset: 3px; cursor: pointer; }
+.cs-tip .why { display: block; margin-top: 4px; }
+.cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; }
+.cs-ref:hover, .cs-ref:focus-visible { color: var(--c-accent-strong); }

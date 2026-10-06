@@ -696,6 +696,15 @@
      "modules": [
       "action-clocks"
      ]
+    },
+    {
+     "op": "promote",
+     "label": "Open a question from a hint",
+     "status": "declared",
+     "modules": [
+      "control-plane",
+      "promotion"
+     ]
     }
    ],
    "journeys": [

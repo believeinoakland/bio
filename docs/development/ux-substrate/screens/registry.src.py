@@ -40,7 +40,7 @@ screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, d
 # --- daily work
 screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by case (DEC-110, DEC-131).',
   [('taskresolve','Act on an item'),('taskforward','Forward to a member'),('proposedispose','Dismiss with a reason'),('queuesnooze','Snooze to a date'),('queuemute','Mute a kind'),
-   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder')], [19,23])
+   ('adoptversion','Adopt the newer version'),('keepversion','Keep the version you cited'),('reminderanswer','Answer a reminder'),('promote','Open a question from a hint')], [19,23])
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
   [('search','Search'),('select','Hold these together'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('countask','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',

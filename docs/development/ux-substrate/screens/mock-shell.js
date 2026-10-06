@@ -70,12 +70,60 @@ const PATH = {
 };
 const pathOf = (id, s) => PATH[id] && !(id === 'answers') ? PATH[id] : id === 'answers' ? ['Find', s.title] : [(RAIL.find(r => r[0] === s.rail) || ['', 'Settings'])[1], s.title];
 const pathNav = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map((x, i) => i === list.length - 1 ? `<b aria-current="page">${esc(x)}</b>` : `<a href="#" onclick="return false">${esc(x)}</a>`).join(' <i>›</i> ')}</nav>`;
+
+// DEC-160, widened on Bob's direction (6 October): the references on each screen, each with what it is and why it matters
+// on that screen. Hover or focus shows the card; a click opens it (null: a card only). Attached as the screen draws.
+const tipOf = (what, why, go) => `${what}${why ? `<span class=why><b>Here:</b> ${why}</span>` : ''}${go ? '<span class=more>Click to open it.</span>' : ''}`;
+const AQ = 'Is the city repairing reported potholes within seven days?';
+const REFS = {
+  home: [['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · project · 3 questions · Edition 2 published 14 November', '2 items in it wait on you this week.'],
+         ['Pothole repairs', 'project', '<b>Pothole repairs</b> · project · 2 questions · its main question is short on connection', 'A better link between reports and work orders would bring it to the bar.'],
+         ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · project · a money trail across FY2022 to FY2024', 'Ana\'s question there waits for the FY2024–25 budget.']],
+  members: [['Rosa', null, '<b>Rosa</b> · administrator · cover name R. Medina · joined 1 October', 'The group\'s only administrator: the group depends on her and the hosting account.'],
+            ['Dev', null, '<b>Dev</b> · member · owner of The Coliseum lease · joined 2 October', 'Signs the group\'s cases for that project.'],
+            ['Ana', null, '<b>Ana</b> · member · joined 3 October', 'Has a question waiting on a held document.'],
+            ['Teo', null, '<b>Teo</b> · member · reporter at the Bay Courier · declared expertise: journalism', 'Runs the story that cites Edition 2.']],
+  queue: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation · 812 of 903 · computed from the city\'s work orders', 'One of its inputs changed: check whether the count still holds.'],
+          ['pothole work orders', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · captured from the city\'s open-data portal, capture A', 'The input that changed.']],
+  finder: [['Public Works work orders, FY2025 (CSV)', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture A', 'The city\'s own record of every pothole report: what your search matched most.'],
+           ['Pothole repair policy, Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · Public Works · capture B · current version', 'Sets the seven-day standard your question tests the city against.'],
+           ['Report to council: street maintenance performance', 'document', '<b>Report to council: street maintenance performance</b> · 2026 · capture B', 'Where the city claims 90% of potholes were filled.']],
+  held: [['City budget FY2024–25, adopted (PDF)', 'document', '<b>City budget FY2024–25, adopted</b> · 412 pages · captured 2 October · not yet released', 'Held until a member vouches for it; Ana\'s question is waiting for it.'],
+         ['Council minutes, 14 May 2024', 'document', '<b>Council minutes, 14 May 2024</b> · captured 28 September · not yet released', 'Records the vote on the FY2024 transfers.'],
+         ['Lease amendment, March 2024', 'document', '<b>Lease amendment, March 2024</b> · the city posted a newer version on 3 October', 'Can\'t be released here: part of it is withheld by its source.']],
+  project: [[AQ, 'question', `<b>${AQ}</b> · question · capture B, connection C · short on connection`, 'The project\'s main question, and the one closest to the bar.'],
+            ['Does "closed" in the city\'s records mean "repaired"?', 'question', '<b>Does “closed” mean “repaired”?</b> · question · unrated · opened by Mai', 'If the answer is no, the main question\'s count overstates repairs.']],
+  question: [['812 of 903 reports closed within 7 days', 'calculation', '<b>Reports closed within seven days, FY2025</b> · a calculation from the city\'s work orders', 'Supports the question, using the city\'s own count of “closed”.']],
+  answers: [['Public Works work orders, FY2025', 'document', '<b>Public Works work orders, FY2025</b> · CSV, 903 rows · capture A', 'The answer counts its rows.']],
+  timeline: [['City Clerk releases schedules', 'action', '<b>The City Clerk released the rent schedules</b> · 18 September · answering the group\'s request', 'The group\'s own act and the office\'s reply, in the second lane.']],
+  explore: [['J. Ortega', 'person', '<b>J. Ortega</b> · Council District 3 since 2023, from Legistar', 'Where this chain starts.'],
+            ['Bayline Properties', 'money', '<b>Bayline Properties</b> · paid $1.2M in FY2024 under the Coliseum lease', 'Where the money in this chain ends up.']],
+  standard: [['Repair reported potholes within seven calendar days', 'document', '<b>Administrative Instruction 4.12</b>, passage 3 · Public Works · capture B', 'The words this standard is held from.']],
+  plan: [['Records request: inspection logs', 'action', '<b>Records request: inspection logs</b> · sent to the City Clerk 4 October · reply due 14 October', 'The plan\'s first step; the next one waits on its reply.'],
+         ['Complaint to the city auditor', 'action', '<b>Complaint to the city auditor</b> · an option, not started', 'Becomes ready if the inspection logs show reports closed without repair.']],
+  'start-send': [['Asha Rao', 'person', '<b>Asha Rao</b> · City Clerk since March 2021, from the city\'s roster', 'Holds the office this request goes to, today.']],
+  matter: [['The 2024 rent adjustment, made without a council vote', 'question', '<b>The 2024 rent adjustment, made without a council vote</b> · finding of Edition 2 · meets the bar', 'What this matter is about.']],
+  'review-copy': [['Prof. N. Iyer', null, '<b>Prof. N. Iyer</b> · housing-law professor · an outside reader named by Dev · can read until 20 November', 'Reviewing Edition 2 before it is published.']],
+  imported: [['Port lease revenue fell short of the adopted budget in three years', 'question', '<b>Port lease revenue fell short of the adopted budget in three years</b> · West Oakland Neighbors\' finding · recreated here', 'Recreated from their case; it counts for your group only once a member accepts it.']],
+};
+function attachRefs(id, html) {
+  for (const [text, go, what, why] of (REFS[id] || [])) {
+    const needle = '>' + text + '<'; let i = html.indexOf(needle);
+    while (i >= 0) { const open = html.lastIndexOf('<', i); if (!/^<a[\s>]/.test(html.slice(open, open + 3))) break; i = html.indexOf(needle, i + 1); }
+    if (i < 0) continue;
+    const tip = esc(tipOf(what, why, go));
+    const a = go ? `<a href="#" class="cs-ref" data-goto="${go}" data-tip="${tip}">${text}</a>` : `<span class="cs-card" tabindex="0" data-tip="${tip}">${text}</span>`;
+    html = html.slice(0, i + 1) + a + html.slice(i + 1 + text.length);
+  }
+  return html;
+}
 // DEC-155: the rail's width, the member's own (184px by default; 64px is icons only); kept per member and device.
 const railW = () => window.CS_RAILW || 184;
 function render(screenId, c) {
   WRITE_ON = !!c.ai;
   const s = SCR[screenId](c);
   WRITE_ON = false;
+  s.main = attachRefs(screenId, s.main);
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
   if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain">${pathNav(pathOf(screenId, s))}${s.main}</main>
