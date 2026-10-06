@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement } from "./fixture.mjs";
+import { kinds, phases, stages, bases } from "../../../src/money/index.mjs";
 import { compile, savedForm, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, SORTABLE, DEFAULT_FACETS }
   from "../../../src/query.mjs";
 
@@ -151,22 +152,15 @@ function t33World() {
   }
   return w;
 }
-/* `money`, injected until it merges (K1563 (1)), coded to its requirements: R17's four closed lists, frozen. At
-   money's merge this is re-pointed at `bio-plane/src/money/index.mjs`. */
-const MONEY = {
-  kinds: () => Object.freeze(["revenue", "expenditure", "transfer", "allocation", "payment", "contribution", "gift",
-    "income", "behested", "settlement", "debt", "balance", "fee charged", "other"]),
-  phases: () => Object.freeze(["proposed", "adopted", "adjusted", "actual"]),
-  stages: () => Object.freeze(["encumbered", "incurred", "paid", "assessed", "collected"]),
-  bases: () => Object.freeze(["budgetary", "cash", "modified accrual", "accrual", "undetermined"]),
-};
+/* `money`'s own closed lists, read at its interface (its R17). */
+const MONEY = { kinds, phases, stages, bases };
 const runIds = (w, opts, second) => sorted(w.all(compile({ viewer: V, limit: 500, ...opts }, second).statements.page())
   .map((r) => r.bundle_id));
 
 test("R28 R3 the T33 fields: each an equality on the value typed, lower-cased where its owner's words are, occurred a time field, each read through its owner's relation", () => {
   assert.deepEqual(Object.keys(FIELDS).slice(-T33.length), T33);
   const w = t33World();
-  const second = { fields: REL, money: MONEY };
+  const second = { fields: REL };
   for (const f of T33) {
     const [a, b] = VALUES[f];
     assert.deepEqual(runIds(w, { q: `${f}:"${a}"` }, second), ["B1", "B2"], `${f}:${a}`);
@@ -272,7 +266,7 @@ test("R30 savedForm: the form a standing question keeps, or a refusal when it is
 
 test("R28 a money field's word outside money's closed list is dropped with a warning naming the list, and every word of the list compiles", () => {
   const w = t33World();
-  const second = { fields: REL, money: MONEY };
+  const second = { fields: REL };
   for (const [f, list] of [["kind", "kinds"], ["phase", "phases"], ["stage", "stages"], ["basis", "bases"]]) {
     assert.equal(FIELDS[f].words, list);
     for (const word of MONEY[list]()) {

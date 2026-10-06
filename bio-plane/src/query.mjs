@@ -1049,6 +1049,12 @@ import { STEP_KINDS, CHAIN_KIND_MIXED, MACHINE_READ_KINDS } from "./textchain.mj
    unchanged. This module interpolates the ONE compiled predicate into every statement
    and mints none of its own (R8, R21). */
 import { viewerPredicate, GATE_MARK } from "./membership/index.mjs";
+/* R28 (T33-39, K1563): the closed words of the money fields, `money`'s own lists, the ones its `kinds()`,
+   `phases()`, `stages()` and `bases()` answer (its R17). Read from `money`'s vocabulary file, which imports
+   nothing, rather than its index: the index registers money's connection owner at load and opens the store's
+   modules, and this compiler is pure (R20). */
+import { MONEY_KINDS, PHASES, STAGES, BASES } from "./money/vocab.mjs";
+const MONEY_WORDS = { kinds: MONEY_KINDS, phases: PHASES, stages: STAGES, bases: BASES };
 /* R27 (T33-39): a date on a time field is a local day in the caller's zone, its bounds `civil-time`'s. */
 import { isCalendarDate, dayRange } from "./civil-time/index.mjs";
 export { viewerPredicate, GATE_MARK };
@@ -1752,13 +1758,10 @@ function available(name, f, ctx) {
 
 /* R28: a money field's value is one of `money`'s closed words (its R17), read from `money` and never listed here
    (R22). A word outside the list is dropped, the warning naming the list; presence (`kind:`, `kind:*`) asks no
-   word. INJECTED UNTIL `money` MERGES (K1563 (1)): `ctx.money` is the module the caller passes; at money's merge it
-   becomes money's own index, imported. */
+   word. */
 function closedWord(name, f, raw, ctx) {
   if (raw === "" || raw === "*") return true;
-  const list = typeof ctx.money?.[f.words] === "function" ? ctx.money[f.words]() : null;
-  if (!Array.isArray(list)) return true;
-  const words = list.map((w) => String(w).toLowerCase());
+  const words = MONEY_WORDS[f.words].map((w) => String(w).toLowerCase());
   if (words.includes(raw.toLowerCase())) return true;
   drop(ctx, `${name}: ${JSON.stringify(raw)} is not one of money's ${f.words} (${words.join(", ")}); dropped`);
   return false;
@@ -2232,8 +2235,7 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      to the row projection's MATCH and `snippet()`, and to nothing else. */
   /* `drops` holds the warnings that DROPPED a term (R30); `zone` is the caller's, for R27's local days. */
   const ctx = { warnings: [], drops: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [],
-                zone: typeof zone === "string" ? zone : null, frs: null,
-                money: relation && typeof relation === "object" ? relation.money ?? null : null };
+                zone: typeof zone === "string" ? zone : null, frs: null };
   /* R25: the relation the projection is read through, `compile(query, {projection: {table, key}})`. */
   const rel = relationOf(relation, ctx.warnings);
   /* A bundle's row in every statement: `bundles b`, and the projection's relation `bp` beside it. */
