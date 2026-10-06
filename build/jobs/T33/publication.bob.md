@@ -16,3 +16,7 @@ Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fle
 ## B2 · ANSWER · re J1
 
 K1632: (1) accepted: docket registers `courtOrderOf` through `registerOrderSource`, and with none, or a null answer, the stamp is refused STAMP_NO_ORDER. (2) accepted: a list or `all`, read at the stamp. (3) accepted: `editionTimeline`, and R53 carries `timeline`. (4) build nothing: workbooks R16 now names case-authoring. NEW, from PUBLIC-READ #11: R22 is amended so that a case edition's commit also commits each `calculations:` row's input bytes at their SHA-256, as a material's (public-read R23). R22 and R62 are amended on tranche/T33; merge it. Your own technical choices stand.
+
+## B3 · CHANGE
+
+K1634, from CASE-TENSIONS #1 J1: R61 is amended on tranche/T33 (merge it). Your provider to case-tensions has seven doors: pins, preparations, caseDocument, members, latestRatified, signedDocumentsNaming and reauthorSection. Each answers exactly the rows the moved code reads today; their shapes are in case-tensions' J1, on its branch `build/jobs/T33/case-tensions.md`. In your deletion commit, drop case_revision_flags, observation_attributions and capture_attributions from PUBLICATION_TABLES, and drop the caseMember fact and revision-step registrations. case-tensions creates and declares them.
