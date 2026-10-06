@@ -1,6 +1,5 @@
-/* case-tensions over the modules it uses, each the real one (record-core, membership, credentials, promotion,
-   provenance), on a real SQLite database (node:sqlite) shaped as workerd's storage (a cursor, never an array; K316),
-   standing in for a Durable Object's storage. Never publication's fixture, which is later in the order (P4;
+/* case-tensions over the modules it uses, each the real one (record-core, membership, promotion, provenance), on a
+   real SQLite database (node:sqlite) shaped as workerd's storage (a cursor, never an array; K316), standing in for a Durable Object's storage. Never publication's fixture, which is later in the order (P4;
    case-carriage's precedent): `publication`'s provider (K1505 (3), its R61) is a stand-in over in-memory case editions,
    each door answering exactly the shape the module's header names, its splice spliced as publication R21 splices
    (through case-grammar's section locators). What a later or other module answers is a stand-in the test controls:
@@ -11,7 +10,6 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { SECTIONS, sourceBlockLines, materialsLines, materialAttestationLines } from "../../../src/case-grammar/index.mjs";
@@ -136,8 +134,6 @@ export function world({ group = "test-group", provider = true, contradiction = n
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
-  const credentials = credentialsOf(host, { record, membership });
-  credentials.migrate();
   const promotion = promotionOf(host, { record, membership, now: () => clock.now });
   const groupRef = { value: group };
   promotion.registerFact("producingGroup", "instance-setup", () => groupRef.value);
@@ -165,7 +161,7 @@ export function world({ group = "test-group", provider = true, contradiction = n
   }
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, prov, clock, groupRef, reach, actors, accounts, pub, ct,
+    st, host, record, membership, promotion, prov, clock, groupRef, reach, actors, accounts, pub, ct,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,

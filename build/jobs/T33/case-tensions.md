@@ -2,6 +2,20 @@
 
 **Status** · session_01PkmYzi41Kn898ru17xUKZN · depth 2 · WORKING · handled B2
 
+## Work (T33-62)
+
+**For `modules.json` (BOB writes at merge).** `paths` `bio-plane/src/case-tensions/`; `tests` `bio-plane/test/m/case-tensions/`; `uses` record-grammar, record-core, membership, promotion, provenance, basis-versions, contradiction, capture, case-grammar (dropped from the registered row: signatures, connections, inquiry, reevaluation, sources, credentials, corpus-export, accepted-work, case-carriage).
+
+**Applied.** T33-62: the module created by copy from `publication` (`index.mjs` lines as J1 names them; the three tables from `schema.mjs`; the C-92 rows from `checks.mjs`, `where` re-pointed), no change of meaning, on the seam B2/K1634 accepted: `registerPublicationProvider` with the seven doors (`PUBLICATION_DOORS`); with no provider R1 is `undetermined` (the fact `caseMember` throws, so promotion answers FACT_FAILED), R2 raises nothing, R4 is `undetermined`, R5/R7 refuse C-92.7/C-92.4 before writing. Tables declared with `declareTable` (R10) at the classes `declarePurge` gave them. Registrations: fact `caseMember`, step `case-tensions`. Exports: `caseTensionsOf`, `CaseTensions`, `caseTensionsOps` (`caseflags`, `attribute`), `caseTensionsOwns`, `ATTRIBUTION_ACT_CHECKS`, `rowOf`, `CASE_TENSIONS_SCHEMA`, `CASE_TENSIONS_TABLES`, `migrateCaseTensions`, `PUBLICATION_DOORS`, `CASE_FLAGS_LIMIT`, `CASE_TENSIONS_MAX`, `ATTRIBUTION_REASON_MAX`, `STATED_FOR_DOCS`. Improvements in passing: `caseFlags` uses the one `pageOf` clamp (its own copy of the same formula dropped); the splice's answer is one helper (`#splice`) for both re-authorings.
+
+**Deferred.** Nothing.
+
+**Other modules (for BOB).** (a) `publication` (T33-63): delete the copy; drop `case_revision_flags`, `observation_attributions`, `capture_attributions` from `PUBLICATION_TABLES`, the `caseMember` fact and the `publication` step in the commit that creates `caseTensionsOf(host, …)` and registers the provider (else TABLE_DECLARED / a refused fact); re-point `caseDocumentFacts`' `attributionFacts` and the commit's `dischargeCaseFlags`; plane spreads `caseTensionsOps`. (b) `test/system/row-census.test.mjs`: C-92.1–.9, .13 "held 2 times" until T33-63 deletes publication's rows (red 4), and their `where` moved (awaiting promotion's T34 stamp).
+
+**Tests and checks.** `node --test bio-plane/test/m/case-tensions/`: 23 pass, 0 fail (relation 7, tensions 4, attribution 8, invariants 4). `bio-plane/test/m/publication/`: 109 pass, 0 fail (untouched). No layer tests in the manifest. From the process repository, with the row above applied locally and restored: format 0 failures; architecture 8 product files, 30 imports, 0 failures; coverage 11 of 11; ownership 9 files, 0 failures.
+
+Size (session_01PkmYzi41Kn898ru17xUKZN): test runs 12, module lines 999
+
 ## J1 · QUESTION
 
 **Seam confirmed against the code** (`bio-plane/src/publication/index.mjs` on `tranche/T33` @ f3c5790): R4 `caseTensions` + `#caseTensionsOne` (1021–1105) with `CASE_TENSIONS_MAX`; R1 `caseRelation` + `#caseClaimInBytes` (1180–1300); R2 `flagCasesOnRevision`, `dischargeCaseFlags` (1302–1429); R3 `caseFlags` (1431–1516) with `CASE_FLAGS_LIMIT`; R5–R7 `observationsNamingAuthor` … `#reauthorCaptureAttestation` (1748–2082) with `ATTRIBUTION_REASON_MAX`; the C-92 rows (`checks.mjs` `ATTRIBUTION_ACT_CHECKS`); the tables `case_revision_flags`, `observation_attributions` (with its additive `reason`), `capture_attributions` (`schema.mjs` 467–590); the ops `caseflags`, `attribute`; and the registrations (fact `caseMember`, the revision step). Code: `bio-plane/src/case-tensions/` (index.mjs, schema.mjs, checks.mjs); tests `bio-plane/test/m/case-tensions/`. Factory `caseTensionsOf(host, deps)`. Publication is not touched (T33-63 deletes and re-points).
