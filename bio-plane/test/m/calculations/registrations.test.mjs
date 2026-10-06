@@ -25,10 +25,10 @@ test("R19 at start it registers with duties.registerOccurrenceEvidence; asked {d
   assert.equal(got[0].state, "current");
   assert.deepEqual(await ask({ duty: "DUT-2026-0001", occurrence: "occ-2" }), [], "another occurrence");
   /* stale */
-  const f = w.money.add({ amount: "3" });
+  const f = w.fact({ amount: "3" });
   const m = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", money: [f] }], recipe: R([{ op: "sum", from: "t", field: "amount", as: "s" }], "s"), evidences: [{ duty: "DUT-2026-0002", occurrence: "o" }], by: V("bob") });
   await w.c.accept({ calcId: m.calc_id, by: V("carol") });
-  w.money.change(f, "adjusted");
+  w.fact({ adjusts: f, amount: "1", sign: "-" });
   assert.equal((await ask({ duty: "DUT-2026-0002", occurrence: "o" }))[0].state, "stale");
   /* withheld from a viewer who may not see an input */
   const P = w.project("Closed", "alice");

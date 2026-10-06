@@ -50,7 +50,7 @@ test("R25 only the evaluator computes: every stored number is calc-grammar's res
   assert.deepEqual(stored.output, direct.result, "calc-grammar's result over the held table");
   assert.equal(w.rows(`SELECT result_key FROM calculations`)[0].result_key, resultKey(SUM, { t: t.sha }));
   assert.equal(c.results.output.value, "30", "the caller's results field is never read");
-  const m = w.money.add({ amount: "12.50", total: "999" });
+  const m = w.fact({ amount: "12.50" });
   const mc = await w.c.create({ question: "Total?", period: PERIOD, kind: "total", inputs: [{ name: "t", money: [m] }], recipe: SUM, by: V("bob") });
   assert.equal(mc.results.output.value, "12.50", "a money fact's amount, never another field of it");
 });
@@ -107,8 +107,8 @@ test("R27 no outward text uses breach, violation, diverted, misused or a score's
 test("R28 no place is named in this module's behaviour, defaults or outward text; fiscal years and schemes are profile data", async () => {
   const base = { amount: "10", kind: "expenditure", phase: "adopted", stage: undefined, basis: "budgetary" };
   const run = async (w) => {
-    const ad = w.money.add({ ...base, period: { from: "2025-08-01", to: "2025-08-31" } });
-    const ac = w.money.add({ ...base, phase: "actual", stage: "paid", period: { from: "2025-08-01", to: "2025-08-31" } });
+    const ad = w.fact({ ...base, period: { from: "2025-08-01", to: "2025-08-31" } });
+    const ac = w.fact({ ...base, phase: "actual", stage: "paid", period: { from: "2025-08-01", to: "2025-08-31" } });
     return w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: [ad] }, { name: "actual", money: [ac] }], by: V("bob") });
   };
   const a = seeded();

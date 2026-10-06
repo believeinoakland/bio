@@ -13,6 +13,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
+import { moneyOf } from "../../../src/money/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -73,66 +74,6 @@ const SHEET_CHAIN = [{ step: "layer", tier: 1, container: "xlsx", cap: null, mea
 /* ---- the providers for the layer-5 modules, at their requirements' interfaces ---- */
 
 const tail = (n) => String(n).padStart(16, "0").replace(/^0/, "a").slice(0, 16);
-
-/** money (its R1, R2, R4, R7, R8, R10, R23): facts held in memory; a fact may be seen only by the viewers it lists. */
-export function moneyProvider(record) {
-  const facts = new Map();
-  const listeners = [];
-  const calls = [];
-  let n = 0;
-  const m = {
-    facts, calls, listeners,
-    add(fields) {
-      const id = fields.fact_id || `MNY-2026-${tail(++n)}`;
-      facts.set(id, { fact_id: id, currency: "USD", sign: "+", precision: "exact", kind: "payment", phase: "actual", stage: "paid",
-        basis: "cash", period: { from: "2025-07-01", to: "2026-06-30" }, from: { entity: "ENT-2026-0001" }, to: { entity: "ENT-2026-0002" },
-        grade: { reading: "B", parties: ["A", "A"] }, ...fields, fact_id: id });
-      return id;
-    },
-    recordFact(fact) {
-      calls.push(fact);
-      if (typeof fact.source === "string" && /^CALC-/.test(fact.source)) return { ok: false, reason: "SOURCE_IS_CALCULATION", detail: "a CALC- is never a source" };
-      if (fact.source && typeof fact.source === "object" && Object.values(fact.source).some((v) => typeof v === "string" && /^CALC-/.test(v)))
-        return { ok: false, reason: "SOURCE_IS_CALCULATION", detail: "a CALC- is never a source" };
-      if (/^class:/.test(fact.by || "") && (!fact.from?.entity || !fact.to?.entity)) return { ok: false, reason: "MACHINE_NEEDS_IDENTIFIERS", detail: "x" };
-      if (fact.kind === "nonsense") return { ok: false, reason: "UNKNOWN_MONEY_KIND", detail: "the kinds are closed" };
-      const id = m.add({ ...fact, amount: fact.amount });
-      return { ok: true, fact_id: id };
-    },
-    readFact({ factId, viewer }) {
-      const f = facts.get(factId);
-      if (!f) return { ok: true, found: false };
-      if (Array.isArray(f.visibleTo) && !/^class:/.test(viewer || "") && !f.visibleTo.includes(viewer)) return { ok: true, found: false };
-      return { ok: true, found: true, ...f };
-    },
-    summable({ factIds }) {
-      const fs = factIds.map((id) => facts.get(id)).filter(Boolean);
-      for (const [k, code] of [["kind", "SUM_MIXED_KIND"], ["phase", "SUM_MIXED_STAGE"], ["stage", "SUM_MIXED_STAGE"], ["basis", "SUM_MIXED_BASIS"], ["currency", "SUM_MIXED_CURRENCY"]]) {
-        const vals = [...new Set(fs.map((f) => f[k] ?? null))];
-        if (vals.length > 1) return { ok: false, reason: code, detail: `the facts differ in ${k}: ${vals.join(", ")}`, facts: fs.slice(0, 2).map((f) => f.fact_id) };
-      }
-      const periods = [...new Set(fs.map((f) => JSON.stringify(f.period)))];
-      if (periods.length > 1) return { ok: false, reason: "SUM_MIXED_PERIOD", detail: "the facts differ in period" };
-      const interfund = fs.filter((f) => f.kind === "transfer" && f.from?.fund && f.to?.fund).map((f) => ({ fact_id: f.fact_id, from: f.from.fund, to: f.to.fund }));
-      return { ok: true, interfund };
-    },
-    onFactChanged(module, fn) {
-      const r = listenerRefusal(listeners, module, fn);
-      if (r) return r;
-      listeners.push({ module, fn });
-      return { ok: true };
-    },
-    /** A write that changes a fact, telling every listener inside its transaction (money R23). */
-    change(factId, change, mutate = null) {
-      return record.transact(() => {
-        if (mutate) mutate(facts.get(factId));
-        for (const l of listeners) l.fn({ factId, change });
-        return { ok: true };
-      });
-    },
-  };
-  return m;
-}
 
 /** retrieval (its R70): `runSaved({form, owner, viewer})` over answers the test holds. */
 export function retrievalProvider() {
@@ -220,8 +161,20 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   const events = eventsOf(host, { record, membership, provenance: prov, extraction, content, entities, now: () => clock.now });
   if (typeof events.migrate === "function") events.migrate();
   const standards = standardsOf(host, { record, membership, promotion, content, events, now: () => clock.now });
-  const money = moneyProvider(record),
-    retrieval = retrievalProvider(), duties = dutiesProvider(), people = peopleProvider(),
+  /* money, real (K1580), reached by calculations through a port that records each write it asks for (R13, R14). */
+  const realMoney = moneyOf(host, { record, membership, entities, provenance: prov, events, now: () => clock.now,
+    calculations: { bindingOf: (k) => (w.c ? w.c.bindingOf(k) : null) } });
+  if (typeof realMoney.migrate === "function") realMoney.migrate();
+  const calls = [];
+  const money = {
+    real: realMoney, calls,
+    recordFact: (f) => { calls.push(f); return realMoney.recordFact(f); },
+    readFact: (a) => realMoney.readFact(a),
+    summable: (a) => realMoney.summable(a),
+    onFactChanged: (m, fn) => realMoney.onFactChanged(m, fn),
+    withdrawFact: (a) => realMoney.withdrawFact(a),
+  };
+  const retrieval = retrievalProvider(), duties = dutiesProvider(), people = peopleProvider(),
     progressions = progressionsProvider();
   const deps = { record, membership, content, provenance: prov, money, entities, standards, retrieval, duties, people, events,
     progressions, now: () => clock.now, clock: () => clock.ms };
@@ -229,6 +182,7 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
   const c = construct ? build() : null;
   let n = 0;
   const held = new Map();
+  let parties = null;
   const w = {
     st, host, record, membership, promotion, prov, content, clock, ex, ev, c, build, money, entities, standards, retrieval,
     duties, people, events, progressions,
@@ -285,6 +239,26 @@ export function world({ now = NOW, construct = true, profiles = [PROFILE], evide
       if (!m.ok) throw new Error(`fixture sheet mint refused: ${JSON.stringify(m).slice(0, 400)}`);
       return m.content_id;
     },
+    /** A money fact recorded by bob through the real money module (its R1), over the test's defaults, its source a
+     *  passage of a fresh document (filed in a project only `visibleTo`'s members may see, when given): its id. */
+    fact(fields = {}) {
+      if (!parties) parties = { from: w.entity("The Treasury", "office"), to: w.entity("Harbour Supply", "institution") };
+      const { visibleTo, ...rest } = fields;
+      const project = Array.isArray(visibleTo) ? w.project("Private ledger", visibleTo[0].replace(/^member:/, "")) : null;
+      const d = w.document(`a ledger page ${++n}`, project ? { project } : {});
+      const amount = String(rest.amount ?? "100");
+      const f = { amount, as_read: `$${amount}`, currency: "USD", sign: "+", precision: "exact", kind: "payment", phase: "actual", stage: "paid",
+        basis: "cash", period: { from: "2025-07-01", to: "2026-06-30", precision: "day" }, from: { entity: parties.from }, to: { entity: parties.to },
+        source: { capture_sha: d.capSha, extent: { kind: "document" } }, by: V("bob"), ...rest };
+      for (const k of Object.keys(f)) if (f[k] === undefined) delete f[k];
+      if (f.period && !f.period.precision) f.period = { ...f.period, precision: "day" };
+      if (f.period && !f.period.zone && profiles === null) f.period = { ...f.period, zone: "UTC" };   /* no profile gives a zone */
+      const r = realMoney.recordFact(f);
+      if (!r.ok) throw new Error(`fixture money fact refused: ${JSON.stringify(r).slice(0, 300)}`);
+      return r.fact_id;
+    },
+    /** The payer and payee the default facts name. */
+    parties() { if (!parties) w.fact({}); return parties; },
     /** A standard declared by bob (standards R1) over a fresh passage, in force over `period`: its id. */
     standard(period) {
       const r = standards.standardDeclare({ cite: `Test Bylaw § ${++n}`, kind: "ordinance", issuer: "The Selectboard", text: [w.passage(`bylaw ${n}`)],

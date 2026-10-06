@@ -151,7 +151,9 @@ export function rolesFault(roles, header) {
     if (seen.has(r.role)) return { field: col, why: `the role ${r.role} is already held by "${seen.get(r.role)}"` };
     seen.set(r.role, col);
     const ways = ["space", "scheme", "crosswalk"].filter((k) => r[k] !== undefined);
-    if (RESOLVED_ROLES.includes(r.role)) {
+    if (r.role === "fund") {
+      if (ways.length > 1) return { field: col, why: "the role fund names at most one way it resolves to a registered fund" };
+    } else if (RESOLVED_ROLES.includes(r.role)) {
       if (ways.length !== 1) return { field: col, why: `the role ${r.role} names exactly one way it resolves: an id space, an entity scheme or a captured crosswalk` };
     } else if (ways.length) return { field: col, why: `the role ${r.role} names no way of resolving` };
     for (const k of ["space", "scheme"])

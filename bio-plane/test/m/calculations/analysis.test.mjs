@@ -9,18 +9,18 @@ const PERIOD = { from: "2025-04-01", to: "2027-03-31" };
 
 test("R16 a unit cost is a ratio of a money fact's amount over its buys quantity, with the unit stated; budget against actuals compares an adopted total with an actual total per fiscal period (the profile's), each total within one phase and basis, the bases stated beside the result", async () => {
   const w = seeded();
-  const f = w.money.add({ amount: "1200", buys: { quantity: "48", unit: "hours" } });
+  const f = w.fact({ amount: "1200", buys: { quantity: "48", unit: "hours" } });
   const uc = await w.c.create({ question: "Cost per hour?", period: PERIOD, kind: "unit_cost", inputs: [{ name: "m", money: [f] }], by: V("bob") });
   assert.equal(uc.ok, true);
   assert.equal(uc.results.output.value.value, "25.000000000000");
   assert.equal(uc.results.output.denominator.value, "48");
   assert.equal(uc.results.unit, "USD per hours", "the unit stated");
-  const none = w.money.add({ amount: "1200" });
+  const none = w.fact({ amount: "1200" });
   assert.equal(code(await w.c.create({ question: "Q", period: PERIOD, kind: "unit_cost", inputs: [{ name: "m", money: [none] }], by: V("bob") })), "NO_BUYS");
   /* budget against actuals, per fiscal period (the test profile's fiscal year starts 04-01) */
   const FY = { "2025": { from: "2025-04-01", to: "2026-03-31" }, "2026": { from: "2026-04-01", to: "2027-03-31" } };
-  const ad = (amount, fy) => w.money.add({ amount, kind: "expenditure", phase: "adopted", stage: undefined, basis: "budgetary", period: FY[fy] });
-  const ac = (amount, fy) => w.money.add({ amount, kind: "expenditure", phase: "actual", stage: "paid", basis: "modified accrual", period: FY[fy] });
+  const ad = (amount, fy) => w.fact({ amount, kind: "expenditure", phase: "adopted", stage: undefined, basis: "budgetary", period: FY[fy] });
+  const ac = (amount, fy) => w.fact({ amount, kind: "expenditure", phase: "actual", stage: "paid", basis: "modified accrual", period: FY[fy] });
   const adopted = [ad("100", "2025"), ad("50", "2025"), ad("200", "2026")];
   const actual = [ac("120", "2025"), ac("190", "2026")];
   const bva = await w.c.create({ question: "Budget against actuals?", period: PERIOD, kind: "budget_against_actuals",
@@ -31,7 +31,7 @@ test("R16 a unit cost is a ratio of a money fact's amount over its buys quantity
   assert.deepEqual(bva.results.bases, { adopted: ["budgetary"], actual: ["modified accrual"] }, "the bases stated beside the result");
   assert.match(bva.results.bases_says, /budgetary.*modified accrual/);
   assert.equal(code(await w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: actual }, { name: "actual", money: actual }], by: V("bob") })), "BUDGET_INPUTS", "each total within one phase");
-  const mixed = [...adopted, w.money.add({ amount: "1", kind: "expenditure", phase: "adopted", stage: undefined, basis: "cash", period: FY["2025"] })];
+  const mixed = [...adopted, w.fact({ amount: "1", kind: "expenditure", phase: "adopted", stage: undefined, basis: "cash", period: FY["2025"] })];
   const m = await w.c.create({ question: "Q", period: PERIOD, kind: "budget_against_actuals", inputs: [{ name: "adopted", money: mixed }, { name: "actual", money: actual }], by: V("bob") });
   assert.equal(code(m), "SUM_MIXED_BASIS", "each total within one basis (R12)");
 });

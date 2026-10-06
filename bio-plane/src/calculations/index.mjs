@@ -106,11 +106,18 @@ function stringsIn(v, out = []) {
 
 /* The figure a money fact states, as calc-grammar holds one. */
 function figureOfFact(f) {
-  if (plain(f.amount) && (typeof f.amount.value === "string" || typeof f.amount.low === "string")) {
+  if (plain(f.amount) && typeof f.amount.value === "string") {
     const g = { ...f.amount };
     delete g.as_read;
     if (!g.currency && f.currency) g.currency = f.currency;
     return g;
+  }
+  if (plain(f.amount) && typeof f.amount.low === "string" && typeof f.amount.high === "string") {
+    /* money holds a range unsigned with its sign apart (money Terms); calc-grammar's range bounds are signed */
+    const neg = f.sign === "-";
+    const s = (d) => (neg && !/^0+(\.0+)?$/.test(d) ? `-${d}` : d);
+    return { low: neg ? s(f.amount.high) : f.amount.low, high: neg ? s(f.amount.low) : f.amount.high, sign: neg ? "-" : "+", precision: "range",
+      ...(f.currency && { currency: f.currency }) };
   }
   const raw = typeof f.amount === "string" ? f.amount.trim() : typeof f.amount === "number" && Number.isSafeInteger(f.amount) ? String(f.amount) : null;
   if (raw === null) return null;
@@ -119,6 +126,15 @@ function figureOfFact(f) {
   const value = neg ? raw.slice(1) : raw;
   if (!/^\d+(?:\.\d+)?$/.test(value)) return null;
   return { value, sign: f.sign === "-" || neg ? "-" : "+", precision: f.precision || "exact", ...(f.currency && { currency: f.currency }) };
+}
+
+/* R14: a period as money takes one (its Terms): `from/to` dates as a day-precision range, else a fiscal key the
+   profile maps (money R1's BAD_PERIOD when it cannot). */
+function moneyPeriod(v) {
+  const t = typeof v === "string" ? v.trim() : "";
+  const m = /^(\d{4}-\d{2}-\d{2})\s*\/\s*(\d{4}-\d{2}-\d{2})?$/.exec(t);
+  if (m) return { from: m[1], to: m[2] ?? null, precision: "day" };
+  return t ? { fiscal: t } : null;
 }
 
 const partyEntity = (p) => (plain(p) ? (p.entity ?? null) : null);
@@ -749,7 +765,7 @@ export class Calculations {
       const sums = summedTables(r).filter((s) => roots(s.from).has(d.name));
       if (!sums.length) continue;
       let s = null;
-      try { s = money && typeof money.summable === "function" ? await money.summable({ factIds: d.facts }) : null; } catch { s = null; }
+      try { s = money && typeof money.summable === "function" ? await money.summable({ factIds: d.facts, viewer }) : null; } catch { s = null; }
       if (s && s.ok === false && sums.some((x) => x.from === d.name))
         return no(s.reason || s.refused || s.code, `${s.detail || s.why || "the money facts cannot be summed"} (money's summation rule). Nothing was written.`, { input: d.name, ...(s.facts ? { facts: s.facts } : {}) });
       if (s && s.ok && Array.isArray(s.interfund) && s.interfund.length) interfund.push({ input: d.name, transfers: s.interfund,
@@ -1147,15 +1163,25 @@ export class Calculations {
       if (!payer.entity) { notWritten.push({ row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why }); continue; }
       const payee = await this.#resolveParty(declared[roles.payee] || {}, row[roles.payee]);
       if (!payee.entity) { notWritten.push({ row: i, reason: "PAYEE_NOT_IDENTIFIED", detail: payee.why }); continue; }
+      let fund = null;
+      if (typeof roles.fund === "string" && String(row[roles.fund] ?? "").trim()) {
+        const spec = declared[roles.fund] || {};
+        const raw = String(row[roles.fund]).trim();
+        const r = spec.scheme || spec.crosswalk ? await this.#resolveParty(spec, raw)
+          : idPattern("ENT").test(raw) ? { entity: raw } : { why: `"${raw.slice(0, 64)}" names no registered fund; declare the fund column's scheme or crosswalk` };
+        if (!r.entity) { notWritten.push({ row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why }); continue; }
+        fund = r.entity;
+      }
       const asRead = String(row[roles.amount] ?? "");
       const f = parseFigure(asRead);
       if (f.refused) { notWritten.push({ row: i, reason: "AMOUNT_NOT_READ", detail: f.why }); continue; }
       const currency = val(row, "currency") || f.currency || null;
-      const fact = { amount: f.precision === "range" ? f.low : f.value, as_read: asRead, currency, sign: f.sign, precision: f.precision,
-        ...(f.precision === "range" ? { range: { low: f.low, high: f.high } } : {}),
+      const unsigned = (d) => String(d).replace(/^-/, "");
+      const range = f.precision === "range" ? (f.sign === "-" ? { low: unsigned(f.high), high: unsigned(f.low) } : { low: f.low, high: f.high }) : null;
+      const fact = { amount: range || f.value, as_read: asRead, currency, sign: f.sign, precision: f.precision,
         kind: val(row, "kind"), phase: val(row, "phase"), ...(val(row, "stage") ? { stage: val(row, "stage") } : {}),
-        basis: val(row, "basis"), period: val(row, "period"),
-        from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(roles.fund ? { fund: val(row, "fund") } : {}),
+        basis: val(row, "basis"), period: moneyPeriod(val(row, "period")),
+        from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(fund ? { fund } : {}),
           ...(roles.account ? { account: val(row, "account") } : {}) },
         to: { entity: payee.entity, as_written: String(row[roles.payee]) },
         source: { table: b.table_sha, row: i, binding: b.binding_key }, method: INGEST_METHOD, by: INGEST_STAMP };

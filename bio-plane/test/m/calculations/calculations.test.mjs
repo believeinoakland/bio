@@ -243,7 +243,7 @@ test("R10 a calculation any of whose inputs the viewer may not see is withheld w
   assert.equal(code(await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "x", calculation: c.calc_id }],
     recipe: R([{ op: "round", of: "x", places: 0, mode: "half_even", as: "r" }], "r", [{ name: "x", kind: "figure" }]), by: V("carol") })), "NO_SUCH_INPUT", "nor is it an input to another's calculation");
   /* a hidden money fact withholds it too */
-  const f = w.money.add({ amount: "10", visibleTo: [V("bob")] });
+  const f = w.fact({ amount: "10", visibleTo: [V("bob")] });
   const m = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", money: [f] }], recipe: SUM, by: V("bob") });
   assert.equal(m.ok, true);
   assert.equal((await w.c.read({ calcId: m.calc_id, viewer: V("bob") })).found, true);
@@ -259,18 +259,17 @@ test("R11 onInputChanged takes one registration per module (membership's listene
   assert.equal(w.c.onInputChanged("reevaluation", (e) => told.push(e)).ok, true);
   assert.equal(code(w.c.onInputChanged("reevaluation", () => {})), "LISTENER_DECLARED");
   w.c.onInputChanged("intent", (e) => told2.push(e));
-  assert.equal(w.money.listeners.map((l) => l.module).join(), "calculations", "registered with money at start");
-  const f = w.money.add({ amount: "10" }), g2 = w.money.add({ amount: "15" });
+  const f = w.fact({ amount: "10" }), g2 = w.fact({ amount: "15" });
   const c = await w.c.create({ question: "Q", period: PERIOD, kind: "total", inputs: [{ name: "t", money: [f, g2] }], recipe: SUM, by: V("bob") });
   assert.equal(c.results.output.value, "25");
   const results = w.rows(`SELECT results_json FROM calculations WHERE calc_id=?`, c.calc_id)[0].results_json;
-  w.money.change(f, "withdrawn", (x) => { x.withdrawn = true; });
+  assert.equal(w.money.withdrawFact({ factId: f, reason: "the page was read twice", by: V("bob") }).ok, true, "money tells its listeners (its R23); calculations registered at start");
   assert.equal(w.rows(`SELECT recompute_status FROM calculations WHERE calc_id=?`, c.calc_id)[0].recompute_status, "stale");
   assert.deepEqual(told, [{ calcId: c.calc_id, input: f, cause: INPUT_CHANGED }], "told once");
   assert.deepEqual(told2, told);
   assert.equal(w.rows(`SELECT results_json FROM calculations WHERE calc_id=?`, c.calc_id)[0].results_json, results, "nothing recomputed by itself");
   /* a write that rolls back tells no one */
-  w.record.transact(() => { for (const l of w.money.listeners) l.fn({ factId: g2, change: "adjusted" }); return { ok: false, reason: "X" }; });
+  w.record.transact(() => { w.money.withdrawFact({ factId: g2, reason: "undone", by: V("bob") }); return { ok: false, reason: "X" }; });
   assert.equal(told.length, 1, "a rolled-back write tells nothing");
   /* the recompute now sees the withdrawn fact counted apart */
   const rc = await w.c.recompute({ calcId: c.calc_id });

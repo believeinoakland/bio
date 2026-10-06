@@ -12,9 +12,9 @@ const total = (w, ids, recipe = SUM) => w.c.create({ question: "How much?", peri
 test("R12 a total over money facts is refused by name across kind, phase or stage, basis, currency or period (money.summable, whose codes are calc-grammar's); a total across funds that includes interfund transfers is answered with the interfund flag", async () => {
   const w = seeded();
   const base = { amount: "100", kind: "payment", phase: "actual", stage: "paid", basis: "cash", currency: "USD", period: PERIOD };
-  const a = w.money.add(base);
+  const a = w.fact(base);
   const cases = [
-    ["SUM_MIXED_KIND", { kind: "fee charged" }],
+    ["SUM_MIXED_KIND", { kind: "fee charged", stage: "collected" }],
     ["SUM_MIXED_STAGE", { phase: "adopted", stage: undefined }],
     ["SUM_MIXED_STAGE", { stage: "incurred" }],
     ["SUM_MIXED_BASIS", { basis: "accrual" }],
@@ -22,25 +22,27 @@ test("R12 a total over money facts is refused by name across kind, phase or stag
     ["SUM_MIXED_PERIOD", { period: { from: "2024-07-01", to: "2025-06-30" } }],
   ];
   for (const [want, diff] of cases) {
-    const b = w.money.add({ ...base, ...diff });
+    const b = w.fact({ ...base, ...diff });
     const r = await total(w, [a, b]);
     assert.equal(code(r), want, JSON.stringify(diff));
     assert.ok(r.detail);
   }
   assert.equal(w.count("calculations"), 0, "no refused total is written");
   /* a filtered sum is judged on the rows it sums (calc-grammar R13): selecting one stage sums cleanly */
-  const paid = w.money.add(base), incurred = w.money.add({ ...base, stage: "incurred", amount: "40" });
+  const paid = w.fact(base), incurred = w.fact({ ...base, stage: "incurred", amount: "40" });
   const sel = await total(w, [paid, incurred], R([{ op: "select", from: "t", where: [{ field: "stage", test: "eq", value: "actual/paid" }], as: "p" },
     { op: "sum", from: "p", field: "amount", as: "total" }], "total"));
   assert.equal(sel.results.output.value, "100");
   /* the interfund flag */
   const tr = { ...base, kind: "transfer" };
-  const x = w.money.add({ ...tr, from: { entity: "ENT-2026-0001", fund: "General" }, to: { entity: "ENT-2026-0001", fund: "Parks" } });
-  const y = w.money.add({ ...tr, amount: "5", from: { entity: "ENT-2026-0001", fund: "Parks" }, to: { entity: "ENT-2026-0003" } });
+  const city = w.parties().from, vendor = w.parties().to;
+  const general = w.entity("General Fund", "fund"), parks = w.entity("Parks Fund", "fund");
+  const x = w.fact({ ...tr, from: { entity: city, fund: general }, to: { entity: city, fund: parks } });
+  const y = w.fact({ ...tr, amount: "5", from: { entity: city, fund: parks }, to: { entity: vendor } });
   const r = await total(w, [x, y]);
   assert.equal(r.ok, true);
   assert.equal(r.results.output.value, "105");
-  assert.deepEqual(r.results.interfund[0].transfers, [{ fact_id: x, from: "General", to: "Parks" }]);
+  assert.deepEqual(r.results.interfund[0].transfers.map((t) => [t.fact_id, t.from_fund, t.to_fund]), [[x, general, parks]], "money's interfund flag, as it names it");
   assert.match(r.results.interfund[0].says, /net/);
   const plain = await total(w, [a, paid]);
   assert.equal(plain.results.interfund, undefined, "no transfer between funds, no flag");
@@ -48,7 +50,7 @@ test("R12 a total over money facts is refused by name across kind, phase or stag
 
 test("R13 no act of this module records a money fact whose source is a CALC-, and no result is ever written as a money fact", async () => {
   const w = seeded();
-  const f = w.money.add({ amount: "10" }), g = w.money.add({ amount: "20" });
+  const f = w.fact({ amount: "10" }), g = w.fact({ amount: "20" });
   const c = await total(w, [f, g]);
   await w.c.accept({ calcId: c.calc_id, by: V("carol") });
   await w.c.recompute({ calcId: c.calc_id });
@@ -76,7 +78,8 @@ test("R14 adoptBinding records a member's adoption of a table's money roles; ing
   const cw = await w.table(`vendor_no,entity\nS-00002,${v2}\nS-00009,${v9}\n`, [{ name: "vendor_no", type: "string" }, { name: "entity", type: "string" }],
     { roles: { vendor_no: { role: "crosswalk_from" }, entity: { role: "crosswalk_to" } } });
   roles.payee = { role: "payee", crosswalk: { table: cw.sha, from: "vendor_no", to: "entity" } };
-  const t = await w.table("payer,payee,amount,fund\nP001,S-00002,\"$1,000\",General\nP001,Somebody,5,General\nP777,S-00009,7,General\nP001,S-00009,oops,General\nP001,S-00009,9,General\n", fields, { roles });
+  const gf = w.entity("General Fund", "fund");
+  const t = await w.table(`payer,payee,amount,fund\nP001,S-00002,"$1,000",${gf}\nP001,Somebody,5,${gf}\nP777,S-00009,7,${gf}\nP001,S-00009,oops,${gf}\nP001,S-00009,9,${gf}\n`, fields, { roles });
   const bindRoles = { amount: "amount", payer: "payer", payee: "payee", fund: "fund", kind: { value: "payment" }, phase: { value: "actual" },
     stage: { value: "paid" }, basis: { value: "cash" }, currency: { value: "USD" }, period: { value: "FY2025-26" } };
   /* adoptBinding's refusals */
@@ -100,15 +103,15 @@ test("R14 adoptBinding records a member's adoption of a table's money roles; ing
   assert.equal(w.money.calls.length, 0);
   const r = await w.c.ingestMoney({ binding: b.binding, rows: [0, 1, 2, 3, 4, 9], by: V("bob") });
   assert.equal(r.ok, true);
-  assert.deepEqual(r.written.map((x) => x.row), [0, 4]);
+  assert.deepEqual(r.written.map((x) => x.row), [0, 4], JSON.stringify(r.not_written));
   assert.deepEqual(r.not_written.map((x) => [x.row, x.reason]), [[1, "PAYEE_NOT_IDENTIFIED"], [2, "PAYER_NOT_IDENTIFIED"], [3, "AMOUNT_NOT_READ"], [9, "NO_SUCH_ROW"]]);
   const fact = w.money.calls[0];
   assert.equal(fact.by, INGEST_STAMP, "machine-attributed");
   assert.equal(fact.method, "table_binding", "with the machine's method (K1573)");
   assert.equal(r.asked_by, V("bob"), "at the member's request, recorded");
   assert.deepEqual({ amount: fact.amount, as_read: fact.as_read, currency: fact.currency, kind: fact.kind, phase: fact.phase, stage: fact.stage, basis: fact.basis, period: fact.period },
-    { amount: "1000", as_read: "$1,000", currency: "USD", kind: "payment", phase: "actual", stage: "paid", basis: "cash", period: "FY2025-26" });
-  assert.deepEqual(fact.from, { entity: pat, as_written: "P001", fund: "General" }, "resolved through the person scheme (entities.entityByIdentifier)");
+    { amount: "1000", as_read: "$1,000", currency: "USD", kind: "payment", phase: "actual", stage: "paid", basis: "cash", period: { fiscal: "FY2025-26" } }, "a fiscal key money maps through the profile (its R1)");
+  assert.deepEqual(fact.from, { entity: pat, as_written: "P001", fund: gf }, "resolved through the person scheme (entities.entityByIdentifier)");
   assert.deepEqual(fact.to, { entity: v2, as_written: "S-00002" }, "resolved through the captured crosswalk");
   assert.deepEqual(fact.source, { table: t.sha, row: 0, binding: b.binding }, "cites its canonical row");
   /* a fact money refuses is listed not written, with money's reason */
