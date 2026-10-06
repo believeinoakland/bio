@@ -1,9 +1,9 @@
 /* credentials — the credentials a member or the instance acts by: the founder's password and claim, members' passwords
  * and sessions, the signer keys whose signatures the record accepts, the credentials AI work runs under, each
- * member's own Claude account reference and the short-lived grant an ask reads under, and the group's own keys for
- * keyed outside services (T33-20).
+ * member's own Claude account reference, the group's own Anthropic API key (T34, K1755), the short-lived grant an ask
+ * or a standing question reads under, and the group's own keys for keyed outside services (T33-20).
  *
- * Requirements: build/requirements/credentials.md (R1–R30). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R37; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -29,18 +29,20 @@ export { CREDENTIALS_CHECKS, SIGNER_ENROLMENT_CHECKS, AI_CREDENTIAL_CHECKS, ACCO
 
 /* R22 (K1502, K1547): the kinds of a member's own Claude account reference: `apikey` (the member's own API key) and
    `subscription` (the member's own subscription token, from `claude setup-token`). Both are held, sealed and used
-   alike, for that member alone. */
+   alike, for that member alone. The group's own key is an API key only (R33). */
 export const ACCOUNT_KINDS = Object.freeze(["apikey", "subscription"]);
-/* R25 (K1479, K1500): the member's two switches. */
+/* R25, R37 (K1479, K1500): the two switches, a member's reference's and the group key's alike. */
 export const ACCOUNT_SWITCHES = Object.freeze(["suggestions", "standing"]);
 /* R27: an ask grant's life, in seconds (it also ends with the member's session). */
 export const AI_GRANT_TTL_SECONDS = 900;
-/* R28 (K1505 (14)): the ask's op allow-list, held by the grant's class. `answers`' `ASK_SCOPE` (its R1) is held equal
-   to it, both ways, by answers' copy test. Every op here is a read; a grant admits no write. */
+/* R28 (K1505 (14); N580, K1603, K1609): the ask's op allow-list, held by the grant's class, each entry the op's name as
+   the plane routes it. `answers`' `ASK_SCOPE` (its R1) is held equal to it, both ways, by answers' copy test. Every op
+   here is a read; a grant admits no write. `rule` is answers' door to every rule service (its R7). */
 export const AI_GRANT_OPS = Object.freeze([
-  "calculations", "careerof", "committedagainstpaid", "duties", "entity", "entitybyalias", "eventsfor", "explore",
-  "frontier", "holderat", "lines", "meaningrows", "moneyfacts", "moneyof", "occurrences", "profiles", "relation",
-  "resolutions", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof", "timeline",
+  "calculation", "career", "committedagainstpaid", "dutiesof", "dutyoccurrences", "entity", "entitybyalias",
+  "eventsfor", "explore", "frontier", "holderat", "linesof", "meaningrows", "money", "moneyof", "profiles", "relation",
+  "resolutions", "rule", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof",
+  "structureat", "timeline",
 ]);
 /* R29 (K1449): the keyed outside services the group may hold a key for; CourtListener's lookup first. */
 export const KEYED_SERVICES = Object.freeze(["courtlistener"]);
@@ -689,12 +691,12 @@ export class Credentials {
              confinedTo: row.confined_to || null };
   }
 
-  /* ===== EACH MEMBER'S OWN CLAUDE ACCOUNT (R22–R26; T33-20, K1502, K1503) =====
+  /* ===== EACH MEMBER'S OWN CLAUDE ACCOUNT (R22–R25; T33-20, K1502, K1503) =====
    *
-   * There is no group-wide, project-wide or instance Claude account (K1502): a member who wants the assistant brings
-   * their own, and it serves only that member's own asks, runs and standing questions. The reference is held only by
-   * the member's own act, SEALED at rest under that member (R23), and never shown, listed, logged or exported: no
-   * answer below carries the secret or a digest of it, except R24's, which unseals it for the one call it serves. */
+   * A member who wants the assistant may bring their own account: an API key or a subscription token, held only by the
+   * member's own act, SEALED at rest under that member (R23), and never shown, listed, logged or exported: no answer
+   * below carries the secret or a digest of it, except R24's and R35's, which unseal it for the one call they serve.
+   * The group's own API key, set by an administrator, serves members who hold none while it is on (R33–R37; K1755). */
 
   /* The member an actor or viewer names: `member:<id>` or a bare member id; null for anything else. */
   static #memberOf(x) {
@@ -708,19 +710,16 @@ export class Credentials {
     return { ok: false, reason: code, code, check: r.check, translation: r.translation, detail, ...(extra || {}) };
   }
 
-  /* R22, R26: who may act on `member`'s reference, asked first by every act on it and by the grant's mint (R27).
-     Answers null when `by` is that member's own act and the member is active. */
-  #accountBar(member, by, level = null) {
+  /* R22: who may act on `member`'s reference, asked first by every act on it, by the grant's mint (R27) and by the
+     notice's acknowledgement (R36). Answers null when `by` is that member's own act and the member is active. A
+     `member` naming no member of the roster ('organisation', a project, a machine class) is refused as any principal
+     but the acting member is: NOT_YOUR_ACCOUNT, or ACCOUNT_MEMBER_NOT_ACTIVE when it names the actor themself (K1756). */
+  #accountBar(member, by) {
     const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail);
     /* DEC-49 REGION is-account-own-act */
     if (by === null || by === undefined || by === "" || isMachineIdentity(by))
       return refuse("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, "
         + "from their own signed-in session; this caller has no member behind it. Nothing was written.");
-    if ((level !== null && level !== undefined && level !== "member")
-        || typeof member !== "string" || member === "organisation" || member.startsWith(MACHINE_CLASS_PREFIX)
-        || /^PROJ-/.test(member))
-      return refuse("ACCOUNT_LEVEL_MEMBER_ONLY", "a Claude account reference is held for one member only; there is no "
-        + "group, project or instance level. Nothing was written.");
     const id = Credentials.#memberOf(member);
     if (id === null || Credentials.#memberOf(by) !== id)
       return Credentials.#notYours("a member's Claude account is acted on only by that member; another member, an "
@@ -732,24 +731,47 @@ export class Credentials {
     return null;
   }
 
-  /* R22–R24, R27: NOT_YOUR_ACCOUNT, minted here alone; `detail` is the asking act's fixed sentence. */
+  /* R22–R24, R27, R35: NOT_YOUR_ACCOUNT, minted here alone; `detail` is the asking act's fixed sentence. */
   static #notYours(detail) {
     /* DEC-49 REGION is-account-theirs */
     return Credentials.#row(ACCOUNT_CHECKS, "NOT_YOUR_ACCOUNT", detail);
     /* END DEC-49 REGION is-account-theirs */
   }
 
-  #noAccount(member) {
+  /* R24, R25, R27, R32, R35: no account serves this member (R35's last branch), or, for R24 and R25, the member holds
+     no reference of their own. */
+  #noAccount(member, ownOnly = false) {
     /* DEC-49 REGION is-account-held */
-    return Credentials.#row(ACCOUNT_CHECKS, "NO_ACCOUNT", "this member holds no Claude account reference, so there is "
-      + "no assistant for them. Nothing was used.", { member });
+    return Credentials.#row(ACCOUNT_CHECKS, "NO_ACCOUNT", ownOnly
+      ? "this member holds no Claude account reference of their own. Nothing was used or written."
+      : "no Claude account serves this member: they hold no reference of their own, and the group's key is not held or "
+        + "not on, so there is no assistant for them. Nothing was used.", { member });
     /* END DEC-49 REGION is-account-held */
   }
 
-  /* R23, R29: THE SEAL. AES-256-GCM under a key derived (HKDF-SHA-256) from the Worker's seal secret, the owner as salt
-     (`member:<id>` or `group:<service>`), so the key is never stored beside the row and no other owner's key opens it.
-     The AAD binds the ciphertext to its owner and kind, so a row moved to another owner does not open. Answers
-     `{sealed, iv}` (base64), or the refusal when no secret is bound. */
+  /* R22, R33: an empty key or token, refused before anything is sealed. */
+  static #noSecret(secret) {
+    /* DEC-49 REGION is-secret-given */
+    if (typeof secret !== "string" || secret.trim() === "")
+      return Credentials.#row(ACCOUNT_CHECKS, "NO_SECRET", "no key or token was given. Nothing was written.");
+    return null;
+    /* END DEC-49 REGION is-secret-given */
+  }
+
+  /* R25, R37: the two switches' names, one list for a member's reference and the group key. */
+  static #switchName(name) {
+    /* DEC-49 REGION is-account-switch */
+    if (!ACCOUNT_SWITCHES.includes(name))
+      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${ACCOUNT_SWITCHES.join(" and ")}. `
+        + "Nothing was written.", { switch: typeof name === "string" ? name.slice(0, 40) : null });
+    return null;
+    /* END DEC-49 REGION is-account-switch */
+  }
+
+  /* R23, R29, R34: THE SEAL. AES-256-GCM under a key derived (HKDF-SHA-256) from the Worker's seal secret, the owner as
+     salt (`member:<id>`, `group:<service>` or `group-key:anthropic`), so the key is never stored beside the row and no
+     other owner's key opens it. The AAD binds the ciphertext to its owner and kind, so a row moved to another owner
+     does not open. Answers `{sealed, iv}` (base64), or the refusal when no secret is bound. */
   static #b64(bytes) { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); }
   static #unb64(s) { return Uint8Array.from(atob(s), (c) => c.charCodeAt(0)); }
 
@@ -792,17 +814,16 @@ export class Credentials {
 
   /* R22: one reference for `member`, of either kind, replacing any earlier one of either kind, by that member's own act.
      Answers `{ok, kind, set_at}` and never the secret. A replacement keeps the member's switches (R25); only removal turns them off. */
-  async accountReferenceSet({ member = null, kind = null, secret = null, by = null, level = null } = {}) {
-    const bar = this.#accountBar(member, by, level);
+  async accountReferenceSet({ member = null, kind = null, secret = null, by = null } = {}) {
+    const bar = this.#accountBar(member, by);
     if (bar) return bar;
-    const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail);
     /* DEC-49 REGION is-account-kind */
     if (!ACCOUNT_KINDS.includes(kind))
-      return refuse("UNKNOWN_ACCOUNT_KIND", `the kinds this copy holds are ${ACCOUNT_KINDS.join(" and ")}. Nothing was `
-        + "written.");
-    if (typeof secret !== "string" || secret.trim() === "")
-      return refuse("NO_SECRET", "no key or token was given. Nothing was written.");
+      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_ACCOUNT_KIND", `the kinds this copy holds are `
+        + `${ACCOUNT_KINDS.join(" and ")}. Nothing was written.`);
     /* END DEC-49 REGION is-account-kind */
+    const empty = Credentials.#noSecret(secret);
+    if (empty) return empty;
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const id = Credentials.#memberOf(member);
@@ -815,13 +836,15 @@ export class Credentials {
     return { ok: true, kind, set_at: setAt };
   }
 
-  /* R22, R25: the member removes their reference, which turns both switches off; with none, `removed: false`. */
-  accountReferenceRemove({ member = null, by = null, level = null } = {}) {
-    const bar = this.#accountBar(member, by, level);
+  /* R22, R25, R32: the member removes their reference, which turns both switches off and ends at once every standing
+     question's grant minted for them (R32); with none, `removed: false`. */
+  accountReferenceRemove({ member = null, by = null } = {}) {
+    const bar = this.#accountBar(member, by);
     if (bar) return bar;
     const id = Credentials.#memberOf(member);
     const held = !!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id);
     if (held) this.sql.exec(`DELETE FROM account_references WHERE member_id=?`, id);
+    this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
     return { ok: true, removed: held };
   }
 
@@ -836,17 +859,20 @@ export class Credentials {
              suggestions: !!(r && r.suggestions), standing: !!(r && r.standing) };
   }
 
-  /* R24: unseals the member's reference only for that member's own ask, run or standing question, for the one call it
-     serves; the caller keeps nothing (agent-model R8). */
-  async accountReferenceFor({ member = null, act = null } = {}) {
+  /* R24, R35: the act a member's account may serve: their own ask, run or standing question. Answers the member's id,
+     or null. */
+  static #ownAct(member, act) {
     const id = Credentials.#memberOf(member);
     const actKind = act && typeof act === "object" ? act.kind : null;
     if (id === null || !["ask", "run", "standing"].includes(actKind) || Credentials.#memberOf(act.member) !== id
-        || isMachineIdentity(act.member))
-      return Credentials.#notYours("a member's Claude account serves only that member's "
-        + "own asks, runs and standing questions. Nothing was used.");
+        || isMachineIdentity(act.member)) return null;
+    return id;
+  }
+
+  /* R24, R35: a member's own reference, unsealed, or a refusal (ACCOUNT_SEAL_UNAVAILABLE); null when none is held. */
+  async #ownReference(id) {
     const r = this.#one(`SELECT kind, sealed, iv FROM account_references WHERE member_id=?`, id);
-    if (!r) return this.#noAccount(id);
+    if (!r) return null;
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const secret = await this.#decrypt(`member:${id}`, r.kind, r.sealed, r.iv);
@@ -856,33 +882,208 @@ export class Credentials {
     return { ok: true, kind: r.kind, secret };
   }
 
+  /* R24: unseals the member's reference only for that member's own ask, run or standing question, for the one call it
+     serves; the caller keeps nothing (agent-model R8). Kept for its callers until they move to `accountFor` (R35). */
+  async accountReferenceFor({ member = null, act = null } = {}) {
+    const id = Credentials.#ownAct(member, act);
+    if (id === null)
+      return Credentials.#notYours("a member's Claude account serves only that member's "
+        + "own asks, runs and standing questions. Nothing was used.");
+    return (await this.#ownReference(id)) ?? this.#noAccount(id, true);
+  }
+
   /* R25: the member's own switches, each off by default; they belong to the reference, so a member with none is
-     answered NO_ACCOUNT. */
+     answered NO_ACCOUNT. They govern only acts their own reference serves; the group key has its own (R37). */
   accountSwitchSet({ member = null, switch: name = null, on = false, by = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
-    /* DEC-49 REGION is-account-switch */
-    if (!ACCOUNT_SWITCHES.includes(name))
-      return Credentials.#row(ACCOUNT_CHECKS, "UNKNOWN_SWITCH", `the switches are ${ACCOUNT_SWITCHES.join(" and ")}. `
-        + "Nothing was written.", { switch: typeof name === "string" ? name.slice(0, 40) : null });
-    /* END DEC-49 REGION is-account-switch */
+    const unknown = Credentials.#switchName(name);
+    if (unknown) return unknown;
     const id = Credentials.#memberOf(member);
-    if (!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id)) return this.#noAccount(id);
+    if (!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id)) return this.#noAccount(id, true);
     this.sql.exec(`UPDATE account_references SET ${name}=? WHERE member_id=?`, on === true ? 1 : 0, id);
     return { ok: true, switch: name, on: on === true };
   }
 
-  /* ===== THE ASK GRANT (R27, R28; Q1-3, K1450, K1505 (14)) =====
+  /* ===== THE GROUP'S API KEY (R33–R37; K1755, K1757) =====
+   *
+   * Bob's three options: an API key at the group level, a subscription token at the member level (R22–R25), or no AI.
+   * An active administrator sets, switches and removes the group's one Anthropic API key; it is sealed under the copy
+   * (R34), off when first set and off by default, and serves only acts of active members who hold no reference of
+   * their own, once each has read its notice (R35, R36). It carries its own two switches, set by an administrator
+   * (R37). Every act is recorded with its administrator and instant, never the key (R33). */
+  static #GROUP_KEY_OWNER = "group-key:anthropic";
+
+  #groupKeyRow() {
+    return this.#one(`SELECT sealed, iv, is_on, set_by, set_at, suggestions, standing FROM group_key WHERE id=1`);
+  }
+
+  /* Held, and on only while held and switched on. */
+  #groupKeyFacts() {
+    const r = this.#groupKeyRow();
+    const held = !!(r && r.sealed);
+    return { held, on: held && !!r.is_on, set_at: held ? r.set_at : null, by: held ? r.set_by : null,
+             suggestions: !!(r && r.suggestions), standing: !!(r && r.standing) };
+  }
+
+  #groupKeyAct(act, detail, by) {
+    this.sql.exec(`INSERT INTO group_key_acts (act, detail, actor, at) VALUES (?,?,?,?)`, act, detail ?? null,
+      Credentials.#memberOf(by), stampSecond());
+  }
+
+  /* R33: one key for the group's copy, replacing any earlier one; off when first set (a replacement keeps the switch
+     as it was). Answers `{ok, set_at}`, never the key. */
+  async groupKeySet({ key = null, by = null } = {}) {
+    const bar = this.#adminBar(by, "setting the group's Anthropic API key");
+    if (bar) return bar;
+    const empty = Credentials.#noSecret(key);
+    if (empty) return empty;
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const { sealed, iv } = await this.#encrypt(Credentials.#GROUP_KEY_OWNER, "apikey", key);
+    const setAt = stampSecond();
+    const first = !this.#groupKeyFacts().held;
+    this.sql.exec(
+      `INSERT INTO group_key (id, sealed, iv, is_on, set_by, set_at) VALUES (1,?,?,0,?,?)
+       ON CONFLICT(id) DO UPDATE SET sealed=excluded.sealed, iv=excluded.iv, set_by=excluded.set_by,
+         set_at=excluded.set_at, is_on=CASE WHEN ? THEN 0 ELSE group_key.is_on END`,
+      sealed, iv, Credentials.#memberOf(by), setAt, first ? 1 : 0);
+    this.#groupKeyAct("set", null, by);
+    return { ok: true, set_at: setAt };
+  }
+
+  /* R33, R37: removes the key, which switches it off and turns both its switches off; with none, `removed: false`. */
+  groupKeyRemove({ by = null } = {}) {
+    const bar = this.#adminBar(by, "removing the group's Anthropic API key");
+    if (bar) return bar;
+    const held = this.#groupKeyFacts().held;
+    this.sql.exec(`UPDATE group_key SET sealed=NULL, iv=NULL, is_on=0, set_by=NULL, set_at=NULL, suggestions=0,
+                   standing=0 WHERE id=1`);
+    this.#groupKeyAct("remove", null, by);
+    return { ok: true, removed: held };
+  }
+
+  /* R33: switches the key on or off; only `true` is on, and it is on only while a key is held. */
+  groupKeySwitch({ on = false, by = null } = {}) {
+    const bar = this.#adminBar(by, "switching the group's Anthropic API key");
+    if (bar) return bar;
+    const v = on === true ? 1 : 0;
+    this.sql.exec(`INSERT INTO group_key (id, is_on) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET is_on=excluded.is_on`, v);
+    this.#groupKeyAct("switch", v ? "on" : "off", by);
+    return { ok: true, on: this.#groupKeyFacts().on };
+  }
+
+  /* R37: the group key's own `suggestions` and `standing`, off by default, set by an active administrator. */
+  groupSwitchSet({ switch: name = null, on = false, by = null } = {}) {
+    const bar = this.#adminBar(by, "switching the group key's assistant settings");
+    if (bar) return bar;
+    const unknown = Credentials.#switchName(name);
+    if (unknown) return unknown;
+    const v = on === true ? 1 : 0;
+    this.sql.exec(`INSERT INTO group_key (id, ${name}) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET ${name}=excluded.${name}`, v);
+    this.#groupKeyAct(`switch:${name}`, v ? "on" : "off", by);
+    return { ok: true, switch: name, on: v === 1 };
+  }
+
+  /* R34, R37: an active administrator reads `{held, on, set_at, by, suggestions, standing}`; any other active member
+     `{on}`; anyone else is refused as a non-administrator. Never the key; writes nothing. */
+  groupKeyState({ viewer = null } = {}) {
+    const id = Credentials.#memberOf(viewer);
+    const f = this.#groupKeyFacts();
+    if (id !== null && !isMachineIdentity(viewer) && this.membership.isAdministrator(id)) return { ok: true, ...f };
+    if (id !== null && !isMachineIdentity(viewer) && this.#memberFacts(id)?.status === "active")
+      return { ok: true, on: f.on };
+    return notAnAdmin(viewer ?? null, "reading the group's Anthropic API key");
+  }
+
+  /* R36: the notice, its words fixed here (D311's disclosure, K1478 (i), K1755). */
+  static GROUP_KEY_NOTICE_TEXT = "This group has its own Claude account, an Anthropic API key an administrator set. When "
+    + "you ask the assistant and you have not connected an account of your own, your questions, and the material read "
+    + "to answer them, go to Anthropic under the group's API account.";
+
+  /* R36: `{due, text}` for a member until their own act records that they have read it; writes nothing. */
+  groupKeyNotice({ member = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    const seen = id !== null && !!this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id);
+    return { ok: true, due: !seen, text: Credentials.GROUP_KEY_NOTICE_TEXT };
+  }
+
+  /* R36: the member's own act (R22's refusals), recorded once with its instant; again answers `already: true`. */
+  groupKeyNoticeSeen({ member = null, by = null } = {}) {
+    const bar = this.#accountBar(member, by);
+    if (bar) return bar;
+    const id = Credentials.#memberOf(member);
+    const already = !!this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id);
+    if (!already) this.sql.exec(`INSERT INTO group_key_notices (member_id, seen_at) VALUES (?,?)`, id, stampSecond());
+    return { ok: true, seen: true, already };
+  }
+
+  /* R36: GROUP_KEY_NOTICE_DUE, minted here alone. */
+  #noticeDue(id) {
+    /* DEC-49 REGION is-group-key-notice-seen */
+    if (this.#one(`SELECT member_id FROM group_key_notices WHERE member_id=?`, id)) return null;
+    return Credentials.#row(ACCOUNT_CHECKS, "GROUP_KEY_NOTICE_DUE", "this member has not yet read the notice that their "
+      + "questions go to Anthropic under the group's API account. Nothing was sent.", { member: id });
+    /* END DEC-49 REGION is-group-key-notice-seen */
+  }
+
+  /* R35's choice without unsealing: which account serves an active member's act now, 'member', 'group' or null, and
+     the switches that govern it (R25, R37). */
+  #servingAccount(id) {
+    const own = this.#one(`SELECT suggestions, standing FROM account_references WHERE member_id=?`, id);
+    if (own) return { level: "member", suggestions: !!own.suggestions, standing: !!own.standing };
+    const g = this.#groupKeyFacts();
+    return g.on ? { level: "group", suggestions: g.suggestions, standing: g.standing } : null;
+  }
+
+  /* R35: the account that serves a member's act: their own reference when held, `{kind, level: "member", key}`; else
+     the group key when held and on, `{kind: "apikey", level: "group", key}`, for an active member who has read its
+     notice (R36); else NO_ACCOUNT. `act` as R24's. Writes nothing; called only by the modules that run the assistant. */
+  async accountFor({ member = null, act = null } = {}) {
+    const id = Credentials.#ownAct(member, act);
+    if (id === null)
+      return Credentials.#notYours("a Claude account serves only a member's own asks, runs and standing questions. "
+        + "Nothing was used.");
+    const own = await this.#ownReference(id);
+    if (own) return own.ok ? { ok: true, kind: own.kind, level: "member", key: own.secret } : own;
+    if (!this.#groupKeyFacts().on) return this.#noAccount(id);
+    if (this.#memberFacts(id)?.status !== "active")
+      return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "the group's key serves only acts of active "
+        + "members. Nothing was used.");
+    const due = this.#noticeDue(id);
+    if (due) return due;
+    const unsealable = this.#seal();
+    if (unsealable) return unsealable;
+    const r = this.#groupKeyRow();
+    const key = await this.#decrypt(Credentials.#GROUP_KEY_OWNER, "apikey", r.sealed, r.iv);
+    if (key === null)
+      return Credentials.#sealRefusal("the group's key does not open under this copy's seal secret, which has changed; "
+        + "an administrator sets it again. Nothing was used.");
+    return { ok: true, kind: "apikey", level: "group", key };
+  }
+
+  /* ===== THE ASK GRANT (R27, R28, R31, R32; Q1-3, K1450, K1505 (14), K1609, K1685) =====
    *
    * A short-lived, read-only `ai` grant whose viewer is the member, minted at their own act under their own live
-   * session. Only its token's SHA-256 is kept; it writes no run row and no observation row and keeps no read log
-   * (K1450). It ends at `AI_GRANT_TTL_SECONDS`, or with the session it was minted under, whichever is first, so a
-   * revoked member's grants end with their sessions (R16). */
+   * session (R27), or for a standing question's AI half by `answers` alone (R32). Only its token's SHA-256 is kept; it
+   * writes no run row and no observation row and keeps no read log (K1450). An ask's grant ends at
+   * `AI_GRANT_TTL_SECONDS`, or with the session it was minted under, whichever is first; a standing question's at its
+   * time; each at once when its member is revoked (R16), and a standing one when they remove their reference (R22). */
   static async #sha256(text) {
     const d = await crypto.subtle.digest("SHA-256", Credentials.#enc.encode(text));
     return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
+  async #mintGrant(id, session, expires, kind) {
+    const token = Credentials.#rand(32);
+    this.sql.exec(`DELETE FROM ai_grants WHERE expires < ?`, Date.now());
+    this.sql.exec(`INSERT INTO ai_grants (grant_sha, member_id, session, expires, kind) VALUES (?,?,?,?,?)`,
+      await Credentials.#sha256(token), id, session, expires, kind);
+    return { ok: true, token, expires };
+  }
+
+  /* R27: at the member's own act under their own live session; refused NO_ACCOUNT when no account serves them (R35),
+     and GROUP_KEY_NOTICE_DUE when the group key would serve them and they have not read its notice (R36). */
   async aiGrantMint({ member = null, by = null, session = null } = {}) {
     const bar = this.#accountBar(member, by);
     if (bar) return bar;
@@ -892,34 +1093,77 @@ export class Credentials {
     if (!s || s.role !== `member:${id}` || s.expires < Date.now())
       return Credentials.#notYours("an ask's grant is minted only under the member's own "
         + "live session. Nothing was minted.");
-    if (!this.#one(`SELECT member_id FROM account_references WHERE member_id=?`, id)) return this.#noAccount(id);
-    const token = Credentials.#rand(32);
-    const expires = Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires);
-    this.sql.exec(`DELETE FROM ai_grants WHERE expires < ?`, Date.now());
-    this.sql.exec(`INSERT INTO ai_grants (grant_sha, member_id, session, expires) VALUES (?,?,?,?)`,
-      await Credentials.#sha256(token), id, session, expires);
-    return { ok: true, token, expires };
+    const serving = this.#servingAccount(id);
+    if (!serving) return this.#noAccount(id);
+    if (serving.level === "group") {
+      const due = this.#noticeDue(id);
+      if (due) return due;
+    }
+    return this.#mintGrant(id, session, Math.min(Date.now() + AI_GRANT_TTL_SECONDS * 1000, s.expires), "ask");
   }
 
-  /* R28: a request under a grant is admitted only for an op on `AI_GRANT_OPS`, only as a read, while the grant and its
-     session live. Answers `{ok, member, viewer, expires}`; writes nothing. */
-  async aiGrantAdmit({ token = null, op = null, write = false } = {}) {
-    const refuse = (code, detail, extra) => Credentials.#row(ACCOUNT_CHECKS, code, detail, extra);
+  /* R32: a standing question's grant, for `answers` R19 only (not routed): shaped as R27's, minted with no session. */
+  async aiGrantMintStanding({ member = null, question = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    const refuse = (code, detail) => Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
+    if (id === null || isMachineIdentity(member) || this.#memberFacts(id)?.status !== "active")
+      return refuse("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was "
+        + "minted.");
+    const serving = this.#servingAccount(id);
+    if (!serving) return this.#noAccount(id);
+    /* DEC-49 REGION is-standing-grant */
+    if (!serving.standing)
+      return refuse("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group"
+        ? "group's key" : "member's own account"}, which would serve this one. Nothing was minted.`);
+    if (typeof question !== "string" || question.trim() === "")
+      return refuse("NO_QUESTION", "no standing question was named. Nothing was minted.");
+    /* END DEC-49 REGION is-standing-grant */
+    return this.#mintGrant(id, "", Date.now() + AI_GRANT_TTL_SECONDS * 1000, "standing");
+  }
+
+  /* R28, R31: the live grant a token names, or null: unexpired and, for an ask's, its session live and the member's;
+     a standing question's needs no session (R32). Writes nothing. */
+  async #liveGrant(token) {
     const g = typeof token === "string" && token !== ""
-      ? this.#one(`SELECT member_id, session, expires FROM ai_grants WHERE grant_sha=?`, await Credentials.#sha256(token))
+      ? this.#one(`SELECT member_id, session, expires, kind FROM ai_grants WHERE grant_sha=?`, await Credentials.#sha256(token))
       : null;
-    const s = g ? this.#one(`SELECT role, expires FROM sessions WHERE token=?`, g.session) : null;
     const now = Date.now();
+    if (!g || g.expires < now) return null;
+    if (g.kind === "standing") return g;
+    const s = this.#one(`SELECT role, expires FROM sessions WHERE token=?`, g.session);
+    return s && s.expires >= now && s.role === `member:${g.member_id}` ? g : null;
+  }
+
+  static #grantNotHeld() {
+    /* DEC-49 REGION is-grant-held */
+    return Credentials.#row(ACCOUNT_CHECKS, "GRANT_NOT_HELD", "no live grant answers to this token: it expired, its "
+      + "session ended, or it never existed. Nothing was read.");
+    /* END DEC-49 REGION is-grant-held */
+  }
+
+  static #held(g) { return { ok: true, member: g.member_id, viewer: `member:${g.member_id}`, expires: g.expires }; }
+
+  /* R28: a request under a grant is admitted only for an op on `AI_GRANT_OPS`, only as a read, while the grant lives.
+     Answers `{ok, member, viewer, expires}`; writes nothing. */
+  async aiGrantAdmit({ token = null, op = null, write = false } = {}) {
+    const g = await this.#liveGrant(token);
+    if (!g) return Credentials.#grantNotHeld();
     /* DEC-49 REGION is-grant-op */
-    if (!g || g.expires < now || !s || s.expires < now || s.role !== `member:${g.member_id}`)
-      return refuse("GRANT_NOT_HELD", "no live grant answers to this token: it expired, its session ended, or it never "
-        + "existed. Nothing was read.");
     if (write !== false || typeof op !== "string" || !AI_GRANT_OPS.includes(op))
-      return refuse("GRANT_OP_REFUSED", `an ask's grant admits only the reads on its list, and '${String(op ?? "")
-        .slice(0, 40)}'${write !== false ? " as a write" : ""} is not one. Nothing was read.`,
+      return Credentials.#row(ACCOUNT_CHECKS, "GRANT_OP_REFUSED", `an ask's grant admits only the reads on its list, `
+        + `and '${String(op ?? "").slice(0, 40)}'${write !== false ? " as a write" : ""} is not one. Nothing was read.`,
         { op: typeof op === "string" ? op.slice(0, 40) : null });
     /* END DEC-49 REGION is-grant-op */
-    return { ok: true, member: g.member_id, viewer: `member:${g.member_id}`, expires: g.expires };
+    return Credentials.#held(g);
+  }
+
+  /* R31 (N616, K1685): whether `token` is a live grant, asking about no op: exactly when R28 would admit a listed read
+     under it. Writes nothing, keeps no read log and never throws. */
+  async aiGrantHeld({ token = null } = {}) {
+    try {
+      const g = await this.#liveGrant(token);
+      return g ? Credentials.#held(g) : Credentials.#grantNotHeld();
+    } catch { return Credentials.#grantNotHeld(); }
   }
 
   /* ===== THE GROUP'S KEYED SERVICES (R29; K1449) =====
@@ -1048,10 +1292,11 @@ export function credentialsOps(c, url, body, env) {
     signeradd: () => c.signerAdd({ ...(body || {}), by: url.searchParams.get("by") }),
     signerlist: () => c.signerList(),
     signerset: () => c.signerSet({ ...(body || {}), by: url.searchParams.get("by") }),
-    /* T33-20 (R22–R29): the member's own account and the ask grant, `by` and `viewer` the control plane's stamps and the
-       session the one it authenticated (`session`, its stamp); a secret only ever in the body, never the query. The
-       in-plane reads (`accountReferenceFor`, `aiGrantAdmit`, `keyedServiceFor`) are not routed. Which credential
-       reaches each op is op-declarations' and control-plane's (Q0-10). */
+    /* T33-20 (R22–R29), T34 (R31–R37): the member's own account, the group's key and the ask grant, `by` and `viewer`
+       the control plane's stamps and the session the one it authenticated (`session`, its stamp); a secret only ever
+       in the body, never the query. The in-plane reads (`accountReferenceFor`, `accountFor`, `aiGrantAdmit`,
+       `aiGrantHeld`, `aiGrantMintStanding`, `keyedServiceFor`) are not routed. Which credential reaches each op is
+       op-declarations' and control-plane's (Q0-10; control-plane R53, R56). */
     accountreferenceset: () => c.accountReferenceSet({ ...(body || {}), by: url.searchParams.get("by") }),
     accountreferenceremove: () => c.accountReferenceRemove({ ...(body || {}), by: url.searchParams.get("by") }),
     accountreference: () => c.accountReferenceState({ member: url.searchParams.get("member"),
@@ -1059,6 +1304,13 @@ export function credentialsOps(c, url, body, env) {
     accountswitchset: () => c.accountSwitchSet({ ...(body || {}), by: url.searchParams.get("by") }),
     aigrantmint: () => c.aiGrantMint({ member: url.searchParams.get("member"), by: url.searchParams.get("by"),
                                        session: url.searchParams.get("session") }),
+    groupkeyset: () => c.groupKeySet({ ...(body || {}), by: url.searchParams.get("by") }),
+    groupkeyremove: () => c.groupKeyRemove({ by: url.searchParams.get("by") }),
+    groupkeyswitch: () => c.groupKeySwitch({ ...(body || {}), by: url.searchParams.get("by") }),
+    groupswitchset: () => c.groupSwitchSet({ ...(body || {}), by: url.searchParams.get("by") }),
+    groupkeystate: () => c.groupKeyState({ viewer: url.searchParams.get("viewer") }),
+    groupkeynotice: () => c.groupKeyNotice({ member: url.searchParams.get("viewer") }),
+    groupkeynoticeseen: () => c.groupKeyNoticeSeen({ member: url.searchParams.get("by"), by: url.searchParams.get("by") }),
     keyedserviceset: () => c.keyedServiceSet({ ...(body || {}), by: url.searchParams.get("by") }),
     keyedserviceswitch: () => c.keyedServiceSwitch({ ...(body || {}), by: url.searchParams.get("by") }),
     keyedservices: () => c.keyedServices(),

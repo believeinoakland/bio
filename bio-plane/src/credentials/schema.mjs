@@ -107,12 +107,12 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
 
--- R22-R26 (T33-20; K1502): each member's own Claude account reference, one row per member, held only by that
+-- R22-R25 (T33-20; K1502): each member's own Claude account reference, one row per member, held only by that
 -- member's own act. THE SECRET IS STORED ONLY SEALED (R23): 'sealed' is AES-256-GCM ciphertext under a key derived
 -- (HKDF-SHA-256) from the Worker's seal secret with the member id as salt, so the key is never stored beside the row
 -- and no other member's act reaches it; 'iv' is its nonce. No digest of the secret is kept. 'suggestions' and
--- 'standing' are the member's own switches (R25), off by default; removing the row turns both off. There is no group,
--- project or instance row (R26): 'member_id' is a member's id and nothing else. Never exported (R30).
+-- 'standing' are the member's own switches (R25), off by default; removing the row turns both off. 'member_id' is a
+-- member's id and nothing else: the group's key is its own table (R33). Never exported (R30).
 CREATE TABLE IF NOT EXISTS account_references (
   member_id   TEXT PRIMARY KEY,
   kind        TEXT NOT NULL,
@@ -137,13 +137,52 @@ CREATE TABLE IF NOT EXISTS keyed_services (
 -- R27 (Q1-3; K1450): the short-lived, read-only ask grant. Only the SHA-256 of the token is kept, with its member,
 -- the session it was minted under (the grant ends with it) and its expiry. It is no run row, no observation row and
 -- no read log. Never exported (R30).
+-- R32 (N580; K1481, K1609): a standing question's grant is held here too, 'kind' 'standing' and 'session' empty: the
+-- scheduler acts with no session, so it ends at its time, or at once when its member is revoked (R16) or removes
+-- their reference (R22). An ask's grant is 'kind' 'ask'; a row written before the column existed has NULL, read as
+-- an ask's (the only kind there was), never back-filled.
 CREATE TABLE IF NOT EXISTS ai_grants (
   grant_sha TEXT PRIMARY KEY,
   member_id TEXT NOT NULL,
   session   TEXT NOT NULL,
-  expires   INTEGER NOT NULL
+  expires   INTEGER NOT NULL,
+  kind      TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_grants_member ON ai_grants(member_id);
+
+-- R33, R34, R37 (K1755, K1757): the group's one Anthropic API key, one row (id=1), set, switched and removed only by
+-- an active administrator. Sealed as a reference is (R23), under the copy rather than a member: 'sealed' is AES-256-GCM
+-- ciphertext under a key derived from the Worker's seal secret with 'group-key:anthropic' as salt; no digest is kept.
+-- 'is_on' is off when the key is first set and off by default; 'suggestions' and 'standing' are the group key's own
+-- switches (R37), off by default, both turned off when the key is removed. 'set_by' and 'set_at' name the act that set
+-- the key held now. Never exported (R30, R34).
+CREATE TABLE IF NOT EXISTS group_key (
+  id          INTEGER PRIMARY KEY CHECK (id = 1),
+  sealed      TEXT,
+  iv          TEXT,
+  is_on       INTEGER NOT NULL DEFAULT 0,
+  set_by      TEXT,
+  set_at      TEXT,
+  suggestions INTEGER NOT NULL DEFAULT 0,
+  standing    INTEGER NOT NULL DEFAULT 0
+);
+
+-- R33: each act on the group key, recorded with its administrator and instant, never the key: 'act' is 'set',
+-- 'remove', 'switch' (detail 'on' or 'off') or 'switch:<name>' (R37; detail 'on' or 'off'). Never exported.
+CREATE TABLE IF NOT EXISTS group_key_acts (
+  seq    INTEGER PRIMARY KEY AUTOINCREMENT,
+  act    TEXT NOT NULL,
+  detail TEXT,
+  actor  TEXT NOT NULL,
+  at     TEXT NOT NULL
+);
+
+-- R36: the members who have read the group key's notice, each by their own act, with its instant. Seen by its member
+-- alone; never exported.
+CREATE TABLE IF NOT EXISTS group_key_notices (
+  member_id TEXT PRIMARY KEY,
+  seen_at   TEXT NOT NULL
+);
 `;
 
 /* Columns a store written before they existed gains at boot: additive and nullable, never back-filled (D-85). */
@@ -153,20 +192,24 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["signers", "registered_by", "TEXT"],
   ["signers", "status_at", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"],
+  ["ai_grants", "kind", "TEXT"],
 ];
 
 /* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus). */
 export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials",
-  "account_references", "keyed_services", "ai_grants"];
+  "account_references", "keyed_services", "ai_grants", "group_key", "group_key_acts", "group_key_notices"];
 
 /* R30 (plan T33, Rules (6)): each table's classes for record-core's `declareTable` (its R21), declared explicitly.
    Every table is purge-exempt (R18) and never expunged. Account references, keyed-service keys, password hashes,
-   sessions, AI credentials and ask grants are never exported; account references are seen by their owner alone.
-   Signer keys are public halves the group already publishes (`groupkeyspublic`), so they export; the bootstrap row
-   is an administrator's fact. */
+   sessions, AI credentials, ask grants, the group key with its acts and its notices are never exported; account
+   references and a member's notice are seen by their owner alone. Signer keys are public halves the group already
+   publishes (`groupkeyspublic`), so they export; the bootstrap row is an administrator's fact. The group key's
+   tables are `sight: "group"`: record-core's R21 offers no administrator sight, and no read answers the key whatever
+   its sight; `groupKeyState` answers its state to administrators alone (R34; K1760). */
 const CLASSES = { purge: "exempt", expunge: "none", derive: "stored", version_chain: false };
 export const CREDENTIALS_TABLES = Object.freeze([
   ["credentials", "never", "group"], ["sessions", "never", "group"], ["bootstrap", "admin-only", "group"],
   ["signers", "yes", "group"], ["ai_credentials", "never", "group"], ["account_references", "never", "owner"],
-  ["keyed_services", "never", "group"], ["ai_grants", "never", "group"],
+  ["keyed_services", "never", "group"], ["ai_grants", "never", "group"], ["group_key", "never", "group"],
+  ["group_key_acts", "never", "group"], ["group_key_notices", "never", "owner"],
 ].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));

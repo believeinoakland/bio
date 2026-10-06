@@ -1,6 +1,9 @@
-/* The ask grant (R27, R28; Q1-3, K1450, K1505 (14)), at the interface: minted at the member's own act under their own
-   live session, short-lived and read-only, writing no run row, no observation row and no read log; admitting only the
-   ops on its class's list, only as reads; ending with its time, its session and the member's revocation. */
+/* The ask grant (R27, R28, R31; Q1-3, K1450, K1505 (14), K1685) and a standing question's (R32; N580, K1609), at the
+   interface: an ask's minted at the member's own act under their own live session, a standing question's for answers
+   with no session; each short-lived and read-only, writing no run row, no observation row and no read log; admitting
+   only the ops on its class's list, only as reads; ending with its time, its session (an ask's), the member's
+   revocation and, for a standing question's, the member's removal of their reference. A member served by the group's
+   key (R35) is granted once they have read its notice (R36). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, PASSWORD } from "./fixture.mjs";
@@ -70,6 +73,18 @@ test("R27 a grant ends at its time, with its session, and with the member's revo
   for (const t of [null, "", "nope", 7]) assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: t, op: "search" })), refusal("GRANT_NOT_HELD"));
 });
 
+test("R28 AI_GRANT_OPS names each op as the plane routes it: `rule` held, the six renamed ops held by their routed names (`linesof` and `structureat` for `lines`), the old names gone; 27 entries, every other entry unchanged", () => {
+  assert.deepEqual([...AI_GRANT_OPS], [
+    "calculation", "career", "committedagainstpaid", "dutiesof", "dutyoccurrences", "entity", "entitybyalias",
+    "eventsfor", "explore", "frontier", "holderat", "linesof", "meaningrows", "money", "moneyof", "profiles", "relation",
+    "resolutions", "rule", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof",
+    "structureat", "timeline"]);
+  for (const gone of ["careerof", "occurrences", "lines", "duties", "calculations", "moneyfacts"])
+    assert.ok(!AI_GRANT_OPS.includes(gone), gone);
+  for (const held of ["rule", "career", "dutyoccurrences", "linesof", "structureat", "dutiesof", "calculation", "money"])
+    assert.ok(AI_GRANT_OPS.includes(held), held);
+});
+
 test("R28 AI_GRANT_OPS is frozen and sorted; a request under a grant is admitted only for an op on it and only as a read; anything else GRANT_OP_REFUSED naming the op", async () => {
   const w = await grantWorld();
   const g = (await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.session.ann })).token;
@@ -91,4 +106,128 @@ test("R28 AI_GRANT_OPS is frozen and sorted; a request under a grant is admitted
   assert.equal(w.snapshot(), before, "admission writes nothing");
   /* the list holds no sources op, no member history, no administrative and no export op (answers R1) */
   assert.deepEqual(AI_GRANT_OPS.filter((op) => /^source|^member|^admin|export|purge|audit|aicredential/.test(op)), []);
+});
+
+test("R27 R35 R36 a member with no reference of their own is granted under the group's key only while it is held and on, and once they have read its notice; NO_ACCOUNT only when no account serves them", async () => {
+  const w = await grantWorld();
+  w.c.accountReferenceRemove({ member: "bob", by: "bob" });
+  const mint = (id) => w.c.aiGrantMint({ member: id, by: id, session: w.session[id] });
+  assert.deepEqual(shape(await mint("bob")), refusal("NO_ACCOUNT"), "no key at all");
+  await w.c.groupKeySet({ key: "sk-group-1", by: "admin" });
+  assert.deepEqual(shape(await mint("bob")), refusal("NO_ACCOUNT"), "the group key held but off");
+  w.c.groupKeySwitch({ on: true, by: "second" });
+  const before = w.snapshot();
+  assert.deepEqual(shape(await mint("bob")), refusal("GROUP_KEY_NOTICE_DUE"), "served by the group key, its notice unread");
+  assert.equal(w.snapshot(), before, "a refusal mints nothing");
+  /* ann holds her own reference: the group key's notice never holds her back */
+  assert.equal((await mint("ann")).ok, true);
+  assert.deepEqual(w.c.groupKeyNoticeSeen({ member: "bob", by: "bob" }), { ok: true, seen: true, already: false });
+  const g = await mint("bob");
+  assert.equal(g.ok, true);
+  assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer, "member:bob");
+  /* the refusals R22 names still come first */
+  assert.deepEqual(shape(await w.c.aiGrantMint({ member: "bob", by: "second", session: w.session.second })), refusal("NOT_YOUR_ACCOUNT"));
+  w.c.groupKeySwitch({ on: false, by: "admin" });
+  assert.deepEqual(shape(await mint("bob")), refusal("NO_ACCOUNT"), "switched off again");
+});
+
+test("R31 aiGrantHeld answers {ok, member, viewer, expires} exactly when R28 would admit a listed read under the token, asking about no op; else GRANT_NOT_HELD (C-29.24); it writes nothing and never throws", async () => {
+  const w = await grantWorld();
+  const mint = async (id) => (await w.c.aiGrantMint({ member: id, by: id, session: w.session[id] })).token;
+  const [a, b, d] = [await mint("ann"), await mint("bob"), await mint("dee")];
+  await w.c.groupKeySet({ key: "sk-g", by: "admin" });
+  w.c.groupSwitchSet({ switch: "standing", on: true, by: "admin" });
+  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  const st = (await w.c.aiGrantMintStanding({ member: "ann", question: "what changed?" })).token;
+  const agree = async (token, label) => {
+    const held = await w.c.aiGrantHeld({ token });
+    const admitted = await w.c.aiGrantAdmit({ token, op: AI_GRANT_OPS[0] });
+    if (admitted.ok) assert.deepEqual(held, admitted, label);
+    else assert.deepEqual(shape(held), refusal("GRANT_NOT_HELD"), label);
+    for (const op of AI_GRANT_OPS) assert.equal((await w.c.aiGrantAdmit({ token, op })).ok, held.ok, `${label} ${op}`);
+    return held;
+  };
+  const before = w.snapshot();
+  for (const [t, who] of [[a, "ann"], [b, "bob"], [d, "dee"], [st, "ann"]]) {
+    const h = await agree(t, who);
+    assert.deepEqual(Object.keys(h).sort(), ["expires", "member", "ok", "viewer"]);
+    assert.deepEqual([h.ok, h.member, h.viewer], [true, who, `member:${who}`]);
+  }
+  assert.equal(w.snapshot(), before, "it writes nothing, keeps no read log");
+  w.sql.exec(`UPDATE ai_grants SET expires=? WHERE member_id='ann' AND kind='ask'`, Date.now() - 1);
+  assert.equal((await agree(a, "expired")).ok, false);
+  w.sql.exec(`DELETE FROM sessions WHERE token=?`, w.session.bob);
+  assert.equal((await agree(b, "signed out")).ok, false);
+  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
+  assert.equal((await agree(d, "revoked")).ok, false);
+  assert.equal((await agree(st, "a standing grant needs no session")).ok, true);
+  for (const t of [null, undefined, "", "nope", 7, {}, ["x"]]) assert.deepEqual(shape(await w.c.aiGrantHeld({ token: t })), refusal("GRANT_NOT_HELD"), String(t));
+  assert.deepEqual(shape(await w.c.aiGrantHeld()), refusal("GRANT_NOT_HELD"));
+  /* never throws: a store it cannot read answers not held */
+  const broken = Object.create(Object.getPrototypeOf(w.c));
+  assert.deepEqual(shape(await w.c.aiGrantHeld.call(broken, { token: a })), refusal("GRANT_NOT_HELD"));
+});
+
+test("R32 aiGrantMintStanding: refusals in order (not active, NO_ACCOUNT, STANDING_SWITCH_OFF, NO_QUESTION), each with its row and minting nothing; a grant shaped as R27's with no session, admitted only for AI_GRANT_OPS as reads; ended by revocation (R16) and by removing the reference (R22); R27 unchanged", async () => {
+  const w = await grantWorld();
+  await w.m.memberAdd({ memberId: "cal", cover: "c", by: "admin" });
+  w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
+  w.c.accountReferenceRemove({ member: "bob", by: "bob" });
+  const standing = (member, question = "what is new on the budget?") => w.c.aiGrantMintStanding({ member, question });
+  const before = w.snapshot();
+  for (const member of ["dee", "cal", "ghost", "admin", "class:ai", null, ""])
+    assert.deepEqual(shape(await standing(member)), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"), String(member));
+  assert.deepEqual(shape(await standing("bob")), refusal("NO_ACCOUNT"), "no reference, no group key");
+  assert.deepEqual(shape(await standing("ann")), refusal("STANDING_SWITCH_OFF"), "her own account's switch is off");
+  assert.equal(w.snapshot(), before, "no refusal mints");
+  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  const on = w.snapshot();
+  for (const question of [null, undefined, "", "   ", 7])
+    assert.deepEqual(shape(await w.c.aiGrantMintStanding({ member: "ann", question })), refusal("NO_QUESTION"), String(question));
+  assert.equal(w.snapshot(), on, "no refusal mints");
+  /* the group key's own switch governs a member it serves (R37), not the member's */
+  await w.c.groupKeySet({ key: "sk-g", by: "admin" });
+  w.c.groupKeySwitch({ on: true, by: "admin" });
+  assert.deepEqual(shape(await standing("bob")), refusal("STANDING_SWITCH_OFF"), "the group key's standing switch is off");
+  w.c.groupSwitchSet({ switch: "standing", on: true, by: "second" });
+  const gb = await standing("bob");
+  assert.equal(gb.ok, true, "R32 names no notice refusal: the model call itself goes through accountFor (R35, R36)");
+  /* ann's own switch governs her, whatever the group key's says */
+  w.c.groupSwitchSet({ switch: "standing", on: false, by: "admin" });
+  const snap = w.snapshot();
+  const t0 = Date.now();
+  const g = await standing("ann");
+  const t1 = Date.now();
+  assert.deepEqual(Object.keys(g).sort(), ["expires", "ok", "token"]);
+  assert.match(g.token, /^[0-9a-f]{64}$/);
+  assert.ok(g.expires >= t0 + AI_GRANT_TTL_SECONDS * 1000 && g.expires <= t1 + AI_GRANT_TTL_SECONDS * 1000);
+  /* only its digest kept, in its own grant row: no run row, no observation row, no read log */
+  assert.ok(!w.snapshot().includes(g.token));
+  const after = JSON.parse(w.snapshot()), was = Object.fromEntries(JSON.parse(snap));
+  assert.deepEqual(after.filter(([n, rows]) => JSON.stringify(rows) !== JSON.stringify(was[n] ?? [])).map(([n]) => n), ["ai_grants"]);
+  assert.deepEqual(w.row(`SELECT member_id, session, kind FROM ai_grants WHERE member_id='ann' AND kind='standing'`),
+    { member_id: "ann", session: "", kind: "standing" });
+  /* admitted as R27's: its viewer the author, only listed ops, only as reads */
+  for (const op of AI_GRANT_OPS) assert.equal((await w.c.aiGrantAdmit({ token: g.token, op })).viewer, "member:ann", op);
+  for (const [op, write] of [["search", true], ["promote", false], ["accountreference", false]])
+    assert.equal((await w.c.aiGrantAdmit({ token: g.token, op, write })).reason, "GRANT_OP_REFUSED", op);
+  /* it ends at once when its member removes their reference (R22); an ask's grant of theirs is not a standing one */
+  const ask = (await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.session.ann })).token;
+  w.c.accountReferenceRemove({ member: "ann", by: "ann" });
+  assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: g.token, op: "search" })), refusal("GRANT_NOT_HELD"));
+  assert.equal((await w.c.aiGrantAdmit({ token: ask, op: "search" })).ok, true);
+  /* and when its member is revoked (R16) */
+  assert.equal((await w.c.aiGrantAdmit({ token: gb.token, op: "search" })).ok, true);
+  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
+  assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: gb.token, op: "search" })), refusal("GRANT_NOT_HELD"));
+  /* an expired one ends at its time */
+  await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-ann-2", by: "ann" });
+  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "ann" });
+  const late = (await standing("ann")).token;
+  w.sql.exec(`UPDATE ai_grants SET expires=? WHERE kind='standing'`, Date.now() - 1);
+  assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: late, op: "search" })), refusal("GRANT_NOT_HELD"));
+  /* R27 unchanged: no `by` but the member's own act mints an ask's grant, and it is not routed */
+  for (const by of [null, "class:ai", "class:daemon", "second"])
+    assert.ok(["MACHINE_CANNOT_HOLD_ACCOUNT", "NOT_YOUR_ACCOUNT"].includes((await w.c.aiGrantMint({ member: "ann", by, session: w.session.ann })).reason), String(by));
+  assert.ok(!Object.keys(w.ops()).some((op) => /standing/i.test(op)), "R32 is reached from answers only, never routed");
 });
