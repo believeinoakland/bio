@@ -46,3 +46,7 @@ B3 applied: tranche merged; case-import now reads the real case-grammar (calcula
 ## J4 · REPORT
 
 B4 applied: tranche merged; a workbook row (recompute: not_recomputed) is recorded not_recreated with the source's status held as its statement (tested). 83/83; checks as before (architecture: only the calc-grammar edge, K1633). Still waiting on case-checker (T33-66) for the real-checker case, then COMPLETE.
+
+## J5 · COMPLETE
+
+T33-67 complete (record: Completion). B5 applied: tranche merged, results read by key as case-grammar R18 states them (as case-checker R20 reads them), real-checker calculation case added. 84/84; users' tests unchanged (3 reds, same as tranche: case-disclosures R29, case-authoring R29/R30). format, coverage 21/21, ownership 0 failures; architecture 2 failures = the calc-grammar edge for uses (K1633). Final uses add calc-grammar. Report: case-checker R9 does not fill a calculation's input from documents, so after an R5 completion case-import says recreated and the checker not_recomputed (recorded agrees_with_this_copy: false); within case-checker's requirements as written. Plane bundle stale (case-import source).
