@@ -40416,6 +40416,69 @@ function compareProvenance(prior, next) {
   return { state: "differs", changed, says };
 }
 
+// src/reading-pipeline/hooks.mjs
+var isClassList = (v) => Array.isArray(v) && v.length > 0 && v.every((c) => typeof c === "string" && c.length > 0);
+var errorText = (e) => {
+  try {
+    return String(e && e.message ? e.message : e).slice(0, 200);
+  } catch {
+    return "the hook failed";
+  }
+};
+var copyOf = (reading) => {
+  try {
+    return structuredClone(reading);
+  } catch {
+    return reading;
+  }
+};
+var ReadHooks = class {
+  #hooks = [];
+  // {module, fn, classes, rank, seq}
+  /** R25: registers, once per module, at start, `fn` for the capture classes `captureClasses` names (a non-empty list
+   *  of non-empty strings). Every refusal is membership's `listenerRefusal` (its R81): a malformed registration, an
+   *  empty or non-list `captureClasses` among them, `LISTENER_MALFORMED`; a second by the same module
+   *  `LISTENER_DECLARED` naming it. A refused registration records nothing. */
+  onRead(module, fn, { captureClasses } = {}) {
+    const refused3 = listenerRefusal(this.#hooks, module, isClassList(captureClasses) ? fn : null, { slot: "onRead" });
+    if (refused3) return refused3;
+    const i = MODULE_ORDER.indexOf(module);
+    this.#hooks.push({ module, fn, classes: [...captureClasses], rank: i === -1 ? Infinity : i, seq: this.#hooks.length });
+    this.#hooks.sort((a, b) => a.rank - b.rank || a.seq - b.seq);
+    return { ok: true, module, captureClasses: [...captureClasses] };
+  }
+  /** R26: called by the module that commits a reading, once its transaction has committed (`committed: true`; any
+   *  other value runs nothing and answers `{ran: []}`). Each hook whose classes hold `captureClass` is called, one at
+   *  a time, in `MODULE_ORDER`, with `{captureSha, captureClass, reading}`; a hook for another class is not. Answers
+   *  `{ran, failed}`: `ran` the modules whose hook returned or resolved, `failed` each `{module, error}` whose hook threw
+   *  or rejected, which never undoes the reading, stops a later hook, or leaves `afterRead`. Never rejects. */
+  async afterRead({ captureSha, captureClass, reading, committed } = {}) {
+    if (committed !== true) return { ran: [] };
+    const ran = [], failed2 = [];
+    for (const h of [...this.#hooks]) {
+      if (!h.classes.includes(captureClass)) continue;
+      try {
+        await h.fn({ captureSha, captureClass, reading: copyOf(reading) });
+        ran.push(h.module);
+      } catch (e) {
+        failed2.push({ module: h.module, error: errorText(e) });
+      }
+    }
+    return { ran, failed: failed2 };
+  }
+};
+var instances5 = /* @__PURE__ */ new WeakMap();
+function readHooksOf(ctx) {
+  const key = ctx && typeof ctx === "object" && ctx.storage && typeof ctx.storage === "object" ? ctx.storage : ctx;
+  if (!key || typeof key !== "object" && typeof key !== "function") return new ReadHooks();
+  let h = instances5.get(key);
+  if (!h) {
+    h = new ReadHooks();
+    instances5.set(key, h);
+  }
+  return h;
+}
+
 // src/reading-pipeline/index.mjs
 var ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
 var ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
@@ -41127,6 +41190,17 @@ function containerExtentOf(i2text, { pdfPaints = null, fmt = null } = {}) {
   }
   return containerExtent;
 }
+function emittedFieldsOf(i2text) {
+  const isObj25 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+  const out = { metadata: isObj25(i2text) && isObj25(i2text.metadata) ? i2text.metadata : null };
+  if (isObj25(i2text) && Array.isArray(i2text.sheets)) {
+    const cells = {};
+    for (const sh of i2text.sheets)
+      if (isObj25(sh) && typeof sh.name === "string") cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
+    out.cells = cells;
+  }
+  return out;
+}
 function documentAddressOf(doc) {
   const chain2 = Array.isArray(doc && doc.provenance_chain) ? doc.provenance_chain : [];
   const drive = chain2.find((h) => h && h.drive_file_id && typeof h.document_address === "string");
@@ -41162,6 +41236,7 @@ async function read(document, {
     return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration });
   } catch (e) {
     const reading = failed(document, null, `the reading could not be composed (${String(e && e.message || e).slice(0, 200)}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document`);
+    reading.metadata = null;
     reading.provenance = await readingProvenance({ text: null, planeVersion });
     return { reading };
   }
@@ -41198,6 +41273,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const fmt = profile.format && typeof profile.format.format === "string" ? profile.format.format : null;
   const vw = view ? { view } : {};
   const early = async (reading2) => {
+    reading2.metadata = null;
     reading2.provenance = await readingProvenance({ text: null, chain: null, tier: null, container: null, planeVersion, member: null });
     return { reading: reading2 };
   };
@@ -41215,7 +41291,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const entry2 = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry2 && (typeof entry2.text === "function" || typeof entry2.structure === "function"));
   let reading, classifiedText = null, member = null;
-  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect;
+  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null;
   if (!wireable && textRead) {
     classifiedText = text5;
     member = "plane";
@@ -41319,6 +41395,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           readDialect = void 0;
         }
       }
+      emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
       ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text));
       if (i2text) {
@@ -41348,6 +41425,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       textUnitsOverBound = 0;
       textUnitsSkipped = null;
       classifiedText = null;
+      emitted = null;
     }
   } else {
     reading = failed(
@@ -41369,6 +41447,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     const n = textCountsOf(classifiedText);
     if (n) Object.assign(reading, n);
   }
+  Object.assign(reading, emittedFieldsOf(emitted));
   if (readDialect !== void 0) reading.dialect = readDialect;
   return {
     reading,
@@ -41647,11 +41726,11 @@ var MIGRATIONS = Object.freeze({
     noLayer: "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides"
   })
 });
-var instances5 = /* @__PURE__ */ new WeakMap();
+var instances6 = /* @__PURE__ */ new WeakMap();
 var isObjectState = (ctx) => !!ctx && typeof ctx.blockConcurrencyWhile === "function";
 function extractionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let x = instances5.get(storage);
+  let x = instances6.get(storage);
   if (!x) {
     const record = opts.record ?? recordOf(ctx);
     x = new Extraction(storage, {
@@ -41662,7 +41741,7 @@ function extractionOf(ctx, opts = {}) {
       provenance: opts.provenance ?? (isObjectState(ctx) ? provenanceOf(ctx) : null),
       host: opts.host ?? (isObjectState(ctx) ? ctx : null)
     });
-    instances5.set(storage, x);
+    instances6.set(storage, x);
     x.registerFigures();
   }
   return x;
@@ -41679,6 +41758,7 @@ var Extraction = class _Extraction {
   #counted = false;
   #host = null;
   #migrationRun = null;
+  #readHooks = null;
   constructor(storage, {
     record,
     membership = null,
@@ -41686,11 +41766,13 @@ var Extraction = class _Extraction {
     promotion = null,
     provenance = null,
     host = null,
-    env = {}
+    env = {},
+    readHooks = null
   } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.#host = host;
+    this.#readHooks = readHooks && typeof readHooks.afterRead === "function" ? readHooks : null;
     this.core = record;
     this.membership = membership;
     this.calibration = calibration;
@@ -42083,8 +42165,40 @@ var Extraction = class _Extraction {
       const listeners = {};
       for (const l of this.#listeners)
         listeners[l.module] = l.fn({ bundleId, captureSha: sha, reading, chainBefore, chainAfter, unitsBefore, indexed, author });
-      return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed" };
+      const afterRead = this.#holdAfterRead(sha, reading);
+      return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed", afterRead };
     });
+  }
+  /** R69 (T33-23a, K1521, K1555; reading-pipeline R26, record-core R66): held with `afterCommit`, so it runs once, just
+   *  after the outermost transaction holding this write has committed (the promotion's, for R20), and never when it
+   *  rolls back. This storage's hook registry (`reading-pipeline.readHooksOf`, keyed by the storage as `extractionOf`
+   *  keys this module, or the one handed in) has its `afterRead` called with the capture class, the reading's
+   *  content-type key (null when it names none, so no hook runs), and the reading as written; the hooks run in
+   *  `MODULE_ORDER` there. Answers a promise of `{ran, failed}`, the refusals reported with the reading: a hook's
+   *  failure, or `afterRead`'s own, never undoes the committed reading. The run is handed to the object's
+   *  `waitUntil`, so a hook finishes. Null when no registry is reachable. */
+  #holdAfterRead(captureSha, reading) {
+    const hooks = this.#readHooks || (typeof readHooksOf === "function" ? readHooksOf(this.#storage) : null);
+    if (!hooks || typeof hooks.afterRead !== "function" || !this.core || typeof this.core.afterCommit !== "function") return null;
+    const captureClass = typeof reading.content_type === "string" && reading.content_type ? reading.content_type : null;
+    const written = JSON.parse(JSON.stringify(reading));
+    let settle;
+    const answer = new Promise((r) => {
+      settle = r;
+    });
+    this.core.afterCommit(() => {
+      const run2 = (async () => {
+        try {
+          const a = await hooks.afterRead({ captureSha, captureClass, reading: written, committed: true });
+          return { ran: Array.isArray(a && a.ran) ? a.ran : [], failed: Array.isArray(a && a.failed) ? a.failed : [] };
+        } catch (e) {
+          return { ran: [], failed: [{ module: "reading-pipeline", error: String(e && e.message ? e.message : e) }] };
+        }
+      })();
+      if (this.#host && typeof this.#host.waitUntil === "function") this.#host.waitUntil(run2);
+      settle(run2);
+    });
+    return answer;
   }
   /* D-536 (R23): every distinct reading kept in arrival order, keyed by the digest of its JSON, before the row is
      replaced; one equal to the latest kept is not kept again; a capture whose one reading predates the history has
@@ -43028,6 +43142,7 @@ var Extraction = class _Extraction {
           const n = textCountsOf(t3.i2text);
           if (n) Object.assign(reading, n);
         }
+        Object.assign(reading, emittedFieldsOf(t3.i2text));
         structureChain = chain2;
         reading.reextracted = {
           at: stampInstant("second"),
@@ -43053,6 +43168,7 @@ var Extraction = class _Extraction {
           }) : null;
           if (out) {
             this.recordComposed(reading, sha);
+            const afterRead = out.afterRead ? await out.afterRead : null;
             const ls = Object.values(out.listeners || {});
             const staled = ls.reduce((n, l) => n + (l && Number.isInteger(l.staled) ? l.staled : 0), 0);
             const observed = (ls.find((l) => l && l.observed) || {}).observed ?? null;
@@ -43061,6 +43177,7 @@ var Extraction = class _Extraction {
               staled,
               observed,
               compared: out.kept ? out.kept.compared : null,
+              afterRead,
               indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound }
             };
           }
@@ -43090,6 +43207,7 @@ var Extraction = class _Extraction {
           units: w.indexed ?? null,
           observed: w.observed ?? null,
           compared: w.compared ?? null,
+          after_read: w.afterRead ?? null,
           candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below what this instance's fleet can read; this one is re-read now"
         };
       }
@@ -43875,6 +43993,16 @@ function dice(a, b) {
 }
 var said = (s) => s || "never recorded";
 function heldTextAt(extent, held) {
+  if ((extent.kind === "sheet-cell" || extent.kind === "sheet-range") && held.cells) {
+    const got = typedCellsAt(extent, held.cells);
+    if (got.cells) {
+      if (extent.kind === "sheet-cell" && !got.cells.length)
+        return { text: null, reason: "cell_not_held", why: `the reading holds no value at ${describeExtent2(extent)}` };
+      if (got.cells.some((c) => typeof c.value !== "string"))
+        return { text: null, reason: "cell_value_undetermined", why: `a cell inside ${describeExtent2(extent)} is held with its value undetermined by its reader, so the whole passage is not held` };
+      return { text: got.cells.map((c) => c.value).join("\n"), extent: canonicalExtent2(extent) };
+    }
+  }
   if (extent.kind === "document") {
     if (held.state !== "whole" || !held.units.length || held.units.some((u2) => u2.truncated))
       return { text: null, reason: "cited_text_partial", why: `the citation is to the whole document, and the record does not hold the cited version's text whole (its index reads ${said(held.state)}), so there is no whole text` };
@@ -43887,6 +44015,43 @@ function heldTextAt(extent, held) {
   if (u.truncated)
     return { text: null, reason: "cited_text_truncated", why: "the cited passage's text is held only to the per-unit cap, so the whole passage is not held" };
   return { text: u.text, extent: at31 };
+}
+function typedCellsAt(extent, sheetCells) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (e.kind !== "sheet-cell" && e.kind !== "sheet-range")
+    return {
+      cells: null,
+      reason: "not_a_sheet_extent",
+      why: `a ${String(e.kind).slice(0, 40)} extent names no cells of a sheet`
+    };
+  const sheet = typeof e.sheet === "string" ? e.sheet.trim() : "";
+  const list2 = sheetCells && typeof sheetCells === "object" && Object.prototype.hasOwnProperty.call(sheetCells, sheet) ? sheetCells[sheet] : null;
+  if (!Array.isArray(list2))
+    return {
+      cells: null,
+      reason: "cells_not_held",
+      why: `the capture's reading holds no typed cells for sheet '${sheet.slice(0, 40)}' (never read for its cells, or over its reader's size guard), so which values it holds there is not read`
+    };
+  const box = e.kind === "sheet-cell" ? (() => {
+    const p3 = a1ToRowCol(e.cell);
+    return p3 && { r0: p3.row, c0: p3.col, r1: p3.row, c1: p3.col };
+  })() : rangeCorners(e.range);
+  if (!box) return { cells: null, reason: "extent_unreadable", why: "the extent's cell or range could not be read" };
+  const inside = [];
+  for (const c of list2) {
+    const at31 = c && c.source && typeof c.source.cell === "string" ? a1ToRowCol(c.source.cell) : null;
+    if (!at31 || at31.row < box.r0 || at31.row > box.r1 || at31.col < box.c0 || at31.col > box.c1) continue;
+    inside.push({ at: at31, cell: {
+      source: { ...c.source },
+      value: c.value ?? null,
+      type: c.type ?? null,
+      declared: c.declared ?? null,
+      cached: c.cached ?? null,
+      formula: c.formula ?? null
+    } });
+  }
+  inside.sort((a, b) => a.at.row - b.at.row || a.at.col - b.at.col);
+  return { cells: inside.map((x) => x.cell) };
 }
 function gradeAcross(row3, extent, older, newer) {
   const G = VERSION_NOTICE_GRADES;
@@ -43903,6 +44068,29 @@ function gradeAcross(row3, extent, older, newer) {
     return U("extent_unreadable", "the cited passage's extent could not be read back from its row");
   if (row3.cited_as === "bytes")
     return U("cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part digest of the newer capture to compare it with");
+  if (extent.kind === "sheet-cell" || extent.kind === "sheet-range") {
+    const both = typedCellsAt(extent, older.cells).cells && typedCellsAt(extent, newer.cells).cells;
+    if (both) {
+      const was = heldTextAt(extent, older), now = heldTextAt(extent, newer);
+      if (was.text == null) return U(was.reason, `${was.why}, so there is nothing to compare`);
+      if (now.reason === "cell_not_held")
+        return out("NOT_FOUND", "text_not_found", `the newer version's typed cells for the sheet are held, and none holds a value at ${describeExtent2(extent)}`);
+      if (now.text == null) return U(now.reason, `in the newer version ${now.why}`);
+      if (now.text === was.text)
+        return out("A", "identical_at_extent", `the cells at ${describeExtent2(extent)} hold byte-identical values in the newer version`, { extent, ref: row3.ref });
+      const sim = dice(bagOf(was.text), bagOf(now.text));
+      const r2 = Math.round(sim * 1e3) / 1e3;
+      return sim >= VERSION_NOTICE_SIMILAR ? out(
+        "C",
+        "similar_text",
+        `the cells at ${describeExtent2(extent)} changed; word similarity ${r2}`,
+        { extent, ref: row3.ref },
+        r2
+      ) : out("NOT_FOUND", "text_not_found", `the cells at ${describeExtent2(extent)} changed past the similarity floor (${VERSION_NOTICE_SIMILAR}); word similarity ${r2}`, null, r2);
+    }
+    older = { ...older, cells: null };
+    newer = { ...newer, cells: null };
+  }
   const whole = extent.kind === "document";
   const cited = heldTextAt(extent, older);
   if (cited.text == null) return U(cited.reason, `${cited.why}, so there is nothing to compare`);
@@ -45216,7 +45404,8 @@ var Content = class {
     };
   }
   #unitsOf(captureSha, memo) {
-    if (!memo.has(captureSha)) memo.set(captureSha, normUnits(this.extraction.unitsOf(captureSha)));
+    if (!memo.has(captureSha))
+      memo.set(captureSha, { ...normUnits(this.extraction.unitsOf(captureSha)), cells: this.#officeOf(captureSha).cells });
     return memo.get(captureSha);
   }
   /** N161: the notice for ONE row a caller has read from `content` through R45's read contract (`{content_id,
@@ -45368,10 +45557,89 @@ var Content = class {
       if (typed) return typeof typed.text === "string" ? typed.text : null;
       const e = safeJson7(r.extent);
       if (!isObj7(e)) return null;
-      const held = heldTextAt({ ...e, kind: r.extent_kind }, normUnits(this.extraction.unitsOf(r.capture_sha)));
+      const held = heldTextAt(
+        { ...e, kind: r.extent_kind },
+        { ...normUnits(this.extraction.unitsOf(r.capture_sha)), cells: this.#officeOf(r.capture_sha).cells }
+      );
       return typeof held.text === "string" ? held.text : null;
     } catch {
       return null;
+    }
+  }
+  /* ===================================================================== *
+   * WHAT AN OFFICE CAPTURE'S READING STATES ABOUT ITSELF (R52, R53; T33-24, C:A-5, K1448, K1505 (11)). Read, never
+   * computed: a cell's value is the file's stored lexical value and a formula's cached value the file's statement
+   * (nothing here recalculates); the metadata is what the file says of its own authorship, and this module asserts no
+   * act over it.
+   * ===================================================================== */
+  /** THE ONE READER of the typed cells and the metadata a capture's reading holds (`extraction.readingOf`'s `reading`):
+   *  `cells` the per-sheet map `{<sheet name>: cells list | null}` (null when the reading holds none), `metadata` the
+   *  office readers' object (null when none), `read` whether the capture was read at all. Never throws. */
+  #officeOf(captureSha) {
+    let r = null;
+    try {
+      r = typeof captureSha === "string" && captureSha ? this.extraction.readingOf(captureSha) : null;
+    } catch {
+      r = null;
+    }
+    const reading = r && isObj7(r.reading) ? r.reading : null;
+    return {
+      read: !!r,
+      cells: reading && isObj7(reading.cells) ? reading.cells : null,
+      metadata: reading && isObj7(reading.metadata) ? reading.metadata : null
+    };
+  }
+  /** R52: the typed cells of a held `sheet-cell` or `sheet-range` row's capture inside its extent, as the reader states
+   *  them (`office-readers` R30), in row then column order: `{content_id, capture_sha, extent_kind, extent, cells}`, or
+   *  `{cells: null, reason, why}` for a row not held, stale (R22), of another extent kind, or whose reading holds no
+   *  typed cells for that sheet. No viewer (R46's terms): a caller that shows them asks sight first (R37). Writes
+   *  nothing; never throws. */
+  cellsAt(contentId) {
+    const no4 = (reason, why) => ({ cells: null, reason, why });
+    try {
+      const id = typeof contentId === "string" ? contentId.trim() : "";
+      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, stale FROM content WHERE content_id=?`, id) : null;
+      if (!r) return no4("not_held", "this record holds no content row by that id");
+      if (r.stale)
+        return no4("stale", "the row was cited under an earlier reading of its document, and the cells held now are the newer reading's, which may not be the cells cited");
+      const e = safeJson7(r.extent);
+      if (r.extent_kind !== "sheet-cell" && r.extent_kind !== "sheet-range")
+        return no4("not_a_sheet_extent", `the row cites a ${r.extent_kind} extent, which names no cells of a sheet`);
+      const extent = { ...isObj7(e) ? e : {}, kind: r.extent_kind };
+      const got = typedCellsAt(extent, this.#officeOf(r.capture_sha).cells);
+      if (!got.cells) return no4(got.reason, got.why);
+      return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells: got.cells };
+    } catch {
+      return no4("not_read", "the row's cells could not be read");
+    }
+  }
+  /** R53: the metadata an office capture's reading holds (`office-readers` R31), `{capture_sha, metadata: {author,
+   *  lastModifiedBy, created, modified, source}}` each as the file writes it, or `{metadata: null, reason, why}` when
+   *  the capture was never read, is not an office document, or its reading holds none. What the file states about
+   *  itself, read by `events` for an edit act; it is never a fact here. Writes nothing; never throws. */
+  officeMetadataOf(captureSha) {
+    const no4 = (reason, why) => ({ metadata: null, reason, why });
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.trim() : "";
+      const held = this.#officeOf(sha);
+      if (!held.read) return no4("never_read", "this record holds no reading of that capture");
+      const m = held.metadata;
+      if (m) {
+        const v = (k) => m[k] === void 0 ? null : m[k];
+        return { capture_sha: sha, metadata: {
+          author: v("author"),
+          lastModifiedBy: v("lastModifiedBy"),
+          created: v("created"),
+          modified: v("modified"),
+          source: v("source")
+        } };
+      }
+      const kind = this.contentContextFor(sha).container;
+      if (kind && kind.office === false)
+        return no4("not_office", `${kind.kind_why || "the capture is not an office document"}, so it states no office metadata`);
+      return no4("none_held", "the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)");
+    } catch {
+      return no4("not_read", "the capture's metadata could not be read");
     }
   }
   /* ===================================================================== *
@@ -45513,9 +45781,9 @@ function legacyConnectionAxis(r, extent, connectionByBundle) {
     why: `this leg cites ${describeExtent2(extent)} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for ${r.bundle_id}, and it is the DOCUMENT's, not this portion's`
   };
 }
-var instances6 = /* @__PURE__ */ new WeakMap();
+var instances7 = /* @__PURE__ */ new WeakMap();
 function contentOf(host, deps) {
-  let c = instances6.get(host);
+  let c = instances7.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -45523,13 +45791,26 @@ function contentOf(host, deps) {
     const provenance = d.provenance || provenanceOf(host);
     const extraction = d.extraction || extractionOf(host);
     c = new Content({ ...d, storage: d.storage || host.storage, record, membership, provenance, extraction });
-    instances6.set(host, c);
-    record.declarePurge("content", CONTENT_TABLES);
+    instances7.set(host, c);
+    declareTables(record);
     c.extraction.onReading("content", (e) => ({ staled: c.markStale(e.captureSha, e.chainAfter, { unitsBefore: e.unitsBefore ?? null }) }));
     joinTestimony(c);
     registerFigures(c);
   }
   return c;
+}
+var CONTENT_TABLE_CLASSES = Object.freeze({
+  purge: "clear",
+  expunge: "none",
+  export: "admin-only",
+  sight: "bundle",
+  derive: "stored",
+  version_chain: false
+});
+function declareTables(record) {
+  const answer = record.declareTable("content", CONTENT_TABLES.map((name2) => ({ name: name2, ...CONTENT_TABLE_CLASSES })));
+  if (answer && answer.ok === false)
+    throw new Error(`content: record-core refused its tables: ${answer.code || answer.reason}${answer.table ? ` (${answer.table})` : ""}`);
 }
 function joinTestimony(c) {
   const p3 = c.provenance;
@@ -46039,22 +46320,18 @@ var ACCOUNT_CHECKS = Object.freeze({
   UNKNOWN_ACCOUNT_KIND: Object.freeze({
     check: "C-29.17",
     where: at5("accountReferenceSet", "is-account-kind"),
-    translation: "That is not a kind of Claude account this group can hold. Connect your own API key. Nothing was changed."
+    translation: "That is not a kind of Claude account this group can hold. Connect your own API key or your own Claude subscription token. Nothing was changed."
   }),
-  ACCOUNT_KIND_NOT_OFFERED: Object.freeze({
-    check: "C-29.18",
-    where: at5("accountReferenceSet", "is-account-kind"),
-    translation: "This copy does not hold a Claude subscription token. Connect your own API key instead. Nothing was changed."
-  }),
+  /* C-29.18 (ACCOUNT_KIND_NOT_OFFERED) is retired with K1537's hold (K1547, T33-20b); its id is not reused. */
   NO_SECRET: Object.freeze({
     check: "C-29.19",
     where: at5("accountReferenceSet", "is-account-kind"),
-    translation: "No key was given, so there is nothing to connect. Nothing was changed."
+    translation: "No key or token was given, so there is nothing to connect. Nothing was changed."
   }),
   NO_ACCOUNT: Object.freeze({
     check: "C-29.20",
     where: at5("#noAccount", "is-account-held"),
-    translation: "You have not connected a Claude account, so the assistant cannot work for you. Connect your own API key to use it. Nothing was changed."
+    translation: "You have not connected a Claude account, so the assistant cannot work for you. Connect your own API key or your own Claude subscription token to use it. Nothing was changed."
   }),
   UNKNOWN_SWITCH: Object.freeze({
     check: "C-29.21",
@@ -46096,8 +46373,7 @@ var KEYED_SERVICE_CHECKS = Object.freeze({
 });
 
 // src/credentials/index.mjs
-var ACCOUNT_KINDS = Object.freeze(["apikey"]);
-var HELD_BACK_KINDS = Object.freeze(["subscription"]);
+var ACCOUNT_KINDS = Object.freeze(["apikey", "subscription"]);
 var ACCOUNT_SWITCHES = Object.freeze(["suggestions", "standing"]);
 var AI_GRANT_TTL_SECONDS = 900;
 var AI_GRANT_OPS = Object.freeze([
@@ -46953,18 +47229,16 @@ var Credentials = class _Credentials {
       return null;
     }
   }
-  /* R22: one reference for `member`, replacing any earlier one, by that member's own act. Answers `{ok, kind, set_at}`
-     and never the secret. A replacement keeps the member's switches (R25); only removal turns them off. */
+  /* R22: one reference for `member`, of either kind, replacing any earlier one of either kind, by that member's own act.
+     Answers `{ok, kind, set_at}` and never the secret. A replacement keeps the member's switches (R25); only removal turns them off. */
   async accountReferenceSet({ member = null, kind = null, secret = null, by = null, level = null } = {}) {
     const bar = this.#accountBar(member, by, level);
     if (bar) return bar;
     const refuse12 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail);
-    if (HELD_BACK_KINDS.includes(kind))
-      return refuse12("ACCOUNT_KIND_NOT_OFFERED", "this copy does not hold a Claude subscription token (held back, K1537); connect your own API key. Nothing was written.");
     if (!ACCOUNT_KINDS.includes(kind))
-      return refuse12("UNKNOWN_ACCOUNT_KIND", `the kinds this copy holds are ${ACCOUNT_KINDS.join(", ")}. Nothing was written.`);
+      return refuse12("UNKNOWN_ACCOUNT_KIND", `the kinds this copy holds are ${ACCOUNT_KINDS.join(" and ")}. Nothing was written.`);
     if (typeof secret !== "string" || secret.trim() === "")
-      return refuse12("NO_SECRET", "no key was given. Nothing was written.");
+      return refuse12("NO_SECRET", "no key or token was given. Nothing was written.");
     const unsealable = this.#seal();
     if (unsealable) return unsealable;
     const id = _Credentials.#memberOf(member);
@@ -47832,7 +48106,7 @@ var TALLY_DAYS = 30;
 var INBOX_SORTS = Object.freeze(["received", "status", "secret", "project"]);
 var SORT_DIRS = Object.freeze(["asc", "desc"]);
 var HELD_SORTS = Object.freeze(["age", "source", "project"]);
-var instances7 = /* @__PURE__ */ new WeakMap();
+var instances8 = /* @__PURE__ */ new WeakMap();
 var supplied = /* @__PURE__ */ new WeakMap();
 var sameEnv2 = (a, b) => {
   const ka = Object.keys(a || {}), kb = Object.keys(b || {});
@@ -47840,7 +48114,7 @@ var sameEnv2 = (a, b) => {
 };
 function captureOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances7.get(storage);
+  let c = instances8.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx), provenance = opts.provenance ?? provenanceOf(ctx);
     c = new Capture(storage, {
@@ -47851,7 +48125,7 @@ function captureOf(ctx, opts = {}) {
       /* attestation's own instance for this host, over the record and provenance capture holds */
       attestation: opts.attestation ?? attestationOf(ctx, { record, provenance })
     });
-    instances7.set(storage, c);
+    instances8.set(storage, c);
     supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
     registerFigures2(c);
@@ -55376,10 +55650,10 @@ function refTermsSql(nTerms, gateSql) {
            LIMIT ?`;
 }
 var refReachSql = (nTerms, gateSql) => `SELECT src, COUNT(*) AS n FROM (${refTermsSql(nTerms, gateSql)}) GROUP BY src`;
-var instances8 = /* @__PURE__ */ new WeakMap();
+var instances9 = /* @__PURE__ */ new WeakMap();
 function entitiesOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let e = instances8.get(storage);
+  let e = instances9.get(storage);
   if (!e) {
     const record = opts.record ?? recordOf(ctx);
     e = new Entities(storage, {
@@ -55388,7 +55662,7 @@ function entitiesOf(ctx, opts = {}) {
       membership: opts.membership ?? membershipOf(ctx, { record }),
       provenance: opts.provenance ?? (() => provenanceOf(ctx))
     });
-    instances8.set(storage, e);
+    instances9.set(storage, e);
     registerFigures3(e, record);
   }
   return e;
@@ -59144,9 +59418,9 @@ function setScalar2(text5, key, value) {
 function randHex2(n) {
   return [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-var instances9 = /* @__PURE__ */ new WeakMap();
+var instances10 = /* @__PURE__ */ new WeakMap();
 function connectionsOf(host, deps) {
-  let k = instances9.get(host);
+  let k = instances10.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -59168,7 +59442,7 @@ function connectionsOf(host, deps) {
       capture,
       entities
     });
-    instances9.set(host, k);
+    instances10.set(host, k);
     record.declarePurge("connections", CONNECTIONS_TABLES);
     if (typeof record.registerCounts === "function") {
       const counted = record.registerCounts("connections", [...CONNECTIONS_COUNT_KEYS], (hid) => k.counts(hid));
@@ -61150,15 +61424,15 @@ var ObservationLog = class _ObservationLog {
     };
   }
 };
-var instances10 = /* @__PURE__ */ new WeakMap();
+var instances11 = /* @__PURE__ */ new WeakMap();
 function observationLogOf(host, deps) {
-  let o = instances10.get(host);
+  let o = instances11.get(host);
   if (!o) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     o = new ObservationLog({ storage: d.storage || host.storage, record, membership, now: d.now || null });
-    instances10.set(host, o);
+    instances11.set(host, o);
     record.declarePurge("observation-log", OBSERVATION_LOG_TABLES);
     const provenance = d.provenance === void 0 ? provenanceOf(host) : d.provenance;
     if (provenance && typeof provenance.onReceipt === "function")
@@ -63790,16 +64064,16 @@ var ProvenanceRoutes = class {
     };
   }
 };
-var instances11 = /* @__PURE__ */ new WeakMap();
+var instances12 = /* @__PURE__ */ new WeakMap();
 function provenanceRoutesOf(host, deps) {
-  let p3 = instances11.get(host);
+  let p3 = instances12.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host);
     p3 = new ProvenanceRoutes({ ...d, storage: d.storage || host.storage, record, membership, promotion });
-    instances11.set(host, p3);
+    instances12.set(host, p3);
     record.declarePurge(PROVENANCE_ROUTES_MODULE, PROVENANCE_ROUTES_TABLES);
     record.registerAuditFinding(PROVENANCE_ROUTES_MODULE, ROUTE_FINDING_KEY, (page2) => p3.routeTally(page2));
     record.registerCounts(PROVENANCE_ROUTES_MODULE, ["routeMarks"], (hid) => p3.counts(hid));
@@ -66061,9 +66335,9 @@ function observationOf(o, sql) {
     leadReferentVisible: (kind, ref, viewer) => o.referentVisible(kind, ref, viewer)
   };
 }
-var instances12 = /* @__PURE__ */ new WeakMap();
+var instances13 = /* @__PURE__ */ new WeakMap();
 function retrievalOf(host, deps) {
-  let r = instances12.get(host);
+  let r = instances13.get(host);
   if (!r) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -66073,7 +66347,7 @@ function retrievalOf(host, deps) {
     const storage = d.storage || (host.storage ?? host);
     const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
     r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation });
-    instances12.set(host, r);
+    instances13.set(host, r);
     const answer = record.declarePurge("retrieval", RETRIEVAL_PURGE);
     if (answer && answer.ok === false)
       throw new Error(`retrieval: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
@@ -67760,7 +68034,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances51 = [];
+    const instances52 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p3 of this.#pairs()) {
       const inst = this.#assemble(p3.progression_key, p3.entity_id);
@@ -67772,7 +68046,7 @@ var Progressions = class _Progressions {
       const findings = [...missing2, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances51.push({
+      instances52.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -67850,10 +68124,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances51,
+      instances: instances52,
       proposals,
       dispositions,
-      instance_count: instances51.length,
+      instance_count: instances52.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -67876,7 +68150,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances51 = [];
+    const instances52 = [];
     for (const r of rows2) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -67895,7 +68169,7 @@ var Progressions = class _Progressions {
       const missing2 = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
       const findings = [...missing2, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances51.push({
+      instances52.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -67908,7 +68182,7 @@ var Progressions = class _Progressions {
         open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances51.length, instances: instances51 };
+    return { ok: true, capture_sha: captureSha, count: instances52.length, instances: instances52 };
   }
   /* ===================================================================== *
    * DECISIONS (R20–R22; REC-7, REC-184, REC-211).
@@ -68016,9 +68290,9 @@ function progressionOps(p3, url, body) {
     captureprogressions: () => p3.captureProgressions({ captureSha: q7("sha256"), nowMs: q7("now") })
   };
 }
-var instances13 = /* @__PURE__ */ new WeakMap();
+var instances14 = /* @__PURE__ */ new WeakMap();
 function progressionsOf(host, deps) {
-  let p3 = instances13.get(host);
+  let p3 = instances14.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -68032,7 +68306,7 @@ function progressionsOf(host, deps) {
       entities: d.entities || entitiesOf(host, { record }),
       connections: d.connections || { weakerGrade }
     });
-    instances13.set(host, p3);
+    instances14.set(host, p3);
     record.declarePurge("progressions", PROGRESSIONS_TABLES);
     registerFigures5(p3);
   }
@@ -71457,9 +71731,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     };
   }
 };
-var instances14 = /* @__PURE__ */ new WeakMap();
+var instances15 = /* @__PURE__ */ new WeakMap();
 function inquiryOf(host, deps) {
-  let k = instances14.get(host);
+  let k = instances15.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -71467,7 +71741,7 @@ function inquiryOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances14.set(host, k);
+    instances15.set(host, k);
     record.declarePurge("inquiry", INQUIRY_PURGE);
     if (typeof record.registerAuditContext === "function")
       record.registerAuditContext("inquiry", (id) => {
@@ -71723,15 +71997,15 @@ function refOf(target) {
   return parseImportedFindingRef(t) ? t : null;
 }
 var pairKey = (leg) => `${refOf(leg.target)}\0${typeof leg.target_edition}\0${String(leg.target_edition)}`;
-var instances15 = /* @__PURE__ */ new WeakMap();
+var instances16 = /* @__PURE__ */ new WeakMap();
 function acceptedWorkOf(host, deps) {
-  let w = instances15.get(host);
+  let w = instances16.get(host);
   if (!w) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const promotion = d.promotion || promotionOf(host, { record });
     w = new AcceptedWork({ record });
-    instances15.set(host, w);
+    instances16.set(host, w);
     promotion.registerStep("accepted-work", { check: (c) => w.check(c) });
   }
   return w;
@@ -75008,9 +75282,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances16 = /* @__PURE__ */ new WeakMap();
+var instances17 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances16.get(host);
+  let bv = instances17.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -75027,7 +75301,7 @@ function basisVersionsOf(host, deps) {
     };
     const acceptedWork = d.acceptedWork && typeof d.acceptedWork.acceptedLegRefusals === "function" ? d.acceptedWork : acceptedWorkOf(host, { record, membership, promotion });
     bv = new BasisVersions({ ...d, inquiry, acceptedWork, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances16.set(host, bv);
+    instances17.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
@@ -78358,9 +78632,9 @@ function strengthOps(s, url, body) {
     })
   };
 }
-var instances17 = /* @__PURE__ */ new WeakMap();
+var instances18 = /* @__PURE__ */ new WeakMap();
 function strengthOf(host, deps) {
-  let s = instances17.get(host);
+  let s = instances18.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -78372,7 +78646,7 @@ function strengthOf(host, deps) {
       return f17 && f17.ok ? f17.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, promotion, producingGroup });
-    instances17.set(host, s);
+    instances18.set(host, s);
     s.migrate();
     record.declarePurge("strength", [...STRENGTH_PURGED_TABLES], { exempt: STRENGTH_EXEMPT_TABLES });
     promotion.registerStep("strength", { project: (c) => s.project(c) });
@@ -78950,10 +79224,10 @@ var STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind,
   proposed_by, label, reason, state, origin, at, a_side, b_side`;
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances18 = /* @__PURE__ */ new WeakMap();
+var instances19 = /* @__PURE__ */ new WeakMap();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances18.get(storage);
+  let c = instances19.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx);
     const lazy = (given, make) => given ?? make;
@@ -78967,7 +79241,7 @@ function contradictionOf(ctx, opts = {}) {
       basisVersions: lazy(opts.basisVersions, () => basisVersionsOf(ctx, { record })),
       inquiry: lazy(opts.inquiry, () => inquiryServices(ctx))
     });
-    instances18.set(storage, c);
+    instances19.set(storage, c);
     const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
     if (promotion && typeof promotion.registerStep === "function")
       promotion.registerStep("contradiction", { check: (step) => c.promotionCheck(step) });
@@ -86525,9 +86799,9 @@ Why: ${line}
     return fm ? checkReevalPending(fm) : [];
   }
 };
-var instances19 = /* @__PURE__ */ new WeakMap();
+var instances20 = /* @__PURE__ */ new WeakMap();
 function reevaluationOf(host, deps) {
-  let r = instances19.get(host);
+  let r = instances20.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -86535,7 +86809,7 @@ function reevaluationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Reevaluation({ ...d, host, storage, record, membership, promotion });
-    instances19.set(host, r);
+    instances20.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
@@ -89046,15 +89320,15 @@ function corpusExportOps(ce, q7) {
     exportlog: () => ce.exportLog({ limit: q7("limit") })
   };
 }
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances21 = /* @__PURE__ */ new WeakMap();
 function corpusExportOf(host, deps) {
-  let c = instances20.get(host);
+  let c = instances21.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CorpusExport({ ...d, storage, record });
-    instances20.set(host, c);
+    instances21.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
   }
@@ -89408,9 +89682,9 @@ var CaseCarriage = class {
     });
   }
 };
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function caseCarriageOf(host, deps) {
-  let c = instances21.get(host);
+  let c = instances22.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -89418,7 +89692,7 @@ function caseCarriageOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new CaseCarriage({ ...d, host, storage, record, membership, promotion });
-    instances21.set(host, c);
+    instances22.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("case-carriage", [], { exempt: [...CASE_CARRIAGE_EXEMPT] });
   }
@@ -92098,9 +92372,9 @@ var Publication = class {
     return reg;
   }
 };
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function publicationOf(host, deps) {
-  let p3 = instances22.get(host);
+  let p3 = instances23.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -92108,7 +92382,7 @@ function publicationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     p3 = new Publication({ ...d, host, storage, record, membership, promotion });
-    instances22.set(host, p3);
+    instances23.set(host, p3);
     p3.migrate();
     p3.purgeDeclaration = record.declarePurge("publication", PUBLICATION_TABLES, { exempt: PUBLICATION_EXEMPT });
     void p3.corpusExport;
@@ -92567,16 +92841,16 @@ case_project: ${pid}
     };
   }
 };
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function projectStageOf(host, deps) {
-  let s = instances23.get(host);
+  let s = instances24.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ProjectStage({ ...d, host, storage, record, membership });
-    instances23.set(host, s);
+    instances24.set(host, s);
   }
   return s;
 }
@@ -93918,16 +94192,16 @@ for (const m of ["docketFile", "docketPressure", "docketPrepare", "docketDecline
     return withRow2(await fn.apply(this, a));
   };
 }
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function docketOf(host, deps) {
-  let k = instances24.get(host);
+  let k = instances25.get(host);
   if (!k) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     k = new Docket({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances24.set(host, k);
+    instances25.set(host, k);
     k.migrate();
     k.purgeDeclaration = record.declarePurge("docket", DOCKET_TABLES.map((name2) => ({ name: name2, keys: [] })));
     k.countsRegistration = record.registerCounts("docket", ["docketRecordEntries", "docketPublicEntries", "docketMarks"], () => {
@@ -95262,16 +95536,16 @@ var PublicRead = class {
     return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 };
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function publicReadOf(host, deps) {
-  let r = instances25.get(host);
+  let r = instances26.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     const docket = d.docket || docketOf(host);
     r = new PublicRead({ storage, publication, docket });
-    instances25.set(host, r);
+    instances26.set(host, r);
   }
   return r;
 }
@@ -96747,16 +97021,16 @@ for (const m of ["prepareNotice", "postNotice"]) {
     return withRow3(await fn.apply(this, a));
   };
 }
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function networkNoticesOf(host, deps) {
-  let n = instances26.get(host);
+  let n = instances27.get(host);
   if (!n) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     n = new NetworkNotices({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances26.set(host, n);
+    instances27.set(host, n);
     n.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name2) => ({ name: name2, keys: [] })));
     const publicRead = d.publicRead || publicReadOf(host);
@@ -99288,13 +99562,13 @@ var Ratification = class _Ratification {
   }
 };
 var evidenceShas = (x) => (Array.isArray(x) ? x : Array.isArray(x?.materials) ? x.materials : []).filter((m) => m && m.held === "evidence" && typeof m.sha === "string").map((m) => m.sha);
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 var MINT_SEED = Object.freeze([
   Object.freeze(["CASE", "cases", "case_id"]),
   Object.freeze(["CASE", "case_documents", "case_id"])
 ]);
 function ratificationOf(host, deps) {
-  let r = instances27.get(host);
+  let r = instances28.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -99302,7 +99576,7 @@ function ratificationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
-    instances27.set(host, r);
+    instances28.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
@@ -103948,16 +104222,16 @@ for (const m of ["importCaseFile", "completeImportedDocument", "recordDocketRead
     return withRow4(await fn.apply(this, a));
   };
 }
-var instances28 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 function caseImportOf(host, deps) {
-  let c = instances28.get(host);
+  let c = instances29.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseImport({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances28.set(host, c);
+    instances29.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("case-import", CASE_IMPORT_TABLES.map((name2) => ({ name: name2, keys: [] })));
     c.countsRegistration = record.registerCounts(
@@ -105249,15 +105523,15 @@ var CaseDisclosures = class {
     return { captures, materials, flags: flagRows, group };
   }
 };
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 function caseDisclosuresOf(host, deps) {
-  let c = instances29.get(host);
+  let c = instances30.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CaseDisclosures({ ...d, host, storage, record });
-    instances29.set(host, c);
+    instances30.set(host, c);
   }
   return c;
 }
@@ -107852,16 +108126,16 @@ case_project: ${project}
     };
   }
 };
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 function caseAuthoringOf(host, deps) {
-  let c = instances30.get(host);
+  let c = instances31.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances30.set(host, c);
+    instances31.set(host, c);
     c.migrate();
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
@@ -109816,16 +110090,16 @@ for (const m of [
     return withRow5(fn.apply(this, a));
   };
 }
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function filingTemplatesOf(host, deps) {
-  let f17 = instances31.get(host);
+  let f17 = instances32.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances31.set(host, f17);
+    instances32.set(host, f17);
     f17.migrate();
     record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
     record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
@@ -110455,16 +110729,16 @@ function localFactsOps(s, url, body) {
     factsdue: () => s.factsDue({ paths: paths(), viewer: qp("viewer") })
   };
 }
-var instances32 = /* @__PURE__ */ new WeakMap();
+var instances33 = /* @__PURE__ */ new WeakMap();
 function localFactsOf(host, deps) {
-  let s = instances32.get(host);
+  let s = instances33.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new LocalFacts({ ...d, storage, record, membership });
-    instances32.set(host, s);
+    instances33.set(host, s);
     record.declarePurge("local-facts", LOCAL_FACTS_TABLES);
   }
   return s;
@@ -111401,12 +111675,12 @@ Changes: cites edges added to ${listed}.${nt ? ` Note: ${nt}.` : ""}
     };
   }
 };
-var instances33 = /* @__PURE__ */ new WeakMap();
+var instances34 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return { earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds), checkLegExtentGrammar, BASIS_ROLES };
 }
 function citationOf(host, deps) {
-  let c = instances33.get(host);
+  let c = instances34.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -111416,7 +111690,7 @@ function citationOf(host, deps) {
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
-    instances33.set(host, c);
+    instances34.set(host, c);
   }
   return c;
 }
@@ -113130,9 +113404,9 @@ for (const m of [
     return withRow6(fn.apply(this, a));
   };
 }
-var instances34 = /* @__PURE__ */ new WeakMap();
+var instances35 = /* @__PURE__ */ new WeakMap();
 function wizardScriptsOf(host, deps) {
-  let w = instances34.get(host);
+  let w = instances35.get(host);
   if (!w) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -113140,7 +113414,7 @@ function wizardScriptsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
     w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, env: d.env ?? host.env ?? null });
-    instances34.set(host, w);
+    instances35.set(host, w);
     w.migrate();
     record.declarePurge("wizard-scripts", [...WIZARD_SCRIPTS_TABLES]);
     record.registerMintSeed("wizard-scripts", WIZARD_SCRIPTS_MINT_SEED.map((x) => [...x]));
@@ -113380,12 +113654,12 @@ var AffordanceFacts = class {
     return { ok: true, screens, wizard_scripts };
   }
 };
-var instances35 = /* @__PURE__ */ new WeakMap();
+var instances36 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances35.get(host);
+  let a = instances36.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances35.set(host, a);
+    instances36.set(host, a);
   }
   return a;
 }
@@ -123658,9 +123932,9 @@ Changes: reading '${name2}' proposed as ${kind}, in state suggested, carrying ru
     return out;
   }
 };
-var instances36 = /* @__PURE__ */ new WeakMap();
+var instances37 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p3 = instances36.get(host);
+  let p3 = instances37.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -123679,7 +123953,7 @@ function runProductionsOf(host, deps) {
       basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances36.set(host, p3);
+    instances37.set(host, p3);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p3.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p3.candidates(a));
   }
@@ -128017,10 +128291,10 @@ function deemingActor(attribution) {
 function lookAuthority(q7) {
   return q7 && q7.run ? { authorityKind: "run", authority: String(q7.run), actorClass: "machine" } : { authorityKind: "sweep", authority: q7 && q7.request ? String(q7.request) : null, actorClass: "plane" };
 }
-var instances37 = /* @__PURE__ */ new WeakMap();
+var instances38 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances37.get(storage);
+  let c = instances38.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -128041,7 +128315,7 @@ function captureRequestsOf(host, deps = {}) {
       inquiry: deps.inquiry || { memberUserAgent: (id) => inquiryOf(host).memberUserAgent(id) }
     };
     c = new CaptureRequests(storage, d);
-    instances37.set(storage, c);
+    instances38.set(storage, c);
     record.declarePurge(CAPTURE_REQUESTS_MODULE, [{ name: "capture_requests", keys: ["target"], clears: ["lead_inquiry"] }]);
     if (typeof record.registerCounts === "function") {
       const counted = record.registerCounts(CAPTURE_REQUESTS_MODULE, [...CAPTURE_REQUESTS_COUNT_KEYS], (hid) => c.counts(hid));
@@ -130068,9 +130342,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances38 = /* @__PURE__ */ new WeakMap();
+var instances39 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances38.get(host);
+  let i = instances39.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -130090,7 +130364,7 @@ function intentOf(host, deps) {
       retrieval: d.retrieval || (() => retrievalOf(host)),
       captureRequests: d.captureRequests || (() => captureRequestsOf(host))
     });
-    instances38.set(host, i);
+    instances39.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -130844,9 +131118,9 @@ function standardsOps(s, url, body) {
     standardadopt: () => s.standardAdopt({ ...b, viewer: qp("viewer") })
   };
 }
-var instances39 = /* @__PURE__ */ new WeakMap();
+var instances40 = /* @__PURE__ */ new WeakMap();
 function standardsOf(host, deps) {
-  let s = instances39.get(host);
+  let s = instances40.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -130861,7 +131135,7 @@ function standardsOf(host, deps) {
       promotion,
       content: d.content || (() => contentOf(host, { record, membership }))
     });
-    instances39.set(host, s);
+    instances40.set(host, s);
     record.declarePurge("standards", STANDARDS_TABLES);
     promotion.registerStep("standards", { check: (c) => s.check(c) });
   }
@@ -132507,9 +132781,9 @@ function determinationDoc({
   ];
   return lines.join("\n");
 }
-var instances40 = /* @__PURE__ */ new WeakMap();
+var instances41 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances40.get(host);
+  let c = instances41.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -132517,7 +132791,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances40.set(host, c);
+    instances41.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -135710,9 +135984,9 @@ function proposalLabelFor(who2, subject) {
   const base = lawProposalLabel(who2);
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS2[subject][base.state] };
 }
-var instances41 = /* @__PURE__ */ new WeakMap();
+var instances42 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances41.get(host);
+  let a = instances42.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -135720,7 +135994,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances41.set(host, a);
+    instances42.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -136740,16 +137014,16 @@ for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer
     return withRow8(fn.apply(this, a));
   };
 }
-var instances42 = /* @__PURE__ */ new WeakMap();
+var instances43 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances42.get(host);
+  let a = instances43.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances42.set(host, a);
+    instances43.set(host, a);
     a.migrate();
     void a.actions;
     record.declarePurge("action-clocks", ["action_reminders"]);
@@ -137899,9 +138173,9 @@ function partDoc(id, p3) {
     ""
   ].join("\n");
 }
-var instances43 = /* @__PURE__ */ new WeakMap();
+var instances44 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances43.get(host);
+  let c = instances44.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -137909,7 +138183,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances43.set(host, c);
+    instances44.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
   }
@@ -140086,15 +140360,15 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances44 = /* @__PURE__ */ new WeakMap();
+var instances45 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f17 = instances44.get(host);
+  let f17 = instances45.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f17 = new Filings({ ...d, host, storage, record });
-    instances44.set(host, f17);
+    instances45.set(host, f17);
     f17.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f17.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f17.evidenceBlock(arg));
@@ -141726,9 +142000,9 @@ for (const name2 of [
     }
   } });
 }
-var instances45 = /* @__PURE__ */ new WeakMap();
+var instances46 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances45.get(host);
+  let i = instances46.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -141740,7 +142014,7 @@ function escalationOf(host, deps) {
     const filings = d.filings || (() => filingsOf(host, { record, membership, promotion }));
     const consequences = d.consequences || (() => consequencesModule(host, { record, membership, promotion, conformance: typeof conformance === "function" ? conformance() : conformance }));
     i = new Escalation({ ...d, storage, record, membership, promotion, conformance, consequences, actions, filings });
-    instances45.set(host, i);
+    instances46.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -144989,17 +145263,17 @@ var Monitoring = class {
     }
   }
 };
-var instances46 = /* @__PURE__ */ new WeakMap();
+var instances47 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances46.get(storage);
+  let m = instances47.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances46.set(storage, m);
+    instances47.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     if (typeof record.registerCounts === "function")
@@ -145875,10 +146149,10 @@ var LinkSweep = class {
 };
 
 // src/link-sweep/index.mjs
-var instances47 = /* @__PURE__ */ new WeakMap();
+var instances48 = /* @__PURE__ */ new WeakMap();
 function linkSweepOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let s = instances47.get(storage);
+  let s = instances48.get(storage);
   if (!s) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -145900,7 +146174,7 @@ function linkSweepOf(host, deps) {
       captureRequests: lazy(d.captureRequests, () => captureRequestsOf(host, { record })),
       monitoring: lazy(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
     });
-    instances47.set(storage, s);
+    instances48.set(storage, s);
     s.migrate();
     record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t) => ({ name: t.name, keys: [...t.keys] })));
     s.registration = s.registerWithMonitoring();
@@ -146402,9 +146676,9 @@ var Scheduler = class {
     return out;
   }
 };
-var instances48 = /* @__PURE__ */ new WeakMap();
+var instances49 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances48.get(ctx);
+  let s = instances49.get(ctx);
   if (!s) {
     const e = env || {};
     const owners = deps.owners || {
@@ -146422,7 +146696,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
       linkSweep: () => linkSweepOf(ctx)
     };
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners });
-    instances48.set(ctx, s);
+    instances49.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -155011,9 +155285,9 @@ for (const name2 of [
     }
   } });
 }
-var instances49 = /* @__PURE__ */ new WeakMap();
+var instances50 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances49.get(host);
+  let i = instances50.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -155038,7 +155312,7 @@ function actionPlansOf(host, deps) {
       filings: lazy("filings", () => filingsOf(host, base)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host))
     });
-    instances49.set(host, i);
+    instances50.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -155168,8 +155442,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances51, into = []) => {
-    for (const inst of instances51)
+  const subjectsFor = (instances52, into = []) => {
+    for (const inst of instances52)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -163153,16 +163427,16 @@ var Review = class {
     };
   }
 };
-var instances50 = /* @__PURE__ */ new WeakMap();
+var instances51 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances50.get(host);
+  let r = instances51.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances50.set(host, r);
+    instances51.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
