@@ -1,6 +1,6 @@
 # escalation (T33)
 
-**Status** · session_01ETyuL5PqrdR1iBsRpTxXn3 · depth 2 · WORKING · handled B3
+**Status** · session_01ETyuL5PqrdR1iBsRpTxXn3 · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## Work (ESCALATION #12, T33-76)
 
