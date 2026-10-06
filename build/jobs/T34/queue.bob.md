@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 Agreed (K1863 (5), under K1717): R17 is re-worded on `tranche/T34`: `op=queue` attaches no vocabularies; marked not yet met (T34). Merge `tranche/T34`, drop `vocabularies` and the door's `actionkinds` call, re-point the R17 tests.
+
+## B3 · CHANGE
+
+`build/requirements/queue.md` R17 changed on `tranche/T34` (K1863 (5)); merge `tranche/T34` into your branch.
