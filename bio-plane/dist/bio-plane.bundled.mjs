@@ -142324,7 +142324,12 @@ function normaliseRegistration({
     library: lib
   };
   reg.helpRefused = helpRefusedActs(reg);
+  reg.withheld = withheldLibrary(reg);
   return reg;
+}
+function withheldLibrary(reg) {
+  const offered = reg.library.map((e2) => ({ id: e2.id, steps: e2.steps }));
+  return new Set(reg.library.filter((e2) => checkScript(e2.steps, { ...reg, offered, self: e2.id }).refusals.length).map((e2) => e2.id));
 }
 var finding3 = (code, step, detail, extra) => {
   const row9 = WIZARD_SCRIPTS_CHECKS[code];
@@ -142654,7 +142659,8 @@ var WizardScripts = class _WizardScripts {
     if (s.retired) return null;
     const n = this.#latestApproved(s, events ?? (s.origin === "civicsmith" ? [] : this.#events(s.id)));
     if (n === null) return null;
-    return s.origin === "group" && this.#isBroken(s.id, n) ? null : n;
+    if (s.origin === "civicsmith") return this.#registration().withheld.has(s.id) ? null : n;
+    return this.#isBroken(s.id, n) ? null : n;
   }
   /* R5: every member who revised the version and every adopted proposal's run, in time order, each dated. Only a
      version's author revises it (R4), so another member contributes by a proposal the author adopts (or drafts from):
@@ -142834,7 +142840,7 @@ var WizardScripts = class _WizardScripts {
     const out = [];
     for (const e2 of this.#registration().library) {
       const s = this.#libraryScript(e2.id);
-      if (this.#canSee(s, viewer)) out.push({ s, n: e2.version, steps: this.#steps(s, e2.version) });
+      if (this.#canSee(s, viewer) && !this.#registration().withheld.has(e2.id)) out.push({ s, n: e2.version, steps: this.#steps(s, e2.version) });
     }
     for (const r of this.#rows(`SELECT script_id FROM wiz_scripts ORDER BY created_at, script_id`)) {
       const s = this.#groupScript(r.script_id);
@@ -146195,7 +146201,6 @@ var T34_NON_ACTS = {
   joinlinkoff: ROSTER_DOOR("the join link, an administrator's"),
   courtnoticeset: "the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object",
   groupdescriptionset: "the group's description of itself \u2014 the subject is the group's identity, not a bundle; an administrator's",
-  courtnotice: R5("the group's court-notice setting and its history"),
   checkrequest: "check-directed: keyed by a held object and its addressees, reached from the object; writes tasks' rows and moves no bundle",
   checktake: "check-directed: keyed by a check request, reached from the member's To do; writes tasks' rows and moves no bundle",
   checkrecord: "check-directed: keyed by a check request its taker holds; a check, or a concern with its reason, appended once",
