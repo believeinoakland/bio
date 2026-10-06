@@ -1,6 +1,6 @@
 # case-grammar (T34)
 
-**Status** · session_01UbNSaW5ZKNVsroGALhrqr4 · depth 2 · WORKING · handled B1
+**Status** · session_01UbNSaW5ZKNVsroGALhrqr4 · depth 2 · COMPLETE · handled B1
 
 ## Completion (T34-88, with T34-87's row)
 
