@@ -399,7 +399,7 @@
   },
   {
    "id": "connect",
-   "name": "Connect your Claude account",
+   "name": "The assistant and your account",
    "frame": "working",
    "purpose": "The member's own API key or subscription token, or the group's key where it offers one, or none; their daily limit; suggestions on or off (K1547, K1755).",
    "acts": [
