@@ -39,3 +39,11 @@ T33-75 built and pushed on `job/T33/filings` (f07ef18e00): the packet's chronolo
 - `checks/ownership.mjs filings tranche/T33`: 0 failures.
 
 Size (session_016bMsS73oBXsth94UBVz1Tn): test runs 24, module lines 2118
+
+## J2 · COMPLETE
+
+T33-75 complete on `job/T33/filings`. B2–B5 processed: tranche merged at B5, re-pointed at conformance's T33 act and at action-clocks' count. Filings 64/64; format, architecture, coverage (32/32) and ownership each 0 failures. Final `uses` as `modules.json` holds them (K1653), `events` included.
+- R33 runs on the real conformance and events, with no stand-ins. A T33 act is read by its event: the `act` blank names the event's kind and id, and `act_date` is its `when` as one day, else undetermined with why. That day also starts an `act` deadline, bounds the chronology and is the date `inForce` is asked at.
+- K1519 cleared. R9 and R30 run on action-clocks' count. Their expected dates are re-derived on the test profile's own weekend (Sunday alone), on C-1 (`received` counted from the group's first `sent`) and on K1581's local day.
+- Escalation (my user): 51/52. `stages.test.mjs:43` (R6) fails identically on `tranche/T33` without my changes. It is not filings'; it is likely K1657's local day, escalation's own job.
+Record: `build/jobs/T33/filings.md`, Completion.
