@@ -36,11 +36,13 @@ import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
 import { legistarBodyId, eventsAddress, itemsAddress, votesAddress, mattersAddress, matterAddress, enactmentOf } from "./legistar.mjs";
 import { noticeRule, meetingsOf, dueBefore } from "./meetings.mjs";
 import { portalKey, readDataset, diffRows } from "./snapshot.mjs";
+import { followRefusal } from "./checks.mjs";
 
 export { FOLLOWING_SCHEMA, FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
 export { legistarSystems, bodySchemes, legistarBodyId } from "./legistar.mjs";
 export { noticeRule, meetingsOf, dueBefore, MEETING_HORIZON_MONTHS } from "./meetings.mjs";
 export { portalKey, readDataset, diffRows } from "./snapshot.mjs";
+export { FOLLOWING_CHECKS, followRefusal } from "./checks.mjs";
 
 export const FOLLOWING_MODULE = "following";
 /** R13: the consumer name under the host's epoch and running set. */
@@ -59,7 +61,8 @@ const STATIC_ONLY = "only its static form is followed: the register is not re-re
 const NOT_PUBLIC = "not reproducible by the public: it was read with a member's own credential or for a fee";
 
 const said = (v) => typeof v === "string" && v.trim() !== "";
-const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+/* every refusal carries its C-137 row (DEC-49; `checks.mjs`) */
+const refuse = followRefusal;
 const json = (v) => { try { return v == null ? null : JSON.parse(v); } catch { return null; } };
 const ms = (s) => Date.parse(s);
 const instant = (t) => stampInstant("second", t);
@@ -202,7 +205,7 @@ export class Following {
     if (!said(from) || !isCalendarDate(from.trim()) || (until != null && (!said(until) || !isCalendarDate(until.trim()) || until.trim() < from.trim())))
       return refuse("BAD_PERIOD", "a follow names the days it covers: from (a day), and until (a day not before it) or none");
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     return this.#insert("body", { kind: "body", id: body.trim(), legistar: id }, { home, author, from: from.trim(),
       until: until == null ? null : until.trim(), cadence: c });
   }
@@ -234,7 +237,7 @@ export class Following {
     const g = this.#gated(gated);
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     return this.#insert("register", { kind: "register", address: address.trim(), render: render === true }, { home, author, cadence: c, gated: g.gated });
   }
 
@@ -256,7 +259,7 @@ export class Following {
     const g = this.#gated(gated);
     if (g.bad) return refuse("BAD_GATE", g.bad);
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     return this.#insert("person-query", { kind: "person-query", register, scheme, value: String(value).trim(), address: address.trim(),
       person: person == null ? null : person.trim() }, { home, author, cadence: c, gated: g.gated });
   }
@@ -285,7 +288,7 @@ export class Following {
     if (!q) return refuse("NO_LOCATOR", "a portal is followed at a public https locator");
     if (!said(key)) return refuse("NO_KEY", "a portal follow declares the field that keys its rows");
     const c = this.#cadence(cadence);
-    if (!c) return refuse("BAD_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
+    if (!c) return refuse("BAD_FOLLOW_CADENCE", `a follow is read daily or at a longer cadence: ${FOLLOW_CADENCES.join(", ")}`);
     const held = this.#rows(`SELECT follow_id, subject FROM follows WHERE kind='portal' AND ended_at IS NULL`)
       .find((x) => { const s = json(x.subject); return s && s.address === q && s.key === key.trim(); });
     if (held) return { ok: true, already: true, follow: Number(held.follow_id) };
@@ -298,7 +301,7 @@ export class Following {
       return refuse("MACHINE_CANNOT_FOLLOW", "naming a watch's body is a member's own act");
     const sub = this.#perMeetingSubjects(this.now()).find((s) => s.address === (said(address) ? address.trim() : null)
       && this.membership.inSight(s.bundle, viewer ?? author));
-    if (!sub) return refuse("NO_SUCH_ADDRESS", "no address you may see is watched per meeting");
+    if (!sub) return refuse("NO_SUCH_MEETING_ADDRESS", "no address you may see is watched per meeting");
     if (!said(body) || !this.entities.has(body.trim())) return refuse("NO_SUCH_BODY", "no body by that id is registered that you may see");
     const at = instant(this.now());
     this.#sql.exec(`INSERT INTO per_meeting_links (address, bundle_id, body, notice, author, at) VALUES (?,?,?,?,?,?)`,
@@ -590,7 +593,7 @@ export class Following {
     const gated = json(f.gated);
     if (!gated) return refuse("NOT_GATED", "a public register is read on the tick; a member's refresh is for one behind an account or a fee");
     if (!said(author) || isMachineIdentity(author) || author !== f.author)
-      return refuse("MEMBER_ACT_ONLY", "only the member who follows this register refreshes it, with their own credential");
+      return refuse("NOT_THE_FOLLOWER", "only the member who follows this register refreshes it, with their own credential");
     if (gated.kind === "fee" && price !== gated.price)
       return refuse("PRICE_FIRST", `this register charges ${gated.price}; the refresh runs only once that price is accepted as shown`, { price: gated.price });
     if (gated.kind === "account" && (!credential || typeof credential !== "object"))

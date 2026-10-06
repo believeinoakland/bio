@@ -70,10 +70,10 @@ export function testView({ legistar = true } = {}) {
       { origin: "ellery.licences", name: "Licence register (test)", hosts: ["licences.ellery.example"], basis: "TEST" }];
     const numeric = (form) => ({ form, pattern: { re: "^(\\d+)$" }, normal: [{ group: 1 }], basis: "TEST" });
     view.spaces = { ...view.spaces,
-      object: { ...(view.spaces.object || { label: "object" }), forms: [...((view.spaces.object || {}).forms || []), numeric("legistar-body")] },
+      body: { ...view.spaces.body, forms: [...view.spaces.body.forms, numeric("legistar-body")] },
       person: { ...view.spaces.person, forms: [...view.spaces.person.forms, { form: "licence", pattern: { re: "^(L-\\d{5})$" }, normal: [{ group: 1 }], basis: "TEST" }] } };
     view.identifier_schemes = [...(view.identifier_schemes || []),
-      { scheme: "legistar_body", label: "Legistar BodyId", entity_kinds: ["body"], space: "object", form: "legistar-body", systems: ["ellery.legistar"], basis: "TEST" },
+      { scheme: "legistar_body", label: "Legistar BodyId", entity_kinds: ["body"], space: "body", form: "legistar-body", systems: ["ellery.legistar"], basis: "TEST" },
       { scheme: "ellery_licence", label: "licence number", entity_kinds: ["person"], space: "person", form: "licence", systems: ["ellery.licences"], basis: "TEST" }];
   }
   return view;
@@ -153,7 +153,7 @@ export function world({ view = testView(), now = T0 } = {}) {
   const monitoring = {
     sweepHost: () => sweepHost,
     schedule: () => ({ due: [], scheduled: [], unscheduled: w.watched.map((s) => ({ bundle: s.bundle, address: s.address, frequency: "per_meeting",
-      reason: "cadence is a meeting schedule this plane does not hold" })) }),
+      reason: "cadence is a meeting schedule your group's Civicsmith does not hold" })) }),
     async monitor({ bundleId }) { w.monitored.push({ bundleId, at: w.t }); return { status: 200, body: { ok: true, status: "unchanged", capture: { sha256: sha(`m${w.monitored.length}`) } } }; },
   };
   w.bundle = (id, { type = "information", project = "" } = {}) => {
@@ -187,7 +187,7 @@ export const meetingRow = (id, date, time, extra = {}) => ({ EventId: id, EventB
 export const itemRow = (id, eventId, extra = {}) => ({ EventItemId: id, EventItemEventId: eventId, EventItemAgendaNumber: "1",
   EventItemMatterId: 900, EventItemMatterFile: "26-0001", EventItemTitle: "A resolution", EventItemActionName: "Adopted",
   EventItemPassedFlag: 1, EventItemMoverId: null, EventItemSeconderId: null, ...extra });
-export const voteRow = (id, itemId, personId, value = "Aye") => ({ VoteId: id, VoteEventItemId: itemId, VotePersonId: personId, VoteValueName: value, VoteResult: 1 });
+export const voteRow = (id, itemId, personId, value = "Content") => ({ VoteId: id, VoteEventItemId: itemId, VotePersonId: personId, VoteValueName: value, VoteResult: 1 });
 export const matterRow = (id, extra = {}) => ({ MatterId: id, MatterFile: `26-${id}`, MatterTypeName: "Ordinance", MatterStatusName: "Introduced",
   MatterIntroDate: "2026-09-01T00:00:00", MatterPassedDate: null, MatterEnactmentNumber: null, MatterEnactmentDate: null, ...extra });
 

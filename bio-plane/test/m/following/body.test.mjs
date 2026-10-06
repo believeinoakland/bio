@@ -11,7 +11,7 @@ const follow = (w, b, x = {}) => w.f.followBody({ body: b, from: "2026-09-01", a
 function serveBody(w, { matter = matterRow(900), status = null } = {}) {
   w.serve(eventsAddress(CLIENT, BODY_ID, "2026-09-01"), [meetingRow(7001, "2026-09-08", "7:00 PM", status ? { EventBodyName: status } : {})]);
   w.serve(itemsAddress(CLIENT, 7001), [itemRow(8001, 7001, { EventItemMoverId: 501 })]);
-  w.serve(votesAddress(CLIENT, 8001), [voteRow(9001, 8001, 501), voteRow(9002, 8001, 502, "Nay")]);
+  w.serve(votesAddress(CLIENT, 8001), [voteRow(9001, 8001, 501, "Content"), voteRow(9002, 8001, 502, "Not content")]);
   w.serve(mattersAddress(CLIENT, BODY_ID, "2026-09-01"), [matter]);
   w.serve(matterAddress(CLIENT, matter.MatterId), matter);
 }
@@ -29,7 +29,7 @@ test("R1 followBody refuses, in order and writing nothing, a machine author, a b
     [{ from: null }, "BAD_PERIOD"],
     [{ from: "2026-02-31" }, "BAD_PERIOD"],
     [{ until: "2026-08-01" }, "BAD_PERIOD"],
-    [{ cadence: "hourly" }, "BAD_CADENCE"],
+    [{ cadence: "hourly" }, "BAD_FOLLOW_CADENCE"],
   ];
   for (const [x, reason] of refused) assert.equal(follow(w, x.body === undefined ? b : x.body, x).reason, reason, JSON.stringify(x));
   /* the order: a machine author is refused before an absent body, an absent body before a missing id */
@@ -87,7 +87,8 @@ test("R2 a followed body's tick reads its events, items, votes and matters, each
     assert.equal(o.captureRequest.credential, undefined);
   }
   for (const l of w.landed) assert.match(l.say.notes, /follow 1 \(body\)/);
-  /* each Legistar list landed with its reading, and events wrote the meeting, the item within it, and the votes */
+  /* each Legistar list landed with its reading, and events wrote the meeting, the item within it, and the votes (the
+     source's label matched to the profile's vote value, events R11) */
   const reading = w.x.readingOf(w.landed[0].filed.doc.capture.sha256).reading;
   assert.equal(reading.content_type, "legistar_api");
   assert.equal(reading.facts.endpoint, "events");
@@ -96,7 +97,7 @@ test("R2 a followed body's tick reads its events, items, votes and matters, each
   assert.ok(meeting && item);
   const iv = w.ev.readEvent({ eventId: item, viewer: MEMBER }).event;
   assert.deepEqual(iv.within, [meeting]);
-  assert.deepEqual(iv.participants.filter((p) => p.role === "voted").map((p) => [p.entity_id, p.vote_value]), [[p501, "Aye"]]);
+  assert.deepEqual(iv.participants.filter((p) => p.role === "voted").map((p) => [p.entity_id, p.vote_value]), [[p501, "content"]]);
   assert.equal(w.ev.readEvent({ eventId: meeting, viewer: MEMBER }).event.by, "class:daemon");
   /* the next day: the same bytes are answered unchanged and land nothing new */
   const landed = w.landed.length;
