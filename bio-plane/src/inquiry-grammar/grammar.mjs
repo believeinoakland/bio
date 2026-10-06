@@ -19,10 +19,11 @@
  *   - `observation-log`: `LEAD_ID_RE`, a lead id's shape (its R14);
  *   - `civil-time`: `isCalendarDate`, whether a `YYYY-MM-DD` names a real day (its R6; R3 and the hunch's date, T33-43);
  *   - `standards`: `isPortionPath` and `PORTION_PATH_MAX`, a portion path's form (its R31; R13, N583);
- *   - `duties`: `OCCURRENCE_KEY_RE`, an occurrence key's form (its R24; R15, N583);
  *   - `connection-grammar`: `derivedId`, a derived connection's id (its R11; R17, N582).
- * Each of the last three is read from the file that states it and imports nothing of the record, so this grammar stays
- * pure and the standalone case checker that bundles it carries no store code.
+ * Each of the last two is read from the file that states it and imports nothing of the record, so this grammar stays
+ * pure and the standalone case checker that bundles it carries no store code. `duties`' occurrence key form (its R24)
+ * is held here until duties offers it from such a file (R15; K1799, N675): its one statement is `duties/index.mjs`,
+ * which imports the store, and a test asserts the copy equal to that export.
  *
  * Pure (R9): nothing here reads or writes the record, the clock or the network; every function never throws on a
  * document it is handed, and the facts a check needs (the published and earned registries) are handed to it. */
@@ -36,7 +37,6 @@ import { CONTENT_EXTENT_KINDS } from "../textchain.mjs";
 import { themeLegFindings } from "../connections/checks.mjs";
 import { LEAD_ID_RE } from "../observation-log/checks.mjs";
 import { isPortionPath, PORTION_PATH_MAX } from "../standards/instrument.mjs";
-import { OCCURRENCE_KEY_RE } from "../duties/index.mjs";
 import { derivedId } from "../connection-grammar/shape.mjs";
 import { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
 
@@ -1534,8 +1534,11 @@ function calculationLegRefusal(message, repairs) {
 }
 
 const DUTY_CORE = idPattern('DUT').source.slice(1, -1);
-/* duties' occurrence key (its R9), in the form `duties` states it (`OCCURRENCE_KEY_RE`, its R24; N583): imported, its
-   anchors dropped so it sits inside the ref's pattern, and never spelled here. */
+/** R15 (K1799): duties' occurrence key form (its R9, R24), `OCC-` and 32 lowercase hexadecimal digits, held here until
+ *  duties states it in a file that imports nothing of the record (N675, T35), which this then imports instead; this
+ *  module's test asserts it equal to `duties.OCCURRENCE_KEY_RE`, so the two cannot drift. */
+export const OCCURRENCE_KEY_RE = Object.freeze(/^OCC-[0-9a-f]{32}$/);
+/* the key's form with its anchors dropped, so it sits inside the ref's pattern */
 const OCCURRENCE_KEY = OCCURRENCE_KEY_RE.source.replace(/^\^/, '').replace(/\$$/, '');
 
 /** R15: exactly `occurrence:<DUT id>/<key>`; capture 1 is the duty, the last capture the key. */

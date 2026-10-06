@@ -1,5 +1,6 @@
 /* inquiry-grammar's T34 requirements at the module's interface (T34-28; N582, N583; K1607, K1608): R13's portion path
-   and R15's occurrence key judged by the forms `standards` (its R31) and `duties` (its R24) state, never spelled here;
+   and R15's occurrence key judged by the forms `standards` (its R31) and `duties` (its R24) state (duties' held here and asserted equal to its
+   export until N675, K1799);
    R17's derived-connection leg kind with its five `derivation_*` fields, checked against `connection-grammar`'s
    `derivedId` (its R11); and R16's row for it. New at T34, so findings are stated by hand. Pure functions, driven with
    documents and legs. */
@@ -44,6 +45,12 @@ test("R13 a target_portion is refused exactly when standards.isPortionPath (its 
 });
 
 /* ---- R15: the occurrence key is duties' form ---- */
+
+test("R15 the occurrence key form held here (K1799) is duties' export exactly: the same source and flags as duties.OCCURRENCE_KEY_RE (its R24), frozen, so the two cannot drift", () => {
+  assert.equal(IG.OCCURRENCE_KEY_RE.source, OCCURRENCE_KEY_RE.source);
+  assert.equal(IG.OCCURRENCE_KEY_RE.flags, OCCURRENCE_KEY_RE.flags);
+  assert.ok(Object.isFrozen(IG.OCCURRENCE_KEY_RE));
+});
 
 test("R15 an occurrence ref spells and parses exactly when duties.OCCURRENCE_KEY_RE (its R24) admits the key: occurrenceRef, parseOccurrenceRef, OCCURRENCE_REF_RE and the leg arm (over the trimmed ref) agree with it on every key tried", () => {
   const keys = [KEY, `OCC-${"a".repeat(32)}`, `OCC-${"a".repeat(31)}`, `OCC-${"a".repeat(33)}`, KEY.toUpperCase(), `occ-${"a".repeat(32)}`,

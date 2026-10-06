@@ -9,7 +9,7 @@ import { supersedesEdgeFindings, divisionDisclosureFindings, checkRecheckCoverag
 export { checkInquiryExtension, checkRecheckCoverage, checkInquiryBasis, checkLegExtentGrammar, supersedesEdgeFindings,
          divisionDisclosureFindings, leadLegFindings, GROUND_LABEL_RE, EARNED_SOURCE_AXIS, IMPORTED_FINDING_RE,
          importedFindingRef, parseImportedFindingRef, importedLegFindings, CALCULATION_REF_RE, calculationLegFindings,
-         OCCURRENCE_REF_RE, occurrenceRef, parseOccurrenceRef, occurrenceLegFindings, DERIVED_CONNECTION_ID_RE,
+         OCCURRENCE_REF_RE, OCCURRENCE_KEY_RE, occurrenceRef, parseOccurrenceRef, occurrenceLegFindings, DERIVED_CONNECTION_ID_RE,
          DERIVATION_FIELDS, derivedConnectionLegFindings } from "./grammar.mjs";
 export { LEAD_CHECKS, INQUIRY_GRAMMAR_CHECKS } from "./checks.mjs";
 
