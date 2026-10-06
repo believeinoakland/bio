@@ -1,20 +1,27 @@
 /* plane R19 (N528; DEC-120, DEC-121 (5); K1396): the registration the plane makes with `wizard-scripts` at start (its
    R13), held apart from the class so the release suite reads the same parts without the Durable Object runtime. */
 import { CIVICSMITH_LIBRARY } from "../wizard-scripts/index.mjs";
-import { MACHINE_REFUSALS } from "../affordances.mjs";
+import { MACHINE_REFUSALS, RUNGS } from "../affordances.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 import { SCREENS } from "./screens.mjs";
 
-/* R19 (N528; K1396): the labelled machine drafts the canon already allows on a member's act, `case-authoring` R39's
-   `whatchangedpropose` and `escalationreasondraft` (DEC-101's "what changed"), registered with `wizard-scripts`. */
-export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft"]);
+/* R19 (N528; K1396): the labelled machine drafts the canon allows on a member's act, `case-authoring` R39's
+   `whatchangedpropose` and `escalationreasondraft` (DEC-101's "what changed"), and (T34; DEC-152, DEC-153; K1818)
+   `instance-setup` R65's `groupdescriptiondraft` and `wizard-scripts` R27's `writinghelp`, registered with
+   `wizard-scripts`. */
+export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp"]);
 
-/** R19 (N528; DEC-121 (5)): what the plane registers with `wizard-scripts` at start (its R13), and what the release
- *  suite holds `requiredFailures` empty for: the screen registry and the Civicsmith library the bundle carries, the
- *  member op table (`op-declarations`), the acts a machine is refused (`affordances`' `MACHINE_REFUSALS`) and the
- *  labelled machine drafts. */
+/** R19 (T34; DEC-153; K1818): the acts `affordances` grades `irreversible` (its R2, R42), read from its `RUNGS` at
+ *  registration, so the set follows the grading and is never a copy of it. */
+export const irreversibleActs = (rungs = RUNGS) => Object.keys(rungs).filter((op) => rungs[op] === "irreversible");
+
+/** R19 (N528; DEC-121 (5); T34, K1818): what the plane registers with `wizard-scripts` at start (its R13), and what the
+ *  release suite holds `requiredFailures` empty for: the screen registry and the Civicsmith library the bundle carries,
+ *  the member op table (`op-declarations`), the acts a machine is refused (`affordances`' `MACHINE_REFUSALS`), the
+ *  labelled machine drafts and the irreversible acts (`wizard-scripts` R24's refused set). */
 export const wizardRegistration = () => ({ screens: SCREENS, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
-                                           machineDrafts: MACHINE_DRAFTS, library: CIVICSMITH_LIBRARY });
+                                           machineDrafts: MACHINE_DRAFTS, irreversible: irreversibleActs(),
+                                           library: CIVICSMITH_LIBRARY });
 
 /** R24 (Q1-7): what the release suite holds empty: each screen of the registry whose shape is not `{id, title, acts,
  *  purpose}` (an id or title or purpose that is not a non-empty string, an id repeated, acts not a list of names, or a

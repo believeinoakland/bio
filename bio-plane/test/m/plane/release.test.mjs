@@ -42,3 +42,13 @@ test("R24 negative control: an entry naming an op no spec holds, a repeated id, 
   assert.deepEqual(screenFailures(bad, OPS), [{ screen: "zz", problem: "no op spec", act: "zz-no-such-op" },
                                               { screen: "queue", problem: "no purpose" }, { screen: "queue", problem: "id repeated" }]);
 });
+
+test("R24 (DEC-149; T34-87, K1784): the screen purposes a member reads through the explain read call the group's Civicsmith \"your group's Civicsmith\", never \"this instance\", \"the instance\", \"this copy\", \"this plane\" or \"server\"", () => {
+  const purpose = (id) => SCREENS.find((s) => s.id === id).purpose;
+  assert.equal(purpose("record"), "The whole record as rows: every bundle your group's Civicsmith holds, with its type and its state.");
+  assert.equal(purpose("members"), "Who holds what in your group's Civicsmith: the roster, each member's capabilities, and the invitations outstanding.");
+  assert.equal(purpose("published"), "The cases your group's Civicsmith has published, readable by somebody holding no credential at all.");
+  for (const s of SCREENS)
+    for (const f of ["title", "purpose"])
+      assert.doesNotMatch(s[f], /\b(?:this|the) (?:instance|copy|plane)\b|\bserver\b/i, `${s.id}.${f}`);
+});

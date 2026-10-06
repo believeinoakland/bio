@@ -1,8 +1,9 @@
-/* plane (B2, K1674, K1684; control-plane R53; agent-worker R54, R56; credentials R24, R25, R27): `op=ask`'s handler. A
-   member's own session (or a grant control-plane admitted, handed as `grantMember`) asks; on the `bio` object, where
-   credentials live, the member's short-lived read-only grant is minted at that act, the member's own account reference
-   is unsealed for this one ask and their suggestions switch read, and the question goes to agent-worker's `/ask` with
-   the grant and the account. agent-worker's answer (its NDJSON stream, or its plain refusal) is handed back unchanged.
+/* plane (B2, K1674, K1684; control-plane R53; agent-worker R6, R54, R56; credentials R25, R27, R35; K1755, K1798, K1806):
+   `op=ask`'s handler. A member's own session (or a grant control-plane admitted, handed as `grantMember`) asks; on the
+   `bio` object, where credentials live, the member's short-lived read-only grant is minted at that act, the account that
+   serves the member's ask (`credentials.accountFor`: their own reference, else the group's API key while held and on) is
+   unsealed for this one ask, the switch that governs it read, and the question goes to agent-worker's `/ask` with the
+   grant and the account in agent-worker R6's shape. agent-worker's answer (its NDJSON stream, or its plain refusal) is handed back unchanged.
    The secret leaves the object only in that one call and is kept nowhere; every refusal is its owner's, in its words. */
 import { credentialsOf } from "../credentials/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
@@ -33,7 +34,7 @@ export async function askOp({ req, url, env, viaSession, sessMember, grantMember
 export async function askOnObject(ctx, env, { member, session = null, grant = null, question, conversation, store = null }) {
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
-    return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "no assistant member is bound to this plane. Nothing was asked." }, 503);
+    return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
   /* K1690 (instance-setup R55): while the copy's assistant is off, every ask is refused ASSISTANT_OFF, before any grant
      is minted or any account read. */
   const off = instanceSetupOf(ctx, env).assistantGate();
@@ -45,13 +46,19 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
     if (!g || g.ok !== true) return json(g, 403);
     token = g.token;
   }
-  let ref = await c.accountReferenceFor({ member, act: { kind: "ask", member } });
+  /* K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): the account that serves this ask, carried as
+     `{kind, level, secret, member, suggestions}`: R35's `key` named `secret`, `level` `member` for the member's own
+     reference or `group` for the group's API key. The member's own switch is read from their reference's state
+     (credentials R25); the group key's switch has no in-plane read for a member's act (K1798), so an ask it serves offers
+     no suggestion, as by default. */
+  let ref = await c.accountFor({ member, act: { kind: "ask", member } });
   if (!ref || ref.ok !== true) return json(ref, 409);
   let suggestions = false;
-  try { const st = c.accountReferenceState({ member, viewer: member }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
-  catch { suggestions = false; }
+  if (ref.level === "member")
+    try { const st = c.accountReferenceState({ member, viewer: member }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
+    catch { suggestions = false; }
   const out = JSON.stringify({ question, ...(conversation !== undefined ? { conversation } : {}), ...(store ? { store } : {}),
-                               grant: token, account: { kind: ref.kind, secret: ref.secret, member, suggestions } });
+                               grant: token, account: { kind: ref.kind, level: ref.level, secret: ref.key, member, suggestions } });
   ref = null;
   let res;
   try {

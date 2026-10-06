@@ -105,10 +105,16 @@
   // text layer at all — and an instance without it says so in the record rather
   // than filing an empty document (D-115). Nothing else changes for an instance
   // that has not installed the fleet.
+  //
+  // SHEET_WORKER (N625, K1683, K1705 G6): `workbooks`' recompute (plane R21,
+  // `ctx.recompute`) reaches the sheet-worker member over it. sheet-worker ships
+  // inactive and answers "not enabled" until an administrator enables it; with
+  // the binding absent a recompute records "not recomputed here: no engine bound".
   "services": [
     { "binding": "PDF_WORKER",   "service": "pdf-worker" },
     { "binding": "AGENT_WORKER", "service": "agent-worker" },
     { "binding": "OCR_WORKER",   "service": "ocr-worker" },
+    { "binding": "SHEET_WORKER", "service": "sheet-worker" },
     { "binding": "SELF",         "service": "bio-plane" }
   ],
 

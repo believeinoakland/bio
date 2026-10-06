@@ -2,18 +2,19 @@
    object's storage first in layer 11, its migration runs in R3's pass, its tables are declared to purge, its ops map is
    routed through control-plane's door, and before the first request it is registered (its R13) with the screen registry
    and the Civicsmith library the bundle carries, the member op table (`op-declarations`' `OPS`), the acts a machine is
-   refused (`affordances`' `MACHINE_REFUSALS`) and the labelled machine drafts (`case-authoring` R39's). The release
+   refused (`affordances`' `MACHINE_REFUSALS`), the labelled machine drafts (`case-authoring` R39's, and since T34
+   `groupdescriptiondraft` and `writinghelp`, DEC-152, DEC-153) and the acts `affordances` grades `irreversible`. The release
    suite, holding `requiredFailures` empty for that registration, is `release.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { store } from "./fixture.mjs";
-import { MACHINE_DRAFTS, wizardRegistration } from "../../../src/plane/wizards.mjs";
+import { MACHINE_DRAFTS, wizardRegistration, irreversibleActs } from "../../../src/plane/wizards.mjs";
 import { SCREENS } from "../../../src/plane/screens.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY } from "../../../src/wizard-scripts/index.mjs";
-import { MACHINE_REFUSALS } from "../../../src/affordances.mjs";
+import { MACHINE_REFUSALS, RUNGS } from "../../../src/affordances.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const WZ = [...WIZARD_SCRIPTS_TABLES];
@@ -56,7 +57,7 @@ test("R19, R3: a store written before wizard-scripts opens with its tables, and 
   assert.deepEqual(shape(await store({ db })), was);
 });
 
-test("R19: before the first request it is registered once with the bundle's screens and library, the member op table, the acts a machine is refused and the labelled machine drafts", async () => {
+test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registered once with the bundle's screens and library, the member op table, the acts a machine is refused, the labelled machine drafts (groupdescriptiondraft and writinghelp among them) and the irreversible acts", async () => {
   const x = await store();
   const w = wizardScriptsOf(x.ctx);
   /* once: a second registration is refused, so the plane's stands */
@@ -64,9 +65,15 @@ test("R19: before the first request it is registered once with the bundle's scre
   assert.equal(again.ok, false);
   assert.equal(again.reason, "WIZARD_ALREADY_REGISTERED");
   /* the registration is exactly R19's parts */
+  const drafts = ["whatchangedpropose", "escalationreasondraft", "groupdescriptiondraft", "writinghelp"];
+  const graded = Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible");
   assert.deepEqual(wizardRegistration(), { screens: SCREENS, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
-                                           machineDrafts: ["whatchangedpropose", "escalationreasondraft"], library: CIVICSMITH_LIBRARY });
-  assert.deepEqual(MACHINE_DRAFTS, ["whatchangedpropose", "escalationreasondraft"]);
+                                           machineDrafts: drafts, irreversible: graded, library: CIVICSMITH_LIBRARY });
+  assert.deepEqual(MACHINE_DRAFTS, drafts);
+  /* the irreversible acts are affordances' grading, read whole (publish among them), never a copy of it */
+  assert.ok(graded.includes("publish"), graded.join());
+  assert.deepEqual(irreversibleActs(), graded);
+  assert.deepEqual(irreversibleActs({ a: "irreversible", b: "reasoned", c: "irreversible" }), ["a", "c"], "follows the grading it is given");
   assert.deepEqual(w.registeredScreens(), SCREENS.map((s) => ({ id: s.id, acts: [...s.acts] })), "the bundle's screens");
   assert.deepEqual(new Set(w.reg.ops), new Set(Object.keys(OPS)), "the member op table");
   assert.deepEqual(w.reg.library.map((e) => e.id), CIVICSMITH_LIBRARY.map((e) => e.id), "the Civicsmith library");
