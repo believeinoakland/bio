@@ -93,3 +93,23 @@ Three points the START leaves to BOB; I carry on on my best readings and stop on
   - `checks/ownership.mjs` wizard-scripts tranche/T34: 20 files, 0 failures.
 
 Size (session_0115AZ1UBhQP27WSj9Lbgs8E): test runs 24, module lines 2,261
+
+## J2 · REPORT
+
+New reds in other modules from this job, each owed by an L11 job (the base `tranche/T34` @ `736656910f` shows only the inherited ones). Detail is in my record's Completion.
+
+1. **plane `release.test.mjs` R19 ×2 (with op-declarations).** `requiredFailures(wizardRegistration())` now names all three required flows: R14 is doing its job. There are two causes.
+   - plane registers its own 21-screen `SCREENS`, not `SCREEN_REGISTRY`. It should omit `screens` or pass `SCREEN_REGISTRY`.
+   - Acts the required flows walk have no spec in `OPS`: `groupkeyset` and `courtnoticeset` (both declared in the registry, in "Set up and claim"), and the owed `memberlanguageset`, `startfrom` (Welcome) and `publishat` (Ceremony).
+   - The optional flows also walk 20 acts with no spec: `filingrecordsent`, `groupdescriptionset`, `websitekeycreate`, `subscriptionsignin`, `declaretie`, `registerproceeding`, `recordline`, `declare`, `recordfact`, `createset`, `include`, `reconcile`, `createevent`, `addparticipant`, `relate`, `standingquestionset`, `standingquestionend`, `translationdraft`, `translationadopt`, `translationconfirm`.
+   - In all, 46 declared or function acts in the registry have no spec.
+2. **affordances `plane.test.mjs` R17 R37.** `pack_absent`: skills' `validateWizardScripts` throws on the library scripts that start on a plane screen but walk screens the plane's `SCREENS` lacks. This has the same cause as 1 and clears with it.
+3. **The three new ops**, `startfrom` and `baseupdates` in the ops map, turn three suites red:
+   - affordances R37 R12;
+   - op-declarations R15 ("exactly fifteen");
+   - control-plane R50.
+   `writinghelp` has no arm: per B4 the door calls `writingHelp`.
+4. **op-declarations R27** lists five owed library acts, but the library at `d129238bf3` walks seven. The two it does not list are `subscriptionsignin` (DEC-156) and `translationconfirm` (DEC-157), both in optional flows.
+5. **control-plane R43** (inherited red) now also sees C-131.24 re-worded (DEC-149) and C-131.33–.41 new, awaiting stamp (accepted red 4).
+6. **Stale generated artifact:** the plane bundle.
+7. **filing-templates (no red):** the library's two `{template}` drafts name templates by name (`@records-request`, `@communication`). R25 resolves templates by id only. A by-name lookup is filing-templates' if wanted.
