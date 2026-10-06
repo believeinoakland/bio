@@ -1,6 +1,6 @@
 # calculations (T33)
 
-**Status** · session_01J7MbcN7jruhwCaMiQMNKVG · depth 2 · WAITING ON BOB (J2) · handled B8
+**Status** · session_01J7MbcN7jruhwCaMiQMNKVG · depth 2 · COMPLETE · handled B8
 
 ## Completion
 
