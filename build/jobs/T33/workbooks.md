@@ -1,6 +1,6 @@
 # workbooks (T33)
 
-**Status** · session_01L8fgt74g2hidcVrkrDDCCZ · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_01L8fgt74g2hidcVrkrDDCCZ · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
