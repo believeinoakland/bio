@@ -89,25 +89,29 @@ test("R62 at a later start a held non-test profile matching the named place by n
   w.setHeld([...HELD, LAKE, profile("p-lake-test", "Lake Shore", [], { test: true }), profile("p-near", "Lake Shores", ["Shore"])]);
   const after = await w.restart();
   assert.deepEqual(after.started.places, { compared: true, arrived: 1 });
-  const open = after.m.placeArrivals({ viewer: "admin" });
+  const { ok, arrivals: open } = after.m.placeArrivals({ viewer: "admin" });
+  assert.equal(ok, true);
   assert.deepEqual(open, [{ name: "Lake Shore", profile: "p-lake", profile_name: "Lake Shore and Valley",
                             covers: ["Lake  Shore", "Valley Town"], found_at: "2026-10-06T08:01:00.000Z" }]);
-  for (const viewer of [null, "ruth", "class:probe"]) assert.deepEqual(after.m.placeArrivals({ viewer }), [], String(viewer));
+  for (const viewer of ["", "ruth", "class:probe"]) assert.deepEqual(after.m.placeArrivals({ viewer }), { ok: true, arrivals: [] }, viewer);
+  /* the plane's own in-process read, as queue-producers R38 reads it, answers them for the administrators' item */
+  assert.deepEqual(after.m.placeArrivals({ viewer: null }).arrivals, open);
+  assert.deepEqual(after.m.placeArrivals().arrivals, open);
   assert.deepEqual(after.m.placeWanted({ viewer: "admin" }).matches, open);
   /* once: a further start records nothing again */
   const again = await w.restart();
   assert.deepEqual(again.started.places, { compared: true, arrived: 0 });
-  assert.equal(again.m.placeArrivals({ viewer: "admin" }).length, 1);
+  assert.equal(again.m.placeArrivals({ viewer: "admin" }).arrivals.length, 1);
   /* a profile already held when the name is set is no arrival, and a profile matched by its own name is */
   const v = await world({ held: [...HELD, LAKE] });
   v.m.placeWantedSet({ name: "lake shore", by: "admin" });
   v.setHeld([...HELD, LAKE, profile("p-valley", "Valley Town", [])]);
   const vr = await v.restart();
-  assert.deepEqual(vr.m.placeArrivals({ viewer: "admin" }), [], "LAKE was held at the set; Valley Town does not match");
+  assert.deepEqual(vr.m.placeArrivals({ viewer: "admin" }).arrivals, [], "LAKE was held at the set; Valley Town does not match");
   v.m.placeWantedSet({ name: "Valley Town", by: "admin" });
   v.setHeld([...HELD, LAKE, profile("p-valley", "Valley Town", []), profile("p-vt", "VALLEY TOWN", [])]);
   const vr2 = await v.restart();
-  assert.deepEqual(vr2.m.placeArrivals({ viewer: "admin" }).map((a) => a.profile), ["p-vt"], "held at the second set: p-valley is not new");
+  assert.deepEqual(vr2.m.placeArrivals({ viewer: "admin" }).arrivals.map((a) => a.profile), ["p-vt"], "held at the second set: p-valley is not new");
   /* no place named: nothing is compared */
   const none = await world();
   none.setHeld([...HELD, LAKE]);
@@ -119,10 +123,10 @@ test("R62 a profile already active is not an arrival; an arrival leaves when an 
   w.m.placeWantedSet({ name: "Lake Shore", by: "admin" });
   w.setHeld([...HELD, LAKE]);
   await w.restart();
-  assert.equal(w.m.placeArrivals({ viewer: "admin" }).length, 1);
+  assert.equal(w.m.placeArrivals({ viewer: "admin" }).arrivals.length, 1);
   /* chosen under Places: it leaves, and stays left */
   assert.equal(w.m.profilesSet({ profiles: ["p-lake"], by: "admin" }).ok, true);
-  assert.deepEqual(w.m.placeArrivals({ viewer: "admin" }), []);
+  assert.deepEqual(w.m.placeArrivals({ viewer: "admin" }).arrivals, []);
   assert.deepEqual(w.st.db.prepare(`SELECT left_why FROM place_arrivals`).all().map((r) => r.left_why), ["the profile was made active"]);
   /* changed, then cleared */
   for (const [next, why] of [["Lake  shore ", null], [null, "the name was cleared"]]) {
@@ -131,7 +135,7 @@ test("R62 a profile already active is not an arrival; an arrival leaves when an 
     c.setHeld([...HELD, LAKE]);
     await c.restart();
     c.m.placeWantedSet({ name: next ?? null, by: "admin" });
-    assert.deepEqual(c.m.placeArrivals({ viewer: "admin" }), [], String(next));
+    assert.deepEqual(c.m.placeArrivals({ viewer: "admin" }).arrivals, [], String(next));
     assert.equal(c.st.db.prepare(`SELECT left_why FROM place_arrivals`).get().left_why, why ?? "the name was changed");
   }
   /* active before it arrives: not an arrival */
@@ -140,10 +144,10 @@ test("R62 a profile already active is not an arrival; an arrival leaves when an 
   a.setHeld([...HELD, LAKE]);
   a.record.setSetting("jurisdiction_profiles", ["p-lake"], "admin");
   const ar = await a.restart();
-  assert.deepEqual([ar.started.places.arrived, ar.m.placeArrivals({ viewer: "admin" })], [0, []]);
+  assert.deepEqual([ar.started.places.arrived, ar.m.placeArrivals({ viewer: "admin" }).arrivals], [0, []]);
 });
 
-test("R62 at start this module registers placeArrivals once with queue-producers (its R38), read as the plane: the read answers the open arrivals for an administrator viewer and [] for anyone else", async () => {
+test("R62 at start this module registers placeArrivals once with queue-producers (its R38), read as the plane: the read answers {ok, arrivals} with the open arrivals to the plane (viewer null) and to an administrator, and none to anyone else", async () => {
   const w = await world();
   assert.equal(w.registered.length, 1);
   assert.deepEqual(w.started.arrivals, { ok: true });
@@ -152,9 +156,10 @@ test("R62 at start this module registers placeArrivals once with queue-producers
   const later = await w.restart();
   assert.equal(w.registered.length, 2, "each start of a new instance registers its own read once");
   const read = w.registered.at(-1);
-  assert.deepEqual(read({ viewer: "admin" }).map((a) => a.profile), ["p-lake"]);
-  assert.deepEqual(read({ viewer: "ruth" }), []);
-  assert.deepEqual(read({}), []);
+  assert.deepEqual(read({ viewer: null }).arrivals.map((a) => a.profile), ["p-lake"]);
+  assert.deepEqual(read({}).arrivals.map((a) => a.profile), ["p-lake"]);
+  assert.deepEqual(read({ viewer: "admin" }).arrivals.map((a) => a.profile), ["p-lake"]);
+  assert.deepEqual(read({ viewer: "ruth" }), { ok: true, arrivals: [] });
   /* a second start of the same instance registers nothing again */
   assert.equal((await later.m.start()).started, false);
   assert.equal(w.registered.length, 2);

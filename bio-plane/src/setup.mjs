@@ -2273,7 +2273,7 @@ export class InstanceSetup {
   #registerArrivals() {
     const qp = this.#queueProducers();
     if (!qp || typeof qp.registerPlaceArrivals !== "function") return { ok: false, detail: "no producers to register with" };
-    try { return qp.registerPlaceArrivals(({ viewer } = {}) => this.placeArrivals({ viewer })); }
+    try { return qp.registerPlaceArrivals(({ viewer = null } = {}) => this.placeArrivals({ viewer })); }
     catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
   }
 
@@ -2497,7 +2497,7 @@ export class InstanceSetup {
     return { verdict: "mismatched", status,
              detail: !isObject
                ? `${path} is not the JSON object your group's Civicsmith reads ({ instance, group })`
-               : `${path} names instance ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and group `
+               : `${path} gives the address ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and the group `
                  + `${JSON.stringify(grp).slice(0, 60)}; your group's Civicsmith is ${address} and its slug is ${slug}` };
   }
 
@@ -3219,20 +3219,22 @@ export class InstanceSetup {
       return notAnAdmin(viewer ?? null, "reading the place your group named");
     const cur = this.#placeCurrent();
     return { ok: true, name: cur ? cur.name : null, set_by: cur ? cur.set_by : null, set_at: cur ? cur.set_at : null,
-             matches: this.placeArrivals({ viewer }) };
+             matches: this.placeArrivals({ viewer }).arrivals };
   }
 
-  /** R62: the open arrivals (those that have not left), each with the profile's name and covers, to administrators
-   *  only, and `[]` to anyone else. Writes nothing; never throws. */
+  /** R62: `{ok, arrivals}`, the open arrivals (those that have not left), each with the profile's name and covers: to
+   *  an administrator, and to the plane's own in-process read (`viewer: null`, as `queue-producers` R38 reads it, which
+   *  addresses its item to the administrators); `arrivals: []` to anyone else. Writes nothing; never throws. */
   placeArrivals({ viewer = null } = {}) {
     try {
-      if (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer)) return [];
-      return this.#rows(`SELECT name, profile, found_at FROM place_arrivals WHERE left_at IS NULL ORDER BY seq`).map((r) => {
+      if (viewer !== null && viewer !== undefined
+          && (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer))) return { ok: true, arrivals: [] };
+      return { ok: true, arrivals: this.#rows(`SELECT name, profile, found_at FROM place_arrivals WHERE left_at IS NULL ORDER BY seq`).map((r) => {
         const p = this.#juris().get(r.profile);
         return { name: r.name, profile: r.profile, profile_name: p ? p.name ?? null : null,
                  covers: p && Array.isArray(p.covers) ? [...p.covers] : [], found_at: r.found_at };
-      });
-    } catch { return []; }
+      }) };
+    } catch { return { ok: true, arrivals: [] }; }
   }
 
   /* R62, at each start with a place named: every held non-test profile matching the name, not held at the last compare
@@ -3310,11 +3312,12 @@ export class InstanceSetup {
    * there is no model turn (N686): past every refusal the op answers `ASSISTANT_DRAFT_UNAVAILABLE`.
    * ===================================================================== */
 
-  /** R65, op=groupdescriptiondraft. `by` and `assistant` (`{on, account}`, as the door resolves it, control-plane R57)
-   *  are the control plane's stamps (R29). The refusals, in order: NOT_AN_ADMIN, ASSISTANT_OFF, the door's account and
+  /** R65, op=groupdescriptiondraft, which the door routes itself and calls here in-process (control-plane R57): `by` and
+   *  `viewer` are its stamps (R29) and `assistant` is `{on, account}` as it resolved them (never the key); `answers` is
+   *  the request's. The refusals, in order: NOT_AN_ADMIN, ASSISTANT_OFF, the door's account and
    *  ceiling codes (answered there), GROUP_DRAFT_ANSWERS_MALFORMED or GROUP_DRAFT_NO_ANSWERS; then the draft, or, while
    *  no model turn exists, ASSISTANT_DRAFT_UNAVAILABLE. */
-  async groupDescriptionDraft({ answers = undefined, assistant = null, by = null } = {}) {
+  async groupDescriptionDraft({ answers = undefined, assistant = null, viewer = null, by = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return notAnAdmin(by ?? null, "asking the assistant to draft your group's description");
     const off = this.assistantGate();
@@ -3499,8 +3502,6 @@ export function instanceSetupOf(ctx, env = null, deps = {}) {
  *  control plane's, read from the query AFTER the body is spread, so a body naming its own is overwritten (R29).
  *  The map joins `control-plane`'s one route map (its R35; N348), so every route passes its frame: R26's body read,
  *  R27's existence read, the envelope and R25's catch. This module keeps no door or Durable Object class of its own. */
-/* R65: the door's `assistant` stamp (control-plane R57), JSON in the query; anything else is no stamp. */
-const stampedJson = (v) => { try { const x = v ? JSON.parse(v) : null; return x && typeof x === "object" ? x : null; } catch { return null; } };
 export function instanceSetupOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -3528,7 +3529,6 @@ export function instanceSetupOps(m, url, body) {
     placewantedstate: () => m.placeWanted({ viewer: q("viewer") }),
     memberlanguageset: () => m.memberLanguageSet({ ...(body || {}), by: q("by") }),
     memberlanguage: () => m.memberLanguage({ viewer: q("viewer") }),
-    groupdescriptiondraft: () => m.groupDescriptionDraft({ ...(body || {}), by: q("by"), assistant: stampedJson(q("assistant")) }),
   };
 }
 
