@@ -153,6 +153,7 @@ export class Lines {
     return this.#record.declareTable(OWNER, [
       { ...base, name: "lines", export: "yes", sight: "source", derive: "stored" },
       { ...base, name: "line_withdrawals", export: "yes", sight: "source", derive: "stored" },
+      { ...base, name: "line_current_through", export: "yes", sight: "source", derive: "stored" },
       { ...base, name: "line_bound_cache", export: "yes", sight: "source", derive: "derived-rebuildable",
         key: ["line_id"], rebuild: (scope) => this.#rebuildRows(scope) },
     ]);
@@ -334,16 +335,60 @@ export class Lines {
   }
 
   /* R10's rule: `in`, `out` or `{undetermined: why}` at `at`. A stale cache is undetermined, "cache stale" (R7). A day
-     string is read as that day in the line's own zone. */
-  #judge(line, at) {
+     string is read as that day in the line's own zone. R21: an open-ended `holds` line is `in` at a date no later than
+     the current-through day the viewer may see, and stays `undetermined` after it (never `out`). */
+  #judge(line, at, viewer) {
     const cache = this.#cacheOf(line);
     if (cache.stale) return { state: "undetermined", why: "cache stale" };
     const valid = this.#validFor(line, cache);
     const date = typeof at === "string" && /^\d{4}-\d{2}-\d{2}$/.test(at) ? { value: at, precision: "day", zone: valid.zone } : at;
-    let r;
-    try { r = validAt({ valid, basis: null }, date); } catch (e) { r = { undetermined: true, why: String(e.message || e) }; }
+    const judge = (v) => { try { return validAt({ valid: v, basis: null }, date); } catch (e) { return { undetermined: true, why: String(e.message || e) }; } };
+    const r = judge(valid);
     if (r === "in" || r === "out") return { state: r };
-    return { state: "undetermined", why: r.why || `the date could not be read: ${r.refused}` };
+    const ct = this.#currentThrough(line, viewer);
+    if (ct && judge({ ...valid, to: ct.day, precision: "day" }) === "in") return { state: "in", current_through: ct.day };
+    const why = r.why || `the date could not be read: ${r.refused}`;
+    return { state: "undetermined", why: ct ? `${why}; it is stated current through ${ct.day}, and the date is after that` : why };
+  }
+
+  /* ---- current through (R21) ---- */
+
+  /* The latest current-through statement on an open-ended `holds` line that `viewer` may see, or null. */
+  #currentThrough(line, viewer) {
+    if (line.kind !== "holds" || parse(line.valid_json).to !== null) return null;
+    const g = this.#gate(viewer);
+    return this.#one(`SELECT l.* FROM line_current_through l WHERE l.line_id = ? AND ${g.sql} ORDER BY l.seq DESC LIMIT 1`,
+                     line.line_id, ...g.args);
+  }
+  #currentThroughView(line, viewer) {
+    if (line.kind !== "holds" || parse(line.valid_json).to !== null) return null;
+    const g = this.#gate(viewer);
+    const rows = this.#rows(`SELECT l.* FROM line_current_through l WHERE l.line_id = ? AND ${g.sql} ORDER BY l.seq DESC`, line.line_id, ...g.args);
+    const view = (r) => { const b = parse(r.basis_json); return { day: r.day, basis: { form: r.basis_form, ...b }, citation: Lines.#citation(r.basis_form, b), by: r.by_actor, at: r.at }; };
+    return rows.length ? { ...view(rows[0]), superseded: rows.slice(1).map(view) } : null;
+  }
+
+  /** R21: a member's, or a source's own, "current as of" statement on an open-ended `holds` line, with its citation
+   *  and day. The machine records one only from a system rule (R4). A later one supersedes; the earlier is kept. */
+  recordCurrentThrough({ lineId, day, basis, by } = {}) {
+    const line = filled(lineId) ? this.#one(`SELECT * FROM lines WHERE line_id = ?`, lineId) : null;
+    if (!line) return refuse("NO_SUCH_LINE", "no line with that id is held", { line_id: lineId ?? null });
+    if (line.withdrawn) return refuse("LINE_WITHDRAWN", "a withdrawn line takes no current-through statement");
+    if (line.kind !== "holds") return refuse("NOT_A_HOLDS_LINE", "only a holds line is stated current through a day");
+    if (parse(line.valid_json).to !== null) return refuse("END_STATED", "this line states its end; a current-through statement is for a line with none");
+    if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day) || dtBounds({ value: day, precision: "day", zone: "UTC" }).refused)
+      return refuse("BAD_DATE", "a current-through day is a calendar day, YYYY-MM-DD");
+    const b = this.#basis(basis, by);
+    if (b.refusal) return b.refusal;
+    if (isMachineIdentity(by) && b.form !== "rule")
+      return refuse("MACHINE_NEEDS_IDENTIFIERS", "the machine records a current-through statement only from a system rule (K1443)");
+    if (!filled(by)) return refuse("NO_BY", "a statement is recorded by the act's stamped author");
+    const at = this.#now();
+    return this.#record.transact(() => {
+      this.#sql.exec(`INSERT INTO line_current_through (line_id, day, basis_form, basis_json, capture_sha, sight_bundle, by_actor, at)
+                      VALUES (?,?,?,?,?,?,?,?)`, lineId, day, b.form, json(b.basis), b.captureSha, b.sight, by, at);
+      return { ok: true, line_id: lineId, day, at };
+    });
   }
   static #atRefusal(at) {
     if (at === undefined || at === null || at === "") return refuse("NO_DATE", "a read as of a date names the date (`at`)");
@@ -528,7 +573,7 @@ export class Lines {
 
   /* A line as every read answers it: its fields, basis and citation, both grade axes, its bounds as given and as
      cached, its withdrawal. A stale cache answers `valid` undetermined, "cache stale" (R7). */
-  #view(line) {
+  #view(line, viewer = null) {
     const cache = this.#cacheOf(line);
     const given = parse(line.valid_json);
     const basis = parse(line.basis_json);
@@ -546,6 +591,7 @@ export class Lines {
       ...(label ? { recorded: label, recorded_at: line.recorded_at } : {}),
       asserted_by: line.asserted_by, assertion: line.assertion, ends: { from: line.end_from, to: line.end_to }, at: line.at,
       withdrawn: w ? { by: w.by_actor, at: w.at, reason: w.reason } : null,
+      ...(line.kind === "holds" && given.to === null ? { current_through: this.#currentThroughView(line, viewer) } : {}),
     };
   }
   static #citation(form, basis) {
@@ -559,7 +605,7 @@ export class Lines {
     if (!filled(lineId)) return refuse("NO_LINE", "a line is read by its id (LIN-...)");
     const line = this.#visible(lineId, viewer);
     if (!line) return { ok: true, found: false, line_id: lineId };
-    return { ok: true, found: true, line: this.#view(line) };
+    return { ok: true, found: true, line: this.#view(line, viewer) };
   }
 
   linesOf({ entity, kinds: ks, direction = "both", limit, viewer } = {}) {
@@ -577,7 +623,7 @@ export class Lines {
                               ORDER BY l.at, l.line_id LIMIT ?`, ...endArgs, ...kk.list, ...g.args, cap + 1);
     const truncated = rows.length > cap;
     const page = truncated ? rows.slice(0, cap) : rows;
-    return { ok: true, entity, direction: dir, count: page.length, limit: cap, truncated, lines: page.map((r) => this.#view(r)) };
+    return { ok: true, entity, direction: dir, count: page.length, limit: cap, truncated, lines: page.map((r) => this.#view(r, viewer)) };
   }
 
   static #kindList(ks, within) {
@@ -607,9 +653,9 @@ export class Lines {
     const { rows, truncated } = this.#liveAt("(l.from_entity = ? OR l.to_entity = ?)", [entity, entity], kk.list, viewer);
     const held = [], undetermined = [];
     for (const r of rows) {
-      const j = this.#judge(r, at);
-      if (j.state === "in") held.push(this.#view(r));
-      else if (j.state === "undetermined") undetermined.push({ line: this.#view(r), why: j.why });
+      const j = this.#judge(r, at, viewer);
+      if (j.state === "in") held.push(this.#view(r, viewer));
+      else if (j.state === "undetermined") undetermined.push({ line: this.#view(r, viewer), why: j.why });
     }
     return { ok: true, entity, at, held, undetermined, truncated };
   }
@@ -626,12 +672,12 @@ export class Lines {
     const { rows, truncated } = this.#liveAt("l.to_entity = ?", [office], ["holds"], viewer);
     const inn = [], und = [];
     for (const r of rows) {
-      const j = this.#judge(r, at);
+      const j = this.#judge(r, at, viewer);
       if (j.state === "in") inn.push(r);
       else if (j.state === "undetermined") und.push({ line_id: r.line_id, why: j.why });
     }
     if (inn.length === 1 && und.length === 0 && !truncated) {
-      const v = this.#view(inn[0]);
+      const v = this.#view(inn[0], viewer);
       return { ok: true, office, at, holder: inn[0].from_entity, line: v, capacity: v.capacity, basis: v.basis,
                assertion: v.assertion, ends: v.ends };
     }
@@ -657,11 +703,11 @@ export class Lines {
     if (bad) return bad;
     if (at !== undefined && at !== null && at !== "") { const b = Lines.#atRefusal(at); if (b) return b; }
     const { rows, truncated } = this.#liveAt("l.to_entity = ?", [proceeding], ["party_to"], viewer);
-    const party = (r) => ({ party: r.from_entity, role: r.role ?? null, line: this.#view(r) });
+    const party = (r) => ({ party: r.from_entity, role: r.role ?? null, line: this.#view(r, viewer) });
     if (at === undefined || at === null || at === "") return { ok: true, proceeding, parties: rows.map(party), truncated };
     const parties = [], undetermined = [];
     for (const r of rows) {
-      const j = this.#judge(r, at);
+      const j = this.#judge(r, at, viewer);
       if (j.state === "in") parties.push(party(r));
       else if (j.state === "undetermined") undetermined.push({ ...party(r), why: j.why });
     }
@@ -674,7 +720,7 @@ export class Lines {
     const { rows, truncated } = this.#liveAt("(l.from_entity = ? OR l.to_entity = ?)", [proceeding, proceeding], PROCEEDING_LINKS, viewer);
     return { ok: true, proceeding, truncated,
              links: rows.map((r) => ({ kind: r.kind, direction: r.from_entity === proceeding ? "out" : "in",
-                                       other: r.from_entity === proceeding ? r.to_entity : r.from_entity, line: this.#view(r) })) };
+                                       other: r.from_entity === proceeding ? r.to_entity : r.from_entity, line: this.#view(r, viewer) })) };
   }
 
   /* ---- neighbours (R14): the connection owner ---- */
@@ -719,8 +765,14 @@ export class Lines {
     for (const r of rows) {
       const cache = this.#cacheOf(r);
       const c = this.#connection(r, cache);
-      let v;
-      try { v = validAt({ valid: c.valid, basis: null }, at); } catch (e) { v = { undetermined: true, why: String(e.message || e) }; }
+      const judge = (valid) => { try { return validAt({ valid, basis: null }, at); } catch (e) { return { undetermined: true, why: String(e.message || e) }; } };
+      let v = judge(c.valid);
+      /* R21: an open-ended holds line stated current through a day reads, at a date within it, with that day as its end */
+      const ct = v !== "in" && v !== "out" && !cache.stale ? this.#currentThrough(r, viewer) : null;
+      if (ct) {
+        const within = { ...c.valid, to: ct.day, precision: "day" };
+        if (judge(within) === "in") { c.valid = within; c.current_through = ct.day; v = "in"; }
+      }
       if (v === "out") continue;
       if (v !== "in") c.undetermined = { why: cache.stale ? "cache stale" : v.why || `the date could not be read: ${v.refused}` };
       if (items.length === per) { next = { after: items[items.length - 1].id, size: per }; break; }
@@ -747,6 +799,7 @@ export function linesOps(lines, url, body) {
   return {
     linerecord: () => lines.recordLine(body || {}),
     linewithdraw: () => lines.withdrawLine(body || {}),
+    linecurrentthrough: () => lines.recordCurrentThrough(body || {}),
     line: () => lines.readLine({ lineId: q("id"), viewer: q("viewer") }),
     linesof: () => lines.linesOf({ entity: q("entity"), kinds: list("kinds"), direction: q("direction") || "both",
                                    limit: q("limit"), viewer: q("viewer") }),

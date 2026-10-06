@@ -80,7 +80,7 @@ test("R19 sight: the registry is group-wide; a line citing a capture follows tha
   assert.equal(w.l.recordLine({ kind: "part_of", from: o, to: p, basis: { captureSha: s, extent: { kind: "document" } }, by: OUT }).reason,
                "CAPTURE_NOT_HELD", "a capture the author may not see is not held for them");
   const decl = Object.fromEntries(w.record.declaredTables().filter((d) => d.module === "lines").map((d) => [d.name, d]));
-  assert.deepEqual(Object.keys(decl).sort(), ["line_bound_cache", "line_withdrawals", "lines"]);
+  assert.deepEqual(Object.keys(decl).sort(), ["line_bound_cache", "line_current_through", "line_withdrawals", "lines"]);
   assert.deepEqual([decl.lines.sight, decl.lines.derive, decl.lines.export], ["source", "stored", "yes"]);
   assert.deepEqual([decl.line_bound_cache.derive, decl.line_bound_cache.key], ["derived-rebuildable", ["line_id"]]);
 });

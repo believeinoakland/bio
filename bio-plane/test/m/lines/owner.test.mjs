@@ -88,7 +88,7 @@ test("R16 linesOps publishes one route arm per act and read, reading parameters 
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master"), c = w.ent("proceeding", "Case one");
   const ops = (q, body) => linesOps(w.l, new URL(`https://plane.example/?${q}`), body);
-  assert.deepEqual(Object.keys(ops("")).sort(), ["holderat", "line", "linerecord", "linesof", "linewithdraw", "partiesof", "proceedinglinks", "structureat"]);
+  assert.deepEqual(Object.keys(ops("")).sort(), ["holderat", "line", "linecurrentthrough", "linerecord", "linesof", "linewithdraw", "partiesof", "proceedinglinks", "structureat"]);
   const rec = ops("", { kind: "holds", from: p, to: o, capacity: "elected", valid: { from: "2020-01-01", to: "2024-12-31" },
                         basis: { statement: "I saw the oath" }, by: ANN }).linerecord();
   assert.equal(rec.ok, true);
@@ -101,6 +101,8 @@ test("R16 linesOps publishes one route arm per act and read, reading parameters 
   assert.deepEqual(ops(`proceeding=${c}&${v}`).partiesof(), w.l.partiesOf({ proceeding: c, viewer: ANN }));
   assert.deepEqual(ops(`proceeding=${c}&${v}`).proceedinglinks(), w.l.proceedingLinks({ proceeding: c, viewer: ANN }));
   assert.equal(ops("", { lineId: pt.line_id, reason: "wrong case", by: ANN }).linewithdraw().ok, true);
+  const open = ops("", { kind: "holds", from: p, to: o, capacity: "acting", valid: { from: "2025-01-01" }, basis: { statement: "named acting" }, by: ANN }).linerecord();
+  assert.equal(ops("", { lineId: open.line_id, day: "2025-06-30", basis: { statement: "the roster says so" }, by: ANN }).linecurrentthrough().ok, true);
   assert.equal(ops("", undefined).linerecord().reason, "UNKNOWN_LINE_KIND", "an absent body is an empty act");
 });
 
