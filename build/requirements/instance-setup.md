@@ -88,6 +88,9 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 **The words members see** (DEC-149; N664)
 - **R63** (DEC-149, Bob's "S4: B") Every member- or founder-facing string this module answers or serves (the pages of R20–R25, R44–R49, R56–R62 and their statements, and the `translation` of each of its check rows, C-64.2–C-64.7) calls the group's own Civicsmith "your group's Civicsmith", or is reworded so it needs no name, and never "copy", "instance", "plane" or "server" for it. "Copy" keeps only its other meanings (a copy of a document, a public archive's own copy, copying a key or a line). "Installation" is said only where the hosting is the subject (R47's hosting account). Where "Civicsmith" alone could mean the software or the group's own, the sentence is reworded. Codes, op names, element ids, binding names and comments are not member-facing and stay. *(not yet met: T34)*
 
+**A member's language** (DEC-127 (1); N668)
+- **R64** (DEC-127 (1)) `memberLanguageSet({language, by})` (`op=memberlanguageset`) records the language a member chooses for the screens, the member's own act: `by` is the member, and no one sets it for another; a machine is refused (`MACHINE_CANNOT_SET_LANGUAGE`). `language` is one well-formed BCP 47 tag (as `jurisdictions` R37 reads one), else `LANGUAGE_MALFORMED`; any such tag is kept, and the screens show each word in it where a translation is held and in English where none is (DEC-127 (1); the translations themselves are N669); `language: null` clears the choice, so the device's setting governs again. Each set or clear is appended with when. `memberLanguage({viewer})` (`op=memberlanguage`) answers the viewer's own `{language, set_at}` (`language` null when none is set), and nobody else's. The enrolment page (R21, R22) offers the choice before `enroll`, starting from the device's setting, and sends `op=memberlanguageset` once `enroll` has signed the new member in; the members-and-keys section and the account screen offer it at any time. *(not yet met: T34)*
+
 ## Private
 
 ### Uses
@@ -130,7 +133,7 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 - `build/layers.md`, "No jurisdiction in the product", rule 2 (the active profiles are an instance setting chosen at install).
 - `docs/development/SCHEDULER.md` (one appended consumer, self-terminating).
 - DEC-122 (3) (R49: nothing loaded from outside the group's own Civicsmith; N528).
-- DEC-150 (Bob's direction, 2026-10-06, with the design session's details (1)–(3)): R60–R62; DEC-149 (Bob's "S4: B"): R63 and R20's, R47's, R53's and R55's words; U77 (Bob's comment, joining asks the new password twice): R22; K1784, K1785 (T34-81).
+- DEC-150 (Bob's direction, 2026-10-06, with the design session's details (1)–(3)): R60–R62; DEC-127 (1) (a member's language): R64 (N668, K1793); DEC-149 (Bob's "S4: B"): R63 and R20's, R47's, R53's and R55's words; U77 (Bob's comment, joining asks the new password twice): R22; K1784, K1785 (T34-81).
 - D-436's three provisional decisions, confirmed as requirements (K102): (a) the slug is recorded at the first boot from the name the installer bound (R2); (b) a store that already held a record is seeded once by the root of trust, never automatically (R4; installer R18); (c) with nothing recorded, no default is ever supplied (C-64.1, `promotion`'s).
 
 ### Suggestions
