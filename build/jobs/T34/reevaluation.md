@@ -30,3 +30,7 @@
 **P6.** Module 3,439 lines (from 3,429), under 4,000.
 
 Size (session_01CsGKTpb9A2SCFrYJQn86h9): test runs 7, module lines 3439
+
+## J1 · COMPLETE
+
+T34-41 applied whole: R34 since is events' telling at (N591; an untimed telling is not kept, said by name); R36 reads standardsWithPortion and standardsAt, never standardsIn (N590; truncated -> standards_read false) and grades each cross-address candidate through content.passageAcross (N589; A/B raise nothing, null -> undetermined by name). 140/140 tests; format, architecture, coverage (36/36), ownership 0 failures. 3,439 lines. Stale: the plane bundle (not_product), for L7's close. Nothing deferred. Record: build/jobs/T34/reevaluation.md, Completion.
