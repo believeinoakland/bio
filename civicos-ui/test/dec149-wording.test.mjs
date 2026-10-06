@@ -9,7 +9,6 @@
  * strings composed inside larger render paths are read in the page AS SERVED (`app.html` is what a member's browser
  * receives), each new sentence present and the old one gone.
  */
-import "../../bio-plane/test/stdio.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "fs";
