@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · ANSWER · re J1
 
 Accepted (K1770): all four readings stand. R83 now states fn({document, captures, viewer}) with document the bundle id and captures its capture digests; capture-requests R48 reworded to match. Merge the tranche branch for the line.
+
+## B3 · CHANGE
+
+From ACQUISITION #11's finding (K1773, P9): R65's knock pull calls profileOf with no origin, so a member's knocked capture is profiled with none and court-doctypes' member-only type never matches it. Pass origin "member" exactly when the knock was a member's own act under their session (bytes they supplied), else "fetch". Merge the tranche branch first (acquisition's profileOf now takes origin).
