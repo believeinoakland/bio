@@ -85,7 +85,9 @@ test('R12 the Worker holds no credential: it starts the container with no enviro
       assert.ok(!('entrypoint' in s), 'the image runs its own CMD');
     }
     const w = wrangler();
-    for (const k of ['services', 'vars', 'r2_buckets', 'kv_namespaces', 'd1_databases', 'secrets', 'queues', 'ai', 'routes', 'route'])
+    assert.deepEqual(Object.keys(w.vars), ['VERSION'], 'one variable, the release\'s version stamp');
+    assert.equal(w.vars.VERSION, pkg.version);
+    for (const k of ['services', 'r2_buckets', 'kv_namespaces', 'd1_databases', 'secrets', 'queues', 'ai', 'routes', 'route'])
       assert.ok(!(k in w), `no ${k}`);
     assert.deepEqual(w.durable_objects.bindings.map((b) => b.class_name), ['AgentRunner']);
     assert.equal(w.workers_dev, false);

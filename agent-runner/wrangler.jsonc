@@ -10,6 +10,9 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
 
+  // The release's version site (resolve-version ARM 7c), as every member's: a stamp, not a credential or address.
+  "vars": { "VERSION": "0.79.0" },
+
   // Reachable only through the Durable Object binding of its caller (agent-worker's RUNNER, script `agent-runner`):
   // no public address of its own.
   "workers_dev": false,
