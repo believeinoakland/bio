@@ -30,3 +30,7 @@ My readings, which I am building on unless you say otherwise:
 7. **Tests** use provenance's fixture with a stand-in provider over in-memory case rows (publication is later in the order, case-carriage's precedent), each door answering exactly the shape above.
 
 Carrying on with all of it now; only (1) changes what I build if you choose other doors.
+
+## J2 · COMPLETE
+
+T33-62 complete (B2 applied: merged tranche/T33, seam per K1634). case-tensions 23/23; publication 109/109 untouched; format 0, architecture 0 (8 files, 30 imports), coverage 11/11, ownership 9 files 0 failures, with the row applied locally. For modules.json: paths bio-plane/src/case-tensions/; tests bio-plane/test/m/case-tensions/; uses record-grammar, record-core, membership, promotion, provenance, basis-versions, contradiction, capture, case-grammar. For T33-63: drop the three tables, the caseMember fact and the publication step in the commit that creates caseTensionsOf and registers the provider. row-census: C-92.1–.9, .13 held twice until T33-63 (red 4). Nothing deferred. Record: build/jobs/T33/case-tensions.md, Work (T33-62).
