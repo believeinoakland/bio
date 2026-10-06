@@ -33,6 +33,14 @@ test("R18 nothing is deleted: every act appends; every name in attribution is he
   /* every table is declared; a bundle's purge clears that project's rows only */
   assert.ok(wz.WIZARD_SCRIPTS_TABLES.every((t) => wz.wizardScriptsOwns(t)));
   assert.equal(wz.wizardScriptsOwns("tpl_templates"), false);
+  /* declared with their classes (record-core R21; plan T33 Rules (6)): cleared by purge, never expunged, stored */
+  const declared = w.record.declaredTables().filter((d) => d.module === "wizard-scripts");
+  assert.deepEqual(declared.map((d) => d.name), [...wz.WIZARD_SCRIPTS_TABLES]);
+  for (const d of declared)
+    assert.deepEqual([d.purge, d.expunge, d.export, d.derive], ["clear", "none", "admin-only", "stored"], d.name);
+  assert.deepEqual(declared.filter((d) => d.sight === "group").map((d) => d.name),
+                   ["wiz_editor_grants", "wiz_editor_revocations", "wiz_tallies", "wiz_refusal_tallies"], "no bundle: group-wide");
+  assert.deepEqual(declared.filter((d) => d.version_chain).map((d) => d.name), ["wiz_versions", "wiz_revisions"]);
   const q = draft(w, { who: "dave", project: w.Q, name: "Q's" });
   const r = w.record.purge({ bundleId: w.P });
   assert.equal(r.ok, true);
