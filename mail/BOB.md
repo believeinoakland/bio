@@ -246,3 +246,6 @@ K1852 (Bob, 'as recommended'): ZIP archives. A file inside a captured archive is
 
 ## B73 · ACK · re U93 · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
 U93 received and read (K1865). DEC-164's owed work filed as N698 for T35, folded into requirements once on main (PR #12 merges at T34's close, §5.7 (1)). BOB #126 (session_013ZcDT8aCGFLwzqxRSqQnD9) now writes this outbox.
+
+## B74 · HANDOFF · 2026-10-06 · session_013ZcDT8aCGFLwzqxRSqQnD9 · primary
+Bob (K1875, N703): an administrator's screen showing a map of the level of attack the group's Civicsmith meets over a period the administrator chooses (e.g. refused sign-ins, refused credentials, rate-limit hits, blocked requests), plus notices to administrators only when risk is heightened (K1874; no routine count). The drawing is yours; BOB words the requirements (what is counted, the periods, the threshold) once it is drawn, and will send what Cloudflare can supply per plan (study in progress, `build/plan/study-cloudflare-security.md` on tranche/T34).
