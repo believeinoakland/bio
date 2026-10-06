@@ -40,3 +40,7 @@ Five readings of T33-49 I am building on now; none stops the job. Answer only wh
 ## J2 · REPORT
 
 (1) ai-runs (T33-50): DEPLOYED_MODES gains ask if ASK_MODE.deployed is ever set. R40's open should then also refuse a mode outside RUN_MODES (new, = the order), because ask is no run. ai-runs writes verification_recorded, checked by checkVerification, and reads deployable (R19). It relays startAllowed (C-22.19) and the R20 rows C-109.8–.12. (2) Stale generated artifacts (§14): agent-worker and bio-plane bundles (run-rules source changed; new input record-grammar/actors.mjs). agent-worker R45's two freshness tests are red until they are regenerated: 271/273, 273/273 before this change. (3) control-plane's named red R43 hash pin (K1572) moves its actual value with the new rows. It is still red, as before.
+
+## J3 · COMPLETE
+
+T33-49 applied: R14 amended; R16 ASK_MODE and RUN_MODES; R17 ASK_BOUNDS, checkAskBounds, askBoundReached; R18 startAllowed; R19 VERIFICATION_RECORDED, checkVerification, deployable; R20 rows C-109.8–.12, plus C-22.19–.21. Also fixed: five rules that threw on a null argument. run-rules 23/23. Users are green except the named reds (ai-runs R18, skills R28, control-plane R22/R26/R43) and agent-worker R45 (stale bundle, J3). format, architecture, coverage (20/20) and ownership (10 files): 0 failures each. Record: build/jobs/T33/run-rules.md, Completion.
