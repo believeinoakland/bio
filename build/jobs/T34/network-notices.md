@@ -1,6 +1,6 @@
 # network-notices (T34)
 
-**Status** · session_01DaJwApJLkJ5MRFQbPXN5ud · depth 2 · WORKING · handled B1
+**Status** · session_01DaJwApJLkJ5MRFQbPXN5ud · depth 2 · RUNNING until 2026-10-06T20:22:33Z (control-plane and plane tests (users of network-notices)) · handled B1
 
 ## J1 · QUESTION
 
