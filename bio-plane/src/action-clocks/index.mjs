@@ -3,16 +3,21 @@
  *
  * Split from `actions` (K617, K624 (1); T18 layer 9) by copy: `pendingClocks` and its bounds (R1, was `actions` R31),
  * `clockPropose` with `computeDeadline` and the clock subject of the proposal label (R2, was R32), the
- * `action_clock_proposals` table and `PENDING_CLOCKS_BAD_BEFORE`'s row, with their comments; `actions`' own job deletes
+ * `action_clock_proposals` table and `PENDING_CLOCKS_BAD_BEFORE`'s row, with their comments; `actions`' own job deleted
  * its copy. New here: `overdueClocks` (R3, the Action fold's `actions` R50) and the member's reminders (R4–R6, R8;
- * DEC-94, K613–K615, K624 (3)). An action's clock is written in its own document (`actions`); this module reads it,
- * proposes entries apart, and holds the members' reminders in its own table. It never writes an action's document.
+ * DEC-94, K613–K615, K624 (3)). T33-74: the count delegates to `civil-time` (`count.mjs`; C-1, C-2, C-4), every day is
+ * the local day of the action's jurisdiction (K1444 (iii)), every deadline names its basis kind (R7, K1431), a computed
+ * deadline is adopted in one member act (R13, K1440), a member downloads their deadlines as one calendar file (R14,
+ * K1451; `ics.mjs`), and the group's own lateness is counted, never a finding about government (R15, D234). An
+ * action's clock is written in its own document (`actions`); this module reads it, proposes entries apart, holds the
+ * members' reminders in its own table, and writes the document only through R13's adoption, a member's revision.
  *
  * REACHED as `actionClocksOf(host, deps)` (K61): one instance per host, created on the first call. At creation it
- * creates its tables and declares them to record-core's purge (R9).
+ * creates its tables and declares them, with their classes, to record-core (R9).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
- *   record, membership   layer 2: `readFile`, `readImage`, `transact`, `getSetting`, `declarePurge`;
- *                        `viewerPredicate`.
+ *   record, membership   layer 2: `readFile`, `readImage`, `textAtSha`, `head`, `livePaths`, `transact`, `getSetting`,
+ *                        `acquireLease`, `releaseLease`, `declareTable`; `viewerPredicate`.
+ *   promotion            `promote`: R13's revision of the action, which `actions`' check judges (its R1–R3, R7).
  *   actions              `actionRead` (its R29) and `noSuchAction` (its R43).
  *   conformance          `determinationRead` (its R9): the project of the determination an action rests on (R3, R5;
  *                        K702). A host on which it cannot be created answers every project null.
@@ -20,6 +25,10 @@
  *                        value that governs here (R10), read through `factReader` (R12). A host on which it cannot be
  *                        created, or whose local-facts has no `factStatus`, reads none, and a business count states
  *                        its calendar `not_read`.
+ *   standards            `standardRead` and `inForceAt` (R7, K1446): a deadline whose basis names a held standard. A
+ *                        host on which it cannot be created answers such a standard undetermined.
+ *   combine              `jurisdictions.combine` over the active profiles' ids (record-core's `jurisdiction_profiles`);
+ *                        a test passes its own, as local-facts takes one.
  *   now                  the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env                  the instance bindings.
  *
@@ -28,20 +37,30 @@
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
 import { PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
+import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter } from "../record-grammar/frontmatter.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
+import { createSha256 } from "../record-grammar/index.mjs";
 import { lawProposalLabel } from "../action-grammar/index.mjs";
-import { localFactsOf, factPath, LOCAL_FACT_STATUSES } from "../local-facts/index.mjs";
+import { localFactsOf, factPath } from "../local-facts/index.mjs";
+import { isCalendarDate, span } from "../civil-time/index.mjs";
+import { evaluate as calcEvaluate } from "../calc-grammar/index.mjs";
 import { ACTION_CLOCK_CHECKS } from "./checks.mjs";
-import { ACTION_CLOCKS_TABLES, migrateActionClocks } from "./schema.mjs";
+import { ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES, migrateActionClocks } from "./schema.mjs";
+import { actionOffices, actionZone, localDayOf, yearEntries, holidayFact, officeHours, readsOfficeCalendar, factReader,
+         computeDeadline, traceLine } from "./count.mjs";
+import { icsCalendar } from "./ics.mjs";
 
 export { ACTION_CLOCK_CHECKS } from "./checks.mjs";
-export { ACTION_CLOCKS_SCHEMA, ACTION_CLOCKS_TABLES } from "./schema.mjs";
+export { ACTION_CLOCKS_SCHEMA, ACTION_CLOCKS_TABLES, ACTION_CLOCKS_TABLE_CLASSES } from "./schema.mjs";
+export { actionOffices, actionZone, yearEntries, factReader, computeDeadline } from "./count.mjs";
+export { icsCalendar } from "./ics.mjs";
 
 /** R1: the most pending clock entries one page answers, and the most actions one page reads. */
 export const PENDING_CLOCKS_MAX = 500;
@@ -56,6 +75,18 @@ export const REMINDERS_PER_ACTION_MAX = 50;
 export const REMINDERS_READ_MAX = 500;
 /** R11: the most actions `calendarFactsRead` reads. */
 export const CALENDAR_FACTS_ACTIONS_MAX = 500;
+/** R14: the most actions one calendar file holds. R15: the most actions one lateness index reads, and the most versions
+ *  of one action it reads for the day an entry was met. */
+export const CLOCKS_ICS_ACTIONS_MAX = 200;
+export const LATENESS_ACTIONS_MAX = 500;
+export const LATENESS_VERSIONS_MAX = 200;
+/** R13: the lease on the action while its revision is written (as `actions`' acts take theirs, its R16). */
+export const ADOPT_LEASE_MS = 30000;
+
+/** R7 (K1431): the basis kinds of a deadline: a law or order, an undertaking, the event it must precede, the group's
+ *  own window. R15 (D234): the kinds that are the group's own deadlines, the only ones its lateness index counts. */
+export const BASIS_KINDS = Object.freeze(["rule", "commitment", "dependency", "window"]);
+export const GROUP_OWN_KINDS = Object.freeze(["commitment", "dependency", "window"]);
 
 /** R3, R5: the lifecycle states in which an action's deadlines no longer call for anything. */
 export const CLOSED_ACTION_STATES = Object.freeze(["resolved", "abandoned"]);
@@ -69,13 +100,8 @@ export function withRow(r) {
 }
 const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
 
-const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
-/** A `YYYY-MM-DD` that names a real UTC calendar day. */
-function isDay(v) {
-  if (typeof v !== "string" || !DAY_RE.test(v)) return false;
-  const t = Date.parse(`${v}T00:00:00Z`);
-  return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === v;
-}
+/** A `YYYY-MM-DD` that names a real calendar day (`civil-time.isCalendarDate`, its R6). */
+const isDay = (v) => typeof v === "string" && isCalendarDate(v);
 const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n > 0 ? Math.min(n, max) : dflt; };
 
 /* R4 (N427, K711): the one site minting `REMINDER_REFUSED`, the refusal of a reminder request's own shape, its detail
@@ -100,17 +126,21 @@ export function reminderRefused(arm, detail, extra = null) {
 export class ActionClocks {
   #deps;
 
-  constructor({ storage, record, membership, actions = null, conformance = null, localFacts = null, host = null, now = null,
-                env = null } = {}) {
+  constructor({ storage, record, membership, promotion = null, actions = null, conformance = null, localFacts = null,
+                standards = null, combine: combineProfiles = combine, host = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
+    this.combine = typeof combineProfiles === "function" ? combineProfiles : combine;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, actions, conformance: conformance ?? undefined, localFacts: localFacts ?? undefined };
+    this.#deps = { host, promotion, actions, conformance: conformance ?? undefined, localFacts: localFacts ?? undefined,
+                   standards: standards ?? undefined };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
 
   get actions() { return this.#deps.actions ||= actionsOf(this.#deps.host); }
+  /* R13: the revision is a promotion, judged by `actions`' check (its R1–R3, R7) like any other. */
+  get promotion() { return this.#deps.promotion ||= promotionOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   /* R3, R5 (K702): conformance's `determinationRead`, reached on the same host unless a test passes its own; null where
      it cannot be created, and every project then reads null. */
   get conformance() {
@@ -127,6 +157,15 @@ export class ActionClocks {
       try { this.#deps.localFacts = localFactsOf(this.#deps.host); } catch { this.#deps.localFacts = false; }
     }
     return this.#deps.localFacts || null;
+  }
+
+  /* R7 (K1446): standards' `standardRead` and `inForceAt`, reached on the same host unless a test passes its own; null
+     where it cannot be created, and a standard a deadline names then reads undetermined. */
+  get standards() {
+    if (this.#deps.standards === undefined || this.#deps.standards === null) {
+      try { this.#deps.standards = standardsOf(this.#deps.host); } catch { this.#deps.standards = false; }
+    }
+    return this.#deps.standards || null;
   }
 
   migrate() { migrateActionClocks(this.sql); }
@@ -146,7 +185,32 @@ export class ActionClocks {
     if (Number.isFinite(v) && v >= 0) return v;
     return Date.now();
   }
+  /* The UTC day of the instance clock: only R11's horizon of years reads it (its "UTC year"); every day a deadline or a
+     reminder is judged on is the action's local day (`#localToday`). */
   #today(explicit = null) { return new Date(this.#nowMs(explicit)).toISOString().slice(0, 10); }
+  /* R3, R5, R6 (K1444 (iii); actions R12): the local day of the instance clock in the action's zone (`actionZone`), or
+     null when no zone is held: undetermined, never the UTC day. */
+  #localToday(fm, view, explicit = null) { return localDayOf(this.#nowMs(explicit), actionZone(fm, view)); }
+
+  /* R7 (K1431, K1446): what an entry names as its basis: its kind (null when it states none, as every entry written
+     before T33-74), its citation, and the kind's own fields; a `rule` naming a held standard answers that standard's
+     in-force state on the entry's date (`standards.inForceAt`), the member's citation staying their statement. */
+  #basisOf(e, viewer) {
+    const kind = e && BASIS_KINDS.includes(e.basis_kind) ? e.basis_kind : null;
+    const out = { kind, citation: e && typeof e.basis === "string" ? e.basis : null };
+    if (kind === "commitment" && e.committed_by) out.committed_by = String(e.committed_by);
+    if (kind === "dependency") Object.assign(out, { precedes: e.precedes ?? null, lead: e.lead ?? null, why: e.why ?? null,
+      says: "a date derived from the event it must precede; missing it is a dated fact about sequence, never a violation" });
+    if (kind === "rule" && typeof e.standard === "string" && e.standard) {
+      const st = this.standards;
+      let f = null;
+      try { f = st && typeof st.inForceAt === "function" ? st.inForceAt({ standard: e.standard, date: e.date, viewer }) : null; }
+      catch { f = null; }
+      out.standard = { id: e.standard, state: f && typeof f.state === "string" ? f.state : "undetermined",
+                       why: f && f.why ? String(f.why) : f ? null : "the standards module cannot be read here" };
+    }
+    return out;
+  }
 
   /* R2: the active profiles' combined view (record-core R26), or null with none active or none combinable. */
   #view() {
@@ -154,7 +218,8 @@ export class ActionClocks {
     try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
     if (typeof ids === "string") { try { ids = JSON.parse(ids); } catch { ids = null; } }
     if (!Array.isArray(ids) || !ids.length) return null;
-    const c = combine(ids);
+    let c = null;
+    try { c = this.combine(ids); } catch { c = null; }
     return c && c.ok ? c.view : null;
   }
 
@@ -261,16 +326,20 @@ export class ActionClocks {
   }
 
   /** R3 (monitoring R34; for `queue-producers` R15): every clock entry of a visible action that is not `resolved` or
-   *  `abandoned` whose stored status is `overdue`, or `pending` with a date before the UTC day of the instance clock;
-   *  each with the action's project and the member who created it. Paged as R1 (`#entryPage`), over every open action
-   *  in id order: an `overdue` entry is not in the projection's clock, so no seek narrows it. R7: overdue is derived at
-   *  the read (`past`), and the stored status is reported beside it, never in place of it. Writes nothing. */
+   *  `abandoned` whose stored status is `overdue`, or `pending` with a date before the local day of the instance clock
+   *  in the action's zone (K1444 (iii); `actions` R12); each with the action's project, the member who created it and
+   *  the entry's basis (R7). Paged as R1 (`#entryPage`), over every open action in id order: an `overdue` entry is not
+   *  in the projection's clock, so no seek narrows it. R7: overdue is derived at the read (`past`), and the stored
+   *  status is reported beside it, never in place of it. An action whose zone is not held has its pending entries'
+   *  lateness undetermined: they are left out and counted in `zone_undetermined`. Writes nothing. */
   overdueClocks({ after = null, limit = null, viewer = null, now = null } = {}) {
-    const today = this.#today(now);
+    const asOf = this.#today(now);
+    const view = this.#view();
     const max = clampLimit(limit, OVERDUE_CLOCKS_MAX, OVERDUE_CLOCKS_MAX);
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
-    const who = new Map();
+    const who = new Map(), day = new Map();
+    let undetermined = 0;
     const page = this.#entryPage({
       after, max, actionsMax: OVERDUE_CLOCKS_ACTIONS_MAX,
       candidates: (seekId, n) => this.#rows(`SELECT b.bundle_id FROM bundles b
@@ -279,22 +348,28 @@ export class ActionClocks {
         ...CLOSED_ACTION_STATES, ...gate.args, ...(seekId !== null ? [seekId] : []), n),
       item: (r, i, e) => {
         if (!e || typeof e !== "object") return null;
+        if (!day.has(r.bundle_id)) day.set(r.bundle_id, this.#localToday(this.#heldFm(r.bundle_id) || {}, view, now));
+        const today = day.get(r.bundle_id);
         const dated = typeof e.date === "string" && isDay(e.date);
-        const past = dated && e.date < today;
-        if (!(e.status === "overdue" || (e.status === "pending" && past))) return null;
+        if (e.status === "pending" && dated && today === null) { undetermined++; return null; }
+        const past = dated && today !== null ? e.date < today : today === null ? null : false;
+        if (!(e.status === "overdue" || (e.status === "pending" && past === true))) return null;
         if (!who.has(r.bundle_id)) who.set(r.bundle_id, { project: this.#projectOf(this.#heldFm(r.bundle_id), viewer), created_by: this.#createdBy(r.bundle_id) });
         return { action: r.bundle_id, ord: i, date: typeof e.date === "string" ? e.date : null, basis: e.basis ?? null,
-                 text: e.text ?? null, status: e.status, past, ...who.get(r.bundle_id) };
+                 text: e.text ?? null, status: e.status, past, ...who.get(r.bundle_id), basis_of: this.#basisOf(e, viewer),
+                 local_day: today };
       },
     });
-    return { ok: true, as_of: today, items: page.items, limit: max, actions_limit: OVERDUE_CLOCKS_ACTIONS_MAX,
-             truncated: page.truncated, cursor: page.cursor };
+    return { ok: true, as_of: asOf, items: page.items, limit: max, actions_limit: OVERDUE_CLOCKS_ACTIONS_MAX,
+             truncated: page.truncated, cursor: page.cursor, zone_undetermined: undetermined };
   }
 
   /* ================================================================ the proposal (R2) */
 
-  /** R2 (was `actions` R32): a clock entry computed from a profile deadline that applies to the action's kind, stored
-   *  apart and labelled; never written into `clock[]`. */
+  /** R2 (was `actions` R32; C-1, C-2, C-4, K1444, K1445): a clock entry computed from a profile deadline that applies
+   *  to the action's kind, by `civil-time` (`computeDeadline`), stored apart with its trace and labelled; never written
+   *  into `clock[]` (R13's adoption, a member's act, is the one way it reaches the document). Its basis kind is `rule`
+   *  (R7). A rule whose basis is absent or `UNMEASURED` is no basis: its date is undetermined (K1445). */
   clockPropose({ target, rule, proposer = null, viewer = null } = {}) {
     const who = String(proposer ?? "").trim();
     if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
@@ -311,22 +386,36 @@ export class ActionClocks {
     if (!d) return { ok: false, reason: "NO_SUCH_RULE", target, rule: rule || null,
       detail: rule ? `no active profile states a deadline '${String(rule).slice(0, 60)}' for an action of kind '${fm.action_kind}'`
                    : `no rule was named: name the profile deadline's rule (rule=<rule>) for an action of kind '${fm.action_kind}'` };
-    const computed = computeDeadline(d, fm, view, { factOf: this.#factOf(viewer) });
+    const sourced = typeof d.basis === "string" && d.basis.trim() && d.basis !== "UNMEASURED";
+    const computed = sourced ? computeDeadline(d, fm, view, { factOf: this.#factOf(viewer) })
+      : { date: null, why: "the rule is not held with a primary source: UNMEASURED is not a basis (K1445; jurisdictions R44)" };
     const basis = `${d.citation}${d.basis ? ` (profile basis: ${d.basis}${d.profile ? `, ${d.profile}` : ""})` : ""}`;
-    const entry = { text: d.rule, description: `${d.days} ${d.count} day${d.days === 1 ? "" : "s"} from ${d.starts}`,
-                    date: computed.date, basis, status: "pending" };
+    const amount = d.amount ?? d.days;
+    const unit = (d.units ?? "days") === "days" ? `${d.count ?? ""} day${amount === 1 ? "" : "s"}`.trim() : String(d.units).replace(/_/g, " ");
+    const entry = { text: d.rule, description: `${amount} ${unit} ${d.direction === "backward" ? "before" : "from"} ${d.starts}`,
+                    date: computed.date, basis, status: "pending", basis_kind: "rule" };
     const at = stampInstant("second", this.#nowMs(null));
-    this.sql.exec(`INSERT INTO action_clock_proposals (bundle_id, proposed_by, rule, date, basis, entry_json, why, proposed_at)
-      VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(bundle_id, proposed_by, rule) DO UPDATE SET date=excluded.date,
-      basis=excluded.basis, entry_json=excluded.entry_json, why=excluded.why, proposed_at=excluded.proposed_at`,
-      target, who, rule, computed.date, basis, JSON.stringify(entry), computed.why ?? null, at);
+    const kept = { trace: computed.trace ?? null, due: computed.due ?? null, candidates: computed.candidates ?? null,
+                   extension: computed.extension ?? null, observed: computed.observed ?? null, calendar: computed.calendar ?? null,
+                   start: computed.start ?? null, trace_line: computed.date ? traceLine(computed) : null };
+    this.sql.exec(`INSERT INTO action_clock_proposals (bundle_id, proposed_by, rule, date, basis, entry_json, why, proposed_at,
+        trace_json, adopted_by, adopted_at, adopted_ord)
+      VALUES (?,?,?,?,?,?,?,?,?,NULL,NULL,NULL) ON CONFLICT(bundle_id, proposed_by, rule) DO UPDATE SET date=excluded.date,
+      basis=excluded.basis, entry_json=excluded.entry_json, why=excluded.why, proposed_at=excluded.proposed_at,
+      trace_json=excluded.trace_json, adopted_by=NULL, adopted_at=NULL, adopted_ord=NULL`,
+      target, who, rule, computed.date, basis, JSON.stringify(entry), computed.why ?? null, at, JSON.stringify(kept));
     return { ok: true, target, weight: "single", evidence: false,
-             proposal: { ...proposalLabelFor(who), rule, entry, at,
+             proposal: { ...proposalLabelFor(who), key: `${rule}@${who}`, rule, entry, at,
                          ...(computed.start ? { start: computed.start, counted_from: `the day after ${computed.start}` } : {}),
+                         ...(computed.candidates ? { candidates: computed.candidates } : {}),
+                         ...(computed.due ? { due: computed.due } : {}),
+                         ...(computed.extension ? { extension: computed.extension } : {}),
+                         ...(computed.observed ? { observed: computed.observed } : {}),
+                         ...(computed.trace ? { trace: computed.trace } : {}),
                          ...(computed.calendar ? { calendar: computed.calendar } : {}),
                          ...(computed.date ? {} : { undetermined: computed.why }) },
-             says: "this clock entry is proposed and is not on the action's clock: a member states a clock entry by a "
-                 + "revision of the action." };
+             says: "this clock entry is proposed and is not on the action's clock: a member adopts it (op=clockadopt) "
+                 + "or states a clock entry by a revision of the action." };
   }
 
   /* R10, R12: the count's reader of the holiday entries' confirmations is `factReader` over this host's local-facts, the
@@ -336,16 +425,19 @@ export class ActionClocks {
 
   /** R11 (for `queue-producers` R21, through `local-facts` R4): the `local-facts` paths a live deadline reads, once each,
    *  with the actions that read them. For every visible action not `resolved` or `abandoned` whose kind has a profile
-   *  deadline counted in business days: the holiday entries that apply to its offices (R10) for each year from the UTC
-   *  year of the instance clock to the year of its latest pending clock entry, and at least the next year; and its
-   *  offices' `hours`. Only facts the active profiles hold are paths (a year they do not list has no fact to confirm,
-   *  and a count reaching it is undetermined, jurisdictions R33). Each path's actions are `{action, project,
+   *  deadline counted in business days: its offices' `hours`; and, when one of its kind's deadlines reads the office
+   *  calendar (`readsOfficeCalendar`: a count that skips or rolls past closed days and names no closure list), the
+   *  office-calendar entries that apply to its offices (R10) for each year from the UTC year of the instance clock to
+   *  the year of its latest pending clock entry, and at least the next year. A closure-list entry is never a path
+   *  (K1519; local-facts R6). Only facts the active profiles hold are paths (a year they do not list has no fact to
+   *  confirm, and a count reaching it is undetermined, jurisdictions R33). Each path's actions are `{action, project,
    *  created_by}`, the project and creator as R3 computes them (K1000). At most 500 actions read, `truncated` stated. */
   calendarFactsRead({ viewer = null, now = null } = {}) {
     const today = this.#today(now);
     const view = this.#view();
-    const business = new Set((view && Array.isArray(view.deadlines) ? view.deadlines : [])
-      .filter((d) => d && d.count === "business" && typeof d.applies_to === "string").map((d) => d.applies_to));
+    const deadlines = (view && Array.isArray(view.deadlines) ? view.deadlines : []).filter((d) => d && typeof d.applies_to === "string");
+    const business = new Set(deadlines.filter((d) => d.count === "business").map((d) => d.applies_to));
+    const calendarKinds = new Set(deadlines.filter(readsOfficeCalendar).map((d) => d.applies_to));
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
     const rows = business.size ? this.#rows(`SELECT b.bundle_id FROM bundles b
@@ -364,11 +456,13 @@ export class ActionClocks {
       /* K1000: the action as its paths answer it, one object shared by every path it reads. */
       const a = { action: r.bundle_id, project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) };
       const offices = actionOffices(fm, view);
-      let y1 = y0 + 1;
-      for (const e of Array.isArray(fm.clock) ? fm.clock : [])
-        if (e && e.status === "pending" && isDay(e.date)) y1 = Math.max(y1, Number(e.date.slice(0, 4)));
-      for (let y = y0; y <= y1; y++)
-        for (const h of yearEntries(view, offices, y).entries) { try { add(factPath(holidayFact(h)), a); } catch { /* no path */ } }
+      if (calendarKinds.has(fm.action_kind)) {
+        let y1 = y0 + 1;
+        for (const e of Array.isArray(fm.clock) ? fm.clock : [])
+          if (e && e.status === "pending" && isDay(e.date)) y1 = Math.max(y1, Number(e.date.slice(0, 4)));
+        for (let y = y0; y <= y1; y++)
+          for (const h of yearEntries(view, offices, y).entries) { try { add(factPath(holidayFact(h)), a); } catch { /* no path */ } }
+      }
       for (const f of officeHours(view, offices)) { try { add(factPath(f), a); } catch { /* no path */ } }
     }
     const paths = [...read.keys()].sort().map((path) => ({ path, actions: read.get(path).map((a) => ({ ...a })) }));
@@ -450,16 +544,18 @@ export class ActionClocks {
   }
 
   /** R4: an action's reminders, each with its entry, its day, who set it, when, and its state (`waiting`, `due` or
-   *  `answered`), in (entry, day, member) order, at most 500 with `truncated`. A reminder changed or removed is gone. */
+   *  `answered`; `undetermined` while the action's zone is not held), in (entry, day, member) order, at most 500 with
+   *  `truncated`; `as_of` is the action's local day. A reminder changed or removed is gone. */
   remindersFor({ action, viewer = null, now = null } = {}) {
     const a = this.#actionFor(action, viewer);
     if (!a) return noSuchAction(action ?? null);
-    const today = this.#today(now);
+    /* R5 (K1444 (iii)): due on the action's local day; with no zone held, a standing reminder's state is undetermined. */
+    const today = this.#localToday(this.#heldFm(a.id) || {}, this.#view(), now);
     const rows = this.#rows(`SELECT entry, day, set_by, set_at, answered_at FROM action_reminders
       WHERE bundle_id=? AND removed_at IS NULL ORDER BY entry, day, set_by, rid LIMIT ?`, a.id, REMINDERS_READ_MAX + 1);
     const reminders = rows.slice(0, REMINDERS_READ_MAX).map((r) => ({
       entry: r.entry, on: r.day, set_by: r.set_by, set_at: r.set_at, answered_at: r.answered_at ?? null,
-      state: r.answered_at ? "answered" : r.day <= today ? "due" : "waiting" }));
+      state: r.answered_at ? "answered" : today === null ? "undetermined" : r.day <= today ? "due" : "waiting" }));
     return { ok: true, action: a.id, as_of: today, reminders, limit: REMINDERS_READ_MAX,
              truncated: rows.length > REMINDERS_READ_MAX, standing_max: REMINDERS_PER_ACTION_MAX };
   }
@@ -469,9 +565,17 @@ export class ActionClocks {
    *  position, day) order (then the member, so the order is total). `cursor` is the last reminder answered,
    *  `<action>#<position>#<day>#<member>`, when `truncated`, else null; `after` is a previous page's cursor or an action
    *  id, read as after all that action's reminders. The entry is read as it stands (an entry a later revision removed
-   *  or re-dated is answered only while the entry at that position is pending). Writes nothing. */
+   *  or re-dated is answered only while the entry at that position is pending). A day "has come" on the local day of
+   *  `nowMs` in the action's zone (Terms; K1444 (iii)): never the UTC day, and not at all while no zone is held.
+   *  Writes nothing. */
   remindersDue({ nowMs = null, after = null, limit = null, viewer = null } = {}) {
     const today = this.#today(nowMs);
+    const view = this.#view();
+    /* K1444 (iii): a reminder's day has come on the action's local day. The SQL bound is the latest local day any zone
+       has reached (UTC+14), each row then judged on its own action's day; an action with no zone held is not due. */
+    const bound = new Date(this.#nowMs(nowMs) + 14 * 3600000).toISOString().slice(0, 10);
+    const localDays = new Map();
+    const localOf = (id) => { if (!localDays.has(id)) localDays.set(id, this.#localToday(fmOf(id), view, nowMs)); return localDays.get(id); };
     const max = clampLimit(limit, REMINDERS_DUE_MAX, REMINDERS_DUE_MAX);
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
@@ -495,13 +599,15 @@ export class ActionClocks {
         WHERE r.answered_at IS NULL AND r.removed_at IS NULL AND r.day <= ? AND b.object_type='action'
           AND b.current_state NOT IN (${closed}) AND (${gate.sql}) ${cur.sql}
         ORDER BY r.bundle_id, r.entry, r.day, r.set_by LIMIT ?`,
-        today, ...CLOSED_ACTION_STATES, ...gate.args, ...cur.args, max + 1);
+        bound, ...CLOSED_ACTION_STATES, ...gate.args, ...cur.args, max + 1);
       let last = null;
       for (const r of rows) {
         last = r;
         const clock = Array.isArray(fmOf(r.bundle_id).clock) ? fmOf(r.bundle_id).clock : [];
         const e = clock[r.entry];
         if (!e || typeof e !== "object" || e.status !== "pending") continue;
+        const local = localOf(r.bundle_id);
+        if (local === null || r.day > local) continue;
         if (items.length === max) { truncated = true; break; }
         items.push({ action: r.bundle_id, ord: r.entry, date: e.date ?? null, basis: e.basis ?? null, text: e.text ?? null,
                      on: r.day, set_by: r.set_by, project: this.#projectOf(fmOf(r.bundle_id), viewer) });
@@ -525,9 +631,10 @@ export class ActionClocks {
     const who = String(author).trim();
     const a = this.#actionFor(target, viewer);
     if (!a) return noSuchAction(target ?? null);
-    const today = this.#today(null);
+    /* K1444 (iii): due, and later, on the action's local day; with no zone held nothing is due. */
+    const today = this.#localToday(this.#heldFm(a.id) || {}, this.#view(), null);
     const pos = typeof entry === "number" ? entry : /^\d+$/.test(String(entry ?? "").trim()) ? Number(String(entry).trim()) : NaN;
-    const due = Number.isInteger(pos) && pos >= 0
+    const due = Number.isInteger(pos) && pos >= 0 && today !== null
       ? this.#rows(`SELECT rid, day FROM action_reminders WHERE bundle_id=? AND entry=? AND set_by=? AND day <= ?
                       AND answered_at IS NULL AND removed_at IS NULL ORDER BY day, rid`, a.id, pos, who, today) : [];
     /* DEC-49 REGION is-no-such-reminder */
@@ -553,6 +660,263 @@ export class ActionClocks {
       return { ok: true, target: a.id, entry: pos, answered: due.map((r) => r.day), next: day };
     });
   }
+
+  /* ================================================================ adopting a computed deadline (R13, R7, R8) */
+
+  /** R13 (K1440; `op=clockadopt`): a member adopts a standing proposal of R2 as a clock entry of the action, in one act:
+   *  the entry, with its basis (R7: kind `rule`, the rule's citation, a held standard the member names) and the trace
+   *  R2 answered, is appended to the document's `clock[]` by a revision of the action (`promotion`, judged by `actions`'
+   *  check, its R1–R3, R7), and the proposal is recorded adopted with who, when and the entry's position. `proposal` is
+   *  the key R2 answered (`<rule>@<proposer>`); `date`, `text` and `description` amend the entry before it is adopted
+   *  (`amended` then marks it). Refusals in order: `MACHINE_CANNOT_ADOPT_CLOCK`; `NO_SUCH_ACTION`;
+   *  `NO_SUCH_CLOCK_PROPOSAL` (none standing on this action by that key: never proposed, or already adopted);
+   *  `CLOCK_PROPOSAL_UNDETERMINED`; then `NO_SUCH_STANDARD` for a `standard` the author may not see; then the
+   *  revision's own refusals (the lease's, and the promotion's, `actions`' among them). */
+  clockAdopt({ target, proposal, why = null, date = null, text = null, description = null, standard = null,
+               author = null, viewer = null } = {}) {
+    const who = String(author ?? "").trim();
+    /* DEC-49 REGION is-machine-adopt */
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_ADOPT_CLOCK", "a deadline is put on an action's clock by a member, in their own act; "
+        + "a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. "
+        + "Nothing was written.", { target: target ?? null });
+    /* END DEC-49 REGION is-machine-adopt */
+    const a = this.#actionFor(target, viewer);
+    if (!a) return noSuchAction(target ?? null);
+    const key = String(proposal ?? "");
+    const at = key.indexOf("@");
+    const p = at > 0 ? this.#one(`SELECT * FROM action_clock_proposals WHERE bundle_id=? AND rule=? AND proposed_by=?
+                                    AND adopted_at IS NULL`, a.id, key.slice(0, at), key.slice(at + 1)) : null;
+    /* DEC-49 REGION is-no-such-clock-proposal */
+    if (!p)
+      return refuse("NO_SUCH_CLOCK_PROPOSAL", `no standing proposal '${key.slice(0, 120)}' on this action: name the key `
+        + "op=clockpropose answered (<rule>@<proposer>), for a proposal not yet adopted. Nothing was written.",
+        { target: a.id, proposal: key.slice(0, 200) || null });
+    /* END DEC-49 REGION is-no-such-clock-proposal */
+    /* DEC-49 REGION is-clock-proposal-undetermined */
+    if (p.date === null || p.date === undefined)
+      return refuse("CLOCK_PROPOSAL_UNDETERMINED", `the proposed deadline has no date: ${p.why || "it is undetermined"}. `
+        + "A member states such an entry by their own revision of the action, with its basis. Nothing was written.",
+        { target: a.id, proposal: key, why: p.why ?? null });
+    /* END DEC-49 REGION is-clock-proposal-undetermined */
+    let entry = {};
+    try { entry = JSON.parse(p.entry_json) || {}; } catch { entry = {}; }
+    let kept = {};
+    try { kept = JSON.parse(p.trace_json || "{}") || {}; } catch { kept = {}; }
+    const amend = {};
+    if (date !== null && date !== undefined && date !== "") {
+      if (!isDay(String(date))) return refuse("CLOCK_ENTRY_REFUSED", `date '${String(date).slice(0, 20)}' is not a calendar day `
+        + "written YYYY-MM-DD. Nothing was written.", { target: a.id, proposal: key });
+      amend.date = String(date);
+    }
+    for (const [k, v] of [["text", text], ["description", description]])
+      if (v !== null && v !== undefined && String(v).trim()) amend[k] = String(v);
+    const std = standard === null || standard === undefined || standard === "" ? null : String(standard).trim();
+    if (std) {
+      const st = this.standards;
+      let r = null;
+      try { r = st ? st.standardRead({ id: std, viewer: who }) : null; } catch { r = null; }
+      if (!r || r.ok === false) return noSuchStandard(std, { target: a.id });
+    }
+    const when = stampInstant("second", this.#nowMs(null));
+    const written = { text: amend.text ?? entry.text, description: amend.description ?? entry.description,
+      date: amend.date ?? entry.date, basis: entry.basis, status: "pending", basis_kind: "rule",
+      ...(std ? { standard: std } : {}), trace: kept.trace_line || traceLine({ trace: kept.trace, start: kept.start }),
+      proposal: key, proposed_by: p.proposed_by, adopted_by: who, adopted_at: when,
+      ...(Object.keys(amend).length ? { amended: Object.keys(amend).sort().join(",") } : {}),
+      ...(why !== null && why !== undefined && String(why).trim() ? { adopted_why: String(why) } : {}) };
+    return this.#reviseClock(a.id, written, who, viewer, when, (ord) => {
+      this.sql.exec(`UPDATE action_clock_proposals SET adopted_by=?, adopted_at=?, adopted_ord=? WHERE bundle_id=? AND
+                      proposed_by=? AND rule=?`, who, when, ord, a.id, p.proposed_by, p.rule);
+      return { ok: true, target: a.id, proposal: key, ord, entry: written, adopted_by: who, adopted_at: when,
+               says: "the deadline is now on the action's clock, stated by you; it is tracked and told once like any other." };
+    });
+  }
+
+  /* R13: one revision of the action appending `e` to `clock[]`, under a 30-second lease the member holds (released on
+     every path), on the held version, carrying every other live file. `done(ord)` answers once the promotion lands. */
+  #reviseClock(id, e, who, viewer, when, done) {
+    const lease = this.record.acquireLease(id, who, ADOPT_LEASE_MS);
+    if (!lease || !lease.ok)
+      return { ok: false, reason: "LEASE_HELD", target: id, heldBy: lease && lease.heldBy, until: lease && lease.until,
+               detail: "another member is writing to this action right now. Nothing was written; try again shortly." };
+    try {
+      const f = this.record.readFile(id, "bundle.md");
+      if (!f || typeof f.text !== "string")
+        return { ok: false, reason: "NO_DOCUMENT", target: id, detail: "this action has no readable bundle.md. Nothing was written." };
+      let fm = {};
+      try { fm = parseFrontmatter(f.text).data || {}; } catch { fm = {}; }
+      const ord = Array.isArray(fm.clock) ? fm.clock.length : 0;
+      let text = spliceClock(f.text, e);
+      let check = null;
+      try { check = text ? parseFrontmatter(text).data : null; } catch { check = null; }
+      if (!text || !check || !Array.isArray(check.clock) || check.clock.length !== ord + 1 || check.clock[ord].date !== e.date)
+        return { ok: false, reason: "UNSPLICEABLE_CLOCK", target: id,
+                 detail: "this action's clock block is not in a shape this grammar can extend in place; appending never "
+                       + "rewrites the rest of the document, so nothing was written." };
+      text = setScalar(text, "last_updated", `"${when}"`);
+      const bytes = new TextEncoder().encode(text);
+      const carried = [];
+      for (const path of this.record.livePaths(id) || []) {
+        if (path === "bundle.md") continue;
+        const c = this.record.readFile(id, path);
+        if (!c) continue;
+        carried.push(typeof c.text === "string" ? { path, text: c.text, bytes: new TextEncoder().encode(c.text).length, sha256: c.sha256 }
+                                                : { path, blobSha: c.blobSha, sha256: c.sha256, bytes: c.bytes });
+      }
+      const head = this.record.head(id);
+      const b = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, id) || {};
+      const promoted = this.promotion.promote({
+        bundleId: id, base: head ? head.bundleSha : null, snapKey: `${when.replace(/[-:]/g, "")}_clock${ord}`,
+        author: who, viewer: viewer ?? who,
+        files: [{ path: "bundle.md", text, bytes: bytes.length, sha256: createSha256().update(bytes).hex() }, ...carried],
+        meta: { object_type: fm.object_type ?? "action", title: fm.title, current_state: b.current_state ?? fm.current_state,
+                prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when, criticality: fm.criticality ?? null },
+      });
+      if (!promoted || !promoted.ok) return { ...(promoted || { ok: false, reason: "PROMOTION_FAILED" }), target: id };
+      return done(ord);
+    } finally {
+      try { this.record.releaseLease(id, who); } catch { /* record-core R61 never throws */ }
+    }
+  }
+
+  /* ================================================================ the calendar file (R14) */
+
+  /** R14 (K1451; `op=clocksics`, a read): one iCalendar file of the pending dated clock entries of each named action the
+   *  viewer may see: an all-day event on the entry's day in the action's zone, its summary the entry's text, its
+   *  description the basis (R7) and the action's id, a stable `UID` per (action, entry position). A one-off file for
+   *  the member to save: no address is published, nothing is pushed, no outside channel is used (DEC-94 (3)). An
+   *  action absent or invisible answers `actions.noSuchAction`; an entry with no date is left out and counted. At most
+   *  200 actions. Writes nothing. */
+  clocksIcs({ actions = null, viewer = null } = {}) {
+    const ids = (Array.isArray(actions) ? actions : String(actions ?? "").split(","))
+      .map((x) => String(x ?? "").trim()).filter(Boolean);
+    const unique = [...new Set(ids)];
+    if (!unique.length || unique.length > CLOCKS_ICS_ACTIONS_MAX)
+      return { ok: false, reason: "CLOCKS_ICS_REFUSED", code: "CLOCKS_ICS_REFUSED", max: CLOCKS_ICS_ACTIONS_MAX,
+               detail: `name one to ${CLOCKS_ICS_ACTIONS_MAX} actions (actions=<id>,<id>). Nothing was read.` };
+    const view = this.#view();
+    const events = [];
+    let undated = 0;
+    for (const id of unique) {
+      const a = this.#actionFor(id, viewer);
+      if (!a) return noSuchAction(id);
+      const fm = this.#heldFm(a.id) || {};
+      const zone = actionZone(fm, view);
+      (Array.isArray(fm.clock) ? fm.clock : []).forEach((e, i) => {
+        if (!e || typeof e !== "object" || e.status !== "pending") return;
+        if (!isDay(e.date)) { undated++; return; }
+        events.push({ uid: `${a.id}.${i}@civicos`, day: e.date, zone,
+                      summary: String(e.text ?? "Deadline"), description: `${basisWords(this.#basisOf(e, viewer))}\nAction: ${a.id}` });
+      });
+    }
+    const ics = icsCalendar({ events, stampMs: this.#nowMs(null) });
+    return { ok: true, filename: "deadlines.ics", content_type: "text/calendar; charset=utf-8", ics, events: events.length,
+             left_out: { undated }, says: "a file for you to save; nothing is published or sent." };
+  }
+
+  /* ================================================================ the group's own lateness (R15) */
+
+  /* R15: the local day an entry at `ord` was met: its `met_on` when stated, else the action's `last_updated` in the first
+     version of its document that shows the entry `met` (the record's history, read in write order), as a local day in
+     the action's zone; null when neither is held. */
+  #metDay(id, ord, e, zone) {
+    if (e && isDay(e.met_on)) return { day: e.met_on, from: "met_on" };
+    let im = null;
+    try { im = this.record.readImage(id); } catch { im = null; }
+    let entries = [];
+    try { entries = (JSON.parse(im && typeof im["_history/manifest.json"] === "string" ? im["_history/manifest.json"] : "{}").entries) || []; }
+    catch { entries = []; }
+    for (const m of [...entries].sort((x, y) => (x.seq ?? 0) - (y.seq ?? 0)).slice(0, LATENESS_VERSIONS_MAX)) {
+      let files = [];
+      try { files = JSON.parse(im[`_history/promotion_${m.key}.json`] || "{}").files || []; } catch { files = []; }
+      const md = files.find((f) => f && f.name === "bundle.md");
+      const t = md ? this.record.textAtSha(id, md.sha256) : null;
+      if (typeof t !== "string") continue;
+      let fm = null;
+      try { fm = parseFrontmatter(t).data; } catch { fm = null; }
+      const x = fm && Array.isArray(fm.clock) ? fm.clock[ord] : null;
+      if (x && x.status === "met") {
+        const lu = typeof fm.last_updated === "string" ? fm.last_updated : null;
+        const ms = lu ? Date.parse(lu) : NaN;
+        const day = Number.isFinite(ms) && /T/.test(lu) ? localDayOf(ms, zone) : lu && isDay(lu.slice(0, 10)) ? lu.slice(0, 10) : null;
+        return day ? { day, from: "the version that first shows it met" } : null;
+      }
+    }
+    return null;
+  }
+
+  /** R15 (D234, K1471; `op=clocklateness`, a read): an index over the group's own clocks only. For the clock entries of
+   *  the actions the viewer may see (in `project` when named) whose basis kind is `commitment`, `dependency` or `window`
+   *  and whose date falls in `from`–`to`: the count met on time, the count met late with the days late each
+   *  (`civil-time.span`), the count still pending past their date, and the denominator, each a computed fact
+   *  (`calc-grammar`'s `evaluate`, its recipe and trace answered), with what it could not count named. Never a finding
+   *  about government: no `rule` entry is counted, no counterparty is named, and nothing is written or raised. */
+  lateness({ from = null, to = null, project = null, viewer = null, now = null } = {}) {
+    const f0 = String(from ?? ""), t0 = String(to ?? "");
+    if (!isDay(f0) || !isDay(t0) || f0 > t0)
+      return { ok: false, reason: "LATENESS_REFUSED", code: "LATENESS_REFUSED",
+               detail: "from= and to= are calendar days written YYYY-MM-DD, from not after to. Nothing was read." };
+    const view = this.#view();
+    const gate = viewerPredicate(viewer);
+    const rows = this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='action' AND (${gate.sql})
+      ORDER BY b.bundle_id LIMIT ?`, ...gate.args, LATENESS_ACTIONS_MAX + 1);
+    const table = [], notCounted = [];
+    for (const r of rows.slice(0, LATENESS_ACTIONS_MAX)) {
+      const fm = this.#heldFm(r.bundle_id) || {};
+      if (project !== null && project !== undefined && project !== "" && this.#projectOf(fm, viewer) !== String(project)) continue;
+      const zone = actionZone(fm, view);
+      const today = localDayOf(this.#nowMs(now), zone);
+      (Array.isArray(fm.clock) ? fm.clock : []).forEach((e, i) => {
+        if (!e || typeof e !== "object" || !isDay(e.date) || e.date < f0 || e.date > t0) return;
+        const kind = BASIS_KINDS.includes(e.basis_kind) ? e.basis_kind : null;
+        if (kind === "rule") return;
+        const ref = { action: r.bundle_id, ord: i, date: e.date };
+        if (!kind) { notCounted.push({ ...ref, why: "the entry names no basis kind, so whether it is the group's own is not stated" }); return; }
+        if (e.status === "met") {
+          const m = this.#metDay(r.bundle_id, i, e, zone);
+          if (!m) { notCounted.push({ ...ref, kind, why: "met, and the day it was met is not held" }); return; }
+          const sp = span({ value: e.date, precision: "day", zone: zone || "UTC" }, { value: m.day, precision: "day", zone: zone || "UTC" }, { unit: "days" });
+          const late = sp && Number.isInteger(sp.min) && sp.min === sp.max ? sp.min : null;
+          if (late === null) { notCounted.push({ ...ref, kind, why: "the span from its date to the day it was met is undetermined" }); return; }
+          table.push({ action: r.bundle_id, ord: i, date: e.date, kind, state: late > 0 ? "late" : "on_time", days_late: late > 0 ? late : 0, met_on: m.day, met_from: m.from });
+          return;
+        }
+        if (e.status === "pending" || e.status === "overdue") {
+          if (today === null) { notCounted.push({ ...ref, kind, why: "the action's zone is not held, so whether its date has passed is undetermined" }); return; }
+          table.push({ action: r.bundle_id, ord: i, kind, state: e.date < today ? "pending_past" : "not_yet_due", days_late: null });
+          return;
+        }
+        table.push({ action: r.bundle_id, ord: i, kind, state: e.status === "waived" ? "waived" : "other", days_late: null });
+      });
+    }
+    const input = { fields: [{ name: "state", type: "string" }, { name: "days_late", type: "integer" }],
+                    rows: table.map((x) => ({ state: x.state, days_late: x.days_late })) };
+    const sel = (as, state) => ({ op: "select", as, from: "entries", where: [{ field: "state", test: "eq", value: state }] });
+    const recipe = { method: "bio-calc/1", inputs: [{ name: "entries", kind: "table" }], steps: [
+      sel("on_time_rows", "on_time"), { op: "count", as: "on_time", from: "on_time_rows" },
+      sel("late_rows", "late"), { op: "count", as: "late", from: "late_rows" },
+      { op: "sum", as: "days_late", from: "late_rows", field: "days_late" },
+      sel("pending_rows", "pending_past"), { op: "count", as: "pending_past", from: "pending_rows" },
+      { op: "count", as: "denominator", from: "entries" }], output: "denominator" };
+    const ev = table.length ? calcEvaluate(recipe, { entries: input }) : null;
+    const zero = { value: "0", sign: "+", precision: "exact" };
+    const out = (name) => {
+      if (!ev || !Array.isArray(ev.trace)) return zero;
+      const st = ev.trace.find((x) => x.step === name);
+      return st && st.output ? st.output : zero;
+    };
+    const fact = (name) => ({ ...out(name), label: "computed fact" });
+    return { ok: true, from: f0, to: t0, project: project || null, kinds: [...GROUP_OWN_KINDS],
+             on_time: fact("on_time"), late: { ...fact("late"), days_late_total: fact("days_late"),
+               each: table.filter((x) => x.state === "late").map((x) => ({ action: x.action, ord: x.ord, date: x.date, days_late: x.days_late, met_on: x.met_on })) },
+             pending_past: fact("pending_past"), denominator: fact("denominator"),
+             entries: table.map((x) => ({ action: x.action, ord: x.ord, kind: x.kind, state: x.state, ...(x.days_late ? { days_late: x.days_late } : {}) })),
+             not_counted: notCounted, actions_limit: LATENESS_ACTIONS_MAX, truncated: rows.length > LATENESS_ACTIONS_MAX,
+             method: ev ? { recipe, trace: ev.trace } : { recipe, trace: [] },
+             says: "an index over the group's own deadlines (commitments, dependencies and its own windows): never a "
+                 + "finding about anyone else's conduct." };
+  }
 }
 
 /* R2: the label of a clock entry proposed apart; it says, in each state, what the proposal is not. The governing-laws
@@ -570,194 +934,70 @@ function proposalLabelFor(who) {
   return { by: base.by, state: base.state, machine_work: base.machine_work, says: PROPOSAL_SAYS[base.state] };
 }
 
-/* R10 (jurisdictions R43; K986): the ONE office a count for an action is for, as a list of none or one: its addressee
-   when that is a named office (its `role` and `body`), else the venue its kind is filed at when the view's kind carries
-   one (`{venue: <kind>}`); none for any other action, whose count reads only the entries for all offices. */
-export function actionOffices(fm, view) {
-  const cp = fm && typeof fm === "object" ? fm.counterparty : null;
-  if (cp && typeof cp === "object" && cp.state === "named" && (cp.kind === undefined || cp.kind === null || cp.kind === "office")
-      && typeof cp.role === "string" && cp.role.trim())
-    return [{ role: cp.role.trim(), body: typeof cp.body === "string" ? cp.body.trim() : null }];
-  const kind = fm && typeof fm === "object" ? fm.action_kind : null;
-  if ((view && Array.isArray(view.action_kinds) ? view.action_kinds : []).some((k) => k && k.kind === kind && k.venue))
-    return [{ venue: kind }];
-  return [];
+/* R13: a scalar of the restricted front-matter grammar, which has no escapes: a line break becomes a space, and a
+   value holding a double quote is written in single quotes, or with its double quotes made single when it holds both. */
+function fmScalar(v) {
+  const t = String(v ?? "").replace(/[\r\n]+/g, " ").trim();
+  if (!t.includes('"')) return `"${t}"`;
+  if (!t.includes("'")) return `'${t}'`;
+  return `"${t.replace(/"/g, "'")}"`;
 }
-const officeKey = (o) => (typeof o === "string" ? `role:${o}` : o && typeof o.venue === "string" ? `venue:${o.venue}`
-  : o && typeof o.role === "string" ? `role:${o.role}` : null);
-const officeWords = (o) => (o.venue ? `the venue of '${o.venue}'` : `'${o.role}'`);
-
-/* R10 (jurisdictions R33, R43): the holiday entries a count for `offices` (`actionOffices`: none or one) reads for
-   `year`: the year's entry for all offices and those naming the office. An office covered by neither leaves the year
-   undetermined (`uncovered`), as does a year with no entry at all. */
-export function yearEntries(view, offices, year) {
-  const hs = (view && Array.isArray(view.holidays) ? view.holidays : []).filter((h) => h && Number(h.year) === year);
-  const keys = new Set((offices || []).map(officeKey).filter(Boolean));
-  const all = hs.filter((h) => !Array.isArray(h.offices));
-  const named = hs.filter((h) => Array.isArray(h.offices) && h.offices.some((o) => keys.has(officeKey(o))));
-  const uncovered = all.length ? [] : (offices || [])
-    .filter((o) => !named.some((h) => h.offices.some((x) => officeKey(x) === officeKey(o))));
-  return { entries: [...all, ...named], uncovered };
-}
-/* R10, R11: the `local-facts` fact of one holiday entry, and those of the offices' `hours` the view holds (its R6). */
-const holidayFact = (h) => ({ profile: h.profile ?? null, fact: "holidays", year: Number(h.year),
-                              ...(Array.isArray(h.offices) ? { offices: h.offices } : {}) });
-function officeHours(view, offices) {
-  const out = [];
-  for (const o of offices || []) {
-    if (o.venue) {
-      const k = (view && Array.isArray(view.action_kinds) ? view.action_kinds : []).find((x) => x && x.kind === o.venue);
-      if (k && k.venue && k.venue.hours) out.push({ profile: k.profile ?? null, fact: "hours", office: { venue: k.kind } });
-    } else {
-      const c = (view && Array.isArray(view.counterparties) ? view.counterparties : [])
-        .find((x) => x && x.role === o.role && (o.body === null || x.body === o.body));
-      if (c && c.hours) out.push({ profile: c.profile ?? null, fact: "hours", office: { role: c.role, body: c.body } });
-    }
+const TOKEN_KEYS = new Set(["date", "status", "basis_kind", "standard", "adopted_at", "met_on"]);
+/* R13: `clock[]` with `e` appended after the block's last line, or the block opened before the closing fence when
+   absent (as `actions` splices its ledger): the rest of the document is never rewritten. Null for a block this grammar
+   cannot extend in place (an inline value other than `[]`). Keys in a fixed order, each only when carried. */
+function spliceClock(text, e) {
+  const lines = String(text).split("\n");
+  if (lines[0] !== "---") return null;
+  const end = lines.indexOf("---", 1);
+  if (end === -1) return null;
+  const order = ["text", "description", "date", "basis", "status", "basis_kind", "standard", "trace", "proposal",
+                 "proposed_by", "adopted_by", "adopted_at", "amended", "adopted_why"];
+  const kv = order.filter((k) => e[k] !== undefined && e[k] !== null && e[k] !== "")
+    .map((k) => `${k}: ${TOKEN_KEYS.has(k) && /^[A-Za-z0-9:._-]+$/.test(String(e[k])) ? (k === "adopted_at" ? `"${e[k]}"` : e[k]) : fmScalar(e[k])}`);
+  const block = kv.map((l, i) => (i === 0 ? `  - ${l}` : `    ${l}`));
+  let ci = -1;
+  for (let i = 1; i < end; i++) if (/^clock:/.test(lines[i])) { ci = i; break; }
+  if (ci === -1) return [...lines.slice(0, end), "clock:", ...block, ...lines.slice(end)].join("\n");
+  const rest = lines[ci].slice("clock:".length).trim();
+  if (rest === "[]") return [...lines.slice(0, ci), "clock:", ...block, ...lines.slice(ci + 1)].join("\n");
+  if (rest !== "") return null;
+  let last = ci;
+  for (let i = ci + 1; i < end; i++) {
+    if (lines[i].trim() === "") continue;
+    if (/^\s/.test(lines[i])) { last = i; continue; }
+    break;
   }
-  return out;
+  return [...lines.slice(0, last + 1), ...block, ...lines.slice(last + 1)].join("\n");
 }
-/* R10: local-facts' answer for one path (its R2), as the count reads it: its status; the value that governs here
-   (`governs.value`: the latest correction's, else the profile's), which the count counts on whatever the status; for a
-   correction its member and date (the correcting act is the latest while the status is `corrected`) and its `says`; for
-   a lapsed confirmation the date it was made; for a dispute who disputed it and when. A refusal, or a status local-facts
-   does not give (its R7's `LOCAL_FACT_STATUSES`), is `absent` with why. */
-function factAnswer(path, r) {
-  if (!r || typeof r !== "object" || r.ok === false) {
-    const why = r && typeof r === "object" ? textOf(r.reason || r.code) : null;
-    return { path, status: "absent", why: why ? `local facts refused the read: ${why}` : "local facts did not answer" };
-  }
-  if (typeof r.status !== "string" || !LOCAL_FACT_STATUSES.includes(r.status))
-    return { path, status: "absent", why: `local facts answered no status it gives (${textOf(r.status)?.slice(0, 40) ?? "none"})` };
-  const g = r.governs && typeof r.governs === "object" ? r.governs : {};
-  const last = r.latest && typeof r.latest === "object" ? r.latest : {};
-  const lapsed = r.lapsed && typeof r.lapsed === "object" ? r.lapsed : {};
-  const day = (v) => (typeof v === "string" ? v.slice(0, 10) : null);
-  return { path, status: r.status, why: r.why ?? null,
-           value: g.value ?? null, corrected: g.origin === "corrected", says: g.says ?? null,
-           by: last.by ?? null, at: day(last.at), last_at: day(lapsed.at) };
+/* A top-level scalar of the front matter replaced in place (left as it is when the key is absent). */
+function setScalar(text, key, value) {
+  const lines = String(text).split("\n");
+  const end = lines.indexOf("---", 1);
+  for (let i = 1; i < (end === -1 ? lines.length : end); i++)
+    if (lines[i].startsWith(`${key}:`)) { lines[i] = `${key}: ${value}`; return lines.join("\n"); }
+  return text;
 }
-
-/** R12 (K998, N474; for `filings` R30): the `factOf` `computeDeadline` takes, over local-facts' `factStatus` (its R2)
- *  for `viewer`, and the one reader R10's own count uses (`ActionClocks#factOf`). Given a holiday entry, it reads the
- *  entry's path (`factPath`, local-facts R6) and answers as R10's count reads it (`factAnswer`). An entry naming no
- *  local fact, a read that throws or is refused, or an answer local-facts cannot give is `absent` with why. Null when
- *  `localFacts` has no `factStatus`: the count then states its calendar `not_read`. Writes nothing; neither it nor the
- *  reader it answers ever throws. */
-export function factReader(localFacts, viewer) {
-  let read = null;
-  try { read = localFacts && (typeof localFacts === "object" || typeof localFacts === "function") ? localFacts.factStatus : null; }
-  catch { read = null; }
-  if (typeof read !== "function") return null;
-  return (h) => {
-    let path = null;
-    try { path = factPath(holidayFact(h)); } catch { path = null; }
-    if (typeof path !== "string") return { path: null, status: "absent", why: "the holiday entry names no local fact" };
-    let r;
-    try { r = read.call(localFacts, { path, viewer }); }
-    catch (e) {
-      let m = null;
-      try { m = e && typeof e.message === "string" ? e.message.slice(0, 200) : null; } catch { m = null; }
-      return { path, status: "absent", why: `local facts' read failed${m ? `: ${m}` : ""}` };
-    }
-    try { return factAnswer(path, r); }
-    catch { return { path, status: "absent", why: "local facts answered in a shape the count cannot read" }; }
-  };
-}
-const daysOf = (v) => (Array.isArray(v) ? v : null);
-
-/* R10: what a business count states of the calendar it read: each holiday entry read with its status, and the whole
-   `confirmed` when every entry is, `corrected` (naming each correction's member and date) when one is and none is
-   unconfirmed, `unconfirmed` ("counted on an unconfirmed calendar (<source>, <date>)", the entry's basis and the lapsed
-   confirmation's date) when any is. Without a reader of the confirmations (a pure caller), `not_read`. */
-function calendarStated(read, readable) {
-  const years = read.map((r) => ({ year: r.year, offices: r.offices, path: r.path, status: r.status, basis: r.basis,
-                                   ...(r.status === "corrected" ? { corrected_by: r.by, corrected_at: r.at } : {}) }));
-  if (!readable) return { status: "not_read", years, says: ["the calendar's confirmation on this instance was not read"] };
-  const says = [];
-  for (const r of read) {
-    if (r.status === "unconfirmed")
-      says.push(`counted on an unconfirmed calendar (${r.basis ?? "no source stated"}, ${r.last_at ?? "never confirmed here"})`);
-    else if (r.status === "corrected") says.push(`counted on a calendar ${r.says ?? `corrected locally by ${r.by}, ${r.at}`}`);
-  }
-  const status = read.some((r) => r.status === "unconfirmed") ? "unconfirmed"
-    : read.some((r) => r.status === "corrected") ? "corrected" : "confirmed";
-  return { status, years, says };
-}
-
-/* R2, R10: a deadline's date from its rule, counted from the event the rule names in the action's ledger: `filed` the
-   first sent entry, `received` the first received entry; `act` and `known` are not ledger events, so they are
-   undetermined. A `business` count reads, for each year it reaches, the holiday entries that apply to the action's
-   office (`actionOffices`, `yearEntries`), each through `factOf` (its status on this instance and, when corrected, the value that
-   governs); it is undetermined past the years the calendar lists for those offices (jurisdictions R33, R43), and when an
-   entry it reads is `disputed` or `absent`. It answers `calendar`, the statement of what it read (`calendarStated`); a
-   `calendar` count reads no holiday and states none. Nothing is written. */
-export function computeDeadline(d, fm, view, { factOf = null } = {}) {
-  const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
-  const dir = d.starts === "filed" ? "sent" : d.starts === "received" ? "received" : null;
-  if (!dir) return { date: null, why: `the rule starts from '${d.starts}', an event the action's ledger does not record` };
-  const e = ledger.find((x) => x && x.direction === dir && typeof x.at === "string" && /^\d{4}-\d{2}-\d{2}/.test(x.at));
-  if (!e) return { date: null, why: `the action's ledger holds no ${dir} entry, the event this rule starts from` };
-  const start = e.at.slice(0, 10);
-  const days = Number(d.days);
-  if (!Number.isInteger(days) || days < 0) return { date: null, start, why: "the rule's number of days is not a whole number" };
-  const t0 = Date.parse(`${start}T00:00:00Z`);
-  const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
-  if (d.count === "calendar") return { date: iso(t0 + days * 86400000), start };
-  if (d.count !== "business") return { date: null, start, why: `the rule's count '${d.count}' is neither calendar nor business` };
-  const offices = actionOffices(fm, view);
-  const readable = typeof factOf === "function";
-  const read = [];
-  const closed = new Map();
-  const undetermined = (why) => ({ date: null, start, why, calendar: calendarStated(read, readable) });
-  /* One year's closure days, read once: undetermined (a string) where the calendar does not cover it. */
-  const yearOf = (y) => {
-    if (closed.has(y)) return closed.get(y);
-    const { entries, uncovered } = yearEntries(view, offices, y);
-    let out;
-    if (uncovered.length) out = `the count reaches ${y}, and the profile's holiday calendar for ${y} names no entry for `
-      + `${uncovered.map(officeWords).join(" or ")} and none for all offices`;
-    else if (!entries.length) out = `the count reaches ${y}, a year the profile's holiday calendar does not list`;
-    else {
-      const set = new Set();
-      for (const h of entries) {
-        const f = readable ? factOf(h) || { status: "absent" } : { status: null };
-        read.push({ year: y, offices: Array.isArray(h.offices) ? h.offices : null, basis: h.basis ?? null, ...f });
-        if (f.status === "disputed" || f.status === "absent") {
-          out = `the holiday calendar for ${y}${Array.isArray(h.offices) ? ` (${h.offices.map((o) => officeWords(typeof o === "string" ? { role: o } : o)).join(", ")})` : ""} `
-            + (f.status === "disputed" ? `is disputed on this instance${f.by ? ` by ${f.by}` : ""}${f.at ? `, ${f.at}` : ""}`
-              : `cannot be read on this instance: ${f.why || "absent"}`);
-          break;
-        }
-        const ds = f.corrected ? daysOf(f.value) || h.days : h.days;
-        for (const x of ds || []) if (x && typeof x.date === "string") set.add(x.date);
-      }
-      if (out === undefined) out = set;
-    }
-    closed.set(y, out);
-    return out;
-  };
-  let t = t0, n = 0;
-  while (n < days) {
-    t += 86400000;
-    const yd = yearOf(new Date(t).getUTCFullYear());
-    if (typeof yd === "string") return undetermined(yd);
-    const wd = new Date(t).getUTCDay();
-    if (wd === 0 || wd === 6 || yd.has(iso(t))) continue;
-    n++;
-  }
-  return { date: iso(t), start, calendar: calendarStated(read, readable) };
+/* R7, R14: the basis of an entry in words, for the calendar file. */
+function basisWords(b) {
+  const cite = b.citation ? `: ${b.citation}` : "";
+  if (b.kind === "rule") return `Basis: a law or order${cite}${b.standard ? ` (standard ${b.standard.id}, ${b.standard.state.replace(/_/g, " ")})` : ""}`;
+  if (b.kind === "commitment") return `Basis: a commitment${b.committed_by ? ` by ${b.committed_by}` : ""}${cite}`;
+  if (b.kind === "dependency") return `Basis: it must precede ${b.precedes ?? "a later event"}${b.lead ? ` (lead ${b.lead})` : ""}${b.why ? `, because ${b.why}` : ""}${cite}`;
+  if (b.kind === "window") return `Basis: the group's own window${cite}`;
+  return `Basis${cite || ": not stated"}`;
 }
 
 /* The reads and acts answer their catalogue-backed refusals with code, check and translation. */
-for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer"]) {
+for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer", "clockAdopt"]) {
   const fn = ActionClocks.prototype[m];
   ActionClocks.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host; at creation it creates and declares its tables (R9), each on its own declaration.
- *  `actions`' copy of `action_clock_proposals` is gone (K914), so this module alone declares it. */
+/** K61: the one instance per host; at creation it creates and declares its tables with their classes (R9), each on
+ *  its own declaration. `actions`' copy of `action_clock_proposals` is gone (K914), so this module alone declares it. */
 export function actionClocksOf(host, deps) {
   let a = instances.get(host);
   if (!a) {
@@ -769,8 +1009,9 @@ export function actionClocksOf(host, deps) {
     instances.set(host, a);
     a.migrate();
     void a.actions;   /* `actions` joins the host first, so its declarations and steps stand before this module's */
-    record.declarePurge("action-clocks", ["action_reminders"]);
-    record.declarePurge("action-clocks", ["action_clock_proposals"]);
+    /* R9 (plan T33 Rules (6)): each table declared with its classes (record-core R21), in the order they were before. */
+    for (const t of ["action_reminders", "action_clock_proposals"])
+      record.declareTable("action-clocks", [{ ...ACTION_CLOCKS_TABLE_CLASSES.find((x) => x.name === t) }]);
   }
   return a;
 }
@@ -782,8 +1023,9 @@ export function actionClocksOwns(t) {
 }
 
 /** The module's ops (K3, K671), entries of the route map `plane` composes (its R5) and control-plane's `dispatch` looks
- *  up: `op=reminderset` (R4) and `op=reminderanswer` (R6). `viewer` and `author` are the control plane's stamps, read
- *  from the query, so a caller's own copy never wins. */
+ *  up: `op=reminderset` (R4), `op=reminderanswer` (R6), `op=clockadopt` (R13), and the reads `op=clocksics` (R14) and
+ *  `op=clocklateness` (R15). `viewer` and `author` are the control plane's stamps, read from the query, so a caller's
+ *  own copy never wins. */
 export function actionClocksOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   const has = (k) => url.searchParams.has(k);
@@ -794,5 +1036,11 @@ export function actionClocksOps(m, url, body) {
                                        author: q("author"), viewer: q("viewer") }),
     reminderanswer: () => m.reminderAnswer({ target: pick("target"), entry: pick("entry"), on: pick("on"),
                                              author: q("author"), viewer: q("viewer") }),
+    clockadopt: () => m.clockAdopt({ target: pick("target"), proposal: pick("proposal"), why: pick("why"), date: pick("date"),
+                                     text: pick("text"), description: pick("description"), standard: pick("standard"),
+                                     author: q("author"), viewer: q("viewer") }),
+    clocksics: () => m.clocksIcs({ actions: has("actions") ? url.searchParams.getAll("actions").join(",") : b.actions ?? null,
+                                   viewer: q("viewer") }),
+    clocklateness: () => m.lateness({ from: pick("from"), to: pick("to"), project: pick("project"), viewer: q("viewer") }),
   };
 }

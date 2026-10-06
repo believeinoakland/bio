@@ -3,7 +3,7 @@
    the one reader R10's own count uses. On the test profile. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V } from "./fixture.mjs";
+import { world, V, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { factPath } from "../../../src/local-facts/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -16,18 +16,18 @@ const entryOf = (year, offices = null) =>
 const pathOf = (h) => factPath({ profile: h.profile, fact: "holidays", year: h.year, ...(h.offices ? { offices: h.offices } : {}) });
 const ALL26 = entryOf(2026), CLERK26 = entryOf(2026, ["Town Clerk"]);
 const CPL = ["counterparty:", "  state: named", "  role: Town Clerk", "  body: City of Port Ellery"];
-const R5 = { rule: "r", days: 5, count: "business", starts: "received" };
+const R5 = { rule: "r", days: 5, count: "business", starts: "received", basis: "TEST" };
 const FM = { counterparty: { state: "named", role: "Town Clerk", body: "City of Port Ellery" }, action_kind: "records_request",
-             correspondence: [{ direction: "received", at: "2026-08-12" }] };
+             correspondence: [{ direction: "sent", at: "2026-08-12" }] };
 const counts = (w) => ["manifest", "files", "local_fact_acts", "action_reminders", "action_clock_proposals"]
   .map((t) => w.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n);
 
 /* A world with an action addressed to the Town Clerk, received 2026-08-12, whose records_answer deadline is a business
    count reading the 2026 entries for all offices and for the Town Clerk. */
 function setUp() {
-  const w = world();
+  const w = world({ override: { "test-port-ellery": officeCalendarProfile() } });
   w.action(A, CPL);
-  w.actions.actionCorrespond({ target: A, direction: "received", at: "2026-08-12", account: "got it", viewer: M, author: M });
+  w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-08-12", account: "sent", viewer: M, author: M });
   const act = (h, a, x = {}) => {
     const r = w.localFacts.factConfirm({ path: pathOf(h), act: a, how: "the clerk's published calendar", by: M, viewer: M, ...x });
     assert.equal(r.ok, true, JSON.stringify(r)); return r;
@@ -121,23 +121,24 @@ test("R12 factReader answers null when localFacts has no factStatus, and the cou
   for (const lf of [null, undefined, {}, { factStatus: "no" }, 3, "x", trap])
     assert.equal(clocks.factReader(lf, M), null, String(lf));
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({}, M) });
-  assert.deepEqual([n.date, n.calendar.status, n.calendar.says], ["2026-08-20", "not_read",
+  assert.deepEqual([n.date, n.calendar.status, n.calendar.says], ["2026-08-19", "not_read",
     ["the calendar's confirmation on this instance was not read"]]);
   /* an instance whose local-facts has no factStatus: the count's own path states not_read too, and counts. */
-  const w = world();
+  const w = world({ override: { "test-port-ellery": officeCalendarProfile() } });
   w.c.localFacts.factStatus = undefined;
   try {
     w.action(A, CPL);
-    w.actions.actionCorrespond({ target: A, direction: "received", at: "2026-08-12", account: "got it", viewer: M, author: M });
+    w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-08-12", account: "sent", viewer: M, author: M });
     const p = w.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M }).proposal;
-    assert.deepEqual([p.entry.date, p.calendar.status, p.undetermined], ["2026-08-20", "not_read", undefined]);
+    assert.deepEqual([p.entry.date, p.calendar.status, p.undetermined], ["2026-08-19", "not_read", undefined]);
   } finally { delete w.c.localFacts.factStatus; }
 });
 
 test("R12 one reader: the same count through factReader and through the count's own path (clockPropose) answers alike, at each status", () => {
   const { w, act, propose } = setUp();
-  const rule = TEST.deadlines.find((d) => d.rule === "records_answer" && d.applies_to === "records_request");
-  const via = () => clocks.computeDeadline(rule, w.fm(A), TEST, { factOf: clocks.factReader(w.localFacts, M) });
+  const VIEW = combine([officeCalendarProfile()]).view;
+  const rule = VIEW.deadlines.find((d) => d.rule === "records_answer" && d.applies_to === "records_request");
+  const via = () => clocks.computeDeadline(rule, w.fm(A), VIEW, { factOf: clocks.factReader(w.localFacts, M) });
   const same = () => {
     const p = propose(), d = via();
     assert.deepEqual([p.entry.date, p.calendar, p.undetermined], [d.date, d.calendar, d.why]);
@@ -147,7 +148,7 @@ test("R12 one reader: the same count through factReader and through the count's 
   act(ALL26, "confirm"); act(CLERK26, "confirm");
   assert.equal(same().calendar.status, "confirmed");
   act(CLERK26, "correct", { by: BOB, viewer: BOB, value: [], source: "the clerk's notice" });
-  assert.deepEqual([same().calendar.status, propose().entry.date], ["corrected", "2026-08-19"]);
+  assert.deepEqual([same().calendar.status, propose().entry.date], ["corrected", "2026-08-18"]);
   act(ALL26, "dispute", { by: BOB, viewer: BOB });
   assert.equal(same().entry.date, null);
   /* and for another viewer, the reader reads as that viewer. */
