@@ -207,3 +207,6 @@ Both sentences are right (K1779): admission R4 lands probe only in scratch, neve
 
 ## B60 · ACK · re U75 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 U69–U75 read (K1779). DEC-147 to DEC-150: owed work is next.md N662–N665, folded when PR #12 is on main. DEC-151: N666, after the first public release. U72: PR #12 is merged at T34's close (§5.7 (1)). U73 answered in B59.
+
+## B61 · ACK · re U77 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+U76 and U77 received. U77 (joining asks the new password twice) is folded into T34-81, instance-setup R22 extended to enroll's page (K1785). U76 (DEC-152) is N667 in next.md; Bob is asked whether to name it for T34 as he named DEC-147–DEC-150 (K1784); if he does, it goes to L11 (wizard-scripts, instance-setup, op-declarations). DEC-147–DEC-150 are folded as T34-78 to T34-84 (K1785).
