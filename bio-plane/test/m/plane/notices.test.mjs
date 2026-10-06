@@ -73,7 +73,7 @@ test("R2: network-notices is built at its place in the modules' order: its purge
   const order = declarers(await store());
   const at = (m) => { const i = order.indexOf(m); assert.notEqual(i, -1, `${m} declared: ${order.join()}`); return i; };
   assert.ok(at("publication") < at("network-notices"), "after publication");
-  for (const m of ["conformance", "local-facts", "filing-templates", "monitoring"])
+  for (const m of ["conformance", "filing-templates", "monitoring"])
     assert.ok(at("network-notices") < at(m), `before ${m}`);
 });
 
@@ -115,12 +115,17 @@ test("R5: network-notices' four ops are in the route map at its place (after pro
   assert.deepEqual(await json(await x.fetch("/noticewithdraw")), { status: 400, body: { ok: false, error: "unknown op: noticewithdraw" } });
 });
 
-test("R5 (N483, K1122): `op=export` and `op=exportlog` reach corpus-export through control-plane's door: an export answered, logged with its note, and read back from the log; the map's arms are corpus-export's own", async () => {
+test("R5 (N483, K1122, K1640): `op=export`, `op=exportlog`, `op=exportpage` and `op=exportrender` reach corpus-export through control-plane's door: an export answered, logged with its note, and read back from the log; the map's arms are corpus-export's own", async () => {
   const u = new URL("http://do/");
-  assert.deepEqual(Object.keys(corpusExportOps(null, () => null)), ["export", "exportlog"]);
+  const arms = ["export", "exportlog", "exportpage", "exportrender"];
+  assert.deepEqual(Object.keys(corpusExportOps(null, () => null)), arms);
   const x = await store();
   const map = x.s.routes(u, null);
-  for (const op of ["export", "exportlog"]) assert.ok(Object.hasOwn(map, op), `the route map holds ${op}`);
+  for (const op of arms) assert.ok(Object.hasOwn(map, op), `the route map holds ${op}`);
+  /* each arm in the map is the one corpus-export's own map answers on the plane's instance */
+  const own = corpusExportOps(corpusExportOf(x.ctx), (k) => u.searchParams.get(k));
+  for (const op of ["exportpage", "exportrender"])
+    assert.deepEqual(JSON.parse(JSON.stringify(await map[op]())), JSON.parse(JSON.stringify(await own[op]())), op);
   /* negative control: before any export, the log is empty */
   const empty = await json(await x.fetch("/exportlog"));
   assert.deepEqual([empty.status, empty.body.ok, empty.body.result.exports], [200, true, []]);

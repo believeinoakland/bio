@@ -15,3 +15,22 @@ export const MACHINE_DRAFTS = Object.freeze(["whatchangedpropose", "escalationre
  *  labelled machine drafts. */
 export const wizardRegistration = () => ({ screens: SCREENS, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
                                            machineDrafts: MACHINE_DRAFTS, library: CIVICSMITH_LIBRARY });
+
+/** R24 (Q1-7): what the release suite holds empty: each screen of the registry whose shape is not `{id, title, acts,
+ *  purpose}` (an id or title or purpose that is not a non-empty string, an id repeated, acts not a list of names, or a
+ *  name repeated), and each act no spec in `ops` holds, as `{screen, problem, act?}`. */
+export function screenFailures(screens = SCREENS, ops = OPS) {
+  const out = [], seen = new Set();
+  const said = (v) => typeof v === "string" && v.trim() !== "";
+  for (const s of Array.isArray(screens) ? screens : []) {
+    const id = s && s.id;
+    for (const f of ["id", "title", "purpose"]) if (!said(s && s[f])) out.push({ screen: id ?? null, problem: `no ${f}` });
+    if (said(id) && seen.has(id)) out.push({ screen: id, problem: "id repeated" });
+    seen.add(id);
+    const acts = s && s.acts;
+    if (!Array.isArray(acts)) { out.push({ screen: id ?? null, problem: "acts is not a list" }); continue; }
+    if (new Set(acts).size !== acts.length) out.push({ screen: id, problem: "an act repeated" });
+    for (const a of acts) if (!said(a) || !Object.hasOwn(ops, a)) out.push({ screen: id, problem: "no op spec", act: a });
+  }
+  return out;
+}
