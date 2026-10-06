@@ -96,3 +96,22 @@ The named reds `notices.test.mjs:118–120`, `docket.test.mjs:41` and `store.tes
 - `ownership: 17 files changed by plane between tranche/T33 and HEAD; 0 failures`
 
 Size (session_017zKzx7PmN8FK2VvvFACCgN): test runs 18, module lines 963
+
+## J5 · COMPLETE
+
+B7 (K1690) applied on top of J4. I merged tranche/T33 (instance-setup merged).
+
+**What changed:**
+- local-facts' `officeOf` and conformance's `officeEntityOf` already reach instance-setup's instance through the ports. They now answer from its seeded offices.
+- answers is handed `assistantGate` (instance-setup R55) as a dep. answers reads none of it yet; that is its own entry.
+- plane's `op=ask` refuses `ASSISTANT_OFF` (403, instance-setup's row) before any grant is minted or any account read. New test B7.
+- door.test's R1/R5 pin now drives instance-setup's twenty routes.
+
+**Tests and checks** (HEAD a70f5c6fa0):
+- `node --test bio-plane/test/m/plane/ bio-plane/test/system/migrate-released.test.mjs`: pass 111, fail 0.
+- format: 0 failures (126 modules, 125 requirements files).
+- architecture: 0 failures (36 product files, 359 relative imports).
+- coverage: 24 of 24 live requirement ids named by a test; 0 failures.
+- ownership: 17 files; 0 failures.
+
+Size (session_017zKzx7PmN8FK2VvvFACCgN): test runs 21, module lines 968
