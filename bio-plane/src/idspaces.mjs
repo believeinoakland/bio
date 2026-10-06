@@ -29,10 +29,12 @@
 
 import * as CourtCitations from "../../court-citations/index.mjs";
 
-/* The nine spaces, in R1's order, their generic labels (used only when the view gives none) and what their
+/* The twelve spaces, in R1's order, their generic labels (used only when the view gives none) and what their
    referent is. `account`, `object` and `vendor` are the money record's identifiers; `proceeding` a proceeding's
    number in its forum's forms (K1452); `person` one form per person scheme (B1b.3), so two schemes' numbers
-   are two forms and never join without a crosswalk (R17). */
+   are two forms and never join without a crosswalk (R17); `body` a body's number in a legislative system and
+   `office` an office record's number, one seat's holding (N569, N613); `institution` one form per institution
+   scheme, as `person` (N574, K1729). */
 const SPACES = Object.freeze({
   enactment: { label: "enactment number (an ordinance or resolution number)", referent: "reading" },
   project: { label: "project number", referent: "reading" },
@@ -43,6 +45,9 @@ const SPACES = Object.freeze({
   vendor: { label: "vendor number", referent: "reading" },
   proceeding: { label: "proceeding or case number", referent: "reading" },
   person: { label: "person identifier (one form per scheme)", referent: "reading" },
+  body: { label: "body number (a body in a legislative system)", referent: "reading" },
+  office: { label: "office record number (one seat's holding)", referent: "reading" },
+  institution: { label: "institution identifier (one form per scheme)", referent: "reading" },
 });
 const SPACE_NAMES = Object.keys(SPACES);
 const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
@@ -86,7 +91,7 @@ function compile(p, mode) {
 
 /* ---------------------------------------------------------------- spaces (R1, R2) */
 
-/** The nine spaces, each with the forms the view supplies (R1, R2). Never throws. */
+/** The twelve spaces, each with the forms the view supplies (R1, R2). Never throws. */
 export function spaces(v) {
   const { view } = viewOf(v);
   return SPACE_NAMES.map((space) => {
