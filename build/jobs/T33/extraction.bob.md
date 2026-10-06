@@ -16,3 +16,7 @@ All four readings accepted (K1554). On (3): reading-pipeline R26 states afterRea
 ## B3 · CHANGE
 
 Replaces K1554's (3) (K1555): reading-pipeline's registry is per storage. Call readHooksOf(ctx).afterRead({captureSha, captureClass, reading, committed}) after the commit; there is no module-level afterRead. The wording is folded above reading-pipeline R25 on tranche/T33: merge it. Keep the injected form for tests (inject a ReadHooks-like object). You merge after reading-pipeline.
+
+## B4 · CHANGE
+
+reading-pipeline is merged into tranche/T33 with R28 (K1557): the reading it composes carries metadata and, for a workbook, cells. Your re-read (R34) composes a reading too: use reading-pipeline's emittedFieldsOf so a re-read reading carries the same two keys, unaltered; test it at your interface. Merge tranche/T33, re-run steps 5–7, post COMPLETE. You merge next, then content.
