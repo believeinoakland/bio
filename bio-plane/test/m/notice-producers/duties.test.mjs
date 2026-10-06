@@ -3,7 +3,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, E, BOB, ZONE } from "../duties/fixture.mjs";
-import { producers, fresh, reader, ofKind, sentences, JUDGMENT } from "./fixture.mjs";
+import { producers, fresh, reader, ofKind, sentences, JUDGMENT, notHintFailures } from "./fixture.mjs";
+import { HINT_MARK } from "../../../src/notice-producers/index.mjs";
 
 const day = (value) => ({ value, precision: "day", zone: ZONE });
 const KIND = "temporal-expectation-due";
@@ -118,4 +119,16 @@ test("R5: its age runs from the start of the due day in the due's own zone, neve
   w.declare();                                               /* due 2026-02-12 in America/Halifax (UTC-4 in February) */
   const it = ofKind(read("bob", { now: "2026-02-13T04:00:00Z" }), KIND)[0];
   assert.deepEqual(it.age, { state: "determined", since: "2026-02-12", ms: 86_400_000 }, "from 04:00Z, Halifax's midnight");
+});
+
+test("R11: a duty's item, overdue or possibly overdue, is no hint: it carries no \"Hint · machine work\" mark and never calls itself a hint or a signal", () => {
+  const { w, read } = setup();
+  w.declare();
+  const overdue = ofKind(read("bob", { now: "2026-02-20T12:00:00Z" }), KIND);
+  assert.equal(overdue.length, 1);
+  const u = setup();
+  u.w.declare({ trigger: { kind: "date", date: "2026-01-31" }, time: { basis: "rule", rule: "monthly_report", applies_to: "claim" } });
+  const between = ofKind(u.read("bob", { now: "2026-03-01T16:00:00Z" }), KIND);
+  assert.equal(between.length, 1);
+  for (const it of [...overdue, ...between]) assert.deepEqual(notHintFailures(it, HINT_MARK), [], it.id);
 });

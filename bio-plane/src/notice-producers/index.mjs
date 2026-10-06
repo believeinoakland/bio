@@ -1,4 +1,4 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R10).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R11).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
@@ -7,8 +7,8 @@
  *                  through queue's walk and carrying queue's options (both passed in), with `facts` stating each
  *                  producer's bound and `truncated`, and `failed`, the providers that threw.
  *
- *   R2  interest-check-noticed   FINDING, people.checkResults            the machine's, "Noticed", hypothesis layer
- *   R3  money-detector-noticed   FINDING, money-checks.noticed           the machine's, "Noticed", hypothesis layer
+ *   R2  interest-check-noticed   FINDING, people.checkResults            the machine's, "Noticed", hypothesis layer; a hint (R11)
+ *   R3  money-detector-noticed   FINDING, money-checks.noticed           the machine's, "Noticed", hypothesis layer; a hint (R11)
  *   R4  standing-answer          FINDING, answers.standingAnswersFor     the assistant's machine work, told once
  *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state
  *   R6  inquiry-recheck-due      OBLIGATION (K1505 (15), K1522), inquiry.datedWaits, to the wait's setter alone
@@ -37,6 +37,9 @@ const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons:
 
 /** R2, R3: the label every machine-noticed item carries (the machine's, in the hypothesis layer). */
 export const NOTICED_LABEL = "noticed";
+/** R11 (DEC-131): the mark on every member-facing sentence of an R2 or R3 item; what the machine raised is a "hint",
+ *  never a "signal". R4's, R5's and R6's items are not hints and never carry it. */
+export const HINT_MARK = "Hint · machine work";
 /** R9: the gate (K1504, M-C8): a check or detector is shown only at a measured false-alarm rate of at most 20%. */
 export const GATE_RATE_MAX = 0.2;
 /** R2, R3 (as queue-producers R4): the projects whose checks and detectors one read asks about, in id order. */
@@ -47,7 +50,7 @@ export const STANDING_PAGES_MAX = 5;
 export const DUTIES_MAX = 500;
 /** R8: the one act an R2 or R3 item offers beside its disposal (queue's own): take it up as the member's hunch or
  *  hypothesis (`hypotheses`, `op=hypothesishold`). Nothing else: never a citation, never a grade, never a finding. */
-export const TAKE_UP = Object.freeze({ id: "hypothesishold", label: "Take it up as your own hunch or hypothesis", weight: "single" });
+export const TAKE_UP = Object.freeze({ id: "hypothesishold", label: "Take this hint up as your own hunch or hypothesis", weight: "single" });
 /** R6: the setter's own answer to a wait come round: record that they looked (`inquiry` R56, `op=waitlook`). */
 export const WAIT_LOOK = Object.freeze({ id: "waitlook", label: "Record that you looked", weight: "single" });
 /** The kinds this module raises, with their class (queue R1's `classOfKind` gains them, T33-83). */
@@ -232,14 +235,14 @@ export class NoticeProducers {
       const condition = conditionOf(c.check, c.version);
       items.push({
         id, class: "FINDING", kind: "interest-check-noticed",
-        label: NOTICED_LABEL, layer: "hypothesis", by: "the machine's",
+        label: NOTICED_LABEL, layer: "hypothesis", by: "the machine's", mark: HINT_MARK,
         case: this.#homesAt(ps, viewer),
         subject: { kind: "interest_check_result", id: x.result_id, check: c.check, version: c.version, name: c.name ?? x.name ?? null },
-        summary: `Noticed: a pattern the check "${c.name ?? c.check}" finds in held facts`,
-        detail: `Noticed by a check, the machine's, in the hypothesis layer. The check's condition is data: `
+        summary: `${HINT_MARK}: a pattern the check "${c.name ?? c.check}" finds in held facts`,
+        detail: `${HINT_MARK}. A check noticed this hint, the machine's work, in the hypothesis layer. The check's condition is data: `
               + `${condition ? JSON.stringify(condition) : "as its definition states"}. It is counted against `
               + `${den.label || "its stated set"}${Number.isFinite(den.counted) ? ` (${den.counted} counted on the last full pass)` : ""}, `
-              + "and its derivation cites every row it rests on. It is a pattern worth a look: never a finding, never "
+              + "and its derivation cites every row it rests on. This hint is a pattern worth a look: never a finding, never "
               + "a basis for a claim, and it says nothing about anyone. Dispose of it, or take it up as your own hunch or hypothesis.",
         basis: { source: "people.checkResults", check: c.check, version: c.version, result: x.result_id, condition,
                  denominator: den, derivation: x.derivation ?? null, gate: "open", projects: ps,
@@ -280,13 +283,13 @@ export class NoticeProducers {
     for (const [id, { projects: ps, x }] of byKey) {
       items.push({
         id, class: "FINDING", kind: "money-detector-noticed",
-        label: NOTICED_LABEL, layer: "hypothesis", by: "the machine's",
+        label: NOTICED_LABEL, layer: "hypothesis", by: "the machine's", mark: HINT_MARK,
         case: this.#homesAt(ps, viewer),
         subject: { kind: "money_detector_result", id: x.result_id, detector: x.detector_id, version: x.version,
                    about: x.subject ?? null },
-        summary: `Noticed: a pattern the detector "${x.detector_label ?? x.detector_id}" finds in held money facts`,
-        detail: `Noticed by a detector, the machine's, in the hypothesis layer: ${figure(x.numerator) ?? "a part"} of `
-              + `${figure(x.denominator) ?? "its stated population"}, by the derivation it cites over each input. It is a `
+        summary: `${HINT_MARK}: a pattern the detector "${x.detector_label ?? x.detector_id}" finds in held money facts`,
+        detail: `${HINT_MARK}. A detector noticed this hint, the machine's work, in the hypothesis layer: ${figure(x.numerator) ?? "a part"} of `
+              + `${figure(x.denominator) ?? "its stated population"}, by the derivation it cites over each input. This hint is a `
               + "pattern worth a look: never a finding, never a basis for a claim, and it says nothing about anyone. "
               + "Dispose of it, or take it up as your own hunch or hypothesis.",
         basis: { source: "money-checks.noticed", detector: x.detector_id, version: x.version, result: x.result_id,
@@ -350,14 +353,15 @@ export class NoticeProducers {
     return { items, facts: { truncated } };
   }
 
-  /** R4: what held the AI half back (answers R19), in plain words: the switch, the account or the ceiling's refusal. */
+  /** R4: what held the AI half back (answers R19), in plain words: the switch, the account or the ceiling's refusal.
+   *  The group's Civicsmith is "your group's Civicsmith" to the member (DEC-149, T34-87). */
   static heldBackWords(h) {
     if (!h || typeof h !== "object") return "it was held back";
     if (h.condition === "switch_off") return h.switch === "member" ? "your own switch for standing questions is off"
-      : "the assistant's half of standing questions is switched off on this copy";
+      : "the assistant's half of standing questions is switched off in your group's Civicsmith";
     if (h.condition === "no_account") return "you have no account of your own set for the assistant";
     if (h.condition === "ceiling") return filled(h.translation) ? h.translation.replace(/\.$/, "") : "your own use limit is reached";
-    if (h.condition === "not_deployed") return "the assistant is not available on this copy";
+    if (h.condition === "not_deployed") return "the assistant is not available in your group's Civicsmith";
     return filled(h.translation) ? h.translation.replace(/\.$/, "") : "it was held back";
   }
 

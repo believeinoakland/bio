@@ -39,7 +39,7 @@ Rule 3's list: `queue-producers` (the item shape and homes, as its R8), `people`
 - **R8** (K1491, K1473, K1467) An item of R2 or R3 is never stored on a person, never moves a grade or a finding, and is never offered as a citation for a claim; its only acts are to dispose of it or take it up as a member's hunch or hypothesis.
 - **R9** (Rule 7; K1504) While a check's or detector's gate is closed, R2 and R3 raise no item for it and count none: switching display on is the gate's opening, never a parameter of this read.
 - **R10** No place is named in this module's behaviour or outward text.
-- **R11** (DEC-131; K1473, K1491; K1536) Every member-facing sentence this module answers for an item of R2 or R3 (its `summary` and `detail`, and the words of its options) marks it "Hint · machine work" and calls what the machine raised a "hint", never a "signal" (DEC-131: "Signal" leaves member text). The `label` value `noticed`, the kinds and the item keys are unchanged. R4's, R5's and R6's items are not hints and carry no such mark. *(not yet met: T34)*
+- **R11** (DEC-131; K1473, K1491; K1536) Every member-facing sentence this module answers for an item of R2 or R3 (its `summary` and `detail`, and the words of its options) marks it "Hint · machine work" and calls what the machine raised a "hint", never a "signal" (DEC-131: "Signal" leaves member text). The `label` value `noticed`, the kinds and the item keys are unchanged. R4's, R5's and R6's items are not hints and carry no such mark.
 
 ### Satisfies
 
