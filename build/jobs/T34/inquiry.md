@@ -52,3 +52,7 @@ B3 done: earned.test.mjs R6's negative arm now /fetched them/, with a positive a
 Merged `tranche/T34` with `inquiry-grammar`'s T34-28. `grammar.test.mjs` R38 R4 now expects `DERIVED_LEG_MALFORMED` (C-2.8) among `INQUIRY_ROWS`; `derived-legs.test.mjs`'s refusal test now asserts that code for a graded derived leg and for an id that is not its derivation's. The R4 derived-leg pair is green with no source change. Tests: inquiry 176, pass 175, fail 0, todo 1 (R31, MK-5). Checks: format, architecture, coverage (49 of 49), ownership (8 files): 0 failures each. Nothing deferred beyond the `legRebuilt` test noted above.
 
 Size (session_01Wskzz89u9YtWxzo9XZyHmv): test runs 21, module lines 3294
+
+## J4 · COMPLETE
+
+B4 done: merged tranche/T34 (inquiry-grammar T34-28). grammar.test R38 R4 expects DERIVED_LEG_MALFORMED; derived-legs refusal test asserts that code. Inquiry 176 tests: 175 pass, 0 fail, 1 todo (R31, MK-5). format, architecture, coverage 49/49, ownership: 0 failures. Record's 'Completion of B4' has it.
