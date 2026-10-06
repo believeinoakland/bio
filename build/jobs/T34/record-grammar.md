@@ -43,3 +43,7 @@ Size (session_01X5UrDpK4HmWSTEDUK3KEDX): test runs 9, module lines 2396
 ## J2 · REPORT
 
 CALC now minted opaque (record-core reads ID_TABLE's form), so tests pinning the old sequential minting are red, each green on tranche/T34 before this job: record-core t33.test.mjs R76 (opaque set pinned as five) and R62 (mintExhausted has no 'calculation' sentence for CALC); calculations calculations.test.mjs R4 (line 49 expects /^CALC-2026-\d{4,}$/ for a fresh id); workbooks ops.test.mjs R15 (export bytes carry a new CALC id; workbooks has no T34 entry). Stale generated artifacts: case-checker program.mjs (R13 already red at base) and agent-worker's bundle (carries ids.mjs). standards law.mjs:312 still labels through 'standard' (T34-21). The legacy read keeps inquiry-grammar t33, strength legs and inquiry held-legs green. Details in my record's Completion.
+
+## J3 · COMPLETE
+
+T34-1 done: R49 (law_relation) and R46/R47 as amended by K1728 (CALC opaque, legacy sequential read through idPattern). record-grammar 72/72; format, architecture, coverage (47/47), ownership: 0 failures. Other modules' reds in J2. Branch job/T34/record-grammar pushed.
