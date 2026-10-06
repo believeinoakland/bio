@@ -1,6 +1,6 @@
 # ratification (T34)
 
-**Status** · session_01EQL9vA1G3VmWTpzuXvQNzy · depth 2 · WORKING · handled B3
+**Status** · session_01EQL9vA1G3VmWTpzuXvQNzy · depth 2 · COMPLETE · handled B3
 
 ## Completion (T34-85, with its T34-87 rows; K1824's deletion)
 
