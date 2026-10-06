@@ -1088,8 +1088,11 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   /* R17, CONSTRUCTS Step 1 (FW-3): THE PROFILE, docprofile read and never copied, over the bytes the record holds. */
   const profHeaders = {};
   for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
+  /* N615 (K1683): `doctypeFor` is handed the capture's origin, a member's own capture exactly when R16's
+     `capture.actor_class` is `member`, so a content type read only from a member's own capture (court-doctypes R2)
+     can tell; every other capture is a fetch. */
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
-                                    retrieved });
+                                    retrieved, origin: member ? "member" : "fetch" });
   /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
      detection over the stored export's BYTES, whole (an OpenDocument package is recognised by its central directory,
      which lies past the first KiB `profile.format` reads for any export of real size): a detection that fell back to
@@ -1183,8 +1186,11 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
  *  address, the content type and (single-part, textual, within bound) the stored bytes read back; `doctypeFor` under
  *  `view` (`profileView`); `profileRecord`; the normalisation rules and boundary; `format` from the bytes (the first
  *  KiB read back when not already read), else the declared type with the absence stated; and `digests`. Every
- *  unreadable byte is stated, never a failed capture. The acquisition act and the knock's pull (capture R65) call it. */
-export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved }) {
+ *  unreadable byte is stated, never a failed capture. The acquisition act and the knock's pull (capture R65) call it.
+ *  `origin` (N615, K1683), `"member"` for a member's own capture or `"fetch"`, reaches `doctypeFor` as `ctx.origin`;
+ *  absent, none is stated and a type that needs a member's own capture does not match. */
+export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
+                                  origin = null }) {
   const pv = view || { view: undefined, ids: null };
   let profileText = "", profileBytes = null;
   if (profilesAsText(ct, total, multipart)) {
@@ -1204,7 +1210,8 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
   }
   const profCtx = { headers, locator, content_type: ct || null, text: profileText };
   const stackId = identify(profCtx);
-  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...(pv.view ? { view: pv.view } : {}) });
+  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...(pv.view ? { view: pv.view } : {}),
+                               ...(origin ? { origin } : {}) });
   const profile = {
     ...profileRecord(stackId, { now: retrieved }),
     content_type: docType.type.key, content_type_label: docType.type.label, content_type_version: docType.type.version,
