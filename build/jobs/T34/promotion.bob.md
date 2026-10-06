@@ -28,3 +28,7 @@ membership merged into tranche/T34 (K1752). Merge the tranche branch and stamp i
 ## B5 · CHANGE
 
 record-core merged into tranche/T34 (K1754). Merge the tranche branch and stamp C-102.26 TABLE_NAME_INVALID and C-102.27 TABLE_DECLARED. Credentials (T34-11) has not started yet (its session awaits Bob's approval, K1748); stamp what is on the tranche and record COMPLETE only once credentials' rows are in, or tell BOB if you would rather complete now and stamp credentials' rows in T35.
+
+## B6 · CHANGE
+
+credentials merged into tranche/T34 (K1764), the last L2 job before you. Merge the tranche branch and stamp: new C-29.25 STANDING_SWITCH_OFF, C-29.26 NO_QUESTION, C-29.27 GROUP_KEY_NOTICE_DUE; retired C-29.16 ACCOUNT_LEVEL_MEMBER_ONLY (never reused); changed C-29.19 NO_SECRET, C-29.20 NO_ACCOUNT, C-29.21 UNKNOWN_SWITCH, C-29.24 GRANT_NOT_HELD (CREDENTIALS #5 J3 lists each change). Then record COMPLETE.
