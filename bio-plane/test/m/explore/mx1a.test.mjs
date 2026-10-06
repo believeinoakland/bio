@@ -64,7 +64,7 @@ function run(t, votesPerYear) {
   const log = [];
   const opts = Object.fromEntries(["lines", "events", "money", "duties", "entities", "hypotheses", "connections"].map((o) => [o, { log }]));
   const { registry } = world(byOwner(w.conns), { opts });
-  const x = exploreOf({ registry });
+  const x = exploreOf(null, { registry });
   const a = x.pathBetween({ from: w.DONOR, to: w.FUND, at: YEAR, viewer: "alice" });
   t.diagnostic(`M-X1a votes/yr ${votesPerYear}: ${w.conns.length} connections; visited ${a.visited}; owner calls ${a.owner_calls}; elapsed ${a.elapsed_ms} ms of ${a.budget_ms}; paths ${a.paths.length}; hubs ${a.hubs.map((h) => `${h.node}(${h.set_size})`).join(" ") || "none"}; ${a.truncated ? `truncated: ${a.why}` : "not truncated"}`);
   // R2: one node per owner call (the bound is 100).
@@ -103,7 +103,7 @@ test("M-X1a R5 with a council that votes more than 1,000 times in the year, the 
 test("M-X1a R5 the 5,000-node walk at real volumes: it finishes within the budget, or stops at a bound answering truncated and undetermined; the employer is named a hub", (t) => {
   const w = build({ votesPerYear: 600 });
   const { registry } = world(byOwner(w.conns));
-  const a = exploreOf({ registry }).explore({ from: ent(10000), at: YEAR, viewer: "alice" });
+  const a = exploreOf(null, { registry }).explore({ from: ent(10000), at: YEAR, viewer: "alice" });
   t.diagnostic(`M-X1a dense walk: visited ${a.visited}; owner calls ${a.owner_calls}; elapsed ${a.elapsed_ms} ms of ${a.budget_ms}; paths ${a.paths.length}; hubs ${a.hubs.map((h) => `${h.node}(${h.set_size})`).join(" ") || "none"}; ${a.truncated ? `truncated: ${a.why}` : "not truncated"}`);
   if (a.truncated) {
     assert.equal(a.undetermined, true);

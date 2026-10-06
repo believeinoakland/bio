@@ -6,7 +6,7 @@ import { createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { AT, ZONE, valid, ent, evt, conn, world, byOwner, OWNER_KINDS, makeStore, makeOwner } from "./fixtures/owners.mjs";
 
 const V = "alice";
-const make = (conns) => { const w = world(byOwner(conns)); return { ...w, x: exploreOf({ registry: w.registry }) }; };
+const make = (conns) => { const w = world(byOwner(conns)); return { ...w, x: exploreOf(null, { registry: w.registry }) }; };
 const ids = (p) => p.hops.map((h) => h.id).join(">");
 const strip = (r) => { const { preset, preset_note, elapsed_ms, owner_calls, ...rest } = r; return rest; };
 
@@ -14,7 +14,7 @@ test("R10 presets() answers each preset by name with its kind set as registered;
   const { x, registry } = make([]);
   const p = Object.fromEntries(x.presets().map((e) => [e.name, e]));
   assert.deepEqual(Object.keys(p), ["chain", "flowsFrom", "relationsOf", "pathBetween", "overlaps"]);
-  assert.deepEqual(p.chain.kinds, ["part_of", "reports_to", "oversees", "appoints", "funds", "power_held"]);
+  assert.deepEqual(p.chain.kinds, ["part_of", "reports_to", "oversees", "appoints", "funds", "holds_power"]);
   assert.deepEqual(p.flowsFrom.kinds, ["contribution", "payment"]);
   assert.deepEqual(p.relationsOf.kinds, ["authorises", "answers", "amends", "reverses", "stated_cause", "within"]);
   const every = Object.values(OWNER_KINDS).flat().map((k) => k.kind);
@@ -22,16 +22,16 @@ test("R10 presets() answers each preset by name with its kind set as registered;
   // A money kind registered later by another registry's money owner joins flowsFrom; on an empty registry each set is empty.
   const late = createRegistry();
   late.registerOwner({ owner: "money", kinds: [{ kind: "transfer", word: "moved money to", class: "evidentiary" }], neighbours: () => ({ items: [] }) });
-  const lx = exploreOf({ registry: late });
+  const lx = exploreOf(null, { registry: late });
   assert.deepEqual(lx.presets().find((e) => e.name === "flowsFrom").kinds, ["transfer"]);
-  assert.deepEqual(exploreOf({ registry: createRegistry() }).presets().map((e) => e.kinds), [[], [], [], [], []]);
+  assert.deepEqual(exploreOf(null, { registry: createRegistry() }).presets().map((e) => e.kinds), [[], [], [], [], []]);
   assert.ok(registry.owners().length);
 });
 
 test("R10 R15 each preset is the one walk over its set: chain, flowsFrom (payer to payee), relationsOf and pathBetween answer what explore answers over the same kinds", () => {
   const A = ent(1), B = ent(2), C = ent(3), D = ent(4), E1 = evt(1), E2 = evt(2);
   const conns = [
-    conn("part_of", A, B, { id: "org" }), conn("power_held", B, "DUT-2026-0001", { id: "power" }), conn("seat_on", A, C, { id: "seat" }),
+    conn("part_of", A, B, { id: "org" }), conn("holds_power", B, "DUT-2026-0001", { id: "power" }), conn("seat_on", A, C, { id: "seat" }),
     conn("contribution", D, A, { id: "gift" }), conn("payment", A, C, { id: "pay" }), conn("payment", C, B, { id: "pay2" }),
     conn("authorises", E1, E2, { id: "auth" }), conn("took_part_voted", A, E1, { id: "vote" }),
   ];
@@ -55,7 +55,7 @@ test("R10 R15 each preset is the one walk over its set: chain, flowsFrom (payer 
   assert.equal(x.pathBetween({ from: D, to: B, at: AT, viewer: V, depth: 11 }).refused, "DEPTH_OVER_MAX");
   assert.equal(x.chain({ from: A, viewer: V }).refused, "NO_DATE");
   assert.equal(x.chain({ from: A, at: AT }).refused, "VIEWER_MISSING");
-  const none = exploreOf({ registry: createRegistry() }).chain({ from: A, at: AT, viewer: V });
+  const none = exploreOf(null, { registry: createRegistry() }).chain({ from: A, at: AT, viewer: V });
   assert.match(none.preset_note, /no owner has registered/);
 });
 

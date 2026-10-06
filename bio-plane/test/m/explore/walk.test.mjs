@@ -17,7 +17,7 @@ const base = () => [
 ];
 const make = (conns = base(), o = {}) => {
   const w = world(byOwner(conns), o);
-  return { ...w, x: exploreOf({ registry: w.registry, ...(o.ctx ?? {}) }) };
+  return { ...w, x: exploreOf(null, { registry: w.registry, ...(o.ctx ?? {}) }) };
 };
 const ask = (x, extra = {}) => x.explore({ from: A, at: AT, viewer: V, ...extra });
 const ids = (p) => p.hops.map((h) => h.id).join(">");
@@ -43,7 +43,7 @@ test("R1 refusals in order: no node, bad node, no date, bad date, unknown kind, 
   for (const r of [x.explore({ at: AT, viewer: V }), ask(x, { depth: 11 })]) assert.ok(r.why.length > 10, "every refusal says why");
 });
 
-test("R2 breadth-first over every owner of the asked kinds, one node per owner call, viewer and scope passed unchanged; with `to`, only paths ending there", () => {
+test("R2 breadth-first over every owner of the asked kinds, one node per owner call, viewer, scope and host passed unchanged; with `to`, only paths ending there", () => {
   const log = [];
   const opts = Object.fromEntries(["lines", "events", "money", "duties", "entities", "hypotheses", "connections"].map((o) => [o, { log }]));
   const { x } = make(base(), { opts });
@@ -69,6 +69,11 @@ test("R2 breadth-first over every owner of the asked kinds, one node per owner c
   assert.equal(ask(x, { to: E, depth: 3 }).paths.length, 1, "longer paths through visited nodes are not shortest");
   const both = make([...base(), conn("part_of", A, F, { id: "h-af" }), conn("payment", F, E, { id: "h-fe" })]).x;
   assert.deepEqual(ask(both, { to: E }).paths.map(ids).sort(), ["h-ab>h-be", "h-af>h-fe"]);
+  // The host is passed to every owner unchanged (K1563 (1)).
+  log.length = 0;
+  const host = { instance: "one" };
+  exploreOf(host, { registry: make(base(), { opts }).registry }).explore({ from: A, at: AT, viewer: V });
+  assert.ok(log.length && log.every((c) => c.host === host));
   // Depth bounds the walk.
   assert.deepEqual(ask(x, { depth: 1 }).paths.map(ids).sort(), ["h-ab", "h-da"]);
 });
@@ -158,13 +163,13 @@ test("R5 bounds: fan-out keeps the first 1,000 of a kind and names the node; a h
   assert.ok(n.paths.every((p) => p.hops.every((hop) => hop.id)), "every path shown is whole");
   // The time budget: a clock that moves 10 ms per read, a budget of 25 ms.
   let clock = 0;
-  const slow = exploreOf({ registry: make(base()).registry, now: () => (clock += 10), budget_ms: 25 });
+  const slow = exploreOf(null, { registry: make(base()).registry, now: () => (clock += 10), budget_ms: 25 });
   const s = ask(slow);
   assert.equal(s.truncated, true);
   assert.match(s.why, /time budget/);
   assert.equal(s.budget_ms, 25);
   // A budget may be lowered, never raised.
-  assert.equal(exploreOf({ registry: createRegistry(), budget_ms: 10 ** 9 }).explore({ from: A, at: AT, viewer: V }).budget_ms, BOUNDS.time_budget_ms);
+  assert.equal(exploreOf(null, { registry: createRegistry(), budget_ms: 10 ** 9 }).explore({ from: A, at: AT, viewer: V }).budget_ms, BOUNDS.time_budget_ms);
   for (const r of [fr, h, n, s, ask(make().x)]) {
     for (const k of ["visited", "depth", "budget_ms", "elapsed_ms"]) assert.equal(typeof r[k], "number", k);
   }

@@ -1,6 +1,6 @@
 // @ts-check
 /* explore: one owner's read of one node, every page, through the registry's `neighbours` (connection-grammar R19),
-   which passes `viewer` and `scope` unchanged and refuses a non-conforming answer whole. One node per call, so no
+   which passes `viewer`, `scope` and `host` unchanged (K1563 (1)) and refuses a non-conforming answer whole. One node per call, so no
    owner call binds more than one node (R2). What the reads met on the way (hubs, fan-out, owners' refusals, tables
    held but not read) is gathered for the answer (R5, R8). Hidden items are never returned by an owner, so nothing
    here can count them (R7). */
@@ -27,7 +27,7 @@ export function kindsByOwner(registry, kinds) {
 
 /**
  * A reader for one exploration: as of `at`, for `viewer`, within `scope`, against the time budget.
- * @param {{registry: any, now: () => number, budget_ms: number}} ctx
+ * @param {{registry: any, now: () => number, budget_ms: number, host?: any}} ctx
  * @param {{at: any, viewer: any, scope: string|null}} q
  */
 export function makeReader(ctx, q) {
@@ -49,7 +49,7 @@ export function makeReader(ctx, q) {
       if (now() - t0 > budget_ms) { s.stop = 'time'; return null; }
       if (i === PAGE_LIMIT) { s.fanout.push({ node, owner, why: `${owner}'s paging did not end within ${PAGE_LIMIT} pages` }); break; }
       s.calls++;
-      const a = registry.neighbours({ owner, node, kinds, at, page, viewer: q.viewer, scope: q.scope });
+      const a = registry.neighbours({ owner, node, kinds, at, page, viewer: q.viewer, scope: q.scope, host: ctx.host });
       if (isRefusal(a)) { s.refusals.push({ owner, node, refused: a.refused, why: a.why }); return null; }
       if (Array.isArray(a.unread)) for (const u of a.unread) if (isObj(u)) s.unread.push({ owner, node, what: String(u.what ?? ''), why: String(u.why ?? '') });
       if (a.hub) { s.hubs.push({ node, owner, kinds, set_size: a.hub.set_size, why: a.hub.why, words: HUB_WORDS }); return null; }

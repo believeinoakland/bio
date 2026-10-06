@@ -21,14 +21,15 @@ export { LEAD_SENTENCE } from './answer.mjs';
 export const TIME_BUDGET_MS = BOUNDS.time_budget_ms;
 
 /**
- * The explore instance. `ctx.registry` is the owner registry (the plane's default when absent); `ctx.events` and
- * `ctx.money` give `timeline` and `moneyOf` (R13); `ctx.now` is a clock in milliseconds and `ctx.budget_ms` may
- * lower the budget, never raise it.
- * @param {{registry?: any, events?: any, money?: any, now?: () => number, budget_ms?: number}} [ctx]
+ * The explore instance for one host (K1563 (1)): `host` is passed to every owner's `neighbours` unchanged. `deps`:
+ * `registry` the owner registry (the plane's default when absent); `events` and `money` the instances whose
+ * `timeline` and `moneyOf` R13 composes; `now` a clock in milliseconds; `budget_ms` lowers the budget, never raises it.
+ * @param {any} [host]
+ * @param {{registry?: any, events?: any, money?: any, now?: () => number, budget_ms?: number}} [deps]
  */
-export function exploreOf(ctx = {}) {
-  const budget = typeof ctx.budget_ms === 'number' && ctx.budget_ms > 0 ? Math.min(ctx.budget_ms, TIME_BUDGET_MS) : TIME_BUDGET_MS;
-  const c = { registry: ctx.registry ?? defaultRegistry, now: ctx.now ?? (() => performance.now()), budget_ms: budget, events: ctx.events, money: ctx.money };
+export function exploreOf(host, deps = {}) {
+  const budget = typeof deps.budget_ms === 'number' && deps.budget_ms > 0 ? Math.min(deps.budget_ms, TIME_BUDGET_MS) : TIME_BUDGET_MS;
+  const c = { host, registry: deps.registry ?? defaultRegistry, now: deps.now ?? (() => performance.now()), budget_ms: budget, events: deps.events, money: deps.money };
   return Object.freeze({
     /** explore({from, to?, kinds?, at, depth?, sortBy?, scope?, viewer}) (R1–R9). */
     explore(arg) {

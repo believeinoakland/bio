@@ -8,11 +8,11 @@ import { kindsByOwner, makeReader } from './reader.mjs';
 import { intersect, spanOfValidity, spanOfWindow } from './intervals.mjs';
 import { refuse, isObj, viewerRefusal, nodeRefusal, dateRefusal, NOT_ASSERTED } from './answer.mjs';
 
-/** The rules of each preset's kind set (R10). `kinds` names an owner's kinds; `match` a part of a kind's name. */
+/** The rules of each preset's kind set (R10): an owner's kinds named, or every kind of an owner (K1563 (8): duties' power kind). */
 export const PRESET_RULES = Object.freeze({
   chain: Object.freeze({ words: 'organisation chains', rules: [
     { owner: 'lines', kinds: ['part_of', 'reports_to', 'oversees', 'appoints', 'funds'] },
-    { owner: 'duties', match: 'power' },
+    { owner: 'duties', kinds: ['holds_power'] },
   ] }),
   flowsFrom: Object.freeze({ words: 'money trails', rules: [{ owner: 'money' }] }),
   relationsOf: Object.freeze({ words: 'event links', rules: [
@@ -28,7 +28,7 @@ export function presetKinds(registry, name) {
   const out = [];
   for (const o of registry.owners()) {
     for (const k of o.kinds) {
-      const hit = p.rules.some((r) => r.every || (r.owner === o.owner && (r.kinds ? r.kinds.includes(k.kind) : r.match ? k.kind.includes(r.match) : true)));
+      const hit = p.rules.some((r) => r.every || (r.owner === o.owner && (r.kinds ? r.kinds.includes(k.kind) : true)));
       if (hit) out.push(k.kind);
     }
   }

@@ -31,7 +31,7 @@ export const OWNER_KINDS = {
   money: [["contribution", "gave money to"], ["payment", "paid"]].map(([kind, word]) => ({ kind, word, class: "evidentiary" })),
   duties: [
     { kind: "owes", word: "owes", class: "evidentiary" },
-    { kind: "power_held", word: "holds the power", class: "evidentiary" },
+    { kind: "holds_power", word: "holds the power", class: "evidentiary" },
     { kind: "met_by", word: "met by", class: "derived" },
   ],
   entities: [["proxy_for", "stands for"], ["member_of", "grouped under"], ["overlaps", "overlaps with"]].map(([kind, word]) => ({ kind, word, class: "declared" })),

@@ -14,7 +14,7 @@ test("R12 rederive recomputes a derived connection through its owner and answers
   const d = conn("mentioned_together", A, B, { as_of: "2026-02-01", method: "co-mention", inputs: ["tie-1", "decl-1", "INFO-2026-0001-a-source"] });
   const store = makeStore();
   const { registry } = world(byOwner([declared, tie, d]), { store });
-  const x = exploreOf({ registry });
+  const x = exploreOf(null, { registry });
   const before = store.snapshot();
   const args = { kind: "mentioned_together", from: A, to: B, as_of: "2026-02-01", method: "co-mention", viewer: V };
   const ok = x.rederive({ ...args, id: d.id });
@@ -51,7 +51,7 @@ test("R13 timelineOver composes events.timeline over the set with the payers and
   const facts = { [E1]: [{ fact_id: "MNY-2026-aaaaaaaaaaaaaaaa", from: { entity: A, as_written: "A Corp" }, to: { entity: B, as_written: "City" }, kind: "payment", phase: "actual", stage: "paid",
     source: { capture: "abc", extent: "p.3" }, grade: { reading: "B", parties: ["A", "A"] } }] };
   const money = { moneyOf: (a) => { calls.push(["moneyOf", a]); return { facts: facts[a.entity] ?? [] }; } };
-  const x = exploreOf({ events, money });
+  const x = exploreOf(null, { events, money });
   const r = x.timelineOver({ set: [A, B], from: "2026-01-01", viewer: V });
   assert.equal(r.ok, true);
   assert.equal(r.timeline, lanes, "the lanes exactly as events answers them, never interleaved");
@@ -63,15 +63,15 @@ test("R13 timelineOver composes events.timeline over the set with the payers and
   assert.equal(x.timelineOver({ set: [], viewer: V }).refused, "NO_SET");
   assert.equal(x.timelineOver({ set: [A], viewer: undefined }).refused, "VIEWER_MISSING");
   assert.equal(x.timelineOver({ inquiry: "INQ-2026-0001-a-question", viewer: V }).refused, "NO_SET", "an inquiry is not a set: the caller resolves it");
-  assert.equal(exploreOf({}).timelineOver({ set: [A], viewer: V }).refused, "NOT_AVAILABLE");
-  assert.match(exploreOf({ events }).timelineOver({ set: [A], viewer: V }).money_note, /money is not wired/);
-  const refusing = exploreOf({ events: { timeline: () => ({ ok: false, reason: "NO_SET", detail: "x" }) } }).timelineOver({ set: [A], viewer: V });
+  assert.equal(exploreOf(null, {}).timelineOver({ set: [A], viewer: V }).refused, "NOT_AVAILABLE");
+  assert.match(exploreOf(null, { events }).timelineOver({ set: [A], viewer: V }).money_note, /money is not wired/);
+  const refusing = exploreOf(null, { events: { timeline: () => ({ ok: false, reason: "NO_SET", detail: "x" }) } }).timelineOver({ set: [A], viewer: V });
   assert.equal(refusing.reason, "NO_SET", "events' own refusal is answered as it is");
 });
 
 test("R14 exploreOps publishes route arms for explore, explorepreset, exploreverify and exploretimeline, reads only, the viewer from the query string and never the body", () => {
   const { registry } = world(byOwner([conn("part_of", A, B, { id: "h" }), conn("seat_on", A, C), conn("seat_on", B, C)]));
-  const x = exploreOf({ registry, events: { timeline: () => ({ ok: true, what_they_did: { items: [] }, what_we_did: { items: [] } }) } });
+  const x = exploreOf(null, { registry, events: { timeline: () => ({ ok: true, what_they_did: { items: [] }, what_we_did: { items: [] } }) } });
   const url = new URL(`https://instance.example/?viewer=${V}`);
   const ops = exploreOps(x, url, { from: A, at: AT, viewer: "mallory" });
   assert.deepEqual(Object.keys(ops).sort(), ["explore", "explorepreset", "exploretimeline", "exploreverify"]);
