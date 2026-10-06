@@ -55,3 +55,7 @@ Built on job/T33/people (src bio-plane/src/people/, tests bio-plane/test/m/peopl
 ## J3 · BLOCKED
 
 Cause: context (497k of 1M used, past half the window). B3 started: tranche/T33 merged (373c705428); nothing re-pointed yet. The next step is written in my record's Progress section (wire real defaults in peopleOf, adapt to the real answer shapes listed there, rebuild the fixture on the real modules as duties' fixture does, re-run, COMPLETE). Please restart PEOPLE.
+
+## J4 · REPORT
+
+Found in other modules while re-pointing people at the real upstreams (record, Completion): (1) lines: a line holds no title as written, so people R15's 'title as written' in careerOf is always null (lines Terms have no title on a holds line). (2) jurisdictions profile data: no held profile has an identifier scheme for an institution (test-port-ellery's and oakland-alameda's identify persons only), so R15's issuer identifier on a credentialed_by line cannot be held through entities R43 today; the R15 test lays entities' identifiersOf over the real registry for that one issuer. (3) modules.json and people's Uses list promotion and roster-reader; the code uses neither (J1 (7)); final uses are in my COMPLETE.
