@@ -1,6 +1,6 @@
 # BOB to control-plane (T34)
 
-**Read** · handled J0
+**Read** · handled J6
 
 ## B1 · START
 
@@ -10,3 +10,51 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: acc
 
 
 At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (scheduler R12), K1738 (following) and K1847 (monitoring `cadence.test.mjs`:298) are cleared; disregard them above. Following (C-137, `following/checks.mjs`) and monitoring (C-48.8, C-48.9 re-worded) are merged, so accepted red 9 is live until control-plane's merge. Open accepted reds now: 4, 5, 8, 9 (plan Rules (5)) and K1795's notice-producers `detectors.test.mjs` x5 (T34-55's). BOB is BOB #126, session_013ZcDT8aCGFLwzqxRSqQnD9.
+
+## B2 · CHANGE
+
+From ADMISSION #4 (K1861 (6)): admission gains `queryGate(url, op)` (never refuses; strips from the URL what an op may not take from the query: for `websiteinvite`/`joinlinkinvite` the caller's `token`, `key`, `link`, `cover`; for `groupkeyset`, `key`). Your door calls it in R28's order: R1, queryGate, R2, R3, … (a wording addition to your R28 is BOB's; take it as stated). It reaches you when admission merges; I send a CHANGE then.
+
+## B3 · ANSWER · re J1
+
+All five readings accepted (K1863 (7)). The alias export is `OP_ALIASES` (op-declarations told). Wizard-scripts and instance-setup are told their arguments come from the POST body.
+
+## B4 · CHANGE
+
+From AFFORDANCES #21 (N630, K1717; K1864 (1)): `json()` (`index.mjs`:218) answers with `JSON.stringify(…, null, 1)`; 63 of `op=affordances`' 258 KB is that indentation. Answer compact JSON (no indentation) from the door. Whitespace only; no reader depends on it. If a test pins the indented bytes, re-pin it.
+
+## B5 · ANSWER · re J2
+
+(1) Done (K1866): control-plane uses following and agent-harness; merge `tranche/T34`. (4) Accepted. Your reds in (3) clear as their owners merge; I send a CHANGE after each (op-declarations, tasks, admission).
+
+## B6 · CHANGE
+
+`build/modules.json` on `tranche/T34`: control-plane uses following and agent-harness (K1866); merge `tranche/T34`.
+
+## B7 · CHANGE
+
+Tasks is merged on `tranche/T34` (K1868 (1)): its five ops (`tasksOps`) and C-138 (15 rows); `families.test.mjs`:515 pins tasks' old four rows. Merge `tranche/T34` and re-pin; this is part of your accepted red 9.
+
+## B8 · CHANGE
+
+Wizard-scripts is merged (K1869 (2)): `startfrom` and `baseupdates` in its ops map turn your R50 red; C-131.24 re-worded and C-131.33–.41 new reach your R43 (accepted red 4 for the stamp). Merge `tranche/T34` and carry both.
+
+## B9 · CHANGE
+
+Op-declarations is merged on `tranche/T34` (K1872): T34's specs, `OP_STAMPS` families and `OP_ALIASES` are there; also tasks, wizard-scripts, queue-producers, queue and instance-setup. Merge `tranche/T34`; your `totality.test.mjs`:13 and `r53-routes.test.mjs`:75 are yours to bring green (accepted red 12 until your merge). Admission's `queryGate` follows its merge.
+
+## B10 · ANSWER · re J3
+
+(2) R55 governs (K1873 (2)): op-declarations is re-opened to give `checkrequests`/`checksof` `machineClasses: []`; your R55 test stays as written and goes green at its re-merge (I send a CHANGE). (1) `totality.test.mjs`:13 is affordances', accepted red 12 until its merge, which follows yours. Admission is merged (`queryGate`, its seven rows for your catalogue-end re-pin): merge `tranche/T34`.
+
+## B11 · CHANGE
+
+Op-declarations is re-merged (K1877): `checkrequests`/`checksof` carry `machineClasses: []`, so your R55 test can go green. Merge `tranche/T34` and post COMPLETE when ready; your only accepted red left is `totality.test.mjs`:13 (affordances').
+
+## B12 · CHANGE
+
+Re-opened (K1879): every L11 job is merged on `tranche/T34`. Your `totality.test.mjs` R2/R41 is still red there, now on `stale`: R21's aliases (`addparticipant`, `addworkbook`, `adoptversion`, `bind`, `claimidentity`, `createevent`, …) and `courtnotice`, which affordances grades (its R45 alias table) but the door's op table does not list. An alias is its op (op-declarations R21, your R55): reconcile so an alias graded as its op is not stale, and find why `courtnotice` reads stale (is it in the door's table?). Merge `tranche/T34`, fix in your module if the cause is yours; if it is affordances', REPORT and I route it. Post COMPLETE.
+
+## B13 · ANSWER · re J6
+
+Thanks (K1883): `courtnotice` goes to affordances (dropped from `NON_ACTS`). Your module is complete; keep the session until the layer closes.

@@ -19,7 +19,8 @@ test("R17 R37: with no target, the catalogue — every act decorated through the
    + "the kinds handed in, the capture acts and the set acts with set_key, item_keys, shared_keys and max_items", () => {
   const r = affordancesAnswer({ kinds: KINDS, gate: GATE });
   assert.deepEqual(Object.keys(r).sort(), ["answer_checks" /* K1601 */, "capture_acts", "catalog", "detail", "screens",
-                                           "set_acts", "target", "vocabularies", "wizard_scripts"]);
+                                           "set_acts", "target", "vocabularies", "wizard_scripts",
+                                           "writing_help_refused" /* R44 */]);
   /* K1601: answers' check family, the very object its table holds */
   assert.equal(r.answer_checks, ANSWERS_CHECKS);
   for (const [code, row] of Object.entries(r.answer_checks))
@@ -138,7 +139,11 @@ test("R17: a store silence or refusal on either question is answered by the cont
   assert.deepEqual(await affordancesOp(at(""), d.stub, d.deps), { silent: "affordances", correlation: "c-1" });
   d = door({ kinds: refused });
   assert.deepEqual(await affordancesOp(at("&target=X"), d.stub, d.deps), { refusal: refused });
-  assert.equal(d.asked.length, 1, "no facts asked after the kinds were refused");
+  /* N630: the facts are asked beside the kinds, a read either way; the kinds' refusal is what is answered */
+  assert.deepEqual(d.asked.map((u) => new URL(u).pathname), ["/actionkinds", "/affordancefacts"]);
+  d = door({ kinds: silent, facts: refused });
+  assert.deepEqual(await affordancesOp(at("&target=X"), d.stub, d.deps), { silent: "affordances", correlation: "c-1" },
+    "the kinds are answered first, whatever the second question answered");
   d = door({ facts: silent });
   assert.deepEqual(await affordancesOp(at("&target=X"), d.stub, d.deps), { silent: "affordances", correlation: "c-1" });
   d = door({ facts: refused });
@@ -154,4 +159,21 @@ test("R22: the door only reads — it asks the store's three read routes and not
   await affordancesOp(at(`&target=${FACTS.target}`), stub, deps);
   assert.deepEqual(asked.map((u) => new URL(u).pathname), ["/actionkinds", "/affordancescreens", "/actionkinds", "/affordancefacts"]);
   assert.equal(JSON.stringify(FACTS), before);
+});
+
+test("R17 R22 (N630, K1717): the door asks its two questions together — the second is asked before the kinds have "
+   + "answered — so an answer costs one store round trip, with or without a target", async () => {
+  for (const q of ["", `&target=${FACTS.target}`]) {
+    const d = door();
+    let release;
+    const held = new Promise((r) => { release = r; });
+    const fetch = d.stub.fetch;
+    d.stub.fetch = (u) => (String(u).startsWith("http://do/actionkinds") ? held.then(() => fetch(u)) : fetch(u));
+    const pending = affordancesOp(at(q), d.stub, d.deps);
+    await Promise.resolve();
+    assert.deepEqual(d.asked.length, 1, `${q}: the second question is asked while the kinds are outstanding`);
+    assert.ok(!d.asked[0].startsWith("http://do/actionkinds"), q);
+    release();
+    assert.equal((await pending).status, 200, q);
+  }
 });

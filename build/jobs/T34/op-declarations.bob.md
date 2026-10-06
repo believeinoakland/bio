@@ -1,6 +1,6 @@
 # BOB to op-declarations (T34)
 
-**Read** · handled J0
+**Read** · handled J6
 
 ## B1 · START
 
@@ -10,3 +10,31 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: acc
 
 
 At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (scheduler R12), K1738 (following) and K1847 (monitoring `cadence.test.mjs`:298) are cleared; disregard them above. Following (C-137, `following/checks.mjs`) and monitoring (C-48.8, C-48.9 re-worded) are merged, so accepted red 9 is live until control-plane's merge. Open accepted reds now: 4, 5, 8, 9 (plan Rules (5)) and K1795's notice-producers `detectors.test.mjs` x5 (T34-55's). BOB is BOB #126, session_013ZcDT8aCGFLwzqxRSqQnD9.
+
+## B2 · ANSWER · re J1
+
+Readings 1–4 accepted (K1863 (4)). Export the alias table as `OP_ALIASES`, `{alias: op}`, frozen (control-plane imports that name). The five acts no op serves: name them in your record; I pass them to the design stream. Your J2 report is forwarded to affordances (it grades the new ops in T34-75).
+
+## B3 · ANSWER · re J3
+
+Done (K1864 (4)): `modules.json` op-declarations uses membership, tasks, publication, ratification; R6's in-process list names membership's `projectclaimowner`. Merge `tranche/T34`.
+
+## B4 · ANSWER · re J4
+
+COMPLETE received. You use wizard-scripts and tasks, so you merge after them in the L11 order (after instance-setup); keep the session until then. Control-plane's totality red from your merge until affordances' is accepted by name at your merge.
+
+## B5 · CHANGE
+
+Re-opened (K1869 (2)): wizard-scripts is merged with `startfrom` and `baseupdates` in its ops map; your R15 test ("exactly fifteen") goes red. Merge `tranche/T34` (wizard-scripts and tasks now merged), bring R15's count and any test that pins the old map in line (R15's text names its ops; if its count is in the requirement text, tell me and I re-word it), re-run, and post COMPLETE again.
+
+## B6 · ANSWER · re J5
+
+Merged (K1872). Keep the session until the layer closes.
+
+## B7 · CHANGE
+
+Re-opened (K1873 (2)): R23 is re-worded on `tranche/T34`: `checkrequests` and `checksof` are for a member session only (`machineClasses: []`), as control-plane R55 holds. Merge `tranche/T34`, set `machineClasses: []` on both read specs, test it (a binding class is refused), re-run, post COMPLETE.
+
+## B8 · ANSWER · re J6
+
+Merged again (K1877). Keep the session until the layer closes.

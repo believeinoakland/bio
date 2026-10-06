@@ -5,8 +5,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, aik, cred } from "./harness.mjs";
-import { PLANE_OPS as AGENT_OPS, NAMESPACES as AGENT_NAMESPACES } from "../../../../agent-worker/src/harness.mjs";
-import { SUBSESSION_OPS } from "../../../../agent-worker/src/subsession.mjs";
+/* N586 (T34-60): agent-worker's op set and namespaces are read from its own `ops.mjs` and the sub-session scope from
+   agent-harness, their owners since T34's L6 (T34-37, T34-39), never through agent-worker's re-exports. */
+import { PLANE_OPS as AGENT_OPS, NAMESPACES as AGENT_NAMESPACES } from "../../../../agent-worker/src/ops.mjs";
+import { SUBSESSION_OPS } from "../../../../agent-harness/src/subsession.mjs";
 import { PLANE_OPS as OCR_OPS, NAMESPACES as OCR_NAMESPACES } from "../../../../ocr-worker/src/contract.mjs";
 /* T33 (K1531, K1570): sheet-worker, the fleet member workbooks' recompute reaches through `SHEET_WORKER` (its R11: it
    calls no op, and names the door's namespaces). */

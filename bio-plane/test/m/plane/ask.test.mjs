@@ -49,7 +49,8 @@ test("B2 (K1674): a member's ask mints their grant, unseals their own account an
   assert.deepEqual(Object.keys(body).sort(), ["account", "conversation", "grant", "question"], "no store unless one was named");
   assert.equal(body.question, "Who holds the clerk's office?");
   assert.match(body.grant, /^[0-9a-f]{64}$/, "the grant minted at the member's act");
-  assert.deepEqual(body.account, { kind: "apikey", secret: "sk-ant-zz-ann", member: "member:ann", suggestions: false });
+  assert.deepEqual(body.account, { kind: "apikey", level: "member", secret: "sk-ant-zz-ann", member: "member:ann", suggestions: false },
+                   "agent-worker R6's shape: credentials R35's account, its `key` carried as `secret`");
   /* the grant is the member's: credentials admits it for an ask read, as that member */
   const admit = await credentialsOf(x.ctx).aiGrantAdmit({ token: body.grant, op: "search", write: false });
   assert.equal(admit.ok, true, JSON.stringify(admit));
@@ -82,7 +83,8 @@ test("B2 negative controls: no account, another's session, and no assistant memb
   const unbound = await world({ worker: false });
   const r3 = await unbound.s.ask({ member: "member:ann", session: SESSION, question: "q" });
   assert.equal(r3.status, 503);
-  assert.equal((await r3.json()).reason, "AGENT_WORKER_UNBOUND");
+  assert.deepEqual(await r3.json(), { ok: false, reason: "AGENT_WORKER_UNBOUND",
+    detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, "DEC-149: the member is told in the group's own words");
   assert.equal(none.asks.length + x.asks.length + unbound.asks.length, 0, "nothing reached agent-worker");
 });
 
@@ -128,4 +130,31 @@ test("B5 (K1685; answers R1, R2): a read under an ask's grant reaching this obje
     await x.fetch(`/search?q=clerk&viewer=member:ann`);
     assert.equal(seen.length, 1);
   } finally { a.logRead = was; }
+});
+
+test("K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): a member with no account of their own is served by the group's API key while it is held and on, carried as level `group` with no suggestion; with it off, or its notice unread, nothing is asked", async () => {
+  const x = await world({ account: false });
+  const c = credentialsOf(x.ctx);
+  const set = await c.groupKeySet({ key: "sk-ant-zz-group", by: "ada" });
+  assert.equal(set.ok, true, JSON.stringify(set));
+  /* held but off (off by default): no account serves ann, so nothing is minted and nothing asked */
+  const off = await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
+  assert.match(JSON.stringify(await off.json()), /NO_ACCOUNT/);
+  assert.equal((await c.groupKeySwitch({ on: true, by: "ada" })).ok, true);
+  /* on, but ann has not read the notice that her questions go to Anthropic under the group's account (credentials R36) */
+  const due = await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
+  assert.match(JSON.stringify(await due.json()), /GROUP_KEY_NOTICE_DUE/);
+  assert.equal(x.asks.length, 0, "nothing reached agent-worker");
+  assert.equal((await c.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" })).ok, true);
+  assert.equal((await c.groupSwitchSet({ switch: "suggestions", on: true, by: "ada" })).ok, true);
+  const r = await x.s.ask({ member: "member:ann", session: SESSION, question: "Who holds the clerk's office?" });
+  assert.equal(r.status, 200);
+  assert.equal(x.asks.length, 1);
+  assert.deepEqual(x.asks[0][1].account, { kind: "apikey", level: "group", secret: "sk-ant-zz-group", member: "member:ann", suggestions: false },
+                   "the group's key serves ann's own ask; its switch has no in-plane read for her act (K1798), so none is offered");
+  /* her own reference, once set, serves her first */
+  assert.equal((await c.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" })).ok, true);
+  await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
+  assert.equal(x.asks[1][1].account.level, "member");
+  assert.equal(x.asks[1][1].account.secret, "sk-ant-zz-ann");
 });

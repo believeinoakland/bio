@@ -18,6 +18,8 @@ N680 (security review, significant, K1831), N688 (ZIP archives, K1844, K1852), N
 
 ## Rules at the opening
 
+0. **Bob's direction (K1862).** Policies, standards and ZIP archives are carried to the greatest extent the order allows; each left-out share names its hard reason and is re-tested at the opening. No release is made unless the measurement it yields lets a left-out entry into the next tranche.
+
 1. T34's rules hold. Merge order within a layer is `modules.json` order, except where a layer's merge-order line says otherwise (an upstream engine or a re-pointing user first).
 2. **N680, the security review (K1831).** A review, not a module job: threat model first (who reaches what; credential and session paths; captured and imported content, archives included (N688); the agent's reach and tools; secrets; supply chain; logging). BOB drafts it before the opening (P18). Its findings become entries in this plan's jobs at the opening, each in its module's one job; a meaning change goes to Bob with a recommendation (P17). A finding in a layer already started goes to T36 with that hard reason (P10). *(BOB: check: no draft exists in `build/plan/` today; if it is not ready by the opening, the opening does not wait (P19), and its findings take the first layers not yet started.)*
 3. **DECs folded at the opening (§5.3, §5.9).** DEC-142 (N623), DEC-143 (N657), DEC-144 (N658), DEC-145 (N659), DEC-146 (N660), DEC-149 (N664, N682, N690–N692) and DEC-156 (N678), each worded by BOB into the named modules' requirements before that module's layer starts. DEC-152/153's model turn (N686) is worded under K1841 (rule 1: never a reason field; rule 7: group holdings only with the switch on).

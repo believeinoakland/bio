@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T34)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -10,3 +10,23 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: acc
 
 
 At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (scheduler R12), K1738 (following) and K1847 (monitoring `cadence.test.mjs`:298) are cleared; disregard them above. Following (C-137, `following/checks.mjs`) and monitoring (C-48.8, C-48.9 re-worded) are merged, so accepted red 9 is live until control-plane's merge. Open accepted reds now: 4, 5, 8, 9 (plan Rules (5)) and K1795's notice-producers `detectors.test.mjs` x5 (T34-55's). BOB is BOB #126, session_013ZcDT8aCGFLwzqxRSqQnD9.
+
+## B2 · ANSWER · re J1
+
+All three readings accepted as stated (K1861 (1)). Commit: `d129238bf3` on `claude/gallant-brown-zg0wc1`. Firsthand: `testify` plus the capture and notes screens' acts recording what the member saw, as `FIRSTHAND_ACTS`. C-131.33 `WIZARD_VIA_REFUSED`, C-131.34–.41 the eight rows, awaiting stamp.
+
+## B3 · CHANGE
+
+Two interfaces your users build against now (K1861 (1)); please expose exactly these: (a) R24: export `WRITING_HELP_NAMED` (frozen array) and an instance read `writingHelpRefused()` → `{named, machine_refused, irreversible}` (`named` that frozen array; the two sets as handed to `wizardRegister`, arrays in registration order, `[]` before registration). Affordances R44 reads it through `op=affordancescreens`. (b) R26: `baseUpdates({after?, limit?, viewer?})` → `{ok, entries: [{copy, copy_version, name, project, base, base_name, based_on, base_version, found_at, recipients: [member ids], steps: {copy, base}}], cursor, truncated}`; `copy` the copy's script id, `based_on` the base version the copy records, `base_version` the newer approved version, `found_at` the instant first found. Queue-producers R39 reads it. If your code cannot give either shape, ask before COMPLETE.
+
+## B4 · CHANGE
+
+From CONTROL-PLANE #23 (K1863 (7)): the door routes `writinghelp` itself and calls `wizardScriptsOf(ctx).writingHelp({op, field, told, draftHeld, assistant, by, viewer})`, those arguments read from the POST body; `assistant` is `{on: true, account: {kind, level}}`, never the key. The door's refusals (`ASSISTANT_OFF`, the ceilings, the account's) come before your R24 items 2–4 and `WRITING_HELP_NOTHING_TOLD`. Build `writingHelp` to that call.
+
+## B5 · ANSWER · re J3
+
+Merged (K1869). Your J2 reds are routed to plane, op-declarations, affordances and control-plane; (4) and (7) to N701, N702. Keep the session until the layer closes.
+
+## B6 · CHANGE
+
+Re-opened (K1883 (2)): on the merged tranche, skills R10 refuses the whole pack because R11 offers two optional Civicsmith library scripts whose steps name acts with no op (`civicsmith-library.mjs`:21 step 3 `subscriptionsignin` on `connect`; :28 steps 3–5 `translationdraft`, `translationadopt`, `translationconfirm` on `translations`). R11 is re-worded on `tranche/T34`: a library script failing R12 against the registration is not offered until it passes, as R13 withholds a group's. Merge `tranche/T34`, apply it in your offered-script reads (leave the library data as is), test it (a failing library script withheld, a passing one offered), and confirm affordances' `plane.test.mjs`:317 goes green. Post COMPLETE.

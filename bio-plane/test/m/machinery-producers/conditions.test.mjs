@@ -1,9 +1,10 @@
-/* The first three CONDITION kinds (R3; REC-32) at feedItems' interface, converted from `queue-conditions.test.mjs`'s
-   queue-producers share: the governor's cool-off condition (its item contract, its basis, its sentences, its subject the
-   host, its documents gathered from that host), a parked capture and a machine-completed document, each clearing for
-   every member at once when its own fact stops being true, with nothing written to clear it (R8, R12). The governor
-   is a fake that answers `governorHolding({now})` as host-governor R14 does (`cooloff_until > now`); the capture
-   ledger a fake in capture R46's shape; the manifest, the register, the captured addresses and membership are real. */
+/* R2's first three CONDITION kinds and R3's grade note at conditionItems' interface (R1), copied from queue-producers'
+   `conditions.test.mjs` (its R3, R22; K1850): the governor's cool-off condition (its item contract, its basis, its
+   sentences, its subject the host, its documents gathered from that host), a parked capture and a machine-completed
+   document, each clearing for every member at once when its own fact stops being true, with nothing written to clear
+   it (R1, R7). The governor is a fake that answers `governorHolding({now})` as host-governor R14 does
+   (`cooloff_until > now`); the capture ledger a fake in capture R46's shape; the manifest, the register, the captured
+   addresses and membership are real. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, byId, NOW, iso } from "./world.mjs";
@@ -32,7 +33,7 @@ function corpus() {
   return { w, holds, sessions, manifest };
 }
 
-test("R3: governor-holding-host is the governor's own cool-off, read at the read's instant: the item contract key for key, its basis the governor's row, its subject the host, its documents those captured from it", () => {
+test("R2: governor-holding-host is the governor's own cool-off, read at the read's instant: the item contract key for key, its basis the governor's row, its subject the host, its documents those captured from it", () => {
   const { w, holds } = corpus();
   assert.equal(w.read("carol").items.some((i) => i.class === "CONDITION"), false, "absent before any machinery fact exists, never stubbed");
   holds.push({ host: HOST, cooloff_until: NOW + 90000, refusals: 1, last_refusal_status: 429, last_refusal_at: NOW - 30000,
@@ -61,7 +62,7 @@ test("R3: governor-holding-host is the governor's own cool-off, read at the read
   }
 });
 
-test("R3: partial-capture-outstanding is the capture ledger's own row, about the document its bytes were registered under; withheld whole from a viewer who may not see it; gone when the session is", () => {
+test("R2: partial-capture-outstanding is the capture ledger's own row, about the document its bytes were registered under; withheld whole from a viewer who may not see it; gone when the session is", () => {
   const { w, sessions } = corpus();
   sessions.push({ session: "cs_partial", locator: AGENDA, primarySha: "cap88", created: iso(NOW - 5000), updated: iso(NOW),
                   expires: iso(NOW + 60000), ticks: 2, state: { queue: ["a", "b", "c"], discovered: 41, spent: 45 } });
@@ -82,7 +83,7 @@ test("R3: partial-capture-outstanding is the capture ledger's own row, about the
     assert.ok(!w.read(who).items.some((i) => i.kind === "partial-capture-outstanding"), `the session dropped, it clears for ${who}`);
 });
 
-test("R3: capture-completed-unattended is the manifest's sequence, a person's document then a machine's revision, its writer named by the catalogue's one prefix; it clears when a person authors again", () => {
+test("R2: capture-completed-unattended is the manifest's sequence, a person's document then a machine's revision, its writer named by the catalogue's one prefix; it clears when a person authors again", () => {
   const { w, manifest } = corpus();
   manifest("k1", "carol", "2026-07-31T12:00:00Z");
   const id = "CONDITION::capture-completed-unattended::INFO-88";
@@ -106,7 +107,7 @@ test("R3: capture-completed-unattended is the manifest's sequence, a person's do
   for (const who of ["carol", "dave"]) assert.equal(byId(w.read(who))[id], undefined, `it clears for ${who} when a person authors again`);
 });
 
-test("R3, R8: the conditions report and never mutate: two reads answer the same items, and clearing one wrote nothing", () => {
+test("R2, R1: the conditions report and never mutate: two reads answer the same items, and clearing one wrote nothing", () => {
   const { w, holds, sessions, manifest } = corpus();
   holds.push({ host: HOST, cooloff_until: NOW + 1000, refusals: 2 });
   sessions.push({ session: "s", locator: AGENDA, primarySha: "cap88", created: iso(NOW), updated: iso(NOW), expires: iso(NOW + 1), ticks: 1, state: {} });
@@ -117,7 +118,7 @@ test("R3, R8: the conditions report and never mutate: two reads answer the same 
   assert.ok(!w.statements.slice(before).some((q) => /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i.test(q)));
 });
 
-test("R22 (DEC-95 (1); K1105): each capture-completed-unattended item carries in its detail the grade note of each capture it names, capture's own words; a capture the viewer may not see carries none", async () => {
+test("R3 (DEC-95 (1); K1105): each capture-completed-unattended item carries in its detail the grade note of each capture it names, capture's own words; a capture the viewer may not see carries none", async () => {
   const { ACQUIRE_GRADE_NOTE } = await import("../../../src/capture/index.mjs");
   const { w, manifest } = corpus();
   /* the first producer: a person's document completed by a machine; the capture it names is the one registered under it */

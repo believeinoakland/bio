@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R16). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R29). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -39,12 +39,47 @@ const frozenTable = (t) => {
 };
 const frozenList = (a) => Object.freeze(a);
 
+/* T34 (R21; DEC-139 (5), K1565): THE REGISTRY'S REQUIREMENT FUNCTIONS UNDER THEIR OWN NAMES. The screen registry
+   (`docs/development/ux-substrate/screens/registry.json`) marks an act `function` by its requirement function's name
+   lowercased; where that name is not already an op, its owner serves the function under the op named here, and the
+   alias is that op in every table — its spec, both session sets, its `NEEDS` row, every act list naming the op and its
+   stamps — so the control plane routes the two to one handler and they answer alike (control-plane R55). Each was read
+   at the owner's ops map. A function no op serves has no alias (R6): `projectcreated` (membership, called in process
+   by promotion), `setpassword` (credentials, in process), `countask` (answers' count inside `ask`),
+   `registerproceeding` (entities, in no ops map) and `deadlinecompute` (an answers rule service, reached as `rule`). */
+const OP_ALIASES = Object.freeze({
+  signerregisterown: "signerregister", signerrevokeown: "signerrevoke",             // credentials (membership R89, R90)
+  declaretie: "membertie", withdrawtie: "membertiewithdraw", recordpersonfact: "personfact",   // people
+  claimidentity: "identityclaim", withdrawidentityclaim: "identitywithdraw", expunge: "personexpunge",
+  adoptversion: "versionadopt", keepversion: "versionkeep",                         // reevaluation
+  strengthbarset: "strengthbar",                                                    // strength
+  ruleanswer: "rule", standingquestionset: "standingset", standingquestionend: "standingend",  // answers
+  createevent: "eventcreate", addparticipant: "participantadd", relate: "eventrelate",         // events
+  recorddatedfact: "datedfact",
+  recordfact: "moneyrecord", createset: "moneysetcreate", include: "moneysetinclude",           // money
+  exclude: "moneysetexclude", reconcile: "moneyreconcile",
+  addworkbook: "workbookadd", bind: "workbookbind", recordcheck: "workbooksecondcheck",         // workbooks
+  recordline: "linerecord",                                                         // lines
+  declare: "dutydeclare",                                                           // duties
+  filingrecordsent: "filingsent",                                                   // filings
+});
+const ALIAS_PAIRS = Object.entries(OP_ALIASES);
+/* a list with each alias beside the op it names; a table with each alias's row a copy of its op's */
+const withAliases = (a) => [...a, ...ALIAS_PAIRS.filter(([al, op]) => a.includes(op) && !a.includes(al)).map(([al]) => al)];
+const listed = (a) => frozenList(withAliases(a));
+const aliasRows = (t) => {
+  for (const [al, op] of ALIAS_PAIRS) if (Object.hasOwn(t, op))
+    t[al] = Array.isArray(t[op]) ? frozenList([...t[op]]) : t[op] && typeof t[op] === "object" ? { ...t[op], ...(Array.isArray(t[op].classes) ? { classes: [...t[op].classes] } : {}),
+      ...(Array.isArray(t[op].machineClasses) ? { machineClasses: [...t[op].machineClasses] } : {}) } : t[op];
+  return t;
+};
+
 /* T33 (R17–R20; T33-88, K1122; B1a.16, C:A-16, Q0-10, Q1-6): THE OP FAMILIES, ONE APPEND SITE EACH. Every op T33's new
    modules serve, and every op T33 adds to an earlier module, is declared here once, in its owner's entry, and the entry
    is all that is spread below into `OPS`, both `SESSION_OPS` sets and `NEEDS` — so a family cannot be specced in one
    table and forgotten in another. An entry names each op's KIND (the spec and capability it takes) and the stamps the
    door sets on it: `viewer` on every op of every family (each owner answers by the caller's sight and fails closed
-   without it), `actor` on each act and `proposer` on each proposal, each `{key, at}` — the parameter the owner reads
+   without it) but T34's public doors and reads, which stamp only what their family names (R22), `actor` on each act and `proposer` on each proposal, each `{key, at}` — the parameter the owner reads
    and whether it reads it from the `query` or the `body`, because the owners differ (events, duties, following and
    credentials read `by` from the query; lines, money, workbooks, people and hypotheses from the body; standards reads
    `author` and `proposer` from the body; calculations and answers take the stamped `viewer` as their actor). The
@@ -67,6 +102,21 @@ const OP_KINDS = Object.freeze({
   tally:    Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: true },  needs: null }),
   read:     Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: null }),
   ownread:  Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: false }, needs: null }),
+  /* T34 (R22, R25, R28): an administrator's roster act, `hostingaccessset`'s spec (the operator's bearer reaches it and
+     the owner asks the roster, NOT_AN_ADMIN; K1749); a member's act or read whose classes name `probe` and whose
+     `machineClasses: []` refuses every bearer — `publishact` on the publication surface (`publish`), `sessionact` on
+     the member's own settings (no working capability), `sessionread` a read. */
+  roster:   Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: ["admin", "probe"], mutating: true }, needs: null }),
+  publishact:  Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: [], mutating: true }, needs: "publish" }),
+  sessionact:  Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: [], mutating: true }, needs: null }),
+  sessionread: Object.freeze({ spec: { classes: MEMBER_PROBE, machineClasses: [], mutating: false }, needs: null }),
+  /* T34 (R22): what is stamped nothing — a public door that gates itself by what its body carries (`door`), a public
+     read (`public`), and a read of the group's own published setting (`plainread`). Each has NO `NEEDS` row
+     (`needs: undefined`), and a public one is in no session set: every caller reaches it. A family's extras still
+     stamp it (R22's `groupdescription` reads who is asking from `viewer`). */
+  door:      Object.freeze({ spec: { classes: null, mutating: true },  needs: undefined, public: true,  stamped: false }),
+  public:    Object.freeze({ spec: { classes: null, mutating: false }, needs: undefined, public: true,  stamped: false }),
+  plainread: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: undefined, stamped: false }),
 });
 const QUERY = (key) => Object.freeze({ key, at: "query" });
 const BODY = (key) => Object.freeze({ key, at: "body" });
@@ -129,9 +179,12 @@ const OP_FAMILIES = Object.freeze({
   /* explore R14 (K1566): reads only, the viewer stamped; it writes nothing and logs no one's exploring (R9). */
   explore: family({ owner: "explore", cite: "explore R14", ops: {
     explore: "read", explorepreset: "read", exploreverify: "read", exploretimeline: "read" } }),
-  /* hypotheses R7: a hypothesis held, revised and withdrawn by a member (MACHINE_CANNOT_HYPOTHESISE, R1, R2, K1473). */
-  hypotheses: family({ owner: "hypotheses", cite: "hypotheses R7", actor: BODY("by"), ops: {
-    hypothesishold: "member", hypothesisrevise: "member", hypothesiswithdraw: "member", hypotheses: "read" } }),
+  /* hypotheses R7: a hypothesis held, revised and withdrawn by a member (MACHINE_CANNOT_HYPOTHESISE, R1, R2, K1473);
+     since T34 (K1807; its R11–R13) a member's own note written and turned, the body's `by` its author, and the notes
+     read, the viewer stamped. */
+  hypotheses: family({ owner: "hypotheses", cite: "hypotheses R7, R11–R13; K1807", actor: BODY("by"), ops: {
+    hypothesishold: "member", hypothesisrevise: "member", hypothesiswithdraw: "member", hypotheses: "read",
+    notewrite: "member", noteturn: "member", notes: "read" } }),
   /* calculations R24 (C:A-16): its actor is the stamped viewer. Declaring a table, adopting a binding, ingesting money,
      accepting a calculation, recording a set and switching a pattern refuse a machine (MEMBER_ACT_ONLY, R2, R8, R14,
      R21, R23); a calculation and a recorded draw any author's (R4, R18); the pattern gate an administrator's (R23). */
@@ -171,13 +224,19 @@ const OP_FAMILIES = Object.freeze({
   /* credentials (K1544; R20): the member's own account reference, its switches and the ask grant, set by the member
      alone (MACHINE_CANNOT_HOLD_ACCOUNT, NOT_YOUR_ACCOUNT, R22–R27), never an administrator for another member;
      `aigrantmint` also reads the session's own `member` and `session` (R27); the keyed services an administrator's
-     (R29). No spec admits a group- or project-level credential: none exists (K1502). */
+     (R29). No spec admits a project-level Claude credential or a group subscription: neither exists (K1502, K1755);
+     the group's API key is reached only through R24's acts below. */
   credentials: family({ owner: "credentials", cite: "credentials R22–R29; K1544; R20", actor: QUERY("by"),
     extra: { accountreferenceset: ["member"], accountreferenceremove: ["member"], accountswitchset: ["member"],
              accountreference: ["member"], aigrantmint: ["member", "session"] }, ops: {
     accountreferenceset: "own", accountreferenceremove: "own", accountswitchset: "own", aigrantmint: "own",
     keyedserviceset: "admin", keyedserviceswitch: "admin",
-    accountreference: "ownread", keyedservices: "read" } }),
+    accountreference: "ownread", keyedservices: "read",
+    /* T34 (R24; credentials R33, R34, R36, R37; K1755, K1764): the group's API key, set, removed, switched and its
+       switches set by an administrator's own session (NOT_AN_ADMIN); its state a session's read; the notice a member's
+       own, read by the viewer and marked seen by the session's own `by`. None is on `AI_GRANT_OPS`. */
+    groupkeyset: "admin", groupkeyremove: "admin", groupkeyswitch: "admin", groupswitchset: "admin",
+    groupkeystate: "ownread", groupkeynotice: "ownread", groupkeynoticeseen: "own" } }),
   /* sources (K1550): marking a capture as from a keyed service, its capturer's own act (MACHINE_CANNOT_MARK, R16, R18). */
   sources: family({ owner: "sources", cite: "sources R16, R18; K1550", actor: QUERY("by"), ops: { sourcekeyed: "member" } }),
   /* entities (K1572; R18): a scheme identifier, `resolutiondefect`'s stamp; a machine on a system rule's basis (R43). */
@@ -206,18 +265,55 @@ const OP_FAMILIES = Object.freeze({
     capturerequestplatformmark: "member", capturerequestplatformunmark: "member", capturerequestplatformhosts: "read" } }),
   /* instance-setup (R17; K1683, its op names): seeding the offices and the seats and setting the assistant, an
      administrator's own session (R50, R52, R53); the disclosure shown, a member's own record (R54); the assistant's
-     state a read, and a member's disclosure their own read. */
-  "instance-setup": family({ owner: "instance-setup", cite: "instance-setup R50, R52–R54; R17; K1683", actor: QUERY("by"), ops: {
+     state a read, and a member's disclosure their own read. T34: the unheld place, an administrator's act and read
+     (R26; its R60, NOT_AN_ADMIN); the member's screen language, their own act (`machineClasses: []`) and the read
+     (R28; its R64); the group's description drafted for its administrator, a session's labelled draft writing nothing,
+     `by` and `viewer` stamped (R29; its R65, DEC-152; K1837). */
+  "instance-setup": family({ owner: "instance-setup", cite: "instance-setup R50, R52–R54, R60, R64, R65; R17, R26, R28, R29; K1683",
+    actor: QUERY("by"), extra: { groupdescriptiondraft: ["by"] }, ops: {
     officesseed: "admin", seatsseed: "admin", assistantset: "admin", disclosureshown: "own",
-    assistantstate: "read", disclosureof: "ownread" } }),
+    assistantstate: "read", disclosureof: "ownread",
+    placewanted: "admin", placewantedstate: "ownread", memberlanguageset: "sessionact", memberlanguage: "read",
+    groupdescriptiondraft: "ownread" } }),
+  /* T34 (R22; membership R98–R110, DEC-133, DEC-134, DEC-136; K1749): the group's settings. The administrator's acts
+     take `hostingaccessset`'s spec (`roster`; NOT_AN_ADMIN is membership's own answer, a bearer's included), `by`
+     from the query; the website's and the join page's doors are public, stamped nothing, the key or link read from the
+     body (admission R17); the court notice a plain read, stamped nothing; the description a public read, `viewer`
+     set so a member reads the whole record. `checkaddressees` is a store-internal route and declared nowhere (R6). */
+  membership: family({ owner: "membership", cite: "membership R98–R110; R22; K1749", actor: QUERY("by"),
+    extra: { groupdescription: ["viewer"] }, ops: {
+    invitewithdraw: "roster", websitekeycreate: "roster", websitekeyset: "roster", websitekeyrevoke: "roster",
+    joinlinkenable: "roster", joinlinkset: "roster", joinlinkreplace: "roster", joinlinkoff: "roster",
+    courtnoticeset: "roster", groupdescriptionset: "roster",
+    websiteinvite: "door", joinlinkinvite: "door", courtnotice: "plainread", groupdescription: "public" } }),
+  /* T34 (R23; tasks R13–R16, DEC-135): asking for a check, taking it and recording it, a member's (MACHINE_CANNOT_CHECK),
+     `by` from the query; the two reads, the viewer stamped, also a member session's only (K1873). */
+  tasks: family({ owner: "tasks", cite: "tasks R13–R16; R23; K1873", actor: QUERY("by"), ops: {
+    checkrequest: "member", checktake: "member", checkrecord: "member", checkrequests: "ownread", checksof: "ownread" } }),
+  /* T34 (R25; publication R68, R69, DEC-147): moving and cancelling a set publish time, on the publication surface
+     (`publish`), `by` from the query; the schedule a member session's read. `publishat` itself is `caseratify`'s
+     ceremony, declared beside it in `OPS`. */
+  publication: family({ owner: "publication", cite: "publication R68, R69; R25; K1784", actor: QUERY("by"), ops: {
+    publishatmove: "publishact", publishatcancel: "publishact", publishschedule: "sessionread" } }),
+  /* T34 (R15, R28, R29; wizard-scripts R23, R26, R27; DEC-129, DEC-153, DEC-158 (4)): the first steps from the home, a
+     read; the copies whose base has a newer version, a member session's read; writing help, a session's labelled draft
+     writing nothing, `by` and `viewer` stamped (K1837). wizard-scripts' T31 ops are declared in `OPS` below. */
+  "wizard-scripts": family({ owner: "wizard-scripts", cite: "wizard-scripts R23, R26, R27; R15, R28, R29; K1818",
+    actor: QUERY("by"), extra: { writinghelp: ["by"] }, ops: {
+    startfrom: "read", baseupdates: "ownread", writinghelp: "ownread" } }),
 });
 const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
+/* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. */
+const FAMILY_SESSION_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)
+  .filter((op) => !OP_KINDS[f.kinds[op]].public)));
 const FAMILY_SPECS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds).map(([op, k]) => {
   const s = OP_KINDS[k].spec;
-  return [op, { classes: [...s.classes], ...(s.machineClasses ? { machineClasses: [...s.machineClasses] } : {}), mutating: s.mutating }];
+  return [op, { classes: s.classes ? [...s.classes] : null, ...(s.machineClasses ? { machineClasses: [...s.machineClasses] } : {}),
+                mutating: s.mutating }];
 })));
+/* a kind whose `needs` is undefined has no row (T34's unstamped kinds) */
 const FAMILY_NEEDS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds)
-  .map(([op, k]) => [op, OP_KINDS[k].needs])));
+  .filter(([, k]) => OP_KINDS[k].needs !== undefined).map(([op, k]) => [op, OP_KINDS[k].needs])));
 /* K1601 (AGENT-WORKER #9 J1 (3), (4)): THE ASK'S PLANE OPS, which agent-worker's `/ask` calls under the member's `ai`
    grant and the control plane admits OUTSIDE the grant's read list (`AI_GRANT_OPS`), the grant's member stamped as the
    viewer: the ceiling read before any model call, the answer's check over the grant's read log, and the usage count
@@ -233,14 +329,15 @@ const ASK_GRANT_OPS = frozenList(["askceiling", "askcheck", "askusage"]);
    actor IS the viewer (calculations, answers, capture-requests' marks) needs no second key. The ask's three plane
    ops carry the grant's member as `viewer` (K1601); `exportpage` and `moneydetectorsrun` are stamped nothing. */
 const stampKey = (st) => (!st || st.key === "viewer" ? null : st.key === "by" ? (st.at === "body" ? "bodyBy" : "by") : st.key);
-const OP_STAMPS = Object.freeze(Object.fromEntries([
+const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
   ...Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds).map((op) => {
+    if (OP_KINDS[f.kinds[op]].stamped === false) return [op, frozenList([...(f.extra[op] ?? [])])];
     const who = f.acts.includes(op) ? stampKey(f.actor) : f.proposals.includes(op) ? stampKey(f.proposer) : null;
     return [op, frozenList([...new Set(["viewer", ...(who ? [who] : []), ...(f.extra[op] ?? [])])])];
   })),
   ...ASK_GRANT_OPS.map((op) => [op, frozenList(["viewer"])]),
   ["exportpage", frozenList([])], ["moneydetectorsrun", frozenList([])],
-]));
+])));
 
 /* BIO plane, control plane entry.
  *
@@ -278,7 +375,7 @@ const OP_STAMPS = Object.freeze(Object.fromEntries([
  * reads, not from who holds a token.
  */
 
-const OPS = frozenTable({
+const OPS = frozenTable(aliasRows({
   //  op          class allowed              mutating
   selftest:   { classes: ["admin", "member", "probe"],           mutating: false },
   livefire:   { classes: ["admin", "probe"],                     mutating: true  },
@@ -577,6 +674,10 @@ const OPS = frozenTable({
      caseratify is gated as ratify. */
   casedocument:   { classes: null,                                 mutating: false },
   caseratify:     { classes: ["admin", "member", "probe"],           mutating: true  },
+  /* T34 (R25; ratification R40, DEC-147): the ceremony's last act with a set date and time, `caseratify`'s gate — its
+     classes, its `NEEDS` row (`publish`) and both session sets — and a member session's only (`machineClasses: []`);
+     `at` is a body field, as ratification reads the ceremony's whole body. */
+  publishat:      { classes: ["admin", "member", "probe"], machineClasses: [], mutating: true  },
   /* REC-126 (§6A): the review copy — authoring, issuing and revoking gated, the store refusing a machine; reading and
      commenting ungated for a grant's holder. */
   casedraft:      { classes: ["admin", "member", "probe"],           mutating: true  },
@@ -1067,7 +1168,7 @@ const OPS = frozenTable({
   askusage:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
   /* T33 (R17–R20): every family's ops, each from its one entry in `OP_FAMILIES` above. */
   ...FAMILY_SPECS,
-});
+}));
 
 /* What a signed-in browser session may do, the write arc's evolution of the
    read-only session rule. Intake is browser-writable: it is append-only,
@@ -1088,7 +1189,7 @@ const OPS = frozenTable({
    own session reach and op=search's own server-side `viewer` stamp. A second
    list would be one more place for the member and admin sets to drift apart —
    the defect class this file keeps naming. */
-const RETRIEVAL_READS = frozenList(["search", "searchfields", "searchindexcheck", "selection", "selectionlist",
+const RETRIEVAL_READS = listed(["search", "searchfields", "searchindexcheck", "selection", "selectionlist",
                          "meaningrows"]);
 /* CONSTRUCTS Step 3 (FW-5): the reading reads. A member session viewing a
    captured document may read what the plane read out of it and which other
@@ -1107,7 +1208,7 @@ const RETRIEVAL_READS = frozenList(["search", "searchfields", "searchindexcheck"
    WRITE (`attesttext`) is deliberately NOT here — it is a member act with its
    own session route, and folding it into a read set would be exactly the
    collapse the fence exists to stop. */
-const READING_READS = frozenList(["reading", "readingref", "readingname", "textprovenance", "textattest"]);
+const READING_READS = listed(["reading", "readingref", "readingname", "textprovenance", "textattest"]);
 /* The selection-backed actions on a Project's citation edges. Named as a set
    rather than listed twice, because the member and admin session lists drifting
    apart is exactly the class of defect this repository keeps finding. */
@@ -1116,7 +1217,7 @@ const READING_READS = frozenList(["reading", "readingref", "readingname", "textp
    edge it creates records the SOURCE's assertion rather than the member's. The
    member's act is deciding to admit the observed connection into the graph; the
    edge itself says asserted_by: source. */
-const EDGE_ACTIONS = frozenList(["cite", "sever", "reinstate", "linkproject"]);
+const EDGE_ACTIONS = listed(["cite", "sever", "reinstate", "linkproject"]);
 /* S-11 step 3. The first selection-backed action to move an OBJECT's state
    rather than an edge's, so it takes the same server-side viewer, owner and
    author stamps the edge actions take: a caller that could name the viewer
@@ -1150,7 +1251,7 @@ const EDGE_ACTIONS = frozenList(["cite", "sever", "reinstate", "linkproject"]);
    project's append-only record, which a caller must not be able to supply. It
    moves the (project, inquiry) relationship's state, so the array's name stays
    true. Not selection-backed, so `owner` is inert for it. */
-const STATE_ACTIONS = frozenList(["dispose", "retire", "release", "conclude", "reopen", "publish", "inquirydivide",
+const STATE_ACTIONS = listed(["dispose", "retire", "release", "conclude", "reopen", "publish", "inquirydivide",
                        "withdrawconclusion"]);
 /* REC-24: the two ACTION acts, as their own array rather than folded into
    STATE_ACTIONS. They need exactly what that array confers — both SESSION_OPS
@@ -1168,12 +1269,12 @@ const STATE_ACTIONS = frozenList(["dispose", "retire", "release", "conclude", "r
    under — and it moves no state, so STATE_ACTIONS would be the wrong list. */
 /* REC-214 adds `actionrisktier` for the same reason: the author is the member named beside the revision and its
    reason, so the stamp must be the server's; it moves no state. */
-const ACTION_ACTIONS = frozenList(["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"]);
+const ACTION_ACTIONS = listed(["actionmove", "actioncorrespond", "actionlaws", "actionrisktier"]);
 /* REC-14 / DEC-17: declaring the group's default required strength is a
    session act whose AUTHOR is part of the declaration — "you can lower your own
    bar; you cannot do it quietly" — so it takes the author stamp without being a
    state action on any object. */
-const DECLARATION_ACTIONS = frozenList(["strengthbar"]);
+const DECLARATION_ACTIONS = listed(["strengthbar"]);
 /* REC-45 / DEC-32: AUTHORING THE STRUCTURE of an inquiry's basis. Its own array
    and NOT folded into STATE_ACTIONS, on the same reasoning REC-24 wrote for
    ACTION_ACTIONS and for the same benefit: it moves NO state. An inquiry that
@@ -1195,7 +1296,7 @@ const DECLARATION_ACTIONS = frozenList(["strengthbar"]);
    requires a reader to be able to draw. So the store DELETES any caller-supplied
    `asserted_by`/`at` on every row before stamping — the op=promote
    `ownerMemberId` discipline — and this stamp is where the name comes from. */
-const STRUCTURE_ACTIONS = frozenList(["inquiryground"]);
+const STRUCTURE_ACTIONS = listed(["inquiryground"]);
 /* PL-2 / IS-2 — THE SIXTH STATE MACHINE'S SIX MEMBER OPS, in their own array
    for the reason STRUCTURE_ACTIONS has one: they share a stamp, a capability and
    a class list, and a list written out six times in four places is the drift
@@ -1222,9 +1323,9 @@ const STRUCTURE_ACTIONS = frozenList(["inquiryground"]);
    Machine classes REACH all six and are refused by the store rather than being
    absent from the table — conclude's posture, fail closed, so the refusal says
    what is wrong instead of "requires a credential you have". */
-const VERSION_ACTIONS = frozenList(["versionaccept", "versionreject", "versionconsider",
+const VERSION_ACTIONS = listed(["versionaccept", "versionreject", "versionconsider",
                          "versionrevert", "versioncurrent", "versionhide"]);
-const PROJECT_ACTIONS = frozenList(["projectinvite", "projectjoin", "projectleave", "projectremove",
+const PROJECT_ACTIONS = listed(["projectinvite", "projectjoin", "projectleave", "projectremove",
                          "projectowneradd", "projectownerremove", "projectfork",
                          "projectownerrescue",
                          /* REC-149: the owner's §7.14 setting — `by` and `viewer` stamped like every roster act. */
@@ -1266,14 +1367,14 @@ const PROJECT_ACTIONS = frozenList(["projectinvite", "projectjoin", "projectleav
    clause that stays true: this array also spreads MEMBER-set reach and the operator
    fence, and moving either is a reach change and a refusal nobody ruled. The stamp
    site says what was decided about a bearer, and that it is provisional. */
-const GOVERNANCE_ACTIONS = frozenList(["adminendorse", "adminremove", "membercaps"]);
+const GOVERNANCE_ACTIONS = listed(["adminendorse", "adminremove", "membercaps"]);
 /* REC-164 / Publication §7 points 2 and 3: the group's display name and its domain claim are set by an
    administrator's session, with `by` stamped by the server "as for the Membership v2 §4 governance acts". A SET OF
    ITS OWN rather than three more names in `GOVERNANCE_ACTIONS`, because that array's fence carries C-32.17, whose
    canned sentence names the §4 votes and the capability edit — it would be FALSE here (D-270's class). Same shape:
    both session sets (an enrolled administrator holds `member:<id>`, so the admin set alone is the founder alone),
    a fence that refuses any caller who did not arrive by a session, and a `by` stamp the store asks the roster. */
-const IDENTITY_ACTIONS = frozenList(["groupnameset", "groupdomainset"]);
+const IDENTITY_ACTIONS = listed(["groupnameset", "groupdomainset"]);
 /* REC-159 — §4.9's CUSTODIAL ACTS, AND EACH IS EVERY ADMINISTRATOR'S. `BIO_Membership_Architecture_v2.md`
    §4.7's block *"WHAT IS STILL NOT CLOSED"* named this fix and REC-156 measured the defect: the four sat in
    `SESSION_OPS.admin` alone — the FOUNDER'S password session — so an enrolled administrator was refused
@@ -1293,7 +1394,7 @@ const IDENTITY_ACTIONS = frozenList(["groupnameset", "groupdomainset"]);
    four, its `by` stamped `class:<cls>` and naming no person. So the bearer route is bounded by each row's
    `machineClasses` instead — `admin` and `probe`, the classes it held before — which keeps the
    MEMBER_TOKEN bearer and an `ai` credential out exactly as they were. */
-const CUSTODIAL_ACTIONS = frozenList(["memberadd", "memberset", "signeradd", "signerset"]);
+const CUSTODIAL_ACTIONS = listed(["memberadd", "memberset", "signeradd", "signerset"]);
 /* N43 (T4) — membership's R10, R11 and R19, each a named person's own act on the roster: an administrator resigning
    (never the founder, whom the store answers ROOT_OF_TRUST), an administrator recording who holds hosting access,
    and a member (or an administrator) choosing whether a pairing is published. REC-159's three halves: REACH in both
@@ -1302,42 +1403,42 @@ const CUSTODIAL_ACTIONS = frozenList(["memberadd", "memberset", "signeradd", "si
    `GOVERNANCE_ACTIONS` or `CUSTODIAL_ACTIONS`: the first carries the operator fence, whose C-32.17 sentence names
    the §4.7 votes and would be false here (D-270's class), and the second's `by` condition is one expression at the
    stamp site. A bearer stamps `class:<cls>`, which is on no roster, so the store refuses it. */
-const ROSTER_SELF_ACTIONS = frozenList(["adminresign", "hostingaccessset", "memberpairingset"]);
+const ROSTER_SELF_ACTIONS = listed(["adminresign", "hostingaccessset", "memberpairingset"]);
 /* N364 (membership R89, R90): a member's own attesting key, registered and revoked from their own session. Its own set
    for ROSTER_SELF_ACTIONS' reason: REACH in both `SESSION_OPS` sets (every bearer is refused by the rows'
    `machineClasses`), and THE STAMP, `by` from the session, read by membership from the query after the body. */
-const OWN_KEY_ACTIONS = frozenList(["signerregister", "signerrevoke"]);
+const OWN_KEY_ACTIONS = listed(["signerregister", "signerrevoke"]);
 /* N364 (capture R65, R68, R69): the pull, a late co-attestation and a capture's signed account, each a member's act in
    their own name, `by` stamped and read by capture from the query first; in both session sets. T22 (K1023; capture
    R79, R81; R9): setting a held capture aside and restoring it join them, `by` stamped for the same reason (capture
    reads `by` from the query before `author`). */
-const CAPTURE_MEMBER_ACTIONS = frozenList(["inboxpull", "reattest", "captureaccount", "heldsetaside", "heldrestore"]);
+const CAPTURE_MEMBER_ACTIONS = listed(["inboxpull", "reattest", "captureaccount", "heldsetaside", "heldrestore"]);
 /* T22 (K1023, K1037; capture R76, R77, R79–R81; R9): the capture ops that answer by the caller's sight, so `viewer` is
    stamped on each (capture reads it from the query; an unstamped call sees nothing): the two held acts, and the held
    list, the grade note and the doorbell's tally. In both session sets. */
-const CAPTURE_VIEWER_ACTIONS = frozenList(["heldsetaside", "heldrestore"]);
-const CAPTURE_READS = frozenList(["heldcaptures", "gradenote", "doorbelltally"]);
+const CAPTURE_VIEWER_ACTIONS = listed(["heldsetaside", "heldrestore"]);
+const CAPTURE_READS = listed(["heldcaptures", "gradenote", "doorbelltally"]);
 /* N364 (sources R2, R6, R7): a member's record of a source's disclosure, link claim, consent and its withdrawal, `by`
    stamped and read by sources from the query after the body; in both session sets. */
-const SOURCE_ACTIONS = frozenList(["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"]);
+const SOURCE_ACTIONS = listed(["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw"]);
 /* N364 (sources R1, R5, R9): the reads that answer by the caller's sight, `viewer` stamped. */
-const SOURCE_READS = frozenList(["sourceof", "sourcerung", "sourcereadlog"]);
+const SOURCE_READS = listed(["sourceof", "sourcerung", "sourcereadlog"]);
 /* REC-155 — `BIO_Membership_Architecture_v2.md` §4.10 (RULED by BOB #19, 2026-09-21): five of the seven ops
    that no session reached and no decision explained JOIN BOTH SESSION SETS. Both sets for D-136's reason at
    the spread below: `SESSION_OPS.admin` is the FOUNDER'S session alone, and none of the five is the founder's.
    THE PROVENANCE PAIR: their OPS rows call the act *"a named member's judgement"*, and a signed-in session is
    the one caller that carries a name — the `author` stamp already names `sessMember` on the session route.
    The bearer WRITE route closes in §4.10's SECOND landing (REC-158), not here: this one refuses nobody. */
-const PROVENANCE_JUDGEMENT_ACTIONS = frozenList(["provenancechain", "provenanceroute"]);
+const PROVENANCE_JUDGEMENT_ACTIONS = listed(["provenancechain", "provenanceroute"]);
 /* THE CALIBRATION WRITES: their OPS row rules that the fence is NOT who may measure but that a measurement
    never moves a GRADE (`CAL_CANNOT_REGRADE`), so a person measures on the same terms as a probe, and the
    bearer route stays — a scheduled re-probe is a machine act by construction. */
-const CALIBRATION_WRITE_ACTIONS = frozenList(["calibrate", "calibrationsubject", "calibrationsignal"]);
+const CALIBRATION_WRITE_ACTIONS = listed(["calibrate", "calibrationsubject", "calibrationsignal"]);
 /* Section 1.3. Both are in the MEMBER set: a member declares their own, and a
    member reaching confirm is refused by the store with NOT_AN_ADMIN, which says
    what is wrong. Putting confirm in the admin set alone would answer "requires a
    machine credential", which is true of neither the caller nor the rule. */
-const EXPERTISE_ACTIONS = frozenList(["expertisedeclare", "expertiseconfirm"]);
+const EXPERTISE_ACTIONS = listed(["expertisedeclare", "expertiseconfirm"]);
 /* CONSTRUCTS Step 4, SLICE A (FW-6): the SUBJECT REGISTRY actions. Members BUILD the
    registry — register a subject, alias it, declare a constitutive relation — and
    READ it by key, by alias, and by relation id. Named as one set, in both the member
@@ -1354,7 +1455,7 @@ const EXPERTISE_ACTIONS = frozenList(["expertisedeclare", "expertiseconfirm"]);
 /* T5-11 (entities R8): the two withdrawals join the set, stamped with the withdrawing member as the three writes are
    with the declaring one. */
 /* N345 (entities R38): the defect report joins the set, stamped with the reporting member as the writes are. */
-const REGISTRY_ACTIONS = frozenList(["entitycreate", "entityalias", "relationdeclare", "aliaswithdraw", "relationwithdraw",
+const REGISTRY_ACTIONS = listed(["entitycreate", "entityalias", "relationdeclare", "aliaswithdraw", "relationwithdraw",
                           "resolutiondefect", "entity", "entitybyalias", "relation"]);
 /* D-98, the TASK construct's two member verbs. Forwarding and resolving a task
    are MEMBER actions performed by a PERSON through their session — the construct
@@ -1368,7 +1469,7 @@ const REGISTRY_ACTIONS = frozenList(["entitycreate", "entityalias", "relationdec
    forward or a resolution as somebody else, and the store's TASK-ACTOR FENCE
    (`#refuseNotYours`, NOT_YOURS) refuses a member who is neither the assignee
    nor an admin — the enforcement UI-1 delegated as cosmetic. */
-const TASK_ACTIONS = frozenList(["taskforward", "taskresolve"]);
+const TASK_ACTIONS = listed(["taskforward", "taskresolve"]);
 /* REC-21: the queue's PERSONAL writes. They are MUTATING, so SESSION_OPS is what
    actually lets a member session reach them, and they are in BOTH lists for the
    same reason every other member surface is: an administrator is a member too.
@@ -1376,7 +1477,7 @@ const TASK_ACTIONS = frozenList(["taskforward", "taskresolve"]);
    the OTHER doctrine — a task act changes the record for everyone, and these
    change nothing for anyone but the member who made them. Naming them together
    would be the first step toward one control. */
-const QUEUE_ACTIONS = frozenList(["queuemute", "queuesnooze"]);
+const QUEUE_ACTIONS = listed(["queuemute", "queuesnooze"]);
 /* IS-6: the investigative run's three WRITES. Its two reads are not here, for
    the reason stated on QUEUE_ACTIONS above: SESSION_OPS gates MUTATING ops alone
    (admission's session gate passes every read), so a read needs no place in it.
@@ -1393,7 +1494,7 @@ const QUEUE_ACTIONS = frozenList(["queuemute", "queuesnooze"]);
    daemon's conduct rules applied to them. `taskenqueue`/`taskdrain` draw the
    same line one door over, and `taskenqueue` is not in OPS at all for the same
    reason `capturerequestdrain` is not in this list. */
-const AI_RUN_ACTIONS = frozenList(["airunopen", "airuntick", "airunclose", "suggest", "capturerequest",
+const AI_RUN_ACTIONS = listed(["airunopen", "airuntick", "airunclose", "suggest", "capturerequest",
                         /* SK-8: the EXTRACT role's production is an ACT OF A RUN
                            (§7.3 (2)), and it is named here for the reason
                            `suggest` and `capturerequest` are — this array says
@@ -1424,7 +1525,7 @@ const AI_RUN_ACTIONS = frozenList(["airunopen", "airuntick", "airunclose", "sugg
    rather than as three literals at the stamp site is the same discipline
    `QUEUE_ACTIONS` and `PROJECT_ACTIONS` keep — a fourth run verb should join
    the gate by being added here, not by somebody remembering. */
-const RUN_VERB_ACTIONS = frozenList(["airunopen", "airuntick", "airunclose"]);
+const RUN_VERB_ACTIONS = listed(["airunopen", "airuntick", "airunclose"]);
 /* REC-165 (INVESTIGATIVE-SESSION.md §11 item 5, rule 1, BOB #25): THE RUN'S PRODUCTIONS. A production names
    a run, and the run is what the production is READ AGAINST (its lens, bar, skill version and principal), so the
    store asks that the run is one the CALLER holds — REC-152's `runPrincipalGate`, fed by REC-152's ONE `principal`
@@ -1436,7 +1537,7 @@ const RUN_VERB_ACTIONS = frozenList(["airunopen", "airuntick", "airunclose"]);
    second stamp condition beside it. Rule 1's TARGET does not reach it (a request names an address, not a question). */
 /* REC-147 JOINS: a candidate names a run, is read against it, and takes the same principal stamp. */
 /* N345 (contradiction R37) JOINS: a recommendation names a run and is compared with its principal, as a candidate is. */
-const RUN_PRODUCTION_ACTIONS = frozenList(["suggest", "extractpropose", "capturerequest", "contradictionpropose", "contradictionrecommend"]);
+const RUN_PRODUCTION_ACTIONS = listed(["suggest", "extractpropose", "capturerequest", "contradictionpropose", "contradictionrecommend"]);
 /* REC-134 / C-56: the acts that change a project and read the POSITIONAL `identity` stamp for
    the store's `#projectAuthority` check (SIGHT IS NOT AUTHORITY, Membership v2 §7). `op=promote`
    carries the same stamp in its body as `actorIdentity`. The stamp site says why. */
@@ -1444,7 +1545,7 @@ const RUN_PRODUCTION_ACTIONS = frozenList(["suggest", "extractpropose", "capture
 /* D-722 (T5-11, connections R27) adds `linkproject`: edges it hangs on a PROJECT's source bundle are that project's,
    so it is cite's position. Its handler stamps the identity itself (it returns above the stamp site); listed here so the
    set of positional acts is read in one place. */
-const POSITIONAL_ACTS = frozenList(["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude",
+const POSITIONAL_ACTS = listed(["cite", "sever", "reinstate", "versioncurrent", "proposedispose", "biasadopt", "conclude",
                          "withdrawconclusion", "linkproject"]);
 /* PL-12 / D-84: the bias object's ONE write. `op=biasmanifest` and
    `op=biasinhale` are not here for the reason restated on AI_RUN_ACTIONS above —
@@ -1459,7 +1560,7 @@ const POSITIONAL_ACTS = frozenList(["cite", "sever", "reinstate", "versioncurren
    control over two different things. It is in BOTH lists because an
    administrator is a member too, and because the doctrine puts instance bias
    with the admins and project bias with the project managers, who are members. */
-const BIAS_ACTIONS = frozenList(["biasadopt"]);
+const BIAS_ACTIONS = listed(["biasadopt"]);
 /* REC-207 (BOB #32, 2026-09-23 23:42Z): SETTLING A BIAS-DEBT OBLIGATION, which is a MEMBER's act through
    their session and nothing else. `op=biasdebt` is not here for the reason restated on BIAS_ACTIONS above —
    SESSION_OPS gates MUTATING ops alone — and this array is the third place the resolve's member-only nature
@@ -1470,63 +1571,63 @@ const BIAS_ACTIONS = frozenList(["biasadopt"]);
    WITHOUT THIS LINE THE DOOR DOES NOT EXIST FOR A PERSON — measured on this item's first suite run, where a
    signed-in member's resolve was answered SESSION_ROUTE_NOT_RECORDED, D-270's honest "no session reaches
    this and no decision says why". It is in BOTH lists because an administrator is a member too. */
-const BIAS_DEBT_ACTIONS = frozenList(["biasdebtresolve"]);
+const BIAS_DEBT_ACTIONS = listed(["biasdebtresolve"]);
 /* T6-13 (intent R2, R8–R11, R16, R18): INTENT's ten acts, as ONE array for the reason every array here is one — they
    share a stamp (`author`, in the body), a capability (`contribute`) and both session sets, and a list written out in
    four places is the drift that made DISPOSITIONS one array. Its own array and not STATE_ACTIONS: they move no bundle
    state through the selection path and would inherit an `owner` stamp and a viewer-gated set shape they do not have. */
-const INTENT_ACTIONS = frozenList(["objectivecondition", "goaldeclare", "goallink", "goalclose", "aspirationdeclare",
+const INTENT_ACTIONS = listed(["objectivecondition", "goaldeclare", "goallink", "goalclose", "aspirationdeclare",
                         "aspirationdepart", "aspirationdeadend", "aspirationretire", "triage", "workobjective"]);
 /* T6-13 (intent R3–R6, R12–R15): its seven reads, every one stamped with the viewer (intent R23). */
-const INTENT_READS = frozenList(["objectiveprogress", "objectivegaps", "goal", "aspirations", "aspirationcontacts", "pursuit",
+const INTENT_READS = listed(["objectiveprogress", "objectivegaps", "goal", "aspirations", "aspirationcontacts", "pursuit",
                       "intentproposals"]);
 /* T6-13 (reevaluation R15, R16): a member's three acts on a reference they hold, stamped `author` in the query, where
    reevaluation reads it after the body. */
-const REEVALUATION_ACTIONS = frozenList(["versionadopt", "versionkeep", "reevaluationrecord"]);
+const REEVALUATION_ACTIONS = listed(["versionadopt", "versionkeep", "reevaluationrecord"]);
 /* T8 (layer 9, K248, K250): the action layer's acts and reads, one array each per module, for the reason every array
    here is one — they share a stamp, a capability and both session sets. `STANDARDS_ACTIONS` take their stamp in the BODY
    (`author`, or `proposer` for the proposal), where standards reads it; the others read `author` from the QUERY, after
    the body. Every read is stamped with the viewer. */
-const STANDARDS_ACTIONS = frozenList(["standarddeclare", "standardpropose", "standardadopt"]);
-const STANDARDS_READS = frozenList(["standard", "standards", "standardinforce"]);
-const CONFORMANCE_ACTIONS = frozenList(["determine", "comparisonpropose"]);
-const CONFORMANCE_READS = frozenList(["determination", "determinations", "comparison", "comparisonfacts"]);
-const CONSEQUENCES_ACTIONS = frozenList(["consequencerecord", "consequencerevise", "addressedrecord"]);
-const CONSEQUENCES_READS = frozenList(["consequence", "consequencesof", "addressed"]);
+const STANDARDS_ACTIONS = listed(["standarddeclare", "standardpropose", "standardadopt"]);
+const STANDARDS_READS = listed(["standard", "standards", "standardinforce"]);
+const CONFORMANCE_ACTIONS = listed(["determine", "comparisonpropose"]);
+const CONFORMANCE_READS = listed(["determination", "determinations", "comparison", "comparisonfacts"]);
+const CONSEQUENCES_ACTIONS = listed(["consequencerecord", "consequencerevise", "addressedrecord"]);
+const CONSEQUENCES_READS = listed(["consequence", "consequencesof", "addressed"]);
 /* T18 (N-A12, K705): filings' communication (R23) and template (R26) acts read `author` from the query as its other
    acts do (the communication's preparer is that stamp), and the template read is viewer-stamped. */
-const FILINGS_ACTIONS = frozenList(["filingprepare", "filingapprove", "filingsent", "counselpacket", "counselpacketexport",
+const FILINGS_ACTIONS = listed(["filingprepare", "filingapprove", "filingsent", "counselpacket", "counselpacketexport",
                          "theorypropose", "communicationprepare", "templatesave"]);
-const FILINGS_READS = frozenList(["counselpacketread", "filingsfor", "availableactions"]);
+const FILINGS_READS = listed(["counselpacketread", "filingsfor", "availableactions"]);
 /* T21 (K921, K927): the template library's member acts (filing-templates R3, R4, R7, R8, R10, R11), one array for the
    reason every array here is one. filing-templates reads `author` from the QUERY for each (as its `by` where its R says
    `by`), so the array joins `QUERY_AUTHOR_ACTIONS` below and takes that stamp's positional identity; `viewer` beside it.
    The library's list moved here from `FILINGS_READS` with its owner (filing-templates R14). */
-const FILING_TEMPLATES_ACTIONS = frozenList(["templatedraft", "templaterevise", "templatesubmit", "templatereviewgrant",
+const FILING_TEMPLATES_ACTIONS = listed(["templatedraft", "templaterevise", "templatesubmit", "templatereviewgrant",
                                   "templategrantrevoke", "templateapprove", "templateretire"]);
-const FILING_TEMPLATES_READS = frozenList(["templates"]);
+const FILING_TEMPLATES_READS = listed(["templates"]);
 /* filing-templates R6: a proposal is any credential's and names its PROPOSER, the label (`proposalLabel`), not an
    author; its own array, `PLAN_PROPOSAL_ACTIONS`' reason. */
-const TEMPLATE_PROPOSAL_ACTIONS = frozenList(["templatepropose"]);
+const TEMPLATE_PROPOSAL_ACTIONS = listed(["templatepropose"]);
 /* filing-templates R8, R9, R12–R14: the review grant's doors (`classes: null`). A member arrives by session and is
    stamped `author` and `viewer`; a recipient arrives by the grant's secret, which the door hashes into `secretSha`
    (control-plane R44), as `reviewcopy` and `reviewcomment` do. */
-const TEMPLATE_DOOR_ACTIONS = frozenList(["templatereview", "templatecomment"]);
-const TEMPLATE_DOOR_READS = frozenList(["templateread", "templatecomments"]);
+const TEMPLATE_DOOR_ACTIONS = listed(["templatereview", "templatecomment"]);
+const TEMPLATE_DOOR_READS = listed(["templateread", "templatecomments"]);
 /* control-plane R44: the acts that issue a revocable door to a named outsider. The door mints the secret, stamps only
    its SHA-256 as `secretSha` (a caller's copy overwritten) and hands the secret back once. */
-const GRANT_SECRET_ACTIONS = frozenList(["reviewgrant", "templatereviewgrant"]);
+const GRANT_SECRET_ACTIONS = listed(["reviewgrant", "templatereviewgrant"]);
 /* T21 (K921; local-facts R1, R2, R4): the member's act on a profile fact, stamped `by` (local-facts reads it from the
    body, so the door overwrites a caller's copy there), and the two reads, viewer-stamped. */
-const LOCAL_FACTS_ACTIONS = frozenList(["factconfirm"]);
-const LOCAL_FACTS_READS = frozenList(["factstatus", "factsdue"]);
+const LOCAL_FACTS_ACTIONS = listed(["factconfirm"]);
+const LOCAL_FACTS_READS = listed(["factstatus", "factsdue"]);
 /* T22 (K1019, J3; escalation R27, R28; R9): `declinetoescalate` joins escalation's acts, `escalationopen`'s place, so its
    `author` is query-stamped and its `viewer` stamped; `escalationstatus` joins the reads, `escalationsdue`'s place. */
-const ESCALATION_ACTIONS = frozenList(["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance",
+const ESCALATION_ACTIONS = listed(["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance",
                             "escalationdecline", "escalationend", "escalationsuspend", "escalationresume",
                             "declinetoescalate"]);
 /* T23 (N485: K1025; escalation R29; R10): `escalationreasondraft` joins the reads, `escalationstatus`' place, viewer-stamped. */
-const ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalationstatus", "escalationreasondraft"]);
+const ESCALATION_READS = listed(["escalation", "escalationsdue", "escalationstatus", "escalationreasondraft"]);
 /* T18 (N-A12, K704, K709, K711): the action layer's new modules, one array each, for the reason every array here is
    one. Each act reads `author` from the QUERY after the body and asks membership of it (a joined member's act, or the
    member whose reminder it is), so each joins `QUERY_AUTHOR_ACTIONS` and takes that stamp's positional identity; every
@@ -1534,63 +1635,63 @@ const ESCALATION_READS = frozenList(["escalation", "escalationsdue", "escalation
    whose stamp is a different expression. T20 (K902; actions R52): `actionhold` joins them, its author query-stamped.
    T27 (N518; actions R56–R58; R12): `actionholdrelease` joins them beside `actionhold`, and the release's preview and the
    held-project read join the reads, viewer-stamped. */
-const ACTIONS_ACTIONS = frozenList(["actioncreate", "actionpressure", "actionhold", "actionholdrelease"]);
-const ACTIONS_READS = frozenList(["action", "actions", "actionholdpreview", "projectholds"]);
-const ACTION_CLOCKS_ACTIONS = frozenList(["reminderset", "reminderanswer"]);
-const ACTION_PLANS_ACTIONS = frozenList(["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise",
+const ACTIONS_ACTIONS = listed(["actioncreate", "actionpressure", "actionhold", "actionholdrelease"]);
+const ACTIONS_READS = listed(["action", "actions", "actionholdpreview", "projectholds"]);
+const ACTION_CLOCKS_ACTIONS = listed(["reminderset", "reminderanswer"]);
+const ACTION_PLANS_ACTIONS = listed(["planopen", "plansubjectadd", "plansubjectremove", "optionadd", "optionrevise",
                               "optionadopt", "optiondispose", "scenarioset", "checkpointrecord", "optionstart",
                               "planclose"]);
-const ACTION_PLANS_READS = frozenList(["plan", "plans", "planproposals"]);
+const ACTION_PLANS_READS = listed(["plan", "plans", "planproposals"]);
 /* T24 (N490, DEC-115; action-plans R37; R11): the start preview, a read that answers what `optionstart` would do. It
    reads `author` from the QUERY after the body, as `optionstart` does, and must be asked as the very caller the start
    would be (the same positional identity, so the same fences answer), so it joins `QUERY_AUTHOR_ACTIONS` below and,
    through it, the action layer's viewer stamp. Its own array because it writes nothing: it is no act. */
-const ACTION_PLANS_PREVIEWS = frozenList(["optionstartpreview"]);
+const ACTION_PLANS_PREVIEWS = listed(["optionstartpreview"]);
 /* action-plans R11, R31: a proposal is any credential's, and it names its PROPOSER, which action-plans reads from the
    query (`proposer`, not `author`) both as the proposal's label and as the caller its planning run's principal is
    compared with; viewer-stamped beside it. Its own array because its stamp is not the acts' `author`. */
-const PLAN_PROPOSAL_ACTIONS = frozenList(["optionpropose"]);
+const PLAN_PROPOSAL_ACTIONS = listed(["optionpropose"]);
 /* N345 (contradiction R30–R36, R51, R53): the six member acts on a candidate, one array for the reason every array here is
    one — they share a stamp (`author`, the POSITIONAL identity, read from the query after the body, the expression the
    action layer's acts take below, because contradiction hands it to promotion as `actorIdentity` and asks membership of
    it), a capability and both session sets. The five reads beside them are viewer-stamped. */
-const CONTRADICTION_ACTIONS = frozenList(["contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve",
+const CONTRADICTION_ACTIONS = listed(["contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve",
                                "contradictionoptin", "contradictionrespond"]);
-const CONTRADICTION_READS = frozenList(["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
+const CONTRADICTION_READS = listed(["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
                              "contradictionresponses"]);
 /* T22 (K1019; monitoring R52; R9): an address's own frequency, a source owner's act; monitoring reads `author` (bare or
    positional) and `viewer` from the query, so it joins `QUERY_AUTHOR_ACTIONS` below, and with it the action layer's
    viewer stamp. Its own array, one per module, for the reason every array here is one. */
-const MONITORING_ACTIONS = frozenList(["addressfrequencyset"]);
+const MONITORING_ACTIONS = listed(["addressfrequencyset"]);
 /* T23 (K1094; R10), link-sweep's since T24 (its R9; N506): the sweeps read, viewer-stamped (link-sweep's ops map reads
    `viewer` from the query); it joins `ACTION_LAYER_READS` below as monitoring's act joins the action layer's acts, so the
    same stamp reaches it. Its own array, its owner's, for the reason every array here is one. */
-const LINK_SWEEP_READS = frozenList(["sweeps"]);
+const LINK_SWEEP_READS = listed(["sweeps"]);
 /* T23 (N485: K1025, K1035; case-authoring R39; R10): a draft of what changed names its PROPOSER (the label,
    `proposalLabel`), `TEMPLATE_PROPOSAL_ACTIONS`' kind of stamp, under the name case-authoring reads it as, `proposedBy`
    (its ops map takes it from the query's `author`); `viewer` beside it. The drafts' read is viewer-stamped. Their own
    arrays, one per module, for the reason every array here is one. */
-const WHAT_CHANGED_PROPOSAL_ACTIONS = frozenList(["whatchangedpropose"]);
-const WHAT_CHANGED_READS = frozenList(["whatchangeddrafts"]);
+const WHAT_CHANGED_PROPOSAL_ACTIONS = listed(["whatchangedpropose"]);
+const WHAT_CHANGED_READS = listed(["whatchangeddrafts"]);
 /* T23 (DEC-111, K1100; network-notices R1, R2, R4, R5, R22, R23; R10): the notice's one act and its three reads, each
    viewer-stamped (network-notices asks the project's sight of it); `NETWORK_NOTICES_BY` names the two an owner performs
    in their own name, prepare and post, `by` stamped (network-notices reads `by` from the query, else `author`). The
    public reads network-notices registers with public-read (its R10, R20, R21) stamp nothing. */
-const NETWORK_NOTICES_ACTIONS = frozenList(["noticepost"]);
-const NETWORK_NOTICES_READS = frozenList(["noticeprepare", "notices", "directorysubmission"]);
-const NETWORK_NOTICES_BY = frozenList(["noticeprepare", "noticepost"]);
-const NETWORK_NOTICES_PUBLIC_READS = frozenList(["activitymethod", "noticespublic", "groupkeyspublic"]);
+const NETWORK_NOTICES_ACTIONS = listed(["noticepost"]);
+const NETWORK_NOTICES_READS = listed(["noticeprepare", "notices", "directorysubmission"]);
+const NETWORK_NOTICES_BY = listed(["noticeprepare", "noticepost"]);
+const NETWORK_NOTICES_PUBLIC_READS = listed(["activitymethod", "noticespublic", "groupkeyspublic"]);
 /* T27 (N520; DEC-116, DEC-100; docket R1–R8, R12, R14, R15; R13): the docket's four acts and three reads, each
    viewer-stamped (docket asks the case's project's sight of it; its map reads `viewer` from the query); `DOCKET_AUTHOR`
    names the two any joined member performs, filing and marking a threat, `author` stamped; `DOCKET_BY` the three only the
    manager performs in their own name, preparing, posting and declining, `by` stamped (docket's map reads each from the
    query, `by` else `author`). The public shelves and the feed (public-read R21) stamp nothing. One array per stamp, the
    network notices' shape. */
-const DOCKET_ACTIONS = frozenList(["docketfile", "docketpressure", "docketdecline", "docketpost"]);
-const DOCKET_READS = frozenList(["docket", "docketprepare", "docketinvitation"]);
-const DOCKET_AUTHOR = frozenList(["docketfile", "docketpressure"]);
-const DOCKET_BY = frozenList(["docketprepare", "docketdecline", "docketpost"]);
-const DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
+const DOCKET_ACTIONS = listed(["docketfile", "docketpressure", "docketdecline", "docketpost"]);
+const DOCKET_READS = listed(["docket", "docketprepare", "docketinvitation"]);
+const DOCKET_AUTHOR = listed(["docketfile", "docketpressure"]);
+const DOCKET_BY = listed(["docketprepare", "docketdecline", "docketpost"]);
+const DOCKET_PUBLIC_READS = listed(["docketpublic", "docketfeed"]);
 /* T28 (N520, N522; case-import R1–R8; R14): case-import's six acts and two reads, each viewer-stamped (case-import asks
    whether the viewer is an active member; an unstamped read is answered as if no import exists); `CASE_IMPORT_BY` names
    the six a member performs in their own name, `by` stamped (case-import's map reads `by` from the query, else
@@ -1598,12 +1699,12 @@ const DOCKET_PUBLIC_READS = frozenList(["docketpublic", "docketfeed"]);
    (case-authoring R52, R53) is a body field the handler reads as given, as `tensionsDisclosed` is, never a stamp.
    case-checker's two public reads (its R15) stamp nothing. */
 /* T31 (N534; case-import R17; R16): the watch and its lifting join the acts, `by` and `viewer` stamped as the rest. */
-const CASE_IMPORT_ACTIONS = frozenList(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
+const CASE_IMPORT_ACTIONS = listed(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
                                         "importflag", "importflagclear", "importwatch", "importunwatch"]);
-const CASE_IMPORT_READS = frozenList(["importedcases", "importedcase"]);
-const CASE_IMPORT_BY = frozenList(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
+const CASE_IMPORT_READS = listed(["importedcases", "importedcase"]);
+const CASE_IMPORT_BY = listed(["caseimport", "caseimportdocument", "importaccept", "importacceptwithdraw",
                                    "importflag", "importflagclear", "importwatch", "importunwatch"]);
-const CASE_CHECKER_PUBLIC_READS = frozenList(["casechecker", "casefilespec"]);
+const CASE_CHECKER_PUBLIC_READS = listed(["casechecker", "casefilespec"]);
 /* T31 (N528; wizard-scripts R3–R16; R15): one array per stamp, the docket's shape. `WIZARD_SCRIPTS_ACTIONS` are the
    viewer-stamped acts (wizard-scripts asks the viewer's sight of a script); `WIZARD_SCRIPTS_AUTHOR` names the three an
    author performs, `author` stamped (its R3, R4, R6); `WIZARD_SCRIPTS_BY` the four an approver or administrator performs
@@ -1611,26 +1712,26 @@ const CASE_CHECKER_PUBLIC_READS = frozenList(["casechecker", "casefilespec"]);
    label (`proposalLabel`), `TEMPLATE_PROPOSAL_ACTIONS`' kind of stamp, with `viewer`. `WIZARD_PROGRESS_ACTIONS` stamps
    NOTHING: the tally keeps no member, viewer or identity (its R15; control-plane R50), so the door passes none. The five
    reads are viewer-stamped; the check (its R12) is pure over the registration and stamps nothing. */
-const WIZARD_SCRIPTS_ACTIONS = frozenList(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
+const WIZARD_SCRIPTS_ACTIONS = listed(["wizarddraft", "wizardrevise", "wizardsubmit", "wizardapprove", "wizardretire",
                                            "wizardpropose"]);
-const WIZARD_SCRIPTS_AUTHOR = frozenList(["wizarddraft", "wizardrevise", "wizardsubmit"]);
-const WIZARD_SCRIPTS_BY = frozenList(["wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
-const WIZARD_PROPOSAL_ACTIONS = frozenList(["wizardpropose"]);
-const WIZARD_PROGRESS_ACTIONS = frozenList(["wizardprogress"]);
-const WIZARD_SCRIPTS_READS = frozenList(["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates"]);
-const WIZARD_CHECK_READS = frozenList(["wizardcheck"]);
+const WIZARD_SCRIPTS_AUTHOR = listed(["wizarddraft", "wizardrevise", "wizardsubmit"]);
+const WIZARD_SCRIPTS_BY = listed(["wizardapprove", "wizardretire", "wizardeditorgrant", "wizardeditorrevoke"]);
+const WIZARD_PROPOSAL_ACTIONS = listed(["wizardpropose"]);
+const WIZARD_PROGRESS_ACTIONS = listed(["wizardprogress"]);
+const WIZARD_SCRIPTS_READS = listed(["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates"]);
+const WIZARD_CHECK_READS = listed(["wizardcheck"]);
 /* The modules whose acts read `author` from the query: the four of T8, T18's three, T21's filing-templates and T22's
    monitoring act; and T24's start preview, the one read among them, stamped as the start it previews (R11). */
-const QUERY_AUTHOR_ACTIONS = frozenList([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
+const QUERY_AUTHOR_ACTIONS = listed([...CONFORMANCE_ACTIONS, ...CONSEQUENCES_ACTIONS, ...FILINGS_ACTIONS, ...ESCALATION_ACTIONS,
                               ...ACTIONS_ACTIONS, ...ACTION_CLOCKS_ACTIONS, ...ACTION_PLANS_ACTIONS, ...FILING_TEMPLATES_ACTIONS,
                               ...MONITORING_ACTIONS, ...ACTION_PLANS_PREVIEWS]);
 /* The action layer's acts and reads, each viewer-stamped (fail closed); T22's monitoring act rides in through
    `QUERY_AUTHOR_ACTIONS`, viewer-stamped as they are. T21 adds the template proposal and the fact
    confirmation, whose stamps are their own (`proposer`, `by`), and the two modules' reads. The grant's doors are not
    here: a recipient arrives with no session, so no viewer. */
-const ACTION_LAYER_ACTIONS = frozenList([...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS, ...PLAN_PROPOSAL_ACTIONS,
+const ACTION_LAYER_ACTIONS = listed([...STANDARDS_ACTIONS, ...QUERY_AUTHOR_ACTIONS, ...PLAN_PROPOSAL_ACTIONS,
                               ...TEMPLATE_PROPOSAL_ACTIONS, ...LOCAL_FACTS_ACTIONS]);
-const ACTION_LAYER_READS = frozenList([...STANDARDS_READS, ...CONFORMANCE_READS, ...CONSEQUENCES_READS, ...FILINGS_READS,
+const ACTION_LAYER_READS = listed([...STANDARDS_READS, ...CONFORMANCE_READS, ...CONSEQUENCES_READS, ...FILINGS_READS,
                             ...ESCALATION_READS, ...ACTIONS_READS, ...ACTION_PLANS_READS, ...FILING_TEMPLATES_READS,
                             ...LOCAL_FACTS_READS, ...LINK_SWEEP_READS]);
 /* K660 (agent-worker R51, R53; K683): WHAT A PLAN-MODE RUN'S AGENT CREDENTIAL IS SCOPED TO. An agent credential is
@@ -1640,9 +1741,9 @@ const ACTION_LAYER_READS = frozenList([...STANDARDS_READS, ...CONFORMANCE_READS,
    one production, `optionpropose`, with the run's own tick and close. Every op here admits `member` and carries no
    `machineClasses`, which is what makes it reachable by such a credential at all. */
 const PLAN_RUN_SCOPE = Object.freeze({
-  reads: frozenList(["plan", "plans", "determination", "standard", "consequencesof", "availableactions",
+  reads: listed(["plan", "plans", "determination", "standard", "consequencesof", "availableactions",
                      "publishededitions", "profiles"]),
-  writes: frozenList(["optionpropose", "airuntick", "airunclose"]),
+  writes: listed(["optionpropose", "airuntick", "airunclose"]),
 });
 /* CONSTRUCTS Step 4, SLICE B (FW-7): the RECOGNISER actions. A member RESOLVES a
    captured document's references to registry entities (resolve), TESTIFIES a grade-D
@@ -1652,7 +1753,7 @@ const PLAN_RUN_SCOPE = Object.freeze({
    resolving member below, like the registry writes: who resolved or testified is part
    of the record. The reads take no viewer stamp — they key on a capture sha and an
    entity id, not on the corpus view. */
-const RECOGNISER_ACTIONS = frozenList(["resolve", "resolvetestify", "resolutions", "concerns"]);
+const RECOGNISER_ACTIONS = listed(["resolve", "resolvetestify", "resolutions", "concerns"]);
 /* CONSTRUCTS Step 5, SLICE A (FW-8): CONNECTIONS AS DATA and the PROGRESSION DEFINITION
    as data. A member DERIVES the connections among the documents concerning an entity
    (connect) and READS them (connections), and AUTHORS a progression definition
@@ -1690,15 +1791,15 @@ const RECOGNISER_ACTIONS = frozenList(["resolve", "resolvetestify", "resolutions
    things the ruling carries with it, are at the FW-6 stamp site in the request path; it is not
    restated here, because a ruling copied into two files is a ruling that will disagree with
    itself. `proposedispose` is the EXCEPTION and is NOT covered — see its own site. */
-const PROGRESSION_ACTIONS = frozenList(["connect", "connections", "progressiondefine", "progression",
+const PROGRESSION_ACTIONS = listed(["connect", "connections", "progressiondefine", "progression",
                              "thread", "instance", "discharge", "exceptions", "proposals",
                              "proposedispose", "captureprogressions"]);
 const SESSION_OPS = Object.freeze({
-  member: frozenSet(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
+  member: frozenSet(withAliases(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
                    /* CASE-5b: signing the CASE DOCUMENT, beside signing a finding.
                       A session op for `ratify`'s own reason — the attestation carries
                       a member's name for as long as the record lasts. */
-                   "caseratify",
+                   "caseratify", "publishat",
                    /* CPDF-10: attesting that a transcription matches the image is a
                       MEMBER act — a person's testimony, carrying their name for as
                       long as the record lasts. It is a session op before it is
@@ -1880,14 +1981,14 @@ const SESSION_OPS = Object.freeze({
                    "aicredentialmint", "aicredentialrevoke",
                    /* T33 (R17–R20): every op of every family, in BOTH sets — an enrolled administrator's session is a
                       `member` kind (D-136), and the owner or the roster decides the rest. */
-                   ...FAMILY_OPS,
+                   ...FAMILY_SESSION_OPS,
                    /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. A
                       session op before anything else, on `aicredentialmint`'s
                       reasoning: each is attributed to the person who performed it,
                       and the store refuses every machine shape by name. */
-                   "casedraft", "reviewgrant", "reviewrevoke"]),
-  admin:  frozenSet(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
-                   "caseratify",
+                   "casedraft", "reviewgrant", "reviewrevoke"])),
+  admin:  frozenSet(withAliases(["promote", "lease", "allocid", "capture", "acquire", "attest", "monitor", "ratify",
+                   "caseratify", "publishat",
                    "attesttext",
                    "contentmint",
                    /* SK-8: the READ half of the EXTRACT role. `extractpropose` is
@@ -1950,8 +2051,8 @@ const SESSION_OPS = Object.freeze({
                    "monitorpause",
                    "profilesset",
                    "aicredentialmint", "aicredentialrevoke",
-                   ...FAMILY_OPS,
-                   "casedraft", "reviewgrant", "reviewrevoke"]),
+                   ...FAMILY_SESSION_OPS,
+                   "casedraft", "reviewgrant", "reviewrevoke"])),
 });
 
 /* ---- capabilities at the op layer. Membership Architecture v2 section 5 ----
@@ -1976,7 +2077,7 @@ const SESSION_OPS = Object.freeze({
  * in either direction. Standing lesson 2: a later addition must not pass by not
  * being mentioned.
  */
-const NEEDS = Object.freeze({
+const NEEDS = Object.freeze(aliasRows({
   /* contribute: create and revise bundles in the working corpus (5). */
   promote:          "contribute",
   lease:            "contribute",
@@ -2334,6 +2435,8 @@ const NEEDS = Object.freeze({
      finding — it is the act that commits what the group is publishing, one
      altitude up. A member who may not publish may not sign a case either. */
   caseratify:       "publish",
+  /* T34 (R25): setting a publish time is the ceremony's last act, `caseratify`'s surface. */
+  publishat:        "publish",
   /* REC-14: authoring a case carries the SAME capability as ratifying one, and
      deliberately not `contribute`. Concluding says what the record shows;
      publishing puts the group's name on it and states, in the group's voice,
@@ -2839,7 +2942,7 @@ const NEEDS = Object.freeze({
      stale (its R12), K516's precedent. */
   exportpage:            null,
   moneydetectorsrun:     null,
-});
+}));
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
    op=affordances answer for the same subject are identical by construction and not by agreement. N177 (T8): the
@@ -2911,10 +3014,11 @@ const UNATTENDED_BY_DECISION = Object.freeze({
   moneydetectorsrun: "build/requirements/money-checks.md R6 (K1566): the machine's detectors run as a bounded sweep "
                    + "runDetectors({budgetMs, cursor}) that the scheduler fires; no member starts it.",
   askusage: "build/rulings.md K1601 (AGENT-WORKER #9 J1 (3), (4)): under an ai grant the control plane admits, outside "
-          + "AI_GRANT_OPS, op=askusage (POST {mode:\"ask\", model, usage} per call), with the grant's member as viewer.",
+          + "AI_GRANT_OPS, op=askusage (POST {mode:\"ask\", model, usage} per call; "
+          + "`calls` beside `usage` since K1798, K1805, so an ask of N calls counts N), with the grant's member as viewer.",
   reproject: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed "
            + "because a deploy runs the bounded pass once at construction and a large store may need more than "
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, OP_KINDS, OP_FAMILIES, FAMILY_OPS, ASK_GRANT_OPS, OP_STAMPS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, OP_KINDS, OP_FAMILIES, FAMILY_OPS, FAMILY_SESSION_OPS, OP_ALIASES, ASK_GRANT_OPS, OP_STAMPS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };

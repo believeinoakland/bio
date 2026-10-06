@@ -1,10 +1,10 @@
-/* The page at the root and its intake, end to end through the real Worker (Miniflare over `src/plane/index.mjs`, plane
-   R6's entry): the bytes served at `/` (R20), the one reader of the group behind them (R1, R3, R4), the tier chooser
-   (R24, R32) and the question's intake (R24) written through the plane and read back, and the record browser the page
-   keeps working (K102, ruling 4). Converts instance-setup's shares of `bio-plane/test/group-public.test.mjs` (P1–P7,
-   G1, G3–G6), `risk-tier.test.mjs` (sections 5 and 6), `inquiry.test.mjs` (section 5) and `browse.test.mjs` (the page's
-   sections and its pure functions); the per-credential projections of op=instancegroup are admission's share, and the
-   source reads of those suites are dropped (P7). */
+/* The page end to end against the real Worker (Miniflare over `src/plane/index.mjs`, plane R6's entry): this module's
+   page, `pageOf` over the plane's own public read of its group, its script run with the real plane behind its fetch, and
+   the bytes the Worker serves at `/` (composed by instance-setup from this page, K1851; until instance-setup's T34-57
+   the served copy is instance-setup's, so the served arms read only what both copies share: the line's state and slug).
+   The group line (R1), the tier chooser (R5, R7), the question's intake (R5) written through the plane and read back,
+   the profiles (R13) and the record browser the page keeps working (K102). Copied from instance-setup's suite (seam read
+   §5), re-labelled to this module's ids; its arms on instance-setup's own reader of the group stay there. */
 import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -14,11 +14,13 @@ import { createHash } from "node:crypto";
 import { Miniflare } from "miniflare";
 import { pageOver } from "./fixture.mjs";
 import { deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
+import { pageOf, PAGE_HTML } from "../../../src/setup-page/index.mjs";
+import { list as heldProfiles } from "../../../../jurisdictions/index.mjs";
 import { RISK_TIERS, riskTierState } from "../../../src/action-grammar/index.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const sha = (v) => createHash("sha256").update(v).digest("hex");
-const ADM = "adm-instance-setup-page", MEM = "mem-instance-setup-page", PRB = "prb-instance-setup-page";
+const ADM = "adm-setup-page-0123456789", MEM = "mem-setup-page-0123456789", PRB = "prb-setup-page-0123456789";
 const FIRST = "river-town", SECOND = "harbor-watch", LATE = "late-town";
 const NOW = "2026-07-01T00:00:00Z", LATER = "2026-07-02T00:00:00Z";
 
@@ -68,7 +70,7 @@ after(async () => { for (const mf of live) await mf.dispose(); });
 const planeAt = async ({ name = FIRST, failing = false } = {}) => {
   const mf = new Miniflare({
     modules: true, modulesRoot: "/",
-    ...(failing ? { scriptPath: join(dirname(SRC), "..", "instance-setup-failing-store.mjs"), script: FAILING }
+    ...(failing ? { scriptPath: join(dirname(SRC), "..", "setup-page-failing-store.mjs"), script: FAILING }
                 : { scriptPath: SRC, script: readFileSync(SRC, "utf8") }),
     compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
     durableObjects: { STORE: { className: failing ? "FailingStore" : "Store", useSQLite: true } },
@@ -110,30 +112,37 @@ const until = async (cond, what) => {
   for (let i = 0; i < 500; i++) { if (cond()) return; await new Promise((r) => setTimeout(r, 10)); }
   assert.fail(`the page never reached: ${what}`);
 };
-const pageOn = async (mf, { hash = "", sent = [] } = {}) => pageOver({ html: (await served(mf)).body, hash,
+/* This module's page over the plane's own public read of its group (op=instancegroup), as instance-setup's `setupPage`
+   hands `pageOf` a read. */
+const readOf = async (mf) => { const r = await api(mf, "op=instancegroup"); return { answered: r.j && r.j.ok === true, result: r.j && r.j.result }; };
+const pageOn = async (mf, { hash = "", sent = [] } = {}) => pageOver({ html: pageOf(await readOf(mf)), hash,
   fetch: async (url, init) => {
     const u = new URL(url, "https://copy.example");
     sent.push({ op: u.searchParams.get("op"), body: init && init.body ? JSON.parse(init.body) : null });
     return mf.dispatchFetch(u.href, init);
   } });
-/* The founder claims the copy on the page and is signed in, as R21 and R22 drive it. */
+/* The founder claims on the page and is signed in, as R2 and R3 drive it, then goes on from the claim's choices
+   (R15–R18, each left unanswered) to the panel. */
 const founderPage = async (mf, sent = []) => {
   const p = await pageOn(mf, { hash: `#boot=${ADM}`, sent });
   await until(() => p.el("#boot").value === ADM, "the claim form");
   p.el("#pw1").value = "the-founders-password"; p.el("#pw2").value = "the-founders-password";
   await p.el("#do-claim").fire();
-  await until(() => p.sandbox.sessionStorage.getItem("bio-session"), "the signed-in panel");
+  await until(() => p.sandbox.sessionStorage.getItem("bio-session"), "the signed-in claim section");
+  await p.el("#claim-on").fire();
   await until(() => p.el("#go-new").hidden === false, "the contribute capability");
   return { ...p, token: JSON.parse(p.sandbox.sessionStorage.getItem("bio-session")).t, sent };
 };
 
-/* ================================================================== R20 R1 R3 R4: the page and the one reader */
+/* ================================================================== R1: the group line over the plane's read */
 
-test("R20 R1 R3 through the Worker: signed out, the page served at / names the recorded slug in its one group line, and the public op=instancegroup answers that slug and nothing else; a second install names its own and not the first's", async () => {
+test("R1 through the Worker: signed out, this module's page over the plane's public read, and the page served at /, name the recorded slug in one group line, and the public op=instancegroup answers that slug and nothing else; a second install names its own and not the first's", async () => {
   const A = await planeAt({ name: FIRST });
   const p = await served(A);
   const g = lineOf(p.body);
   assert.deepEqual([p.status, /text\/html/.test(p.type), g.state, g.text.includes(FIRST), g.count], [200, true, "recorded", true, 1]);
+  const mine = lineOf(pageOf(await readOf(A)));
+  assert.deepEqual([mine.state, mine.text, mine.count], ["recorded", `${FIRST} · your group's Civicsmith`, 1]);
   const r = await api(A, "op=instancegroup");
   assert.deepEqual([r.status, r.j.ok, r.j.store, r.j.result], [200, true, "bio", { ok: true, group: FIRST }]);
   const s = await api(A, "op=instancegroup&store=scratch");
@@ -145,13 +154,15 @@ test("R20 R1 R3 through the Worker: signed out, the page served at / names the r
   const q = await served(B);
   const h = lineOf(q.body);
   assert.deepEqual([h.state, h.text.includes(SECOND)], ["recorded", true]);
+  assert.equal(lineOf(pageOf(await readOf(B))).text, `${SECOND} · your group's Civicsmith`);
+  assert.equal(pageOf(await readOf(B)).includes(FIRST), false);
   assert.equal(q.body.includes(FIRST), false, "the second install's served bytes, script included, name not the first's slug");
   assert.equal(p.body.includes(SECOND), false);
   assert.equal((await api(B, "op=instancegroup")).j.result.group, SECOND);
 });
 
-test("R20 the group line sits inside <main> before the first section the script switches between, and the script never addresses it, so every state of the page, signed in or out, shows it", async () => {
-  const p = (await served(await planeAt())).body;
+test("R1 the group line sits inside <main> before the first section the script switches between, and the script never addresses it, so every state of the page, signed in or out, shows it", async () => {
+  const p = pageOf(await readOf(await planeAt()));
   const at = p.indexOf('id="instance-group"'), main = p.indexOf("<main"), sec = p.indexOf("<section");
   const script = p.slice(p.lastIndexOf("<script>") + 8, p.lastIndexOf("</script>"));
   assert.ok(main > -1 && at > main && at < sec, `main ${main}, line ${at}, first section ${sec}`);
@@ -159,7 +170,7 @@ test("R20 the group line sits inside <main> before the first section the script 
   assert.doesNotMatch(script, /instance-group|eyebrow/);
 });
 
-test("R1 R3 one reader: the group the page shows, the group the public op answers and the group the plane stamps into a document it creates stating none are one value", async () => {
+test("R1 one reader: the group this module's page shows, the group the public op answers and the group the plane stamps into a document it creates stating none are one value", async () => {
   const A = await planeAt({ name: FIRST });
   const id = "INFO-2026-1631-one-reader";
   const text = infoMd(id);
@@ -173,12 +184,14 @@ test("R1 R3 one reader: the group the page shows, the group the public op answer
   assert.equal(groupOf(stored), FIRST);
   assert.equal((await api(A, "op=instancegroup")).j.result.group, FIRST);
   assert.ok(lineOf((await served(A)).body).text.includes(groupOf(stored)));
+  assert.ok(lineOf(pageOf(await readOf(A))).text.startsWith(groupOf(stored) + " "));
 });
 
-test("R20 R3 R4 a store recording no group: the page says so in words and the public op answers group null with the stated absence; once the root of trust seeds a slug, the next page served names it", async () => {
+test("R1 a store recording no group: the page says so in words and the public op answers group null with the stated absence; once the root of trust seeds a slug, the next page served names it", async () => {
   const C = await planeAt({ name: null });
   const g = lineOf((await served(C)).body);
   assert.equal(g.state, "none");
+  assert.deepEqual(lineOf(pageOf(await readOf(C))), { count: 1, state: "none", text: "No group is recorded here yet" });
   assert.match(g.text, /\b(?:no|not|none)\b/i);
   assert.match(g.text, /recorded/i);
   assert.equal(g.text.includes(FIRST), false);
@@ -189,24 +202,27 @@ test("R20 R3 R4 a store recording no group: the page says so in words and the pu
   assert.equal(rP(seed.j).ok, true, JSON.stringify(seed.j));
   const g2 = lineOf((await served(C)).body);
   assert.deepEqual([g2.state, g2.text.includes(LATE)], ["recorded", true]);
+  assert.equal(lineOf(pageOf(await readOf(C))).text, `${LATE} · your group's Civicsmith`);
 });
 
-test("R20 R3 a store that does not answer: the page is still served and its line says it could not read the group, never 'none' and never a name; the public op answers the silence as STORE_DID_NOT_ANSWER; cleared, both name the slug", async () => {
+test("R1 a store that does not answer: the page is still served and its line says it could not read the group, never 'none' and never a name; the public op answers the silence as STORE_DID_NOT_ANSWER; cleared, both name the slug", async () => {
   const D = await planeAt({ name: FIRST, failing: true });
   const armed = await (await D.dispatchFetch("https://copy.example/__failpaths?paths=instancegrouppublic,groupidentitypublic")).json();
   assert.deepEqual(armed.result.failing, ["instancegrouppublic", "groupidentitypublic"]);
   const p = await served(D);
   const g = lineOf(p.body);
   assert.deepEqual([p.status, g.state, /recorded/i.test(g.text), p.body.includes(FIRST)], [200, "unread", false, false]);
+  const unread = pageOf(await readOf(D));
+  assert.deepEqual([lineOf(unread).state, lineOf(unread).text, unread.includes(FIRST)], ["unread", "Which group this is could not be read just now", false]);
   const r = await api(D, "op=instancegroup");
   assert.deepEqual([r.status, r.j.reason, "result" in r.j && r.j.result !== undefined], [502, "STORE_DID_NOT_ANSWER", false]);
   await D.dispatchFetch("https://copy.example/__failpaths?paths=");
   assert.deepEqual([lineOf((await served(D)).body).state, (await api(D, "op=instancegroup")).j.result.group], ["recorded", FIRST]);
 });
 
-/* ================================================================== R24 R32: the tier chooser, through the plane */
+/* ================================================================== R5 R7: the tier chooser, through the plane */
 
-test("R32 R24 the tier chooser as a member first meets it: one radio per settable tier in the vocabulary's order, each labelled with the plane's sentence, none checked; with nothing chosen the page reports no choice and states the undetermined sentence", async () => {
+test("R7 R5 the tier chooser as a member first meets it: one radio per settable tier in the vocabulary's order, each labelled with the plane's sentence, none checked; with nothing chosen the page reports no choice and states the undetermined sentence", async () => {
   const mf = await planeAt();
   const p = await founderPage(mf);
   const html = p.el("#n-risk-choices").innerHTML;
@@ -219,7 +235,7 @@ test("R32 R24 the tier chooser as a member first meets it: one radio per settabl
   assert.ok(p.el("#n-risk-unset").textContent.includes(RISK_TIERS.undetermined));
 });
 
-test("R24 R32 driven through the form and the real plane: an action saved with tier 1, 2 or 3 chosen reads that tier and the plane's words through op=projection, its bytes stating it; saved with none chosen it reads undetermined, the bytes saying so and no tier 1", async () => {
+test("R5 R7 driven through the form and the real plane: an action saved with tier 1, 2 or 3 chosen reads that tier and the plane's words through op=projection, its bytes stating it; saved with none chosen it reads undetermined, the bytes saying so and no tier 1", async () => {
   const mf = await planeAt();
   const p = await founderPage(mf);
   const save = async (title, tier) => {
@@ -255,9 +271,9 @@ test("R24 R32 driven through the form and the real plane: an action saved with t
   assert.equal(audit.tally?.["C-2.10"] ?? 0, 0);
 });
 
-/* ================================================================== R24: the question's intake */
+/* ================================================================== R5: the question's intake */
 
-test("R24 a Question through the form: no Title control, record-grammar's first state, the INQ prefix and inquiry@1; the question written under ## Question with no group line, the plane stamping its group, conformant as the record judges it, and projecting the title derived from the question", async () => {
+test("R5 a Question through the form: no Title control, record-grammar's first state, the INQ prefix and inquiry@1; the question written under ## Question with no group line, the plane stamping its group, conformant as the record judges it, and projecting the title derived from the question", async () => {
   const mf = await planeAt({ failing: true });
   const p = await founderPage(mf);
   assert.deepEqual([p.ui.FIRST_STATE.inquiry, p.ui.PREFIX.inquiry, p.ui.SCHEMA_OF.inquiry], ["open", "INQ", "inquiry@1"]);
@@ -295,8 +311,8 @@ test("R24 a Question through the form: no Title control, record-grammar's first 
 
 /* ================================================================== the record browser (K102, ruling 4) */
 
-test("K102 the record browser the page keeps working: the served page ships the browse, bundle, intake, revise, inbox, members and enrolment sections, the doors to them, and the notes that publishing needs a signature and history is append-only", async () => {
-  const page = (await served(await planeAt())).body;
+test("K102 the record browser the page keeps working: this module's page ships the browse, bundle, intake, revise, inbox, members and enrolment sections, the doors to them, and the notes that publishing needs a signature and history is append-only", async () => {
+  const page = pageOf(await readOf(await planeAt()));
   for (const id of ["s-browse", "s-bundle", "go-browse", "s-new", "s-edit", "s-inbox", "s-members", "s-enroll", "lwho"])
     assert.ok(page.includes(`id="${id}"`), id);
   for (const words of ["append-only", "Paste the signature from the signing page.", "Where a key comes from", 'href="/sign"'])
@@ -319,4 +335,57 @@ test("K102 the served script's pure functions: splitFm reads the frontmatter, md
   assert.equal(dk("  ssh-ed25519   AAAAC3Nz   lbl  ").ok, true);
   assert.match(dk("ssh-ed25519 AAAAC3Nz bio-release").why, /RELEASE key/);
   for (const bad of ["BIOKEY-RAW1.bio-ratify.abc", "here is my key", ""]) assert.equal(dk(bad).ok, false, JSON.stringify(bad));
+});
+
+/* ================================================================== R13: the profiles, through the plane */
+
+const REAL = heldProfiles().filter((p) => p.test !== true);
+const TEST = heldProfiles().filter((p) => p.test === true);
+
+test("R13 end to end through the Worker's route: the page shows the active profiles by name, offers an administrator every held non-test profile with none preselected, warns before op=profilesset and sends only on confirmation; none is allowed and said; a member sees the names and no choice", { timeout: 300000 }, async () => {
+  const mf = await planeAt();
+  const sent = [];
+  const admin = await founderPage(mf, sent);
+  await until(() => /class="pf-pick"/.test(admin.el("#pf-choices").innerHTML), "the administrator's choice");
+  assert.equal(admin.el("#pf-choose").hidden, false);
+  assert.match(admin.el("#pf-active").innerHTML, /No profile is active/);
+  const offered = [...admin.el("#pf-choices").innerHTML.matchAll(/class="pf-pick" value="([^"]*)"/g)].map((m) => m[1]);
+  assert.deepEqual(offered, REAL.map((p) => p.id));
+  for (const p of REAL) assert.ok(admin.el("#pf-choices").innerHTML.includes(p.name), p.name);
+  for (const p of TEST) assert.equal(admin.el("#pf-choices").innerHTML.includes(p.id), false, p.id);
+  assert.doesNotMatch(admin.el("#pf-choices").innerHTML, /checked/);
+  const pick = admin.sandbox.document.querySelectorAll("#pf-choices .pf-pick").find((x) => x.value === REAL[0].id);
+  pick.checked = true; await pick.fire("change");
+  admin.el("#pf-warn").hidden = true;
+  await admin.el("#pf-review").fire();
+  await until(() => admin.el("#pf-warn").hidden === false, "the warning");
+  assert.match(admin.el("#pf-warn-text").textContent, new RegExp(`${REAL[0].name}[^]*read differently from then on`));
+  assert.equal(sent.filter((c) => c.op === "profilesset").length, 0, "nothing is sent before the warning is confirmed");
+  await admin.el("#pf-confirm").fire();
+  await until(() => sent.some((c) => c.op === "profilesset") && /class="k">1\./.test(admin.el("#pf-active").innerHTML), "the change shown");
+  assert.deepEqual(sent.filter((c) => c.op === "profilesset").map((c) => c.body), [{ profiles: [REAL[0].id] }]);
+  assert.equal(admin.el("#pf-err").textContent, "");
+  assert.deepEqual(rP((await api(mf, `op=profiles&token=${admin.token}`)).j).profiles.map((p) => p.id), [REAL[0].id]);
+  /* a member, invited and enrolled, signed in on a fresh page: the names and no choice */
+  const invited = rP((await api(mf, `op=memberadd&token=${admin.token}`, { method: "POST", body: JSON.stringify({ memberId: "ada", cover: "volunteer-7" }) })).j);
+  assert.equal(invited.ok, true, JSON.stringify(invited));
+  const joined = rP((await api(mf, "op=enroll", { method: "POST", body: JSON.stringify({ invite: invited.invite, handle: "ada", password: "adas-own-password" }) })).j);
+  assert.equal(joined.ok, true, JSON.stringify(joined));
+  const member = await pageOn(mf);
+  await until(() => typeof member.el("#do-login").listeners.click !== "undefined", "the sign-in form");
+  member.el("#lwho").value = "ada"; member.el("#lpw").value = "adas-own-password";
+  await member.el("#do-login").fire();
+  await until(() => /class="k">1\./.test(member.el("#pf-active").innerHTML), "the member's view of the profiles");
+  assert.match(member.el("#pf-active").innerHTML, new RegExp(REAL[0].name));
+  assert.equal(member.el("#pf-choose").hidden, true);
+  /* choosing none: allowed, said before it is sent, and shown after */
+  pick.checked = false; await pick.fire("change");
+  admin.el("#pf-warn").hidden = true;
+  await admin.el("#pf-review").fire();
+  await until(() => admin.el("#pf-warn").hidden === false, "the warning for none");
+  assert.match(admin.el("#pf-warn-text").textContent, /You chose no profile[^]*read differently from then on/);
+  await admin.el("#pf-confirm").fire();
+  await until(() => /No profile is active/.test(admin.el("#pf-active").innerHTML), "none shown");
+  assert.deepEqual(sent.filter((c) => c.op === "profilesset").map((c) => c.body).at(-1), { profiles: [] });
+  assert.deepEqual(rP((await api(mf, `op=profiles&token=${admin.token}`)).j).profiles, []);
 });

@@ -61,7 +61,8 @@ import { biasOf, biasOps } from "../bias/index.mjs";
 import { aiRunsOf, aiRunsOps } from "../ai-runs/index.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
-import { queueOf } from "../queue/index.mjs";
+import { queueOf, Queue } from "../queue/index.mjs";
+import { queueProducersOf } from "../queue-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
@@ -84,10 +85,10 @@ import { hypothesesOf, hypothesesOps } from "../hypotheses/index.mjs";
 import { answersOf, answersOps } from "../answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
-import { PROJECTION_RELATION } from "../retrieval/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { askOnObject } from "./ask.mjs";
-import { registerReaders, rosterSource, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute } from "./wiring.mjs";
+import { registerReaders, rosterSource, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
+         ratificationWorker } from "./wiring.mjs";
 
 /* The name control-plane's promotion step (its R42) is registered under. */
 const STEP = "control-plane";
@@ -202,10 +203,10 @@ export class Store extends DurableObject {
     /* R21 (K1607): hypotheses at boot, so its leg check joins the promotion (its R5, R6) and the `hunch` owner, which
        registered at load, finds its one instance; explore is the instance above (its R6 rederives through it). */
     hypothesesOf(ctx, { explore: this.explore });
-    /* R21 (K1609; answers R7–R12, R15–R21): the owners its rule services read, the saved query's runner, the account
-       reads, the relation the saved form is checked against (retrieval's projection, K1609) and ai-runs' ceiling. */
+    /* R21 (K1609; answers R7–R12, R15–R21): the owners its rule services read, the saved query's runner (retrieval,
+       whose `relations()` and `zone()` answers reads itself, K1788, K1803), the account reads and ai-runs' ceiling. */
     answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
-      calculations, retrieval, credentials: credentialsOf(ctx), relations: () => ({ projection: PROJECTION_RELATION }),
+      calculations, retrieval, credentials: credentialsOf(ctx),
       ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }),
       /* K1690 (instance-setup R55): the copy's assistant switch, read before any model turn. */
       assistantGate: () => instanceSetupOf(ctx, env).assistantGate(),
@@ -231,10 +232,16 @@ export class Store extends DurableObject {
        registers its notice ids' mint seed and its three public reads (public-read R18), all before the first request;
        the scheduler reaches it for `working-on-seal` and `working-on-attest` (scheduler R5), with this environment. */
     networkNoticesOf(ctx, { env, attestation, docket });
+    /* ratification: its case catalogue and C-2.8's case-member arm, registered at start (its R8, R9). Built here, before
+       actions, whose factory reaches it for its hold reader (actions R69), since a factory reads its deps on its first
+       call only. K1832 (its R42): handed the Worker's reach, the environment and a stub over this object's own door, so
+       a scheduled edition's commit copies its materials (its R39) and assembles its container (its R6) in-process, as
+       `op=caseratify` does. */
+    ratificationOf(ctx, { worker: ratificationWorker({ env, door: (req) => this.fetch(req),
+                                                       namespace: () => this.#ownNamespace() || "bio" }) });
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
-    ratificationOf(ctx);   /* ratification: its case catalogue and C-2.8's case-member arm, registered at start (R8, R9) */
     strengthOf(ctx, { retrieval, acceptedWork });   /* strength: registers its pair (R17), its cache projection (R13) and, with retrieval, the cache's fields (R23) */
     /* R17 (N520, N522): case-checker, then case-import, at their places after ratification in the modules' order, built
        here once strength (with its retrieval, above) and reevaluation (with its environment) exist, since a factory reads
@@ -315,10 +322,19 @@ export class Store extends DurableObject {
        queue-producers' deps. */
     const noticeProducers = noticeProducersOf(ctx, { membership: membershipOf(ctx), people, moneyChecks: moneyChecksOf(ctx), duties,
                                                      answers: answersOf(ctx), inquiry: inquiryOf(ctx) });
-    queueOf(ctx, { env, filingTemplates, localFacts, docket, caseImport, noticeProducers }).migrate();
+    /* K1868 (2): queue-producers' one instance per storage, built here with the providers queue would hand it
+       (`Queue.PRODUCER_DEPS`), since its factory reads its deps on the first call only; handed to queue as its producers
+       and to instance-setup, whose start registers `placeArrivals` through it (instance-setup R62, queue-producers R38),
+       so neither builds it bare. */
+    const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers };
+    const queueProducers = queueProducersOf(ctx, Object.fromEntries(
+      Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
+    queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
     tasksOf(ctx, { env }).migrate();
-    /* R1: instance-setup started once per object (its `start` is idempotent on one storage). */
-    ctx.blockConcurrencyWhile(async () => instanceSetupOf(ctx, env).start());
+    /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
+       queue's producers (K1868 (2)). */
+    const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
+    ctx.blockConcurrencyWhile(async () => instanceSetup.start());
   }
 
   /* R3: record-core's `RECORD_SCHEMA` first, then each owner's `migrate()` in this order. */

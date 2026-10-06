@@ -66,7 +66,7 @@ export const STEP_ORDER = Object.freeze((() => {
 })());
 
 /** A record and its door. `go(path, method, body)` asks the door; `ctx` and `db` are the object's. */
-export async function record({ step = false, probes = {} } = {}) {
+export async function record({ step = false, probes = {}, sealSecret = null } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...a) { const st = db.prepare(q); return cursor(st.columns().length ? st.all(...a.map(bind)).map((r) => ({ ...r })) : (st.run(...a.map(bind)), [])); },
                 get databaseSize() { return 0; } };
@@ -89,6 +89,8 @@ export async function record({ step = false, probes = {} } = {}) {
   /* built in the composition root's order, each module the promotion's steps reach registering at start */
   const record = recordOf(ctx, { evidence: bucket, evidencePrefix: () => "bio/captures/" });
   const promotion = step ? promotionOf(ctx, { order: STEP_ORDER }) : promotionOf(ctx);
+  /* T34 (R57): credentials built first with a seal secret when a suite asks for one, so accounts can be held */
+  if (sealSecret) credentialsOf(ctx, { record, sealSecret });
   observationLogOf(ctx, { extraction: null, provenance: provenanceOf(ctx, { signingKey: null, instanceName: "test" }) });
   /* N512: provenance's split, each built after provenance in the module order */
   attestationOf(ctx, { record, provenance: provenanceOf(ctx), signingKey: null });

@@ -1,4 +1,4 @@
-/* R44 (N397, K573; D-605): the members and keys section's key form splits a pasted public-key line into the `keyB64`
+/* R8 (N397, K573; D-605): the members and keys section's key form splits a pasted public-key line into the `keyB64`
    and `comment` membership R25 takes. Driven at the page's interface: the served page's script in the fixture's
    sandbox, its key form filled and its register button clicked, and the body it sends handed to the REAL credentials
    module's `signerAdd` (credentials R6, was membership R25; K789), over the REAL membership roster it reads, whose key
@@ -8,7 +8,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync } from "node:crypto";
-import { setupPage } from "../../../src/setup.mjs";
+import { pageOf } from "../../../src/setup-page/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { pageOver, storage } from "./fixture.mjs";
@@ -27,7 +27,7 @@ const sshLine = (label) => {
 
 /* The real membership and credentials modules on one storage, as the plane composes them (K789): credentials
    registers its claim fact, password setter and revocation listener with membership at its start (credentials
-   R16, R17, R20). The founder claims (credentials R1), a second administrator and ruth enrol (membership R12, R16).
+   R16, R17, R1). The founder claims (credentials R1), a second administrator and ruth enrol (membership R12, R16).
    `by` is the founder's stamp, as the control plane stamps an administrator's session. Answers the credentials
    module, whose keys the page registers and lists. */
 async function roster() {
@@ -63,7 +63,7 @@ async function adminPage(m) {
     else if (op === "memberlist") out = { result: { members: [] } };
     return { ok: true, status: 200, json: async () => out };
   };
-  const p = pageOver({ html: setupPage({ answered: true, result: { ok: true, group: "river-town" } }),
+  const p = pageOver({ html: pageOf({ answered: true, result: { ok: true, group: "river-town" } }),
                        session: { t: "sess-1", e: 0, w: "admin" }, fetch });
   await settle();
   const register = async (line, who) => {
@@ -80,7 +80,7 @@ const rowOf = (m, b64) => {
   return r ? { member: r.member_id, comment: r.comment ?? null, status: r.status } : null;
 };
 
-test("R44 a whole public-key line pasted into the key form registers the key: the form sends the line's second token as keyB64 and its label as comment, and the roster reads it active under the member with its label", async () => {
+test("R8 a whole public-key line pasted into the key form registers the key: the form sends the line's second token as keyB64 and its label as comment, and the roster reads it active under the member with its label", async () => {
   const m = await roster();
   const A = sshLine("bio-ratify");
   assert.equal(A.b64.length, 68);
@@ -97,7 +97,7 @@ test("R44 a whole public-key line pasted into the key form registers the key: th
   assert.deepEqual(p.ui.signerAddBody(A.line, "ruth"), body);
 });
 
-test("R44 a line pasted with tabs, runs of spaces, a trailing newline and a many-word label, for a member named with spaces and capitals, registers too, the label's words kept joined by single spaces", async () => {
+test("R8 a line pasted with tabs, runs of spaces, a trailing newline and a many-word label, for a member named with spaces and capitals, registers too, the label's words kept joined by single spaces", async () => {
   const m = await roster();
   const p = await adminPage(m);
   const B = sshLine(null);
@@ -106,7 +106,7 @@ test("R44 a line pasted with tabs, runs of spaces, a trailing newline and a many
   assert.deepEqual(rowOf(m, B.b64), { member: "ruth", comment: "ruth's laptop bio-ratify", status: "active" });
 });
 
-test("R44 a line with no label registers with no comment sent and none stored", async () => {
+test("R8 a line with no label registers with no comment sent and none stored", async () => {
   const m = await roster();
   const p = await adminPage(m);
   const C = sshLine(null);
@@ -116,7 +116,7 @@ test("R44 a line with no label registers with no comment sent and none stored", 
   assert.deepEqual(rowOf(m, C.b64), { member: "ruth", comment: null, status: "active" });
 });
 
-test("R44 text that is not a key line is sent trimmed, as pasted, and the plane refuses it BAD_KEY; the roster holds exactly the keys registered from lines, never a whole line", async () => {
+test("R8 text that is not a key line is sent trimmed, as pasted, and the plane refuses it BAD_KEY; the roster holds exactly the keys registered from lines, never a whole line", async () => {
   const m = await roster();
   const p = await adminPage(m);
   const body = p.ui.signerAddBody("  not a key at all ", "ruth");
