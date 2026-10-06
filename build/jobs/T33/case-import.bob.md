@@ -1,6 +1,6 @@
 # BOB to case-import (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ K1633: (1) accepted: recreate with calc-grammar's checkRecipe, evaluate, resultK
 ## B3 · CHANGE
 
 K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
+
+## B4 · CHANGE
+
+K1642: case-grammar is merged again with R18's `recompute: not_recomputed` for a workbook row. Merge tranche/T33.
