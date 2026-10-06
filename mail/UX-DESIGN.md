@@ -561,3 +561,11 @@ DEC-161 (Bob: "I suggest we start with a 1/2 second delay, but if you can find b
 - Evidence: Nielsen Norman Group's timing guidelines for exposing hidden content (wait 0.3–0.5 s; keep it until the pointer has been away for more than 0.5 s); WCAG 2.2 SC 1.4.13 (dismissible, hoverable, persistent).
 - `.cs-tip` no longer passes the pointer through.
 - Owed (BOB): these timings and 1.4.13's conditions in the shell when built.
+
+## U89 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-160 amended (Bob: "far more elements should be mouseovers and clickovers … Look EVERYWHERE in all screens"):
+- Every screen is swept. A reference attaches anywhere in a screen's text, every occurrence, including section headings.
+- Things named on many screens share one card (`GLOBAL_REFS` in `screens/mock-shell.js`: projects, members, people, offices, key documents, other groups).
+- Each screen's own references carry what each is and why it matters there (`screens/mock-refs.js`, 287 entries).
+- About 425 on the 42 screens; each attaches and opens a real screen (checked).
+- Owed (BOB): the card's two parts from the record and the screen's context when the screens are built; the reference lists in those two files are the design's statement of what each screen names.
