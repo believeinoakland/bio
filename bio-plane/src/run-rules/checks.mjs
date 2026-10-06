@@ -615,12 +615,13 @@ export const AI_USE_CHECKS = {
     translation: 'Nothing was run, because you have not connected a Claude account or an API key of your own. The '
       + 'assistant works only on the account of the member who asks; connect yours to use it.',
   },
-  /* R50 (K1601): a member's ceiling is that member's own to set and read; the copy's lower one an administrator's. */
+  /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
+     administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. */
   NOT_YOUR_CEILING: {
     check: 'C-109.11',
-    where: 'src/ai-runs/index.mjs aiCeilingSet, aiCopyCeilingSet and the ceiling\'s reads',
+    where: 'src/ai-runs/index.mjs aiCeilingSet and aiUsageMine',
     translation: 'Nothing was changed, because a member\'s daily limit on the assistant is theirs alone to set or look '
-      + 'at, and the limit for the whole group\'s copy is set only by an administrator.',
+      + 'at.',
   },
   /* R50 (K1601): a ceiling's figure is a whole number of one or more, or none at all (null: no ceiling of one's own). */
   AI_CEILING_INVALID: {

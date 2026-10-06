@@ -154,7 +154,10 @@ test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REAC
   assert.match(AI_USE_CHECKS.AI_USE_CEILING_REACHED.translation, /your own daily limit/);
   assert.match(AI_USE_CHECKS.AI_USE_COPY_CEILING_REACHED.translation, /administrator/);
   assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /Claude account or an API key of your own/);
-  assert.match(AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /theirs alone to set or look at.*only by an administrator/);
+  assert.match(AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /theirs alone to set or look at/);
+  /* K1610: the copy's ceiling is refused NOT_AN_ADMIN, so this row names neither it nor its setter */
+  assert.equal(AI_USE_CHECKS.NOT_YOUR_CEILING.where, "src/ai-runs/index.mjs aiCeilingSet and aiUsageMine");
+  assert.doesNotMatch(AI_USE_CHECKS.NOT_YOUR_CEILING.where + AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /aiCopyCeilingSet|administrator|copy/);
   assert.match(AI_USE_CHECKS.AI_CEILING_INVALID.translation, /a whole number of one or more, or no limit/);
   const texts = Object.values(all).map((r) => r.translation);
   assert.equal(new Set(texts).size, texts.length);
