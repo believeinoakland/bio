@@ -42,3 +42,5 @@
 - **op-declarations, control-plane (L11)** (K1610): ai-runs' `aiUseCheck` and `providerLimit` are answers' and agent-worker's; specs for `aiusage`, `aiceilingset`, `aicopyceilingset` as K1601.
 - **op-declarations, control-plane (L11)** (K1612, from AI-RUNS #10 J3): also `airunverify` (`by` stamped).
 - **installer (L11) and the release (T33-D1)** (K1615, from AGENT-WORKER #9 J2 (6)): a Worker named `agent-runner` exports the `AgentRunner` Container DO class with the image and R10's egress, so agent-worker's cross-script `RUNNER` binding can deploy.
+- **case-authoring (T33-69), case-disclosures (T33-68), consequences (L8+)** (K1619, from INQUIRY #14 J3 (2)): their fixtures reach `connections` and `entities` through inquiry's instance (`inquiry.connections`); inquiry keeps those getters for now. When the job touches those fixtures, build them on the host directly.
+- **plane (L11)** (K1619, from INQUIRY #14 J3 (3)): `store.mjs` composes leg-earning's `legEarningOps` (`basis`, `restson`, `earnedbasis`) in place of inquiry's delegating entries, and registers inquiry's `waitlook` (routing as K1604).
