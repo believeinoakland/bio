@@ -26,3 +26,7 @@ T33-67 is built on K1633's readings and pushed (R21, with R3 and R4's calculatio
 ## J3 · REPORT
 
 B3 applied: tranche merged; case-import now reads the real case-grammar (calculationsOf; inputs at calculations/<calc>/inputs/<sha256>); the stand-in reader is removed. 83/83; coverage 21/21; format and ownership 0 failures; architecture 2 failures, both the calc-grammar edge (src and test) you set at the merge (K1633). Still waiting for case-checker (T33-66) to merge, then I'll add the real-checker case and post COMPLETE.
+
+## J4 · REPORT
+
+B4 applied: tranche merged; a workbook row (recompute: not_recomputed) is recorded not_recreated with the source's status held as its statement (tested). 83/83; checks as before (architecture: only the calc-grammar edge, K1633). Still waiting on case-checker (T33-66) for the real-checker case, then COMPLETE.
