@@ -1,4 +1,4 @@
-/* admission: WHO MAY CALL AN OP, judged before the op runs (R1–R15). The namespace a request addresses, the class its
+/* admission: WHO MAY CALL AN OP, judged before the op runs (R1–R19). The namespace a request addresses, the class its
    credential gives, the agent credential's confinement and task scope, the session's reach and capabilities, and the
    fences a bearer meets. It decides whether a caller is admitted and as whom, and answers a refusal that names why; it
    never runs an op or answers one.
@@ -66,8 +66,11 @@ export function namespaceGate(url) {
    once filed a knock in the REAL record's inbox and answered `ok`. Refuse, never redirect: the caller is told. THE SET
    IS INVERTED ON PURPOSE: it lists the public ops that DO address scratch (each reads `store=` itself), so a public op
    added later is refused `store=scratch` until somebody makes it answer from scratch and lists it here — the unlisted
-   default is the refusal, never the real record. Gated ops take their namespace from `scopeFor`. */
-export const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity"]);
+   default is the refusal, never the real record. Gated ops take their namespace from `scopeFor`.
+   T34 (DEC-133, DEC-132; R3 as amended): the two doors and `groupdescription` join, since each namespace holds its own
+   website key, join link and description, as it holds its own invitations and identity. */
+export const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity",
+                                                            "websiteinvite", "joinlinkinvite", "groupdescription"]);
 export function pinnedNamespaceGate(url, op, spec) {
   if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
   if (url.searchParams.get("store") !== SCRATCH) return null;
@@ -76,6 +79,32 @@ export function pinnedNamespaceGate(url, op, spec) {
            error: `op=${op} always answers from the bio namespace and has no ${SCRATCH} counterpart; nothing was read or written`,
            op, asked: SCRATCH, pinned: "bio" } };
   /* END DEC-49 REGION is-pinned-namespace-gate */
+}
+
+/* R17, R19 — WHAT A REQUEST'S QUERY MAY NOT CARRY, judged once, after R1 and before the agent credential is looked up
+   (R6) or its confinement applied (R2). It never refuses and answers `null`; it removes from the URL what the op takes
+   from the request's BODY ONLY, so no later reader of the URL (the door's relay, a reader of `store=`, a log of the
+   address) can take it from there, and a secret is never kept in an address:
+     - the DOORS (`websiteinvite`, the group's website's call; `joinlinkinvite`, the join page's call; R17) are admitted
+       with no credential, and whoever calls, nothing about the caller reaches the act: the caller's `token` is removed
+       too, so no credential is looked up, no confinement applies and no reader sees a caller; the act is recorded only
+       as its door's (`membership` R105). The key or link and the cover are the body's; one sent in the query is gone,
+       and the call answers as `membership` answers a missing key or link. Admission counts nothing: the daily cap is
+       `membership`'s (its R101, R104), relayed by the door.
+     - `groupkeyset` (R19): the group's API key is the body's; one sent in the query is gone, and the call answers as
+       `credentials` answers an empty key (`NO_SECRET`). The session's `token` stays: the act is a session's own.
+   Every other op's URL is left as it came. */
+export const PUBLIC_DOORS = Object.freeze(["joinlinkinvite", "websiteinvite"]);
+export const BODY_ONLY_FIELDS = Object.freeze({
+  websiteinvite: Object.freeze(["cover", "key"]),
+  joinlinkinvite: Object.freeze(["cover", "link"]),
+  groupkeyset: Object.freeze(["key"]),
+});
+export function queryGate(url, op) {
+  const fields = Object.hasOwn(BODY_ONLY_FIELDS, op) ? BODY_ONLY_FIELDS[op] : [];
+  for (const k of fields) url.searchParams.delete(k);
+  if (PUBLIC_DOORS.includes(op)) url.searchParams.delete("token");
+  return null;
 }
 
 /* R2 (D-463, C-78.3) — A CREDENTIAL MINTED CONFINED TO `scratch` ADDRESSES `scratch` ON EVERY CALL IT MAKES.

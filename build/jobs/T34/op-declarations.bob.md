@@ -30,3 +30,7 @@ Re-opened (K1869 (2)): wizard-scripts is merged with `startfrom` and `baseupdate
 ## B6 · ANSWER · re J5
 
 Merged (K1872). Keep the session until the layer closes.
+
+## B7 · CHANGE
+
+Re-opened (K1873 (2)): R23 is re-worded on `tranche/T34`: `checkrequests` and `checksof` are for a member session only (`machineClasses: []`), as control-plane R55 holds. Merge `tranche/T34`, set `machineClasses: []` on both read specs, test it (a binding class is refused), re-run, post COMPLETE.
