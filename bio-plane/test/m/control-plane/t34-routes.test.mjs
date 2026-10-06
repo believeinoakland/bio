@@ -317,3 +317,13 @@ test("R22, R32, R33 (DEC-149, K1821; T34-87): the door's own rows call the group
                      "This is the only time this instance will show this value.", "the plane could not check that"])
     assert.match(old, OLD);
 });
+
+test("R21 (N630, K1864 (1)): every JSON answer the door builds is compact, with no indentation or line break, for an answer, a refusal and a relayed store answer alike (negative control: the indented form of the same answer is longer)", async () => {
+  const { env, S } = world();
+  for (const args of [{ op: "whoami", token: S.ann }, { op: "nosuchop" }, { op: "index", token: S.ann }]) {
+    const r = await call(env, args);
+    assert.equal(/\n/.test(r.text), false, args.op);
+    assert.equal(r.text, JSON.stringify(r.json), args.op);
+    assert.ok(JSON.stringify(r.json, null, 1).length > r.text.length);
+  }
+});

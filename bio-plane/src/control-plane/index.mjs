@@ -219,8 +219,9 @@ async function caseReader(url, env, storeName, presentedAi) {
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
 }
 
+/* N630 (K1717, K1864 (1)): compact JSON, no indentation, so no answer carries whitespace it does not need. */
 const json = (o, status = 200) =>
-  new Response(JSON.stringify(dec49Attach(o), null, 1), {
+  new Response(JSON.stringify(dec49Attach(o)), {
     status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
   });
 
