@@ -204,7 +204,16 @@ export function normaliseRegistration({ screens = [], ops = null, machineRefused
   const reg = { screens: sc, ops: opSet, machineRefused: nameSet(machineRefused), machineDrafts: nameSet(machineDrafts),
                 irreversible: nameSet(irreversible), library: lib };
   reg.helpRefused = helpRefusedActs(reg);
+  reg.withheld = withheldLibrary(reg);
   return reg;
+}
+/* R11 (K1883): the library scripts R12 refuses against the registration, by id: not offered until they pass, as R13
+   withholds a group's. A `{template}` draft is judged by shape, as R14 judges it, and a side trip against the whole
+   library, as R14 judges it: R11's grounds are a script's own acts and screens, so a required flow is never withheld
+   because an optional script it visits is (the side trip to a script not offered is the runner's to skip). */
+function withheldLibrary(reg) {
+  const offered = reg.library.map((e) => ({ id: e.id, steps: e.steps }));
+  return new Set(reg.library.filter((e) => checkScript(e.steps, { ...reg, offered, self: e.id }).refusals.length).map((e) => e.id));
 }
 
 /* ================================================================ R12: checkScript */
@@ -512,7 +521,8 @@ export class WizardScripts {
     if (s.retired) return null;
     const n = this.#latestApproved(s, events ?? (s.origin === "civicsmith" ? [] : this.#events(s.id)));
     if (n === null) return null;
-    return s.origin === "group" && this.#isBroken(s.id, n) ? null : n;
+    if (s.origin === "civicsmith") return this.#registration().withheld.has(s.id) ? null : n;
+    return this.#isBroken(s.id, n) ? null : n;
   }
 
   /* R5: every member who revised the version and every adopted proposal's run, in time order, each dated. Only a
@@ -657,7 +667,7 @@ export class WizardScripts {
     const out = [];
     for (const e of this.#registration().library) {
       const s = this.#libraryScript(e.id);
-      if (this.#canSee(s, viewer)) out.push({ s, n: e.version, steps: this.#steps(s, e.version) });
+      if (this.#canSee(s, viewer) && !this.#registration().withheld.has(e.id)) out.push({ s, n: e.version, steps: this.#steps(s, e.version) });
     }
     for (const r of this.#rows(`SELECT script_id FROM wiz_scripts ORDER BY created_at, script_id`)) {
       const s = this.#groupScript(r.script_id);
