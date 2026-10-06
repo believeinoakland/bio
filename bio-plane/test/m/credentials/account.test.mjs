@@ -1,6 +1,8 @@
-/* Each member's own Claude account reference (R22–R26; T33-20, T33-20b, K1502, K1503, K1547), at the interface: an API
-   key or a subscription token, held only by the member's own act, sealed at rest under that member, never shown or exported, unsealed only for that member's own
-   asks, runs and standing questions; the member's two switches; no group, project or instance level. */
+/* Each member's own Claude account reference (R22–R25; T33-20, T33-20b, K1502, K1503, K1547), at the interface: an API
+   key or a subscription token, held only by the member's own act, sealed at rest under that member, never shown or
+   exported, unsealed only for that member's own asks, runs and standing questions; the member's two switches. A set
+   naming any principal but the acting member is refused as R22 refuses another member (R26 retired, K1755, K1756);
+   the group's own key is R33's act (`group-key.test.mjs`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, SEAL } from "./fixture.mjs";
@@ -44,7 +46,7 @@ test("R22 accountReferenceSet: refusals in order, each writing nothing; the memb
   /* the refusals R22 names come before the kind, for a subscription token as for a key */
   for (const [member, by, code] of [["ann", "class:ai", "MACHINE_CANNOT_HOLD_ACCOUNT"], ["ann", "second", "NOT_YOUR_ACCOUNT"],
                                     ["ann", "admin", "NOT_YOUR_ACCOUNT"], ["dee", "dee", "ACCOUNT_MEMBER_NOT_ACTIVE"],
-                                    ["organisation", "ann", "ACCOUNT_LEVEL_MEMBER_ONLY"]])
+                                    ["organisation", "ann", "NOT_YOUR_ACCOUNT"]])
     assert.deepEqual(shape(await w.c.accountReferenceSet({ member, kind: "subscription", secret: SUB, by })), refusal(code),
       `subscription ${member} by ${by}`);
   assert.equal(w.snapshot(), before, "no refusal writes");
@@ -94,7 +96,7 @@ test("R22 R25 accountReferenceRemove: the same refusals, by the member's own act
                             ["bob", "NOT_YOUR_ACCOUNT"], ["second", "NOT_YOUR_ACCOUNT"], ["admin", "NOT_YOUR_ACCOUNT"]])
     assert.deepEqual(shape(w.c.accountReferenceRemove({ member: "ann", by })), refusal(code), String(by));
   assert.deepEqual(shape(w.c.accountReferenceRemove({ member: "dee", by: "dee" })), refusal("ACCOUNT_MEMBER_NOT_ACTIVE"));
-  assert.deepEqual(shape(w.c.accountReferenceRemove({ member: "organisation", by: "ann" })), refusal("ACCOUNT_LEVEL_MEMBER_ONLY"));
+  assert.deepEqual(shape(w.c.accountReferenceRemove({ member: "organisation", by: "ann" })), refusal("NOT_YOUR_ACCOUNT"));
   assert.equal(w.snapshot(), before, "no refusal writes");
   assert.deepEqual(w.c.accountReferenceRemove({ member: "ann", by: "ann" }), { ok: true, removed: true });
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "member:ann" }),
@@ -208,7 +210,7 @@ test("R24 accountReferenceFor unseals a key or a token only for the member's own
     assert.deepEqual(shape(await w.c.accountReferenceFor({ member: "ann", act })), refusal("NOT_YOUR_ACCOUNT"), JSON.stringify(act));
   const none = await w.c.accountReferenceFor({ member: "bob", act: { kind: "run", member: "bob" } });
   assert.deepEqual([shape(none), none.member], [refusal("NO_ACCOUNT"), "bob"]);
-  assert.match(none.detail, /no assistant/);
+  assert.match(none.detail, /no Claude account reference of their own/);
   assert.equal(w.snapshot(), before, "it writes nothing");
   /* a subscription token likewise: only for bob's own ask, run or standing question, answered with its kind */
   await w.c.accountReferenceSet({ member: "bob", kind: "subscription", secret: SUB, by: "bob" });
@@ -260,19 +262,20 @@ test("R25 accountSwitchSet: two switches, off by default, set only by the member
   assert.equal(w.snapshot(), n);
 });
 
-test("R26 no group, project or instance level: a set naming any principal but a member is ACCOUNT_LEVEL_MEMBER_ONLY, writing nothing; only member rows exist", async () => {
+test("R22 K1756: a set or removal naming any principal but the acting member (the organisation, a project, a machine class, another member) is refused as R22 refuses another member, writing nothing; no refusal names a level any more", async () => {
   const w = await accountWorld();
   const before = w.snapshot();
-  for (const [member, level] of [["organisation", null], ["PROJ-2026-0001", null], ["class:ai", null], ["ann", "organisation"],
-                                 ["ann", "project"], ["ann", "instance"], ["ann", "group"]])
-    assert.deepEqual(shape(await w.c.accountReferenceSet({ member, level, kind: "apikey", secret: SENTINEL, by: "ann" })),
-      refusal("ACCOUNT_LEVEL_MEMBER_ONLY"), `${member} ${level}`);
+  for (const member of ["organisation", "PROJ-2026-0001", "class:ai", "member:bob", "bob", "", null, 7]) {
+    assert.deepEqual(shape(await w.c.accountReferenceSet({ member, kind: "apikey", secret: SENTINEL, by: "ann" })),
+      refusal("NOT_YOUR_ACCOUNT"), `set ${String(member)}`);
+    assert.deepEqual(shape(w.c.accountReferenceRemove({ member, by: "ann" })), refusal("NOT_YOUR_ACCOUNT"), `remove ${String(member)}`);
+  }
+  /* a `level` the caller sends changes nothing: the reference is the member's, whatever it says */
+  for (const level of ["organisation", "project", "instance", "group"])
+    assert.deepEqual(shape(await w.c.accountReferenceSet({ member: "organisation", level, kind: "apikey", secret: SENTINEL, by: "ann" })),
+      refusal("NOT_YOUR_ACCOUNT"), level);
   assert.equal(w.snapshot(), before);
-  assert.equal((await set(w, "ann", "ann", { level: "member" })).ok, true, "the member level is the one level");
-  const m = await w.m.memberAdd({ memberId: "proj-x", cover: "c", by: "admin" });
-  assert.equal(m.ok, true);
-  /* the table holds member ids only, and every service is keyed by a member */
+  assert.ok(!("ACCOUNT_LEVEL_MEMBER_ONLY" in ACCOUNT_CHECKS), "C-29.16 retired with R26");
+  assert.equal((await set(w, "ann", "ann", { level: "group" })).ok, true, "the member's own act holds their own reference");
   assert.deepEqual(w.rows(`SELECT member_id FROM account_references`).map((r) => r.member_id), ["ann"]);
-  for (const name of Object.getOwnPropertyNames(Object.getPrototypeOf(w.c)))
-    assert.ok(!/group|project|instance|organisation/i.test(name) || !/account/i.test(name), name);
 });
