@@ -25,3 +25,37 @@ Done before the split's merge (95/95 module tests; queue 124/124, plane `watch.t
 **R38's option (B2 (3)).** instance-setup's code already names R14's act: `op=profilesset` (`op-declarations` declares it; instance-setup R14's `profilesSet`). So the item offers `{id: "profilesset"}`, not `placeset`. Nothing for INSTANCE-SETUP #13 to rename.
 
 Next: once `machinery-producers` merges, I delete the moved copy, delegate to `conditionItems`, and drop the copied tests. I'm at 4,257 lines now and expect about 3,440 after the deletion. I'm waiting for your CHANGE.
+
+## J3 · COMPLETE
+
+T34-54, T34-82, T34-92 and this module's T34-87 rows: all applied. B1–B4 handled; `tranche/T34` merged (machinery-producers included). Head: 2bc91a0283 on `job/T34/queue-producers`.
+
+**Entries applied**
+- **T34-54.** The moved copy is deleted (R3, R22, R26, R27 producers; their helpers, statics and getters). `feedItems` now calls `machineryProducersOf(host, <this module's deps>).conditionItems` where `#queueConditions` stood, passing the same `homesOf`/`optionsOf`. It is built lazily, so injected deps reach it. `static SWEEP_CONDITION_KINDS` is kept as an alias of machinery-producers'. R8 and R36 are met as re-worded.
+  - R6 reads `case-tensions.caseTensions` (its R4), reaching `publication` first so its provider is registered (K1505 (3)).
+  - R15 and R18 read the item's own `zone`, else `zoneOf(actions.place())`.
+  - R24: no summary, detail or option says "signal"; the codes are unchanged.
+- **T34-82.**
+  - R37: `edition-scheduled` ("Signed · publishes <date, time>", the time as set and never converted, offering `publishatmove`/`publishatcancel`), `edition-published-as-scheduled`, `scheduled-edition-stopped` (each reason in its own translation). These go to the time's setter and the project's owners; a cancelled edition earns none.
+  - R38: `registerPlaceArrivals` (a second call `PLACE_ARRIVALS_REGISTERED`, a non-read `PLACE_ARRIVALS_MALFORMED`) and `place-profile-arrived` to active administrators, with no home, offering `profilesset` (K1864 (2)).
+- **T34-92.** R39: `wizard-base-updated`, per entry and recipient of `baseUpdates`, in the shape B2 ruled, offering `wizardread` and `wizardrevise`. Its tests use a fake in that shape; wizard-scripts R26's real read is not yet on the tranche.
+- **T34-87.** The six rows (:218, :1623, :3487, :3560, :3612, :3741) say "your group's Civicsmith", each named by a test. The rows BOB kept (:1222, :3649, :3675) are unchanged. No check translation changed, so no catalogue version moves.
+
+**Tests** were changed at the interface only:
+- removed: `conditions.test.mjs`, `producers.test.mjs` R3 arms, `sweeps.test.mjs` R26/R27 arms (machinery-producers' now);
+- added: `scheduled.test.mjs` (R37), `arrivals.test.mjs` (R38, R39), and in `localday.test.mjs` R15/R18 read in each item's own zone;
+- in `feeditems.test.mjs`: R8, R12 and R24 widened, a DEC-149 test added, and R24's assertion on the moved items now reads machinery-producers' "status".
+
+**Deferred:** none.
+
+**Found elsewhere**
+1. **`uses` edges no remaining code imports:** `host-governor`, `capture`, `link-sweep`, `network-notices` (moved with the split), and `inquiry`. `inquiry` was imported by nothing before this job either; the module reads `inquiry_basis` and `inquiry_basis_version_legs` by SQL (R2's lead, inquiry's read contract), so dropping `inquiry` is BOB's call. `capture-requests`, `monitoring`, `record-core` and `provenance` are still imported.
+2. **Stale generated artifact:** `bio-plane/dist/bio-plane.bundled.mjs` (this module's and machinery-producers' sources changed). It is regenerated at the layer close.
+3. **machinery-producers:** its moved basis details still say "this instance's governor" and "this instance's renderer" (:487/:2013 here before the split). BOB ruled these developer-facing text; noted only.
+
+**Tests and checks**
+- queue-producers: 79 pass, 0 fail.
+- machinery-producers + queue + plane `watch.test.mjs`: 151 pass, 0 fail.
+- format: 0 failures. architecture: 0 failures. coverage: 35 of 35 live ids named, 0 failures. ownership: 8 files, 0 failures.
+
+**Size (session_012tuSfiT13aFdZLyebrLHE1):** test runs 12, module lines 3,429.
