@@ -59,6 +59,7 @@ export const RECOMPUTE_WORDS = Object.freeze({
   agrees: "recomputed at publication, and the result agrees with the one stored",
   differs: "recomputed at publication, and the result differs from the one stored",
   unbound: "not recomputed at publication: an input it names was not bound",
+  not_recomputed: "not recomputed here: a workbook this instance's engine did not recompute",
 });
 /** R14: the sentence the strength section opens with (§5C). */
 export const TWO_STRENGTHS_SENTENCE = "A case has two strengths, never one.";
