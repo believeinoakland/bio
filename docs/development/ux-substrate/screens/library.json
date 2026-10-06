@@ -658,8 +658,8 @@
       {
        "screen": "ties",
        "act": "declaretie",
-       "what": "For each tie, choose how it is disclosed when a case concerns it: under your handle, or as the group.",
-       "why": "Disclosing as the group protects you while keeping the case honest."
+       "what": "For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as “a member of the group”.",
+       "why": "Readers learn of the tie either way; not naming you protects you while keeping the case honest."
       }
      ]
     }

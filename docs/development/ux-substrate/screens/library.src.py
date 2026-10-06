@@ -118,7 +118,7 @@ wiz('Connect your Claude account', 'connect', False, [
 wiz('Your ties', 'ties', False, [
  ('ties', 'declaretie', 'List your employer, relatives, and businesses you have an interest in.', 'A case concerning any of them can then disclose the tie honestly.'),
  ('ties', None, 'Only you and the administrators can see this.', 'Your ties never appear in a case unless one concerns it, and then only as you choose.'),
- ('ties', 'declaretie', 'For each tie, choose how it is disclosed when a case concerns it: under your handle, or as the group.', 'Disclosing as the group protects you while keeping the case honest.'),
+ ('ties', 'declaretie', 'For each tie, choose how a published case discloses it when the case concerns them: naming you by your handle, or as “a member of the group”.', 'Readers learn of the tie either way; not naming you protects you while keeping the case honest.'),
 ], [5])
 
 wiz('Follow a proceeding', 'capture', False, [
