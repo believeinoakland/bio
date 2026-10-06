@@ -97,3 +97,19 @@ test("B2 (control-plane R53): the door's arm asks the bio object only for a memb
   const bad = await askOp({ req: new Request("http://plane/ask", { method: "POST", body: "{x" }), url, env, viaSession: true, sessMember: "ann" });
   assert.equal(bad.status, 400);
 });
+
+test("B5 (K1685; answers R1, R2): a read under an ask's grant reaching this object is recorded through this object's answers' logRead, which the class hands the dispatch frame", async () => {
+  const { answersOf } = await import("../../../src/answers/index.mjs");
+  const x = await store();
+  const a = answersOf(x.ctx), was = a.logRead.bind(a), seen = [];
+  a.logRead = (e) => { seen.push([e.grant, e.op, e.viewer]); return was(e); };
+  try {
+    const grant = "g".repeat(64);
+    const r = await x.fetch(`/search?q=clerk&grant=${grant}&viewer=member:ann`);
+    assert.equal(r.status, 200);
+    assert.deepEqual(seen, [[grant, "search", "member:ann"]], "the read was recorded in this object's read log");
+    /* negative control: a read with no grant is recorded nowhere */
+    await x.fetch(`/search?q=clerk&viewer=member:ann`);
+    assert.equal(seen.length, 1);
+  } finally { a.logRead = was; }
+});

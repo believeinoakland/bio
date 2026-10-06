@@ -406,7 +406,9 @@ export class Store extends DurableObject {
      record's and fails closed), and `actions`' `purgeHeld` (its R60) on this storage, each asked at the purge only. */
   async fetch(req) {
     return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx),
-      namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionsOf(this.ctx).purgeHeld(q) });
+      namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionsOf(this.ctx).purgeHeld(q),
+      /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. */
+      logRead: (entry) => answersOf(this.ctx).logRead(entry) });
   }
 
   /* The injectable clock: an explicit instant, else `BIO_NOW_MS` (so a suite pins "now"), else the wall clock.
