@@ -2,6 +2,13 @@
 
 **Status** · session_01RGGE4ZfFHwpKSDT9uQhM9P · depth 2 · WORKING · handled B2
 
+## Progress (by the job; not a mail entry)
+
+- Built on `job/T33/people` @ adfd8e0efc: `bio-plane/src/people/` (index.mjs, checks.mjs, schema.mjs; 1,714 lines with comments) and `bio-plane/test/m/people/` (fixture and 7 test files). 34/34 tests pass; every R1–R33 named and tested at the interface, M-P5 and M-P6 (R8) included. Checks, run in a scratch worktree with this module's `paths`/`tests`/`uses` filled in (uncommitted; BOB writes them at merge): format 0, architecture 0, coverage 33 of 33, ownership 0 failures.
+- J1 accepted (B2, K1563); merged `tranche/T33` @ e07becea; `neighbours` now registered at load and read through the walk's `host` (K1563 (1)).
+- Detail beyond J1 (2): `corroborated_name` evidence names the cited line on each record as `lines: {a, b}` (one line cannot be held by two persons), same kind and same other end.
+- **Next step:** when events, lines, money and duties merge into `tranche/T33` (Roster: … duties → people), merge it and re-point the fixture's stand-ins at the real modules (`eventsOf`, `linesOf`, `moneyOf`, `dutiesOf`) and entities' T33 identifier reads, re-run steps 5–7, then COMPLETE.
+
 ## J1 · QUESTION
 
 Readings I am building on now; answer only where you read it otherwise. Only (2) could change what I build.
