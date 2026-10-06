@@ -1,9 +1,9 @@
 /* public-read — a court order's stamp, served (T33-65; R28; K1480, K1493, K1522; `publication` R62, `docket` R25). An
    edition under a court-order stamp is served with the stamp and its docket entry linked; bytes a `remove` or `seal`
    withholds are not served, never deleted, and their withholding is stated where they would appear; an `unseal` ends a
-   seal's withholding for its parts and never a removal's; a `redact` withholds nothing (past editions stand). Stamps come
-   from `publication.stampsOf` (its R62), here the fixture's `stampsOn` on that interface until publication's T33-63
-   merges and these tests re-point at its `stampEdition` (K1563 (1)). Driven at the interface: the store ops and the
+   seal's withholding for its parts and never a removal's; a `redact` withholds nothing (past editions stand). Stamps are
+   made by `publication.stampEdition` and read through its `stampsOf` (its R62), the order posted as `docket` posts it
+   (the fixture's `stampsOn`). Driven at the interface: the store ops and the
    Worker's routes, with the case file assembled as the Worker assembles it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -27,7 +27,8 @@ const call = async (w, env, op, q) => {
 };
 const CASE = "CASE-2026-0001";
 const ENTRY = { seq: 7, digest: "d".repeat(64) };
-const LINK = { seq: 7, id: `${CASE}#7`, digest: "d".repeat(64), docket: `op=docketpublic&case=${CASE}` };
+/* publication's stamp records the entry's seq (its R62); the link names the entry and the docket's fixed address */
+const LINK = { seq: 7, id: `${CASE}#7`, digest: null, docket: `op=docketpublic&case=${CASE}` };
 
 /* A published /6 edition with its case file assembled; `doc` its case document's hash, `manifest` its manifest's. */
 async function assembled(opts = {}) {

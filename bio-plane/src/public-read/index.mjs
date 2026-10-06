@@ -18,15 +18,14 @@
  *
  * REACHED as `publicReadOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. `deps`:
- *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), and its
+ *   publication    `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `stampsOf` (its
+ *                  R62, for R28), and its
  *                  storage, whose tables it reads under its R40 (default: `publicationOf(host)`).
  *   docket         `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14, and its R24's `captures: "omit"`)
  *                  and `docketFeed` (its R15), for R20, R21 and R25:
  *                  the docket's public answers, which this module serves and never composes (N520; default:
  *                  `docketOf(host)`).
  *   storage        the Durable Object's storage (default: the host's).
- *   stamps         `publication.stampsOf({case, edition})` (its R62): an edition's court-order stamps in order, for R28
- *                  (default: `publication`'s; T33-63).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
@@ -152,11 +151,10 @@ export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
   #publicReads = new Map(); // R18: name -> {module, params, read}, each name registered once
 
-  constructor({ storage, publication, docket, stamps = null } = {}) {
+  constructor({ storage, publication, docket } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
     this.docket = docket;
-    this.stamps = stamps || ((q) => (typeof publication.stampsOf === "function" ? publication.stampsOf(q) : []));
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1193,7 +1191,7 @@ export class PublicRead {
 
   /* R28: an edition's stamps as `publication` answers them (its R62), in order; `[]` for none. */
   #stampsOf(caseId, edition) {
-    const s = this.stamps({ case: caseId, edition: Number(edition) });
+    const s = this.publication.stampsOf({ case: caseId, edition: Number(edition) });
     return Array.isArray(s) ? s : s && Array.isArray(s.stamps) ? s.stamps : [];
   }
 
@@ -1503,7 +1501,7 @@ export function publicReadOf(host, deps) {
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     const docket = d.docket || docketOf(host);
-    r = new PublicRead({ storage, publication, docket, stamps: d.stamps || null });
+    r = new PublicRead({ storage, publication, docket });
     instances.set(host, r);
   }
   return r;

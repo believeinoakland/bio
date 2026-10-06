@@ -65,24 +65,25 @@ export function docketOn({ cases = [] } = {}) {
   return d;
 }
 
-/** Court-order stamps on `publication`'s interface (its R62), until publication's job (T33-63) merges and these tests
- *  re-point at its `stampEdition` (K1563 (1)): `stamp({case, editions, entry, effect, parts?})` records one stamp per
- *  named edition, in order, as R62 states it, and `stampsOf({case, edition})` answers an edition's stamps in order. */
-export function stampsOn() {
-  const held = new Map();
-  let n = 0;
+/** Court-order stamps through `publication` itself (its R62): `stamp({case, editions, entry, effect, parts?})` posts
+ *  the order as `docket` does (R25), its source registered with publication as docket registers it, answering the entry
+ *  posted, and stamps the editions with `publication.stampEdition`; the read side is publication's `stampsOf`. */
+export function stampsOn(w) {
+  const posted = [];
+  const reg = w.p.registerOrderSource("docket", { courtOrderOf: (c, entry) => {
+    const seq = entry && typeof entry === "object" ? Number(entry.seq) : Number(entry);
+    return posted.find((o) => o.case === c && o.seq === seq) || null;
+  } });
+  if (!reg.ok) throw new Error(JSON.stringify(reg));
   return {
-    held,
+    posted,
     stamp({ case: c, editions, entry, effect, parts = null }) {
-      for (const e of editions) {
-        const k = `${c}\u0000${Number(e)}`;
-        if (!held.has(k)) held.set(k, []);
-        held.get(k).push({ case: c, edition: Number(e), effect, parts, entry,
-                           stamped_at: `2026-10-0${1 + (n++ % 8)}T00:00:00Z` });
-      }
-      return { ok: true };
+      const seq = entry && typeof entry === "object" ? Number(entry.seq) : Number(entry);
+      posted.push({ case: c, seq, effect, editions, parts });
+      const r = w.p.stampEdition({ case: c, editions, entry: seq, effect, parts });
+      if (!r.ok) throw new Error(JSON.stringify(r));
+      return r;
     },
-    stampsOf({ case: c, edition }) { return [...(held.get(`${c}\u0000${Number(edition)}`) || [])]; },
   };
 }
 
@@ -114,8 +115,8 @@ export function legacyCaseCommit(w, { case: caseId, edition, project, roster, si
 function withRead(w, opts = {}) {
   signAsOfItsFormat(w);
   w.docket = opts.docket || docketOn();
-  w.stamps = opts.stamps || stampsOn();
-  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket, stamps: (q) => w.stamps.stampsOf(q) });
+  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
+  w.stamps = stampsOn(w);
   w.read = (name, query = {}) => {
     const url = new URL(`http://do/${name}`);
     for (const [k, v] of Object.entries(query)) if (v != null) url.searchParams.set(k, String(v));
@@ -158,7 +159,7 @@ export function bucket() {
 /** T33-65 (R23, R26, R27, R28): a `/6` case edition of `CASE-2026-0001` over F (load-bearing) and G (supporting), signed
  *  and published, its findings' bytes in the published bucket (`env`). `extra` are front-matter lines added to the signed
  *  document (a block in `case-grammar`'s own spelling, `calculationsLines`, `timelineLines`); `opts` reach the world
- *  (`stamps`). */
+ *  (`docket`). */
 export function publishedSix({ extra = [], edition = 1, ...opts } = {}) {
   const CASE = "CASE-2026-0001", F = "INQ-2026-0001", G = "INQ-2026-0002";
   const w = world(opts);
