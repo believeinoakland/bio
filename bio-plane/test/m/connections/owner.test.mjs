@@ -1,13 +1,15 @@
 /* connections: the connection owner (R62–R65: co-mention as "mentioned together", read through `connection-grammar`'s
    registry and battery), the theme id grammar from `ID_TABLE` (R66) and the tables declared explicitly (R67). Read with
    BOB's question J1 (T33): an undated kind is undetermined at every date; entity hubs are named in `hubs`; one item per
-   (document pair, entity); a capped derivation is recorded in `connection_derivations`. */
+   (document pair, entity); a capped derivation is recorded in `connection_derivations`. Since T34 (N560, K1563 (2)) the
+   owner declares its kind undated to the battery, which then answers ok whole. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V, MACHINE } from "./fixture.mjs";
 import { defaultRegistry, ownerConformance, derivedId, BOUNDS, createRegistry } from "../../../src/connection-grammar/index.mjs";
 import { idPattern } from "../../../src/record-grammar/index.mjs";
-import { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_REGISTRATION, CO_MENTION_HUB, WARN_BAND, PAIR_RULE,
+import { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_DECLARES, MENTIONED_REGISTRATION, CO_MENTION_HUB,
+         WARN_BAND, PAIR_RULE,
          CONNECTIONS_TABLES, THEME_ID_RE, THEME_REF_RE, themeLegFindings, mentionedMethod, registeredNeighbours }
   from "../../../src/connections/index.mjs";
 
@@ -51,7 +53,7 @@ test("R62: registered once at load through connection-grammar.registerOwner, own
   assert.equal(registeredNeighbours({ node: A, viewer: V("alice"), host: {} }).refused, "OWNER_NOT_READY");
 });
 
-test("R62: its owner-conformance battery (connection-grammar R9) runs over this module's own fixture; only the dated-in check, inapplicable to an undated kind, fails", () => {
+test("R62 (N560; K1563 (2)): its owner-conformance battery (connection-grammar R9) runs over this module's own fixture with the owner's declaration that its kind is undated, and answers ok whole: the at check inapplicable, every other check passing; R6's at rule and R7's sight tested directly", () => {
   const w = world();
   star(w);
   const hub = hubWorld(w, "INFO-2026-0900-z", BOUNDS.hub + 1);
@@ -59,16 +61,40 @@ test("R62: its owner-conformance battery (connection-grammar R9) runs over this 
   const throughE = (o) => all.items.find((i) => (i.from === o || i.to === o) && i.derived.inputs[0].entity === E).id;
   const fixture = {
     node: A, at: "2026-10-01", kinds: [MENTIONED_KIND],
-    in: throughE(B), out: "no co-mention is out at any date", undetermined: throughE(B),
     viewers: { sees: MACHINE, blind: V("bob") }, fenced: throughE(H), expected: ids(all),
     hub: { node: hub, at: "2026-10-01" },
   };
   assert.equal(all.items.length, 4, "B and C through E, H through E (fenced), B through F");
-  const r = ownerConformance({ owner: "connections", kinds: MENTIONED_KINDS.map((x) => ({ ...x })),
-                               neighbours: (a) => w.k.neighbours(a), fixture });
-  assert.deepEqual(r.failures, [{ check: "at", why: `${fixture.in} (in at the date) is not returned unmarked` }],
-                   "every other check passes: shape, kinds, sight, paging, derivedId, determinism, hub");
-  for (const i of all.items) assert.equal(i.undetermined.why.includes("states no dates"), true, "marked undetermined, never out");
+  /* The declaration is the owner's own: undated, and not group-wide (it holds a fenced item). */
+  assert.deepEqual(MENTIONED_DECLARES, { undated: true });
+  assert.ok(Object.isFrozen(MENTIONED_DECLARES));
+  const battery = (declares) => ownerConformance({ owner: "connections", kinds: MENTIONED_KINDS.map((x) => ({ ...x })),
+                                                   neighbours: (a) => w.k.neighbours(a), fixture,
+                                                   ...(declares ? { declares } : {}) });
+  const r = battery(MENTIONED_DECLARES);
+  assert.deepEqual(r.failures, [], "shape, kinds, sight (the fenced item and the missing viewer), paging, derivedId, determinism, hub");
+  assert.equal(r.ok, true, "ok whole");
+  assert.deepEqual(r.inapplicable.map((x) => x.check), ["at"], "only R6's at rule, which an undated kind cannot show");
+  /* Without the declaration the battery cannot show R6's rule over this fixture, which names no in, out or
+     undetermined connection: the declaration, and nothing weaker, is what makes the answer ok. */
+  const bare = battery(null);
+  assert.equal(bare.ok, false);
+  assert.deepEqual([...new Set(bare.failures.map((x) => x.check))], ["at"]);
+  assert.equal("inapplicable" in bare, false);
+  /* R6 directly (connection-grammar R6; R63): an undated item is returned marked undetermined at every date and
+     never dropped as out, so the set is the same whatever the date asked. */
+  for (const i of all.items) {
+    assert.deepEqual(i.valid, { from: null, to: null, precision: "day", zone: "UTC" }, "no valid bound stated");
+    assert.equal(i.undetermined.why.includes("states no dates"), true, "marked undetermined, never out");
+  }
+  for (const at of ["1900-01-01", "2026-10-01", "2999-12-31", undefined])
+    assert.deepEqual(ids(ask(w, { node: A, viewer: MACHINE, at })), ids(all), `the same set at ${at}`);
+  /* R7 directly (R33): the fenced co-mention reaches the viewer who may see it, and nothing of it the one who may
+     not; a missing viewer is refused. */
+  const blind = ask(w, { node: A, viewer: V("bob") });
+  assert.deepEqual(ids(blind), ids(all).filter((x) => x !== fixture.fenced));
+  assert.ok(!JSON.stringify(blind).includes(H));
+  assert.equal(ask(w, { node: A, viewer: undefined }).refused, "VIEWER_MISSING");
 });
 
 test("R63: each item is one derived connection in connection-grammar's shape: from/to the two bundle ids, the weaker grade and each end's, derived {method, inputs}, a deterministic derivedId, the two determining references as evidence", () => {

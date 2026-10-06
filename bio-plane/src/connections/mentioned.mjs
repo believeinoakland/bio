@@ -14,6 +14,10 @@ import { BOUNDS, derivedId } from "../connection-grammar/index.mjs";
 export const MENTIONED_OWNER = "connections";
 export const MENTIONED_KIND = "mentioned_together";
 export const MENTIONED_KINDS = Object.freeze([Object.freeze({ kind: MENTIONED_KIND, word: "mentioned together", class: "derived" })]);
+/** R62 (N560; K1563 (2); connection-grammar R9): what this owner declares to its conformance battery. Co-mention
+ *  states no dates (R63), so R6's `at` rule cannot be shown and is answered inapplicable. It is not group-wide: a
+ *  co-mention with a document the viewer may not see is fenced (R33), so R7's sight check runs whole. */
+export const MENTIONED_DECLARES = Object.freeze({ undated: true });
 /** R65 (X110; legistar-events §6, M-P4): an entity concerned by more than this many documents is a co-mention hub;
  *  it is R2's document bound at the default pair limit (32 documents, 496 pairs). */
 export const CO_MENTION_HUB = 32;
