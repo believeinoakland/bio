@@ -3,7 +3,7 @@
  * allowance), the event queue an undetermined capture raises, the doorbell (`doorbell.mjs`) and the information
  * grammar (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
- * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R82). Extracted from `legacy-store` and
+ * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R84). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
  *
  * SHAPE (K61). `captureOf(ctx, opts)` answers the one instance for a Durable Object's storage. It reaches
@@ -13,7 +13,7 @@
  * (`attestationOf(ctx)`), which the acquisition act reaches as `cap.attestation` to sign an archive-sourced receipt
  * (its R4; R73, K1224). It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
  * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R32's litigation hold, R78's
- * batch examination; `registerReader`). At its first construction for a
+ * batch examination, R83's questions a document was captured for; `registerReader`). At its first construction for a
  * storage it registers its grammar (R37) and its figures (R75) with record-core. */
 import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
@@ -130,9 +130,13 @@ const badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is 
 export const CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
 
 /* The readers a later module may register, once at start, each taking one registration whoever makes it: whether any
-   litigation hold is in place (R32; `actions` R52) and the batch-release examination of one document (R78;
-   `ratification` R34). */
-export const CAPTURE_READERS = Object.freeze(["litigation-hold", "batch-examination"]);
+   litigation hold is in place (R32; `actions` R52), the batch-release examination of one document (R78;
+   `ratification` R34) and the questions a document was captured for (R83; `capture-requests` R48). */
+export const CAPTURE_READERS = Object.freeze(["litigation-hold", "batch-examination", "captured-for"]);
+
+/* R77, R79 (DEC-141 (1)): the one sentence a row carries when a question the viewer may not see is among those its
+   document was captured for, or waits on it. It names no question, no asker and no count. */
+export const WITHHELD_QUESTION = "Captured for a question you may not see";
 
 /* R32, R79, R81: the longest reason a member may give, in characters. */
 export const REASON_MAX = 2000;
@@ -314,7 +318,7 @@ export class Capture {
   /** Hands `payload` to the listeners of `event` (the acquisition act calls it for R55's measurement). */
   emit(event, payload) { return this.#emit(event, payload); }
 
-  /** R32, R78: a later module registers, once at start, the reader of one of `CAPTURE_READERS`. Each slot takes one
+  /** R32, R78, R83: a later module registers, once at start, the reader of one of `CAPTURE_READERS`. Each slot takes one
    *  registration whoever makes it; a second, or a malformed one, is membership's `listenerRefusal` (its R81). */
   registerReader(slot, module, fn) {
     if (!CAPTURE_READERS.includes(slot)) return { ok: false, reason: "UNKNOWN_READER", slot };
@@ -790,8 +794,12 @@ export class Capture {
                      detail: "the knock's bytes could not be held under their own digest, so nothing was written" }; }
     const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
     const address = `knock:${knockId}`;
+    /* N615 (K1683, K1773): the origin `doctypeFor` is handed. `"member"` is only for bytes a member supplied by their own
+       act under their session; a knock is made with no account (R30) and its row names no member session, so no knock
+       is one, and every pull is profiled as `"fetch"`: a type read only from a member's own capture (court-doctypes R2)
+       never matches a stranger's knock, whoever brings it in. */
     const profile = await profileOf({ ev, sha, ct: null, total: bytes.length, multipart: false, headers: {}, locator: address,
-                                      view: profileView(this.core), retrieved: when });
+                                      view: profileView(this.core), retrieved: when, origin: "fetch" });
     const document = this.#pulledDocument(row, { by, at: when, profile });
     const receiptOf = (fn) => { try { return fn(); } catch (e) { return { recorded: false, error: String(e && e.message || e).slice(0, 200) }; } };
     /* N409 (K609): one fixed sentence. A thrown message is the caller's internals (a store fault names a table, a
@@ -1079,7 +1087,7 @@ export class Capture {
   }
 
   /* ==================================================================== *
-   * Held captures (R77–R79, R81; DEC-97)
+   * Held captures (R77–R79, R81–R84; DEC-97, DEC-141)
    * ==================================================================== */
 
   /* R77: the SQL of a document's standing: an Information document at `collected` whose latest held act is not a
@@ -1102,7 +1110,8 @@ export class Capture {
   /** R77 (DEC-97 (1)): the Information documents at `collected` not set aside, as the viewer may see them, at most
    *  `limit` (N90), with `truncated` and `next`. `member` keeps the documents that member captured (`capture_actors`
    *  over the register); `project` that project's (the document's `project`). Each row: the document, its source, its
-   *  project, its age since collected and its batch eligibility (R78). Sorted by `age` (the default, oldest first),
+   *  project, its age since collected, its batch eligibility (R78) and `captured_for`, the questions it was captured for as
+   *  R83's reader answers them for the viewer (DEC-141 (1)). Sorted by `age` (the default, oldest first),
    *  `source` or `project`, either way, a row with none last; ties by id. Writes nothing; nothing is notified. */
   async heldCaptures({ member = null, project = null, sort = null, dir = null, limit = null, after = null, viewer = undefined,
                        now = null } = {}) {
@@ -1139,10 +1148,13 @@ export class Capture {
     const rows = [];
     for (const r of page) {
       const since = Date.parse(r.since);
+      const asked = this.#questionsOf(r.bundle_id, viewer);
       rows.push({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
                   source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
                   collected_since: r.since, age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at - since) / 86400000)) : null,
-                  ...(await this.#eligibility(r.bundle_id)) });
+                  ...(await this.#eligibility(r.bundle_id)),
+                  ...(asked.questions ? { captured_for: Capture.#shown(asked.questions) }
+                                      : { captured_for: null, captured_for_basis: asked.basis }) });
     }
     return { ok: true, held: rows, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
@@ -1161,6 +1173,47 @@ export class Capture {
     if (v && v.eligible === false && typeof v.class === "string" && v.class)
       return { eligible: false, class: v.class, reason: typeof v.reason === "string" ? v.reason : null };
     return undetermined(`${reader.module}'s examination did not answer for this document, so eligibility is undetermined`);
+  }
+
+  /* R83 (DEC-141): the questions one document was captured for, read through the registered `captured-for` reader,
+     synchronously, for the viewer: `{questions}`, each `{question, asker, title, visible, waiting}` with `title` and
+     `asker` forced null when the question is not visible, whatever the reader sent; or `{questions: null, basis}` when
+     none is registered or it does not answer. It is handed the document (its bundle id) and `captures`, the digests the
+     register files under it (provenance R48), so the reader can match its own rows without a join of its own. Anything
+     but `{questions: [...]}` with every entry well formed is no answer, never a partial list (`capture-requests` R48). */
+  #questionsOf(bundleId, viewer) {
+    const reader = this.#readers.get("captured-for");
+    if (!reader) return { questions: null,
+      basis: "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined" };
+    const silent = { questions: null,
+      basis: `${reader.module} did not answer which questions this document was captured for, so they are undetermined` };
+    let captures = [];
+    try { captures = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
+    catch { captures = []; }
+    let v;
+    try { v = reader.fn({ document: bundleId, viewer, captures }); } catch { return silent; }
+    if (v && typeof v.then === "function") { Promise.resolve(v).catch(() => {}); return silent; }
+    const list = v && typeof v === "object" ? v.questions : null;
+    const str = (x) => (typeof x === "string" && x ? x : null);
+    if (!Array.isArray(list) || !list.every((q) => q && typeof q === "object" && str(q.question)
+                                             && typeof q.visible === "boolean" && typeof q.waiting === "boolean")) return silent;
+    const seen = new Set(), questions = [];
+    for (const q of list) {
+      const asker = q.visible ? str(q.asker) : null;
+      const key = JSON.stringify([q.question, asker, q.visible]);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      questions.push({ question: q.question, asker, title: q.visible ? str(q.title) : null, visible: q.visible, waiting: q.waiting });
+    }
+    return { questions };
+  }
+
+  /* R77, R79 (DEC-141 (1)): what a viewer is shown of a list of questions: each it may see, `{question, title, asker}`, and
+     R77's one sentence when any it may not see is among them, else null. A question not seen leaves no id, title, asker
+     or count. */
+  static #shown(questions) {
+    return { questions: questions.filter((q) => q.visible).map((q) => ({ question: q.question, title: q.title, asker: q.asker })),
+             withheld: questions.some((q) => !q.visible) ? WITHHELD_QUESTION : null };
   }
 
   /* R79, R81: the refusals the two held acts share, in order: a member's own act (C-118.8), with a reason (C-118.9),
@@ -1203,22 +1256,30 @@ export class Capture {
     return out;
   }
 
-  /* R79, R81: append one act per document, in one transaction. */
-  #appendHeld(ids, act, reason, author) {
+  /* R79, R81, R84: append one act per document, in one transaction, each recorded with the questions `questionsOf(id)`
+     names (R79's waiting questions; R81's, those of the set-aside it undoes), one row per (act, question). */
+  #appendHeld(ids, act, reason, author, questionsOf = () => []) {
     const at = stampSecond();
     this.#tx(() => {
       for (const id of new Set(ids)) {
         const n = Number(this.#one(`SELECT COALESCE(MAX(seq), 0) AS n FROM held_acts WHERE bundle_id = ?`, id).n) + 1;
         this.#sql.exec(`INSERT INTO held_acts (bundle_id, seq, act, reason, author, at) VALUES (?, ?, ?, ?, ?, ?)`,
                        id, n, act, reason, author, at);
+        for (const q of new Set(questionsOf(id)))
+          this.#sql.exec(`INSERT INTO held_act_questions (bundle_id, seq, question) VALUES (?, ?, ?)`, id, n, q);
       }
     });
     return at;
   }
 
-  /** R79 (DEC-97 (2)): set several held documents aside with one reason. Refused whole, never narrowed: C-118.8,
-   *  C-118.9, the id count, then any id absent or unseen (one answer), not `information`, not at `collected`, or
-   *  already set aside, named. The document is unchanged and stays at `collected`; append-only. */
+  /** R79 (DEC-97 (2); DEC-141 (1), (2)): set several held documents aside with one reason. Refused whole, never narrowed:
+   *  C-118.8, C-118.9, the id count, then any id absent or unseen (one answer), not `information`, not at `collected`, or
+   *  already set aside, named. Each document's questions are read through R83's reader once, before anything is
+   *  written; every question it answers as waiting on the document, seen by the viewer or not, is recorded with that
+   *  document's set-aside (R84), the one reason applying to each. The answer names, per document, `captured_for` as R77
+   *  shows it and `waiting`, the waiting questions as the viewer is shown them; with no reader, or one that does not
+   *  answer, the set-aside is still made, with no question recorded, and both read null with the sentence why. The
+   *  document is unchanged and stays at `collected`; append-only. */
   setAside({ ids, reason, author, viewer = undefined } = {}) {
     const refused = this.#heldActRefusal(ids, reason, author);
     if (refused) return refused;
@@ -1232,13 +1293,21 @@ export class Capture {
       || named("NOT_COLLECTED", (r) => r.current_state !== "collected", "only documents at collected are held; nothing was written")
       || named("ALREADY_SET_ASIDE", (r) => !r.standing, "these documents are already set aside; nothing was written");
     if (no) return no;
-    const at = this.#appendHeld([...standing.keys()], "set_aside", reason, author);
-    return { ok: true, act: "set_aside", ids: [...standing.keys()], reason, author, at };
+    const asked = new Map([...standing.keys()].map((id) => [id, this.#questionsOf(id, viewer)]));
+    const at = this.#appendHeld([...standing.keys()], "set_aside", reason, author,
+                                (id) => (asked.get(id).questions || []).filter((q) => q.waiting).map((q) => q.question));
+    const documents = [...asked].map(([document, a]) => (a.questions
+      ? { document, captured_for: Capture.#shown(a.questions), waiting: Capture.#shown(a.questions.filter((q) => q.waiting)) }
+      : { document, captured_for: null, captured_for_basis: a.basis, waiting: null,
+          waiting_basis: "the questions waiting on this document are undetermined, so none was recorded with its set-aside" }));
+    return { ok: true, act: "set_aside", ids: [...standing.keys()], reason, author, at, documents };
   }
 
-  /** R81 (DEC-97 (2)): undo a set-aside by a reasoned act, for several documents with one reason. Refused whole: R79's
-   *  first three, then any id absent or unseen (one answer), or not set aside now, named. The restore is appended
-   *  beside the set-aside, which is never rewritten or removed; a document's latest act decides. */
+  /** R81 (DEC-97 (2); DEC-141 (4)): undo a set-aside by a reasoned act, for several documents with one reason. Refused
+   *  whole: R79's first three, then any id absent or unseen (one answer), or not set aside now, named. The restore is
+   *  appended beside the set-aside, which is never rewritten or removed; a document's latest act decides. It is recorded
+   *  with every question that set-aside was recorded with, so it stands in the same history (R84). Any member who may
+   *  see the document may restore it: no consent, vote or count is asked (K1618). */
   restoreHeld({ ids, reason, author, viewer = undefined } = {}) {
     const refused = this.#heldActRefusal(ids, reason, author);
     if (refused) return refused;
@@ -1249,8 +1318,47 @@ export class Capture {
     const notAside = [...standing].filter(([, r]) => r.standing).map(([id]) => id);
     if (notAside.length) return { ok: false, reason: "NOT_SET_ASIDE", ids: notAside, status: 409,
                                   detail: "these documents are not set aside; nothing was written" };
-    const at = this.#appendHeld([...standing.keys()], "restore", reason, author);
+    /* The set-aside each restore undoes is the document's latest act (it is set aside now); its questions carry over. */
+    const undone = new Map([...standing.keys()].map((id) => [id, this.#rows(
+      `SELECT q.question FROM held_act_questions q
+        WHERE q.bundle_id = ? AND q.seq = (SELECT MAX(seq) FROM held_acts WHERE bundle_id = ?) ORDER BY q.question`, id, id)
+      .map((r) => r.question)]));
+    const at = this.#appendHeld([...standing.keys()], "restore", reason, author, (id) => undone.get(id));
     return { ok: true, act: "restore", ids: [...standing.keys()], reason, author, at };
+  }
+
+  /** R84 (DEC-141 (3), (4)): the history of the documents R79 recorded `question` as waiting on: every set-aside and
+   *  restore recorded with it, oldest first, each `{document, act, reason, author, at}`, and per document of the page
+   *  `set_aside`, whether its latest act of all (R81) is a set-aside. An act on a document the viewer may not see
+   *  (membership R43) is left out, unannounced and uncounted; the question is taken as given (its caller, `inquiry`,
+   *  gates it). At most `limit` acts (N90), with `truncated` and `next`. Writes nothing, notifies nothing and makes no
+   *  queue item (DEC-94); never throws: a store that cannot be read answers `ok: false` with no list. */
+  heldActsOf({ question, viewer = undefined, limit = null, after = null } = {}) {
+    try {
+      const cap = limitOf(limit);
+      const from = after ? keyOf(after, 3) : null;
+      if (after && !from) return badCursor();
+      if (typeof question !== "string" || !question)
+        return { ok: true, question: typeof question === "string" ? question : null, acts: [], documents: [], limit: cap, truncated: false, next: null };
+      const sight = this.#sightOf(viewer);
+      const found = this.#rows(
+        `SELECT h.bundle_id, h.seq, h.act, h.reason, h.author, h.at FROM held_act_questions q
+           JOIN held_acts h ON h.bundle_id = q.bundle_id AND h.seq = q.seq
+           JOIN bundles b ON b.bundle_id = h.bundle_id
+          WHERE q.question = ? AND (${sight.sql})
+            AND ${from ? "(h.at > ? OR (h.at = ? AND (h.bundle_id > ? OR (h.bundle_id = ? AND h.seq > CAST(? AS INTEGER)))))" : "1=1"}
+          ORDER BY h.at, h.bundle_id, h.seq LIMIT ?`,
+        question, ...sight.args, ...(from ? [from[0], from[0], from[1], from[1], from[2]] : []), cap + 1);
+      const page = found.slice(0, cap), truncated = found.length > cap, last = page[page.length - 1];
+      const documents = [...new Set(page.map((r) => r.bundle_id))].map((document) => ({ document,
+        set_aside: this.#one(`SELECT act FROM held_acts WHERE bundle_id = ? ORDER BY seq DESC LIMIT 1`, document)?.act === "set_aside" }));
+      return { ok: true, question,
+               acts: page.map((r) => ({ document: r.bundle_id, act: r.act, reason: r.reason, author: r.author, at: r.at })),
+               documents, limit: cap, truncated, next: truncated ? cursorOf([last.at, last.bundle_id, String(last.seq)]) : null };
+    } catch {
+      return { ok: false, reason: "HELD_ACTS_UNREADABLE", question: typeof question === "string" ? question : null, acts: null,
+               detail: "the set-asides recorded with this question could not be read" };
+    }
   }
 
   /** R82 (K1036; Intake Doctrine §4, the backlog ceiling): how many Information documents at `collected`, not set aside

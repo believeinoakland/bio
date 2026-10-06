@@ -486,6 +486,16 @@ CREATE TABLE IF NOT EXISTS held_acts (
   at        TEXT NOT NULL,
   PRIMARY KEY (bundle_id, seq)
 );
+-- R79, R81, R84 (DEC-141; K1618, K1645): the questions a held act is recorded with: one row per (act, question), each a
+-- question R83's reader answered as waiting on the document when it was set aside, and the same questions again on the
+-- restore that undid that set-aside. Appended with its act, never rewritten or removed.
+CREATE TABLE IF NOT EXISTS held_act_questions (
+  bundle_id TEXT NOT NULL,
+  seq       INTEGER NOT NULL,
+  question  TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq, question)
+);
+CREATE INDEX IF NOT EXISTS held_act_questions_q ON held_act_questions (question, bundle_id, seq);
 -- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
 -- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
 CREATE TABLE IF NOT EXISTS knock_key (
@@ -522,6 +532,6 @@ export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
    (`test/m/capture/figures.test.mjs`). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
-  "capture_actors", "capture_accounts", "late_attestations", "held_acts"];
+  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions"];
 export const CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key",
   "knocker_key", "doorbell_tally", "doorbell_limit_last"];

@@ -211,7 +211,7 @@ test("R32 (N90, DEC-108 (2)): a sorted list pages by `after` over every knock on
 /* ---- R32: the litigation hold's pause of the discard clearing (DEC-108 (5)) ---- */
 
 test("R32 (DEC-108 (5)): nothing discarded is cleared while a hold may be in place: no reader registered, one that fails or does not answer, or one that reports a hold, each pauses the clearing; only a reader answering no hold lets it run", () => {
-  assert.deepEqual([...CAPTURE_READERS], ["litigation-hold", "batch-examination"]);
+  assert.deepEqual([...CAPTURE_READERS], ["litigation-hold", "batch-examination", "captured-for"]);
   const may = (fn) => { const { c } = fresh(); if (fn) assert.equal(c.registerReader("litigation-hold", "actions", fn).ok, true); return c.mayClearDiscarded().may; };
   assert.equal(may(null), false, "none registered: nothing is cleared");
   assert.equal(may(() => true), false, "a hold in place");
