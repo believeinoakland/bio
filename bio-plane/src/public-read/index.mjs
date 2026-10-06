@@ -259,7 +259,7 @@ export class PublicRead {
       /* DEC-49 REGION is-public-read-not-registered
        * C-98.10 (K1149): the code a STRING LITERAL at its site, its row from this module's table (R17). */
       return { ok: false, reason: "PUBLIC_READ_NOT_REGISTERED", ...rowOf("PUBLIC_READ_NOT_REGISTERED"), name: n,
-               detail: `no public read named ${JSON.stringify(n)} is registered on this copy of the record, so there `
+               detail: `no public read named ${JSON.stringify(n)} is registered on this group's Civicsmith, so there `
                      + "is nothing to serve under that name" };
       /* END DEC-49 REGION is-public-read-not-registered */
     }
@@ -468,8 +468,8 @@ export class PublicRead {
                + "disagree, `strength` is null, `strengthUndetermined` says CASES_DISAGREE, and "
                + "`strengthByCase` lists every ratified case edition's own pair, named by its case and "
                + "edition. None of them is the finding's pair; each is that case's.",
-      detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without this "
-            + "instance's cooperation or continued existence. Nothing unpublished appears, by construction: "
+      detail: "every hash here is verifiable by anyone with ssh-keygen and the doorbell, without the cooperation or "
+            + "continued existence of this group's Civicsmith. Nothing unpublished appears, by construction: "
             + "this reads the published projection and never the working corpus." };
   }
 
@@ -1046,7 +1046,7 @@ export class PublicRead {
                         + "the case carries the scope that brought them together, the completeness "
                         + "assertion, and the group's acknowledgement of the bias the case was produced "
                         + "under — the last of these is a DISCLOSURE the reader weighs, never a verdict this "
-                        + "plane reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
+                        + "group's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: "
                         + "composing two findings' strengths into one letter is the substitution R2 forbids.",
              graph_detail: "each finding's serves[] is what this surface may hand over — every entry names a "
                          + "published edition. names[] is what it may only NAME. unresolved[] is an edge "
