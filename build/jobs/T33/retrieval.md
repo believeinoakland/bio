@@ -42,3 +42,15 @@ For other modules (not mine to change):
 ## J4 · REPORT
 
 B4 applied (a4063de42f's parent): every compile and savedForm get query-language J2's second argument ({projection, fields, money} with money injected as retrievalOf's `money` dep until query-language imports it), zone in the query object. Against job/T33/query-language's query.mjs (local copy, not committed): retrieval 134/134 pass, R68's money-word test added. Waiting for the CHANGE at query-language's merge to re-run on tranche/T33 and COMPLETE.
+
+## J5 · REPORT
+
+B5 applied: tranche/T33 merged (K1582); the stand-ins for events' and money's tables are gone, and my tests run on their own schemas (`EVENTS_SCHEMA`, `MONEY_SCHEMA`); duties' table stays a stand-in by R20's columns until duties merges. Retrieval 134/134 pass on the real query-language. Format, coverage (71/71) and ownership: 0 failures.
+
+Found on the real schemas, fixed in my module: events holds the when-cache as `event_when_cache` (its R37 calls it `when_cache`), so `occurred:` would never have gone live; the view now reads `event_when_cache`. Please align events R37's wording with its table name (a requirement edit, no code change).
+
+What remains before COMPLETE:
+1. duties' merge: then I point the `obligor`/`owed_to` test at duties' own schema and re-run.
+2. `uses` (architecture, 2 failures now): retrieval gains `events` and `money` (my tests load their schemas; the views read their R37/R19 contracts), and `duties` at its merge. Final uses at COMPLETE: today's list plus events, money, duties.
+
+Users of retrieval re-run (inquiry, citation, basis-versions, strength, intent, ratification, monitoring, scheduler, plane, migrate-released, query-language): all green. Red, and identically red on tranche/T33 @ 00b6cc2dd1's parent: ai-runs R18 (K1514), agent-worker `requirements.test.mjs`, actions R36/R48/R51/R52 ×5, action-clocks R10 ×3 (K1519), control-plane R22, R26, R43. None is retrieval's.
