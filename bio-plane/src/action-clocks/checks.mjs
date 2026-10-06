@@ -1,8 +1,9 @@
-/* action-clocks — its catalogue rows (requirements: `build/requirements/action-clocks.md`, R1, R4–R6; K617, K624).
+/* action-clocks — its catalogue rows (requirements: `build/requirements/action-clocks.md`, R1, R4–R6, R13; K617, K624).
  *
  * `PENDING_CLOCKS_BAD_BEFORE` (C-117.5) is copied from `actions/checks.mjs` with its comment (R1 was `actions` R31),
  * its `where` re-pointed here; `actions`' copy is gone (K914), so this row is the only one. New here (R4, R6):
- * C-123.1–C-123.3, the reminders' three refusals. `NO_SUCH_ACTION` is `actions`' row (its R43), answered through `actions.noSuchAction`. */
+ * C-123.1–C-123.3, the reminders' three refusals. New in T33-74 (R13): C-123.4–C-123.6, the adoption's three refusals,
+ * in this module's own family. `NO_SUCH_ACTION` is `actions`' row (its R43), answered through `actions.noSuchAction`. */
 
 export const ACTION_CLOCK_CHECKS = {
   /* R1: the date the pending-clock read looks before is a date; the condition is this read's own. */
@@ -33,5 +34,26 @@ export const ACTION_CLOCK_CHECKS = {
     where: 'src/action-clocks/index.mjs reminderAnswer > is-no-such-reminder',
     translation: 'There is no reminder of yours on that deadline that has come due and is waiting for an answer, so '
       + 'nothing was answered.',
+  },
+  /* R13, R8 (K1440): adopting a computed deadline into an action's clock is a member's own act. */
+  MACHINE_CANNOT_ADOPT_CLOCK: {
+    check: 'C-123.4',
+    where: 'src/action-clocks/index.mjs clockAdopt > is-machine-adopt',
+    translation: 'A deadline is put on an action by a member. This request came from no signed-in member, so the '
+      + 'proposed deadline was not adopted. Sign in as a member to adopt it.',
+  },
+  /* R13: the proposal adopted is one that stands on this action. */
+  NO_SUCH_CLOCK_PROPOSAL: {
+    check: 'C-123.5',
+    where: 'src/action-clocks/index.mjs clockAdopt > is-no-such-clock-proposal',
+    translation: 'There is no standing proposed deadline of that name on this action (it was never proposed, or it '
+      + 'has already been adopted), so nothing was adopted. Ask for the deadline to be computed again.',
+  },
+  /* R13: an undetermined date is never adopted; a member states such an entry by their own revision. */
+  CLOCK_PROPOSAL_UNDETERMINED: {
+    check: 'C-123.6',
+    where: 'src/action-clocks/index.mjs clockAdopt > is-clock-proposal-undetermined',
+    translation: 'The proposed deadline has no date: it could not be computed, for the reason it states. Nothing was '
+      + 'adopted. A member can state the deadline themselves by revising the action, with its basis.',
   },
 };

@@ -1,10 +1,12 @@
 /* action-clocks' calendar: a business count states the confirmation of every holiday year it reads and counts on the value
    that governs on this instance, for the offices the action is addressed to or filed at (R10; jurisdictions R43;
-   local-facts R2); and the local facts a live deadline reads (R11). On the test profile, and on the first profile's
-   office-specific 2026 entries (M-189–M-191; K936). */
+   local-facts R2); and the local facts a live deadline reads (R11). On the test profile (its weekend Sunday alone),
+   on a variant of it whose deadlines name no closure list (`officeCalendarProfile`), and on the first profile's
+   office-specific 2026 entries (M-189–M-191; K936). K1519: a closure list's entries (jurisdictions R47) are never read
+   as the office calendar, and never a local fact. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CLK } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CLK, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { factPath } from "../../../src/local-facts/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -13,8 +15,9 @@ const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d";
 const TEST = combine(["test-port-ellery"]).view, FIRST = combine(["oakland-alameda"]).view;
 const office = (role, body) => ({ state: "named", role, body });
-const fm = (counterparty, action_kind, at) => ({ counterparty, action_kind, correspondence: [{ direction: "received", at }] });
-const R5 = { rule: "r", days: 5, count: "business", starts: "received" };
+const fm = (counterparty, action_kind, at) => ({ counterparty, action_kind, correspondence: [{ direction: "sent", at }] });
+const R5 = { rule: "r", days: 5, count: "business", starts: "received", basis: "TEST" };
+const OFFICE = { "test-port-ellery": officeCalendarProfile() };
 const count = (d, f, view, factOf) => clocks.computeDeadline(d, f, view, factOf === undefined ? {} : { factOf });
 /* The paths of the holiday entries of a view for a year, keyed by their offices ("all" for every office). */
 const pathOf = (view, year, offices = null) => {
@@ -24,27 +27,49 @@ const pathOf = (view, year, offices = null) => {
 const CLERK = office("Town Clerk", "City of Port Ellery"), SELECT = office("Selectboard", "Port Ellery Selectboard");
 const CPL = (role, body) => ["counterparty:", "  state: named", `  role: ${role}`, `  body: ${body}`];
 
-test("R10 a business count reads the holiday entries for all offices and those naming the action's ONE office (its addressee when a named office, else its kind's venue; K986), and no other office's", () => {
-  /* Wednesday 2026-08-12: the Town Clerk's office alone is closed Friday 14 August (an entry naming it). */
-  assert.equal(count(R5, fm(CLERK, "records_request", "2026-08-12"), TEST).date, "2026-08-20", "the Clerk's closure is counted");
-  assert.equal(count(R5, fm(SELECT, "records_request", "2026-08-12"), TEST).date, "2026-08-19", "for another office it is not");
-  /* Friday 2026-08-28: the venue of a commitment claim is closed Monday 31 August; a records request's is not. With no
+test("R10 a business count reads the holiday entries for all offices and those naming the action's ONE office (its addressee when a named office, else its kind's venue; K986), and no other office's; never a closure list's (K1519)", () => {
+  /* Wednesday 2026-08-12, the weekend Sunday alone: the Town Clerk's office alone is closed Friday 14 August. Thu 13,
+     (Fri 14), Sat 15, (Sun 16), Mon 17, Tue 18, Wed 19; for another office Thu 13 … Tue 18. */
+  assert.equal(count(R5, fm(CLERK, "records_request", "2026-08-12"), TEST).date, "2026-08-19", "the Clerk's closure is counted");
+  assert.equal(count(R5, fm(SELECT, "records_request", "2026-08-12"), TEST).date, "2026-08-18", "for another office it is not");
+  /* Saturday 2026-08-29: the venue of a commitment claim is closed Monday 31 August; a records request's is not. With no
      office addressed, the venue decides; with an office addressed, the addressee does. */
   const one = { ...R5, days: 1 }, AUD = { state: "audience", description: "residents" };
-  assert.equal(count(one, fm(AUD, "commitment_claim", "2026-08-28"), TEST).date, "2026-09-01", "the venue's closure is counted");
-  assert.equal(count(one, fm(AUD, "records_request", "2026-08-28"), TEST).date, "2026-08-31");
-  assert.equal(count(one, fm(SELECT, "commitment_claim", "2026-08-28"), TEST).date, "2026-08-31", "the addressee, not the venue");
-  /* the all-offices entry binds every office: Friday 3 July. */
+  assert.equal(count(one, fm(AUD, "commitment_claim", "2026-08-29"), TEST).date, "2026-09-01", "the venue's closure is counted");
+  assert.equal(count(one, fm(AUD, "records_request", "2026-08-29"), TEST).date, "2026-08-31");
+  assert.equal(count(one, fm(SELECT, "commitment_claim", "2026-08-29"), TEST).date, "2026-08-31", "the addressee, not the venue");
+  /* the all-offices entry binds every office: Friday 3 July (Thu 2, Sat 4, Mon 6, Tue 7, Wed 8). */
   for (const f of [fm(CLERK, "records_request", "2026-07-01"), fm({ state: "audience", description: "residents" }, "other", "2026-07-01")])
-    assert.equal(count(R5, f, TEST).date, "2026-07-09");
-  /* the entries read are stated, each once, the others' not. */
-  const read = count(R5, fm(CLERK, "records_request", "2026-08-12"), TEST).calendar.years.map((y) => [y.year, y.offices]);
-  assert.deepEqual(read, [[2026, null], [2026, ["Town Clerk"]]]);
+    assert.equal(count(R5, f, TEST).date, "2026-07-08");
+  /* the entries read are stated, each once, the others' not, and no closure list among them (K1519): the 'court' and
+     'town' lists of 2026 carry no `offices` and were once read as the calendar for all offices. */
+  const read = count(R5, fm(CLERK, "records_request", "2026-08-12"), TEST).calendar.years.map((y) => [y.year, y.list, y.offices]);
+  assert.deepEqual(read, [[2026, null, ["Town Clerk"]], [2026, null, null]]);
+  /* 1 January 2026 is a 'town' and 'court' closure and an all-office holiday; 17 March a 'town' one and an all-office
+     one; 31 August a 'court' one only: an office count is not moved by the lists' days. */
+  assert.equal(count({ ...R5, days: 1 }, fm(SELECT, "other", "2026-08-29"), TEST).date, "2026-08-31", "the 'court' list's 31 August is not the office calendar's");
+  assert.deepEqual(clocks.yearEntries(TEST, [], 2026).entries.map((h) => [h.list ?? null, h.offices ?? null]), [[null, null]],
+    "yearEntries reads no list entry");
   assert.deepEqual(clocks.actionOffices(fm(CLERK, "commitment_claim", "2026-08-28"), TEST),
     [{ role: "Town Clerk", body: "City of Port Ellery" }]);
   assert.deepEqual(clocks.actionOffices(fm(AUD, "commitment_claim", "2026-08-28"), TEST), [{ venue: "commitment_claim" }]);
   assert.deepEqual(clocks.actionOffices(fm({ state: "named", kind: "press", role: "Reporter", organisation: "x" }, "other", "x"), TEST), [],
     "a named non-office and a kind with no venue are no office");
+});
+
+test("R10 a rule that names a closure list counts on that list alone and states it as the profile holds it: a list is not confirmed on this instance, so the count reads unconfirmed, saying so", () => {
+  const w = world();
+  w.action(A, CPL("Town Clerk", "City of Port Ellery"));
+  w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-08-12", account: "sent", viewer: M, author: M });
+  const p = w.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M }).proposal;
+  /* the 'town' list closes no day in the period, so the Clerk's own 14 August does not move it: Thu 13 … Tue 18. */
+  assert.equal(p.entry.date, "2026-08-18");
+  assert.deepEqual(p.calendar.years.map((y) => [y.year, y.list, y.status, y.path]), [[2026, "town", "profile_list", null]]);
+  assert.equal(p.calendar.status, "unconfirmed");
+  assert.deepEqual(p.calendar.says, ["counted on the closure list 'town' for 2026 as the profile holds it (TEST); a closure list is not confirmed on this instance"]);
+  /* the local-facts reader never answers a list entry as an office-calendar fact (its path would collide with one). */
+  const list = TEST.holidays.find((h) => h.list === "town");
+  assert.deepEqual(clocks.factReader(w.localFacts, M)(list), { path: null, status: "absent", why: "a closure list's entry is not a local fact" });
 });
 
 test("R10 on the first profile's office-specific 2026 entries (M-189–M-191): each office counts on its own entry; an office no entry names, with no entry for all offices, leaves the year undetermined", () => {
@@ -63,7 +88,7 @@ test("R10 on the first profile's office-specific 2026 entries (M-189–M-191): e
   const jury = count(one, fm(office("Civil Grand Jury", "Alameda County Civil Grand Jury"), "other", "2026-07-02"), FIRST);
   assert.equal(jury.date, null); assert.match(jury.why, /Civil Grand Jury/); assert.match(jury.why, /2026/);
   const none = count(one, fm(audience, "other", "2026-07-02"), FIRST);
-  assert.equal(none.date, null); assert.match(none.why, /does not list/);
+  assert.equal(none.date, null); assert.match(none.why, /does not cover for every office/);
   /* the addressee is the office even where the kind has a venue an entry names: the jury, no entry naming it. */
   assert.equal(count(two, fm(office("Civil Grand Jury", "Alameda County Civil Grand Jury"), "records_petition", "2026-07-02"), FIRST).date, null);
   /* a request to the City Auditor counts on M-190's entry, though the kind's venue (the portal) is named by none. */
@@ -74,10 +99,10 @@ test("R10 on the first profile's office-specific 2026 entries (M-189–M-191): e
 });
 
 test("R10 the count states each year's confirmation through local-facts: unconfirmed, confirmed, corrected (counting on the correction, naming its member and date), and undetermined when disputed; a calendar count states none", () => {
-  const w = world();
+  const w = world({ override: OFFICE });
   const clerk = pathOf(TEST, 2026, ["Town Clerk"]), all26 = pathOf(TEST, 2026);
   w.action(A, CPL("Town Clerk", "City of Port Ellery"));
-  w.actions.actionCorrespond({ target: A, direction: "received", at: "2026-08-12", account: "got it", viewer: M, author: M });
+  w.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-08-12", account: "sent", viewer: M, author: M });
   const propose = () => w.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M }).proposal;
   const act = (path, a, x = {}) => {
     const r = w.localFacts.factConfirm({ path, act: a, how: "the clerk's published calendar, read 2026-09-28", by: M, viewer: M, ...x });
@@ -85,32 +110,32 @@ test("R10 the count states each year's confirmation through local-facts: unconfi
   };
   /* no member has confirmed: counted, and said to be counted on an unconfirmed calendar, naming the source. */
   let p = propose();
-  assert.equal(p.entry.date, "2026-08-20");
+  assert.equal(p.entry.date, "2026-08-19");
   assert.equal(p.calendar.status, "unconfirmed");
-  assert.deepEqual(p.calendar.years.map((y) => [y.path, y.status]), [[all26, "unconfirmed"], [clerk, "unconfirmed"]]);
+  assert.deepEqual(p.calendar.years.map((y) => [y.path, y.status]), [[clerk, "unconfirmed"], [all26, "unconfirmed"]]);
   assert.equal(p.calendar.says.length, 2);
   for (const s of p.calendar.says) assert.match(s, /^counted on an unconfirmed calendar \(TEST, /);
   /* one confirmed, one not: still unconfirmed, the confirmed one not named among what is said. */
   act(all26, "confirm");
   p = propose();
-  assert.deepEqual([p.calendar.status, p.calendar.says.length, p.entry.date], ["unconfirmed", 1, "2026-08-20"]);
+  assert.deepEqual([p.calendar.status, p.calendar.says.length, p.entry.date], ["unconfirmed", 1, "2026-08-19"]);
   /* both confirmed: counted as before, nothing said. */
   act(clerk, "confirm");
   p = propose();
-  assert.deepEqual([p.calendar.status, p.calendar.says, p.entry.date], ["confirmed", [], "2026-08-20"]);
+  assert.deepEqual([p.calendar.status, p.calendar.says, p.entry.date], ["confirmed", [], "2026-08-19"]);
   assert.ok(p.calendar.years.every((y) => y.status === "confirmed"));
   /* corrected: the correction governs (the Clerk is open on 14 August), naming the member and the date. */
   const c = act(clerk, "correct", { by: BOB, viewer: BOB, value: [],
                                     source: "the clerk's notice of 2026-09-20" });
   p = propose();
-  assert.deepEqual([p.calendar.status, p.entry.date], ["corrected", "2026-08-19"]);
+  assert.deepEqual([p.calendar.status, p.entry.date], ["corrected", "2026-08-18"]);
   const y = p.calendar.years.find((x) => x.path === clerk);
   assert.deepEqual([y.status, y.corrected_by, y.corrected_at], ["corrected", BOB, c.at.slice(0, 10)]);
   assert.deepEqual(p.calendar.says, [`counted on a calendar corrected locally by ${BOB}, ${c.at.slice(0, 10)}`]);
   /* a correction since confirmed: confirmed, and still counted on the correction that governs. */
   act(clerk, "confirm");
   p = propose();
-  assert.deepEqual([p.calendar.status, p.calendar.says, p.entry.date], ["confirmed", [], "2026-08-19"]);
+  assert.deepEqual([p.calendar.status, p.calendar.says, p.entry.date], ["confirmed", [], "2026-08-18"]);
   /* disputed: undetermined, with why; nothing is counted. */
   act(all26, "dispute", { by: BOB, viewer: BOB });
   p = propose();
@@ -118,16 +143,18 @@ test("R10 the count states each year's confirmation through local-facts: unconfi
   assert.equal(w.rows(`SELECT date FROM action_clock_proposals WHERE bundle_id=?`, A)[0].date, null);
   /* a confirmation lapsed at its horizon (a holiday year's, at that year's end): unconfirmed again, naming its source
      and the date of the lapsed confirmation. */
-  const x = world();
+  const x = world({ override: OFFICE });
   x.action(B, ["clock:", ...CLK("2027-12-01"), ...CPL("Town Clerk", "City of Port Ellery")]);
-  x.actions.actionCorrespond({ target: B, direction: "received", at: "2026-12-30", account: "got it", viewer: M, author: M });
+  x.actions.actionCorrespond({ target: B, direction: "sent", at: "2026-12-30", account: "sent", viewer: M, author: M });
   for (const path of [pathOf(TEST, 2026), pathOf(TEST, 2026, ["Town Clerk"]), pathOf(TEST, 2027)])
     assert.equal(x.localFacts.factConfirm({ path, act: "confirm", how: "the calendar", by: M, viewer: M }).ok, true);
   const q = () => x.c.clockPropose({ target: B, rule: "records_answer", proposer: M, viewer: M }).proposal;
-  assert.deepEqual([q().calendar.status, q().entry.date], ["confirmed", "2027-01-07"]);
+  /* Wed 2026-12-30: Thu 31, (Fri 1 January), Sat 2, (Sun 3), Mon 4, Tue 5, Wed 6. */
+  assert.deepEqual([q().calendar.status, q().entry.date], ["confirmed", "2027-01-06"]);
+  /* 2027-01-02T00:00Z is still 1 January in the profile's zone, and 2026 has ended there (local-facts R3). */
   x.clock.ms = Date.parse("2027-01-02T00:00:00Z");
   const lapsed = q();
-  assert.deepEqual([lapsed.calendar.status, lapsed.entry.date], ["unconfirmed", "2027-01-07"]);
+  assert.deepEqual([lapsed.calendar.status, lapsed.entry.date], ["unconfirmed", "2027-01-06"]);
   assert.deepEqual(lapsed.calendar.says, ["counted on an unconfirmed calendar (TEST, 2026-09-28)",
                                           "counted on an unconfirmed calendar (TEST, 2026-09-28)"], "the two 2026 entries");
   /* a local-facts that cannot answer reads as absent: undetermined. */
@@ -135,13 +162,13 @@ test("R10 the count states each year's confirmation through local-facts: unconfi
   assert.equal(absent.date, null); assert.match(absent.why, /cannot be read/);
   /* a calendar count reads no holiday and states none. */
   const cal = clocks.computeDeadline({ ...R5, count: "calendar" }, fm(CLERK, "records_request", "2026-08-12"), TEST, { factOf: () => { throw new Error("read"); } });
-  assert.deepEqual(cal, { date: "2026-08-17", start: "2026-08-12" });
+  assert.deepEqual([cal.date, cal.start, "calendar" in cal], ["2026-08-17", "2026-08-12", false]);
   /* a pure caller that reads no confirmation says so. */
   assert.equal(count(R5, fm(CLERK, "records_request", "2026-08-12"), TEST).calendar.status, "not_read");
 });
 
 test("R11 calendarFactsRead lists, once each, the holiday entries and office hours a live business-day deadline reads, from this year to its latest pending entry's (at least the next), with the actions reading each; writes nothing", () => {
-  const w = world();
+  const w = world({ override: OFFICE });
   w.action(A, [...CPL("Town Clerk", "City of Port Ellery"), "clock:", ...CLK("2028-03-01"), ...CLK("2029-01-05", "met")]);
   w.action(B, CPL("Town Clerk", "City of Port Ellery"));
   w.promote(C, actionMd(C, [...CPL("Selectboard", "Port Ellery Selectboard"), "action_kind: bylaw_complaint"]));
@@ -173,6 +200,12 @@ test("R11 calendarFactsRead lists, once each, the holiday entries and office hou
   const bare = world({ profiles: null });
   bare.action(A, CPL("Town Clerk", "City of Port Ellery"));
   assert.deepEqual(bare.c.calendarFactsRead({ viewer: M }).paths, []);
+  /* K1519: on the test profile itself every business deadline counts on a closure list, which is no local fact: only
+     the offices' hours are read, and no list entry ever becomes a path. */
+  const lists = world();
+  lists.action(A, [...CPL("Town Clerk", "City of Port Ellery"), "clock:", ...CLK("2028-03-01")]);
+  assert.deepEqual(lists.c.calendarFactsRead({ viewer: M }).paths.map((p) => p.path),
+    [factPath({ profile: "test-port-ellery", fact: "hours", office: { role: "Town Clerk", body: "City of Port Ellery" } })]);
 });
 
 test("R11 at most 500 actions are read, `truncated` stated", () => {
@@ -186,7 +219,7 @@ test("R11 at most 500 actions are read, `truncated` stated", () => {
 });
 
 test("R11 each path's actions are answered as {action, project, created_by}, the project and creator as R3 computes them (K1000): one created by a member in a project, one by a machine in another member's project", () => {
-  const w = world();
+  const w = world({ override: OFFICE });
   for (const x of ["CONF-2026-0001-mine", "CONF-2026-0002-bobs"]) w.doc(x);
   w.determinations.set("CONF-2026-0001-mine", { project: "PROJ-2026-0001", sees: [M, BOB] });
   w.determinations.set("CONF-2026-0002-bobs", { project: "PROJ-2026-0002", sees: [M, BOB] });

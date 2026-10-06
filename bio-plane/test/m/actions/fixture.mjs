@@ -77,7 +77,8 @@ export function actionMd(id, lines = [], { state = "planned" } = {}) {
 export const CP = ["counterparty:", "  state: named", "  role: Town Clerk", "  body: Town of Port Ellery"];
 
 /* `recordAs(record)`, when given, is the record-core instance `actions` is handed (a test's spy over the real one). */
-export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null, recordAs = null } = {}) {
+/* `deps`, when given, are further dependencies handed to `actionsOf` (a stand-in a test controls). */
+export function world({ profiles = ["test-port-ellery"], retrieval = true, conformance = null, recordAs = null, deps = {} } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -107,7 +108,7 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
     registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return { ok: true }; },
   } : null;
   const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
-                              content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms });
+                              content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms, ...deps });
   /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the
      store's boot migrates them. */
   if (!conformance) {
@@ -130,6 +131,9 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
     connections.migrate();
     inquiryOf(host, { record, membership, promotion, content, connections, entities: connections.entities, provenance: prov }).migrate();
   }
+  /* the dated lines, the events and the duties actions reaches on this host (T33-73): their tables, as the store's boot
+     migrates them. */
+  for (const m of [a.events, a.lines, a.duties]) if (m && typeof m.migrate === "function") m.migrate();
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, a, clock, reg, captures,
