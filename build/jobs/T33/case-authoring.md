@@ -27,3 +27,22 @@ Replaces J1: J1's four points stand as written, with three refinements found in 
 (3) **One more edge.** R30's fixed test now reads the places through `jurisdictions.list()` (its R1), so case-authoring's `uses` also gains `jurisdictions` (layer 1). With J1 (4): `calculations`, `workbooks`, `events`, `case-tensions`, `inquiry-grammar`, `jurisdictions`.
 
 J1 (2) (the row's id and words) and (3) (the input names `calculationsDisclosed`, `peopleBases`, `tieAttested`, signers `[author]`) are unchanged.
+
+## J3 · REPORT
+
+Built on K1633/K1634: R56 (gather, judgment, C-136.1, the `calculations:` block and a body section), R57 (the `timeline:` block, two lanes, a body section), R55's new steps (calculations, then `peopleNamed`/`peopleJudged`, then `tieAttestationJudged`), R34's new blockers, R8/R55 reaching `caseRelation`/`attributionStatements` through a `caseTensions` dep (publication's re-export until T33-62 merges), R30's red fixed through `jurisdictions.list()`. 137/137 module tests; format 0, coverage 41/41, ownership 0; architecture fails only on the four `uses` edges you set at the merge (calculations, workbooks, events, jurisdictions). Pushed on `job/T33/case-authoring`. I now wait for case-grammar, case-tensions and case-disclosures to merge, to re-point my tests at them before COMPLETE.
+
+Findings in other modules:
+
+(1) **inquiry: no finding can rest on a calculation today.** `inquiry`'s promote gate refuses every `CALC-` leg (`inquiry/index.mjs:512`, C-2.8 `CALCULATION_NOT_ACCEPTED`: "whether it is held, visible to you and accepted cannot be confirmed here"), against inquiry-grammar R14 and inquiry R4's calculation leg. So R56 is reachable only in my tests (which give case-authoring's view of inquiry the legs). The likely cause is that `calculations`' reads are async; a synchronous read of a calculation's acceptance and visibility (calculations has `#visible` sync already) registered with inquiry would close it. For inquiry's or calculations' next job.
+
+(2) **calculations: `read` states each input's SHA-256 only for a table.** case-grammar R18's `inputs` ("each input's name and SHA-256, the canonical bytes calc-grammar evaluates") and publication R22 as amended (K1632: the commit stores each input's bytes at its SHA-256) need it for every input; `calculations.#compute` computes these hashes (`hashes`) but `read` does not answer them. I write `{name, sha}` with the table's sha and null for a figure, money or calculation input. For calculations' next job (or now, if you route it as a CHANGE).
+
+(3) **case-grammar (T33-60): one more `recompute` value.** Per K1634 a workbook not recomputed here is written `recompute: not_recomputed`, beside R18's `agrees`, `differs`, `unbound`; its `calculationsLines`/`calculationsOf` should carry it. A workbook row has `calc` = its capture sha, `recipe`, `results`, `result_key` null, `inputs` [], `method_version` "<engine> <version>".
+
+(4) **case-disclosures (T33-68): the shapes I hand it**, for its job to code against (or tell me to change mine):
+- `peopleNamed(prepared, parts, viewer)` with `parts = {statement, scope, justification, bias, excluded, conclusions: [{target, …conclusion}], subjects: [{target, entity}], lens: [lens statements as R40 reads them], timeline: [{lane, ord, when, label, ref, source, participants: [entity ids]}], money: [money fact ids the case's calculations cite]}`; I read back `{named, unresolved}` only by handing it to `peopleJudged` and `tieAttestationJudged`.
+- `peopleJudged(named, peopleBases, viewer)`: `peopleBases` is the act's body field, handed whole.
+- `tieAttestationJudged([author], named, moneyFactIds, tieAttested, viewer)`: `tieAttested` is the act's body field, handed whole; `moneyParties` is the money fact ids (it resolves payer and payee).
+- `peopleLines(rows)` and `memberTieLines(rows)` are written after `timeline:` and before `completeness:`.
+The pre-flight asks all three over the same parts.
