@@ -88,3 +88,12 @@ test("R5 append-only: every act is kept with its member, date and how; nothing i
   w.lf.factStatus({}); w.lf.factStatus({ path: P.tz }); w.lf.factsDue({}); w.lf.factsDue({ paths: [P.tz] });
   assert.equal(w.count(), before);
 });
+
+test("R9 the table is declared explicitly through record-core's declareTable, with its classes", () => {
+  const w = world();
+  const mine = w.record.declaredTables().filter((d) => d.module === "local-facts");
+  assert.deepEqual(mine, [{ module: "local-facts", name: "local_fact_acts", keys: [], purge: "clear", expunge: "none",
+                            export: "admin-only", sight: "group", derive: "stored", version_chain: true }]);
+  /* the purge classes keep R5: only the whole-store form clears it (shown in R5's test); declared once */
+  assert.equal(w.record.declareTable("local-facts", [{ ...mine[0] }]).reason, "TABLE_DECLARED");
+});

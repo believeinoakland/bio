@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS entities (
   label       TEXT NOT NULL,
   note        TEXT,
   declared_by TEXT,
-  at          TEXT
+  at          TEXT,
+  sector      TEXT
 );
 CREATE INDEX IF NOT EXISTS entities_kind ON entities(kind);
 -- ALIASES are FIRST-CLASS and per entity (safeguard 4). The canonical label is also an alias (canonical=1).
@@ -38,7 +39,9 @@ CREATE INDEX IF NOT EXISTS entity_aliases_norm ON entity_aliases(alias_norm);
 CREATE INDEX IF NOT EXISTS entity_aliases_entity ON entity_aliases(entity_id);
 -- DECLARED RELATIONS: proxy_for, member_of, overlaps (safeguard 4), each justified and cited like a pattern
 -- statement. THERE IS DELIBERATELY NO GRADE COLUMN (D-83, R26): a declared relation is CONSTITUTIVE, not
--- evidentiary, and sits outside the section 8.1 grade; the enforcement is structural. R8: withdrawn, never deleted.
+-- evidentiary, and sits outside the section 8.1 grade; the enforcement is structural. It never resolves a reference;
+-- explore may walk it as a hop marked "declared, not evidenced" at the lowest grade (K1487, R47). R8: withdrawn, never
+-- deleted.
 CREATE TABLE IF NOT EXISTS entity_relations (
   relation_id      TEXT PRIMARY KEY,
   from_entity      TEXT NOT NULL,
@@ -54,6 +57,65 @@ CREATE TABLE IF NOT EXISTS entity_relations (
 );
 CREATE INDEX IF NOT EXISTS entity_relations_from ON entity_relations(from_entity);
 CREATE INDEX IF NOT EXISTS entity_relations_to ON entity_relations(to_entity);
+-- R48 (T33-25): both ends indexed WITH the key a page continues from, so one end's relations are read in relation_id
+-- order, a page at a time, by an index seek on either end (connection-grammar's neighbours, R47).
+CREATE INDEX IF NOT EXISTS entity_relations_from_id ON entity_relations(from_entity, relation_id);
+CREATE INDEX IF NOT EXISTS entity_relations_to_id ON entity_relations(to_entity, relation_id);
+-- R42 (K1453; T33-25): AN ORGANISATION'S SECTOR, its history. entities.sector holds the current value (an organisation
+-- kind's; NULL for every other kind, and for an organisation registered before T33, which reads 'undetermined'); every
+-- set or correction appends one row here with the value it replaced, so an earlier value is never erased (R8's pattern).
+CREATE TABLE IF NOT EXISTS entity_sectors (
+  seq       INTEGER PRIMARY KEY,
+  entity_id TEXT NOT NULL,
+  sector    TEXT NOT NULL,
+  prior     TEXT,
+  note      TEXT NOT NULL,
+  set_by    TEXT,
+  at        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS entity_sectors_entity ON entity_sectors(entity_id, seq);
+-- R43, R44 (B1a.3, A ORG; T33-25): SCHEME IDENTIFIERS. One row per identifier an entity holds in a scheme of the active
+-- profiles' identifier_schemes (jurisdictions R52), in the scheme's space and form (id-spaces), compared on its NORMAL
+-- form. scope is '' for a profile scheme; for the reserved scheme 'proceeding' (R45) it is the forum's entity id, so a
+-- number is taken only within its forum. valid is civil-time's validity value as JSON, or NULL (unstated). basis is
+-- the cited source or the system rule (K1443), as text or JSON. Withdrawn, never deleted (R8's pattern). The value
+-- index serves R9's identifier tier and R44's lookup.
+CREATE TABLE IF NOT EXISTS entity_identifiers (
+  entity_id        TEXT NOT NULL,
+  scheme           TEXT NOT NULL,
+  scope            TEXT NOT NULL DEFAULT '',
+  space            TEXT NOT NULL,
+  form             TEXT NOT NULL,
+  id               TEXT NOT NULL,
+  normal           TEXT NOT NULL,
+  valid            TEXT,
+  basis            TEXT NOT NULL,
+  held_by          TEXT,
+  at               TEXT NOT NULL,
+  withdrawn_by     TEXT,
+  withdrawn_at     TEXT,
+  withdrawn_reason TEXT,
+  PRIMARY KEY (entity_id, scheme, scope, normal)
+);
+CREATE INDEX IF NOT EXISTS entity_identifiers_value ON entity_identifiers(space, normal);
+CREATE INDEX IF NOT EXISTS entity_identifiers_scheme ON entity_identifiers(scheme, scope, normal);
+-- R45, R46 (C1, K1452, K1443; T33-25): A PROCEEDING'S FACET, one row per entity of kind 'proceeding': its forum (a
+-- registered entity), the forum's kind, the proceeding kind (jurisdictions R51) and its number as the forum writes it,
+-- with the normal form the identifier holds. basis_capture and basis_extent (content's canonical extent) name the
+-- passage a machine registration read the number from (R46), NULL for a member's own registration. A renumbering is a
+-- withdrawal and a new identifier, never an edit of this row. Status as of a date is events', never stored here.
+CREATE TABLE IF NOT EXISTS entity_proceedings (
+  entity_id     TEXT PRIMARY KEY,
+  forum         TEXT NOT NULL,
+  forum_kind    TEXT NOT NULL,
+  kind          TEXT NOT NULL,
+  number        TEXT NOT NULL,
+  normal        TEXT NOT NULL,
+  basis_capture TEXT,
+  basis_extent  TEXT,
+  at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS entity_proceedings_forum ON entity_proceedings(forum, normal);
 -- THE RESOLUTIONS (FW-7): one reading reference matched to one registry entity, with the METHOD declared as the
 -- section 8.1 grade. A, B, C are the recogniser's (the reference, its key, its label matched an alias); D is a
 -- member's testimony, never the machine's. established is derived from the grade at the write (1 for A and B), so
@@ -108,6 +170,9 @@ CREATE INDEX IF NOT EXISTS resolution_defects_bundle ON resolution_defects(bundl
    the schema, with its index, and filled once for the rows a store held before it; NULL for testimony (R8). */
 export const BASIS_NORM_COLUMN = Object.freeze(["resolutions", "basis_norm"]);
 export const BASIS_NORM_INDEX = "CREATE INDEX IF NOT EXISTS resolutions_entity_basis ON resolutions(entity_id, basis_norm)";
+
+/* R42 (T33-25): the sector column a store written before T33 lacks; its organisations read 'undetermined'. */
+export const SECTOR_COLUMN = Object.freeze(["entities", "sector"]);
 
 /* R8: the columns a store written before K106 lacks. */
 export const WITHDRAWAL_COLUMNS = Object.freeze([

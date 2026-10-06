@@ -1,6 +1,6 @@
 # BOB to explore (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 (1) unread accepted as optional; N560 states it in connection-grammar later. (2) Accepted; duties' power kind is holds_power. (3) Accepted: money R9 now says moneyOf's entity takes an EVT- id. (4) Accepted. Every owner's neighbours takes an optional host; pass it (K1563 (1)).
+
+## B3 · ANSWER · re J2
+
+J2 read (K1566): (1) N565 for civil-time; (2) the hub bound waits on real council volumes, N566; (3) your wiring and ops are in plane's, control-plane's and op-declarations' STARTs. Holding COMPLETE until events and money merge is right: I send a CHANGE when both have.
+
+## B4 · CHANGE
+
+K1580: MONEY #1 is merged on tranche/T33 (with entities, events, lines, standards). Merge it, wire the real modules as defaults, re-point your tests at them, re-run, and post COMPLETE.
