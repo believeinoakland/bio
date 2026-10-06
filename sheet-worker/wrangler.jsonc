@@ -24,7 +24,8 @@
 
   // CPU: the paid plan's 5-minute ceiling, declared rather than discovered (R14). The bounds in src/contract.mjs are
   // set so a workbook under them finishes inside it on the measured figures; one that does not is ended by the
-  // platform, and the plane reads a dropped call as "not recomputed here".
+  // platform, and the plane reads a dropped call as "not recomputed here". The member states these limits in its own
+  // bundle (src/limits.mjs, R17), so the signed release carries what the installer sends; a test pins the two equal.
   "limits": { "cpu_ms": 300000 },
 
   // The narrowest binding that does the job: the captures bucket, read. No PUBLISHED, no Durable Object (R10).

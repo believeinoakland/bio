@@ -96,6 +96,6 @@ Open, each with a recommendation:
 - **D4 · Unseen and absent policies. Ruled (K1724): as recommended.** Hold a policy known only by citation, and "no written policy exists", each with the search made; neither is a criterion until its text is held; an absence is itself a finding.
 - **D6 · Copyrighted standards.** Always hold the edition, citation and access; the text only by a member's own act (K1449); publications quote only the passages a finding needs.
 - **D7 · Confidential policies.** A policy obtained from a source keeps that source's confidentiality.
-- **D8 · Watching.** For policies a group holds, the product watches their published copies, keeps every version it sees, and notices a silent change.
+- **D8 · Watching. Ruled (K1727): as recommended, with whole portals a member chooses to follow.** For policies a group holds, the product watches their published copies, keeps every version it sees, and notices a silent change.
 
 BOB's, after the rulings: staging (POLICIES L2 and STANDARDS L2 beside LAW's stage 1 in the next plan carrying `standards`; L3 and the patterns with LAW's stage 2), the module shape, and a HANDOFF of the members' words to UX-DESIGN.

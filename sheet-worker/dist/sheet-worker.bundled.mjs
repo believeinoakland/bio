@@ -713,6 +713,10 @@ function makeEngine(mod) {
 // src/engine.mjs
 var SHEET_ENGINE = makeEngine(wasmModule2);
 
+// src/limits.mjs
+var MEMBER_LIMITS = Object.freeze({ cpu_ms: 3e5 });
+var MEMBER_LIMITS_STATEMENT = "bio-member-limits/1 cpu_ms=300000";
+
 // src/index.mjs
 var SURFACE = {
   recompute: { method: "POST", mutating: false },
@@ -720,7 +724,9 @@ var SURFACE = {
 };
 var member = makeMember(SHEET_ENGINE);
 var index_default = {
-  fetch: (req, env) => member.fetch(req, env)
+  fetch: (req, env) => member.fetch(req, env),
+  limits: MEMBER_LIMITS,
+  limitsStatement: MEMBER_LIMITS_STATEMENT
 };
 export {
   SURFACE,
