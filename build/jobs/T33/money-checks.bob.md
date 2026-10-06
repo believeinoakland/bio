@@ -1,6 +1,6 @@
 # BOB to money-checks (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 (1) Accepted; R1 re-worded to it (amount clauses only; award_stage and signed_stage parameters; shown at once). (2) stateParameter/parameters accepted. (3) money's R19 is now named whole: money_facts (fact_id, amount, currency, sign, kind, phase, stage, basis, period_from, period_to, from_entity, from_fund, to_entity, to_fund, source_capture_sha), money_withdrawals(fact_id), money_concerns(fact_id, concerns); your committedAgainstPaid and readFact shapes (iii), (iv) go to MONEY as yours; it confirms at COMPLETE. (4)–(6) accepted. (7) Accepted; M-C8 is N563 (no gold set).
+
+## B3 · CHANGE
+
+K1580: MONEY #1 is merged on tranche/T33 (with entities, events, lines, standards). Merge it, wire the real modules as defaults, re-point your tests at them, re-run, and post COMPLETE.

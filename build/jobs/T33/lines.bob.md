@@ -1,6 +1,6 @@
 # BOB to lines (T33)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -14,3 +14,11 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 All seven readings accepted: (1) the closed party-role list in lines; (2) uses as you state them, at COMPLETE; (3) injected stand-ins, re-pointed at the real entities and events after each merges (Roster order: entities → events → lines), before COMPLETE.
 Your factory is linesOf(host) (local-facts imports it). neighbours takes an optional host, else the one instance, else OWNER_HOST_AMBIGUOUS (K1563 (1)).
+
+## B3 · CHANGE
+
+K1574: EVENTS #1 is merged on tranche/T33 (entities too). Merge it, wire the real eventsOf(host) default, re-point your tests at the real module, re-run, and post COMPLETE.
+
+## B4 · CHANGE
+
+K1577: merged (T33-27). Re-opened for one requirement: R21 (K1505 (10)'s current_through) is now in build/requirements/lines.md: an open-ended holds line is in at a date no later than a held current_through (a member's or a source's own 'current as of' statement, with citation and day), undetermined after it; none held → undetermined after its start; recording one is a member's act or a system rule's (R4), a later one superseding, the earlier kept. Merge tranche/T33, build and test it, COMPLETE.
