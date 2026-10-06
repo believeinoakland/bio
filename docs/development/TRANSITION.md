@@ -164,7 +164,7 @@ Each: what it is, and how the plan handles it.
 - **C14 · The mechanics are not functionally complete (found running T1, 2026-09-26).** *Resolved 2026-09-26: revised, proven by the dry runs D1–D3, certified (K26).* (a) **No channel between BOB and a job, either way.** A job cannot message BOB, and BOB's session has no tool that reaches a cloud job session, so a job that asks a question or finishes waits, unseen, until BOB polls; `pdf-reader` waited on its proposed services and `subresources` on its completion. (b) **Metrics and ownership conflict:** a job's metrics row goes to `build/metrics/T<n>.csv`, which the ownership check refuses, and concurrent jobs appending one file would conflict at merge. (c) **Generated artifacts cross modules:** `ocr-worker`'s committed bundle inlines `pdf-worker`'s source, so a `pdf-worker` job stales an artifact no job may regenerate. (d) **A changed service within a layer** cannot reach its user before the layer closes; BOB patched this mid-tranche, uncertified. (e) **A job blocks on a wording question** it could have carried on through. Fix: mechanics revised and certified on a dry run (P3) before T1 resumes.
 - **C15 · The ownership check's net-removal rule assumes an extraction moves more than it wires (found in T7, K204).** A target module that is new in all but a few lines (intent: three lines out of legacy-checks) needs more wiring lines in legacy-store than it removes, so the check fails although every added line is the import-and-use §12.2 permits. *Handled:* BOB accepts such a job at the layer close from its read of the ADDED list, by ruling. *Fix:* the mechanics' next revision (P3) states the rule as "every added line is an import from the target's paths or a use of one", and drops net removal where the target's `from` includes a legacy module it only wires into; certified by a dry run before use.
 
-## 6. Handoff (BOB #122 to BOB #123, 2026-10-06 ~14:30 UTC)
+## 6. Handoff (BOB #122, standing; refresh withdrawn by K1720, 2026-10-06 ~14:20 UTC)
 
 Replaced at each handoff; the progress log (§4) is the history; the rulings are `build/rulings.md` K1700–K1719.
 
@@ -180,4 +180,4 @@ Replaced at each handoff; the progress log (§4) is the history; the rulings are
 
 **Reviewed acts.** Pushing to `main` outside §5.7 (3): done once by mistake (K1701), refused acts followed; K1703 forbids it. Fast-forwarding `main` at a close: §5.7 (3); refused once (K1454), accepted K1508, K1698. Merging the design stream's PR: §5.7 (1) on its `MERGE`; CLAUDE.md, K1177, standing list K1261. Deploying to `biosmoke7`: refused (K1715), approved by Bob per act (K1716, K1717), **not** on the standing list. Pushing a tag: refused twice (K1433, K1436), never retried.
 
-**Your own context (§2, P13).** BOB #122 refreshed at about 330k.
+**Your own context (§2, P13).** Refresh past half the window (K1720). BOB #122 was at about 330k at 14:20 and continues.
