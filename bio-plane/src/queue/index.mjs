@@ -33,9 +33,9 @@
  * answer decorated for the caller, R17) is `door.mjs`' `queueOp`, which the control plane's door reaches through the
  * plane's hooks (plane R6; T19).
  *
- * N301 (K356), R48 (DEC-107): the classes keep their codes and meanings and are shown to members as **To do**,
- * **Noticed** and **Signal**: the answer publishes `class_labels`, and no member-facing sentence this module owns calls
- * a to-do an obligation or a signal a condition.
+ * N301 (K356), R48 (DEC-107, DEC-131): the classes keep their codes and meanings and are shown to members as **To do**,
+ * **Noticed** and **Status**: the answer publishes `class_labels`, and no member-facing sentence this module owns calls
+ * a to-do an obligation, or a status item a condition or a signal.
  */
 
 import { normalizeType, STATES, vocabFor, isMachineIdentity } from "../record-grammar/index.mjs";
@@ -59,10 +59,10 @@ import { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS, queueRefusal } from "./checks.mjs"
 export { QUEUE_SCHEMA, QUEUE_TABLES, queueOwns } from "./schema.mjs";
 export { QUEUE_MINT_CHECKS, QUEUE_ACT_CHECKS } from "./checks.mjs";
 
-/* R48 (N301, K356; DEC-107, DEC-110; K1038): how each class is shown to members. The codes are unchanged; the words are
-   these, and no member-facing sentence this module answers calls a to-do an "obligation" or a signal a "condition"
-   ("obligation" names only a public body's duty, DEC-107). */
-export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Signal" });
+/* R48 (N301, K356; DEC-107, DEC-110, DEC-131; K1038, K1536): how each class is shown to members. The codes are
+   unchanged; the words are these, and no member-facing sentence this module answers calls a to-do an "obligation", or a
+   status item a "condition" or a "signal" ("obligation" names only a public body's duty, DEC-107). */
+export const QUEUE_CLASS_LABELS = Object.freeze({ OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Status" });
 
 /* R49 (DEC-110 (1); K1038): the orders the feed's `sort` names; absent or blank is DEC-110 (3)'s default. */
 export const QUEUE_SORTS = Object.freeze(["added", "due", "case", "kind"]);
@@ -233,7 +233,7 @@ export class Queue {
    *  sorts on one value of the item; an item without it goes after those with it, and items without it, and ties, keep
    *  R6's order among themselves.
    *    default, `case`  the item's nearest home ancestor (`case.ancestors`, the least depth, then id), ordered by that
-   *                     depth, then that id; within one case R6's order is to-dos, then noticed, then signals, then id.
+   *                     depth, then that id; within one case R6's order is to-dos, then noticed, then status items, then id.
    *                     DEC-110 (3)'s default IS grouping by case; the two part when its collapsing (DEC-110 (2)) lands.
    *    `added`          newest first, by when the item arose: its `age.since`, else `now` less `age.ms`.
    *    `due`            soonest first, by its `due` (`YYYY-MM-DD`, queue-producers R25).
@@ -646,6 +646,11 @@ export class Queue {
     "inquiry-recheck-due": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and "
       + "the date rather than by a task, and it is yours alone: it leaves when you record that you looked "
       + "(op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
+    /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
+       member's own; taking it and recording the check are its other ways out. */
+    "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a "
+      + "reasoned concern (op=checkrecord), which closes it; leaving it (op=taskresolve) closes only yours, and it stays "
+      + "open to the others asked. Once someone takes it, everyone else's closes, naming who took it.",
   });
 
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
@@ -730,8 +735,8 @@ export class Queue {
       return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
                reason: "a_condition_is_acknowledged_or_muted",
                instead: "queuemute",
-               detail: "a signal is a fact about our own machinery, and the only thing a member "
-                     + "does to it is acknowledge or QUIET it — personally, with the signal "
+               detail: "a status item is a fact about our own machinery, and the only thing a member "
+                     + "does to it is acknowledge or QUIET it — personally, with the status item "
                      + "persisting and every other member still seeing it." };
     /* R12 (N172): a newer capture affecting a member's reference is decided by that member through reevaluation's
        door (its R15): adopt the newer version, or keep the earlier one. Keyed on the notice, never on a project.
@@ -768,20 +773,11 @@ export class Queue {
                   a surface holding this block has every argument for. */
                definition_version: dv,
                requires: ["definitionVersion"],
-               detail: "this finding carries the identity the disposition act is keyed on, so Adopt, "
-                     + "Defer and Dismiss are acts a member can actually complete. Send "
-                     + "`definitionVersion` with the act — the version published here, which is the "
-                     + "one this finding was derived against: a decision binds the declared flow the "
-                     + "member READ, and one naming a version that has since been revised is refused "
-                     + "DEFINITION_MOVED so the member can look again (framework §8.2, REC-211). The "
-                     + "act still "
-                     + "checks the pair against the definition tables (NO_SUCH_PROGRESSION, "
-                     + "BAD_STAGE) — this says the item has an identity, not that the identity is "
-                     + "valid, and those are different claims. THE SCOPE IS `instance` AND THAT IS "
-                     + "A CLAIM ABOUT THE SUBJECT, NOT A DEFAULT (D-266, DEC-16): a progression "
-                     + "stage is a fact about the SHARED record, so one act clears this finding "
-                     + "under every case it appears in, which is dedup rather than one team "
-                     + "silencing another." };
+               detail: "this finding carries a progression stage, the identity the disposition act is keyed on, so "
+                     + "Adopt, Defer and Dismiss can be completed. Send `definitionVersion`, the version published here: a "
+                     + "decision on a definition since revised is refused DEFINITION_MOVED (REC-211), and the act still "
+                     + "checks the pair (NO_SUCH_PROGRESSION, BAD_STAGE). The scope is `instance`: a progression stage is a "
+                     + "fact about the shared record, so one act clears it under every case (D-266, DEC-16)." };
     /* ==================================================================== D-266
      * THE PROJECT-SCOPED HALF, AND IT IS A PROPERTY RATHER THAN A LIST OF SLUGS.
      *
@@ -820,32 +816,17 @@ export class Queue {
                finding: fid, projects: [], ...acts,
                reason: "no_project_scope",
                instead: null,
-               detail: "this finding carries no progression stage, so a disposition of it is a "
-                     + "JUDGMENT-LAYER act and is scoped to one project's feed (D-266, §7/D-216, "
-                     + "R5) — and this item is filed under no project this viewer can see, so "
-                     + "there is nothing for the decision to be recorded under. That is a bound on "
-                     + "the SCOPE and not on the finding's identity: nothing here says the act is "
-                     + "meaningless, only that this read found no team whose feed it would govern. "
-                     + "WHAT DECLINING MEANS FOR A FINDING RECOMPUTED ON EVERY READ IS NOT OPEN: a "
-                     + "disposition is keyed on the finding's STABLE IDENTITY, it stands until it "
-                     + "is re-triaged whether or not the fact still fires, and it AGES the finding "
-                     + "out of the open list instead of deleting it (D-79)." };
+               detail: "this finding carries no progression stage, so its disposition is one project's judgment, "
+                     + "scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: "
+                     + "there is no team to record a decision for. A decision, where one can be made, ages the finding "
+                     + "out of the team's open list until it is re-triaged, and deletes nothing (D-79)." };
     return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON,
              key: null, finding: fid, projects: homes, requires: ["project", "finding"], ...acts,
-             detail: "this finding carries no progression stage, and that is what makes its "
-                   + "disposition a JUDGMENT-LAYER act rather than a fact about the shared record "
-                   + "(D-266's scoping ruling, 2026-08-10: a dismissal is scoped to the key's own "
-                   + "subject). "
-                   + "A stance is expressly one project's own property (§7, D-216) and R5 makes "
-                   + "forks at the judgment layer legitimate, so ONE TEAM'S DISMISSAL GOVERNS THAT "
-                   + "TEAM'S FEED AND NOTHING ELSE — the same boundary this feed already enforces "
-                   + "by refusing to offer op=versioncurrent across projects. `key` is null "
-                   + "DELIBERATELY: the acting project is yours to name, and a plane that defaulted "
-                   + "one where this item has several homes would be choosing whose judgment the "
-                   + "record carries. Send `project` (one of `projects`) and `finding` beside your "
-                   + "disposition and reason. The decision AGES this finding out of your team's "
-                   + "open list and stands until it is re-triaged (D-79) — it deletes nothing, and "
-                   + "it moves no other team's feed by even one item." };
+             detail: "this finding carries no progression stage, so its disposition is a judgment-layer act, and a "
+                   + "stance is one project's own property (§7, D-216): one team's decision governs that team's feed "
+                   + "and no other (D-266). Send `project` (one of `projects`; `key` is null because the acting "
+                   + "project is yours to name) and `finding` with your disposition and reason. The decision ages the "
+                   + "finding out of that team's open list until it is re-triaged, and deletes nothing (D-79)." };
   }
 
   /** R46 (N345; DEC-76 item 3, DEC-84 items 2, 3, 7, 13; DEC-85): the doors of the contradiction kinds, or null for any
@@ -1112,9 +1093,9 @@ export class Queue {
           `'${String(it.kind).slice(0, 60)}' is catalogued as "${QUEUE_CLASS_LABELS[classOfKind(it.kind)]}" and this `
           + `item mints it as "${QUEUE_CLASS_LABELS[it.class]}". That is not a spelling mistake, it is a change of `
           + `doctrine at a producer: the class decides whether leaving a member's list is a PERSONAL QUIET or an `
-          + `AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a signal would `
+          + `AUTHORED RECORD ACT (D-125, DEC-16), so minting a to-do's kind as a status item would `
           + `let one member silence a task the record believes reached a person, and minting a `
-          + `signal's kind as something noticed would make a fact about our own machinery undismissable.`,
+          + `status item's kind as something noticed would make a fact about our own machinery undismissable.`,
           { id: it.id ?? null, kind: it.kind ?? null,
             catalogued_as: classOfKind(it.kind), minted_as: it.class });
       /* END DEC-49 REGION is-queue-mint */
@@ -1206,11 +1187,8 @@ export class Queue {
           ...it.case, ancestors: kept,
           ungrouped: it.case.state === "determined" && kept.length === 0,
           disposed_by: decided.map((p) => ({ id: p, reason: "disposed_by_that_project",
-            detail: "this team decided this finding at the judgment layer, so it is no longer in "
-                  + "their open list. It is still live for the teams named above, and their feed "
-                  + "was not touched by that act (D-266, §7/D-216). Stated rather than performed "
-                  + "silently: a home set that is quietly shorter is indistinguishable from nobody "
-                  + "caring (DEC-16)." })),
+            detail: "this team decided this finding at the judgment layer, so it has left their open list; it "
+                  + "is still live for the teams named above, whose feed that act did not touch (D-266)." })),
         };
         it.disposition = { ...dsp, projects: homes.filter((p) => !decided.includes(p)),
                            disposed_by: decided };
@@ -1401,7 +1379,7 @@ export class Queue {
         suppressed,
         suppressed_count: suppressed.length,
         detail: "muting is PERSONAL and dismissing is a RECORD ACT (D-125). Nothing here was removed "
-              + "from the record and nothing here left another member's queue. A signal or a noticed item "
+              + "from the record and nothing here left another member's queue. A status item or a noticed item "
               + "can be here, quieted by case over the kinds you named or by its own id (`scope`); a "
               + "to-do never can, because it leaves every list only when it is DONE. A quieted "
               + "noticed item is still open for the team and in op=proposals: it leaves the team's list only "
@@ -1708,7 +1686,7 @@ export class Queue {
         return { ok: false, reason: "UNKNOWN_KIND", ...(sb.item ? { item: sb.item } : { kind: sb.kind }),
           case: c ? c.id : null,
           detail: sb.item
-            ? "no queue item by that id is one this plane can classify: a noticed item's or a signal's id "
+            ? "no queue item by that id is one this plane can classify: a noticed item's or a status item's id "
               + "begins with its class code (as op=queue publishes it), and it names no to-do. Unknown is "
               + "not the same as forbidden, and this refusal is the first rather than the second."
             : "the notification catalogue does not name that kind. Unknown is not the same as "
@@ -1771,7 +1749,7 @@ export class Queue {
          so the suite can assert the boundary from the op's own answer as well as
          from the tables. */
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: "a mute is PERSONAL and reaches the kinds of signals and noticed items, never a to-do. Nothing "
+      detail: "a mute is PERSONAL and reaches the kinds of status items and noticed items, never a to-do. Nothing "
             + "left the record, nothing left another member's queue, no disposition was written, and a "
             + "to-do on this case still reaches you: a to-do leaves every list only when it is "
             + "DONE, which is record state.",
@@ -2026,8 +2004,8 @@ export class Queue {
                class: keyClass, kind: keyKind,
                /* R28 (K607): the same per-kind door R12 publishes on the item. */
                instead: keyClass === "CONDITION" ? "queuemute" : Queue.doorOf(keyKind),
-               detail: `this names ${keyClass === "CONDITION" ? "a signal" : "a to-do"}, and `
-                     + `${keyClass === "CONDITION" ? "a signal" : "a to-do"} is not DISPOSED: a disposition is `
+               detail: `this names ${keyClass === "CONDITION" ? "a status item" : "a to-do"}, and `
+                     + `${keyClass === "CONDITION" ? "a status item" : "a to-do"} is not DISPOSED: a disposition is `
                      + "an authored record act on something the record noticed, and op=queue publishes the act that does "
                      + "reach this item as its `disposition.instead`. Nothing was written. The rest of "
                      + "a selection is unaffected — under the per-item weight this item alone is kept, "

@@ -367,11 +367,13 @@ test("R40: a snoozed case's lapse is published in mute and each of its items is 
   assert.equal(byId(w.feed(null, "class:admin"))["TASK-2026-0001-a"].snoozed, undefined);
 });
 
-test("R48 (N301; DEC-107): class_labels are exactly To do, Noticed and Signal; the codes are unchanged", () => {
+test("R48 (N301; DEC-107, DEC-131): class_labels are exactly To do, Noticed and Status; the codes are unchanged", () => {
   const w = world();
   w.bundle("INF-1"); w.task("TASK-2026-0001-a", "INF-1");
   const f = w.feed(null, "class:admin");
-  assert.deepEqual(f.class_labels, { OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Signal" });
+  assert.deepEqual(f.class_labels, { OBLIGATION: "To do", FINDING: "Noticed", CONDITION: "Status" });
+  // negative control (DEC-131, K1536): the status label is no longer "Signal"
+  assert.ok(!Object.values(f.class_labels).includes("Signal"));
   assert.deepEqual(f.class_labels, QUEUE_CLASS_LABELS);
   assert.ok(Object.isFrozen(QUEUE_CLASS_LABELS));
   // the codes: the classes, an item's class and the counts keep their names
