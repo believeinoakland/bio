@@ -1,6 +1,6 @@
 # BOB to control-plane (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -36,3 +36,7 @@ K1679. Confirmed and routed: duties, hypotheses and money-checks re-key in T34 (
 ## B4 · CHANGE
 
 K1684 (from PLANE #22 J2): when the door admits a presented ai grant (K1674 (2)), hand gatedOp the grant's member as grantMember, a member:<id> stamp; plane's ask arm then forwards the token and mints none.
+
+## B5 · ANSWER · re J3
+
+K1685. Uses set on tranche/T33 (events, money-checks, duties, hypotheses, answers, case-tensions, sheet-worker; agent-worker already held): merge it. The three ask ops are yours to route: askcheck to answers' answercheck arm, askusage to ai-runs' countAskUsage, askceiling to the member's ceiling as aiceilingset records it (ai-runs' read); if a read you need has no provider, REPORT it rather than build it here. PLANE #22 is told to add logRead to the store handed to dispatch. aiGrantHeld is N616 (T34). aigrantadmit as a store-internal route is accepted.
