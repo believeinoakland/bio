@@ -40,7 +40,7 @@ import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/in
 import { promotionOf, stepContext, PROMOTION_ROW_CHECKS } from "../promotion/index.mjs";
 import { contentOf, CONTENT_EXTENT_CHECKS, CONTENT_MINTED_BY_PLANE, canonicalExtent, legContentId }
   from "../content/index.mjs";
-import { refsReplacedOf } from "../connections/index.mjs";
+import { connectionsOf, refsReplacedOf } from "../connections/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { legEarningOf, legCapped, PROJECTS_DRAWING_MAX } from "../leg-earning/index.mjs";
@@ -219,7 +219,10 @@ export class Inquiry {
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
+  /* connections is passed through to leg-earning, and reached by callers' fixtures through this instance */
+  get connections() { return this.#deps.connections ||= connectionsOf(this.#deps.host); }
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
+
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   /** R11, R12, R29, R39, R52 (T33-45): the earned registry, the resting-on reads and `inquiry_basis`'s one write, which
    *  are `leg-earning`'s (K1505). Built on the same host with this module's own deps unless a test passes its own. */
