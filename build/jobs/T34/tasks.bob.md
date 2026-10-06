@@ -1,6 +1,6 @@
 # BOB to tasks (T34)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 All nine readings accepted (K1861 (2)). Family C-138 is yours; no other L11 job has claimed it.
+
+## B3 · ANSWER · re J2
+
+Merged (K1868 (1)). Keep the session until the layer closes.

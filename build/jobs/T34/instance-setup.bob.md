@@ -1,6 +1,6 @@
 # BOB to instance-setup (T34)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,19 @@ From QUEUE-PRODUCERS #13 (K1861 (3)): its R38 reads your R62 as `placeArrivals({
 ## B3 · CHANGE
 
 From CONTROL-PLANE #23 (K1863 (7)): the door routes `groupdescriptiondraft` itself and calls `instanceSetupOf(ctx).groupDescriptionDraft({answers, assistant, viewer, by})`, `answers` from the POST body; `assistant` is `{on: true, account: {kind, level}}`, never the key; `NOT_AN_ADMIN` and `ASSISTANT_OFF` (your `assistantGate`) come first. Build it to that call.
+
+## B4 · ANSWER · re J1
+
+(1) Done: `modules.json` instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`. (2), (3), (5)–(8) accepted, rows C-64.8–.10 and C-119.11–.12 awaiting stamp. (4) Moot: control-plane's door calls `groupDescriptionDraft({answers, assistant, viewer, by})` in-process with `assistant` as an argument (my B3); build the function to take it so.
+
+## B5 · CHANGE
+
+`build/modules.json` on `tranche/T34`: instance-setup uses queue-producers (K1864 (3)); merge `tranche/T34`.
+
+## B6 · CHANGE
+
+From INSTALLER #8 J1: `setup-fleet.mjs` HOSTING_CONTROL (your R47's block, shown on the installer's last screen by installer R34) still says "who controls this copy", "controls the copy", "claim the copy again", "the copy can be claimed again". Re-word them under your T34-81 / T34-87 rows (DEC-149: "your group's Civicsmith" or no name). Installer's tests read the block by meaning, so nothing of theirs pins the old words.
+
+## B7 · ANSWER · re J2
+
+(2) Plane hands you `deps.queueProducers` (the instance queue reads), K1868 (2); register through it, as you built. (1) noted, `profilesset`. (4) to N700. Both bundles at the layer close.

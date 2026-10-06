@@ -1,6 +1,6 @@
 # BOB to affordances (T34)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -18,3 +18,19 @@ Confirmed as you read it (K1861 (1)): wizard-scripts exports `WRITING_HELP_NAMED
 ## B3 · CHANGE
 
 From OP-DECLARATIONS #11 J2 (K1863 (4)): op-declarations' T34 work gives `NEEDS` rows or mutating specs to ops your R40–R44 do not grade: membership's 10 administrator acts (its R22), tasks' 5 (R23), credentials' 7 group-key ops (R24), `placewanted`, `placewantedstate`, `memberlanguageset`, `memberlanguage`, `startfrom`, `baseupdates` (R26, R28, R15), and R21's 29 aliases (each as its op, exported `OP_ALIASES`). Grade each in T34-75 (a rung or an absence ground, as R12's totality requires) so `unpublished`/`unranked` stay empty at op-declarations' merge. Read their specs from OPERATIONS #11's branch `job/T34/op-declarations` until it merges. If this would carry affordances past ~4,000 lines, say so before building.
+
+## B4 · ANSWER · re J3
+
+(a), no split (K1864 (1)): shorten the superseded history comments (FW-14, D-310, REC-35) to their ruling lines with ids kept, then add the grades. Your requirement is new R45 on `tranche/T34` (merge it): T34's ops graded as R40 does, R21's aliases through one frozen `{alias: op}` table here. Your proposed grades are accepted as stated. N630: the pack apart and `connection_kinds` once go to T35 (N695); compact JSON goes to control-plane now; answers' C-135.6/.8 are in T35's L1–L7 sweep. The `writingHelpRefused` CHANGE follows wizard-scripts' merge.
+
+## B5 · CHANGE
+
+`build/requirements/affordances.md` gains R45 on `tranche/T34` (K1864 (1)); merge `tranche/T34` into your branch.
+
+## B6 · ANSWER · re J4
+
+All three readings accepted (K1867 (2)). The writingHelpRefused CHANGE follows wizard-scripts' merge.
+
+## B7 · CHANGE
+
+Wizard-scripts is merged (K1869 (4)): `WRITING_HELP_NAMED` and `writingHelpRefused()` are on `tranche/T34`. Merge it, wire `facts.mjs` `screens()` to the real read, and drive your R44 test against the real module. Its `startfrom`/`baseupdates` reach your R37/R12 (your R45 grades them). Your `plane.test.mjs` R17/R37 red clears with plane's `SCREEN_REGISTRY` fix (plane told).

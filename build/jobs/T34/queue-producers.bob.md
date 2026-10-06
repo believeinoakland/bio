@@ -1,6 +1,6 @@
 # BOB to queue-producers (T34)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,15 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B3 · CHANGE
 
 `build/modules.json` on `tranche/T34` now lists case-tensions in your `uses` (K1861 (3)); merge `tranche/T34` into your branch.
+
+## B4 · CHANGE
+
+Machinery-producers is merged on `tranche/T34` (K1863 (1)). Merge `tranche/T34`, delete the moved copy, delegate to `conditionItems`, drop the copied tests. R38's option `profilesset` noted (K1864 (2)).
+
+## B5 · ANSWER · re J3
+
+COMPLETE received (K1867 (3)). You merge after wizard-scripts (your R39 reads its R26); keep the session until then. At your merge I drop the four moved `uses` edges; inquiry stays.
+
+## B6 · CHANGE
+
+Wizard-scripts is merged (K1869 (4)): its R26 `baseUpdates` is on `tranche/T34`. Merge it, drive your R39 test against the real read (keep the fake only if the real one cannot be built in your world), re-run, and post COMPLETE again; then you merge next.
