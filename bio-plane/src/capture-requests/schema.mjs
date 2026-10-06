@@ -149,6 +149,10 @@ CREATE INDEX IF NOT EXISTS capture_requests_renders ON capture_requests(render, 
 -- R39 (N262): the drain finds the capture this table holds of an address (and
 -- render flag) to fetch conditionally on, by one indexed read per fired row.
 CREATE INDEX IF NOT EXISTS capture_requests_address ON capture_requests(address, render, state, captured_at);
+-- R48 (N587; DEC-141): capture's held list asks, per document, which requests
+-- filed one of its capture digests (the captured-for reader), so that read is
+-- one indexed lookup per digest rather than a walk of every request.
+CREATE INDEX IF NOT EXISTS capture_requests_sha ON capture_requests(capture_sha, state);
 -- R46 (T33-51; K1492 (2), (4)): THE HOSTS A MEMBER HAS MARKED A LOGIN-GATED
 -- PLATFORM, R41's scope record for a platform (kind 'platform'). A page on such
 -- a host is captured only by a member's own act in their own browser: the drain

@@ -81,7 +81,7 @@ const RENDER_FAILED_CHECK = "C-83.7";
 export const SITE_KINDS = Object.freeze(["personal", "platform"]);
 /** R46: the one sentence every MEMBER_CAPTURE_ONLY refusal carries, routing the page to the members. */
 export const MEMBER_ROUTE = "Such a page is captured only by a member's own act in their own browser (capture's member "
-  + "capture), never by the daemon: nothing was fetched, and no login is used for it on this instance's behalf.";
+  + "capture), never by the daemon: nothing was fetched, and your group's Civicsmith uses no login for it.";
 /** R46: the kind of mark a member puts on a host (R41's scope record for a platform), and its one scope. */
 export const PLATFORM_KIND = "platform";
 /** R4: the fields that would make a request a capture. */
@@ -469,7 +469,7 @@ export class CaptureRequests {
     const at = stampInstant("second", nowMs);
     if (!this.configured())
       return { configured: false, actor, at, drained: 0, captured: [], refused: [], held: [], expired: [], remaining: 0,
-               detail: "no daemon credential is bound: this instance drains nothing and holds no alarm for it" };
+               detail: "no daemon credential is bound: your group's Civicsmith drains nothing and holds no alarm for it" };
     /* R11: NOT RE-ENTRANT. The tick awaits its fetches, and a second tick while one is out would judge the same rows
        and could send the same fetch twice. */
     if (this.#draining)
@@ -1111,6 +1111,44 @@ export class CaptureRequests {
     };
   }
 
+  /** R48 (N587; DEC-141, K1618, K1645): `capture`'s `captured-for` reader (capture R83), registered at creation. For
+   *  `{document, captures, viewer}` it answers, synchronously, the questions the document was captured for: from the
+   *  requests whose filed capture (`capture_sha`, R15, R39) is one of `captures`, one entry per (`target`,
+   *  `principal_plane`): `question` the target, `asker` the plane principal (the member who asked, never the Claude
+   *  principal), `visible` by R23's sight, `title` the target's title when visible, `title` and `asker` null when not,
+   *  and `waiting` whether the target inquiry is open (`open`, or its alias `surfaced`: inquiry R1), whatever the viewer
+   *  sees, because capture records every waiting question with a set-aside (its R79). A document no request was filed
+   *  into answers `questions: []`; `lead_inquiry` is not a question the document was captured for. It writes nothing,
+   *  and a failure inside it answers nothing (null), never a partial list. */
+  capturedFor(a = {}) {
+    try {
+      const { captures = [], viewer = null } = a && typeof a === "object" ? a : {};
+      const shas = [...new Set((Array.isArray(captures) ? captures : []).filter((x) => typeof x === "string" && x))];
+      const pairs = new Map();
+      for (let i = 0; i < shas.length; i += CAPTURED_FOR_CHUNK) {
+        const part = shas.slice(i, i + CAPTURED_FOR_CHUNK);
+        for (const r of this.#rows(
+          `SELECT DISTINCT target, principal_plane FROM capture_requests
+            WHERE state='captured' AND capture_sha IN (${part.map(() => "?").join(",")})`, ...part)) {
+          const key = JSON.stringify([r.target, r.principal_plane]);
+          if (!pairs.has(key)) pairs.set(key, r);
+        }
+      }
+      const seen = CaptureRequests.#gate("q.bundle_id", viewer);
+      const questions = [];
+      for (const r of [...pairs.values()].sort((x, y) => (x.target < y.target ? -1 : x.target > y.target ? 1
+                                                         : String(x.principal_plane) < String(y.principal_plane) ? -1 : 1))) {
+        const b = this.#one(`SELECT q.title, q.current_state, (${seen.sql}) AS seen FROM bundles q WHERE q.bundle_id = ?`,
+                            ...seen.args, r.target);
+        const visible = !!b && !!b.seen;
+        questions.push({ question: r.target, asker: visible ? (r.principal_plane || null) : null,
+                         title: visible ? (b.title ?? null) : null, visible,
+                         waiting: !!b && OPEN_INQUIRY_STATES.includes(b.current_state) });
+      }
+      return { questions };
+    } catch { return null; }
+  }
+
   /** R35: the census figure this module reports through record-core's `registerCounts` (its R63), for `op=stats` and
    *  purge's proof. PL-4 / IS-4: the outbound work list is the only figure in the store that says how much traffic this
    *  instance is about to send to somebody else's server, and a purge that reported scope ALL while it stood would leave
@@ -1222,7 +1260,7 @@ export class CaptureRequests {
       return { ok: true, already: false,
                mark: CaptureRequests.#markEntry(this.#one(`SELECT * FROM capture_request_platforms WHERE mark=?`, mark)) };
     } catch {
-      return this.#platformRefused("the mark could not be written, and this plane did not record why. Nothing was written.");
+      return this.#platformRefused("the mark could not be written, and the reason was not recorded. Nothing was written.");
     }
   }
 
@@ -1244,7 +1282,7 @@ export class CaptureRequests {
       return { ok: true, already: false,
                mark: CaptureRequests.#markEntry(this.#one(`SELECT * FROM capture_request_platforms WHERE mark=?`, standing.mark)) };
     } catch {
-      return this.#platformRefused("the withdrawal could not be written, and this plane did not record why. Nothing was written.");
+      return this.#platformRefused("the withdrawal could not be written, and the reason was not recorded. Nothing was written.");
     }
   }
 
@@ -1265,6 +1303,11 @@ export class CaptureRequests {
              withdrawn_at: r.withdrawn_at ?? null, withdrawn_by: r.withdrawn_by ?? null };
   }
 }
+
+/** R48: the states in which an inquiry is open (inquiry R1: `open` and its alias `surfaced`), and how many capture
+ *  digests one read binds. */
+const OPEN_INQUIRY_STATES = Object.freeze(["open", "surfaced"]);
+const CAPTURED_FOR_CHUNK = 100;
 
 /** R45: a sweep's full name, `"<bundle>#<id>"` (link-sweep R1: the id `^[a-z0-9][a-z0-9-]{0,39}$`). */
 const SWEEP_NAME = /^[^\s#]{1,200}#[a-z0-9][a-z0-9-]{0,39}$/;
@@ -1376,6 +1419,10 @@ export function captureRequestsOf(host, deps = {}) {
       const b = c.bundlesOf(request);
       return b ? [b.target, b.lead_inquiry].filter(Boolean) : null;
     });
+    /* R48 (N587; DEC-141): the seam by which a held document's questions and askers reach `capture`, earlier in the
+       order (its R83). A capture with no seam (a test's stand-in) is not asked. */
+    if (d.capture && typeof d.capture.registerReader === "function")
+      d.capture.registerReader("captured-for", CAPTURE_REQUESTS_MODULE, (a) => c.capturedFor(a));
     /* R29, ai-runs R41 (K182): the wake reads this module's rows through the wait source, when ai-runs is given. */
     if (d.aiRuns && typeof d.aiRuns.registerWaitSource === "function")
       d.aiRuns.registerWaitSource(CAPTURE_REQUESTS_MODULE, c.waitSource());
