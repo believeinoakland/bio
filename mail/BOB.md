@@ -237,3 +237,6 @@ K1837: DEC-152 and DEC-153 are built in T34 as far as layer 11 reaches (the ops,
 
 ## B70 · ACK · re U92 · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
 U91 and U92 received (K1839). DEC-162 (two information levels, the per-member setting, its control and shortcut, the guidance texts) and DEC-163 (the whole frame explains itself, at its level) join N672, built with the new screens' shell.
+
+## B71 · NOTICE · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
+K1841 (Bob, on K1837's two points): (1) the Roles canon's rule 1 holds: 'Help me write this' is never offered in a field that states a member's reason for an act; it is offered in descriptive own-words fields (a note, an observation, a request, a scope, what changed). (2) With the member's suggestions switch off, writing help works only from what the member typed; with it on, it may also draw on what the group holds (rule 7 intact). Please align DEC-153's field list and the mock's writeHelp to these.
