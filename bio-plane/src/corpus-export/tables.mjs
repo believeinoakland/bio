@@ -22,6 +22,10 @@
  * removed content and nothing more. */
 import { createSha256 } from "../record-grammar/index.mjs";
 
+/** R7 (K1632, K1490): the tables held as `export: "never"` whatever their owner declares, fail closed, until the owner's
+ *  declaration says so itself (N594: people declares `member_ties` `admin-only`). */
+export const HELD_NEVER = Object.freeze({ member_ties: "members' ties never travel (K1490); held never here until its owner declares it so (N594)" });
+
 /** R8: the page bound, set from the measured paging cost (job record, T33-61). */
 export const PAGE_ROWS = 1000;
 export const PAGE_BYTES = 256 * 1024;
@@ -128,6 +132,8 @@ export function tableEntry(sql, decl, record) {
   if (decl.export === "never")
     return { ...head, carried: "named", rows: null, pages: [],
              why: "declared export never: named with its owner and class, and no row travels" };
+  if (Object.hasOwn(HELD_NEVER, decl.name))
+    return { ...head, carried: "named", rows: null, pages: [], held_never: true, why: HELD_NEVER[decl.name] };
   if (decl.derive === "derived-rebuildable")
     return { ...head, carried: "rule", rows: null, pages: [],
              rule: { owner: decl.module, key: Array.isArray(decl.key) ? [...decl.key] : null,

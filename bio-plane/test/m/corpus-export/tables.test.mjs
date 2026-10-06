@@ -56,7 +56,7 @@ test("R7 the export carries every declared table under its owner with its classe
     const t = x.tables[i];
     assert.deepEqual(t.classes, { purge: d.purge, expunge: d.expunge, export: d.export, sight: d.sight, derive: d.derive,
                                   version_chain: d.version_chain }, d.name);
-    if (d.export === "never") {
+    if (d.export === "never" || d.name === "member_ties") {
       assert.deepEqual([t.carried, t.rows, t.pages], ["named", null, []], `${d.name}: named, no row`);
       seen.never++;
     } else if (d.derive === "derived-rebuildable") {
@@ -79,12 +79,19 @@ test("R7 the export carries every declared table under its owner with its classe
     }
   }
   assert.ok(seen.yes && seen.admin && seen.never && seen.rule, JSON.stringify(seen));
+  /* members' ties are never carried, whatever people declares (K1490, K1632; N594): the tie is held here, and no part
+     of it travels, nor can its page be fetched */
+  assert.equal(declared.find((d) => d.name === "member_ties").export, "admin-only", "people's declaration today");
+  assert.equal(w.rows(`SELECT * FROM member_ties`).length, 1);
+  assert.deepEqual(x.tables.find((t) => t.table === "member_ties").held_never, true);
+  assert.equal(JSON.stringify(x).includes("I worked there"), false);
+  assert.equal(w.ce.exportPage({ table: "member_ties", index: 0 }).reason, "EXPORT_TABLE_NOT_CARRIED");
   /* a never table holding a row here (a person's address) carries none of it */
   const never = x.tables.filter((t) => t.classes.export === "never").map((t) => t.table);
   assert.ok(never.includes("source_person_links") && never.includes("person_contacts") && never.includes("leases"));
   assert.equal(w.rows(`SELECT * FROM person_contacts`).length, 1);
   assert.equal(JSON.stringify(x).includes("12 Elm Row"), false);
-  for (const [, b] of w.pagesFor(x)) assert.equal(new TextDecoder().decode(b).includes("12 Elm Row"), false);
+  for (const [, b] of w.pagesFor(x)) for (const v of ["12 Elm Row", "I worked there"]) assert.equal(new TextDecoder().decode(b).includes(v), false, v);
   /* the entities tables are exported (B0.13) */
   assert.ok(x.tables.find((t) => t.table === "entities" && t.carried === "rows" && t.rows > 0));
   assert.ok(x.tables.find((t) => t.table === "event_when_cache" && t.carried === "rule"));
