@@ -35,3 +35,7 @@ Seam (Choices 7): no clean copy seam in monitoring; following is new code in `bi
 4. **R2 the reading events reads.** `events.followedImport` reads `extraction.readingOf`, so the tick lands each capture with its `legistar-reader` parse as the document's `reading` (`content_type: legistar_api`), which promotion's projection writes (extraction R20, recorded as the machine's assertion). Each R2 read is `capture.acquire`'s capture-request arm (`origin: named_request`, the follow as authority), class daemon.
 5. **R4 the capture itself** is `monitoring.monitor({bundleId, actor: "class:daemon"})` of the watched bundle (its R1–R10), so the look, comparison and capture stay monitoring's; R6's lateness is the tick's instant less the due instant.
 6. **Uses** final: record-grammar (machine test, public locator), record-core, membership, jurisdictions, civil-time, legistar-reader, entities, events, capture, monitoring; `acquisition` only through capture.
+
+## J2 · REPORT
+
+events (R22, against following R4): followedImport writes a Legistar meeting without linking it to the followed body (no concerns row, no participant), so eventsFor({entity: body, kinds: [meeting]}) never returns an imported meeting. following R4 reads a body's observed meetings that way, so today only member-recorded meetings concerning the body govern a recurrence instance. Smallest fix in events: a concerns row from each imported meeting to the body it was imported for. Recorded in my record.
