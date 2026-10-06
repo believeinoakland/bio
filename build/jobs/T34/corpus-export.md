@@ -22,3 +22,7 @@
 - `format`: 127 modules, 126 requirements files, 0 failures. `architecture corpus-export`: 12 product files, 31 relative imports, 0 failures. `coverage corpus-export`: 10 of 10 live requirement ids named by a test, 0 failures. `ownership corpus-export tranche/T34`: 5 files changed, 0 failures.
 
 Size (session_01NKwzp2HcZSKsKytmRSrj16): test runs 4, module lines 1032
+
+## J1 · REPORT
+
+Other modules (record, Other modules). (1) Stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json carry corpus-export's source, which changed in T34-42 (HELD_NEVER retired, R7 rule's from); regenerate at L8's close. (2) A plane red, the same on tranche/T34 before my change: plane 'R2, R10 (K1416; control-plane R42): control-plane's step ranks after every module of layers 1-10 ... directly before the first layer-11 module'. I could not match it to a named inherited red in my START; it may follow K1824's modules.json change (case-catalogue). Not mine; named for you.
