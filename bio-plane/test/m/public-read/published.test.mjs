@@ -293,8 +293,8 @@ test("R16 it owns no table and writes nothing: every read leaves the database by
   const r = new PublicRead({ storage: w2.st, publication: spy, docket: docketSpy });
   r.publishedCase({ id: "CASE-2026-0001" }); r.publishedList(); r.publishedEditions(F); r.publishedManifest();
   await r.docketPublic("CASE-2026-0001"); await r.docketFeed("CASE-2026-0001");
-  assert.deepEqual([...new Set(seen)].sort().filter((m) => !["caseDocMemberFrozen", "caseEditionState", "soleCase"].includes(m)), [],
-                   "it reaches publication only through R53–R55");
+  assert.deepEqual([...new Set(seen)].sort().filter((m) => !["caseDocMemberFrozen", "caseEditionState", "soleCase", "stampsOf"].includes(m)), [],
+                   "it reaches publication only through R53–R55 and R62's stampsOf (R28)");
   /* N520: and `docket` only through the services named in Uses (its R12, R14, R15) */
   assert.deepEqual([...new Set(askedDocket)].sort(), ["docketFeed", "docketPublic", "lastEntryOf", "withdrawalOf"],
                    "it reaches docket only through withdrawalOf, lastEntryOf, docketPublic and docketFeed");

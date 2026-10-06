@@ -1,5 +1,5 @@
 /* public-read — its own refusal rows (R17; K651, K93 (3): rows follow their raisers). The table holds C-44.2, C-68.5 and
-   C-98.1–C-98.9 under their family names, each with its number, `where` and translation as `publication`'s table held
+   C-98.1–C-98.11 under their family names, each with its number, `where` and translation as `publication`'s table held
    them (pinned here by number, `where` and the translation's sha256, so a change to any fails); `rowOf` answers a row
    here and throws for any other code; and every refusal this module answers with one of these codes, at every site
    that raises it, carries its row from here. Driven at the module's interface: its store ops (`publicReadOps`) and the
@@ -45,7 +45,9 @@ const MOVED = {
     NOT_PUBLISHED: ["C-98.8", "src/public-read/index.mjs publishedCase > is-not-published", "bf79ad45a8e581b6"],
     CASE_DOCUMENT_UNSERVABLE: ["C-98.9", "src/publication/worker.mjs publishedRoutes > is-case-document-unservable", "0a10cff464f2574e"],
     /* C-98.10 (R18; K1149): a row minted here in T23, stamped by 1.54.0; its translation as R17 states it, word for word. */
-    PUBLIC_READ_NOT_REGISTERED: ["C-98.10", "src/public-read/index.mjs publicRead > is-public-read-not-registered", "5bd5f9f10b3aa19b"] },
+    PUBLIC_READ_NOT_REGISTERED: ["C-98.10", "src/public-read/index.mjs publicRead > is-public-read-not-registered", "5bd5f9f10b3aa19b"],
+    /* C-98.11 (R28; J1 (6)): a row minted here in T33, its stamp by a release T34's (K1504). */
+    WITHHELD_BY_COURT_ORDER: ["C-98.11", "src/publication/worker.mjs withheldByCourtOrder > is-withheld-by-court-order", "cf8fe4e020217355"] },
 };
 const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
 
@@ -77,7 +79,7 @@ function manifestAt(w, env, bytes) {
 }
 const enc = (o) => new TextEncoder().encode(typeof o === "string" ? o : JSON.stringify(o));
 
-test("R17 the module holds C-44.2, C-68.5 and C-98.1–C-98.10 in its own table, under their family names, each number, where and translation as moved; rowOf answers them and throws for any other code", () => {
+test("R17 R28 the module holds C-44.2, C-68.5 and C-98.1–C-98.11 in its own table, under their family names, each number, where and translation as moved; rowOf answers them and throws for any other code", () => {
   const families = Object.keys(CHECKS).filter((k) => /_CHECKS$/.test(k)).sort();
   assert.deepEqual(families, Object.keys(MOVED).sort(), "exactly the three families");
   for (const [fam, rows] of Object.entries(MOVED)) {
@@ -154,6 +156,12 @@ test("R17 every refusal the module answers with one of these codes, at every sit
   seen(await nr.json(), "door publicread PUBLIC_READ_NOT_REGISTERED");
   assert.equal(rowOf("PUBLIC_READ_NOT_REGISTERED").translation,
                "This copy of the record offers no public read by that name. Nothing was changed.");
+  /* C-98.11: bytes a court order withholds, at publishedbytes (R28), with HTTP 451 */
+  env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(w.text(F)));
+  w.stamps.stamp({ case: "CASE-2026-0001", editions: [1], entry: { seq: 4, digest: "d".repeat(64) }, effect: "remove" });
+  const wh = await call(w, env, "publishedbytes", { sha256: pin });
+  assert.equal(wh.status, 451);
+  seen(await wh.json(), "publishedbytes WITHHELD_BY_COURT_ORDER");
   /* every code of the table was met at a site */
   assert.deepEqual([...got.keys()].sort(), Object.values(MOVED).flatMap((r) => Object.keys(r)).sort());
 });

@@ -1,4 +1,4 @@
-/* public-read's Worker half (requirements: `build/requirements/public-read.md` R3, R5, R6, R9; K3): the public read
+/* public-read's Worker half (requirements: `build/requirements/public-read.md` R3, R5, R6, R9, R28; K3): the public read
  * path's control-plane side (`op=publishedcase`, `op=publishedbytes`), its governed refusals (C-68.5, C-98, rows held
  * in `../public-read/checks.mjs`, R17), and the case container's assembly the moment a case edition completes. Moved
  * from `index.mjs` with their comments; it is this module's by `paths` and stays at this path (K697, K702). The store
@@ -112,6 +112,31 @@ export function publishedObjectMissing() {
            detail: "that hash is published, and this instance's published store holds no bytes for it, so "
                  + "they cannot be handed over. The hash is genuine." };
   /* END DEC-49 REGION is-published-object-missing */
+}
+
+/* R28 (K1480, K1493; C-98.11): BYTES A COURT ORDER WITHHOLDS, at `publishedbytes`. The hash is published and its bytes
+ * are held (nothing is deleted, `publication` R24); a court order this group complied with keeps them from being served,
+ * and the answer says so, naming each order and the docket entry that names it, with HTTP 451 (unavailable for legal
+ * reasons). `withheld` maps each withheld hash asked to its orders (`PublicRead.withheldOf`). Returns the refusal OBJECT,
+ * as `noPublishedPart` does, and its one site wraps it. */
+export function withheldByCourtOrder(sha256, withheld) {
+  /* DEC-49 REGION is-withheld-by-court-order */
+  return { ok: false, reason: "WITHHELD_BY_COURT_ORDER", ...rowOf("WITHHELD_BY_COURT_ORDER"), sha256,
+           withheld,
+           detail: "a court order this group complied with keeps these contents from being served here. The order and the "
+                 + "record entry that names it are public, at the docket address each order gives, and nothing was "
+                 + "deleted: the fingerprint still verifies." };
+  /* END DEC-49 REGION is-withheld-by-court-order */
+}
+
+/* R28: of `shas`, the ones a court order in force withholds, asked of the store (`op=withheld`): `{answered: true,
+   withheld}` with `withheld` an object of hash to orders, empty for none; or the unanswered reply, relayed by the caller. */
+async function withheldOf(stub, shas) {
+  const P = plane();
+  const out = await P.doAnswer(stub.fetch(`http://do/withheld?sha256=${shas.map(encodeURIComponent).join(",")}`));
+  if (!out.answered) return out;
+  const w = out.result && out.result.withheld && typeof out.result.withheld === "object" ? out.result.withheld : {};
+  return { answered: true, withheld: w };
 }
 
 /* REC-44 / DEC-34: THE CASE CONTAINER, assembled the moment a case edition COMPLETES — every member
@@ -478,6 +503,11 @@ export async function publishedRoutes({ op, url, env, stub }) {
     const v = vOut.result;
     /* D-561: NO_PUBLISHED_PART (C-98.1) from its one governed site; it was `NOT_FOUND`. */
     if (!v || !v.published) return P.json(noPublishedPart(shaParam), 404);
+    /* R28: bytes a court order in force withholds are not served, by any route below; the zip's own files are checked
+       once its manifest is read. */
+    const wOut = await withheldOf(stub, [shaParam]);
+    if (!wOut.answered) return relayUnanswered(wOut, "publishedbytes");
+    if (wOut.withheld[shaParam]) return P.json(withheldByCourtOrder(shaParam, { [shaParam]: wOut.withheld[shaParam] }), 451);
     /* D-734 (BOB #36, 2026-09-25 11:50Z, D-731 (b); BIO_Publication_v0_1.md §4): A RATIFIED CASE DOCUMENT'S HASH is
        registered when it is signed (kind `case_document`), and its bytes never go to the published bucket — they are
        the signed text itself. So they are read from the store and served only after THIS layer re-hashes them and
@@ -568,6 +598,15 @@ export async function publishedRoutes({ op, url, env, stub }) {
           + `one of ${caseFileParts(manifest).join(", ")} (1 by default)`) }, 400);
       read = async (sha) => { const b = await pubBytes(sha); return b && (await sha256Hex(b)) === sha ? b : null; };
     }
+    /* R28: a zip carrying any file a court order withholds is not served: one with a piece missing is never handed over
+       (C-98.5's rule), and the withheld files are named with their orders; every other file is still served by hash. */
+    const listedShas = [...new Set((Array.isArray(source.parts) ? source.parts : [])
+      .map((p) => p && p.sha256).filter((x) => typeof x === "string" && /^[0-9a-f]{64}$/.test(x)))];
+    if (listedShas.length) {
+      const zOut = await withheldOf(stub, listedShas);
+      if (!zOut.answered) return relayUnanswered(zOut, "publishedbytes");
+      if (Object.keys(zOut.withheld).length) return P.json(withheldByCourtOrder(shaParam, zOut.withheld), 451);
+    }
     const built = await containerEntries(source, raw, read);
     /* D-561 (C-98.5–.7): `container.mjs` is pure and reads no catalogue, so each refusal's row is attached here, by
        its code, from this module's rows. D-613: THE STATUS FOLLOWS THE CODE — a part missing and two parts claiming one
@@ -650,6 +689,12 @@ export async function publishedRoutes({ op, url, env, stub }) {
        unreadable body is STATED as unavailable with its reason; it is never
        substituted from the working corpus, which would be the same overclaim
        by a shorter route. */
+    /* R28: a finding whose bytes a court order withholds is not fetched; its body states the withholding and its
+       orders, and no basis is read from bytes that are not served. */
+    if (fnd.withheld)
+      return { ...fnd, object_type: null, basis: [],
+               body: { state: "withheld", from_sha: fnd.bundle_sha, ...fnd.withheld },
+               bytes: `op=publishedbytes&sha256=${fnd.bundle_sha}` };
     const md = await pubBytes(fnd.bundle_sha);
     const text = md ? new TextDecoder().decode(md) : null;
     const fm = text ? (parseFrontmatter(text).data || {}) : null;
