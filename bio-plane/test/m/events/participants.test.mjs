@@ -6,11 +6,14 @@ import { ROLES } from "../../../src/events/index.mjs";
 
 const doc = { kind: "document" };
 
-test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTITY, UNKNOWN_ROLE (payer and payee live on the money fact), NO_ATTESTATION, then NO_VOTE_VALUE/UNKNOWN_VOTE_VALUE for voted; a repeat answers already", () => {
-  const w = world({ view: testView({ votes: [{ value: "Aye" }, { value: "No" }] }) });
+test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTITY, UNKNOWN_ROLE (payer and payee live on the money fact), NO_ATTESTATION, then NO_VOTE_VALUE/UNKNOWN_VOTE_VALUE for voted against the active profiles' vote_values matched on value; with none held a vote is kept as written, unchecked; a repeat answers already", () => {
+  /* the test profile's own vote values (jurisdictions R58, R62), read from the view and never from a list of this module's */
+  const w = world();
+  const values = w.ev.view().vocabulary.vote_values.map((x) => x.value);
+  assert.deepEqual(values, ["content", "not_content", "abstains"]);
   const e = w.event({ kind: "vote", value: "2026-01-20" });
   const p = w.entity("Una");
-  const add = (x) => w.ev.addParticipant({ eventId: e.event_id, entityId: p, role: "voted", attestation: e.attestation_ids[0], voteValue: "Aye", by: MEMBER, ...x });
+  const add = (x) => w.ev.addParticipant({ eventId: e.event_id, entityId: p, role: "voted", attestation: e.attestation_ids[0], voteValue: "content", by: MEMBER, ...x });
   assert.deepEqual(ROLES, ["actor", "organizer", "mover", "seconder", "voted", "present", "speaker", "sender", "recipient", "copied",
     "signatory", "decider", "author", "implementer", "party", "subject"]);
   assert.equal(add({ eventId: "EVT-2026-aaaaaaaaaaaaaaaa", entityId: "", role: "payer" }).reason, "NO_SUCH_EVENT");
@@ -23,25 +26,41 @@ test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTIT
   assert.equal(add({ attestation: null, voteValue: "" }).reason, "NO_ATTESTATION");
   assert.equal(add({ attestation: 999 }).reason, "NO_SUCH_ATTESTATION");
   assert.equal(add({ voteValue: "" }).reason, "NO_VOTE_VALUE");
-  const unk = add({ voteValue: "Maybe" });
-  assert.equal(unk.reason, "UNKNOWN_VOTE_VALUE");
-  assert.deepEqual(unk.values, ["Aye", "No"], "the profile's values");
+  /* matched on value: a label, another case or another jurisdiction's word is no value of the profile's */
+  for (const bad of ["Content", "Aye", "Maybe"]) {
+    const unk = add({ voteValue: bad });
+    assert.equal(unk.reason, "UNKNOWN_VOTE_VALUE", bad);
+    assert.deepEqual(unk.values, values, "it names the profile's values");
+    assert.ok(values.every((v) => unk.detail.includes(v)));
+  }
+  assert.equal(w.rows(`SELECT * FROM event_participants`).length, 0, "no refusal writes");
   const a = add({});
   assert.equal(a.ok, true);
   assert.equal(add({}).already, true);
   assert.equal(w.rows(`SELECT * FROM event_participants`).length, 1);
+  for (const v of values.slice(1)) assert.equal(add({ voteValue: v, entityId: w.entity(`Voter ${v}`) }).ok, true, v);
+  const read = w.ev.readEvent({ eventId: e.event_id, viewer: MEMBER }).event.participants;
+  assert.deepEqual(read.map((x) => [x.vote_value, x.vote_value_checked]), values.map((v) => [v, true]));
   /* a participant on a fresh attestation, given here */
   const s = w.capture("r11b");
   const b = w.ev.addParticipant({ eventId: e.event_id, entityId: p, role: "present", attestation: { captureSha: s, extent: doc }, by: MEMBER });
   assert.equal(b.ok, true);
   assert.notEqual(b.attestation_id, e.attestation_ids[0]);
-  /* with no vote values in the view, a vote is kept as written and says it was not checked (never a default list) */
-  const w2 = world();
+  /* another profile's values are that profile's: the module holds no list of its own */
+  const w3 = world({ view: testView({ votes: [{ value: "aye", label: "Aye", citation: "c", basis: "TEST" }] }) });
+  const e3 = w3.event({ kind: "vote", value: "2026-01-20" });
+  const voter = w3.entity("Wim");
+  assert.equal(w3.ev.addParticipant({ eventId: e3.event_id, entityId: voter, role: "voted", attestation: e3.attestation_ids[0], voteValue: "content", by: MEMBER }).reason, "UNKNOWN_VOTE_VALUE");
+  assert.equal(w3.ev.addParticipant({ eventId: e3.event_id, entityId: voter, role: "voted", attestation: e3.attestation_ids[0], voteValue: "aye", by: MEMBER }).ok, true);
+  /* with no vote values in the active profiles, a vote is kept as written and says it was not checked (never a default list) */
+  const w2 = world({ view: testView({ votes: "none" }) });
   const e2 = w2.event({ kind: "vote", value: "2026-01-20" });
   const q = w2.entity("Vic");
   assert.equal(w2.ev.addParticipant({ eventId: e2.event_id, entityId: q, role: "voted", attestation: e2.attestation_ids[0], voteValue: "Abstain", by: MEMBER }).ok, true);
   const v = w2.ev.readEvent({ eventId: e2.event_id, viewer: MEMBER }).event.participants[0];
   assert.deepEqual([v.vote_value, v.vote_value_checked], ["Abstain", false]);
+  assert.match(v.vote_value_why, /no active jurisdiction profile names vote values/);
+  assert.equal(w2.ev.addParticipant({ eventId: e2.event_id, entityId: w2.entity("Xo"), role: "voted", attestation: e2.attestation_ids[0], voteValue: " ", by: MEMBER }).reason, "NO_VOTE_VALUE");
 });
 
 test("R12 each participant answers its entity's resolution grade in the attesting capture, the strongest, beside its attestation's grade: two axes, never one combined", () => {

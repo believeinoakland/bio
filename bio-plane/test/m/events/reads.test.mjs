@@ -74,7 +74,7 @@ test("R28 R30 timeline: an explicit set (NO_SET when empty), the world's events 
   assert.deepEqual(Object.keys(w.ev.timeline({ set: [p], lanes: ["world"], viewer: MEMBER })).sort(), ["ok", "set", "world"]);
 });
 
-test("R29 within a lane items in R31's order, undetermined orders shown with their bands, items with no when apart as placed nowhere; limit per lane", () => {
+test("R29 within a lane items in R31's order, undetermined orders shown with their bands, items with no when apart as placed nowhere; a dated read bounds only the placed items and still lists every placed-nowhere item; limit per lane", () => {
   const w = world();
   const p = w.entity("Eve");
   const part = [{ entityId: p, role: "present", attestation: 0 }];
@@ -89,6 +89,51 @@ test("R29 within a lane items in R31's order, undetermined orders shown with the
   assert.equal(t.items[2].order.undetermined, false);
   assert.deepEqual(t.placed_nowhere.map((i) => i.event_id), [nowhere]);
   assert.equal(w.ev.timeline({ set: [p], limit: 1, viewer: MEMBER }).world.truncated, true);
+  /* a dated read bounds only the placed items: every placed-nowhere item of the set is still listed apart (N602) */
+  for (const [from, to] of [["2026-06-11", null], [null, "2026-06-09"], ["2026-06-12", "2026-06-12"], ["2027-01-01", "2027-12-31"]]) {
+    const d2 = w.ev.timeline({ set: [p], from, to, viewer: MEMBER }).world;
+    assert.deepEqual(d2.placed_nowhere.map((i) => i.event_id), [nowhere], `${from}..${to}`);
+    assert.ok(d2.items.every((i) => i.when), "no unplaced item among the placed");
+  }
+  assert.deepEqual(w.ev.timeline({ set: [p], from: "2026-06-11", viewer: MEMBER }).world.items.map((i) => i.event_id), [later]);
+  assert.deepEqual(w.ev.timeline({ set: [p], from: "2027-01-01", viewer: MEMBER }).world.items, []);
+  assert.equal(w.ev.timeline({ set: [p], from: "2026-02-31", viewer: MEMBER }).reason, "BAD_DATE");
+  /* the limit holds per lane for the placed-nowhere list too */
+  w.event({ participants: part });
+  const cut = w.ev.timeline({ set: [p], from: "2026-06-12", limit: 1, viewer: MEMBER }).world;
+  assert.deepEqual([cut.placed_nowhere.length, cut.truncated], [1, true]);
+});
+
+test("R30 registerEventSource: each source is asked with the timeline's own viewer, unchanged, so one failing closed without it answers what the reader may see; its lane is truncated when the source says so or the limit cuts it", () => {
+  const w = world();
+  const p = w.entity("Fen");
+  const asked = [];
+  /* a source that fails closed: nothing without a viewer, its own items only to the member who may see them */
+  w.ev.registerEventSource("docket", ({ viewer, limit }) => {
+    asked.push(viewer);
+    if (!viewer) return { items: [] };
+    const all = viewer === MEMBER ? [1, 2, 3].map((n) => ({ at: `2026-05-0${n}`, label: `case ${n}`, ref: `CASE-${n}`, kind: "case" })) : [];
+    return { items: all.slice(0, limit), truncated: all.length > limit };
+  });
+  w.ev.registerEventSource("actions", () => ({ items: [{ at: "2026-05-04", label: "one", ref: "A-1", kind: "letter" }], truncated: true }));
+  w.ev.registerEventSource("escalation", ({ viewer }) => [{ at: "2026-05-05", label: String(viewer), ref: "E-1", kind: "escalation" },
+                                                          { at: "2026-05-06", label: "two", ref: "E-2", kind: "escalation" }]);
+  const lane = (t, m) => t.ours.sources.find((s) => s.source === m);
+  const mine = w.ev.timeline({ set: [p], viewer: MEMBER });
+  assert.deepEqual(asked, [MEMBER], "the viewer passed unchanged");
+  assert.deepEqual(lane(mine, "docket").items.map((i) => i.ref), ["CASE-1", "CASE-2", "CASE-3"]);
+  assert.equal(lane(mine, "docket").truncated, false);
+  assert.equal(lane(mine, "escalation").items[0].label, MEMBER);
+  assert.equal(w.ev.timeline({ set: [p], viewer: OUTSIDER }).ours.sources.find((s) => s.source === "docket").items.length, 0);
+  assert.equal(lane(w.ev.timeline({ set: [p] }), "docket").items.length, 0, "no viewer: the source answers nothing");
+  assert.equal(asked.at(-1), null);
+  /* truncated: the source's own word, or this limit cutting its items */
+  const two = w.ev.timeline({ set: [p], limit: 2, viewer: MEMBER });
+  assert.deepEqual([lane(two, "docket").items.length, lane(two, "docket").truncated], [2, true], "the source said truncated");
+  assert.equal(lane(mine, "actions").truncated, true, "carried even when nothing here was cut");
+  const one = w.ev.timeline({ set: [p], limit: 1, viewer: MEMBER });
+  assert.deepEqual([lane(one, "escalation").items.length, lane(one, "escalation").truncated], [1, true], "the limit cut a source that said nothing");
+  assert.equal(lane(mine, "escalation").truncated, false);
 });
 
 test("R31 sequence: before, after or undetermined with why, through civil-time.compare; a day band against a minute in it is undetermined, equal values undetermined, no when placed nowhere; never stored", () => {

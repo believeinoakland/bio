@@ -154,7 +154,7 @@ test("R15 onWhenChanged: registered once, refused through listenerRefusal; run i
   assert.equal(w2.rows(`SELECT * FROM events`).length, 0);
 });
 
-test("R16 onEventChanged runs after commit for when_moved and participant_re_resolved, with the event id and what changed; same registration rules", async () => {
+test("R16 onEventChanged runs after commit for when_moved and participant_re_resolved, with the event id, what changed and at, the instant of the write that made it, the same for every listener; same registration rules", async () => {
   const w = world();
   const got = [];
   assert.equal(w.ev.onEventChanged("reevaluation", (x) => got.push({ ...x, committed: !!w.one(`SELECT 1 AS x FROM events WHERE event_id=?`, x.eventId) })).ok, true);
@@ -173,6 +173,22 @@ test("R16 onEventChanged runs after commit for when_moved and participant_re_res
   w.ev.correctParticipant({ participantId: pid, entityId: p2, reason: "the minutes name R", by: MEMBER });
   assert.equal(got[1].change, "participant_re_resolved");
   assert.deepEqual([got[1].was, got[1].now], [p, p2]);
+  /* at: the instant the write stamped on its own rows, the same for every listener told of it */
+  const choice = w.rows(`SELECT at FROM event_choices WHERE event_id=? ORDER BY choice_id`, e.event_id).at(-1).at;
+  assert.equal(got[0].at, choice, "when_moved carries the instant of the choice that moved it");
+  const corrected = w.one(`SELECT at, superseded_at FROM event_participants WHERE participant_id=?`, pid);
+  const replacement = w.one(`SELECT at FROM event_participants WHERE superseded_by IS NULL AND entity_id=?`, p2);
+  assert.deepEqual([got[1].at, corrected.superseded_at], [replacement.at, replacement.at], "one instant for the whole act");
+  assert.match(got[1].at, /^\d{4}-\d{2}-\d{2}T/);
+  const w3 = world();
+  const seen = { reevaluation: [], monitoring: [] };
+  for (const m of Object.keys(seen)) w3.ev.onEventChanged(m, (x) => seen[m].push(x.at));
+  const s3 = w3.capture("r16-two");
+  const e3 = w3.ev.createEvent({ kind: "meeting", attestations: [{ datedFactId: fact(w3, s3, "2026-08-01") }], by: MEMBER });
+  const a3 = w3.ev.attest({ eventId: e3.event_id, attestation: { datedFactId: fact(w3, s3, "2026-08-03") }, by: MEMBER }).attestation_id;
+  w3.ev.chooseGoverning({ eventId: e3.event_id, attestationId: a3, by: MEMBER });
+  assert.equal(seen.reevaluation.length, 1);
+  assert.deepEqual(seen.monitoring, seen.reevaluation, "every listener is told the same instant");
   /* a refused write tells nothing */
   w.ev.onWhenChanged("lines", () => { throw new Error("no"); });
   w.ev.chooseGoverning({ eventId: e.event_id, attestationId: e.attestation_ids[0], by: MEMBER });

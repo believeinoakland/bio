@@ -1,8 +1,9 @@
 /* events: what the machine writes (R4, R22–R25, R38). Only what a source identifies at both ends by its own ids is
    written: a meeting by its `EventId`, an item by its `EventItemId` within its meeting, a participant whose `PersonId`
    resolves to a registered entity through a scheme identifier (grade A). Nothing is inferred: no cause, no relation but
-   `within`, no participant from office holding (R41). Each row is stamped as the machine's, cites its capture, and is
-   correctable by a member (R13, R14, R20). An import is idempotent by source id (R25). */
+   `within`, no participant from office holding (R41). A meeting concerns the body it was imported for (R22). Each row
+   is stamped as the machine's, cites its capture, and is correctable by a member (R13, R14, R20). An import is
+   idempotent by source id (R25). */
 import { readDate } from "./time.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { noEntity, noSuchEntity } from "../entities/index.mjs";
@@ -182,6 +183,10 @@ function meeting(k, held, row, f, scope, out) {
     else out.unchanged++;
     k.setWhen(eventId);
   }
+  /* R22 (N606): the meeting concerns the body it was imported for, so the followed body's events are read from it (R27);
+     a meeting held before T34 gains it at its next import */
+  if (!k.one(`SELECT 1 AS x FROM event_concerns WHERE event_id=? AND end_id=?`, eventId, scope.body))
+    k.insert("event_concerns", { event_id: eventId, end_id: scope.body, by_actor: MACHINE, at: k.now() });
   keepSource(k, row.key, "event", eventId, { ...facts, agenda: (prior && JSON.parse(prior.facts).agenda) || facts.agenda,
     minutes: (prior && JSON.parse(prior.facts).minutes) || facts.minutes }, held.sha);
   /* R24: a posting time is the agenda's or the minutes' publication, within the meeting, on or before the first value seen. */

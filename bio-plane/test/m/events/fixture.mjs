@@ -54,8 +54,10 @@ export const MEMBER = "member:alice";
 export const OUTSIDER = "member:outsider";
 export const ZONE = "America/Halifax";
 
-/* The test profile's view, to which a test may add Legistar's person and body schemes over numeric forms (R22) and vote
-   values (R11), as test data, never in product code. */
+/* The test profile's view, to which a test may add Legistar's person and body schemes over numeric forms in the `person`
+   and `body` spaces (R22, `jurisdictions` R3), as test data, never in product code. Its vote values are the profile's own
+   (`vocabulary.vote_values`, `jurisdictions` R58, R62); `votes` replaces them as test data, `votes: "none"` removes them
+   (a profile that holds none, as the first profile today, R11). */
 export function testView({ legistar = false, votes = null } = {}) {
   const c = combine(["test-port-ellery"]);
   const view = structuredClone(c.view);
@@ -63,12 +65,13 @@ export function testView({ legistar = false, votes = null } = {}) {
     const numeric = (form) => ({ form, pattern: { re: "^(\\d+)$" }, normal: [{ group: 1 }], basis: "TEST" });
     view.spaces = { ...view.spaces,
       person: { ...view.spaces.person, forms: [...view.spaces.person.forms, numeric("legistar-person")] },
-      object: { ...(view.spaces.object || { label: "object" }), forms: [...((view.spaces.object || {}).forms || []), numeric("legistar-body")] } };
+      body: { ...view.spaces.body, forms: [...view.spaces.body.forms, numeric("legistar-body")] } };
     view.identifier_schemes = [...(view.identifier_schemes || []),
       { scheme: "legistar_person", label: "Legistar PersonId", entity_kinds: ["person"], space: "person", form: "legistar-person", basis: "TEST" },
-      { scheme: "legistar_body", label: "Legistar BodyId", entity_kinds: ["body"], space: "object", form: "legistar-body", basis: "TEST" }];
+      { scheme: "legistar_body", label: "Legistar BodyId", entity_kinds: ["body"], space: "body", form: "legistar-body", basis: "TEST" }];
   }
-  if (votes) view.vote_values = votes;
+  if (votes === "none") delete view.vocabulary.vote_values;
+  else if (votes) view.vocabulary = { ...view.vocabulary, vote_values: votes };
   return view;
 }
 
