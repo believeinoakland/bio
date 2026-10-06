@@ -420,9 +420,19 @@ export class Retrieval {
     return Object.freeze({ projection: PROJECTION_RELATION, fields: Object.freeze(fields), ...money });
   }
 
-  /** R68, R69: every compile this module runs: the relations, and the governing zone (`query-language` R27). */
-  #compile(input) {
-    return compile({ ...input, zone: this.zone() }, this.#relations());
+  /** R72 (N584; K1609): the relations every compile this module runs names (`query-language` R26's `fields`, each
+   *  `{table, key, col}`, with the projection and money's words beside them), as a run compiles with them at this
+   *  moment, frozen, so `answers`' saved-form check (its R15) compiles a form against the T33 fields a run reads.
+   *  Synchronous; writes nothing but the views R68 already keeps; never throws: a read that fails answers the relations
+   *  R61–R62 name. */
+  relations() {
+    try { return this.#relations(); } catch { return this.#via; }
+  }
+
+  /** R68, R69: every compile this module runs: the relations, and the governing zone (`query-language` R27). A caller
+   *  that checks a form first (R70) hands the zone and relations it checked with, so the check and the run are one. */
+  #compile(input, zone = this.zone(), relations = this.relations()) {
+    return compile({ ...input, zone }, relations);
   }
 
   /* ---- sight ---- */
@@ -1297,15 +1307,19 @@ export class Retrieval {
                        detail: "no saved query of yours answers to that" };
     const isForm = !!form && typeof form === "object" && !Array.isArray(form) && form.v === 1 && typeof form.q === "string";
     if (!isForm || typeof owner !== "string" || !owner || typeof viewer !== "string" || viewer !== owner) return notYours;
+    /* N584: the check that the form compiles as saved is made with R72's relations and R69's zone, the ones `answers`
+       checks it with when the question is set, and the run compiles with the same two, so a date term or a T33 field
+       that compiled then is neither dropped nor refused now. */
+    const zone = this.zone(), relations = this.relations();
     const saved = typeof QL.savedForm === "function"
-      ? QL.savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir }, this.#relations())
+      ? QL.savedForm({ q: form.q, implicitOp: form.implicitOp, sort: form.sort, dir: form.dir, zone }, relations)
       : { ok: true };
     if (!saved || saved.ok !== true) return saved && typeof saved === "object" ? saved : notYours;
     const asked = Number(limit);
     const cap = limit == null || !Number.isFinite(asked) || asked < 1 ? SAVED_LIMIT_DEFAULT
       : Math.min(IDS_MAX, Math.floor(asked));
     const plan = this.#compile({ q: form.q, implicitOp: form.implicitOp === "or" ? "or" : undefined,
-                                 sort: form.sort ?? null, dir: form.dir ?? null, viewer });
+                                 sort: form.sort ?? null, dir: form.dir ?? null, viewer }, zone, relations);
     const tally = { applied: 0 };
     const total = this.runQuery(plan.statements.count(), tally)[0]?.n ?? 0;
     const all = this.runQuery(plan.statements.ids(), tally).map((r) => r.bundle_id);
