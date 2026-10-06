@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 Finding (K1570, K1594): an undisclosed differing or unbound workbook is read through `workbooks.readWorkbook` (K1448); your T33-69 pre-flight refuses on it as on a calculation, and publication reads the same answer.
 Finding before your start (K1619, from INQUIRY #14 J3 (2)): your fixtures reach `connections` and `entities` through inquiry's instance (`inquiry.connections`); inquiry keeps those getters for now. When the job touches those fixtures, build them on the host directly.
 Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fleetbundles "agent-worker's 13 inputs" (K1598, N575) and agent-runner's three (no `bundle` block; K1604, N578), resolveversion ARM 7b (K1604); control-plane R43 pin (K1606, until T33-89); conformance R21 comparisonFacts (K1610, its L9 job); capture-requests `plane.test.mjs` ×4, scheduler R12 and agent-worker `harness.test.mjs` REC100 ×5 (AI_NO_ACCOUNT until N585 routes `op=accountreferenceset`; K1614, K1621); row-census gains C-2.8 ×3, C-28.20–.22, C-134.1–.12, C-135.1–.12. Intent's `invariants.test.mjs:200` red is cleared (K1629).
+
+## B2 · CHANGE
+
+K1632: workbooks R16's wording now names your pre-flight (T33-69, C:A-15) as the rule that refuses an undisclosed, differing or unbound load-bearing calculation. publication R22 now commits the calculation inputs at publish. Merge tranche/T33 and build to that.
