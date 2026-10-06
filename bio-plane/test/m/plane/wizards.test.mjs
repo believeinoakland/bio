@@ -74,7 +74,12 @@ test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registe
   assert.ok(graded.includes("publish"), graded.join());
   assert.deepEqual(irreversibleActs(), graded);
   assert.deepEqual(irreversibleActs({ a: "irreversible", b: "reasoned", c: "irreversible" }), ["a", "c"], "follows the grading it is given");
-  assert.deepEqual(w.registeredScreens(), SCREEN_REGISTRY.map((s) => ({ id: s.id, acts: [...s.acts] })), "the registry's screens (K1869 (2))");
+  /* the registry's screens (K1869 (2)), each with at least the acts it carries (an owed act whose op is declared is
+     registered as well, wizard-scripts R13) */
+  const held = w.registeredScreens();
+  assert.deepEqual(held.map((s) => s.id), SCREEN_REGISTRY.map((s) => s.id), "the registry's screens (K1869 (2))");
+  for (const s of SCREEN_REGISTRY)
+    for (const a of s.acts) assert.ok(held.find((h) => h.id === s.id).acts.includes(a), `${s.id}: ${a}`);
   assert.deepEqual(new Set(w.reg.ops), new Set(Object.keys(OPS)), "the member op table");
   assert.deepEqual(w.reg.library.map((e) => e.id), CIVICSMITH_LIBRARY.map((e) => e.id), "the Civicsmith library");
   /* behaviour through the door (`op=wizardcheck`, wizard-scripts R12) over what was registered */
