@@ -12,7 +12,7 @@
 
 **Deferred.** None.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 - `skills` (`test/m/skills/doctrine.test.mjs`:160, :165, its R18 R29) pins `GATE_ADDRESS.file` to `agent-worker/src/harness.mjs`: red from this merge until skills' T34-35 re-points the pin (N586 expects it).
 - `agent-worker` (`agent-worker/test/requirements.test.mjs`:1350, R44 (N53)) pins the same file string: red until agent-worker's T34-39 re-points it. Its `HARNESS` exports all exist at the new address.
 - Generated artifacts staled by this change (mechanics §14; not written by this job): `agent-worker/dist/agent-worker.bundled.mjs` (agent-worker R45 now red: STALE BUNDLE for `run-rules/checks.mjs`, `deployment.mjs`, `rules.mjs`), and the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) and the bundles built from it, for BOB's regeneration at layer close.
@@ -39,4 +39,4 @@ Other modules (detail in this record's Completion):
 
 ## J2 · COMPLETE
 
-T34-32 and T34-86 applied (plus C-109.1, C-109.9, STANDARD_BASIS none-recorded under DEC-149, and AI_NO_ACCOUNT's translation brought to K1755/R20). run-rules 24/24; format, architecture, coverage 20/20, ownership 0 failures. New reds outside this module: skills R18 R29 and agent-worker R44 (the file pin), agent-worker R45 (stale bundle) — see J2. Record: Completion.
+T34-32 and T34-86 applied (plus C-109.1, C-109.9, STANDARD_BASIS none-recorded under DEC-149, and AI_NO_ACCOUNT's translation brought to K1755/R20). run-rules 24/24; format, architecture, coverage 20/20, ownership 0 failures. New reds outside this module: skills R18 R29 and agent-worker R44 (the file pin), agent-worker R45 (stale bundle) — see J1. Record: Completion.
