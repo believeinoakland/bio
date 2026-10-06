@@ -43,12 +43,15 @@ test("R17 op=bootstrap: service, this isolate's version (0.0.0 unset), bootstrap
   /* storeVersion is the store's own, never filled from this isolate */
   const own = await read(await bootstrapReport({ VERSION: "plane-3" }, "x", { stub: bootstrapStub({ claimed: true }), ...io }));
   assert.equal("storeVersion" in own.body, false);
-  const env = { VERSION: "plane-3", AGENT_WORKER: member("agent-worker", "a-1"), PDF_WORKER: member("ocr-worker", "o-1") };
+  const env = { VERSION: "plane-3", AGENT_WORKER: member("agent-worker", "a-1"), PDF_WORKER: member("ocr-worker", "o-1"),
+                SHEET_WORKER: member("sheet-worker", "s-1") };
   const withMembers = await read(await bootstrapReport(env, "x", { members: true, stub, ...io }));
   assert.deepEqual(withMembers.body.memberVersions, {
     "agent-worker": { binding: "AGENT_WORKER", state: "SERVING", version: "a-1" },
     "pdf-worker": { binding: "PDF_WORKER", state: "MISNAMED", name: "ocr-worker", version: "o-1" },
-    "ocr-worker": { binding: "OCR_WORKER", state: "UNBOUND" } });
+    "ocr-worker": { binding: "OCR_WORKER", state: "UNBOUND" },
+    "sheet-worker": { binding: "SHEET_WORKER", state: "SERVING", version: "s-1" },
+    "agent-runner": { binding: "AGENT_RUNNER", state: "UNBOUND" } });
   assert.equal("memberVersions" in (await read(await bootstrapReport(env, "x", { stub, ...io }))).body, false);
   const silent = await read(await bootstrapReport(env, "x", { stub: { fetch: async () => new Response("x", { status: 500 }) }, ...io }));
   assert.deepEqual([silent.status, silent.body.reason], [502, "STORE_DID_NOT_ANSWER"]);

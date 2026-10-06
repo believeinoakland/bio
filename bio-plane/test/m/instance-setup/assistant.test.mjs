@@ -4,7 +4,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, frame, pageOver } from "./fixture.mjs";
-import { ASSISTANT_DISCLOSURE, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLE_DECLARATIONS, setupPage } from "../../../src/setup.mjs";
+import { ASSISTANT_DISCLOSURE, ASSISTANT_INSTALLER, INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, setupPage }
+  from "../../../src/setup.mjs";
 
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
@@ -184,14 +185,37 @@ test("R28 R41 R53 R54 every table is declared explicitly to record-core (declare
   const w = await boot();
   assert.equal(w.started.purge.ok, true);
   const mine = w.record.declaredTables().filter((d) => d.module === "instance-setup");
-  assert.deepEqual(mine.map((d) => d.table ?? d.name), INSTANCE_SETUP_TABLE_DECLARATIONS.map((d) => d.name));
-  for (const d of mine) assert.equal(d.purge ?? d.classes?.purge, "exempt");
-  const disc = mine.find((d) => (d.table ?? d.name) === "assistant_disclosures");
-  assert.equal(disc.export ?? disc.classes?.export, "never");
+  assert.deepEqual(mine.map((d) => d.name), INSTANCE_SETUP_TABLE_DECLARATIONS.map((d) => d.name));
+  for (const d of mine) assert.equal(d.purge, INSTANCE_SETUP_TABLES.includes(d.name) ? "exempt" : "clear", d.name);
+  assert.deepEqual(mine.filter((d) => d.purge === "clear").map((d) => d.name), ["seed_entities", "seed_lines", "seed_offices"]);
+  const disc = mine.find((d) => d.name === "assistant_disclosures");
+  assert.equal(disc.export, "never");
   w.prov.admins = new Set(["admin"]);
   w.m.assistantSet({ on: true, by: "admin" });
   w.m.disclosureShown({ member: "ruth", version: ASSISTANT_DISCLOSURE.version, by: "ruth" });
   w.record.purge({});
   assert.equal(w.m.assistantState().on, true);
   assert.equal(w.m.disclosureOf({ member: "ruth" }).shown, true);
+});
+
+test("R53 (K1678) at the first boot the installer's binding ASSISTANT_ENABLED is recorded, on or off, with by the installer; no binding, or any other value, records nothing and the assistant stays off; no later boot reads it", async () => {
+  const at = Date.parse("2026-10-06T07:00:00Z");
+  for (const [bound, on] of [["on", true], [" ON ", true], ["off", false]]) {
+    const w = await boot({ env: { ASSISTANT_ENABLED: bound }, now: () => at });
+    assert.deepEqual(w.started.assistant, { recorded: true, on });
+    assert.deepEqual(w.m.assistantState(), { ok: true, on, set_by: ASSISTANT_INSTALLER, set_at: "2026-10-06T07:00:00.000Z" });
+    assert.equal(ASSISTANT_INSTALLER, "installer");
+  }
+  for (const bound of [undefined, "", "yes", "true", "1"]) {
+    const w = await boot({ env: bound === undefined ? {} : { ASSISTANT_ENABLED: bound } });
+    assert.equal(w.started.assistant.recorded, false, String(bound));
+    assert.deepEqual([w.m.assistantState().on, w.m.assistantState().set_by], [false, null]);
+    if (bound) assert.match(w.started.assistant.why, /neither on nor off/);
+    assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 0);
+  }
+  /* a later boot of a store the installer set off does not read a binding changed to on */
+  const first = await boot({ env: { ASSISTANT_ENABLED: "off" } });
+  const later = await boot({ st: first.st, env: { ASSISTANT_ENABLED: "on" } });
+  assert.equal("assistant" in later.started, false);
+  assert.equal(later.m.assistantState().on, false);
 });

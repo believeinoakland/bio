@@ -102,14 +102,14 @@ export function providers({ admins = ["admin", "member:ada"] } = {}) {
  * record's schema pass, then the module starts. `st` given boots the SAME database again, as a new Durable Object
  * instance over it (a later boot).
  */
-export async function boot({ st = null, env = {}, prov = null, now = null } = {}) {
+export async function boot({ st = null, env = {}, prov = null, now = null, more = {} } = {}) {
   const store = st ? storage(st.db) : storage();
   const ctx = { storage: store };
   const record = recordOf(ctx);                 // the first-boot witness, before any table is made
   applyRecordSchema(store);                     // the record's schema pass (CREATE IF NOT EXISTS)
   const p = prov || providers();
   const deps = { record, membership: p.membership, promotion: p.promotion, scheduler: p.scheduler, capture: p.capture,
-                 governor: p.governor, fetch: p.fetch, sleep: async () => {}, ...(now ? { now } : {}) };
+                 governor: p.governor, fetch: p.fetch, sleep: async () => {}, ...(now ? { now } : {}), ...more };
   const m = new InstanceSetup(ctx, env, deps);
   const started = await m.start();
   return { m, st: store, ctx, record, prov: p, started, env };
@@ -247,4 +247,69 @@ export function pageOver({ html, hash = "", session = null, fetch }) {
           profilesWarning, openProfiles, panel, chosenRiskTier, openBundle, signerAddBody, describeKey, acquireWhy,
           PREFIX, SCHEMA_OF, splitFm, mdRender, ratifyWhy, openBrowse, openInbox, openAssistant };`)(...Object.values(sandbox));
   return { ui, el, sandbox, replaced: () => replaced, picks, ibtns: () => ibtns };
+}
+
+/* The registry R50–R52 seed into, as a stand-in coded to its requirements (K1563 (1)'s convention for a dep a test
+   injects): `entities` R1 (a kind of the closed list, a label and a note), R43 (a scheme the active profiles declare,
+   for the entity's kind, a machine's basis `{system, row}` naming one of the scheme's systems, `IDENTIFIER_TAKEN`, a
+   repeat `already`), R44 (`entityByIdentifier`); `lines` R1, R2 and R4 (closed kinds and capacities, `seat_on` from an
+   office to a body, `holds` from a person, and a machine's line only from a system rule whose `ids` name both ends).
+   `schemes()` is the active profiles' `identifier_schemes`. Every write is kept for the test to read. */
+export async function registryOver(schemes) {
+  const { ENTITY_KINDS } = await import("../../../src/entities/index.mjs");
+  const { LINE_KINDS, CAPACITIES } = await import("../../../src/lines/index.mjs");
+  const ents = new Map(), idents = [], lines = [];
+  let n = 0, l = 0;
+  const machine = (by) => typeof by === "string" && by.startsWith("class:");
+  const byIdent = ({ scheme, id }) => {
+    const held = idents.filter((x) => x.scheme === scheme && x.id === String(id));
+    if (!held.length) return null;
+    if (new Set(held.map((x) => x.entity_id)).size > 1) return { undetermined: true, candidates: held.map((x) => x.entity_id) };
+    const e = ents.get(held[0].entity_id);
+    return { entity_id: held[0].entity_id, kind: e.kind, label: e.label, scheme, id: String(id) };
+  };
+  const entities = {
+    ents, idents,
+    createEntity({ kind, label, note, declaredBy, sector } = {}) {
+      if (!ENTITY_KINDS.includes(kind)) return { ok: false, reason: "UNKNOWN_KIND" };
+      if (typeof label !== "string" || !label.trim()) return { ok: false, reason: "ENTITY_NO_LABEL" };
+      if (typeof note !== "string" || !note.trim()) return { ok: false, reason: "ENTITY_NO_NOTE" };
+      const entity_id = `ENT-2026-${String(++n).padStart(4, "0")}`;
+      ents.set(entity_id, { kind, label, note, declared_by: declaredBy, sector: sector ?? null });
+      return { ok: true, entity_id, kind, label };
+    },
+    has: (id) => ents.has(id),
+    addIdentifier({ entityId, scheme, id, basis, by } = {}) {
+      const e = ents.get(entityId);
+      if (!e) return { ok: false, reason: "NO_SUCH_ENTITY" };
+      const sch = schemes().find((x) => x.scheme === scheme);
+      if (!sch) return { ok: false, reason: "UNKNOWN_SCHEME" };
+      if (!sch.entity_kinds.includes(e.kind)) return { ok: false, reason: "SCHEME_NOT_FOR_KIND" };
+      if (machine(by) && !(basis && (sch.systems || []).includes(basis.system) && basis.row !== undefined)) return { ok: false, reason: "NO_BASIS" };
+      const mine = idents.find((x) => x.entity_id === entityId && x.scheme === scheme && x.id === String(id));
+      if (mine) return { ok: true, already: true, entity_id: entityId };
+      if (idents.some((x) => x.entity_id !== entityId && x.scheme === scheme && x.id === String(id))) return { ok: false, reason: "IDENTIFIER_TAKEN" };
+      idents.push({ entity_id: entityId, scheme, id: String(id), basis, by });
+      return { ok: true, entity_id: entityId, scheme, id: String(id) };
+    },
+    entityByIdentifier: byIdent,
+  };
+  const linesApi = {
+    lines,
+    recordLine({ kind, from, to, capacity, valid, basis, by } = {}) {
+      if (!LINE_KINDS.includes(kind)) return { ok: false, reason: "UNKNOWN_LINE_KIND" };
+      if (!ents.has(from) || !ents.has(to)) return { ok: false, reason: "NO_SUCH_ENTITY" };
+      if (kind === "seat_on" && !(ents.get(from).kind === "office" && ents.get(to).kind === "body")) return { ok: false, reason: "SEAT_ON_ENDS" };
+      if (kind === "holds" && ents.get(from).kind !== "person") return { ok: false, reason: "HOLDER_NOT_A_PERSON" };
+      if (kind === "holds" && !CAPACITIES.includes(capacity)) return { ok: false, reason: "UNKNOWN_CAPACITY" };
+      if (kind !== "holds" && capacity) return { ok: false, reason: "BAD_CAPACITY" };
+      const ends = basis && basis.ids ? [byIdent(basis.ids.from || {}), byIdent(basis.ids.to || {})] : [null, null];
+      if (machine(by) && !(basis && basis.rule && ends[0] && ends[0].entity_id === from && ends[1] && ends[1].entity_id === to))
+        return { ok: false, reason: "MACHINE_NEEDS_IDENTIFIERS" };
+      const line_id = `LIN-2026-${String(++l).padStart(4, "0")}`;
+      lines.push({ line_id, kind, from, to, capacity: capacity ?? null, valid: valid ?? null, basis, by });
+      return { ok: true, line_id, kind, from, to };
+    },
+  };
+  return { entities, lines: linesApi };
 }

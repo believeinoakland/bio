@@ -75,6 +75,6 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
   assert.deepEqual(Object.keys(ops).sort(), ["assistantset", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate",
     "disclosureof", "disclosureshown", "groupdomainset",
     "groupidentity", "groupidentitypublic", "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed",
-    "profiles", "profilesset", "recordcpuprobestep", "runtimeobservations"]);
+    "officesseed", "profiles", "profilesset", "recordcpuprobestep", "runtimeobservations", "seatsseed"]);
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });
