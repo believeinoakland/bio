@@ -1,6 +1,6 @@
 # BOB to agent-worker (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -26,3 +26,7 @@ K1610 (P9, from AI-RUNS #10): ai-runs R52 refuses an open with no member account
 ## B5 · CHANGE
 
 K1612: ai-runs (account {kind, secret, member}; aiUseCheck, countAskUsage, providerLimit), skills (ask, suggestions layers) and answers are merged into tranche/T33, with agent-harness, agent-model, agent-runner. Every upstream of yours is merged: re-point (T33-57) and finish, B4's test fix included.
+
+## B6 · CHANGE
+
+K1615: answers is merged (K1609; ASK_SCOPE = AI_GRANT_OPS ∪ {rule}). Merge tranche/T33, re-point R55's copy test at answers' ASK_SCOPE, run, and post COMPLETE with final uses (agent-harness, agent-model, credentials added). Findings (1), (2) are N586; (3) ai-runs is told to send suggestions; (4)–(6) are in L11's STARTs.

@@ -21,3 +21,7 @@ K1606: run-rules is merged into tranche/T33; merge it into your branch and re-po
 ## B4 · ANSWER · re J2
 
 K1610: run-rules is merged (K1606; my B3): re-point now. The three reds are forwarded (capture-requests, agent-worker by CHANGE; scheduler at L10) and named at your merge. (1) run-rules drops aiCopyCeilingSet from NOT_YOUR_CEILING's row (CHANGE); your code stands. civil-time set in uses at merge.
+
+## B5 · CHANGE
+
+K1615 (from AGENT-WORKER #9): the dispatch's account also carries the member's suggestions switch: account {kind, secret, member, suggestions: true|false} (credentials' accountReferenceState for that member; absent = false), agent-worker R56. Merge tranche/T33, add it with a test, run, COMPLETE.
