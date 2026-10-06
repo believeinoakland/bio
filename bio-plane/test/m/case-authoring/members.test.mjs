@@ -81,7 +81,7 @@ test("R4: NOT_CONCLUDED is asked of the publishing project's relationship (ratif
   assert.equal(w2.basisVersions.withdrawConclusion({ target: Q, project: PW, reason: "second thoughts", who: ALICE,
                                                      viewer: V("alice"), identity: ALICE }).ok, true);
   assert.equal(w2.publish(PW, "alice", [Q]).why, "project_withdrew_its_conclusion");
-  /* undetermined: the project's latest entry names an act this plane does not know */
+  /* undetermined: the project's latest entry names an act the group's Civicsmith does not know */
   const w3 = setup();
   w3.finding(Q, [{ target: DOC }], { state: "open", lines: readingLines("first", [DOC]) });
   const PU = w3.project("Team", "alice", [Q], { extra: [...currentLines(Q), "conclusions:", `  - inquiry: "${Q}"`,

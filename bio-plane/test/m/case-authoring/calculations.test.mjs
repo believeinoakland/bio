@@ -8,24 +8,30 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CALCULATION_STATE_WORDS, DISCLOSED_WITHOUT_WORDS }
+import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CALCULATION_STATE_WORDS, WORKBOOK_STATE_WORDS, DISCLOSED_WITHOUT_WORDS }
   from "../../../src/case-authoring/index.mjs";
 import { calculationsOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
 const C1 = "CALC-2026-0001", C2 = "CALC-2026-0002";
-const TABLE = "a".repeat(64);
+const TABLE = "a".repeat(64), RATE = "b".repeat(64), LIMIT = "e".repeat(64);
 const WORDS = "The council's own total omits the late invoices; we disclose the difference.";
 
-/* calculations at its interface: `state` per calc is `agrees`, `differs`, `unbound` or `hidden`; `calls` records each. */
-function calculationsStandIn(state, calls = []) {
+/* calculations at its interface: `state` per calc is `agrees`, `differs`, `unbound` or `hidden`; `calls` records each.
+   `read` answers as calculations R9 does: `calculation.inputs` states each input's kind and the SHA-256 of its canonical
+   bytes (`sha`), beside the stored arguments (`inputs`); one in `legacy` was created before T34 and states a hash for its
+   table alone; one in `threshold` carries a threshold, stated as an input of its own. */
+function calculationsStandIn(state, calls = [], { legacy = [], threshold = [] } = {}) {
   const read = async ({ calcId, viewer }) => {
     calls.push({ read: calcId, viewer });
     if (state[calcId] === "hidden" || !(calcId in state)) return { ok: true, found: false, calc_id: calcId };
     return { ok: true, found: true, calc_id: calcId, result_key: `key-${calcId}`, method_version: "bio-calc/1",
       calculation: { calc_id: calcId, recipe: { steps: [{ id: "t", op: "sum" }], output: "t" }, method_version: "bio-calc/1",
-                     result_key: `key-${calcId}`, results: { t: { value: "12", precision: "exact" } } },
-      /* C2 rests on a table alone; C1 also on a typed value, whose hash `read` does not state */
+                     result_key: `key-${calcId}`, results: { t: { value: "12", precision: "exact" } },
+                     inputs: [{ name: "ledger", kind: "table", sha: TABLE },
+                              ...(calcId === C2 ? [] : [{ name: "rate", kind: "figure", as_read: "0.5", sha: legacy.includes(calcId) ? null : RATE }]),
+                              ...(threshold.includes(calcId) ? [{ name: "threshold", kind: "threshold", sha: LIMIT }] : [])] },
+      /* C2 rests on a table alone; C1 also on a typed value */
       inputs: calcId === C2 ? [{ name: "ledger", table: TABLE }] : [{ name: "ledger", table: TABLE }, { name: "rate", value: "0.5" }],
       grade: { inputs: [{ name: "ledger", kind: "table", grade: "B" },
                         { name: "rate", kind: "value", grade: "D", ...(state[calcId] === "unbound" ? { unbound: true } : {}) }] } };
@@ -38,14 +44,14 @@ function calculationsStandIn(state, calls = []) {
 }
 
 /* Q rests on DOC and C1; Q2 rests on Q3, which rests on C2 (a chain through an inquiry leg). */
-function setup({ state = { [C1]: "differs", [C2]: "agrees" }, workbooks = null, legs = null } = {}) {
+function setup({ state = { [C1]: "differs", [C2]: "agrees" }, workbooks = null, legs = null, legacy = [], threshold = [] } = {}) {
   const calls = [];
   const extra = legs || { [Q]: [C1], [Q3]: [C2] };
   const inquiry = (real) => new Proxy(real, { get: (t, k) => (k === "basisFor"
     ? (id, o) => { const b = t.basisFor(id, o); const more = (extra[id] || []).map((c, i) => ({ ord: 100 + i, target_id: c,
         target_type: "calculation", role: "supports" })); return b && b.ok !== false ? { ...b, legs: [...b.legs, ...more] } : b; }
     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
-  const w = world({ inquiry, deps: { calculations: calculationsStandIn(state, calls),
+  const w = world({ inquiry, deps: { calculations: calculationsStandIn(state, calls, { legacy, threshold }),
                                      workbooks: workbooks || { readWorkbook: async () => ({ ok: true, found: false }) } } });
   w.member("alice");
   w.doc(DOC);
@@ -85,10 +91,13 @@ test("R56: op=publish recomputes and reads each calculation a member's chain rea
     ["bio-calc/1", { steps: [{ id: "t", op: "sum" }], output: "t" }]]);
   assert.deepEqual(rows[1].inputs, { ledger: TABLE }, "each input by name and SHA-256");
   assert.match(rows[1].result_key, /^[0-9a-f]{64}$/, "keyed by case-grammar from the row it writes");
-  assert.deepEqual([rows[0].inputs, rows[0].result_key], [null, null], "an input whose hash read does not state: undetermined (J3 (2))");
+  assert.deepEqual(rows[0].inputs, { ledger: TABLE, rate: RATE }, "a typed value's hash too, as read states it (N596)");
+  assert.match(rows[0].result_key, /^[0-9a-f]{64}$/, "keyed, now that every input is stated");
+  assert.notEqual(rows[0].result_key, rows[1].result_key, "over its own inputs");
   assert.deepEqual(rows[0].results, { t: { value: "12", precision: "exact" } });
   const body = bodyOf(docOf(w, ok));
   assert.ok(body.includes(`- ${C1}: ${CALCULATION_STATE_WORDS.differs}. Disclosed by the group: ${WORDS}`));
+  assert.equal(body.includes("Each workbook below"), false, "no workbook, no workbook sentence");
 });
 
 test("R56: a load-bearing calculation with an unbound input (calculations R9's grade facts) is unbound, and needs disclosure as one that differs; a differing state outranks unbound", async () => {
@@ -166,7 +175,11 @@ test("R56 (K1570, K1594): a workbook among the captures a member rests on is rea
   const row = calcs(w, ok)[0];
   /* case-grammar R18's fourth status, a workbook not recomputed here (K1639 (3), K1642), never a gate */
   assert.deepEqual([row.calc, row.recompute, row.disclosed, row.method_version], [cap, "not_recomputed", null, "IronCalc 0.5"]);
-  assert.ok(bodyOf(docOf(w, ok)).includes(`- ${cap}: ${CALCULATION_STATE_WORDS.not_recomputed}.`));
+  /* workbooks R8: read, never recomputed here, and stated as agreement between engines, never accuracy */
+  const body = bodyOf(docOf(w, ok));
+  assert.ok(body.includes(`- ${cap}: ${WORKBOOK_STATE_WORDS.not_recomputed} (IronCalc 0.5).`), body.slice(body.indexOf("## Calc"), body.indexOf("## Calc") + 900));
+  assert.match(body, /Each workbook below was read when the case was published and not recomputed then\. .*agreement between two engines, never a check that the figures are right/);
+  for (const words of Object.values(WORKBOOK_STATE_WORDS)) assert.doesNotMatch(words, /recomputed at publication/);
 });
 
 test("R56, R55: the calculations judgment is asked after case-disclosures' flags and before the people the case names (R55's order): a case refused on both answers the calculation first", async () => {
@@ -202,4 +215,22 @@ test("R56: the gather answers nothing for an act R1, R2 or R4 refuses first, so 
     assert.deepEqual(f, { calculations: [], workbooks: [] });
   }
   assert.deepEqual(calls, []);
+});
+
+test("R56 (N596): each calculations: row names every input by the SHA-256 calculations' read states for it — a typed figure and a threshold as well as a table — so publication can commit their bytes; one created before T34, whose read states a hash for its table alone, is written with its inputs and key undetermined, never half-stated", async () => {
+  const { w, P } = setup({ state: { [C1]: "agrees", [C2]: "agrees" }, threshold: [C1] });
+  const r = await op(w, P, { targets: [Q, Q2], roles: roles([Q, Q2]) });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const rows = calcs(w, r);
+  assert.deepEqual(rows.map((x) => [x.calc, x.inputs]), [[C1, { ledger: TABLE, rate: RATE, threshold: LIMIT }], [C2, { ledger: TABLE }]]);
+  for (const x of rows) assert.match(x.result_key, /^[0-9a-f]{64}$/, `${x.calc} keyed by case-grammar from the row it writes`);
+  assert.notEqual(rows[0].result_key, rows[1].result_key);
+  /* the document's own bytes carry each hash */
+  for (const h of [TABLE, RATE, LIMIT]) assert.ok(docOf(w, r).includes(h), h);
+  /* a calculation from before T34: its figure's hash is null, so the row's inputs are undetermined, never the table alone */
+  const old = setup({ state: { [C1]: "agrees", [C2]: "agrees" }, legacy: [C1] });
+  const o = await op(old.w, old.P, { targets: [Q], roles: roles([Q]) });
+  assert.equal(o.ok, true, JSON.stringify(o).slice(0, 300));
+  assert.deepEqual(calcs(old.w, o).map((x) => [x.calc, x.inputs, x.result_key]), [[C1, null, null]]);
+  assert.equal(docOf(old.w, o).includes(TABLE), false, "no half-stated inputs");
 });
