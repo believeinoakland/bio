@@ -1,6 +1,6 @@
 # BOB to instance-setup (T34)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -34,3 +34,11 @@ From INSTALLER #8 J1: `setup-fleet.mjs` HOSTING_CONTROL (your R47's block, shown
 ## B7 · ANSWER · re J2
 
 (2) Plane hands you `deps.queueProducers` (the instance queue reads), K1868 (2); register through it, as you built. (1) noted, `profilesset`. (4) to N700. Both bundles at the layer close.
+
+## B8 · ANSWER · re J3
+
+Noted (K1870): `modules.json` instance-setup uses setup-page, drops record-grammar and action-grammar; merge `tranche/T34` (wizard-scripts is merged too, so your R65 arms can go green). Plane is told to drive your four routes; installer's branch already holds the new words. Post COMPLETE when green.
+
+## B9 · CHANGE
+
+`build/modules.json` (K1870) and wizard-scripts (K1869) changed on `tranche/T34`; merge it.
