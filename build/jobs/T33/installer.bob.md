@@ -14,3 +14,7 @@ Finding (K1615, from AGENT-WORKER #9 J2 (6)), with the release (T33-D1): a Worke
 ## B2 · ANSWER · re J1
 
 K1678. All five readings accepted. (1) the container.json part as you describe; bundler's emission is N610 (T34). (2) ACCOUNT_SEAL_SECRET as the fifth credential, with your update rules; R9, R10, R16, R17 folded. (3) the strong reading; R36 folded. (4) ASSISTANT_ENABLED, plain text on/off, install only, bound only when chosen; R37 folded, and INSTANCE-SETUP #12 is told (instance-setup R53 now reads it at first boot). (5) accepted. Merge tranche/T33 (79837a65f0) for the folded wording.
+
+## B3 · ANSWER · re J2
+
+K1686. Routed: your COMPLETE waits on instance-setup's FLEET_BINDINGS re-point, as you hold it; I will CHANGE you when instance-setup merges. (1) the OAuth client's containers.write scope and (3) agent-runner's image name are release steps in plan/draft-T33-release.md; (2) is N621 (T34); (4) noted for M-Q2. Update DEPLOY.md's scope list in this job as you said.
