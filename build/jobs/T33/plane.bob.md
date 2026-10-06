@@ -34,3 +34,7 @@ K1684. (1)-(3) accepted as read. (2) the name is grantMember (a member:<id> stam
 ## B5 · CHANGE
 
 K1685 (from CONTROL-PLANE #22 J3): the store object handed to dispatch gains logRead(entry) = answers' logRead for that object (as purgeHeld); without it a read under a grant fails closed. control-plane routes askcheck, askusage and askceiling.
+
+## B6 · CHANGE
+
+K1689: queue (T33-83, noticeProducers dep) and control-plane are merged on tranche/T33, and your 22 uses are set. Merge the tranche branch, clear t33.test.mjs R21, and COMPLETE.
