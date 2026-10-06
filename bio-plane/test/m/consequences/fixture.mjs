@@ -84,7 +84,7 @@ const EXTRACTION_JOINED = [
 
 /** The world: `alice` owns and has joined project P, and `pat` has joined it; `bob` is a member who has not; `carol`
  *  is an administrator outside P (who sees it). `passages: false` leaves the passage-text read out (R4's "a form not read"). */
-export function world({ passages = true, group = "test-group", superseded = null, people: peopleDep = null } = {}) {
+export function world({ passages = true, group = "test-group", superseded = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -161,7 +161,7 @@ export function world({ passages = true, group = "test-group", superseded = null
   const inq = new Proxy(inquiry, { get: (t, p) => (p === "supersededBy" && superseded
     ? (id) => superseded.get(id) || [] : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const deps = { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq, strength, money,
-    calculations, entities, people: peopleDep ? peopleDep(people) : people,
+    calculations, entities, people,
     now: () => clock.now, ...(passages ? { passageText: (id) => texts.get(id) ?? null } : {}) };
   const c = consequencesModule(host, deps);
 

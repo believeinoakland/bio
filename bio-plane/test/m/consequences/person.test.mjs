@@ -10,17 +10,9 @@ import { Consequences } from "../../../src/consequences/index.mjs";
 const S = "STD-2026-0001-law";
 const ROLL = "INFO-2026-0001-roll";
 
-/* people's proposed internal read of a link's sight, `sourceLinkSight(person)` (null when no link is held, else the
-   members it lists; J1 (4)), is stood in by the test over people's own table until people provides it. */
-function setup({ sight = true } = {}) {
-  let st = null;
-  const w = world({ people: sight ? (people) => new Proxy(people, { get: (t, p) => (p === "sourceLinkSight"
-    ? (person) => {
-        const links = [...st.sql.exec(`SELECT sight_json FROM source_person_links WHERE person=?`, person)];
-        return links.length ? [...new Set(links.flatMap((l) => JSON.parse(l.sight_json)))] : null;
-      }
-    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) }) : null });
-  st = w.st;
+/* people is the real one: its `sourceLinkSight(person)` (its R34) answers a link's sight. */
+function setup() {
+  const w = world();
   w.D = w.determination("CONF-2026-0001-act", w.P, { [S]: "noncompliant" });
   w.doe = w.person("Jordan Doe");
   w.roll = w.figure(ROLL, "The waiting list removed Jordan Doe");
@@ -81,15 +73,40 @@ test("R16 (DEC-78): a person the record holds as a protected source is withheld 
   assert.equal(md.includes(w.doe) || md.includes(w.roll) || /doe/i.test(md), false);
 });
 
-test("R16: until people answers a link's sight, a person is answered only to a viewer a link lists (fail closed)", () => {
-  const w = setup({ sight: false });
-  for (const v of ["alice", "pat", "carol"]) assert.deepEqual(w.read(w.c, v).affected, { kind: "person" }, v);
-  assert.equal(w.people.linkSourceToPerson({ source: "SRC-2026-0001-tip", person: w.doe, evidence: "e", sight: ["pat"],
+test("R16 (N600): no link held leaves the capture's sight alone to decide; a person no link names is withheld from no one for want of one", () => {
+  const w = setup();
+  assert.equal(w.people.sourceLinkSight(w.doe), null, "no link is held");
+  /* Every viewer who may see the roll's capture is answered the person: alice, pat, and carol (an administrator). */
+  for (const v of ["alice", "pat", "carol"]) {
+    const p = w.read(w.c, v);
+    assert.deepEqual(p.affected.person, { entity: w.doe, named_in: w.roll }, v);
+    assert.equal("out_of_view" in p, false, v);
+  }
+  /* A link to another person changes nothing for this one. */
+  const other = w.person("Robin Roe");
+  assert.equal(w.people.linkSourceToPerson({ source: "SRC-2026-0002-tip", person: other, evidence: "e", sight: ["alice"],
                                              by: V("alice") }).ok, true);
   assert.equal(w.read(w.c, "pat").affected.person.entity, w.doe);
-  assert.deepEqual(w.read(w.c, "alice").affected, { kind: "person" });
   /* An internal read (no viewer) holds the person as the document names them. */
   assert.equal(w.c.consequenceRead({ id: w.id }).part.affected.person.named_in, w.roll);
+});
+
+test("R16 (N600): a person withheld for a link is answered exactly as for a capture the viewer may not see; several links admit only those every one admits", () => {
+  const w = setup();
+  /* pat withheld for the capture, before any link. */
+  const forCapture = w.read(w.sighted(new Set([ROLL])), "pat");
+  assert.deepEqual([forCapture.affected, forCapture.out_of_view], [{ kind: "person" }, true]);
+  /* pat sees the capture; a link admits alice alone: pat's answer is the same, word for word, saying no link is held. */
+  assert.equal(w.people.linkSourceToPerson({ source: "SRC-2026-0001-tip", person: w.doe, evidence: "e", sight: ["alice", "pat"],
+                                             by: V("alice") }).ok, true);
+  assert.equal(w.read(w.c, "pat").affected.person.entity, w.doe, "admitted by the one link");
+  assert.equal(w.people.linkSourceToPerson({ source: "SRC-2026-0003-tip", person: w.doe, evidence: "e", sight: ["alice"],
+                                             by: V("alice") }).ok, true);
+  const forLink = w.read(w.c, "pat");
+  assert.deepEqual(forLink, forCapture, "no answer says that a link is held");
+  assert.equal(/link|source/i.test(JSON.stringify(forLink)), false);
+  assert.equal(w.read(w.c, "alice").affected.person.entity, w.doe, "alice, whom every link admits, is answered the person");
+  assert.deepEqual(w.c.consequencesOf({ determination: w.D, viewer: V("pat") }).parts.find((p) => p.id === w.id), forLink);
 });
 
 test("R15: a money fact the viewer may not see leaves the operands; the computed value and grade stand", () => {
