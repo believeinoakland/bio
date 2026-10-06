@@ -42,3 +42,7 @@ Tests: inquiry 173 pass, 2 fail, 1 todo. The 2 reds are R4's derived-connection 
 `test/m/inquiry/earned.test.mjs` R6: the negative arm now excludes `/fetched them/` (any fetch wording, the measured route's DEC-149 sentence "as your group's Civicsmith fetched them" among them), and a new positive arm asserts the measured route (A) carries that sentence, so the negative arm can fail. Merged `tranche/T34` first. Tests: inquiry 176, pass 173, fail 2 (the same two R4 derived-leg tests waiting on `inquiry-grammar` R17), todo 1. Checks: format, architecture, coverage (49 of 49), ownership: 0 failures each.
 
 Size (session_01Wskzz89u9YtWxzo9XZyHmv): test runs 19, module lines 3294
+
+## J3 · COMPLETE
+
+B3 done: earned.test.mjs R6's negative arm now /fetched them/, with a positive arm proving the measured route says 'as your group's Civicsmith fetched them'. Inquiry 173 pass, 2 fail (the R4 derived-leg pair waiting on inquiry-grammar R17, unchanged), 1 todo; all four checks 0 failures. Record's 'Completion of B3' has it.
