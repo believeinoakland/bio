@@ -1,6 +1,6 @@
 # inquiry-grammar (T34)
 
-**Status** · session_01FaokvJZPmRci5p59ej5t9j · depth 2 · WORKING · handled B2
+**Status** · session_01FaokvJZPmRci5p59ej5t9j · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
