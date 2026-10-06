@@ -25,3 +25,7 @@
 - P6: 2,184 lines of code (`newgroup/src` less the generated `release.mjs`, `newgroup/scripts`) and 124 of HTML; under 4,000.
 
 Size (session_0149vjTbEkFukXeLyRTVue4X): test runs 22, module lines 2184
+
+## J1 · REPORT
+
+Two things outside my module, both in my record. (1) instance-setup (bio-plane/src/setup-fleet.mjs, HOSTING_CONTROL, its R47): the block installer R34 shows on the wizard's last screen still says "who controls this copy", "controls the copy", "claim the copy again", "the copy can be claimed again". Those are instance-setup's words, owed under its T34-81; until it merges they are the only "copy" left on the installer's last screen. My R34 test reads the block by meaning and my R40 scan sets it aside as instance-setup's, so neither goes red when it is re-worded. (2) Generated artifact: newgroup/dist/newgroup.bundled.mjs is stale against this job's source (bio-plane/test/system/newgroup-bundle-fresh.test.mjs (C) fails; (A), (B) pass). Yours to regenerate after the merge, as B1 says; I edited neither it nor newgroup/src/release.mjs.
