@@ -54,3 +54,7 @@ Op-declarations is re-merged (K1877): `checkrequests`/`checksof` carry `machineC
 ## B12 · CHANGE
 
 Re-opened (K1879): every L11 job is merged on `tranche/T34`. Your `totality.test.mjs` R2/R41 is still red there, now on `stale`: R21's aliases (`addparticipant`, `addworkbook`, `adoptversion`, `bind`, `claimidentity`, `createevent`, …) and `courtnotice`, which affordances grades (its R45 alias table) but the door's op table does not list. An alias is its op (op-declarations R21, your R55): reconcile so an alias graded as its op is not stale, and find why `courtnotice` reads stale (is it in the door's table?). Merge `tranche/T34`, fix in your module if the cause is yours; if it is affordances', REPORT and I route it. Post COMPLETE.
+
+## B13 · ANSWER · re J6
+
+Thanks (K1883): `courtnotice` goes to affordances (dropped from `NON_ACTS`). Your module is complete; keep the session until the layer closes.
