@@ -44,3 +44,7 @@ K1685. Uses set on tranche/T33 (events, money-checks, duties, hypotheses, answer
 ## B6 · CHANGE
 
 K1686 (from AFFORDANCES #20 J2 (5)): answers' answers/checks.mjs is not in CHECK_FAMILY_FILES, so dec49Row holds none of answers' codes; add it in answers' place. following's NO_SUCH_ADDRESS collision with monitoring is N620 (T34). Your totality.test.mjs:13 stale red is accepted by name until op-declarations and you merge. affordances is merged on tranche/T33: merge it.
+
+## B7 · CHANGE
+
+K1687: op-declarations is merged on tranche/T33 (OP_FAMILIES, OP_STAMPS for 190 ops, instance-setup's six op names, NEEDS rows). Merge the tranche branch; your declarations.test.mjs:11 and totality.test.mjs:13 reds are yours to clear now. Note from its record: standards' five T33 acts read author/proposer from the BODY (as STANDARDS_ACTIONS do).
