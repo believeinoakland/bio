@@ -47,7 +47,7 @@ The obligation inbox: tasks routed from captures whose authority is undetermined
 - **R9** No answer names a bundle the viewer may not see, and no count reveals one (REC-30, DEC-36).
 - **R10** `actor` and `viewer` are taken only from the control plane's stamps, never from a body.
 - **R11** No place is named in this module's behaviour or outward text.
-- **R12** (S0-11, B0.11) The task id C-19.1 tests (`TASK_ID_RE`, `checks.mjs`:80) is tested by the pattern `record-grammar`'s one id table answers for its prefix (`idPattern`, its R46, R47), never by a pattern of its own: a counter of four or more digits is accepted, and every id valid before stays valid, so every finding on an inbox file written before T33 is byte-identical. *(not yet met: T33-86)*
+- **R12** (S0-11, B0.11) The task id C-19.1 tests (`TASK_ID_RE`, `checks.mjs`:80) is tested by the pattern `record-grammar`'s one id table answers for its prefix (`idPattern`, its R46, R47), never by a pattern of its own: a counter of four or more digits is accepted, and every id valid before stays valid, so every finding on an inbox file written before T33 is byte-identical.
 
 ### Satisfies
 
