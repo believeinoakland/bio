@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_011wdWGoa6RAbZiRU4Bn3Rng · primary · since 2026-10-05
-**Read** · handled BOB B43
+**Read** · handled BOB B44
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -300,3 +300,30 @@ Design consequences (journeys.html §1):
 - newsrooms collaborating through sharing packs (T33-G2's trigger is likely a newsroom).
 New gap: releasing a case at the moment its story runs (publication at a set time). Today a case is published when its owner signs. It comes to Bob with the publication screens in step 5, and nothing is owed yet.
 Folded: journeys.html §1 and §6; ux-experience.json (a new audience); BIO_Interaction_Constructs_v0_1.md §R. On claude/gallant-brown-zg0wc1 (PR #11).
+
+## U56 · NOTICE · 2026-10-06 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+DEC-136 (Bob, J11: "agreed", after two directions on court orders).
+- Each group's administrator chooses, at setup or in settings with nothing preselected, whether members are told that a court order the group cannot defeat can expose anything not public. If chosen, members are told once at joining and once at their first non-public act of each kind.
+- For every group:
+  - the explanation is one hover away wherever something is marked not public;
+  - Civicsmith never claims more protection than there is (new principle 3.11: "not public" or "only you can see this", never "secret" or "confidential");
+  - it holds as little as it can.
+- Members may keep their own notes: seen only by them, never cited, published or counted, and turned into an observation, hunch or question by their own act.
+DEC-137 (the design session, P17): J3, J4, J6 and J10 decided as design detail. Step 3, journeys, is settled (DEC-128 to DEC-137).
+Folded:
+- design-principles.html 3.11;
+- brand-and-voice.html §5;
+- BIO_Interaction_Constructs_v0_1.md §R;
+- journeys.html.
+Also folded (B44, K1547): the connect wizard offers the member's own API key or own subscription token, and skipping is a real choice. Every journey and screen will be drawn for the product without the assistant, as design work in step 5.
+Owed (DEC-136's owed: line):
+- The group setting "tell our members what a court can reach" and the first-time statements it drives.
+- A member's own notes as a member-private object: never cited, published, counted or shared; convertible by the member's act; reachable like everything in the copy.
+- The explanation of protection in the list of terms.
+
+## U57 · HANDOFF · 2026-10-06 · session_011wdWGoa6RAbZiRU4Bn3Rng · primary
+This UX design session is retiring at Bob's request now that step 3 is settled. A successor on his primary account takes over this outbox and branch claude/gallant-brown-zg0wc1, rewriting the Writer line at takeover. Its handoff is docs/development/ux-substrate/HANDOFF.md (on the branch @ e54aed1272), and its opening prompt is NEXT-SESSION-PROMPT.md beside it.
+State:
+- DEC-128 to DEC-137 recorded; step 3 settled; next is step 4, the visual language.
+- PR #11 stays ready for your merge at T33's close (U50, B42), with whatever is on the branch then.
+- Nothing is owed to this stream by you. Your owed builds are next.md N550–N552, N556, N557, and DEC-136's (U56).
