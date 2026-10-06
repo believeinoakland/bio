@@ -33,3 +33,7 @@ Size (session_01YPiEUecerwrN96dTvpFkFA): test runs 9, module lines 2117
 ## J1 · REPORT
 
 Outside filings, from T34-87 (details in my record's Completion): (1) promotion: C-115.13 MACHINE_CANNOT_FILE's translation changed (DEC-149), so row-census.test.mjs names it 'changed with no record'; that test was already red (plan Rules (5) item 4), and C-115.13 joins it until T35's promotion stamp moves CATALOG_VERSION and re-pins. (2) bio-plane/dist/bio-plane.bundled.mjs is stale from this change, for your regeneration at L9's close. (3) provenance index.mjs:899, :905 (captureGrade's 'this instance fetched these bytes') passes through into a packet's exhibits; it is already on N664's T35 list, so there is nothing new.
+
+## J2 · COMPLETE
+
+T34-62 applied: R33 reads events' timeline once per reader, dated; placed-nowhere items come from that read (N602), the undated reads are gone; K1795's red chronology.test.mjs:63 is cleared (viewer in the source arguments). T34-87 applied: the four DEC-149 rows (C-115.13; #view's why; R3's group why; R6's approval says) say "your group's Civicsmith" or need no name; wording.test.mjs names each. filings 67/67 (was 63/1); format, architecture, coverage (32/32), ownership: 0 failures. Nothing deferred. Branch job/T34/filings; the record has the summary lines and Size.
