@@ -1,6 +1,6 @@
 # tasks (T34)
 
-**Status** · session_011DdbtwJUhTwJan4dKnywad · depth 2 · RUNNING until 2026-10-06T22:39:20Z (queue, control-plane, plane tests at HEAD and at tranche/T34 (users of tasks)) · handled B2
+**Status** · session_011DdbtwJUhTwJan4dKnywad · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
