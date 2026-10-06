@@ -650,8 +650,9 @@ export class LawRecords {
     const ev = this.k.eventWhen(eventId, viewer);
     if (!ev || !ev.day) return [];
     const ids = this.k.rows(`SELECT standard_id FROM standards WHERE NOT ((period_from IS NOT NULL AND period_from > ?)
-                               OR (period_to IS NOT NULL AND period_to < ?)) ORDER BY standard_id LIMIT ?`,
-                            ev.day, ev.day, BOUNDS.hub + 1).map((r) => r.standard_id);
+                               OR (period_to IS NOT NULL AND period_to < ?)) ORDER BY standard_id`,
+                            ev.day, ev.day).map((r) => r.standard_id);
+    /* every candidate is asked, so the hub bound (neighbours) is judged on the whole set, never a cut one */
     const out = [];
     for (const sid of ids) {
       const f = this.k.inForceAt({ standard: sid, date: ev.day, viewer });
