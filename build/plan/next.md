@@ -30,6 +30,8 @@
 
 - N563 · `money-checks` · M-C8, the shipped detectors' measurement, on a gold set of payments. **Hard reason:** no gold set exists (K1506: no Oakland payment ledger); runs when one is captured.
 
+- N564 · `wizard-scripts`, `op-declarations`, `answers` (BOB names the module that holds the screen registry at T34's opening) · DEC-139 (UX-DESIGN U59; K1565), folded once PR #11 is on `main`: the screen registry `docs/development/ux-substrate/screens/registry.json` registered (42 screens, 192 acts), its 69 requirement functions' ops declared by lowercased name; wizard-scripts R2 gains an optional `via` (a side trip into another wizard, returning to the step left); answers' standing question runs for a member with no account of their own, its matches arriving unread; the Civicsmith library as its data file only once Bob approves it (S2). **Hard reason it is not in T33:** DEC-139 is not on `main` until T33's close (§13.1 (5)), and the library waits on Bob.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
