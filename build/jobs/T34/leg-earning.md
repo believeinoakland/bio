@@ -10,7 +10,7 @@
 
 **Deferred.** None.
 
-**Found in other modules** (reported, J2):
+**Found in other modules** (reported, J1):
 - `inquiry` `test/m/inquiry/earned.test.mjs`:29 asserts `doesNotMatch(/as this instance fetched them/)` on leg-earning's `why`; after this change it can never fail (vacuous). Suggest `/fetched them/`, as here.
 - `provenance` (L3, closed) `index.mjs`:899, :905: `captureGrade`'s `why` says "this instance fetched these bytes …", a member-facing string in DEC-149's sense not in any T34 share; for N664's T35 list.
 - Generated artifacts made stale (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` and `release/bio-plane.bundled.mjs` hold the old wording of these strings; BOB regenerates at the layer close.
