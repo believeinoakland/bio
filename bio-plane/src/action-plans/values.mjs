@@ -16,6 +16,8 @@ export const REFUSED_KEYS = Object.freeze(["budget", "cost", "assignee", "hours"
 export const TIERS = Object.freeze([1, 2, 3, "undetermined"]);
 /** R16: a checkpoint's judgements. */
 export const JUDGEMENTS = Object.freeze(["met", "not_met"]);
+/** R38: the states of a duty occurrence a phase may start on (K1466). */
+export const DUTY_STATES = Object.freeze(["met", "met_late", "overdue", "undetermined"]);
 
 export const TITLE_MAX = 200;
 export const REASON_MAX = 500;
@@ -126,7 +128,17 @@ export function checkPhases(phases, { chosen, subjects }) {
         return bad(`a track reaching a stage names the stage, 1 to ${STAGE_MAX}`);
       if (s.reaches === "resolved" && s.stage !== undefined && s.stage !== null) return bad("a track reaching resolved names no stage");
       starts = { when_subject: subj, reaches: s.reaches, ...(s.reaches === "stage" ? { stage: s.stage } : {}) };
-    } else return bad("starts is plan_start, {after}, {branch_of, when} or {when_subject, reaches, stage?}");
+    } else if (isObj(s) && s.when_duty !== undefined) {
+      const d = s.when_duty;
+      if (Object.keys(s).some((k) => k !== "when_duty" && k !== "state") || !isObj(d)
+          || Object.keys(d).some((k) => k !== "duty" && k !== "occurrence")
+          || !isToken(d.duty) || !d.duty.startsWith("DUT-")
+          || (d.occurrence !== undefined && d.occurrence !== null && !isToken(d.occurrence)))
+        return bad("when_duty is {duty, occurrence?}: an obligation's id (DUT-...) and, if one is meant, one of its occurrence keys");
+      if (!DUTY_STATES.includes(s.state)) return bad(`a phase started by an obligation names its state, one of ${DUTY_STATES.join(", ")}`);
+      starts = { when_duty: { duty: d.duty, ...(d.occurrence !== undefined && d.occurrence !== null ? { occurrence: d.occurrence } : {}) },
+                 state: s.state };
+    } else return bad("starts is plan_start, {after}, {branch_of, when}, {when_subject, reaches, stage?} or {when_duty: {duty, occurrence?}, state}");
     let checkpoint = null;
     if (p.checkpoint !== undefined && p.checkpoint !== null) {
       const d = isObj(p.checkpoint) ? p.checkpoint.after_days : undefined;
@@ -193,13 +205,15 @@ const ms = (iso) => (typeof iso === "string" ? Date.parse(iso) : NaN);
 export const dayOf = (msv) => new Date(msv).toISOString().slice(0, 10);
 const iso = (msv) => new Date(msv).toISOString().replace(/\.\d{3}Z$/, "Z");
 
-/** R14–R16: when each phase of a scenario version starts, derived, never stored. `setAt` is when the version was set
- *  (a `plan_start` phase starts then); `judged` maps a phase id to its judgement `{judged, at}`; `track(starts)` answers
- *  the instant another subject's track met R15's point, or null. Each phase answers `{started, at, earliest, due}`:
+/** R14–R16, R38: when each phase of a scenario version starts, derived, never stored. `setAt` is when the version was
+ *  set (a `plan_start` phase starts then); `judged` maps a phase id to its judgement `{judged, at}`; `track(starts)`
+ *  answers the instant another subject's track met R15's point, or null; `duty(phase, anchor)` answers the instant a
+ *  duty occurrence's state met R38's start, or null, where `anchor` is when the phase's predecessor started it waiting:
+ *  the judgement of a phase whose branch leads to it, else the version's setting (null: not yet led to). Each phase answers `{started, at, earliest, due}`:
  *  `at` its start when started; `earliest` the soonest it can start (its start when started, else from the phases it
  *  waits on and their checkpoints' days, null when it waits on a track); `due` the instant its checkpoint is due, when
  *  it has one and has started. */
-export function phaseTimes(phases, { setAt, judged, track }) {
+export function phaseTimes(phases, { setAt, judged, track, duty = () => null }) {
   const byId = new Map(phases.map((p) => [p.id, p]));
   const memo = new Map();
   const ofPhase = (id) => {
@@ -229,10 +243,21 @@ export function phaseTimes(phases, { setAt, judged, track }) {
       const t = track(s);
       if (t) at = ms(t);
       earliest = at;
+    } else if (s.when_duty) {
+      /* R38: a branch leading here is its predecessor: it sets when the phase begins to wait, never starts it. */
+      const led = phases.filter((o) => o.branches && Object.values(o.branches).includes(id));
+      let anchor = led.length ? null : ms(setAt);
+      for (const o of led) {
+        const j = judged.get(o.id);
+        if (j && o.branches[j.judged] === id && (anchor === null || ms(j.at) < anchor)) anchor = ms(j.at);
+      }
+      const t = anchor === null ? null : duty(p, iso(anchor));
+      if (t) at = ms(t);
+      earliest = at;
     }
-    /* A phase named by another's branch starts at that judgement too. */
+    /* A phase named by another's branch starts at that judgement too (an obligation's phase waits on its state). */
     for (const o of phases) {
-      if (!o.branches) continue;
+      if (!o.branches || s.when_duty) continue;
       for (const [k, v] of Object.entries(o.branches)) {
         if (v !== id) continue;
         const j = judged.get(o.id);

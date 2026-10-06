@@ -5,7 +5,8 @@
    (`projectsDrawingOn`), strength (`projectBar`), conformance (`determinationRead` R9, `determinationsFor` R11),
    standards (`standardRead` R5), escalation (`escalationsFor` R22, `escalationRead` R2), filings (`availableActions`
    R21) and ai-runs (`registerOpenCheck` R47, `onRunOpened` R43, `runFor` R28, `read` R19, `boundOf`/`consumeBound`
-   R29). An inquiry and a determination are real bundles in the record (so an action's legs resolve); their facts are
+   R29); duties (R38) is the real module, built by its own test world over its real modules when a test passes it
+   (`world({duties})`; `duty-starts.test.mjs`). An inquiry and a determination are real bundles in the record (so an action's legs resolve); their facts are
    the stand-ins'. Provenance is real and migrated before `actions`, as every real host builds it: actions joins its
    promotion step (through capture's reader, its R55), which reads provenance's tables. Every test drives
    `action-plans` at its interface, under the jurisdictions test profile. */
@@ -59,7 +60,7 @@ export const ms = (iso) => Date.parse(iso);
 export const OFFICE = { state: "named", kind: "office", role: "Town Clerk", body: "City of Port Ellery" };
 const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
+export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -156,7 +157,8 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
     ? (a) => (hid(a && a.viewer, a && a.id) ? { ok: false, reason: "NO_SUCH_BUNDLE", target: a.id } : t.actionRead(a))
     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
   const ap = actionPlansOf(host, { record, membership: sight, promotion, ...given, actions: omit.includes("actions") ? null : seenActions,
-                                   clocks: omit.includes("clocks") ? null : clocks, now: () => clock.now });
+                                   clocks: omit.includes("clocks") ? null : clocks,
+                                   ...(omit.includes("duties") ? { duties: null } : duties !== undefined ? { duties } : {}), now: () => clock.now });
 
   let n = 0, nd = 0, ni = 0, nr = 0;
   const commitBundle = (id, type, text, state) => {
