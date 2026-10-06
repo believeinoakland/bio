@@ -120,9 +120,13 @@ const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch
 /** R4, R12 (N522): a leg's target that is an imported finding reference (`inquiry-grammar` R11), another group's finding
  *  rather than a bundle of this record: never in `references[]`, no content row, projected as spelled. */
 const isImportedRef = (t) => typeof t === "string" && parseImportedFindingRef(t) !== null;
-/** R4 (T33-45; inquiry-grammar R11, R14, R15): a target that is never a `references[]` entry: an imported finding, a
- *  calculation (a row, not a bundle) or a duty occurrence. */
-const unreferenced = (t) => isImportedRef(t) || (typeof t === "string" && (CALCULATION_REF_RE.test(t) || parseOccurrenceRef(t) !== null));
+/** R4 (T34-29; inquiry-grammar R17): a derived connection's id, 64 lowercase hex (`connection-grammar.derivedId`), the
+ *  form inquiry-grammar's arm judges; whether it matches its derivation is that arm's, whether it re-derives hypotheses'. */
+const DERIVED_ID_RE = /^[0-9a-f]{64}$/;
+/** R4 (T33-45, T34-29; inquiry-grammar R11, R14, R15, R17): a target that is never a `references[]` entry: an imported
+ *  finding, a calculation (a row, not a bundle), a duty occurrence or a derived connection. */
+const unreferenced = (t) => isImportedRef(t) || (typeof t === "string"
+  && (CALCULATION_REF_RE.test(t) || parseOccurrenceRef(t) !== null || DERIVED_ID_RE.test(t)));
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
 const ROW_FAMILIES = [INQUIRY_ROWS, SHARED_ACT_CHECKS, INQUIRY_DISPOSE_CHECKS, INQUIRY_CONTRADICTION_CHECKS,
@@ -166,8 +170,10 @@ const mdFile = (text) => {
 
 /* R24 (N360): a leg's lines rebuilt from its parsed fields, for the one case `divide` cannot copy them from the parent's
    bytes (a replayed shape whose block does not line up with its legs): every field of the leg grammar, the passage it
-   names (`content_id`, each `extent_*` field, the capture it was made against) among them. A list is written inline. */
-const LEG_FIELDS = ["target", "role", "grade", "grade_axis", "grade_source", "target_edition", "author", "date", "ground"];
+   names (`content_id`, each `extent_*` field, the capture it was made against), a standard's portion and a derived
+   connection's five `derivation_*` fields among them. A list is written inline. */
+const LEG_FIELDS = ["target", "role", "grade", "grade_axis", "grade_source", "target_edition", "target_portion", "author", "date",
+                    "ground", "derivation_kind", "derivation_from", "derivation_to", "derivation_as_of", "derivation_method"];
 function legRebuilt(l) {
   const val = (v) => (Array.isArray(v) ? `[${v.map((x) => fmSafe(x).replace(/[,[\]]/g, " ")).join(", ")}]`
     : typeof v === "string" && /[:#"'\[\]{},]|^\s|\s$|^$/.test(v) ? `"${fmSafe(v)}"` : String(v));
