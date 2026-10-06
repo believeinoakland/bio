@@ -25,3 +25,7 @@ From QUERY-LANGUAGE #6 J2 (P9): its compile takes compile(q, {fields: {<field>: 
 ## B5 · CHANGE
 
 K1582: query-language is merged on tranche/T33 (with money, events, entities, standards, lines, local-facts). Merge, drop your local stand-ins, re-point at the real owner schemas you can (duties still to come), re-run, COMPLETE when duties has merged or name what remains.
+
+## B6 · CHANGE
+
+K1585: duties is merged; re-point your duties view at its real schema (arising_in), re-run, COMPLETE.
