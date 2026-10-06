@@ -85,7 +85,7 @@ const bounded = (items, max = READ_LIST_MAX, truncated = false) =>
   ({ items: items.slice(0, max), truncated: truncated || items.length > max });
 
 const instances = new WeakMap();
-let registeredDefault = null;     /* R26: the instance the default registry's owner entry reads through */
+const live = new Set();           /* R26 (K1563 (1)): every instance made in this isolate, weakly held */
 
 /** K61: the one People for a Durable Object's storage. `deps` is read on the first call only: `record`, `membership`,
  *  `entities`, `provenance`, `content`, `sources`, `events`, `lines`, `money`, `duties`, `registry` (connection-grammar's;
@@ -1261,24 +1261,29 @@ export class People {
    * THE CONNECTION OWNER (R26; connection-grammar R2, R6–R9)
    * ===================================================================== */
 
-  /* R26: registered once with the registry. A test's own registry takes this instance; the default one is registered
-     once per isolate and reads through the latest instance made. */
+  /* R26: a registry the caller hands in (a test's own) takes this instance directly; the default registry's entry is
+     made once at load (below) and reads through `host`. */
   #registerOwner(isDefault) {
-    if (isDefault) {
-      registeredDefault = this;
-      if (People.#defaultDone) return;
-      People.#defaultDone = true;
-      this.#registry.registerOwner({ owner: MODULE, kinds: IDENTITY_KIND_WORDS.map((k) => ({ ...k }) ),
-                                     neighbours: (args) => registeredDefault.neighbours(args) });
-      return;
-    }
+    live.add(new WeakRef(this));
+    if (isDefault) return;
     this.#registry.registerOwner({ owner: MODULE, kinds: IDENTITY_KIND_WORDS.map((k) => ({ ...k })), neighbours: (args) => this.neighbours(args) });
   }
-  static #defaultDone = false;
+
+  /** R26 (K1563 (1)): the instance a load-time registration reads through: the one for `host` when the walk passes it,
+   *  else the isolate's one instance, else none (`OWNER_HOST_AMBIGUOUS`). */
+  static forHost(host) {
+    if (host) {
+      const storage = host.storage ? host.storage : host;
+      return instances.get(storage) || null;
+    }
+    const alive = [];
+    for (const r of live) { const p = r.deref(); if (p) alive.push(p); else live.delete(r); }
+    return alive.length === 1 ? alive[0] : null;
+  }
 
   /** R26: each visible, unwithdrawn claim on `node` as one hop in connection-grammar's shape, evidentiary, its evidence
    *  and grade the claim's. */
-  neighbours({ node, kinds = null, at, page = null, viewer, scope = null } = {}) {
+  neighbours({ node, kinds = null, at, page = null, viewer, scope = null, host: _host = null } = {}) {
     if (viewer === undefined || viewer === null || viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
     const want = Array.isArray(kinds) ? kinds.filter((k) => CLAIM_KINDS.includes(k)) : [...CLAIM_KINDS];
@@ -1305,6 +1310,14 @@ export class People {
     return { items: slice, ...(start + BOUNDS.fanout < items.length ? { next: start + BOUNDS.fanout } : {}) };
   }
 }
+
+/* R26 (K1563 (1)): registered once at load with connection-grammar's default registry, the plane's. */
+defaultRegistry.registerOwner({ owner: MODULE, kinds: IDENTITY_KIND_WORDS.map((k) => ({ ...k })), neighbours: (args) => {
+  const p = People.forHost(args && args.host);
+  if (!p) return { refused: "OWNER_HOST_AMBIGUOUS",
+                   why: "people's neighbours needs the host it reads (args.host) when this isolate holds no single people instance" };
+  return p.neighbours(args);
+} });
 
 /** R27: the route arms, keyed by op name, each a function of no arguments answering what its service answers; the
  *  stamps (`viewer` in the query, `by` in the body) are the control plane's. Which credential reaches each op is

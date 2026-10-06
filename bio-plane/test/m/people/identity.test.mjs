@@ -2,8 +2,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUT, MACHINE, PROJ } from "./fixture.mjs";
-import { CLAIM_KINDS, CLAIM_BASES, IDENTITY_KIND_WORDS } from "../../../src/people/index.mjs";
-import { ownerConformance } from "../../../src/connection-grammar/index.mjs";
+import { CLAIM_KINDS, CLAIM_BASES, IDENTITY_KIND_WORDS, peopleOf } from "../../../src/people/index.mjs";
+import { ownerConformance, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 
 const doc = (c, date) => ({ captureSha: c.captureSha, extent: { kind: "document" }, ...(date ? { date } : {}) });
 
@@ -224,6 +224,16 @@ test("R26 people registers as the owner of same_as, not_same_as and unsure; neig
   assert.deepEqual(hop.grade, { assertion: "C", ends: ["C", "C"] });
   assert.equal(hop.evidence.length, 2);
   assert.ok(!got.items.some((i) => i.id === gone.claim_id), "a withdrawn claim is never a hop");
+  /* K1563 (1): the plane's registry holds people's entry from load; it reads the host the walk passes, and with no host
+     and more than one instance in the isolate it refuses rather than guess */
+  assert.ok(defaultRegistry.owners().some((o) => o.owner === "people"));
+  const host = { storage: w.st };
+  const plane = peopleOf(host, { ...w.deps, registry: null });
+  const viaHost = defaultRegistry.neighbours({ owner: "people", node, at: { value: "2021-01-01", precision: "day", zone: "UTC" }, viewer: ANN, scope: null, host });
+  assert.deepEqual(viaHost.items.map((i) => i.id).sort(), got.items.map((i) => i.id).sort());
+  assert.equal(plane, peopleOf(host), "one instance per storage");
+  const blind = defaultRegistry.neighbours({ owner: "people", node, at: { value: "2021-01-01", precision: "day", zone: "UTC" }, viewer: ANN, scope: null });
+  assert.equal(blind.refused, "OWNER_HOST_AMBIGUOUS");
 });
 
 test("R28 linked, never merged: no act of people changes an entities row, alias or resolution, and two persons stay two ids whatever claims join them", () => {
