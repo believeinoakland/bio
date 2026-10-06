@@ -9,11 +9,19 @@
    `events`'; money is `money`'s; duties are `duties`'. This module reads them through the services it is handed
    (`peopleOf(ctx, deps)`, K61) and stores none of them. NO JUDGMENT ON A PERSON (R29): no score, rank or suspicion is
    stored or answered, and a match of a check is "Noticed", the machine's, in the hypothesis layer. */
-import { viewerPredicate, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
+import { recordOf } from "../record-core/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER, notAnAdmin, noSuchProject } from "../membership/index.mjs";
 import { isMachineIdentity, BASIS_GRADES, sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
 import { validAt, compare, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
-import { noSuchEntity, noEntity } from "../entities/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
+import { contentOf, checkContentExtent, canonicalExtent } from "../content/index.mjs";
+import { sourcesOf } from "../sources/index.mjs";
+import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { linesOf } from "../lines/index.mjs";
+import { moneyOf } from "../money/index.mjs";
+import { dutiesOf } from "../duties/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { PEOPLE_SCHEMA, PEOPLE_TABLES, CLUSTER_TABLE } from "./schema.mjs";
 import { SHIPPED_CHECKS, CHECK_MACHINE, conditionError, hypothesisNamed, evaluatePerson } from "./checks.mjs";
@@ -87,21 +95,39 @@ const bounded = (items, max = READ_LIST_MAX, truncated = false) =>
 const instances = new WeakMap();
 const live = new Set();           /* R26 (K1563 (1)): every instance made in this isolate, weakly held */
 
-/** K61: the one People for a Durable Object's storage. `deps` is read on the first call only: `record`, `membership`,
- *  `entities`, `provenance`, `content`, `sources`, `events`, `lines`, `money`, `duties`, `registry` (connection-grammar's;
- *  the default one when absent), `now`. The plane wires the real modules; a test may pass its own. */
+/** K61, K1563 (1): the one People for a Durable Object's storage. `deps` is read on the first call only: `record`,
+ *  `membership`, `entities`, `provenance`, `content`, `sources`, `events`, `lines`, `money`, `duties` (each the real
+ *  module on the same host when not given, reached on first use; a dep given as a function is called once, then), and
+ *  `registry` (connection-grammar's; the default one when absent), `now`. */
 export function peopleOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let p = instances.get(storage);
   if (!p) {
-    p = new People(storage, deps);
+    const d = deps || {};
+    const record = d.record ?? recordOf(ctx);
+    const membership = d.membership ?? membershipOf(ctx, { record });
+    const real = {
+      entities: () => entitiesOf(ctx, { record, membership }),
+      provenance: () => provenanceOf(ctx),
+      content: () => contentOf(ctx, { record, membership }),
+      sources: () => sourcesOf(ctx, { record, membership }),
+      events: () => eventsOf(ctx, { record, membership }),
+      lines: () => linesOf(ctx, { record }),
+      money: () => moneyOf(ctx, { record, membership }),
+      duties: () => dutiesOf(ctx, { record, membership }),
+    };
+    const pick = (k) => (d[k] !== undefined && d[k] !== null ? d[k] : real[k]);
+    p = new People(storage, { ...d, record, membership, entities: pick("entities"), provenance: pick("provenance"),
+                              content: pick("content"), sources: pick("sources"), events: pick("events"), lines: pick("lines"),
+                              money: pick("money"), duties: pick("duties") });
     instances.set(storage, p);
   }
   return p;
 }
 
 export class People {
-  #sql; #record; #membership; #entities; #provenance; #content; #sources; #events; #lines; #money; #duties;
+  #sql; #record; #membership;
+  #deps = {};            /* the used modules' services, each an instance or a function answering it on first use */
   #registry; #now; #declared = false;
   #roster = [];          /* R19: {module, fn, seq} in the modules' order */
   #onResult = [];        /* R25: {module, fn, seq} */
@@ -111,18 +137,21 @@ export class People {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
-    this.#entities = entities;
-    this.#provenance = provenance;
-    this.#content = content;
-    this.#sources = sources;
-    this.#events = events;
-    this.#lines = lines;
-    this.#money = money;
-    this.#duties = duties;
+    this.#deps = { entities, provenance, content, sources, events, lines, money, duties };
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
     this.#registry = registry || defaultRegistry;
     this.#registerOwner(!registry);
   }
+
+  #dep(name) { const d = this.#deps[name]; return typeof d === "function" ? (this.#deps[name] = d()) : d ?? null; }
+  get #entities() { return this.#dep("entities"); }
+  get #provenance() { return this.#dep("provenance"); }
+  get #content() { return this.#dep("content"); }
+  get #sources() { return this.#dep("sources"); }
+  get #events() { return this.#dep("events"); }
+  get #lines() { return this.#dep("lines"); }
+  get #money() { return this.#dep("money"); }
+  get #duties() { return this.#dep("duties"); }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -261,16 +290,26 @@ export class People {
     return at;
   }
   /* `in`, `out` or `{undetermined, why}` of a validity at a date (civil-time R22); a validity civil-time cannot read
-     answers undetermined with its reason, never in. */
-  static #judge(valid, at) {
+     answers undetermined with its reason, never in. A validity its owner answers undetermined (a stale bound cache,
+     lines R7) stays so. `currentThrough` is the day an open-ended `holds` line is stated current through (lines R21): at
+     a date no later than it the line is `in`, and after it stays undetermined. Event bounds are read as their owner
+     answers them, with the resolved edge as their `at`. */
+  static #judge(valid, at, currentThrough = null) {
     if (!isObj(valid)) return { undetermined: true, why: "no validity is stated" };
+    if (valid.undetermined) return { undetermined: true, why: filled(valid.why) ? valid.why : "its owner does not settle its validity" };
     const v = { from: valid.from ?? null, to: valid.to ?? null, precision: valid.precision || "day", zone: valid.zone || "UTC" };
-    try {
-      const r = validAt({ valid: v, basis: null }, People.#dateOf(at, v.zone));
-      if (r === "in" || r === "out") return r;
-      if (r && r.refused) return { undetermined: true, why: r.why };
-      return { undetermined: true, why: (r && r.why) || "undetermined" };
-    } catch (e) { return { undetermined: true, why: String((e && e.message) || e) }; }
+    const judge = (x) => {
+      try {
+        const r = validAt({ valid: x, basis: null }, People.#dateOf(at, x.zone));
+        if (r === "in" || r === "out") return r;
+        if (r && r.refused) return { undetermined: true, why: r.why };
+        return { undetermined: true, why: (r && r.why) || "undetermined" };
+      } catch (e) { return { undetermined: true, why: String((e && e.message) || e) }; }
+    };
+    const r = judge(v);
+    if (r === "in" || r === "out" || !filled(currentThrough) || v.to !== null) return r;
+    if (judge({ ...v, to: currentThrough, precision: "day" }) === "in") return "in";
+    return { undetermined: true, why: `${r.why}; it is stated current through ${currentThrough}, and the date is after that` };
   }
   /* R9: a validity as civil-time's value, or the bound it refuses. */
   static #validity(valid) {
@@ -302,11 +341,14 @@ export class People {
       return { reason: "NO_CITATION", detail: `${what} cites a captured document and a part of it: {captureSha, extent}` };
     if (!this.#homeOf(c.captureSha))
       return { reason: "NO_CITATION", detail: `${what} names no captured document the record holds` };
-    if (this.#content && typeof this.#content.contentContextFor === "function" && typeof this.#content.checkContentExtent === "function") {
-      let bad;
-      try { bad = this.#content.checkContentExtent(c.extent, this.#content.contentContextFor(c.captureSha)); } catch { bad = null; }
-      if (bad && bad.ok === false) return { ...bad, reason: bad.reason || bad.code };
-    }
+    /* content's own judgment of the extent against that capture (content R-extent checks), as lines reads a passage */
+    let bad;
+    try {
+      canonicalExtent(c.extent);
+      const ctx = this.#content && typeof this.#content.contentContextFor === "function" ? this.#content.contentContextFor(c.captureSha) : {};
+      bad = checkContentExtent(c.extent, ctx);
+    } catch (e) { bad = { reason: "CONTENT_EXTENT_UNREADABLE", detail: String((e && e.message) || e) }; }
+    if (bad) return { ...bad, reason: bad.reason || bad.code || "NO_CITATION", detail: bad.detail || `${what}'s extent is not a part of that capture` };
     return null;
   }
   /* The capture axis of a cited fact (provenance R24–R27): its letter, or null where it is not determined. */
@@ -397,7 +439,7 @@ export class People {
       for (const [id, end, day] of [[a, "a", dA], [b, "b", dB]]) {
         const held = this.#identifiers(id).find((x) => x.scheme === want.scheme && x.normal === norm);
         if (!held) return { failed: `${end} holds the scheme identifier ${want.scheme} ${want.id}` };
-        if (held.valid && People.#judge(held.valid, day) === "out")
+        if (held.valid && People.#judge(held.valid, day) !== "in")
           return { failed: `the identifier ${want.scheme} ${want.id} is valid on ${end} at its record's date ${day}` };
       }
       return { because: `both records hold the identifier ${want.scheme} ${want.id}, valid at ${dA} and ${dB}` };
@@ -416,8 +458,8 @@ export class People {
     if (oa === undefined) return { failed: `the line ${ls.a} has a at one end` };
     if (ob === undefined) return { failed: `the line ${ls.b} has b at one end` };
     if (la.kind !== lb.kind || oa !== ob) return { failed: "the two lines are the same fact: one kind, to the same entity" };
-    if (People.#judge(la.valid, dA) === "out") return { failed: `the line ${ls.a} is valid at a's record date ${dA}` };
-    if (People.#judge(lb.valid, dB) === "out") return { failed: `the line ${ls.b} is valid at b's record date ${dB}` };
+    if (People.#judge(la.valid, dA, People.#through(la)) !== "in") return { failed: `the line ${ls.a} is valid at a's record date ${dA}` };
+    if (People.#judge(lb.valid, dB, People.#through(lb)) !== "in") return { failed: `the line ${ls.b} is valid at b's record date ${dB}` };
     return { because: `both records carry the name '${shared}' and each holds a ${la.kind} line to ${oa} at its record's date (${dA}, ${dB})` };
   }
 
@@ -562,8 +604,11 @@ export class People {
       let r;
       try { r = typeof this.#entities.entityByIdentifier === "function" ? this.#entities.entityByIdentifier({ scheme: idf.scheme, id: idf.id }) : null; }
       catch { r = null; }
-      const other = isObj(r) ? r.entity_id ?? (isObj(r.entity) ? r.entity.entity_id : null) : typeof r === "string" ? r : null;
-      if (filled(other) && other !== entityId) { const e = this.#entity(other); if (e && e.kind === "person") found.add(other); }
+      /* entities R44: one holder, or `undetermined` with every candidate holding it; each is a candidate here */
+      const others = isObj(r) && Array.isArray(r.candidates) ? r.candidates
+        : [isObj(r) ? r.entity_id ?? (isObj(r.entity) ? r.entity.entity_id : null) : typeof r === "string" ? r : null];
+      for (const other of others)
+        if (filled(other) && other !== entityId) { const e = this.#entity(other); if (e && e.kind === "person") found.add(other); }
     }
     const ids = [...found].sort();
     const mine = this.#profile(entityId, viewer);
@@ -729,8 +774,10 @@ export class People {
   static #lineItem(l, member) {
     return { member, line_id: lineId(l), kind: l.kind, from: lineFrom(l), to: lineTo(l), capacity: l.capacity ?? null,
              title: l.title ?? l.as_written ?? null, valid: l.valid ?? null, grade: { assertion: l.assertion ?? null, ends: l.ends ?? null },
-             citation: l.basis ?? null };
+             citation: l.basis ?? null, ...(People.#through(l) ? { current_through: People.#through(l) } : {}) };
   }
+  /* lines R21: the day an open-ended holds line is stated current through, as its owner answers it to this viewer. */
+  static #through(l) { return isObj(l) && isObj(l.current_through) && filled(l.current_through.day) ? l.current_through.day : null; }
   /* Every unwithdrawn line of the members, of these kinds, from the member's end; `truncated` when an owner's list was cut. */
   #linesOver(members, kinds, viewer) {
     const items = [];
@@ -746,7 +793,7 @@ export class People {
   static #atDate(items, at, validOf = (x) => x.valid) {
     const held = [], undetermined = [];
     for (const x of items) {
-      const j = People.#judge(validOf(x), at);
+      const j = People.#judge(validOf(x), at, x.current_through ?? null);
       if (j === "in") held.push(x);
       else if (j !== "out") undetermined.push({ ...x, undetermined: { why: j.why } });
     }
@@ -774,16 +821,26 @@ export class People {
     const facts = People.#atDate(members.flatMap((m) => this.#factsOf(m, viewer)), at);
     const posts = this.#linesOver(members, ["holds"], viewer);
     const postsAt = People.#atDate(posts.items, at);
-    const duties = [];
+    /* duties R7, R8: the person's duties as obligor, each with `in_force` at the date; a withdrawn duty or one not in
+       force then binds nothing, and one whose in-force answer is not settled is listed undetermined with its reason */
+    const duties = [], dutiesUnsettled = [];
     let dutiesTruncated = false;
+    const day = typeof at === "string" ? at : isObj(at) && typeof at.value === "string" ? at.value : null;
     for (const m of members) {
-      const r = this.#duties ? this.#duties.dutiesOf({ entity: m, as: "obligor", at, limit: READ_LIST_MAX, viewer }) : null;
+      const r = this.#duties ? this.#duties.dutiesOf({ entity: m, as: "obligor", at: day, limit: READ_LIST_MAX, viewer }) : null;
       if (r && r.truncated) dutiesTruncated = true;
-      for (const d of listOf(r)) duties.push({ member: m, ...d });
+      for (const x of listOf(r)) {
+        if (x.withdrawn) continue;
+        const state = isObj(x.in_force) ? x.in_force.state : null;
+        if (state === "not_in_force") continue;
+        if (state === "in_force") duties.push({ member: m, ...x });
+        else dutiesUnsettled.push({ member: m, ...x, undetermined: { why: isObj(x.in_force) && filled(x.in_force.why) ? x.in_force.why
+          : "whether its source is in force at the date is not settled" } });
+      }
     }
     const n = bounded(names), f = bounded(facts.held), p = bounded(postsAt.held, READ_LIST_MAX, posts.truncated);
     const d = bounded(duties, READ_LIST_MAX, dutiesTruncated);
-    const u = bounded([...facts.undetermined, ...postsAt.undetermined]);
+    const u = bounded([...facts.undetermined, ...postsAt.undetermined, ...dutiesUnsettled]);
     return { ok: true, found: true, entity_id: entityId, at, cluster,
              names: n.items, facts: f.items, posts: p.items, duties: d.items, undetermined: u.items,
              truncated: { names: n.truncated, facts: f.truncated, posts: p.truncated, duties: d.truncated, undetermined: u.truncated },
@@ -836,7 +893,7 @@ export class People {
         const side = (f.kind === "income" || f.kind === "gift") && payee === m ? "payee" : f.kind === "contribution" && payer === m ? "payer" : null;
         if (side) money.push({ member: m, side, fact_id: factIdOf(f), kind: f.kind, amount: f.amount ?? null, as_read: f.as_read ?? null,
                                currency: f.currency ?? null, period: f.period ?? null, from: f.from ?? null, to: f.to ?? null,
-                               grade: f.grade ?? null, source: f.source ?? null });
+                               grade: f.grade ?? null, source: f.source ?? null, citation: f.citation ?? null });
       }
     }
     const l = bounded(People.#byValidity(lines), READ_LIST_MAX, r.truncated), mm = bounded(money, READ_LIST_MAX, moneyTruncated);
@@ -862,13 +919,15 @@ export class People {
       for (const r of as) if (!held.as.includes(r)) held.as.push(r);
       byId.set(id, held);
     };
+    /* events R27, R33: placed events, and apart those placed nowhere (no `when`); both are the member's */
+    const all = (r) => [...listOf(r), ...(r && Array.isArray(r.placed_nowhere) ? r.placed_nowhere : [])];
     for (const m of members) {
       const s = this.#events.statementsOf({ entity: m, from, to, limit: READ_LIST_MAX, viewer });
       if (s && s.truncated) truncated = true;
-      for (const e of listOf(s)) put(e, m, ["statement"]);
+      for (const e of all(s)) put(e, m, ["statement"]);
       const acts = this.#events.eventsFor({ entity: m, from, to, limit: READ_LIST_MAX, viewer });
       if (acts && acts.truncated) truncated = true;
-      for (const e of listOf(acts)) {
+      for (const e of all(acts)) {
         const roles = roleNames(e.roles).filter((r) => STATEMENT_ROLES.includes(r));
         if (roles.length) put(e, m, roles);
       }
@@ -936,7 +995,7 @@ export class People {
       if (r && r.truncated) truncated = true;
       for (const l of listOf(r)) {
         if (l.withdrawn || l.kind !== "holds" || lineTo(l) !== u) continue;
-        const j = People.#judge(l.valid, at);
+        const j = People.#judge(l.valid, at, People.#through(l));
         const item = { unit: u, person: lineFrom(l), line_id: lineId(l), capacity: l.capacity ?? null, valid: l.valid ?? null,
                        grade: { assertion: l.assertion ?? null, ends: l.ends ?? null }, citation: l.basis ?? null };
         if (j === "in") held.push(item); else if (j !== "out") undetermined.push({ ...item, undetermined: { why: j.why } });
@@ -1025,7 +1084,7 @@ export class People {
   /** R21. */
   linkSourceToPerson({ source, person, evidence, sight, by = null } = {}) {
     if (!memberOf(by)) return refuse("MEMBER_ACT_ONLY", "a source is linked to a person only by a member's own act");
-    if (!filled(source) || !this.#sourceHeld(source)) return refuse("NO_SUCH_SOURCE", "no source with that id is held", { source: source ?? null });
+    if (!filled(source) || !this.#sourceHeld(source, by)) return refuse("NO_SUCH_SOURCE", "no source with that id is held", { source: source ?? null });
     const bad = this.#personRefusal(person);
     if (bad) return bad;
     const ev = clean(evidence);
@@ -1038,10 +1097,11 @@ export class People {
                     by_actor=excluded.by_actor, at=excluded.at`, source, person, ev, JSON.stringify(list), String(by), at);
     return { ok: true, source, person, sight: list, at };
   }
-  #sourceHeld(id) {
+  /* sources R9: a source the linking member may read (its own refusal answers alike for an absent one). */
+  #sourceHeld(id, by) {
     try {
       if (!this.#sources || typeof this.#sources.rungOf !== "function") return false;
-      const r = this.#sources.rungOf({ source: id, viewer: MACHINE_VIEWER });
+      const r = this.#sources.rungOf({ source: id, viewer: `member:${memberOf(by)}` });
       return !!r && r.ok !== false && r.reason !== "NO_SUCH_SOURCE";
     } catch { return false; }
   }

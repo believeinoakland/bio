@@ -1,19 +1,20 @@
 /* people's identity claims and cluster at its interface: R1–R6, R26, R28. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, OUT, MACHINE, PROJ } from "./fixture.mjs";
+import { world, doc, ANN, OUT, MACHINE } from "./fixture.mjs";
 import { CLAIM_KINDS, CLAIM_BASES, IDENTITY_KIND_WORDS, peopleOf } from "../../../src/people/index.mjs";
 import { ownerConformance, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 
-const doc = (c, date) => ({ captureSha: c.captureSha, extent: { kind: "document" }, ...(date ? { date } : {}) });
+const day = (from, to) => ({ from, to, precision: "day", zone: "UTC" });
 
-/* Two same-name persons with one identifier each, and two cited records. */
-function pair(w, { ids = ["P-1", "P-1"], label = "Michael Houston" } = {}) {
+/* Two same-name persons with one identifier each, and two cited records. entities R43 lets two persons hold one
+   identifier only at validities that do not overlap: a holds it through 2020, b from 2021, each record dated within. */
+function pair(w, { ids = ["P001", "P001"], label = "Michael Houston" } = {}) {
   const a = w.person(label), b = w.person(label);
-  if (ids[0]) w.identify(a, "ellery_person", ids[0]);
-  if (ids[1]) w.identify(b, "ellery_person", ids[1]);
+  if (ids[0]) w.identify(a, "ellery_person", ids[0], day("2020-01-01", "2020-12-31"));
+  if (ids[1]) w.identify(b, "ellery_person", ids[1], day("2021-01-01", "2021-12-31"));
   const ca = w.capture(`a-${a}`), cb = w.capture(`b-${b}`);
-  return { a, b, ev: { a: doc(ca, "2020-03-01"), b: doc(cb, "2021-06-01"), identifier: { scheme: "ellery_person", id: "P-1" } } };
+  return { a, b, ev: { a: doc(ca, "2020-03-01"), b: doc(cb, "2021-06-01"), identifier: { scheme: "ellery_person", id: ids[0] || ids[1] } } };
 }
 const count = (w) => w.one(`SELECT COUNT(*) AS n FROM identity_claims`).n;
 
@@ -31,7 +32,7 @@ test("R1 claimIdentity refuses in order NO_ENDS, SELF_CLAIM, NO_SUCH_ENTITY nami
     [{ ...base, basis: "bogus", evidence: null, note: "" }, "UNKNOWN_BASIS"],
     [{ ...base, evidence: null, note: "" }, "NO_EVIDENCE"], [{ ...base, evidence: {}, note: "" }, "NO_EVIDENCE"],
     [{ ...base, note: "  " }, "NO_NOTE"],
-    [{ ...base, evidence: { ...ev, identifier: { scheme: "ellery_person", id: "P-2" } } }, "IDENTITY_GRADE_UNEARNED"],
+    [{ ...base, evidence: { ...ev, identifier: { scheme: "ellery_person", id: "P002" } } }, "IDENTITY_GRADE_UNEARNED"],
   ];
   for (const [args, reason] of cases) {
     const r = w.p.claimIdentity(args);
@@ -58,36 +59,38 @@ test("R1 claimIdentity refuses in order NO_ENDS, SELF_CLAIM, NO_SUCH_ENTITY nami
 test("R2 the grade is earned from the basis, never stated: identifier A only with one scheme identifier held on both and valid at both cited dates; corroborated_name B only with a cited line on each valid at both dates; name C; testimony D; a failed condition refused IDENTITY_GRADE_UNEARNED naming it; why says 'claimed the same person, grade X, because …', never 'is the same person'", () => {
   const w = world();
   /* identifier: held on one end only is refused A */
-  const one = pair(w, { ids: ["P-1", null] });
+  const one = pair(w, { ids: ["P001", null] });
   const r1 = w.p.claimIdentity({ a: one.a, b: one.b, kind: "same_as", basis: "identifier", evidence: one.ev, note: "n", by: ANN, grade: "A" });
   assert.equal(r1.reason, "IDENTITY_GRADE_UNEARNED");
   assert.match(r1.condition, /b holds the scheme identifier/);
   /* identifier valid on b only before b's record date is refused */
-  const late = pair(w, { ids: ["P-1", null] });
-  w.identify(late.b, "ellery_person", "P-1", { from: "2019-01-01", to: "2019-12-31", precision: "day", zone: "UTC" });
+  const late = pair(w, { ids: ["P002", null] });
+  w.identify(late.b, "ellery_person", "P002", day("2019-01-01", "2019-12-31"));
   const r2 = w.p.claimIdentity({ a: late.a, b: late.b, kind: "same_as", basis: "identifier", evidence: late.ev, note: "n", by: ANN });
   assert.equal(r2.reason, "IDENTITY_GRADE_UNEARNED");
   assert.match(r2.condition, /valid on b at its record's date 2021-06-01/);
   /* identifier with a date missing is refused */
-  const nod = pair(w);
+  const nod = pair(w, { ids: ["P003", "P003"] });
   const r3 = w.p.claimIdentity({ a: nod.a, b: nod.b, kind: "same_as", basis: "identifier", evidence: { ...nod.ev, b: doc(w.capture("z")) }, note: "n", by: ANN });
   assert.equal(r3.reason, "IDENTITY_GRADE_UNEARNED");
   assert.match(r3.condition, /date of b's cited record/);
   /* identifier earned A */
-  const good = pair(w);
+  const good = pair(w, { ids: ["P004", "P004"] });
   const A = w.p.claimIdentity({ a: good.a, b: good.b, kind: "same_as", basis: "identifier", evidence: good.ev, note: "n", by: ANN, grade: "D" });
   assert.equal(A.grade, "A", "a caller's grade field is never read");
-  assert.equal(A.why, "claimed the same person, grade A, because both records hold the identifier ellery_person P-1, valid at 2020-03-01 and 2021-06-01");
+  assert.equal(A.why, "claimed the same person, grade A, because both records hold the identifier ellery_person P004, valid at 2020-03-01 and 2021-06-01");
   /* corroborated_name: the same post on each, valid at each date */
   const c = pair(w, { ids: [null, null] });
   const post = w.entity("office", "Harbour Master");
-  const la = w.line("holds", c.a, post, { from: "2019-01-01", to: "2020-12-31" }, { capacity: "appointed" });
-  const lb = w.line("holds", c.b, post, { from: "2021-01-01", to: "2022-12-31" }, { capacity: "appointed" });
+  const la = w.line("holds", c.a, post, { from: "2019-01-01", to: "2020-12-31" });
+  const lb = w.line("holds", c.b, post, { from: "2021-01-01", to: "2022-12-31" });
   const lbad = w.line("holds", c.b, post, { from: "2023-01-01", to: "2023-12-31" });
   const other = w.line("holds", c.b, w.entity("office", "Other Post"), { from: "2021-01-01", to: "2022-12-31" });
   const cn = (lines) => w.p.claimIdentity({ a: c.a, b: c.b, kind: "same_as", basis: "corroborated_name", evidence: { a: c.ev.a, b: c.ev.b, lines }, note: "n", by: ANN });
   assert.match(cn(null).condition, /lines: \{a, b\}/);
   assert.match(cn({ a: la, b: lbad }).condition, /valid at b's record date/);
+  const lopen = w.line("holds", c.b, post, { from: "2020-01-01", to: null });
+  assert.match(cn({ a: la, b: lopen }).condition, /valid at b's record date/, "a line the record does not settle at the date earns nothing");
   assert.match(cn({ a: la, b: other }).condition, /the same fact/);
   assert.match(cn({ a: la, b: "LIN-2026-none" }).condition, /is held/);
   const B = cn({ a: la, b: lb });

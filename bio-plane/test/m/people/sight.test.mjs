@@ -1,10 +1,9 @@
 /* people's members' ties, the protected source link and sight at its interface: R20, R21, R31. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, OUT, BOSS, MACHINE } from "./fixture.mjs";
+import { world, doc, ANN, OUT, BOSS, MACHINE } from "./fixture.mjs";
 import { TIE_KINDS, ATTRIBUTION_LEVELS } from "../../../src/people/index.mjs";
 
-const doc = (c) => ({ captureSha: c.captureSha, extent: { kind: "document" } });
 
 test("R20 a member declares only their own tie (MTI-), to a registered entity, of kind employer, relative, business or other, with a note and the attribution level they choose; by is the stamp and no field names another member; a machine is refused; seen only by its member and administrators, any other viewer answered exactly as for no tie; tiesConcerning answers the member's ties to given entities with their levels", () => {
   const w = world();

@@ -102,7 +102,8 @@ function factsAt(readers, entity, sel, viewer) {
                  precision: v.precision || "day", zone: v.zone || "UTC" });
     }
   } else if (sel.event_role !== undefined) {
-    for (const e of listOf(readers.events.eventsFor({ entity, limit: 500, viewer }))) {
+    const r = readers.events.eventsFor({ entity, limit: 500, viewer });
+    for (const e of [...listOf(r), ...(r && Array.isArray(r.placed_nowhere) ? r.placed_nowhere : [])]) {
       if (!roleNames(e.roles).includes(sel.event_role)) continue;
       const w = isObj(e.when) ? e.when : {};
       out.push({ row: { module: "events", id: eventId(e) }, counterparty: eventId(e), from: w.start ?? null, to: w.end ?? w.start ?? null,

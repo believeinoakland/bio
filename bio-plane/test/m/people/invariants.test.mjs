@@ -62,7 +62,7 @@ test("R30 one home per fact: this module holds no post, membership, credential, 
   w.line("holds", p, w.entity("office", "Clerk"), { from: "2010-01-01", to: "2020-01-01" });
   w.line("credentialed_by", p, w.entity("institution", "Bar"), { from: "2010-01-01", to: "2020-01-01" });
   w.event("statement", { start: "2015-01-01" }, [{ entity: p, role: "speaker" }]);
-  w.M.push({ fact_id: "MNY-2026-x", kind: "income", from: { entity: p }, to: { entity: p }, amount: "5" });
+  w.fact({ kind: "income", from: { entity: w.entity("institution", "Payer Co") }, to: { entity: p }, amount: "5.00" });
   const before = tables.map((t) => w.one(`SELECT COUNT(*) AS n FROM ${t}`).n);
   w.p.careerOf({ entityId: p, viewer: ANN }); w.p.credentialsOf({ entityId: p, viewer: ANN });
   w.p.statementsOf({ entityId: p, viewer: ANN }); w.p.interestsOf({ entityId: p, viewer: ANN });
@@ -83,7 +83,7 @@ test("R32 no place is named in this module's behaviour, defaults or outward text
   const w = world({ profiles: [] });
   const p = w.person("Di Elm");
   const c = w.capture("c");
-  const f = w.p.recordPersonFact({ person: p, kind: "address", value: "x", valid: { from: null, to: null }, citation: { captureSha: c.captureSha, extent: { kind: "document" } }, by: ANN });
+  const f = w.p.recordPersonFact({ person: p, kind: "address", value: "x", valid: { from: null, to: null }, citation: { captureSha: c.captureSha, extent: { kind: "pdf-page", page: 0 } }, by: ANN });
   const r = w.p.expunge({ id: f.fact_id, ground: "lawful_demand", demandKind: "officer_privacy", reason: "demand", by: BOSS });
   assert.equal(r.reason, "DEMAND_KIND_UNLISTED");
   assert.deepEqual(r.demand_kinds, []);

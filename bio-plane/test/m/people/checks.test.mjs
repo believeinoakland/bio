@@ -1,7 +1,7 @@
 /* people's interest checks at its interface: R22–R25 (K1491, K1473; gate K1504 M-C8, K1505 (8)). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, OUT, BOSS, MACHINE } from "./fixture.mjs";
+import { world, ANN, OUT, BOSS, MACHINE, PRESET_PERSONS } from "./fixture.mjs";
 import { SHIPPED_CHECKS, GATE_RATE_MAX } from "../../../src/people/index.mjs";
 
 const span = (from, to) => ({ from, to });
@@ -13,7 +13,7 @@ function door(w, { fenced = false } = {}) {
   const office = w.entity("office", "Harbour Commissioner"), co = w.entity("institution", "Quay Ltd");
   const p = w.person("Uma Vance"), r = w.person("Vic Wu"), s = w.person("Wes Xu");
   w.line("holds", p, office, span("2010-01-01", "2015-12-31"));
-  w.line("holds", p, co, span("2016-06-01", "2018-01-01"), fenced ? { bundle: w.capture("fenced", { fenced: true }).bundle } : {});
+  w.line("holds", p, co, span("2016-06-01", "2018-01-01"), { fenced });
   w.line("holds", r, office, span("2010-01-01", "2015-12-31"));
   w.line("holds", r, co, span("2024-06-01", "2025-01-01"));
   w.line("holds", s, co, span("2016-06-01", "2018-01-01"));
@@ -77,7 +77,7 @@ test("R23 evaluateChecks evaluates every switched-on check over the held record 
   assert.equal(rows[0].denominator, SHIPPED_CHECKS[0].denominator);
   assert.equal(people(), before, "nothing is written to a person's or entity's row");
   const again = w.p.evaluateChecks({ budgetMs: 10000 });
-  assert.deepEqual([again.evaluated, again.remaining], [3, false], "a fresh pass over the three persons");
+  assert.deepEqual([again.evaluated, again.remaining], [3 + PRESET_PERSONS, false], "a fresh pass over every person held");
   assert.equal(w.rows(`SELECT * FROM interest_check_results`).length, 1, "a re-evaluation finds the same match, not a second");
   w.p.recordCheckGate({ check: shipped(w).check, version: 1, goldSet: "g", falseAlarmRate: 0.1, by: "member:boss" });
   const res = w.p.checkResults({ check: shipped(w).check, viewer: ANN }).checks[0].results[0];

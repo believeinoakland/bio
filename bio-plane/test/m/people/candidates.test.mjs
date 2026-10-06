@@ -1,22 +1,22 @@
 /* people's same-person candidates at its interface: R7, and R8 (M-P6, the false-merge gate set before measuring, K1504). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, OUT } from "./fixture.mjs";
+import { world, doc, ANN, OUT } from "./fixture.mjs";
 import { People, CANDIDATES_MAX } from "../../../src/people/index.mjs";
 
-const doc = (c) => ({ captureSha: c.captureSha, extent: { kind: "document" } });
+const day = (from, to) => ({ from, to, precision: "day", zone: "UTC" });
 
 test("R7 candidates share a name's fold or a scheme identifier, are explained field by field (names, identifiers, posts, life facts: agrees, differs or absent with the rows compared), carry no score or rank, are ordered by entity id, bounded 1–200 (default 50) with truncated, write nothing and say they are not claims", () => {
   const w = world();
-  /* entities R44 answers the one entity holding an identifier; the stand-in answers the first registered, so the record
-     that shares only the identifier is registered first. */
+  /* entities R43: three persons hold one identifier, each over its own years; entities R44 answers all three as
+     candidates of an undetermined holder, and each is a candidate here. */
   const idOnly = w.person("M. H. Houston");          /* shares only the identifier */
   const p = w.person("Michael Houston");
   const twin = w.person("Michael Houston");          /* same name, same identifier, same post, same birth */
   const other = w.person("Michael Houston");         /* same name, different identifier and birth */
   w.person("Jane Roe");
-  w.identify(idOnly, "ellery_person", "P-7"); w.identify(p, "ellery_person", "P-7");
-  w.identify(twin, "ellery_person", "P-7"); w.identify(other, "ellery_person", "P-8");
+  w.identify(idOnly, "ellery_person", "P007", day("2000-01-01", "2004-12-31")); w.identify(p, "ellery_person", "P007", day("2005-01-01", "2009-12-31"));
+  w.identify(twin, "ellery_person", "P007", day("2010-01-01", "2014-12-31")); w.identify(other, "ellery_person", "P008");
   const post = w.entity("office", "Harbour Master");
   w.line("holds", p, post, { from: "2019-01-01" }); w.line("holds", twin, post, { from: "2019-01-01" });
   const c = w.capture("births");
@@ -64,21 +64,23 @@ test("R8 M-P6 on the synthetic same-name fixture (two Michael Houstons and a tho
   const add = (name, who, { ident = null, birth = null, post = null } = {}) => {
     const e = w.person(name);
     truth.set(e, who);
-    if (ident) w.identify(e, "ellery_person", ident);
+    if (ident) w.identify(e, ...ident);
     if (birth) w.p.recordPersonFact({ person: e, kind: "birth", value: birth, valid: { from: birth, to: null }, citation: doc(c), by: ANN });
     if (post) w.line("holds", e, post, { from: "2018-01-01" });
     return e;
   };
   /* The two Michael Houstons: different people, one name, different identifiers and births, the same seat at different times. */
   const seat = office("council-3");
-  add("Michael Houston", "mh-1", { ident: "P-100", birth: "1950-01-01", post: seat });
-  add("Michael Houston", "mh-2", { ident: "P-200", birth: "1979-09-09", post: seat });
-  /* A thousand others: 300 people each held twice (the same person in two registers: same identifier, birth and post),
+  add("Michael Houston", "mh-1", { ident: ["ellery_person", "P100"], birth: "1950-01-01", post: seat });
+  add("Michael Houston", "mh-2", { ident: ["ellery_person", "P200"], birth: "1979-09-09", post: seat });
+  /* A thousand others: 300 people each held twice (the same person in two registers: same bar number, over two spans
+     that do not overlap as entities R43 requires, same birth and post),
      200 names shared by two different people (no identifier held, births differ), and 200 singletons. */
   for (let i = 0; i < 300; i++) {
     const post = office(`s-${i}`), birth = `19${String(40 + (i % 50)).padStart(2, "0")}-0${1 + (i % 9)}-1${i % 9}`;
-    add(`Same Person ${i}`, `sp-${i}`, { ident: `S-${i}`, birth, post });
-    add(`Same Person ${i}`, `sp-${i}`, { ident: `S-${i}`, birth, post });
+    const bar = `BAR${String(i).padStart(5, "0")}`;
+    add(`Same Person ${i}`, `sp-${i}`, { ident: ["marlow_bar", bar, day("2000-01-01", "2009-12-31")], birth, post });
+    add(`Same Person ${i}`, `sp-${i}`, { ident: ["marlow_bar", bar, day("2010-01-01", "2019-12-31")], birth, post });
   }
   for (let i = 0; i < 100; i++) {
     add(`Shared Name ${i}`, `sn-${i}-a`, { birth: "1960-01-01" });

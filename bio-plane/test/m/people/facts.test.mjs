@@ -1,10 +1,9 @@
 /* people's person facts and their removal at its interface: R9–R12, R33. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, OUT, BOSS, MACHINE } from "./fixture.mjs";
+import { world, doc, ANN, OUT, BOSS, MACHINE } from "./fixture.mjs";
 import { FACT_KINDS, EXPUNGE_GROUNDS, PEOPLE_TABLES } from "../../../src/people/index.mjs";
 
-const doc = (c) => ({ captureSha: c.captureSha, extent: { kind: "document" } });
 const valid = { from: "2020-01-01", to: "2030-12-31", precision: "day", zone: "America/Los_Angeles" };
 
 test("R9 recordPersonFact records one PFA- fact (kind closed: name, birth, death, locality, address, contact; the value as the document states it; a validity; a citation), refusing in order NO_SUCH_ENTITY, NOT_A_PERSON, UNKNOWN_FACT_KIND, NO_VALUE, NO_CITATION, BAD_VALIDITY naming the bound", () => {
@@ -19,7 +18,7 @@ test("R9 recordPersonFact records one PFA- fact (kind closed: name, birth, death
     [{ ...base, kind: "religion", value: "" }, "UNKNOWN_FACT_KIND"],
     [{ ...base, value: "  ", citation: null }, "NO_VALUE"],
     [{ ...base, citation: null, valid: null }, "NO_CITATION"],
-    [{ ...base, citation: { captureSha: "f".repeat(64), extent: { kind: "document" } } }, "NO_CITATION"],
+    [{ ...base, citation: { captureSha: "f".repeat(64), extent: { kind: "pdf-page", page: 0 } } }, "NO_CITATION"],
     [{ ...base, valid: { from: "2026-02-31", to: null, precision: "day", zone: "UTC" } }, "BAD_VALIDITY"],
     [{ ...base, valid: { from: null, to: "2026-02-31", precision: "day", zone: "UTC" } }, "BAD_VALIDITY"],
     [{ ...base, valid: null }, "BAD_VALIDITY"],
@@ -140,6 +139,6 @@ test("R33 every table is declared explicitly through record-core's declareTable 
   const p = w.person("Zed"), q = w.person("Zed");
   w.p.claimIdentity({ a: p, b: q, kind: "same_as", basis: "testimony", note: "n", by: ANN, project: w.project() });
   w.p.claimIdentity({ a: p, b: q, kind: "unsure", basis: "testimony", note: "n", by: ANN });
-  w.record.purge({ bundleId: "PROJ-2026-0001-fenced" });
+  w.record.purge({ bundleId: w.project() });
   assert.equal(w.one(`SELECT COUNT(*) AS n FROM identity_claims`).n, 1);
 });
