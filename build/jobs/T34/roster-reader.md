@@ -25,3 +25,7 @@ R12, two readings I am building on (carrying on meanwhile):
 2. **An `org_chart` capture** (the Suggestion names them among `reads`' items): R12 says a document is read by R2. My reading: an item with `type: "org_chart"` is read by R3 instead, and only a post whose holder is named on its own line becomes a row `{name, title}`; a chart read by R2 would make rows of box labels. If you want charts left out of the source instead, say so.
 
 No row bound: each roster's rows are answered whole, as R12 states (people bounds its own lists, R17).
+
+## J2 · REPORT
+
+`plane` (not mine): `bio-plane/src/plane/wiring.mjs` `rosterSource()` still registers the "held as a table, not read" source (`ROSTER_NOT_READ`), and `store.mjs:183` registers it into `people`. To meet people R18 with roster-reader R12, plane composes `reads({organisation, viewer})` from the store (captures placed as `staff_roster` or `org_chart` whose stated organisation resolves to the entity; calculations' tables with R6's roles), in J1's shape, and registers `rosterSource(reads)` imported from `roster-reader/index.mjs`. Its `test/m/plane/t33.test.mjs` (lines 280–287) asserts the old source and moves with it; the plane bundle goes stale when plane imports it.
