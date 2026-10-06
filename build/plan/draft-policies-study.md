@@ -93,7 +93,7 @@ Ruled (K1713): D1 two constructs; D5 organisations' own policies and standards, 
 Open, each with a recommendation:
 - **D2 · Force. Ruled (K1722): as recommended.** Every held provision carries its force, read from its own words and cited: for policies, mandatory or discretionary (with who holds the discretion and its stated criteria); for standards, shall, should, may and mandatory or other. A finding names the force it rests on; the machine never raises a force the text does not state.
 - **D3 · Benchmarks (OP1). Ruled (K1723): as recommended.** A group may compare a body with a standard it never adopted, shown as a benchmark; nonconformity is found only against a standard that binds that body.
-- **D4 · Unseen and absent policies.** Hold a policy known only by citation, and "no written policy exists", each with the search made; neither is a criterion until its text is held; an absence is itself a finding.
+- **D4 · Unseen and absent policies. Ruled (K1724): as recommended.** Hold a policy known only by citation, and "no written policy exists", each with the search made; neither is a criterion until its text is held; an absence is itself a finding.
 - **D6 · Copyrighted standards.** Always hold the edition, citation and access; the text only by a member's own act (K1449); publications quote only the passages a finding needs.
 - **D7 · Confidential policies.** A policy obtained from a source keeps that source's confidentiality.
 - **D8 · Watching.** For policies a group holds, the product watches their published copies, keeps every version it sees, and notices a silent change.

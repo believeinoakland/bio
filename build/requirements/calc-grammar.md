@@ -1,6 +1,6 @@
 # calc-grammar — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1439; scope §2), layer 1 directly after `civil-time`. Plan entry T33-4 (C:A-1; recorded draws, C §(c) ANALYSIS L4). Every id is not yet met. `join` takes its id-space resolver from the caller, because `id-spaces` comes later in layer 1 (K1504, Choices 4).
+**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1439; scope §2), layer 1 directly after `civil-time`. Plan entry T33-4 (C:A-1; recorded draws, C §(c) ANALYSIS L4). Every id is not yet met. `join` takes its id-space resolver from the caller, because `id-spaces` comes later in layer 1 (K1504, Choices 4). T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-4 (N567, N571; K1569, K1576: a capacity bound, no change of meaning): R21 (`relate` exported from the index) and R22 (a streamed table, about 1,000,000 cells) added; not yet met (T34).
 
 **Size (P6).** About 800–1,200 lines (ladders §8.4).
 
@@ -45,6 +45,12 @@ The pure engine of calculation: it reads figures exactly as printed, holds them 
 **interval({frame_size, sample_size, successes, confidence}) → `{low, high, method}`**
 - **R17** The exact interval for a proportion in a frame of `frame_size` from a simple random sample drawn without replacement (hypergeometric), at the stated `confidence`: `low` and `high` are counts in the frame, each the extreme count whose tail probability is not below `(1 − confidence)/2`. `method` names it. Inputs out of range are refused (K1448).
 
+**relate(a, b) → relation** (N567; K1569)
+- **R21** `relate` is exported from the module's index beside R4's arithmetic: R10's relation of two figures, `lower`, `equal`, `higher` or `{undetermined, why}`, refused `UNIT_MISMATCH` as R5 says, so a caller (`duties`) imports it from the index and from no inner file. *(not yet met: T34)*
+
+**A streamed table** (N571; K1576; `calculations` R1)
+- **R22** A table input of `evaluate` may also be bound as a *streamed table*: `{fields, rows}`, `rows` a function that answers, on each call, a new iterator over the table's rows, each row an array of its cell values in `fields` order, not an object keyed by field name. Over a streamed table `evaluate` answers exactly as over the same table bound as row objects (R7–R14: the same `result`, `undetermined_rows` and `trace`), and a malformed one is refused `INPUT_INVALID` as a malformed table is. Evaluating any recipe of R6's grammar over a streamed table of 1,000,000 cells grows the heap by less than the 35 MB K1576 measured for 500,000 cells as row objects, so `calculations` R1's cell bound can return to about 1,000,000; the test measures the growth and states it. *(not yet met: T34)*
+
 ## Private
 
 ### Uses
@@ -69,4 +75,5 @@ The pure engine of calculation: it reads figures exactly as printed, holds them 
 - `consequences` R2 names `product`; a product is R4's `multiply`, not a recipe step, so the closed grammar of R6 is the ladders' list unchanged.
 - SHA-256 can be computed synchronously in-module, so every service stays synchronous; tests compare it with `node:crypto`.
 - R16's ranking by hash, rather than a seeded generator, lets a stranger reproduce a draw with any SHA-256 tool. R17's hypergeometric interval is exact for a finite frozen frame; Clopper–Pearson is the binomial alternative if BOB prefers it.
+- **R22's streamed table.** Steps that keep rows (`select`, `group`, `sort`, `join`) may hold what they keep; a step that only totals or counts (`sum`, `count`, `share`) can read the iterator once without holding it. A caller streams the canonical CSV `calculations` holds row by row (its R1).
 - `divide`'s places for `ratio` and `share` in R8: 12 decimal places, `half_even`, carried as `precision: rounded`, is a starting choice.
