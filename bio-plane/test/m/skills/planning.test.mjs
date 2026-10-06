@@ -11,9 +11,10 @@ const PROPOSES = ["optionpropose", "standardpropose", "comparisonpropose", "theo
 const MEMBER = ["optionadopt", "standardadopt", "determine", "filingapprove", "filingsent"];
 const entry = (id, mode) => ({ id, label: `the ${id} act`, weight: null, needs: "contribute", mode, rung: null,
                                rung_absence: null, prompt: null });
+/* `capturerequest` too: with `standardpropose` published the legal_lookup layer renders, and reads it (R33). */
 const planningCatalog = (drop = []) => [...published().catalog,
-  ...PROPOSES.map((id) => entry(id, "machine")), ...MEMBER.map((id) => entry(id, "session"))]
-  .filter((a) => !drop.includes(a.id));
+  ...PROPOSES.map((id) => entry(id, "machine")), ...MEMBER.map((id) => entry(id, "session")),
+  entry("capturerequest", "session")].filter((a) => !drop.includes(a.id));
 const LOAD_WHEN = "the run proposes plan options, standards, comparisons, candidate theories or communication "
   + "drafts for an action or a plan";
 

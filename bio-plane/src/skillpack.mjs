@@ -144,7 +144,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
 import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, wizardAuthoringLayer,
-         SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
+         legalLookupLayer, askLayer, suggestionsLayer, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
@@ -240,6 +240,12 @@ export const SOURCING = {
   edition_statement_unpublished: "absent", /* while op=affordances publishes no edition statement proposal act (R31) */
   wizard_authoring: "authored", /* skilldoctrine.mjs, Interaction Constructs §P, ASSISTANT-PILOT §3 (R32) */
   wizard_authoring_unpublished: "absent", /* while op=affordances publishes no wizard script proposal act (R32) */
+  legal_lookup:   "authored",   /* skilldoctrine.mjs, ladders §6.4 and §10 (R33) */
+  legal_lookup_unpublished: "absent", /* while op=affordances publishes no standard proposal act (R33) */
+  ask:            "authored",   /* skilldoctrine.mjs, ladders §9.4 and §10, DEC-27 (R34) */
+  ask_unpublished: "absent",    /* while op=affordances publishes no answers checks (R34) */
+  answer_checks:  "driven",     /* op=affordances .answer_checks, answers' checks as answers holds them (R34) */
+  suggestions:    "authored",   /* skilldoctrine.mjs, ladders §2's suggestion switch, DEC-27 (R35) */
   wizard_scripts: "absent",     /* absent until the plane publishes wizard scripts — see the header (R9) */
   wizard_scripts_published: "driven", /* op=affordances .wizard_scripts, validated against .screens (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -409,7 +415,7 @@ export function renderPack(published) {
   const wizardScripts = Array.isArray(p.wizard_scripts) ? p.wizard_scripts : null;
   if (wizardScripts) validateWizardScripts(wizardScripts, p.screens);
 
-  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, wizardScripts });
+  const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, wizardScripts, published: p });
   resident.disclosable = Object.keys(disclosed).map((k) => ({ layer: k, load_when: disclosed[k].load_when }));
 
   const pack = { id: SKILL_PACK_ID, edition: DOCTRINE_EDITION, resident, disclosed,
@@ -420,7 +426,7 @@ export function renderPack(published) {
 /** THE PROGRESSIVELY-DISCLOSED LAYERS (§14b.1). Each names the work that loads
  *  it, so "loads when the run reaches work that needs them" is a field a
  *  scheduler can read rather than a sentence a model must interpret. */
-export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScripts = null } = {}) {
+export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScripts = null, published = {} } = {}) {
   return {
     /* SK-2's judgement layers first, so `disclosable` lists what the run is
        INSTRUCTED BY before what it is given to work with. Spread from one
@@ -482,6 +488,15 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
        and the acts it may use and must leave to a member, read from the published catalogue; a stated absence
        while the plane publishes no wizard script proposal act. */
     wizard_authoring: wizardAuthoringLayer(catalog),
+    /* R33 (A LAW; K1474). The doctrine a run looking for the law works under, and the standard proposal, the capture
+       request and the adoption left to a member, read from the published catalogue; a stated absence while the plane
+       publishes no standard proposal act, and deployable only in the mode its load_when names. */
+    legal_lookup: legalLookupLayer(catalog),
+    /* R34 (Q1-5; K1474 (i)-(iii)). The doctrine a member's ask is answered under, with `answers`' checks as the plane
+       publishes them; a stated absence while the plane publishes none. */
+    ask: askLayer(published),
+    /* R35 (K1479, K1502). Loaded only where the asking member's own switch is on, which this pack never reads. */
+    suggestions: suggestionsLayer(),
     wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.wizard_scripts_published,

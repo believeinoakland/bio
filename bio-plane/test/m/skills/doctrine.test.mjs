@@ -306,9 +306,13 @@ test("R24 it holds no gate: across every export and every input, the only refusa
     }
   assert.deepEqual([...refusals], ["AI_RUN_SKILL_VERSION_UNNAMED"]);
   const rendered = pack.renderPack(published());
-  const clauses = Object.values(rendered.disclosed).flatMap((l) => (l.body && Array.isArray(l.body.clauses) ? l.body.clauses : []));
+  const all = Object.values(rendered.disclosed).flatMap((l) => (l.body && Array.isArray(l.body.clauses) ? l.body.clauses : []));
+  const clauses = all.filter((c) => c && typeof c === "object" && "decides" in c);
   assert.equal(clauses.length, CLAUSES.length, "every clause is rendered");
   for (const c of clauses) assert.deepEqual(controlFlowAuthority(c.decides), [], c.id);
+  /* The quoted clauses of the other layers (R28–R35) carry none either. */
+  for (const c of all) for (const s of typeof c === "string" ? [c] : [c.text, ...(c.sentences ?? [])].filter(Boolean))
+    assert.deepEqual(controlFlowAuthority(s), [], s);
   assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "the recommender prompt the pack renders once measured (N345)");
   if (rendered.disclosed.contradiction.body.recommend_prompt !== undefined)
     assert.deepEqual(controlFlowAuthority(rendered.disclosed.contradiction.body.recommend_prompt), []);

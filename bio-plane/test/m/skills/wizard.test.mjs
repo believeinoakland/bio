@@ -22,11 +22,11 @@ const sP = () => section(read(INTERACTION_SOURCE), "P · THE ASSISTANT");
 const s3 = () => section(read(PILOT_SOURCE), "3 · ");
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
 
-test("R32 R5 the wizard_authoring layer, in disclosed after edition_statement and before wizard_scripts: authored, its load_when R32's sentence, its body the checks' sentence of §P (DEC-121) and §3's no-say, no-submit clauses, each found by R21's normaliser", () => {
+test("R32 R5 the wizard_authoring layer, in disclosed after edition_statement and before legal_lookup: authored, its load_when R32's sentence, its body the checks' sentence of §P (DEC-121) and §3's no-say, no-submit clauses, each found by R21's normaliser", () => {
   const { disclosed, resident } = renderPack(published({ catalog: wizardCatalog() }));
   const keys = Object.keys(disclosed);
   assert.equal(keys.indexOf("wizard_authoring"), keys.indexOf("edition_statement") + 1, "after edition_statement");
-  assert.equal(keys.indexOf("wizard_scripts"), keys.indexOf("wizard_authoring") + 1, "and before wizard_scripts");
+  assert.equal(keys.indexOf("legal_lookup"), keys.indexOf("wizard_authoring") + 1, "and before legal_lookup (R33)");
   const layer = disclosed.wizard_authoring;
   assert.equal(layer.sourcing, "authored");
   assert.equal(SOURCING.wizard_authoring, "authored");
