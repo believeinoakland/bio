@@ -205,7 +205,7 @@ export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap"
    references and a member's notice are seen by their owner alone. Signer keys are public halves the group already
    publishes (`groupkeyspublic`), so they export; the bootstrap row is an administrator's fact. The group key's
    tables are `sight: "group"`: record-core's R21 offers no administrator sight, and no read answers the key whatever
-   its sight; `groupKeyState` answers its state to administrators alone (R34; J1). */
+   its sight; `groupKeyState` answers its state to administrators alone (R34; K1760). */
 const CLASSES = { purge: "exempt", expunge: "none", derive: "stored", version_chain: false };
 export const CREDENTIALS_TABLES = Object.freeze([
   ["credentials", "never", "group"], ["sessions", "never", "group"], ["bootstrap", "admin-only", "group"],

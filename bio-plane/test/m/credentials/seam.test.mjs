@@ -135,7 +135,7 @@ test("R18 R30 R34 the declaration: every table declared once by credentials thro
     assert.equal(cls[t].export, "never", t);
   assert.equal(cls.account_references.sight, "owner");
   /* R34: the group key never exported; record-core's R21 offers no administrator sight, so its tables are the group's
-     and the key is answered by no read (J1) */
+     and the key is answered by no read (K1760) */
   assert.deepEqual([cls.group_key.export, cls.group_key.sight], ["never", "group"]);
   assert.deepEqual(CREDENTIALS_TABLES.map((t) => t.name), CREDENTIALS_EXEMPT_TABLES);
   /* once */
