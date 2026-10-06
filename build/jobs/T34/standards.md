@@ -22,3 +22,7 @@
 - `format`: 0 failures. `architecture standards`: 0 failures. `coverage standards`: 32 of 32, 0 failures. `ownership standards tranche/T34`: 6 files, 0 failures.
 
 Size (session_01XE4Db8KTzHZSG8kemteGy9): test runs 22, module lines 2339
+
+## J1 · COMPLETE
+
+T34-21 applied: R23 lawPropose labels through proposalLabel(…, "law_relation"); R31 isPortionPath exported (R18 reads it); R32 standardsAt / standardsWithPortion. standards 51/0; its users green except calculations (R4 per K1732; R19 at registrations.test.mjs:46 intermittent, 3 of 6 runs; this looks like an order assumption over opaque CALC ids, not standards; see record). Checks: format, architecture, coverage 32/32, ownership: 0 failures. Plane bundle made stale. Record: build/jobs/T34/standards.md.
