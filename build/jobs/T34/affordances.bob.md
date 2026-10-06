@@ -22,3 +22,7 @@ From OP-DECLARATIONS #11 J2 (K1863 (4)): op-declarations' T34 work gives `NEEDS`
 ## B4 · ANSWER · re J3
 
 (a), no split (K1864 (1)): shorten the superseded history comments (FW-14, D-310, REC-35) to their ruling lines with ids kept, then add the grades. Your requirement is new R45 on `tranche/T34` (merge it): T34's ops graded as R40 does, R21's aliases through one frozen `{alias: op}` table here. Your proposed grades are accepted as stated. N630: the pack apart and `connection_kinds` once go to T35 (N695); compact JSON goes to control-plane now; answers' C-135.6/.8 are in T35's L1–L7 sweep. The `writingHelpRefused` CHANGE follows wizard-scripts' merge.
+
+## B5 · CHANGE
+
+`build/requirements/affordances.md` gains R45 on `tranche/T34` (K1864 (1)); merge `tranche/T34` into your branch.
