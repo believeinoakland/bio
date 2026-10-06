@@ -1,8 +1,8 @@
 /* answers — the plane's half of the assistant (requirements: `build/requirements/answers.md`; T33-53; K1450, K1474,
  * K1479, K1481, K1502, K1505 (14)). What an ask may read (R1, R2: `./scope.mjs`), what an answer must look like and the
  * checks every answer passes before a member sees it (R3–R6, R22: `./check.mjs`), the rule services every rule comes
- * from (R7–R12: `./rules.mjs`), the unattributed tallies (R13, R14), and a member's standing questions (R15–R21:
- * `./standing.mjs`). The model only understands the member's words, writes queries, quotes and translates; it never
+ * from (R7–R12: `./rules.mjs`), the unattributed tallies (R13, R14), and a member's standing questions (R15–R21, R26,
+ * R27: `./standing.mjs`). The model only understands the member's words, writes queries, quotes and translates; it never
  * answers from its own knowledge.
  *
  * REACHED as `answersOf(host, deps)`: one instance per host, created on the first call with `deps`, its tables made
@@ -10,9 +10,12 @@
  * `not_held` or is skipped where a read needs it):
  *   record, membership   record-core and membership on the same host unless a test passes its own.
  *   standards, content, events, entities, lines, people, duties, calculations   the owners the rule services read.
- *   retrieval            the saved query's runner (its R70); query   query-language's `savedForm` (its R30).
- *   relations            the relations retrieval compiles with (its R68), for R15's saved-form check.
- *   credentials          the author's account and standing switch (its R23, R25).
+ *   retrieval            the saved query's runner (its R70), the relations it compiles with (its R72) and the
+ *                        governing zone (its R69), so a question is checked and run on one day boundary (N584).
+ *   query                query-language's `savedForm` (its R30).
+ *   relations, zone      each a function: the relations and the zone, used only where `retrieval` gives none.
+ *   credentials          the account that serves the author (its R35, `accountFor`) and the standing question's
+ *                        grant (its R32, `aiGrantMintStanding`), for R19.
  *   ceilingRefusal       `(member, at)` → null or ai-runs' ceiling refusal (its R50), until ai-runs merges.
  *   combine              `jurisdictions.combine` (default), over the active profiles (`record-core` R26).
  *   now                  the module's clock, an ISO instant (default: the wall clock).
@@ -64,6 +67,7 @@ export class Answers {
     this.logs = new Map();
     this.services = new Map();
     this.answerer = null;
+    this.setListeners = [];
     migrateAnswers(this.sql);
   }
 
@@ -95,9 +99,24 @@ export class Answers {
     const r = comb(Array.isArray(list) ? list : []);
     return r && r.ok ? r.view : null;
   }
-  /** The governing time zone (`jurisdictions` R41), or null. */
-  zone() { const v = this.view(); return v && v.time_zone && filled(v.time_zone.value) ? v.time_zone.value : null; }
-  relations() { const r = this.deps.relations; try { return typeof r === "function" ? r() : r ?? null; } catch { return null; } }
+  /** The governing time zone, as retrieval answers it (its R69: local-facts' governing value first, then the active
+   *  profiles'), so a question is set, checked, counted and run on the day boundary its saved query compiles on (N584).
+   *  Without retrieval's, `deps.zone`, else the active profiles' `time_zone` (`jurisdictions` R41); or null. */
+  zone() {
+    const own = (z) => (filled(z) ? z : null);
+    const r = this.dep("retrieval");
+    if (r && typeof r.zone === "function") { try { return own(r.zone()); } catch { return null; } }
+    if (typeof this.deps.zone === "function") { try { return own(this.deps.zone()); } catch { return null; } }
+    const v = this.view();
+    return v && v.time_zone ? own(v.time_zone.value) : null;
+  }
+  /** R15 (N584): the relations retrieval compiles a run with (its R72), so the saved-form check refuses no field a run
+   *  reads; without retrieval's, `deps.relations`; or null. */
+  relations() {
+    const r = this.dep("retrieval");
+    const fn = r && typeof r.relations === "function" ? () => r.relations() : this.deps.relations;
+    try { return typeof fn === "function" ? fn() ?? null : fn ?? null; } catch { return null; }
+  }
   dayStart(day, zone) { try { const r = dayRange(day, day, zone); return r && r.start ? r.start : null; } catch { return null; } }
 
   /* ===================================================================== *
@@ -260,6 +279,19 @@ export class Answers {
     if (bad) return bad;
     this.answerer = { module, fn };
     return { ok: true, module };
+  }
+
+  /** R27 (N605; K1666): one listener per module, told `{question, due}` after a standing question is set or ended by
+   *  its author, so `scheduler` re-arms R17's wake. Refused through `membership.listenerRefusal`. */
+  onStandingSet(module, fn) {
+    const bad = listenerRefusal(this.setListeners, module, fn);
+    if (bad) return bad;
+    this.setListeners.push({ module, fn });
+    return { ok: true, module };
+  }
+  /** R27: each listener once, after the act; one that throws never undoes it, nor stops the others. Writes nothing. */
+  tellStanding(question, due) {
+    for (const l of this.setListeners) { try { l.fn({ question, due }); } catch { /* the act stands (R27) */ } }
   }
 
   standingQuestionSet(a) { return S.standingQuestionSet(this, a); }

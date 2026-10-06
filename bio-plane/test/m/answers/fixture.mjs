@@ -23,6 +23,9 @@ export function answersWorld({ rules = true, deps: more = {}, ...opts } = {}) {
     credentials: w.credentials, now: () => w.clock.now,
     ceilingRefusal: (member, at) => { w.ceiling.asked.push({ member, at }); return w.ceiling.refusal; }, ...more };
   w.a = answersOf(w.host, w.deps);
+  /* the plane makes every module's tables at boot; here retrieval's zone (its R69) meets local-facts on its first read,
+     so it is read once now, before any test takes its snapshot */
+  w.retrieval.zone();
   if (rules) w.record.setSetting("answers_rule_services", true, "admin");
   w.at = (iso) => { w.clock.now = iso; w.clock.ms = Date.parse(iso); };
   return w;
