@@ -63,7 +63,7 @@ screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it 
 
 # --- the record's subjects
 screen('person', 'Person', 'working', 'Positions, career, credentials, memberships, interests, statements; same person?',
-  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Claim the same person'),('withdrawidentityclaim','Withdraw a claim'),('followregister','Follow a register'),('expunge','Remove where the law requires')], [10])
+  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Claim the same person'),('withdrawidentityclaim','Withdraw a claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
 screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',

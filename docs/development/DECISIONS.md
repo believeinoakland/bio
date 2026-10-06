@@ -2258,3 +2258,17 @@ response: **Decided by the design session, 2026-10-06, beneath K1618:** (1) **Co
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `BIO_Intake_Doctrine_v1_1.md` (after DEC-97's held-captures list); `layouts.html` (held captures; question); `screens/registry.src.py` (question gains `heldrestore` and `search`).
 owed: (BOB, N587) capture R77 and R79 answer, per held document, the question it was captured for and its asker (from capture-requests R8, R10) when the viewer may see the question, else that it is withheld; R79 requires a reason when an open question waits on the document and records the question; inquiry gains the wait "a document it waits on was set aside", read on the question and its project's list, never raised as a queue item; R81's restore records its reason in the same history.
+
+### DEC-142 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (BOB's B51, from AFFORDANCES #20, K1686)
+for: bob-session
+question: Should `personexpunge` (people R12: removes a person's recorded value; cannot be undone), graded reasoned by affordances R27, be a named exception that opens the full dialog stating its consequence, as DEC-113 made of `actionholdrelease`?
+why it is Bob's: it is not: Bob already ruled that an act whose effect cannot be taken back opens the full dialog stating that effect, whatever its rung, and that the rung's name stays honest (DEC-88; principle 4.4). Applying that rule to one act is design detail, decided by the design session (P17).
+provisional: affordances R27 (reasoned, from the owner's NO_REASON); DEC-113 (the hold release's consequence statement).
+alternative: a reason field in place only (the reasoned rung's ordinary friction).
+recommendation: as BOB recommends: yes, DEC-113's tier.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06, applying DEC-88:** an expunge opens the full dialog, as DEC-113's hold release does. It states what value is removed and from where (the person's page, every question that cited it, every export); that it cannot be undone, by the member or anyone; that a marker stays in its place ("Removed where the law requires, <date>, by <member>"); and that published cases change only through the docket. The member confirms with a reason naming the law or order that requires it ("Remove it for good, with this reason"). The rung stays as affordances grades it (reasoned), its name honest; the button shows it. Drawn on the person screen of layouts.html; the screen registry now names the op `personexpunge`.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `BIO_Interaction_Constructs_v0_1.md` §F; `layouts.html` (person); `screens/registry.src.py`.
+owed: (BOB) affordances: `personexpunge` a named exception beside DEC-113's `actionholdrelease`, with its consequence statement as above; the screen registry's person screen names `personexpunge` (was the function `expunge`).

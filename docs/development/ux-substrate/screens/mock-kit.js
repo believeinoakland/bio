@@ -26,7 +26,7 @@ const WEIGHT = {
   bootstrap:2, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
   filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, owed_memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,
   owed_noteadd:1, owed_noteconvert:2, owed_translationdraft:1, owed_translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,
-  retire:3, planclose:3, filingapprove:3, expunge:3, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
+  retire:3, planclose:3, filingapprove:3, personexpunge:2, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
   release:4, attest:4, caseratify:4, docketpost:4, signerregisterown:4, claim:4, docketfile:2,
   publish:5,

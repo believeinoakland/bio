@@ -1086,12 +1086,11 @@
      ]
     },
     {
-     "op": "expunge",
-     "label": "Remove where the law requires",
-     "status": "function",
+     "op": "personexpunge",
+     "label": "Remove a fact where the law requires",
+     "status": "declared",
      "modules": [
-      "people",
-      "record-core"
+      "people"
      ]
     }
    ],
