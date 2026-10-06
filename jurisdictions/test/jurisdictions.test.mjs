@@ -601,8 +601,9 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.deepEqual(f.covers, ["City of Oakland", "Alameda County"]);
   assert.equal(f.test, false);
   /* spaces: labels, forms, kinds, floors with their system */
-  /* the snapshot's four spaces, and T33's person scheme for Legistar's PersonId and proceeding numbers (R3) */
-  assert.deepEqual(Object.keys(f.spaces).sort(), ["enactment", "fund", "parcel", "person", "proceeding", "project"]);
+  /* the snapshot's four spaces, T33's person scheme for Legistar's PersonId and proceeding numbers, and T34's Legistar
+     BodyId and OfficeRecordId (R3, R61) */
+  assert.deepEqual(Object.keys(f.spaces).sort(), ["body", "enactment", "fund", "office", "parcel", "person", "proceeding", "project"]);
   for (const [sp, old] of [["enactment", "cms"], ["project", "project"], ["fund", "fund"], ["parcel", "apn"]]) {
     assert.equal(f.spaces[sp].label, legacy.ID_SPACES[old].label, sp);
     assert.deepEqual(f.spaces[sp].forms.map((x) => x.form), legacy.ID_SPACES[old].forms.map((x) => x.form), sp);
@@ -680,10 +681,12 @@ test("R22 the test profile: test true, every basis TEST, every section and vocab
     for (const form of t.spaces[sp].forms) assert.ok(!f.spaces[sp].forms.some((x) => x.form === form.form || x.pattern.re === form.pattern.re), `${sp} ${form.form}`);
   }
   assert.ok(t.spaces.enactment.kinds.length);
+  /* a pattern key's entries differ in their patterns; a data key's (R58, R60) in their values */
+  const differs = (e) => (e.pattern ? e.pattern.re : JSON.stringify({ ...e, basis: undefined }));
   for (const key of Object.keys(f.vocabulary)) {
     assert.ok(t.vocabulary[key] && t.vocabulary[key].length, key);
-    const fr = new Set(f.vocabulary[key].map((e) => e.pattern.re));
-    for (const e of t.vocabulary[key]) assert.ok(!fr.has(e.pattern.re), `${key} ${e.pattern.re}`);
+    const fr = new Set(f.vocabulary[key].map(differs));
+    for (const e of t.vocabulary[key]) assert.ok(!fr.has(differs(e)), `${key} ${differs(e)}`);
   }
   assert.notEqual(t.practice.minutes_due_days.value, f.practice.minutes_due_days.value);
   const hosts = (p) => new Set([...p.systems.flatMap((s) => s.hosts), ...p.mixed_hosts.map((m) => m.host)]);
@@ -944,7 +947,7 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   /* no measurement names any of its venues' evidence standards: absent, never guessed (its calendar is R45's) */
   assert.ok(f.action_kinds.every((k) => k.evidence === undefined));
   /* re-based on their primary sources in T33 (R30, R56) */
-  for (const c of f.counterparties.filter((x) => x.oversight)) assert.equal(c.basis, "2026-10-05 time-law", c.role);
+  for (const c of f.counterparties.filter((x) => x.oversight)) assert.match(c.basis, /^2026-10-05 time-law(, 2026-10-05 legistar-events)?$/, c.role);
 });
 
 /* ============================================================================================== */
