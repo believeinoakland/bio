@@ -1,6 +1,6 @@
 # BOB to explore (T34)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
