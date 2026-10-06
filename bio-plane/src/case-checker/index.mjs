@@ -4,7 +4,7 @@
  * Anybody can check a published case, and recreate its findings, without a Civicsmith copy. This module is the one
  * checker:
  *
- *   checkCaseFile        R1–R11, R18 (`./check.mjs`): a pure function Civicsmith runs on import (`case-import`);
+ *   checkCaseFile        R1–R11, R18, R20 (`./check.mjs`): a pure function Civicsmith runs on import (`case-import`);
  *   the program          R13 (`./main.mjs`, built by `./build-program.mjs` into `./program.mjs`): the same code, one
  *                        file anyone runs offline with nothing to install;
  *   the specification    R14 (`./spec.mjs`): the readable text of each case-file format version;
@@ -18,8 +18,8 @@ import { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
 import { publicReadOf } from "../public-read/index.mjs";
 
 export { checkCaseFile, RESULTS, RESULT_WORDS, CHECKER_VERSIONS, RECREATION_STATEMENT, REST_ON_ANOTHER_GROUP_STATEMENT,
-         KEYS_NOT_CHECKED_STATEMENT, CHECKS_VERSION_STATEMENT, accountStatement, keyFingerprint, readCaseFile,
-         textAtExtent } from "./check.mjs";
+         KEYS_NOT_CHECKED_STATEMENT, CHECKS_VERSION_STATEMENT, NOT_RECOMPUTED_STATEMENT, CALCULATION_RESULTS, accountStatement,
+         keyFingerprint, readCaseFile, textAtExtent } from "./check.mjs";
 export { runProgram } from "./main.mjs";
 export { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
 export { PROGRAM, PROGRAM_SHA256, PROGRAM_BODY_SHA256 } from "./program.mjs";
