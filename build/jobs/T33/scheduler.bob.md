@@ -17,3 +17,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1666: 1-3 and 5-6 accepted as you state them (UTC day without a zone, said zone: null; 1000 ms to money-checks named as its siblings', its own default is N604; the missing arming notices are N605). modules.json now holds your uses. 4: following gains R19 onFollowed(module, fn), fn({follow, due}) after a follow is recorded, ended or re-dated, after the act's transaction; FOLLOWING #1 is told. Register it, coded to R19 until following merges, then re-point. Merge tranche/T33 for both.
+
+## B3 · CHANGE
+
+K1667: monitoring is merged into tranche/T33 (T33-78: R34/R50 on the view's local day; R50's wake is the start of the local day after the earliest pending date; no zone, no wake). Merge tranche/T33. Your test plane.test.mjs:109 (R5, R9, 'the real alarm marks it overdue') is red on the tranche (it was before this merge too): its plane instance holds no jurisdiction profile, so actions R33 has no zone and refuses every mark. Fix it in your job: set jurisdiction_profiles on that instance to a profile with a time_zone, and date the entry before the local day in that zone.
