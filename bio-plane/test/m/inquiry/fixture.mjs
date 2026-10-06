@@ -61,7 +61,8 @@ const STRENGTH_COLUMNS = ["inquiry_capture_strength TEXT", "inquiry_capture_stat
  *  module's findings registered with it as `plane` registers them (R53, `inquiryFindings`). `view`: the active
  *  jurisdiction view the dated waits read their time zone from (R55, R57), a function; absent, the record's own. */
 export function world({ caseMembers = new Set(), published = null, group = "test-group", realRetrieval = false,
-                        legacyColumns = false, bias: withBias = false, view = undefined, standards: withStandards = false } = {}) {
+                        legacyColumns = false, bias: withBias = false, view = undefined, standards: withStandards = false,
+                        duties = undefined } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -112,7 +113,7 @@ export function world({ caseMembers = new Set(), published = null, group = "test
   }
   const k = inquiryOf(host, { record, membership, promotion, content, connections, entities, retrieval, provenance: prov,
                               now: () => clock.now, ...(view !== undefined ? { view } : {}),
-                              ...(standards ? { standards } : {}) });
+                              ...(standards ? { standards } : {}), ...(duties !== undefined ? { duties } : {}) });
   k.migrate();
   if (bias) bias.registerWorkProducts("finding", inquiryFindings(host, bias));
   const raisedCalls = [];

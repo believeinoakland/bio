@@ -187,7 +187,7 @@ test("R38 R4 the rows the module mints are inquiry-grammar's, read with their id
    nothing a refusal could name. Its test arrives with the element (case-authoring or publication). */
 test.todo("R31 a leg naming an opinion case element is refused by name (not yet met: MK-5; no module defines an opinion element or its id yet, K181)");
 
-test("R4 R5 R8 R9 R17 R38 the grammar face re-exports inquiry-grammar's and record-grammar's names as the same bindings, and reads inquiry-grammar's rows, never a copy", async () => {
+test("R4 R5 R8 R9 R38 the grammar face re-exports inquiry-grammar's and record-grammar's names as the same bindings, and reads inquiry-grammar's rows, never a copy", async () => {
   const face = await import("../../../src/inquiry/index.mjs");
   const IG = await import("../../../src/inquiry-grammar/index.mjs");
   const RG = await import("../../../src/record-grammar/index.mjs");
