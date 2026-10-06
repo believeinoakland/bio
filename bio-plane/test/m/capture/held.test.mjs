@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, network, receipt, register, sha, H } from "./fixture.mjs";
-import { captureOps, ACQUIRE_GRADE_NOTE, READ_LIMIT, REASON_MAX } from "../../../src/capture/index.mjs";
+import { captureOps, ACQUIRE_GRADE_NOTE, READ_LIMIT, REASON_MAX, WITHHELD_QUESTION } from "../../../src/capture/index.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { PER_ITEM_MAX } from "../../../src/record-core/index.mjs";
 
@@ -93,7 +93,9 @@ test("R77 (DEC-97 (1)): heldCaptures lists the Information documents at collecte
   assert.deepEqual({ ...one }, { bundle_id: "INFO-1", title: "title INFO-1", project: null,
                                  source: { address: "https://b.example/one", via: "direct", retrieved: "2026-01-01T00:00:00Z" },
                                  collected_since: "2026-01-01T00:00:00Z", age_days: 69,
-                                 eligible: null, eligibility_basis: "no batch-release examination is registered, so eligibility is undetermined" });
+                                 eligible: null, eligibility_basis: "no batch-release examination is registered, so eligibility is undetermined",
+                                 captured_for: null,
+                                 captured_for_basis: "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined" });
   const three = r.held.find((x) => x.bundle_id === "INFO-3");
   assert.deepEqual([three.collected_since, three.age_days, three.source], ["2026-03-01T00:00:00Z", 10, null],
                    "back at collected: aged from when its state last moved; no receipt, no source");
@@ -299,4 +301,207 @@ test("R82 (K1129): an unknown sweep answers 0, as does a sweep that is no string
   assert.equal(thrower.heldCount({ sweep: S }), 3, "negative control: the store readable again answers the count");
   /* negative control: the empty store */
   assert.equal(fresh().c.heldCount({ sweep: S }), 0);
+});
+
+/* ---- R77, R79, R81, R83, R84: the question a held document was captured for (DEC-141 beneath K1618; K1645) ---- */
+
+/* A registered stand-in for `capture-requests` R48's reader: Q-OPEN (m1's, open, seen by everyone) and Q-SHUT (m2's,
+   concluded) were asked for INFO-1; Q-HID (in a project m2 does not take part in, open) for INFO-1 and INFO-2; nothing
+   for INFO-3. Every call is recorded. */
+function capturedFor(c, { module = "capture-requests" } = {}) {
+  const calls = [];
+  const asked = {
+    "INFO-1": [{ question: "Q-OPEN", title: "Budget 2024", asker: "member:m1", open: true, hidden: false },
+               { question: "Q-SHUT", title: "Old question", asker: "member:m2", open: false, hidden: false },
+               { question: "Q-HID", title: "Secret project question", asker: "member:m1", open: true, hidden: true }],
+    "INFO-2": [{ question: "Q-HID", title: "Secret project question", asker: "member:m1", open: true, hidden: true }],
+  };
+  const r = c.registerReader("captured-for", module, (arg) => {
+    calls.push(arg);
+    const seesHidden = arg.viewer === undefined || arg.viewer === "member:m1" || arg.viewer === "class:admin";
+    return { questions: (asked[arg.document] || []).map((q) => {
+      const visible = !q.hidden || seesHidden;
+      return { question: q.question, title: visible ? q.title : null, asker: visible ? q.asker : null, visible, waiting: q.open };
+    }) };
+  });
+  assert.equal(r.ok, true);
+  return calls;
+}
+const OPEN = { question: "Q-OPEN", title: "Budget 2024", asker: "member:m1" };
+const SHUT = { question: "Q-SHUT", title: "Old question", asker: "member:m2" };
+const HID = { question: "Q-HID", title: "Secret project question", asker: "member:m1" };
+const UNDETERMINED_FOR = "no reader of the questions a document was captured for is registered, so the questions it was captured for are undetermined";
+
+test("R83 (DEC-141): the captured-for reader is a third reader slot, registered once at start whoever registers it; a second or malformed registration is refused as the other slots' are; it is handed the document, the viewer and the document's captures", async () => {
+  const { c } = heldWorld();
+  assert.equal(c.registerReader("captured-for", "capture-requests", "not a function").reason, "LISTENER_MALFORMED");
+  assert.equal(c.registerReader("captured-for", "", () => ({ questions: [] })).reason, "LISTENER_MALFORMED");
+  const calls = capturedFor(c);
+  const again = c.registerReader("captured-for", "other", () => ({ questions: [] }));
+  assert.deepEqual([again.ok, again.reason, again.module], [false, "LISTENER_DECLARED", "capture-requests"]);
+  assert.equal(c.registerReader("captured-fur", "x", () => ({})).reason, "UNKNOWN_READER");
+  await c.heldCaptures({ viewer: "member:m2", project: null, now: NOW });
+  const one = calls.find((x) => x.document === "INFO-1");
+  assert.deepEqual(one, { document: "INFO-1", viewer: "member:m2", captures: [H("1")] }, "the bundle id, the viewer and the register's captures");
+});
+
+test("R83 R77: a reader that throws, answers a promise, or answers anything but {questions: [...]} with every entry well formed is no answer: captured_for is null and stated undetermined, never a partial list; with no reader registered, likewise", async () => {
+  const bad = [() => { throw new Error("down"); }, async () => ({ questions: [] }), () => undefined, () => ({ questions: "x" }),
+               () => ({ questions: [{ question: "Q", visible: true, waiting: true }, { question: "", visible: true, waiting: true }] }),
+               () => ({ questions: [{ question: "Q", visible: "yes", waiting: true }] }),
+               () => ({ questions: [{ question: "Q", visible: true }] }), () => ({ questions: [null] })];
+  for (const fn of bad) {
+    const { c } = heldWorld();
+    c.registerReader("captured-for", "capture-requests", fn);
+    const row = (await c.heldCaptures({ viewer: "member:m1", now: NOW })).held.find((x) => x.bundle_id === "INFO-1");
+    assert.equal(row.captured_for, null, String(fn));
+    assert.equal(row.captured_for_basis, "capture-requests did not answer which questions this document was captured for, so they are undetermined");
+  }
+  const { c } = heldWorld();
+  const rows = (await c.heldCaptures({ viewer: "member:m1", now: NOW })).held;
+  assert.ok(rows.length && rows.every((r) => r.captured_for === null && r.captured_for_basis === UNDETERMINED_FOR), "no reader: every row undetermined");
+});
+
+test("R77 R83 (DEC-141 (1)): each held row answers captured_for for the viewer: every question it may see with title and asker, and the one withheld sentence, with no id, title, asker or count, when a question it may not see is among them; captured for nothing answers [] and null", async () => {
+  const { c, rows } = heldWorld();
+  capturedFor(c);
+  const before = everything(rows);
+  const by = async (viewer) => Object.fromEntries((await c.heldCaptures({ viewer, now: NOW })).held.map((r) => [r.bundle_id, r.captured_for]));
+  const m1 = await by("member:m1");
+  assert.deepEqual(m1["INFO-1"], { questions: [OPEN, SHUT, HID], withheld: null }, "m1 sees all three, a concluded question included");
+  assert.deepEqual(m1["INFO-2"], { questions: [HID], withheld: null });
+  assert.deepEqual(m1["INFO-3"], { questions: [], withheld: null }, "captured for no question");
+  const m2 = await by("member:m2");
+  assert.deepEqual(m2["INFO-1"], { questions: [OPEN, SHUT], withheld: WITHHELD_QUESTION }, "the hidden question withheld whole");
+  assert.deepEqual(m2["INFO-2"], { questions: [], withheld: "Captured for a question you may not see" }, "only a hidden question: the sentence alone");
+  assert.ok(!JSON.stringify(m2).includes("Q-HID") && !JSON.stringify(m2).includes("Secret"), "no id or title of a hidden question");
+  assert.deepEqual(everything(rows), before, "writes nothing");
+  /* the reader's own leak is not carried: a not-visible entry's title and asker are never shown */
+  const w = heldWorld();
+  w.c.registerReader("captured-for", "capture-requests", () => ({ questions: [
+    { question: "Q-X", title: "leaked title", asker: "member:m9", visible: false, waiting: true },
+    { question: "Q-X", title: "leaked title", asker: "member:m8", visible: false, waiting: true }] }));
+  const leak = (await w.c.heldCaptures({ viewer: "member:m2", now: NOW })).held[0].captured_for;
+  assert.deepEqual(leak, { questions: [], withheld: WITHHELD_QUESTION }, "two hidden askers: one sentence, no count");
+  /* the route reads the stamped viewer */
+  const viaRoute = (await route(c, "heldcaptures", "viewer=member:m2")).held.find((r) => r.bundle_id === "INFO-1");
+  assert.equal(viaRoute.captured_for.withheld, WITHHELD_QUESTION);
+});
+
+test("R79 R83 R84 (DEC-141 (1), (2)): a set-aside reads each document's questions once, before writing, and records every question waiting on it, seen by the viewer or not, with that set-aside; the one reason applies to each in a batch; the answer names captured_for and the waiting questions as the viewer is shown them", () => {
+  const { c, rows } = heldWorld();
+  const calls = capturedFor(c);
+  const a = c.setAside({ ids: ["INFO-1", "INFO-2", "INFO-3"], reason: "wrong year", author: "member:m2", viewer: "member:m2" });
+  assert.equal(a.ok, true);
+  assert.deepEqual(calls.map((x) => x.document), ["INFO-1", "INFO-2", "INFO-3"], "once per document per act");
+  assert.deepEqual(a.documents, [
+    { document: "INFO-1", captured_for: { questions: [OPEN, SHUT], withheld: WITHHELD_QUESTION }, waiting: { questions: [OPEN], withheld: WITHHELD_QUESTION } },
+    { document: "INFO-2", captured_for: { questions: [], withheld: WITHHELD_QUESTION }, waiting: { questions: [], withheld: WITHHELD_QUESTION } },
+    { document: "INFO-3", captured_for: { questions: [], withheld: null }, waiting: { questions: [], withheld: null } }]);
+  const recorded = rows(`SELECT bundle_id, seq, question FROM held_act_questions ORDER BY bundle_id, question`).map((x) => ({ ...x }));
+  assert.deepEqual(recorded, [{ bundle_id: "INFO-1", seq: 1, question: "Q-HID" }, { bundle_id: "INFO-1", seq: 1, question: "Q-OPEN" },
+                              { bundle_id: "INFO-2", seq: 1, question: "Q-HID" }],
+                   "the waiting questions, the one hidden from the actor included; not the concluded Q-SHUT; nothing for INFO-3");
+  /* the reason is required whether or not a question waits (C-118.9), and a refused set reads nothing and records nothing */
+  const w = heldWorld();
+  const wcalls = capturedFor(w.c);
+  const before = everything(w.rows);
+  assert.equal(w.c.setAside({ ids: ["INFO-1"], reason: " ", author: "member:m1", viewer: "member:m1" }).check, "C-118.9");
+  assert.equal(w.c.setAside({ ids: ["INFO-1", "INFO-5"], reason: "r", author: "member:m1", viewer: "member:m1" }).reason, "NOT_COLLECTED");
+  assert.deepEqual(wcalls, [], "a refused act asks the reader nothing");
+  assert.deepEqual(everything(w.rows), before, "nothing written");
+});
+
+test("R79 R83: with no reader registered, or one that does not answer, the set-aside is still made, no question is recorded with it, and the answer says per document that the waiting questions are undetermined", () => {
+  for (const fn of [null, () => { throw new Error("down"); }, () => new Promise(() => {}), () => ({ nope: true })]) {
+    const { c, rows } = heldWorld();
+    if (fn) c.registerReader("captured-for", "capture-requests", fn);
+    const a = c.setAside({ ids: ["INFO-1"], reason: "duplicate", author: "member:m1", viewer: "member:m1" });
+    assert.equal(a.ok, true, "never blocked on another module");
+    const d = a.documents[0];
+    assert.deepEqual([d.document, d.captured_for, d.waiting], ["INFO-1", null, null]);
+    assert.match(d.waiting_basis, /undetermined/);
+    assert.match(d.captured_for_basis, /undetermined/);
+    assert.equal(rows(`SELECT count(*) n FROM held_act_questions`)[0].n, 0, "no question recorded");
+    assert.equal(rows(`SELECT count(*) n FROM held_acts`)[0].n, 1, "the set-aside itself is recorded");
+  }
+});
+
+test("R81 R84 (DEC-141 (4); K1618): a restore is recorded with every question its undone set-aside was recorded with, after it in the same history, with its own reason, who and when; any member who may see the document restores it, the asker or another", () => {
+  const { c, rows } = heldWorld();
+  capturedFor(c);
+  assert.equal(c.setAside({ ids: ["INFO-1"], reason: "wrong year", author: "member:m2", viewer: "member:m2" }).ok, true);
+  /* the reader is not consulted again on restore: the questions carried are those of the set-aside undone */
+  const r = c.restoreHeld({ ids: ["INFO-1"], reason: "it is the right year", author: "member:m1", viewer: "member:m1" });
+  assert.equal(r.ok, true);
+  assert.deepEqual(rows(`SELECT seq, question FROM held_act_questions WHERE bundle_id = 'INFO-1' ORDER BY seq, question`).map((x) => ({ ...x })),
+                   [{ seq: 1, question: "Q-HID" }, { seq: 1, question: "Q-OPEN" }, { seq: 2, question: "Q-HID" }, { seq: 2, question: "Q-OPEN" }]);
+  /* a set-aside made with no question recorded is restored with none */
+  const w = heldWorld();
+  assert.equal(w.c.setAside({ ids: ["INFO-1"], reason: "dup", author: "member:m1" }).ok, true);
+  capturedFor(w.c);
+  assert.equal(w.c.restoreHeld({ ids: ["INFO-1"], reason: "no", author: "member:m2", viewer: "member:m2" }).ok, true, "another member, not the actor");
+  assert.equal(w.rows(`SELECT count(*) n FROM held_act_questions`)[0].n, 0);
+  /* set aside again while the question waits: recorded again */
+  assert.equal(c.setAside({ ids: ["INFO-1"], reason: "after all", author: "member:m2", viewer: "member:m2" }).ok, true);
+  assert.equal(rows(`SELECT count(*) n FROM held_act_questions WHERE bundle_id = 'INFO-1' AND seq = 3`)[0].n, 2);
+});
+
+test("R84 (DEC-141 (3), (4)): heldActsOf answers every set-aside and restore recorded with a question, oldest first, each with its reason, who and when, and per document whether its latest act is a set-aside; writes nothing, makes no queue item", () => {
+  const { c, rows } = heldWorld();
+  capturedFor(c);
+  c.setAside({ ids: ["INFO-1", "INFO-2"], reason: "wrong year", author: "member:m2", viewer: "member:m2" });
+  rows(`UPDATE held_acts SET at = '2026-03-01T00:00:00Z'`);
+  c.restoreHeld({ ids: ["INFO-1"], reason: "right year", author: "member:m1", viewer: "member:m1" });
+  rows(`UPDATE held_acts SET at = '2026-03-02T00:00:00Z' WHERE seq = 2`);
+  const before = everything(rows);
+  const h = c.heldActsOf({ question: "Q-HID", viewer: "member:m1" });
+  assert.deepEqual(h.acts, [
+    { document: "INFO-1", act: "set_aside", reason: "wrong year", author: "member:m2", at: "2026-03-01T00:00:00Z" },
+    { document: "INFO-2", act: "set_aside", reason: "wrong year", author: "member:m2", at: "2026-03-01T00:00:00Z" },
+    { document: "INFO-1", act: "restore", reason: "right year", author: "member:m1", at: "2026-03-02T00:00:00Z" }]);
+  assert.deepEqual(h.documents, [{ document: "INFO-1", set_aside: false }, { document: "INFO-2", set_aside: true }]);
+  assert.deepEqual([h.ok, h.question, h.limit, h.truncated, h.next], [true, "Q-HID", READ_LIMIT.default, false, null]);
+  assert.deepEqual(c.heldActsOf({ question: "Q-OPEN", viewer: "member:m1" }).acts.map((a) => [a.document, a.act]),
+                   [["INFO-1", "set_aside"], ["INFO-1", "restore"]]);
+  assert.deepEqual(c.heldActsOf({ question: "Q-SHUT", viewer: "member:m1" }).acts, [], "a concluded question waited on nothing");
+  assert.deepEqual(c.heldActsOf({ question: "Q-NONE" }).acts, [], "nothing recorded: an empty history");
+  for (const question of [null, undefined, "", 7]) assert.deepEqual(c.heldActsOf({ question }).acts, [], String(question));
+  assert.deepEqual(everything(rows), before, "writes nothing");
+});
+
+test("R84: an act on a document the viewer may not see is left out, unannounced and uncounted; no viewer through a stamped call sees nothing; paged by `after` over every act once, at most `limit`; never throws", () => {
+  const { c, s, rows } = heldWorld();
+  capturedFor(c);
+  /* INFO-4 sits in PROJ-1, which m2 does not take part in */
+  rows(`INSERT INTO held_acts (bundle_id, seq, act, reason, author, at) VALUES ('INFO-4', 1, 'set_aside', 'in the project', 'member:m1', '2026-02-01T00:00:00Z')`);
+  rows(`INSERT INTO held_act_questions (bundle_id, seq, question) VALUES ('INFO-4', 1, 'Q-OPEN')`);
+  c.setAside({ ids: ["INFO-1", "INFO-2"], reason: "r", author: "member:m1", viewer: "member:m1" });
+  c.restoreHeld({ ids: ["INFO-1"], reason: "back", author: "member:m1", viewer: "member:m1" });
+  const m1 = c.heldActsOf({ question: "Q-OPEN", viewer: "member:m1" });
+  assert.deepEqual(m1.acts.map((a) => a.document), ["INFO-4", "INFO-1", "INFO-1"]);
+  const m2 = c.heldActsOf({ question: "Q-OPEN", viewer: "member:m2" });
+  assert.deepEqual(m2.acts.map((a) => a.document), ["INFO-1", "INFO-1"], "INFO-4 left out");
+  assert.ok(!JSON.stringify(m2).includes("INFO-4") && !JSON.stringify(m2).includes("in the project"), "unannounced");
+  assert.deepEqual(c.heldActsOf({ question: "Q-OPEN", viewer: "" }).acts, [], "an absent viewer sees nothing");
+  assert.deepEqual(c.heldActsOf({ question: "Q-OPEN", viewer: "junk" }).acts, []);
+  assert.equal(c.heldActsOf({ question: "Q-OPEN" }).acts.length, 3, "an in-process caller passing no viewer reads whole");
+  /* paging */
+  const whole = c.heldActsOf({ question: "Q-OPEN", viewer: "member:m1" }).acts;
+  const seen = [];
+  let after = null;
+  for (let n = 0; n < 10; n++) {
+    const p = c.heldActsOf({ question: "Q-OPEN", viewer: "member:m1", limit: 1, after });
+    assert.ok(p.acts.length <= 1);
+    seen.push(...p.acts);
+    if (!p.truncated) break;
+    after = p.next;
+  }
+  assert.deepEqual(seen, whole);
+  assert.equal(c.heldActsOf({ question: "Q-OPEN", after: "x" }).reason, "BAD_CURSOR");
+  assert.equal(c.heldActsOf({ question: "Q-OPEN", limit: 5000 }).limit, READ_LIMIT.max);
+  /* a store that cannot be read: no list, never a throw */
+  s.db.exec(`DROP TABLE held_act_questions`);
+  const broken = c.heldActsOf({ question: "Q-OPEN" });
+  assert.deepEqual([broken.ok, broken.acts], [false, null]);
 });

@@ -476,6 +476,8 @@ test("R74 (N418): every statement that changes the store, from every writer this
   await as("doorbellRefused", () => c.doorbellRefused({}));
   s.db.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
              VALUES ('INFO-9', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
+  /* a waiting question, so the set-aside and the restore also write the questions recorded with them (R79, R81) */
+  c.registerReader("captured-for", "capture-requests", () => ({ questions: [{ question: "Q-1", title: "t", asker: "member:m1", visible: true, waiting: true }] }));
   await as("setAside", () => assert.equal(c.setAside({ ids: ["INFO-9"], reason: "r", author: "member:m1" }).ok, true));
   await as("restoreHeld", () => assert.equal(c.restoreHeld({ ids: ["INFO-9"], reason: "r", author: "member:m1" }).ok, true));
   s.sql.exec = exec;
