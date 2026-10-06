@@ -41,3 +41,7 @@ T34-87 (DEC-149; K1811, K1821, B2): seven translations re-worded, nothing else c
 - `format`: 129 modules, 0 failures. `architecture`: 10 product files, 0 failures. `coverage`: 19 of 19 live ids, 0 failures. `ownership`: 7 files changed, 0 failures.
 
 Size (session_01881r9vqe42oZehxYxDvLfc): test runs 9, module lines 882
+
+## J3 · REPORT
+
+For CONTROL-PLANE (T34-60): (1) the door calls admission's new `queryGate(url, op)` after R1 and before `aiCredentialPresented` (R28's order; K1861 (6)); without it R17/R19 hold only at admission's interface. (2) `catalogue-end.test.mjs` (`rows-before-r43.json`) pins the old translations of admission's seven DEC-149 rows: C-38.1, C-38.3, C-38.8, C-78.1, C-29.8, C-32.17, C-64.4. That test is already red (K1789); these join T34-60's re-pin. Its suite is otherwise unchanged by admission (163/168 with my branch, 162/168 on the tranche; every red is the tranche's own).
