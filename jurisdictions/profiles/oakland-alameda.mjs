@@ -27,9 +27,16 @@
  *                                  with no primary source is absent, never `UNMEASURED` (R44).
  *   meeting markers, body variants Legistar's own body names (`measures-T33/legistar-events.md` §1–§2, 2026-10-05)
  *   lawful_demands                 Gov. Code §7928.215 as K1493 rules it (R53)
+ *   Legistar's ids (T34)           the `body` and `office` spaces, their schemes and the counterparties' BodyIds, from
+ *                                  legistar-reader's captured `bodies` and `officerecords` (2026-10-05; R61). No
+ *                                  `member_types`: the measured MemberTypes (Member, Chair) sit on elected and
+ *                                  appointed holders alike, so none maps to one capacity (R60, R27). No `vote_values`:
+ *                                  two captured roll calls show only Aye and Excused, not the whole set (R58).
  *
  * Plain data: patterns are `{re, flags?}` with a JavaScript regular-expression source. */
 const R = String.raw;
+/* The organisation the City's offices are part of (Charter §§200, 403, 504; time-law §2), by name and kind (R59). */
+const CITY = { label: "City of Oakland", kind: "institution", ids: [] };
 
 export default {
   id: "oakland-alameda",
@@ -80,6 +87,22 @@ export default {
       label: "person identifier, by scheme",
       forms: [
         { form: "legistar-person", pattern: { re: R`^(\d{1,7})$` }, normal: [{ group: 1 }], clean: { spaces: "remove" },
+          basis: "2026-10-05 legistar-events" },
+      ],
+    },
+    /* A Legistar BodyId and OfficeRecordId (`/v1/oakland/bodies`, 151 bodies, 1–283; `/v1/oakland/officerecords`, 1,262
+       records, 1–1552; read 2026-10-05, legistar-events §7): a body's number and one seat's holding (N569, N613). */
+    body: {
+      label: "body number in the legislative record",
+      forms: [
+        { form: "legistar-body", pattern: { re: R`^(\d{1,6})$` }, normal: [{ group: 1 }], clean: { spaces: "remove" },
+          basis: "2026-10-05 legistar-events" },
+      ],
+    },
+    office: {
+      label: "office record number in the legislative record",
+      forms: [
+        { form: "legistar-office-record", pattern: { re: R`^(\d{1,7})$` }, normal: [{ group: 1 }], clean: { spaces: "remove" },
           basis: "2026-10-05 legistar-events" },
       ],
     },
@@ -338,16 +361,25 @@ export default {
      are absent, undetermined (R27, K925). Each office rests on its primary source (time-law §2): Charter §504(e)
      (an appointed Director of Finance), Charter §200 (eight elected Councilmembers), Penal Code §§888, 925a (the
      grand jury, which may examine any city's books), Charter §403(1) (the elected City Auditor), Cal. Const. art. V
-     §11 (the elected Controller). */
+     §11 (the elected Controller). The City's three offices carry their Legistar BodyId (`/v1/oakland/bodies`, read
+     2026-10-05): the Council's own body (1, "Meeting of the Oakland City Council", whose variants the body-variant map
+     names `city_council`), and the Auditor's and Finance's Requestor bodies, whose names are written here as Legistar
+     gives them (16, 171; K1690). No source read gives the City an identifier in a scheme this profile holds, so `within`
+     names it with none. No office record measured is a counterparty's (they are the Council's and committees' seats). */
   counterparties: [
-    { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "2026-10-05 time-law" },
-    { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "2026-10-05 time-law" },
+    { role: "Controller", body: "Finance Department", level: "city", elected: false,
+      ids: { body: { scheme: "legistar_body_id", id: "171" } }, within: CITY,
+      basis: "2026-10-05 time-law, 2026-10-05 legistar-events" },
+    { role: "City Council", body: "Oakland City Council", level: "city", elected: true,
+      ids: { body: { scheme: "legistar_body_id", id: "1" } }, within: CITY, organisation: "city_council",
+      basis: "2026-10-05 time-law, 2026-10-05 legistar-events" },
     { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "2026-10-05 time-law" },
     /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
-    { role: "City Auditor", body: "Office of the City Auditor, City of Oakland", level: "city", elected: true, oversight: true,
+    { role: "City Auditor", body: "Office Of The City Auditor", level: "city", elected: true, oversight: true,
       hours: { weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:30", close: "17:00" })),
         status: "researched", basis: "M-192" },
-      basis: "2026-10-05 time-law" },
+      ids: { body: { scheme: "legistar_body_id", id: "16" } }, within: CITY,
+      basis: "2026-10-05 time-law, 2026-10-05 legistar-events" },
     { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "2026-10-05 time-law" },
   ],
   action_kinds: [
@@ -432,10 +464,15 @@ export default {
     { key: "ccp_12", rule: "exclude_first_include_last", citation: "Cal. Code Civ. Proc. § 12; Cal. Gov. Code § 6800",
       status: "researched", basis: "2026-10-05 time-law" },
   ],
-  /* Legistar's PersonId, the register that issues it (legistar-events §1; B1b.4). */
+  /* Legistar's PersonId, BodyId and OfficeRecordId, the register that issues them (legistar-events §1, §7; B1b.4, N569,
+     N613). An office record is one seat's holding: person × body × dates, the source's own key. */
   identifier_schemes: [
     { scheme: "legistar_person_id", label: "Legistar PersonId", entity_kinds: ["person"], space: "person", form: "legistar-person",
       systems: ["oakland.legistar"], basis: "2026-10-05 legistar-events" },
+    { scheme: "legistar_body_id", label: "Legistar BodyId", entity_kinds: ["body"], space: "body", form: "legistar-body",
+      systems: ["oakland.legistar"], basis: "2026-10-05 legistar-events" },
+    { scheme: "legistar_office_record_id", label: "Legistar OfficeRecordId", entity_kinds: ["office"], space: "office",
+      form: "legistar-office-record", systems: ["oakland.legistar"], basis: "2026-10-05 legistar-events" },
   ],
   /* The budget's keys (money-people §3; legistar-events §3): fund and org codes stable cycle to cycle, departments a
      dated grouping recoded as DP codes from FY19-21. */

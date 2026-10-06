@@ -7,7 +7,9 @@
  * Modules that take local facts are tested against it (`build/layers.md`, "No jurisdiction in the product",
  * rule 3). T33's sections and fields (R57) are here too, with values unlike the first profile's: two closure lists
  * with a rule naming one and observing the other, a one-day weekend, a venue's cutoff, outages and receipt rule,
- * every unit, direction and anchor, fiscal years, law ranks, proceedings, schemes, a lawful demand, recurrences. */
+ * every unit, direction and anchor, fiscal years, law ranks, proceedings, schemes, a lawful demand, recurrences. T34's (R62):
+ * vote values, response statuses, a MemberType map, a counterparty with ids, within and organisation, and schemes for a
+ * body, a seat and an institution. */
 const R = String.raw;
 
 /* R40: a template's whole attribution, as filing-templates reads a profile template (its R15); every blank in
@@ -68,6 +70,13 @@ export default {
     person: { label: "registered person number", forms: [
       { form: "minute-person", pattern: { re: R`^P(\d{3})$`, flags: "i" }, normal: ["P", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
       { form: "bar-number", pattern: { re: R`^BAR(\d{5})$`, flags: "i" }, normal: ["BAR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+    /* T34 (R62): a body's and a seat's numbers in the minute book, and an institution's in the county registry */
+    body: { label: "minute-book body number", forms: [
+      { form: "minute-body", pattern: { re: R`^B-?(\d{2})$`, flags: "i" }, normal: ["B-", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+    office: { label: "minute-book seat number", forms: [
+      { form: "minute-seat", pattern: { re: R`^SEAT-?(\d{3})$`, flags: "i" }, normal: ["SEAT-", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
+    institution: { label: "county registry number", forms: [
+      { form: "marlow-registry", pattern: { re: R`^MR(\d{4})$`, flags: "i" }, normal: ["MR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }] },
     parcel: {
       label: "lot and block number",
       forms: [
@@ -202,6 +211,21 @@ export default {
     staff_titles: [
       { pattern: { re: R`\b(?:Town\s+Reeve|Harbour\s+Master|Deputy\s+Clerk)\b`, flags: "i" }, basis: "TEST" },
     ],
+    /* T34 (R58, R60, R62) */
+    vote_values: [
+      { value: "content", label: "Content", citation: "P.E.B.L. § 5(1)", basis: "TEST" },
+      { value: "not_content", label: "Not content", citation: "P.E.B.L. § 5(1)", basis: "TEST" },
+      { value: "abstains", label: "Abstains", citation: "P.E.B.L. § 5(2)", basis: "TEST" },
+    ],
+    response_statuses: [
+      { status: "implemented", label: "Implemented", citation: "Test Stat. § 3.40", basis: "TEST" },
+      { status: "in_hand", label: "In hand", citation: "Test Stat. § 3.40", basis: "TEST" },
+      { status: "declined", label: "Will not be implemented", citation: "Test Stat. § 3.41", basis: "TEST" },
+    ],
+    member_types: [
+      { member_type: "Selectperson", capacity: "elected", basis: "TEST" },
+      { member_type: "Co-opted Member", capacity: "appointed", basis: "TEST" },
+    ],
   },
 
   practice: { minutes_due_days: { value: 30, count: "calendar", closures: "town", basis: "TEST" } },
@@ -226,7 +250,10 @@ export default {
         ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "13:30", close: "16:00" })),
         { day: "fri", open: "09:00", close: "12:00" }], status: "researched", basis: "TEST" },
       basis: "TEST" },
-    { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true, basis: "TEST" },
+    { role: "Selectboard", body: "Port Ellery Selectboard", level: "city", elected: true,
+      ids: { office: { scheme: "ellery_seat", id: "SEAT-001" }, body: { scheme: "ellery_body", id: "B-01" } },
+      within: { label: "City of Port Ellery", kind: "institution", ids: [{ scheme: "marlow_registry", id: "MR0001" }] },
+      organisation: "selectboard", basis: "TEST" },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
     { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" },
   ],
@@ -313,6 +340,13 @@ export default {
     { scheme: "ellery_person", label: "minute-book person number", entity_kinds: ["person"], space: "person", form: "minute-person",
       systems: ["ellery.minutes"], basis: "TEST" },
     { scheme: "marlow_bar", label: "Marlow bar number", entity_kinds: ["person"], space: "person", form: "bar-number", basis: "TEST" },
+    { scheme: "ellery_body", label: "minute-book body number", entity_kinds: ["body"], space: "body", form: "minute-body",
+      systems: ["ellery.minutes"], basis: "TEST" },
+    { scheme: "ellery_seat", label: "minute-book seat number", entity_kinds: ["office"], space: "office", form: "minute-seat",
+      systems: ["ellery.minutes"], basis: "TEST" },
+    /* N574: an issuer of credentials, held through entities R43 */
+    { scheme: "marlow_registry", label: "Marlow County registry of institutions", entity_kinds: ["institution"], space: "institution",
+      form: "marlow-registry", basis: "TEST" },
   ],
   classification_schemes: [
     { scheme: "ellery_funds", label: "ledger funds", kind: "fund", codes: [{ code: "100-01", label: "General" }, { code: "200-01", label: "Harbour" }], basis: "TEST" },

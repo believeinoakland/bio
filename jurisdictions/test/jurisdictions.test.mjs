@@ -601,8 +601,9 @@ test("R21 the first profile holds every local fact of the snapshot's code, and m
   assert.deepEqual(f.covers, ["City of Oakland", "Alameda County"]);
   assert.equal(f.test, false);
   /* spaces: labels, forms, kinds, floors with their system */
-  /* the snapshot's four spaces, and T33's person scheme for Legistar's PersonId and proceeding numbers (R3) */
-  assert.deepEqual(Object.keys(f.spaces).sort(), ["enactment", "fund", "parcel", "person", "proceeding", "project"]);
+  /* the snapshot's four spaces, T33's person scheme for Legistar's PersonId and proceeding numbers, and T34's Legistar
+     BodyId and OfficeRecordId (R3, R61) */
+  assert.deepEqual(Object.keys(f.spaces).sort(), ["body", "enactment", "fund", "office", "parcel", "person", "proceeding", "project"]);
   for (const [sp, old] of [["enactment", "cms"], ["project", "project"], ["fund", "fund"], ["parcel", "apn"]]) {
     assert.equal(f.spaces[sp].label, legacy.ID_SPACES[old].label, sp);
     assert.deepEqual(f.spaces[sp].forms.map((x) => x.form), legacy.ID_SPACES[old].forms.map((x) => x.form), sp);
@@ -944,7 +945,7 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   /* no measurement names any of its venues' evidence standards: absent, never guessed (its calendar is R45's) */
   assert.ok(f.action_kinds.every((k) => k.evidence === undefined));
   /* re-based on their primary sources in T33 (R30, R56) */
-  for (const c of f.counterparties.filter((x) => x.oversight)) assert.equal(c.basis, "2026-10-05 time-law", c.role);
+  for (const c of f.counterparties.filter((x) => x.oversight)) assert.match(c.basis, /^2026-10-05 time-law(, 2026-10-05 legistar-events)?$/, c.role);
 });
 
 /* ============================================================================================== */

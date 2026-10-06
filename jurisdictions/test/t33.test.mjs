@@ -333,9 +333,9 @@ test("R52 identifier_schemes name a space, form and systems of the profile; clas
   assert.ok(hasError(breakT((p) => { p.classification_schemes[0].kind = "department"; }), "SCHEME_INVALID", `${C}.kind`));
   assert.ok(hasError(breakT((p) => { p.classification_schemes[0].codes.push({ code: "100-01", label: "Again" }); }), "SCHEME_INVALID", `${C}.codes[2].code`));
   assert.ok(hasError(breakT((p) => { p.classification_schemes[0].codes[0] = { code: "1" }; }), "SCHEME_INVALID", `${C}.codes[0]`));
-  /* the first profile's Legistar person scheme: its PersonId form and its system */
-  assert.deepEqual(get(FIRST).identifier_schemes.map((x) => [x.scheme, x.space, x.form, x.systems]),
-    [["legistar_person_id", "person", "legistar-person", ["oakland.legistar"]]]);
+  /* the first profile's Legistar person scheme: its PersonId form and its system (T34's body and office schemes follow, R61) */
+  assert.deepEqual(get(FIRST).identifier_schemes[0], { scheme: "legistar_person_id", label: "Legistar PersonId", entity_kinds: ["person"],
+    space: "person", form: "legistar-person", systems: ["oakland.legistar"], basis: "2026-10-05 legistar-events" });
 });
 
 test("R53 lawful_demands: kind, label, covers from home_address, phone, other, within in R26's units, citation", () => {
@@ -477,7 +477,8 @@ test("R56 the first profile's sourced rule set: each rule with its primary sourc
   assert.ok(dates(lists.federal).includes("10-12") && dates(lists.federal).includes("11-11"));
   assert.deepEqual(dates(lists.city), dates(f.holidays.find((h) => h.basis === "M-190")), "the City list is M-190's days");
   /* records_response's five counterparties, re-based on their primary sources; the records venues sourced */
-  for (const c of f.counterparties) assert.equal(c.basis, "2026-10-05 time-law", c.role);
+  /* each on its primary source; T34 adds the Legistar read its identifiers rest on (R61) */
+  for (const c of f.counterparties) assert.match(c.basis, /^2026-10-05 time-law(, 2026-10-05 legistar-events)?$/, c.role);
   for (const k of ["records_request", "records_petition"]) assert.equal(f.action_kinds.find((x) => x.kind === k).venue.basis, "2026-10-05 time-law", k);
   assert.equal(venue(f).receipt.rule, "next_business_day");
   /* nothing in a deadline or calendar fact rests on UNMEASURED (R44) */

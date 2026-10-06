@@ -20,14 +20,24 @@ export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces",
   /* T33 (R46–R54) */
   "weekend", "computation", "fiscal_year", "law_ranks", "instrument_key", "proceeding_kinds", "proceeding_flows",
   "identifier_schemes", "classification_schemes", "lawful_demands", "recurrences"]);
-/* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's. */
-export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"]);
+/* R3: `account`, `object`, `vendor`, `proceeding` (K1452) and `person` (one form per person scheme) are T33's; `body` and
+   `office` (a legislative system's body and office-record numbers, N569, N613) T34's, and `institution` (one form per
+   institution scheme, N574) this job's reading, put to BOB. */
+export const SPACES = Object.freeze(["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person",
+  "body", "office", "institution"]);
 export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles", "enactment_markers", "codes",
   "file_numbers", "report_titles", "report_sections", "recommendation_openers", "template_blanks",
   /* T33 (R6): LAW's amending clauses, Legistar's markers and body-variant map, the roster words */
   "amending", "meeting_markers", "body_variants", "roster_words", "roster_headers", "staff_titles",
   /* (K1513) the budget and financial-report readers' words */
-  "financial_report_titles", "budget_book_titles", "financial_headings", "fiscal_year_forms", "budget_headers"]);
+  "financial_report_titles", "budget_book_titles", "financial_headings", "fiscal_year_forms", "budget_headers",
+  /* T34 (R58, R60): the values a vote is recorded in, a response's reported statuses, the MemberType map. Data, not patterns. */
+  "vote_values", "response_statuses", "member_types"]);
+/* R58, R60: the vocabulary keys whose entries carry no pattern, with each entry's fields. */
+const DATA_VOCABULARY = Object.freeze({ vote_values: ["value", "label", "citation", "basis"],
+  response_statuses: ["status", "label", "citation", "basis"], member_types: ["member_type", "capacity", "basis"] });
+/* R60: the capacity a MemberType maps to. */
+export const MEMBER_CAPACITIES = Object.freeze(["elected", "appointed"]);
 /* R31: the one vocabulary of a law's level, for records laws, standard sources and an action's governing
    laws. An office's level (R24) is not a law's level and keeps its own. */
 export const LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
@@ -458,9 +468,24 @@ function validateInto(p, errors) {
     else for (const [key, entries] of Object.entries(p.vocabulary)) {
       const at = `vocabulary.${key}`;
       if (!VOCABULARY.includes(key)) { err(at, "UNKNOWN_VOCABULARY", `'${key}' is not one of ${VOCABULARY.join(", ")}`); continue; }
+      const once = new Set(); /* R58, R60: a value, status or member type once in the profile */
       list(at, entries).forEach((e, i) => {
         const ea = `${at}[${i}]`;
         if (!entry(ea, e)) return;
+        if (own(DATA_VOCABULARY, key)) {
+          fields(ea, e, DATA_VOCABULARY[key]);
+          const name = DATA_VOCABULARY[key][0];
+          const v = e[name];
+          if (key === "member_types" ? !isStr(v) : (typeof v !== "string" || !KIND_RE.test(v)))
+            err(`${ea}.${name}`, "VALUE_INVALID", key === "member_types" ? "member_type is the MemberType as written, non-empty" : `${name} matches ^[a-z][a-z0-9_]*$`);
+          else if (once.has(v)) err(`${ea}.${name}`, "VALUE_INVALID", `'${v}' is given twice`);
+          else once.add(v);
+          if (key === "member_types") {
+            if (!MEMBER_CAPACITIES.includes(e.capacity)) err(`${ea}.capacity`, "VALUE_INVALID", `capacity is ${MEMBER_CAPACITIES.join(" or ")}`);
+          } else { str(`${ea}.label`, e.label, "label"); str(`${ea}.citation`, e.citation, "citation"); }
+          basis(ea, e);
+          return;
+        }
         if (key === "codes") {
           fields(ea, e, ["key", "label", "pattern", "copy", "sections", "basis"]);
           str(`${ea}.key`, e.key, "key"); str(`${ea}.label`, e.label, "label");
@@ -611,10 +636,43 @@ function validateInto(p, errors) {
   });
   const roles = new Set();
   const bodies = new Set();
+  /* R59: the schemes an office's, a body's or its organisation's identifier may be in (R52's, read here: a scheme is
+     judged where it is given), and the organisation keys the body-variant map names. */
+  const schemeKinds = new Map(own(p, "identifier_schemes") && Array.isArray(p.identifier_schemes)
+    ? p.identifier_schemes.filter((x) => isObj(x) && isStr(x.scheme) && Array.isArray(x.entity_kinds)).map((x) => [x.scheme, x.entity_kinds]) : []);
+  const variantOrgs = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.body_variants)
+    ? p.vocabulary.body_variants.filter(isObj).map((v) => v.organisation) : []);
+  const identifier = (path, x, kind) => {
+    if (!isObj(x)) { err(path, "SCHEME_INVALID", "an identifier is {scheme, id}"); return; }
+    fields(path, x, ["scheme", "id"]);
+    if (!schemeKinds.has(x.scheme)) err(`${path}.scheme`, "SCHEME_INVALID", `no identifier scheme of this profile is '${String(x.scheme)}'`);
+    else if (!schemeKinds.get(x.scheme).includes(kind)) err(`${path}.scheme`, "SCHEME_INVALID", `the scheme ${x.scheme} identifies no ${kind}`);
+    if (!isStr(x.id)) err(`${path}.id`, "SCHEME_INVALID", "id is a non-empty string");
+  };
   if (own(p, "counterparties")) list("counterparties", p.counterparties).forEach((c, i) => {
     const at = `counterparties[${i}]`;
     if (!entry(at, c)) return;
-    fields(at, c, ["role", "body", "level", "elected", "oversight", "hours", "basis"]);
+    fields(at, c, ["role", "body", "level", "elected", "oversight", "hours", "ids", "within", "organisation", "basis"]);
+    /* R59: the office's and its body's identifiers, the organisation the body is part of, its body-variant key */
+    if (own(c, "ids")) {
+      if (!isObj(c.ids) || !Object.keys(c.ids).length) err(`${at}.ids`, "VALUE_INVALID", "ids is {office?, body?}, at least one");
+      else { fields(`${at}.ids`, c.ids, ["office", "body"]); for (const k of ["office", "body"]) if (own(c.ids, k)) identifier(`${at}.ids.${k}`, c.ids[k], k); }
+    }
+    if (own(c, "within")) {
+      const w = c.within, wa = `${at}.within`;
+      if (!isObj(w)) err(wa, "VALUE_INVALID", "within is {label, kind, ids}");
+      else {
+        fields(wa, w, ["label", "kind", "ids"]);
+        str(`${wa}.label`, w.label, "label");
+        if (typeof w.kind !== "string" || !KIND_RE.test(w.kind)) err(`${wa}.kind`, "VALUE_INVALID", "kind is an entity kind");
+        if (!Array.isArray(w.ids)) err(`${wa}.ids`, "VALUE_INVALID", "ids is a list of {scheme, id}, possibly empty");
+        else w.ids.forEach((x, j) => identifier(`${wa}.ids[${j}]`, x, w.kind));
+      }
+    }
+    if (own(c, "organisation")) {
+      if (typeof c.organisation !== "string" || !KIND_RE.test(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", "organisation is a key matching ^[a-z][a-z0-9_]*$");
+      else if (!variantOrgs.has(c.organisation)) err(`${at}.organisation`, "VALUE_INVALID", `the body-variant map names no organisation '${c.organisation}'`);
+    }
     str(`${at}.role`, c.role, "role"); str(`${at}.body`, c.body, "body");
     if (isStr(c.role)) roles.add(c.role);
     if (isStr(c.body)) bodies.add(c.body);
@@ -1285,6 +1343,14 @@ function merge(profiles) {
       if (!profiles.some((p) => p.vocabulary && own(p.vocabulary, key))) continue;
       const v = [];
       for (const p of profiles) union(v, p.vocabulary && p.vocabulary[key], p.id);
+      /* R60: a MemberType's capacity is one value per key; profiles that disagree have the type withheld */
+      if (key === "member_types") for (const t of [...new Set(v.map((e) => e.member_type))]) {
+        const given = v.filter((e) => e.member_type === t);
+        if (given.length < 2) continue;
+        conflict(`vocabulary.member_types[${t}]`, given.flatMap((e) => e.bases.map((b) => ({ profile: b.profile, value: e.capacity, basis: b.basis }))),
+          `the active profiles map the MemberType '${t}' to different capacities, so it maps to none: a seat's capacity is undetermined`);
+        for (const e of given) v.splice(v.indexOf(e), 1);
+      }
       view.vocabulary[key] = strip(v);
     }
   }
@@ -1329,13 +1395,15 @@ function merge(profiles) {
     const v = [];
     const marks = new Map();
     const hoursOf = new Map();
+    const named = { ids: new Map(), within: new Map(), organisation: new Map() }; /* R59 */
     const push = (m, k, g) => { if (!m.has(k)) m.set(k, []); m.get(k).push(g); };
     for (const p of profiles) for (const c of p.counterparties || []) {
-      const { oversight, hours, ...rest } = c;
+      const { oversight, hours, ids, within, organisation, ...rest } = c;
       union(v, [rest], p.id);
       const k = `${c.role}\u0000${c.body}`;
       if (own(c, "oversight")) push(marks, k, { profile: p.id, value: oversight, basis: c.basis });
       if (own(c, "hours")) push(hoursOf, k, { profile: p.id, value: hours, basis: hours.basis });
+      for (const f of Object.keys(named)) if (own(c, f)) push(named[f], k, { profile: p.id, value: c[f], basis: c.basis });
     }
     const each = (k, fn) => { const [role, body] = k.split("\u0000"); for (const c of v) if (c.role === role && c.body === body) fn(c); };
     for (const [k, given] of marks) {
@@ -1349,6 +1417,13 @@ function merge(profiles) {
       const [role, body] = k.split("\u0000");
       conflict(`counterparties[${role}/${body}].hours`, given,
         `the active profiles give different hours for ${role} (${body}), so its hours are undetermined`);
+    }
+    const NAMED = { ids: "identifiers", within: "organisations it is part of", organisation: "body-variant keys" };
+    for (const [f, m] of Object.entries(named)) for (const [k, given] of m) {
+      if (agree(given)) { each(k, (c) => { c[f] = clone(given[0].value); }); continue; }
+      const [role, body] = k.split("\u0000");
+      conflict(`counterparties[${role}/${body}].${f}`, given,
+        `the active profiles give different ${NAMED[f]} for ${role} (${body}), so none is given: it is undetermined`);
     }
     view.counterparties = strip(v);
   }
