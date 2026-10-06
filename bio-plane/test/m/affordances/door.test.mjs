@@ -3,6 +3,7 @@
    answers as plain recorders, so what the arm asks of the store, with which stamps, and what it answers in each case is
    measured exactly. The same arm in the running plane, with the real door, store and gate, is `plane.test.mjs`' R17. */
 import test from "node:test";
+import { ANSWERS_CHECKS } from "../../../src/answers/index.mjs";
 import assert from "node:assert/strict";
 import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, PER_ITEM_MAX, VOCABULARIES, decorate, deriveActs, vocabulariesFor,
          affordancesAnswer, affordancesOp } from "../../../src/affordances.mjs";
@@ -17,8 +18,12 @@ const FACTS = { ok: true, target: "INQ-2026-0001-q", object_type: "inquiry", dec
 test("R17 R37: with no target, the catalogue — every act decorated through the gate with appliesTo, the vocabularies for "
    + "the kinds handed in, the capture acts and the set acts with set_key, item_keys, shared_keys and max_items", () => {
   const r = affordancesAnswer({ kinds: KINDS, gate: GATE });
-  assert.deepEqual(Object.keys(r).sort(), ["capture_acts", "catalog", "detail", "screens", "set_acts", "target", "vocabularies",
-                                           "wizard_scripts"]);
+  assert.deepEqual(Object.keys(r).sort(), ["answer_checks" /* K1601 */, "capture_acts", "catalog", "detail", "screens",
+                                           "set_acts", "target", "vocabularies", "wizard_scripts"]);
+  /* K1601: answers' check family, the very object its table holds */
+  assert.equal(r.answer_checks, ANSWERS_CHECKS);
+  for (const [code, row] of Object.entries(r.answer_checks))
+    assert.ok(typeof row.check === "string" && typeof row.translation === "string" && row.translation.length > 0, code);
   assert.deepEqual([r.screens, r.wizard_scripts], [[], []], "nothing handed in: two lists, empty");
   assert.equal(r.target, null);
   assert.deepEqual(r.catalog, ACTS.map((a) => ({ ...decorate(a, GATE), appliesTo: a.types })));
