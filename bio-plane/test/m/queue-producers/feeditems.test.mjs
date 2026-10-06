@@ -397,3 +397,15 @@ test("R8 (R22, R23; K1019): feedItems reads the unattended capture's grade note 
   assert.deepEqual([credit.class, credit.kind, credit.recipients], ["OBLIGATION", "attribution-unchosen", ["alice"]], "R23");
   assert.ok(!("disposition" in credit) && !("catalogue_id" in credit), "the mint's and queue's, as every item");
 });
+
+test("R2 (T33-81; K1481, K1491): the FINDING kinds T33 adds are notice-producers' (its R2–R5) and are never raised here, whatever every producer of this module answers", () => {
+  const theirs = ["interest-check-noticed", "money-detector-noticed", "standing-answer", "temporal-expectation-due"];
+  const w = everyKind();
+  for (const [member, viewer] of [["alice", "member:alice"], [null, "class:admin"]]) {
+    const r = w.read(member, viewer);
+    assert.ok(r.items.length > 20, "a feed with every producer of this module answering");
+    assert.deepEqual(r.items.filter((i) => theirs.includes(i.kind)).map((i) => i.id), [], "no item of a kind notice-producers raises");
+    assert.ok(!r.items.some((i) => theirs.some((k) => i.id.includes(`::${k}::`))), "and no id of one");
+  }
+  assert.deepEqual(Object.keys(w.p).filter((k) => /notice|interest|money|standing|temporal/i.test(k)), [], "no service of theirs here");
+});
