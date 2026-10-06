@@ -215,6 +215,25 @@ test("R9: a dated wait set, told inside the promotion's transaction, arms the al
   assert.deepEqual(writes(st), [["setAlarm", WAKE]], "one arm for the two waits");
 });
 
+test("R9: a follow recorded, ended or re-dated arms the alarm at the follow's wake through following's onFollowed (its R19); arming only schedules", async () => {
+  const WAKE = NOW + 86_400_000;
+  const { s, st, calls, set } = world({ follow: { wake: null } });
+  const heard = [];
+  s.listenTo({ following: { onFollowed: (module, fn) => { heard.push({ module, fn }); return { ok: true, module }; } } });
+  assert.deepEqual(heard.map((h) => h.module), ["scheduler"]);
+  set.follow.wake = WAKE;
+  assert.equal(await heard[0].fn({ follow: "FOL-1", due: WAKE }), WAKE);
+  assert.equal(st.alarm, WAKE);
+  set.follow.wake = WAKE + 5000;   /* re-dated later: an arm never pushes the set alarm later */
+  st.log.length = 0;
+  await heard[0].fn({ follow: "FOL-1", due: WAKE + 5000 });
+  assert.deepEqual(writes(st), []);
+  set.follow.wake = null;   /* ended, nothing else wanting: no alarm left (R4, R15) */
+  await heard[0].fn({ follow: "FOL-1", due: null });
+  assert.equal(st.alarm, null);
+  assert.equal(calls.some(([m]) => m === "following.followTick"), false);
+});
+
 /* ---- R21 against the real owners ---- */
 
 test("R21: against the real duties, the alarm records each tracked occurrence's state change as of the firing, once that local day, and only what moved the next", async () => {

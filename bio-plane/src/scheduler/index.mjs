@@ -500,7 +500,7 @@ export class Scheduler {
 
   /** Registers `arm` with each notice an earlier producer offers (K72 (9), K206). Each listener only schedules.
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. */
-  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry } = {}) {
+  listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry, following } = {}) {
     const arm = () => this.arm();
     /* A notice told inside its owner's transaction, where no storage call may be awaited: the arm is deferred until
        the transaction has returned, once however many notices it told. */
@@ -546,6 +546,9 @@ export class Scheduler {
     /* inquiry R54 (K1601): a dated wait set or re-dated, told inside the promotion's transaction; the reconcile then
        reads the dated waits' wake (R21). */
     if (inquiry) out.inquiry = inquiry.onWaitSet("scheduler", deferred());
+    /* following R19 (K1666): a follow recorded, ended or re-dated, told after the act's transaction; the reconcile reads
+       the follow's wake (R21). */
+    if (following) out.following = following.onFollowed("scheduler", () => arm());
     return out;
   }
 }
