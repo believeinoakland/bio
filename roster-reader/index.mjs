@@ -4,16 +4,18 @@
  * Two content types for `docprofile`'s registry, registered through `registerRosterTypes(register)`, which
  * `plane` wires after `doctypes`' types and before `generic`; `rosterColumns`, the roles of a captured
  * roster table's columns, which `people.staffingAt` reads through its roster source; and
- * `directoryPersonRefs`, a staff directory's contact entries as person references graded C.
+ * `directoryPersonRefs`, a staff directory's contact entries as person references graded C; and `rosterSource`
+ * (R12), the roster source `plane` registers into `people`, reading the held rosters the store's read hands it.
  *
  * EVERYTHING HERE IS A READING (R10). No post, holder, reporting line or identity is written: lines and
- * identity claims are proposed elsewhere and adopted by a member (K1443, K1452). This module reads no store
- * and no network, and takes every local word from the view it is given (R8). */
+ * identity claims are proposed elsewhere and adopted by a member (K1443, K1452). This module holds no store
+ * (R12's `reads` is handed in by the composition root) and reads no network, and takes every local word from the view it is given (R8). */
 import orgChart from "./org-chart.mjs";
 import staffRoster from "./staff-roster.mjs";
 
 export { rosterColumns, ROLES } from "./columns.mjs";
 export { directoryPersonRefs, NAME_GRADE } from "./directory-refs.mjs";
+export { rosterSource, LEVEL_READ, LEVEL_NOT_READ } from "./source.mjs";
 export { ROSTER_FLOOR, ROSTER_SHARE, DIRECTORY_FLOOR } from "./staff-roster.mjs";
 export { CHART_FLOOR, CHART_MIN_LABELS, CHART_SHARE, CHART_SHORT } from "./org-chart.mjs";
 export { staffRoster, orgChart };
