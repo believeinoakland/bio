@@ -20,12 +20,15 @@ const HARD = "It's \"final\" \\ here # not a comment\nsecond line 'quoted' â€” Ã
 
 test("R17 the grading_facts: block round-trips every leg of every finding exactly, strength R35's fields, lists and maps as canonical JSON, each finding's rows in ord order", () => {
   assert.deepEqual([...CG.GRADING_FACT_FIELDS], ["finding", "ord", "target", "kind", "role", "grade", "grade_axis",
-    "grade_source", "ground", "target_edition", "answer", "origins", "origins_complete", "captures", "author_key"]);
+    "grade_source", "ground", "target_edition", "answer", "origins", "origins_complete", "captures", "author_key", "undetermined"]);
   const rows = [
     ...LEGS,
     { finding: C, ord: 2, target: "INFO-2026-0005-x", kind: "document", role: "supports", grade: "C", grade_axis: "connection",
       grade_source: "resolution", ground: HARD, target_edition: null, answer: null, origins: [HARD, "b"], origins_complete: false,
       captures: [], author_key: HARD },
+    /* K1608 (strength R35): a calculation leg whose capture grade is undetermined carries its reason */
+    { finding: C, ord: 3, target: "CALC-2026-0001", kind: "calculation", role: "supports", grade: null, grade_axis: "capture",
+      grade_source: null, undetermined: "an input is a member's own table, with no capture grade" },
     { finding: C, ord: 1, target: "imported:abc/INQ-1", kind: "imported", role: "supports", target_edition: 3,
       answer: { connection: { grade: "C", state: "graded" }, capture: { grade: null, state: "undetermined" } } },
   ];
@@ -35,9 +38,11 @@ test("R17 the grading_facts: block round-trips every leg of every finding exactl
   assert.deepEqual(Object.keys(back), [A, B, C], "findings in the order they first appear");
   assert.deepEqual(back[A], LEGS.filter((l) => l.finding === A).map((l) => full(CG.GRADING_FACT_FIELDS, l)));
   assert.deepEqual(back[B], LEGS.filter((l) => l.finding === B).map((l) => full(CG.GRADING_FACT_FIELDS, l)));
-  assert.deepEqual(back[C], [full(CG.GRADING_FACT_FIELDS, rows[rows.length - 1]), full(CG.GRADING_FACT_FIELDS, rows[rows.length - 2])],
+  assert.deepEqual(back[C], [rows[rows.length - 1], rows[rows.length - 3], rows[rows.length - 2]].map((r) => full(CG.GRADING_FACT_FIELDS, r)),
                    "in ord order, every value exactly as handed");
   assert.equal(back[C][1].ground, HARD);
+  assert.equal(back[C][2].undetermined, "an input is a member's own table, with no capture grade", "the leg's reason, as strength R35 answers it");
+  assert.equal(back[A][0].undetermined, null, "a leg with no reason reads null");
   assert.equal(back[C][0].answer.connection.grade, "C");
   /* flat rows */
   assert.deepEqual(fmOf(doc(V6, lines)).grading_facts.map((r) => Object.keys(r)), rows.map(() => [...CG.GRADING_FACT_FIELDS]));
