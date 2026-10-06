@@ -1,6 +1,6 @@
 # BOB to credentials (T34)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ K1756: R26 is retired (K1755), so remove what enforces it in this job: the refus
 ## B4 · CHANGE
 
 K1757: credentials' requirements amended further for the group key before you start: R25 (switches govern only your own reference's acts), R27 and R32 (NO_ACCOUNT only when R35 finds no account), R35 (answers {kind, level, key}, agent-model R1's shape), and new R37 (the group key's own suggestions and standing switches, administrators only). Merge the tranche branch first and read the file whole.
+
+## B5 · ANSWER · re J1
+
+Accepted, all three (K1760). R34 now reads sight "group" with administrator-only reading enforced by the service; merge the tranche branch for the reworded line. Readings 1 and 2 stand as you state them.
