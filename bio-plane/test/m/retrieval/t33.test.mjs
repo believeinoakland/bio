@@ -2,7 +2,7 @@
  *
  * The owners' tables the fields' views read stand in here under their owners' names and columns as this module reads
  * them (`fields.mjs`): entities' `entities` and `resolutions` and extraction's `reading_refs` from their owners'
- * schemas (the fixture); events' `event_attestations` and `event_when_cache`, money's `money_facts` and
+ * schemas (the fixture); events' `event_attestations` and `when_cache`, money's `money_facts` and
  * `money_withdrawals`, duties' `duties` from the column text here, written as their owners write them. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -13,7 +13,7 @@ import { FIELDS, IDS_MAX } from "../../../src/query.mjs";
 
 const OWNER_TABLES = `
 CREATE TABLE IF NOT EXISTS event_attestations (attestation_id TEXT PRIMARY KEY, event_id TEXT NOT NULL, capture_sha TEXT);
-CREATE TABLE IF NOT EXISTS event_when_cache (event_id TEXT PRIMARY KEY, start TEXT, end TEXT, precision TEXT, zone TEXT);
+CREATE TABLE IF NOT EXISTS when_cache (event_id TEXT PRIMARY KEY, start TEXT, end TEXT, precision TEXT, zone TEXT);
 CREATE TABLE IF NOT EXISTS money_facts (fact_id TEXT PRIMARY KEY, source_capture_sha TEXT, kind TEXT, phase TEXT, stage TEXT,
   basis TEXT, period_from TEXT, period_to TEXT, from_entity TEXT, to_entity TEXT, from_fund TEXT, to_fund TEXT);
 CREATE TABLE IF NOT EXISTS money_withdrawals (fact_id TEXT PRIMARY KEY, reason TEXT);
@@ -46,11 +46,11 @@ function addOwners(w, { c1, c2, c3 }) {
   const x = (q, ...a) => w.st.sql.exec(q, ...a);
   x(`INSERT INTO event_attestations VALUES ('A1', 'EVT-1', ?)`, c2.sha);
   x(`INSERT INTO event_attestations VALUES ('A2', 'EVT-2', ?)`, c3.sha);
-  x(`INSERT INTO event_when_cache VALUES ('EVT-1', '2026-03-15T17:00:00Z', NULL, 'minute', 'UTC')`);
-  x(`INSERT INTO event_when_cache VALUES ('EVT-2', '2026-04-01T17:00:00Z', NULL, 'minute', 'UTC')`);
+  x(`INSERT INTO when_cache VALUES ('EVT-1', '2026-03-15T17:00:00Z', NULL, 'minute', 'UTC')`);
+  x(`INSERT INTO when_cache VALUES ('EVT-2', '2026-04-01T17:00:00Z', NULL, 'minute', 'UTC')`);
   x(`INSERT INTO money_facts VALUES ('MNY-1', ?, 'expenditure', 'actual', 'paid', 'cash', '2025-07-01', '2026-06-30',
        'ENT-X', 'ENT-P', 'FUND-1', NULL)`, c1.sha);
-  x(`INSERT INTO money_facts VALUES ('MNY-2', ?, 'revenue', 'budget', NULL, 'modified-accrual', '2024-07-01', '2025-06-30',
+  x(`INSERT INTO money_facts VALUES ('MNY-2', ?, 'revenue', 'adopted', NULL, 'modified accrual', '2024-07-01', '2025-06-30',
        'ENT-O', NULL, 'FUND-2', NULL)`, c2.sha);
   x(`INSERT INTO money_withdrawals VALUES ('MNY-2', 'misread')`);
   x(`INSERT INTO money_facts VALUES ('MNY-3', ?, 'expenditure', 'actual', 'paid', 'cash', '2025-07-01', '2026-06-30',
@@ -107,7 +107,7 @@ test("R68: event and occurred read events' attestations through the captures a b
     ["occurred:>=2026-03-01T00:00:00Z", ["INFO-2"], ["INFO-2", proj]], ["occurred:<2026-03-20T00:00:00Z", ["INFO-2"], ["INFO-2"]],
     ["kind:expenditure", ["INFO-1"], ["INFO-1", proj]], ["kind:revenue", [], []],
     ["phase:actual", ["INFO-1"], ["INFO-1", proj]], ["stage:paid", ["INFO-1"], ["INFO-1", proj]],
-    ["basis:cash", ["INFO-1"], ["INFO-1", proj]], ["basis:modified-accrual", [], []],
+    ["basis:cash", ["INFO-1"], ["INFO-1", proj]], ['basis:"modified accrual"', [], []], ["phase:adopted", [], []],
     ["fund:FUND-1", ["INFO-1"], ["INFO-1", proj]], ["fund:FUND-2", [], []],
     ["party:ENT-P", ["INFO-1"], ["INFO-1", proj]], ["party:ENT-X", ["INFO-1"], ["INFO-1", proj]], ["party:ENT-O", [], []],
     ["obligor:ENT-X", ["INFO-2"], ["INFO-2"]], ["owed_to:ENT-P", ["INFO-2"], ["INFO-2"]], ["owed_to:ENT-X", [], []],

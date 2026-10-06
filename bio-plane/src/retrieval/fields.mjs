@@ -44,18 +44,20 @@ const viaTerms = (field) => ({ field, route: "projected", owner: "retrieval",
 /* A bundle and the captures it registers (provenance's `register`, its R48). */
 const viaCapture = (field, owner, needs, select) => ({ field, route: "read contract", owner,
   needs: { register: ["capture_sha", "bundle_id"], ...needs }, sql: select });
-/* An entity of one kind a bundle's captures resolve to (entities R35, the `concerns:` arm's relation). */
+/* An entity of one kind a bundle's captures resolve to (entities R35, K1563: `entities.kind`; the `concerns:` arm's
+   relation). */
 const entityOf = (field, kind) => ({ field, route: "read contract", owner: "entities",
   needs: { resolutions: ["bundle_id", "entity_id"], entities: ["entity_id", "kind"] },
   sql: `SELECT DISTINCT r.bundle_id AS bundle_id, r.entity_id AS value FROM resolutions r
           JOIN entities e ON e.entity_id = r.entity_id WHERE e.kind = '${kind}'` });
-/* A column of the money facts a bundle's captures are the source of (money R19), a withdrawn fact left out. */
+/* A column of the money facts a bundle's captures are the source of (money R19, K1563: `source_capture_sha`), a
+   withdrawn fact left out. */
 const moneyOf = (field, cols) => viaCapture(field, "money",
   { money_facts: ["fact_id", "source_capture_sha", ...cols], money_withdrawals: ["fact_id"] },
   cols.map((c) => `SELECT g.bundle_id AS bundle_id, f.${c} AS value FROM money_facts f
                      JOIN register g ON g.capture_sha = f.source_capture_sha
                     WHERE f.${c} IS NOT NULL AND f.fact_id NOT IN (SELECT fact_id FROM money_withdrawals)`).join(" UNION "));
-/* A party of the duties arising in a bundle's captures (duties R20). */
+/* A party of the duties arising in a bundle's captures (duties R20, K1563: `arising_in`). */
 const dutyOf = (field, col) => viaCapture(field, "duties", { duties: ["duty_id", "arising_in", col] },
   `SELECT DISTINCT g.bundle_id AS bundle_id, d.${col} AS value FROM duties d
      JOIN register g ON g.capture_sha = d.arising_in WHERE d.${col} IS NOT NULL`);
@@ -67,19 +69,20 @@ export const FIELD_VIEWS = Object.freeze([
           UNION SELECT bundle_id, ref_key AS value FROM reading_refs WHERE ref_key IS NOT NULL AND ref_key <> ''` },
   entityOf("person", "person"),
   entityOf("post", "office"),
-  /* events R37: an event a bundle's captures attest, and that event's `when` (its start). */
+  /* events R37 (K1563): an event a bundle's captures attest (`event_attestations`), and that event's `when` (its start,
+     `when_cache`). */
   viaCapture("event", "events", { event_attestations: ["event_id", "capture_sha"] },
     `SELECT DISTINCT g.bundle_id AS bundle_id, a.event_id AS value FROM event_attestations a
        JOIN register g ON g.capture_sha = a.capture_sha`),
-  viaCapture("occurred", "events", { event_attestations: ["event_id", "capture_sha"], event_when_cache: ["event_id", "start"] },
+  viaCapture("occurred", "events", { event_attestations: ["event_id", "capture_sha"], when_cache: ["event_id", "start"] },
     `SELECT DISTINCT g.bundle_id AS bundle_id, w.start AS value FROM event_attestations a
        JOIN register g ON g.capture_sha = a.capture_sha
-       JOIN event_when_cache w ON w.event_id = a.event_id WHERE w.start IS NOT NULL`),
+       JOIN when_cache w ON w.event_id = a.event_id WHERE w.start IS NOT NULL`),
   moneyOf("kind", ["kind"]),
   moneyOf("phase", ["phase"]),
   moneyOf("stage", ["stage"]),
   moneyOf("basis", ["basis"]),
-  moneyOf("period", ["period_from"]),
+  moneyOf("period", ["period_from", "period_to"]),
   moneyOf("fund", ["from_fund", "to_fund"]),
   moneyOf("party", ["from_entity", "to_entity"]),
   dutyOf("obligor", "obligor"),
