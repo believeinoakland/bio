@@ -40,6 +40,20 @@
 
 Size (session_01UxA8Yv7kHqsFpTvQSvpR4k): test runs 16, module lines 878
 
+## Completion after B4 (R21, K1577)
+
+- **R21 met:** `recordCurrentThrough({lineId, day, basis, by})` (op `linecurrentthrough`) holds a member's or a source's own "current as of" statement, with its citation and day, in `line_current_through` (declared explicitly: stored, sight `source`, export `yes`). It takes the same basis forms as a line; the machine may record one only from a system rule (R4). It refuses `NO_SUCH_LINE`, `LINE_WITHDRAWN`, `NOT_A_HOLDS_LINE`, `END_STATED` (a line with a stated end), `BAD_DATE`, the basis refusals, `MACHINE_NEEDS_IDENTIFIERS` and `NO_BY`.
+- **How it reads:** an open-ended `holds` line is `in` at a date no later than the latest statement the viewer may see, and `undetermined` after it, never `out`. It is `out` only before its start.
+  - `holderAt` and `structureAt` count it so; `neighbours` answers it in with `valid.to` the stated day.
+  - `readLine` shows `current_through` with the superseded ones, each kept; a later statement supersedes, nothing is erased.
+  - A statement inside a hidden project counts only for those who may see it.
+- **Tests and checks:**
+  - lines: 29 tests, 29 pass (3 new, naming R21).
+  - events and local-facts: 66 pass, 0 fail.
+  - format: 0 failures. architecture: 0 failures. coverage: 21 of 21. ownership: 5 files, 0 failures. The `modules.json` row as BOB set it.
+
+Size (session_01UxA8Yv7kHqsFpTvQSvpR4k): test runs 19, module lines 943
+
 ## J1 · QUESTION
 
 Seven readings; I am building on each now. Only (1) and (3) could change what I build.
