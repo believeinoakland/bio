@@ -29502,6 +29502,14 @@ function attestationOf(host, deps) {
   return a;
 }
 
+// src/acquisition/keyed.mjs
+var SERVICES = Object.freeze({
+  courtlistener: Object.freeze({ host: "www.courtlistener.com", authorization: (key) => `Token ${key}` })
+});
+var KEYED_SERVICE_HOSTS = Object.freeze(Object.fromEntries(Object.entries(SERVICES).map(([k, v]) => [k, v.host])));
+var KEYED_ANSWER_MAX = 8 * 1024 * 1024;
+var LOOKUP = Object.freeze({ 200: "found", 300: "several_matches", 404: "not_found", 400: "unknown_reporter", 429: "not_looked_up" });
+
 // src/acquisition/index.mjs
 var hex3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 var stampSecond = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
@@ -29679,6 +29687,28 @@ async function archiveEligibility(cap, address) {
 var ARCHIVE = WAYBACK_MEMENTO;
 var MEMENTO_TRIES = 4;
 var MEMENTO_HOPS = 5;
+function askedInstant(at31) {
+  if (at31 === void 0 || at31 === null) return { ok: true, at: null, ms: null };
+  const ms2 = typeof at31 === "string" && ISO_TS_RE.test(at31) ? Date.parse(at31) : NaN;
+  if (!Number.isFinite(ms2) || new Date(ms2).toISOString().replace(/\.\d+Z$/, "Z") !== at31)
+    return { ok: false, status: 400, payload: {
+      ok: false,
+      reason: "MEMENTO_BAD_ASKED_DATE",
+      at: typeof at31 === "string" ? at31.slice(0, 40) : null,
+      detail: "`at` names the moment asked about as an instant to the second, YYYY-MM-DDTHH:MM:SSZ; nothing was fetched"
+    } };
+  return { ok: true, at: at31, ms: ms2, timestamp: at31.replace(/[-:TZ]/g, "") };
+}
+function askedReading(asked, chosen) {
+  if (!asked || !asked.at) return null;
+  const apart = Math.round(Math.abs(Date.parse(chosen.archived_at) - asked.ms) / 1e3);
+  return {
+    asked_at: asked.at,
+    memento_datetime: chosen.archived_at,
+    apart_seconds: apart,
+    asked_note: apart === 0 ? `the memento is of ${chosen.archived_at}, the instant asked about` : `the memento is of ${chosen.archived_at}, ${apart} seconds ${Date.parse(chosen.archived_at) < asked.ms ? "before" : "after"} the instant asked about (${asked.at}); it is not the page at ${asked.at}`
+  };
+}
 var cancelBody = (res) => {
   try {
     res?.body?.cancel?.()?.catch?.(() => {
@@ -29750,7 +29780,7 @@ function replayed(res, ahead, reader) {
   };
   return { status: res.status, ok: res.ok, url: res.url, headers: res.headers, body: { getReader: () => ({ read: read3, cancel }), cancel } };
 }
-async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", take } = {}) {
+async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fetchPurpose = "archive-lookup", asked = null, take } = {}) {
   const ends = mementoEndpoints(ARCHIVE, address);
   if (!ends) return { ok: false, status: 400, payload: { ok: false, reason: "BAD_ADDRESS", detail: "the archive has no endpoint for this address" } };
   const considered = [], rows2 = [], tried = /* @__PURE__ */ new Set();
@@ -29821,7 +29851,7 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
       return { next: true };
     }
   };
-  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(Date.now()) });
+  const tg = await call(ends.timegate, indexPurpose, { "accept-datetime": acceptDatetime(asked && asked.at ? asked.ms : Date.now()) });
   if (tg.fail) return tg.fail;
   if (tg.res.status === 429 || tg.res.status >= 500) {
     cancelBody(tg.res);
@@ -29845,7 +29875,9 @@ async function mementoLookup(cap, address, { indexPurpose = "archive-lookup", fe
   if (!map.ok) return { ok: false, status: 502, payload: { ok: false, reason: map.reason, detail: map.detail, considered, address } };
   const cands = timeMapCandidates(map);
   considered.push(...cands.considered);
-  for (const cand of cands.ok ? cands.candidates.slice(0, MEMENTO_TRIES) : []) {
+  const near = (m) => Math.abs(Date.parse(m.archived_at) - asked.ms);
+  const ordered = !cands.ok ? [] : asked && asked.at ? [...cands.candidates].sort((a, b) => near(a) - near(b) || (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)) : cands.candidates;
+  for (const cand of ordered.slice(0, MEMENTO_TRIES)) {
     const m = await tryMemento(cand.uri);
     if (!m.next) return m.fail || m;
   }
@@ -29861,23 +29893,27 @@ function nothingUsable(sel, considered, address) {
     address
   } };
 }
-function chooseMemento(m, sha, bytes2, address) {
+function chooseMemento(m, sha, bytes2, address, asked = null) {
   const sel = selectCapture([mementoRow(m.answer, { sha256: sha, bytes: bytes2 }), ...m.rows]);
   if (!sel.ok) return nothingUsable(sel, m.considered, address);
+  const reading = askedReading(asked, sel.chosen);
   return {
     ok: true,
     chosen: sel.chosen,
     rejected: [...sel.rejected, ...m.considered],
     usable_count: sel.usable_count,
-    hop: mementoHop(sel.chosen, m.locator, { archive: ARCHIVE, answer: m.answer })
+    reading,
+    hop: { ...mementoHop(sel.chosen, m.locator, { archive: ARCHIVE, answer: m.answer }), ...reading || {} }
   };
 }
-async function archiveLookup(cap, { address } = {}) {
+async function archiveLookup(cap, { address, at: at31 } = {}) {
   if (typeof address !== "string" || !isPublicHttpsLocator(address))
     return { status: 400, body: { ok: false, reason: "BAD_ADDRESS", detail: "the document address must be https on a public host" } };
+  const asked = askedInstant(at31);
+  if (!asked.ok) return { status: asked.status, body: asked.payload };
   const el = await archiveEligibility(cap, address);
   if (!el.ok) return { status: el.status, body: el.payload };
-  const m = await mementoLookup(cap, address, { take: async ({ res, answer, locator }) => {
+  const m = await mementoLookup(cap, address, { asked, take: async ({ res, answer, locator }) => {
     const h = await hashBody(res);
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
@@ -29893,19 +29929,20 @@ async function archiveLookup(cap, { address } = {}) {
     return selectCapture([row3]).ok ? { sha: h.sha, bytes: h.bytes } : { row: row3 };
   } });
   if (!m.ok) return { status: m.status, body: m.payload };
-  const c = chooseMemento(m, m.sha, m.bytes, address);
+  const c = chooseMemento(m, m.sha, m.bytes, address, asked);
   if (!c.ok) return { status: c.status, body: c.payload };
   return { status: 200, body: {
     ok: true,
     address,
     eligible_because: el.reach.basis,
     chosen: c.chosen,
+    ...c.reading || {},
     /* Every memento considered and why it was not used: "nothing suitable" alone is unauditable. */
     rejected: c.rejected,
     usable_count: c.usable_count,
     retrieval_locator: m.locator,
     provenance_hop: c.hop,
-    capture_with: { op: "acquire", via: "archive.org", address },
+    capture_with: { op: "acquire", via: "archive.org", address, ...asked.at ? { at: asked.at } : {} },
     note: "this op decides and reports; op=acquire with via=archive.org decides AGAIN and captures, because the hop that reaches the record must be built by the same call that fetched the memento"
   } };
 }
@@ -30004,7 +30041,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
       cls,
       detail: `the daemon class reaches op=acquire through the archive fallback (via: "archive.org") and through the capture-request drain (via: "capture-request"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.`
     });
-  let archiveHopRecorded = null, archiveAddress = null, archiveAsked = null;
+  let archiveHopRecorded = null, archiveAddress = null, archiveAsked = null, archiveAt = null;
   if (body.via === "archive.org") {
     if (cls !== "admin" && cls !== "probe" && cls !== "daemon")
       return answer(403, {
@@ -30021,6 +30058,8 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
         reason: "BAD_ADDRESS",
         detail: "an archive-sourced capture names the document address, not a replay locator"
       });
+    archiveAt = askedInstant(body.at);
+    if (!archiveAt.ok) return answer(archiveAt.status, archiveAt.payload);
     const el = await archiveEligibility(cap, addr);
     if (!el.ok) return answer(el.status, el.payload);
     archiveAsked = addr;
@@ -30214,7 +30253,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   }
   let archiveMemento = null;
   if (archiveAsked) {
-    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", take: async ({ res: res2, answer: answer2 }) => {
+    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res: res2, answer: answer2 }) => {
       const p3 = await peekBody(res2);
       if (p3.failed) return { fail: archiveBroke(p3.failed) };
       return p3.empty ? { row: mementoRow(answer2, { sha256: EMPTY_SHA256, bytes: 0 }) } : { res: p3.res };
@@ -30473,7 +30512,7 @@ async function acquire(cap, body0, { cls = null, member = false, sessMember = nu
   await flush();
   let sha = whole.hex();
   if (archiveMemento) {
-    const c = chooseMemento(archiveMemento, sha, total, archiveAsked);
+    const c = chooseMemento(archiveMemento, sha, total, archiveAsked, archiveAt);
     if (!c.ok) return answer(c.status, c.payload);
     archiveHopRecorded = c.hop;
     await noteOutcome("success", res.status);
@@ -81965,9 +82004,13 @@ __export(checks_exports25, {
   SOURCES_CHECKS: () => SOURCES_CHECKS,
   badDisclosure: () => badDisclosure,
   consentNotStanding: () => consentNotStanding,
+  machineCannotMark: () => machineCannotMark,
   noEvidence: () => noEvidence,
+  noService: () => noService,
   noSightList: () => noSightList,
+  noSuchCapture: () => noSuchCapture,
   noSuchSource: () => noSuchSource,
+  notYourCapture: () => notYourCapture,
   secretNotRecognised: () => secretNotRecognised
 });
 var at8 = (fn, region) => `src/sources/checks.mjs ${fn} > ${region}`;
@@ -82001,6 +82044,27 @@ var SOURCES_CHECKS = Object.freeze({
     check: "C-121.6",
     where: at8("secretNotRecognised", "is-secret-recognised"),
     translation: "That secret was not recognised, so nothing was recorded. Check it and try again."
+  }),
+  /* R16 (T33-22; K1492 (3), K1449): marking a member-keyed result. */
+  MACHINE_CANNOT_MARK: Object.freeze({
+    check: "C-121.7",
+    where: at8("machineCannotMark", "is-member-marking"),
+    translation: "Only a member, acting for themselves, can mark a result from a paid or account-gated service; no machine, scheduled task or unattended process can. Nothing was written."
+  }),
+  NOT_YOUR_CAPTURE: Object.freeze({
+    check: "C-121.8",
+    where: at8("notYourCapture", "is-own-capture"),
+    translation: "Only the member who captured a result can mark it as from their own account on a paid service. Nothing was written."
+  }),
+  NO_SUCH_CAPTURE: Object.freeze({
+    check: "C-121.9",
+    where: at8("noSuchCapture", "is-capture-held"),
+    translation: "No capture the record holds answers to that digest. Nothing was written."
+  }),
+  NO_SERVICE: Object.freeze({
+    check: "C-121.10",
+    where: at8("noService", "is-service-named"),
+    translation: "A result from a paid or account-gated service names the service it came from. Name it. Nothing was written."
   })
 });
 var ROW = SOURCES_CHECKS;
@@ -82072,6 +82136,49 @@ function secretNotRecognised() {
   });
 }
 var SECRET_NOT_RECOGNISED_ANSWER = secretNotRecognised();
+function machineCannotMark() {
+  return {
+    ok: false,
+    reason: "MACHINE_CANNOT_MARK",
+    code: "MACHINE_CANNOT_MARK",
+    check: ROW.MACHINE_CANNOT_MARK.check,
+    translation: ROW.MACHINE_CANNOT_MARK.translation,
+    detail: "the mark is made only by an active member's own act; this stamp names none, so nothing was written"
+  };
+}
+function notYourCapture(captureSha) {
+  return {
+    ok: false,
+    reason: "NOT_YOUR_CAPTURE",
+    code: "NOT_YOUR_CAPTURE",
+    check: ROW.NOT_YOUR_CAPTURE.check,
+    translation: ROW.NOT_YOUR_CAPTURE.translation,
+    detail: "the capture's actor is not the member marking it, so nothing was written",
+    captureSha
+  };
+}
+function noSuchCapture(captureSha) {
+  return {
+    ok: false,
+    reason: "NO_SUCH_CAPTURE",
+    code: "NO_SUCH_CAPTURE",
+    check: ROW.NO_SUCH_CAPTURE.check,
+    translation: ROW.NO_SUCH_CAPTURE.translation,
+    detail: "no capture held in the record answers to that digest (one capture, named by its 64-hex digest, per act), so nothing was written",
+    captureSha
+  };
+}
+function noService(field, detail) {
+  return {
+    ok: false,
+    reason: "NO_SERVICE",
+    code: "NO_SERVICE",
+    check: ROW.NO_SERVICE.check,
+    translation: ROW.NO_SERVICE.translation,
+    detail,
+    field
+  };
+}
 
 // src/sources/schema.mjs
 var SOURCES_SCHEMA = `
@@ -82143,15 +82250,30 @@ CREATE TABLE IF NOT EXISTS source_reads (
   at             TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS source_reads_source ON source_reads(source_id, seq);
+-- R16: a capture marked as a member-keyed result, by the member who captured it. Appended once, never edited or removed;
+-- the latest mark of a capture is the one read (R17). It holds the vendor and the terms as stated, never a query, a
+-- search term or a result the member did not capture (R18).
+CREATE TABLE IF NOT EXISTS source_keyed_marks (
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT,
+  capture_sha    TEXT NOT NULL,
+  service        TEXT NOT NULL,
+  terms          TEXT,
+  by             TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS source_keyed_marks_capture ON source_keyed_marks(capture_sha, seq);
 `;
-var SOURCES_TABLES = Object.freeze([
-  "sources",
-  "source_knocks",
-  "source_entries",
-  "source_sight",
-  "source_consents",
-  "source_reads"
-]);
+var CLASSES2 = (exportClass, sight, versionChain) => ({ purge: "exempt", expunge: "none", export: exportClass, sight, derive: "stored", version_chain: versionChain });
+var SOURCES_TABLE_CLASSES = Object.freeze([
+  { name: "sources", ...CLASSES2("never", "group", false) },
+  { name: "source_knocks", ...CLASSES2("admin-only", "group", false) },
+  { name: "source_entries", ...CLASSES2("never", "source", true) },
+  { name: "source_sight", ...CLASSES2("never", "source", false) },
+  { name: "source_consents", ...CLASSES2("never", "source", true) },
+  { name: "source_reads", ...CLASSES2("never", "source", false) },
+  { name: "source_keyed_marks", ...CLASSES2("never", "source", true) }
+].map((e) => Object.freeze(e)));
+var SOURCES_TABLES = Object.freeze(SOURCES_TABLE_CLASSES.map((e) => e.name));
 function migrateSources(sql) {
   const bare2 = SOURCES_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare2.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
@@ -82168,6 +82290,8 @@ var SECRET_MIN = 20;
 var VALUE_MAX = 400;
 var CLAIMED_BY_MAX = 200;
 var EVIDENCE_MAX = 2e3;
+var SERVICE_MAX = 200;
+var TERMS_MAX = 2e3;
 var CONSENT_STATEMENT = "This consent is permanent for anything published under it: what is published under it stays published, even if the consent is later withdrawn.";
 var WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the consent stays published.";
 var NOT_RECORDED = "known to the group, not recorded";
@@ -82206,21 +82330,27 @@ var Sources = class _Sources {
   #record;
   #membership;
   #captureRef;
+  #provenanceRef;
   #clock;
   #listeners = [];
-  constructor({ storage, record, membership, capture = null, now = null } = {}) {
+  constructor({ storage, record, membership, capture = null, provenance = null, now = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
     this.#captureRef = capture;
+    this.#provenanceRef = provenance;
     this.#clock = typeof now === "function" ? now : () => Date.now();
     migrateSources(this.#sql);
-    const declared = record.declarePurge("sources", [], { exempt: [...SOURCES_TABLES] });
+    const declared = record.declareTable("sources", SOURCES_TABLE_CLASSES.map((e) => ({ ...e })));
     if (declared && declared.ok === false)
-      throw new Error(`sources: record-core refused its purge declaration: ${declared.reason} (${declared.table})`);
+      throw new Error(`sources: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
   }
   get #capture() {
     return typeof this.#captureRef === "function" ? this.#captureRef() : this.#captureRef;
+  }
+  get #provenance() {
+    if (typeof this.#provenanceRef === "function") this.#provenanceRef = this.#provenanceRef();
+    return this.#provenanceRef;
   }
   #rows(q7, ...a) {
     return [...this.#sql.exec(q7, ...a)];
@@ -82872,6 +83002,101 @@ var Sources = class _Sources {
     const w = this.#writeConsent(src.source_id, plan, { via: "secret", by: `knocker:${src.pseudonym}` });
     return { ok: true, entry: w.entry, audience: w.audience, act: w.act, at: w.at, statement: w.statement };
   }
+  /* ---- R16–R18: a member-keyed result ---- */
+  /** R16: the capture's own document, `{actor}`, from its home bundle's `data/provenance.json` (`provenance.homeOf`,
+   *  its R4; the document `acquisition` R16 writes), or null when the record holds no such capture. */
+  #captureDocument(captureSha) {
+    const home = this.#provenance.homeOf(captureSha);
+    if (!home || typeof home.bundleId !== "string") return null;
+    const f17 = this.#record.readFile(home.bundleId, "data/provenance.json");
+    const reg = f17 && typeof f17.text === "string" ? safeJson12(f17.text) : null;
+    const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+    const doc = docs.find((d) => isObj11(d) && isObj11(d.capture) && String(d.capture.sha256 ?? "").toLowerCase().replace(/^sha256:/, "") === captureSha);
+    return doc ? { actor: typeof doc.capture.actor === "string" ? doc.capture.actor : null } : null;
+  }
+  /** R16 (`op=sourcekeyed`): a member marks a capture they made as a result from a member-keyed outside source (a paid
+   *  people-search database or another fee-bearing record), reached by their own act on their own account under the
+   *  vendor's terms. Only that member's own act (R18: never a machine, a daemon or a scheduled consumer), one capture
+   *  per act; the mark holds the vendor and the terms, never a query, a search term or a result not captured (R18:
+   *  every other field of the call is dropped). Refusals, in order: `MACHINE_CANNOT_MARK`, `NO_SERVICE` (naming the
+   *  field), `NO_SUCH_CAPTURE`, `NOT_YOUR_CAPTURE`; each writes nothing. Appended once with `by` and the instant; the
+   *  same mark again writes nothing. */
+  markKeyedResult(args = {}) {
+    const a = isObj11(args) ? args : {};
+    const by = this.#memberOf(a.by);
+    if (!by) return machineCannotMark();
+    const service = str4(a.service);
+    if (!service || service.length > SERVICE_MAX)
+      return noService("service", `the service is the vendor's name, at most ${SERVICE_MAX} characters`);
+    if (a.terms !== void 0 && a.terms !== null && (typeof a.terms !== "string" || a.terms.length > TERMS_MAX))
+      return noService("terms", `the vendor's terms, when stated, are text of at most ${TERMS_MAX} characters`);
+    const terms = str4(a.terms) || null;
+    const captureSha = typeof a.captureSha === "string" ? a.captureSha.trim().toLowerCase() : null;
+    if (!captureSha || !HEX645.test(captureSha)) return noSuchCapture(null);
+    let doc;
+    try {
+      doc = this.#captureDocument(captureSha);
+    } catch {
+      doc = null;
+    }
+    if (!doc) return noSuchCapture(captureSha);
+    if (this.#memberOf(doc.actor) !== by) return notYourCapture(captureSha);
+    const last = this.#lastMark(captureSha);
+    if (last && last.service === service && (last.terms ?? null) === terms && last.by === by)
+      return { ok: true, existed: true, captureSha, service, terms, by, at: last.at };
+    const at31 = this.#instant();
+    this.#record.transact(() => {
+      this.#sql.exec(
+        `INSERT INTO source_keyed_marks (capture_sha, service, terms, by, at) VALUES (?, ?, ?, ?, ?)`,
+        captureSha,
+        service,
+        terms,
+        by,
+        at31
+      );
+      return { ok: true };
+    });
+    return { ok: true, captureSha, service, terms, by, at: at31 };
+  }
+  #lastMark(captureSha) {
+    return this.#one(`SELECT * FROM source_keyed_marks WHERE capture_sha = ? ORDER BY seq DESC LIMIT 1`, captureSha);
+  }
+  /** R17: a marked capture's `{member_keyed: true, service, by, at, reproducible_by_public: false, grade_cap}` (its
+   *  latest mark), else null; never throws. `grade_cap` is one rank below the letter `provenance.captureGrade` answers
+   *  for the capture, in `BASIS_GRADES`' order, D staying D. Where it answers no letter (received, unrecorded or an
+   *  unruled route) the cap is one rank below the ceiling it names, the most a leg on it could carry; an authored
+   *  observation, which earns none, is held at the testimony grade. */
+  keyedResultOf(captureSha) {
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
+      if (!HEX645.test(sha)) return null;
+      const m = this.#lastMark(sha);
+      if (!m) return null;
+      return {
+        member_keyed: true,
+        service: m.service,
+        by: m.by,
+        at: m.at,
+        reproducible_by_public: false,
+        grade_cap: this.#gradeCap(sha)
+      };
+    } catch {
+      return null;
+    }
+  }
+  #gradeCap(sha) {
+    const weakest = BASIS_GRADES[BASIS_GRADES.length - 1];
+    const below = (letter2) => BASIS_GRADES[Math.min(BASIS_GRADES.indexOf(letter2) + 1, BASIS_GRADES.length - 1)];
+    let g = null;
+    try {
+      g = this.#provenance.captureGrade(sha);
+    } catch {
+      g = null;
+    }
+    if (g && BASIS_GRADES.includes(g.grade)) return below(g.grade);
+    if (g && BASIS_GRADES.includes(g.ceiling)) return below(g.ceiling);
+    return BASIS_GRADES.includes(TESTIMONY_GRADE) ? TESTIMONY_GRADE : weakest;
+  }
 };
 var OF5 = /* @__PURE__ */ new WeakMap();
 function sourcesOf(ctx, deps = {}) {
@@ -82884,6 +83109,7 @@ function sourcesOf(ctx, deps = {}) {
       record,
       membership: deps.membership ?? membershipOf(ctx, { record }),
       capture: deps.capture ?? (() => captureOf(ctx)),
+      provenance: deps.provenance ?? (() => provenanceOf(ctx, { record })),
       now: deps.now ?? null
     });
     OF5.set(storage, s);
@@ -82900,6 +83126,7 @@ function sourcesOps(s, url, body) {
     sourceconsent: () => s.recordConsent({ ...b, by: q7("by") }),
     sourceconsentwithdraw: () => s.withdrawConsent({ ...b, by: q7("by") }),
     knockerconsent: () => s.consentBySecret({ ...b, sourceAddress: q7("source"), now: q7("now") }),
+    sourcekeyed: () => s.markKeyedResult({ captureSha: b.captureSha, service: b.service, terms: b.terms, by: q7("by") }),
     sourcerung: () => s.rungOf({ source: q7("source_id") ?? b.source, viewer: q7("viewer") }),
     sourcereadlog: () => s.readLog({ source: q7("source_id") ?? b.source, viewer: q7("viewer") }),
     sourcepublishable: () => s.publishableAt({
@@ -138016,7 +138243,7 @@ var withRowNow = (r) => {
   return row3 ? { ...r, code: r.reason, check: row3.check, translation: row3.translation } : r;
 };
 var withRow9 = (r) => r && typeof r.then === "function" ? r.then(withRowNow) : withRowNow(r);
-var SERVICES = Object.freeze([
+var SERVICES2 = Object.freeze([
   "filingPrepare",
   "filingApprove",
   "filingRecordSent",
@@ -138061,7 +138288,7 @@ var Filings = class _Filings {
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : null;
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
     this.now = typeof now === "function" ? now : () => stampInstant("second");
-    for (const m of SERVICES) {
+    for (const m of SERVICES2) {
       const fn = this[m].bind(this);
       this[m] = (...a) => withRow9(fn(...a));
     }
