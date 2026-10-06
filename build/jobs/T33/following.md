@@ -39,3 +39,9 @@ Seam (Choices 7): no clean copy seam in monitoring; following is new code in `bi
 ## J2 · REPORT
 
 events (R22, against following R4): followedImport writes a Legistar meeting without linking it to the followed body (no concerns row, no participant), so eventsFor({entity: body, kinds: [meeting]}) never returns an imported meeting. following R4 reads a body's observed meetings that way, so today only member-recorded meetings concerning the body govern a recurrence instance. Smallest fix in events: a concerns row from each imported meeting to the body it was imported for. Recorded in my record.
+
+## J3 · COMPLETE
+
+T33-79 complete with R19 (K1666), on J1's readings (K1665). Code `bio-plane/src/following/`, tests `bio-plane/test/m/following/` (21 pass; R1–R19 each named). Checks: format 0, coverage 19/19, ownership 0; architecture 0 in product code, 2 fixture lines (below). Tests re-pointed at the real monitoring host (sweepHost: pause, epoch, claim, running, ranked, land through real promotion); `schedule` and `monitor` stand in (per_meeting rows need retrieval's projection; the check is monitoring's own).
+For modules.json: paths `bio-plane/src/following/`, tests `bio-plane/test/m/following/`; uses K1665's ten plus `provenance` and `extraction` (test fixture only: the landing's register and reading reach events through promotion; both earlier layers): record-grammar, jurisdictions, civil-time, legistar-reader, record-core, membership, provenance, capture, extraction, entities, events, monitoring.
+Found: events' imported meetings carry no link to their body (REPORT J2). Nothing deferred. Record: `build/jobs/T33/following.md`.
