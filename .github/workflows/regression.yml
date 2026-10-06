@@ -21,6 +21,9 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+        with:
+          # migrate-released reads every released cut's files with `git show` (K1710).
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "26.10.0"
