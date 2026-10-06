@@ -26,3 +26,30 @@ Five points on T33-28; I carry on with my best reading of each and stop for none
 ## J3 · REPORT
 
 Applied B2: merged tranche/T33 @ e07becea (aa4a17fb25). Architecture now 0 failures; module tests 32 pass, 0 fail; format, coverage (9 of 9), ownership clean. Next step, per K1563 (1): once LINES merges into tranche/T33, I merge it, default deps.lines to linesOf(host), re-point R6's governingPath tests at the real lines (beside the injected reader), re-run steps 5-7 and post COMPLETE. Until then nothing else is left. Please ring me when lines is on tranche/T33.
+
+## J4 · COMPLETE
+
+T33-28 done on `job/T33/local-facts` (tranche/T33 merged after LINES #1, K1577).
+
+**Entries applied (T33-28; K1438, K1444, K1563):**
+- **R3** Horizons on local days of the fact's profile's zone through `civil-time.localDay`: a year's end, 1 November and the 183rd day each fall at the zone's local midnight, the confirmation's own day taken locally too; the zone is the profile's `time_zone` as it governs here (a member's correction, else the profile's). No zone: `horizon: {undetermined, why}`, `due: null`, a confirmation not shown in force (J2 (4)). The UTC-day site (`index.mjs:53`) is gone; days shown in `why`/`says` are local (J2 (5)).
+- **R6** `governingPath({profile, fact, office, entity?, at, year?, viewer})`: the office's own fact; else upward along `part_of` through `lines.structureAt` (one line at a time, at most `BOUNDS.depth_default`, naming each line) to the nearest entity `officeOf` maps to an office the profile holds a fact for; else the `offices` grouping (a year's entry for every office), saying why. An undetermined line, two parents, a truncated read, a refusal, a loop or the depth stop the walk with why. Writes nothing, never throws. `deps.lines` defaults to `linesOf(host)` (K1563 (1)); `deps.officeOf` comes from the composition root (J2 (3), recorded for plane's START). `factPath` stays pure.
+- **R9** `local_fact_acts` declared through `record-core.declareTable`: purge clear, expunge none, export admin-only, sight group, derive stored, version_chain true, no bundle key (R5's purge kept).
+- **R7** unchanged; `LOCAL_FACT_HORIZONS`' comment now says local days.
+
+**A flaw fixed in my module:** with `jurisdictions` R47 a profile holds several entries per year and offices, one per closure `list`; a holiday path silently named whichever came first. Paths now name the office calendar's entry (no `list`) only; list entries are not local facts here (J2 (6); naming them is N562).
+
+**Deferred:** none.
+
+**Found in other modules / artifacts:**
+- `bio-plane/dist/bio-plane.bundled.mjs` (bundler's generated artifact) is stale: it inlines local-facts' old `declarePurge` call and `LOCAL_FACTS_TABLES` shape. For BOB's regeneration at layer close (mechanics §14).
+- Consumers: `action-clocks`, `filings` and the UI read `why`/`says` text from `factStatus`; its days are now local days of the profile's zone (the test profile's Halifax: 01:00Z shows the previous day). Their R10 and R9/R30 tests are already named reds (K1519); when their jobs green them, expect local days there.
+- `plane`: should pass `officeOf` (entity → profile office, the ladders §5.4 bridge) to `localFactsOf`; without it the `part_of` walk always falls back, saying so.
+
+**Tests (step 5):** `node --test bio-plane/test/m/local-facts/`: 33 tests, 33 pass, 0 fail; every live id R1–R9 named; R6 run over the real `lines` (linesOf(host)) as well as an exact reader. Users of local-facts and lines (`action-clocks`, `filings`, `queue-producers`, `affordances`, `control-plane`, `plane`, `lines`): 609 tests, 599 pass, 10 fail, the identical 10 with identical assertion output on plain `tranche/T33` @ the merged head: the 7 named reds of B1 (action-clocks R10 ×3, filings R9 and R30, affordances N364's ops, control-plane R26) and three red on the tranche already (affordances "R3 R7 R12: layer 9's 41 mutating ops", control-plane "R22 CHECK_FAMILIES is total" and "R43, R22: every code decorated"), none local-facts'.
+
+**Checks (step 6):** format: 126 modules, 125 requirements files; 0 failures · architecture: 11 product files, 32 relative imports; 0 failures · coverage: 1 modules, 9 of 9 live requirement ids named by a test; 0 failures · ownership: 8 files changed by local-facts between tranche/T33 and HEAD; 0 failures.
+
+**Final uses:** record-grammar, jurisdictions, civil-time, connection-grammar, record-core, membership, lines (as modules.json now has them).
+
+Size (session_01UrBMVXpBq34KGAWaYpcZ3K): test runs 16, module lines 752
