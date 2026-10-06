@@ -1,6 +1,6 @@
 # admission (T34)
 
-**Status** · session_01881r9vqe42oZehxYxDvLfc · depth 2 · WORKING · handled B2
+**Status** · session_01881r9vqe42oZehxYxDvLfc · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · QUESTION
 
