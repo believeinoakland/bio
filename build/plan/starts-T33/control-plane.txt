@@ -16,3 +16,4 @@ Finding (K1638, from CASE-DISCLOSURES #3 J2 (2)): `families.test.mjs:245` pins c
 Finding (K1640, from CORPUS-EXPORT #3 J3): `corpusExportOps` gains `exportpage` (export's credential) and `exportrender` (R10, a member's stamped viewer); route both.
 Finding (K1643, from PUBLICATION #20 J2 (c)): `families.mjs` lists `src/case-tensions/checks.mjs` for C-92 (inside the named red "CHECK_FAMILIES is total").
 Finding (K1649, from CONSEQUENCES #8 J1 (6)): C-114.5 `AFFECTED_INDIVIDUAL` is retired and C-114.21/.22 are new; your own fixture `test/m/control-plane/rows-before-r43.json` names C-114.5, so regenerate or re-pin it. `test/fixtures/row-census-1.60.0.jsonl` names it too, but that is row-census's fixture, within N553's stamp.
+Finding (K1657, from ACTIONS #12 J2 (3)): actions' new op `addresseesuggest` (R62, a read for every signed-in class) and the `proceeding` filter of `op=actions` (R65) are routed here.

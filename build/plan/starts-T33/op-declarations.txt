@@ -12,3 +12,4 @@ Finding (K1610): ai-runs' `aiUseCheck` and `providerLimit` are answers' and agen
 Finding (K1612, from AI-RUNS #10 J3): also declare `airunverify` (`by` stamped).
 Finding (K1635, from DOCKET #5 J2 (4)): `docketprepare` takes two new fields, `order` and `capture` (court-order); `DOCKET_VOCABULARIES.docket_entry_kinds` gains `court-order`; docket exports `ORDER_EFFECTS` (remove, redact, seal, unseal); its new reads `courtOrdersOf({case, edition?})` and `courtOrderOf(case, entry)` take no viewer.
 Finding (K1640, from CORPUS-EXPORT #3 J3): `corpusExportOps` gains `exportpage` (export's credential) and `exportrender` (R10, a member's stamped viewer); declare both.
+Finding (K1657, from ACTIONS #12 J2 (3)): actions' new op `addresseesuggest` (R62, a read for every signed-in class) and the `proceeding` filter of `op=actions` (R65) are declared here.
