@@ -107,7 +107,7 @@ test("R8 PACKET_NO_REASON (C-115.44): a reason absent, not a string, blank or on
   assert.deepEqual([o.ok, o.version, read(o.id, 3).reason], [true, 3, "asked through the op"]);
 });
 
-test("R9 the six sections, each item naming its record source: facts, chronology in date order (ties by source id), exhibits with provenance and attestations, standards with in-force, candidate theories, deadlines; consequences as recorded", async () => {
+test("R9 the six sections, each item naming its record source: facts, the chronology (a timeline read, R33), exhibits with provenance and attestations, standards with in-force, candidate theories, deadlines; consequences as recorded", async () => {
   const x = tier3();
   correspond(x, x.A, { direction: "sent", at: "2026-03-10", account: "letter" });
   correspond(x, x.A, { direction: "received", at: "2026-03-12", party: "the clerk", artifactSha: sha(`the text of ${DOC}`) });
@@ -127,12 +127,10 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   assert.deepEqual([fact.finding, fact.case, fact.edition, fact.version_sha, fact.source], [F, CASE, 1, x.pin, `${F}@${CASE}/1`]);
   assert.equal(fact.claim.conclusion, "The works order was let without the vote the bylaw requires.");
   assert.deepEqual(fact.citations.map((c) => c.target), [DOC]);
-  /* chronology: every dated event in order, ties by source id */
-  const ch = s.chronology.items;
-  assert.deepEqual(ch.map((e) => [e.date, e.source]), [
-    ["2026-03-02", x.D], ["2026-03-10", `${A}#0`], ["2026-03-10", `${A}/state_history[0]`],
-    ["2026-03-12", `${A}#1`], ["2026-04-01", `${A}/clock[0]`], ["2026-09-28", `${F}@${CASE}/1`]]);
-  for (let i = 1; i < ch.length; i++) assert.ok(ch[i - 1].date < ch[i].date || (ch[i - 1].date === ch[i].date && ch[i - 1].source < ch[i].source));
+  /* chronology: the timeline of the finding's subject (R33, whose own tests read it whole), its two lanes apart */
+  assert.deepEqual([s.chronology.title, s.chronology.marking, s.chronology.set.map((i) => i.id)], ["Chronology", s.facts.marking, [x.SUBJECT]]);
+  assert.deepEqual(Object.keys(s.chronology.lanes), ["world", "ours"]);
+  assert.equal(fact.subject_entity, x.SUBJECT, "the entity the finding concerns, from its published bytes");
   /* exhibits: each capture a fact or event cites, with digest, locator, capture time and attestations */
   const ex = Object.fromEntries(s.exhibits.items.map((e) => [e.sha256, e]));
   const docSha = sha(`the text of ${DOC}`), evSha = sha("the text of INFO-2026-0002-ledger");
@@ -207,7 +205,7 @@ test("R9 an exhibit's attestations are attestation.attestationsOf's answer (its 
 });
 
 test("R9 a claim deadline's date only from a recorded start event and its count: calendar, business on the holiday calendar, undetermined past the calendar's years", async () => {
-  const base = { rule: "claim_act", applies_to: "claim", days: 10, citation: "Test Stat. § 9.30", basis: "TEST" };
+  const base = { rule: "claim_act", applies_to: "claim", days: 10, citation: "Test Stat. § 9.30", basis: "TEST", status: "researched" };
   const prof = (deadlines) => {
     const x0 = world();
     return { ...x0.profile(PROFILE), id: "test-filings-deadlines", deadlines };
@@ -242,8 +240,8 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
   const x0 = world();
   const PID = "test-filings-r30";
   const p = { ...x0.profile(PROFILE), id: PID,
-              deadlines: [{ rule: "claim_act", applies_to: "claim", days: 2, count: "business", starts: "act", citation: "Test Stat. § 9.30", basis: "TEST" },
-                          { rule: "claim_cal", applies_to: "claim", days: 2, count: "calendar", starts: "act", citation: "Test Stat. § 9.31", basis: "TEST" }] };
+              deadlines: [{ rule: "claim_act", applies_to: "claim", days: 2, count: "business", starts: "act", citation: "Test Stat. § 9.30", basis: "TEST", status: "researched" },
+                          { rule: "claim_cal", applies_to: "claim", days: 2, count: "calendar", starts: "act", citation: "Test Stat. § 9.31", basis: "TEST", status: "researched" }] };
   const x = world({ profiles: [p] });
   /* the act on Wednesday 12 August 2026; the Town Clerk's office alone keeps Friday the 14th */
   const D = x.determine({ act: { ...x.act, at: "2026-08-12" } });

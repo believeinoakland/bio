@@ -121,14 +121,23 @@ test("R21 availableActions answers R15's block for a determination's offices, fr
 });
 
 test("R18 every filled value, packet item and chronology event names the record source it was read from; an undetermined fact is stated as undetermined, never defaulted", async () => {
-  const { x, A, d2, p2 } = (await busy());
+  const { x, A, T3, d2 } = (await busy());
   const d = x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
   for (const b of d.blanks) assert.ok(typeof b.source === "string" && b.source, b.name);
   for (const u of d.unfilled) assert.ok(typeof u.why === "string" && u.why, u.name);
   assert.ok(d2.blanks.length);
-  const s = x.f.counselPacketRead({ id: p2.id, viewer: V("olive") }).sections;
+  /* R33: an event of the chronology's set in each place a lane holds one (dated, and placed nowhere) */
+  x.event({ value: "2026-04-02", concerns: [x.SUBJECT] });
+  x.event({ concerns: [x.SUBJECT] });
+  const p3 = x.f.counselPacket({ reason: WHY, action: T3, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  assert.deepEqual([p3.sections.chronology.lanes.world.items.length, p3.sections.chronology.lanes.world.placed_nowhere.length], [1, 1]);
+  const s = x.f.counselPacketRead({ id: p3.id, viewer: V("olive") }).sections;
   for (const [name, sec] of Object.entries(s)) {
-    for (const item of sec.items) {
+    /* R33: the chronology's items are its lanes' */
+    const items = name === "chronology"
+      ? [...sec.lanes.world.items, ...sec.lanes.world.placed_nowhere, ...sec.lanes.ours.sources.flatMap((o) => o.items || [])]
+      : sec.items;
+    for (const item of items) {
       if (name === "exhibits") assert.ok(item.cited_by.length && item.sha256, name);
       else assert.ok(typeof item.source === "string" && item.source, `${name}: ${JSON.stringify(item).slice(0, 80)}`);
     }
@@ -137,12 +146,13 @@ test("R18 every filled value, packet item and chronology event names the record 
   const dl = s.deadlines.items[0];
   assert.equal(dl.date.state, "undetermined");
   assert.ok(dl.date.why);
-  /* an act stated over a period starts no single day: its date in the chronology is the period's start, and a claim
+  /* an act stated over a period starts no single day: the chronology reads from the period's start (R33), and a claim
      deadline starting at the act is undetermined, with why */
   const Dp = x.determine({ act: { ...x.act, at: undefined, period: { from: "2026-03-01", to: "2026-03-05" } } });
   const P = x.action({ kind: "commitment_claim", legs: [{ target: Dp, kind: "rests_on" }] });
   const pp = x.f.counselPacket({ reason: WHY, action: P, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
-  assert.equal(pp.sections.chronology.items.find((e) => e.source === Dp).date, "2026-03-01");
+  assert.equal(pp.sections.chronology.from, "2026-03-01");
+  assert.equal(pp.sections.deadlines.items.find((i) => i.starts === "act")?.date.state ?? "undetermined", "undetermined");
 });
 
 test("R19 drafts, approvals, sendings, packets, exports and proposals are append-only, keyed to the action and declared to purge; every read answers an action the viewer may not see as absent", async () => {

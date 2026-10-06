@@ -26,9 +26,11 @@ export function realDate(v) {
  *  does not list for that office, or reading an entry disputed or absent here, is undetermined, never counted as though that year had none
  *  (jurisdictions R33). The count itself is `action-clocks`' (its R2's `computeDeadline`, the one rule a clock entry's
  *  date and a packet's deadline are counted by): here the start is the one this module's R9 found (the act, or a ledger
- *  event), handed to it as the event its rule starts from. `calendar` is its statement of the calendar it read (R30). */
-export function deadlineDate({ start = null, days = null, count = null, holidays = null, view = null, counterparty = null,
-                               kind = null, factOf = null } = {}) {
+ *  event), handed to it as the event its rule starts from, with the rest of the profile's `rule` as written (its
+ *  `closures`, `roll` and the like: jurisdictions R26, R47, so a count reads the closure list its rule names and no
+ *  other). `calendar` is its statement of the calendar it read (R30). */
+export function deadlineDate({ start = null, days = null, count = null, rule = null, holidays = null, view = null,
+                               counterparty = null, kind = null, factOf = null } = {}) {
   const from = realDate(start);
   if (!from) return { state: "undetermined", why: "no start event is recorded, so no date is computed from it" };
   if (!Number.isInteger(days) || days < 0)
@@ -38,7 +40,7 @@ export function deadlineDate({ start = null, days = null, count = null, holidays
   if (count === "business" && days > 2600)
     return { state: "undetermined", why: "the count runs past ten years" };
   const v = view && typeof view === "object" ? view : { holidays: Array.isArray(holidays) ? holidays : [] };
-  const c = computeDeadline({ starts: "filed", days, count },
+  const c = computeDeadline({ ...(rule && typeof rule === "object" ? rule : {}), starts: "filed", days, count },
                             { correspondence: [{ direction: "sent", at: from }], counterparty, action_kind: kind }, v,
                             { factOf: typeof factOf === "function" ? factOf : null });
   const calendar = c.calendar ? { calendar: c.calendar } : {};
