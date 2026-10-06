@@ -11,7 +11,8 @@
    promotion steps read once a wake has reached them on this host (`refs`, connections'; `inquiry_bundle_facts`,
    inquiry's) are created as the plane creates them (N506's tail, K1164: SCHEDULER #25 found a promotion after a wake
    failing on them here), their statements copied, since this module uses neither. Every test drives `monitoring` at its
-   interface. */
+   interface. The content types are docprofile's registry as a test leaves it: empty unless the test registers a stand-in
+   (`registerCalendarStub`), since `doctypes` is a later module's composition (T34-8). */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -26,6 +27,7 @@ import { actionsOf, actionFacts } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { PROJECTION_SCHEMA, PROJECTION_TABLE } from "../../../src/retrieval/schema.mjs";
+import { registerDoctype, CONTRACT, CONFIDENCE } from "../../../../docprofile/registry.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 /** A Durable Object's storage over an in-memory SQLite database. */
@@ -257,6 +259,21 @@ export function world({ profiles = ["test-port-ellery"], env = null, evidence = 
     },
   };
   return w;
+}
+
+/** docprofile holds no content type of its own since T34-8 (its R36): the plane registers `doctypes`' types at
+ *  composition, and `doctypes` is not a module this one uses. A test that needs a document read under the `membership`
+ *  contract (R14's daily default) registers this stand-in through docprofile's seam: a meeting calendar, recognised
+ *  (CERTAIN) by an ASP.NET calendar page's markers, `__VIEWSTATE` and `MeetingDetail.aspx`. Registration is for the
+ *  test file's process; a document it does not recognise stays docprofile's no-type answer (contract `substance`). */
+export function registerCalendarStub() {
+  return registerDoctype({
+    key: "stub_meeting_calendar", label: "stub meeting calendar", version: 1, contract: CONTRACT.MEMBERSHIP,
+    detect: (ctx) => (/__VIEWSTATE/.test(String(ctx.text || "")) && /MeetingDetail\.aspx/.test(String(ctx.text || ""))
+      ? { match: true, confidence: CONFIDENCE.CERTAIN, signals: ["__VIEWSTATE", "MeetingDetail.aspx"] } : { match: false }),
+    parse: () => ({ entities: [], facts: {} }),
+    assess: () => ({ meaningful: null, events: [], confirmed: null, why: "the stand-in reads no meaning" }),
+  });
 }
 
 /** A sweep definition in link-sweep R1's shape, with `over` replacing any field: kept here for the readers of this

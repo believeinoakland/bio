@@ -2,7 +2,7 @@
    own frequency (R17) and the member's act that sets it (R52), and the lengthening of a contract default (R18). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, serve, DAEMON, NOW_MS, V } from "./fixture.mjs";
+import { world, serve, DAEMON, NOW_MS, V, registerCalendarStub } from "./fixture.mjs";
 import { cadenceFor, monitorIntervalMs, CONTRACT_FREQUENCY, MONITOR_CADENCE_MS, monitoringOps, FREQUENCY_CHECKS,
          ADDRESS_FREQUENCY_REASONS, FREQUENCY_REASON_MAX, VOLATILITY_RUN, lengthenedFrequency } from "../../../src/monitoring/index.mjs";
 import { MONITOR_FREQ } from "../../../src/capture/index.mjs";
@@ -113,7 +113,7 @@ test("R16 the plan: never checked is due; nothing authored and nothing read is d
   assert.deepEqual(due.slice(0, 2), [never, unread].sort());
   assert.deepEqual(due.slice(2), [overdue2, overdue1], "then longest-overdue first");
   const un = Object.fromEntries(p.unscheduled.map((x) => [x.bundle, x.reason]));
-  assert.equal(un[meeting], "cadence is a meeting schedule this plane does not hold");
+  assert.equal(un[meeting], "cadence is a meeting schedule your group's Civicsmith does not hold");
   assert.equal(un[none], "no frequency declared");
   assert.match(un[unknown], /which is not one the catalog knows/);
   assert.match(un[checkedUnread], /no check has read a document at this address/);
@@ -287,7 +287,7 @@ test("R17 an address's own frequency, when set, governs over its versions' and R
   const e = tick.ticked.find((x) => x.address === ADDR);
   assert.deepEqual([e.frequency, e.frequency_source, e.address_frequency.reason], ["daily", "address", "legal_deadline_approaching"]);
   /* an address set to per_meeting or none is unscheduled, with its reason */
-  for (const [frequency, reason] of [["per_meeting", "cadence is a meeting schedule this plane does not hold"],
+  for (const [frequency, reason] of [["per_meeting", "cadence is a meeting schedule your group's Civicsmith does not hold"],
                                      ["none", "the address's own frequency, set by a member, is none: it is not checked on a clock"]]) {
     assert.equal(set(w, { frequency, reason: "source_changes_rarely" }).ok, true);
     const u = w.m.schedule(NOW_MS + 3 * DAY).unscheduled.find((r) => r.address === ADDR);
@@ -297,6 +297,8 @@ test("R17 an address's own frequency, when set, governs over its versions' and R
 
 test("R18 a document whose substance has not moved across repeated checks earns a longer interval: one step up daily, weekly, monthly per 10 unchanged checks, never past monthly, stated on the plan row with its count and step; any change or failed look returns the contract default", async () => {
   assert.equal(VOLATILITY_RUN, 10);
+  /* the calendar's membership contract is a content type's, registered as the plane registers doctypes' (T34-8) */
+  assert.equal(registerCalendarStub().ok, true);
   const w = world();
   /* a meeting calendar served by ASP.NET (contract membership, daily) and a plain text document (substance, weekly) */
   const cal = (h) => `<html><head><title>Calendar</title></head><body><form id="aspnetForm"><input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="abc" />
