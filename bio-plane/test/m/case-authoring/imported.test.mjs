@@ -35,7 +35,7 @@ async function setup() {
 }
 const args = (P) => ({ scope: "s", statement: "It does not cover the amendments.", subjectPosition: "not_sought",
   subjectJustification: "A public record.", biasAcknowledgement: "We read the minutes as the account.", excluded: [],
-  project: P, targets: [Q], roles: { [Q]: "load_bearing" }, viewer: V("alice"), author: "alice" });
+  project: P, targets: [Q], roles: { [Q]: "load_bearing" }, viewer: V("alice"), author: "alice", tieAttested: true });
 const docOf = (w, r) => w.row(`SELECT text FROM case_documents WHERE case_id=?`, r.caseId).text;
 
 test("R55 (case-disclosures R13) (real case-import): the accepted_work: row states, from case-import's acceptanceOf and importedCase, who accepted which edition, when and why, the recreation result and the source case file's manifest; what was checked stays inside the group", async () => {

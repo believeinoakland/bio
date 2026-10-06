@@ -290,13 +290,13 @@ test("R32: its refusals are R2's authority refusals and R4's per-member refusals
   assert.equal(ask({ project: null, targets: ["INQ-2026-0404-none"] }).reason, "NO_PUBLISHING_PROJECT", "R2 before R4");
 });
 
-test("R32, R55 (case-disclosures R1): op=publishtensions takes its stamps from the query after the body, and op=publish carries tensionsDisclosed in its body", () => {
+test("R32, R55 (case-disclosures R1): op=publishtensions takes its stamps from the query after the body, and op=publish carries tensionsDisclosed in its body", async () => {
   const { w, P, id } = seen();
   const q = (op, s) => new URL(`http://do/${op}?viewer=${encodeURIComponent(V("alice"))}&author=alice&${s}`);
   const read = caseAuthoringOps(w.ca, q("publishtensions", `project=${P}&targets=${F}`), { author: "bo", viewer: V("bo") })
     .publishtensions();
   assert.deepEqual([read.ok, read.candidates.map((c) => c.candidate)], [true, [id]]);
-  const pub = caseAuthoringOps(w.ca, q("publishcase", `project=${P}`),
+  const pub = await caseAuthoringOps(w.ca, q("publishcase", `project=${P}`),
     { ...AUTHORED, targets: [F], roles: { [F]: "load_bearing" }, tensionsDisclosed: disclose(id), author: "bo" }).publishcase();
   assert.equal(pub.ok, true, JSON.stringify(pub).slice(0, 300));
   assert.equal(pub.tensions[0].acknowledged_by, "alice", "the author stamp, never a body's");

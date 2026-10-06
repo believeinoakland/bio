@@ -2,13 +2,13 @@
    that moved here (R29), no place named (R30), and the ops that route to the module (K3). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
 import { world, V, AUTHORED } from "./fixture.mjs";
 import { caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
          CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES }
   from "../../../src/case-authoring/index.mjs";
 import * as CHECKS from "../../../src/case-authoring/checks.mjs";
 import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
+import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
@@ -40,13 +40,13 @@ test("R18: publishCase is synchronous and writes only inside the caller's transa
   assert.equal(w.count("minted_ids"), n);
 });
 
-test("R25: every authorship field is a stamp — the author, an acknowledger, the draft link's namer — and statement_by is read from the record, never a body's", () => {
+test("R25: every authorship field is a stamp — the author, an acknowledger, the draft link's namer — and statement_by is read from the record, never a body's", async () => {
   const { w, P } = setup();
   w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "bo" });
   const url = new URL(`http://do/publishcase?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}&draft=DRAFT-2026-0001`);
   const body = { ...AUTHORED, targets: [Q], roles: { [Q]: "load_bearing" }, author: "mallory", viewer: V("mallory"),
                  statement_by: "mallory", statementBy: "mallory", draft: "DRAFT-2026-0099" };
-  const r = caseAuthoringOps(w.ca, url, body).publishcase();
+  const r = await caseAuthoringOps(w.ca, url, body).publishcase();
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.deepEqual([r.author, r.completeness.author, r.completeness.statement_by, r.completeness.draft.named_by,
                     r.completeness.draft.draft_id], ["alice", "alice", "bo", "alice", "DRAFT-2026-0001"]);
@@ -73,7 +73,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.13 (C-120.9 withdrawn unstamped) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5, C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), and R56's CALCULATION_NOT_DISCLOSED (new, T33-69) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.16 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"]]);
@@ -90,10 +90,13 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
     "src/case-authoring/index.mjs acknowledgeStatement > is-statement-ack-reasoned");
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11",
-     "C-120.12", "C-120.13"]);
+     "C-120.12", "C-120.13", "C-120.14", "C-120.15", "C-120.16"]);
   assert.equal(Object.values(CASE_DISCLOSURE_CHECKS).some((v) => v.check === "C-120.9"), false, "withdrawn, never used");
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
-    [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"]]);
+    [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"], ["CALCULATION_NOT_DISCLOSED", "C-136.1"]]);
+  /* R56's new row (T33-69), this module's own, never case-disclosures' */
+  assert.equal(PUBLISH_ACT_CHECKS.CALCULATION_NOT_DISCLOSED.where,
+    "src/case-authoring/index.mjs #calculationsJudged > is-calculation-disclosed");
   assert.equal(CASE_DISCLOSURE_CHECKS, DISCLOSURES.CASE_DISCLOSURE_CHECKS, "case-disclosures' one table, re-exported");
   for (const row of Object.values(CASE_DISCLOSURE_CHECKS))
     assert.match(row.where, /^src\/case-disclosures\/index\.mjs \S+ > [a-z-]+$/, "each C-120 row names case-disclosures' region");
@@ -122,17 +125,14 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
 });
 
 test("R30: no place is named in this module's behaviour or outward text — every document, answer and refusal it writes, and every row's words, name no place a jurisdiction profile covers", () => {
-  /* the places the profiles cover, read from the profiles' own data */
-  const dir = new URL("../../../../jurisdictions/profiles/", import.meta.url);
+  /* the places the profiles cover, read through jurisdictions' interface (its R1: each held profile's `covers`), never
+     scraped from the profiles' source, where other fields also hold `covers:` lists (K1545) */
   const places = new Set();
-  for (const f of readdirSync(dir)) {
-    const text = readFileSync(new URL(f, dir), "utf8");
-    for (const m of text.matchAll(/covers:\s*\[([^\]]*)\]/g))
-      for (const q of m[1].matchAll(/"([^"]+)"/g)) {
-        places.add(q[1]);
-        places.add(q[1].replace(/^(City|Town|County) of /, "").replace(/ (County|City)$/, ""));
-      }
-  }
+  for (const p of listProfiles())
+    for (const c of p.covers) {
+      places.add(c);
+      places.add(c.replace(/^(City|Town|County) of /, "").replace(/ (County|City)$/, ""));
+    }
   assert.ok(places.size >= 4, "the profiles name places");
   const { w, P } = setup();
   w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "bo" });
@@ -156,18 +156,18 @@ test("R30: no place is named in this module's behaviour or outward text — ever
   for (const p of places) assert.equal(all.includes(p), false, `names ${p}`);
 });
 
-test("K3: the ops route the stamps from the query after the body — publishcase takes targets, caseId, project and draft from either, newCase's string forms spelled out; statementack takes its subject from the query", () => {
+test("K3: the ops route the stamps from the query after the body — publishcase takes targets, caseId, project and draft from either, newCase's string forms spelled out; statementack takes its subject from the query", async () => {
   const { w, P } = setup();
   const q = (s) => new URL(`http://do/x?viewer=${encodeURIComponent(V("alice"))}&author=alice&${s}`);
   const base = { ...AUTHORED, roles: { [Q]: "load_bearing", [Q2]: "load_bearing" } };
-  const viaQuery = caseAuthoringOps(w.ca, q(`targets=${Q},${Q2}&project=${P}&newCase=false`), base).publishcase();
+  const viaQuery = await caseAuthoringOps(w.ca, q(`targets=${Q},${Q2}&project=${P}&newCase=false`), base).publishcase();
   assert.deepEqual([viaQuery.ok, viaQuery.findings.map((f) => f.target), viaQuery.minted], [true, [Q, Q2], true]);
   const w2 = setup().w; const P2 = w2.project("Two", "alice", [Q]);
   for (const [v, want] of [["true", true], ["1", true], ["yes", true], ["false", false], ["0", false], ["no", false]]) {
-    const r = caseAuthoringOps(w2.ca, q(`target=${Q}&project=${P2}&caseId=CASE-2026-0001&newCase=${v}`), base).publishcase();
+    const r = await caseAuthoringOps(w2.ca, q(`target=${Q}&project=${P2}&caseId=CASE-2026-0001&newCase=${v}`), base).publishcase();
     assert.equal(r.reason, want ? "CASE_IDENTITY_AMBIGUOUS" : "NO_SUCH_CASE", `newCase=${v}`);
   }
-  const b = caseAuthoringOps(w2.ca, q(""), { ...base, targets: [Q], project: P2, newCase: true, caseId: "CASE-2026-0001" }).publishcase();
+  const b = await caseAuthoringOps(w2.ca, q(""), { ...base, targets: [Q], project: P2, newCase: true, caseId: "CASE-2026-0001" }).publishcase();
   assert.equal(b.reason, "CASE_IDENTITY_AMBIGUOUS", "the body's own newCase and caseId when the query has none");
   const ack = caseAuthoringOps(w.ca, new URL(`http://do/statementack?case=${viaQuery.caseId}&edition=1&viewer=${encodeURIComponent(V("bo"))}&reason=${encodeURIComponent("I read it whole.")}`), null).statementack();
   assert.deepEqual([ack.ok, ack.acknowledgement.reason], [true, "I read it whole."], "the reason from the query (R19)");

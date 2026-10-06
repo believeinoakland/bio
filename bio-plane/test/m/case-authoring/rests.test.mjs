@@ -212,4 +212,4 @@ test("R55 (case-disclosures R13, R14), R14: the document's accepted_work: row st
 const publishArgs = (P, targets) => ({ scope: "s", statement: "It does not cover the amendments.", subjectPosition: "not_sought",
   subjectJustification: "A public record.", biasAcknowledgement: "We read the minutes as the account.", excluded: [],
   project: P, targets, roles: Object.fromEntries(targets.map((t) => [t, "load_bearing"])), viewer: "member:alice",
-  author: "alice" });
+  author: "alice", tieAttested: true });

@@ -60,20 +60,26 @@ test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its
     "src/case-disclosures/index.mjs hunchDebt > is-hunch-cleared"], "each names the method that raises it there");
 });
 
-test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), in the same family, moved with their translations word for word to case-disclosures (its R22), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
+test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), and C-120.14–C-120.16 (the people a case names, T33-68), in the same family, moved with their translations word for word to case-disclosures (its R22), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
   const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check, v.where]), [
     ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-disclosures/index.mjs materialsJudged > is-relied-on-presentable"],
     ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "src/case-disclosures/index.mjs acceptedWorkJudged > is-accepted-work-in-force"],
     ["FLAG_NOT_DISCLOSED", "C-120.11", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosed"],
     ["FLAGS_UNDETERMINED", "C-120.12", "src/case-disclosures/index.mjs flagsJudged > is-flags-determined"],
-    ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosure-standing"]]);
+    ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosure-standing"],
+    ["PERSON_BASIS_UNRECORDED", "C-120.14", "src/case-disclosures/index.mjs peopleJudged > is-person-basis-recorded"],
+    ["PERSON_BASIS_NOT_STANDING", "C-120.15", "src/case-disclosures/index.mjs peopleJudged > is-person-basis-standing"],
+    ["TIE_ATTESTATION_MISSING", "C-120.16", "src/case-disclosures/index.mjs tieAttestationJudged > is-tie-attested"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
     "A finding this case relies on rests on material this copy does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
     "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
     "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
     "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
-    "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."]);
+    "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published.",
+    "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written.",
+    "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written.",
+    "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written."]);
 });
 
 test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
@@ -96,7 +102,7 @@ test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with i
 });
 const AUTH = { author: "alice", scope: "s", statement: "It does not cover the amendments.", subjectPosition: "not_sought",
                subjectJustification: "A public record.", biasAcknowledgement: "We read the minutes as the account.",
-               excluded: [] };
+               excluded: [], tieAttested: true };
 
 test("R55 (case-disclosures R2): each capture a member rests on is stated with its grade (provenance.captureGrade) and co-attestation (both a timestamp and a co-archive); a load-bearing Grade B capture not co-attested is CO_ATTESTATION_UNACKNOWLEDGED (C-120.4), naming each, and nothing is written", () => {
   const { w, P, a, b } = setup();
@@ -242,14 +248,14 @@ test("R55 (case-disclosures R2): an empty reason is SELF_ATTESTED_NO_REASON (C-1
   assert.equal(caseDocumentBlocks(docOf(w, ok).text).captures.find((c) => c.capture === b).acknowledgement.reason, REASON);
 });
 
-test("R55 (case-disclosures R3): an acknowledged capture is marked self_attested_only with {reason, acknowledged_by (the author stamp), at} and capture.captureAccountsOf's signed accounts, exact, and its block carries DEC-81 item 3's sentence", () => {
+test("R55 (case-disclosures R3): an acknowledged capture is marked self_attested_only with {reason, acknowledged_by (the author stamp), at} and capture.captureAccountsOf's signed accounts, exact, and its block carries DEC-81 item 3's sentence", async () => {
   const { w, P, b } = setup();
   const text = "I saved it from the council page myself.\nThe archive refused it that day.";
   const signature = "-----BEGIN SSH SIGNATURE-----\nU1NIU0lH\n-----END SSH SIGNATURE-----";
   w.st.sql.exec(`INSERT INTO capture_accounts (capture_sha, seq, by, text, signature, key_b64, at) VALUES (?, 1, 'alice', ?, ?, 'AAAA', ?)`,
                 b, text, signature, "2026-09-27T12:00:00Z");
   const url = new URL(`http://do/publishcase?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}`);
-  const r = caseAuthoringOps(w.ca, url, { ...AUTH, targets: [Q], roles: { [Q]: "load_bearing" }, author: "bo",
+  const r = await caseAuthoringOps(w.ca, url, { ...AUTH, targets: [Q], roles: { [Q]: "load_bearing" }, author: "bo",
                                          selfAttested: [{ capture: b, reason: REASON }] }).publishcase();
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const doc = docOf(w, r).text;
@@ -416,7 +422,7 @@ test("R34: steps gives the five steps' content — what becomes permanent; what 
   assert.ok(Array.isArray(no.steps[2].tensions.candidates), "R32's read is still carried");
 });
 
-test("R34: it raises no re-evaluation for a member's new edition (R15's listeners are never told of an edition a rolled-back run made), and op=publishpreflight takes its stamps from the query after the body", () => {
+test("R34: it raises no re-evaluation for a member's new edition (R15's listeners are never told of an edition a rolled-back run made), and op=publishpreflight takes its stamps from the query after the body", async () => {
   const { w, P, b } = setup({ ratification: ratifyWith({ ok: true, ready: true, refusals: [] }) });
   const sa = { selfAttested: [{ capture: b, reason: REASON }] };
   const a1 = w.publish(P, "alice", [Q], sa); w.ratify(a1);
@@ -435,7 +441,7 @@ test("R34: it raises no re-evaluation for a member's new edition (R15's listener
   assert.deepEqual(w.snapshot(), before);
   /* the op: author and viewer stamped from the query; a body's own are overwritten */
   const url = new URL(`http://do/publishpreflight?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}&caseId=${a1.caseId}`);
-  const viaOp = caseAuthoringOps(w.ca, url, { ...AUTH, ...fresh, ...sa, targets: [Q], roles: { [Q]: "load_bearing" },
+  const viaOp = await caseAuthoringOps(w.ca, url, { ...AUTH, ...fresh, ...sa, targets: [Q], roles: { [Q]: "load_bearing" },
                                              author: "bo", viewer: V("bo") }).publishpreflight();
   assert.deepEqual([viaOp.ready, viaOp.steps[4].signer], [true, "alice"]);
   const pub = w.publish(P, "alice", [Q], { caseId: a1.caseId, ...fresh, ...sa });
@@ -464,7 +470,7 @@ test("R34: against the real ratification R18, its list is read over the text op=
   assert.equal(pre.ready, direct.refusals.length === 0);
 });
 
-test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door stamps a minted agent's — is carried whole to ratification R18, so its machine fences hold the agent whatever its viewer stamp; the act and every other read are asked as the stamp; op=publishpreflight reads the door's aiCred beside viewer, and one that does not parse still fences", () => {
+test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door stamps a minted agent's — is carried whole to ratification R18, so its machine fences hold the agent whatever its viewer stamp; the act and every other read are asked as the stamp; op=publishpreflight reads the door's aiCred beside viewer, and one that does not parse still fences", async () => {
   const { w, P, b } = setup();
   /* a member-scoped agent credential alice mints: its viewer stamp is alice's own (membership R28's principal) */
   const mint = w.credentials.aiCredentialMint({ who: "alice", tokenId: "AIC-0001", secretSha: sha("the agent's secret"),
@@ -492,10 +498,10 @@ test("R34 (N435): an agent credential's stamp — {stamp, aiCred}, as the door s
   /* the route: the door's aiCred beside viewer; absent, the stamp alone; unparsable, still an agent's */
   const route = (extra) => caseAuthoringOps(w.ca, new URL(`http://do/publishpreflight?author=alice&viewer=${
     encodeURIComponent(V("alice"))}&project=${P}${extra}`), { ...a, viewer: V("bo"), author: "bo" }).publishpreflight();
-  const viaDoor = route(`&aiCred=${encodeURIComponent(JSON.stringify(aiCred))}`);
+  const viaDoor = await route(`&aiCred=${encodeURIComponent(JSON.stringify(aiCred))}`);
   assert.deepEqual(reasons(viaDoor), reasons(agent));
-  assert.deepEqual(reasons(route("")), reasons(member));
-  assert.deepEqual(reasons(route("&aiCred=not-json")).filter((x) => fenced.includes(x)), fenced, "fails closed");
+  assert.deepEqual(reasons(await route("")), reasons(member));
+  assert.deepEqual(reasons(await route("&aiCred=not-json")).filter((x) => fenced.includes(x)), fenced, "fails closed");
   /* last, since it stores a preparation: exactly as ratification answers that viewer over the text op=publish then stores, but for the minted case id */
   const r = w.ca.publishCase(a);
   const direct = w.ratification.caseRatifyPreflight({ text: docOf(w, r).text, signer: "alice",
