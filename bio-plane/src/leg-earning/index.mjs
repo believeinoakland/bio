@@ -613,7 +613,7 @@ export class LegEarning {
          checkEarnedLeg compares this leg against, so the sentence a member reads
          and the refusal that enforces it cannot say different things. */
       const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it `
-                    + `needs a chain-of-custody web archive, which this plane cannot produce and does not `
+                    + `needs a chain-of-custody web archive, which your group's Civicsmith cannot produce and does not `
                     + `claim (CAPTURE-FIDELITY.md).`;
       /* CASE 1 — NOTHING TRANSCRIBED THIS DOCUMENT'S TEXT, so there is no
          fidelity to bound the bytes by and the answer is the one this record
@@ -645,7 +645,7 @@ export class LegEarning {
           mode: "ceiling",
           grade: EARNED_CAPTURE_CEILING, captures: e.n,
           why: `${captureWord}, so the strongest capture grade it can `
-             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
+             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as your group's Civicsmith fetched them, hashed at `
              + `receipt.`,
           ceiling, ...(asAuthored || {}) };
         continue;
@@ -702,7 +702,7 @@ export class LegEarning {
           mode: "ceiling",
           grade: EARNED_CAPTURE_CEILING, captures: e.n,
           why: `${captureWord}, so the strongest capture grade it can `
-             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as this instance fetched them, hashed at `
+             + `earn is ${EARNED_CAPTURE_CEILING} — the bytes as your group's Civicsmith fetched them, hashed at `
              + `receipt.`,
           ceiling, ...(asAuthored || {}) };
         continue;
@@ -712,7 +712,7 @@ export class LegEarning {
         out.earned.capture[bundleId] = {
           mode: "ceiling", grade: e.bound, captures: e.n,
           bounded_by: "CAPTURE_BOUNDED_BY_ROUTE",
-          why: `${captureWord}, and the strongest route by which this instance received them earns `
+          why: `${captureWord}, and the strongest route by which your group's Civicsmith received them earns `
              + `${e.bound} on the capture axis (provenance's capture grade: an archive replay stands one party `
              + `further from the publisher than a direct fetch), so the strongest capture grade this document can `
              + `earn is ${e.bound}.`,
@@ -722,7 +722,7 @@ export class LegEarning {
       out.earned.capture[bundleId] = {
         mode: "ceiling", grade: e.bound, captures: e.n,
         bounded_by: "CAPTURE_BOUNDED_BY_FIDELITY",
-        why: `${captureWord}, and the bytes as this instance fetched them would be worth `
+        why: `${captureWord}, and the bytes as your group's Civicsmith fetched them would be worth `
            + `${EARNED_CAPTURE_CEILING} — but this document's TEXT was derived by a machine and that `
            + `derivation is measured at ${e.bound}. The capture axis is bounded by the weakest link of `
            /* THE WORDING AVOIDS "grade a": the capture rule's letters have one
@@ -782,7 +782,7 @@ export class LegEarning {
    *  with `NO_SUCH_STANDARD`. Never throws. */
   #standardCeiling(id) {
     const ceiling = `Grade ${UNREACHABLE_CAPTURE_GRADE} is not reachable on the capture axis at all: it needs a `
-                  + `chain-of-custody web archive, which this plane cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
+                  + `chain-of-custody web archive, which your group's Civicsmith cannot produce and does not claim (CAPTURE-FIDELITY.md).`;
     const undetermined = (because, why, extra = {}) => ({ mode: "ceiling", axis: "capture", standard: id, grade: null,
       determined: false, undetermined_because: because, why, ...extra, ceiling });
     let read;
