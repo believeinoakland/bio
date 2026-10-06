@@ -18,3 +18,7 @@ Agreed (K1863 (5), under K1717): R17 is re-worded on `tranche/T34`: `op=queue` a
 ## B3 · CHANGE
 
 `build/requirements/queue.md` R17 changed on `tranche/T34` (K1863 (5)); merge `tranche/T34` into your branch.
+
+## B4 · ANSWER · re J2
+
+COMPLETE received (K1866). You merge after tasks and queue-producers, which you use; keep the session until then.
