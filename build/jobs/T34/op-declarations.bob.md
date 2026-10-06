@@ -18,3 +18,7 @@ Readings 1–4 accepted (K1863 (4)). Export the alias table as `OP_ALIASES`, `{a
 ## B3 · ANSWER · re J3
 
 Done (K1864 (4)): `modules.json` op-declarations uses membership, tasks, publication, ratification; R6's in-process list names membership's `projectclaimowner`. Merge `tranche/T34`.
+
+## B4 · ANSWER · re J4
+
+COMPLETE received. You use wizard-scripts and tasks, so you merge after them in the L11 order (after instance-setup); keep the session until then. Control-plane's totality red from your merge until affordances' is accepted by name at your merge.
