@@ -74,7 +74,7 @@ test("R12: one transaction — entries appended as the run's machine rows (a ref
   const rows = logOf(w);
   assert.equal(rows.length, 2);
   for (const row of rows)
-    assert.deepEqual([row.authority_kind, row.authority, row.actor_class, row.actor, row.terminal, row.at], ["run", "R1", "machine", "instance", 0, T(5)]);
+    assert.deepEqual([row.authority_kind, row.authority, row.actor_class, row.actor, row.terminal, row.at], ["run", "R1", "machine", "member:ann", 0, T(5)]);
   assert.deepEqual(rows.map((x) => x.state), ["LOOKED_ABSENT", "PRESENT"]);
   assert.deepEqual(w.rows(`SELECT bound, consumed FROM ai_run_bounds WHERE run='R1' ORDER BY bound`),
     [{ bound: "fetches", consumed: 1 }, { bound: "runtime", consumed: 0 }]);
