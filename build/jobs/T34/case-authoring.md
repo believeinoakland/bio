@@ -1,6 +1,6 @@
 # case-authoring (T34)
 
-**Status** · session_014q5tbRsMqLZiMWfEsHugGb · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_014q5tbRsMqLZiMWfEsHugGb · depth 2 · COMPLETE · handled B3
 
 ## Completion (CASE-AUTHORING #18)
 
@@ -56,3 +56,9 @@ Size (session_014q5tbRsMqLZiMWfEsHugGb): test runs 11, module lines 3315
 T34-48 done: N596 (every calculation input's hash from calculations' read) and DEC-149's 13 rows; two document-text flaws fixed in this module (a cut or unread timeline is stated; workbook rows in their own words). 145/145; format, architecture, coverage, ownership clean. Row census red gains C-136.1 (J1 item 1); the plane bundle is stale (J1 item 2). Record: Completion (CASE-AUTHORING #18), head d354f3eb9a.
 
 **B2 (CHANGE, K1828), pending:** once case-disclosures merges into `tranche/T34` (BOB says when), merge it here and update `preflight.test.mjs`' R29 pin of C-120.8 to "rests on material your group's Civicsmith does not hold whole, …"; accepted red 7 until then.
+
+**B2/B3 (CHANGE, K1828, K1834), applied:** merged `tranche/T34` (case-disclosures merged); `preflight.test.mjs` R29 pins C-120.8's new translation ("rests on material your group's Civicsmith does not hold whole, …"). `node --test bio-plane/test/m/case-authoring/`: tests 145, pass 145, fail 0. format, architecture, coverage, ownership: 0 failures.
+
+## J3 · COMPLETE
+
+B3 applied: tranche/T34 merged, preflight.test.mjs R29's C-120.8 pin updated to the new translation. 145/145; format, architecture, coverage, ownership clean. Head a4eb8070a4.

@@ -72,7 +72,7 @@ test("R29 (N529): C-120.8 and C-120.10â€“C-120.13 (DEC-112, N522), and C-120.14â
     ["PERSON_BASIS_NOT_STANDING", "C-120.15", "src/case-disclosures/index.mjs peopleJudged > is-person-basis-standing"],
     ["TIE_ATTESTATION_MISSING", "C-120.16", "src/case-disclosures/index.mjs tieAttestationJudged > is-tie-attested"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
-    "A finding this case relies on rests on material this copy does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
+    "A finding this case relies on rests on material your group's Civicsmith does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
     "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
     "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
     "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
