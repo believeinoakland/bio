@@ -287,9 +287,9 @@ const OP_FAMILIES = Object.freeze({
     courtnoticeset: "roster", groupdescriptionset: "roster",
     websiteinvite: "door", joinlinkinvite: "door", courtnotice: "plainread", groupdescription: "public" } }),
   /* T34 (R23; tasks R13–R16, DEC-135): asking for a check, taking it and recording it, a member's (MACHINE_CANNOT_CHECK),
-     `by` from the query; the two reads, the viewer stamped. */
-  tasks: family({ owner: "tasks", cite: "tasks R13–R16; R23", actor: QUERY("by"), ops: {
-    checkrequest: "member", checktake: "member", checkrecord: "member", checkrequests: "read", checksof: "read" } }),
+     `by` from the query; the two reads, the viewer stamped, also a member session's only (K1873). */
+  tasks: family({ owner: "tasks", cite: "tasks R13–R16; R23; K1873", actor: QUERY("by"), ops: {
+    checkrequest: "member", checktake: "member", checkrecord: "member", checkrequests: "ownread", checksof: "ownread" } }),
   /* T34 (R25; publication R68, R69, DEC-147): moving and cancelling a set publish time, on the publication surface
      (`publish`), `by` from the query; the schedule a member session's read. `publishat` itself is `caseratify`'s
      ceremony, declared beside it in `OPS`. */
