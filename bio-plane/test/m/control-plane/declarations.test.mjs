@@ -29,7 +29,9 @@ test("R2 (op-declarations R6): no spec is without a handler or a store route —
       const routes = opCalls(env).map((c) => c.route);
       /* R45: a registered public read asked by its own name is answered by the store's `publicread` under that name */
       const publicRead = opCalls(env).some((c) => c.route === "publicread" && c.params.name === op);
-      if (routes.includes(RENAMED[op] ?? op) || publicRead || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)) {
+      /* R55 (op-declarations R21): an alias is its op, so it is reached at that op's route */
+      const target = O.OP_ALIASES[op] ?? op;
+      if (routes.includes(RENAMED[target] ?? target) || publicRead || log.some((l) => l.kind === "public" && l.op === op) || (op === "whoami" && r.json.ok)) {
         reached = true; break;
       }
     }

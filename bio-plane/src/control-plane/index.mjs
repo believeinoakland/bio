@@ -42,8 +42,9 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          TEMPLATE_DOOR_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS,
          NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR,
          DOCKET_BY } from "../op-declarations/index.mjs";
-/* R53 (K1674): the stamps T33's ops declare, op → keys (op-declarations R17–R20). */
-import { OP_STAMPS } from "../op-declarations/index.mjs";
+/* R53 (K1674): the stamps T33's ops declare, op → keys (op-declarations R17–R20); R55 (K1863 (7)): the registry's
+   aliases, alias → op (its R21). */
+import { OP_STAMPS, OP_ALIASES } from "../op-declarations/index.mjs";
 /* R53 (K1601, K1674): an ask's grant reads only its list (credentials R28). */
 import { AI_GRANT_OPS } from "../credentials/index.mjs";
 
@@ -796,6 +797,9 @@ export function makeFetch(hooks = {}) {
     const path = url.pathname.replace(/^\/api\/?/, "/");
     let op = url.searchParams.get("op") || path.slice(1) || "selftest";
     const askedOp = op;   /* R50: the op the caller asked, before R36's re-route */
+    /* R55 (op-declarations R21): a requirement function's name that aliases an op is that op, before every gate: its
+       handler, its stamps and its answer, so the two answer alike. */
+    if (Object.hasOwn(OP_ALIASES, op)) op = OP_ALIASES[op];
     let spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
     /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
        any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
@@ -941,20 +945,21 @@ export function makeFetch(hooks = {}) {
           method: "POST", body: JSON.stringify(body) })), op);
       }
       /* R54 (membership R101, R104; admission R17): the group website's and the join page's calls, answered as the
-         invitation's two steps are, from the store the caller names. Only the body's key (or link), cover and the website's
-         approver cross, nothing of whoever called, and the one-time invitation is relayed once, never kept here (R30). */
+         invitation's two steps are, from `bio` (admission R3 pins them: `store=scratch` was refused above). Only the body's
+         key (or link), cover and the website's approver cross, nothing of whoever called, and the one-time invitation is
+         relayed once, never kept here (R30). */
       if (op === "websiteinvite" || op === "joinlinkinvite") {
         const b = await req.json().catch(() => null);
         const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
         const pass = op === "websiteinvite" ? { key: o.key, cover: o.cover, approvedBy: o.approvedBy } : { link: o.link, cover: o.cover };
-        return relayAnswer(invStub.fetch(new Request(`http://do/${op}`, { method: "POST", body: JSON.stringify(pass) })), op);
+        return relayAnswer(stub.fetch(new Request(`http://do/${op}`, { method: "POST", body: JSON.stringify(pass) })), op);
       }
       /* R54 (membership R110): the group's self-description, the viewer read as admission's `readerOf` reads who is asking
          (`""` for no one), so the public receives only what membership answers the public. */
       if (op === "groupdescription") {
-        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred);
+        const reader = await caseReader(url, env, "bio", presentedAi.cred);
         if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-        return relayAnswer(invStub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
+        return relayAnswer(stub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });

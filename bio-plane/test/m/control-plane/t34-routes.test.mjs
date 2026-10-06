@@ -9,7 +9,7 @@ import { M, O, world, call, opCalls, refused, FORGED } from "./harness.mjs";
 const D = await import("../../../src/control-plane/dispatch.mjs");
 const { record } = await import("./record.mjs");
 const { credentialsOf, credentialsOps } = await import("../../../src/credentials/index.mjs");
-const { membershipOf } = await import("../../../src/membership/index.mjs");
+const { membershipOf, membershipOps } = await import("../../../src/membership/index.mjs");
 const { instanceSetupOf } = await import("../../../src/setup.mjs");
 const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
 const { wizardScriptsOf } = await import("../../../src/wizard-scripts/index.mjs");
@@ -40,7 +40,7 @@ test("R54, R30 (membership R101, R104; admission R17): `websiteinvite` and `join
   const { env, S } = world({ answer: answering(["websiteinvite", "joinlinkinvite"], once) });
   for (const op of ["websiteinvite", "joinlinkinvite"]) {
     assert.equal(OPS[op]?.classes, null, `${op} is public`);
-    for (const [token, params] of [[undefined, {}], [S.ann, {}], [env.ADMIN_TOKEN, {}], [undefined, { store: "scratch" }]]) {
+    for (const [token, params] of [[undefined, {}], [S.ann, {}], [env.ADMIN_TOKEN, {}]]) {
       env.calls.length = 0;
       const sent = op === "websiteinvite"
         ? { key: "wk-body", cover: "Pat", approvedBy: "front desk", by: FORGED, viewer: FORGED, actorMemberId: FORGED }
@@ -54,8 +54,12 @@ test("R54, R30 (membership R101, R104; admission R17): `websiteinvite` and `join
       assert.deepEqual(inner[0].params, {}, `${op}: nothing from the query`);
       assert.deepEqual(inner[0].body, op === "websiteinvite" ? { key: "wk-body", cover: "Pat", approvedBy: "front desk" }
                                                              : { link: "jl-body", cover: "Pat" });
-      assert.equal(inner[0].ns, params.store === "scratch" ? "scratch" : "bio");
+      assert.equal(inner[0].ns, "bio");
     }
+    /* the group's own doors answer from the one record: a `store=scratch` is refused by admission's pin (R3), nothing sent */
+    env.calls.length = 0;
+    refused(await call(env, { op, method: "POST", params: { store: "scratch" }, body: {} }), 400, "NAMESPACE_PINNED", "C-78.2");
+    assert.deepEqual(opCalls(env), []);
   }
   /* a store that does not answer is a silence, never a success (R23, R24) */
   const silent = world({ answer: (c) => (c.route === "websiteinvite" ? new Response("no", { status: 500 }) : null) });
@@ -89,7 +93,7 @@ test("R54, R29 (op-declarations R22; membership R84): membership's ten administr
       const [inner] = opCalls(env);
       assert.equal(inner.route, op);
       assert.equal(inner.params.by, want, `${op}: ${want}`);
-      assert.equal(JSON.stringify(inner).includes(FORGED), false, `${op}: the forged by is gone`);
+      assert.equal(JSON.stringify(inner.params).includes(FORGED), false, `${op}: the forged by is gone`);
       checked++;
     }
   }
@@ -106,9 +110,9 @@ test("R54, R2 (membership R106; op-declarations R6): `checkaddressees` is never 
   }
   const ok = await call(env, { op: "courtnotice", token: S.ann });
   assert.equal(ok.status, 200);
-  const r = await record();
-  const a = await r.go("checkaddressees?target=PRJ-NONE&label=law");
-  assert.deepEqual([a.status, a.json.ok], [200, true]);
+  const { ctx } = await record();
+  const served = membershipOps(membershipOf(ctx), new URL("http://do/checkaddressees?target=PRJ-NONE&label=law"), null, {});
+  assert.deepEqual(served.checkaddressees(), []);
 });
 
 test("R55 (op-declarations R23; tasks R13–R16): tasks' five check-request ops are routed through tasks' own map in the record store's door, each admitted only from a member's session, with the stamps op-declarations declares set from the session and none taken from the caller (negative control: a machine credential is refused before the store, and a forged stamp is absent)", async () => {
@@ -129,7 +133,7 @@ test("R55 (op-declarations R23; tasks R13–R16): tasks' five check-request ops 
     const [inner] = opCalls(env);
     assert.equal(inner.params.viewer, "member:ann", op);
     if (keys.includes("by")) assert.equal(inner.params.by, "member:ann", op);
-    assert.equal(JSON.stringify(inner).includes(FORGED), false, op);
+    assert.equal(JSON.stringify(inner.params).includes(FORGED), false, op);
     env.calls.length = 0;
     const m = await call(env, { op, token: env.MEMBER_TOKEN, method: OPS[op].mutating ? "POST" : "GET", body: OPS[op].mutating ? {} : undefined });
     assert.equal(m.status, 403, op);
@@ -150,7 +154,7 @@ test("R56, R30 (credentials R33, R34, R36; admission R19): the group key's seven
     const [inner] = opCalls(env);
     assert.equal(inner.route, op);
     assert.equal(Object.hasOwn(inner.params, "key") && op === "groupkeyset", false, `${op}: no key in the address`);
-    assert.equal(JSON.stringify(inner).includes(FORGED), false, op);
+    assert.equal(JSON.stringify(inner.params).includes(FORGED), false, op);
     if (op === "groupkeyset") assert.equal(inner.body.key, "sk-in-the-body");
     for (const token of [env.ADMIN_TOKEN, env.MEMBER_TOKEN]) {
       env.calls.length = 0;
@@ -326,4 +330,26 @@ test("R21 (N630, K1864 (1)): every JSON answer the door builds is compact, with 
     assert.equal(r.text, JSON.stringify(r.json), args.op);
     assert.ok(JSON.stringify(r.json, null, 1).length > r.text.length);
   }
+});
+
+test("R55 (op-declarations R21; K1863 (7)): every alias `OP_ALIASES` declares is routed to the handler of the op it aliases, with that op's stamps, so the two answer alike — the same store route, the same stamped parameters and the same answer for the same caller (negative control: a name that is neither an op nor an alias is unknown)", async () => {
+  const aliases = Object.entries(O.OP_ALIASES);
+  assert.ok(aliases.length > 20, String(aliases.length));
+  assert.ok(Object.isFrozen(O.OP_ALIASES));
+  const { env, S } = world();
+  let compared = 0;
+  for (const [alias, op] of aliases) {
+    assert.ok(Object.hasOwn(OPS, op), `${alias} → ${op}: the op is declared`);
+    const ask = async (name) => {
+      env.calls.length = 0;
+      const r = await call(env, { op: name, token: S.ann, method: OPS[op].mutating ? "POST" : "GET",
+                                  params: { id: "X-1", viewer: FORGED, by: FORGED }, body: OPS[op].mutating ? { note: "n" } : undefined });
+      return { status: r.status, text: r.text, inner: opCalls(env).filter((c) => c.route !== "wizardrefusaltally").map((c) => [c.route, c.params, c.body]) };
+    };
+    const [a, b] = [await ask(alias), await ask(op)];
+    assert.deepEqual(a, b, `${alias} answers as ${op}`);
+    if (a.inner.length) compared++;
+  }
+  assert.ok(compared > 10, String(compared));
+  refused(await call(env, { op: "nosuchaliasorop", token: S.ann }), 400, "UNKNOWN_OP", "C-69.1");
 });
