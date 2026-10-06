@@ -36,6 +36,7 @@
    6. (K1824) From ratification's L8 merge until case-checker's (T34-47): case-checker's `program.test.mjs` R13 (the bundled program's bytes change once ratification re-exports `case-catalogue`). From case-catalogue's merge until ratification's: the row census counts C-41.1–C-41.17 twice (both copies held).
    7. (K1828) From case-disclosures' merge until case-authoring's (T34-48): case-authoring's `preflight.test.mjs` R29, which pins C-120.8's old translation.
    8. (K1832) From K1824 until plane's L11 job (T34-76): plane `store.test.mjs`:91 R2/R10, which asks every `modules.json` module to have a step in the plane's construction order; `case-catalogue` is a pure library with none.
+   9. (K1836) From following's merge (T34-70) until control-plane's (T34-60, L11): control-plane `families.test.mjs`, until `CHECK_FAMILY_FILES` lists following's new C-137 file. From monitoring's merge until control-plane's: `catalogue-end.test.mjs`'s pins of C-48.8 and C-48.9 (DEC-149 re-wordings), inside its named red (K1789), re-pinned by T34-60.
 
 ## Entries
 
@@ -166,9 +167,9 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 ### L10
 
-- **T34-51 · scheduler** · (ANSWERS #2, K1803) registers with answers' `onStandingSet` (its R27) to re-arm the `standing-questions` wake at once. (N662, DEC-147; K1790) a consumer over publication R67's `publishWake` and `publishDue`, so a waiting edition is taken at its time. (N585) its R12 test connects the opener's account through `op=accountreferenceset` and names the member (ai-runs R52). (N605, user side) registers each arming notice duties, people, money-checks and answers offer · K1614 · req: none · depends —.
+- **T34-51 · scheduler** · (ANSWERS #2, K1803) registers with answers' `onStandingSet` (its R27) to re-arm the `standing-questions` wake at once. (N662, DEC-147; K1790) a consumer over publication R67's `publishWake` and `publishDue`, so a waiting edition is taken at its time. (N585) its R12 test connects the opener's account through `op=accountreferenceset` and names the member (ai-runs R52). (N605, user side) registers each arming notice duties, people, money-checks and answers offer (`onDutyTracked`, `onChecksChanged`, `onDetectorSwitchedOn`, `onStandingSet`; none registered in its code today), and publication R71's `onPublishScheduled` (K1816, K1836) · K1614 · req: none · depends —.
 
-- **T34-70 · following** · (N620) its own checks family, `NO_SUCH_ADDRESS` re-keyed · K1686 · req: none · depends —.
+- **T34-70 · following** · (N620) its own checks family, C-137, `NO_SUCH_ADDRESS` re-keyed as `NO_SUCH_MEETING_ADDRESS` (K1836) · K1686, K1836 · req: none · depends —.
 
 ### L11
 
