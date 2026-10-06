@@ -83,7 +83,7 @@ test("R32 monitoring({viewer}): every monitored address the viewer may see, with
   assert.deepEqual(Object.keys(by).sort(), ["INFO-2026-0510-due", "INFO-2026-0511-meeting", "INFO-2026-0512-later"]);
   assert.equal(by["INFO-2026-0510-due"].state, "due");
   assert.equal(by["INFO-2026-0511-meeting"].state, "unscheduled");
-  assert.equal(by["INFO-2026-0511-meeting"].reason, "cadence is a meeting schedule this plane does not hold");
+  assert.equal(by["INFO-2026-0511-meeting"].reason, "cadence is a meeting schedule your group's Civicsmith does not hold");
   assert.equal(by["INFO-2026-0512-later"].state, "scheduled");
   assert.equal(by["INFO-2026-0512-later"].next_at, iso(NOW_MS - DAY + 7 * DAY));
   assert.deepEqual(r.counts, { due: 1, scheduled: 1, unscheduled: 1 });
