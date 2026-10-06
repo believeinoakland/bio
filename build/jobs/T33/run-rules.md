@@ -16,7 +16,7 @@
 
 **Deferred.** None.
 
-**Found in other modules (REPORT J3).**
+**Found in other modules (REPORT J2).**
 - ai-runs (T33-50): when `ASK_MODE.deployed` is ever set, `DEPLOYED_MODES` includes `ask`. R40's open should then also refuse a mode outside `RUN_MODES`, because `ask` is no run. ai-runs writes `verification_recorded` and reads `deployable` (R19). It relays `startAllowed` and the R20 rows.
 - Generated artifacts made stale (§14): `agent-worker/dist/agent-worker.bundled.mjs` and `bio-plane/dist/bio-plane.bundled.mjs` (run-rules' source changed). agent-worker R45 ("static check", "fresh build byte-identical") is red until they are regenerated, and was green before this change. run-rules now imports `record-grammar/actors.mjs` (`isMachineIdentity`), a new bundle input.
 - control-plane: the named red "R43, R22 … every published fence" hash pin (K1572, until T33-89) moves its actual value with the new rows. It was red before this change and is still red.
