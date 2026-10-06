@@ -79,9 +79,12 @@ const dayIn = (instant, zone) => {
 
 /* Every profile that gives a fact in the combined view (jurisdictions R13, R14); a raw profile gives its own. */
 const givers = (x, own) => (own ? [own] : [x.profile, ...((x.bases || []).map((b) => b.profile))].filter(Boolean));
-/* A holiday entry of the office calendar (`jurisdictions` R43): one with no closure `list` (R47). R6's paths name a year
-   and its offices only, so an entry of a named list (a court's judicial holidays) is never one of this module's facts. */
-const officeCalendar = (h) => isObj(h) && (h.list === undefined || h.list === null);
+/* The closure list a holiday entry belongs to (`jurisdictions` R47): its `list`, or null for the office calendar (R43).
+   R6 gives a named list's entry a path of its own (`list=<name>`), so a court's judicial holidays are a fact apart from
+   the office calendar's entry for the same year and offices (T34-19). */
+const listOf = (h) => (isObj(h) && typeof h.list === "string" ? h.list : null);
+const sameEntry = (e, parts) => isObj(e) && Number(e.year) === parts.year && listOf(e) === (parts.list ?? null)
+  && officesToken(e.offices) === officesToken(parts.offices);
 
 /** The fact `parts` names in `p` (a held profile, `own` its id, or the combined view, `own` null), as
  *  `{value, status, basis}`, or null. The value is what a correction replaces (R1): the year's `days`, the office's
@@ -94,9 +97,7 @@ function factIn(p, parts, own = null) {
     return isObj(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
   }
   if (parts.fact === "holidays") {
-    const key = officesToken(parts.offices);
-    const h = (Array.isArray(p.holidays) ? p.holidays : [])
-      .find((e) => officeCalendar(e) && Number(e.year) === parts.year && officesToken(e.offices) === key && mine(e));
+    const h = (Array.isArray(p.holidays) ? p.holidays : []).find((e) => sameEntry(e, parts) && mine(e));
     if (!h) return null;
     const days = (h.days || []).map((d) => ({ date: d.date, name: d.name }))
       .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
@@ -121,7 +122,8 @@ function factsOf(p) {
   if (!isObj(p)) return out;
   if (isObj(p.time_zone)) out.push({ profile: p.id, fact: "time_zone" });
   for (const h of Array.isArray(p.holidays) ? p.holidays : [])
-    if (officeCalendar(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...(h.offices ? { offices: h.offices } : {}) });
+    if (isObj(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...(listOf(h) ? { list: h.list } : {}),
+                             ...(h.offices ? { offices: h.offices } : {}) });
   for (const c of Array.isArray(p.counterparties) ? p.counterparties : [])
     if (isObj(c) && isObj(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
   for (const k of Array.isArray(p.action_kinds) ? p.action_kinds : [])
@@ -138,8 +140,7 @@ function withValue(p, parts, value) {
     q.time_zone.value = value;
   } else if (parts.fact === "holidays") {
     if (!Array.isArray(value)) return null;
-    const key = officesToken(parts.offices);
-    const h = q.holidays.find((e) => officeCalendar(e) && Number(e.year) === parts.year && officesToken(e.offices) === key);
+    const h = q.holidays.find((e) => sameEntry(e, parts));
     h.days = clone(value);
   } else {
     if (!isObj(value) || Object.keys(value).join() !== "weekly") return null;
@@ -262,8 +263,8 @@ export class LocalFacts {
     const confirmedAt = latest && latest.act === "confirm" ? latest.at : null;
     const confirmed = confirmedAt ? dayIn(confirmedAt, zone) : null;
     const undetermined = today === null
-      ? { undetermined: true, why: `the profile ${parts.profile} holds no time zone this instance can read, so its local `
-          + "days, and this fact's horizon, are undetermined" }
+      ? { undetermined: true, why: `the profile ${parts.profile} holds no time zone that can be read, so its local days, `
+          + "and this fact's horizon, are undetermined" }
       : null;
     if (parts.fact === "holidays") {
       const y = parts.year, due_from = `${y - 1}-11-01`, lapses_on = `${y + 1}-01-01`;
@@ -347,7 +348,8 @@ export class LocalFacts {
    * R2: factStatus
    * ===================================================================== */
 
-  /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first. */
+  /** R2, R3: one fact's status (with `path`), or every fact of the active profiles, corrections and disputes first.
+   *  The list's `note` is member-facing (DEC-149): it names the group's Civicsmith, never "this instance". */
   factStatus(a = {}) {
     const b = isObj(a) ? a : {};
     const active = this.#active();
@@ -361,7 +363,7 @@ export class LocalFacts {
     const rank = (f) => (f.status === "corrected" || f.status === "disputed" ? 0 : 1);
     facts.sort((x, y) => rank(x) - rank(y) || (x.path < y.path ? -1 : x.path > y.path ? 1 : 0));
     return { ok: true, facts, count: facts.length,
-             note: "corrections and disputes come first, for a member to report for a profile fix; this instance transmits nothing" };
+             note: "corrections and disputes come first, for a member to report for a profile fix; your group's Civicsmith transmits nothing" };
   }
 
   /* Every fact of the active profiles, once each, with its status. */
@@ -464,7 +466,7 @@ export class LocalFacts {
         : office.venue !== undefined ? { venue: office.venue } : null;
       const tok = named === null ? null : officesToken([named]);
       if (!tok) return null;
-      const entries = factsOf(p).filter((f) => f.fact === "holidays" && f.year === year && f.offices
+      const entries = factsOf(p).filter((f) => f.fact === "holidays" && f.year === year && !f.list && f.offices
                                                  && (officesToken(f.offices) || "").split(",").includes(tok))
         .map((f) => factPath(f)).filter(Boolean).sort();
       return entries[0] || null;

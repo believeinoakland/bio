@@ -13,6 +13,9 @@ test("R6 factPath answers the one path of each fact kind, and parseFactPath its 
     [{ profile: TP, fact: "holidays", year: 2026, offices: [{ venue: "commitment_claim" }] }, P.y2026court],
     [{ profile: TP, fact: "hours", office: { role: "Town Clerk", body: "City of Port Ellery" } }, P.clerkHours],
     [{ profile: TP, fact: "hours", office: { venue: "records_request" } }, P.venueHours],
+    [{ profile: TP, fact: "holidays", year: 2026, list: "court" }, P.y2026courtList],
+    [{ profile: TP, fact: "holidays", year: 2026, list: "town" }, P.y2026townList],
+    [{ profile: TP, fact: "holidays", year: 2026, list: "court", offices: ["Town Clerk"] }, `${TP}/holidays/2026/list=court/role=Town%20Clerk`],
   ];
   for (const [parts, path] of cases) {
     assert.equal(factPath(parts), path);
@@ -46,6 +49,28 @@ test("R6 parts that name no fact give null; a path not as factPath spells it giv
     assert.equal(parseFactPath(s), null, String(s));
   /* the canonical order of two offices parses */
   assert.ok(parseFactPath(`${TP}/holidays/2026/role=Town%20Clerk,venue=commitment_claim`));
+});
+
+test("R6 a named closure list's entry has a path of its own naming the list (list=<name>), never the office calendar's path for the same year and offices", () => {
+  const cal = factPath({ profile: TP, fact: "holidays", year: 2026 });
+  const court = factPath({ profile: TP, fact: "holidays", year: 2026, list: "court" });
+  const town = factPath({ profile: TP, fact: "holidays", year: 2026, list: "town" });
+  assert.equal(court, `${TP}/holidays/2026/list=court`);
+  assert.equal(new Set([cal, court, town]).size, 3);
+  const withOffices = (list) => factPath({ profile: TP, fact: "holidays", year: 2026, offices: [{ venue: "k" }, "Clerk"], ...(list ? { list } : {}) });
+  assert.notEqual(withOffices("court"), withOffices(null));
+  assert.equal(withOffices("court"), `${TP}/holidays/2026/list=court/role=Clerk,venue=k`);
+  assert.deepEqual(parseFactPath(withOffices("court")), { profile: TP, fact: "holidays", year: 2026, list: "court", offices: ["Clerk", { venue: "k" }] });
+  /* the same list always gives the same path; null or absent is the office calendar */
+  assert.equal(factPath({ profile: TP, fact: "holidays", year: "2026", list: "court" }), court);
+  assert.equal(factPath({ profile: TP, fact: "holidays", year: 2026, list: null }), cal);
+  /* a list name outside jurisdictions R47's form names no fact; neither function throws */
+  for (const list of ["", "Court", "1court", "court list", "court/x", "court=x", 3, {}, ["court"]])
+    assert.equal(factPath({ profile: TP, fact: "holidays", year: 2026, list }), null, JSON.stringify(list));
+  for (const s of [`${TP}/holidays/2026/list=`, `${TP}/holidays/2026/list=Court`, `${TP}/holidays/2026/list=court/list=town`,
+    `${TP}/holidays/2026/role=Clerk/list=court`, `${TP}/holidays/2026/list=court/role=Clerk/x`, `${TP}/holidays/2026/list=court/`,
+    `${TP}/holidays/2026/list%3Dcourt`, `${TP}/time_zone/list=court`, `${TP}/hours/list=court`])
+    assert.equal(parseFactPath(s), null, s);
 });
 
 test("R7 the acts, statuses and horizons are exported, frozen", () => {

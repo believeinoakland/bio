@@ -4,7 +4,7 @@
    the real `lines`, reached as `linesOf(host)`. `officeOf` is the profile-office bridge (K1563). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, V, P, TP } from "./fixture.mjs";
+import { world, V, P, TP, written } from "./fixture.mjs";
 import { BOUNDS } from "../../../src/connection-grammar/index.mjs";
 
 const AT = "2026-06-01T12:00:00Z";
@@ -84,6 +84,18 @@ test("R6 governingPath falls back to the profile's offices grouping, saying why:
   const ok = ask(lf(reader([["LIN-1", "ENT-board", "ENT-clerk", "in"]], { "ENT-clerk": CLERK })),
                  { fact: "hours", office: BOARD, entity: "ENT-board" });
   assert.deepEqual([ok.path, ok.via], [P.clerkHours, "part_of"]);
+});
+
+test("R6 governingPath: an office's own holiday entry is of the office calendar, never a named closure list's entry naming it", () => {
+  const prof = written("test-glist", { time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
+    counterparties: [{ role: "Clerk", body: "Town", level: "city", elected: false, basis: "TEST" }],
+    holidays: [{ year: 2026, list: "court", citation: "the court's rule", offices: ["Clerk"], days: [{ date: "2026-08-31", name: "Court day" }], status: "ruled", basis: "TEST" },
+               { year: 2026, days: [{ date: "2026-01-01", name: "New Year's Day" }], status: "researched", basis: "TEST" }] });
+  const l = world({ profiles: ["test-glist"], own: [prof] }).lf;
+  const g = l.governingPath({ profile: "test-glist", fact: "holidays", office: "Clerk", year: 2026, at: AT, viewer: V("bob") });
+  assert.deepEqual([g.path, g.via], ["test-glist/holidays/2026", "fallback"]);
+  /* the negative control: the list's entry is a fact of its own, named by its own path (R6) */
+  assert.equal(l.factStatus({ path: "test-glist/holidays/2026/list=court/role=Clerk", viewer: V("bob") }).status, "unconfirmed");
 });
 
 test("R6 governingPath walks at most connection-grammar's default depth, and never loops", () => {
