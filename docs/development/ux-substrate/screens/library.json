@@ -82,7 +82,7 @@
       {
        "screen": "setup",
        "act": "assistantset",
-       "what": "Choose how members reach the assistant: the group's API key, members' own accounts, both, or no assistant at all.",
+       "what": "Read what the assistant is (and open More about this if you want the detail), then choose: the group's API key, members' own accounts, both, or none.",
        "why": "The group's key serves members with no account of their own, at the group's cost. A member's own account always comes first. Everything works without it."
       },
       {
