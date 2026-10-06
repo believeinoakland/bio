@@ -43,8 +43,7 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR,
          DOCKET_BY } from "../op-declarations/index.mjs";
 /* R53 (K1674): the stamps T33's ops declare, op → keys (op-declarations R17–R20). */
-import * as DECLARED from "../op-declarations/index.mjs";
-const OP_STAMPS = DECLARED.OP_STAMPS || {};
+import { OP_STAMPS } from "../op-declarations/index.mjs";
 /* R53 (K1601, K1674): an ask's grant reads only its list (credentials R28). */
 import { AI_GRANT_OPS } from "../credentials/index.mjs";
 
@@ -1053,7 +1052,7 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.delete(k);
       if (stampOf[k] !== null) inner.searchParams.set(k, stampOf[k]);
     }
-    if (declared.length || AI_GRANT_OPS.includes(op) || GRANT_OWN_OPS.includes(op)) inner.searchParams.delete("grant");
+    if (Object.hasOwn(OP_STAMPS, op) || AI_GRANT_OPS.includes(op) || GRANT_OWN_OPS.includes(op)) inner.searchParams.delete("grant");
     if (aiCred?.grant) inner.searchParams.set("grant", aiCred.grant);
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
@@ -2759,7 +2758,9 @@ export function makeFetch(hooks = {}) {
        layer's expression (`QUERY_AUTHOR_ACTIONS` above): the positional identity for a session, `class:<cls>` or
        `class:ai/<tokenId>` for a machine, which standards refuses BY NAME at a declaration or an adoption
        (MACHINE_CANNOT_DECLARE_STANDARD) and labels as machine work on a proposal. An empty POST body is stamped too. */
-    if (STANDARDS_ACTIONS.includes(op) && req.method === "POST") {
+    /* K1687: standards' five T33 acts read `author` (`lawpropose` `proposer`) from the body too, as these do. */
+    const standardsT33 = ["lawrelate", "lawwithdraw", "lawpropose", "courtlink", "courttreat"].includes(op);
+    if ((STANDARDS_ACTIONS.includes(op) || standardsT33) && req.method === "POST") {
       try {
         const b = passBody ? JSON.parse(passBody) : {};
         if (b && typeof b === "object" && !Array.isArray(b)) {
@@ -2768,7 +2769,7 @@ export function makeFetch(hooks = {}) {
             : `${MACHINE_CLASS_PREFIX}${cls}`;
           delete b.author;
           delete b.proposer;
-          if (op === "standardpropose") b.proposer = who; else b.author = who;
+          if (op === "standardpropose" || op === "lawpropose") b.proposer = who; else b.author = who;
           passBody = JSON.stringify(b);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }

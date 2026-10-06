@@ -240,3 +240,21 @@ test("R53 (K1685; agent-worker R54): the record store's door routes the ask's ow
   assert.equal(c.json.ok, true);
   assert.ok(c.json.result && typeof c.json.result === "object", JSON.stringify(c.json).slice(0, 300));
 });
+
+test("R53, R29 (K1687): standards' five T33 acts read their author from the body, so the door sets it there — `author`, or `proposer` on `lawpropose` — as the positional identity for a session and the machine's own name otherwise, whatever the caller put in the body (negative control: a caller's body field of its own reaches the route)", async () => {
+  const { w, list } = callers();
+  const who = { admin: "class:admin", member: "class:member", probe: "class:probe", founder: "member:admin", ann: "member:ann", agent: "class:ai/agent-ann" };
+  let checked = 0;
+  for (const op of ["lawrelate", "lawwithdraw", "lawpropose", "courtlink", "courttreat"]) for (const c of list) {
+    w.env.calls.length = 0;
+    const r = await call(w.env, { op, token: c.token, params: c.params, method: "POST", body: { author: FORGED, proposer: FORGED, note: "kept" } });
+    if (r.status !== 200) continue;
+    const [inner] = opCalls(w.env);
+    const key = op === "lawpropose" ? "proposer" : "author";
+    assert.equal(inner.body[key], who[c.name], `${op}/${c.name}`);
+    assert.equal(Object.hasOwn(inner.body, key === "author" ? "proposer" : "author"), false, `${op}/${c.name}: the other key is gone`);
+    assert.equal(inner.body.note, "kept");
+    checked++;
+  }
+  assert.ok(checked >= 12, String(checked));
+});
