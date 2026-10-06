@@ -34,3 +34,5 @@ Phases 0, 1 and 1b run in parallel; 2 needs all of them; 3 needs 2; 4 needs 3. E
 5. Phase 4: the S-SYNTHESIS worker drafts; BOB reviews it against the studies, corrects it, renders it as a page for Bob (P17: shown rendered), and records nothing in the product until Bob rules.
 
 **Pace.** The study runs alongside tranche T33 (P18); the tranche's jobs come first. Bob's weekly meter at start: 44% (2026-10-06 ~04:20 UTC).
+
+**Phase 4 status (BOB #119, 2026-10-06 ~05:20 UTC).** The synthesis was reviewed independently against the studies, reviews and product tree (26 findings), corrected (commit 311e1a4422), and rendered for Bob: https://claude.ai/artifact/YS6bEKymPtdKZkiScS9pmc . It waits on his rulings D1–D24; nothing enters the product until he rules.
