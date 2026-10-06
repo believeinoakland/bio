@@ -28,8 +28,8 @@ export const QUEUE_DOOR_OPS = Object.freeze(["queue"]);
  *  `sort` (R49) are the only arguments taken from the caller.
  *
  *  REC-52: a store silence is `storeSilent`, never `NO_QUEUE` or an empty feed — the plane inventing a word the store
- *  never said. N231 (affordances R26): the vocabularies' `action_kind` is asked of `actions` at this call (actions R42),
- *  its silence stated as one. A store refusal (`ok` not true) is passed through with status 400 (R17). */
+ *  never said. A store refusal (`ok` not true) is passed through with status 400 (R17). One store call: the
+ *  vocabularies are `op=affordances`' alone (R17; K1717, K1863), so `actions`' kinds are not asked here. */
 export async function queueFeedOp(url, store, { json, doAnswer, storeRefusal, storeSilent, gate, member, viewer,
                                                storeName, cls }) {
   const inner = new URL("http://do/queue");
@@ -44,10 +44,7 @@ export async function queueFeedOp(url, store, { json, doAnswer, storeRefusal, st
   if (!qOut.answered) return storeSilent("queue", qOut.correlation);
   const r = qOut.result;
   if (!r) return storeSilent("queue");
-  const qkOut = await doAnswer(store.fetch("http://do/actionkinds"));
-  if (qkOut.refused) return storeRefusal(qkOut);
-  if (!qkOut.answered) return storeSilent("queue", qkOut.correlation);
-  const a = queueAnswer(r, { gate, kinds: qkOut.result?.kinds });
+  const a = queueAnswer(r, { gate });
   if (a.status !== 200) return json({ ok: false, ...a.refusal, store: storeName, tokenClass: cls }, a.status);
   return json({ ok: true, result: a.result, store: storeName, tokenClass: cls }, 200);
 }

@@ -49,7 +49,7 @@ import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
-import { affordancesOf, deriveActs, decorate, vocabulariesFor, PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
+import { affordancesOf, deriveActs, decorate, PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem, serializeMutedKinds, parseMutedKinds,
          suppressedBy } from "../queuestate.mjs";
@@ -2180,15 +2180,14 @@ export function queueOps(q, url, body) {
 }
 
 /** R17: the control plane's half of `op=queue`, given the store's answer `r` (never null: a store silence is the
- *  control plane's own answer), the control plane's act gate `gate` (`{needs, mode}`, affordances' decorate) and the
- *  action kinds `actions` answers at this call (actions R42). A refusal is passed through with status 400; an answer
- *  has every option decorated, so an option equals the act `op=affordances` publishes for that subject, and carries
- *  the vocabularies `affordances.vocabulariesFor(kinds)` publishes. Pure; never throws on a well-formed answer. */
-export function queueAnswer(r, { gate, kinds } = {}) {
+ *  control plane's own answer) and the control plane's act gate `gate` (`{needs, mode}`, affordances' decorate). A
+ *  refusal is passed through with status 400; an answer has every option decorated, so an option equals the act
+ *  `op=affordances` publishes for that subject. It attaches no vocabularies: `op=affordances` publishes them once, and
+ *  the app reads them there (K1717, K1863). Pure; never throws on a well-formed answer. */
+export function queueAnswer(r, { gate } = {}) {
   if (!r || r.ok !== true) return { status: 400, refusal: r };
   return { status: 200, result: {
     ...r,
     items: (r.items || []).map((i) => ({ ...i, options: (i.options || []).map((a) => decorate(a, gate)) })),
-    vocabularies: vocabulariesFor(kinds),
   } };
 }
