@@ -351,6 +351,7 @@ export function evaluateRule(args) {
   const trace = { ...head, ...base.trace };
   for (const e of base.trace.calendar ? base.trace.calendar.entries : []) {
     if (e.status === "unconfirmed" || e.status === "corrected") trace.notes.push(`calendar entry ${e.year}${e.list ? ` (${e.list})` : ""}: ${e.status}`);
+    if (e.governs === "correction" && e.status !== "corrected") trace.notes.push(`calendar entry ${e.year}${e.list ? ` (${e.list})` : ""}: counted on its correction, now ${e.status}`);
   }
   const out = { due: base.due, trace };
   if (rule.extension && r.units !== "hours" && r.units !== "business_hours" && base.results) {

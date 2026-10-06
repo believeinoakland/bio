@@ -27,6 +27,17 @@ function namesOffice(entry, office) {
     : !!(o && typeof o === "object" && office && typeof office === "object" && o.venue === office.venue)));
 }
 
+/* R9, R16 (N603; local-facts R2, R3): the days of a member's correction that governs on this instance, else null. A
+ * correction governs until a later act, and a later `confirm` confirms it, so it is counted on whenever the answer says
+ * the governing value is a correction (`corrected: true`), whatever the status reads now, as well as while the status
+ * reads `corrected`. The value is the entry's days, or the entry itself with its days. */
+function governingCorrection(f) {
+  if (!f || (f.status !== "corrected" && f.corrected !== true)) return null;
+  if (Array.isArray(f.value)) return f.value;
+  if (f.value && typeof f.value === "object" && Array.isArray(f.value.days)) return f.value.days;
+  return null;
+}
+
 /**
  * A calendar: `closedOn(n)` answers whether local day `n` is closed, `{closed, why}`, or undetermined. `list` names
  * the closure list (R47) a rule counts on; null takes the office calendar (the entries with no `list`). `tolled` days
@@ -56,16 +67,18 @@ export function calendar({ view, list = null, office = null, factOf = null }) {
       for (const h of entries) {
         let f = null;
         if (readable) { try { f = factOf(h) || { status: "absent", why: "the reader gave no answer" }; } catch { f = { status: "absent", why: "the reader failed" }; } }
+        const governs = governingCorrection(f);
         read.push({ year: y, list: h.list ?? null, offices: Array.isArray(h.offices) ? h.offices : null, basis: h.basis ?? null,
                     status: f ? f.status : "not_read", ...(f && f.why ? { why: f.why } : {}),
-                    ...(f && f.status === "corrected" ? { corrected_by: f.by ?? null, corrected_at: f.at ?? null } : {}) });
+                    ...(f && f.status === "corrected" ? { corrected_by: f.by ?? null, corrected_at: f.at ?? null } : {}),
+                    ...(governs ? { governs: "correction", ...(typeof f.says === "string" ? { says: f.says } : {}) } : {}) });
         if (f && (f.status === "disputed" || f.status === "absent")) {
           out = no(f.status === "disputed" ? "FACT_DISPUTED" : "FACT_ABSENT",
             `${listWords} for ${y}${Array.isArray(h.offices) ? ` (${h.offices.map(officeWords).join(", ")})` : ""} `
             + (f.status === "disputed" ? "is disputed on this instance" : `cannot be read on this instance${f.why ? `: ${f.why}` : ""}`));
           break;
         }
-        const list2 = f && f.status === "corrected" && Array.isArray(f.value) ? f.value : h.days;
+        const list2 = governs || h.days;
         for (const d of list2 || []) {
           const n = d && parseDay(d.date);
           if (n !== null && n !== undefined) days.set(n, d.name || "a closure day");
@@ -95,6 +108,8 @@ export function calendarStated(cal) {
   const notes = [];
   for (const r of cal.read) {
     if (r.status === "unconfirmed") notes.push(`counted on an unconfirmed calendar (${r.basis ?? "no source stated"}, ${r.year})`);
+    if (r.governs === "correction" && r.status !== "corrected")
+      notes.push(`counted on a correction that governs on this instance, now ${r.status}${r.says ? ` (${r.says})` : ""} (${r.year})`);
     if (r.status === "corrected") notes.push(`counted on a calendar corrected on this instance${r.corrected_by ? ` by ${r.corrected_by}` : ""}${r.corrected_at ? `, ${r.corrected_at}` : ""} (${r.year})`);
   }
   return { list: cal.list, office: cal.office ?? null, entries: cal.read, status: cal.readable ? (cal.read.length ? "read" : "none_read") : "not_read", notes };
