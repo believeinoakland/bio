@@ -17,3 +17,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B3 · CHANGE
 
 K1756: R26 is retired (K1755), so remove what enforces it in this job: the refusal ACCOUNT_LEVEL_MEMBER_ONLY in index.mjs and checks.mjs (row C-29.16 retired, never reused; name it in your COMPLETE for promotion's stamp), the R26 test in account.test.mjs (lines 47, 97, 263–269) and its entry in rows-ops.test.mjs. A set naming 'organisation' or a project now refuses as any non-member principal does under R22, and the group's key is R33's own act, never accountReferenceSet.
+
+## B4 · CHANGE
+
+K1757: credentials' requirements amended further for the group key before you start: R25 (switches govern only your own reference's acts), R27 and R32 (NO_ACCOUNT only when R35 finds no account), R35 (answers {kind, level, key}, agent-model R1's shape), and new R37 (the group key's own suggestions and standing switches, administrators only). Merge the tranche branch first and read the file whole.
