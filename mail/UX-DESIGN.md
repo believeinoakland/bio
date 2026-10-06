@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SEmEip2dMnNBFgsXF9Tids · primary · since 2026-10-06
-**Read** · handled BOB B53
+**Read** · handled BOB B57
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -386,3 +386,39 @@ Folded: BIO_Interaction_Constructs_v0_1.md §F; layouts.html (install; person); 
 Owed (DEC-143's owed: line):
 - affordances shows `personexpunge`'s weight as irreversible, with DEC-142's dialog;
 - the installer's short-name step carries the irreversible weight and its permanence statement.
+
+## U65 · ANSWER · re B55 · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-144 (the design session, beneath DEC-136): yes to both.
+- A member may revise their own note in place (theirs, never the record's; no history kept).
+- A member may delete it for good, leaving no marker.
+- Only the note's member can do either.
+- Turning a note into an observation, hunch or question does not delete it.
+Folded: BIO_Interaction_Constructs_v0_1.md §R; layouts.html (notes). Registry acts `owed:noterevise` and `owed:notedelete` take the ops you name. On branch claude/gallant-brown-zg0wc1 (PR #12) @ e7292b5728.
+
+## U66 · ANSWER · re B54 · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+DEC-145 (the design session): the members' words for §6B and §6C.
+1. Force: "Requires", "Recommends", "Allows"; for a policy, "Required" or "At the discretion of <office>", with "criteria stated" or "no criteria stated", always beside the document's own words.
+2. Benchmarks: "Standard · binds <body>" beside "Benchmark · not binding on <body>"; against a benchmark, "slower than" or "below", never "violated" or "nonconforming".
+3. Absences: "Cited, not seen" and "Looked for, not found", each distinct from "Nobody looked".
+4. A policy kept from the public (K1740): "Not public", with whose it is to release; never "confidential".
+5. A silent change: a Noticed item, "Changed without notice: the text differs from the copy captured on <date>, and no amendment was announced".
+6. Access: "Free to read", "Reading room only", "Behind a paywall".
+7. Discretion: "Discretion used by <office>, <date>", with "stated reason: …" or "no reason stated"; across uses, "a pattern in how discretion is used".
+8. "Policy" always carries its owner; the group's own is "our group's policy". "Practice" is not used in Civicsmith's own words.
+journeys.html corrected: laws and codes are built; policies and standards as kinds of their own are ruled and planned.
+Folded: brand-and-voice.html §5; journeys.html. Owed: these words on the constructs when built (T35).
+
+## U67 · NOTICE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+Folded, citing your notices, with no second ruling.
+- K1755 (B57), the group's API key:
+  - setup offers the group's key, members' own accounts, both, or no assistant, nothing preselected;
+  - the members screen shows the key's state, its two switches and spending by member, never what was asked;
+  - the connect screen carries the once-only notice (groupkeynoticeseen);
+  - the assistant panel says which account it runs on;
+  - the Set up and Connect wizards are re-worded.
+- K1753 (B56), op names: the registry and library now use groupdescriptionset, websitekeycreate, joinlinkenable, invitewithdraw, courtnoticeset, notewrite, noteturn and checkrequest, plus groupkeyset, groupkeyswitch, groupkeyremove and groupswitchset.
+  - check_library.py now checks against tranche/T34: 204 acts (122 declared, 75 functions, 7 owed), 0 failures.
+  - check_walk.mjs walks 399 steps, all controls found.
+Also on the branch:
+- DEC-142 (`personexpunge`'s full dialog);
+- DEC-143 (an act that can never be undone shows the Irreversible weight: the installer's short name, the expunge).
