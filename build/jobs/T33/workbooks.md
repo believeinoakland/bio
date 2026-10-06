@@ -30,3 +30,7 @@ Workbooks reads them through one adapter, so a different shape costs one functio
 - No generated artifact is staled: nothing that bundles reaches `workbooks` yet.
 
 **Tests and checks run (on the stand-in).** `node --test bio-plane/test/m/workbooks/`: 26 pass, 0 fail (the real sheet-worker engine over its corpus fixtures for R6–R8 and R14). `format` 0 failures; with my paths filled in locally (not committed): `architecture` 15 product files, 0 failures; `coverage` 18 of 18 ids named, 0 failures; `ownership` 0 failures. No layer tests are named in `build/manifest.md`.
+
+## J2 · REPORT
+
+Built and tested on a stand-in calculations holding J1's shapes: all 18 ids (R1–R18), 26 tests pass (the real sheet-worker engine for R6–R8 and R14); format, architecture, coverage 18/18 and ownership 0 failures with my paths filled locally. Paths: bio-plane/src/workbooks/, tests bio-plane/test/m/workbooks/. Per K1563 (1) I re-point my tests at the real calculations after CALCULATIONS merges, then post COMPLETE; please send a CHANGE when it has. Found in other modules (record's Progress): plane/control-plane/op-declarations/affordances take my 11 ops and wire ctx.recompute to SHEET_WORKER (I bind nothing in the plane, so K1531's three test pins fall to whichever job first binds it); publication reads readWorkbook for an undisclosed differing or unbound workbook (K1448). Choices on my reading, including two refusals beyond the lists (NO_SUCH_BINDING, NO_SUCH_FINDING) and the op name workbooksecondcheck (workbookcheck names T33-D6), are in my record.
