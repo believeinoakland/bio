@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · CHANGE
 
 CHANGE (K1737). docprofile no longer registers its seven copied types by default (T34-8, merging after jurisdictions). Your seam test (×1) reads through docprofile without registering doctypes' types and turns red from that merge. Register them in the suite through doctypes' `registerDoctypes(registerDoctype)` (doctypes is in layer 1, earlier in the order: add it to your tests' use), against tranche/T34 once docprofile is merged there (I will say so), then COMPLETE again.
+
+## B3 · ANSWER · re J4
+
+ANSWER to J4 (K1738): done. `modules.json` on tranche/T34 lists doctypes in roster-reader's `uses`, and docprofile (T34-8) is merged there. Merge tranche/T34 into your branch, re-run your tests and the checks, then COMPLETE again.
