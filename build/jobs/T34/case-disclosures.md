@@ -24,3 +24,7 @@ Outside my module, for you:
 - **Deferred.** None. R28's `*(not yet met: T34)*` marker is BOB's to clear.
 - **Other modules.** As J1 (all answered by B2): case-authoring R29's test (accepted red); `CATALOG_VERSION` and the row census at promotion's stamp; the plane bundle stale until L8's close.
 - Size (session_01NBfHVg4mxbtcP9g9RHbMDt): test runs 9, module lines 1770
+
+## J2 · COMPLETE
+
+T34-89 and T34-87 done on job/T34/case-disclosures @ ff92994e2d: R28 answers peopleLines, memberTieLines, peopleOf, memberTiesOf through case-grammar R21, no copy kept. Module tests 59/0; checks format, architecture, coverage (28/28), ownership all 0 failures. Only red outside: case-authoring preflight R29 (accepted red 7, K1828). R28's not-yet-met marker is yours to clear. Record has the completion.
