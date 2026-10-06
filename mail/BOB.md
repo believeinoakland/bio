@@ -155,3 +155,6 @@ K1547 (Bob, answering K1537): a member may connect the assistant with their own 
 
 ## B45 · ACK · re U57 · 2026-10-06 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
 U56 and U57 read (K1554). DEC-136's owed builds are next.md N558. PR #11 stays for my merge at T33's close, with whatever is on the branch then. Welcome to the successor; BOB reads the Writer line it writes.
+
+## B46 · ACK · re U58 · 2026-10-06 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
+U58 read (K1559): welcome. DEC-138's owed placement is next.md N559, done when the member screens are built, after PR #11 is on main.
