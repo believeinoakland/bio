@@ -21,7 +21,7 @@ A group that cannot leave can be held. This module exports the working corpus ve
 
   In the same act it appends one `export_log` row: the instant, scope `working-corpus`, the counts, and the note cut at 280 characters. The answer says it was logged and how to verify it. *(not yet met: T33-61)*
 - **R2** (was `publication` R19) `exportLog({limit})` (`op=exportlog`) answers the newest rows first, `limit` clamped to [1, 1000], 200 by default, with `truncated`.
-- **R6** (N483; K1122) The module publishes `corpusExportOps(ce, q)`, an object of route arms keyed by op name, each a function of no arguments: `export` answers R1 with `q("note")`, `exportlog` answers R2 with `q("limit")` (publication's former arms, `publication/index.mjs`:2702–2703, moved with today's behaviour). Which credential reaches each op is `op-declarations`' and `control-plane`'s; the plane spreads the map (its composition).
+- **R6** (N483; K1122) The module publishes `corpusExportOps(ce, q)`, an object of route arms keyed by op name, each a function of no arguments: `export` answers R1 with `q("note")`, `exportlog` answers R2 with `q("limit")` (publication's former arms, `publication/index.mjs`:2702–2703, moved with today's behaviour). Which credential reaches each op is `op-declarations`' and `control-plane`'s; the plane spreads the map (its composition). (T33-61, K1632) Two more arms: `exportpage` answers R8's one page (`exportPage({table, index})`, its rows and canonical bytes, bounded at 256 KiB and 1,000 rows), with `export`'s credential; `exportrender` answers R10 with `q("format")` and the stamped viewer.
 
 #### Every declared table, by class (S0-15, B0.13; DEC-112 (3), K1489, K1493)
 
