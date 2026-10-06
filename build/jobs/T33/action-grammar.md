@@ -44,3 +44,7 @@ Merged `tranche/T33` @ `origin/tranche/T33` first (requirements R7 and Uses chan
 Ownership: `ownership: 4 files changed by action-grammar between tranche/T33 and HEAD; 0 failures`.
 
 Size (session_019ZPA869n1maeYjDhwTzrT3): test runs 9, module lines 1839
+
+## J2 · COMPLETE
+
+B2 (K1657) applied. (a) C-117.26 NO_SUBJECT, C-117.27 MACHINE_CANNOT_SET_PROCEEDING, C-117.28 NOT_A_PROCEEDING in ACTION_CATALOGUE_CHECKS (wheres: addresseeSuggest > is-addressee-subject, #heldLinks > is-machine-set-proceeding, #proceedingRefusal > is-proceeding-kind). (b) R7: past date only once ctx.zone's local day (civil-time.localDay) has ended; no zone, no past-date finding. action-grammar 28/0 (negative control 27/1). Checks 0 failures (ownership 4 files). For ACTIONS #12's re-merge: actions/index.mjs:1000 passes no zone, so its two t19 R51 tests go red (the only new reds; dependants otherwise identical by name); fix: pass zone: zoneOf(this.place()). Actions should also mark DEC-49 regions for the three new wheres. Details in my record.
