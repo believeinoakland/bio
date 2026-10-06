@@ -24,3 +24,4 @@
 - **control-plane (L11)** (K1572): C-91.1 `IDSPACE_UNKNOWN`'s translation is re-worded by entities (nine spaces, listed from the profiles), so control-plane's "R43, R22 … every published fence" hash pin is red from that merge; re-pin it in T33-89.
 - **op-declarations (L11), affordances (L11)** (K1572, from ENTITIES #9 J2 (4)): declare `op=entityidentify` with `by` stamped from the credential as `resolutiondefect`'s; affordances may publish entities' `sectors()` beside `kinds()`; `ENTITY_KINDS` now has 13 kinds.
 - **plane, control-plane, op-declarations (L11)** (K1573, from MONEY #1 J2): wire `moneyOps` and declare its ops (T33-88); plane calls `money.joinPromotion(promotion)` and `migrate()`, and hands money `calculations.bindingOf` as its port.
+- **op-declarations, control-plane (L11)** (K1579): lines' new op `linecurrentthrough` (R21) is declared and routed.

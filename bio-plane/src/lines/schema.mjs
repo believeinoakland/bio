@@ -38,6 +38,18 @@ CREATE TABLE IF NOT EXISTS line_bound_cache (
   from_zone      TEXT,
   to_zone        TEXT
 );
+CREATE TABLE IF NOT EXISTS line_current_through (   -- R21: "current as of" statements on an open-ended holds line
+  seq          INTEGER PRIMARY KEY AUTOINCREMENT,      -- the order recorded: a later one supersedes, the earlier kept
+  line_id      TEXT NOT NULL,
+  day          TEXT NOT NULL,
+  basis_form   TEXT NOT NULL,
+  basis_json   TEXT NOT NULL,
+  capture_sha  TEXT,
+  sight_bundle TEXT,
+  by_actor     TEXT NOT NULL,
+  at           TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS line_current_through_line ON line_current_through (line_id, seq);
 CREATE TABLE IF NOT EXISTS line_withdrawals (
   line_id  TEXT PRIMARY KEY,
   reason   TEXT NOT NULL,
@@ -46,4 +58,4 @@ CREATE TABLE IF NOT EXISTS line_withdrawals (
 );
 `;
 
-export const LINES_TABLES = Object.freeze(["lines", "line_bound_cache", "line_withdrawals"]);
+export const LINES_TABLES = Object.freeze(["lines", "line_bound_cache", "line_withdrawals", "line_current_through"]);

@@ -1,6 +1,6 @@
 # lines (T33)
 
-**Status** · session_01UxA8Yv7kHqsFpTvQSvpR4k · depth 2 · COMPLETE · handled B3
+**Status** · session_01UxA8Yv7kHqsFpTvQSvpR4k · depth 2 · COMPLETE · handled B4
 
 
 ## Completion
@@ -40,6 +40,20 @@
 
 Size (session_01UxA8Yv7kHqsFpTvQSvpR4k): test runs 16, module lines 878
 
+## Completion after B4 (R21, K1577)
+
+- **R21 met:** `recordCurrentThrough({lineId, day, basis, by})` (op `linecurrentthrough`) holds a member's or a source's own "current as of" statement, with its citation and day, in `line_current_through` (declared explicitly: stored, sight `source`, export `yes`). It takes the same basis forms as a line; the machine may record one only from a system rule (R4). It refuses `NO_SUCH_LINE`, `LINE_WITHDRAWN`, `NOT_A_HOLDS_LINE`, `END_STATED` (a line with a stated end), `BAD_DATE`, the basis refusals, `MACHINE_NEEDS_IDENTIFIERS` and `NO_BY`.
+- **How it reads:** an open-ended `holds` line is `in` at a date no later than the latest statement the viewer may see, and `undetermined` after it, never `out`. It is `out` only before its start.
+  - `holderAt` and `structureAt` count it so; `neighbours` answers it in with `valid.to` the stated day.
+  - `readLine` shows `current_through` with the superseded ones, each kept; a later statement supersedes, nothing is erased.
+  - A statement inside a hidden project counts only for those who may see it.
+- **Tests and checks:**
+  - lines: 29 tests, 29 pass (3 new, naming R21).
+  - events and local-facts: 66 pass, 0 fail.
+  - format: 0 failures. architecture: 0 failures. coverage: 21 of 21. ownership: 5 files, 0 failures. The `modules.json` row as BOB set it.
+
+Size (session_01UxA8Yv7kHqsFpTvQSvpR4k): test runs 19, module lines 943
+
 ## J1 · QUESTION
 
 Seven readings; I am building on each now. Only (1) and (3) could change what I build.
@@ -59,3 +73,7 @@ B2 applied (merged tranche/T33 @ 9bc95fbf27; K1563 (1): owner registered at load
 ## J3 · COMPLETE
 
 T33-27 complete; re-pointed at the real entities and events (B3, K1574), stand-ins removed. 26/26 tests on the real modules; events, entities and connection-grammar 152/152 after lines' load-time registration. Checks: format 0, architecture 0, coverage 20/20, ownership 0 (with the modules.json row below applied locally). For modules.json: paths bio-plane/src/lines/; tests bio-plane/test/m/lines/; uses record-grammar, jurisdictions, civil-time, connection-grammar, record-core, membership, provenance, content, entities, events. The record's Completion section lists the refusals added (HOLDER_NOT_A_PERSON, NO_BY, BAD_DIRECTION, LINE_HOLDS_NO_AMOUNT, LINE_NO_HYPOTHESIS), what is deferred (the upper-bound edge end to end, current_through, M-P2's staleness rule), and one finding: events answers an unknown host OWNER_HOST_UNKNOWN where K1563 (1) names OWNER_HOST_AMBIGUOUS.
+
+## J4 · COMPLETE
+
+B4 done: R21 met (merged tranche/T33 first). recordCurrentThrough({lineId, day, basis, by}), op linecurrentthrough, table line_current_through (declared: stored, sight source, export yes). An open-ended holds line is in through the latest statement the viewer may see and undetermined after it (never out); a later statement supersedes, the earlier kept and shown; the machine only from a system rule. New refusals: LINE_WITHDRAWN, NOT_A_HOLDS_LINE, END_STATED. lines 29/29 (3 new tests naming R21); events and local-facts 66/66; format 0, architecture 0, coverage 21/21, ownership 5 files 0 failures. The op arm is new for op-declarations/control-plane (T33-88/89).
