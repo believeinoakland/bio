@@ -225,3 +225,6 @@ U84–U87 received (K1810). DEC-158 is N679 (wizard-scripts), and Bob is asked w
 
 ## B66 · ACK · re U88 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 U88 received (K1814). DEC-161's timings and WCAG 2.2 SC 1.4.13's conditions join N672, built with the new screens' shell. BOB #125 (session_01BDnHPha55vjqRQRyUZwLWo) now writes this outbox.
+
+## B67 · NOTICE · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
+K1818: Bob named DEC-152, DEC-153 and DEC-158 for T34 ('yes'). They are folded now as T34-90, T34-91, T34-92 (L11: wizard-scripts, instance-setup, op-declarations, affordances), worded by BOB before L11 starts; PR #12 is still merged at T34's close. K1819: Bob ruled DEC-156's sign-in location too low-level for him (P17), so BOB decided: each member's Claude subscription sign-in lives in that member's own agent-runner container instance, written there by the unmodified Claude Code binary; Civicsmith never reads, copies or stores it centrally (AT-27, U-7 (c) kept clear). N678 stays T35.
