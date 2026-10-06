@@ -348,20 +348,30 @@ test("R7: the moved checks carry their ids and words: C-19.1 and its C-19.2, C-3
   assert.deepEqual(f, [{ check: "C-19.1", severity: "error", message: "data/inbox.json must be a JSON object" }]);
 });
 
-test("R8: tasks is declared to the whole-store purge only: a bundle's purge leaves it, the whole-store purge clears it", () => {
+test("R8, R17: tasks and the check tables are declared to the whole-store purge only: a bundle's purge leaves them, the whole-store purge clears them", () => {
   const w = box();
   assert.deepEqual([TASKS_TABLES, tasksOwns("tasks"), tasksOwns({ name: "tasks" }), tasksOwns("queue_state")],
-    [["tasks"], true, true, false]);
+    [["tasks", "check_requests", "check_todos", "check_takes", "check_records"], true, true, false]);
+  for (const t of TASKS_TABLES) assert.equal(tasksOwns(t), true, t);
   w.bundle(DOC);
   w.task("TASK-2026-0001-a", DOC);
   const one = w.record.purge({ bundleId: DOC });
   assert.equal(one.scope, DOC);
   assert.equal(w.all(`SELECT count(*) c FROM tasks`)[0].c, 1);
+  w.run(`INSERT INTO check_requests (request, target, label, member, note, by, at, addressed) VALUES ('chkreq-x', ?, 'CPA', NULL, NULL, 'olga', ?, 0)`, DOC, iso(NOW));
+  w.run(`INSERT INTO check_todos (request, member, task, at) VALUES ('chkreq-x', 'olga', 'TASK-2026-0001-a', ?)`, iso(NOW));
+  w.run(`INSERT INTO check_takes (request, taker, handle, at) VALUES ('chkreq-x', 'olga', 'olga', ?)`, iso(NOW));
+  w.run(`INSERT INTO check_records (check_id, request, target, checker, verdict, at) VALUES ('chk-x', 'chkreq-x', ?, 'olga', 'check', ?)`, DOC, iso(NOW));
+  assert.equal(w.record.purge({ bundleId: DOC }).scope, DOC);
+  for (const t of TASKS_TABLES) assert.equal(w.all(`SELECT count(*) c FROM ${t}`)[0].c, 1, `a bundle's purge leaves ${t}`);
   const all = w.record.purge({});
   assert.equal(all.removed.tasks, 1);
-  assert.equal(w.all(`SELECT count(*) c FROM tasks`)[0].c, 0);
-  // declared once: a second declaration of the table is record-core's refusal
-  assert.equal(w.record.declarePurge("other", ["tasks"]).reason, "TABLE_DECLARED");
+  for (const t of TASKS_TABLES) {
+    assert.equal(all.removed[t], 1, t);
+    assert.equal(w.all(`SELECT count(*) c FROM ${t}`)[0].c, 0, t);
+  }
+  // declared once: a second declaration of a table is record-core's refusal
+  for (const t of TASKS_TABLES) assert.equal(w.record.declarePurge("other", [t]).reason, "TABLE_DECLARED", t);
 });
 
 test("R8: while another module holds the table (as queue did in N363's coexistence), this module registers nothing a second time", () => {
@@ -410,11 +420,29 @@ test("R10: the viewer comes only from the control plane's stamp in the URL, neve
   const url = new URL("http://do/x?viewer=member%3Aalice&assignee=alice&status=open&refers=D&limit=5");
   const body = { viewer: "class:admin", actor: "alice", id: "TASK-1", to: "bob", limit: 3 };
   const ops = tasksOps(t, url, body);
-  assert.deepEqual(Object.keys(ops).sort(), ["taskdrain", "taskforward", "taskresolve", "tasks"]);
+  assert.deepEqual(Object.keys(ops).sort(), ["checkrecord", "checkrequest", "checkrequests", "checksof", "checktake",
+                                             "taskdrain", "taskforward", "taskresolve", "tasks"]);
   ops.tasks(); ops.taskdrain(); ops.taskforward(); ops.taskresolve();
   assert.deepEqual(seen, [
     ["taskList", { assignee: "alice", status: "open", refersTo: "D", limit: "5", viewer: "member:alice" }],
     ["taskDrain", body], ["taskForward", body], ["taskResolve", body]]);
+  // R13–R16: the check acts' `by` and every `viewer` are the URL's stamps; a body's copy is never read
+  seen.length = 0;
+  const curl = new URL("http://do/x?by=olga&viewer=member%3Aolga&after=chkreq-a&limit=7&target=INFO-1");
+  const cbody = { by: "mallory", viewer: "class:admin", target: "INFO-1", label: "CPA", member: null, note: "n",
+                  request: "chkreq-a", verdict: "concern", reason: "r" };
+  const cops = tasksOps(t, curl, cbody);
+  cops.checkrequest(); cops.checktake(); cops.checkrecord(); cops.checkrequests(); cops.checksof();
+  assert.deepEqual(seen, [
+    ["checkRequest", { target: "INFO-1", label: "CPA", member: null, note: "n", by: "olga", viewer: "member:olga" }],
+    ["checkTake", { request: "chkreq-a", by: "olga" }],
+    ["checkRecord", { request: "chkreq-a", verdict: "concern", reason: "r", by: "olga" }],
+    ["checkRequests", { viewer: "member:olga", after: "chkreq-a", limit: "7" }],
+    ["checksOf", { target: "INFO-1", viewer: "member:olga" }]]);
+  seen.length = 0;
+  const unstamped = tasksOps(t, new URL("http://do/x"), cbody);
+  unstamped.checkrequest(); unstamped.checktake(); unstamped.checkrecord(); unstamped.checkrequests(); unstamped.checksof();
+  for (const [, a] of seen) { assert.equal(a.by ?? null, null); assert.equal(a.viewer ?? null, null); }
   const bare = tasksOps(t, new URL("http://do/x"), { viewer: "class:admin" });
   seen.length = 0; bare.tasks();
   assert.equal(seen[0][1].viewer, null, "a body's viewer is never read");
