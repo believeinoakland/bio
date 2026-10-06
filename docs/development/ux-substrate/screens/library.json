@@ -37,10 +37,16 @@
        "why": "The test proves your copy works before anyone relies on it."
       },
       {
+       "screen": "install",
+       "act": null,
+       "what": "Save the one-time password somewhere safe, such as a password manager, then continue.",
+       "why": "It is shown once, and it is how you become the first administrator. Continuing fills it in; if it is lost before you claim, whoever can sign in to the Cloudflare account can set a new one."
+      },
+      {
        "screen": "setup",
        "act": "claim",
-       "what": "Claim your copy with the one-time password, then choose your own password.",
-       "why": "Only the person holding the one-time password can become the first administrator."
+       "what": "Claim with the one-time password, then choose your own password. It is already filled in if you continued from the installer; otherwise type the one you saved.",
+       "why": "Only the person holding the one-time password can become the first administrator. Once you claim, it is spent."
       },
       {
        "screen": "setup",
