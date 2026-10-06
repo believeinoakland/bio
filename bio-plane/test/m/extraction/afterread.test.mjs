@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, hold, member, withEntry, i2, noText, ocrAnswer } from "./fixture.mjs";
+import { readHooksOf } from "../../../src/reading-pipeline/index.mjs";
 
 const S1 = "1".repeat(64), S2 = "2".repeat(64), S3 = "3".repeat(64);
 const reading = (type, extra = {}) => ({ content_type: type, reader_version: 1, read_from_text: true, found: false, entities: [],
@@ -142,4 +143,26 @@ test("R69 R34: a re-read that writes its reading calls afterRead once after the 
     () => w.x.pdfStructure({ ocr: "1", sha: d, viewer: "class:admin", author: "member:m1", env: { OCR_WORKER: member(() => ocrAnswer([])) } }));
   assert.equal(none.body.reextraction.written, false);
   assert.equal(rec.calls.length, 1);
+});
+
+test("R69 (K1555): with no registry handed in, the storage's own readHooksOf(ctx) is called: a hook opted into the reading's class runs after the commit, a throwing one is reported in failed, and another class runs none", async () => {
+  const w = fresh();
+  bundle(w.s, "B-1");
+  const seen = [];
+  readHooksOf(w.ctx).onRead("events", (a) => { seen.push([a.captureSha, a.captureClass, !!w.one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, a.captureSha)]); },
+                            { captureClasses: ["minutes"] });
+  readHooksOf(w.ctx).onRead("entities", () => { throw new Error("hook failed"); }, { captureClasses: ["minutes"] });
+  const out = w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading("minutes") });
+  const got = await out.afterRead;
+  assert.deepEqual(got.ran, ["events"]);
+  assert.deepEqual(got.failed.map((f) => f.module), ["entities"]);
+  assert.deepEqual(seen, [[S1, "minutes", true]]);
+  assert.ok(w.one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, S1), "the reading stands");
+  const other = w.x.writeReading({ bundleId: "B-1", captureSha: S2, reading: reading("agenda") });
+  assert.deepEqual(await other.afterRead, { ran: [], failed: [] });
+  assert.equal(seen.length, 1);
+  /* another storage's hooks never run for this one's reading */
+  const v = fresh();
+  bundle(v.s, "B-1");
+  assert.deepEqual(await v.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading("minutes") }).afterRead, { ran: [], failed: [] });
 });

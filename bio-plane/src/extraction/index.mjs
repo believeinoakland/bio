@@ -30,7 +30,7 @@ import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import * as pipeline from "../reading-pipeline/index.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
-         readingFromWire, decodeView, textCountsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
+         readingFromWire, decodeView, textCountsOf, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
          compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../reading-pipeline/index.mjs";
 
 export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP };
@@ -1394,6 +1394,9 @@ export class Extraction {
                                                        container: "pdf", planeVersion: e.VERSION || null });
         /* N139 (reading-pipeline R17): the re-read's own counts, by the acquire path's rule. */
         { const n = textCountsOf(t3.i2text); if (n) Object.assign(reading, n); }
+        /* reading-pipeline R28 (K1557, CHANGE B4): what the pdf entry emitted beside the text, unaltered, by the read's own
+           rule: its `metadata` or null, and `cells` only for a workbook (never here). */
+        Object.assign(reading, emittedFieldsOf(t3.i2text));
         structureChain = chain;
         reading.reextracted = {
           at: stampInstant("second"), by: author,
