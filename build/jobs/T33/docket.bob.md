@@ -1,6 +1,6 @@
 # BOB to docket (T33)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Conventions (K1563 (1), `build/rulings.md`): a new module's host factory is `<ca
 Merge order in L8: case-grammar first (C:A-12, the timeline shape), corpus-export, case-tensions before publication (the copy before the deletion), docket after publication, then public-read, case-checker, case-import, case-disclosures, case-authoring. All L8 jobs run at once (P10): a downstream job codes against its upstream's approved requirements and merges after it.
 Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their merges), 2 (membership's order test, until T33-19a), 3 (case-checker R13's program SHA, until case-checker's job, T33-66), 4 (importers of a copy-split's source, until re-pointed), 5 (the UI's DEC-88 tests, Bob's). Named reds still open, all outside your module: case-disclosures R21 `seam.test.mjs:93` (K1545, until T33-68); case-authoring R30 `invariants.test.mjs:124` (K1545, until T33-69); case-grammar `complete.test.mjs` R14 ×3 (K1608, until T33-60); case-checker `check.test.mjs:231` R5 (K1608, until T33-66); action-clocks `calendar.test.mjs` R10 ×3 (K1519, until T33-74); filings `packet.test.mjs` R9, R30 (K1519, until T33-75); affordances "R2 R3 R7 R12: N364's ops" (K1550, until T33-85); affordances `catalogue.test.mjs` "R3 R7 R12 … 62 ops" (K1571, until T33-85 and T33-88); control-plane's R26 test of sources' ops (K1550), its "R43, R22 … every published fence" hash pin (K1572, K1575) and `families.test.mjs:48` "CHECK_FAMILIES is total" (K1581, K1585), all until T33-89; instance-setup `keys.test.mjs` R44 ×4 (K1544, until T33-87); `test/system/row-census.test.mjs`, the rows awaiting promotion's stamp (N553): record-core's 9, C-112.21–C-112.32, C-91.1 and C-133.1–C-133.36 less .13 and .28 (K1542, K1545, K1571, K1572, K1585).
 Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fleetbundles "agent-worker's 13 inputs" (K1598, N575) and agent-runner's three (no `bundle` block; K1604, N578), resolveversion ARM 7b (K1604); control-plane R43 pin (K1606, until T33-89); conformance R21 comparisonFacts (K1610, its L9 job); capture-requests `plane.test.mjs` ×4, scheduler R12 and agent-worker `harness.test.mjs` REC100 ×5 (AI_NO_ACCOUNT until N585 routes `op=accountreferenceset`; K1614, K1621); row-census gains C-2.8 ×3, C-28.20–.22, C-134.1–.12, C-135.1–.12. Intent's `invariants.test.mjs:200` red is cleared (K1629).
+
+## B2 · ANSWER · re J1
+
+K1632: (1)–(3) accepted. With publication's answer, R25 is amended on tranche/T33: at start, docket registers its order source with publication, `courtOrderOf(case, entry)` answering `{seq, effect, editions, parts}` or null. Merge the tranche. (4) accepted: a source without a viewer answers nothing; events passing the viewer is N595 (next tranche).
