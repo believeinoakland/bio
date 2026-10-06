@@ -743,13 +743,13 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 
 <div class="cs"><div class="doc">
 <header>
-<p class="kicker">Design phase · step 5 of 5 · layouts and key screens · drafted 6 October 2026 · approved 6 October</p>
+<p class="kicker">Design phase · step 5 of 5 · layouts and key screens · drafted 6 October 2026 · approved 6 October · one question for you</p>
 <h1 class="page">Civicsmith screens</h1>
 <p class="lede">Every journey walked through the screens a member will use, drawn in the visual language, on a desktop and on a phone, with the assistant and without it. Each of the seventeen wizards is written and walked step by step: the guide docks beside the work and rings the real control it names.</p>
 <div class="meta3">
 <div><b>How to use it</b>Pick a journey, a wizard or a screen in the viewer below, then step through. Switch between with and without the assistant, desktop and phone, light and dark, at the top.</div>
 <div><b>What is real</b>Every button carries the act it would perform and its weight; every wizard step names a screen and an act from the requirements, checked. The data is invented: Lakeshore Tenants, its members Rosa, Dev, Mai, Ana and Teo.</div>
-<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). Everything else is design detail, decided and listed in section 6.</div>
+<div><b>Status</b>Open to your comments. The wizard library is approved (DEC-148); publishing at a set time (DEC-147), the name for a group’s own Civicsmith (DEC-149) and the group’s API key (K1755) are ruled (section 7). A group whose place Civicsmith doesn’t know yet is ruled too (DEC-150, DEC-151). One question is yours: S6, using a Claude subscription without a command line. Everything else is design detail, decided and listed in section 6.</div>
 </div>
 </header>
 <nav class="idx" aria-label="Sections">
@@ -848,6 +848,30 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 
 <section id="question">
 <h2 class="sec">7. For you</h2>
+<div class="qbrief" id="q-s6">
+<h3>S6. Using a Claude subscription without a command line</h3>
+<p><b>What you are asked:</b> how a member who isn't technical can use their own Claude Pro or Max subscription with the assistant.</p>
+<p><b>Why it is yours:</b> each way out depends on how Civicsmith is built and on what Anthropic's terms allow, and one of them means asking Anthropic for something.</p>
+<h4>How it works today</h4>
+<p>A subscription token is made only by Anthropic's own sign-in, started from Claude Code with <span class="id">claude setup-token</span>. A member has to install Claude Code and type a command, then paste the token into Civicsmith. An API key, by contrast, is made entirely in a web browser, at Anthropic's Console. The screen now says this plainly, puts the API key first and suggests asking a technical member for five minutes' help.</p>
+<h4>What Anthropic's terms say (as the development process recorded them on 6 October)</h4>
+<ul class="mk-list">
+<li>"Anthropic does not permit third-party developers to offer Claude.ai login into their own applications" (AT-16), and "Unless previously approved, Anthropic does not allow third party developers to offer claude.ai login" (AT-19).</li>
+<li>Sign-in "must complete through Anthropic's own flow", and developers may not "collect, store, or intermediate Claude.ai credentials or session tokens" (AT-17).</li>
+<li>Nothing prevents "an end user from signing in to the unmodified Claude Code binary with their own Claude subscription, including where a platform hosts Claude Code" (AT-18).</li>
+</ul>
+<h4>An example</h4>
+<p>Ana has a Claude Pro plan and uses it on her phone. She would like the assistant in Civicsmith to use it too. Today she would have to install Claude Code on a laptop and type a command; she won't. So she uses the group's key, or goes without.</p>
+<h4>The choices</h4>
+<div class="qopts">
+<div><b>A. The screen as now drawn</b><span>The API key comes first, made in a browser. The subscription path is marked as needing a command line, with plain steps and "ask a member to help".</span><span><b style="font:inherit;font-weight:700">Gains:</b> works today, and nothing in the terms is in doubt.</span><span><b style="font:inherit;font-weight:700">Costs:</b> most members who aren't technical won't use their own subscription; they pay for an API key, use the group's key, or go without.</span></div>
+<div><b>B. Sign in through the hosted Claude Code's own login</b><span>The group's Civicsmith already runs Anthropic's unmodified Claude Code for the subscription path. Its own sign-in shows a link to Anthropic's page. The member signs in there and pastes back the code Anthropic shows them: no command line.</span><span><b style="font:inherit;font-weight:700">Gains:</b> any member with a Pro or Max plan can use it in a minute.</span><span><b style="font:inherit;font-weight:700">Costs:</b> AT-18 permits signing in to hosted, unmodified Claude Code. Whether Civicsmith passing the code along and keeping the sign-in counts as "intermediating" (AT-17) is unsettled (the register's U-2). The development process would check the terms and whether it can be built before anything is drawn.</span></div>
+<div><b>C. Ask Anthropic for approval</b><span>Whoever speaks for Civicsmith asks Anthropic to approve a "Sign in with Claude" button (AT-19's "unless previously approved").</span><span><b style="font:inherit;font-weight:700">Gains:</b> the simplest experience, with certainty about the terms.</span><span><b style="font:inherit;font-weight:700">Costs:</b> an outward request with an uncertain answer and timing; AT-16 states the bar without the approval clause.</span></div>
+<div><b>D. API keys only</b><span>Drop the subscription path.</span><span><b style="font:inherit;font-weight:700">Costs:</b> reverses part of your ruling of 6 October (K1755); members with a plan pay twice.</span></div>
+</div>
+<p class="qrec"><b>Recommendation: A now, and have the development process assess B.</b> If B can't be confirmed under the terms, C is next. <b>Risk:</b> until then, few members who aren't technical use their own plan; the group's key covers them where the group offers it.</p>
+<p class="answer">Reply, for example: “S6: A, assess B” · “S6: A and C” · “S6: D” · or a question.</p>
+</div>
 <div class="qbrief" id="q-s5" style="border-left-color:var(--c-accent)">
 <h3>S5. A group whose place Civicsmith doesn't know yet: A for now, recorded</h3>
 <p>Your answer, 6 October: “S5: A for now, but the B capabilities should be recorded as something to be done after the first public release goes out.” Recorded as DEC-151. For now, only the places Civicsmith ships, researched with their sources: a group elsewhere chooses “Other”, names its place, and is told when an update brings it (DEC-150). After the first public release, a group may write its own place's rules inside its own Civicsmith, each with its source, marked as the group's own research and serving only that group. That is recorded for the development process as work for after the first public release.</p>
@@ -1082,9 +1106,9 @@ SCR.connect = c => { const st = CONNECT_ST[c.wizard && c.wizard.act]; const sel 
   </div>
   <div class="st st-a st-d">${sec('Before your first question', `<div class="cs-dialog" style="max-width:none;box-shadow:none"><span class="cs-tag-outward">${I('outward')}Outward · leaves your group's Civicsmith</span><div class="ends">Your questions, and the material read to answer them, go to Anthropic under the group's account. Administrators see how much you spend, never what you ask.</div>${acts(btn('groupkeynoticeseen', 'I have read this'))}</div>`)}</div>
   <div class="st st-a st-c">${sec('Connect your own account (optional)', `<div class="st st-a">${note('If you connect your own account, it serves you instead of the group\'s key, and only you.')}</div><div class="cs-dialog" style="max-width:none;box-shadow:none"><span class="cs-tag-outward">${I('outward')}Outward · leaves your group's Civicsmith</span><div class="ends">When you ask the assistant something, your question and the material read to answer it go to Anthropic under your own Claude account, and its terms apply. Nothing goes unless you ask.</div>${acts(btn('disclosureshown', 'I have read this'))}</div>
-    ${checks('Connect with', [['My own Claude API key', true], ['My own Claude subscription token', false], ['Skip: use Civicsmith without the assistant', false]], { radio: true })}
-    ${field('mk-key', 'Your API key', 'sk-ant-…', { help: 'From console.anthropic.com → API keys. Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.' })}
-    <details class="mk-details"><summary>Using a subscription token instead</summary><ol class="mk-list"><li>On your own computer, open a terminal.</li><li>Run <span class="id">claude setup-token</span> and sign in to Claude when your browser opens.</li><li>Paste the token it prints into the field above.</li></ol><p class="mk-note">Your group's Civicsmith needs Workers Paid for this. Civicsmith never sees your Claude password.</p></details>
+    ${checks('Connect with', [['My own Claude API key (made in your web browser)', true], ['My own Claude subscription (Pro or Max): needs a few minutes at a command line', false], ['Skip: use Civicsmith without the assistant', false]], { radio: true })}
+    ${field('mk-key', 'Your API key', 'sk-ant-…', { help: 'In your web browser: go to console.anthropic.com, sign in, add a payment method, then API keys › Create key, and paste it here. Anthropic bills you for each use. Civicsmith keeps it sealed, never shows or exports it, and uses it only for your questions.' })}
+    <details class="mk-details"><summary>Using your Claude subscription instead (about five minutes, at a command line)</summary><p class="mk-note">Not comfortable with a command line? Ask a member who is to sit with you for five minutes, or use an API key above: it is made entirely in your web browser.</p><ol class="mk-list"><li>On your own computer, open the command line: on a Mac, <b>Terminal</b> (Applications › Utilities); on Windows, <b>PowerShell</b>.</li><li>Install Claude Code, Anthropic's own tool, by pasting the one line from Anthropic's Claude Code page.</li><li>Paste <span class="id">claude setup-token</span> ${'<button type="button" class="cs-btn" data-tone="quiet">Copy</button>'} and press Enter. Your browser opens Anthropic's sign-in page; sign in and approve.</li><li>The command line shows a long token. Copy it and paste it into the field above.</li></ol><p class="mk-note">Needs a Pro or Max plan, and your group's Civicsmith on Workers Paid. Civicsmith never sees your Claude password. Your administrator can see whether the group offers its own key instead.</p></details>
     ${acts(btn('accountreferenceset', 'Connect', { tone: 'primary' }))}`)}</div>
   <div class="st st-b st-c">${sec('Your limit and suggestions', `${field('mk-lim', 'Your daily limit', '$2.00', { help: 'On your own account. Your administrator has set at most $5.00 a day for anyone in the group.' })}${acts(btn('aiceilingset', 'Set your daily limit'))}${checks('Suggestions', [['Let the assistant suggest things without being asked', false]], { act: 'accountswitchset' })}${acts(btn('accountswitchset', 'Save'))}`)}</div>
   <div class="st st-a st-d">${sec('Limits and suggestions', note('On the group\'s key, your administrators set the daily limit ($2.00 for each member) and whether the assistant may suggest things unprompted (off).'))}</div>

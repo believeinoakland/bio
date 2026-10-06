@@ -1,3 +1,27 @@
+<div class="qbrief" id="q-s6">
+<h3>S6. Using a Claude subscription without a command line</h3>
+<p><b>What you are asked:</b> how a member who isn't technical can use their own Claude Pro or Max subscription with the assistant.</p>
+<p><b>Why it is yours:</b> each way out depends on how Civicsmith is built and on what Anthropic's terms allow, and one of them means asking Anthropic for something.</p>
+<h4>How it works today</h4>
+<p>A subscription token is made only by Anthropic's own sign-in, started from Claude Code with <span class="id">claude setup-token</span>. A member has to install Claude Code and type a command, then paste the token into Civicsmith. An API key, by contrast, is made entirely in a web browser, at Anthropic's Console. The screen now says this plainly, puts the API key first and suggests asking a technical member for five minutes' help.</p>
+<h4>What Anthropic's terms say (as the development process recorded them on 6 October)</h4>
+<ul class="mk-list">
+<li>"Anthropic does not permit third-party developers to offer Claude.ai login into their own applications" (AT-16), and "Unless previously approved, Anthropic does not allow third party developers to offer claude.ai login" (AT-19).</li>
+<li>Sign-in "must complete through Anthropic's own flow", and developers may not "collect, store, or intermediate Claude.ai credentials or session tokens" (AT-17).</li>
+<li>Nothing prevents "an end user from signing in to the unmodified Claude Code binary with their own Claude subscription, including where a platform hosts Claude Code" (AT-18).</li>
+</ul>
+<h4>An example</h4>
+<p>Ana has a Claude Pro plan and uses it on her phone. She would like the assistant in Civicsmith to use it too. Today she would have to install Claude Code on a laptop and type a command; she won't. So she uses the group's key, or goes without.</p>
+<h4>The choices</h4>
+<div class="qopts">
+<div><b>A. The screen as now drawn</b><span>The API key comes first, made in a browser. The subscription path is marked as needing a command line, with plain steps and "ask a member to help".</span><span><b style="font:inherit;font-weight:700">Gains:</b> works today, and nothing in the terms is in doubt.</span><span><b style="font:inherit;font-weight:700">Costs:</b> most members who aren't technical won't use their own subscription; they pay for an API key, use the group's key, or go without.</span></div>
+<div><b>B. Sign in through the hosted Claude Code's own login</b><span>The group's Civicsmith already runs Anthropic's unmodified Claude Code for the subscription path. Its own sign-in shows a link to Anthropic's page. The member signs in there and pastes back the code Anthropic shows them: no command line.</span><span><b style="font:inherit;font-weight:700">Gains:</b> any member with a Pro or Max plan can use it in a minute.</span><span><b style="font:inherit;font-weight:700">Costs:</b> AT-18 permits signing in to hosted, unmodified Claude Code. Whether Civicsmith passing the code along and keeping the sign-in counts as "intermediating" (AT-17) is unsettled (the register's U-2). The development process would check the terms and whether it can be built before anything is drawn.</span></div>
+<div><b>C. Ask Anthropic for approval</b><span>Whoever speaks for Civicsmith asks Anthropic to approve a "Sign in with Claude" button (AT-19's "unless previously approved").</span><span><b style="font:inherit;font-weight:700">Gains:</b> the simplest experience, with certainty about the terms.</span><span><b style="font:inherit;font-weight:700">Costs:</b> an outward request with an uncertain answer and timing; AT-16 states the bar without the approval clause.</span></div>
+<div><b>D. API keys only</b><span>Drop the subscription path.</span><span><b style="font:inherit;font-weight:700">Costs:</b> reverses part of your ruling of 6 October (K1755); members with a plan pay twice.</span></div>
+</div>
+<p class="qrec"><b>Recommendation: A now, and have the development process assess B.</b> If B can't be confirmed under the terms, C is next. <b>Risk:</b> until then, few members who aren't technical use their own plan; the group's key covers them where the group offers it.</p>
+<p class="answer">Reply, for example: “S6: A, assess B” · “S6: A and C” · “S6: D” · or a question.</p>
+</div>
 <div class="qbrief" id="q-s5" style="border-left-color:var(--c-accent)">
 <h3>S5. A group whose place Civicsmith doesn't know yet: A for now, recorded</h3>
 <p>Your answer, 6 October: “S5: A for now, but the B capabilities should be recorded as something to be done after the first public release goes out.” Recorded as DEC-151. For now, only the places Civicsmith ships, researched with their sources: a group elsewhere chooses “Other”, names its place, and is told when an update brings it (DEC-150). After the first public release, a group may write its own place's rules inside its own Civicsmith, each with its source, marked as the group's own research and serving only that group. That is recorded for the development process as work for after the first public release.</p>
