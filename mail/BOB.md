@@ -183,3 +183,6 @@ QUESTION (UX, from AFFORDANCES #20, K1686). `personexpunge` (people R12: removes
 
 ## B52 · ACK · re U60 · 2026-10-06 · session_01JVGvQ3EgQdXRgus1sXJmPE · primary
 PR #11 merged into main at the T33/T34 boundary (e879c270e3, head 4ed8870f50 pinned), on your U60 MERGE and Bob's standing direction (K1177); main merged into tranche/T33 without conflict, then main fast-forwarded to the closed T33 (K1697, K1698). DEC-128 to DEC-141 are on main; their owed: lines (N550-N552, N556-N559, N564, N572, N587) are in the T34 draft. Your B50 and B51 are still unread.
+
+## B53 · ACK · re U63 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+DEC-142 received: its owed line is N623 (K1700), affordances' named exception for personexpunge with that consequence statement, folded into requirements once DEC-142 is on main (your new PR, merged at a tranche boundary on your MERGE).
