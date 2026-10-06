@@ -234,18 +234,18 @@ function adjustedFrom(before, after) {
   return canonical(before ?? null) !== canonical(after ?? null);
 }
 var allowance = (budget, bound) => {
-  const row = (budget || {})[bound];
-  if (!row) return null;
-  const allowed = Number(row.allowed);
-  const consumed = Number(row.consumed) || 0;
+  const row2 = (budget || {})[bound];
+  if (!row2) return null;
+  const allowed = Number(row2.allowed);
+  const consumed = Number(row2.consumed) || 0;
   if (!Number.isFinite(allowed) || allowed <= 0) return null;
   return { allowed, consumed };
 };
 function stopBecause(state) {
   const s = state || {};
   for (const bound of BUDGET_BOUNDS) {
-    const row = allowance(s.budget, bound);
-    if (row && row.consumed >= row.allowed) return bound;
+    const row2 = allowance(s.budget, bound);
+    if (row2 && row2.consumed >= row2.allowed) return bound;
   }
   if (Number(s.pass) >= Number(s.maxPasses)) return "completed";
   return null;
@@ -269,8 +269,8 @@ function gateStep(state) {
 function nextStep(state) {
   const s = state || {};
   const at = String(s.step || FIRST_STEP);
-  const row = CONTROL_FLOW[at];
-  if (!row) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
+  const row2 = CONTROL_FLOW[at];
+  if (!row2) return { step: "close", why: `'${at}' is not a row in this table`, bound: "completed" };
   if (at === "gate-mode") return gateStep(s);
   const stopped = stopBecause(s);
   if (stopped && at !== "close")
@@ -518,8 +518,8 @@ var PLAN_MAX_PASSES = 1;
 function planStopBecause(state) {
   const s = state || {};
   for (const bound of PLAN_BUDGET_BOUNDS) {
-    const row = allowance(s.budget, bound);
-    if (row && row.consumed >= row.allowed) return bound;
+    const row2 = allowance(s.budget, bound);
+    if (row2 && row2.consumed >= row2.allowed) return bound;
   }
   if (Number(s.pass) >= PLAN_MAX_PASSES) return "completed";
   return null;
@@ -692,6 +692,96 @@ function whyWithUndetermined(why, undetermined) {
   return `${head}${tail}`.trim().slice(0, WHY_MAX);
 }
 
+// ../bio-plane/src/record-grammar/ids.mjs
+var row = (prefix, owner, form = "sequential") => Object.freeze({ prefix, owner, form });
+var ID_TABLE = Object.freeze([
+  /* R1's bundle prefixes, each with the module whose record it names. */
+  row("INFO", "capture"),
+  row("PROB", "inquiry"),
+  row("FOCUS", "inquiry"),
+  row("INQ", "inquiry"),
+  row("PROJ", "promotion"),
+  row("ACTN", "actions"),
+  row("BIAS", "bias"),
+  row("STD", "standards"),
+  row("CONF", "conformance"),
+  row("CONS", "consequences"),
+  row("ESC", "escalation"),
+  row("ASP", "intent"),
+  row("GOAL", "intent"),
+  row("PLN", "action-plans"),
+  /* Every other prefix a module minted or validated at T33's opening, sequential in form. `ENT` was validated as four
+     digits by inquiry-grammar, bias and action-grammar; it is widened here, and they read this table (S0-4 to S0-13). */
+  row("ENT", "entities"),
+  row("REL", "entities"),
+  row("STDP", "standards"),
+  row("ACT", "conformance"),
+  row("CMP", "conformance"),
+  row("FIL", "filings"),
+  row("CPK", "filings"),
+  row("THY", "filings"),
+  row("GATH", "monitoring"),
+  row("THEME", "connections"),
+  row("LEAD", "observation-log"),
+  row("TASK", "tasks"),
+  /* Drawn at random by record-core's opaque minter (its R6), four random digits and the caller's tail. */
+  row("CASE", "case-authoring"),
+  row("WCD", "case-authoring"),
+  row("DRAFT", "review"),
+  row("RVG", "review"),
+  row("SRC", "sources"),
+  row("NOTE", "network-notices"),
+  row("DKT", "docket"),
+  row("TPL", "filing-templates"),
+  row("TPP", "filing-templates"),
+  row("TRG", "filing-templates"),
+  row("WIZ", "wizard-scripts"),
+  row("WZP", "wizard-scripts"),
+  row("WEG", "wizard-scripts"),
+  /* T33's new objects, rows of their owners' tables (R3): opaque. */
+  row("EVT", "events", "opaque"),
+  row("LIN", "lines", "opaque"),
+  row("MNY", "money", "opaque"),
+  row("PFA", "people", "opaque"),
+  row("IDC", "people", "opaque"),
+  /* Reserved now (P8), sequential. */
+  row("MTI", "people"),
+  row("CHK", "people"),
+  row("MSR", "money"),
+  row("HYP", "hypotheses"),
+  row("DUT", "duties"),
+  row("CALC", "calculations"),
+  row("STQ", "answers")
+]);
+var YEAR = "\\d{4}";
+var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
+var FORM = new Map(ID_TABLE.map((e) => [e.prefix, e.form]));
+var coreOf = (prefix) => `${prefix}-${YEAR}-${CORE[FORM.get(prefix)]}`;
+function idPattern(prefix) {
+  return typeof prefix === "string" && FORM.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
+}
+var HYP_RE = idPattern("HYP");
+var ID_PREFIXES = Object.freeze([
+  "INFO",
+  "PROB",
+  "FOCUS",
+  "INQ",
+  "PROJ",
+  "ACTN",
+  "BIAS",
+  "STD",
+  "CONF",
+  "CONS",
+  "ESC",
+  "ASP",
+  "GOAL",
+  "PLN"
+]);
+var SLUG = "[a-z0-9]+(-[a-z0-9]+)*";
+var BUNDLE = `(${ID_PREFIXES.map((p) => idPattern(p).source.slice(1, -1)).join("|")})-${SLUG}`;
+var BUNDLE_ID_RE = new RegExp(`^${BUNDLE}$`);
+var ANN_ID_RE = new RegExp(`^${BUNDLE}\\.ann-\\d{8}T\\d{6}Z-${SLUG}$`);
+
 // ../bio-plane/src/observation-log/checks.mjs
 var AI_RUN_CHECKS = {
   /* §11: "Absence uses D-129's vocabulary — NEVER_LOOKED / LOOKED_ABSENT /
@@ -850,6 +940,7 @@ var AI_RUN_CHECKS = {
   }
 };
 var OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS));
+var LEAD_ID_RE = new RegExp(`^${idPattern("LEAD").source.slice(1, -1)}-[a-z0-9]+$`);
 
 // ../bio-plane/src/run-rules/checks.mjs
 var AI_RUN_OWN_CHECKS = {
@@ -2002,8 +2093,8 @@ var LOAD_LAYER = (disclosable) => ({
 function parentSystem(pack) {
   return "You make the judgements inside the steps of a BIO AI run. The run's control flow is a table you do not decide: at each judged step you are told the step and its facts, and you answer only by calling that step's judge tool. The instructions you work under are this skill pack, version " + String(pack.version) + ".\n\nRESIDENT LAYER:\n" + JSON.stringify(pack.resident) + "\n\nDisclosed layers, loaded with load_layer when your work needs them: " + (pack.resident?.disclosable ?? []).map((d) => `${d.layer} (${d.load_when})`).join("; ");
 }
-function rowPrompt(step, row, facts) {
-  return `STEP ${step}: ${row.does}. You judge: ${row.judged}. Facts: ${JSON.stringify(facts)}. Answer by calling judge_${step}.`;
+function rowPrompt(step, row2, facts) {
+  return `STEP ${step}: ${row2.does}. You judge: ${row2.judged}. Facts: ${JSON.stringify(facts)}. Answer by calling judge_${step}.`;
 }
 function rowFacts(s, levels) {
   if (s.mode === "plan")
@@ -2250,10 +2341,10 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
   while (steps < maxSteps) {
     steps += 1;
     const callsAtStepStart = calls;
-    const row = FLOW[state.step];
+    const row2 = FLOW[state.step];
     let judgement;
-    if (row && row.judged && model && state.step !== "collect") {
-      model.messages.push({ role: "user", content: rowPrompt(state.step, row, rowFacts(state, LEVELS)) });
+    if (row2 && row2.judged && model && state.step !== "collect") {
+      model.messages.push({ role: "user", content: rowPrompt(state.step, row2, rowFacts(state, LEVELS)) });
       const got = await converse({
         token: model.token,
         model: model.id,
@@ -2277,7 +2368,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
         break;
       }
       if (got.answer) judgement = got.answer;
-    } else if (row && row.judged && !model && jx < judgements.length) {
+    } else if (row2 && row2.judged && !model && jx < judgements.length) {
       judgement = judgements[jx];
       jx += 1;
     }
