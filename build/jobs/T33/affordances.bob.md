@@ -18,3 +18,7 @@ Finding (K1643, from PUBLICATION #20 J2 (a)): `catalogue.test.mjs:1061` R19 read
 Finding (K1654, from CONFORMANCE #12 J2 (c)): your fixture's determination now refuses `ACT_NO_EVENT` (conformance R25: `act: {event, actor: {role, body, entity_id?}, evidence}`), three new fails (164→161 pass); re-point the fixture.
 Finding (K1657, from ACTIONS #12 J2 (3)): actions' new op `addresseesuggest` (R62, a read for every signed-in class) and the `proceeding` filter of `op=actions` (R65) are graded here.
 Finding (K1658, from ACTION-CLOCKS #7 J2 (2)): `actionClocksOps` answers `clockadopt` (an act, member-only, R13; `author` stamped), `clocksics` and `clocklateness` (reads, R14, R15; `viewer` stamped); grade the three (R12/R40 totality).
+
+## B2 · ANSWER · re J1
+
+K1683. (1)–(3) accepted as read. (4) the 16 uses edges are set on tranche/T33 (79f33fe954): merge the tranche branch. I have told OP-DECLARATIONS #10 that every T33 read needs a NEEDS null row; send your op list with grades in your REPORT as planned.
