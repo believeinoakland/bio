@@ -1,30 +1,31 @@
 /* The asking scope (R1, R2; K1450, K1470, K1489, C:B-3). ASK_SCOPE is the one closed list of plane reads an ask may
  * make; credentials holds the same list as its grant's class (`AI_GRANT_OPS`, its R28; K1505 (14)), and a copy test
- * holds the two equal both ways. Every entry names its op, the module whose read it is, and the ruling that admitted it
- * (a recorded widening, D9, DEC-55). It holds no `sources*` op, no member history, no administrative op and no export.
+ * holds the two equal both ways, `rule` included (K1603, K1609). Every entry names its op, the module whose read it is,
+ * and the ruling that admitted it (a recorded widening, D9, DEC-55). It holds no `sources*` op, no member history, no administrative op and no export.
  *
  * `scrubRead` is R2: a read made under a grant never answers, names or counts a member's declared tie (`MTI-`), the
  * link from a source to a person, or a row of a project hidden from the asking member. Pure over its predicate. */
 
 const e = (op, owner, ruling) => Object.freeze({ op, owner, ruling });
 
-/** R1: the asking scope, sorted by op. `rule` is R7's door to every rule service (R8–R12), J1 (1). */
+/** R1: the asking scope, sorted by op, each op named as the plane routes it (N580; K1603, K1609), so the list equals
+ *  credentials' `AI_GRANT_OPS` both ways. `rule` is R7's door to every rule service (R8–R12), J1 (1). */
 export const ASK_SCOPE = Object.freeze([
-  e("calculations", "calculations", "C:B-3"),
-  e("careerof", "people", "K1470"),
+  e("calculation", "calculations", "C:B-3"),
+  e("career", "people", "K1470"),
   e("committedagainstpaid", "money", "K1470"),
-  e("duties", "duties", "K1450"),
+  e("dutiesof", "duties", "K1450"),
+  e("dutyoccurrences", "duties", "K1450"),
   e("entity", "entities", "K1450"),
   e("entitybyalias", "entities", "C:B-3"),
   e("eventsfor", "events", "K1470"),
   e("explore", "explore", "K1470"),
   e("frontier", "retrieval", "K1450"),
   e("holderat", "lines", "K1470"),
-  e("lines", "lines", "K1450"),
+  e("linesof", "lines", "K1450"),
   e("meaningrows", "retrieval", "K1450"),
-  e("moneyfacts", "money", "C:B-3"),
+  e("money", "money", "C:B-3"),
   e("moneyof", "money", "K1470"),
-  e("occurrences", "duties", "K1450"),
   e("profiles", "jurisdictions", "K1450"),
   e("relation", "entities", "K1450"),
   e("resolutions", "entities", "C:B-3"),
@@ -35,6 +36,7 @@ export const ASK_SCOPE = Object.freeze([
   e("standardinforce", "standards", "K1450"),
   e("standards", "standards", "K1450"),
   e("strengthbarof", "strength", "K1450"),
+  e("structureat", "lines", "K1609"),
   e("timeline", "events", "K1470"),
 ]);
 

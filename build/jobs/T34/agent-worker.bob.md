@@ -1,6 +1,6 @@
 # BOB to agent-worker (T34)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · ANSWER · re J1
 
 K1798: your reading is ruled and folded in R6 on tranche/T34 (merge it): the wire account is {kind, level, secret, member, suggestions?}, credentials R35's key carried as secret, level required, group only with apikey; you hand agent-model its own terms' shape (apikey {kind,key}, subscription {kind,token}). AGENT-MODEL keeps its terms; AI-RUNS sends this shape.
+
+## B3 · CHANGE
+
+With run-rules merged (its GATE_ADDRESS.file is now agent-harness/src/harness.mjs, T34-32), test/requirements.test.mjs:1391 (R44, N53) still expects "agent-worker/src/harness.mjs" and is red on tranche/T34 (292/1). Merge tranche/T34 (bundles regenerated there), re-point R44's pin to the file GATE_ADDRESS names, run your suites, and record completion again.

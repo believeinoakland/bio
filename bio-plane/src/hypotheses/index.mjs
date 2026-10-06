@@ -8,23 +8,25 @@
  *                                                         `hunch`, answered only inside the inquiry holding them
  *   check (R5, R6)                                        registered with `promotion` (its R39): no leg rests on a
  *                                                         hypothesis or on a derived connection carrying a lead
+ *   noteWrite, notesOf, noteTurn (R11–R15)                a member's own notes, answered to their author alone
  *   hypothesesOps (R7)                                    the route arms
  *
  * SHAPE (K61, K1563 (1)). `hypothesesOf(host, deps)` answers the one instance per host; making it creates and declares
- * the tables (R10) and registers the leg check with `promotion`. `deps` may give `record`, `membership`, `promotion`,
- * `explore` (whose `rederive` R6 asks), `calculationInputs(calcId)` (a synchronous read of a calculation's stored inputs,
- * R6's calculation arm; absent, that arm asks nothing), `registry` (a connection registry other than the default, for a
- * test) and `now` (a clock answering an ISO instant). */
-import { isHypothesisId, isMachineIdentity } from "../record-grammar/index.mjs";
+ * the tables (R10, R15) and registers the leg check with `promotion`. `deps` may give `record`, `membership`,
+ * `promotion`, `explore` (whose `rederive` R6 asks), `calculations` (whose synchronous `gradeFactsOf` R6's calculation
+ * arm asks; absent, the host's instance, reached when first asked), `registry` (a connection registry other than the
+ * default, for a test) and `now` (a clock answering an ISO instant). */
+import { isHypothesisId, isMachineIdentity, idPattern } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, Membership } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { BOUNDS, HUNCH_LABEL, defaultRegistry, isRecordId } from "../connection-grammar/index.mjs";
 import { exploreOf } from "../explore/index.mjs";
-import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES } from "./schema.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
+import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES } from "./schema.mjs";
 import { HYPOTHESES_CHECKS } from "./checks.mjs";
 
-export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, HYPOTHESES_CHECKS };
+export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, HYPOTHESES_CHECKS };
 
 /** The module's name: its tables' declarer, its promotion step and the connection owner of `hunch` (R4, R10). */
 export const OWNER = "hypotheses";
@@ -44,7 +46,19 @@ export const ABOUT_MAX = 50;
 export const UNDATED_WHY = "a hunch states no period of its own, so whether it holds at a date is not determined";
 /** R6: the form of a derived connection's id (`connection-grammar.derivedId`, a SHA-256 in lowercase hex). */
 export const DERIVED_ID_RE = /^[0-9a-f]{64}$/;
-const CALC_RE = /^CALC-\d{4}-\d{4,}$/;
+/** R6 (K1728): a calculation's id, in either form `record-grammar` reads (opaque, and the earlier sequential). */
+const CALC_RE = idPattern("CALC");
+/** R6: the kinds of a calculation's input whose 64-hex reference names, by definition, something other than a derived
+ *  connection (a table's canonical sha256, a passage's content id, a frozen set's or a draw's sha, money facts, a
+ *  calculation), so it is never read as one. */
+const NOT_A_CONNECTION_REF = Object.freeze(["table", "figure", "set", "draw", "money", "calculation"]);
+/** R11: a note's bound, in bytes (`observation-log` R14's bound for a member's own words); refused, never cut. */
+export const NOTE_MAX_BYTES = 131072;
+/** R13: what a note may become. */
+export const NOTE_TURNS = Object.freeze(["observation", "hunch", "question"]);
+/** R12: the page of notes: 200 by default, clamped 1…1000. */
+export const NOTES_LIMIT = Object.freeze({ default: 200, max: 1000 });
+const UTF8 = new TextEncoder();
 const HUNCH_VALID = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -99,15 +113,15 @@ export function hypothesesOf(host, deps = {}) {
 }
 
 export class Hypotheses {
-  #sql; #record; #membership; #explore; #host; #calcInputs; #registry; #now;
+  #sql; #record; #membership; #explore; #host; #calculations; #registry; #now;
 
-  constructor(storage, { record, membership, explore = null, host = null, calculationInputs = null, registry = defaultRegistry, now = null }) {
+  constructor(storage, { record, membership, explore = null, host = null, calculations = null, registry = defaultRegistry, now = null }) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
     this.#explore = explore;
     this.#host = host;
-    this.#calcInputs = typeof calculationInputs === "function" ? calculationInputs : null;
+    this.#calculations = calculations;
     this.#registry = registry;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
@@ -120,12 +134,15 @@ export class Hypotheses {
   /** The tables and their declaration (R10), and, for a registry other than the default (a test's), the owner bound to
    *  this instance (R4). Idempotent; a refused declaration is a defect of the wiring and throws. */
   migrate() {
-    const bare = HYPOTHESES_SCHEMA.split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
+    const bare = (HYPOTHESES_SCHEMA + NOTES_SCHEMA).split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
     if (this.#declared) return { ok: true, already: true };
     const base = { purge: "clear", expunge: "none", export: "yes", sight: "bundle", derive: "stored", version_chain: false,
                    keys: ["bundle_id"] };
-    const d = this.#record.declareTable(OWNER, HYPOTHESES_TABLES.map((name) => ({ ...base, name })));
+    /* R15: a member's notes, their author's alone and never exported, held in the group's copy like every table. */
+    const notes = { purge: "clear", expunge: "none", export: "never", sight: "owner", derive: "stored", version_chain: false, keys: [] };
+    const d = this.#record.declareTable(OWNER, [...HYPOTHESES_TABLES.map((name) => ({ ...base, name })),
+                                                ...NOTES_TABLES.map((name) => ({ ...notes, name }))]);
     if (d && d.ok === false) throw new Error(`hypotheses: declareTable refused: ${d.reason}`);
     if (this.#registry !== defaultRegistry && !this.#registry.owners().some((o) => o.owner === OWNER)) {
       const r = this.#registry.registerOwner({ owner: OWNER, kinds: [...HUNCH_KINDS], neighbours: (a) => this.neighbours(a) });
@@ -185,7 +202,7 @@ export class Hypotheses {
     if (isMachineIdentity(by)) return refuse("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member holds a hypothesis (K1473)");
     if (!HYPOTHESIS_KINDS.includes(kind))
       return refuse("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
-    if (!filled(statement)) return refuse("NO_STATEMENT", "a hypothesis states, in the member's words, what they think");
+    if (!filled(statement)) return refuse("HYPOTHESIS_NO_STATEMENT", "a hypothesis states, in the member's words, what they think");
     const a = Hypotheses.#about(kind, about);
     if (a.refusal) return a.refusal;
     const at = this.#now();
@@ -206,7 +223,7 @@ export class Hypotheses {
     const r = this.#held(hypothesisId, by);
     if (!r) return { refusal: Hypotheses.#noSuch(hypothesisId) };
     if (isMachineIdentity(by)) return { refusal: refuse("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member changes a hypothesis (K1473)") };
-    if (!filled(reason)) return { refusal: refuse("NO_REASON", "a change to a hypothesis says why, in the member's words") };
+    if (!filled(reason)) return { refusal: refuse("HYPOTHESIS_NO_REASON", "a change to a hypothesis says why, in the member's words") };
     return { row: r, reason: reason.trim().slice(0, REASON_MAX) };
   }
 
@@ -217,7 +234,7 @@ export class Hypotheses {
     const r = m.row;
     if (r.withdrawn) return refuse("HYPOTHESIS_WITHDRAWN", `${r.hypothesis_id} was withdrawn; a withdrawn hypothesis is not revised`, { hypothesis_id: r.hypothesis_id });
     if (statement !== undefined && statement !== null && !filled(statement))
-      return refuse("NO_STATEMENT", "a revised statement says, in the member's words, what they now think");
+      return refuse("HYPOTHESIS_NO_STATEMENT", "a revised statement says, in the member's words, what they now think");
     const text = filled(statement) ? statement.trim().slice(0, STATEMENT_MAX) : r.statement;
     let a = { about: parse(r.about_json), from: r.from_node, to: r.to_node };
     if (about !== undefined && about !== null) { a = Hypotheses.#about(r.kind, about); if (a.refusal) return a.refusal; }
@@ -309,19 +326,118 @@ export class Hypotheses {
     return { items, ...(rows.length > per ? { next: { after: items[items.length - 1].id, size: per } } : {}) };
   }
 
+  /* ---- a member's own notes (R11–R15; DEC-136 (2), (3)) ---- */
+
+  /* The member an act's stamp or a read's viewer names, or null: a machine, an absent stamp and a viewer naming no
+     member keep and read no note (R11, R12). */
+  #noteMember(who) {
+    if (!filled(who) || isMachineIdentity(who)) return null;
+    let m = null;
+    try { m = this.#membership.positionalMember(who); } catch { m = null; }
+    return filled(m) ? m : null;
+  }
+
+  /* The note `note` names when `member` kept it, else null (absent and another's alike, R13). */
+  #ownNote(note, member) {
+    const n = typeof note === "number" ? note : typeof note === "string" && /^\d{1,15}$/.test(note.trim()) ? Number(note.trim()) : NaN;
+    if (!Number.isSafeInteger(n) || n < 1) return null;
+    return this.#one(`SELECT note_id, member, text, at FROM member_notes WHERE note_id = ? AND member = ?`, n, member);
+  }
+
+  /** R11: `noteWrite({text, by})` keeps one note in the member's words, refused (never cut) past its bound; the first
+   *  note a member keeps while the group tells members what a court can reach answers the court statement, once. */
+  noteWrite({ text = null, by = null } = {}) {
+    const member = this.#noteMember(by);
+    if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a member keeps a note of their own");
+    if (!filled(text)) return refuse("NOTE_NO_TEXT", "a note holds the member's words, and this one holds none");
+    const bytes = UTF8.encode(text).length;
+    if (bytes > NOTE_MAX_BYTES)
+      return refuse("NOTE_TOO_LONG", `a note holds at most ${NOTE_MAX_BYTES} bytes, and this one is ${bytes}`, { max_bytes: NOTE_MAX_BYTES, bytes });
+    let tell = false;
+    try { tell = this.#membership.courtNotice().choice === "tell"; } catch { tell = false; }
+    const at = this.#now();
+    return this.#record.transact(() => {
+      this.#sql.exec(`INSERT INTO member_notes (member, text, at) VALUES (?,?,?)`, member, text, at);
+      const note = Number(this.#one(`SELECT last_insert_rowid() AS id`).id);
+      let told = false;
+      if (tell && !this.#one(`SELECT member FROM member_note_told WHERE member = ?`, member)) {
+        this.#sql.exec(`INSERT INTO member_note_told (member, at) VALUES (?,?)`, member, at);
+        told = true;
+      }
+      return { ok: true, note, at, ...(told ? { courtStatement: Membership.COURT_STATEMENT } : {}) };
+    });
+  }
+
+  /** R12: `notesOf({viewer, after?, limit?})`: the viewer's own notes, newest first, each with its turns; any other
+   *  viewer, and none, reads exactly as a member with no notes. */
+  notesOf({ viewer = null, after = null, limit = undefined } = {}) {
+    const lim = Number.isInteger(Number(limit)) && limit !== null && limit !== "" && limit !== undefined
+      ? Math.min(NOTES_LIMIT.max, Math.max(1, Number(limit))) : NOTES_LIMIT.default;
+    const member = this.#noteMember(viewer);
+    if (!member) return { ok: true, notes: [], limit: lim, truncated: false, next: null };
+    const from = after === null || after === undefined || after === "" ? null : Number(after);
+    const cursor = Number.isSafeInteger(from) && from > 0 ? from : null;
+    const rows = this.#rows(`SELECT note_id, text, at FROM member_notes WHERE member = ? ${cursor ? "AND note_id < ?" : ""}
+                             ORDER BY note_id DESC LIMIT ?`, ...(cursor ? [member, cursor, lim + 1] : [member, lim + 1]));
+    const page = rows.slice(0, lim);
+    const notes = page.map((r) => ({ note: Number(r.note_id), text: r.text, at: r.at,
+      turned: this.#rows(`SELECT turned_into, made_id, at FROM member_note_turns WHERE note_id = ? AND member = ? ORDER BY seq`, r.note_id, member)
+        .map((t) => ({ into: t.turned_into, id: t.made_id, at: t.at })) }));
+    const truncated = rows.length > lim;
+    return { ok: true, notes, limit: lim, truncated, next: truncated ? { after: notes[notes.length - 1].note } : null };
+  }
+
+  /** R13: `noteTurn({note, into, by, hunch?, made?})` records that a note became an observation, a hunch or a question,
+   *  by its author's own act: a hunch is held here (R1), a note past R1's statement bound refused, never cut (K1807);
+   *  an observation or a question is made by its owner's act and named in `made`. The note itself is unchanged and
+   *  stays its author's alone. */
+  noteTurn({ note = null, into = null, by = null, hunch = null, made = null } = {}) {
+    const member = this.#noteMember(by);
+    if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author turns it");
+    const n = this.#ownNote(note, member);
+    if (!n) return refuse("NO_SUCH_NOTE", "no note of yours is held by that number", { note: typeof note === "number" || typeof note === "string" ? note : null });
+    if (!NOTE_TURNS.includes(into)) return refuse("NOTE_TURN_UNKNOWN", `a note becomes one of ${NOTE_TURNS.join(", ")}`, { turns: [...NOTE_TURNS] });
+    const noteId = Number(n.note_id);
+    const append = (id) => {
+      const at = this.#now();
+      this.#sql.exec(`INSERT INTO member_note_turns (note_id, member, turned_into, made_id, at) VALUES (?,?,?,?,?)`, noteId, member, into, id, at);
+      return { ok: true, note: noteId, into, id, at };
+    };
+    if (into === "hunch") {
+      /* K1807: R1's statement bound is never reached by cutting the member's words: such a turn is refused. */
+      const length = n.text.trim().length;
+      if (length > STATEMENT_MAX)
+        return refuse("NOTE_TOO_LONG_FOR_HUNCH", `a hunch's statement holds at most ${STATEMENT_MAX} characters, and this note is ${length}`,
+                      { max_characters: STATEMENT_MAX, characters: length, note: noteId });
+      const h = isObj(hunch) ? hunch : {};
+      return this.#record.transact(() => {
+        const r = this.hold({ inquiry: h.inquiry ?? null, kind: h.kind ?? null, about: h.about ?? null, statement: n.text, by });
+        if (!r || r.ok !== true) return r;
+        return { ...append(r.hypothesis_id), hypothesis: r };
+      });
+    }
+    const id = typeof made === "string" ? made.trim() : made;
+    if (typeof id !== "string" || !isRecordId(id))
+      return refuse("NOTE_TURN_NOT_MADE", `name the ${into} your own act made from this note by the record's id`, { made: typeof made === "string" ? made : null });
+    return this.#record.transact(() => append(id));
+  }
+
   /* ---- the leg check (R5, R6) ---- */
 
   /** R5, R6: for each leg, a finding when it rests on a hypothesis, or on a derived connection that is a lead or that
-   *  cannot be re-derived; `legs` as `inquiry` numbers them (`ord`, its R12). Writes nothing and never throws. */
-  legRefusals({ legs = [], viewer = null } = {}) {
+   *  cannot be re-derived; `legs` as `inquiry` numbers them (`ord`, its R12). `inquiry` is the inquiry the legs belong
+   *  to, passed to `explore.rederive` as `scope: {inquiry}` (its R19; N582), so a hunch of that inquiry is seen as one;
+   *  without it no scope is passed and no hunch is read. Writes nothing and never throws. */
+  legRefusals({ legs = [], viewer = null, inquiry = null } = {}) {
     const out = [];
     const list = Array.isArray(legs) ? legs : [];
+    const scope = filled(inquiry) ? { inquiry } : null;
     list.forEach((leg, i) => {
       if (!isObj(leg)) return;
       const ord = Number.isInteger(leg.ord) ? leg.ord : i;
       const target = typeof leg.target === "string" ? leg.target.trim() : leg.target;
       try {
-        const f = this.#judgeLeg(target, leg, viewer);
+        const f = this.#judgeLeg(target, leg, viewer, scope);
         if (f) out.push({ ...f, ord, target });
       } catch (e) {
         out.push({ ...finding("LEG_NOT_REDERIVED", `basis[${ord}] could not be checked: ${String(e && e.message ? e.message : e).slice(0, 200)}`), ord, target });
@@ -330,39 +446,57 @@ export class Hypotheses {
     return out;
   }
 
-  #judgeLeg(target, leg, viewer) {
+  #judgeLeg(target, leg, viewer, scope) {
     /* DEC-49 REGION is-hypothesis-leg */
     if (isHypothesisId(target))
       return finding("HYPOTHESIS_NOT_A_LEG", `the leg rests on ${target}, a hypothesis: hypotheses are held in the working inquiry, never as a leg (K1467)`);
     /* END DEC-49 REGION is-hypothesis-leg */
-    if (typeof target === "string" && DERIVED_ID_RE.test(target)) return this.#judgeDerived(target, derivationOf(leg), viewer, "the leg");
-    if (typeof target === "string" && CALC_RE.test(target) && this.#calcInputs) {
-      let inputs = null;
-      try { inputs = this.#calcInputs(target); } catch { inputs = null; }
-      if (isThenable(inputs)) { Promise.resolve(inputs).catch(() => {}); inputs = null; }
-      for (const inp of Array.isArray(inputs) ? inputs : []) {
-        for (const s of stringsIn(inp)) if (isHypothesisId(s))
-          return finding("HYPOTHESIS_NOT_A_LEG", `the calculation ${target} names ${s}, a hypothesis, among its inputs (K1467)`);
-        if (derivationOf(inp)) {
-          const id = [inp.connection, inp.id].find((v) => typeof v === "string" && DERIVED_ID_RE.test(v)) ?? null;
-          const f = this.#judgeDerived(id, derivationOf(inp), viewer, `the calculation ${target}'s input ${filled(inp.name) ? inp.name : id ?? ""}`.trim());
-          if (f) return f;
-        }
-      }
+    if (typeof target === "string" && DERIVED_ID_RE.test(target)) return this.#judgeDerived(target, derivationOf(leg), viewer, scope, "the leg");
+    if (typeof target === "string" && CALC_RE && CALC_RE.test(target)) return this.#judgeCalculation(target, viewer, scope);
+    return null;
+  }
+
+  /* R6's calculation arm (N576, K1601): the calculation's inputs read synchronously through `calculations.gradeFactsOf`,
+     the promotion's author as the viewer. A hypothesis among an input's reference is refused; an input naming a derived
+     connection is judged as a leg on it; a calculation not found, or a read that throws or answers no such shape, is
+     refused `LEG_NOT_REDERIVED`, never passed (fail closed). */
+  #judgeCalculation(calcId, viewer, scope) {
+    const cannot = (why) => finding("LEG_NOT_REDERIVED", `the leg rests on the calculation ${calcId}, whose inputs could not be read: ${why}`, { calculation: calcId });
+    const calc = this.#calculationsOf();
+    if (!calc || typeof calc.gradeFactsOf !== "function") return cannot("no calculation read is reachable");
+    let facts = null;
+    try { facts = calc.gradeFactsOf({ calcId, viewer }); } catch { return cannot("the read failed"); }
+    if (isThenable(facts)) { Promise.resolve(facts).catch(() => {}); return cannot("the read did not answer synchronously"); }
+    if (!isObj(facts) || facts.found !== true || !Array.isArray(facts.inputs))
+      return cannot(isObj(facts) && facts.found === false ? "it is not held, or not one this author may see" : "the read answered no grade facts");
+    for (const inp of facts.inputs) {
+      if (!isObj(inp)) continue;
+      const refs = stringsIn(inp.ref);
+      const hyp = refs.find((x) => isHypothesisId(x.trim()));
+      if (hyp !== undefined)
+        return finding("HYPOTHESIS_NOT_A_LEG", `the calculation ${calcId} names ${hyp.trim()}, a hypothesis, among its inputs (K1467)`, { calculation: calcId });
+    }
+    for (const inp of facts.inputs) {
+      if (!isObj(inp) || NOT_A_CONNECTION_REF.includes(inp.kind)) continue;
+      const id = stringsIn(inp.ref).map((x) => x.trim()).find((x) => DERIVED_ID_RE.test(x));
+      if (id === undefined) continue;
+      const what = `the calculation ${calcId}'s input ${filled(inp.name) ? inp.name : id}`;
+      const f = this.#judgeDerived(id, derivationOf(inp), viewer, scope, what);
+      if (f) return { ...f, calculation: calcId };
     }
     return null;
   }
 
-  /* R6: one derived connection id with its derivation, re-derived through `explore`. Null when it re-derives with no
-     declared or hunch hop; a finding otherwise, never a pass. */
-  #judgeDerived(id, derivation, viewer, what) {
+  /* R6: one derived connection id with its derivation, re-derived through `explore` with the leg's inquiry as `scope`
+     (its R19). Null when it re-derives with no declared or hunch hop; a finding otherwise, never a pass. */
+  #judgeDerived(id, derivation, viewer, scope, what) {
     if (!filled(id) || !isObj(derivation))
-      return finding("LEG_NOT_REDERIVED", `${what} cites a derived connection ${id ?? ""} without its derivation (kind, from, to, as_of, method), so it cannot be re-derived`);
+      return finding("LEG_NOT_REDERIVED", `${what} cites a derived connection ${id ?? ""} without its derivation (kind, from, to, as_of, method), so it cannot be re-derived`, { connection: filled(id) ? id : null });
     const ex = this.#exploreOf();
     let r = null;
     if (ex) {
       try { r = ex.rederive({ kind: derivation.kind, from: derivation.from, to: derivation.to, as_of: derivation.as_of,
-                              method: derivation.method, id, viewer }); } catch { r = null; }
+                              method: derivation.method, id, viewer, ...(scope ? { scope } : {}) }); } catch { r = null; }
     }
     if (isThenable(r)) { Promise.resolve(r).catch(() => {}); r = null; }
     /* DEC-49 REGION is-rederived-leg */
@@ -380,6 +514,14 @@ export class Hypotheses {
     return null;
   }
 
+  /* R6: the host's calculations instance, reached when first asked (the plane builds it before this module). */
+  #calculationsOf() {
+    if (!this.#calculations && this.#host) {
+      try { this.#calculations = calculationsOf(this.#host); } catch { this.#calculations = null; }
+    }
+    return this.#calculations;
+  }
+
   #exploreOf() {
     if (!this.#explore && this.#host) {
       try { this.#explore = exploreOf(this.#host); } catch { this.#explore = null; }
@@ -395,7 +537,7 @@ export class Hypotheses {
     const legs = (fm && Array.isArray(fm.basis) ? fm.basis : []).filter(isObj);
     if (!legs.length) return null;
     const viewer = filled(c.author) ? c.author : (c.writer ?? null);
-    const findings = this.legRefusals({ legs: legs.map((l, ord) => ({ ...l, ord })), viewer });
+    const findings = this.legRefusals({ legs: legs.map((l, ord) => ({ ...l, ord })), viewer, inquiry: c.bundleId ?? null });
     if (!findings.length) return null;
     return { ok: false, reason: "BASIS_REFUSED", findings,
              detail: "a leg rests on a hypothesis, or on a derived connection that is a lead or cannot be re-derived. Nothing was written." };
@@ -428,8 +570,9 @@ function stringsIn(v, out = []) {
 
 /* ---- the ops map (R7) ---- */
 
-/** R7: the route arms, keyed by op name, each a function of no arguments. An act's arguments come from the body,
- *  whose `by` is the control plane's stamp; a read's from `url`'s query, the `viewer` stamp among them, never the body. */
+/** R7: the route arms, keyed by op name, each a function of no arguments: the hypotheses' four and, since T34, the
+ *  notes' three. An act's arguments come from the body, whose `by` is the control plane's stamp; a read's from `url`'s
+ *  query, the `viewer` stamp among them, never the body. */
 export function hypothesesOps(hypotheses, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = isObj(body) ? body : {};
@@ -439,5 +582,8 @@ export function hypothesesOps(hypotheses, url, body) {
     hypothesiswithdraw: () => hypotheses.withdraw(b),
     hypotheses: () => (q("id") ? hypotheses.read({ hypothesisId: q("id"), viewer: q("viewer") })
                                 : hypotheses.hypothesesOf({ inquiry: q("inquiry"), viewer: q("viewer") })),
+    notewrite: () => hypotheses.noteWrite(b),
+    notes: () => hypotheses.notesOf({ viewer: q("viewer"), after: q("after"), limit: q("limit") ?? undefined }),
+    noteturn: () => hypotheses.noteTurn(b),
   };
 }

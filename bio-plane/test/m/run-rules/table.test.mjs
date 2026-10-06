@@ -154,6 +154,9 @@ test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REAC
   assert.match(AI_USE_CHECKS.AI_USE_CEILING_REACHED.translation, /your own daily limit/);
   assert.match(AI_USE_CHECKS.AI_USE_COPY_CEILING_REACHED.translation, /administrator/);
   assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /Claude account or an API key of your own/);
+  /* K1755: the group's API key, held by an administrator and switched on, also serves a member; the row says both */
+  assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /your group has no API key of its own switched on/);
+  assert.doesNotMatch(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /works only on the account of the member who asks/);
   assert.match(AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /theirs alone to set or look at/);
   /* K1610: the copy's ceiling is refused NOT_AN_ADMIN, so this row names neither it nor its setter */
   assert.equal(AI_USE_CHECKS.NOT_YOUR_CEILING.where, "src/ai-runs/index.mjs aiCeilingSet and aiUsageMine");
@@ -163,4 +166,31 @@ test("R20: the ceiling refusals AI_USE_CEILING_REACHED, AI_USE_COPY_CEILING_REAC
   assert.equal(new Set(texts).size, texts.length);
   /* control: the cost pattern does catch a cost */
   assert.match("this answer cost $0.02", /\$|\bcost/i);
+});
+
+test("R11, R20 (DEC-149, T34-86): a string a member reads names the group's Civicsmith as \"your group's Civicsmith\" — C-33.29, C-109.1 and C-109.9 say it, and STANDARD_BASIS' none-recorded needs no name; no translation or vocabulary sentence of this module says instance, copy, plane or server", () => {
+  const named = {
+    AI_RUN_CAPABILITY_UNAVAILABLE: "Nothing was run, because your group's Civicsmith could not find an account to run it under. "
+      + "That is a fact about our setup and not an answer about your question: no searching happened, so nothing here "
+      + "should be read as having looked and found nothing.",
+    AI_RUN_MODE_NOT_DEPLOYED: "Nothing was run, because the kind of work this run asked for is not switched on for your "
+      + "group's Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been "
+      + "checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is.",
+    AI_USE_COPY_CEILING_REACHED: "Nothing was run, because you have reached today's limit that this group's administrator "
+      + "set to keep your group's Civicsmith from being overloaded. It resets at the start of tomorrow, or an administrator "
+      + "can raise it.",
+  };
+  for (const [code, text] of Object.entries(named)) {
+    assert.equal(AI_RUNS_CHECKS[code].translation, text, code);
+    assert.equal(translationOf(code), text, code);
+  }
+  assert.equal(RR.STANDARD_BASIS["none-recorded"], "no bar was recorded when this run was formed, and none is filled in afterwards");
+  /* every member-facing sentence this module holds: its rows' translations and its vocabularies' values */
+  const OLD = /\b(instances?|cop(y|ies)|planes?|servers?)\b/i;
+  const member = [...Object.entries(AI_RUNS_CHECKS).map(([c, r]) => [c, r.translation]),
+    ...[RR.RUN_BOUNDS, RR.RUN_ENDINGS, RR.STANDARD_BASIS, RR.RUN_CONTEXTS, RR.PROJECT_GATE_GROUNDS]
+      .flatMap((o) => Object.entries(o))];
+  for (const [k, t] of member) assert.doesNotMatch(t, OLD, k);
+  /* control: the pattern catches each old name */
+  for (const t of ["this instance", "the group's copy", "the plane does", "the server"]) assert.match(t, OLD);
 });

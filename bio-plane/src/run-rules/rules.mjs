@@ -215,7 +215,7 @@ export const RUN_BOUNDS = {
    FL-7 (2026-08-10, IC-62) ADDED THE THIRD, AND THE SENTENCE DIRECTLY ABOVE IS
    WHAT DECIDED IT. `mode-not-deployed` is a THIRD such fact, and it arrived as a
    MEASURED misattribution rather than as a gap somebody noticed: FL-3's
-   deployment gate (`agent-worker/src/harness.mjs`, `gate-mode`) closed a refused
+   deployment gate (`gate-mode`, today in `agent-harness/src/harness.mjs`) closed a refused
    launch on `cancelled` — which this vocabulary defines two lines up as *"a
    member stopped it"*. **A member did not.** The gate refused a mode that is not
    deployed, before anything was spent and with nobody asking. So a run's own
@@ -330,7 +330,7 @@ export const RUN_STATUS = { running: 1, finished: 1, stopped: 1, "never-started"
 
    ONE MEMBER TODAY, and that is a measurement rather than a shape chosen for
    the future: `mode-not-deployed` is the only way a launch is currently refused
-   before its first step (`agent-worker/src/harness.mjs`'s `gate-mode` row, the
+   before its first step (`agent-harness/src/harness.mjs`'s `gate-mode` row, the
    FIRST row every run takes). A second one added later joins this set and
    inherits the status with no edit to the keying — which is the difference
    between a set and an `if`. */
@@ -400,7 +400,7 @@ export const STANDARD_BASIS = {
   recorded:
     "this run was formed under a bar the launching project declared",
   "none-recorded":
-    "no bar was recorded when this run was formed, and the plane does not fill one in afterwards",
+    "no bar was recorded when this run was formed, and none is filled in afterwards",
   "context-has-no-project":
     "this run works on a question outside any project, and only a project declares a bar",
   "names-no-axis":

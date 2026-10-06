@@ -741,9 +741,10 @@ export const PERMITTED_AUTO_COMPOSITION = {
  * `SEQUENCING_ALSO_NAMED_IN` are imported above and re-exported unchanged
  * (R18), and the layer below carries them: an ADDRESS for the gate and a
  * reason for the order, and no flag, predicate or decision of this module's.
- * The gate itself is `agent-worker`'s first row (`gate-mode`), whose owner,
- * later in the order and a user of this module, dereferences `GATE_ADDRESS` in
- * its own tests; this module's own tests read nothing later in the order (P4).
+ * The gate itself is the first row (`gate-mode`) of the control-flow table
+ * `agent-worker` runs, held in `agent-harness`' files since the agent-worker
+ * split (N586, K1615); `run-rules`' own tests dereference `GATE_ADDRESS`, and
+ * this module's tests pin it as a string and read nothing later in the order (P4).
  * ========================================================================= */
 
 /* =========================================================================

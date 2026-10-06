@@ -7,7 +7,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { createRegistry } from "../../../src/connection-grammar/index.mjs";
-import { hypothesesOf } from "../../../src/hypotheses/index.mjs";
+import { hypothesesOf, HYPOTHESES_TABLES, NOTES_TABLES } from "../../../src/hypotheses/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -43,12 +43,14 @@ function storage() {
 
 export const ANN = "member:ann";
 export const OUTSIDER = "member:outsider";
+export const BOSS = "member:boss";
 export const NOW = "2026-10-06T01:00:00.000Z";
 export const INQ = "INQ-2026-0001-q";
 export const E1 = "ENT-2026-0001", E2 = "ENT-2026-0002", E3 = "ENT-2026-0003";
 
 /** The world: a host with record-core, membership and promotion, and `hypotheses` made over them with its own
- *  connection registry. `deps` are passed to `hypothesesOf` (an `explore`, a `calculationInputs`). */
+ *  connection registry. `deps` are passed to `hypothesesOf` (an `explore`, a `calculations`). Members: Ann and the
+ *  outsider, ordinary, and the boss, an administrator. */
 export function world(deps = {}) {
   const st = storage();
   const host = { storage: st };
@@ -66,8 +68,8 @@ export function world(deps = {}) {
   let tick = 0;
   const clock = () => new Date(Date.parse(NOW) + 1000 * tick++).toISOString();
   const h = hypothesesOf(host, { record, membership, promotion, registry, now: clock, ...deps });
-  for (const m of ["ann", "outsider"])
-    st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status) VALUES (?, 'c', 'member', 'active')`, m);
+  for (const [m, role] of [["ann", "member"], ["outsider", "member"], ["boss", "admin"]])
+    st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', ?, 'active', '2026-01-01', '2026-01-01')`, m, role);
   let n = 0;
   const w = {
     st, host, record, membership, promotion, registry, h,
@@ -99,7 +101,7 @@ export function world(deps = {}) {
     /** Every table's rows but this module's, for R8's comparison. */
     others() {
       const names = w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`).map((r) => r.name)
-        .filter((t) => t !== "hypotheses" && t !== "hypothesis_revisions" && t !== "seq");
+        .filter((t) => !HYPOTHESES_TABLES.includes(t) && !NOTES_TABLES.includes(t) && t !== "seq");
       return Object.fromEntries(names.map((t) => [t, JSON.stringify(w.rows(`SELECT * FROM ${t}`))]));
     },
   };

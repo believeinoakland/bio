@@ -1,6 +1,5 @@
 // ../agent-harness/src/harness.mjs
 var LEVELS = ["meaning", "content", "document", "internet"];
-var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var REPORTING_LEVEL = Object.freeze({
   meaning: "meaning",
   content: "content",
@@ -697,7 +696,7 @@ function whyWithUndetermined(why, undetermined) {
 }
 
 // src/ops.mjs
-var NAMESPACES2 = Object.freeze(["bio", "scratch"]);
+var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var MEANING_ARM = "leg";
 var ASK_OPS = Object.freeze([
   "calculation",
@@ -1267,7 +1266,7 @@ var AI_RUN_ACT_SHAPE_CHECKS = {
   AI_RUN_CAPABILITY_UNAVAILABLE: {
     check: "C-33.29",
     where: "src/ai-runs/index.mjs open > is-airun-open-capability, reached from op=airunopen",
-    translation: "Nothing was run, because this instance could not find an account to run it under. That is a fact about our setup and not an answer about your question: no searching happened, so nothing here should be read as having looked and found nothing."
+    translation: "Nothing was run, because your group's Civicsmith could not find an account to run it under. That is a fact about our setup and not an answer about your question: no searching happened, so nothing here should be read as having looked and found nothing."
   },
   /* ---------------------------------------------------------------------------
        REC-76 / D-236 — THE TWO CODELESS REFUSALS THE WIDENED CLASSIFIER FOUND.
@@ -1386,7 +1385,7 @@ var AI_RUN_OPEN_CHECKS = {
   AI_RUN_MODE_NOT_DEPLOYED: {
     check: "C-109.1",
     where: "src/ai-runs/index.mjs open > is-airun-open-mode, reached from op=airunopen",
-    translation: "Nothing was run, because the kind of work this run asked for is not switched on for this instance yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
+    translation: "Nothing was run, because the kind of work this run asked for is not switched on for your group's Civicsmith yet. Kinds of work are switched on one at a time, each only after the one before it has been checked in real use. Ask for a kind that is switched on, or leave the kind out to run the one that is."
   }
 };
 var AI_RUN_PLAN_CHECKS = {
@@ -1438,13 +1437,14 @@ var AI_USE_CHECKS = {
   AI_USE_COPY_CEILING_REACHED: {
     check: "C-109.9",
     where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
-    translation: "Nothing was run, because you have reached today's limit that this group's administrator set to keep the group's copy from being overloaded. It resets at the start of tomorrow, or an administrator can raise it."
+    translation: "Nothing was run, because you have reached today's limit that this group's administrator set to keep your group's Civicsmith from being overloaded. It resets at the start of tomorrow, or an administrator can raise it."
   },
-  /* R52 (K1502, K1503): there is no group-wide account; each member brings their own. */
+  /* R52 (K1502, K1503; K1755): no account serves the member's act — none of their own connected (a subscription token
+     or an API key), and the group's API key, which an administrator may hold, not held or switched off. */
   AI_NO_ACCOUNT: {
     check: "C-109.10",
     where: "src/ai-runs/index.mjs open and the ask's account, reached from op=airunopen and an ask",
-    translation: "Nothing was run, because you have not connected a Claude account or an API key of your own. The assistant works only on the account of the member who asks; connect yours to use it."
+    translation: "Nothing was run, because no account serves your request: you have not connected a Claude account or an API key of your own, and your group has no API key of its own switched on. Connect yours, or ask an administrator about the group's."
   },
   /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
      administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. */
@@ -1585,8 +1585,8 @@ function askBoundReached(bounds, used) {
 
 // ../bio-plane/src/run-rules/deployment.mjs
 var GATE_ADDRESS = {
-  file: "agent-worker/src/harness.mjs",
-  owned_by: "FL-3 (IS-9, the run harness) \u2014 landed, and outside this area's paths",
+  file: "agent-harness/src/harness.mjs",
+  owned_by: "FL-3 (IS-9, the run harness) \u2014 held by agent-harness and run by agent-worker, both outside this area's paths",
   modes_export: "MODES",
   table_export: "CONTROL_FLOW",
   row: "gate-mode",
@@ -1809,7 +1809,7 @@ async function handleAsk(req, env, deps) {
     loadLayer: loadLayer2,
     converse: converse2,
     segmentMeter: segmentMeter2,
-    NAMESPACES: NAMESPACES3,
+    NAMESPACES: NAMESPACES2,
     DEFAULT_MAX_SEGMENT_BYTES: DEFAULT_MAX_SEGMENT_BYTES2,
     now = () => Date.now()
   } = deps;
@@ -1828,12 +1828,12 @@ async function handleAsk(req, env, deps) {
   if (body.store !== void 0) {
     if (typeof body.store !== "string")
       return refusal3("BAD_STORE", "store, when an ask names one, is the namespace's name.", 400);
-    if (!NAMESPACES3.includes(body.store))
+    if (!NAMESPACES2.includes(body.store))
       return refusal3(
         "NAMESPACE_UNKNOWN",
         "an ask names the namespace it reads, and no namespace by that name exists on any instance this member can be bound to, so nothing was read; they are listed beside this message.",
         400,
-        { asked: body.store.slice(0, 80), namespaces: [...NAMESPACES3] }
+        { asked: body.store.slice(0, 80), namespaces: [...NAMESPACES2] }
       );
     store = body.store;
   }
@@ -2427,6 +2427,10 @@ function sumUsage(a, b) {
   if (!b) return usageOf(a);
   return Object.fromEntries(USAGE_FIGURES.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
 }
+function callsOf(stated) {
+  return Number.isInteger(stated) && stated >= 0 ? stated : null;
+}
+var sumCalls = (a, b) => a == null || b == null ? null : a + b;
 function scrub(text, secret, max) {
   let s = String(text ?? "");
   if (typeof secret === "string" && secret) s = s.split(secret).join("[secret]");
@@ -2609,22 +2613,23 @@ async function subscriptionConverse({
 }) {
   const offered = new Set(plainTools(tools).map((t) => t.name));
   let usage = null;
+  let calls = 0;
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
   while (k < maxTurns) {
     const serialized = JSON.stringify(conversationRequest(token, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
-    if (stop) return { ...stop, usage };
+    if (stop) return { ...stop, usage, calls };
     k += 1;
     const conn = await openRunner(runner, token);
-    if (!conn.send) return { ...conn, usage: conn.silent ? usage : unstated() };
+    if (!conn.send) return conn.silent ? { ...conn, usage, calls } : { ...conn, usage: unstated(), calls: null };
     conn.send(serialized);
     let answer = null;
     for (; ; ) {
       const m = await conn.next();
       if (m.closed) {
-        if (answer) return { answer, usage: unstated() };
-        return { ...silent(m.detail, token), usage: unstated() };
+        if (answer) return { answer, usage: unstated(), calls: null };
+        return { ...silent(m.detail, token), usage: unstated(), calls: null };
       }
       if (m.tool_use) {
         const u = m.tool_use;
@@ -2659,7 +2664,7 @@ async function subscriptionConverse({
         const halt = k >= maxTurns ? { exhausted: true } : charge(out);
         if (halt) {
           conn.close();
-          return answer ? { answer, usage: unstated() } : { ...halt, usage: unstated() };
+          return answer ? { answer, usage: unstated(), calls: null } : { ...halt, usage: unstated(), calls: null };
         }
         k += 1;
         conn.send(out);
@@ -2667,15 +2672,16 @@ async function subscriptionConverse({
       }
       conn.close();
       usage = sumUsage(usage, usageOf(m.usage));
-      if (answer) return { answer, usage };
+      calls = sumCalls(calls, callsOf(m.num_turns));
+      if (answer) return { answer, usage, calls };
       const end = ending(m, usage, token);
-      if (end) return end;
+      if (end) return { ...end, calls };
       messages.push({ role: "assistant", content: [{ type: "text", text: String(m.result || "(no answer)") }] });
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
       break;
     }
   }
-  return { exhausted: true, usage };
+  return { exhausted: true, usage, calls };
 }
 
 // ../agent-model/src/model.mjs
@@ -2693,8 +2699,11 @@ var CONVERSATION_MAX_TURNS = 12;
 function segmentMeter({ turnsBound, bytesBound }) {
   return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
 }
+var LEVELS2 = Object.freeze(["member", "group"]);
 function usable(reference) {
   if (!reference || typeof reference !== "object") return null;
+  if (reference.level !== void 0 && !LEVELS2.includes(reference.level)) return null;
+  if (reference.level === "group" && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
   if (reference.kind === "subscription" && typeof reference.token === "string" && reference.token)
     return { kind: "subscription", secret: reference.token };
@@ -2705,7 +2714,7 @@ function precheck(reference, runner) {
   if (!ref) return { refusal: refused(
     null,
     "ACCOUNT_REFERENCE_UNUSABLE",
-    `a model turn runs only under one member's own account reference: {kind: "apikey", key} or {kind: "subscription", token}`
+    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "subscription", token}, the member's own, or the group's API key {kind: "apikey", level: "group", key}`
   ) };
   if (ref.kind === "subscription" && !runner) return { refusal: refused(
     null,
@@ -2757,6 +2766,7 @@ async function converse({
       charge
     });
   let usage = null;
+  let calls = 0;
   for (let k = 0; k < maxTurns; k += 1) {
     const serialized = JSON.stringify(withCache({
       model,
@@ -2767,10 +2777,13 @@ async function converse({
       tool_choice: { type: "auto" }
     }));
     const stop = charge(serialized);
-    if (stop) return { ...stop, usage };
+    if (stop) return { ...stop, usage, calls };
     const got = await apikeyTurn(ref.secret, serialized);
-    if (got.usage) usage = sumUsage(usage, got.usage);
-    if (got.silent || got.refused) return { ...got, usage };
+    if (got.usage) {
+      usage = sumUsage(usage, got.usage);
+      calls += 1;
+    }
+    if (got.silent || got.refused) return { ...got, usage, calls };
     const content = Array.isArray(got.result.content) ? got.result.content : [];
     messages.push({ role: "assistant", content });
     const uses = content.filter((b) => b && b.type === "tool_use");
@@ -2781,7 +2794,7 @@ async function converse({
         tool_use_id: u.id,
         content: u === final ? "received" : "not performed: the answer ended this step"
       })) });
-      return { answer: final.input && typeof final.input === "object" ? final.input : {}, usage };
+      return { answer: final.input && typeof final.input === "object" ? final.input : {}, usage, calls };
     }
     if (!uses.length) {
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
@@ -2800,7 +2813,7 @@ async function converse({
     }
     messages.push({ role: "user", content: results });
   }
-  return { exhausted: true, usage };
+  return { exhausted: true, usage, calls };
 }
 var STATE_ENUM = ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "PRESENT", "partial"];
 var LOOK_FIELDS = (levels) => ({
@@ -3872,12 +3885,12 @@ async function handleRun(req, env) {
       "a run happens inside one namespace and this member guesses none: the caller must say which. A default namespace here would let a run touch the real record while its caller believed it was working in a scratch one.",
       400
     );
-  if (!NAMESPACES2.includes(store))
+  if (!NAMESPACES.includes(store))
     return refusal2(
       "NAMESPACE_UNKNOWN",
       "a run names the namespace it works in, and no namespace by that name exists on any instance this member can be bound to, so nothing was read or changed. There are two: the record itself and a scratch area kept apart for testing, and the name must match one of them exactly; they are listed beside this message.",
       400,
-      { asked: store.slice(0, 80), namespaces: [...NAMESPACES2] }
+      { asked: store.slice(0, 80), namespaces: [...NAMESPACES] }
     );
   if (!credential)
     return refusal2(
@@ -4047,7 +4060,7 @@ var ASK_DEPS = {
   loadLayer,
   converse,
   segmentMeter,
-  NAMESPACES: NAMESPACES2,
+  NAMESPACES,
   DEFAULT_MAX_SEGMENT_BYTES
 };
 var MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the member's own reference, or the group's API key) arrives with the call and the run's or ask's mode has turns to run; a segment whose caller supplies the judgements runs none";

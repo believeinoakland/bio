@@ -8,7 +8,7 @@ import { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, DEPLOYED_MODES, DEFAULT_MODE, AI_RUN
 
 const ROOT = new URL("../../../../", import.meta.url);
 
-test("R9: DEPLOYMENT_SEQUENCE is the one deployment order — its first member the first deployed mode, enforced_by C-109.1 (ai-runs R40's refusal, a row of this module's table), and GATE_ADDRESS naming agent-worker's gate", () => {
+test("R9: DEPLOYMENT_SEQUENCE is the one deployment order — its first member the first deployed mode, enforced_by C-109.1 (ai-runs R40's refusal, a row of this module's table), and GATE_ADDRESS naming the gate agent-worker runs, in the file that holds it, agent-harness' harness.mjs (T34-32, N586)", () => {
   assert.equal(DEPLOYMENT_SEQUENCE.order[0], "check");
   assert.equal(DEPLOYMENT_SEQUENCE.first_deployed_mode, DEPLOYMENT_SEQUENCE.order[0]);
   assert.equal(new Set(DEPLOYMENT_SEQUENCE.order).size, DEPLOYMENT_SEQUENCE.order.length, "each mode once");
@@ -16,11 +16,12 @@ test("R9: DEPLOYMENT_SEQUENCE is the one deployment order — its first member t
   assert.equal(AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED.check, DEPLOYMENT_SEQUENCE.enforced_by[0]);
   assert.equal(AI_RUN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED, AI_RUN_OPEN_CHECKS.AI_RUN_MODE_NOT_DEPLOYED);
   assert.equal(DEPLOYMENT_SEQUENCE.gate, GATE_ADDRESS);
-  assert.equal(GATE_ADDRESS.file, "agent-worker/src/harness.mjs");
+  assert.equal(GATE_ADDRESS.file, "agent-harness/src/harness.mjs");
+  assert.notEqual(GATE_ADDRESS.file, "agent-worker/src/harness.mjs", "not agent-worker's re-export, which goes once no importer names it");
   assert.deepEqual([GATE_ADDRESS.modes_export, GATE_ADDRESS.table_export, GATE_ADDRESS.row, GATE_ADDRESS.first_step_export,
                     GATE_ADDRESS.decision_function], ["MODES", "CONTROL_FLOW", "gate-mode", "FIRST_STEP", "nextStep"]);
   assert.ok(existsSync(new URL(GATE_ADDRESS.file, ROOT)), "the address names a file that exists");
-  assert.equal(DEPLOYMENT_SEQUENCE.enforced_by_row, 'agent-worker/src/harness.mjs:CONTROL_FLOW["gate-mode"]');
+  assert.equal(DEPLOYMENT_SEQUENCE.enforced_by_row, 'agent-harness/src/harness.mjs:CONTROL_FLOW["gate-mode"]');
   assert.equal(DEPLOYMENT_SEQUENCE.verification_recorded, null);
   /* the mode a run naming none opens in is the first deployed; mode-not-deployed is the ending the gate closes on */
   assert.equal(DEFAULT_MODE, DEPLOYED_MODES[0]);

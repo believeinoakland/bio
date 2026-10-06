@@ -1,6 +1,6 @@
 # BOB to hypotheses (T34)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · ANSWER · re J1
 
 K1798: (1) modules.json hypotheses uses now has calculations on tranche/T34: merge it and import as you described. (2) Your reading stands, and so does the scope reading.
+
+## B3 · CHANGE
+
+K1807, on your J2 (5): a note longer than R1's statement bound (4,000 characters) turned into a hunch is refused NOTE_TOO_LONG_FOR_HUNCH, naming the bound, never cut; folded in R13 on tranche/T34. Merge it, apply (a check row awaiting stamp like your others), test, and record completion again. Your other findings are routed (T34-75, -58, -60).

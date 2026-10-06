@@ -18,9 +18,9 @@ function logged() {
   w.a.logRead({ grant: g, viewer: BOB, op: "search", args: { q: "budget" },
                 answer: { ok: true, total: 1, hits: [{ bundle_id: "INFO-2026-0001-minutes", title: "Council minutes",
                                                       snippet: "The council approved the budget on a vote of 5 to 2." }] } });
-  w.a.logRead({ grant: g, viewer: BOB, op: "calculations", args: { id: CALC },
+  w.a.logRead({ grant: g, viewer: BOB, op: "calculation", args: { id: CALC },
                 answer: { ok: true, calc_id: CALC, results: { share: { numerator: "41", denominator: "58", value: "0.7069" } } } });
-  w.a.logRead({ grant: g, viewer: BOB, op: "moneyfacts", args: { id: MNY },
+  w.a.logRead({ grant: g, viewer: BOB, op: "money", args: { id: MNY },
                 answer: { ok: true, fact_id: MNY, amount: "2097431", currency: "USD", kind: "payment" } });
   return { w, g, log: w.a.readLog(g) };
 }

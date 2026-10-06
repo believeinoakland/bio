@@ -21,7 +21,9 @@ const mf = new Miniflare({
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-cr", MEMBER_TOKEN: "mem-cr", PROBE_TOKEN: "prb-cr", DAEMON_TOKEN: "dmn-cr",
               VERSION: "1.0.0", INSTANCE_NAME: "cr-plane", GOVERNOR_APPETITE_PER_MIN: "600000",
-              CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000" },
+              CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000",
+              /* N585 (K1614): the seal secret the opener's account reference is kept under (credentials R23) */
+              ACCOUNT_SEAL_SECRET: "cr-plane-seal-secret" },
   outboundService(request) {
     SEEN.push(request.url);
     AGENTS.set(request.url, request.headers.get("User-Agent"));
@@ -71,6 +73,10 @@ async function world() {
   await create("INQ-2026-9000-cr");
   /* N295: an inquiry created through a member's session, whose browser agent the control plane stamps (inquiry R44) */
   await create("INQ-2026-9001-ua", { "User-Agent": MEMBER_UA });
+  /* N585 (K1614; ai-runs R52): a run carries the account of the member whose act opened it, so the opener connects
+     their own account first, through the op the control plane routes (credentials R22), the member named by the stamp */
+  const acct = (await call("accountreferenceset", RUTH, { member: "ruth", kind: "apikey", secret: "sk-cr-plane" })).body;
+  assert.equal(acct.ok, true, JSON.stringify(acct));
   const run = (await call("airunopen", RUTH, { run: "RUN-CR-1", contextType: "inquiry", contextId: "INQ-2026-9000-cr",
     label: "cr", mode: "check", principalClaude: "project", principalClaudeRef: "g/claude",
     skillVersion: "investigative-session@1", biasManifest: null, bounds: [{ bound: "fetches", allowed: 5, unit: "requests" }],
@@ -159,4 +165,20 @@ test("R14 in the plane (N295): a member-browser request under an inquiry created
   assert.equal([...d.refused, ...d.held].find((x) => x.request === a.request), undefined, JSON.stringify(d).slice(0, 600));
   assert.ok(d.captured.find((c) => c.request === a.request), JSON.stringify(d).slice(0, 600));
   assert.equal(AGENTS.get(address), MEMBER_UA, "the member's own agent left the instance, verbatim");
+});
+
+test("R48 in the plane: a requested capture, drained and promoted, is listed by capture's op=heldcaptures with the question it was captured for and its asker, read through the reader this module registered (capture R77, R83)", async () => {
+  const { RUTH } = await world();
+  const address = "https://up.example.org/held-for.pdf";
+  const a = (await call("capturerequest", RUTH, { run: "RUN-CR-1", address, target: "INQ-2026-9000-cr", purpose: "investigate" })).body;
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const d = (await call("capturerequestdrain", "dmn-cr", {})).body;
+  const got = d.captured.find((c) => c.request === a.request);
+  assert.equal(got && got.promoted && got.promoted.ok, true, JSON.stringify(d).slice(0, 600));
+  const held = (await call("heldcaptures&limit=1000", RUTH)).body;
+  const row = (held.held || []).find((r) => r.bundle_id === got.promoted.bundle_id);
+  assert.ok(row, JSON.stringify(held).slice(0, 600));
+  assert.equal(row.captured_for && row.captured_for.withheld, null, JSON.stringify(row));
+  assert.deepEqual(row.captured_for.questions.map((q) => [q.question, q.title]), [["INQ-2026-9000-cr", "What?"]]);
+  assert.ok(typeof row.captured_for.questions[0].asker === "string" && row.captured_for.questions[0].asker.length > 0);
 });
