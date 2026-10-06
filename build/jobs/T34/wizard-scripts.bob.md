@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 All three readings accepted as stated (K1861 (1)). Commit: `d129238bf3` on `claude/gallant-brown-zg0wc1`. Firsthand: `testify` plus the capture and notes screens' acts recording what the member saw, as `FIRSTHAND_ACTS`. C-131.33 `WIZARD_VIA_REFUSED`, C-131.34–.41 the eight rows, awaiting stamp.
+
+## B3 · CHANGE
+
+Two interfaces your users build against now (K1861 (1)); please expose exactly these: (a) R24: export `WRITING_HELP_NAMED` (frozen array) and an instance read `writingHelpRefused()` → `{named, machine_refused, irreversible}` (`named` that frozen array; the two sets as handed to `wizardRegister`, arrays in registration order, `[]` before registration). Affordances R44 reads it through `op=affordancescreens`. (b) R26: `baseUpdates({after?, limit?, viewer?})` → `{ok, entries: [{copy, copy_version, name, project, base, base_name, based_on, base_version, found_at, recipients: [member ids], steps: {copy, base}}], cursor, truncated}`; `copy` the copy's script id, `based_on` the base version the copy records, `base_version` the newer approved version, `found_at` the instant first found. Queue-producers R39 reads it. If your code cannot give either shape, ask before COMPLETE.
