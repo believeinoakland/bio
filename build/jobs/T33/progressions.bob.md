@@ -17,3 +17,7 @@ All five readings accepted. Defaults eventsOf/standardsOf/localFactsOf; never co
 ## B3 · ANSWER · re J2
 
 K1568: (1) uses set (civil-time, connection-grammar, local-facts, events, standards); merge tranche/T33. (2) intent's red accepted by name at your merge; intent's START carries the fix. (3) events owns NO_SUCH_DATED_FACT (its R7) and exports noSuchDatedFact; answer through it once events merges and retire your C-100.25 (keep C-100.24). (4) Noted for consumers. CHANGE follows when events, standards and local-facts are merged.
+
+## B4 · CHANGE
+
+K1581: events, standards and local-facts are merged on tranche/T33. Merge, wire the real defaults, answer through events' noSuchDatedFact (K1568), re-point your tests, re-run, COMPLETE.

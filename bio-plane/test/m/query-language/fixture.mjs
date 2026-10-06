@@ -29,7 +29,8 @@ export function world({ projection = null, fields = null } = {}) {
   const P = projection;
   /* R26: each named field's registry column, held in its own table and on neither `bundles` nor the projection. */
   const F = new Map(Object.entries(fields || {}).map(([name, r]) => [FIELDS[name].col, r]));
-  const cols = [...new Set([...PROVENANCE_COLS, ...Object.values(FIELDS).map((f) => f.col)])]
+  /* A T33 field (`rel`, R29) is its owner's and is on no table here unless a relation names it. */
+  const cols = [...new Set([...PROVENANCE_COLS, ...Object.values(FIELDS).filter((f) => !f.rel || F.has(f.col)).map((f) => f.col)])]
     .filter((c) => c !== "bundle_id");
   const decl = (c) => `${c} ${["annotations_open", "reeval_flag", "monitor_enabled", "inquiry_basis_count",
     "action_risk_tier", "action_clock_overdue", "fts_id"].includes(c) ? "INTEGER" : "TEXT"}`;

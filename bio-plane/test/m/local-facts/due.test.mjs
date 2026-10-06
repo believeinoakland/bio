@@ -26,13 +26,13 @@ test("R4 without paths: every fact of the active profiles that is unconfirmed (l
   assert.ok(!paths(r).includes(P.clerkHours));
   const disputed = r.due.find((d) => d.path === P.y2027);
   assert.equal(disputed.status, "disputed");
-  assert.match(disputed.why, /disputed by member:bob, 2026-09-28/);
-  /* lapsed: the time zone 183 days on */
+  assert.match(disputed.why, /disputed by member:bob, 2026-09-27/, "the local day of 01:00Z in the profile's zone (R3)");
+  /* lapsed: the time zone 183 local days on (confirmed 2026-09-27 local, lapsing at 2027-03-29's local midnight) */
   r = w.at("2027-03-30T00:00:00Z").lf.factsDue({});
   const tz = r.due.find((d) => d.path === P.tz);
   assert.equal(tz.status, "unconfirmed");
   assert.equal(tz.lapsed.act, "confirm");
-  assert.equal(tz.lapses_on, "2027-03-30");
+  assert.equal(tz.lapses_on, "2027-03-29");
   assert.equal(new Set(paths(r)).size, r.due.length, "once each");
 });
 
