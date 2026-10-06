@@ -1,4 +1,4 @@
-/* control-plane: THE RECORD STORE'S DOOR (R25–R27, R46). `dispatch(req, store)` is the one frame every Durable Object
+/* control-plane: THE RECORD STORE'S DOOR (R25–R27, R46, R53). `dispatch(req, store)` is the one frame every Durable Object
    request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
    `store.routes(url, body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable
    project (R27), a purge's hold check (R46), the `{ok: true, result}` envelope, and the one catch (R25). Moved from
@@ -15,6 +15,7 @@ import { queueOf, queueOps } from "../queue/index.mjs";
 import { tasksOf, tasksOps } from "../tasks/index.mjs";
 import { affordancesOf, affordancesOps } from "../affordances.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
+import { askAdmits } from "../answers/scope.mjs";
 import { DISPATCH_CHECKS } from "./checks.mjs";
 import { pullAndFile } from "./pull.mjs";
 
@@ -207,6 +208,17 @@ function purgeHoldRefusal(store, url) {
   /* END DEC-49 REGION is-purge-hold-in-place */
 }
 
+/* R53 (K1674; answers R1, R2): a read served under an ask's grant (the Worker's `grant` stamp) is recorded in the grant's
+   read log through `store.logRead` (answers' `logRead`, handed by plane), its answer scrubbed there and answered as
+   recorded; `rule` records its own (answers R7). A read that cannot be recorded throws to R25's catch, so it is never
+   answered unrecorded. */
+function underGrant(store, url, op, body, answer) {
+  const grant = url.searchParams.get("grant");
+  if (!grant || op === "rule" || !askAdmits(op)) return answer;
+  const { grant: _g, viewer, ...args } = Object.fromEntries(url.searchParams);
+  return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer });
+}
+
 /* R26: the frame. `store.routes(url, body)` answers the route map, `store.membership()` membership for R27;
    `store.namespace()` (the object's own name, plane R2) and `store.purgeHeld({bundleId})` (`actions`' R60 reader, plane
    R14), each a function asked at a purge and never before, for R46. */
@@ -238,7 +250,7 @@ export async function dispatch(req, store) {
       if (held) return Response.json(held, { status: 409 });
     }
     const existence = existenceRead(() => store.membership(), op, url, body);
-    return Response.json({ ok: true, result: existence ?? await map[op]() });
+    return Response.json({ ok: true, result: existence ?? underGrant(store, url, op, body, await map[op]()) });
   } catch (e) {
     return Response.json(storeInternalError(e, op), { status: 500 });
   }
@@ -270,6 +282,9 @@ export function controlPlaneRoutes(ctx, url, body) {
     signerregister: () => credentialsOf(ctx).signerRegisterOwn({ ...b, by: q("by") }),
     signerrevoke: () => credentialsOf(ctx).signerRevokeOwn({ ...b, by: q("by") }),
     wizardrefusaltally: () => wizardScriptsOf(ctx).tallyRefusal(b.op, b.code),
+    /* R53 (K1674): the Worker's question whether a token is a live ask grant admitting the op (credentials R28),
+       store-internal as `wizardrefusaltally`. */
+    aigrantadmit: () => credentialsOf(ctx).aiGrantAdmit({ token: b.token, op: b.op, write: b.write }),
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
