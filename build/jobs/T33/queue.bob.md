@@ -14,3 +14,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1677. (1) civil-time and notice-producers are now in your uses on tranche/T33 (79837a65f0): merge the tranche branch. (2)–(6) accepted as read. For (4), state the five kinds' dispositions in your COMPLETE in a form I can fold into R12/R50 at the merge. For (5), keep K1563's pattern: switch to the real noticeProducersOf once notice-producers merges (I will tell you by CHANGE).
+
+## B3 · CHANGE
+
+K1682: notice-producers is merged on tranche/T33 (79f33fe954). Merge the tranche branch and switch your default to the real noticeProducersOf before COMPLETE.
