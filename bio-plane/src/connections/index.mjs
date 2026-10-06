@@ -55,7 +55,8 @@ import { MENTIONED_KINDS, MENTIONED_OWNER, mentionedNeighbours } from "./mention
 export { CONNECTIONS_SCHEMA, CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES } from "./schema.mjs";
 export { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 export { THEME_READ_LIMIT_DEFAULT, THEME_READ_LIMIT_MAX, THEME_WITHDRAW_CHECKS } from "./themes.mjs";
-export { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, CO_MENTION_HUB, WARN_BAND, mentionedMethod } from "./mentioned.mjs";
+export { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, MENTIONED_DECLARES, CO_MENTION_HUB, WARN_BAND, mentionedMethod }
+  from "./mentioned.mjs";
 /* R35, R46: C-49, C-74 and C-81 and the leg check are this module's own (`./checks.mjs`; C-74 T18, the rest copied
    T19), its public face for `inquiry-grammar` and `action-grammar` (`themeLegFindings`). */
 export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
