@@ -10,6 +10,7 @@ import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, DETECTORS_BUDGET_MS, Sc
 import { world, storage, writes, NOW } from "./fixture.mjs";
 import { world as dutiesWorld } from "../duties/fixture.mjs";
 import { world as inquiryWorld, inquiryMd, V } from "../inquiry/fixture.mjs";
+import { world as followingWorld, MEMBER as FOLLOWER, T0, DAY as F_DAY } from "../following/fixture.mjs";
 
 const SIX = ["follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions", "dated-waits"];
 const KEYS = ["follow", "dutytransitions", "interestchecks", "moneydetectors", "standingquestions", "datedwaits"];
@@ -272,4 +273,23 @@ test("R21, R9: against the real inquiry, a promotion setting a dated wait arms t
   const again = await s.onAlarm(AT + 1000);
   assert.equal("datedwaits" in again, false, "marked once: not due again");
   assert.equal(st.alarm, null, "nothing left to mark: no alarm (R15)");
+});
+
+test("R21, R9, R10: against the real following, a register followed arms the alarm through its onFollowed (R19); the alarm reads it once, given the rank, and wakes a day after the read", async () => {
+  const w = followingWorld();
+  const st = storage();
+  const s = new Scheduler({ storage: st, owners: { following: () => w.f } });
+  assert.deepEqual(s.listenTo({ following: w.f }).following, { ok: true, module: "scheduler" });
+  assert.equal(await s.arm(T0), null, "nothing followed: no alarm");
+  const ADDR = "https://registry.ellery.example/r/sched";
+  const before = Date.now();
+  assert.equal(w.f.followRegister({ address: ADDR, author: FOLLOWER, viewer: FOLLOWER }).ok, true);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.ok(st.alarm !== null && st.alarm >= before && st.alarm <= Date.now(), `armed at once: never read, due now (${st.alarm})`);
+  w.serve(ADDR, "the register");
+  const r = await s.onAlarm(T0);
+  assert.equal(r.follow.configured, true, JSON.stringify(r.follow).slice(0, 300));
+  assert.equal(r.follow.read.length, 1);
+  assert.equal(r.nextAt, T0 + F_DAY, "the daily follow wakes a day after its read");
+  assert.equal("follow" in (await s.onAlarm(T0 + 1000)), false, "read: not due again before then");
 });
