@@ -8,7 +8,8 @@
  * `DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL`) are copied here from the catalogue's `DRIVE_CAPTURE_CHECKS` with their
  * comments, code, number, translation and reasons unchanged, their `where` naming this module's site; they are no longer
  * read in place, and the catalogue's copy is T19's layer 1's to delete (K529). The rest of C-48 is `acquisition`'s (its
- * R29). New with them (N242's share, DEC-49): C-18.10, the row of C-18.5's refusal at the write, `GATHERING_REFUSED`,
+ * R29). T34-87 (DEC-149): both translations call the group's Civicsmith by that name, never "this instance".
+ * New with them (N242's share, DEC-49): C-18.10, the row of C-18.5's refusal at the write, `GATHERING_REFUSED`,
  * which until now reached the wire with no translation (queue's C-19.2 `INBOX_REFUSED` is its twin). All three rows
  * were taken by the stamp 1.49.0 (T19's promotion job). T22 (R52, K1019): C-18.11–C-18.15, the refusals of an address's
  * frequency setting (`FREQUENCY_CHECKS`), taken by 1.53.0 (T23's promotion job).
@@ -52,7 +53,7 @@ export const DRIVE_TICK_CHECKS = Object.freeze({
     translation: 'The check of that Google Drive document did not run: the export address answered '
       + 'with a web page rather than a document, which is what Drive does when a file stops being '
       + 'shared with anyone who has the link. Nothing was compared and nothing about the record '
-      + 'changed — what is known is that this instance could not see the document today.',
+      + 'changed — what is known is that your group\'s Civicsmith could not see the document today.',
   }),
   /* THE SAME TICK, CAUGHT ON THE BYTES. C-48.7's reasoning one op over: the
      declared type and the first kibibyte are two different pieces of evidence,
@@ -64,7 +65,7 @@ export const DRIVE_TICK_CHECKS = Object.freeze({
     check: 'C-48.9',
     where: at('monitor', 'is-drive-tick-bytes'),
     translation: 'The check of that Google Drive document did not run: the export address said it '
-      + 'was sending a document and sent a web page instead. This instance reads the bytes rather '
+      + 'was sending a document and sent a web page instead. Your group\'s Civicsmith reads the bytes rather '
       + 'than the label, so the application page was recognised and not compared against the '
       + 'captured document — comparing it would report a change on every visit that nobody made.',
   }),

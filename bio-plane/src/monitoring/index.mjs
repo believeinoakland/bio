@@ -659,7 +659,7 @@ export class Monitoring {
         ...driveRow("DRIVE_SHAPE_UNRECOGNISED"), op, bundleId,
         drive: { host: driveTick.host, shape: driveTick.shape, harvestable: false },
         locator: driveTick.address,
-        detail: driveTick.why + " A shape this instance cannot read is a shape it cannot promise to "
+        detail: driveTick.why + " A shape your group's Civicsmith cannot read is a shape it cannot promise to "
               + "be watching." }, 422);
     /* The address the tick FETCHES, which is the export for a harvestable Drive
        document and the locator itself for everything else. The document address
@@ -1055,7 +1055,7 @@ export class Monitoring {
          reads Google's export, not the page at the document's own address, and
          a Session Log that does not say so leaves a reader to assume the page. */
       + (driveTick && driveTick.harvestable
-          ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export this instance composed `
+          ? ` — fetched ${driveTick.exportAddress}, the OpenDocument export composed `
             + `from the Drive ${driveTick.kind} in ${driveTick.address}`
           : "") + (capLine ? ` — ${capLine}` : ""));
 
@@ -1508,7 +1508,7 @@ export class Monitoring {
         unscheduled.push({ bundle: r.bundle_id, frequency: word,
           last_checked: r.monitor_last_checked ?? null,
           reason: r.monitor_frequency === "per_meeting"
-            ? "cadence is a meeting schedule this plane does not hold"
+            ? "cadence is a meeting schedule your group's Civicsmith does not hold"
             : r.why ? r.why
             : word === "none" || word == null
               ? "no frequency declared"
@@ -2255,7 +2255,7 @@ export class Monitoring {
                              detail: String((p && p.detail) || "the promotion was refused").slice(0, 300) };
       });
     } catch {
-      return { ok: false, reason: null, detail: "the landing did not complete and this plane did not record why" };
+      return { ok: false, reason: null, detail: "the landing did not complete, and why was not recorded" };
     }
   }
 

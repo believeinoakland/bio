@@ -239,7 +239,7 @@ test("R31 the reads answer what queue-producers publishes: flagged (R48) names e
   assert.equal(overdue(items["INFO-2026-0805-just"]), false, "half a day past: due, not overdue");
   assert.deepEqual([items["INFO-2026-0806-never"].state, items["INFO-2026-0806-never"].due_at], ["due", null], "never checked: due now, not overdue");
   assert.deepEqual([items["INFO-2026-0807-meet"].state, items["INFO-2026-0807-meet"].reason],
-                   ["unscheduled", "cadence is a meeting schedule this plane does not hold"]);
+                   ["unscheduled", "cadence is a meeting schedule your group's Civicsmith does not hold"]);
   /* this module publishes no item: none of its reads answers an item of the item contract */
   for (const read of [f, e, w.m.monitoring({ viewer: DAEMON, now: NOW_MS })])
     assert.equal(/"class":"(FINDING|CONDITION)"|"kind":"(source-modified|source-removed|archive-fallback-eligible|monitoring-recheck-due)"/
