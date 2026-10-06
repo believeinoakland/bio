@@ -257,3 +257,20 @@ test("R39: the four tables carry bundle_id and are declared to record-core's pur
   for (const t of CONTENT_TABLES) assert.equal(w.count(t), 1, `${t}: only the other bundle's row is left`);
   assert.deepEqual(w.record.declarePurge("other", ["content"]).reason, "TABLE_DECLARED");
 });
+
+test("R54: the four tables are declared explicitly through declareTable, each with every class named", () => {
+  const w = world();
+  const mine = w.record.declaredTables().filter((d) => d.module === "content");
+  assert.deepEqual(mine.map((d) => d.name).sort(), ["content", "text_attestations", "transcription_attestations", "transcriptions"]);
+  for (const d of mine) {
+    /* R39's purge on bundle_id, the sight of the bundle it names (R37), the rest as declarePurge's default form. */
+    assert.deepEqual({ purge: d.purge, expunge: d.expunge, export: d.export, sight: d.sight, derive: d.derive,
+                       version_chain: d.version_chain },
+                     { purge: "clear", expunge: "none", export: "admin-only", sight: "bundle", derive: "stored",
+                       version_chain: false }, d.name);
+    assert.equal(d.keys, undefined, `${d.name} is keyed by its bundle_id column`);
+  }
+  /* Negative control: a second declaration of one of them, by any module, is refused, so the declaration is held. */
+  assert.equal(w.record.declareTable("other", [{ name: "transcriptions", purge: "clear", expunge: "none",
+    export: "admin-only", sight: "bundle", derive: "stored", version_chain: false }]).reason, "TABLE_DECLARED");
+});

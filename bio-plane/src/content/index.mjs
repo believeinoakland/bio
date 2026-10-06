@@ -14,7 +14,7 @@
  * record's grammar is `record-grammar`'s, the extent algebra `text-chain`'s (see `./extent.mjs`).
  *
  * REACHED as `contentOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
- * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge (R39).
+ * call with `deps`, returned to every later caller. At creation it declares its tables explicitly to record-core (R54, R39).
  * `deps`:
  *   record, membership, provenance   the modules it uses, through their factories on the same host unless a test
  *                                    passes its own.
@@ -48,11 +48,11 @@ import {
   unitChainKind,
 } from "./extent.mjs";
 import { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, extentBoundUnheld, gradeAcross,
-         affectsOf, heldTextAt } from "./notice.mjs";
+         affectsOf, heldTextAt, typedCellsAt } from "./notice.mjs";
 
 export * from "./extent.mjs";
 export { CONTENT_SCHEMA, CONTENT_TABLES } from "./schema.mjs";
-export { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, VERSION_NOTICE_SIMILAR }
+export { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, VERSION_NOTICE_SIMILAR, typedCellsAt }
   from "./notice.mjs";
 export { CONTENT_MINTED_BY_PLANE, CONTENT_MINT_STATES, contentMintState };
 export { TRANSCRIBE_CHECKS, VERSION_NOTICE_CHECKS } from "./checks.mjs";
@@ -1150,7 +1150,8 @@ export class Content {
   }
 
   #unitsOf(captureSha, memo) {
-    if (!memo.has(captureSha)) memo.set(captureSha, normUnits(this.extraction.unitsOf(captureSha)));
+    if (!memo.has(captureSha))
+      memo.set(captureSha, { ...normUnits(this.extraction.unitsOf(captureSha)), cells: this.#officeOf(captureSha).cells });
     return memo.get(captureSha);
   }
 
@@ -1271,9 +1272,81 @@ export class Content {
       if (typed) return typeof typed.text === "string" ? typed.text : null;
       const e = safeJson(r.extent);
       if (!isObj(e)) return null;
-      const held = heldTextAt({ ...e, kind: r.extent_kind }, normUnits(this.extraction.unitsOf(r.capture_sha)));
+      const held = heldTextAt({ ...e, kind: r.extent_kind },
+        { ...normUnits(this.extraction.unitsOf(r.capture_sha)), cells: this.#officeOf(r.capture_sha).cells });
       return typeof held.text === "string" ? held.text : null;
     } catch { return null; }
+  }
+
+  /* ===================================================================== *
+   * WHAT AN OFFICE CAPTURE'S READING STATES ABOUT ITSELF (R52, R53; T33-24, C:A-5, K1448, K1505 (11)). Read, never
+   * computed: a cell's value is the file's stored lexical value and a formula's cached value the file's statement
+   * (nothing here recalculates); the metadata is what the file says of its own authorship, and this module asserts no
+   * act over it.
+   * ===================================================================== */
+
+  /** THE ONE READER of the typed cells and the metadata a capture's reading holds (`extraction.readingOf`'s `reading`):
+   *  `cells` the per-sheet map `{<sheet name>: cells list | null}` (null when the reading holds none), `metadata` the
+   *  office readers' object (null when none), `read` whether the capture was read at all. Never throws. */
+  #officeOf(captureSha) {
+    let r = null;
+    try { r = typeof captureSha === "string" && captureSha ? this.extraction.readingOf(captureSha) : null; } catch { r = null; }
+    const reading = r && isObj(r.reading) ? r.reading : null;
+    return { read: !!r, cells: reading && isObj(reading.cells) ? reading.cells : null,
+             metadata: reading && isObj(reading.metadata) ? reading.metadata : null };
+  }
+
+  /** R52: the typed cells of a held `sheet-cell` or `sheet-range` row's capture inside its extent, as the reader states
+   *  them (`office-readers` R30), in row then column order: `{content_id, capture_sha, extent_kind, extent, cells}`, or
+   *  `{cells: null, reason, why}` for a row not held, stale (R22), of another extent kind, or whose reading holds no
+   *  typed cells for that sheet. No viewer (R46's terms): a caller that shows them asks sight first (R37). Writes
+   *  nothing; never throws. */
+  cellsAt(contentId) {
+    const no = (reason, why) => ({ cells: null, reason, why });
+    try {
+      const id = typeof contentId === "string" ? contentId.trim() : "";
+      const r = id ? this.#one(`SELECT content_id, capture_sha, extent_kind, extent, stale FROM content WHERE content_id=?`, id)
+        : null;
+      if (!r) return no("not_held", "this record holds no content row by that id");
+      if (r.stale)
+        return no("stale", "the row was cited under an earlier reading of its document, and the cells held now are the "
+          + "newer reading's, which may not be the cells cited");
+      const e = safeJson(r.extent);
+      if (r.extent_kind !== "sheet-cell" && r.extent_kind !== "sheet-range")
+        return no("not_a_sheet_extent", `the row cites a ${r.extent_kind} extent, which names no cells of a sheet`);
+      const extent = { ...(isObj(e) ? e : {}), kind: r.extent_kind };
+      const got = typedCellsAt(extent, this.#officeOf(r.capture_sha).cells);
+      if (!got.cells) return no(got.reason, got.why);
+      return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells: got.cells };
+    } catch {
+      return no("not_read", "the row's cells could not be read");
+    }
+  }
+
+  /** R53: the metadata an office capture's reading holds (`office-readers` R31), `{capture_sha, metadata: {author,
+   *  lastModifiedBy, created, modified, source}}` each as the file writes it, or `{metadata: null, reason, why}` when
+   *  the capture was never read, is not an office document, or its reading holds none. What the file states about
+   *  itself, read by `events` for an edit act; it is never a fact here. Writes nothing; never throws. */
+  officeMetadataOf(captureSha) {
+    const no = (reason, why) => ({ metadata: null, reason, why });
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.trim() : "";
+      const held = this.#officeOf(sha);
+      if (!held.read) return no("never_read", "this record holds no reading of that capture");
+      const m = held.metadata;
+      if (m) {
+        const v = (k) => (m[k] === undefined ? null : m[k]);
+        return { capture_sha: sha, metadata: { author: v("author"), lastModifiedBy: v("lastModifiedBy"),
+                                               created: v("created"), modified: v("modified"), source: v("source") } };
+      }
+      const kind = this.contentContextFor(sha).container;
+      if (kind && kind.office === false)
+        return no("not_office", `${kind.kind_why || "the capture is not an office document"}, so it states no office metadata`);
+      return no("none_held", "the capture's reading holds no office metadata (its file has no readable core-properties "
+        + "part, or it was read before readings carried it)");
+    } catch {
+      return no("not_read", "the capture's metadata could not be read");
+    }
   }
 
   /* ===================================================================== *
@@ -1410,7 +1483,7 @@ function legacyConnectionAxis(r, extent, connectionByBundle) {
 const instances = new WeakMap();
 
 /** The one content instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the first
- *  call only. At creation it declares its tables to purge (R39; record-core R21). */
+ *  call only. At creation it declares its tables explicitly (R54, R39; record-core R21). */
 export function contentOf(host, deps) {
   let c = instances.get(host);
   if (!c) {
@@ -1421,7 +1494,7 @@ export function contentOf(host, deps) {
     const extraction = d.extraction || extractionOf(host);
     c = new Content({ ...d, storage: d.storage || host.storage, record, membership, provenance, extraction });
     instances.set(host, c);
-    record.declarePurge("content", CONTENT_TABLES);
+    declareTables(record);
     /* R22 (REC-82): the stale mark on every replaced reading, registered with extraction (its R24; K31's pattern). */
     /* R41: the capture's units as they stood before the write (extraction R24's `unitsBefore`, K141) are graded against
        the units the write left, which the index holds at this call (the listener runs after the write). */
@@ -1430,6 +1503,19 @@ export function contentOf(host, deps) {
     registerFigures(c);
   }
   return c;
+}
+
+/** R54 (plan T33, Rules (6)), R39: the four tables declared explicitly through record-core's `declareTable` (its R21),
+ *  each keyed to its bundle by `bundle_id` and cleared by purge, seen as that bundle is seen (R37), and every other
+ *  class as `declarePurge`'s default form gives it. A refusal (another module holding one of them, or content
+ *  declaring twice) is a defect of the wiring and throws. */
+export const CONTENT_TABLE_CLASSES = Object.freeze({
+  purge: "clear", expunge: "none", export: "admin-only", sight: "bundle", derive: "stored", version_chain: false,
+});
+function declareTables(record) {
+  const answer = record.declareTable("content", CONTENT_TABLES.map((name) => ({ name, ...CONTENT_TABLE_CLASSES })));
+  if (answer && answer.ok === false)
+    throw new Error(`content: record-core refused its tables: ${answer.code || answer.reason}${answer.table ? ` (${answer.table})` : ""}`);
 }
 
 /** R49: the testimony path's check and mint, registered once on provenance's testimony slot (its R52), which
