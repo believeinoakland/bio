@@ -28,3 +28,7 @@ Size (session_01M4x59wQhwN7AXzMLPTFvn1): test runs 4, module lines 1477
 ## J1 · REPORT
 
 Two findings outside id-spaces, from T34-7 (job/T34/id-spaces): (1) entities: bio-plane/test/m/entities/idmatch.test.mjs:26 (its R20 test) pins id-spaces' list as nine literal names; with this branch's id-spaces, entities is 82 pass, 1 fail (that test), 82/0 without. Red from id-spaces' merge until entities' next job lists the eleven or drops the literal; the next assertion already compares with spaces() over the view, as entities R20 requires; entities' code needs no change. (2) Generated artifact stale (§14): bio-plane/dist/bio-plane.bundled.mjs bundles idspaces.mjs. Also: my tests graft body and office onto a combined view (fixtures.mjs withNewSpaces) because jurisdictions.combine refuses them until T34-2 (its R3) merges; the graft is the view's own shape and stays valid after.
+
+## J2 · COMPLETE
+
+T34-7 applied: R1, eleven spaces, body and office after person, referent reading, recognised and judged from the view's forms; a body number and an office number never judged together. id-spaces 32/32. Checks: format, architecture, coverage (28/28), ownership (4 files) all 0 failures. Users: court-doctypes, record-core, stats-disclosure, standards, calculations, jurisdictions green; entities 82/1 (R20's literal list, J1). bio-plane bundle stale. Uses unchanged: jurisdictions, court-citations. Record: build/jobs/T34/id-spaces.md, Completion.
