@@ -66,13 +66,14 @@ import { publicationOf } from "../publication/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         isPublicHttpsLocator, proposalLabel } from "../record-grammar/index.mjs";
+         isPublicHttpsLocator, proposalLabel, idPattern } from "../record-grammar/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
 import { SECTIONS, calculationsLines, timelineLines } from "../case-grammar/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { workbooksOf } from "../workbooks/index.mjs";
 import { eventsOf } from "../events/index.mjs";
-import { caseDisclosuresOf, FLAGS_SAY, SELF_ATTESTED_SENTENCE, TENSIONS_DEPTH_STATED } from "../case-disclosures/index.mjs";
+import { caseDisclosuresOf, FLAGS_SAY, SELF_ATTESTED_SENTENCE, TENSIONS_DEPTH_STATED, peopleLines, memberTieLines }
+  from "../case-disclosures/index.mjs";
 import { PUBLISH_ACT_CHECKS, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS } from "./checks.mjs";
 import { CASE_AUTHORING_TABLES, migrateCaseAuthoring } from "./schema.mjs";
 import { searchedSection } from "./searched.mjs";
@@ -134,6 +135,11 @@ const str = (v) => String(v ?? "").trim();
 export const DISCLOSED_WITHOUT_WORDS = "disclosed by the publisher, without words of their own";
 /** R56: how deep a member's chain is followed through inquiry legs to the calculations it reaches. */
 const CHAIN_DEPTH_MAX = 16;
+/** R55 (case-disclosures R24): an entity id in an authored sentence, record-grammar's one spelling of it. */
+const ENTITY_ID = idPattern("ENT");
+/* R55 (case-disclosures R27): the signer's attestation of no undeclared tie is the act's own: `tieAttested: true` from the
+   publishing owner, stamped with the author and the act's instant (R25), never a body's names or times. */
+const attestedBy = (who, tieAttested, at) => (tieAttested === true ? [{ signer: who, at }] : null);
 /* R3's set: `targets` as a list, a comma-separated string, or the one `target`. */
 const membersOf = (targets, target) => [...new Set((Array.isArray(targets) ? targets
   : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : [])
@@ -377,25 +383,38 @@ export class CaseAuthoring {
     return { rows, money: [...new Set(money)] };
   }
 
-  /** R55 (case-disclosures R24): the parts this act assembles that may name a person — the authored sentences, the
-   *  conclusions, the members' subjects, the lens, R57's timeline with each event's participants, and the money facts the
-   *  calculations cite — and the people they name. Asked by `op=publish` and by R34's pre-flight alike. */
-  #namedInCase(prepared, proj, viewer, authored, money) {
+  /** R55 (case-disclosures R24): the parts this act assembles that may name a person, in its shape `[{place, where,
+   *  people?, event?, fact?}]` — each authored sentence and exclusion (`statement`), each member's claim (`claim`), each
+   *  lens statement (`lens`), each of R57's `they_did` items (`timeline`, its event, whose participants case-disclosures
+   *  reads) and each money fact the calculations cite (`money`) — and the people it answers they name (each finding's
+   *  subject it reads itself). A sentence names a person by an entity id it holds. Asked by `op=publish` and by R34's
+   *  pre-flight alike. */
+  #namedInCase(prepared, proj, viewer, authored, moneyFacts) {
     const timeline = this.#timelineOf(prepared, viewer);
     const lens = this.#lensStatements(proj);
-    const named = this.disclosures.peopleNamed(prepared, { ...authored,
-      conclusions: prepared.map((p) => ({ target: p.id, ...p.conclusion })),
-      subjects: prepared.map((p) => ({ target: p.id, entity: this.inquiry.subjectEntityOf(p.id) })).filter((x) => x.entity),
-      lens: lens.statements, timeline: timeline.rows.map((r) => ({ ...r, participants: timeline.participants.get(r.ref) || [] })),
-      money }, viewer);
+    const idsIn = (...texts) => [...new Set(texts.flatMap((t) => String(t ?? "").split(/[^A-Za-z0-9-]+/))
+      .filter((t) => ENTITY_ID.test(t)))];
+    const parts = [];
+    const add = (place, where, people) => { if (people.length) parts.push({ place, where, people }); };
+    add("statement", "statement", idsIn(authored.statement));
+    add("statement", "scope", idsIn(authored.scope));
+    add("statement", "subject_justification", idsIn(authored.justification));
+    add("statement", "bias_acknowledgement", idsIn(authored.bias));
+    (Array.isArray(authored.excluded) ? authored.excluded : []).forEach((r, i) =>
+      add("statement", `excluded[${i}]`, idsIn(r && r.target, r && r.description, r && r.reason)));
+    for (const p of prepared) add("claim", p.id, idsIn(p.conclusion && p.conclusion.claim ? p.conclusion.claim.text : null));
+    for (const st of lens.statements) add("lens", st.id ?? st.bundle ?? null, idsIn(st.subject, st.text, st.justification));
+    for (const r of timeline.rows) if (r.lane === "they_did") parts.push({ place: "timeline", where: `timeline ${r.ord}`, event: r.ref });
+    for (const f of moneyFacts) parts.push({ place: "money", where: f, fact: f });
+    const named = this.disclosures.peopleNamed(prepared, parts, viewer);
     return { timeline, lens, named };
   }
 
   /** R57 (C11; K1494): the timeline of the members' subject entities (`inquiry.subjectEntityOf`) and the events their
    *  legs cite, read through `events.timeline` (its R28–R30) as the publisher sees the record at the act: the world's
    *  lane (`they_did`) and the registered sources' lane (`we_did`) apart, each in its own order, each item with its
-   *  source; an item with no source is left out and counted. `participants` maps an event to the entities named in it,
-   *  for `case-disclosures` R24; no row names a person (R55: people are named only as its R25 passes them). */
+   *  source; an item with no source is left out and counted. No row names a person: an event's participants are read by
+   *  `case-disclosures` (its R24), and named only as its R25 passes them (R55). */
   #timelineOf(prepared, viewer) {
     const set = [];
     for (const p of prepared) {
@@ -406,7 +425,7 @@ export class CaseAuthoring {
         if (normalizeType(OBJECT_TYPES[str(leg.target_id).split("-")[0]]) === "event") set.push(str(leg.target_id));
     }
     const ids = [...new Set(set)];
-    const out = { set: ids, rows: [], left_out: 0, participants: new Map() };
+    const out = { set: ids, rows: [], left_out: 0 };
     if (!ids.length) return out;
     const read = this.events.timeline({ set: ids, viewer });
     if (!read || read.ok === false) return { ...out, unread: read ? read.reason ?? "TIMELINE_UNREAD" : "TIMELINE_UNREAD" };
@@ -418,7 +437,6 @@ export class CaseAuthoring {
       const att = atts.find((x) => x.attestation_id === e.governing) || atts.find((x) => x.capture_sha) || atts[0] || null;
       const source = att ? att.capture_sha || `event_attestation:${att.attestation_id}` : null;
       if (!source) { out.left_out += 1; continue; }
-      if (e) out.participants.set(it.event_id, [...new Set(e.participants.map((x) => x.entity_id).filter(Boolean))]);
       out.rows.push({ lane: "they_did", ord: ++ord, when: whenWords(it.when, it.why), label: [it.kind, it.status]
         .filter(Boolean).join(", "), ref: it.event_id, source });
     }
@@ -608,7 +626,8 @@ export class CaseAuthoring {
       const peopleJ = D.peopleJudged(named, peopleBases, viewer);
       if (peopleJ.refusals.length) return { refusal: peopleJ.refusals[0] };
       /* each signer's attestation of no undeclared tie, the money's payers and payees included (its R27) */
-      const tiesJ = D.tieAttestationJudged([who], named, calcJ.money, tieAttested, viewer);
+      const tiesJ = D.tieAttestationJudged([who], named, named.money_parties || [], attestedBy(who, tieAttested, this.#when("second")),
+                                           viewer);
       if (tiesJ.refusals.length) return { refusal: tiesJ.refusals[0] };
       return { tensionsJ, resting, facts, selfJ, reached, accepted, flagsJ, calcJ, timeline, lens, peopleJ, tiesJ };
     })();
@@ -954,7 +973,7 @@ export class CaseAuthoring {
       /* R56, R57: case-grammar's blocks (its R18, R20); R55: case-disclosures' people and member-ties blocks (its R28). */
       calculations: calcJ.rows, calculationsBlock: calculationsLines(calcJ.rows),
       timeline: timeline.rows, timelineLeftOut: timeline.left_out, timelineBlock: timelineLines(timeline.rows),
-      peopleBlock: D.peopleLines(peopleJ.rows), memberTiesBlock: D.memberTieLines(tiesJ.rows),
+      peopleBlock: peopleLines(peopleJ.rows), memberTiesBlock: memberTieLines(tiesJ.rows),
     });
     const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
@@ -1414,7 +1433,8 @@ export class CaseAuthoring {
                              bias: str(a.biasAcknowledgement), excluded: Array.isArray(a.excluded) ? a.excluded : [] };
           const { named } = this.#namedInCase(judged.prepared, auth.proj, a.viewer ?? null, authored, calc.money || []);
           found.push(...D.peopleJudged(named, a.peopleBases ?? null, a.viewer ?? null).refusals);
-          found.push(...D.tieAttestationJudged([who], named, calc.money || [], a.tieAttested ?? null, a.viewer ?? null).refusals);
+          found.push(...D.tieAttestationJudged([who], named, named.money_parties || [],
+            attestedBy(who, a.tieAttested ?? null, this.#when("second")), a.viewer ?? null).refusals);
         }
         tensions = D.tensionsJudged(judged.prepared, a.viewer ?? null, a.tensionsDisclosed ?? null);
         found.push(...tensions.refusals);

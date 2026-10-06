@@ -172,10 +172,12 @@ test("R56 (K1570, K1594): a workbook among the captures a member rests on is rea
 
 test("R56, R55: the calculations judgment is asked after case-disclosures' flags and before the people the case names (R55's order): a case refused on both answers the calculation first", async () => {
   const { w, P } = setup({ state: { [C1]: "differs", [C2]: "agrees" } });
-  w.people.named = [{ person: "ENT-2026-0001-p", places: ["statement"] }];
-  const r = await op(w, P, { targets: [Q], roles: roles([Q]) });
+  const person = w.entities.createEntity({ kind: "person", label: "Pat Example", note: "registered by the test", declaredBy: V("alice") });
+  assert.equal(person.ok, true);
+  const statement = `It does not cover what ${person.entity_id} said afterwards.`;
+  const r = await op(w, P, { targets: [Q], roles: roles([Q]), statement });
   assert.equal(r.reason, "CALCULATION_NOT_DISCLOSED");
-  const r2 = await op(w, P, { targets: [Q], roles: roles([Q]), calculationsDisclosed: [{ calc: C1 }] });
+  const r2 = await op(w, P, { targets: [Q], roles: roles([Q]), statement, calculationsDisclosed: [{ calc: C1 }] });
   assert.equal(r2.reason, "PERSON_BASIS_UNRECORDED");
 });
 

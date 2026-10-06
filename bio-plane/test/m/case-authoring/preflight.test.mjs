@@ -60,20 +60,26 @@ test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its
     "src/case-disclosures/index.mjs hunchDebt > is-hunch-cleared"], "each names the method that raises it there");
 });
 
-test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), in the same family, moved with their translations word for word to case-disclosures (its R22), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
+test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), and C-120.14–C-120.16 (the people a case names, T33-68), in the same family, moved with their translations word for word to case-disclosures (its R22), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
   const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check, v.where]), [
     ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-disclosures/index.mjs materialsJudged > is-relied-on-presentable"],
     ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "src/case-disclosures/index.mjs acceptedWorkJudged > is-accepted-work-in-force"],
     ["FLAG_NOT_DISCLOSED", "C-120.11", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosed"],
     ["FLAGS_UNDETERMINED", "C-120.12", "src/case-disclosures/index.mjs flagsJudged > is-flags-determined"],
-    ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosure-standing"]]);
+    ["FLAG_DISCLOSURE_NOT_STANDING", "C-120.13", "src/case-disclosures/index.mjs flagsJudged > is-flag-disclosure-standing"],
+    ["PERSON_BASIS_UNRECORDED", "C-120.14", "src/case-disclosures/index.mjs peopleJudged > is-person-basis-recorded"],
+    ["PERSON_BASIS_NOT_STANDING", "C-120.15", "src/case-disclosures/index.mjs peopleJudged > is-person-basis-standing"],
+    ["TIE_ATTESTATION_MISSING", "C-120.16", "src/case-disclosures/index.mjs tieAttestationJudged > is-tie-attested"]]);
   assert.deepEqual(rows.map(([, v]) => v.translation), [
     "A finding this case relies on rests on material this copy does not hold whole, and everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
     "A finding in this case rests on another group's finding, and this group's acceptance of that edition is not in force. Accept it again, or take the leg out. Nothing was written.",
     "Another group's work this case rests on carries an open flag, and a case may be published with it only if the flag is disclosed. Each one is named. Disclose it, or clear it first. Nothing was published.",
     "The flags on another group's work this case rests on could not be read completely, so what must be disclosed is not known. Try again. Nothing was published.",
-    "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published."]);
+    "One of the flags disclosed is not open on work this case rests on: it may have been cleared since. Read the list again. Nothing was published.",
+    "This case names a person without a recorded reason for naming them. Give each person named a basis: their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is named. Nothing was written.",
+    "A reason given for naming a person is not one the record holds, or the position it cites was not held on the date of the act. Read the list again. Nothing was written.",
+    "Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written."]);
 });
 
 test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with its row C-120.7, naming every hunch leg, before anything is written; the pre-flight answers it before the first screen", () => {
@@ -96,7 +102,7 @@ test("R55 (case-disclosures R16): uncleared hunch debt is UNCLEARED_HUNCH with i
 });
 const AUTH = { author: "alice", scope: "s", statement: "It does not cover the amendments.", subjectPosition: "not_sought",
                subjectJustification: "A public record.", biasAcknowledgement: "We read the minutes as the account.",
-               excluded: [] };
+               excluded: [], tieAttested: true };
 
 test("R55 (case-disclosures R2): each capture a member rests on is stated with its grade (provenance.captureGrade) and co-attestation (both a timestamp and a co-archive); a load-bearing Grade B capture not co-attested is CO_ATTESTATION_UNACKNOWLEDGED (C-120.4), naming each, and nothing is written", () => {
   const { w, P, a, b } = setup();

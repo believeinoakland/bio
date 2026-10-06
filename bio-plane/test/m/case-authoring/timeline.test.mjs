@@ -2,14 +2,15 @@
    case carries, composed at authoring from `events.timeline` over the members' subjects and the events their legs cite,
    the two lanes apart, each item with its source, an item with none left out and counted; and the people the case
    names, each with the owner's basis, and the signer's attestation of no undeclared tie. `events` is a stand-in at its
-   ruled interface (its R28–R30 `timeline`, its `readEvent`), answering the real module's shapes; the people judgments
-   are case-disclosures' (the fixture's stand-in until its job merges, K1563 (1)); a member's subject and event legs are
-   given through case-authoring's view of inquiry. */
+   ruled interface (its R28–R30 `timeline`, its `readEvent`), answering the real module's shapes, where a test must
+   control the lanes; the people arms run on the real events and the real case-disclosures; a member's subject and
+   event legs are given through case-authoring's view of inquiry. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
 import { timelineBodyLines } from "../../../src/case-authoring/document.mjs";
 import { timelineOf } from "../../../src/case-grammar/index.mjs";
+import { peopleOf, memberTiesOf } from "../../../src/case-disclosures/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const SUBJ = "ENT-2026-0001-council", E1 = "EVT-2026-0001-a", E2 = "EVT-2026-0002-b", E3 = "EVT-2026-0003-c", E4 = "EVT-2026-0004-d";
@@ -101,50 +102,73 @@ test("R57: the body's timeline section prints each lane as its own list and says
   assert.ok(lines.includes("2 item(s) had no source this record could cite and are left out."));
 });
 
-test("R55 (case-disclosures R24): the people the case names are asked over the parts this act assembles — the authored sentences, the conclusions, the members' subjects, the lens, the timeline with each event's participants, and the money the calculations cite — as the publisher sees them", () => {
-  const { w, P } = setup();
-  publish(w, P);
-  const asked = w.people.asked.find((a) => a.peopleNamed).peopleNamed;
-  assert.equal(asked.viewer, V("alice"));
-  assert.deepEqual(Object.keys(asked.parts).sort(), ["bias", "conclusions", "excluded", "justification", "lens", "money", "scope",
-    "statement", "subjects", "timeline"]);
-  assert.equal(asked.parts.statement, AUTHORED.statement);
-  assert.deepEqual(asked.parts.subjects, [{ target: Q, entity: SUBJ }]);
-  assert.deepEqual(asked.parts.timeline.find((x) => x.ref === E1).participants, ["ENT-2026-0009-person"]);
-  assert.deepEqual(asked.parts.conclusions.map((c) => c.target), [Q, Q2]);
+/* A world with people, on the real case-disclosures and events: PAT signed an event the finding's leg cites (a timeline
+   participant), and SAM is named by id in the statement. */
+function peopleWorld() {
+  const inquiry = (real) => new Proxy(real, { get: (t, k) => (k === "basisFor"
+    ? (id, o) => { const b = t.basisFor(id, o); return b && b.ok !== false && id === Q
+        ? { ...b, legs: [...b.legs, { ord: 50, target_id: w.SIGNED, role: "supports" }] } : b; }
+    : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
+  const w = world({ inquiry });
+  w.member("alice");
+  const mk = (label) => { const r = w.entities.createEntity({ kind: "person", label, note: "registered by the test", declaredBy: V("alice") });
+                          if (!r.ok) throw new Error(JSON.stringify(r)); return r.entity_id; };
+  const PAT = mk("Pat Example"), SAM = mk("Sam Private");
+  const ev = w.events.createEvent({ kind: "signing", attestations: [{ testimony: "I saw the signing.", value: "2026-03-02" }],
+    participants: [{ entityId: PAT, role: "signatory", attestation: 0 }], by: V("alice") });
+  if (!ev.ok) throw new Error(JSON.stringify(ev));
+  w.SIGNED = ev.event_id;
+  w.doc(DOC);
+  w.finding(Q, [{ target: DOC }]);
+  const P = w.project("Team", "alice", [Q]);
+  const statement = `It does not cover what ${SAM} said afterwards.`;
+  return { w, P, PAT, SAM, statement };
+}
+const BASES = (x) => [{ person: x.PAT, basis: "private_party", words: "they signed the award" },
+                      { person: x.SAM, basis: "private_party", words: "they spoke at the hearing" }];
+
+test("R55 (case-disclosures R24, R25): the people the case names are asked of case-disclosures over the parts this act assembles — an id in an authored sentence, a timeline event's participants — and a person named with no basis given refuses PERSON_BASIS_UNRECORDED (C-120.14), naming each with where, before any id is drawn", () => {
+  const x = peopleWorld();
+  const before = x.w.snapshot();
+  const r = x.w.publish(x.P, "alice", [Q], { statement: x.statement });
+  assert.deepEqual([r.ok, r.code, r.check], [false, "PERSON_BASIS_UNRECORDED", "C-120.14"], JSON.stringify(r).slice(0, 400));
+  assert.deepEqual(r.unrecorded.map((u) => [u.person, u.places.map((p) => p.place)]).sort(),
+    [[x.PAT, ["timeline"]], [x.SAM, ["statement"]]].sort());
+  assert.deepEqual(x.w.snapshot(), before, "nothing written");
+  /* negative control: nobody named, nothing asked */
+  const n = setup({ subjects: {}, eventLegs: {} });
+  assert.equal(publish(n.w, n.P).ok, true);
 });
 
-test("R55 (case-disclosures R25, R28): a person the case names with no basis given refuses as case-disclosures answers (PERSON_BASIS_UNRECORDED), before any id is drawn; with each basis given it publishes and the people: block is written through its renderer", () => {
-  const { w, P } = setup();
-  w.people.named = [{ person: "ENT-2026-0009-person", places: ["timeline"] }];
-  const before = w.snapshot();
-  const r = publish(w, P);
-  assert.deepEqual([r.ok, r.reason, r.people], [false, "PERSON_BASIS_UNRECORDED", ["ENT-2026-0009-person"]]);
-  assert.deepEqual(w.snapshot(), before, "nothing written");
-  const ok = publish(w, P, { peopleBases: [{ person: "ENT-2026-0009-person", basis: "act_or_position", ref: "LIN-2026-0001" }] });
+test("R55 (case-disclosures R25, R28): with each basis given the case publishes, and the people: block, written through case-disclosures' renderer, states each person with the places named and the basis kind, never a judgment of them", () => {
+  const x = peopleWorld();
+  const ok = x.w.publish(x.P, "alice", [Q], { statement: x.statement, peopleBases: BASES(x) });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 400));
+  const fm = x.w.fm(docOf(x.w, ok));
+  const rows = peopleOf(fm);
+  assert.deepEqual(rows.map((p) => [p.person, p.basis]).sort(), [[x.PAT, "private_party"], [x.SAM, "private_party"]].sort());
+  assert.ok(rows.every((p) => typeof p.places === "string" && p.places.length), "the places named");
+});
+
+test("R55 (case-disclosures R27): the signer — the publishing owner — attests no undeclared tie by tieAttested: true, stamped with the author and the act's instant (R25); without it the act refuses TIE_ATTESTATION_MISSING (C-120.16), after the people (R55's order), naming the signer to themself; a body's own signer list is not an attestation; the pre-flight lists both", () => {
+  const x = peopleWorld();
+  assert.equal(x.w.publish(x.P, "alice", [Q], { statement: x.statement, tieAttested: undefined }).reason, "PERSON_BASIS_UNRECORDED",
+    "the people first");
+  const before = x.w.snapshot();
+  const r = x.w.publish(x.P, "alice", [Q], { statement: x.statement, peopleBases: BASES(x), tieAttested: undefined });
+  assert.deepEqual([r.code, r.check, r.missing], ["TIE_ATTESTATION_MISSING", "C-120.16", ["alice"]]);
+  const forged = x.w.publish(x.P, "alice", [Q], { statement: x.statement, peopleBases: BASES(x),
+                                                  tieAttested: [{ signer: "alice", at: "2020-01-01T00:00:00Z" }] });
+  assert.equal(forged.code, "TIE_ATTESTATION_MISSING", "only the act's own attestation counts");
+  assert.deepEqual(x.w.snapshot(), before);
+  const ok = x.w.publish(x.P, "alice", [Q], { statement: x.statement, peopleBases: BASES(x), tieAttested: true });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
-  assert.deepEqual(w.fm(docOf(w, ok)).people, [{ person: "ENT-2026-0009-person", basis: "act_or_position", ref: "LIN-2026-0001" }]);
-  const judged = w.people.asked.filter((a) => a.peopleJudged).at(-1).peopleJudged;
-  assert.deepEqual(judged.bases, [{ person: "ENT-2026-0009-person", basis: "act_or_position", ref: "LIN-2026-0001" }], "handed whole");
-});
-
-test("R55 (case-disclosures R27): the signer — the publishing owner, the author stamp — is asked the attestation of no undeclared tie, with the money the case cites; one missing refuses as case-disclosures answers, after the people (R55's order); the pre-flight lists both", () => {
-  const { w, P } = setup();
-  w.people.tiesRequired = true;
-  w.people.named = [{ person: "ENT-2026-0009-person", places: ["timeline"] }];
-  assert.equal(publish(w, P).reason, "PERSON_BASIS_UNRECORDED", "the people first");
-  const bases = { peopleBases: [{ person: "ENT-2026-0009-person", basis: "consent", ref: CAP }] };
-  const r = publish(w, P, bases);
-  assert.deepEqual([r.reason, r.signers], ["TIE_ATTESTATION_MISSING", ["alice"]]);
-  const asked = w.people.asked.filter((a) => a.tieAttestationJudged).at(-1).tieAttestationJudged;
-  assert.deepEqual([asked.signers, asked.moneyParties, asked.attested], [["alice"], [], null]);
-  assert.equal(publish(w, P, { ...bases, tieAttested: { by: "alice", none_undeclared: true } }).ok, true);
-  /* R34: both are blockers the pre-flight reaches */
-  const n = setup();
-  n.w.people.tiesRequired = true;
-  n.w.people.named = [{ person: "ENT-2026-0009-person", places: ["timeline"] }];
-  const pre = n.w.ca.publishPreflight({ ...AUTHORED, whatChanged: WHAT_CHANGED, project: n.P, targets: [Q, Q2],
-    roles: { [Q]: "load_bearing", [Q2]: "load_bearing" }, viewer: V("alice"), author: "alice" });
-  assert.equal(pre.first.reason, "PERSON_BASIS_UNRECORDED");
-  assert.ok(pre.blockers.some((b) => b.reason === "TIE_ATTESTATION_MISSING"), JSON.stringify(pre.blockers).slice(0, 300));
+  assert.deepEqual(memberTiesOf(x.w.fm(docOf(x.w, ok))).filter((t) => t.row === "attestation").map((t) => [t.signer, t.at]),
+    [["alice", x.w.clock.now]]);
+  /* R34: both are blockers the pre-flight reaches independently */
+  const y = peopleWorld();
+  const pre = y.w.ca.publishPreflight({ ...AUTHORED, whatChanged: WHAT_CHANGED, statement: y.statement, tieAttested: undefined,
+    project: y.P, targets: [Q], roles: { [Q]: "load_bearing" }, viewer: V("alice"), author: "alice" });
+  assert.equal(pre.first.code, "PERSON_BASIS_UNRECORDED");
+  assert.ok(pre.blockers.some((b) => b.code === "TIE_ATTESTATION_MISSING"), JSON.stringify(pre.blockers).slice(0, 300));
 });
