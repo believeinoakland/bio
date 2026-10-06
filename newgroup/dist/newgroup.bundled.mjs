@@ -2911,7 +2911,13 @@ var OPAQUE_ID_RE = statementIdPattern();
 
 // ../bio-plane/src/setup-fleet.mjs
 var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var FLEET_BINDINGS = [
+  ["agent-worker", "AGENT_WORKER"],
+  ["pdf-worker", "PDF_WORKER"],
+  ["ocr-worker", "OCR_WORKER"],
+  ["sheet-worker", "SHEET_WORKER"],
+  ["agent-runner", "AGENT_RUNNER"]
+];
 var HOSTING_CONTROL = Object.freeze({
   heading: "Before you choose a password: who controls this copy",
   sentences: Object.freeze([
