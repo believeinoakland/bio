@@ -1,10 +1,12 @@
-# BIO Capability Ladders v0.1: time, organisations and obligations, people, events, money, law, courts, analysis and questions
+# BIO Capability Ladders v0.1: time, organisations and obligations, people, events, money, law, policies, standards, courts, analysis and questions
 
 **Status.** Written 2026-10-05 for BOB #111 from the constructs study (K1426–K1432); the study's full evidence is on branch `study/constructs`, commit `892fca16c4` (never deleted, K1433). The targets are Bob's (B1 (c), K1432): every construct reaches L5, staged by dependency, within realistic resources and without slowing everyday use. Rungs not yet built are planned, not held; each is re-verified against the code and the world when its stage is planned. Facts about the product are as of `tranche/T32` @ 84e7cd321d. (The studies cite `09837e3ddc`, the reviews `6645f2ea04` and the synthesis's module order `8fa5ab4e3d`; a `git diff` from each of those to 84e7cd321d over `bio-plane/src`, `build/requirements`, `build/modules.json`, `agent-worker`, `newgroup` and `civicos-ui` shows no change.)
 
 **Amended 2026-10-05 by BOB #112 (K1452, K1453, K1455; K1457, K1458).** Bob named two more constructs: EVENTS (what happens in the world and how events relate; §5B) and MONEY (where it comes from and goes, the rules on its movement, commitments, what it buys and delivers; §5C). `chronology` is renamed and widened as `events`, placed directly after `entities`; `money` sits after `progressions`; `people` after `duties`; a new `explore` after `people` and `connection-grammar` in layer 1 (K1469). Bob ruled B8: tracking people is essential to investigation. §5A PEOPLE is added; §5.1 reaches organisations of every kind; the doctrine row "Offices, never private individuals" (§10) is replaced; Design Requirement 6 still governs publication.
 
 **Amended 2026-10-05 after the second constructs study** (PEOPLE, EVENTS, MONEY and the architecture across nine; rulings K1462–K1469, K1471, and BOB's K1470 recorded from `synthesis/constructs-2.md` §7). §5A–§5C are no longer provisional; the provisional K1453, K1456 and K1458 are superseded where they differ. Bob ruled every decision of constructs-2 §6 on 2026-10-05 (C1–C11: K1483–K1494; C12, machine signals, K1473; the synthesis's first C12, on hunch legs, was withdrawn in review, K1470), and B16–B22 (K1478–K1482); B16's account was re-ruled on new evidence (K1502: each member's own account only, no group or project account). Each passage cites its ruling. "constructs-2 §n" cites a section of that synthesis.
+
+**Amended 2026-10-06 by BOB #122 (K1711–K1713, K1722–K1724, K1727, K1739, K1740).** Bob named policies and standards as two constructs beyond law (K1713): §6B POLICIES and §6C STANDARDS, from the study `build/plan/draft-policies-study.md`, every decision ruled; they share the `standards` home with LAW, and LAW no longer claims policies (§6.1, N11). Their rungs are planned for T35 as `build/plan/next.md` N638–N652, each part that waits naming its reason.
 
 **Why it exists.** Bob, 2026-10-05: "The required capabilities is certain to expand. When I discover the need for that expansion is less certain. So while meeting the targets you've identified for today sounds appropriate, the understanding from this study should be preserved in a way that supports later situation when the need for greater capabilities is identified." Bob then ruled decision B1 as option (c) (K1432): every construct is to reach its full ladder, L5, within what is realistically doable with the resources available and without slowing the system's everyday use for members. This document is the plan's reference: for each construct, every rung, its evidence, its design, what must exist first, what is realistic today, and the decisions it raises. The study's synthesis (`synthesis/constructs.md` on the study branch, cited here as "synthesis §n") holds the full argument.
 
@@ -13,7 +15,7 @@
 ## 1. How to use this document
 
 **When planning a stage.**
-1. **Take the stage's rungs.** Synthesis §4 orders the stages by dependency (stage 0: runnable and correct; stage 1a: the shared ground, 1b: identity and amounts; stage 2a: occurrences and timelines, 2b: relations, trails and connections; stage 3: applied and assisted; stage 4: network and imports; the second study's constructs-2 §5). Each construct's ladder table (§4.3–§9.3, and §5A.3–§5C.3 for PEOPLE, EVENTS and MONEY) names the stage that carries each rung; rungs beyond stage 3 are the "Later rungs, planned" of §4.5–§9.5 (PEOPLE's, EVENTS' and MONEY's are in their §5A.5–§5C.5). A stage opens only when Bob says a tranche may open (K1425).
+1. **Take the stage's rungs.** Synthesis §4 orders the stages by dependency (stage 0: runnable and correct; stage 1a: the shared ground, 1b: identity and amounts; stage 2a: occurrences and timelines, 2b: relations, trails and connections; stage 3: applied and assisted; stage 4: network and imports; the second study's constructs-2 §5). Each construct's ladder table (§4.3–§9.3, §5A.3–§5C.3 for PEOPLE, EVENTS and MONEY, and §6B.3–§6C.3 for POLICIES and STANDARDS) names the stage that carries each rung; rungs beyond stage 3 are the "Later rungs, planned" of §4.5–§9.5 (PEOPLE's, EVENTS' and MONEY's are in their §5A.5–§5C.5, POLICIES' and STANDARDS' in §6B.6–§6C.6). A stage opens only when Bob says a tranche may open (K1425).
 2. **Read each rung's entry and the rungs below it.** An entry gives what a member can do, its state on 2026-10-05, the design, what must exist first, realism and performance, the decisions it raises, and risks. A rung assumes every rung below it.
 3. **Check what must exist first.** Prerequisite rungs, modules, deployments and measurements. A rung whose prerequisites are not in place is not in the stage; say which one is missing (P19).
 4. **Re-verify.** The product facts here are as of 84e7cd321d; check each cited file, requirement and line again. The world sources date: standards are revised, APIs change their limits and prices, vendors change terms (the study saw a tzdata release this month and an Anthropic terms reading withdrawn within a day, K1429). Fetch every URL the rung depends on again and note what changed.
@@ -22,7 +24,7 @@
 7. **Draft requirements citing this document by section** (for example "BIO_Capability_Ladders_v0_1 §7.5, COURTS L5"), with each "measure first" item made an `M-<n>` before the requirements are drafted (D350), and every requirement given a negative control (P7).
 
 **When a member's real situation shows a gap no rung covers.** The need may come from a group's request, a job's report, the design session, a measurement, or questions members keep asking (the assistant's unattributed tallies, B17 (iii), are built to show this).
-1. Look for it in the construct's needs register (§4.2–§9.2, §5A.2–§5C.2) and the rung that serves it. If it is there, plan that rung as above.
+1. Look for it in the construct's needs register (§4.2–§9.2, §5A.2–§5C.2, §6B.2–§6C.2) and the rung that serves it. If it is there, plan that rung as above.
 2. If it is not, the ladder itself is extended here: add the need to the register in the same form (id, a member's words, centrality, evidence); place it on the rung that serves it, or add a rung where no rung serves it; write the rung's design, what must exist first, realism and performance, decisions and risks; update §2 if the new rung needs a substrate choice made earlier; and update the interfaces table.
 3. Keep the registers whole: a need is retired only with the reason stated. Update a rung's state when it is built.
 
@@ -86,6 +88,15 @@
 - *Proposals stored apart; no adoption without captured text* (`STANDARD_NO_TEXT`). AI rungs add proposers, never write paths.
 - *`standards` moves whole to layer 5 now* (B2), so the later callers (inquiry legs, contradiction's canons, publication's Criteria, `duties`) need no further move. *Blocks:* a registration seam built for stage 1 and thrown away later (R-2 L-E6).
 - *Watching rests on Legistar enactments (static JSON), not on rendered codifier pages* (R-2 L-E8).
+
+**POLICIES AND STANDARDS (§6B, §6C; K1713).**
+- *One home, `standards`, for every measure* (K1446): a policy's family, a standard's edition and adoption, a provision's force and a copy's identity are fields of the held standard and its portions; series, issuers and designations are profile data. *Blocks:* a second store for policies or standards, or `policy` kept one undifferentiated kind (standards R12).
+- *Force per provision, read from its words and cited* (K1722). *Blocks:* a whole-document "binding" flag, or a force the text does not state.
+- *`held: text | cited | absent` from the first rung* (K1724). *Blocks:* an unseen policy held only as an unadoptable proposal.
+- *Bindingness per body, derived from adoption; anything else a labelled benchmark* (K1723). *Blocks:* a comparison stored as "nonconforming" against a standard that does not bind the body.
+- *Sight from the source* (K1740). *Blocks:* instance-wide sight as a fixed property of every standard (`standards.md:110`).
+- *Versions from captures as well as enactments; every version seen kept* (K1727). *Blocks:* versions resting only on `period_basis` enactments.
+- *Acts of discretion are events of the power used; patterns are calculations* (K1713 (2)). *Blocks:* a separate discretion store or a second analytic engine.
 
 **COURTS.**
 - *A proceeding is an entity of kind `proceeding` with a facet* (Option A). Option B (a `proceedings` module) can come later with no data change, on the trigger "the facet needs its own acts and tables, or `entities` nears 4,000 lines" (B3).
@@ -703,7 +714,7 @@ Bob's decisions these rungs rest on: K1457, K1463, K1464, K1466 and K1468 (ruled
 
 ### 6.1 Purpose
 
-Law is the standard the work measures against: charters, statutes, codes, ordinances, resolutions, regulations, policies, budgets as law, contracts and commitments held as binding. The construct holds the law's own words with the standing of the copy, at the version in force on the date of an act and at section level, linked to the documents that cite it, and makes it available where investigation runs, so that "each requirement becomes a question". Bob: "Law and regulations are at the very heart of much of this work." Members see "standard" for law, policy or a commitment held and "requirement" for one thing it requires (B20).
+Law is the standard the work measures against: charters, statutes, codes, ordinances, resolutions, regulations, budgets as law, contracts and commitments held as binding. Policies and documented standards are their own constructs, POLICIES (§6B) and STANDARDS (§6C), held in the same `standards` home (K1713). The construct holds the law's own words with the standing of the copy, at the version in force on the date of an act and at section level, linked to the documents that cite it, and makes it available where investigation runs, so that "each requirement becomes a question". Bob: "Law and regulations are at the very heart of much of this work." Members see "standard" for law, policy or a commitment held and "requirement" for one thing it requires (B20).
 
 ### 6.2 Needs register
 
@@ -721,7 +732,7 @@ Law is the standard the work measures against: charters, statutes, codes, ordina
 | N8 | Law at section and requirement level, one question per requirement | "Chapter 13.04 has five requirements; open a question for each." | core | L2 | journeys §3 L105; DEC-23 |
 | N9 | Definitions, cross-references and exceptions in context | "The procurement rule has an emergency exemption in §2.04.050." | regular | L3 | DEC-60; IS §5; D273 |
 | N10 | Hierarchy and conflict of norms | "Prop 218 overrides the municipal fee ordinance." | occasional | L3 | DEC-76.3; CM 791–795; X14 |
-| N11 | Contracts, policies, budgets and commitments as standards | "Is the hauler meeting the franchise's service levels?" | regular | L2 | journeys L98–100; DEC-27; ACTION-PLAN l.65 (two-thirds vote); RM §5 OP1 |
+| N11 | Contracts, budgets and commitments as standards (policies: §6B; adopted and documented standards: §6C) | "Is the hauler meeting the franchise's service levels?" | regular | L2 | journeys L98–100; DEC-27; ACTION-PLAN l.65 (two-thirds vote); RM §5 OP1 |
 | N12 | Compare an act with a requirement during investigation | "What does the law require, what did the city do, where do they diverge?" | core | L4 | FA Layer 2 Function 1 (L254–261); IS §8 L770–783; CONTRADICTION-IDENTIFY §1 |
 | N13 | Determine compliance per standard after publication, and act on a breach | (built) | core | L4 | AC §3, §4 rule 2; conformance R1–R9; actions R8 |
 | N14 | Lawful skips and exception documents in a procedure | "A sole-source award with no justification published." | regular | L4 | DEC-9; progressions R11, R14 |
@@ -787,6 +798,208 @@ Bob's decisions these rungs rest on: B2 (the move), B11 (the model of law; one h
 | QUESTIONS | FIND and investigate deployed; four-level absence extended to law | `legal_lookup`, `compliance_analysis`, the explain-a-rule reading, all fenced by `answers` |
 | EVENTS | enactments, amendments and repeals as events | when a provision was in force for an event's date |
 | MONEY | flows to set against rules of movement | fee limits, restricted funds, thresholds and grant conditions as held standards |
+| POLICIES | policies below the law that delegates them (§6B) | the `standards` home; `implements` to the delegating law; hierarchy (N10) |
+| STANDARDS | standards an ordinance adopts by reference (§6C) | the adopting act and its amendments; `incorporates` |
+
+## 6B. POLICIES
+
+*Added 2026-10-06 by BOB #122 from the policies-and-standards study (N629; K1711, K1712): `build/plan/draft-policies-study.md` (cited "study §n"), its evidence `build/plan/study-policies/canon.md` (cited "CN:line") and `world.md` (cited "W:line"; each line there carries its sources' URLs). Bob ruled every decision of the study (§6B.8). The rungs' tranches are the entries N638–N652 of `build/plan/next.md`; each rung is re-verified when its tranche is planned.*
+
+### 6B.1 Purpose
+
+Bob, 2026-10-06 (K1713): "When, how, for who, and for what stated reasons (and unstated reasons) that discretion is exercised is often at the heart of an issue and a culture within the organization"; and policies "are more likely to exist in the shadows and change without public notice."
+
+This construct holds the rules a body or organisation sets for its own conduct: administrative instructions, department procedures, general and special orders, training bulletins, board policies and regulations, gift, hiring, conflict and complaint policies, a company's code of conduct, a utility's rules. It holds each in its family, provision by provision with the force its own words give it; finds it where it hides and keeps every copy seen, so its history can be rebuilt; holds a policy known only by citation, or recorded as not found; holds each exercise of discretion and each waiver a group can see as a record; and measures how policies are applied (§6B.5). It covers governments and organisations of every sector (K1453), and the treatment by, toward and between organisations and governments, their employees, partners and former employees (K1713 (3)). OP1 holds: the group holds a body to its stated policies and takes no position on what they should be (RM:368). A policy is held in `standards`, the one home for what an act is measured against (K1446); written law is LAW (§6), documented standards STANDARDS (§6C). Members see "standard" for any of them held (B20); the words for a policy, a waiver and a discretionary provision are the design stream's (K1712's HANDOFF).
+
+### 6B.2 Needs register
+
+(Study §1.1.)
+
+| id | need | in a member's words | centrality | rung | evidence |
+|---|---|---|---|---|---|
+| PO1 | Held in its family (AI, DGO, Special Order, Training Bulletin, BP/AR, a company's policy), with issuer, number and owner | "Administrative Instruction 4.12, §3, Public Works." | core | L2 | W:8–15; standards R1, R12: one `policy` kind (CN:44); the Oakland profile has no policy source (CN:53) |
+| PO2 | Each provision's force from its own words: mandatory or discretionary; for discretion, who holds it and its stated criteria | "The Director 'may' waive the fee 'for good cause'." | core | L2 | W:35 (ISO shall/should/may; DGO D-18's "command intent"); W:45 (IAD Commander, AI 594 supervisors); K1722 |
+| PO3 | Known only by citation, or recorded as not found with the search made | "The audit says 'per department policy'; we don't have it." / "No written procedure exists." | core | L2 | FA:275 (CN:14); W:72 (illegal-dumping audit: no policies); W:18 (no Oakland pothole standard); CN:102–105; K1724 |
+| PO4 | Found where it hides (intranet, department PDF, vendor portal, records-request production), with the copy's identity: in force, draft, superseded, production, vendor model | "This PDF says draft; is it the one in force?" | core | L2 | W:8 (AIs on the intranet, scattered); W:50 ("XX" effective dates posted); W:54; CN:99–101 |
+| PO5 | History rebuilt from captures and productions: every copy kept, header dates read, silent changes found between captures, a portion overridden until an event | "What did the order say on the night of the incident, and when did it change?" | core | L3 | W:49–53 (header metadata; PC 13650 posts current only; SO 9196 "until revision of K-03"); CN:96–97 |
+| PO6 | Each exercise of discretion a group can see as a record: decider, subject, date, provision, stated reason, outcome | "Fee waived for Acme on 3 March, 'good cause', by the Director." | core | L3 | K1713 (2); LAD §2 CONNECTIONS (K1487, CN:31); W:45 |
+| PO7 | Waivers, variances and exceptions as granted records: power, scope, conditions, expiry | "How often has the Council waived bidding this year?" | core | L3 | W:45 (OMC 2.04.050); W:81 (waiver as routine); CN:115–120, :150–151 |
+| PO8 | Where its force comes from: delegation, resolution, oversight approval, court order, contract | "Who let the Chief issue this, and did the Commission approve it?" | regular | L3 | W:36–42 (Charter §604; AIs under the Administrator; NSA tasks; franchises) |
+| PO9 | Review cycles and owners; an overdue review noticed | "M-03 was due for revision in 2018." | regular | L3 | W:49 (M-03: one-year cycle, due 22 Dec 18, still served); W:94 |
+| PO10 | Organisations' own policies; treatment by, toward and between organisations and governments, their employees, partners and former employees | "Does the hauler's gift policy allow what it gave the inspector?" / "Which firms hire the officials who approved their contracts?" | core | L3 | K1713 (3); W:26 (Form 990 policies); duties R1 `NOT_ACTING_FOR_PUBLIC` (CN:56, :114) |
+| PO11 | Policy against practice: the written rule, the measured practice, the divergence with its denominator | "'Closed' means the crew said so; nobody inspected." | core | L4 | `layouts.html:1123` (CN:80); CN:129–131; K1504 (1) |
+| PO12 | A policy from confidential material keeps that material's confidentiality | "This manual came from inside; it stays in our hidden project." | regular | L2 | `standards.md:110` (instance-wide); DEC-78, K1489 (CN:113, :157); K1740 |
+| PO13 | A reader for policy documents: header block, sections, definitions, applicability, responsibility tables, timeframes | (the machine reads AI 4.12's sections) | core | L2 | `doctypes/regulation.mjs:1–60` needs an enacting formula (CN:65–66); W:58 |
+| PO14 | Decrees and settlements that require a policy, linked to it | "Task 41 requires this policy; was it adopted?" | occasional | L3 | W:40, W:74; `standards/law.mjs:32` (court links end at law; CN:50, :110–112) |
+| PO15 | The assistant finds and proposes the governing policy with its passage, never states it | "Find the policy on pursuits, with the passage." | core | L2 | FA:227, Skill 4 (CN:12); standards R9; D274 |
+| PO16 | Watched for silent change; shared between groups; a vendor manual as a base with local changes | "Lexipol pushed an update; what changed in our county's manual?" | regular | L5 | W:13, W:51 (Lexipol releases and update packets); K1727; K1482 |
+
+### 6B.3 The ladder
+
+| rung | a member can | example | state on 2026-10-06 | planned tranche |
+|---|---|---|---|---|
+| L0 Policy as plain evidence | Capture a policy and cite its passages as legs | "Leg: DGO M-03, §IV.B passage." | **Usable today** | foundation |
+| L1 Policy named | Have policy citations recognised from the profile's series; find every document citing one | "Every staff report citing AI 4.12." | **Not for policies.** `id-spaces` recognises enactment numbers only | T35 (N638, N639) |
+| L2 Policy held | Hold it in its family; each provision's force; cited, not seen, or not found; the copy's identity; sight from its source; a policy reader; the assistant's proposals | "AI 4.12 §3: mandatory, the Public Works Director; §5: discretionary, 'for good cause', held by the Director (cited)." | **One generic kind, not reachable.** `standards` (layer 5, 2,290 lines) holds `policy` as one kind (R1, R12), instance-wide (`standards.md:110`), never without captured text (R2, R9); UI 0 | T35 (N638, N640, N643, N646), except the assistant's proposals (N647) |
+| L3 Policy in time and use | Rebuild its history from captures; overrides until an event; its source of force; review cycles; each act of discretion and each waiver; organisations' policies and treatment; decree links | "SO 9196 replaced K-03 §III from 2019 until K-03's revision; 41 bid waivers in FY24, each with its resolution." | **Not built.** Waivers only as duty `exceptions` and progression exception documents (CN:115–120) | T35 (N642, N643, N644) |
+| L4 Policy applied | Policy against practice with denominators; the patterns of application (§6B.5) | "Closures 'per policy' 1,204; inspected 0 (levels 1–2)." | **Partly built, not reachable.** `conformance` (1,738 lines) judges an office's act, UI 0 | T35 (N645, N651), except machine-raised "Noticed" patterns (N645: a measurement) |
+| L5 Policy watched and shared | Every held policy's published copy watched, every version kept, a change "Noticed"; a whole portal followed; policy sets shared; vendor bases with local changes | "Noticed: DGO K-03 on PowerDMS changed since 2 May." | **Not built.** `following` R10–R11 follows a portal's dataset with snapshot diffs, not documents | T35 for watching held copies (N652); portals, sharing and vendor bases wait (N652, N650, N643) |
+
+### 6B.4 Rungs in the first stages
+
+Bob's decisions these rungs rest on: K1713, K1722, K1724, K1727, K1740 (§6B.8); and K1443 (the machine proposes), K1446 (one home), K1449, K1473, K1483, K1489, K1491.
+
+**Measure first (before N643's requirements are worded, D350).** A census of Oakland's policy families and where each is published (AIs, DGOs, Special Orders, Training Bulletins; OUSD BP/AR; W:8–15); the share of captured policy PDFs whose header states number, effective date and supersession; how many staff reports and audits cite a policy by name only.
+
+**L1 and L2 (T35: N638, N639, N640, N643, N646; the assistant's share N647).**
+- *Design:* No new module. `jurisdictions`' `standard_sources` gains policy series per issuer, with `cite` patterns and key segments (W:88), and issuers of any `sector` (K1453), beyond JUR R31's four government levels; `id-spaces` recognises the series. `standards` gains `family`; provisions as portions, each with `force` {mandatory | discretionary, with the holder (an office) and the stated criteria as a cited passage}, taken only from the document's own words, a finding naming the force it rests on and nothing raising a force the text does not state (K1722); `held: text | cited | absent` (K1724): `cited` holds who cited it and where, and opens a records request through `capture-requests`; `absent` holds the search made (portals checked, the request and its answer); neither is a measure until its text is held, and R2's "never held without captured text" stays for a measure; both are facts a finding may state. `copy` widens to in force, draft, superseded, production, vendor model or undetermined, the claimed version kept apart from the observed evidence (W:96). A policy captured from confidential material (a source, a hidden project) keeps that material's sight until its owner releases it, through `record-core`'s sight classes, instead of the instance-wide sight of `standards.md:110` (K1740, K1489). A `policy` reader in `doctypes` beside `regulation` (header block, numbered sections, definitions, applicability, responsible-party and action tables, timeframes; W:58).
+- *The AI's part:* the Legal/Policy Lookup (`skills`, `answers`) finds and proposes the governing policy with its passage and a proposed force label, labelled; a member confirms; it never states a policy (D274, K1443).
+- *The member decides:* declaring a policy; confirming each force label; recording "cited, not seen" and "not found" with the search.
+- *Size:* 6–8 modules touched, 25–35 requirements (study §4).
+- *Measure first:* the `policy` reader's header and section accuracy on 50 captured AIs, DGOs and Special Orders; the force labeller's agreement with members on 200 provisions before any label is proposed.
+
+**L3 (T35: N642, N643, N644).**
+- *Design:* History from captures and productions: every copy kept, a changed text between two captures of one address held as a version with its basis (the captures, not an enactment; W:49–53); `overrides {portion, until}` (an event or a revision), applied by `inForceAt`; `force_source` (delegation, resolution, oversight approval, court order, contract) citing the instrument (W:36–42); `review_due` and the owner from the header, held in `duties` as the body's own commitment, so an overdue review is an occurrence shown "Noticed", never a violation (K1431, D241). An act of discretion or a waiver is an `events` event of the power used (decider, subject, date, provision, stated reason, outcome; a waiver's scope, conditions and expiry), linked by `duties` to the power held (K1713 (2), K1487). An organisation's own policy is a standard whose issuer is that organisation, measured on its own terms; it becomes a duty only where K1440 allows. A court standard or decree paragraph may link to a policy portion (`law.mjs:32` widened; PO14).
+- *The AI's part:* proposes the differences between versions, overrides, force sources and discretion events from documents a member chose (K1468), labelled.
+- *The member decides:* adopting a version, an override or a force source; recording an act of discretion or a waiver.
+- *Size:* not estimated by the study; BOB words it with the entries.
+- *Measure first:* how many held Oakland policies have two captures with differing text; a year of Legistar bid waivers under OMC 2.04.050.
+
+### 6B.5 Patterns of application (POLICIES and STANDARDS; K1713 (2))
+
+- *What is held:* each act under a policy or standard: decider, subject, date, provision, stated reason, outcome (PO6, PO7, ST9).
+- *What is measured:* rates and distributions of outcomes by decider, by subject and the subject's class, over time, by stated reason, and by relationship (ties, donations, employment, former employment, partnerships, from `connections`, `people`, `money`); consistency (like cases treated alike); outcomes before and after a policy changed; reasons missing or boilerplate; waivers and exceptions as a share of all acts.
+- *How it is shown:* every measure states its denominator, its population and its derivation; a ranking by a stated, measured quantity is analysis (K1471). The machine never names an unstated reason. A disparity the stated reasons do not explain reaches the queue as "Noticed", the machine's, in the hypothesis layer, with its denominator and derivation, never a fact or a finding, and none shown before its false-alarm rate is measured on a gold set (K1473, K1491). A member draws the reading and may publish it with its denominators; people are named as K1483 allows; a signal attaches to the pattern, never to a person.
+- *Where it lives:* `calculations` (recipes over the held acts), `conformance` (comparison rows), the queue's existing "Noticed" path; no new analytic engine. Size: 15–20 requirements with §6C's share (study §4). T35 (N645, N651), except the machine-raised "Noticed" items (N645: no gold set of discretion acts exists).
+
+### 6B.6 Later rungs, planned
+
+**L4: policy applied (T35: N645, N651).**
+- *Design:* Policy against practice: the written provision at its version, the practice measured as a `CALC-` over events or tables, and the divergence with its denominator, practice held beside the rule, never as the rule (K1504 (1)); `conformance` prepares comparison rows for any actor's act (an organisation's included), its determination still judging an office's duty after publication (K102); the patterns of §6B.5.
+- *What must exist first:* L2–L3 in the same tranche, `conformance` (layer 9) reading `standards` and `calculations` (layer 5).
+- *Risks:* a pattern read as proof (denominators, "Noticed", never a verdict).
+
+**L5: watched and shared (T35 in part: N652; N650, N643 wait).**
+- *Design:* `following` watches the published copy of each policy a group holds, on a schedule, keeps every version it sees, and shows a change as "Noticed" for a member to review; a member may follow a whole policy portal (PowerDMS, a department page, GAMUT), within each site's terms (K1727, K1449, K1492). Policy sets travel in packs only by an explicit act, recreated (K1482). A vendor manual (Lexipol) is held as a base with the agency's local changes (W:13, W:51).
+- *What waits, and why:* following whole portals waits on a measurement of each site's terms and fetch volume; sharing waits on the pack path for held standards (LAW L5, K1482), not yet built; the vendor base waits on a vendor manual and its update packet captured to measure (Oakland uses its own DGOs).
+- *Ruled:* K1727 (watching, portals by a member's choice).
+
+### 6B.7 Interfaces
+
+| construct | POLICIES needs from it | POLICIES supplies to it |
+|---|---|---|
+| TIME | `validAt`, as-of, precision; review cycles' dates | versions in force on a date; overrides until an event; review due dates as commitments |
+| ORGANISATIONS | issuers and owner offices of any sector; powers in `duties` (who may waive or decide) | the provision a power rests on; a body's own commitments (review cycles) |
+| PEOPLE | deciders and subjects as `person` entities; tenures, former employees included | who exercised discretion, for whom; treatment between organisations, their employees and former employees |
+| EVENTS | acts of discretion and waivers as events, with deciders and subjects | the provision and stated reason each act cites |
+| MONEY | fees, gifts and payments to set against gift, fee and conflict policies | the policies that govern them |
+| LAW | the `standards` home, work, version and portion; `implements` up to the delegating law | policies below the law that delegates them; hierarchy and conflict (N10) |
+| STANDARDS | the patterns of §6B.5, shared | a body's own targets and procedures that cite a standard |
+| COURTS | decree paragraphs and rulings linked to a policy portion | the policy a decree task requires |
+| ANALYSIS | recipes over held acts; denominators | the populations and outcomes of §6B.5 |
+| QUESTIONS | the Legal/Policy Lookup fenced by `answers` | policies with passages and force for closed-book answers |
+
+### 6B.8 Decisions, all ruled
+
+- **Two constructs** (D1): POLICIES and STANDARDS, each with its own needs and ladder. RULED, K1713 (1).
+- **Discretion and patterns** (K1713 (2)): every exercise of discretion a group can see is a record, and patterns of application are measured (§6B.5). RULED, K1713 (2); unstated reasons never named by the machine, patterns as "Noticed" with denominators, BOB's reading from K1473 and K1491.
+- **Organisations' own policies** (D5): held, with treatment by, toward and between organisations and governments, their employees, partners and former employees. RULED, K1713 (3).
+- **Force** (D2): per provision, read from its own words and cited; the assistant proposes, a member confirms; a finding names the force; none raised beyond the text. RULED, K1722.
+- **Cited, not seen; not found** (D4): two kinds of entry, each a fact a finding may state, neither a measure until its text is held. RULED, K1724.
+- **Confidential policies** (D7): keep their source's sight until its owner releases them. RULED, K1740.
+- **Watching** (D8): held policies' copies watched, every version kept, a change "Noticed"; whole portals by a member's choice, within each site's terms. RULED, K1727.
+- Benchmarks (D3, K1723) and copyrighted text (D6, K1739) are ruled under §6C.8.
+- BOB's (P17): staging, module shape (no new module), the requirements' wording, the HANDOFF of members' words to UX-DESIGN.
+
+## 6C. STANDARDS
+
+*Added 2026-10-06 by BOB #122 with §6B, from the same study (study §2) and evidence. Each rung is re-verified when its tranche is planned.*
+
+### 6C.1 Purpose
+
+Bob, 2026-10-06 (K1713): standards are "more likely to be documented in detail" than policies, and are "not the same construct".
+
+This construct holds documented requirements set by a standards body, a profession, a regulator, an accreditor, or a body itself as a measurable target: building and fire codes, GASB, the Yellow Book, NFPA 1710, CALEA, state 911 answer times, service targets. It holds each at its edition, with who adopted it, by which act, from when and with which local amendments; its clauses with their force; how its text can be read; the edition in force on the date of an act; targets as measures; benchmarks labelled as not binding; accreditation; and conformance across acts with its patterns (§6B.5). A standard that binds no body here is still held, as a benchmark (K1723). It shares `standards` with LAW and POLICIES (K1446).
+
+### 6C.2 Needs register
+
+(Study §2.1.)
+
+| id | need | in a member's words | centrality | rung | evidence |
+|---|---|---|---|---|---|
+| ST1 | Held at its edition, with its issuer (standards body, profession, regulator, accreditor) | "NFPA 1710, 2020 edition." | core | L2 | W:23–24; JUR R31 levels are government only (CN:52, :91); NISO STS `std-meta` (W:64) |
+| ST2 | The adoption: who adopted which edition, by what act, from when, with which local amendments; by reference, voluntary, by accreditation | "Oakland adopted the 2022 Fire Code by ordinance, amending §503." | core | L2 | W:30 (Title 24; OMC ch. 15.04 per edition); W:29 (1 CFR 51); no `incorporates` (CN:49, :106) |
+| ST3 | Its requirements at clause level, each with its force | "§4.1.2.1: turnout time 80 seconds, 90% of the time." | core | L3 | W:35 (ISO shall/should/may; CALEA mandatory or other); W:23 (GASB categories A, B); K1722 |
+| ST4 | How the text can be read: free, reading room, paywalled; text only by a member's own act | "We can cite it but not reproduce it." | regular | L2 | W:24 (NFPA read-only); W:31 (*ASTM v. Public.Resource.Org*); CN:107–108 (K1449 against R2); K1739 |
+| ST5 | The edition in force on the date of an act, with adoption lag | "The permit was issued under the 2019 code, a year after 2022 took effect." | regular | L3 | W:30 (2022 edition effective 2023-01-01; 2025 effective 2026-01-01) |
+| ST6 | Performance targets as measurable standards: metric, threshold, period, the body's own definition | "90% of potholes within 72 hours: was it met?" | core | L3 | W:18, W:59; `layouts.html:1190–1197` (CN:80); CN:137–138 |
+| ST7 | Benchmarks the body never adopted, labelled: a standard aimed at others, a best practice, a peer, its own past | "Oakland answers 911 calls far slower than the state standard." | regular | L3 | W:18, W:71 (the Auditor's 911 audit); W:69 (Yellow Book ¶8.18); W:17 (GFOA); CN:142; K1723 |
+| ST8 | Accreditation and certification: status, assessments, findings | "CALEA's last assessment found 12 standards unmet." | occasional | L3 | W:25 (CALEA: 440+ standards, four-year cycle) |
+| ST9 | Conformance measured across many acts, with the patterns of §6B.5 | "Inspections met the code's interval in 61% of cases, 40% in District 6." | core | L4 | W:73–74 (OIG task audits); K1713 (2) |
+| ST10 | Imported from structured sources (NISO STS) and followed to new editions | "A new edition of NFPA 1710 is out; what changed?" | occasional | L5 | W:64 |
+
+### 6C.3 The ladder
+
+| rung | a member can | example | state on 2026-10-06 | planned tranche |
+|---|---|---|---|---|
+| L0 Standard as plain evidence | Capture a standard and cite its passages | "Leg: NFPA 1710 §4.1.2.1, read in the reading room." | **Usable today** | foundation |
+| L1 Standard named | Have its designation and edition recognised | "NFPA 1710-2020 recognised in a staff report." | **Not built** | T35 (N638, N639) |
+| L2 Standard held at an edition | Its issuer, edition, adoption and amendments, and access status; text only by a member's act; passages only in publications | "CA Fire Code 2022, adopted by Ordinance X from 2023-01-01, §503 amended; paywalled, cited." | **Not built.** `standards` has no edition, no issuer outside government levels, no `incorporates` | T35 (N638, N643, N648), except the published rendering (N649: P6) |
+| L3 Standard structured and measured | Clauses with force; the edition in force on a date; targets measured; benchmarks labelled; accreditation | "Benchmark, not binding on Oakland: state 911 standard, 90% in 15 s; Oakland 54% in 2024." | **Not built** | T35 (N642, N643, N645) |
+| L4 Conformance across acts | Conformance across acts with the patterns of §6B.5; nonconformity only against a binding standard | "Met the code's interval in 61% of 2,140 inspections." | **Partly built, not reachable** (`conformance`) | T35 (N645, N651), except machine-raised "Noticed" patterns (N645) |
+| L5 Imported and followed | Import from NISO STS; follow new editions | "NFPA 1710's 2025 edition: 14 clauses changed." | **Not built** | waits (N641, N652: measurements) |
+
+### 6C.4 Rungs in the first stages
+
+Bob's decisions these rungs rest on: K1713, K1722, K1723, K1724, K1739 (§6C.8); K1446, K1449, K1453.
+
+**Measure first.** Which standards Oakland adopts by reference and by which ordinances (OMC 15.04, per edition; W:30); each one's access status (ICC and NFPA reading rooms; W:24, W:31); which targets Oakland's budget publishes (W:18: none for potholes).
+
+**L1 and L2 (T35: N638, N639, N643, N648; N649 waits on P6).**
+- *Design:* `standards` gains `designation`, `edition`, `issuer` (an entity of any `sector`, K1453), `adoption {act, edition, from, amendments, mode: by reference | voluntary | by accreditation}` citing the adopting act, and an `incorporates {edition}` law relation, local amendments held as portions amending the adopted edition (temporal and referential kept apart, D192). `access` (free, reading room, paywalled) is always held with the edition, citation and adoption; the text is held only when a member captures it by their own act (K1449), kept inside the group; a standard used as a measure is never held without captured text (R2 stays, K1724). `case-checker` refuses a publication that quotes more of a copyrighted standard than the passages a finding relies on (K1739). `jurisdictions` holds standard issuers and designation patterns; `id-spaces` recognises them.
+- *The AI's part:* proposes the edition and adoption act from captured ordinances, labelled (N647 waits, as §6B.4).
+- *The member decides:* declaring the standard, its edition and adoption; capturing paywalled text by their own act.
+- *Size:* 4–6 modules, 15–25 requirements (study §4).
+- *Measure first:* the share of Oakland adopting ordinances whose edition and amendments read mechanically.
+
+**L3 (T35: N642, N643, N645).**
+- *Design:* clauses as portions with force (requirement, recommendation, permission; mandatory or other; GASB category), read from the text (K1722); `inForceAt` over adoptions, with the adoption lag stated; a target is a standard with metric, threshold, period and the body's own definition, "was it met?" a `CALC-` (K1471). Whether a standard binds a body is derived from its adoption or a law that imposes it; any other is a **benchmark**, held, shown and publishable, always labelled "not binding on" the body; a finding may say "slower than" or "below", never "violated" or "nonconforming" (K1723). Accreditation assessments are `events`, their unmet standards cited.
+- *The AI's part:* proposes clause force and target definitions from the text; never labels a benchmark binding.
+- *The member decides:* adopting a target's definition; declaring a comparison a benchmark.
+- *Measure first:* whether 911 answer-time data and budget performance measures are held as tables.
+
+### 6C.5 Patterns of application
+
+As §6B.5, over acts measured against a standard (ST9): conformance rates by decider, subject, area, time and relationship, each with its denominator; a pattern against a benchmark says "below", never "nonconforming" (K1723).
+
+### 6C.6 Later rungs, planned
+
+**L4: conformance across acts (T35: N645, N651).** `conformance` refuses a nonconforming determination or comparison against a standard that does not bind the body (K1723); rates across acts are recipes in `calculations`, patterns as §6B.5. *Risks:* a benchmark read as a breach (labels, the refusal).
+
+**L5: imported and followed (waits: N641, N652).** NISO STS metadata imported as captured documents on the same keys (W:64); new editions followed and their clauses compared. *What waits, and why:* no NISO STS source for a standard Oakland adopts has been measured (bodies sell their standards and serve reading rooms, W:31), and following editions waits on a measurement of the issuers' sites' terms and fetch volume.
+
+### 6C.7 Interfaces
+
+| construct | STANDARDS needs from it | STANDARDS supplies to it |
+|---|---|---|
+| TIME | `validAt`; adoption dates; target periods | the edition in force on a date |
+| ORGANISATIONS | issuers of any sector; adopting bodies | duties a binding standard imposes; accreditation status |
+| EVENTS | adoptions, assessments and the acts measured | the clause each act is measured against |
+| MONEY | amounts reported under GASB and audited under the Yellow Book | the accounting and audit standards they follow |
+| LAW | `standards` home; the adopting ordinance; `incorporates` | standards incorporated into law, with amendments |
+| POLICIES | §6B.5's patterns, shared | standards a policy adopts or cites |
+| ANALYSIS | `CALC-`s for targets and rates | thresholds and metrics, binding or benchmark |
+| QUESTIONS | `answers`' fence | editions, clauses and access status for closed-book answers |
+
+### 6C.8 Decisions, all ruled
+
+- **Two constructs; organisations' standards** (D1, D5): RULED, K1713 (1), (3). **Patterns** (§6C.5): RULED, K1713 (2).
+- **Force** (D2): per clause, read from the text and cited, a member confirming. RULED, K1722.
+- **Benchmarks** (D3; OP1): a standard not binding on a body is held, shown and publishable as a labelled benchmark; nonconformity only against a binding standard; the comparison is a fact, not a position on policy (K14). RULED, K1723.
+- **Captured text** (D4): R2's "never held without captured text" stays for a standard used as a measure. RULED, K1724.
+- **Copyrighted and paywalled standards** (D6): edition, citation, adoption and access always held; text only by a member's own act (K1449), kept inside the group; publications quote only the passages a finding relies on. A product policy, not legal advice. RULED, K1739.
+- **Sight** (D7): standards keep group-wide sight (K1489); confidential policies are §6B's. RULED, K1740.
+- BOB's (P17): as §6B.8.
 
 ## 7. COURTS
 
@@ -1105,6 +1318,7 @@ Each rule binds every rung of every construct, including the planned ones. Where
 | Hypotheses have a place, never in findings (K1467) | A member's hypotheses (cause, identity, relation, flow, other) are labelled rows of the working inquiry; no world fact references one, and a store-side check refuses a hypothesis id in a leg, a total, a check or an absence level; in `explore` a hunch or hypothesis may be a labelled hop of the working inquiry, the chain staying a lead on which no finding rests (K1487) | K1467; constructs-2 §4.2 (h); TAD §10.11 |
 | One connection shape, one bounded as-of exploration, never machine-asserted (K1469) | Every relationship keeps its one owner and presents it in the shape of `connection-grammar`; `explore` is the one cross-owner read, bounded (depth 8, at most 10; fan-out 1,000; 5,000 nodes), as of a date, each hop cited and graded, weakest hop governing; ordered by hop count then date, and sortable by a stated quantity; no score standing for a judgment as a fact (a signal in the hypothesis layer may carry one, K1473); fact-based rankings are analysis (K1471), and no network measure such as centrality or "most connected" across mixed kinds of link (a count of one kind of link is a fact); it writes nothing and asserts no connection | K1469; K1471; constructs-2 §4.4; D53, D91 |
 | Machine signals live in the hypothesis layer (K1473) | A combined measure with a stated formula is a computed fact (analysis, K1471). A score standing for a judgment (importance, suspicion, significance, or "this may have been a factor in that") is a signal: produced by the machine only with its method, inputs, each input's contribution and its measured false-alarm rate, shown only after a false-alarm test; a member may take it up as a hunch or hypothesis; never cited by a claim, never moving a grade or a finding, never published unless a member proves the point with evidence; a suggested cause stays "proposed: may have been a factor" until evidence makes it a Cause (DEC-84 (10)); a signal attaches to a pattern or a transaction, never stored as a label on a person | Bob, C12 (K1473); K1467; amends DEC-22, DEC-82, DEC-89, DEC-92 |
+| Force as the text states it; nonconformity only against a binding standard (K1722, K1723) | A provision's force is taken from its own words and cited, never raised by the machine; a finding names the force it rests on; a standard not binding on a body is a labelled benchmark, compared ("slower than", "below"), never "violated" or "nonconforming" | K1722; K1723; OP1, K14 |
 | World date-times carry precision and zone (K1464) | Every world date-time is held with its precision and zone (by default the jurisdiction's), so a day-precision fact is never an exact midnight; comparisons stay three-valued | K1464; K1444 (iii); constructs-2 §3 TIME |
 | Extraction is targeted (K1468) | The machine reads facts out of documents and tables only at a member's request for a basis or claim, or by a member's act scoped to a body and period; never a sweep of every reading; ledgers stay captured tables until asked | K1468; constructs-2 §7 |
 | The group's own money is followed and unmarked (K1463) | The group's payments are ordinary money facts; no "ours" mark is stored or derived; a fee quote stays the group's correspondence and the fact paid cites it | K1463; action-plans R26 |
