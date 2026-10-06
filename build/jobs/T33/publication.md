@@ -37,3 +37,9 @@ Found outside my module by T33-63 (full text in my record, Work (T33-63), "Other
 (e) public-read (T33-65): calculation inputs reach the published bucket by ratification R39's copy (answered `held: "evidence"`), registered at `caseFilePath("calculation", [calc, sha])`.
 (f) Importers of the moved names (ratification, review, case-authoring, affordances, docket, queue-producers) read through publication's delegates until their next jobs.
 (g) Generated artifact staled: `bio-plane/dist/bio-plane.bundled.mjs`.
+
+## J3 · COMPLETE
+
+T33-63 complete (B2–B5 applied; pushed `job/T33/publication` @ 7dc5a8c191). The split's deletion: the moved code out, case-tensions created at this module's creation with the seven-door provider registered (R61), the three tables, the caseMember fact and the revision step dropped, delegates kept for importers (Rules (9) item 4), tables declared with their classes (Rules (6)). New: R62 (`registerOrderSource`, `stampEdition`, `stampsOf`, table `edition_stamps`, exempt), R63 (`editionTimeline`, R53's `timeline`), R22's calculation inputs (registered by hash at their case-file path, answered `held: "evidence"` for ratification R39's copy). case-grammar real, nothing injected.
+publication 97 pass, 0 fail, 1 todo (R30); case-tensions 23/23; dependents as tranche/T33 plus the three reds in my REPORT (a), (b). format 0; coverage 39/39; ownership 13 files, 0 failures; architecture 3 failures, all the missing `case-tensions` edge (0 with the row applied locally).
+For modules.json: uses add `case-tensions`, drop `contradiction` and `capture`. Deferred: R30 only. Size (session_01NzjiMp4zjfAgrLGoEk8GYf): test runs 16, module lines 3126. Record: build/jobs/T33/publication.md, Work (T33-63).
