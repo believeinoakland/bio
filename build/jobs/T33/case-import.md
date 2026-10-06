@@ -1,6 +1,6 @@
 # case-import (T33)
 
-**Status** · session_01Y1URYHRYBVXZLpDjSMzS7r · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_01Y1URYHRYBVXZLpDjSMzS7r · depth 2 · WAITING ON BOB (J2) · handled B3
 
 ## Progress (T33-67)
 
