@@ -21,3 +21,7 @@
 - `checks/format.mjs`: 126 modules, 125 requirements files; 0 failures. `checks/architecture.mjs … local-facts`: 11 product files, 32 relative imports; 0 failures. `checks/coverage.mjs … local-facts`: 9 of 9 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … local-facts tranche/T34`: 9 files changed; 0 failures.
 
 Size (session_01Sf3T2zSYHW6geULZ8hLeeo): test runs 7, module lines 769
+
+## J1 · COMPLETE
+
+T34-19 and T34-78 applied on job/T34/local-facts (0b46d70384, record 0d18d3ff51). R6: a named closure list's year has its own path (list=<name>) and is a fact as any holiday year is; DEC-149's three local-facts strings changed, each named by a test. local-facts 38/38; users 1228/1230, the 2 reds inherited (control-plane catalogue-end ADMINS_FIRST; op-declarations t33 groupkeyset spec), red without this change. Checks: format, architecture, coverage (9/9), ownership all 0 failures. Stale for the layer close: bio-plane/dist and release bundles. Details in the record.
