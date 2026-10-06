@@ -68,8 +68,11 @@ const PLANE_ENTRY = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs",
 const AIK = "aik-" + "a".repeat(64);
 const REVOKED = "aik-" + "c".repeat(64);
 const CLAUDE_TOKEN = "sk-ant-requirements-fixture-never-echoed";
-/* R6 (K1601 (1)): the member's own reference, as the plane sends it; with no `judgements`, model turns run (R58). */
-const ACCOUNTS = Object.freeze({ kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER });
+/* R6 (K1601 (1), K1755): the account that serves the member's act, as the plane sends it (here the member's own,
+   `level: "member"`); with no `judgements`, model turns run (R58). */
+const ACCOUNTS = Object.freeze({ kind: "apikey", level: "member", secret: CLAUDE_TOKEN, member: MEMBER });
+/* K1755: the group's API key, serving the same member's act. */
+const GROUP_ACCOUNT = Object.freeze({ kind: "apikey", level: "group", secret: CLAUDE_TOKEN, member: MEMBER });
 const wide = [{ bound: "fetches", allowed: 50 }, { bound: "subsessions", allowed: 50 },
               { bound: "wallclock", allowed: 500000 }, { bound: "runtime", allowed: 5000 }];
 
@@ -359,7 +362,12 @@ section("R2–R7 · each malformed request refused by its code, in order, with n
     ["R6", "account an array", { ...base, account: [] }, 400, "BAD_ACCOUNT"],
     ["R6", "account a string", { ...base, account: "x" }, 400, "BAD_ACCOUNT"],
     ["R6", "account of a kind agent-model does not take", { ...base, account: { ...ACCOUNTS, kind: "password" } }, 400, "BAD_ACCOUNT"],
-    ["R6", "account naming no member", { ...base, account: { kind: "apikey", secret: CLAUDE_TOKEN } }, 400, "BAD_ACCOUNT"],
+    ["R6", "account naming no member", { ...base, account: { kind: "apikey", level: "member", secret: CLAUDE_TOKEN } }, 400, "BAD_ACCOUNT"],
+    ["R6", "account naming no level", { ...base, account: { kind: "apikey", secret: CLAUDE_TOKEN, member: MEMBER } }, 400, "BAD_ACCOUNT"],
+    ["R6", "account at the project level (there is none)", { ...base, account: { ...ACCOUNTS, level: "project" } }, 400, "BAD_ACCOUNT"],
+    ["R6", "account at the instance level (there is none)", { ...base, account: { ...ACCOUNTS, level: "instance" } }, 400, "BAD_ACCOUNT"],
+    ["R6", "the group's account as a subscription (the group's is an API key only)", { ...base, account: { ...GROUP_ACCOUNT, kind: "subscription" } }, 400, "BAD_ACCOUNT"],
+    ["R6", "the group's account with an empty secret", { ...base, account: { ...GROUP_ACCOUNT, secret: "" } }, 409, "NO_ACCOUNT"],
     ["R6", "a body still carrying claude_accounts", { ...base, account: ACCOUNTS, claude_accounts: {} }, 400, "BAD_ACCOUNT"],
     ["R6", "account with an empty secret", { ...base, account: { ...ACCOUNTS, secret: "" } }, 409, "NO_ACCOUNT"],
     ["R7", "turns zero", { ...base, turns: 0 }, 400, "BAD_TURNS"],
@@ -459,6 +467,16 @@ section("R10, R57 · the run's recorded account holder must be the member whose 
   await reset(mf, { payer: "member:sam" });
   const own = await runOp(mf, { ...base, account: { ...ACCOUNTS, member: "member:sam" }, judgements: J() });
   t("R10 (control): the starter's own reference drives", own.status, 200);
+  await reset(mf, { payer: "member:sam" });
+  const group = await runOp(mf, { ...base, account: GROUP_ACCOUNT, judgements: J() });
+  t("R10, R57 (K1755): the group's API key serving Ruth's act, on Sam's run -> refused the same way: the group key serves "
+    + "a member's act, never the group's own",
+    [group.status, group.out.code, group.out.recorded, group.out.supplied, JSON.stringify(group.out).includes(CLAUDE_TOKEN)],
+    [409, "RUN_NAMES_A_DIFFERENT_PAYER", "member:sam", MEMBER, false]);
+  await reset(mf, { payer: "member:sam" });
+  const groupOwn = await runOp(mf, { ...base, account: { ...GROUP_ACCOUNT, member: "member:sam" }, judgements: J() });
+  t("R10, R57 (control): the group's API key serving Sam's own act on Sam's run drives, still Sam's act",
+    [groupOwn.status, groupOwn.out.claude_account], [200, { available: true, kind: "apikey", level: "group", member: "member:sam" }]);
 }
 
 section("R11 · op=airunlog: silent 502, refused 403; resumed_from counts its entries");
@@ -1033,11 +1051,16 @@ section("R29 · claude_account and principal");
 {
   await reset(mf);
   const a = await runOp(mf, { ...base, judgements: J(), account: ACCOUNTS });
-  t("R29: the member's reference arrived -> {available: true, kind, member}, never the secret", a.out.claude_account,
-    { available: true, kind: "apikey", member: MEMBER });
+  t("R29: the member's reference arrived -> {available: true, kind, level, member}, never the secret", a.out.claude_account,
+    { available: true, kind: "apikey", level: "member", member: MEMBER });
   await reset(mf);
   const s = await runOp(mf, { ...base, judgements: J(), account: { ...ACCOUNTS, kind: "subscription" } });
-  t("R29: a subscription is named as one", s.out.claude_account, { available: true, kind: "subscription", member: MEMBER });
+  t("R29: a subscription is named as one", s.out.claude_account, { available: true, kind: "subscription", level: "member", member: MEMBER });
+  await reset(mf);
+  const g = await runOp(mf, { ...base, judgements: J(), account: GROUP_ACCOUNT });
+  t("R29 (K1755): the group's API key is named at its level, with the member whose act it serves, never the secret",
+    [g.out.claude_account, JSON.stringify(g.out).includes(CLAUDE_TOKEN)],
+    [{ available: true, kind: "apikey", level: "group", member: MEMBER }, false]);
   const n = await call(mf, "run", { method: "POST", body: JSON.stringify({ ...base, judgements: J() }) });
   t("R29: with none, the answer is never a 200: R6 refused it before any step, {available: false} never reaches the wire",
     [n.status, n.out.code, "claude_account" in n.out], [409, "NO_ACCOUNT", false]);
@@ -1049,7 +1072,7 @@ section("R30, R31 · GET /version; anything else 404 UNKNOWN");
 {
   const v = await call(mf, "version", { method: "GET" });
   t("R30, R58: GET /version -> 200 {ok, name, version: env.VERSION} and the one statement of when model turns run",
-    [v.status, v.out.ok, v.out.name, v.out.version, /through agent-model exactly when the member's own Claude account reference arrives/.test(v.out.model_turns)],
+    [v.status, v.out.ok, v.out.name, v.out.version, /through agent-model exactly when the Claude account that serves the member's act \(the member's own reference, or the group's API key\) arrives/.test(v.out.model_turns)],
     [200, true, "agent-worker", "req-test", true]);
   const bare = newMf({ VERSION: "" });
   t("R30: and \"0.0.0\" when env.VERSION is empty", (await call(bare, "version", { method: "GET" })).out.version, "0.0.0");
@@ -1067,27 +1090,41 @@ section("R30, R31 · GET /version; anything else 404 UNKNOWN");
 }
 
 /* ============================================================ the cascade, pure */
-section("R32, R33 · the cascade: the member's own reference only");
+section("R32, R33 · the cascade: the one account that arrived, at its own level (member or group)");
 {
   const PUBLISHED_VALUE = readFileSync(fileURLToPath(new URL("../../bio-plane/dist/SECRETS.txt", import.meta.url)), "utf8")
     .split("\n").find((l) => l.startsWith("ADMIN_TOKEN=")).split("=")[1].trim();
   const st = async (a) => (await resolveClaudeCascade(a)).levels.map((l) => `${l.level}:${l.state}`);
-  t("R32: one level, member; no project or instance level is judged, held or answered", [...CASCADE_ORDER], ["member"]);
-  t("R32: unset (no non-empty secret), revoked_by_publication, or available — no shape check beyond agent-model's kinds",
-    [await st({ kind: "apikey", secret: "", member: MEMBER }), await st({ kind: "apikey", secret: PUBLISHED_VALUE, member: MEMBER }),
-     await st({ kind: "subscription", secret: "x", member: MEMBER }), await st({ kind: "other", secret: "x", member: MEMBER })],
-    [["member:unset"], ["member:revoked_by_publication"], ["member:available"], ["member:unset"]]);
+  t("R32: two levels, member and group; no project or instance level is judged, held or answered", [...CASCADE_ORDER], ["member", "group"]);
+  t("R32: unset (no non-empty secret), revoked_by_publication, or available, at the account's own level — no shape check "
+    + "beyond agent-model's kinds (the group's an API key only)",
+    [await st({ ...ACCOUNTS, secret: "" }), await st({ ...ACCOUNTS, secret: PUBLISHED_VALUE }),
+     await st({ ...ACCOUNTS, kind: "subscription", secret: "x" }), await st({ ...ACCOUNTS, kind: "other", secret: "x" }),
+     await st(GROUP_ACCOUNT), await st({ ...GROUP_ACCOUNT, secret: "" }), await st({ ...GROUP_ACCOUNT, secret: PUBLISHED_VALUE }),
+     await st({ ...GROUP_ACCOUNT, kind: "subscription" }), await st({ ...ACCOUNTS, level: "project" })],
+    [["member:unset"], ["member:revoked_by_publication"], ["member:available"], ["member:unset"],
+     ["group:available"], ["group:unset"], ["group:revoked_by_publication"], ["group:unset"], ["member:unset"]]);
   const r = await resolveClaudeCascade(ACCOUNTS);
-  t("R32: available resolves with its kind", [r.available, r.level, r.kind, r.member], [true, "member", "apikey", MEMBER]);
-  const none = await resolveClaudeCascade({ kind: "apikey", secret: PUBLISHED_VALUE, member: MEMBER });
-  t("R32: anything else -> {available:false, reason:NO_ACCOUNT, level:member, detail}",
+  t("R32: available resolves with its kind and level", [r.available, r.level, r.kind, r.member], [true, "member", "apikey", MEMBER]);
+  const rg = await resolveClaudeCascade(GROUP_ACCOUNT);
+  t("R32 (K1755): the group's API key resolves at the group level, for the member whose act it serves",
+    [rg.available, rg.level, rg.kind, rg.member], [true, "group", "apikey", MEMBER]);
+  const none = await resolveClaudeCascade({ ...ACCOUNTS, secret: PUBLISHED_VALUE });
+  t("R32: anything else -> {available:false, reason:NO_ACCOUNT, level (the account's own), detail}",
     [none.available, none.reason, none.level, typeof none.detail], [false, "NO_ACCOUNT", "member", "string"]);
-  t("R32: the status never carries a secret", JSON.stringify(r).includes(CLAUDE_TOKEN), false);
-  t("R33: cascadeToken returns {level: member, reference} in agent-model's terms exactly when R32 resolves, else null",
-    [await cascadeToken(ACCOUNTS), await cascadeToken({ ...ACCOUNTS, kind: "subscription" }),
-     await cascadeToken({ ...ACCOUNTS, secret: PUBLISHED_VALUE }), await cascadeToken(undefined)],
+  const noneG = await resolveClaudeCascade({ ...GROUP_ACCOUNT, secret: "" });
+  t("R32: …at the group level for the group's account", [noneG.available, noneG.reason, noneG.level], [false, "NO_ACCOUNT", "group"]);
+  const absent = await resolveClaudeCascade(undefined);
+  t("R32: …and member when none arrived", [absent.available, absent.reason, absent.level], [false, "NO_ACCOUNT", "member"]);
+  t("R32: the status never carries a secret", [r, rg, none, noneG].some((x) => JSON.stringify(x).includes(CLAUDE_TOKEN)), false);
+  t("R33: cascadeToken returns {level, reference} in agent-model's terms, level the account's own, exactly when R32 "
+    + "resolves, else null",
+    [await cascadeToken(ACCOUNTS), await cascadeToken({ ...ACCOUNTS, kind: "subscription" }), await cascadeToken(GROUP_ACCOUNT),
+     await cascadeToken({ ...ACCOUNTS, secret: PUBLISHED_VALUE }), await cascadeToken({ ...GROUP_ACCOUNT, kind: "subscription" }),
+     await cascadeToken(undefined)],
     [{ level: "member", reference: { kind: "apikey", key: CLAUDE_TOKEN } },
-     { level: "member", reference: { kind: "subscription", token: CLAUDE_TOKEN } }, null, null]);
+     { level: "member", reference: { kind: "subscription", token: CLAUDE_TOKEN } },
+     { level: "group", reference: { kind: "apikey", key: CLAUDE_TOKEN } }, null, null, null]);
 }
 
 section("R34 · SURFACE and fleet-member.json");
