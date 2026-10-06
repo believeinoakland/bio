@@ -2501,3 +2501,17 @@ response: **Decided by the design session, 2026-10-06:** (1) yes: on the Wizards
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the Wizards screen).
 owed: (BOB) confirm that R3's derivative of a Civicsmith script creates a new script with `origin: group` (never a version of the Civicsmith script), recording what it was based on; a notice to the group's wizard editors when the base gets a newer approved version.
+
+### DEC-159 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob, 2026-10-06: "when going through the screens, I'm not seeing any mouseovers or other elements that support members and increase information density.")
+for: bob-session
+question: How the screens carry the explanations Bob's rulings already require (DEC-129 rule 4: explained where it appears, and findable again; DEC-82: every grade and bar step opens its meaning on hover, focus or tap, and a strength's hover names its weakest leg), which the mockups had not drawn.
+why it is Bob's: it is not: carrying out his rulings; decided by the design session (P17) and reported.
+provisional: the measures map (DEC-82); the wide path (DEC-129); the visual language's marks (DEC-138).
+alternative: a help page only; printed explanations under every mark (loses density).
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06:** (1) every mark explains itself on hover, keyboard focus or tap: grades (the scale, what A and D mean, "a grade never says whether something is true"), strengths (the weakest-thing rule, and the weakest part here with what would raise it), the five gaps, origin tags, the queue's kinds, due dates, hints and hunches, the outward tag, each button's weight, and each step of the path and the ladders; (2) names of people, offices and documents carry a dotted underline and open a card (who or what, where it came from, how much the group holds about it); (3) one explanation at a time, beside the thing and never over it, closed by Escape or moving away, announced to screen readers as the element's description; (4) the visual language gains the tip and the card (`.cs-tip`, `.cs-card`); (5) the mockups carry it on every screen (438 marks across 42, each with its text, checked).
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `visual-language/components.css` and `visual-language.html` §6a; `layouts.html` (every screen, and its "Explained where it appears" section); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) the explanations as interface words (held with the translation layer, DEC-127, DEC-157), the tip and card on every member screen when built, and each card's facts from the record (an office's holder today, a person's position and source, a document's capture and citations).

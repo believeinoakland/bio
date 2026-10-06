@@ -492,6 +492,18 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
   .cs-tabs a[aria-current] { color: var(--c-ink); font-weight: 700; box-shadow: inset 0 3px 0 var(--c-accent); }
 }
 
+/* ============================================================
+   Explanations where they appear (DEC-129 rule 4, DEC-82 disclosure, DEC-159)
+   Every mark opens its meaning on hover, focus or tap; a name opens a card. One tip at a time, never over the thing
+   it explains; Escape or moving away closes it.
+   ============================================================ */
+.cs-tip { position: fixed; z-index: 50; max-width: 300px; background: var(--c-sheet); color: var(--c-ink); border: var(--hair-strong);
+  box-shadow: 0 4px 14px rgba(0,0,0,.14); padding: 8px 10px; font: 400 var(--t-sm)/1.45 var(--f-sans); border-radius: var(--r-1); pointer-events: none; }
+.cs-tip b { font-weight: 600; } .cs-tip .more { display: block; margin-top: 4px; color: var(--c-muted); font-size: var(--t-xs); }
+.cs-tip[hidden] { display: none; }
+[data-tip] { cursor: help; } [data-tip]:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.cs-card { text-decoration: underline dotted var(--c-rule-strong); text-underline-offset: 3px; cursor: pointer; }
+
 /* Layout of this page: a reading document (the design-phase pages' order: what it is, the parts, the decisions, the
    question) around one live viewer that draws any screen, journey step or wizard step in a desktop or phone frame. */
 html, body { background: var(--c-ground); }
@@ -810,6 +822,11 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <p class="src">journeys.html (DEC-128 to DEC-137); screens/library.json (DEC-121 (9), DEC-130); screens/registry.json; check_walk.mjs proves every wizard step's control is on its screen</p>
 </section>
 
+<section id="explain">
+<h2 class="sec">Explained where it appears</h2>
+<p class="intro">Every mark on every screen opens its meaning on hover, keyboard focus or tap: grades, strengths, gaps, origin tags, queue kinds, due dates, hints, the weight of every button, and the steps of the path and the ladders. 438 marks across the 42 screens, each with its explanation. A question's strength names its weakest part and what would raise it. Names of people, offices and documents (dotted underline) open a card. Try it on any screen in the viewer above (DEC-159; your rule 4 of the wide path; the measures map's disclosure, DEC-82).</p>
+</section>
+
 <section id="noai">
 <h2 class="sec">4. Civicsmith without the assistant</h2>
 <p class="intro">Your rulings of 5 and 6 October: a group may run without the assistant, and a member reached by no account (none of their own, and no group key) uses Civicsmith without it. These are the rules every screen follows for that member, and they are drawn in every journey above.</p>
@@ -948,7 +965,9 @@ function btn(op, label, o = {}) {
 /* a plain control with no act (navigation, a link) */
 const link = (label, icon) => `<a href="#" onclick="return false" class="cs-btn" data-tone="quiet">${icon ? I(icon) : ''}${esc(label)}</a>`;
 const grade = (scale, l, full) => `<span class="cs-grade" data-scale="${scale}" tabindex="0" aria-label="${scale} ${l}">${I(scale === 'subject' ? 'subject' : scale)}${full ? `<span class="sc">${full}</span> ` : ''}${l}</span>`;
-const strength = (c, n, phrase, t) => `<span class="cs-strength">${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
+// a name or object that opens a card on hover, focus or tap (DEC-159)
+const card = (text, tip) => `<span class="cs-card" tabindex="0" data-tip="${esc(tip)}">${text}</span>`;
+const strength = (c, n, phrase, t, weak) => `<span class="cs-strength"${weak ? ` data-weak="${esc(weak)}"` : ''}>${grade('capture', c)}${grade('connection', n)}${t ? grade('testimony', t) : ''}<span class="phrase">${phrase}</span></span>`;
 const gapm = (k, html) => `<span class="cs-gap" data-gap="${k}">${I({undetermined:'undetermined', withheld:'withheld', unrated:'unrated', nobody:'nobody', refused:'refused'}[k])}<span>${html}</span></span>`;
 const origin = (k, t) => `<span class="cs-origin" data-origin="${k}">${I({machine:'machine', elsewhere:'elsewhere', unevaluated:'unevaluated', accepted:'accepted', flagged:'flagged'}[k])}${esc(t)}</span>`;
 const kindm = k => `<span class="cs-kind" data-kind="${k}">${I(k === 'todo' ? 'todo' : k)}${{todo:'To do', noticed:'Noticed', status:'Status'}[k]}</span>`;
@@ -1016,7 +1035,7 @@ SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `
   ${sec('Your group', `${field('mk-gname', 'Group name', 'Lakeshore Tenants', { help: 'What people read: at the head of your pages, invitations and published cases. Change it whenever you like. Your short name, lakeshore-tenants, was fixed at install and stays in your addresses and signatures.' })}<div class="mk-logo">${I('add')} Add your logo (optional)</div>${acts(btn('groupnameset', 'Save the name'))}
    ${field('mk-gdom', 'Your group\'s website (optional)', 'lakeshoretenants.org', { help: 'Only if your group has a website you can put a file on. Verifying it lets readers confirm a published case really comes from you: Civicsmith gives you one small file to place on the site, then checks it. Your public page will name the site, so a group that wants to stay unnamed leaves this empty. You can add it later.' })}${acts(btn('groupdomainset', 'Verify the address'))}`)}
   ${sec('Places and languages', `${choice('mk-place', 'The places whose rules apply', ['Choose a place…', 'Oakland, California (City, County, State)', 'Other (not listed)'], 'Oakland, California (City, County, State)', { onchange: 'this.closest(\'main\').classList.toggle(\'mk-other\', this.value.indexOf(\'Other\') === 0)', help: 'The places Civicsmith holds the rules for: their deadlines, holidays, offices and records laws, each with its source. Your place not listed? Choose “Other”: everything else works, and you enter due dates and offices yourself. New places arrive with Civicsmith\'s releases.' })}<div class="mk-ifother">${field('mk-placewant', 'Your place, if it is not listed (optional)', '', { act: 'owed:placewanted DEC-150', help: 'For example “Fresno, California”. Kept in your group\'s Civicsmith and never sent anywhere. When an update brings its rules and offices, your administrators are told once in their queue and can choose it here.' })}${acts(btn('owed:placewanted DEC-150', 'Save your place'))}</div>${checks('Languages your members use', [['English', true], ['Español', true], ['Tiếng Việt', false]])}${acts(btn('profilesset', 'Save places and languages'))}`)}
-  ${sec('Offices and seats', `<div class="mk-ifheld"><div class="cs-sheet">${row(I('group'), 'City Clerk · <span class="muted">held by Asha Rao</span>', '<span class="cs-origin" data-origin="machine">' + I('machine') + 'From the city\'s roster</span>')}${row(I('group'), 'Director of Public Works · <span class="muted">held by L. Chen</span>', '<span class="cs-origin" data-origin="machine">' + I('machine') + 'From the city\'s roster</span>')}${row(I('group'), 'Council District 3 · <span class="muted">held by J. Ortega since 2023</span>', '<span class="cs-origin" data-origin="machine">' + I('machine') + 'From Legistar</span>')}</div>${acts(btn('officesseed', 'Confirm these offices'))}</div><div class="mk-ifother">${note('Nothing is filled in here: Civicsmith does not hold the offices and seats for Fresno yet. Add the offices your group deals with yourself, now or at any time; each is marked as added by your group. When an update brings Fresno\'s rules, your administrators are told once in their queue and can choose it under Places; the offices you added stay.')}${acts(btn('entitycreate', 'Add an office yourself'))}</div>`)}
+  ${sec('Offices and seats', `<div class="mk-ifheld"><div class="cs-sheet">${row(I('group'), 'City Clerk · <span class="muted">held by ' + card('Asha Rao', '<b>Asha Rao</b> · City Clerk since March 2021, from the city&#39;s roster. Cited in 3 documents your group holds.') + '</span>', '<span class="cs-origin" data-origin="machine">' + I('machine') + 'From the city\'s roster</span>')}${row(I('group'), 'Director of Public Works · <span class="muted">held by ' + card('L. Chen', '<b>L. Chen</b> · Director of Public Works since 2022, from the city&#39;s roster. Signed 2 documents your group holds; named in 1 question.') + '</span>', '<span class="cs-origin" data-origin="machine">' + I('machine') + 'From the city\'s roster</span>')}${row(I('group'), 'Council District 3 · <span class="muted">held by J. Ortega since 2023</span>', '<span class="cs-origin" data-origin="machine">' + I('machine') + 'From Legistar</span>')}</div>${acts(btn('officesseed', 'Confirm these offices'))}</div><div class="mk-ifother">${note('Nothing is filled in here: Civicsmith does not hold the offices and seats for Fresno yet. Add the offices your group deals with yourself, now or at any time; each is marked as added by your group. When an update brings Fresno\'s rules, your administrators are told once in their queue and can choose it under Places; the offices you added stay.')}${acts(btn('entitycreate', 'Add an office yourself'))}</div>`)}
   ${sec('Who sees what about people', note('Facts that come from public documents follow those documents. A project\'s own notes about a person stay inside that project. ' + '<a href="#" onclick="return false">More about this</a>'))}
   ${sec('How members reach the assistant', `${note('The assistant is an optional helper, built on Anthropic\'s Claude. A member can ask it in plain words to find, read, answer or check things in what your group holds; it can suggest questions and documents, and draft translations. It answers only from what your group holds, gives legal information but never legal advice, and never concludes, signs or sends anything. What it does is labelled as the assistant\'s. Everything in Civicsmith also works without it.')}
    <details class="mk-more"><summary>More about this</summary>
@@ -1201,7 +1220,7 @@ SCR.project = c => ({ rail: 'projects', title: 'Pothole repairs', crumbs: ['Proj
   <div class="mk-titlerow">${h1('Pothole repairs', 'Is the city repairing reported potholes as its own policy requires?')}${wizmark(2, 'Your first question · Check a claim')}</div>
   <div class="mk-grid2"><div>${ladder('stage', ['Forming', 'Investigating', 'Matured', 'Closed'], 1)}</div><div class="row">${btn('strengthbarset', 'Set the project\'s bar')}<span class="muted">Bar: B/B</span></div></div>
   ${sec('Questions', sheet(
-    row(I('question'), `<span class="rec">Is the city repairing reported potholes within seven days?</span><span class="meta">${strength('B', 'C', '<b>Short on connection</b> · bar B/B')}</span>`, '') +
+    row(I('question'), `<span class="rec">Is the city repairing reported potholes within seven days?</span><span class="meta">${strength('B', 'C', '<b>Short on connection</b> · bar B/B', null, 'the link between report #4471 and the work order (C, matched by street address only). A work-order number on both would raise it to B')}</span>`, '') +
     row(I('question'), `<span class="rec">Does "closed" in the city's records mean "repaired"?</span><span class="meta">${gapm('unrated', '<b>Unrated</b> · rests on nothing yet')}</span>`, '')) +
     acts(btn('promote', 'Open a question', { tone: 'primary' }), btn('planopen', 'Plan what to do')))}
   ${c.ai ? sec('Suggested questions', machine('Mai', '<p class="rec">Did the 2026 report count reports closed within seven days, or within seven working days?</p>' + acts(btn('promote', 'Open this question')))) : ''}
@@ -1209,9 +1228,9 @@ SCR.project = c => ({ rail: 'projects', title: 'Pothole repairs', crumbs: ['Proj
 
 SCR.question = c => ({ rail: 'projects', title: 'Question', crumbs: ['Pothole repairs', 'Question'], main: `
   ${h1('<span class="rec">Is the city repairing reported potholes within seven days?</span>', 'Opened by Dev, 3 October · Pothole repairs')}
-  <div class="mk-strengthbox"><div>${strength('B', 'C', '<b>Short on connection</b> · bar B/B')}</div><p class="mk-note">Strength is two grades, never one score. <a href="#" onclick="return false">What raises it</a>: a link the source itself makes, or a shared identifier.</p>${gapm('undetermined', '<b>Undetermined</b>, because the city does not define "closed" in the report.')}</div>
+  <div class="mk-strengthbox"><div>${strength('B', 'C', '<b>Short on connection</b> · bar B/B', null, 'the link between report #4471 and the work order (C, matched by street address only). A work-order number on both would raise it to B')}</div><p class="mk-note">Strength is two grades, never one score. <a href="#" onclick="return false">What raises it</a>: a link the source itself makes, or a shared identifier.</p>${gapm('undetermined', '<b>Undetermined</b>, because the city does not define "closed" in the report.')}</div>
   <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px"><span class="cs-wait">${I('clock')}Waiting: the 2024 budget PDF was set aside by Ben: <span class="rec">"wrong year"</span></span>${acts(btn('heldrestore', 'Restore it, with a reason'), btn('search', 'Find another source'))}<span class="mk-small muted">Set aside by Ben, 6 October · each act stays on the record</span></div>
-  ${sec('Supports', sheet(row(grade('capture', 'B'), '<span class="rec">"…within seven calendar days of the report…"</span><span class="meta">Administrative Instruction 4.12, passage 3 · cited by Dev</span>', btn('sever', 'Remove')) + row(grade('capture', 'B'), '<span class="rec">812 of 903 reports closed within 7 days</span><span class="meta">computed fact · method shown · checked by Ana</span>', btn('reinstate', 'Reinstate'))) + acts(btn('cite', 'Cite a passage', { tone: 'primary' })))}
+  ${sec('Supports', sheet(row(grade('capture', 'B'), '<span class="rec">"…within seven calendar days of the report…"</span><span class="meta">' + card('Administrative Instruction 4.12', '<b>Pothole repair policy, Administrative Instruction 4.12</b> · City of Oakland, Public Works · captured from the city&#39;s site 12 September 2026, capture B · current version · cited in 2 questions') + ', passage 3 · cited by Dev</span>', btn('sever', 'Remove')) + row(grade('capture', 'B'), '<span class="rec">812 of 903 reports closed within 7 days</span><span class="meta">computed fact · method shown · checked by Ana</span>', btn('reinstate', 'Reinstate'))) + acts(btn('cite', 'Cite a passage', { tone: 'primary' })))}
   ${sec('Cuts against', sheet(row(grade('testimony', 'D'), '<span class="rec">"…marked closed on 15 September is still open, about 60 cm across."</span><span class="meta">Mai\'s observation, 4 October</span>', '')))}
   ${sec('Hunches', `<span class="cs-hunch">${I('hunch')}Hunch · Dev's</span> <span class="rec">Crews may be closing reports when they inspect, not when they repair.</span>${acts(btn('hypothesishold', 'Keep a hunch'))}`)}
   ${sec('Concluding', `${acts(btn('narrow', 'Narrow the question'), btn('conclude', 'Conclude'), btn('withdrawconclusion', 'Withdraw the conclusion'))}${acts(btn('checkrequest', 'Ask for a check by expertise'), btn('planopen', 'Plan what to do'))}`)}` });
@@ -1312,7 +1331,7 @@ SCR.plan = c => ({ rail: 'projects', title: 'Action plan', crumbs: ['Pothole rep
 
 SCR['start-send'] = c => ({ rail: 'projects', title: 'Start and send', crumbs: ['Pothole repairs', 'Plans', 'Start'], main: `
   ${h1('Start "Records request: inspection logs"', 'Nothing runs until you confirm. This is what the action will say and rest on.')}
-  ${sec('Step 1 · Start', `<dl class="mk-dl"><dt>Kind</dt><dd>records request</dd><dt>Addressed to</dt><dd>Office of the City Clerk (an office) · held today by Asha Rao</dd><dt>Rests on</dt><dd>Subject 1: reports closed before repair · <span class="muted">hypothetical: not yet shown</span></dd><dt>Clock</dt><dd>10 days, from the law your profile names</dd><dt>Asserts a breach</dt><dd>no</dd></dl>
+  ${sec('Step 1 · Start', `<dl class="mk-dl"><dt>Kind</dt><dd>records request</dd><dt>Addressed to</dt><dd>${card('Office of the City Clerk', '<b>Office of the City Clerk</b> · City of Oakland · keeps the city&#39;s records and answers records requests · held today by Asha Rao (since March 2021) · 4 requests from your group, 3 answered on time')} (an office) · held today by ${card('Asha Rao', '<b>Asha Rao</b> · City Clerk since March 2021, from the city&#39;s roster. Cited in 3 documents your group holds.')}</dd><dt>Rests on</dt><dd>Subject 1: reports closed before repair · <span class="muted">hypothetical: not yet shown</span></dd><dt>Clock</dt><dd>10 days, from the law your profile names</dd><dt>Asserts a breach</dt><dd>no</dd></dl>
    ${acts(btn('optionstartpreview', 'See what starting does'), btn('optionstart', 'Start the action', { tone: 'primary' }))}`)}
   ${sec('Step 2 · Prepare and send', `${field('mk-ss', 'What the group sends', 'To the Office of the City Clerk:\nWe request copies of the inspection logs for every pothole report closed between 1 July 2025 and 30 June 2026, showing the date of each inspection and of each repair.\nSubmitted by Lakeshore Tenants, by its contact.', { area: true, rec: true, draft: c.ai && !c.wizard ? 'machine' : 'template', act: 'communicationprepare' })}
    ${acts(btn('communicationprepare', 'Prepare what is sent'), btn('filingprepare', 'Prepare the filing'), btn('filingapprove', 'Approve this text'), btn('filingrecordsent', 'I have sent it · record the sending', { tone: 'primary' }))}
@@ -1749,5 +1768,68 @@ function journeySteps(j, ai) {
     if (e.key === 'ArrowLeft') set(shell, w <= 120 ? MIN : w - 16); else if (e.key === 'ArrowRight') set(shell, w <= MIN ? 120 : w + 16);
     else if (e.key === 'Home') set(shell, DEF); else return; e.preventDefault();
   });
+})();
+</script>
+<script>
+/* DEC-159 (DEC-129 rule 4; DEC-82's disclosure): every mark explains itself on hover, focus or tap; names open a card. */
+(function () {
+  var G = {
+    scale: { capture: ['Capture', 'how easily someone else could check that this copy is what its source published, unaltered'],
+             connection: ['Connection', 'how easily someone else could check this link: that this payment, vote, office or person is the one meant'],
+             testimony: ['Testimony', 'how easily someone else could check what a witness says'],
+             subject: ['Subject match', 'how easily someone else could check that this record is about this person or thing'] },
+    gap: { undetermined: '<b>Undetermined</b>: the record can\'t settle this yet, and the reason is always given. An answer, not an error.',
+           withheld: '<b>Withheld</b>: something is here that you can\'t see, kept back by its source or by who may see it. That it exists is shown, never hidden.',
+           unrated: '<b>Unrated</b>: not graded yet.',
+           nobody: '<b>Nobody looked</b>: no one has searched for this yet. Not the same as “looked for, not found”.',
+           refused: '<b>Refused</b>: Civicsmith won\'t do this. The reason says why, and what you can do instead.' },
+    origin: { machine: '<b>Machine work</b>: made by the assistant or an automatic check, never by a member. It counts only once a member accepts it.',
+              elsewhere: '<b>Another group\'s</b>: from another group\'s published case, recreated here. It counts only once your group accepts it.',
+              unevaluated: '<b>Not yet evaluated</b>: no one in your group has judged this yet.',
+              accepted: '<b>Accepted by our group</b>: a member accepted it, with a reason you can open.',
+              flagged: '<b>Flagged</b>: someone marked this for a second look.' },
+    kind: { todo: '<b>To do</b>: something only you can move forward.', noticed: '<b>Noticed</b>: something changed that you may want to know. Nothing is required of you.', status: '<b>Status</b>: where something you follow stands.' },
+    weight: { Reversible: '<b>Reversible</b>: you can undo this.', Reasoned: '<b>Reasoned</b>: asks for your reason, which becomes part of the record.', Terminal: '<b>Terminal</b>: ends or removes something; reopening it takes a reason.', Signed: '<b>Signed</b>: signed with your key, and stands under your name.', Irreversible: '<b>Irreversible</b>: can never be undone.' },
+    path: { 'Working': '<b>Working</b>: not public; seen by your group\'s members.', 'Shared for review': '<b>Shared for review</b>: named outsiders can read this draft until the owner stops sharing it.', 'Published': '<b>Published</b>: signed and public. It can be corrected by a new edition, never removed.' }
+  };
+  function tipFor(el) {
+    if (el.dataset.tip) return el.dataset.tip;
+    var c = el.classList;
+    if (c.contains('cs-grade')) { var s = G.scale[el.dataset.scale] || ['Grade', '']; var l = el.textContent.trim().slice(-1);
+      return '<b>' + s[0] + ' ' + l + '</b>: ' + s[1] + '. A is easiest to check; D rests on a person\'s word. A grade never says whether something is true.<span class="more">Click to see the whole scale.</span>'; }
+    if (c.contains('cs-strength')) return '<b>An answer is only as strong as the weakest thing it depends on</b>: its weakest document copy and its least certain link, side by side, never merged.' + (el.dataset.weak ? ' Weakest here: ' + el.dataset.weak + '.' : '') + '<span class="more">Click to open the question with that part highlighted.</span>';
+    if (c.contains('cs-gap')) return G.gap[el.dataset.gap];
+    if (c.contains('cs-origin')) return G.origin[el.dataset.origin];
+    if (c.contains('cs-kind')) return G.kind[el.dataset.kind];
+    if (c.contains('cs-due')) return '<b>A due date</b>, counted on your group\'s local day.<span class="more">Open it to see the law or commitment it comes from and how the days were counted.</span>';
+    if (c.contains('cs-hint')) return '<b>Hint · machine work</b>: something the machine marked worth a look, with how it was found and out of how many. A lead, never a finding.';
+    if (c.contains('cs-hunch')) return '<b>Hunch</b>: a member\'s suspicion, labelled as one. Never evidence, and it never moves a finding.';
+    if (c.contains('cs-tag-outward')) return '<b>Outward</b>: this leaves your group\'s Civicsmith. Someone outside will see it.';
+    if (c.contains('w') && el.closest('.cs-btn')) { var n = el.textContent.replace(/[^A-Za-z]/g, ''); return (G.weight[n] || '') + '<span class="more">The dots show how much the act weighs, from one to five.</span>'; }
+    if (el.matches('.cs-path > span')) return G.path[el.textContent.trim()];
+    if (el.matches('.cs-ladder > span')) return '<b>' + el.textContent.trim() + '</b>: ' + (el.classList.contains('on') ? 'reached. Click to see how.' : 'not reached yet.');
+    if (c.contains('mk-tag')) return el.textContent.trim() === 'Protected' ? '<b>Protected word</b>: it protects members, so a change to it needs a second check before it shows (DEC-157).' : '<b>Local name</b>: the official name stays as it is, with an explanation in the member\'s language beside it.';
+    if (c.contains('cs-band')) return '<b>Where you are</b>: this band says who can see what you are working on.';
+    return '';
+  }
+  var SEL = '.cs-grade,.cs-strength,.cs-gap,.cs-origin,.cs-kind,.cs-due,.cs-hint,.cs-hunch,.cs-tag-outward,.cs-btn .w,.cs-path > span,.cs-ladder > span,.mk-tag,.cs-band,[data-tip]';
+  var tip = document.createElement('div'); tip.className = 'cs-tip cs'; tip.id = 'cs-tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
+  var cur = null;
+  function show(el) { var h = tipFor(el); if (!h) return; cur = el; tip.innerHTML = h; tip.hidden = false; el.setAttribute('aria-describedby', 'cs-tip');
+    var r = el.getBoundingClientRect(), w = tip.offsetWidth, ht = tip.offsetHeight;
+    var x = Math.max(8, Math.min(r.left, innerWidth - w - 8)), y = r.bottom + 6; if (y + ht > innerHeight - 8) y = r.top - ht - 6;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+  function hide() { if (cur) cur.removeAttribute('aria-describedby'); cur = null; tip.hidden = true; }
+  function target(e) { var t = e.target; return t && t.closest ? t.closest(SEL) : null; }
+  function mark(root) { (root || document).querySelectorAll('.mk-page ' + SEL.split(',').join(',.mk-page ')).forEach(function (el) {
+    if (!el.matches('button,a,input,select,textarea') && !el.closest('button') && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); }); }
+  document.addEventListener('mouseover', function (e) { var el = target(e); if (el && el !== cur && el.closest('.mk-page')) show(el); else if (!el && cur) hide(); });
+  document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });
+  document.addEventListener('focusout', hide);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  document.addEventListener('click', function (e) { var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
+  window.addEventListener('scroll', hide, true);
+  new MutationObserver(function () { mark(); }).observe(document.body, { childList: true, subtree: true });
+  mark(); window.CS_TIP = { tipFor: tipFor, SEL: SEL };
 })();
 </script>

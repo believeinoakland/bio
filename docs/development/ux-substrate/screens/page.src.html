@@ -263,6 +263,11 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <p class="src">journeys.html (DEC-128 to DEC-137); screens/library.json (DEC-121 (9), DEC-130); screens/registry.json; check_walk.mjs proves every wizard step's control is on its screen</p>
 </section>
 
+<section id="explain">
+<h2 class="sec">Explained where it appears</h2>
+<p class="intro">Every mark on every screen opens its meaning on hover, keyboard focus or tap: grades, strengths, gaps, origin tags, queue kinds, due dates, hints, the weight of every button, and the steps of the path and the ladders. 438 marks across the 42 screens, each with its explanation. A question's strength names its weakest part and what would raise it. Names of people, offices and documents (dotted underline) open a card. Try it on any screen in the viewer above (DEC-159; your rule 4 of the wide path; the measures map's disclosure, DEC-82).</p>
+</section>
+
 <section id="noai">
 <h2 class="sec">4. Civicsmith without the assistant</h2>
 <p class="intro">Your rulings of 5 and 6 October: a group may run without the assistant, and a member reached by no account (none of their own, and no group key) uses Civicsmith without it. These are the rules every screen follows for that member, and they are drawn in every journey above.</p>
@@ -424,5 +429,68 @@ const REG = {{REG}};
     if (e.key === 'ArrowLeft') set(shell, w <= 120 ? MIN : w - 16); else if (e.key === 'ArrowRight') set(shell, w <= MIN ? 120 : w + 16);
     else if (e.key === 'Home') set(shell, DEF); else return; e.preventDefault();
   });
+})();
+</script>
+<script>
+/* DEC-159 (DEC-129 rule 4; DEC-82's disclosure): every mark explains itself on hover, focus or tap; names open a card. */
+(function () {
+  var G = {
+    scale: { capture: ['Capture', 'how easily someone else could check that this copy is what its source published, unaltered'],
+             connection: ['Connection', 'how easily someone else could check this link: that this payment, vote, office or person is the one meant'],
+             testimony: ['Testimony', 'how easily someone else could check what a witness says'],
+             subject: ['Subject match', 'how easily someone else could check that this record is about this person or thing'] },
+    gap: { undetermined: '<b>Undetermined</b>: the record can\'t settle this yet, and the reason is always given. An answer, not an error.',
+           withheld: '<b>Withheld</b>: something is here that you can\'t see, kept back by its source or by who may see it. That it exists is shown, never hidden.',
+           unrated: '<b>Unrated</b>: not graded yet.',
+           nobody: '<b>Nobody looked</b>: no one has searched for this yet. Not the same as “looked for, not found”.',
+           refused: '<b>Refused</b>: Civicsmith won\'t do this. The reason says why, and what you can do instead.' },
+    origin: { machine: '<b>Machine work</b>: made by the assistant or an automatic check, never by a member. It counts only once a member accepts it.',
+              elsewhere: '<b>Another group\'s</b>: from another group\'s published case, recreated here. It counts only once your group accepts it.',
+              unevaluated: '<b>Not yet evaluated</b>: no one in your group has judged this yet.',
+              accepted: '<b>Accepted by our group</b>: a member accepted it, with a reason you can open.',
+              flagged: '<b>Flagged</b>: someone marked this for a second look.' },
+    kind: { todo: '<b>To do</b>: something only you can move forward.', noticed: '<b>Noticed</b>: something changed that you may want to know. Nothing is required of you.', status: '<b>Status</b>: where something you follow stands.' },
+    weight: { Reversible: '<b>Reversible</b>: you can undo this.', Reasoned: '<b>Reasoned</b>: asks for your reason, which becomes part of the record.', Terminal: '<b>Terminal</b>: ends or removes something; reopening it takes a reason.', Signed: '<b>Signed</b>: signed with your key, and stands under your name.', Irreversible: '<b>Irreversible</b>: can never be undone.' },
+    path: { 'Working': '<b>Working</b>: not public; seen by your group\'s members.', 'Shared for review': '<b>Shared for review</b>: named outsiders can read this draft until the owner stops sharing it.', 'Published': '<b>Published</b>: signed and public. It can be corrected by a new edition, never removed.' }
+  };
+  function tipFor(el) {
+    if (el.dataset.tip) return el.dataset.tip;
+    var c = el.classList;
+    if (c.contains('cs-grade')) { var s = G.scale[el.dataset.scale] || ['Grade', '']; var l = el.textContent.trim().slice(-1);
+      return '<b>' + s[0] + ' ' + l + '</b>: ' + s[1] + '. A is easiest to check; D rests on a person\'s word. A grade never says whether something is true.<span class="more">Click to see the whole scale.</span>'; }
+    if (c.contains('cs-strength')) return '<b>An answer is only as strong as the weakest thing it depends on</b>: its weakest document copy and its least certain link, side by side, never merged.' + (el.dataset.weak ? ' Weakest here: ' + el.dataset.weak + '.' : '') + '<span class="more">Click to open the question with that part highlighted.</span>';
+    if (c.contains('cs-gap')) return G.gap[el.dataset.gap];
+    if (c.contains('cs-origin')) return G.origin[el.dataset.origin];
+    if (c.contains('cs-kind')) return G.kind[el.dataset.kind];
+    if (c.contains('cs-due')) return '<b>A due date</b>, counted on your group\'s local day.<span class="more">Open it to see the law or commitment it comes from and how the days were counted.</span>';
+    if (c.contains('cs-hint')) return '<b>Hint · machine work</b>: something the machine marked worth a look, with how it was found and out of how many. A lead, never a finding.';
+    if (c.contains('cs-hunch')) return '<b>Hunch</b>: a member\'s suspicion, labelled as one. Never evidence, and it never moves a finding.';
+    if (c.contains('cs-tag-outward')) return '<b>Outward</b>: this leaves your group\'s Civicsmith. Someone outside will see it.';
+    if (c.contains('w') && el.closest('.cs-btn')) { var n = el.textContent.replace(/[^A-Za-z]/g, ''); return (G.weight[n] || '') + '<span class="more">The dots show how much the act weighs, from one to five.</span>'; }
+    if (el.matches('.cs-path > span')) return G.path[el.textContent.trim()];
+    if (el.matches('.cs-ladder > span')) return '<b>' + el.textContent.trim() + '</b>: ' + (el.classList.contains('on') ? 'reached. Click to see how.' : 'not reached yet.');
+    if (c.contains('mk-tag')) return el.textContent.trim() === 'Protected' ? '<b>Protected word</b>: it protects members, so a change to it needs a second check before it shows (DEC-157).' : '<b>Local name</b>: the official name stays as it is, with an explanation in the member\'s language beside it.';
+    if (c.contains('cs-band')) return '<b>Where you are</b>: this band says who can see what you are working on.';
+    return '';
+  }
+  var SEL = '.cs-grade,.cs-strength,.cs-gap,.cs-origin,.cs-kind,.cs-due,.cs-hint,.cs-hunch,.cs-tag-outward,.cs-btn .w,.cs-path > span,.cs-ladder > span,.mk-tag,.cs-band,[data-tip]';
+  var tip = document.createElement('div'); tip.className = 'cs-tip cs'; tip.id = 'cs-tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
+  var cur = null;
+  function show(el) { var h = tipFor(el); if (!h) return; cur = el; tip.innerHTML = h; tip.hidden = false; el.setAttribute('aria-describedby', 'cs-tip');
+    var r = el.getBoundingClientRect(), w = tip.offsetWidth, ht = tip.offsetHeight;
+    var x = Math.max(8, Math.min(r.left, innerWidth - w - 8)), y = r.bottom + 6; if (y + ht > innerHeight - 8) y = r.top - ht - 6;
+    tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+  function hide() { if (cur) cur.removeAttribute('aria-describedby'); cur = null; tip.hidden = true; }
+  function target(e) { var t = e.target; return t && t.closest ? t.closest(SEL) : null; }
+  function mark(root) { (root || document).querySelectorAll('.mk-page ' + SEL.split(',').join(',.mk-page ')).forEach(function (el) {
+    if (!el.matches('button,a,input,select,textarea') && !el.closest('button') && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); }); }
+  document.addEventListener('mouseover', function (e) { var el = target(e); if (el && el !== cur && el.closest('.mk-page')) show(el); else if (!el && cur) hide(); });
+  document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });
+  document.addEventListener('focusout', hide);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  document.addEventListener('click', function (e) { var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });
+  window.addEventListener('scroll', hide, true);
+  new MutationObserver(function () { mark(); }).observe(document.body, { childList: true, subtree: true });
+  mark(); window.CS_TIP = { tipFor: tipFor, SEL: SEL };
 })();
 </script>

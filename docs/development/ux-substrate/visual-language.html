@@ -492,6 +492,18 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
   .cs-tabs a[aria-current] { color: var(--c-ink); font-weight: 700; box-shadow: inset 0 3px 0 var(--c-accent); }
 }
 
+/* ============================================================
+   Explanations where they appear (DEC-129 rule 4, DEC-82 disclosure, DEC-159)
+   Every mark opens its meaning on hover, focus or tap; a name opens a card. One tip at a time, never over the thing
+   it explains; Escape or moving away closes it.
+   ============================================================ */
+.cs-tip { position: fixed; z-index: 50; max-width: 300px; background: var(--c-sheet); color: var(--c-ink); border: var(--hair-strong);
+  box-shadow: 0 4px 14px rgba(0,0,0,.14); padding: 8px 10px; font: 400 var(--t-sm)/1.45 var(--f-sans); border-radius: var(--r-1); pointer-events: none; }
+.cs-tip b { font-weight: 600; } .cs-tip .more { display: block; margin-top: 4px; color: var(--c-muted); font-size: var(--t-xs); }
+.cs-tip[hidden] { display: none; }
+[data-tip] { cursor: help; } [data-tip]:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+.cs-card { text-decoration: underline dotted var(--c-rule-strong); text-underline-offset: 3px; cursor: pointer; }
+
 /* Layout of this page: a reading document drawn in the visual language it describes; a sticky index; each section a band of
    live specimens. The design-phase pages use Google's copy of the same faces only as a fallback; the product ships its own. */
 html, body { background: var(--c-ground); }
@@ -940,6 +952,15 @@ body:not(.show-src) .src { display: none; }
 <p class="cap">A draft placed by a wizard or the assistant has a dashed edge and says whose draft it is. It becomes the member's words only when they keep or edit it.</p>
 </div>
 <p class="src">DEC-82, DEC-86, DEC-90, DEC-92, DEC-94, DEC-96, DEC-98, DEC-106, DEC-110, DEC-112, DEC-120, DEC-121, DEC-131; K1473, K1491; Interaction Constructs §S, §U</p>
+</section>
+
+<section id="explain">
+<h2>6a. Explained where it appears</h2>
+<p>Every mark above explains itself where a member meets it: a grade, a strength, a gap, an origin tag, a queue kind, a due date, a hint, a weight's pips, a step on the path or a ladder. Hover it, focus it with the keyboard, or tap it on a phone, and a short plain explanation opens beside it, never over the thing it explains. A strength also names its weakest part and what would raise it. Names of people, offices and documents carry a dotted underline and open a card: who or what it is, where that came from, and how much the group holds about it. One explanation is open at a time, and Escape or moving away closes it. This keeps screens dense, with the marks compact and the meaning one gesture away, and a member who forgets a term can always find it again (your ruling on the wide path, rule 4; the measures map's disclosure, DEC-82; DEC-159).</p>
+<div class="cs" style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+<div class="cs-tip" style="position:static;pointer-events:auto"><b>Capture B</b>: how easily someone else could check that this copy is what its source published, unaltered. A is easiest to check; D rests on a person's word. A grade never says whether something is true.<span class="more">Click to see the whole scale.</span></div>
+<div><span class="cs-card">Asha Rao</span><div class="cs-tip" style="position:static;margin-top:6px;pointer-events:auto"><b>Asha Rao</b> · City Clerk since March 2021, from the city's roster. Cited in 3 documents your group holds.</div></div>
+</div>
 </section>
 
 <section id="acts">
