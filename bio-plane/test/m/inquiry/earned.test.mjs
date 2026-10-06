@@ -26,11 +26,13 @@ test("R6 capture: bytes received through the doorbell, never fetched, keep the a
     assert.equal(cap[id].grade, EARNED_CAPTURE_CEILING, id); assert.equal(cap[id].mode, "ceiling");
     assert.equal(cap[id].stated_as, "authored", id); assert.deepEqual(cap[id].route_basis, [basis], id);
     assert.match(cap[id].why, /stated as authored and never as measured/);
-    assert.doesNotMatch(cap[id].why, /as this instance fetched them/, "never worded as a fetch");
+    assert.doesNotMatch(cap[id].why, /fetched them/, "never worded as a fetch (the measured wording, DEC-149: \"as your group's Civicsmith fetched them\")");
     assert.equal(cap[id].undetermined_because, undefined, "counted, never as unruled");
   }
   assert.match(cap[B].why, /doorbell/);
   for (const id of [A, D]) { assert.equal(cap[id].grade, EARNED_CAPTURE_CEILING); assert.equal(cap[id].stated_as, undefined, id); }
+  /* the measured route is worded as a fetch, so the negative arm above can fail */
+  assert.match(cap[A].why, /as your group's Civicsmith fetched them/);
   /* the grammar reads it so: the author's letter at or under the ceiling stands, above it is refused (R6, R14) */
   const leg = (grade) => w.promote("INQ-2026-0001-q", [
     "---", "id: INQ-2026-0001-q", "object_type: inquiry", "schema: inquiry@1", 'title: "q?"', "current_state: open", "prior_state: null",

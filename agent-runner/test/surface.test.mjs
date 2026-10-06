@@ -81,7 +81,8 @@ test('R10 the manifest\'s egress allow-list is the model API alone', () => {
 });
 
 test('R11 no place is named in its behaviour or outward text', async () => {
-  const texts = [JSON.stringify(readManifest()), readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8'), JSON.stringify(pkg)];
+  const texts = [JSON.stringify(readManifest()), readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8'), JSON.stringify(pkg),
+    readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'), readFileSync(new URL('../src/worker.mjs', import.meta.url), 'utf8')];
   const { sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', {}); return success(); });
   const r = await startRunner(sdk);
   try {

@@ -53,15 +53,18 @@ export const PLANE_OPS = {
 export const MEANING_ARM = "leg";
 
 /* R55 (K1450; the canon audit's R37 row) — AN ASK'S WHOLE REACH. Equal to `answers`' `ASK_SCOPE` (its R1) and to
- * `credentials`' `AI_GRANT_OPS` (its R28), both ways, by the suites: today `AI_GRANT_OPS` with `rule`, `answers`' one
- * op for its rule services, which credentials' list gains by N580 (K1603). Every op is a read; none is a `sources*` op,
- * member history, an administrative op or an export. An ask's reach is NOT `PLANE_OPS`: a run's ops are unchanged by
- * it, and a run's credential never reads through this list. */
+ * `credentials`' `AI_GRANT_OPS` (its R28), both ways, by the suites. Since N580 (K1603, K1609) each entry is the op's
+ * name as the plane routes it, `rule` included (`answers`' one door to its rule services), so the three lists are equal
+ * with no exception: `career`, `dutyoccurrences`, `linesof`, `structureat`, `dutiesof`, `calculation` and `money` where
+ * the old list held `careerof`, `occurrences`, `lines`, `duties`, `calculations` and `moneyfacts` (credentials R28,
+ * T34-11, K1764). Every op is a read; none is a `sources*` op, member history, an administrative op or an export. An
+ * ask's reach is NOT `PLANE_OPS`: a run's ops are unchanged by it, and a run's credential never reads through this
+ * list. */
 export const ASK_OPS = Object.freeze([
-  "calculations", "careerof", "committedagainstpaid", "duties", "entity", "entitybyalias", "eventsfor", "explore",
-  "frontier", "holderat", "lines", "meaningrows", "moneyfacts", "moneyof", "occurrences", "profiles", "relation",
+  "calculation", "career", "committedagainstpaid", "dutiesof", "dutyoccurrences", "entity", "entitybyalias",
+  "eventsfor", "explore", "frontier", "holderat", "linesof", "meaningrows", "money", "moneyof", "profiles", "relation",
   "resolutions", "rule", "search", "searchfields", "standard", "standardinforce", "standards", "strengthbarof",
-  "timeline",
+  "structureat", "timeline",
 ]);
 
 /* R54 (K1601 (3), (4)) — THE ASK'S OWN CALLS, which are not reads of the record and so not in `ASK_OPS`: the control

@@ -33,8 +33,9 @@
  * and NAMED, and its level goes UNDETERMINED rather than becoming an absence.
  *
  * **WHEN IT RUNS MODEL TURNS, AND IT SAYS WHICH ON THE WIRE (R28, R58).** It
- * runs model turns through `agent-model` exactly when the member's own Claude
- * account reference arrived with the call (R6; K1502: there is no group or
+ * runs model turns through `agent-model` exactly when the Claude account that
+ * serves the member's act arrived with the call (R6: the member's own, or the
+ * group's API key, as `credentials.accountFor` answers it, K1755; there is no
  * project account) and the run's mode has turns to run: an API key goes to the
  * Messages API, a subscription to Claude Code in the `agent-runner` container
  * through the Container Durable Object binding (R35). A segment whose caller
@@ -43,8 +44,8 @@
  * `judgement_source` says whose judgements the table applied (`model` or
  * `body`), so a table-driven walk is never presented as a model run, nor the
  * reverse. `POST /ask` (R54) is a member's question, answered through the same
- * module under the member's own reference and an ask grant, and handed to the
- * plane's `answers` checks before anything is returned.
+ * module under the account that serves that member's ask and an ask grant, and
+ * handed to the plane's `answers` checks before anything is returned.
  *
  * WHAT IT MUST NOT DO (fleet rules 2/3, inherited from I6 and asserted in the
  * suite behaviourally, at this member's interface — what it reads from `env`,
@@ -74,9 +75,11 @@
  *     untouched: no binding but the plane, no write this member performs itself,
  *     and no op it may name that somebody did not decide to give it.
  *   - HOLD A CREDENTIAL (R36). It has no token of its own and no secret binding.
- *     The `ai` credential, an ask's grant and the member's own Claude account
- *     reference arrive PER CALL and are never stored, logged or echoed, so this
- *     member cannot act except while somebody is asking it to.
+ *     The `ai` credential, an ask's grant and the account that serves the
+ *     member's act (the member's own reference, or the group's API key, held
+ *     sealed in `credentials`, K1755) arrive PER CALL and are never stored,
+ *     logged or echoed, so this member cannot act except while somebody is
+ *     asking it to. The copy binds no Claude credential in its environment.
  *   - JUDGE ITS OWN SCOPE. D-199 (2): what an agent may reach is a row a member
  *     AUTHORED, read from the record at the plane's gate by `aiTaskScope`. A copy
  *     of that judgement here would be a second enforcement point that drifts from
@@ -152,12 +155,15 @@ import {
   SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
 } from "../../agent-harness/src/subsession.mjs";
 
-/* R32, R33 (K1502) — WHOSE ACCOUNT PAYS: the member's own, the one level, judged in its own file and pure. The
- * reference arrives PER CALL beside the `ai` credential and is retained exactly as long: not at all (R36). */
-import { resolveClaudeCascade, cascadeToken, CASCADE_NO_ACCOUNT, ACCOUNT_KINDS } from "./cascade.mjs";
+/* R32, R33 (K1502, K1755) — WHICH ACCOUNT SERVES THE ACT: the one that arrived, judged at its own level (`member` or
+ * `group`), in its own file and pure. The account arrives PER CALL beside the `ai` credential and is retained exactly
+ * as long: not at all (R36). */
+import {
+  resolveClaudeCascade, cascadeToken, CASCADE_NO_ACCOUNT, ACCOUNT_KINDS, CASCADE_ORDER, LEVEL_KINDS,
+} from "./cascade.mjs";
 
-/* THE MODEL HALF (`agent-model`, T33-55; R58). It runs a judgement's turns inside a step, under the member's own
- * reference and the model its mode names (`MODEL_FOR_MODE`), and decides no step; the table still decides every one. */
+/* THE MODEL HALF (`agent-model`, T33-55; R58). It runs a judgement's turns inside a step, under the account that serves
+ * the member's act and the model its mode names (`MODEL_FOR_MODE`), and decides no step; the table still decides every one. */
 import {
   DEFAULT_MAX_SEGMENT_BYTES, SEGMENT_BYTES_SOURCE, segmentMeter, converse, MODEL_FOR_MODE,
   judgeTools, planJudgeTools, LOAD_LAYER, parentSystem, rowPrompt, rowFacts, subsessionSystem, subsessionTools,
@@ -354,19 +360,23 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       + "member opens no run: a run's identity and its conditions are the plane's, and a member that "
       + "could open one would be a machine deciding what it was formed under.", 404, { run_id: runId }) };
 
-  /* R10, R57 (K1502, K1503) — THE RECORD'S PAYER AND THE MEMBER WHOSE REFERENCE ARRIVED MUST BE THE SAME MEMBER.
-     The run records the member whose act started it (a standing question's author) as its account holder
-     (`session.principal.claude`); this segment was handed one member's own reference. When the two differ, driving on
-     would spend one member's account on another's run, which K1502 forbids and nobody could audit. Refused before any
-     step, naming both members (ids, never a secret); this member re-words neither. Every segment carries a reference
-     (R6), the stubbed `judgements` path included, so the check is made on every segment. */
+  /* R10, R57 (K1502, K1503, K1755) — THE RECORD'S ACCOUNT HOLDER AND THE MEMBER WHOSE ACT THE ARRIVED ACCOUNT SERVES
+     MUST BE THE SAME MEMBER. The run records the member whose act started it (a standing question's author) as its
+     account holder (`session.principal.claude`); this segment was handed the account that serves one member's act:
+     that member's own reference, or the group's API key (`level: "group"`), which serves that member's act and never
+     the group's own, so the run stays that member's act. When the two members differ, driving on would spend one
+     member's act on another's run, which K1502 forbids and nobody could audit. Refused before any step, naming both
+     members (ids, never a secret); this member re-words neither. Every segment carries an account (R6), the stubbed
+     `judgements` path included, so the check is made on every segment. */
   const recordedPayer = session.principal?.claude ?? null;
   if (account && recordedPayer !== account.member)
     return { refusal: refusal("RUN_NAMES_A_DIFFERENT_PAYER",
-      `the run's own record says the Claude account of ${JSON.stringify(recordedPayer)} pays for it, but the reference `
-      + `handed to this segment is ${JSON.stringify(account.member)}'s. A run is continued only under the account of `
-      + "the member whose act started it, never under another member's (K1502, D-260), so no step was taken and the "
-      + "run stays as it was. The caller handed the wrong member's reference, or the run recorded the wrong member.",
+      `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to `
+      + `this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group"
+        ? "the group's API key, serving that member" : "that member's own reference"}). A run is continued only under `
+      + "the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no "
+      + "step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run "
+      + "recorded the wrong member.",
       409, { run_id: runId, recorded: recordedPayer, supplied: account.member }) };
 
   /* R48 — THE PACK, AS THE PLANE PUBLISHED IT, HELD TO THE RUN'S RECORD, BEFORE ANY TURN. Only when model turns run:
@@ -393,7 +403,7 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     model.messages = [];
     model.system = parentSystem(held);
     /* R52: a plan-mode run judges with `optionPropose`'s fields only; every other mode with the search table's. */
-    /* R56 (K1479, K1502): the `suggestions` layer is loadable only when the member's own switch is on. */
+    /* R56 (K1479, K1502, K1755): the `suggestions` layer is loadable only when the switch that governs the act is on. */
     model.layers = loadableLayers(held, model.suggestions);
     model.tools = [LOAD_LAYER(model.layers),
                    ...(session.mode === "plan" ? planJudgeTools(OPTION_KEYS) : judgeTools(LEVELS))];
@@ -1313,8 +1323,10 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
   return { reports, refused };
 }
 
-/* R56 (K1479, K1502) — THE MEMBER'S OWN SUGGESTIONS SWITCH. Only when it is on may the pack's `suggestions` layer
-   (skills R35) be loaded; off, as by default, the layer is not offered and a call naming it is refused, so DEC-27's
+/* R56 (K1479, K1502, K1755) — THE SUGGESTIONS SWITCH THAT GOVERNS THE ACT, as the plane sends it beside the account
+   (`suggestions`): the member's own (credentials R25), or, for an act the group's API key serves, the group key's
+   (credentials R37; K1479: the switch belongs to whoever holds the account). Only when it is on may the pack's
+   `suggestions` layer (skills R35) be loaded; off, as by default, the layer is not offered and a call naming it is refused, so DEC-27's
    clause in the layers that are loaded governs and no unprompted suggestion is offered. The pack and its version are
    the same for every member (skills R35); only what this member lets the model load differs. */
 const SUGGESTIONS_LAYER = "suggestions";
@@ -1325,22 +1337,25 @@ function loadLayer(model, input) {
   const name = String(input?.name ?? "");
   if (!model.layers.includes(name))
     return { content: name === SUGGESTIONS_LAYER
-      ? "the suggestions layer is not loaded: the asking member's own suggestions switch is off"
+      ? "the suggestions layer is not loaded: the suggestions switch that governs this act is off"
       : `no disclosed layer '${name}'`, error: true };
   return { content: model.pack.disclosed[name] };
 }
 
-/** A segment's or an ask's model half (R54, R58): the member's reference for the calls it serves, the runner binding,
- *  the meter, and the usage of each conversation kept until it is reported (ai-runs R48). Nothing in it outlives the
- *  call that made it (R36). */
+/** A segment's or an ask's model half (R54, R58): the reference for the calls it serves (the account that serves the
+ *  member's act, R33), the runner binding, the meter, and the usage of each conversation kept until it is reported
+ *  (ai-runs R48). Nothing in it outlives the call that made it (R36). */
 function modelHalf({ reference, runner, meter, suggestions }) {
   const pending = [];
   return {
     reference, runner, meter, suggestions: suggestions === true, pack: null, layers: [], messages: [],
-    /* One entry per conversation that reached the provider: `{mode, model, usage}` (ai-runs R48's entry). */
-    spent(got, mode, calls = null) {
+    /* R26 (N588; K1621): one entry per conversation that reached the provider, `{mode, model, usage, calls}` (ai-runs
+       R48's entry), `usage` and `calls` exactly as `agent-model` R6 answers them: `calls` the model calls that sum
+       covers, so the plane counts each model call, never a conversation as one. A `calls` it did not state is passed
+       as `null` (which the plane counts as one call), never invented here. */
+    spent(got, mode) {
       if (got && got.usage) pending.push({ mode, model: MODEL_FOR_MODE[mode] ?? null, usage: got.usage,
-                                           ...(calls == null ? {} : { calls }) });
+                                           calls: got.calls === undefined ? null : got.calls });
     },
     drain() { return pending.splice(0, pending.length); },
   };
@@ -1368,29 +1383,34 @@ const planeRefused = (runId, store, asked) =>
                + "passed through exactly as the plane worded it.",
          plane_status: asked.status, plane: asked.body }, 403);
 
-/** R6, R32, R57 — the account a call carries: `{account, cascade}` or `{refusal}`. `account` is the member's own
- *  reference as credentials R24 unseals it for this act, with the member it belongs to and their suggestions switch:
- *  `{kind, secret, member, suggestions?}` (K1601 (1), (2)). There is no group, project or instance level (R32): a body
- *  still carrying the old cascade's `claude_accounts` is refused naming that field, and a member with no usable
- *  reference of their own has no assistant, refused by name before any plane call (D-260 as K1503 reads it). The
- *  secret is read here for the call it serves and goes no further than `agent-model` (R36). */
+/** R6, R32, R57 (K1502, K1503, K1755) — the account a call carries: `{account, cascade}` or `{refusal}`. `account` is
+ *  the account that serves the act of the member who started the run (or asked; a standing question's author), as
+ *  `credentials.accountFor` answers it for that act (its R35), with that member and the switch that governs it:
+ *  `{kind, level, secret, member, suggestions?}`, `level` `member` (the member's own reference) or `group` (the group's
+ *  API key, which serves that member's act and is still that member's act). There is no project level (R32): a body
+ *  still carrying the old cascade's `claude_accounts` is refused naming that field, and a member whom no account
+ *  serves has no assistant, refused by name before any plane call (D-260 as K1503 reads it). The secret is read here
+ *  for the call it serves and goes no further than `agent-model` (R36). */
 async function accountOf(body) {
   if (body.claude_accounts !== undefined)
     return { refusal: refusal("BAD_ACCOUNT",
-      "claude_accounts is the retired three-level cascade's field: there is no group, project or instance Claude "
-      + "account (K1502). A call carries one member's own reference, as account.", 400, { field: "claude_accounts" }) };
+      "claude_accounts is the retired three-level cascade's field: there is no project or instance Claude account. "
+      + "A call carries the one account that serves the member's act, as account.", 400, { field: "claude_accounts" }) };
   const a = body.account;
   if (a === undefined || a === null)
     return { refusal: refusal("NO_ACCOUNT",
-      "this call carries no Claude account reference of the member whose act started it. Each member who wants the "
-      + "assistant connects their own subscription or their own API key, and it serves only that member; there is no "
-      + "group or project account to fall back to (K1502), so the capability is UNAVAILABLE and nothing was done.",
+      "this call carries no Claude account for the act of the member who started it: neither the member's own "
+      + "reference nor the group's API key serves that act (K1502, K1755), so the capability is UNAVAILABLE and "
+      + "nothing was done.",
       409, { capability: "unavailable" }) };
   if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind)
+      || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind)
       || typeof a.member !== "string" || !a.member)
     return { refusal: refusal("BAD_ACCOUNT",
-      `account is the member's own reference: {kind, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, and `
-      + "member the member it belongs to. What arrived is not one, and this member judges only what it is handed.",
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
+      + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), `
+      + "and member the member whose act it serves. What arrived is not one, and this member judges only what it is "
+      + "handed.",
       400, { field: "account" }) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
@@ -1497,8 +1517,8 @@ async function handleRun(req, env) {
    * walks it with no network at all, and this driver is the part that turns a
    * row into a plane call. A driver that decided anything would be a second
    * control flow nobody could exhaust. */
-  /* R58 — MODEL TURNS RUN, through `agent-model`, when the member's reference arrived (it always has, past R6) and the
-     caller supplied no judgements; `judgements` in the body is the stubbed path, in which no turn is taken. The
+  /* R58 — MODEL TURNS RUN, through `agent-model`, when the account that serves the member's act arrived (it always has,
+     past R6) and the caller supplied no judgements; `judgements` in the body is the stubbed path, in which no turn is taken. The
      reference is handed to `agent-model` for the calls it serves and kept by nothing here (R33, R36). A subscription's
      turns reach `agent-runner` through the Container Durable Object binding (R35), passed as it is bound. */
   const bytesBound = Number(env.MAX_SEGMENT_BYTES) > 0 ? Number(env.MAX_SEGMENT_BYTES) : DEFAULT_MAX_SEGMENT_BYTES;
@@ -1529,13 +1549,15 @@ async function handleRun(req, env) {
     judgement_source: modelMode ? "model" : "body",
     judgement_note: modelMode
       ? `the control-flow table ran and the judgements inside its steps were made by model turns run through `
-        + `agent-model (${meter.turns}), under the member's own Claude account and the skill pack the run names; `
+        + `agent-model (${meter.turns}), under the Claude account that serves the member's act `
+        + `(${cascade.level === "group" ? "the group's API key" : "the member's own"}) and the skill pack the run names; `
         + "the sub-sessions ran one per level and returned REPORTS"
       : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken "
         + "(turns_run: 0). Stated rather than presented as a model run.",
-    /* R29 — WHOSE ACCOUNT, secret-free by construction: its kind and the member it belongs to. A call with none never
-       reaches here (R6 refused it by name before any step). */
-    claude_account: { available: true, kind: cascade.kind, member: cascade.member },
+    /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, or the group's API key,
+       K1755) and the member whose act it serves. A call with none never reaches here (R6 refused it by name before
+       any step). */
+    claude_account: { available: true, kind: cascade.kind, level: cascade.level, member: cascade.member },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,
@@ -1621,8 +1643,9 @@ const ASK_DEPS = { refusal, json, askPlane, planeAnswer, publishedPack, accountO
 
 /* R58 — ONE TRUTH FOR MODEL TURNS, the sentence this member states about itself on `GET /version`, and the same one its
    header and its `/run` answer state. */
-const MODEL_TURNS = "run through agent-model exactly when the member's own Claude account reference arrives with the "
-  + "call and the run's or ask's mode has turns to run; a segment whose caller supplies the judgements runs none";
+const MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the "
+  + "member's own reference, or the group's API key) arrives with the call and the run's or ask's mode has turns to "
+  + "run; a segment whose caller supplies the judgements runs none";
 
 export default {
   async fetch(req, env) {

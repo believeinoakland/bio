@@ -44,7 +44,7 @@ test("R36: a calculation leg counts on the capture axis only, at the weakest inp
 test("R36: not accepted, not held, unreadable facts, an unmeasured engine's value or no input capture: the leg is undetermined, named with why; a hunch is inert", () => {
   const cases = [
     ["not accepted", (w) => w.calcs.set(CALC, { accepted: false, capture: { grade: "B" } }), /is not accepted/],
-    ["not held", () => {}, /is not a calculation this copy holds/],
+    ["not held", () => {}, /is not a calculation your group's Civicsmith holds/],
     ["another program's value", (w) => w.calcs.set(CALC, { capture: { grade: "B" }, inputs: [{ name: "cell", engine: "sheet" }] }),
      /another program computed \(cell\).*not measured/],
     ["no input capture", (w) => w.calcs.set(CALC, { capture: { grade: null, why: "undetermined: a, not held" } }),
@@ -199,7 +199,7 @@ test("R38: a part of the derivation duties answers undetermined, or an occurrenc
   w.inquiry(INQ, [{ target: `occurrence:${DUT}/OCC-ffffffffffffffffffffffffffffffff` }, { target: "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111" }]);
   const p = w.s.strengthOf(INQ);
   assert.match(exhaustedWhy(p.capture, `occurrence:${DUT}/OCC-ffffffffffffffffffffffffffffffff`), /no occurrence by that key is derived/);
-  assert.match(exhaustedWhy(p.capture, "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111"), /DUT-2026-0009 is not an obligation this copy holds/);
+  assert.match(exhaustedWhy(p.capture, "occurrence:DUT-2026-0009/OCC-11111111111111111111111111111111"), /DUT-2026-0009 is not an obligation your group's Civicsmith holds/);
 });
 
 test("R38: versionStrength, candidatePair, gradingFacts and recomputePair answer the same occurrence grade; inquiryStrength withholds an occurrence whose obligation the viewer may not see", () => {

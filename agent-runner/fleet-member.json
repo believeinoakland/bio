@@ -15,12 +15,31 @@
     "port": 8080,
     "schedulingPolicy": "default"
   },
+  "bundle": {
+    "entry": "src/worker.mjs",
+    "outfile": "dist/agent-runner.bundled.mjs",
+    "manifest": "dist/agent-runner.bundle.json",
+    "external": [
+      "cloudflare:workers",
+      "node:*"
+    ]
+  },
+  "class_name": "AgentRunner",
+  "max_instances": 10,
+  "bind": [
+    {
+      "member": "agent-worker",
+      "binding": "RUNNER"
+    }
+  ],
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".",
     "command": "docker build --platform linux/amd64 -t docker.io/civicos/agent-runner:<version> agent-runner",
     "dependencies": "package-lock.json (npm ci; the Agent SDK pinned exactly)"
   },
-  "egress": ["api.anthropic.com"],
-  "note": "The fleet-member marker of a container member: it has no Worker bundle. `image.digest` is written by the release when it first publishes the image (T33-D1), and an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the member's network allow-list, applied by whoever deploys the container (R10)."
+  "egress": [
+    "api.anthropic.com"
+  ],
+  "note": "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13)."
 }

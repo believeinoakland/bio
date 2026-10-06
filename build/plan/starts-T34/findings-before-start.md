@@ -41,3 +41,8 @@
 - publication (T34-79): calculations R9's input bytes are now also put in the evidence store at create (for publication R22), with a new column `calculations.input_shas_json` (CALCULATIONS #2).
 - control-plane (T34-60): `askusage` (`dispatch.mjs`:294) passes only `b.usage`; pass `calls: b.calls` too (ai-runs R48; agent-worker's ask sends it), K1798.
 - case-authoring (T34-48): DEC-149: `index.mjs` ~:1226 and ~:2188 carry "this plane"/"this copy" for the group's Civicsmith (BASIS-VERSIONS #12), K1799.
+- plane (T34-76): answers reads retrieval's `relations()` and `zone()` itself (ANSWERS #2): drop the `relations` dep `store.mjs` ~:207 hands it (replaces K1788's wiring line), K1803.
+- scheduler (T34-51): register with answers' `onStandingSet` (its R27) to re-arm `standing-questions` at once (ANSWERS #2), K1803.
+- affordances (T34-75): `t33-backing.test.mjs`:122 (R19) red since duties' merge (`DUTY_NO_REASON`, N608), K1805.
+- op-declarations (T34-58): `askusage`'s reason text (`index.mjs`:2913) omits `calls` (AI-RUNS #11), K1805.
+- affordances (T34-75), op-declarations (T34-58), control-plane (T34-60): hypotheses serves the note ops `notewrite`, `notes`, `noteturn` and re-keys `HYPOTHESIS_NO_REASON` (HYPOTHESES #2 J2): grade, declare and route them; reds `t33-backing.test.mjs`:212, `t33.test.mjs`:135, `r53-routes.test.mjs`:58 until then, K1807.

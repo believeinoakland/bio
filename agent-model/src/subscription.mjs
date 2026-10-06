@@ -16,9 +16,13 @@
  * transcript rendered as text (`prompt`). What happens over the socket is appended to `messages` in the Messages
  * API's own shape, so one transcript serves either provider.
  *
+ * THE CALLS (R6; N588). Each runner conversation's model calls are the `num_turns` its end states (agent-runner R4);
+ * a conversation that ended without stating them (the socket closed, or this side stopped it) makes the count
+ * `null`, as its unstated usage is null: never 0, which would be a claim.
+ *
  * THE METER (D-611). Every message this side sends is a request: the conversation request and each `tool_result`
  * are counted, turn and bytes, before they are sent, and one that would pass a bound is not sent. */
-import { usageOf, sumUsage, silent, refused } from "./outcome.mjs";
+import { usageOf, sumUsage, callsOf, sumCalls, silent, refused } from "./outcome.mjs";
 
 export const RUNNER_URL = "https://agent-runner/conversation";
 const ANSWERED = "received";
@@ -124,23 +128,24 @@ export async function subscriptionConverse({ token, runner, model, system, messa
                                              maxTurns, charge }) {
   const offered = new Set(plainTools(tools).map((t) => t.name));
   let usage = null;
+  let calls = 0;
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
   while (k < maxTurns) {
     const serialized = JSON.stringify(conversationRequest(token, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
-    if (stop) return { ...stop, usage };
+    if (stop) return { ...stop, usage, calls };
     k += 1;
     const conn = await openRunner(runner, token);
-    if (!conn.send) return { ...conn, usage: conn.silent ? usage : unstated() };
+    if (!conn.send) return conn.silent ? { ...conn, usage, calls } : { ...conn, usage: unstated(), calls: null };
     conn.send(serialized);
     let answer = null;
     for (;;) {
       const m = await conn.next();
       if (m.closed) {
         /* The end never came, so this conversation's usage is unknown: its figures are null, never 0. */
-        if (answer) return { answer, usage: unstated() };
-        return { ...silent(m.detail, token), usage: unstated() };
+        if (answer) return { answer, usage: unstated(), calls: null };
+        return { ...silent(m.detail, token), usage: unstated(), calls: null };
       }
       if (m.tool_use) {
         const u = m.tool_use;
@@ -162,7 +167,7 @@ export async function subscriptionConverse({ token, runner, model, system, messa
         const halt = k >= maxTurns ? { exhausted: true } : charge(out);
         if (halt) {
           conn.close();
-          return answer ? { answer, usage: unstated() } : { ...halt, usage: unstated() };
+          return answer ? { answer, usage: unstated(), calls: null } : { ...halt, usage: unstated(), calls: null };
         }
         k += 1;
         conn.send(out);
@@ -170,14 +175,15 @@ export async function subscriptionConverse({ token, runner, model, system, messa
       }
       conn.close();
       usage = sumUsage(usage, usageOf(m.usage));
-      if (answer) return { answer, usage };
+      calls = sumCalls(calls, callsOf(m.num_turns));
+      if (answer) return { answer, usage, calls };
       const end = ending(m, usage, token);
-      if (end) return end;
+      if (end) return { ...end, calls };
       /* The model ended without answering: say what it said, ask again, in a fresh conversation. */
       messages.push({ role: "assistant", content: [{ type: "text", text: String(m.result || "(no answer)") }] });
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
       break;
     }
   }
-  return { exhausted: true, usage };
+  return { exhausted: true, usage, calls };
 }

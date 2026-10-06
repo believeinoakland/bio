@@ -1,19 +1,20 @@
 /* agent-harness — its requirements, tested at its interface (`src/harness.mjs`, `src/subsession.mjs`), pure.
  *
- * Every live id R1–R8 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
+ * Every live id R1–R9 of `build/requirements/agent-harness.md` is named by a test here, in its title. The module is
  * pure (R8), so nothing is stood up: the tables are walked directly, exhaustively where a requirement says "never",
  * and a run is driven the way the Worker shell drives it (`walk` below: `nextStep`, then `advance`, a judgement
  * applied only at a judged row). What only the shell does (the plane calls, the HTTP status) is agent-worker's and is
  * tested there. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
 
 import * as HARNESS from "../src/harness.mjs";
 import * as SUBSESSION from "../src/subsession.mjs";
 
 const {
   CONTROL_FLOW, PLAN_FLOW, FIRST_STEP, MODES, LEVELS, BUDGET_BOUNDS, PLAN_BUDGET_BOUNDS, PLAN_MAX_PASSES,
-  DEFAULT_MAX_PASSES, JUDGEABLE, NOT_JUDGEABLE, PLAN_READS, PLANE_OPS,
+  DEFAULT_MAX_PASSES, JUDGEABLE, NOT_JUDGEABLE, PLAN_READS,
   nextStep, nextPlanStep, gateStep, stopBecause, planStopBecause, passLimit, advance, planAdvance, applyJudgement,
   flowFor,
 } = HARNESS;
@@ -369,10 +370,11 @@ test("R6: it has no fanout: no row and no edge names fanout, collect or next-pas
   const subjects = [{ kind: "outcome", determination: "D", standard: "S" }, { kind: "inquiry", inquiry: "I", standards: ["S2"] }, { kind: "x" }];
   const ops = [PLAN_READS.plan("P"), PLAN_READS.plans("J"), PLAN_READS.profile(), ...subjects.flatMap((s) => PLAN_READS.subject(s))]
     .map((r) => r.op);
-  for (const op of ops) {
-    assert.equal(PLANE_OPS[op]?.mutating, false, `${op} is a declared read`);
-    assert.ok(!["airunspawn", "capturerequest", "suggest", "fetch"].includes(op));
-  }
+  /* exactly the reads R6's table makes (that each is a declared read is agent-worker's, its R37 over its own `ops.mjs`) */
+  assert.deepEqual([...new Set(ops)].sort(), ["availableactions", "consequencesof", "determination", "plan", "plans",
+    "profiles", "publishededitions", "standard"]);
+  for (const op of ops)
+    assert.ok(!["airunspawn", "capturerequest", "suggest", "optionpropose", "airuntick", "airunclose", "fetch"].includes(op), op);
 });
 
 test("R6: nextPlanStep never leaves a row's declared steps, and a refusal goes to adjust, never back to submit", () => {
@@ -430,7 +432,6 @@ test("R7: sub-sessions run one per level, all four in LEVELS order, each under i
     assert.deepEqual(Object.keys(c), SPAWN_KEYS);
     assert.deepEqual(c.scope, SUBSESSION_OPS);
     assert.deepEqual(c.scope, ["meaningrows"]);
-    for (const op of c.scope) assert.equal(PLANE_OPS[op].mutating, false);
     assert.deepEqual(c.standard, { in_force: true, basis: "b", stated: "st", pair: "p" });
     assert.ok(Object.isFrozen(c) && Object.isFrozen(c.context) && Object.isFrozen(c.returns));
   }
@@ -518,4 +519,17 @@ test("R8: the module reads no binding, environment or storage: every export runs
     }
   }
   assert.deepEqual(touched, []);
+});
+
+/* ============================================================ R9: none of agent-worker's declarations */
+test("R9: no file of this module exports PLANE_OPS, NAMESPACES or MEANING_ARM (they are agent-worker's, in its ops.mjs)", async () => {
+  const dir = new URL("../src/", import.meta.url);
+  const files = readdirSync(dir).filter((f) => f.endsWith(".mjs")).sort();
+  assert.deepEqual(files, ["harness.mjs", "subsession.mjs"]);
+  const found = [];
+  for (const f of files) {
+    const mod = await import(new URL(f, dir));
+    for (const name of ["PLANE_OPS", "NAMESPACES", "MEANING_ARM"]) if (name in mod) found.push(`${f}: ${name}`);
+  }
+  assert.deepEqual(found, []);
 });

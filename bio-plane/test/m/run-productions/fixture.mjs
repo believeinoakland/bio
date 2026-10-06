@@ -7,7 +7,7 @@
    and content's own two providers (extraction's readings, provenance's `capturesOf`). Every stand-in records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
-   here in their stated columns, and extraction's own tables from its schema (so a test can show a production writes
+   here in their stated columns (inquiry_basis is leg-earning's since K1505 (2), its R12), and extraction's own tables from its schema (so a test can show a production writes
    none of them, N201). The storage answers at the plane's shape (K316): a cursor, and workerd's 50-byte cap on a LIKE
    or GLOB pattern (K313). Every test drives `run-productions` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -79,13 +79,17 @@ export function storage() {
 /** A text layer's chain, unscoped (content's fixture's). */
 export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }];
 
-/* The read contracts of the later modules this one joins (inquiry R40, basis-versions R38), and provenance's (its R48)
-   the extracted strength joins for its origin trace, in their stated columns. */
+/* The read contracts of the later modules this one joins (leg-earning R12's `inquiry_basis`, basis-versions R38), and
+   provenance's (its R48) the extracted strength joins for its origin trace, in their stated columns. `inquiry_basis`
+   holds every column leg-earning's table holds (N627), so leg-earning's own migration, run when the real strength and
+   citation reach inquiry, finds the columns its indexes name. */
 const CONTRACT_TABLES = `
 CREATE TABLE IF NOT EXISTS register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT, encoding TEXT,
   bytes INTEGER, registered TEXT, authored INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS captured_locators (capture_sha TEXT, address_norm TEXT);
-CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT, ord INTEGER, role TEXT, target_id TEXT, content_id TEXT, note TEXT);
+CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL,
+  target_type TEXT NOT NULL, role TEXT NOT NULL, grade TEXT, grade_axis TEXT, grade_source TEXT, note TEXT, at TEXT,
+  ground TEXT, content_id TEXT, PRIMARY KEY (bundle_id, ord));
 CREATE TABLE IF NOT EXISTS inquiry_basis_versions (bundle_id TEXT, name TEXT, ord INTEGER, state TEXT, hidden INTEGER,
   claim TEXT, relationship TEXT, derived_from TEXT, run TEXT, kind TEXT, composition TEXT, leg_count INTEGER);
 CREATE TABLE IF NOT EXISTS inquiry_basis_version_legs (bundle_id TEXT, name TEXT, ord INTEGER, target_id TEXT,
