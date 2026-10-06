@@ -141,6 +141,13 @@ const RELEASES = [
   /* 0.78.0: deployed and live-verified on biosmoke7 2026-09-23 (REC-172 / IC-188, a CUT NOW; carried REC-171, REC-173,
      REC-174); its pointer landed at 38b49c50. The commit is dist/cut-0.78.0's cut, whose release/ holds it. */
   ["0.78.0", "dfe9858c89810a49422ee071c4f0bf92c0c2f297"],
+  /* 0.79.0: deployed and live-verified on biosmoke7 2026-09-24 and distributed to groups; the commit is
+     dist/cut-0.79.0's cut, whose release/ holds it. RELEASES, NOT WITHDRAWN. */
+  ["0.79.0", "dd324152c9d999b9a0cc8cadc99947c15bebdd88"],
+  /* 0.80.0: deployed to biosmoke7 2026-10-06 (K1717) and NOT distributed (K1718, K1759), but biosmoke7's store
+     migrated and was written on it, as 0.77.0's was; the next release boots on that store. The commit is
+     dist/cut-0.80.0's cut (never merged to main), whose release/ holds it. RELEASES, NOT WITHDRAWN. */
+  ["0.80.0", "e34406635f65c9c64c86e963e94d73ec7ae61f1c"],
 ];
 const gitShow = (commit, path) =>
   execFileSync("git", ["show", `${commit}:${path}`], { cwd: ROOT, maxBuffer: 64 << 20 });
