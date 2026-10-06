@@ -140,11 +140,11 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 ### L9
 
-- **T34-49 · consequences** · (PEOPLE #3 J1, K1791) retires R16's interim fail-closed test (`person.test.mjs`:84), red since people's `sourceLinkSight`. (N576, widened by K1649) R2 and R15 read a calculation operand through calculations' synchronous read, instead of withholding it from every member viewer. (N600) R16 tells "no link" from "a link that does not admit me" through people's `sourceLinkSight`, instead of showing a person only to a viewer `sourceLinksOf` lists · K1649 · req: R2, R15, R16, BOB's wording (the fail-closed reading was the interim) · depends T34-27, T34-23.
+- **T34-49 · consequences** · (CALCULATIONS #2 J1, K1795) `computed.test.mjs`:176 (R2) expects alice `out_of_view`, but she created the calculation, so calculations R30 admits her: the expectation is inverted. (PEOPLE #3 J1, K1791) retires R16's interim fail-closed test (`person.test.mjs`:84), red since people's `sourceLinkSight`. (N576, widened by K1649) R2 and R15 read a calculation operand through calculations' synchronous read, instead of withholding it from every member viewer. (N600) R16 tells "no link" from "a link that does not admit me" through people's `sourceLinkSight`, instead of showing a person only to a viewer `sourceLinksOf` lists · K1649 · req: R2, R15, R16, BOB's wording (the fail-closed reading was the interim) · depends T34-27, T34-23.
 - **T34-50 · action-clocks** · (N609) R3, R5 items carry `zone`. (N562) `factOf` per calendar entry uses local-facts R6's named closure-list entries. (N603, user side) drops `count.mjs`'s `governedView` once civil-time counts on the governing correction · K1563 (10) · req: BOB's wording · depends T34-19, T34-3.
 
 - **T34-61 · action-plans** · (N601, user side) answers `NO_SUCH_DUTY` through duties' `noSuchDuty`; C-124.32's translation as T34-12 stamps it · K1650 · req: BOB's wording · depends T34-22, T34-12.
-- **T34-62 · filings** · (N602, user side) reads placed-nowhere items from events' dated `timeline` instead of its second undated read · K1653 · req: none (a simplification) · depends T34-17.
+- **T34-62 · filings** · (EVENTS #2 J2, K1795) `chronology.test.mjs`:63 (R33) expects the source arguments with `viewer` (events R30). (N602, user side) reads placed-nowhere items from events' dated `timeline` instead of its second undated read · K1653 · req: none (a simplification) · depends T34-17.
 
 **L9 merge order:** consequences → action-clocks → filings → action-plans (`modules.json` order).
 
