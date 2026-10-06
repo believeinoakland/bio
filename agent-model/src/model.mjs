@@ -1,11 +1,14 @@
-/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R10). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
+/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R11). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
  * (iii); K617, K1439) and extended with the two providers of K1429 and K1502.
  *
- * WHOSE ACCOUNT (R1, R2, R8, R9). Every call carries one member's own account reference, `{kind: "apikey", key}` or
- * `{kind: "subscription", token}` (K1502: the group's copy binds no Claude credential). Its `kind` picks the
- * provider: an API key goes to the Messages API (`apikey.mjs`), a subscription to Claude Code in the `agent-runner`
- * container through the Container Durable Object binding the caller passes (`subscription.mjs`). The secret is used
- * for the call it came with and kept nowhere; this module reads no environment variable and no binding for one.
+ * WHOSE ACCOUNT (R1, R2, R8, R9, R11). Every call carries the account reference that serves one member's act, as
+ * `credentials.accountFor` answers it: the member's own, `{kind: "apikey", key}` or `{kind: "subscription", token}`,
+ * or the group's API key, `{kind: "apikey", level: "group", key}` (K1755), sent exactly as a member's key is. The
+ * group's copy binds no Claude credential in its environment (K1502): the group's key too arrives per call. Its
+ * `kind` picks the provider: an API key goes to the Messages API (`apikey.mjs`), a subscription to Claude Code in the
+ * `agent-runner` container through the Container Durable Object binding the caller passes (`subscription.mjs`). The
+ * secret is used for the call it came with and kept nowhere; this module reads no environment variable and no binding
+ * for one.
  *
  * WHICH MODEL (R1). The model a turn asks for is `MODEL_FOR_MODE[mode]`, set by measurement: no request body and no
  * judgement chooses it, and changing an entry is a reviewed edit.
@@ -48,9 +51,13 @@ export function segmentMeter({ turnsBound, bytesBound }) {
   return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
 }
 
-/* R2 — a reference this module can use, as `{kind, secret}`, or null. Nothing else about it is read. */
+/* R2, R11 — a reference this module can use, as `{kind, secret}`, or null. Its `level`, when present, is `member`
+ * or `group`, and a `group` reference is only ever an API key; nothing else about it is read. */
+const LEVELS = Object.freeze(["member", "group"]);
 function usable(reference) {
   if (!reference || typeof reference !== "object") return null;
+  if (reference.level !== undefined && !LEVELS.includes(reference.level)) return null;
+  if (reference.level === "group" && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
   if (reference.kind === "subscription" && typeof reference.token === "string" && reference.token)
     return { kind: "subscription", secret: reference.token };
@@ -61,7 +68,8 @@ function usable(reference) {
 function precheck(reference, runner) {
   const ref = usable(reference);
   if (!ref) return { refusal: refused(null, "ACCOUNT_REFERENCE_UNUSABLE",
-    "a model turn runs only under one member's own account reference: {kind: \"apikey\", key} or {kind: \"subscription\", token}") };
+    "a model turn runs only under the account reference that serves a member's act: {kind: \"apikey\", key} or "
+    + "{kind: \"subscription\", token}, the member's own, or the group's API key {kind: \"apikey\", level: \"group\", key}") };
   if (ref.kind === "subscription" && !runner) return { refusal: refused(null, "RUNNER_NOT_CONFIGURED",
     "a subscription runs in the agent runner, and no runner binding was passed") };
   return { ref };
@@ -86,7 +94,8 @@ export async function modelCall(reference, request, { runner } = {}) {
 /** ONE CONVERSATION, TO ITS ANSWER (R6, R7). `messages` is the transcript and is appended to in place (the parent's
  *  persists across rows; each sub-session has its own). It ends when the model calls `finalTool` (`answer`: its
  *  input), or `stopped` (the segment's turn or byte bound), `exhausted` (this conversation's own ceiling), `silent`
- *  or `refused`; every ending past the first request carries the conversation's summed `usage`. Any other tool call
+ *  or `refused`; every ending past the meter's first check carries the conversation's summed `usage` and `calls`, the
+ *  number of model calls that sum covers (N588), so a caller counts calls, not conversations. Any other tool call
  *  is performed by `onTool` and its result returned to the model. */
 export async function converse({ reference, runner, mode, meter, system, messages, tools, finalTool, onTool,
                                  maxTurns = CONVERSATION_MAX_TURNS }) {
@@ -107,14 +116,17 @@ export async function converse({ reference, runner, mode, meter, system, message
                                   maxTurns, charge });
 
   let usage = null;
+  /* A request counts when its outcome reached the provider (it carries `usage`); one the meter stopped, or one that
+     failed before an answer came, counts none. */
+  let calls = 0;
   for (let k = 0; k < maxTurns; k += 1) {
     const serialized = JSON.stringify(withCache({ model, max_tokens: MODEL_MAX_TOKENS, system, messages, tools,
                                                   tool_choice: { type: "auto" } }));
     const stop = charge(serialized);
-    if (stop) return { ...stop, usage };
+    if (stop) return { ...stop, usage, calls };
     const got = await apikeyTurn(ref.secret, serialized);
-    if (got.usage) usage = sumUsage(usage, got.usage);
-    if (got.silent || got.refused) return { ...got, usage };
+    if (got.usage) { usage = sumUsage(usage, got.usage); calls += 1; }
+    if (got.silent || got.refused) return { ...got, usage, calls };
     const content = Array.isArray(got.result.content) ? got.result.content : [];
     messages.push({ role: "assistant", content });
     const uses = content.filter((b) => b && b.type === "tool_use");
@@ -123,7 +135,7 @@ export async function converse({ reference, runner, mode, meter, system, message
       /* Every tool call gets its result, so the transcript stays one the API accepts when the next row is asked. */
       messages.push({ role: "user", content: uses.map((u) => ({ type: "tool_result", tool_use_id: u.id,
         content: u === final ? "received" : "not performed: the answer ended this step" })) });
-      return { answer: final.input && typeof final.input === "object" ? final.input : {}, usage };
+      return { answer: final.input && typeof final.input === "object" ? final.input : {}, usage, calls };
     }
     if (!uses.length) {
       messages.push({ role: "user", content: `Answer by calling the \`${finalTool}\` tool.` });
@@ -138,7 +150,7 @@ export async function converse({ reference, runner, mode, meter, system, message
     }
     messages.push({ role: "user", content: results });
   }
-  return { exhausted: true, usage };
+  return { exhausted: true, usage, calls };
 }
 
 /* ------------------------------------------------------------------ THE PARENT'S JUDGEMENTS (`agent-worker` R40, now R1 here)
