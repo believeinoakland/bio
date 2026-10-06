@@ -92,7 +92,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 - **T34-26 · retrieval** · (N584) exports a read of the relations it compiles with, so answers R15's saved-form check sees T33's fields; `runSaved` re-checks a form with the zone it was set with · K1609 · req: the new export, BOB's wording · depends —.
 - **T34-27 · calculations** · (N619) a refused accept writes nothing. (N576) a synchronous read for the synchronous checks: `gradeFactsOf({calcId, viewer})` returns R9's grade facts `{found, accepted, capture: {grade, why}, inputs, method}` with R10's withholding, plus a status read `{held, visible, accepted}`. (N571, user side) R1's cell bound back to about 1,000,000 over the streaming evaluate. (N596) `read` states each input's canonical bytes' SHA-256 (figure, money and calculation inputs, not only tables) · K1601, K1576, K1639 · req: the two reads, R1's bound and the input hash, BOB's wording (K1576, K1601) · depends T34-4.
 
-**L5 merge order:** `modules.json` order: entities → events → lines → local-facts → connections → standards → duties → people → explore → bias → retrieval → calculations. lines merges before people (N573) and standards before duties (N583).
+**L5 merge order:** `modules.json` order: entities → events → lines → local-facts → connections → standards → money-checks → duties → people → explore → bias → retrieval → calculations. lines merges before people (N573) and standards before duties (N583).
 
 ### L6
 
