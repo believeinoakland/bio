@@ -34,3 +34,45 @@ Once agent-runner declares a `bundle`, a release refuses `[CONTAINER_UNDESCRIBED
 (2) **The fleet gate needs nothing from T34-74.** `fleetbundles.test.mjs` asserts that every member with no bundle is a container member, and `resolveversion` ARM 7b is now a floor (at least 11 sites) with a per-directory arm (7c). So adding a bundle, or a `wrangler.jsonc` with `vars.VERSION`, to agent-runner leaves both green with no edit to bundler's tests. A bundle added to agent-runner is guarded like any member's (R24).
 
 (3) **A finding for the release, not for this job.** `release-assemble.mjs --dry-run` on this tree gets past every freshness proof: 5 assets are fresh, and agent-runner is left out by name. It then refuses `[VERSION_ALREADY_RELEASED]`, because `release/RELEASE.json` holds 0.79.0 with a different plane while the tree still declares 0.79.0. 0.80.1's cut bumps the version, as usual.
+
+## J3 · COMPLETE
+
+T34-6 is applied, on `job/T34/bundler` at 2588a7276a. It changes only bundler's own paths and tests.
+
+**Entries applied**
+- **N578 / R24.** `discoverMembers` gives each member a `kind` (`worker` unless its marker says otherwise), an `image`, and its `marker`. The new `isContainer` and `isGuarded` say which members the bundle guard covers. A container member with no Worker bundle is listed and not bundle-guarded:
+  - `verifyStatic` returns no findings, with `guarded: false`.
+  - `verifyFresh` returns `checked: false` with a reason, and never calls the member fresh.
+  - `bundles.mjs` lists it as not guarded.
+  - A container member that declares a `bundle` is guarded like any member.
+- **N610 / R25.** `containerDescriptor` and `imageReference` live in `fleet-bundle.mjs`.
+  - The release gives a container member that has a `bundle` its `container.json` part, type `Container`. The part is made from the marker, carried in the fleet payload and written to `release/<member>/container.json`.
+  - A field it lacks is refused `[CONTAINER_UNDESCRIBED]` naming the field, before any build runs or anything is written. `bind` must name a member that ships.
+  - A container member with no `bundle` is left out by name (K1730).
+- **N624 / R26.** `deploy-fleet.mjs` with a container member runs these steps in order, stopping at the first refusal or failure:
+  1. `[CONTAINER_UNDESCRIBED]` for an image with no pinned digest, or for a config with no `containers`, before any request.
+  2. A Containers preflight. A token that cannot reach Containers is refused `[CONTAINERS_UNREACHABLE]`, naming the account and saying what it lacks, before anything is pulled, pushed or deployed. `--dry-run` stops after this step.
+  3. `docker pull` the image by digest, `docker tag` it `<member>:<12 hex of the digest>`, then `wrangler containers push` with the account's token. A failed step exits with its own status, and nothing is deployed.
+  4. R20's deploy, with `containers[].image` set to `registry.cloudflare.com/<account>/<tag>`. The tracked config is never written.
+- **N575.** `fleetbundles.test.mjs` re-pins agent-worker to the 20 inputs its committed manifest records, and lists agent-runner (5 members). The guard counts any member with no `bundle` that is not a container member. `resolveversion` ARM 7b is now a floor of at least 11 sites, and a new ARM 7c checks the sites directory by directory.
+- **N586 (bundler's share).** Arm 1 of `fleetbundles.control.mjs` now appends to `agent-harness/src/harness.mjs`. Run alone: 111 pass, 1 FAIL, exit 1, naming agent-worker and `../agent-harness/src/harness.mjs` with STALE BUNDLE; restored by content and sha256.
+- **The inherited reds K1708 named as bundler's are now green:** fleetbundles ×4 and resolveversion ARM 7b.
+
+**A flaw fixed in my own module.** `release-assemble.mjs` used to filter members to those with a `bundle`. A worker member whose `bundle` block was deleted therefore dropped out of a signed release without a word. It now refuses `[NO_ARTIFACT]` (R22), and the R22 test covers it.
+
+**Deferred.** None.
+
+**Found in other modules.** agent-runner's marker fields, for T34-74's START: J2 REPORT. `requirements/bundler.md` R24–R26 still carry "not yet met: T34"; that wording is BOB's.
+
+**Tests and checks run**
+- Module set (`test/m/bundler/` with `bundle`, `deploybindings`, `fleetbundles` and `resolveversion`): `# tests 63 # pass 63 # fail 0 # skipped 0`. Inside it, `fleetbundles: 112 pass, 0 fail` and `resolve-version: 12 pass, 0 fail`.
+- Users of the changed functions: agent-worker `requirements.test.mjs` pass 1 fail 0; ocr-worker `ocr-worker.test.mjs` pass 1 fail 0; case-checker `program.test.mjs` pass 5 fail 0; newgroup `requirements.test.mjs` pass 37 fail 0.
+- Real tree: `bundles.mjs --check` exit 0 (5 guarded, agent-runner listed and not guarded). `release-assemble.mjs --dry-run` proves 5 assets fresh and leaves agent-runner out, then refuses `[VERSION_ALREADY_RELEASED]` (J2 (3)).
+- Checks:
+  - `format: 126 modules, 125 requirements files; 0 failures`
+  - `architecture: 19 product files, 48 relative imports (8 naming no tracked file, not judged); 0 failures`
+  - `coverage: 1 modules, 26 of 26 live requirement ids named by a test; 0 failures`
+  - `ownership: 12 files changed by bundler between tranche/T34 and HEAD; 0 failures`
+- Layer tests: `build/manifest.md` names none.
+
+Size (session_01FJffd6B15P17amC4kMWkAK): test runs 16, module lines 2666
