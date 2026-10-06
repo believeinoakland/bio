@@ -15,6 +15,6 @@
 - `monitoring` `test/m/monitoring/cadence.test.mjs`:298 (R18) fails with and without this change (114 pass, 1 fail both ways); not docket's.
 - Generated artifacts made stale (mechanics §14): the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) carries the old wording of the two rows; BOB regenerates at the layer close.
 
-**Ran.** `node --test test/m/docket/`: tests 59, pass 59, fail 0. Users (wording only, run anyway): public-read 123/123, network-notices 68/68, queue 124/124, affordances catalogue 50/50, control-plane families 10/10, monitoring 114 pass 1 fail (as above). No layer tests are named in `build/manifest.md`. Checks: format "127 modules, 126 requirements files; 0 failures"; architecture "10 product files, 52 relative imports …; 0 failures"; coverage "26 of 26 live requirement ids named by a test; 0 failures"; ownership "0 failures" (re-run after the commit, below).
+**Ran.** `node --test test/m/docket/`: tests 59, pass 59, fail 0. Users (wording only, run anyway): public-read 123/123, network-notices 68/68, queue 124/124, affordances catalogue 50/50, control-plane families 10/10, monitoring 114 pass 1 fail (as above). No layer tests are named in `build/manifest.md`. Checks: format "127 modules, 126 requirements files; 0 failures"; architecture "10 product files, 52 relative imports …; 0 failures"; coverage "26 of 26 live requirement ids named by a test; 0 failures"; ownership "4 files changed by docket between tranche/T34 and HEAD; 0 failures".
 
 Size (session_011xvZrjC2VEHSEoquWKsvpe): test runs 9, module lines 1483
