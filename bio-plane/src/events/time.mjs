@@ -7,7 +7,7 @@ import { bounds, compare, isCalendarDate } from "../civil-time/index.mjs";
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const MINUTE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 const SECOND = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
-const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 /** A stated date as a date-time `{value, precision, zone}`, or `{bad: why}`. `v` is a day `YYYY-MM-DD`, a minute
  *  `YYYY-MM-DDTHH:MM`, a second, a UTC instant, or a date-time object; `zone` is the view's, used when `v` gives none.

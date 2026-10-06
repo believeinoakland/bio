@@ -257,6 +257,20 @@ function vote(k, held, row, f, out) {
 
 const COURT_TYPES = ["courtlistener_docket", "cpuc_proceeding", "ecourt_roa"];
 const US_DATE = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+const LONG_DATE = /^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4})$/;
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+/* A register's date as written (`MM/DD/YYYY`, `Mon D, YYYY` or `YYYY-MM-DD`) as a day, or the text as given. */
+function dayAsWritten(raw) {
+  const us = US_DATE.exec(raw);
+  if (us) return `${us[3]}-${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}`;
+  const lg = LONG_DATE.exec(raw);
+  const m = lg ? MONTHS.indexOf(lg[1].toLowerCase()) : -1;
+  if (m >= 0) return `${lg[3]}-${String(m + 1).padStart(2, "0")}-${lg[2].padStart(2, "0")}`;
+  return raw.slice(0, 10);
+}
+/* What the entry says it is: an order when its stated kind, or its own opening words, say order; else a filing. */
+const kindOf = (row) => (/order/i.test(String(row.kind_as_written ?? "")) || /^\s*(?:minute\s+)?order\b/i.test(String(row.text ?? ""))
+  ? "order" : "filing");
 
 /** R38: register rows with a source-assigned entry id, as `filing` or `order` events of a proceeding a member follows. */
 export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {}) {
@@ -275,13 +289,10 @@ export function followedRegister(k, { captureSha, proceeding, by = MACHINE } = {
       const key = `register:${reading.content_type}:${proceeding}:${row.entry_id}`;
       const p = source(k, key);
       if (p) { out.unchanged++; return; }
-      const kind = /order/i.test(String(row.kind_as_written ?? "")) ? "order" : "filing";
+      const kind = kindOf(row);
       const eventId = newEvent(k, kind, "EventScheduled");
       let fact = null;
-      const raw = typeof row.date === "string" ? row.date.trim() : "";
-      const us = US_DATE.exec(raw);
-      const day = us ? `${us[3]}-${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}` : raw.slice(0, 10);
-      const d = readDate(day, k.zone());
+      const d = readDate(dayAsWritten(typeof row.date === "string" ? row.date.trim() : ""), k.zone());
       if (!d.bad && k.zone()) fact = k.holdFact({ sha: held.sha, bundleId: held.bundleId, extent: { kind: "document" }, kind: "entered",
         date: d, method: `court-doctypes ${reading.content_type}: the entry's date as written`, by: MACHINE, sourceRow: i }).dated_fact;
       rowAttestation(k, eventId, held, { source: i }, fact);

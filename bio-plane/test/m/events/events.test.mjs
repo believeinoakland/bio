@@ -179,7 +179,7 @@ test("R16 onEventChanged runs after commit for when_moved and participant_re_res
   assert.equal(got.length, 2);
 });
 
-test("R37 the read contract: events(event_id, kind, status), event_when_cache(event_id, start, end, precision, zone), event_participants(event_id, entity_id, role) joinable in a later module's SQL", () => {
+test("R37 the read contract: events(event_id, kind, status), event_when_cache(event_id, start, end, precision, zone), event_participants(event_id, entity_id, role), event_attestations(event_id, capture_sha: each capture an attestation of the event cites) joinable in a later module's SQL", () => {
   const w = world();
   const p = w.entity("S");
   const e = w.event({ value: "2026-09-09", participants: [{ entityId: p, role: "present", attestation: 0 }] }).event_id;
@@ -190,6 +190,14 @@ test("R37 the read contract: events(event_id, kind, status), event_when_cache(ev
   const j = w.rows(`SELECT e.kind, e.status, c.start, c.precision, c.zone, p.role FROM events e
                     JOIN event_when_cache c ON c.event_id = e.event_id JOIN event_participants p ON p.event_id = e.event_id WHERE p.entity_id=?`, p);
   assert.deepEqual(j, [{ kind: "meeting", status: "EventScheduled", start: "2026-09-09T03:00:00Z", precision: "day", zone: "America/Halifax", role: "present" }]);
+  for (const c of ["event_id", "capture_sha"]) assert.ok(cols("event_attestations").includes(c));
+  /* each capture an attestation of the event cites, and no other: a relation's citation is not the event's attestation */
+  const s1 = w.capture("r37-a"), s2 = w.capture("r37-b"), s3 = w.capture("r37-rel");
+  const two = w.ev.createEvent({ kind: "hearing", attestations: [{ captureSha: s1, extent: doc }, { captureSha: s2, extent: doc }, { testimony: "I saw it" }], by: MEMBER }).event_id;
+  w.ev.relate({ from: two, to: e, kind: "answers", attestation: { captureSha: s3, extent: doc }, by: MEMBER });
+  const caps = w.rows(`SELECT DISTINCT a.capture_sha FROM event_attestations a JOIN events e ON e.event_id = a.event_id
+                       WHERE e.event_id=? AND a.capture_sha IS NOT NULL ORDER BY a.capture_sha`, two).map((r) => r.capture_sha);
+  assert.deepEqual(caps, [s1, s2].sort());
 });
 
 test("R39 one home per fact at the store's gate: no amount, no payer or payee, no HYP- id in an id field, every when_cache equal to its rebuild", () => {

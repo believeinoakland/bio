@@ -73,8 +73,20 @@ const GATED = ["events", "event_attestations", "event_participants", "event_conc
 /* ---- the instance (K61) ---- */
 
 const instances = new WeakMap();
-let current = null;        /* R35: the instance the default registry's owner reads (the plane wires one) */
+const made = new Set();    /* R35 (K1563 (1)): every instance this isolate made, for the owner's host-less read */
 let ownerRegistered = false;
+
+/* R35 (K1563 (1)): the registry's read: the instance of the `host` it passes through, else the isolate's one instance,
+   else a refusal, never a guess between two stores. */
+function ownerRead(a) {
+  const host = a && a.host;
+  if (host) {
+    const e = instances.get(host.storage ? host.storage : host);
+    return e ? e.neighbours(a) : { refused: "OWNER_HOST_UNKNOWN", why: "no events instance is wired for that host" };
+  }
+  if (made.size === 1) return [...made][0].neighbours(a);
+  return { refused: "OWNER_HOST_AMBIGUOUS", why: `this isolate holds ${made.size} events instances and the read names no host` };
+}
 
 /** K61: the one Events for this object's storage. `opts` is read on the first call only: `record`, `membership`,
  *  `provenance`, `extraction`, `content`, `entities` (each its module's instance for `ctx`, reached on first use), `now`
@@ -160,10 +172,9 @@ export class Events {
   /** R4, R35: the after-read hook (once, over the content types whose readings this module reads dates from) and the
    *  connection owner in the default registry (once per process; it reads the instance the plane made last). */
   start(readHooks) {
-    current = this;
+    made.add(this);
     if (!ownerRegistered) {
-      const r = registerOwner({ owner: "events", kinds: OWNER_KINDS,
-        neighbours: (a) => (current ? current.neighbours(a) : { refused: "OWNER_NOT_READY", why: "no events instance is wired" }) });
+      const r = registerOwner({ owner: "events", kinds: OWNER_KINDS, neighbours: ownerRead });
       ownerRegistered = r.ok === true || r.refused === "OWNER_DUPLICATE";
     }
     if (this.#started) return;
@@ -410,9 +421,12 @@ export class Events {
     return refuse("NO_ATTESTATION", "an attestation is {datedFactId}, {captureSha, extent} or {testimony}");
   }
 
+  /* A relation's citation (R17) is held as `relation:<from>`, so it is never one of the event's own attestations (R9, the
+     R37 contract: each capture an attestation OF the event cites). */
   #addAttestation(eventId, row, by, serves = "event") {
     const { upper_bound, ...rest } = row;
-    return this.#insert("event_attestations", { ...rest, event_id: eventId, serves, by_actor: stamp(by), at: this.#now() });
+    return this.#insert("event_attestations", { ...rest, event_id: serves === "relation" ? `relation:${eventId}` : eventId, serves,
+                                                by_actor: stamp(by), at: this.#now() });
   }
 
   /* R6: a concerns end, an entity or another event; a hypothesis id is never held (R39). */
