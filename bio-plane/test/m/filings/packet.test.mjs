@@ -107,7 +107,7 @@ test("R8 PACKET_NO_REASON (C-115.44): a reason absent, not a string, blank or on
   assert.deepEqual([o.ok, o.version, read(o.id, 3).reason], [true, 3, "asked through the op"]);
 });
 
-test("R9 the six sections, each item naming its record source: facts, chronology in date order (ties by source id), exhibits with provenance and attestations, standards with in-force, candidate theories, deadlines; consequences as recorded", async () => {
+test("R9 the six sections, each item naming its record source: facts, the chronology (a timeline read, R33), exhibits with provenance and attestations, standards with in-force, candidate theories, deadlines; consequences as recorded", async () => {
   const x = tier3();
   correspond(x, x.A, { direction: "sent", at: "2026-03-10", account: "letter" });
   correspond(x, x.A, { direction: "received", at: "2026-03-12", party: "the clerk", artifactSha: sha(`the text of ${DOC}`) });
@@ -127,18 +127,16 @@ test("R9 the six sections, each item naming its record source: facts, chronology
   assert.deepEqual([fact.finding, fact.case, fact.edition, fact.version_sha, fact.source], [F, CASE, 1, x.pin, `${F}@${CASE}/1`]);
   assert.equal(fact.claim.conclusion, "The works order was let without the vote the bylaw requires.");
   assert.deepEqual(fact.citations.map((c) => c.target), [DOC]);
-  /* chronology: every dated event in order, ties by source id */
-  const ch = s.chronology.items;
-  assert.deepEqual(ch.map((e) => [e.date, e.source]), [
-    ["2026-03-02", x.D], ["2026-03-10", `${A}#0`], ["2026-03-10", `${A}/state_history[0]`],
-    ["2026-03-12", `${A}#1`], ["2026-04-01", `${A}/clock[0]`], ["2026-09-28", `${F}@${CASE}/1`]]);
-  for (let i = 1; i < ch.length; i++) assert.ok(ch[i - 1].date < ch[i].date || (ch[i - 1].date === ch[i].date && ch[i - 1].source < ch[i].source));
+  /* chronology: the timeline of the finding's subject (R33, whose own tests read it whole), its two lanes apart */
+  assert.deepEqual([s.chronology.title, s.chronology.marking, s.chronology.set.map((i) => i.id)], ["Chronology", s.facts.marking, [x.ACT_EVENT, x.SUBJECT]]);
+  assert.deepEqual(Object.keys(s.chronology.lanes), ["world", "ours"]);
+  assert.equal(fact.subject_entity, x.SUBJECT, "the entity the finding concerns, from its published bytes");
   /* exhibits: each capture a fact or event cites, with digest, locator, capture time and attestations */
   const ex = Object.fromEntries(s.exhibits.items.map((e) => [e.sha256, e]));
   const docSha = sha(`the text of ${DOC}`), evSha = sha("the text of INFO-2026-0002-ledger");
   assert.deepEqual(Object.keys(ex).sort(), [docSha, evSha].sort());
   assert.deepEqual(ex[docSha].cited_by, [`${A}#1`, `${F}@${CASE}/1`]);
-  assert.deepEqual(ex[evSha].cited_by, [x.D]);
+  assert.deepEqual(ex[evSha].cited_by, [x.D, x.ACT_EVENT].sort(), "the act's evidence and the act's event (R33) cite it");
   assert.equal(ex[evSha].locator, "https://example.org/snapshots/INFO-2026-0002-ledger.txt");
   assert.equal(ex[evSha].captured_at, "2026-09-27T00:00:00Z");
   assert.deepEqual(ex[evSha].attestations.items, x.attestation.attestationsOf(evSha).attestations, "attestation's attestationsOf, never the bundle document");
@@ -207,7 +205,7 @@ test("R9 an exhibit's attestations are attestation.attestationsOf's answer (its 
 });
 
 test("R9 a claim deadline's date only from a recorded start event and its count: calendar, business on the holiday calendar, undetermined past the calendar's years", async () => {
-  const base = { rule: "claim_act", applies_to: "claim", days: 10, citation: "Test Stat. § 9.30", basis: "TEST" };
+  const base = { rule: "claim_act", applies_to: "claim", days: 10, citation: "Test Stat. § 9.30", basis: "TEST", status: "researched" };
   const prof = (deadlines) => {
     const x0 = world();
     return { ...x0.profile(PROFILE), id: "test-filings-deadlines", deadlines };
@@ -215,22 +213,22 @@ test("R9 a claim deadline's date only from a recorded start event and its count:
   const x = tier3({}, { profiles: [prof([{ ...base, days: 11, count: "business", starts: "act" },
                                          { ...base, rule: "claim_filed", count: "calendar", starts: "filed" }])] });
   const d = Object.fromEntries(pack(x).sections.deadlines.items.map((i) => [i.rule, i]));
-  /* 2026-03-02 (a Monday) plus 11 business days: the 11th would be Tuesday 17 March, the profile's holiday, so the
-     18th. */
+  /* 2026-03-02 (a Monday) plus 11 business days on the test profile's calendar, whose weekend is Sunday alone (its
+     `weekend`, never code): 3–7, 9–14, so Saturday the 14th. */
   assert.deepEqual([d.claim_act.start.date, d.claim_act.start.source, d.claim_act.date.state, d.claim_act.date.date],
-                   ["2026-03-02", x.D, "determined", "2026-03-18"]);
+                   ["2026-03-02", x.ACT_EVENT, "determined", "2026-03-14"]);
   assert.equal(d.claim_act.date.calendar.status, "unconfirmed", "R30: no member has confirmed the year here");
   assert.equal(d.claim_act.source, "profile:test-filings-deadlines/deadlines/claim_act");
   assert.equal(d.claim_filed.date.state, "undetermined", "no sent entry is recorded");
   correspond(x, x.A, { direction: "sent", at: "2026-05-01", account: "letter" });
   const d2 = Object.fromEntries(pack(x).sections.deadlines.items.map((i) => [i.rule, i]));
   assert.deepEqual([d2.claim_filed.date.date, d2.claim_filed.start.source], ["2026-05-11", `${x.A}#0`]);
-  const hol = combine([PROFILE]).view.holidays;
-  assert.equal(deadlineDate({ start: "2026-03-13", days: 2, count: "business", holidays: hol }).date, "2026-03-18",
-               "a Friday, then Monday 16th, Tuesday 17th a holiday, Wednesday 18th");
-  assert.equal(deadlineDate({ start: "2026-12-30", days: 3, count: "business", holidays: hol }).date, "2027-01-05",
-               "31 Dec, 1 Jan a holiday, weekend, 4 and 5 Jan");
-  const past = deadlineDate({ start: "2027-12-30", days: 3, count: "business", holidays: hol });
+  const view = combine([PROFILE]).view;
+  assert.equal(deadlineDate({ start: "2026-03-13", days: 4, count: "business", view }).date, "2026-03-19",
+               "a Friday, then Saturday 14th, Monday 16th, Tuesday 17th a holiday, Wednesday 18th, Thursday 19th");
+  assert.equal(deadlineDate({ start: "2026-12-30", days: 3, count: "business", view }).date, "2027-01-04",
+               "31 Dec, 1 Jan a holiday, Saturday 2 Jan, Sunday 3 Jan the weekend, Monday 4 Jan");
+  const past = deadlineDate({ start: "2027-12-30", days: 3, count: "business", view });
   assert.equal(past.state, "undetermined");
   assert.match(past.why, /reaches into 2028/);
   assert.equal(deadlineDate({ start: "2026-01-31", days: 30, count: "calendar" }).date, "2026-03-02");
@@ -242,11 +240,12 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
   const x0 = world();
   const PID = "test-filings-r30";
   const p = { ...x0.profile(PROFILE), id: PID,
-              deadlines: [{ rule: "claim_act", applies_to: "claim", days: 2, count: "business", starts: "act", citation: "Test Stat. § 9.30", basis: "TEST" },
-                          { rule: "claim_cal", applies_to: "claim", days: 2, count: "calendar", starts: "act", citation: "Test Stat. § 9.31", basis: "TEST" }] };
+              deadlines: [{ rule: "claim_act", applies_to: "claim", days: 2, count: "business", starts: "act", citation: "Test Stat. § 9.30", basis: "TEST", status: "researched" },
+                          { rule: "claim_cal", applies_to: "claim", days: 2, count: "calendar", starts: "act", citation: "Test Stat. § 9.31", basis: "TEST", status: "researched" }] };
   const x = world({ profiles: [p] });
-  /* the act on Wednesday 12 August 2026; the Town Clerk's office alone keeps Friday the 14th */
-  const D = x.determine({ act: { ...x.act, at: "2026-08-12" } });
+  /* the act on Wednesday 12 August 2026; the Town Clerk's office alone keeps Friday the 14th; only Sunday is the
+     test profile's weekend */
+  const D = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption", value: "2026-08-12" }) } });
   const clerk = { state: "named", role: "Town Clerk", body: "City of Port Ellery", level: "city" };
   const A = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }], counterparty: clerk });
   const B = x.action({ kind: "commitment_claim", legs: [{ target: D, kind: "rests_on" }] });
@@ -255,7 +254,7 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
   const all = `${PID}/holidays/2026`, office = `${PID}/holidays/2026/role=Town%20Clerk`;
   /* unconfirmed: counted, and said so */
   let a = dl(A).claim_act, b = dl(B).claim_act;
-  assert.deepEqual([a.date.state, a.date.date, b.date.date], ["determined", "2026-08-17", "2026-08-14"],
+  assert.deepEqual([a.date.state, a.date.date, b.date.date], ["determined", "2026-08-15", "2026-08-14"],
                    "the clerk's day is counted for the clerk's office alone");
   assert.equal(a.date.calendar.status, "unconfirmed");
   assert.deepEqual(a.date.calendar.years.map((y) => y.path).sort(), [all, office].sort(), "the entries for all offices and the office's own");
@@ -268,12 +267,13 @@ test("R30 a packet's business-day deadline states the calendar's status as actio
   act(all, { act: "confirm" });
   act(office, { act: "confirm" });
   a = dl(A).claim_act;
-  assert.deepEqual([a.date.date, a.date.calendar.status, a.date.calendar.says], ["2026-08-17", "confirmed", []]);
+  assert.deepEqual([a.date.date, a.date.calendar.status, a.date.calendar.says], ["2026-08-15", "confirmed", []]);
   /* corrected: counted on the corrected days, naming the member and the date */
   act(office, { act: "correct", value: [{ date: "2026-08-13", name: "Clerk's records day (moved)" }], source: "the clerk's notice" });
   a = dl(A).claim_act;
-  assert.deepEqual([a.date.date, a.date.calendar.status], ["2026-08-17", "corrected"], "13th closed instead: 14th, then Monday 17th");
-  assert.match(a.date.calendar.says.join(" "), /corrected locally by .*2026-09-28/);
+  assert.deepEqual([a.date.date, a.date.calendar.status], ["2026-08-15", "corrected"], "13th closed instead: 14th, then Saturday 15th");
+  /* the member's act at 2026-09-28T01:00Z is 27 September on the profile's local day (America/Halifax; K1581) */
+  assert.match(a.date.calendar.says.join(" "), /corrected locally by member:olive, 2026-09-27/);
   /* disputed: undetermined, with why */
   act(all, { act: "dispute" });
   a = dl(A).claim_act;

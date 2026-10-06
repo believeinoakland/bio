@@ -137,7 +137,7 @@ test("R16: no place is named in this module's behaviour or outward text", () => 
   const d = w.c.determine(input());
   const p = w.c.comparisonPropose({ project: d.project, proposer: MACHINE, viewer: MACHINE }).proposal;
   const outward = [...Object.values(CONFORMANCE_CHECKS).map((r) => r.translation), PROPOSAL_SAYS, FLAG_SAYS, p.says,
-                   p.label.says, w.text(d.id).replace(input().act.description, "").replace(/Parks|Director of Parks/g, "")];
+                   p.label.says, w.text(d.id).replace(/Parks|Director of Parks/g, "")];
   for (const s of outward)
     assert.doesNotMatch(s, /Oakland|California|Alameda|Berkeley|San Francisco|Sacramento|CPRA|Brown Act/, s.slice(0, 80));
 });
@@ -157,7 +157,7 @@ test("R17: a determination is a record object of its own type, promoted through 
   assert.match(JSON.stringify(manifest[1]), /member:olive/);
   /* the document states every part */
   const text = w.text(d.id);
-  for (const part of [d.act.id, d.act.description, "Director of Parks", "noncompliant", F, "CASE-2026-0001", "## Comparison"])
+  for (const part of [d.act.id, d.act.event, "2026-03-02", "Director of Parks", "noncompliant", F, "CASE-2026-0001", "## Comparison"])
     assert.ok(text.includes(part), part);
   /* audit: the catalogue and every registered check find it clean */
   const audit = await w.record.auditPass({ after: "", limit: 500, visible: () => true });

@@ -37,16 +37,22 @@ import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
-import { entitiesOf } from "../entities/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
+import { linesOf } from "../lines/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { standardsOf, noSuchStandard } from "../standards/index.mjs";
+import { dutiesOf } from "../duties/index.mjs";
+import { localDay, overdueOn, isCalendarDate } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
-         createSha256, BUNDLE_ID_RE } from "../record-grammar/index.mjs";
+         createSha256, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, lifecycleFindings, lawProposalLabel,
          LAW_LEVELS, GOVERNING_LAWS_MAX, CITATION_MAX, RISK_TIER_REASON_MAX, RISK_TIER_HISTORY_MAX, riskTierHistoryOf,
          governingLawsOf, requestLifecycleOf, consequenceState, respondsToEdgeFindings, checkActionExtension,
          recordsLawRefusal, recordsLawOf, counterpartyName, counterpartyFindings, actionKinds, addresseeIsOffice,
+         counterpartyOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
          LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
          ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
@@ -71,8 +77,11 @@ export const ACTIONS_PAGE_MAX = 200;
 /** R3 (N237, K351): the most `action_basis` and `correspondence` entries one action's document holds. */
 export const ACTION_LEGS_MAX = 500;
 export const ACTION_LEDGER_MAX = 500;
-/** R46: a plan's id, `PLN-YYYY-NNNN` with or without a slug (`action-plans` mints it). */
-const PLAN_ID_RE = /^PLN-\d{4}-\d{4}(-[a-z0-9]+)*$/;
+/** R46, R61 (S0-5): a plan's id, the core record-grammar's one id table answers for `PLN` (its R47), with or without a
+ *  slug (`action-plans` mints it). No pattern of this module's own: a counter of four or more digits is accepted. */
+const PLAN_ID_RE = new RegExp(`^${idPattern("PLN").source.slice(1, -1)}(-[a-z0-9]+)*$`);
+/** R9: an entity id of the registry's `ENT-` form (record-grammar's `idPattern`). */
+const ENTITY_ID_RE = idPattern("ENT");
 /** R48 (K597 (1)): the kinds of pressure a received entry may be marked with. */
 export const PRESSURE_KINDS = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
 /** R52 (K899 (7), DEC-61): what a litigation hold on a `legal` pressure mark is stated as. */
@@ -171,18 +180,71 @@ export function actionClockNext(fm) {
     .sort();
   return pending.length ? pending[0] : null;
 }
-/* Overdue is DERIVED from the document's own pending dates and an instant, never stored as the answer. A date is
-   overdue when the day AFTER it has begun — a deadline of the 14th is met by anything on the 14th — so the comparison
-   is against the UTC calendar day of `nowMs`, C-11.1's "silently past-due" convention. */
-export function actionOverdue(fm, nowMs) {
+/** An instant of `nowMs`, to the second, in record-grammar's `ISO_TS_RE` form (civil-time reads no other). */
+export function instantOf(nowMs) {
+  const n = Number(nowMs);
+  return new Date(Math.floor((Number.isFinite(n) ? n : 0) / 1000) * 1000).toISOString().replace(".000Z", "Z");
+}
+/** R12 (K1444 (iii)): the zone a view gives the action's office: the view's `time_zone`, or null when none is held
+ *  (or the active profiles disagree, so it is withheld). A string is read as the zone itself. */
+export function zoneOf(place) {
+  if (typeof place === "string") return place.trim() || null;
+  const tz = place && typeof place === "object" ? place.time_zone : null;
+  const v = tz && typeof tz === "object" ? tz.value : tz;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+/** R12, R25 (K1444 (iii)): the local day of `nowMs` in `zone`, or null with no zone or an unreadable one. */
+export function localToday(nowMs, zone) {
+  if (!zone) return null;
+  const d = localDay(instantOf(nowMs), zone);
+  return typeof d === "string" ? d : null;
+}
+const COB_RE = /close\s+of\s+business/i;
+const WEEKDAY = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+/* R12 (K1444 (iii); civil-time R14): the close of the counterparty office's hours on `day`, `HH:MM`, from the view's
+   `counterparties` entry for its role and body; null when the view holds no hours for it, or none that day. */
+function closeOf(fm, day, place) {
+  const cp = fm && fm.counterparty && typeof fm.counterparty === "object" ? fm.counterparty : null;
+  const list = place && typeof place === "object" && Array.isArray(place.counterparties) ? place.counterparties : [];
+  if (!cp) return null;
+  const role = typeof cp.role === "string" ? cp.role.trim() : typeof cp.name === "string" ? cp.name.trim() : "";
+  const body = typeof cp.body === "string" ? cp.body.trim() : null;
+  const office = list.find((c) => c && c.role === role && (body === null || c.body === body));
+  const weekly = office && office.hours && Array.isArray(office.hours.weekly) ? office.hours.weekly : null;
+  if (!weekly) return null;
+  const [y, m, d] = day.split("-").map(Number);
+  const wd = WEEKDAY[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  const closes = weekly.filter((h) => h && h.day === wd && typeof h.close === "string").map((h) => h.close).sort();
+  return closes.length ? closes[closes.length - 1] : null;
+}
+/** R12 (K1444 (iii)): whether the next pending deadline has passed at `nowMs`, on the local day of the office's zone,
+ *  never the UTC day: a deadline is met by anything on its day, and an entry whose basis says "close of business" is
+ *  overdue from the close of the office's hours that day (`civil-time.overdueOn`, side `body`). `place` is the
+ *  jurisdiction view (its `time_zone` and `counterparties`) or a zone. True, false, or null when no zone is held or
+ *  the comparison is undetermined. */
+export function actionOverdue(fm, nowMs, place = null) {
   const next = actionClockNext(fm);
   if (!next) return false;
-  const today = new Date(Number(nowMs)).toISOString().slice(0, 10);
-  return next < today;
+  const zone = zoneOf(place);
+  if (!zone) return null;
+  const at = instantOf(nowMs);
+  const entries = (Array.isArray(fm.clock) ? fm.clock : [])
+    .filter((e) => e && typeof e === "object" && e.status === "pending" && e.date === next);
+  let undetermined = false;
+  for (const e of entries.length ? entries : [{ date: next }]) {
+    const close = typeof e.basis === "string" && COB_RE.test(e.basis) ? closeOf(fm, next, place) : null;
+    const due = close ? { value: `${next}T${close}`, precision: "minute", zone } : { value: next, precision: "day", zone };
+    let r;
+    try { r = overdueOn({ due, at, side: "body" }); } catch { r = null; }
+    if (r === "overdue") return true;
+    if (r !== "not_overdue") undetermined = true;
+  }
+  return undetermined ? null : false;
 }
 
-/** R12: the six facts retrieval projects for an action, pure; all null for another type or an unparsable document. */
-export function actionFacts(documentText, nowMs) {
+/** R12: the six facts retrieval projects for an action, pure; all null for another type or an unparsable document.
+ *  `place` is the jurisdiction view (or a zone) the caller passes; without a zone `clock_overdue` is null. */
+export function actionFacts(documentText, nowMs, place = null) {
   const none = { kind: null, risk_tier: null, counterparty_state: null, resolution: null, clock_next: null, clock_overdue: null };
   let fm = null;
   try { fm = typeof documentText === "string" ? parseFrontmatter(documentText).data : null; } catch { fm = null; }
@@ -193,7 +255,7 @@ export function actionFacts(documentText, nowMs) {
            risk_tier: tier === 1 || tier === 2 || tier === 3 ? tier : null,
            counterparty_state: typeof cp.state === "string" ? cp.state : null,
            resolution: typeof fm.resolution === "string" ? fm.resolution : null,
-           clock_next: actionClockNext(fm), clock_overdue: actionOverdue(fm, nowMs) };
+           clock_next: actionClockNext(fm), clock_overdue: actionOverdue(fm, nowMs, place) };
 }
 
 const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n > 0 ? Math.min(n, max) : dflt; };
@@ -202,12 +264,13 @@ export class Actions {
   #deps;
 
   constructor({ storage, record, membership, promotion, host = null, retrieval = null, content = null,
-                conformance = null, entities = null, now = null, env = null } = {}) {
+                conformance = null, entities = null, lines = null, events = null, standards = null, duties = null,
+                now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities };
+    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -217,12 +280,28 @@ export class Actions {
   /* R9: the subject registry's `readEntity` (entities R5), for an addressee's `entity_id`. */
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
 
-  /* R9: whether the registry holds `entityId` as a person. Unregistered, unreadable or another kind: false. */
-  #namesPerson(entityId) {
+  /* R9, R62, R65 (T33-73): the dated lines (`holderAt`, `structureAt`, `linesOf`), the events (`proceedingStatusAt`,
+     `registerEventSource`), the held standards (`standardRead`, `inForceAt`) and the duties (`registerTriggerSource`),
+     each reached on the same host unless a test passes its own; a host on which one cannot be created answers null, and
+     what it would have answered is answered undetermined, never guessed. */
+  #reach(name, make) {
+    if (this.#deps[name] === undefined || this.#deps[name] === null) {
+      try { this.#deps[name] = make(this.#deps.host); } catch { this.#deps[name] = false; }
+    }
+    return this.#deps[name] || null;
+  }
+  get lines() { return this.#reach("lines", (h) => linesOf(h)); }
+  get events() { return this.#reach("events", (h) => eventsOf(h)); }
+  get standards() { return this.#reach("standards", (h) => standardsOf(h)); }
+  get duties() { return this.#reach("duties", (h) => dutiesOf(h)); }
+
+  /* R9: the kind the registry holds `entityId` as, or null when it holds none or cannot be read. */
+  #entityKind(entityId) {
     let r = null;
     try { r = this.entities.readEntity({ entityId }); } catch { r = null; }
-    return !!(r && r.ok && r.found && r.entity && r.entity.kind === "person");
+    return r && r.ok && r.found && r.entity && typeof r.entity.kind === "string" ? r.entity.kind : null;
   }
+  #namesPerson(entityId) { return this.#entityKind(entityId) === "person"; }
   /* R8, R30: conformance's `determinationRead` (its R9; K252). Reached on the same host unless a test passes its own; a
      host on which it cannot be created answers null, and R8 then refuses, never passes. */
   get conformance() {
@@ -237,6 +316,9 @@ export class Actions {
     /* R11: the leg's pinned capture, on a table created before it had the column. */
     const cols = [...this.sql.exec(`PRAGMA table_info(action_basis)`)].map((r) => r.name);
     if (!cols.includes("extent_capture")) this.sql.exec(`ALTER TABLE action_basis ADD COLUMN extent_capture TEXT`);
+    /* R64, R19: a proposed law's held standard, on a table created before it had the column. */
+    const pcols = [...this.sql.exec(`PRAGMA table_info(action_law_proposals)`)].map((r) => r.name);
+    if (!pcols.includes("standard")) this.sql.exec(`ALTER TABLE action_law_proposals ADD COLUMN standard TEXT`);
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -263,6 +345,11 @@ export class Actions {
     if (!Array.isArray(ids) || !ids.length) return null;
     const c = combine(ids);
     return c && c.ok ? c.view : null;
+  }
+  /** R12 (K1444 (iii)): the active profiles' combined view, the place a clock is read in (its `time_zone`, its
+   *  offices' hours), or null. Never throws. */
+  place() {
+    try { return this.#view(); } catch { return null; }
   }
   /** R10, R42 (N231; action-grammar R1's `actionKinds`): the kinds this instance accepts now: the product's own and the active profiles' combined
    *  view. Writes nothing and never throws: a view that cannot be read answers the product's kinds alone. */
@@ -509,10 +596,16 @@ export class Actions {
         && !(typeof cp.role === "string" && cp.role.trim() && typeof cp.body === "string" && cp.body.trim());
       /* R9: never a private individual: an `entity_id` the subject registry holds as a person (entities R5). */
       const eid = cp && typeof cp === "object" && !Array.isArray(cp) && typeof cp.entity_id === "string" ? cp.entity_id.trim() : "";
-      if (!cf.length && eid && this.#namesPerson(eid))
+      const eidKind = !cf.length && eid ? this.#entityKind(eid) : null;
+      if (!cf.length && eid && eidKind === "person")
         cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names a person `
           + "in the subject registry: an action is addressed to an office, an organisation or an audience, never a private "
           + "individual (R9, arm: person)" });
+      /* R9 (K1484 row 5; B1a.14): an office arm's entity id names an office entity the registry holds. */
+      else if (!cf.length && eid && addresseeIsOffice(cp) && eidKind !== "office")
+        cf.push({ check: "C-2.10", severity: "error", message: `counterparty.entity_id '${eid.slice(0, 40)}' names `
+          + `${eidKind ? `an entity of kind ${eidKind}` : "no entity the subject registry holds"}: an office addressee's entity `
+          + "is an office entity (R9, arm: office)" });
       if (cf.length || office)
         return refuse("COUNTERPARTY_REFUSED", cf.length ? cf[0].message
           : "a named counterparty is an office, stated by its official role and the body it belongs to (R9). Nothing was written.",
@@ -542,7 +635,8 @@ export class Actions {
     /* END DEC-49 REGION is-promote-clock */
     /* DEC-49 REGION is-promote-clock-mechanical */
     if (!creation && (!who || isMachineIdentity(who) || writer === "mechanical")) {
-      const today = new Date(this.#nowMs(null)).toISOString().slice(0, 10);
+      /* R33 (K1444 (iii)): "passed" on the office's local day; with no zone held no entry has passed. */
+      const today = localToday(this.#nowMs(null), zoneOf(this.place())) ?? "0000-00-00";
       const heldClock = heldFm && Array.isArray(heldFm.clock) ? heldFm.clock : [];
       const nextClock = Array.isArray(clock) ? clock : [];
       const recheck = writer === "mechanical" && operation === "deadline-recheck";
@@ -643,6 +737,62 @@ export class Actions {
     return null;
   }
 
+  /* R64 (K1446), R65 (C1): the records-request law's held standard (`law_standard`) and the `proceeding`, each set or
+     changed only by a member and naming a record the author may see: a standard through `standards.standardRead`
+     (`NO_SUCH_STANDARD`, minted by `standards.noSuchStandard`), a proceeding through the registry (`NO_SUCH_ENTITY`,
+     minted by `entities.noSuchEntity`; another kind `NOT_A_PROCEEDING`). Asked only when the value moved. */
+  #heldLinks(heldFm, nextFm, who, viewer) {
+    const val = (fm, k) => (fm && typeof fm[k] === "string" && fm[k].trim() ? fm[k].trim() : fm && fm[k] !== undefined && fm[k] !== null && fm[k] !== "" ? fm[k] : null);
+    const lawStd = val(nextFm, "law_standard");
+    if (JSON.stringify(val(heldFm, "law_standard")) !== JSON.stringify(lawStd)) {
+      if (!who || isMachineIdentity(who))
+        return refuse("MACHINE_CANNOT_STATE_RECORDS_LAW", "which law governs a records request, and the held standard it "
+          + "names, are a member's statement. A machine credential may propose one (op=actionlawspropose); it may not "
+          + "state, change or remove it. Nothing was written.", { held: val(heldFm, "law_standard"), law_standard: lawStd });
+      if (lawStd !== null && (nextFm.action_kind !== "records_request" || typeof nextFm.law !== "string" || !nextFm.law.trim()))
+        return refuse("RECORDS_LAW_REFUSED", "law_standard names the held standard of a records request's stated law; "
+          + "this action states no law, or is not a records_request. Nothing was written.",
+          { findings: [{ check: "C-2.10", detail: "law_standard is stated with no law on a records_request (R64)",
+                         repairs: ["state the law by its citation", "or remove law_standard"] }] });
+      if (lawStd !== null) {
+        const r = this.#standardSeen(lawStd, viewer);
+        if (r) return r;
+      }
+    }
+    const proc = val(nextFm, "proceeding");
+    if (JSON.stringify(val(heldFm, "proceeding")) !== JSON.stringify(proc)) {
+      if (!who || isMachineIdentity(who))
+        return { ok: false, reason: "MACHINE_CANNOT_SET_PROCEEDING", detail: "the proceeding an action belongs to is a "
+          + "member's statement; a machine credential may not set, change or remove it. Nothing was written." };
+      if (proc !== null) {
+        const r = this.#proceedingRefusal(proc);
+        if (r) return r;
+      }
+    }
+    return null;
+  }
+  /* R64: null when `id` is a standard the viewer may read, else `standards.noSuchStandard`'s one answer. */
+  #standardSeen(id, viewer) {
+    const sid = typeof id === "string" ? id.trim() : "";
+    const st = this.standards;
+    let r = null;
+    if (sid && BUNDLE_ID_RE.test(sid) && sid.startsWith("STD-") && st) {
+      try { r = st.standardRead({ id: sid, viewer }); } catch { r = null; }
+    }
+    return r && r.ok ? null : noSuchStandard(sid || (typeof id === "string" ? id : null));
+  }
+  /* R65: null when `id` is a registered entity of kind `proceeding`, else the refusal. */
+  #proceedingRefusal(id) {
+    const pid = typeof id === "string" ? id.trim() : "";
+    const kind = pid ? this.#entityKind(pid) : null;
+    if (!kind) return noSuchEntity(pid || null, { end: "proceeding" });
+    if (kind !== "proceeding")
+      return { ok: false, reason: "NOT_A_PROCEEDING", entity_id: pid, kind,
+               detail: `proceeding names an entity of kind ${kind}; an action belongs to an entity of kind proceeding. `
+                     + "Nothing was written." };
+    return null;
+  }
+
   /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
      or revised, with the count and the limit; a replay is never asked (the projection skips it whole). */
   #tooLarge(fm) {
@@ -683,6 +833,8 @@ export class Actions {
       if (premise) return premise;
       const link = this.#contactAndPlan(c, heldFm, nextFm, who);
       if (link) return link;
+      const t33 = this.#heldLinks(heldFm, nextFm, who, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who || null));
+      if (t33) return t33;
       const large = this.#tooLarge(nextFm);
       if (large) return large;
       /* REC-24: the legs (ACTION_BASIS_REFUSED), the ledger (CORRESPONDENCE_REFUSED) and what only the record can
@@ -845,7 +997,8 @@ export class Actions {
     const findings = [];
     respondsToEdgeFindings(fm, findings);
     if (fm.object_type === "action")
-      checkActionExtension({ fm, nowMs: this.#nowMs(null), actionKinds: this.kinds() }, findings);
+      /* R51 (K1444 (iii)): the zone of the action's office or venue, as R12 reads it; none held, none handed. */
+      checkActionExtension({ fm, nowMs: this.#nowMs(null), actionKinds: this.kinds(), zone: zoneOf(this.place()) }, findings);
     return findings;
   }
 
@@ -1090,10 +1243,11 @@ export class Actions {
                detail: `direction is one of ${CORRESPONDENCE_DIRECTIONS.join(", ")}. A reply that never came `
                      + "is recorded as no_response with the date it was due, not omitted (DEC-13)." };
     const day = String(at ?? "").trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day))
+    /* R15 (civil-time R6): a YYYY-MM-DD naming a real calendar day; 2026-02-31 is no day. */
+    if (!isCalendarDate(day))
       return { ok: false, reason: "BAD_DATE", at: day,
-               detail: "every entry in this ledger is dated YYYY-MM-DD, including a non-response, which is "
-                     + "dated by when the reply was due" };
+               detail: "every entry in this ledger is dated YYYY-MM-DD, a day the calendar has, including a "
+                     + "non-response, which is dated by when the reply was due" };
     const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
     const acct = String(account ?? "").trim();
     if (sha && acct)
@@ -1639,9 +1793,23 @@ export class Actions {
     const minted = this.record.allocId("ACTN", when.slice(0, 4));
     const id = minted && minted.id;
     if (!id) return { ok: false, reason: "NO_ID", detail: "no action id could be allocated. Nothing was written." };
-    const withId = Actions.#setOrAddScalar(text, "id", id);
-    const bytes = new TextEncoder().encode(withId);
+    let withId = Actions.#setOrAddScalar(text, "id", id);
     const who = String(author ?? "").trim();
+    /* R9 (K1484 row 5): an office arm stating no entity id has it filled from the office entity held for its role and
+       body (the bridge), here where this module writes the bytes; written without one, and said so, when none is. */
+    const office = counterpartyOffice(fm.counterparty);
+    let addressee = null;
+    if (office && !office.legacy && !office.entity_id) {
+      addressee = this.#bridge(office.role, office.body, viewer ?? (who || null));
+      if (addressee.entity_id) {
+        const filled = Actions.#fillEntityId(withId, addressee.entity_id);
+        if (filled) withId = filled;
+        else addressee = { entity_id: null, filled: "unspliceable",
+                           says: "the office entity was found, and this document's counterparty block cannot be extended in "
+                               + "place, so it was written without one" };
+      }
+    }
+    const bytes = new TextEncoder().encode(withId);
     const r = this.promotion.promote({
       bundleId: id, base: null, snapKey: `${when.replace(/[-:]/g, "")}_${Actions.#rand(4)}`,
       author: who || null, viewer: viewer ?? (who || null),
@@ -1650,7 +1818,51 @@ export class Actions {
               created: fm.created ?? when, last_updated: fm.last_updated ?? when, criticality: fm.criticality ?? null },
     });
     if (!r.ok) return r;
-    return { ok: true, id };
+    return { ok: true, id, ...(addressee ? { addressee } : {}) };
+  }
+
+  /* R9: add `entity_id` as the last line of the top-level `counterparty:` block; null for any other shape. */
+  static #fillEntityId(text, entityId) {
+    const lines = text.split("\n");
+    if (lines[0] !== "---") return null;
+    const end = lines.indexOf("---", 1);
+    if (end === -1) return null;
+    let ci = -1;
+    for (let i = 1; i < end; i++) if (/^counterparty:\s*$/.test(lines[i])) { ci = i; break; }
+    if (ci === -1) return null;
+    let last = ci, indent = null;
+    for (let i = ci + 1; i < end; i++) {
+      if (/^\s+\S/.test(lines[i])) { last = i; indent ??= lines[i].match(/^\s+/)[0]; continue; }
+      break;
+    }
+    if (last === ci || /^\s+entity_id:/m.test(lines.slice(ci + 1, last + 1).join("\n"))) return null;
+    return [...lines.slice(0, last + 1), `${indent}entity_id: ${entityId}`, ...lines.slice(last + 1)].join("\n");
+  }
+
+  /** R9 (K1484 row 5; the bridge, `instance-setup` R50): the office entity held for `{role, body}`: the one entity of
+   *  kind `office` holding the role as an alias with a live `post_in` line to an entity holding the body as an alias.
+   *  Answers `{entity_id, filled, says}`, `filled` `bridge`, `none` or `ambiguous` (never a guess between several). */
+  #bridge(role, body, viewer) {
+    const none = (filled, says) => ({ entity_id: null, filled, says });
+    if (!role || !body) return none("none", "an office is found by its role and body, and this one does not state both");
+    let offices = [], bodies = new Set();
+    try {
+      offices = (this.entities.entitiesByAlias({ alias: role }).entities || []).filter((e) => e.kind === "office").map((e) => e.entity_id);
+      bodies = new Set((this.entities.entitiesByAlias({ alias: body }).entities || []).map((e) => e.entity_id));
+    } catch { return none("none", "the subject registry could not be read, so no office entity was looked for"); }
+    const lines = this.lines;
+    const found = [];
+    for (const o of offices) {
+      let r = null;
+      try { r = lines ? lines.linesOf({ entity: o, kinds: ["post_in"], direction: "from", limit: 500, viewer: viewer ?? "class:admin" }) : null; }
+      catch { r = null; }
+      if (r && r.ok && (r.lines || []).some((l) => !l.withdrawn && bodies.has(l.to))) found.push(o);
+    }
+    if (found.length === 1)
+      return { entity_id: found[0], filled: "bridge", says: "the office entity the record holds for this role and body" };
+    return found.length
+      ? none("ambiguous", `${found.length} office entities are held for this role and body, so none was chosen`)
+      : none("none", "no office entity is held for this role and body; the action is addressed to it by role and body alone");
   }
 
   /* D-149 (Bob, 2026-09-22; BIO_Case_Making_v0_1.md §2, *A RECORDS REQUEST NAMES EVERY LAW THAT GOVERNS IT*):
@@ -1700,6 +1912,12 @@ export class Actions {
       return { ok: false, reason: "NO_DOCUMENT", target,
                detail: "this action has no readable bundle.md, so its governing laws cannot be set" };
     const fm = parseFrontmatter(liveMd.content).data || {};
+    /* R64: each named standard is one the author may read, else standards' one answer. */
+    for (const e of entries) {
+      if (!e.standard) continue;
+      const r = this.#standardSeen(e.standard, viewer ?? who);
+      if (r) return { ...r, target };
+    }
     const before = governingLawsOf(fm);
     const when = stampInstant("second", this.#nowMs(null));
     let text = Actions.#replaceGoverningLaws(liveMd.content, entries);
@@ -1778,7 +1996,10 @@ export class Actions {
         return { ok: false, reason: "BAD_CITATION", index: i,
                  detail: `laws[${i}] repeats an earlier entry: a law is named once at its level` };
       seen.add(key);
-      entries.push({ level, citation });
+      /* R64 (K1446): an entry may name a held standard; the citation stays the member's own statement. Whether the
+         standard is one the caller may read is asked by each act once the action is found. */
+      const std = e.standard === undefined || e.standard === null || e.standard === "" ? null : String(e.standard).trim();
+      entries.push({ level, citation, ...(std ? { standard: std } : {}) });
     }
     /* END DEC-49 REGION is-laws-entry */
     return { ok: true, entries };
@@ -1796,6 +2017,7 @@ export class Actions {
     const block = ["governing_laws:", ...entries.flatMap((e) => [
       `  - level: ${e.level}`,
       `    citation: "${e.citation}"`,
+      ...(e.standard ? [`    standard: ${e.standard}`] : []),
     ])];
     let gi = -1;
     for (let i = 1; i < end; i++) if (/^governing_laws:/.test(lines[i])) { gi = i; break; }
@@ -1993,12 +2215,18 @@ export class Actions {
     if (normalizeType(b.object_type) !== "action")
       return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type,
                detail: "governing laws belong to an action: they are the laws its request is made under." };
+    /* R64, R19: a proposal may name a held standard with a law; it is one the proposer may read. */
+    for (const e of entries) {
+      if (!e.standard) continue;
+      const r = this.#standardSeen(e.standard, viewer ?? who);
+      if (r) return { ...r, target };
+    }
     const at = stampInstant("second", this.#nowMs(null));
     /* REPLACE THIS PROPOSER'S OWN ROWS AND NOBODY ELSE'S. Keyed on both columns, never on the bundle alone. */
     this.sql.exec(`DELETE FROM action_law_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
     entries.forEach((e, i) => this.sql.exec(
-      `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, proposed_at)
-       VALUES (?, ?, ?, ?, ?, ?)`, target, who, i, e.level, e.citation, at));
+      `INSERT INTO action_law_proposals (bundle_id, proposed_by, ord, level, citation, standard, proposed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`, target, who, i, e.level, e.citation, e.standard ?? null, at));
 
     /* THE ACT'S OWN ANSWER SAYS WHAT IT DID NOT DO, read through the ONE reader of the list (`governingLawsOf`)
        so the act and the action's own read cannot disagree about whose the list is. */
@@ -2234,6 +2462,7 @@ export class Actions {
     try { fm = row && row.fm_json ? (JSON.parse(row.fm_json) || {}) : {}; } catch { fm = {}; }
     if ((!fm || !Object.keys(fm).length) && row && row.bundle_id) fm = this.#heldFm(row.bundle_id) || {};
     const now = this.#nowMs(nowMs);
+    const place = this.place();
     const ledger = this.#rows(
       `SELECT ord, direction, at, medium, party, artifact_bundle_id, artifact_sha, account, author, recorded_at
          FROM correspondence WHERE bundle_id=? ORDER BY ord`, row.bundle_id);
@@ -2251,7 +2480,7 @@ export class Actions {
       counterparty_state: typeof cp.state === "string" ? cp.state : (row.action_counterparty_state ?? null),
       resolution: typeof fm.resolution === "string" ? fm.resolution : (row.action_resolution ?? null),
       clock_next: actionClockNext(fm),
-      clock_overdue: actionOverdue(fm, now),
+      clock_overdue: actionOverdue(fm, now, place),
       clock_overdue_cached: row.action_clock_overdue === null || row.action_clock_overdue === undefined
         ? null : !!row.action_clock_overdue,
       as_of: new Date(now).toISOString(),
@@ -2261,7 +2490,7 @@ export class Actions {
       governing_laws_proposals: this.#lawProposalsFor(row.bundle_id),
       risk_tier_proposals: this.#riskProposalsFor(row.bundle_id),
       records_law: fm.action_kind === "records_request" ? recordsLawOf(fm, this.#lawAuthor(row.bundle_id, fm)) : null,
-      lifecycle: requestLifecycleOf(fm, new Date(now).toISOString().slice(0, 10)),
+      lifecycle: requestLifecycleOf(fm, localToday(now, zoneOf(place)) ?? ""),
       /* R26, DEC-14: the ACTION'S OWN OUTCOME, never the breach's consequence (which `consequences` holds). */
       own_outcome: consequenceState(fm),
       responses: this.#rows(`SELECT bundle_id FROM refs WHERE target_id=? AND kind='responds_to' ORDER BY bundle_id`,
@@ -2277,7 +2506,75 @@ export class Actions {
       pressure: this.#rows(`SELECT ord, kind, note, marked_by, at FROM action_pressure WHERE bundle_id=? ORDER BY ord`,
         row.bundle_id).map((r) => ({ ord: r.ord, kind: r.kind, note: r.note, by: r.marked_by, at: r.at,
                                      ...(r.kind === "legal" ? this.#holdsOf(row.bundle_id, r.ord, viewer) : {}) })),
+      /* T33-73: the action's date (R9, R64, R65), the office addressee's entity and holder on it (R9), each law's held
+         standard with its in-force state on it (R64), and the proceeding with its status on it (R65). */
+      ...this.#t33Read(fm, viewer),
     };
+  }
+
+  /** R9, R64, R65: "the action's date": the first `sent` entry's day, else the day it was created; null when neither
+   *  is a calendar day. Answered with its basis. */
+  static actionDate(fm) {
+    const sent = (Array.isArray(fm && fm.correspondence) ? fm.correspondence : [])
+      .find((e) => e && typeof e === "object" && e.direction === "sent" && isCalendarDate(String(e.at ?? "").slice(0, 10)));
+    if (sent) return { date: String(sent.at).slice(0, 10), basis: "the first sent correspondence entry" };
+    const c = typeof (fm && fm.created) === "string" ? fm.created.slice(0, 10) : "";
+    return isCalendarDate(c) ? { date: c, basis: "the day the action was created; nothing has been sent" }
+      : { date: null, basis: "the action states no date it was sent or created" };
+  }
+
+  #t33Read(fm, viewer) {
+    const asOf = Actions.actionDate(fm);
+    const date = asOf.date;
+    /* R9: an office addressee, its entity (stated, or the bridge's at read), and who held it on the action's date. */
+    const office = counterpartyOffice(fm.counterparty);
+    let addressee = null;
+    if (office) {
+      const stated = office.entity_id ? { entity_id: office.entity_id, filled: "stated" }
+        : office.legacy ? { entity_id: null, filled: "none", says: "an earlier addressee named by a name alone, read as written" }
+        : this.#bridge(office.role, office.body, viewer);
+      let holder;
+      if (!stated.entity_id) holder = { holder: null, undetermined: "no office entity is held for this addressee" };
+      else if (!date) holder = { holder: null, undetermined: asOf.basis };
+      else {
+        let h = null;
+        try { h = this.lines ? this.lines.holderAt({ office: stated.entity_id, at: date, viewer }) : null; } catch { h = null; }
+        holder = !h ? { holder: null, undetermined: "the dated lines could not be read" }
+          : h.ok === false ? { holder: null, undetermined: h.detail || h.reason }
+          : h.holder ? { holder: h.holder, line: h.line ? h.line.line_id : null, capacity: h.capacity ?? null }
+          : { holder: null, undetermined: h.undetermined, ...(h.lines ? { lines: h.lines } : {}) };
+      }
+      addressee = { role: office.role, body: office.body, ...stated,
+                    holder_on_date: { ...holder, on: date,
+                      says: "who held this office on the action's date. The action is addressed to the office, never to them." } };
+    }
+    /* R64: each law naming a held standard, with that standard's in-force state on the action's date. */
+    const named = [];
+    for (const l of Array.isArray(fm.governing_laws) ? fm.governing_laws : [])
+      if (l && typeof l === "object" && typeof l.standard === "string" && l.standard.trim())
+        named.push({ law: "governing", level: l.level ?? null, citation: l.citation ?? null, standard: l.standard.trim() });
+    if (typeof fm.law_standard === "string" && fm.law_standard.trim())
+      named.push({ law: "records", citation: typeof fm.law === "string" ? fm.law : null, standard: fm.law_standard.trim() });
+    const law_standards = named.map((n) => {
+      if (this.#standardSeen(n.standard, viewer))
+        return { ...n, in_force: null, says: "no standard you may read answers to this id" };
+      let f = null;
+      try { f = date ? this.standards.inForceAt({ standard: n.standard, date, viewer }) : null; } catch { f = null; }
+      return { ...n, in_force: f ? { state: f.state ?? "undetermined", why: f.why ?? null, on: date }
+                                 : { state: "undetermined", why: date ? "the standard's period could not be read" : asOf.basis, on: date } };
+    });
+    /* R65: the proceeding, with its status on the action's date. */
+    let proceeding = null;
+    if (typeof fm.proceeding === "string" && fm.proceeding.trim()) {
+      const pid = fm.proceeding.trim();
+      let st = null;
+      try { st = date && this.events ? this.events.proceedingStatusAt({ proceeding: pid, at: date, viewer }) : null; } catch { st = null; }
+      proceeding = { entity_id: pid, on: date,
+                     status: !st ? { stage: "undetermined", why: date ? "the events could not be read" : asOf.basis }
+                       : st.ok === false ? { stage: "undetermined", why: st.detail || st.reason }
+                       : { stage: st.stage, ...(st.why ? { why: st.why } : {}), ...(st.label ? { label: st.label } : {}) } };
+    }
+    return { as_of_date: asOf, addressee, law_standards, proceeding };
   }
 
   /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer sees at FULL (an
@@ -2392,7 +2689,7 @@ export class Actions {
 
   /** R30: visible actions by filters, in id order, at most 200 per page, `truncated` by reading one past. */
   actionsFor({ determination = null, counterparty = null, state = null, kind = null, after = null, limit = null,
-               pressure = null, viewer = null } = {}) {
+               pressure = null, proceeding = null, viewer = null } = {}) {
     const max = clampLimit(limit, ACTIONS_PAGE_MAX, ACTIONS_PAGE_MAX);
     const gate = viewerPredicate(viewer);
     const where = [`b.object_type='action'`, `(${gate.sql})`, `b.bundle_id>?`], fixed = [...gate.args];
@@ -2413,6 +2710,8 @@ export class Actions {
         const fm = this.#heldFm(r.bundle_id) || {};
         if (kind && fm.action_kind !== kind) continue;
         if (counterparty && counterpartyName(fm.counterparty) !== counterparty) continue;
+        /* R65: the actions belonging to a proceeding. */
+        if (proceeding && fm.proceeding !== proceeding) continue;
         if (out.length === max) { truncated = true; break; }
         out.push({ id: r.bundle_id, state: r.current_state, kind: fm.action_kind ?? null,
                    counterparty: counterpartyName(fm.counterparty), counterparty_state: fm.counterparty?.state ?? null });
@@ -2423,6 +2722,138 @@ export class Actions {
     return { ok: true, items: out, limit: max, truncated, cursor,
              ...(determination && !this.conformance ? { determination_read: "undetermined",
                  says: "the legs are matched by the determination named; whether it is live is conformance's to say, and it is not provided on this instance" } : {}) };
+  }
+
+  /** R62 (A ORG): the offices the record holds as `custodian_of` or `responsible_for` a subject (an entity, or a record
+   *  the action rests on, read through the entities its captures resolve to at an established grade), each as R9's
+   *  office arm with the line it rests on and that line's two grades, valid on the action's date or today
+   *  (`lines.structureAt`); undetermined ones apart, with why. A suggestion: it writes nothing and sets nothing. */
+  addresseeSuggest({ action = null, subject = null, viewer = null } = {}) {
+    const subj = typeof subject === "string" ? subject.trim() : "";
+    if (!subj) return { ok: false, reason: "NO_SUBJECT", detail: "an addressee is suggested for a subject: an entity "
+      + "(ENT-) or a record the action rests on." };
+    let at = null, basis = "today";
+    if (action) {
+      const b = this.#visibleAction(String(action), viewer);
+      if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: action };
+      if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target: action };
+      const d = Actions.actionDate(this.#heldFm(String(action)) || {});
+      if (d.date) { at = d.date; basis = d.basis; }
+    }
+    if (!at) at = localToday(this.#nowMs(null), zoneOf(this.place())) ?? instantOf(this.#nowMs(null));
+    let entities;
+    if (ENTITY_ID_RE.test(subj)) {
+      if (!this.#entityKind(subj)) return noSuchEntity(subj, { end: "subject" });
+      entities = [subj];
+    } else {
+      const b = this.#visibleAction(subj, viewer);
+      if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: subj };
+      try {
+        entities = this.#rows(`SELECT DISTINCT entity_id FROM resolutions WHERE bundle_id=? AND established=1 ORDER BY entity_id LIMIT 51`, subj)
+          .map((r) => r.entity_id);
+      } catch { entities = []; }
+    }
+    const lines = this.lines;
+    const offices = [], undetermined = [];
+    const seen = new Set();
+    const label = (id) => { let r = null; try { r = this.entities.readEntity({ entityId: id }); } catch { r = null; }
+                            return r && r.found && r.entity ? r.entity.label : null; };
+    const bodyOf = (office) => {
+      let r = null;
+      try { r = lines.structureAt({ entity: office, at, kinds: ["post_in"], viewer }); } catch { r = null; }
+      const held = r && r.ok ? (r.held || []).filter((l) => l.from === office) : [];
+      return held.length === 1 ? { body: label(held[0].to) } : { why: held.length ? "the office is held in more than one body on that date"
+        : "no line on that date places the office in a body" };
+    };
+    for (const e of entities.slice(0, 50)) {
+      let r = null;
+      try { r = lines ? lines.structureAt({ entity: e, at, kinds: ["custodian_of", "responsible_for"], viewer }) : null; } catch { r = null; }
+      if (!r || r.ok === false) { undetermined.push({ subject: e, why: "the dated lines could not be read" }); continue; }
+      for (const l of r.held || []) {
+        if (l.to !== e || this.#entityKind(l.from) !== "office" || seen.has(`${l.from}|${l.line_id}`)) continue;
+        seen.add(`${l.from}|${l.line_id}`);
+        const line = { line_id: l.line_id, kind: l.kind, grades: { assertion: l.assertion, ends: l.ends } };
+        const b = bodyOf(l.from);
+        if (b.body) offices.push({ addressee: { state: "named", kind: "office", role: label(l.from), body: b.body, entity_id: l.from },
+                                   concerns: e, line });
+        else undetermined.push({ office: l.from, concerns: e, line, why: b.why });
+      }
+      for (const u of r.undetermined || [])
+        if (u.line && u.line.to === e) undetermined.push({ office: u.line.from, concerns: e,
+          line: { line_id: u.line.line_id, kind: u.line.kind, grades: { assertion: u.line.assertion, ends: u.line.ends } }, why: u.why });
+    }
+    return { ok: true, subject: subj, at, at_basis: basis, offices, undetermined, suggestion: true,
+             says: offices.length || undetermined.length
+               ? "offices the record holds as custodian of or responsible for this subject on that date. A suggestion: "
+                 + "nothing was set, and a member chooses the addressee."
+               : "the record holds no custodian_of or responsible_for line to this subject on that date. That is a "
+                 + "statement about the lines held and about nothing else." };
+  }
+
+  /* R66, R67: the visible actions, each with its document, in id order (the sources read the group's own acts). */
+  #visibleActions(viewer) {
+    if (viewer === null || viewer === undefined || viewer === "") return [];
+    const gate = viewerPredicate(viewer);
+    return this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='action' AND (${gate.sql}) ORDER BY b.bundle_id`,
+      ...gate.args).map((r) => ({ id: r.bundle_id, fm: this.#heldFm(r.bundle_id) || {} }));
+  }
+  static #inWindow(day, from, to) {
+    const d = String(day ?? "").slice(0, 10);
+    if (!isCalendarDate(d)) return false;
+    if (from && d < String(from).slice(0, 10)) return false;
+    if (to && d > String(to).slice(0, 10)) return false;
+    return true;
+  }
+
+  /** R66 (EVENTS 2a; K1494): "what we did", for `events.timeline`: the group's own acts (each correspondence entry and
+   *  each move) on the actions the viewer may see whose office entity, `proceeding` or a leg's target is in `set`, each
+   *  `{at, label, ref, kind}` at the entry's own date, within `from`–`to`, at most `limit`. No viewer: nothing (R36). */
+  eventSource({ set = null, from = null, to = null, limit = null, viewer = null } = {}) {
+    const ids = new Set((Array.isArray(set) ? set : typeof set === "string" ? set.split(",") : []).map((x) => String(x).trim()).filter(Boolean));
+    const max = clampLimit(limit, 100, 500);
+    const items = [];
+    if (!ids.size) return items;
+    for (const { id, fm } of this.#visibleActions(viewer)) {
+      const office = counterpartyOffice(fm.counterparty);
+      const ends = [office && office.entity_id, typeof fm.proceeding === "string" ? fm.proceeding : null,
+                    ...(Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => (l && typeof l.target === "string" ? l.target : null))];
+      if (!ends.some((x) => x && ids.has(x))) continue;
+      (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e, ord) => {
+        if (!e || typeof e !== "object" || !Actions.#inWindow(e.at, from, to)) return;
+        items.push({ at: String(e.at).slice(0, 10), kind: `correspondence_${e.direction}`, ref: `${id}#correspondence/${ord}`,
+                     label: `${e.direction === "sent" ? "we sent" : e.direction === "received" ? "we received" : "no response recorded"}`
+                       + ` (${counterpartyName(fm.counterparty) ?? "addressee undetermined"})` });
+      });
+      (Array.isArray(fm.state_history) ? fm.state_history : []).forEach((h, i) => {
+        if (!h || typeof h !== "object" || !Actions.#inWindow(h.timestamp, from, to)) return;
+        items.push({ at: String(h.timestamp), kind: "move", ref: `${id}#move/${i}`,
+                     label: `we moved the action from ${h.from_state} to ${h.to_state}` });
+      });
+    }
+    items.sort((p, q) => (String(p.at) < String(q.at) ? -1 : String(p.at) > String(q.at) ? 1 : p.ref < q.ref ? -1 : 1));
+    return items.slice(0, max);
+  }
+
+  /** R67 (K1466; duties R16): the items that trigger a body's response duty: each `sent` correspondence entry of an
+   *  action of the duty's trigger kinds (`trigger.action_kinds`, else `records_request`) addressed to the duty's obligor
+   *  office, `{ref, date, label}`, within `from`–`to`. An action the viewer may not see contributes nothing. */
+  triggerSource({ duty = null, from = null, to = null, viewer = null } = {}) {
+    const obligor = duty && typeof duty.obligor === "string" ? duty.obligor : null;
+    if (!obligor) return [];
+    const t = duty.trigger && typeof duty.trigger === "object" ? duty.trigger : {};
+    const kinds = Array.isArray(t.action_kinds) && t.action_kinds.length ? t.action_kinds
+      : typeof t.action_kind === "string" ? [t.action_kind] : ["records_request"];
+    const out = [];
+    for (const { id, fm } of this.#visibleActions(viewer)) {
+      const office = counterpartyOffice(fm.counterparty);
+      if (!kinds.includes(fm.action_kind) || !office || office.entity_id !== obligor) continue;
+      (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e, ord) => {
+        if (!e || e.direction !== "sent" || !Actions.#inWindow(e.at, from, to)) return;
+        out.push({ ref: `${id}#correspondence/${ord}`, date: String(e.at).slice(0, 10),
+                   label: `the group's ${fm.action_kind} sent to ${counterpartyName(fm.counterparty)}` });
+      });
+    }
+    return out;
   }
 
   /* ================================================================ proposals (R19, R28) */
@@ -2475,13 +2906,13 @@ export class Actions {
     const cap = LAW_PROPOSALS_READ_MAX;
     const rowCap = (cap + 1) * GOVERNING_LAWS_MAX;
     const rows = this.#rows(
-      `SELECT proposed_by, ord, level, citation, proposed_at FROM action_law_proposals
+      `SELECT proposed_by, ord, level, citation, standard, proposed_at FROM action_law_proposals
         WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, bundleId, rowCap + 1);
     const byProposer = new Map();
     for (const r of rows) {
       if (!byProposer.has(r.proposed_by))
         byProposer.set(r.proposed_by, { ...lawProposalLabel(r.proposed_by), at: r.proposed_at, laws: [] });
-      byProposer.get(r.proposed_by).laws.push({ level: r.level, citation: r.citation });
+      byProposer.get(r.proposed_by).laws.push({ level: r.level, citation: r.citation, ...(r.standard ? { standard: r.standard } : {}) });
     }
     const all = [...byProposer.values()];
     const proposals = all.slice(0, cap);
@@ -2547,10 +2978,19 @@ export function actionsOf(host, deps) {
     record.registerAuditCheck("actions", (image) => a.audit(image));
     const retrieval = d.retrieval === null ? null : a.retrieval;
     if (retrieval) {
-      retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs));
+      retrieval.registerActionFacts("actions", (md, nowMs) => actionFacts(md, nowMs, a.place()));
       retrieval.registerProjectionDecoration("actions", (row, { nowMs, viewer } = {}) =>
         (normalizeType(row && row.object_type) === "action" ? { action: a.derived(row, nowMs, viewer ?? null) } : {}));
     }
+    /* R66, R67 (T33-73): the "what we did" source with events and the trigger source with duties, once per host; a
+       registration either refuses (this module's already held) leaves the earlier one standing. A host on which either
+       cannot be created registers nothing there. */
+    const events = d.events === null ? null : a.events;
+    if (events && typeof events.registerEventSource === "function")
+      events.registerEventSource("actions", (args) => a.eventSource(args || {}));
+    const duties = d.duties === null ? null : a.duties;
+    if (duties && typeof duties.registerTriggerSource === "function")
+      duties.registerTriggerSource("actions", (args) => a.triggerSource(args || {}));
     /* R55: once per host, as the registrations above. Capture's slot takes one registration (membership's
        `listenerRefusal`); one already held by this module (another host over the same storage) stands, and one held by
        any other module is a defect of the wiring, thrown as the purge declaration's is. Capture is handed the `env`
@@ -2603,7 +3043,10 @@ export function actionsOps(a, url, body) {
     action: () => a.actionRead({ id: q("id") || q("target") || b.id || null, viewer: q("viewer"), now: q("now") }),
     actions: () => a.actionsFor({ determination: q("determination"), counterparty: q("counterparty"), state: q("state"),
                                   kind: q("kind"), after: q("after"), limit: q("limit"), pressure: q("pressure"),
-                                  viewer: q("viewer") }),
+                                  proceeding: q("proceeding"), viewer: q("viewer") }),
+    /* R62: the offices the record holds as custodian of or responsible for a subject, suggested; a read. */
+    addresseesuggest: () => a.addresseeSuggest({ action: q("action") || b.action || null, subject: q("subject") || b.subject || null,
+                                                 viewer: q("viewer") }),
     /* R48: a pressure mark on a recorded received entry. */
     actionpressure: () => a.actionPressure({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
       pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null

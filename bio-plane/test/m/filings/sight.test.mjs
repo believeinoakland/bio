@@ -32,7 +32,7 @@ function hidden() {
 /* Nothing of the hidden project in `answer`: its id, its determinations, the act's words, its consequences. */
 function namesNothing(x, answer, extra = []) {
   const bytes = JSON.stringify(answer);
-  for (const s of [x.proj, x.D, "the works order", "CONS-", "the hauling reserve fund", ...extra])
+  for (const s of [x.proj, x.D, "the adoption recorded as", "CONS-", "the hauling reserve fund", ...extra])
     assert.equal(bytes.includes(s), false, `names ${s}: ${bytes.slice(0, 300)}`);
 }
 

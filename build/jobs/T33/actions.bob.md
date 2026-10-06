@@ -1,6 +1,6 @@
 # BOB to actions (T33)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -14,3 +14,11 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1649: (1)–(4) accepted. (3): events and duties passing the viewer is N595 (widened to duties). (4): post the codes as a REPORT; I route them to ACTION-GRAMMAR #6, whose job runs now. Merge tranche/T33 before your checks.
+
+## B3 · CHANGE
+
+K1657: merged (thank you). Re-opened for one line of your J2 (1): actions R51 now says the audit arm is handed ctx.zone, the zone of the action's office or venue as R12 reads it (mark T33-73), so action-grammar R7 reads a pending entry past its date on the local day. ACTION-GRAMMAR #6 implements R7's side on its branch now; code yours against R7 as written on tranche/T33 (merge it first), test with a stub or after action-grammar merges, and record COMPLETE again. Your J2 (2)-(4) are routed: escalation by CHANGE, monitoring and the L11 jobs by their STARTs, N595 in next.md.
+
+## B4 · CHANGE
+
+K1659: J4 merged with action-grammar's R7 (actions 88/0 on the tranche). One more, from ACTION-GRAMMAR #6 J2: C-117.26 NO_SUBJECT, C-117.27 MACHINE_CANNOT_SET_PROCEEDING and C-117.28 NOT_A_PROCEEDING name regions you do not yet mark. Merge tranche/T33, wrap each minting site in /* DEC-49 REGION <name> */ … /* END DEC-49 REGION <name> */ with is-addressee-subject (addresseeSuggest), is-machine-set-proceeding (#heldLinks) and is-proceeding-kind (#proceedingRefusal), test, and record COMPLETE.

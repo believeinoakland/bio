@@ -95,19 +95,23 @@ test("R4 remindersFor answers an action's reminders with their entry, day, membe
   assert.deepEqual(r.reminders.map((x) => [x.entry, x.on, x.set_by, x.state]),
     [[0, "2026-09-20", M, "answered"], [0, "2026-09-28", M, "answered"], [0, "2026-10-05", M, "waiting"], [1, "2026-11-20", BOB, "waiting"]]);
   assert.equal(r.reminders[0].answered_at, "2026-09-28T12:00:00Z");
-  assert.deepEqual(w.c.remindersFor({ action: A, viewer: M, now: Date.parse("2026-10-05T00:00:00Z") }).reminders[2].state, "due");
+  /* due on the action's local day (America/Halifax): 2026-10-05T00:00Z is still the 4th there. */
+  assert.deepEqual(w.c.remindersFor({ action: A, viewer: M, now: Date.parse("2026-10-05T00:00:00Z") }).reminders[2].state, "waiting");
+  assert.deepEqual(w.c.remindersFor({ action: A, viewer: M, now: Date.parse("2026-10-05T03:00:00Z") }).reminders[2].state, "due");
+  assert.equal(w.c.remindersFor({ action: A, viewer: M, now: Date.parse("2026-10-05T03:00:00Z") }).as_of, "2026-10-05");
   assert.deepEqual(w.c.remindersFor({ action: A, viewer: "nobody" }), actions.noSuchAction(A));
   assert.deepEqual(w.c.remindersFor({ action: "ACTN-2026-0404-x", viewer: M }), actions.noSuchAction("ACTN-2026-0404-x"));
   assert.deepEqual([r.limit, r.truncated], [500, false]);
 });
 
-test("R5 remindersDue lists each unanswered reminder whose day has come, on a pending entry of an open visible action: due on its day and not before, gone once answered", () => {
+test("R5 remindersDue lists each unanswered reminder whose day has come, on a pending entry of an open visible action: due on its local day and not before, gone once answered", () => {
   const w = setUp();
   set(w, { entry: 1, on: "2026-10-01" });
   set(w, { entry: 0, on: "2026-09-29", author: BOB, viewer: BOB });
   const at = (iso, x = {}) => w.c.remindersDue({ nowMs: Date.parse(iso), viewer: M, ...x });
   assert.deepEqual(at("2026-09-28T23:59:59Z").items, [], "not before its day");
-  const d = at("2026-09-29T00:00:00Z");
+  assert.deepEqual(at("2026-09-29T02:59:59Z").items, [], "not on the UTC day: the action's local day is still the 28th");
+  const d = at("2026-09-29T03:00:00Z");
   assert.deepEqual(d.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", on: "2026-09-29", set_by: BOB,
                                project: null }]);
   assert.deepEqual(at("2026-10-01T08:00:00Z").items.map((x) => [x.ord, x.on]), [[0, "2026-09-29"], [1, "2026-10-01"]]);
@@ -239,7 +243,8 @@ test("R4 R6 the ops reminderset and reminderanswer read the control plane's stam
   assert.deepEqual(op("reminderset", `target=${A}&entry=1&from=2026-11-01&on=&author=${M}&viewer=${M}`).on, null, "an empty on removes");
   const a = op("reminderanswer", `target=${A}&entry=0&on=2026-10-01&author=${M}&viewer=${M}`);
   assert.deepEqual(a, { ok: true, target: A, entry: 0, answered: ["2026-09-20"], next: "2026-10-01" });
-  assert.deepEqual(Object.keys(clocks.actionClocksOps(w.c, new URL("https://x/"), null)).sort(), ["reminderanswer", "reminderset"]);
+  assert.deepEqual(Object.keys(clocks.actionClocksOps(w.c, new URL("https://x/"), null)).sort(),
+    ["clockadopt", "clocklateness", "clocksics", "reminderanswer", "reminderset"]);
 });
 
 test("R4 (N427) reminderRefused(arm, detail, extra?) is exported, the one answer REMINDER_REFUSED is minted through: its row, its arm and detail, a caller's extra fields never replacing them; it writes nothing and never throws", () => {

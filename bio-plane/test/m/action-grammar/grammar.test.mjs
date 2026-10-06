@@ -8,11 +8,11 @@ import * as AG from "../../../src/action-grammar/index.mjs";
 import { proposalLabel, idPattern } from "../../../src/record-grammar/index.mjs";
 import * as J from "../../../../jurisdictions/index.mjs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
-import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, REWORDED_COUNTS } from "./fixture.mjs";
+import { GOLDEN, suite, overDoc, pushed, plain, VALUE_NAMES, ROW_NAMES, REWORDED, REWORDED_COUNTS, ZONE } from "./fixture.mjs";
 
 const S = suite(AG);
 const codes = (list) => list.map((x) => x.code);
-const audit = (fm, o = {}) => pushed((f) => AG.checkActionExtension({ fm, nowMs: NOW, ...o }, f));
+const audit = (fm, o = {}) => pushed((f) => AG.checkActionExtension({ fm, nowMs: NOW, zone: ZONE, ...o }, f));
 const TEST_VIEW = (() => { const c = J.combine(["test-port-ellery"]); assert.ok(c.ok); return c.view; })();
 
 test("R1, R2: every vocabulary and bound is exported with its value unchanged from before the move", () => {
@@ -161,7 +161,7 @@ test("R7 by hand: a missing counterparty and a pending clock entry past its date
   assert.deepEqual(audit(DOCS["kind-profile"]).findings.map((x) => x.message), ["action_kind 'bylaw_complaint' is not a kind this instance offers"]);
   assert.deepEqual(audit(DOCS["kind-profile"], { actionKinds: AG.actionKinds(TEST_VIEW) }).findings, []);
   t.mock.timers.enable({ apis: ["Date"], now: Date.parse("2026-07-03T00:00:00Z") });
-  const byClock = pushed((f) => AG.checkActionExtension({ fm: DOCS["clock-past-due"] }, f)).findings;
+  const byClock = pushed((f) => AG.checkActionExtension({ fm: DOCS["clock-past-due"], zone: ZONE }, f)).findings;
   t.mock.timers.reset();
   assert.equal(byClock.filter((x) => /silently past-due/.test(x.message)).length, 2, "the 2026-07-02 entry is past on the 3rd");
 });
@@ -231,6 +231,35 @@ const DEC113_ROWS = {
   },
 };
 
+/* R9 (K1657; ACTIONS #12 J2 (1)): the rows of the codes `actions` mints for R62's subject and R65's proceeding; new in T33
+   layer 9, awaiting promotion's stamp. */
+const T33_ROWS = {
+  NO_SUBJECT: {
+    check: "C-117.26",
+    where: "src/actions/index.mjs addresseeSuggest > is-addressee-subject",
+    translation: "An addressee is suggested for something: an entity in the subject registry, or a record the action rests on. None was named, so there is nothing to suggest an office for. Name the subject and ask again.",
+  },
+  MACHINE_CANNOT_SET_PROCEEDING: {
+    check: "C-117.27",
+    where: "src/actions/index.mjs #heldLinks > is-machine-set-proceeding",
+    translation: "Which proceeding an action belongs to is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot set, change or remove it. Nothing was written. Sign in to state it yourself.",
+  },
+  NOT_A_PROCEEDING: {
+    check: "C-117.28",
+    where: "src/actions/index.mjs #proceedingRefusal > is-proceeding-kind",
+    translation: "An action belongs to a proceeding, such as a case before a court or a board, and the entity named is of another kind. Nothing was written. Name the proceeding itself.",
+  },
+};
+
+test("R9: the rows C-117.26 NO_SUBJECT (actions R62), C-117.27 MACHINE_CANNOT_SET_PROCEEDING and C-117.28 NOT_A_PROCEEDING (actions R65) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, last and in that order, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
+  const C = AG.ACTION_CATALOGUE_CHECKS;
+  for (const [code, row] of Object.entries(T33_ROWS)) assert.deepEqual(C[code], row, code);
+  assert.deepEqual(Object.keys(C).slice(-3), Object.keys(T33_ROWS));
+  for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
+    for (const code of Object.keys(T33_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
+  for (const row of Object.values(T33_ROWS)) assert.doesNotMatch(row.translation, /\b(bundle|op=|DEC-|C-\d|ENT-)/, row.check);
+});
+
 test("R9: the litigation-hold rows C-117.20 MACHINE_CANNOT_SET_HOLD, C-117.21 HOLD_REFUSED, C-117.22 HOLD_NO_LEGAL_MARK are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, after PRESSURE_NO_ENTRY, their wheres naming actions' actionHold regions", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   for (const [code, row] of Object.entries(HOLD_ROWS)) assert.deepEqual(C[code], row, code);
@@ -240,29 +269,29 @@ test("R9: the litigation-hold rows C-117.20 MACHINE_CANNOT_SET_HOLD, C-117.21 HO
     for (const code of Object.keys(HOLD_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
 });
 
-test("R9: the hold rows C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT, C-117.24 HOLD_PROJECTS_REFUSED, C-117.25 HOLD_ALREADY_RELEASED (DEC-113) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, last and in that order, their wheres naming actions' actionHold and #holdProjects regions (K1281); no other table holds them", () => {
+test("R9: the hold rows C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT, C-117.24 HOLD_PROJECTS_REFUSED, C-117.25 HOLD_ALREADY_RELEASED (DEC-113) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T33's rows, their wheres naming actions' actionHold and #holdProjects regions (K1281); no other table holds them", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   for (const [code, row] of Object.entries(DEC113_ROWS)) assert.deepEqual(C[code], row, code);
-  assert.deepEqual(Object.keys(C).slice(-6), [...Object.keys(HOLD_ROWS), ...Object.keys(DEC113_ROWS)]);
+  assert.deepEqual(Object.keys(C).slice(-9, -3), [...Object.keys(HOLD_ROWS), ...Object.keys(DEC113_ROWS)]);
   for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
     for (const code of Object.keys(DEC113_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
   for (const row of Object.values(DEC113_ROWS)) assert.doesNotMatch(row.translation, /\b(bundle|op=|DEC-|C-\d)/, row.check);
 });
 
-test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.20–.25 are added", () => {
+test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.20–.28 are added", () => {
   const expected = structuredClone(GOLDEN.rows);
   delete expected.ACTION_CATALOGUE_CHECKS.PENDING_CLOCKS_BAD_BEFORE;
-  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(HOLD_ROWS), structuredClone(DEC113_ROWS));
+  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(HOLD_ROWS), structuredClone(DEC113_ROWS), structuredClone(T33_ROWS));
   expected.GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED.where = "src/action-grammar/checks.mjs recordsLawRefusal > is-records-law";
   expected.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER.where = "src/actions/index.mjs contactNotAMember > is-contact-member";
   assert.deepEqual(S.rows, expected);
   for (const n of ROW_NAMES) assert.ok(n in AG, n);
 });
 
-test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.25, each {check, where, translation}", () => {
+test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.28, each {check, where, translation}", () => {
   const range = (fam, a, b, skip = []) => Array.from({ length: b - a + 1 }, (_, i) => a + i).filter((n) => !skip.includes(n)).map((n) => `${fam}.${n}`);
   const want = ["C-32.3", "C-32.4", "C-32.18", "C-32.19", "C-32.20", ...range("C-33", 3, 9), ...range("C-72", 1, 8), ...range("C-73", 1, 6),
-    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 25, [5])].sort();
+    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 28, [5])].sort();
   const rows = ROW_NAMES.flatMap((n) => Object.values(AG[n]));
   assert.deepEqual(rows.map((r) => r.check).sort(), want);
   assert.equal(new Set(rows.map((r) => r.check)).size, rows.length, "no number twice");
@@ -361,4 +390,34 @@ test("R12: every entity id the module tests (counterparty.entity_id, under every
     assert.deepEqual(S.docs[id].counterpartyFindings, GOLDEN.docs[id].counterpartyFindings, id);
     assert.deepEqual(S.docs[id].audit, GOLDEN.docs[id].audit, id);
   }
+});
+
+test("R7 (K1444 (iii)): a pending clock entry is past its date only once the office's local day (ctx.zone, through civil-time) has ended; with no zone, an unknown zone or an unreadable time, no entry is past its date; every other C-11.1 and C-2.10 finding is unchanged", () => {
+  const PAST = /silently past-due/;
+  const fm = { ...DOCS["clean-records-request"], clock: [{ text: "reply due", description: "the reply is due", date: "2026-07-01", basis: "the group's stated window", status: "pending" }] };
+  const past = (zone, at) => audit(fm, { zone, nowMs: Date.parse(at) }).findings.filter((x) => PAST.test(x.message)).length;
+  /* 2026-07-02T03:00Z is still 1 July in a zone eight hours behind UTC, and 2 July in UTC and east of it. */
+  assert.equal(past("UTC", "2026-07-02T03:00:00Z"), 1);
+  assert.equal(past("America/Los_Angeles", "2026-07-02T03:00:00Z"), 0, "the office's day of 1 July has not ended");
+  assert.equal(past("America/Los_Angeles", "2026-07-02T06:59:59Z"), 0, "the last second of 1 July there");
+  assert.equal(past("America/Los_Angeles", "2026-07-02T07:00:00Z"), 1, "its first instant of 2 July");
+  assert.equal(past("Pacific/Kiritimati", "2026-07-01T09:59:59Z"), 0);
+  assert.equal(past("Pacific/Kiritimati", "2026-07-01T10:00:00Z"), 1, "a zone fourteen hours ahead ends 1 July at 10:00 UTC");
+  assert.equal(past("UTC", "2026-07-01T23:59:59Z"), 0, "an entry is not past on its own day");
+  /* R11: the test profile's own zone, as actions hands it in from the view. */
+  const testZone = TEST_VIEW.time_zone.value;
+  assert.equal(past(testZone, "2026-07-02T02:59:59Z"), 0, `${testZone}: 1 July has not ended`);
+  assert.equal(past(testZone, "2026-07-02T03:00:00Z"), 1, `${testZone}: 1 July has ended`);
+  /* No zone: no entry is past its date, never the UTC day. */
+  for (const zone of [undefined, null, "", "  ", 5, "Not/AZone"]) assert.equal(past(zone, "2026-08-01T00:00:00Z"), 0, String(zone));
+  assert.equal(pushed((f) => AG.checkActionExtension({ fm, nowMs: Number.NaN, zone: "UTC" }, f)).findings.filter((x) => PAST.test(x.message)).length, 0, "an unreadable time");
+  assert.equal(pushed((f) => AG.checkActionExtension({ fm, nowMs: 1e300, zone: "UTC" }, f)).findings.length, 0, "never throws");
+  /* The rest of C-11.1 is asked with or without a zone. */
+  for (const id of ["clock-shape", "clock-date", "clock-basis", "clock-status", "clock-past-due", "cp-missing"]) {
+    const withZone = audit(DOCS[id]).findings.filter((x) => !PAST.test(x.message));
+    assert.deepEqual(audit(DOCS[id], { zone: undefined }).findings, withZone, id);
+  }
+  /* A met, overdue or waived entry is never past-due, in any zone. */
+  for (const status of ["met", "overdue", "waived"])
+    assert.equal(audit({ ...fm, clock: [{ ...fm.clock[0], status }] }, { nowMs: Date.parse("2026-08-01T00:00:00Z") }).findings.length, 0, status);
 });

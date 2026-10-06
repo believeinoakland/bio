@@ -4,6 +4,11 @@
 import { readFileSync } from "node:fs";
 import { DOCS, KIND_SETS, SCALARS, NOW, TODAY } from "./corpus.mjs";
 
+/* R7 (K1444 (iii); T33-72): the audit reads a clock entry's past date on the office's local day, `ctx.zone`. The golden
+   file was recorded when it read the UTC day, so the suite hands it `UTC` (a zone, not a place), on which the local day is
+   the UTC day and every finding is the recorded one; the local day in other zones is R7's own tests'. */
+export const ZONE = "UTC";
+
 /* K899 (1) (T20 layer 9): text a member reads says "record" where the code before the move said "bundle". These are the
    two sentences of this module that held the word, each old phrase with its new one; the golden file stays as recorded
    and is compared with these applied, so no other byte of it moves. */
@@ -41,7 +46,7 @@ export function overDoc(api, fm) {
   const entries = Array.isArray(fm?.correspondence) ? fm.correspondence : [];
   const audit = {};
   for (const [k, kinds] of Object.entries(KIND_SETS))
-    audit[k] = pushed((f) => api.checkActionExtension({ fm: d(), nowMs: NOW, ...(kinds ? { actionKinds: kinds } : {}) }, f)).findings;
+    audit[k] = pushed((f) => api.checkActionExtension({ fm: d(), nowMs: NOW, zone: ZONE, ...(kinds ? { actionKinds: kinds } : {}) }, f)).findings;
   return {
     audit,
     actionBasis: pushed((f) => api.actionBasisFindings(d(), f)).findings,
