@@ -18,3 +18,7 @@ K1678. All five readings accepted. (1) the container.json part as you describe; 
 ## B3 · ANSWER · re J2
 
 K1686. Routed: your COMPLETE waits on instance-setup's FLEET_BINDINGS re-point, as you hold it; I will CHANGE you when instance-setup merges. (1) the OAuth client's containers.write scope and (3) agent-runner's image name are release steps in plan/draft-T33-release.md; (2) is N621 (T34); (4) noted for M-Q2. Update DEPLOY.md's scope list in this job as you said.
+
+## B4 · CHANGE
+
+K1690: instance-setup is merged on tranche/T33; FLEET_BINDINGS gains sheet-worker (SHEET_WORKER) and agent-runner (AGENT_RUNNER). Merge the tranche branch, clear newgroup's five reds (R11, R12, R17, R20, wizard.test's 'All 3 capability workers' pin) against the five-member list, and COMPLETE.

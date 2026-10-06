@@ -275,7 +275,8 @@ test("R17: clockpropose any credential's, as actionlawspropose (admin, member, p
   assert.deepEqual(plain(OPS.exportrender), { classes: ["admin", "member"], machineClasses: [], mutating: true });
   assert.deepEqual(plain(OPS.exportpage), { classes: ["admin"], mutating: false });
   assert.deepEqual(plain(OPS.exportpage).classes, [...OPS.export.classes]);
-  assert.ok(!Object.hasOwn(NEEDS, "exportpage") && !SESSION_OPS.member.has("exportpage"));
+  /* K1689: a present null row, affordances grading it; no session set holds it */
+  assert.ok(Object.hasOwn(NEEDS, "exportpage") && NEEDS.exportpage === null && !SESSION_OPS.member.has("exportpage"));
   const is = OP_FAMILIES["instance-setup"];
   for (const op of ["officesseed", "assistantset"]) {
     assert.equal(is.kinds[op], "admin", op);
@@ -326,7 +327,8 @@ test("R19, R3 (K1601, K1566): the ask's three plane ops admit a session's kinds 
   }
   assert.match(UNATTENDED_BY_DECISION.askusage, /K1601/);
   assert.deepEqual(plain(OPS.moneydetectorsrun), { classes: ["admin", "probe"], mutating: true });
-  assert.ok(!SESSION_OPS.member.has("moneydetectorsrun") && !Object.hasOwn(NEEDS, "moneydetectorsrun"));
+  assert.ok(!SESSION_OPS.member.has("moneydetectorsrun") && !SESSION_OPS.admin.has("moneydetectorsrun"));
+  assert.ok(Object.hasOwn(NEEDS, "moneydetectorsrun") && NEEDS.moneydetectorsrun === null, "K1689");
   assert.match(UNATTENDED_BY_DECISION.moneydetectorsrun, /money-checks\.md R6/);
   assert.ok(servedBy("money-checks").includes("moneydetectorsrun"));
 });

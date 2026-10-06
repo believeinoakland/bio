@@ -1,6 +1,6 @@
 # affordances (T33)
 
-**Status** · session_01AfNbyRvRpNFntg82yANhuQ · depth 2 · COMPLETE · handled B2
+**Status** · session_01AfNbyRvRpNFntg82yANhuQ · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -43,3 +43,15 @@ T33-85 applied (commit on `job/T33/affordances`, tranche merged through 79f33fe9
 **Tests and checks.** affordances: tests 192, pass 192, fail 0 (13 files; new `t33.test.mjs` 13 tests, `t33-backing.test.mjs` 12 tests driving all 31 new `reasoned` ops at their owners). Users: tasks 74/0, queue 113/0, op-declarations 59/0, control-plane 154/5 (the four named reds of B1 plus totality above; 155/4 on the tranche). `format.mjs`: 0 failures; `architecture.mjs . affordances`: 0 failures; `coverage.mjs . affordances`: 41 of 41, 0 failures; `ownership.mjs . affordances tranche/T33`: 11 files, 0 failures. Final `uses`: as modules.json holds after K1683.
 
 Size (session_01AfNbyRvRpNFntg82yANhuQ): test runs 9, module lines 3881
+
+## J4 · COMPLETE
+
+B3 (K1689) applied; tranche merged through bcd0f7a8a7.
+
+**Done.** (1) `platformhosts` re-keyed `capturerequestplatformhosts` (a `read:` reason). (2) Graded, each with its NON_ACTS reason: `ask` (caller-owned: the member's own question under their own account), `disclosureshown` (caller-owned, instance-setup R54), `seatsseed` (substrate, as `officesseed`, R52), reads `assistantstate`, `disclosureof`, `capturerequestplatformhosts`, and `standardinforce` (layer 9's read, now gated; catalogue.test.mjs's layer-9 test re-counted: 19 ungated reads, two gated). `askusage` ranked `observational` (a usage count naming no question) with no NON_ACTS reason, since op-declarations gives it no NEEDS row (UNATTENDED_BY_DECISION). No rung is `reasoned`, so no new backing drive.
+
+**control-plane `totality.test.mjs:13`** now reads only `stale: [exportpage, moneydetectorsrun]`, both op-declarations' NEEDS rows (B3 says it adds them); unpublished and unranked are empty.
+
+**Tests and checks.** affordances 192/192, 0 fail. format 0, architecture 0 (18 files), coverage 41/41, ownership 3 files, 0 failures.
+
+Size (session_01AfNbyRvRpNFntg82yANhuQ): test runs 11, module lines 3895

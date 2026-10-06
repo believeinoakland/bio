@@ -2833,6 +2833,12 @@ const NEEDS = Object.freeze({
   ...FAMILY_NEEDS,
   /* R18: the in-force read (standards R7's alias `standardinforce`), a present null as `inforceat`'s beside it. */
   standardinforce:       null,
+  /* K1689: an export's page (`export`'s credential) and the detectors' run (the operator's, unattended by decision)
+     take NO WORKING CAPABILITY — neither is a session's act — and are PRESENT, null, because affordances grades each
+     (its R40: the page a NON_ACT, the run a substrate absence) and its totality reads a graded key this table lacks as
+     stale (its R12), K516's precedent. */
+  exportpage:            null,
+  moneydetectorsrun:     null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an

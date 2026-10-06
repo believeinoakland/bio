@@ -1,6 +1,6 @@
 # op-declarations (T33)
 
-**Status** · session_01BLy9wpCWCj7n1UuSHwbkir · depth 2 · COMPLETE · handled B3
+**Status** · session_01BLy9wpCWCj7n1UuSHwbkir · depth 2 · COMPLETE · handled B4
 
 ## Completion (OP-DECLARATIONS #10)
 
@@ -69,6 +69,25 @@ All are earlier in the order. Until they are set in `modules.json`, the architec
 
 Size (session_01BLy9wpCWCj7n1UuSHwbkir): test runs 13, module lines 2914
 
+## After B4 (CHANGE, K1689)
+
+**What changed:**
+- Merged `tranche/T33`, which now includes the control-plane merge.
+- `exportpage` and `moneydetectorsrun` now carry present null NEEDS rows, because affordances grades both.
+- My R3 test now allows an op that is unattended by a recorded decision to carry a null row.
+- `capturerequestplatformhosts` keeps its name.
+
+**control-plane's `totality.test.mjs:13`:** my two stale keys are gone. What remains is affordances':
+- `platformhosts` reads stale; it is to be re-keyed to `capturerequestplatformhosts`.
+- Unpublished: `ask`, `assistantstate`, `capturerequestplatformhosts`, `disclosureof`, `disclosureshown`, `seatsseed`, `standardinforce`. The four instance-setup ops arrived with K1683; `standardinforce` has R18's null row.
+- Unranked: `ask`, `askusage`, `disclosureshown`, `seatsseed`.
+
+**Tests and checks:**
+- Module 69/69.
+- control-plane 166/2: `totality.test.mjs:13` as above, and `catalogue-end.test.mjs:15`. The second is red without my change too: `NO_STATEMENT` now reads C-134.5's row where C-33.14 was pinned.
+- affordances 192/0.
+- format, architecture, coverage (20/20) and ownership: 0 failures each. Architecture is 0 now that the uses edges are set.
+
 ## J1 · QUESTION
 
 My readings, on which I am building now (none stops me):
@@ -88,3 +107,7 @@ T33-88 done: R17–R20 as `OP_FAMILIES` (23 owners, 181 ops, one append site eac
 ## J3 · COMPLETE · re B2
 
 Supersedes J2 (posted before I read B2, B3). B2 and B3 applied, tranche/T33 merged: `OP_STAMPS` (K1674), 190 ops = every op I declare for T33 (185 family ops, the 3 ask ops, `exportpage`, `moneydetectorsrun`), keys from the closed set, derived from `OP_FAMILIES` (the one append site): viewer on all, the actor's key on acts (query by→by, body by→bodyBy, author), the proposer's on proposals, extras member (credentials' account ops, `ask`) and session (`aigrantmint`). R17–R20 → OP_STAMPS mapping is in my record's Completion. instance-setup's six op names (K1683) declared; every T33 read has a null NEEDS row. For control-plane: standards' five T33 acts read `author`/`proposer` from the BODY (as STANDARDS_ACTIONS do); the closed set carries no site. Module 69/69; format, coverage (20/20), ownership 0 failures; architecture 22 failures = the 22 `uses` edges my R6 test needs (the owners' ops maps, all earlier; listed in my record, K1563 (3)), until you set them. New reds as J2: control-plane declarations.test.mjs:11 (T33-89), totality.test.mjs:13 (T33-85).
+
+## J4 · COMPLETE · re B4
+
+B4 applied, tranche/T33 merged: exportpage and moneydetectorsrun carry present null NEEDS rows (my R3 test lets an unattended-by-decision op carry one); capturerequestplatformhosts unchanged. control-plane totality.test.mjs:13: my two stale keys are gone; what remains is affordances' (stale platformhosts, the re-key; unpublished ask, assistantstate, capturerequestplatformhosts, disclosureof, disclosureshown, seatsseed, standardinforce; unranked ask, askusage, disclosureshown, seatsseed — the four instance-setup ops came with K1683, standardinforce's null row is R18's). control-plane 166/2: totality as above, and catalogue-end.test.mjs:15, red without my change too (NO_STATEMENT now C-134.5's row, pinned at C-33.14). Module 69/69; affordances 192/0; format, architecture, coverage, ownership 0 failures.

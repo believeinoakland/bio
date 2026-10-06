@@ -150,6 +150,11 @@ export const T33_RUNG_ABSENT = {
   aicopyceilingset:     { ground: "substrate", is: "an administrator sets the copy's daily assistant ceiling below members' own; it moves no document, claim or grade (ai-runs R50)" },
   officesseed:          { ground: "substrate", is: "an administrator seeds the offices and bodies the active profiles name as entities, with their identifiers and lines (instance-setup R50)" },
   assistantset:         { ground: "substrate", is: "an administrator records whether the assistant is enabled for this copy; it binds no credential and moves no document, claim or grade (instance-setup R53)" },
+  /* B3 (K1689): the ops op-declarations declares that T33's first grading did not reach */
+  seatsseed:            { ground: "substrate", is: "an administrator seeds the seats of matched bodies, and their holders, from held register captures as entities and lines, each as the register records it (instance-setup R52)" },
+  disclosureshown:      { ground: "caller-owned", is: "records that a member was shown the assistant's disclosure, and its version, when they connect their own account (instance-setup R54)" },
+  ask:                  { ground: "caller-owned", is: "a member asks the assistant their own question under their own account; what is read to answer it is logged, and the answer stores nothing in the record (answers; K1609)" },
+  askusage:             { ground: "observational", is: "counts one assistant call's usage against the member's own day, naming no question or answer (K1601)" },
 };
 
 /* ---- every op's NON_ACTS reason (R7, R40) ---- */
@@ -352,8 +357,17 @@ export const T33_NON_ACTS = {
   /* capture-requests */
   capturerequestplatformmark: "host-directed: keyed by a host; a group-wide mark that the host is a login-gated platform",
   capturerequestplatformunmark: "host-directed: keyed by a host; withdraws its platform mark, kept with who and when",
-  platformhosts: R("the hosts marked platforms"),
+  capturerequestplatformhosts: R("the hosts marked platforms"),
   /* instance-setup */
   officesseed: "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's",
   assistantset: "the copy's configuration: whether the assistant is enabled; an administrator's, not an act on an object",
+  /* B3 (K1689). `askusage` carries no NEEDS row (op-declarations' UNATTENDED_BY_DECISION, K1601), so it has no reason
+     here (R12: a reason for an ungated op reads stale); its rank is above. */
+  seatsseed: "the instance's configuration: seeds the seats of matched bodies and their holders from held captures; an administrator's",
+  disclosureshown: "personal state, keyed by member: the assistant's disclosure shown to them, with its version",
+  ask: "member-directed: a member's own question to the assistant under their own account; no object is before them",
+  assistantstate: R("whether the assistant is enabled for this copy, with who set it and when"),
+  disclosureof: R("a member's own record of the assistant's disclosure shown to them"),
+  /* layer 9's read, gated since T33 (op-declarations gives it a NEEDS row of null, K1689) */
+  standardinforce: R("whether one standard was in force on a date, with why"),
 };
