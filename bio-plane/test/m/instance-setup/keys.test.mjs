@@ -31,7 +31,7 @@ const sshLine = (label) => {
    `by` is the founder's stamp, as the control plane stamps an administrator's session. Answers the credentials
    module, whose keys the page registers and lists. */
 async function roster() {
-  const record = { bundleInfo: () => null, declarePurge() { return { ok: true }; } };
+  const record = { bundleInfo: () => null, declarePurge() { return { ok: true }; }, declareTable() { return { ok: true }; } };
   const ctx = { storage: storage() };
   const m = membershipOf(ctx, { record });
   m.migrate();

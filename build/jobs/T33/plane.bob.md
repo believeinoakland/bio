@@ -1,6 +1,6 @@
 # BOB to plane (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -26,3 +26,19 @@ K1674 (from CONTROL-PLANE #22 J1 (2)): op=ask's handler is yours in T33-90: admi
 ## B3 · ANSWER · re J1
 
 K1683. (1)-(10) accepted as read. (1) INSTANCE-SETUP #12 is told by CHANGE to export officeOf and officeEntityOf on its instance. (2) roster-reader's store-reading source is N614; (3) the capture origin is N615, court-doctypes R22's second sentence deferred; (7) retrieval's relations are N584 (T34-26). (6) notice-producers is merged on tranche/T33 (79f33fe954): wire noticeProducersOf for real. Merge the tranche branch.
+
+## B4 · ANSWER · re J2
+
+K1684. (1)-(3) accepted as read. (2) the name is grantMember (a member:<id> stamp); CONTROL-PLANE #22 is told to hand it to gatedOp when a grant is presented.
+
+## B5 · CHANGE
+
+K1685 (from CONTROL-PLANE #22 J3): the store object handed to dispatch gains logRead(entry) = answers' logRead for that object (as purgeHeld); without it a read under a grant fails closed. control-plane routes askcheck, askusage and askceiling.
+
+## B6 · CHANGE
+
+K1689: queue (T33-83, noticeProducers dep) and control-plane are merged on tranche/T33, and your 22 uses are set. Merge the tranche branch, clear t33.test.mjs R21, and COMPLETE.
+
+## B7 · CHANGE
+
+K1690: instance-setup is merged on tranche/T33: its routes are now twenty (+assistantset, assistantstate, disclosureshown, disclosureof, officesseed, seatsseed), so your R1/R5 pin of 'fourteen routes' needs re-pinning; hand officeOf/officeEntityOf and assistantGate (to answers) as ports. Merge the tranche branch before COMPLETE.

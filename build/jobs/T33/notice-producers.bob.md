@@ -1,6 +1,6 @@
 # BOB to notice-producers (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1676. (1) and (2) accepted as read. (3) R5's sentence governs: the key gains ::<state> (overdue or undetermined), so the change from possibly overdue to overdue raises a fresh item. R5's wording is folded on tranche/T33 (79837a65f0): merge the tranche branch.
+
+## B3 · CHANGE
+
+K1688 (from QUEUE #18 J2, against K1444 (iii)): ageFrom (index.mjs near line 64) reads a date-only since as ${since}T00:00:00Z, the UTC midnight, so an inquiry-recheck-due item's age is 7-8 hours too old in the Pacific zone. Take the start of w.date's local day through civil-time.dayRange in the wait's zone (inquiry.datedWaits' zone, else the instance zone as queue-producers reads it); with no zone, age undetermined, never UTC. Add a test west of UTC at the day boundary. Merge tranche/T33 first (queue is merged), then COMPLETE again.

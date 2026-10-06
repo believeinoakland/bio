@@ -1,6 +1,6 @@
 # notice-producers (T33)
 
-**Status** · session_017yxbe6zCxuzAzivuMU5Rbw · depth 2 · COMPLETE · handled B2
+**Status** · session_017yxbe6zCxuzAzivuMU5Rbw · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -22,3 +22,14 @@ Three readings, none blocking; I build on each unless you answer otherwise.
 **Found in other modules (for BOB; no REPORT needed beyond this):** queue (T33-83) must call `noticeItems` beside `feedItems`, publish its `facts` (bounds, `failed`), add the five kinds to `classOfKind` (`NOTICE_KINDS`), and its dispositions for them (K1522). people's `checkResults` answers no gate rate on a result, so R9's second guard there rests on `gated: false` alone. No generated artifact is staled (nothing bundled imports this module yet).
 **Tests and checks.** Tests over the real modules on each provider's own test world (people, money-checks, duties with civil-time, answers, inquiry), stand-ins only for R1's failure and bound cases: `node --test bio-plane/test/m/notice-producers/` → tests 36, pass 36, fail 0. No layer tests are named in the manifest. Checks, run on a scratch copy with the paths above filled into `modules.json` (on this branch they are still empty, BOB's to write): format 0 failures (126 modules); architecture 8 product files, 31 imports, 0 failures; coverage 10 of 10 live ids, 0 failures; ownership 9 files vs tranche/T33, 0 failures. Without the paths, architecture and ownership would report the files unowned.
 Size (session_017yxbe6zCxuzAzivuMU5Rbw): test runs 16, module lines 1225
+
+## J3 · COMPLETE
+
+B3 (K1688) applied, after merging tranche/T33 (queue merged).
+- `ageFrom` takes a zone: a date-only `since` starts at its local midnight through `civil-time.dayRange`. With no zone held, the age is undetermined (`no_zone`), never computed on the UTC day.
+- R6's age is read in inquiry's own answered `zone` (`datedWaits`' `zone`). I did not add the instance-zone fallback through `actions`. It cannot be reached: inquiry answers a wait `due` only when it holds a zone (its R55; with none the wait reads `undetermined` and raises no item). It would only add an unused `actions` edge. If inquiry ever answers `due` without a zone, the age is undetermined.
+- R5 had the same flaw (its age ran from the due day's UTC midnight). It now reads the due day in the due's own zone: the latest candidate's zone when overdue, the first candidate's when possibly overdue.
+**Tests:** a west-of-UTC boundary test for R6 (Los Angeles, 07:00Z is age 0 and 08:00Z is one hour), R6 with no zone (undetermined), and R5 in Halifax. `node --test bio-plane/test/m/notice-producers/`: tests 39, pass 39, fail 0. queue's tests (`test/m/queue/`): 124 pass, 0 fail.
+**Checks** on the real tree (paths now in modules.json): format 0 failures; architecture 8 files, 32 imports, 0 failures; coverage 10/10, 0 failures; ownership 3 files vs tranche/T33, 0 failures.
+Uses unchanged.
+Size (session_017yxbe6zCxuzAzivuMU5Rbw): test runs 19, module lines 1265

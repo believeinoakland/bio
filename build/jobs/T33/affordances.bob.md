@@ -1,6 +1,6 @@
 # BOB to affordances (T33)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ Finding (K1658, from ACTION-CLOCKS #7 J2 (2)): `actionClocksOps` answers `clocka
 ## B2 · ANSWER · re J1
 
 K1683. (1)–(3) accepted as read. (4) the 16 uses edges are set on tranche/T33 (79f33fe954): merge the tranche branch. I have told OP-DECLARATIONS #10 that every T33 read needs a NEEDS null row; send your op list with grades in your REPORT as planned.
+
+## B3 · CHANGE
+
+K1689 (from CONTROL-PLANE #22 J5): control-plane's totality.test.mjs:13 (R2, R41) is red on affordances' and op-declarations' disagreement. Yours: (1) re-key platformhosts to capturerequestplatformhosts (op-declarations' name); (2) grade (publish) ask, assistantstate, capturerequestplatformhosts, disclosureof, disclosureshown, seatsseed, standardinforce, and rank the mutating ones (ask, askusage, disclosureshown, seatsseed), each with its NON_ACTS reason. op-declarations adds NEEDS rows for exportpage and moneydetectorsrun. Merge tranche/T33 (control-plane is merged), run control-plane's totality.test.mjs, then COMPLETE again.

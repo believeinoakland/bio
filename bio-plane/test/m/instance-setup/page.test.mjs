@@ -301,7 +301,7 @@ test("R47 the claim section shows DEC-109's block before the password is chosen,
   p.el("#boot").value = "token"; p.el("#pw1").value = "twelve-chars-a"; p.el("#pw2").value = "twelve-chars-a";
   await p.el("#do-claim").fire(); await settle();
   assert.deepEqual(p.calls.find((c) => c.op === "claim").body, { bootstrapToken: "token", password: "twelve-chars-a" });
-  assert.deepEqual([...new Set(p.calls.map((c) => c.op))].filter((op) => !["bootstrap", "claim", "login", "whoami", "profiles"].includes(op)), []);
+  assert.deepEqual([...new Set(p.calls.map((c) => c.op))].filter((op) => !["bootstrap", "claim", "login", "whoami", "profiles", "assistantstate"].includes(op)), []);
 });
 
 test("R48 the inbox's resolve asks the member's reason and sends it with the knock and the status; a blank reason posts nothing; a refusal is shown in the plane's words and the knock is left as it was", async () => {

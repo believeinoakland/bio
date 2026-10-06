@@ -1,6 +1,6 @@
 # BOB to op-declarations (T33)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ K1674 (from CONTROL-PLANE #22 J1): the stamp interface is one frozen export OP_S
 ## B3 · ANSWER · re J1
 
 K1683. (1) OP_FAMILIES accepted as the one append site; its stamps are published as K1674's OP_STAMPS (op -> stamp keys from the closed set viewer, by, bodyBy, author, proposer, member, session; read my B2 CHANGE), derived from OP_FAMILIES if you like. (2), (4)-(8) accepted as read; (4) control-plane's routing decides which ask-check name survives. (3) owners confirmed: control-plane (T33-89) for the ask ops, clockpropose and the three platform ops; instance-setup (T33-87) for assistantset, assistantstate, disclosureshown, disclosureof, officesseed, seatsseed (its op names). Also from AFFORDANCES #20: every T33 read, R17's included (clocksics, clocklateness, addresseesuggest, exportrender, accountreference, keyedservices, aiusage), needs a NEEDS row (null), or it reads stale. Merge tranche/T33 (79f33fe954).
+
+## B4 · CHANGE
+
+K1689 (from CONTROL-PLANE #22 J5): give exportpage and moneydetectorsrun NEEDS rows (affordances grades both as NON_ACTS; read their reasons from affordances' t33.mjs). capturerequestplatformhosts stays your name; affordances re-keys to it. Merge tranche/T33 (control-plane is merged), run control-plane's totality.test.mjs, then COMPLETE again.

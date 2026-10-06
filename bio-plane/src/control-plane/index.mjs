@@ -1,4 +1,4 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R52). The Worker's HTTP entry — routing, the stamps, the answer's decoration
+/* control-plane: THE INSTANCE'S DOOR (R1–R53). The Worker's HTTP entry — routing, the stamps, the answer's decoration
    and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
@@ -42,6 +42,10 @@ import { OPS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, 
          TEMPLATE_DOOR_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS,
          NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR,
          DOCKET_BY } from "../op-declarations/index.mjs";
+/* R53 (K1674): the stamps T33's ops declare, op → keys (op-declarations R17–R20). */
+import { OP_STAMPS } from "../op-declarations/index.mjs";
+/* R53 (K1601, K1674): an ask's grant reads only its list (credentials R28). */
+import { AI_GRANT_OPS } from "../credentials/index.mjs";
 
 /* R49 (DEC-112 (3)(6), DEC-96; N520, N522; op-declarations R14): `case-import`'s eight member ops (its R1–R8), routed
    through its own map by the general forward. The six acts take `by` (the positional identity case-import asks
@@ -682,6 +686,25 @@ const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
    text finds it whole. `PLANE_LIMITS` is its parsed form. */
 const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
 
+/* R53 (K1601, K1674; credentials R27, R28; agent-worker R54): AN ASK'S GRANT. Its token has a session's shape and is
+   no session, so admission answers NOT_AUTHENTICATED; for an op on the grant's list, or one of the ask's own four calls
+   (`affordances` untargeted), the door then asks credentials in `bio` whether a live grant admits it (the four, off the
+   list, by its first read). Admitted, the caller is `ai`, its viewer the grant's member, its grant stamped `grant`
+   (answers' arms, the read log); GRANT_OP_REFUSED is answered; anything else keeps admission's answer. */
+const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances"]);
+async function grantAdmit(env, url, op, spec) {
+  const own = GRANT_OWN_OPS.includes(op), token = url.searchParams.get("token");
+  if ((!own && !AI_GRANT_OPS.includes(op)) || (op === "affordances" && url.searchParams.get("target"))) return {};
+  const out = await doAnswer(env.STORE.get(env.STORE.idFromName("bio")).fetch(new Request("http://do/aigrantadmit", {
+    method: "POST", body: JSON.stringify({ token, op: own ? AI_GRANT_OPS[0] : op, write: own ? false : spec.mutating }) })));
+  if (!out.answered) return { silent: { op: "aigrantadmit", correlation: out.correlation } };
+  const g = out.result || {};
+  if (g.ok === true) return { caller: { cls: "ai", viaSession: false, member: null, viewer: null, identity: null, rights: null,
+    caps: null, aiCred: { tokenId: "grant", principal: g.viewer, grant: token },
+    storeName: url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio" } };
+  return g.reason === "GRANT_OP_REFUSED" ? { refusal: { status: 403, body: g } } : {};
+}
+
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler is a module's, through plane's hooks;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
@@ -927,8 +950,13 @@ export function makeFetch(hooks = {}) {
     /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
        refusal and session gate), the class or the agent's task scope, the capability, the landing. A refusal is answered
        as the gate gives it; a store that could not be asked is a silence, never a statement about the caller. */
-    const admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
+    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
+    if (admitted.refusal?.body?.reason === "NOT_AUTHENTICATED") {   /* R53: an ask's grant */
+      const granted = await grantAdmit(env, url, op, spec);
+      if (granted.silent) return storeSilent(granted.silent.op, granted.silent.correlation);
+      if (granted.caller || granted.refusal) admitted = granted;
+    }
     if (admitted.refusal) return refused(admitted.refusal);
     const caller = admitted.caller;
     const { cls, viaSession, aiCred, storeName } = caller;
@@ -1009,6 +1037,23 @@ export function makeFetch(hooks = {}) {
     /* R44: a grant's digest and the secret door's mark are the door's alone (the mints below, the four grant doors), so a
        caller's copy reaches no admitted op. */
     for (const k of ["secretSha", "bySecret"]) inner.searchParams.delete(k);
+    /* R53 (K1122, K1674; op-declarations R17–R20): T33'S OPS' STAMPS, each declared key (`OP_STAMPS`) deleted from the
+       caller's query and set by one expression: `viewer` every read's; `by` (query) and `bodyBy` (the body's `by`, below)
+       the actor in the viewer's form (a session's viewer; a machine `class:<cls>`, an agent `class:ai/<tokenId>`);
+       `author` the positional identity and `proposer` the label, by `QUERY_AUTHOR_ACTIONS`' and `actionlawspropose`'s
+       expressions; `member` and `session` a session's own member and token, never set for another caller. A grant's
+       token is stamped `grant` for its caller alone. */
+    const declared = OP_STAMPS[op] || [];
+    const actor = viaSession ? sessViewer : cls === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
+    const stampOf = { viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : actor, by: actor,
+      author: viaSession ? sessIdentity : actor, proposer: viaSession ? sessMember : actor,
+      member: viaSession ? sessViewer : null, session: viaSession ? url.searchParams.get("token") : null };
+    for (const k of declared) if (Object.hasOwn(stampOf, k)) {
+      inner.searchParams.delete(k);
+      if (stampOf[k] !== null) inner.searchParams.set(k, stampOf[k]);
+    }
+    if (Object.hasOwn(OP_STAMPS, op) || AI_GRANT_OPS.includes(op) || GRANT_OWN_OPS.includes(op)) inner.searchParams.delete("grant");
+    if (aiCred?.grant) inner.searchParams.set("grant", aiCred.grant);
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
        `author`, `by` and `viewer` follow below. A session stamps the member; a
@@ -1950,7 +1995,8 @@ export function makeFetch(hooks = {}) {
     /* R28: an op whose handler is a module's, reached through plane's hooks, answers here, after the R14 fences and R16;
        undefined falls through to the forward. */
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
-      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub }) : undefined;
+      sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
+      grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
     if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
@@ -2182,6 +2228,14 @@ export function makeFetch(hooks = {}) {
           for (const k of BODY_STAMPS) delete b0[k];
           passBody = JSON.stringify(b0);
         }
+      } catch { /* the DO will refuse the malformed body with its own words */ }
+    }
+    /* R53: `bodyBy`, the actor in the body's `by` (lines, money, money-checks, people, hypotheses, workbooks); an empty
+       POST body is stamped too, so a refusal is the module's own. */
+    if (declared.includes("bodyBy") && req.method === "POST") {
+      try {
+        const b = passBody ? JSON.parse(passBody) : {};
+        if (b && typeof b === "object" && !Array.isArray(b)) { b.by = actor; passBody = JSON.stringify(b); }
       } catch { /* the DO will refuse the malformed body with its own words */ }
     }
     /* create_projects (section 5) and the 7.1 owner claim, in one place.
@@ -2704,7 +2758,9 @@ export function makeFetch(hooks = {}) {
        layer's expression (`QUERY_AUTHOR_ACTIONS` above): the positional identity for a session, `class:<cls>` or
        `class:ai/<tokenId>` for a machine, which standards refuses BY NAME at a declaration or an adoption
        (MACHINE_CANNOT_DECLARE_STANDARD) and labels as machine work on a proposal. An empty POST body is stamped too. */
-    if (STANDARDS_ACTIONS.includes(op) && req.method === "POST") {
+    /* K1687: standards' five T33 acts read `author` (`lawpropose` `proposer`) from the body too, as these do. */
+    const standardsT33 = ["lawrelate", "lawwithdraw", "lawpropose", "courtlink", "courttreat"].includes(op);
+    if ((STANDARDS_ACTIONS.includes(op) || standardsT33) && req.method === "POST") {
       try {
         const b = passBody ? JSON.parse(passBody) : {};
         if (b && typeof b === "object" && !Array.isArray(b)) {
@@ -2713,7 +2769,7 @@ export function makeFetch(hooks = {}) {
             : `${MACHINE_CLASS_PREFIX}${cls}`;
           delete b.author;
           delete b.proposer;
-          if (op === "standardpropose") b.proposer = who; else b.author = who;
+          if (op === "standardpropose" || op === "lawpropose") b.proposer = who; else b.author = who;
           passBody = JSON.stringify(b);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
