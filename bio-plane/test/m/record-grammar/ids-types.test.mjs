@@ -132,17 +132,19 @@ const TABLE = [
   ["EVT", "events", "opaque"], ["LIN", "lines", "opaque"], ["MNY", "money", "opaque"], ["PFA", "people", "opaque"],
   ["IDC", "people", "opaque"],
   ["MTI", "people"], ["CHK", "people"], ["MSR", "money"], ["HYP", "hypotheses"], ["DUT", "duties"],
-  ["CALC", "calculations", "opaque"], ["STQ", "answers"],
-].map(([prefix, owner, form = "sequential"]) => ({ prefix, owner, form }));
+  ["CALC", "calculations", "opaque", "sequential"], ["STQ", "answers"],
+].map(([prefix, owner, form = "sequential", legacy]) => (legacy ? { prefix, owner, form, legacy } : { prefix, owner, form }));
 const SEQUENTIAL = TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
 const TAIL = "a1b2c3d4e5f6g7h8";
 
-test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque", () => {
+test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form", () => {
   assert.ok(Object.isFrozen(ID_TABLE));
   for (const e of ID_TABLE) {
     assert.ok(Object.isFrozen(e), e.prefix);
-    assert.deepEqual(Object.keys(e).sort(), ["form", "owner", "prefix"], e.prefix);
+    /* `legacy` only on a row whose form changed (K1728): CALC alone, and never the row's own form. */
+    assert.deepEqual(Object.keys(e).sort(), e.prefix === "CALC" ? ["form", "legacy", "owner", "prefix"] : ["form", "owner", "prefix"], e.prefix);
+    if ("legacy" in e) assert.ok(["sequential", "opaque"].includes(e.legacy) && e.legacy !== e.form, e.prefix);
     assert.match(e.prefix, /^[A-Z]+$/);
     assert.ok(typeof e.owner === "string" && /^[a-z][a-z-]*$/.test(e.owner), e.prefix);
     assert.ok(["sequential", "opaque"].includes(e.form), e.prefix);
@@ -154,7 +156,8 @@ test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twic
   for (const p of PREFIXES) assert.equal(ID_TABLE.find((e) => e.prefix === p).form, "sequential", p);
   assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC"]);
   for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT"]) assert.ok(SEQUENTIAL.includes(p), p);
-  assert.equal(ID_TABLE.find((e) => e.prefix === "CALC").owner, "calculations");
+  assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "CALC") },
+    { prefix: "CALC", owner: "calculations", form: "opaque", legacy: "sequential" });
 });
 
 test("R46 every id valid before T33 stays valid; the 10,000th id of every sequential prefix is accepted; the controls refused", () => {
@@ -171,20 +174,29 @@ test("R46 every id valid before T33 stays valid; the 10,000th id of every sequen
   }
   assert.ok(!idPattern("ENT").test("ENT-2026-999"));
   assert.ok(idPattern("ENT").test("ENT-2026-10000"));
-  /* T34 (N570): idPattern('CALC') matches an opaque CALC- core and refuses a sequential one. */
-  assert.ok(idPattern("CALC").test(`CALC-2026-${TAIL}`));
-  for (const seq of ["CALC-2026-0001", "CALC-2026-9999", "CALC-2026-10000"]) assert.ok(!idPattern("CALC").test(seq), seq);
+  /* T34 (N570, K1728): CALC is minted opaque, and a CALC- id minted sequentially before T34 (as a copy on 0.80.0 holds)
+     stays valid wherever it is read: idPattern('CALC') matches both cores and refuses the controls of each. */
+  const calc = idPattern("CALC");
+  for (const ok of [`CALC-2026-${TAIL}`, "CALC-2026-0001", "CALC-2026-9999", "CALC-2026-10000", "CALC-2026-0000000000000000"])
+    assert.ok(calc.test(ok), ok);
+  for (const bad of ["CALC-2026-999", `CALC-2026-${TAIL.slice(1)}`, `CALC-2026-${TAIL}x`, "CALC-2026-A1b2c3d4e5f6g7h8",
+    "CALC-2026-0001-a", `CALC-2026-${TAIL}-a`, "CALC-26-0001", `calc-2026-${TAIL}`, "CALC-2026-12345abc"])
+    assert.ok(!calc.test(bad), bad);
   for (const p of OPAQUE) {
     const re = idPattern(p);
+    const legacySequential = TABLE.find((e) => e.prefix === p).legacy === "sequential";
     assert.ok(re.test(`${p}-2026-${TAIL}`) && re.test(`${p}-2026-0000000000000000`) && re.test(`${p}-2026-zzzzzzzzzzzzzzzz`), p);
     for (const bad of [`${p}-2026-${TAIL.slice(1)}`, `${p}-2026-${TAIL}x`, `${p}-2026-A1b2c3d4e5f6g7h8`, `${p}-2026-a1b2c3d4e5f6g7H8`,
-      `${p}-2026-a1b2c3d4e5f6g7_8`, `${p}-2026-0001`, `${p}-2026-10000`, `${p}-26-${TAIL}`, `${p}-2026-${TAIL}-a`])
+      `${p}-2026-a1b2c3d4e5f6g7_8`, `${p}-26-${TAIL}`, `${p}-2026-${TAIL}-a`])
       assert.ok(!re.test(bad), bad);
+    /* A sequential core is refused for an opaque prefix, unless its row reads that form as legacy (CALC). */
+    for (const seq of [`${p}-2026-0001`, `${p}-2026-10000`]) assert.equal(re.test(seq), legacySequential, seq);
   }
 });
 
 /* An independent reading of R47's two forms, against which every prefix's pattern is driven over a grid of candidates. */
-const reference = (prefix, form, s) => {
+const reference = (prefix, form, s, legacy) => {
+  if (legacy && reference(prefix, legacy, s)) return true;
   const head = `${prefix}-`;
   if (!s.startsWith(head)) return false;
   const rest = s.slice(head.length);
@@ -194,11 +206,11 @@ const reference = (prefix, form, s) => {
     : tail.length >= 4 && [...tail].every((c) => "0123456789".includes(c));
 };
 
-test("R47 idPattern: the anchored RegExp of exactly that prefix's id core in its ID_TABLE form; null for any other prefix; never throws", () => {
+test("R47 idPattern: the anchored RegExp of exactly that prefix's id core in its ID_TABLE form, and in its legacy form for a row with legacy; null for any other prefix; never throws", () => {
   const tails = ["0001", "9999", "10000", "999", "", TAIL, TAIL.slice(1), TAIL + "0", TAIL.toUpperCase(), "0000000000000000",
     "00000000000000000", "a", "1234a", "x".repeat(16), "-0001", "0001-a"];
   const years = ["2026", "0000", "202", "20260", "abcd"];
-  for (const { prefix, form } of ID_TABLE) {
+  for (const { prefix, form, legacy } of ID_TABLE) {
     const re = idPattern(prefix);
     assert.ok(re instanceof RegExp, prefix);
     assert.equal(re.flags, "", prefix);
@@ -207,12 +219,15 @@ test("R47 idPattern: the anchored RegExp of exactly that prefix's id core in its
     for (const other of ID_TABLE.map((e) => e.prefix).concat(["", prefix.toLowerCase(), `X${prefix}`, `${prefix}X`]))
       for (const y of years) for (const t of tails) {
         const s = `${other}-${y}-${t}`;
-        assert.equal(re.test(s), other === prefix && reference(prefix, form, s), `${prefix} on '${s}'`);
+        assert.equal(re.test(s), other === prefix && reference(prefix, form, s, legacy), `${prefix} on '${s}'`);
       }
     /* A validator whose ids carry a slug composes it after the core, keeping its own slug rule. */
     const withSlug = new RegExp(`^${re.source.slice(1, -1)}-[a-z0-9]+(-[a-z0-9]+)*$`);
     const core = form === "opaque" ? `${prefix}-2026-${TAIL}` : `${prefix}-2026-10000`;
     assert.ok(withSlug.test(`${core}-a-b`) && !withSlug.test(core) && !withSlug.test(`${core}-A`), prefix);
+    /* A row with legacy: its pattern composes inside a larger alternation without adding a capturing group. */
+    assert.equal(new RegExp(`(${re.source.slice(1, -1)})`).exec(core).length, 2, prefix);
+    if (legacy) assert.ok(withSlug.test(`${prefix}-2026-${legacy === "sequential" ? "0001" : TAIL}-a`), prefix);
   }
   const odd = [undefined, null, 0, 1, NaN, true, {}, [], ["HYP"], "", "hyp", "HYP ", " HYP", "HYP-", "X", "constructor", "__proto__",
     "toString", "hasOwnProperty", Symbol("HYP"), 10n, () => "HYP", { toString() { throw new Error("x"); } }, new String("HYP")];
