@@ -54,13 +54,13 @@ import { citationLookup as acquisitionCitationLookup } from "../acquisition/inde
 import { recogniseCitations } from "../idspaces.mjs";
 import { STANDARDS_CHECKS, refusal } from "./checks.mjs";
 import { STANDARDS_TABLES, migrateStandards } from "./schema.mjs";
-import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite } from "./instrument.mjs";
+import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite, isPortionPath } from "./instrument.mjs";
 import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
          weakestCeiling } from "./law.mjs";
 
 export { STANDARDS_CHECKS } from "./checks.mjs";
 export { STANDARDS_SCHEMA, STANDARDS_TABLES } from "./schema.mjs";
-export { instrumentKey, referenceKey } from "./instrument.mjs";
+export { instrumentKey, referenceKey, isPortionPath, PORTION_PATH_MAX } from "./instrument.mjs";
 export { LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD };
 
 export const STANDARD = "standard";
@@ -352,8 +352,8 @@ export class Standards {
     let portion = null;
     if (a.portion != null) {
       const p = a.portion;
-      if (!isObj(p) || Object.keys(p).some((k) => k !== "path" && k !== "content_id") || typeof p.path !== "string"
-          || !p.path.trim() || p.path.length > 200 || typeof p.content_id !== "string")
+      if (!isObj(p) || Object.keys(p).some((k) => k !== "path" && k !== "content_id") || !isPortionPath(p.path)
+          || typeof p.content_id !== "string")
         return bad("portion", "is {path, content_id}: a path within the instrument of at most 200 characters and the "
                    + "content id of its extent");
       /* DEC-49 REGION is-portion-in-text */
@@ -709,6 +709,43 @@ export class Standards {
              ...(date ? { at: date, says: `standards in force on ${date}, or whose period does not decide it (stated `
                                           + "undetermined); a standard whose period excludes the date is left out" }
                       : {}) };
+  }
+
+  /* ===================================================================== *
+   * R32: READS BY KEY AND PORTION, AND BY A PORTION'S CONTENT ID (N590)
+   * ===================================================================== */
+
+  /** R32: the held standards whose instrument key is `key` (its versions), with `portion` only those recording that
+   *  portion path. `{ok, items, truncated}`, in id order, at most `PAGE_MAX`; a viewer naming no member reads none; a
+   *  blank key answers none. Writes nothing. */
+  standardsAt({ key = null, portion = null, viewer = null } = {}) {
+    const k = str(key);
+    if (!k) return { ok: true, items: [], truncated: false };
+    const p = portion == null || portion === "" ? null : String(portion);
+    return this.#versionsWhere(p === null ? "s.instrument=?" : "s.instrument=? AND s.portion_path=?",
+                               p === null ? [k] : [k, p], viewer);
+  }
+
+  /** R32: the held standards whose portion's content id is `contentId`, as `standardsAt` answers them. */
+  standardsWithPortion({ contentId = null, viewer = null } = {}) {
+    const c = str(contentId);
+    if (!c) return { ok: true, items: [], truncated: false };
+    return this.#versionsWhere("s.portion_content=?", [c], viewer);
+  }
+
+  /* R32's one read: the rows the condition admits that the viewer may read (R8's gate), one past the cap. */
+  #versionsWhere(cond, args, viewer) {
+    const gate = viewerPredicate(viewer);
+    const rows = this.#rows(`SELECT s.standard_id, s.instrument, s.portion_path, s.portion_content, s.period_from, s.period_to,
+                               s.supersedes FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
+                             WHERE (${gate.sql}) AND ${cond} ORDER BY s.standard_id LIMIT ?`,
+                            ...gate.args, ...args, PAGE_MAX + 1);
+    const items = rows.slice(0, PAGE_MAX).map((r) => ({
+      id: r.standard_id, instrument: r.instrument ?? null,
+      portion: r.portion_path ? { path: r.portion_path, content_id: r.portion_content } : null,
+      period: { from: r.period_from ?? null, to: r.period_to ?? null },
+      supersedes: r.supersedes ?? null, superseded_by: this.#successorOf(r.standard_id) }));
+    return { ok: true, items, truncated: rows.length > PAGE_MAX };
   }
 
   /* ===================================================================== *

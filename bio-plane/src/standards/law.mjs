@@ -309,9 +309,11 @@ export class LawRecords {
       const id = this.#id("lprop", { what, fields, at });
       this.k.sql.exec(`INSERT INTO law_proposals (proposal_id, what, fields_json, why, proposed_by, proposed_at)
                        VALUES (?,?,?,?,?,?)`, id, what, JSON.stringify(fields), why, who, at);
-      const label = proposalLabel(who, "standard");
+      /* R23 (N568): a relation, link or treatment is labelled through record-grammar's `law_relation` subject (its R49),
+         never `standard`, which labels only R9's proposed standards */
+      const label = proposalLabel(who, "law_relation");
       return { ok: true, proposal: { id, what, fields, why, at, by: label.by, state: label.state,
-                                     machine_work: label.machine_work, adopted_as: null },
+                                     machine_work: label.machine_work, label: label.says, adopted_as: null },
                recorded: false,
                says: `this is a proposal of a ${what} and not one: it moves no answer, and nothing is recorded until a `
                    + "member records it naming this proposal" };

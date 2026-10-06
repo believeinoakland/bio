@@ -102,5 +102,12 @@ export function sourceCopy(view, source) {
   return code && ["official", "codifier", "undetermined"].includes(code.copy) ? code.copy : "undetermined";
 }
 
+/** R31: a portion path as R18 admits it: a string, non-blank once trimmed, of at most 200 characters. Pure, never
+ *  throws; the one statement of the form, which R18's check and later modules (`inquiry-grammar` R13) read. */
+export const PORTION_PATH_MAX = 200;
+export function isPortionPath(value) {
+  return typeof value === "string" && value.trim() !== "" && [...value].length <= PORTION_PATH_MAX;
+}
+
 /** The fold two citations are compared on: trimmed, white space collapsed, lower-cased. */
 export const foldCite = (s) => String(s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
