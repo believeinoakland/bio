@@ -93,6 +93,8 @@ import * as FILINGS from "../filings/checks.mjs";
 import * as ESCALATION from "../escalation/checks.mjs";
 import * as ACTION_PLANS from "../action-plans/checks.mjs";
 import * as MONITORING from "../monitoring/checks.mjs";
+/* K1836 (T34-70, T34-60): following's C-137, in its place in the module order (after monitoring, before link-sweep). */
+import * as FOLLOWING from "../following/checks.mjs";
 /* K1207 (N506, R43): link-sweep's C-18.16–C-18.18 (`SWEEP_CHECKS`), moved from monitoring's file with the sweep, in its
    place in the module order (after monitoring). */
 import * as LINK_SWEEP from "../link-sweep/checks.mjs";
@@ -169,6 +171,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/escalation/checks.mjs", ESCALATION],
   ["src/action-plans/checks.mjs", ACTION_PLANS],
   ["src/monitoring/checks.mjs", MONITORING],
+  ["src/following/checks.mjs", FOLLOWING],
   ["src/link-sweep/checks.mjs", LINK_SWEEP],
   ["src/wizard-scripts/checks.mjs", WIZARD_SCRIPTS],
   ["src/tasks/checks.mjs", TASKS],

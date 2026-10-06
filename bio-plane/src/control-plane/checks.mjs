@@ -22,8 +22,8 @@ export const DISPATCH_CHECKS = {
   UNKNOWN_OP: {
     check: 'C-69.1',
     where: 'src/control-plane/index.mjs fetch > is-unknown-op',
-    translation: 'This copy has no operation by that name. A copy running an older or newer version can have '
-      + 'a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
+    translation: 'This group\'s Civicsmith has no operation by that name. A version older or newer than this one '
+      + 'can have a different set of operations, and a misspelt name reads the same way. Nothing was changed.',
   },
   /* D-561. THE STORE DID NOT ANSWER (REC-52's `storeSilent`). Every public read can meet it — `publishedbytes`,
      `publishedcase`, `verify`, `publishedmanifest` — so its reader is often a member of the public holding nothing,
@@ -33,7 +33,7 @@ export const DISPATCH_CHECKS = {
   STORE_DID_NOT_ANSWER: {
     check: 'C-69.2',
     where: 'src/control-plane/index.mjs storeSilent > is-store-silent',
-    translation: 'This copy of the record could not consult its own records just now, so nothing in this reply is a '
+    translation: 'This group\'s Civicsmith could not consult its own records just now, so nothing in this reply is a '
       + 'statement about them: not that what you asked for is missing, unpublished or refused. Ask again. If your '
       + 'request was meant to change something, look before repeating it, because this reply cannot say whether it did.',
   },
@@ -45,10 +45,10 @@ export const DISPATCH_CHECKS = {
   PLANE_INTERNAL_ERROR: {
     check: 'C-69.3',
     where: 'src/control-plane/index.mjs planeInternalAnswer > is-plane-internal-error',
-    translation: 'This copy failed while handling the request, before it could produce an answer. That is a fault '
-      + 'in this copy, not a statement about what the record holds or about your request; whether any part of it '
-      + 'took effect is not known from here. The administrator can find the details in this copy\'s logs under the '
-      + 'reference given with this answer.',
+    translation: 'This group\'s Civicsmith failed while handling the request, before it could produce an answer. '
+      + 'That is a fault in this group\'s Civicsmith, not a statement about what the record holds or about your '
+      + 'request; whether any part of it took effect is not known from here. The administrator can find the details '
+      + 'in its logs under the reference given with this answer.',
   },
   /* D-629 (R25, C-69.4) — THE STORE'S DOOR THREW. Its outermost catch answered `String(e.stack)` for any throw on any op
      (file paths, line numbers and constraint text, public ops included). It came with the store's door (N333, K412);
@@ -57,10 +57,10 @@ export const DISPATCH_CHECKS = {
   STORE_INTERNAL_ERROR: {
     check: 'C-69.4',
     where: 'src/control-plane/dispatch.mjs internalAnswer > is-store-internal-error',
-    translation: 'This copy failed inside its own record while carrying out the request, so no answer was produced. '
-      + 'That is a fault in this copy, not a statement about what the record holds or about your request; whether '
-      + 'any part of it took effect is not known from here. The administrator can find the details in this copy\'s '
-      + 'logs under the reference given with this answer.',
+    translation: 'This group\'s Civicsmith failed inside its own record while carrying out the request, so no answer '
+      + 'was produced. That is a fault in this group\'s Civicsmith, not a statement about what the record holds or '
+      + 'about your request; whether any part of it took effect is not known from here. The administrator can find '
+      + 'the details in its logs under the reference given with this answer.',
   },
   /* DEC-113 (R46, C-69.5; K1252, K1253) — A PURGE THAT WOULD REACH HELD MATERIAL. While a litigation hold stands, the
      store's door refuses every purge of the real record that would reach what the hold preserves: the whole store while
@@ -70,7 +70,8 @@ export const DISPATCH_CHECKS = {
   PURGE_HOLD_IN_PLACE: {
     check: 'C-69.5',
     where: 'src/control-plane/dispatch.mjs purgeHoldRefusal > is-purge-hold-in-place',
-    translation: 'This copy is preserving records under a litigation hold, and this removal would reach material the '
+    translation: 'Your group\'s Civicsmith is preserving records under a litigation hold, and this removal would reach '
+      + 'material the '
       + 'hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold '
       + 'stands waits until the hold is released.',
   },
@@ -83,21 +84,21 @@ export const BOOTSTRAP_CHECKS = {
   BOOTSTRAP_CREDENTIAL_UNSET: {
     check: 'C-68.2',
     where: 'src/control-plane/index.mjs fetch > is-bootstrap-claim',
-    translation: 'This copy has no administrator token set, so it cannot be claimed yet. Whoever installed it '
+    translation: 'Your group\'s Civicsmith has no administrator token set, so it cannot be claimed yet. Whoever installed it '
       + 'sets one in the hosting account. Nothing was changed.',
   },
   BOOTSTRAP_CREDENTIAL_PUBLISHED: {
     check: 'C-68.3',
     where: 'src/control-plane/index.mjs fetch > is-bootstrap-claim',
-    translation: 'This copy\'s administrator token is a value published in the project\'s public repository, '
-      + 'so it can never be used to claim the copy: anyone can read it. Whoever installed the copy sets a '
-      + 'fresh one in the hosting account. Nothing was changed.',
+    translation: 'The administrator token of your group\'s Civicsmith is a value published in the project\'s public '
+      + 'repository, so it can never be used to claim it: anyone can read it. Whoever installed your group\'s '
+      + 'Civicsmith sets a fresh one in the hosting account. Nothing was changed.',
   },
   BOOTSTRAP_CREDENTIAL_MISMATCH: {
     check: 'C-68.4',
     where: 'src/control-plane/index.mjs fetch > is-bootstrap-claim',
-    translation: 'The administrator token given does not match the one this copy holds, so the copy was not '
-      + 'claimed. Nothing was changed.',
+    translation: 'The administrator token given does not match the one your group\'s Civicsmith holds, so it was '
+      + 'not claimed. Nothing was changed.',
   },
 };
 
@@ -120,7 +121,8 @@ export const REPLAY_CHECKS = {
   REPLAY_UNVERIFIED: {
     check: 'C-66.6',
     where: 'src/control-plane/index.mjs fetch > is-promote-replay-verified',
-    translation: 'This save says it is a replay of the record\'s own history, and the plane could not check that '
+    translation: 'This save says it is a replay of the record\'s own history, and your group\'s Civicsmith could not '
+      + 'check that '
       + 'against the history it holds: the replay must name the provenance file for this document, already '
       + 'uploaded, whose records list this document and exactly this version of it. A replay is excused from '
       + 'the rules a new save must meet only when that check succeeds. Nothing was saved.',
