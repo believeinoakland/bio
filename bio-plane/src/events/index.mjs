@@ -289,7 +289,7 @@ export class Events {
   setReadOptIn({ captureClasses, by = null } = {}) {
     const m = this.#membership;
     const member = typeof by === "string" ? by.replace(/^member:/, "") : null;
-    const admin = by === "admin" || (member && m && typeof m.isAdministrator === "function" && m.isAdministrator(member));
+    const admin = !!member && !!m && typeof m.isAdministrator === "function" && m.isAdministrator(member);
     if (!admin || isMachineIdentity(by)) return notAnAdmin(by, "choosing which readings' dates are held");
     if (!Array.isArray(captureClasses) || !captureClasses.every(said))
       return refuse("NO_CLASSES", "the opt-in set is a list of capture classes (content-type keys), empty for none");
@@ -1155,7 +1155,8 @@ export class Events {
    stamps (`viewer`, `by`); `body` the act's arguments, whose `by` the control plane stamps. One append site per act. */
 export function eventsOps(ev, url, body) {
   const q = (k) => url.searchParams.get(k);
-  const act = (fn) => () => fn({ ...(body || {}), by: q("by") ?? (body && body.by) ?? null });
+  /* the author is the url's stamp alone: a body's own `by` is never read, and an act with no stamp has no author */
+  const act = (fn) => () => fn({ ...(body || {}), by: q("by") ?? null });
   return {
     datedfact: act((b) => ev.recordDatedFact(b)),
     editacts: act((b) => ev.recordEditActs(b)),
