@@ -137,7 +137,7 @@ test("R21, R27: an act the registry marks `owed` is no op until its ruling's op 
   for (const op of DECLARED) assert.ok(owed.includes(op), op);
 });
 
-test("R22: membership's T34 ops — the ten administrator's acts with hostingaccessset's spec (admin, member, probe; machineClasses admin, probe), mutating, by stamped from the query, a present null NEEDS row, in both session sets and in neither bearer fence; the two doors public, mutating, stamped nothing, in no session set and no NEEDS row; courtnotice a read of admin, member, probe stamped nothing; groupdescription a public read with viewer set; checkaddressees no spec (R6)", async () => {
+test("R22, R6: membership's T34 ops — the ten administrator's acts with hostingaccessset's spec (admin, member, probe; machineClasses admin, probe), mutating, by stamped from the query, a present null NEEDS row, in both session sets and in neither bearer fence; the two doors public, mutating, stamped nothing, in no session set and no NEEDS row; courtnotice a read of admin, member, probe stamped nothing; groupdescription a public read with viewer set; checkaddressees no spec (R6)", async () => {
   const ACTS = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
                 "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
   assert.deepEqual(plain(OPS.hostingaccessset), { classes: MP, machineClasses: ["admin", "probe"], mutating: true });
@@ -164,8 +164,8 @@ test("R22: membership's T34 ops — the ten administrator's acts with hostingacc
   assert.deepEqual(stamps("groupdescription"), ["viewer"]);
   assert.ok(neither("groupdescription") && !Object.hasOwn(NEEDS, "groupdescription"));
   assert.ok(JSON.stringify(await drive(membershipOps, "groupdescription", { query: { viewer: SENT } })).includes(SENT));
-  /* R6: the store-internal route */
-  assert.ok(inNoTable("checkaddressees"));
+  /* R6: the store-internal routes membership serves (its R106's, read by tasks; `projectclaimowner`, K1864) */
+  for (const op of ["checkaddressees", "projectclaimowner"]) assert.ok(inNoTable(op), op);
   /* negative control: a drifted spec */
   assert.notDeepEqual(plain({ ...OPS.joinlinkset, machineClasses: [] }), plain(OPS.hostingaccessset));
 });

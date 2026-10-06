@@ -69,7 +69,7 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
                      credentials: ["aicredentiallook", "setpassword", "session"],
                      /* T34 (R22, R6): the check's addressees, read by tasks in process (membership R106) */
                      membership: ["checkaddressees",
-                       /* membership's own hop, called inside `projectCreated` (reported to BOB: R6's list names it not) */
+                       /* membership's own hop, called inside `projectCreated` (R6's store-internal list, K1864) */
                        "projectclaimowner"],
                      /* publication's internal hops (its R15; D-734) and its reads served by public-read */
                      publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
