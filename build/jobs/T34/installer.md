@@ -21,7 +21,7 @@
 - `newgroup`: `test/embed.test.mjs` 23 passed, 0 failed; `test/wizard.test.mjs` 208 passed, 0 failed; `node --test test/requirements.test.mjs` tests 41, pass 39, fail 0, todo 2 (R13, R24, not yet met by MULTI-INSTANCE-ISOLATION).
 - `bio-plane/test/system/newgroup-bundle-fresh.test.mjs`: 3 passed, 1 failed, (C), the stale bundle above.
 - Layer 11 tests: none named in `build/manifest.md`. Installer provides no service another module uses.
-- `format`: 129 modules, 128 requirements files; 0 failures. `architecture`: 17 product files, 33 relative imports; 0 failures. `coverage`: 40 of 40 live requirement ids named by a test; 0 failures. `ownership` (tranche/T34): see J3.
+- `format`: 129 modules, 128 requirements files; 0 failures. `architecture`: 17 product files, 33 relative imports; 0 failures. `coverage`: 40 of 40 live requirement ids named by a test; 0 failures. `ownership` (tranche/T34): 8 files changed; 0 failures.
 - P6: 2,184 lines of code (`newgroup/src` less the generated `release.mjs`, `newgroup/scripts`) and 124 of HTML; under 4,000.
 
 Size (session_0149vjTbEkFukXeLyRTVue4X): test runs 22, module lines 2184
