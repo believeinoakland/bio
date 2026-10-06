@@ -18,3 +18,7 @@ Your factory is linesOf(host) (local-facts imports it). neighbours takes an opti
 ## B3 · CHANGE
 
 K1574: EVENTS #1 is merged on tranche/T33 (entities too). Merge it, wire the real eventsOf(host) default, re-point your tests at the real module, re-run, and post COMPLETE.
+
+## B4 · CHANGE
+
+K1577: merged (T33-27). Re-opened for one requirement: R21 (K1505 (10)'s current_through) is now in build/requirements/lines.md: an open-ended holds line is in at a date no later than a held current_through (a member's or a source's own 'current as of' statement, with citation and day), undetermined after it; none held → undetermined after its start; recording one is a member's act or a system rule's (R4), a later one superseding, the earlier kept. Merge tranche/T33, build and test it, COMPLETE.
