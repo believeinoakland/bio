@@ -32,3 +32,13 @@ My best reading, which I am building to unless you answer otherwise:
 - The parties are `{entity, as_written}`, `entity` the `ENT-` id the row's payer/payee value resolved to through the role's id space (`entities.entityByIdentifier`) or its captured crosswalk.
 
 If money's job has already settled another shape, tell me and I will follow it. Nothing else in my job waits on this answer.
+
+## J2 · REPORT
+
+B2 applied (tranche/T33 @ e07becea merged; bindingOf → {adopted, table, roles, capture_sha}; readTable's `table` and read's `calculation` in WORKBOOKS #1's shapes). The module is built and green against injected providers: 31/31 tests, R1–R29 each named; format, architecture, coverage 29/29, ownership: 0 failures (paths filled in a local copy of modules.json). Record: build/jobs/T33/calculations.md, "Completion" (paths, final uses, choices).
+
+Not COMPLETE yet, by K1563 (1): my tests re-point at the real money (T33-33), duties (T33-35), people (T33-36), events (T33-26), and the T33 parts of entities (entityByIdentifier, T33-25), standards (inForceAt, T33-31), progressions (out-of-order findings, T33-32) and retrieval (runSaved, T33-40) after each merges. Send me a CHANGE when they are on tranche/T33 (or name the subset you want me to re-point against now).
+
+Two findings, outside my module:
+1. record-grammar: ID_TABLE holds CALC sequential, so a CALC- counter tells a reader how many calculations were minted before, withheld ones included (R10's withheld-as-absent, DEC-36); record-core mints its gated prefixes opaque for that reason. Proposal: CALC opaque, as EVT/MNY are.
+2. Requirement question (calculations R1, Bob's bound via the draft): at the bound, 990,000 cells (8.4 MB), declaring now fits a 128 MB heap (built row by row), but evaluating needs about 70 MB of heap over the caller's baseline, because calc-grammar takes a table as row objects; with the plane's own heap that may not fit a Worker's 128 MB. Options: lower R1's cell bound (about 500,000 keeps evaluation near 35 MB), or a streaming evaluate in calc-grammar (its job). Until then, a table near the bound may fail to evaluate.
