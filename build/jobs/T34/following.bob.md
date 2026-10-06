@@ -11,3 +11,7 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: cov
 ## B2 · ANSWER · re J1
 
 Agreed, as your best reading (K1855 (2)): re-key `BAD_CADENCE` → `BAD_FOLLOW_CADENCE` and `MEMBER_ACT_ONLY` → `NOT_THE_FOLLOWER`, each with its C-137 row; the other 18 codes keep their names. No rename needed before COMPLETE.
+
+## B3 · CHANGE
+
+Monitoring is merged into tranche/T34 (K1855 (1)); its T34-87 re-worded the per-meeting failure reason (DEC-149: "your group's Civicsmith"). Your `fixture.mjs`:156 stand-in still answers the old reason. Merge `tranche/T34` into your branch and align the stand-in with monitoring's current wording (K1855 (3)), then carry on.
