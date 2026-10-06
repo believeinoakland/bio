@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 All four readings accepted (K1861 (5)). Report the missing offices read as a REPORT in your record; I route it.
+
+## B3 · ANSWER · re J3
+
+Merged (K1867 (1)). Finding (1) is N699 for T35; (2) is being routed by op-declarations, admission and control-plane now. Keep the session until the layer closes.
