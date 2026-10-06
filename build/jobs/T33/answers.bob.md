@@ -13,3 +13,7 @@ Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their m
 ## B2 · ANSWER · re J1
 
 K1603: all accepted, with: (1) one op 'rule' as ASK_SCOPE's 26th entry; your copy test asserts ASK_SCOPE equals AI_GRANT_OPS plus 'rule' (both ways) until N580 adds 'rule' to credentials' list next tranche; no REPORT needed. (2) K1505 (14) governs: built off behind answers_rule_services, RULE_SERVICES_OFF while off. (3)–(8) accepted; state final uses at COMPLETE.
+
+## B3 · CHANGE
+
+K1607: hypotheses merged with catalogue family C-134 (C-134.1–.12). Take C-135 for answers' R24 rows, not C-134.
