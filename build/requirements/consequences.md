@@ -47,6 +47,7 @@ Terms. **Affected** is `{kind, description, role?, person?}`, `kind` one of `cla
 - `calc-grammar` (T33-71): the figure reader, exact arithmetic and unit refusals (its R1–R5; R2), replacing `consequences/figures.mjs`.
 - `money` (T33-71): `readFact`, `summable` (R2). `calculations` (T33-71): `read` (R2).
 - `people` (T33-71): the source↔person link's sight (R10, R16).
+- `entities` (T33-71): `readEntity`, for R10's person check and the person's label and aliases (K1649).
 - `conformance`: `determinationRead` (R1); `noSuchDetermination` and `determinationSuperseded` (its R19, R20), through which R1's, R7's and R9's `NO_SUCH_DETERMINATION` and R1's `DETERMINATION_SUPERSEDED` are answered, in place of C-114.1 (N309, K275).
 
 ### Invariants

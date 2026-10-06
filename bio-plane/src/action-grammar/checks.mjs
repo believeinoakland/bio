@@ -1,5 +1,5 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
- * R1, R3, R7–R10; K6, K64).
+ * R1, R3, R7–R10, R12; K6, K64).
  *
  * Copied from `actions/checks.mjs` in T19 layer 9 with its comments (that file is deleted since, K914; `actions` reads each
  * of these from here): the kinds this instance accepts (`actionKinds`, `kindReadsAsWritten`, `PRODUCT_KINDS`), the records law
@@ -19,7 +19,7 @@
  * a copy. Nothing here imports the catalogue. Pure (R10): no record, no network, and the clock only as
  * `checkActionExtension`'s default when `ctx.nowMs` is not given. */
 
-import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES } from "../record-grammar/index.mjs";
+import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES, idPattern } from "../record-grammar/index.mjs";
 import { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel,
@@ -39,8 +39,10 @@ function f(check, severity, message, repairs, code) {
   return out;
 }
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-/* The subject registry's key shape (inquiry-grammar keeps its own for C-2.8's subject arm; bias has a private one). */
-const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
+/* R12 (T33-72; S0-10, B0.8, K1470): the subject registry's key shape is record-grammar's one id table's (`idPattern`, its
+   R47), never a copy here: a counter of four or more digits, so `ENT-2026-10000` is a key and every key valid before
+   stays valid. The finding's sentence is unchanged, so a document written before T33 reads byte-identically. */
+const ENTITY_ID_RE = idPattern('ENT');
 const UNWRITABLE = /["\\\r\n]/;
 
 /* ---------------------------------------------------------------------------------------------- R7: the endings */
