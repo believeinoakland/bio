@@ -34,7 +34,8 @@ const CATALOGUE_DETAIL = "pass target=<record id> for the acts available on that
  *  publishes the product's kinds for anything that is not a kind list). With no `target`, the catalogue — the shape a
  *  surface loads once, searchfields' precedent; with one, `facts` is R13–R14's answer for it: a refusal is returned as
  *  given (stated `ok: false`), and otherwise the target's acts (R8–R10) decorated. */
-export function affordancesAnswer({ target = null, facts = null, kinds, gate, screens = [], wizard_scripts = [] } = {}) {
+export function affordancesAnswer({ target = null, facts = null, kinds, gate, screens = [], wizard_scripts = [],
+                                    writing_help_refused = null } = {}) {
   const vocabularies = vocabulariesFor(kinds);
   const dec = (a) => decorate(a, gate);
   /* REC-38: the SAME block on both arms, and deliberately NOT filtered by a target: a capture act's subject is a capture
@@ -59,6 +60,10 @@ export function affordancesAnswer({ target = null, facts = null, kinds, gate, sc
     wizard_scripts: Array.isArray(wizard_scripts) ? wizard_scripts : [],
     /* K1601: `answers`' check family `{CODE: {check, translation}}`, the very object its table holds, for the pack. */
     answer_checks: ANSWERS_CHECKS,
+    /* R44 (DEC-153; K1861 (1)): the acts on which `wizard-scripts` R24 (item 2) refuses writing help, as that module holds
+       and registers them (`writingHelpRefused()`: `{named, machine_refused, irreversible}`), passed through unchanged so
+       no surface keeps a copy (R21); null only where no answer was handed in. */
+    writing_help_refused: writing_help_refused ?? null,
   };
   if (!facts || facts.ok !== true) return { ok: false, ...facts };
   return { target: facts.target, object_type: facts.object_type, current_state: facts.current_state,
@@ -72,33 +77,34 @@ export async function affordancesOp(url, stub, { json, doAnswer, storeSilent, st
                                                  author, by, storeName, cls }) {
   const target = url.searchParams.get("target");
   /* N231 (R26): `action_kind` is the kinds this instance's `actions` accepts at this call (actions R42), asked of the
-     store; a silence is stated as one, never answered with the product's kinds (REC-52). */
-  const kOut = await doAnswer(stub.fetch("http://do/actionkinds"));
+     store; a silence is stated as one, never answered with the product's kinds (REC-52). N630 (K1717): the second
+     question is asked beside the kinds, not after them, so an answer costs one store round trip, not two. */
+  const second = target
+    /* R13 (REC-25): an object the viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. The facts are
+       asked with the stamps exactly as the acts receive them (D-311), so each question is asked of the caller the act
+       will see. */
+    ? `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(viewer)}`
+      + `&identity=${encodeURIComponent(identity)}`
+      + `&author=${encodeURIComponent(author ?? "")}&by=${encodeURIComponent(by ?? "")}`
+    /* R37: the screens and offered scripts, asked of the store for this viewer. */
+    : `http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`;
+  const [kOut, out] = await Promise.all([doAnswer(stub.fetch("http://do/actionkinds")), doAnswer(stub.fetch(second))]);
   if (kOut.refused) return storeRefusal(kOut);
   if (!kOut.answered) return storeSilent("affordances", kOut.correlation);
   const kinds = kOut.result?.kinds;
   const answer = (result) => json({ ok: true, result, store: storeName, tokenClass: cls }, 200);
+  /* REC-52: a store silence or refusal is answered as one, never as "no screens" or as "there are no facts about that
+     object", which is a claim about the object: what the acts on an object are is the whole of what this op is asked,
+     so answering it out of a failure to ask would put a wrong set of affordances in front of a member. The store's own
+     NO_SUCH_BUNDLE, and its 404, stand. */
+  if (out.refused) return storeRefusal(out);
   if (!target) {
-    /* R37: the screens and offered scripts, asked of the store for this viewer; a silence or refusal is answered as the
-       kinds' are (REC-52), never as "no screens". */
-    const sOut = await doAnswer(stub.fetch(`http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`));
-    if (sOut.refused) return storeRefusal(sOut);
-    if (!sOut.answered || !sOut.result) return storeSilent("affordances", sOut.correlation);
-    return answer(affordancesAnswer({ kinds, gate, screens: sOut.result.screens, wizard_scripts: sOut.result.wizard_scripts }));
+    if (!out.answered || !out.result) return storeSilent("affordances", out.correlation);
+    return answer(affordancesAnswer({ kinds, gate, screens: out.result.screens, wizard_scripts: out.result.wizard_scripts,
+                                      writing_help_refused: out.result.writing_help_refused }));
   }
-  /* R13 (REC-25): an object the viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. The facts are
-     asked with the stamps exactly as the acts receive them (D-311), so each question is asked of the caller the act
-     will see. */
-  const fOut = await doAnswer(stub.fetch(
-    `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(viewer)}`
-    + `&identity=${encodeURIComponent(identity)}`
-    + `&author=${encodeURIComponent(author ?? "")}&by=${encodeURIComponent(by ?? "")}`));
-  if (fOut.refused) return storeRefusal(fOut);
-  /* REC-52: a store silence is never answered as "there are no facts about that object", which is a claim about the
-     object: what the acts on an object are is the whole of what this op is asked, so answering it out of a failure to
-     ask would put a wrong set of affordances in front of a member. The store's own NO_SUCH_BUNDLE, and its 404, stand. */
-  if (!fOut.answered) return storeSilent("affordances", fOut.correlation);
-  const facts = fOut.result;
+  if (!out.answered) return storeSilent("affordances", out.correlation);
+  const facts = out.result;
   if (!facts) return storeSilent("affordances");
   const result = affordancesAnswer({ target, facts, kinds, gate });
   if (result.ok === false)

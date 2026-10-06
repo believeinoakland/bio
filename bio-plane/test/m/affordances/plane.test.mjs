@@ -18,6 +18,7 @@ import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
 import { T33_RUNGS } from "../../../src/affordances/t33.mjs";
+import { OP_ALIASES } from "../../../src/affordances/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
   "line_kinds", "line_capacities", "line_roles", "money_kinds", "money_phases", "money_stages", "money_bases",
@@ -319,7 +320,7 @@ test("R17 R37: with no target, the catalogue — each act decorated with applies
   /* R17's six keys, all present; the control plane's door may add its own decoration beside them (`fences`, `pack`:
      control-plane R41, K585 (1), K730) and nothing else */
   const SIX = ["capture_acts", "catalog", "detail", "set_acts", "target", "vocabularies", "screens", "wizard_scripts" /* R37 */,
-    "answer_checks" /* K1601 */];
+    "answer_checks" /* K1601 */, "writing_help_refused" /* R44 */];
   assert.deepEqual(SIX.filter((k) => !Object.hasOwn(r, k)), []);
   assert.deepEqual(Object.keys(r).filter((k) => !SIX.includes(k) && !["fences", "pack"].includes(k)), []);
   assert.equal(r.target, null);
@@ -644,7 +645,12 @@ test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned
     "wizardretire",
     /* R40 (T33-85): T33's, each at its owner's interface over its fixture, t33-backing.test.mjs */
     ...Object.keys(T33_RUNGS).filter((op) => T33_RUNGS[op] === "reasoned")];
-  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), []);
+  /* R45: an alias is its op's handler (op-declarations R21, control-plane R55), so its op's drive is its backing */
+  driven.push(...Object.keys(OP_ALIASES).filter((a) => driven.includes(OP_ALIASES[a])));
+  /* R45: tasks' checkrecord (CHECK_NO_REASON, tasks R15): tasks is later in the order (P4), so this module's tests cannot
+     drive it; its refusal is tasks' own R15 test, and the code's place in the family is held in t34.test.mjs */
+  const awaitingOwner = ["checkrecord"];
+  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), awaitingOwner);
 });
 
 test("R19 R2: inquiryground is `reasoned` where it revises what stands — a FIRST grouping replaces nothing and asks no "

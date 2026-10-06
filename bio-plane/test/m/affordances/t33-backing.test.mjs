@@ -109,7 +109,7 @@ test("R19: money's moneywithdraw, moneysetinclude and moneysetexclude, graded `r
   }
 });
 
-/* ---- duties (R6, R12, R13) ---- */
+/* ---- duties (R6, R12, R13): DUTY_NO_REASON since duties' re-key (N608; K1805) ---- */
 import * as duFix from "../duties/fixture.mjs";
 
 test("R19: duties' dutyrevise, dutywithdraw, dutymatch and dutytransition, graded `reasoned` (R40), are refused without "
@@ -119,13 +119,13 @@ test("R19: duties' dutyrevise, dutywithdraw, dutymatch and dutytransition, grade
     const w = duFix.world();
     const a = w.declare({ trigger: { kind: "recurrence", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", dtstart: "2026-01-01" }, time: { basis: "commitment" } });
     const call = (x) => w.duties.revise({ dutyId: a.duty_id, performance: { act: "post the minutes" }, by: B, ...x });
-    backed("dutyrevise", "NO_REASON", call({}), call({ reason: "the clause says minutes" }));
+    backed("dutyrevise", "DUTY_NO_REASON", call({}), call({ reason: "the clause says minutes" }));
   }
   {
     const w = duFix.world();
     const a = w.declare({ trigger: { kind: "recurrence", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", dtstart: "2026-01-01" }, time: { basis: "commitment" } });
     const call = (x) => w.duties.withdraw({ dutyId: a.duty_id, by: B, ...x });
-    backed("dutywithdraw", "NO_REASON", call({}), call({ reason: "repealed by the council" }));
+    backed("dutywithdraw", "DUTY_NO_REASON", call({}), call({ reason: "repealed by the council" }));
   }
   {
     const w = duFix.world();
@@ -136,7 +136,7 @@ test("R19: duties' dutyrevise, dutywithdraw, dutymatch and dutytransition, grade
     const occ = w.duties.occurrencesOf({ dutyId: id, asOf: "2026-03-09T12:00:00Z", from: "2026-01-01", to: "2026-03-31", viewer: B });
     const k = occ.occurrences.find((o) => o.trigger.ref === req1).key;
     const call = (x) => w.duties.matchEvent({ dutyId: id, occurrenceKey: k, eventId: resp1, by: B, ...x });
-    backed("dutymatch", "NO_REASON", call({}), call({ reason: "the response" }));
+    backed("dutymatch", "DUTY_NO_REASON", call({}), call({ reason: "the response" }));
   }
   {
     const w = duFix.world();
@@ -206,7 +206,7 @@ test("R19: people's identityclaim, identitywithdraw, personfactwithdraw, persone
   }
 });
 
-/* ---- hypotheses (R2) ---- */
+/* ---- hypotheses (R2): HYPOTHESIS_NO_REASON (R43; K1807) ---- */
 import * as hyFix from "../hypotheses/fixture.mjs";
 
 test("R19: hypotheses' hypothesisrevise and hypothesiswithdraw, graded `reasoned` (R40), are refused without their "
@@ -217,14 +217,14 @@ test("R19: hypotheses' hypothesisrevise and hypothesiswithdraw, graded `reasoned
     w.bundle(hyFix.INQ);
     const id = w.hold();
     const call = (x) => w.h.revise({ hypothesisId: id, statement: "They act together, through E3.", by: A, ...x });
-    backed("hypothesisrevise", "NO_REASON", call({}), call({ reason: "A new filing." }));
+    backed("hypothesisrevise", "HYPOTHESIS_NO_REASON", call({}), call({ reason: "A new filing." }));
   }
   {
     const w = hyFix.world();
     w.bundle(hyFix.INQ);
     const id = w.hold();
     const call = (x) => w.h.withdraw({ hypothesisId: id, by: A, ...x });
-    backed("hypothesiswithdraw", "NO_REASON", call({}), call({ reason: "The filing was misread." }));
+    backed("hypothesiswithdraw", "HYPOTHESIS_NO_REASON", call({}), call({ reason: "The filing was misread." }));
   }
 });
 

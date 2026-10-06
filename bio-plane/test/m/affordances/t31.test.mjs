@@ -79,7 +79,8 @@ const R37_GRADES = {
   wizardeditorgrant: ["absent", "credential"], wizardeditorrevoke: ["absent", "credential"],
   wizardprogress: ["absent", "observational"],
 };
-const R37_READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck"];
+const R37_READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck",
+  "baseupdates" /* R37 (DEC-158 (4)) */, "startfrom" /* R45 (op-declarations R28) */];
 const WIZARD_DIRECTED = "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's "
   + "mark; writes this module's rows and moves no bundle";
 
@@ -256,4 +257,17 @@ test("R19 R37: wizardretire, graded `reasoned`, is refused without its reason wi
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
   const wd = w.wz.wizardRetire({ script: d.script, version: d.version, reason: "drafted in error", by: wz.V("frank"), viewer: wz.V("frank") });
   assert.equal(wd.ok, true, JSON.stringify(wd).slice(0, 300));
+});
+
+/* R44 (K1861 (1), K1869 (4)): the screens route carries wizard-scripts' own writing-help list, the real module's answer. */
+import { WRITING_HELP_NAMED } from "../../../src/wizard-scripts/index.mjs";
+test("R44 R17 R21: the screens route answers writing_help_refused as wizard-scripts R24 holds and registers it — its "
+   + "named list the very frozen array, the registered sets as registered — and before registration the empty sets", () => {
+  const { w, screens } = wizardWorld();
+  const r = screens(wz.V("alice")).writing_help_refused;
+  assert.deepEqual(r, w.wz.writingHelpRefused());
+  assert.equal(r.named, WRITING_HELP_NAMED, "the very array, never a copy");
+  for (const op of ["release", "caseratify", "publishat", "publishatcancel", "bootstrap"]) assert.ok(r.named.includes(op), op);
+  const none = wizardWorld({ register: false }).screens(wz.V("alice")).writing_help_refused;
+  assert.deepEqual([none.named, none.machine_refused, none.irreversible], [WRITING_HELP_NAMED, [], []]);
 });
