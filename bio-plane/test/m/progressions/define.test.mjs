@@ -2,12 +2,13 @@
    refusal rows (R27, R28) and the outward text (R30). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, seeded, MEMBER } from "./fixture.mjs";
+import { world, seeded, MEMBER, portionUnknown } from "./fixture.mjs";
 import { PROGRESSION_CHECKS, GENERIC_CODES, STAGE_REQUIREDNESS } from "../../../src/progressions/index.mjs";
 import { SHARED_ACT_CHECKS } from "../../../src/record-grammar/index.mjs";
 import { noSuchEntity, noEntity, ENTITY_CHECKS } from "../../../src/entities/index.mjs";
 import { noSha, EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
+import { noSuchStandard } from "../../../src/standards/index.mjs";
 
 const S = (o = {}) => ({ key: "a", cardinality: "1", required: "always", ...o });
 
@@ -60,7 +61,7 @@ test("R2 R26: a first declaration is version 1 with its basis, its citation opti
                                        basis: "  the clerk's published calendar  " });
   assert.equal(plain.ok, true);
   assert.equal(plain.version, 1);
-  assert.deepEqual(plain.basis, { statement: "the clerk's published calendar", citation: null, stated: true });
+  assert.deepEqual(plain.basis, { statement: "the clerk's published calendar", citation: null, stated: true, standard: null });
   const back = w.p.readProgression({ progressionKey: "n" });
   assert.equal(back.declared_by, "class:member");
   assert.deepEqual(back.basis, plain.basis);
@@ -199,7 +200,8 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   // C-100 and the three moved rows: one function and one marked region each (N118, N242), ids unique, a translation
   const kept = ["PROGRESSION_NO_LABEL", "PROGRESSION_VERSION_NOT_HELD", "NOT_A_DISPOSITION", "NO_STAGES", "NO_STAGE_KEY", "DUPLICATE_STAGE", "NO_CARDINALITY", "BAD_REQUIRED", "UNKNOWN_AFTER",
     "NO_PLACEMENTS", "NO_SUCH_PROGRESSION", "NO_STAGE", "BAD_STAGE", "NO_CAPTURE", "DUPLICATE_PLACEMENT", "NOT_CONCERNED",
-    "NO_REASON", "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED"];
+    "NO_REASON", "BAD_REASON", "NO_DECIDER", "NO_DEFINITION_VERSION", "DEFINITION_MOVED",
+    "NOT_ATTESTED_BY_DOCUMENT", "NO_SUCH_DATED_FACT"];
   assert.deepEqual(Object.keys(PROGRESSION_CHECKS).sort(), [...kept].sort());
   const ids = new Set();
   for (const c of kept) {
@@ -234,6 +236,8 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   // every refusal each act answers, driven at the interface, and what it carries
   const w = seeded();
   w.define();
+  w.std.held.set("STD-2026-0001", { portion: "s 2", inForce: { state: "in_force", why: "w" } });
+  const B = (basis) => w.p.defineProgression({ progressionKey: "k2", label: "L", stages: [S()], basis, viewer: MEMBER });
   const S2 = (o) => ({ progressionKey: "k", label: "L", stages: [S(), S({ key: "b", ...o })] });
   const P = (...ps) => w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-1", placements: ps, threadedBy: "member:alice", viewer: MEMBER });
   const Dc = (b) => w.p.dischargeStage({ progressionKey: "proc", entityId: "ENT-1", stageKey: "need", captureSha: "sa", reason: "r",
@@ -251,6 +255,8 @@ test("R27 R28: every refusal this module answers carries its code with its row a
     await w.p.threadInstance({ progressionKey: "proc", entityId: "ENT-9", placements: [{}] }),
     await P({}), await P({ stage: "bid" }), await P({ stage: "need" }), await P({ stage: "need", captureSha: "sa" }, { stage: "need", captureSha: "sa" }),
     await P({ stage: "need", captureSha: "zz" }),
+    await P({ stage: "need", captureSha: "sa", event: "EVT-2026-zzzzzzzzzzzzzzzz" }), await P({ stage: "need", captureSha: "sa", datedFact: "DF-x" }),
+    B({ statement: "b", standard: "STD-2026-0009" }), B({ statement: "b", standard: "STD-2026-0001", portion: "s 3" }),
     w.p.readInstance({}), w.p.readInstance({ progressionKey: "proc" }), w.p.readExceptions({}), w.p.readExceptions({ progressionKey: "proc" }),
     Dc({ progressionKey: "" }), Dc({ entityId: "" }), Dc({ stageKey: "" }), Dc({ captureSha: "" }), Dc({ reason: "" }), Dc({ citation: "" }),
     Dc({ progressionKey: "nope" }), Dc({ entityId: "ENT-9" }), Dc({ stageKey: "bid" }), Dc({ captureSha: "zz" }),
@@ -273,6 +279,8 @@ test("R27 R28: every refusal this module answers carries its code with its row a
       assert.deepEqual(r, noSha(r.detail));
       assert.equal(r.check, EXTRACTION_CHECKS.NO_SHA.check);
     }
+    else if (r.code === "NO_SUCH_STANDARD") assert.deepEqual(r, noSuchStandard("STD-2026-0009"));  // standards R17 (R39)
+    else if (r.code === "PORTION_UNKNOWN") assert.deepEqual(r, portionUnknown("STD-2026-0001", "s 3", { portion_held: "s 2" }));  // K1563 (10)
     else if (r.code === "LISTENER_DECLARED") assert.deepEqual(r, listenerRefusal([{ module: "scheduler" }], "scheduler", f));
     else if (r.code === "LISTENER_MALFORMED") assert.deepEqual(r, listenerRefusal([], "", f));   // membership R81 (N202)
     else {
@@ -283,7 +291,7 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   }
   // the drive reached every code: each row, each generic code, the shared act rows and the owners' answers
   assert.deepEqual([...seen].sort(), [...kept, ...GENERIC_CODES, "NO_BASIS", "NO_CITATION", "NO_SUCH_ENTITY",
-                                      "LISTENER_DECLARED", "LISTENER_MALFORMED", "NO_SHA", "NO_ENTITY"].sort());
+                                      "LISTENER_DECLARED", "LISTENER_MALFORMED", "NO_SHA", "NO_ENTITY", "NO_SUCH_STANDARD", "PORTION_UNKNOWN"].sort());
 });
 
 test("R27: NO_ENTITY is entities' one answer (its R37, noEntity, C-91.5) at every act that asks for an entity, whatever shape of absence; writes nothing", async () => {

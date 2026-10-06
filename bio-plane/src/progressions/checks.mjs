@@ -19,7 +19,10 @@
  * its REC-64 rule (R27; K163, K329), with no row (`GENERIC_CODES`, `generic`). N285 renamed this module's own
  * `NO_LABEL` and `NOT_FOUND` to `PROGRESSION_NO_LABEL` (C-100.2) and `PROGRESSION_VERSION_NOT_HELD` (C-100.8), each
  * keeping its translation; `NOT_A_DISPOSITION` (C-100.20) is one condition several modules answer, so its one site is
- * `notADisposition` below (R35), which `inquiry` and `queue` call too (`legacy-store`'s call went to `queue`). */
+ * `notADisposition` below (R35), which `inquiry` and `queue` call too (`legacy-store`'s call went to `queue`).
+ * T33 (T33-32) adds C-100.24 `NOT_ATTESTED_BY_DOCUMENT` and C-100.25 `NO_SUCH_DATED_FACT` (R37); R39's
+ * `NO_SUCH_STANDARD` and `PORTION_UNKNOWN` are standards' one answers (its R17, `noSuchStandard`; `portionUnknown`,
+ * K1563 (10)). */
 
 import { SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { DISPOSITIONS } from "../promotion/index.mjs";
@@ -138,6 +141,16 @@ export const PROGRESSION_CHECKS = Object.freeze({
       + 'group learns better. This request does not say which of those versions you were reading '
       + 'when you decided, so the record cannot say what you actually judged. Open the question '
       + 'again and send the version shown beside it. Nothing was recorded.',
+  },
+  NOT_ATTESTED_BY_DOCUMENT: {
+    check: 'C-100.24', where: at("#ownDateNamed", "is-event-attested"),
+    translation: 'The event named for this document is not one the document attests, so its date cannot be the '
+      + 'date of this step. Name an event the document attests, or none. Nothing was written.',
+  },
+  NO_SUCH_DATED_FACT: {
+    check: 'C-100.25', where: at("#ownDateNamed", "is-dated-fact-held"),
+    translation: 'The dated fact named for this document is not one the record holds for this document, so it '
+      + 'cannot give this step its date. Name one of the document\'s own dates, or none. Nothing was written.',
   },
   DEFINITION_MOVED: {
     check: 'C-33.43', where: at("disposeProposal", "is-dispose-version-current"),

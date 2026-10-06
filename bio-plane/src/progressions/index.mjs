@@ -1,8 +1,9 @@
 /* progressions — a group's declared flow for one kind of happening, and the instances that thread real captured
  * documents through it (requirements: `build/requirements/progressions.md`; Content Framework §8.2). From the declared
  * flow and the documents threaded, the record derives on every read, and never stores, the instance's grade (its weakest
- * link), each required stage that is missing and not lawfully discharged, each missing stage that is overdue, and each
- * stage holding more documents than it may. The derived questions are aggregated one per (progression, stage), and a
+ * link), each required stage that is missing and not lawfully discharged, each missing stage that is overdue (counted
+ * from the predecessor's own date on the local day, R16, R37), each stage holding more documents than it may, and each
+ * placement out of order or past its term by the placements' own dates (R38, R32). The derived questions are aggregated one per (progression, stage), and a
  * member's recorded decision ages a question without hiding it (D-79).
  *
  * Extracted from the legacy modules (T5-6; K78, K102): `store.mjs` (the definition and its versions, FW-8, D-128; the
@@ -14,18 +15,26 @@
  * bridge went to `queue` (map §5.1), which routes the progression shape of `op=proposedispose` here.
  *
  * REACHED as `progressionsOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
- * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge (R29)
- * and registers its figures with record-core's `registerCounts` (R36).
+ * call with `deps`, returned to every later caller. At creation it declares its tables to record-core (R29, R42) and
+ * registers its figures with record-core's `registerCounts` (R36). At load the module registers once as the connection
+ * owner of "placed on a declared flow" (R40), answering from the instance last made.
  * `deps`:
- *   record       `recordOf(host)` unless a test passes its own: `transact`, `declarePurge`.
- *   extraction   `extractionOf(host)`: a reading's date (`readingOf(sha).reading.at`, R16); a request naming no
- *                capture digest is answered by its export `noSha` (R63, R19; N285).
- *   provenance   `provenanceOf(host)`: a capture's registration (`homeOf(sha).registered`, R16).
+ *   record       `recordOf(host)` unless a test passes its own: `transact`, `declareTable`.
+ *   extraction   `extractionOf(host)`: a reading's date (`readingOf(sha).reading.at`), shown only as a bound (R16); a
+ *                request naming no capture digest is answered by its export `noSha` (R63, R19; N285).
+ *   provenance   `provenanceOf(host)`: a capture's registration (`homeOf(sha).registered`), shown only as a bound (R16).
  *   entities     `entitiesOf(host)`: `has(id)` (R7), `readEntity({entityId})` (R5), `strongestByCapture(id)` (R16); the
  *                grade order and `established` are its exports `gradeRank` (R33) and `isEstablished` (R34), and an
  *                unregistered entity is answered by its export `noSuchEntity` (R36, N208), a request naming none by
  *                its export `noEntity` (R37, N285).
  *   connections  `weakerGrade(a, b)`, its module-level export (connections R50).
+ *   events       `eventsOf(host)`: `readEvent({eventId, viewer})` (an event's `when` and attestations, its R9, R26) and
+ *                `datedFactsFor({captureSha, viewer})` (its R27): a stage document's own date (R37).
+ *   standards    `standardsOf(host)`: `standardRead({id, viewer})` and `inForceAt({standard, portion, date, viewer})`
+ *                (its R5, R20): a basis naming a held standard (R39); its exports `noSuchStandard` (R17) and
+ *                `portionUnknown` (K1563 (10)) answer for a standard or portion not held (`deps.portionUnknown` in tests).
+ *   zoneOf       the time zone that governs, as `local-facts` governs it (its R2: the `time_zone` fact's governing value
+ *                over the active profiles), or null; default `localFactsOf(host).factStatus`. Read lazily, each read.
  *   now          the module's clock for the instants it writes, an ISO string (default: the wall clock).
  *   nowMs        the instance's configured clock for the overdue reads, milliseconds (R16), else `env.BIO_NOW_MS`,
  *                else the wall clock. */
@@ -36,6 +45,11 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf, noSha } from "../extraction/index.mjs";
 import { entitiesOf, gradeRank, isEstablished, noSuchEntity, noEntity } from "../entities/index.mjs";
 import { weakerGrade } from "../connections/index.mjs";
+import { evaluateRule, overdueOn, compare, bounds, span, localDay, validAt } from "../civil-time/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import * as STANDARDS from "../standards/index.mjs";
+import { registerOwner, BOUNDS } from "../connection-grammar/index.mjs";
 import { PROGRESSIONS_TABLES, migrateProgressions } from "./schema.mjs";
 import { refusal, generic, notADisposition } from "./checks.mjs";
 
@@ -66,7 +80,9 @@ const str = (v) => (typeof v === "string" ? v.trim() : "");
 /* R5: a definition's basis as it reads back. `stated: false` is a version written before versions were kept, or a first
    version declared before a first declaration had to state its basis (DEC-88, T22): the record says it holds none
    rather than inventing one. */
-const basisView = (statement, citation) => ({ statement: statement ?? null, citation: citation ?? null, stated: statement != null });
+const basisView = (statement, citation, standard = null, portion = null) =>
+  ({ statement: statement ?? null, citation: citation ?? null, stated: statement != null,
+     standard: standard ? { standard, portion: portion ?? null } : null });
 
 /* R20: does a recorded decision GOVERN the definition in force? It applies to the version it judged and to no later one.
    A row written before the version was recorded applies only while the definition has not been declared again since
@@ -97,25 +113,55 @@ function dispositionOnFinding(d, cur) {
            applies: v.applies, applies_because: v.applies_because };
 }
 
-/* R16: a member-declared `within` and an anchor instant as a deadline, or null when the interval does not read as
-   `<n> day|week|month|year` (plural allowed). Days and weeks are fixed spans; months and years are calendar arithmetic
-   on the anchor date. Anything else ("before the meeting") is never overdue: no deadline is invented. */
-export function intervalDeadlineMs(anchorMs, within) {
+/* R16: a member-declared `within` read as `<n> day|week|month|year` (plural allowed), or null. Anything else ("before
+   the meeting") is never overdue: no deadline is invented. */
+const WITHIN_RE = /^(\d+)\s*(day|days|week|weeks|month|months|year|years)$/i;
+export function readInterval(within) {
   if (typeof within !== "string") return null;
-  const m = within.trim().match(/^(\d+)\s*(day|days|week|weeks|month|months|year|years)$/i);
+  const m = within.trim().match(WITHIN_RE);
   if (!m) return null;
   const n = parseInt(m[1], 10);
-  if (!Number.isFinite(n)) return null;
-  const unit = m[2].toLowerCase();
-  if (unit.startsWith("day")) return anchorMs + n * 86400000;
-  if (unit.startsWith("week")) return anchorMs + n * 7 * 86400000;
-  const d = new Date(anchorMs);
-  if (unit.startsWith("month")) { d.setUTCMonth(d.getUTCMonth() + n); return d.getTime(); }
-  d.setUTCFullYear(d.getUTCFullYear() + n); return d.getTime();
+  if (!Number.isSafeInteger(n) || n <= 0) return null;
+  const unit = m[2].toLowerCase().replace(/s$/, "") + "s";
+  return { amount: n, unit };
 }
 
+/* R16: the interval as the rule `civil-time` counts (its R9, R13): days and weeks as local calendar days, months and
+   years by the calendar, never as fixed 86,400,000 ms days. */
+function intervalRule(iv, within) {
+  const base = { rule: `within ${within}`, citation: null, starts: "act", direction: "forward" };
+  if (iv.unit === "days") return { ...base, units: "days", amount: iv.amount, count: "calendar" };
+  if (iv.unit === "weeks") return { ...base, units: "days", amount: 7 * iv.amount, count: "calendar" };
+  return { ...base, units: iv.unit, amount: iv.amount };
+}
+
+/* An instant as `record-grammar`'s ISO_TS_RE writes one (no milliseconds), the form `civil-time` reads. */
+const instantOf = (ms) => new Date(Math.floor(ms / 1000) * 1000).toISOString().replace(".000Z", "Z");
+/* The span end of a date-time, as milliseconds (the first instant after it), or null. */
+const endMs = (dt) => { const b = bounds(dt); return b && typeof b.latest === "string" ? Date.parse(b.latest) : null; };
+/* The later of two date-times by their span ends (R16: a body is overdue only after the latest). */
+const later = (a, b) => (a === null ? b : b === null ? a : (endMs(b) > endMs(a) ? b : a));
+const dateText = (dt) => (dt ? `${dt.value} (${dt.precision}${dt.zone ? `, ${dt.zone}` : ""})` : "none");
+
+/* The members' word for the one connection kind this module owns (R40; K1486), and its id. */
+export const PLACED_KIND = "placed_on_flow";
+export const PLACED_KINDS = Object.freeze([Object.freeze({ kind: PLACED_KIND, word: "placed on a declared flow", class: "evidentiary" })]);
+/* R37, R40: own dates are read with the group's whole sight, so a finding is the same for every reader (R13); only
+   bundle ids are withheld, by the reader's own sight. */
+const GROUP_SIGHT = "class:member";
+
+/* A stored placement as every read shows it: the document, its bundle and grade, and the event or dated fact the member
+   named for its own date (R37), or null. */
+const placementOf = (p) => ({ stage_key: p.stage_key, capture_sha: p.capture_sha, bundle_id: p.bundle_id, grade: p.grade,
+                              event_id: p.event_id ?? null, dated_fact_id: p.dated_fact_id ?? null });
+
+/* events' answers read as lists, whatever the list is named (its R27: a capture's dated facts in extent order). */
+const listOf = (a, ...names) => (Array.isArray(a) ? a : a && typeof a === "object"
+  ? names.map((n) => a[n]).find(Array.isArray) || [] : []);
+
 export class Progressions {
-  constructor({ storage, record, extraction, provenance, entities, connections, env = null, now = null, nowMs = null }) {
+  constructor({ storage, record, extraction, provenance, entities, connections, events = null, standards = null,
+                zoneOf = null, portionUnknown = null, env = null, now = null, nowMs = null }) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -123,11 +169,20 @@ export class Progressions {
     this.provenance = provenance;
     this.entities = entities;
     this.connections = connections;
+    /* events and standards may be thunks, resolved on first use (their factories construct their own modules) */
+    this.eventsDep = events;
+    this.standardsDep = standards;
+    this.zoneOf = typeof zoneOf === "function" ? zoneOf : () => null;
+    /* standards' `portionUnknown` (K1563 (10)); a test passes one coded to its requirements until standards merges */
+    this.portionUnknown = typeof portionUnknown === "function" ? portionUnknown : (...a) => STANDARDS.portionUnknown(...a);
     this.env = env;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.clockMs = typeof nowMs === "function" ? nowMs : null;
     this.threadListeners = [];
   }
+
+  get events() { if (typeof this.eventsDep === "function") this.eventsDep = this.eventsDep(); return this.eventsDep; }
+  get standards() { if (typeof this.standardsDep === "function") this.standardsDep = this.standardsDep(); return this.standardsDep; }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -285,10 +340,10 @@ export class Progressions {
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
          FROM progression_stages WHERE progression_key=? ORDER BY stage_no`, key);
     const v = this.#one(
-      `SELECT version, basis_statement, basis_citation FROM progression_def_versions
+      `SELECT version, basis_statement, basis_citation, basis_standard, basis_portion FROM progression_def_versions
          WHERE progression_key=? ORDER BY version DESC LIMIT 1`, key);
     return { ...def, stages, version: v ? v.version : 1, version_recorded: !!v,
-             basis: v ? basisView(v.basis_statement, v.basis_citation) : basisView(null, null) };
+             basis: v ? basisView(v.basis_statement, v.basis_citation, v.basis_standard, v.basis_portion) : basisView(null, null) };
   }
 
   /* REC-184: the current version's number and the instant it came to stand: the one reader the instance, the act and
@@ -301,11 +356,13 @@ export class Progressions {
   }
 
   /* R23: one version, appended; a second write of the same version is an error, never an overwrite. */
-  #writeVersion(key, version, def, stages, statement, citation) {
+  #writeVersion(key, version, def, stages, statement, citation, std = null) {
     this.sql.exec(
-      `INSERT INTO progression_def_versions (progression_key,version,label,note,declared_by,at,basis_statement,basis_citation)
-       VALUES (?,?,?,?,?,?,?,?)`,
-      key, version, def.label, def.note ?? null, def.declared_by ?? null, def.at ?? null, statement, citation);
+      `INSERT INTO progression_def_versions
+         (progression_key,version,label,note,declared_by,at,basis_statement,basis_citation,basis_standard,basis_portion)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      key, version, def.label, def.note ?? null, def.declared_by ?? null, def.at ?? null, statement, citation,
+      std ? std.standard : null, std ? std.portion : null);
     for (const s of stages)
       this.sql.exec(
         `INSERT INTO progression_stage_versions (progression_key,version,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
@@ -318,7 +375,8 @@ export class Progressions {
    *  its basis statement, its citation optional (R2, DEC-88). A definition is APPEND-ONLY (D-128): a declaration that
    *  changes anything is a revision, version N+1 with its basis and citation; one identical to the current version
    *  writes nothing. The declarer is the control plane's stamp (R26). */
-  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null } = {}) {
+  defineProgression({ progressionKey, label, note = null, stages, declaredBy = null, basis = null, citation = null,
+                      viewer = null } = {}) {
     if (!str(progressionKey))
       return generic("NO_KEY", "a progression definition is named by a key, e.g. 'meeting' or 'procurement'");
     const key = str(progressionKey);
@@ -381,7 +439,11 @@ export class Progressions {
     /* END DEC-49 REGION is-progression-order */
     const lbl = label.trim();
     const nt = note == null ? null : String(note).slice(0, NOTE_MAX);
-    const stmt = str(basis) ? str(basis).slice(0, BASIS_MAX) : null;
+    /* R39: a basis is the member's statement, a string, or `{statement, standard, portion?}` naming a held standard
+       beside it (K1446: the member's statement and citation stay theirs) */
+    const named = basis !== null && typeof basis === "object" && !Array.isArray(basis);
+    const said = named ? basis.statement : basis;
+    const stmt = str(said) ? str(said).slice(0, BASIS_MAX) : null;
     const cite = str(citation) ? str(citation).slice(0, CITATION_MAX) : null;
     /* R2, R3, R4: what stands now. Identical is no revision; a different one must carry its basis, and so must a first
        declaration (DEC-88), each judged AFTER every stage so a caller learns of a bad stage before a missing basis. */
@@ -406,6 +468,8 @@ export class Progressions {
       if (!cite) return refusal("NO_CITATION", "a revision of a declared flow carries a citation -- where the basis for the change is published or held",
                                 { progression_key: key, version: cur.version });
     }
+    const std = named && basis.standard != null ? this.#basisStandard(basis.standard, basis.portion, viewer) : null;
+    if (std && std.ok === false) return std;
     const version = cur ? cur.version + 1 : 1;
     const at = this.now();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
@@ -423,26 +487,55 @@ export class Progressions {
           `INSERT INTO progression_stages (progression_key,stage_key,stage_no,label,after_stage,cardinality,within_interval,required)
            VALUES (?,?,?,?,?,?,?,?)`,
           key, s.stage_key, s.stage_no, s.label, s.after_stage, s.cardinality, s.within_interval, s.required);
-      this.#writeVersion(key, version, { label: lbl, note: nt, declared_by: by, at }, norm, stmt, cite);
+      this.#writeVersion(key, version, { label: lbl, note: nt, declared_by: by, at }, norm, stmt, cite, std);
     });
     return { ok: true, progression_key: key, label: lbl, stage_count: norm.length,
              stages: norm, declared_by: by, at, version, unchanged: false,
-             basis: basisView(stmt, cite), prior_version: cur ? cur.version : null };
+             basis: basisView(stmt, cite, std && std.standard, std && std.portion), prior_version: cur ? cur.version : null };
+  }
+
+  /* R39 (K1446): a basis naming a held standard, `{standard, portion?}`: `standards`' one answers, `noSuchStandard`
+     when the reader may see none by that id (its R17) and `portionUnknown` for a portion it does not hold (K1563 (10)).
+     Answers `{standard, portion}`. */
+  #basisStandard(standardId, portion, viewer) {
+    const id = str(standardId);
+    let read = null;
+    try { read = id ? this.standards.standardRead({ id, viewer }) : null; } catch { read = null; }
+    const held = read && read.ok !== false && (read.found !== false) ? (read.standard || read) : null;
+    if (!held) return STANDARDS.noSuchStandard(id || null);
+    const part = portion == null || portion === "" ? null : String(portion).slice(0, 500);
+    const holds = held.portion == null ? null : typeof held.portion === "object" ? held.portion.path ?? null : held.portion;
+    /* standards' one answer (its R23's code; K1563 (10)), never minted here */
+    if (part !== null && part !== holds) return this.portionUnknown(id, part, { portion_held: holds });
+    return { standard: id, portion: part };
+  }
+
+  /* R39: whether the standard a basis names is in force on the read's date, answered by `standards` on every read and
+     never stored. */
+  #inForce(b, viewer) {
+    if (!b || !b.standard) return b;
+    const date = instantOf(Date.parse(this.now()));
+    let a = null;
+    try { a = this.standards.inForceAt({ standard: b.standard.standard, portion: b.standard.portion, date, viewer }); }
+    catch (e) { a = { state: "undetermined", why: `standards could not answer: ${String(e && e.message || e).slice(0, 200)}` }; }
+    const state = a && typeof a.state === "string" ? a.state : "undetermined";
+    const why = a && typeof a.why === "string" ? a.why : "standards gave no answer";
+    return { ...b, standard: { ...b.standard, in_force: { date, state, why } } };
   }
 
   /** R5 (`op=progression`): a definition, the current version by default or any held one, with every version held. */
-  readProgression({ progressionKey, version = null } = {}) {
+  readProgression({ progressionKey, version = null, viewer = null } = {}) {
     if (!str(progressionKey))
       return generic("NO_KEY", "read a progression definition by its key (op=progression&key=meeting)");
     const key = str(progressionKey);
     const cur = this.#current(key);
     if (!cur) return { ok: true, progression_key: key, found: false, stages: [] };
     const recorded = this.#rows(
-      `SELECT version, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
-         WHERE progression_key=? ORDER BY version`, key);
+      `SELECT version, declared_by, at, basis_statement, basis_citation, basis_standard, basis_portion
+         FROM progression_def_versions WHERE progression_key=? ORDER BY version`, key);
     const versions = recorded.length
       ? recorded.map((v) => ({ version: v.version, declared_by: v.declared_by, at: v.at,
-                               basis: basisView(v.basis_statement, v.basis_citation) }))
+                               basis: basisView(v.basis_statement, v.basis_citation, v.basis_standard, v.basis_portion) }))
       : [{ version: 1, declared_by: cur.declared_by, at: cur.at, basis: cur.basis }];
     const want = version == null || version === "" ? cur.version : Number(version);
     /* DEC-49 REGION is-version-held — C-100.8. */
@@ -455,9 +548,9 @@ export class Progressions {
     let def = cur, stages = cur.stages;
     if (want !== cur.version) {
       def = this.#one(
-        `SELECT label, note, declared_by, at, basis_statement, basis_citation FROM progression_def_versions
-           WHERE progression_key=? AND version=?`, key, want);
-      def.basis = basisView(def.basis_statement, def.basis_citation);
+        `SELECT label, note, declared_by, at, basis_statement, basis_citation, basis_standard, basis_portion
+           FROM progression_def_versions WHERE progression_key=? AND version=?`, key, want);
+      def.basis = basisView(def.basis_statement, def.basis_citation, def.basis_standard, def.basis_portion);
       stages = this.#rows(
         `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
            FROM progression_stage_versions WHERE progression_key=? AND version=? ORDER BY stage_no`, key, want);
@@ -465,7 +558,7 @@ export class Progressions {
     return { ok: true, progression_key: key, found: true,
              label: def.label, note: def.note, declared_by: def.declared_by, at: def.at,
              version: want, current: want === cur.version, current_version: cur.version,
-             basis: def.basis, version_count: versions.length, versions,
+             basis: this.#inForce(def.basis, viewer), version_count: versions.length, versions,
              stage_count: stages.length, stages };
   }
 
@@ -480,18 +573,18 @@ export class Progressions {
       `SELECT version, threaded_by, at FROM progression_threads WHERE progression_key=? AND entity_id=? ORDER BY version`, key, eid);
     if (!heads.length) {
       const cur = this.#rows(
-        `SELECT stage_key, capture_sha, bundle_id, grade, threaded_by, at FROM progression_instances
+        `SELECT stage_key, capture_sha, bundle_id, grade, event_id, dated_fact_id, threaded_by, at FROM progression_instances
            WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`, key, eid);
       if (!cur.length) return [];
       return [{ version: 1, version_recorded: false, threaded_by: cur[0].threaded_by ?? null, at: cur[0].at ?? null,
-                placements: cur.map((p) => ({ stage_key: p.stage_key, capture_sha: p.capture_sha, bundle_id: p.bundle_id, grade: p.grade })) }];
+                placements: cur.map(placementOf) }];
     }
     const placed = new Map();
     for (const p of this.#rows(
-      `SELECT version, stage_key, capture_sha, bundle_id, grade FROM progression_thread_placements
+      `SELECT version, stage_key, capture_sha, bundle_id, grade, event_id, dated_fact_id FROM progression_thread_placements
          WHERE progression_key=? AND entity_id=? ORDER BY version, stage_key, capture_sha`, key, eid)) {
       if (!placed.has(p.version)) placed.set(p.version, []);
-      placed.get(p.version).push({ stage_key: p.stage_key, capture_sha: p.capture_sha, bundle_id: p.bundle_id, grade: p.grade });
+      placed.get(p.version).push(placementOf(p));
     }
     return heads.map((h) => ({ version: h.version, version_recorded: true, threaded_by: h.threaded_by, at: h.at,
                                placements: placed.get(h.version) || [] }));
@@ -510,7 +603,7 @@ export class Progressions {
       `SELECT stage_key, stage_no, label, after_stage, cardinality, within_interval, required
          FROM progression_stages WHERE progression_key=? ORDER BY stage_no`, progressionKey);
     const rows = this.#rows(
-      `SELECT stage_key, capture_sha, bundle_id, grade FROM progression_instances
+      `SELECT stage_key, capture_sha, bundle_id, grade, event_id, dated_fact_id FROM progression_instances
          WHERE progression_key=? AND entity_id=? ORDER BY stage_key, capture_sha`, progressionKey, entityId);
     const excByStage = new Map();
     for (const x of this.#rows(
@@ -525,11 +618,14 @@ export class Progressions {
       return { ok: true, progression_key: progressionKey, entity_id: entityId, found: false, defined: true,
                definition_version: definitionVersion, label: def.label, entity,
                grade: null, grade_determined: false, established: false, stage_count: stageDefs.length, placed_count: 0,
-               chain: [], stages: [], findings: [], finding_count: 0, discharges: [], discharge_count: 0 };
+               chain: [], stages: [], findings: [], finding_count: 0, discharges: [], discharge_count: 0,
+               undetermined_checks: [] };
+    /* R37: each document with its own date, read from `events` on this read and never stored */
+    const zone = this.#zone();
     const docsByStage = new Map();
     for (const r of rows) {
       if (!docsByStage.has(r.stage_key)) docsByStage.set(r.stage_key, []);
-      docsByStage.get(r.stage_key).push({ capture_sha: r.capture_sha, bundle_id: r.bundle_id, grade: r.grade });
+      docsByStage.get(r.stage_key).push({ ...placementOf(r), ...this.#ownDate(r, zone) });
     }
     /* a stage is as well evidenced as its strongest document */
     const repGrade = new Map();
@@ -552,7 +648,8 @@ export class Progressions {
     }
     const determined = grade !== null;
     const carried = { grade: determined ? grade : "undetermined", grade_determined: determined };
-    const stages = [], findings = [], discharges = [];
+    const stages = [], findings = [], discharges = [], undetermined = [];
+    const defsByKey = new Map(stageDefs.map((s) => [s.stage_key, s]));
     for (const s of stageDefs) {
       const docs = docsByStage.get(s.stage_key) || [];
       const present = docs.length > 0;
@@ -587,13 +684,76 @@ export class Progressions {
                         detail: `the '${s.stage_key}' stage is declared to hold ${s.cardinality === "1" ? "exactly one" : "at most one"}`
                               + ` document and ${docs.length} are threaded at it -- a finding, which decides nothing about which`
                               + ` of them belongs (framework 8.2)` });
+      /* R38, R32: the junction checks over the placements' own dates, against the stage this one is after */
+      const pred = s.after_stage ? defsByKey.get(s.after_stage) : null;
+      if (present && pred && docsByStage.has(pred.stage_key))
+        this.#junctions(s, docs, docsByStage.get(pred.stage_key), definitionVersion, carried, findings, undetermined);
     }
     return { ok: true, progression_key: progressionKey, entity_id: entityId, found: true, defined: true,
              definition_version: definitionVersion, label: def.label, entity,
              grade, grade_determined: determined, established: determined && isEstablished(grade),
              stage_count: stageDefs.length, placed_count: placedInOrder.length,
              chain, stages, findings, finding_count: findings.length,
-             discharges, discharge_count: discharges.length };
+             discharges, discharge_count: discharges.length,
+             undetermined_checks: undetermined, zone: zone.zone, zone_why: zone.zone ? null : zone.why };
+  }
+
+  /* R38, R32 (K1505 (8)): the amount-free junction checks of one placed stage `s` against the placed stage it is
+     after, by the placements' own dates (R37), each derived on read (R24), reporting and never deciding (R25).
+     - OUT OF ORDER: a document of `s` dated before a document of its predecessor ("payment before award"), the order
+       decided by `civil-time.compare` at the dates' precision.
+     - PLACED AFTER THE TERM: a document of `s` dated after the predecessor's latest own date plus `s`'s own interval
+       (its `within`, the term), counted as R16 counts it.
+     Where the dates do not settle it (a band, a coarser precision, equal values, a date missing), the pair is listed
+     in `undetermined_checks` with why: never a finding, never a guess. */
+  #junctions(s, docs, predDocs, definitionVersion, carried, findings, undetermined) {
+    const base = { stage_key: s.stage_key, stage_label: s.label, required: s.required, after_stage: s.after_stage,
+                   definition_version: definitionVersion };
+    const show = (d, stage) => ({ stage_key: stage, capture_sha: d.capture_sha, own_date: d.own_date, own_date_source: d.own_date_source });
+    for (const d of docs) for (const p of predDocs) {
+      const pair = [show(p, s.after_stage), show(d, s.stage_key)];
+      if (!d.own_date || !p.own_date) {
+        undetermined.push({ kind: "order_undetermined", ...base, placements: pair,
+                            why: `${!p.own_date ? `the '${s.after_stage}' document ${p.capture_sha}` : `the '${s.stage_key}' document ${d.capture_sha}`}`
+                               + ` has no own date (${(!p.own_date ? p : d).own_date_why}), so which came first is undetermined` });
+        continue;
+      }
+      const c = compare(d.own_date, p.own_date);
+      if (c === "before")
+        findings.push({ kind: "out_of_order", ...base, dischargeable: false, ...carried, placements: pair,
+                        detail: `the '${s.stage_key}' document ${d.capture_sha} is dated ${dateText(d.own_date)}, before the`
+                              + ` '${s.after_stage}' document ${p.capture_sha} it comes after, dated ${dateText(p.own_date)}`
+                              + ` -- out of order (framework 8.2); a finding, which decides nothing` });
+      else if (c !== "after")
+        undetermined.push({ kind: "order_undetermined", ...base, placements: pair,
+                            why: c && c.why ? c.why : "the dates' precision does not settle which came first" });
+    }
+    const iv = readInterval(s.within_interval);
+    if (!iv) return;
+    const term = this.#deadline(predDocs, s.within_interval, iv);
+    for (const d of docs) {
+      const pair = [...predDocs.map((p) => show(p, s.after_stage)), show(d, s.stage_key)];
+      const why = !d.own_date ? `the '${s.stage_key}' document ${d.capture_sha} has no own date (${d.own_date_why})`
+        : term.undetermined ? term.why : null;
+      if (why) { undetermined.push({ kind: "term_undetermined", ...base, within_interval: s.within_interval, placements: pair, why }); continue; }
+      /* after the term: the document's whole span lies at or past the first instant after the term's last day; within
+         it: wholly before the end of the earliest reading of that day; anything between is undetermined */
+      const db = bounds(d.own_date);
+      const lo = db && db.earliest ? Date.parse(db.earliest) : NaN, hi = db && db.latest ? Date.parse(db.latest) : NaN;
+      const endE = endMs(term.earliest), endL = endMs(term.latest);
+      if (Number.isFinite(lo) && lo >= endL)
+        findings.push({ kind: "placed_after_term", ...base, dischargeable: false, ...carried, placements: pair,
+                        within_interval: s.within_interval, term_ends: term.latest.value,
+                        detail: `the '${s.stage_key}' document ${d.capture_sha} is dated ${dateText(d.own_date)}, after its term`
+                              + ` of ${s.within_interval} from '${s.after_stage}' ended (${term.latest.value})`
+                              + ` -- placed after the term (framework 8.2, junction checks); a finding, which decides nothing` });
+      else if (!(Number.isFinite(hi) && hi <= endE))
+        undetermined.push({ kind: "term_undetermined", ...base, within_interval: s.within_interval, placements: pair,
+                            why: !Number.isFinite(lo) || !Number.isFinite(hi) ? `${dateText(d.own_date)} has an open end`
+                              : term.earliest.value !== term.latest.value
+                                ? `the term ends between ${term.earliest.value} and ${term.latest.value}, and ${dateText(d.own_date)} is not settled against both`
+                                : `${dateText(d.own_date)} overlaps the term's last day, ${term.latest.value}, at the precision held` });
+    }
   }
 
   /* R12: stage_key -> the published decision, for ONE progression. */
@@ -687,7 +847,10 @@ export class Progressions {
         + "(resolve it first with op=resolve, or thread it on the entity it actually concerns)",
         { stage_key: sk, capture_sha: cs, entity_id: eid });
       if (unconcerned) return unconcerned;
-      norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade });
+      /* R37: the event or dated fact named for the document's own date, each checked against what events holds */
+      const named = this.#ownDateNamed(p, sk, cs);
+      if (named.ok === false) return named;
+      norm.push({ stage_key: sk, capture_sha: cs, bundle_id: res.bundle_id, grade: res.grade, ...named });
     }
     const at = this.now();
     const by = threadedBy == null ? null : String(threadedBy).slice(0, 200);
@@ -703,9 +866,10 @@ export class Progressions {
       this.sql.exec(`DELETE FROM progression_instances WHERE progression_key=? AND entity_id=?`, key, eid);
       for (const p of norm)
         this.sql.exec(
-          `INSERT INTO progression_instances (progression_key,entity_id,stage_key,capture_sha,bundle_id,grade,threaded_by,at)
-           VALUES (?,?,?,?,?,?,?,?)`,
-          key, eid, p.stage_key, p.capture_sha, p.bundle_id, p.grade, by, at);
+          `INSERT INTO progression_instances
+             (progression_key,entity_id,stage_key,capture_sha,bundle_id,grade,threaded_by,at,event_id,dated_fact_id)
+           VALUES (?,?,?,?,?,?,?,?,?,?)`,
+          key, eid, p.stage_key, p.capture_sha, p.bundle_id, p.grade, by, at, p.event_id ?? null, p.dated_fact_id ?? null);
     });
     const answer = { ...this.#answer(key, eid, viewer), threaded: norm.length, threaded_by: by, at };
     /* R33: told after the write, in the modules' total order (`onThreaded` keeps them so); a listener that throws or
@@ -720,13 +884,46 @@ export class Progressions {
     return answer;
   }
 
+  /* R37: a placement's `event` (an `EVT-` the document attests) and `datedFact` (a dated fact held for its capture),
+     each optional: `{event_id, dated_fact_id}`, or the refusal. A refusal writes nothing. */
+  #ownDateNamed(p, sk, cs) {
+    const ev = str(p.event) || str(p.eventId) || null;
+    const df = str(p.datedFact) || str(p.datedFactId) || null;
+    if (ev) {
+      let e = null;
+      try { e = this.events.readEvent({ eventId: ev, viewer: GROUP_SIGHT }); } catch { e = null; }
+      const held = e && e.ok !== false && e.found !== false ? (e.event || e) : null;
+      const atts = held ? listOf(held.attestations, "items") : [];
+      const attests = atts.some((x) => x && (x.capture_sha === cs || (x.dated_fact && x.dated_fact.capture_sha === cs)));
+      /* DEC-49 REGION is-event-attested */
+      if (!attests)
+        return refusal("NOT_ATTESTED_BY_DOCUMENT",
+          `the document ${cs} placed at '${sk}' is not among the records that attest ${ev}, so that event cannot date this step`,
+          { stage_key: sk, capture_sha: cs, event: ev });
+      /* END DEC-49 REGION is-event-attested */
+    }
+    if (df) {
+      let facts = [];
+      try { facts = listOf(this.events.datedFactsFor({ captureSha: cs, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items"); } catch { facts = []; }
+      /* DEC-49 REGION is-dated-fact-held */
+      if (!facts.some((f) => f && f.dated_fact_id === df))
+        return refusal("NO_SUCH_DATED_FACT",
+          `the dated fact ${df} is not one events holds for the document ${cs} placed at '${sk}'`,
+          { stage_key: sk, capture_sha: cs, dated_fact: df });
+      /* END DEC-49 REGION is-dated-fact-held */
+    }
+    return { event_id: ev, dated_fact_id: df };
+  }
+
   #writeThread(key, eid, version, by, at, placements) {
     this.sql.exec(`INSERT INTO progression_threads (progression_key,entity_id,version,threaded_by,at) VALUES (?,?,?,?,?)`,
                   key, eid, version, by ?? null, at ?? null);
     for (const p of placements)
       this.sql.exec(
-        `INSERT INTO progression_thread_placements (progression_key,entity_id,version,stage_key,capture_sha,bundle_id,grade)
-         VALUES (?,?,?,?,?,?,?)`, key, eid, version, p.stage_key, p.capture_sha, p.bundle_id, p.grade);
+        `INSERT INTO progression_thread_placements
+           (progression_key,entity_id,version,stage_key,capture_sha,bundle_id,grade,event_id,dated_fact_id)
+         VALUES (?,?,?,?,?,?,?,?,?)`, key, eid, version, p.stage_key, p.capture_sha, p.bundle_id, p.grade,
+        p.event_id ?? null, p.dated_fact_id ?? null);
   }
 
   /** R33 (N202): a later module registers once, at start, to be told of every thread (`scheduler`'s `arm`, K90 (6)). A
@@ -858,22 +1055,93 @@ export class Progressions {
    * THE OVERDUE CLOCK (R16, R17; REC-8). Derived on read, never stored.
    * ===================================================================== */
 
-  /* A captured document's date in ms: its reading's date (extraction), else its registration (provenance); null when
-     neither is determinable, and the stage anchored on it is never overdue. */
-  #captureDateMs(captureSha) {
-    if (typeof captureSha !== "string" || !captureSha) return null;
-    const r = this.extraction.readingOf(captureSha);
-    const at = r && r.reading && typeof r.reading.at === "string" ? r.reading.at : null;
-    if (at) { const t = Date.parse(at); if (Number.isFinite(t)) return t; }
-    const home = this.provenance.homeOf(captureSha);
-    if (home && typeof home.registered === "string" && home.registered) { const t = Date.parse(home.registered); if (Number.isFinite(t)) return t; }
+  /* R16: the time zone that governs, as `local-facts` governs it, or null with why (never a UTC fallback). */
+  #zone() {
+    let z = null;
+    try { z = this.zoneOf(); } catch { z = null; }
+    if (typeof z === "string" && z) return { zone: z, why: null };
+    if (z && typeof z === "object" && typeof z.zone === "string" && z.zone) return { zone: z.zone, why: null };
+    return { zone: null, why: z && typeof z === "object" && typeof z.why === "string" ? z.why
+      : "no time zone governs here (local-facts holds no governing time_zone of the active profiles)" };
+  }
+
+  /* R37: a placement's own date: the event the member named (its `when`), else the dated fact named (its value), else
+     the one dated fact `events` holds for the capture when exactly one is held. Never the capture's registration,
+     reading or retrieval instant. `{own_date: {value, precision, zone} | null, own_date_source, own_date_ref,
+     own_date_why}`. */
+  #ownDate(p, zone) {
+    const none = (why, source = "none", ref = null) => ({ own_date: null, own_date_source: source, own_date_ref: ref, own_date_why: why });
+    try {
+      if (p.event_id) {
+        const e = this.events.readEvent({ eventId: p.event_id, viewer: GROUP_SIGHT });
+        const ev = e && (e.event || e);
+        if (!e || e.found === false || e.ok === false) return none(`the event ${p.event_id} is not held`, "event", p.event_id);
+        const w = ev.when;
+        if (w == null) return none(`the event ${p.event_id} is placed nowhere: it has no dated attestation`, "event", p.event_id);
+        if (w.undetermined || typeof w !== "object") return none(`the event ${p.event_id}'s date is undetermined: ${w.why || "no why given"}`, "event", p.event_id);
+        const value = typeof w.value === "string" ? w.value : w.start;
+        const dz = w.zone || zone.zone;
+        if (typeof value !== "string" || typeof w.precision !== "string") return none(`the event ${p.event_id} states no date`, "event", p.event_id);
+        if (!dz) return none(`the event ${p.event_id}'s date states no zone and ${zone.why}`, "event", p.event_id);
+        return { own_date: { value, precision: w.precision, zone: dz }, own_date_source: "event", own_date_ref: p.event_id, own_date_why: null };
+      }
+      const facts = listOf(this.events.datedFactsFor({ captureSha: p.capture_sha, viewer: GROUP_SIGHT }), "facts", "dated_facts", "items");
+      let f = null;
+      if (p.dated_fact_id) {
+        f = facts.find((x) => x && x.dated_fact_id === p.dated_fact_id) || null;
+        if (!f) return none(`the dated fact ${p.dated_fact_id} is no longer held for this document`, "dated_fact", p.dated_fact_id);
+      } else if (facts.length === 1) f = facts[0];
+      else return none(facts.length ? `events holds ${facts.length} dated facts for this document; a member names the one that dates this step`
+                                     : "events holds no dated fact for this document");
+      const dz = f.zone || zone.zone;
+      if (!dz) return none(`the dated fact ${f.dated_fact_id} states a day and ${zone.why}`, "dated_fact", f.dated_fact_id);
+      return { own_date: { value: f.value, precision: f.precision || "day", zone: dz }, own_date_source: "dated_fact",
+               own_date_ref: f.dated_fact_id ?? null, own_date_why: null };
+    } catch (e) {
+      return none(`events could not answer: ${String(e && e.message || e).slice(0, 200)}`);
+    }
+  }
+
+  /* R16 (K1444 (ii)): the capture date of a document with no own date, shown as a bound only, never as the date: its
+     registration (provenance), else its reading's date (extraction), or null. */
+  #captureBound(captureSha) {
+    try {
+      const home = this.provenance.homeOf(captureSha);
+      if (home && typeof home.registered === "string" && home.registered) return { at: home.registered, from: "registered" };
+      const r = this.extraction.readingOf(captureSha);
+      if (r && r.reading && typeof r.reading.at === "string") return { at: r.reading.at, from: "read" };
+    } catch { /* no bound */ }
     return null;
   }
 
-  /* For an assembled instance, the deadline of every missing-required-undischarged stage whose deadline is determinable
-     (a parseable interval, a placed predecessor, a dated predecessor document), past or not. The anchor is the LATEST
-     dated document of the predecessor stage, so a stage is overdue only when it truly is. */
-  #deadlines(inst) {
+  /* R16, R32: the deadline a stage's interval sets after its predecessor's documents: counted by `civil-time` from each
+     document's own date in the interval's units on the local day, the latest governing. A document with no own date
+     makes it undetermined, its capture date named as a bound only. `{earliest, latest, from}` (the latest reading's
+     due and the earliest's; equal when exact) or `{undetermined, why, bounds}`. */
+  #deadline(predDocs, within, iv) {
+    const undated = predDocs.filter((d) => !d.own_date);
+    if (undated.length) {
+      const bounds_ = undated.map((d) => ({ capture_sha: d.capture_sha, own_date_why: d.own_date_why, bound: this.#captureBound(d.capture_sha) }));
+      return { undetermined: true, bounds: bounds_,
+               why: bounds_.map((b) => `the document ${b.capture_sha} has no own date (${b.own_date_why})`
+                 + (b.bound ? `; it was captured (${b.bound.from}) ${b.bound.at}, a bound only and never its date` : "")).join("; ") };
+    }
+    const rule = intervalRule(iv, within);
+    let earliest = null, latest = null;
+    for (const d of predDocs) {
+      const r = evaluateRule({ rule, anchor: d.own_date, view: { time_zone: { value: d.own_date.zone } } });
+      if (!r || r.refused || r.undetermined || !r.due)
+        return { undetermined: true, bounds: [], why: `the deadline after ${d.capture_sha} (${dateText(d.own_date)}) is undetermined: ${r && r.why || "no answer"}` };
+      const [e, l] = r.due.candidates ? r.due.candidates : [r.due, r.due];
+      earliest = later(earliest, e);
+      latest = later(latest, l);
+    }
+    return { earliest, latest };
+  }
+
+  /* R16: the clock of every missing-required-undischarged stage with a parsable interval and a placed predecessor:
+     `{finding, within_interval, predecessor_stage, deadline}` with `deadline` from #deadline. */
+  #clocks(inst) {
     const out = [];
     if (!inst || !inst.found || !Array.isArray(inst.findings)) return out;
     const missing = inst.findings.filter((f) => f.kind === "missing_predecessor");
@@ -883,39 +1151,65 @@ export class Progressions {
     const stageByKey = new Map((inst.stages || []).map((s) => [s.stage_key, s]));
     for (const f of missing) {
       const wi = within.get(f.stage_key);
-      if (!wi || !f.after_stage) continue;
+      const iv = readInterval(wi);
+      if (!iv || !f.after_stage) continue;
       const anchor = stageByKey.get(f.after_stage);
       if (!anchor || !anchor.present) continue;
-      let anchorMs = null;
-      for (const d of anchor.documents || []) {
-        const t = this.#captureDateMs(d.capture_sha);
-        if (t !== null && (anchorMs === null || t > anchorMs)) anchorMs = t;
-      }
-      if (anchorMs === null) continue;
-      const deadline = intervalDeadlineMs(anchorMs, wi);
-      if (deadline === null) continue;
-      out.push({ finding: f, within_interval: wi, predecessor_stage: f.after_stage, predecessor_ms: anchorMs, deadline_ms: deadline });
+      out.push({ finding: f, within_interval: wi, interval: iv, predecessor_stage: f.after_stage, documents: anchor.documents,
+                 deadline: this.#deadline(anchor.documents, wi, iv) });
     }
     return out;
   }
 
-  /* R16: the overdue findings of one instance at `nowMs`, each also a missing predecessor, carrying its grade. */
+  /* R16: one clock read at `nowMs`: `overdue`, `not_overdue` or `undetermined` (a body is overdue only after the latest
+     reading of its deadline, K1444 (i)), and the instants at which that answer next changes. */
+  #judge(c, nowMs) {
+    const d = c.deadline;
+    if (d.undetermined) return { state: "undetermined", why: d.why, wakes: [] };
+    const due = d.earliest.value === d.latest.value && d.earliest.precision === d.latest.precision ? d.latest : { candidates: [d.earliest, d.latest] };
+    const o = overdueOn({ due, at: instantOf(nowMs), side: "body" });
+    const wakes = [endMs(d.earliest), endMs(d.latest)].filter((t) => Number.isFinite(t));
+    if (o === "overdue" || o === "not_overdue") return { state: o, why: null, wakes };
+    return { state: "undetermined", why: o && o.why ? o.why : "the deadline is undetermined", wakes };
+  }
+
+  /* R16: the overdue findings of one instance at `nowMs`, each also a missing predecessor, carrying its grade: `overdue:
+     true` past its deadline, `overdue: "undetermined"` where the dates do not settle it, with why. */
   #overdue(inst, nowMs) {
     const out = [];
-    for (const d of this.#deadlines(inst)) {
-      if (d.deadline_ms >= nowMs) continue;
-      const f = d.finding;
-      out.push({ kind: "overdue_successor", stage_key: f.stage_key, stage_label: f.stage_label,
-                 required: f.required, after_stage: f.after_stage, definition_version: f.definition_version,
-                 predecessor_stage: d.predecessor_stage,
-                 predecessor_at: new Date(d.predecessor_ms).toISOString(), within_interval: d.within_interval,
-                 deadline: new Date(d.deadline_ms).toISOString(), overdue_by_ms: nowMs - d.deadline_ms,
-                 grade: f.grade, grade_determined: f.grade_determined,
+    for (const c of this.#clocks(inst)) {
+      const j = this.#judge(c, nowMs);
+      if (j.state === "not_overdue") continue;
+      const f = c.finding;
+      const d = c.deadline;
+      const head = { kind: "overdue_successor", stage_key: f.stage_key, stage_label: f.stage_label,
+                     required: f.required, after_stage: f.after_stage, definition_version: f.definition_version,
+                     predecessor_stage: c.predecessor_stage, within_interval: c.within_interval,
+                     predecessor_dates: c.documents.map((x) => ({ capture_sha: x.capture_sha, own_date: x.own_date,
+                                                                  own_date_source: x.own_date_source })),
+                     grade: f.grade, grade_determined: f.grade_determined };
+      if (j.state === "undetermined") {
+        out.push({ ...head, overdue: "undetermined", deadline: d.undetermined ? null : d.latest.value,
+                   deadline_earliest: d.undetermined ? null : d.earliest.value, bounds: d.undetermined ? d.bounds : [],
+                   why: j.why,
+                   detail: `whether the '${f.stage_key}' stage is past its '${c.within_interval}' deadline after '${c.predecessor_stage}'`
+                         + ` is undetermined: ${j.why}` });
+        continue;
+      }
+      const L = d.latest;
+      const today = localDay(instantOf(nowMs), L.zone);
+      /* how late, in the interval's own units, counted on local days (a day rule's due is a day, civil-time R9) */
+      const sp = typeof today === "string"
+        ? span(L, { value: today, precision: "day", zone: L.zone }, { unit: c.interval.unit === "weeks" ? "days" : c.interval.unit })
+        : null;
+      const amount = sp && Number.isFinite(sp.max) ? (c.interval.unit === "weeks" ? Math.floor(sp.max / 7) : sp.max) : null;
+      out.push({ ...head, overdue: true, deadline: L.value, deadline_earliest: d.earliest.value, deadline_zone: L.zone,
+                 predecessor_at: c.documents.map((x) => x.own_date).reduce(later, null).value,
+                 overdue_by: { amount, unit: c.interval.unit },
+                 overdue_by_ms: nowMs - endMs(L),
                  detail: "the '" + f.stage_key + "' stage is " + f.required + " required and still absent past its '"
-                       + d.within_interval + "' deadline after '" + d.predecessor_stage + "' ("
-                       + new Date(d.predecessor_ms).toISOString() + " + " + d.within_interval + " = "
-                       + new Date(d.deadline_ms).toISOString() + ") -- an overdue successor (framework 8.2,"
-                       + " temporal), carrying the instance's grade" });
+                       + c.within_interval + "' deadline after '" + c.predecessor_stage + "' (" + L.value + ", the local day in "
+                       + L.zone + ") -- an overdue successor (framework 8.2, temporal), carrying the instance's grade" });
     }
     return out;
   }
@@ -930,12 +1224,14 @@ export class Progressions {
     const nowMs = this.nowMs(now);
     let overdue = 0, next = null;
     for (const p of this.#pairs())
-      for (const d of this.#deadlines(this.#assemble(p.progression_key, p.entity_id))) {
-        if (d.deadline_ms < nowMs) overdue += 1;
-        else if (d.deadline_ms > nowMs && (next === null || d.deadline_ms < next)) next = d.deadline_ms;
+      for (const c of this.#clocks(this.#assemble(p.progression_key, p.entity_id))) {
+        const j = this.#judge(c, nowMs);
+        if (j.state === "overdue") overdue += 1;
+        for (const t of j.wakes) if (t > nowMs && (next === null || t < next)) next = t;
       }
-    return { overdue_count: overdue, next_deadline: next, next_deadline_at: next === null ? null : new Date(next).toISOString() };
+    return { overdue_count: overdue, next_deadline: next, next_deadline_at: next === null ? null : instantOf(next) };
   }
+
 
   /* ===================================================================== *
    * THE FEEDS (R18, R19; REC-6, REC-7, REC-9, REC-184, D-552).
@@ -978,7 +1274,7 @@ export class Progressions {
           g = { key, progression_key: inst.progression_key, progression_label: inst.label,
                 stage_key: f.stage_key, stage_label: f.stage_label, required: f.required,
                 definition_version: inst.definition_version, surfaced_by: "machine", overdue_count: 0, instances: [],
-                prior_disposition: prior
+                overdue_undetermined_count: 0, prior_disposition: prior
                   ? { state: prior.state, reason: prior.reason, decided_by: prior.decided_by, at: prior.at,
                       definition_version: prior.definition_version, definition_version_state: prior.definition_version_state,
                       applies: false, applies_because: prior.applies_because }
@@ -986,11 +1282,12 @@ export class Progressions {
           groups.set(key, g);
         }
         const od = overdueByStage.get(f.stage_key) || null;
-        if (od) g.overdue_count += 1;
+        if (od && od.overdue === true) g.overdue_count += 1;
+        else if (od) g.overdue_undetermined_count += 1;
         g.instances.push({ entity_id: inst.entity_id, entity_label: entityLabel,
                            progression_key: inst.progression_key, definition_version: inst.definition_version,
                            grade: f.grade_determined ? f.grade : null, grade_determined: f.grade_determined === true,
-                           overdue: !!od, deadline: od ? od.deadline : null });
+                           overdue: od ? od.overdue : false, deadline: od ? od.deadline : null });
       }
     }
     const proposals = [];
@@ -1055,6 +1352,58 @@ export class Progressions {
                        open_finding_count: findings.filter((f) => !(f.disposition && f.disposition.applies)).length });
     }
     return { ok: true, capture_sha: captureSha, count: instances.length, instances };
+  }
+
+  /* ===================================================================== *
+   * THE CONNECTION OWNER (R40; connection-grammar R2, R6–R9; B1a.8).
+   * ===================================================================== */
+
+  /** R40: "placed on a declared flow", `connection-grammar`'s `neighbours` contract. For an entity node, each current
+   *  placement on its instances; for an event node (`EVT-`), the placements naming it; for any other record id (the
+   *  bundle a document is filed in), the placements of its documents. Each is one connection from the event the
+   *  placement names, else the document's bundle, to the instance's entity, with the stage and definition version, its
+   *  grade the placement's (R7), `valid` the placement's own date (R37) or unstated. A bundle the viewer may not see is
+   *  neither returned nor counted (R13). Synchronous; writes nothing and records no reading. */
+  neighbours({ node, kinds = null, at, page = null, viewer, scope = null } = {}) {
+    if (viewer === undefined || viewer === null || viewer === "")
+      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+    void scope;   /* no hunch kind is this module's (connection-grammar R8) */
+    if (Array.isArray(kinds) && !kinds.includes(PLACED_KIND)) return { items: [] };
+    if (typeof node !== "string" || !node) return { items: [] };
+    const col = /^ENT-/.test(node) ? "entity_id" : /^EVT-/.test(node) ? "event_id" : "bundle_id";
+    const keep = this.#redactor(viewer);
+    const rows = this.#rows(
+      `SELECT progression_key, entity_id, stage_key, capture_sha, bundle_id, grade, event_id, dated_fact_id FROM progression_instances
+         WHERE ${col}=? ORDER BY progression_key, entity_id, stage_key, capture_sha`, node).filter((r) => keep(r.bundle_id) !== null);
+    if (rows.length > BOUNDS.hub)
+      return { items: [], hub: { set_size: rows.length, why: `${node} is placed on more than ${BOUNDS.hub} declared flows` } };
+    const zone = this.#zone();
+    const versions = new Map();
+    const items = [];
+    for (const r of rows) {
+      if (!versions.has(r.progression_key)) versions.set(r.progression_key, this.definitionVersionOf(r.progression_key).version);
+      const own = this.#ownDate(r, zone);
+      const d = own.own_date;
+      const valid = d ? { from: d.value, to: d.value, precision: d.precision, zone: d.zone }
+        /* unstated: both bounds null ("not stated", never "always"); the zone is a label the shape requires and no
+           bound reads it */
+        : { from: null, to: null, precision: "day", zone: zone.zone || "Etc/Unknown" };
+      let v;
+      try { v = validAt({ valid }, at); } catch (e) { return { refused: "AT_INVALID", why: String(e && e.message || e).slice(0, 200) }; }
+      if (v && v.refused) return { refused: "AT_INVALID", why: v.why };
+      if (v === "out") continue;
+      const from = r.event_id || r.bundle_id;
+      items.push({ id: `placed:${r.progression_key}:${r.stage_key}:${r.capture_sha}:${r.entity_id}${r.event_id ? `:${r.event_id}` : ""}`,
+                   from, to: r.entity_id, kind: PLACED_KIND, owner: "progressions", valid,
+                   evidence: [{ source: r.capture_sha, bundle_id: r.bundle_id, progression_key: r.progression_key, stage_key: r.stage_key }],
+                   grade: { assertion: r.grade, ends: [r.grade, r.grade] }, derived: null,
+                   progression_key: r.progression_key, stage_key: r.stage_key, definition_version: versions.get(r.progression_key),
+                   own_date_source: own.own_date_source,
+                   ...(v === "in" ? {} : { undetermined: { why: v && v.why ? v.why : `${own.own_date_why || "no own date"}` } }) });
+    }
+    const start = Number.isInteger(page) && page > 0 ? page : 0;
+    const slice = items.slice(start, start + BOUNDS.fanout);
+    return start + BOUNDS.fanout < items.length ? { items: slice, next: start + BOUNDS.fanout } : { items: slice };
   }
 
   /* ===================================================================== *
@@ -1143,8 +1492,8 @@ export class Progressions {
 export function progressionOps(p, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
-    progressiondefine: () => p.defineProgression(body || {}),
-    progression: () => p.readProgression({ progressionKey: q("key"), version: q("version") }),
+    progressiondefine: () => p.defineProgression({ ...(body || {}), viewer: q("viewer") }),
+    progression: () => p.readProgression({ progressionKey: q("key"), version: q("version"), viewer: q("viewer") }),
     thread: () => p.threadInstance({ ...(body || {}), viewer: q("viewer") }),
     instance: () => p.readInstance({ progressionKey: q("key"), entityId: q("id"), viewer: q("viewer") }),
     discharge: () => p.dischargeStage({ ...(body || {}), viewer: q("viewer") }),
@@ -1167,13 +1516,52 @@ export function progressionsOf(host, deps) {
                            extraction: d.extraction || extractionOf(host),
                            provenance: d.provenance || provenanceOf(host),
                            entities: d.entities || entitiesOf(host, { record }),
-                           connections: d.connections || { weakerGrade } });
+                           connections: d.connections || { weakerGrade },
+                           events: d.events || (() => eventsOf(host)),
+                           standards: d.standards || (() => STANDARDS.standardsOf(host, { record })),
+                           zoneOf: d.zoneOf || (() => governingZone(localFactsOf(host, { record }))) });
     instances.set(host, p);
-    record.declarePurge("progressions", PROGRESSIONS_TABLES);
+    /* R42: every table declared explicitly, with its classes; a refusal is a defect of the wiring and throws */
+    const declared = record.declareTable("progressions", PROGRESSIONS_TABLES);
+    if (declared && declared.ok === false)
+      throw new Error(`progressions: record-core refused its tables: ${declared.reason} ${declared.table || ""}`.trim());
     registerFigures(p);
   }
+  made.add(p);
   return p;
 }
+
+/* R16: the governing `time_zone` as `local-facts` answers it (its R2): the one value that governs over every active
+   profile, or null with why when none governs or the profiles' governing zones differ. */
+function governingZone(lf) {
+  const all = lf.factStatus({});
+  const zones = new Set((all && Array.isArray(all.facts) ? all.facts : [])
+    .filter((f) => f && f.fact && f.fact.fact === "time_zone" && f.status !== "absent" && f.governs)
+    .map((f) => (typeof f.governs.value === "string" ? f.governs.value : f.governs.value && f.governs.value.value))
+    .filter((z) => typeof z === "string" && z));
+  if (zones.size === 1) return [...zones][0];
+  return { zone: null, why: zones.size ? `the active profiles' governing time zones differ (${[...zones].join(", ")})`
+                                       : "no time zone governs here (local-facts holds no governing time_zone of the active profiles)" };
+}
+
+/* R40: every instance `progressionsOf` has made in this isolate. */
+const made = new Set();
+
+/** R40 (K1563 (1)): registered once, at load, into `connection-grammar`'s default registry (its R2, R5). Its read takes
+ *  the optional `host` the registry passes through unchanged, else the isolate's one instance; with neither, or several
+ *  and no host, it refuses `OWNER_HOST_AMBIGUOUS`. */
+export const OWNER_REGISTRATION = registerOwner({
+  owner: "progressions", kinds: PLACED_KINDS,
+  neighbours: (a) => {
+    const { host = null, ...args } = a && typeof a === "object" ? a : {};
+    if (args.viewer === undefined || args.viewer === null || args.viewer === "")
+      return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+    const p = host ? instances.get(host) : made.size === 1 ? [...made][0] : null;
+    if (!p) return { refused: "OWNER_HOST_AMBIGUOUS", why: host ? "progressions holds no instance for that host"
+                       : `progressions holds ${made.size} instances in this isolate and the read names no host` };
+    return p.neighbours(args);
+  },
+});
 
 /** R36 (`build/extraction/legacy-store.md` §4.2 (2)): this module's figures, registered with record-core's
  *  `registerCounts` (its R63) once per storage, when the instance is first made. A record with no seam (a test's

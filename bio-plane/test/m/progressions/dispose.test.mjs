@@ -213,3 +213,21 @@ test("R34: progression_instances' named columns and every R29 table's row count 
   for (const t of PROGRESSIONS_TABLES.map((x) => (typeof x === "string" ? x : x.name)))
     assert.equal(typeof w.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n, "number", t);
 });
+
+test("R42 R29: every table declared explicitly through record-core's declareTable with its classes; the versions and the versioned rows are chains, bundle-keyed ones take the bundle's sight", () => {
+  const w = seeded();
+  const mine = w.record.declaredTables().filter((d) => d.module === "progressions");
+  const view = Object.fromEntries(mine.map((d) => [d.name, [d.purge, d.expunge, d.export, d.sight, d.derive, d.version_chain]]));
+  const B = (chain) => ["clear", "none", "admin-only", "bundle", "stored", chain], G = (chain) => ["clear", "none", "admin-only", "group", "stored", chain];
+  assert.deepEqual(view, {
+    progression_instances: B(true), progression_exceptions: B(true), progression_thread_placements: B(true),
+    progression_exception_versions: B(true), progression_defs: G(false), progression_stages: G(false),
+    progression_def_versions: G(true), progression_stage_versions: G(true), progression_threads: G(true),
+    proposal_dispositions: G(false) });
+  // declared once: a second declaration by this module, or another's of one of its tables, is refused
+  assert.equal(w.record.declareTable("progressions", [{ name: "progression_defs", purge: "clear", expunge: "none", export: "admin-only",
+    sight: "group", derive: "stored", version_chain: false }]).reason, "TABLE_DECLARED");
+  // the definitions and decisions are keyed to no bundle (a bundle's purge leaves them, R29's test above)
+  for (const t of PROGRESSIONS_TABLES) assert.equal(t.keys === undefined, ["progression_instances", "progression_exceptions",
+    "progression_thread_placements", "progression_exception_versions"].includes(t.name), t.name);
+});
