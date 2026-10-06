@@ -120,15 +120,21 @@ test("R16: through the wait source — an outstanding request extends the lease;
   assert.equal((await w3.runs.wake(at("00:00:10"))).held, 25);
 });
 
-test("R18, R52 (K1514, K1615): a woken run is dispatched only when its principal is the instance's organisation ai credential, on record and unrevoked, carrying its own member's account reference and no instance account; otherwise the decision is withheld and named (NO_ACCOUNT when the member holds none); the call is bounded and no secret enters the record", async () => {
+test("R18, R52 (K1514, K1615, K1755): a woken run is dispatched only when its principal is the instance's organisation ai credential, on record and unrevoked, carrying the account credentials.accountFor answers for its member's act (their own reference, else the group's API key) and no instance account; otherwise the decision is withheld and named (NO_ACCOUNT when no account serves the member); the call is bounded and no secret enters the record", async () => {
   const TOKEN = "instance-ai-secret-value-7f3c";
   const bound = (w, store = "bio") => { w.ctx.id = { equals: (x) => x === `id:${store}` }; };
   const env = (aw, extra = {}) => ({ AGENT_WORKER: aw, INSTANCE_AI_TOKEN: TOKEN, INSTANCE_CLAUDE_TOKEN: "claude-account-x",
                                       STORE: { idFromName: (n) => `id:${n}` }, AI_RUN_DISPATCH_WAIT_MS: "50", ...extra });
-  const setup = async (e, { principal = ORG, mint = "organisation", revoke = false, store = "bio", kind = null } = {}) => {
+  const setup = async (e, { principal = ORG, mint = "organisation", revoke = false, store = "bio", kind = null, groupKey = false } = {}) => {
     const w = world({ env: e });
-    await w.group("ann");
+    await w.group("ann", groupKey ? { noAccount: ["ann"] } : {});
     if (kind) await w.account("ann", kind, `${kind}-secret-of-ann`);
+    /* K1755: the group's API key, set and switched on by an administrator, its notice read by ann (credentials R33, R36) */
+    if (groupKey) {
+      assert.equal((await w.credentials.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
+      assert.equal(w.credentials.groupKeySwitch({ on: true, by: "admin" }).ok, true);
+      assert.equal(w.credentials.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" }).ok, true);
+    }
     w.bundle(INQ);
     if (mint) {
       const m = w.credentials.aiCredentialMint({ who: mint === "member" ? "ann" : "admin", tokenId: "tok-org", secretSha: sha(TOKEN),
@@ -152,9 +158,11 @@ test("R18, R52 (K1514, K1615): a woken run is dispatched only when its principal
   const d = await decision(w1);
   assert.deepEqual([d.resume, d.dispatch.state], ["DISPATCH", "DISPATCHED"]);
   assert.equal(aw.calls.length, 1);
-  /* the run member's own reference (credentials R24), and no instance Claude account, whatever the copy's bindings hold */
+  /* the run member's own reference (credentials R35, level member), and no instance Claude account, whatever the copy's
+     bindings hold */
   assert.deepEqual(aw.calls[0].body, { run_id: "R1", store: "bio", credential: TOKEN,
-                                       account: { kind: "apikey", secret: "secret-of-ann", member: "member:ann", suggestions: false } });
+                                       account: { kind: "apikey", level: "member", secret: "secret-of-ann", member: "member:ann",
+                                                  suggestions: false } });
   for (const secret of [TOKEN, "secret-of-ann", "claude-account-x"]) {
     assert.equal(JSON.stringify(w1.rows(`SELECT * FROM observation_log`)).includes(secret), false, "no secret enters the record");
     assert.equal(JSON.stringify(w1.rows(`SELECT * FROM ai_runs`)).includes(secret), false);
@@ -163,20 +171,35 @@ test("R18, R52 (K1514, K1615): a woken run is dispatched only when its principal
   /* a subscription token travels as a subscription, never re-labelled an API key (K1553) */
   const sub = await setup(env(aw), { principal: stamp, kind: "subscription" });
   assert.equal((await decision(sub)).dispatch.state, "DISPATCHED");
-  assert.deepEqual(aw.calls[1].body.account, { kind: "subscription", secret: "subscription-secret-of-ann", member: "member:ann",
-                                               suggestions: false });
+  assert.deepEqual(aw.calls[1].body.account, { kind: "subscription", level: "member", secret: "subscription-secret-of-ann",
+                                               member: "member:ann", suggestions: false });
   /* K1615 (agent-worker R56): the member's own suggestions switch rides with the reference — on when they turned it on */
   const on = await setup(env(aw), { principal: stamp });
   assert.equal(on.credentials.accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   assert.equal((await decision(on)).dispatch.state, "DISPATCHED");
   assert.equal(aw.calls[2].body.account.suggestions, true);
+  /* K1755: a member with no account of their own is served by the group's API key while it is held and on; the run is
+     still that member's (`member` names them), and the group key's own switch has no in-plane read for a member's act,
+     so it offers no suggestion (ai-runs #11 J1 (2)) */
+  const grp = await setup(env(aw), { principal: stamp, groupKey: true });
+  assert.equal(grp.credentials.groupSwitchSet({ switch: "suggestions", on: true, by: "admin" }).ok, true);
+  assert.equal((await decision(grp)).dispatch.state, "DISPATCHED");
+  assert.deepEqual(aw.calls[3].body.account, { kind: "apikey", level: "group", secret: "group-key-secret", member: "member:ann",
+                                               suggestions: false });
+  for (const t of ["observation_log", "ai_runs"])
+    assert.equal(JSON.stringify(grp.rows(`SELECT * FROM ${t}`)).includes("group-key-secret"), false, "the group key enters no record");
+  /* and switched off, nothing serves her: withheld NO_ACCOUNT, the binding not called */
+  const off = await setup(env(aw), { principal: stamp, groupKey: true });
+  assert.equal(off.credentials.groupKeySwitch({ on: false, by: "admin" }).ok, true);
+  assert.equal((await decision(off)).resume, "NO_ACCOUNT");
+  assert.equal(aw.calls.length, 4);
   /* every withheld ground, each named, none calling the binding */
   const calls = aw.calls.length;
   const gone = await setup(env(aw), { principal: stamp });
   assert.equal((await gone.credentials.accountReferenceRemove({ member: "member:ann", by: "member:ann" })).ok, true);
   const noAcct = await decision(gone);
   assert.equal(noAcct.resume, "NO_ACCOUNT");
-  assert.match(logOf(gone)[0].detail, /Resumption: NOT dispatched — the member whose act started this run has no Claude account/);
+  assert.match(logOf(gone)[0].detail, /Resumption: NOT dispatched — no Claude account serves the member whose act started this run/);
   assert.equal((await decision(await setup(env(aw), { principal: "member:ann/tok-m" }))).resume, "MEMBER_PRINCIPAL_RUN");
   assert.equal((await decision(await setup(env(aw), { principal: "class:ai/other" }))).resume, "NOT_THE_INSTANCE_CREDENTIALS_RUN");
   assert.equal((await decision(await setup(env(null), { principal: stamp }))).resume, "AGENT_WORKER_UNBOUND");

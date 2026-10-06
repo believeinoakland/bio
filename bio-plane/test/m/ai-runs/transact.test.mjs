@@ -51,13 +51,13 @@ test("R10, R12, R14, R16, R18, R26, R29, R48, R50 (N418): every write of the run
     state: { next: 1 }, log: [{ level: "document", subject: INQ, state: "LOOKED_ABSENT" }] });
   assert.deepEqual([t.ticked, t.appended], [true, 1]);
   assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-01T00:00:02Z",
-    usage: [{ mode: "check", model: "m", usage: USAGE() }] })).counted, 1);
+    usage: [{ mode: "check", model: "m", usage: USAGE(), calls: 1 }] })).counted, 1);
   assert.equal(w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE() }).ok, true);
   assert.equal(w.runs.aiCopyCeilingSet({ calls: 50, by: "admin" }).ok, true);
   assert.equal(w.runs.aiCeilingSet({ member: "member:ann", calls: 2, by: "member:ann" }).ok, true);
   /* at the ceiling: the refused tick's calls are still counted, inside transact */
   assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-01T00:00:03Z",
-    usage: [{ mode: "check", model: "m", usage: USAGE() }] })).counted, 1);
+    usage: [{ mode: "check", model: "m", usage: USAGE(), calls: 1 }] })).counted, 1);
   w.runs.aiCeilingSet({ member: "member:ann", calls: null, by: "member:ann" });
   assert.equal(w.surface("INQ-2026-0009").ok, true);
   assert.equal(w.runs.consumeBound("R1", "fetches", 1), null);
