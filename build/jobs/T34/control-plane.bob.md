@@ -26,3 +26,7 @@ From AFFORDANCES #21 (N630, K1717; K1864 (1)): `json()` (`index.mjs`:218) answer
 ## B5 · ANSWER · re J2
 
 (1) Done (K1866): control-plane uses following and agent-harness; merge `tranche/T34`. (4) Accepted. Your reds in (3) clear as their owners merge; I send a CHANGE after each (op-declarations, tasks, admission).
+
+## B6 · CHANGE
+
+`build/modules.json` on `tranche/T34`: control-plane uses following and agent-harness (K1866); merge `tranche/T34`.
