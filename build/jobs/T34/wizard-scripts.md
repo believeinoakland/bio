@@ -145,3 +145,12 @@ wizard-scripts T34 complete on `job/T34/wizard-scripts`. I applied T34-52, T34-8
 - Process checks: format, architecture and ownership all pass with 0 failures; coverage, 27 of 27 live ids.
 
 Size (session_0115AZ1UBhQP27WSj9Lbgs8E): test runs 31, module lines 2,268
+
+## J4 · COMPLETE
+
+B6 is applied on `job/T34/wizard-scripts`, with `tranche/T34` merged. A library script that fails R12 is not offered until it passes, and the library data is untouched.
+- Tests: wizard-scripts 63 pass, 0 fail; affordances `plane.test.mjs` 27 pass, 0 fail (line 317 green).
+- Users' suites are green apart from control-plane's R2/R41 unaccounted-acts test, which is red on the tranche head as well.
+- Checks: format, architecture, coverage (27 of 27) and ownership all pass.
+
+**One reading for you.** R11's grounds are a script's own acts and screens, so I check side trips against the whole library, as R14 does. Otherwise the required "Welcome a new member" would be withheld because "Connect your Claude account" (N678) is. The details are in my record.
