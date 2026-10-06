@@ -103,7 +103,7 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
   assert.deepEqual([DEC88.reversible.length, DEC88.reasoned.length, DEC88.terminal.length], [25, 30, 2]);
   const want = {
-    irreversible: ["publish"],
+    irreversible: ["publish", "publishat", "publishatmove" /* R42 */],
     attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */, "noticepost" /* R32 */,
       "docketpost" /* R34 */],
     terminal: ["retire", "actionholdrelease" /* R33: a named exception to R27 */],
@@ -134,6 +134,8 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   };
   /* R38: the watch of an imported case's docket and its end, each taking the other back */
   want.reversible.push("importwatch", "importunwatch");
+  /* R42: cancelling a set time, taken back by a new signing */
+  want.reversible.push("publishatcancel");
   want.reversible.push(...DEC88.reversible);
   want.terminal.push(...DEC88.terminal);
   /* R40: T33's rungs, each graded in t33.mjs and held there to its owner (t33.test.mjs) */
@@ -370,12 +372,13 @@ test("R7: NON_ACTS gives every op it names a reason, names no act, and a reason 
     ids(CAPTURE_ACTS));
 });
 
-test("R19 R33: `terminal` is given only while STATES.information.edges.retired is empty — to retire, DEC-88's two and "
-   + "R33's named exception actionholdrelease — and `irreversible` only to publish", () => {
+test("R19 R33 R42: `terminal` is given only while STATES.information.edges.retired is empty — to retire, DEC-88's two "
+   + "and R33's named exception actionholdrelease — and `irreversible` only to publish and the two that set when a signed "
+   + "case edition publishes, publishat and publishatmove", () => {
   const terminal = Object.keys(RUNGS).filter((op) => RUNGS[op] === "terminal");
   assert.deepEqual(STATES.information.edges.retired, []);
   assert.deepEqual(terminal.sort(), ["actionholdrelease", "escalationend", "filingapprove", "retire"]);
-  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible"), ["publish"]);
+  assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible").sort(), ["publish", "publishat", "publishatmove"]);
 });
 
 test("R19: the justification family names only codes that ask the member for an account, and holds the "

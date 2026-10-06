@@ -37,9 +37,9 @@ export const T33_RUNGS = {
   /* duties (R3, R6, R12, R13) */
   dutyadopt:             "reversible", // dutywithdraw takes it back
   dutydeclare:           "reversible", // dutywithdraw takes it back
-  dutyrevise:            "reasoned",   // NO_REASON (duties R6: a new version with its reason)
-  dutywithdraw:          "reasoned",   // NO_REASON (duties R6)
-  dutymatch:             "reasoned",   // NO_REASON (duties R12: an event meets an occurrence, with why)
+  dutyrevise:            "reasoned",   // DUTY_NO_REASON (duties R6: a new version with its reason)
+  dutywithdraw:          "reasoned",   // DUTY_NO_REASON (duties R6)
+  dutymatch:             "reasoned",   // DUTY_NO_REASON (duties R12: an event meets an occurrence, with why)
   dutytransition:        "reasoned",   // NO_CAUSE (duties R13: a member's statement of an occurrence's state names its cause)
   /* people (R1, R4, R9, R11, R12, R20, R21, R22) */
   identityclaim:         "reasoned",   // NO_NOTE (people R1: every claim carries the member's note); NO_EVIDENCE beside it
@@ -53,8 +53,8 @@ export const T33_RUNGS = {
   interestcheckswitch:   "reversible", // a further switch turns it back; the latest governs
   /* hypotheses (R1, R2) */
   hypothesishold:        "reversible", // hypothesiswithdraw takes it back
-  hypothesisrevise:      "reasoned",   // NO_REASON (hypotheses R2)
-  hypothesiswithdraw:    "reasoned",   // NO_REASON (hypotheses R2)
+  hypothesisrevise:      "reasoned",   // HYPOTHESIS_NO_REASON (hypotheses R2)
+  hypothesiswithdraw:    "reasoned",   // HYPOTHESIS_NO_REASON (hypotheses R2)
   /* calculations (R14, R23) */
   moneyingest:           "reasoned",   // NO_REASON (calculations R14: every row of a binding at once asks why; named rows ask none, `triage`'s shape)
   patternswitch:         "reversible", // a further switch turns it back; the latest governs
@@ -114,6 +114,10 @@ export const T33_RUNG_ABSENT = {
   /* people */
   interestcheckdefine:  { ground: "undetermined", is: "a member or the machine defines an interest check, or a new version of one, with its condition and denominator; earlier versions kept, and a machine's results shown only once gated (people R22)" },
   interestcheckgate:    { ground: "substrate", is: "an administrator records a check version's false-alarm rate measured on a named gold set; results show only at or under the gate (people R24)" },
+  /* hypotheses (R43; R11, R13): a member's own note, answered to its author alone, and a turn recorded on it; what a turn
+     makes is its owner's act, graded there */
+  notewrite:            { ground: "caller-owned", is: "a member writes a note of their own, answered to that member alone; never a record id, never cited, published or counted (hypotheses R11)" },
+  noteturn:             { ground: "caller-owned", is: "the note's author records that the note became an observation, a hunch or a question their own act made (hypotheses R13)" },
   /* calculations */
   tabledeclare:         { ground: "undetermined", is: "a member declares a table from a captured source, with its schema, roles and vintage; superseded only by a later declaration naming it (calculations R1–R3)" },
   bindingadopt:         { ground: "undetermined", is: "a member adopts a table's money-role mapping, which the ingest writer reads (calculations R14)" },
@@ -267,6 +271,10 @@ export const T33_NON_ACTS = {
   hypothesisrevise: "hypothesis-directed: keyed by hypothesis; a new statement with its reason, the history kept",
   hypothesiswithdraw: "hypothesis-directed: keyed by hypothesis; keeps it, shown withdrawn",
   hypotheses: R("one hypothesis, or an inquiry's, each labelled a hypothesis with its history"),
+  /* R43: a member's own notes */
+  notewrite: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+  noteturn: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
+  notes: R("a member's own notes, to that member alone"),
   /* calculations */
   tabledeclare: "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle",
   bindingadopt: "table-directed: keyed by (table, roles); writes calculations' rows and moves no bundle",

@@ -572,6 +572,9 @@ export const JUSTIFICATION_REFUSALS = [
      note states its purpose (workbooks R10), and a member verifying an assistant mode's first live run gives the evidence
      of what they checked (run-rules R19; refused absent as well as malformed). Each the member's own account. */
   "NO_CAUSE", "NO_PURPOSE", "AI_RUN_VERIFICATION_UNFIT",
+  /* R43 (K1805, K1807; T34-75): duties and hypotheses now answer an absent reason in their own word for it (duties' re-key,
+     N608; hypotheses R2), where they answered NO_REASON; `NO_REASON` stays for the ops that still answer it. */
+  "DUTY_NO_REASON", "HYPOTHESIS_NO_REASON",
 ];
 
 /* THE GROUNDS ON WHICH A MUTATING OP HAS NO RUNG. Written ONCE here and pointed
@@ -586,7 +589,11 @@ export const JUSTIFICATION_REFUSALS = [
  * scratch state, or an observation — and for those the honest answer is not "no
  * rung yet" but "the ladder does not reach here". `undetermined` is the bucket
  * that DOES mean "no rung yet", and keeping it apart from the other four is what
- * stops a real gap from hiding inside a category error. */
+ * stops a real gap from hiding inside a category error.
+ *
+ * DEC-149 (T34-87, K1849 (7)): served to every surface as `vocabularies.rung_absence_grounds`, so these sentences take
+ * the member voice: none names the group's Civicsmith as "the plane", "this instance" or "this copy" ("server-side"
+ * below says where a selection is kept, and stays). */
 export const RUNG_ABSENCE_GROUNDS = {
   substrate:
     "the machinery a decided act rides on, not a decision. A member never chooses op=promote; they "
@@ -605,8 +612,8 @@ export const RUNG_ABSENCE_GROUNDS = {
     + "observation is corrected by observing again, and the earlier observation stays true of the "
     + "moment it was made.",
   undetermined:
-    "THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG. No document assigns one and no refusal in "
-    + "the plane establishes one, so the honest answer is that it is UNDETERMINED — stated, never "
+    "THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG. No document assigns one and no refusal "
+    + "establishes one, so the honest answer is that it is UNDETERMINED — stated, never "
     + "guessed (CLAUDE.md: undetermined is first-class and must be STATED). Do not read this as "
     + "'light'. Several of these are weighty, and the reason they are undetermined is that the "
     + "ladder as it stands has no rung for an act that is CORRECTED FORWARD but is not signed.",
@@ -856,10 +863,11 @@ export function vocabulariesFor(kinds) {
  * each act called without its account at its own module's interface) — a rung with
  * no backing is a promise to a member that nothing keeps. */
 export const RUNGS = {
-  /* ---- irreversible. ONE op, and DEC-19 as amended names it. --------------
-     Derived, not spelled: the suite finds it as the op whose DO route is the
-     publishing path, so renaming either half fails rather than drifts. */
+  /* ---- irreversible. The op that publishes, as DEC-19 as amended names it, and (R42; DEC-147) the two that set when a
+     signed case edition goes public: the set time is weighed as publishing itself, and moving it sets again. */
   publish:            "irreversible",
+  publishat:          "irreversible",   // ratification R40 · signs now; publishes at the set time if every check passes again
+  publishatmove:      "irreversible",   // publication R68 · sets again when the signed edition goes public
 
   /* ---- attested: signed or countersigned, and correctable only by a further
      act that is itself signed. Constructs:275. Both require an authority the
@@ -1130,6 +1138,10 @@ export const RUNGS = {
      reason, and each takes the other back (case-import R17: an end leaves no watch in force; a new watch puts one back). */
   importwatch:           "reversible", // importunwatch takes it back
   importunwatch:         "reversible", // importwatch takes it back
+
+  /* ---- R42 (DEC-147): cancelling a set time publishes nothing, and the edition returns to an unsigned preparation
+     (publication R68); a new signing, published now (`caseratify`) or at a time (`publishat`), takes it back. */
+  publishatcancel:       "reversible", // caseratify or publishat signs it again
 
   /* ---- R40 (T33-85): T33's ops, graded in ./affordances/t33.mjs. */
   ...T33_RUNGS,
@@ -2894,6 +2906,17 @@ export const NON_ACTS = {
   wizarduse: "read: a script's unattributed daily use tallies by version and day, to its project's owners and its version's author; writes nothing",
   wizardcandidates: "read: where offered scripts' step counts drop most and which acts are refused most, never a member, case, target or project; writes nothing",
   wizardcheck: "read: the checks every wizard script passes, run over a list of steps against the registered screens, naming each refusal's step; reached by any credential, and writes nothing",
+  /* R37 (DEC-158 (4); K1818): the copies whose base has a newer approved version, a read for the wizard editors. */
+  baseupdates: "read: each copy of a wizard script whose base has a newer approved version, with both versions' steps, for the group's wizard editors; writes nothing",
+  /* R42 (DEC-147; N662): publishing at a set time. A case edition is keyed by (case, edition), never a bundle state
+     `affordanceFacts` describes, so each is reached from the ceremony, the case or the owner's queue. */
+  publishat: "case-directed: keyed by a case edition (case, edition), reached from the publication ceremony's last step; signs now and publishes at the set time only if every check passes again then",
+  publishatmove: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
+  publishatcancel: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
+  publishschedule: "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
+  /* R44 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
+  groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
+  writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R40 (T33-85): T33's ops, their reasons in ./affordances/t33.mjs. */
   ...T33_NON_ACTS,
 };
