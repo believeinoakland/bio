@@ -35,3 +35,4 @@
 - control-plane (T34-60): `catalogue-end.test.mjs` (rows-before-r43.json) pins C-91.1 and C-91.2's translation digests; entities changed both (DEC-149, K1789): re-pin them as K1572 did.
 - corpus-export (T34-42): `tables.test.mjs`:84 asserts `member_ties` export admin-only; people declares it `never` (N594, PEOPLE #3): the test and its HELD_NEVER interim note follow. Red from people's merge until this job's (K1791).
 - consequences (T34-49): R16's interim test "until people answers a link's sight … (fail closed)" (`person.test.mjs`:84) is red since people's `sourceLinkSight` (N600): retire it. Red from people's merge until this job's (K1791).
+- op-declarations (T34-58): duties re-keyed `NO_REASON` to `DUTY_NO_REASON` (N608, DUTIES #2): the `reasoned` table still names `NO_REASON` for `dutyrevise`, `dutywithdraw`, `dutymatch`; red from duties' merge until this job's (K1792).
