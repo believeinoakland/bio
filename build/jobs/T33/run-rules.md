@@ -48,3 +48,7 @@ Five readings of T33-49 I am building on now; none stops the job. Answer only wh
 ## J3 · COMPLETE
 
 T33-49 applied: R14 amended; R16 ASK_MODE and RUN_MODES; R17 ASK_BOUNDS, checkAskBounds, askBoundReached; R18 startAllowed; R19 VERIFICATION_RECORDED, checkVerification, deployable; R20 rows C-109.8–.12, plus C-22.19–.21. Also fixed: five rules that threw on a null argument. run-rules 23/23. Users are green except the named reds (ai-runs R18, skills R28, control-plane R22/R26/R43) and agent-worker R45 (stale bundle, J3). format, architecture, coverage (20/20) and ownership (10 files): 0 failures each. Record: build/jobs/T33/run-rules.md, Completion.
+
+## J4 · COMPLETE · re B3
+
+B3 (K1610) applied: NOT_YOUR_CEILING's where is now 'src/ai-runs/index.mjs aiCeilingSet and aiUsageMine', and its translation no longer mentions the copy's ceiling; the R20 test holds this. Merged tranche/T33 first. run-rules 23/23; ai-runs 55/56 (R18, named red). skills 66/67: R15 'C-2.8 is typed, read from no earlier owner's row' also fails on tranche/T33 without this change, so it is not run-rules'. Checks: 0 failures each.
