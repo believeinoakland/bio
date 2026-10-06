@@ -11,12 +11,12 @@ import { refuse, isObj, viewerRefusal, nodeRefusal, dateRefusal, NOT_ASSERTED } 
 /** The rules of each preset's kind set (R10): an owner's kinds named, or every kind of an owner (K1563 (8): duties' power kind). */
 export const PRESET_RULES = Object.freeze({
   chain: Object.freeze({ words: 'organisation chains', rules: [
-    { owner: 'lines', kinds: ['part_of', 'reports_to', 'oversees', 'appoints', 'funds'] },
+    { owner: 'lines', kinds: ['line:part_of', 'line:reports_to', 'line:oversees', 'line:appoints', 'line:funds'] },
     { owner: 'duties', kinds: ['holds_power'] },
   ] }),
   flowsFrom: Object.freeze({ words: 'money trails', rules: [{ owner: 'money' }] }),
   relationsOf: Object.freeze({ words: 'event links', rules: [
-    { owner: 'events', kinds: ['authorises', 'answers', 'amends', 'reverses', 'stated_cause', 'within'] },
+    { owner: 'events', kinds: ['event_authorises', 'event_answers', 'event_amends', 'event_reverses', 'event_stated_cause', 'event_within'] },
   ] }),
   pathBetween: Object.freeze({ words: 'the path between two records', rules: [{ every: true }] }),
   overlaps: Object.freeze({ words: 'overlaps', rules: [{ every: true }] }),

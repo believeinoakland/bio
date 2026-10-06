@@ -9,11 +9,11 @@ import { AT, INQUIRY, ZONE, valid, ent, conn, world, byOwner, makeStore, makeOwn
 const V = "alice";
 const A = ent(1), B = ent(2), C = ent(3), D = ent(4), E = ent(5), F = ent(6);
 const base = () => [
-  conn("part_of", A, B, { id: "h-ab" }),
-  conn("reports_to", B, C, { id: "h-bc", grade: { assertion: "C", ends: ["A", "D"] } }),
+  conn("line:part_of", A, B, { id: "h-ab" }),
+  conn("line:reports_to", B, C, { id: "h-bc", grade: { assertion: "C", ends: ["A", "D"] } }),
   conn("contribution", D, A, { id: "h-da" }),
   conn("payment", C, E, { id: "h-ce", quantities: { amount: 500 } }),
-  conn("funds", B, E, { id: "h-be", quantities: { amount: 900 } }),
+  conn("line:funds", B, E, { id: "h-be", quantities: { amount: 900 } }),
 ];
 const make = (conns = base(), o = {}) => {
   const w = world(byOwner(conns), o);
@@ -33,7 +33,7 @@ test("R1 refusals in order: no node, bad node, no date, bad date, unknown kind, 
   assert.equal(x.explore({ from: A, at: { value: "2026-02-31", precision: "day", zone: ZONE }, viewer: V }).refused, "BAD_DATE");
   assert.equal(x.explore({ from: A, at: { value: "2026-02-01", precision: "day", zone: "Mars/Base" }, viewer: V }).refused, "BAD_DATE");
   assert.equal(x.explore({ from: A, at: 42, viewer: V }).refused, "BAD_DATE");
-  const k = ask(x, { kinds: ["part_of", "no_such_kind"], depth: 11 });
+  const k = ask(x, { kinds: ["line:part_of", "no_such_kind"], depth: 11 });
   assert.equal(k.refused, "UNKNOWN_KIND");
   assert.match(k.why, /no_such_kind/);
   assert.equal(ask(x, { depth: 11 }).refused, "DEPTH_OVER_MAX");
@@ -61,13 +61,13 @@ test("R2 breadth-first over every owner of the asked kinds, one node per owner c
   assert.equal(new Set(log.filter((c) => c.node === A).map((c) => c.kinds.join())).size, 7);
   // Only the kinds asked reach the owners.
   log.length = 0;
-  ask(x, { kinds: ["part_of"] });
-  assert.ok(log.every((c) => c.kinds.length === 1 && c.kinds[0] === "part_of"));
+  ask(x, { kinds: ["line:part_of"] });
+  assert.ok(log.every((c) => c.kinds.length === 1 && c.kinds[0] === "line:part_of"));
   // With `to`: only paths that end there; both shortest paths into E are answered.
   const t = ask(x, { to: E });
   assert.deepEqual(t.paths.map(ids), ["h-ab>h-be"]);
   assert.equal(ask(x, { to: E, depth: 3 }).paths.length, 1, "longer paths through visited nodes are not shortest");
-  const both = make([...base(), conn("part_of", A, F, { id: "h-af" }), conn("payment", F, E, { id: "h-fe" })]).x;
+  const both = make([...base(), conn("line:part_of", A, F, { id: "h-af" }), conn("payment", F, E, { id: "h-fe" })]).x;
   assert.deepEqual(ask(both, { to: E }).paths.map(ids).sort(), ["h-ab>h-be", "h-af>h-fe"]);
   // The host is passed to every owner unchanged (K1563 (1)).
   log.length = 0;
@@ -90,7 +90,7 @@ test("R3 each path's hops as their owners answered them, its grade the weakest h
   assert.deepEqual(all.filter((q) => q.hops.length === 1).map(ids), ["h-ab", "h-da"], "ties by ids");
   assert.match(r.order.by, /fewest steps/);
   // Validity orders before ids: the later-starting path goes after.
-  const v = make([conn("part_of", A, B, { id: "a-late", valid: valid("2025-01-01", "2027-01-01") }), conn("part_of", A, C, { id: "z-early", valid: valid("2024-01-01", "2027-01-01") })]).x;
+  const v = make([conn("line:part_of", A, B, { id: "a-late", valid: valid("2025-01-01", "2027-01-01") }), conn("line:part_of", A, C, { id: "z-early", valid: valid("2024-01-01", "2027-01-01") })]).x;
   assert.deepEqual(ask(v).paths.map(ids), ["z-early", "a-late"]);
   // sortBy: by the stated quantity, descending, the quantity named.
   const s = ask(x, { sortBy: "amount" });
@@ -105,10 +105,10 @@ test("R3 each path's hops as their owners answered them, its grade the weakest h
 
 test("R4 only hops valid at the date are walked; an undetermined hop is walked, marked, and its path is undetermined, never shown as holding", () => {
   const { x } = make([
-    conn("part_of", A, B, { id: "in" }),
-    conn("part_of", A, C, { id: "out", valid: valid("2010-01-01", "2011-01-01") }),
-    conn("part_of", A, D, { id: "open", valid: valid("2025-01-01", null) }),
-    conn("part_of", D, E, { id: "after-open" }),
+    conn("line:part_of", A, B, { id: "in" }),
+    conn("line:part_of", A, C, { id: "out", valid: valid("2010-01-01", "2011-01-01") }),
+    conn("line:part_of", A, D, { id: "open", valid: valid("2025-01-01", null) }),
+    conn("line:part_of", D, E, { id: "after-open" }),
   ]);
   const r = ask(x);
   assert.deepEqual(r.paths.map(ids).sort(), ["in", "open", "open>after-open"]);
@@ -127,20 +127,20 @@ test("R4 only hops valid at the date are walked; an undetermined hop is walked, 
 test("R5 bounds: fan-out keeps the first 1,000 of a kind and names the node; a hub is named with its set size and why and not expanded; the node bound and the time budget stop the walk as exhausted; every answer states visited, depth, budget and elapsed", () => {
   // Fan-out: an owner whose pages carry more than 1,000 of one kind.
   const many = [];
-  for (let i = 0; i < 1200; i++) many.push(conn("part_of", A, ent(1000 + i), { id: `f-${String(i).padStart(5, "0")}` }));
+  for (let i = 0; i < 1200; i++) many.push(conn("line:part_of", A, ent(1000 + i), { id: `f-${String(i).padStart(5, "0")}` }));
   const f = make(many, { opts: { lines: { pageSize: 1000, noHub: true } } }).x;
   const fr = ask(f, { depth: 1 });
   assert.equal(fr.paths.length, BOUNDS.fanout);
   assert.deepEqual(fr.paths.map(ids), many.slice(0, 1000).map((c) => c.id).sort(), "the first 1,000 in the owner's order");
   assert.equal(fr.fanout_truncated[0].node, A);
-  assert.equal(fr.fanout_truncated[0].kind, "part_of");
+  assert.equal(fr.fanout_truncated[0].kind, "line:part_of");
   assert.equal(fr.complete, false);
   // An owner's own `truncated` is named too.
   const t = make(base(), { opts: { lines: { truncatedAt: [A] } } }).x;
   assert.equal(ask(t).fanout_truncated[0].node, A);
   // A hub: named, its set size and why, not expanded.
-  const hub = [conn("part_of", A, B, { id: "to-hub" }), conn("part_of", B, C, { id: "beyond" })];
-  for (let i = 0; i < 1001; i++) hub.push(conn("holds_employee", ent(2000 + i), B));
+  const hub = [conn("line:part_of", A, B, { id: "to-hub" }), conn("line:part_of", B, C, { id: "beyond" })];
+  for (let i = 0; i < 1001; i++) hub.push(conn("line:holds:employee", ent(2000 + i), B));
   const h = ask(make(hub).x);
   assert.deepEqual(h.paths.map(ids), ["to-hub"], "the hub is reached, never expanded");
   assert.equal(h.hubs.length, 1);
@@ -152,8 +152,8 @@ test("R5 bounds: fan-out keeps the first 1,000 of a kind and names the node; a h
   const wide = [];
   for (let i = 0; i < 6; i++) {
     const mid = ent(10 + i);
-    wide.push(conn("part_of", A, mid));
-    for (let j = 0; j < 999; j++) wide.push(conn("seat_on", mid, ent(20000 + i * 1000 + j)));
+    wide.push(conn("line:part_of", A, mid));
+    for (let j = 0; j < 999; j++) wide.push(conn("line:seat_on", mid, ent(20000 + i * 1000 + j)));
   }
   const n = ask(make(wide).x);
   assert.equal(n.visited, BOUNDS.nodes);
@@ -181,7 +181,7 @@ test("R6 a declared hop is marked declared at the lowest grade; a hunch is walke
     conn("hunch_tie", A, C, { id: "hunch" }),
     conn("hunch_tie", A, D, { id: "other-hunch", scope: "INQ-2026-0002-another" }),
     conn("mentioned_together", A, E),
-    conn("part_of", B, F, { id: "after-declared" }),
+    conn("line:part_of", B, F, { id: "after-declared" }),
   ];
   const { x } = make(conns);
   const out = ask(x);
@@ -205,7 +205,7 @@ test("R6 a declared hop is marked declared at the lowest grade; a hunch is walke
 });
 
 test("R7 a hop the owner withholds from the viewer is not walked, and nothing in the answer counts or reveals it, visited included", () => {
-  const conns = [conn("part_of", A, B, { id: "open" }), conn("part_of", A, C, { id: "fenced", seen_by: ["carol"] }), conn("part_of", C, D, { id: "behind" })];
+  const conns = [conn("line:part_of", A, B, { id: "open" }), conn("line:part_of", A, C, { id: "fenced", seen_by: ["carol"] }), conn("line:part_of", C, D, { id: "behind" })];
   const { x } = make(conns);
   const alice = ask(x), carol = ask(x, { viewer: "carol" });
   assert.deepEqual(alice.paths.map(ids), ["open"]);
@@ -221,7 +221,7 @@ test("R7 a hop the owner withholds from the viewer is not walked, and nothing in
 
 test("R8 an answer with no path states its level in observation-log's vocabulary, how far it searched, and what owners hold as tables not read", () => {
   const unread = { [A]: [{ what: "a payroll table", why: "held as a table, not read" }] };
-  const { x } = make([conn("part_of", B, C)], { opts: { money: { unread } } });
+  const { x } = make([conn("line:part_of", B, C)], { opts: { money: { unread } } });
   const r = ask(x, { to: D, depth: 3 });
   assert.deepEqual(r.paths, []);
   assert.equal(r.absence.level, "meaning");
@@ -233,7 +233,7 @@ test("R8 an answer with no path states its level in observation-log's vocabulary
   assert.deepEqual(r.absence.unread, [{ owner: "money", node: A, what: "a payroll table", why: "held as a table, not read" }]);
   // A walk that was cut short cannot say the path is not there.
   const hub = [];
-  for (let i = 0; i < 1001; i++) hub.push(conn("seat_on", ent(3000 + i), A));
+  for (let i = 0; i < 1001; i++) hub.push(conn("line:seat_on", ent(3000 + i), A));
   const cut = ask(make(hub).x, { to: D });
   assert.equal(cut.absence.state, "LOOKED_INDETERMINATE");
   assert.equal(cut.complete, false);
@@ -272,7 +272,7 @@ test("R16 no answer states two nodes connected beyond the cited hops, and no out
 });
 
 test("R17 a constitutive relation is walked only as a declared hop: it never resolves a reference or carries a grade of its own", () => {
-  const { x } = make([conn("proxy_for", A, B, { id: "proxy" }), conn("part_of", B, C, { id: "line", grade: { assertion: "A", ends: ["A", "A"] } })]);
+  const { x } = make([conn("proxy_for", A, B, { id: "proxy" }), conn("line:part_of", B, C, { id: "line", grade: { assertion: "A", ends: ["A", "A"] } })]);
   const r = ask(x);
   const p = r.paths.find((q) => ids(q) === "proxy>line");
   assert.deepEqual(p.grade, { assertion: LOWEST_GRADE, end: LOWEST_GRADE }, "the declared hop gives the lowest grade, not the line's A");

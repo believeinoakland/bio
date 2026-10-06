@@ -29,29 +29,29 @@ function build({ votesPerYear }) {
   const VOTE = evt(1), AWARD = evt(2);
   conns.push(conn("contribution", DONOR, COMMITTEE, { id: "chain-1", valid: once("2025-02-03") }));
   conns.push(conn("contribution", COMMITTEE, MEMBER, { id: "chain-2", valid: once("2025-02-10") }));
-  conns.push(conn("took_part_voted", MEMBER, VOTE, { id: "chain-3", valid: once("2025-05-06") }));
-  conns.push(conn("authorises", VOTE, AWARD, { id: "chain-4", valid: once("2025-05-06") }));
-  conns.push(conn("concerns", AWARD, CONTRACT, { id: "chain-5", valid: once("2025-05-20") }));
-  conns.push(conn("contracts_with", CONTRACT, VENDOR, { id: "chain-6", valid: valid("2025-06-01", "2027-05-31") }));
+  conns.push(conn("event_voted", MEMBER, VOTE, { id: "chain-3", valid: once("2025-05-06") }));
+  conns.push(conn("event_authorises", VOTE, AWARD, { id: "chain-4", valid: once("2025-05-06") }));
+  conns.push(conn("event_concerns", AWARD, CONTRACT, { id: "chain-5", valid: once("2025-05-20") }));
+  conns.push(conn("line:contracts_with", CONTRACT, VENDOR, { id: "chain-6", valid: valid("2025-06-01", "2027-05-31") }));
   conns.push(conn("payment", FUND, VENDOR, { id: "chain-7", valid: once("2025-09-30") }));
   // Lines: about 30,000 among people and organisations, the employer's 5,000 among them.
-  for (let i = 0; i < 5000; i++) conns.push(conn("holds_employee", person(i), EMPLOYER, { valid: valid("2020-01-01", null) }));
-  const LINE_KINDS = ["holds_employee", "belongs_to", "seat_on", "educated_at", "part_of", "reports_to", "contracts_with"];
+  for (let i = 0; i < 5000; i++) conns.push(conn("line:holds:employee", person(i), EMPLOYER, { valid: valid("2020-01-01", null) }));
+  const LINE_KINDS = ["line:holds:employee", "line:belongs_to", "line:seat_on", "line:educated_at", "line:part_of", "line:reports_to", "line:contracts_with"];
   for (let i = 0; i < 25000; i++) {
     const k = LINE_KINDS[Math.floor(r() * LINE_KINDS.length)];
-    const from = k === "part_of" || k === "reports_to" || k === "contracts_with" ? org(Math.floor(r() * ORGS)) : person(Math.floor(r() * PEOPLE));
+    const from = k === "line:part_of" || k === "line:reports_to" || k === "line:contracts_with" ? org(Math.floor(r() * ORGS)) : person(Math.floor(r() * PEOPLE));
     conns.push(conn(k, from, org(Math.floor(r() * ORGS)), { valid: valid(`20${10 + Math.floor(r() * 15)}-01-01`, r() < 0.3 ? null : "2030-01-01") }));
   }
   // Events: 32,000 in the year, each with two or three participants and what it concerns; votes by the council.
   const council = [MEMBER, ...Array.from({ length: 6 }, (_, i) => ent(100 + i))];
   for (let i = 0; i < 32000; i++) {
     const e = evt(1000 + i), d = once(day(r));
-    for (let j = 0; j < 2 + Math.floor(r() * 2); j++) conns.push(conn("took_part_decider", person(Math.floor(r() * PEOPLE)), e, { valid: d }));
-    conns.push(conn("concerns", e, org(Math.floor(r() * ORGS)), { valid: d }));
+    for (let j = 0; j < 2 + Math.floor(r() * 2); j++) conns.push(conn("event_decider", person(Math.floor(r() * PEOPLE)), e, { valid: d }));
+    conns.push(conn("event_concerns", e, org(Math.floor(r() * ORGS)), { valid: d }));
   }
   for (let i = 0; i < votesPerYear; i++) {
     const e = evt(100000 + i), d = once(day(r));
-    for (const m of council) conns.push(conn("took_part_voted", m, e, { valid: d }));
+    for (const m of council) conns.push(conn("event_voted", m, e, { valid: d }));
   }
   // Money: the city-wide fund pays 2,000 vendors; small contributions among people and committees.
   for (let i = 0; i < 2000; i++) conns.push(conn("payment", FUND, org(i), { valid: once(day(r)), quantities: { amount: Math.floor(r() * 1e6) } }));

@@ -20,13 +20,13 @@ export const dut = (n) => `DUT-2026-${String(n).padStart(4, "0")}`;
 /** The fixture owners' kinds, with the members' words and classes (connection-grammar R2). */
 export const OWNER_KINDS = {
   lines: [
-    ["part_of", "part of"], ["reports_to", "reports to"], ["oversees", "oversees"], ["appoints", "appoints"], ["funds", "funds"],
-    ["holds_elected", "holds, elected"], ["holds_employee", "holds, employee"], ["seat_on", "seat on"], ["belongs_to", "belongs to"],
-    ["educated_at", "educated at"], ["contracts_with", "contracts with"],
+    ["line:part_of", "part of"], ["line:reports_to", "reports to"], ["line:oversees", "oversees"], ["line:appoints", "appoints"], ["line:funds", "funds"],
+    ["line:holds:elected", "holds, elected"], ["line:holds:employee", "holds, employee"], ["line:seat_on", "seat on"], ["line:belongs_to", "belongs to"],
+    ["line:educated_at", "educated at"], ["line:contracts_with", "contracts with"],
   ].map(([kind, word]) => ({ kind, word, class: "evidentiary" })),
   events: [
-    ["took_part_voted", "took part, voted"], ["took_part_decider", "took part, decided"], ["concerns", "concerns"],
-    ["authorises", "authorises"], ["answers", "answers"], ["amends", "amends"], ["reverses", "reverses"], ["stated_cause", "stated cause"], ["within", "within"],
+    ["event_voted", "took part, voted"], ["event_decider", "took part, decided"], ["event_concerns", "concerns"],
+    ["event_authorises", "authorises"], ["event_answers", "answers"], ["event_amends", "amends"], ["event_reverses", "reverses"], ["event_stated_cause", "stated cause"], ["event_within", "within"],
   ].map(([kind, word]) => ({ kind, word, class: "evidentiary" })),
   money: [["contribution", "gave money to"], ["payment", "paid"]].map(([kind, word]) => ({ kind, word, class: "evidentiary" })),
   duties: [

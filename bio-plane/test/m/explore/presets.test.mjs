@@ -14,9 +14,9 @@ test("R10 presets() answers each preset by name with its kind set as registered;
   const { x, registry } = make([]);
   const p = Object.fromEntries(x.presets().map((e) => [e.name, e]));
   assert.deepEqual(Object.keys(p), ["chain", "flowsFrom", "relationsOf", "pathBetween", "overlaps"]);
-  assert.deepEqual(p.chain.kinds, ["part_of", "reports_to", "oversees", "appoints", "funds", "holds_power"]);
+  assert.deepEqual(p.chain.kinds, ["line:part_of", "line:reports_to", "line:oversees", "line:appoints", "line:funds", "holds_power"]);
   assert.deepEqual(p.flowsFrom.kinds, ["contribution", "payment"]);
-  assert.deepEqual(p.relationsOf.kinds, ["authorises", "answers", "amends", "reverses", "stated_cause", "within"]);
+  assert.deepEqual(p.relationsOf.kinds, ["event_authorises", "event_answers", "event_amends", "event_reverses", "event_stated_cause", "event_within"]);
   const every = Object.values(OWNER_KINDS).flat().map((k) => k.kind);
   assert.deepEqual(p.pathBetween.kinds, every);
   // A money kind registered later by another registry's money owner joins flowsFrom; on an empty registry each set is empty.
@@ -31,9 +31,9 @@ test("R10 presets() answers each preset by name with its kind set as registered;
 test("R10 R15 each preset is the one walk over its set: chain, flowsFrom (payer to payee), relationsOf and pathBetween answer what explore answers over the same kinds", () => {
   const A = ent(1), B = ent(2), C = ent(3), D = ent(4), E1 = evt(1), E2 = evt(2);
   const conns = [
-    conn("part_of", A, B, { id: "org" }), conn("holds_power", B, "DUT-2026-0001", { id: "power" }), conn("seat_on", A, C, { id: "seat" }),
+    conn("line:part_of", A, B, { id: "org" }), conn("holds_power", B, "DUT-2026-0001", { id: "power" }), conn("line:seat_on", A, C, { id: "seat" }),
     conn("contribution", D, A, { id: "gift" }), conn("payment", A, C, { id: "pay" }), conn("payment", C, B, { id: "pay2" }),
-    conn("authorises", E1, E2, { id: "auth" }), conn("took_part_voted", A, E1, { id: "vote" }),
+    conn("event_authorises", E1, E2, { id: "auth" }), conn("event_voted", A, E1, { id: "vote" }),
   ];
   const { x } = make(conns);
   const kindsOf = (name) => x.presets().find((p) => p.name === name).kinds;
@@ -62,16 +62,16 @@ test("R10 R15 each preset is the one walk over its set: chain, flowsFrom (payer 
 test("R11 overlaps: each record both reach in one step of the same kind whose validities meet at the date or in the period, three-valued, with both steps, the shared span and the size of the shared set; never stated as acquaintance", () => {
   const P = ent(1), Q = ent(2), BOARD = ent(10), SCHOOL = ent(11), FIRM = ent(12), OTHER = ent(13);
   const conns = [
-    conn("seat_on", P, BOARD, { id: "p-board", valid: valid("2020-01-01", "2027-01-01") }),
-    conn("seat_on", Q, BOARD, { id: "q-board", valid: valid("2024-06-01", "2026-12-31") }),
-    conn("seat_on", ent(20), BOARD, { id: "r-board", valid: valid("2025-01-01", "2026-06-01") }),
-    conn("seat_on", ent(21), BOARD, { id: "s-board", valid: valid("2010-01-01", "2012-01-01") }),
-    conn("seat_on", ent(22), BOARD, { id: "t-board", valid: valid("2025-01-01", null) }),
-    conn("educated_at", P, SCHOOL, { id: "p-school", valid: valid("1990-01-01", "1994-06-01") }),
-    conn("educated_at", Q, SCHOOL, { id: "q-school", valid: valid("2001-01-01", "2005-06-01") }),
-    conn("holds_employee", P, FIRM, { id: "p-firm", valid: valid("2025-01-01", null) }),
-    conn("holds_employee", Q, FIRM, { id: "q-firm", valid: valid("2024-01-01", "2027-01-01") }),
-    conn("seat_on", P, OTHER, { id: "p-other" }), conn("belongs_to", Q, OTHER, { id: "q-other" }),
+    conn("line:seat_on", P, BOARD, { id: "p-board", valid: valid("2020-01-01", "2027-01-01") }),
+    conn("line:seat_on", Q, BOARD, { id: "q-board", valid: valid("2024-06-01", "2026-12-31") }),
+    conn("line:seat_on", ent(20), BOARD, { id: "r-board", valid: valid("2025-01-01", "2026-06-01") }),
+    conn("line:seat_on", ent(21), BOARD, { id: "s-board", valid: valid("2010-01-01", "2012-01-01") }),
+    conn("line:seat_on", ent(22), BOARD, { id: "t-board", valid: valid("2025-01-01", null) }),
+    conn("line:educated_at", P, SCHOOL, { id: "p-school", valid: valid("1990-01-01", "1994-06-01") }),
+    conn("line:educated_at", Q, SCHOOL, { id: "q-school", valid: valid("2001-01-01", "2005-06-01") }),
+    conn("line:holds:employee", P, FIRM, { id: "p-firm", valid: valid("2025-01-01", null) }),
+    conn("line:holds:employee", Q, FIRM, { id: "q-firm", valid: valid("2024-01-01", "2027-01-01") }),
+    conn("line:seat_on", P, OTHER, { id: "p-other" }), conn("line:belongs_to", Q, OTHER, { id: "q-other" }),
   ];
   const { x } = make(conns);
   const r = x.overlaps({ a: P, b: Q, at: AT, viewer: V });
@@ -80,7 +80,7 @@ test("R11 overlaps: each record both reach in one step of the same kind whose va
   assert.deepEqual(Object.keys(by).sort(), [BOARD, FIRM].sort(), "a different kind to the same record is no overlap; the school years never met");
   const b = by[BOARD];
   assert.deepEqual(b.hops.map((h) => h.id), ["p-board", "q-board"]);
-  assert.equal(b.kind, "seat_on");
+  assert.equal(b.kind, "line:seat_on");
   assert.equal(b.intersection.holds, "in");
   assert.equal(b.intersection.from, "2024-06-01T07:00:00Z");
   assert.equal(b.intersection.to, "2027-01-01T08:00:00Z");
@@ -93,7 +93,7 @@ test("R11 overlaps: each record both reach in one step of the same kind whose va
   assert.ok(!school.overlaps.some((o) => o.node === SCHOOL), "two spans in one period that never meet are no overlap");
   assert.deepEqual(school.period, { value: "1990/2010", precision: "edtf", zone: ZONE });
   // Kinds limit what is compared.
-  assert.deepEqual(x.overlaps({ a: P, b: Q, at: AT, viewer: V, kinds: ["holds_employee"] }).overlaps.map((o) => o.node), [FIRM]);
+  assert.deepEqual(x.overlaps({ a: P, b: Q, at: AT, viewer: V, kinds: ["line:holds:employee"] }).overlaps.map((o) => o.node), [FIRM]);
   // Refusals.
   assert.equal(x.overlaps({ a: P, b: Q, at: AT }).refused, "VIEWER_MISSING");
   assert.equal(x.overlaps({ a: P, at: AT, viewer: V }).refused, "NO_NODE");
@@ -106,8 +106,8 @@ test("R11 overlaps: each record both reach in one step of the same kind whose va
 
 test("R11 R5 an overlap at a hub names the hub as too common to walk, with its set size", () => {
   const P = ent(1), Q = ent(2), BIG = ent(50);
-  const conns = [conn("holds_employee", P, BIG, { id: "p" }), conn("holds_employee", Q, BIG, { id: "q" })];
-  for (let i = 0; i < 1001; i++) conns.push(conn("holds_employee", ent(5000 + i), BIG));
+  const conns = [conn("line:holds:employee", P, BIG, { id: "p" }), conn("line:holds:employee", Q, BIG, { id: "q" })];
+  for (let i = 0; i < 1001; i++) conns.push(conn("line:holds:employee", ent(5000 + i), BIG));
   const r = make(conns).x.overlaps({ a: P, b: Q, at: AT, viewer: V });
   assert.equal(r.overlaps.length, 1);
   const o = r.overlaps[0];
@@ -121,7 +121,7 @@ test("R11 R5 an overlap at a hub names the hub as too common to walk, with its s
 
 test("R11 R7 an overlap through a step the viewer may not see is not answered or counted", () => {
   const P = ent(1), Q = ent(2), BOARD = ent(10);
-  const conns = [conn("seat_on", P, BOARD), conn("seat_on", Q, BOARD, { seen_by: ["carol"] }), conn("seat_on", ent(3), BOARD, { seen_by: ["carol"] }), conn("seat_on", ent(4), BOARD)];
+  const conns = [conn("line:seat_on", P, BOARD), conn("line:seat_on", Q, BOARD, { seen_by: ["carol"] }), conn("line:seat_on", ent(3), BOARD, { seen_by: ["carol"] }), conn("line:seat_on", ent(4), BOARD)];
   const { x } = make(conns);
   assert.deepEqual(x.overlaps({ a: P, b: Q, at: AT, viewer: V }).overlaps, []);
   const carol = x.overlaps({ a: P, b: Q, at: AT, viewer: "carol" });
