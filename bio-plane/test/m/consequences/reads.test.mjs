@@ -44,11 +44,11 @@ test("R7: every live part, totals only within one state, unit and currency, labe
   }
   const t = Object.fromEntries(r.totals.map((x) => [`${x.state}/${x.unit}/${x.currency}`, x]));
   assert.deepEqual(Object.keys(t).sort(), ["assessed/count/null", "assessed/money/USD", "computed/money/EUR", "computed/money/USD"]);
-  assert.deepEqual([t["computed/money/USD"].value, t["computed/money/USD"].parts.sort()], [3500, [c1, c2].sort()]);
-  assert.deepEqual([t["computed/money/EUR"].value, t["computed/money/EUR"].parts], [1000, [c3]]);
-  assert.deepEqual(t["assessed/money/USD"].range, { low: 500, high: 700 }, "a value and a range add as a range");
+  assert.deepEqual([t["computed/money/USD"].value, t["computed/money/USD"].parts.sort()], ["3500", [c1, c2].sort()]);
+  assert.deepEqual([t["computed/money/EUR"].value, t["computed/money/EUR"].parts], ["1000", [c3]]);
+  assert.deepEqual(t["assessed/money/USD"].range, { low: "500", high: "700" }, "a value and a range add as a range");
   assert.deepEqual(t["assessed/money/USD"].parts.sort(), [a1, a2].sort());
-  assert.deepEqual([t["assessed/count/null"].value, t["assessed/count/null"].parts.sort()], [35, [a3, other].sort()]);
+  assert.deepEqual([t["assessed/count/null"].value, t["assessed/count/null"].parts.sort()], ["35", [a3, other].sort()]);
   for (const x of r.totals) assert.match(x.says, /never added to parts in another state, unit or currency/);
   assert.deepEqual(r.undetermined, [u1]);
   assert.deepEqual(r.unproven.sort(), r.parts.map((p) => p.id).sort());
@@ -64,6 +64,27 @@ test("R7: every live part, totals only within one state, unit and currency, labe
   /* A superseded determination's parts stay readable. */
   w.determinations.get(w.D).superseded_by = "CONF-2026-0003-next";
   assert.equal(w.c.consequencesOf({ determination: w.D, viewer: V("alice") }).parts.length, 8);
+});
+
+test("R7: totals are calc-grammar's exact sums (0.1 + 0.2 is 0.3), and a part recorded before T33 with numbers reads as exact decimals", () => {
+  const w = setup();
+  const a = w.part({ unit: "time", value: 0.1 }, { rationale: "r" });
+  const b = w.part({ unit: "time", value: "0.2" }, { rationale: "r" });
+  const t = w.c.consequencesOf({ determination: w.D, viewer: V("alice") }).totals;
+  assert.deepEqual(t.map((x) => [x.state, x.unit, x.value, x.parts.sort()]), [["assessed", "time", "0.3", [a, b].sort()]]);
+  /* A row recorded before T33 held its values as JSON numbers (and its operands' as floats); it is never rewritten
+     (R6, R13), and every read answers its values as the exact decimals of their shortest form. */
+  const cut = w.figure("INFO-2026-0009-old", "Cut 1,000.5");
+  const old = w.part({ unit: "money" }, { op: "sum", operands: [{ content: cut, figure: "1,000.5" }] });
+  w.st.sql.exec(`UPDATE consequence_parts SET measure=?, value=? WHERE bundle_id=?`,
+                JSON.stringify({ unit: "money", value: 1000.5 }), JSON.stringify({ value: 1000.5 }), old);
+  w.st.sql.exec(`UPDATE consequence_operands SET kind=NULL, exact=NULL, number=? WHERE part_id=?`, 1000.5, old);
+  w.st.sql.exec(`UPDATE consequence_parts SET measure=? WHERE bundle_id=?`, JSON.stringify({ unit: "time", range: { low: 0.1, high: 2 } }), b);
+  const p = w.c.consequenceRead({ id: old, viewer: V("alice") }).part;
+  assert.deepEqual([p.measure.value, p.computation.operands.map((o) => [o.kind, o.content, o.value])], ["1000.5", [["content", cut, "1000.5"]]]);
+  const again = w.c.consequencesOf({ determination: w.D, viewer: V("alice") }).totals;
+  assert.deepEqual(again.map((x) => [x.state, x.unit, x.range ?? x.value]).sort(),
+                   [["assessed", "time", { low: "0.2", high: "2.1" }], ["computed", "money", "1000.5"]]);
 });
 
 test("R8: a newer capture that does not carry an operand's passage flags the part basis_changed; nothing is recomputed", () => {
