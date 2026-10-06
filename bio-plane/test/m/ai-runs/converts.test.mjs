@@ -83,7 +83,7 @@ test("R16, R18 (convert d260-resume): each withheld resumption's wake entry says
   const wakes = Object.fromEntries(a1.wakes.map((x) => [x.run, x]));
   assert.deepEqual([a1.woken, a1.dispatched, calls.length], [3, 1, 1], "one dispatch over three woken runs, one call at the binding");
   assert.deepEqual([calls[0].method, new URL(calls[0].url).pathname, calls[0].body.run_id, calls[0].body.store], ["POST", "/run", "INST", "bio"]);
-  assert.deepEqual(Object.keys(calls[0].body.claude_accounts), ["instance"]);
+  assert.deepEqual(Object.keys(calls[0].body), ["run_id", "store", "credential", "account"], "no instance Claude account (K1514)");
   assert.deepEqual([wakes.MEM.resume, wakes.OTHER.resume, wakes.INST.resume, wakes.INST.dispatch.state],
                    ["MEMBER_PRINCIPAL_RUN", "NOT_THE_INSTANCE_CREDENTIALS_RUN", "DISPATCH", "DISPATCHED"]);
   const wakeEntry = (run) => logOf(w, run).find((e) => /the daemon answered/.test(e.detail));
@@ -108,7 +108,7 @@ test("R16, R18 (convert d260-resume): each withheld resumption's wake entry says
   assert.match(logOf(u)[0].detail, /Resumption: NOT dispatched — the instance cannot resume anything here \(AGENT_WORKER_UNBOUND\)\./);
   /* a dispatch agent-worker refuses carries its code, in the answer and in the run's own last entry */
   answer = { status: 409, body: { ok: false, reason: "RUN_NAMES_A_DIFFERENT_PAYER" } };
-  await w.runs.open(OPEN({ run: "PAYER", principalPlane: stamp, principalClaude: "project" }));
+  await w.runs.open(OPEN({ run: "PAYER", principalPlane: stamp }));
   reqs.PAYER = [{ request: "q4", state: "captured" }];
   const a3 = await w.runs.wake(at("00:00:30"));
   const p = a3.wakes.find((x) => x.run === "PAYER");

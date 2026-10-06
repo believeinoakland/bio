@@ -1,7 +1,8 @@
-/* ai-runs' tables (R38; Bob's ruling 3, "each module owns its tables"), moved from `schema.mjs` at the module's
- * extraction. `lens_at_open`, `rerun_of` and `plan` (R46) are additive columns of the store's migration; they are part of the
+/* ai-runs' tables (R38, R49, R50, R53; Bob's ruling 3, "each module owns its tables"), moved from `schema.mjs` at the
+ * module's extraction; `ai_usage` and `ai_ceilings` added by T33-50. `lens_at_open`, `rerun_of` and `plan` (R46) are additive columns of the store's migration; they are part of the
  * table here, and `migrate` adds them to a table created before them. */
-export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"]);
+export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings", "ai_usage", "ai_ceilings",
+  "ai_mode_verifications"]);
 
 export const AI_RUNS_SCHEMA = `
 
@@ -23,10 +24,11 @@ export const AI_RUNS_SCHEMA = `
 -- the plane credential as the control plane stamps it ('member:<id>' for a
 -- member, '/<tokenId>' added for a member's AI credential; 'class:<cls>' for a
 -- machine, '/<tokenId>' added for an AI credential); 'principal_claude' is
--- WHICH LEVEL of the Claude-account cascade paid — member, then project, then
--- instance. They are two different principals and an act must say both. NEITHER
--- IS EVER A TOKEN VALUE: 'principal_claude_ref' is a label the operator
--- configured, not a secret, and nothing in the plane writes a credential here.
+-- the member whose own Claude account carries the run, 'member:<id>' (R52, K1502,
+-- K1503: there is no group, project or instance account). They are two different
+-- principals and an act must say both. NEITHER IS EVER A TOKEN VALUE:
+-- 'principal_claude_ref' is a label, not a secret, and nothing in the plane writes
+-- a credential here.
 --
 -- NO TRANSCRIPT COLUMN, AND THAT IS DEC-61 (Bob, 2026-08-06). The model's
 -- reasoning is DEVICE-LOCAL, TTL'd and deleted at publication, and never in the
@@ -95,5 +97,47 @@ CREATE TABLE IF NOT EXISTS inquiry_run_surfacings (
   run        TEXT NOT NULL,
   principal  TEXT NOT NULL,
   at         TEXT NOT NULL
+);
+
+-- R48, R49 (T33-50; K1450): THE USE COUNTER, one row per member, per local day (civil-time's localDay in the group's
+-- time zone) and per mode: the sums of each model call's figures and a count of calls. It is not a run row and not an
+-- observation row, and it holds no question, answer, address or content: a member id, a day, a mode and numbers.
+-- Cost is summed in millionths of a dollar so the sum is exact. A figure the provider did not state adds nothing and is
+-- counted in 'tokens_unstated' / 'cost_unstated' (calls with a token figure, or the cost, unstated), never as 0.
+CREATE TABLE IF NOT EXISTS ai_usage (
+  member                       TEXT NOT NULL,
+  day                          TEXT NOT NULL,
+  mode                         TEXT NOT NULL,
+  calls                        INTEGER NOT NULL DEFAULT 0,
+  input_tokens                 INTEGER NOT NULL DEFAULT 0,
+  output_tokens                INTEGER NOT NULL DEFAULT 0,
+  cache_read_input_tokens      INTEGER NOT NULL DEFAULT 0,
+  cache_creation_input_tokens  INTEGER NOT NULL DEFAULT 0,
+  cost_micro_usd               INTEGER NOT NULL DEFAULT 0,
+  tokens_unstated              INTEGER NOT NULL DEFAULT 0,
+  cost_unstated                INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (member, day, mode)
+);
+
+-- R50 (K1450, K1502): THE CEILINGS. 'holder' is 'member:<id>' for a member's own daily ceiling, set by that member's own
+-- act, or 'copy' for the lower one an administrator sets for the copy's own load. A NULL figure is no ceiling of that
+-- figure at that holder (a member's then falls back to the provisional default).
+CREATE TABLE IF NOT EXISTS ai_ceilings (
+  holder  TEXT PRIMARY KEY,
+  tokens  INTEGER,
+  calls   INTEGER,
+  set_by  TEXT NOT NULL,
+  set_at  TEXT NOT NULL
+);
+
+-- K1606 (run-rules R19; VF-4): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED, by a member, with what they saw.
+-- Append-only: the chain that lets the next mode deploy is read from these rows, never from a parameter.
+CREATE TABLE IF NOT EXISTS ai_mode_verifications (
+  mode         TEXT NOT NULL,
+  run          TEXT NOT NULL,
+  verified_by  TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  evidence     TEXT NOT NULL,
+  PRIMARY KEY (mode, run)
 );
 `;
