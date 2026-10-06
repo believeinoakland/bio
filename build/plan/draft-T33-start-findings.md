@@ -9,3 +9,4 @@
 - **op-declarations, control-plane (L11)** (K1544): route credentials' 8 new ops and call `aiGrantAdmit` for a presented grant.
 - **agent-model, ai-runs, agent-worker** (K1544): read the member's reference through credentials' `accountReferenceFor`.
 - **case-authoring (T33-69) and case-disclosures (T33-68), L8** (K1545, from RECORD-CORE #16 J2): case-authoring R30 (`invariants.test.mjs:124`) and case-disclosures R21 (`seam.test.mjs:93`) scrape `covers: [...]` from the profiles' source and so read jurisdictions' new rule field `covers: ["home_address", "other"]` (R56, merged in L1) as a place; red since jurisdictions' L1 merge. Read the places the profiles cover through jurisdictions' interface (a loaded profile's `covers`), not source text (P7).
+- **affordances** (K1549, from SOURCES #11 J1): grade the new op `sourcekeyed` (affordances R40).
