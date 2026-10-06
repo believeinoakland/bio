@@ -2,13 +2,13 @@
    that moved here (R29), no place named (R30), and the ops that route to the module (K3). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
 import { world, V, AUTHORED } from "./fixture.mjs";
 import { caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
          CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES }
   from "../../../src/case-authoring/index.mjs";
 import * as CHECKS from "../../../src/case-authoring/checks.mjs";
 import * as DISCLOSURES from "../../../src/case-disclosures/index.mjs";
+import { list as listProfiles } from "../../../../jurisdictions/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 
@@ -122,17 +122,14 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
 });
 
 test("R30: no place is named in this module's behaviour or outward text — every document, answer and refusal it writes, and every row's words, name no place a jurisdiction profile covers", () => {
-  /* the places the profiles cover, read from the profiles' own data */
-  const dir = new URL("../../../../jurisdictions/profiles/", import.meta.url);
+  /* the places the profiles cover, read through jurisdictions' interface (its R1: each held profile's `covers`), never
+     scraped from the profiles' source, where other fields also hold `covers:` lists (K1545) */
   const places = new Set();
-  for (const f of readdirSync(dir)) {
-    const text = readFileSync(new URL(f, dir), "utf8");
-    for (const m of text.matchAll(/covers:\s*\[([^\]]*)\]/g))
-      for (const q of m[1].matchAll(/"([^"]+)"/g)) {
-        places.add(q[1]);
-        places.add(q[1].replace(/^(City|Town|County) of /, "").replace(/ (County|City)$/, ""));
-      }
-  }
+  for (const p of listProfiles())
+    for (const c of p.covers) {
+      places.add(c);
+      places.add(c.replace(/^(City|Town|County) of /, "").replace(/ (County|City)$/, ""));
+    }
   assert.ok(places.size >= 4, "the profiles name places");
   const { w, P } = setup();
   w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "bo" });
