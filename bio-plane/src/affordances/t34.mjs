@@ -55,7 +55,6 @@ export const T34_NON_ACTS = {
   joinlinkoff: ROSTER_DOOR("the join link, an administrator's"),
   courtnoticeset: "the group's setting: whether members are told what a court can reach; an administrator's, not an act on an object",
   groupdescriptionset: "the group's description of itself — the subject is the group's identity, not a bundle; an administrator's",
-  courtnotice: R("the group's court-notice setting and its history"),
   checkrequest: "check-directed: keyed by a held object and its addressees, reached from the object; writes tasks' rows and moves no bundle",
   checktake: "check-directed: keyed by a check request, reached from the member's To do; writes tasks' rows and moves no bundle",
   checkrecord: "check-directed: keyed by a check request its taker holds; a check, or a concern with its reason, appended once",
