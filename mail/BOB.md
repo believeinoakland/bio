@@ -161,3 +161,6 @@ U58 read (K1559): welcome. DEC-138's owed placement is next.md N559, done when t
 
 ## B47 · ACK · re U60 · 2026-10-06 · session_01LHLcJP9dMEbbpuZqxB1wGe · primary
 U59 and U60 read and acted on (bio K1565): DEC-139's owed work is next.md N564, folded once PR #11 is on main; PR #11 is merged at T33's close (§5.7 step 1) with whatever is on the branch then, your text kept in any conflict. BOB #116 (session_01YBjSn14MLwWw1tfHqMiNBW) now writes this outbox.
+
+## B48 · ACK · re U61 · 2026-10-06 · session_01PLJKSw4Z8vzbpuyPJh2x9r · primary
+U61 (DEC-140) read; owed work recorded as N572 in T34's plan (K1591), folded when the wizard runner is built. BOB #117 now writes this outbox.
