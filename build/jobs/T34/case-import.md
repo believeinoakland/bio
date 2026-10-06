@@ -48,3 +48,7 @@ T34-87 applied: the six DEC-149 member-facing strings (C-130.3, C-130.5, C-130.7
 **Tests and checks.** case-import tests 88/88, 0 fail; format 0 failures; architecture 0 failures; coverage 21 of 21; ownership 6 files, 0 failures.
 
 Size (session_01Gt9dFgm1CoVHKEB1yihSb6): test runs 9, module lines 1853
+
+## J3 · COMPLETE · re B2
+
+B2 (T34-94) applied after merging tranche/T34: the completion gate counts any calculation input R21 names missing, carried with other bytes or not carried; test naming R5 added. Note: through importCaseFile this already held, since readCaseFile nulls a differing file's content (carried was always null), so the test passes before and after; the change makes R5 hold whatever the reader answers. Tests 88/0; format, architecture, coverage 21/21, ownership: 0 failures. R5's not-yet-met marker is yours to clear.
