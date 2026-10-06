@@ -22,10 +22,11 @@
  */
 import "../stdio.mjs";
 import "../sandbox.mjs";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resolveVersion, versionSites } from "../../scripts/resolve-version.mjs";
+import { REPO_ROOT, discoverMembers } from "../../scripts/fleet-bundle.mjs";
 
 let pass = 0, fail = 0;
 const t = (name, got, want) => {
@@ -137,8 +138,19 @@ try {
        walk cannot see. Move it WITH the fleet, in the same turn.
        MOVED 2026-10-05 by BUNDLER #7 (T33-18a, K1531): 8 -> 10, the fleet's fourth
        member (`sheet-worker`, T33-18), by the same rule. */
-    t("ARM 7b: and the live tree declares the plane and all FOUR members (10 sites)",
-      versionSites().length, 10);
+    /* MOVED 2026-10-06 by BUNDLER #8 (T34-6; K1708): 10 -> 11, the fleet's fifth member (`agent-runner`, a container
+       member, bundler R24), which declares its version in its package.json and has no Worker config yet. The count
+       stays a FLOOR moved only upward, and the per-directory arm below says which site is owed: every discovered
+       member's package.json version and, where it has a wrangler.jsonc, its vars.VERSION — so the container's Worker
+       config (T34-74) adds its twelfth site without this arm having to guess it in advance. */
+    const sites = versionSites();
+    t("ARM 7b: and the live tree declares the plane and all FIVE members (at least 11 sites)",
+      sites.length >= 11, true);
+    const owed = ["bio-plane", ...discoverMembers().map((m) => m.dir)].flatMap((d) => [
+      ...(existsSync(join(REPO_ROOT, d, "package.json")) ? [`${d}/package.json`] : []),
+      ...(existsSync(join(REPO_ROOT, d, "wrangler.jsonc")) ? [`${d}/wrangler.jsonc`] : [])]);
+    t("ARM 7c: every member directory's package.json and wrangler.jsonc is a version site — none declares no version",
+      sites.map((s) => s.file).sort(), owed.sort());
   }
 } finally {
   for (const r of roots) rmSync(r, { recursive: true, force: true });

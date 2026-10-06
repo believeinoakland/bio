@@ -68,7 +68,8 @@ export function lawProposalState(proposedBy) {
  * (action-plans R11), a prepared communication (filings R23; both N-A1, T18), wording proposed for a filing template
  * (filing-templates R6; K921, T21), a draft of a new edition's statement of what changed (case-authoring R39;
  * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23), and steps proposed
- * for a wizard script (wizard-scripts R5; N543, T32) are each machine work or a member's
+ * for a wizard script (wizard-scripts R5; N543, T32), and a law relation, court link or treatment (standards R23, R26,
+ * R27, R30; N568, T34) are each machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -175,6 +176,19 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'its author adopts them into a version, and the record holds who proposed it',
     unstated: 'the record does not say who proposed these steps for a wizard script, and they are not a script\'s steps '
       + 'until its author adopts them into a version',
+  }),
+  /* N568 (K1571; T34, R49): a law relation, a court link or a treatment proposed beside the record (standards R23, R26,
+     R27, R30) is not one the record holds until a member records it themselves, and a machine can propose one and never
+     record one (K1443). Before this subject, standards' `lawPropose` labelled through `standard`, whose sentences speak
+     of a standard and misnamed what was proposed. */
+  law_relation: Object.freeze({
+    machine_proposed: 'a machine credential proposed this law relation, court link or treatment. That is machine work, '
+      + 'labelled as machine work: it can propose one and it can never record one. It is not one the record holds until '
+      + 'a member records it themselves',
+    member_proposed: 'a member proposed this law relation, court link or treatment. It is a proposal and not one the '
+      + 'record holds until a member records it themselves, and the record holds who proposed it',
+    unstated: 'the record does not say who proposed this law relation, court link or treatment, and it is not one the '
+      + 'record holds until a member records it themselves',
   }),
 });
 

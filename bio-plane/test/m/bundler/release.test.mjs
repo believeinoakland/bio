@@ -19,7 +19,8 @@ import { fleetStatement, NS_FLEET, NS_RELEASE, verifySshsig } from "../../../src
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import { renderSignpage } from "../../../scripts/embed-signpage.mjs";
 import {
-  makeRepo, addMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig, VERSION, ACCOUNT, PLANE,
+  makeRepo, addMember, addContainerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig, VERSION,
+  ACCOUNT, PLANE, DIGEST,
 } from "./repo.mjs";
 
 const refused = (r, code) => {
@@ -562,13 +563,22 @@ function expectedPayload(root, version = VERSION) {
       const b = readFileSync(join(m.abs, p));
       return { path: p, type: p.endsWith(".bin") ? "Data" : "CompiledWasm", sha256: hex(b), bytes: b.length };
     });
+    /* R25: a container member's descriptor, written here from its marker's fields by hand. */
+    const mk = readJson(join(m.abs, "fleet-member.json"));
+    if (mk.kind === "container") {
+      const b = Buffer.from(JSON.stringify({ class_name: mk.class_name, image: `${mk.image.repository}@${mk.image.digest}`,
+        scheduling_policy: "default", max_instances: mk.max_instances, bind: mk.bind }, null, 2) + "\n");
+      parts.push({ path: "container.json", type: "Container", sha256: hex(b), bytes: b.length, buf: b });
+    }
     return { member: m.name, asset: `${m.name}.bundled.mjs`, sha256: hex(art(m)), bytes: art(m).length,
       compat: { date: cfg.compatibility_date, flags: cfg.compatibility_flags || [] },
       services: (cfg.services || []).map((s) => ({ binding: s.binding, service: s.service })), parts };
   });
   const p = art(lib.plane);
+  const bufs = Object.fromEntries(members.flatMap((m) => m.parts.filter((x) => x.buf).map((x) => [`${m.member}/${x.path}`, x.buf])));
+  for (const m of members) m.parts = m.parts.map(({ buf: _b, ...x }) => x);
   return { payload: fleetStatement({ version, plane: { sha256: hex(p), bytes: p.length, asset: "bio-plane.bundled.mjs" }, members }),
-    members, plane: { sha256: hex(p), bytes: p.length, buf: p } };
+    members, plane: { sha256: hex(p), bytes: p.length, buf: p }, bufs };
 }
 
 test("R22: a fresh fleet assembles; the payload is signatures' fleetStatement over the plane and every member; --emit-payload writes it; --dry-run writes nothing else", async () => {
@@ -715,5 +725,221 @@ test("R23: without --sign the fleet signature comes from --fleet-sig and the pla
     assert.equal(rel.version, VERSION);
     assert.ok(existsSync(join(root, "release/alpha-worker.bundled.mjs")));
     rmSync(sigFile);
+  } finally { rm(root); }
+});
+
+/* --------------------------------------------------------- R24, R25, R26 */
+
+test("R24: bundles.mjs surveys a container member with no Worker bundle as listed, not guarded, never stale; one with a bundle is surveyed like any member", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner", { bundle: false });
+    addContainerMember(root, "hosted");
+    await buildAll(root);
+    const r = bundles(root, ["--check"]);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /4 guarded bundle\(s\) — alpha-worker, beta-worker, bio-plane, hosted/);
+    assert.match(r.stdout, /1 container member\(s\) listed, not bundle-guarded \(no Worker bundle\) — runner/);
+    assert.doesNotMatch(r.stdout, /runner: declares no/);
+    const full = bundles(root);
+    assert.equal(full.status, 0, "and a rebuild run has nothing to rebuild and nothing it could not");
+    writeFileSync(join(root, "hosted/src/word.mjs"), 'export const word = "moved";\n');
+    const stale = bundles(root, ["--check"]);
+    assert.equal(stale.status, 1);
+    assert.match(stale.stdout, /1 of 4 bundle\(s\) are STALE — hosted/);
+  } finally { rm(root); }
+});
+
+test("R22: a worker member that declares no bundle block refuses NO_ARTIFACT, never drops out of the release", async () => {
+  const root = await makeRepo();
+  try {
+    const p = join(root, "alpha-worker/fleet-member.json");
+    const { bundle: _b, ...rest } = readJson(p);
+    writeJson(p, rest);
+    const before = snapshot(root);
+    const r = assemble(root, ["--dry-run"]);
+    refused(r, "NO_ARTIFACT");
+    assert.match(r.stderr, /alpha-worker is a fleet member and declares no `bundle` block/);
+    assert.deepEqual(snapshot(root), before);
+  } finally { rm(root); }
+});
+
+test("R25: a container member's container.json part (type Container, its marker's descriptor) is in the signed payload, written under <member>/container.json, and listed in RELEASE.json", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    await buildAll(root);
+    const { payload, members, bufs } = expectedPayload(root);
+    const runner = members.find((m) => m.member === "runner");
+    const part = runner.parts.find((x) => x.path === "container.json");
+    assert.equal(part.type, "Container");
+    assert.match(payload, new RegExp(`^member runner .* parts=container\\.json:Container:${part.sha256}:${part.bytes}$`, "m"));
+    assert.equal(JSON.parse(bufs["runner/container.json"]).image, `docker.io/civicos/runner@${DIGEST}`);
+
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.ok(dry.stdout.includes(payload), "the payload the fleet signature covers carries the descriptor's hash");
+    assert.equal(existsSync(join(root, "release/runner")), false, "--dry-run writes nothing");
+
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const rel = readJson(join(root, "release/RELEASE.json"));
+    assert.deepEqual(rel.fleet, members);
+    assert.ok(readFileSync(join(root, "release/runner/container.json")).equals(bufs["runner/container.json"]), "the exact bytes hashed");
+    assert.ok(readFileSync(join(root, "release/runner.bundled.mjs")).equals(readFileSync(join(root, "runner/dist/runner.bundled.mjs"))),
+      "its asset is its Worker bundle, like any member's");
+    assert.ok(sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+    assert.equal(existsSync(join(root, "runner/container.json")), false, "never written into the member's tree");
+  } finally { rm(root); }
+});
+
+test("R25: a container member with a Worker bundle whose marker lacks a field of the part, or states no digest in the pinned form, is refused CONTAINER_UNDESCRIBED naming the field, before anything is written", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    await buildAll(root);
+    const marker = join(root, "runner/fleet-member.json");
+    const good = readFileSync(marker);
+    const seed = envelope();
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer: signerPublicLine(seed) });
+    const cases = [
+      ["image.digest", (m) => { m.image.digest = null; }],
+      ["image.digest", (m) => { m.image.digest = "sha256:" + "ab".repeat(31); }],
+      ["image.repository", (m) => { delete m.image.repository; }],
+      ["image.schedulingPolicy", (m) => { m.image.schedulingPolicy = "regional"; }],
+      ["class_name", (m) => { delete m.class_name; }],
+      ["max_instances", (m) => { m.max_instances = 0; }],
+      ["bind", (m) => { m.bind = [{ member: "no-such-worker", binding: "RUNNER" }]; }],
+      ["class_name, max_instances", (m) => { delete m.class_name; delete m.max_instances; }],
+    ];
+    for (const [field, mutate] of cases) {
+      const m = JSON.parse(good);
+      mutate(m);
+      writeJson(marker, m);
+      const before = snapshot(root);
+      const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+      refused(r, "CONTAINER_UNDESCRIBED");
+      assert.ok(r.stderr.includes(`runner is a container member and its fleet-member.json does not state ${field}.`), `${field}:\n${r.stderr}`);
+      assert.doesNotMatch(r.stdout, /guard: /, `${field}: refused before any build ran`);
+      assert.deepEqual(snapshot(root), before, `${field}: nothing written`);
+    }
+    writeFileSync(marker, good);
+    assert.equal(assemble(root, ["--dry-run"]).status, 0, "restored, it assembles");
+  } finally { rm(root); }
+});
+
+test("R25: a container member that declares no Worker bundle is left out of the release by name (K1730), and the fleet signature covers only what ships", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner", { bundle: false, marker: { image: { repository: "docker.io/civicos/runner", digest: null } } });
+    await buildAll(root);
+    const { payload, members } = expectedPayload(root);
+    assert.deepEqual(members.map((m) => m.member), ["alpha-worker", "beta-worker"]);
+    const dry = assemble(root, ["--dry-run"]);
+    assert.equal(dry.status, 0, dry.stdout + dry.stderr);
+    assert.match(dry.stdout, /left out: runner — a container member with no Worker bundle to host its class/);
+    assert.ok(dry.stdout.includes(payload), "the payload names no runner");
+    assert.doesNotMatch(payload, /runner/);
+    assert.match(dry.stdout, /would carry 3 assets/);
+
+    const seed = envelope(), signer = signerPublicLine(seed);
+    writeJson(join(root, "release/RELEASE.json"), { version: "1.2.2", signer });
+    const r = assemble(root, ["--sign"], { BIO_RELEASE_SEED: seed });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(readJson(join(root, "release/RELEASE.json")).fleet.map((e) => e.member), ["alpha-worker", "beta-worker"]);
+    assert.equal(existsSync(join(root, "release/runner")), false);
+
+    /* A hosted container member may not bind a member the release leaves out. */
+    addContainerMember(root, "hosted", { marker: { bind: [{ member: "runner", binding: "X" }] } });
+    await buildAll(root);
+    const bad = assemble(root, ["--dry-run"]);
+    refused(bad, "CONTAINER_UNDESCRIBED");
+    assert.match(bad.stderr, /hosted is a container member and its fleet-member\.json does not state bind\./);
+  } finally { rm(root); }
+});
+
+const containerStub = (extra = {}) => ({ subdomain: "sub", containers: 200, scripts: { [SLUG]: {} },
+  serving: { runner: JSON.stringify({ version: VERSION }) }, ...extra });
+
+test("R26: deploy-fleet pushes a container member's image to Cloudflare's registry with the account's token, by digest, then deploys its Worker and container from its own config with the pushed image", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    const tracked = join(root, "runner/wrangler.jsonc");
+    const trackedBefore = readFileSync(tracked);
+    const r = fleet(root, ["runner", "--instance", SLUG], { stub: containerStub() });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const ref = `docker.io/civicos/runner@${DIGEST}`, tag = `runner:${"ab".repeat(6)}`;
+    assert.deepEqual(r.docker.map((d) => d.args), [["pull", ref], ["tag", ref, tag]], "pulled by digest, tagged by digest");
+    assert.equal(r.wrangler.length, 2);
+    assert.deepEqual(r.wrangler[0].args, ["containers", "push", tag]);
+    assert.equal(r.wrangler[0].token, "present", "pushed with the account's token");
+    assert.deepEqual(r.wrangler[1].args.slice(0, 2), ["deploy", "-c"]);
+    const want = parseJsonc(trackedBefore.toString());
+    want.containers = want.containers.map((c) => ({ ...c, image: `registry.cloudflare.com/${ACCOUNT}/${tag}` }));
+    assert.deepEqual(JSON.parse(r.wrangler[1].config), want, "its own config, the container naming the project's pushed copy");
+    for (const w of r.wrangler) assert.equal(realpathSync(w.cwd), realpathSync(join(root, "runner")));
+    assert.ok(readFileSync(tracked).equals(trackedBefore), "the tracked config is never written");
+    assert.equal(existsSync(join(root, "runner/.wrangler.deploy.generated.json")), false);
+    assert.ok(r.calls.some((c) => c.url.endsWith(`/accounts/${ACCOUNT}/containers/applications`) && c.bearer));
+    assert.match(r.stdout, /preflight: Containers reachable/);
+    assert.match(r.stdout, /rollout: runner serving 1\.2\.3 after/);
+    assert.ok(!(r.stdout + r.stderr).includes("cf-secret-token-value"), "the token is never printed");
+  } finally { rm(root); }
+});
+
+test("R26: a token that cannot reach Containers is refused CONTAINERS_UNREACHABLE, naming what the account lacks, before anything is pushed or deployed; --dry-run pushes and deploys nothing", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner");
+    for (const stub of [containerStub({ containers: 403 }), containerStub({ containers: 401 }), containerStub({ containers: 500 }),
+      containerStub({ unreachable: ["/containers/"] })]) {
+      for (const args of [["runner", "--instance", SLUG], ["runner", "--instance", SLUG, "--dry-run"]]) {
+        const r = fleet(root, args, { stub });
+        refused(r, "CONTAINERS_UNREACHABLE");
+        assert.match(r.stderr, new RegExp(`cannot reach Containers in account ${ACCOUNT}`));
+        assert.match(r.stderr, /needs the Containers edit permission/);
+        assert.deepEqual([r.docker, r.wrangler], [[], []], "nothing pulled, pushed or deployed");
+      }
+    }
+    const dry = fleet(root, ["runner", "--instance", SLUG, "--dry-run"], { stub: containerStub() });
+    assert.equal(dry.status, 0, dry.stderr);
+    assert.match(dry.stdout, /--dry-run: nothing was pushed or deployed/);
+    assert.deepEqual([dry.docker, dry.wrangler], [[], []]);
+    /* A worker member never asks for Containers. */
+    const w = fleet(root, ["alpha-worker", "--instance", SLUG, "--dry-run"], { stub: containerStub({ containers: 403 }) });
+    assert.equal(w.status, 0, w.stderr);
+    assert.ok(!w.calls.some((c) => c.url.includes("/containers/")));
+  } finally { rm(root); }
+});
+
+test("R26: a container member with no pinned digest, or whose config declares no container, is refused CONTAINER_UNDESCRIBED before any request; a failed pull or push exits with its status and deploys nothing", async () => {
+  const root = await makeRepo({ build: false });
+  try {
+    addContainerMember(root, "runner", { marker: { image: { repository: "docker.io/civicos/runner", digest: null } } });
+    const nodigest = fleet(root, ["runner", "--instance", SLUG, "--dry-run"], { stub: containerStub() });
+    refused(nodigest, "CONTAINER_UNDESCRIBED");
+    assert.match(nodigest.stderr, /does not state image\.digest/);
+    assert.deepEqual([nodigest.calls, nodigest.docker, nodigest.wrangler], [[], [], []]);
+
+    addContainerMember(root, "plain", { containers: false });
+    const noconf = fleet(root, ["plain", "--instance", SLUG], { stub: containerStub() });
+    refused(noconf, "CONTAINER_UNDESCRIBED");
+    assert.match(noconf.stderr, /plain is a container member and its wrangler\.jsonc declares no `containers`/);
+    assert.deepEqual([noconf.calls, noconf.docker, noconf.wrangler], [[], [], []]);
+
+    addContainerMember(root, "runner");
+    const gen = join(root, "runner/.wrangler.deploy.generated.json");
+    const pull = fleet(root, ["runner", "--instance", SLUG], { env: { CF_TOKEN: "t", DOCKER_EXIT: "4" }, stub: containerStub() });
+    assert.equal(pull.status, 4, "the pull's failure is the exit");
+    assert.match(pull.stderr, /Nothing was deployed/);
+    assert.equal(pull.docker.length, 1);
+    assert.deepEqual(pull.wrangler, []);
+    const push = fleet(root, ["runner", "--instance", SLUG], { env: { CF_TOKEN: "t", WRANGLER_EXIT: "6" }, stub: containerStub() });
+    assert.equal(push.status, 6, "the push's failure is the exit");
+    assert.deepEqual(push.wrangler.map((w) => w.args[0]), ["containers"], "no deploy after a failed push");
+    assert.equal(existsSync(gen), false);
   } finally { rm(root); }
 });

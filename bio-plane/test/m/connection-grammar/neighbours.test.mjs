@@ -113,3 +113,33 @@ test("R8 scope: a hunch only within the working inquiry that holds it; other cla
   assert.equal(bad.refused, "OWNER_NONCONFORMING");
   assert.ok(bad.failures.some((f) => f.check === "scope"));
 });
+
+test("R20 R19 an owner may add unread: [{what, why}], carried unchanged; an answer without it states nothing unread; a malformed one is refused whole", () => {
+  const unread = [{ what: "the council's votes table", why: "the table is held and not read by this owner's index" }];
+  const r = createRegistry();
+  r.registerOwner({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread }) });
+  let page;
+  for (;;) {
+    const a = read(r, { page });
+    assert.deepEqual(a.unread, unread, "carried unchanged on every page");
+    if (a.next === undefined) break;
+    page = a.next;
+  }
+  const spy = createRegistry();
+  const answer = { items: [], unread: [{ what: "w", why: "y" }] };
+  spy.registerOwner({ owner: "spy", kinds: [{ kind: "k", word: "w", class: "evidentiary" }], neighbours: () => answer });
+  assert.equal(spy.neighbours({ owner: "spy", node: NODE, at: AT, viewer: "a", scope: null }), answer, "the owner's answer itself, not a copy or a trim");
+  assert.equal(Object.hasOwn(read(withOwner()), "unread"), false, "no unread is added to an answer without one");
+  for (const bad of [{}, "a table", [{ what: "w" }], [{ what: "", why: "y" }], [{ what: "w", why: 3 }], [null]]) {
+    const b = createRegistry();
+    b.registerOwner({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread: bad }) });
+    const a = read(b);
+    assert.equal(a.refused, "OWNER_NONCONFORMING", JSON.stringify(bad));
+    assert.ok(a.failures.some((f) => f.check === "unread"));
+    assert.equal(a.items, undefined, "never trimmed");
+  }
+  // The battery holds every owner to the same.
+  assert.equal(ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread }), fixture: fixture() }).ok, true);
+  const bad = ownerConformance({ owner: "sample", kinds: KINDS, neighbours: makeNeighbours(undefined, { unread: [{ what: "w" }] }), fixture: fixture() });
+  assert.ok(checks(bad).includes("unread"));
+});

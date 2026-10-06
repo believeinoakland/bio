@@ -18,9 +18,13 @@
  * THE STANDING RULE, inherited and it applies harder here than anywhere. A content
  * type that reports change when nothing meaningful happened costs a member some
  * attention. One that stays quiet when something did puts a false reassurance in
- * the record. So an unmeasured content type is NOT written: the generic type below
+ * the record. So an unmeasured content type is NOT written: the generic fallback
  * reports any substantive difference without describing it, which is noisy and
  * honest, and the noise is the signal that the type is worth measuring.
+ *
+ * The types themselves are `doctypes`' and the other readers' (R36), registered through
+ * `./registry.mjs`' seam; this file holds the helpers they share and nothing a place or a
+ * type owns.
  */
 
 /* The content-type axis uses the ONE confidence ladder, re-exported here so content

@@ -1,8 +1,10 @@
-/* docprofile — the registry seam (T33-12; K1513), at the module's interface: everything
- * through `docprofile/registry.mjs`. The registry is seeded with this module's own seven
- * types; `registerDoctype` is the `register` that `doctypes.registerDoctypes` is handed
- * (wired by `plane`). Types registered here are stubs, never `doctypes`' (a later
- * module). This file runs in its own process, so its registrations reach no other suite.
+/* docprofile — the registry seam (T33-12; K1513; T34-8), at the module's interface:
+ * everything through `docprofile/registry.mjs`. This module holds no content type (R36):
+ * the registry starts empty, and `registerDoctype` is the `register` that
+ * `doctypes.registerDoctypes` is handed (wired by `plane`). Types registered here are
+ * stubs, never `doctypes`' (a later module). This file runs in its own process, so its
+ * registrations reach no other suite, and its first test sees the registry as a process
+ * that registered nothing does.
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -12,21 +14,42 @@ import * as dp from "../registry.mjs";
 const { doctypeFor, doctypes, registerDoctype, readText, assess, NO_TYPE, CONFIDENCE, CONTRACT } = dp;
 const enc = (s) => new TextEncoder().encode(s);
 const sha256 = async (b) => createHash("sha256").update(b).digest("hex");
-const SEEDED = ["meeting_calendar", "meeting_minutes", "meeting_agenda", "staff_report", "regulation",
-                "staff_directory", "generic"];
 
-/* A stub type: CERTAIN on its marker word, reading one entity per line naming it. */
-const stub = (key, marker, extra) => ({
+/* A stub type: `confidence` on its marker word (CERTAIN by default). */
+const stub = (key, marker, extra, confidence = CONFIDENCE.CERTAIN) => ({
   key, label: `stub ${key}`, version: 1, contract: CONTRACT.SUBSTANCE,
   detect: (ctx) => (String(ctx.text || "").includes(marker)
-    ? { match: true, confidence: CONFIDENCE.CERTAIN, signals: [marker] } : { match: false }),
+    ? { match: true, confidence, signals: [marker] } : { match: false }),
   parse: () => ({ entities: [], facts: { read_by: key } }),
   assess: () => ({ meaningful: false, events: [], confirmed: null, why: "stub" }),
   ...(extra || {}),
 });
 
-test("R36 the seam: seeded with the seven types in their deciding order; registerDoctype replaces by key in place, appends a new key, refuses a malformed member", () => {
-  assert.deepEqual(doctypes().map((t) => t.key), SEEDED);
+test("R36 R4 R13 R19 R35 nothing is registered by default: doctypeFor answers the stated no-type answer, never throws, and readText and assess claim nothing", async () => {
+  assert.deepEqual(doctypes(), [], "this module registers no content type of its own");
+  assert.ok(Object.isFrozen(NO_TYPE));
+  assert.deepEqual({ ...NO_TYPE }, { key: "unregistered", label: "no content type is registered", version: 0,
+                                     fallback: true, contract: CONTRACT.SUBSTANCE });
+  for (const ctx of [{ text: "a letter about nothing in particular" }, { text: "" }, {}]) {
+    const r = doctypeFor(ctx);
+    assert.equal(r.type, NO_TYPE);
+    assert.deepEqual([r.confidence, r.signals, r.considered, r.also], [CONFIDENCE.NONE, [], [], []]);
+    assert.match(r.why, /no content type is registered/);
+  }
+  // readText: a determined reading with no reader, stated (R19)
+  const t = readText("a letter about nothing in particular", {});
+  assert.deepEqual([t.determined, t.doctype.type, t.parsed], [true, NO_TYPE, null]);
+  assert.match(t.parse_error, /unregistered content type declares no reader/);
+  // assess: the substance differs and nothing is claimed about it (R13)
+  const a = await assess(enc("<p>one</p>"), enc("<p>two</p>"), { sha256 });
+  assert.deepEqual([a.content_type, a.verdict, a.meaningful, a.events, a.stopped_at],
+                   ["unregistered", "changed", null, [], "L5_meaning"]);
+  assert.match(a.why, /declares no reader/);
+  // what does not reach L4 is unchanged by an empty registry
+  assert.equal((await assess(enc("<p>one</p>"), enc("<p>one</p>"), { sha256 })).verdict, "identical");
+});
+
+test("R36 R4 R5 the seam: registerDoctype appends a new key, replaces a held key in its own slot, refuses a malformed member; the order decides", () => {
   assert.equal(typeof registerDoctype, "function");
   // a refused member: stated, never thrown, registry unchanged
   for (const bad of [null, 3, {}, { key: "" }, { key: 7, detect() {} }, { key: "x" }, { key: "x", detect: 1 }]) {
@@ -34,61 +57,52 @@ test("R36 the seam: seeded with the seven types in their deciding order; registe
     assert.equal(r.ok, false);
     assert.match(r.why, /./);
   }
-  assert.deepEqual(doctypes().map((t) => t.key), SEEDED);
+  assert.deepEqual(doctypes(), []);
+  // three new keys, appended in the order given; the fallback last, as a composer registers it
+  const first = stub("stub_first", "FIRST");
+  const second = stub("stub_second", "SECOND");
+  const fallback = stub("stub_fallback", "\u0000never", { fallback: true });
+  for (const t of [first, second, fallback]) assert.deepEqual(registerDoctype(t), { ok: true, key: t.key, replaced: false });
+  assert.deepEqual(doctypes().map((t) => t.key), ["stub_first", "stub_second", "stub_fallback"]);
   // a held key is replaced in its own slot: the order is unchanged and the new member answers
-  const minutes = stub("meeting_minutes", "MINUTES-STUB");
-  assert.deepEqual(registerDoctype(minutes), { ok: true, key: "meeting_minutes", replaced: true });
-  assert.deepEqual(doctypes().map((t) => t.key), SEEDED);
-  assert.equal(doctypes()[1], minutes);
-  assert.equal(doctypeFor({ text: "MINUTES-STUB" }).type, minutes);
+  const first2 = stub("stub_first", "ONE");
+  assert.deepEqual(registerDoctype(first2), { ok: true, key: "stub_first", replaced: true });
+  assert.deepEqual(doctypes().map((t) => t.key), ["stub_first", "stub_second", "stub_fallback"]);
+  assert.equal(doctypes()[0], first2);
+  assert.equal(doctypeFor({ text: "ONE" }).type, first2);
+  assert.equal(doctypeFor({ text: "FIRST" }).type, fallback, "the replaced member answers nothing now");
   // registering the same member again registers nothing new
-  assert.deepEqual(registerDoctype(minutes), { ok: true, key: "meeting_minutes", replaced: true });
-  assert.equal(doctypes().length, SEEDED.length);
-  // a new key is appended, and recognised
-  const extra = stub("stub_extra", "EXTRA-STUB");
-  assert.deepEqual(registerDoctype(extra), { ok: true, key: "stub_extra", replaced: false });
-  assert.deepEqual(doctypes().map((t) => t.key), [...SEEDED, "stub_extra"]);
-  const d = doctypeFor({ text: "EXTRA-STUB" });
-  assert.equal(d.type, extra);
-  assert.equal(d.confidence, CONFIDENCE.CERTAIN);
-  // a document both stubs recognise: the earlier slot wins (R4), and also names the other (R5)
-  const both = doctypeFor({ text: "MINUTES-STUB EXTRA-STUB" });
-  assert.equal(both.type.key, "meeting_minutes");
-  assert.ok(both.also.some((x) => x.key === "stub_extra"));
+  assert.deepEqual(registerDoctype(first2), { ok: true, key: "stub_first", replaced: true });
+  assert.equal(doctypes().length, 3);
+  // two CERTAIN: the earlier slot wins (R4), and also names the other (R5)
+  const both = doctypeFor({ text: "SECOND ONE" });
+  assert.deepEqual([both.type, both.confidence], [first2, CONFIDENCE.CERTAIN]);
+  assert.deepEqual(both.also.map((x) => x.key), ["stub_second"]);
+  // no CERTAIN: the highest-confidence match wins, wherever it is registered (R4)
+  assert.equal(registerDoctype(stub("stub_possible", "MAYBE", null, CONFIDENCE.POSSIBLE)).ok, true);
+  assert.equal(registerDoctype(stub("stub_likely", "MAYBE", null, CONFIDENCE.LIKELY)).ok, true);
+  const best = doctypeFor({ text: "MAYBE" });
+  assert.deepEqual([best.type.key, best.confidence], ["stub_likely", CONFIDENCE.LIKELY]);
+  assert.deepEqual(best.considered.map((c) => c.key), ["stub_possible", "stub_likely"]);
+  assert.deepEqual(best.also.map((x) => x.key), ["stub_possible"]);
   // readText reads with the registered member
-  assert.deepEqual(readText("EXTRA-STUB", {}).parsed.facts, { read_by: "stub_extra" });
-  // the seeded fallback still answers what nothing recognises
-  assert.equal(doctypeFor({ text: "nothing at all" }).type.key, "generic");
+  assert.deepEqual(readText("SECOND", {}).parsed.facts, { read_by: "stub_second" });
+  // the registered fallback answers what nothing recognises
+  const none = doctypeFor({ text: "nothing at all" });
+  assert.deepEqual([none.type, none.confidence], [fallback, CONFIDENCE.NONE]);
+  assert.match(none.why, /no registered content type recognised/);
 });
 
-test("R4 R13 R19 R35 with no fallback registered, doctypeFor answers the stated no-type answer, never throws, and readText and assess claim nothing", async () => {
-  // replace the fallback with a type that is not one: no registered type is a fallback now
-  assert.equal(registerDoctype(stub("generic", "GENERIC-STUB")).ok, true);
+test("R4 R13 R19 R35 with the fallback replaced by a type that is not one, doctypeFor answers the stated no-type answer again", async () => {
+  assert.equal(registerDoctype(stub("stub_fallback", "GENERIC-STUB")).ok, true);
   assert.ok(!doctypes().some((t) => t.fallback === true));
-  assert.ok(Object.isFrozen(NO_TYPE));
-  assert.equal(NO_TYPE.fallback, true);
-  assert.equal(NO_TYPE.contract, CONTRACT.SUBSTANCE);
   const r = doctypeFor({ text: "a letter about nothing in particular" });
-  assert.equal(r.type, NO_TYPE);
-  assert.equal(r.confidence, CONFIDENCE.NONE);
+  assert.deepEqual([r.type, r.confidence], [NO_TYPE, CONFIDENCE.NONE]);
   assert.match(r.why, /no content type is registered/);
-  assert.deepEqual(r.also, []);
   // a type that does recognise still wins (R4)
-  assert.equal(doctypeFor({ text: "GENERIC-STUB" }).type.key, "generic");
-  // readText: a determined reading with no reader, stated (R19)
-  const t = readText("a letter about nothing in particular", {});
-  assert.equal(t.determined, true);
-  assert.equal(t.doctype.type, NO_TYPE);
-  assert.equal(t.parsed, null);
-  assert.match(t.parse_error, /unregistered content type declares no reader/);
-  // assess: the substance differs and nothing is claimed about it (R13)
+  assert.equal(doctypeFor({ text: "GENERIC-STUB" }).type.key, "stub_fallback");
   const a = await assess(enc("<p>one</p>"), enc("<p>two</p>"), { sha256 });
-  assert.equal(a.content_type, "unregistered");
-  assert.equal(a.verdict, "changed");
-  assert.equal(a.meaningful, null);
-  assert.deepEqual(a.events, []);
-  assert.match(a.why, /declares no reader/);
-  assert.equal(a.stopped_at, "L5_meaning");
+  assert.deepEqual([a.content_type, a.meaningful], ["unregistered", null]);
 });
 
 test("R37 readText hands the reader the supplied structure as ctx.supplied, unchanged: pages (an empty one included), markers, images, ocr, typed cells; null for a bare string", () => {
@@ -127,7 +141,7 @@ test("R37 readText hands the reader the supplied structure as ctx.supplied, unch
   assert.equal(seen.supplied, sheet);
 });
 
-test("R36 the shared helper practiceValue carries the unit a profile counts in, so no reader counts business days as calendar days", () => {
+test("R36 R30 the shared helper practiceValue carries the unit a profile counts in, so no reader counts business days as calendar days", () => {
   const view = (fact) => ({ practice: { minutes_due_days: fact } });
   assert.deepEqual(dp.practiceValue({ view: view({ value: 10, count: "business", basis: "OMC 2.20.160" }) }, "minutes_due_days"),
                    { value: 10, basis: "OMC 2.20.160", count: "business" });

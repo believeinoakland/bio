@@ -24,6 +24,45 @@ test("R1 localDay: every half hour of 2026 in eight zones falls on the day the r
   assert.equal(localDay("2026-09-06T04:00:00Z", "America/Santiago"), "2026-09-06");
 });
 
+/* An independent reading of a wall time to the second, in the runtime's own formatting. */
+const oracleWall = (ms, zone) => {
+  const v = {};
+  for (const p of new Intl.DateTimeFormat("en-CA", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(new Date(ms))) v[p.type] = p.value;
+  return `${v.year}-${v.month}-${v.day}T${v.hour}:${v.minute}:${v.second}`;
+};
+const oracleOffset = (ms, zone) => Date.parse(`${oracleWall(ms, zone)}Z`) - ms;
+
+test("R1 R2 the offsets at every second either side of each change agree with the runtime's reading, read again from the cache, including changes off the hour (N565)", () => {
+  /* each zone's changes in 2026, found by the oracle hour by hour, plus changes at odd seconds and quarter hours */
+  const changes = [];
+  const t0 = Date.UTC(2026, 0, 1), t1 = Date.UTC(2027, 0, 1);
+  for (const z of ZONES) {
+    for (let t = t0; t < t1; t += 3600e3) {
+      if (oracleOffset(t, z) === oracleOffset(t + 3600e3, z)) continue;
+      let lo = t, hi = t + 3600e3;
+      while (hi - lo > 1000) { const m = lo + Math.floor((hi - lo) / 2000) * 1000; if (oracleOffset(m, z) === oracleOffset(t, z)) lo = m; else hi = m; }
+      changes.push([hi, z]);
+    }
+  }
+  assert.ok(changes.length >= 10, "the zones change in 2026");
+  changes.push([Date.parse("1883-11-18T20:00:00Z"), LA]);                     /* local mean time to PST: 12:07:02 */
+  changes.push([Date.parse("1986-01-01T00:00:00Z") - 5.5 * 3600e3, "Asia/Kathmandu"]);  /* +05:30 to +05:45 */
+  for (const pass of [1, 2]) {
+    for (const [c, z] of changes) {
+      for (let t = c - 120e3; t <= c + 120e3; t += 1000) {
+        const w = oracleWall(t, z);
+        assert.equal(localDay(iso(t), z), w.slice(0, 10), `pass ${pass}: ${iso(t)} in ${z}`);
+        const b = bounds({ value: w, precision: "second", zone: z });
+        assert.ok(!b.refused, `pass ${pass}: ${w} in ${z} is a wall time`);
+        const lo = Date.parse(b.earliest), hi = Date.parse(b.latest);
+        assert.ok(lo <= t && t < hi, `pass ${pass}: ${iso(t)} lies within the bounds of ${w} in ${z}`);
+        assert.equal(oracleWall(lo, z), w, `pass ${pass}: the bounds of ${w} in ${z} begin at it`);
+      }
+    }
+  }
+});
+
 test("R1 localDay: an unknown zone is refused ZONE_INVALID; a malformed instant DATE_INVALID; a wrong type throws TypeError", () => {
   for (const z of ["Mars/Olympus", "", "+05:00", "PST8PDT/x", "America/"]) assert.equal(localDay("2026-10-05T12:00:00Z", z).refused, "ZONE_INVALID", z);
   for (const s of ["2026-10-05", "2026-10-05T12:00:00", "2026-10-05T12:00:00.000Z", "2026-13-05T12:00:00Z", "2026-02-30T12:00:00Z", "2026-10-05T24:00:00Z"])
