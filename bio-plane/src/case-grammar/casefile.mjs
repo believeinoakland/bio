@@ -20,7 +20,11 @@
  *   findings/<finding>/finding.md, …/finding.md.sig                       a finding's published bytes and signature
  *   findings/<finding>/grading-facts.json, …/passages.json               its grading facts (strength R35), its passages
  *   materials/<ref>/document, …/extracted.txt, …/observation.md          a material, whole (R12's `ref`)
- *   attestations/<ref>/<name>                                            a signed account, a timestamp token, a co-archive */
+ *   attestations/<ref>/<name>                                            a signed account, a timestamp token, a co-archive
+ *   calculations/<calc>/calculation.json                                 a calculation a member's chain reaches (R18's row)
+ *   calculations/<calc>/inputs/<sha256>                                  each input it names, named by its hash (C:A-12)
+ *   calculations/prov.jsonld                                             the calculations' PROV-O rendering (R19), once
+ * The three calculation paths are one kind, `calculation` (R13); `caseFileEntryOf` tells them apart. */
 
 import { sha256HexSync } from "../record-grammar/index.mjs";
 
@@ -30,7 +34,8 @@ export const CASE_FILE_FORMAT = "bio-case-file/1";
 export const CASE_FILE_MANIFEST_PATH = "manifest.json";
 /** R13: every kind of file a case file carries. */
 export const CASE_FILE_KINDS = Object.freeze(["case_document", "case_signature", "complete_edition", "finding",
-  "finding_signature", "grading_facts", "passages", "document", "extracted_text", "observation", "attestation"]);
+  "finding_signature", "grading_facts", "passages", "document", "extracted_text", "observation", "attestation",
+  "calculation"]);
 /** R13: the kinds a case file carries exactly once. */
 export const CASE_FILE_SINGLE_KINDS = Object.freeze(["case_document", "case_signature", "complete_edition"]);
 /** R13: the fields of the manifest, of a key, of a part and of a file, in order. */
@@ -52,24 +57,39 @@ const FINDING_FILES = Object.freeze({ finding: "finding.md", finding_signature: 
                                       grading_facts: "grading-facts.json", passages: "passages.json" });
 const MATERIAL_FILES = Object.freeze({ document: "document", extracted_text: "extracted.txt",
                                        observation: "observation.md" });
+/** R13, R19: where the calculations' PROV-O rendering travels, once per case file. */
+export const CASE_FILE_PROV_PATH = "calculations/prov.jsonld";
+const CALCULATION_FILE = "calculation.json";
 
 /** R13: the path a file of `kind` is carried at. `key` is the finding id (the finding kinds), the material's ref (the
- *  material kinds), or `[ref, name]` (an attestation); the single kinds take none. Null for anything this format does
- *  not spell. */
+ *  material kinds), `[ref, name]` (an attestation), or for a `calculation` its id (the row), `[calc, sha256]` (one of
+ *  its inputs) or `"prov"` (R19's rendering, `CASE_FILE_PROV_PATH`); the single kinds take none. Null for anything this
+ *  format does not spell. */
 export function caseFilePath(kind, key = null) {
   if (Object.hasOwn(SINGLE_PATHS, kind)) return SINGLE_PATHS[kind];
   if (Object.hasOwn(FINDING_FILES, kind)) return SEGMENT.test(String(key ?? "")) ? `findings/${key}/${FINDING_FILES[kind]}` : null;
   if (Object.hasOwn(MATERIAL_FILES, kind)) return SEGMENT.test(String(key ?? "")) ? `materials/${key}/${MATERIAL_FILES[kind]}` : null;
   if (kind === "attestation" && Array.isArray(key) && key.length === 2 && key.every((k) => SEGMENT.test(String(k ?? ""))))
     return `attestations/${key[0]}/${key[1]}`;
+  if (kind === "calculation") {
+    if (key === "prov") return CASE_FILE_PROV_PATH;
+    if (Array.isArray(key)) return key.length === 2 && SEGMENT.test(String(key[0] ?? "")) && HEX64.test(String(key[1] ?? ""))
+      ? `calculations/${key[0]}/inputs/${key[1]}` : null;
+    return SEGMENT.test(String(key ?? "")) && key !== "prov" ? `calculations/${key}/${CALCULATION_FILE}` : null;
+  }
   return null;
 }
 
-/** R13: what a path spells: `{kind, finding?, ref?, name?}`, or null for a path this format does not spell. */
+/** R13: what a path spells: `{kind, finding?, ref?, name?, calc?, input?, prov?}`, or null for a path this format does
+ *  not spell. */
 export function caseFileEntryOf(path) {
   if (typeof path !== "string") return null;
   for (const [kind, p] of Object.entries(SINGLE_PATHS)) if (path === p) return { kind };
+  if (path === CASE_FILE_PROV_PATH) return { kind: "calculation", prov: true };
   const parts = path.split("/");
+  if (parts.length === 4 && parts[0] === "calculations" && SEGMENT.test(parts[1]) && parts[1] !== "prov.jsonld"
+      && parts[2] === "inputs" && HEX64.test(parts[3]))
+    return { kind: "calculation", calc: parts[1], input: parts[3] };
   if (parts.length !== 3 || !SEGMENT.test(parts[1])) return null;
   const [top, key, leaf] = parts;
   if (top === "findings") {
@@ -81,6 +101,7 @@ export function caseFileEntryOf(path) {
     return kind ? { kind, ref: key } : null;
   }
   if (top === "attestations" && SEGMENT.test(leaf)) return { kind: "attestation", ref: key, name: leaf };
+  if (top === "calculations" && leaf === CALCULATION_FILE) return { kind: "calculation", calc: key };
   return null;
 }
 
@@ -168,6 +189,8 @@ export function caseFileManifestCheck(manifest) {
         paths.add(f.path);
       }
       if (typeof f.sha256 !== "string" || !HEX64.test(f.sha256)) no(`${at}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f.sha256)}`);
+      else if (entry && entry.input && f.sha256 !== entry.input)
+        no(`${at}.sha256`, "input_sha", `a calculation's input is named by its SHA-256, and ${shown(f.path)} is listed with another`);
       if (!Number.isSafeInteger(f.bytes) || f.bytes < 0) no(`${at}.bytes`, "bytes", `a file's size is a whole number of bytes, and this is ${shown(f.bytes)}`);
       if (!indices.has(f.part) || f.part == null) no(`${at}.part`, "part", `a file is in one of the parts listed, and this one names ${shown(f.part)}`);
       if (CASE_FILE_KINDS.includes(f.kind)) kinds.set(f.kind, [...(kinds.get(f.kind) || []), f]);
