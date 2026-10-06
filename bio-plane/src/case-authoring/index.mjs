@@ -67,11 +67,8 @@ import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratifi
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
          isPublicHttpsLocator, proposalLabel } from "../record-grammar/index.mjs";
-import { SECTIONS } from "../case-grammar/index.mjs";
-/* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20) and case-disclosures' people
-   renderers (its R28), read through the namespace so a name an upstream job has not yet merged is a dependency injected
-   by the composition (K1563 (1)), never a load failure. */
-import * as caseGrammar from "../case-grammar/index.mjs";
+/* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
+import { SECTIONS, calculationsLines, timelineLines } from "../case-grammar/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { workbooksOf } from "../workbooks/index.mjs";
 import { eventsOf } from "../events/index.mjs";
@@ -132,6 +129,9 @@ const LENS_PAGE = 2000;
 const PUBLISHED_TARGETS_CHUNK = 200;
 
 const str = (v) => String(v ?? "").trim();
+/** R56: what a `calculations:` row's `disclosed` states when the publisher listed a calculation that needed disclosure
+ *  and gave no words of their own (case-grammar R18: null would read as "none was needed"). */
+export const DISCLOSED_WITHOUT_WORDS = "disclosed by the publisher, without words of their own";
 /** R56: how deep a member's chain is followed through inquiry legs to the calculations it reaches. */
 const CHAIN_DEPTH_MAX = 16;
 /* R3's set: `targets` as a list, a comma-separated string, or the one `target`. */
@@ -165,13 +165,13 @@ export class CaseAuthoring {
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
                 networkNotices = null, disclosures = null, calculations = null, workbooks = null, events = null,
-                caseTensions = null, grammar = null, now = null } = {}) {
+                caseTensions = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
-                   networkNotices, disclosures, calculations, workbooks, events, caseTensions, grammar };
+                   networkNotices, disclosures, calculations, workbooks, events, caseTensions };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -197,8 +197,6 @@ export class CaseAuthoring {
   /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5), reached through
      publication's re-export until that split merges (plan Rules (9) item 4); the composition hands in the one instance. */
   get caseTensions() { return this.#deps.caseTensions ||= this.publication; }
-  /* R56, R57: case-grammar's renderers (its R18, R20), the one spelling of each block. */
-  get grammar() { return this.#deps.grammar ||= caseGrammar; }
 
   migrate() { migrateCaseAuthoring(this.sql); }
 
@@ -339,7 +337,8 @@ export class CaseAuthoring {
     const judge = (calc, members, state, row) => {
       const needs = loadBearing(members) && (state === "differs" || state === "unbound");
       if (needs && !listed.has(calc)) undisclosed.push({ calc, members, recompute: state });
-      rows.push({ calc, ...row, recompute: state, disclosed: needs && listed.has(calc) ? listed.get(calc) : null });
+      rows.push({ calc, ...row, recompute: state,
+                  disclosed: needs && listed.has(calc) ? listed.get(calc) || DISCLOSED_WITHOUT_WORDS : null });
     };
     for (const f of (facts && facts.calculations) || []) {
       const r = f.read;
@@ -350,7 +349,9 @@ export class CaseAuthoring {
       for (const x of inputs) if (x.money !== undefined) money.push(...(Array.isArray(x.money) ? x.money : [x.money]));
       judge(f.calc, f.members, differs ? "differs" : unbound ? "unbound" : "agrees", {
         recipe: r.calculation ? r.calculation.recipe ?? null : null,
-        inputs: inputs.map((x) => ({ name: x.name ?? null, sha: typeof x.table === "string" ? x.table : null })),
+        /* case-grammar R18: each input's name and SHA-256; `read` states the hash of a table's canonical bytes only
+           (reported, J3 (2)), so a row naming another input is written with its inputs undetermined (null). */
+        inputs: inputs.map((x) => ({ name: x.name ?? null, sha256: typeof x.table === "string" ? x.table : null })),
         method_version: r.method_version ?? null,
         results: r.calculation ? r.calculation.results ?? null : null,
         result_key: r.result_key ?? null });
@@ -951,8 +952,8 @@ export class CaseAuthoring {
       materials: materialBlocks, group, accepted: { rows: accepted.rows, flags: flagRows },
       grading: findingFacts.grading, passages: findingFacts.passages,
       /* R56, R57: case-grammar's blocks (its R18, R20); R55: case-disclosures' people and member-ties blocks (its R28). */
-      calculations: calcJ.rows, calculationsBlock: this.grammar.calculationsLines(calcJ.rows),
-      timeline: timeline.rows, timelineLeftOut: timeline.left_out, timelineBlock: this.grammar.timelineLines(timeline.rows),
+      calculations: calcJ.rows, calculationsBlock: calculationsLines(calcJ.rows),
+      timeline: timeline.rows, timelineLeftOut: timeline.left_out, timelineBlock: timelineLines(timeline.rows),
       peopleBlock: D.peopleLines(peopleJ.rows), memberTiesBlock: D.memberTieLines(tiesJ.rows),
     });
     const docBytes = new TextEncoder().encode(docText);

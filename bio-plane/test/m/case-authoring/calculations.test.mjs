@@ -8,7 +8,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CALCULATION_STATE_WORDS } from "../../../src/case-authoring/index.mjs";
+import { caseAuthoringOps, PUBLISH_ACT_CHECKS, CALCULATION_STATE_WORDS, DISCLOSED_WITHOUT_WORDS }
+  from "../../../src/case-authoring/index.mjs";
+import { calculationsOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
 const C1 = "CALC-2026-0001", C2 = "CALC-2026-0002";
@@ -23,7 +25,8 @@ function calculationsStandIn(state, calls = []) {
     return { ok: true, found: true, calc_id: calcId, result_key: `key-${calcId}`, method_version: "bio-calc/1",
       calculation: { calc_id: calcId, recipe: { steps: [{ id: "t", op: "sum" }], output: "t" }, method_version: "bio-calc/1",
                      result_key: `key-${calcId}`, results: { t: { value: "12", precision: "exact" } } },
-      inputs: [{ name: "ledger", table: TABLE }, { name: "rate", value: "0.5" }],
+      /* C2 rests on a table alone; C1 also on a typed value, whose hash `read` does not state */
+      inputs: calcId === C2 ? [{ name: "ledger", table: TABLE }] : [{ name: "ledger", table: TABLE }, { name: "rate", value: "0.5" }],
       grade: { inputs: [{ name: "ledger", kind: "table", grade: "B" },
                         { name: "rate", kind: "value", grade: "D", ...(state[calcId] === "unbound" ? { unbound: true } : {}) }] } };
   };
@@ -58,6 +61,8 @@ const op = (w, P, body, name = "publishcase") => caseAuthoringOps(w.ca,
 const roles = (lb, sup = []) => Object.fromEntries([...lb.map((t) => [t, "load_bearing"]), ...sup.map((t) => [t, "supporting"])]);
 const docOf = (w, r) => w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition).text;
 const bodyOf = (text) => text.slice(text.indexOf("\n---\n", 4) + 5);
+/* the block read back through case-grammar's one reading of it (its R18) */
+const calcs = (w, r) => calculationsOf(w.fm(docOf(w, r)));
 
 test("R56: op=publish recomputes and reads each calculation a member's chain reaches (through inquiry legs) before the act; a load-bearing one that differs and is not listed is CALCULATION_NOT_DISCLOSED with its row C-136.1, naming each calculation, its state and members, and nothing is written", async () => {
   const { w, P, calls } = setup({ state: { [C1]: "differs", [C2]: "differs" } });
@@ -73,11 +78,15 @@ test("R56: op=publish recomputes and reads each calculation a member's chain rea
   const ok = await op(w, P, { targets: [Q, Q2], roles: roles([Q, Q2]),
                               calculationsDisclosed: [{ calc: C1, words: WORDS }, { calc: C2 }] });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
-  const fm = w.fm(docOf(w, ok));
-  assert.deepEqual(fm.calculations.map((x) => [x.calc, x.recompute, x.disclosed]), [[C1, "differs", WORDS], [C2, "differs", ""]]);
-  assert.equal(fm.calculations[0].method_version, "bio-calc/1");
-  assert.equal(fm.calculations[0].result_key, `key-${C1}`);
-  assert.ok(String(fm.calculations[0].inputs).includes(TABLE), "each input named with its SHA-256 where calculations states one");
+  const rows = calcs(w, ok);
+  assert.deepEqual(rows.map((x) => [x.calc, x.recompute, x.disclosed]),
+    [[C1, "differs", WORDS], [C2, "differs", DISCLOSED_WITHOUT_WORDS]], "listed with no words still reads as disclosed");
+  assert.deepEqual(rows.map((x) => [x.method_version, x.recipe]), [["bio-calc/1", { steps: [{ id: "t", op: "sum" }], output: "t" }],
+    ["bio-calc/1", { steps: [{ id: "t", op: "sum" }], output: "t" }]]);
+  assert.deepEqual(rows[1].inputs, { ledger: TABLE }, "each input by name and SHA-256");
+  assert.match(rows[1].result_key, /^[0-9a-f]{64}$/, "keyed by case-grammar from the row it writes");
+  assert.deepEqual([rows[0].inputs, rows[0].result_key], [null, null], "an input whose hash read does not state: undetermined (J3 (2))");
+  assert.deepEqual(rows[0].results, { t: { value: "12", precision: "exact" } });
   const body = bodyOf(docOf(w, ok));
   assert.ok(body.includes(`- ${C1}: ${CALCULATION_STATE_WORDS.differs}. Disclosed by the group: ${WORDS}`));
 });
@@ -87,19 +96,19 @@ test("R56: a load-bearing calculation with an unbound input (calculations R9's g
   const r = await op(w, P, { targets: [Q], roles: roles([Q]) });
   assert.deepEqual([r.reason, r.calculations], ["CALCULATION_NOT_DISCLOSED", [{ calc: C1, members: [Q], recompute: "unbound" }]]);
   const ok = await op(w, P, { targets: [Q], roles: roles([Q]), calculationsDisclosed: [{ calc: C1, words: "typed from the minutes" }] });
-  assert.deepEqual(w.fm(docOf(w, ok)).calculations.map((x) => [x.recompute, x.disclosed]), [["unbound", "typed from the minutes"]]);
+  assert.deepEqual(calcs(w, ok).map((x) => [x.recompute, x.disclosed]), [["unbound", "typed from the minutes"]]);
 });
 
 test("R56 (D370): no other state refuses — an agreeing calculation, a supporting member's differing one, and one listed that needs no disclosure all publish, each written with disclosed null; a calculation the viewer may not see is neither recomputed, judged nor written (calculations R10)", async () => {
   const { w, P, calls } = setup({ state: { [C1]: "agrees", [C2]: "differs" } });
   const r = await op(w, P, { targets: [Q, Q2], roles: roles([Q], [Q2]), calculationsDisclosed: [{ calc: C1, words: "fine" }] });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  assert.deepEqual(w.fm(docOf(w, r)).calculations.map((x) => [x.calc, x.recompute, x.disclosed]),
+  assert.deepEqual(calcs(w, r).map((x) => [x.calc, x.recompute, x.disclosed]),
     [[C1, "agrees", null], [C2, "differs", null]]);
   const h = setup({ state: { [C1]: "hidden", [C2]: "agrees" } });
   const r2 = await op(h.w, h.P, { targets: [Q], roles: roles([Q]) });
   assert.equal(r2.ok, true, JSON.stringify(r2).slice(0, 300));
-  assert.deepEqual(h.w.fm(docOf(h.w, r2)).calculations || [], [], "withheld whole: not written");
+  assert.deepEqual(calcs(h.w, r2), [], "withheld whole: not written");
   assert.deepEqual(h.calls.filter((c) => c.recompute), [], "never recomputed");
   void calls;
 });
@@ -154,8 +163,11 @@ test("R56 (K1570, K1594): a workbook among the captures a member rests on is rea
   Object.assign(answer, { status: "not recomputed here", binding: true, bound: true });
   const ok = await op(w, P, { targets: [Q], roles: roles([Q]) });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
-  const row = w.fm(docOf(w, ok)).calculations[0];
-  assert.deepEqual([row.calc, row.recompute, row.disclosed, row.method_version], [cap, "not_recomputed", null, "IronCalc 0.5"]);
+  const row = calcs(w, ok)[0];
+  /* case-grammar R18 holds three statuses; "not recomputed here" is stated in the body, and the block's value waits on
+     case-grammar taking it (J3 (3)) */
+  assert.deepEqual([row.calc, row.disclosed, row.method_version], [cap, null, "IronCalc 0.5"]);
+  assert.ok(bodyOf(docOf(w, ok)).includes(`- ${cap}: ${CALCULATION_STATE_WORDS.not_recomputed}.`));
 });
 
 test("R56, R55: the calculations judgment is asked after case-disclosures' flags and before the people the case names (R55's order): a case refused on both answers the calculation first", async () => {

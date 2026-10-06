@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
 import { timelineBodyLines } from "../../../src/case-authoring/document.mjs";
+import { timelineOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q";
 const SUBJ = "ENT-2026-0001-council", E1 = "EVT-2026-0001-a", E2 = "EVT-2026-0002-b", E3 = "EVT-2026-0003-c", E4 = "EVT-2026-0004-d";
@@ -70,13 +71,14 @@ test("R57: the timeline is read through events.timeline over the members' subjec
   const r2 = publish(n.w, n.P);
   assert.equal(r2.ok, true);
   assert.deepEqual(n.calls, []);
-  assert.deepEqual(n.w.fm(docOf(n.w, r2)).timeline || [], []);
+  assert.deepEqual(timelineOf(n.w.fm(docOf(n.w, r2))), { they_did: [], we_did: [] });
 });
 
 test("R57: the timeline: block writes the world's lane (they_did) and the registered sources' lane (we_did) apart, each in its own order, each item with its source (the governing attestation's capture, else the record entry); an item with no source is left out and counted, as is a source that failed", () => {
   const { w, P } = setup();
   const r = publish(w, P);
-  const rows = w.fm(docOf(w, r)).timeline;
+  const lanes = timelineOf(w.fm(docOf(w, r)));
+  const rows = [...lanes.they_did, ...lanes.we_did];
   assert.deepEqual(rows.map((x) => [x.lane, x.ord, x.when, x.label, x.ref, x.source]), [
     ["they_did", 1, "2026-03-04", "meeting, held", E1, CAP],
     ["they_did", 2, "2026-03", "vote, held", E2, "event_attestation:9"],

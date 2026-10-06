@@ -596,7 +596,7 @@ export function calculationBodyLines(rows) {
     + "result that differs, or an input typed in with no source, is disclosed here by the group and does not stop "
     + "publication.", "",
     ...rows.map((r) => `- ${r.calc}: ${CALCULATION_STATE_WORDS[r.recompute] ?? r.recompute}.`
-      + (r.disclosed != null ? ` Disclosed by the group${r.disclosed ? `: ${r.disclosed}` : "."}` : "")),
+      + (r.disclosed != null ? ` Disclosed by the group: ${r.disclosed}` : "")),
     ""];
 }
 
