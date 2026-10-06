@@ -37,3 +37,7 @@ Four readings I am building on; each is the page's own detail unless you say oth
 P6: 2,115 lines of source (estimate 2,100–2,450).
 
 Size (session_01WfW58j4sjUPP7j6BfdTRs3): test runs 14, module lines 4041 (src 2115, tests 1926)
+
+## J2 · REPORT
+
+Found outside my module (record, Completion, items 1–2): (1) no op reads a group's offices (entities by kind office) and op=profiles carries no counterparties, so R20 lists only offices added in the visit (J1 (2), B2); a read of the group's offices would let the section list them all. (2) On tranche/T34 the door declares none of joinlinkinvite (also absent from the public ops relayed before sign-in), courtnotice(set), groupkey(set|switch|state), placewanted(state), memberlanguage(set), groupdescription(set|draft): op-declarations, admission, control-plane. Until their L11 jobs route them, the page states the door's refusal for each act. No generated artifact made stale.
