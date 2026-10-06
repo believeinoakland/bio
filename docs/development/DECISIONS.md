@@ -2203,6 +2203,7 @@ decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `docs/development/ux-substrate/journeys.html` (settled 2026-10-06).
 owed: nothing to BOB beyond each journey's own owed items in DEC-128 to DEC-136. (Design session) the journeys walked in step 5.
 ### DEC-138 · answered
+amended: 2026-10-06 · DEC-140: the wizard's ring is drawn again whenever the member asks ("Show me where", Alt+Shift+W).
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the design phase's step 4, the visual language, which Bob asked the session on 2026-10-06 to carry out, deciding everything beneath his rulings and bringing him only what is his)
 for: bob-session
 question: One visual language for every member screen and the published case, replacing the three conflicting looks (`civicos-ui/tokens.css`, whose source `BIO_Design_Language_v0_2.md` is missing; the action-design sketches; the measures map's placeholder colours): type, colour, shape, motion, light and dark, icons, and the marks (grades, weights, origin, the five gaps and the ordinary states, the queue's To do / Noticed / Status, the hint, the hold strip, the wizard mark), built on the plumb-bob mark, shipped inside the group's copy, WCAG 2.2 AA.
@@ -2229,3 +2230,17 @@ response: **Decided by the design session, 2026-10-06:** (1) **The working frame
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (published at https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv); `docs/development/ux-substrate/screens/`; `BIO_Interaction_Constructs_v0_1.md` §P (the library written) and §R (the rules without the assistant).
 owed: (BOB) the screen registry as the registry `wizard-scripts` R13 registers, declaring the ops of its 69 requirement functions by their lowercased names; the Civicsmith library as its data file once Bob approves it (S2); `wizard-scripts` R2 gains an optional `via` (a side trip into another wizard, returning to the step left); `answers` (the standing question) runs for a member with no account of their own, its new matches reaching the queue once as a list, unread. (Design session) S1 and S2 brought to Bob; the screens revised for his comments.
+
+### DEC-140 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the visual-language page, rule 4, "Still until the member is needed")
+for: bob-session
+question: Bob, 2026-10-06: "What do you think about a gesture or key of some kind that a user can use to say, "Hey, I missed that indicator of what you want me to do. Do it again.""
+why it is Bob's: it is not: design detail beneath principle 7.2 (motion only when action is needed) and DEC-120/DEC-121 (the wizard points, the member presses), suggested by Bob and decided by the design session (P17).
+provisional: DEC-138 rule 4 (the one movement: a wizard's ring drawn once onto the control its step names).
+alternative: no replay (the ring stays on the control for the whole step, so a member can scroll to it); a replay by gesture only.
+recommendation: as decided below.
+reversal cost: low.
+response: **Decided by the design session, 2026-10-06, at Bob's suggestion:** the wizard guide carries **"Show me where"** on every step that names a control, with the keyboard shortcut **Alt+Shift+W** (changeable in the member's settings; a modified key, so WCAG 2.2's character-key rule is met). Asking scrolls the control into view, draws the ring again, and moves the keyboard focus to it, so a screen-reader user hears the control named; it works as often as the member asks. On a phone the button sits in the guide's sheet. Under reduced motion the ring is not animated: the control is scrolled to and focused, and the ring stays as drawn. Member-initiated movement is consistent with principle 7.2. DEC-138 rule 4 and DEC-139's guide read accordingly.
+decided: 2026-10-06 · the design session (P17)
+reasoning recorded in: this entry; `visual-language.html` (rule 4, motion, the wizard marks); `layouts.html` (the guide, live in every walked step); `visual-language/components.css` (`.cs-target.again`, `.cs-kbd`).
+owed: (BOB) when the wizard runner is built (the interface's, wizard-scripts "It runs no wizard"): the guide's "Show me where" and its shortcut, as drawn. Nothing in a requirement changes.

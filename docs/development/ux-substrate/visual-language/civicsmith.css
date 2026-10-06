@@ -432,6 +432,9 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
   .cs-target { animation: cs-ring 600ms var(--ease) 1; }
   @keyframes cs-ring { from { outline-offset: 9px; outline-color: transparent; } to { outline-offset: 3px; } }
 }
+.cs-kbd { font: 500 var(--t-xs)/1 var(--f-mono); padding: 3px 6px; border: 1px solid var(--c-rule-strong); border-bottom-width: 2px; border-radius: var(--r-1); color: var(--c-ink-2); background: var(--c-sheet); }
+/* "Show me where": the member asks to see the ring again; it is drawn again, the control scrolled into view and focused */
+@media (prefers-reduced-motion: no-preference) { .cs-target.again { animation: cs-ring 600ms var(--ease) 1; } }
 /* the wizard mark: where wizards start (principle 6.7) */
 .cs-wizmark { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 6px; border: 1px solid var(--c-accent); border-radius: var(--r-1);
               color: var(--c-accent); font: 600 var(--t-xs)/1.2 var(--f-sans); background: transparent; cursor: pointer; }

@@ -455,6 +455,9 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
   .cs-target { animation: cs-ring 600ms var(--ease) 1; }
   @keyframes cs-ring { from { outline-offset: 9px; outline-color: transparent; } to { outline-offset: 3px; } }
 }
+.cs-kbd { font: 500 var(--t-xs)/1 var(--f-mono); padding: 3px 6px; border: 1px solid var(--c-rule-strong); border-bottom-width: 2px; border-radius: var(--r-1); color: var(--c-ink-2); background: var(--c-sheet); }
+/* "Show me where": the member asks to see the ring again; it is drawn again, the control scrolled into view and focused */
+@media (prefers-reduced-motion: no-preference) { .cs-target.again { animation: cs-ring 600ms var(--ease) 1; } }
 /* the wizard mark: where wizards start (principle 6.7) */
 .cs-wizmark { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 6px; border: 1px solid var(--c-accent); border-radius: var(--r-1);
               color: var(--c-accent); font: 600 var(--t-xs)/1.2 var(--f-sans); background: transparent; cursor: pointer; }
@@ -808,7 +811,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <tr><td>The working frame</td><td>Masthead with the group's name, a standing band, a seven-place rail, one column of work, the dock on the right. On a phone, five tabs and the dock as a sheet.</td></tr>
 <tr><td>Where acts sit</td><td>Under what they act on, each carrying its weight; a heavy act's dialog in place, never a distant toolbar.</td></tr>
 <tr><td>Home</td><td>“What brought you here?” with five front doors, a problem first; then what waits on you; then the group's projects with their stages.</td></tr>
-<tr><td>The wizard guide</td><td>Docks where the assistant does; says step, what and why; rings the real control once; side trips return to the step left; “Stopping is fine” on every step.</td></tr>
+<tr><td>The wizard guide</td><td>Docks where the assistant does; says step, what and why; rings the real control once; “Show me where” (or Alt+Shift+W) scrolls the control into view, draws the ring again and moves the keyboard to it, as often as the member asks (your suggestion); side trips return to the step left; “Stopping is fine” on every step.</td></tr>
 <tr><td>Side trips</td><td>A wizard step may start another wizard and return (journeys page). The script form needs one optional field for it; owed to the development process.</td></tr>
 <tr><td>Without the assistant</td><td>Section 4's six rules, including standing questions that still run and arrive as a list.</td></tr>
 <tr><td>Drafts without the assistant</td><td>From the group's own templates, labelled the same way, in the same field. No place, law or venue appears in Civicsmith's own wizard text: they come from the group's profile and templates.</td></tr>
@@ -1332,6 +1335,7 @@ function wizardGuide(w) {
     ${w.via ? `<p class="mk-small">${I('wizard')} Side trip: <b>${esc(w.via)}</b>. When it finishes or you stop it, you come back to this step.</p>` : ''}
     ${w.draft ? `<p class="mk-small">${I('machine')} This step places a labelled draft in the field. It becomes yours only when you keep or edit it.</p>` : ''}
     <span class="nav"><button type="button" class="cs-btn" data-tone="quiet">${I('back')}Back</button><button type="button" class="cs-btn">Next${I('next')}</button></span>
+    ${w.act ? `<span class="nav"><button type="button" class="cs-btn" data-replay>${I('wizard')}Show me where</button><span class="cs-kbd">Alt+Shift+W</span></span>` : ''}
     <p class="mk-small muted">Stopping is fine: nothing is lost, and nobody is told.</p></div></div></aside>`;
 }
 function mast(c, s) {
@@ -1352,6 +1356,15 @@ function render(screenId, c) {
    <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}</nav>
    <main class="cs-main">${s.crumbs ? crumbs(s.crumbs) : ''}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;
+}
+/* "Show me where": draw the ring again on the step's control, scroll it into view, and move the keyboard to it */
+function replay(root) {
+  const el = root.querySelector('.cs-target'); if (!el) return false;
+  el.classList.remove('again'); void el.offsetWidth; el.classList.add('again');
+  const main = el.closest('.cs-main, .mk-plainmain, .mk-pubmain');
+  if (main) { const r = el.getBoundingClientRect(), m = main.getBoundingClientRect(); main.scrollTop += (r.top - m.top) - 120; }
+  el.focus({ preventScroll: true });
+  return true;
 }
 /* draw the wizard's ring on the control its step names; return whether it was found */
 function ring(root, act, label) {
@@ -1487,7 +1500,7 @@ function journeySteps(j, ai) {
   if (j.wiz) {
     const w = LIB.find(x => x.name === j.wiz);
     const st = w.versions[0].steps;
-    return st.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: st.length, what: x.what, why: x.why, via: x.via, draft: x.draft } }));
+    return st.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: st.length, what: x.what, why: x.why, via: x.via, draft: x.draft, act: x.act } }));
   }
   return j.steps.filter(x => !x.only || (x.only === 'ai') === ai);
 }
@@ -1499,7 +1512,7 @@ function journeySteps(j, ai) {
   const save = () => { try { localStorage.setItem('cs-screens', JSON.stringify(st)); } catch (e) {} };
   function stepsNow() {
     if (st.mode === 'journey') { const j = J.find(x => x.n === st.id) || J[0]; return journeySteps(j, st.ai); }
-    if (st.mode === 'wizard') { const w = LIB.find(x => x.id === st.id) || LIB[0]; const s = w.versions[0].steps; return s.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: s.length, what: x.what, why: x.why, via: x.via, draft: x.draft } })); }
+    if (st.mode === 'wizard') { const w = LIB.find(x => x.id === st.id) || LIB[0]; const s = w.versions[0].steps; return s.map((x, i) => ({ s: x.screen, act: x.act, say: '', wizard: { name: w.name, i: i + 1, n: s.length, what: x.what, why: x.why, via: x.via, draft: x.draft, act: x.act } })); }
     return [{ s: st.id, act: null, say: ((REG.find(r => r.id === st.id) || {}).purpose || '').replace(/\s*\((?:DEC|K)[^)]*\)+/g, '').replace(/\s*\([^()]*\b(?:DEC|K)-?\d[^()]*\)/g, ''), dock: st.id === 'assistant' }];
   }
   function list() {
@@ -1545,6 +1558,7 @@ function journeySteps(j, ai) {
     const p = e.target.closest('[data-pick]'); if (p) { const [m, id] = p.dataset.pick.split(':'); st.mode = m; st.id = m === 'journey' ? +id : id; st.step = 0; draw(); return; }
     const t = e.target.closest('.vtabs button'); if (t) { st.list = t.dataset.list; list(); save(); return; }
     const d = e.target.closest('[data-step]'); if (d) { st.step = +d.dataset.step; draw(); return; }
+    const rp = e.target.closest('[data-replay]'); if (rp) { replay($('vscale')); return; }
     const o = e.target.closest('[data-open]'); if (o) { const [m, id, ai] = o.dataset.open.split(':'); st.mode = m; st.id = id; st.step = 0; st.list = 's'; st.ai = ai === '1'; syncSeg(); draw(); document.getElementById('walk').scrollIntoView(); return; }
     const a = e.target.closest('[data-ai]'); if (a) { st.ai = a.dataset.ai === '1'; syncSeg(); draw(); return; }
     const v = e.target.closest('[data-dev]'); if (v) { st.dev = v.dataset.dev; syncSeg(); draw(); return; }
@@ -1555,6 +1569,7 @@ function journeySteps(j, ai) {
   const t = $('srcToggle'); t.addEventListener('change', () => document.body.classList.toggle('show-src', t.checked));
   try { const th = localStorage.getItem('cs-th'); if (th) { document.documentElement.setAttribute('data-theme', th); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b.dataset.th === th)); } } catch (e) {}
   window.addEventListener('resize', fit);
+  document.addEventListener('keydown', e => { if (e.altKey && e.shiftKey && e.code === 'KeyW') { if (replay($('vscale'))) e.preventDefault(); } });
   window.CS_WALK = { st, stepsNow, draw, render, ring };
   syncSeg(); draw();
 })();

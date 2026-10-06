@@ -36,6 +36,7 @@ function wizardGuide(w) {
     ${w.via ? `<p class="mk-small">${I('wizard')} Side trip: <b>${esc(w.via)}</b>. When it finishes or you stop it, you come back to this step.</p>` : ''}
     ${w.draft ? `<p class="mk-small">${I('machine')} This step places a labelled draft in the field. It becomes yours only when you keep or edit it.</p>` : ''}
     <span class="nav"><button type="button" class="cs-btn" data-tone="quiet">${I('back')}Back</button><button type="button" class="cs-btn">Next${I('next')}</button></span>
+    ${w.act ? `<span class="nav"><button type="button" class="cs-btn" data-replay>${I('wizard')}Show me where</button><span class="cs-kbd">Alt+Shift+W</span></span>` : ''}
     <p class="mk-small muted">Stopping is fine: nothing is lost, and nobody is told.</p></div></div></aside>`;
 }
 function mast(c, s) {
@@ -56,6 +57,15 @@ function render(screenId, c) {
    <nav class="cs-rail" aria-label="Sections">${RAIL.map(([k, l, ic, n]) => `<a href="#" onclick="return false"${s.rail === k ? ' aria-current="page"' : ''}>${I(ic)}${l}${n ? `<span class="count">${n}</span>` : ''}</a>`).join('')}</nav>
    <main class="cs-main">${s.crumbs ? crumbs(s.crumbs) : ''}${s.main}</main>${dock}
    <nav class="cs-tabs" aria-label="Sections">${TABS.map(([k, l, ic]) => `<a href="#" onclick="return false"${(s.rail === k || (k === 'more' && ['projects', 'people', 'settings'].includes(s.rail))) ? ' aria-current="page"' : ''}>${I(ic)}${l}</a>`).join('')}</nav></div>`;
+}
+/* "Show me where": draw the ring again on the step's control, scroll it into view, and move the keyboard to it */
+function replay(root) {
+  const el = root.querySelector('.cs-target'); if (!el) return false;
+  el.classList.remove('again'); void el.offsetWidth; el.classList.add('again');
+  const main = el.closest('.cs-main, .mk-plainmain, .mk-pubmain');
+  if (main) { const r = el.getBoundingClientRect(), m = main.getBoundingClientRect(); main.scrollTop += (r.top - m.top) - 120; }
+  el.focus({ preventScroll: true });
+  return true;
 }
 /* draw the wizard's ring on the control its step names; return whether it was found */
 function ring(root, act, label) {

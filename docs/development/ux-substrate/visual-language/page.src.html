@@ -129,7 +129,7 @@ body:not(.show-src) .src { display: none; }
 <li><b>Colour always means something.</b><span>Verdigris for acting and for Civicsmith; rust only for attention (a clock, a change, a refusal, something visible outside the group); one colour per evidence scale. The assistant's work and another group's work carry no colour of their own: an edge, a mark and a word tell them apart.</span></li>
 <li><b>Three voices in type.</b><span>A serif for words people wrote (the group's questions, findings and cases, and passages quoted from documents); a plain sans for Civicsmith's own words; a monospaced face only for identifiers a machine checks, such as a fingerprint.</span></li>
 <li><b>Lines before shadows, and square corners.</b><span>Like a printed form: thin rules separate things; only something lifted above the work (a dialog, the hold strip) casts a shadow. No rounded pills.</span></li>
-<li><b>Still until the member is needed.</b><span>Nothing moves on load or while idle. The one movement is a wizard drawing a ring onto the control the member should press, once.</span></li>
+<li><b>Still until the member is needed.</b><span>Nothing moves on load or while idle. The one movement is a wizard drawing a ring onto the control the member should press: once by itself, and again whenever the member asks (“Show me where” in the guide, or Alt+Shift+W).</span></li>
 <li><b>Never colour alone.</b><span>Every colour has a word or an icon beside it; every pairing meets the international accessibility standard (WCAG 2.2 AA) in light and dark.</span></li>
 </ol>
 </section>
@@ -180,7 +180,7 @@ body:not(.show-src) .src { display: none; }
 <div class="cell"><h4>Lines before shadows</h4><div class="row"><span style="width:56px;height:36px;border:var(--hair);background:var(--c-surface)"></span><span style="width:56px;height:36px;background:var(--c-sheet);box-shadow:var(--shadow-float)"></span></div><p>Hairline rules separate. A shadow means “lifted above your work”: only a dialog, a menu and the hold strip have one.</p></div>
 <div class="cell"><h4>Space</h4><div class="row" style="align-items:flex-end;gap:6px"><span style="width:4px;height:4px;background:var(--c-ink)"></span><span style="width:8px;height:8px;background:var(--c-ink)"></span><span style="width:12px;height:12px;background:var(--c-ink)"></span><span style="width:16px;height:16px;background:var(--c-ink)"></span><span style="width:24px;height:24px;background:var(--c-ink)"></span><span style="width:32px;height:32px;background:var(--c-ink)"></span><span style="width:48px;height:48px;background:var(--c-ink)"></span></div><p>Eight steps on a four-pixel base. Density comes from signals, not cramming (principle 2.5): whitespace is kept, and marks carry the information.</p></div>
 <div class="cell"><h4>Targets</h4><p>Every button is at least 40 pixels tall, every phone target 44, well above the standard's 24-pixel minimum. A focused control always shows a two-pixel verdigris ring.</p><div class="row"><button class="cs-btn" type="button">Focus me</button></div></div>
-<div class="cell"><h4>Motion</h4><p>Changes of state take a tenth to a fifth of a second, with no bounce. Nothing animates on load or while idle. A wizard's ring draws onto its control once. With the device set to reduce motion, nothing moves at all.</p></div>
+<div class="cell"><h4>Motion</h4><p>Changes of state take a tenth to a fifth of a second, with no bounce. Nothing animates on load or while idle. A wizard's ring draws onto its control once, and again each time the member asks for it. With the device set to reduce motion, nothing moves at all.</p></div>
 <div class="cell"><h4>Light and dark</h4><p>Member screens follow the device and can be set in settings. The dark theme is drawn, not inverted: every colour was chosen again to keep its meaning and its contrast. A printed case and the complete edition are always light.</p></div>
 </div>
 <p class="src">principles 2.5, 7.2, 8.1, 8.8 (DEC-122 G2); WCAG 2.2 2.4.7, 2.5.8; civicsmith.css --r-*, --s-*, --d-*</p>
@@ -296,6 +296,7 @@ body:not(.show-src) .src { display: none; }
 <span class="what">Choose the office that holds the records.</span>
 <span class="why">the request goes to the office by its role, so it reaches whoever holds the post that day.</span>
 <span class="nav"><button class="cs-btn" data-tone="quiet" type="button">{i:back}Back</button><button class="cs-btn" type="button">Next{i:next}</button><button class="cs-btn" data-tone="quiet" type="button" style="margin-left:auto">Stop</button></span>
+<span class="nav"><button class="cs-btn" type="button" data-replay>{i:wizard}Show me where</button><span class="cs-kbd">Alt+Shift+W</span></span>
 </div>
 <div class="cs-field" style="align-content:start;padding:8px">
 <label for="vlOffice">Office</label>
@@ -303,7 +304,7 @@ body:not(.show-src) .src { display: none; }
 <span class="cs-target-label">{i:wizard}Choose here when you're ready</span>
 </div>
 </div>
-<p class="cap">The wizard mark is a walked path, never a gear. The guide docks where the assistant does; it rings the real control and never presses it. Stopping is a non-event.</p>
+<p class="cap">The wizard mark is a walked path, never a gear. The guide docks where the assistant does; it rings the real control and never presses it. Missed it? “Show me where”, or Alt+Shift+W, scrolls the control into view, draws the ring again and moves the keyboard to it. Stopping is a non-event.</p>
 </div>
 
 <h3>A labelled draft in a field</h3>
