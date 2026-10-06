@@ -66,11 +66,12 @@ export function world(fakes = {}, { bare = false } = {}) {
   /* `tasks` real (its R6 is what the feed reads), over the capture and provenance fakes; its table made at boot. */
   const tasks = tasksOf(host, { record, membership, start: false, now: () => w.now, capture: F.capture, provenance: F.provenance });
   if (!bare) tasks.migrate();
-  const q = queueOf(host, { record, membership, start: false, now: () => w.now, tasks, ...F });
+  /* R21, R22: the instance profile's zone is the world's `zone` (a test sets it, null for none held). */
+  const q = queueOf(host, { record, membership, start: false, now: () => w.now, zone: () => w.zone, tasks, ...F });
   /* R36: queue makes its own tables (`migrate`), never through the legacy store's SCHEMA (K735). */
   if (!bare) q.migrate();
   const w = {
-    db, sql, host, record, membership, credentials, q, tasks, fakes: F, statements, now: NOW, boot: () => { boot(); tasks.migrate(); q.migrate(); },
+    db, sql, host, record, membership, credentials, q, tasks, fakes: F, statements, now: NOW, zone: "America/Los_Angeles", boot: () => { boot(); tasks.migrate(); q.migrate(); },
     run: (s, ...a) => db.prepare(s).run(...a.map(bind)),
     all: (s, ...a) => db.prepare(s).all(...a.map(bind)),
     bundle(id, type = "information", { title = id, state = null } = {}) {
@@ -156,6 +157,8 @@ export function defaultFakes() {
        says otherwise. */
     filingTemplates: { reviewsRequested: ({ limit } = {}) => ({ ok: true, items: [], limit: limit ?? 500, truncated: false, cursor: null }) },
     localFacts: { factsDue: () => ({ ok: true, due: [], unknown: [], absent: [] }) },
+    /* notice-producers R1 (queue R51): nothing noticed and no producer failed until a test says otherwise. */
+    notices: { noticeItems: () => ({ items: [], facts: {} }) },
     affordances: { affordanceFacts: () => ({ ok: false }) },
     scheduler: { arm: async () => null, register: () => ({ ok: true }) },
   };
