@@ -2483,6 +2483,17 @@ order they should be read. None is chosen for you.</p>
 ${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name="profile" value="${escText(p.id)}"><span class="pname">${escText(p.name)}</span> <span class="small pcovers">covers ${p.covers.map(escText).join(", ")}</span></label>`).join("\n")}
 </fieldset>
 <p class="hint">${PROFILES_NONE}</p>`;
+var ASSISTANT_OFFER = `The assistant is off unless your group chooses it. Your copy holds no Claude account of
+its own: each member who wants the assistant connects their own Claude subscription or API key inside the copy, and is
+told then that their questions, and the material read to answer them, go to Anthropic under their own account. An
+administrator can change this choice later on your copy.`;
+var assistantBlock = () => `<h2>The assistant</h2>
+<fieldset class="profiles" id="assistant">
+<legend class="small">Offer the assistant on your copy?</legend>
+<label class="choice"><input type="radio" name="assistant" value="on">Yes, offer it to members who connect their own account</label>
+<label class="choice"><input type="radio" name="assistant" value="off">Not now</label>
+</fieldset>
+<p class="hint">${ASSISTANT_OFFER}</p>`;
 var PAGE_CSS = `
 :root{
   --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
@@ -2590,6 +2601,7 @@ ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
+const asOf=()=>{const c=document.querySelector('input[name="assistant"]:checked');return c?{assistant:c.value}:{};};
 const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
   const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
@@ -2601,7 +2613,7 @@ $("#go").addEventListener("click",async()=>{
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...asOf(),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -2630,12 +2642,17 @@ copy keeps its evidence in. The installer checks both before it creates
 anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
+<p style="margin:12px 0 0">For the assistant through a member's own Claude
+subscription, the installer also asks the <b>Workers Containers
+permission</b>: that path runs in a container, which Workers Paid includes.
+Without the permission, everything else installs, and members use the
+assistant only with their own API key.</p>
 </div>
 
 <h2>What happens when you press the button</h2>
 <p>Cloudflare will show you a permission screen naming exactly what this
-installer may do in your account: install the software, and set up its
-storage. You approve it there, on Cloudflare's own page, and you can revoke
+installer may do in your account: install the software, set up its
+storage, and set up the assistant's container. You approve it there, on Cloudflare's own page, and you can revoke
 it any time from your Cloudflare dashboard. The permission passes through
 this installer for the seconds the setup takes. This installer has no
 database and nowhere to keep it, and it is never stored.</p>
@@ -2646,6 +2663,8 @@ that your group can stand up a copy even if the publisher of ${PRODUCT} releases
 disappears.</p>
 
 ${profilesBlock()}
+
+${assistantBlock()}
 
 <h2>Name your copy</h2>`,
   slugLabel: "A short name for your group",
@@ -2668,8 +2687,11 @@ credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
 organisation AI credential you paste in the optional box below.`,
   blocks: `<h2>What happens when you press the button</h2>
-<p>Cloudflare shows you the same permission screen as at install. You approve
-it on Cloudflare's own page, the new release is placed into your account, and
+<p>Cloudflare shows you the permission screen. If your copy was installed
+before the assistant's container existed, it asks one permission more than
+before, <b>Workers Containers</b>, for the assistant through a member's own
+Claude subscription; without it, everything else updates and members use the
+assistant only with their own API key. You approve it on Cloudflare's own page, the new release is placed into your account, and
 the permission is gone the moment it finishes. Nothing is stored here.</p>
 
 <h2>Which copy</h2>`,
@@ -2889,7 +2911,13 @@ var OPAQUE_ID_RE = statementIdPattern();
 
 // ../bio-plane/src/setup-fleet.mjs
 var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var FLEET_BINDINGS = [
+  ["agent-worker", "AGENT_WORKER"],
+  ["pdf-worker", "PDF_WORKER"],
+  ["ocr-worker", "OCR_WORKER"],
+  ["sheet-worker", "SHEET_WORKER"],
+  ["agent-runner", "AGENT_RUNNER"]
+];
 var HOSTING_CONTROL = Object.freeze({
   heading: "Before you choose a password: who controls this copy",
   sentences: Object.freeze([
@@ -2912,8 +2940,11 @@ var CFG = {
   TOKEN: "https://dash.cloudflare.com/oauth2/token",
   API: "https://api.cloudflare.com/client/v4",
   REDIRECT: "https://newgroup.believeinoakland.workers.dev/callback",
-  /* Exactly the scopes registered on the OAuth client, nothing more. */
-  SCOPES: ["workers-scripts.write", "workers-r2.write", "account-settings.read"],
+  /* Exactly the scopes registered on the OAuth client, nothing more. R2 (M-Q8): the fourth is the Containers write
+     scope, by the id Cloudflare's scope list gives it (`GET /client/v4/oauth/scopes`, read 2026-10-06: "Workers
+     Containers Write", `containers.write`); it is asked so a container member can be installed (R38), and a group
+     re-consents to it at its first update after T33 (R17). */
+  SCOPES: ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write"],
   COOKIE: "bio_wiz",
   COOKIE_MAX_AGE_S: 900,
   /* Public releases: two committed files in the repo's release/ folder on
@@ -3026,7 +3057,7 @@ async function exchange(code, verifier) {
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.access_token)
     throw new Error(j.error_description || j.error || `HTTP ${r.status}`);
-  return j.access_token;
+  return { token: j.access_token, scope: typeof j.scope === "string" ? j.scope : null };
 }
 async function cf(token, path, init = {}) {
   const r = await fetch(CFG.API + path, { ...init, headers: {
@@ -3171,6 +3202,27 @@ var INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
 var INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
 var instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
 var instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
+var SEAL_BINDING = "ACCOUNT_SEAL_SECRET";
+var sealBinding = (v) => typeof v === "string" && v ? [{ type: "secret_text", name: SEAL_BINDING, text: v }] : [];
+var RETIRED_CLAUDE_BINDING = "INSTANCE_CLAUDE_TOKEN";
+async function heldSecrets(token, acct, slug) {
+  try {
+    const s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`);
+    if (!s || !Array.isArray(s.bindings)) return null;
+    return new Set(s.bindings.filter((b) => b && b.type === "secret_text").map((b) => b.name));
+  } catch {
+    return null;
+  }
+}
+var ASSISTANT_BINDING = "ASSISTANT_ENABLED";
+var ASSISTANT_CHOICES = ["on", "off"];
+var assistantBinding = (v) => ASSISTANT_CHOICES.includes(v) ? [{ type: "plain_text", name: ASSISTANT_BINDING, text: v }] : [];
+function assistantRefusal(v, mode) {
+  if (v === void 0 || v === null) return null;
+  if (mode === "update") return "An update never changes whether your copy offers the assistant; an administrator changes it on your copy.";
+  if (!ASSISTANT_CHOICES.includes(v)) return "The assistant is offered or not: choose one of the two, or neither.";
+  return null;
+}
 var LIMITS_TAG = "bio-plane-limits/1";
 function planeLimits(source) {
   if (typeof source !== "string") return { ok: false, why: "none" };
@@ -3236,8 +3288,12 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "secret_text", name: "DAEMON_TOKEN", text: secrets.daemon },
       /* DIST-9 (D-260's deploy half): the organisation `ai` credential, ONLY when the operator supplied one. */
       ...instanceAiBinding(secrets.instanceAi),
+      /* K1541: the seal secret members' own account references are sealed under; never shown. */
+      ...sealBinding(secrets.seal),
       /* R21: the chosen jurisdiction profiles, only when some were chosen. */
       ...profilesBinding(opts.profiles),
+      /* R37: the assistant choice, only when one was made. */
+      ...assistantBinding(opts.assistant),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...opts.noSelf ? [] : [selfBinding(slug)],
@@ -3309,8 +3365,12 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          it. Unlike DAEMON_TOKEN above there is NO `|| rand(32)` here, and there must never be one: see
          instanceAiBinding. */
       ...instanceAiBinding(opts.instanceAi),
+      /* K1541: only when the copy is known to hold none (runUpdate reads its settings); never over one it holds. */
+      ...sealBinding(opts.seal),
       /* R21: restated only by the install's step-3 re-PUT (see PROFILES_BINDING); an update never passes it. */
-      ...profilesBinding(opts.profiles)
+      ...profilesBinding(opts.profiles),
+      /* R37: likewise the assistant choice. */
+      ...assistantBinding(opts.assistant)
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -3340,7 +3400,7 @@ async function fetchVerified(url, wantSha, what) {
   if (got !== wantSha) throw new Error(what + " failed its integrity check");
   return bytes;
 }
-async function uploadMember(token, acct, slug, m, version, bundle, partBytes) {
+async function uploadMember(token, acct, slug, m, version, bundle, partBytes, extra = {}) {
   const meta = {
     main_module: "index.mjs",
     /* COPIED from the signed manifest, which copied it from the member's own
@@ -3357,18 +3417,95 @@ async function uploadMember(token, acct, slug, m, version, bundle, partBytes) {
         type: "service",
         name: sv.binding,
         service: sv.service === "bio-plane" ? slug : sv.service
-      }))
-    ]
+      })),
+      /* R38: a container member's Durable Object class, bound cross-script into each member its descriptor names. */
+      ...extra.bindings || []
+    ],
+    /* R38: a container member's class is created by its first upload's migration, and never restated after it. */
+    ...extra.migrations ? { migrations: extra.migrations } : {}
   };
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
   fd.append("index.mjs", new Blob([bundle], { type: "application/javascript+module" }), "index.mjs");
-  for (const p of m.parts || []) {
+  for (const p of (m.parts || []).filter((pp) => pp.type !== CONTAINER_PART)) {
     fd.append(p.path, new Blob([partBytes[p.path]], { type: PART_MIME[p.type] }), p.path);
   }
   return cf(token, `/accounts/${acct}/workers/scripts/${m.member}`, { method: "PUT", body: fd });
 }
-async function installFleet(emit, token, acct, slug, release) {
+var CONTAINER_PART = "Container";
+var containerPartOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
+var PUBLIC_IMAGE = /^(?:docker\.io|registry-1\.docker\.io|[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com|[a-z0-9-]+-docker\.pkg\.dev)\/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$/;
+var CLASS_NAME = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
+var BINDING_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
+function containerDescriptor(bytes) {
+  let d;
+  try {
+    d = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return { ok: false, why: "its container description does not parse" };
+  }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "its container description is not an object" };
+  if (typeof d.class_name !== "string" || !CLASS_NAME.test(d.class_name)) return { ok: false, why: "its container description names no class" };
+  if (typeof d.image !== "string" || !PUBLIC_IMAGE.test(d.image))
+    return { ok: false, why: "its image is not a public registry image pinned by its sha256 digest" };
+  if (d.scheduling_policy !== "default") return { ok: false, why: "its scheduling policy is not the default one" };
+  if (!Number.isInteger(d.max_instances) || d.max_instances < 1 || d.max_instances > 1e3)
+    return { ok: false, why: "its container description states no maximum number of instances" };
+  const bind = d.bind === void 0 ? [] : d.bind;
+  if (!Array.isArray(bind) || !bind.every((b) => b && typeof b.member === "string" && b.member && typeof b.binding === "string" && BINDING_NAME.test(b.binding)))
+    return { ok: false, why: "its container description names its bindings unreadably" };
+  return { ok: true, d: { class_name: d.class_name, image: d.image, max_instances: d.max_instances, bind } };
+}
+async function containerConditions(token, acct, { scope, plan }) {
+  if (scope !== null && scope !== void 0) {
+    if (!scope.split(/[\s,]+/).includes("containers.write"))
+      return { ok: false, why: "the permission you approved does not include Workers Containers" };
+  } else {
+    try {
+      await cf(token, `/accounts/${acct}/containers/applications`);
+    } catch (e) {
+      return { ok: false, why: "the permission you approved could not be shown to include Workers Containers (" + e.message + ")" };
+    }
+  }
+  let p = plan;
+  if (!p) {
+    try {
+      p = await establishPlan(token, acct);
+    } catch (e) {
+      p = { plan: "unknown", detail: e.message };
+    }
+  }
+  if (p.plan === "free") return { ok: false, why: "your account is on Workers Free, and containers need Workers Paid" };
+  if (p.plan !== "paid") return { ok: false, why: "your account's Workers plan could not be verified (" + (p.detail || "no answer") + ")" };
+  return { ok: true, leftover: !!p.leftover };
+}
+async function placeContainer(token, acct, m, d) {
+  const spaces = await cf(token, `/accounts/${acct}/workers/durable_objects/namespaces?per_page=1000`);
+  const ns = (Array.isArray(spaces) ? spaces : []).find((n) => n && n.script === m.member && n.class === d.class_name);
+  if (!ns || !ns.id) throw new Error("its Durable Object class " + d.class_name + " was not found after the upload");
+  const apps = await cf(token, `/accounts/${acct}/containers/applications`);
+  const app = (Array.isArray(apps) ? apps : []).find((a) => a && a.name === m.member);
+  if (!app) {
+    await cf(token, `/accounts/${acct}/containers/applications`, { method: "POST", body: JSON.stringify({
+      name: m.member,
+      scheduling_policy: "default",
+      instances: 0,
+      max_instances: d.max_instances,
+      configuration: { image: d.image },
+      durable_objects: { namespace_id: ns.id }
+    }) });
+    return "created";
+  }
+  await cf(token, `/accounts/${acct}/containers/applications/${app.id}/rollouts`, { method: "POST", body: JSON.stringify({
+    description: "Civicsmith installer: " + m.member,
+    strategy: "rolling",
+    kind: "full_auto",
+    step_percentage: 100,
+    target_configuration: { image: d.image }
+  }) });
+  return "rolled out";
+}
+async function installFleet(emit, token, acct, slug, release, ctx = {}) {
   emit.step("fleet", "Installing the capability workers beside your copy");
   const man = release.man;
   if (!man) {
@@ -3405,10 +3542,15 @@ async function installFleet(emit, token, acct, slug, release) {
     return;
   }
   const done = [], left = [];
-  for (const m of man.fleet) {
+  const fleet = [...man.fleet].sort((a, b) => (containerPartOf(b).length ? 1 : 0) - (containerPartOf(a).length ? 1 : 0));
+  const classOf = /* @__PURE__ */ new Map();
+  let conditions = null, leftover = false;
+  for (const m of fleet) {
     try {
-      const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type]);
+      const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type] && pp.type !== CONTAINER_PART);
       if (badType) throw new Error("part " + badType.path + " has module type '" + badType.type + "' this installer does not know \u2014 refusing to guess a loader");
+      const box = containerPartOf(m);
+      if (box.length > 1) throw new Error("it carries more than one container description");
       const bundle = await fetchVerified(CFG.RELEASE_LATEST + "/" + m.asset, m.sha256, m.member);
       const partBytes = {};
       for (const pp of m.parts || []) {
@@ -3418,16 +3560,49 @@ async function installFleet(emit, token, acct, slug, release) {
           m.member + " " + pp.path
         );
       }
-      await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes);
+      if (!box.length) {
+        await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { bindings: classOf.get(m.member) });
+        done.push(m.member);
+        continue;
+      }
+      const read = containerDescriptor(partBytes[box[0].path]);
+      if (!read.ok) throw new Error(read.why);
+      const d = read.d;
+      const binds = () => {
+        for (const b of d.bind) classOf.set(b.member, [
+          ...classOf.get(b.member) || [],
+          { type: "durable_object_namespace", name: b.binding, class_name: d.class_name, script_name: m.member }
+        ]);
+      };
+      const fresh = !await scriptExists(token, acct, m.member);
+      conditions ??= await containerConditions(token, acct, ctx);
+      leftover = !!conditions.leftover;
+      if (!conditions.ok) {
+        if (!fresh) binds();
+        throw new Error(conditions.why);
+      }
+      await uploadMember(
+        token,
+        acct,
+        slug,
+        m,
+        String(man.version),
+        bundle,
+        partBytes,
+        fresh ? { migrations: { new_tag: "v1", new_sqlite_classes: [d.class_name] } } : {}
+      );
+      await placeContainer(token, acct, m, d);
+      binds();
       done.push(m.member);
     } catch (e) {
-      left.push({ member: m.member, why: String(e && e.message || e) });
+      left.push({ member: m.member, why: String(e && e.message || e) + (containerPartOf(m).length ? "; your copy offers the assistant only through a member's own API key until it is installed" : "") });
     }
   }
+  const probeNote = leftover ? ' One cleanup note: the tiny probe script "' + PLAN_PROBE + '" could not be deleted automatically \u2014 it is harmless, and you can remove it from Workers & Pages any time.' : "";
   if (left.length === 0) {
-    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: " + done.join(", ") + ".");
+    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: " + done.join(", ") + "." + probeNote);
   } else {
-    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "") + left.length + " left out: " + left.map((l) => l.member + " (" + l.why + ")").join("; ") + ". Your copy works without them; the next update retries exactly this step.");
+    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "") + left.length + " left out: " + left.map((l) => l.member + " (" + l.why + ")").join("; ") + ". Your copy works without them; the next update retries exactly this step." + probeNote);
   }
   return { done, left };
 }
@@ -3443,7 +3618,7 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
       slug,
       opts.withR2,
       release,
-      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles }
+      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles, assistant: opts.assistant }
     );
     emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
     return { bound: want, unbound: [], put: true };
@@ -3619,6 +3794,28 @@ function instanceAiNotice(emit, mode, carried) {
   if (carried) return emit.ok("ai", "The organisation AI credential you gave was stored in your copy as a secret (it is not shown here). Your copy uses it to resume assistant runs that credential opened.");
   emit.ok("ai", mode === "update" ? "No organisation AI credential was given, so none was sent. One your copy already holds is kept unchanged; this installer never creates one." : "No organisation AI credential was given, so your copy has none: it will not resume paused assistant runs on its own. A member mints one on the copy; running the updater with it adds it. This installer never creates one.");
 }
+async function accountSecretsNotice(emit, token, acct, slug, held, seal) {
+  emit.step("keys", "Your members' own accounts");
+  if (!held) return emit.no("keys", "Your copy's settings could not be read, so the installer could not tell whether it holds the secret that seals each member's own Claude account or API key, or a group-wide Claude credential from before. Nothing was sent or removed. Running this update again checks once more.");
+  const said = [seal ? "Your copy now holds the secret that seals each member's own Claude account or API key (it is not shown here)." : "Your copy already held the secret that seals each member's own Claude account or API key; it is kept unchanged."];
+  let ok = true;
+  if (held.has(RETIRED_CLAUDE_BINDING)) {
+    try {
+      await cf(token, `/accounts/${acct}/workers/scripts/${slug}/secrets/${RETIRED_CLAUDE_BINDING}`, { method: "DELETE" });
+      said.push("The group-wide Claude credential your copy held was removed: a copy holds none now.");
+    } catch (e) {
+      ok = false;
+      said.push("Your copy holds a group-wide Claude credential from before, and removing it was refused (Cloudflare said: " + e.message + "). Remove the secret " + RETIRED_CLAUDE_BINDING + " from your worker's settings on Cloudflare.");
+    }
+  }
+  said.push(ASSISTANT_OWN_ACCOUNTS);
+  return ok ? emit.ok("keys", said.join(" ")) : emit.no("keys", said.join(" "));
+}
+var ASSISTANT_OWN_ACCOUNTS = "Your copy holds no Claude account of its own: each member who wants the assistant connects their own Claude subscription or API key inside the copy, and is told then that their questions, and the material read to answer them, go to Anthropic under their own account.";
+function assistantNotice(emit, choice) {
+  emit.step("assist", "The assistant");
+  emit.ok("assist", (choice === "on" ? "You chose to offer the assistant on your copy. " : choice === "off" ? "You chose not to offer the assistant for now, so it is off. " : "No choice was made about the assistant, so it is off. ") + ASSISTANT_OWN_ACCOUNTS + (choice === "on" ? "" : " An administrator can turn it on later on your copy."));
+}
 function oneCopyRefusal(emit, held) {
   return emit.fail(
     `Your Cloudflare account already holds a copy of ${PRODUCT}`,
@@ -3628,10 +3825,10 @@ function oneCopyRefusal(emit, held) {
 }
 async function runInstall(emit, code, saved) {
   const slug = saved.slug;
-  let token;
+  let token, scope;
   emit.step("auth", "Confirming your permission with Cloudflare");
   try {
-    token = await exchange(code, saved.v);
+    ({ token, scope } = await exchange(code, saved.v));
     emit.ok("auth");
   } catch (e) {
     emit.no("auth");
@@ -3748,20 +3945,22 @@ async function runInstall(emit, code, saved) {
     member: rand(32),
     probe: rand(32),
     daemon: rand(32),
+    seal: rand(32),
     ...instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}
   };
   emit.ok("gen");
   const present = await membersPresent(token, acct.id);
   const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
+  const assistant = ASSISTANT_CHOICES.includes(saved.as) ? saved.as : void 0;
   let selfRefused = false;
   emit.step("install", "Installing the software into your account");
   try {
-    await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles });
+    await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles, assistant });
     emit.ok("install");
   } catch (e) {
     let degraded = false;
     try {
-      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles });
+      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles, assistant });
       degraded = true;
     } catch {
     }
@@ -3782,7 +3981,7 @@ async function runInstall(emit, code, saved) {
     if (lag && !byteLags.includes(lag)) byteLags.push(lag);
   };
   await readBackInto();
-  const fleet = await installFleet(emit, token, acct.id, slug, release);
+  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope, plan: { plan: "paid" } });
   const bound = await bindMembers(
     emit,
     token,
@@ -3791,10 +3990,11 @@ async function runInstall(emit, code, saved) {
     release,
     present,
     fleet,
-    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles }
+    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles, assistant }
   );
   if (bound.put) await readBackInto();
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
+  assistantNotice(emit, assistant);
   emit.step("addr", "Turning on your web address");
   let base;
   try {
@@ -3877,10 +4077,10 @@ the same. The installer does not record it for you: which group produces your re
 }
 async function runUpdate(emit, code, saved) {
   const slug = saved.slug;
-  let token;
+  let token, scope;
   emit.step("auth", "Confirming your permission with Cloudflare");
   try {
-    token = await exchange(code, saved.v);
+    ({ token, scope } = await exchange(code, saved.v));
     emit.ok("auth");
   } catch (e) {
     emit.no("auth");
@@ -3951,8 +4151,10 @@ async function runUpdate(emit, code, saved) {
   emit.step("up", noop ? `Your copy already runs ${release.version}. Re-uploading the same version` : before ? `Updating the software from ${before} to ${release.version}` : `Updating the software to ${release.version}`);
   const present = await membersPresent(token, acct.id);
   const instanceAi = instanceAiOk(saved.ai) ? saved.ai : void 0;
+  const held = await heldSecrets(token, acct.id, slug);
+  const seal = held && !held.has(SEAL_BINDING) ? rand(32) : void 0;
   try {
-    await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi });
+    await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi, seal });
     emit.ok("up");
   } catch (e) {
     emit.no("up");
@@ -3968,10 +4170,11 @@ async function runUpdate(emit, code, saved) {
     if (lag && !byteLags.includes(lag)) byteLags.push(lag);
   };
   await readBackInto();
-  const fleet = await installFleet(emit, token, acct.id, slug, release);
+  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope });
   const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
   if (bound.put) await readBackInto();
   instanceAiNotice(emit, "update", !!instanceAi);
+  await accountSecretsNotice(emit, token, acct.id, slug, held, seal);
   emit.step("addr", "Finding your copy's address");
   let base = null;
   try {
@@ -4039,7 +4242,19 @@ var index_default = {
       const profilesWhy = profilesRefusal(body.profiles, mode);
       if (profilesWhy) return json({ ok: false, error: profilesWhy }, 400);
       const p = Array.isArray(body.profiles) && body.profiles.length ? body.profiles : null;
-      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...ai ? { ai } : {}, ...p ? { p } : {} })));
+      const assistantWhy = assistantRefusal(body.assistant, mode);
+      if (assistantWhy) return json({ ok: false, error: assistantWhy }, 400);
+      const as = ASSISTANT_CHOICES.includes(body.assistant) ? body.assistant : null;
+      const cookie = b64url(enc.encode(JSON.stringify({
+        v,
+        s,
+        slug,
+        mode,
+        t: Date.now(),
+        ...ai ? { ai } : {},
+        ...p ? { p } : {},
+        ...as ? { as } : {}
+      })));
       return json(
         { ok: true, authorize: `${CFG.AUTHORIZE}?${q}` },
         200,
@@ -4104,10 +4319,16 @@ ${publisherFooter()}
 }
 export {
   ARMED_SIGNERS,
+  ASSISTANT_BINDING,
+  ASSISTANT_OWN_ACCOUNTS,
   BROWSER_BINDING,
   CFG,
+  CONTAINER_PART,
   INSTANCE_AI_BINDING,
   PROFILES_BINDING,
+  RETIRED_CLAUDE_BINDING,
+  SEAL_BINDING,
+  containerDescriptor,
   index_default as default,
   instanceAiOk,
   planeLimits,

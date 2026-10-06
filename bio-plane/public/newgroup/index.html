@@ -76,14 +76,19 @@ too small for that work.</li>
 turns on the file storage your copy keeps its evidence in. The installer
 checks for the plan and the storage before it creates anything, and stops,
 saying which is missing, if either is.</li>
+<li><b>The Workers Containers permission,</b> for the assistant through a
+member's own Claude subscription, which runs in a container. The setup asks
+for it; without it everything else installs, and members use the assistant
+only with their own API key. The assistant is optional, and your copy holds no
+Claude account of its own.</li>
 <li><b>About five minutes,</b> in a browser. No terminal, no code, nothing
 to download.</li>
 </ul>
 
 <h2>What happens, and what we can and cannot see</h2>
 <p>The setup assistant asks Cloudflare to show you a permission screen
-naming exactly what it may do in your account: install the software and set
-up its storage. You approve it on Cloudflare's own page, and you can revoke
+naming exactly what it may do in your account: install the software, set
+up its storage, and set up the assistant's container. You approve it on Cloudflare's own page, and you can revoke
 it any time from your dashboard. That permission passes through our
 assistant for the seconds the installation takes, is stored nowhere, and is
 never seen by a person. After setup, nothing your group does routes through

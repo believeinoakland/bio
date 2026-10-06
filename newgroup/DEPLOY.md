@@ -44,7 +44,10 @@ If the very first step fails with a handshake error, the suspects in order
 are: the redirect URL on the OAuth client not being character-identical to
 `https://newgroup.believeinoakland.workers.dev/callback`, and the scope
 names on the client not matching `workers-scripts.write`, `workers-r2.write`,
-`account-settings.read`.
+`account-settings.read`, `containers.write`. The fourth was added for the
+assistant's container member (T33-91). Add it to the OAuth client's registered
+scopes BEFORE deploying an installer that asks it, or every sign-in is refused
+on Cloudflare's consent screen.
 
 ## 5. Clean up the smoke test
 
