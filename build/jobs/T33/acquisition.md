@@ -37,13 +37,13 @@
 
 **Deferred.** Nothing in this module.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 1. **`build/modules.json`: acquisition's `uses` lacks `credentials`, though its requirements' Uses names `credentials.keyedServiceFor`.** No code edge is needed: the key is read through `store.credentials`, which the caller hands in. BOB may add the edge to match the requirements or leave it.
 2. **capture:** its instance's `credentials` field is lazy. It stays null until `#credentials()` is first called, unless it is passed in at construction. Anyone that hands capture's store to `keyedFetch` or `citationLookup` must populate it first; otherwise the service reads as off. The first such caller is expected to be `standards` (T33-31, the citation resolver), which can instead hand in its own `{credentials, governor, env}`.
 3. **standards (T33-31):** call `citationLookup(store, {text, viewer})` with a member's viewer. A machine viewer is refused.
 4. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` is stale from this module's source. I did not rebuild it.
 
-**Final uses.** Unchanged in code: record-grammar (now also `ISO_TS_RE` and `isMachineIdentity`), subresources, format-registry, odf-reader, docprofile, jurisdictions, capture-sources, host-governor, provenance, attestation. credentials is reached through the store handed in (see J2 item 1).
+**Final uses.** Unchanged in code: record-grammar (now also `ISO_TS_RE` and `isMachineIdentity`), subresources, format-registry, odf-reader, docprofile, jurisdictions, capture-sources, host-governor, provenance, attestation. credentials is reached through the store handed in (see J1 item 1).
 
 **Tests and checks** (branch `job/T33/acquisition` at the commit above, on `tranche/T33` @ `206778b8b7`).
 - `node --test bio-plane/test/m/acquisition/`: tests 84, pass 84, fail 0. The base was 73/73; the 11 new tests are `memento-at.test.mjs` (R35, 4 tests) and `keyed.test.mjs` (R36, R37, 7 tests, including a sentinel key checked absent from every answer, receipt, store row, governor call, stored object and log line).
