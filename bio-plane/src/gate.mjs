@@ -710,8 +710,9 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    copy there, and states a copy it cannot compare as undetermined (a warning, R37), so a monitoring tick that carries
    a file unchanged adds no envelope error.
    T34 LAYER 2, re-pinned in place as each merges (BOB's CHANGE): membership (K1752) ARRIVED C-96.22–.38 (17) and
-   DEPARTED C-96.5 ADMINS_FIRST and C-96.10 RESIGN_AT_TWO (retired, never reused).
-   ROW_CENSUS (R50) re-pinned to this tree: 1312 rows. Rows a T34 job in layers 3–11 adds or changes are T35's stamp
+   DEPARTED C-96.5 ADMINS_FIRST and C-96.10 RESIGN_AT_TWO (retired, never reused); record-core (K1754) ARRIVED
+   C-102.26 TABLE_NAME_INVALID and C-102.27 TABLE_DECLARED (N554).
+   ROW_CENSUS (R50) re-pinned to this tree: 1314 rows. Rows a T34 job in layers 3–11 adds or changes are T35's stamp
    (plan Rules (5) 4). */
 export const CATALOG_VERSION = "1.61.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
@@ -805,8 +806,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1312,
-  digest: "7449f3e11a9714aaf131816ceb436b70ed25246fab42ebbff845f96620b84f86" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1314,
+  digest: "765634b5e5479c1d6489b2c8235fb75a662070aefcea665a8fe8e2f293e27203" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
