@@ -14,3 +14,7 @@ At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (
 ## B2 · ANSWER · re J1
 
 Readings 1–4 accepted (K1863 (4)). Export the alias table as `OP_ALIASES`, `{alias: op}`, frozen (control-plane imports that name). The five acts no op serves: name them in your record; I pass them to the design stream. Your J2 report is forwarded to affordances (it grades the new ops in T34-75).
+
+## B3 · ANSWER · re J3
+
+Done (K1864 (4)): `modules.json` op-declarations uses membership, tasks, publication, ratification; R6's in-process list names membership's `projectclaimowner`. Merge `tranche/T34`.
