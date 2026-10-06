@@ -259,6 +259,29 @@ Sources, with the date each page states:
   > For questions about permitted authentication methods for your use case, please contact sales.
 - **Bears on:** the questions below go to Anthropic's sales; an answer in writing is cited here as a new entry.
 
+### AT-26
+- **Governs:** Claude Code's sign-in (Pro, Max; Team and Enterprise as invited)
+- **Source:** https://code.claude.com/docs/en/authentication ("Log in to Claude Code")
+- **Read:** 2026-10-06 (quoted by the design session, U81; checked verbatim by BOB #124 the same day)
+- **Text:**
+  > If your browser shows a login code instead of redirecting back after you sign in, paste it into the terminal at the `Paste code here if prompted` prompt. This happens when the browser can't reach Claude Code's local callback server, which is common in WSL2, SSH sessions, and containers.
+  >
+  > You can authenticate with any of these account types:
+  >
+  > * **Claude Pro or Max subscription**: log in with your claude.ai account. […]
+  > * **Claude for Teams or Enterprise**: log in with the claude.ai account your team admin invited you to.
+- **Bears on:** Claude Code hosted in a group's container: a member signing in completes Anthropic's sign-in in their own browser, and the login code must then reach the hosted binary's own prompt. The page lists no Free plan among the account types for Claude Code (it lists also Console, cloud providers and a cloud gateway, outside the member's subscription path).
+
+### AT-27
+- **Governs:** Claude Code's stored credentials (every account type)
+- **Source:** https://code.claude.com/docs/en/authentication ("Credential management")
+- **Read:** 2026-10-06 (as AT-26)
+- **Text:**
+  > On Linux, credentials are stored in `~/.claude/.credentials.json` with file mode `0600`.
+  >
+  > Claude Code manages `.credentials.json` through `/login` and `/logout`.
+- **Bears on:** a member's sign-in through hosted Claude Code's own login is written by the binary into the container it runs in (the group's), not by Civicsmith's code.
+
 ## Unresolved: ask Anthropic
 
 Questions the pages read on 2026-10-06 do not answer, which matter to this product. Each states what the pages say and what they do not; no statement elsewhere assumes either answer.
@@ -269,6 +292,7 @@ Questions the pages read on 2026-10-06 do not answer, which matter to this produ
 - **U-4 · Who a group's "authorized users" are.** Say: the key owner's "own authorized users" (AT-9); the Customer's "own customers and end users ('Users')" (AT-10). Do not say: whether a civic group's members, who are not its employees and may be an unincorporated association's volunteers, are its authorized users or Users.
 - **U-5 · Unattended runs on a member's subscription.** Say: Pro and Max limits "assume ordinary, individual usage of Claude Code and the Agent SDK" (AT-4); OAuth supports "ordinary use" (AT-21); `setup-token` is for "CI pipelines, scripts, or other environments" (AT-22). Do not say: whether a member's standing question, re-run by the scheduler and calling the model on that member's token without their act each time, is ordinary individual use.
 - **U-6 · The paused Agent SDK change.** Say: the June 15 change is paused and an update will be shared "before anything takes effect" (AT-23). Do not say: whether or when Agent SDK and third-party-app use will stop drawing on subscription limits, or what will replace the withdrawn credit.
+- **U-7 · A member signing in through hosted Claude Code's own login, from a Civicsmith screen.** Say: the binary is unmodified (AT-14); the member uses their own subscription, billed to them (AT-15); the sign-in completes on Anthropic's own page (AT-17); an end user signing in to "the unmodified Claude Code binary with their own Claude subscription, including where a platform hosts Claude Code" is not prevented (AT-18); the member's browser shows a login code that must reach the hosted binary's `Paste code here if prompted` prompt (AT-26), and the binary stores the result in the container (AT-27); Anthropic directs such questions to sales (AT-25). Do not say: (a) whether a Civicsmith screen that takes the login code and passes it to the binary, or carries the member's keystrokes to the binary's own prompt, "collect[s] … or intermediate[s] Claude.ai credentials or session tokens" (AT-17); (b) whether a Civicsmith button that starts that sign-in offers "Claude.ai login into their own applications" (AT-16) or is the member "signing in to the unmodified Claude Code binary" (AT-18); (c) whether the credential the binary writes in the group's container is the developer "stor[ing]" it (AT-17; as U-2); (d) who agrees to the Commercial Terms as the one "running Claude Code in your products" (AT-14): each group, or Civicsmith's makers (as U-2). Answerable only by Anthropic (AT-25); whether to ask is Bob's (the layouts page's S6).
 
 ## Bob's choices (not Anthropic's rules)
 
