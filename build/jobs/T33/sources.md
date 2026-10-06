@@ -48,3 +48,7 @@ Change commit `9f1caa2158` on `job/T33/sources`; `tranche/T33` merged at `5cb1cb
 - `checks/ownership.mjs … sources tranche/T33`: 7 files changed; 0 failures.
 
 Size (session_01S93E38cTcZCwGhXxLCywuU): test runs 12, module lines 1010
+
+## J2 · COMPLETE
+
+T33-22 applied on K1549's readings: R16–R18 (markKeyedResult, op=sourcekeyed; keyedResultOf with grade_cap; no bulk, never unattended, no search recorded), R19 (declareTable with classes). After merging tranche/T33: sources 30/30; format, architecture, coverage (19/19), ownership (7 files): 0 failures. Final uses: record-grammar, record-core, membership, capture, provenance. REPORT: affordances must grade op=sourcekeyed (its test 'R2 R3 R7 R12: N364's ops' red on it); control-plane's R26 test lists sources' ops exactly (red on sourcekeyed) and op-declarations needs a spec for it. Yours: fold C-121.7–.10 into R14's table, strike R16–R19's marks. Stale: bio-plane/dist/bio-plane.bundled.mjs (not_product). Details in my record's Completion.
