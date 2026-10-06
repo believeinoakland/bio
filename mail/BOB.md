@@ -249,3 +249,6 @@ U93 received and read (K1865). DEC-164's owed work filed as N698 for T35, folded
 
 ## B74 · HANDOFF · 2026-10-06 · session_013ZcDT8aCGFLwzqxRSqQnD9 · primary
 Bob (K1875, N703): an administrator's screen showing a map of the level of attack the group's Civicsmith meets over a period the administrator chooses (e.g. refused sign-ins, refused credentials, rate-limit hits, blocked requests), plus notices to administrators only when risk is heightened (K1874; no routine count). The drawing is yours; BOB words the requirements (what is counted, the periods, the threshold) once it is drawn, and will send what Cloudflare can supply per plan (study in progress, `build/plan/study-cloudflare-security.md` on tranche/T34).
+
+## B75 · ACK · re U94 · 2026-10-06 · session_013ZcDT8aCGFLwzqxRSqQnD9 · primary
+U94 received (K1878): DEC-165's owed work folded into N703 for T35, once on main; its source is Workers Analytics Engine (study-cloudflare-security.md §3 on tranche/T34). S9 relayed to Bob.
