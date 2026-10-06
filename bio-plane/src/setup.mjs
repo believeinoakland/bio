@@ -27,7 +27,7 @@ import { RISK_TIERS, riskTierState } from "./action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS, list as heldProfiles, get as heldProfile, combine as combineProfiles }
   from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
-import { membershipOf } from "./membership/index.mjs";
+import { membershipOf, notAnAdmin } from "./membership/index.mjs";
 import { promotionOf } from "./promotion/index.mjs";
 import { governorOf } from "./host-governor/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
@@ -289,6 +289,17 @@ ${GROUP_LINE_UNREAD}
       <button id="pf-confirm">Make this change</button> <button id="pf-cancel">Keep things as they are</button>
     </div>
     <p class="err" id="pf-err"></p>
+  </div>
+  <!-- R53 (K1502, K1478 (i)): the assistant is optional for the copy, off unless an administrator chooses it, offered
+       here and changeable later. Enabling it binds no account: each member connects their own. -->
+  <h2>The assistant</h2>
+  <div class="card" id="as-state"><p class="small" style="margin:0">Reading whether the assistant is on&hellip;</p></div>
+  <div id="as-choose" hidden>
+    <p class="small">The assistant is optional. This copy holds no account for it: each member who wants it connects
+    their own Claude account or API key, and is told first that their questions and the material read to answer them
+    go to Anthropic under their own account. While it is off, no question is put to it and nothing runs.</p>
+    <div class="actions"><button id="as-toggle"></button></div>
+    <p class="err" id="as-err"></p>
   </div>
   <h2>What this page is, and is not</h2>
   <p>This page opens the record for reading, takes in new material, and
@@ -673,7 +684,8 @@ function panel(login, claimedAt){
     ADMIN = !!(r && r.result && r.result.administer === true);
     applyCaps();
     openProfiles();
-  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); });
+    openAssistant();
+  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); openAssistant(); });
   $("#panel-lede").textContent = WHO === "admin"
     ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
@@ -1554,6 +1566,41 @@ $("#pf-confirm").addEventListener("click", async ()=>{
   finally { $("#pf-confirm").disabled = false; }
 });
 
+/* ---- the assistant (R53) ----
+   Every signed-in member sees whether it is on; only a session that administers is offered the switch, which says
+   what it will do before it is pressed. A read that did not answer says so and offers nothing. */
+let AS_ON = null;
+async function openAssistant(){
+  let r = null;
+  try { r = await rec("assistantstate"); } catch { r = null; }
+  const res = r && r.result;
+  if (!res || res.ok !== true || typeof res.on !== "boolean") {
+    AS_ON = null;
+    $("#as-state").innerHTML = '<p class="small" style="margin:0">This copy could not read whether the assistant is on just now.</p>';
+    $("#as-choose").hidden = true; return;
+  }
+  AS_ON = res.on;
+  $("#as-state").innerHTML = '<p class="small" style="margin:0">'
+    + (res.on ? "The assistant is on for this copy." : "The assistant is off for this copy.")
+    + (res.set_at ? " Last set by " + escH(res.set_by) + " on " + fmtWhen(res.set_at) + "." : "") + "</p>";
+  if (!ADMIN) { $("#as-choose").hidden = true; return; }
+  $("#as-err").textContent = "";
+  $("#as-toggle").textContent = res.on ? "Switch the assistant off" : "Switch the assistant on";
+  $("#as-choose").hidden = false;
+}
+$("#as-toggle").addEventListener("click", async ()=>{
+  const e = $("#as-err"); e.textContent = "";
+  if (AS_ON === null) return;
+  $("#as-toggle").disabled = true;
+  try {
+    const r = await post("assistantset", { on: !AS_ON });
+    const res = r && (r.result || r);
+    if (!res || res.ok !== true) { e.textContent = (res && (res.translation || res.detail)) || (r && r.error) || "The change was not made."; return; }
+    openAssistant();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#as-toggle").disabled = false; }
+});
+
 /* ---- enrolment, for an invited member with no password yet ---- */
 $("#en-go").addEventListener("click", async ()=>{
   const e = $("#en-err"); e.textContent = "";
@@ -1695,6 +1742,30 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'That profile is made up for testing: its facts describe no real place, so a copy never reads '
       + 'local facts from it. Nothing was changed.',
   },
+  /* R53–R55 (K1502, K1478 (i), D311): the assistant, optional for the copy, and each member's disclosure. */
+  ASSISTANT_OFF: {
+    check: 'C-119.5',
+    where: 'src/setup.mjs assistantGate > is-assistant-on',
+    translation: 'The assistant is switched off for this copy, so no question is put to it and nothing runs. One of '
+      + 'the group\'s administrators can switch it on. Nothing was asked.',
+  },
+  ASSISTANT_SWITCH_MALFORMED: {
+    check: 'C-119.6',
+    where: 'src/setup.mjs assistantSet > is-assistant-switch',
+    translation: 'The assistant is switched on or off, and the request said neither. Nothing was changed.',
+  },
+  DISCLOSURE_NOT_THE_MEMBERS: {
+    check: 'C-119.7',
+    where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
+    translation: 'The assistant\'s disclosure is recorded as shown only to the member it was shown to, by their own '
+      + 'act, never by another member or a machine on their behalf. Nothing was recorded.',
+  },
+  DISCLOSURE_MALFORMED: {
+    check: 'C-119.8',
+    where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
+    translation: 'A shown disclosure is recorded with the member it was shown to and the version of its words. One '
+      + 'of them is missing. Nothing was recorded.',
+  },
 });
 
 const refusal = (code, detail, extra) => {
@@ -1708,7 +1779,22 @@ const refusal = (code, detail, extra) => {
  * measurements of the runtime are not derived from the corpus, in the family of `seq` and the settings.
  * ============================================================================================================ */
 export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_identity_history", "group_domain_checks",
-  "runtime_observations", "cpu_probe_runs", "cpu_probe_steps"]);
+  "runtime_observations", "cpu_probe_runs", "cpu_probe_steps", "assistant_switch", "assistant_disclosures"]);
+/* Each table's classes, declared explicitly through record-core's `declareTable` (its R21; plan T33, Rules (6)). Every
+   one is exempt from purge (R28, R41); none is a cache of anything; the append-only ones keep every version (R26, R53,
+   R54). A member's disclosure record is theirs and the group's, never exported (it names who connected an account). */
+const TABLE_CLASSES = Object.freeze({
+  instance_group: { export: "admin-only", version_chain: false },
+  group_identity_history: { export: "admin-only", version_chain: true },
+  group_domain_checks: { export: "admin-only", version_chain: true },
+  runtime_observations: { export: "admin-only", version_chain: false },
+  cpu_probe_runs: { export: "admin-only", version_chain: false },
+  cpu_probe_steps: { export: "admin-only", version_chain: false },
+  assistant_switch: { export: "admin-only", version_chain: true },
+  assistant_disclosures: { export: "never", version_chain: true },
+});
+export const INSTANCE_SETUP_TABLE_DECLARATIONS = Object.freeze(INSTANCE_SETUP_TABLES.map((name) => Object.freeze({
+  name, purge: "exempt", expunge: "none", sight: "group", derive: "stored", ...TABLE_CLASSES[name] })));
 export const INSTANCE_SETUP_SCHEMA = `
 -- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG, ONE VALUE FOR THE WHOLE
 -- INSTANCE. Every bundle this instance writes names it as its group, in the bytes that get signed, and nothing else may
@@ -1789,7 +1875,33 @@ CREATE TABLE IF NOT EXISTS cpu_probe_steps (
   at          TEXT NOT NULL,
   PRIMARY KEY (run, step)
 );
+-- R53 (K1502): whether the assistant is enabled for this copy, each set appended with who and when; the switch is the
+-- latest row, and with no row it is off. No row updates or deletes another.
+CREATE TABLE IF NOT EXISTS assistant_switch (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  on_     INTEGER NOT NULL CHECK (on_ IN (0, 1)),
+  set_by  TEXT NOT NULL,
+  set_at  TEXT NOT NULL
+);
+-- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
+-- the disclosure's version, who recorded it and when. Append-only.
+CREATE TABLE IF NOT EXISTS assistant_disclosures (
+  seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+  member    TEXT NOT NULL,
+  version   TEXT NOT NULL,
+  shown_by  TEXT NOT NULL,
+  shown_at  TEXT NOT NULL
+);
 `;
+
+/* R54 (D311): the assistant's disclosure. Its words are the design stream's (NOTICE to UX-DESIGN) and are shown by the
+   surface; this module holds the version a shown disclosure is recorded against, and the meaning the words carry. A new
+   version of the words is a new `version`, and a member shown only an earlier one reads `shown: false` until shown again. */
+export const ASSISTANT_DISCLOSURE = Object.freeze({
+  version: "D311-1",
+  meaning: "your questions and the material read to answer them, people's facts included, go to Anthropic under your "
+    + "own account",
+});
 
 /* The probe run the trail held before runs were kept apart (R40): its rows, keyed on the step alone, become one run. */
 export const LEGACY_PROBE_RUN = "legacy";
@@ -1939,7 +2051,7 @@ export class InstanceSetup {
     this.#started = true;
     this.migrate();
     const out = { ok: true, started: true };
-    out.purge = this.#record().declarePurge("instance-setup", [], { exempt: [...INSTANCE_SETUP_TABLES] });
+    out.purge = this.#record().declareTable("instance-setup", INSTANCE_SETUP_TABLE_DECLARATIONS.map((t) => ({ ...t })));
     out.fact = this.#promotion().registerFact("producingGroup", "instance-setup", () => this.producingGroup());
     out.consumer = this.#scheduler().register("instance-setup", { name: "group-domain-recheck", key: "groupdomain",
       due: () => this.groupDomainWake(), wake: () => this.groupDomainWake(), tick: () => this.groupDomainTick() });
@@ -2308,6 +2420,95 @@ export class InstanceSetup {
   }
 
   /* =====================================================================
+   * THE ASSISTANT, OPTIONAL FOR THE COPY, AND EACH MEMBER'S DISCLOSURE (R53–R55; K1502, K1478 (i), D311).
+   *
+   * The copy holds no Claude credential: enabling the assistant binds none, and each member who wants it connects their
+   * own account (credentials R22). The switch is the administrator's (K1522), off unless chosen, and every set is
+   * appended with who and when. While it is off, every ask and every run is refused by name (`ASSISTANT_OFF`) through
+   * `assistantGate`, which the plane and `answers` read before any model turn; turning it off ends nothing recorded.
+   * ===================================================================== */
+
+  /** R53: the switch as recorded, off when nothing is. Writes nothing and never throws. */
+  assistantState() {
+    let r = null;
+    try { r = this.#one(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq DESC LIMIT 1`); } catch { r = null; }
+    return r ? { ok: true, on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at }
+             : { ok: true, on: false, set_by: null, set_at: null,
+                 detail: "the assistant has never been switched on for this copy, so it is off" };
+  }
+
+  /** R53, op=assistantset: an administrator switches the assistant on or off for this copy. `by` is the control
+   *  plane's stamp (R29). Each set is appended, a repeat of the current value included, so the history says who
+   *  chose what and when. */
+  assistantSet({ on = undefined, by = null } = {}) {
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return notAnAdmin(by ?? null, "switching the assistant on or off for this copy");
+    /* DEC-49 REGION is-assistant-switch */
+    if (typeof on !== "boolean")
+      return refusal("ASSISTANT_SWITCH_MALFORMED", "`on` is true (switch the assistant on) or false (switch it off). "
+        + "Nothing was changed.");
+    /* END DEC-49 REGION is-assistant-switch */
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (?, ?, ?)`, on ? 1 : 0, by, at);
+    return { ok: true, on, set_by: by, set_at: at,
+             history: this.#rows(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq`)
+               .map((r) => ({ on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at })),
+             note: on
+               ? "the assistant is on for this copy. The copy holds no account of its own: each member who wants it "
+                 + "connects their own Claude account or API key, and is shown the disclosure first."
+               : "the assistant is off for this copy: no ask is put to it and no run starts. Nothing already recorded "
+                 + "is changed or ended." };
+  }
+
+  /** R55: null while the assistant is on; otherwise the refusal every ask and every run answers, whoever asks and
+   *  whatever account they hold. A standing question is not run while it is off. Writes nothing. */
+  assistantGate() {
+    const st = this.assistantState();
+    if (st.on === true) return null;
+    /* DEC-49 REGION is-assistant-on */
+    return refusal("ASSISTANT_OFF", st.set_at
+      ? `an administrator switched the assistant off for this copy on ${st.set_at}; no ask is put to it and no run starts.`
+      : "the assistant has never been switched on for this copy; no ask is put to it and no run starts.",
+      { set_by: st.set_by, set_at: st.set_at });
+    /* END DEC-49 REGION is-assistant-on */
+  }
+
+  /** R54, op=disclosureshown: the disclosure was shown to `member` before they connected their own account. `by` is
+   *  the control plane's stamp and must be that member's own session: no one records it on another's behalf. */
+  disclosureShown({ member = null, version = null, by = null } = {}) {
+    const m = typeof member === "string" ? member.trim() : "";
+    const v = typeof version === "string" ? version.trim() : "";
+    /* DEC-49 REGION is-disclosure-shown */
+    if (!m || !v)
+      return refusal("DISCLOSURE_MALFORMED", `${!m ? "the request names no member" : "the request names no version of "
+        + "the disclosure's words"}. Nothing was recorded.`);
+    if (typeof by !== "string" || by !== m || /^class:/.test(by))
+      return refusal("DISCLOSURE_NOT_THE_MEMBERS", "the disclosure is recorded by the member it was shown to, from "
+        + "their own signed-in session. Nothing was recorded.", { member: m, by: by ?? null });
+    /* END DEC-49 REGION is-disclosure-shown */
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO assistant_disclosures (member, version, shown_by, shown_at) VALUES (?, ?, ?, ?)`,
+                   m, v.slice(0, 80), by, at);
+    return { ok: true, member: m, version: v.slice(0, 80), shown_at: at, shown: v.slice(0, 80) === ASSISTANT_DISCLOSURE.version };
+  }
+
+  /** R54: whether the disclosure at the current version (or `version`) was recorded as shown to `member`. A member with
+   *  none recorded is `shown: false`, never assumed. Writes nothing and never throws. */
+  disclosureOf({ member = null, version = ASSISTANT_DISCLOSURE.version } = {}) {
+    const m = typeof member === "string" ? member.trim() : "";
+    const v = typeof version === "string" && version.trim() ? version.trim() : ASSISTANT_DISCLOSURE.version;
+    let r = null;
+    try {
+      r = m ? this.#one(`SELECT version, shown_at FROM assistant_disclosures WHERE member = ? AND version = ?
+                         ORDER BY seq DESC LIMIT 1`, m, v) : null;
+    } catch { r = null; }
+    return r ? { ok: true, member: m, version: v, shown: true, shown_at: r.shown_at }
+             : { ok: true, member: m || null, version: v, shown: false, shown_at: null,
+                 detail: m ? "no disclosure at this version is recorded as shown to this member"
+                           : "the request names no member, so no disclosure is recorded as shown" };
+  }
+
+  /* =====================================================================
    * THE INSTANCE'S OWN LIMITS (K98; R33–R40). What runs here COST, measured, and where the CPU ceiling lies, found
    * by walking into it. They are measurements of the runtime, not of the corpus (R41).
    * ===================================================================== */
@@ -2467,6 +2668,10 @@ export function instanceSetupOps(m, url, body) {
     cpuprobestart: () => m.recordCpuProbeStart(body || {}),
     recordcpuprobestep: () => m.recordCpuProbeStep(body || {}),
     cpuprobeend: () => m.recordCpuProbeEnd(body || {}),
+    assistantstate: () => m.assistantState(),
+    assistantset: () => m.assistantSet({ ...(body || {}), by: q("by") }),
+    disclosureshown: () => m.disclosureShown({ ...(body || {}), by: q("by") }),
+    disclosureof: () => m.disclosureOf({ member: q("member") ?? (body || {}).member, version: q("version") ?? (body || {}).version }),
   };
 }
 
