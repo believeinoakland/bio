@@ -111,7 +111,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 #### The people and member-ties blocks (K1816; was `case-disclosures` R28's spelling)
 
-- **R21** `peopleLines(rows)` and `memberTieLines(rows)` spell the case document's `people:` block (one row per person: `{person, places, basis, citation, words}`) and `member_ties:` block (one row per tie a signer attests: `{row, signer, at, entity, kind, level, shown}`), flat as R1's blocks; `peopleOf(fm)` and `memberTiesOf(fm)` read them back from parsed front matter, each field a string or null, answering empty lists for a document without them. Pure; never throws. *(not yet met: T34)*
+- **R21** `peopleLines(rows)` and `memberTieLines(rows)` spell the case document's `people:` block (one row per person: `{person, places, basis, citation, words}`) and `member_ties:` block (one row per tie a signer attests: `{row, signer, at, entity, kind, level, shown}`), flat as R1's blocks; `peopleOf(fm)` and `memberTiesOf(fm)` read them back from parsed front matter, each field a string or null, answering empty lists for a document without them. Pure; never throws.
 
 ## Private
 

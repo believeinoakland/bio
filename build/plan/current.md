@@ -34,6 +34,8 @@
    4. Row census: rows that T34's L3–L11 jobs add stay `awaiting stamp` until T35's promotion job. The order rules out an earlier stamp: promotion (L2) comes first (P4).
    5. The UI's DEC-88 tests (Bob's), carried.
    6. (K1824) From ratification's L8 merge until case-checker's (T34-47): case-checker's `program.test.mjs` R13 (the bundled program's bytes change once ratification re-exports `case-catalogue`). From case-catalogue's merge until ratification's: the row census counts C-41.1–C-41.17 twice (both copies held).
+   7. (K1828) From case-disclosures' merge until case-authoring's (T34-48): case-authoring's `preflight.test.mjs` R29, which pins C-120.8's old translation.
+   8. (K1832) From K1824 until plane's L11 job (T34-76): plane `store.test.mjs`:91 R2/R10, which asks every `modules.json` module to have a step in the plane's construction order; `case-catalogue` is a pure library with none.
 
 ## Entries
 
@@ -145,6 +147,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 - **T34-93 · case-catalogue** · (K617, K1824; seam read `build/extraction/ratification-split.md`) the new module, split from ratification by copy before T34-85: the C-41 catalogue (`checkCaseDocument`, `CASE_DOCUMENT_FAMILY`, `CASE_CITATION_VERSIONS`, `SEARCHED_SUBJECT_SOURCES`) and C-2.8's case-member arm (`checkPublishedExtension` and its definitions and runners), copied from `ratification/checks.mjs` 13–962 and 1246–1281 with their pure tests; no table, no registration (ratification keeps both) · K1824 · req: R1–R5 (worded) · depends —. **P6:** about 1,000 lines.
 - **T34-88 · case-grammar** · (K1816, for T34-85) R21: the `people:` and `member_ties:` blocks' spelling and readers (`peopleLines`, `memberTieLines`, `peopleOf`, `memberTiesOf`), copied from case-disclosures R28 so ratification R41, earlier than case-disclosures, reads the signed document's ties; with its T34-87 rows · K1816 · req: R21 (worded) · depends —.
+- **T34-94 · case-import** · (K1828, CASE-CHECKER #5 J1) R5: a calculation input carried with bytes that differ from its hash counts as missing, so the import's completion agrees with case-checker R9 · K1828 · req: R5 (worded) · depends —.
 - **T34-89 · case-disclosures** · (K1816) R28 answers its four block functions through case-grammar R21 and keeps no copy (importers keep working through its names); with its T34-87 rows · K1816 · req: R28 (worded) · depends T34-88.
 
 **L8 merge order:** case-grammar (T34-88 first: ratification and case-disclosures merge it in) → case-catalogue (T34-93, before ratification) → corpus-export → case-carriage → **publication → ratification → docket → public-read** (publication's new reads first; ratification serves publication R66/R67, K1790) → case-checker → case-authoring.
@@ -157,9 +160,9 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 - **T34-61 · action-plans** · (N601, user side) answers `NO_SUCH_DUTY` through duties' `noSuchDuty`; C-124.32's translation as T34-12 stamps it · K1650 · req: BOB's wording · depends T34-22, T34-12.
 - **T34-62 · filings** · (EVENTS #2 J2, K1795) `chronology.test.mjs`:63 (R33) expects the source arguments with `viewer` (events R30). (N602, user side) reads placed-nowhere items from events' dated `timeline` instead of its second undated read · K1653 · req: none (a simplification) · depends T34-17.
 
-**L9 merge order:** consequences → action-clocks → filings → action-plans (`modules.json` order).
+**L9 merge order:** consequences → actions (T34-67) → action-clocks → filings → action-plans (`modules.json` order; K1830). The row-only joiners (action-grammar, conformance, escalation, filing-templates) merge as they complete.
 
-- **T34-67 · actions** · (N611) Provides gains `place()` and `zoneOf` (R12's zone read) · K1681 · req: BOB's wording · depends —.
+- **T34-67 · actions** · (N611) Provides gains `place()` and `zoneOf` (R12's zone read). (K1830, N662's share) R69: registers the hold reader `ratification` R45 asks (`holdsOn({project})`, R58's answer for one project, read as the plane), so `op=publishat` stops answering `SCHEDULE_UNCHECKABLE` once this job merges · K1681, K1830 · req: R68 (worded, K1753), R69 (worded) · depends T34-85.
 
 ### L10
 
@@ -193,7 +196,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 - **T34-71 · installer** · (N621, user side) sends a member's stated limits at upload · K1686 · req: R20, BOB's wording · depends T34-69.
 - **T34-75 · affordances** · (HYPOTHESES #2 J2, K1807) `JUSTIFICATION_REFUSALS` gains `HYPOTHESIS_NO_REASON` (`t33-backing.test.mjs`:212), and the note ops `notewrite`, `notes`, `noteturn` are graded (`t33.test.mjs`:135). (AI-RUNS #11 J2, K1805) `t33-backing.test.mjs`:122 (R19) expects duties' `DUTY_NO_REASON` for `dutyrevise` (duties' re-key, N608). (N662, DEC-147; K1790) grades `publishat` (and its move) `irreversible`, as `publish`. (N630) measures `op=affordances`' answer (232 KB, was 18 KB, +92 ms) against what the app reads once per session and trims or splits it if the size is not needed (K1717) · K1432 · req: none · depends —.
-- **T34-76 · plane** · (AGENT-WORKER #10 J2, K1806) `plane/ask.mjs`:48–54 builds the ask's account from `credentials.accountFor` (not `accountReferenceFor`) in agent-worker R6's shape `{kind, level, secret, member, suggestions?}` (K1798), so a member served by the group's key can ask (agent-worker R54, K1755). (N625) `wrangler.jsonc` declares the `SHEET_WORKER` service binding (K1683). (N584, plane's share; RETRIEVAL #12 J1, K1788; ANSWERS #2, K1803) `plane/store.mjs` ~:207's `relations: () => ({projection: PROJECTION_RELATION})` dep to answers is dropped: answers now reads retrieval's `relations()` and `zone()` itself · K1705 · req: none · depends —.
+- **T34-76 · plane** · (AGENT-WORKER #10 J2, K1806) `plane/ask.mjs`:48–54 builds the ask's account from `credentials.accountFor` (not `accountReferenceFor`) in agent-worker R6's shape `{kind, level, secret, member, suggestions?}` (K1798), so a member served by the group's key can ask (agent-worker R54, K1755). (N625) `wrangler.jsonc` declares the `SHEET_WORKER` service binding (K1683). (N584, plane's share; RETRIEVAL #12 J1, K1788; ANSWERS #2, K1803) `plane/store.mjs` ~:207's `relations: () => ({projection: PROJECTION_RELATION})` dep to answers is dropped: answers now reads retrieval's `relations()` and `zone()` itself · K1705 · req: none (K1832) Also: `store.test.mjs`:91 R2/R10 (accepted red 8): a pure module with no construction (case-catalogue) is not asked for a step; and (K1832, RATIFICATION #19 J1) `ratificationOf(ctx)` is handed `worker: {env, stub}` so ratification R42 copies materials (R39) and assembles the container (R6) in-process after a scheduled commit · depends —.
 - **T34-77 · legacy-ui** · (N628) `queue-recipients.test.mjs`: members connect their own account before opening runs, and the NOBODY fixture and §3 (a run by the machine credential, impossible under K1481) are retired; `several-cases-choice.test.mjs`: Q's `basis: [LEDGER]` dropped and `publish` sends `tieAttested: true` (test-only; the DEC-88 shares stay N487's) · K1708 · req: none · depends —.
 
 ## Left out of T34 (one hard reason each)

@@ -2,7 +2,7 @@
  * `build/requirements/case-checker.md` R14, R15; K1134 (1); DEC-112 (3) "an open specification").
  *
  * Written from `case-grammar` R11–R13 (the case document's `method:`, `materials:` and `material_attestations:` blocks
- * and the case file) and from what this checker checks (R1–R11, R18), so that anyone can write a checker of their own
+ * and the case file) and from what this checker checks (R1–R11, R18, R20), so that anyone can write a checker of their own
  * from it. Each version's text is held here whole and served by `casefilespec` (R15). Its version names the format it
  * specifies. No place is named in it (R17). */
 
@@ -110,7 +110,7 @@ A checker answers, for each finding (a member, or a finding a member's chain rea
 5. The bar. A load-bearing member reaches the recorded bar on every declared axis, or differs naming each axis. A supporting member is not asked; a case with no bar has none to meet.
 6. Publication checks. The case document passes the publication checks of the catalogue; a check that needs the publishing copy's record is named as not asked. When the case states another catalogue version than the checker's, the answer says the checks ran at the checker's version.
 7. Presentability. Every material a load-bearing member's chain reaches is listed in \`materials:\` as \`included: true\` and carried whole (its bytes and extracted text, or an observation's text). Not carried is missing; not listed, or listed as not included, differs.
-8. Completion. Bytes supplied later whose SHA-256 is a missing file's fingerprint fill that gap; other bytes are named and never used.
+8. Completion. Bytes supplied later whose SHA-256 is a missing file's fingerprint fill that gap. Bytes whose SHA-256 is a calculation input's stated SHA-256, where the case file lacks that input (absent, or carried with other bytes), fill that input: the calculation is recomputed with them (rule 11), and every finding resting on it takes its new entries. Other bytes are named and never used.
 9. The complete edition. The carried complete edition equals the one rendered from the rest of the case file, or differs.
 10. Another group's work. A leg on another group's finding (\`imported\`) is recreated up to that leg: its grade is the \`accepted_work:\` row's \`pair\`, passages and material are not followed past it, it adds nothing missing, and the answer names that group's case file (group, case, edition, finding and manifest SHA-256) as the place to check it.
 11. Calculations. Each \`calculations:\` row is recomputed by the \`bio-calc/1\` engine over the inputs the case file carries, each first checked against its SHA-256, at the method version the row states, and answered \`agrees\`, \`differs\` or \`not_recomputed\`. A result or result key that recomputes differently differs, naming the result, the stated and the recomputed value; an input absent or unlike its hash, or a method version the checker does not hold, is missing. A row the document discloses as differing or unbound is answered with that disclosure, and is not counted as differing for being so. A workbook, or a value from another engine, is answered \`not_recomputed\`, recomputed by the publishing copy's engine, never as agreeing. A finding whose chain rests on a calculation takes its entries.

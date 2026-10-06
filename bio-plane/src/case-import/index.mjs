@@ -99,7 +99,7 @@ export const ENTRY_CHECKS = Object.freeze(["digest", "form", "signature", "chain
 export const WATCH_PAGE_MAX = 200;
 /** R19: what an import's reads say beside a `publisher` of null (DEC-116 item 8: never that nothing changed). */
 export const NO_MOVE_SEEN = "No new edition or withdrawal of this case has been seen on its publisher's docket. That is "
-  + "not a statement that none was made: it says only what this copy's reads have seen, as of the last read.";
+  + "not a statement that none was made: it says only what your group's Civicsmith has seen in its reads, as of the last read.";
 export { DOCKET_UNREADABLE };
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -272,7 +272,7 @@ function recreateOne(row, ord, byContent, byStated) {
   const method = str(row.method_version);
   if (method !== CALC_METHOD)
     missing.push({ what: "method_version", method_version: method, why: method
-      ? `this copy does not hold the method version ${method} (it holds ${CALC_METHOD}): the value was computed by the publishing copy's engine and is not recreated here`
+      ? `your group's Civicsmith does not hold the method version ${method} (it holds ${CALC_METHOD}): the value was computed by the publishing group's engine and is not recreated here`
       : "the case states no method version" });
   const recipe = isObj(row.recipe) ? row.recipe : null;
   if (!recipe) missing.push({ what: "recipe", why: "the case states no recipe that can be read" });
@@ -291,7 +291,7 @@ function recreateOne(row, ord, byContent, byStated) {
         : { input: inp.name, sha: inp.sha, why: "the case file does not carry this input; bytes with this SHA-256 complete it" });
       continue;
     }
-    if (b.length > CALC_INPUT_MAX) { missing.push({ input: inp.name, sha: inp.sha, why: `the input is over ${CALC_INPUT_MAX} bytes, more than this copy reads` }); continue; }
+    if (b.length > CALC_INPUT_MAX) { missing.push({ input: inp.name, sha: inp.sha, why: `the input is over ${CALC_INPUT_MAX} bytes, more than your group's Civicsmith reads` }); continue; }
     const v = (() => { try { return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(b)); } catch { return undefined; } })();
     if (v === undefined) { missing.push({ input: inp.name, sha: inp.sha, why: "the input's bytes are not the canonical JSON of a value calc-grammar evaluates" }); continue; }
     bound[inp.name] = v;
@@ -791,8 +791,9 @@ export class CaseImport {
     const e = this.#edition(importId, edition);
     const missing = new Set();
     if (e) for (const r of this.#resultsOf(e.import_id, Number(e.edition))) for (const m of r.missing) fingerprintsOf(m, missing);
-    /* R21: a carried calculation's input the case file lacks is a missing material too, named by the hash its row states */
-    if (e) for (const c of this.#calcsOf(e.import_id, Number(e.edition))) for (const m of c.missing) if (isObj(m) && isSha(m.sha) && !m.carried) missing.add(m.sha);
+    /* R5, R21 (K1828): a calculation's input the case file lacks, or carries with bytes other than its stated hash, is a
+       missing material too, named by the hash its row states (as `case-checker` R9 fills it) */
+    if (e) for (const c of this.#calcsOf(e.import_id, Number(e.edition))) for (const m of c.missing) if (isObj(m) && isSha(m.sha)) missing.add(m.sha);
     /* DEC-49 REGION is-import-document */
     if (!b || !e || !missing.has(sha))
       return refuse("IMPORT_DOCUMENT_NOT_MISSING", "the bytes match no material this imported edition records as missing",

@@ -7,7 +7,9 @@
  * until T30's stamp. No code here is a code another module's table holds (R22). `NO_SUCH_CASE` is the shared answer for an absent case, a case with no ratified edition and one
  * the viewer does not see, and has no row here (R22). The words a member reads before posting (the outward-act warning,
  * the invitation, the shelves' labels) are the UX design stream's; these rows only say why an act was refused and that
- * nothing changed. At T33 (K1480, T33-64) C-129.27 and C-129.28 arrived for a court order (R25), awaiting the stamp. */
+ * nothing changed. At T33 (K1480, T33-64) C-129.27 and C-129.28 arrived for a court order (R25), awaiting the stamp.
+ * At T34 (DEC-149, T34-87) C-129.16 and C-129.22 call the group's Civicsmith "your group's Civicsmith", not "this
+ * copy"; both rows read changed until T35's promotion stamp moves `CATALOG_VERSION`. */
 
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
@@ -98,8 +100,8 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_NO_GROUP_SLUG: {
     check: "C-129.16", where: MANAGER,
-    translation: "This copy has no group name recorded, and a docket entry is never anonymous. Record the group's "
-      + "name first. Nothing was published.",
+    translation: "Your group's Civicsmith has no group name recorded, and a docket entry is never anonymous. Record "
+      + "the group's name first. Nothing was published.",
   },
   DOCKET_ENTRY_SETTLED: {
     check: "C-129.17", where: ENTRY,
@@ -128,9 +130,9 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_STALE: {
     check: "C-129.22", where: POST,
-    translation: "This copy holds no prepared docket entry from you with this fingerprint, it was prepared more "
-      + "than an hour ago, or the docket has moved since. Prepare it again and sign what it shows. Nothing was "
-      + "published.",
+    translation: "Your group's Civicsmith holds no prepared docket entry from you with this fingerprint, it was "
+      + "prepared more than an hour ago, or the docket has moved since. Prepare it again and sign what it shows. "
+      + "Nothing was published.",
   },
   DOCKET_SIGNATURE_REFUSED: {
     check: "C-129.23", where: POST,

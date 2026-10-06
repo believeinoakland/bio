@@ -402,7 +402,7 @@ export class CaseDisclosures {
         .filter((x) => x.materials.length);
       refusals.push(disclosureRefusal("RELIED_ON_NOT_PRESENTABLE", { not_presentable: byMember,
         detail: `${short.length} document(s) or observation(s) a load-bearing finding of this case rests on are not held `
-              + `whole by this copy (` + byMember.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
+              + `whole by your group's Civicsmith (` + byMember.map((x) => `${x.target}: ` + x.materials.map((m) => `${m.ref} `
                 + `${m.sha} lacks ${m.missing.join(" and ")}`).join(", ")).join("; ")
               + `). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop `
               + `relying on the material, or make the finding supporting. Nothing was written.` }));
