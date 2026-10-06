@@ -1,101 +1,38 @@
 /* The CONTENT-TYPE axis: a second registry of the SAME shape as the stack axis.
  *
- * Before CONSTRUCTS Step 0 this file carried its own ordered loop and its own rank
- * table, a near-duplicate of the stack registry's. Now both axes are `makeRegistry()`
- * instances of the one recogniser engine (site-profiles' recogniser.mjs), which is the whole claim
- * of framework §4: a third axis is a third `makeRegistry()`, not a third loop.
+ * Both axes are `makeRegistry()` instances of the one recogniser engine (site-profiles'
+ * recogniser.mjs), which is the whole claim of framework §4: a third axis is a third
+ * `makeRegistry()`, not a third loop.
  *
- * SEVEN types are registered today -- `meeting_calendar`, `meeting_agenda`,
- * `meeting_minutes`, `staff_report`, `regulation`, `staff_directory` and the `generic`
- * fallback (the register() calls below) -- of which SIX are measured real types, and the
- * restraint is still deliberate rather than unfinished.
+ * THIS MODULE HOLDS NO CONTENT TYPE (R36; T34-8, N549). The registry starts EMPTY and
+ * holds only what a composer registers through the seam below: `plane` wires
+ * `doctypes`' `registerDoctypes(registerDoctype)` and the other readers' registrations,
+ * `generic` (the fallback) last. The seven copies this module kept, and their
+ * registration by default (K1513 (3)), were deleted once `plane` registered `doctypes`'
+ * types (T33-90). Which types exist, what each one reads and the measurements each was
+ * written from are `doctypes`' (its R1) and the other readers'; this file is the seam,
+ * the order and the `also` pass.
  *
- * CORRECTED 2026-09-14 (CPDF-17): this header used to open "Only ONE real type is
- * registered today" and went on to list an agenda among the types that "none has been
- * measured, so none is written". Both were true when written and both went false when
- * FW-15 added `meeting_agenda` below (see its own comment at the register() call). A
- * file that describes itself wrongly is the record overclaiming -- D-106's class, and
- * the same defect CPDF-17 corrected in the plane's tier-3 comments. Part II section 15
- * of `docs/architecture/BIO_Content_Framework_v0_10.md` inventories what is registered
- * and is the authority; it caught this line.
- *
- * UPDATED 2026-09-15 (FW-18), and the count above is now the thing CPDF-17's
- * correction obliges every later author to move: three types were added in the order
- * M0-32's census measured (`MEASUREMENTS.md` M-18) -- meeting minutes, then the staff
- * report, then the ordinance or resolution. A staff DIRECTORY, the fourth and smallest
- * class in that order, was withheld by FW-18 on a measurement and WRITTEN BY FW-20
- * (2026-09-23) once that measurement was re-taken and did not hold: see the register()
- * calls below.
- *
- * Every measured type was written from a document that was actually fetched and read:
- * `meeting_calendar` from a page that was fetched, diffed and read, `meeting_agenda`
- * from a real Legistar agenda packet's Tier-1 text, and FW-18's three from the real
- * Oakland documents each names in its own header, read through the plane's own Tier-1
- * extractor; FW-20's directory from real Oakland directories read through the plane's
- * tier-2 member. The rule has not moved: a content type invented from what a document
- * probably looks like is a type that reassures people about things it has not
- * understood. The generic type reports change without describing it, which is noisy and
- * honest, and the noise is the prompt to go and measure. */
-import { makeRegistry, CONFIDENCE } from "../../site-profiles/index.mjs";
+ * The rule the deleted types were written under holds for whatever is registered here:
+ * a content type invented from what a document probably looks like is a type that
+ * reassures people about things it has not understood. With no type recognising a
+ * document, the registered fallback reports change without describing it, which is
+ * noisy and honest; with no fallback registered at all, NO_TYPE below says so. */
+import { makeRegistry } from "../../site-profiles/index.mjs";
 import { CONTRACT } from "./index.mjs";
-import meetingCalendar from "./meeting-calendar.mjs";
-import meetingAgenda from "./meeting-agenda.mjs";
-import meetingMinutes from "./meeting-minutes.mjs";
-import staffReport from "./staff-report.mjs";
-import regulation from "./regulation.mjs";
-import staffDirectory from "./staff-directory.mjs";
-import generic from "./generic.mjs";
 
-/* THE SEAM (T33-12; K1513). The registry is SEEDED with this module's own seven types,
-   in the order below, and `registerDoctype` (exported further down) is how a composer
-   registers types into it: `doctypes`' `registerDoctypes(registerDoctype)`, wired by
-   `plane`. A type whose key is already held REPLACES it in its own slot, so the copies
-   `doctypes` registers take over these seeds without moving the load-bearing order, and
-   no module reads documents as unrecognised before `plane` wires them. Deleting the
-   seeds is the next tranche's (N549).
+/* THE SEAM (T33-12; K1513; T34-8). `registerDoctype` (exported further down) is how a
+   composer registers types: a type whose key is already held REPLACES it in its own
+   slot, so a re-registration never moves the load-bearing order; a new key is
+   appended. `recognise` walks in registration order and BREAKS ON THE FIRST CERTAIN
+   detection, so the order a composer registers in is the order that decides (R4).
 
-   generic carries `fallback: true`, so the registry answers it when nothing detects —
-   same mechanism as the conservative handler on the stack axis. */
+   A member carrying `fallback: true` (doctypes' generic) is what the registry answers
+   when nothing detects -- same mechanism as the conservative handler on the stack
+   axis. */
 const members = [];
 let types = makeRegistry();
 const rebuild = () => { types = makeRegistry(); for (const m of members) types.register(m); };
-const seed = (m) => { members.push(m); types.register(m); };
-seed(meetingCalendar);
-/* meeting_minutes (FW-18) is registered BEFORE meeting_agenda, and the order is
-   load-bearing rather than alphabetical. `recognise` walks in registration order and
-   BREAKS ON THE FIRST CERTAIN detection, so when two types are both certain the
-   earlier one wins. Minutes and the agenda of the same meeting share their file
-   numbers and their item blocks, and the document that can be BOTH at once is the
-   agenda PACKET, whose minutes-side evidence is quoted rather than its own. Putting
-   minutes first means the rarer, more specific reading is offered its chance; the
-   agenda's own masthead rate then decides. Neither type rests on this order for
-   correctness -- each was corrected until it separates the two measured documents on
-   its own evidence -- and `alsoSatisfies` below reports what the break hid. */
-seed(meetingMinutes);
-/* meeting_agenda (FW-15) is the SECOND measured type, written from a real
-   Legistar agenda packet's Tier-1 text — the first content type reached through
-   text a non-HTML container produced, which is the FORMAT-axis uniformity claim
-   exercised on the content axis. */
-seed(meetingAgenda);
-/* staff_report and regulation (FW-18), classes 2 and 3 of M0-32's order. Both are
-   SUBSTANCE contracts and both read documents published by the City of Oakland rather
-   than by Legistar, which is why both match over flattened text: that producer's
-   Tier-1 output breaks phrases across lines (see `flatten` in ./index.mjs). */
-seed(staffReport);
-seed(regulation);
-/* staff_directory (FW-20), class 4 of M0-32's order (~395 items, the smallest class).
-   FW-18 withheld it (D-376) because every directory it fetched was Tier-1 UNDECODABLE,
-   and read that as a tier-3 gap. FW-20 re-took the census through the plane with its
-   fleet bound and the premise did not survive: the markers were `no_tounicode`, TIER 2's
-   case, and with the tier-2 member bound 56 of 57 name-matched documents read from text
-   (`docs/development/measurements/M-121.md`; the census script itself was retired in T18 and
-   is in git history). So the type
-   is written from directories that were actually fetched AND read — see its own header.
-   Registered AFTER the three substance types: `recognise` breaks on the first CERTAIN,
-   and a report or an instrument that happens to carry a contact block is that document
-   first; `also` then says it is a directory too. */
-seed(staffDirectory);
-seed(generic);
 
 /* THE NO-TYPE ANSWER (K1513 (1)): what `doctypeFor` gives when no registered type
    carries `fallback: true` (none registered, or the fallback replaced by a type that is
@@ -151,7 +88,7 @@ export function doctypeFor(ctx) {
   if (!r.matched) r.member = types.all().find((m) => m.fallback === true) || NO_TYPE;
   const out = { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered,
                 also: alsoFor(ctx, r.member.key) };
-  /* A "no" says which no (R35): nothing recognised, and so the generic reading. */
+  /* A "no" says which no (R35): nothing recognised, and so the registered fallback's reading. */
   if (r.member === NO_TYPE)
     out.why = "no content type is registered to recognise documents, so this one is not read as any type: "
             + "nothing is read from it and what changes in it is not described";
@@ -175,5 +112,4 @@ export function alsoFor(ctx, selfKey) {
   return out;
 }
 
-export { meetingCalendar, meetingAgenda, meetingMinutes, staffReport, regulation, staffDirectory, generic };
 export * from "./index.mjs";

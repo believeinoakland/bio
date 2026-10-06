@@ -10,4 +10,3 @@ export * from "../site-profiles/index.mjs";
 export * from "./pipeline.mjs";
 export * from "./readtext.mjs";
 export * from "./doctypes/registry.mjs";
-export { default as meetingCalendarType } from "./doctypes/meeting-calendar.mjs";
