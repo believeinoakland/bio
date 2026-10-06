@@ -38,7 +38,8 @@ test("R53 assistantSet is an administrator's act only (NOT_AN_ADMIN through memb
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM assistant_switch`).get().n, 0, "no refusal writes");
   const on = w.m.assistantSet({ on: true, by: "member:ada" });
   assert.deepEqual([on.ok, on.on, on.set_by, on.set_at], [true, true, "member:ada", "2026-10-06T08:00:00.000Z"]);
-  assert.match(on.note, /no account of its own/);
+  assert.match(on.note, /^the assistant is on for your group's Civicsmith\. Switching it on binds no account/);
+  assert.match(on.note, /their own Claude account or API key, connected by their own act, or by the group's Anthropic API key/);
   t += 60_000;
   const off = w.m.assistantSet({ on: false, by: "admin" });
   t += 60_000;
@@ -187,7 +188,7 @@ test("R28 R41 R53 R54 every table is declared explicitly to record-core (declare
   const mine = w.record.declaredTables().filter((d) => d.module === "instance-setup");
   assert.deepEqual(mine.map((d) => d.name), INSTANCE_SETUP_TABLE_DECLARATIONS.map((d) => d.name));
   for (const d of mine) assert.equal(d.purge, INSTANCE_SETUP_TABLES.includes(d.name) ? "exempt" : "clear", d.name);
-  assert.deepEqual(mine.filter((d) => d.purge === "clear").map((d) => d.name), ["seed_entities", "seed_lines", "seed_offices"]);
+  assert.deepEqual(mine.filter((d) => d.purge === "clear").map((d) => d.name), ["seed_entities", "seed_lines", "seed_offices", "seed_bodies"]);
   const disc = mine.find((d) => d.name === "assistant_disclosures");
   assert.equal(disc.export, "never");
   w.prov.admins = new Set(["admin"]);

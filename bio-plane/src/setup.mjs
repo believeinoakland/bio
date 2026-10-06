@@ -38,6 +38,9 @@ import { provenanceOf } from "./provenance/index.mjs";
 import { normAlias as termFold } from "./extraction/index.mjs";
 import { parse as legistarParse, readPages as legistarPages, readBodyName as legistarBodyName, KEY as LEGISTAR_KEY,
          BASIS as LEGISTAR_BASIS } from "../../legistar-reader/index.mjs";
+/* R65 (K1837): the no-added-fact check and the one row both assistant drafts answer until the model turn lands are
+   wizard-scripts' (its R25, its rows), read there and never copied. */
+import * as wizardScripts from "./wizard-scripts/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
@@ -1698,7 +1701,7 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   GROUP_ALREADY_RECORDED: {
     check: 'C-64.3',
     where: 'src/setup.mjs instanceGroupSeed > is-instance-group-seed',
-    translation: 'This copy\'s group is already recorded, and it is recorded once: the name travels inside every '
+    translation: 'Your group\'s Civicsmith has its group recorded already, and it is recorded once: the name travels inside every '
       + 'document the record has signed, so a second name would make those documents name a producer they were '
       + 'not written under. Nothing was changed.',
   },
@@ -1728,7 +1731,7 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     check: 'C-119.1',
     where: 'src/setup.mjs profilesSet > is-profiles-admin',
     translation: 'Only one of the group\'s administrators, signed in as themselves, can choose which jurisdiction '
-      + 'profiles this copy reads its local facts from. Nothing was changed.',
+      + 'profiles your group\'s Civicsmith reads its local facts from. Nothing was changed.',
   },
   NOT_A_LIST: {
     check: 'C-119.2',
@@ -1739,20 +1742,20 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
   UNKNOWN_PROFILE: {
     check: 'C-119.3',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'This copy holds no jurisdiction profile by that name, so it cannot read local facts from it. '
+    translation: 'Your group\'s Civicsmith holds no jurisdiction profile by that name, so it cannot read local facts from it. '
       + 'Choose among the profiles it offers. Nothing was changed.',
   },
   PROFILE_IS_TEST: {
     check: 'C-119.4',
     where: 'src/setup.mjs profilesSet > is-profiles-list',
-    translation: 'That profile is made up for testing: its facts describe no real place, so a copy never reads '
-      + 'local facts from it. Nothing was changed.',
+    translation: 'That profile is made up for testing: its facts describe no real place, so no group\'s Civicsmith '
+      + 'reads local facts from it. Nothing was changed.',
   },
   /* R53–R55 (K1502, K1478 (i), D311): the assistant, optional for the copy, and each member's disclosure. */
   ASSISTANT_OFF: {
     check: 'C-119.5',
     where: 'src/setup.mjs assistantGate > is-assistant-on',
-    translation: 'The assistant is switched off for this copy, so no question is put to it and nothing runs. One of '
+    translation: 'The assistant is switched off for your group\'s Civicsmith, so no question is put to it and nothing runs. One of '
       + 'the group\'s administrators can switch it on. Nothing was asked.',
   },
   ASSISTANT_SWITCH_MALFORMED: {
@@ -1785,12 +1788,68 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'A shown disclosure is recorded with the member it was shown to and the version of its words. One '
       + 'of them is missing. Nothing was recorded.',
   },
+  /* R60 (DEC-150 (1)): the name of a place the group works in that no held profile covers. */
+  PLACE_NAME_MALFORMED: {
+    check: 'C-64.8',
+    where: 'src/setup.mjs placeWantedSet > is-place-name',
+    translation: 'A place your group works in is named in plain words: some text, at most 200 characters, on one '
+      + 'line. It is kept only in your group\'s Civicsmith and sent nowhere. Nothing was changed.',
+  },
+  /* R65 (DEC-152): the assistant's draft of the group's focus and purpose, from the administrator's answers. */
+  GROUP_DRAFT_NO_ANSWERS: {
+    check: 'C-64.9',
+    where: 'src/setup.mjs groupDescriptionDraft > is-group-draft-answers',
+    translation: 'Tell the assistant a little about your group first: it drafts only from what you tell it and what '
+      + 'your group already holds. Nothing was saved.',
+  },
+  GROUP_DRAFT_ANSWERS_MALFORMED: {
+    check: 'C-64.10',
+    where: 'src/setup.mjs groupDescriptionDraft > is-group-draft-answers',
+    translation: 'The assistant drafts from your answers to its questions: a short list of answers, each at most '
+      + '1,000 characters. Nothing was saved.',
+  },
+  /* R64 (DEC-127 (1)): the language a member chooses for the screens, the member's own act. */
+  MACHINE_CANNOT_SET_LANGUAGE: {
+    check: 'C-119.11',
+    where: 'src/setup.mjs memberLanguageSet > is-member-language',
+    translation: 'The language your screens are shown in is your own choice, made from your own signed-in session, '
+      + 'never by another member or a machine. Nothing was changed.',
+  },
+  LANGUAGE_MALFORMED: {
+    check: 'C-119.12',
+    where: 'src/setup.mjs memberLanguageSet > is-member-language',
+    translation: 'A language is chosen by its standard tag, like en, es or zh-Hant, and what was sent is not one. '
+      + 'Nothing was changed.',
+  },
 });
 
 const refusal = (code, detail, extra) => {
   const row = INSTANCE_SETUP_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
 };
+/* R65: a refusal in one of wizard-scripts' rows (its R25's codes, and `ASSISTANT_DRAFT_UNAVAILABLE`), with its check and
+   translation as that module holds them. */
+const scriptRefusal = (code, detail) => {
+  const row = (wizardScripts.WIZARD_SCRIPTS_CHECKS || {})[code] || {};
+  return { ok: false, reason: code, code, check: row.check ?? null, translation: row.translation ?? null, detail };
+};
+const draftUnavailable = (detail) => scriptRefusal("ASSISTANT_DRAFT_UNAVAILABLE", detail);
+const draftRefused = (checked) => (checked && typeof checked.code === "string"
+  ? scriptRefusal(checked.code, "the draft did not pass the check that it adds no fact, so nothing is offered.")
+  : draftUnavailable("the draft could not be checked, so nothing is offered."));
+
+/* R60: the longest name a place is given, in characters. R65: the answers' bounds, and membership R109's limits on
+   the focus and the purpose a draft must fit. R64: one BCP 47 tag, as `jurisdictions` R37 reads one (`Intl` reads no
+   clock, store or network), at most 255 characters. */
+export const PLACE_NAME_MAX = 200;
+export const GROUP_DRAFT_ANSWERS_MAX = 20;
+export const GROUP_DRAFT_ANSWER_MAX = 1000;
+export const GROUP_FOCUS_MAX = 1000;
+export const GROUP_PURPOSE_MAX = 4000;
+export function isLanguageTag(v) {
+  if (typeof v !== "string" || !v || v.length > 255 || /\s|,/.test(v)) return false;
+  try { return Intl.getCanonicalLocales(v).length === 1; } catch { return false; }
+}
 
 /* ============================================================================================================
  * THE TABLES (K4, `build/layers.md` ruling 3: each module owns its tables), created by `migrate` at start. Every one
@@ -1798,7 +1857,8 @@ const refusal = (code, detail, extra) => {
  * measurements of the runtime are not derived from the corpus, in the family of `seq` and the settings.
  * ============================================================================================================ */
 export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_identity_history", "group_domain_checks",
-  "runtime_observations", "cpu_probe_runs", "cpu_probe_steps", "assistant_switch", "assistant_disclosures"]);
+  "runtime_observations", "cpu_probe_runs", "cpu_probe_steps", "assistant_switch", "assistant_disclosures",
+  "place_wanted", "place_seen", "place_arrivals", "member_languages"]);
 /* Each table's classes, declared explicitly through record-core's `declareTable` (its R21; plan T33, Rules (6)). Every
    one is exempt from purge (R28, R41); none is a cache of anything; the append-only ones keep every version (R26, R53,
    R54). A member's disclosure record is theirs and the group's, never exported (it names who connected an account). */
@@ -1811,10 +1871,16 @@ const TABLE_CLASSES = Object.freeze({
   cpu_probe_steps: { export: "admin-only", version_chain: false },
   assistant_switch: { export: "admin-only", version_chain: true },
   assistant_disclosures: { export: "never", version_chain: true },
+  /* R60, R62 (DEC-150): the place the group named, held only in its own Civicsmith, never exported (R60). */
+  place_wanted: { export: "never", version_chain: true },
+  place_seen: { export: "never", version_chain: false },
+  place_arrivals: { export: "never", version_chain: true },
+  /* R64 (DEC-127 (1)): each member's own choice of language, appended. */
+  member_languages: { export: "admin-only", version_chain: true },
 });
 /* R50–R52: the seeding ledgers name entities and lines of the registry (`entities`, `lines`), which a whole-store purge
    clears, so a whole-store purge clears them with it and a later seeding starts afresh; a bundle's purge touches none. */
-export const INSTANCE_SETUP_SEED_TABLES = Object.freeze(["seed_entities", "seed_lines", "seed_offices"]);
+export const INSTANCE_SETUP_SEED_TABLES = Object.freeze(["seed_entities", "seed_lines", "seed_offices", "seed_bodies"]);
 export const INSTANCE_SETUP_TABLE_DECLARATIONS = Object.freeze([
   ...INSTANCE_SETUP_TABLES.map((name) => Object.freeze({
     name, purge: "exempt", expunge: "none", sight: "group", derive: "stored", ...TABLE_CLASSES[name] })),
@@ -1941,6 +2007,51 @@ CREATE TABLE IF NOT EXISTS seed_offices (
   body_entity    TEXT NOT NULL,
   seeded_at      TEXT NOT NULL,
   PRIMARY KEY (profile, role, body)
+);
+-- R50, R51: each profile body seeded under the profile's own identifier for it (ids.body), with or without its office,
+-- so R51 finds the body a Legistar body is matched to even where the profile gives its office no identifier.
+CREATE TABLE IF NOT EXISTS seed_bodies (
+  profile      TEXT NOT NULL,
+  role         TEXT NOT NULL,
+  body         TEXT NOT NULL,
+  entry        TEXT NOT NULL,
+  body_entity  TEXT NOT NULL,
+  seeded_at    TEXT NOT NULL,
+  PRIMARY KEY (profile, role, body)
+);
+-- R60 (DEC-150 (1)): the place the group works in that no held profile covers, named by an administrator; the latest row
+-- is the name, and a row with name NULL clears it. Held only here: nothing reads it outward. Append-only.
+CREATE TABLE IF NOT EXISTS place_wanted (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  name    TEXT,
+  set_by  TEXT NOT NULL,
+  set_at  TEXT NOT NULL
+);
+-- R62 (DEC-150 (3)): the held profiles as last compared (at the set of a name, then at each start), one row.
+CREATE TABLE IF NOT EXISTS place_seen (
+  id        INTEGER PRIMARY KEY CHECK (id = 1),
+  profiles  TEXT NOT NULL,
+  seen_at   TEXT NOT NULL
+);
+-- R62: each held profile found matching the named place that was not held before, recorded once per name (place_seq,
+-- the place_wanted row it matched); it leaves when the profile is made active or the name is cleared or changed.
+CREATE TABLE IF NOT EXISTS place_arrivals (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  place_seq  INTEGER NOT NULL,
+  name       TEXT NOT NULL,
+  profile    TEXT NOT NULL,
+  found_at   TEXT NOT NULL,
+  left_at    TEXT,
+  left_why   TEXT,
+  UNIQUE (place_seq, profile)
+);
+-- R64 (DEC-127 (1)): the language each member chose for the screens, by their own act; the latest row per member is the
+-- choice, and a row with language NULL clears it. Append-only.
+CREATE TABLE IF NOT EXISTS member_languages (
+  seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+  member    TEXT NOT NULL,
+  language  TEXT,
+  set_at    TEXT NOT NULL
 );
 -- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
 -- the disclosure's version, who recorded it and when. Append-only.
@@ -2082,6 +2193,7 @@ export class InstanceSetup {
   #governor() { return this.#deps.governor ?? governorOf(this.#ctx); }
   #scheduler() { return this.#deps.scheduler ?? schedulerOf(this.#ctx, this.#env); }
   #capture() { return this.#deps.capture ?? captureOf(this.#ctx, { env: this.#env }); }
+  #queueProducers() { return this.#deps.queueProducers ?? null; }
   #fetch(...a) { return (this.#deps.fetch ?? globalThis.fetch)(...a); }
   #sleep(ms) { return this.#deps.sleep ? this.#deps.sleep(ms) : new Promise((s) => setTimeout(s, ms)); }
   #now() { return this.#deps.now ? this.#deps.now() : Date.now(); }
@@ -2101,6 +2213,9 @@ export class InstanceSetup {
     if (!cols.includes("unit")) this.#sql.exec(`ALTER TABLE runtime_observations ADD COLUMN unit TEXT`);
     for (const r of this.#rows(`SELECT metric FROM runtime_observations WHERE unit IS NULL`))
       this.#sql.exec(`UPDATE runtime_observations SET unit = ? WHERE metric = ?`, unitOfMetric(r.metric), r.metric);
+    /* R50: a body seeded with its office before the body ledger existed is held there too, so R51 finds it. */
+    this.#sql.exec(`INSERT OR IGNORE INTO seed_bodies (profile, role, body, entry, body_entity, seeded_at)
+                    SELECT profile, role, body, entry, body_entity, seeded_at FROM seed_offices`);
     /* R40: the trail that predates runs, keyed on the step alone, becomes one run of its own, and its table goes. */
     if (this.#rows(`PRAGMA table_info(cpu_probe)`).length) {
       const old = this.#rows(`SELECT step, elapsed_ms, iterations, at FROM cpu_probe ORDER BY step`);
@@ -2141,6 +2256,11 @@ export class InstanceSetup {
         catch (e) { out.offices = { ok: false, detail: `the offices could not be seeded at setup: ${String(e && e.message || e).slice(0, 200)}` }; }
       }
     }
+    /* R62: at each start, with a place named, the profiles that arrived for it; and once, the read `queue-producers`
+       raises the administrators' one Status item from (its R38), read as the plane. */
+    try { out.places = this.#comparePlaces(); }
+    catch (e) { out.places = { compared: false, detail: `the place could not be compared: ${String(e && e.message || e).slice(0, 200)}` }; }
+    out.arrivals = this.#registerArrivals();
     /* The instance's start reconciles (scheduler R11), now that this consumer is registered: never `arm`, the producers'
        door, which would start the test seam's probe at every boot (K419). */
     try { out.armed = await this.#scheduler().start(); } catch { out.armed = null; /* the next arm reconciles */ }
@@ -2148,6 +2268,14 @@ export class InstanceSetup {
   }
 
   /* ---- R1–R4: the producing group ---- */
+
+  /* R62: `placeArrivals` registered once with `queue-producers` (its R38; K31's pattern), read as the plane. */
+  #registerArrivals() {
+    const qp = this.#queueProducers();
+    if (!qp || typeof qp.registerPlaceArrivals !== "function") return { ok: false, detail: "no producers to register with" };
+    try { return qp.registerPlaceArrivals(({ viewer } = {}) => this.placeArrivals({ viewer })); }
+    catch (e) { return { ok: false, detail: String(e && e.message || e).slice(0, 200) }; }
+  }
 
   /** R1: THE ONE READER — the recorded slug, or null. It reads the store and nothing else, never `env`. */
   producingGroup() {
@@ -2242,7 +2370,7 @@ export class InstanceSetup {
     if (!by || !this.#membership().isAdministrator(by))
       return refusal("GROUP_IDENTITY_NOT_ADMIN",
         "setting the group's display name or claiming its domain is an administrator's act (Publication §7), and "
-        + "the plane stamps who is asking from the signed-in session rather than taking it from the caller. This "
+        + "your group's Civicsmith stamps who is asking from the signed-in session rather than taking it from the caller. This "
         + "caller is not one of the active administrators.", { by: by ?? null });
     /* END DEC-49 REGION is-group-identity-admin */
     return null;
@@ -2348,7 +2476,7 @@ export class InstanceSetup {
     } catch { res = null; }
     if (!res)
       return { verdict: "undetermined", status: null,
-               detail: `the fetch of ${path} did not complete, and this plane did not record why` };
+               detail: `the fetch of ${path} did not complete, and why was not recorded` };
     const status = res.status;
     try { this.#governor().governorReport({ host: domain, status }); } catch { /* an unrecorded outcome is not a verdict */ }
     if (status === 404 || status === 410 || (status >= 300 && status < 400))
@@ -2365,12 +2493,12 @@ export class InstanceSetup {
     const inst = isObject && typeof f.instance === "string" ? instanceAddress(f.instance) : null;
     const grp = isObject && typeof f.group === "string" ? f.group.trim() : null;
     if (inst === address && grp === slug)
-      return { verdict: "verified", status, detail: `${path} names this instance (${address}) and its slug (${slug})` };
+      return { verdict: "verified", status, detail: `${path} names your group's Civicsmith (${address}) and its slug (${slug})` };
     return { verdict: "mismatched", status,
              detail: !isObject
-               ? `${path} is not the JSON object this plane reads ({ instance, group })`
+               ? `${path} is not the JSON object your group's Civicsmith reads ({ instance, group })`
                : `${path} names instance ${JSON.stringify(inst ?? f.instance ?? null).slice(0, 120)} and group `
-                 + `${JSON.stringify(grp).slice(0, 60)}; this instance is ${address} and its slug is ${slug}` };
+                 + `${JSON.stringify(grp).slice(0, 60)}; your group's Civicsmith is ${address} and its slug is ${slug}` };
   }
 
   /** R9, the alarm consumer's two halves: the next re-check is due one interval after the current claim's latest
@@ -2448,7 +2576,7 @@ export class InstanceSetup {
     const { ids, unknown, tests } = this.#checkProfileList(raw.split(",").map((s) => s.trim()).filter(Boolean));
     const unique = [...new Set(ids)];
     let why = null;
-    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which this copy does not hold`;
+    if (unknown.length) why = `the installer bound ${unknown.map((x) => JSON.stringify(x)).join(", ")}, which your group's Civicsmith does not hold`;
     else if (tests.length) why = `the installer bound ${tests.join(", ")}, a profile made up for testing`;
     const core = this.#record();
     if (why) {
@@ -2476,7 +2604,7 @@ export class InstanceSetup {
     const out = { ok: true, profiles: active, conflicts: combined.ok ? combined.conflicts : [],
                   ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices };
     if (!ids.length) {
-      out.detail = "no active profile: this copy reads no local facts, which is valid, and every fact that needs one "
+      out.detail = "no active profile: your group's Civicsmith reads no local facts, which is valid, and every fact that needs one "
         + "is answered as undetermined until an administrator chooses";
       const note = core.getSetting(InstanceSetup.PROFILES_BOOT_NOTE);
       if (note && note.recorded === false && typeof note.why === "string")
@@ -2490,7 +2618,7 @@ export class InstanceSetup {
     /* DEC-49 REGION is-profiles-admin */
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return refusal("PROFILES_NOT_ADMIN",
-        "choosing the jurisdiction profiles is an administrator's act, and the plane stamps who is asking from the "
+        "choosing the jurisdiction profiles is an administrator's act, and your group's Civicsmith stamps who is asking from the "
         + "signed-in session. This caller is not one of the active administrators.", { by: by ?? null });
     /* END DEC-49 REGION is-profiles-admin */
     /* DEC-49 REGION is-profiles-list */
@@ -2499,7 +2627,7 @@ export class InstanceSetup {
         + "empty list chooses none. Nothing was changed.");
     const { ids, unknown, tests } = this.#checkProfileList(profiles);
     if (unknown.length)
-      return refusal("UNKNOWN_PROFILE", `this copy holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. `
+      return refusal("UNKNOWN_PROFILE", `your group's Civicsmith holds no profile ${unknown.map((x) => JSON.stringify(x)).join(", ")}. `
         + "Nothing was changed.", { profiles: unknown });
     if (tests.length)
       return refusal("PROFILE_IS_TEST", `${tests.join(", ")} ${tests.length > 1 ? "are profiles" : "is a profile"} made up `
@@ -2508,6 +2636,8 @@ export class InstanceSetup {
     const unique = [...new Set(ids)];
     const set = this.#record().setSetting("jurisdiction_profiles", unique, by);
     if (!set || set.ok !== true) return set;
+    /* R62: an arrival leaves when an administrator makes that profile active. */
+    this.#leaveArrivals("the profile was made active", this.#iso(), unique);
     return { ...this.profiles(), set_by: by, ...(unique.length < ids.length ? { collapsed: true } : {}),
              note: unique.length
                ? "local facts are read from these profiles, in this order, from now on; what was recorded before is unchanged"
@@ -2634,33 +2764,43 @@ export class InstanceSetup {
         const where = { profile, entry, role, body };
         const ids = cp && cp.ids && typeof cp.ids === "object" ? cp.ids : {};
         const officeId = InstanceSetup.#ident(ids.office), bodyId = InstanceSetup.#ident(ids.body);
-        if (!officeId || !bodyId) {
-          put({ state: "unseeded", why: `the profile names no identifier for this ${!officeId ? "office (ids.office)" : "body (ids.body)"}, `
-            + "so nothing is seeded for it: an office is seeded only under the profile's own identifier, never by its name" },
-            { what: "office", ...where });
-          return;
-        }
         const source = { profile, entry };
         const cite = `jurisdiction profile ${profile}, ${entry}${cp.basis ? ` (basis: ${cp.basis})` : ""}`;
-        const b = this.#seedEntity({ p, ident: bodyId, kind: "body", label: body, sector: "government", source,
-          row: `${profile}/${entry}/body`, note: `The body the office "${role}" belongs to, as the active ${cite} names it; seeded at setup.` });
-        put(b, { what: "body", ...where, ident: bodyId });
-        const o = this.#seedEntity({ p, ident: officeId, kind: "office", label: `${role}, ${body}`, source,
-          row: `${profile}/${entry}/office`, note: `An office an action may be addressed to, as the active ${cite} names it; seeded at setup.` });
-        put(o, { what: "office", ...where, ident: officeId });
-        if (!o.entity_id || !b.entity_id || o.state === "unseeded" || b.state === "unseeded") {
-          put({ state: "unseeded", why: "its office or its body is not held under its identifier, so the line has no identified ends" },
-              { what: "post_in", ...where });
-          return;
-        }
-        this.#sql.exec(`INSERT INTO seed_offices (profile, role, body, entry, office_entity, body_entity, seeded_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
-                       profile, role, body, entry, o.entity_id, b.entity_id, this.#iso());
+        /* Each entity is seeded when, and only when, the profile gives its own identifier for it: the body under
+           `ids.body` whether or not the office has one, the office under `ids.office` (K1682's reading 1; N613). */
+        const noIdent = (what, field) => ({ state: "unseeded", why: `the profile names no identifier for this ${what} `
+          + `(${field}), so it is not seeded: an entity is seeded only under the profile's own identifier, never by its name` });
+        const b = bodyId ? this.#seedEntity({ p, ident: bodyId, kind: "body", label: body, sector: "government", source,
+          row: `${profile}/${entry}/body`, note: `The body the office "${role}" belongs to, as the active ${cite} names it; seeded at setup.` })
+          : noIdent("body", "ids.body");
+        put(b, { what: "body", ...where, ...(bodyId ? { ident: bodyId } : {}) });
+        const bodyHeld = !!b.entity_id && b.state !== "unseeded";
+        if (bodyHeld)
+          this.#sql.exec(`INSERT INTO seed_bodies (profile, role, body, entry, body_entity, seeded_at)
+                          VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
+                         profile, role, body, entry, b.entity_id, this.#iso());
+        const o = officeId ? this.#seedEntity({ p, ident: officeId, kind: "office", label: `${role}, ${body}`, source,
+          row: `${profile}/${entry}/office`, note: `An office an action may be addressed to, as the active ${cite} names it; seeded at setup.` })
+          : noIdent("office", "ids.office");
+        put(o, { what: "office", ...where, ...(officeId ? { ident: officeId } : {}) });
+        const officeHeld = !!o.entity_id && o.state !== "unseeded";
+        /* K1683: the office's row names its body's entity, or '' when the body is not held under an identifier. */
+        if (officeHeld)
+          this.#sql.exec(`INSERT INTO seed_offices (profile, role, body, entry, office_entity, body_entity, seeded_at)
+                          VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
+                         profile, role, body, entry, o.entity_id, bodyHeld ? b.entity_id : "", this.#iso());
         const zone = zoneOf(p) ? { zone: zoneOf(p) } : null;
         const rule = (ids2) => ({ rule: "a jurisdiction profile's office entry, seeded at setup", source, ids: ids2 });
-        put(this.#seedLine({ key: `post_in|${o.entity_id}|${b.entity_id}|${profile}`, kind: "post_in",
-                             from: o.entity_id, to: b.entity_id, valid: zone, basis: rule({ from: officeId, to: bodyId }) }),
-            { what: "post_in", ...where });
+        /* A line needs both its ends held under identifiers. Neither held: the two entities' answers say why, and no
+           line is named; one held: the line is answered could-not-be-seeded, naming the end that is missing. */
+        if (officeHeld && bodyHeld)
+          put(this.#seedLine({ key: `post_in|${o.entity_id}|${b.entity_id}|${profile}`, kind: "post_in",
+                               from: o.entity_id, to: b.entity_id, valid: zone, basis: rule({ from: officeId, to: bodyId }) }),
+              { what: "post_in", ...where });
+        else if (officeHeld || bodyHeld)
+          put({ state: "unseeded", why: `its ${officeHeld ? "body" : "office"} is not held under an identifier, so the line has `
+            + "only one identified end" }, { what: "post_in", ...where });
+        if (!bodyHeld) return;
         const within = cp.within && typeof cp.within === "object" ? cp.within : null;
         const withinId = within ? InstanceSetup.#ident(within.ids) : null;
         if (!within) {
@@ -2755,7 +2895,10 @@ export class InstanceSetup {
         const hits = [...forms].filter((f) => groups.has(f));
         const entry = `counterparties[${i}]`;
         const role = typeof cp.role === "string" ? cp.role.trim() : "";
-        if (hits.length === 1) { out.push({ profile, entry, role, body, matched: true, form: hits[0], bodies: groups.get(hits[0]) }); return; }
+        /* R52: the body's organisation, for the MemberType map: the counterparty's own key, else the one its name reads as. */
+        const organisation = [cp.organisation, read.organisation, hits.length === 1 && hits[0].startsWith("organisation:")
+          ? hits[0].slice("organisation:".length) : null].find((o) => typeof o === "string" && o) ?? null;
+        if (hits.length === 1) { out.push({ profile, entry, role, body, matched: true, form: hits[0], organisation, bodies: groups.get(hits[0]) }); return; }
         const terms = termFold(body).split(/[^\p{L}\p{N}]+/u).filter((t) => t.length > 2);
         const near = hits.length > 1 ? hits.flatMap((h) => groups.get(h))
           : [...groups.values()].flat().filter((g) => terms.length && terms.every((t) => termFold(g.name).includes(t)));
@@ -2814,11 +2957,11 @@ export class InstanceSetup {
       if (!m.matched) { out.unmatched.push(m); continue; }
       const { p } = active.find((a) => a.id === m.profile);
       const sch = InstanceSetup.#scheme(p, LEGISTAR_SCHEMES.body);
-      const office = this.#one(`SELECT body_entity FROM seed_offices WHERE profile = ? AND role = ? AND body = ?`, m.profile, m.role, m.body);
+      const office = this.#one(`SELECT body_entity FROM seed_bodies WHERE profile = ? AND role = ? AND body = ?`, m.profile, m.role, m.body);
       const match = { profile: m.profile, entry: m.entry, role: m.role, body: m.body, form: m.form,
                       bodies: m.bodies.map((b) => ({ BodyId: b.BodyId, name: b.name })) };
       out.matches.push(match);
-      if (!office) { match.why = "the profile's body is not seeded (R50: the profile names no identifier for it), so its BodyIds are held on no entity"; continue; }
+      if (!office) { match.why = "the profile's body is not seeded (R50: the profile names no identifier for it, ids.body), so its BodyIds are held on no entity"; continue; }
       if (!sch) { match.why = `the profile declares no identifier scheme ${LEGISTAR_SCHEMES.body}, so its BodyIds are held on no entity`; continue; }
       for (const b of m.bodies) {
         const ident = { scheme: LEGISTAR_SCHEMES.body, id: String(b.BodyId) };
@@ -2832,7 +2975,8 @@ export class InstanceSetup {
             : { state: "unseeded", why: `the registry refused the identifier: ${got && (got.reason || got.detail)}` };
           if (r.state !== "unseeded") {
             this.#ledgerEntity(ident, office.body_entity, "body", m.body, { capture: bodiesCap.sha, row: b.source });
-            seatBodies.set(b.BodyId, { entity: office.body_entity, p, profile: m.profile, label: m.body, ident });
+            seatBodies.set(b.BodyId, { entity: office.body_entity, p, profile: m.profile, label: m.body, ident,
+                                       organisation: m.organisation });
           }
         }
         put(r, { what: "body_identifier", profile: m.profile, body: m.body, ident });
@@ -2884,12 +3028,16 @@ export class InstanceSetup {
         out.same_names.push({ PersonId: f.PersonId, name, same_name_as: others });
       put(person, { what: "person", ...where });
       if (!person.entity_id || person.state === "unseeded") continue;
-      const map = (sb.p.vocabulary && Array.isArray(sb.p.vocabulary.member_types) ? sb.p.vocabulary.member_types : [])
-        .find((x) => x && x.member_type === memberType);
+      /* jurisdictions R60 (K1729): an entry for the seat's body's organisation is read before one for all bodies. */
+      const types = (sb.p.vocabulary && Array.isArray(sb.p.vocabulary.member_types) ? sb.p.vocabulary.member_types : [])
+        .filter((x) => x && x.member_type === memberType);
+      const map = (sb.organisation ? types.find((x) => x.organisation === sb.organisation) : null)
+        ?? types.find((x) => x.organisation === undefined || x.organisation === null);
       const capacity = map && LINE_CAPACITIES.includes(map.capacity) ? map.capacity : null;
       if (!capacity) {
         out.holders_undetermined.push({ ...where, person: person.entity_id, seat: seat.entity_id,
-          why: `the profile maps no capacity for the MemberType ${JSON.stringify(memberType)}, so the holder's capacity is undetermined and no holds line is recorded` });
+          why: `the profile maps no capacity for the MemberType ${JSON.stringify(memberType)}${sb.organisation ? ` on ${sb.organisation}` : " on this body"} `
+            + "or on all bodies, so the holder's capacity is undetermined and no holds line is recorded" });
         continue;
       }
       const zone = zoneOf(sb.p) ?? undefined;
@@ -2922,7 +3070,7 @@ export class InstanceSetup {
     try { r = this.#one(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq DESC LIMIT 1`); } catch { r = null; }
     return r ? { ok: true, on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at }
              : { ok: true, on: false, set_by: null, set_at: null,
-                 detail: "the assistant has never been switched on for this copy, so it is off" };
+                 detail: "the assistant has never been switched on for your group's Civicsmith, so it is off" };
   }
 
   /** R53, op=assistantset: an administrator switches the assistant on or off for this copy. `by` is the control
@@ -2930,7 +3078,7 @@ export class InstanceSetup {
    *  chose what and when. */
   assistantSet({ on = undefined, by = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
-      return notAnAdmin(by ?? null, "switching the assistant on or off for this copy");
+      return notAnAdmin(by ?? null, "switching the assistant on or off for your group's Civicsmith");
     /* DEC-49 REGION is-assistant-switch */
     if (typeof on !== "boolean")
       return refusal("ASSISTANT_SWITCH_MALFORMED", "`on` is true (switch the assistant on) or false (switch it off). "
@@ -2942,9 +3090,11 @@ export class InstanceSetup {
              history: this.#rows(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq`)
                .map((r) => ({ on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at })),
              note: on
-               ? "the assistant is on for this copy. The copy holds no account of its own: each member who wants it "
-                 + "connects their own Claude account or API key, and is shown the disclosure first."
-               : "the assistant is off for this copy: no ask is put to it and no run starts. Nothing already recorded "
+               ? "the assistant is on for your group's Civicsmith. Switching it on binds no account: each member who "
+                 + "wants it is served by their own Claude account or API key, connected by their own act, or by the "
+                 + "group's Anthropic API key, which an administrator sets, switches and removes; each is told first "
+                 + "where their questions go."
+               : "the assistant is off for your group's Civicsmith: no ask is put to it and no run starts. Nothing already recorded "
                  + "is changed or ended." };
   }
 
@@ -2955,8 +3105,8 @@ export class InstanceSetup {
     if (st.on === true) return null;
     /* DEC-49 REGION is-assistant-on */
     return refusal("ASSISTANT_OFF", st.set_at
-      ? `an administrator switched the assistant off for this copy on ${st.set_at}; no ask is put to it and no run starts.`
-      : "the assistant has never been switched on for this copy; no ask is put to it and no run starts.",
+      ? `an administrator switched the assistant off for your group's Civicsmith on ${st.set_at}; no ask is put to it and no run starts.`
+      : "the assistant has never been switched on for your group's Civicsmith; no ask is put to it and no run starts.",
       { set_by: st.set_by, set_at: st.set_at });
     /* END DEC-49 REGION is-assistant-on */
   }
@@ -2994,6 +3144,216 @@ export class InstanceSetup {
              : { ok: true, member: m || null, version: v, shown: false, shown_at: null,
                  detail: m ? "no disclosure at this version is recorded as shown to this member"
                            : "the request names no member, so no disclosure is recorded as shown" };
+  }
+
+  /* =====================================================================
+   * A PLACE NOT YET HELD (R60, R62; DEC-150). An administrator may name the place the group works in when no held
+   * profile covers it. The name is held only here: no public read, notice, submission, edition, export or request to
+   * another host carries it, and it is never a profile, a jurisdiction or a local fact. At each start, a held profile
+   * that matches it and was not held before is recorded once as an arrival, which `queue-producers` (its R38) raises to
+   * the administrators as one Status item through the read this module registers; it leaves when that profile is made
+   * active (R14) or the name is cleared or changed.
+   * ===================================================================== */
+
+  #placeCurrent() {
+    return this.#one(`SELECT seq, name, set_by, set_at FROM place_wanted ORDER BY seq DESC LIMIT 1`) || null;
+  }
+  /* The held profiles a place can arrive as: every held profile that is not a test profile, by id. */
+  #heldPlaceIds() {
+    return this.#juris().list().filter((p) => p && p.test !== true && typeof p.id === "string").map((p) => p.id);
+  }
+  #seePlaces(at) {
+    this.#sql.exec(`INSERT INTO place_seen (id, profiles, seen_at) VALUES (1, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET profiles = excluded.profiles, seen_at = excluded.seen_at`,
+                   JSON.stringify(this.#heldPlaceIds()), at);
+  }
+  #leaveArrivals(why, at, profiles = null) {
+    for (const r of this.#rows(`SELECT seq, profile FROM place_arrivals WHERE left_at IS NULL`))
+      if (!profiles || profiles.includes(r.profile))
+        this.#sql.exec(`UPDATE place_arrivals SET left_at = ?, left_why = ? WHERE seq = ?`, at, why, r.seq);
+  }
+  /* R62: a profile matches the named place when its name or one of its covers, folded as extraction's term fold, is
+     exactly the name folded the same way. */
+  static #placeMatches(p, name) {
+    const want = termFold(name);
+    return !!want && [p && p.name, ...(p && Array.isArray(p.covers) ? p.covers : [])]
+      .some((x) => typeof x === "string" && termFold(x) === want);
+  }
+
+  /** R60, op=placewanted: an administrator names the place the group works in that no held profile covers, or clears
+   *  it with `name: null`. `by` is the control plane's stamp (R29). Each set or clear is appended with who and when. */
+  placeWantedSet({ name = undefined, by = null } = {}) {
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return notAnAdmin(by ?? null, "naming the place your group works in");
+    let value = null;
+    if (name !== null) {
+      const s = typeof name === "string" ? name.trim() : "";
+      const chars = [...s].length;
+      /* DEC-49 REGION is-place-name */
+      if (!s || chars > PLACE_NAME_MAX || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(s))
+        return refusal("PLACE_NAME_MALFORMED", `${s ? `a name of ${chars} characters` : "the request names no place, and "
+          + "one is named as"} one line of 1 to ${PLACE_NAME_MAX} characters with no control characters; null clears it. `
+          + "Nothing was changed.");
+      /* END DEC-49 REGION is-place-name */
+      value = s;
+    }
+    const at = this.#iso();
+    const before = this.#placeCurrent();
+    this.#sql.exec(`INSERT INTO place_wanted (name, set_by, set_at) VALUES (?, ?, ?)`, value, by, at);
+    /* R62: the open arrivals leave when the name is cleared or changed; the profiles held now are what a later start
+       compares against, so a profile already held when the name is set is not an arrival. */
+    if (before && before.name !== null && before.name !== value)
+      this.#leaveArrivals(value === null ? "the name was cleared" : "the name was changed", at);
+    this.#seePlaces(at);
+    return { ok: true, name: value, set_by: by, set_at: at,
+             history: this.#rows(`SELECT name, set_by, set_at FROM place_wanted ORDER BY seq`).map((r) => ({ ...r })),
+             note: value === null
+               ? "no place is named. Nothing about it was ever sent anywhere."
+               : "the name is kept only in your group's Civicsmith and sent nowhere. When an installed update brings a "
+                 + "profile for it, the administrators are told once and may choose it under Places." };
+  }
+
+  /** R60, op=placewantedstate: the named place, to an administrator only, with R62's open arrivals as `matches`. */
+  placeWanted({ viewer = null } = {}) {
+    if (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer))
+      return notAnAdmin(viewer ?? null, "reading the place your group named");
+    const cur = this.#placeCurrent();
+    return { ok: true, name: cur ? cur.name : null, set_by: cur ? cur.set_by : null, set_at: cur ? cur.set_at : null,
+             matches: this.placeArrivals({ viewer }) };
+  }
+
+  /** R62: the open arrivals (those that have not left), each with the profile's name and covers, to administrators
+   *  only, and `[]` to anyone else. Writes nothing; never throws. */
+  placeArrivals({ viewer = null } = {}) {
+    try {
+      if (typeof viewer !== "string" || !viewer || !this.#membership().isAdministrator(viewer)) return [];
+      return this.#rows(`SELECT name, profile, found_at FROM place_arrivals WHERE left_at IS NULL ORDER BY seq`).map((r) => {
+        const p = this.#juris().get(r.profile);
+        return { name: r.name, profile: r.profile, profile_name: p ? p.name ?? null : null,
+                 covers: p && Array.isArray(p.covers) ? [...p.covers] : [], found_at: r.found_at };
+      });
+    } catch { return []; }
+  }
+
+  /* R62, at each start with a place named: every held non-test profile matching the name, not held at the last compare
+     (or at the set), and not active, is recorded once as an arrival; then the profiles held now are what the next start
+     compares against. */
+  #comparePlaces() {
+    const cur = this.#placeCurrent();
+    if (!cur || cur.name === null) return { compared: false };
+    const at = this.#iso();
+    const seenRow = this.#one(`SELECT profiles FROM place_seen WHERE id = 1`);
+    let seen = null;
+    try { seen = seenRow ? JSON.parse(seenRow.profiles) : null; } catch { seen = null; }
+    const active = new Set(this.#activeIds());
+    let found = 0;
+    if (Array.isArray(seen))
+      for (const id of this.#heldPlaceIds()) {
+        if (seen.includes(id) || active.has(id) || !InstanceSetup.#placeMatches(this.#juris().get(id), cur.name)) continue;
+        const r = this.#rows(`INSERT INTO place_arrivals (place_seq, name, profile, found_at) VALUES (?, ?, ?, ?)
+                              ON CONFLICT(place_seq, profile) DO NOTHING RETURNING seq`, cur.seq, cur.name, id, at);
+        found += r.length;
+      }
+    this.#seePlaces(at);
+    return { compared: true, arrived: found };
+  }
+  #activeIds() {
+    const set = this.#record().getSetting("jurisdiction_profiles");
+    return Array.isArray(set) ? set.filter((x) => typeof x === "string") : [];
+  }
+
+  /* =====================================================================
+   * A MEMBER'S LANGUAGE (R64; DEC-127 (1)). The language a member chooses for the screens, by their own act; the screens
+   * show each word in it where a translation is held and in English where none is. `null` clears the choice.
+   * ===================================================================== */
+
+  /** R64, op=memberlanguageset: `by` (the control plane's stamp) is the member, and nobody sets it for another. */
+  memberLanguageSet({ language = undefined, by = null } = {}) {
+    const who = typeof by === "string" ? by.trim() : "";
+    /* DEC-49 REGION is-member-language */
+    if (!who || /^class:/.test(who))
+      return refusal("MACHINE_CANNOT_SET_LANGUAGE", "the language of the screens is set by the member, from their own "
+        + "signed-in session. Nothing was changed.", { by: by ?? null });
+    let tag = null;
+    if (language !== null) {
+      tag = typeof language === "string" ? language.trim() : "";
+      if (!isLanguageTag(tag))
+        return refusal("LANGUAGE_MALFORMED", `${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no language, and "
+          + "one is chosen as"} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.`);
+    }
+    /* END DEC-49 REGION is-member-language */
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO member_languages (member, language, set_at) VALUES (?, ?, ?)`, who, tag, at);
+    return { ok: true, member: who, language: tag, set_at: at,
+             note: tag === null
+               ? "no language is chosen: the screens follow your device's setting again."
+               : "the screens show each word in this language where a translation is held, and in English where none is." };
+  }
+
+  /** R64, op=memberlanguage: the viewer's own choice, `{language, set_at}`, and nobody else's. Writes nothing. */
+  memberLanguage({ viewer = null } = {}) {
+    const who = typeof viewer === "string" ? viewer.trim() : "";
+    let r = null;
+    try {
+      r = who && !/^class:/.test(who)
+        ? this.#one(`SELECT language, set_at FROM member_languages WHERE member = ? ORDER BY seq DESC LIMIT 1`, who) : null;
+    } catch { r = null; }
+    return { ok: true, language: r ? r.language ?? null : null, set_at: r ? r.set_at : null };
+  }
+
+  /* =====================================================================
+   * THE ASSISTANT DRAFTS THE GROUP'S DESCRIPTION (R65; DEC-152, K1818, K1837, K1841 (2)). On "Who your group is", an
+   * administrator answers a few questions and asks for a labelled draft of the group's focus and purpose
+   * (`membership` R109). It writes nothing: the words become the group's only when the administrator keeps them through
+   * `op=groupdescriptionset`. The draft is built from the answers and, while the suggestions switch of the account that
+   * serves the administrator is on, what the group holds, and it passes `wizard-scripts`' no-added-fact check. In T34
+   * there is no model turn (N686): past every refusal the op answers `ASSISTANT_DRAFT_UNAVAILABLE`.
+   * ===================================================================== */
+
+  /** R65, op=groupdescriptiondraft. `by` and `assistant` (`{on, account}`, as the door resolves it, control-plane R57)
+   *  are the control plane's stamps (R29). The refusals, in order: NOT_AN_ADMIN, ASSISTANT_OFF, the door's account and
+   *  ceiling codes (answered there), GROUP_DRAFT_ANSWERS_MALFORMED or GROUP_DRAFT_NO_ANSWERS; then the draft, or, while
+   *  no model turn exists, ASSISTANT_DRAFT_UNAVAILABLE. */
+  async groupDescriptionDraft({ answers = undefined, assistant = null, by = null } = {}) {
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return notAnAdmin(by ?? null, "asking the assistant to draft your group's description");
+    const off = this.assistantGate();
+    if (off) return off;
+    if (assistant && typeof assistant === "object" && assistant.on === false)
+      return refusal("ASSISTANT_OFF", "the assistant is not on for this request, so no question is put to it.");
+    /* DEC-49 REGION is-group-draft-answers */
+    const given = Array.isArray(answers) && answers.length <= GROUP_DRAFT_ANSWERS_MAX ? answers : null;
+    if (!given || given.some((a) => !a || typeof a !== "object" || typeof a.question !== "string"
+                                    || typeof a.text !== "string" || [...a.text].length > GROUP_DRAFT_ANSWER_MAX))
+      return refusal("GROUP_DRAFT_ANSWERS_MALFORMED", `the answers are a list of at most ${GROUP_DRAFT_ANSWERS_MAX} `
+        + `{question, text}, each text at most ${GROUP_DRAFT_ANSWER_MAX} characters. Nothing was saved.`);
+    if (given.every((a) => !a.text.trim()))
+      return refusal("GROUP_DRAFT_NO_ANSWERS", "every answer is empty, so there is nothing to draft from. Nothing was saved.");
+    /* END DEC-49 REGION is-group-draft-answers */
+    const unavailable = () => draftUnavailable("the assistant's turn that drafts the group's description is not built "
+      + "yet, so nothing was drafted and the fields are as they were.");
+    const turn = this.#deps.groupDraftTurn;
+    if (typeof turn !== "function") return unavailable();
+    const account = assistant && typeof assistant === "object" ? assistant.account ?? null : null;
+    const suggestions = !!(account && account.suggestions === true);
+    let got = null;
+    try { got = await turn({ answers: given.map((a) => ({ question: a.question, text: a.text })), account, holdings: suggestions }); }
+    catch { got = null; }
+    if (!got || typeof got !== "object") return unavailable();
+    const told = given.map((a) => a.text).join("\n");
+    const readLog = Array.isArray(got.readLog) ? got.readLog : [];
+    const label = { kind: "machine", asked_by: by };
+    const out = { ok: true, withheld: [] };
+    for (const [field, max] of [["focus", GROUP_FOCUS_MAX], ["purpose", GROUP_PURPOSE_MAX]]) {
+      const text = typeof got[field] === "string" ? got[field] : "";
+      const checked = wizardScripts.checkDraft(text, { told, readLog, firsthand: false, suggestions });
+      if (!checked || checked.ok !== true) return draftRefused(checked);
+      if ([...checked.text].length > max) return unavailable();
+      out[field] = { text: checked.text, label };
+      out.withheld.push(...(checked.withheld || []).map((w) => ({ field, ...w })));
+    }
+    out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
+    return out;
   }
 
   /* =====================================================================
@@ -3139,6 +3499,8 @@ export function instanceSetupOf(ctx, env = null, deps = {}) {
  *  control plane's, read from the query AFTER the body is spread, so a body naming its own is overwritten (R29).
  *  The map joins `control-plane`'s one route map (its R35; N348), so every route passes its frame: R26's body read,
  *  R27's existence read, the envelope and R25's catch. This module keeps no door or Durable Object class of its own. */
+/* R65: the door's `assistant` stamp (control-plane R57), JSON in the query; anything else is no stamp. */
+const stampedJson = (v) => { try { const x = v ? JSON.parse(v) : null; return x && typeof x === "object" ? x : null; } catch { return null; } };
 export function instanceSetupOps(m, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -3162,6 +3524,11 @@ export function instanceSetupOps(m, url, body) {
     disclosureof: () => m.disclosureOf({ member: q("member") ?? (body || {}).member, version: q("version") ?? (body || {}).version }),
     officesseed: () => m.officesSeed({ ...(body || {}), boot: false, by: q("by") }),
     seatsseed: () => m.seatsSeed({ ...(body || {}), by: q("by") }),
+    placewanted: () => m.placeWantedSet({ ...(body || {}), by: q("by") }),
+    placewantedstate: () => m.placeWanted({ viewer: q("viewer") }),
+    memberlanguageset: () => m.memberLanguageSet({ ...(body || {}), by: q("by") }),
+    memberlanguage: () => m.memberLanguage({ viewer: q("viewer") }),
+    groupdescriptiondraft: () => m.groupDescriptionDraft({ ...(body || {}), by: q("by"), assistant: stampedJson(q("assistant")) }),
   };
 }
 

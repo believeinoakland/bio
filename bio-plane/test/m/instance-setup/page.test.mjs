@@ -258,12 +258,13 @@ test("R15 the page half: the active profiles by name to a member; to an administ
    run the same reading over a page that breaks it. The words are pinned here, in this test, not read from the block. */
 const OLD_CARD = /If you ever lose the\s+password you choose here/;
 const DEC_109 = [
-  /Whoever can sign in to the hosting account this copy runs in \(its Cloudflare account\) controls the copy\./,
-  /can replace the one-time password, claim the copy again, read everything in it and lock everyone else out,\s+and no vote of the group's administrators can stop them\./,
+  /Before you choose a password: who controls your group's Civicsmith/,
+  /Whoever can sign in to the hosting account your group's Civicsmith runs in \(its Cloudflare account\) controls it\./,
+  /can replace the one-time password, claim it again, read everything in it and lock everyone else out,\s+and no vote of the group's administrators can stop them\./,
   /Use a group account for it, not anyone's personal login\./,
   /Add at least one other trusted person to that account\./,
   /Where possible, let someone other than the group's administrators hold it\./,
-  /The same account is the way back in if the password you choose is lost/,
+  /The same account is the way back in if the password you choose is lost[^<]*your group's Civicsmith can be claimed again\./,
 ];
 function r47Fails(html) {
   const fails = [];
@@ -278,12 +279,14 @@ function r47Fails(html) {
   return fails;
 }
 
-test("R47 the claim section shows DEC-109's block before the password is chosen, in place of the reassurance-only card, and asks and records no acknowledgement", async () => {
+test("R47 R63 the claim section shows DEC-109's block before the password is chosen, in place of the reassurance-only card, in DEC-149's words (your group's Civicsmith, never this copy), and asks and records no acknowledgement", async () => {
   assert.deepEqual(r47Fails(SETUP_HTML), []);
   assert.deepEqual(r47Fails(setupPage({ answered: true, result: { ok: true, group: "river-town" } })), []);
   /* the words are held once, in the leaf the installer imports, and the page carries them as that leaf renders them */
   assert.ok(SETUP_HTML.includes(hostingControlBlock("notice")));
   for (const sentence of HOSTING_CONTROL.sentences) assert.equal(SETUP_HTML.split(sentence).length - 1, 1, sentence);
+  /* R63 (DEC-149): the block names the group's Civicsmith, never "copy"; "installation" only for the hosting */
+  for (const words of [HOSTING_CONTROL.heading, ...HOSTING_CONTROL.sentences]) assert.doesNotMatch(words, /\bcopy\b|\binstance\b|\bplane\b|\bserver\b/i, words);
   assert.match(hostingControlBlock('x"<'), /^<div class="x&quot;&lt;" id="hosting-control">/);
   /* negative controls: the old card restored, and the block placed after pw1, each fail the reading */
   const card = '<div class="card"><p class="small" style="margin:0"><b>If you ever lose the\n  password you choose here,</b> you are not locked out.</p></div>';
