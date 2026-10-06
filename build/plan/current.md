@@ -120,6 +120,7 @@ Each line is one job (P8): every T33 entry for that module. Fields: what (draft 
 
 ### L3
 
+- **T33-20b · credentials** *(added under Bob's one-time exception to P10, K1548)* · R22's subscription arm, held by K1537 and ruled by K1547: `kind: "subscription"` holds the member's own subscription token (`claude setup-token`), sealed at rest under that member (R23, R29), never shown or exported, used only for that member's own asks, runs and standing questions; `ACCOUNT_KINDS` becomes `["apikey", "subscription"]`; `ACCOUNT_KIND_NOT_OFFERED` retired. Runs alongside L3; merges before L6 starts. No other change · K1547, K1548 · est 2 · uses — · depends T33-20.
 - **T33-21 · acquisition** · Memento asked for a past date (`index.mjs:291–293`; A TIME 3). The keyed-service fetch path, built in and off by default with the group's own key; CourtListener Citation Lookup is its first client (K1449; A COURTS 3) · K1449 · est 4 · uses — (credentials already used) · depends T33-20.
 - **T33-22 · sources** · A member-keyed outside source (paid people-search, by a member's own act on their own account): cited at a lower grade, marked not reproducible by the public, never bulk-imported (K1492 (3), K1449) · K1449, K1492 · est 3 · uses — · depends —.
 
