@@ -18,3 +18,7 @@
 **Ran.** `node --test test/m/leg-earning/`: tests 47, pass 47, fail 0. Users of the module (wording only, run anyway): inquiry tests 159, pass 158, fail 0 (one not run, as before); strength 138/138; action-plans 61/61. No layer tests are named in `build/manifest.md`. Checks: format "126 modules, 125 requirements files; 0 failures"; architecture "9 product files, 44 relative imports …; 0 failures"; coverage "12 of 12 live requirement ids named by a test; 0 failures"; ownership "0 failures".
 
 Size (session_01FTMB4PQTNsZdpTB6CYLNQL): test runs 6, module lines 1349
+
+## J1 · REPORT
+
+Found outside leg-earning while applying T34-86 (details in my record's Completion): (1) inquiry test/m/inquiry/earned.test.mjs:29 doesNotMatch(/as this instance fetched them/) on leg-earning's why is now vacuous; suggest /fetched them/. (2) provenance (L3, closed) index.mjs:899, :905 captureGrade why says 'this instance fetched these bytes' — member-facing, DEC-149, no T34 share; for N664's T35 list. (3) Stale generated artifacts (§14): bio-plane/dist/bio-plane.bundled.mjs and release/bio-plane.bundled.mjs carry the old wording. Also: BOB's grep named :715, :725; four more of the same kind in leg-earning (:616, :648, :705, :785) were applied under the entry's 'every member-facing string'.
