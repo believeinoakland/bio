@@ -495,10 +495,12 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 /* ============================================================
    Explanations where they appear (DEC-129 rule 4, DEC-82 disclosure, DEC-159)
    Every mark opens its meaning on hover, focus or tap; a name opens a card. One tip at a time, never over the thing
-   it explains; Escape or moving away closes it.
+   it explains. Timing (DEC-161, after Nielsen Norman Group's timing guidelines): on hover it waits 0.5 s with the pointer
+   still, then shows; it stays while the pointer is on the thing or on the tip, and closes 0.5 s after the pointer has left
+   both. Keyboard focus and a tap show it at once. Escape closes it (WCAG 2.2 1.4.13: dismissible, hoverable, persistent).
    ============================================================ */
 .cs-tip { position: fixed; z-index: 50; max-width: 300px; background: var(--c-sheet); color: var(--c-ink); border: var(--hair-strong);
-  box-shadow: 0 4px 14px rgba(0,0,0,.14); padding: 8px 10px; font: 400 var(--t-sm)/1.45 var(--f-sans); border-radius: var(--r-1); pointer-events: none; }
+  box-shadow: 0 4px 14px rgba(0,0,0,.14); padding: 8px 10px; font: 400 var(--t-sm)/1.45 var(--f-sans); border-radius: var(--r-1); }
 .cs-tip b { font-weight: 600; } .cs-tip .more { display: block; margin-top: 4px; color: var(--c-muted); font-size: var(--t-xs); }
 .cs-tip[hidden] { display: none; }
 [data-tip] { cursor: help; } [data-tip]:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
@@ -829,7 +831,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 
 <section id="explain">
 <h2 class="sec">Explained where it appears</h2>
-<p class="intro">Every mark on every screen opens its meaning on hover, keyboard focus or tap: grades, strengths, gaps, origin tags, queue kinds, due dates, hints, the weight of every button, and the steps of the path and the ladders. 438 marks across the 42 screens, each with its explanation. A question's strength names its weakest part and what would raise it. Names of people, offices and documents (dotted underline) open a card. Try it on any screen in the viewer above (DEC-159; your rule 4 of the wide path; the measures map's disclosure, DEC-82).</p>
+<p class="intro">Every mark on every screen opens its meaning on hover, keyboard focus or tap: grades, strengths, gaps, origin tags, queue kinds, due dates, hints, the weight of every button, and the steps of the path and the ladders. 438 marks across the 42 screens, each with its explanation. A question's strength names its weakest part and what would raise it. Names of people, offices and documents (dotted underline) open a card. An explanation waits until the pointer rests for half a second, stays while the pointer is on it, and closes half a second after the pointer leaves; keyboard focus and a tap open it at once (DEC-161). Try it on any screen in the viewer above (DEC-159; your rule 4 of the wide path; the measures map's disclosure, DEC-82).</p>
 </section>
 
 <section id="noai">
@@ -1875,18 +1877,26 @@ function journeySteps(j, ai) {
   }
   var SEL = '.cs-grade,.cs-strength,.cs-gap,.cs-origin,.cs-kind,.cs-due,.cs-hint,.cs-hunch,.cs-tag-outward,.cs-btn .w,.cs-path > span,.cs-ladder > span,.mk-tag,.cs-band,[data-tip]';
   var tip = document.createElement('div'); tip.className = 'cs-tip cs'; tip.id = 'cs-tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
-  var cur = null;
-  function show(el) { var h = tipFor(el); if (!h) return; cur = el; tip.innerHTML = h; tip.hidden = false; el.setAttribute('aria-describedby', 'cs-tip');
+  var cur = null, showT = 0, hideT = 0, SHOW_MS = 500, HIDE_MS = 500;  /* DEC-161: Nielsen Norman Group's 0.3–0.5 s, at its upper end */
+  function show(el) { clearTimeout(showT); clearTimeout(hideT); var h = tipFor(el); if (!h) return; if (cur && cur !== el) cur.removeAttribute('aria-describedby'); cur = el; tip.innerHTML = h; tip.hidden = false; el.setAttribute('aria-describedby', 'cs-tip');
     var r = el.getBoundingClientRect(), w = tip.offsetWidth, ht = tip.offsetHeight;
     var x = Math.max(8, Math.min(r.left, innerWidth - w - 8)), y = r.bottom + 6; if (y + ht > innerHeight - 8) y = r.top - ht - 6;
     tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
-  function hide() { if (cur) cur.removeAttribute('aria-describedby'); cur = null; tip.hidden = true; }
+  function hide() { clearTimeout(showT); clearTimeout(hideT); if (cur) cur.removeAttribute('aria-describedby'); cur = null; tip.hidden = true; }
   function target(e) { var t = e.target; return t && t.closest ? t.closest(SEL) : null; }
   function mark(root) { (root || document).querySelectorAll('.mk-page ' + SEL.split(',').join(',.mk-page ')).forEach(function (el) {
     if (!el.matches('button,a,input,select,textarea') && !el.closest('button') && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); }); }
-  document.addEventListener('mouseover', function (e) { var el = target(e); if (el && el !== cur && el.closest('.mk-page')) show(el); else if (!el && cur) hide(); });
-  document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });
-  document.addEventListener('focusout', hide);
+  document.addEventListener('mouseover', function (e) {
+    if (tip.contains(e.target)) { clearTimeout(hideT); return; }               /* the tip itself is hoverable (WCAG 1.4.13) */
+    var el = target(e); if (el && !el.closest('.mk-page')) el = null;
+    if (el && el === cur) { clearTimeout(hideT); return; }
+    clearTimeout(showT);
+    if (el) showT = setTimeout(function () { show(el); }, SHOW_MS);            /* only if the pointer rests there */
+    if (cur) { clearTimeout(hideT); hideT = setTimeout(hide, HIDE_MS); }         /* grace before the open one closes */
+  });
+  document.addEventListener('mouseout', function (e) { var to = e.relatedTarget; if (!to || (!tip.contains(to) && target({ target: to }) !== cur)) { clearTimeout(showT); if (cur) { clearTimeout(hideT); hideT = setTimeout(hide, HIDE_MS); } } });
+  document.addEventListener('focusin', function (e) { var el = target(e); if (el && el.closest('.mk-page')) show(el); });  /* keyboard: at once */
+  document.addEventListener('focusout', function () { hideT = setTimeout(hide, 50); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
   document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }
     var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button') && !el.closest('summary')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });

@@ -2530,3 +2530,17 @@ response: **Decided by the design session, 2026-10-06:** (1) anything the record
 decided: 2026-10-06 · the design session (P17)
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the queue, the timeline, the exploration chain, the question's citation; `screens/mock-kit.js` `ref`).
 owed: (BOB) every reference on a member screen and the public page as a link to the item it names (with the passage or version where one is meant), with its card.
+
+### DEC-161 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob, 2026-10-06, on the explanations of DEC-159 and DEC-160)
+for: bob
+question: How long an explanation waits before it appears on hover, and how it closes.
+why it is Bob's: he set it: "I suggest we start with a 1/2 second delay, but if you can find best practices that give us a proven value then we can start there."
+provisional: the mockups showed explanations at once on hover.
+alternative: Nielsen Norman Group's lower bound, 0.3 s.
+recommendation: 0.5 s, the upper end of Nielsen Norman Group's range, matching Bob's suggestion.
+reversal cost: low (one value).
+response: **Bob, 2026-10-06:** "Properly done, mouseovers cost nothing visually. One aspect of a mouseover that must be set properly is the delay between when the mouse is over the element and when the mouseover appears. Too short (as they are now in your screens document, and the user is left feeling that they even move the mouse around on the screen without one mouseover after another popping up. Not cool. I suggest we start with a 1/2 second delay, but if you can find best practices that give us a proven value then we can start there." Ruled as he suggests; the proven range agrees. **Evidence:** Nielsen Norman Group, "Timing Guidelines for Exposing Hidden Content" (https://www.nngroup.com/articles/timing-exposing-content): on hover, wait 0.3–0.5 s, show if the cursor stays, and keep the content until the cursor has left the target and the content for longer than 0.5 s; W3C, Understanding WCAG 2.2 SC 1.4.13 Content on Hover or Focus (https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus): such content is dismissible, hoverable and persistent. **Design session's details (P17), Bob may change any:** (1) on hover an explanation or card shows only after the pointer has rested 0.5 s on the thing; (2) it stays while the pointer is on the thing or on the explanation itself; (3) it closes 0.5 s after the pointer has left both; (4) keyboard focus and a tap show it at once; (5) Escape closes it; (6) one at a time.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `visual-language/components.css` and `visual-language.html` §6a; `layouts.html` (the viewer's explanations).
+owed: (BOB) the timings and the three WCAG 1.4.13 conditions in the shell's explanation behaviour when the screens are built.

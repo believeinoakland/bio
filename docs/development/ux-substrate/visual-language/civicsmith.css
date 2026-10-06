@@ -472,10 +472,12 @@ textarea.cs-input { min-height: 96px; resize: vertical; }
 /* ============================================================
    Explanations where they appear (DEC-129 rule 4, DEC-82 disclosure, DEC-159)
    Every mark opens its meaning on hover, focus or tap; a name opens a card. One tip at a time, never over the thing
-   it explains; Escape or moving away closes it.
+   it explains. Timing (DEC-161, after Nielsen Norman Group's timing guidelines): on hover it waits 0.5 s with the pointer
+   still, then shows; it stays while the pointer is on the thing or on the tip, and closes 0.5 s after the pointer has left
+   both. Keyboard focus and a tap show it at once. Escape closes it (WCAG 2.2 1.4.13: dismissible, hoverable, persistent).
    ============================================================ */
 .cs-tip { position: fixed; z-index: 50; max-width: 300px; background: var(--c-sheet); color: var(--c-ink); border: var(--hair-strong);
-  box-shadow: 0 4px 14px rgba(0,0,0,.14); padding: 8px 10px; font: 400 var(--t-sm)/1.45 var(--f-sans); border-radius: var(--r-1); pointer-events: none; }
+  box-shadow: 0 4px 14px rgba(0,0,0,.14); padding: 8px 10px; font: 400 var(--t-sm)/1.45 var(--f-sans); border-radius: var(--r-1); }
 .cs-tip b { font-weight: 600; } .cs-tip .more { display: block; margin-top: 4px; color: var(--c-muted); font-size: var(--t-xs); }
 .cs-tip[hidden] { display: none; }
 [data-tip] { cursor: help; } [data-tip]:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
