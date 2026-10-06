@@ -21,7 +21,8 @@ const mf = new Miniflare({
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-sch", MEMBER_TOKEN: "mem-sch", PROBE_TOKEN: "prb-sch", DAEMON_TOKEN: "dmn-sch",
               VERSION: "1.0.0", INSTANCE_NAME: "sch-plane", GOVERNOR_APPETITE_PER_MIN: "600000",
-              CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000" },
+              CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000",
+              ACCOUNT_SEAL_SECRET: "sched-plane-seal-secret" },   /* a member's account reference is kept sealed (credentials R23) */
   serviceBindings: { SELF: async (request) => MF.dispatchFetch(request) },
   outboundService() {
     return new Response(new Uint8Array(512).map((_, i) => i % 251), { headers: { "content-type": "application/pdf" } });
@@ -167,6 +168,10 @@ test("R12: a run waiting on a request that reaches expired is woken on the alarm
     meta: { object_type: "inquiry", group: "a-group", current_state: "open", created: C, last_updated: C } });
   assert.equal(pr.ok, true, JSON.stringify(pr).slice(0, 300));
 
+  /* N585 (K1614; ai-runs R52): a run carries the account of the member whose act opened it, so ruth connects her own
+     account first, through the op the plane routes (credentials R22), the member named, never by writing the store */
+  const acct = await POST(`op=accountreferenceset&token=${RUTH}`, { member: "ruth", kind: "apikey", secret: "sk-sched-plane" });
+  assert.equal(acct.ok, true, JSON.stringify(acct));
   const T0 = Date.now();
   const RUN = "RUN-2026-0928-sched-expiry";
   const opened = await POST(`op=airunopen&token=${RUTH}`, { run: RUN, contextType: "inquiry", contextId: INQ,
