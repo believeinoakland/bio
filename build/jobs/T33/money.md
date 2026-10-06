@@ -23,3 +23,7 @@ Built and green against stand-ins; COMPLETE waits only on K1563 (1)'s re-pointin
 - **Waiting on:** entities (R44 `entityByIdentifier`), events (`has`, `eventsFor`, `readEvent` relations) and lines (`has`) to merge. Then: wire `eventsOf`/`linesOf` as the defaults, re-point the tests at the real modules, re-run, and post COMPLETE. A CHANGE when they have merged starts that.
 - Final uses (for modules.json at merge): record-grammar, jurisdictions, civil-time, calc-grammar, connection-grammar, record-core, membership, promotion, provenance, content, entities, events, lines. Dropped: extraction, standards, progressions, observation-log.
 - For other modules (not mine): plane/control-plane must wire `moneyOps` and its op declarations (T33-88) and call `money.joinPromotion(promotion)` and `migrate()`; calculations' ingest writer must send `source {table,row,binding}` with `by: class:daemon` and `method: "table_binding"`.
+
+## J3 · REPORT
+
+B3 done (K1569): module-level noSuchFact(factId, extra?) exported from bio-plane/src/money/index.mjs, the one NO_SUCH_FACT answer ({ok:false, reason, code, fact_id, detail} fixed, extra beside); withdrawFact, summable, reconcile, include/exclude and proposeInclusion answer through it, a hidden fact answered alike. Test named R7; 52 pass, 0 fail; format, architecture, coverage, ownership pass. Pushed. Still waiting on entities, events and lines to merge before re-pointing and COMPLETE (J2).
