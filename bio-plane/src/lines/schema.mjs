@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS lines (
   to_entity    TEXT NOT NULL,
   role         TEXT,
   capacity     TEXT,
+  title        TEXT,              -- holds only: the post's title as the basis words it, kept as written (T34, N573)
   valid_json   TEXT NOT NULL,     -- the validity as given: {from, to, precision, zone}
   from_event   TEXT,              -- an event bound's event, so R6 finds the lines it bounds
   to_event     TEXT,
@@ -57,5 +58,9 @@ CREATE TABLE IF NOT EXISTS line_withdrawals (
   at       TEXT NOT NULL
 );
 `;
+
+/* Columns added to a table after its first release, each `[table, column, declaration]`: a store made before them gains
+   them at boot (`migrate`), so a store migrated forward and a fresh one present the same table. */
+export const LINES_ADDITIVE_COLUMNS = Object.freeze([["lines", "title", "TEXT"]]);
 
 export const LINES_TABLES = Object.freeze(["lines", "line_bound_cache", "line_withdrawals", "line_current_through"]);
