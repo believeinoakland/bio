@@ -13,7 +13,8 @@
    `plane` to register (R74). T24: a chosen opaque id recorded in the ledger (R75). T33 (T33-19; S0-2, S0-3, B0.12,
    K1493): ids minted from record-grammar's `ID_TABLE`, the counter with no ceiling and the opaque allocator (R1, R40,
    R76); `declareTable` with its classes, `declarePurge` its default form (R21, R46); the derived-cache convention (R77);
-   the store gate (R78); expunge with a tombstone (R79). */
+   the store gate (R78); expunge with a tombstone (R79). T34 (T34-9; N554, N593, K1728): `CALC` minted opaque (R62, R76);
+   a derived-rebuildable table's `from` (R77); the declaration's two older refusals answered with their rows (R80). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -100,10 +101,12 @@ function manifestFiles(filesJson) {
 /* What each opaque-minted prefix's id is called in R62's detail: R3's set (`RecordCore.GATED_ID_PREFIXES`), and `SRC`, a
    source, which `sources` mints opaque through `mintOpaqueId` and never through the counter (N376, K540). */
 const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source",
-  /* T33 (R76): the opaque prefixes of `ID_TABLE`, which `allocId` draws a 16-character tail for */
-  EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim" });
+  /* T33 (R76): the opaque prefixes of `ID_TABLE`, which `allocId` draws a 16-character tail for; `CALC` since T34 (K1728) */
+  EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation" });
 
-/* R76 (S0-2): the prefixes `ID_TABLE` gives the opaque form, read from record-grammar's one table, never restated. */
+/* R76 (S0-2): the prefixes `ID_TABLE` gives the opaque form, read from record-grammar's one table, never restated. Minting
+   follows `form` alone: a row that also carries `legacy: "sequential"` (`CALC`, K1728) is minted opaque, its counter never
+   read or stepped, and the sequential ids minted before stay held. */
 const OPAQUE_PREFIXES = new Set(ID_TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix));
 const TAIL_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 const TAIL_LENGTH = 16;      /* measures-T33/assistant-substrate.md §5: under 1e-9 over a 10-year store at 10^7 a year */
@@ -111,7 +114,8 @@ const TAIL_LENGTH = 16;      /* measures-T33/assistant-substrate.md §5: under 1
 /** R62 (N322, N250, K275, K392): THE ONE ANSWER TO ONE CONDITION, no free opaque id could be drawn (`mintOpaqueId`
  *  answered null, R9). Every act of any module that meets it answers through here, so `MINT_EXHAUSTED` is minted at
  *  one site under one row (C-59.6). `detail` is one fixed sentence per prefix, naming the id that could not be drawn
- *  and saying nothing was written, the same for every caller; a prefix neither in R3's set nor `SRC` is named by no object. `extra`
+ *  and saying nothing was written, the same for every caller; a prefix neither in R3's set, `SRC` nor R76's opaque set is
+ *  named by no object. `extra`
  *  adds the caller's own fields and never replaces these. It writes nothing and never throws. */
 export function mintExhausted(prefix, extra) {
   const asked = typeof prefix === "string" ? prefix : "";        /* only a string names a prefix */
@@ -1341,8 +1345,10 @@ export class RecordCore {
    *  each naming its classes (`purge`, `expunge`, `export`, `sight`, `derive`, `version_chain`) beside R46's keying
    *  (`keys`, `whole`, `clears`). A `derived-rebuildable` table also names `rebuild(scope)` and `key`, the columns that
    *  name one of its rows (R77). An entry missing a class, or with a value outside it, is refused, naming the table and
-   *  the class; so is a name that is not a plain identifier, and a table declared twice or by two modules. A refused
-   *  declaration declares nothing. `purge` clears every declared table whose `purge` is `clear`. */
+   *  the class; so is a name that is not a plain identifier, and a table declared twice or by two modules (R80, each with
+   *  its row). A refused declaration declares nothing. `purge` clears every declared table whose `purge` is `clear`.
+   *  R77 (N593): a derived-rebuildable table may also name `from`, the stored tables its rows are rebuilt from, kept as
+   *  given and answered by `declaredTables()`. */
   declareTable(module, entries = []) {
     return this.#declare(module, Array.isArray(entries) ? entries : [entries], false);
   }
@@ -1362,14 +1368,18 @@ export class RecordCore {
 
   /* The one declaration door (R21). `keyedSight`: the entries' `sight` is decided by their keying when read. */
   #declare(module, entries, keyedSight) {
-    const columns = (list) => list == null || (Array.isArray(list) && list.every((k) => IDENT.test(String(k))));
+    const plain = (k) => typeof k === "string" && IDENT.test(k);
+    const columns = (list) => list == null || (Array.isArray(list) && list.every(plain));
+    /* R77: `from` is not stated (absent or null), or a non-empty list of plain table names */
+    const sources = (list) => list == null || (Array.isArray(list) && list.length > 0 && list.every(plain));
     const names = new Set(), held = [];
     for (const raw of entries) {
       const e = raw && typeof raw === "object" ? raw : { name: raw };
       const table = String(e.name);
       /* DEC-49 REGION is-table-declaration */
-      if (!IDENT.test(table) || !columns(e.keys) || !columns(e.clears) || !columns(e.key))
-        return { ok: false, reason: "TABLE_NAME_INVALID", table, module };
+      if (!plain(e.name) || !columns(e.keys) || !columns(e.clears) || !columns(e.key) || !sources(e.from))
+        return rowRefusal("TABLE_NAME_INVALID", `${table} was not declared: a table's name, and every column or table its `
+          + "declaration names, is a plain identifier; nothing was declared.", { table, module });
       for (const [cls, allowed] of Object.entries(RecordCore.#CLASSES)) {
         if (e[cls] === undefined)
           return rowRefusal("TABLE_CLASS_MISSING", `${table} names no ${cls} class; nothing was declared.`, { table, module, class: cls });
@@ -1385,7 +1395,8 @@ export class RecordCore {
                           { table, module, class: "key" });
       if (this.#declared.has(table) || names.has(table)) {
         const declaredBy = this.#declared.has(table) ? this.#declared.get(table).module : module;
-        return { ok: false, reason: "TABLE_DECLARED", table, module, declaredBy };
+        return rowRefusal("TABLE_DECLARED", `${table} is already declared by ${declaredBy}, and a table is declared once; `
+          + "nothing was declared.", { table, module, declaredBy });
       }
       /* END DEC-49 REGION is-table-declaration */
       names.add(table);
@@ -1397,7 +1408,8 @@ export class RecordCore {
                                 keys: e.keys == null ? null : Object.freeze([...e.keys]), whole: e.whole || null,
                                 clears: Object.freeze(e.clears == null ? [] : [...e.clears]),
                                 rebuild: classes.derive === "derived-rebuildable" ? e.rebuild : null,
-                                key: classes.derive === "derived-rebuildable" ? Object.freeze([...e.key]) : null });
+                                key: classes.derive === "derived-rebuildable" ? Object.freeze([...e.key]) : null,
+                                from: classes.derive === "derived-rebuildable" && e.from != null ? Object.freeze([...e.from]) : null });
       this.#declared.set(table, d);
       this.#order.push(d);
     }
@@ -1412,13 +1424,15 @@ export class RecordCore {
   }
 
   /** R21: every declaration with its classes, in declaration order (`corpus-export` reads it), a fresh list each call. A
-   *  default-form entry's `sight` is `bundle` when the table is keyed to a bundle now, else `group`. */
+   *  default-form entry's `sight` is `bundle` when the table is keyed to a bundle now, else `group`. R77: a
+   *  derived-rebuildable entry answers `from`, the stored tables it is rebuilt from, or null when its declaration named
+   *  none (not stated, never an empty list); a stored entry answers no `from`. */
   declaredTables() {
     return this.#order.map((d) => ({
       module: d.module, name: d.name, ...(d.keys ? { keys: [...d.keys] } : {}), ...(d.whole ? { whole: d.whole } : {}),
       ...(d.clears.length ? { clears: [...d.clears] } : {}), ...d.classes,
       ...(d.keyedSight ? { sight: this.#bundleKeys(d).length ? "bundle" : "group" } : {}),
-      ...(d.key ? { key: [...d.key] } : {}),
+      ...(d.key ? { key: [...d.key], from: d.from ? [...d.from] : null } : {}),
     }));
   }
 
