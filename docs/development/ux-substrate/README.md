@@ -12,6 +12,7 @@ What a member sees and works with, as the approved requirements and Bob's ruling
 - `marks/civicsmith-plumb-bob.svg`: Civicsmith's mark (DEC-126), one path, one colour; the source for the browser icon, phone icon and credit mark.
 - `new-name.html`: the search for a name to replace CivicOS (3 October 2026): the four steps by which someone who hears the name finds the tool, both rounds of candidates, every name set aside and why, and the brand check by audience. Bob chose Civicsmith (DEC-124). Published at https://claude.ai/artifact/Fmr6rVd7GMifYDRaWcV7s8.
 - `HANDOFF.md`: the design session's handoff to its successor (who you are, how to record a ruling, where the design phase stands, the pages and their URLs). Rewritten 2026-10-03.
+- `NEXT-SESSION-PROMPT.md`: the opening prompt for the next design session (2026-10-06), for Bob to paste.
 - `measures-map.html`: the approved measures map DEC-82 rests on (rendered at https://claude.ai/artifact/TfqcXNaJQ86SZzUA8Xn6Ni).
 - `ux-substrate.json`, `build_ux.py`: the first inventory and its renderer, kept for reference.
 
