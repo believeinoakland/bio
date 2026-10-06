@@ -1,9 +1,13 @@
-/* Standing questions (R15–R21; L5; K1481, K1500, K1502, K1503). A member keeps a question with the saved query the
- * assistant wrote and showed, a cadence and an end date. The scheduler's tick re-runs each due question's saved query
- * under its author's sight at that moment, with no model call (R17); a run finds something new only when its result
- * holds an id the previous run's did not, or an occurrence it reads changed state (R18). Only then may the AI half
- * answer, and only when every condition of R19 holds; it is built switched off (plan Rules (7)). A question, its runs
- * and its finds are seen by its author alone (R16), and it reads nothing outside the asking scope (R21).
+/* Standing questions (R15–R21, R26, R27; L5; K1481, K1500, K1502, K1503, K1755; DEC-139 (7)). A member keeps a
+ * question with the saved query shown when it was set (the one the assistant wrote, or the one the member made in the
+ * search's own form), a cadence and an end date. None of it asks for an account: a member no account serves sets,
+ * runs, sees and ends one as any member does, and its new finds reach them once as a list, read by no model (R26).
+ * The scheduler's tick re-runs each due question's saved query under its author's sight at that moment, with no model
+ * call (R17); a run finds something new only when its result holds an id the previous run's did not, or an occurrence
+ * it reads changed state (R18). Only then may the AI half answer, and only when every condition of R19 holds; it is
+ * built switched off (plan Rules (7)). A question, its runs
+ * and its finds are seen by its author alone (R16), and it reads nothing outside the asking scope (R21). Setting or
+ * ending one tells each module listening (R27), so the scheduler re-arms its wake.
  *
  * These are the `Answers` instance's methods' bodies (`self`); `index.mjs` binds them. */
 
@@ -77,7 +81,7 @@ export function standingQuestionSet(self, { author = null, question = null, quer
   if (!CADENCES.includes(cadence)) return refusal("BAD_CADENCE", `the cadence is one of ${CADENCES.join(", ")}`);
   const now = self.now();
   if (!isDay(ends) || ends <= today(self, now)) return refusal("STANDING_NEEDS_END", "the end date is a date after today");
-  return self.record.transact(() => {
+  const r = self.record.transact(() => {
     const a = self.record.allocId("STQ", now.slice(0, 4));
     if (!a || !a.id) return { ok: false, reason: "MINT_EXHAUSTED", detail: "no standing-question id could be allocated" };
     self.sql.exec(`INSERT INTO standing_questions (stq_id, author, question, form_json, cadence, ends, created_at, next_due)
@@ -85,6 +89,9 @@ export function standingQuestionSet(self, { author = null, question = null, quer
                   cadence, ends, now);
     return { ok: true, id: a.id, question: String(question ?? ""), query: saved.form, cadence, ends, created_at: now };
   });
+  /* R27: a new question is due at once, on today's local day */
+  if (r && r.ok) self.tellStanding(r.id, today(self, now));
+  return r;
 }
 
 /* R16: the author's own row, or null for any other viewer, an administrator included. */
@@ -120,6 +127,7 @@ export function standingQuestionEnd(self, { id = null, author = null } = {}) {
   if (r.ended_at) return { ok: true, id, already: true, ended: { at: r.ended_at, by: r.ended_by } };
   const at = self.now();
   self.sql.exec(`UPDATE standing_questions SET ended_at=?, ended_by=? WHERE stq_id=?`, at, r.author, id);
+  self.tellStanding(id, null);   /* R27 */
   return { ok: true, id, ended: { at, by: r.author } };
 }
 
@@ -168,21 +176,41 @@ async function occurrenceStates(self, ids, author, now) {
   return out;
 }
 
-/* R19: what holds the AI half back, or null when every condition holds. */
-async function heldBack(self, author, at) {
-  if (self.record.getSetting(STANDING_AI_SETTING) !== true) return { condition: "switch_off", switch: "copy" };
+/* R19, R26: what holds the AI half back, or null with the grant it reads under when every condition holds. In order:
+ * the copy's switch (K1481; Rule 7), the answerer's deployment, an account serving the author's act (credentials R35:
+ * their own reference, else the group's key while held and on, K1755; none is R26's `no_account`), the author's use
+ * ceiling (ai-runs), and last the grant credentials mints for the author (its R32), whose refusal names the standing
+ * switch of the account that would serve (R25, R37). The grant is minted only when it would be used. */
+async function heldBack(self, r, at) {
+  const author = r.author;
+  if (self.record.getSetting(STANDING_AI_SETTING) !== true) return { held: { condition: "switch_off", switch: "copy" } };
+  if (!self.answerer) return { held: { condition: "not_deployed" } };
   const creds = self.dep("credentials");
+  const act = { kind: "standing", member: author };
   let acct = null;
-  try { acct = creds ? creds.accountReferenceState({ member: author, viewer: author }) : null; } catch { acct = null; }
-  if (!acct || acct.ok === false || !acct.held) return { condition: "no_account" };
-  if (!acct.standing) return { condition: "switch_off", switch: "member" };
+  try { acct = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member: author, act }) : null; }
+  catch { acct = null; }
+  if (!acct || acct.ok !== true) {
+    const code = acct ? acct.code || acct.reason || null : null;
+    return { held: { condition: "no_account", ...(code && code !== "NO_ACCOUNT" ? { code, translation: acct.translation ?? null } : {}) } };
+  }
+  const level = acct.level === "group" ? "group" : "member";
+  acct = null;   /* the account's key is used by no caller here (credentials R35; agent-model R8) */
   const ceiling = self.dep("ceilingRefusal");
   let refused = null;
   try { refused = typeof ceiling === "function" ? await ceiling(memberOf(author), at) : null; } catch { refused = null; }
   if (refused && refused.ok === false)
-    return { condition: "ceiling", code: refused.code || refused.reason, translation: refused.translation ?? null };
-  if (!self.answerer) return { condition: "not_deployed" };
-  return null;
+    return { held: { condition: "ceiling", code: refused.code || refused.reason, translation: refused.translation ?? null } };
+  let g = null;
+  try { g = await creds.aiGrantMintStanding({ member: author, question: r.question }); } catch { g = null; }
+  if (!g || g.ok !== true || typeof g.token !== "string") {
+    const code = g ? g.code || g.reason || null : null;
+    if (code === "STANDING_SWITCH_OFF") return { held: { condition: "switch_off", switch: level } };
+    if (code === "NO_ACCOUNT" || code === "ACCOUNT_MEMBER_NOT_ACTIVE")
+      return { held: { condition: "no_account", ...(code !== "NO_ACCOUNT" ? { code, translation: g.translation ?? null } : {}) } };
+    return { held: { condition: "grant_refused", code, translation: g ? g.translation ?? null : null } };
+  }
+  return { held: null, grant: g.token };
 }
 
 /* One run of one question (R17–R19). */
@@ -216,9 +244,11 @@ async function runOne(self, r, now) {
   const finds = found ? { ids: newIds, occurrences: changed } : null;
   let answer = null, withheld = null, held = null;
   if (found) {
-    held = await heldBack(self, r.author, now);
+    const hb = await heldBack(self, r, now);
+    held = hb.held;
     if (!held) {
-      const log = new ReadLog({ grant: `standing:${r.stq_id}:${now}`, viewer: r.author, at: now });
+      /* R19: the answerer reads under the grant credentials minted (R32), each read logged here (R1, R2) */
+      const log = new ReadLog({ grant: hb.grant, viewer: r.author, at: now });
       self.holdLog(log);
       try {
         const given = await self.answerer.fn({ id: r.stq_id, question: r.question, query: form, finds, author: r.author,

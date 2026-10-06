@@ -1,5 +1,6 @@
 /* The asking scope (R1, R2), at the interface: the one closed list of plane reads an ask may make, held equal to
-   credentials' grant class (K1505 (14); K1603: plus `rule` until N580 adds it there), and every read made under a grant
+   credentials' grant class both ways, each op named as the plane routes it (K1505 (14); N580, K1603, K1609), and every
+   read made under a grant
    answered with a member's ties, the source-to-person link and a hidden project's rows removed and uncounted. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -20,9 +21,12 @@ test("R1 ASK_SCOPE is one closed list, each entry naming its op, its owner and t
   }
   /* the reads K1450, K1470 and C:B-3 name, R12's door among them */
   for (const op of ["search", "searchfields", "meaningrows", "frontier", "standard", "standardinforce", "standards", "profiles",
-                    "entity", "entitybyalias", "resolutions", "relation", "lines", "duties", "occurrences", "strengthbarof",
-                    "timeline", "eventsfor", "moneyof", "committedagainstpaid", "holderat", "careerof", "explore",
-                    "calculations", "moneyfacts", "rule"]) assert.equal(askAdmits(op), true, op);
+                    "entity", "entitybyalias", "resolutions", "relation", "linesof", "structureat", "dutiesof",
+                    "dutyoccurrences", "strengthbarof", "timeline", "eventsfor", "moneyof", "committedagainstpaid", "holderat",
+                    "career", "explore", "calculation", "money", "rule"]) assert.equal(askAdmits(op), true, op);
+  assert.equal(ASK_SCOPE.length, 27);
+  /* the names the plane does not route (K1609) are not the list's */
+  for (const op of ["careerof", "occurrences", "lines", "duties", "calculations", "moneyfacts"]) assert.equal(askAdmits(op), false, op);
   /* no sources op, no member history, no administrative op, no export, no write */
   for (const op of ["sources", "sourceread", "sourcepersonlink", "membertie", "memberties", "members", "memberlist", "airuns",
                     "stats", "purge", "audit", "export", "corpusexport", "promote", "standarddeclare", "entitycreate",
@@ -31,12 +35,12 @@ test("R1 ASK_SCOPE is one closed list, each entry naming its op, its owner and t
   assert.equal(ASK_SCOPE.some((e) => /^sources?/.test(e.op) || /export|admin|purge|stats/.test(e.op)), false);
 });
 
-test("R1 the copy test: ASK_SCOPE equals credentials' AI_GRANT_OPS both ways, plus `rule` until N580 adds it there (K1603)", () => {
+test("R1 the copy test: ASK_SCOPE equals credentials' AI_GRANT_OPS both ways, `rule` included (N580; K1603, K1609)", () => {
   const scope = ASK_SCOPE.map((e) => e.op);
-  const grant = [...AI_GRANT_OPS, ...(AI_GRANT_OPS.includes("rule") ? [] : ["rule"])].sort();
-  assert.deepEqual(scope, grant);
+  assert.deepEqual(scope, [...AI_GRANT_OPS].sort());
   for (const op of AI_GRANT_OPS) assert.equal(askAdmits(op), true, op);
-  for (const op of scope) assert.ok(op === "rule" || AI_GRANT_OPS.includes(op), op);
+  for (const op of scope) assert.ok(AI_GRANT_OPS.includes(op), op);
+  assert.ok(AI_GRANT_OPS.includes("rule"));
 });
 
 test("R2 a read under a grant never answers, names or counts a member's tie, the source-to-person link, or a hidden project's row", async () => {
