@@ -8,7 +8,7 @@
    the testimony path's index as a projection in `provenance`'s slot (R65), the figures through record-core's
    `registerCounts` and `textIndexOk` (R67), and N26's migration of stored `.docx` readings (R66). T20 layer 4: N439's
    migration of stored `.pptx` readings (R68), run by the same machine as N26's. T33 layer 4: every reading's commit
-   calls `reading-pipeline.afterRead` once (R69, T33-23a). */
+   calls its storage's `reading-pipeline.readHooksOf(ctx).afterRead` once (R69, T33-23a). */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { calibrationOf } from "../calibration/index.mjs";
@@ -357,14 +357,14 @@ export function extractionOf(ctx, opts = {}) {
 
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
-  #testified = false; #counted = false; #host = null; #migrationRun = null; #afterRead = null;
+  #testified = false; #counted = false; #host = null; #migrationRun = null; #readHooks = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
-                         env = {}, afterRead = null } = {}) {
+                         env = {}, readHooks = null } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.#host = host;
-    this.#afterRead = typeof afterRead === "function" ? afterRead : null;
+    this.#readHooks = readHooks && typeof readHooks.afterRead === "function" ? readHooks : null;
     this.core = record;
     this.membership = membership;
     this.calibration = calibration;
@@ -702,16 +702,18 @@ export class Extraction {
     });
   }
 
-  /** R69 (T33-23a, K1521; reading-pipeline R26, record-core R66): held with `afterCommit`, so it runs once, just after
-   *  the outermost transaction holding this write has committed (the promotion's, for R20), and never when it rolls
-   *  back. `reading-pipeline.afterRead` (or the one handed in) is called with the capture class, the reading's
+  /** R69 (T33-23a, K1521, K1555; reading-pipeline R26, record-core R66): held with `afterCommit`, so it runs once, just
+   *  after the outermost transaction holding this write has committed (the promotion's, for R20), and never when it
+   *  rolls back. This storage's hook registry (`reading-pipeline.readHooksOf`, keyed by the storage as `extractionOf`
+   *  keys this module, or the one handed in) has its `afterRead` called with the capture class, the reading's
    *  content-type key (null when it names none, so no hook runs), and the reading as written; the hooks run in
    *  `MODULE_ORDER` there. Answers a promise of `{ran, failed}`, the refusals reported with the reading: a hook's
    *  failure, or `afterRead`'s own, never undoes the committed reading. The run is handed to the object's
-   *  `waitUntil`, so a hook finishes. Null when no `afterRead` is reachable. */
+   *  `waitUntil`, so a hook finishes. Null when no registry is reachable. */
   #holdAfterRead(captureSha, reading) {
-    const fn = this.#afterRead || (typeof pipeline.afterRead === "function" ? pipeline.afterRead : null);
-    if (!fn || !this.core || typeof this.core.afterCommit !== "function") return null;
+    const hooks = this.#readHooks
+      || (typeof pipeline.readHooksOf === "function" ? pipeline.readHooksOf(this.#storage) : null);
+    if (!hooks || typeof hooks.afterRead !== "function" || !this.core || typeof this.core.afterCommit !== "function") return null;
     const captureClass = typeof reading.content_type === "string" && reading.content_type ? reading.content_type : null;
     const written = JSON.parse(JSON.stringify(reading));
     let settle;
@@ -719,7 +721,7 @@ export class Extraction {
     this.core.afterCommit(() => {
       const run = (async () => {
         try {
-          const a = await fn({ captureSha, captureClass, reading: written, committed: true });
+          const a = await hooks.afterRead({ captureSha, captureClass, reading: written, committed: true });
           return { ran: Array.isArray(a && a.ran) ? a.ran : [], failed: Array.isArray(a && a.failed) ? a.failed : [] };
         } catch (e) {
           return { ran: [], failed: [{ module: "reading-pipeline", error: String(e && e.message ? e.message : e) }] };

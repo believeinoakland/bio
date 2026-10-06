@@ -1,7 +1,7 @@
 /* extraction: the after-read call (R69, T33-23a) at the module's interface: every reading R19's writer commits calls
-   `reading-pipeline.afterRead` once, after the outermost transaction commits, with the capture class and the reading
+   its storage's `reading-pipeline.readHooksOf(ctx).afterRead` once (K1555), after the outermost transaction commits, with the capture class and the reading
    as written; a rollback calls nothing; a hook's refusal, or `afterRead`'s own throw, is reported with the reading and
-   never undoes it. `afterRead` is handed in as a stand-in recording its calls (reading-pipeline R26 is its own
+   never undoes it. The registry is handed in as a stand-in whose `afterRead` records its calls (reading-pipeline R26 is its own
    module's to test). Each test names the requirement ids it checks in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -25,7 +25,7 @@ function recorder(w, answer = () => ({ ran: ["events"], failed: [] })) {
 function withRecorder(answer) {
   const box = {};
   const rec = recorder(box, answer);
-  const w = fresh({ afterRead: rec.fn });
+  const w = fresh({ readHooks: { afterRead: rec.fn } });
   Object.assign(box, w);
   return { w, calls: rec.calls };
 }
@@ -111,7 +111,7 @@ test("R69: a hook's refusal is reported with the reading and never undoes it; af
 
 test("R69: the run is handed to the object's waitUntil, so a hook finishes after the write answers", async () => {
   const waited = [];
-  const w = fresh({ afterRead: async () => ({ ran: ["events"], failed: [] }), host: { waitUntil: (p) => waited.push(p) } });
+  const w = fresh({ readHooks: { afterRead: async () => ({ ran: ["events"], failed: [] }) }, host: { waitUntil: (p) => waited.push(p) } });
   bundle(w.s, "B-1");
   const before = waited.length;   /* the host also carries the N26 and N439 migrations' run (R66, R68) */
   const out = w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading("agenda") });
@@ -122,7 +122,7 @@ test("R69: the run is handed to the object's waitUntil, so a hook finishes after
 test("R69 R34: a re-read that writes its reading calls afterRead once after the commit, and its answer reports the outcome as after_read", async () => {
   const box = {};
   const rec = recorder(box, () => ({ ran: ["events"], failed: [{ module: "people", error: "boom" }] }));
-  const w = fresh({ afterRead: rec.fn });
+  const w = fresh({ readHooks: { afterRead: rec.fn } });
   Object.assign(box, w);
   bundle(w.s, "B-1");
   const d = await hold(w.evidence, "%PDF-1.7 " + Math.random());
