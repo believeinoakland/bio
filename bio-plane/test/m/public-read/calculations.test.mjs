@@ -9,9 +9,9 @@ import assert from "node:assert/strict";
 import { publishedSix, stubOf, sha } from "./fixture.mjs";
 import { buildCaseFile } from "../../../src/public-read/casefile.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
-import { calculationsLines, calculationFileText, provOf, caseFilePath, caseFileManifestCheck }
+import { calculationsLines, calculationsOf, calculationFileText, provOf, caseFilePath, caseFileManifestCheck }
   from "../../../src/case-grammar/index.mjs";
-import { resultKey } from "../../../src/calc-grammar/index.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 import { COMPUTED_FACT, CALC_DISCLOSED_SENTENCE, CALC_UNDISCLOSED_SENTENCE, SHARE_NO_DENOMINATOR_SENTENCE }
   from "../../../src/public-read/index.mjs";
 
@@ -27,7 +27,6 @@ const line = (rows) => calculationsLines(rows);
 const H = (c) => c.repeat(64);
 const RECIPE = { method: "bio-calc/1", inputs: { contracts: "table" }, steps: [{ op: "count", as: "n", from: "contracts" }],
                  output: "n" };
-const keyOf = (r) => resultKey(r.recipe, Object.fromEntries(r.inputs.map((i) => [i.name, i.sha256])), { methodVersion: r.method_version });
 const SHARE = { calc: "CALC-2026-0001", recipe: { ...RECIPE, question: "How many contracts are at grade B?" },
   inputs: [{ name: "contracts", sha256: H("a") }], method_version: "bio-calc/1@1",
   results: { at_b: { numerator: "41", denominator: "58", value: "0.706896551724" }, rows: "58" },
@@ -39,13 +38,16 @@ const DIFFERS = { calc: "CALC-2026-0002", recipe: RECIPE,
 const UNBOUND = { ...DIFFERS, calc: "CALC-2026-0003", results: { total: "9" }, recompute: "unbound", disclosed: null, result_key: H("3") };
 
 test("R26 publishedCase answers each calculation the signed document carries: its question, its outputs by key each labelled a computed fact, a share with its numerator and denominator beside it, its method version and recompute status", () => {
-  const { w } = publishedSix({ extra: line([SHARE]) });
+  const { w, text } = publishedSix({ extra: line([SHARE]) });
+  /* the key the signed document states (case-grammar's writer keys each row, its R18) */
+  const signedKey = calculationsOf(parseFrontmatter(text).data)[0].result_key;
+  assert.match(String(signedKey), /^[0-9a-f]{64}$/);
   const c = w.read("publishedcase", { id: "CASE-2026-0001" });
   assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
   assert.equal(c.calculations.length, 1);
   const k = c.calculations[0];
   assert.deepEqual([k.calc, k.question, k.method_version, k.recompute, k.result_key, k.label],
-    ["CALC-2026-0001", "How many contracts are at grade B?", "bio-calc/1@1", "agrees", keyOf(SHARE), COMPUTED_FACT]);
+    ["CALC-2026-0001", "How many contracts are at grade B?", "bio-calc/1@1", "agrees", signedKey, COMPUTED_FACT]);
   assert.deepEqual(k.outputs.map((o) => o.key), ["at_b", "rows"], "every output, by key");
   const share = k.outputs[0];
   assert.deepEqual([share.numerator, share.denominator, share.label], ["41", "58", COMPUTED_FACT],
