@@ -1,6 +1,6 @@
 # inquiry (T34)
 
-**Status** · session_01Wskzz89u9YtWxzo9XZyHmv · depth 2 · WORKING · handled B1
+**Status** · session_01Wskzz89u9YtWxzo9XZyHmv · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
