@@ -98,24 +98,68 @@ const REFS = {
   timeline: [['City Clerk releases schedules', 'action', '<b>The City Clerk released the rent schedules</b> · 18 September · answering the group\'s request', 'The group\'s own act and the office\'s reply, in the second lane.']],
   explore: [['J. Ortega', 'person', '<b>J. Ortega</b> · Council District 3 since 2023, from Legistar', 'Where this chain starts.'],
             ['Bayline Properties', 'money', '<b>Bayline Properties</b> · paid $1.2M in FY2024 under the Coliseum lease', 'Where the money in this chain ends up.']],
-  standard: [['Repair reported potholes within seven calendar days', 'document', '<b>Administrative Instruction 4.12</b>, passage 3 · Public Works · capture B', 'The words this standard is held from.']],
   plan: [['Records request: inspection logs', 'action', '<b>Records request: inspection logs</b> · sent to the City Clerk 4 October · reply due 14 October', 'The plan\'s first step; the next one waits on its reply.'],
          ['Complaint to the city auditor', 'action', '<b>Complaint to the city auditor</b> · an option, not started', 'Becomes ready if the inspection logs show reports closed without repair.']],
   'start-send': [['Asha Rao', 'person', '<b>Asha Rao</b> · City Clerk since March 2021, from the city\'s roster', 'Holds the office this request goes to, today.']],
-  matter: [['The 2024 rent adjustment, made without a council vote', 'question', '<b>The 2024 rent adjustment, made without a council vote</b> · finding of Edition 2 · meets the bar', 'What this matter is about.']],
   'review-copy': [['Prof. N. Iyer', null, '<b>Prof. N. Iyer</b> · housing-law professor · an outside reader named by Dev · can read until 20 November', 'Reviewing Edition 2 before it is published.']],
   imported: [['Port lease revenue fell short of the adopted budget in three years', 'question', '<b>Port lease revenue fell short of the adopted budget in three years</b> · West Oakland Neighbors\' finding · recreated here', 'Recreated from their case; it counts for your group only once a member accepts it.']],
 };
+
+// Things named on many screens: one card wherever they appear (DEC-160, widened 6 October). [text, opens, what it is, why here
+// (usually none: a screen's own REFS add that), screens where it is not attached].
+const GLOBAL_REFS = [
+  ['The Coliseum lease', 'project', '<b>The Coliseum lease</b> · a project · whether the city kept the terms of its lease of the Coliseum land, including rent raised in 2024 without a council vote · owner: Dev · Edition 2 published 14 November', null, ['project']],
+  ['Pothole repairs', 'project', '<b>Pothole repairs</b> · a project · whether the city repairs reported potholes within the seven days its own policy sets · 2 questions · owner: Mai', null, ['project']],
+  ['Sewer fund transfers', 'money', '<b>Sewer fund transfers</b> · a project · where sewer-fee money moved between funds, FY2022 to FY2024, and whether each transfer was authorised · owner: Ana', null, []],
+  ['Lakeshore Tenants', null, '<b>Lakeshore Tenants</b> · your group · tenants near the Coliseum, meeting since 2025 · 6 members, 1 administrator', null, ['install', 'setup', 'join', 'doorbell', 'published']],
+  ['Rosa', 'members', '<b>Rosa</b> · member of your group · administrator · joined 1 October', null, ['members']],
+  ['Dev', 'members', '<b>Dev</b> · member of your group · owns The Coliseum lease · joined 2 October', null, ['members']],
+  ['Mai', 'members', '<b>Mai</b> · member of your group · owns Pothole repairs · translates Español · joined 2 October', null, ['members']],
+  ['Ana', 'members', '<b>Ana</b> · member of your group · owns Sewer fund transfers · joined 3 October', null, ['members']],
+  ['Teo', 'members', '<b>Teo</b> · member of your group · a reporter at the Bay Courier · declared expertise: journalism', null, ['members']],
+  ['Asha Rao', 'person', '<b>Asha Rao</b> · a person the record follows · City Clerk since March 2021, from the city\'s roster', null, []],
+  ['L. Chen', 'person', '<b>L. Chen</b> · a person the record follows · Director of Public Works since 2022, from the city\'s roster', null, ['person']],
+  ['J. Ortega', 'person', '<b>J. Ortega</b> · a person the record follows · Council District 3 since 2023, from Legistar', null, []],
+  ['Office of the City Clerk', null, '<b>Office of the City Clerk</b> · an office · keeps the city\'s records and answers records requests · held today by Asha Rao', null, []],
+  ['City Clerk', null, '<b>City Clerk</b> · an office · keeps the city\'s records and answers records requests · held today by Asha Rao', null, []],
+  ['City Administrator', null, '<b>City Administrator</b> · an office · runs the city\'s departments and answers to the council', null, []],
+  ['Director of Public Works', null, '<b>Director of Public Works</b> · an office · runs the department that repairs streets · held today by L. Chen', null, []],
+  ['Administrative Instruction 4.12', 'document', '<b>Administrative Instruction 4.12</b> · a document · the city\'s pothole repair policy · Public Works · capture B · sets seven calendar days', null, ['document']],
+  ['Lease amendment 1', 'document', '<b>Lease amendment 1</b> · a document · the Coliseum lease change approved 12 January 2024', null, []],
+  ['Bayline Properties', 'money', '<b>Bayline Properties</b> · a firm · paid $1.2M in FY2024 under the Coliseum lease', null, []],
+  ['Edition 2', 'published', '<b>Edition 2</b> of The Coliseum lease · a published case · signed and published 14 November 2026', null, ['published']],
+  ['Edition 1', 'published', '<b>Edition 1</b> of The Coliseum lease · a published case, since corrected by Edition 2', null, []],
+  ['West Oakland Neighbors', 'imported', '<b>West Oakland Neighbors</b> · another group · its published cases can be imported and recreated here', null, ['imported']],
+  ['Bay Courier', null, '<b>Bay Courier</b> · a newsroom · Teo reports for it; its story cites Edition 2', null, []],
+];
+// Attach references by text: every occurrence on the screen, inside running text too, never inside a link, button, field,
+// heading or an element that already explains itself. Per-screen entries win over GLOBAL ones (things named on many screens).
+const NO_REF = 'a,button,select,option,textarea,input,label,h1,legend,summary,[data-tip],.cs-grade,.cs-btn,.mk-crumbs,.mk-mockctl,.id,script,style';
 function attachRefs(id, html) {
-  for (const [text, go, what, why] of (REFS[id] || [])) {
-    const needle = '>' + text + '<'; let i = html.indexOf(needle);
-    while (i >= 0) { const open = html.lastIndexOf('<', i); if (!/^<a[\s>]/.test(html.slice(open, open + 3))) break; i = html.indexOf(needle, i + 1); }
-    if (i < 0) continue;
-    const tip = esc(tipOf(what, why, go));
-    const a = go ? `<a href="#" class="cs-ref" data-goto="${go}" data-tip="${tip}">${text}</a>` : `<span class="cs-card" tabindex="0" data-tip="${tip}">${text}</span>`;
-    html = html.slice(0, i + 1) + a + html.slice(i + 1 + text.length);
+  if (typeof document === 'undefined') return html;
+  const own = (REFS[id] || []).map(r => [...r, true]);
+  const seen = new Set(own.map(r => r[0]));
+  const list = own.concat((typeof GLOBAL_REFS !== 'undefined' ? GLOBAL_REFS : []).filter(r => !seen.has(r[0]) && !(r[4] || []).includes(id)));
+  if (!list.length) return html;
+  const t = document.createElement('template'); t.innerHTML = html;
+  const esc_ = x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  for (const [text, go, what, why] of list.sort((a, b) => b[0].length - a[0].length)) {
+    const re = new RegExp('(^|[^\\w])(' + esc_(text) + ')(?![\\w])');
+    const walker = document.createTreeWalker(t.content, NodeFilter.SHOW_TEXT);
+    const hits = []; let n;
+    while ((n = walker.nextNode())) { if (n.parentElement && n.parentElement.closest(NO_REF)) continue; if (re.test(n.nodeValue)) hits.push(n); }
+    for (const node of hits) {
+      let cur = node;
+      for (let m; cur && (m = re.exec(cur.nodeValue));) {
+        const start = m.index + m[1].length;
+        const after = cur.splitText(start); const rest = after.splitText(text.length);
+        const el = document.createElement(go ? 'a' : 'span');
+        if (go) { el.href = '#'; el.className = 'cs-ref'; el.dataset.goto = go; } else { el.className = 'cs-card'; el.tabIndex = 0; }
+        el.dataset.tip = tipOf(what, why, go); el.textContent = text; after.replaceWith(el); cur = rest;
+      }
+    }
   }
-  return html;
+  return t.innerHTML;
 }
 // DEC-155: the rail's width, the member's own (184px by default; 64px is icons only); kept per member and device.
 const railW = () => window.CS_RAILW || 184;
