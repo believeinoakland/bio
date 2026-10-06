@@ -382,3 +382,15 @@ test("R14 negative controls: a document without the blocks renders exactly as be
   const v5 = render(before.manifest, new Map([["case.md", "---\nformat: bio-case-document/5\ncase_id: CASE-2026-0002\ntimeline: []\ncalculations: []\n---\n"]]));
   for (const h of [TIMELINE_HEADING, CALCULATIONS_HEADING]) assert.equal(v5.includes(h), false);
 });
+
+test("R14 DEC-149 K1821 the complete edition, read with no credential, names the group's software \"this group's Civicsmith\": the workbook row's recompute words, never \"this instance\"", () => {
+  assert.equal(RECOMPUTE_WORDS.not_recomputed, "not recomputed here: a workbook this group's Civicsmith did not recompute");
+  const { manifest, files } = caseFileFixture({ t33: true });
+  const wb = new Map(files);
+  wb.set("case.md", files.get("case.md").replace('recompute: \'"differs"\'', 'recompute: \'"not_recomputed"\''));
+  const html = render(manifest, wb);
+  assert.equal(has(html, "It was not recomputed here: a workbook this group's Civicsmith did not recompute."), true);
+  /* negative control: no rendered edition, nor any word of the edition, calls the group's software this instance, copy or plane */
+  for (const text of [html, render(manifest, files), JSON.stringify(RECOMPUTE_WORDS)])
+    assert.equal(/this (instance|copy|plane)|the plane/i.test(text), false);
+});

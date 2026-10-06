@@ -56,13 +56,14 @@ test("R7 the export carries every declared table under its owner with its classe
     const t = x.tables[i];
     assert.deepEqual(t.classes, { purge: d.purge, expunge: d.expunge, export: d.export, sight: d.sight, derive: d.derive,
                                   version_chain: d.version_chain }, d.name);
-    if (d.export === "never" || d.name === "member_ties") {
+    if (d.export === "never") {
       assert.deepEqual([t.carried, t.rows, t.pages], ["named", null, []], `${d.name}: named, no row`);
       seen.never++;
     } else if (d.derive === "derived-rebuildable") {
       assert.deepEqual([t.carried, t.rows, t.pages], ["rule", null, []], `${d.name}: its rule, no row`);
       assert.equal(t.rule.owner, d.module);
       assert.deepEqual(t.rule.key, d.key);
+      assert.deepEqual(t.rule.from, d.from, `${d.name}: its from exactly as declaredTables answers it`);
       seen.rule++;
     } else {
       assert.equal(t.carried, "rows", d.name);
@@ -79,11 +80,12 @@ test("R7 the export carries every declared table under its owner with its classe
     }
   }
   assert.ok(seen.yes && seen.admin && seen.never && seen.rule, JSON.stringify(seen));
-  /* members' ties are never carried, whatever people declares (K1490, K1632; N594): the tie is held here, and no part
-     of it travels, nor can its page be fetched */
-  assert.equal(declared.find((d) => d.name === "member_ties").export, "admin-only", "people's declaration today");
+  /* members' ties are never carried (K1490): people declares them `never` (N594, K1791), so the tie is held here and
+     named with its owner and class, and no part of it travels, nor can its page be fetched */
+  assert.equal(declared.find((d) => d.name === "member_ties").export, "never", "people's declaration (N594)");
   assert.equal(w.rows(`SELECT * FROM member_ties`).length, 1);
-  assert.deepEqual(x.tables.find((t) => t.table === "member_ties").held_never, true);
+  assert.deepEqual((({ owner, table, carried, rows }) => ({ owner, table, carried, rows }))(x.tables.find((t) => t.table === "member_ties")),
+                   { owner: "people", table: "member_ties", carried: "named", rows: null });
   assert.equal(JSON.stringify(x).includes("I worked there"), false);
   assert.equal(w.ce.exportPage({ table: "member_ties", index: 0 }).reason, "EXPORT_TABLE_NOT_CARRIED");
   /* a never table holding a row here (a person's address) carries none of it */
@@ -95,6 +97,37 @@ test("R7 the export carries every declared table under its owner with its classe
   /* the entities tables are exported (B0.13) */
   assert.ok(x.tables.find((t) => t.table === "entities" && t.carried === "rows" && t.rows > 0));
   assert.ok(x.tables.find((t) => t.table === "event_when_cache" && t.carried === "rule"));
+});
+
+test("R7 a derived-rebuildable table travels as its rule naming its from exactly as declaredTables answers it: a list as given, null when not stated", () => {
+  const w = rich();
+  for (const t of ["probe_src_a", "probe_src_b", "probe_cache_from", "probe_cache_bare"])
+    w.st.sql.exec(`CREATE TABLE ${t} (k TEXT PRIMARY KEY, v TEXT)`);
+  w.st.sql.exec(`INSERT INTO probe_cache_from VALUES ('a', 'derived one')`);
+  w.st.sql.exec(`INSERT INTO probe_cache_bare VALUES ('b', 'derived two')`);
+  const rule = { ...cls, export: "yes", derive: "derived-rebuildable", key: ["k"], rebuild: () => [] };
+  declare(w, "probe", [{ name: "probe_src_a", ...cls, export: "yes" }, { name: "probe_src_b", ...cls, export: "yes" },
+                       { name: "probe_cache_from", ...rule, from: ["probe_src_b", "probe_src_a"] },
+                       { name: "probe_cache_bare", ...rule }]);
+  const x = w.ce.exportManifest({});
+  const withFrom = x.tables.find((t) => t.table === "probe_cache_from"), bare = x.tables.find((t) => t.table === "probe_cache_bare");
+  /* a list given at declaration travels as given, in its order */
+  assert.deepEqual([withFrom.carried, withFrom.rows, withFrom.pages], ["rule", null, []]);
+  assert.deepEqual(withFrom.rule.from, ["probe_src_b", "probe_src_a"]);
+  assert.deepEqual(withFrom.rule.owner, "probe");
+  /* none stated: null, said not stated, never an empty list and never filled */
+  assert.deepEqual([bare.carried, bare.rows, bare.pages], ["rule", null, []]);
+  assert.equal(bare.rule.from, null);
+  assert.match(bare.rule.rebuild, /did not state/);
+  /* every derived-rebuildable entry in the store, the owners' own among them, follows declaredTables exactly */
+  for (const d of w.record.declaredTables().filter((e) => e.derive === "derived-rebuildable"))
+    assert.deepEqual(x.tables.find((t) => t.table === d.name).rule.from, d.from ?? null, d.name);
+  /* the rule's tables' rows never travel, and their pages cannot be fetched */
+  assert.equal(JSON.stringify(x).includes("derived one") || JSON.stringify(x).includes("derived two"), false);
+  for (const name of ["probe_cache_from", "probe_cache_bare"])
+    assert.equal(w.ce.exportPage({ table: name, index: 0 }).reason, "EXPORT_TABLE_NOT_CARRIED");
+  /* a stored table's entry names no rule */
+  assert.equal(x.tables.find((t) => t.table === "probe_src_a").rule, undefined);
 });
 
 test("R7 a table declared after an export was taken is named by the next export", () => {

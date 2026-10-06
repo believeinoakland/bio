@@ -17,10 +17,15 @@ test("R6 published_material_texts and published_case_materials are declared exem
   assert.deepEqual([...CASE_CARRIAGE_EXEMPT], KEPT);
   assert.equal(caseCarriageOf(w.host), w.cc, "one instance per host (K61)");
   assert.ok(KEPT.every((t) => w.tables().includes(t)), "created at creation");
-  /* record-core holds the declaration under this module's name: another declaring either table is refused */
-  for (const t of KEPT)
-    assert.deepEqual(w.record.declarePurge(`probe-${t}`, [t]),
-                     { ok: false, reason: "TABLE_DECLARED", table: t, module: `probe-${t}`, declaredBy: "case-carriage" });
+  /* record-core holds the declaration under this module's name: another declaring either table is refused, in the
+     refusal's shape with its row (record-core R80, C-102.27; N554), naming this module as the holder */
+  for (const t of KEPT) {
+    const r = w.record.declarePurge(`probe-${t}`, [t]);
+    assert.deepEqual({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, table: r.table, module: r.module, declaredBy: r.declaredBy },
+                     { ok: false, reason: "TABLE_DECLARED", code: "TABLE_DECLARED", check: "C-102.27", table: t, module: `probe-${t}`,
+                       declaredBy: "case-carriage" });
+    assert.ok(typeof r.translation === "string" && r.translation && typeof r.detail === "string" && r.detail.includes(t), JSON.stringify(r));
+  }
   const docSha = w.doc(DOC);
   const obs = w.observe("ann");
   w.cc.holdMaterials(caseFm({ materials: [row(DOC, docSha), row(obs.id, obs.sha, "observation")] }), { caseId: CASE, edition: 1, at: NOW });

@@ -79,9 +79,10 @@ export const REVIEW_RECIPIENT_MAX = 200;
  *  over it to know), and an answer that hit it says so rather than presenting a page as the whole. `case-authoring`,
  *  earlier in the order, reads `case_drafts` under the same bound and keeps its own copy of it (K242). */
 export const REVIEW_LIST_MAX = 500;
-/** R11: the marking every copy carries. */
-export const REVIEW_MARKING = "REVIEW COPY — NOT A PUBLICATION. This is a draft of a case, shown inside this "
-  + "instance to the people it was addressed to. It is not signed, it is not published, it may still "
+/** R11: the marking every copy carries. Read by members and by recipients outside the group, so it names no machine
+ *  and addresses no one as the group (DEC-149, T34-87). */
+export const REVIEW_MARKING = "REVIEW COPY — NOT A PUBLICATION. This is a draft of a case, shown to the people it "
+  + "was addressed to without leaving the group that made it. It is not signed, it is not published, it may still "
   + "change, and it may never be published at all. What a publication would require that this draft does "
   + "not yet have is listed under `missing`, in the publish gates' own words.";
 
