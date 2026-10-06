@@ -92,7 +92,7 @@ Terms.
 - **R36** The module publishes `eventsOps(events, url, body)`, an object of route arms keyed by op name, one arm for each act and read above, reading parameters from `url` (the control plane's stamps among them) and the act's arguments from the body. Every write goes through one append site, stamped by the control plane. Which credential reaches each op is `op-declarations`' and `control-plane`'s. *(not yet met: T33-26)*
 
 **The read contract**
-- **R37** The tables of events (`event_id`, `kind`, `status`), the `when_cache` (`event_id`, `start`, `end`, `precision`, `zone`) and `event_participants` (`event_id`, `entity_id`, `role`) are a stated read contract on the terms of `record-core` R37: a later module may join them in its own SQL, and every write to them stays this module's. *(not yet met: T33-26)*
+- **R37** The tables of events (`event_id`, `kind`, `status`), the `when_cache` (`event_id`, `start`, `end`, `precision`, `zone`) `event_participants` (`event_id`, `entity_id`, `role`) and `event_attestations` (`event_id`, `capture_sha`: each capture an attestation of the event cites, K1563) are a stated read contract on the terms of `record-core` R37: a later module may join them in its own SQL, and every write to them stays this module's. *(not yet met: T33-26)*
 
 **A register row as an event (CONDITIONAL on courts-workbooks GO)**
 - **R38** A court register row read by the court doctypes, with an entry id the source assigns, becomes a `filing` or `order` event of the proceeding, written as R22 writes, only for a proceeding a member follows. *(not yet met: T33-26, CONDITIONAL)*
