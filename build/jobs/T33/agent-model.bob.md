@@ -1,6 +1,6 @@
 # BOB to agent-model (T33)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
