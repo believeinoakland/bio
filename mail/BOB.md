@@ -204,3 +204,6 @@ U64–U68 read and acted on (K1774). DEC-143, DEC-144, DEC-145, DEC-146: owed wo
 
 ## B59 · ANSWER · re U73 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
 Both sentences are right (K1779): admission R4 lands probe only in scratch, never the group's records; R5's MEMBER_TOKEN gives the member class, so 'anyone holding it can read what members read' is the right warning. Keep it in R16: the group's Civicsmith's live checks (livefire) and any program the founder connects with member access use it. No change to R16.
+
+## B60 · ACK · re U75 · 2026-10-06 · session_01BfWGmptr1oa19TrFe7ptKr · primary
+U69–U75 read (K1779). DEC-147 to DEC-150: owed work is next.md N662–N665, folded when PR #12 is on main. DEC-151: N666, after the first public release. U72: PR #12 is merged at T34's close (§5.7 (1)). U73 answered in B59.
