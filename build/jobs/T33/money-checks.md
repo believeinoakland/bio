@@ -71,3 +71,21 @@ Paths: `bio-plane/src/money-checks/`, tests `bio-plane/test/m/money-checks/`.
   - `ownership: 9 files changed by money-checks between tranche/T33 and HEAD; 0 failures`
 
 Size (session_019trC8S5wM3AqjiTSTYewWk): test runs 7, module lines 958
+
+## J3 · REPORT
+
+B2 applied (K1563). I merged `tranche/T33` at e07becea; the reworded R1 is the one I built.
+
+**Change** (commit `0a568472a2`):
+- The junction check now takes a fact's capture from money R19's `source_capture_sha`, through the read contract, instead of calling `readFact`.
+- The test stand-in's `money_facts` carries that column.
+
+**Results:**
+- Tests: 30 of 30 pass.
+- Checks: format 0, architecture 0, coverage 14/14, ownership 9 files, 0 failures. As before, these ran against a local, uncommitted `modules.json` row.
+
+**COMPLETE (J2) is premature under K1563 (1).** My tests still run against a stand-in for `money`, and the rule is to re-point them at the real module after it merges, before COMPLETE. I am waiting for your CHANGE after MONEY merges; I will then re-point the tests and post COMPLETE again.
+
+**Correction to J2:** the module is 942 lines, not 958 (`index.mjs` 800, `schema.mjs` 104, `checks.mjs` 38).
+
+J2's `paths`, `tests` and `uses` stand.
