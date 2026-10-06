@@ -22,3 +22,38 @@ Found outside my paths, all caused by T33-43's R16 rows or reported as improveme
 3. **row-census** (`test/system/row-census.test.mjs`): `C-2.8 STANDARD_LEG_AXIS`, `C-2.8 CALCULATION_LEG_MALFORMED` and `C-2.8 OCCURRENCE_LEG_MALFORMED` arrive awaiting promotion's stamp (R16; T34). My COMPLETE names them `awaiting stamp`, and they join K1542's named red.
 4. **Generated artifact (§14):** `bio-plane/dist/bio-plane.bundled.mjs` bundles my source and is now stale (layer close). `case-checker/program.mjs` does not include inquiry-grammar.
 5. **Improvements for later (not needed now):** `duties` could export its occurrence key's pattern (R9; `occurrenceKey` spells `OCC-` + 32 hex). My R15 spells that form itself (J1 (2), accepted), and an export would give it one home. Likewise `standards` could export a portion-path predicate (R18: a string, non-empty when trimmed, at most 200 characters), which R13 now checks here.
+
+## J3 · COMPLETE
+
+T33-43 applied. B2 (K1601) applied after merging `tranche/T33` into my branch.
+
+Entries applied:
+- R3 (C-15.1): a trigger's `date` is checked with civil-time's `isCalendarDate`. A wrong shape keeps the catalogue's sentence; a shaped but impossible day (`2026-02-31`) reads "… is not a calendar date (YYYY-MM-DD)".
+- C-6 (R4): a hunch's date goes through `isCalendarDate` too. `DATE_RE` is gone.
+- R12: `ENTITY_ID_RE` is `idPattern("ENT")`; no copy is held here.
+- R13: a held standard (`STD-`) is a leg target, listed in `references[]` (C-6.3 as for information), with an optional `target_portion` (a path of at most 200 characters; a malformed one is a C-2.8 error). A `connection` or `testimony` axis, or a `hunch` source, is one C-2.8 `STANDARD_LEG_AXIS` error. The hunch, testimony, earned and inherited arms then stay silent on that leg (J1 (5)). Its capture grade is bounded by the earned registry handed in.
+- R14 (K1601): `CALCULATION_REF_RE` = `idPattern("CALC")`. `calculationLegFindings` pushes one C-2.8 `CALCULATION_LEG_MALFORMED` per departure (grade, grade_axis, grade_source, content_id, extent, extent_capture). The leg is not a reference, so C-6.3 does not ask it. A `references[]` entry naming one stays record-grammar's refusal.
+- R15: `OCCURRENCE_REF_RE` (`occurrence:<DUT id>/OCC-<32 hex>`, J1 (2)), `occurrenceRef`, `parseOccurrenceRef` and `occurrenceLegFindings` (C-2.8 `OCCURRENCE_LEG_MALFORMED`, read trimmed). A `references[]` entry naming an occurrence is refused with the same code. R14's and R15's arms replace R4's target arm, as R11's does; lead, theme, role, note and grounds are unchanged.
+- R16: the three rows are in `INQUIRY_GRAMMAR_CHECKS` with my drafted translations, each minted at one DEC-49 region. The golden parity holds for every corpus case.
+
+**Rows, each `awaiting stamp` (T34, promotion's next stamping):**
+- C-2.8 STANDARD_LEG_AXIS
+- C-2.8 CALCULATION_LEG_MALFORMED
+- C-2.8 OCCURRENCE_LEG_MALFORMED
+
+Deferred: none.
+
+Other modules (J2): inquiry `grammar.test.mjs:176` and skills `doctrine.test.mjs:62` are red from the new rows (green without them), until those modules' T33 jobs. The row-census red gains the three rows above. `bio-plane.bundled.mjs` is stale until the layer close. Improvements for later: duties could export its occurrence key pattern, and standards a portion-path predicate.
+
+Tests and checks:
+- `node --test test/m/inquiry-grammar/`: tests 49, pass 49, fail 0 (17 new in `t33.test.mjs`; R7's row list updated).
+- Users' tests: accepted-work 23/23, basis-versions 127/127, strength 115/115, reevaluation 121/121, ratification 204/204, case-import 75/75, action-grammar 25/25, plane 85/85, `test/system/migrate-released` 1/1.
+  - inquiry 169 pass, 1 fail (J2 (1)); skills 52 pass, 2 fail (J2 (2), plus the named R28 red).
+  - case-disclosures 1 fail (named R21), case-authoring 1 fail (named R30), control-plane 3 fail (the named K1550, K1572 and K1581 reds; none involves my rows).
+- row-census: the named red, plus my three awaiting-stamp rows.
+- format 0 failures; coverage 16 of 16, 0 failures; ownership 0 failures.
+- architecture: 2 failures, both the civil-time edge (K1601 (4)).
+
+Final uses: record-grammar, text-chain, record-core, content, connections, observation-log, civil-time. standards is not used.
+
+Size (session_01LroHgukPpcdTvG8EcQ4WHp): test runs 16, module lines 1763
