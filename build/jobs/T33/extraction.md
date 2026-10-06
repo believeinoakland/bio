@@ -37,3 +37,7 @@ Merged `tranche/T33` (reading-pipeline's wording above its R25). R69 now calls t
 Tests and checks re-run: `node --test bio-plane/test/m/extraction/`: ℹ pass 119, ℹ fail 0. format 0 failures; architecture (26 product files, 95 imports) 0 failures; coverage 45 of 45, 0 failures; ownership 4 files, 0 failures.
 
 Size (session_01G7Adz3cZJyj9EDveznQ5vf): test runs 6, module lines 2716
+
+## J3 · COMPLETE
+
+CHANGE B3 applied: tranche/T33 merged; R69 calls readHooksOf(storage).afterRead after each reading's commit (namespace import, so nothing is called before reading-pipeline merges); tests inject a ReadHooks-like object. Also checked once (uncommitted) against job/T33/reading-pipeline's hooks.mjs: works. 119/119; format, architecture, coverage 45/45, ownership 0 failures. Merges after reading-pipeline.
