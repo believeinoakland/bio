@@ -30,3 +30,56 @@ Every other user of ai-runs matches the tranche: run-productions 39/0, skills 53
 4. An account reference that cannot be unsealed is found only at the dispatch, because the decision is synchronous. Its wake entry says "handed over", and the following entry records `REFUSED: ACCOUNT_SEAL_UNAVAILABLE` as a dispatch that did not complete. A member with no reference is withheld `NO_ACCOUNT` before the binding is called.
 
 **For BOB's acts at my merge.** `uses` gains `civil-time`; architecture fails on that one edge until it is set (K1563 (3)). The marks "not yet met: T33-50" on R48–R53 can be struck; coverage is 44/44.
+
+## J3 · COMPLETE
+
+T33-50, K1514, K1601 and K1606 are applied on `job/T33/ai-runs` @ f35d151aad, merged with `tranche/T33` after run-rules.
+
+**Entries applied**
+- T33-50: R48–R53. Each model call's use is counted per member, local day and mode (`ai_usage`). Each member sets their own daily ceiling (provisional default `AI_CEILING_DEFAULT` = 2,000,000 tokens / 200 calls, until M-Q6), and an administrator can set a lower one for the copy. Both are checked at the open, the tick and through `aiUseCheck` for an ask. `op=aiusage`. The run's account is its member's (`principal_claude` = `member:<id>`). The tables are declared through `declareTable`.
+- K1514: the dispatch no longer sends `claude_accounts`. It sends `account: {kind, secret, member}`, the run member's reference from `credentials.accountReferenceFor` (K1601). A subscription stays a subscription. A member holding none is withheld `NO_ACCOUNT`.
+- K1606:
+  - The open's mode must be one of `RUN_MODES`, deployed by its flag and `deployable` on the verifications the record holds. `ask` is refused C-109.1.
+  - `startAllowed` is relayed: a machine credential naming no member gets C-22.19 before the account check.
+  - `verificationRecord` (`op=airunverify`, `by` stamped) writes `verification_recorded` into `ai_mode_verifications`. It is append-only and judged by `checkVerification`; a run not held in that mode is refused C-22.20 with `field: "run"`. `verifications()` reads the records back.
+- The tests now read run-rules' real rows. No injected rows are left.
+
+**Deferred:** none.
+
+**Found elsewhere (also in J2):**
+- R52 turns these red in their own tests: capture-requests `plane.test.mjs` ×4, scheduler `plane.test.mjs` R12, agent-worker `harness.test.mjs` REC100-0/1b/2/2b/2c. Each opens a run whose member holds no account. Each module's test fixes it by connecting the opener's account and naming the member.
+- run-rules' `NOT_YOUR_CEILING` row names `aiCopyCeilingSet` as a minting site. My R50 refuses a non-admin there with `NOT_AN_ADMIN`, and that is what I built.
+- New ops need specs from op-declarations and control-plane: `aiusage`, `aiceilingset`, `aicopyceilingset`, `airunverify`.
+- Services for answers and agent-worker: `aiUseCheck`, `countAskUsage` and `providerLimit`.
+
+**Final uses:** the current ones plus `civil-time`. Architecture fails on that one undeclared edge until it is set (K1563 (3)).
+
+**Tests and checks**
+- ai-runs: 69 tests, 69 pass, 0 fail.
+- Dependents:
+
+| module | pass | fail | the fails |
+|---|---|---|---|
+| run-productions | 39 | 0 | |
+| capture-requests | 76 | 4 | R52's, listed above |
+| skills | 66 | 1 | K1516 |
+| intent | 64 | 1 | K1568 |
+| action-plans | 53 | 0 | |
+| scheduler | 65 | 1 | R52's |
+| queue-producers | 80 | 0 | |
+| control-plane | 156 | 3 | named reds |
+| plane | 85 | 0 | |
+| credentials | 54 | 0 | |
+| basis-versions | 127 | 0 | |
+| run-rules | 23 | 0 | |
+| affordances | 165 | 2 | named reds |
+| agent-worker | 6 | 2 | harness: R52's; requirements R45: K1606's stale bundles |
+
+- Checks:
+  - format: 0 failures.
+  - architecture: 1 failure, the `civil-time` uses edge.
+  - coverage: 44 of 44.
+  - ownership: 13 files, 0 failures.
+- The marks "not yet met: T33-50" on R48–R53 can be struck.
+
+Size (session_01GWgcYQuUzZUEFB4pASDvTC): test runs 18, module lines 3198
