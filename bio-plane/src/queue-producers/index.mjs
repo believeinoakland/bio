@@ -1,21 +1,26 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R36).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R39).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
  *
- *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26, R27, R29–R35 derive for a
+ *   feedItems      queue's one read of this module (R8): every item R1–R7, R9, R14, R15–R23, R26, R27, R29–R35, R37–R39 derive for a
  *                  member and viewer, each homed through queue's walk and carrying queue's options (both passed in),
  *                  with the facts the answer publishes beside them. No item carries `disposition` (queue's mint gives
  *                  it) or `catalogue_id` (queue stamps it from its R2).
  *   proposalFindingItems, CARDINALITY_EXCEEDED   the FINDING producer over `progressions.proposalsFeed` (R2, R10, R11),
  *                  pure, re-exported from `./proposals.mjs`.
  *
- * REACHED as `queueProducersOf(ctx, deps)`: one instance per Durable Object storage. It registers nothing and holds no
- * check row: it refuses nothing (draft §3.3).
+ *   registerPlaceArrivals   R38's one door: `instance-setup` registers its `placeArrivals` read here once at start (K31's
+ *                  pattern), since it comes later in layer 11.
+ *
+ * REACHED as `queueProducersOf(ctx, deps)`: one instance per Durable Object storage. It registers nothing with an earlier
+ * module and holds no check row: it refuses nothing a member does (draft §3.3); a second registration at R38's door is a
+ * programming error answered to its caller.
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, governor, provenance, capture, captureRequests, basisVersions, progressions, aiRuns, bias,
  *   publication, corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans,
- *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket, caseImport, wizardScripts   the providers.
+ *   actions, filingTemplates, localFacts, networkNotices, linkSweep, docket, caseImport, wizardScripts, caseTensions   the
+ *   providers.
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue, one walk and one derivation: `feedItems` takes them
  * as `homesOf(subjectIds)` and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, and holds
@@ -39,6 +44,7 @@ import { aiRunsOf } from "../ai-runs/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { intentOf } from "../intent/index.mjs";
@@ -112,6 +118,11 @@ export class QueueProducers {
   get #caseImport() { return this.#dep("caseImport", () => caseImportOf(this.#host)); }
   /* N528: a wizard script's breaks and its submissions are wizard-scripts' (its R13, R17). */
   get #wizardScripts() { return this.#dep("wizardScripts", () => wizardScriptsOf(this.#host)); }
+  /* N612 (K1505 (1)): a case's tensions after publication are case-tensions' (its R4, was publication R50). Its provider is
+     registered by publication at start (K1505 (3)), so publication is reached first, as case-authoring does. */
+  get #caseTensions() { return this.#dep("caseTensions", () => { void this.#publication; return caseTensionsOf(this.#host); }); }
+  /* R38: the read instance-setup registers at start (its R62), or null while none is. */
+  #placeArrivals = null;
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -215,7 +226,7 @@ export class QueueProducers {
     } catch { return null; }
   }
 
-  static ZONE_UNDETERMINED = "no time zone is held for it on this instance, so the local day it is counted from is "
+  static ZONE_UNDETERMINED = "no time zone is held for it in your group's Civicsmith, so the local day it is counted from is "
     + "undetermined; it is never counted on the UTC day";
 
   /** R36: an item's `age` from a day or an instant, counted on local days in `zone`: a day ages from its first local
@@ -332,6 +343,12 @@ export class QueueProducers {
          version submitted, to each owner who may approve it. */
       items.push(...this.#findingsWizardBroken(me, viewer, at));
       items.push(...this.#obligationsWizardApproval(me, viewer, at));
+      /* R37 (DEC-147; N662): a case edition signed to publish at a set time, while it waits, once published, once stopped. */
+      items.push(...this.#scheduledEditionItems(me, viewer, at));
+      /* R38 (DEC-150 (3); N665): a held profile for the place the group named, arrived with an update, to the administrators. */
+      items.push(...this.#conditionsPlaceArrived(me, viewer, at));
+      /* R39 (DEC-158 (4); K1818): a copied wizard whose base has a newer approved version, to the copy's editors. */
+      items.push(...this.#findingsWizardBaseUpdated(me, viewer, at));
       return {
         items,
         facts: {
@@ -1620,7 +1637,7 @@ export class QueueProducers {
         case: homes,
         subject: { kind: "export", id: `export_log:${r.seq}`, seq: r.seq },
         summary: `A full ${r.scope} export was taken on ${r.at}: ${r.bundles} records, ${r.files} files`,
-        detail: `An export of the ${r.scope} left this instance with the root-of-trust credential `
+        detail: `An export of the ${r.scope} left your group's Civicsmith with the root-of-trust credential `
               + `(Membership v2 §8.1). It is row ${r.seq} of the append-only export log`
               + (r.note ? `, noted "${r.note}"` : ", with no note") + `. Every administrator is told; `
               + `nobody else is. The log is the record of it and nothing here changes the log.`,
@@ -2076,7 +2093,7 @@ export class QueueProducers {
    *
    * Each reads the fact its owning module offers and restates none of it: the candidates shown on a project
    * (`contradiction` R25), the notices on a project's own side (its R50), the dependents resting on a side named wrong
-   * (`reevaluation` R27) and the tensions a published case did not disclose (`publication` R50). Each is derived on
+   * (`reevaluation` R27) and the tensions a published case did not disclose (`case-tensions` R4). Each is derived on
    * read and writes nothing, and each follows its provider's cursor under a stated bound of pages.
    *
    * WHAT THE PROVIDER WITHHOLDS STAYS WITHHELD. `candidatesFor` answers only a candidate whose two sides the viewer
@@ -2088,7 +2105,7 @@ export class QueueProducers {
    *  are followed per project before the read is stated cut. */
   static QUEUE_CONTRADICTION_PROJECTS = 50;
   static QUEUE_CONTRADICTION_PAGES = 20;
-  /** R6: how many owned projects `tension-after-publication` asks `publication` about. */
+  /** R6: how many owned projects `tension-after-publication` asks `case-tensions` about. */
   static QUEUE_TENSION_PROJECTS = 50;
   /** R5: the page `reevaluation.correctedDependents` is read in (its R27's largest). */
   static QUEUE_CORRECTED_PAGE = 200;
@@ -2265,8 +2282,8 @@ export class QueueProducers {
     return { projects: out, bound: cap, truncated };
   }
 
-  /** `tension-after-publication` (R6; N345, DEC-84 item 13): one FINDING per (case, candidate) `publication`
-   *  `caseTensions({project})` answers (its R50), for each project the member owns, at most 50. It goes to those
+  /** `tension-after-publication` (R6; N345, DEC-84 item 13): one FINDING per (case, candidate) `case-tensions`
+   *  `caseTensions({project})` answers (its R4, was publication R50; N612), for each project the member owns, at most 50. It goes to those
    *  owners and to nobody else: a caller with no member, or a member who owns no project, gets none. It leaves when a
    *  later edition discloses it or the candidate resolves (the read no longer answers it). */
   #findingsTensionAfterPublication(me, viewer, now) {
@@ -2280,7 +2297,7 @@ export class QueueProducers {
       let after = null;
       for (let page = 0; ; page += 1) {
         if (page === QueueProducers.QUEUE_CONTRADICTION_PAGES) { cut = true; break; }
-        const r = this.#publication.caseTensions({ project, after });
+        const r = this.#caseTensions.caseTensions({ project, after });
         if (!r || r.ok !== true || !Array.isArray(r.cases)) break;
         for (const c of r.cases) {
           for (const t of (c && Array.isArray(c.tensions) ? c.tensions : [])) {
@@ -2310,14 +2327,14 @@ export class QueueProducers {
         detail: "a contradiction on what this published case's findings rest on, one level deep, was found after its "
               + "latest edition and is not disclosed there. The signed edition does not change: a later edition "
               + "discloses or resolves it.",
-        basis: { source: "publication.caseTensions", case: c.case, edition: c.edition ?? null, project,
+        basis: { source: "case-tensions.caseTensions", case: c.case, edition: c.edition ?? null, project,
                  candidate: t.candidate, state: t.state ?? null, members, depth: t.depth ?? 1,
                  ...(t.unseen_other_side ? { unseen_other_side: true, side: t.side ?? null }
                                          : { a: t.a ?? null, b: t.b ?? null }),
                  ...(Array.isArray(c.unread) && c.unread.length ? { unread: c.unread } : {}),
                  bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true,
                           pages_bound: QueueProducers.QUEUE_CONTRADICTION_PAGES, pages_truncated: cut },
-                 detail: "a tension after publication is publication's (its R50), read under the owning project's "
+                 detail: "a tension after publication is case-tensions' (its R4, was publication R50), read under the owning project's "
                        + "owners' sight: a side any owner may not see is answered unseen, with nothing of it. It is "
                        + "told to the project's owners and to nobody else, and it composes no strength." },
         age: { state: "undetermined", reason: "derived_on_read",
@@ -3484,7 +3501,7 @@ export class QueueProducers {
                             truncated: cut },
                    detail: "the cause is reevaluation's (its R33): a live leg of this finding rests on another group's "
                          + "finding at an edition whose publisher has since listed a later edition or withdrawn it on its "
-                         + "docket, a verified entry this copy read. It is read here, never raised, and nothing was regraded." },
+                         + "docket, a verified entry your group's Civicsmith read. It is read here, never raised, and nothing was regraded." },
           age: Number.isFinite(sinceMs)
             ? { state: "determined", since: e.since, ms: Math.max(0, now - sinceMs) }
             : { state: "undetermined", reason: "no_cause_instant",
@@ -3557,7 +3574,7 @@ export class QueueProducers {
         case: this.#homesOf([]),
         subject: subjectOf(e),
         summary: `the publisher's docket for ${whose(e)}, which you follow, lists ${kindWords}`,
-        detail: `Entry ${e.seq} of the docket, ${kindWords}${e.date ? `, dated ${e.date}` : ""}, was read and verified by this copy. `
+        detail: `Entry ${e.seq} of the docket, ${kindWords}${e.date ? `, dated ${e.date}` : ""}, was read and verified by your group's Civicsmith. `
               + `Its signing key ${e.key_listed === false ? "is not" : "is"} among the keys the imported case file lists.`
               + QueueProducers.#entryWords({ ...e, key_listed: null })
               + (e.move ? " Anything here resting on an edition it moves is told to its own members as well."
@@ -3609,7 +3626,7 @@ export class QueueProducers {
         kind: "cited-docket-entry-refused",
         case: this.#homesOf([]),
         subject: subjectOf(e),
-        summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed this copy's checks`,
+        summary: `an entry on the publisher's docket for ${whose(e)}, which you follow, failed the checks your group's Civicsmith makes`,
         detail: QueueProducers.#refusedWords(e, seq, [failed]),
         basis: { source: "case-import.watchItems", import: e.import, group: e.group ?? null, case: e.case ?? null, seq,
                  failed: [failed], entry_detail: e.detail ?? null, seen_at: e.seen_at ?? null, set_by: e.set_by ?? null,
@@ -3738,7 +3755,7 @@ export class QueueProducers {
         detail: withdrawn
           ? `It is not offered to members while it fails its checks${words ? `. The first thing it failed: ${words}` : ""}. `
             + "A new version that passes them, approved as before, returns it. This is told once."
-          : "It passed its checks again when this copy started, and members are offered it as before. This is told once.",
+          : "It passed its checks again when your group's Civicsmith started, and members are offered it as before. This is told once.",
         basis: { source: "wizard-scripts.brokenScripts", script: x.script, version: x.version, name: x.name ?? null, project,
                  author, at: x.at, break_kind: x.kind, refusal, recipients_rule: project ? "project_owners_and_author" : "administrators_and_author",
                  bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
@@ -3800,6 +3817,272 @@ export class QueueProducers {
         assignee_role: null,
         recipients: [me],
         options: [QueueProducers.WIZARD_APPROVE],
+      });
+    }
+    return out;
+  }
+
+  /* ======================================================================
+   * DEC-147 · R37 — A CASE EDITION SIGNED TO PUBLISH AT A SET TIME (publication R66–R69; N662, K1784, K1785).
+   * DEC-150 (3) · R38 — A HELD PROFILE FOR THE PLACE THE GROUP NAMED (instance-setup R62; N665).
+   * DEC-158 (4) · R39 — A COPIED WIZARD WHOSE BASE HAS A NEWER APPROVED VERSION (wizard-scripts R26; N679, K1818).
+   * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
+   * first read after the fact stops holding; what is told once is raised once and leaves by its recipient's disposition.
+   * ====================================================================== */
+
+  /** R37: the acts that answer a waiting edition (publication R68): moving its time, or cancelling it. */
+  static PUBLISH_AT_MOVE = Object.freeze({ id: "publishatmove", label: "Move the time it publishes", weight: "single" });
+  static PUBLISH_AT_CANCEL = Object.freeze({ id: "publishatcancel", label: "Cancel publishing it at that time", weight: "single" });
+  /** R37: each state's class and kind (publication R67, R69); a cancelled edition earns no item. */
+  static SCHEDULED_KINDS = Object.freeze({
+    waiting: Object.freeze(["CONDITION", "edition-scheduled"]),
+    published: Object.freeze(["FINDING", "edition-published-as-scheduled"]),
+    stopped: Object.freeze(["FINDING", "scheduled-edition-stopped"]) });
+  /** R38: the act that answers an arrival (instance-setup R14, `op=profilesset`): choosing the profile under Places. */
+  static PLACE_CHOOSE = Object.freeze({ id: "profilesset", label: "Choose this profile under Places", weight: "single" });
+  /** R39: the acts a copy's editors are offered (wizard-scripts R4, R26): seeing what changed (both versions, read), and
+   *  bringing it across by their own revision (`adopt: {base}`). */
+  static WIZARD_BASE_READ = Object.freeze({ id: "wizardread", label: "See what changed in the wizard it was copied from", weight: "single" });
+  static WIZARD_BASE_ADOPT = Object.freeze({ id: "wizardrevise", label: "Bring the change across to your copy", weight: "single" });
+
+  /** A person's id, never a machine credential's. */
+  static #person(x) {
+    return typeof x === "string" && x.trim() !== "" && !x.startsWith(MACHINE_AUTHOR_PREFIX) && !x.startsWith(MACHINE_CLASS_PREFIX);
+  }
+
+  /** R37: "<date>, <time>" as set, in the group's zone as R69 carries it, never converted (R36); null when unreadable. */
+  static #setTime(at) {
+    const a = at && typeof at === "object" ? at : {};
+    return isCalendarDate(a.date) && typeof a.time === "string" && /^\d{2}:\d{2}$/.test(a.time) ? `${a.date}, ${a.time}` : null;
+  }
+
+  /** An instant's age, or undetermined for `reason`. */
+  static #instantAge(v, now, reason, detail) {
+    const ms = typeof v === "string" && v ? Date.parse(v) : NaN;
+    return Number.isFinite(ms) ? { state: "determined", since: v, ms: Math.max(0, now - ms) } : { state: "undetermined", reason, detail };
+  }
+
+  /** `edition-scheduled`, `edition-published-as-scheduled` and `scheduled-edition-stopped` (R37; publication R66–R69;
+   *  DEC-147 (2), (3), (5)): for each case edition `publication.scheduledEditions` answers read as the plane (its R69),
+   *  paged by its cursor, items to the member who set its time and to the case's project's owners (membership R65), and
+   *  to nobody else: a caller with no member is none of them. Each item's subject is the case edition, homed under the
+   *  case's project (none when it has none), and a project this viewer may not see yields no item (R11).
+   *  - while it is `waiting`, one CONDITION keyed `CONDITION::edition-scheduled::<case>@<edition>`, its summary
+   *    "Signed · publishes <date, time>" as set, in the group's zone, never converted (R36); offering the move and the
+   *    cancel; a moved time changes its words, never its key; it leaves when the edition leaves `waiting`;
+   *  - once `published`, one FINDING keyed `FINDING::edition-published-as-scheduled::<case>@<edition>`, naming the set time
+   *    and the instant published;
+   *  - once `stopped`, one FINDING keyed `FINDING::scheduled-edition-stopped::<case>@<edition>`, naming each reason in its
+   *    own translation and saying nothing was published and publishing needs a new signing.
+   *  The two findings are raised once and leave by their recipient's disposition (DEC-69, DEC-70). A cancelled edition
+   *  earns no item. */
+  #scheduledEditionItems(me, viewer, now) {
+    if (!me || typeof this.#publication.scheduledEditions !== "function") return [];
+    const page = this.#actionPages((after) => {
+      const r = this.#publication.scheduledEditions({ after });
+      return r && Array.isArray(r.editions) ? { ...r, items: r.editions, truncated: !!r.cursor } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const owners = new Map();
+    const seen = new Set();
+    const out = [];
+    for (const e of page.items) {
+      const k = e ? QueueProducers.SCHEDULED_KINDS[e.state] : null;
+      if (!k || typeof e.case !== "string" || !e.case || !Number.isInteger(Number(e.edition)) || e.edition === null) continue;
+      const project = typeof e.project === "string" && e.project ? e.project : null;
+      if (project && visible(project) === null) continue;        // R11: a case of a project this viewer may not see
+      const key = project || "";
+      if (!owners.has(key)) owners.set(key, project ? (this.#membership.projectOwners(project) || []) : []);
+      const setter = QueueProducers.#person(e.set_by) ? e.set_by : null;
+      const recipients = [...new Set([...(setter ? [setter] : []), ...owners.get(key)])];
+      if (!recipients.includes(me)) continue;
+      const [cls, kind] = k;
+      const edition = Number(e.edition);
+      const id = `${cls}::${kind}::${e.case}@${edition}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const at = e.at && typeof e.at === "object" ? e.at : {};
+      const when = QueueProducers.#setTime(at) || "a time that cannot be read";
+      const zone = typeof at.zone === "string" && at.zone ? at.zone : null;
+      const which = `case ${e.case}, edition ${edition}`;
+      const moves = Array.isArray(e.moves) ? e.moves : [];
+      const reasons = (Array.isArray(e.reasons) ? e.reasons : []).filter((x) => x && typeof x === "object")
+        .map((x) => ({ code: x.code ?? null, translation: typeof x.translation === "string" ? x.translation : null }));
+      let summary, detail, age, options;
+      if (kind === "edition-scheduled") {
+        summary = `Signed · publishes ${when} · ${which}`;
+        detail = `This edition is signed and waits to publish on ${when}${zone ? ` (${zone})` : ""}, the group's own time. `
+          + "Nothing of it is public until then. At that time every check it passed at signing is run again, and it is "
+          + "published only if nothing has changed. An owner of the case's project may move the time or cancel it"
+          + (moves.length ? `; its time has been moved ${moves.length === 1 ? "once" : `${moves.length} times`}` : "") + ".";
+        age = QueueProducers.#instantAge(e.signed_at, now, "no_signing_instant", "the edition carries no signing instant this producer can read");
+        options = [QueueProducers.PUBLISH_AT_MOVE, QueueProducers.PUBLISH_AT_CANCEL];
+      } else if (kind === "edition-published-as-scheduled") {
+        summary = `${which} was published at its set time, ${when}`;
+        detail = `It was signed to publish on ${when}${zone ? ` (${zone})` : ""} and was published `
+          + `${typeof e.outcome_at === "string" && e.outcome_at ? `at ${e.outcome_at}` : "at an instant that cannot be read"}, `
+          + "after every check it passed at signing ran again and passed. This is told once.";
+        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", "the edition carries no publishing instant this producer can read");
+        options = [];
+      } else {
+        const said = reasons.map((x) => x.translation || `a reason with no recorded words (${x.code || "no code"})`);
+        summary = `${which} was not published at its set time, ${when}`;
+        detail = `When its time came, the check stopped it: ${said.length ? said.join(" ") : "no reason was recorded."} `
+          + "Nothing was published. Publishing this edition needs a new signing. This is told once.";
+        age = QueueProducers.#instantAge(e.outcome_at, now, "no_outcome_instant", "the edition carries no stopping instant this producer can read");
+        options = [];
+      }
+      out.push({
+        id,
+        class: cls,
+        kind,
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: { kind: "case_edition", id: `${e.case}@${edition}`, case: e.case, edition, project },
+        summary,
+        detail,
+        basis: { source: "publication.scheduledEditions", case: e.case, edition, project, state: e.state,
+                 at: { date: at.date ?? null, time: at.time ?? null, zone }, publish_at: e.publish_at ?? null,
+                 signed_at: e.signed_at ?? null, signer: e.signer ?? null, set_by: e.set_by ?? null, moves,
+                 outcome_at: e.outcome_at ?? null, ...(kind === "scheduled-edition-stopped" ? { reasons } : {}),
+                 recipients_rule: "setter_and_project_owners",
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a scheduled edition is publication's (its R66–R69): its time as set, in the group's zone, and "
+                       + "its outcome, read here as the plane and never stored. It goes to the member who set the time and "
+                       + "to the case's project's owners, and to nobody else (DEC-147)." },
+        age,
+        assignee: null,
+        assignee_role: null,
+        recipients,
+        options,
+      });
+    }
+    return out;
+  }
+
+  /** R38 (DEC-150 (3); instance-setup R62): the one door through which `instance-setup` registers, once at start, its
+   *  `placeArrivals` read (a function, or an object offering `placeArrivals`), K31's pattern since it comes later in
+   *  layer 11. A second registration is refused `PLACE_ARRIVALS_REGISTERED`, a read that is neither
+   *  `PLACE_ARRIVALS_MALFORMED`: programming errors answered to the caller, never a member's refusal. */
+  registerPlaceArrivals(read) {
+    const fn = typeof read === "function" ? read
+      : read && typeof read === "object" && typeof read.placeArrivals === "function" ? (a) => read.placeArrivals(a) : null;
+    if (!fn)
+      return { ok: false, reason: "PLACE_ARRIVALS_MALFORMED", detail: "the registered read is placeArrivals, a function" };
+    if (this.#placeArrivals)
+      return { ok: false, reason: "PLACE_ARRIVALS_REGISTERED", detail: "the read of a named place's arrivals is registered once at start, and it was" };
+    this.#placeArrivals = fn;
+    return { ok: true };
+  }
+
+  /** `place-profile-arrived` (R38; instance-setup R62; DEC-150 (3)): with a read registered (none: no item), for each
+   *  arrival it answers read as the plane, one CONDITION keyed `CONDITION::place-profile-arrived::<profile>`, to every
+   *  active administrator (membership R64, R86) and to nobody else, with no project home. It names the place the group
+   *  named and the held profile's name and coverage, and offers choosing it under Places (instance-setup R14). Raised once
+   *  per arrival; it leaves when the arrival leaves (the profile made active, or the name cleared or changed). */
+  #conditionsPlaceArrived(me, viewer, now) {
+    if (!this.#placeArrivals || !me || !this.#isAdminMember(me)) return [];
+    let r;
+    try { r = this.#placeArrivals({ viewer: null }); } catch { return []; }
+    const list = Array.isArray(r) ? r : r && r.ok !== false && Array.isArray(r.arrivals) ? r.arrivals : [];
+    const seen = new Set();
+    const out = [];
+    let admins = null;
+    for (const a of list) {
+      if (!a || typeof a !== "object") continue;
+      const held = a.profile && typeof a.profile === "object" ? a.profile : null;
+      const profile = held ? held.id ?? held.profile ?? null : a.profile;
+      if (typeof profile !== "string" || !profile) continue;
+      const id = `CONDITION::place-profile-arrived::${profile}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      if (admins === null) admins = this.#activeAdmins();
+      const place = typeof a.name === "string" && a.name.trim() ? a.name.trim() : null;
+      const pname = (held ? held.name : a.profile_name) ?? null;
+      const covers = (held ? held.covers : a.covers);
+      const coverage = Array.isArray(covers) ? covers.filter((x) => typeof x === "string" && x) : [];
+      const named = typeof pname === "string" && pname ? pname : profile;
+      out.push({
+        id,
+        class: "CONDITION",
+        kind: "place-profile-arrived",
+        case: this.#homesOf([]),
+        subject: { kind: "place_profile", id: profile, name: pname ?? null, covers: coverage, place },
+        summary: `a profile for ${place ? `"${place}"` : "the place your group named"} is now held: ${named}`,
+        detail: `An installed update brought a profile that matches the place your group named${place ? `, "${place}"` : ""}: `
+              + `${named}${coverage.length ? `, which covers ${coverage.join(", ")}` : ""}. An administrator may choose it under `
+              + "Places; the offices your group added stay. This status is told once, and it leaves when the profile is "
+              + "chosen or the place's name is cleared or changed.",
+        basis: { source: "instance-setup.placeArrivals", profile, profile_name: pname ?? null, covers: coverage, place,
+                 found_at: a.found_at ?? null, recipients_rule: "administrators", raised_to: admins,
+                 detail: "an arrival is instance-setup's fact (its R62): a held profile matching the place the group named, "
+                       + "first found at a start, read here through the read it registered and never stored. It goes to "
+                       + "every administrator and to nobody else (DEC-150 (3)), and leaves when the arrival leaves." },
+        age: QueueProducers.#instantAge(a.found_at, now, "no_found_instant", "the arrival carries no instant this producer can read"),
+        assignee: null,
+        assignee_role: null,
+        recipients: [...admins],
+        options: [QueueProducers.PLACE_CHOOSE],
+      });
+    }
+    return out;
+  }
+
+  /** `wizard-base-updated` (R39; wizard-scripts R26; DEC-158 (4), K1818): one FINDING per entry and recipient
+   *  `wizard-scripts.baseUpdates` answers (a copy whose base has a newer approved version, to the copy's wizard editors as
+   *  it names them), paged by its cursor, keyed `FINDING::wizard-base-updated::<copy>::<base version>::<member>`, to that
+   *  recipient and to nobody else: a caller with no member is none of them. Its subject the copy, naming the copy's name,
+   *  its base's name and the base's new version, homed under the copy's project, a project this viewer may not see
+   *  yielding none (R11); offering to see what changed and to bring it across by the member's own revision (wizard-scripts
+   *  R4's `adopt: {base}`). Raised once and never repeated; it leaves when its recipient disposes of it (DEC-69, DEC-70). */
+  #findingsWizardBaseUpdated(me, viewer, now) {
+    if (!me || typeof this.#wizardScripts.baseUpdates !== "function") return [];
+    const page = this.#actionPages((after) => {
+      const r = this.#wizardScripts.baseUpdates({ after, viewer });
+      return r && Array.isArray(r.entries) ? { ...r, items: r.entries } : r;
+    });
+    const visible = this.#bundleRedactor(viewer);
+    const seen = new Set();
+    const out = [];
+    for (const x of page.items) {
+      if (!x || typeof x.copy !== "string" || !x.copy || x.base_version === undefined || x.base_version === null
+          || x.base_version === "") continue;
+      const recipients = (Array.isArray(x.recipients) ? x.recipients : []).filter((m) => QueueProducers.#person(m));
+      if (!recipients.includes(me)) continue;
+      const project = typeof x.project === "string" && x.project ? x.project : null;
+      if (project && visible(project) === null) continue;        // R11: a copy in a project this viewer may not see
+      const baseVersion = String(x.base_version);
+      const id = `FINDING::wizard-base-updated::${x.copy}::${baseVersion}::${me}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const name = typeof x.name === "string" && x.name ? `"${x.name}"` : x.copy;
+      const baseName = typeof x.base_name === "string" && x.base_name ? `"${x.base_name}"` : "the wizard it was copied from";
+      out.push({
+        id,
+        class: "FINDING",
+        kind: "wizard-base-updated",
+        case: project ? this.#homesAt([project], viewer) : this.#homesOf([]),
+        subject: { kind: "wizard", id: x.copy, name: x.name ?? null, copy_version: x.copy_version ?? null,
+                   base: x.base ?? null, base_name: x.base_name ?? null, based_on: x.based_on ?? null,
+                   base_version: baseVersion, project },
+        summary: `${baseName} has a newer approved version, ${baseVersion}, than your group's copy ${name} was made from`,
+        detail: `Your group's copy ${name} was made from ${x.based_on ? `version ${x.based_on} of ` : ""}${baseName}, and `
+              + `version ${baseVersion} of it has since been approved. See what changed between the two; you may bring the `
+              + "change across to your copy by your own revision, and nothing is changed in your copy unless you do. "
+              + "This is told once.",
+        basis: { source: "wizard-scripts.baseUpdates", copy: x.copy, copy_version: x.copy_version ?? null, name: x.name ?? null,
+                 project, base: x.base ?? null, base_name: x.base_name ?? null, based_on: x.based_on ?? null,
+                 base_version: baseVersion, found_at: x.found_at ?? null,
+                 ...(x.steps && typeof x.steps === "object" ? { steps: x.steps } : {}),
+                 recipients_rule: "copy_editors", raised_to: recipients,
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 detail: "a newer approved version of a copy's base is wizard-scripts' fact (its R26), listed once per copy and "
+                       + "version and read here, never stored. It goes to each of the copy's wizard editors it names, once "
+                       + "(DEC-69, DEC-70), and the change is brought across only by a member's own revision (its R4)." },
+        age: QueueProducers.#instantAge(x.found_at, now, "no_found_instant", "the entry carries no instant this producer can read"),
+        assignee: null,
+        assignee_role: null,
+        recipients: [me],
+        options: [QueueProducers.WIZARD_BASE_READ, QueueProducers.WIZARD_BASE_ADOPT],
       });
     }
     return out;
