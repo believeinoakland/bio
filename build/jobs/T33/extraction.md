@@ -25,3 +25,7 @@ R69 (T33-23a): my best readings, on which I am building now. Answer only where o
 - Uses unchanged (`reading-pipeline`, `record-core` already in `modules.json`).
 
 Size (session_01G7Adz3cZJyj9EDveznQ5vf): test runs 3, module lines 2715
+
+## J2 · COMPLETE
+
+R69 (T33-23a) met: afterRead held with record-core.afterCommit in writeReading, once per committed reading; capture class = content_type; outcome reported with the reading (writeReading's afterRead, the re-read's after_read). 119/119 extraction tests; format, architecture, coverage (45/45), ownership (4 files) 0 failures. Uses unchanged. Merges after reading-pipeline; nothing is called until its afterRead export lands. Record: build/jobs/T33/extraction.md.
