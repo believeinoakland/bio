@@ -1,5 +1,5 @@
 // @ts-check
-/* connection-grammar: what an owner's `neighbours` answer must be, checked at the interface (R6, R8). A registry's
+/* connection-grammar: what an owner's `neighbours` answer must be, checked at the interface (R6, R8, R20). A registry's
    `neighbours` and the conformance battery (R9) judge every answer by the same rules. Sight (R7) depends on the
    owner's own visibility, so only the battery, over the owner's fixture, can check it. */
 import { validAt } from '../civil-time/index.mjs';
@@ -23,8 +23,15 @@ export function answerFailures(answer, ctx) {
   const out = [];
   const fail = (check, why) => out.push({ check, why });
   if (isThenable(answer)) return [{ check: 'answer', why: 'neighbours must answer synchronously' }];
-  if (!isObj(answer) || !Array.isArray(answer.items)) return [{ check: 'answer', why: 'an answer is {items, next?, truncated?, hub?}' }];
+  if (!isObj(answer) || !Array.isArray(answer.items)) return [{ check: 'answer', why: 'an answer is {items, next?, truncated?, hub?, unread?}' }];
   const { items } = answer;
+  // R20: what the owner holds for the node as a table and did not read, each {what, why}; optional.
+  if (answer.unread !== undefined) {
+    const u = answer.unread;
+    if (!Array.isArray(u) || u.some((e) => !isObj(e) || !filled(e.what) || !filled(e.why))) {
+      fail('unread', 'unread is a list of {what, why}, each a non-empty string');
+    }
+  }
   if (items.length > BOUNDS.fanout) fail('fanout', `a page holds at most ${BOUNDS.fanout} items; this one holds ${items.length}`);
   if (answer.hub !== undefined) {
     const h = answer.hub;

@@ -40,6 +40,13 @@ fs.appendFileSync(process.env.WRANGLER_LOG, JSON.stringify({ args, cwd: process.
 process.exit(Number(process.env.WRANGLER_EXIT || 0));
 `;
 
+/* The fake docker (R26): records argv and exits $DOCKER_EXIT. Found on PATH, as the deploy finds the real one. */
+const DOCKER = `#!/usr/bin/env node
+require("node:fs").appendFileSync(process.env.DOCKER_LOG, JSON.stringify({ args: process.argv.slice(2), cwd: process.cwd() }) + "\\n");
+process.exit(Number(process.env.DOCKER_EXIT || 0));
+`;
+export const DIGEST = "sha256:" + "ab".repeat(32);
+
 /** A member's files: source, marker, configs, and a build script that is the member's own `npm run build`. */
 export function addMember(root, name, { version = VERSION, services = [{ binding: "PLANE", service: "bio-plane" }],
   assets = null, compat = "2026-07-01", flags = ["nodejs_compat"], account = ACCOUNT, vendored = false } = {}) {
@@ -68,6 +75,30 @@ export function addMember(root, name, { version = VERSION, services = [{ binding
   put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
   return dir;
 }
+
+/** A container member (R24): `kind: "container"` and an `image` block, with R25's descriptor fields, and, unless
+ *  `bundle: false`, the Worker that hosts its class (a guarded bundle) and a config declaring its container. Any
+ *  `marker` key overrides the marker's (`undefined` removes one). */
+export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true } = {}) {
+  const dir = join(root, name);
+  if (bundle) {
+    addMember(root, name, { services: [] });
+    const cfg = parseCfg(join(dir, "wrangler.jsonc"));
+    if (containers) cfg.containers = [{ class_name: "Runner", image: "./Dockerfile", max_instances: 3 }];
+    put(root, `${name}/wrangler.jsonc`, jsonc(cfg));
+  } else {
+    put(root, `${name}/src/entry.mjs`, "export const runner = true;\n");
+    put(root, `${name}/package.json`, JSON.stringify({ name, version: VERSION, private: true, type: "module" }, null, 2));
+  }
+  const prev = bundle ? JSON.parse(readFileSync(join(dir, "fleet-member.json"), "utf8")) : { name, entry: "src/entry.mjs" };
+  const m = { ...prev, kind: "container",
+    image: { repository: "docker.io/civicos/runner", digest: DIGEST, platform: "linux/amd64", port: 8080, schedulingPolicy: "default" },
+    class_name: "Runner", max_instances: 3, bind: [{ member: "alpha-worker", binding: "RUNNER" }], ...marker };
+  for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
+  put(root, `${name}/fleet-member.json`, JSON.stringify(m, null, 2));
+  return dir;
+}
+const parseCfg = (p) => JSON.parse(readFileSync(p, "utf8").split("\n").slice(1).join("\n"));
 
 /** The plane's configuration, as a parsed object, for a fixture or a function test. */
 export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }] } = {}) {
@@ -112,6 +143,8 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   symlinkSync(join(PLANE, "node_modules/esbuild"), join(root, "bio-plane/node_modules/esbuild"), "dir");
   put(root, "bio-plane/node_modules/.bin/wrangler", WRANGLER);
   chmodSync(join(root, "bio-plane/node_modules/.bin/wrangler"), 0o755);
+  put(root, ".fakebin/docker", DOCKER);
+  chmodSync(join(root, ".fakebin/docker"), 0o755);
 
   const version = plane.version ?? VERSION;
   put(root, "bio-plane/src/plane/index.mjs", `import { tag } from "../tag.mjs";\nexport default { fetch() { return new Response(tag); } };\n`);
@@ -133,22 +166,25 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
 /** Writes every guarded bundle in the fixture fresh, through the module's real `writeMember`. */
 export async function buildAll(root) {
   const lib = await import(pathToFileURL(join(root, "bio-plane/scripts/fleet-bundle.mjs")).href);
-  for (const m of [lib.planeMember(root), ...lib.discoverMembers(root)]) await lib.writeMember(m);
+  for (const m of [lib.planeMember(root), ...lib.discoverMembers(root).filter((x) => x.bundle)]) await lib.writeMember(m);
 }
 
 /** Runs a command; `stub` is a scenario object for stubfetch, `env` extra environment. */
 export function run(root, cwdRel, args, { env = {}, stub = null, timeout = 120_000 } = {}) {
   const work = mkdtempSync(join(tmpdir(), "bundler-run-"));
   const stubFile = join(work, "stub.json"), stubLog = join(work, "stub.log"), wLog = join(work, "wrangler.log");
+  const dLog = join(work, "docker.log");
   writeFileSync(stubFile, JSON.stringify(stub || {}));
   const clean = Object.fromEntries(Object.entries(process.env).filter(([k]) =>
     !/^(CF_TOKEN|CF_ACCT|CLOUDFLARE_API_TOKEN|INSTANCE_CLAUDE_TOKEN|INSTANCE_AI_TOKEN|BIO_RELEASE_SEED|NODE_OPTIONS|NODE_TEST_CONTEXT)$/.test(k)));
   const r = spawnSync(process.execPath, ["--import", STUB, ...args], {
     cwd: join(root, cwdRel), encoding: "utf8", timeout,
-    env: { ...clean, BUNDLER_STUB: stubFile, BUNDLER_STUB_LOG: stubLog, WRANGLER_LOG: wLog, ...env },
+    env: { ...clean, PATH: `${join(root, ".fakebin")}:${process.env.PATH}`, BUNDLER_STUB: stubFile, BUNDLER_STUB_LOG: stubLog,
+      WRANGLER_LOG: wLog, DOCKER_LOG: dLog, ...env },
   });
   const lines = (f) => (existsSync(f) ? readFileSync(f, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
-  const out = { status: r.status, stdout: r.stdout || "", stderr: r.stderr || "", calls: lines(stubLog), wrangler: lines(wLog) };
+  const out = { status: r.status, stdout: r.stdout || "", stderr: r.stderr || "", calls: lines(stubLog), wrangler: lines(wLog),
+    docker: lines(dLog) };
   rmSync(work, { recursive: true, force: true });
   return out;
 }
