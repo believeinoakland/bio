@@ -15,3 +15,17 @@ Two points on T34-30, hypotheses R6's calculation arm. I am carrying on with bot
 - A nested `calculation` input is not walked. calculations R4 already refuses a hypothesis input at creation, and R6 names only the leg's own calculation's inputs.
 
 Also confirming the scope reading of the START finding: `#judgeDerived` passes `scope: {inquiry: <the promoted bundle's id>}` (promotion's check context `bundleId`). `legRefusals` gains an optional `inquiry`; without one, no scope is passed.
+
+## J2 · REPORT
+
+Findings in other modules from T34-30. Each is a red or a gap that my changes to hypotheses' provided service cause or expose. None is mine to change.
+
+1. **affordances** (`src/affordances/t33.mjs` ~:56–57, and `JUSTIFICATION_REFUSALS`). `hypothesisrevise` and `hypothesiswithdraw` are graded `reasoned` against `NO_REASON`. hypotheses R2 now answers `HYPOTHESIS_NO_REASON` (C-134.7, N608), so `test/m/affordances/t33-backing.test.mjs:212` ("R19: hypotheses' hypothesisrevise and hypothesiswithdraw … JUSTIFICATION_REFUSALS") is red until `HYPOTHESIS_NO_REASON` is in that list. Also, `hypothesesOps` now serves `notewrite`, `notes` and `noteturn` (hypotheses R7, R11–R13), which have no grading yet, so `test/m/affordances/t33.test.mjs:135` ("R40 R12: each new module's op map holds exactly the ops graded for it") is red.
+2. **op-declarations** (`src/op-declarations/index.mjs` ~:133, the `hypotheses` family, `actor: BODY("by")`). The family needs `notewrite: "member"`, `noteturn: "member"` and `notes: "read"`, with the viewer stamped in the query for `notes`. A note is only a member's act: a machine is refused `MACHINE_CANNOT_NOTE`.
+3. **control-plane** (`test/m/control-plane/r53-routes.test.mjs:58`, R53). The three note ops have no spec and no `OP_STAMPS` entry yet, so this test is red.
+4. **Row census** (promotion's `test/system/row-census.test.mjs`, already red at the base). My rows awaiting T35's stamp:
+   - renamed: C-134.5 `NO_STATEMENT` → `HYPOTHESIS_NO_STATEMENT`, and C-134.7 `NO_REASON` → `HYPOTHESIS_NO_REASON`;
+   - added: C-134.13 to C-134.18 (`MACHINE_CANNOT_NOTE`, `NOTE_NO_TEXT`, `NOTE_TOO_LONG`, `NO_SUCH_NOTE`, `NOTE_TURN_UNKNOWN`, `NOTE_TURN_NOT_MADE`).
+   My COMPLETE names them `awaiting stamp` (plan Rules (5) item 4).
+5. **A requirements point for BOB, not a red.** A note holds up to 131,072 bytes (R11, never cut). When it is turned into a hunch (R13), `hold` stores the statement trimmed and cut at `STATEMENT_MAX` (4,000 characters), as R1's code always has. R1 names no refusal for a statement that is too long, so a long note's hunch keeps only its first 4,000 characters. I left it as R1 states it. If BOB wants such a turn refused rather than cut, that is a new R1 refusal, such as `HYPOTHESIS_TOO_LONG`.
+6. **Generated artifact.** The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, `not_product`) is stale from `src/hypotheses/` and is regenerated at layer close.
