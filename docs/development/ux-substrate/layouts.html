@@ -661,6 +661,9 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .tbl th, .tbl td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: var(--hair); }
 .tbl th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
 .tw { overflow-x: auto; }
+.asfig { margin: 0; display: grid; gap: 6px; min-width: 0; }
+.asfig figcaption { font-size: var(--t-sm); color: var(--c-ink-2); }
+.asfig .mk-device { padding: 6px; }
 .foot { margin-top: 48px; padding-top: 14px; border-top: var(--hair); color: var(--c-muted); font-size: var(--t-sm); }
 </style>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
@@ -764,6 +767,11 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <section id="assistant">
 <h2 class="sec">2. The assistant panel</h2>
 <p class="intro">Drawn early, because every other screen leaves room for it. It docks beside the screen it serves, on the member's own Claude account, labelled as machine work in everything it produces, with the member's daily limit always in view. For a member who has not connected an account, it does not exist: no button, no empty panel, no reminder. Open any screen with “With the assistant” to see it; the question screen below opens with it.</p>
+<div class="cols2 aspair" style="margin-top:12px">
+ <figure class="asfig"><figcaption><b>With the assistant</b> · the same question, the panel docked on the right</figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="as-with"></div></div></figure>
+ <figure class="asfig"><figcaption><b>Without it</b> · nothing in its place: no button, no empty panel, no “suggested” section</figcaption><div class="mk-device" data-device="desktop"><div class="mk-scaler" id="as-without"></div></div></figure>
+</div>
+<p class="intro" style="margin-top:10px">Everything else a member does is the same either way. Where the assistant would have helped, the member's own way takes its place: “Ask” becomes “Find and count”, drafts come from the group's own templates, and standing questions still run, their new matches arriving as a list. Section 4 lists all six rules, and every journey in section 3 can be walked both ways with the switch at the top.</p>
 <div class="cols2" style="margin-top:12px">
  <div class="cell"><h4>With the assistant</h4><p>Docked right on a desktop, as a sheet on a phone. It answers only from what the group holds and says where it looked; about laws it gives legal information, never advice. Its drafts go into fields, labelled, until the member makes them theirs.</p><p><button type="button" class="cs-btn" data-open="screen:assistant:1">Show it beside a question</button></p></div>
  <div class="cell"><h4>Without it</h4><p>“Ask” becomes “Find and count”: search, and counts that show their method. Drafts come from the group's own templates. Standing questions still run; their new matches arrive as a list.</p><p><button type="button" class="cs-btn" data-open="screen:assistant:0">Show the same screen without it</button></p></div>
@@ -1593,6 +1601,14 @@ function journeySteps(j, ai) {
   try { const th = localStorage.getItem('cs-th'); if (th) { document.documentElement.setAttribute('data-theme', th); document.querySelectorAll('[data-th]').forEach(b => b.setAttribute('aria-pressed', b.dataset.th === th)); } } catch (e) {}
   window.addEventListener('resize', fit);
   document.addEventListener('keydown', e => { if (e.altKey && e.shiftKey && e.code === 'KeyW') { if (replay($('vscale'))) e.preventDefault(); } });
+  function pair() {
+    for (const [id, ai] of [['as-with', true], ['as-without', false]]) {
+      const sc = $(id); if (!sc) continue; const dev = sc.parentElement;
+      sc.innerHTML = render('question', { ai, dockAssist: ai }); sc.style.width = '1180px'; sc.style.height = '700px';
+      const z = Math.min(1, (dev.clientWidth - 12) / 1180); sc.style.transform = `scale(${z})`; dev.style.height = (700 * z + 12) + 'px';
+    }
+  }
+  pair(); window.addEventListener('resize', pair);
   window.CS_WALK = { st, stepsNow, draw, render, ring };
   syncSeg(); draw();
 })();
