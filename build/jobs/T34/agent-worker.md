@@ -26,7 +26,7 @@ Alternative, if you prefer it: R6's braces say `key` (R35's own name), and I rea
 
 **Deferred.** None of the entry. `cascade.control.mjs` stays stale (N586's part, T35, plan Left out), unchanged.
 
-**Found in other modules (REPORT J3).** Two callers build the account without `level` and must send K1798's shape, else a live run or ask is now refused `BAD_ACCOUNT`: ai-runs' dispatch (`bio-plane/src/ai-runs/index.mjs:1713`, its T34-33 job, K1798 names it) and the plane's ask (`bio-plane/src/plane/ask.mjs:48–54`, module `plane`, L11), which also reads `accountReferenceFor` rather than `accountFor`, so a member served by the group's key gets no ask. No test of theirs is red today (none drives a live dispatch).
+**Found in other modules (REPORT J2).** Two callers build the account without `level` and must send K1798's shape, else a live run or ask is now refused `BAD_ACCOUNT`: ai-runs' dispatch (`bio-plane/src/ai-runs/index.mjs:1713`, its T34-33 job, K1798 names it) and the plane's ask (`bio-plane/src/plane/ask.mjs:48–54`, module `plane`, L11), which also reads `accountReferenceFor` rather than `accountFor`, so a member served by the group's key gets no ask. No test of theirs is red today (none drives a live dispatch).
 
 **Reds that wait on an upstream merge (L6 order, both before me).** `ask.test.mjs` 53/4: R54's and R26's `calls` arms (3) need agent-model's `calls` (T34-38; today `converse` returns none, so `null` is carried); R55's `ASK_SCOPE` arm (1) needs answers' list (T34-36). Each passes once its upstream is merged and I merge the tranche.
 
