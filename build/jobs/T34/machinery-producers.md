@@ -29,3 +29,7 @@ Size (session_01B2rF1RrCAjrKyXJs9sb1xC): test runs 6, module lines 1097
 ## J1 · REPORT
 
 acquisition (L3), `bio-plane/src/acquisition/checks.mjs:94`: C-83.4's translation says "… held by renders this instance is running right now …". It is member-facing: my R2's render-deferred carries it whole as its reason (and so does queue-producers' copy until its job). DEC-149's L8–L11 grep did not reach L3 (N690's L1–L7 re-sweep, T35). Nothing for this tranche unless you place it; my R9 test takes the carried translation out before its check.
+
+## J2 · COMPLETE
+
+T34-95 applied; R1–R10 met. `machinery-producers/index.mjs` 1,097 lines: `conditionItems` holds qp 353–771, 1842–1936, 1943–2027 and 3031–3236 with their helpers, every key, kind, recipient, bound and basis unchanged. R9's four 'signal'→'status' and DEC-149's three rows are applied, each pinned by a test. Tests: 24/24 (conditions whole, producers 137–209, sweeps 40–221 re-labelled; invariants R1, R6–R10). Checks: format, architecture and coverage (10/10) show 0 failures. Ownership shows 1 failure, `build/modules.json`: my entry's paths and tests, added as your START directed (K1043); the check has no allowance for it, so it is yours to accept. The tranche is merged in; no conflict. Ready to merge before queue-producers. Record: `build/jobs/T34/machinery-producers.md` § Completion; REPORT J2 (acquisition C-83.4 wording).
