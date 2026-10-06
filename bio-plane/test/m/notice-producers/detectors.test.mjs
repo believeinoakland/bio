@@ -2,15 +2,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, shareDetector, ALICE, ADMIN_BOB } from "../money-checks/fixture.mjs";
-import { producers, fresh, reader, ofKind, sentences, texts, JUDGMENT } from "./fixture.mjs";
-import { TAKE_UP, NOTICED_LABEL } from "../../../src/notice-producers/index.mjs";
+import { producers, fresh, reader, ofKind, sentences, texts, JUDGMENT, hintFailures } from "./fixture.mjs";
+import { TAKE_UP, NOTICED_LABEL, HINT_MARK } from "../../../src/notice-producers/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
 const P = "PROJ-2026-0001-alpha", Q = "PROJ-2026-0003-beta", H = "PROJ-2026-0002-hidden";
 const gate = (w, d, rate) => w.c.recordGate({ detectorId: d.detector_id, version: d.version, goldSet: "desk gold set", falseAlarmRate: rate, by: ADMIN_BOB });
 
 /* Two payees, one with 80% of the paid amounts (past the stated half), the detector run; `hidden` files the second
-   payee's fact in a project alice is not in. */
+   payee's fact in a project alice is not in. A detector is off until a member switches it on for a project
+   (money-checks R5, K1787), and runs only once switched on somewhere, so the fixture switches it on for P first. */
 function setup({ hidden = false } = {}) {
   const w = world();
   w.member("carol");
@@ -21,6 +22,7 @@ function setup({ hidden = false } = {}) {
   w.factAs("MNY-2026-f1", { to: "ENT-2026-0010", amount: "800" });
   w.factAs("MNY-2026-f2", { to: "ENT-2026-0011", amount: "200", ...(hidden ? { bundle: "INFO-2026-0001-secret", by: ADMIN_BOB } : {}) });
   const d = w.c.defineDetector(shareDetector());
+  w.switchOn(d.detector_id, P);
   w.c.runDetectors({ budgetMs: 10_000 });
   const n = producers(w.host, { membership: w.membership, moneyChecks: w.c });
   return { w, d, ...reader(n) };
@@ -75,6 +77,7 @@ test("R3: switched off for a project, a detector raises nothing there; a member 
   const { w, d, read } = setup();
   gate(w, d, 0.1);
   w.project(Q, ["carol"]);
+  assert.equal(w.c.switchDetector({ detectorId: d.detector_id, project: Q, on: true, by: "member:carol" }).ok, true);
   assert.deepEqual(ofKind(read("carol", { now: NOW }), "money-detector-noticed")[0].basis.projects, [P, Q]);
   w.c.switchDetector({ detectorId: d.detector_id, project: P, on: false, by: ALICE });
   assert.deepEqual(ofKind(read("alice", { now: NOW }), "money-detector-noticed"), []);
@@ -113,4 +116,17 @@ test("R9: a second guard: a result whose gate is absent or above 20% is never ra
     const got = ofKind(reader(n).read("alice", { now: NOW }), "money-detector-noticed");
     assert.equal(got.length, g && g.false_alarm_rate === "0.2" ? 1 : 0, JSON.stringify(g));
   }
+});
+
+test("R11: a money-detector item is marked \"Hint · machine work\" in its summary and detail, every sentence calls it a hint and none a signal; its label, kind and key unchanged", () => {
+  const { w, d, read } = setup();
+  gate(w, d, 0.1);
+  const it = ofKind(read("alice", { now: NOW }), "money-detector-noticed")[0];
+  assert.deepEqual(hintFailures(it, HINT_MARK), []);
+  assert.ok(it.summary.startsWith("Hint · machine work: a pattern the detector "), it.summary);
+  assert.match(it.detail, /^Hint · machine work\. A detector noticed this hint/);
+  assert.equal(it.options[0].label, "Take this hint up as your own hunch or hypothesis");
+  assert.equal(it.label, "noticed");
+  assert.equal(it.kind, "money-detector-noticed");
+  assert.equal(it.id, `FINDING::money-detector-noticed::${d.detector_id}::${it.subject.id}`);
 });

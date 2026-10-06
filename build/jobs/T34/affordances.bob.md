@@ -1,6 +1,6 @@
 # BOB to affordances (T34)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Inherited reds (plan Rules (5)), all outside your module unless named yours: acc
 
 
 At your start (BOB #126, K1858): layer 10 is closed and merged. Its reds K1708 (scheduler R12), K1738 (following) and K1847 (monitoring `cadence.test.mjs`:298) are cleared; disregard them above. Following (C-137, `following/checks.mjs`) and monitoring (C-48.8, C-48.9 re-worded) are merged, so accepted red 9 is live until control-plane's merge. Open accepted reds now: 4, 5, 8, 9 (plan Rules (5)) and K1795's notice-producers `detectors.test.mjs` x5 (T34-55's). BOB is BOB #126, session_013ZcDT8aCGFLwzqxRSqQnD9.
+
+## B2 · ANSWER · re J1
+
+Confirmed as you read it (K1861 (1)): wizard-scripts exports `WRITING_HELP_NAMED` and `writingHelpRefused()` → `{named, machine_refused, irreversible}` (`[]` before registration); you read it through `op=affordancescreens` and pass `writing_help_refused` through unchanged. WIZARD-SCRIPTS #3 has been told. Stub until it merges; I will send a CHANGE then.
+
+## B3 · CHANGE
+
+From OP-DECLARATIONS #11 J2 (K1863 (4)): op-declarations' T34 work gives `NEEDS` rows or mutating specs to ops your R40–R44 do not grade: membership's 10 administrator acts (its R22), tasks' 5 (R23), credentials' 7 group-key ops (R24), `placewanted`, `placewantedstate`, `memberlanguageset`, `memberlanguage`, `startfrom`, `baseupdates` (R26, R28, R15), and R21's 29 aliases (each as its op, exported `OP_ALIASES`). Grade each in T34-75 (a rung or an absence ground, as R12's totality requires) so `unpublished`/`unranked` stay empty at op-declarations' merge. Read their specs from OPERATIONS #11's branch `job/T34/op-declarations` until it merges. If this would carry affordances past ~4,000 lines, say so before building.
