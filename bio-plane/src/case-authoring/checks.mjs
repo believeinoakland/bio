@@ -7,7 +7,8 @@
  * number is not reused); C-82.8 is new in T22 (R19, DEC-88). Each `where` names the region of this module that
  * enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) were copied
  * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29; K695), ids, codes, `where`s and translations unchanged, and stamped by
- * promotion in T19; the catalogue and its copies are deleted (K529). The family C-120, "a case's disclosures and its
+ * promotion in T19; the catalogue and its copies are deleted (K529). R56's `CALCULATION_NOT_DISCLOSED` joins
+ * `PUBLISH_ACT_CHECKS` in T33 (R29). The family C-120, "a case's disclosures and its
  * pre-flight", moved whole to `case-disclosures`' own `checks.mjs` with its ids, codes and translations (its R22; N529);
  * no copy is held here (K529), and `index.mjs` re-exports it for this module's importers. */
 
@@ -32,6 +33,16 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
     translation: 'A published case has to say what it does NOT cover. A case that is silent about '
       + 'its own limits is claiming to cover everything, and that is the overclaim this record '
       + 'exists to refuse.',
+  },
+  /* R56 (C:A-15; DEC-76.4; T33-69): a load-bearing finding's calculation that differs on recompute or rests on an
+     unbound input, not disclosed. A new row of this module's table (R29); its id and words are BOB's (J1 (2), as
+     proposed until answered); promotion stamps it with T33's other new rows (T34, K1504). */
+  CALCULATION_NOT_DISCLOSED: {
+    check: 'C-136.1',
+    where: at('#calculationsJudged', 'is-calculation-disclosed'),
+    translation: 'A calculation a load-bearing finding rests on gives a different result when the instance recomputes '
+      + 'it, or rests on a figure typed in without a source, and this publication does not say so. List it with your '
+      + 'own words, and publish again; the published case will state it. Nothing was published.',
   },
 });
 

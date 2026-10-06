@@ -462,8 +462,10 @@ $("rat-sign").onclick = async () => {
 /* The same bytes as the plane's noticeStatement: `bio-working-on <id> <revision>
    <hash>` and a newline, in the namespace bio-working-on. The fields are checked
    exactly as the plane checks them, so the page never signs a statement the
-   instance would build differently. An opaque id, as the plane's minter draws it. */
-const OPAQUE_ID_RE = /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
+   instance would build differently. An opaque id, as the plane's minter draws it:
+   the next line is written by scripts/embed-signpage.mjs from the plane's pattern,
+   whose counter is the id table's (four digits or more); never edit it by hand. */
+const OPAQUE_ID_RE = /^[A-Z]+-\d{4}-\d{4,}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
 $("not-sign").onclick = async () => {
   const id = $("not-id").value.trim(), rev = $("not-rev").value.trim();
   const sha = $("not-sha").value.trim().toLowerCase();

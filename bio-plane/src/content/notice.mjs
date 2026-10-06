@@ -13,6 +13,7 @@
  * Nothing moves by itself: only a member's act moves a citation (§14.4, Bob 2026-09-14). */
 
 import { canonicalExtent, describeExtent } from "./extent.mjs";
+import { rangeCorners, a1ToRowCol } from "../textchain.mjs";
 
 /** R29: at most this many addresses one capture is asked about; past it the rest are not asked, and the answer says so. */
 export const VERSION_NOTICE_ADDRESSES_MAX = 20;
@@ -97,6 +98,19 @@ const said = (s) => s || "never recorded";
  *  canonical extent), or `{text: null, reason, why}` naming what is not held. ONE rule, so a passage graded across
  *  versions and a passage's text read by a later module are the same text. Pure. */
 export function heldTextAt(extent, held) {
+  /* R46's sheet arm: where the capture's reading holds typed cells for the extent's sheet, a cell's text is its stored
+     value and a range's the values of the cells inside it, one per line (R52's reading); a cell not held is no text. */
+  if ((extent.kind === "sheet-cell" || extent.kind === "sheet-range") && held.cells) {
+    const got = typedCellsAt(extent, held.cells);
+    if (got.cells) {
+      if (extent.kind === "sheet-cell" && !got.cells.length)
+        return { text: null, reason: "cell_not_held", why: `the reading holds no value at ${describeExtent(extent)}` };
+      if (got.cells.some((c) => typeof c.value !== "string"))
+        return { text: null, reason: "cell_value_undetermined", why: `a cell inside ${describeExtent(extent)} is held `
+          + "with its value undetermined by its reader, so the whole passage is not held" };
+      return { text: got.cells.map((c) => c.value).join("\n"), extent: canonicalExtent(extent) };
+    }
+  }
   if (extent.kind === "document") {
     if (held.state !== "whole" || !held.units.length || held.units.some((u) => u.truncated))
       return { text: null, reason: "cited_text_partial", why: "the citation is to the whole document, and the record "
@@ -114,6 +128,38 @@ export function heldTextAt(extent, held) {
   return { text: u.text, extent: at };
 }
 
+/** R52's rule, pure: the typed cells (`office-readers` R30, `odf-reader` R46) a reading holds inside a `sheet-cell` or
+ *  `sheet-range` extent, from `sheetCells` (`{<sheet name>: cells list | null}`), each `{source, value, type, declared,
+ *  cached, formula}` copied field for field, in row then column order. Returns `{cells}` (a held sheet with no cell in
+ *  the extent is a measured empty list), or `{cells: null, reason, why}`: another extent kind, or no typed cells held
+ *  for that sheet, never an empty list for what was not read. Recalculates nothing. */
+export function typedCellsAt(extent, sheetCells) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (e.kind !== "sheet-cell" && e.kind !== "sheet-range")
+    return { cells: null, reason: "not_a_sheet_extent",
+             why: `a ${String(e.kind).slice(0, 40)} extent names no cells of a sheet` };
+  const sheet = typeof e.sheet === "string" ? e.sheet.trim() : "";
+  const list = sheetCells && typeof sheetCells === "object" && Object.prototype.hasOwnProperty.call(sheetCells, sheet)
+    ? sheetCells[sheet] : null;
+  if (!Array.isArray(list))
+    return { cells: null, reason: "cells_not_held",
+             why: `the capture's reading holds no typed cells for sheet '${sheet.slice(0, 40)}' (never read for its cells, `
+                + "or over its reader's size guard), so which values it holds there is not read" };
+  const box = e.kind === "sheet-cell"
+    ? (() => { const p = a1ToRowCol(e.cell); return p && { r0: p.row, c0: p.col, r1: p.row, c1: p.col }; })()
+    : rangeCorners(e.range);
+  if (!box) return { cells: null, reason: "extent_unreadable", why: "the extent's cell or range could not be read" };
+  const inside = [];
+  for (const c of list) {
+    const at = c && c.source && typeof c.source.cell === "string" ? a1ToRowCol(c.source.cell) : null;
+    if (!at || at.row < box.r0 || at.row > box.r1 || at.col < box.c0 || at.col > box.c1) continue;
+    inside.push({ at, cell: { source: { ...c.source }, value: c.value ?? null, type: c.type ?? null,
+                              declared: c.declared ?? null, cached: c.cached ?? null, formula: c.formula ?? null } });
+  }
+  inside.sort((a, b) => (a.at.row - b.at.row) || (a.at.col - b.at.col));
+  return { cells: inside.map((x) => x.cell) };
+}
+
 /** THE GRADE for one cited passage (`row`: its `cited_as`, `ref`) against one newer capture, from the two captures'
  *  held units `{units: [{extent (canonical JSON), ref, text, truncated}], state}` where `state` is the text index's
  *  own (`whole`, `partial`, `none`, or null for never indexed; extraction R36). Returns
@@ -129,6 +175,31 @@ export function gradeAcross(row, extent, older, newer) {
   if (row.cited_as === "bytes")
     return U("cited_as_bytes", "the passage is an image cited as its bytes, and the record holds no per-part "
       + "digest of the newer capture to compare it with");
+  /* A sheet passage is compared in ONE form on both sides: its typed cells (R46's sheet arm) where both captures' readings
+     hold them for its sheet, else the indexed units, so cell values never meet a unit's tab-joined rows. */
+  if (extent.kind === "sheet-cell" || extent.kind === "sheet-range") {
+    const both = typedCellsAt(extent, older.cells).cells && typedCellsAt(extent, newer.cells).cells;
+    if (both) {
+      const was = heldTextAt(extent, older), now = heldTextAt(extent, newer);
+      if (was.text == null) return U(was.reason, `${was.why}, so there is nothing to compare`);
+      if (now.reason === "cell_not_held")
+        return out("NOT_FOUND", "text_not_found", `the newer version's typed cells for the sheet are held, and none holds `
+          + `a value at ${describeExtent(extent)}`);
+      if (now.text == null) return U(now.reason, `in the newer version ${now.why}`);
+      if (now.text === was.text)
+        return out("A", "identical_at_extent", `the cells at ${describeExtent(extent)} hold byte-identical values in the `
+          + "newer version", { extent, ref: row.ref });
+      const sim = dice(bagOf(was.text), bagOf(now.text));
+      const r = Math.round(sim * 1000) / 1000;
+      return sim >= VERSION_NOTICE_SIMILAR
+        ? out("C", "similar_text", `the cells at ${describeExtent(extent)} changed; word similarity ${r}`,
+              { extent, ref: row.ref }, r)
+        : out("NOT_FOUND", "text_not_found", `the cells at ${describeExtent(extent)} changed past the similarity floor `
+              + `(${VERSION_NOTICE_SIMILAR}); word similarity ${r}`, null, r);
+    }
+    older = { ...older, cells: null };
+    newer = { ...newer, cells: null };
+  }
   const whole = extent.kind === "document";
   const cited = heldTextAt(extent, older);
   if (cited.text == null) return U(cited.reason, `${cited.why}, so there is nothing to compare`);

@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { list as heldProfiles, combine } from "../../../../jurisdictions/index.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -109,9 +110,9 @@ test("R9: a resolution that marks an entity leaves the alarm armed at the connec
 test("R5, R9: a promotion that leaves an action holding a past-dated pending clock entry arms the deadline re-check, and the real alarm marks it overdue (monitoring R34, R50)", async () => {
   const obj = await store();
   const DAY = 86_400_000;
-  /* yesterday, UTC: R50's wake is the start of today, already passed, so the arm sets the real alarm and workerd fires
-     it; the plane's own clock judges the mark (actions R33), so the date must truly have passed */
-  const date = new Date(Math.floor(Date.now() / DAY) * DAY - DAY).toISOString().slice(0, 10);
+  /* two days ago, UTC: before the local day in any profile's zone, so R50's wake has passed, the arm sets the real alarm and workerd fires it; the plane's own clock judges the mark (actions
+     R33), so the date must truly have passed */
+  const date = new Date(Math.floor(Date.now() / DAY) * DAY - 2 * DAY).toISOString().slice(0, 10);
   const ACT = "ACTN-2026-0900-sched";
   const C = "2026-09-01T00:00:00Z";
   const md = ["---", `id: ${ACT}`, "object_type: action", `title: ${ACT}`, "current_state: planned", `created: "${C}"`,
@@ -123,6 +124,10 @@ test("R5, R9: a promotion that leaves an action holding a past-dated pending clo
     { memberId: "sam", cover: "cover for sam", role: "admin", capabilities: ["contribute", "publish"] });
   assert.equal((await POST("op=enroll", { invite: add.invite, handle: "sam", password: "sam-passphrase-1" })).ok, true);
   const SAM = (await POST("op=login", { role: "member:sam", password: "sam-passphrase-1" })).token;
+  /* the day is the group's local day (actions R12, R33; monitoring R50): the instance holds a profile with a zone */
+  const zoned = heldProfiles().find((p) => !p.test && combine([p.id]).view?.time_zone?.value);
+  const prof = await POST(`op=profilesset&token=${SAM}`, { profiles: [zoned.id] });
+  assert.equal(prof.ok, true, JSON.stringify(prof).slice(0, 300));
   const first = await obj.onAlarm(Date.now());
   assert.equal("deadlinerecheck" in first, false, "nothing pending: it does not tick");
   const pr = await POST(`op=promote&token=${SAM}`, { bundleId: ACT, base: null, snapKey: "20260920T000000Z_0900", author: "sch",

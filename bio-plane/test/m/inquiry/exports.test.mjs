@@ -97,7 +97,7 @@ function legCorpus(opts = {}) {
   return w;
 }
 
-test("R52 (2) R14: the resolver caps each leg's capture letter as legCapped answers it over its target's earned capture ceiling, in order; a target with no ceiling answers null; an empty list answers none", () => {
+test("R52 (2) leg-earning R2: the resolver caps each leg's capture letter as legCapped answers it over its target's earned capture ceiling, in order; a target with no ceiling answers null; an empty list answers none", () => {
   const w = legCorpus();
   const resolve = inquiryLegGrades(w.host);
   const legs = [{ grade: "B", target_id: DC }, { grade: "B", target_id: DB }, { grade: "A", target_id: DU },
@@ -117,18 +117,19 @@ test("R52 (2) R14: the resolver caps each leg's capture letter as legCapped answ
   assert.deepEqual(w.k.legGrades(legs), got, "the instance's own method answers the same");
 });
 
-test("R52 (2) R14: the resolver asks R13's earned once per list, with no subject entity, over the list's distinct targets; an empty list asks nothing", () => {
+test("R52 (2) leg-earning R1: the resolver asks leg-earning's earned once per list, with no subject entity, over the list's distinct targets; an empty list asks nothing", () => {
   const w = legCorpus();
   const asked = [];
-  const earned = w.k.earned.bind(w.k);
-  w.k.earned = (s, t, c) => { asked.push([s, t, c]); return earned(s, t, c); };
+  const le = w.k.legEarning;
+  const earned = le.earned.bind(le);
+  le.earned = (s, t, c) => { asked.push([s, t, c]); return earned(s, t, c); };
   try {
     inquiryLegGrades(w.host)([{ grade: "B", target_id: DC }, { grade: "A", target_id: DC }, { grade: "B", target_id: DB }]);
     assert.deepEqual(asked, [[null, [DC, DB], undefined]]);
     asked.length = 0;
     inquiryLegGrades(w.host)([]);
     assert.deepEqual(asked, []);
-  } finally { delete w.k.earned; }
+  } finally { delete le.earned; }
 });
 
 test("R52 (2) retrieval R55, R12: registered through registerLegGrades as `inquiry`, the resolver caps the leg rows' capture letters, the authored letter beside the earned one; a leg onto a question passes unchanged", () => {
@@ -153,4 +154,47 @@ test("R52 (2) retrieval R55, R12: registered through registerLegGrades as `inqui
   assert.equal(at(DC).grade, "C");
   assert.equal(at(DU).grade, null);
   assert.deepEqual([at(R).grade, at(R).grade_why], [null, null], "a leg onto a question carries no capture letter to cap");
+});
+
+/* T33-45 (K617, K1505; plan Rules (9) item 4): the earned registry and the resting-on reads are leg-earning's. This
+   module's projection writes `inquiry_basis` only through leg-earning's one write, and its names and reads answer
+   exactly what leg-earning's do, for importers not yet re-pointed. */
+import * as LE from "../../../src/leg-earning/index.mjs";
+import * as INQ from "../../../src/inquiry/index.mjs";
+
+test("R12 R29 R40 the projection writes inquiry_basis only through leg-earning's writeBasis, once per promotion, the legs whole and in order", () => {
+  const w = legCorpus();
+  const calls = [];
+  const le = w.k.legEarning, write = le.writeBasis.bind(le);
+  le.writeBasis = (id, rows) => { calls.push([id, rows.map((r) => [r.ord, r.target, r.role])]); return write(id, rows); };
+  try {
+    const Q = "INQ-2026-0630-q";
+    assert.equal(w.inquiry(Q, { legs: [{ target: DB }, { target: DC, role: "cuts_against" }] }).ok, true);
+    assert.deepEqual(calls, [[Q, [[0, DB, "supports"], [1, DC, "cuts_against"]]]]);
+    assert.equal(w.row(`SELECT inquiry_basis_count AS n FROM inquiry_bundle_facts WHERE bundle_id=?`, Q).n, 2);
+    /* a promotion of anything else writes none */
+    calls.length = 0;
+    w.doc("INFO-2026-0631-z");
+    assert.deepEqual(calls, [["INFO-2026-0631-z", []]]);
+  } finally { delete le.writeBasis; }
+});
+
+test("R11 R29 R39 R52 Rules (9): the moved names are leg-earning's own bindings, and the instance's reads answer exactly what leg-earning's answer", () => {
+  for (const n of ["legCapped", "LEG_BACKFILL_MAX", "EARNED_TARGETS_MAX", "PROJECTS_DRAWING_MAX", "AUTHORED_ROUTE_BASES"])
+    assert.equal(INQ[n], LE[n], n);
+  const w = legCorpus();
+  const Q = "INQ-2026-0640-q", R = "INQ-2026-0641-r";
+  w.inquiry(R, { legs: [{ target: DB }] });
+  w.inquiry(Q, { legs: [{ target: DC }, { target: R }] });
+  const le = w.k.legEarning;
+  assert.equal(le, LE.legEarningOf(w.host), "the host's one leg-earning instance");
+  assert.deepEqual(w.k.basisFor(Q), le.basisFor(Q));
+  assert.deepEqual(w.k.basisFor(Q, { limit: 1 }), le.basisFor(Q, { limit: 1 }));
+  assert.deepEqual(w.k.restingOn(R), le.restingOn(R));
+  assert.deepEqual(w.k.restsOnLive(R), le.restsOnLive(R));
+  assert.deepEqual(w.k.cyclePath(R, [Q]), le.cyclePath(R, [Q]));
+  assert.deepEqual(w.k.earned(null, [DB, DC]), le.earned(null, [DB, DC]));
+  assert.deepEqual(w.k.earnedForDoc({}, [{ target: DB }]), le.earnedForDoc({}, [{ target: DB }]));
+  assert.deepEqual(w.k.earnedBasis({ id: Q, viewer: "admin" }), le.earnedBasis({ id: Q, viewer: "admin" }));
+  assert.deepEqual([...w.k.projectsDrawingOn(R)], [...le.projectsDrawingOn(R)]);
 });

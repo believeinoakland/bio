@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<meta http-equiv="x-ua-compatible" content="IE=edge" />
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:htmldb="http://htmldb.oracle.com" xmlns:apex="http://apex.oracle.com">
+
+
+<head>
+  <title>CPUC Proceeding Information</title>
+
+  <link rel="icon" href="/i/favicon.ico" type="image/x-icon">
+
+  <link rel="shortcut icon" href="/i/favicon.ico" type="image/x-icon">
+
+<link rel="canonical" href="/apex/f?p=401:1:0"/>
+  <link rel="stylesheet" href="/i/app_ui/css/Core.min.css?v=20.2.0.00.20" type="text/css" />
+<link rel="stylesheet" href="/i/app_ui/css/Theme-Standard.min.css?v=20.2.0.00.20" type="text/css" />
+
+<link rel="stylesheet" href="/i/legacy_ui/css/5.0.min.css?v=20.2.0.00.20" type="text/css" />
+
+<style type="text/css">
+/* Global Style */
+
+.center_modal_popup_contents {
+    position: relative;
+    width: 595px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.ltBlueText {
+    color: #278db0;
+}
+
+div.sHorizontalTabs {
+    padding: 0;
+}
+
+div.sHorizontalTabs div.sHorizontalTabsInner {
+    padding: 0;
+}
+
+/* Button Style */
+
+.addPubComm {
+    margin-left: 290px;
+}
+
+.btnRtMargin {
+    margin-right: 30px;
+}
+
+.btnStyle {
+   height: 26px;
+   color:#000000;   
+   font: bold 100% sans serif ;
+   cursor: hand;
+   background-color: #A9A9A9; 
+   filter: progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#FDCDCDC',EndColorStr='#696969');
+}
+
+.btnStyleDisabled {
+   height: 26px;
+   font: bold 100% sans serif;
+   background-color: #A9A9A9; 
+}
+
+#success-message-jp {
+    margin: 0 auto;
+    font: bold 14px/20px Arial, sans-serif;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+    color: #155724;
+    background: url(../images/sReportBG.png) 0 -200px #d4edda repeat-x;
+    width: 560px;
+    padding: 15px;
+    border: 1px solid #c3e6cb;
+    border: 1px solid rgba(0,0,0,.5);
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: rgba(0, 0, 0, 0.5);
+    border-top: none;
+    -moz-border-radius-bottomleft: 4px;
+    -moz-border-radius-bottomright: 4px;
+    -webkit-border-bottom-right-radius: 4px;
+    -webkit-border-bottom-left-radius: 4px;
+    text-align: center;
+}
+
+
+/***** Report Style *****/
+
+.tblstyle {
+/*  width: 700px; */
+    padding: 5px;
+    border: 1px solid #808080;
+}
+
+.table-even {
+    background-color: #D9E2F3;
+}
+
+/* Bold styling */
+.bol {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.commLoc {
+    position: absolute;
+    left: 300px;
+    width: 300px;
+}
+
+.zip {
+    padding-left: 20px;
+}
+
+/* body styling (comment, reason, etc) */
+.bod {
+    font-size: 12px;
+}
+
+/* date time styling */
+.datetime {
+    font-size: 12px;
+}
+
+/* time styling */
+.time {
+    padding-left: 10px;
+}
+
+/***** Pagination Style (Not being used as of 2/20/19) *****/
+#pagination_width {
+    width: 100%;
+    min-width: 745px;
+    max-width: 1890px;
+}
+/*
+.paginationPrev {
+    position: absolute;
+    left: 600px;
+}
+
+.paginationInfo {
+    position: absolute;
+    left: 660px;
+}
+
+.paginationNext {
+    position: absolute;
+    left: 700px;
+}
+*/
+
+/***** Form Styling *****/
+.itemMarginRt {
+    margin-right: 15px;
+}
+
+.innaFontStyle {
+    font-weight: bold;
+}
+
+.u-Processing  {  
+display:none !important; 
+}
+
+.asteriskAlign {
+    position: relative;
+    bottom: 79px;
+    right: 14px;
+    font-weight: bold;
+    color: blue;
+}
+
+.asterisk {
+    color: blue;
+    font-weight: bold;
+}
+
+#P65_FLAG_REASON_CHAR_COUNTER {
+    margin-left: 10px;
+}
+</style>
+
+
+
+
+
+<script>
+var apex_img_dir = "/i/", htmldb_Img_Dir = apex_img_dir;
+</script>
+<script src="/i/libraries/apex/minified/desktop_all.min.js?v=20.2.0.00.20"></script>
+<script src="wwv_flow.js_messages?p_app_id=401&p_lang=en&p_version=20.2.0.00.20-38879929386"></script>
+<script src="/i/libraries/apex/minified/legacy_pre18.min.js?v=20.2.0.00.20"></script>
+<script src="/i/libraries/apex/minified/legacy_18.min.js?v=20.2.0.00.20"></script>
+<script src="/i/libraries/jquery-migrate/3.3.0/jquery-migrate-3.3.0.min.js?v=20.2.0.00.20"></script>
+
+
+<script type="text/javascript">
+// This function validates if the email passed in has the correct email format
+
+ function validateEmail(email) {
+  var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+  return emailReg.test( email );
+}
+
+/////////////////
+// This function checks if the key entered is a letter. If its not, nothing will be inputted in the object.
+
+function isLetterKey(evt)
+      {
+         var charCode = (evt.which) ? evt.which : event.keyCode
+         if (charCode > 31 && (charCode < 65 || charCode > 90) && (charCode < 65+32 || charCode > 90+32))
+            return false;
+
+         return true;
+      }
+
+/////////////////
+
+// This function checks if the key entered is a number. If its not, nothing will be inputted in the object. [Ex: <INPUT id="txtChar" onkeypress="return isNumberKey(event)" type="text" name="txtChar">]
+
+function isNumberKey(evt)
+      {
+         var charCode = (evt.which) ? evt.which : event.keyCode
+         if (charCode > 31 && (charCode < 48 || charCode > 57))
+            return false;
+
+         return true;
+      }
+
+/////////////////
+
+// This function checks if the key entered is a number or a dash. If its not, nothing will be inputted in the object. [Ex: <INPUT id="txtChar" onkeypress="return isNumberDashKey(event)" type="text" name="txtChar">]
+
+function isNumberDashKey(evt)
+{
+    var charCode = (evt.which) ? evt.which : event.keyCode;
+
+    if (charCode != 45  && charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+
+    return true;
+}
+
+/////////////////
+
+/*****************************************************************************
+Created by Malik Owens
+This function validates the phone number for public comments and complaints (flagged comments.) 
+Used in DA:
+    JS - Populate Hidden PC form items, JS Validate, and Review. (Sequence 15)
+    JS - SUBMIT Populate Hidden FC form items. (Sequence 15)
+******************************************************************************/
+
+function check_phone_number(ph_num) {
+       var phone = ph_num
+       var valid = 1;
+       
+       // If phone length is null, then return valid 1
+       if (phone.length == 0) {
+          return valid;
+       }
+       
+       // Check to ensure the phone number is the correct length
+       if (phone.length != 12) {
+              valid = 0;
+       }
+       
+	// Ensure the phone number only contains numbers
+	// and position 3 and 7 are only dashes
+       for (i = 0; i < 12; i++) {
+              if (i != 3 && i != 7) {
+                     if (phone.charCodeAt(i) > 57 || phone.charCodeAt(i) < 48) {
+                           valid = 0;
+                     }
+              } else if (phone.charAt(3) != '-' || phone.charAt(7) != '-') {
+                     valid = 0;
+       	      }
+       }
+       
+       return valid;
+}
+
+</script>
+
+
+<META NAME="keywords" CONTENT="docket, docket card, proceeding, case, filings, application, decision, OII, OIR, order instituting investigation, order instituting rulemaking, rulemaking, investigation">
+<META NAME="description" CONTENT="This section of the website provides docket information on proceedings at the Commission. The information will continue to appear until the proceeding has been closed for 30 years and has no unresolved judicial appeals.">
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+
+  <link rel="stylesheet" href="/i/themes/theme_7/css/theme_4_0.css" type="text/css" />
+
+  <!-- Script for Captchas -->
+  <script type="text/javascript">
+      var verifyCallback = function(response) {
+        alert(response);
+      };
+      var pc_captcha;        // widget 1
+      var complaint_captcha;  // widget 2
+      var onloadCallback = function() {
+        // Renders the HTML element with id 'pc_captcha_div' as a reCAPTCHA widget.
+        // The id of the reCAPTCHA widget is assigned to 'pc_captcha'.
+        pc_captcha = grecaptcha.render(document.getElementById('pc_captcha_div'), {
+          'sitekey' : '6LeB-X8UAAAAAIJ_9thAr9a6Y91PQTM62OiVCICJ',
+          'theme' : 'white'
+        });
+        complaint_captcha = grecaptcha.render(document.getElementById('complaint_captcha_div'), {
+          'sitekey' : '6LeB-X8UAAAAAIJ_9thAr9a6Y91PQTM62OiVCICJ'
+        });
+      };
+    </script>
+
+  <!--[if IE]><link rel="stylesheet" href="/i/themes/theme_7/css/theme_4_0_ie.css" type="text/css" /><![endif]-->
+  <!--[if IE 6]><link rel="stylesheet" href="/i/themes/theme_7/css/theme_4_0_ie6.css" type="text/css" /><![endif]-->
+  <!--[if IE 7]><link rel="stylesheet" href="/i/themes/theme_7/css/theme_4_0_ie7.css" type="text/css" /><![endif]-->
+</head>
+<body  style="min-width: 775px;">
+<!--[if lte IE 6]><div id="outdated-browser">You are using an outdated web browser. For a list of supported browsers, please reference the Oracle Application Express Installation Guide.</div><![endif]-->
+<form action="wwv_flow.accept" method="post" name="wwv_flow" id="wwvFlowForm" data-oj-binding-provider="none" novalidate >
+<input type="hidden" name="p_flow_id" value="401" id="pFlowId" /><input type="hidden" name="p_flow_step_id" value="1" id="pFlowStepId" /><input type="hidden" name="p_instance" value="15805104529172" id="pInstance" /><input type="hidden" name="p_page_submission_id" value="281435221926494791036523427209154503863" id="pPageSubmissionId" /><input type="hidden" name="p_request" value="" id="pRequest" /><input type="hidden" name="p_reload_on_submit" value="A" id="pReloadOnSubmit" /><input type="hidden" value="281435221926494791036523427209154503863" id="pSalt" />
+<td id="logo" valign="top"><img src="/apeximg/cpuc_page_heading.gif" class="apex-logo-img" /><br /></td>
+<div id="navi_bar"></div>
+<div id="tabs" style="filter:progid:DXImageTransform.Microsoft.Gradient   
+(GradientType=0,StartColorStr='#DBE1E8',EndColorStr='#93A6B9'">
+
+</div>
+
+
+<div id="messages"><span id="APEX_SUCCESS_MESSAGE" data-template-id="237169964601954467626_S" class="apex-page-success u-hidden"></span><span id="APEX_ERROR_MESSAGE" data-template-id="237169964601954467626_E" class="apex-page-error u-hidden"></span></div>
+<div id="body">
+  <table class="tbl-body" cellspacing="0" cellpadding="0" border="0" summary="">
+    <tbody>
+      <tr>
+        <td class="tbl-main" width="100%"><div class="borderless-region" id="R235410531222540007091" >
+  <div class="bl-top">
+<!--    <div class="bg">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbspNavi Bar Region</div> -->
+   </div> 
+ <!-- <div class="bl-body"></div> -->
+</div>
+ <!-- <div class="clear"></div> -->
+<div class="" id="R235442854921225225051" >
+  <div class="bl-top">
+<!-- <div class="bl-title">P0 Hidden Items</div> -->
+    <div class="bl-buttons"></div>
+  </div>
+  <div class="bl-body"><input type="hidden" id="P0_HID_USER_ID" name="P0_HID_USER_ID" value=""><input type="hidden" data-for="P0_HID_USER_ID" value="GqvkjrATQ-448CKD_affB3HtcO2cwbVyfBh-myqyV4Sa8W7YbLgJqHgZj6M0hnP_GxAId0U_uUafpWlmsAAcPQ"></div>
+</div>
+<div class="clear"></div><div class="rounded-corner-region" id="R237199084171386095379" >
+  <div class="rc-gray-top"><div class="rc-gray-top-r">
+    <div class="rc-title"><font size=4>Proceeding Information Search</font></div>
+  </div></div>
+  <div class="rc-body"><div class="rc-body-r">
+<div class="rc-content-buttons"></div>
+<div class="rc-content-main"><input type="hidden" id="PREPARE_URL" name="PREPARE_URL" value="http:&#x2F;&#x2F;apps.cpuc.ca.gov&#x2F;CPUCProceedingLookup&#x2F;f?p=401:60:15805104529172::NO::P5_DOCUMENT_SELECT::P5_DOCUMENT_SELECT"><input type="hidden" id="P1_GET_INVOLVED_URL" name="P1_GET_INVOLVED_URL" value="https:&#x2F;&#x2F;www.cpuc.ca.gov&#x2F;proceedings-and-rulemaking&#x2F;cpuc-public-participation-hearings&#x2F;get-involved"><input type="hidden" data-for="P1_GET_INVOLVED_URL" value="eyutSLaYFMSzINV33dNAl37vmj_0zjvytToFs9v44FkJDPrU3DRBGbpt7aTtSCPfArO5NXPepKG1RfkJ6jrD5w"><br>
+Looking for information and documents for a specific proceeding? This page gives you options for how to get to what you are looking for quickly.
+<br>
+<br>
+You can search for information for proceedings that are currently open, or that have been closed for less than 30 years. The more recent the proceeding, the more links there will be to documents filed in the proceeding. 
+<br>
+<br>
+Below we provide several different ways to search.
+<br>
+<br>
+<font color = "black"> For best results, use a Microsoft Windows browser such as Microsoft Edge. </font><div class="clear"></div></div></div></div>
+  <div class="rc-bottom"><div class="rc-bottom-r"></div></div>
+</div> <div class="rounded-corner-region" id="R237199084658011100942" >
+  <div class="rc-gray-top"><div class="rc-gray-top-r">
+    <div class="rc-title">Proceeding Search (Click on underlined text for further information related to each search field)</div>
+  </div></div>
+  <div class="rc-body"><div class="rc-body-r">
+<div class="rc-content-buttons"></div>
+<div class="rc-content-main"><table id="apex_layout_237199084658011100942" border="0" class="formlayout"  role="presentation"><tr><td nowrap="nowrap" align="right"><label for="P1_PROCEEDING_NUM" id="P1_PROCEEDING_NUM_LABEL" tabindex="999"><a class="optional-w-help" href="javascript:popupFieldHelp('237199085857772100946','15805104529172')" tabindex="999"><u>Proceeding Number Search:</u></a></label></td><td  align="left" valign="middle"><input type="text"  id="P1_PROCEEDING_NUM" name="P1_PROCEEDING_NUM" class="text_field&#x20;apex-item-text" value="" size="30" maxlength="4000" onkeypress="return apex.submit({request:'P1_PROCEEDING_NUM',submitIfEnter:event})" data-trim-spaces="NONE"  /></td><td nowrap="nowrap" align="right"><label for="P1_FILER_NAME" id="P1_FILER_NAME_LABEL" tabindex="999"><a class="optional-w-help" href="javascript:popupFieldHelp('237199085074537100945','15805104529172')" tabindex="999"><u>Filer Search:</u></a></label></td><td  align="left" valign="middle"><input type="text"  id="P1_FILER_NAME" name="P1_FILER_NAME" class="text_field&#x20;apex-item-text" value="" size="30" maxlength="4000" onkeypress="return apex.submit({request:'P1_FILER_NAME',submitIfEnter:event})" data-trim-spaces="NONE"  /></td></tr><tr><td nowrap="nowrap" align="right"><label for="P1_FILED_DATE_L" id="P1_FILED_DATE_L_LABEL" tabindex="999"><a class="optional-w-help" href="javascript:popupFieldHelp('237199086075776100946','15805104529172')" tabindex="999"><u>Date Range (Low):</u><br><i> <span style="font-size : 8pt; font-weight:bold;  "> (MM/DD/YYYY)</span></a></label></td><td  align="left" valign="middle"><input type="text"  aria-describedby="P1_FILED_DATE_L_format_help" class="datepicker&#x20;apex-item-text&#x20;apex-item-datepicker"  id="P1_FILED_DATE_L" name="P1_FILED_DATE_L" maxlength="4000" size="30" value="" autocomplete="off"><span class="u-VisuallyHidden" id="P1_FILED_DATE_L_format_help">Expected format: MM/DD/YYYY</span></td><td nowrap="nowrap" align="right"><label for="P1_FILED_DATE_H" id="P1_FILED_DATE_H_LABEL" tabindex="999"><a class="optional-w-help" href="javascript:popupFieldHelp('237199084863925100943','15805104529172')" tabindex="999"><u>Date Range (High):</u><br><i> <span style="font-size : 8pt; font-weight:bold;  "> (MM/DD/YYYY)</span></a></label></td><td  align="left" valign="middle"><input type="text"  aria-describedby="P1_FILED_DATE_H_format_help" class="datepicker&#x20;apex-item-text&#x20;apex-item-datepicker"  id="P1_FILED_DATE_H" name="P1_FILED_DATE_H" maxlength="4000" size="30" value="" autocomplete="off"><span class="u-VisuallyHidden" id="P1_FILED_DATE_H_format_help">Expected format: MM/DD/YYYY</span></td></tr><tr><td nowrap="nowrap" align="right"><label for="P1_DESCRIPTION" id="P1_DESCRIPTION_LABEL" tabindex="999"><a class="optional-w-help" href="javascript:popupFieldHelp('237199085287893100945','15805104529172')" tabindex="999"><u>Description Search:</u></a></label></td><td  align="left" valign="middle"><input type="text"  id="P1_DESCRIPTION" name="P1_DESCRIPTION" class="text_field&#x20;apex-item-text" value="" size="30" maxlength="4000" onkeypress="return apex.submit({request:'P1_DESCRIPTION',submitIfEnter:event})" data-trim-spaces="NONE"  /></td><td nowrap="nowrap" align="right"><label for="P1_LAST_NAME" id="P1_LAST_NAME_LABEL" tabindex="999"><a class="optional-w-help" href="javascript:popupFieldHelp('237199085487947100945','15805104529172')" tabindex="999"><u>Assignment Search:</u></a></label></td><td  align="left" valign="middle"><input type="text"  id="P1_LAST_NAME" name="P1_LAST_NAME" class="text_field&#x20;apex-item-text" value="" size="30" maxlength="4000" onkeypress="return apex.submit({request:'P1_LAST_NAME',submitIfEnter:event})" data-trim-spaces="NONE"  /></td></tr></table><div class="borderless-region" id="R237170334002428616010" style="margin-left: 300px;">
+  <div class="bl-top">
+    <div class="bl-title">&nbsp;</div>
+    <div class="bl-buttons"></div>
+  </div>
+  <div class="bl-body"><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td align="left"></td><td align="right"></td></tr></table><table id="apex_layout_237170334002428616010" border="0" class="formlayout"  role="presentation"><tr><td  align="left"> <input type="button" value="Search" onclick="apex.submit({request:&#x27;P1_SEARCH&#x27;});" id="P1_SEARCH" class="btnStyle&#x20;btnRtMargin" /></td><td  align="left"> <input type="button" value="Clear" onclick="apex.navigation.redirect(&#x27;f?p=401:1::::CR:P1_FILER_NAME,P1_FILED_DATE_L,P1_FILED_DATE_H,P1_DESCRIPTION,P1_LAST_NAME:,,,,&#x27;);" id="P1_CLEAR" class="btnStyle&#x20;btnRtMargin" /></td><td  align="left"> <input type="button" value="Get Involved!" onclick="void(0);" id="P1_GET_INVOLVED" class="btnStyle" /></td></tr></table></div>
+</div><div class="clear"></div></div></div></div>
+  <div class="rc-bottom"><div class="rc-bottom-r"></div></div>
+</div> <div class="rounded-corner-region" id="R237199757970458676120" >
+  <div class="rc-gray-top"><div class="rc-gray-top-r">
+    <div class="rc-title">Hint</div>
+  </div></div>
+  <div class="rc-body"><div class="rc-body-r">
+<div class="rc-content-buttons"></div>
+<div class="rc-content-main"><i><b>Search Hints:</b> You may search using <b>partial</b> proceeding numbers.
+<br>
+<br>
+To narrow your search, you may enter information into any or all of the six search fields. When your search is complete, the proceedings matching your search will be grouped by ACTIVE, REOPENED, and CLOSED, and they will be listed in date order (newest first) within each group. <br>
+<br>
+For example, you might be looking for proceedings related to renewable energy filed by PG&E between June 1, 2009 and May 30, 2010. To receive that list, you would enter: <br>
+<br>
+-"06/01/2009" for <b>Date Range Search (Low)</b>
+<br>
+<br>
+-"05/30/2010" for <b>Date Range Search (High)</b>
+<br> 
+<br>
+-"Pacific Gas and Electric Company" for <b>Filer Search</b>
+<br>
+<br>
+-"Renewable" for <b>Description Search.</b></i>
+<br>
+<br><div class="clear"></div></div></div></div>
+  <div class="rc-bottom"><div class="rc-bottom-r"></div></div>
+</div> </td>
+        <td class="tbl-sidebar"></td>
+      </tr>
+    </tbody>
+  </table>
+</div><input type="hidden" id="pPageFormRegionChecksums" value="&#x5B;&#x5D;">
+<input type="hidden" id="pPageItemsRowVersion" value="" /><input type="hidden" id="pPageItemsProtected" value="UDBfSElEX1VTRVJfSUQ6UDFfR0VUX0lOVk9MVkVEX1VSTA&#x2F;rfdGs833cBjrE1ksvVW2gcTCL8vmnLf5lQs71LI40KscsZJZtBerrgUboPZ0bGK-5CMcQiiTbImE_HqB0u-pvw" /></form>
+<div id="footer"><div class="content">
+  
+  <div id="customize"></div>&nbsp;
+</div></div>
+
+<script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit"
+        async defer>
+</script>
+
+
+<script type="text/javascript">
+apex.da.initDaEventList = function(){
+apex.da.gEventList = [
+{"bindEventType":"ready","anyActionsFireOnInit":true,actionList:[{"eventResult":true,"executeOnPageInit":true,"stopExecutionOnError":false,"waitForResult":false,javascriptFunction:apex.da.executePlSqlCode,"ajaxIdentifier":"REEgVFlQRX5-MjM1NDUzOTg4OTYzNDE4NDc1NTQx\u002Fux4r_xHida5L0Zdvzqo3yWcZzcb4LPkXd-Pv5H6XFW6WG8pXsPrnxoEVmOWnHl6mCmBm6L5VYp2CgPpfrzUg6g","attribute02":"#P0_PRIVACY_LINK","attribute04":"N","attribute05":"sync","action":"NATIVE_EXECUTE_PLSQL_CODE"},{"eventResult":true,"executeOnPageInit":false,"stopExecutionOnError":true,javascriptFunction:function (){ var privacy_div = document.createElement('DIV');
+privacy_div.style.textAlign = 'center';
+
+var link = document.createElement('A');
+link.style.color = '#6495ed';
+link.style.fontSize = 'medium';
+link.href = '';
+link.target = '_blank';
+link.innerHTML = 'Privacy Policy';
+
+privacy_div.appendChild(link);
+document.body.appendChild(privacy_div); 
+},"action":"NATIVE_JAVASCRIPT_CODE"}]},
+{"triggeringElementType":"BUTTON","triggeringButtonId":"P1_GET_INVOLVED","bindType":"bind","bindEventType":"click","anyActionsFireOnInit":false,actionList:[{"eventResult":true,"executeOnPageInit":false,"stopExecutionOnError":true,javascriptFunction:function (){ var giUrl = document.getElementById("P1_GET_INVOLVED_URL").value
+
+window.location.href = giUrl;
+},"action":"NATIVE_JAVASCRIPT_CODE"}]},
+{"bindEventType":"ready","anyActionsFireOnInit":true,actionList:[{"eventResult":true,"executeOnPageInit":true,"stopExecutionOnError":true,"affectedElementsType":"REGION",javascriptFunction:apex.da.hide,"attribute01":"N","action":"NATIVE_HIDE"},{"eventResult":true,"executeOnPageInit":true,"stopExecutionOnError":true,"affectedElementsType":"REGION",javascriptFunction:apex.da.hide,"attribute01":"N","action":"NATIVE_HIDE"},{"eventResult":true,"executeOnPageInit":true,"stopExecutionOnError":true,"affectedElementsType":"REGION",javascriptFunction:apex.da.hide,"attribute01":"N","action":"NATIVE_HIDE"},{"eventResult":true,"executeOnPageInit":true,"stopExecutionOnError":true,"affectedElementsType":"REGION",javascriptFunction:apex.da.hide,"attribute01":"N","action":"NATIVE_HIDE"},{"eventResult":true,"executeOnPageInit":true,"stopExecutionOnError":true,"affectedElementsType":"REGION",javascriptFunction:apex.da.hide,"attribute01":"N","action":"NATIVE_HIDE"}]},
+{"bindEventType":"ready","anyActionsFireOnInit":false,actionList:[{"eventResult":true,"executeOnPageInit":false,"stopExecutionOnError":true,javascriptFunction:function (){ document.getElementsByClassName('sHorizontalTabs')[0].style.margin= '0';
+document.getElementsByClassName('sHorizontalTabs')[0].style.padding = '0';
+document.getElementsByClassName('sHorizontalTabsInner')[0].style.padding = '0';
+},"action":"NATIVE_JAVASCRIPT_CODE"}]},
+{"triggeringElementType":"BUTTON","triggeringButtonId":"P1_CLEAR","bindType":"bind","bindEventType":"click","anyActionsFireOnInit":false,actionList:[{"eventResult":true,"executeOnPageInit":false,"stopExecutionOnError":true,"affectedElementsType":"ITEM","affectedElements":"P1_PROCEEDING_NUM,P1_FILER_NAME,P1_FILED_DATE_L,P1_FILED_DATE_H,P1_DESCRIPTION,P1_LAST_NAME",javascriptFunction:apex.da.clear,"action":"NATIVE_CLEAR"}]},
+{"triggeringElementType":"ITEM","triggeringElement":"P1_FILED_DATE_L,P1_FILED_DATE_H","bindType":"bind","bindEventType":"change","anyActionsFireOnInit":false,actionList:[{"eventResult":true,"executeOnPageInit":false,"stopExecutionOnError":true,javascriptFunction:function (){ // AUTOCORRECT/AUTOCOMPLETE P20_DATE_FROM
+$("#P1_FILED_DATE_L").datepicker( "option");
+
+// AUTOCORRECT/AUTOCOMPLETE P1_FILED_DATE_H AND ENSURES THAT USER CAN'T ENTER OR SELECT A DATE PRIOR TO P1_FILED_DATE_L
+$("#P1_FILED_DATE_H").datepicker( "option", "minDate", $("#P1_FILED_DATE_L").val());
+},"action":"NATIVE_JAVASCRIPT_CODE"}]}];
+}
+</script>
+
+
+
+
+
+
+<script src="/i/libraries/jquery-ui/1.12.1/ui/i18n/oracle/jquery.ui.datepicker-en.js?v=20.2.0.00.20"></script>
+<script type="text/javascript">
+apex.jQuery( function() {
+apex.page.init( this, function() {
+apex.jQuery.when.apply( apex.jQuery, apex.page.loadingDeferreds ).done(function() {
+try {
+(function(){apex.widget.datepicker("#P1_FILED_DATE_L",{"buttonImageOnly":false,"buttonText":"\u003Cspan class=\u0022a-Icon icon-calendar\u0022\u003E\u003C\u002Fspan\u003E\u003Cspan class=\u0022u-VisuallyHidden\u0022\u003EPopup Calendar: Date Range (Low):  (MM\u002FDD\u002FYYYY)\u003Cspan\u003E","showTime":false,"defaultDate":new Date(2026,9,5,15,12,40),"showOn":"button","showOtherMonths":false,"yearRange":"1981:nnnn","changeMonth":true,"changeYear":true},"mm\u002Fdd\u002Fyy","en"); apex.jQuery('#P1_FILED_DATE_L').next('button').addClass('a-Button a-Button--calendar');})();
+(function(){apex.widget.datepicker("#P1_FILED_DATE_H",{"buttonImageOnly":false,"buttonText":"\u003Cspan class=\u0022a-Icon icon-calendar\u0022\u003E\u003C\u002Fspan\u003E\u003Cspan class=\u0022u-VisuallyHidden\u0022\u003EPopup Calendar: Date Range (High):  (MM\u002FDD\u002FYYYY)\u003Cspan\u003E","showTime":false,"defaultDate":new Date(2026,9,5,15,12,40),"showOn":"button","showOtherMonths":false,"yearRange":"1981:nnnn","changeMonth":true,"changeYear":true},"mm\u002Fdd\u002Fyy","en"); apex.jQuery('#P1_FILED_DATE_H').next('button').addClass('a-Button a-Button--calendar');})();
+(function(){apex.da.initDaEventList();})();
+(function(){apex.da.init();})();
+
+
+} finally {
+apex.event.trigger(apex.gPageContext$,'apexreadyend');
+}
+});
+});
+});</script>
+
+
+</body>
+</html>

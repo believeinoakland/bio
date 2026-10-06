@@ -12,11 +12,11 @@ const sorted = (a) => [...a].sort();
 /* A small corpus over which every operator of R1 has a distinguishable answer. */
 function corpus() {
   const w = world();
-  w.bundle("A", { title: "water main", body: "the water main broke", current_state: "open", created: "2026-01-05",
+  w.bundle("A", { title: "water main", body: "the water main broke", current_state: "open", created: "2026-01-05T12:00:00Z",
                   annotations_open: 3, fm: { a: { b: "c d" }, n: 1 } });
-  w.bundle("B", { title: "budget", body: "water budget shortfall", current_state: "closed", created: "2026-02-05",
+  w.bundle("B", { title: "budget", body: "water budget shortfall", current_state: "closed", created: "2026-02-05T12:00:00Z",
                   annotations_open: 0, fm: { a: { b: "x" } } });
-  w.bundle("C", { title: "sewer", body: "sewer fund watering", current_state: "open", created: "2026-03-05",
+  w.bundle("C", { title: "sewer", body: "sewer fund watering", current_state: "open", created: "2026-03-05T12:00:00Z",
                   annotations_open: 7 });
   w.bundle("D", { title: "streets", body: "nothing of note", created: null, annotations_open: null });
   return w;
@@ -24,7 +24,8 @@ function corpus() {
 
 test("R1 the grammar: implicit AND/OR, capital operators, negation, parentheses, phrases, prefixes, fields, comparisons, ranges, presence, fm:, text:, sort:", () => {
   const w = corpus();
-  const ids = (q, o = {}) => sorted(w.ids({ q, viewer: V, ...o }));
+  /* A date is a local day in the caller's zone (R27); here UTC, so the days read as the column's. */
+  const ids = (q, o = {}) => sorted(w.ids({ q, viewer: V, zone: "UTC", ...o }));
   assert.deepEqual(ids("water main"), ["A"], "bare words join by AND");
   assert.deepEqual(ids("water main", { implicitOp: "or" }), ["A", "B"], "implicitOp or joins them by OR");
   assert.deepEqual(ids("main OR sewer"), ["A", "C"]);
@@ -86,7 +87,8 @@ test("R2 an unknown field is free text with a warning; an unknown has: or sort: 
 test("R3 FIELDS is the projection's vocabulary; free-text fields match, the rest are equality with case and type normalised", () => {
   assert.deepEqual(Object.keys(FIELDS), ("id type group title state prior created updated criticality sha schema mode tier "
     + "locator authority retrieved status hash monitored frequency checked annotations reeval since reevalsource "
-    + "capture connection legs actionkind risk addressee resolution due overdue").split(" "));
+    + "capture connection legs actionkind risk addressee resolution due overdue "
+    + "standard cites person holder post kind phase stage basis period fund party event occurred obligor owed_to").split(" "));
   assert.deepEqual(Object.entries(FIELDS).filter(([, f]) => f.fts).map(([n]) => n), ["title", "locator", "authority"]);
   const w = world();
   w.bundle("A", { type: normalizeType("problem"), title: "Main street water", locator: "https://x.example/doc/7",

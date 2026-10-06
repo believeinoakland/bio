@@ -189,9 +189,9 @@ test("R30: the projection and the index are derived: both are rebuilt from the s
   assert.equal(w.retrieval.searchIndexCheck({ viewer: MACHINE }).ok, true);
 });
 
-test("R33, R61: bundle_projection, selections, selection_items and bundles_fts are declared to record-core's purge; a bundle's purge removes its projection and index rows, and the whole-store purge clears all four", () => {
+test("R33, R61, R71: bundle_projection, bundle_terms, selections, selection_items and bundles_fts are declared to record-core; a bundle's purge removes its projection and index rows, and the whole-store purge clears all five", () => {
   const w = world();
-  assert.deepEqual([...RETRIEVAL_TABLES].sort(), ["bundle_projection", "bundles_fts", "selection_items", "selections"]);
+  assert.deepEqual([...RETRIEVAL_TABLES].sort(), ["bundle_projection", "bundle_terms", "bundles_fts", "selection_items", "selections"]);
   /* Declared: a second declaration of any of them is refused as another module's. */
   for (const t of RETRIEVAL_TABLES) {
     const r = w.record.declarePurge("someone-else", [t]);
@@ -214,7 +214,7 @@ test("R33, R61: bundle_projection, selections, selection_items and bundles_fts a
     const all = w.record.purge({});
     assert.deepEqual([all.removed.selections, all.removed.selection_items, all.removed.bundles_fts, all.removed.bundle_projection],
       [1, 2, 1, 1]);
-    assert.deepEqual(RETRIEVAL_TABLES.map((t) => w.count(t)), [0, 0, 0, 0]);
+    assert.deepEqual(RETRIEVAL_TABLES.map((t) => w.count(t)), [0, 0, 0, 0, 0]);
   });
 });
 

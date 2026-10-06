@@ -8,12 +8,11 @@
  * `plan` is not deployed (R53): a plan-mode run closes `mode-not-deployed` at the gate, and one arm holds that. To
  * drive `PLAN_FLOW`'s rows through the op, the suite deploys it IN THIS PROCESS ONLY, by the edit R42 names — setting
  * `MODES.plan.deployed` on the module it imports — and restores it; no request field can do that (R42). */
+import { ACCOUNT, MEMBER, ACCOUNT_SECRET, withAccount } from "./account.mjs";
 import "../../bio-plane/test/sandbox.mjs";
 
-import {
-  MODES, PLANE_OPS, PLAN_FLOW, CONTROL_FLOW, OPTION_KEYS, PLAN_BUDGET_BOUNDS, nextPlanStep, planStopBecause,
-  applyPlanJudgement, planDedup, earlierPlans, whyWithUndetermined, flowFor, resumeFrom, publishableState,
-} from "../src/harness.mjs";
+import { MODES, PLAN_FLOW, CONTROL_FLOW, OPTION_KEYS, PLAN_BUDGET_BOUNDS, nextPlanStep, planStopBecause, applyPlanJudgement, planDedup, earlierPlans, whyWithUndetermined, flowFor, resumeFrom, publishableState } from "../../agent-harness/src/harness.mjs";
+import { PLANE_OPS } from "../src/ops.mjs";
 import worker from "../src/index.mjs";
 
 let pass = 0, fail = 0;
@@ -50,7 +49,7 @@ function planeStub(cfg = {}) {
     airun: () => ok({ found: true, session: {
       id: "RUN-P", mode: cfg.mode ?? "plan", status: S.status, plan: cfg.noPlan ? null : PLAN_ID,
       context: { type: "project", id: PROJECT, questions: [] },
-      principal: { plane: "member:ruth", claude: null, ref: null, skill: "investigative-session@1" },
+      principal: { plane: "member:ruth", claude: "member:ruth", ref: null, skill: "investigative-session@1" },
       state: S.state, budget: Object.entries(budget).map(([bound, b]) => ({ bound, ...b })) } }),
     airunlog: () => ok({ found: true, entries: [], truncated: false }),
     plan: () => ok({ ...PLAN_DOC, proposals: S.proposals.map((p) => ({ summary: p.summary, category: p.category, subjects: p.subjects })) }),
@@ -107,7 +106,7 @@ async function run(cfg, judgements, extra = {}) {
   const plane = planeStub(cfg);
   globalFetches = 0;
   const res = await worker.fetch(new Request("http://agent-worker/run", { method: "POST",
-    body: JSON.stringify({ run_id: "RUN-P", store: "scratch", credential: AIK, judgements, ...extra }) }),
+    body: JSON.stringify(withAccount({ run_id: "RUN-P", store: "scratch", credential: AIK, judgements, ...extra })) }),
     { PLANE: plane, VERSION: "test" });
   return { status: res.status, out: await res.json(), S: plane.S, ops: plane.S.log.map((l) => l.op), fetches: globalFetches };
 }

@@ -4,7 +4,8 @@
  * why each is shaped as it is. Two tables are new with the extraction (K102): `progression_threads` and
  * `progression_thread_placements` keep every threading of an instance as a dated version (R8), and
  * `progression_exception_versions` every recording of an exception document (R14). `migrateProgressions` brings a
- * store created under an earlier shape to this one: `proposal_dispositions.definition_version` (REC-184). */
+ * store created under an earlier shape to this one: `proposal_dispositions.definition_version` (REC-184), and T33's
+ * columns (R37's own-date namings, R39's basis standard). */
 
 export const PROGRESSIONS_SCHEMA = `
 -- CONSTRUCTS Step 5, SLICE A (FW-8): the PROGRESSION DEFINITION as data (framework
@@ -73,6 +74,8 @@ CREATE TABLE IF NOT EXISTS progression_def_versions (
   at              TEXT,
   basis_statement TEXT,
   basis_citation  TEXT,
+  basis_standard  TEXT,           -- R39 (K1446): a held standard the basis names (STD-...), or NULL
+  basis_portion   TEXT,           -- R39: the portion of that standard it names, or NULL for the whole
   PRIMARY KEY (progression_key, version)
 );
 CREATE TABLE IF NOT EXISTS progression_stage_versions (
@@ -108,6 +111,12 @@ CREATE TABLE IF NOT EXISTS progression_stage_versions (
 -- the member's authored judgment (this document is the award, that one the contract), so
 -- threaded_by is stamped server-side; the GRADE is the record's, never the caller's.
 --
+-- T33 (R37): a placement may name the EVENT the document attests (event_id) or one DATED FACT
+-- of its capture (dated_fact_id), the member's naming, stored; the stage document's OWN DATE is
+-- read from 'events' on every read (that event's when, that fact's value), never copied here,
+-- and never the capture's registration, reading or retrieval instant. The two indexes on
+-- entity_id and event_id serve the connection owner's reads (R40).
+--
 -- DERIVED-from-the-corpus and carrying bundle_id, so it clears in BOTH purge arms exactly
 -- as resolutions do (declared to record-core's purge, R29): a per-bundle purge removes that document's
 -- placements and the instance honestly re-reads with that stage now unfilled, and a
@@ -123,11 +132,15 @@ CREATE TABLE IF NOT EXISTS progression_instances (
   grade           TEXT NOT NULL,
   threaded_by     TEXT,
   at              TEXT,
+  event_id        TEXT,           -- R37: the EVT- the member named the document as attesting, or NULL
+  dated_fact_id   TEXT,           -- R37: the dated fact of this capture the member named, or NULL
   PRIMARY KEY (progression_key, entity_id, stage_key, capture_sha)
 );
 CREATE INDEX IF NOT EXISTS progression_instances_key ON progression_instances(progression_key, entity_id);
 CREATE INDEX IF NOT EXISTS progression_instances_bundle ON progression_instances(bundle_id);
 CREATE INDEX IF NOT EXISTS progression_instances_capture ON progression_instances(capture_sha);
+CREATE INDEX IF NOT EXISTS progression_instances_entity ON progression_instances(entity_id);
+CREATE INDEX IF NOT EXISTS progression_instances_event ON progression_instances(event_id);
 -- CONSTRUCTS Step 5, SLICE C (FW-10): an EXCEPTION DOCUMENT that discharges a LEGITIMATE SKIP
 -- (framework 8.2: "a sole-source award skips the solicitation stage lawfully ... a skipped
 -- stage with no exception document is [a finding]. The table records which document discharges
@@ -193,6 +206,8 @@ CREATE TABLE IF NOT EXISTS progression_thread_placements (
   capture_sha     TEXT NOT NULL,
   bundle_id       TEXT NOT NULL,
   grade           TEXT NOT NULL,
+  event_id        TEXT,
+  dated_fact_id   TEXT,
   PRIMARY KEY (progression_key, entity_id, version, stage_key, capture_sha)
 );
 CREATE INDEX IF NOT EXISTS progression_thread_placements_bundle ON progression_thread_placements(bundle_id);
@@ -267,23 +282,42 @@ CREATE TABLE IF NOT EXISTS proposal_dispositions (
 CREATE INDEX IF NOT EXISTS proposal_dispositions_at ON proposal_dispositions(at);
 `;
 
-/** R29 (K23): the tables declared to record-core's purge. Those carrying `bundle_id` are keyed to their bundle; the
- *  definitions and the decisions carry none and clear only with the whole store. */
-export const PROGRESSIONS_TABLES = [
-  "progression_instances", "progression_exceptions", "progression_thread_placements", "progression_exception_versions",
-  { name: "progression_defs", keys: [] }, { name: "progression_stages", keys: [] },
-  { name: "progression_def_versions", keys: [] }, { name: "progression_stage_versions", keys: [] },
-  { name: "progression_threads", keys: [] }, { name: "proposal_dispositions", keys: [] },
+/** R29, R42 (K23; plan T33, Rules (6)): every table, declared explicitly through record-core's `declareTable` (its
+ *  R21). Those carrying `bundle_id` are keyed to their bundle and take its sight (R13); the definitions, the threads'
+ *  heads and the decisions carry none, are group-wide and clear only with the whole store. The versions (definition,
+ *  stage, thread, exception) and the instances and exceptions they version are version chains (R8, R14, R23); the
+ *  other classes are `declarePurge`'s default form's. */
+const DEFAULTS = Object.freeze({ purge: "clear", expunge: "none", export: "admin-only", derive: "stored" });
+const table = (name, sight, version_chain, keyed) =>
+  Object.freeze({ name, ...(keyed ? {} : { keys: [] }), ...DEFAULTS, sight, version_chain });
+export const PROGRESSIONS_TABLES = Object.freeze([
+  table("progression_instances", "bundle", true, true), table("progression_exceptions", "bundle", true, true),
+  table("progression_thread_placements", "bundle", true, true), table("progression_exception_versions", "bundle", true, true),
+  table("progression_defs", "group", false, false), table("progression_stages", "group", false, false),
+  table("progression_def_versions", "group", true, false), table("progression_stage_versions", "group", true, false),
+  table("progression_threads", "group", true, false), table("proposal_dispositions", "group", false, false),
+]);
+
+/* Columns added after a store was created, each with the table it belongs to (an earlier store's shape brought to
+   this one): REC-184's decision version, and T33's own-date namings (R37) and basis standard (R39). None is
+   back-filled: a row written before reads as naming none. */
+const ADDED = [
+  ["proposal_dispositions", "definition_version", "INTEGER"],
+  ["progression_instances", "event_id", "TEXT"], ["progression_instances", "dated_fact_id", "TEXT"],
+  ["progression_thread_placements", "event_id", "TEXT"], ["progression_thread_placements", "dated_fact_id", "TEXT"],
+  ["progression_def_versions", "basis_standard", "TEXT"], ["progression_def_versions", "basis_portion", "TEXT"],
 ];
 
 /** Creates the tables and brings an earlier store's shape to this one. REC-184's `definition_version` is NULLABLE AND
  *  NEVER BACK-FILLED: a decision taken before the column existed recorded no version, and the one value a backfill
  *  could reach for is the current version, the very claim the column exists to test. */
 export function migrateProgressions(sql) {
-  const bare = PROGRESSIONS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  const bare = PROGRESSIONS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n")
+    .replace(/--[^\n]*/g, "");
   const stmts = bare.split(";").map((x) => x.trim()).filter(Boolean);
-  const info = [...sql.exec(`PRAGMA table_info(proposal_dispositions)`)];
-  if (info.length && !info.some((r) => r.name === "definition_version"))
-    sql.exec(`ALTER TABLE proposal_dispositions ADD COLUMN definition_version INTEGER`);
+  for (const [t, col, type] of ADDED) {
+    const info = [...sql.exec(`PRAGMA table_info(${t})`)];
+    if (info.length && !info.some((r) => r.name === col)) sql.exec(`ALTER TABLE ${t} ADD COLUMN ${col} ${type}`);
+  }
   for (const s of stmts) sql.exec(s);
 }

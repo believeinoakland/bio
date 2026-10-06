@@ -23,6 +23,8 @@
  *              here: governor, provenance, capture, captureRequests, basisVersions, aiRuns, publication, reevaluation,
  *              intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions, filingTemplates,
  *              localFacts, networkNotices, linkSweep, docket, caseImport, wizardScripts and the shared ones);
+ *   notices   `notice-producers` (R51), whose `noticeItems` is read beside the producers;
+ *   zone      `() => zone | null`, the instance profile's time zone (R21, R22), in place of scheduler's `viewZone`;
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
  *   start     false to skip the scheduler registration (a test that drives the consumer itself).
@@ -42,9 +44,11 @@ import { membershipOf, viewerPredicate, noSuchProject } from "../membership/inde
 import { connectionsOf } from "../connections/index.mjs";
 import { progressionsOf, notADisposition } from "../progressions/index.mjs";
 import { biasOf } from "../bias/index.mjs";
-import { schedulerOf } from "../scheduler/index.mjs";
+import { schedulerOf, viewZone } from "../scheduler/index.mjs";
+import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
+import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { affordancesOf, deriveActs, decorate, vocabulariesFor, PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem, serializeMutedKinds, parseMutedKinds,
@@ -119,6 +123,18 @@ export class Queue {
        breaks and submissions; queue passes them and calls none of their reads. */
     "caseImport", "wizardScripts"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
+  /* R51 (T33-83): `notice-producers`, read beside `queue-producers`. */
+  get #notices() { return this.#dep("notices", () => noticeProducersOf(this.#host)); }
+
+  /** R21, R22 (K1444 (iii)): the instance profile's time zone, or null when none is held: the caller's `deps.zone`, else
+   *  scheduler's `viewZone` over record-core's active jurisdiction profiles. Never throws; never the UTC day in its
+   *  place. */
+  #zone() {
+    try {
+      const z = typeof this.#deps.zone === "function" ? this.#deps.zone() : viewZone(this.#record);
+      return typeof z === "string" && z.trim() ? z.trim() : null;
+    } catch { return null; }
+  }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -242,8 +258,9 @@ export class Queue {
       if (Number.isFinite(since)) return since;
       return Number.isFinite(age.ms) ? now - age.ms : null;
     };
-    const due = (it) => (typeof it.due === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.due)
-                         && Number.isFinite(Date.parse(`${it.due}T00:00:00Z`)) ? it.due : null);
+    /* R22 (K1444 (iii)): a `due` is a local day as its producer wrote it, so it is read as a calendar date
+       (`civil-time.isCalendarDate`) and compared as one, never parsed as a UTC midnight. */
+    const due = (it) => (typeof it.due === "string" && isCalendarDate(it.due) ? it.due : null);
     switch (order) {
       case "added": return on(arose, (x, y) => y - x);
       case "due":   return on(due, str);
@@ -564,6 +581,7 @@ export class Queue {
     "action-reminder": "reminderanswer", "litigation-hold": "actionhold",
     "template-review-requested": "templatereview", "local-fact-due": "factconfirm",
     "attribution-unchosen": "attribute", "wizard-approval-requested": "wizardapprove",
+    "inquiry-recheck-due": "waitlook",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
@@ -625,6 +643,9 @@ export class Queue {
     "wizard-approval-requested": " This one is a wizard script's version submitted for your approval, keyed by the "
       + "version and by you rather than by a task: it leaves when you approve it (op=wizardapprove), or when the version "
       + "is withdrawn or its script retired.",
+    "inquiry-recheck-due": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and "
+      + "the date rather than by a task, and it is yours alone: it leaves when you record that you looked "
+      + "(op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
   });
 
   /** R46, R50: the acts a project-scoped FINDING of these kinds names beside R12's disposition: a recorded re-evaluation
@@ -634,7 +655,11 @@ export class Queue {
   static FINDING_ACTS = Object.freeze({ "side-corrected": Object.freeze(["reevaluationrecord"]),
     "edition-withdrawn": Object.freeze(["reevaluationrecord"]), "edition-contested": Object.freeze(["reevaluationrecord"]),
     "cited-newer-edition": Object.freeze(["reevaluationrecord"]),
-    "cited-edition-withdrawn": Object.freeze(["reevaluationrecord"]) });
+    "cited-edition-withdrawn": Object.freeze(["reevaluationrecord"]),
+    /* T33-83 (notice-producers R8; K1491, K1467): what the machine noticed is disposed of, or taken up as a member's
+       hunch or hypothesis, and nothing else. */
+    "interest-check-noticed": Object.freeze(["hypothesishold"]),
+    "money-detector-noticed": Object.freeze(["hypothesishold"]) });
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -712,6 +737,16 @@ export class Queue {
        door (its R15): adopt the newer version, or keep the earlier one. Keyed on the notice, never on a project.
        K1035 (reevaluation R15, C-110.29 VERSION_ADOPT_NO_REASON): adopting takes a why and keeping's stays optional;
        the detail says so, and `requires` stays the notice R12 states. */
+    /* T33-83 (notice-producers R4; K1481, DEC-94): a standing question's answer is told once to its author and to
+       nobody else, so no team's list holds it and there is no team for a record act to speak for: its author quiets it
+       for themselves, which is the whole of disposing of it (R30: the mute writes only their row). */
+    if (item.kind === "standing-answer")
+      return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
+               reason: "an_answer_told_to_you_alone_is_quieted", instead: "queuemute",
+               detail: "your standing question's answer is told to you once and to nobody else, so no team's list "
+                     + "holds it and there is no team for a disposition to speak for. Quiet it for yourself "
+                     + "(op=queuemute, naming this item) once you have read it; your question keeps running and a "
+                     + "later run's new finds are told to you as a new item." };
     if (item.kind === "newer-capture-affects-reference") {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
       return { available: notice !== null, op: null, scope: "notice", keyed_on: ["notice"], key: notice,
@@ -872,6 +907,18 @@ export class Queue {
     return this.#producers.feedItems(args);
   }
 
+  /** R51: `notice-producers.noticeItems`, as `{items, facts, failed}`. Its contract is never to throw; were it to, the
+   *  read is named failed whole rather than taking the feed down, and contributes no item. */
+  #noticeItems(args) {
+    const np = this.#notices;
+    if (!np || typeof np.noticeItems !== "function") return { items: [], facts: {}, failed: [] };
+    let r;
+    try { r = np.noticeItems(args); } catch { return { items: [], facts: {}, failed: ["noticeItems"] }; }
+    const facts = r && r.facts && typeof r.facts === "object" ? r.facts : {};
+    const failed = Array.isArray(facts.failed) ? facts.failed.filter((x) => typeof x === "string") : [];
+    return { items: r && Array.isArray(r.items) ? r.items : [], facts, failed };
+  }
+
   /** op=queue: the member's ONE feed.
    *
    *  `member` and `viewer` are BOTH stamped server-side by the control plane and are
@@ -973,6 +1020,14 @@ export class Queue {
       optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });
     const facts = produced && produced.facts && typeof produced.facts === "object" ? produced.facts : {};
     items.push(...(produced && Array.isArray(produced.items) ? produced.items : []));
+    /* R51 (T33-83): `notice-producers`' one read, beside them, handed the same walk and options, its items treated
+       exactly as theirs (minted, homed, muted, decided and sorted below). It writes nothing and never throws (its R1),
+       and a producer it names in `facts.failed` contributes no item; the answer states which (`notice_producers`). A
+       closed gate is that module's alone to honour: nothing here re-judges what it raises. */
+    const noticed = this.#noticeItems({ member: me, viewer, now, identity,
+      homesOf: (subjects) => this.#queueAncestors(subjects, viewer),
+      optionsOf: (subjects) => this.#queueOptions(subjects, viewer, identity) });
+    items.push(...noticed.items);
 
     /* THE MINT, and PL-15 SWEPT IT FOR THE CLASS RATHER THAN ADDING TO IT.
      *
@@ -1390,6 +1445,12 @@ export class Queue {
          whether it cut. Neither counts nor names the other side of a conflict a member cannot see. */
       contradiction_projects_bound: facts.contradiction ? facts.contradiction.bound ?? null : null,
       contradiction_projects_truncated: !!(facts.contradiction && facts.contradiction.truncated === true),
+      /* R51 (T33-83): what `notice-producers` said of its read: each producer's bound and `truncated` as it states
+         them, and `failed`, the producers that contributed no item because they could not be read. */
+      notice_producers: { ...noticed.facts, failed: [...noticed.failed],
+        detail: "the machine's and the assistant's noticed items, duties come due and dated waits come round are read "
+              + "here beside the rest of the feed. A producer named in `failed` could not be read, so it contributed "
+              + "nothing this time: its absence from the feed is not a statement that it has nothing to say." },
       /* D-266's SECOND, SMALLER HALF — the folded gap, counted rather than
          closed, because closing it needs an identity this record does not
          hold and inventing one would be the overclaim the silence exists to
@@ -1742,22 +1803,53 @@ export class Queue {
     const c = this.#queueCaseFor(caseId, viewer);
     if (c.ok !== true) return c;
     const stamp = typeof at === "string" && at ? at : new Date(this.#nowMs(null)).toISOString();
-    let iso = null;
+    let iso = null, dated = null;
     if (!clear) {
       if (typeof until !== "string" || !until)
         return { ok: false, reason: "NO_UNTIL", case: c.id,
           detail: "name the instant to snooze until. There is no default and there must not be one: "
                 + "P-87 requires re-notification at the stage's OWN declared interval, never at a "
                 + "global one, so this plane holds no instance-wide snooze constant to fall back on." };
-      const ms = Date.parse(until);
-      if (!Number.isFinite(ms))
-        return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
-          detail: "until must be an instant this plane can read (ISO-8601)" };
-      if (ms <= this.#nowMs(null))
-        return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id,
-          detail: "a snooze that has already expired is not a snooze; it would report as deferred while "
-                + "deferring nothing" };
+      /* R21 (K1444 (iii)): `until` is an instant, or a calendar date read as the start of that local day in the
+         instance profile's zone (`civil-time.dayRange`), never as a UTC midnight. A date is in the past when it is
+         before TODAY'S local day there (`civil-time.localDay`), never the UTC day. */
+      const nowMs = this.#nowMs(null);
+      const text = until.trim();
+      let ms = NaN, day = null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+        if (!isCalendarDate(text))
+          return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
+            detail: "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD) naming a "
+                  + "real day" };
+        const zone = this.#zone();
+        if (zone === null)
+          return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
+            detail: "a calendar date is snoozed until the start of that day where this group is, and no time zone "
+                  + "is held for this copy (its jurisdiction profile gives none), so the day cannot be read without "
+                  + "guessing one. Send an instant instead (ISO-8601, with its time)." };
+        const today = localDay(new Date(nowMs).toISOString().replace(/\.\d{3}Z$/, "Z"), zone);
+        const range = dayRange(text, text, zone);
+        if (typeof today !== "string" || !range || typeof range.start !== "string")
+          return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
+            detail: "the day could not be read in this copy's time zone; send an instant instead" };
+        if (text < today)
+          return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id, today,
+            detail: `that day is before today (${today}) where this group is; a snooze that has already expired is `
+                  + "not a snooze, it would report as deferred while deferring nothing" };
+        day = text;
+        ms = Date.parse(range.start);
+      } else {
+        ms = /^\d{4}-\d{2}-\d{2}T/.test(text) ? Date.parse(text) : NaN;
+        if (!Number.isFinite(ms))
+          return { ok: false, reason: "BAD_UNTIL", until, case: c.id,
+            detail: "until must be an instant (ISO-8601, with its time) or a calendar date (YYYY-MM-DD)" };
+        if (ms <= nowMs)
+          return { ok: false, reason: "UNTIL_IN_PAST", until, case: c.id,
+            detail: "a snooze that has already expired is not a snooze; it would report as deferred while "
+                  + "deferring nothing" };
+      }
       iso = new Date(ms).toISOString();
+      if (day !== null) dated = { day, lapsed: ms <= nowMs };
     }
     const row = this.#one(
       `SELECT muted_kinds FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
@@ -1769,8 +1861,12 @@ export class Queue {
       me, c.id, row ? row.muted_kinds ?? null : null, iso, stamp);
     return {
       ok: true, member: me, case: c.id, case_type: c.type, snoozed_until: iso, at: stamp,
+      ...(dated ? { until_day: dated.day } : {}),
       wrote: { queue_state: 1, tasks: 0, proposal_dispositions: 0, bundles: 0 },
-      detail: iso
+      detail: dated && dated.lapsed
+        ? "that day has already begun where this group is, so the snooze, which holds until its start, has already "
+        + "lapsed and defers nothing. The items are unchanged and no other member's feed moved."
+        : iso
         ? "re-notification about this case is deferred for YOU until that instant. The items themselves "
         + "are unchanged, they still appear in your feed, and no other member's feed moved."
         : "the snooze is cleared; re-notification resumes at the declared interval of whatever raises it.",

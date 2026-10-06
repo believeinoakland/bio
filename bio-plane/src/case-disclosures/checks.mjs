@@ -13,8 +13,9 @@
  * work with no acceptance in force, and an open flag on it left undisclosed, a disclosure standing on nothing, or a
  * flags read not made whole. Promotion stamps these rows (N318); C-120.4–C-120.7 were stamped in `CATALOG_VERSION`
  * 1.47.0 (T17); C-120.8 and C-120.10–C-120.13, and C-120.1–C-120.7's new `where`s, await T29's stamp.
- * C-120.9 was withdrawn unstamped (K1275), and its number is never reused. A change to any row moves `CATALOG_VERSION`
- * (rule 17). */
+ * C-120.9 was withdrawn unstamped (K1275), and its number is never reused. T33 adds a person named without a recorded
+ * basis, a basis that stands on nothing, and a signer who has not attested to their ties (R25, R27). A change to any
+ * row moves `CATALOG_VERSION` (rule 17). */
 
 const at = (fn, region) => `src/case-disclosures/index.mjs ${fn} > ${region}`;
 
@@ -99,5 +100,28 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
     where: at('flagsJudged', 'is-flag-disclosure-standing'),
     translation: 'One of the flags disclosed is not open on work this case rests on: it may have been cleared since. '
       + 'Read the list again. Nothing was published.',
+  },
+  /* R25, R27 (Design Requirement 6 as amended, K1483; K1490; T33-68): every person a case names has a recorded basis,
+     checked before anything is signed, and each signer attests that they hold no undeclared tie. New in T33, numbered
+     provisionally C-120.14–C-120.16 until promotion's stamp (T34); the translations are drafts the UX stream may
+     re-word. A refusal of these names a person or a signer to the publisher's own act only, never to the document. */
+  PERSON_BASIS_UNRECORDED: {
+    check: 'C-120.14',
+    where: at('peopleJudged', 'is-person-basis-recorded'),
+    translation: 'This case names a person without a recorded reason for naming them. Give each person named a basis: '
+      + 'their act or position, a tie, an interest, their consent, an earlier publication, or why a private person is '
+      + 'named. Nothing was written.',
+  },
+  PERSON_BASIS_NOT_STANDING: {
+    check: 'C-120.15',
+    where: at('peopleJudged', 'is-person-basis-standing'),
+    translation: 'A reason given for naming a person is not one the record holds, or the position it cites was not held '
+      + 'on the date of the act. Read the list again. Nothing was written.',
+  },
+  TIE_ATTESTATION_MISSING: {
+    check: 'C-120.16',
+    where: at('tieAttestationJudged', 'is-tie-attested'),
+    translation: 'Each member who signs a case first attests that they hold no undeclared tie to anyone or anything the '
+      + 'case names, including those paid or paying in its money. Attest, or declare the tie first. Nothing was written.',
   },
 });

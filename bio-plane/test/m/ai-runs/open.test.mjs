@@ -93,7 +93,7 @@ test("R10: success writes the run, its bounds, the handed manifest and bar verba
   const row = w.row(`SELECT * FROM ai_runs WHERE run='R1'`);
   assert.deepEqual([row.status, row.ticks, row.label, row.bias_manifest, row.standard_pair, row.state, row.context_type, row.context_id,
                     row.principal_plane, row.principal_claude, row.skill_version, row.expires],
-                   ["running", 1, "fees", handed, bar, '{"todo":[1]}', "inquiry", INQ, "member:bob/t1", "instance", "bio@1", "2026-07-01T01:00:00Z"]);
+                   ["running", 1, "fees", handed, bar, '{"todo":[1]}', "inquiry", INQ, "member:bob/t1", "member:bob", "bio@1", "2026-07-01T01:00:00Z"]);
   assert.deepEqual(w.rows(`SELECT bound, allowed, consumed, unit FROM ai_run_bounds WHERE run='R1' ORDER BY bound`),
     [{ bound: "fetches", allowed: 5, consumed: 0, unit: "fetch" }, { bound: "surfaces", allowed: 2, consumed: 0, unit: null }]);
   const atOpen = JSON.parse(row.lens_at_open);

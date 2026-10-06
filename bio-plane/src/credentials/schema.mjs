@@ -106,6 +106,44 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
+
+-- R22-R26 (T33-20; K1502): each member's own Claude account reference, one row per member, held only by that
+-- member's own act. THE SECRET IS STORED ONLY SEALED (R23): 'sealed' is AES-256-GCM ciphertext under a key derived
+-- (HKDF-SHA-256) from the Worker's seal secret with the member id as salt, so the key is never stored beside the row
+-- and no other member's act reaches it; 'iv' is its nonce. No digest of the secret is kept. 'suggestions' and
+-- 'standing' are the member's own switches (R25), off by default; removing the row turns both off. There is no group,
+-- project or instance row (R26): 'member_id' is a member's id and nothing else. Never exported (R30).
+CREATE TABLE IF NOT EXISTS account_references (
+  member_id   TEXT PRIMARY KEY,
+  kind        TEXT NOT NULL,
+  sealed      TEXT NOT NULL,
+  iv          TEXT NOT NULL,
+  set_at      TEXT NOT NULL,
+  suggestions INTEGER NOT NULL DEFAULT 0,
+  standing    INTEGER NOT NULL DEFAULT 0
+);
+
+-- R29 (K1449): the group's own key for one keyed outside service, set by an administrator, sealed as above (salt
+-- 'group:<service>'), off by default and off while no key is held. Never exported (R30).
+CREATE TABLE IF NOT EXISTS keyed_services (
+  service TEXT PRIMARY KEY,
+  sealed  TEXT,
+  iv      TEXT,
+  is_on   INTEGER NOT NULL DEFAULT 0,
+  set_by  TEXT,
+  set_at  TEXT
+);
+
+-- R27 (Q1-3; K1450): the short-lived, read-only ask grant. Only the SHA-256 of the token is kept, with its member,
+-- the session it was minted under (the grant ends with it) and its expiry. It is no run row, no observation row and
+-- no read log. Never exported (R30).
+CREATE TABLE IF NOT EXISTS ai_grants (
+  grant_sha TEXT PRIMARY KEY,
+  member_id TEXT NOT NULL,
+  session   TEXT NOT NULL,
+  expires   INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ai_grants_member ON ai_grants(member_id);
 `;
 
 /* Columns a store written before they existed gains at boot: additive and nullable, never back-filled (D-85). */
@@ -118,4 +156,17 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
 ];
 
 /* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus). */
-export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials"];
+export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials",
+  "account_references", "keyed_services", "ai_grants"];
+
+/* R30 (plan T33, Rules (6)): each table's classes for record-core's `declareTable` (its R21), declared explicitly.
+   Every table is purge-exempt (R18) and never expunged. Account references, keyed-service keys, password hashes,
+   sessions, AI credentials and ask grants are never exported; account references are seen by their owner alone.
+   Signer keys are public halves the group already publishes (`groupkeyspublic`), so they export; the bootstrap row
+   is an administrator's fact. */
+const CLASSES = { purge: "exempt", expunge: "none", derive: "stored", version_chain: false };
+export const CREDENTIALS_TABLES = Object.freeze([
+  ["credentials", "never", "group"], ["sessions", "never", "group"], ["bootstrap", "admin-only", "group"],
+  ["signers", "yes", "group"], ["ai_credentials", "never", "group"], ["account_references", "never", "owner"],
+  ["keyed_services", "never", "group"], ["ai_grants", "never", "group"],
+].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));

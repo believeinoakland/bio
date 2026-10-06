@@ -2,7 +2,9 @@
    under a question of its own. Its form is `inquiry-grammar`'s (its R11) and its acceptance `accepted-work`'s (R3–R4,
    registered by that module, which this world does not create); here, what this module does with it: the check passes
    it with no `references[]` entry (R4), the projection names it as spelled with no content row (R12), a division
-   carries it (R24) and `earnedBasis` states it (R15). */
+   carries it (R24) and `earnedBasis` states it (R15).
+   The earned registry's own tests (R13–R17 here before T33) moved with those requirements to `leg-earning`'s suite
+   (K617, K1505); what stays is this module's own share. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, inquiryMd } from "./fixture.mjs";
@@ -97,19 +99,3 @@ test("R24 R4 a division carries a leg on an imported finding reference verbatim,
     .map((x) => [x.ord, x.target_id, x.content_id === null]), [[0, A, false], [1, IMP, true]]);
 });
 
-test("R15 R12 earnedBasis lists a leg on an imported finding reference as the question's own, earning nothing, its null case IMPORTED_TARGET", () => {
-  const w = world(); w.doc(A);
-  assert.equal(w.promote(P, md(P)).ok, true);
-  const e = w.k.earnedBasis({ id: P, viewer: "admin" });
-  assert.equal(e.ok, true, JSON.stringify(e).slice(0, 400));
-  assert.equal(e.legs_out_of_view, undefined); assert.equal(e.out_of_view, undefined);
-  const leg = e.legs.find((l) => l.ord === 1);
-  assert.equal(leg.target, IMP); assert.equal(leg.content_id, null); assert.equal(leg.null_case, "IMPORTED_TARGET");
-  assert.match(leg.why_no_content, /another group's finding/);
-  assert.equal(leg.version, undefined, "no version: this record holds no capture of it");
-  assert.ok(e.asked.includes(IMP));
-  assert.equal(e.earned.connection[IMP], undefined); assert.equal(e.earned.capture[IMP], undefined);
-  assert.equal(w.k.ensureLegContent(P, 1).null_case, "IMPORTED_TARGET");
-  /* a viewer who may not see the question is answered as for an absent one (R33), the ref included */
-  assert.equal(w.k.earnedBasis({ id: P, viewer: null }).reason, "NO_SUCH_BUNDLE");
-});

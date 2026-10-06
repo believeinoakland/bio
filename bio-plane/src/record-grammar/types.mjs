@@ -19,7 +19,13 @@
 /* N-A1 (T18, K608): `action_plan`, the Action fold's action plan (`action-plans`' record), on the same terms. */
 export const OBJECT_TYPES = { INFO: 'information', PROB: 'inquiry', FOCUS: 'inquiry', INQ: 'inquiry', PROJ: 'project', ACTN: 'action', BIAS: 'bias',
   STD: 'standard', CONF: 'determination', CONS: 'consequence', ESC: 'escalation', ASP: 'aspiration', GOAL: 'goal',
-  PLN: 'action_plan' };
+  PLN: 'action_plan',
+  /* T33-1 (B0.1, C:A-6; K1470): the types of T33's new objects, one per prefix of `ID_TABLE` (ids.mjs). They are rows of
+     their owners' tables, not bundle documents: R1's prefix set, `HEADINGS`, `STATES` and `checkBundle`'s schemas gain
+     none of them, and `checkBundle` admits only the bundle prefixes' types (bundle.mjs). */
+  CALC: 'calculation', EVT: 'event', LIN: 'line', MNY: 'money_fact', MSR: 'money_set', PFA: 'person_fact',
+  IDC: 'identity_claim', MTI: 'member_tie', CHK: 'interest_check', HYP: 'hypothesis', DUT: 'duty',
+  STQ: 'standing_question' };
 export const LEGACY_TYPE_ALIASES = { problem: 'inquiry', focus: 'inquiry' };
 /* An OWN key only (R5): `constructor`, `toString` and the other `Object.prototype` names are types nobody declared,
    and answer themselves, never an inherited function. Only a string can be an alias. */

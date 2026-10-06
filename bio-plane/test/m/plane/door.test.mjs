@@ -48,7 +48,7 @@ function object() {
 const settle = async (o) => { const out = []; for (const p of o.blocked) out.push(await p); o.blocked.length = 0; return out; };
 const started = (outs) => outs.filter((x) => x && typeof x === "object" && "started" in x);
 
-/* The fourteen instance-setup routes, each driven with a request that exercises it; the stamps are the ones the Worker
+/* The twenty instance-setup routes (K1690), each driven with a request that exercises it; the stamps are the ones the Worker
    door sets (R17). Order matters: the writes run before the reads that show them. */
 const DRIVES = [
   ["instancegroup", "GET"],
@@ -68,6 +68,13 @@ const DRIVES = [
   ["cpuprobeend", "POST", { run: "r1", completed: 1, elapsedMs: 4, reason: "done" }],
   ["cpuprobestate", "GET"],
   ["instancegroupseed?author=token:admin", "POST", { slug: "grp-other" }],
+  ["assistantstate", "GET"],
+  ["assistantset?by=admin", "POST", { on: true }],
+  ["assistantstate", "GET"],
+  ["disclosureshown?by=member:nobody&member=member:nobody", "POST", {}],
+  ["disclosureof?member=member:nobody&viewer=member:nobody", "GET"],
+  ["officesseed?by=admin", "POST", {}],
+  ["seatsseed?by=admin", "POST", {}],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
 /* Instants differ between two runs; everything else must not. */
@@ -95,9 +102,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5: instance-setup's fourteen routes are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690): instance-setup's twenty routes are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 14);
+  assert.equal(ops.length, 20);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);

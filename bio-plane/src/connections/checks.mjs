@@ -12,6 +12,8 @@
  * file's `themeLegFindings`). The catalogue's copy was deleted with the catalogue at T19's close (K855), so these rows
  * are the only ones; the leg grammars read `themeLegFindings` from here. */
 
+import { idPattern } from "../record-grammar/index.mjs";
+
 /* The catalogue's finding shape (`f`, legacy-checks), copied for `themeLegFindings`: a finding is
    `{check, severity, message}`, with `repairable` and `repairs` when repairs are named and `code` when one is. */
 function f(check, severity, message, repairs, code) {
@@ -203,11 +205,15 @@ export const CONNECTION_PAIR_CHECKS = {
  * answering "not a canonical bundle id" — a member told their theme is a
  * malformed id would go looking for a way to make it citable.
  * ===================================================================== */
-export const THEME_ID_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+$/;
+/* R66 (T33-29; S0-7, B0.4): the id core is `record-grammar`'s `idPattern("THEME")` (`ID_TABLE`), so a counter of five
+   or more digits is accepted wherever one of four is; the slug after the core, and the membership address below, are
+   this module's own rules. No copy of the counter's width is held here. */
+const THEME_CORE = idPattern("THEME").source.slice(1, -1);
+export const THEME_ID_RE = new RegExp(`^${THEME_CORE}-[a-z0-9]+$`);
 /* A leg can name a theme BARE, or name a MEMBERSHIP in one by the theme's id with
    an address after it (`THEME-…#INFO-…`, `THEME-…/…`, `THEME-…:…`) — resting on
    membership is still resting on the theme, so both are the same refusal. */
-export const THEME_REF_RE = /^THEME-\d{4}-\d{4}-[a-z0-9]+(?:[#/:?].*)?$/;
+export const THEME_REF_RE = new RegExp(`^${THEME_CORE}-[a-z0-9]+(?:[#/:?].*)?$`);
 /* The leg keys that can only mean "this leg counts BECAUSE of a theme". No leg
    grammar reads either; a leg carrying one is claiming membership as a reason. */
 export const THEME_LEG_KEYS = ["theme", "themes"];

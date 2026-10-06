@@ -42,8 +42,9 @@ test("R7 R26: a placement's grade and bundle are the record's, never the caller'
   const r = await T(w, [{ stage: "need", captureSha: "sa", grade: "D", bundleId: "INFO-X" }, { stage: "award", captureSha: "sc", grade: "A" }],
                     { threadedBy: "member:zed" });
   const docs = Object.fromEntries(r.stages.flatMap((s) => s.documents.map((d) => [d.capture_sha, d])));
-  assert.deepEqual(docs.sa, { capture_sha: "sa", bundle_id: "INFO-A", grade: "A" });
-  assert.deepEqual(docs.sc, { capture_sha: "sc", bundle_id: "INFO-C", grade: "C" });
+  const pick = ({ capture_sha, bundle_id, grade }) => ({ capture_sha, bundle_id, grade });
+  assert.deepEqual(pick(docs.sa), { capture_sha: "sa", bundle_id: "INFO-A", grade: "A" });
+  assert.deepEqual(pick(docs.sc), { capture_sha: "sc", bundle_id: "INFO-C", grade: "C" });
   assert.equal(r.threaded_by, "member:zed");
   // the strongest resolution is the one used
   w.resolve("ENT-1", "sc", "INFO-C", "B");
@@ -243,14 +244,14 @@ test("R33: listeners registered once through membership's refusal, told after ea
   w.p.onThreaded("intent", (e) => { told.push(["intent", e]); return Promise.reject(new Error("no")); });
   w.p.onThreaded("aa-last", fn("aa-last"));
   w.p.onThreaded("bias", fn("bias"));
-  w.dates.reading.sa = "2026-09-01T00:00:00.000Z";
+  w.fact("sa", "2026-09-01");
   w.clock.now = "2026-09-05T00:00:00.000Z";
   const r = await T(w, [{ stage: "need", captureSha: "sa" }]);
   assert.equal(r.ok, true);
   assert.equal(r.thread_version, 1);
   assert.deepEqual(told.map((t) => t[0]), ["bias", "intent", "scheduler", "zz-later", "aa-last"]);
   for (const [, e] of told)
-    assert.deepEqual(e, { progressionKey: "proc", entityId: "ENT-1", nextDeadline: Date.parse("2026-10-01T00:00:00.000Z") });
+    assert.deepEqual(e, { progressionKey: "proc", entityId: "ENT-1", nextDeadline: Date.parse("2026-10-02T04:00:00.000Z") });   // 2026-10-01 ends in the zone
   // written despite the throwing and rejecting listeners, and the answer is the thread's own
   assert.equal(w.count("progression_instances"), 1);
   assert.equal(r.threaded, 1);

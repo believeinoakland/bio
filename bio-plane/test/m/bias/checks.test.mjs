@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { checkBiasSet, checkBiasImage, withBiasChecks, BIAS_CHECKS, BIAS_STATEMENT_KINDS, BIAS_VERDICT_WHOLESALE,
          BIAS_VERDICT_SPEAKER, BIAS_BAR_PHRASING, biasOf } from "../../../src/bias/index.mjs";
 import { PROMOTION_ROW_CHECKS } from "../../../src/promotion/index.mjs";
+import { idPattern } from "../../../src/record-grammar/index.mjs";
 import { FM, S, biasMd, RESIDUE, world } from "./world.mjs";
 
 const ID = "BIAS-2026-0001-house-lens";
@@ -34,10 +35,17 @@ test("R2: C-26.1 — no statements[], a non-object entry, no id, a repeated id, 
   assert.deepEqual(BIAS_STATEMENT_KINDS, ["scrutiny", "inference", "pattern"]);
 });
 
-test("R3: C-26.2 a subject that is not a registry key; C-26.3 no justification on every kind, a nullification included", () => {
-  for (const subject of ["the city attorney", "ENT-26-7", "ent-2026-0007", "", undefined])
+test("R3: C-26.2 a subject that is not a registry key (an ENT- id as record-grammar's ID_TABLE reads it); C-26.3 no justification on every kind, a nullification included", () => {
+  for (const subject of ["the city attorney", "ENT-26-7", "ent-2026-0007", "", undefined, "ENT-2026-999", "ENT-2026-0007x",
+                         " ENT-2026-0007-slug", "REL-2026-0007", "ENT-202-0007", "ENT-2026-abcdefghijklmnop"])
     assert.ok(errs(clean({ statements: [S("s1", { subject })] })).includes("C-26.2"), String(subject));
-  assert.ok(!errs(clean({ statements: [S("s1", { subject: "ENT-2031-9999" })] })).includes("C-26.2"));
+  /* T33-38 (S0-9): an ENT- id as record-grammar's ID_TABLE states it, no four-digit ceiling */
+  for (const subject of ["ENT-2031-9999", "ENT-2026-0007", "ENT-2026-10000", "ENT-2026-123456789", " ENT-2026-0007 "])
+    assert.ok(!errs(clean({ statements: [S("s1", { subject })] })).includes("C-26.2"), subject);
+  /* the module holds no copy of the pattern: its verdict is idPattern("ENT")'s on every subject tried */
+  const ent = idPattern("ENT");
+  for (const subject of ["ENT-2026-0001", "ENT-2026-10000", "ENT-2026-999", "ENT-1-0001", "ENT-2026-", "ENT-2026-00001"])
+    assert.equal(errs(clean({ statements: [S("s1", { subject })] })).includes("C-26.2"), !ent.test(subject), subject);
   for (const kind of BIAS_STATEMENT_KINDS)
     assert.ok(errs(clean({ statements: [S("s1", { kind, justification: " ", citations: ["x"] })] })).includes("C-26.3"), kind);
   assert.ok(errs(clean({ statements: [S("p1", { text: "", nullifies: "s1", justification: "" })] })).includes("C-26.3"));

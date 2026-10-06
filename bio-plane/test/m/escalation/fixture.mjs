@@ -13,6 +13,9 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { escalationOf } from "../../../src/escalation/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { linesOf } from "../../../src/lines/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
@@ -72,7 +75,7 @@ export const OFFICE = {
   unlisted: { role: "Water Board", body: "Nowhere Water District" },
 };
 
-export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } = {}) {
+export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], structure = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -187,12 +190,39 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
     },
   };
   const given = Object.fromEntries(Object.entries({ conformance, consequences, actions, filings }).filter(([k]) => !omit.includes(k)));
+  /* R4, R12, R30 (T33-76): with `structure`, the real entities, events and lines on this storage, each through its own
+     factory (which reaches the modules it uses itself), escalation reaching them as its deps; otherwise none is given, and an events stand-in takes
+     the registration. Either way the registered source is kept, so a test can call it with a viewer (events R30 calls
+     it without one). */
+  const source = { module: null, fn: null, registrations: 0 };
+  let ents = null, ev = null, lines = null;
+  if (structure) {
+    /* No capture is cited here (every line is a member's testimony, every entity declared), so the capture-side
+       modules the three read through (provenance, content, extraction) are given as empty stand-ins, never reached. */
+    const unread = { provenance: {}, content: {}, extraction: {} };
+    ents = entitiesOf(host, { record, membership, provenance: unread.provenance });
+    ents.migrate();
+    ev = eventsOf(host, { record, membership, entities: ents, ...unread, now: () => clock.now });
+    ev.migrate();
+    lines = linesOf(host, { record, entities: ents, events: ev, provenance: unread.provenance, content: unread.content,
+                            now: () => clock.now });
+    lines.migrate();
+  }
+  const events = {
+    registerEventSource(module, fn) {
+      source.registrations++;
+      Object.assign(source, { module, fn });
+      return ev ? ev.registerEventSource(module, fn) : { ok: true };
+    },
+  };
   /* no explicit migrate: the factory migrates its tables at construction (K267) */
-  const esc = escalationOf(host, { record, membership, promotion, ...given, now: () => clock.now });
+  const esc = escalationOf(host, { record, membership, promotion, ...given, events,
+                                   ...(structure ? { entities: ents, lines } : {}), now: () => clock.now });
 
   let n = 0, nd = 0, na = 0;
   const w = {
     st, host, record, membership, promotion, esc, clock, calls, determinations, addressedBy, ledgers, actionHidden,
+    source, ents, ev, lines,
     stand: { conformance, consequences, actions, filings },
     parts,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
@@ -220,15 +250,15 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
                    VALUES (?, ?, ?, 0, 't', 't')`, projectId, memberId, state);
     },
     /** A determination as conformance records it: per-standard outcomes, an act with an actor office. */
-    determine({ project, outcomes, actor = OFFICE.clerk, act = null, at = clock.now, supersededBy = null } = {}) {
+    determine({ project, outcomes, actor = OFFICE.clerk, act = null, event = null, at = clock.now, supersededBy = null } = {}) {
       const id = `CONF-2026-${String(++nd).padStart(4, "0")}-determination`;
       /* R9's `standards`: each outcome with its in-force answer, rows and disagreement, as an outcome states them, else
          one diverging row over content `c1` */
       const standards = outcomes.map((o) => ({ standard: o.standard, outcome: o.outcome, in_force: o.in_force ?? "in_force",
         in_force_why: o.in_force_why ?? null, disagreement: o.disagreement ?? null,
         rows: o.rows ?? [{ requires: `what ${o.standard} requires`, did: "what the act did", reading: "diverges", content: ["c1"] }] }));
-      determinations.set(id, { id, project, act: { id: act ?? `ACT-2026-${String(nd).padStart(4, "0")}`, description: "the act",
-        actor, at: "2026-09-01", evidence: ["c1"] }, outcomes: outcomes.map((o) => ({ standard: o.standard, outcome: o.outcome })),
+      determinations.set(id, { id, project, act: { id: act ?? `ACT-2026-${String(nd).padStart(4, "0")}`, ...(event ? { event } : {}),
+        description: "the act", actor, at: "2026-09-01", evidence: ["c1"] }, outcomes: outcomes.map((o) => ({ standard: o.standard, outcome: o.outcome })),
         standards, at, author: V("alice"), superseded_by: supersededBy });
       return id;
     },
@@ -246,6 +276,18 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [] } 
         criticality: null, at: clock.now }));
       ledgers.set(id, []);
       return id;
+    },
+    /** A registered entity (entities' own act); `structure` worlds only. */
+    ent(kind, label) {
+      const r = ents.createEntity({ kind, label, note: `${label}, registered by the test`, declaredBy: V("alice") });
+      if (!r.ok) throw new Error(`fixture entity refused: ${r.reason} ${r.detail}`);
+      return r.entity_id;
+    },
+    /** A member's testimony line (lines' shortest valid act); `structure` worlds only. */
+    say(kind, from, to, valid = { from: "2020-01-01", to: "2030-12-31" }) {
+      const r = lines.recordLine({ kind, from, to, valid, basis: { statement: "the charter says so" }, by: V("alice") });
+      if (!r.ok) throw new Error(`fixture line refused: ${r.reason} ${r.detail}`);
+      return r.line_id;
     },
     /** One ledger entry, as actions' `actionCorrespond` appends it (R16): its position, direction, date and recording time. */
     correspond(action, direction, at, recordedAt = clock.now) {

@@ -59,6 +59,7 @@
    so the leak is on the SUCCESS path; the old battery leaked 41.0 GB that way and
    filled the machine's disk. A fleet suite that runs beside the plane's must own
    its ground like every plane suite does. */
+import { ACCOUNT, MEMBER, ACCOUNT_SECRET, withAccount } from "./account.mjs";
 import "../../bio-plane/test/sandbox.mjs";
 
 import { readFileSync } from "node:fs";
@@ -79,7 +80,7 @@ const { Miniflare } = await (async () => {
 /* FL-3: the pinned op set lives in `harness.mjs`, beside the table rows that
    use it, rather than being retyped here where a copy would age separately —
    the defect this file's own A2 note is about, one construct over. */
-import { PLANE_OPS } from "../src/harness.mjs";
+import { PLANE_OPS } from "../src/ops.mjs";
 /* D-276: the mock's `op=meaningrows` branch, DERIVED from the plane's own arm
    registry and refusal catalog rather than typed here. See `plane-meaning.mjs`
    for why a fixture that says yes to everything is not a fixture. */
@@ -87,7 +88,7 @@ import { MEANING_ARMS, meaningRowsBranch } from "./plane-meaning.mjs";
 /* D-276: the arm the MEMBER actually sends, imported rather than retyped — a
    suite asserting about its own copy of the value is the failure this item is
    about, one file over. */
-import { MEANING_ARM } from "../src/harness.mjs";
+import { MEANING_ARM } from "../src/ops.mjs";
 
 const WORKER_SRC = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WRANGLER = fileURLToPath(new URL("../wrangler.jsonc", import.meta.url));
@@ -98,10 +99,10 @@ const SRC = readFileSync(WORKER_SRC, "utf8");
    member at its interface: the op declaration it exports (`PLANE_OPS`, R37) and its namespaces (`NAMESPACES`, R4),
    each pinned exactly here. control-plane pins both against its own op table, `AI_RUN_ACTIONS` and namespace gate
    (layer 11), which a layer-6 suite may not import. */
-import { NAMESPACES } from "../src/harness.mjs";
+import { NAMESPACES } from "../src/ops.mjs";
 /* N421: the fence measured at the member's interface, in this process (section 6). */
 import { SURFACE } from "../src/index.mjs";
-import { MODEL_ENDPOINT } from "../src/model.mjs";
+import { MODEL_ENDPOINT } from "../../agent-model/src/model.mjs";
 import { driveMember, AIK as INPROCESS_AIK, AIK_SECOND as INPROCESS_AIK_SECOND,
          CLAUDE_TOKEN as INPROCESS_CLAUDE } from "./inprocess.mjs";
 /* The writes this member declares: exactly the mutating members of `PLANE_OPS`, pinned floor and ceiling (R37). */
@@ -161,6 +162,7 @@ export default {
     if (op === "airun")
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
         id: url.searchParams.get("run"), mode: "check", status: "running", max_passes: 1,
+        principal: { plane: "member:ruth", claude: "member:ruth" },
         context: { type: "inquiry", id: "INQ-1" },
         budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
                  { bound: "subsessions", allowed: 50, consumed: 0 },
@@ -214,7 +216,7 @@ const newMf = (vars = {}, opts = {}) => new Miniflare({
 });
 
 const run = (mf, body) =>
-  mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(body) });
+  mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(withAccount(body)) });
 const mockState = async (mf) => {
   const w = await mf.getWorker("plane-mock");
   return (await (await w.fetch("http://plane/__mock/state")).json());
@@ -248,7 +250,7 @@ console.log("\n--- 1 · the round trip: the member asks the plane and reports wh
      presented without it would be indistinguishable from a model run. */
   t("the stage says the HARNESS ran", out.stage, "harness");
   t("zero model turns were run, stated", out.turns_run, 0);
-  t("and the judgement source is NAMED rather than implied", out.judgement_source, "supplied");
+  t("R28: and the judgement source is NAMED rather than implied: the body's", out.judgement_source, "body");
   /* R40 moved the sentence: model turns now run when an account resolves, so the note says which happened. */
   t("with the missing model half stated in words", /no model turn was taken/.test(out.judgement_note ?? ""), true);
 
@@ -462,8 +464,8 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
     [200, 200, 200, 200, 10, true]);
 
   console.log("\n  -- it holds no binding but the plane: no store, no bucket, no write route --");
-  t("R35: the only keys of env it reads are PLANE and its configuration (VERSION, the two segment bounds, MODEL)",
-    [...all.envKeys].filter((k) => !["PLANE", "VERSION", "MAX_TURNS_PER_SEGMENT", "MAX_SEGMENT_BYTES", "MODEL"].includes(k)), []);
+  t("R35: the only keys of env it reads are PLANE, RUNNER and its configuration (VERSION, the two segment bounds)",
+    [...all.envKeys].filter((k) => !["PLANE", "RUNNER", "VERSION", "MAX_TURNS_PER_SEGMENT", "MAX_SEGMENT_BYTES"].includes(k)), []);
   t("R35: offered STORE, CAPTURES, PUBLISHED, a KV, a D1 and a queue, it read and touched none of them",
     all.forbiddenTouched, []);
   t("R35: of the PLANE binding it touches `fetch` and nothing else — no put, delete, get or list on any binding",
@@ -517,7 +519,10 @@ console.log("\n--- 6 · WRITES NOTHING, HOLDS NOTHING, REACHES NOTHING BUT THE P
   console.log("\n  -- the config declares the narrowest bindings that do the job --");
   const cfg = readFileSync(WRANGLER, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
   t("account_id is PINNED to this project's account", /"account_id":\s*"20b533579290b9b93168345edd3b7f72"/.test(cfg), true);
-  t("no durable_objects (STORE) binding declared", /durable_objects/.test(cfg), false);
+  /* R35 (K1601 (6)): its one Durable Object binding is the agent runner's Container, cross-script; no STORE. */
+  const dos = (JSON.parse(cfg).durable_objects?.bindings) || [];
+  t("R35: no durable_objects binding but the runner's Container (RUNNER, cross-script to agent-runner); no STORE",
+    dos.map((b) => [b.name, b.class_name, b.script_name]), [["RUNNER", "AgentRunner", "agent-runner"]]);
   t("no r2_buckets declared at all", /r2_buckets/.test(cfg), false);
   t("no PUBLISHED binding declared", /PUBLISHED/.test(cfg), false);
   t("no secret or token var declared", /TOKEN/.test(cfg), false);
@@ -698,7 +703,7 @@ console.log("\n--- 8 · D-276: the meaning ARM, driven against the REAL plane in
    (`bio-plane/test/m/ai-runs/reads.test.mjs`). */
 console.log("\n--- D-451: runContextTarget over a project run's published questions ---");
 {
-  const { runContextTarget } = await import("../src/harness.mjs");
+  const { runContextTarget } = await import("../../agent-harness/src/harness.mjs");
   const at = (ctx) => runContextTarget({ context: ctx });
   const P = "PROJ-2026-9451-d451";
   t("D-451a: a project run publishing ONE question seeds it, and says why",

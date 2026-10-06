@@ -17,7 +17,13 @@
  *
  * T19 (RECORD-CORE #11): C-102.19–.20 are new, the mint seed's two registration refusals (R70), on the same terms.
  * C-102.15's and .16's meaning follows R67 as K766 words it (a registration may claim several whole slots, a slot
- * several registrations); their sentences already say so. */
+ * several registrations); their sentences already say so.
+ *
+ * T33 (RECORD-CORE #16, T33-19; S0-3, K1493): C-102.21–.22 are new, `declareTable`'s classes (R21); C-102.23–.25 new,
+ * the store gate's registration and its failed check (R78). (The declaration's older refusals, TABLE_DECLARED and
+ * TABLE_NAME_INVALID, keep their row-less shape, which other modules' tests pin; their rows are deferred.) C-132 is a
+ * new family, expunge with a tombstone (R79), whose refusals a member's act meets. All are `awaiting stamp`: promotion,
+ * which stamps rows, has no T33 job (T34's layer 2). */
 
 const at = (fn, region) => `src/record-core/index.mjs ${fn} > ${region}`;
 const BUILD_FAULT = 'This is a fault in how the instance was built, not in the record, and nothing in the record changed.';
@@ -118,6 +124,56 @@ export const RECORD_CORE_CHECKS = Object.freeze({
     check: 'C-102.20', where: at("registerMintSeed", "is-mint-seed-registration"),
     translation: 'A part of this instance tried to name the identifiers it holds without naming itself, or named a '
       + 'place to read them that is not a table and a column, so nothing was registered. ' + BUILD_FAULT,
+  }),
+  /* New (T33, R21; S0-3): `declareTable`'s classes. */
+  TABLE_CLASS_MISSING: Object.freeze({
+    check: 'C-102.21', where: at("#declare", "is-table-declaration"),
+    translation: 'A part of this instance tried to declare a table without saying how it is purged, removed, exported, '
+      + 'seen, derived or versioned, so nothing was declared. ' + BUILD_FAULT,
+  }),
+  TABLE_CLASS_UNKNOWN: Object.freeze({
+    check: 'C-102.22', where: at("#declare", "is-table-declaration"),
+    translation: 'A part of this instance tried to declare a table with a class the record does not know, so nothing was '
+      + 'declared. ' + BUILD_FAULT,
+  }),
+  /* New (T33, R78; S0-3): the store gate, one table's one-home and shape checks. */
+  STORE_GATE_DECLARED: Object.freeze({
+    check: 'C-102.23', where: at("registerStoreGate", "is-store-gate-registration"),
+    translation: 'A part of this instance tried to register the checks of a table that already has them, so the second '
+      + 'registration was refused and the first still runs. ' + BUILD_FAULT,
+  }),
+  STORE_GATE_MALFORMED: Object.freeze({
+    check: 'C-102.24', where: at("registerStoreGate", "is-store-gate-registration"),
+    translation: 'A part of this instance tried to register or run the checks of a table without naming itself, a table it '
+      + 'declared or a check to run, so nothing was registered and nothing was written. ' + BUILD_FAULT,
+  }),
+  STORE_GATE_FAILED: Object.freeze({
+    check: 'C-102.25', where: at("storeGate", "is-store-gate-failed"),
+    translation: 'One of the checks the record runs before saving this stopped with an error instead of answering, so '
+      + 'nothing was saved. The error is in the check and says nothing yet about what you sent. If it keeps happening, '
+      + 'tell whoever runs this instance.',
+  }),
+  /* New family (T33, R79; K1493, State Rules I-19): expunge with a tombstone, the one removal outside purge. */
+  EXPUNGE_GROUND_UNKNOWN: Object.freeze({
+    check: 'C-132.1', where: at("expunge", "is-expunge-refused"),
+    translation: 'Nothing was removed. The record removes something only on one of four stated grounds: it is unlawful to '
+      + 'hold, it is confidential, a court ordered it (name the recorded order), or a lawful demand requires it (name the '
+      + 'kind of demand). Say which ground applies and try again.',
+  }),
+  EXPUNGE_NOT_DECLARED: Object.freeze({
+    check: 'C-132.2', where: at("expunge", "is-expunge-refused"),
+    translation: 'Nothing was removed. This kind of record is never removed, only corrected by a later entry, so its '
+      + 'history stays whole.',
+  }),
+  EXPUNGE_NOT_A_MEMBER: Object.freeze({
+    check: 'C-132.3', where: at("expunge", "is-expunge-refused"),
+    translation: 'Nothing was removed. Only a member, acting as themselves, removes something from the record; a machine '
+      + 'or an unnamed request cannot.',
+  }),
+  EXPUNGE_NOTHING: Object.freeze({
+    check: 'C-132.4', where: at("expunge", "is-expunge-refused"),
+    translation: 'Nothing was removed, because nothing held matches what was named. Check what you asked to remove and '
+      + 'try again.',
   }),
 });
 

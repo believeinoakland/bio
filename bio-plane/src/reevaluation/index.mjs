@@ -8,7 +8,10 @@
  * through `levelMoved`) moving included, a case edition withdrawn or contested on its docket (R30, read through the
  * registration `docket` fills, told through `docketActed`), this group's acceptance of another group's finding
  * withdrawn (R31, read through `accepted-work`, told by `case-import` through `acceptanceWithdrawn`), and a cited case's
- * new edition or withdrawal at its publisher (R33, `accepted-work`'s publisher moves, told through `citedCaseMoved`).
+ * new edition or withdrawal at its publisher (R33, `accepted-work`'s publisher moves, told through `citedCaseMoved`), a
+ * held event moved or a participant of it re-resolved (R34, heard from `events`) and a calculation's input changed (R35,
+ * heard from `calculations`). R14's notice also arises across addresses, for the same portion of a law held at another
+ * address (R36, through `standards`' instrument keys and recodifications).
  *
  * Extracted from the legacy modules (T7, layer 7; K3, K102): `store.mjs` (`#reevalRaisedBy`, now `raise`; the REC-17
  * obligation, `reevaluations`, with `#reevalLegsEarned` and `#reevalMoved`; D-256's `changedFromAudit`; D-394's
@@ -26,7 +29,8 @@
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to record-core's
  * purge (K23), registers its answer with `inquiry.onRaised` (a deferral, a division, a re-read) and
  * `promotion.onReopened` (a reopening), registers C-10.1 with promotion as a check and with record-core's audit (R22), and
- * listens to provenance's receipts (its R47), each of which makes the notice sweep pending again (R25).
+ * listens to provenance's receipts (its R47), each of which makes the notice sweep pending again (R25), and to `events`'
+ * and `calculations`' change notices (R34, R35).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `readFile`, `head`, `livePaths`, `transact`, `declarePurge`,
  *                                   `registerAuditCheck`; `viewerPredicate`; `registerStep`, `onReopened`, the facts
@@ -45,6 +49,11 @@
  *                  reference (R1) and the acceptances withdrawn (R31); `publisherMoves` (its R8): the cited cases'
  *                  new editions and withdrawals (R33). `case-import` fills it and tells `acceptanceWithdrawn` after a
  *                  withdrawal commits, `citedCaseMoved` after a docket read that recorded a move commits.
+ *   events         `onEventChanged` (its R16) and `eventForAct` (its R21), for R34; `readEvent` (its R26), whether a viewer
+ *                  sees an event a leg names (R20).
+ *   calculations   `onInputChanged` (its R11), for R35.
+ *   standards      `standardsIn` (its R8, each standard's instrument key and portion, R18) and `addressesOf` (its R24),
+ *                  for R36.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *   env            the instance bindings: `REEVAL_NOTICE_DELAY_MS` (R25).
  *
@@ -52,7 +61,8 @@
  * `last_updated`, its R37) and `files` (the D-256 audit's scan, below); inquiry's `inquiry_basis` (`bundle_id`, `ord`,
  * `target_id`, `content_id`, its R40); content's `content` (its R45); provenance's `register` and `captured_locators`
  * (its R48); basis-versions' `inquiry_basis_versions` (`bundle_id`, `name`, `claim`, its R38), R27's claim referents;
- * sources' `source_knocks` (`source_id`, `capture_sha`, its R15), R28's captures of a source. */
+ * sources' `source_knocks` (`source_id`, `capture_sha`, its R15), R28's captures of a source; events'
+ * `event_attestations` is not read (R34 names the event a leg names, never the documents attesting it). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
@@ -65,6 +75,9 @@ import { strengthOf, GRADE_RANK } from "../strength/index.mjs";
 import { contradictionOf, TENSIONS_REFERENTS_MAX } from "../contradiction/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
+import { eventsOf } from "../events/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
 import { normalizeType, parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX, sha256HexSync }
   from "../record-grammar/index.mjs";
 import { VERSION_NAME_RE } from "../basis-versions/index.mjs";
@@ -110,6 +123,24 @@ export const ACCEPTANCE_PAGE = 200;
  *  (K1339, K1366 F1: no other docket entry raises a cause here). */
 export const CITED_CASE_MOVED = "cited_case_moved";
 export const PUBLISHER_MOVE_KINDS = Object.freeze(["edition", "withdrawal"]);
+/** R34: the cause a held event's change raises, also the kind R8's listeners are told; the two changes `events` tells
+ *  that raise it (its R16; a merge or a split it also tells is not one of them). */
+export const EVENT_CHANGED = "event_changed";
+export const EVENT_CHANGES = Object.freeze(["when_moved", "participant_re_resolved"]);
+/** R35: the cause a calculation's input change raises, also the kind R8's listeners are told (calculations R11). */
+export const CALCULATION_INPUT_CHANGED = "calculation_input_changed";
+/* R34, R35 and R2: ids naming a row another module holds, never a bundle here: an event (`EVT-`), an act aliasing one
+   (`ACT-`, events R21), a calculation (`CALC-`) or a duty occurrence (`occurrence:`). Absent from `bundles` is not a
+   deletion for these: whether one is held is its own module's to say. */
+const EVENT_REF = /^EVT-/, ACT_REF = /^ACT-/, CALC_REF = /^CALC-/;
+const isRowTarget = (id) => typeof id === "string" && (EVENT_REF.test(id) || ACT_REF.test(id) || CALC_REF.test(id)
+  || id.startsWith("occurrence:"));
+/** R36: the standards one page of `standards.standardsIn` is asked for (its R8's most). */
+export const STANDARDS_PAGE = 200;
+/** R36, R21: what a notice raised across addresses says of its grade, which content does not read across addresses. */
+export const ACROSS_UNDETERMINED_WHY = "the newer version is held at another address, and content compares a passage only "
+  + "along one address's version chain, so whether the change touches this passage is undetermined; that is not the "
+  + "same as unaffected";
 /** R33: the moves one page of accepted-work's `publisherMoves` is asked for (its R8's most). */
 export const MOVES_PAGE = 200;
 /** R33: the (dependent, move) pairs one `citedCaseDependents` read lists (default and most). */
@@ -119,13 +150,19 @@ export const CITED_LIMIT_MAX = 200;
  *  about a side the leg rests on; `source` is R28's, a rung move of the source behind a capture the leg rests on;
  *  `attribution` is R29's, a move of the credit level of the observation the leg rests on; `withdrawal` and `contested`
  *  are R30's, a case edition withdrawn or contested on its docket; `acceptance` is R31's, this group's acceptance of
- *  another group's finding withdrawn at the edition the leg names; §5.4's four cascade events (C-10.1's
+ *  another group's finding withdrawn at the edition the leg names; `cited_case_moved` is R33's; `event_changed` and
+ *  `calculation_input_changed` are R34's and R35's, a change heard about a held event or calculation a leg names; §5.4's
+ *  four cascade events (C-10.1's
  *  `REEVAL_SOURCES`, `./checks.mjs`) are derived the same way; `weakened` is R17's. */
 export const CAUSE_SOURCES = Object.freeze(["supersession", "edition", "deferred", "reopened", "dismissed", "corrected",
-  "source", "attribution", ...DOCKET_KINDS, "acceptance", CITED_CASE_MOVED, ...REEVAL_SOURCES, "weakened"]);
+  "source", "attribution", ...DOCKET_KINDS, "acceptance", CITED_CASE_MOVED, EVENT_CHANGED, CALCULATION_INPUT_CHANGED,
+  ...REEVAL_SOURCES, "weakened"]);
 /** R21, R27: what an answer says when a tensions read could not be made. */
 const CORRECTIONS_UNREAD = "the contradiction module's tensions read could not be made, so whether a side this rests on "
   + "was named wrong was not read and no corrected cause could be derived; that is not the same as none";
+/** R36, R21: what a sweep says when the held standards, or a provision's other addresses, could not all be read. */
+const STANDARDS_UNREAD = "the held standards, or the addresses a provision has been held under, could not all be read, so a "
+  + "notice of a newer version at another address may be missing; that is not the same as none";
 /** R16, R21 (N457): what an answer says when no module registered a case edition's parts (R26), or a read of the work
  *  products a project owns could not be made. */
 const CASE_PARTS_ABSENT = "no module has registered the cited parts of a case edition, so which cases a project owns "
@@ -214,6 +251,11 @@ function attributionDetail(m) {
     + ` how the member who gave it is identified has changed.`;
 }
 
+/* R36: a notice's `across`, as stored. */
+function parseAcross(v) {
+  try { const o = JSON.parse(v); return o && typeof o === "object" ? o : null; } catch { return null; }
+}
+
 /* R33: one publisher move as accepted-work's R8 answers it, checked; null when it cannot be one (a kind that is not a
    move, an edition that is neither a positive whole number nor `all`, no id or import). */
 function moveOf(x) {
@@ -264,12 +306,14 @@ export class Reevaluation {
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, content = null,
                 connections = null, provenance = null, strength = null, basisVersions = null, contradiction = null,
-                sources = null, acceptedWork = null, now = null, env = null } = {}) {
+                sources = null, acceptedWork = null, events = null, calculations = null, standards = null, now = null,
+                env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction, sources, acceptedWork };
+    this.#deps = { host, inquiry, content, connections, provenance, strength, basisVersions, contradiction, sources, acceptedWork,
+                   events, calculations, standards };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     this.env = env && typeof env === "object" ? env : {};
   }
@@ -282,6 +326,9 @@ export class Reevaluation {
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
   get sources() { return this.#deps.sources ||= sourcesOf(this.#deps.host); }
+  get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  get calculations() { return this.#deps.calculations ||= calculationsOf(this.#deps.host); }
+  get standards() { return this.#deps.standards ||= standardsOf(this.#deps.host); }
   get acceptedWork() {
     return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record, promotion: this.promotion });
   }
@@ -381,6 +428,9 @@ export class Reevaluation {
     /* R1, R31: an imported finding reference is held by another group's case, never a bundle here: no row of its own
        moves, so it carries no cause of its own (and never a deletion); R31's arm is per leg. */
     if (isRef(targetId)) return null;
+    /* R34, R35: an event, an act, a calculation or an occurrence is a row its own module holds; nothing of it moves here
+       but what R34's and R35's arms hear, per leg, and its absence from `bundles` is not a deletion. */
+    if (isRowTarget(targetId)) return null;
     const row = this.#targetRow(targetId);
     /* §5.4's gated deletion: a leg naming what the record no longer holds. When it went is not recorded here. */
     if (!row)
@@ -1322,6 +1372,185 @@ export class Reevaluation {
     return out;
   }
 
+  /* ---------------------------------------------------------------- R34, R35: an event or a calculation changed */
+
+  /* R34: the event an id a leg names stands for: an `EVT-` id itself, or the event `events.eventForAct` answers for an
+     `ACT-` id (its R21); null for any other id, or when events cannot say. Memoised in `memo` for one answer. */
+  #eventOf(id, memo = new Map()) {
+    if (memo.has(id)) return memo.get(id);
+    let e = null;
+    if (EVENT_REF.test(id)) e = id;
+    else if (ACT_REF.test(id)) {
+      let a = null;
+      try { a = this.events.eventForAct(id); } catch { a = null; }
+      e = a && a.found === true && typeof a.event_id === "string" && a.event_id ? a.event_id : null;
+    }
+    memo.set(id, e);
+    return e;
+  }
+
+  /* R34: the ids a basis leg may name for one event: the event and every `ACT-` id a leg names that aliases it. */
+  #namesOfEvent(eventId) {
+    const acts = this.#rows(`SELECT DISTINCT target_id FROM inquiry_basis WHERE target_id LIKE 'ACT-%' ORDER BY target_id`)
+      .map((r) => r.target_id);
+    const memo = new Map();
+    return [eventId, ...acts.filter((a) => this.#eventOf(a, memo) === eventId)];
+  }
+
+  /* R34, R35: the live legs (R7) resting on any of `targets`, each `{bundle_id, ord, role, state, target}`, as the plane
+     reads them (a listener is the plane's own; no viewer is asked). Direct dependents only: a dependent's own
+     dependents are not walked (Choices 19). */
+  #liveLegsOn(targets) {
+    const live = this.#liveOn(targets);
+    const out = [];
+    for (const t of new Set(targets))
+      for (const x of live.get(t).values())
+        out.push({ bundle_id: x.bundle_id, ord: x.ord, role: x.role ?? null, state: x.state ?? null, target: t });
+    return out.sort((a, b) => (a.bundle_id < b.bundle_id ? -1 : a.bundle_id > b.bundle_id ? 1 : 0) || (a.ord - b.ord));
+  }
+
+  /** R34, R8: the listener registered with `events.onEventChanged` (its R16), called after an event's change commits with
+   *  `{eventId, change, …}`. A `when_moved` or `participant_re_resolved` telling about an event some basis leg names
+   *  (itself, or an `ACT-` id aliasing it) is kept as one row (R18: the event, the change and this module's instant; no
+   *  value), then told to R8's listeners as `kind: "event_changed"` with the live legs resting on it, direct dependents
+   *  only. Any other change, or a telling nothing rests on, writes nothing. It moves nothing and never throws. */
+  eventChanged({ eventId = null, change = null } = {}) {
+    try {
+      const id = str(eventId);
+      if (!id || !EVENT_CHANGES.includes(change)) return { ok: true, kept: false };
+      const names = this.#namesOfEvent(id);
+      if (!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE target_id IN (SELECT value FROM json_each(?)) LIMIT 1`,
+                     JSON.stringify(names)))
+        return { ok: true, kept: false, dependents: 0 };
+      const at = this.#when();
+      this.sql.exec(`INSERT INTO reevaluation_event_changes (event_id, change, at) VALUES (?,?,?)`, id, change, at);
+      let dependents = [];
+      try { dependents = this.#liveLegsOn(names); } catch { dependents = []; }
+      const out = { ok: true, kept: true, at, dependents: dependents.length };
+      this.#tellAfterCommit({ kind: EVENT_CHANGED, subject: id, source: EVENT_CHANGED, since: at, change,
+        detail: `the event ${id} ${change === "when_moved" ? "moved in time" : "had a participant re-resolved"}; `
+          + `${dependents.length ? "what rests on it directly is named" : "nothing live here rests on it"}`,
+        dependents }, out);
+      return out;
+    } catch { return { ok: true, kept: false }; }
+  }
+
+  /** R35, R8: the listener registered with `calculations.onInputChanged` (its R11), called after an input change commits
+   *  with `{calcId, input, cause}`. A telling about a calculation some basis leg names is kept as one row (R18: the
+   *  calculation, the input and this module's instant; no value), then told to R8's listeners as
+   *  `kind: "calculation_input_changed"` with the live legs resting on it, direct dependents only. Nothing is recomputed
+   *  here. A telling nothing rests on writes nothing. It never throws. */
+  inputChanged({ calcId = null, input = null } = {}) {
+    try {
+      const id = str(calcId);
+      if (!id) return { ok: true, kept: false };
+      if (!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE target_id = ? LIMIT 1`, id))
+        return { ok: true, kept: false, dependents: 0 };
+      const at = this.#when();
+      const inp = input == null ? null : String(input);
+      this.sql.exec(`INSERT INTO reevaluation_input_changes (calc_id, input, at) VALUES (?,?,?)`, id, inp, at);
+      let dependents = [];
+      try { dependents = this.#liveLegsOn([id]); } catch { dependents = []; }
+      const out = { ok: true, kept: true, at, dependents: dependents.length };
+      this.#tellAfterCommit({ kind: CALCULATION_INPUT_CHANGED, subject: id, source: CALCULATION_INPUT_CHANGED, since: at,
+        input: inp,
+        detail: `an input of the calculation ${id}${inp ? ` (${inp})` : ""} changed; the calculation is recomputed only `
+          + `by its own module's act; ${dependents.length ? "what rests on it directly is named" : "nothing live here rests on it"}`,
+        dependents }, out);
+      return out;
+    } catch { return { ok: true, kept: false }; }
+  }
+
+  /** R34, R35: the `event_changed` and `calculation_input_changed` causes on `legs` (`inquiry_basis` rows), for a
+   *  viewer's visible dependents. A live leg (R7) naming an event (or an `ACT-` id `eventForAct` answers as one) carries
+   *  one per kept telling about that event, and a live leg naming a calculation one per kept telling about it, when the
+   *  telling came after the dependent's last write (`bundles.last_updated`). Answers `{byPair}` keyed
+   *  `<dependent>\0<target>`, each list latest telling first, then ord. Reads only; moves nothing (R19). */
+  #heardChanges(legs, visible) {
+    const byPair = new Map();
+    const anyEvent = !!this.#one(`SELECT 1 AS x FROM reevaluation_event_changes LIMIT 1`);
+    const anyInput = !!this.#one(`SELECT 1 AS x FROM reevaluation_input_changes LIMIT 1`);
+    if (!anyEvent && !anyInput) return { byPair };
+    const rows = legs.filter((l) => l && l.bundle_id && l.target_id && visible(l.bundle_id) !== null
+      && (EVENT_REF.test(l.target_id) || ACT_REF.test(l.target_id) || CALC_REF.test(l.target_id)));
+    if (!rows.length) return { byPair };
+    const memo = new Map();
+    const eventOf = new Map();
+    if (anyEvent)
+      for (const t of new Set(rows.map((l) => l.target_id).filter((t) => !CALC_REF.test(t)))) {
+        const e = this.#eventOf(t, memo);
+        if (e) eventOf.set(t, e);
+      }
+    const group = (list, key) => {
+      const m = new Map();
+      for (const x of list) { if (!m.has(x[key])) m.set(x[key], []); m.get(x[key]).push(x); }
+      return m;
+    };
+    const evIds = [...new Set(eventOf.values())];
+    const evMoves = group(evIds.length ? this.#rows(`SELECT change_id, event_id, change, at FROM reevaluation_event_changes
+      WHERE event_id IN (SELECT value FROM json_each(?)) ORDER BY event_id, change_id`, JSON.stringify(evIds)) : [], "event_id");
+    const calcIds = anyInput ? [...new Set(rows.map((l) => l.target_id).filter((t) => CALC_REF.test(t)))] : [];
+    const inMoves = group(calcIds.length ? this.#rows(`SELECT change_id, calc_id, input, at FROM reevaluation_input_changes
+      WHERE calc_id IN (SELECT value FROM json_each(?)) ORDER BY calc_id, change_id`, JSON.stringify(calcIds)) : [], "calc_id");
+    const movesOn = (l) => (CALC_REF.test(l.target_id) ? inMoves.get(l.target_id) || []
+      : evMoves.get(eventOf.get(l.target_id)) || []);
+    const deps = [...new Set(rows.filter((l) => movesOn(l).length).map((l) => l.bundle_id))];
+    if (!deps.length) return { byPair };
+    const written = new Map(this.#rows(`SELECT bundle_id, last_updated FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+                                       JSON.stringify(deps), deps.length).map((r) => [r.bundle_id, r.last_updated]));
+    const hits = [];
+    for (const l of rows)
+      for (const m of movesOn(l))
+        if (laterThan(m.at, written.get(l.bundle_id))) hits.push({ l, m });
+    if (!hits.length) return { byPair };
+    const live = this.#liveOn(hits.map((h) => h.l.target_id));
+    for (const { l, m } of hits) {
+      if (!live.get(l.target_id).has(`${l.bundle_id}\u0000${l.ord}`)) continue;
+      const pk = `${l.bundle_id}\u0000${l.target_id}`;
+      if (!byPair.has(pk)) byPair.set(pk, []);
+      if (m.calc_id)
+        byPair.get(pk).push({
+          source: CALCULATION_INPUT_CHANGED, since: m.at, ord: l.ord, calculation: m.calc_id, input: m.input ?? null,
+          detail: `an input of the calculation ${m.calc_id}${m.input ? ` (${m.input})` : ""}, which this leg rests on, `
+            + `changed at ${m.at}. The calculation is recomputed only by its own module's act (at acceptance, at `
+            + `publication and in the checker), never here, and the leg is unchanged; whether this finding still stands is `
+            + `the members' to decide.` });
+      else
+        byPair.get(pk).push({
+          source: EVENT_CHANGED, since: m.at, ord: l.ord, event: m.event_id, change: m.change,
+          ...(l.target_id !== m.event_id ? { act: l.target_id } : {}),
+          detail: `the event ${m.event_id}${l.target_id !== m.event_id ? ` (named on this leg as ${l.target_id})` : ""}, `
+            + `which this leg rests on, ${m.change === "when_moved" ? "moved in time: when the record places it changed"
+              : "had a participant re-resolved: who the record says took part changed"}, at ${m.at}. Only what rests on `
+            + `the event directly is told; a finding resting on this one takes its own second look. The leg is unchanged; `
+            + `whether this finding still stands is the members' to decide.` });
+    }
+    for (const list of byPair.values())
+      list.sort((a, b) => (a.since < b.since ? 1 : a.since > b.since ? -1 : 0) || (a.ord - b.ord));
+    return { byPair };
+  }
+
+  /* R20 (R34): whether a viewer may see an event a leg names (itself, or an `ACT-` id aliasing it), by events' own read
+     (its R26): an event it does not answer for this viewer is not seen. A machine credential is not filtered. */
+  #eventSeen(id, viewer, memo = new Map()) {
+    if (viewerPredicate(viewer).scope === "member") return true;
+    const e = this.#eventOf(id, memo);
+    if (!e) return false;
+    let r = null;
+    try { r = this.events.readEvent({ eventId: e, viewer }); } catch { r = null; }
+    return !!r && r.ok !== false && r.found === true;
+  }
+
+  /* R1, R20: whether a viewer may see a target: a ref through accepted work (R1), an event through events (R34), a
+     bundle through membership; any other row (a calculation, an occurrence) is not seen by a member, since no read here
+     can say it may be (fail closed), and is seen by a machine credential. */
+  #targetSeer(viewer, refs = this.#refSeer(viewer)) {
+    const visible = this.#redactor(viewer);
+    const memo = new Map();
+    return (t) => (isRef(t) ? refs.seen(t) : EVENT_REF.test(t) || ACT_REF.test(t) ? this.#eventSeen(t, viewer, memo)
+      : visible(t) !== null);
+  }
+
   /* ---------------------------------------------------------------- R1–R6, R16, R17: the obligation */
 
   /** R1–R6: the re-evaluation obligation, derived on read. With `target`, the dependents of one moved thing (and, R17,
@@ -1330,7 +1559,9 @@ export class Reevaluation {
     const t0 = str(target);
     /* R1 (N522): an imported finding reference is a target, seen when accepted work answers it for this viewer. */
     const refs = this.#refSeer(viewer);
-    if (t0 && (isRef(t0) ? !refs.seen(t0) : !this.#visible(t0, viewer)))
+    /* R20 (R34): an event or an act aliasing one is seen as events answers it for this viewer. */
+    const seenTarget = this.#targetSeer(viewer, refs);
+    if (t0 && !(isRef(t0) || EVENT_REF.test(t0) || ACT_REF.test(t0) ? seenTarget(t0) : this.#visible(t0, viewer)))
       return { ok: false, reason: "NO_SUCH_BUNDLE", target: t0, ...refs.flags() };
     /* Bounded by the number of DISTINCT basis targets rather than by the corpus: the same index read the other way, and
        each costs one row read before it is dismissed as unmoved. */
@@ -1366,17 +1597,21 @@ export class Reevaluation {
     const acc = this.#acceptanceOn(onTargets, all, aw, viewer);
     /* R33: the cited_case_moved causes, over the same legs; the group and case stated where the viewer sees the ref. */
     const cmv = this.#citedMovedOn(onTargets, all, mv, (ref) => refs.seen(ref));
+    /* R34, R35: the event_changed and calculation_input_changed causes, over the same legs. */
+    const hrd = this.#heardChanges(onTargets, all);
     const correctedOn = new Set([...corr.byPair.keys(), ...srcm.byPair.keys(), ...lvlm.byPair.keys(), ...wdr.byPair.keys(),
-                                 ...acc.byPair.keys(), ...cmv.byPair.keys()].map((k) => k.slice(k.indexOf("\u0000") + 1)));
+                                 ...acc.byPair.keys(), ...cmv.byPair.keys(), ...hrd.byPair.keys()]
+      .map((k) => k.slice(k.indexOf("\u0000") + 1)));
     for (const t of targets) {
       const moved = this.#moved(t, visible, reg, wp, dk);
       if (!moved && !correctedOn.has(t)) continue;
       /* R20: in the listing, an obligation whose target the viewer may not see is withheld whole, as strength R6
          withholds an unseen leg's member. A target the record no longer holds is no one's to see: its deletion cause
          is a fact about the leg naming it, and stands (§5.4). */
-      if (!t0 && !(moved && moved.held === false) && (isRef(t) ? !refs.seen(t) : visible(t) === null)) continue;
+      if (!t0 && !(moved && moved.held === false) && !seenTarget(t)) continue;
       if (moved && moved.withheld) withheld = true;
-      /* A target whose only causes are R27's, R28's, R29's or R30's is read for its own state and type here, as `#moved` reads one. */
+      /* A target whose only causes are R27's–R35's is read for its own state and type here, as `#moved` reads one (an
+         event or a calculation is no bundle: both read null). */
       const own = moved ? { state: moved.state, object_type: moved.object_type }
         : this.#one(`SELECT current_state AS state, object_type FROM bundles WHERE bundle_id=?`, t)
           || { state: null, object_type: null };
@@ -1430,7 +1665,8 @@ export class Reevaluation {
         }
         causes.push(...(corr.byPair.get(`${bundleId}\u0000${t}`) || []), ...(srcm.byPair.get(`${bundleId}\u0000${t}`) || []),
                     ...(lvlm.byPair.get(`${bundleId}\u0000${t}`) || []), ...(wdr.byPair.get(`${bundleId}\u0000${t}`) || []),
-                    ...(acc.byPair.get(`${bundleId}\u0000${t}`) || []), ...(cmv.byPair.get(`${bundleId}\u0000${t}`) || []));
+                    ...(acc.byPair.get(`${bundleId}\u0000${t}`) || []), ...(cmv.byPair.get(`${bundleId}\u0000${t}`) || []),
+                    ...(hrd.byPair.get(`${bundleId}\u0000${t}`) || []));
         if (!causes.length) continue;
         place({
           bundle_id: bundleId, title: dep?.title ?? null,
@@ -1604,7 +1840,8 @@ export class Reevaluation {
   /* ---------------------------------------------------------------- R9: the recovery read */
 
   /** R9: now, the causes standing on each named finding (R2's arms and §5.4's, the finding as target, R17's, and R27's
-   *  `corrected`, R28's `source`, R29's `attribution`, R30's, R31's `acceptance` and R33's `cited_case_moved` causes the finding carries on its
+   *  `corrected`, R28's `source`, R29's `attribution`, R30's, R31's `acceptance`, R33's `cited_case_moved` and R34's and
+   *  R35's `event_changed` and `calculation_input_changed` causes the finding carries on its
    *  own legs, each naming its target, less those a recorded re-evaluation closed) and each named passage's `affects` (`content.passageNotice`). Ids the viewer may not see
    *  answer as absent. Writes nothing. */
   changesOf({ findings = null, contents = null, viewer = null } = {}) {
@@ -1651,11 +1888,12 @@ export class Reevaluation {
              ...dk.flags(), ...aw.flags(), ...mv.flags() };
   }
 
-  /* R9, R27 (and R28, R29, R30, R31, R33 `withSource`): the corrected (and source, attribution, withdrawal, contested,
-     acceptance and cited_case_moved) causes the
+  /* R9, R27 (and R28–R31, R33–R35 `withSource`): the corrected (and source, attribution, withdrawal, contested,
+     acceptance, cited_case_moved, event_changed and calculation_input_changed) causes the
      named dependents carry on their own legs, each with its `target`, less those a recorded re-evaluation closed (R16).
      `byDependent` keyed by dependent, in (target, ord, candidate) order, each target's source causes after its corrected
-     ones, its attribution causes after those, then its withdrawal, acceptance and cited_case_moved causes; a contested
+     ones, its attribution causes after those, then its withdrawal, acceptance, cited_case_moved and heard (R34, R35)
+     causes; a contested
      cause names the finding itself
      as its target. */
   #standingCorrected(dependents, viewer, visible, { withSource = false, dk = null, aw = null, mv = null } = {}) {
@@ -1671,7 +1909,8 @@ export class Reevaluation {
       const moved = [this.#sourceMoves(legs, visible), this.#levelMoves(legs, visible),
                      ...(dk ? [this.#withdrawn(legs, visible, dk)] : []),
                      ...(aw ? [this.#acceptanceOn(legs, visible, aw, viewer)] : []),
-                     ...(mv ? [this.#citedMovedOn(legs, visible, mv, (ref) => refs.seen(ref))] : [])];
+                     ...(mv ? [this.#citedMovedOn(legs, visible, mv, (ref) => refs.seen(ref))] : []),
+                     this.#heardChanges(legs, visible)];
       for (const moves of moved)
         for (const [k, list] of moves.byPair) corr.byPair.set(k, [...(corr.byPair.get(k) || []), ...list]);
       for (const d of dk ? dependents : []) {
@@ -2115,6 +2354,9 @@ export class Reevaluation {
                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length)
       : []).map((r) => [r.content_id, r]));
     const memo = new Map(), noticeMemo = new Map();
+    /* R36: the held standards' portions, read once for the batch and only when it holds a leg; each leg's newer versions
+       at other addresses read once per passage. */
+    const across = this.#acrossReader(legs.length > 0);
     /* R26: the case half runs once the legs are read to their end, with what is left of this batch's limit. */
     const cases = truncated ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
@@ -2130,20 +2372,22 @@ export class Reevaluation {
           try { n = this.content.noticeForRow(row, MACHINE_ADMIN, memo); } catch { n = null; }
           noticeMemo.set(l.content_id, n);
         }
-        if (!n || n.state === "chain_unread") { unread++; continue; }
-        for (const c of n.candidates || []) {
+        /* A chain that could not be read raises nothing along it (K102); R36's other addresses are read apart. */
+        const chained = !!n && n.state !== "chain_unread";
+        if (!chained) unread++;
+        for (const c of [...(chained ? n.candidates || [] : []), ...across.of(row)]) {
           if (!RAISED_ON.includes(c.affects)) continue;
           const id = `RN-${sha256HexSync(`${l.holder}\u0000${l.ord}\u0000${l.content_id}\u0000${c.capture_sha}`).slice(0, 24)}`;
           if (this.#one(`SELECT 1 AS x FROM reevaluation_notices WHERE notice_id=?`, id)) continue;
           this.sql.exec(
             `INSERT INTO reevaluation_notices (notice_id, holder, ord, content_id, target_id, capture_sha, newer_capture,
-                                               newer_bundle, grade, affects, raised_at, state)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?, 'open')`,
+                                               newer_bundle, grade, affects, raised_at, state, newer_content, across)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?, 'open', ?, ?)`,
             id, l.holder, l.ord, l.content_id, l.target_id, row.capture_sha, c.capture_sha, c.bundle_id ?? null,
-            c.grade ?? null, c.affects, when);
+            c.grade ?? null, c.affects, when, c.across ? c.content_id : null, c.across ? JSON.stringify(c.across) : null);
           raised.push({ notice: id, holder: l.holder, ord: l.ord, content_id: l.content_id, target: l.target_id,
                         capture_sha: row.capture_sha, newer_capture: c.capture_sha, grade: c.grade ?? null,
-                        affects: c.affects });
+                        affects: c.affects, ...(c.across ? { newer_content: c.content_id, across: c.across } : {}) });
         }
       }
       for (const p of cases ? cases.parts : []) {
@@ -2171,6 +2415,7 @@ export class Reevaluation {
     let cursor = truncated && last ? `${last.holder}#${last.ord}` : null;
     if (cases && cases.cursor !== null) { truncated = true; cursor = `${CASE_CURSOR}${cases.cursor}`; }
     const out = { ok: true, examined, chain_unread: unread, raised, count: raised.length, limit: cap, truncated, cursor,
+                  ...(across.read() ? {} : { standards_read: false, standards_why: STANDARDS_UNREAD }),
                   ...(cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the "
                     + "cited parts of a case edition, so no case's owners were told of a newer version of what it cites; "
                     + "that is not the same as none" } : {}),
@@ -2187,14 +2432,110 @@ export class Reevaluation {
             dependents: [], case: { case: r.case, edition: r.edition, project: r.project, owners: r.owners },
             captures: { cited: r.capture_sha, newer: r.newer_capture }, grade: r.grade, affects: r.affects, notice: r.notice }
         : { kind: "passage", subject: r.content_id, source: "newer_capture", since: when,
-            detail: `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades `
-                  + `this passage ${r.grade ?? "undetermined"} (${r.affects})`,
+            detail: r.across
+              ? `a newer version of the same portion of law (${r.across.key}, ${r.across.portion}) is held at another `
+                + `address (${r.newer_capture.slice(0, 12)}); whether it touches this passage is undetermined`
+              : `a newer capture of ${r.target} (${r.newer_capture.slice(0, 12)}) grades `
+                + `this passage ${r.grade ?? "undetermined"} (${r.affects})`,
             dependents: [{ bundle_id: r.holder, ord: r.ord }],
             captures: { cited: r.capture_sha, newer: r.newer_capture },
-            grade: r.grade, affects: r.affects, notice: r.notice };
+            grade: r.grade, affects: r.affects, notice: r.notice,
+            ...(r.across ? { across: r.across, newer_content: r.newer_content } : {}) };
       this.#tellAfterCommit(told, out);
     }
     return out;
+  }
+
+  /** R36 (X73, K1446): R14's notice across addresses, for one sweep batch. A reference pinned to a held standard's
+   *  portion (its content id is the portion's content id, `standards` R18) has a newer version at another address when
+   *  `standards` holds the same instrument key and portion at another capture, or holds the key and portion a
+   *  member-recorded renumbering or recodification names (`addressesOf`, its R24), and that capture was first retrieved
+   *  after the pinned one (provenance's `captured_locators`, R48) and is held at none of the addresses the pinned
+   *  capture is: an address is never matched to another by its text. Content grades a passage only along one address's
+   *  version chain, so each such version is graded UNDETERMINED by name (R21). `enabled` false reads nothing. Answers
+   *  `{of(row), read()}`: `of` the candidates for one content row, each `{capture_sha, bundle_id, content_id, grade,
+   *  affects, why, across}`; `read` false when the standards could not all be read. Reads only. */
+  #acrossReader(enabled) {
+    let index = null, ok = true;
+    const load = () => {
+      if (index) return index;
+      index = { byPortion: new Map(), byKeyPortion: new Map(), byId: new Map() };
+      const kp = (k, p) => `${k}\u0000${p}`;
+      const push = (map, k, v) => { if (!map.has(k)) map.set(k, []); map.get(k).push(v); };
+      const seen = new Set();
+      let after = null;
+      for (;;) {
+        let page = null;
+        try { page = this.standards.standardsIn({ after, limit: STANDARDS_PAGE, viewer: MACHINE_ADMIN }); } catch { page = null; }
+        if (!page || page.ok === false || !Array.isArray(page.items)) { ok = false; break; }
+        for (const it of page.items) {
+          const key = it && it.instrument && it.instrument.state === "composed" ? str(it.instrument.key) : null;
+          const portion = it && it.portion ? str(it.portion.path) : null;
+          const content = it && it.portion ? str(it.portion.content_id) : null;
+          if (!key || !portion || !content || !str(it.id)) continue;
+          const sd = { id: it.id, key, portion, content };
+          index.byId.set(sd.id, sd);
+          push(index.byPortion, content, sd);
+          push(index.byKeyPortion, kp(key, portion), sd);
+        }
+        const next = typeof page.cursor === "string" ? page.cursor : null;
+        if (!page.truncated || !next || seen.has(next)) break;
+        seen.add(next);
+        after = next;
+      }
+      index.kp = kp;
+      return index;
+    };
+    const memo = new Map();
+    const placed = (capture) => {
+      const at = this.#rows(`SELECT address_norm, MIN(first_retrieved) AS first FROM captured_locators WHERE capture_sha=?
+                              GROUP BY address_norm ORDER BY address_norm`, capture);
+      const firsts = at.map((r) => r.first).filter((x) => typeof x === "string" && x).sort();
+      return { addresses: new Set(at.map((r) => r.address_norm).filter(Boolean)), first: firsts[0] ?? null };
+    };
+    const of = (row) => {
+      if (!enabled || !row || !row.content_id) return [];
+      if (memo.has(row.content_id)) return memo.get(row.content_id);
+      const out = [];
+      memo.set(row.content_id, out);
+      const idx = load();
+      const own = idx.byPortion.get(row.content_id) || [];
+      if (!own.length) return out;
+      const pinned = placed(row.capture_sha);
+      const cands = new Map();
+      const add = (from, to, via) => { if (to.id !== from.id && !cands.has(to.content)) cands.set(to.content, { from, to, via }); };
+      for (const sd of own) {
+        for (const o of idx.byKeyPortion.get(idx.kp(sd.key, sd.portion)) || [])
+          add(sd, o, { type: "same_instrument", relation: null, effective: null });
+        let a = null;
+        try { a = this.standards.addressesOf({ key: sd.key, portion: sd.portion }); } catch { a = null; }
+        if (!a || !Array.isArray(a.addresses)) { ok = false; continue; }
+        if (a.truncated) ok = false;
+        for (const x of a.addresses) {
+          const via = { type: x.via ? x.via.type ?? null : null, relation: x.via ? x.via.relation ?? null : null,
+                        effective: x.via ? x.via.effective ?? null : null };
+          const named = idx.byId.get(x.standard);
+          if (named) add(sd, named, via);
+          if (x.key && x.portion) for (const o of idx.byKeyPortion.get(idx.kp(x.key, x.portion)) || []) add(sd, o, via);
+        }
+      }
+      if (!cands.size) return out;
+      const rows = new Map(this.#rows(`SELECT content_id, capture_sha, bundle_id FROM content
+                                        WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`,
+                                      JSON.stringify([...cands.keys()]), cands.size).map((r) => [r.content_id, r]));
+      for (const [content, { from, to, via }] of [...cands.entries()].sort((x, y) => (x[0] < y[0] ? -1 : 1))) {
+        const r = rows.get(content);
+        if (!r || !r.capture_sha || r.capture_sha === row.capture_sha) continue;
+        const there = placed(r.capture_sha);
+        if (!there.addresses.size || [...there.addresses].some((x) => pinned.addresses.has(x))) continue;
+        if (!there.first || !pinned.first || !laterThan(there.first, pinned.first)) continue;
+        out.push({ capture_sha: r.capture_sha, bundle_id: r.bundle_id, content_id: content, grade: "UNDETERMINED",
+                   affects: "undetermined", why: ACROSS_UNDETERMINED_WHY,
+                   across: { from_standard: from.id, standard: to.id, key: to.key, portion: to.portion, via } });
+      }
+      return out;
+    };
+    return { of, read: () => ok };
   }
 
   /* R26: R14's case half for one batch: the ratified cases after `afterCase`, one counting one toward `budget`, each
@@ -2241,6 +2582,8 @@ export class Reevaluation {
              target: r.target_id, capture_sha: r.capture_sha, newer_capture: r.newer_capture, newer_bundle: r.newer_bundle,
              grade: r.grade, affects: r.affects, raised_at: r.raised_at, state: r.state,
              closed_by: r.closed_by, closed_at: r.closed_at, why: r.why, adopted_version: r.adopted_version,
+             /* R36: a notice raised across addresses names the passage there and what links the two addresses. */
+             ...(r.across ? { newer_content: r.newer_content ?? null, across: parseAcross(r.across) } : {}),
              ...(r.kind === "case" ? { case: { case: r.holder, edition: r.edition, project: r.project,
                                                part: r.target_id } } : {}) };
   }
@@ -2253,12 +2596,12 @@ export class Reevaluation {
       `SELECT * FROM (
          SELECT 'leg' AS kind, n.notice_id, n.holder, n.ord, n.content_id, n.target_id, n.capture_sha, n.newer_capture,
                 n.newer_bundle, n.grade, n.affects, n.raised_at, n.state, n.closed_by, n.closed_at, n.why,
-                n.adopted_version, NULL AS edition, NULL AS project
+                n.adopted_version, NULL AS edition, NULL AS project, n.newer_content, n.across
            FROM reevaluation_notices n JOIN bundles b ON b.bundle_id = n.holder WHERE (${g.sql})
          UNION ALL
          SELECT 'case' AS kind, c.notice_id, c.case_id, c.ord, NULL, c.part, c.capture_sha, c.newer_capture,
                 c.newer_bundle, c.grade, c.affects, c.raised_at, c.state, c.closed_by, c.closed_at, c.why,
-                NULL, c.edition, c.project
+                NULL, c.edition, c.project, NULL, NULL
            FROM reevaluation_case_notices c
           WHERE ? = 1 OR EXISTS (SELECT 1 FROM json_each(c.owners) o WHERE o.value = ?)
        ) WHERE ${where} ${tail}`, ...g.args, seeAll, g.member ?? null, ...args, ...tailArgs);
@@ -2295,7 +2638,8 @@ export class Reevaluation {
     const visible = this.#redactor(viewer);
     const seesCapture = this.#captureSeer(viewer);
     const list = rows.slice(0, cap).map((r) => ({ ...this.#noticeView(r), newer_bundle: visible(r.newer_bundle),
-      ...(seesCapture(r.newer_capture) ? {} : { newer_capture: null, grade: null, affects: null }) }));
+      ...(seesCapture(r.newer_capture) ? {} : { newer_capture: null, grade: null, affects: null,
+                                                ...(r.across ? { newer_content: null } : {}) }) }));
     return { ok: true, notices: list, count: list.length, limit: cap, truncated: rows.length > cap,
              cursor: rows.length > cap ? list[list.length - 1].notice : null, state: st };
   }
@@ -2440,8 +2784,11 @@ export class Reevaluation {
     /* The newer capture's home: the version chain is per address, so the newer version may be filed in another bundle,
        and a leg names the document its capture is held in (content R27). */
     const home = r.newer_bundle || r.target_id;
-    const held = old ? this.#one(`SELECT content_id FROM content WHERE capture_sha=? AND extent=? AND bundle_id=?
-                                   ORDER BY content_id LIMIT 1`, r.newer_capture, old.extent, home) : null;
+    /* R36: a notice raised across addresses names the passage at the new address itself (the standard's portion there),
+       which is the reference the leg is re-pinned to. */
+    const held = r.newer_content ? { content_id: r.newer_content }
+      : old ? this.#one(`SELECT content_id FROM content WHERE capture_sha=? AND extent=? AND bundle_id=?
+                          ORDER BY content_id LIMIT 1`, r.newer_capture, old.extent, home) : null;
     const when = this.#when();
     /* Every leg as the live basis holds it; the adopted one re-pinned. A content id is a hash over its capture, so the
        adopted leg names the newer capture's row where the record holds one at the same extent, else the extent itself
@@ -2495,7 +2842,8 @@ export class Reevaluation {
     /* END DEC-49 REGION is-version-adoptable */
     /* The why on one line: a line break in it would open a heading of its own in the Session Log. */
     const line = text.replace(/\s*[\r\n]+\s*/g, " ");
-    const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}: leg ${r.ord} rests on capture `
+    const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}`
+      + `${r.newer_content ? ", at another address" : ""}: leg ${r.ord} rests on capture `
       + `${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). `
       + `Every other leg is as the live basis holds it. Why: ${line}`;
     const answer = this.record.transact(() => {
@@ -2572,7 +2920,7 @@ export class Reevaluation {
       return noCause("pass dependent=<the finding looked at>, target=<what moved under it> and source=<one of "
                      + `${CAUSE_SOURCES.join(", ")}>.`);
     if (!this.#visible(dep, viewer)) return noCause(`no finding by the id '${dep.slice(0, 60)}' is readable here.`);
-    const ob = ((isRef(tgt) ? this.#refSeer(viewer).seen(tgt) : this.#visible(tgt, viewer)) || tgt === dep)
+    const ob = (this.#targetSeer(viewer)(tgt) || tgt === dep)
       ? this.reevaluations({ target: tgt, viewer }) : { ok: true, obligations: [] };
     const hit = ob.ok ? (ob.obligations || []).find((o) => o.bundle_id === dep && o.target === tgt) : null;
     const cause = hit ? hit.causes.find((c) => c.source === src && (since == null || String(c.since) === String(since))) : null;
@@ -2647,6 +2995,10 @@ export function reevaluationOf(host, deps) {
     r.provenance.onReceipt("reevaluation", () => r.receiptSeen());
     /* R28: each rung move of a source is heard and kept (sources R10). */
     r.sources.onDisclosure("reevaluation", (move) => r.sourceMoved(move));
+    /* R34: each change of a held event, heard after it commits (events R16). R35: each change of a calculation's input,
+       heard after it commits (calculations R11). */
+    r.events.onEventChanged("reevaluation", (e) => r.eventChanged(e || {}));
+    r.calculations.onInputChanged("reevaluation", (e) => r.inputChanged(e || {}));
   }
   return r;
 }

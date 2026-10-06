@@ -239,7 +239,8 @@ test("R13 K1318 the case file's format: its token, its kinds, one path per kind 
   assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/1");
   assert.equal(CG.CASE_FILE_MANIFEST_PATH, "manifest.json");
   assert.deepEqual([...CG.CASE_FILE_KINDS], ["case_document", "case_signature", "complete_edition", "finding",
-    "finding_signature", "grading_facts", "passages", "document", "extracted_text", "observation", "attestation"]);
+    "finding_signature", "grading_facts", "passages", "document", "extracted_text", "observation", "attestation",
+    "calculation"]);
   assert.deepEqual([...CG.CASE_FILE_MANIFEST_FIELDS], ["format", "group", "case", "edition", "case_document_sha", "keys", "parts", "files"]);
   assert.deepEqual([...CG.CASE_FILE_FILE_FIELDS], ["path", "sha256", "bytes", "part", "kind"]);
   assert.deepEqual([...CG.CASE_FILE_PART_FIELDS], ["index", "sha256", "bytes"]);
@@ -251,7 +252,8 @@ test("R13 K1318 the case file's format: its token, its kinds, one path per kind 
     finding: [F, `findings/${F}/finding.md`], finding_signature: [F, `findings/${F}/finding.md.sig`],
     grading_facts: [F, `findings/${F}/grading-facts.json`], passages: [F, `findings/${F}/passages.json`],
     document: [R, `materials/${R}/document`], extracted_text: [R, `materials/${R}/extracted.txt`],
-    observation: [R, `materials/${R}/observation.md`], attestation: [[R, "account-1.txt"], `attestations/${R}/account-1.txt`] };
+    observation: [R, `materials/${R}/observation.md`], attestation: [[R, "account-1.txt"], `attestations/${R}/account-1.txt`],
+    calculation: ["CALC-2026-0001", "calculations/CALC-2026-0001/calculation.json"] };
   assert.deepEqual(Object.keys(spelled), [...CG.CASE_FILE_KINDS], "every kind has its path");
   for (const [kind, [key, path]] of Object.entries(spelled)) {
     assert.equal(CG.caseFilePath(kind, key), path, kind);

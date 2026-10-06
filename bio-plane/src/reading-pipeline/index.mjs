@@ -1,11 +1,12 @@
-/* reading-pipeline (R1–R24): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
+/* reading-pipeline (R1–R28): a capture's reading from its stored bytes, for `extraction`, which stores it. The tier
    ladder, the chain composed as it goes, the content type's reader over the text, and the reading with its
    provenance, its container, its dialect and its text units; and the pieces of it `extraction`'s re-read (its
    R31–R35) composes (R23). Split from `extraction` by N513 with no change of meaning (its `pipeline.mjs`, which it
    took from the plane's old `index.mjs`), with the reasons kept where the reason is the code's; the rows applied here
    are named at their sites. It is pure: no record, no table, no catalogue row. It fetches nothing about the source:
    the bytes come from the evidence store the caller hands in (R24), and tiers 2 and 3 are reached only through their
-   bindings with the capture's digest (R16). */
+   bindings with the capture's digest (R16). T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
+   `read` never reaches. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
 import { getFormat, readingDialect } from "../formats.mjs";
@@ -14,6 +15,7 @@ import { driveConvertStep } from "../drive.mjs";
 import { readingProvenance, describePages } from "./readingprov.mjs";
 
 export { readingProvenance, compareProvenance, describePages, PROVENANCE_SCHEME } from "./readingprov.mjs";
+export { ReadHooks, readHooksOf } from "./hooks.mjs";
 
 /* ===================================================================== *
  * The bounds (R15).
@@ -832,6 +834,27 @@ export function containerExtentOf(i2text, { pdfPaints = null, fmt = null } = {})
 }
 
 /* ===================================================================== *
+ * What the entry emitted beside the text (R28).
+ * ===================================================================== */
+
+/* R28 (T33-24; C:A-5; K1556): the entry's document `metadata` as it emitted it (office-readers R31), or null; and, for
+   a workbook (a text with a `sheets` list), `cells`: each named sheet's cells as the entry emitted them
+   (office-readers R30, odf-reader R46), or null where it emitted none (over its size guard). Neither is altered; a
+   sheet with no name is no key, since a key would be one this module made up. No text, or no entry: metadata null
+   and no `cells`. */
+export function emittedFieldsOf(i2text) {
+  const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+  const out = { metadata: isObj(i2text) && isObj(i2text.metadata) ? i2text.metadata : null };
+  if (isObj(i2text) && Array.isArray(i2text.sheets)) {
+    const cells = {};
+    for (const sh of i2text.sheets)
+      if (isObj(sh) && typeof sh.name === "string") cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
+    out.cells = cells;
+  }
+  return out;
+}
+
+/* ===================================================================== *
  * read (R1–R17, R24).
  * ===================================================================== */
 
@@ -868,6 +891,7 @@ export async function read(document, { evidence = null, env = {}, storeName = "b
   catch (e) {
     const reading = failed(document, null, `the reading could not be composed (${String(e && e.message || e).slice(0, 200)}), `
       + `so nothing is claimed about this document's text; it is a failed reading, never an emptied document`);
+    reading.metadata = null;   /* R28: no entry's answer reached the reading */
     reading.provenance = await readingProvenance({ text: null, planeVersion });
     return { reading };
   }
@@ -910,6 +934,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
      text. */
   /* R14: every branch's reading gets its provenance at the one site below, a failure's included. */
   const early = async (reading) => {
+    reading.metadata = null;   /* R28: no entry answered */
     reading.provenance = await readingProvenance({ text: null, chain: null, tier: null, container: null, planeVersion, member: null });
     return { reading };
   };
@@ -928,7 +953,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   let reading, classifiedText = null, member = null;
-  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect;
+  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null;
 
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
@@ -1016,6 +1041,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (i2text && Object.prototype.hasOwnProperty.call(i2text, "dialect")) {
         try { readDialect = readingDialect(i2text.dialect); } catch { readDialect = undefined; }
       }
+      emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
       ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text));
       if (i2text) {
@@ -1049,7 +1075,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     } catch (e) {
       reading = failed(doc, docType, `the ${fmt} entry could not read these bytes (${String(e && e.message || e).slice(0, 200)}), `
         + `so nothing is claimed about its text`, { page_count: null, page_boxes: null, container_extent: null });
-      textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null;
+      textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null;
     }
   } else {
     reading = failed(doc, docType, `the document was not read as text (${multipart ? "multipart" : "non-textual or too large"}), so no reading was attempted`,
@@ -1065,6 +1091,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     planeVersion, member });
   /* N139 (R17): the counts of exactly the text the reader was handed; none when no text was. */
   { const n = textCountsOf(classifiedText); if (n) Object.assign(reading, n); }
+  /* R28: the entry's metadata, or null, and a workbook's cells, as emitted. */
+  Object.assign(reading, emittedFieldsOf(emitted));
   /* R13: absent when no entry answered a decoding choice. */
   if (readDialect !== undefined) reading.dialect = readDialect;
   return { reading,

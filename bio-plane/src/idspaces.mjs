@@ -20,15 +20,29 @@
  * WHAT IT CANNOT DO, stated: it cannot READ a referent. Agreement is either a determinate check (the fund
  * NAME, compared normalised) or a reading the caller supplies, returned labelled as theirs.
  *
- * It imports nothing: the view's shape is `jurisdictions.combine`'s, which the caller makes. (R26, the
- * legacy adapter under the old names, is retired: entry N105, K143.) */
+ * It imports only `court-citations`' reporter data: the view's shape is `jurisdictions.combine`'s, which the caller makes. (R26, the
+ * legacy adapter under the old names, is retired: entry N105, K143.)
+ *
+ * It also RECOGNISES court citations (R27–R29): volume, reporter, page, the reporter known only from the
+ * reporter data `court-citations` holds (or the same data passed in). A citation recognised is a spelling
+ * recognised, never a case resolved. */
 
-/* The four spaces, their generic labels (used only when the view gives none) and what their referent is. */
+import * as CourtCitations from "../../court-citations/index.mjs";
+
+/* The nine spaces, in R1's order, their generic labels (used only when the view gives none) and what their
+   referent is. `account`, `object` and `vendor` are the money record's identifiers; `proceeding` a proceeding's
+   number in its forum's forms (K1452); `person` one form per person scheme (B1b.3), so two schemes' numbers
+   are two forms and never join without a crosswalk (R17). */
 const SPACES = Object.freeze({
   enactment: { label: "enactment number (an ordinance or resolution number)", referent: "reading" },
   project: { label: "project number", referent: "reading" },
   fund: { label: "fund code", referent: "name" },
   parcel: { label: "parcel number", referent: "reading" },
+  account: { label: "account code", referent: "reading" },
+  object: { label: "object code", referent: "reading" },
+  vendor: { label: "vendor number", referent: "reading" },
+  proceeding: { label: "proceeding or case number", referent: "reading" },
+  person: { label: "person identifier (one form per scheme)", referent: "reading" },
 });
 const SPACE_NAMES = Object.keys(SPACES);
 const has = (o, k) => o != null && Object.prototype.hasOwnProperty.call(o, k);
@@ -72,7 +86,7 @@ function compile(p, mode) {
 
 /* ---------------------------------------------------------------- spaces (R1, R2) */
 
-/** The four spaces, each with the forms the view supplies. Never throws. */
+/** The nine spaces, each with the forms the view supplies (R1, R2). Never throws. */
 export function spaces(v) {
   const { view } = viewOf(v);
   return SPACE_NAMES.map((space) => {
@@ -413,4 +427,155 @@ export function judgePair(v, space, a, b, reading = null) {
   return verdict("SHARED", `one value${via}, two independent systems (${sa.origin}, ${sb.origin}), and the referent agrees on `
     + "the caller's reading — a reading this module did not make and cannot check",
     { referent: { by: "the caller's reading", agrees: true } });
+}
+
+/* ---------------------------------------------------------------- recogniseCitations (R27–R29) */
+
+/* The reporter data this module reads when the caller passes none: `court-citations`' exports (R27; K1513,
+   K1518). Data, never code: no reporter is named here (R29). */
+const HELD_REPORTERS = CourtCitations;
+
+/* A spelling's folded key: white space removed, so "F. Supp." and "F.Supp." meet (as `court-citations` R7
+   folds them). Letter case and every other character are kept. A spelling is looked up as written first, and
+   folded only when no spelling is held as written, so two reporters' spellings that differ only by spacing
+   ("B.R.", "B. R.") stay apart. */
+const spellingKey = (s) => String(s).replace(/\s+/g, "");
+
+/* The reporter data compiled once per data object: the lookups (as written, and folded; each → the reporters
+   and editions a spelling stands for) and the most words a spelling can be written in. Data in neither of
+   court-citations' shapes (`VARIANTS`, `REPORTERS`) compiles to null. */
+const DATA = new WeakMap();
+function compileReporters(data) {
+  if (!isObj(data)) return null;
+  if (DATA.has(data)) return DATA.get(data);
+  const exact = new Map(), lookup = new Map();
+  let words = 1;
+  const put = (map, k, reporter, edition) => {
+    if (!map.has(k)) map.set(k, new Map());
+    map.get(k).set(`${reporter}\u0000${edition ?? ""}`, { reporter, edition: typeof edition === "string" ? edition : null });
+  };
+  const add = (spelling, reporter, edition) => {
+    if (typeof spelling !== "string" || !spelling.trim() || typeof reporter !== "string" || !reporter) return;
+    put(exact, spelling.trim(), reporter, edition);
+    put(lookup, spellingKey(spelling), reporter, edition);
+    /* written with a space after every period, a spelling has at most this many words */
+    words = Math.max(words, spelling.trim().replace(/\.(?=\S)/g, ". ").split(/\s+/).length);
+  };
+  try {
+    const variants = isObj(data.VARIANTS) ? data.VARIANTS : Array.isArray(data.REPORTERS) ? null : data;
+    const reporters = Array.isArray(data.REPORTERS) ? data.REPORTERS : null;
+    if (isObj(variants) && !Array.isArray(variants))
+      for (const spelling of Object.keys(variants)) {
+        const v = variants[spelling];
+        for (const x of Array.isArray(v) ? v : [v]) if (isObj(x)) add(spelling, x.reporter, x.edition);
+      }
+    for (const r of arr(reporters)) {
+      if (!isObj(r) || typeof r.key !== "string") continue;
+      add(r.key, r.key, r.key);
+      for (const ed of arr(r.editions)) if (isObj(ed)) add(ed.key, r.key, ed.key);
+      if (isObj(r.variations)) for (const sp of Object.keys(r.variations)) add(sp, r.key, r.variations[sp]);
+    }
+  } catch { lookup.clear(); }
+  const out = lookup.size ? { exact, lookup, words } : null;
+  DATA.set(data, out);
+  return out;
+}
+
+/* A citation is a volume, the reporter as written, and a page, in that order: so the reporter is exactly the
+   words between the volume and the page, and is found by looking those words up, the most words first. */
+const VOLUME = /(?<![\p{L}\p{N}.])\d{1,5}(?=\s)/gu;
+const WORD = /\s+(\S+)/y;
+const PAGE = /^\d{1,7}(?![\p{L}\p{N}])/u;
+const PIN = /^\s*,\s*(\d{1,7})(?![\p{L}\p{N}])(?!\s+\p{Lu})/u;
+function findCitations(t, data) {
+  const found = [];
+  VOLUME.lastIndex = 0;
+  for (let m; (m = VOLUME.exec(t)); ) {
+    const words = [];
+    WORD.lastIndex = m.index + m[0].length;
+    for (let w; words.length <= data.words && (w = WORD.exec(t)); ) words.push({ start: w.index + w[0].length - w[1].length, end: WORD.lastIndex, s: w[1] });
+    for (let k = Math.min(data.words, words.length - 1); k >= 1; k--) {
+      const page = PAGE.exec(words[k].s);
+      if (!page) continue;
+      const variant = t.slice(words[0].start, words[k - 1].end);
+      const hit = data.exact.get(variant) ?? data.lookup.get(spellingKey(variant));
+      if (!hit) continue;
+      let end = words[k].start + page[0].length;
+      const pin = PIN.exec(t.slice(end, end + 32));
+      const c = { volume: Number(m[0]), variant, page: Number(page[0]), entries: [...hit.values()], start: m.index };
+      if (pin) { c.pin = Number(pin[1]); end += pin[0].length; }
+      c.end = end;
+      found.push(c);
+      VOLUME.lastIndex = end;
+      break;
+    }
+  }
+  return found;
+}
+
+/* The volume-reporter-page shape with no data: a number, one to six words each beginning with a capital
+   letter or an ordinal series mark (2d, 4th), at least one of them holding a period or written all in
+   capitals, then a page number. */
+const SHAPE = /(?<![\p{L}\p{N}.])(\d{1,5})\s+((?:\p{Lu}[\p{L}\p{N}.'&]*|\d+(?:d|st|nd|rd|th)\.?)(?:\s(?:\p{Lu}[\p{L}\p{N}.'&]*|\d+(?:d|st|nd|rd|th)\.?|&)){0,5})\s+(\d{1,7})(?![\p{L}\p{N}])/gu;
+const looksLikeReporter = (r) => /\./.test(r) || /^[\p{Lu}&\s]{2,}$/u.test(r);
+
+function shapes(text) {
+  const out = [];
+  for (const m of text.matchAll(SHAPE)) if (looksLikeReporter(m[2])) out.push({ text: m[0], start: m.index, end: m.index + m[0].length });
+  return out;
+}
+
+/** The court citations in `text`, each volume, reporter and page (R27–R29). `reporters` is court-citations'
+ *  data (its exports, or its `VARIANTS` map alone), taking precedence over the data this module holds.
+ *  Never throws. */
+export function recogniseCitations(text, reporters = undefined) {
+  try {
+    const t = typeof text === "string" ? text : "";
+    const passed = reporters !== undefined && reporters !== null;
+    const data = passed ? compileReporters(reporters) : compileReporters(HELD_REPORTERS);
+    if (typeof text !== "string")
+      return { citations: [], undetermined: { why: "no text was given (not a string), so nothing was read: whether it cites anything is undetermined" } };
+    if (!data) {
+      const why = passed
+        ? "no reporter data is held for this reading: the data passed is in neither of court-citations' shapes (VARIANTS or REPORTERS)"
+        : "no reporter data is held (court-citations' data is not readable here, and none was passed)";
+      const unrecognised = shapes(t);
+      return { citations: [], undetermined: { why: `${why}: no citation can be recognised, and finding none says nothing about `
+        + "what the text cites", ...(unrecognised.length ? { unrecognised } : {}) } };
+    }
+    const citations = [], ambiguous = [], taken = [];
+    for (const f of findCitations(t, data)) {
+      const { start, end, variant } = f;
+      taken.push([start, end]);
+      const named = [...new Set(f.entries.map((e) => e.reporter))].sort();
+      if (named.length !== 1) {
+        ambiguous.push({ text: t.slice(start, end), start, end, variant, reporters: named });
+        continue;
+      }
+      const c = { volume: f.volume, reporter: named[0], variant, page: f.page };
+      if (f.pin !== undefined) c.pin = f.pin;
+      citations.push({ ...c, start, end });
+    }
+    /* both lists are in reading order, so one sweep finds the shapes no citation found overlaps */
+    let i = 0;
+    const unrecognised = shapes(t).filter((s) => {
+      while (i < taken.length && taken[i][1] <= s.start) i++;
+      return !(i < taken.length && taken[i][0] < s.end);
+    });
+    if (!unrecognised.length && !ambiguous.length) return { citations };
+    const undetermined = {};
+    if (unrecognised.length) {
+      undetermined.unrecognised = unrecognised;
+      undetermined.why = `${unrecognised.length} run(s) of text have a volume-reporter-page shape, but no variant in the reporter `
+        + "data names the reporter: listed, never dropped and never guessed";
+    }
+    if (ambiguous.length) {
+      undetermined.ambiguous = ambiguous;
+      undetermined.why = [undetermined.why, `${ambiguous.length} citation(s) are written in a spelling the reporter data gives to more `
+        + "than one reporter: listed with each, never one chosen"].filter(Boolean).join("; ");
+    }
+    return { citations, undetermined };
+  } catch {
+    return { citations: [], undetermined: { why: "the text could not be read for citations, so whether it cites anything is undetermined" } };
+  }
 }

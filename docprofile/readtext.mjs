@@ -298,8 +298,15 @@ export function readText(supplied, ctx = {}) {
          so a reader can state it as a document FACT, which is the surface a member
          sees. It is a plain list, computed once, and no reader is obliged to use it. */
       const alsoSatisfies = () => (doctype.also || []).map((x) => x.key);
+      /* R37 (K1520): the supplied text's own STRUCTURE, beside the flat `text` and
+         `locate` — its pages (one with no text layer included), its undetermined
+         markers, images, an `ocr` transcription where the caller supplied one, a
+         sheet's typed `cells` — handed UNCHANGED, the very object the caller gave, so a
+         reader that needs what the flatten drops reads it from the producer, never from
+         a copy this module re-shaped. A bare string carries no structure (R21): null. */
+      const structure = supplied && typeof supplied === "object" ? supplied : null;
       parsed = doctype.type.parse({ ...dctx, handler: stack.handler, at: ctx.at || null,
-                                    locate, alsoSatisfies }) || {};
+                                    locate, alsoSatisfies, supplied: structure }) || {};
     } catch (e) {
       parse_error = String((e && e.message) || e);
     }

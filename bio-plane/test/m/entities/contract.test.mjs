@@ -5,17 +5,26 @@ import { world, sha, MACHINE } from "./fixture.mjs";
 import { noSuchEntity, noEntity, NO_ENTITY_DETAIL, ENTITY_CHECKS, isEstablished } from "../../../src/entities/index.mjs";
 import { noSha, NO_SHA_DETAIL, EXTRACTION_CHECKS } from "../../../src/extraction/index.mjs";
 
-test("R35 the read contract: entities(entity_id key, at the instant R1 answers) and resolutions(capture_sha, bundle_id, ref, entity_id, grade, established), established 1 exactly when R34 holds of the grade", () => {
+test("R35 the read contract: entities(entity_id key, kind the entity's kind (K1563), at the instant R1 answers) and resolutions(capture_sha, bundle_id, ref, entity_id, grade, established), established 1 exactly when R34 holds of the grade", () => {
   const { e, read, rows } = world();
   const cols = (t) => rows(`PRAGMA table_info(${t})`);
   const ent = cols("entities");
   assert.deepEqual(ent.filter((c) => c.pk).map((c) => c.name), ["entity_id"], "entity_id is the key");
   assert.ok(ent.some((c) => c.name === "at"));
+  assert.ok(ent.some((c) => c.name === "kind"), "kind is in the contract (K1563)");
   const res = cols("resolutions").map((c) => c.name);
   for (const c of ["capture_sha", "bundle_id", "ref", "entity_id", "grade", "established"]) assert.ok(res.includes(c), c);
   /* `at` is the instant the entity was created, the time R1 answers */
   const made = e.createEntity({ note: "a subject the test registers", kind: "office", label: "Alpha", aliases: ["a:1", "22"] });
   assert.equal(rows(`SELECT at FROM entities WHERE entity_id=?`, made.entity_id)[0].at, made.at);
+  /* `kind` is the kind R1 answers and R5 reads, one of the closed list, for every kind (retrieval reads person/post) */
+  for (const kind of e.kinds()) {
+    const k = kind === "proceeding" ? null : e.createEntity({ note: "a subject the test registers", kind, label: `K ${kind}` });
+    if (!k) continue;
+    assert.equal(rows(`SELECT kind FROM entities WHERE entity_id=?`, k.entity_id)[0].kind, k.kind, kind);
+    assert.equal(e.readEntity({ entityId: k.entity_id }).entity.kind, kind);
+  }
+  assert.equal(rows(`SELECT kind FROM entities WHERE entity_id=?`, made.entity_id)[0].kind, "office");
   e.createEntity({ note: "a subject the test registers", kind: "office", label: "Beta" });
   /* every grade the record can hold, written by every path that writes one: A, B, C by the recogniser, D by
      testimony, and a raise in place (R10) */

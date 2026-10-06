@@ -32,6 +32,12 @@ import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { caseImportOf } from "../../../src/case-import/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
+import { connectionsOf } from "../../../src/connections/index.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { linesOf } from "../../../src/lines/index.mjs";
+import { moneyOf } from "../../../src/money/index.mjs";
+import { peopleOf } from "../../../src/people/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -68,6 +74,8 @@ export const AUTHORED = Object.freeze({
   subjectJustification: "The award is a public record and the question is whether it was followed.",
   biasAcknowledgement: "We read the minutes as the authoritative account of the meeting.",
   excluded: [],
+  /* R55 (case-disclosures R27): the publishing owner attests holding no undeclared tie to anything the case names */
+  tieAttested: true,
 });
 
 /* R38: what changed in an edition above 1, as a member writes it (the fixture's `publish` sends it on every act). */
@@ -121,7 +129,7 @@ function reviewProvider(w) {
 }
 
 export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
-                        deps = {}, realImports = false } = {}) {
+                        inquiry: inqWrap = null, deps = {}, realImports = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -162,14 +170,27 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const content = contentOf(host, { record, membership, provenance: prov, extraction: exProvider, now: () => clock.now });
   content.migrate();
   const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
-  /* entities and connections are created by inquiry on this host (its lazy uses), as case-authoring uses neither. */
-  const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, now: () => clock.now });
+  /* the record of people (layer 5), each the real module built on this host (K1619: never reached through inquiry):
+     the registry, the world's events, the lines between entities, money facts and people, which case-disclosures reads
+     for the people a case names (its R24–R27) and R57's timeline reads through events. */
+  const entities = entitiesOf(host, { record, membership, provenance: prov });
+  entities.migrate();
+  const events = eventsOf(host, { record, membership, content, extraction: exProvider, provenance: prov, entities, readHooks: {},
+                                  now: () => clock.now });
+  events.migrate();
+  const lines = linesOf(host, { record, provenance: prov, content, entities, events, now: () => clock.now });
+  lines.migrate();
+  const money = moneyOf(host, { record, membership, entities, provenance: prov, events, lines, now: () => clock.now });
+  money.migrate();
+  const people = peopleOf(host, { record, membership, entities, provenance: prov, content, sources, events, lines, money,
+                                  duties: { dutiesOf: () => ({ ok: true, duties: [] }) }, now: () => clock.now });
+  people.migrate();
+  const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, entities, now: () => clock.now });
   inquiry.migrate();
   const promotion = inquiry.promotion;
   promotion.registerFact("producingGroup", "instance-setup", () => group);
-  const entities = inquiry.entities;
-  entities.migrate();
-  const connections = inquiry.connections;
+  /* connections, the one instance on this host (K1619), its tables migrated here */
+  const connections = connectionsOf(host);
   connections.migrate();
   const basisVersions = basisVersionsOf(host, { record, membership, promotion, content,
     inquiry: { earned: (s, t) => inquiry.earned(s, t), legCapped, cyclePath: (id, t) => inquiry.cyclePath(id, t) },
@@ -249,15 +270,21 @@ export function world({ group = "test-group", provider = true, now = null, recor
      instance on the host and hands it nothing. */
   const caseRecord = recordWrap ? recordWrap(record) : record;
   const READ_BY_DISCLOSURES = ["contradiction", "provenance", "attestation", "capture", "sources", "extraction",
-                               "caseImport", "promotion", "inquiry", "strength"];
+                               "caseImport", "promotion", "inquiry", "strength", "entities", "lines", "money", "people"];
   const given = (k) => Object.fromEntries(Object.entries(deps).filter(([d]) => k(d)));
-  caseDisclosuresOf(host, { storage: st, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
+  const disclosures = caseDisclosuresOf(host, { storage: st, entities, events, lines, money, people, membership,
+    now: () => clock.now, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
     extraction: ex, caseImport: imports, promotion, inquiry, strength,
     ...given((d) => READ_BY_DISCLOSURES.includes(d)) });
-  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, inquiry, basisVersions,
+  /* `inquiry` (a wrap) changes only what case-authoring reads of inquiry: R56's and R57's tests give a finding legs on a
+     calculation or an event, which inquiry's own gate does not yet admit at promotion (C-2.8). */
+  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions,
     strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
     networkNotices, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)),
-    ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength") });
+    disclosures, events,
+    ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
+    inquiry: inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry });
+  Object.assign(w, { events, lines, money, people });
   let n = 0;
   Object.assign(w, {
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
@@ -439,7 +466,7 @@ export function infoMd(id) {
 export function inqMd(id, legs = [], { state = "concluded", lines = [] } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
   /* a leg on another group's finding is not a reference (inquiry-grammar R11) */
-  const refs = [...new Set(legs.map((l) => l.target).filter((t) => !String(t).startsWith("imported:")))];
+  const refs = [...new Set(legs.map((l) => l.target).filter((t) => !/^(imported:|CALC-)/.test(String(t))))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
     `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
     ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",

@@ -1,0 +1,44 @@
+# BOB to plane (T33)
+
+**Read** · handled J5
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T33), layer 11, plane: T33-90 (K1122). Your requirements: `build/requirements/plane.md` (read whole; folded for T33, K1522, K1122). Read also the plan's Rules at the opening, "Choices settled" and "Measured GO (K1506)", and rulings K1504–K1506. Layers 1–9 are closed and merged into `tranche/T33`; layer 10 (monitoring, following, scheduler) is closed and merged.
+Findings, the composition root's wiring: hand credentials `{sealSecret}` from the Worker secret `ACCOUNT_SEAL_SECRET` (`credentialsOf(ctx, {sealSecret})`; unbound, setting a reference is refused `ACCOUNT_SEAL_UNAVAILABLE`) (K1541). Capture's store gives `credentials` lazily; populate it before handing it to acquisition's `keyedFetch` or `citationLookup`, or the keyed service reads as off (K1551). `standardsOf(ctx)` gets `keyedStore` (`{credentials, env, governor}`, R25) (K1571).
+Pass local-facts `deps.officeOf(entityId, profile)` → `{role, body}` | `{venue}` | null from instance-setup's seeded offices, and `deps.lines` (`linesOf(host)`); hand `retrievalOf(ctx, {terms: {standard: standards.standardsFor, holder: lines.holderAt over the offices a bundle names}})` and `money`; wire every new L5 module's real factory (`<name>Of(host)`) where a module took an injected dep (K1563, K1593). Build `exploreOf(host, {events: eventsOf(host), money: moneyOf(host)})` (K1566). Wire duties' deps: the real services, `view()` (the active combined view) and local-facts' `factOf` (K1569). Call `money.joinPromotion(promotion)` and `migrate()`, and hand money `calculations.bindingOf` as its port (K1573). Wire workbooks' `ctx.recompute` to `SHEET_WORKER`; the job that first binds it takes K1531's three sheet-worker test pins (instance-setup `FLEET_BINDINGS`, control-plane `members-pin.test.mjs`, bundler `deploybindings.test.mjs`), each changing its own part (K1570, K1531).
+Register roster-reader into people (K1505 (6)). docprofile keeps its seven doctypes registered by default until you register doctypes' types; deleting docprofile's copies is `next.md` N549 (K1513). court-doctypes takes a page's capture origin from you, `ctx.origin` `member` for a member's own capture (K1511, K1514). Settled at the fold (K1522): R24's first screens come from the legacy UI as the fold reads them.
+Conventions (K1563 (1), `build/rulings.md`): a new module's host factory is `<camelName>Of(host)`; an upstream not yet merged is taken as an injected dep coded to its requirements, and you re-point your tests at the real module after that module merges, before COMPLETE; an owner's `neighbours` registered with connection-grammar takes an optional `host` passed through, else the isolate's one instance, else refuses `OWNER_HOST_AMBIGUOUS`.
+Merge order in L11: queue-producers → notice-producers → wizard-scripts, affordances, tasks → queue (it uses tasks and affordances; K1594) → instance-setup, op-declarations; then control-plane; plane; installer last. All L11 jobs run at once (P10): a downstream job codes against its upstream's approved requirements and merges after it.
+Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their merges), 2 (membership's order test, until T33-19a), 3 (case-checker R13's program SHA, until case-checker's job, T33-66), 4 (importers of a copy-split's source, until re-pointed), 5 (the UI's DEC-88 tests, Bob's). Named reds still open (any in your own module is yours to clear in this job): affordances "R2 R3 R7 R12: N364's ops" (K1550, until T33-85); affordances `catalogue.test.mjs` "R3 R7 R12 … 62 ops" (K1571, until T33-85 and T33-88) and `catalogue.test.mjs:1061` R19 (`ATTRIBUTION_NO_REASON` now case-tensions', K1643, until T33-85); control-plane's R26 test of sources' ops (K1550), its "R43, R22 … every published fence" hash pin (K1572, K1575), `families.test.mjs:48` "CHECK_FAMILIES is total" (K1581, K1585, K1643) and `families.test.mjs:245` (C-120's rows, K1638), all until T33-89; plane `notices.test.mjs:118–120` (corpus-export's new arms, K1640), `docket.test.mjs:41` and `store.test.mjs:68` (case-tensions' registrations, K1643), all until T33-90; instance-setup `keys.test.mjs` R44 ×4 (K1544) and `identity.test.mjs:256` (K1668), until T33-87; the AI_NO_ACCOUNT set: capture-requests' four plane tests, scheduler's R12 test and agent-worker `harness.test.mjs`'s five REC100 arms (K1614, K1621, until N585 in T34); fleetbundles' four (K1598, K1604, until the close); `test/system/row-census.test.mjs`, the rows awaiting promotion's stamp (N553): record-core's 9, C-112.21–C-112.32, C-91.1, C-133.1–C-133.36 less .13 and .28, C-129.27/.28, C-120.14–.16, C-98.11, C-113.29–.31, C-114.21/.22, C-117.26–.28, C-123.4–.6 and the changed C-113.5, C-114.4, C-114.7 (K1542, K1545, K1571, K1572, K1585, K1635, K1637, K1638, K1644, K1649, K1650, K1659).
+Finding (K1601, from AGENT-WORKER #9 J1 (1), (2)): `/run` and `/ask` carry `account: {kind, secret, member, suggestions}`; `d260-resume` and `fence-e2e` send one.
+Finding (K1607, from HYPOTHESES #1 J3): compose `hypothesesOf(host)` at boot (its promotion step and the `hunch` owner) and route `hypothesishold`, `hypothesisrevise`, `hypothesiswithdraw`, `hypotheses`.
+Finding (K1609, from ANSWERS #1 J2 (4)): compose `answersOf(host, deps)` with ai-runs' `ceilingRefusal` and a `relations` dep.
+Finding (K1619, from INQUIRY #14 J3 (3)): `store.mjs` composes leg-earning's `legEarningOps` (`basis`, `restson`, `earnedbasis`) in place of inquiry's delegating entries, and registers inquiry's `waitlook` (routed as K1604).
+Finding (K1640, from CORPUS-EXPORT #3 J3): `corpusExportOps` gains `exportpage` (export's credential) and `exportrender` (R10, a member's stamped viewer); your `notices.test.mjs:120` pins the two old arms and is red by name from corpus-export's merge until this job.
+Finding (K1643, from PUBLICATION #20 J2 (b)): `docket.test.mjs:41` and `store.test.mjs:68` pin the old registrations (case-tensions now declares between publication and docket; the revision step is case-tensions'). Spread `caseTensionsOps` yourself; removing publication's spread of it is a next-tranche entry for publication. Both are red by name until this job.
+Finding (K1654, from CONFORMANCE #12 J2 (d)): wire conformance's `deps.officeEntityOf` from instance-setup R50's seeded office entities.
+
+## B2 · CHANGE
+
+K1674 (from CONTROL-PLANE #22 J1 (2)): op=ask's handler is yours in T33-90: admitted only from a member's own session (control-plane R53) or a presented ai grant, it carries the asker and the account {kind, secret, member, suggestions} to agent-worker's /ask (K1601). control-plane does the grant admission and the read-log recording. Build it with your T33-90 wiring and test it.
+
+## B3 · ANSWER · re J1
+
+K1683. (1)-(10) accepted as read. (1) INSTANCE-SETUP #12 is told by CHANGE to export officeOf and officeEntityOf on its instance. (2) roster-reader's store-reading source is N614; (3) the capture origin is N615, court-doctypes R22's second sentence deferred; (7) retrieval's relations are N584 (T34-26). (6) notice-producers is merged on tranche/T33 (79f33fe954): wire noticeProducersOf for real. Merge the tranche branch.
+
+## B4 · ANSWER · re J2
+
+K1684. (1)-(3) accepted as read. (2) the name is grantMember (a member:<id> stamp); CONTROL-PLANE #22 is told to hand it to gatedOp when a grant is presented.
+
+## B5 · CHANGE
+
+K1685 (from CONTROL-PLANE #22 J3): the store object handed to dispatch gains logRead(entry) = answers' logRead for that object (as purgeHeld); without it a read under a grant fails closed. control-plane routes askcheck, askusage and askceiling.
+
+## B6 · CHANGE
+
+K1689: queue (T33-83, noticeProducers dep) and control-plane are merged on tranche/T33, and your 22 uses are set. Merge the tranche branch, clear t33.test.mjs R21, and COMPLETE.
+
+## B7 · CHANGE
+
+K1690: instance-setup is merged on tranche/T33: its routes are now twenty (+assistantset, assistantstate, disclosureshown, disclosureof, officesseed, seatsseed), so your R1/R5 pin of 'fourteen routes' needs re-pinning; hand officeOf/officeEntityOf and assistantGate (to answers) as ports. Merge the tranche branch before COMPLETE.

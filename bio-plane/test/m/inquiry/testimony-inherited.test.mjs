@@ -10,7 +10,9 @@
        R7 inheriting from an edition that froze no testimony axis.
      - test/audit-inheritance.test.mjs: R7 a correctly inherited leg reads clean, an own grade on a case published
        after the leg was written is C-21.2 with its detail, an ungraded leg is inert.
-   The shares of provenance, strength, ratification and extraction in those suites, and the one legacy-store held, are not here. */
+   The shares of provenance, strength, ratification and extraction in those suites, and the one legacy-store held, are not here.
+   The earned registry's own tests (R13–R17 here before T33) moved with those requirements to `leg-earning`'s suite
+   (K617, K1505); what stays is this module's own share. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V } from "./fixture.mjs";
@@ -48,38 +50,6 @@ function testimonyWorld(opts = {}) {
 const leg = (w, id, l) => w.promote(id, legDoc(id, [l]), null);
 
 /* ------------------------------------------------------------------------------------------------ R13 the registry */
-
-test("R13 an observation earns testimony D in value mode and no capture letter (captures 0, authored 1, CAPTURE_AXIS_AUTHORED, its empty level naming the testimony axis); an ordinary document earns the ceiling and no testimony", () => {
-  const { w, OBS } = testimonyWorld();
-  const r = w.k.earned(null, [OBS, UP]);
-  assert.deepEqual(Object.keys(r.earned).sort(), ["capture", "connection", "testimony"], "asked about an observation: a testimony map beside the others");
-  const t = r.earned.testimony[OBS];
-  assert.deepEqual([t.grade, t.mode, t.authored, typeof t.why], [TESTIMONY_GRADE, "value", 1, "string"]);
-  const c = r.earned.capture[OBS];
-  assert.deepEqual([c.grade, c.determined, c.undetermined_because, c.captures, c.authored, typeof c.why],
-                   [null, false, "CAPTURE_AXIS_AUTHORED", 0, 1, "string"]);
-  assert.match(c.empty_level, /on the testimony axis at D/);
-  assert.equal(r.earned.connection[OBS], undefined, "the connection axis earns nothing for the observation");
-  /* the contrast: the ordinary document */
-  assert.equal(r.earned.testimony[UP], undefined, "an ordinary document earns no testimony entry");
-  assert.equal(r.earned.capture[UP].grade, EARNED_CAPTURE_CEILING, "and the ceiling on capture, as before");
-  /* over-strictness: asked about no observation, the answer carries the keys it always had */
-  assert.deepEqual(Object.keys(w.k.earned(null, [UP]).earned).sort(), ["capture", "connection"]);
-});
-
-test("R13 a second member's attestation over the observation raises nothing: the registry still holds testimony D", () => {
-  const { w, OBS, capSha } = testimonyWorld();
-  /* the nearest act a second member has over another's observation; whatever it answers, the letter does not move */
-  w.content.attestText({ captureSha: capSha, member: V("sam"), extent: { kind: "document" }, viewer: "admin",
-                         note: "I was there too and saw the same" });
-  assert.equal(w.k.earned(null, [OBS]).earned.testimony[OBS].grade, TESTIMONY_GRADE);
-  const raised = leg(w, "INQ-2026-5302-raised", { target: OBS, grade: "C", axis: "testimony", source: "testimony" });
-  assert.deepEqual(refusedBy(raised, "testimony-grade-not-d"), REFUSED, "a leg claiming C because it was attested");
-  const still = leg(w, "INQ-2026-5302-stilld", { target: OBS, grade: "D", axis: "testimony", source: "testimony" });
-  assert.equal(still.ok, true, JSON.stringify(still).slice(0, 400));
-});
-
-/* ------------------------------------------------------------------------------------- R4 R6 the write, by name */
 
 test("R4 R6 a leg on the observation at testimony D (source testimony) is accepted; two observations are two testimonies, each at D", () => {
   const { w, OBS, OBS2 } = testimonyWorld();

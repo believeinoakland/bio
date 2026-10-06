@@ -173,7 +173,12 @@ test("R47 actionCreate is a promotion of an action document, its id minted; op=a
   const c = w.a.actionCreate({ document: doc, viewer: M, author: M });
   assert.equal(c.ok, true, JSON.stringify(c)); assert.match(c.id, /^ACTN-2026-\d{4}$/);
   assert.equal(w.fm(c.id).id, c.id, "the plane writes the minted id");
-  assert.deepEqual(Object.keys(c).sort(), ["id", "ok"]);
+  /* R9 (T33-73): an office addressee's answer says whether its entity was filled from the bridge; none is held here */
+  assert.deepEqual(Object.keys(c).sort(), ["addressee", "id", "ok"]);
+  assert.deepEqual([c.addressee.entity_id, c.addressee.filled], [null, "none"]);
+  const aud = w.a.actionCreate({ document: actionMd("", ["counterparty:", "  state: audience", '  description: "readers"',
+    "action_kind: other"]).replace("id: \n", ""), viewer: M, author: M });
+  assert.deepEqual(Object.keys(aud).sort(), ["id", "ok"], "another addressee: the answer is {ok, id}");
   /* its refusals are the promotion's (R1–R11 at the act) */
   const k = w.a.actionCreate({ document: doc.replace("action_kind: other", "action_kind: grand_jury"), viewer: M, author: M });
   assert.equal(k.reason, "ACTION_KIND_UNKNOWN");
@@ -188,7 +193,7 @@ test("R47 actionCreate is a promotion of an action document, its id minted; op=a
   assert.deepEqual([read.ok, read.id, read.kind], [true, op.id, "other"]);
   assert.equal(actions.actionsOps(w.a, url({ id: op.id, viewer: "nobody" }), null).action().reason, "NO_SUCH_BUNDLE");
   const list = actions.actionsOps(w.a, url({ viewer: M, kind: "other" }), null).actions();
-  assert.deepEqual(list.items.map((x) => x.id), [c.id, op.id]);
+  assert.deepEqual(list.items.map((x) => x.id), [c.id, aud.id, op.id]);
 });
 
 test("R48 pressure: marked on a received entry by a member, with actionCorrespond or later by actionPressure; never rewritten; read apart; actionsFor pressure", () => {
@@ -296,7 +301,7 @@ test("R2 GOVERNING_LAWS_REWRITTEN with no envelope type: the document alone make
 });
 
 /* B5 (K707): entities joined the uses, so R9's person arm is met through the subject registry (entities R5). */
-test("R9 an entity_id the subject registry holds as a person is refused COUNTERPARTY_REFUSED, its finding naming the arm; an office's lands", () => {
+test("R9 an entity_id the subject registry holds as a person is refused COUNTERPARTY_REFUSED, its finding naming the arm; on an office arm one naming no office entity too; an office's lands", () => {
   const w = world();
   const ent = (kind, label) => {
     const r = w.a.entities.createEntity({ kind, label, note: `registered to test the addressee: ${label}`, declaredBy: M });
@@ -309,7 +314,13 @@ test("R9 an entity_id the subject registry holds as a person is refused COUNTERP
   assert.ok(r.findings.some((f) => /arm: person/.test(f.detail)), JSON.stringify(r.findings));
   assert.equal(w.record.head(B), null, "nothing was written");
   assert.equal(w.promote(B, withId(office)).ok, true, "an office in the registry");
-  assert.equal(w.promote(A, md(A, [...CP, "  entity_id: ENT-2026-9999"])).ok, true, "an id the registry does not hold is not a person");
+  /* T33-73 (R9 narrowed, K1484 row 5): an office arm's entity id names an office entity: an unheld id, or another kind,
+     is refused, its finding naming the arm */
+  for (const id of ["ENT-2026-9999", ent("body", "Port Ellery Selectboard")]) {
+    const x = w.promote(A, md(A, [...CP, `  entity_id: ${id}`]));
+    assert.equal(x.reason, "COUNTERPARTY_REFUSED", id);
+    assert.ok(x.findings.some((f) => /arm: office/.test(f.detail)), JSON.stringify(x.findings));
+  }
   const press = w.promote("ACTN-2026-0003-c", md("ACTN-2026-0003-c", [...named("press", "Reporter", "Gazette"), `  entity_id: ${person}`]));
   assert.equal(press.reason, "COUNTERPARTY_REFUSED", "on every named arm");
 });

@@ -81,6 +81,21 @@ export function planeConfig({ version = VERSION, services = [{ binding: "SELF", 
   };
 }
 
+/** `rel` (under the real bio-plane/) and every file it reaches through relative static imports, as paths under
+ *  bio-plane/. */
+function localClosure(rel) {
+  const seen = new Set(), todo = [rel];
+  while (todo.length) {
+    const f = todo.pop();
+    if (seen.has(f)) continue;
+    seen.add(f);
+    const text = readFileSync(join(PLANE, f), "utf8");
+    for (const [, spec] of text.matchAll(/(?:^|[\s;])(?:import|export)\b[^'"`;]*?\bfrom\s*["']([^"']+)["']/g))
+      if (spec.startsWith(".")) todo.push(relative(PLANE, join(PLANE, dirname(f), spec)));
+  }
+  return [...seen];
+}
+
 /** A fixture repository: the plane, `members` (name → addMember options), the module's scripts, and the
  *  other modules' files the commands read. `build: true` writes every guarded bundle fresh. */
 export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": { assets: { "assets/model.bin": "MODEL-1" } } },
@@ -88,7 +103,9 @@ export async function makeRepo({ members = { "alpha-worker": {}, "beta-worker": 
   const root = mkdtempSync(join(tmpdir(), "bundler-repo-"));
   for (const f of OWN) put(root, `bio-plane/scripts/${f}`, readFileSync(join(PLANE, "scripts", f)));
   put(root, "bio-plane/scripts/embed-signpage.mjs", readFileSync(join(PLANE, "scripts/embed-signpage.mjs")));
-  put(root, "bio-plane/src/sshsig.mjs", readFileSync(join(PLANE, "src/sshsig.mjs")));
+  /* sshsig.mjs is signatures', and it imports other modules (record-grammar since T33-7): copy its whole relative
+     import closure, so a new import there never strands the fixture. */
+  for (const rel of localClosure("src/sshsig.mjs")) put(root, `bio-plane/${rel}`, readFileSync(join(PLANE, rel)));
   put(root, "bio-plane/src/sign-release.html", readFileSync(join(PLANE, "src/sign-release.html")));
   put(root, "bio-plane/scripts/sign-sshsig.mjs", readFileSync(join(PLANE, "scripts/sign-sshsig.mjs")));
   mkdirSync(join(root, "bio-plane/node_modules/.bin"), { recursive: true });

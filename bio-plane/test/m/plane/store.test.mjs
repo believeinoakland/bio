@@ -74,7 +74,7 @@ test("R2: before the first request every module's start registrations are held, 
   assert.deepEqual(retrievalOf(x.ctx).registerLegGrades("probe", () => []), { ok: false, reason: "RESOLVER_DECLARED", module: "probe", declaredBy: "inquiry" });
   /* Every step a module of the order registers at start is held: a second registration of each is refused. */
   for (const m of ["provenance", "extraction", "retrieval", "inquiry", "basis-versions", "strength", "bias", "ai-runs",
-                   "intent", "reevaluation", "publication", "ratification", "standards", "conformance", "actions",
+                   "intent", "reevaluation", "case-tensions", "ratification", "money", "hypotheses", "standards", "conformance", "actions",
                    "escalation", "action-plans", "monitoring", "tasks", STEP])
     assert.equal(promotionOf(x.ctx).registerStep(m, {}).ok, false, `${m}'s step is held`);
   /* queue and tasks have made their tables. */

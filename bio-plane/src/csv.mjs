@@ -577,6 +577,8 @@ function csvText(parts) {
     /* Exhaustive and EMPTY, not null: the format has no media container to
        have looked in, so this is a zero of the format and not of a walk. */
     images: [],
+    /* R31: the format carries no metadata part, so none is stated. */
+    metadata: null,
     dialect,
   };
 
@@ -593,6 +595,12 @@ function csvText(parts) {
 
   const undetermined = [];
   const lines = [];
+  /* R30: one typed cell per field holding a value — every csv field is
+     `text`, the format declaring no type (`declared` null), and a field the
+     encoding cannot read keeps its entry with a null value. */
+  const cells = [];
+  const typedCell = (row, col, value) => ({ source: csvCellRef(row, col), value, type: "text",
+    declared: null, cached: null, formula: null });
   let cellCount = 0, usedRows = 0, usedCols = 0;
 
   parts.records.forEach((record, r0) => {
@@ -610,6 +618,7 @@ function csvText(parts) {
            mojibake. */
         undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`,
           reason: read.why });
+        cells.push(typedCell(row, col, null));
         if (row > usedRows) usedRows = row;
         if (col > usedCols) usedCols = col;
         return;
@@ -617,6 +626,7 @@ function csvText(parts) {
       const field = read.value;
       if (field === "") return;   // an empty cell is a measured emptiness, not text
       cellCount++;
+      cells.push(typedCell(row, col, field));
       if (row > usedRows) usedRows = row;
       if (col > usedCols) usedCols = col;
       vals.push(field);
@@ -636,7 +646,7 @@ function csvText(parts) {
        format never fixed. The USED range is measured and emitted beside it. */
     rows: null, cols: null, usedRows, usedCols,
     range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
-    text, undetermined,
+    text, cells, undetermined,
   };
   return {
     ...base,

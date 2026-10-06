@@ -111,7 +111,8 @@ test("R14: the bias manifest is frozen from bias.biasManifest at the project's s
            bundles: [{ bundle_id: "BIAS-2026-0001-lens", revision: "a".repeat(64), scope: "instance", adopter: "x" }],
            pins_proposed: [{ bundle_id: "BIAS-2026-0002-new", revision: "b".repeat(64), scope: "project", pinned_state: "proposed" }] };
   const on = w.publish(P, "alice", [Q]);
-  assert.deepEqual(calls[0], { scope: "project", scopeId: P, viewer: "admin", limit: 1 }, "read as the plane, once");
+  assert.deepEqual(calls.filter((c) => c.limit === 1), [{ scope: "project", scopeId: P, viewer: "admin", limit: 1 }],
+                   "the manifest stamped, read as the plane, once (R40's lens reads its pages beside it)");
   assert.deepEqual(on.bias_manifest, { in_force: true, scope: "project", scope_id: P, statements_sha: "f".repeat(64),
     bundles: [{ bundle_id: "BIAS-2026-0001-lens", revision: "a".repeat(64), scope: "instance" }], lock_violations: 1,
     stated: `the effective bias set in force for ${P} at publication, frozen here and never recomputed`,

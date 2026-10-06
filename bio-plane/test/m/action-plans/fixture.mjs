@@ -1,11 +1,13 @@
 /* action-plans over the modules it uses: the real ones where it writes or reads the record (record-core, membership,
    promotion) and where it creates (actions, action-clocks: R18 and R29 create a real action and set real reminders), on
    a real SQLite database (node:sqlite) standing in for a Durable Object's storage, answering as workerd's does (a
-   cursor); and stand-ins, in the shape of their Provides, for the modules whose facts the test controls: inquiry
-   (`projectsDrawingOn`), strength (`projectBar`), conformance (`determinationRead` R9, `determinationsFor` R11),
+   cursor); leg-earning, real, for the projects drawing on an inquiry (its R7, K1661: a project's `cites` reference in
+   connections' `refs`, written here as connections' projection would; no citation severed); and stand-ins, in the shape of their Provides,
+   for the modules whose facts the test controls: strength (`projectBar`), conformance (`determinationRead` R9, `determinationsFor` R11),
    standards (`standardRead` R5), escalation (`escalationsFor` R22, `escalationRead` R2), filings (`availableActions`
    R21) and ai-runs (`registerOpenCheck` R47, `onRunOpened` R43, `runFor` R28, `read` R19, `boundOf`/`consumeBound`
-   R29). An inquiry and a determination are real bundles in the record (so an action's legs resolve); their facts are
+   R29); duties (R38) is the real module, built by its own test world over its real modules when a test passes it
+   (`world({duties})`; `duty-starts.test.mjs`). An inquiry and a determination are real bundles in the record (so an action's legs resolve); their facts are
    the stand-ins'. Provenance is real and migrated before `actions`, as every real host builds it: actions joins its
    promotion step (through capture's reader, its R55), which reads provenance's tables. Every test drives
    `action-plans` at its interface, under the jurisdictions test profile. */
@@ -18,6 +20,7 @@ import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { actionsOf } from "../../../src/actions/index.mjs";
 import { actionClocksOf } from "../../../src/action-clocks/index.mjs";
 import { actionPlansOf } from "../../../src/action-plans/index.mjs";
+import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { runPrincipalGate } from "../../../src/run-rules/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -59,7 +62,7 @@ export const ms = (iso) => Date.parse(iso);
 export const OFFICE = { state: "named", kind: "office", role: "Town Clerk", body: "City of Port Ellery" };
 const EMPTY = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
+export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -107,8 +110,8 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
       return { ok: true, items, cursor: null, truncated: false };
     },
   };
-  const drawing = new Map();
-  const inquiry = { projectsDrawingOn: (id) => [...(drawing.get(id) || [])] };
+  /* R1: a project draws on an inquiry when its document cites it (leg-earning R7); `w.cite` writes the reference. */
+  const cite = (inquiryId, project) => st.sql.exec(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'cites')`, project, inquiryId);
   const bars = new Map();
   const strength = { projectBar: (p) => ({ declared: bars.has(p), capture: bars.get(p)?.capture ?? null, connection: bars.get(p)?.connection ?? null }) };
   const standardsHeld = new Map();
@@ -144,7 +147,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
       st.sql.exec(`CREATE TABLE IF NOT EXISTS stub_consumed (run TEXT, n INTEGER)`); st.sql.exec(`INSERT INTO stub_consumed VALUES (?, ?)`, run, n);
       r.bounds[bound].consumed += n; return null; },
   };
-  const stand = { inquiry, strength, conformance, standards, escalation, filings, aiRuns };
+  const stand = { strength, conformance, standards, escalation, filings, aiRuns };
   /* actions, real, over the stand-in conformance; what it registers with retrieval is the test's (nothing here reads it). */
   const retrievalStub = { registerActionFacts: () => ({ ok: true }), registerProjectionDecoration: () => ({ ok: true }) };
   const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
@@ -155,8 +158,13 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
   const seenActions = new Proxy(actions, { get: (t, k) => (k === "actionRead"
     ? (a) => (hid(a && a.viewer, a && a.id) ? { ok: false, reason: "NO_SUCH_BUNDLE", target: a.id } : t.actionRead(a))
     : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
-  const ap = actionPlansOf(host, { record, membership: sight, promotion, ...given, actions: omit.includes("actions") ? null : seenActions,
-                                   clocks: omit.includes("clocks") ? null : clocks, now: () => clock.now });
+  /* leg-earning, real; of its own deps R7 reads only connections' `edgeSevered` (no citation here is severed: severing is
+     leg-earning's and connections' to test), and content is not read, so neither module is built on this host. */
+  const legEarning = legEarningOf(host, { record, membership, promotion, content: {}, connections: { edgeSevered: () => false } });
+  legEarning.migrate();
+  const ap = actionPlansOf(host, { record, membership: sight, promotion, legEarning, ...given, actions: omit.includes("actions") ? null : seenActions,
+                                   clocks: omit.includes("clocks") ? null : clocks,
+                                   ...(omit.includes("duties") ? { duties: null } : duties !== undefined ? { duties } : {}), now: () => clock.now });
 
   let n = 0, nd = 0, ni = 0, nr = 0;
   const commitBundle = (id, type, text, state) => {
@@ -167,7 +175,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
       group: "test-group", created: clock.now, lastUpdated: clock.now, criticality: null, at: clock.now }));
   };
   const w = {
-    st, host, record, membership, promotion, ap, actions, clocks, clock, stand, determinations, drawing, bars, standardsHeld,
+    st, host, record, membership, promotion, ap, actions, clocks, clock, stand, determinations, cite, legEarning, bars, standardsHeld,
     escalations, runs, reg,
     /** R35: withhold `id` from `viewer` (a member's stamp), as a narrower sight rule would. */
     hide(viewer, id) { hidden.add(`${viewer}|${id}`); },
@@ -208,7 +216,7 @@ export function world({ profiles = ["test-port-ellery"], omit = [] } = {}) {
     inquiry(projects = [], state = "open") {
       const id = `INQ-2026-${String(++ni).padStart(4, "0")}-q`;
       commitBundle(id, "inquiry", ["---", `id: ${id}`, "object_type: inquiry", `title: "${id}"`, `current_state: ${state}`, "---", "", "## Question", "", "Why?", ""].join("\n"), state);
-      drawing.set(id, new Set(projects));
+      for (const p of projects) cite(id, p);
       return id;
     },
     setInquiryState(id, state) { st.sql.exec(`UPDATE bundles SET current_state=? WHERE bundle_id=?`, state, id); },

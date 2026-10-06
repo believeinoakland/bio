@@ -13,7 +13,10 @@
  * `OBSERVATION_CHECKS` is this same object under the name the append's refusals read it by.
  *
  * `LEAD_ID_RE`, a lead id's shape, is held here (K649): this module mints the ids it matches (R14), and
- * `inquiry-grammar`'s `leadLegFindings` (C-54.1) reads it from here. */
+ * `inquiry-grammar`'s `leadLegFindings` (C-54.1) reads it from here. Since T33 (R34) its core is `record-grammar`'s
+ * `idPattern("LEAD")` (`ID_TABLE`, its R46–R47), so no copy of the id's shape is held here. */
+
+import { idPattern } from "../record-grammar/ids.mjs";
 
 /* C-22 — THE INVESTIGATIVE RUN'S FAMILY, AND SINCE REC-93 THE OBSERVATION LOG'S (IS-6, INVESTIGATIVE-SESSION.md §11 and
  * §14b.6). REC-93 (2026-09-14) folded `ai_run_log` into `observation_log` (`OBSERVATION-LOG-DESIGN.md` §4.4), so
@@ -204,8 +207,12 @@ export const OBSERVATION_CHECK_KEYS = Object.freeze(Object.keys(AI_RUN_CHECKS));
 /** The same rows, under the name the append's refusals read them by: one object, not a copy. */
 export const OBSERVATION_CHECKS = AI_RUN_CHECKS;
 
-/** A lead's id: `LEAD-YYYY-MMDD-` and its random tail (R14, R25). No bundle or content grammar admits the prefix. */
-export const LEAD_ID_RE = /^LEAD-\d{4}-\d{4}-[a-z0-9]+$/;
+/** A lead's id: `LEAD-YYYY-MMDD-` and its random tail (R14, R25). No bundle or content grammar admits the prefix.
+ *  R34 (T33-30; S0-8, B0.5): the core `LEAD-YYYY-MMDD` is `idPattern("LEAD")`, `ID_TABLE`'s sequential form, whose
+ *  four-or-more-digit counter is where a lead's `MMDD` sits; the tail is composed after it, as R47 allows. The tail
+ *  keeps the rule it had before T33 (`[a-z0-9]+`, which admits the twelve hex digits R14 mints), so every lead minted
+ *  before T33 stays valid and C-54.1 still refuses every id it refused. */
+export const LEAD_ID_RE = new RegExp(`^${idPattern("LEAD").source.slice(1, -1)}-[a-z0-9]+$`);
 
 /* =====================================================================
  * MK-4 / IC-135 / IC-136 — THE LEAD (D-194, `MEMBER-KNOWLEDGE-DESIGN.md` §5):

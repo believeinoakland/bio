@@ -50,9 +50,24 @@ export const LEGS = [
 export const PASSAGES = [{ finding: A, ord: 1, content_id: sha("passage"), capture_sha: MINUTES_SHA,
   extent: { page: 3, start: 10, end: 52 }, chain: null, quoted: "No vote was taken on item 7 <the lease>. It's \"final\" # here" }];
 
-/** The case document's text, `/7` (the format written) unless `format` says otherwise. */
+/** T33-60: a calculation a member's chain reaches (R18), with its inputs' canonical bytes, and a timeline (R20). */
+export const RECIPE = { method: "bio-calc/1", inputs: [{ name: "payments", kind: "table" }],
+  steps: [{ op: "sum", as: "total", from: "payments", field: "amount" }], output: "total" };
+export const INPUT_BYTES = '{"fields":[{"name":"amount","type":"number"}],"rows":[["10.50"],["4.25"]]}';
+export const CALCS = [{ calc: "CALC-2026-0001", recipe: RECIPE, inputs: { payments: sha(INPUT_BYTES) },
+  method_version: "bio-calc/1", results: { total: { value: "14.75", sign: "+", precision: "exact" } }, recompute: "differs",
+  disclosed: "The stored total was taken before a late payment was added; we disclose that it differs." }];
+export const TIMELINE = [
+  { lane: "we_did", ord: 2, when: { day: "2026-09-12", precision: "day" }, label: "We filed the records request.", ref: "ACTN-2026-0002", source: { entry: "ACTN-2026-0002#1" } },
+  { lane: "they_did", ord: 1, when: { day: "2026-03-04", precision: "day" }, label: "The board approved the lease.", ref: "EVT-2026-abcdefgh12345678", source: { capture: MINUTES_SHA, extent: { page: 3 } } },
+  { lane: "we_did", ord: 1, when: { state: "undetermined", low: "2026-08-01", high: "2026-08-31" }, label: "We read the minutes.", ref: null, source: MINUTES_SHA },
+  { lane: "they_did", ord: 2, when: "nowhere", label: "An undated memo circulated.", ref: null, source: { capture: sha("memo") } },
+];
+
+/** The case document's text, `/7` (the format written) unless `format` says otherwise; `t33` adds R18's and R20's
+    blocks. */
 export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true,
-                               format = CG.CASE_DOCUMENT_FORMAT } = {}) {
+                               format = CG.CASE_DOCUMENT_FORMAT, t33 = false } = {}) {
   const fm = [
     "---", `format: ${format}`, "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
@@ -91,6 +106,7 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
       flags: [{ ref: REF, edition: 2, flag: "FLAG-1", issue: "The lease date may be wrong.", flagged_at: NOW,
                 words: "We disclose it.", acknowledged_by: V("olive"), acknowledged_at: NOW }] }),
     ...(blocks ? [...CG.gradingFactsLines(LEGS), ...CG.passagesLines(PASSAGES)] : []),
+    ...(t33 ? [...CG.calculationsLines(CALCS), ...CG.timelineLines(TIMELINE)] : []),
     "searched:", '  computed_at: "2026-09-30T00:00:00Z"', "  subject_source: case", "  subjects: 3", "  looked: 2",
     ...rows("searched_levels", [{ level: "document", subject_kind: "document", outcome: "looked", subjects: 3, looked: 2,
                                   never_looked: 0, undetermined: 1, detail: "One was never logged." }]),
@@ -101,7 +117,9 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
     "---"];
   const body = ["", "# Case CASE-2026-0001 — edition 2", "", ...CG.whatChangedSectionLines("Added the 2019 minutes."), "## Scope", "",
                 "Who approved the lease.", ""];
-  return [...fm, ...body].join("\n");
+  const text = [...fm, ...body].join("\n");
+  /* a /6 document was written before strength R35's `undetermined` (K1608) reached R17's rows: as it was written then */
+  return format === CG.CASE_DOCUMENT_FORMAT_V6 ? text.replace(/\n {4}undetermined: null(?=\n)/g, "") : text;
 }
 
 /** A whole case file: `{manifest, files}`, `files` a Map of path to text, the complete edition rendered from the rest. */
@@ -119,6 +137,9 @@ export function caseFileFixture(opts = {}) {
     [CG.caseFilePath("document", MINUTES), "%PDF the minutes' bytes"],
     [CG.caseFilePath("extracted_text", MINUTES), "No vote was taken on item 7 <the lease>."],
     [CG.caseFilePath("attestation", [MINUTES, "account-1.txt"]), "I pulled it from the box."],
+    ...(opts.t33 ? [[CG.caseFilePath("calculation", CALCS[0].calc), CG.calculationFileText(CALCS[0])],
+                    [CG.caseFilePath("calculation", [CALCS[0].calc, sha(INPUT_BYTES)]), INPUT_BYTES],
+                    [CG.caseFilePath("calculation", "prov"), CG.provOf(CALCS)]] : []),
   ]);
   const listed = (m) => [...m].map(([path, t]) => ({ path, sha256: sha(t), bytes: bytesOf(t), part: 1,
                                                      kind: CG.caseFileEntryOf(path).kind }));

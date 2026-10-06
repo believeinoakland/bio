@@ -195,8 +195,9 @@ test("R13 (N202) registrations are refused through membership's listenerRefusal 
   assert.deepEqual(dup, listenerRefusal([{ module: "connections" }], "connections", f));
   assert.deepEqual([dup.code, dup.module], ["LISTENER_DECLARED", "connections"]);
   e.resolve({ captureSha: sha("r13o") });
-  const byOrder = ["connections", "progressions", "observation-log"];
-  assert.deepEqual(byOrder.map((m) => MODULE_ORDER.indexOf(m)), [...byOrder.map((m) => MODULE_ORDER.indexOf(m))].sort((x, y) => x - y));
+  /* the expected order is MODULE_ORDER's own (K1543): under T33 observation-log precedes progressions */
+  const byOrder = ["observation-log", "connections", "progressions"].sort((x, y) => MODULE_ORDER.indexOf(x) - MODULE_ORDER.indexOf(y));
+  assert.ok(byOrder.every((m) => MODULE_ORDER.includes(m)), "each listed module is in the total order");
   assert.deepEqual(order, [...byOrder, "zz-unlisted"], "total order, a module not in it last");
   assert.deepEqual(attempts, [...byOrder, "zz-unlisted"]);
 });

@@ -1,4 +1,4 @@
-/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R35).
+/* queue-producers — the feed's producers (requirements: `build/requirements/queue-producers.md`, R1–R36).
  * Split out of `queue` by N363 (Bob's K507; seams ruled K531, `build/plan/draft-N363-queue-split.md` §1, §3.2): each
  * producer derives, on read and writing nothing, the items one provider's facts earn for a viewer, naming each item's
  * subjects and home subjects, for `queue` to home, offer, mint and publish.
@@ -47,7 +47,8 @@ import { linkSweepOf, SWEEP_CONDITION_KINDS } from "../link-sweep/index.mjs";
 import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { actionPlansOf } from "../action-plans/index.mjs";
-import { actionsOf } from "../actions/index.mjs";
+import { actionsOf, zoneOf } from "../actions/index.mjs";
+import { localDay, dayRange, span, isCalendarDate } from "../civil-time/index.mjs";
 import { filingTemplatesOf } from "../filing-templates/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
@@ -65,6 +66,8 @@ export class QueueProducers {
   #host; #deps;
   /* The read's two functions from queue (R8), held for one synchronous `feedItems` call and cleared after it. */
   #homesFn = null; #optionsFn = null;
+  /* R25, R36: the instance's zone, read once per `feedItems` call (undefined until asked) and cleared after it. */
+  #zone = undefined;
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -156,6 +159,82 @@ export class QueueProducers {
   #homesOf(subjectIds) { return this.#homesFn ? this.#homesFn(subjectIds || []) : { ...UNGROUPED }; }
   #optionsOf(subjectIds) { return this.#optionsFn ? this.#optionsFn(subjectIds || []) || [] : []; }
 
+  /* ------------------------------------------------------------------ R25, R36: the local day, through civil-time
+     Every day this module derives or compares is a local day in the subject's zone (`civil-time` R1, R7, R24), never
+     the UTC day; with no zone held, the day and the age are undetermined, stated, never counted on UTC (K1444 (iii)). */
+
+  /** The zone `actions` R12 reads (`zoneOf` over `actions.place()`: the active profiles' combined view's `time_zone`),
+   *  held for the length of one read; null when none is held, or when the runtime does not know it. R16's "instance
+   *  profile's time_zone", and the zone of R21's facts and R27's windows. */
+  #instanceZone() {
+    if (this.#zone === undefined) {
+      let z = null;
+      try { const a = this.#actions; z = zoneOf(a && typeof a.place === "function" ? a.place() : null); } catch { z = null; }
+      this.#zone = QueueProducers.#knownZone(z);
+    }
+    return this.#zone;
+  }
+
+  /** R15, R18: an action's zone: the one its provider names on the item (`zone`) when it names one, else the zone
+   *  `actions` R12 reads. */
+  #actionZone(e) { return QueueProducers.#knownZone(e && e.zone) || this.#instanceZone(); }
+
+  static #knownZone(z) {
+    if (typeof z !== "string" || !z.trim()) return null;
+    try { return typeof localDay("2000-01-01T00:00:00Z", z.trim()) === "string" ? z.trim() : null; } catch { return null; }
+  }
+
+  /** The local day of a day or an instant in `zone`: a `YYYY-MM-DD` is already a local day and is answered as it is;
+   *  an instant is read in the zone (civil-time R1). Null when neither, or when the instant needs a zone none holds. */
+  static #localDayOf(v, zone) {
+    const raw = typeof v === "string" ? v.trim() : "";
+    if (isCalendarDate(raw)) return raw;
+    if (!raw || !zone) return null;
+    try { const d = localDay(raw, zone); return typeof d === "string" ? d : null; } catch { return null; }
+  }
+
+  /** The first instant of a local day (`edge` "start") or the first instant after it ("end") in `zone` (civil-time R7). */
+  static #dayEdge(day, zone, edge) {
+    if (!zone || !isCalendarDate(day)) return null;
+    try { const r = dayRange(day, day, zone); return r && typeof r[edge] === "string" ? r[edge] : null; } catch { return null; }
+  }
+
+  /** The local day of the read's instant in `zone`. */
+  static #today(now, zone) {
+    if (!zone) return null;
+    try { const d = localDay(stampInstant("second", now), zone); return typeof d === "string" ? d : null; } catch { return null; }
+  }
+
+  /** R36: the whole local days from `from` to `to` (civil-time R24's `span`), never fewer than none; null when unknown. */
+  static #daysBetween(from, to, zone) {
+    if (!zone || !isCalendarDate(from) || !isCalendarDate(to)) return null;
+    if (to < from) return 0;
+    try {
+      const s = span({ value: from, precision: "day", zone }, { value: to, precision: "day", zone }, { unit: "days" });
+      return s && Number.isFinite(s.min) ? Math.max(0, s.min) : null;
+    } catch { return null; }
+  }
+
+  static ZONE_UNDETERMINED = "no time zone is held for it on this instance, so the local day it is counted from is "
+    + "undetermined; it is never counted on the UTC day";
+
+  /** R36: an item's `age` from a day or an instant, counted on local days in `zone`: a day ages from its first local
+   *  instant, an instant from itself; `days` the whole local days since. With no zone held it is undetermined
+   *  (`zone_undetermined`); with nothing readable, undetermined for `reason`. */
+  static #localAge(v, zone, now, reason, detail) {
+    const raw = typeof v === "string" ? v.trim() : "";
+    const day = isCalendarDate(raw);
+    const readable = day || (raw !== "" && Number.isFinite(Date.parse(raw)));
+    if (!readable) return { state: "undetermined", reason, detail };
+    if (!zone) return { state: "undetermined", reason: "zone_undetermined", detail: QueueProducers.ZONE_UNDETERMINED };
+    const since = day ? QueueProducers.#dayEdge(raw, zone, "start") : raw;
+    const from = QueueProducers.#localDayOf(raw, zone);
+    const sinceMs = since ? Date.parse(since) : NaN;
+    if (!Number.isFinite(sinceMs) || !from) return { state: "undetermined", reason, detail };
+    return { state: "determined", since, ms: Math.max(0, now - sinceMs),
+             days: QueueProducers.#daysBetween(from, QueueProducers.#today(now, zone), zone) };
+  }
+
   /* ------------------------------------------------------------------ the bounds */
   /** Which object types can BE a case (queue's R7 vocabulary, through normalizeType): an inquiry or a project. */
   static QUEUE_CASE_TYPES = ["inquiry", "project"];
@@ -188,6 +267,7 @@ export class QueueProducers {
     const at = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : Date.now();
     this.#homesFn = typeof homesOf === "function" ? homesOf : null;
     this.#optionsFn = typeof optionsOf === "function" ? optionsOf : null;
+    this.#zone = undefined;
     try {
       const items = [];
       /* OBLIGATION · R1: the bias debts. */
@@ -266,6 +346,7 @@ export class QueueProducers {
     } finally {
       this.#homesFn = null;
       this.#optionsFn = null;
+      this.#zone = undefined;
     }
   }
 
@@ -2402,27 +2483,28 @@ export class QueueProducers {
     return { rule: "administrators", members: this.#activeAdmins() };
   }
 
-  /** R25 (DEC-110 (1)): the day an item's subject is due, `YYYY-MM-DD`, for queue R49's sort: the clock entry's date
-   *  (R15, R18) or the checkpoint's day (R16), read as the provider states it; null when it states none this producer
-   *  can read as a day. Only those three kinds carry `due`. */
-  static #dueDay(v) {
-    const d = typeof v === "string" ? v.trim().slice(0, 10) : "";
-    return /^\d{4}-\d{2}-\d{2}$/.test(d) && Number.isFinite(Date.parse(`${d}T00:00:00Z`)) ? d : null;
-  }
+  /** R25 (DEC-110 (1)): the day an item's subject is due, `YYYY-MM-DD`, for queue R49's sort: the local day in the
+   *  subject's zone (civil-time R1), never the UTC day. A clock entry's date (R15, R18) is already a local day of the
+   *  action's zone (action-clocks' Terms) and is carried as it is; a checkpoint (R16) stated as an instant is read in
+   *  the instance profile's zone. Null when none can be read as a day, or when an instant meets no zone held. Only
+   *  those three kinds carry `due`. */
+  static #dueDay(v, zone) { return QueueProducers.#localDayOf(v, zone); }
 
-  /** A provider's paged read followed by its cursor, at most QUEUE_ACTION_PAGES pages; `truncated` when it was cut. */
+  /** A provider's paged read followed by its cursor, at most QUEUE_ACTION_PAGES pages; `truncated` when it was cut;
+   *  `zone_undetermined` the entries its pages left out for want of a zone (action-clocks R3; K1658), summed. */
   #actionPages(read) {
     const items = [];
-    let after = null, cut = false;
+    let after = null, cut = false, unzoned = 0;
     for (let page = 0; ; page += 1) {
       if (page === QueueProducers.QUEUE_ACTION_PAGES) { cut = true; break; }
       const r = read(after);
       if (!r || r.ok === false || !Array.isArray(r.items)) break;
       items.push(...r.items);
+      if (Number.isInteger(r.zone_undetermined) && r.zone_undetermined > 0) unzoned += r.zone_undetermined;
       if (!r.truncated || !r.cursor) break;
       after = r.cursor;
     }
-    return { items, truncated: cut };
+    return { items, truncated: cut, zone_undetermined: unzoned };
   }
 
   /** The homes of an item about an action: its project at depth 0 (as `#homesAt`), and whatever the walk reaches from
@@ -2445,14 +2527,16 @@ export class QueueProducers {
       if (!e || typeof e.action !== "string" || !e.action || !Number.isInteger(e.ord)) continue;
       const to = this.#actionRecipients(e.created_by, e.project);
       if (!to.members.includes(me)) continue;
-      const dated = typeof e.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && Number.isFinite(Date.parse(`${e.date}T00:00:00Z`));
-      const sinceMs = dated ? Date.parse(`${e.date}T00:00:00Z`) + QueueProducers.DAY_MS : NaN;
+      /* R36: overdue from the first instant after the entry's local day, in the action's zone (civil-time R7) */
+      const zone = this.#actionZone(e);
+      const dated = isCalendarDate(e.date);
+      const after = dated ? QueueProducers.#dayEdge(e.date, zone, "end") : null;
       out.push({
         id: `CONDITION::action-clock-overdue::${e.action}::${e.ord}`,
         class: "CONDITION",
         kind: "action-clock-overdue",
         case: this.#actionHomes(e.action, e.project, viewer),
-        due: QueueProducers.#dueDay(e.date),
+        due: QueueProducers.#dueDay(dated ? e.date : null, zone),
         subject: { kind: "action", id: e.action, entry: e.ord, date: e.date ?? null, basis: e.basis ?? null,
                    text: e.text ?? null, project: e.project ?? null },
         summary: `a date on ${e.action} has passed: ${e.text || "a clock entry"}${e.date ? `, due ${e.date}` : ""}`,
@@ -2461,14 +2545,17 @@ export class QueueProducers {
               + "marked met or waived or the action is resolved or abandoned.",
         basis: { source: "action-clocks.overdueClocks", action: e.action, entry: e.ord, date: e.date ?? null,
                  basis: e.basis ?? null, text: e.text ?? null, status: e.status ?? null, past: e.past ?? null,
-                 project: e.project ?? null, created_by: e.created_by ?? null, recipients_rule: to.rule,
-                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
+                 project: e.project ?? null, created_by: e.created_by ?? null, recipients_rule: to.rule, zone,
+                 local_day: typeof e.local_day === "string" ? e.local_day : null,
+                 basis_of: e.basis_of && typeof e.basis_of === "object" ? e.basis_of : null,
+                 bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated,
+                          zone_undetermined: page.zone_undetermined },
                  detail: "an overdue entry is action-clocks' fact (its R3): a stored status of overdue, or a pending entry "
-                       + "dated before today. It goes to the member who created the action, else the project's owners, "
+                       + "dated before the action's local day (`local_day`), its basis kind as `basis_of` names it; a pending "
+                       + "entry of an action whose zone is not held is left out and counted (`zone_undetermined`). It goes to the member who created the action, else the project's owners, "
                        + "else the administrators (DEC-10, DEC-94), and is raised once: nothing here repeats it." },
         age: dated
-          ? { state: "determined", since: `${new Date(sinceMs).toISOString().slice(0, 10)}T00:00:00Z`,
-              ms: Math.max(0, now - sinceMs) }
+          ? QueueProducers.#localAge(after || "", zone, now, "zone_undetermined", QueueProducers.ZONE_UNDETERMINED)
           : { state: "undetermined", reason: "no_entry_date",
               detail: "the entry carries no date this producer can read, so when it fell overdue is not derivable" },
         assignee: null,
@@ -2496,13 +2583,14 @@ export class QueueProducers {
       const to = this.#actionRecipients(c.set_by, c.project);
       if (!to.members.includes(me)) continue;
       const due = typeof c.due === "string" ? c.due : null;
-      const dueMs = due === null ? NaN : /^\d{4}-\d{2}-\d{2}$/.test(due) ? Date.parse(`${due}T00:00:00Z`) : Date.parse(due);
+      /* R25, R36: the checkpoint's local day in the instance profile's zone */
+      const zone = this.#instanceZone();
       out.push({
         id: `OBLIGATION::plan-checkpoint-due::${c.plan}::${c.scenario}::${c.phase}`,
         class: "OBLIGATION",
         kind: "plan-checkpoint-due",
         case: this.#homesAt([c.project], viewer),
-        due: QueueProducers.#dueDay(due),
+        due: QueueProducers.#dueDay(due, zone),
         subject: { kind: "plan", id: c.plan, project: c.project, scenario: c.scenario ?? null, phase: c.phase ?? null,
                    version: c.version ?? null },
         summary: `a checkpoint of plan ${c.plan} has come due: scenario ${c.scenario}, phase ${c.phase}`,
@@ -2511,15 +2599,12 @@ export class QueueProducers {
               + "nothing about the government.",
         basis: { source: "action-plans.checkpointsDue", plan: c.plan, project: c.project, scenario: c.scenario ?? null,
                  phase: c.phase ?? null, version: c.version ?? null, set_by: c.set_by ?? null, due,
-                 days_since_due: Number.isFinite(c.days_since_due) ? c.days_since_due : null, recipients_rule: to.rule,
+                 days_since_due: Number.isFinite(c.days_since_due) ? c.days_since_due : null, recipients_rule: to.rule, zone,
                  bound: { limit: r.limit ?? null, truncated: r.truncated === true },
                  detail: "a checkpoint come due is action-plans' fact (its R17): read here at the read's instant and never "
                        + "stored. It goes to the member who set the scenario's current version, else the project's owners, "
                        + "else the administrators, and leaves when a member judges it or closes the plan." },
-        age: Number.isFinite(dueMs)
-          ? { state: "determined", since: due, ms: Math.max(0, now - dueMs) }
-          : { state: "undetermined", reason: "no_checkpoint_day",
-              detail: "the checkpoint carries no day this producer can read" },
+        age: QueueProducers.#localAge(due, zone, now, "no_checkpoint_day", "the checkpoint carries no day this producer can read"),
         assignee: null,
         assignee_role: null,
         recipients: to.members,
@@ -2584,13 +2669,14 @@ export class QueueProducers {
     const out = [];
     for (const x of page.items) {
       if (!x || typeof x.action !== "string" || !x.action || !Number.isInteger(x.ord) || x.set_by !== me) continue;
-      const onMs = typeof x.on === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x.on) ? Date.parse(`${x.on}T00:00:00Z`) : NaN;
+      /* R36: the reminder's day is a local day of the action's zone; it ages from that day's first local instant */
+      const zone = this.#actionZone(x);
       out.push({
         id: `OBLIGATION::action-reminder::${x.action}::${x.ord}::${x.on}`,
         class: "OBLIGATION",
         kind: "action-reminder",
         case: this.#actionHomes(x.action, x.project, viewer),
-        due: QueueProducers.#dueDay(x.date),
+        due: QueueProducers.#dueDay(isCalendarDate(x.date) ? x.date : null, zone),
         subject: { kind: "action", id: x.action, entry: x.ord, date: x.date ?? null, basis: x.basis ?? null,
                    text: x.text ?? null, on: x.on ?? null, project: x.project ?? null },
         summary: `the reminder you asked for: ${x.text || "a clock entry"} on ${x.action}${x.date ? `, due ${x.date}` : ""}`,
@@ -2598,15 +2684,13 @@ export class QueueProducers {
               + "none; nothing reminds you again unless you ask.",
         basis: { source: "action-clocks.remindersDue", action: x.action, entry: x.ord, date: x.date ?? null,
                  basis: x.basis ?? null, text: x.text ?? null, on: x.on ?? null, set_by: x.set_by,
-                 project: x.project ?? null,
+                 project: x.project ?? null, zone,
                  bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
                  detail: "a reminder is the member's own request, held by action-clocks (its R4) and due when its day has "
                        + "come (its R5): it goes to the member who set it and to nobody else, and it leaves when that "
                        + "member answers it (its R6) or the entry or the action no longer calls for it." },
-        age: Number.isFinite(onMs)
-          ? { state: "determined", since: `${x.on}T00:00:00Z`, ms: Math.max(0, now - onMs) }
-          : { state: "undetermined", reason: "no_reminder_day",
-              detail: "the reminder carries no day this producer can read" },
+        age: QueueProducers.#localAge(isCalendarDate(x.on) ? x.on : null, zone, now, "no_reminder_day",
+          "the reminder carries no day this producer can read"),
         assignee: null,
         assignee_role: null,
         recipients: [me],
@@ -2828,7 +2912,8 @@ export class QueueProducers {
       /* aged from the dispute, else from the day the confirmation lapsed, else from the day the fact fell due */
       const latestAt = f.latest && typeof f.latest === "object" && typeof f.latest.at === "string" ? f.latest.at : null;
       const since = status === "disputed" ? latestAt : (f.lapsed && f.lapses_on ? f.lapses_on : f.due_from ?? null);
-      const sinceMs = typeof since === "string" ? Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(since) ? `${since}T00:00:00Z` : since) : NaN;
+      /* R36: a day here is a local day of the fact's profile's zone (local-facts R3), the instance's combined view's */
+      const zone = this.#instanceZone();
       out.push({
         id: `OBLIGATION::local-fact-due::${f.path}::${status}`,
         class: "OBLIGATION",
@@ -2847,15 +2932,12 @@ export class QueueProducers {
                  ...(f.lapsed ? { lapsed: f.lapsed } : {}), ...(f.due_from ? { due_from: f.due_from } : {}),
                  ...(f.lapses_on ? { lapses_on: f.lapses_on } : {}),
                  actions: acts.map((a) => a.action), recipients: [...members].sort(),
-                 recipients_rule: [...rules].sort().join("+"),
+                 recipients_rule: [...rules].sort().join("+"), zone,
                  bound: { actions_limit: read.actions_limit ?? null, truncated: read.truncated === true },
                  detail: "a fact due is local-facts' (its R4), asked of the paths a live deadline reads, which are "
                        + "action-clocks' (its R11). It goes to the members who created those actions, else their "
                        + "projects' owners, else the administrators (as R15's), and is raised once per fact and status." },
-        age: Number.isFinite(sinceMs)
-          ? { state: "determined", since, ms: Math.max(0, now - sinceMs) }
-          : { state: "undetermined", reason: "no_due_instant",
-              detail: "the fact carries no day it fell due this producer can read" },
+        age: QueueProducers.#localAge(since, zone, now, "no_due_instant", "the fact carries no day it fell due this producer can read"),
         assignee: null,
         assignee_role: null,
         recipients: [...members].sort(),
@@ -3063,6 +3145,11 @@ export class QueueProducers {
     if (!me) return [];
     const scope = this.#ownedProjects(me, viewer, QueueProducers.QUEUE_NOTICE_PROJECTS);
     const DAY = QueueProducers.DAY_MS;
+    /* R36: the windows are counted on local days of the instance's zone (civil-time); with none held, the lapse window
+       is read at the latest local day any zone has reached (UTC+14), so no item is withheld for want of a zone, and
+       its age is undetermined. */
+    const zone = this.#instanceZone();
+    const today = QueueProducers.#today(now, zone);
     const out = [];
     for (const project of scope.projects) {
       const r = this.#networkNotices.noticesOf({ project, viewer });
@@ -3070,7 +3157,6 @@ export class QueueProducers {
       const owners = this.#membership.projectOwners(project) || [];
       const title = (this.#record.bundleInfo(project) || {}).title || project;
       const item = (kind, n, { since, summary, detail, facts, options }) => {
-        const sinceMs = Date.parse(since ?? "");
         out.push({
           id: `CONDITION::${kind}::${n.notice}`,
           class: "CONDITION",
@@ -3080,15 +3166,13 @@ export class QueueProducers {
           summary,
           detail,
           basis: { source: "network-notices.noticesOf", notice: n.notice, project, status: n.status, ...facts,
-                   recipients_rule: "project_owners",
+                   recipients_rule: "project_owners", zone,
                    bound: { projects_bound: scope.bound, projects_truncated: scope.truncated === true },
                    detail: "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never "
                          + "restated. It is told to the project's owners and to nobody else, and it leaves on the first "
                          + "read after it stops holding." },
-          age: Number.isFinite(sinceMs)
-            ? { state: "determined", since, ms: Math.max(0, now - sinceMs) }
-            : { state: "undetermined", reason: "no_notice_instant",
-                detail: "the notice carries no instant this producer can read for when this began" },
+          age: QueueProducers.#localAge(since, zone, now, "no_notice_instant",
+            "the notice carries no instant this producer can read for when this began"),
           assignee: null,
           assignee_role: null,
           recipients: [...owners],
@@ -3098,13 +3182,14 @@ export class QueueProducers {
       for (const n of r.notices) {
         if (!n || typeof n.notice !== "string" || !n.notice) continue;
         const atts = Array.isArray(n.attestations) ? n.attestations : [];
-        const instant = (a) => Date.parse(a && (a.published_at || (a.as_of ? `${a.as_of}T00:00:00Z` : "")) || "");
+        /* an attestation's instant: its publication, else the first local instant of its `as_of` day */
+        const instant = (a) => Date.parse((a && (a.published_at || QueueProducers.#dayEdge(a.as_of, zone, "start"))) || "");
         if (n.status === "open") {
           const misses = Array.isArray(n.missed_monthlies) ? n.missed_monthlies.filter((m) => m && m.month) : [];
           const miss = misses.at(-1);
           if (miss) {
             const missMs = Date.parse(miss.at ?? "");
-            const since = atts.some((a) => a.kind === "monthly" && (Number.isFinite(missMs)
+            const since = atts.some((a) => a.kind === "monthly" && (Number.isFinite(missMs) && Number.isFinite(instant(a))
               ? instant(a) > missMs : String(a.as_of || "").slice(0, 7) > miss.month));
             if (!since)
               item("notice-attestation-missed", n, { since: miss.at ?? null,
@@ -3115,10 +3200,11 @@ export class QueueProducers {
                 facts: { month: miss.month, missed_at: miss.at ?? null, missed: misses.length },
                 options: this.#optionsOf([project]) });
           }
-          const lapseMs = typeof n.lapse_date === "string" ? Date.parse(`${n.lapse_date.slice(0, 10)}T00:00:00Z`) : NaN;
-          if (Number.isFinite(lapseMs) && lapseMs - now <= QueueProducers.NOTICE_LAPSE_NEAR_DAYS * DAY) {
-            const opened = lapseMs - QueueProducers.NOTICE_LAPSE_NEAR_DAYS * DAY;
-            item("notice-lapse-near", n, { since: new Date(opened).toISOString().replace(/\.\d{3}Z$/, "Z"),
+          const lapse = typeof n.lapse_date === "string" && isCalendarDate(n.lapse_date.slice(0, 10)) ? n.lapse_date.slice(0, 10) : null;
+          const opens = lapse ? QueueProducers.#addDays(lapse, -QueueProducers.NOTICE_LAPSE_NEAR_DAYS) : null;
+          const reached = today || QueueProducers.#today(now, "Etc/GMT-14");
+          if (opens && reached && opens <= reached) {
+            item("notice-lapse-near", n, { since: opens,
               summary: `${title}'s working-on notice will lapse on ${n.lapse_date.slice(0, 10)}`,
               detail: "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no "
                     + "revision lapses it. A revision or a stop answers this; so does the lapse itself.",
@@ -3128,9 +3214,13 @@ export class QueueProducers {
           }
         } else if (n.status === "closed") {
           const closed = atts.find((a) => a && a.kind === "closed");
-          const closedMs = instant(closed);
-          if (!Number.isFinite(closedMs) || now - closedMs < QueueProducers.NOTICE_CLOSED_DAYS * DAY) {
-            const since = closed ? closed.published_at || (closed.as_of ? `${closed.as_of}T00:00:00Z` : null) : null;
+          const since = closed ? closed.published_at || (isCalendarDate(closed.as_of) ? closed.as_of : null) : null;
+          const closedDay = QueueProducers.#localDayOf(since, zone);
+          /* 30 local days from the closing; with no zone held, 30 days elapsed from a published instant, else it stands */
+          const closedMs = Date.parse(closed && closed.published_at || "");
+          const stands = closedDay && today ? QueueProducers.#daysBetween(closedDay, today, zone) < QueueProducers.NOTICE_CLOSED_DAYS
+            : !Number.isFinite(closedMs) || now - closedMs < QueueProducers.NOTICE_CLOSED_DAYS * DAY;
+          if (stands) {
             item("notice-project-closed", n, { since,
               summary: `${title} closed while its working-on notice was open`,
               detail: "this copy signed the closing into the notice's public record. An owner may still stop the notice "
@@ -3716,6 +3806,17 @@ export class QueueProducers {
   }
 
   static DAY_MS = 86400000;
+
+  /** A calendar day `n` days from `day` in the proleptic Gregorian calendar: arithmetic on the date's own numbers, no
+   *  instant and no zone (civil-time R6's calendar). */
+  static #addDays(day, n) {
+    if (!isCalendarDate(day)) return null;
+    const [y, m, d] = day.split("-").map(Number);
+    const t = new Date(0);
+    t.setUTCFullYear(y, m - 1, d + n);
+    const yy = t.getUTCFullYear();
+    return `${yy < 0 ? "-" : ""}${String(Math.abs(yy)).padStart(4, "0")}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`;
+  }
 }
 
 const OF = new WeakMap();

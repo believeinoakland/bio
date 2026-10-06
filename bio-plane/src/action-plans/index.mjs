@@ -8,7 +8,7 @@
  * model (its index.mjs and doc.mjs).
  *
  * WHAT IT DECIDES, AND WHAT IT NEVER DOES. Every fact about a matter is read through the module that owns it (an
- * inquiry's state and the projects drawing on it through `inquiry` and record-core, a determination through
+ * inquiry's state through record-core and the projects drawing on it through `leg-earning`, a determination through
  * `conformance`, a standard through `standards`, an action through `actions`, an escalation through `escalation`, what
  * is available through `filings`, the project's bar through `strength`); support, liveness, phase starts and the checks
  * are derived when read, never stored (R8, R15, R19). A machine proposes (R11, R31) and nothing else (R24, R33): every
@@ -32,7 +32,7 @@
  *   record, membership, promotion   layer 2: `allocId`, `transact`, `head`, `readFile`, `livePaths`, `declarePurge`;
  *                                   `inSight`, `sight`, `existenceAct`, `projectAuthority`, `memberFacts`; `promote`,
  *                                   `registerStep`.
- *   inquiry        `projectsDrawingOn` (R1: the projects drawing on an inquiry).
+ *   legEarning     `projectsDrawingOn` (its R7; R1: the projects drawing on an inquiry), read directly (K1661).
  *   strength       `projectBar` (Terms: `short` support).
  *   conformance    `determinationRead`, `determinationsFor` (R1, R5, R8); its `noSuchDetermination`.
  *   standards      `standardRead` (R12's `enforces`, R19).
@@ -40,13 +40,14 @@
  *   clocks         action-clocks' `reminderSet` and `reminderRefused` (its R4; R18, R29).
  *   escalation     `escalationsFor`, `escalationRead` (R6, R15).
  *   filings        `availableActions` (shown beside legal options).
+ *   duties         `occurrencesOf`, `transitionsOf`, `readDuty` (R38: a phase started by a duty occurrence's state).
  *   aiRuns         `registerOpenCheck`, `onRunOpened`, `runFor`, `read`, `boundOf`, `consumeBound` (R30–R32).
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { inquiryOf } from "../inquiry/index.mjs";
+import { legEarningOf } from "../leg-earning/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { conformanceOf, noSuchDetermination } from "../conformance/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
@@ -54,6 +55,7 @@ import { actionsOf, contactNotAMember, contactId } from "../actions/index.mjs";
 import { actionClocksOf, reminderRefused } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
+import { dutiesOf, INTERNAL as DUTIES_INTERNAL } from "../duties/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType } from "../record-grammar/index.mjs";
@@ -63,11 +65,11 @@ import { ACTION_PLAN_CHECKS, refusal } from "./checks.mjs";
 import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
          SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, SCENARIOS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
          TRAY_PAGE, SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
-         checkPhases, phaseTimes, unbranched, dayOf } from "./values.mjs";
+         checkPhases, phaseTimes, unbranched, dayOf, DUTY_STATES } from "./values.mjs";
 
 export { ACTION_PLANS_SCHEMA, ACTION_PLANS_TABLES } from "./schema.mjs";
 export { ACTION_PLAN_CHECKS } from "./checks.mjs";
-export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TRAY_PAGE } from "./values.mjs";
+export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TRAY_PAGE, DUTY_STATES } from "./values.mjs";
 
 /** R1, R8: an inquiry still open is live; these states are closed. (`published` is read, never entered.) */
 export const CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
@@ -104,8 +106,8 @@ export class ActionPlans {
     this.now = deps.now || (() => stampInstant("second"));
   }
 
-  /* The providers, reached when first needed (layers 6–9). */
-  get inquiry() { return this.#dep("inquiry"); }
+  /* The providers, reached when first needed (layers 5–9). */
+  get legEarning() { return this.#dep("legEarning"); }
   get strength() { return this.#dep("strength"); }
   get conformance() { return this.#dep("conformance"); }
   get standards() { return this.#dep("standards"); }
@@ -113,6 +115,7 @@ export class ActionPlans {
   get clocks() { return this.#dep("clocks"); }
   get escalation() { return this.#dep("escalation"); }
   get filings() { return this.#dep("filings"); }
+  get duties() { return this.#dep("duties"); }
   get aiRuns() { return this.#dep("aiRuns"); }
   #dep(name) {
     const d = this.deps[name];
@@ -187,7 +190,7 @@ export class ActionPlans {
     return { state: h.currentState };
   }
   #inquiryOfProject(id, project) {
-    const list = this.inquiry.projectsDrawingOn(id) || [];
+    const list = this.legEarning.projectsDrawingOn(id) || [];
     return list.includes(project);
   }
   #determination(id, viewer) {
@@ -259,10 +262,23 @@ export class ActionPlans {
         if (out.enforces && out.enforces.subject && !v.subject(out.enforces.subject)) delete out.enforces;
         return out;
       },
+      duty: (id) => {
+        const seen = ask(`d:${id}`, () => { const r = this.duties.readDuty({ dutyId: id, viewer: dutyViewer(viewer) }); return ok(r) && r.found === true; });
+        if (!seen) v.withheld = true;
+        return seen;
+      },
       phases: (ps) => (Array.isArray(ps) ? ps.map((ph) => {
-        if (!isObj(ph) || !isObj(ph.starts) || !ph.starts.when_subject || v.subject(ph.starts.when_subject)) return ph;
-        const { when_subject, ...starts } = ph.starts;
-        return { ...ph, starts };
+        if (!isObj(ph) || !isObj(ph.starts)) return ph;
+        if (ph.starts.when_subject && !v.subject(ph.starts.when_subject)) {
+          const { when_subject, ...starts } = ph.starts;
+          return { ...ph, starts };
+        }
+        /* R35, R38: an obligation the viewer may not see is withheld whole, as an unseen matter is. */
+        if (ph.starts.when_duty && !v.duty(ph.starts.when_duty.duty)) {
+          const { when_duty, ...starts } = ph.starts;
+          return { ...ph, starts };
+        }
+        return ph;
       }) : ps),
     };
     return v;
@@ -1009,7 +1025,7 @@ export class ActionPlans {
       return refusal("SCENARIO_NAME_REFUSED", `a scenario's name is 1 to ${TITLE_MAX} characters with no quotation mark, `
         + "backslash or line break. Nothing was written.", { max: TITLE_MAX });
     /* END DEC-49 REGION is-scenario-named */
-    const ph = this.#scenarioPhases(o.p, phases);
+    const ph = this.#scenarioPhases(o.p, phases, viewer);
     if (!ph.phases) return ph;
     const keys = refuseKeys(args) || (Array.isArray(phases) ? phases.map((x) => refuseKeys(x)).find(Boolean) : null);
     if (keys) return keys;
@@ -1020,11 +1036,14 @@ export class ActionPlans {
     return { ok: true, plan: o.p.id, scenario: n, version: v ? v.version : 1, name: entry.name, phases: ph.phases,
              author, at: entry.at };
   }
-  #scenarioPhases(p, phases) {
+  #scenarioPhases(p, phases, viewer) {
     const chosen = new Set(this.#options(p.id).filter((x) => x.disposition === "chosen").map((x) => x.id));
     const subjects = new Map(this.#subjectsOf(p.id).map((s) => [s.key, s.subject]));
-    const r = checkPhases(phases, { chosen, subjects });
-    if (r.phases) return r;
+    let r = checkPhases(phases, { chosen, subjects });
+    if (r.phases) {
+      r = this.#dutyPhases(r.phases, viewer);
+      if (r.phases || r.ok === false) return r;
+    }
     const at = { index: r.index, ...(r.phase ? { phase: r.phase } : {}), ...(r.option ? { option: r.option } : {}) };
     /* DEC-49 REGION is-phase-shaped */
     if (r.fault === "malformed")
@@ -1048,11 +1067,77 @@ export class ActionPlans {
     /* END DEC-49 REGION is-phase-acyclic */
   }
 
-  /* R14–R16: a scenario version's phases with when each starts and its checkpoint, read at `nowMs`. */
-  #timed(p, sc, viewer) {
+  /* R38: each phase started by a duty occurrence's state names a held duty the author may see, answered through
+     duties' own refusal (NO_SUCH_DUTY, one answer for absent and unseen), and an occurrence named is one of its own
+     (else R14's malformed fault, minted at its one site). `{phases}`, duties' refusal, or a fault. */
+  #dutyPhases(phases, viewer) {
+    const asOf = this.now();
+    for (let i = 0; i < phases.length; i++) {
+      const s = phases[i].starts;
+      if (!isObj(s) || !s.when_duty) continue;
+      const { duty, occurrence } = s.when_duty;
+      /* the window reaches two years ahead, so a key of an instance already dated in the record (a dated trigger, a
+         recurrence) is one of its own before it falls due */
+      const r = this.duties.occurrencesOf({ dutyId: duty, asOf, to: dayOf(msOf(asOf) + 731 * DAY_MS), viewer: dutyViewer(viewer) });
+      if (!ok(r)) return r;
+      if (occurrence === undefined) continue;
+      const keys = new Set((r.occurrences || []).map((x) => x.key));
+      for (const t of (this.duties.transitionsOf({ dutyId: duty, viewer: dutyViewer(viewer) }) || {}).transitions || []) keys.add(t.occurrence_key);
+      if (!keys.has(occurrence))
+        return { fault: "malformed", index: i, detail: `occurrence ${occurrence} is not one of that obligation's occurrences` };
+    }
+    return { phases };
+  }
+
+  /* R14–R16, R38: a scenario version's phases with when each starts and its checkpoint, read at `nowMs`; `starts` maps a
+     phase started by an obligation to what R38 read of it. */
+  #timed(p, sc, viewer, nowMs = this.#nowMs()) {
     const judged = this.#judgements(p.id, sc.scenario, sc.version);
-    const times = phaseTimes(sc.phases, { setAt: sc.at, judged, track: (s) => this.#track(p, s, viewer) });
-    return { judged, times };
+    const starts = new Map();
+    const times = phaseTimes(sc.phases, { setAt: sc.at, judged, track: (s) => this.#track(p, s, viewer),
+      duty: (ph, anchor) => { const d = this.#dutyStart(ph.starts, anchor, nowMs, viewer); starts.set(ph.id, d); return d.holds ? d.since : null; } });
+    for (const ph of sc.phases)
+      if (isObj(ph.starts) && ph.starts.when_duty && !starts.has(ph.id))
+        starts.set(ph.id, { duty: ph.starts.when_duty.duty, occurrence: ph.starts.when_duty.occurrence ?? null, state_asked: ph.starts.state,
+                            state: null, holds: false, since: null, says: "the phase that leads here has not led here yet, so no occurrence is read" });
+    return { judged, times, starts };
+  }
+
+  /** R38: whether a phase's duty start holds, derived when read and never stored. The occurrence is the one named, else
+   *  the first triggered on or after `anchor`'s day; its state is its latest transition recorded by the read's instant
+   *  (duties R14), else its state derived as of the read (duties R9, R10), as duties answers it: a question with its
+   *  derivation, never a violation. `since` is when the state began to hold, never before `anchor` or after the read. */
+  #dutyStart(s, anchor, nowMs, viewer) {
+    const { duty, occurrence } = s.when_duty;
+    const asOf = iso(nowMs);
+    const base = { duty, occurrence: occurrence ?? null, state_asked: s.state };
+    const none = (says) => ({ ...base, state: null, holds: false, since: null, says });
+    let r;
+    try {
+      r = this.duties.occurrencesOf({ dutyId: duty, asOf, ...(occurrence ? {} : { from: anchor.slice(0, 10) }), viewer: dutyViewer(viewer) });
+    } catch (e) { if (e instanceof ProviderAbsent) throw e; return none("the obligation's occurrences could not be read"); }
+    if (!ok(r)) return none("the obligation does not answer to this reader");
+    const list = Array.isArray(r.occurrences) ? r.occurrences : [];
+    const occ = occurrence ? list.find((x) => x.key === occurrence)
+      : list.filter((x) => dayIn(x.trigger && x.trigger.date) !== null && dayIn(x.trigger.date) >= anchor.slice(0, 10))
+          .sort((a, b) => (dayIn(a.trigger.date) < dayIn(b.trigger.date) ? -1 : dayIn(a.trigger.date) > dayIn(b.trigger.date) ? 1 : 0))[0];
+    if (!occ) return none(occurrence ? "that occurrence of the obligation is not derived as of this read"
+      : "no occurrence of the obligation has been triggered since the phase began to wait");
+    const recorded = ((this.duties.transitionsOf({ dutyId: duty, occurrenceKey: occ.key, viewer: dutyViewer(viewer) }) || {}).transitions || [])
+      .filter((t) => typeof t.at === "string" && msOf(t.at) <= nowMs);
+    const last = recorded.at(-1) || null;
+    const state = last ? last.state : occ.state;
+    const holds = state === s.state;
+    let since = null;
+    if (holds) {
+      let t = last ? msOf(last.as_of) : derivedSince(occ, nowMs);
+      if (!Number.isFinite(t) || t > nowMs) t = nowMs;
+      since = iso(Math.max(t, msOf(anchor)));
+    }
+    return { ...base, occurrence: occ.key, trigger: occ.trigger, due: occ.due, state, read_from: last ? "recorded" : "derived",
+             ...(last ? { transition: { state: last.state, as_of: last.as_of, at: last.at, cause: last.cause, by: last.by } } : {}),
+             why: last ? last.cause : occ.why, derivation: occ.derivation, ...(occ.question ? { question: occ.question } : {}),
+             holds, since };
   }
 
   /** R15: the instant another subject's track met its point (its escalation reached the stage, or the action started
@@ -1277,7 +1362,7 @@ export class ActionPlans {
     });
     const held = this.#options(p.id);
     const options = held.map((o) => this.#optionView(p, o, live, viewer, see));
-    const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer, see));
+    const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer, see, now));
     const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p.id)
       .map((r) => this.#proposalView(r, see, viewer));
     const runs = this.#planRuns(p.id).map((run) => {
@@ -1383,14 +1468,16 @@ export class ActionPlans {
     return out;
   }
 
-  #scenarioView(p, sc, viewer, see) {
-    const { judged, times } = this.#timed(p, sc, viewer);
+  #scenarioView(p, sc, viewer, see, now) {
+    const { judged, times, starts } = this.#timed(p, sc, viewer, now);
     const shown = see.phases(sc.phases);
     return { scenario: sc.scenario, version: sc.version, versions: sc.versions, name: sc.name, set_by: sc.author, set_at: sc.at,
              phases: shown.map((ph) => {
                const t = times.get(ph.id), j = judged.get(ph.id) || null;
+               /* R38: a duty start with its occurrence, state, derivation and whether it holds; withheld with its duty (R35). */
+               const d = isObj(ph.starts) && ph.starts.when_duty ? starts.get(ph.id) : null;
                return { ...ph, started: t.started, started_at: t.at, earliest: t.earliest, checkpoint_due: t.due,
-                        judgement: j, ...(j ? { leads_to: this.#leadsTo(ph, sc.phases, j.judged) } : {}) };
+                        judgement: j, ...(j ? { leads_to: this.#leadsTo(ph, sc.phases, j.judged) } : {}), ...(d ? { duty_start: d } : {}) };
              }),
              history: this.#rows(`SELECT version, name, author, at FROM plan_scenarios WHERE plan_id=? AND scenario=? ORDER BY version`,
                p.id, sc.scenario).map((r) => ({ version: r.version, name: r.name, set_by: r.author, set_at: r.at })) };
@@ -1492,7 +1579,7 @@ export class ActionPlans {
     for (const r of this.#rows(`SELECT plan_id FROM plans WHERE state='open' ORDER BY plan_id`)) {
       const p = this.#plan(r.plan_id, null);
       for (const sc of this.#scenarios(p.id)) {
-        const { judged, times } = this.#timed(p, sc, null);
+        const { judged, times } = this.#timed(p, sc, null, now);
         for (const ph of sc.phases) {
           const t = times.get(ph.id);
           if (!t.due || msOf(t.due) > now || judged.has(ph.id)) continue;
@@ -1574,6 +1661,27 @@ export class ActionPlans {
         r.run, p.id, p.project, wk.state === "stated" ? JSON.stringify(wk.kinds) : null, this.now());
     } catch { /* a listener never changes the run (ai-runs R43) */ }
   }
+}
+
+/* R38: duties' reader for a viewer: an internal read (no viewer) is duties' own internal reader. */
+const dutyViewer = (viewer) => (viewer === null || viewer === undefined ? DUTIES_INTERNAL : viewer);
+/* R38: the day a civil-time date or due date names (its latest candidate when uncertain), or null. */
+function dayIn(d) {
+  if (typeof d === "string") return /^\d{4}-\d{2}-\d{2}/.test(d) ? d.slice(0, 10) : null;
+  if (!isObj(d) || d.undetermined) return null;
+  if (Array.isArray(d.candidates) && d.candidates.length) return dayIn(d.candidates[d.candidates.length - 1]);
+  return dayIn(d.value ?? d.date ?? null);
+}
+/* R38: when a derived state began to hold: overdue the day after the due date (after its latest candidate, K1444 (i)),
+   met or met late the matched event's day; otherwise the read itself. */
+function derivedSince(occ, nowMs) {
+  if (occ.state === "overdue") { const d = dayIn(occ.due && occ.due.date); return d ? Date.parse(`${d}T00:00:00Z`) + DAY_MS : nowMs; }
+  if (occ.state === "met" || occ.state === "met_late") {
+    const ev = (occ.evidence || []).find((e) => e && e.when);
+    const d = ev ? dayIn(ev.when) : null;
+    return d ? Date.parse(`${d}T00:00:00Z`) : nowMs;
+  }
+  return nowMs;
 }
 
 /* R7, R35: the subject a key (R3's identity) names; null for a string that is not one. */
@@ -1751,7 +1859,7 @@ export function actionPlansOf(host, deps) {
     const base = { record, membership, promotion };
     const lazy = (name, make) => (d[name] !== undefined ? d[name] : () => make());
     i = new ActionPlans({ ...d, storage, record, membership, promotion,
-      inquiry: lazy("inquiry", () => inquiryOf(host, base)),
+      legEarning: lazy("legEarning", () => legEarningOf(host, base)),
       strength: lazy("strength", () => strengthOf(host, base)),
       conformance: lazy("conformance", () => conformanceOf(host, base)),
       standards: lazy("standards", () => standardsOf(host, base)),
@@ -1759,6 +1867,7 @@ export function actionPlansOf(host, deps) {
       clocks: lazy("clocks", () => actionClocksOf(host, base)),
       escalation: lazy("escalation", () => escalationOf(host, base)),
       filings: lazy("filings", () => filingsOf(host, base)),
+      duties: lazy("duties", () => dutiesOf(host, base)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host)) });
     instances.set(host, i);
     i.migrate();

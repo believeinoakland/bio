@@ -80,6 +80,55 @@ var oakland_alameda_default = {
         }
       ]
     },
+    /* A Legistar PersonId (`/v1/oakland/persons`, read 2026-10-05; legistar-events §1): one form per person scheme. */
+    person: {
+      label: "person identifier, by scheme",
+      forms: [
+        {
+          form: "legistar-person",
+          pattern: { re: R`^(\d{1,7})$` },
+          normal: [{ group: 1 }],
+          clean: { spaces: "remove" },
+          basis: "2026-10-05 legistar-events"
+        }
+      ]
+    },
+    /* A proceeding's number in its forum's forms (courts-workbooks §1; K1452): the Superior Court's current and legacy
+       civil numbers, a federal district docket number and CourtListener's docket_number_core, a CPUC proceeding. */
+    proceeding: {
+      label: "proceeding or case number",
+      forms: [
+        {
+          form: "alameda-civil",
+          pattern: { re: R`^(\d{2}CV\d{6})$` },
+          normal: [{ group: 1 }],
+          clean: { spaces: "remove", upper: true },
+          basis: "2026-10-05 courts-workbooks"
+        },
+        {
+          form: "alameda-legacy",
+          pattern: { re: R`^((?:RG|HG)\d{8})$` },
+          normal: [{ group: 1 }],
+          clean: { spaces: "remove", upper: true },
+          basis: "2026-10-05 courts-workbooks"
+        },
+        {
+          form: "federal-district",
+          pattern: { re: R`^(\d):(\d{2})-(cv|cr|mc|md|mj|bk|ap)-(\d{5})((?:-[A-Z]{2,4})*)$` },
+          normal: [{ group: 1 }, ":", { group: 2 }, "-", { group: 3 }, "-", { group: 4 }, { group: 5, default: "" }],
+          clean: { spaces: "remove" },
+          basis: "2026-10-05 courts-workbooks"
+        },
+        { form: "docket-core", pattern: { re: R`^(\d{7,8})$` }, normal: [{ group: 1 }], clean: { spaces: "remove" }, basis: "2026-10-05 courts-workbooks" },
+        {
+          form: "cpuc",
+          pattern: { re: R`^([ARICPK])\.?(\d{2})-?(\d{2})-?(\d{3})$` },
+          normal: [{ group: 1 }, { group: 2 }, { group: 3 }, { group: 4 }],
+          clean: { spaces: "remove", upper: true },
+          basis: "2026-10-05 courts-workbooks"
+        }
+      ]
+    },
     parcel: {
       label: "assessor's parcel number (APN)",
       /* Book (digits with an optional letter, or a bare letter), page, parcel (optional letter),
@@ -160,6 +209,28 @@ var oakland_alameda_default = {
       name: "the Office of the City Auditor",
       hosts: ["www.oaklandauditor.com"],
       basis: "M-119 AUD"
+    },
+    /* The three court registers (courts-workbooks §1): a CourtListener docket page, a CPUC proceeding card and its
+       documents report, and the Superior Court's eCourt portal (login-gated; a member's own capture, K1492). */
+    {
+      origin: "courtlistener_docket",
+      name: "CourtListener docket pages (Free Law Project)",
+      hosts: ["www.courtlistener.com"],
+      path: { re: R`^\/docket\/\d+\/` },
+      basis: "2026-10-05 courts-workbooks"
+    },
+    {
+      origin: "cpuc_proceeding",
+      name: "the California Public Utilities Commission's proceeding cards",
+      hosts: ["apps.cpuc.ca.gov"],
+      path: { re: R`^\/apex\/f\?p=401:5[67]:` },
+      basis: "2026-10-05 courts-workbooks"
+    },
+    {
+      origin: "ecourt_roa",
+      name: "the Alameda County Superior Court's eCourt public portal",
+      hosts: ["eportal.alameda.courts.ca.gov"],
+      basis: "2026-10-05 courts-workbooks"
     }
   ],
   mixed_hosts: [
@@ -202,7 +273,31 @@ var oakland_alameda_default = {
       { pattern: { re: R`C\.?\s?M\.?\s?S\.?`, flags: "i" }, basis: "M-24, M-132" }
     ],
     codes: [
-      { key: "omc", label: "O.M.C.", pattern: { re: R`O\.?M\.?C\.?|Oakland\s+Municipal\s+Code`, flags: "i" }, basis: "M-24" }
+      /* The code is served by its codifier (Municode), 230 days behind the record at Supp. 103; one doc per section,
+         headed `2.20.070 - Title.` (time-law §4–§5); its subsections print `A.`, `1.`, `a.`, `i.`, `(1)` (doctypes'
+         codifier fixtures, K1521). */
+      {
+        key: "omc",
+        label: "O.M.C.",
+        pattern: { re: R`O\.?M\.?C\.?|Oakland\s+Municipal\s+Code`, flags: "i" },
+        copy: "codifier",
+        sections: {
+          number: { re: R`\d+\.\d+\.\d+[A-Z]?` },
+          separators: ".",
+          markers: ["letter", "numeral", "letter", "roman", "paren_numeral"]
+        },
+        basis: "M-24, 2026-10-05 time-law, 2026-10-05 doctypes"
+      },
+      /* The City Charter, served by the same codifier as article-level docs; its sections print `Section 200.`, one
+         part, their subsections `(a)`, `(1)`, `(a)`, `i.` (time-law §2, §4; K1514, K1521). */
+      {
+        key: "charter",
+        label: "Oakland City Charter",
+        pattern: { re: R`(?:Oakland\s+)?City\s+Charter`, flags: "i" },
+        copy: "codifier",
+        sections: { number: { re: R`\d{3,4}` }, separators: "", markers: ["paren_letter", "paren_numeral", "paren_letter", "roman"] },
+        basis: "2026-10-05 time-law, 2026-10-05 doctypes"
+      }
     ],
     file_numbers: [
       { pattern: { re: R`\d{2}-\d{4}` }, system: "oakland.legistar", basis: "2026-08-03, M-24" }
@@ -230,12 +325,94 @@ var oakland_alameda_default = {
     ],
     template_blanks: [
       { pattern: { re: R`^\s*INTRODUCED\s+BY\b[^\]]*\]`, flags: "i" }, basis: "M-24" }
+    ],
+    /* Legistar carries a meeting's kind in its body's name: a cancellation is a separate body ("… - CANCELLED",
+       "… - CANCELLATION"), as are special and concurrent meetings (legistar-events §1, §2 (2)). */
+    meeting_markers: [
+      { marker: "cancelled", pattern: { re: R`\s*-\s*CANCELL(?:ED|ATION)\s*$`, flags: "i" }, basis: "2026-10-05 legistar-events" },
+      { marker: "special", pattern: { re: R`\bSpecial\b`, flags: "i" }, basis: "2026-10-05 legistar-events" },
+      { marker: "concurrent", pattern: { re: R`\bConcurrent\b`, flags: "i" }, basis: "2026-10-05 legistar-events" }
+    ],
+    /* The variant names of one organisation (legistar-events §1 (a)): the Council and its standing committees. */
+    body_variants: [
+      { pattern: { re: R`^\W*Meeting of the Oakland City Council\b`, flags: "i" }, organisation: "city_council", basis: "2026-10-05 legistar-events" },
+      { pattern: { re: R`Rules\s+(?:&|and)\s+Legislation\s+Committee`, flags: "i" }, organisation: "rules_committee", basis: "2026-10-05 legistar-events" },
+      { pattern: { re: R`Finance\s+(?:&|and)\s+Management\s+Committee`, flags: "i" }, organisation: "finance_management_committee", basis: "2026-10-05 legistar-events" },
+      { pattern: { re: R`Community\s+(?:&|and)\s+Economic\s+Development\s+Committee`, flags: "i" }, organisation: "community_economic_development_committee", basis: "2026-10-05 legistar-events" },
+      { pattern: { re: R`Public\s+Safety\s+Committee`, flags: "i" }, organisation: "public_safety_committee", basis: "2026-10-05 legistar-events" },
+      { pattern: { re: R`Life\s+Enrichment\s+Committee`, flags: "i" }, organisation: "life_enrichment_committee", basis: "2026-10-05 legistar-events" },
+      { pattern: { re: R`Public\s+Works\s+(?:(?:&|and)\s+Transportation\s+)?Committee`, flags: "i" }, organisation: "public_works_committee", basis: "2026-10-05 legistar-events" }
+    ],
+    /* The City's own rosters and organisation charts (roster-reader's fixtures, 15 documents read 2026-10-05; K1517).
+       A term column's header is left unnamed. */
+    roster_words: [
+      { pattern: { re: R`\brosters?\b`, flags: "i" }, kind: "roster", basis: "2026-10-05 roster-reader" },
+      { pattern: { re: R`\borgani[sz]ational\s+chart\b|\borg\s+chart\b`, flags: "i" }, kind: "chart", basis: "2026-10-05 roster-reader" }
+    ],
+    staff_titles: [
+      { pattern: { re: R`\b(?:Co-|Vice\s+)?Chair\b`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { pattern: { re: R`\b(?:(?:Assistant|Deputy)\s+)?City\s+Administrator\b`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { pattern: { re: R`\bCity\s+(?:Attorney|Clerk)\b`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      {
+        pattern: { re: R`\b(?:Director|Manager|Chief|Supervisor|Coordinator|Analyst|Inspector|Engineer|Custodian|Leader|Officer|Parliamentarians?|Accountant|Intern)\b`, flags: "i" },
+        basis: "2026-10-05 roster-reader"
+      }
+    ],
+    roster_headers: [
+      { role: "name", pattern: { re: R`^(?:Full\s+)?Name$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "title", pattern: { re: R`^(?:Title|Position|Job\s+Title)$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "unit", pattern: { re: R`^(?:Department|Division|Organization)$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "employee_id", pattern: { re: R`^Employee\s+ID$`, flags: "i" }, basis: "2026-10-05 roster-reader" },
+      { role: "contact", pattern: { re: R`^(?:Phone|Email|Address)$`, flags: "i" }, basis: "2026-10-05 roster-reader" }
+    ],
+    /* The ACFRs (FY2012–FY2025) and the adopted budget books (money-people §1c, §4, §7; K1513). Some years' headings
+       are letter-spaced ("Primary Gove rnme nt"), so headings match whitespace-tolerantly. */
+    financial_report_titles: [
+      { pattern: { re: R`\b(?:Annual\s+Comprehensive|Comprehensive\s+Annual)\s+Financial\s+Report\b`, flags: "i" }, basis: "2026-10-05 money-people" }
+    ],
+    budget_book_titles: [
+      { pattern: { re: R`\b(?:Adopted|Proposed)\s+(?:Policy\s+)?Budget\b`, flags: "i" }, basis: "2026-10-05 money-people" }
+    ],
+    financial_headings: [
+      "Statement of Net Position",
+      "Statement of Activities",
+      "Statement of Cash Flows",
+      "Balance Sheet",
+      "Budget and Actual",
+      "Summary Table By Fund",
+      "Citywide Classification Summary",
+      "Property Tax Levies and Collections",
+      /* the budget book's OpenGov-rendered pages (BB23 p148; the department pages, p283) */
+      "General Purpose Fund Revenue",
+      "Expenditures By Fund"
+    ].map((h) => ({ pattern: { re: h.replace(/ /g, "").split("").join(R`\s*`), flags: "i" }, basis: "2026-10-05 money-people" })),
+    fiscal_year_forms: [
+      /* a biennial budget: FY13-15, FY2023-25, FY25-27 */
+      { pattern: { re: R`\bFY\s?(\d{2}|\d{4})-(\d{2})\b`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      /* an ACFR's year: FY2024 */
+      { pattern: { re: R`\bFY\s?(\d{4})\b(?!-)`, flags: "i" }, basis: "2026-10-05 money-people" }
+    ],
+    /* The headers of the Socrata budget line items, FY2013-15 `vmzx-e5fe` (budget, department, org_code, fund_code,
+       project_code, program_code, account_code, amount), FY2015-17 `urid-amga` (budget_year_name, …, org, fund, amt) and
+       FY2019-21 `m4jd-q2c4` (prog, acct, and one amount column per period such as fy18_19_midcycle_adopted)
+       (money-people §2, legistar-events §3; read by BUDGET-DOCTYPES, P9). */
+    budget_headers: [
+      { column: "fund", pattern: { re: R`^fund(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "org", pattern: { re: R`^org(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "program", pattern: { re: R`^(?:program(?:_code)?|prog)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "account", pattern: { re: R`^(?:account(?:_code)?|acct)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "project", pattern: { re: R`^project(?:_code)?$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "department", pattern: { re: R`^department$`, flags: "i" }, basis: "2026-10-05 legistar-events" },
+      { column: "amount", pattern: { re: R`^(?:amount|amt)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "amount", pattern: { re: R`^fy\d{2}_\d{2}_[a-z0-9_]+$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" },
+      { column: "period", pattern: { re: R`^(?:budget|budget_year_name)$`, flags: "i" }, basis: "2026-10-05 money-people, 2026-10-05 legistar-events" }
     ]
   },
   practice: {
-    /* A threshold for raising a question, never for asserting a violation; the city's practice is
-       not measured (its code says so). */
-    minutes_due_days: { value: 21, basis: "UNMEASURED" }
+    /* A threshold for raising a question, never for asserting a violation: OMC 2.20.160's draft minutes, "no later
+       than ten business days after the meeting" (time-law §2; K1504), correcting the code's earlier 21 days; an ordinance's
+       business days skip the City's list (K1504 (5), K1533). */
+    minutes_due_days: { value: 10, count: "business", closures: "city", basis: "2026-10-05 time-law" }
   },
   locale: { value: "en-US", basis: "UNMEASURED" },
   /* California's statutory time (Gov. Code § 6808), by its IANA name. */
@@ -250,7 +427,10 @@ var oakland_alameda_default = {
       name: "California Public Records Act",
       citation: "Cal. Gov. Code \xA7 7920.000 et seq.",
       basis: "D-149"
-    }
+    },
+    /* The City's own records law, whose Immediate Disclosure Request is OMC 2.20.230 (time-law §2). */
+    { level: "city", name: "Oakland Sunshine Ordinance", citation: "Oakland Mun. Code ch. 2.20", basis: "2026-10-05 time-law" },
+    { level: "federal", name: "Freedom of Information Act", citation: "5 U.S.C. \xA7 552", basis: "2026-10-05 time-law" }
   ],
   standard_sources: [
     {
@@ -276,16 +456,35 @@ var oakland_alameda_default = {
       issuer: "California Legislature",
       level: "state",
       cite: { re: R`\b(?:Cal(?:ifornia|\.)?\s+)?Gov(?:ernment|\.|t\.?)?\s+Code\s+(?:§+\s*|Section\s+)?\d+(?:\.\d+)?`, flags: "i" },
-      basis: "UNMEASURED"
+      basis: "2026-10-05 time-law"
+    },
+    {
+      source: "California Code of Civil Procedure",
+      kind: "statute",
+      issuer: "California Legislature",
+      level: "state",
+      cite: { re: R`\b(?:Cal(?:ifornia|\.)?\s+)?(?:Code\s+(?:of\s+)?Civ(?:il|\.)?\s+Proc(?:edure|\.)?|C\.?C\.?P\.?)\s+(?:§+\s*|Section\s+)?\d+[a-z]?`, flags: "i" },
+      basis: "2026-10-05 time-law"
+    },
+    {
+      source: "Freedom of Information Act",
+      kind: "statute",
+      issuer: "United States Congress",
+      level: "federal",
+      cite: { re: R`\b5\s+U\.?\s?S\.?\s?C\.?\s+§+\s*552\b`, flags: "i" },
+      basis: "2026-10-05 time-law"
     }
   ],
   /* Hours only where the office publishes them (M-192). The Controller's Bureau (M-195), the City Council (M-196)
      and the Civil Grand Jury (M-194) publish none, and the State Controller's Office could not be read: their hours
-     are absent, undetermined (R27, K925). */
+     are absent, undetermined (R27, K925). Each office rests on its primary source (time-law §2): Charter §504(e)
+     (an appointed Director of Finance), Charter §200 (eight elected Councilmembers), Penal Code §§888, 925a (the
+     grand jury, which may examine any city's books), Charter §403(1) (the elected City Auditor), Cal. Const. art. V
+     §11 (the elected Controller). */
   counterparties: [
-    { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "UNMEASURED" },
-    { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "UNMEASURED" },
-    { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "UNMEASURED" },
+    { role: "Controller", body: "City of Oakland Finance Department", level: "city", elected: false, basis: "2026-10-05 time-law" },
+    { role: "City Council", body: "Oakland City Council", level: "city", elected: true, basis: "2026-10-05 time-law" },
+    { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury", level: "county", elected: false, oversight: true, basis: "2026-10-05 time-law" },
     /* Design Requirement 8's "City Auditor whistleblower complaints"; its system is oakland.auditor. */
     {
       role: "City Auditor",
@@ -298,17 +497,29 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "M-192"
       },
-      basis: "UNMEASURED"
+      basis: "2026-10-05 time-law"
     },
-    { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "UNMEASURED" }
+    { role: "State Controller", body: "California State Controller's Office", level: "state", elected: true, basis: "2026-10-05 time-law" }
   ],
   action_kinds: [
+    /* The portal is live (118,270 requests on 2026-10-05) and named by the City Attorney's staff guide, whose §5 says a
+       request is received "on the next business day if submitted on a non-business day" (time-law §1c-3; K1504 (3)). */
     {
       kind: "records_request",
       label: "public records request",
       tier: 1,
-      laws: ["California Public Records Act"],
-      venue: { name: "the City's public records request portal (NextRequest)", how: "portal", basis: "UNMEASURED" },
+      laws: ["California Public Records Act", "Oakland Sunshine Ordinance"],
+      venue: {
+        name: "the City's public records request portal (NextRequest)",
+        how: "portal",
+        basis: "2026-10-05 time-law",
+        receipt: {
+          rule: "next_business_day",
+          citation: "Oakland City Attorney, Public Records Act staff guide \xA7 5 (2025-04-29)",
+          status: "researched",
+          basis: "2026-10-05 time-law"
+        }
+      },
       basis: "D-182"
     },
     { kind: "grand_jury", label: "complaint to the civil grand jury", tier: 1, basis: "D-182" },
@@ -327,10 +538,11 @@ var oakland_alameda_default = {
       laws: ["California Public Records Act"],
       /* The hours are the civil clerk's office at the René C. Davidson Courthouse, in person, where writ matters
          are filed (M-193); its drop box and e-filing hours are not office hours. */
+      /* Gov. Code §7923.100: a verified petition to the superior court of the county where the records are. */
       venue: {
         name: "Alameda County Superior Court",
         how: "court",
-        basis: "UNMEASURED",
+        basis: "2026-10-05 time-law",
         hours: { weekly: [
           ...["mon", "tue", "wed", "thu"].map((day) => ({ day, open: "08:30", close: "15:00" })),
           { day: "fri", open: "08:30", close: "14:00" }
@@ -344,16 +556,239 @@ var oakland_alameda_default = {
     { kind: "consent_decree_motion", label: "motion under a federal consent decree", tier: 3, basis: "D-182" },
     { kind: "constitutional_claim", label: "claim involving constitutional interpretation or statutory construction", tier: 3, basis: "D-182" }
   ],
+  /* The first sourced rule set (R56; K1445, K1504; time-law §1). Each rule cites its primary source; civil-time counts
+     it. A statutory day period rolls on the closures its law names (CCP §12a: Saturdays and the judicial holidays of
+     CCP §135); the City portal's practice on the City list is held as `observed`, never as the rule (K1504 (1)). An
+     Oakland ordinance's "holidays" are the City's list (K1504 (5)). */
   deadlines: [
     {
       rule: "records_response",
       applies_to: "records_request",
-      days: 10,
+      units: "days",
+      amount: 10,
       count: "calendar",
+      direction: "forward",
       starts: "received",
-      extension: { days: 14, count: "calendar", when: "unusual circumstances, by written notice to the requester" },
-      citation: "Cal. Gov. Code \xA7 7922.535",
-      basis: "UNMEASURED"
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      extension: {
+        days: 14,
+        count: "calendar",
+        when: "unusual circumstances (Gov. Code \xA7 7922.535(c)(1)\u2013(6)), by written notice to the requester",
+        citation: "Cal. Gov. Code \xA7 7922.535(b)"
+      },
+      observed: { closures: "city", status: "researched", basis: "2026-10-05 time-law" },
+      citation: "Cal. Gov. Code \xA7 7922.535(a)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    {
+      rule: "immediate_disclosure",
+      applies_to: "records_request",
+      units: "days",
+      amount: 3,
+      count: "business",
+      direction: "forward",
+      starts: "received",
+      closures: "city",
+      citation: "Oakland Mun. Code \xA7 2.20.230",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    /* The Brown Act and OMC 2.20.070 bind a body's notice of its meeting, counted back from the meeting (the act);
+       they bear on the group's comment to that body. Clock hours do not roll. */
+    {
+      rule: "agenda_posting_regular",
+      applies_to: "public_comment",
+      units: "hours",
+      amount: 72,
+      direction: "backward",
+      starts: "act",
+      citation: "Cal. Gov. Code \xA7 54954.2(a)(1)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    {
+      rule: "special_meeting_notice",
+      applies_to: "public_comment",
+      units: "hours",
+      amount: 24,
+      direction: "backward",
+      starts: "act",
+      citation: "Cal. Gov. Code \xA7 54956(a)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    /* "at least forty-eight (48) hours (excluding Saturdays, Sundays and holidays) before the time of the meeting". */
+    {
+      rule: "omc_special_meeting_notice",
+      applies_to: "public_comment",
+      units: "business_hours",
+      amount: 48,
+      direction: "backward",
+      starts: "act",
+      closures: "city",
+      citation: "Oakland Mun. Code \xA7 2.20.070",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    /* (C): "if a special meeting is called for a Monday, notice shall be deemed timely made if … made no later than
+       12:00 p.m. (noon) on the preceding Friday". Held beside the general rule; the later answer is the safe harbour
+       (K1514). */
+    {
+      rule: "omc_special_meeting_monday",
+      applies_to: "public_comment",
+      units: "days",
+      amount: 3,
+      count: "calendar",
+      direction: "backward",
+      starts: "act",
+      applies_on: ["mon"],
+      due_at: "12:00",
+      citation: "Oakland Mun. Code \xA7 2.20.070(C)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    {
+      rule: "claim_presentation_injury",
+      applies_to: "claim",
+      units: "months",
+      amount: 6,
+      direction: "forward",
+      starts: "act",
+      roll: true,
+      closures: "judicial",
+      citation: "Cal. Gov. Code \xA7 911.2(a) (death, personal injury, personal property, growing crops)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    {
+      rule: "claim_presentation_other",
+      applies_to: "claim",
+      units: "years",
+      amount: 1,
+      direction: "forward",
+      starts: "act",
+      roll: true,
+      closures: "judicial",
+      citation: "Cal. Gov. Code \xA7 911.2(a) (any other claim)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    {
+      rule: "claim_suit_after_rejection",
+      applies_to: "claim",
+      units: "months",
+      amount: 6,
+      direction: "forward",
+      starts: "served",
+      roll: true,
+      closures: "judicial",
+      citation: "Cal. Gov. Code \xA7 945.6(a)(1)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    },
+    /* "within 20 days (excepting Saturdays, Sundays, and legal public holidays) after the receipt". */
+    {
+      rule: "foia_response",
+      applies_to: "records_request",
+      units: "days",
+      amount: 20,
+      count: "business",
+      direction: "forward",
+      starts: "received",
+      closures: "federal",
+      extension: {
+        days: 10,
+        count: "business",
+        when: "unusual circumstances, by written notice to the requester",
+        citation: "5 U.S.C. \xA7 552(a)(6)(B)(i)"
+      },
+      tolling: [
+        { when: "the agency awaits information it reasonably requested from the requester", citation: "5 U.S.C. \xA7 552(a)(6)(A)(ii)(I)" },
+        { when: "the agency awaits clarification of the requester's fee assessment", citation: "5 U.S.C. \xA7 552(a)(6)(A)(ii)(II)" }
+      ],
+      citation: "5 U.S.C. \xA7 552(a)(6)(A)(i)",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    }
+  ],
+  weekend: {
+    days: ["sat", "sun"],
+    citation: "Cal. Code Civ. Proc. \xA7 12a(a); Cal. Gov. Code \xA7 6700(a); 5 U.S.C. \xA7 552(a)(6)(A)(i)",
+    status: "researched",
+    basis: "2026-10-05 time-law"
+  },
+  computation: [
+    {
+      key: "ccp_12",
+      rule: "exclude_first_include_last",
+      citation: "Cal. Code Civ. Proc. \xA7 12; Cal. Gov. Code \xA7 6800",
+      status: "researched",
+      basis: "2026-10-05 time-law"
+    }
+  ],
+  /* Legistar's PersonId, the register that issues it (legistar-events §1; B1b.4). */
+  identifier_schemes: [
+    {
+      scheme: "legistar_person_id",
+      label: "Legistar PersonId",
+      entity_kinds: ["person"],
+      space: "person",
+      form: "legistar-person",
+      systems: ["oakland.legistar"],
+      basis: "2026-10-05 legistar-events"
+    }
+  ],
+  /* The budget's keys (money-people §3; legistar-events §3): fund and org codes stable cycle to cycle, departments a
+     dated grouping recoded as DP codes from FY19-21. */
+  classification_schemes: [
+    {
+      scheme: "oakland_fund",
+      label: "fund",
+      kind: "fund",
+      forms: [{ re: R`^FD_\d{4}$` }, { re: R`^\d{4}$` }],
+      codes: [{ code: "1010", label: "General Purpose Fund" }],
+      basis: "2026-10-05 money-people, 2026-10-05 legistar-events"
+    },
+    /* `OR_01111` in the budget tables; the FY2013-15 line items write the bare code (`11`, `1111`) */
+    {
+      scheme: "oakland_org",
+      label: "organisation (org)",
+      kind: "organisation",
+      forms: [{ re: R`^OR_\d{5}$` }, { re: R`^\d{2,5}$` }],
+      basis: "2026-10-05 money-people, 2026-10-05 legistar-events"
+    },
+    {
+      scheme: "oakland_department",
+      label: "department",
+      kind: "organisation",
+      forms: [{ re: R`^DP(?:\d{3,4}|CC0)$` }],
+      codes: [
+        { code: "DP010", label: "Mayor" },
+        { code: "DP1000", label: "Police" },
+        { code: "DP350", label: "Transportation" },
+        { code: "DP660", label: "Police Commission" },
+        { code: "DP700", label: "Violence Prevention" },
+        { code: "DPCC0", label: "Council" }
+      ],
+      basis: "2026-10-05 legistar-events"
+    },
+    { scheme: "oakland_program", label: "program", kind: "program", forms: [{ re: R`^PG_[A-Z0-9]+$` }], basis: "2026-10-05 money-people" },
+    { scheme: "oakland_account", label: "account", kind: "account", forms: [{ re: R`^\d{5}$` }], basis: "2026-10-05 money-people" },
+    { scheme: "oakland_project", label: "project", kind: "project", forms: [{ re: R`^PJ_\d{7}$` }, { re: R`^100\d{4}$` }], basis: "2026-10-05 money-people" }
+  ],
+  /* K1493: a public official's home address or telephone number, removed within 48 hours of a written demand. */
+  lawful_demands: [
+    {
+      kind: "official_home_contact",
+      label: "demand by a public official to remove their home address or telephone number",
+      covers: ["home_address", "phone"],
+      within: { amount: 48, units: "hours" },
+      citation: "Cal. Gov. Code \xA7 7928.215",
+      status: "ruled",
+      basis: "K1493"
     }
   ],
   /* Design Requirement 8's legal organisations, as Bob named them (K283 (2), K303): each takes up the
@@ -437,6 +872,121 @@ var oakland_alameda_default = {
       ],
       status: "researched",
       basis: "M-191"
+    },
+    /* The closure lists rules name (R47). The judicial holidays of CCP §135 for 2026 are the court's published days
+       (M-189): Columbus Day is not one (AB 268), Native American Day is. The City's list (M-190) is the "holidays"
+       of an Oakland ordinance (K1504 (5)) and the portal's observed practice. The legal public holidays of 5 U.S.C.
+       §6103(a) for 2026, by the statute's own dates (Independence Day falls on a Saturday). No other year is
+       sourced, so a count reaching one is undetermined (R33). */
+    {
+      year: 2026,
+      list: "judicial",
+      citation: "Cal. Code Civ. Proc. \xA7 135",
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Martin Luther King Jr.'s Birthday" },
+        { date: "2026-02-12", name: "Lincoln's Birthday" },
+        { date: "2026-02-16", name: "Washington's Birthday" },
+        { date: "2026-03-31", name: "Cesar Chavez Day" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-06-19", name: "Juneteenth" },
+        { date: "2026-07-03", name: "Independence Day (observed)" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-09-25", name: "Native American Day" },
+        { date: "2026-11-11", name: "Veterans Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day after Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-189, 2026-10-05 time-law"
+    },
+    {
+      year: 2026,
+      list: "city",
+      citation: 'City of Oakland holiday list (M-190); Oakland Mun. Code \xA7 2.20.070 "holidays" (K1504 (5))',
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Dr. Martin Luther King, Jr. Day" },
+        { date: "2026-02-16", name: "President's Day" },
+        { date: "2026-03-31", name: "Cesar Chavez Day" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-06-19", name: "Juneteenth National Independence Day" },
+        { date: "2026-07-04", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-11-27", name: "Day After Thanksgiving" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "M-190, 2026-10-05 time-law"
+    },
+    {
+      year: 2026,
+      list: "federal",
+      citation: "5 U.S.C. \xA7 6103(a)",
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-01-19", name: "Birthday of Martin Luther King, Jr." },
+        { date: "2026-02-16", name: "Washington's Birthday" },
+        { date: "2026-05-25", name: "Memorial Day" },
+        { date: "2026-06-19", name: "Juneteenth National Independence Day" },
+        { date: "2026-07-03", name: "Independence Day (observed, 5 U.S.C. \xA7 6103(b))" },
+        { date: "2026-07-04", name: "Independence Day" },
+        { date: "2026-09-07", name: "Labor Day" },
+        { date: "2026-10-12", name: "Columbus Day" },
+        { date: "2026-11-11", name: "Veterans Day" },
+        { date: "2026-11-26", name: "Thanksgiving Day" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "2026-10-05 time-law; 2026-10-05 holidays-extra"
+    },
+    /* The judicial holidays of 2018 and 2020, as the superior courts published them (San Diego Superior Court's
+       schedules, agreeing with a statewide calendar; holidays-extra): Columbus Day was then a judicial holiday. */
+    {
+      year: 2018,
+      list: "judicial",
+      citation: "Cal. Code Civ. Proc. \xA7 135 (as in force in 2018); San Diego Super. Ct. holiday schedule 2018",
+      days: [
+        { date: "2018-01-01", name: "New Year's Day" },
+        { date: "2018-01-15", name: "Martin Luther King Jr. Day" },
+        { date: "2018-02-12", name: "Lincoln's Birthday" },
+        { date: "2018-02-19", name: "Presidents' Day" },
+        { date: "2018-03-30", name: "Cesar Chavez Day (observed)" },
+        { date: "2018-05-28", name: "Memorial Day" },
+        { date: "2018-07-04", name: "Independence Day" },
+        { date: "2018-09-03", name: "Labor Day" },
+        { date: "2018-10-08", name: "Columbus Day" },
+        { date: "2018-11-12", name: "Veterans Day (observed)" },
+        { date: "2018-11-22", name: "Thanksgiving" },
+        { date: "2018-11-23", name: "Day after Thanksgiving" },
+        { date: "2018-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "2026-10-05 holidays-extra"
+    },
+    {
+      year: 2020,
+      list: "judicial",
+      citation: "Cal. Code Civ. Proc. \xA7 135 (as in force in 2020); San Diego Super. Ct. holiday schedule 2020",
+      days: [
+        { date: "2020-01-01", name: "New Year's Day" },
+        { date: "2020-01-20", name: "Martin Luther King Jr. Day" },
+        { date: "2020-02-12", name: "Lincoln's Birthday" },
+        { date: "2020-02-17", name: "Presidents' Day" },
+        { date: "2020-03-31", name: "Cesar Chavez Day" },
+        { date: "2020-05-25", name: "Memorial Day" },
+        { date: "2020-07-03", name: "Independence Day (observed)" },
+        { date: "2020-09-07", name: "Labor Day" },
+        { date: "2020-10-12", name: "Columbus Day" },
+        { date: "2020-11-11", name: "Veterans Day" },
+        { date: "2020-11-26", name: "Thanksgiving" },
+        { date: "2020-11-27", name: "Day after Thanksgiving" },
+        { date: "2020-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "2026-10-05 holidays-extra"
     }
   ]
 };
@@ -519,6 +1069,36 @@ var test_port_ellery_default = {
         }
       ]
     },
+    account: { label: "ledger account", forms: [
+      { form: "A-####", pattern: { re: R2`^A-?(\d{4})$`, flags: "i" }, normal: ["A-", { group: 1 }], clean: { spaces: "remove" }, basis: "TEST" }
+    ] },
+    object: { label: "spending object", forms: [
+      { form: "OBJ##", pattern: { re: R2`^OBJ(\d{2})$`, flags: "i" }, normal: ["OBJ", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }
+    ] },
+    vendor: { label: "supplier number", forms: [
+      { form: "S-#####", pattern: { re: R2`^S-?0*(\d{1,5})$`, flags: "i" }, normal: ["S-", { group: 1, unpad: true }], clean: { spaces: "remove" }, basis: "TEST" }
+    ] },
+    proceeding: { label: "court file number", forms: [
+      {
+        form: "MC-yy-####",
+        pattern: { re: R2`^MC-(\d{2})-(\d{4})$`, flags: "i" },
+        normal: ["MC-", { group: 1 }, "-", { group: 2 }],
+        clean: { spaces: "remove", upper: true },
+        basis: "TEST"
+      },
+      {
+        form: "UB/yyyy/##",
+        pattern: { re: R2`^UB\/(\d{4})\/(\d{2})$`, flags: "i" },
+        normal: ["UB/", { group: 1 }, "/", { group: 2 }],
+        clean: { spaces: "remove", upper: true },
+        basis: "TEST"
+      },
+      { form: "docket-####", pattern: { re: R2`^D(\d{6})$`, flags: "i" }, normal: ["D", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }
+    ] },
+    person: { label: "registered person number", forms: [
+      { form: "minute-person", pattern: { re: R2`^P(\d{3})$`, flags: "i" }, normal: ["P", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" },
+      { form: "bar-number", pattern: { re: R2`^BAR(\d{5})$`, flags: "i" }, normal: ["BAR", { group: 1 }], clean: { spaces: "remove", upper: true }, basis: "TEST" }
+    ] },
     parcel: {
       label: "lot and block number",
       forms: [
@@ -567,7 +1147,23 @@ var test_port_ellery_default = {
       name: "the Marlow County lands register",
       hosts: ["lands.marlow-county.example"],
       basis: "TEST"
-    }
+    },
+    /* the court-register origins court-doctypes reads (K1514), on made-up hosts */
+    {
+      origin: "courtlistener_docket",
+      name: "the national docket mirror",
+      hosts: ["dockets.registry.example"],
+      path: { re: R2`^\/case\/\d+$` },
+      basis: "TEST"
+    },
+    {
+      origin: "cpuc_proceeding",
+      name: "the Marlow utilities board's proceeding cards",
+      hosts: ["board.marlow-county.example"],
+      path: { re: R2`^\/proceeding\/` },
+      basis: "TEST"
+    },
+    { origin: "ecourt_roa", name: "the Marlow County Court's register of actions", hosts: ["court.marlow-county.example"], basis: "TEST" }
   ],
   mixed_hosts: [
     { host: "www.port-ellery.example", why: "the city's general website, serving every department", basis: "TEST" }
@@ -598,7 +1194,14 @@ var test_port_ellery_default = {
       { pattern: { re: R2`P\.?E\.?`, flags: "i" }, basis: "TEST" }
     ],
     codes: [
-      { key: "pebl", label: "P.E. Bylaws", pattern: { re: R2`Port\s+Ellery\s+Bylaws|P\.?E\.?B\.?L\.?`, flags: "i" }, basis: "TEST" }
+      {
+        key: "pebl",
+        label: "P.E. Bylaws",
+        pattern: { re: R2`Port\s+Ellery\s+Bylaws|P\.?E\.?B\.?L\.?`, flags: "i" },
+        copy: "official",
+        sections: { number: { re: R2`\d+-\d+` }, separators: "-", markers: ["paren_numeral", "paren_letter", "roman"] },
+        basis: "TEST"
+      }
     ],
     file_numbers: [
       { pattern: { re: R2`M\d{3}\/\d{2}` }, system: "ellery.minutes", basis: "TEST" }
@@ -616,9 +1219,68 @@ var test_port_ellery_default = {
     ],
     template_blanks: [
       { pattern: { re: R2`\[INSERT\s+[A-Z ]+\]`, flags: "i" }, basis: "TEST" }
+    ],
+    amending: [
+      { pattern: { re: R2`\bis\s+hereby\s+varied\b`, flags: "i" }, relation: "amends", basis: "TEST" },
+      { pattern: { re: R2`\bis\s+hereby\s+inserted\b`, flags: "i" }, relation: "adds", basis: "TEST" },
+      { pattern: { re: R2`\bis\s+hereby\s+revoked\b`, flags: "i" }, relation: "repeals", basis: "TEST" },
+      { pattern: { re: R2`\bshall\s+be\s+renumbered\b`, flags: "i" }, relation: "renumbers", basis: "TEST" },
+      { pattern: { re: R2`\bis\s+consolidated\s+into\b`, flags: "i" }, relation: "recodifies", basis: "TEST" }
+    ],
+    meeting_markers: [
+      { marker: "cancelled", pattern: { re: R2`\(POSTPONED\)\s*$`, flags: "i" }, basis: "TEST" },
+      { marker: "special", pattern: { re: R2`\bExtraordinary\b`, flags: "i" }, basis: "TEST" },
+      { marker: "concurrent", pattern: { re: R2`\bJoint\s+Sitting\b`, flags: "i" }, basis: "TEST" }
+    ],
+    body_variants: [
+      { pattern: { re: R2`^(?:The\s+)?Selectboard(?:\s+of\s+Port\s+Ellery)?\b`, flags: "i" }, organisation: "selectboard", basis: "TEST" },
+      { pattern: { re: R2`Harbour\s+(?:Commission|Commissioners)`, flags: "i" }, organisation: "harbour_commission", basis: "TEST" }
+    ],
+    roster_words: [
+      { pattern: { re: R2`\bList\s+of\s+Officers\b`, flags: "i" }, kind: "roster", basis: "TEST" },
+      { pattern: { re: R2`\bWho'?s\s+Who\s+at\s+Town\s+Hall\b`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R2`\bTable\s+of\s+Offices\b`, flags: "i" }, kind: "chart", basis: "TEST" }
+    ],
+    roster_headers: [
+      { role: "name", pattern: { re: R2`^Officer$`, flags: "i" }, basis: "TEST" },
+      { role: "title", pattern: { re: R2`^Post$`, flags: "i" }, basis: "TEST" },
+      { role: "unit", pattern: { re: R2`^Office$`, flags: "i" }, basis: "TEST" },
+      { role: "start", pattern: { re: R2`^Sworn$`, flags: "i" }, basis: "TEST" },
+      { role: "end", pattern: { re: R2`^Retires$`, flags: "i" }, basis: "TEST" },
+      { role: "as_of", pattern: { re: R2`^Correct\s+at$`, flags: "i" }, basis: "TEST" },
+      { role: "employee_id", pattern: { re: R2`^Payroll\s+No\.?$`, flags: "i" }, basis: "TEST" },
+      { role: "contact", pattern: { re: R2`^Extension$`, flags: "i" }, basis: "TEST" }
+    ],
+    financial_report_titles: [
+      { pattern: { re: R2`\bStatement\s+of\s+Accounts\b`, flags: "i" }, basis: "TEST" }
+    ],
+    budget_book_titles: [
+      { pattern: { re: R2`\bEstimates\s+Book\b`, flags: "i" }, basis: "TEST" }
+    ],
+    financial_headings: [
+      { pattern: { re: R2`^Harbour\s+Revenue\s+Account$`, flags: "i" }, basis: "TEST" },
+      { pattern: { re: R2`^Schedule\s+of\s+Reserves$`, flags: "i" }, basis: "TEST" }
+    ],
+    fiscal_year_forms: [
+      { pattern: { re: R2`\bYear\s+(\d{4})\/(\d{2})\b`, flags: "i" }, basis: "TEST" }
+    ],
+    budget_headers: [
+      { column: "fund", pattern: { re: R2`^Ledger$`, flags: "i" }, basis: "TEST" },
+      { column: "org", pattern: { re: R2`^Cost\s+Centre$`, flags: "i" }, basis: "TEST" },
+      { column: "department", pattern: { re: R2`^Service$`, flags: "i" }, basis: "TEST" },
+      { column: "department_code", pattern: { re: R2`^Service\s+Code$`, flags: "i" }, basis: "TEST" },
+      { column: "program", pattern: { re: R2`^Activity$`, flags: "i" }, basis: "TEST" },
+      { column: "project", pattern: { re: R2`^Works\s+Order$`, flags: "i" }, basis: "TEST" },
+      { column: "account", pattern: { re: R2`^Nominal$`, flags: "i" }, basis: "TEST" },
+      { column: "amount", pattern: { re: R2`^Sum$`, flags: "i" }, basis: "TEST" },
+      { column: "period", pattern: { re: R2`^Year$`, flags: "i" }, basis: "TEST" },
+      { column: "phase", pattern: { re: R2`^Stage$`, flags: "i" }, basis: "TEST" }
+    ],
+    staff_titles: [
+      { pattern: { re: R2`\b(?:Town\s+Reeve|Harbour\s+Master|Deputy\s+Clerk)\b`, flags: "i" }, basis: "TEST" }
     ]
   },
-  practice: { minutes_due_days: { value: 30, basis: "TEST" } },
+  practice: { minutes_due_days: { value: 30, count: "calendar", closures: "town", basis: "TEST" } },
   locale: { value: "en-GB", basis: "TEST" },
   time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
@@ -635,6 +1297,7 @@ var test_port_ellery_default = {
       level: "city",
       cite: { re: R2`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" },
       code: "pebl",
+      key: "selectboard",
       basis: "TEST"
     },
     {
@@ -673,6 +1336,9 @@ var test_port_ellery_default = {
         name: "the Town Clerk's office",
         how: "email",
         basis: "TEST",
+        cutoff: { time: "16:30", citation: "Test Stat. \xA7 1.105", status: "ruled", basis: "TEST" },
+        outages: [{ from: "2026-03-02T09:00:00-04:00", to: "2026-03-02T13:30:00-04:00", status: "researched", basis: "TEST" }],
+        receipt: { rule: "next_business_day", citation: "P.E.B.L. \xA7 4(2)", status: "researched", basis: "TEST" },
         hours: {
           weekly: ["mon", "tue", "wed", "thu", "fri"].map((day) => ({ day, open: "08:00", close: "18:00" })),
           status: "ruled",
@@ -740,23 +1406,200 @@ var test_port_ellery_default = {
     }
   ],
   deadlines: [
+    /* the pre-T33 form, `days: n`, read as units: days, amount: n */
     {
       rule: "records_answer",
       applies_to: "records_request",
       days: 5,
       count: "business",
       starts: "received",
-      extension: { days: 5, count: "business", when: "the records are held off site" },
+      closures: "town",
+      extension: { days: 5, count: "business", when: "the records are held off site", citation: "Test Stat. \xA7 1.141" },
+      observed: { closures: "court", status: "researched", basis: "TEST" },
       citation: "Test Stat. \xA7 1.140",
+      status: "researched",
       basis: "TEST"
     },
     {
       rule: "claim_notice",
       applies_to: "claim",
-      days: 90,
+      units: "days",
+      amount: 90,
       count: "calendar",
+      direction: "forward",
       starts: "known",
+      roll: true,
+      closures: "court",
+      computation: "clear_days",
+      tolling: [{ when: "the claimant is a minor", citation: "Test Stat. \xA7 9.22" }],
       citation: "Test Stat. \xA7 9.20",
+      status: "ruled",
+      basis: "TEST"
+    },
+    {
+      rule: "notice_of_sitting",
+      applies_to: "bylaw_complaint",
+      units: "hours",
+      amount: 36,
+      direction: "backward",
+      starts: "act",
+      citation: "P.E.B.L. \xA7 7",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      rule: "harbour_notice",
+      applies_to: "bylaw_complaint",
+      units: "business_hours",
+      amount: 16,
+      direction: "backward",
+      starts: "hearing",
+      closures: "town",
+      citation: "P.E.B.L. \xA7 8",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      rule: "appeal_window",
+      applies_to: "commitment_claim",
+      units: "months",
+      amount: 2,
+      direction: "forward",
+      starts: "entered",
+      roll: true,
+      closures: "court",
+      citation: "Marlow Ct. R. 30.1",
+      status: "researched",
+      basis: "TEST"
+    },
+    /* K1514: a rule for one weekday's anchor, due at a stated time (the Monday safe harbour's shape) */
+    {
+      rule: "notice_of_sitting_friday",
+      applies_to: "bylaw_complaint",
+      units: "days",
+      amount: 2,
+      count: "calendar",
+      direction: "backward",
+      starts: "act",
+      applies_on: ["fri", "sat"],
+      due_at: "15:00",
+      citation: "P.E.B.L. \xA7 7(2)",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      rule: "registry_answer",
+      applies_to: "commitment_claim",
+      units: "days",
+      amount: 4,
+      count: "business",
+      starts: "filed",
+      closures: "court",
+      due_at: "close_of_business",
+      citation: "Marlow Ct. R. 12",
+      status: "ruled",
+      basis: "TEST"
+    },
+    {
+      rule: "service_lapse",
+      applies_to: "commitment_claim",
+      units: "years",
+      amount: 2,
+      direction: "forward",
+      starts: "served",
+      citation: "Marlow Ct. R. 30.9",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      rule: "filing_reply",
+      applies_to: "commitment_claim",
+      units: "days",
+      amount: 7,
+      count: "calendar",
+      direction: "backward",
+      starts: "filed",
+      roll: true,
+      closures: "court",
+      computation: "clear_days",
+      citation: "Marlow Ct. R. 31.2",
+      status: "researched",
+      basis: "TEST"
+    }
+  ],
+  weekend: { days: ["sun"], citation: "Test Stat. \xA7 0.12", status: "researched", basis: "TEST" },
+  computation: [
+    { key: "clear_days", rule: "exclude_first_include_last", citation: "Test Stat. \xA7 0.10", status: "ruled", basis: "TEST" }
+  ],
+  fiscal_year: [
+    { body: "*", start: "04-01", named_by: "start", label: "FY{start}-{end2}", status: "researched", basis: "TEST" },
+    { body: "Port Ellery Harbour District", start: "10-01", named_by: "end", label: "HD{end}", status: "ruled", basis: "TEST" }
+  ],
+  law_ranks: [
+    { kind: "statute", level: "state", rank: 1, basis: "TEST" },
+    { kind: "ordinance", level: "city", rank: 2, basis: "TEST" },
+    { kind: "commitment", level: "county", rank: 3, basis: "TEST" }
+  ],
+  instrument_key: { jurisdiction: "xx-port-ellery", basis: "TEST" },
+  proceeding_kinds: [
+    { kind: "commitment_suit", label: "suit on a budget commitment", forum_kind: "court", basis: "TEST" },
+    { kind: "harbour_inquiry", label: "harbour commission inquiry", forum_kind: "commission", basis: "TEST" }
+  ],
+  proceeding_flows: [
+    {
+      kind: "commitment_suit",
+      stages: [
+        { stage: "filed", label: "filed", reached_by: ["filing"] },
+        { stage: "heard", label: "heard", reached_by: ["hearing"] },
+        { stage: "decided", label: "decided", reached_by: ["judgment", "dismissal"] }
+      ],
+      citation: "Marlow Ct. R. 2",
+      basis: "TEST"
+    }
+  ],
+  identifier_schemes: [
+    {
+      scheme: "ellery_person",
+      label: "minute-book person number",
+      entity_kinds: ["person"],
+      space: "person",
+      form: "minute-person",
+      systems: ["ellery.minutes"],
+      basis: "TEST"
+    },
+    { scheme: "marlow_bar", label: "Marlow bar number", entity_kinds: ["person"], space: "person", form: "bar-number", basis: "TEST" }
+  ],
+  classification_schemes: [
+    { scheme: "ellery_funds", label: "ledger funds", kind: "fund", codes: [{ code: "100-01", label: "General" }, { code: "200-01", label: "Harbour" }], basis: "TEST" },
+    { scheme: "ellery_objects", label: "spending objects", kind: "object", basis: "TEST" },
+    { scheme: "ellery_works", label: "works orders", kind: "project", forms: [{ re: R2`^WO-?\d{4}$`, flags: "i" }], basis: "TEST" }
+  ],
+  lawful_demands: [
+    {
+      kind: "officer_privacy",
+      label: "an officer's demand to remove their home details",
+      covers: ["home_address", "other"],
+      within: { amount: 5, units: "days" },
+      citation: "Test Stat. \xA7 12.4",
+      status: "researched",
+      basis: "TEST"
+    }
+  ],
+  recurrences: [
+    {
+      body: "Port Ellery Selectboard",
+      rrule: "FREQ=MONTHLY;BYDAY=2TU",
+      dtstart: "2026-01-13T19:00",
+      citation: "P.E.B.L. \xA7 6",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      body: "Port Ellery Harbour District",
+      rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=TH;UNTIL=20261231",
+      dtstart: "2026-01-08T10:00",
+      citation: "P.E.B.L. \xA7 6A",
+      status: "ruled",
       basis: "TEST"
     }
   ],
@@ -807,11 +1650,105 @@ var test_port_ellery_default = {
       ],
       status: "researched",
       basis: "TEST"
+    },
+    /* Two closure lists (R47): the court's, which a rule counts on, and the town's, observed beside it. */
+    {
+      year: 2026,
+      list: "court",
+      citation: "Marlow Ct. R. 1.4",
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-08-31", name: "Court vacation day" },
+        { date: "2026-12-24", name: "Court closed" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "ruled",
+      basis: "TEST"
+    },
+    {
+      year: 2026,
+      list: "town",
+      citation: "P.E.B.L. \xA7 3",
+      days: [
+        { date: "2026-01-01", name: "New Year's Day" },
+        { date: "2026-03-17", name: "Harbour Day" },
+        { date: "2026-12-25", name: "Christmas Day" }
+      ],
+      status: "researched",
+      basis: "TEST"
     }
   ]
 };
 
 // ../bio-plane/src/record-grammar/ids.mjs
+var row = (prefix, owner, form = "sequential") => Object.freeze({ prefix, owner, form });
+var ID_TABLE = Object.freeze([
+  /* R1's bundle prefixes, each with the module whose record it names. */
+  row("INFO", "capture"),
+  row("PROB", "inquiry"),
+  row("FOCUS", "inquiry"),
+  row("INQ", "inquiry"),
+  row("PROJ", "promotion"),
+  row("ACTN", "actions"),
+  row("BIAS", "bias"),
+  row("STD", "standards"),
+  row("CONF", "conformance"),
+  row("CONS", "consequences"),
+  row("ESC", "escalation"),
+  row("ASP", "intent"),
+  row("GOAL", "intent"),
+  row("PLN", "action-plans"),
+  /* Every other prefix a module minted or validated at T33's opening, sequential in form. `ENT` was validated as four
+     digits by inquiry-grammar, bias and action-grammar; it is widened here, and they read this table (S0-4 to S0-13). */
+  row("ENT", "entities"),
+  row("REL", "entities"),
+  row("STDP", "standards"),
+  row("ACT", "conformance"),
+  row("CMP", "conformance"),
+  row("FIL", "filings"),
+  row("CPK", "filings"),
+  row("THY", "filings"),
+  row("GATH", "monitoring"),
+  row("THEME", "connections"),
+  row("LEAD", "observation-log"),
+  row("TASK", "tasks"),
+  /* Drawn at random by record-core's opaque minter (its R6), four random digits and the caller's tail. */
+  row("CASE", "case-authoring"),
+  row("WCD", "case-authoring"),
+  row("DRAFT", "review"),
+  row("RVG", "review"),
+  row("SRC", "sources"),
+  row("NOTE", "network-notices"),
+  row("DKT", "docket"),
+  row("TPL", "filing-templates"),
+  row("TPP", "filing-templates"),
+  row("TRG", "filing-templates"),
+  row("WIZ", "wizard-scripts"),
+  row("WZP", "wizard-scripts"),
+  row("WEG", "wizard-scripts"),
+  /* T33's new objects, rows of their owners' tables (R3): opaque. */
+  row("EVT", "events", "opaque"),
+  row("LIN", "lines", "opaque"),
+  row("MNY", "money", "opaque"),
+  row("PFA", "people", "opaque"),
+  row("IDC", "people", "opaque"),
+  /* Reserved now (P8), sequential. */
+  row("MTI", "people"),
+  row("CHK", "people"),
+  row("MSR", "money"),
+  row("HYP", "hypotheses"),
+  row("DUT", "duties"),
+  row("CALC", "calculations"),
+  row("STQ", "answers")
+]);
+var YEAR = "\\d{4}";
+var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
+var FORM = new Map(ID_TABLE.map((e) => [e.prefix, e.form]));
+var coreOf = (prefix) => `${prefix}-${YEAR}-${CORE[FORM.get(prefix)]}`;
+function idPattern(prefix) {
+  return typeof prefix === "string" && FORM.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
+}
+var HYP_RE = idPattern("HYP");
 var ID_PREFIXES = Object.freeze([
   "INFO",
   "PROB",
@@ -828,11 +1765,43 @@ var ID_PREFIXES = Object.freeze([
   "GOAL",
   "PLN"
 ]);
-var PREFIX = `(${ID_PREFIXES.join("|")})`;
 var SLUG = "[a-z0-9]+(-[a-z0-9]+)*";
-var BUNDLE = `${PREFIX}-\\d{4}-\\d{4}-${SLUG}`;
+var BUNDLE = `(${ID_PREFIXES.map((p) => idPattern(p).source.slice(1, -1)).join("|")})-${SLUG}`;
 var BUNDLE_ID_RE = new RegExp(`^${BUNDLE}$`);
 var ANN_ID_RE = new RegExp(`^${BUNDLE}\\.ann-\\d{8}T\\d{6}Z-${SLUG}$`);
+
+// ../bio-plane/src/record-grammar/types.mjs
+var OBJECT_TYPES = {
+  INFO: "information",
+  PROB: "inquiry",
+  FOCUS: "inquiry",
+  INQ: "inquiry",
+  PROJ: "project",
+  ACTN: "action",
+  BIAS: "bias",
+  STD: "standard",
+  CONF: "determination",
+  CONS: "consequence",
+  ESC: "escalation",
+  ASP: "aspiration",
+  GOAL: "goal",
+  PLN: "action_plan",
+  /* T33-1 (B0.1, C:A-6; K1470): the types of T33's new objects, one per prefix of `ID_TABLE` (ids.mjs). They are rows of
+     their owners' tables, not bundle documents: R1's prefix set, `HEADINGS`, `STATES` and `checkBundle`'s schemas gain
+     none of them, and `checkBundle` admits only the bundle prefixes' types (bundle.mjs). */
+  CALC: "calculation",
+  EVT: "event",
+  LIN: "line",
+  MNY: "money_fact",
+  MSR: "money_set",
+  PFA: "person_fact",
+  IDC: "identity_claim",
+  MTI: "member_tie",
+  CHK: "interest_check",
+  HYP: "hypothesis",
+  DUT: "duty",
+  STQ: "standing_question"
+};
 
 // ../bio-plane/src/record-grammar/grades.mjs
 var BASIS_GRADES = ["A", "B", "C", "D"];
@@ -1356,6 +2325,7 @@ var SHARED_ACT_CHECKS = Object.freeze({
 });
 
 // ../bio-plane/src/record-grammar/bundle.mjs
+var BUNDLE_TYPES = Object.fromEntries(ID_PREFIXES.map((p) => [p, OBJECT_TYPES[p]]));
 var EXTENSION_ARMS = Object.freeze([
   { name: "checkInformationExtension", ids: ["C-2.7"] },
   { name: "checkInfo2Contract", ids: ["C-18.6", "C-18.7"] },
@@ -1386,9 +2356,21 @@ var SECTIONS = Object.freeze([
   "legal_organisations",
   "holidays",
   "locale",
-  "time_zone"
+  "time_zone",
+  /* T33 (R46–R54) */
+  "weekend",
+  "computation",
+  "fiscal_year",
+  "law_ranks",
+  "instrument_key",
+  "proceeding_kinds",
+  "proceeding_flows",
+  "identifier_schemes",
+  "classification_schemes",
+  "lawful_demands",
+  "recurrences"
 ]);
-var SPACES = Object.freeze(["enactment", "project", "fund", "parcel"]);
+var SPACES = Object.freeze(["enactment", "project", "fund", "parcel", "account", "object", "vendor", "proceeding", "person"]);
 var VOCABULARY = Object.freeze([
   "furniture",
   "bodies",
@@ -1399,14 +2381,54 @@ var VOCABULARY = Object.freeze([
   "report_titles",
   "report_sections",
   "recommendation_openers",
-  "template_blanks"
+  "template_blanks",
+  /* T33 (R6): LAW's amending clauses, Legistar's markers and body-variant map, the roster words */
+  "amending",
+  "meeting_markers",
+  "body_variants",
+  "roster_words",
+  "roster_headers",
+  "staff_titles",
+  /* (K1513) the budget and financial-report readers' words */
+  "financial_report_titles",
+  "budget_book_titles",
+  "financial_headings",
+  "fiscal_year_forms",
+  "budget_headers"
 ]);
 var LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
 var COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
 var SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
 var VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
 var COUNTS = Object.freeze(["calendar", "business"]);
-var STARTS = Object.freeze(["received", "filed", "act", "known"]);
+var STARTS = Object.freeze(["received", "filed", "act", "known", "entered", "served", "hearing"]);
+var UNITS = Object.freeze(["days", "hours", "business_hours", "months", "years"]);
+var DIRECTIONS = Object.freeze(["forward", "backward"]);
+var COMPUTATION_RULES = Object.freeze(["exclude_first_include_last"]);
+var RECEIPT_RULES = Object.freeze(["next_business_day"]);
+var CODE_COPIES = Object.freeze(["official", "codifier", "undetermined"]);
+var SECTION_MARKERS = Object.freeze(["letter", "numeral", "paren_letter", "paren_numeral", "roman"]);
+var AMENDING_RELATIONS = Object.freeze(["amends", "adds", "repeals", "renumbers", "recodifies"]);
+var MEETING_MARKERS = Object.freeze(["cancelled", "special", "concurrent"]);
+var ROSTER_KINDS = Object.freeze(["roster", "chart"]);
+var ROSTER_ROLES = Object.freeze(["name", "title", "unit", "start", "end", "as_of", "employee_id", "contact"]);
+var BUDGET_COLUMNS = Object.freeze([
+  "fund",
+  "org",
+  "department",
+  "department_code",
+  "program",
+  "project",
+  "account",
+  "amount",
+  "period",
+  "phase"
+]);
+var FISCAL_NAMED_BY = Object.freeze(["start", "end"]);
+var FORUM_KINDS = Object.freeze(["court", "commission", "grand_jury", "auditor", "other"]);
+var CLASSIFICATION_KINDS = Object.freeze(["fund", "organisation", "account", "object", "program", "project", "function"]);
+var DEMAND_COVERS = Object.freeze(["home_address", "phone", "other"]);
+var RRULE_PARTS = Object.freeze(["FREQ", "INTERVAL", "BYDAY", "BYMONTHDAY", "BYSETPOS", "UNTIL"]);
 var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 var TEMPLATE_FIELDS = Object.freeze([
@@ -1461,6 +2483,17 @@ order they should be read. None is chosen for you.</p>
 ${PROFILE_CHOICES.map((p) => `<label class="choice"><input type="checkbox" name="profile" value="${escText(p.id)}"><span class="pname">${escText(p.name)}</span> <span class="small pcovers">covers ${p.covers.map(escText).join(", ")}</span></label>`).join("\n")}
 </fieldset>
 <p class="hint">${PROFILES_NONE}</p>`;
+var ASSISTANT_OFFER = `The assistant is off unless your group chooses it. Your copy holds no Claude account of
+its own: each member who wants the assistant connects their own Claude subscription or API key inside the copy, and is
+told then that their questions, and the material read to answer them, go to Anthropic under their own account. An
+administrator can change this choice later on your copy.`;
+var assistantBlock = () => `<h2>The assistant</h2>
+<fieldset class="profiles" id="assistant">
+<legend class="small">Offer the assistant on your copy?</legend>
+<label class="choice"><input type="radio" name="assistant" value="on">Yes, offer it to members who connect their own account</label>
+<label class="choice"><input type="radio" name="assistant" value="off">Not now</label>
+</fieldset>
+<p class="hint">${ASSISTANT_OFFER}</p>`;
 var PAGE_CSS = `
 :root{
   --ink:#16232E; --paper:#EDEFE8; --paper-2:#E3E7DD;
@@ -1568,6 +2601,7 @@ ${publisherFooter()}
 <script>
 const $=s=>document.querySelector(s);
 const slugify=v=>v.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40);
+const asOf=()=>{const c=document.querySelector('input[name="assistant"]:checked');return c?{assistant:c.value}:{};};
 const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.addEventListener("change",()=>{
   const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
@@ -1579,7 +2613,7 @@ $("#go").addEventListener("click",async()=>{
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
+      body:JSON.stringify({slug,mode:"${mode}",...($("#profiles")?{profiles:chosen}:{}),...asOf(),...($("#ai")&&$("#ai").value.trim()?{instanceAi:$("#ai").value.trim()}:{})})});
     const j=await r.json();
     if(!j.ok){err.textContent=j.error||"That name was not accepted.";return;}
     location.href=j.authorize;
@@ -1608,12 +2642,17 @@ copy keeps its evidence in. The installer checks both before it creates
 anything, and stops, saying which is missing, if either is.
 <a href="https://dash.cloudflare.com/sign-up" rel="noopener">Create a
 Cloudflare account</a> first if you do not have one, then come back.</p>
+<p style="margin:12px 0 0">For the assistant through a member's own Claude
+subscription, the installer also asks the <b>Workers Containers
+permission</b>: that path runs in a container, which Workers Paid includes.
+Without the permission, everything else installs, and members use the
+assistant only with their own API key.</p>
 </div>
 
 <h2>What happens when you press the button</h2>
 <p>Cloudflare will show you a permission screen naming exactly what this
-installer may do in your account: install the software, and set up its
-storage. You approve it there, on Cloudflare's own page, and you can revoke
+installer may do in your account: install the software, set up its
+storage, and set up the assistant's container. You approve it there, on Cloudflare's own page, and you can revoke
 it any time from your Cloudflare dashboard. The permission passes through
 this installer for the seconds the setup takes. This installer has no
 database and nowhere to keep it, and it is never stored.</p>
@@ -1624,6 +2663,8 @@ that your group can stand up a copy even if the publisher of ${PRODUCT} releases
 disappears.</p>
 
 ${profilesBlock()}
+
+${assistantBlock()}
 
 <h2>Name your copy</h2>`,
   slugLabel: "A short name for your group",
@@ -1646,8 +2687,11 @@ credentials, and your record are untouched, and that is enforced by how the
 update is applied, not by promise. The one exception is yours to choose: an
 organisation AI credential you paste in the optional box below.`,
   blocks: `<h2>What happens when you press the button</h2>
-<p>Cloudflare shows you the same permission screen as at install. You approve
-it on Cloudflare's own page, the new release is placed into your account, and
+<p>Cloudflare shows you the permission screen. If your copy was installed
+before the assistant's container existed, it asks one permission more than
+before, <b>Workers Containers</b>, for the assistant through a member's own
+Claude subscription; without it, everything else updates and members use the
+assistant only with their own API key. You approve it on Cloudflare's own page, the new release is placed into your account, and
 the permission is gone the moment it finishes. Nothing is stored here.</p>
 
 <h2>Which copy</h2>`,
@@ -1855,10 +2899,25 @@ plane ${plane.sha256} ${plane.bytes} ${plane.asset}
   }
   return `member ${m.member} ${m.sha256} ${m.bytes} ${m.asset} compat=${m.compat.date}+${m.compat.flags.length ? [...m.compat.flags].sort().join(",") : "-"} services=${renderServices(m.services)} parts=${renderParts(m.parts)}`;
 }).join("\n") + "\n";
+var statementIdPattern = () => {
+  const entry = ID_TABLE.find((e) => e.form === "sequential");
+  const core = entry && idPattern(entry.prefix);
+  const head = entry && `^${entry.prefix}`;
+  if (!(core instanceof RegExp) || !core.source.startsWith(head) || !core.source.endsWith("$") || core.flags)
+    throw new Error("sshsig: record-grammar's sequential id pattern is not ^<PREFIX>\u2026$");
+  return new RegExp(`^[A-Z]+${core.source.slice(head.length, -1)}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`);
+};
+var OPAQUE_ID_RE = statementIdPattern();
 
 // ../bio-plane/src/setup-fleet.mjs
 var GROUP_SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-var FLEET_BINDINGS = [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]];
+var FLEET_BINDINGS = [
+  ["agent-worker", "AGENT_WORKER"],
+  ["pdf-worker", "PDF_WORKER"],
+  ["ocr-worker", "OCR_WORKER"],
+  ["sheet-worker", "SHEET_WORKER"],
+  ["agent-runner", "AGENT_RUNNER"]
+];
 var HOSTING_CONTROL = Object.freeze({
   heading: "Before you choose a password: who controls this copy",
   sentences: Object.freeze([
@@ -1881,8 +2940,11 @@ var CFG = {
   TOKEN: "https://dash.cloudflare.com/oauth2/token",
   API: "https://api.cloudflare.com/client/v4",
   REDIRECT: "https://newgroup.believeinoakland.workers.dev/callback",
-  /* Exactly the scopes registered on the OAuth client, nothing more. */
-  SCOPES: ["workers-scripts.write", "workers-r2.write", "account-settings.read"],
+  /* Exactly the scopes registered on the OAuth client, nothing more. R2 (M-Q8): the fourth is the Containers write
+     scope, by the id Cloudflare's scope list gives it (`GET /client/v4/oauth/scopes`, read 2026-10-06: "Workers
+     Containers Write", `containers.write`); it is asked so a container member can be installed (R38), and a group
+     re-consents to it at its first update after T33 (R17). */
+  SCOPES: ["workers-scripts.write", "workers-r2.write", "account-settings.read", "containers.write"],
   COOKIE: "bio_wiz",
   COOKIE_MAX_AGE_S: 900,
   /* Public releases: two committed files in the repo's release/ folder on
@@ -1995,7 +3057,7 @@ async function exchange(code, verifier) {
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.access_token)
     throw new Error(j.error_description || j.error || `HTTP ${r.status}`);
-  return j.access_token;
+  return { token: j.access_token, scope: typeof j.scope === "string" ? j.scope : null };
 }
 async function cf(token, path, init = {}) {
   const r = await fetch(CFG.API + path, { ...init, headers: {
@@ -2140,6 +3202,27 @@ var INSTANCE_AI_BINDING = "INSTANCE_AI_TOKEN";
 var INSTANCE_AI_RE = /^[\x21-\x7e]{16,512}$/;
 var instanceAiOk = (v) => typeof v === "string" && INSTANCE_AI_RE.test(v);
 var instanceAiBinding = (v) => instanceAiOk(v) ? [{ type: "secret_text", name: INSTANCE_AI_BINDING, text: v }] : [];
+var SEAL_BINDING = "ACCOUNT_SEAL_SECRET";
+var sealBinding = (v) => typeof v === "string" && v ? [{ type: "secret_text", name: SEAL_BINDING, text: v }] : [];
+var RETIRED_CLAUDE_BINDING = "INSTANCE_CLAUDE_TOKEN";
+async function heldSecrets(token, acct, slug) {
+  try {
+    const s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`);
+    if (!s || !Array.isArray(s.bindings)) return null;
+    return new Set(s.bindings.filter((b) => b && b.type === "secret_text").map((b) => b.name));
+  } catch {
+    return null;
+  }
+}
+var ASSISTANT_BINDING = "ASSISTANT_ENABLED";
+var ASSISTANT_CHOICES = ["on", "off"];
+var assistantBinding = (v) => ASSISTANT_CHOICES.includes(v) ? [{ type: "plain_text", name: ASSISTANT_BINDING, text: v }] : [];
+function assistantRefusal(v, mode) {
+  if (v === void 0 || v === null) return null;
+  if (mode === "update") return "An update never changes whether your copy offers the assistant; an administrator changes it on your copy.";
+  if (!ASSISTANT_CHOICES.includes(v)) return "The assistant is offered or not: choose one of the two, or neither.";
+  return null;
+}
 var LIMITS_TAG = "bio-plane-limits/1";
 function planeLimits(source) {
   if (typeof source !== "string") return { ok: false, why: "none" };
@@ -2205,8 +3288,12 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       { type: "secret_text", name: "DAEMON_TOKEN", text: secrets.daemon },
       /* DIST-9 (D-260's deploy half): the organisation `ai` credential, ONLY when the operator supplied one. */
       ...instanceAiBinding(secrets.instanceAi),
+      /* K1541: the seal secret members' own account references are sealed under; never shown. */
+      ...sealBinding(secrets.seal),
       /* R21: the chosen jurisdiction profiles, only when some were chosen. */
       ...profilesBinding(opts.profiles),
+      /* R37: the assistant choice, only when one was made. */
+      ...assistantBinding(opts.assistant),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: "bio-captures" },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: "bio-published" },
       ...opts.noSelf ? [] : [selfBinding(slug)],
@@ -2278,8 +3365,12 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
          it. Unlike DAEMON_TOKEN above there is NO `|| rand(32)` here, and there must never be one: see
          instanceAiBinding. */
       ...instanceAiBinding(opts.instanceAi),
+      /* K1541: only when the copy is known to hold none (runUpdate reads its settings); never over one it holds. */
+      ...sealBinding(opts.seal),
       /* R21: restated only by the install's step-3 re-PUT (see PROFILES_BINDING); an update never passes it. */
-      ...profilesBinding(opts.profiles)
+      ...profilesBinding(opts.profiles),
+      /* R37: likewise the assistant choice. */
+      ...assistantBinding(opts.assistant)
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -2309,7 +3400,7 @@ async function fetchVerified(url, wantSha, what) {
   if (got !== wantSha) throw new Error(what + " failed its integrity check");
   return bytes;
 }
-async function uploadMember(token, acct, slug, m, version, bundle, partBytes) {
+async function uploadMember(token, acct, slug, m, version, bundle, partBytes, extra = {}) {
   const meta = {
     main_module: "index.mjs",
     /* COPIED from the signed manifest, which copied it from the member's own
@@ -2326,18 +3417,95 @@ async function uploadMember(token, acct, slug, m, version, bundle, partBytes) {
         type: "service",
         name: sv.binding,
         service: sv.service === "bio-plane" ? slug : sv.service
-      }))
-    ]
+      })),
+      /* R38: a container member's Durable Object class, bound cross-script into each member its descriptor names. */
+      ...extra.bindings || []
+    ],
+    /* R38: a container member's class is created by its first upload's migration, and never restated after it. */
+    ...extra.migrations ? { migrations: extra.migrations } : {}
   };
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
   fd.append("index.mjs", new Blob([bundle], { type: "application/javascript+module" }), "index.mjs");
-  for (const p of m.parts || []) {
+  for (const p of (m.parts || []).filter((pp) => pp.type !== CONTAINER_PART)) {
     fd.append(p.path, new Blob([partBytes[p.path]], { type: PART_MIME[p.type] }), p.path);
   }
   return cf(token, `/accounts/${acct}/workers/scripts/${m.member}`, { method: "PUT", body: fd });
 }
-async function installFleet(emit, token, acct, slug, release) {
+var CONTAINER_PART = "Container";
+var containerPartOf = (m) => (m.parts || []).filter((pp) => pp.type === CONTAINER_PART);
+var PUBLIC_IMAGE = /^(?:docker\.io|registry-1\.docker\.io|[0-9]{12}\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com|[a-z0-9-]+-docker\.pkg\.dev)\/[a-z0-9._/-]+@sha256:[0-9a-f]{64}$/;
+var CLASS_NAME = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;
+var BINDING_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
+function containerDescriptor(bytes) {
+  let d;
+  try {
+    d = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return { ok: false, why: "its container description does not parse" };
+  }
+  if (!d || typeof d !== "object" || Array.isArray(d)) return { ok: false, why: "its container description is not an object" };
+  if (typeof d.class_name !== "string" || !CLASS_NAME.test(d.class_name)) return { ok: false, why: "its container description names no class" };
+  if (typeof d.image !== "string" || !PUBLIC_IMAGE.test(d.image))
+    return { ok: false, why: "its image is not a public registry image pinned by its sha256 digest" };
+  if (d.scheduling_policy !== "default") return { ok: false, why: "its scheduling policy is not the default one" };
+  if (!Number.isInteger(d.max_instances) || d.max_instances < 1 || d.max_instances > 1e3)
+    return { ok: false, why: "its container description states no maximum number of instances" };
+  const bind = d.bind === void 0 ? [] : d.bind;
+  if (!Array.isArray(bind) || !bind.every((b) => b && typeof b.member === "string" && b.member && typeof b.binding === "string" && BINDING_NAME.test(b.binding)))
+    return { ok: false, why: "its container description names its bindings unreadably" };
+  return { ok: true, d: { class_name: d.class_name, image: d.image, max_instances: d.max_instances, bind } };
+}
+async function containerConditions(token, acct, { scope, plan }) {
+  if (scope !== null && scope !== void 0) {
+    if (!scope.split(/[\s,]+/).includes("containers.write"))
+      return { ok: false, why: "the permission you approved does not include Workers Containers" };
+  } else {
+    try {
+      await cf(token, `/accounts/${acct}/containers/applications`);
+    } catch (e) {
+      return { ok: false, why: "the permission you approved could not be shown to include Workers Containers (" + e.message + ")" };
+    }
+  }
+  let p = plan;
+  if (!p) {
+    try {
+      p = await establishPlan(token, acct);
+    } catch (e) {
+      p = { plan: "unknown", detail: e.message };
+    }
+  }
+  if (p.plan === "free") return { ok: false, why: "your account is on Workers Free, and containers need Workers Paid" };
+  if (p.plan !== "paid") return { ok: false, why: "your account's Workers plan could not be verified (" + (p.detail || "no answer") + ")" };
+  return { ok: true, leftover: !!p.leftover };
+}
+async function placeContainer(token, acct, m, d) {
+  const spaces = await cf(token, `/accounts/${acct}/workers/durable_objects/namespaces?per_page=1000`);
+  const ns = (Array.isArray(spaces) ? spaces : []).find((n) => n && n.script === m.member && n.class === d.class_name);
+  if (!ns || !ns.id) throw new Error("its Durable Object class " + d.class_name + " was not found after the upload");
+  const apps = await cf(token, `/accounts/${acct}/containers/applications`);
+  const app = (Array.isArray(apps) ? apps : []).find((a) => a && a.name === m.member);
+  if (!app) {
+    await cf(token, `/accounts/${acct}/containers/applications`, { method: "POST", body: JSON.stringify({
+      name: m.member,
+      scheduling_policy: "default",
+      instances: 0,
+      max_instances: d.max_instances,
+      configuration: { image: d.image },
+      durable_objects: { namespace_id: ns.id }
+    }) });
+    return "created";
+  }
+  await cf(token, `/accounts/${acct}/containers/applications/${app.id}/rollouts`, { method: "POST", body: JSON.stringify({
+    description: "Civicsmith installer: " + m.member,
+    strategy: "rolling",
+    kind: "full_auto",
+    step_percentage: 100,
+    target_configuration: { image: d.image }
+  }) });
+  return "rolled out";
+}
+async function installFleet(emit, token, acct, slug, release, ctx = {}) {
   emit.step("fleet", "Installing the capability workers beside your copy");
   const man = release.man;
   if (!man) {
@@ -2374,10 +3542,15 @@ async function installFleet(emit, token, acct, slug, release) {
     return;
   }
   const done = [], left = [];
-  for (const m of man.fleet) {
+  const fleet = [...man.fleet].sort((a, b) => (containerPartOf(b).length ? 1 : 0) - (containerPartOf(a).length ? 1 : 0));
+  const classOf = /* @__PURE__ */ new Map();
+  let conditions = null, leftover = false;
+  for (const m of fleet) {
     try {
-      const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type]);
+      const badType = (m.parts || []).find((pp) => !PART_MIME[pp.type] && pp.type !== CONTAINER_PART);
       if (badType) throw new Error("part " + badType.path + " has module type '" + badType.type + "' this installer does not know \u2014 refusing to guess a loader");
+      const box = containerPartOf(m);
+      if (box.length > 1) throw new Error("it carries more than one container description");
       const bundle = await fetchVerified(CFG.RELEASE_LATEST + "/" + m.asset, m.sha256, m.member);
       const partBytes = {};
       for (const pp of m.parts || []) {
@@ -2387,16 +3560,49 @@ async function installFleet(emit, token, acct, slug, release) {
           m.member + " " + pp.path
         );
       }
-      await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes);
+      if (!box.length) {
+        await uploadMember(token, acct, slug, m, String(man.version), bundle, partBytes, { bindings: classOf.get(m.member) });
+        done.push(m.member);
+        continue;
+      }
+      const read = containerDescriptor(partBytes[box[0].path]);
+      if (!read.ok) throw new Error(read.why);
+      const d = read.d;
+      const binds = () => {
+        for (const b of d.bind) classOf.set(b.member, [
+          ...classOf.get(b.member) || [],
+          { type: "durable_object_namespace", name: b.binding, class_name: d.class_name, script_name: m.member }
+        ]);
+      };
+      const fresh = !await scriptExists(token, acct, m.member);
+      conditions ??= await containerConditions(token, acct, ctx);
+      leftover = !!conditions.leftover;
+      if (!conditions.ok) {
+        if (!fresh) binds();
+        throw new Error(conditions.why);
+      }
+      await uploadMember(
+        token,
+        acct,
+        slug,
+        m,
+        String(man.version),
+        bundle,
+        partBytes,
+        fresh ? { migrations: { new_tag: "v1", new_sqlite_classes: [d.class_name] } } : {}
+      );
+      await placeContainer(token, acct, m, d);
+      binds();
       done.push(m.member);
     } catch (e) {
-      left.push({ member: m.member, why: String(e && e.message || e) });
+      left.push({ member: m.member, why: String(e && e.message || e) + (containerPartOf(m).length ? "; your copy offers the assistant only through a member's own API key until it is installed" : "") });
     }
   }
+  const probeNote = leftover ? ' One cleanup note: the tiny probe script "' + PLAN_PROBE + '" could not be deleted automatically \u2014 it is harmless, and you can remove it from Workers & Pages any time.' : "";
   if (left.length === 0) {
-    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: " + done.join(", ") + ".");
+    emit.ok("fleet", "All " + done.length + " capability workers installed and verified: " + done.join(", ") + "." + probeNote);
   } else {
-    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "") + left.length + " left out: " + left.map((l) => l.member + " (" + l.why + ")").join("; ") + ". Your copy works without them; the next update retries exactly this step.");
+    emit.ok("fleet", (done.length ? done.length + " capability worker(s) installed (" + done.join(", ") + "); " : "") + left.length + " left out: " + left.map((l) => l.member + " (" + l.why + ")").join("; ") + ". Your copy works without them; the next update retries exactly this step." + probeNote);
   }
   return { done, left };
 }
@@ -2412,7 +3618,7 @@ async function bindMembers(emit, token, acct, slug, release, already, fleet, opt
       slug,
       opts.withR2,
       release,
-      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles }
+      { members: want, daemon: opts.daemon, noSelf: opts.noSelf, profiles: opts.profiles, assistant: opts.assistant }
     );
     emit.ok("bind", "Your copy is connected to " + added.join(", ") + ".");
     return { bound: want, unbound: [], put: true };
@@ -2588,6 +3794,28 @@ function instanceAiNotice(emit, mode, carried) {
   if (carried) return emit.ok("ai", "The organisation AI credential you gave was stored in your copy as a secret (it is not shown here). Your copy uses it to resume assistant runs that credential opened.");
   emit.ok("ai", mode === "update" ? "No organisation AI credential was given, so none was sent. One your copy already holds is kept unchanged; this installer never creates one." : "No organisation AI credential was given, so your copy has none: it will not resume paused assistant runs on its own. A member mints one on the copy; running the updater with it adds it. This installer never creates one.");
 }
+async function accountSecretsNotice(emit, token, acct, slug, held, seal) {
+  emit.step("keys", "Your members' own accounts");
+  if (!held) return emit.no("keys", "Your copy's settings could not be read, so the installer could not tell whether it holds the secret that seals each member's own Claude account or API key, or a group-wide Claude credential from before. Nothing was sent or removed. Running this update again checks once more.");
+  const said = [seal ? "Your copy now holds the secret that seals each member's own Claude account or API key (it is not shown here)." : "Your copy already held the secret that seals each member's own Claude account or API key; it is kept unchanged."];
+  let ok = true;
+  if (held.has(RETIRED_CLAUDE_BINDING)) {
+    try {
+      await cf(token, `/accounts/${acct}/workers/scripts/${slug}/secrets/${RETIRED_CLAUDE_BINDING}`, { method: "DELETE" });
+      said.push("The group-wide Claude credential your copy held was removed: a copy holds none now.");
+    } catch (e) {
+      ok = false;
+      said.push("Your copy holds a group-wide Claude credential from before, and removing it was refused (Cloudflare said: " + e.message + "). Remove the secret " + RETIRED_CLAUDE_BINDING + " from your worker's settings on Cloudflare.");
+    }
+  }
+  said.push(ASSISTANT_OWN_ACCOUNTS);
+  return ok ? emit.ok("keys", said.join(" ")) : emit.no("keys", said.join(" "));
+}
+var ASSISTANT_OWN_ACCOUNTS = "Your copy holds no Claude account of its own: each member who wants the assistant connects their own Claude subscription or API key inside the copy, and is told then that their questions, and the material read to answer them, go to Anthropic under their own account.";
+function assistantNotice(emit, choice) {
+  emit.step("assist", "The assistant");
+  emit.ok("assist", (choice === "on" ? "You chose to offer the assistant on your copy. " : choice === "off" ? "You chose not to offer the assistant for now, so it is off. " : "No choice was made about the assistant, so it is off. ") + ASSISTANT_OWN_ACCOUNTS + (choice === "on" ? "" : " An administrator can turn it on later on your copy."));
+}
 function oneCopyRefusal(emit, held) {
   return emit.fail(
     `Your Cloudflare account already holds a copy of ${PRODUCT}`,
@@ -2597,10 +3825,10 @@ function oneCopyRefusal(emit, held) {
 }
 async function runInstall(emit, code, saved) {
   const slug = saved.slug;
-  let token;
+  let token, scope;
   emit.step("auth", "Confirming your permission with Cloudflare");
   try {
-    token = await exchange(code, saved.v);
+    ({ token, scope } = await exchange(code, saved.v));
     emit.ok("auth");
   } catch (e) {
     emit.no("auth");
@@ -2717,20 +3945,22 @@ async function runInstall(emit, code, saved) {
     member: rand(32),
     probe: rand(32),
     daemon: rand(32),
+    seal: rand(32),
     ...instanceAiOk(saved.ai) ? { instanceAi: saved.ai } : {}
   };
   emit.ok("gen");
   const present = await membersPresent(token, acct.id);
   const profiles = Array.isArray(saved.p) && !profilesRefusal(saved.p, "install") ? saved.p : [];
+  const assistant = ASSISTANT_CHOICES.includes(saved.as) ? saved.as : void 0;
   let selfRefused = false;
   emit.step("install", "Installing the software into your account");
   try {
-    await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles });
+    await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles, assistant });
     emit.ok("install");
   } catch (e) {
     let degraded = false;
     try {
-      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles });
+      await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles, assistant });
       degraded = true;
     } catch {
     }
@@ -2751,7 +3981,7 @@ async function runInstall(emit, code, saved) {
     if (lag && !byteLags.includes(lag)) byteLags.push(lag);
   };
   await readBackInto();
-  const fleet = await installFleet(emit, token, acct.id, slug, release);
+  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope, plan: { plan: "paid" } });
   const bound = await bindMembers(
     emit,
     token,
@@ -2760,10 +3990,11 @@ async function runInstall(emit, code, saved) {
     release,
     present,
     fleet,
-    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles }
+    { withR2: true, daemon: secrets.daemon, noSelf: selfRefused, profiles, assistant }
   );
   if (bound.put) await readBackInto();
   instanceAiNotice(emit, "install", !!secrets.instanceAi);
+  assistantNotice(emit, assistant);
   emit.step("addr", "Turning on your web address");
   let base;
   try {
@@ -2846,10 +4077,10 @@ the same. The installer does not record it for you: which group produces your re
 }
 async function runUpdate(emit, code, saved) {
   const slug = saved.slug;
-  let token;
+  let token, scope;
   emit.step("auth", "Confirming your permission with Cloudflare");
   try {
-    token = await exchange(code, saved.v);
+    ({ token, scope } = await exchange(code, saved.v));
     emit.ok("auth");
   } catch (e) {
     emit.no("auth");
@@ -2920,8 +4151,10 @@ async function runUpdate(emit, code, saved) {
   emit.step("up", noop ? `Your copy already runs ${release.version}. Re-uploading the same version` : before ? `Updating the software from ${before} to ${release.version}` : `Updating the software to ${release.version}`);
   const present = await membersPresent(token, acct.id);
   const instanceAi = instanceAiOk(saved.ai) ? saved.ai : void 0;
+  const held = await heldSecrets(token, acct.id, slug);
+  const seal = held && !held.has(SEAL_BINDING) ? rand(32) : void 0;
   try {
-    await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi });
+    await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi, seal });
     emit.ok("up");
   } catch (e) {
     emit.no("up");
@@ -2937,10 +4170,11 @@ async function runUpdate(emit, code, saved) {
     if (lag && !byteLags.includes(lag)) byteLags.push(lag);
   };
   await readBackInto();
-  const fleet = await installFleet(emit, token, acct.id, slug, release);
+  const fleet = await installFleet(emit, token, acct.id, slug, release, { scope });
   const bound = await bindMembers(emit, token, acct.id, slug, release, present, fleet, { withR2 });
   if (bound.put) await readBackInto();
   instanceAiNotice(emit, "update", !!instanceAi);
+  await accountSecretsNotice(emit, token, acct.id, slug, held, seal);
   emit.step("addr", "Finding your copy's address");
   let base = null;
   try {
@@ -3008,7 +4242,19 @@ var index_default = {
       const profilesWhy = profilesRefusal(body.profiles, mode);
       if (profilesWhy) return json({ ok: false, error: profilesWhy }, 400);
       const p = Array.isArray(body.profiles) && body.profiles.length ? body.profiles : null;
-      const cookie = b64url(enc.encode(JSON.stringify({ v, s, slug, mode, t: Date.now(), ...ai ? { ai } : {}, ...p ? { p } : {} })));
+      const assistantWhy = assistantRefusal(body.assistant, mode);
+      if (assistantWhy) return json({ ok: false, error: assistantWhy }, 400);
+      const as = ASSISTANT_CHOICES.includes(body.assistant) ? body.assistant : null;
+      const cookie = b64url(enc.encode(JSON.stringify({
+        v,
+        s,
+        slug,
+        mode,
+        t: Date.now(),
+        ...ai ? { ai } : {},
+        ...p ? { p } : {},
+        ...as ? { as } : {}
+      })));
       return json(
         { ok: true, authorize: `${CFG.AUTHORIZE}?${q}` },
         200,
@@ -3073,10 +4319,16 @@ ${publisherFooter()}
 }
 export {
   ARMED_SIGNERS,
+  ASSISTANT_BINDING,
+  ASSISTANT_OWN_ACCOUNTS,
   BROWSER_BINDING,
   CFG,
+  CONTAINER_PART,
   INSTANCE_AI_BINDING,
   PROFILES_BINDING,
+  RETIRED_CLAUDE_BINDING,
+  SEAL_BINDING,
+  containerDescriptor,
   index_default as default,
   instanceAiOk,
   planeLimits,

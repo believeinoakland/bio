@@ -8,7 +8,9 @@
    R41): a question concluded through it is promoted through the real promotion, so inquiry's grammar judges the
    resolution. A run gate stands in for ai-runs' (R21). Every test drives `contradiction` at its interface. The
    version tables are basis-versions' own (its migrate), rows laid down by hand with the columns its read contract
-   names (R38 there). */
+   names (R38 there). T33-48: the real `events` (a capture's own dates, its `datedFactsFor`) and the real `money` (its
+   facts, read contract R19, and `reconcile`); a document's own date and a money fact are laid down as rows of their
+   owners' tables, which those modules then read and judge. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -20,6 +22,8 @@ import { entitiesOf } from "../../../src/entities/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { migrateBasisVersions } from "../../../src/basis-versions/schema.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
+import { eventsOf } from "../../../src/events/index.mjs";
+import { moneyOf } from "../../../src/money/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -125,7 +129,13 @@ export function world({ gate = true, now = null } = {}) {
     },
   };
   let n = 0;
-  const c = contradictionOf(host, { record, extraction: x, membership, promotion, entities, basisVersions: bv,
+  /* events (a capture's own dates) and money (its facts and reconciliation), each the real module over this record. */
+  const events = eventsOf(host, { record, membership, extraction: x, content, entities, provenance: prov,
+                                  readHooks: { onRead: () => ({ ok: true }) }, now: tick });
+  events.migrate();
+  const money = moneyOf(host, { record, membership, entities, provenance: prov, events, lines: null, now: tick });
+  money.migrate();
+  const c = contradictionOf(host, { record, extraction: x, membership, promotion, entities, basisVersions: bv, events, money,
                                     inquiry: inquiryServices(host), now: now || (() => clock.now) });
   c.migrate();
   /* The runs the stand-in gate answers for: {status, principal, hidden}. */
@@ -141,7 +151,7 @@ export function world({ gate = true, now = null } = {}) {
                    translation: "not the run's principal", detail: "proposing is the principal's act" } };
   });
   const w = {
-    st, host, record, membership, promotion, x, content, entities, k, c, bv, runs, gateCalls, clock, drawing, stances,
+    st, host, record, membership, promotion, x, content, entities, k, c, bv, runs, gateCalls, clock, drawing, stances, events, money,
     rows: (q, ...a) => st.sql.exec(q, ...a), one: (q, ...a) => st.sql.exec(q, ...a)[0] || null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
@@ -196,12 +206,45 @@ export function world({ gate = true, now = null } = {}) {
       st.sql.exec(`INSERT INTO inquiry_basis_version_legs (bundle_id, name, ord, target_id, target_type, role, ground, content_id)
                    VALUES (?, ?, ?, ?, ?, 'supports', '', ?)`, inquiry, name, ord, target, type, content);
     },
-    /* A reading of `capture` (extraction's table): `contentType` its doctype, `date` its top-level date. */
-    reading(capture, bundleId, { contentType = null, date = null } = {}) {
+    /* A reading of `capture` (extraction's table): `contentType` its doctype, `date` its top-level date. A stated date is
+       also held by `events` as the document's own (a dated fact, its R1, R4: what its after-read hook holds), at day
+       precision in UTC unless `precision` or `zone` say otherwise; `dated: false` leaves the reading's date unheld. */
+    reading(capture, bundleId, { contentType = null, date = null, dated = true, precision = "day", zone = "UTC" } = {}) {
       w.bundle(bundleId);
       const reading = { content_type: contentType, found: true, ...(date == null ? {} : { date }) };
       st.sql.exec(`INSERT OR REPLACE INTO readings (capture_sha, bundle_id, content_type, reading) VALUES (?, ?, ?, ?)`,
                   capture, bundleId, contentType, JSON.stringify(reading));
+      if (date != null && dated) w.dated(capture, bundleId, date, { precision, zone });
+    },
+    /* A document's own date as `events` holds it (its `dated_facts`, keyed by the capture in lower case as events reads
+       it; the reader's method). */
+    dated(capture, bundleId, value, { precision = "day", zone = "UTC", kind = "issued", upperBound = false, extent = null } = {}) {
+      const id = `DF-${sha(`${capture}|${value}|${kind}|${extent ?? ""}`).slice(0, 16)}`;
+      st.sql.exec(`INSERT OR IGNORE INTO dated_facts (dated_fact_id, capture_sha, bundle_id, extent, kind, value, precision, zone,
+                     method, grade, upper_bound, by_actor, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'reader', 'B', ?, 'class:daemon', ?)`,
+                  id, String(capture).toLowerCase(), bundleId, JSON.stringify(extent ?? { page: 1 }), kind, value, precision, zone, upperBound ? 1 : 0, NOW);
+      return id;
+    },
+    /* A money fact as `money` holds it (its read contract, R19, and the columns its reads take): `from` and `to` the
+       payer and payee entities, `period` {from, to} days in UTC, `amount` signed exact decimal text (or `low`/`high`
+       for a range), the source a content row filed in `bundle`. */
+    fact(id, { from = "E-PAYER", to = "E-PAYEE", kind = "payment", phase = "actual", stage = "paid", basis = "cash",
+               amount = "100", precision = "exact", low = null, high = null, currency = "USD", period = { from: "2026-01-01", to: "2026-12-31" },
+               bundle = "INFO-2026-0901", content = null, capture = null, withdrawn = false } = {}) {
+      w.bundle(bundle);
+      const cap = capture ?? sha(`cap ${id}`);
+      if (content) w.content(content, cap, bundle);
+      const instant = (d, end) => (d == null ? null : end ? new Date(Date.parse(`${d}T00:00:00Z`) + 86400000).toISOString().replace(/\.\d{3}Z$/, "Z") : `${d}T00:00:00Z`);
+      st.sql.exec(`INSERT INTO money_facts (fact_id, amount, amount_low, amount_high, sign, precision, as_read, currency, kind, phase,
+                     stage, basis, period_from, period_to, period_precision, period_zone, period_start, period_end,
+                     from_entity, to_entity, source_capture_sha, source_extent, source_content_id, method, grade_reading, by, at,
+                     sight_bundle, withdrawn_at)
+                   VALUES (?, ?, ?, ?, '+', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'day', 'UTC', ?, ?, ?, ?, ?, '{"page":1}', ?, 'typed', 'B', 'member:m1', ?, ?, ?)`,
+                  id, precision === "range" ? null : amount, low, high, precision, precision === "range" ? `${low}–${high}` : amount, currency,
+                  kind, phase, stage, basis, period.from, period.to ?? null, instant(period.from, false), instant(period.to, true),
+                  from, to, cap, content, NOW, bundle, withdrawn ? NOW : null);
+      if (withdrawn) st.sql.exec(`INSERT INTO money_withdrawals (fact_id, reason, by, at, sight_bundle) VALUES (?, 'r', 'member:m1', ?, ?)`, id, NOW, bundle);
+      return id;
     },
     resolution(capture, bundleId, entity, { established = 1, ref = "ref:1" } = {}) {
       st.sql.exec(`INSERT INTO resolutions (capture_sha, bundle_id, ref, entity_id, grade, method, established)

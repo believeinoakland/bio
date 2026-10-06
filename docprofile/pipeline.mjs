@@ -157,6 +157,8 @@ export async function assess(before, after, ctx) {
   };
 
   /* ---- L5: is the change meaningful FOR THAT TYPE ---- */
+  if (typeof dt.type.parse !== "function" || typeof dt.type.assess !== "function")
+    return unread(`the ${content_type} content type declares no reader`);
   const textBefore = pipelineText(before);
   const read = (t, at) => dt.type.parse({ ...ctx, text: t, handler: id.handler, at });
   let a, b, m;

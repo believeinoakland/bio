@@ -1,5 +1,5 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
- * R1, R3, R7–R10; K6, K64).
+ * R1, R3, R7–R10, R12; K6, K64).
  *
  * Copied from `actions/checks.mjs` in T19 layer 9 with its comments (that file is deleted since, K914; `actions` reads each
  * of these from here): the kinds this instance accepts (`actionKinds`, `kindReadsAsWritten`, `PRODUCT_KINDS`), the records law
@@ -9,6 +9,9 @@
  * (C-2.10's action arms and C-11.1), `RESOLUTIONS`, and the rows `actions`' acts mint: C-32.3, C-32.4, C-32.18–C-32.20,
  * C-33.3–C-33.9, C-72, C-73, C-90, C-94, C-101 and C-117 (C-117.5, `PENDING_CLOCKS_BAD_BEFORE`, is `action-clocks`'; N428).
  * Every value, finding and sentence is the copy's, unchanged; only C-73.6's `where` names its new site (stamped by 1.50.0).
+ * Since T33 layer 9 (K1657): C-117.26–.28, the rows of `actions`' `NO_SUBJECT` (its R62), `MACHINE_CANNOT_SET_PROCEEDING` and
+ * `NOT_A_PROCEEDING` (its R65), awaiting promotion's stamp; and C-11.1's past date is read on the office's local day
+ * (R7, K1444 (iii)) through `civil-time`.
  * Since T27 layer 9: C-117.23–.25 (`actions` R52, R56, R58; DEC-113, N518; awaiting T28's stamp).
  * Since T20 layer 9: C-117.20–.22 (`actions` R52, K899 (7); stamped by 1.51.0), and a member reads "record" where the
  * copy said "bundle" (K899 (1): `respondsToEdgeFindings`' repair here, `actionBasisFindings`' target finding in
@@ -19,12 +22,13 @@
  * a copy. Nothing here imports the catalogue. Pure (R10): no record, no network, and the clock only as
  * `checkActionExtension`'s default when `ctx.nowMs` is not given. */
 
-import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES } from "../record-grammar/index.mjs";
+import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES, idPattern } from "../record-grammar/index.mjs";
 import { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel,
          RFC_RESPONSE_WINDOW_PRECEDENT } from "./grammar.mjs";
 import { LAW_LEVELS } from "../../../jurisdictions/index.mjs";
+import { localDay } from "../civil-time/index.mjs";
 
 export { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
@@ -39,8 +43,10 @@ function f(check, severity, message, repairs, code) {
   return out;
 }
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-/* The subject registry's key shape (inquiry-grammar keeps its own for C-2.8's subject arm; bias has a private one). */
-const ENTITY_ID_RE = /^ENT-\d{4}-\d{4}$/;
+/* R12 (T33-72; S0-10, B0.8, K1470): the subject registry's key shape is record-grammar's one id table's (`idPattern`, its
+   R47), never a copy here: a counter of four or more digits, so `ENT-2026-10000` is a key and every key valid before
+   stays valid. The finding's sentence is unchanged, so a document written before T33 reads byte-identically. */
+const ENTITY_ID_RE = idPattern('ENT');
 const UNWRITABLE = /["\\\r\n]/;
 
 /* ---------------------------------------------------------------------------------------------- R7: the endings */
@@ -686,8 +692,22 @@ export function consequenceState(fm) {
            detail: `IMPACT rests on evidence that is not our own action: ${evidence.join(', ')}.` };
 }
 
+/** R7 (K1444 (iii)): the local day of `nowMs` in `zone` (`civil-time.localDay`), or null with no zone, an unknown one or
+ *  an unreadable time: a pending clock entry is past its date only once that day is after the entry's, and with no
+ *  local day nothing is past, never the UTC day. */
+function localTodayOf(nowMs, zone) {
+  const z = typeof zone === "string" && zone.trim() ? zone.trim() : null;
+  const n = Number(nowMs);
+  if (!z || !Number.isFinite(n) || Math.abs(n) > 8.64e15) return null;
+  const instant = new Date(Math.floor(n / 1000) * 1000).toISOString().replace(".000Z", "Z");
+  let d = null;
+  try { d = localDay(instant, z); } catch { d = null; }
+  return typeof d === "string" ? d : null;
+}
+
 /** R37: C-2.10's action arms and C-11.1 over one action's document, as the audit runs them (`ctx.fm`, `ctx.nowMs`;
- *  `ctx.actionKinds`, the instance's R10 set, when the caller has it). */
+ *  `ctx.actionKinds`, the instance's R10 set, when the caller has it; `ctx.zone`, the IANA zone of the action's office
+ *  or venue, R7). */
 export function checkActionExtension(ctx, findings) {
   if (ctx?.fm?.object_type !== 'action') return;
   const fm = ctx.fm;
@@ -715,7 +735,8 @@ export function checkActionExtension(ctx, findings) {
   }
   // C-11: clock discipline
   const clock = Array.isArray(fm.clock) ? fm.clock : [];
-  const today = new Date(ctx.nowMs ?? Date.now()).toISOString().slice(0, 10);
+  /* R7 (K1444 (iii)): the office's local day, never the UTC day; with no zone, no entry is past its date. */
+  const today = localTodayOf(ctx.nowMs ?? Date.now(), ctx.zone);
   const STATUSES = ['pending', 'met', 'overdue', 'waived'];
   for (let i = 0; i < clock.length; i++) {
     const e = clock[i];
@@ -727,7 +748,7 @@ export function checkActionExtension(ctx, findings) {
       findings.push(f('C-11.1', 'error', `clock[${i}] has no basis (the statute, order, or commitment the date derives from)`, ['supply basis']));
     }
     if (!STATUSES.includes(e.status)) findings.push(f('C-11.1', 'error', `clock[${i}].status '${e.status}' is not one of: ${STATUSES.join(', ')}`));
-    if (DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {
+    if (today && DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {
       findings.push(f('C-11.1', 'error', `clock[${i}] '${e.text}' is silently past-due (${e.date} < today, status still pending)`,
         ['mark overdue', 'mark met', 'mark waived with reason']));
     }
@@ -1319,5 +1340,26 @@ export const ACTION_CATALOGUE_CHECKS = {
     where: 'src/actions/index.mjs actionHold > is-hold-already-released',
     translation: 'That litigation hold is already released, and a release is stated once. Nothing was written. If the '
       + 'group is preserving again, place a new hold.',
+  },
+  /* R62, R65 (K1657; ACTIONS #12 J2 (1)): the codes `actions` mints for the addressee suggestion's subject and for the
+     proceeding an action belongs to. New in T33 layer 9; awaiting promotion's stamp. */
+  NO_SUBJECT: {
+    check: 'C-117.26',
+    where: 'src/actions/index.mjs addresseeSuggest > is-addressee-subject',
+    translation: 'An addressee is suggested for something: an entity in the subject registry, or a record the action '
+      + 'rests on. None was named, so there is nothing to suggest an office for. Name the subject and ask again.',
+  },
+  MACHINE_CANNOT_SET_PROCEEDING: {
+    check: 'C-117.27',
+    where: 'src/actions/index.mjs #heldLinks > is-machine-set-proceeding',
+    translation: 'Which proceeding an action belongs to is a member\'s statement, and somebody answers for it. The '
+      + 'credential that asked here is an automated one, so it cannot set, change or remove it. Nothing was written. '
+      + 'Sign in to state it yourself.',
+  },
+  NOT_A_PROCEEDING: {
+    check: 'C-117.28',
+    where: 'src/actions/index.mjs #proceedingRefusal > is-proceeding-kind',
+    translation: 'An action belongs to a proceeding, such as a case before a court or a board, and the entity named is '
+      + 'of another kind. Nothing was written. Name the proceeding itself.',
   },
 };

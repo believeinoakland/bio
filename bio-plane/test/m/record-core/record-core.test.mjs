@@ -412,7 +412,7 @@ test("R26: the active jurisdiction profiles are the setting jurisdiction_profile
 
 test("R21 R46: tables are declared once; a table declared twice or by two modules is refused with TABLE_DECLARED", () => {
   const { rc } = fresh();
-  for (const t of ["files", "history", "manifest", "leases", "bundles", "seq", "minted_ids", "settings"]) {
+  for (const t of ["files", "history", "manifest", "leases", "bundles", "seq", "minted_ids", "settings", "tombstones", "derived_stale"]) {
     const r = rc.declarePurge("membership", [t]);
     assert.equal(r.reason, "TABLE_DECLARED"); assert.equal(r.declaredBy, "record-core", `${t} is record-core's own`);
   }
@@ -611,7 +611,7 @@ test("R31: every service reads and writes only this module's tables and the cloc
   assert.equal(others(), before, "no other module's table was read into a write or changed (none was declared to purge)");
   // and what it holds: no member, capability or fence table among its own
   const own = rows(s, `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'other_%' AND name NOT LIKE 'sqlite_%'`).map((r) => r.name).sort();
-  assert.deepEqual(own, ["bundles", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings"]);
+  assert.deepEqual(own, ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
 });
 
 test("R29: history and manifest are append-only under every service but purge", () => {
@@ -650,7 +650,8 @@ test("R39: recordOf answers one instance per storage, the same to every caller, 
                    "evidenceStore", "seedMintLedger", "head", "manifestEntry", "livePaths", "manifestByAuthor", "isFirstBoot",
                    "digestCensus", "snapKeyCensus", "registerAuditCheck", "textAtSha", "releaseLease", "registerCounts", "counts",
                    "afterCommit", "registerGrammar", "grammars", "registerStatsSource", "stats", "proofCounts", "ownCounts",
-                   "recordOpaqueId"])
+                   "recordOpaqueId", "declareTable", "declaredTables", "markStale", "readDerived", "rebuildDerived",
+                   "rebuildAndCompare", "registerStoreGate", "storeGate", "expunge", "tombstones"])
     assert.equal(typeof a[m], "function", m);
 });
 
@@ -2146,7 +2147,7 @@ test("R71: migrate runs RECORD_SCHEMA itself and this module's own migrations, s
   const rc = recordOf({ storage: s });
   rc.migrate();
   const tables = () => rows(s, `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name);
-  assert.deepEqual(tables(), ["bundles", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings"]);
+  assert.deepEqual(tables(), ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
   const once = dump(s), schemaOnce = JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`));
   rc.migrate();
   assert.deepEqual(dump(s), once); assert.equal(JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`)), schemaOnce, "running it twice changes nothing");

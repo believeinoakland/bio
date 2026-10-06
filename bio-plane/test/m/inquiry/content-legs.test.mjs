@@ -11,7 +11,9 @@
      - rec220-version-pin.test.mjs: the pinned capture kept after a preferred later one, fresh and re-promoted; the
        author's re-pointing wins; the unpinned leg carried; earnedBasis's version shapes;
      - transcribe.test.mjs: a whole-document attestation of a chainless capture does not raise a typing through a leg.
-   Driven through the real promotion (the fixture's `world()`), content's own writers where a fact must exist. */
+   Driven through the real promotion (the fixture's `world()`), content's own writers where a fact must exist.
+   The earned registry's own tests (R13–R17 here before T33) moved with those requirements to `leg-earning`'s suite
+   (K617, K1505); what stays is this module's own share. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, infoMd, provDoc, sha, V } from "./fixture.mjs";
@@ -240,7 +242,7 @@ test("R12 projection: after a purge the same leg over the same capture and chain
 
 /* ------------------------------------------------------------------------------------------------ R12 R15: REC-220's pin */
 
-test("R12 R15 a pinned leg keeps capture A after a preferred later B, fresh and re-promoted; the author's re-pointing to B wins; the unpinned leg is carried at A and reads undetermined", () => {
+test("R12 a pinned leg keeps capture A after a preferred later B, fresh and re-promoted; the author's re-pointing to B wins; the unpinned leg is carried at A and reads undetermined", () => {
   const w = world();
   const DOC = "INFO-2026-0901-doc", OTHER = "INFO-2026-0902-other";
   const [A] = w.doc(DOC, ["capture A"]); const [O] = w.doc(OTHER, ["capture O"]);
@@ -300,114 +302,3 @@ test("R12 R15 a pinned leg keeps capture A after a preferred later B, fresh and 
 
 /* ------------------------------------------------------------------------------------------------ R13 R15: the earned read */
 
-test("R13 R15 earnedBasis at content grain: a portion's connection axis is undetermined with the empty level named (NO_CONNECTION), never borrowed; a document row earns its document's", () => {
-  const w = world(); w.entity("ENT-2026-0001", "Sewer Fund Transfer Ordinance");
-  const [cap] = w.doc(PAGED, ["paged"], { chain: scoped([0, 1, 2]) });
-  w.resolve(cap, PAGED, "ordinance:24680", "ENT-2026-0001", "A");
-  const r = w.promote("INQ-2026-1001-q", md("INQ-2026-1001-q", [{ target: PAGED },
-    { target: PAGED, f: { extent_kind: "pdf-page", extent_page: 1, extent_rect: "[10, 20, 100, 200]", extent_ref: q("page 2, the transfer table") } }],
-    { subject: "ENT-2026-0001" }));
-  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
-  const [DOC_ROW, PAGE_ROW] = r.content.map((c) => c.content_id);
-  const eb = w.k.earnedBasis({ id: "INQ-2026-1001-q", viewer: "admin" });
-  assert.deepEqual(Object.keys(eb.earned.content).sort(), [DOC_ROW, PAGE_ROW].sort());
-  const d = eb.earned.content[DOC_ROW].connection, p = eb.earned.content[PAGE_ROW].connection;
-  assert.deepEqual([d.determined, d.grain, d.grade], [true, "document", "A"], "the document row: its portion IS the document");
-  assert.equal(d.grade, eb.earned.connection[PAGED].grade);
-  assert.deepEqual([p.determined, p.grain, p.grade, p.undetermined_because], [false, "portion", null, "NO_CONNECTION"]);
-  assert.match(p.empty_level, /^connection — /);
-  assert.match(p.empty_level, /end of no connection through this subject/);
-  assert.ok(String(p.why).includes(`nothing for ${eb.earned.content[PAGE_ROW].ref} to earn from`), p.why);
-  assert.match(p.why, /end of no connection/);
-  assert.equal(Object.prototype.hasOwnProperty.call(p, "document_grade"), false, "never borrowed from the document");
-  assert.equal(Object.values(eb.earned.content).filter((c) => c.extent_kind !== "document")
-    .filter((c) => c.connection.grade !== null || c.connection.determined !== false).length, 0);
-  assert.deepEqual([legOf(eb, 0).null_case ?? null, legOf(eb, 1).null_case ?? null], [null, null],
-    "a leg with a referent carries no null case");
-});
-
-test("R13 R15 earnedBasis for a cell leg: names the leg's row; its standing is about THIS extent, its connection and transcription undetermined and stated, its ref the cell", () => {
-  const w = world(); w.doc(BOOK, ["book"], { chain: LAYER });
-  const r = w.promote("INQ-2026-1101-c", md("INQ-2026-1101-c", [{ target: BOOK,
-    f: { extent_kind: "sheet-cell", extent_sheet: q("Sheet1"), extent_cell: q("B14") } }]));
-  const ROW = r.content[0].content_id;
-  const eb = w.k.earnedBasis({ id: "INQ-2026-1101-c", viewer: "admin" });
-  assert.deepEqual([eb.ok, eb.legs.length, eb.legs[0].content_id], [true, 1, ROW]);
-  const s = eb.earned.content[ROW];
-  assert.deepEqual([s.extent_kind, s.extent.sheet, s.extent.cell], ["sheet-cell", "Sheet1", "B14"]);
-  assert.deepEqual([s.connection.determined, s.connection.grain, s.connection.undetermined_because], [false, "portion", "NO_CONNECTION"]);
-  assert.equal(s.transcription.ceiling, null);
-  assert.match(s.transcription.why, /cannot yet evaluate what a sheet-cell extent covers/);
-  assert.equal(s.ref, "Sheet1!B14");
-});
-
-test("R15 the backfill: a leg promoted before its document was captured gets exactly the hashed document row on the first read, and is found, not re-minted, on the next", () => {
-  const w = world();
-  const LATE = "INFO-2026-1201-late", Q = "INQ-2026-1201-q";
-  uncaptured(w, LATE);
-  const first = w.promote(Q, md(Q, [{ target: LATE }]));
-  assert.deepEqual([first.ok, first.content], [true, undefined], "the leg lands with no referent");
-  const CHAIN = scoped([0, 1]);
-  const [cap] = redoc(w, LATE, [{ path: "snapshots/l.txt", text: "captured after the leg", chain: CHAIN }], ["snapshots/l.txt"]);
-  const eb = w.k.earnedBasis({ id: Q, viewer: "admin" });
-  const leg = legOf(eb, 0);
-  assert.deepEqual([leg.content_id != null, leg.backfilled], [true, true]);
-  assert.equal(leg.content_id, contentIdFor(cap, { kind: "document" }, CHAIN), "the id the hash answers");
-  assert.deepEqual([eb.earned.content[leg.content_id]?.extent_kind, eb.earned.content[leg.content_id]?.bundle_id], ["document", LATE]);
-  const again = legOf(w.k.earnedBasis({ id: Q, viewer: "admin" }), 0);
-  assert.deepEqual([again.content_id, !!again.backfilled], [leg.content_id, false]);
-  assert.equal(w.content.contentRow(leg.content_id).bundle_id, LATE);
-});
-
-test("R15 the backfill's bound bites at LEG_BACKFILL_MAX over 51 legs, says so, names the rest NOT_YET_RESOLVED needing no cursor, and the next read continues onto one row", () => {
-  const w = world();
-  const MANY = "INFO-2026-1301-many", Q = "INQ-2026-1301-q", OVER = LEG_BACKFILL_MAX + 1;
-  uncaptured(w, MANY);
-  assert.equal(w.promote(Q, md(Q, Array.from({ length: OVER }, () => ({ target: MANY })))).ok, true);
-  redoc(w, MANY, [{ path: "snapshots/m.txt", text: "captured after fifty-one legs", chain: scoped([0]) }], ["snapshots/m.txt"]);
-  const first = w.k.earnedBasis({ id: Q, viewer: "admin" });
-  assert.deepEqual([first.legs.length, first.legs.filter((l) => l.content_id).length], [OVER, LEG_BACKFILL_MAX]);
-  assert.equal(first.backfill_truncated, true);
-  const left = first.legs.find((l) => !l.content_id);
-  assert.equal(left.null_case, "NOT_YET_RESOLVED");
-  assert.match(left.why_no_content, /needs no cursor/);
-  const second = w.k.earnedBasis({ id: Q, viewer: "admin" });
-  assert.deepEqual([second.legs.filter((l) => l.content_id).length, second.backfill_truncated ?? false], [OVER, false]);
-  assert.equal(new Set(second.legs.map((l) => l.content_id)).size, 1, "51 legs onto one referent");
-});
-
-test("R15 the two legitimate nulls are stated as which, each with its own sentence, never collapsed", () => {
-  const w = world();
-  const TARGET = "INQ-2026-1401-t", NOBYTES = "INFO-2026-1401-nobytes", Q = "INQ-2026-1402-q";
-  w.inquiry(TARGET);
-  uncaptured(w, NOBYTES);
-  assert.equal(w.promote(Q, md(Q, [{ target: TARGET }, { target: NOBYTES }])).ok, true);
-  const eb = w.k.earnedBasis({ id: Q, viewer: "admin" });
-  const inq = legOf(eb, 0), none = legOf(eb, 1);
-  assert.deepEqual([inq.content_id ?? null, none.content_id ?? null], [null, null]);
-  assert.equal(inq.null_case, "INQUIRY_TARGET");
-  assert.match(inq.why_no_content, /an inquiry rather than a/); assert.match(inq.why_no_content, /DEC-21/);
-  assert.equal(none.null_case, "NO_BYTES_HELD");
-  assert.match(none.why_no_content, /holds no capture of/);
-  assert.match(none.why_no_content, /never evidence about what the document says/);
-});
-
-test("R13 a whole-document attestation of a chainless capture does not raise a member's typing through a leg; a second member's attestation of the typing does", () => {
-  const w = world(); w.member("ruth"); w.member("sam");
-  const DOC_N = "INFO-2026-1501-nochain", QN = "INQ-2026-1501-qn";
-  const [capN] = w.doc(DOC_N, ["no chain was ever recorded"], { chain: null });
-  const at = w.content.attestText({ captureSha: capN, member: "sam", at: "2026-09-27T00:00:00Z",
-                                    extent: { kind: "document" }, viewer: V("sam"), note: "Checked against the original." });
-  assert.deepEqual([at.ok, at.chain_at_attestation], [true, null], JSON.stringify(at).slice(0, 300));
-  const tx = w.content.transcribe({ bundleId: DOC_N, extent: { kind: "pdf-page", page: 0 }, text: "Lot 7, Block 3.",
-                                    transcriber: "ruth", viewer: V("ruth"), at: "2026-09-27T00:00:00Z" });
-  assert.equal(tx.ok, true, JSON.stringify(tx).slice(0, 300));
-  assert.equal(w.promote(QN, md(QN, [{ target: DOC_N, f: { content_id: q(tx.content_id) } }])).ok, true);
-  const ceil = (id) => { const s = w.k.earnedBasis({ id, viewer: "admin" }).earned.content?.[tx.content_id];
-    return s ? [s.transcription.ceiling, s.transcription.determinant, s.transcription.by] : null; };
-  assert.deepEqual(ceil(QN), [null, "derivation", []], "the capture attestation checked other text");
-  const sa = w.content.transcriptionAttest({ contentId: tx.content_id, attestor: "sam", viewer: V("sam"), at: "2026-09-27T01:00:00Z",
-                                            note: "The typing matches the page." });
-  assert.equal(sa.ok, true, JSON.stringify(sa).slice(0, 300));
-  assert.deepEqual(ceil(QN), [EARNED_CAPTURE_CEILING, "attestation", ["sam"]], "the leg earns what the typing's attestation supports");
-});

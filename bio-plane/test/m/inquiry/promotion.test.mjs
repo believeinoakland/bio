@@ -122,8 +122,18 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
     { memberUserAgent: "Mozilla/5.0" }).ok, true);
   assert.equal(w.promote("INQ-2026-0001-q", w.text("INQ-2026-0001-q").replace("---\n\n## Question",
     `contradiction:\n  candidate: ${"c".repeat(64)}\n---\n\n## Question`)).ok, true);
-  assert.deepEqual(INQUIRY_TABLES, ["inquiry_basis", "inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
-                                    "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings"]);
+  assert.deepEqual(INQUIRY_TABLES, ["inquiry_exclusions", "inquiry_migration_replays", "inquiry_member_agents",
+                                    "inquiry_contradiction_links", "inquiry_bundle_facts", "inquiry_findings",
+                                    "inquiry_dated_waits"]);
+  /* T33 (plan Rules (6)): each declared explicitly, with the default form's classes, the sight of the bundle it names,
+     and the dated waits told to their setter alone */
+  const declared = w.record.declaredTables().filter((d) => d.module === "inquiry");
+  assert.deepEqual(declared.map((d) => d.name), INQUIRY_TABLES);
+  for (const d of declared)
+    assert.deepEqual({ purge: d.purge, expunge: d.expunge, export: d.export, sight: d.sight, derive: d.derive,
+                       version_chain: d.version_chain }, { purge: "clear", expunge: "none", export: "admin-only",
+      sight: d.name === "inquiry_dated_waits" ? "owner" : "bundle", derive: "stored", version_chain: false }, d.name);
+  assert.deepEqual([...declared.find((d) => d.name === "inquiry_findings").keys], ["bundle_id", "project_id"]);
   for (const t of INQUIRY_TABLES) {
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "bundle_id"), t);
     assert.ok(inquiryOwns(t) && inquiryOwns({ name: t }));
@@ -133,11 +143,12 @@ test("R36 the module's tables carry bundle_id and are declared to record-core's 
     "INQ-2026-0001-q", "PROJ-2026-0001-p", "none", "2026-09-28T01:00:00Z");
   const r = w.record.purge({ bundleId: "INQ-2026-0001-q" });
   assert.equal(w.count("inquiry_findings"), 0, "R53's finding is purged with its question");
-  assert.equal(w.count("inquiry_basis"), 0);
+  assert.equal(w.count("inquiry_basis"), 0, "leg-earning's table (R40, its R12) clears with the inquiry too");
+  assert.equal(w.record.declaredTables().find((d) => d.name === "inquiry_basis").module, "leg-earning",
+    "inquiry_basis is declared by leg-earning, not here (K1505 (2))");
   assert.equal(w.count("inquiry_member_agents"), 0);
   assert.equal(w.count("inquiry_contradiction_links"), 0, "R48's projection is purged with its inquiry");
   assert.equal(w.count("inquiry_bundle_facts"), 0, "the leg count and superseded-by index are purged with it (N136)");
-  assert.ok(JSON.stringify(r).includes("inquiry_basis"), JSON.stringify(r).slice(0, 300));
   /* the list is every table this module's migration creates, and only those: none is left undeclared to purge */
   const bare = storage();
   new Inquiry({ storage: bare }).migrate();

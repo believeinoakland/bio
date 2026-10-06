@@ -134,9 +134,11 @@ try {
        it in only one of its two sites, would leave this at 6 or 7 and the
        authority would then be silently unenforced for that member — which is the
        exact hole DS-2 built this suite to close, in the direction a per-member
-       walk cannot see. Move it WITH the fleet, in the same turn. */
-    t("ARM 7b: and the live tree declares the plane and all THREE members (8 sites)",
-      versionSites().length, 8);
+       walk cannot see. Move it WITH the fleet, in the same turn.
+       MOVED 2026-10-05 by BUNDLER #7 (T33-18a, K1531): 8 -> 10, the fleet's fourth
+       member (`sheet-worker`, T33-18), by the same rule. */
+    t("ARM 7b: and the live tree declares the plane and all FOUR members (10 sites)",
+      versionSites().length, 10);
   }
 } finally {
   for (const r of roots) rmSync(r, { recursive: true, force: true });

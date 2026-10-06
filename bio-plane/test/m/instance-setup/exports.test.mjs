@@ -26,7 +26,11 @@ test("the slug grammar: 3 to 40 of a-z, 0-9 and '-', beginning and ending with a
 });
 
 test("the fleet's member binding names: one pair per member, each name a binding the plane reads (R17)", () => {
-  assert.deepEqual(FLEET_BINDINGS, [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"]]);
+  assert.deepEqual(FLEET_BINDINGS, [["agent-worker", "AGENT_WORKER"], ["pdf-worker", "PDF_WORKER"], ["ocr-worker", "OCR_WORKER"],
+    ["sheet-worker", "SHEET_WORKER"], ["agent-runner", "AGENT_RUNNER"]]);
+  /* one pair per member and one member per binding */
+  assert.equal(new Set(FLEET_BINDINGS.map(([m]) => m)).size, FLEET_BINDINGS.length);
+  assert.equal(new Set(FLEET_BINDINGS.map(([, b]) => b)).size, FLEET_BINDINGS.length);
 });
 
 const answering = (body, status = 200) => ({ fetch: async () => new Response(JSON.stringify(body), { status }) });
@@ -62,14 +66,15 @@ test("R17 members=1: a member that does not answer within 4 seconds reads SILENT
   assert.ok(took >= 3900 && took < 6000, `took ${took} ms`);
 });
 
-test("N348 this module holds no Durable Object door or class of its own: its fourteen routes are the map control-plane joins to its frame (control-plane R35)", async () => {
+test("N348 this module holds no Durable Object door or class of its own: its routes are the map control-plane joins to its frame (control-plane R35)", async () => {
   const S = await import("../../../src/setup.mjs");
   assert.equal("instanceSetupRoute" in S, false);
   assert.equal("instanceSetupStore" in S, false);
   assert.equal(typeof S.instanceSetupOps, "function");
   const ops = S.instanceSetupOps(null, new URL("http://do/"), null);
-  assert.deepEqual(Object.keys(ops).sort(), ["cpuprobeend", "cpuprobestart", "cpuprobestate", "groupdomainset",
+  assert.deepEqual(Object.keys(ops).sort(), ["assistantset", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate",
+    "disclosureof", "disclosureshown", "groupdomainset",
     "groupidentity", "groupidentitypublic", "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed",
-    "profiles", "profilesset", "recordcpuprobestep", "runtimeobservations"]);
+    "officesseed", "profiles", "profilesset", "recordcpuprobestep", "runtimeobservations", "seatsseed"]);
   for (const f of Object.values(ops)) assert.equal(typeof f, "function");
 });

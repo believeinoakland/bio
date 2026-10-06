@@ -6,7 +6,7 @@
  * case-authoring's), C-68.5 (the published-store complaint; the rest of C-68 stays in the catalogue's
  * `INSTALLATION_CHECKS`, and `control-plane` reads this row from here, its layer-11 job) and the whole of C-98 (the
  * public door). Each family keeps the name it had there. C-98.10 (`PUBLIC_READ_NOT_REGISTERED`, R18; K1149) is a row minted
- * here in T23, stamped by 1.54.0. `publication`'s job deletes its copies once this one merges,
+ * here in T23, stamped by 1.54.0; C-98.11 (`WITHHELD_BY_COURT_ORDER`, R28) in T33, its stamp T34's (K1504). `publication`'s job deletes its copies once this one merges,
  * so no row id is held in two tables after it. */
 
 /* C-44.2 — D-309's read (R3). Its family, C-44, is the case identity: the act's half (C-44.1) is case-authoring's. */
@@ -149,6 +149,15 @@ export const PUBLISHED_READ_CHECKS = {
     check: 'C-98.10',
     where: 'src/public-read/index.mjs publicRead > is-public-read-not-registered',
     translation: 'This copy of the record offers no public read by that name. Nothing was changed.',
+  },
+  /* R28 (K1480, K1493, K1522; J1 (6)): bytes a court order this group complied with withholds from serving, at
+     `publishedbytes`. A new row minted in T33; its stamp by a release is T34's (K1504). The bytes are held, never
+     deleted, and the fingerprint still verifies, so the sentence says both. */
+  WITHHELD_BY_COURT_ORDER: {
+    check: 'C-98.11',
+    where: 'src/publication/worker.mjs withheldByCourtOrder > is-withheld-by-court-order',
+    translation: 'A court order this group complied with keeps these contents from being handed over. The order and the '
+      + 'record entry that names it are public, and nothing was deleted. Nothing was changed.',
   },
 };
 

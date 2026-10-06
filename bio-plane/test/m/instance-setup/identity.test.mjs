@@ -267,9 +267,12 @@ test("R9 at start the consumer is registered before the scheduler's own start re
   const scheduler = new Scheduler({ storage: store, env, owners: idle });
   const b = await boot({ env, prov: { ...providers(), scheduler } });
   assert.equal(b.started.consumer.ok, true);
-  assert.equal(alarm, null, "no probe armed and no consumer wanting a wake");
-  assert.equal(kv.size, 0, "the probe's state is not written at boot");
+  /* K1668: a fresh instance's start may set an alarm (scheduler R21: the daily consumers want their first pass at the
+     local day's start, K1522), so what is pinned is the probe itself: none armed, and its state not written. */
+  assert.deepEqual(await scheduler.probeLog(), {}, "no probe armed at boot");
+  assert.equal(kv.has("sched_probe"), false, "the probe's state is not written at boot");
   /* while the producers' door, arm, does start it: the seam is live, only the boot leaves it alone */
   await scheduler.arm();
   assert.notEqual(alarm, null);
+  assert.ok(Object.keys(await scheduler.probeLog()).includes("probe-a"), "arm starts the probe the boot left alone");
 });

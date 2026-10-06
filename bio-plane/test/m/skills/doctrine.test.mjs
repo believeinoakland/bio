@@ -43,9 +43,9 @@ function keyedNumbers() {
     for (const row of Object.values(rows)) if (row && typeof row.check === "string") out.add(row.check);
   return out;
 }
-/* The two numbers R15 lets the doctrine type: C-2.8, which has no keyed row, and C-32.6, whose holder
-   (case-authoring) is later in the order (P4; K787 (6), K811). */
-const TYPED = ["C-2.8", "C-32.6"];
+/* The one number R15 lets the doctrine type: C-32.6, whose holder (case-authoring) is later in the order (P4; K787
+   (6), K811). C-2.8 is read from inquiry-grammar's keyed rows since its T33 job (K1609). */
+const TYPED = ["C-32.6"];
 
 /* Every string anywhere inside a value. */
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
@@ -76,7 +76,7 @@ test("R15 every clause judges within JUDGED_ROWS and defers within DEFERRED_ROWS
     }
   }
   assert.deepEqual([...new Set(CLAUSES.flatMap((c) => c.defers))].sort(), [...DEFERRED_ROWS].sort());
-  /* Exactly those two numbers are typed: the doctrine's source holds no other C-number literal, and each typed one
+  /* Exactly that number is typed: the doctrine's source holds no other C-number literal, and each typed one
      is cited. */
   const literals = SRC.flatMap((f) => stringLiterals(read(f))).filter((l) => /^C-\d+\.\d+$/.test(l));
   assert.deepEqual([...new Set(literals)].sort(), [...TYPED].sort(), "the C-numbers typed in the source");
@@ -306,9 +306,13 @@ test("R24 it holds no gate: across every export and every input, the only refusa
     }
   assert.deepEqual([...refusals], ["AI_RUN_SKILL_VERSION_UNNAMED"]);
   const rendered = pack.renderPack(published());
-  const clauses = Object.values(rendered.disclosed).flatMap((l) => (l.body && Array.isArray(l.body.clauses) ? l.body.clauses : []));
+  const all = Object.values(rendered.disclosed).flatMap((l) => (l.body && Array.isArray(l.body.clauses) ? l.body.clauses : []));
+  const clauses = all.filter((c) => c && typeof c === "object" && "decides" in c);
   assert.equal(clauses.length, CLAUSES.length, "every clause is rendered");
   for (const c of clauses) assert.deepEqual(controlFlowAuthority(c.decides), [], c.id);
+  /* The quoted clauses of the other layers (R28–R35) carry none either. */
+  for (const c of all) for (const s of typeof c === "string" ? [c] : [c.text, ...(c.sentences ?? [])].filter(Boolean))
+    assert.deepEqual(controlFlowAuthority(s), [], s);
   assert.deepEqual(controlFlowAuthority(RECOMMEND_PROMPT), [], "the recommender prompt the pack renders once measured (N345)");
   if (rendered.disclosed.contradiction.body.recommend_prompt !== undefined)
     assert.deepEqual(controlFlowAuthority(rendered.disclosed.contradiction.body.recommend_prompt), []);

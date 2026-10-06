@@ -15,14 +15,15 @@ const OWNED = { "gathering-sweep": ["linkSweep.sweepDue", "linkSweep.sweepWake",
                 "working-on-seal": ["networkNotices.sealDue", "networkNotices.sealWake", "networkNotices.sealTick"],
                 "working-on-attest": ["networkNotices.attestDue", "networkNotices.attestWake", "networkNotices.attestTick"] };
 
-test("R5: gathering-sweep stands after monitor-cadence and before ai-run-reap; working-on-seal, then working-on-attest, close the registry", () => {
+test("R5: gathering-sweep stands after monitor-cadence and before ai-run-reap; working-on-seal, then working-on-attest, close T23's consumers, before R21's", () => {
   const { s } = world();
   const names = s.consumers();
   const at = (n) => names.indexOf(n);
   for (const n of NEW) assert.ok(at(n) >= 0, `${n} is registered`);
   assert.equal(at("gathering-sweep"), at("monitor-cadence") + 1, "directly after monitor-cadence");
   assert.equal(names[at("gathering-sweep") + 1], "ai-run-reap", "directly before ai-run-reap");
-  assert.deepEqual(names.slice(at("deadline-recheck")), ["deadline-recheck", "working-on-seal", "working-on-attest"]);
+  assert.deepEqual(names.slice(at("deadline-recheck"), at("deadline-recheck") + 3), ["deadline-recheck", "working-on-seal", "working-on-attest"]);
+  assert.equal(names[at("working-on-attest") + 1], "follow", "then R21's six");
   assert.deepEqual(NEW.map((n) => SCHEDULER_KEYS[n]), ["gatheringsweep", "workingonseal", "workingonattest"]);
   for (const n of NEW) assert.ok(SCHEDULER_ORDER.includes(n));
 });

@@ -2,7 +2,8 @@
  * at this module's extraction (layers.md ruling 3, "each module owns its tables"): `refs`, `connections`,
  * `connection_pair_choices`, `connection_dirty`, `themes`, `theme_placements`, with the comments that record why each
  * is shaped as it is; and the tables this job added for R31, R32, R43 and R49 (`theme_placement_acts`,
- * `asserted_connections`, `asserted_connection_judgements`, `file_membership_pending`). `migrateConnections` brings a
+ * `asserted_connections`, `asserted_connection_judgements`, `file_membership_pending`); and T33's
+ * `connection_derivations` (R64). `migrateConnections` brings a
  * store created under an earlier shape to this one (the pair columns FW-17, REC-120 and D-454 added, moved here from
  * the store's additive list). */
 
@@ -176,6 +177,24 @@ CREATE TABLE IF NOT EXISTS connection_dirty (
 );
 CREATE INDEX IF NOT EXISTS connection_dirty_stamped ON connection_dirty(stamped_at);
 
+-- R64 (T33-29): THE LAST DERIVATION OF EACH ENTITY, as R2 bounded it. One row per
+-- entity, replaced by every derivation in its own transaction, so a read of the
+-- connections through an entity can say whether the set it holds was cut at R2's
+-- bound (truncated) and which bound: the documents (k(k-1)/2 within the pair
+-- limit) or the resolution rows. Without it a capped set would read as complete.
+-- No bundle column: like the dirty set it is derived from the corpus and cleared
+-- by the whole-store purge only; a per-bundle purge leaves it, and the next
+-- derivation of the entity rewrites it.
+CREATE TABLE IF NOT EXISTS connection_derivations (
+  entity_id       TEXT PRIMARY KEY,
+  documents       INTEGER NOT NULL,  -- the captures the derivation paired
+  document_limit  INTEGER NOT NULL,  -- R2's document bound at the limit asked
+  resolution_rows INTEGER NOT NULL,  -- the resolution rows read (at most 5,000, plus the one that shows a cut)
+  pair_limit      INTEGER NOT NULL,  -- R2's pair bound, the limit asked
+  truncated       INTEGER NOT NULL,  -- 1 when either bound cut the set
+  at              TEXT NOT NULL
+);
+
 -- D-162 / IC-241 -- THE THEME. BIO_Content_Framework_v0_10.md section 8.4, Bob's
 -- ruling of 2026-09-21: a connection through an IDEA, fenced four ways. Declared
 -- by a MEMBER (the declarer is stamped and shown on every reading), it carries
@@ -317,23 +336,32 @@ CREATE INDEX IF NOT EXISTS file_membership_pending_item ON file_membership_pendi
 CREATE INDEX IF NOT EXISTS file_membership_pending_file ON file_membership_pending(file_norm);
 `;
 
-/** R36 (K23): what purge clears. Keyed to a bundle by the named columns, or whole-store only. */
+/** R36 (K23), R67 (T33-29; plan T33 Rules (6)): every table, declared explicitly through `record-core.declareTable`
+ *  (its R21), with R36's purge keying: keyed to a bundle by the named columns (or its `bundle_id`), or whole-store only
+ *  (`keys: []`). Every table is `derive: "stored"`. `connections`, `connection_pair_choices`, `refs` and
+ *  `theme_placements` take the sight of the bundles they name (R33); `themes`, `connection_dirty` and
+ *  `connection_derivations` are group-wide; every other class is what `declarePurge`'s default form gives: purge
+ *  `clear`, expunge `none`, export `admin-only`, no version chain, and the sight of the bundle a keyed table names. */
+const CLASSES = Object.freeze({ purge: "clear", expunge: "none", export: "admin-only", derive: "stored",
+                                version_chain: false });
+const entry = (name, sight, keys) => Object.freeze({ name, ...(keys ? { keys: Object.freeze(keys) } : {}), ...CLASSES, sight });
 export const CONNECTIONS_TABLES = Object.freeze([
-  "refs",
-  { name: "connections", keys: ["a_bundle_id", "b_bundle_id"] },
-  { name: "connection_pair_choices", keys: ["a_bundle_id", "b_bundle_id"] },
-  { name: "connection_dirty", keys: [] },
-  { name: "themes", keys: [] },
-  "theme_placements",
-  "theme_placement_acts",
-  { name: "asserted_connections", keys: ["a_bundle_id", "b_bundle_id"] },
-  { name: "asserted_connection_judgements", keys: ["a_bundle_id", "b_bundle_id"] },
-  { name: "file_membership_pending", keys: ["agenda_bundle"] },
+  entry("refs", "bundle"),
+  entry("connections", "bundle", ["a_bundle_id", "b_bundle_id"]),
+  entry("connection_pair_choices", "bundle", ["a_bundle_id", "b_bundle_id"]),
+  entry("connection_dirty", "group", []),
+  entry("connection_derivations", "group", []),
+  entry("themes", "group", []),
+  entry("theme_placements", "bundle"),
+  entry("theme_placement_acts", "bundle"),
+  entry("asserted_connections", "bundle", ["a_bundle_id", "b_bundle_id"]),
+  entry("asserted_connection_judgements", "bundle", ["a_bundle_id", "b_bundle_id"]),
+  entry("file_membership_pending", "bundle", ["agenda_bundle"]),
 ]);
 
 /** The names of the tables above, read by `connectionsOwns` (`./index.mjs`); the legacy store's purge list and census
  *  read them until T19. */
-export const CONNECTIONS_TABLE_NAMES = Object.freeze(CONNECTIONS_TABLES.map((t) => (typeof t === "string" ? t : t.name)));
+export const CONNECTIONS_TABLE_NAMES = Object.freeze(CONNECTIONS_TABLES.map((t) => t.name));
 
 /* The columns earlier shapes lacked, added in place (nullable, never back-filled: each one's NULL is a true state of
    the row, as the store's additive list said of them). FW-17 / D-161: the determining pair; REC-120: how the pair was

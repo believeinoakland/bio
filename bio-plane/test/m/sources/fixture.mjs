@@ -3,12 +3,15 @@
    (node:sqlite) standing in for a Durable Object's storage at the plane's shape (`sql.exec` answers a cursor, as
    workerd's does). Capture's own providers, which `sources` never reaches, are stand-ins that behave as their Provides
    state: provenance's `recordReceipt` (a receipt recorded) and an evidence bucket behind record-core's
-   `evidenceStore`. Every test drives `sources` at its interface. */
+   `evidenceStore`. `sources` itself reads the real provenance (`homeOf`, `captureGrade`: R16, R17) over register rows
+   and receipts written as a promotion and an acquisition leave them (provenance R1, R13, R48; record-core's `bundles`
+   and `files`). Every test drives `sources` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -66,7 +69,9 @@ export const T0 = Date.parse("2026-09-30T10:00:00.000Z");
 export const SECRET = "correct horse battery staple one";      // 32 characters
 export const OTHER_SECRET = "a different knocker secret, long enough";
 
-export function world() {
+/** `gradeAs`: what provenance's `captureGrade` answers to `sources` for every capture, standing in for a route the
+ *  record cannot hold here (R17 over every letter); by default the real provenance answers. */
+export function world({ gradeAs = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -85,10 +90,13 @@ export function world() {
   const pulledKnocksOf = cap.pulledKnocksOf.bind(cap), knockAttempt = cap.knockAttempt.bind(cap);
   cap.pulledKnocksOf = (x) => { spy.reads++; return pulledKnocksOf(x); };
   cap.knockAttempt = (a) => { spy.attempts.push(a); return knockAttempt(a); };
-  const s = sourcesOf(host, { record, membership, capture: cap, now: () => clock.now });
-  let n = 0;
+  const prov = provenanceOf(host, { record, membership, now: () => new Date(clock.now).toISOString() });
+  prov.migrate();
+  const s = sourcesOf(host, { record, membership, capture: cap, now: () => clock.now,
+                              provenance: gradeAs ? { homeOf: (x) => prov.homeOf(x), captureGrade: () => gradeAs } : prov });
+  let n = 0, b = 0;
   const w = {
-    st, host, record, membership, cap, spy, receipts, s, clock,
+    st, host, record, membership, cap, spy, receipts, s, clock, prov,
     rows: (q, ...a) => st.rows(q, ...a),
     count: (t) => st.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     tick(ms = 1000) { clock.now += ms; },
@@ -124,6 +132,33 @@ export function world() {
       const answer = s.sourceOf({ captureSha: row.sha256, viewer });
       return { row, sourceId: answer.sourceId, answer, pulled };
     },
+    /** A capture a member made (`acquisition` R16's document: `capture.actor` the member's stamp, or `actor_class`
+     *  `daemon` with no actor), held in an information bundle whose register row is its home (provenance R1, R48) and
+     *  whose `data/provenance.json` carries the document; `via` writes the plane's receipt (`direct`, `archive.org`,
+     *  `doorbell`; provenance R13) or none; `authored` makes the row a member's own observation (provenance R27).
+     *  Answers `{sha, bundleId}`. */
+    captured({ actor = "bob", actorClass = "member", text = `a result page ${++b}`, via = "direct", authored = false } = {}) {
+      const bundleId = `INFO-2026-${String(1000 + b).padStart(4, "0")}`;
+      const path = `snapshots/result-${b}.html`;
+      const digest = sha(text);
+      const at = new Date(clock.now).toISOString();
+      const doc = { file: path, locator: `https://people-search.example/r/${b}`, retrieved: "2026-09-30T09:00:00Z",
+                    capture: { method: "acquire", grade: "B", actor_class: actorClass, ...(actor ? { actor } : {}),
+                               sha256: digest, encoding: "utf8", bytes: Buffer.byteLength(text) },
+                    origin: { kind: "named_request" } };
+      const json = JSON.stringify({ documents: [doc] });
+      st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, current_state, created, last_updated, bundle_sha)
+                   VALUES (?, 'information', 'test-group', 'collected', ?, ?, ?)`, bundleId, at, at, sha(bundleId));
+      for (const [p, t] of [[path, text], ["data/provenance.json", json]])
+        st.sql.exec(`INSERT INTO files (bundle_id, path, content, bytes, sha256) VALUES (?, ?, ?, ?, ?)`,
+                    bundleId, p, t, Buffer.byteLength(t), sha(t));
+      st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored, author, observed_at)
+                   VALUES (?, ?, ?, 'utf8', ?, ?, ?, ?, ?)`, digest, bundleId, path, Buffer.byteLength(text), at,
+                  authored ? 1 : 0, authored ? actor : null, authored ? at : null);
+      if (via) prov.recordReceipt({ address: doc.locator, addressNorm: doc.locator, captureSha: digest,
+                                    retrieved: "2026-09-30T09:00:00Z", via });
+      return { sha: digest, bundleId };
+    },
     /** A name disclosed with its value to `sight`, by bob. */
     disclose(source, fields = {}) {
       w.tick();
@@ -135,8 +170,8 @@ export function world() {
 }
 
 /** alice an administrator, bob and carol members, dave a revoked member. */
-export function seeded() {
-  const w = world();
+export function seeded(opts) {
+  const w = world(opts);
   w.member("alice", { role: "admin" });
   w.member("bob");
   w.member("carol");

@@ -106,7 +106,49 @@ test("R13: a bundle that is not an inquiry holds no row; one promoted out of bei
   assert.equal(row(w, INQ), null, "only an inquiry has a pair, so capture: finds it no more");
   assert.equal(w.s.writeProjection(INQ, false), null);
   assert.deepEqual(w.s.writeProjection(INQ, true), { capture: { grade: "B", state: "graded" }, connection: { grade: "C", state: "graded" } });
-  assert.deepEqual(w.s.cachedOf(INQ), { capture_grade: "B", capture_state: "graded", connection_grade: "C", connection_state: "graded" });
+  assert.deepEqual(w.s.cachedOf(INQ), { stale: false, row: { capture_grade: "B", capture_state: "graded", connection_grade: "C",
+                                                              connection_state: "graded" } });
+});
+
+test("R39: the tables are declared explicitly: the cache derived-rebuildable by bundle with R13 as its rebuild, the bar exempt and group-wide", () => {
+  const w = cached();
+  const mine = w.record.declaredTables().filter((d) => d.module === "strength");
+  assert.deepEqual(mine.map((d) => [d.name, d.purge, d.expunge, d.export, d.sight, d.derive, d.version_chain]), [
+    [STRENGTH_CACHE_TABLE, "clear", "none", "admin-only", "bundle", "derived-rebuildable", false],
+    ["group_strength_bar", "exempt", "none", "admin-only", "group", "stored", false]]);
+  assert.deepEqual(mine[0].key, ["bundle_id"]);
+  /* The rebuild is R13's computation: the held rows equal it right after the promotions that wrote them. */
+  w.promote(SUB);
+  w.promote(INQ);
+  assert.deepEqual(w.record.rebuildAndCompare("strength", STRENGTH_CACHE_TABLE), { same: true });
+  /* Negative control: the record moves beneath a held row, and the rebuild names the row that differs. */
+  w.ceilings.set(DOC, { grade: "C", why: "re-read" });
+  const diff = w.record.rebuildAndCompare("strength", STRENGTH_CACHE_TABLE);
+  assert.equal(diff.same, false);
+  assert.deepEqual(diff.first.key, { bundle_id: INQ });
+  assert.equal(diff.first.held.capture_grade, "B");
+  assert.equal(diff.first.rebuilt.capture_grade, "C");
+});
+
+test("R39, R13: a promotion marks stale the cached rows of the inquiries resting on what it promoted, to the depth bound; a stale row is never read as current until its own promotion rebuilds it", () => {
+  const w = cached();
+  w.inquiry("INQ-2026-0003-a", [{ target: INQ }]);
+  for (const id of [SUB, INQ, "INQ-2026-0003-a"]) w.promote(id);
+  for (const id of [SUB, INQ, "INQ-2026-0003-a"]) assert.equal(w.s.cachedOf(id).stale, false, id);
+  /* A leg beneath is raised and SUB re-promoted: INQ, and INQ-0003 above it, go stale; SUB is fresh. */
+  w.basis.get(SUB)[0].grade = "A";
+  w.promote(SUB);
+  assert.deepEqual(w.s.cachedOf(SUB), { stale: false, row: row(w, SUB) });
+  for (const id of [INQ, "INQ-2026-0003-a"]) assert.deepEqual(w.s.cachedOf(id), { stale: true }, id);
+  assert.equal(row(w, INQ).connection_grade, "C", "the held row itself stays as written (rec108): only its reading fails closed");
+  /* A refused promotion marks nothing. */
+  w.promote(INQ);
+  w.promote(SUB, "inquiry", { fail: true });
+  assert.equal(w.s.cachedOf(INQ).stale, false);
+  /* Its own promotion rebuilds it and clears the mark. */
+  assert.deepEqual(w.s.cachedOf(INQ), { stale: false, row: { capture_grade: "B", capture_state: "graded", connection_grade: "A",
+                                                              connection_state: "graded" } });
+  assert.deepEqual(w.s.cachedOf("INQ-2026-0009-a"), { stale: true }, "never projected: fails closed");
 });
 
 test("R23: the cache is declared to purge by bundle, and the bar exempt: a bundle's purge and a whole-store purge remove the cache, never the bar", () => {

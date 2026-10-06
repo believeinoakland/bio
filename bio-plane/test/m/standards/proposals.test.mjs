@@ -43,7 +43,7 @@ test("R9 a proposal is stored apart from standards, labelled by proposalLabel(pr
   assert.deepEqual(w.snapshot(), snap, "a refused proposal writes nothing");
 });
 
-test("R10 standardAdopt is R1 by a member naming the proposal: the standard records the proposal it came from, the proposal its adoption, and a proposal is adopted at most once", () => {
+test("R9 R10 standardAdopt is R1 by a member naming the proposal: the standard records the proposal it came from, the proposal its adoption, and a proposal is adopted at most once", () => {
   const w = seeded();
   const text = w.passage().contentId;
   const p = w.s.standardPropose({ cite: BYLAW, kind: "ordinance", issuer: "Port Ellery Selectboard", text: [text],
@@ -78,8 +78,14 @@ test("R10 standardAdopt is R1 by a member naming the proposal: the standard reco
   assert.equal(b.ok, true);
   assert.equal(b.cite, "MCBC 2024-2");
   assert.deepEqual(b.adopted.from_proposal, []);
-  /* a proposal naming no text: the adopting member must name it (R2) */
-  const r = w.s.standardPropose({ cite: BYLAW, why: "Maybe.", proposer: MACHINE }).proposal;
+  /* a proposal naming no text (R9): stored, and saying so; the adopting member must name it (R2) */
+  const bare = w.s.standardPropose({ cite: BYLAW, why: "Maybe.", proposer: MACHINE });
+  assert.deepEqual([bare.ok, bare.text_held], [true, false]);
+  assert.match(bare.says, /stored with no captured text, and cannot be adopted until a member names/);
+  assert.equal(w.s.standardPropose({ cite: BYLAW, why: "With text.", proposer: MACHINE, text: [text] }).text_held, undefined);
+  const r = bare.proposal;
   assert.equal(w.s.standardAdopt({ proposal: r.id, author: V("bob"), kind: "ordinance", issuer: "Selectboard", reason: REASON }).reason,
                "STANDARD_NO_TEXT");
+  /* whatever the proposer stated: a text the adopting member names is the one checked */
+  assert.equal(w.s.standardAdopt({ proposal: r.id, author: V("bob"), kind: "ordinance", issuer: "Selectboard", reason: REASON, text: [text] }).ok, true);
 });

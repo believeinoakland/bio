@@ -1,41 +1,14 @@
-/* FL-6 — THE CLAUDE-ACCOUNT CASCADE AT RUNTIME, driven pure AND through the
- * endpoint. `src/cascade.mjs` is the one expression of Bob's order (member →
- * project → instance) and of the per-level judgement; this suite walks it as a
- * plain module first, then hands material to `POST /run` under miniflare and
- * asserts what travels on the wire: the resolved level named, every level's
- * own absence stated, no secret anywhere, and the record's payer and the
- * runtime's resolution refusing to disagree.
+/* R32, R33, R6, R10, R29, R36, R57 — WHOSE CLAUDE ACCOUNT PAYS, driven pure AND through the endpoint (K1502: the
+ * member's own, one level). `src/cascade.mjs` is the one judgement of the member's reference; this suite walks it as a
+ * plain module first, then hands references to `POST /run` under miniflare and asserts what travels on the wire: the
+ * member's account named without its secret, an absent, bad or revoked one refused by name before any plane call, and
+ * the run's recorded payer and the reference's member refusing to differ.
  *
- * NEGATIVE CONTROL: DECLARED HERE, RUN BY `test/cascade.control.mjs` —
- * deliberately NOT a `.test.mjs`, because it edits real sources while it runs
- * (fleetbundles' precedent, one tree over). ALL FOUR ARMS RUN 2026-09-12 IN
- * WORKTREE bio-worktrees/FLEET, each armed ALONE, restores verified by content
- * AND sha256, tallies below MEASURED rather than predicted. **BASELINE
- * 29 pass / 0 fail, exit 0** before each arm.
- *   (1) THE ARM FL-6's ROW NAMES — remove the named-UNAVAILABLE refusal (the
- *       `!cascade.available` guard in `src/index.mjs` flipped so exhausted
- *       material drives on) -> **26 pass, 3 FAIL, exit 1**: section 7's three
- *       arms by name — the refusal, the named reason, the per-level statement.
- *       An empty success is indistinguishable from a run that found nothing,
- *       which is the sentence this item exists to make false. The pure-resolver
- *       arms held: the resolver still answered honestly; the ENDPOINT stopped
- *       saying so, and only the endpoint's arms went red.
- *   (2) THE DENYLIST NEUTERED (`levelState` in `src/cascade.mjs` stops asking
- *       the published question) -> **20 pass, 9 FAIL, exit 1** — the largest
- *       arm because publication-is-revocation is load-bearing at every
- *       altitude: section 2's fall-through pair, section 3's named reason,
- *       per-level statement and renderable detail, section 4's derived-token
- *       refusal, and section 7's three endpoint arms all went red together.
- *   (3) THE PAYER-CONSISTENCY CHECK REMOVED (the `RUN_NAMES_A_DIFFERENT_PAYER`
- *       guard deleted) -> **26 pass, 3 FAIL, exit 1**: exactly section 6 — the
- *       409, its name, and the two facts it must carry. Sections 5 and 7 held,
- *       as declared: an agreeing pair and an empty cascade have nothing to
- *       disagree about.
- *   (4) OVER-STRICTNESS — every fixture in this file is legitimate traffic and
- *       the baseline is the arm: **29 pass, 0 fail, exit 0**, with the
- *       judgements-supplied caller (no material at all) still answering 200,
- *       because a caller that offered no accounts is not a caller whose
- *       cascade exhausted.
+ * NEGATIVE CONTROL: `test/cascade.control.mjs` was written against the three-level cascade (K1429) and its arms name
+ * source lines T33-57 removed; it is stale until re-armed against this file (recorded in the job's record). The arms
+ * this suite must fail on, if re-armed: the published-value check in `levelState` removed (section 1's revoked arm,
+ * section 4's published case); the `RUN_NAMES_A_DIFFERENT_PAYER` guard removed (section 5); `accountOf`'s NO_ACCOUNT
+ * refusal removed (section 4).
  */
 import "../../bio-plane/test/sandbox.mjs";
 
@@ -51,7 +24,7 @@ const { Miniflare } = await (async () => {
 })();
 
 import {
-  CASCADE_ORDER, CASCADE_NO_ACCOUNT, LEVEL_UNSET, LEVEL_REVOKED, LEVEL_AVAILABLE,
+  CASCADE_ORDER, CASCADE_NO_ACCOUNT, LEVEL_UNSET, LEVEL_REVOKED, LEVEL_AVAILABLE, ACCOUNT_KINDS,
   resolveClaudeCascade, cascadeToken,
 } from "../src/cascade.mjs";
 import { meaningRowsBranch } from "./plane-meaning.mjs";
@@ -72,77 +45,52 @@ const PUBLISHED_VALUE = readFileSync(
   fileURLToPath(new URL("../../bio-plane/dist/SECRETS.txt", import.meta.url)), "utf8")
   .split("\n").find((l) => l.startsWith("ADMIN_TOKEN=")).split("=")[1].trim();
 
-const MEMBER_TOK = "sk-ant-member-fixture-value-never-echoed";
-const PROJECT_TOK = "sk-ant-project-fixture-value-never-echoed";
-const INSTANCE_TOK = "sk-ant-instance-fixture-value-never-echoed";
-const ALL = {
-  member: { token: MEMBER_TOK, ref: "ruth@believe-in-oakland" },
-  project: { token: PROJECT_TOK, ref: "believe-in-oakland/claude" },
-  instance: { token: INSTANCE_TOK, ref: "instance" },
-};
+const KEY = "sk-ant-member-key-fixture-never-echoed";
+const TOKEN = "sk-ant-oat-member-subscription-fixture-never-echoed";
+const RUTH = "member:ruth", SAM = "member:sam";
+const apikey = (member = RUTH, secret = KEY) => ({ kind: "apikey", secret, member });
+const sub = (member = RUTH, secret = TOKEN) => ({ kind: "subscription", secret, member });
 const states = (st) => st.levels.map((l) => `${l.level}:${l.state}`);
 
-console.log("\n--- 1 · the resolver, pure: Bob's order, one expression ---");
+console.log("\n--- 1 · R32: the cascade is the member's own reference, ONE level, pure ---");
 {
-  t("the order IS member → project → instance, and nothing else may restate it",
-    [...CASCADE_ORDER], ["member", "project", "instance"]);
-
-  const m = await resolveClaudeCascade(ALL);
-  t("all three supplied -> the MEMBER's account pays, and its ref travels",
-    [m.available, m.level, m.ref], [true, "member", "ruth@believe-in-oakland"]);
-  t("and every level's own state is still stated beside the resolution",
-    states(m), ["member:available", "project:available", "instance:available"]);
-
-  const p = await resolveClaudeCascade({ project: ALL.project, instance: ALL.instance });
-  t("no member account -> the PROJECT's pays", [p.available, p.level], [true, "project"]);
-  t("and the member level's absence is STATED as unset, not omitted",
-    states(p)[0], `member:${LEVEL_UNSET}`);
-
-  const i = await resolveClaudeCascade({ instance: ALL.instance });
-  t("member and project absent -> the INSTANCE's pays", [i.available, i.level], [true, "instance"]);
-  t("an empty string is the same case as absent (a blank config line is not an account)",
-    (await resolveClaudeCascade({ member: { token: "" }, instance: ALL.instance })).level, "instance");
+  t("R32: the order is the member level and nothing else (K1502: no project or instance level)",
+    [...CASCADE_ORDER], ["member"]);
+  t("R32: the kinds are agent-model's: apikey and subscription", [...ACCOUNT_KINDS], ["apikey", "subscription"]);
+  const a = await resolveClaudeCascade(apikey());
+  t("R32: an API key of the member's own is available, with its kind and its member",
+    [a.available, a.level, a.kind, a.member, states(a)], [true, "member", "apikey", RUTH, [`member:${LEVEL_AVAILABLE}`]]);
+  const s = await resolveClaudeCascade(sub());
+  t("R32: a subscription token of the member's own is available as a subscription", [s.available, s.kind], [true, "subscription"]);
+  for (const [why, acct] of [["absent", undefined], ["empty secret", apikey(RUTH, "")], ["another kind", { kind: "oauth", secret: KEY, member: RUTH }],
+                             ["the old cascade's shape", { member: { token: KEY } }]]) {
+    const n = await resolveClaudeCascade(acct);
+    t(`R32: ${why} is unset: NO_ACCOUNT at the member level`, [n.available, n.reason, n.level, states(n)],
+      [false, CASCADE_NO_ACCOUNT, "member", [`member:${LEVEL_UNSET}`]]);
+  }
+  const r = await resolveClaudeCascade(apikey(RUTH, PUBLISHED_VALUE));
+  t("R32: a PUBLISHED secret is revoked by publication, a different fact from unset, and nothing falls through",
+    [r.available, r.reason, states(r)], [false, CASCADE_NO_ACCOUNT, [`member:${LEVEL_REVOKED}`]]);
+  t("R32: and the detail is a sentence a surface can render", typeof r.detail === "string" && r.detail.length > 80, true);
+  t("R32: no status carries the secret", [a, s, r].some((x) => JSON.stringify(x).includes(KEY)
+    || JSON.stringify(x).includes(TOKEN) || JSON.stringify(x).includes(PUBLISHED_VALUE)), false);
+  t("R32: no status names a project or instance level", [a, s, r].some((x) => /project|instance/.test(JSON.stringify(x.levels))), false);
 }
 
-console.log("\n--- 2 · publication is revocation, and the cascade FALLS THROUGH a revoked level by name ---");
+console.log("\n--- 2 · R33: the reference, derived from the status, in agent-model's terms ---");
 {
-  const r = await resolveClaudeCascade({ member: { token: PUBLISHED_VALUE, ref: "r" }, project: ALL.project });
-  t("a PUBLISHED member value is not an account: the project pays",
-    [r.available, r.level], [true, "project"]);
-  t("and the member level says WHY — revoked_by_publication, a different fact from unset",
-    states(r), [`member:${LEVEL_REVOKED}`, "project:available", `instance:${LEVEL_UNSET}`]);
-}
-
-console.log("\n--- 3 · nothing resolves: an honest absence, STATED, per level ---");
-{
-  const n = await resolveClaudeCascade({ member: { token: "" }, project: { token: PUBLISHED_VALUE } });
-  t("no level resolves -> available:false with the NAMED reason",
-    [n.available, n.reason], [false, CASCADE_NO_ACCOUNT]);
-  t("WHICH absence is stated at every level — unset and revoked are different facts",
-    states(n), [`member:${LEVEL_UNSET}`, `project:${LEVEL_REVOKED}`, `instance:${LEVEL_UNSET}`]);
-  t("and the detail is a sentence a surface can render, not a code to decode",
-    typeof n.detail === "string" && n.detail.length > 80, true);
-}
-
-console.log("\n--- 4 · no secret in any status; status and token cannot disagree ---");
-{
-  const st = await resolveClaudeCascade(ALL);
-  t("the STATUS carries no secret, so it is safe to log, publish, or record",
-    [MEMBER_TOK, PROJECT_TOK, INSTANCE_TOK].some((v) => JSON.stringify(st).includes(v)), false);
-  const tok = await cascadeToken(ALL);
-  t("the token accessor answers the RESOLVED level's value, for the one spender",
-    [tok.level, tok.token === MEMBER_TOK], ["member", true]);
-  t("and it refuses whenever the status refuses — derived, not a second reading",
-    await cascadeToken({ member: { token: PUBLISHED_VALUE } }), null);
+  t("R33: an API key becomes {kind: apikey, key}", await cascadeToken(apikey()),
+    { level: "member", reference: { kind: "apikey", key: KEY } });
+  t("R33: a subscription token becomes {kind: subscription, token} — used as a subscription, never as an API key (K1553)",
+    await cascadeToken(sub()), { level: "member", reference: { kind: "subscription", token: TOKEN } });
+  t("R33: null exactly when R32 does not resolve",
+    [await cascadeToken(undefined), await cascadeToken(apikey(RUTH, "")), await cascadeToken(apikey(RUTH, PUBLISHED_VALUE))],
+    [null, null, null]);
 }
 
 /* ================================================================ THE ENDPOINT
- * The mock is the sibling suite's, cut to what these arms exercise, with ONE
- * addition the sibling does not need: `session.principal`, derived from the
- * run id (`run-member` names member, `run-project` project, …) — because
- * FL-6's consistency check compares the RECORD's payer with the runtime's
- * resolution, and a mock without a payer would make every comparison a
- * comparison with null. */
+ * The mock's run record names its payer from the run id: `run-sam` was started by member:sam, every other run by
+ * member:ruth — so R10's comparison is between two facts this suite controls. */
 const AIK = "aik-" + "a".repeat(64);
 const PLANE_MOCK = `
 let LOG = [];
@@ -151,14 +99,15 @@ export default {
     const url = new URL(req.url);
     if (url.pathname === "/__mock/state") return Response.json({ log: LOG });
     const op = url.searchParams.get("op") || "";
-    LOG.push({ op, q: url.search, method: req.method });
+    const text = req.method === "POST" ? await req.text() : "";
+    LOG.push({ op, q: url.search, method: req.method, body: text });
     if (op === "airun") {
       const run = url.searchParams.get("run");
-      const level = (run || "").split("-")[1] || "project";
       return Response.json({ ok: true, result: { run, found: true, session: {
         id: run, mode: "check", status: "running", max_passes: 1,
         context: { type: "inquiry", id: "INQ-1" },
-        principal: { plane: "member:ruth", claude: level, ref: "fixture", skill: "investigative-session@1" },
+        principal: { plane: "member:ruth", claude: run === "run-sam" ? "member:sam" : "member:ruth",
+                     ref: null, skill: "investigative-session@1" },
         budget: [{ bound: "fetches", allowed: 50, consumed: 0 },
                  { bound: "subsessions", allowed: 50, consumed: 0 },
                  { bound: "wallclock", allowed: 500000, consumed: 0 },
@@ -198,72 +147,68 @@ const mf = new Miniflare({
 });
 const run = (body) =>
   mf.dispatchFetch("http://agent-worker/run", { method: "POST", body: JSON.stringify(body) });
+const planeLog = async () => (await (await (await mf.getWorker("plane-mock")).fetch("http://plane/__mock/state")).json()).log;
+const base = { run_id: "run-ruth", store: "scratch", credential: AIK, judgements: [] };
 
-console.log("\n--- 5 · through the endpoint: the resolved level is NAMED on the wire, beside the record's ---");
+console.log("\n--- 3 · R6, R29: through the endpoint, the member's account is NAMED on the wire, without its secret ---");
 {
-  /* R40 CORRECTED THIS FIXTURE, NEVER EXEMPTED IT: resolved accounts with no `judgements` now run model turns
-     (`requirements.test.mjs` drives that mode). The facts this section is about — the level named, every level
-     stated, no secret — are the same in the supplied mode, which `judgements: []` selects. */
-  const res = await run({ run_id: "run-project", store: "scratch", credential: AIK, judgements: [],
-    claude_accounts: { project: ALL.project, instance: ALL.instance } });
-  t("a run whose record names the resolved level DRIVES", res.status, 200);
+  const res = await run({ ...base, account: apikey() });
+  t("R6: a run carrying its starter's own reference DRIVES", res.status, 200);
   const out = await res.json();
-  t("the response names WHICH level pays, with its ref",
-    [out.claude_account?.available, out.claude_account?.level, out.claude_account?.ref],
-    [true, "project", "believe-in-oakland/claude"]);
-  t("and states every level beside it — the instance's availability included, because a level "
-    + "the resolution did not reach is not a level whose fact is hidden",
-    (out.claude_account?.levels || []).map((l) => `${l.level}:${l.state}`),
-    [`member:${LEVEL_UNSET}`, "project:available", "instance:available"]);
-  t("the honesty pair is intact: the account resolved, judgements supplied, so no model turn ran",
-    [out.turns_run, out.judgement_source], [0, "supplied"]);
-  t("no secret reaches the wire in either direction",
-    [JSON.stringify(out).includes(PROJECT_TOK), JSON.stringify(out).includes(INSTANCE_TOK)],
-    [false, false]);
+  t("R29: claude_account is {available: true, kind, member}, never the secret",
+    out.claude_account, { available: true, kind: "apikey", member: RUTH });
+  t("R28: judgements supplied, so no model turn ran, and the answer says whose judgements they were",
+    [out.turns_run, out.judgement_source], [0, "body"]);
+  t("R36: no secret reaches the wire", JSON.stringify(out).includes(KEY), false);
 }
 
-console.log("\n--- 6 · the record's payer and the runtime's resolution refuse to disagree ---");
+console.log("\n--- 4 · R6, R57: no account, a bad one, or the retired cascade's field: refused by name, before any plane call ---");
 {
-  /* The record (mock run-project) says PROJECT; the material resolves MEMBER. */
-  const res = await run({ run_id: "run-project", store: "scratch", credential: AIK,
-    claude_accounts: ALL });
-  t("driving under a payer the record does not name is REFUSED", res.status, 409);
-  const out = await res.json();
-  t("by name", out.reason, "RUN_NAMES_A_DIFFERENT_PAYER");
-  t("naming BOTH facts, so the reader knows which two disagree",
-    [out.recorded, out.resolved], ["project", "member"]);
+  const before = (await planeLog()).length;
+  const cases = [
+    ["R6, R57: no account at all", { ...base }, 409, "NO_ACCOUNT"],
+    ["R6: an account that is not a plain object", { ...base, account: "sk-ant-x" }, 400, "BAD_ACCOUNT"],
+    ["R6: an account that is a list", { ...base, account: [apikey()] }, 400, "BAD_ACCOUNT"],
+    ["R6: an account of a kind agent-model does not take", { ...base, account: { kind: "oauth", secret: KEY, member: RUTH } }, 400, "BAD_ACCOUNT"],
+    ["R6: an account naming no member", { ...base, account: { kind: "apikey", secret: KEY } }, 400, "BAD_ACCOUNT"],
+    ["R6: a body still carrying claude_accounts", { ...base, account: apikey(), claude_accounts: { member: { token: KEY } } }, 400, "BAD_ACCOUNT"],
+    ["R6, R32: an empty secret is no account", { ...base, account: apikey(RUTH, "") }, 409, "NO_ACCOUNT"],
+    ["R6, R32: a published secret is no account", { ...base, account: apikey(RUTH, PUBLISHED_VALUE) }, 409, "NO_ACCOUNT"],
+  ];
+  for (const [label, body, status, code] of cases) {
+    const res = await run(body);
+    const out = await res.json();
+    t(`${label}: ${status} ${code}`, [res.status, out.code, out.reason], [status, code, code]);
+    if (code === "NO_ACCOUNT") t(`${label}: stated as the capability unavailable`, out.capability, "unavailable");
+    if (body.claude_accounts) t(`${label}: naming the field`, out.field, "claude_accounts");
+  }
+  t("R6, R57: and not one of those calls reached the plane", (await planeLog()).length, before);
 }
 
-console.log("\n--- 7 · FL-6's OWN FIXTURE: every token removed -> the NAMED unavailable, never an empty success ---");
+console.log("\n--- 5 · R10, R57: a run is continued only under the account of the member whose act started it ---");
 {
-  const res = await run({ run_id: "run-project", store: "scratch", credential: AIK,
-    claude_accounts: { member: { token: "" }, project: { token: PUBLISHED_VALUE } } });
-  t("the response is a REFUSAL, not an empty success", res.status, 409);
+  const res = await run({ ...base, run_id: "run-sam", account: apikey(RUTH) });
+  t("R10: Ruth's reference on Sam's run is REFUSED", res.status, 409);
   const out = await res.json();
-  t("and it is the NAMED unavailable", [out.ok, out.reason, out.capability],
-    [false, CASCADE_NO_ACCOUNT, "unavailable"]);
-  t("with WHICH absence stated per level — the sentence a silent no-op could never say",
-    (out.levels || []).map((l) => `${l.level}:${l.state}`),
-    [`member:${LEVEL_UNSET}`, `project:${LEVEL_REVOKED}`, `instance:${LEVEL_UNSET}`]);
+  t("R10: by name, naming both members (ids, never a secret)",
+    [out.reason, out.recorded, out.supplied, JSON.stringify(out).includes(KEY)],
+    ["RUN_NAMES_A_DIFFERENT_PAYER", SAM, RUTH, false]);
+  const log = await planeLog();
+  const samCalls = log.filter((c) => c.q.includes("run=run-sam") || c.body.includes("run-sam"));
+  t("R57: before any step: the refused run was read, and nothing was written to it",
+    samCalls.map((c) => c.op), ["airun"]);
+  const own = await run({ ...base, run_id: "run-sam", account: apikey(SAM) });
+  t("R10 (control): Sam's own reference on Sam's run drives", own.status, 200);
+  const subRun = await run({ ...base, account: sub() });
+  t("R10 (control): a subscription token of the starter's own drives too, named as one",
+    (await subRun.json()).claude_account, { available: true, kind: "subscription", member: RUTH });
 }
 
-console.log("\n--- 8 · a caller that offered no accounts is a DIFFERENT fact, stated as its own absence ---");
+console.log("\n--- 6 · R36: the reference is spent here and travels NOWHERE: no plane call carries it ---");
 {
-  const res = await run({ run_id: "run-project", store: "scratch", credential: AIK });
-  t("the judgements-supplied mode still drives", res.status, 200);
-  const out = await res.json();
-  t("and its absence is NAMED as no-material, distinct from an exhausted cascade",
-    [out.claude_account?.available, out.claude_account?.reason],
-    [false, "NO_ACCOUNT_MATERIAL_SUPPLIED"]);
-}
-
-console.log("\n--- 9 · the material is spent here and travels NOWHERE: no plane call carries it ---");
-{
-  const w = await mf.getWorker("plane-mock");
-  const { log } = await (await w.fetch("http://plane/__mock/state")).json();
-  const all = JSON.stringify(log);
-  t("no Claude token value ever reached the plane, in any call this suite made",
-    [MEMBER_TOK, PROJECT_TOK, INSTANCE_TOK].some((v) => all.includes(v)), false);
+  const all = JSON.stringify(await planeLog());
+  t("R36: no secret of any reference ever reached the plane, in any call this suite made",
+    [KEY, TOKEN, PUBLISHED_VALUE].some((v) => all.includes(v)), false);
 }
 await mf.dispose();
 

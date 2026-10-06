@@ -39,6 +39,209 @@ const frozenTable = (t) => {
 };
 const frozenList = (a) => Object.freeze(a);
 
+/* T33 (R17–R20; T33-88, K1122; B1a.16, C:A-16, Q0-10, Q1-6): THE OP FAMILIES, ONE APPEND SITE EACH. Every op T33's new
+   modules serve, and every op T33 adds to an earlier module, is declared here once, in its owner's entry, and the entry
+   is all that is spread below into `OPS`, both `SESSION_OPS` sets and `NEEDS` — so a family cannot be specced in one
+   table and forgotten in another. An entry names each op's KIND (the spec and capability it takes) and the stamps the
+   door sets on it: `viewer` on every op of every family (each owner answers by the caller's sight and fails closed
+   without it), `actor` on each act and `proposer` on each proposal, each `{key, at}` — the parameter the owner reads
+   and whether it reads it from the `query` or the `body`, because the owners differ (events, duties, following and
+   credentials read `by` from the query; lines, money, workbooks, people and hypotheses from the body; standards reads
+   `author` and `proposer` from the body; calculations and answers take the stamped `viewer` as their actor). The
+   stamps themselves are the control plane's (`control-plane`'s arms, K1122): this table only says which.
+   The kinds (R19): an act its owner admits a machine to (labelled `class:<cls>`, DEC-52) is `open` — admin, member and
+   probe, `contribute`; an act its owner refuses a machine by name is `member` — a session's only (`machineClasses: []`),
+   `contribute`; an administrator's own act (asked of the roster, NOT_AN_ADMIN) is `admin`, and a member's act on their
+   own account, attention or ties is `own` — each a session's only and, on D-136's and `queuemute`'s reasoning, no
+   working capability (`null`); a `proposal` is any credential's, an agent credential's by its scope (R2), labelled by
+   its proposer, `contribute`; a `tally` writes a count in no one's name (`null`); a `read` is admin, member and probe
+   and an `ownread` a session's only, each with a present `null` row (affordances R40 names each a NON_ACT). */
+const MEMBER_PROBE = ["admin", "member", "probe"];
+const SESSION_KINDS = ["admin", "member"];
+const OP_KINDS = Object.freeze({
+  open:     Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: true },  needs: "contribute" }),
+  member:   Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: true }, needs: "contribute" }),
+  admin:    Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: true }, needs: null }),
+  own:      Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: true }, needs: null }),
+  proposal: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: true },  needs: "contribute" }),
+  tally:    Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: true },  needs: null }),
+  read:     Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: null }),
+  ownread:  Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: false }, needs: null }),
+});
+const QUERY = (key) => Object.freeze({ key, at: "query" });
+const BODY = (key) => Object.freeze({ key, at: "body" });
+/* One family: `ops` maps each op to its kind; the lists are derived from it so they cannot disagree. */
+/* `extra` names, per op, the stamps beyond these the owner reads (credentials' account ops read the session's own
+   `member`, and the ask grant's mint the `session` itself, R22–R27; answers' `ask` the asking `member`). */
+const family = ({ owner, cite, actor = null, proposer = null, extra = {}, ops }) => {
+  const of = (pred) => frozenList(Object.keys(ops).filter((op) => pred(ops[op])));
+  for (const [op, k] of Object.entries(ops)) if (!Object.hasOwn(OP_KINDS, k)) throw new TypeError(`op-declarations: ${op}: no kind ${k}`);
+  for (const op of Object.keys(extra)) if (!Object.hasOwn(ops, op)) throw new TypeError(`op-declarations: ${op}: an extra stamp on no op`);
+  return Object.freeze({ owner, cite, actor, proposer, kinds: Object.freeze({ ...ops }),
+    extra: Object.freeze(Object.fromEntries(Object.entries(extra).map(([op, k]) => [op, frozenList([...k])]))),
+    acts: of((k) => OP_KINDS[k].spec.mutating && k !== "proposal"), proposals: of((k) => k === "proposal"),
+    reads: of((k) => !OP_KINDS[k].spec.mutating) });
+};
+const OP_FAMILIES = Object.freeze({
+  /* events R36 (K1122): dated facts and events; `eventmerge`/`eventsplit` refuse a machine (MEMBER_ACT_ONLY, R14), the
+     read opt-in is an administrator's (R4, K1505 (9)); the machine's following imports write as `class:daemon` (R22). */
+  events: family({ owner: "events", cite: "events R36", actor: QUERY("by"), ops: {
+    datedfact: "open", editacts: "open", readoptin: "admin", eventcreate: "open", eventattest: "open", eventgovern: "open",
+    participantadd: "open", participantcorrect: "open", eventmerge: "member", eventsplit: "member", eventrelate: "open",
+    eventrelationwithdraw: "open", actalias: "open", eventimport: "open", registerimport: "open",
+    event: "read", eventforact: "read", datedfacts: "read", eventsfor: "read", timeline: "read", sequence: "read",
+    whowassent: "read", statementsof: "read", proceedingstatus: "read" } }),
+  /* lines R16 (A ORG; R18 here): a line recorded, withdrawn or held current through by a member or, on a system rule's
+     basis, the machine (MACHINE_NEEDS_IDENTIFIERS otherwise, R4, R21); `structureat` and `holderat` its one home. */
+  lines: family({ owner: "lines", cite: "lines R16, R21; R18", actor: BODY("by"), ops: {
+    linerecord: "open", linewithdraw: "open", linecurrentthrough: "open",
+    line: "read", linesof: "read", structureat: "read", holderat: "read", partiesof: "read", proceedinglinks: "read" } }),
+  /* money R18 (K1573): a fact recorded by a member or a member-bound machine method (R3, R4); a set's inclusion and
+     exclusion a member's (MEMBER_ACT_ONLY, R12); its proposal any credential's (R13). */
+  money: family({ owner: "money", cite: "money R18", actor: BODY("by"), proposer: BODY("by"), ops: {
+    moneyrecord: "open", moneywithdraw: "open", moneysetcreate: "open", moneysetinclude: "member",
+    moneysetexclude: "member", moneysetpropose: "proposal", moneyfundtype: "open",
+    money: "read", moneyof: "read", moneysummable: "read", moneyreconcile: "read", moneyset: "read",
+    committedagainstpaid: "read", authoritychain: "read" } }),
+  /* money-checks R11 (K1566): parameters and detectors a member's (MEMBER_ACT_ONLY, R3–R5), the display gate an
+     administrator's (R8); the run itself is the scheduler's (R6), declared apart below. */
+  "money-checks": family({ owner: "money-checks", cite: "money-checks R11", actor: BODY("by"), ops: {
+    moneycheckparam: "member", moneydetectordefine: "member", moneydetectorswitch: "member", moneydetectorgate: "admin",
+    moneyamountchecks: "read", moneyjunction: "read", moneycheckparams: "read", moneydetectors: "read",
+    moneynoticed: "read" } }),
+  /* duties R19: a duty proposed by any credential (R1, R5), adopted, declared, revised, withdrawn, matched and
+     transitioned by a member (MEMBER_ACT_ONLY, R2–R14). */
+  duties: family({ owner: "duties", cite: "duties R19", actor: QUERY("by"), proposer: QUERY("by"), ops: {
+    dutypropose: "proposal", dutyadopt: "member", dutydeclare: "member", dutyrevise: "member", dutywithdraw: "member",
+    dutymatch: "member", dutytransition: "member",
+    duty: "read", dutiesof: "read", dutyoccurrences: "read", dutytransitions: "read", powersof: "read",
+    dutysetagainst: "read" } }),
+  /* people R27: identity claims and person facts by a member or, within R3 and R10, the machine; a member's own tie
+     (R20) and a source's person link a member's (MEMBER_ACT_ONLY, R21); expunging and the check gate an
+     administrator's (R12, R24); `samepersoncandidates` published since M-P6 passed (R8, K1592). */
+  people: family({ owner: "people", cite: "people R27", actor: BODY("by"), ops: {
+    identityclaim: "open", identitywithdraw: "open", personfact: "open", personfactwithdraw: "open",
+    personexpunge: "admin", membertie: "own", membertiewithdraw: "own", sourcepersonlink: "member",
+    interestcheckdefine: "open", interestcheckswitch: "open", interestcheckgate: "admin",
+    identity: "read", samepersoncandidates: "read", person: "read", career: "read", personcredentials: "read",
+    personinterests: "read", personstatements: "read", staffing: "read", memberties: "read", sourcepersonlinks: "read",
+    interestchecks: "read" } }),
+  /* explore R14 (K1566): reads only, the viewer stamped; it writes nothing and logs no one's exploring (R9). */
+  explore: family({ owner: "explore", cite: "explore R14", ops: {
+    explore: "read", explorepreset: "read", exploreverify: "read", exploretimeline: "read" } }),
+  /* hypotheses R7: a hypothesis held, revised and withdrawn by a member (MACHINE_CANNOT_HYPOTHESISE, R1, R2, K1473). */
+  hypotheses: family({ owner: "hypotheses", cite: "hypotheses R7", actor: BODY("by"), ops: {
+    hypothesishold: "member", hypothesisrevise: "member", hypothesiswithdraw: "member", hypotheses: "read" } }),
+  /* calculations R24 (C:A-16): its actor is the stamped viewer. Declaring a table, adopting a binding, ingesting money,
+     accepting a calculation, recording a set and switching a pattern refuse a machine (MEMBER_ACT_ONLY, R2, R8, R14,
+     R21, R23); a calculation and a recorded draw any author's (R4, R18); the pattern gate an administrator's (R23). */
+  calculations: family({ owner: "calculations", cite: "calculations R24", actor: QUERY("viewer"), ops: {
+    tabledeclare: "member", bindingadopt: "member", moneyingest: "member", calculationcreate: "open",
+    calculationaccept: "member", calculationdraw: "open", recordset: "member", patterngate: "admin",
+    patternswitch: "member",
+    table: "read", tablesat: "read", calculationevaluate: "read", calculation: "read", patterns: "read" } }),
+  /* workbooks R15 (K1570): every act a sighted author's, a machine not refused by name (R13); the second check
+     refuses only its own author (SELF_CHECK, R11). */
+  workbooks: family({ owner: "workbooks", cite: "workbooks R15; K1570", actor: BODY("by"), ops: {
+    workbookadd: "open", workbookbind: "open", workbookunbind: "open", workbookrecompute: "open",
+    workbooklintexplain: "open", workbookmethodnote: "open", workbooksecondcheck: "open",
+    workbook: "read", workbookinputs: "read", workbooklint: "read", workbookexport: "read" } }),
+  /* answers (K1609; R20 here): its actor is the stamped viewer. `rule` is the ask's read door (R7); `answercheck`
+     counts the check in no one's name (R13); the tallies and the two switches an administrator's (R13, R19, K1603);
+     a standing question the member's own (MACHINE_CANNOT_AUTHOR, R15, R16, R20); `ask` (Q0-10, Q1-6) a member's own
+     session, reaching only their own account reference (credentials R24). */
+  answers: family({ owner: "answers", cite: "answers; K1609; R20", actor: QUERY("viewer"), extra: { ask: ["member"] }, ops: {
+    ask: "own", answercheck: "tally", ruleservicesswitch: "admin", standingset: "own", standingend: "own",
+    standingaiswitch: "admin",
+    rule: "read", asktallies: "ownread", standing: "ownread", standinganswers: "ownread" } }),
+  /* following: every follow a member's own (MACHINE_CANNOT_FOLLOW, R1, R7–R10; MEMBER_ACT_ONLY, R8); it reads the
+     query's `by` as its `author`. */
+  following: family({ owner: "following", cite: "following R1–R14", actor: QUERY("by"), ops: {
+    followbody: "member", unfollow: "member", followregister: "member", followpersonquery: "member",
+    followportal: "member", permeetingbody: "member", refreshregister: "member",
+    follows: "read", snapshots: "read", snapshotdiff: "read" } }),
+  /* T33's ops in earlier modules (R17, R18; the START's findings). standards (K1571): relating, linking and treating a
+     member's (MACHINE_CANNOT_RELATE, R23, R26, R27, R30), proposing any credential's; `inforceat` is R18's in-force
+     read beside `standardinforce` (R7's alias). */
+  standards: family({ owner: "standards", cite: "standards R20–R30; K1571; R18", actor: BODY("author"),
+    proposer: BODY("proposer"), ops: {
+    lawrelate: "member", lawwithdraw: "member", lawpropose: "proposal", courtlink: "member", courttreat: "member",
+    inforceat: "read", standardsfor: "read", lawrelations: "read", lawaddresses: "read", stillstanding: "read",
+    citationresolve: "read" } }),
+  /* credentials (K1544; R20): the member's own account reference, its switches and the ask grant, set by the member
+     alone (MACHINE_CANNOT_HOLD_ACCOUNT, NOT_YOUR_ACCOUNT, R22–R27), never an administrator for another member;
+     `aigrantmint` also reads the session's own `member` and `session` (R27); the keyed services an administrator's
+     (R29). No spec admits a group- or project-level credential: none exists (K1502). */
+  credentials: family({ owner: "credentials", cite: "credentials R22–R29; K1544; R20", actor: QUERY("by"),
+    extra: { accountreferenceset: ["member"], accountreferenceremove: ["member"], accountswitchset: ["member"],
+             accountreference: ["member"], aigrantmint: ["member", "session"] }, ops: {
+    accountreferenceset: "own", accountreferenceremove: "own", accountswitchset: "own", aigrantmint: "own",
+    keyedserviceset: "admin", keyedserviceswitch: "admin",
+    accountreference: "ownread", keyedservices: "read" } }),
+  /* sources (K1550): marking a capture as from a keyed service, its capturer's own act (MACHINE_CANNOT_MARK, R16, R18). */
+  sources: family({ owner: "sources", cite: "sources R16, R18; K1550", actor: QUERY("by"), ops: { sourcekeyed: "member" } }),
+  /* entities (K1572; R18): a scheme identifier, `resolutiondefect`'s stamp; a machine on a system rule's basis (R43). */
+  entities: family({ owner: "entities", cite: "entities R43; K1572; R18", actor: BODY("by"), ops: { entityidentify: "open" } }),
+  /* ai-runs (K1601, K1610, K1612; R20): a member's own ceiling (NOT_YOUR_CEILING), the copy's an administrator's
+     (R50); a run's verification refused to a machine (AI_RUN_VERIFICATION_UNFIT, run-rules R19); usage read by a
+     session, the copy's figure an administrator's (R51). */
+  "ai-runs": family({ owner: "ai-runs", cite: "ai-runs R50, R51; run-rules R19; K1601, K1612; R20", actor: QUERY("by"), ops: {
+    aiceilingset: "own", aicopyceilingset: "admin", airunverify: "member", aiusage: "ownread" } }),
+  /* inquiry (K1604): a member's look at their own dated wait (MACHINE_CANNOT_LOOK, R56), `author` from the query. */
+  inquiry: family({ owner: "inquiry", cite: "inquiry R56; K1604", actor: QUERY("author"), ops: { waitlook: "member" } }),
+  /* corpus-export (K1640): the render a member's, by their stamped viewer (R10), writing one export-log row in no
+     working capability's name; `exportpage` takes `export`'s credential and is declared apart below. */
+  "corpus-export": family({ owner: "corpus-export", cite: "corpus-export R10; K1640", ops: { exportrender: "own" } }),
+  /* actions (K1657; R17): the addressee suggestion, a read for every signed-in class (R62); the `proceeding` filter of
+     `op=actions` (R65) is a parameter of an op already declared. */
+  actions: family({ owner: "actions", cite: "actions R62; K1657; R17", ops: { addresseesuggest: "read" } }),
+  /* action-clocks (K1658; R17): adopting a proposed clock a member's (MACHINE_CANNOT_ADOPT_CLOCK, R13), `author` from
+     the query; `clockpropose` any credential's, `actionlawspropose`'s posture (R2); the two reads (R14, R15). */
+  "action-clocks": family({ owner: "action-clocks", cite: "action-clocks R2, R13–R15; K1658; R17", actor: QUERY("author"),
+    proposer: QUERY("proposer"), ops: {
+    clockadopt: "member", clockpropose: "proposal", clocksics: "read", clocklateness: "read" } }),
+  /* capture-requests (K1601): marking a host a platform and lifting the mark, a member's act on the group's drain
+     (R46), its actor the stamped viewer; the marks a read. */
+  "capture-requests": family({ owner: "capture-requests", cite: "capture-requests R46; K1601", actor: QUERY("viewer"), ops: {
+    capturerequestplatformmark: "member", capturerequestplatformunmark: "member", capturerequestplatformhosts: "read" } }),
+  /* instance-setup (R17; K1683, its op names): seeding the offices and the seats and setting the assistant, an
+     administrator's own session (R50, R52, R53); the disclosure shown, a member's own record (R54); the assistant's
+     state a read, and a member's disclosure their own read. */
+  "instance-setup": family({ owner: "instance-setup", cite: "instance-setup R50, R52–R54; R17; K1683", actor: QUERY("by"), ops: {
+    officesseed: "admin", seatsseed: "admin", assistantset: "admin", disclosureshown: "own",
+    assistantstate: "read", disclosureof: "ownread" } }),
+});
+const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
+const FAMILY_SPECS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds).map(([op, k]) => {
+  const s = OP_KINDS[k].spec;
+  return [op, { classes: [...s.classes], ...(s.machineClasses ? { machineClasses: [...s.machineClasses] } : {}), mutating: s.mutating }];
+})));
+const FAMILY_NEEDS = Object.fromEntries(Object.values(OP_FAMILIES).flatMap((f) => Object.entries(f.kinds)
+  .map(([op, k]) => [op, OP_KINDS[k].needs])));
+/* K1601 (AGENT-WORKER #9 J1 (3), (4)): THE ASK'S PLANE OPS, which agent-worker's `/ask` calls under the member's `ai`
+   grant and the control plane admits OUTSIDE the grant's read list (`AI_GRANT_OPS`), the grant's member stamped as the
+   viewer: the ceiling read before any model call, the answer's check over the grant's read log, and the usage count
+   per call. No spec names `ai` (R2): each admits a session's kinds and no bearer (`machineClasses: []`), so the grant
+   is their only machine route; `askusage`, a write no session set holds, is recorded unattended below. */
+const ASK_GRANT_OPS = frozenList(["askceiling", "askcheck", "askusage"]);
+/* K1674, K1683 (CONTROL-PLANE #22 J1): THE STAMP INTERFACE. Every op this module declares for T33 maps to the stamp
+   keys the door sets on it, from a closed set the control plane implements once each: `viewer` (the caller's sight),
+   `by` (the actor in the query), `bodyBy` (the actor in the body, a caller's copy overwritten), `author` (the
+   positional identity), `proposer` (the label), `member` (the session's own member) and `session` (the session token,
+   into the store request only). Read from `OP_FAMILIES` — `viewer` on every op, the actor's key on each act, the
+   proposer's on each proposal, and the family's extras — so the families stay the one append site. A family whose
+   actor IS the viewer (calculations, answers, capture-requests' marks) needs no second key. The ask's three plane
+   ops carry the grant's member as `viewer` (K1601); `exportpage` and `moneydetectorsrun` are stamped nothing. */
+const stampKey = (st) => (!st || st.key === "viewer" ? null : st.key === "by" ? (st.at === "body" ? "bodyBy" : "by") : st.key);
+const OP_STAMPS = Object.freeze(Object.fromEntries([
+  ...Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds).map((op) => {
+    const who = f.acts.includes(op) ? stampKey(f.actor) : f.proposals.includes(op) ? stampKey(f.proposer) : null;
+    return [op, frozenList([...new Set(["viewer", ...(who ? [who] : []), ...(f.extra[op] ?? [])])])];
+  })),
+  ...ASK_GRANT_OPS.map((op) => [op, frozenList(["viewer"])]),
+  ["exportpage", frozenList([])], ["moneydetectorsrun", frozenList([])],
+]));
+
 /* BIO plane, control plane entry.
  *
  * Secret discipline, which is a design constraint rather than a convention:
@@ -852,6 +1055,18 @@ const OPS = frozenTable({
      are: each answers only what is already public, so nothing is stamped and no session set holds it. */
   casechecker:     { classes: null,                              mutating: false },
   casefilespec:    { classes: null,                              mutating: false },
+  /* T33 (K1640; R17): a page of an export, with `export`'s credential (corpus-export R6, R8); it writes nothing. */
+  exportpage:      { classes: ["admin"],                         mutating: false },
+  /* T33 (K1566; money-checks R6): the detectors' bounded run is the scheduler's, which calls it in-process; the op is
+     the operator's, `reproject`'s posture, and no session reaches it (recorded below). */
+  moneydetectorsrun: { classes: ["admin", "probe"],              mutating: true  },
+  /* K1601: the ask's three plane ops (`ASK_GRANT_OPS` above): a session's kinds, no bearer; the grant is admitted
+     outside this table. */
+  askceiling:      { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  askcheck:        { classes: ["admin", "member"], machineClasses: [], mutating: false },
+  askusage:        { classes: ["admin", "member"], machineClasses: [], mutating: true  },
+  /* T33 (R17–R20): every family's ops, each from its one entry in `OP_FAMILIES` above. */
+  ...FAMILY_SPECS,
 });
 
 /* What a signed-in browser session may do, the write arc's evolution of the
@@ -1663,6 +1878,9 @@ const SESSION_OPS = Object.freeze({
                       route that produces a name the store will accept is a session,
                       and the store refuses everything else BY SHAPE (C-29.1). */
                    "aicredentialmint", "aicredentialrevoke",
+                   /* T33 (R17–R20): every op of every family, in BOTH sets — an enrolled administrator's session is a
+                      `member` kind (D-136), and the owner or the roster decides the rest. */
+                   ...FAMILY_OPS,
                    /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. A
                       session op before anything else, on `aicredentialmint`'s
                       reasoning: each is attributed to the person who performed it,
@@ -1732,6 +1950,7 @@ const SESSION_OPS = Object.freeze({
                    "monitorpause",
                    "profilesset",
                    "aicredentialmint", "aicredentialrevoke",
+                   ...FAMILY_OPS,
                    "casedraft", "reviewgrant", "reviewrevoke"]),
 });
 
@@ -2607,6 +2826,19 @@ const NEEDS = Object.freeze({
   wizarduse:             null,
   wizardcandidates:      null,
   wizardcheck:           null,
+  /* T33 (R17–R20): each family op's row, from its kind in `OP_FAMILIES`: `contribute` for an act on the record and a
+     proposal (proposing is contributing, never publishing); NO WORKING CAPABILITY for an administrator's act (D-136), a
+     member's act on their own account, attention or ties (`queuemute`'s reasoning) and an unattributed tally; and a
+     present null for every read, which affordances names a NON_ACT (its R40, R12). */
+  ...FAMILY_NEEDS,
+  /* R18: the in-force read (standards R7's alias `standardinforce`), a present null as `inforceat`'s beside it. */
+  standardinforce:       null,
+  /* K1689: an export's page (`export`'s credential) and the detectors' run (the operator's, unattended by decision)
+     take NO WORKING CAPABILITY — neither is a session's act — and are PRESENT, null, because affordances grades each
+     (its R40: the page a NON_ACT, the run a substrate absence) and its totality reads a graded key this table lacks as
+     stale (its R12), K516's precedent. */
+  exportpage:            null,
+  moneydetectorsrun:     null,
 });
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
@@ -2675,9 +2907,14 @@ const UNATTENDED_BY_DECISION = Object.freeze({
   reevaluationraise: "build/rulings.md K199 (BOB #51), reevaluation R14: 'R14's notices are raised by a bounded sweep "
                    + "raiseNotices({limit, after}) (op reevaluationraise, admin and daemon)', which scheduler or "
                    + "monitoring calls.",
+  /* T33: the detectors' run (money-checks R6) and the ask's usage count (K1601), each addressed to a credential. */
+  moneydetectorsrun: "build/requirements/money-checks.md R6 (K1566): the machine's detectors run as a bounded sweep "
+                   + "runDetectors({budgetMs, cursor}) that the scheduler fires; no member starts it.",
+  askusage: "build/rulings.md K1601 (AGENT-WORKER #9 J1 (3), (4)): under an ai grant the control plane admits, outside "
+          + "AI_GRANT_OPS, op=askusage (POST {mode:\"ask\", model, usage} per call), with the grant's member as viewer.",
   reproject: "BIO_Membership_Architecture_v2.md §4.10 (BOB #19), citing src/store.mjs, reproject: 'Exposed "
            + "because a deploy runs the bounded pass once at construction and a large store may need more than "
            + "one' — a deploy's maintenance pass, addressed to the operator's credential.",
 });
 
-export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };
+export { OPS, RETRIEVAL_READS, READING_READS, EDGE_ACTIONS, STATE_ACTIONS, ACTION_ACTIONS, DECLARATION_ACTIONS, STRUCTURE_ACTIONS, VERSION_ACTIONS, PROJECT_ACTIONS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS, ROSTER_SELF_ACTIONS, OWN_KEY_ACTIONS, CAPTURE_MEMBER_ACTIONS, CAPTURE_VIEWER_ACTIONS, CAPTURE_READS, SOURCE_ACTIONS, SOURCE_READS, PROVENANCE_JUDGEMENT_ACTIONS, CALIBRATION_WRITE_ACTIONS, EXPERTISE_ACTIONS, REGISTRY_ACTIONS, TASK_ACTIONS, QUEUE_ACTIONS, AI_RUN_ACTIONS, RUN_VERB_ACTIONS, RUN_PRODUCTION_ACTIONS, POSITIONAL_ACTS, BIAS_ACTIONS, BIAS_DEBT_ACTIONS, INTENT_ACTIONS, INTENT_READS, REEVALUATION_ACTIONS, STANDARDS_ACTIONS, STANDARDS_READS, CONFORMANCE_ACTIONS, CONFORMANCE_READS, CONSEQUENCES_ACTIONS, CONSEQUENCES_READS, FILINGS_ACTIONS, FILINGS_READS, FILING_TEMPLATES_ACTIONS, FILING_TEMPLATES_READS, TEMPLATE_PROPOSAL_ACTIONS, TEMPLATE_DOOR_ACTIONS, TEMPLATE_DOOR_READS, GRANT_SECRET_ACTIONS, LOCAL_FACTS_ACTIONS, LOCAL_FACTS_READS, ESCALATION_ACTIONS, ESCALATION_READS, MONITORING_ACTIONS, LINK_SWEEP_READS, WHAT_CHANGED_PROPOSAL_ACTIONS, WHAT_CHANGED_READS, NETWORK_NOTICES_ACTIONS, NETWORK_NOTICES_READS, NETWORK_NOTICES_BY, NETWORK_NOTICES_PUBLIC_READS, DOCKET_ACTIONS, DOCKET_READS, DOCKET_AUTHOR, DOCKET_BY, DOCKET_PUBLIC_READS, CASE_IMPORT_ACTIONS, CASE_IMPORT_READS, CASE_IMPORT_BY, CASE_CHECKER_PUBLIC_READS, WIZARD_SCRIPTS_ACTIONS, WIZARD_SCRIPTS_AUTHOR, WIZARD_SCRIPTS_BY, WIZARD_PROPOSAL_ACTIONS, WIZARD_PROGRESS_ACTIONS, WIZARD_SCRIPTS_READS, WIZARD_CHECK_READS, CONTRADICTION_ACTIONS, CONTRADICTION_READS, ACTIONS_ACTIONS, ACTIONS_READS, ACTION_CLOCKS_ACTIONS, ACTION_PLANS_ACTIONS, ACTION_PLANS_READS, ACTION_PLANS_PREVIEWS, PLAN_PROPOSAL_ACTIONS, QUERY_AUTHOR_ACTIONS, ACTION_LAYER_ACTIONS, ACTION_LAYER_READS, PLAN_RUN_SCOPE, RECOGNISER_ACTIONS, PROGRESSION_ACTIONS, OP_KINDS, OP_FAMILIES, FAMILY_OPS, ASK_GRANT_OPS, OP_STAMPS, SESSION_OPS, NEEDS, decorateAct, ACT_GATE, UNATTENDED_BY_DECISION };

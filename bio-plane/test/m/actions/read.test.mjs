@@ -5,25 +5,57 @@ import { world, storage, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs"
 import * as actions from "../../../src/actions/index.mjs";
 import { migrateActions } from "../../../src/actions/schema.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
-import { get as profile } from "../../../../jurisdictions/index.mjs";
+import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
+const profile = (id) => combine([id]).view;
 
 const A = "ACTN-2026-0001-a";
 const M = V("alice");
 const CLK = (d, st = "pending") => ['  - text: "t"', '    description: "d"', `    date: ${d}`, "    basis: Act s.2", `    status: ${st}`];
 
-test("R12 actionFacts is pure; null for another type or an unparsable document; overdue from the UTC day after the date", () => {
+test("R12 actionFacts is pure; null for another type or an unparsable document; overdue on the office's local day, never the UTC day (K1444 (iii))", () => {
   const md = actionMd(A, [...CP, "action_kind: other", "risk_tier: 2", "clock:", ...CLK("2026-09-14"), ...CLK("2026-09-10", "met")]);
-  const at = (iso) => actions.actionFacts(md, Date.parse(iso));
-  assert.deepEqual(at("2026-09-14T23:59:59Z"), { kind: "other", risk_tier: 2, counterparty_state: "named", resolution: null,
+  const view = profile("test-port-ellery");                 /* America/Halifax, UTC-3 in September */
+  const at = (iso, place = view) => actions.actionFacts(md, Date.parse(iso), place);
+  /* 23:30 on the 14th in Halifax is 02:30 UTC on the 15th: still met that day */
+  assert.deepEqual(at("2026-09-15T02:30:00Z"), { kind: "other", risk_tier: 2, counterparty_state: "named", resolution: null,
                                                  clock_next: "2026-09-14", clock_overdue: false });
-  assert.equal(at("2026-09-15T00:00:00Z").clock_overdue, true);
+  assert.equal(at("2026-09-15T02:59:59Z").clock_overdue, false, "the last second of the local day");
+  assert.equal(at("2026-09-15T03:00:00Z").clock_overdue, true, "the local day after has begun");
+  /* negative control: the UTC day would have read it overdue three hours early */
+  assert.equal(at("2026-09-15T00:00:00Z").clock_overdue, false);
+  assert.equal(at("2026-09-15T00:00:00Z", "UTC").clock_overdue, true, "a zone given as a string is read as the zone");
+  /* no zone held: undetermined, never computed on UTC */
+  assert.equal(at("2026-09-20T00:00:00Z", null).clock_overdue, null);
+  assert.equal(at("2026-09-20T00:00:00Z", { counterparties: [] }).clock_overdue, null);
   assert.equal(actions.actionFacts(actionMd(A, ["action_kind: other"]), NOW_MS).risk_tier, null, "undetermined is null");
   const none = { kind: null, risk_tier: null, counterparty_state: null, resolution: null, clock_next: null, clock_overdue: null };
-  assert.deepEqual(actions.actionFacts(md.replace("object_type: action", "object_type: information"), NOW_MS), none);
-  assert.deepEqual(actions.actionFacts("not a document", NOW_MS), none);
-  assert.equal(at("2026-09-15T00:00:00Z").clock_overdue, at("2026-09-15T00:00:00Z").clock_overdue, "pure");
+  assert.deepEqual(actions.actionFacts(md.replace("object_type: action", "object_type: information"), NOW_MS, view), none);
+  assert.deepEqual(actions.actionFacts("not a document", NOW_MS, view), none);
+  assert.deepEqual(at("2026-09-15T03:00:00Z"), at("2026-09-15T03:00:00Z"), "pure");
   const w = world();
   assert.equal(w.reg.facts.length, 1); assert.equal(w.reg.facts[0].m, "actions", "registered with retrieval R53");
+  /* the registered function reads the zone from the active profiles' view */
+  assert.equal(w.reg.facts[0].fn(md, Date.parse("2026-09-15T02:30:00Z")).clock_overdue, false);
+  assert.equal(w.reg.facts[0].fn(md, Date.parse("2026-09-15T03:00:00Z")).clock_overdue, true);
+  assert.equal(world({ profiles: null }).reg.facts[0].fn(md, Date.parse("2026-09-20T00:00:00Z")).clock_overdue, null, "no profile, no zone");
+});
+
+test("R12 an entry whose basis says close of business is overdue from the close of the office's hours that day (civil-time R14)", () => {
+  const view = profile("test-port-ellery");                 /* the Town Clerk closes at 16:00 Mon-Thu, 12:00 Fri */
+  const cob = (d) => ['  - text: "t"', '    description: "d"', `    date: ${d}`, '    basis: "Bylaw 4: by close of business"', "    status: pending"];
+  const office = ["counterparty:", "  state: named", "  role: Town Clerk", "  body: City of Port Ellery"];
+  const md = (d) => actionMd(A, [...office, "action_kind: other", "clock:", ...cob(d)]);
+  const at = (d, iso) => actions.actionFacts(md(d), Date.parse(iso), view).clock_overdue;
+  /* Monday 14 September: closes 16:00 local (19:00 UTC); civil-time's minute is overdue once it has passed */
+  assert.equal(at("2026-09-14", "2026-09-14T18:59:00Z"), false);
+  assert.equal(at("2026-09-14", "2026-09-14T19:01:00Z"), true, "after close, the same day");
+  /* Friday 18 September: closes 12:00 local */
+  assert.equal(at("2026-09-18", "2026-09-18T15:01:00Z"), true);
+  /* negative controls: no hours for the office (another office), or a basis that says no close: the day governs */
+  const other = actionMd(A, [...CP, "action_kind: other", "clock:", ...cob("2026-09-14")]);
+  assert.equal(actions.actionFacts(other, Date.parse("2026-09-14T19:01:00Z"), view).clock_overdue, false);
+  const plain = md("2026-09-14").replace("by close of business", "fourteen days");
+  assert.equal(actions.actionFacts(plain, Date.parse("2026-09-14T19:01:00Z"), view).clock_overdue, false);
 });
 
 test("R25 R26 the projection block: derived at now beside the cached flag; legs, ledger, laws, proposals, lifecycle, own outcome, responses", () => {
@@ -118,7 +150,7 @@ test("R36 every table this module creates is keyed by bundle_id, listed in ACTIO
 });
 
 test("R39 R41 no place is named in outward text; an old records-law kind names no law; tests run on the test profile", () => {
-  const oak = profile("oakland-alameda");
+  const oak = profileOf("oakland-alameda");
   const places = ["Oakland", "Alameda", "California", "CPRA", ...oak.covers];
   const outward = JSON.stringify([grammar.ACTION_FENCE_CHECKS, grammar.ACTION_ACT_CHECKS, grammar.GOVERNING_LAW_CHECKS,
     grammar.QUOTE_CHECKS, grammar.LIFECYCLE_CHECKS, grammar.RISK_TIER_REVISION_CHECKS, grammar.RECORDS_LAW_FENCE_CHECKS,
@@ -126,6 +158,6 @@ test("R39 R41 no place is named in outward text; an old records-law kind names n
   for (const p of places) assert.ok(!outward.includes(p), p);
   const g = grammar.governingLawsOf({ action_kind: "cpra_request" });
   assert.equal(g.state, "undetermined"); assert.match(g.stated, /named the records law it was made under/);
-  assert.equal(profile("test-port-ellery").test, true);
+  assert.equal(profileOf("test-port-ellery").test, true);
 });
 

@@ -30,6 +30,8 @@
  * (scripts/sign-sshsig.mjs, which no bundle reaches).
  */
 
+import { ID_TABLE, idPattern } from "./record-grammar/index.mjs";
+
 const te = new TextEncoder();
 
 const b64ToBytes = (b64) => {
@@ -351,10 +353,26 @@ export const caseRatifyStatement = (caseId, edition, docSha) =>
    to publish, nor the reverse, whatever the identifiers turn out to be. */
 export const NS_NOTICE = "bio-working-on";
 
-/* An opaque id, as record-core's minter draws it (its R6): `<PREFIX>-<year>-<4
-   random digits>`, with an optional `-<slug>` tail. One token, ASCII, no space
-   and no newline, so the statement below always has exactly its four fields. */
-const OPAQUE_ID_RE = /^[A-Z]+-\d{4}-\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;
+/* An opaque id, as record-core's minter draws it (its R6): `<PREFIX>-<year>-<counter>`,
+   with an optional `-<slug>` tail. One token, ASCII, no space and no newline, so
+   the statement below always has exactly its four fields.
+   THE COUNTER IS record-grammar's, NEVER A COPY HELD HERE (R38, S0-13; K1470): the
+   one id table every validator reads, so the 10,000th id of a year is accepted
+   here the day it is minted there. The prefix is any run of capitals, so the
+   core is read from the sequential form of `ID_TABLE`'s first sequential prefix,
+   with that prefix replaced by `[A-Z]+`. If `idPattern`'s answer stops being
+   `^<PREFIX>…$`, this throws at load: a drift is loud, never a silent narrowing.
+   Exported so `scripts/embed-signpage.mjs` writes this same pattern into the
+   signer page's copy (R42): one derivation, two places. */
+const statementIdPattern = () => {
+  const entry = ID_TABLE.find((e) => e.form === "sequential");
+  const core = entry && idPattern(entry.prefix);
+  const head = entry && `^${entry.prefix}`;
+  if (!(core instanceof RegExp) || !core.source.startsWith(head) || !core.source.endsWith("$") || core.flags)
+    throw new Error("sshsig: record-grammar's sequential id pattern is not ^<PREFIX>…$");
+  return new RegExp(`^[A-Z]+${core.source.slice(head.length, -1)}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`);
+};
+export const OPAQUE_ID_RE = statementIdPattern();
 const SHA256_HEX_RE = /^[0-9a-f]{64}$/;
 
 /* R38: the bytes an owner signs for one revision of a notice. Unlike the

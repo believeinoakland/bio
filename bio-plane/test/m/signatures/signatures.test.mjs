@@ -20,7 +20,8 @@ import vm from "node:vm";
 import * as sshsig from "../../../src/sshsig.mjs";
 import * as tsa from "../../../src/tsa.mjs";
 import * as signpage from "../../../src/signpage.mjs";
-import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../../scripts/embed-signpage.mjs";
+import { renderSignpage, syncIdPattern, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../../scripts/embed-signpage.mjs";
+import { ID_TABLE, idPattern } from "../../../src/record-grammar/index.mjs";
 
 const {
   NS_RELEASE, NS_RATIFY, NS_FLEET, NS_NOTICE, verifySshsig, ratifyStatement, caseRatifyStatement, fleetStatement,
@@ -350,7 +351,8 @@ const NOTICE_SHA = "0123456789abcdef".repeat(4);
 
 test("R38 noticeStatement is exactly the ASCII line, the same bytes every time", () => {
   for (const [id, rev] of [["NOTE-2026-4817", 1], ["NOTE-2026-0000", 2], ["WON-2027-9999", 12345],
-    ["N-2026-0001-a-slug-tail", 1], ["NOTE-2026-4817-x", Number.MAX_SAFE_INTEGER]]) {
+    ["N-2026-0001-a-slug-tail", 1], ["NOTE-2026-4817-x", Number.MAX_SAFE_INTEGER], ["NOTE-2026-10000", 1],
+    ["NOTE-2026-48170", 3], ["NOTE-2026-123456789-a-tail", 2]]) {
     const out = noticeStatement(id, rev, NOTICE_SHA);
     assert.ok(out instanceof Uint8Array);
     assert.deepEqual([...out], [...Buffer.from(`bio-working-on ${id} ${rev} ${NOTICE_SHA}\n`, "ascii")]);
@@ -365,7 +367,7 @@ test("R38 noticeStatement is exactly the ASCII line, the same bytes every time",
 
 test("R38 noticeStatement throws on a notice id that is not an opaque id, a revision below 1 or not whole, or a sha not 64 lowercase hex", () => {
   const ok = ["NOTE-2026-4817", 1, NOTICE_SHA];
-  const badIds = [undefined, null, 0, 20264817, {}, [], "", "NOTE", "NOTE-2026", "NOTE-2026-481", "NOTE-2026-48170",
+  const badIds = [undefined, null, 0, 20264817, {}, [], "", "NOTE", "NOTE-2026", "NOTE-2026-481", "NOTE-2026-999",
     "NOTE-26-4817", "note-2026-4817", "Note-2026-4817", "NOTE-2026-4817 ", " NOTE-2026-4817", "NOTE-2026-4817\n",
     "NOTE 2026-4817", "NOTE-2026-4817-", "NOTE-2026-4817-Slug", "NOTE-2026-4817--x", "NOTE-2026-4817-a b",
     "NOTE-2026-4817-a_b", "-2026-4817", "NOTE1-2026-4817", "NOTE-2026-4817\u0000", "ＮＯＴＥ-2026-4817",
@@ -420,7 +422,8 @@ const DOCKET_SHA = "fedcba9876543210".repeat(4);
 
 test("R40 docketStatement is exactly the ASCII line, the same bytes every time", () => {
   for (const [id, seq] of [["CASE-2026-3091", 1], ["CASE-2026-0000", 2], ["C-2027-9999", 12345],
-    ["CASE-2026-0001-a-slug-tail", 1], ["CASE-2026-3091-x", Number.MAX_SAFE_INTEGER]]) {
+    ["CASE-2026-0001-a-slug-tail", 1], ["CASE-2026-3091-x", Number.MAX_SAFE_INTEGER], ["CASE-2026-10000", 1],
+    ["CASE-2026-30910", 3], ["CASE-2026-123456789-a-tail", 2]]) {
     const out = docketStatement(id, seq, DOCKET_SHA);
     assert.ok(out instanceof Uint8Array);
     assert.deepEqual([...out], [...Buffer.from(`bio-docket ${id} ${seq} ${DOCKET_SHA}\n`, "ascii")]);
@@ -435,7 +438,7 @@ test("R40 docketStatement is exactly the ASCII line, the same bytes every time",
 
 test("R40 docketStatement throws on a case id that is not an opaque id, an entry number below 1 or not whole, or a sha not 64 lowercase hex", () => {
   const ok = ["CASE-2026-3091", 1, DOCKET_SHA];
-  const badIds = [undefined, null, 0, 20263091, {}, [], "", "CASE", "CASE-2026", "CASE-2026-309", "CASE-2026-30910",
+  const badIds = [undefined, null, 0, 20263091, {}, [], "", "CASE", "CASE-2026", "CASE-2026-309", "CASE-2026-999",
     "CASE-26-3091", "case-2026-3091", "Case-2026-3091", "CASE-2026-3091 ", " CASE-2026-3091", "CASE-2026-3091\n",
     "CASE 2026-3091", "CASE-2026-3091-", "CASE-2026-3091-Slug", "CASE-2026-3091--x", "CASE-2026-3091-a b",
     "CASE-2026-3091-a_b", "-2026-3091", "CASE1-2026-3091", "CASE-2026-3091\u0000", "ＣＡＳＥ-2026-3091",
@@ -477,6 +480,52 @@ test("R40 a docket statement's leading token differs from every other statement'
   for (const m of [ratifyStatement(id, DOCKET_SHA), caseRatifyStatement(id, 1, DOCKET_SHA), noticeStatement(id, 1, DOCKET_SHA)]) {
     assert.equal((await verifyAndLog(dsig, m, NS_DOCKET, [KEY.line])).reason, "BAD_SIGNATURE");
   }
+});
+
+/* The ids R38 and R40 judge, against record-grammar's sequential form (R46, R47): the counter's widths either side
+   of four digits, the 10,000th id and far past it, every slug shape, and the near misses around each part. */
+const SEQ_PREFIXES = ID_TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
+const ID_CORES = ["2026-0000", "2026-0001", "2026-9999", "2026-10000", "2026-99999", "2026-1234567890123", "0000-0001",
+  "2026-000", "2026-1", "2026-", "26-0001", "20266-0001", "2026-0001a", "2026-00 01", "2026--0001", "2026-٠٠٠١"];
+const ID_TAILS = ["", "-a", "-a-b", "-sewer-fund-transfers", "-10000", "-x1-2y", "-", "-A", "-a--b", "-a_b", "-a b", "-a-"];
+const statementAccepts = (fn, id) => { try { fn(id, 1, "0".repeat(64)); return true; } catch { return false; } };
+
+test("R38 R40 the id's counter is record-grammar's sequential form: every id is accepted exactly when idPattern accepts its core, any prefix, the slug optional", () => {
+  assert.ok(SEQ_PREFIXES.length > 0, "ID_TABLE holds a sequential prefix");
+  const slugOk = (t) => t === "" || /^(?:-[a-z0-9]+)+$/.test(t);
+  let accepted = 0;
+  for (const prefix of [...SEQ_PREFIXES, "NOTE", "CASE", "N", "ZZZZZZZZ"]) {
+    for (const core of ID_CORES) for (const tail of ID_TAILS) {
+      const id = `${prefix}-${core}${tail}`;
+      /* Judged by record-grammar: the core under a sequential prefix of its table, the prefix capitals, the slug ours. */
+      const want = SEQ_PREFIXES.some((p) => idPattern(p).test(`${p}-${core}`)) && /^[A-Z]+$/.test(prefix) && slugOk(tail);
+      assert.equal(statementAccepts(noticeStatement, id), want, `notice ${id}`);
+      assert.equal(statementAccepts(docketStatement, id), want, `docket ${id}`);
+      assert.equal(sshsig.OPAQUE_ID_RE.test(id), want, `pattern ${id}`);
+      if (want) accepted++;
+    }
+  }
+  assert.ok(accepted > 50);
+  /* The 10,000th id of a year, and the controls R46 names. */
+  for (const fn of [noticeStatement, docketStatement]) {
+    assert.equal(statementAccepts(fn, "ENT-2026-10000"), true);
+    assert.equal(statementAccepts(fn, "ENT-2026-999"), false);
+    assert.equal(statementAccepts(fn, "NOTE-2026-10000-a-slug"), true);
+  }
+  /* Every id accepted before T33 still is: four digits, with or without a slug. */
+  for (let n = 0; n < 10000; n += 37) {
+    const id = `NOTE-2026-${String(n).padStart(4, "0")}`;
+    assert.equal(statementAccepts(noticeStatement, id), true, id);
+    assert.equal(statementAccepts(docketStatement, `${id}-x`), true, id);
+  }
+});
+
+test("R38 R40 the exported pattern is record-grammar's sequential core under any capitals, with the optional slug", () => {
+  /* At the interface: the exported pattern is record-grammar's sequential core under any capitals, with the slug. */
+  const p = SEQ_PREFIXES[0];
+  const core = idPattern(p).source;
+  assert.equal(sshsig.OPAQUE_ID_RE.source, `^[A-Z]+${core.slice(1 + p.length, -1)}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$`);
+  assert.equal(sshsig.OPAQUE_ID_RE.flags, "");
 });
 
 test("R39 NS_DOCKET is bio-docket, distinct from every other namespace, and a docket signature verifies only in it", async () => {
@@ -958,6 +1007,24 @@ test("R30 the page served is the byte-identical render of src/sign-release.html 
   assert.throws(() => renderSignpage('<button id="gen"></button><script>fetch("/x")</script>'), /outbound call/);
 });
 
+test("R42 the page's copy of the id pattern is the plane's, regenerated by embed-signpage and never edited by hand", () => {
+  const html = readFileSync(SIGNPAGE_SRC, "utf8");
+  /* The committed page is a fixed point of the regeneration: a hand edit or a stale copy is red here. */
+  assert.equal(syncIdPattern(html), html);
+  const lines = SIGN_HTML.match(/^const OPAQUE_ID_RE = \/.*\/;$/gm);
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0], `const OPAQUE_ID_RE = ${sshsig.OPAQUE_ID_RE};`);
+  /* A stale copy, the pre-T33 four-digit counter among them, is rewritten to the plane's, and nothing else moves. */
+  for (const stale of ["/^[A-Z]+-\\d{4}-\\d{4}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/", "/x/", "/^$/"]) {
+    const old = html.replace(lines[0], `const OPAQUE_ID_RE = ${stale};`);
+    assert.notEqual(old, html);
+    assert.equal(syncIdPattern(old), html);
+  }
+  /* A page with no copy, or two, is refused rather than half-regenerated. */
+  assert.throws(() => syncIdPattern(html.replace(lines[0], "")), /0 OPAQUE_ID_RE lines/);
+  assert.throws(() => syncIdPattern(html.replace(lines[0], `${lines[0]}\n${lines[0]}`)), /2 OPAQUE_ID_RE lines/);
+});
+
 /* Run the served page's own script against a stub DOM. */
 function loadPage(html) {
   const script = html.slice(html.lastIndexOf("<script>") + 8, html.lastIndexOf("</script>"));
@@ -1137,6 +1204,26 @@ test("R39 the served page signs a docket entry in NS_DOCKET over exactly docketS
   page.el("forget").onclick();
   assert.equal(page.el("dock-sign").disabled, true);
   assert.equal(page.el("dock-out").innerHTML, "");
+});
+
+test("R42 the served page signs a notice or docket entry for exactly the ids noticeStatement and docketStatement accept, the 10,000th included", async () => {
+  const page = loadPage(SIGN_HTML);
+  await page.generateAll();
+  const ids = [];
+  for (const prefix of [SEQ_PREFIXES[0], "NOTE", "CASE"]) for (const core of ID_CORES) for (const tail of ["", "-a-b", "-A", "-a_b"]) {
+    ids.push(`${prefix}-${core}${tail}`);
+  }
+  ids.push("NOTE-2026-10000", "CASE-2026-10000", "ENT-2026-999", "note-2026-10000", "NOTE1-2026-10000");
+  for (const id of ids) {
+    const notice = (await pageSignsNotice(page, id, "1", NOTICE_SHA)).sig !== null;
+    assert.equal(notice, statementAccepts(noticeStatement, id), `notice ${id}`);
+    const docket = (await pageSignsDocket(page, id, "1", DOCKET_SHA)).sig !== null;
+    assert.equal(docket, statementAccepts(docketStatement, id), `docket ${id}`);
+  }
+  /* And a 10,000th id's signature from the page verifies over the plane's own statement. */
+  const made = await page.generateAll();
+  const { sig } = await pageSignsNotice(page, "NOTE-2026-10000", "1", NOTICE_SHA);
+  assert.equal((await verifyAndLog(sig, noticeStatement("NOTE-2026-10000", 1, NOTICE_SHA), NS_NOTICE, [made["bio-ratify"].pub])).ok, true);
 });
 
 test("R39 the served page's docket signatures are accepted by stock ssh-keygen -Y verify in bio-docket only", { skip: NO_SSH_KEYGEN }, async () => {

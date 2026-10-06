@@ -10,8 +10,11 @@
    caller and the registered seeds name (R40, R70). Extracted from `legacy-store` (store.mjs, schema.mjs) in T3; the
    reasoning the legacy comments carried is kept beside the code it explains. T19: the audit's seams (R68, R69), the
    mint seeds (R70), the schema run first (R71) and the ops map (R72, R73). T20: this module's own figures exported for
-   `plane` to register (R74). T24: a chosen opaque id recorded in the ledger (R75). */
-import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES } from "../record-grammar/index.mjs";
+   `plane` to register (R74). T24: a chosen opaque id recorded in the ledger (R75). T33 (T33-19; S0-2, S0-3, B0.12,
+   K1493): ids minted from record-grammar's `ID_TABLE`, the counter with no ceiling and the opaque allocator (R1, R40,
+   R76); `declareTable` with its classes, `declarePurge` its default form (R21, R46); the derived-cache convention (R77);
+   the store gate (R78); expunge with a tombstone (R79). */
+import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
 
@@ -96,7 +99,14 @@ function manifestFiles(filesJson) {
 
 /* What each opaque-minted prefix's id is called in R62's detail: R3's set (`RecordCore.GATED_ID_PREFIXES`), and `SRC`, a
    source, which `sources` mints opaque through `mintOpaqueId` and never through the counter (N376, K540). */
-const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source" });
+const MINTED_OBJECT = Object.freeze({ PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source",
+  /* T33 (R76): the opaque prefixes of `ID_TABLE`, which `allocId` draws a 16-character tail for */
+  EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim" });
+
+/* R76 (S0-2): the prefixes `ID_TABLE` gives the opaque form, read from record-grammar's one table, never restated. */
+const OPAQUE_PREFIXES = new Set(ID_TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix));
+const TAIL_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+const TAIL_LENGTH = 16;      /* measures-T33/assistant-substrate.md §5: under 1e-9 over a 10-year store at 10^7 a year */
 
 /** R62 (N322, N250, K275, K392): THE ONE ANSWER TO ONE CONDITION, no free opaque id could be drawn (`mintOpaqueId`
  *  answered null, R9). Every act of any module that meets it answers through here, so `MINT_EXHAUSTED` is minted at
@@ -263,11 +273,32 @@ export class RecordCore {
 
   /** This module's own tables, declared to purge by it (R21), and those purge never clears (R23). */
   static OWN_TABLES = Object.freeze(["files", "history", "manifest", "leases", "bundles"]);
-  static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings"]);
+  static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings", "tombstones", "derived_stale"]);
+
+  /** R21 (T33-19): the classes of this module's own tables, declared by it explicitly (R79's tombstones and R77's stale
+   *  marks are exempt from purge: an expunge's record outlives every purge, and a mark that outlives its row still
+   *  answers stale). */
+  static #OWN_DECLARATIONS = (() => {
+    const own = (name, cls) => Object.freeze({ name, purge: "clear", expunge: "none", derive: "stored", version_chain: false, ...cls });
+    const kept = { purge: "exempt", sight: "group" };
+    return Object.freeze([
+      own("files", { export: "yes", sight: "bundle" }),
+      own("history", { export: "yes", sight: "bundle", version_chain: true }),
+      own("manifest", { export: "yes", sight: "bundle", version_chain: true }),
+      own("leases", { export: "never", sight: "bundle" }),
+      own("bundles", { export: "yes", sight: "bundle" }),
+      own("seq", { ...kept, export: "admin-only" }),
+      own("minted_ids", { ...kept, export: "never" }),               /* read by no route, never counted or listed */
+      own("settings", { ...kept, export: "admin-only", version_chain: true }),
+      own("tombstones", { ...kept, export: "yes", version_chain: true }),   /* R79: a removal reaches future exports */
+      own("derived_stale", { ...kept, export: "never" }),
+    ]);
+  })();
 
   static { sqlOf = (rc) => rc.#sql; }
 
   #storage; #sql; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
+  #gates = new Map();     // R78: table → {module, checks}, one registration per table
   #held = [];             // R66: one list per open `transact`, outermost first, of what `afterCommit` held
   #auditChecks = [];      // R59: {module, check}, in registration order
   #grammars = [];         // R67: {module, ids, arm}, in registration order
@@ -288,7 +319,7 @@ export class RecordCore {
     catch { this.#firstBoot = false; }
     this.#evidence = evidence && typeof evidence.get === "function" ? evidence : null;
     this.#evidencePrefix = evidencePrefix;
-    this.declarePurge("record-core", RecordCore.OWN_TABLES, { exempt: RecordCore.EXEMPT_TABLES });
+    this.#declare("record-core", RecordCore.#OWN_DECLARATIONS, false);
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -387,10 +418,31 @@ export class RecordCore {
 
   /* ---- ids (R1–R9) ---- */
 
-  /** R1, R2: `<prefix>-<year>-NNNN`, the scope's next number; the same step inside a caller's
-   *  transaction as on its own, because it joins the caller's. */
+  /** R1, R2, R76 (T33-19; S0-2, B0.12): an id of `prefix` in its `ID_TABLE` form (record-grammar's R46). A sequential
+   *  prefix, or one the table does not hold, is `<prefix>-<year>-N`, the scope's next number, zero-padded to four digits
+   *  and never cut: there is no ceiling, so the 10,000th is `…-10000`. An opaque prefix is R76's id. The same step
+   *  inside a caller's transaction as on its own, because it joins the caller's. */
   allocId(prefix, year) {
-    return this.transact(() => this.#nextSeq(prefix, year));
+    return this.transact(() => (OPAQUE_PREFIXES.has(prefix) ? this.#opaqueId(prefix, year) : this.#nextSeq(prefix, year)));
+  }
+
+  /** R76: `<prefix>-<year>-<tail>`, the tail 16 characters of `[a-z0-9]`, each drawn uniformly from the CSPRNG by
+   *  rejection sampling (a byte of 252 or more is drawn again, 252 being the largest multiple of 36 under 256). Asked of
+   *  the opaque-id ledger and recorded there before it is returned, in the transaction `allocId` joins, so a rolled-back
+   *  act takes its id back (R7) and no purge forgets it (R8): a hit draws again, so a collision is a retry and never a
+   *  duplicate. After 64 hits in a row, R62's one answer for the prefix. The counter is not read or stepped. */
+  #opaqueId(prefix, year) {
+    const byte = new Uint8Array(1);
+    const char = () => { for (;;) { crypto.getRandomValues(byte); if (byte[0] < 252) return TAIL_ALPHABET[byte[0] % 36]; } };
+    for (let i = 0; i < 64; i++) {
+      let tail = "";
+      while (tail.length < TAIL_LENGTH) tail += char();
+      const id = `${prefix}-${year}-${tail}`;
+      if (this.#one(`SELECT 1 AS x FROM minted_ids WHERE id=?`, id)) continue;
+      this.#sql.exec(`INSERT INTO minted_ids (id,recorded_at,source) VALUES (?,?,'opaque')`, id, new Date().toISOString());
+      return { id };
+    }
+    return mintExhausted(prefix);
   }
 
   #nextSeq(prefix, year) {
@@ -472,7 +524,8 @@ export class RecordCore {
    *  LIVE: every live row of a gated kind, from the `[prefix, table, column]` sources the caller names
    *  (the tables each mint site's `taken` reads; their owners declare them). COUNTER: for a prefix
    *  whose mint passes no tail, every id `seq` says the counter issued before REC-151, used or not,
-   *  capped at 9,999. Rows already recorded are left as they are. One statement per source and one
+   *  of any counter width (T33, R40: no ceiling). Live ids are learned whole, so an id of either `ID_TABLE` form,
+   *  a counter of any width or an opaque 16-character tail, is learned as it is held. Rows already recorded are left as they are. One statement per source and one
    *  for the counter, each doing its work inside SQLite. A live id is matched by its literal `<prefix>-`
    *  head, never a GLOB built from the prefix: workerd refuses a pattern over 50 bytes (K313), and a
    *  prefix is the caller's, of any length and any characters. */
@@ -490,7 +543,7 @@ export class RecordCore {
     const inScope = (col) => scopes.map(() => `${col} GLOB ?`).join(" OR ");
     this.#sql.exec(`INSERT OR IGNORE INTO minted_ids (id,recorded_at,source)
                     WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n
-                      WHERE i < (SELECT MIN(9999, COALESCE(MAX(next), 1) - 1) FROM seq WHERE ${inScope("scope")}))
+                      WHERE i < (SELECT COALESCE(MAX(next), 1) - 1 FROM seq WHERE ${inScope("scope")}))
                     SELECT s.scope || '-' || printf('%04d', n.i), ?, 'counter'
                       FROM seq s JOIN n ON n.i < s.next WHERE ${inScope("s.scope")}`,
                    ...scopes, at, ...scopes);
@@ -1277,32 +1330,96 @@ export class RecordCore {
 
   /* ---- purge (R21–R24) ---- */
 
-  /** R21, R46: a module declares the tables it owns, once, at start. An entry is a table name, keyed to a
-   *  bundle by its `bundle_id` column when it has one, or `{name, keys, whole, clears}`: keyed to a bundle by the
-   *  named columns (any of them matching; none, and only the whole-store form clears it), cleared by the whole-store
-   *  form only where the `whole` clause holds, and, for `clears` (K775), a pointer column a bundle's purge sets to
-   *  NULL where it names the bundle, on rows that stay. `exempt` names tables purge never clears.
-   *  A table declared twice, or by two modules, is refused, and the refused declaration declares nothing. */
+  /* R21 (S0-3): the classes every declared table names, each with the values it may take. */
+  static #CLASSES = Object.freeze({
+    purge: Object.freeze(["clear", "exempt"]), expunge: Object.freeze(["tombstone", "none"]),
+    export: Object.freeze(["yes", "admin-only", "never"]), sight: Object.freeze(["group", "bundle", "source", "owner"]),
+    derive: Object.freeze(["stored", "derived-rebuildable"]), version_chain: Object.freeze([true, false]),
+  });
+
+  /** R21, R46 (T33-19; S0-3, K1470, K1489): a module declares the tables it owns, once, at start, one entry per table,
+   *  each naming its classes (`purge`, `expunge`, `export`, `sight`, `derive`, `version_chain`) beside R46's keying
+   *  (`keys`, `whole`, `clears`). A `derived-rebuildable` table also names `rebuild(scope)` and `key`, the columns that
+   *  name one of its rows (R77). An entry missing a class, or with a value outside it, is refused, naming the table and
+   *  the class; so is a name that is not a plain identifier, and a table declared twice or by two modules. A refused
+   *  declaration declares nothing. `purge` clears every declared table whose `purge` is `clear`. */
+  declareTable(module, entries = []) {
+    return this.#declare(module, Array.isArray(entries) ? entries : [entries], false);
+  }
+
+  /** R21, R46: `declareTable`'s default form, kept for the modules with no T33 job (plan T33, Rules (6)): each table
+   *  `purge: "exempt"` when listed in `exempt`, else `clear`; `expunge: "none"`, `export: "admin-only"`, `derive:
+   *  "stored"`, `version_chain: false`; `sight` is `bundle` when the table is keyed to a bundle, else `group`, decided
+   *  when the declarations are read, as purge decides keying (the table may not exist yet at declaration). An entry is a
+   *  table name or `{name, keys, whole, clears}`: keyed to a bundle by the named columns (any of them matching; none, and
+   *  only the whole-store form clears it), cleared by the whole-store form only where `whole` holds, and, for `clears`
+   *  (K775), a pointer column a bundle's purge sets to NULL where it names the bundle, on rows that stay. */
   declarePurge(module, tables = [], { exempt = [] } = {}) {
-    const entries = [...tables.map((t) => (typeof t === "string" ? { name: t } : { ...t })),
-                     ...exempt.map((name) => ({ name, exempt: true }))];
-    const names = new Set();
-    for (const e of entries) {
-      const columns = (list) => list == null || (Array.isArray(list) && list.every((k) => IDENT.test(String(k))));
-      if (!IDENT.test(String(e.name)) || !columns(e.keys) || !columns(e.clears))
-        return { ok: false, reason: "TABLE_NAME_INVALID", table: String(e.name), module };
-      if (this.#declared.has(e.name) || names.has(e.name))
-        return { ok: false, reason: "TABLE_DECLARED", table: e.name, module,
-                 declaredBy: this.#declared.has(e.name) ? this.#declared.get(e.name).module : module };
-      names.add(e.name);
+    const defaults = { expunge: "none", export: "admin-only", sight: "bundle", derive: "stored", version_chain: false };
+    return this.#declare(module, [...tables.map((t) => ({ ...(typeof t === "string" ? { name: t } : t), ...defaults, purge: "clear" })),
+                                  ...exempt.map((name) => ({ name, ...defaults, purge: "exempt" }))], true);
+  }
+
+  /* The one declaration door (R21). `keyedSight`: the entries' `sight` is decided by their keying when read. */
+  #declare(module, entries, keyedSight) {
+    const columns = (list) => list == null || (Array.isArray(list) && list.every((k) => IDENT.test(String(k))));
+    const names = new Set(), held = [];
+    for (const raw of entries) {
+      const e = raw && typeof raw === "object" ? raw : { name: raw };
+      const table = String(e.name);
+      /* DEC-49 REGION is-table-declaration */
+      if (!IDENT.test(table) || !columns(e.keys) || !columns(e.clears) || !columns(e.key))
+        return { ok: false, reason: "TABLE_NAME_INVALID", table, module };
+      for (const [cls, allowed] of Object.entries(RecordCore.#CLASSES)) {
+        if (e[cls] === undefined)
+          return rowRefusal("TABLE_CLASS_MISSING", `${table} names no ${cls} class; nothing was declared.`, { table, module, class: cls });
+        if (!allowed.includes(e[cls]))
+          return rowRefusal("TABLE_CLASS_UNKNOWN", `${table}'s ${cls} class is one of ${allowed.join(", ")}; nothing was declared.`,
+                            { table, module, class: cls });
+      }
+      if (e.derive === "derived-rebuildable" && typeof e.rebuild !== "function")
+        return rowRefusal("TABLE_CLASS_MISSING", `${table} is derived-rebuildable and names no rebuild; nothing was declared.`,
+                          { table, module, class: "rebuild" });
+      if (e.derive === "derived-rebuildable" && !(Array.isArray(e.key) && e.key.length))
+        return rowRefusal("TABLE_CLASS_MISSING", `${table} is derived-rebuildable and names no key columns; nothing was declared.`,
+                          { table, module, class: "key" });
+      if (this.#declared.has(table) || names.has(table)) {
+        const declaredBy = this.#declared.has(table) ? this.#declared.get(table).module : module;
+        return { ok: false, reason: "TABLE_DECLARED", table, module, declaredBy };
+      }
+      /* END DEC-49 REGION is-table-declaration */
+      names.add(table);
+      held.push({ e, table });
     }
-    for (const e of entries) {
-      const d = { module, name: e.name, exempt: !!e.exempt, keys: e.keys == null ? null : [...e.keys], whole: e.whole || null,
-                  clears: e.clears == null ? [] : [...e.clears] };
-      this.#declared.set(e.name, d);
+    for (const { e, table } of held) {
+      const classes = Object.freeze(Object.fromEntries(Object.keys(RecordCore.#CLASSES).map((c) => [c, e[c]])));
+      const d = Object.freeze({ module, name: table, exempt: classes.purge === "exempt", classes, keyedSight,
+                                keys: e.keys == null ? null : Object.freeze([...e.keys]), whole: e.whole || null,
+                                clears: Object.freeze(e.clears == null ? [] : [...e.clears]),
+                                rebuild: classes.derive === "derived-rebuildable" ? e.rebuild : null,
+                                key: classes.derive === "derived-rebuildable" ? Object.freeze([...e.key]) : null });
+      this.#declared.set(table, d);
       this.#order.push(d);
     }
     return { ok: true };
+  }
+
+  /* A declaration's keying (R46): its `keys` when it names them, else the table's `bundle_id` column. */
+  #bundleKeys(d) {
+    if (d.keys) return d.keys;
+    try { return this.#rows(`PRAGMA table_info(${d.name})`).some((c) => c.name === "bundle_id") ? ["bundle_id"] : []; }
+    catch { return []; }
+  }
+
+  /** R21: every declaration with its classes, in declaration order (`corpus-export` reads it), a fresh list each call. A
+   *  default-form entry's `sight` is `bundle` when the table is keyed to a bundle now, else `group`. */
+  declaredTables() {
+    return this.#order.map((d) => ({
+      module: d.module, name: d.name, ...(d.keys ? { keys: [...d.keys] } : {}), ...(d.whole ? { whole: d.whole } : {}),
+      ...(d.clears.length ? { clears: [...d.clears] } : {}), ...d.classes,
+      ...(d.keyedSight ? { sight: this.#bundleKeys(d).length ? "bundle" : "group" } : {}),
+      ...(d.key ? { key: [...d.key] } : {}),
+    }));
   }
 
   /** R22–R24, R46: whole-store (no `bundleId`) or one bundle's rows, from every declared non-exempt table,
@@ -1322,7 +1439,7 @@ export class RecordCore {
         let where, args = [];
         if (one) {
           for (const c of d.clears) this.#sql.exec(`UPDATE ${d.name} SET ${c}=NULL WHERE ${c}=?`, bundleId);
-          const keys = d.keys ?? (this.#rows(`PRAGMA table_info(${d.name})`).some((c) => c.name === "bundle_id") ? ["bundle_id"] : []);
+          const keys = this.#bundleKeys(d);
           if (!keys.length) continue;
           where = keys.map((k) => `${k}=?`).join(" OR "); args = keys.map(() => bundleId);
         } else where = d.whole || "1=1";
@@ -1332,6 +1449,292 @@ export class RecordCore {
       }
     });
     return { ok: true, scope: one ? bundleId : "ALL", removed };
+  }
+
+  /* ---- the derived-cache convention (R77; S0-3) ---- */
+
+  /* A row key as it is held and compared: the column→value pairs in column order, as JSON. */
+  static #keyJson(map) { return JSON.stringify(Object.keys(map).sort().map((k) => [k, map[k]])); }
+  static #scalar(v) { return typeof v === "string" || (typeof v === "number" && Number.isFinite(v)); }
+  static #plain(o) { return !!o && typeof o === "object" && !Array.isArray(o) && Object.getPrototypeOf(o) === Object.prototype; }
+
+  /* The declaration of a table `module` declared derived-rebuildable; a caller naming any other is a defect in how the
+     instance was built, answered as a TypeError. */
+  #derived(module, table) {
+    const d = this.#declared.get(String(table));
+    if (!d || d.module !== module || d.rebuild === null)
+      throw new TypeError(`${String(table)} is not a table ${String(module)} declared derived-rebuildable (R77)`);
+    return d;
+  }
+  /* A row's key, `{column: value}` over exactly the declared key columns, or a bare value for a one-column key; null
+     for anything else. */
+  #keyMap(d, key) {
+    if (RecordCore.#plain(key)) {
+      const cols = Object.keys(key);
+      return cols.length === d.key.length && d.key.every((c) => Object.hasOwn(key, c) && RecordCore.#scalar(key[c]))
+        ? Object.fromEntries(d.key.map((c) => [c, key[c]])) : null;
+    }
+    return d.key.length === 1 && RecordCore.#scalar(key) ? { [d.key[0]]: key } : null;
+  }
+  /* A rebuild's scope: null (the whole table) or `{column: value}`, every column matching. */
+  static #scope(scope) {
+    if (scope === null || scope === undefined) return null;
+    if (!RecordCore.#plain(scope) || !Object.entries(scope).every(([c, v]) => IDENT.test(c) && RecordCore.#scalar(v)))
+      throw new TypeError("a rebuild's scope is null or an object of column names to values (R77)");
+    return Object.keys(scope).length ? { ...scope } : null;
+  }
+  static #where(map) {
+    const cols = map ? Object.keys(map) : [];
+    return { sql: cols.length ? cols.map((c) => `${c}=?`).join(" AND ") : "1=1", args: cols.map((c) => map[c]) };
+  }
+  /* `rebuild(scope)`'s rows, each a plain object of column names to values; anything else is the rebuild's defect. */
+  static #rebuilt(d, scope) {
+    const rows = d.rebuild(scope);
+    if (!Array.isArray(rows) || !rows.every((r) => RecordCore.#plain(r) && Object.keys(r).every((c) => IDENT.test(c))))
+      throw new TypeError(`${d.name}'s rebuild answered something other than a list of rows (R77)`);
+    return rows;
+  }
+  #insertRows(table, rows) {
+    for (const r of rows) {
+      const cols = Object.keys(r);
+      this.#sql.exec(`INSERT INTO ${table} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`, ...cols.map((c) => r[c]));
+    }
+  }
+
+  /** R77: marks a held row of a derived-rebuildable table stale, in whatever transaction the caller holds, so
+   *  `readDerived` answers it stale until a rebuild clears it. `key` names the row (R77's key columns). A table the
+   *  module did not declare derived-rebuildable, or a key that names no row's key, is the caller's defect: a TypeError. */
+  markStale(module, table, key) {
+    const d = this.#derived(module, table);
+    const map = this.#keyMap(d, key);
+    if (!map) throw new TypeError(`markStale: ${d.name}'s key is ${d.key.join(", ")} (R77)`);
+    this.#sql.exec(`INSERT OR IGNORE INTO derived_stale (module,table_name,key_json,marked_at) VALUES (?,?,?,?)`,
+                   module, d.name, RecordCore.#keyJson(map), new Date().toISOString());
+    return { ok: true };
+  }
+
+  /** R77: FAIL CLOSED. A held row that is marked stale, missing, or cannot be read is `{stale: true}`, never its held
+   *  value; a fresh one is `{stale: false, row}`. Only a table the module did not declare derived-rebuildable throws. */
+  readDerived(module, table, key) {
+    const d = this.#derived(module, table);
+    try {
+      const map = this.#keyMap(d, key);
+      if (!map) return { stale: true };
+      if (this.#one(`SELECT 1 AS x FROM derived_stale WHERE module=? AND table_name=? AND key_json=?`, module, d.name,
+                    RecordCore.#keyJson(map))) return { stale: true };
+      const w = RecordCore.#where(map);
+      const row = this.#one(`SELECT * FROM ${d.name} WHERE ${w.sql} LIMIT 1`, ...w.args);
+      return row ? { stale: false, row: { ...row } } : { stale: true };
+    } catch {
+      return { stale: true };
+    }
+  }
+
+  /** R77: THE REBUILD THAT CLEARS A MARK. In one transaction, the held rows in `scope` (null: the whole table) are
+   *  replaced by `rebuild(scope)`'s, and the marks of every row it removed or wrote are cleared (with no scope, every
+   *  mark of the table). It writes only the declared table and this module's marks. */
+  rebuildDerived(module, table, scope = null) {
+    const d = this.#derived(module, table);
+    const sc = RecordCore.#scope(scope);
+    return this.transact(() => {
+      const rows = RecordCore.#rebuilt(d, sc);
+      const w = RecordCore.#where(sc);
+      const pick = (r) => Object.fromEntries(d.key.map((c) => [c, r[c]]));
+      const touched = new Set(this.#rows(`SELECT ${d.key.join(",")} FROM ${d.name} WHERE ${w.sql}`, ...w.args)
+                                .map((r) => RecordCore.#keyJson(pick(r))));
+      this.#sql.exec(`DELETE FROM ${d.name} WHERE ${w.sql}`, ...w.args);
+      this.#insertRows(d.name, rows);
+      for (const r of rows) touched.add(RecordCore.#keyJson(pick(r)));
+      if (!sc) this.#sql.exec(`DELETE FROM derived_stale WHERE module=? AND table_name=?`, module, d.name);
+      else for (const k of touched)
+        this.#sql.exec(`DELETE FROM derived_stale WHERE module=? AND table_name=? AND key_json=?`, module, d.name, k);
+      return { ok: true, rows: rows.length };
+    });
+  }
+
+  /** R77: THE ONE TEST HELPER. Rebuilds the rows of `scope` into a scratch copy of the table and compares them byte for
+   *  byte with the held rows of `scope`, both read back through SQLite (so its own typing is what is compared), walked
+   *  in key order: `{same: true}`, or `{same: false, first: {key, held, rebuilt}}` at the first key whose rows differ
+   *  (`held` null for a row only the rebuild holds, `rebuilt` null for one only the table holds). The scratch copy lives in a savepoint that is
+   *  always rolled back: nothing is written to the held table, or anywhere. */
+  rebuildAndCompare(module, table, scope = null) {
+    const d = this.#derived(module, table);
+    const sc = RecordCore.#scope(scope);
+    const cols = this.#rows(`PRAGMA table_info(${d.name})`).map((c) => c.name);
+    /* Both sides in one order: the key columns first, then every other column, so rows of one key meet. */
+    const order = [...d.key, ...cols.filter((c) => !d.key.includes(c))].join(",");
+    const scratch = `rebuild_scratch_${d.name}`;
+    const tag = (v) => (v instanceof Uint8Array ? ["blob", hex(v)] : typeof v === "bigint" ? ["bigint", String(v)] : [typeof v, v]);
+    const bytes = (r) => JSON.stringify(cols.map((c) => tag(r[c])));
+    /* SQLite's order of two values (null, then numbers, then text, then blobs; text and blobs by their bytes). */
+    const rank = (v) => (v === null || v === undefined ? 0 : typeof v === "number" || typeof v === "bigint" ? 1 : typeof v === "string" ? 2 : 3);
+    const cmp = (x, y) => {
+      if (rank(x) !== rank(y)) return rank(x) - rank(y);
+      if (rank(x) === 1) return x < y ? -1 : x > y ? 1 : 0;
+      if (rank(x) === 0) return 0;
+      return Buffer.compare(Buffer.from(rank(x) === 2 ? te.encode(x) : x), Buffer.from(rank(y) === 2 ? te.encode(y) : y));
+    };
+    const keyCmp = (h, r) => { for (const c of d.key) { const k = cmp(h[c], r[c]); if (k) return k; } return 0; };
+    const keyOf = (r) => Object.fromEntries(d.key.map((c) => [c, r[c]]));
+    const DONE = Symbol("compared");
+    let out;
+    try {
+      this.#storage.transactionSync(() => {
+        this.#sql.exec(`CREATE TABLE ${scratch} AS SELECT * FROM ${d.name} WHERE 0`);
+        this.#insertRows(scratch, RecordCore.#rebuilt(d, sc));
+        const w = RecordCore.#where(sc);
+        const held = this.#rows(`SELECT * FROM ${d.name} WHERE ${w.sql} ORDER BY ${order}`, ...w.args);
+        const rebuilt = this.#rows(`SELECT * FROM ${scratch} ORDER BY ${order}`);
+        out = { same: true };
+        let i = 0, j = 0;
+        while (i < held.length || j < rebuilt.length) {
+          const h = held[i] ?? null, r = rebuilt[j] ?? null;
+          const k = h && r ? keyCmp(h, r) : h ? -1 : 1;
+          if (k === 0 && bytes(h) === bytes(r)) { i++; j++; continue; }
+          out = { same: false, first: k === 0 ? { key: keyOf(h), held: { ...h }, rebuilt: { ...r } }
+                    : k < 0 ? { key: keyOf(h), held: { ...h }, rebuilt: null } : { key: keyOf(r), held: null, rebuilt: { ...r } } };
+          break;
+        }
+        throw DONE;
+      });
+    } catch (e) {
+      if (e !== DONE) throw e;
+    }
+    return out;
+  }
+
+  /* ---- the store gate (R78; S0-3, the one-home checks) ---- */
+
+  /** R78: a table's owner registers, once per table at start, `check(row, {op})` (or a list of them, run in order), the
+   *  table's one-home and shape checks. Refused, registering nothing: a table that already has its checks
+   *  (`STORE_GATE_DECLARED`, naming the holder); no module, a table this module did not declare, or no function
+   *  (`STORE_GATE_MALFORMED`). */
+  registerStoreGate(module, table, check) {
+    const named = typeof module === "string" && module.trim() !== "";
+    const d = typeof table === "string" ? this.#declared.get(table) : undefined;
+    const checks = typeof check === "function" ? [check]
+      : Array.isArray(check) && check.length && check.every((c) => typeof c === "function") ? [...check] : null;
+    /* DEC-49 REGION is-store-gate-registration */
+    if (!named || !d || d.module !== module || !checks)
+      return rowRefusal("STORE_GATE_MALFORMED", "a store gate names its module, a table that module declared and a check to "
+        + `run; nothing was registered${d && named && d.module !== module ? ` (${d.name} is ${d.module}'s)` : ""}.`,
+        { module: named ? module : null, table: typeof table === "string" ? table : null, ...(d ? { declaredBy: d.module } : {}) });
+    if (this.#gates.has(table))
+      return rowRefusal("STORE_GATE_DECLARED", `${table}'s checks are already registered by ${this.#gates.get(table).module}; `
+        + "the first still runs.", { module, table, heldBy: this.#gates.get(table).module });
+    /* END DEC-49 REGION is-store-gate-registration */
+    this.#gates.set(table, Object.freeze({ module, checks: Object.freeze(checks) }));
+    return { ok: true, module, table };
+  }
+
+  /** R78: what every write to a gated table asks, inside its transaction, before it writes: the table's checks in order,
+   *  answering the first refusal (a check's answer carrying a non-empty `code`, given back with `ok: false` and that
+   *  code as `reason`), or null when every check passed (or the table has none). FAIL CLOSED: a check that throws,
+   *  answers a promise, or answers anything but null, undefined or a refusal is `STORE_GATE_FAILED`, never a pass; a
+   *  writer that is not the table's declarer is `STORE_GATE_MALFORMED`. A writer that gets a refusal writes nothing and
+   *  answers it. Writes nothing; never throws. */
+  storeGate(module, table, row, op) {
+    const d = typeof table === "string" ? this.#declared.get(table) : undefined;
+    /* DEC-49 REGION is-store-gate-registration */
+    if (d && d.module !== module)
+      return rowRefusal("STORE_GATE_MALFORMED", `${table} is ${d.module}'s table; ${String(module)} does not write it. Nothing `
+        + "was written.", { module: typeof module === "string" ? module : null, table, declaredBy: d.module });
+    /* END DEC-49 REGION is-store-gate-registration */
+    const gate = typeof table === "string" ? this.#gates.get(table) : undefined;
+    if (!gate) return null;
+    for (const check of gate.checks) {
+      let got, failed = null;
+      try {
+        got = check(row, { op });
+        if (got !== null && typeof got === "object" && typeof got.then === "function") {
+          try { got.then(null, () => {}); } catch { /* a thenable that cannot be followed is still no answer */ }
+          failed = "it answered later, not now";
+        }
+      } catch (e) { failed = String((e && e.message) || e).slice(0, 200); }
+      if (failed === null && (got === null || got === undefined)) continue;
+      let code = null;
+      try { code = failed === null && got && typeof got === "object" && typeof got.code === "string" && got.code ? got.code : null; }
+      catch { code = null; }
+      if (code !== null) {
+        let own = {};
+        try { own = { ...got }; } catch { own = {}; }
+        return { ...own, ok: false, reason: code, code };
+      }
+      /* DEC-49 REGION is-store-gate-failed */
+      return rowRefusal("STORE_GATE_FAILED", `${gate.module}'s check on ${table} did not answer a pass or a refusal`
+        + `${failed === null ? "" : `: ${failed}`}. Nothing was written.`, { module: gate.module, table });
+      /* END DEC-49 REGION is-store-gate-failed */
+    }
+    return null;
+  }
+
+  /* ---- expunge with a tombstone (R79; K1493, State Rules I-19) ---- */
+
+  static #GROUNDS = Object.freeze(["unlawful", "confidential", "court_order", "lawful_demand"]);
+
+  /** R79: THE SANCTIONED EXCEPTION TO APPEND-ONLY. Removes, in one transaction, the rows of a table its module declared
+   *  `expunge: "tombstone"` whose columns match every column of `key`, and records one tombstone `{table, key, ground,
+   *  order?, demandKind?, by, at}` holding none of the removed content. Refused, removing nothing, in this order: a
+   *  ground outside the four (or `court_order` naming no order, `lawful_demand` no demand kind),
+   *  `EXPUNGE_GROUND_UNKNOWN`; a table `module` did not declare `tombstone` (`history` and `manifest` are declared
+   *  `none`, R29), `EXPUNGE_NOT_DECLARED`; a machine (`token:`) or absent `by`, `EXPUNGE_NOT_A_MEMBER`; a key that is
+   *  empty, names a column the table lacks, or matches no row, `EXPUNGE_NOTHING`. Who may expunge, and the ground's
+   *  evidence, are the caller's. */
+  expunge({ module, table, key, ground, order, demandKind, by } = {}) {
+    const said = (v) => typeof v === "string" && v.trim() !== "";
+    const d = typeof table === "string" ? this.#declared.get(table) : undefined;
+    const named = typeof table === "string" ? table : null;
+    let cols = [];
+    if (d && d.classes.expunge === "tombstone") cols = this.#rows(`PRAGMA table_info(${d.name})`).map((c) => c.name);
+    const keyed = RecordCore.#plain(key) && Object.keys(key).length > 0
+      && Object.entries(key).every(([c, v]) => IDENT.test(c) && cols.includes(c) && RecordCore.#scalar(v));
+    const w = keyed ? RecordCore.#where(key) : null;
+    /* DEC-49 REGION is-expunge-refused */
+    if (!RecordCore.#GROUNDS.includes(ground) || (ground === "court_order" && !said(order))
+        || (ground === "lawful_demand" && !said(demandKind)))
+      return rowRefusal("EXPUNGE_GROUND_UNKNOWN", "an expunge names one of the grounds unlawful, confidential, court_order (with "
+        + "the recorded order) or lawful_demand (with the profile's demand kind); nothing was removed.", { table: named });
+    if (!d || d.module !== module || d.classes.expunge !== "tombstone")
+      return rowRefusal("EXPUNGE_NOT_DECLARED", `${String(table)} is not a table ${String(module)} declared expunge: tombstone; `
+        + "nothing was removed.", { table: named });
+    if (!said(by) || by.trim().startsWith("token:"))
+      return rowRefusal("EXPUNGE_NOT_A_MEMBER", "an expunge is a member's act, named by that member; a machine or absent actor "
+        + "removes nothing.", { table: named });
+    const n = keyed ? Number(this.#one(`SELECT COUNT(*) AS n FROM ${d.name} WHERE ${w.sql}`, ...w.args).n) : 0;
+    if (!n)
+      return rowRefusal("EXPUNGE_NOTHING", `no row of ${d.name} matches the key; nothing was removed.`, { table: named });
+    /* END DEC-49 REGION is-expunge-refused */
+    const at = new Date().toISOString();
+    const keep = { ...key };
+    return this.transact(() => {
+      this.#sql.exec(`DELETE FROM ${d.name} WHERE ${w.sql}`, ...w.args);
+      this.#sql.exec(`INSERT INTO tombstones (module,table_name,key_json,ground,court_order,demand_kind,by_actor,at)
+                      VALUES (?,?,?,?,?,?,?,?)`, module, d.name, RecordCore.#keyJson(keep), ground,
+                     ground === "court_order" ? order : null, ground === "lawful_demand" ? demandKind : null, by, at);
+      return { ok: true, table: d.name, removed: n,
+               tombstone: { table: d.name, key: keep, ground, ...(ground === "court_order" ? { order } : {}),
+                            ...(ground === "lawful_demand" ? { demandKind } : {}), by, at } };
+    });
+  }
+
+  /** R79: the tombstones in the order recorded, after the cursor `after` (a tombstone's `seq`), at most `limit`, of one
+   *  table when `table` is given. `cursor` is the last `seq` listed. Writes nothing; never throws. */
+  tombstones({ table = null, after = 0, limit = 200 } = {}) {
+    try {
+      const cap = RecordCore.#bound(limit);
+      const from = Number.isSafeInteger(Number(after)) ? Number(after) : 0;
+      const list = (typeof table === "string"
+        ? this.#rows(`SELECT * FROM tombstones WHERE seq > ? AND table_name = ? ORDER BY seq LIMIT ?`, from, table, cap)
+        : this.#rows(`SELECT * FROM tombstones WHERE seq > ? ORDER BY seq LIMIT ?`, from, cap)).map((r) => {
+          let key;
+          try { key = Object.fromEntries(JSON.parse(r.key_json)); } catch { key = null; }
+          return { seq: r.seq, table: r.table_name, key, ground: r.ground, ...(r.court_order != null ? { order: r.court_order } : {}),
+                   ...(r.demand_kind != null ? { demandKind: r.demand_kind } : {}), by: r.by_actor, at: r.at };
+        });
+      return { tombstones: list, cursor: list.length ? list[list.length - 1].seq : null };
+    } catch {
+      return { tombstones: [], cursor: null };
+    }
   }
 
   /* ---- settings (R25, R26) ---- */

@@ -1,10 +1,13 @@
 /* sources — the person behind material given to the group (requirements: `build/requirements/sources.md`; Intake
- * Doctrine §2a, DEC-78 items 2, 3 and 5; Bob's K509 (1), (4), (5)). A source is the knocker who handed material over,
+ * Doctrine §2a, DEC-78 items 2, 3 and 5; Bob's K509 (1), (4), (5); T33-22: K1449, K1492 (3)). A source is the knocker who handed material over,
  * and later whoever is revealed behind them, held as a dated, attributed history of disclosures, never one overwritten
  * field. It also answers what of a source may be published, and to whom, and how far the source is known (the ladder).
+ * And it holds the mark that a capture is a result a member reached on their own paid account (a member-keyed outside
+ * source, R16–R18): cited at a lower grade, never reproducible by the public, marked one capture at a time by the
+ * member who captured it, never in bulk and never unattended.
  *
  * A new module (K509 (1), N364): nothing moves. Its tables (`./schema.mjs`) are append-only and exempt from purge
- * (R13). Its rows are its own family, C-121 (`./checks.mjs`, R14).
+ * (R13), each declared with its classes (R19). Its rows are its own family, C-121 (`./checks.mjs`, R14).
  *
  * WHERE A SOURCE COMES FROM (R1). `capture` is earlier in the order and cannot call this module, so a source is
  * derived at read from the knocks capture pulled into a capture (its R72, R65, R66) and minted on first read and kept:
@@ -20,24 +23,26 @@
  * REACHED as `sourcesOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call with
  * `deps` and returned to every later caller. At creation it creates its tables and declares them to purge, every one
  * exempt (R13). `deps`:
- *   record, membership, capture   the modules it uses, through their factories on the same storage unless a test
- *                                 passes its own (`capture` is reached lazily, on first use).
+ *   record, membership, capture, provenance   the modules it uses, through their factories on the same storage unless
+ *                                 a test passes its own (`capture` and `provenance` are reached lazily, on first use).
  *   now                           the module's clock, milliseconds since the epoch (default: the wall clock).
  *
  * THE OPS (routed and stamped by `control-plane`, layer 11; `sourcesOps` below): `sourcedisclose` (R2–R5),
- * `sourcelink` (R6), `sourceconsent` and `sourceconsentwithdraw` (R7), `knockerconsent` (R11, no account), and the
+ * `sourcelink` (R6), `sourceconsent` and `sourceconsentwithdraw` (R7), `knockerconsent` (R11, no account), `sourcekeyed`
+ * (R16; `keyedResultOf`, R17, is read in process by the modules that grade a fact citing a capture), and the
  * reads `sourceof` (R1), `sourcerung` (R9), `sourcereadlog` (R5) and `sourcepublishable` (R8). */
 
-import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { isMachineIdentity, BASIS_GRADES, TESTIMONY_GRADE } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { SOURCES_CHECKS, noSuchSource, badDisclosure, noEvidence, noSightList, consentNotStanding,
-         SECRET_NOT_RECOGNISED_ANSWER } from "./checks.mjs";
-import { SOURCES_TABLES, migrateSources } from "./schema.mjs";
+         SECRET_NOT_RECOGNISED_ANSWER, machineCannotMark, notYourCapture, noSuchCapture, noService } from "./checks.mjs";
+import { SOURCES_TABLE_CLASSES, migrateSources } from "./schema.mjs";
 
 export { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER } from "./checks.mjs";
-export { SOURCES_SCHEMA, SOURCES_TABLES } from "./schema.mjs";
+export { SOURCES_SCHEMA, SOURCES_TABLES, SOURCES_TABLE_CLASSES } from "./schema.mjs";
 
 /** R2: the vocabularies. An audience is ordered lowest to highest. */
 export const KINDS = Object.freeze(["pseudonym_link", "attribute", "name"]);
@@ -52,6 +57,8 @@ export const LINK_BASES = Object.freeze(["same_secret", "evidence"]);
 export const SECRET_MIN = 20;
 /** Bounds on what a member writes: a value, an exposer's name, a statement of evidence, a citation. */
 export const VALUE_MAX = 400, CLAIMED_BY_MAX = 200, EVIDENCE_MAX = 2000;
+/** R16: bounds on a mark: the vendor's name, and its terms as the member states them. */
+export const SERVICE_MAX = 200, TERMS_MAX = 2000;
 
 /** R7: the sentences a consent and a withdrawal answer with (DEC-78 item 5(d)). */
 export const CONSENT_STATEMENT = "This consent is permanent for anything published under it: what is published under "
@@ -91,22 +98,27 @@ function isWhen(v) {
 }
 
 export class Sources {
-  #sql; #record; #membership; #captureRef; #clock; #listeners = [];
+  #sql; #record; #membership; #captureRef; #provenanceRef; #clock; #listeners = [];
 
-  constructor({ storage, record, membership, capture = null, now = null } = {}) {
+  constructor({ storage, record, membership, capture = null, provenance = null, now = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
     this.#captureRef = capture;
+    this.#provenanceRef = provenance;
     this.#clock = typeof now === "function" ? now : () => Date.now();
     migrateSources(this.#sql);
-    /* R13: every table exempt from purge. */
-    const declared = record.declarePurge("sources", [], { exempt: [...SOURCES_TABLES] });
+    /* R13, R19: every table declared with its classes, each exempt from purge. */
+    const declared = record.declareTable("sources", SOURCES_TABLE_CLASSES.map((e) => ({ ...e })));
     if (declared && declared.ok === false)
-      throw new Error(`sources: record-core refused its purge declaration: ${declared.reason} (${declared.table})`);
+      throw new Error(`sources: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
   }
 
   get #capture() { return typeof this.#captureRef === "function" ? this.#captureRef() : this.#captureRef; }
+  get #provenance() {
+    if (typeof this.#provenanceRef === "function") this.#provenanceRef = this.#provenanceRef();
+    return this.#provenanceRef;
+  }
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
   #nowMs() { const n = Number(this.#clock()); return Number.isFinite(n) ? n : Date.parse(this.#clock()); }
@@ -620,6 +632,86 @@ export class Sources {
     const w = this.#writeConsent(src.source_id, plan, { via: "secret", by: `knocker:${src.pseudonym}` });
     return { ok: true, entry: w.entry, audience: w.audience, act: w.act, at: w.at, statement: w.statement };
   }
+
+  /* ---- R16–R18: a member-keyed result ---- */
+
+  /** R16: the capture's own document, `{actor}`, from its home bundle's `data/provenance.json` (`provenance.homeOf`,
+   *  its R4; the document `acquisition` R16 writes), or null when the record holds no such capture. */
+  #captureDocument(captureSha) {
+    const home = this.#provenance.homeOf(captureSha);
+    if (!home || typeof home.bundleId !== "string") return null;
+    const f = this.#record.readFile(home.bundleId, "data/provenance.json");
+    const reg = f && typeof f.text === "string" ? safeJson(f.text) : null;
+    const docs = reg && Array.isArray(reg.documents) ? reg.documents : [];
+    const doc = docs.find((d) => isObj(d) && isObj(d.capture)
+                                 && String(d.capture.sha256 ?? "").toLowerCase().replace(/^sha256:/, "") === captureSha);
+    return doc ? { actor: typeof doc.capture.actor === "string" ? doc.capture.actor : null } : null;
+  }
+
+  /** R16 (`op=sourcekeyed`): a member marks a capture they made as a result from a member-keyed outside source (a paid
+   *  people-search database or another fee-bearing record), reached by their own act on their own account under the
+   *  vendor's terms. Only that member's own act (R18: never a machine, a daemon or a scheduled consumer), one capture
+   *  per act; the mark holds the vendor and the terms, never a query, a search term or a result not captured (R18:
+   *  every other field of the call is dropped). Refusals, in order: `MACHINE_CANNOT_MARK`, `NO_SERVICE` (naming the
+   *  field), `NO_SUCH_CAPTURE`, `NOT_YOUR_CAPTURE`; each writes nothing. Appended once with `by` and the instant; the
+   *  same mark again writes nothing. */
+  markKeyedResult(args = {}) {
+    const a = isObj(args) ? args : {};
+    const by = this.#memberOf(a.by);
+    if (!by) return machineCannotMark();
+    const service = str(a.service);
+    if (!service || service.length > SERVICE_MAX)
+      return noService("service", `the service is the vendor's name, at most ${SERVICE_MAX} characters`);
+    if (a.terms !== undefined && a.terms !== null && (typeof a.terms !== "string" || a.terms.length > TERMS_MAX))
+      return noService("terms", `the vendor's terms, when stated, are text of at most ${TERMS_MAX} characters`);
+    const terms = str(a.terms) || null;
+    const captureSha = typeof a.captureSha === "string" ? a.captureSha.trim().toLowerCase() : null;
+    if (!captureSha || !HEX64.test(captureSha)) return noSuchCapture(null);
+    let doc;
+    try { doc = this.#captureDocument(captureSha); } catch { doc = null; }
+    if (!doc) return noSuchCapture(captureSha);
+    if (this.#memberOf(doc.actor) !== by) return notYourCapture(captureSha);
+    const last = this.#lastMark(captureSha);
+    if (last && last.service === service && (last.terms ?? null) === terms && last.by === by)
+      return { ok: true, existed: true, captureSha, service, terms, by, at: last.at };
+    const at = this.#instant();
+    this.#record.transact(() => {
+      this.#sql.exec(`INSERT INTO source_keyed_marks (capture_sha, service, terms, by, at) VALUES (?, ?, ?, ?, ?)`,
+                     captureSha, service, terms, by, at);
+      return { ok: true };
+    });
+    return { ok: true, captureSha, service, terms, by, at };
+  }
+
+  #lastMark(captureSha) {
+    return this.#one(`SELECT * FROM source_keyed_marks WHERE capture_sha = ? ORDER BY seq DESC LIMIT 1`, captureSha);
+  }
+
+  /** R17: a marked capture's `{member_keyed: true, service, by, at, reproducible_by_public: false, grade_cap}` (its
+   *  latest mark), else null; never throws. `grade_cap` is one rank below the letter `provenance.captureGrade` answers
+   *  for the capture, in `BASIS_GRADES`' order, D staying D. Where it answers no letter (received, unrecorded or an
+   *  unruled route) the cap is one rank below the ceiling it names, the most a leg on it could carry; an authored
+   *  observation, which earns none, is held at the testimony grade. */
+  keyedResultOf(captureSha) {
+    try {
+      const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
+      if (!HEX64.test(sha)) return null;
+      const m = this.#lastMark(sha);
+      if (!m) return null;
+      return { member_keyed: true, service: m.service, by: m.by, at: m.at, reproducible_by_public: false,
+               grade_cap: this.#gradeCap(sha) };
+    } catch { return null; }
+  }
+
+  #gradeCap(sha) {
+    const weakest = BASIS_GRADES[BASIS_GRADES.length - 1];
+    const below = (letter) => BASIS_GRADES[Math.min(BASIS_GRADES.indexOf(letter) + 1, BASIS_GRADES.length - 1)];
+    let g = null;
+    try { g = this.#provenance.captureGrade(sha); } catch { g = null; }
+    if (g && BASIS_GRADES.includes(g.grade)) return below(g.grade);
+    if (g && BASIS_GRADES.includes(g.ceiling)) return below(g.ceiling);
+    return BASIS_GRADES.includes(TESTIMONY_GRADE) ? TESTIMONY_GRADE : weakest;
+  }
 }
 
 /* K61: one instance per storage. */
@@ -630,7 +722,8 @@ export function sourcesOf(ctx, deps = {}) {
   if (!s) {
     const record = deps.record ?? recordOf(ctx);
     s = new Sources({ storage, record, membership: deps.membership ?? membershipOf(ctx, { record }),
-                      capture: deps.capture ?? (() => captureOf(ctx)), now: deps.now ?? null });
+                      capture: deps.capture ?? (() => captureOf(ctx)),
+                      provenance: deps.provenance ?? (() => provenanceOf(ctx, { record })), now: deps.now ?? null });
     OF.set(storage, s);
   }
   return s;
@@ -649,6 +742,7 @@ export function sourcesOps(s, url, body) {
     sourceconsent: () => s.recordConsent({ ...b, by: q("by") }),
     sourceconsentwithdraw: () => s.withdrawConsent({ ...b, by: q("by") }),
     knockerconsent: () => s.consentBySecret({ ...b, sourceAddress: q("source"), now: q("now") }),
+    sourcekeyed: () => s.markKeyedResult({ captureSha: b.captureSha, service: b.service, terms: b.terms, by: q("by") }),
     sourcerung: () => s.rungOf({ source: q("source_id") ?? b.source, viewer: q("viewer") }),
     sourcereadlog: () => s.readLog({ source: q("source_id") ?? b.source, viewer: q("viewer") }),
     sourcepublishable: () => s.publishableAt({ source: q("source_id") ?? b.source, audience: q("audience") ?? b.audience,

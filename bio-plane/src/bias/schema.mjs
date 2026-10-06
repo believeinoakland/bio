@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS bias_statements (
   ord           INTEGER NOT NULL,-- position in statements[], the addressable slot
   statement_id  TEXT NOT NULL,   -- stable within the bundle, and what an override names
   kind          TEXT NOT NULL,   -- scrutiny | inference | pattern (the closed set of three)
-  subject       TEXT NOT NULL,   -- ENT-YYYY-NNNN, a subject registry key (safeguard 4)
+  subject       TEXT NOT NULL,   -- an ENT- id, a subject registry key (safeguard 4)
   text          TEXT NOT NULL,
   justification TEXT NOT NULL,
   citations     TEXT,            -- JSON array, required for kind=pattern to leave draft

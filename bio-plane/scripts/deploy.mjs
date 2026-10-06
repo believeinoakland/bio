@@ -71,20 +71,14 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
   console.log(`version: ${r.version} — plane and ${r.sites.length - 2} fleet site(s) agree`);
 }
 
-/* DS-3: SAY WHICH WAY THE CASCADE IS GOING OUT, because an absence that is not
-   stated is indistinguishable from one nobody checked. A deploy from a machine
-   without the value does not clear the instance (keep_bindings preserves
-   secret_text) — so the two cases genuinely differ and the operator is told
-   which one this is. The value itself is never printed. */
+/* SAY WHAT GOES OUT, because an absence that is not stated is indistinguishable
+   from one nobody checked. A deploy never carries a Claude credential (K1502):
+   an INSTANCE_CLAUDE_TOKEN left in the operator's environment is named as
+   ignored, never sent. The values themselves are never printed. */
 {
-  const has = typeof process.env.INSTANCE_CLAUDE_TOKEN === "string"
-    && process.env.INSTANCE_CLAUDE_TOKEN.length > 0;
-  console.log(has
-    ? "cascade: INSTANCE_CLAUDE_TOKEN present in this environment — it will be SENT and will"
-      + " replace whatever the instance holds (value not printed; confirmed by USING it)"
-    : "cascade: INSTANCE_CLAUDE_TOKEN not in this environment — NOT sent. Any value already"
-      + " on the instance is KEPT (keep_bindings: secret_text), so this deploy neither sets"
-      + " nor clears the instance Claude account.");
+  if (typeof process.env.INSTANCE_CLAUDE_TOKEN === "string" && process.env.INSTANCE_CLAUDE_TOKEN.length > 0)
+    console.log("INSTANCE_CLAUDE_TOKEN is set in this environment and IGNORED — a deploy never carries a"
+      + " Claude credential (K1502); it is not sent.");
   /* DIST-9 (D-260's deploy half): the organisation `ai` credential rides the same way, and is never generated —
      a member mints it on the instance (DS-3). */
   const hasAi = typeof process.env.INSTANCE_AI_TOKEN === "string" && process.env.INSTANCE_AI_TOKEN.length > 0;
@@ -227,12 +221,10 @@ const meta = {
   main_module: "index.mjs",
   compatibility_date: wranglerCfg.compatibility_date,
   compatibility_flags: wranglerCfg.compatibility_flags || [],
-  /* DS-3's cascade token still rides the environment, never printed, and a
-     deploy without it neither sets nor clears the instance's Claude account
-     (keep_bindings: secret_text). */
+  /* The organisation `ai` credential rides the environment, never printed; no
+     Claude credential is ever derived (K1502). */
   bindings: deriveBindings(wranglerCfg, {
     slug, version,
-    instanceClaudeToken: process.env.INSTANCE_CLAUDE_TOKEN || undefined,
     instanceAiToken: process.env.INSTANCE_AI_TOKEN || undefined,
   }),
   keep_bindings: ["secret_text", "durable_object_namespace", "service"],

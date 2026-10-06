@@ -1,5 +1,5 @@
-/* The feeds: proposalsFeed (R18) and captureProgressions (R19); a finding reports and never decides (R25); the junction
-   check (R32, deferred). */
+/* The feeds: proposalsFeed (R18) and captureProgressions (R19); a finding reports and never decides (R25). The
+   junction checks (R32) are in owndates.test.mjs. */
 import { test } from "node:test";
 import { noSha } from "../../../src/extraction/index.mjs";
 import assert from "node:assert/strict";
@@ -16,6 +16,9 @@ async function three(w) {
   w.resolve("ENT-2", "s2b", "INFO-B", "A");
   w.resolve("ENT-3", "s3", "INFO-C", "A");
   w.resolve("ENT-3", "s3b", "INFO-C", "A");
+  // own dates (R37) recent enough that no deadline has passed at the feeds' instants
+  for (const [sha, day] of [["sa", "2026-08-25"], ["sb", "2026-08-26"], ["s2", "2026-08-25"], ["s2b", "2026-08-26"],
+                            ["s3", "2026-08-25"], ["s3b", "2026-08-30"]]) w.fact(sha, day);
   await T(w, "ENT-1", [{ stage: "need", captureSha: "sa" }, { stage: "contract", captureSha: "sb" }]);   // award missing, grade B
   await T(w, "ENT-2", [{ stage: "need", captureSha: "s2" }, { stage: "contract", captureSha: "s2b" }]);  // award missing, grade C
   await T(w, "ENT-3", [{ stage: "need", captureSha: "s3" }, { stage: "award", captureSha: "s3b" }]);   // contract missing (usually)
@@ -41,7 +44,7 @@ test("R18: one walk; instances with open findings; one proposal per (progression
 test("R18: an undetermined instance makes the proposal undetermined; overdue annotates; ties ordered by key", async () => {
   const w = seeded();
   w.define();
-  w.dates.reading.sa = "2026-01-01T00:00:00.000Z";
+  w.fact("sa", "2026-01-01");
   await T(w, "ENT-1", [{ stage: "need", captureSha: "sa" }]);            // one placed stage: undetermined; award overdue after Jan 31
   const f = w.p.proposalsFeed(Date.parse("2026-03-01"));
   const award = f.proposals.find((p) => p.stage_key === "award");
@@ -50,7 +53,8 @@ test("R18: an undetermined instance makes the proposal undetermined; overdue ann
   assert.equal(award.overdue, true);
   assert.equal(award.overdue_count, 1);
   assert.deepEqual(award.kinds, ["missing_predecessor", "overdue_successor"]);
-  assert.equal(award.instances[0].deadline, "2026-01-31T00:00:00.000Z");
+  assert.equal(award.instances[0].deadline, "2026-01-31");
+  assert.equal(award.overdue_undetermined_count, 0);
   assert.deepEqual(f.instances[0].findings.map((x) => x.kind + ":" + x.stage_key),
     ["missing_predecessor:award", "missing_predecessor:contract", "overdue_successor:award"]);
   assert.deepEqual(f.proposals.map((p) => p.key), ["proc::award", "proc::contract"]);   // equal counts, by key
@@ -178,7 +182,8 @@ test("R19: NO_SHA; every placement of a capture, each instance once, findings wi
   w.entity("ENT-2");
   w.resolve("ENT-2", "sa", "INFO-A", "A");
   w.resolve("ENT-2", "sc", "INFO-C", "C");
-  w.dates.reading.sa = "2026-01-01T00:00:00.000Z";
+  w.fact("sa", "2026-01-01");
+  w.fact("sc", "2026-01-25");                                            // ENT-2's award, within its term; its contract overdue
   await T(w, "ENT-1", [{ stage: "need", captureSha: "sa" }, { stage: "contract", captureSha: "sa" }, { stage: "contract", captureSha: "sb" }]);
   await T(w, "ENT-2", [{ stage: "need", captureSha: "sa" }, { stage: "award", captureSha: "sc" }]);
   w.p.disposeProposal({ key: "proc::award", to: "deferred", reason: "later", definitionVersion: 1, decidedBy: "member:alice" });
@@ -194,17 +199,15 @@ test("R19: NO_SHA; every placement of a capture, each instance once, findings wi
   assert.equal(e1.finding_count, 2);
   const e2 = r.instances[2];
   assert.deepEqual(e2.findings.map((f) => [f.kind, f.stage_key, f.grade, f.established, f.needs_confirmation, f.disposition]),
-    [["missing_predecessor", "contract", "C", false, true, null]]);
-  assert.equal(e2.open_finding_count, 1);
+    [["missing_predecessor", "contract", "C", false, true, null], ["overdue_successor", "contract", "C", false, true, null]]);
+  assert.equal(e2.open_finding_count, 2);
   assert.deepEqual(w.p.captureProgressions({ captureSha: "nowhere" }), { ok: true, capture_sha: "nowhere", count: 0, instances: [] });
 });
-
-test.todo("R32: a junction check (one response, a signed amount differing from the award, amendments past a threshold, payments past the term) is data over an instance and yields a finding; deferred by K102 until the record holds amounts and funds as values");
 
 test("R25: a finding never changes a bundle, an instance or a definition, whatever is read", async () => {
   const w = seeded();
   await three(w);
-  w.dates.reading.sa = "2026-01-01T00:00:00.000Z";
+  w.fact("sa", "2026-01-01");
   const before = w.snapshot();
   for (const now of [Date.parse("2026-01-02"), Date.parse("2030-01-01")]) {
     w.p.proposalsFeed(now);

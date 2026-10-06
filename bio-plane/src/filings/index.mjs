@@ -6,7 +6,8 @@
  * that it was sent (R6, R7), and may start a template draft from it (R32). At any tier, a counsel packet (a briefing) for
  * counsel the group names (required at Tier 3) or for the group's own review, marked as prepared for review, never
  * published and never fileable, with a `briefing` section filled from a `brief` template when one is named (R8–R12,
- * R31). A communication to anyone is drafted without a template and goes the same way (R23). Approved bytes and
+ * R31); its chronology is `events`' timeline, the world's lane and the group's own acts apart (R33; K1494). A
+ * communication to anyone is drafted without a template and goes the same way (R23). Approved bytes and
  * exports carry the in-band quartet (R22); whatever is prepared from an action resting on a premise override says so
  * first (R24); exhibits show their grades beside the venue's standard (R25); deadlines state the calendar's
  * confirmation (R30), read by `action-clocks.factReader` (its R12; N474). Candidate theories are proposals, stored
@@ -38,6 +39,8 @@
  *   standards      `standardRead` (its R5), `inForce` (R7), from `standardsOf(host, deps)` (K251).
  *   consequences   `consequencesOf` (its R7), from `consequencesModule(host, deps)` (K171 (17), K250).
  *   promotion      `fact("producingGroup")` (its R40; R3's `group`, N331), from `promotionOf` on the same host unless given.
+ *   events         `timeline` (its R28–R30; R33's chronology) and `readEvent` (its R26; the captures R9's exhibits take from
+ *                  the events the chronology lists), from `eventsOf` (T33-75, K1494).
  *   producingGroup a function answering the instance's producing group, or null when none is recorded (R3's `group`),
  *                  or answering promotion's fact as `fact` answers it. No caller hands one in since the legacy store's
  *                  retirement (a test may); absent, the group is read through `promotion.fact("producingGroup")`.
@@ -68,6 +71,7 @@ import { consequencesModule } from "../consequences/index.mjs";
 import { actionsOf, noSuchAction } from "../actions/index.mjs";
 import { actionClocksOf, factReader } from "../action-clocks/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
+import { eventsOf } from "../events/index.mjs";
 import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, withRow as templatesRow }
   from "../filing-templates/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -98,6 +102,10 @@ export const THEORY_TEXT_MAX = 2000;
 export const COUNSEL_FIELD_MAX = 200;
 /** R8 (DEC-88): the longest reason a packet's author gives, in characters (code points). */
 export const PACKET_REASON_MAX = 2000;
+/** R33: the most items the chronology reads in each lane (events' own bound, its R27, R29). */
+export const CHRONOLOGY_MAX = 500;
+/** R33: the words that head each lane, as `events` R28 names them. */
+export const LANE_WORDS = Object.freeze({ world: "what they did", ours: "what we did" });
 /** R13: the drafts and the packet versions one `filingsFor` read lists, each. */
 export const FILINGS_FOR_MAX = 200;
 /** R10: the marking every section, the packet's head and every export carry; with no counsel named (Tier 1 or 2, K924),
@@ -161,7 +169,6 @@ const withRow = (r) => (r && typeof r.then === "function" ? r.then(withRowNow) :
 const SERVICES = Object.freeze(["filingPrepare", "filingApprove", "filingRecordSent", "counselPacket", "counselPacketRead",
                                 "counselPacketExport", "filingsFor", "theoryPropose", "availableActions",
                                 "communicationPrepare", "templateSave"]);
-const byDayThenSource = (a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.source < b.source ? -1 : a.source > b.source ? 1 : 0);
 
 export class Filings {
   #deps;
@@ -169,11 +176,11 @@ export class Filings {
   constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
                 attestation = null, content = null,
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
-                localFacts = null, filingTemplates = null,
+                localFacts = null, filingTemplates = null, events = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates };
+    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates, events };
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (as the retired legacy store's was) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
@@ -208,6 +215,8 @@ export class Filings {
   /* R30: local-facts' `factStatus` (its R2), the confirmation of each holiday year a business count reads; with no host
      and none given, absent, and a business count states its calendar `not_read`. */
   get localFacts() { return this.#deps.localFacts ||= (this.#deps.host ? localFactsOf(this.#deps.host) : null); }
+  /* R33: events' timeline (its R28–R30); with no host and none given, absent, and the chronology says it is unread. */
+  get events() { return this.#deps.events ||= (this.#deps.host ? eventsOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -313,11 +322,28 @@ export class Filings {
     const seen = (x) => !!(x && x.id);
     return {
       id: str(d.id) || str(id), project: str(d.project), act: isObj(d.act) ? d.act : {},
+      /* conformance R25: the act's event as the viewer reads it (null when withheld or when a pre-T33 act names none) */
+      event: isObj(d.event) ? d.event : null,
       findings: findings.filter(seen), standards: standards.filter(seen),
       withheld: d.out_of_view === true || !findings.every(seen) || !standards.every(seen),
       live: d.live !== false && !str(d.superseded_by), superseded_by: str(d.superseded_by),
       basis_changed: isObj(d.basis_changed) ? d.basis_changed : d.basis_changed === true ? { causes: [] } : null,
     };
+  }
+
+  /* The act's day (conformance R3, R25): its event's `when` read as one local day (a value at day precision or finer),
+     or a pre-T33 act's stated date (R26); null for a band, an undetermined `when` or an event placed nowhere. */
+  static #actDay(act) {
+    const w = isObj(act.when) ? act.when : null;
+    return realDate(act.at) || (w && str(w.value) ? realDate(str(w.value).slice(0, 10)) : null);
+  }
+
+  /* Why the act has no single day, in words (R3's `act_date`, R9's deadlines). */
+  static #actDayWhy(act) {
+    const w = act.when;
+    if (isObj(act.period)) return "the determination states the act over a period, so no single day starts it";
+    if (!w || w === "undetermined") return `the act's event ${w === "undetermined" ? "has an undetermined date" : "is placed nowhere: no record dates it"}`;
+    return "the act's event is dated only within a band, so no single day starts it";
   }
 
   /** R3, R8: the live determination the action rests on (its `rests_on` legs, in leg order), with `hidden` true when one
@@ -399,12 +425,19 @@ export class Filings {
       : "the action rests on no live determination, so the record holds no value for it";
     if (det) {
       const act = det.act || {};
-      out.act = str(act.description) ? { value: str(act.description), source: det.id } : none("the determination states no act");
+      /* conformance R25: a T33 act is its event (named by its kind and id); a pre-T33 act keeps its description (R26) */
+      const evId = str(act.event);
+      const ev = det.event;
+      out.act = str(act.description) ? { value: str(act.description), source: det.id }
+        : evId && ev && str(ev.kind) ? { value: `the ${ev.kind} recorded as ${evId}`, source: evId }
+        : evId ? none("the act's event is not one you may see")
+        : none("the determination states no act");
       const period = isObj(act.period) ? act.period : null;
-      out.act_date = str(act.at) ? { value: str(act.at), source: det.id }
+      const day = Filings.#actDay(act);
+      out.act_date = day ? { value: day, source: str(act.at) ? det.id : evId }
         : period && (str(period.from) || str(period.to))
           ? { value: `${str(period.from) || "undetermined"} to ${str(period.to) || "undetermined"}`, source: det.id }
-          : none("the determination states no date for the act, so it is undetermined");
+          : none(`${Filings.#actDayWhy(act)}, so the act's date is undetermined`);
       /* R27: conformance states only that something was withheld (`det.withheld`), never which list it left, so neither
          list is given as though whole; the why names nothing of what was withheld. */
       const cut = "a finding or standard the determination rests on is not one you may see, so this list would not be whole";
@@ -853,8 +886,9 @@ export class Filings {
 
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
 
-  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations. Only
-     a finding `#det` kept is asked (R27: one withheld is no item). */
+  /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations, and
+     the entity it concerns (its own `subject_entity`, R33's set). Only a finding `#det` kept is asked (R27: one withheld
+     is no item). */
   #fact(f) {
     const source = `${f.id}@${f.case ?? "?"}/${f.edition ?? "?"}`;
     const text = f.version_sha ? this.#call(() => this.record.textAtSha(f.id, f.version_sha)) : null;
@@ -866,7 +900,7 @@ export class Filings {
     const m = /\n## Conclusion\s*\n([\s\S]*?)(?=\n## |\s*$)/.exec(text);
     const conclusion = m && m[1].trim() ? m[1].trim() : null;
     const legs = fm && Array.isArray(fm.basis) ? fm.basis.filter(isObj) : [];
-    return { ...base,
+    return { ...base, ...(str(fm && fm.subject_entity) ? { subject_entity: str(fm.subject_entity) } : {}),
              claim: { question: str(fm && fm.title), conclusion,
                       ...(conclusion ? {} : { conclusion_why: "the published finding states no conclusion section" }) },
              citations: legs.map((l) => ({ target: str(l.target), ...(str(l.content_id) ? { content_id: str(l.content_id) } : {}),
@@ -874,14 +908,16 @@ export class Filings {
   }
 
   /* R9, R25: the captures a draft or packet rests on: each a fact's citation cites, each piece of evidence the act
-     names, and each artifact the action's correspondence holds, with the source that cites it. */
-  #citesOf(a, det, facts) {
+     names, each artifact the action's correspondence holds and each capture attesting an event of R33's chronology
+     (as `events.readEvent` answers it to the reader, its R26), with the source that cites it. */
+  #citesOf(a, det, facts, events = []) {
     const cites = [];
     for (const f of facts) for (const c of f.citations || []) cites.push({ content_id: c.content_id, target: c.content_id ? null : c.target, source: f.source });
     const act = det ? det.act || {} : {};
     for (const cid of Array.isArray(act.evidence) ? act.evidence : []) cites.push({ content_id: str(cid), source: det.id });
     for (const [i, e] of a.correspondence.entries())
       if (str(e.artifact_sha)) cites.push({ capture_sha: str(e.artifact_sha), source: `${a.id}#${Number.isInteger(e.ord) ? e.ord : i}` });
+    for (const ev of events) for (const sha of ev.captures) cites.push({ capture_sha: sha, source: ev.event_id });
     return cites;
   }
 
@@ -991,8 +1027,8 @@ export class Filings {
       let start;
       const act = det ? det.act || {} : {};
       if (r.starts === "act")
-        start = realDate(act.at) ? { event: "act", date: act.at, source: det.id }
-          : { event: "act", state: "undetermined", why: det ? "the determination states the act over a period or not at all, so no single day starts the count" : "no live determination states the act" };
+        start = Filings.#actDay(act) ? { event: "act", date: Filings.#actDay(act), source: str(act.at) ? det.id : str(act.event) }
+          : { event: "act", state: "undetermined", why: det ? `${Filings.#actDayWhy(act)}, so no single day starts the count` : "no live determination states the act" };
       else if (r.starts === "received" || r.starts === "filed") {
         const e = first(r.starts === "received" ? "received" : "sent");
         start = e ? { event: r.starts, date: String(e.at).slice(0, 10), source: `${a.id}#${e.ord}` }
@@ -1001,7 +1037,7 @@ export class Filings {
                        why: r.starts === "known" ? "the record holds no date on which the group knew of the act" : "the rule names no start event this record holds" };
       /* R30: counted as action-clocks R10 counts, on the entries for the action's office, each read through local-facts
          by action-clocks' own reader (its R12), this module holding no copy (N474) */
-      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, view: v.view,
+      const date = deadlineDate({ start: start.date ?? null, days: r.days, count: r.count, rule: r, view: v.view,
                                   counterparty: a.counterparty, kind: a.kind, factOf: factReader(this.localFacts, viewer) });
       return { rule: r.rule, days: r.days ?? null, count: r.count ?? null, starts: r.starts ?? null,
                ...(r.extension ? { extension: r.extension } : {}), citation: r.citation ?? null,
@@ -1010,40 +1046,76 @@ export class Filings {
     });
   }
 
+  /* R33 (EVENTS 2a; K1494): the chronology as `events.timeline` (its R28–R30) over the set of the determination's act
+     event (conformance R25), the counterparty office entity (the action's addressee, actions R9, else the act's actor)
+     and the entities the findings concern (each finding's `subject_entity`, from its published bytes), from the act's
+     date (or, with none, the earliest `when` among them) to the packet's assembly. The world's lane ("what they did")
+     and the registered sources' lane ("what we did") are kept apart, each in events' order, never interleaved; an item
+     whose order is undetermined carries events' `order` with its bounds. An item placed nowhere has no `when` to fall
+     within the dates, so the placed-nowhere items are read without them and listed apart. Each item names its record
+     source (R18). R27: an event of the set the reader may not see is left out, never stood in for, and the lane states
+     `out_of_view: true`, read against the plane's own read. */
+  #chronology(a, det, facts, viewer, at, marking) {
+    const act = det ? det.act || {} : {};
+    const set = [];
+    const add = (id, is, source) => { if (id && !set.some((x) => x.id === id)) set.push({ id, is, source }); };
+    add(isObj(act.event) ? str(act.event.event_id) || str(act.event.id) : str(act.event), "the act's event", det && det.id);
+    const cp = isObj(a.counterparty) ? str(a.counterparty.entity_id) : null;
+    const actor = isObj(act.actor) ? str(act.actor.entity_id) : null;
+    add(cp || actor, "the counterparty office", cp ? a.id : det && det.id);
+    for (const f of facts) add(f.subject_entity, "an entity a finding concerns", f.source);
+    const from = Filings.#actDay(act) || (isObj(act.period) ? realDate(act.period.from) : null);
+    const to = at.slice(0, 10);
+    const base = { title: "Chronology", marking, set, from, to,
+                   ...(from ? {} : { from_says: "the act states no date, so the chronology reads from the earliest event of the set" }) };
+    const empty = (says) => ({ ...base, lanes: { world: { label: LANE_WORDS.world, items: [], placed_nowhere: [], truncated: false },
+                                                 ours: { label: LANE_WORDS.ours, sources: [] } }, events: [], says });
+    if (!set.length)
+      return empty("the record names no act event, counterparty office or subject entity for this action, so the timeline has no set to read");
+    const t = this.events;
+    if (!t || typeof t.timeline !== "function")
+      return { ...empty("no module answers the timeline here, so the chronology is undetermined"), unread: true };
+    const ids = set.map((x) => x.id);
+    const read = (who, o) => this.#call(() => t.timeline({ set: ids, limit: CHRONOLOGY_MAX, viewer: who, ...o }));
+    const dated = read(viewer, { from, to });
+    const loose = read(viewer, { lanes: ["world"] });
+    if (!dated || dated.ok === false || !dated.world || !loose || loose.ok === false || !loose.world)
+      return { ...empty(`the timeline could not be read${dated && dated.reason ? ` (${dated.reason})` : ""}, so the chronology is undetermined`),
+               unread: true };
+    const seen = new Set([...dated.world.items, ...loose.world.placed_nowhere].map((i) => i.event_id));
+    const plane = [read(MACHINE_READER, { from, to, lanes: ["world"] }), read(MACHINE_READER, { lanes: ["world"] })];
+    const hidden = !plane.every((p) => p && p.ok !== false && p.world)
+      || [...plane[0].world.items, ...plane[1].world.placed_nowhere].some((i) => !seen.has(i.event_id));
+    const world = { label: LANE_WORDS.world,
+                    items: dated.world.items.map((i) => ({ ...i, source: i.event_id })),
+                    placed_nowhere: loose.world.placed_nowhere.map((i) => ({ ...i, placed_nowhere: true, source: i.event_id })),
+                    truncated: !!(dated.world.truncated || loose.world.truncated),
+                    ...(hidden ? { out_of_view: true } : {}) };
+    if (world.truncated) world.says = `more events than the ${CHRONOLOGY_MAX} this lane lists are held: the lane is truncated`;
+    const ours = { label: LANE_WORDS.ours, sources: (dated.ours && Array.isArray(dated.ours.sources) ? dated.ours.sources : []).map((s) => (s.error
+      ? { source: s.source, error: s.error, says: "this source could not be read, so its acts are not listed" }
+      : { source: s.source, items: (s.items || []).map((x) => ({ ...x, source: `${s.source}:${x.ref}` })), truncated: !!s.truncated,
+          ...(s.truncated ? { says: `more acts than the ${CHRONOLOGY_MAX} this source lists are held: it is truncated` } : {}) })) };
+    /* R9's exhibits: the captures attesting each event listed, as the reader may see them */
+    const events = [...world.items, ...world.placed_nowhere].map((i) => {
+      const r = typeof t.readEvent === "function" ? this.#call(() => t.readEvent({ eventId: i.event_id, viewer })) : null;
+      const atts = r && r.ok !== false && r.event && Array.isArray(r.event.attestations) ? r.event.attestations : [];
+      return { event_id: i.event_id, captures: [...new Set(atts.map((x) => str(x.capture_sha)).filter(Boolean))] };
+    });
+    return { ...base, lanes: { world, ours }, events,
+             says: "what they did (the world's events) and what we did (the group's own acts, each source apart) are answered "
+                 + "apart, each in its own order, never interleaved into one list" };
+  }
+
   /* R9: the six sections and the consequences, each item naming its source. R8, R24: for an action resting on a
      premise override and no live determination, `det` is null: the facts section says in words that no determination
-     is held, and nothing is drawn from one. R25: each exhibit read against the venue's standard. */
-  #assemble(a, det, viewer, marking) {
+     is held, and nothing is drawn from one. R25: each exhibit read against the venue's standard. R33: the chronology. */
+  #assemble(a, det, viewer, marking, at) {
     const v = this.#view();
     const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
     const facts = det ? det.findings.map((f) => this.#fact(f)) : [];
-    const events = [], undated = [];
     const act = det ? det.act || {} : {};
-    const actDay = realDate(act.at) || (isObj(act.period) ? realDate(act.period.from) : null);
-    const push = (day, e) => (day ? events.push({ day, ...e }) : undated.push({ ...e, why: "the record states no date for it" }));
-    if (det)
-      push(actDay, { event: `the act: ${str(act.description) || "undescribed"}`, source: det.id,
-                     ...(isObj(act.actor) ? { actor: { role: act.actor.role ?? null, body: act.actor.body ?? null } } : {}) });
-    for (const f of facts) {
-      const r = f.case != null ? this.#one(`SELECT ratified_at FROM published_cases WHERE case_id=? AND edition=?`, f.case, Number(f.edition)) : null;
-      push(r ? realDate(String(r.ratified_at).slice(0, 10)) : null,
-           { event: `${f.finding} published in case ${f.case} edition ${f.edition}`, source: f.source });
-    }
-    if (a.state_history === null)
-      undated.push({ event: "the action's state history", source: a.id, why: "the action's read does not answer its state history" });
-    /* actions R29 (K253): each move `{state, at, by}`, in order. */
-    for (const [i, h] of (a.state_history || []).entries())
-      push(realDate(String(h.at ?? "").slice(0, 10)), { event: `the action entered ${h.state ?? h.to ?? "an undetermined state"}`,
-                                                        ...(h.by ? { by: h.by } : {}), source: `${a.id}/state_history[${i}]` });
-    for (const [i, e] of a.correspondence.entries()) {
-      const ord = Number.isInteger(e.ord) ? e.ord : i;
-      push(realDate(String(e.at ?? "").slice(0, 10)), { event: `correspondence ${e.direction ?? "undetermined"}${str(e.party) ? ` (${e.party})` : ""}`,
-                                                        source: `${a.id}#${ord}` });
-    }
-    for (const [i, c] of a.clock.entries())
-      push(realDate(c.date), { event: `clock: ${str(c.text) || str(c.description) || "a deadline"} (${c.status ?? "undetermined"})`,
-                               basis: c.basis ?? null, source: `${a.id}/clock[${i}]` });
-    events.sort(byDayThenSource);
+    const { events, ...chronology } = this.#chronology(a, det, facts, viewer, at, marking);
     const standard = this.#venueStandard(v, a.kind);
     /* R27 (DEC-36): a standard conformance withheld, or one standards' read refuses here, is no item; the section
        states only that something was withheld. */
@@ -1053,7 +1125,7 @@ export class Filings {
       if (!r) { refused = true; return []; }
       return [{ standard: s.id, cite: r.cite ?? null, kind: r.kind ?? null, issuer: r.issuer ?? null,
                 text: Array.isArray(r.text) ? r.text : [], outcome: s.outcome ?? null,
-                in_force: this.#inForce(s.id, realDate(act.at)), source: s.id }];
+                in_force: this.#inForce(s.id, Filings.#actDay(act)), source: s.id }];
     });
     const unseen = { out_of_view: true };
     const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t) => ({
@@ -1064,9 +1136,8 @@ export class Filings {
     return {
       facts: section("Facts", facts, det ? (det.withheld ? unseen : {}) : { says: "no determination is held: the action rests "
         + "on a premise a member overrode, so no finding is set out as a fact" }),
-      chronology: section("Chronology", events.map(({ day, ...e }) => ({ date: day, ...e })),
-                          { undated, order: "by date; events on the same day by source id" }),
-      exhibits: section("Exhibits", this.#exhibits(this.#citesOf(a, det, facts), standard), {
+      chronology,
+      exhibits: section("Exhibits", this.#exhibits(this.#citesOf(a, det, facts, events), standard), {
         venue_standard: standard,
         says: standard.state === "stated" ? "each exhibit's capture grade and co-attestation, beside the venue's standard; "
           + "an exhibit below it, or at a grade the profile marks contestable, is flagged, and nothing is refused for its grade"
@@ -1191,8 +1262,8 @@ export class Filings {
                  : "no module answers determinations here, so no live determination can be read" };
     /* END DEC-49 REGION is-counsel-packet-basis */
     const marking = counselMarking(c);
-    const sections = this.#assemble(a, det, viewer, marking);
     const at = this.#when();
+    const sections = this.#assemble(a, det, viewer, marking, at);
     if (used) sections.briefing = this.#briefing(used, a, det, hidden, viewer, at, marking);
     const tpl = used ? Filings.#templateOf(used) : null;
     const basis = this.#packetBasis(det, a);
@@ -1301,6 +1372,16 @@ export class Filings {
       if (typeof s.text === "string") lines.push(s.text, "");
       for (const x of s.items || []) lines.push(item(x));
       for (const x of s.undated || []) lines.push(item({ undated: true, ...x }));
+      /* R33: the chronology's two lanes, each apart and in its own order */
+      if (isObj(s.lanes)) {
+        const w = s.lanes.world || {}, o = s.lanes.ours || {};
+        for (const x of w.items || []) lines.push(item({ lane: w.label, ...x }));
+        for (const x of w.placed_nowhere || []) lines.push(item({ lane: w.label, ...x }));
+        for (const src of o.sources || []) {
+          if (src.error) lines.push(item({ lane: o.label, source: src.source, error: src.error }));
+          for (const x of src.items || []) lines.push(item({ lane: o.label, ...x }));
+        }
+      }
       lines.push("");
     }
     lines.push("## Manifest of exhibits", "", v.marking, "");

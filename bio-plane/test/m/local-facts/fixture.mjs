@@ -65,7 +65,8 @@ export const P = Object.freeze({
 export const written = (id, extra = {}) => ({ id, name: `Profile ${id}`, covers: [`Place ${id}`], test: true, ...extra });
 
 /** `profiles`: the instance's active profile ids; `own`: profile objects the test wrote, resolved by id. */
-export function world({ now = NOW, profiles = [TP], own = [] } = {}) {
+/** `lines` and `officeOf`: R6's readers (`lines.structureAt`, the profile-office bridge), as a test writes them. */
+export function world({ now = NOW, profiles = [TP], own = [], lines = null, officeOf = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -78,7 +79,7 @@ export function world({ now = NOW, profiles = [TP], own = [] } = {}) {
   if (profiles !== null) record.setSetting("jurisdiction_profiles", profiles, "admin");
   const byId = new Map(own.map((p) => [p.id, p]));
   const lf = localFactsOf(host, {
-    record, membership, now: () => clock.now, validate,
+    record, membership, now: () => clock.now, validate, lines, officeOf,
     get: (id) => byId.get(id) ?? get(id),
     combine: (ids) => combine(ids.map((id) => byId.get(id) ?? id)),
   });

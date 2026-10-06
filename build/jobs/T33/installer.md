@@ -1,0 +1,64 @@
+# installer (T33)
+
+**Status** · session_012cCBykexVjuaQ82HEkMok3 · depth 2 · COMPLETE · handled B4
+
+**Completion** (INSTALLER #7, 2026-10-06)
+
+- **Entries applied:** T33-91, as K1678 settled it.
+  - R2 asks four scopes, the fourth `containers.write`, read from Cloudflare's live scope list on 2026-10-06 (M-Q8 (a)).
+  - R9, R10 and R16: `ACCOUNT_SEAL_SECRET` is the fifth fresh credential, never shown.
+  - R11: container members first. sheet-worker installs as any member.
+  - R17: the seal secret is bound on an update only where the settings list none. An update with unreadable settings sends nothing and names it. Re-consent to the fourth scope.
+  - R23: the install, update and invitation pages state the Containers permission.
+  - R36: no Claude credential is taken, bound or shown, and an update deletes a held `INSTANCE_CLAUDE_TOKEN` (a refused delete is named).
+  - R37: the assistant is offered on the install page (two choices, none preselected) and bound as `ASSISTANT_ENABLED` on/off, install only.
+  - R38: the `Container` descriptor part (`container.json`, covered by the fleet signature through its hash) installs through the Containers API (namespace, application create or rollout) only with the scope, Workers Paid (probed on an update, never refusing it) and a public digest-pinned image under `default`. Its class is bound cross-script into the members it names, and a container held from before keeps its bindings. Every failure is named, and the install never fails over it.
+  - DEPLOY.md names the fourth scope and when to register it.
+- **Re-pointed** at instance-setup's merged `FLEET_BINDINGS` (five members, K1690). The tests derive every member count from it, so its five pins pass on the real list.
+- **Deferred:** none of mine. R13 and R24 stay todo (MULTI-INSTANCE-ISOLATION, not T33).
+- **Found elsewhere** (J2, routed by K1686):
+  - The OAuth client must register `containers.write` before this installer deploys (a release step).
+  - Members' limits are not in the signed release, so sheet-worker's cpu_ms 300,000 is not sent (N621).
+  - agent-runner's image name carries the old product name (a release step).
+  - The Containers API calls are deploy-gated (M-Q2).
+  - bundler's emission of the descriptor part is N610.
+- **Tests and checks run, on the merged tranche:**
+  - `node test/embed.test.mjs`: embed 23 passed, 0 failed.
+  - `node test/wizard.test.mjs`: wizard 208 passed, 0 failed.
+  - `node --test test/requirements.test.mjs`: 37 pass, 0 fail, 2 todo.
+  - `node --test bio-plane/test/system/newgroup-bundle-fresh.test.mjs`: 1 pass, 0 fail.
+  - Negative controls run, each failing exactly its own arm: R38's conditions forced true fails R38; the seal secret restated whatever is held fails R17 (K1541).
+  - format: 0 failures. architecture: 0 failures. coverage: 38 of 38 live ids named, 0 failures. ownership: 9 files, 0 failures.
+- Size (session_012cCBykexVjuaQ82HEkMok3): test runs 22, module lines 2277
+
+## J1 · QUESTION
+
+Five readings I am building on now (T33-91); each is mine to change if you answer otherwise. Measured first (M-Q8 (a), the Suggestions' one `GET /client/v4/oauth/scopes`, 2026-10-06): the scope exists, id `containers.write` ("Workers Containers Write"); R2's fourth scope is that id.
+
+(1) **How the signed release names a container member (R11, R38).** Signatures' `bio-release-fleet/2` line has no image field, and neither bundler's release nor agent-runner's requirements say how a container member appears in `RELEASE.json`'s `fleet[]`. My reading, which needs no signatures change and keeps every older installer verifying the fleet signature: the container member is an ordinary fleet entry (its `asset` the Worker bundle that exports the `AgentRunner` Container DO class, K1615) carrying one extra part `{path: "container.json", type: "Container", sha256, bytes}`. That part is a JSON descriptor, fetched and hash-checked like any part, so the fleet signature covers it: `{"class_name": "AgentRunner", "image": "<repository>@sha256:<64 hex>", "scheduling_policy": "default", "max_instances": <n>, "bind": [{"member": "agent-worker", "binding": "RUNNER"}]}`. The installer uploads the Worker with the class's migration, then creates (or rolls out) the Containers application by API with that image under `default`, then uploads the members `bind` names with a cross-script DO binding to it. An older installer meets a part type it does not know and leaves that one member out by name (R11). An image that is not `repository@sha256:<64 hex>` on a public registry host (docker.io, ECR, Artifact Registry), or a policy other than `default`, leaves the member out. When the container member is left out, agent-worker is uploaded without `RUNNER`, because a binding to a class that does not exist is refused. Owed elsewhere if you accept it: bundler's release-assemble emits the part, and the release (T33-D1) writes the descriptor from `agent-runner/fleet-member.json`.
+
+(2) **ACCOUNT_SEAL_SECRET (B1, K1541).** The install generates it as a fifth fresh 32-byte secret. It is bound with the other four and never shown (R16 as for DAEMON_TOKEN). On an update it is NEVER restated over one the copy holds: a new value would orphan every sealed member reference. The update reads the script's settings. When they list no `ACCOUNT_SEAL_SECRET`, it binds a fresh one and says so. When they list one, it is kept (keep_bindings). When the settings are unreadable, nothing is sent and the page names it. R9, R10, R16 and R17 say "four credentials" today, so the requirements need a fold.
+
+(3) **R36 "an update leaves none behind".** My reading is the strong one. Not restating is not enough: keep_bindings keeps a held `INSTANCE_CLAUDE_TOKEN`. So when the settings list one, the update deletes that secret (`DELETE …/scripts/<slug>/secrets/INSTANCE_CLAUDE_TOKEN`), says so, and names it if the delete is refused. Answer "weak" and I only stop restating it.
+
+(4) **R37's binding (the name is the job's).** It is `ASSISTANT_ENABLED`, plain_text `on` or `off`, bound only when the operator chose. The install page offers two choices, none preselected; no choice binds nothing, and instance-setup R53 records "off unless chosen". It rides the install's plane uploads only, like `JURISDICTION_PROFILES`; an update never sends it, and `/begin` refuses it on an update. INSTANCE-SETUP #12 must read this name at first boot. Please carry it to that job, or give me its name.
+
+(5) **Workers Paid on an update (R38 with R17).** An update runs no plan check today ("an update never grows a new refusal"). Mine runs R6's probe only when a container member would otherwise install (the scope granted, a verified descriptor). It uses the answer only to leave the container out: Free or unknown means "left out, named". It never refuses the update.
+
+The scope comes from the token response's `scope`. When the response states none, one `GET /accounts/<id>/containers/applications` decides: 2xx means held, anything else means not held, named.
+
+## J2 · REPORT
+
+T33-91 is built to K1678 and green on my branch (7bfd49a664): embed 23/0, wizard 208/0, requirements 37 pass with 2 todo (R13, R24, not T33's), bundle-fresh 1/0, and the four checks clean. I hold COMPLETE only for the re-point: instance-setup's `FLEET_BINDINGS` (it gains sheet-worker and agent-runner). My tests already derive every member count from it. I rehearsed them locally against a five-member list, and all pass. Found outside my module, for routing:
+
+(1) **The OAuth client's registered scopes must gain `containers.write` before this installer is deployed.** That is client `1c2fdba3fc71cf88d26fcd7b90df95de` on account 20b5…7f72, an act at the release (T33-D1). Until the client carries it, every install and update asking the four scopes is refused by Cloudflare at the consent screen. That refusal happens before any installer page can explain it, the failure DEPLOY.md step 4 warns about. DEPLOY.md's scope list (step 4) is mine: I will update it in this job.
+
+(2) **A member's own limits are not in the signed release.** sheet-worker's `wrangler.jsonc` sets `limits.cpu_ms` 300,000 (K1536). The fleet statement and `RELEASE.json`'s `fleet[]` carry no limits. So the installer uploads every member with none, and the copy's sheet-worker runs under the default CPU limit. A proposal on R20's model: the member states its limits in its own bundle as one string (`bio-member-limits/1 cpu_ms=300000`), which the signed bytes already cover, and the installer sends exactly that. That needs a sheet-worker change and an installer requirement, so it is a T34 row (not built here).
+
+(3) **agent-runner's image repository is `docker.io/civicos/agent-runner`** (`agent-runner/fleet-member.json`). A group sees that name in its own Cloudflare dashboard, and it carries the product's old name (DEC-124). It is the release's to choose before the image is first published.
+
+(4) **The Containers API calls are wrangler's own, and deploy-gated, like SELF.** They are: the namespaces list, `POST /containers/applications`, and `POST …/applications/<id>/rollouts`. The first real install at the release confirms them. M-Q2's run can do that.
+
+## J3 · COMPLETE
+
+T33-91 complete on job/T33/installer, re-pointed at the merged five-member FLEET_BINDINGS (K1690). Its five named reds pass on the real list. embed 23/0, wizard 208/0, requirements 37 pass 0 fail 2 todo (R13, R24), bundle-fresh 1/0. The bundle is rebuilt. format, architecture, coverage (38/38) and ownership (9 files) all show 0 failures. Final uses unchanged: bundler, jurisdictions, signatures, instance-setup, test-support. The record carries the completion.

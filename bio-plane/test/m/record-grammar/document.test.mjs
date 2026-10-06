@@ -55,8 +55,11 @@ test("R35 STATES: every type's legal states and edges, inquiry's legacy `publish
     problem: FOCUS });
   assert.ok(STATES.problem === STATES.focus);
   assert.ok(!Object.isFrozen(STATES));
-  /* Every canonical type has a machine, every edge lands on a state its machine reads, and nothing enters a legacy state. */
-  for (const t of new Set(Object.values(OBJECT_TYPES))) assert.ok(STATES[t], t);
+  /* Every bundle type has a machine, every edge lands on a state its machine reads, and nothing enters a legacy state.
+     T33's new objects are table rows, not bundles, and have none (R3). */
+  const BUNDLE = ["INFO", "PROB", "FOCUS", "INQ", "PROJ", "ACTN", "BIAS", "STD", "CONF", "CONS", "ESC", "ASP", "GOAL", "PLN"];
+  for (const t of new Set(BUNDLE.map((p) => OBJECT_TYPES[p]))) assert.ok(STATES[t], t);
+  for (const [p, t] of Object.entries(OBJECT_TYPES)) if (!BUNDLE.includes(p)) assert.ok(!(t in STATES) && !(t in HEADINGS), t);
   for (const [t, m] of Object.entries(STATES)) {
     const readable = [...m.legal, ...(m.legacy || [])];
     assert.deepEqual(Object.keys(m.edges).sort(), [...readable].sort(), t);

@@ -209,7 +209,7 @@ const PINNED = {
   docx: "b70fa4e8976d4c6ef3f663145af1b943d204b306eab29f7470dd9ea50038cd25",
 };
 
-test("R2 R15 (over-strictness): a real PDF and an office capture are read through this module byte for byte as before the move: the whole answer, reading and text units, digests to the pin", async () => {
+test("R2 R15 (over-strictness): a real PDF and an office capture are read through this module byte for byte as before the move: the whole answer, reading and text units, digests to the pin, beside R28's added keys", async () => {
   for (const [name, bytes, format, ct] of [["pdf", PDF, "pdf", "application/pdf"], ["docx", DOCX, "docx", DOCX_CT]]) {
     const b = bucket();
     const d = await hold(b, bytes);
@@ -217,6 +217,10 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     const out = await rp.read(document, { evidence: evidenceStore(b), env: {}, storeName: "bio", view: combine(["oakland-alameda"]).view,
                                           planeVersion: "v-test", liveCalibration: null });
     assert.ok(out.reading.read_from_text && Array.isArray(out.text_units) && out.text_units.length > 0, `${name}: read, with units`);
-    assert.equal(hex(JSON.stringify(out)), PINNED[name], name);
+    /* R28 (K1556) adds `metadata` (and a workbook's `cells`) to the reading on purpose; every other byte stays pinned. */
+    const { metadata, cells, ...before } = out.reading;
+    assert.ok(metadata === null || (metadata && typeof metadata === "object"), `${name}: R28's metadata is present`);
+    assert.equal(cells, undefined, `${name}: no cells for a document that is no workbook`);
+    assert.equal(hex(JSON.stringify({ ...out, reading: before })), PINNED[name], name);
   }
 });

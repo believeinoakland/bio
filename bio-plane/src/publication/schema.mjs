@@ -3,12 +3,13 @@
  * comment names `Store.publish` or `op=ratify` it names the act as it stands today (ratification's), not this module.
  *
  * The published projection (`published_bundles`, `published_shas`, `published_cases`, `published_case_members`,
- * `cases`) is append-only and exempt from purge (R24, R31): an edition answers forever. `export_log` is
- * `corpus-export`'s since K1024, and `published_material_texts` and
- * `published_case_materials` `case-carriage`'s since N532. The derived
- * and working tables (`published_edges`, `published_held_references`, unsigned `case_documents` and their
- * `case_exclusions`, `case_revision_flags`, `observation_attributions`, `capture_attributions` (R60)) are declared to record-core's purge as the
- * store declared them (K23); the held references (N256) as `published_edges` is. */
+ * `cases`) and the court-order stamps (`edition_stamps`, R62) are append-only and exempt from purge (R24, R31): an
+ * edition answers forever. `export_log` is `corpus-export`'s since K1024, `published_material_texts` and
+ * `published_case_materials` `case-carriage`'s since N532, and `case_revision_flags`, `observation_attributions` and
+ * `capture_attributions` `case-tensions`' since T33 (its R10; K1634), which creates and declares them with names and
+ * columns unchanged. The derived and working tables (`published_edges`, `published_held_references`, unsigned
+ * `case_documents` and their `case_exclusions`) are declared as the store declared them (K23).
+ */
 
 export const PUBLICATION_SCHEMA = `
 -- The published projection: the ONLY tables the public doorbell reads.
@@ -465,132 +466,27 @@ CREATE TABLE IF NOT EXISTS case_exclusions (
 );
 CREATE INDEX IF NOT EXISTS case_exclusions_target ON case_exclusions(target_id);
 
--- CASE-4 / DEC-72: THE REVISION FLAG. A CASE EDITION FROZE A MEMBER AT A HASH,
--- AND THAT MEMBER HAS SINCE MINTED A NEW VERSION.
---
--- The design (CASE-AS-PRODUCTION.md, "Revised findings vs the cases containing
--- them"): a case is a frozen, signed edition, honest as of its date. When a
--- member finding is later revised, the containing cases are FLAGGED, never
--- silently updated and never automatically re-published -- the cascade doctrine
--- one level up. New editions are each owning project's deliberate act.
---
--- WHY A TABLE AND NOT A DERIVED READ, WHICH IS THE ONE STRUCTURAL DECISION HERE.
--- The condition itself IS derivable: CASE-5 unslaved the member's edition from
--- the case's and made a member resolve BY ITS PIN, so "this case's pin is no
--- longer this finding's current version" is one comparison over columns that
--- already exist. A derived answer was written first and is wrong for exactly one
--- reason: IT CLEARS ITSELF. Revert the finding to the pinned bytes, or let the
--- pin and the head agree again by any route, and the derived flag vanishes with
--- nobody having acted -- which is D-79's ruling one altitude up. A finding that
--- disappears is indistinguishable from one that was never made, and a flag that
--- stops being raised is indistinguishable from a project that dealt with it. So
--- the OBSERVATION is derived (from the pin, and from no second mechanism) and
--- the FLAG is written down, once, at the moment the revision mints.
---
--- SET-BUT-NEVER-CLEAR IS LITERAL. No statement anywhere DELETES a row here. An
--- owning project that acts ADDS the discharge to the row it discharges
--- (acted_at / acted_by / acted_edition), so the record holds both the flag and
--- what was done about it, in the order it happened. A row with acted_at NULL is
--- outstanding; a row with acted_at set is history, and history is not absence.
---
--- THE ACT THAT DISCHARGES IS A NEW RATIFIED EDITION OF THAT CASE, and it is
--- deliberately an act that ALREADY EXISTS rather than a new acknowledgement op.
--- The design names it: "New editions are each owning project's deliberate act."
--- It is also the only discharge available without walking into CASE-5b's wall --
--- every case fact this plane commits is committed FROM THE SIGNED BYTES, and a
--- bare acknowledgement op would commit a case-level assertion from an unsigned
--- request. A ratified edition is signed, so the discharge rests on a signature
--- exactly as the flag's pin does.
---
--- SCOPED TO case_id, WHICH IS D-266's RULING ARRIVING HERE: a disposition is
--- scoped to the key's own subject. A case is ONE project's production (cases is
--- keyed on case_id alone, CASE-1's sharpest call), so a project acting on ITS
--- case discharges rows carrying that case_id and reaches no other project's.
--- Where several cases containing revised members are owned by several projects,
--- one project acting leaves every other project's rows outstanding -- and that
--- is structural here rather than a rule somebody has to remember, because the
--- discharge statement's WHERE clause names case_id and nothing wider.
---
--- pinned_sha is the hash the case COMMITTED TO (published_case_members.version_sha
--- as it stood) and revised_sha is the version that superseded it as the finding's
--- head. Both are stored rather than re-read: the roster row can be re-pinned by a
--- later edition, and a flag that re-read the pin would silently re-describe what
--- it was raised about.
---
--- Keyed (case_id, edition, bundle_id, revised_sha) so a member that revises
--- three times against one frozen edition raises three rows and not one -- each
--- revision is its own fact, and collapsing them would let the second and third
--- vanish into the first.
---
--- DERIVED FROM NOTHING, so it is not rebuilt by a projection pass; it is a
--- record of events. It carries a bundle_id, so it is cleared by BOTH arms of
--- op=purge -- the D-113 silent-leftover; R31's test
--- (test/m/publication/invariants.test.mjs) purges a bundle and finds its flags gone.
-CREATE TABLE IF NOT EXISTS case_revision_flags (
-  case_id       TEXT NOT NULL,
-  edition       INTEGER NOT NULL,  -- the CASE edition whose roster froze the pin
-  bundle_id     TEXT NOT NULL,     -- the member finding that revised
-  pinned_sha    TEXT NOT NULL,     -- what the case committed to
-  revised_sha   TEXT NOT NULL,     -- the version that superseded it
-  project_id    TEXT,              -- the OWNING project that must act. NULL for a pre-DEC-72 case, and STATED
-  since         TEXT NOT NULL,
-  acted_at      TEXT,              -- NULL while the flag stands. NEVER set back to NULL, and the row is never deleted
-  acted_by      TEXT,              -- the member whose act discharged it
-  acted_edition INTEGER,           -- the CASE edition that act published
-  PRIMARY KEY (case_id, edition, bundle_id, revised_sha)
-);
--- Outstanding-by-member is the question op=caseflags asks with a bundle_id, and
--- it is the only filter whose leading column is not the primary key's. The index
--- arrives WITH that statement, which is the rule the finding_dispositions comment
--- above had to learn by failing the build.
-CREATE INDEX IF NOT EXISTS case_revision_flags_bundle ON case_revision_flags(bundle_id);
-
--- MK-7 / MEMBER-KNOWLEDGE-DESIGN.md section 4.2-4.6: THE ATTRIBUTION ACT. One row per
--- (case edition, observation): the level the observation's AUTHOR chose for what that edition's
--- published case document shows of them. Written only by op=attribute, taken by the author and by
--- nobody else, never prefilled (no row is "unchosen", and a case document cannot be ratified
--- while any observation it reaches is unchosen). A later edition INHERITS the latest earlier
--- edition's row until the author acts again (section 4.3). chosen_by is the server-stamped author.
--- There is deliberately NO column that could hold an off-the-record source's identity: that
--- anonymity is a structural absence (section 4).
--- bundle_id is the OBSERVATION, so the rows ride the purge TABLES list in both arms (D-113): an
--- attribution outliving its observation would attach to whatever bundle was next allocated its id.
--- reason is DEC-88's: the author's words on why this level, as written. NULL on a choice recorded
--- before DEC-88, never back-filled (K1050's form).
-CREATE TABLE IF NOT EXISTS observation_attributions (
+-- R62 (K1480; Publication §5D, "A court order has its own path"): A COURT ORDER COMPLIED WITH OPENLY. One row per
+-- (case edition, docket entry): a ratified edition named by a signed court-order docket entry (docket R25), with the
+-- order's effect (remove, redact, seal, unseal) and the parts it names (a JSON list, NULL when it names none). Written
+-- only by stampEdition, inside docket's transaction; appended and never altered (R24): a stamp is a new row beside the
+-- edition, never a change to a published row, a signed document or a published object. Its order of rows is the
+-- order the stamps were made (rowid), so a later unseal reads after the seal it ends. Published (public-read serves it
+-- beside the edition), so exempt from purge as the published projection is (R31).
+CREATE TABLE IF NOT EXISTS edition_stamps (
   case_id    TEXT NOT NULL,
-  edition    INTEGER NOT NULL,
-  bundle_id  TEXT NOT NULL,     -- the observation (an authored INFO bundle)
-  level      TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
-  chosen_by  TEXT NOT NULL,     -- the observation's author, stamped from the signed-in session
-  chosen_at  TEXT NOT NULL,
-  reason     TEXT,              -- DEC-88: why this level, in the author's words. NULL = chosen before DEC-88
-  PRIMARY KEY (case_id, edition, bundle_id)
-);
-CREATE INDEX IF NOT EXISTS observation_attributions_bundle ON observation_attributions(bundle_id);
-
--- R60 (DEC-119 (3); DEC-102 items 1-3; N523): THE ATTESTING MEMBER'S CREDIT FOR OFF-THE-RECORD MATERIAL. One row per
--- (case edition, capture): the level the capture's attesting member (its actor, acquisition R16) chose for how that
--- edition credits their attestation of material from a source the case shows as Withheld. Written only by
--- op=attribute with capture, by that member and nobody else, never prefilled; a later edition inherits the latest
--- earlier edition's row, as observation_attributions'. capture_sha is a capture's SHA-256, never a bundle id, so the
--- rows are cleared by the whole-store purge only. reason is the member's words, as DEC-88 asks of an observation's.
-CREATE TABLE IF NOT EXISTS capture_attributions (
-  case_id     TEXT NOT NULL,
-  edition     INTEGER NOT NULL,
-  capture_sha TEXT NOT NULL,     -- the off-the-record capture (64 lowercase hex)
-  level       TEXT NOT NULL CHECK (level IN ('group','project','cover','name')),
-  chosen_by   TEXT NOT NULL,     -- the capture's attesting member, stamped from the signed-in session
-  chosen_at   TEXT NOT NULL,
-  reason      TEXT NOT NULL,     -- why this level, in the member's words
-  PRIMARY KEY (case_id, edition, capture_sha)
+  edition    INTEGER NOT NULL,     -- the CASE edition stamped
+  entry_seq  INTEGER NOT NULL,     -- the docket entry's seq on the case's docket
+  effect     TEXT NOT NULL CHECK (effect IN ('remove','redact','seal','unseal')),
+  parts      TEXT,                 -- JSON list of the parts the order names, NULL = none named
+  stamped_at TEXT NOT NULL,
+  PRIMARY KEY (case_id, edition, entry_seq)
 );
 `;
 
 /** R31 (K23): what purge clears, as the store declared it — `published_edges` keyed by either end, the unsigned case
- *  documents and their exclusions by the whole-store form only, the flags and the attributions by their bundle. */
+ *  documents and their exclusions by the whole-store form only. */
 export const PUBLICATION_TABLES = Object.freeze([
-  "case_revision_flags", "observation_attributions", "capture_attributions",
   { name: "published_edges", keys: ["from_bundle", "to_bundle"] },
   { name: "published_held_references", keys: ["from_bundle", "to_bundle"] },
   { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
@@ -598,7 +494,23 @@ export const PUBLICATION_TABLES = Object.freeze([
 ]);
 /** R24, R31: the published bytes, never cleared by any purge. */
 export const PUBLICATION_EXEMPT = Object.freeze([
-  "published_bundles", "published_shas", "published_cases", "published_case_members", "cases",
+  "published_bundles", "published_shas", "published_cases", "published_case_members", "cases", "edition_stamps",
+]);
+
+/* The classes record-core's default form gives (plan T33 Rules (6)): no expunge, export to administrators, stored. */
+const CLASSES = Object.freeze({ expunge: "none", export: "admin-only", derive: "stored", version_chain: false });
+/* Sight as the default form decided it: a table keyed to a bundle (or holding `bundle_id`) is seen as that bundle is;
+   one keyed to none (`case_documents`, `case_exclusions`) or holding no bundle column as the group. */
+const BUNDLE_SIGHT = new Set(["published_edges", "published_held_references", "published_bundles",
+                              "published_shas", "published_case_members"]);
+
+/** R31 (plan T33 Rules (6)): every table, declared with its classes to record-core's `declareTable`: the purged ones
+ *  as `PUBLICATION_TABLES` keys them, the exempt ones never cleared; each the classes `declarePurge` gave it. */
+export const PUBLICATION_DECLARATIONS = Object.freeze([
+  ...PUBLICATION_TABLES.map((t) => Object.freeze({ ...t, ...CLASSES, purge: "clear",
+                                                   sight: BUNDLE_SIGHT.has(t.name) ? "bundle" : "group" })),
+  ...PUBLICATION_EXEMPT.map((name) => Object.freeze({ name, ...CLASSES, purge: "exempt",
+                                                      sight: BUNDLE_SIGHT.has(name) ? "bundle" : "group" })),
 ]);
 
 /* Columns added after a store was first written, added by hand because CREATE TABLE IF NOT EXISTS does nothing to a
@@ -622,9 +534,6 @@ const ADDITIVE_COLUMNS = [
   /* REC-217 (BIO_Publication_v0_1.md §3 rule 13): THE DRAFT A PUBLISHER NAMED as a case edition's draft. NULL is the
      measured truth for every older row: no act could name a draft before this column existed. */
   ["case_documents", "draft_id", "TEXT"],
-  /* DEC-88 (R17, K1058): the author's reason for an attribution level. NULL on every choice recorded before it: no act
-     asked for one, and none may come out of a migration. */
-  ["observation_attributions", "reason", "TEXT"],
 ];
 
 /* D-734 (BOB #36, D-731 (b)): the path a ratified case document's hash is registered under in `published_shas`. */

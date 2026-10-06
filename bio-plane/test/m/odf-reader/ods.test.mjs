@@ -132,7 +132,7 @@ test("R18 text() sheets: capacity null, used extent from the cells (padding neve
     row(empty(1024), 'table:number-rows-repeated="1048000"'),
   ].join("")) + table("Blank", row(empty(50), 'table:number-rows-repeated="99"')) + table("Hidden", row(cell("h")), 'table:display="false"');
   const t = await T(body);
-  assert.deepEqual(t.sheets.map(({ text, ...s }) => s), [
+  assert.deepEqual(t.sheets.map(({ text, cells, ...s }) => s), [   // cells: R46 (cells.test.mjs)
     { sheet: 0, name: "Used", hidden: false, rows: null, cols: null, usedRows: 7, usedCols: 5, range: usedSheetRange("Used", 7, 5), undetermined: [] },
     { sheet: 1, name: "Blank", hidden: false, rows: null, cols: null, usedRows: 0, usedCols: 0, range: null, undetermined: [] },
     { sheet: 2, name: "Hidden", hidden: "hidden", rows: null, cols: null, usedRows: 1, usedCols: 1, range: usedSheetRange("Hidden", 1, 1), undetermined: [] },

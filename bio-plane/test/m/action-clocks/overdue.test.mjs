@@ -1,4 +1,5 @@
-/* action-clocks' overdue read and its invariants at its interface (R3, R7, R9). */
+/* action-clocks' overdue read and its invariants at its interface (R3, R7, R9). The test profile's zone is
+   America/Halifax (UTC−3 in September): R3's day is that local day (K1444 (iii)), never the UTC day. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, CLK } from "./fixture.mjs";
@@ -29,22 +30,33 @@ test("R3 overdueClocks lists every overdue or past pending entry of open visible
   const r = w.c.overdueClocks({ viewer: M });
   assert.deepEqual(r.items.map(key), [`${A}:0`, `${A}:3`, `${D}:0`]);
   assert.deepEqual(r.items[0], { action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", status: "pending", past: true,
-                                 project: null, created_by: M });
+                                 project: null, created_by: M, basis_of: { kind: null, citation: "Act s.2" }, local_day: "2026-09-28" });
   assert.equal(r.items[0].created_by, M, "the creator, not the later reviser");
-  assert.deepEqual([r.as_of, r.limit, r.actions_limit, r.truncated, r.cursor], ["2026-09-28", 500, 500, false, null]);
+  assert.deepEqual([r.as_of, r.limit, r.actions_limit, r.truncated, r.cursor, r.zone_undetermined], ["2026-09-28", 500, 500, false, null, 0]);
   assert.deepEqual(counts(w), before, "writes nothing");
   assert.equal(w.c.overdueClocks({ viewer: "nobody" }).items.length, 0, "only visible actions");
   assert.equal(w.c.overdueClocks({ viewer: MACHINE }).items.length, 3, "a machine reads as any viewer the gate passes");
 });
 
-test("R3 a pending entry is past from the UTC day after its date: at the day boundary, the instance clock decides", () => {
+test("R3 a pending entry is past from the local day after its date in the action's zone, never the UTC day (K1444 (iii)); with no zone held its lateness is undetermined and it is not listed", () => {
   const w = world();
   w.action(A, ["clock:", ...CLK("2026-09-28")]);
-  w.clock.ms = Date.parse("2026-09-28T23:59:59.999Z");
-  assert.equal(w.c.overdueClocks({ viewer: M }).items.length, 0, "met by anything on its day");
+  /* 2026-09-29T02:59:59Z is still 28 September in America/Halifax: met by anything on its day. The UTC day (the 29th)
+     would call it overdue three hours early. */
+  w.clock.ms = Date.parse("2026-09-29T02:59:59.999Z");
+  assert.equal(w.c.overdueClocks({ viewer: M }).items.length, 0, "met by anything on its local day");
   w.clock.ms = Date.parse("2026-09-29T00:00:00.000Z");
-  assert.deepEqual(w.c.overdueClocks({ viewer: M }).items.map(key), [`${A}:0`]);
+  assert.equal(w.c.overdueClocks({ viewer: M }).items.length, 0, "the UTC day after is not the local day after");
+  w.clock.ms = Date.parse("2026-09-29T03:00:00.000Z");
+  assert.deepEqual(w.c.overdueClocks({ viewer: M }).items.map((x) => [key(x), x.local_day]), [[`${A}:0`, "2026-09-29"]]);
   assert.equal(w.c.overdueClocks({ viewer: M, now: Date.parse("2026-09-28T12:00:00Z") }).items.length, 0, "a caller's as-of");
+  /* a profile with no time zone: undetermined, so not listed and counted apart; a stored `overdue` is still reported. */
+  const noZone = structuredClone(profile("test-port-ellery"));
+  delete noZone.time_zone;
+  const x = world({ override: { "test-port-ellery": noZone } });
+  x.action(A, ["clock:", ...CLK("2026-09-01"), ...CLK("2026-09-02", "overdue")]);
+  const r = x.c.overdueClocks({ viewer: M });
+  assert.deepEqual([r.items.map((i) => [i.ord, i.status, i.past]), r.zone_undetermined], [[[1, "overdue", null]], 1]);
 });
 
 test("R3 pages run in (action, position) order, at most 500 entries and 500 actions a page, `cursor` and `truncated` as R1's; every entry is reached", () => {
@@ -78,7 +90,8 @@ test("R7 overdue is derived at the read and a stored status is reported beside t
   const at = (iso) => w.c.overdueClocks({ viewer: M, now: Date.parse(iso) }).items.map((x) => [x.ord, x.status, x.past]);
   /* a stored `overdue` not yet past is answered with both: the stored mark and the derivation. */
   assert.deepEqual(at("2026-09-28T00:00:00Z"), [[0, "overdue", false], [1, "pending", true]]);
-  assert.deepEqual(at("2026-12-02T00:00:00Z"), [[0, "overdue", true], [1, "pending", true]]);
+  assert.deepEqual(at("2026-12-02T00:00:00Z"), [[0, "overdue", false], [1, "pending", true]], "still 1 December in the zone");
+  assert.deepEqual(at("2026-12-02T04:00:00Z"), [[0, "overdue", true], [1, "pending", true]]);
   assert.deepEqual(at("2026-08-01T00:00:00Z"), [[0, "overdue", false]], "pending and not past: not overdue");
   assert.deepEqual(w.c.pendingClocks({ before: "2026-09-02", viewer: M }).items.map((x) => [x.ord, x.past]), [[1, true]]);
   /* the document is the same before and after every read: nothing is computed into it. */
@@ -120,6 +133,11 @@ test("R9 every read answers an invisible action as an absent one; the module's t
   w.record.purge({});
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_reminders`)[0].n, 0);
   assert.ok(clocks.actionClocksOwns("action_reminders") && clocks.actionClocksOwns({ name: "action_clock_proposals" }));
+  /* declared explicitly with their classes (record-core R21; plan T33 Rules (6)). */
+  const declared = w.record.declaredTables().filter((d) => clocks.ACTION_CLOCKS_TABLES.includes(d.name));
+  assert.deepEqual(declared.map((d) => [d.name, d.module, d.purge, d.expunge, d.export, d.sight, d.derive, d.version_chain]).sort(),
+    [["action_clock_proposals", "action-clocks", "clear", "none", "admin-only", "bundle", "stored", false],
+     ["action_reminders", "action-clocks", "clear", "none", "admin-only", "bundle", "stored", false]]);
   assert.ok(!clocks.actionClocksOwns("correspondence"));
   /* no place in outward text. */
   const oak = profile("oakland-alameda");

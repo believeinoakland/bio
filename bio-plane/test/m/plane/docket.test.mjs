@@ -38,12 +38,13 @@ test("R15: construction builds docket, which creates its tables and declares the
   assert.equal(rc.declarePurge("zz-probe", ["zz_none"]).ok, true);
 });
 
-test("R15, R2: docket is built directly after publication in the modules' order and before network-notices and layer 9, as the purge declarations show", async () => {
+test("R15, R2, R23 (K1643): docket is built after publication and case-tensions (which declares between them, its tables made by publication's factory) and before network-notices and layer 9, as the purge declarations show", async () => {
   const order = declarers(await store());
   const at = (m) => { const i = order.indexOf(m); assert.notEqual(i, -1, m); return i; };
-  assert.equal(at("docket"), at("publication") + 1, "directly after publication");
+  assert.equal(at("case-tensions"), at("publication") + 1, "case-tensions directly after publication");
+  assert.equal(at("docket"), at("case-tensions") + 1, "docket directly after case-tensions");
   assert.ok(at("docket") < at("network-notices"), "before network-notices");
-  assert.ok(at("docket") < at("local-facts"), "before layer 9");
+  assert.ok(at("docket") < at("conformance"), "before layer 9");
 });
 
 test("R15, R3: a store written before docket opens with its tables, and a second construction changes nothing", async () => {

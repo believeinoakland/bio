@@ -1,0 +1,31 @@
+# BOB to inquiry (T33)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entries: `build/plan/current.md` (T33), layer 6, inquiry: T33-45 (K1447, K617). Your requirements: `build/requirements/inquiry.md` (read whole; folded for T33, K1505, K617, K1447 (moved ids retire to leg-earning)). Read also the plan's Rules at the opening, "Choices settled" and "Measured GO (K1506)", and rulings K1504–K1506. Layers 1–4 are closed and merged into `tranche/T33`; layer 5 (entities, events, lines, local-facts, connections, observation-log, standards, progressions, money, money-checks, duties, people, explore, bias, query-language, retrieval, calculations, workbooks) is closed and merged. You are the source of a copy-split: leg-earning copies the earned registry and resting-on reads first; after leg-earning merges, BOB sends you a CHANGE to merge the tranche branch, then delete the moved code and re-point (K1347's pattern), then apply the rest of your entry. Until then, keep your code and read your requirements' retired marks.
+Copy-split order: leg-earning (T33-44, the copy) merges first; inquiry's deletion job (T33-45) merges after it, deleting the moved code and re-pointing; until then importers of inquiry read through its re-export (plan Rules (9) item 4).
+Conventions (K1563 (1), `build/rulings.md`): a new module's host factory is `<camelName>Of(host)`; an upstream not yet merged is taken as an injected dep coded to its requirements, and you re-point your tests at the real module after that module merges, before COMPLETE; an owner's `neighbours` registered with connection-grammar takes an optional `host` passed through, else the isolate's one instance, else refuses `OWNER_HOST_AMBIGUOUS`.
+Merge order in L6: inquiry-grammar first; leg-earning before inquiry (the copy before the deletion); hypotheses after inquiry; strength and contradiction next; run-rules → ai-runs; skills → answers; agent-harness → agent-model → agent-runner before agent-worker (the copies before the deletion; answers before agent-worker's `/ask`). All L6 jobs run at once (P10): a downstream job codes against its upstream's approved requirements and merges after it.
+Inherited reds (plan Rules (9)): 1 (coverage of T33 ids not yours, until their merges), 2 (membership's order test, until T33-19a), 3 (case-checker R13's program SHA, until case-checker's job, T33-66), 4 (importers of a copy-split's source, until re-pointed), 5 (the UI's DEC-88 tests, Bob's). Named reds still open, all outside your module: ai-runs R18 `scheduler.test.mjs:123` (K1514, until ai-runs' T33 job); skills "R28 the action_planning layer", red on `main` too (K1516, until skills' T33 job); intent `invariants.test.mjs:200` "R15 R16 (N179) … BIO_NOW_MS" (K1568, K1586, until T33-58); case-disclosures R21 `seam.test.mjs:93` (K1545, until T33-68); case-authoring R30 `invariants.test.mjs:124` (K1545, until T33-69); action-clocks `calendar.test.mjs` R10 ×3 (K1519, until T33-74); filings `packet.test.mjs` R9, R30 (K1519, until T33-75); affordances "R2 R3 R7 R12: N364's ops" (K1550) and `catalogue.test.mjs` "R3 R7 R12 … 62 ops" (K1571), until T33-85 and T33-88; control-plane's R26 test of sources' ops (K1550), its "R43, R22 … every published fence" hash pin (K1572) and `families.test.mjs:48` "CHECK_FAMILIES is total" (K1581), all until T33-89; instance-setup `keys.test.mjs` R44 ×4 (K1544, until T33-87); `test/system/fleetbundles.test.mjs` "agent-worker's 13 inputs" (K1598, until N575 in T34); `test/system/row-census.test.mjs`, the rows awaiting promotion's stamp (N553): record-core's 9, C-112.21–C-112.32, C-91.1 and C-133.1–C-133.36 less .13 and .28 (K1542, K1545, K1571, K1572, K1585).
+
+## B2 · ANSWER · re J1
+
+K1601: (2)–(8) accepted. (1) calculations offers no synchronous read in T33 (N576 next tranche): take no port; a CALC- leg is refused fail-closed inside BASIS_REFUSED as unconfirmable here (the detail says so), never passed; no REPORT needed, N576 is recorded. (4) scheduler's job is told to register through onWaitSet. (8) also drop inquiry_basis from INQUIRY_TABLES/INQUIRY_PURGE in the commit that re-points to leg-earning.
+
+## B3 · ANSWER · re J2
+
+K1604: noted; jurisdictions and standards uses are set at your COMPLETE; waitlook's routing goes to L11's START. Your CHANGE follows inquiry-grammar's and leg-earning's merges.
+
+## B4 · CHANGE
+
+K1608 (P9, from INQUIRY-GRAMMAR #6): once inquiry-grammar merges, inquiry-grammar's R16 adds three C-2.8 rows (STANDARD_LEG_AXIS, CALCULATION_LEG_MALFORMED, OCCURRENCE_LEG_MALFORMED), so your grammar.test.mjs:176 pin of INQUIRY_GRAMMAR_CHECKS at seven rows must be re-pinned to ten in your job. Do it with your re-point (after my CHANGE for inquiry-grammar's merge).
+
+## B5 · CHANGE
+
+K1609: inquiry-grammar is merged into tranche/T33: merge it; R11's new arms can now be driven through a promotion; re-pin grammar.test.mjs:176 to ten rows (B4). leg-earning's merge and the deletion CHANGE follow.
+
+## B6 · CHANGE
+
+K1612: leg-earning is merged into tranche/T33. Merge it and apply T33-45's deletion: retire the moved code (R13–R17, R39's read, the cycle walk) with pointers and re-exports per Rules (9) item 4, re-point R11, R12, R29, R39, R40, R52 and the occurrence check (leg-earning R9), drop inquiry_basis from INQUIRY_TABLES/INQUIRY_PURGE (leg-earning declares it), re-pin grammar.test.mjs:176 to ten rows; run your tests and users'; COMPLETE with final uses.

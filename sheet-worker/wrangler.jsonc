@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sheet-worker",
+
+  // Pinned, as every Worker config of this repository is: wrangler otherwise deploys wherever the machine's session
+  // points (CLAUDE.md).
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+
+  // Built by scripts/build.mjs through bundler's writeMember; the committed bundle is what deploys and what the suite
+  // boots.
+  "main": "dist/sheet-worker.bundled.mjs",
+  "compatibility_date": "2026-07-01",
+
+  // The engine wasm is a module part the platform compiles at upload (Workers forbid compiling wasm at run time).
+  // `**/` because wrangler matches from main's directory (dist/), as ocr-worker found on its first deploy.
+  "rules": [
+    { "type": "CompiledWasm", "globs": ["**/*.wasm"] }
+  ],
+
+  // One version across the plane and every member (bundler R12): this and package.json are the two sites.
+  // SHEET_RECOMPUTE is off: the member answers every recompute request NOT_ENABLED until an administrator sets it
+  // to "on" after the release deploys this member (R2, K1501).
+  "vars": { "VERSION": "0.79.0", "SHEET_RECOMPUTE": "off" },
+
+  // CPU: the paid plan's 5-minute ceiling, declared rather than discovered (R14). The bounds in src/contract.mjs are
+  // set so a workbook under them finishes inside it on the measured figures; one that does not is ended by the
+  // platform, and the plane reads a dropped call as "not recomputed here".
+  "limits": { "cpu_ms": 300000 },
+
+  // The narrowest binding that does the job: the captures bucket, read. No PUBLISHED, no Durable Object (R10).
+  "r2_buckets": [
+    { "binding": "CAPTURES", "bucket_name": "bio-captures" }
+  ],
+
+  "observability": { "enabled": true }
+}

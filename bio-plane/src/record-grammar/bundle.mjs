@@ -7,7 +7,7 @@
    K855). Pure over the files it is handed: no store, no network; the clock is
    read only where the caller passes no `nowMs` (C-16.3, C-16.5), as the catalogue's has always read it. */
 
-import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE } from './ids.mjs';
+import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, ID_PREFIXES } from './ids.mjs';
 import { OBJECT_TYPES, normalizeType } from './types.mjs';
 import { CORE_FIELDS, FORBIDDEN_ALIASES, parseFrontmatter } from './frontmatter.mjs';
 import { HEADINGS, HEADINGS_WHEN, isCaseMemberBytes, vocabFor, STATES, sectionText } from './document.mjs';
@@ -136,6 +136,11 @@ function checkIdentity(ctx, findings) {
   }
 }
 
+/* T33-1 (R3): `OBJECT_TYPES` also names the types of T33's new objects, which are table rows and never bundles. The
+   bundle check reads only the bundle prefixes' types, so `object_type: event` is still not a known type here (C-2.5)
+   and a prefix outside R1's set implies none, exactly as before the new keys. */
+const BUNDLE_TYPES = Object.fromEntries(ID_PREFIXES.map((p) => [p, OBJECT_TYPES[p]]));
+
 function checkFrontmatterContract(ctx, findings) {
   const fm = ctx.fm;
   if (!fm) return;
@@ -146,11 +151,11 @@ function checkFrontmatterContract(ctx, findings) {
     if (alias in fm) findings.push(f('C-2.3', 'error', `forbidden alias '${alias}' present (canonical name is '${canonical}')`, [`rename '${alias}' to '${canonical}'`]));
   }
   const ot = fm.object_type;
-  if (!Object.values(OBJECT_TYPES).includes(normalizeType(ot))) {
+  if (!Object.values(BUNDLE_TYPES).includes(normalizeType(ot))) {
     findings.push(f('C-2.5', 'error', `object_type '${ot}' is not a known type`));
   } else {
     const prefix = fm.id && String(fm.id).split('-')[0];
-    const wantType = OBJECT_TYPES[prefix];
+    const wantType = BUNDLE_TYPES[prefix];
     if (wantType && wantType !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
     const schema = fm.schema;
     /* N-A1 (T18): a type name may hold `_` (`action_plan`, the first that does), so the stamp's type part does too. */

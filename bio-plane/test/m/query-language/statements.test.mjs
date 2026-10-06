@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, everyStatement } from "./fixture.mjs";
-import { compile, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, MEANING, PROVENANCE_COLS, DEFAULT_FACETS,
+import { compile, cachedNotes, viewerPredicate, GATE_MARK, FIELDS, MEANING, PROVENANCE_COLS, DEFAULT_FACETS, SORTABLE,
          LIMIT_DEFAULT, LIMIT_MAX, IDS_MAX, MEANING_LIMIT_DEFAULT, MEANING_LIMIT_MAX, MEANING_AXIS_CAP,
          RANK_ATOMS_MAX } from "../../../src/query.mjs";
 import * as membership from "../../../src/membership/index.mjs";
@@ -43,7 +43,7 @@ test("R7 no member input enters a statement's text: for every value a member can
   assert.equal(a.sql, b.sql);
   const c = compile({ q: "", viewer: V, sort: "last_updated; DROP TABLE x" }).statements.page();
   assert.ok(!c.sql.includes("DROP"));
-  for (const [f, col] of Object.entries(FIELDS).map(([n, x]) => [n, x.col]))
+  for (const [f, col] of Object.entries(SORTABLE).filter(([n]) => n !== "relevance"))
     assert.ok(compile({ q: "", viewer: V, sort: f }).statements.page().sql.includes(`b.${col}`));
 });
 
@@ -262,7 +262,7 @@ test("R16 meaning levels and axis take their scope from the query's other arms",
 
 test("R17 plan.cached names each cached column and route; cachedNotes publishes only routes that ran, in FIELDS order", () => {
   const cachedCols = Object.values(FIELDS).filter((f) => f.asOf).map((f) => f.col);
-  assert.deepEqual(cachedCols, [FIELDS.capture.col, FIELDS.connection.col]);
+  assert.deepEqual(cachedCols, [FIELDS.capture.col, FIELDS.connection.col, FIELDS.due.col, FIELDS.overdue.col]);
   const p = compile({ q: "-(connection:A OR x)", viewer: V, sort: "capture", facets: ["type"] });
   assert.deepEqual(Object.fromEntries(Object.entries(p.cached).map(([k, s]) => [k, [...s].sort()])),
     { [FIELDS.connection.col]: ["filter"], [FIELDS.capture.col]: ["sort"] });

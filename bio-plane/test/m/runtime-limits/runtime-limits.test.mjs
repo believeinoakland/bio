@@ -12,7 +12,7 @@ const { makeMeter, burn, cpuProbe } = cpu;
 const {
   sha256hex, liveToken, PUBLISHED_TOKEN_HASHES, instanceClaudeStatus, instanceClaudeToken, instanceAiCredential,
   unattendedCredential,
-  INSTANCE_CLAUDE_BINDING, INSTANCE_AI_BINDING, CASCADE_UNSET, CASCADE_PUBLISHED, INSTANCE_AI_UNSET, INSTANCE_AI_PUBLISHED,
+  INSTANCE_AI_BINDING, CASCADE_UNSET, CASCADE_PUBLISHED, INSTANCE_AI_UNSET, INSTANCE_AI_PUBLISHED,
 } = tokens;
 
 const fresh = () => "tok-" + randomBytes(24).toString("hex");
@@ -24,6 +24,30 @@ async function published(v, fn) {
   PUBLISHED_TOKEN_HASHES.add(h);
   try { return await fn(); } finally { PUBLISHED_TOKEN_HASHES.delete(h); }
 }
+
+/** An env that records every key read from it (and every probe of a key), so a test can show what a service reads. */
+function watched(target, reads) {
+  return new Proxy(target, {
+    get(t, k) { reads.push(String(k)); return t[k]; },
+    has(t, k) { reads.push(String(k)); return k in t; },
+    getOwnPropertyDescriptor(t, k) { reads.push(String(k)); return Object.getOwnPropertyDescriptor(t, k); },
+    ownKeys(t) { reads.push("<keys>"); return Reflect.ownKeys(t); },
+  });
+}
+
+/** The one answer the instance level gives (R13), and the env values that must all receive it. */
+const NO_ACCOUNT = (st) => {
+  assert.deepEqual(Object.keys(st).sort(), ["configured", "detail", "level", "reason"]);
+  assert.equal(st.level, "instance");
+  assert.equal(st.configured, false);
+  assert.equal(st.reason, CASCADE_UNSET);
+  assert.equal(typeof st.detail, "string");
+};
+const claudeEnvs = (v) => [undefined, null, {}, 0, "x", [], { INSTANCE_CLAUDE_TOKEN: "" },
+  { INSTANCE_CLAUDE_TOKEN: undefined }, { INSTANCE_CLAUDE_TOKEN: 5 }, { INSTANCE_CLAUDE_TOKEN: v },
+  { INSTANCE_CLAUDE_TOKEN: "sk-ant-anything" }, { INSTANCE_CLAUDE_TOKEN: " " }, { instance_claude_token: v },
+  { INSTANCE_AI_TOKEN: v }, { ANTHROPIC_API_KEY: v, CLAUDE_CODE_OAUTH_TOKEN: v },
+  { INSTANCE_CLAUDE_TOKEN: v, INSTANCE_AI_TOKEN: v, DAEMON_TOKEN: v, ADMIN_TOKEN: v }];
 
 /** A `now` that returns the listed values in turn and records each call as an event. */
 function clock(values, events) {
@@ -283,61 +307,62 @@ test("R12: PUBLISHED_TOKEN_HASHES is an exported Set of SHA-256 hex; membership 
   for (const v of [fresh(), fresh()]) {
     const direct = async () => !PUBLISHED_TOKEN_HASHES.has(await sha256hex(v));
     assert.equal(await direct(), await liveToken(v));
-    assert.equal((await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v })).configured, true);
     assert.equal((await instanceAiCredential({ INSTANCE_AI_TOKEN: v })).token, v);
+    assert.equal(await unattendedCredential({ DAEMON_TOKEN: v }).token(), v);
+    const empty = async () => [await instanceAiCredential({ INSTANCE_AI_TOKEN: "" }),
+      await unattendedCredential({ DAEMON_TOKEN: "", ADMIN_TOKEN: "" }).token(), await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: "" }),
+      await instanceClaudeToken({ INSTANCE_CLAUDE_TOKEN: "" })];
     await published(v, async () => {
       assert.equal(await direct(), false);
       assert.equal(await direct(), await liveToken(v));
-      // Published is treated as not set by every credential service.
-      const st = await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v });
-      assert.equal(st.configured, false);
-      assert.equal(await instanceClaudeToken({ INSTANCE_CLAUDE_TOKEN: v }), null);
-      assert.equal((await instanceAiCredential({ INSTANCE_AI_TOKEN: v })).token, null);
+      // Published is treated as not set by every credential service: each answers exactly as for the empty value
+      // (the AI credential's reason alone names publication, R19).
+      const [ai, un, cs, ct] = await empty();
+      assert.deepEqual(await instanceAiCredential({ INSTANCE_AI_TOKEN: v }), { token: null, reason: INSTANCE_AI_PUBLISHED });
+      assert.equal(ai.token, null);
+      assert.equal(await unattendedCredential({ DAEMON_TOKEN: v, ADMIN_TOKEN: v }).token(), un);
+      assert.deepEqual(await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v }), cs);
+      assert.equal(await instanceClaudeToken({ INSTANCE_CLAUDE_TOKEN: v }), ct);
     });
   }
 });
 
 /* ------------------------------------------------------------------ instanceClaudeStatus */
 
-test("R13: instanceClaudeStatus reads INSTANCE_CLAUDE_TOKEN; missing or empty is not configured, CASCADE_UNSET, with a detail", async () => {
-  assert.equal(INSTANCE_CLAUDE_BINDING, "INSTANCE_CLAUDE_TOKEN");
-  for (const env of [undefined, null, {}, { INSTANCE_CLAUDE_TOKEN: "" }, { INSTANCE_CLAUDE_TOKEN: undefined },
-    { INSTANCE_AI_TOKEN: fresh() }, { instance_claude_token: fresh() }]) {
-    const st = await instanceClaudeStatus(env);
-    assert.deepEqual(Object.keys(st).sort(), ["configured", "detail", "level", "reason"]);
-    assert.equal(st.level, "instance");
-    assert.equal(st.configured, false);
-    assert.equal(st.reason, CASCADE_UNSET);
-    assert.equal(typeof st.detail, "string");
-    assert.ok(st.detail.length > 0);
-  }
-});
-
-test("R14: instanceClaudeStatus on a published value is not configured, CASCADE_PUBLISHED, with a detail", async () => {
+test("R13: instanceClaudeStatus answers not configured, CASCADE_UNSET, with a detail pointing to each member's own account, for every env; it reads nothing from env and no binding name is exported", async () => {
   const v = fresh();
-  await published(v, async () => {
-    const st = await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v });
-    assert.deepEqual(Object.keys(st).sort(), ["configured", "detail", "level", "reason"]);
-    assert.equal(st.level, "instance");
-    assert.equal(st.configured, false);
-    assert.equal(st.reason, CASCADE_PUBLISHED);
-    assert.equal(typeof st.detail, "string");
-    assert.ok(st.detail.length > 0);
-  });
-});
-
-test("R15: instanceClaudeStatus on any other non-empty string is configured, with no shape check", async () => {
-  for (const v of [fresh(), "x", " ", "sk-ant-anything", "not a key at all", "日本", "\n"]) {
-    assert.deepEqual(await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v }),
-      { level: "instance", configured: true, reason: null, detail: null });
-  }
+  const answers = [];
+  const check = async (env) => {
+    const reads = [];
+    const e = env !== null && typeof env === "object" ? watched(env, reads) : env;
+    const st = await instanceClaudeStatus(e);
+    NO_ACCOUNT(st);
+    assert.deepEqual(reads, [], "no binding is read from env");
+    answers.push(JSON.stringify(st));
+  };
+  for (const env of claudeEnvs(v)) await check(env);
+  await published(v, async () => { for (const env of claudeEnvs(v)) await check(env); });
+  await check(new Proxy({}, { get() { throw new Error("read"); }, has() { throw new Error("has"); } }));
+  await check(undefined);
+  assert.equal(new Set(answers).size, 1, "one answer, whatever env carries");
+  // The detail says the member connects their own Claude account or API key.
+  const { detail } = await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v });
+  assert.match(detail, /member/i);
+  assert.match(detail, /own Claude account/i);
+  assert.match(detail, /API key/i);
+  assert.ok(!("INSTANCE_CLAUDE_BINDING" in tokens), "INSTANCE_CLAUDE_BINDING is no longer exported");
+  assert.ok(!Object.values(tokens).includes("INSTANCE_CLAUDE_TOKEN"), "no export names the retired binding");
+  // A fresh answer each call: changing one answer changes no later one.
+  const st = await instanceClaudeStatus({});
+  st.configured = true; st.detail = null;
+  NO_ACCOUNT(await instanceClaudeStatus({}));
 });
 
 test("R16: detail is null exactly when configured, a string otherwise, and no status ever carries the value", async () => {
   const v = fresh();
-  const cases = [await instanceClaudeStatus({}), await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: "" }),
-    await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v })];
-  await published(v, async () => cases.push(await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v })));
+  const cases = [];
+  for (const env of claudeEnvs(v)) cases.push(await instanceClaudeStatus(env));
+  await published(v, async () => { for (const env of claudeEnvs(v)) cases.push(await instanceClaudeStatus(env)); });
   for (const st of cases) {
     assert.equal(st.detail === null, st.configured === true);
     if (!st.configured) assert.equal(typeof st.detail, "string");
@@ -348,21 +373,22 @@ test("R16: detail is null exactly when configured, a string otherwise, and no st
 
 /* ------------------------------------------------------------------ instanceClaudeToken */
 
-test("R17: instanceClaudeToken returns the value exactly when the status is configured, null otherwise", async () => {
+test("R17: instanceClaudeToken is null for every env, agreeing with instanceClaudeStatus, and reads nothing from env", async () => {
   const v = fresh();
-  const envs = [undefined, null, {}, { INSTANCE_CLAUDE_TOKEN: "" }, { INSTANCE_CLAUDE_TOKEN: 5 },
-    { INSTANCE_CLAUDE_TOKEN: v }, { INSTANCE_CLAUDE_TOKEN: "x" }];
   const check = async (env) => {
-    const st = await instanceClaudeStatus(env);
-    const tok = await instanceClaudeToken(env);
-    assert.equal(tok, st.configured ? env.INSTANCE_CLAUDE_TOKEN : null);
+    const reads = [];
+    const e = env !== null && typeof env === "object" ? watched(env, reads) : env;
+    const st = await instanceClaudeStatus(e);
+    const tok = await instanceClaudeToken(e);
+    assert.equal(tok, null);
+    assert.equal(st.configured, false, "the status and the token agree");
+    assert.deepEqual(reads, [], "no Claude credential is read from the copy's bindings");
   };
-  for (const env of envs) await check(env);
-  await published(v, async () => {
-    await check({ INSTANCE_CLAUDE_TOKEN: v });
-    assert.equal(await instanceClaudeToken({ INSTANCE_CLAUDE_TOKEN: v }), null);
-  });
-  assert.equal(await instanceClaudeToken({ INSTANCE_CLAUDE_TOKEN: v }), v);
+  for (const env of claudeEnvs(v)) await check(env);
+  await published(v, async () => { for (const env of claudeEnvs(v)) await check(env); });
+  await check(new Proxy({}, { get() { throw new Error("read"); }, has() { throw new Error("has"); } }));
+  assert.ok((await Promise.resolve(instanceClaudeToken({ INSTANCE_CLAUDE_TOKEN: v }))) === null);
+  assert.ok(instanceClaudeToken({}) instanceof Promise, "answers a promise");
 });
 
 /* ------------------------------------------------------------------ instanceAiCredential */
@@ -465,7 +491,10 @@ test("R21: the four reason constants have their stated values and are the only n
   };
   const seen = [...await reasons(), ...await published(v, reasons)];
   for (const r of seen) assert.ok(allowed.has(r), String(r));
-  for (const r of allowed) if (r !== null) assert.ok(seen.includes(r), `${r} is reachable`);
+  // Every reason but CASCADE_PUBLISHED is reachable; that one is kept exported and stable, and no service gives it
+  // since the instance level answers CASCADE_UNSET for every env (R13).
+  for (const r of allowed) if (r !== null && r !== CASCADE_PUBLISHED) assert.ok(seen.includes(r), `${r} is reachable`);
+  assert.ok(!seen.includes(CASCADE_PUBLISHED));
   // Stable across calls and across module loads.
   const again = await import("../../../src/tokens.mjs?again");
   for (const k of ["CASCADE_UNSET", "CASCADE_PUBLISHED", "INSTANCE_AI_UNSET", "INSTANCE_AI_PUBLISHED"])
@@ -504,7 +533,7 @@ test("R22: pure — no fetch, no clock outside cpuProbe's now, and the same answ
 test("R23: nothing exported accepts or sets a credential; the env passed in is only read", async () => {
   // The whole export surface: services that read, the two binding names, the reasons and the denylist.
   assert.deepEqual(Object.keys(tokens).sort(), ["CASCADE_PUBLISHED", "CASCADE_UNSET", "INSTANCE_AI_BINDING",
-    "INSTANCE_AI_PUBLISHED", "INSTANCE_AI_UNSET", "INSTANCE_CLAUDE_BINDING", "PUBLISHED_TOKEN_HASHES",
+    "INSTANCE_AI_PUBLISHED", "INSTANCE_AI_UNSET", "PUBLISHED_TOKEN_HASHES",
     "instanceAiCredential", "instanceClaudeStatus", "instanceClaudeToken", "liveToken", "sha256hex",
     "unattendedCredential"]);
   assert.deepEqual(Object.keys(cpu).sort(), ["burn", "cpuProbe", "makeMeter"]);
@@ -528,6 +557,14 @@ test("R23: nothing exported accepts or sets a credential; the env passed in is o
     assert.deepEqual(await instanceAiCredential({}), { token: null, reason: INSTANCE_AI_UNSET });
     assert.equal(await instanceClaudeToken({}), null);
     assert.ok(withToken);
+  }
+  // No Claude credential is read from env at all (K1502): with every binding present, the Claude services read nothing.
+  {
+    const reads = [];
+    const e = watched({ INSTANCE_CLAUDE_TOKEN: v, ANTHROPIC_API_KEY: v, CLAUDE_CODE_OAUTH_TOKEN: v }, reads);
+    assert.equal(await instanceClaudeToken(e), null);
+    assert.equal((await instanceClaudeStatus(e)).configured, false);
+    assert.deepEqual(reads, []);
   }
   // A module-level global of the same name is never read: the value reaches the module only on `env`.
   globalThis.INSTANCE_CLAUDE_TOKEN = v; globalThis.INSTANCE_AI_TOKEN = v;
@@ -557,13 +594,14 @@ test("R25: no place is named in anything the module says, and no behaviour depen
   const said = [];
   said.push(JSON.stringify(makeMeter().report()));
   said.push(JSON.stringify(await instanceClaudeStatus({})));
-  await published(v, async () => said.push(JSON.stringify(await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v }))));
-  said.push(CASCADE_UNSET, CASCADE_PUBLISHED, INSTANCE_AI_UNSET, INSTANCE_AI_PUBLISHED, INSTANCE_CLAUDE_BINDING, INSTANCE_AI_BINDING);
+  said.push(JSON.stringify(await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: v })));
+  await published(v, async () => said.push(JSON.stringify(await instanceAiCredential({ INSTANCE_AI_TOKEN: v }))));
+  said.push(CASCADE_UNSET, CASCADE_PUBLISHED, INSTANCE_AI_UNSET, INSTANCE_AI_PUBLISHED, INSTANCE_AI_BINDING);
   for (const s of said) assert.doesNotMatch(s, places, s);
   // Values naming a place are treated like any other value.
   for (const t of ["oakland-token", "alameda-county", "springfield"]) {
     assert.equal(await liveToken(t), true);
-    assert.equal((await instanceClaudeStatus({ INSTANCE_CLAUDE_TOKEN: t })).configured, true);
+    assert.equal(await unattendedCredential({ DAEMON_TOKEN: t }).token(), t);
     assert.deepEqual(await instanceAiCredential({ INSTANCE_AI_TOKEN: t }), { token: t, reason: null });
   }
 });
