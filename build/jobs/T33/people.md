@@ -1,6 +1,6 @@
 # people (T33)
 
-**Status** · session_01RGGE4ZfFHwpKSDT9uQhM9P · depth 2 · WAITING ON BOB (B2) · handled B2
+**Status** · session_01RGGE4ZfFHwpKSDT9uQhM9P · depth 2 · WORKING · handled B2
 
 ## Progress (by the job; not a mail entry)
 
