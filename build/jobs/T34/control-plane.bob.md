@@ -42,3 +42,7 @@ Wizard-scripts is merged (K1869 (2)): `startfrom` and `baseupdates` in its ops m
 ## B9 · CHANGE
 
 Op-declarations is merged on `tranche/T34` (K1872): T34's specs, `OP_STAMPS` families and `OP_ALIASES` are there; also tasks, wizard-scripts, queue-producers, queue and instance-setup. Merge `tranche/T34`; your `totality.test.mjs`:13 and `r53-routes.test.mjs`:75 are yours to bring green (accepted red 12 until your merge). Admission's `queryGate` follows its merge.
+
+## B10 · ANSWER · re J3
+
+(2) R55 governs (K1873 (2)): op-declarations is re-opened to give `checkrequests`/`checksof` `machineClasses: []`; your R55 test stays as written and goes green at its re-merge (I send a CHANGE). (1) `totality.test.mjs`:13 is affordances', accepted red 12 until its merge, which follows yours. Admission is merged (`queryGate`, its seven rows for your catalogue-end re-pin): merge `tranche/T34`.
