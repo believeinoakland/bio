@@ -1,7 +1,8 @@
 /* ai-runs' tables (R38, R49, R50, R53; Bob's ruling 3, "each module owns its tables"), moved from `schema.mjs` at the
  * module's extraction; `ai_usage` and `ai_ceilings` added by T33-50. `lens_at_open`, `rerun_of` and `plan` (R46) are additive columns of the store's migration; they are part of the
  * table here, and `migrate` adds them to a table created before them. */
-export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings", "ai_usage", "ai_ceilings"]);
+export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings", "ai_usage", "ai_ceilings",
+  "ai_mode_verifications"]);
 
 export const AI_RUNS_SCHEMA = `
 
@@ -127,5 +128,16 @@ CREATE TABLE IF NOT EXISTS ai_ceilings (
   calls   INTEGER,
   set_by  TEXT NOT NULL,
   set_at  TEXT NOT NULL
+);
+
+-- K1606 (run-rules R19; VF-4): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED, by a member, with what they saw.
+-- Append-only: the chain that lets the next mode deploy is read from these rows, never from a parameter.
+CREATE TABLE IF NOT EXISTS ai_mode_verifications (
+  mode         TEXT NOT NULL,
+  run          TEXT NOT NULL,
+  verified_by  TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  evidence     TEXT NOT NULL,
+  PRIMARY KEY (mode, run)
 );
 `;

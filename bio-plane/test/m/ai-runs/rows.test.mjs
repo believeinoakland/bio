@@ -3,10 +3,10 @@
    to `run-rules` with their tests (K617). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, OPEN, INQ, ORG, USAGE, PENDING_ROWS } from "./world.mjs";
+import { world, OPEN, INQ, ORG, USAGE } from "./world.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
-/** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47). */
+/** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47, R50, R52). */
 export const MINTED = {
   AI_RUN_CAPABILITY_UNAVAILABLE: "C-33.29", AI_RUN_NO_CONTEXT: "C-33.30", AI_RUN_ALREADY_OPEN: "C-33.31",
   AI_RUN_RERUN_SELF: "C-33.45", AI_RUN_RERUN_UNKNOWN: "C-33.46", AI_RUN_RERUN_OTHER_CONTEXT: "C-33.47",
@@ -15,6 +15,9 @@ export const MINTED = {
   AI_RUN_MODE_NOT_DEPLOYED: "C-109.1", AI_RUN_PLAN_REQUIRED: "C-109.2", AI_RUN_PLAN_UNEXPECTED: "C-109.3",
   AI_RUN_PLAN_NEEDS_PROJECT: "C-109.4", AI_RUN_PLAN_NEEDS_MEMBER: "C-109.5", AI_RUN_PLAN_NO_SEARCH: "C-109.6",
   AI_RUN_MODE_UNCHECKED: "C-109.7",
+  /* T33-50 (run-rules R20, K1601) */
+  AI_USE_CEILING_REACHED: "C-109.8", AI_USE_COPY_CEILING_REACHED: "C-109.9", AI_NO_ACCOUNT: "C-109.10",
+  NOT_YOUR_CEILING: "C-109.11", AI_CEILING_INVALID: "C-109.12",
 };
 
 test("R35: each check this module's acts mint has its row in run-rules' table, read by key — its number, a translation and a where naming this module's site", () => {
@@ -41,7 +44,7 @@ test("R39: no place is named in the module's outward text — its acts' rows, re
   /* T33-50's texts: the account and ceiling refusals, the provider's limit, and the use reads */
   w.runs.aiCeilingSet({ member: "member:ann", calls: 1, by: "member:ann" });
   w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE() });
-  texts.push(...Object.values(PENDING_ROWS).map((r) => r.translation),
+  texts.push(
              JSON.stringify(await w.runs.open(OPEN({ run: "R9" }))), JSON.stringify(await w.runs.open(OPEN({ run: "R9", principalClaude: "x" }))),
              JSON.stringify(w.runs.aiUseCheck({ member: "member:ann" })), JSON.stringify(w.runs.providerLimit("enforced_spend_limit_reached")),
              JSON.stringify(w.runs.aiCeilingSet({ member: "member:ann", calls: 0, by: "member:ann" })),

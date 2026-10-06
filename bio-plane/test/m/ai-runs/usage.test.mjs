@@ -3,15 +3,15 @@
    account a run carries; and the tables declared explicitly. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, OPEN, INQ, PROJ, ANN, ORG, T0, USAGE, PENDING_ROWS, sha, agentWorker } from "./world.mjs";
+import { world, OPEN, INQ, PROJ, ANN, ORG, T0, USAGE, sha, agentWorker } from "./world.mjs";
 import { AI_CEILING_DEFAULT, USAGE_FIGURES } from "../../../src/ai-runs/index.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const at = (s) => `2026-07-01T${s}Z`;
-const ROWS = { ...AI_RUNS_CHECKS, ...PENDING_ROWS };
+const ROWS = AI_RUNS_CHECKS;
 const usageRows = (w) => w.rows(`SELECT * FROM ai_usage ORDER BY member, day, mode`);
 const call = (mode = "check", over = {}) => ({ mode, model: "claude-model-x", usage: USAGE(over) });
-/** A refusal carrying its row (R35: read by key; `run-rules` R20's rows are the injected upstream until it merges). */
+/** A refusal carrying its row (R35: read by key from `run-rules`' table, its R20). */
 function refused(r, code) {
   assert.equal(r.code, code, JSON.stringify(r).slice(0, 300));
   assert.equal(r.check, ROWS[code].check, code);
@@ -287,12 +287,12 @@ test("R51: aiUsage answers an administrator the month's use per mode, summed ove
   assert.equal((await w.op("aiusage", { viewer: "member:bob", day: "2026-07-20" })).used.calls, 1);
 });
 
-test("R52: a run carries the account of the member whose act started it — the session member, else the member a member-kind key acts for, else the member a machine credential names — recorded as principal_claude; with none, or none held, AI_NO_ACCOUNT before anything is written", async () => {
+test("R52: a run carries the account of the member whose act started it — the session member, else the member a member-kind key acts for, else the member a machine credential names — recorded as principal_claude; with no member's act AI_RUN_NOT_A_MEMBER_ACT (run-rules R18, K1606), with none held AI_NO_ACCOUNT, before anything is written", async () => {
   const w = await useWorld();
   const before = w.dump();
-  /* a machine credential naming no member, or a level word */
+  /* a machine credential naming no member, or a level word: no member's act at all (run-rules R18, relayed, K1606) */
   for (const principalClaude of ["instance", "project", "member", "class:ai/x"])
-    refused(await w.runs.open(OPEN({ principalClaude })), "AI_NO_ACCOUNT");
+    refused(await w.runs.open(OPEN({ principalClaude })), "AI_RUN_NOT_A_MEMBER_ACT");
   /* a member who holds no account: by session, by their own key, or named by a machine credential */
   refused(await w.runs.open(OPEN({ contextType: "project", contextId: PROJ, actor: "dan", viewer: "member:dan", principalPlane: "member:dan" })), "AI_NO_ACCOUNT");
   refused(await w.runs.open(OPEN({ principalPlane: "member:dan/t1" })), "AI_NO_ACCOUNT");
@@ -303,6 +303,7 @@ test("R52: a run carries the account of the member whose act started it — the 
   assert.equal(w.dump(), before, "nothing written");
   /* after the earlier refusals: a malformed request is still its own refusal */
   assert.equal((await w.runs.open(OPEN({ principalClaude: "instance", skillVersion: "" }))).code, "AI_RUN_SKILL_VERSION_UNNAMED");
+  assert.equal((await w.runs.open(OPEN({ principalClaude: "instance", rerunOf: "R404" }))).code, "AI_RUN_RERUN_UNKNOWN");
   /* the account member, in each case */
   const opened = async (run, o) => { const r = await w.runs.open(OPEN({ run, ...o })); assert.equal(r.started, true, JSON.stringify(r));
     return w.row(`SELECT principal_claude FROM ai_runs WHERE run=?`, run).principal_claude; };
@@ -322,10 +323,12 @@ test("R52: a run carries the account of the member whose act started it — the 
 test("R53: the module's tables are declared explicitly through record-core's declareTable — ai_usage and ai_ceilings admin-only, group sight, purged only with the whole store; ai_runs, ai_run_bounds and inquiry_run_surfacings with a run's sight, as R38 purges them", async () => {
   const w = await useWorld();
   const decl = Object.fromEntries(w.record.declaredTables().filter((t) => t.module === "ai-runs").map((t) => [t.name, t]));
-  assert.deepEqual(Object.keys(decl).sort(), ["ai_ceilings", "ai_run_bounds", "ai_runs", "ai_usage", "inquiry_run_surfacings"]);
+  assert.deepEqual(Object.keys(decl).sort(), ["ai_ceilings", "ai_mode_verifications", "ai_run_bounds", "ai_runs", "ai_usage",
+                                               "inquiry_run_surfacings"]);
   for (const t of Object.values(decl))
     assert.deepEqual([t.purge, t.expunge, t.export, t.derive, t.version_chain], ["clear", "none", "admin-only", "stored", false], t.name);
-  assert.deepEqual(["ai_usage", "ai_ceilings"].map((n) => [decl[n].sight, decl[n].keys]), [["group", []], ["group", []]]);
+  assert.deepEqual(["ai_usage", "ai_ceilings", "ai_mode_verifications"].map((n) => [decl[n].sight, decl[n].keys]),
+                   [["group", []], ["group", []], ["group", []]]);
   assert.deepEqual(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"].map((n) => decl[n].sight), ["bundle", "bundle", "bundle"]);
   assert.deepEqual([decl.ai_runs.keys, decl.ai_run_bounds.keys, decl.inquiry_run_surfacings.keys], [[], [], undefined]);
   /* a bundle's purge leaves the counter and the ceilings; the whole store's clears them */

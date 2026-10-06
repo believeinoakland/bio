@@ -32,7 +32,8 @@ import { localDay } from "../civil-time/index.mjs";
 import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STATES, OBSERVATION_LEVELS,
          OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage, checkBound, checkCondition,
          checkConsume, checkRunState, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
-         runPrincipalGate, checkSkillVersion, DEPLOYED_MODES, DEFAULT_MODE, AI_RUNS_CHECKS } from "../run-rules/index.mjs";
+         runPrincipalGate, checkSkillVersion, DEPLOYED_MODES, DEFAULT_MODE, AI_RUNS_CHECKS, RUN_MODES, startAllowed,
+         checkVerification, deployable } from "../run-rules/index.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 
 export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
@@ -112,9 +113,8 @@ export class AiRuns {
   #runListeners = [];     // R43: {module, fn, seq}, in the modules' total order
   #openChecks = [];       // R47: {module, mode, fn}, one per mode and one per module
   #deps;
-  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`), `checks`
-   *  (rows by code, read before `run-rules`' table: K1563 (1)'s injected upstream, for rows `run-rules` R20 adds and
-   *  has not yet merged), and, for a module test alone, `deployedModes` in place of `run-rules`' `DEPLOYED_MODES`. */
+  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`) and, for a
+   *  module test alone, `deployedModes` in place of `run-rules`' `DEPLOYED_MODES`. */
   constructor(ctx, env = {}, deps = {}) {
     this.ctx = ctx;
     this.env = env || {};
@@ -130,7 +130,8 @@ export class AiRuns {
       { name: "ai_run_bounds", keys: [], ...cls, sight: "bundle" },
       { name: "ai_runs", keys: [], ...cls, sight: "bundle" },
       { name: "ai_usage", keys: [], ...cls, sight: "group" },
-      { name: "ai_ceilings", keys: [], ...cls, sight: "group" }]);
+      { name: "ai_ceilings", keys: [], ...cls, sight: "group" },
+      { name: "ai_mode_verifications", keys: [], ...cls, sight: "group" }]);
     /* R36: observation-log's `run` resolver (a run's log rows are visible to whoever may read the run) and
        retrieval's hidden-run tail (R42's `hiddenRuns`) and `surfaced_in` decoration; R30: the runs as bias's work
        products. */
@@ -216,10 +217,7 @@ export class AiRuns {
   }
 
   /** R35: the row of one of this module's acts' codes, read by key from `run-rules`' table (its R11, R15, R20). */
-  #checkRow(code) {
-    const injected = this.#deps.checks && typeof this.#deps.checks === "object" ? this.#deps.checks[code] : null;
-    return injected || AI_RUNS_CHECKS[code];
-  }
+  #checkRow(code) { return AI_RUNS_CHECKS[code]; }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -883,7 +881,9 @@ export class AiRuns {
        refused. The fleet member's own first row (`gate-mode`) still refuses first inside the harness. */
     const runMode = mode === undefined || mode === null ? DEFAULT_MODE : String(mode).trim();
     /* DEC-49 REGION is-airun-open-mode — C-109.1. */
-    const deployed = this.#deployedModes();
+    /* K1606 (run-rules R16, R19): a RUN's mode is one of the order's (`RUN_MODES`; `ask` is deployed apart and is no
+       run), deployed by its flag, and deployable on the verifications this record holds (the chain is the record's). */
+    const deployed = this.#deployedModes().filter((m) => RUN_MODES.includes(m) && deployable(m, this.verifications()));
     if (!deployed.includes(runMode))
       return refusal("AI_RUN_MODE_NOT_DEPLOYED", {
                mode: String(mode).slice(0, 60), deployed: [...deployed],
@@ -1002,7 +1002,12 @@ export class AiRuns {
        name. Then R50: that member's use today against the ceiling in force. Both before anything is written, and
        before R47's check, which stays last. Each refusal keeps the open's shape. */
     const accountMember = AiRuns.#accountMember({ actor, principalPlane, principalClaude });
-    if (!accountMember || !this.#accountHeld(accountMember))
+    /* K1606 (run-rules R18, C-22.19, a RELAY): a run starts only at a member's act — the member found above; with none,
+       the caller's own stamp is what is judged, and a run is never the standing question's exception. */
+    const start = startAllowed({ startedBy: accountMember ? `member:${accountMember}` : (actor || principalPlane), mode: runMode });
+    if (!start || start.ok !== true)
+      return { run, started: false, code: start.code, check: start.check, translation: start.translation, detail: start.detail };
+    if (!this.#accountHeld(accountMember))
       return { run, started: false, ...this.#noAccount(accountMember, "A run") };
     const overCeiling = this.#ceilingRefusal(accountMember, nowMs);
     if (overCeiling) return { run, started: false, ...overCeiling };
@@ -2828,6 +2833,44 @@ export class AiRuns {
              reached: reached(c.own) ? "own" : c.copy && reached(c.copy) ? "copy" : null };
   }
 
+  /* ---- K1606 (run-rules R19; VF-4): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED, written here, where runs
+     are, and read back by the open's deployability (R40). ------------------------------------------------------------ */
+
+  /** Every well-formed `verification_recorded` this record holds, oldest first, in run-rules' shape. */
+  verifications() {
+    try {
+      return this.#rows(`SELECT mode, run, verified_by, at, evidence FROM ai_mode_verifications ORDER BY at, mode, run`)
+        .map((r) => ({ mode: r.mode, run: r.run, verified_by: r.verified_by, at: r.at, evidence: safeJson(r.evidence) }));
+    } catch { return []; }
+  }
+
+  /** run-rules R19: record that `mode`'s first live run, `run`, was verified, by the member `by` (the control plane's
+   *  stamp), with `evidence`. Refused by `checkVerification` (C-22.20, a RELAY) as it judges it; a run this record
+   *  does not hold in that mode, for this member's sight, is refused the same way, naming `run`. Append-only: a mode and
+   *  run already recorded answer `existed: true`. The answer carries whether the next mode is now deployable. */
+  verificationRecord({ mode = null, run = null, evidence = null, by = null, at = null } = {}) {
+    const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
+    const who = memberIdOf(by);
+    const v = { mode, run, verified_by: who ? `member:${who}` : (by ?? null), at: now, evidence };
+    const bad = checkVerification(v);
+    if (bad) return bad;
+    const held = this.runFor(run, by);
+    if (!held || held.mode !== mode) {
+      const row = this.#checkRow("AI_RUN_VERIFICATION_UNFIT");
+      return { ok: false, code: "AI_RUN_VERIFICATION_UNFIT", check: row.check, translation: row.translation, field: "run",
+               detail: `no run '${String(run).slice(0, 60)}' in mode '${String(mode).slice(0, 40)}' is held here for this member. Nothing was recorded` };
+    }
+    const prior = this.#one(`SELECT at FROM ai_mode_verifications WHERE mode = ? AND run = ?`, mode, run);
+    const existed = !!prior;
+    if (!existed)
+      this.#transact(() => this.sql.exec(`INSERT INTO ai_mode_verifications (mode, run, verified_by, at, evidence) VALUES (?, ?, ?, ?, ?)`,
+        mode, run, v.verified_by, now, JSON.stringify(evidence)));
+    const order = RUN_MODES;
+    const next = order[order.indexOf(mode) + 1] ?? null;
+    return { ok: true, mode, run, verified_by: v.verified_by, at: existed ? prior.at : now, existed,
+             next: next ? { mode: next, deployable: deployable(next, this.verifications()) } : null };
+  }
+
   /* ---- R25, R26: THE SURFACING STEP, registered with promotion (K31) --------------------------------------------- */
 
   /** Whether this promotion is an assistant's creation of a question: a creation of an inquiry carrying the control
@@ -3006,5 +3049,7 @@ export function aiRunsOps(runs, url, body) {
     /* R50: the ceilings, `by` the control plane's stamp, never the body's. */
     aiceilingset: () => runs.aiCeilingSet({ ...(body || {}), by: q("by") }),
     aicopyceilingset: () => runs.aiCopyCeilingSet({ ...(body || {}), by: q("by") }),
+    /* K1606 (run-rules R19): the verification act, `by` the stamp. */
+    airunverify: () => runs.verificationRecord({ ...(body || {}), by: q("by") }),
   };
 }

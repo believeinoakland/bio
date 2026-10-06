@@ -73,34 +73,13 @@ function cursor(rows) {
   return c;
 }
 
-/** `run-rules` R20's rows (T33-49; with the two K1601 added), as RUN-RULES #6 wrote them, taken as an injected upstream
- *  until `run-rules` merges (K1563 (1)); the job re-points its tests at the real table before COMPLETE. */
-export const PENDING_ROWS = Object.freeze({
-  AI_USE_CEILING_REACHED: { check: "C-109.8",
-    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
-    translation: "Nothing was run, because you have used the assistant as much today as your own daily limit allows. "
-      + "You set that limit yourself and can raise it; otherwise it resets at the start of tomorrow." },
-  AI_USE_COPY_CEILING_REACHED: { check: "C-109.9",
-    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
-    translation: "Nothing was run, because you have reached today's limit that this group's administrator set to keep "
-      + "the group's copy from being overloaded. It resets at the start of tomorrow, or an administrator can raise it." },
-  AI_NO_ACCOUNT: { check: "C-109.10", where: "src/ai-runs/index.mjs open and the ask's account, reached from op=airunopen and an ask",
-    translation: "Nothing was run, because you have not connected a Claude account or an API key of your own. The "
-      + "assistant works only on the account of the member who asks; connect yours to use it." },
-  NOT_YOUR_CEILING: { check: "C-109.11", where: "src/ai-runs/index.mjs aiCeilingSet, aiCopyCeilingSet and the ceiling's reads",
-    translation: "Nothing was changed, because a member's daily limit on the assistant is theirs alone to set or look "
-      + "at, and the limit for the whole group's copy is set only by an administrator." },
-  AI_CEILING_INVALID: { check: "C-109.12", where: "src/ai-runs/index.mjs aiCeilingSet and aiCopyCeilingSet",
-    translation: "Nothing was changed, because a daily limit on the assistant is a whole number of one or more, or no "
-      + "limit of your own at all. Give a whole number, or clear the limit." },
-});
 export const SEAL = "test-seal-secret-for-ai-runs";
 
 /** inquiry's R49 as this module reaches it (K674): a stub at the interface, answering from `migrated` by question id,
  *  null otherwise; inquiry builds the real one in this layer. */
 export const inquiryStub = (migrated = {}) => ({ migratedSurfacing: (id) => migrated[id] ?? null });
 
-export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined, checks = PENDING_ROWS, zone = null } = {}) {
+export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined, zone = null } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) {
     const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
@@ -136,7 +115,7 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   /* `zone`: the group's governing time zone as retrieval answers it (its R69), from an active profile's `time_zone`. */
   if (zone) record.setSetting("jurisdiction_profiles", ["zone-profile"], "admin");
   retrievalOf(ctx, zone ? { combine: () => ({ ok: true, view: { time_zone: { value: zone } } }), localFacts: null } : undefined).migrate();
-  const runs = aiRunsOf(ctx, env, { inquiry, checks, ...(deployedModes ? { deployedModes } : {}) });
+  const runs = aiRunsOf(ctx, env, { inquiry, ...(deployedModes ? { deployedModes } : {}) });
   runs.migrate();
   let k = 0;
   const w = {
