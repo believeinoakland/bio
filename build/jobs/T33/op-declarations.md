@@ -4,9 +4,25 @@
 
 ## Completion (OP-DECLARATIONS #10)
 
-**Applied: T33-88 (R17–R20), with every START finding.** New export `OP_FAMILIES`, one frozen entry per owner, one append site each (R19): `events`, `lines`, `money`, `money-checks`, `duties`, `people`, `explore`, `hypotheses`, `calculations`, `workbooks`, `answers`, `following`, and T33's ops in `standards` (K1571), `credentials` (K1544), `sources` (`sourcekeyed`, K1550), `entities` (`entityidentify`, K1572), `ai-runs` (`aiusage`, `aiceilingset`, `aicopyceilingset`, `airunverify`; K1601, K1610, K1612), `inquiry` (`waitlook`, K1604), `corpus-export` (`exportrender`, K1640), `actions` (`addresseesuggest`, K1657), `action-clocks` (`clockadopt`, `clockpropose`, `clocksics`, `clocklateness`; R17, K1658), `capture-requests` (the three platform ops, K1601) and `instance-setup` (`officesseed`, `assistantset`, R17). 181 ops. Each entry gives every op a kind (`OP_KINDS`: open, member, admin, own, proposal, tally, read, ownread). `OPS`, both `SESSION_OPS` sets and `NEEDS` are spread from it, so a family cannot be specced in one table and missed in another. Each entry also names the stamps the door sets: `viewer` on every op, `actor` `{key, at}` on each act, `proposer` on each proposal. `at` says whether the owner reads the stamp from the query or the body (J1 (1)). Declared apart: `exportpage` (`export`'s classes); `moneydetectorsrun` (the operator's, unattended by money-checks R6); and `ASK_GRANT_OPS` `askceiling`, `askcheck`, `askusage` (K1601: a session's kinds, no bearer, in no session set; `askusage` is unattended, citing K1601). `standardinforce` gains R18's null row. Built on J1's readings (1)–(7) (no ANSWER yet).
+**Applied: T33-88 (R17–R20), with every START finding.** New export `OP_FAMILIES`, one frozen entry per owner, one append site each (R19): `events`, `lines`, `money`, `money-checks`, `duties`, `people`, `explore`, `hypotheses`, `calculations`, `workbooks`, `answers`, `following`, and T33's ops in `standards` (K1571), `credentials` (K1544), `sources` (`sourcekeyed`, K1550), `entities` (`entityidentify`, K1572), `ai-runs` (`aiusage`, `aiceilingset`, `aicopyceilingset`, `airunverify`; K1601, K1610, K1612), `inquiry` (`waitlook`, K1604), `corpus-export` (`exportrender`, K1640), `actions` (`addresseesuggest`, K1657), `action-clocks` (`clockadopt`, `clockpropose`, `clocksics`, `clocklateness`; R17, K1658), `capture-requests` (the three platform ops, K1601) and `instance-setup` (`officesseed`, `assistantset`, R17). 185 ops after B3. Each entry gives every op a kind (`OP_KINDS`: open, member, admin, own, proposal, tally, read, ownread). `OPS`, both `SESSION_OPS` sets and `NEEDS` are spread from it, so a family cannot be specced in one table and missed in another. Each entry also names the stamps the door sets: `viewer` on every op, `actor` `{key, at}` on each act, `proposer` on each proposal. `at` says whether the owner reads the stamp from the query or the body (J1 (1)). Declared apart: `exportpage` (`export`'s classes); `moneydetectorsrun` (the operator's, unattended by money-checks R6); and `ASK_GRANT_OPS` `askceiling`, `askcheck`, `askusage` (K1601: a session's kinds, no bearer, in no session set; `askusage` is unattended, citing K1601). `standardinforce` gains R18's null row. Built on J1's readings (1)–(7) (no ANSWER yet).
 
-**Not done from J1 (8):** `aigrantmint` also reads `member` and `session` from the query (credentials R27). The family names `by` as its actor only. Stamping the session token is control-plane's to decide.
+**After B2 (CHANGE, K1674) and B3 (ANSWER, K1683):**
+- **The stamp interface.** New export `OP_STAMPS`: op → frozen stamp keys from the closed set `viewer`, `by`, `bodyBy`, `author`, `proposer`, `member`, `session`. It covers every op this job declares, and only those: the 185 family ops, the three ask ops, `exportpage` and `moneydetectorsrun`.
+- **OP_STAMPS is derived from OP_FAMILIES,** so the families stay the one append site. Each family op gets `viewer`. Each act also gets its actor's key: `by` at the query is `by`, at the body `bodyBy`, otherwise `author`, and a viewer actor adds nothing. Each proposal gets its proposer's key the same way. Then come the family's `extra`:
+  - credentials' account ops get `member`;
+  - `aigrantmint` gets `member` and `session` (J1 (8) is done this way);
+  - answers' `ask` gets `member`.
+- **The rest:** the ask's three plane ops take `viewer` (the grant's member). `exportpage` and `moneydetectorsrun` take no keys.
+- **instance-setup's op names (K1683):** `seatsseed` (admin), `assistantstate` (read), `disclosureshown` (own) and `disclosureof` (ownread) join `officesseed` and `assistantset`. All six are served by T33-87.
+- **Every T33 read carries a null NEEDS row (K1683).** The `read` and `ownread` kinds give one.
+- **How R17–R20 map to OP_STAMPS:**
+  - R17: `clockpropose` → viewer, proposer; `clockadopt` → viewer, author; the reads → viewer; `officesseed` and `assistantset` → viewer, by.
+  - R18: `entityidentify` and lines' acts → viewer, bodyBy; the reads → viewer.
+  - R19: each family by its actor's site, as above.
+  - R20: `ask` → viewer, member; `aiusage` → viewer; the account ops → viewer, by, member; `aigrantmint` adds session.
+- **One mismatch for the control plane.** standards' T33 acts read `author`, and `lawpropose` reads `proposer`, from the BODY. The family says `at: "body"`, but the closed set's `author` and `proposer` carry no site. The door should stamp them into the body for these five ops, as it already does for `STANDARDS_ACTIONS`.
+
+**Was "Not done" from J1 (8), now done by OP_STAMPS:** `aigrantmint` also reads `member` and `session` from the query (credentials R27). The family names `by` as its actor only. Stamping the session token is control-plane's to decide.
 
 **The docket finding (K1635):** `docketprepare`'s new `order` and `capture` are body fields. Nothing here changes for them.
 
@@ -34,17 +50,24 @@
   - The START's named reds are unchanged. control-plane `doorbell.test.mjs:488` (R26, sourcekeyed), `catalogue-end.test.mjs:15`, `families.test.mjs:47` and `:245`; plane `docket.test.mjs:41`, `notices.test.mjs:118` and `store.test.mjs:68`; affordances `catalogue.test.mjs:548` ("62 ops", which affordances clears in T33-85 now the specs exist), `:707` and `:1061`.
 
 **Tests and checks:**
-- Module: `node --test bio-plane/test/m/op-declarations/*.test.mjs`: 68 tests, 68 pass, 0 fail (59 before, plus `t33.test.mjs`'s 9). The stamp tests drive every family act, proposal and read through the owner's own ops map.
+- Module: `node --test bio-plane/test/m/op-declarations/*.test.mjs`: 69 tests, 69 pass, 0 fail (59 before, plus `t33.test.mjs`'s 10). The stamp tests drive every family act, proposal and read through the owner's own ops map.
 - Users of the service: admission 19/0; queue 113/0; control-plane 153/6 (the 4 named reds and (f)'s 2); plane 82/3 (named); affordances 164/3 (named).
 - Checks:
   - `format`: 126 modules, 0 failures.
-  - `architecture`: 9 product files, 0 failures.
+  - `architecture`: 10 product files, 22 failures, all the `uses` edges above.
   - `coverage`: 20 of 20 live ids, 0 failures.
   - `ownership`: 4 files, 0 failures.
 
-**Final `uses`:** unchanged (affordances, link-sweep, case-import, wizard-scripts). The families' owners are read by the tests only.
+**Final `uses` (K1563 (3)):** affordances, link-sweep, case-import and wizard-scripts, plus the 22 owners whose ops maps R6's test reads (the requirement's Uses already names them):
+- events, lines, money, money-checks, duties, people, explore, calculations, workbooks;
+- hypotheses, answers, following;
+- standards, credentials, sources, entities;
+- ai-runs, inquiry, capture-requests;
+- corpus-export, actions, action-clocks.
 
-Size (session_01BLy9wpCWCj7n1UuSHwbkir): test runs 9, module lines 2888
+All are earlier in the order. Until they are set in `modules.json`, the architecture check reports 22 failures, one per edge, all from `t33.test.mjs`.
+
+Size (session_01BLy9wpCWCj7n1UuSHwbkir): test runs 13, module lines 2914
 
 ## J1 · QUESTION
 
