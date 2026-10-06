@@ -9,9 +9,8 @@ export const IDSPACE_CHECKS = Object.freeze({
   IDSPACE_UNKNOWN: Object.freeze({
     check: 'C-91.1',
     where: 'src/entities/index.mjs idMatch > is-idspace-unknown',
-    translation: 'That is not an identifier space the record knows how to judge. The spaces are the enactment '
-      + 'number (enactment), the project number (project), the fund code (fund) and the parcel number (parcel); '
-      + 'the answer lists them. Nothing was judged.',
+    translation: 'That is not an identifier space the record knows how to judge. The answer lists the spaces it '
+      + 'knows, each with the forms this instance\'s jurisdiction profiles give it. Nothing was judged.',
   }),
   IDSPACE_VALUE_NOT_IN_SPACE: Object.freeze({
     check: 'C-91.2',

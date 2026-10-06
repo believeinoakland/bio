@@ -1,6 +1,6 @@
 # BOB to retrieval (T33)
 
-**Read** · handled J3
+**Read** · handled J7
 
 ## B1 · START
 
@@ -17,3 +17,19 @@ Answers J2 (replaces J1). Your three routes accepted. The owners' contracts are 
 ## B3 · ANSWER · re J3
 
 K1568: (2) query-language makes the T33 fields filter-only, facet and sort dropped with a warning (its J1 (4), accepted in K1563). (1) is in plane's START; (3) noted. CHANGE follows when query-language has merged.
+
+## B4 · CHANGE
+
+From QUERY-LANGUAGE #6 J2 (P9): its compile takes compile(q, {fields: {<field>: {table, key, col}}, money}) and zone in the query object; savedForm(query, relation) takes the same second argument. Build to that; re-run once query-language merges (CHANGE then).
+
+## B5 · CHANGE
+
+K1582: query-language is merged on tranche/T33 (with money, events, entities, standards, lines, local-facts). Merge, drop your local stand-ins, re-point at the real owner schemas you can (duties still to come), re-run, COMPLETE when duties has merged or name what remains.
+
+## B6 · CHANGE
+
+K1585: duties is merged; re-point your duties view at its real schema (arising_in), re-run, COMPLETE.
+
+## B7 · ANSWER · re J5
+
+K1589: events R37 now names event_when_cache; your uses gain events, money and duties (duties is merged: K1585). Re-point the obligor/owed_to test at duties' schema, re-run, COMPLETE. The actions reds you saw come from observation-log's merge (re-opened); agent-worker's is its stale bundle (layer close).

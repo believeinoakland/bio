@@ -128,7 +128,8 @@ export function provDoc(c) {
 /** A world: the storage, the real record-core, membership, promotion, provenance and provenance-routes (which owns
  *  `provenance_route_marks`, its R8, R12), the test's extraction and
  *  observation providers, and `retrieval` over them. `members` are enrolled active; `admins` too, as administrators. */
-export function world({ members = ["ann", "vera"], admins = [], now = Date.parse("2026-09-27T03:00:00Z") } = {}) {
+export function world({ members = ["ann", "vera"], admins = [], now = Date.parse("2026-09-27T03:00:00Z"), deps = {},
+                         before = null } = {}) {
   const st = storage();
   const host = { storage: st };
   run(st.db, RECORD_SCHEMA);
@@ -179,8 +180,10 @@ export function world({ members = ["ann", "vera"], admins = [], now = Date.parse
   log.registerAuthority("run", (run, viewer) => (w.runs[run] || []).includes(viewer));
   w.log = log;
   w.observation = observationOf(log, st.sql);
+  /* `before(w)` runs ahead of retrieval's creation (an owner's tables a test stands in); `deps` are handed to it. */
+  if (typeof before === "function") before(w);
   w.retrieval = retrievalOf(host, { record, membership, promotion, extraction: w.extraction, observation: w.observation,
-                                    now: () => clock.now, selectionNow: () => clock.sel });
+                                    now: () => clock.now, selectionNow: () => clock.sel, ...deps });
   w.retrieval.migrate();
   let k = 0;
   const snap = () => `k${++k}`;

@@ -36,6 +36,22 @@
 
 - N566 · `connection-grammar`, `explore` · M-X1a's hub bound: a period walk over a council member with more than 1,000 votes in the window is cut at the hub (`LOOKED_INDETERMINATE`); a bound per kind or a narrower window is decided on real council volumes measured at T33's release (EXPLORE #1 J2 (2); K1566). **Hard reason:** a deployment measurement.
 
+- N567 · `calc-grammar` · export `relate` (R10's comparison of two figures) from its index, so `duties` imports it there and not from `decimal.mjs` (DUTIES #1 J2 (1); K1569). **Hard reason:** the order: calc-grammar (L1) is closed.
+
+- N568 · `record-grammar` · a `law_relation` subject in `PROPOSAL_STATES` (law relations, court links, treatments), so `standards`' `lawPropose` labels through it instead of the `standard` subject (STANDARDS #7 J2 (4); K1571). **Hard reason:** the order: record-grammar (L1) is closed.
+
+- N569 · `id-spaces`, `jurisdictions` · a `body` id space, and the Oakland profile's Legistar `PersonId` and `BodyId` schemes (numeric forms), so events R22's Legistar following resolves rows in a deployed copy; today no profile holds either scheme and `SPACE_NAMES` has no `body` (EVENTS #1 J3 (2); K1574). **Hard reason:** the order: id-spaces and jurisdictions (L1) are closed.
+
+- N570 · `record-grammar` · `CALC` minted opaque, as `EVT` and `MNY` are: a sequential `CALC-` counter tells a reader how many calculations were minted before, withheld ones included (DEC-36's withheld-as-absent; CALCULATIONS #1 J2 (1); K1576). **Hard reason:** the order: record-grammar (L1) is closed.
+
+- N571 · `calc-grammar`, `calculations` · a streaming evaluate over a table (not row objects), then calculations R1's cell bound back to about 1,000,000 (CALCULATIONS #1 J2 (2); K1576). **Hard reason:** the order: calc-grammar (L1) is closed.
+
+- N572 · the module that runs wizards (BOB names it when the wizard runner is built) · DEC-140 (UX-DESIGN U61; K1591): the wizard guide's "Show me where" on every step that names a control, shortcut Alt+Shift+W (changeable in the member's settings): scrolls the control into view, redraws the ring, moves keyboard focus; under reduced motion scrolls and focuses without animating. No requirement change. **Hard reason:** DEC-140 is not on `main` until PR #11 merges at T33's close, and the wizard runner is not yet built.
+
+- N573 · `lines`, `people` · a `holds` line carries the title as written (its cited document's words), so people R15's `careerOf` answers it; today it is always null (PEOPLE #2 J4 (1); K1592). **Hard reason:** arose in T33 L5 after lines' merge (P10: an entry arising during a tranche goes to the next plan).
+
+- N574 · `jurisdictions` (profile data) · an identifier scheme for institutions in the held profiles (test-port-ellery's and oakland-alameda's identify persons only), so people R15's issuer identifier on a `credentialed_by` line can be held through entities R43 (PEOPLE #2 J4 (2); K1592). **Hard reason:** the order: jurisdictions (L1) is closed.
+
 Otherwise none yet. T33's release at its close (K1501) runs the deployment-gated measurements; the work they unlock is written here then.
 
 ## Carried from T33
