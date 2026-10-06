@@ -37,6 +37,10 @@
  * `./legs.mjs`), so the method moved to version 2 (R31); and the tables are declared explicitly, the cache read through
  * record-core's derived-cache convention so a stale row is never answered as current (R39).
  *
+ * T34 (layer 6): a calculation leg is graded through calculations' synchronous read of its grade facts (its R30;
+ * T34-31, N576), with the method's version named beside the grade; and the sentences a member reads name the group's
+ * Civicsmith as "your group's Civicsmith", or need no name (DEC-149; T34-86).
+ *
  * REACHED as `strengthOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it declares its tables to record-core's purge
  * (`strength_cache` by bundle, `group_strength_bar` exempt, R23), registers its projection with promotion (the cache,
@@ -64,8 +68,8 @@
  *   now          the clock for the instants it writes, an ISO string (default: the wall clock).
  *   events, lines, people, money, duties, calculations   the layer-5 modules R12, R36 and R38 read, each `<name>Of(host)`
  *                unless given (K1563 (1)): `events.readEvent`, `lines.structureAt` and `linesOf`, `people.identityOf`,
- *                `money.readFact`, `duties.readDuty` and `occurrencesOf`, and `calculations.gradeFactsOf` (its R9's grade
- *                facts, read synchronously; J1 (5), J2).
+ *                `money.readFact`, `duties.readDuty` and `occurrencesOf`, and `calculations.gradeFactsOf` (its R30: R9's
+ *                grade facts, read synchronously; T34-31).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, its R37) and
  * provenance's `register` (with `authored` and `author`, R29, R30) and `captured_locators` (its R48); since T33 events'
@@ -352,13 +356,13 @@ export class Strength {
                       + "is unknown here", unknown: true };
     const f = this.#acceptedFinding(leg.target_id, edition, null);
     if (f && f.absent)
-      return { stopped: "this leg rests on another group's finding, and this copy holds no accepted work to read it "
+      return { stopped: "this leg rests on another group's finding, and your group's Civicsmith holds no accepted work to read it "
                       + "from, so what it rests on is unknown here", unknown: true };
     if (f && f.unreadable)
       return { stopped: "this leg rests on another group's finding that could not be read just now, so what it rests on "
                       + "is unknown here", unknown: true };
     if (!f || typeof f !== "object")
-      return { stopped: `this leg rests on another group's finding that this copy does not hold at edition ${edition}, `
+      return { stopped: `this leg rests on another group's finding that your group's Civicsmith does not hold at edition ${edition}, `
                       + "so what it rests on is unknown here", unknown: true };
     return { pair: f.pair && typeof f.pair === "object" ? f.pair : {}, from: leg.target_id,
              another_groups: { group: f.group ?? null, case: f.case ?? null, edition: f.edition ?? edition,
@@ -422,7 +426,8 @@ export class Strength {
     return memo.get(leg.target_id);
   }
 
-  /* R36 (`calculations` R9; J1 (5)): a calculation's grade facts, read synchronously, or null when they cannot be. */
+  /* R36 (`calculations` R30, T34-31): a calculation's grade facts through calculations' synchronous read, or null when
+     they cannot be read (a provider answering a promise is not consumed). */
   #calcFacts(id, viewer = RECORD_READER) {
     const c = this.calculations;
     if (!c || typeof c.gradeFactsOf !== "function") return null;
@@ -439,7 +444,7 @@ export class Strength {
   #deriveCalculation(id) {
     const f = this.#calcFacts(id);
     if (!f) return { stopped: `the grade facts of ${id} cannot be read here, so what this leg rests on is unknown` };
-    if (!f.found) return { stopped: `${id} is not a calculation this copy holds, so what this leg rests on is unknown` };
+    if (!f.found) return { stopped: `${id} is not a calculation your group's Civicsmith holds, so what this leg rests on is unknown` };
     if (!f.accepted) return { stopped: `the result of ${id} is not accepted, so what this leg rests on is unknown` };
     const inputs = Array.isArray(f.inputs) ? f.inputs : [];
     const engine = inputs.find((i) => i && i.engine && !i.engine_measured);
@@ -449,11 +454,14 @@ export class Strength {
     const cap = f.capture || {};
     if (!GRADE_RANK[cap.grade])
       return { stopped: `the capture strength of ${id} is unknown: ${String(cap.why ?? "no input carries a capture grade")}` };
-    const note = f.method && typeof f.method.note === "string" && f.method.note.trim() ? ` (${f.method.note.trim()})` : "";
+    /* The method named beside the grade (its version, and its note when it has one), never graded. */
+    const said = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const m = f.method && typeof f.method === "object" ? f.method : {};
+    const named = [said(m.version) && `method ${said(m.version)}`, said(m.note)].filter(Boolean).join(": ");
     return { grade: cap.grade,
              why: `${id} counts at ${cap.grade}, the weakest capture among its inputs, each no stronger than where it came `
-                + `from; the recipe's arithmetic does not weaken it. Its method is stated beside the grade${note} and is `
-                + `not graded.` };
+                + `from; the recipe's arithmetic does not weaken it. Its method is stated beside the grade`
+                + `${named ? ` (${named})` : ""} and is not graded.` };
   }
 
   /* R38 (K1447 (i); leg-earning R9): an occurrence's derivation (the source in force, the trigger date, the due date
@@ -465,7 +473,7 @@ export class Strength {
     const d = this.duties;
     if (!parts || !d) return unknown("the obligation cannot be read here");
     const duty = (() => { try { return d.readDuty({ dutyId: parts.duty, viewer: RECORD_READER }); } catch { return null; } })();
-    if (!duty || !duty.found) return unknown(`${parts.duty} is not an obligation this copy holds`);
+    if (!duty || !duty.found) return unknown(`${parts.duty} is not an obligation your group's Civicsmith holds`);
     let read = null;
     try { read = d.occurrencesOf({ dutyId: parts.duty, asOf: this.#asOf(), viewer: RECORD_READER }); } catch { read = null; }
     const occ = read && Array.isArray(read.occurrences) ? read.occurrences.find((o) => o && o.key === parts.key) : null;
@@ -977,7 +985,7 @@ export class Strength {
     if (wantVersion && partitionNamed)
       return refusal("PARTITION_INDEPENDENCE_TWO_SUBJECTS",
         "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not "
-        + "both: this answers for one of them, and which one was meant is not this plane's to guess.",
+        + "both: this answers for one of them, and does not guess which one was meant.",
         { inquiry: inq });
     let legs, head;
     if (wantVersion) {

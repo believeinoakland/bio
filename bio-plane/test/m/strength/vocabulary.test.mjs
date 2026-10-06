@@ -321,9 +321,9 @@ test("R28: the sentences T33 added (a calculation's, a held standard's and an oc
   const p = w.s.strengthOf("INQ-2026-0001-a"), q = w.s.strengthOf("INQ-2026-0002-a"), o = w.s.strengthOf("INQ-2026-0003-a");
   const corpus = STRENGTH_AXES.flatMap((axis) => [...sentences(p[axis], axis), ...sentences(q[axis], `standard ${axis}`),
                                                   ...sentences(o[axis], `occurrence ${axis}`)]);
-  for (const re of [/weakest capture among its inputs/, /is not accepted/, /another program computed/, /is not a calculation this copy holds/,
+  for (const re of [/weakest capture among its inputs/, /is not accepted/, /another program computed/, /is not a calculation your group's Civicsmith holds/,
                     /no more than B for STD-2026-0001/, /no captured text at that version/, /held standard, so a connection grade/,
-                    /capture axis only/, /It is overdue as known today/, /due date is undetermined/, /not an obligation this copy holds/])
+                    /capture axis only/, /It is overdue as known today/, /due date is undetermined/, /not an obligation your group's Civicsmith holds/])
     assert.ok(corpus.some(([, s]) => re.test(s)), `reached: ${re}`);
   corpus.push(["gradingMethodText v2", gradingMethodText(GRADING_METHOD_VERSION)]);
   clean(corpus);
