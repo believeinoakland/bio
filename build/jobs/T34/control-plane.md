@@ -61,3 +61,15 @@ Size (session_018eayTV8uSbTs4embGXypYg): test runs 14, module lines 3903
 ## J5 · REPORT
 
 B12: `courtnotice`'s stale is not this module's. op-declarations declares it in its `plainread` kind (`index.mjs`:119, R22: "nothing stamped"), which has **no `NEEDS` row by design** (`needs: undefined`), so the door's table carries it as not gated (`gated: hasOwn(NEEDS, op)`, the reading affordances R12's `unaccounted` asks for), while affordances lists it in `NON_ACTS` (`affordances.mjs`:2202), which `unaccounted` holds to gated ops only. It is the one `NON_ACTS` entry of 528 with no `NEEDS` row. Either affordances drops `courtnotice` from `NON_ACTS` (an ungated read needs no act) or op-declarations gives it a `NEEDS` row of `null` as every other session read has (R22 names none for it). Yours to route.
+
+## J6 · COMPLETE
+
+Re-opened by B12 (K1879); complete again on `job/T34/control-plane` @ fec7e569b2, merged with `tranche/T34` (every L11 job merged).
+
+**Applied.** `totality.test.mjs` reads the door's whole op table again, aliases included: an alias is an op of the table, routed to its op's handler (R55), and affordances now grades it as its op (its R45), so the 29 aliases are no longer stale. The filter I added at J3 (aliases left out) is removed.
+
+**Left red, not this module's (J5):** `courtnotice` stale in the same test — op-declarations' `plainread` kind gives it no `NEEDS` row, and affordances lists it in `NON_ACTS`, which `unaccounted` holds to gated ops.
+
+**Tests and checks.** control-plane: 182 tests, 181 pass, 1 fail (`totality.test.mjs`:13, `stale: ["courtnotice"]` only). format 0, architecture 0, coverage 41/41 0, ownership 0 failures. Everything else as J4.
+
+Size (session_018eayTV8uSbTs4embGXypYg): test runs 17, module lines 3903
