@@ -30,8 +30,27 @@ If you mean instead that I own the line's stamp in T34, that needs action-plans'
 
 **The stamp's shape (stated, not asked).** I move `CATALOG_VERSION` once for T34, 1.60.0 → 1.61.0 (MINOR: arrivals, and C-20.1's changed judgement, N631). I re-pin `ROW_CENSUS` and write `fixtures/row-census-1.61.0.jsonl` in place at each CHANGE until my COMPLETE, so T34 names one catalogue. **You swap my `tests` entry** in `modules.json` from `row-census-1.60.0.jsonl` to `row-census-1.61.0.jsonl` (K1027's form, as in T32). After the stamp, case-checker's `program.mjs` (it embeds `CATALOG_VERSION`) and the plane bundle are stale; both are yours to regenerate.
 
-## Progress (not yet COMPLETE)
+## Completion
 
-- N631 done (`99d13d07ac`; J1, accepted B2/K1747). Stamp 1.61.0 (`abcfa6fc52`), re-pinned in place after membership (B4, `3acf57a74b`) and record-core (B5, `12b0fc5471`): 1314 rows `765634b5…`, row-census 8/0.
-- Next: credentials' merge (its CHANGE), then merge `tranche/T34`, re-pin with the scratch reader (`censusRows`/`censusOf` over the repo, fixture `bio-plane/test/fixtures/row-census-1.61.0.jsonl`), verify the moved rows are exactly credentials', re-run promotion, d526, row-census and the four checks, write the completion section and post COMPLETE.
-- Known, BOB's at merge: `modules.json` tests entry 1.60.0 → 1.61.0 (format and ownership each show that one failure until then); case-checker `program.mjs` and the plane bundle stale.
+**Entries applied (T34-12).**
+- **N631 (K1718), R30.** `99d13d07ac`. C-20.1 counts a file named in a mechanical promotion's entry as written only when it is new to that promotion's own pre-image snapshot, or differs from its copy there. It judges against that copy alone, never the previous entry. A blob-held copy is compared by its reference's stated digest, never fetched: `recordChecks` takes `raw`, and the gate and the audit pass it. A copy that cannot be compared is a C-20.1 **warning** naming the file and why (R37; accepted B2, K1747). `converts.test.mjs`'s R30 envelope test is amended. The new `tick.test.mjs` composes a real tick through `promote` and record-core into `runGate` over `readImage`; 3 of its 4 tests fail without the fix.
+- **N553, the stamp.** `CATALOG_VERSION` 1.60.0 → **1.61.0** (MINOR). It covers T33's rows awaiting stamp, T34's layer 1 and C-20.1's changed judgement. It was re-pinned in place at each L2 merge: membership (B4, K1752), record-core (B5, K1754), credentials (B6, K1764). Final `ROW_CENSUS`: **1316 rows, `5f710da02a024ab7f2b1c477f4094f35dc8735328c6ba2629198b3ed80b4218a`**. Each merge's moved rows were checked to be exactly those BOB's CHANGE named. The new fixture path is **`bio-plane/test/fixtures/row-census-1.61.0.jsonl`** (1316 lines); 1.60.0's is deleted. `gate.mjs`'s 1.61.0 note lists every row by family.
+- **N601 (C-124.32).** I gave the wording (J2); action-plans T34-61 applies it, and control-plane moves its pin. The row awaits T35's stamp (B3, K1750). No change here.
+
+**Deferred.** None in this module. C-20.1 still skips its envelope arm for a mechanical creation, and for a promotion whose post-state `bundle.md` is unknowable. That is unchanged behaviour; widening it could add new errors to held records, so it is left for a requirement change if wanted.
+
+**Found in other modules / for BOB at merge (§14).**
+- `modules.json`: promotion's `tests` entry `row-census-1.60.0.jsonl` → `row-census-1.61.0.jsonl`. Format and ownership each show exactly this one failure until the swap.
+- case-checker's `program.mjs` embeds `CATALOG_VERSION`, so it is stale (its R13 tests ×2 red until regenerated); the plane bundle is also stale.
+
+**Tests and checks** (on the final tree, after B6's merge):
+- `node test/system/row-census.test.mjs`: `row-census: 8 pass, 0 fail` (CENSUS = PIN, 1.61.0, 1316 rows, `5f710da0…`).
+- `node --test test/m/promotion/ test/d526-refusal-order.test.mjs`: 107 pass, 0 fail.
+- credentials, membership, record-core: 359 pass, 0 fail.
+- Earlier, after B5: `test/m` 7161/7216. Every one of the 44 failures is a red accepted by name (plan Rules (5), K1708, K1732, K1737, K1738) or case-checker's stale program.
+- `checks/format.mjs`: 1 failure (the `modules.json` fixture entry above).
+- `checks/architecture.mjs bio promotion`: 0 failures.
+- `checks/coverage.mjs bio promotion`: 56 of 56, 0 failures.
+- `checks/ownership.mjs bio promotion tranche/T34`: 1 failure (the new fixture, until the swap).
+
+Size (session_011TTwXKMsCDA3RVYLNZrRLP): test runs 22, module lines 3385
