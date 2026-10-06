@@ -1,8 +1,6 @@
 # money-checks — requirements
 
-> **DRAFT by a requirements worker for BOB #114, not reviewed.** 2026-10-05, on `tranche/T32` (P18), for T33's opening (§5.9). Not yet in `build/requirements/`.
-
-**Status** · New product module, layer 5, directly after `money` and before `duties` (plan T33, Rules (2)); split from `money` at creation, with no copy (Choices 9; K1504). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §5C.4 L3 (amount checks raised as questions), §5C.5 L4 (detectors the machine runs on its own), §2 "Cross-cutting rulings" (machine checks), §10 (machine signals live in the hypothesis layer; a due threshold raises a question), and rulings K1471, K1473, K1491, K1504 (gate: a false-alarm rate of at most 20% on its gold set). Plan entry T33-34, which also moves `progressions` R32 here (T32 A37; Choices 11). Display is gated (plan Rule 7): the checks and detectors are built and their results held, and none is shown before its rate is measured. Every requirement is new and not yet met (T33-34). For BOB's review and Bob's approval (a product module, P17).
+**Status** · New product module, layer 5, directly after `money` and before `duties` (plan T33, Rules (2)); split from `money` at creation, with no copy (Choices 9; K1504). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §5C.4 L3 (amount checks raised as questions), §5C.5 L4 (detectors the machine runs on its own), §2 "Cross-cutting rulings" (machine checks), §10 (machine signals live in the hypothesis layer; a due threshold raises a question), and rulings K1471, K1473, K1491, K1504 (gate: a false-alarm rate of at most 20% on its gold set). Plan entry T33-34, which also moves `progressions` R32 here (T32 A37; Choices 11). Display is gated (plan Rule 7): the checks and detectors are built and their results held, and none is shown before its rate is measured. Every requirement is new; all met at T33-34 (K1584). For BOB's review and Bob's approval (a product module, P17).
 
 **Size (P6).** About 600–1,000 lines (est. 15 requirements). Under 4,000.
 
@@ -17,27 +15,27 @@ Checks over money facts that raise questions, never verdicts. An **amount check*
 Terms. A **detector** is `{detector_id, version, label, population, condition, denominator, derivation, origin: shipped | member, by}`: `population` a filter over money facts, `condition` a closed `calc-grammar` recipe, `denominator` the population it is counted over. A **result** is `{result_id, detector_id, version, subject, numerator, denominator, derivation, inputs, at}`; `subject` is a money fact, a money set, a contract or a pattern over facts, never a person. A **gate** is a detector version's measured false-alarm rate on a named gold set. The viewer, the refusal shape and `by` are as in `entities`.
 
 **junctionCheck({progressionKey, entityId, viewer})** (`progressions` R32, moved; Framework §8.2)
-- **R1** A junction check is data over a progression instance (`progressions`' read of the instance) and its money facts (`money`): a signed amount differing from the award, and amendments (change orders) past a stated share of the award; the amount-free checks (one response, a payment placed after the term) are `progressions`' R31–R32 (K1521, K1563). The award and signed stages are the check's parameters `award_stage`, `signed_stage`. Shown at once, as member-declared (K1505 (8)). Each answers `{check, holds: true | false | undetermined, why, derivation}` with the facts and stages it read, as a question shown as "Noticed", never a violation. It is derived on read and never stored. *(not yet met: T33-34)*
+- **R1** A junction check is data over a progression instance (`progressions`' read of the instance) and its money facts (`money`): a signed amount differing from the award, and amendments (change orders) past a stated share of the award; the amount-free checks (one response, a payment placed after the term) are `progressions`' R31–R32 (K1521, K1563). The award and signed stages are the check's parameters `award_stage`, `signed_stage`. Shown at once, as member-declared (K1505 (8)). Each answers `{check, holds: true | false | undetermined, why, derivation}` with the facts and stages it read, as a question shown as "Noticed", never a violation. It is derived on read and never stored.
 
 **amountChecks({contract, viewer})**
-- **R2** Over `money.committedAgainstPaid` for the contract: paid above committed, a signed amount differing from its award's, and change orders summing above a stated share of the award each answer as R1's shape, with the facts read and both sums. A comparison `money.summable` refuses is answered as that refusal, not a check. *(not yet met: T33-34)*
-- **R3** A threshold or share a check reads is a parameter stated in the check's definition with its citation (a held standard or the member's own word), never a default the module assumes. A check with none answers `undetermined: "no threshold stated"`. *(not yet met: T33-34)*
+- **R2** Over `money.committedAgainstPaid` for the contract: paid above committed, a signed amount differing from its award's, and change orders summing above a stated share of the award each answer as R1's shape, with the facts read and both sums. A comparison `money.summable` refuses is answered as that refusal, not a check.
+- **R3** A threshold or share a check reads is a parameter stated in the check's definition with its citation (a held standard or the member's own word), never a default the module assumes. A check with none answers `undetermined: "no threshold stated"`.
 
 **defineDetector({label, population, condition, denominator, derivation, by}), switchDetector({detectorId, project, on, by}), detectors({viewer})**
-- **R4** `defineDetector` refuses `NO_LABEL`, `NO_POPULATION`, `BAD_RECIPE` (`calc-grammar`'s refusal of the condition), `NO_DENOMINATOR`, `NO_DERIVATION`, and a condition or population naming a person entity as its subject (`SUBJECT_IS_PERSON`). A member's definition is recorded as theirs; a change is a new version, earlier versions kept. Shipped detectors are data, versioned the same way. *(not yet met: T33-34)*
-- **R5** `switchDetector` is a member's act per project (`MEMBER_ACT_ONLY`; `NO_SUCH_DETECTOR`; `NO_PROJECT`); a detector switched off for a project raises nothing for it. `detectors` answers every detector with its versions, origin, gate and per-project switch. *(not yet met: T33-34)*
+- **R4** `defineDetector` refuses `NO_LABEL`, `NO_POPULATION`, `BAD_RECIPE` (`calc-grammar`'s refusal of the condition), `NO_DENOMINATOR`, `NO_DERIVATION`, and a condition or population naming a person entity as its subject (`SUBJECT_IS_PERSON`). A member's definition is recorded as theirs; a change is a new version, earlier versions kept. Shipped detectors are data, versioned the same way.
+- **R5** `switchDetector` is a member's act per project (`MEMBER_ACT_ONLY`; `NO_SUCH_DETECTOR`; `NO_PROJECT`); a detector switched off for a project raises nothing for it. `detectors` answers every detector with its versions, origin, gate and per-project switch.
 
 **runDetectors({budgetMs, cursor?})** (the scheduler's consumer, registered by `scheduler`, T33-80)
-- **R6** Runs each detector over the facts held, in slices within `budgetMs` on the one alarm, answering a cursor to resume; it is a computation, never a model run. Each run writes its results, keyed by (detector, version, subject, inputs), so a rerun over unchanged inputs writes nothing new. *(not yet met: T33-34)*
-- **R7** A result carries its numerator, denominator and derivation with each input cited; a result with no denominator is never written. *(not yet met: T33-34)*
+- **R6** Runs each detector over the facts held, in slices within `budgetMs` on the one alarm, answering a cursor to resume; it is a computation, never a model run. Each run writes its results, keyed by (detector, version, subject, inputs), so a rerun over unchanged inputs writes nothing new.
+- **R7** A result carries its numerator, denominator and derivation with each input cited; a result with no denominator is never written.
 
 **recordGate({detectorId, version, goldSet, falseAlarmRate, by}), noticed({project, viewer, limit})**
-- **R8** `recordGate` records a measured false-alarm rate for one detector version on a named gold set, with who and when; it refuses `NO_GOLD_SET` and a rate outside 0–1. *(not yet met: T33-34)*
-- **R9** `noticed` answers, for a project, only the results of detector versions whose recorded rate is at most 20% (K1504) and that are switched on for it, each labelled as the machine's, "Noticed", with its derivation; every other result is withheld and not counted. Bounded 1–500 with `truncated`. *(not yet met: T33-34)*
-- **R10** A result is never written on a person's or entity's row, never cited as a basis, never moves a grade or a finding, and no read answers it as a fact or as "conflict" (K1473, K1491). *(not yet met: T33-34)*
+- **R8** `recordGate` records a measured false-alarm rate for one detector version on a named gold set, with who and when; it refuses `NO_GOLD_SET` and a rate outside 0–1.
+- **R9** `noticed` answers, for a project, only the results of detector versions whose recorded rate is at most 20% (K1504) and that are switched on for it, each labelled as the machine's, "Noticed", with its derivation; every other result is withheld and not counted. Bounded 1–500 with `truncated`.
+- **R10** A result is never written on a person's or entity's row, never cited as a basis, never moves a grade or a finding, and no read answers it as a fact or as "conflict" (K1473, K1491).
 
 **The ops map**
-- **R11** The module publishes `moneyChecksOps(checks, url, body)`, one route arm per act and read above; one append site, stamped by the control plane. *(not yet met: T33-34)*
+- **R11** The module publishes `moneyChecksOps(checks, url, body)`, one route arm per act and read above; one append site, stamped by the control plane.
 
 ## Private
 
@@ -53,9 +51,9 @@ Terms. A **detector** is `{detector_id, version, label, population, condition, d
 
 ### Invariants
 
-- **R12** No `HYP-` id is an input, subject or parameter of a check or detector (K1467). *(not yet met: T33-34)*
-- **R13** Sight: a result is answered only to a viewer who may see every input it cites; results inside a hidden project stay fenced and uncounted (K1489). The results table is declared through `record-core.declareTable` as derived-rebuildable from its detectors and inputs. *(not yet met: T33-34)*
-- **R14** No result, label or text says "violation", "breach", "conflict", "suspicious" or ranks a person; a detector's output is a signal with its method, inputs and measured rate (K1473). No place is named in behaviour or defaults. *(not yet met: T33-34)*
+- **R12** No `HYP-` id is an input, subject or parameter of a check or detector (K1467).
+- **R13** Sight: a result is answered only to a viewer who may see every input it cites; results inside a hidden project stay fenced and uncounted (K1489). The results table is declared through `record-core.declareTable` as derived-rebuildable from its detectors and inputs.
+- **R14** No result, label or text says "violation", "breach", "conflict", "suspicious" or ranks a person; a detector's output is a signal with its method, inputs and measured rate (K1473). No place is named in behaviour or defaults.
 
 ### Satisfies
 

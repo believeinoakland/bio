@@ -100,42 +100,85 @@ test("R2 without a path: every fact of the active profiles once, corrections and
   assert.match(y.why, /no active jurisdiction profile holds/);
 });
 
-test("R3 a holiday year's confirmation lasts until the year ends, then reads unconfirmed naming it", () => {
+/* The test profile's zone is America/Halifax: UTC-3 in daylight time (to 1 November 2026, 02:00), UTC-4 after. Every
+   boundary below is that zone's local midnight, and the instant a second before it is still the day before, though its
+   UTC day is already the next (R3: never the UTC day). */
+
+test("R3 a holiday year's confirmation lasts until the year ends at the zone's local midnight, then reads unconfirmed naming it", () => {
   const w = world();
   w.act(P.y2026, "confirm", { how: "the town's holiday schedule" });
-  assert.equal(w.at("2026-12-31T23:59:59Z").status(P.y2026).status, "confirmed");
-  const s = w.at("2027-01-01T00:00:00Z").status(P.y2026);
+  assert.equal(w.at("2027-01-01T03:59:59Z").status(P.y2026).status, "confirmed", "already 2027 in UTC, still 2026 locally");
+  const s = w.at("2027-01-01T04:00:00Z").status(P.y2026);
   assert.equal(s.status, "unconfirmed");
   assert.equal(s.lapses_on, "2027-01-01");
   assert.deepEqual(s.lapsed, { act: "confirm", by: V("bob"), at: "2026-09-28T01:00:00Z", how: "the town's holiday schedule" });
-  assert.match(s.why, /lapsed on 2027-01-01/);
+  assert.match(s.why, /confirmation by member:bob on 2026-09-27 lapsed on 2027-01-01/);
   /* a year confirmed early lasts until its own end */
   w.at("2026-02-01T00:00:00Z").act(P.y2027, "confirm");
   assert.equal(w.at("2027-12-31T12:00:00Z").status(P.y2027).status, "confirmed");
+  assert.equal(w.at("2028-01-01T03:59:59Z").status(P.y2027).status, "confirmed");
+  assert.equal(w.at("2028-01-01T04:00:00Z").status(P.y2027).status, "unconfirmed");
 });
 
-test("R3 a holiday year not confirmed by 1 November of the year before is due", () => {
+test("R3 a holiday year not confirmed by 1 November of the year before is due, from that local midnight", () => {
   const w = world();
-  let s = w.at("2026-10-31T23:59:59Z").status(P.y2027);
+  let s = w.at("2026-11-01T02:59:59Z").status(P.y2027);
   assert.equal(s.status, "unconfirmed");
-  assert.equal(s.due, false);
+  assert.equal(s.due, false, "1 November in UTC, still 31 October locally");
   assert.equal(s.due_from, "2026-11-01");
-  s = w.at("2026-11-01T00:00:00Z").status(P.y2027);
+  s = w.at("2026-11-01T03:00:00Z").status(P.y2027);
   assert.equal(s.due, true);
   w.act(P.y2027, "confirm");
   assert.equal(w.status(P.y2027).due, false, "confirmed, it is no longer due");
 });
 
-test("R3 an office's hours and the time zone lapse 183 days after confirmation, at the day boundary", () => {
+test("R3 an office's hours and the time zone lapse 183 local days after confirmation, at the local day boundary", () => {
   for (const path of [P.clerkHours, P.venueHours, P.tz]) {
-    const w = world();
-    w.at("2026-01-10T15:00:00Z").act(path, "confirm");
-    assert.equal(w.at("2026-07-11T23:59:59Z").status(path).status, "confirmed", `${path} on day 182`);
-    const s = w.at("2026-07-12T00:00:00Z").status(path);
-    assert.equal(s.status, "unconfirmed", `${path} on day 183`);
-    assert.equal(s.lapses_on, "2026-07-12");
-    assert.equal(s.due, true);
+    for (const at of ["2026-01-10T15:00:00Z", "2026-01-11T02:30:00Z"]) {   /* both on 2026-01-10 locally */
+      const w = world();
+      w.at(at).act(path, "confirm");
+      assert.equal(w.at("2026-07-12T02:59:59Z").status(path).status, "confirmed", `${path} ${at} on local day 182`);
+      const s = w.at("2026-07-12T03:00:00Z").status(path);
+      assert.equal(s.status, "unconfirmed", `${path} ${at} on local day 183`);
+      assert.equal(s.lapses_on, "2026-07-12");
+      assert.equal(s.due, true);
+    }
   }
+});
+
+test("R3 the days are the zone that governs here: a member's correction of the time zone moves every horizon of the profile", () => {
+  const w = world();
+  /* 2026-01-10T03:00Z is 2026-01-10 in Tokyo and 2026-01-09 in Halifax: in Halifax the confirmation would lapse at
+     2026-07-11T03:00Z; in Tokyo, the zone that governs once corrected, at 2026-07-12 00:00 local, 2026-07-11T15:00Z */
+  w.at("2026-01-10T03:00:00Z").act(P.clerkHours, "confirm");
+  w.act(P.tz, "correct", { value: "Asia/Tokyo", source: "the clerk's notice" });
+  assert.equal(w.status(P.tz).governs.says, "corrected locally by member:bob, 2026-01-10");
+  assert.equal(w.at("2026-07-11T14:59:59Z").status(P.clerkHours).status, "confirmed");
+  const s = w.at("2026-07-11T15:00:00Z").status(P.clerkHours);
+  assert.equal(s.status, "unconfirmed");
+  assert.equal(s.lapses_on, "2026-07-12");
+});
+
+test("R3 a profile with no time zone answers the horizon undetermined, saying so, never on the UTC day", () => {
+  const nozone = written("test-nozone", { holidays: [{ year: 2026, days: [{ date: "2026-01-01", name: "New Year's Day" }],
+                                                      status: "researched", basis: "TEST" }] });
+  const w = world({ profiles: ["test-nozone"], own: [nozone] });
+  const path = "test-nozone/holidays/2026";
+  let s = w.status(path);
+  assert.equal(s.status, "unconfirmed");
+  assert.equal(s.due, null);
+  assert.equal(s.horizon.undetermined, true);
+  assert.match(s.horizon.why, /no time zone/);
+  w.act(path, "confirm");
+  s = w.status(path);
+  assert.equal(s.status, "unconfirmed", "a confirmation whose horizon is undetermined is not shown in force");
+  assert.equal(s.lapsed.act, "confirm");
+  assert.match(s.why, /cannot be shown in force: .*no time zone/);
+  assert.equal(s.latest.at, "2026-09-28T01:00:00Z", "the act's instant, whole, not a UTC day");
+  const due = w.lf.factsDue({});
+  assert.deepEqual(due.due.map((d) => [d.path, d.status, d.due, d.horizon.undetermined]), [[path, "unconfirmed", null, true]]);
+  /* the negative control: the same year in a zoned profile is determined */
+  assert.equal(world().status(P.y2026).horizon, undefined);
 });
 
 test("R3 a correction governs until a later act; it does not lapse", () => {
@@ -146,4 +189,17 @@ test("R3 a correction governs until a later act; it does not lapse", () => {
   assert.equal(s.governs.origin, "corrected");
   w.act(P.clerkHours, "dispute");
   assert.equal(w.status(P.clerkHours).status, "disputed");
+});
+
+test("R2 R6 a holiday path names the office calendar's entry, never an entry of a named closure list (jurisdictions R47)", () => {
+  const listed = written("test-lists", { time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
+    holidays: [{ year: 2026, list: "court", citation: "the court's rule", days: [{ date: "2026-08-31", name: "Court day" }], status: "ruled", basis: "TEST" },
+               { year: 2026, days: [{ date: "2026-01-01", name: "New Year's Day" }], status: "researched", basis: "TEST" }] });
+  const w = world({ profiles: ["test-lists"], own: [listed] });
+  const s = w.status("test-lists/holidays/2026");
+  assert.deepEqual(s.profile.value, [{ date: "2026-01-01", name: "New Year's Day" }]);
+  assert.deepEqual(w.lf.factStatus({}).facts.map((f) => f.path).sort(), ["test-lists/holidays/2026", "test-lists/time_zone"]);
+  /* a correction replaces the office calendar's days, validated as the profile's own field */
+  assert.equal(w.act("test-lists/holidays/2026", "correct", { value: [{ date: "2026-07-01", name: "A day" }], ...SRC }).ok, true);
+  assert.deepEqual(w.status("test-lists/holidays/2026").governs.value, [{ date: "2026-07-01", name: "A day" }]);
 });

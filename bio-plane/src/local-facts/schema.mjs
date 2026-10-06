@@ -1,4 +1,4 @@
-/* local-facts' table (requirements: `build/requirements/local-facts.md`, R5). One row per member's act on a profile
+/* local-facts' table (requirements: `build/requirements/local-facts.md`, R5, R9). One row per member's act on a profile
  * fact, written once and never updated or removed: the status is read from the acts in the order written (`seq`).
  * The table names no bundle, so record-core's single-bundle purge leaves it and the whole-store purge clears it (K23). */
 
@@ -20,8 +20,14 @@ CREATE TABLE IF NOT EXISTS local_fact_acts (
 CREATE INDEX IF NOT EXISTS local_fact_acts_path ON local_fact_acts(path, seq);
 `;
 
-/** R5: the table, as record-core's `declarePurge` takes it (no bundle key: only the whole-store form clears it). */
-export const LOCAL_FACTS_TABLES = Object.freeze([{ name: "local_fact_acts", keys: [] }]);
+/** R5, R9 (plan T33, Rules (6)): the table, declared explicitly through record-core's `declareTable` (its R21). No
+ *  bundle key, so only the whole-store purge clears it (R5, K23); appended, never overwritten (`version_chain`); a
+ *  profile fact is the instance's (`sight: "group"`); the other classes as `declarePurge`'s default form gives them. */
+export const LOCAL_FACTS_TABLE_CLASSES = Object.freeze([Object.freeze({
+  name: "local_fact_acts", keys: Object.freeze([]), purge: "clear", expunge: "none", export: "admin-only",
+  sight: "group", derive: "stored", version_chain: true,
+})]);
+export const LOCAL_FACTS_TABLES = Object.freeze(LOCAL_FACTS_TABLE_CLASSES.map((e) => e.name));
 
 export function migrateLocalFacts(sql) {
   const bare = LOCAL_FACTS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");

@@ -102,7 +102,8 @@ test("R21 one compilation point for visibility: every statement's gate is the on
 });
 
 test("R22 every vocabulary is read from its owner: fields, arm words, content kinds, step kinds, cached columns", () => {
-  assert.deepEqual(Object.keys(SORTABLE), ["relevance", ...Object.keys(FIELDS)]);
+  /* Every field a bundle holds one value of is a sort key; a field it can hold many of (R28) is not. */
+  assert.deepEqual(Object.keys(SORTABLE), ["relevance", ...Object.keys(FIELDS).filter((n) => !FIELDS[n].rel)]);
   assert.ok(DEFAULT_FACETS.every((f) => f in FIELDS));
   assert.deepEqual(MEANING.leg.sub.source.vocab, GRADE_SOURCES);
   assert.deepEqual(MEANING.leg.sub.role.vocab, BASIS_ROLES);
