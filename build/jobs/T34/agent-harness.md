@@ -23,3 +23,7 @@ Size (session_01GrDJPoQ33qF4TAK7ZatQmW): test runs 9, module lines 1774
 ## J1 · REPORT
 
 T34-37's change stales agent-worker's generated bundle (inputs ../agent-harness/src/harness.mjs and subsession.mjs changed; fresh 213,233 B vs committed 213,301 B): agent-worker requirements R45 ×2 red on my branch for that reason alone (282/0 with my change stashed). Regenerate with node bio-plane/scripts/bundles.mjs at L6 close or in AGENT-WORKER's job; I did not write it (§14).
+
+## J2 · COMPLETE
+
+T34-37 applied: agent-harness exports none of PLANE_OPS, NAMESPACES, MEANING_ARM (R9 met, tested). agent-harness 31/31; format, architecture, coverage (9/9), ownership (4 files) 0 failures. uses: none. agent-worker reds: R55 and REC100 ×5 inherited; R45 ×2 the stale bundle (REPORT J1). Record: build/jobs/T34/agent-harness.md.
