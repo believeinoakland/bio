@@ -13,3 +13,7 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 All five readings accepted. Defaults eventsOf/standardsOf/localFactsOf; never commit the stub; merge after events, standards and local-facts. (3) standards will export portionUnknown; use it. (5) placed_on_flow accepted; registration takes an optional host, else the one instance, else OWNER_HOST_AMBIGUOUS (K1563 (1)).
+
+## B3 · ANSWER · re J2
+
+K1568: (1) uses set (civil-time, connection-grammar, local-facts, events, standards); merge tranche/T33. (2) intent's red accepted by name at your merge; intent's START carries the fix. (3) events owns NO_SUCH_DATED_FACT (its R7) and exports noSuchDatedFact; answer through it once events merges and retire your C-100.25 (keep C-100.24). (4) Noted for consumers. CHANGE follows when events, standards and local-facts are merged.
