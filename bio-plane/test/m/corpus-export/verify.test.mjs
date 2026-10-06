@@ -32,7 +32,9 @@ test("R3 negative control: an untampered export, two records, a base link, a sna
   assert.equal(manifest.register.length, 1);
   const before = w.snapshot();
   const r = verifyCorpusExport({ manifest, bytes });
-  assert.deepEqual(r, { ok: true, verified: true, counts: { bundles: 2, files: 4, promotions: 3, snapshots: 1, captures: 1 } });
+  const pages = manifest.tables.reduce((n, t) => n + t.pages.length, 0);
+  assert.deepEqual(r, { ok: true, verified: true,
+    counts: { bundles: 2, files: 4, promotions: 3, snapshots: 1, captures: 1, tables: manifest.tables.length, pages } });
   assert.deepEqual(w.snapshot(), before, "it writes nothing");
   assert.deepEqual(w.ce.verifyCorpusExport({ manifest, bytes }), r, "the instance answers the same service");
   /* the bytes may come as a plain object, keyed in any case, as text */

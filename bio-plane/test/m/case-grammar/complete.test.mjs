@@ -6,11 +6,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { gradingMethodText, GRADING_METHOD_VERSION } from "../../../src/strength/method.mjs";
+import { gradingMethodText } from "../../../src/strength/method.mjs";
 import { completeEditionOf, COMPLETE_EDITION_HEADINGS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES,
          editionProductOf, madeWithLine, CHECKER_READS, standingOf, BAR_AXES, STANDING_ROLE_WORDS, LENS_CLOSING_SENTENCES, LENS_KIND_WORDS,
-         WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON, caseFilePath } from "../../../src/case-grammar/index.mjs";
-import { caseFileFixture, editionInput, caseDocument, A, B, C, MINUTES, OBS, MINUTES_SHA, REF } from "./casefile-fixture.mjs";
+         WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON, caseFilePath, TIMELINE_HEADING, CALCULATIONS_HEADING, TIMELINE_LANE_WORDS,
+         RECOMPUTE_WORDS } from "../../../src/case-grammar/index.mjs";
+import { canonicalJson } from "../../../src/record-grammar/index.mjs";
+import { resultKey } from "../../../src/calc-grammar/index.mjs";
+import { caseFileFixture, editionInput, caseDocument, A, B, C, MINUTES, OBS, MINUTES_SHA, REF, CALCS, RECIPE,
+         INPUT_BYTES } from "./casefile-fixture.mjs";
 import { sha } from "./helpers.mjs";
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
@@ -19,6 +23,9 @@ const has = (html, s) => html.includes(esc(s));
 const at = (html, s) => html.indexOf(esc(s));
 const sectionOf = (html, i) => html.slice(html.indexOf(`<h2>${i}. `), i < 9 ? html.indexOf(`<h2>${i + 1}. `) : undefined);
 const render = (manifest, files) => completeEditionOf(editionInput(manifest, files));
+/* K1608: the grading version the case file states (its `method:` block), never strength's current constant: a case is
+   rendered at the version it was graded by, so the edition is pinned to that version's words. */
+const STATED = "bio-grading/1";
 
 /* ===== R14 ===== */
 
@@ -98,7 +105,8 @@ test("R14 its order: the claims, the findings, the materials, what was searched,
   assert.equal(has(strength, `${C}: capture D, connection undetermined.`), true);
   /* 8. the grading method in plain words, at the document's grading version */
   const method = sectionOf(html, 8);
-  for (const line of gradingMethodText(GRADING_METHOD_VERSION, "Civicsmith").split("\n").filter((l) => l.trim()))
+  assert.match(files.get("case.md"), new RegExp(`\n  grading: "${STATED}"\n`), "the version the case file states");
+  for (const line of gradingMethodText(STATED, "Civicsmith").split("\n").filter((l) => l.trim()))
     assert.equal(has(method, line), true, line.slice(0, 40));
   assert.equal(has(method, "It was checked under catalogue version 1.61.0."), true);
   /* 9. how to check it, naming the checker's public read */
@@ -221,7 +229,7 @@ test("R14 DEC-124 K1365 a complete edition rendered from a /6 case file before T
   assert.equal(countOf(html, "CivicOS"), 3);
   assert.equal(html.includes(`<p class="foot">Made with CivicOS</p>`), true);
   assert.equal(html.includes("without CivicOS and without a network connection"), true);
-  assert.equal(has(sectionOf(html, 8), gradingMethodText(GRADING_METHOD_VERSION, "CivicOS").split("\n")[0]), true);
+  assert.equal(has(sectionOf(html, 8), gradingMethodText(STATED, "CivicOS").split("\n")[0]), true);
   assert.equal(html.includes("Civicsmith"), false);
   /* a /6 case file built today renders the same way: the name is chosen by the format, not by when it is rendered */
   const v6 = caseFileFixture({ format: "bio-case-document/6" });
@@ -236,7 +244,7 @@ test("R14 DEC-124 a /7 case file renders Civicsmith in the foot, in the line on 
   assert.equal(html.includes(`<p class="foot">Made with Civicsmith</p>`), true, "the foot");
   assert.equal(has(sectionOf(html, 9), "You can check this case yourself, without Civicsmith and without a network connection."), true);
   const method = sectionOf(html, 8);
-  const lines = gradingMethodText(GRADING_METHOD_VERSION, "Civicsmith").split("\n").filter((l) => l.trim());
+  const lines = gradingMethodText(STATED, "Civicsmith").split("\n").filter((l) => l.trim());
   assert.equal(lines.some((l) => l.includes("Civicsmith")), true, "the method's text names the product");
   for (const line of lines) assert.equal(has(method, line), true, line.slice(0, 40));
   assert.equal(html.includes("CivicOS"), false, "never the old name");
@@ -244,8 +252,8 @@ test("R14 DEC-124 a /7 case file renders Civicsmith in the foot, in the line on 
   const v6 = caseFileFixture({ format: "bio-case-document/6" });
   const old = render(v6.manifest, v6.files);
   assert.equal(countOf(old, "CivicOS"), 3);
-  assert.equal(countOf(html, "Civicsmith"), countOf(old, "CivicOS") + countOf(gradingMethodText(GRADING_METHOD_VERSION, "Civicsmith"), "Civicsmith")
-    - countOf(gradingMethodText(GRADING_METHOD_VERSION, "CivicOS"), "CivicOS"));
+  assert.equal(countOf(html, "Civicsmith"), countOf(old, "CivicOS") + countOf(gradingMethodText(STATED, "Civicsmith"), "Civicsmith")
+    - countOf(gradingMethodText(STATED, "CivicOS"), "CivicOS"));
   /* the name, by format: /6 and every earlier accepted format CivicOS; /7, and anything else, Civicsmith */
   for (const v of [6, 5, 4, 3, 2, 1]) assert.equal(editionProductOf({ format: `bio-case-document/${v}` }), "CivicOS", `/${v}`);
   for (const fm of [{ format: "bio-case-document/7" }, { format: "bio-case-document/8" }, { format: null }, {}, null, 7,
@@ -323,4 +331,54 @@ test("R15 the line never says meets without the bar it is measured against, comp
                      { get role() { throw new Error("boom"); } }])
     assert.doesNotThrow(() => standingOf(odd));
   assert.equal(standingOf({ get role() { throw new Error("boom"); } }).line, "Its standing against this project's bar could not be read");
+});
+
+/* ===== R14: the timeline and the calculations (C11, K1494; C:A-12, K1448; T33-60) ===== */
+
+test("R14 C11 a case file whose document carries the timeline prints it right after the findings, its two lanes as two lists never mixed, each item with its when and its source; C:A-12 its calculations right after the materials", () => {
+  const { manifest, files } = caseFileFixture({ t33: true });
+  const html = render(manifest, files);
+  const heads = [...html.matchAll(/<h2>(\d+)\. ([^<]+)<\/h2>/g)].map((m) => m[2]);
+  assert.deepEqual(heads, ["The claims", "The findings", TIMELINE_HEADING, "The documents and observations", CALCULATIONS_HEADING,
+    "What was searched", "The declared bias", "Disclosed contradictions", "Strength", "How grades are worked out",
+    "How to check this case yourself"]);
+  assert.deepEqual([...html.matchAll(/<h2>(\d+)\. /g)].map((m) => Number(m[1])), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "numbered as rendered");
+  const tl = html.slice(html.indexOf(`<h2>3. ${TIMELINE_HEADING}`), html.indexOf("<h2>4. "));
+  const they = tl.slice(tl.indexOf(`<h3>${TIMELINE_LANE_WORDS.they_did}</h3>`), tl.indexOf(`<h3>${TIMELINE_LANE_WORDS.we_did}</h3>`));
+  const we = tl.slice(tl.indexOf(`<h3>${TIMELINE_LANE_WORDS.we_did}</h3>`));
+  assert.equal(they.length > 0 && we.length > 0, true);
+  assert.equal(at(they, "The board approved the lease.") < at(they, "An undated memo circulated."), true, "its own order");
+  assert.equal(has(they, `{"day":"2026-03-04","precision":"day"}: The board approved the lease (EVT-2026-abcdefgh12345678). Source: {"capture":"${MINUTES_SHA}","extent":{"page":3}}.`), true);
+  assert.equal(has(they, "nowhere: An undated memo circulated."), true);
+  assert.equal(has(we, `{"high":"2026-08-31","low":"2026-08-01","state":"undetermined"}: We read the minutes. Source: ${MINUTES_SHA}.`), true);
+  for (const s of ["We filed the records request.", "We read the minutes."]) assert.equal(has(they, s), false, `never in the other lane: ${s}`);
+  for (const s of ["The board approved the lease.", "An undated memo circulated."]) assert.equal(has(we, s), false, `never in the other lane: ${s}`);
+  /* the calculations: recipe, inputs, results, the recompute status in words and the disclosure */
+  const calc = html.slice(html.indexOf(`<h2>5. ${CALCULATIONS_HEADING}`), html.indexOf("<h2>6. "));
+  const c = CALCS[0];
+  for (const s of [`Recipe: ${canonicalJson(RECIPE)}`, "Method version: bio-calc/1", `Input payments: SHA-256 ${sha(INPUT_BYTES)}`,
+                   `Result total: ${canonicalJson(c.results.total)}`, `Result key: ${resultKey(c.recipe, c.inputs, { methodVersion: c.method_version })}`,
+                   `It was ${RECOMPUTE_WORDS.differs}.`, `The publisher's disclosure: ${c.disclosed}`])
+    assert.equal(has(calc, s), true, s);
+  assert.equal(render(manifest, files), html, "byte-identical twice");
+  /* K1639: a workbook row not recomputed is stated so, in words */
+  const wb = new Map(files);
+  wb.set("case.md", files.get("case.md").replace('recompute: \'"differs"\'', 'recompute: \'"not_recomputed"\''));
+  assert.equal(has(render(manifest, wb), `It was ${RECOMPUTE_WORDS.not_recomputed}.`), true);
+});
+
+test("R14 negative controls: a document without the blocks renders exactly as before T33 (no new section, the nine numbered as they were); an empty block states that its section has nothing", () => {
+  const before = caseFileFixture();
+  const html = render(before.manifest, before.files);
+  for (const h of [TIMELINE_HEADING, CALCULATIONS_HEADING]) assert.equal(html.includes(h), false, h);
+  assert.deepEqual([...html.matchAll(/<h2>(\d+)\. ([^<]+)<\/h2>/g)].map((m) => [Number(m[1]), m[2]]), COMPLETE_EDITION_HEADINGS.map((h, i) => [i + 1, h]));
+  /* the /6 golden is unchanged (above); an empty block is carried, so its section says it holds nothing */
+  const empty = new Map(before.files);
+  empty.set("case.md", before.files.get("case.md").replace("\nsearched:", "\ncalculations: []\ntimeline: []\nsearched:"));
+  const e = render(before.manifest, empty);
+  assert.equal(has(e, "No calculation is reached by this case's findings."), true);
+  assert.equal(countOf(e, esc("Nothing is stated in this lane.")), 2, "both lanes, each stating it is empty");
+  /* an older format carrying the block is not read: no section */
+  const v5 = render(before.manifest, new Map([["case.md", "---\nformat: bio-case-document/5\ncase_id: CASE-2026-0002\ntimeline: []\ncalculations: []\n---\n"]]));
+  for (const h of [TIMELINE_HEADING, CALCULATIONS_HEADING]) assert.equal(v5.includes(h), false);
 });

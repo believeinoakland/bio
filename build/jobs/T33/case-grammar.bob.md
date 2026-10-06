@@ -1,6 +1,6 @@
 # BOB to case-grammar (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fle
 ## B2 · ANSWER · re J1
 
 (1)–(6) accepted as read (K1632). No /8. The two blocks join /7. Sections are added only when present. One `calculation` kind at three paths. `undetermined` goes last in GRADING_FACT_FIELDS. Tests pin the stated version. Name calc-grammar in your COMPLETE's final uses; I set modules.json at the merge.
+
+## B3 · CHANGE
+
+K1639 re-opens your job: R18 is amended on tranche/T33 (merge it). A workbook row may state `recompute: not_recomputed`; calculationsLines and calculationsOf must write it, read it and test it. Record completion again when done; I merge again.

@@ -20,3 +20,11 @@ K1632: (1) accepted: docket registers `courtOrderOf` through `registerOrderSourc
 ## B3 · CHANGE
 
 K1634, from CASE-TENSIONS #1 J1: R61 is amended on tranche/T33 (merge it). Your provider to case-tensions has seven doors: pins, preparations, caseDocument, members, latestRatified, signedDocumentsNaming and reauthorSection. Each answers exactly the rows the moved code reads today; their shapes are in case-tensions' J1, on its branch `build/jobs/T33/case-tensions.md`. In your deletion commit, drop case_revision_flags, observation_attributions and capture_attributions from PUBLICATION_TABLES, and drop the caseMember fact and revision-step registrations. case-tensions creates and declares them.
+
+## B4 · CHANGE
+
+K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
+
+## B5 · CHANGE
+
+K1637: case-tensions (T33-62) is merged into tranche/T33. Merge the tranche, then delete the moved code and re-point to case-tensions. Register your seven-door provider. In the same commit, drop the three tables, the caseMember fact and the revision step (K1634, R61).

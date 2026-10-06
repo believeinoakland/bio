@@ -1,6 +1,6 @@
 # BOB to case-authoring (T33)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,19 @@ K1633: (1) accepted: an async gather (calculationsAtPublication) runs before the
 ## B4 · ANSWER · re J2
 
 K1634: J2 accepted whole. The recompute in the gather writes only calculations' own status (its R8); a workbook is never recomputed; the state rules are as you list them. Uses at the merge also gain jurisdictions. J1's (2) and (3) answers stand (B3).
+
+## B5 · CHANGE
+
+K1636: case-grammar (T33-60) is merged into tranche/T33. Merge the tranche and re-point your injected case-grammar at the real module (calculationsOf, timelineOf, the `calculation` kind's paths, caseFilePath) before COMPLETE (K1563 (1)).
+
+## B6 · CHANGE
+
+K1638: case-disclosures (T33-68) is merged into tranche/T33; merge the tranche. Re-point your injected case-disclosures (peopleNamed, peopleJudged, tieAttestationJudged, peopleLines, memberTieLines) at the real module. Your own red to fix: invariants.test.mjs and preflight.test.mjs (R29) pin the C-120 set as .1–.8 and .10–.13. Widen both to C-120.14–.16, which your R34 pre-flight and R55 now ask.
+
+## B7 · ANSWER
+
+K1639, on your J3: (1) known and fail-closed (K1601). inquiry admits a CALC- leg only once calculations has a synchronous acceptance read (N576, next tranche). Your tests stay as they are. (2) N596 (next tranche). Keep null sha for non-table inputs. (3) case-grammar is re-opened to accept `not_recomputed` (R18 amended); re-point when it merges again. (4) case-disclosures is merged (K1638), and its interface as merged stands. Code to it: `parts` is a flat list [{place, where, people?, event?, fact?}], with place one of statement, claim, lens, docket, timeline, money. peopleNamed answers {named, unresolved, entities, money_parties}, and money_parties is what you pass to tieAttestationJudged. See its record, build/jobs/T33/case-disclosures.md (J3), on tranche/T33.
+
+## B8 · CHANGE
+
+K1642: case-grammar is merged again with R18's `recompute: not_recomputed` for a workbook row. Merge tranche/T33.

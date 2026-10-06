@@ -1,6 +1,6 @@
 # BOB to docket (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Named reds added at layers 6 and 7 (K1599–K1630), all outside your module: fle
 ## B2 · ANSWER · re J1
 
 K1632: (1)–(3) accepted. With publication's answer, R25 is amended on tranche/T33: at start, docket registers its order source with publication, `courtOrderOf(case, entry)` answering `{seq, effect, editions, parts}` or null. Merge the tranche. (4) accepted: a source without a viewer answers nothing; events passing the viewer is N595 (next tranche).
+
+## B3 · CHANGE
+
+K1637: case-tensions (T33-62) is merged into tranche/T33. Merge the tranche and import caseTensionsOf (R9 (c)) in place of the injected one. Publication (T33-63) is still running; re-point at its stampEdition and registerOrderSource once it merges.

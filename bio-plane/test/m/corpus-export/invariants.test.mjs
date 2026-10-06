@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha } from "./fixture.mjs";
-import { corpusExportOf, verifyCorpusExport, CORPUS_EXPORT_EXEMPT } from "../../../src/corpus-export/index.mjs";
+import { corpusExportOf, verifyCorpusExport, CORPUS_EXPORT_EXEMPT, FORMATS } from "../../../src/corpus-export/index.mjs";
 
 const A = "INFO-2026-0001-minutes", B = "INQ-2026-0001";
 
@@ -48,7 +48,11 @@ test("R5 no place is named in this module's behaviour or outward text", () => {
   tampered.register[0].bytes = 0;
   const outward = JSON.stringify([manifest.recorded, manifest.verify, w.ce.exportLog({}),
     verifyCorpusExport({ manifest, bytes }), verifyCorpusExport({ manifest: tampered, bytes: new Map() }),
-    verifyCorpusExport({ manifest, bytes: new Map([...bytes].map(([k]) => [k, "x"])) }), verifyCorpusExport(null)]);
+    verifyCorpusExport({ manifest, bytes: new Map([...bytes].map(([k]) => [k, "x"])) }), verifyCorpusExport(null),
+    /* T33-61: the tables, the pages, their refusals and every rendering */
+    manifest.tables, w.ce.exportPage({ table: "leases", index: 0 }), w.ce.exportPage({ table: "x", index: 0 }),
+    w.ce.exportPage({ table: "export_log", index: "x" }), w.ce.exportRendering({ format: "nope" }),
+    ...FORMATS.map((format) => w.ce.exportRendering({ format, viewer: "admin" }))]);
   for (const place of ["Oakland", "California", "Alameda", "Berkeley", "San Francisco", "Sacramento", "Brown Act", "CPRA",
                        "United States", "County", "City of"])
     assert.equal(outward.includes(place), false, `names ${place}`);

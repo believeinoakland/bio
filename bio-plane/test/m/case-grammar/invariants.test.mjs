@@ -50,6 +50,8 @@ test("R7 no place is named in this module's behaviour or outward text", () => {
     CG.withheldSourceStatement(), CG.methodOf({ format: "bio-case-document/6", method: {} }),
     CG.caseFileManifestCheck({}), CG.caseFileManifestCheck(null), caseFileFixture().manifest,
     caseFileFixture().files.get("complete-edition.html"), CG.completeEditionOf(null),
+    caseFileFixture({ t33: true }).files.get("complete-edition.html"), CG.provOf([{ calc: "CALC-2026-0001", recipe: {} }]),
+    CG.calculationsLines([{ calc: "CALC-2026-0001" }]), CG.timelineLines([{ lane: "we_did", source: "s" }]),
     ...[["load_bearing", { capture: "B" }], ["supporting", { connection: "C" }], [null, { capture: "B" }], ["load_bearing", null]]
       .map(([role, bar]) => CG.standingOf({ role, bar, pair: { capture: "C" } })),
     ...[true, false, null].map((inForce) => CG.lensSectionLines({ statements: [{ kind: "scrutiny" }, { kind: "inference" },
