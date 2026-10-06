@@ -2,9 +2,9 @@
    cursor, `transactionSync` nesting as savepoints) with the real modules events uses — record-core, membership,
    extraction (the readings), provenance (the register and the capture grade), content (the extent check and office
    metadata), entities (the registry and resolutions) and reading-pipeline's hook registry — and the fictional test
-   profile (R42). Every test drives `events` at its interface. `entities`' T33 services (`entityByIdentifier`,
-   `proceedingOf`) are read through the real instance; while the merged `entities` lacks them, the fixture adds them
-   over its own small table and says so (`STAND_IN`), never inside the module under test. */
+   profile (R42). Every test drives `events` at its interface, over the real `entities` (its scheme identifiers, the
+   proceeding facet and resolutions). Both modules read one jurisdiction view, the test profile's, to which a test may
+   add Legistar's two schemes and their numeric forms as test data (the profile names none, N561's kind of gap). */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -53,38 +53,23 @@ export const MACHINE = "class:daemon";
 export const MEMBER = "member:alice";
 export const OUTSIDER = "member:outsider";
 export const ZONE = "America/Halifax";
-export let STAND_IN = false;
 
-/* The test profile's view, with a Legistar person scheme and body scheme a test may add (R22) and vote values
-   (R11) a test may add, never in product code. */
+/* The test profile's view, to which a test may add Legistar's person and body schemes over numeric forms (R22) and vote
+   values (R11), as test data, never in product code. */
 export function testView({ legistar = false, votes = null } = {}) {
   const c = combine(["test-port-ellery"]);
-  const view = { ...c.view };
-  if (legistar) view.identifier_schemes = [...(view.identifier_schemes || []),
-    { scheme: "legistar_person", label: "Legistar PersonId", entity_kinds: ["person"], space: "person", basis: "TEST" },
-    { scheme: "legistar_body", label: "Legistar BodyId", entity_kinds: ["body"], space: "body", basis: "TEST" }];
+  const view = structuredClone(c.view);
+  if (legistar) {
+    const numeric = (form) => ({ form, pattern: { re: "^(\\d+)$" }, normal: [{ group: 1 }], basis: "TEST" });
+    view.spaces = { ...view.spaces,
+      person: { ...view.spaces.person, forms: [...view.spaces.person.forms, numeric("legistar-person")] },
+      object: { ...(view.spaces.object || { label: "object" }), forms: [...((view.spaces.object || {}).forms || []), numeric("legistar-body")] } };
+    view.identifier_schemes = [...(view.identifier_schemes || []),
+      { scheme: "legistar_person", label: "Legistar PersonId", entity_kinds: ["person"], space: "person", form: "legistar-person", basis: "TEST" },
+      { scheme: "legistar_body", label: "Legistar BodyId", entity_kinds: ["body"], space: "object", form: "legistar-body", basis: "TEST" }];
+  }
   if (votes) view.vote_values = votes;
   return view;
-}
-
-/* entities' T33 services over the fixture's own table, only where the merged entities lacks them. */
-function withIdentifiers(e, st) {
-  const has = typeof e.entityByIdentifier === "function";
-  st.sql.exec(`CREATE TABLE IF NOT EXISTS fixture_identifiers (entity_id TEXT, scheme TEXT, id TEXT)`);
-  st.sql.exec(`CREATE TABLE IF NOT EXISTS fixture_proceedings (entity_id TEXT PRIMARY KEY, kind TEXT)`);
-  const addId = has && typeof e.addIdentifier === "function"
-    ? (entityId, scheme, id) => e.addIdentifier({ entityId, scheme, id: String(id), basis: "the test's system rule", by: MACHINE })
-    : (entityId, scheme, id) => st.sql.exec(`INSERT INTO fixture_identifiers VALUES (?,?,?)`, entityId, scheme, String(id));
-  if (!has) {
-    STAND_IN = true;
-    e.entityByIdentifier = ({ scheme, id }) => {
-      const r = [...st.sql.exec(`SELECT entity_id FROM fixture_identifiers WHERE scheme=? AND id=?`, scheme, String(id))];
-      return r.length === 1 ? { entity_id: r[0].entity_id } : null;
-    };
-  }
-  if (typeof e.proceedingOf !== "function")
-    e.proceedingOf = (id) => { const r = [...st.sql.exec(`SELECT kind FROM fixture_proceedings WHERE entity_id=?`, id)]; return r.length ? { kind: r[0].kind } : null; };
-  return { addId };
 }
 
 let clock = 0;
@@ -106,7 +91,8 @@ export function world({ view = testView(), now = null, profiles = true } = {}) {
   if (typeof content.migrate === "function") content.migrate();
   const ents = new Entities(st, { record, membership, provenance: prov });
   ents.migrate();
-  const ids = withIdentifiers(ents, st);
+  /* entities reads the same view as events (the instance's one view; a test's added schemes are test data) */
+  ents.view = () => ({ ...(typeof view === "function" ? view() : view), conflicts: [] });
   const hooks = readHooksOf(host);
   const ev = eventsOf(host, { record, membership, provenance: prov, extraction: x, content, entities: ents, readHooks: hooks,
                               now: now || (() => new Date(Date.UTC(2026, 9, 1, 0, 0, clock++)).toISOString()),
@@ -145,18 +131,19 @@ export function world({ view = testView(), now = null, profiles = true } = {}) {
     entity(label, kind = "person") {
       return ents.createEntity({ kind, label, note: "a subject the test registers", declaredBy: MEMBER }).entity_id;
     },
-    identify(entityId, scheme, id) { return ids.addId(entityId, scheme, id); },
-    /* A proceeding with its kind (R34). While the merged entities admits no `proceeding` kind (T33-25), the fixture
-       registers it in entities' table directly and holds its facet beside it (STAND_IN). */
+    /* A scheme identifier held on an entity by entities' own act (its R43), on a member's cited source. */
+    identify(entityId, scheme, id) {
+      const r = ents.addIdentifier({ entityId, scheme, id: String(id), basis: "the test's cited source", by: MEMBER });
+      if (!r.ok) throw new Error(`fixture: addIdentifier refused ${r.reason}: ${r.detail}`);
+      return r;
+    },
+    /* A proceeding registered with its facet {forum, kind, number} by entities (its R45). */
     proceeding(label, kind = "commitment_suit") {
-      let id = ents.createEntity({ kind: "proceeding", label, note: "a proceeding the test registers", declaredBy: MEMBER }).entity_id;
-      if (!id) {
-        STAND_IN = true;
-        id = `ENT-2026-${String(9000 + clock++).padStart(4, "0")}`;
-        st.sql.exec(`INSERT INTO entities (entity_id, kind, label, note, declared_by, at) VALUES (?, 'proceeding', ?, 'n', ?, '2026-01-01')`, id, label, MEMBER);
-      }
-      st.sql.exec(`INSERT OR REPLACE INTO fixture_proceedings VALUES (?, ?)`, id, kind);
-      return id;
+      const forum = w.entity(`${label}, its forum`, "institution");
+      const r = ents.createEntity({ kind: "proceeding", label, note: "a proceeding the test registers", declaredBy: MEMBER,
+                                    proceeding: { forum, kind, number: `MC-26-${String(1000 + clock++).slice(-4)}` } });
+      if (!r.ok) throw new Error(`fixture: createEntity refused ${r.reason}: ${r.detail}`);
+      return r.entity_id;
     },
     /* An event attested by one dated fact of a fresh capture (`value` its date) or, with no value, by its extent. */
     event({ kind = "meeting", value = null, by = MEMBER, capture = null, dkind = "meeting", ...rest } = {}) {
