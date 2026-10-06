@@ -997,7 +997,8 @@ export class Actions {
     const findings = [];
     respondsToEdgeFindings(fm, findings);
     if (fm.object_type === "action")
-      checkActionExtension({ fm, nowMs: this.#nowMs(null), actionKinds: this.kinds() }, findings);
+      /* R51 (K1444 (iii)): the zone of the action's office or venue, as R12 reads it; none held, none handed. */
+      checkActionExtension({ fm, nowMs: this.#nowMs(null), actionKinds: this.kinds(), zone: zoneOf(this.place()) }, findings);
     return findings;
   }
 

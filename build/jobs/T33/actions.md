@@ -1,6 +1,6 @@
 # actions (T33)
 
-**Status** · session_01NJ3oEE5VB1ykNEwnTexhdw · depth 2 · COMPLETE · handled B2
+**Status** · session_01NJ3oEE5VB1ykNEwnTexhdw · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
@@ -40,3 +40,10 @@ Final uses: record-grammar, jurisdictions, civil-time, record-core, membership, 
 Tests (after merging tranche/T33 @ 554876bb8b): actions 87 pass, 0 fail (new `t33.test.mjs`, 12 tests; read/t18 tests re-pinned to R12's local day and R9's narrowing). Users of actions: action-plans 53/0, queue-producers 80/0, queue 113/0; escalation 51/1 and monitoring 110/1 (new, J2 (2)); action-clocks 29/3, filings 58/2, affordances 164/3, instance-setup 90/4, control-plane 155/4, plane 82/3: the same tests by name as on the tranche before my change (the named inherited reds).
 Checks: format 0 failures; architecture 6 failures (the uses edges above); coverage 55 of 55, 0 failures; ownership 7 files, 0 failures.
 Size (session_01NJ3oEE5VB1ykNEwnTexhdw): test runs 14, module lines 3327
+
+## J4 · COMPLETE
+
+B3 (K1657) applied: R51's audit arm is handed `ctx.zone`, the zone of the action's office as R12 reads it (`zoneOf(place())`; null with none held), so action-grammar R7 reads a pending entry past its date on the office's local day.
+Test: `t33.test.mjs` "R51 the audit's arm is handed the zone …" (Halifax 23:00 on the dated day not past, the next local day past; no zone, never past). It is red against action-grammar as it stands on tranche/T33 (R7 not yet built there: actions 87 pass, 1 fail, this test). Checked against a local, uncommitted stand-in of R7 as written (the local day through `ctx.zone`, none past without it): 88 pass, 0 fail; the stand-in reverted. It turns green when ACTION-GRAMMAR #6 merges.
+Checks after merging tranche/T33 @ a3bf52a471: format 0 failures; architecture 0 failures (uses set at K1657); coverage 55 of 55; ownership 3 files, 0 failures.
+Size (session_01NJ3oEE5VB1ykNEwnTexhdw): test runs 17, module lines 3328
