@@ -21,3 +21,7 @@
 **For BOB.** R12's `*(not yet met: T33-86)*` mark in `build/requirements/tasks.md` can be struck (BOB's file). Final `uses` unchanged (record-grammar already among them). No generated artifact staled by this job beyond the plane bundle's inputs (`tasks/` is bundled by the plane; regenerated at the close). Nothing deferred; nothing found in another module.
 
 Size (session_01HrkD2bfzn2ME5gxfzK8eEK): test runs 6, module lines 1995
+
+## J1 · COMPLETE
+
+T33-86 applied: R12, C-19.1's task id composed from record-grammar's idPattern('TASK') with its own slug rule (no private pattern; 10,000th id accepted; pre-T33 ids and findings byte-identical); ISO_INSTANT now record-grammar's ISO_TS_RE. tasks 74/74; users run: queue 113/113, control-plane and plane fail only B1's named reds (T33-89, T33-90). format, architecture, coverage (12/12), ownership (4 files) 0 failures. Uses unchanged. R12 mark can be struck. Record: build/jobs/T33/tasks.md on job/T33/tasks.
