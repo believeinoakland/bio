@@ -46,3 +46,9 @@ Size (session_01Wskzz89u9YtWxzo9XZyHmv): test runs 19, module lines 3294
 ## J3 · COMPLETE
 
 B3 done: earned.test.mjs R6's negative arm now /fetched them/, with a positive arm proving the measured route says 'as your group's Civicsmith fetched them'. Inquiry 173 pass, 2 fail (the R4 derived-leg pair waiting on inquiry-grammar R17, unchanged), 1 todo; all four checks 0 failures. Record's 'Completion of B3' has it.
+
+## Completion of B4 (CHANGE, K1803)
+
+Merged `tranche/T34` with `inquiry-grammar`'s T34-28. `grammar.test.mjs` R38 R4 now expects `DERIVED_LEG_MALFORMED` (C-2.8) among `INQUIRY_ROWS`; `derived-legs.test.mjs`'s refusal test now asserts that code for a graded derived leg and for an id that is not its derivation's. The R4 derived-leg pair is green with no source change. Tests: inquiry 176, pass 175, fail 0, todo 1 (R31, MK-5). Checks: format, architecture, coverage (49 of 49), ownership (8 files): 0 failures each. Nothing deferred beyond the `legRebuilt` test noted above.
+
+Size (session_01Wskzz89u9YtWxzo9XZyHmv): test runs 21, module lines 3294

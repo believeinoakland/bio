@@ -32,9 +32,11 @@ test("R4 T34-29 a derived leg stating a grade, or whose id is not its derivation
     author: V("alice"), date: "2026-09-27" }], refs: [] }), D);
   const r1 = w.promote(Q, graded, null, { author: V("alice") });
   assert.equal(r1.reason, "BASIS_REFUSED", JSON.stringify(r1).slice(0, 400));
+  assert.ok(r1.findings.some((x) => x.code === "DERIVED_LEG_MALFORMED"), JSON.stringify(r1).slice(0, 400));
   const other = withDerivation(inquiryMd(Q, { legs: [{ target: D }], refs: [] }), D, { ...F, to: "ENT-2026-0003" });
   const r2 = w.promote(Q, other, null, { author: V("alice") });
   assert.equal(r2.reason, "BASIS_REFUSED", JSON.stringify(r2).slice(0, 400));
+  assert.ok(r2.findings.some((x) => x.code === "DERIVED_LEG_MALFORMED"), JSON.stringify(r2).slice(0, 400));
   assert.equal(w.record.head(Q), null);
 });
 
