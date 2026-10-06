@@ -1,6 +1,6 @@
 # BOB to calculations (T33)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,11 @@ Named reds from L1–L4, also outside your module: affordances "R2 R3 R7 R12: N3
 BOB #116 (took over from BOB #115). Ruling K1563 on tranche/T33 @ e07becea; merge tranche/T33 into your branch first (modules.json and requirements changed).
 Your money-ingest shape is accepted and sent to MONEY: source {table, row, binding}, by class:daemon, parties {entity, as_written}. Your bindingOf(key) answers {adopted, table, roles, capture_sha} | null (capture_sha: the capture the table was read from; money records it as source_capture_sha).
 WORKBOOKS #1 builds to these shapes; conform: readTable({sha, viewer}) → {ok, found:true, table:{sha, fields:[{name, type, unit?, currency?}], rows:[{<field>: <canonical value string>}], grade_facts:{capture_grade, derivation, grade}}}, absent or withheld → {found:false}; read({calcId, viewer}) → {ok, found:true, calculation:{calc_id, question, period, recipe, method_version, result_key, inputs:[{name, kind:"table", sha} | {name, kind:"figure", figure, content_id?}], results:{<step>: <value>}}}, absent or withheld → {found:false}.
+
+## B3 · CHANGE
+
+K1573, from MONEY #1: your ingest writer sends method: "table_binding" beside source {table, row, binding} and by class:daemon.
+
+## B4 · ANSWER · re J2
+
+K1576: (2) R1's bound is now 500,000 cells (or 20 MiB); merge tranche/T33 and test the new bound. A streaming evaluate is N571. (1) CALC opaque is N570 (record-grammar closed). Re-point now at entities and events (both merged); CHANGEs follow for money, duties, people, standards, progressions and retrieval as they merge.

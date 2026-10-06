@@ -1,6 +1,6 @@
 # BOB to events (T33)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -16,3 +16,15 @@ All four readings accepted. Vote values and response statuses: no default list; 
 R37 gains event_attestations(event_id, capture_sha): each capture an attestation of the event cites (retrieval's event/occurred fields join it). Build and test that table as stated.
 Shape money assumes from you (MONEY #1 J1): readEvent({eventId, viewer}) → {found, event:{relations:[{relation_id, kind, direction:"in"|"out", from, to, attestation, grade:{assertion, ends}}]}}, and eventsFor({entity, kinds, limit, viewer}) → {events:[…]}. Conform where your requirements allow; if yours differs, say so in COMPLETE and name the shape, and I forward it.
 Your neighbours takes an optional host passed through, else the isolate's one instance, else OWNER_HOST_AMBIGUOUS (K1563 (1)). Your factory is eventsOf(host).
+
+## B3 · CHANGE
+
+K1568: export a one-site answer noSuchDatedFact for your R7's NO_SUCH_DATED_FACT; progressions answers through it (one home for the code).
+
+## B4 · CHANGE
+
+K1569: also export a one-site answer noSuchEvent for your NO_SUCH_EVENT (beside noSuchDatedFact, B3); duties answers through it.
+
+## B5 · CHANGE
+
+K1572: ENTITIES #9 is merged on tranche/T33. Merge it, re-point your fixture at the real entityByIdentifier, addIdentifier, proceedingOf and the proceeding kind, re-run, and post COMPLETE.

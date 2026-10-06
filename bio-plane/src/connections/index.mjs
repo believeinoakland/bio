@@ -49,10 +49,13 @@ import { entitiesOf, gradeRank, isEstablished, noEntity } from "../entities/inde
 import { CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES, migrateConnections } from "./schema.mjs";
 import { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 import { Themes } from "./themes.mjs";
+import { registerOwner } from "../connection-grammar/index.mjs";
+import { MENTIONED_KINDS, MENTIONED_OWNER, mentionedNeighbours } from "./mentioned.mjs";
 
 export { CONNECTIONS_SCHEMA, CONNECTIONS_TABLES, CONNECTIONS_TABLE_NAMES } from "./schema.mjs";
 export { checkConnectionPairCovers, checkConnectionMentionUnchosen } from "./pair.mjs";
 export { THEME_READ_LIMIT_DEFAULT, THEME_READ_LIMIT_MAX, THEME_WITHDRAW_CHECKS } from "./themes.mjs";
+export { MENTIONED_KIND, MENTIONED_KINDS, MENTIONED_OWNER, CO_MENTION_HUB, WARN_BAND, mentionedMethod } from "./mentioned.mjs";
 /* R35, R46: C-49, C-74 and C-81 and the leg check are this module's own (`./checks.mjs`; C-74 T18, the rest copied
    T19), its public face for `inquiry-grammar` and `action-grammar` (`themeLegFindings`). */
 export { CONNECTION_PAIR_CHECKS, CONNECTION_CHOICE_CHECKS, THEME_CHECKS, THEME_ID_RE, THEME_REF_RE, THEME_LEG_KEYS,
@@ -326,6 +329,13 @@ export class Connections {
           written.push(row);
         }
       }
+      /* R64: what this derivation's bounds did, so a read of the connections through the entity can say so. */
+      this.sql.exec(
+        `INSERT INTO connection_derivations (entity_id, documents, document_limit, resolution_rows, pair_limit, truncated, at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(entity_id) DO UPDATE SET documents=excluded.documents, document_limit=excluded.document_limit,
+           resolution_rows=excluded.resolution_rows, pair_limit=excluded.pair_limit, truncated=excluded.truncated,
+           at=excluded.at`, entityId, ends.length, endsCap, scan.length, cap, truncated ? 1 : 0, at);
       return { ok: true };
     });
     const connections = written.map((row) => this.#view(row));
@@ -1309,6 +1319,30 @@ export class Connections {
              says: `${who} ${word} that the file belongs to the agenda item; the inference and every judgement are kept` };
   }
 
+  /* ================================================================ the connection owner (R62–R65): ./mentioned.mjs */
+
+  /** R63–R65: the documents connected to `node` by R1's derived connections, in `connection-grammar`'s shape, as the
+   *  kind `mentioned_together`. Reads; never derives. */
+  neighbours(args) {
+    return mentionedNeighbours(this, args, { positionOf: (r, side) =>
+      readingSourceFromColumns(r[`${side}_pos_kind`], r[`${side}_pos`], r[`${side}_pos_ref`]) });
+  }
+
+  /** R65: how many captures resolving to `entityId` sit in a bundle the viewer may see. */
+  visibleCaptureCount(entityId, viewer) {
+    const seen = this.#bundleGate("r.bundle_id", viewer);
+    return this.#one(`SELECT count(DISTINCT r.capture_sha) AS n FROM resolutions r WHERE r.entity_id = ? AND (${seen.sql})`,
+                     entityId, ...seen.args).n;
+  }
+
+  /** R64: what `entityId`'s last derivation's bounds did, or null when none is recorded. */
+  lastDerivation(entityId) {
+    const d = this.#one(`SELECT * FROM connection_derivations WHERE entity_id = ?`, entityId);
+    return d ? { ...d, truncated: !!d.truncated } : null;
+  }
+
+  rankOf(grade) { return rank(grade); }
+
   /* ================================================================ themes (R39–R48): ./themes.mjs */
 
   declareTheme(a) { return this.themes.declare(a); }
@@ -1383,6 +1417,25 @@ function randHex(n) {
 }
 
 const instances = new WeakMap();
+/* R62: the instances created in this isolate, for the registered read when the caller names no `host`. */
+let created = 0, latest = null;
+
+/** R62: the owner's read as registered: the instance of the caller's `host` (an argument `connection-grammar`'s
+ *  registry passes through unchanged, R19), else the one instance this isolate created; with several and no `host`
+ *  the read cannot say whose record it reads, and refuses. */
+export function registeredNeighbours(args) {
+  const a = args && typeof args === "object" ? args : {};
+  const k = a.host ? instances.get(a.host) : created === 1 ? latest : null;
+  if (!k) return { refused: a.host || created === 0 ? "OWNER_NOT_READY" : "OWNER_HOST_AMBIGUOUS",
+                   why: a.host || created === 0 ? "no connections instance is held for this host yet"
+                     : "several records are open in this isolate and the read names no host, so whose connections to read is not known" };
+  const { host: _h, ...rest } = a;
+  return k.neighbours(rest);
+}
+
+/** R62: registered once, at load, into the plane's default registry (`connection-grammar` R5). */
+export const MENTIONED_REGISTRATION = registerOwner({ owner: MENTIONED_OWNER, kinds: MENTIONED_KINDS.map((x) => ({ ...x })),
+                                                      neighbours: registeredNeighbours });
 
 /** The one connections instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on the
  *  first call only. At creation it declares its tables (R36), registers its figures (R60) and registers its projection and fact with promotion
@@ -1406,7 +1459,11 @@ export function connectionsOf(host, deps) {
     k = new Connections({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, extraction,
                           capture, entities });
     instances.set(host, k);
-    record.declarePurge("connections", CONNECTIONS_TABLES);
+    created++; latest = k;
+    /* R36, R67: every table declared with its classes; a refusal is a build fault, never a silent gap. */
+    const declared = record.declareTable("connections", CONNECTIONS_TABLES.map((t) => ({ ...t })));
+    if (declared && declared.ok === false)
+      throw new Error(`connections: record-core refused its tables: ${declared.reason}${declared.table ? ` (${declared.table})` : ""}`);
     /* R60: the figures, once at start (record-core R63); a refusal is a build fault, never a silent gap. */
     if (typeof record.registerCounts === "function") {
       const counted = record.registerCounts("connections", [...CONNECTIONS_COUNT_KEYS], (hid) => k.counts(hid));
