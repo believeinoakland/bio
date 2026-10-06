@@ -69,3 +69,7 @@ Size (session_01REJDyRkXAWYAFW1aBrgywm): test runs 9, module lines 1805
 ## J1 · REPORT
 
 Four findings outside acquisition (details in my record's Completion section). (1) modules.json: acquisition's uses lacks credentials, though its requirements' Uses name credentials.keyedServiceFor. No code edge is needed, because the key is read through store.credentials handed in, so adding the edge is yours to decide. (2) capture: its instance's credentials field is lazy (null until #credentials() first runs). A caller handing capture's store to keyedFetch or citationLookup must populate it, or the service reads as off. (3) standards (T33-31): call citationLookup(store, {text, viewer}) with a member viewer; a machine viewer is refused. (4) bio-plane/dist/bio-plane.bundled.mjs is stale from this module's source; I did not rebuild it.
+
+## J2 · COMPLETE
+
+T33-21 applied: R35 (Memento for a past date: at to the second, TimeGate Accept-Datetime at at, TimeMap nearest-first, both instants stated, MEMENTO_BAD_ASKED_DATE), R36 (keyedFetch through store.credentials.keyedServiceFor, off by default, own host only, key in nothing), R37 (citationLookup, CourtListener v4, every result labelled the service's answer, never verified). Tests 84/84; users unchanged (instance-setup 90/4 = base, K1544). format, architecture, coverage (37/37) and ownership: 0 failures. Nothing deferred. Record pushed on job/T33/acquisition.
