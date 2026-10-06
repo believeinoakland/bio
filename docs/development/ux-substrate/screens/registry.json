@@ -515,6 +515,11 @@
      "op": "owed:notedelete DEC-144",
      "label": "Delete your note",
      "status": "owed"
+    },
+    {
+     "op": "owed:writinghelp DEC-153",
+     "label": "Help me write this",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -783,6 +788,11 @@
       "capture-sources",
       "monitoring"
      ]
+    },
+    {
+     "op": "owed:writinghelp DEC-153",
+     "label": "Help me write this",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -830,6 +840,11 @@
      "modules": [
       "capture"
      ]
+    },
+    {
+     "op": "owed:writinghelp DEC-153",
+     "label": "Help me write this",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -1910,6 +1925,11 @@
       "publication",
       "queue-producers"
      ]
+    },
+    {
+     "op": "owed:writinghelp DEC-153",
+     "label": "Help me write this",
+     "status": "owed"
     }
    ],
    "journeys": [

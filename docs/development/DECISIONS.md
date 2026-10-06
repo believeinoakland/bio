@@ -2403,6 +2403,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` 
 owed: (BOB) (2) recorded as work for after the first public release, wherever BOB keeps such work, to be worded as a requirement then; nothing for the release now.
 
 ### DEC-152 · answered
+amended: 2026-10-06 · DEC-153: the same help wherever members write in their own words.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (Bob's comment on the layouts page's "Who your group is" screen)
 for: bob
 question: Whether an administrator may ask the assistant to help write the group's focus and reasons for existing (DEC-132), which the group gives in its own words.
@@ -2415,3 +2416,17 @@ response: **Bob, 2026-10-06:** "Can the administrator use the assistant to help 
 decided: 2026-10-06 · Bob
 reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (the "Who your group is" screen).
 owed: (BOB) the assistant's draft for the group's description (an op behind the registry's `owed:groupdescriptiondraft DEC-152`, a machine draft per wizard-scripts R13 and the assistant's roles), labelled and kept only by the administrator's act.
+
+### DEC-153 · answered
+raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the design session's question on the layouts page, after DEC-152: "should the same help be offered wherever someone writes in their own words (a records request, an observation, a case's statement)? It would never apply where the assistant is refused: concluding, signing, publishing.")
+for: bob
+question: Whether the assistant's help with writing (DEC-152) is offered wherever members write in their own words.
+why it is Bob's: what the assistant may do (P17).
+provisional: DEC-152 (the group's description only); translations (DEC-127); the drafts wizard-scripts R13 lists.
+alternative: only on "Who your group is".
+recommendation: everywhere members write in their own words, never on an act the assistant is refused.
+reversal cost: low.
+response: **Bob, 2026-10-06: "Yes, offer it wherever members write in their own words".** Ruled, within the limits of the question he answered: never where the assistant is refused (concluding, signing, publishing). **Design session's details (P17), Bob may change any:** (1) wherever a field takes a member's own words (a note, an observation, a reason, a request, a case's scope, what changed), "Help me write this" sits under it when the assistant is reachable for that member (K1755); (2) the help works only from what the member tells it and what the group holds, and never adds a fact; for a firsthand observation it only helps word what the member saw (testimony stays the witness's); (3) its words arrive in the field labelled "Draft · the assistant's, asked by <handle>"; nothing is saved until the member edits and keeps them (K1364), and kept words are the member's; (4) never on an act the assistant is refused or an irreversible one: vouching (release), concluding and withdrawing or reopening a conclusion, signing (caseratify), publishing, the expunge, the installer's short name; not where a labelled draft already fills the field; the group's own description keeps its guided draft (DEC-152); (5) without the assistant nothing appears.
+decided: 2026-10-06 · Bob
+reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` (section 2; the notes, capture, held and case-editor screens); `screens/mock-kit.js` (the rule as code: `writeHelp`); BIO_Interaction_Constructs_v0_1.md §P.
+owed: (BOB) the assistant's writing help as an act (the op behind the registry's `owed:writinghelp DEC-153`): a machine draft into a member's own-words field, labelled, kept only by the member's act, refused on the acts named in (4), the facts it may use limited as in (2); the assistant's roles amended to allow it.

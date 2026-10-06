@@ -7,7 +7,7 @@ import path from 'path'; import url from 'url';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PW || 'playwright');
 const here = path.dirname(url.fileURLToPath(import.meta.url));
-const AI_ONLY = new Set(['airunopen', 'suggest', 'airunclose', 'optionadopt', 'optionpropose', 'owed:translationdraft DEC-127', 'owed:groupdescriptiondraft DEC-152', 'whatchangedpropose']);
+const AI_ONLY = new Set(['airunopen', 'suggest', 'airunclose', 'optionadopt', 'optionpropose', 'owed:translationdraft DEC-127', 'owed:groupdescriptiondraft DEC-152', 'owed:writinghelp DEC-153', 'whatchangedpropose']);
 const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1400, height: 1000 } });
 const errs = []; p.on('pageerror', e => errs.push(e.message));
 await p.goto('file://' + path.join(here, '..', 'layouts.html')); await p.waitForTimeout(300);

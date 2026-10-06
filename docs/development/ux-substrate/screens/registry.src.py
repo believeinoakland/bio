@@ -31,7 +31,7 @@ screen('connect', 'Connect your Claude account', 'working', 'The member\'s own A
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',
-  [('notewrite','Write a note'),('noteturn','Turn a note into an observation, hunch or question'),('owed:noterevise DEC-144','Revise your note'),('owed:notedelete DEC-144','Delete your note')], [6])
+  [('notewrite','Write a note'),('noteturn','Turn a note into an observation, hunch or question'),('owed:noterevise DEC-144','Revise your note'),('owed:notedelete DEC-144','Delete your note'),('owed:writinghelp DEC-153','Help me write this')], [6])
 screen('translations', 'Translations', 'working', 'The interface\'s words in the group\'s languages (DEC-127).',
   [('owed:translationdraft DEC-127','Ask the assistant to draft'),('owed:translationadopt DEC-127','Adopt a translation')], [3])
 screen('wizards', 'Wizards', 'working', 'The group\'s wizard library: offered, drafts, submitted (DEC-121).',
@@ -44,9 +44,9 @@ screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by 
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
   [('search','Search'),('select','Hold these together'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('countask','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
-  [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address')], [6,7,9,15])
+  [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('owed:writinghelp DEC-153','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
-  [('heldcaptures','See held captures'),('release','Vouch for them'),('heldsetaside','Set aside with a reason'),('heldrestore','Restore')], [15])
+  [('heldcaptures','See held captures'),('release','Vouch for them'),('heldsetaside','Set aside with a reason'),('heldrestore','Restore'),('owed:writinghelp DEC-153','Help me write this')], [15])
 screen('document', 'Document', 'working', 'One captured document: its copy, grade note, passages, versions and what cites it.',
   [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Claim the same person'),('monitor','Watch for changes')], [7,15,23])
 
@@ -95,7 +95,7 @@ screen('matter', 'Matter', 'working', 'One government act: determination, conseq
 
 # --- publishing
 screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.',
-  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason')], [15,23])
+  [('casedraft','Prepare the draft'),('whatchangedpropose','Draft "what changed"'),('statementack','Acknowledge what it leaves out'),('attribute','Name a person with the reason'),('owed:writinghelp DEC-153','Help me write this')], [15,23])
 screen('review-copy', 'Review copy', 'working', 'A named outsider\'s revocable view of the draft.',
   [('reviewgrant','Share for review'),('reviewrevoke','Stop sharing'),('reviewcomment','Comment')], [21])
 screen('ceremony', 'Publication ceremony', 'working', 'The required wizard: checks, disclosures, ties confirmed, preview, signing.',

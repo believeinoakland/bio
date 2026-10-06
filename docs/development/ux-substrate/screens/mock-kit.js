@@ -50,10 +50,20 @@ const due = (s, t) => `<span class="cs-due"${s ? ` data-due="${s}"` : ''}>${I(s 
 const hint = t => `<span class="cs-hint">${I('hint')}${esc(t || 'Hint · machine work')}</span>`;
 const pathm = cur => `<span class="cs-path">${['Working', 'Shared for review', 'Published'].map((s, i) => `<span${i === cur ? ' aria-current="step"' : ''}>${s}</span>`).join('<i>→</i>')}</span>`;
 const ladder = (k, steps, on, pend = []) => `<div class="cs-ladder" data-ladder="${k}">${steps.map((s, i) => `<span class="${i < on ? 'on' : ''}${pend.includes(i) ? ' pend' : ''}">${esc(s)}</span>`).join('')}</div>`;
+// DEC-153: wherever a member writes in their own words (a `rec` field), the assistant can help when it is reachable;
+// never on an act the assistant is refused, never where a labelled draft already fills the field, and not on the
+// group's own description, which has its own guided draft (DEC-152).
+const WRITE_ACT = 'owed:writinghelp DEC-153';
+const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'caseratify', 'personexpunge', 'bootstrap', 'groupdescriptionset']);
+let WRITE_ON = false;
+const writeHelp = o => WRITE_ON && o.rec && !o.draft && !WRITE_REFUSED.has(o.act || '') ? `<div class="mk-acts">${btn(WRITE_ACT, 'Help me write this', { w: 1 })}</div>` : '';
 function field(id, label, value = '', o = {}) {
   const tag = o.area ? 'textarea' : 'input';
   const cls = `cs-input${o.rec ? ' rec' : ''}${o.draft ? ' cs-draft' : ''}`;
   const v = o.area ? `>${esc(value)}</textarea>` : ` value="${esc(value)}">`;
+  return writeHelp(o) ? fieldHtml(id, label, value, o, tag, cls, v) + writeHelp(o) : fieldHtml(id, label, value, o, tag, cls, v);
+}
+function fieldHtml(id, label, value, o, tag, cls, v) {
   return `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<${tag} id="${id}" class="${cls}"${o.area ? '' : ' type="text"'}${o.area ? '' : ''}${v}${o.draft ? `<span class="cs-draftlabel">${I(o.draft === 'machine' ? 'machine' : 'wizard')}${o.draft === 'machine' ? 'Draft by the assistant, at your request · edit it until it is yours' : o.draft === 'template' ? 'Draft from your group\'s template · edit it until it is yours' : 'Draft from the wizard · edit it until it is yours'}</span>` : ''}</div>`;
 }
 const choice = (id, label, opts, sel, o = {}) => `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<select id="${id}" class="cs-input"${o.onchange ? ` onchange="${o.onchange}"` : ''}>${opts.map(x => `<option${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
