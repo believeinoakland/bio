@@ -151,13 +151,22 @@ function t33World() {
   }
   return w;
 }
+/* `money`, injected until it merges (K1563 (1)), coded to its requirements: R17's four closed lists, frozen. At
+   money's merge this is re-pointed at `bio-plane/src/money/index.mjs`. */
+const MONEY = {
+  kinds: () => Object.freeze(["revenue", "expenditure", "transfer", "allocation", "payment", "contribution", "gift",
+    "income", "behested", "settlement", "debt", "balance", "fee charged", "other"]),
+  phases: () => Object.freeze(["proposed", "adopted", "adjusted", "actual"]),
+  stages: () => Object.freeze(["encumbered", "incurred", "paid", "assessed", "collected"]),
+  bases: () => Object.freeze(["budgetary", "cash", "modified accrual", "accrual", "undetermined"]),
+};
 const runIds = (w, opts, second) => sorted(w.all(compile({ viewer: V, limit: 500, ...opts }, second).statements.page())
   .map((r) => r.bundle_id));
 
 test("R28 R3 the T33 fields: each an equality on the value typed, lower-cased where its owner's words are, occurred a time field, each read through its owner's relation", () => {
   assert.deepEqual(Object.keys(FIELDS).slice(-T33.length), T33);
   const w = t33World();
-  const second = { fields: REL };
+  const second = { fields: REL, money: MONEY };
   for (const f of T33) {
     const [a, b] = VALUES[f];
     assert.deepEqual(runIds(w, { q: `${f}:"${a}"` }, second), ["B1", "B2"], `${f}:${a}`);
@@ -167,7 +176,7 @@ test("R28 R3 the T33 fields: each an equality on the value typed, lower-cased wh
     assert.deepEqual(runIds(w, { q: `has:${f}` }, second), ["B1", "B2", "PR"]);
     assert.deepEqual(runIds(w, { q: `${f}:*` }, second), ["B1", "B2", "PR"]);
     assert.deepEqual(runIds(w, { q: `${f}:"${a}"`, viewer: "member:ann" }, second), ["B1", "B2"], "the gate holds (R8)");
-    assert.deepEqual(compile({ q: `${f}:x`, viewer: V }, second).warnings, [], f);
+    assert.deepEqual(compile({ q: `${f}:"${a}"`, viewer: V }, second).warnings, [], f);
   }
   /* The money words are lower-case, so a member's capitals still match; an id is matched as typed. */
   for (const f of ["kind", "phase", "stage", "basis"]) {
@@ -259,4 +268,31 @@ test("R30 savedForm: the form a standing question keeps, or a refusal when it is
   const bad = { toString() { throw new Error("x"); } };
   for (const x of [undefined, null, 7, "water", [], { q: 5 }, { q: "water", sort: bad }, { q: "water", ids: 3 }])
     assert.doesNotThrow(() => { const r = savedForm(x); assert.equal(typeof r.ok, "boolean"); }, JSON.stringify(x));
+});
+
+test("R28 a money field's word outside money's closed list is dropped with a warning naming the list, and every word of the list compiles", () => {
+  const w = t33World();
+  const second = { fields: REL, money: MONEY };
+  for (const [f, list] of [["kind", "kinds"], ["phase", "phases"], ["stage", "stages"], ["basis", "bases"]]) {
+    assert.equal(FIELDS[f].words, list);
+    for (const word of MONEY[list]()) {
+      for (const typed of [word, word.toUpperCase()]) {
+        const p = compile({ q: `${f}:"${typed}"`, viewer: V }, second);
+        assert.deepEqual([p.warnings, p.ast.op], [[], "meta"], `${f}:${typed}`);
+      }
+    }
+    for (const bad of ["nope", "revenue!", "paid ", list]) {
+      const p = compile({ q: `water ${f}:"${bad}"`, viewer: V }, second);
+      assert.deepEqual(p.warnings, [`${f}: ${JSON.stringify(bad)} is not one of money's ${list} (${MONEY[list]().join(", ")}); dropped`], bad);
+      assert.deepEqual(p.drops, p.warnings);
+      assert.deepEqual(everyStatement(p), everyStatement(compile({ q: "water", viewer: V }, second)), `${f}:${bad} widens`);
+      assert.deepEqual(runIds(w, { q: `water ${f}:"${bad}"` }, second), ["B1", "B2", "B3", "PR"]);
+    }
+    /* Presence asks no word. */
+    assert.deepEqual(compile({ q: `has:${f} ${f}:*`, viewer: V }, second).warnings, []);
+    /* The other fields have no closed list. */
+  }
+  for (const f of T33.filter((x) => !["kind", "phase", "stage", "basis"].includes(x)))
+    assert.equal(FIELDS[f].words, undefined, f);
+  assert.equal(savedForm({ q: "kind:nope" }, second).reason, "SAVED_QUERY_DROPS");
 });

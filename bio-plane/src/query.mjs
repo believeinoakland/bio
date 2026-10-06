@@ -135,16 +135,17 @@ export const FIELDS = {
      relation the caller names for it (`rel`, R29): never off `bundles`, so with none named the term is dropped and
      says so. A bundle can hold MANY values of each (it cites several standards, concerns several people), so they
      filter and never sort or facet: one value per bundle would be an arbitrary pick among its values. `col` is the
-     plan's name for the field; the column read is the relation's. */
+     plan's name for the field; the column read is the relation's. `words` names the owner's service that answers
+     the field's closed list (`money` R17); a word outside it is dropped and the warning names the list. */
   standard:       { col: "standard_id",  type: "text", rel: true },
   cites:          { col: "cited_key",    type: "text", rel: true },
   person:         { col: "person_id",    type: "text", rel: true },
   holder:         { col: "holder_id",    type: "text", rel: true },
   post:           { col: "post_id",      type: "text", rel: true },
-  kind:           { col: "money_kind",   type: "text", lower: true, rel: true },
-  phase:          { col: "money_phase",  type: "text", lower: true, rel: true },
-  stage:          { col: "money_stage",  type: "text", lower: true, rel: true },
-  basis:          { col: "money_basis",  type: "text", lower: true, rel: true },
+  kind:           { col: "money_kind",   type: "text", lower: true, rel: true, words: "kinds" },
+  phase:          { col: "money_phase",  type: "text", lower: true, rel: true, words: "phases" },
+  stage:          { col: "money_stage",  type: "text", lower: true, rel: true, words: "stages" },
+  basis:          { col: "money_basis",  type: "text", lower: true, rel: true, words: "bases" },
   period:         { col: "money_period", type: "text", rel: true },
   fund:           { col: "money_fund",   type: "text", rel: true },
   party:          { col: "money_party",  type: "text", rel: true },
@@ -1513,6 +1514,7 @@ function selector(tok, ctx) {
   }
   if (!available(name, f, ctx)) return null;
   let raw = String(tok.value);
+  if (f.words && !closedWord(name, f, raw, ctx)) return null;
   /* The type renames (normalisation site 4 of 4, REC-10): the projection
      stores canonical types only, so the legacy spellings `problem` and
      `focus` are honoured as filter values THROUGH `record-grammar`'s OWN MAP
@@ -1745,6 +1747,20 @@ function drop(ctx, msg) {
 function available(name, f, ctx) {
   if (!f.rel || ctx.frs.has(f.col)) return true;
   drop(ctx, `${JSON.stringify(name)} is not available here; read as nothing`);
+  return false;
+}
+
+/* R28: a money field's value is one of `money`'s closed words (its R17), read from `money` and never listed here
+   (R22). A word outside the list is dropped, the warning naming the list; presence (`kind:`, `kind:*`) asks no
+   word. INJECTED UNTIL `money` MERGES (K1563 (1)): `ctx.money` is the module the caller passes; at money's merge it
+   becomes money's own index, imported. */
+function closedWord(name, f, raw, ctx) {
+  if (raw === "" || raw === "*") return true;
+  const list = typeof ctx.money?.[f.words] === "function" ? ctx.money[f.words]() : null;
+  if (!Array.isArray(list)) return true;
+  const words = list.map((w) => String(w).toLowerCase());
+  if (words.includes(raw.toLowerCase())) return true;
+  drop(ctx, `${name}: ${JSON.stringify(raw)} is not one of money's ${f.words} (${words.join(", ")}); dropped`);
   return false;
 }
 
@@ -2216,7 +2232,8 @@ export function compile({ q = "", viewer = null, sort = null, dir = null,
      to the row projection's MATCH and `snippet()`, and to nothing else. */
   /* `drops` holds the warnings that DROPPED a term (R30); `zone` is the caller's, for R27's local days. */
   const ctx = { warnings: [], drops: [], textAtoms: [], sort: null, meaningArms: [], passageTerms: [],
-                zone: typeof zone === "string" ? zone : null, frs: null };
+                zone: typeof zone === "string" ? zone : null, frs: null,
+                money: relation && typeof relation === "object" ? relation.money ?? null : null };
   /* R25: the relation the projection is read through, `compile(query, {projection: {table, key}})`. */
   const rel = relationOf(relation, ctx.warnings);
   /* A bundle's row in every statement: `bundles b`, and the projection's relation `bp` beside it. */
