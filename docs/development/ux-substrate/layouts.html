@@ -667,6 +667,7 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 <!-- Civicsmith's icons (DEC-138): a 16-unit grid, 1.5 stroke, round joins, currentColor, one meaning each.
      Every icon is drawn beside a word; none stands alone as the only signal (principle 8.2). -->
 <defs><style>.s{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.f{fill:currentColor;stroke:none}</style></defs>
+<!-- the plumb bob (DEC-126): an <svg> that uses it takes viewBox="0 0 60 90", never the symbol's own, or the left third is cut off -->
 <symbol id="i-mark" viewBox="20 2 60 90"><path class="f" d="M48 4h4v14h-4z M41.3 16.7h17.4a1 1 0 0 1 1 1v5.1L50 26.1l-9.7-3.3v-5.1a1 1 0 0 1 1-1z M39 25.6L50 29.6L61 25.6L76 34L50 43.4L24 34z M23.4 37.4L48.3 46.5V90.2z M76.6 37.4L51.7 46.5V90.2z"/></symbol>
 <!-- the four evidence scales (measures map, DEC-82) -->
 <symbol id="i-capture" viewBox="0 0 16 16"><path class="s" d="M3.5 1.75h6l3 3v9.5h-9z M9.5 1.75v3h3"/></symbol>
@@ -943,7 +944,7 @@ const SCR = {};
 
 /* ---------------- the group's copy: installing, setting up, joining ---------------- */
 SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
-  <div class="mk-setuphead"><svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span></div>
+  <div class="mk-setuphead"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span></div>
   ${h1('Install your group\'s copy', 'Free software for civic groups. Your group\'s copy runs in your own Cloudflare account; nobody else holds your work.')}
   ${sec('Before you start', `<ul class="mk-list"><li>A Cloudflare account. The free plan works.</li><li>About twenty minutes.</li><li>Workers Paid ($5 a month, with a payment method) adds recomputing members' spreadsheets and signing in with a Claude subscription. You can add it later.</li><li>No Claude account is needed to set up.</li></ul>`)}
   ${sec('Your group\'s short name', `${field('mk-slug', 'Short name', 'lakeshore-tenants', { help: 'Lower-case letters, digits and hyphens. It appears in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.' })}
@@ -951,7 +952,7 @@ SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
   ${sec('Testing itself', `<div class="cs-sheet">${row(I('accepted'), 'Signed release verified', '<span class="muted">0.9 s</span>')}${row(I('accepted'), 'Record store ready', '<span class="muted">1.2 s</span>')}${row(I('clock'), 'The assistant\'s container: allow it to run?', '')}</div>${acts(btn('selftest', 'Run the test again'))}`)}` });
 
 SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `
-  <div class="mk-setuphead"><svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span><span class="muted">lakeshore-tenants</span></div>
+  <div class="mk-setuphead"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span><span class="muted">lakeshore-tenants</span></div>
   ${h1('Set up your group\'s copy', 'Seven short parts. You can leave and come back; nothing is lost.')}
   <ol class="mk-steps"><li class="done">Claim</li><li class="done">Name</li><li aria-current="step">Places</li><li>Offices</li><li>People</li><li>The assistant</li><li>Administrators</li></ol>
   ${sec('Claim your copy', `${field('mk-otp', 'One-time password', '••••••••••••', { help: 'From the installer. It works once.' })}${acts(btn('claim', 'Claim this copy', { tone: 'primary' }))}`)}
@@ -1354,7 +1355,7 @@ function render(screenId, c) {
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
   if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain">${s.main}</main>
-    <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
+    <footer class="cs-pubfoot"><span class="id">${G.slug} · signed by an owner of the project · 7c1e…a90b</span><span class="cs-credit">Made with <svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><b>Civicsmith</b></span></footer></div>`;
   if (frame === 'setup' || frame === 'public') return `<div class="cs-frame mk-page mk-plain${dock ? ' with-dock' : ''}" data-frame="${frame}"><main class="mk-plainmain">${s.main}</main>${dock}</div>`;
   const band = s.band || 'working';
   return `<div class="cs-frame cs-shell mk-page${dock ? ' with-dock' : ''}" data-frame="working">${mast(c, s)}<div class="cs-band" data-band="${band}">${BANDS[band]}</div>

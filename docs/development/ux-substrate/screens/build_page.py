@@ -27,5 +27,6 @@ page = page.replace('{{FACES}}', P(VL, 'faces.css').replace('url("fonts/', 'url(
 page = page.replace('{{SPRITE}}', P(VL, 'icons.svg')).replace('{{REGSUMMARY}}', summary).replace('{{QUESTION}}', P(HERE, 'question.html'))
 page = page.replace('{{LIB}}', json.dumps(lib, ensure_ascii=False)).replace('{{REG}}', json.dumps(reg['screens'], ensure_ascii=False)).replace('{{JS}}', js)
 assert '{{' not in page.replace('${{', '')
+assert not re.search(r'viewBox="20 2 60 90"[^>]*>\s*<use href="#i-mark"', page), 'an <svg> using the plumb bob must take viewBox="0 0 60 90"'
 open(os.path.join(HERE, '..', 'layouts.html'), 'w').write(page)
 print('layouts.html', len(page), 'bytes')

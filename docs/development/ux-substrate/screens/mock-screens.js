@@ -7,7 +7,7 @@ const SCR = {};
 
 /* ---------------- the group's copy: installing, setting up, joining ---------------- */
 SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
-  <div class="mk-setuphead"><svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span></div>
+  <div class="mk-setuphead"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span></div>
   ${h1('Install your group\'s copy', 'Free software for civic groups. Your group\'s copy runs in your own Cloudflare account; nobody else holds your work.')}
   ${sec('Before you start', `<ul class="mk-list"><li>A Cloudflare account. The free plan works.</li><li>About twenty minutes.</li><li>Workers Paid ($5 a month, with a payment method) adds recomputing members' spreadsheets and signing in with a Claude subscription. You can add it later.</li><li>No Claude account is needed to set up.</li></ul>`)}
   ${sec('Your group\'s short name', `${field('mk-slug', 'Short name', 'lakeshore-tenants', { help: 'Lower-case letters, digits and hyphens. It appears in your addresses and beside every signature, and can never change. A group that wants to stay unnamed picks one that reveals nothing.' })}
@@ -15,7 +15,7 @@ SCR.install = c => ({ frame: 'setup', title: 'Install Civicsmith', main: `
   ${sec('Testing itself', `<div class="cs-sheet">${row(I('accepted'), 'Signed release verified', '<span class="muted">0.9 s</span>')}${row(I('accepted'), 'Record store ready', '<span class="muted">1.2 s</span>')}${row(I('clock'), 'The assistant\'s container: allow it to run?', '')}</div>${acts(btn('selftest', 'Run the test again'))}`)}` });
 
 SCR.setup = c => ({ frame: 'setup', title: 'Set up', main: `
-  <div class="mk-setuphead"><svg viewBox="20 2 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span><span class="muted">lakeshore-tenants</span></div>
+  <div class="mk-setuphead"><svg viewBox="0 0 60 90" aria-hidden="true"><use href="#i-mark"/></svg><span class="mk-wordmark">Civicsmith</span><span class="muted">lakeshore-tenants</span></div>
   ${h1('Set up your group\'s copy', 'Seven short parts. You can leave and come back; nothing is lost.')}
   <ol class="mk-steps"><li class="done">Claim</li><li class="done">Name</li><li aria-current="step">Places</li><li>Offices</li><li>People</li><li>The assistant</li><li>Administrators</li></ol>
   ${sec('Claim your copy', `${field('mk-otp', 'One-time password', '••••••••••••', { help: 'From the installer. It works once.' })}${acts(btn('claim', 'Claim this copy', { tone: 'primary' }))}`)}
