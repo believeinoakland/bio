@@ -51,7 +51,7 @@
  * fences, that means a clause backed by no code may not read like a clause
  * backed by code. Every clause therefore carries either a non-empty
  * `enforced_by` (C-numbers, read from their owners' rows by KEY so no number
- * is typed here but the two named below) or a non-empty `unenforced_because`, and the R15 test in
+ * is typed here but the one named below) or a non-empty `unenforced_because`, and the R15 test in
  * `test/m/skills/` holds every clause to one or the other. The clauses with no code
  * behind them are the honest measure of how much of this skill a careless model
  * could ignore, and they say so in the layer rather than leaving it implied.
@@ -241,7 +241,9 @@ export function controlFlowAuthority(text) {
    number of its own. A row renamed by its owner fails at import rather than
    leaving a stale number that still looks like a citation. */
 const C = {
-  hunch_needs_author:   "C-2.8",            /* checkEarnedLeg's hunch arms — see below */
+  /* The leg grammar's number, read from inquiry-grammar's keyed rows since its T33 job keyed three C-2.8 rows (K1609);
+     the hunch arms that push it are the same grammar's. */
+  hunch_needs_author:   INQUIRY_GRAMMAR_CHECKS.STANDARD_LEG_AXIS.check,
   boilerplate:          SUGGEST_CHECKS.SUGGEST_BOILERPLATE.check,
   unwritable_state:     SUGGEST_CHECKS.SUGGEST_UNWRITABLE_STATE.check,
   not_different:        SUGGEST_CHECKS.SUGGEST_NOT_DIFFERENT.check,
@@ -259,18 +261,11 @@ const C = {
   strength_unfiltered:  VERSION_STRENGTH_CHECKS.VERSION_STRENGTH_UNFILTERED.check,
 };
 
-/* THE ONE C-NUMBER WRITTEN OUT, AND IT IS WRITTEN OUT BECAUSE IT HAS NO ROW TO
-   READ. `checkEarnedLeg`'s hunch arms — a hunch with no author, a hunch with no
-   date — push `C-2.8` at the call site rather than through a keyed registry the
-   way the SUGGEST and fence families do, so there is no `.check` here to
-   resolve. Hiding that behind a computed expression would make this file look
-   uniformly driven when one member of it is not, which is the false-coverage
-   shape this project keeps measuring. It is instead NAMED as the exception and
-   PINNED: the suite asserts it is read from no owner's keyed row and is one of
-   exactly two numbers typed in this module's source (R15); the hunch arms that
-   push it are inquiry-grammar's (its leg grammar), whose own tests hold them.
+/* C-2.8 WAS TYPED HERE until inquiry-grammar keyed its first C-2.8 rows (T33-43; K1609): the hunch arms of its leg
+   grammar push the number at their call site, and its keyed rows now carry the same number, so it is read above
+   by key like every other.
 
-   AND ONE MORE, FOR A DIFFERENT REASON: C-32.6 (`MACHINE_CANNOT_PUBLISH`) has a
+   THE ONE C-NUMBER WRITTEN OUT: C-32.6 (`MACHINE_CANNOT_PUBLISH`) has a
    keyed row, but its holder, `case-authoring`, is LATER in the order than this
    module (P4), so no import can carry it (R15; K787 (6), K811). It is typed
    here, and the holder's own tests assert its row's id equals this
