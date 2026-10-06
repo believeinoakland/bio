@@ -2,8 +2,9 @@
  * a captured document, up to and including the whole: the extent grammar (`./extent.mjs`), the content address, the
  * content row minted over it and what it may claim on the transcription axis, a member's typed transcription of a
  * part and a second member's attestation of it, and, for one cited passage, whether a newer capture exists and
- * whether the passage is carried into it (`./notice.mjs`), without moving anything. It never moves a reference: the
- * record points where a member pointed (R34).
+ * whether the passage is carried into it (`./notice.mjs`), or how it compares with a capture a caller found at
+ * another address (R55), without moving anything. It never moves a reference: the record points where a member
+ * pointed (R34).
  *
  * Extracted from the legacy modules (T5-3; K73, K102): `store.mjs` (the content writer REC-82, the reads REC-83,
  * transcription REC-87, the machine mint SK-7, the version notice's per-passage half D-394 / REC-221, and, by K73 (1),
@@ -1197,20 +1198,11 @@ export class Content {
     const allRead = addresses.length > 0 && read.length === addresses.length && addrRows.length <= cap;
     const newer = newerBySha.size > 0 ? true : allRead ? false : null;
     const fullExtent = extent ? { kind: row.extent_kind, ...extent } : null;
-    const candidates = [...newerBySha.values()].map((v) => {
-      const test = this.#extentTestAcross(fullExtent, v.capture_sha);
-      const g = gradeAcross(row, fullExtent, this.#unitsOf(row.capture_sha, memo), this.#unitsOf(v.capture_sha, memo));
-      return { capture_sha: v.capture_sha, bundle_id: v.bundle_id, first_retrieved: v.first_retrieved,
-               extent: test.holds ? fullExtent : null, matched: test.holds, reason: test.reason, why: test.why,
-               existing_content_id: test.existing_content_id,
-               grade: g.grade, affects: g.affects, grade_reason: g.reason, grade_why: g.why,
-               found_at: g.found_at, similarity: g.similarity,
-               candidate_only: true, identity: "not_established",
-               says: test.holds
-                 ? "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same "
-                   + "passage; extent-match is a sufficient signal for a candidate and never evidence of identity"
-                 : "UNDETERMINED: " + test.why };
-    });
+    const candidates = [...newerBySha.values()].map((v) => ({
+      bundle_id: v.bundle_id, first_retrieved: v.first_retrieved,
+      ...this.#candidateAt(row, fullExtent, v.capture_sha, memo,
+        "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same "
+        + "passage; extent-match is a sufficient signal for a candidate and never evidence of identity") }));
     const state = newer === true
       ? (candidates.length && candidates.every((c) => c.matched) ? "newer_capture_matched" : "newer_capture_undetermined")
       : newer === false ? "no_newer_capture" : "chain_unread";
@@ -1230,6 +1222,41 @@ export class Content {
         ? "every version chain this capture sits on was read and holds nothing after it"
         : state === "chain_unread" ? unread : null,
     };
+  }
+
+  /** ONE CANDIDATE (R30, R31), the shape R47's `candidates` and R55's answer share: the extent test asked of capture
+   *  `sha` (nothing minted) and the grade read from both captures' units, `memo` carrying them between calls. `held`
+   *  is the sentence a candidate whose extent holds says. */
+  #candidateAt(row, fullExtent, sha, memo, held) {
+    const test = this.#extentTestAcross(fullExtent, sha);
+    const g = gradeAcross(row, fullExtent, this.#unitsOf(row.capture_sha, memo), this.#unitsOf(sha, memo));
+    return { capture_sha: sha,
+             extent: test.holds ? fullExtent : null, matched: test.holds, reason: test.reason, why: test.why,
+             existing_content_id: test.existing_content_id,
+             grade: g.grade, affects: g.affects, grade_reason: g.reason, grade_why: g.why,
+             found_at: g.found_at, similarity: g.similarity,
+             candidate_only: true, identity: "not_established",
+             says: test.holds ? held : "UNDETERMINED: " + test.why };
+  }
+
+  /** R55 (N589, K1624): the passage of a row read through R45's contract (R47's `row`) compared with ONE capture the
+   *  caller found itself, held at another address (reevaluation R36), exactly as R30 and R31 compare it with a newer
+   *  capture on its own chain: one candidate in R47's shape, or null. It reads no version chain and decides neither
+   *  that the capture is newer nor that it holds the same work or portion (the caller does), and asks no sight (the
+   *  caller gates the row and the capture, R37). Null for a row that is not an object, a capture that is not 64
+   *  lowercase hex or is the row's own (a candidate is never the same passage), or a read that fails. Writes nothing;
+   *  never throws. */
+  passageAcross(row, captureSha, memo = new Map()) {
+    if (!isObj(row) || typeof captureSha !== "string" || !/^[0-9a-f]{64}$/.test(captureSha)
+        || captureSha === row.capture_sha) return null;
+    try {
+      const extent = safeJson(row.extent);
+      return this.#candidateAt(row, extent ? { kind: row.extent_kind, ...extent } : null, captureSha,
+        memo instanceof Map ? memo : new Map(),
+        "a CANDIDATE: a passage at the same extent of the capture compared, held at another address. It is not "
+        + "established to be the same passage, nor that capture the same work; extent-match is a sufficient signal for "
+        + "a candidate and never evidence of identity");
+    } catch { return null; }
   }
 
   /** R29–R31: one cited passage against the newer captures of its document, for a viewer. An absent or invisible

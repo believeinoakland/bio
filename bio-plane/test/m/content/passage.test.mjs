@@ -173,3 +173,131 @@ test("R47: noticeForRow answers passageNotice's notice for a row read through R4
   w.prov.versionChain = vc;
   assert.deepEqual(w.snapshot(), before, "noticeForRow writes nothing");
 });
+
+/** A cited capture `a` at one address and a capture `c` of another bundle held at ANOTHER address: no version chain
+ *  joins them, so only a caller that found `c` itself (reevaluation R36) can ask about it. */
+function across({ cUnits = null, cState = "whole", cFacts = { pageCount: 3 }, aUnits = null, aState = "whole" } = {}) {
+  const w = world();
+  const a = w.cap("a", "cited bytes"), c = w.cap("c", "elsewhere bytes");
+  w.doc(DOC, [a]); w.doc(NEW, [c]);
+  w.read(a.sha, { chain: LAYER, pageCount: 3 },
+    aUnits || [{ extent: P(0), text: "alpha beta" }, { extent: P(1), text: "the budget was cut by the council" }, { extent: P(2), text: "gamma" }], aState);
+  w.read(c.sha, { chain: LAYER, ...cFacts },
+    cUnits || [{ extent: P(0), text: "alpha beta" }, { extent: P(1), text: "gamma" }, { extent: P(2), text: "the budget was cut by the council" }], cState);
+  w.prov.recordReceipt({ address: "https://ex.org/a", addressNorm: "ex.org/a", captureSha: a.sha, retrieved: "2026-09-01T00:00:00Z" });
+  w.prov.recordReceipt({ address: "https://other.org/c", addressNorm: "other.org/c", captureSha: c.sha, retrieved: "2026-09-20T00:00:00Z" });
+  const rowOf = (e) => {
+    const id = w.content.mint({ bundleId: DOC, captureSha: a.sha, extent: e, mintedBy: V("bo") }).content_id;
+    return w.row(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content WHERE content_id=?`, id);
+  };
+  const ask = (row, sha = c.sha, memo) => {
+    const before = w.snapshot();
+    const got = w.content.passageAcross(row, sha, memo);
+    assert.deepEqual(w.snapshot(), before, "passageAcross writes nothing");
+    return got;
+  };
+  return { w, a, c, rowOf, ask };
+}
+
+test("R55: passageAcross compares a row's passage with a capture held at another address exactly as R30–R31 compare a newer capture, one candidate in R47's shape; reads no version chain and asks no sight", () => {
+  const KEYS = ["capture_sha", "extent", "matched", "reason", "why", "existing_content_id", "grade", "affects", "grade_reason",
+                "grade_why", "found_at", "similarity", "candidate_only", "identity", "says"].sort();
+  {
+    const { w, c, rowOf, ask } = across();
+    const row = rowOf(P(0));
+    const own = w.content.noticeForRow(row, V("bo"), new Map());
+    assert.deepEqual([own.state, own.candidates], ["no_newer_capture", []], "the row's own chain never reaches the capture");
+    const k = ask(row);
+    assert.deepEqual(Object.keys(k).sort(), KEYS, "R47's candidate fields, less the version chain's bundle_id and first_retrieved");
+    assert.deepEqual([k.capture_sha, k.matched, k.reason, k.extent, k.grade, k.affects, k.candidate_only, k.identity],
+      [c.sha, true, "extent_in_newer_capture", { kind: "pdf-page", page: 0, rect: null }, "A", "unaffected", true, "not_established"]);
+    assert.match(k.says, /CANDIDATE/); assert.match(k.says, /never evidence of identity/);
+    /* B: identical text at another position, found_at named */
+    const kB = ask(rowOf(P(1)));
+    assert.deepEqual([kB.grade, kB.affects, kB.grade_reason, kB.found_at.extent], ["B", "unaffected", "identical_elsewhere", { kind: "pdf-page", page: 2, rect: null }]);
+    /* an existing row at that extent of the other capture is named, and nothing is minted (R30) */
+    const there = w.content.mint({ bundleId: NEW, captureSha: c.sha, extent: P(0), mintedBy: V("bo") }).content_id;
+    const n = w.count("content");
+    assert.equal(ask(row).existing_content_id, there);
+    assert.equal(w.count("content"), n);
+    /* the whole document: whole on both sides, so A or B from the units */
+    assert.equal(ask(rowOf({ kind: "document" })).reason, "whole_document");
+    /* reads no version chain: one that cannot be read changes nothing */
+    const vc = w.prov.versionChain;
+    w.prov.versionChain = () => { throw new Error("no chain may be read"); };
+    assert.deepEqual(ask(row), ask(row, c.sha, new Map()));
+    assert.equal(ask(row).grade, "A");
+    w.prov.versionChain = vc;
+    /* asks no sight: a capture whose bundle no viewer here is a member of still answers; the caller gates (R37) */
+    assert.equal(w.content.sees(NEW, "nobody"), false);
+    assert.equal(ask(row, c.sha).capture_sha, c.sha);
+  }
+  /* the same comparison R30–R31 make on a version chain: put the capture on the row's chain and the candidate matches */
+  {
+    const { w, c, rowOf, ask } = across();
+    w.prov.recordReceipt({ address: "https://ex.org/a", addressNorm: "ex.org/a", captureSha: c.sha, retrieved: "2026-09-21T00:00:00Z" });
+    for (const e of [P(0), P(1), P(2), { kind: "document" }]) {
+      const row = rowOf(e);
+      const { bundle_id, first_retrieved, says, ...onChain } = w.content.noticeForRow(row, V("bo"), new Map()).candidates[0];
+      const { says: s2, ...got } = ask(row);
+      assert.deepEqual(got, onChain, JSON.stringify(e));
+      assert.equal(typeof s2, "string");
+    }
+  }
+});
+
+test("R55: grades are R31's with no new one: C, NOT_FOUND only on whole text, UNDETERMINED wherever either capture's units are not held whole, never A or B but from the units", () => {
+  const P1 = P(1);
+  const g = (opts, e = P1) => { const { rowOf, ask } = across(opts); return ask(rowOf(e)); };
+  const C = g({ cUnits: [{ extent: P(0), text: "alpha beta" }, { extent: P(1), text: "the budget was cut by the council today" }, { extent: P(2), text: "x" }] });
+  assert.deepEqual([C.grade, C.affects], ["C", "affected"]); assert.ok(C.similarity >= 0.7);
+  const NF = g({ cUnits: [{ extent: P(0), text: "alpha beta" }, { extent: P(1), text: "nothing alike here at all" }, { extent: P(2), text: "x" }] });
+  assert.deepEqual([NF.grade, NF.affects], ["NOT_FOUND", "affected"]);
+  /* the other capture's units not whole: never NOT_FOUND */
+  const part = g({ cUnits: [{ extent: P(0), text: "nothing alike here at all" }], cState: "partial" });
+  assert.deepEqual([part.grade, part.affects, part.grade_reason], ["UNDETERMINED", "undetermined", "newer_text_partial"]);
+  const cut = g({ cUnits: [{ extent: P(0), text: "nothing alike", truncated: true }] });
+  assert.deepEqual([cut.grade, cut.grade_reason], ["UNDETERMINED", "newer_text_truncated"]);
+  const none = g({ cUnits: [], cState: null });
+  assert.deepEqual([none.grade, none.grade_reason], ["UNDETERMINED", "newer_text_not_held"]);
+  /* the cited capture's units not whole: undetermined, even where the extent matches */
+  const notCited = g({ aUnits: [{ extent: P(0), text: "alpha beta" }] });
+  assert.deepEqual([notCited.matched, notCited.grade, notCited.grade_reason], [true, "UNDETERMINED", "cited_text_not_held"]);
+  const docPart = g({ aState: "partial" }, { kind: "document" });
+  assert.deepEqual([docPart.matched, docPart.grade, docPart.grade_reason], [true, "UNDETERMINED", "cited_text_partial"]);
+  const docOther = g({ cState: "partial" }, { kind: "document" });
+  assert.deepEqual([docOther.grade, docOther.grade_reason], ["UNDETERMINED", "newer_text_partial"]);
+  /* R30's extent test on the other capture */
+  assert.deepEqual((({ matched, reason, extent }) => [matched, reason, extent])(g({ cFacts: { pageCount: 1 } }, P(2))),
+    [false, "outside_newer_capture", null]);
+  assert.deepEqual((({ matched, reason }) => [matched, reason])(g({ cFacts: { pageCount: null } })), [false, "bound_not_held"]);
+  const unread = g({ cFacts: { chain: null, pageCount: 3 } });
+  assert.deepEqual([unread.matched, unread.reason], [false, "newer_capture_unread"]);
+  assert.match(unread.says, /^UNDETERMINED: /);
+});
+
+test("R55: null for a row that is not an object, a capture that is not 64 lowercase hex, or the row's own; memo reads a capture's units once; never throws", () => {
+  const { w, a, c, rowOf, ask } = across();
+  const row = rowOf(P(0));
+  for (const bad of [null, undefined, "row", 7, ["x"]]) assert.equal(ask(bad), null, JSON.stringify(bad));
+  for (const sha of [undefined, null, "", 7, c.sha.toUpperCase(), c.sha.slice(1), `${c.sha}0`, ` ${c.sha}`, "g".repeat(64)])
+    assert.equal(w.content.passageAcross(row, sha), null, String(sha));
+  assert.equal(ask(row, a.sha), null, "the row's own capture: a candidate is never the same passage");
+  /* a capture nothing has read is still a capture: stated, never refused */
+  const unknown = ask(row, "f".repeat(64));
+  assert.deepEqual([unknown.matched, unknown.grade], [false, "UNDETERMINED"]);
+  /* memo: one read of each capture's units across rows; a memo that is not a Map is not used */
+  const units = w.content.extraction.unitsOf;
+  let asked = [];
+  w.content.extraction.unitsOf = (s) => { asked.push(s); return units(s); };
+  const memo = new Map();
+  const rows = [P(0), P(1), P(2)].map(rowOf);
+  const got = rows.map((r) => ask(r, c.sha, memo));
+  assert.deepEqual(asked.sort(), [a.sha, c.sha].sort());
+  assert.deepEqual(ask(rows[1], c.sha, "not a map"), got[1]);
+  w.content.extraction.unitsOf = () => { throw new Error("index unreadable"); };
+  assert.equal(ask(rows[1], c.sha, new Map()), null, "a read that fails answers null, never a throw");
+  w.content.extraction.unitsOf = units;
+  const odd = ask({ ...row, extent: "{not json" });
+  assert.deepEqual([odd.matched, odd.reason, odd.grade, odd.grade_reason], [false, "extent_unreadable", "UNDETERMINED", "extent_unreadable"]);
+});
