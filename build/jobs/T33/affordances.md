@@ -29,3 +29,17 @@ Findings in other modules (each against its own requirements):
 5. following: no checks family; its `NO_SUCH_ADDRESS` collides with monitoring's row, so control-plane's `dec49Decorate` would attach monitoring's translation to following's refusal. answers' `answers/checks.mjs` is not in control-plane's `CHECK_FAMILY_FILES`, so `dec49Row` (the lookup R41's caller hands in) holds none of answers' codes.
 6. capture-requests' platform ops and instance-setup's `officesseed`/`assistantset` are unrouted (above).
 7. The plane bundle is stale for affordances' sources (new files t33.mjs, words.mjs).
+
+## J3 · COMPLETE
+
+T33-85 applied (commit on `job/T33/affordances`, tranche merged through 79f33fe954).
+
+**Entries applied.** R39: `bio-plane/src/affordances/words.mjs`; the 15 vocabularies as `{values, words}`, values by reference, words as K1683 accepted; present only for composed owners (`vocabulariesFor` at the call). R40: `bio-plane/src/affordances/t33.mjs`; 109 writes graded (rung or ground) and 76 reads, each with its NON_ACTS reason (list in J2); `NO_CAUSE`, `NO_PURPOSE`, `AI_RUN_VERIFICATION_UNFIT` join JUSTIFICATION_REFUSALS; MACHINE_REFUSALS unchanged. R41: `explainRefusal` (pure core in `affordances.mjs`, the dry run as the instance method in `facts.mjs`; `rowOf` handed in; `NOT_CATALOGUED`). START findings: `sourcekeyed`, standards' eleven, workbooks' eleven, credentials' eight, capture-requests' three, ai-runs' four, action-clocks' three (and `clockpropose`), `addresseesuggest`, `entityidentify`, `waitlook`, corpus-export's two graded; K1601 `answer_checks` (answers' `ANSWERS_CHECKS`, by reference) added to the untargeted answer; K1643 R19 test re-pointed to case-tensions' checks. K1654: nothing to re-point; the drive uses conformance's own fixture, which conformance re-pointed at its merge (determine's backing passes). K1657's `proceeding` filter is on `op=actions`, an ungated read already named nowhere; nothing to grade. Own reds cleared: "R2 R3 R7 R12: N364's ops", "R3 R7 R12 … 62 ops", `catalogue.test.mjs:1061` R19.
+
+**Deferred.** entities' `sectors()` not published (optional in B1; no requirement names it, P6). docket's `ORDER_EFFECTS` not published (no requirement of mine names it; `docket_entry_kinds` carries `court-order` by reference already).
+
+**Found in other modules.** In J2 (seven items; `personexpunge`'s rung is a question for a ruling). New red in control-plane, accepted by name until T33-88/T33-89 I ask: `totality.test.mjs:13` "R2, R41 … nothing stale" lists the T33 ops under `stale` only.
+
+**Tests and checks.** affordances: tests 192, pass 192, fail 0 (13 files; new `t33.test.mjs` 13 tests, `t33-backing.test.mjs` 12 tests driving all 31 new `reasoned` ops at their owners). Users: tasks 74/0, queue 113/0, op-declarations 59/0, control-plane 154/5 (the four named reds of B1 plus totality above; 155/4 on the tranche). `format.mjs`: 0 failures; `architecture.mjs . affordances`: 0 failures; `coverage.mjs . affordances`: 41 of 41, 0 failures; `ownership.mjs . affordances tranche/T33`: 11 files, 0 failures. Final `uses`: as modules.json holds after K1683.
+
+Size (session_01AfNbyRvRpNFntg82yANhuQ): test runs 9, module lines 3881
