@@ -73,19 +73,26 @@ function cursor(rows) {
   return c;
 }
 
-/** `run-rules` R20's rows (T33-49), with the two this job asked BOB to add there (J1 (5)), taken as an injected upstream
+/** `run-rules` R20's rows (T33-49; with the two K1601 added), as RUN-RULES #6 wrote them, taken as an injected upstream
  *  until `run-rules` merges (K1563 (1)); the job re-points its tests at the real table before COMPLETE. */
 export const PENDING_ROWS = Object.freeze({
-  AI_USE_CEILING_REACHED: { check: "C-22.19", where: "src/ai-runs/index.mjs #ceilingRefusal",
-    translation: "You have reached today's limit for the assistant. It is available again tomorrow." },
-  AI_USE_COPY_CEILING_REACHED: { check: "C-22.20", where: "src/ai-runs/index.mjs #ceilingRefusal",
-    translation: "The assistant has reached today's limit an administrator set for this group. It is available again tomorrow." },
-  AI_NO_ACCOUNT: { check: "C-22.21", where: "src/ai-runs/index.mjs #noAccount",
-    translation: "The assistant needs your own Claude account or API key, and none is connected." },
-  NOT_YOUR_CEILING: { check: "C-22.22", where: "src/ai-runs/index.mjs aiCeilingSet",
-    translation: "Only you set your own daily limit for the assistant." },
-  AI_CEILING_INVALID: { check: "C-22.23", where: "src/ai-runs/index.mjs #ceilingFigures",
-    translation: "A daily limit is a whole number of one or more, or nothing to clear it." },
+  AI_USE_CEILING_REACHED: { check: "C-109.8",
+    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
+    translation: "Nothing was run, because you have used the assistant as much today as your own daily limit allows. "
+      + "You set that limit yourself and can raise it; otherwise it resets at the start of tomorrow." },
+  AI_USE_COPY_CEILING_REACHED: { check: "C-109.9",
+    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
+    translation: "Nothing was run, because you have reached today's limit that this group's administrator set to keep "
+      + "the group's copy from being overloaded. It resets at the start of tomorrow, or an administrator can raise it." },
+  AI_NO_ACCOUNT: { check: "C-109.10", where: "src/ai-runs/index.mjs open and the ask's account, reached from op=airunopen and an ask",
+    translation: "Nothing was run, because you have not connected a Claude account or an API key of your own. The "
+      + "assistant works only on the account of the member who asks; connect yours to use it." },
+  NOT_YOUR_CEILING: { check: "C-109.11", where: "src/ai-runs/index.mjs aiCeilingSet, aiCopyCeilingSet and the ceiling's reads",
+    translation: "Nothing was changed, because a member's daily limit on the assistant is theirs alone to set or look "
+      + "at, and the limit for the whole group's copy is set only by an administrator." },
+  AI_CEILING_INVALID: { check: "C-109.12", where: "src/ai-runs/index.mjs aiCeilingSet and aiCopyCeilingSet",
+    translation: "Nothing was changed, because a daily limit on the assistant is a whole number of one or more, or no "
+      + "limit of your own at all. Give a whole number, or clear the limit." },
 });
 export const SEAL = "test-seal-secret-for-ai-runs";
 

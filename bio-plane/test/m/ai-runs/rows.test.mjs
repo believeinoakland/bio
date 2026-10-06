@@ -3,7 +3,7 @@
    to `run-rules` with their tests (K617). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, OPEN, INQ, ORG } from "./world.mjs";
+import { world, OPEN, INQ, ORG, USAGE, PENDING_ROWS } from "./world.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
 /** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47). */
@@ -27,7 +27,7 @@ test("R35: each check this module's acts mint has its row in run-rules' table, r
   }
 });
 
-test("R39: no place is named in the module's outward text — its acts' rows, refusals, notes and answers", async () => {
+test("R39: no place is named in the module's outward text — its acts' rows, refusals, notes and answers (the use and ceiling texts of R48–R52 included)", async () => {
   const PLACE = /oakland|alameda|california|berkeley|san francisco|\bcounty of\b/i;
   const w = world();
   await w.group("ann"); w.bundle(INQ);
@@ -38,5 +38,14 @@ test("R39: no place is named in the module's outward text — its acts' rows, re
              JSON.stringify(await w.runs.listInContext({})), JSON.stringify(await w.runs.read({ run: "R1", viewer: "admin" })),
              JSON.stringify(w.runs.log({ run: "R1", viewer: "admin" })), JSON.stringify(w.surface("INQ-2026-0100", { run: "NONE" })),
              JSON.stringify(await w.runs.close({ run: "R1", bound: "completed", viewer: "admin", caller: ORG })));
+  /* T33-50's texts: the account and ceiling refusals, the provider's limit, and the use reads */
+  w.runs.aiCeilingSet({ member: "member:ann", calls: 1, by: "member:ann" });
+  w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE() });
+  texts.push(...Object.values(PENDING_ROWS).map((r) => r.translation),
+             JSON.stringify(await w.runs.open(OPEN({ run: "R9" }))), JSON.stringify(await w.runs.open(OPEN({ run: "R9", principalClaude: "x" }))),
+             JSON.stringify(w.runs.aiUseCheck({ member: "member:ann" })), JSON.stringify(w.runs.providerLimit("enforced_spend_limit_reached")),
+             JSON.stringify(w.runs.aiCeilingSet({ member: "member:ann", calls: 0, by: "member:ann" })),
+             JSON.stringify(w.runs.aiCeilingSet({ member: "member:ann", calls: 1, by: "member:bob" })),
+             JSON.stringify(w.runs.aiUsageMine({ viewer: "member:ann" })), JSON.stringify(w.runs.aiUsage({ viewer: "admin" })));
   for (const t of texts) assert.equal(PLACE.test(String(t)), false, String(t).slice(0, 80));
 });

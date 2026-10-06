@@ -154,7 +154,7 @@ test("R18, R52 (K1514): a woken run is dispatched only when its principal is the
   assert.equal(aw.calls.length, 1);
   /* the run member's own reference (credentials R24), and no instance Claude account, whatever the copy's bindings hold */
   assert.deepEqual(aw.calls[0].body, { run_id: "R1", store: "bio", credential: TOKEN,
-                                       account: { kind: "apikey", secret: "secret-of-ann" } });
+                                       account: { kind: "apikey", secret: "secret-of-ann", member: "member:ann" } });
   for (const secret of [TOKEN, "secret-of-ann", "claude-account-x"]) {
     assert.equal(JSON.stringify(w1.rows(`SELECT * FROM observation_log`)).includes(secret), false, "no secret enters the record");
     assert.equal(JSON.stringify(w1.rows(`SELECT * FROM ai_runs`)).includes(secret), false);
@@ -163,7 +163,7 @@ test("R18, R52 (K1514): a woken run is dispatched only when its principal is the
   /* a subscription token travels as a subscription, never re-labelled an API key (K1553) */
   const sub = await setup(env(aw), { principal: stamp, kind: "subscription" });
   assert.equal((await decision(sub)).dispatch.state, "DISPATCHED");
-  assert.deepEqual(aw.calls[1].body.account, { kind: "subscription", secret: "subscription-secret-of-ann" });
+  assert.deepEqual(aw.calls[1].body.account, { kind: "subscription", secret: "subscription-secret-of-ann", member: "member:ann" });
   /* every withheld ground, each named, none calling the binding */
   const calls = aw.calls.length;
   const gone = await setup(env(aw), { principal: stamp });

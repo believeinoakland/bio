@@ -1683,9 +1683,10 @@ export class AiRuns {
   /** THE CALL. Bounded, and every way it can fail is a stated outcome carrying no secret. A dispatch that did not
    *  complete appends ONE entry saying so, because the wake entry above it said the run was handed over. */
   async #aiRunDispatch(d, resumer, iso) {
-    /* R52, K1514 (agent-worker R6): the body carries `account`, the run member's own reference as credentials R24 unseals
-       it for this run, `{kind, secret}` (a subscription token stays `subscription`, never an API key, K1553), used for
-       this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
+    /* R52, K1514, K1601 (agent-worker R6, R10): the body carries `account`, the run member's own reference as credentials
+       R24 unseals it for this run, `{kind, secret, member}` — a subscription token stays `subscription`, never an API key
+       (K1553), and `member` is the run's account member, `member:<id>`, so agent-worker can check it against the run.
+       Used for this one call and kept nowhere here. The instance Claude account it carried before is retired (K1502). */
     let outcome, timer;
     let ref = null;
     try {
@@ -1695,7 +1696,7 @@ export class AiRuns {
       outcome = { state: "REFUSED", status: null,
                   reason: String((ref && (ref.code || ref.reason)) || "NO_ACCOUNT").slice(0, 80) };
     const body = outcome ? null : { run_id: d.run, store: resumer.store, credential: resumer.token,
-                                    account: { kind: ref.kind, secret: ref.secret } };
+                                    account: { kind: ref.kind, secret: ref.secret, member: `member:${d.payer}` } };
     ref = null;
     if (body) try {
       const res = await Promise.race([
@@ -2664,17 +2665,17 @@ export class AiRuns {
   /** R50: null while `member`'s use today is under the ceiling in force; else the plain refusal — their own ceiling's
    *  first, then the copy's. Names no cost. */
   #ceilingRefusal(member, ms) {
-    const { day, zone } = this.#dayOf(ms);
+    const { day } = this.#dayOf(ms);
     const used = this.#usedOn(member, day);
     const c = this.#ceilingFor(member);
     const over = (lim) => lim && ((lim.tokens != null && used.tokens >= lim.tokens) || (lim.calls != null && used.calls >= lim.calls));
     /* DEC-49 REGION is-ai-use-ceiling */
     if (over(c.own))
       return this.#refuse("AI_USE_CEILING_REACHED", `Your assistant has reached today's limit, which you set (or the `
-        + `starting limit, if you have not set one). It is available again tomorrow (${zone}). Nothing was started.`, { day });
+        + `starting limit, if you have not set one). It is available again tomorrow. Nothing was started.`, { day });
     if (over(c.copy))
       return this.#refuse("AI_USE_COPY_CEILING_REACHED", `Your assistant has reached today's limit for this group, which `
-        + `an administrator set for the group's own load. It is available again tomorrow (${zone}). Nothing was started.`, { day });
+        + `an administrator set for the group's own load. It is available again tomorrow. Nothing was started.`, { day });
     /* END DEC-49 REGION is-ai-use-ceiling */
     return null;
   }
