@@ -1,6 +1,6 @@
 /* consequences over the modules it uses, each the real one (record-core, membership, promotion, provenance, content,
-   inquiry, strength, entities, money, calculations, people; and what those reach: events, lines, duties, connections,
-   each built on the host directly, K1619), on a real SQLite database (node:sqlite) standing
+   inquiry, strength, entities, money, calculations, people; entities built on the host directly, K1619), on a real
+   SQLite database (node:sqlite) standing
    in for a Durable Object's storage, shaped as workerd's (K316: `sql.exec` answers a cursor; K313: a LIKE or GLOB
    pattern over 50 bytes is refused). Two stand-ins the test controls: `conformance`'s `determinationRead`, answering as
    conformance R9 states it (`outcomes`, `superseded_by`, `live`), gated on the project's sight, so a test states a
@@ -18,11 +18,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
-import { connectionsOf } from "../../../src/connections/index.mjs";
-import { eventsOf } from "../../../src/events/index.mjs";
-import { linesOf } from "../../../src/lines/index.mjs";
 import { moneyOf } from "../../../src/money/index.mjs";
-import { dutiesOf } from "../../../src/duties/index.mjs";
 import { peopleOf } from "../../../src/people/index.mjs";
 import { calculationsOf } from "../../../src/calculations/index.mjs";
 import { consequencesModule, Consequences } from "../../../src/consequences/index.mjs";
@@ -119,32 +115,32 @@ export function world({ passages = true, group = "test-group", superseded = null
   content.migrate();
   /* The profile money reads periods and zones through (the fictional test profile). */
   record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin");
-  /* entities and connections on this host, built directly (K1619); inquiry reaches the same instances. */
+  /* entities on this host, built directly (K1619); inquiry reaches the same instance. */
   const entities = entitiesOf(host, { record, membership, provenance: prov });
   entities.migrate();
-  connectionsOf(host).migrate();
   const inquiry = inquiryOf(host, { record, membership, promotion, content,
     retrieval: { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION" }) }, provenance: prov,
     now: () => clock.now });
   inquiry.migrate();
-  /* money, people and calculations, real, with what they reach. */
-  const events = eventsOf(host, { record, membership, provenance: prov, extraction, content, entities, now: () => clock.now });
-  events.migrate();
-  const lines = linesOf(host, { record });
-  lines.migrate();
+  /* connections' tables (promotion writes its `refs`): connections is not this module's use, so the architecture check
+     refuses importing it here; it is reached through inquiry's getter, as before K1619 (reported to BOB, T33 J2). */
+  inquiry.connections.migrate();
+  /* money, people and calculations, real. What they reach and this module never asks of them (events, lines and
+     duties: a fact's `concerns`, a person's posts and duties) is answered as absent, a port answering null, so no
+     module outside this one's uses is built here. */
+  const none = () => null;
   let calculations = null;
-  const money = moneyOf(host, { record, membership, entities, provenance: prov, events, now: () => clock.now,
+  const money = moneyOf(host, { record, membership, entities, provenance: prov, events: none, lines: none, now: () => clock.now,
     calculations: { bindingOf: (k) => (calculations ? calculations.bindingOf(k) : null) } });
   money.migrate();
-  const duties = dutiesOf(host, { record, membership, entities, events, money, provenance: prov, content, now: () => clock.now });
-  if (typeof duties.migrate === "function") duties.migrate();
   /* people's source↔person link names a source `sources` holds (its R9); sources is not this module's use, so a
      stand-in holds every `SRC-` id. */
   const sources = { rungOf: ({ source }) => (/^SRC-/.test(String(source)) ? { ok: true, rung: "held" } : { ok: false, reason: "NO_SUCH_SOURCE" }) };
-  const people = peopleOf(host, { record, membership, entities, provenance: prov, content, events, money, duties, lines, sources });
+  const people = peopleOf(host, { record, membership, entities, provenance: prov, content, events: none, money, duties: none,
+                                  lines: none, sources });
   if (typeof people.migrate === "function") people.migrate();
-  calculations = calculationsOf(host, { record, membership, content, provenance: prov, money, entities, events, duties,
-    people, now: () => clock.now, clock: () => Date.parse(clock.now) });
+  calculations = calculationsOf(host, { record, membership, content, provenance: prov, money, entities, events: none,
+    duties: none, people, now: () => clock.now, clock: () => Date.parse(clock.now) });
   const strength = strengthOf(host, { record, membership,
     inquiry: { basisFor: (id, o) => inquiry.basisFor(id, o), earned: (e, t) => inquiry.earned(e, t), legCapped,
                subjectEntityOf: (id) => inquiry.subjectEntityOf(id) },
@@ -172,7 +168,7 @@ export function world({ passages = true, group = "test-group", superseded = null
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, inquiry, strength, c, clock, ex, texts, determinations,
-    entities, events, money, people, calculations,
+    entities, money, people, calculations,
     /** R15: this module over the same record, with a sight rule that withholds the bundles in `hidden` from `pat`
      *  (and from no one else). membership's rule shows every bundle outside a project to a member (its R43), so a
      *  document or an inquiry is withheld from a reader of a part only through such a rule, as conformance's suite
