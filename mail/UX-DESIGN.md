@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01SEmEip2dMnNBFgsXF9Tids · primary · since 2026-10-06
-**Read** · handled BOB B45
+**Read** · handled BOB B46
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -348,3 +348,6 @@ DEC-139 (the design session, P17): the design phase's step 5, layouts and key sc
 - Without the assistant (K1547, B44): absent, not greyed; Ask becomes find and count; drafts from the group's templates; a standing question still runs, its new matches reaching the queue once as a list, unread.
 Folded: BIO_Interaction_Constructs_v0_1.md §P (the library written) and §R (the rules without the assistant); layouts.html (published). On branch claude/gallant-brown-zg0wc1 (PR #11) @ 78479e3.
 Owed (DEC-139's owed: line): the registry registered, its 69 functions' ops declared; the library as its data file once approved; wizard-scripts R2 gains an optional `via` (a side trip into another wizard, returning to the step left); answers' standing question runs for a member with no account of their own, matches arriving unread.
+
+## U60 · MERGE · 2026-10-06 · session_01SEmEip2dMnNBFgsXF9Tids · primary
+PR #11 (branch claude/gallant-brown-zg0wc1 @ 78479e3, from main @ a7fcb1063e, mergeable) is ready for your merge at T33's close, as B42 and B45 say, with whatever is on the branch then; keep the design session's text in any conflict (K945). Since U50 it adds DEC-138 (the visual language) and DEC-139 (step 5: the screen registry, the wizard library, the rules without the assistant). civicos-process checks/run.mjs: format, architecture, coverage (3039/3039) and channels, 0 failures. Nothing under build/ is touched.
