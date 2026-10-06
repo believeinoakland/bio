@@ -12,9 +12,9 @@ The case-document catalogue and the case-member arm of C-2.8: what a case docume
 
 ### Provides
 
-- **R1** (was `ratification` R8, its catalogue) `checkCaseDocument(fm, ctx)` answers the findings of C-41.1–C-41.17 and the case arms of C-2.8, C-3.1 and C-21.1 over a case document of any accepted format (`case-grammar` R1), each naming its check; pure, never throws; an absent member basis in `ctx` leaves those arms unasked. `CASE_DOCUMENT_FAMILY`, `CASE_CITATION_VERSIONS` (`pinned`, `only_capture`, `undetermined`, `no_capture`, `no_bytes`) and `SEARCHED_SUBJECT_SOURCES` (only `case_basis`; C-41.10 refuses any other) are exported. C-41.16 finds a case document whose edition is above 1 and which carries no "What changed" statement (`case-grammar` R8), or a blank one. Its translation: "A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed." (C-41.16: DEC-101 (2); K1019) *(not yet met: T34)*
-- **R2** (was `ratification` R9, its definitions) `checkPublishedExtension` is C-2.8's case-member arm, asked only of bytes `isCaseMemberBytes(fm)` answers true for; `caseMemberFindings(fm)`, `caseMemberImageFindings(image, parse)` and `withCaseMemberChecks(image, gate, parse)` run it over front matter, an image and a gate's findings. `caseEditionClaimed(fm)`, `isCaseMemberBytes(fm)`, `completenessFields(fm)` (the one shape C-21.1 compares, a string comparison), `biasAcknowledgementOf(fm)`, `CASE_MEMBER_ROLES` (`load_bearing`, `supporting`) and `SUBJECT_POSITIONS` (`sought_and_answered`, `sought_no_answer`, `not_sought`) are exported, pure. *(not yet met: T34)*
-- **R3** (was `ratification` R38; DEC-111; `case-grammar` R10; K1119) `checkCaseDocument` refuses a case document whose `working_on` is present and not a notice reference by `case-grammar` R10's rule, under C-41.17, before any write. *(not yet met: T34)*
+- **R1** (was `ratification` R8, its catalogue) `checkCaseDocument(fm, ctx)` answers the findings of C-41.1–C-41.17 and the case arms of C-2.8, C-3.1 and C-21.1 over a case document of any accepted format (`case-grammar` R1), each naming its check; pure, never throws; an absent member basis in `ctx` leaves those arms unasked. `CASE_DOCUMENT_FAMILY`, `CASE_CITATION_VERSIONS` (`pinned`, `only_capture`, `undetermined`, `no_capture`, `no_bytes`) and `SEARCHED_SUBJECT_SOURCES` (only `case_basis`; C-41.10 refuses any other) are exported. C-41.16 finds a case document whose edition is above 1 and which carries no "What changed" statement (`case-grammar` R8), or a blank one. Its translation: "A new edition of a case says what changed in it, and why, before it is signed. This one does not. Write the statement, then sign. Nothing was signed." (C-41.16: DEC-101 (2); K1019)
+- **R2** (was `ratification` R9, its definitions) `checkPublishedExtension` is C-2.8's case-member arm, asked only of bytes `isCaseMemberBytes(fm)` answers true for; `caseMemberFindings(fm)`, `caseMemberImageFindings(image, parse)` and `withCaseMemberChecks(image, gate, parse)` run it over front matter, an image and a gate's findings. `caseEditionClaimed(fm)`, `isCaseMemberBytes(fm)`, `completenessFields(fm)` (the one shape C-21.1 compares, a string comparison), `biasAcknowledgementOf(fm)`, `CASE_MEMBER_ROLES` (`load_bearing`, `supporting`) and `SUBJECT_POSITIONS` (`sought_and_answered`, `sought_no_answer`, `not_sought`) are exported, pure.
+- **R3** (was `ratification` R38; DEC-111; `case-grammar` R10; K1119) `checkCaseDocument` refuses a case document whose `working_on` is present and not a notice reference by `case-grammar` R10's rule, under C-41.17, before any write.
 
 ## Private
 
@@ -26,8 +26,8 @@ The case-document catalogue and the case-member arm of C-2.8: what a case docume
 
 ### Invariants
 
-- **R4** (was `ratification` R14, its C-41 share) Each check is an invariant with its test (K6): C-41.1–C-41.17 with the case arms of C-2.8, C-3.1 and C-21.1. They are gate findings, not refusal rows: `CASE_DOCUMENT_FAMILY` is not named `*_CHECKS` and carries no `where`. A change to any moves `CATALOG_VERSION` (rule 17). *(not yet met: T34)*
-- **R5** (copy of `ratification` R15) No place is named in this module's findings or vocabularies. *(not yet met: T34)*
+- **R4** (was `ratification` R14, its C-41 share) Each check is an invariant with its test (K6): C-41.1–C-41.17 with the case arms of C-2.8, C-3.1 and C-21.1. They are gate findings, not refusal rows: `CASE_DOCUMENT_FAMILY` is not named `*_CHECKS` and carries no `where`. A change to any moves `CATALOG_VERSION` (rule 17).
+- **R5** (copy of `ratification` R15) No place is named in this module's findings or vocabularies.
 
 ### Satisfies
 

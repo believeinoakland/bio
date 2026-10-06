@@ -172,3 +172,31 @@ test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported 
 test("R26: case-authoring's own copy of the bound, DRAFTS_READ_MAX, equals REVIEW_LIST_MAX (K242)", () => {
   assert.equal(DRAFTS_READ_MAX, REVIEW_LIST_MAX);
 });
+
+/* DEC-149 (T34-87): words that call the group's Civicsmith a machine ("this instance", "this plane", "the plane", "this
+   copy" for the whole Civicsmith). A review copy is still called a copy, which DEC-149 keeps. */
+const MACHINE_WORDS = /\b(?:this|the|your|our)\s+(?:group's\s+)?(?:instance|plane|server)s?\b/i;
+
+test("R11 (DEC-149): the marking every copy carries calls the group's Civicsmith no machine word and addresses no reader as the group", () => {
+  assert.doesNotMatch(REVIEW_MARKING, MACHINE_WORDS);
+  assert.doesNotMatch(REVIEW_MARKING, /your group/i, "a recipient outside the group reads it too");
+  assert.match(REVIEW_MARKING, /^REVIEW COPY — NOT A PUBLICATION\. This is a draft of a case, shown to the people it was addressed to without leaving the group that made it\. /);
+  /* what every copy carries, on both doors */
+  const w = standard();
+  const d = w.r.act({ act: "draft", author: "ann", project: P, statement: "S" });
+  w.r.act({ act: "grant", author: "ann", draft: d.draftId, recipient: "R", secretSha: SECRET(1) });
+  for (const c of [w.r.copy({ draft: d.draftId, viewer: V("ann") }), w.r.copy({ secretSha: SECRET(1), bySecret: true })])
+    assert.equal(c.marking, REVIEW_MARKING);
+  /* negative control: the old words are seen */
+  assert.match("shown inside this instance to the people", MACHINE_WORDS);
+});
+
+test("R3, R23 (DEC-149): C-87.7 REVIEW_DRAFT_TOO_LARGE's translation says \"your group's Civicsmith\", and no member's translation calls it a machine", () => {
+  const t = REVIEW_COPY_CHECKS.REVIEW_DRAFT_TOO_LARGE.translation;
+  assert.match(t, /^This draft's arguments are larger than your group's Civicsmith will store: the limit is 64 KiB, /);
+  const w = standard();
+  const r = w.r.act({ act: "draft", author: "ann", project: P, scope: "x".repeat(70000) });
+  assert.deepEqual([r.code, r.check, r.translation], ["REVIEW_DRAFT_TOO_LARGE", "C-87.7", t]);
+  for (const [code, row] of Object.entries(REVIEW_COPY_CHECKS)) assert.doesNotMatch(row.translation, MACHINE_WORDS, code);
+  assert.match("larger than the plane will store", MACHINE_WORDS, "negative control");
+});

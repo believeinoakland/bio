@@ -34,6 +34,7 @@
    4. Row census: rows that T34's L3–L11 jobs add stay `awaiting stamp` until T35's promotion job. The order rules out an earlier stamp: promotion (L2) comes first (P4).
    5. The UI's DEC-88 tests (Bob's), carried.
    6. (K1824) From ratification's L8 merge until case-checker's (T34-47): case-checker's `program.test.mjs` R13 (the bundled program's bytes change once ratification re-exports `case-catalogue`). From case-catalogue's merge until ratification's: the row census counts C-41.1–C-41.17 twice (both copies held).
+   7. (K1828) From case-disclosures' merge until case-authoring's (T34-48): case-authoring's `preflight.test.mjs` R29, which pins C-120.8's old translation.
 
 ## Entries
 
@@ -145,6 +146,7 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 
 - **T34-93 · case-catalogue** · (K617, K1824; seam read `build/extraction/ratification-split.md`) the new module, split from ratification by copy before T34-85: the C-41 catalogue (`checkCaseDocument`, `CASE_DOCUMENT_FAMILY`, `CASE_CITATION_VERSIONS`, `SEARCHED_SUBJECT_SOURCES`) and C-2.8's case-member arm (`checkPublishedExtension` and its definitions and runners), copied from `ratification/checks.mjs` 13–962 and 1246–1281 with their pure tests; no table, no registration (ratification keeps both) · K1824 · req: R1–R5 (worded) · depends —. **P6:** about 1,000 lines.
 - **T34-88 · case-grammar** · (K1816, for T34-85) R21: the `people:` and `member_ties:` blocks' spelling and readers (`peopleLines`, `memberTieLines`, `peopleOf`, `memberTiesOf`), copied from case-disclosures R28 so ratification R41, earlier than case-disclosures, reads the signed document's ties; with its T34-87 rows · K1816 · req: R21 (worded) · depends —.
+- **T34-94 · case-import** · (K1828, CASE-CHECKER #5 J1) R5: a calculation input carried with bytes that differ from its hash counts as missing, so the import's completion agrees with case-checker R9 · K1828 · req: R5 (worded) · depends —.
 - **T34-89 · case-disclosures** · (K1816) R28 answers its four block functions through case-grammar R21 and keeps no copy (importers keep working through its names); with its T34-87 rows · K1816 · req: R28 (worded) · depends T34-88.
 
 **L8 merge order:** case-grammar (T34-88 first: ratification and case-disclosures merge it in) → case-catalogue (T34-93, before ratification) → corpus-export → case-carriage → **publication → ratification → docket → public-read** (publication's new reads first; ratification serves publication R66/R67, K1790) → case-checker → case-authoring.
@@ -157,9 +159,9 @@ Each line is one job (P8): every T34 entry for that module. Fields: what (N-ids)
 - **T34-61 · action-plans** · (N601, user side) answers `NO_SUCH_DUTY` through duties' `noSuchDuty`; C-124.32's translation as T34-12 stamps it · K1650 · req: BOB's wording · depends T34-22, T34-12.
 - **T34-62 · filings** · (EVENTS #2 J2, K1795) `chronology.test.mjs`:63 (R33) expects the source arguments with `viewer` (events R30). (N602, user side) reads placed-nowhere items from events' dated `timeline` instead of its second undated read · K1653 · req: none (a simplification) · depends T34-17.
 
-**L9 merge order:** consequences → action-clocks → filings → action-plans (`modules.json` order).
+**L9 merge order:** consequences → actions (T34-67) → action-clocks → filings → action-plans (`modules.json` order; K1830). The row-only joiners (action-grammar, conformance, escalation, filing-templates) merge as they complete.
 
-- **T34-67 · actions** · (N611) Provides gains `place()` and `zoneOf` (R12's zone read) · K1681 · req: BOB's wording · depends —.
+- **T34-67 · actions** · (N611) Provides gains `place()` and `zoneOf` (R12's zone read). (K1830, N662's share) R69: registers the hold reader `ratification` R45 asks (`holdsOn({project})`, R58's answer for one project, read as the plane), so `op=publishat` stops answering `SCHEDULE_UNCHECKABLE` once this job merges · K1681, K1830 · req: R68 (worded, K1753), R69 (worded) · depends T34-85.
 
 ### L10
 
