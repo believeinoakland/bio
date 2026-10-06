@@ -6,7 +6,7 @@ import { ROLES } from "../../../src/events/index.mjs";
 
 const doc = { kind: "document" };
 
-test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTITY, UNKNOWN_ROLE (payer and payee live on the money fact), NO_ATTESTATION, then NO_VOTE_VALUE/UNKNOWN_VOTE_VALUE for voted against the active profiles' vote_values matched on value; with none held a vote is kept as written, unchecked; a repeat answers already", () => {
+test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTITY, UNKNOWN_ROLE (payer and payee live on the money fact), NO_ATTESTATION, then NO_VOTE_VALUE/UNKNOWN_VOTE_VALUE for voted against the active profiles' vote_values matched on value (an import's source value also exactly on a label, holding the value); with none held a vote is kept as written, unchecked; a repeat answers already", () => {
   /* the test profile's own vote values (jurisdictions R58, R62), read from the view and never from a list of this module's */
   const w = world();
   const values = w.ev.view().vocabulary.vote_values.map((x) => x.value);
@@ -51,6 +51,8 @@ test("R11 addParticipant refuses in order NO_SUCH_EVENT, NO_ENTITY/NO_SUCH_ENTIT
   const e3 = w3.event({ kind: "vote", value: "2026-01-20" });
   const voter = w3.entity("Wim");
   assert.equal(w3.ev.addParticipant({ eventId: e3.event_id, entityId: voter, role: "voted", attestation: e3.attestation_ids[0], voteValue: "content", by: MEMBER }).reason, "UNKNOWN_VOTE_VALUE");
+  assert.equal(w3.ev.addParticipant({ eventId: e3.event_id, entityId: voter, role: "voted", attestation: e3.attestation_ids[0], voteValue: "Aye", by: MEMBER }).reason,
+    "UNKNOWN_VOTE_VALUE", "a member's act matches on value alone, never on a label (K1788)");
   assert.equal(w3.ev.addParticipant({ eventId: e3.event_id, entityId: voter, role: "voted", attestation: e3.attestation_ids[0], voteValue: "aye", by: MEMBER }).ok, true);
   /* with no vote values in the active profiles, a vote is kept as written and says it was not checked (never a default list) */
   const w2 = world({ view: testView({ votes: "none" }) });

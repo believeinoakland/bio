@@ -100,6 +100,23 @@ test("R22 followedImport refuses NO_BODY, NO_PERIOD, CAPTURE_NOT_HELD, NOT_LEGIS
   assert.equal(checked.written.length, 0);
   assert.ok(checked.unresolved.some((u) => u.refusal === "UNKNOWN_VOTE_VALUE"));
   assert.equal(v2.w.rows(`SELECT * FROM event_participants WHERE role='voted'`).length, 0);
+  /* R11 (K1788): a source value that is no entry's value is matched exactly on an entry's label, and the value is held */
+  const v3 = setup({ votes: [{ value: "aye", label: "Aye", citation: "c", basis: "TEST" }, { value: "excused", label: "Excused", citation: "c", basis: "TEST" }] });
+  const g3 = load("gold/9451");
+  v3.w.identify(v3.body, "legistar_body", g3.body.EventBodyId);
+  for (const id of [734, 1012]) v3.w.identify(v3.w.entity(`Person ${id}`), "legistar_person", id);
+  v3.w.ev.followedImport({ captureSha: legistar(v3.w, "9451", { body: g3.body, locator: g3.locator }), body: v3.body, period: ALL });
+  v3.w.ev.followedImport({ captureSha: legistar(v3.w, "eventitems-9451"), body: v3.body, period: ALL });
+  const byLabel = v3.w.ev.followedImport({ captureSha: legistar(v3.w, "votes-232608"), body: v3.body, period: ALL });
+  const mine3 = load("votes-232608").body.filter((v) => [734, 1012].includes(v.VotePersonId));
+  assert.equal(byLabel.written.length, mine3.length);
+  assert.ok(!byLabel.unresolved.some((u) => u.refusal), "every value matched a label");
+  const held3 = v3.w.rows(`SELECT vote_value FROM event_participants WHERE role='voted' ORDER BY participant_id`).map((r) => r.vote_value);
+  assert.deepEqual(held3, mine3.map((v) => v.VoteValueName.toLowerCase()), "the entry's value is held, not the label");
+  const item3 = v3.w.one(`SELECT target_id FROM event_sources WHERE source_key='legistar:event_item:232608'`).target_id;
+  assert.ok(v3.w.ev.readEvent({ eventId: item3, viewer: MEMBER }).event.participants.filter((p) => p.role === "voted").every((p) => p.vote_value_checked === true));
+  /* the same votes again are unchanged */
+  assert.equal(v3.w.ev.followedImport({ captureSha: legistar(v3.w, "votes-232608"), body: v3.body, period: ALL }).written.length, 0);
 });
 
 test("R23 a meeting's start is the source day and local time joined in the profile's zone at minute precision (the 50-event gold set, both daylight-saving offsets); a cancelled row is one event, EventCancelled", () => {

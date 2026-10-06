@@ -488,21 +488,27 @@ export class Events {
     return null;
   }
 
-  /* R11: the active profiles' vote values (`jurisdictions` R58, `vocabulary.vote_values`), matched on `value`; with none
-     held (null), a vote's value is kept as written and marked unchecked. This module holds no list of its own. */
-  #voteValues() {
+  /* R11: the active profiles' vote values (`jurisdictions` R58, `vocabulary.vote_values`); null when none are held. This
+     module holds no list of its own. */
+  #voteEntries() {
     const voc = this.view().vocabulary;
-    const list = isObj(voc) && Array.isArray(voc.vote_values) ? voc.vote_values : null;
-    const values = list ? list.filter(isObj).map((x) => x.value).filter(said) : [];
-    return values.length ? values : null;
+    const list = isObj(voc) && Array.isArray(voc.vote_values) ? voc.vote_values.filter((x) => isObj(x) && said(x.value)) : [];
+    return list.length ? list : null;
   }
-  #voteRefusal(voteValue) {
+  #voteValues() { const e = this.#voteEntries(); return e ? e.map((x) => x.value) : null; }
+  /* R11: the value held for a vote, or a refusal. A member's value is matched on `value`; a value an import reads from a
+     source (`fromSource`, R22) that is no entry's `value` is matched exactly on an entry's `label`, and that entry's
+     `value` is held (K1788). With none held, the value is kept as written, unchecked. */
+  #voteMatch(voteValue, { fromSource = false } = {}) {
     if (!said(voteValue)) return refuse("NO_VOTE_VALUE", "a vote is held with the value the record states");
-    const values = this.#voteValues();
-    if (values && !values.includes(voteValue.trim()))
-      return refuse("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
-    return null;
+    const v = voteValue.trim(), entries = this.#voteEntries();
+    if (!entries) return { ok: true, value: v };
+    const hit = entries.find((x) => x.value === v) || (fromSource ? entries.find((x) => x.label === v) : null);
+    if (hit) return { ok: true, value: hit.value };
+    const values = entries.map((x) => x.value);
+    return refuse("UNKNOWN_VOTE_VALUE", `a vote value is one of the profile's: ${values.join(", ")}`, { values });
   }
+  #voteRefusal(voteValue) { const m = this.#voteMatch(voteValue); return m.ok ? null : m; }
 
   /** R6: an event held with at least one attestation, its concerns and its participants, in one transaction. */
   createEvent({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
@@ -1194,7 +1200,7 @@ export class Events {
       setWhen: (e) => this.#setWhen(e), resolve: (e) => this.#resolve(e), governing: (e) => this.#governing(e),
       whenRead: (e) => this.#whenRead(e), visibleAttestations: (e, v) => this.#visibleAttestations(e, v),
       resolutionGrade: (en, a) => this.#resolutionGrade(en, a), captureGrade: (s) => this.#captureGrade(s),
-      voteRefusal: (v) => this.#voteRefusal(v), tell: (c) => this.#tell(c), allocEvent: () => this.#record.allocId("EVT", this.#instant().slice(0, 4)),
+      voteMatch: (v) => this.#voteMatch(v, { fromSource: true }), tell: (c) => this.#tell(c), allocEvent: () => this.#record.allocId("EVT", this.#instant().slice(0, 4)),
     };
   }
 }

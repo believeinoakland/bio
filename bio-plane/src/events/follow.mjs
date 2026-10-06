@@ -250,10 +250,11 @@ function vote(k, held, row, f, out) {
   if (!eventId) { out.unresolved.push({ row: row.source, key: row.key, why: "its item is not held: import the items first" }); return; }
   const ent = Number.isInteger(f.PersonId) ? personOf(k, f.PersonId) : null;
   if (!ent) { out.unresolved.push({ row: row.source, key: row.key, source_row: { PersonId: f.PersonId ?? null }, why: "its PersonId resolves to no registered entity" }); return; }
-  const bad = k.voteRefusal(f.value);
-  if (bad) { out.unresolved.push({ row: row.source, key: row.key, why: bad.detail, refusal: bad.reason }); return; }
+  /* R11 (K1788): the source's value matched on an entry's value, else exactly on its label; the entry's value is held */
+  const m = k.voteMatch(typeof f.value === "string" ? f.value : f.value == null ? "" : String(f.value));
+  if (!m.ok) { out.unresolved.push({ row: row.source, key: row.key, why: m.detail, refusal: m.reason }); return; }
   const aid = rowAttestation(k, eventId, held, row);
-  const p = participant(k, eventId, ent, "voted", aid, String(f.value).trim());
+  const p = participant(k, eventId, ent, "voted", aid, m.value);
   if (p.added) out.written.push({ key: row.key, event_id: eventId, participant_id: p.id }); else out.unchanged++;
   keepSource(k, row.key, "participant", String(p.id), { value: f.value }, held.sha);
 }
