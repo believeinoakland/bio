@@ -55,7 +55,7 @@ test("R14 R20: it states every field, kind and rule a checker needs, from case-g
   assert.match(SPEC, /`bio-case-document\/6` document, or an earlier one, renders `CivicOS`, and a `bio-case-document\/7` document renders `Civicsmith`/);
 });
 
-test("R15: at start the module registers casechecker and casefilespec with public-read, credential-free; a second registration is refused", async () => {
+test("R15 (DEC-149): at start the module registers casechecker and casefilespec with public-read, credential-free; a second registration is refused", async () => {
   const pr = new PublicRead({ storage: { sql: null }, publication: null, docket: null });
   const host = {};
   const answer = CC.registerCaseCheckerPublicReads(host, { publicRead: pr });
@@ -77,6 +77,10 @@ test("R15: at start the module registers casechecker and casefilespec with publi
     assert.deepEqual(r.result.versions, ["bio-case-file/1"]);
     assert.equal("text" in r.result, false);
   }
+  /* DEC-149 (T34-87; K1821): the reader has no credential, so the detail speaks of this group's Civicsmith, never "this copy" */
+  const unknown = pr.publicRead("casefilespec", { version: "bio-case-file/9" }).result.detail;
+  assert.equal(unknown, "this group's Civicsmith holds no specification of that version; it holds the specification of bio-case-file/1, named as version");
+  assert.equal(/this (copy|plane|instance)/.test(unknown + CC.caseFileSpec(null).detail), false);
   /* another module cannot take the names */
   const again = new PublicRead({ storage: { sql: null } });
   again.registerPublicReads("someone-else", { casechecker: () => 1 });

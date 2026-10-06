@@ -105,7 +105,7 @@ export function carriesBodyLines(method, materials, group) {
     "## What This Case Carries", "",
     ...(rows.length
       ? ["Every document and observation this case's findings reach. One a load-bearing finding relies on travels whole "
-         + "with the case. One that only a supporting finding reaches, and that this copy does not hold whole, is listed "
+         + "with the case. One that only a supporting finding reaches, and that is not held whole, is listed "
          + "with its fingerprint, origin and archived copy.", "",
          ...rows.flatMap((m) => [
            `- ${m.ref}, ${MATERIAL_KIND_WORDS[m.kind] ?? m.kind}, fingerprint ${m.sha}: `

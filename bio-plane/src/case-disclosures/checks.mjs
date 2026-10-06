@@ -9,9 +9,9 @@
  * co-attestation, and is never refused because a document is not co-attested. What refuses is an undisclosed conflict,
  * a disclosure of something that is not one, a read that could not be made whole, a load-bearing Grade B document
  * published as self-attested without its owner saying so and why, an acknowledgement that stands on nothing, and an
- * uncleared hunch; and material a load-bearing finding relies on that this copy does not hold whole, another group's
- * work with no acceptance in force, and an open flag on it left undisclosed, a disclosure standing on nothing, or a
- * flags read not made whole. Promotion stamps these rows (N318); C-120.4–C-120.7 were stamped in `CATALOG_VERSION`
+ * uncleared hunch; and material a load-bearing finding relies on that the group's Civicsmith does not hold whole,
+ * another group's work with no acceptance in force, and an open flag on it left undisclosed, a disclosure standing on
+ * nothing, or a flags read not made whole. Promotion stamps these rows (N318); C-120.4–C-120.7 were stamped in `CATALOG_VERSION`
  * 1.47.0 (T17); C-120.8 and C-120.10–C-120.13, and C-120.1–C-120.7's new `where`s, await T29's stamp.
  * C-120.9 was withdrawn unstamped (K1275), and its number is never reused. T33 adds a person named without a recorded
  * basis, a basis that stands on nothing, and a signer who has not attested to their ties (R25, R27). A change to any
@@ -71,9 +71,9 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
   RELIED_ON_NOT_PRESENTABLE: {
     check: 'C-120.8',
     where: at('materialsJudged', 'is-relied-on-presentable'),
-    translation: 'A finding this case relies on rests on material this copy does not hold whole, and everything a case '
-      + 'relies on travels with it in full. Find a presentable copy, stop relying on the material, or make the finding '
-      + 'supporting. Nothing was written.',
+    translation: 'A finding this case relies on rests on material your group\'s Civicsmith does not hold whole, and '
+      + 'everything a case relies on travels with it in full. Find a presentable copy, stop relying on the material, or '
+      + 'make the finding supporting. Nothing was written.',
   },
   /* R13, R14 (DEC-96 item 4; N522): another group's work a case rests on, its acceptance stated and its open flags
      disclosed, never blocked (R1's pattern). New in T28: awaiting stamp. */

@@ -1,13 +1,10 @@
 /* The people a case names, and its signers' ties (requirements: `build/requirements/case-disclosures.md`, R24–R28;
  * Design Requirement 6 as amended, K1483; K1490, K1493, K1494). Pure: nothing here touches a table. The owner's list of
- * bases is read here, and the case document's `people:` and `member_ties:` blocks are spelled and read back here, one
- * spelling (P15). The services that read the record (`peopleNamed`, `peopleJudged`, `tieAttestationJudged`) are this
+ * bases is read here; the case document's `people:` and `member_ties:` blocks are spelled and read back through
+ * `case-grammar` R21, the one spelling (P15; K1816). The services that read the record (`peopleNamed`, `peopleJudged`, `tieAttestationJudged`) are this
  * module's `CaseDisclosures`.
- *
- * THE GRAMMAR IS THE RESTRICTED FRONTMATTER GRAMMAR: an array of flat objects of scalars, as `case-grammar` R1's blocks
- * (K549); a quote, a backslash or a line break in a derived string is sanitised by `case-grammar`'s `fmSafe`. */
+ */
 
-import { fmSafe } from "../case-grammar/index.mjs";
 import { PEOPLE_KINDS } from "../lines/index.mjs";
 
 /** R25: the closed list of bases a named person is named on (K1483). */
@@ -104,45 +101,10 @@ export function placesStated(places) {
 }
 
 /* ===========================================================================
- * THE BLOCKS (R28). `people:` one row per person R25 passed `{person, places, basis, citation, words}`; `member_ties:`
- * R27's rows `{row, signer, at, entity, kind, level, shown}`, `row` `attestation` or `tie`. Flat, as `case-grammar` R1's
- * blocks (K549). A document without them reads back as empty lists.
+ * THE BLOCKS (R28; K1816). `people:` one row per person R25 passed `{person, places, basis, citation, words}`;
+ * `member_ties:` R27's rows `{row, signer, at, entity, kind, level, shown}`, `row` `attestation` or `tie`. Their spelling
+ * and readers are `case-grammar` R21's, the one spelling (P15): this module answers its four names through it and keeps
+ * no copy, so its importers keep working through these names.
  * =========================================================================== */
 
-const q = (v) => (v == null ? "null" : `"${fmSafe(v)}"`);
-const bare = (v) => (v == null ? "null" : String(v));
-
-export function peopleLines(rows) {
-  return ["people:", ...(Array.isArray(rows) ? rows : []).flatMap((r) => [
-    `  - person: ${bare(r.person)}`,
-    `    places: ${q(r.places)}`,
-    `    basis: ${bare(r.basis)}`,
-    `    citation: ${q(r.citation)}`,
-    `    words: ${q(r.words)}`])];
-}
-
-export function memberTieLines(rows) {
-  return ["member_ties:", ...(Array.isArray(rows) ? rows : []).flatMap((r) => [
-    `  - row: ${bare(r.row)}`,
-    `    signer: ${q(r.signer)}`,
-    `    at: ${q(r.at)}`,
-    `    entity: ${bare(r.entity)}`,
-    `    kind: ${bare(r.kind)}`,
-    `    level: ${bare(r.level)}`,
-    `    shown: ${q(r.shown)}`])];
-}
-
-const str = (v) => (v == null ? null : String(v));
-const rowsOf = (fm, key) => (isObj(fm) && Array.isArray(fm[key]) ? fm[key].filter(isObj) : []);
-
-/** R28: the `people:` block read back, `[]` for a document without it. */
-export function peopleOf(fm) {
-  return rowsOf(fm, "people").map((r) => ({ person: str(r.person), places: str(r.places), basis: str(r.basis),
-                                            citation: str(r.citation), words: str(r.words) }));
-}
-
-/** R28: the `member_ties:` block read back, `[]` for a document without it. */
-export function memberTiesOf(fm) {
-  return rowsOf(fm, "member_ties").map((r) => ({ row: str(r.row), signer: str(r.signer), at: str(r.at), entity: str(r.entity),
-                                                 kind: str(r.kind), level: str(r.level), shown: str(r.shown) }));
-}
+export { peopleLines, memberTieLines, peopleOf, memberTiesOf } from "../case-grammar/index.mjs";
