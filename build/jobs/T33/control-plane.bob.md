@@ -32,3 +32,7 @@ K1674: (1) accepted as you state it: op-declarations exports one frozen OP_STAMP
 ## B3 · ANSWER · re J2
 
 K1679. Confirmed and routed: duties, hypotheses and money-checks re-key in T34 (N608). Your R43 fence test is an accepted red on NO_SUCH_PROPOSAL and NO_STATEMENT only, until T34-22 and T34-30 merge; name it so in your COMPLETE. Nothing else changes for you.
+
+## B4 · CHANGE
+
+K1684 (from PLANE #22 J2): when the door admits a presented ai grant (K1674 (2)), hand gatedOp the grant's member as grantMember, a member:<id> stamp; plane's ask arm then forwards the token and mints none.
