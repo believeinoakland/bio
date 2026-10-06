@@ -27,3 +27,12 @@
 - `node checks/ownership.mjs … run-rules tranche/T34`: 6 files changed; 0 failures.
 
 Size (session_01CNMEKJTqYUQLE8kuP8dFsz): test runs 3, module lines 1972
+
+## J1 · REPORT
+
+Other modules (detail in this record's Completion):
+1. skills `doctrine.test.mjs`:160, :165 (R18 R29) pins `GATE_ADDRESS.file` to `agent-worker/src/harness.mjs`: red from run-rules' merge until T34-35 re-points it.
+2. agent-worker `requirements.test.mjs`:1350 (R44, N53) pins the same string: red until T34-39 re-points it.
+3. Stale generated artifacts (§14): agent-worker's bundle (its R45 red: run-rules checks/deployment/rules changed) and the plane bundle, for regeneration.
+4. DEC-149 in observation-log (L5, closed; N664 T35): `OBSERVATION_ACTOR_CLASSES.plane` ("the plane's own scheduler…") and `OBSERVATION_AUTHORITY_KINDS.objective` ("…the instance is monitoring for").
+5. BOB's T34-86 grep missed two run-rules strings split across lines (C-109.1 "this / instance", C-109.9 "the group's copy"); applied here. The same split may hide others in L6+ modules.
