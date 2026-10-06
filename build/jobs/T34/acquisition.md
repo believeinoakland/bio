@@ -22,3 +22,7 @@
 - `format`: 126 modules, 125 requirements files; 0 failures. `architecture`: 15 product files, 59 relative imports; 0 failures. `coverage`: 37 of 37 live requirement ids named by a test; 0 failures. `ownership`: 4 files changed by acquisition between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01JnE9bHgWiNuuBC1kUAXAsw): test runs 9, module lines 1812
+
+## J1 · COMPLETE
+
+T34-65 applied: acquire hands doctypeFor ctx.origin "member" (actor_class member) or "fetch"; profileOf takes optional origin. Also cleared K1737's 'plane acquisition ×2' reds, which are this module's profile.test.mjs (now register test-local types via docprofile; no undeclared import). acquisition 88/88, capture 118/118; format, architecture, coverage (37/37), ownership 0 failures. Reported in record: capture R65's knock pull passes no origin; K1683's actor_class=member is a member session's server fetch, not a member-browser capture as court-doctypes R2's why words it. Details in the record.
