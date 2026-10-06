@@ -1,6 +1,6 @@
 # money-checks (T33)
 
-**Status** · session_019trC8S5wM3AqjiTSTYewWk · depth 2 · COMPLETE · handled B2
+**Status** · session_019trC8S5wM3AqjiTSTYewWk · depth 2 · WAITING ON BOB (J3) · handled B2
 
 ## J1 · QUESTION
 
