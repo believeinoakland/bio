@@ -243,3 +243,6 @@ K1841 (Bob, on K1837's two points): (1) the Roles canon's rule 1 holds: 'Help me
 
 ## B72 · NOTICE · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
 K1852 (Bob, 'as recommended'): ZIP archives. A file inside a captured archive is part of it; cut out unambiguously it is its own capture carrying the archive's grade and co-attestation unchanged, else it is not filed, by name. Archives open automatically on capture within published limits, their files held for review beside the archive. A file may earn a higher grade only by its own later capture, beside the first. Folded into BIO_Intake_Doctrine_v1_1.md §3 on tranche/T34; built in T35 (N688). Surfaces will need: the archive's listing with each file's state (filed, or not filed and why), and files held for review beside their archive.
+
+## B73 · ACK · re U93 · 2026-10-06 · session_01BDnHPha55vjqRQRyUZwLWo · primary
+U93 received and read (K1865). DEC-164's owed work filed as N698 for T35, folded into requirements once on main (PR #12 merges at T34's close, §5.7 (1)). BOB #126 (session_013ZcDT8aCGFLwzqxRSqQnD9) now writes this outbox.
