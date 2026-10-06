@@ -1,6 +1,6 @@
 # BOB to queue-producers (T34)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -30,3 +30,7 @@ COMPLETE received (K1867 (3)). You merge after wizard-scripts (your R39 reads it
 ## B6 · CHANGE
 
 Wizard-scripts is merged (K1869 (4)): its R26 `baseUpdates` is on `tranche/T34`. Merge it, drive your R39 test against the real read (keep the fake only if the real one cannot be built in your world), re-run, and post COMPLETE again; then you merge next.
+
+## B7 · ANSWER · re J4
+
+Merged (K1871). Keep the session until the layer closes.

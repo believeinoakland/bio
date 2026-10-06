@@ -28,9 +28,15 @@ import { corpusExportOps } from "../../../src/corpus-export/index.mjs";
 import { actionsOps } from "../../../src/actions/index.mjs";
 import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { captureRequestsOps } from "../../../src/capture-requests/index.mjs";
+import { membershipOps } from "../../../src/membership/index.mjs";
+import { tasksOps } from "../../../src/tasks/index.mjs";
+import { publicationOps } from "../../../src/publication/index.mjs";
+import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, OP_FAMILIES, OP_KINDS, FAMILY_OPS, ASK_GRANT_OPS,
-        OP_STAMPS } = O;
+        OP_STAMPS, OP_ALIASES } = O;
+/* T34's kinds that stamp nothing of their own (R22): their ops take only the family's extras */
+const unstamped = (f, op) => OP_KINDS[f.kinds[op]].stamped === false;
 const MP = ["admin", "member", "probe"];
 const plain = (s) => ({ ...s, ...(Array.isArray(s.classes) ? { classes: [...s.classes] } : {}),
                         ...(Array.isArray(s.machineClasses) ? { machineClasses: [...s.machineClasses] } : {}) });
@@ -42,7 +48,8 @@ const MAPS = { events: eventsOps, lines: linesOps, money: moneyOps, "money-check
   people: peopleOps, explore: exploreOps, hypotheses: hypothesesOps, calculations: calculationsOps, workbooks: workbooksOps,
   answers: answersOps, following: followingOps, standards: standardsOps, credentials: credentialsOps, sources: sourcesOps,
   entities: entitiesOps, "ai-runs": aiRunsOps, inquiry: inquiryOps, "corpus-export": corpusExportOps, actions: actionsOps,
-  "action-clocks": actionClocksOps, "capture-requests": captureRequestsOps };
+  "action-clocks": actionClocksOps, "capture-requests": captureRequestsOps, membership: membershipOps, tasks: tasksOps,
+  publication: publicationOps, "wizard-scripts": wizardScriptsOps };
 const recorder = () => {
   const calls = [];
   const fn = (...args) => { calls.push(args); return { ok: true }; };
@@ -59,7 +66,13 @@ const servedBy = (owner) => Object.keys(build(owner).map);
    Callers' obligations: the control plane routes neither), entities' plan read, credentials' three the plane's own
    admission and login call. */
 const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"],
-                     credentials: ["aicredentiallook", "setpassword", "session"] };
+                     credentials: ["aicredentiallook", "setpassword", "session"],
+                     /* T34 (R22, R6): the check's addressees, read by tasks in process (membership R106) */
+                     membership: ["checkaddressees",
+                       /* membership's own hop, called inside `projectCreated` (R6's store-internal list, K1864) */
+                       "projectclaimowner"],
+                     /* publication's internal hops (its R15; D-734) and its reads served by public-read */
+                     publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
 /* The family ops whose arm another L11 job serves (R6's other half holds at the layer's close): the control plane
    routes these to their owner's in-process services (K1601; action-clocks R2's `clockpropose`, capture-requests R46,
    answers' `ask`), instance-setup builds its two (T33-87). */
@@ -67,13 +80,21 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   capturerequestplatformunmark: "control-plane (T33-89)", capturerequestplatformhosts: "control-plane (T33-89)",
   ask: "control-plane (T33-89)", officesseed: "instance-setup (T33-87)", seatsseed: "instance-setup (T33-87)",
   assistantset: "instance-setup (T33-87)", assistantstate: "instance-setup (T33-87)",
-  disclosureshown: "instance-setup (T33-87)", disclosureof: "instance-setup (T33-87)" };
+  disclosureshown: "instance-setup (T33-87)", disclosureof: "instance-setup (T33-87)",
+  /* T34's ops whose owners' L11 jobs build them beside this one (their merges come first in L11's order) */
+  placewanted: "instance-setup (T34-81)", placewantedstate: "instance-setup (T34-81)",
+  memberlanguageset: "instance-setup (T34-81)", memberlanguage: "instance-setup (T34-81)",
+  groupdescriptiondraft: "instance-setup (T34-90)",
+  /* the door routes it itself, calling wizard-scripts' `writingHelp` with the assistant it resolves (K1863 (7)) */
+  writinghelp: "control-plane (T34-60)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["action-clocks", "actions", "ai-runs", "answers", "calculations",
     "capture-requests", "corpus-export", "credentials", "duties", "entities", "events", "explore", "following", "hypotheses",
-    "inquiry", "instance-setup", "lines", "money", "money-checks", "people", "sources", "standards", "workbooks"]);
-  assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "member", "open", "own", "ownread", "proposal", "read", "tally"]);
+    "inquiry", "instance-setup", "lines", "membership", "money", "money-checks", "people", "publication", "sources",
+    "standards", "tasks", "wizard-scripts", "workbooks"]);
+  assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "door", "member", "open", "own", "ownread", "plainread",
+    "proposal", "public", "publishact", "read", "roster", "sessionact", "sessionread", "tally"]);
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -97,7 +118,7 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     assert.deepEqual([...f.proposals], ops.filter((op) => f.kinds[op] === "proposal"), owner);
     assert.deepEqual([...f.reads], ops.filter((op) => !kind(op).spec.mutating), owner);
     /* an act needs an actor stamp unless it reads only the viewer; a proposal its proposer */
-    if (f.acts.length && owner !== "corpus-export") assert.ok(f.actor, `${owner} names no actor`);
+    if (f.acts.some((op) => !unstamped(f, op)) && owner !== "corpus-export") assert.ok(f.actor, `${owner} names no actor`);
     if (f.proposals.length) assert.ok(f.proposer, `${owner} names no proposer`);
   }
   assert.deepEqual([...FAMILY_OPS].sort(), [...seen].sort());
@@ -115,21 +136,41 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     tally: [{ classes: MP, mutating: true }, null],
     read: [{ classes: MP, mutating: false }, null],
     ownread: [{ classes: ["admin", "member"], machineClasses: [], mutating: false }, null],
+    /* T34 (R22, R25, R28): `undefined` is no NEEDS row */
+    roster: [{ classes: MP, machineClasses: ["admin", "probe"], mutating: true }, null],
+    publishact: [{ classes: MP, machineClasses: [], mutating: true }, "publish"],
+    sessionact: [{ classes: MP, machineClasses: [], mutating: true }, null],
+    sessionread: [{ classes: MP, machineClasses: [], mutating: false }, null],
+    door: [{ classes: null, mutating: true }, undefined],
+    public: [{ classes: null, mutating: false }, undefined],
+    plainread: [{ classes: MP, mutating: false }, undefined],
   };
+  const PUBLIC = ["door", "public"];
   let n = 0;
   for (const f of Object.values(OP_FAMILIES)) for (const [op, k] of Object.entries(f.kinds)) {
     n++;
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
     assert.deepEqual(plain(OPS[op]), want[k][0], op);
-    assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);
-    assert.equal(NEEDS[op], want[k][1], op);
-    assert.equal(ACT_GATE.needs(op), want[k][1], op);
+    if (want[k][1] === undefined) assert.ok(!Object.hasOwn(NEEDS, op), `${op} has a NEEDS row`);
+    else {
+      assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);
+      assert.equal(NEEDS[op], want[k][1], op);
+    }
+    assert.equal(ACT_GATE.needs(op), want[k][1] ?? null, op);
+    assert.ok(!JSON.stringify(OPS[op]).includes('"ai"'), op);
+    assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, op), op);
+    if (PUBLIC.includes(k)) {
+      assert.ok(!SESSION_OPS.member.has(op) && !SESSION_OPS.admin.has(op), `${op} is public and in a session set`);
+      continue;
+    }
     assert.ok(both(op), `${op} is not in both session sets`);
     assert.equal(ACT_GATE.mode(op), "session", op);
     assert.ok(!JSON.stringify(OPS[op]).includes('"ai"'), op);
     assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, op), op);
     assert.ok(Object.isFrozen(OPS[op]) && Object.isFrozen(OPS[op].classes), op);
   }
+  for (const op of Object.keys(OP_FAMILIES.membership.kinds).filter((o) => PUBLIC.includes(OP_FAMILIES.membership.kinds[o])))
+    assert.ok(Object.isFrozen(OPS[op]), op);
   assert.ok(n >= 180, `${n} family ops`);
   /* negative controls */
   assert.notDeepEqual(plain({ ...OPS.eventmerge, machineClasses: undefined }), want.member[0]);
@@ -160,6 +201,11 @@ test("R19, R6: each new module's ops map and each family's share of an earlier m
   }
   /* the families no map holds are instance-setup's (its job builds them) */
   for (const op of Object.keys(OP_FAMILIES["instance-setup"].kinds)) assert.match(SERVED_ELSEWHERE[op], /instance-setup/);
+  /* T34: membership's, publication's and credentials' new ops are served by their merged owners now */
+  for (const op of [...Object.keys(OP_FAMILIES.membership.kinds), ...Object.keys(OP_FAMILIES.publication.kinds),
+                    "groupkeyset", "groupkeyremove", "groupkeyswitch", "groupswitchset", "groupkeystate", "groupkeynotice",
+                    "groupkeynoticeseen", "notewrite", "noteturn", "notes"])
+    assert.ok(!Object.hasOwn(SERVED_ELSEWHERE, op), op);
   /* each named exception is a family op its owner's map does not yet serve */
   for (const op of Object.keys(SERVED_ELSEWHERE)) {
     assert.ok(FAMILY_OPS.includes(op), op);
@@ -191,7 +237,7 @@ test("R19, R4: each family's actor stamp reaches its owner on every act, and its
     if (!MAPS[owner]) continue;
     const served = servedBy(owner);
     const pairs = [...f.acts.map((op) => [op, f.actor]), ...f.proposals.map((op) => [op, f.proposer])]
-      .filter(([op, st]) => st && served.includes(op));
+      .filter(([op, st]) => st && served.includes(op) && !unstamped(f, op));
     for (const [op, st] of pairs) {
       assert.ok(await reaches(owner, op, st), `${owner}.${op}: ${st.key} in the ${st.at} does not reach the owner`);
       /* negative controls: at the query, a key the owner does not read does not reach; an owner that reads the body
@@ -214,7 +260,7 @@ test("R19, R4: every family read is stamped with the viewer, and the owner reads
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     if (!MAPS[owner]) continue;
     const served = servedBy(owner);
-    for (const op of f.reads.filter((o) => served.includes(o) && !NO_VIEWER.includes(o))) {
+    for (const op of f.reads.filter((o) => served.includes(o) && !NO_VIEWER.includes(o) && !unstamped(f, o))) {
       assert.ok(await reaches(owner, op, { key: "viewer", at: "query" }), `${owner}.${op}: the viewer does not reach`);
       assert.equal(await reaches(owner, op, { key: "nosuchstamp", at: "query" }), false, `${owner}.${op}: any key reaches`);
       checked++;
@@ -229,7 +275,10 @@ const keyOf = (st) => (!st || st.key === "viewer" ? null : st.key === "by" ? (st
 
 test("R19, R4, R5 (K1674, K1683): OP_STAMPS maps every op this module declares for T33 — each family op, the ask's three plane ops, exportpage and moneydetectorsrun, and no other — to frozen stamp keys from the closed set viewer, by, bodyBy, author, proposer, member, session: viewer on every family op, the family's actor key on each act (by at the query, bodyBy at the body), its proposer key on each proposal, the family's extras, the grant's member as viewer on the ask ops (negative control: a drifted key is seen)", () => {
   assert.ok(Object.isFrozen(OP_STAMPS));
-  assert.deepEqual(Object.keys(OP_STAMPS).sort(), [...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun"].sort());
+  /* T34 (R21): an alias of a stamped op carries its op's stamps */
+  const aliased = Object.keys(OP_ALIASES).filter((al) => FAMILY_OPS.includes(OP_ALIASES[al]));
+  assert.deepEqual(Object.keys(OP_STAMPS).sort(), [...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased].sort());
+  for (const al of aliased) assert.deepEqual([...OP_STAMPS[al]], [...OP_STAMPS[OP_ALIASES[al]]], al);
   for (const [op, keys] of Object.entries(OP_STAMPS)) {
     assert.ok(Object.isFrozen(keys) && Array.isArray(keys), op);
     assert.equal(new Set(keys).size, keys.length, op);
@@ -237,6 +286,7 @@ test("R19, R4, R5 (K1674, K1683): OP_STAMPS maps every op this module declares f
     assert.ok(Object.hasOwn(OPS, op), op);
   }
   for (const f of Object.values(OP_FAMILIES)) for (const op of Object.keys(f.kinds)) {
+    if (unstamped(f, op)) { assert.deepEqual([...OP_STAMPS[op]], [...(f.extra[op] ?? [])], op); continue; }
     const who = f.acts.includes(op) ? keyOf(f.actor) : f.proposals.includes(op) ? keyOf(f.proposer) : null;
     assert.deepEqual([...OP_STAMPS[op]].sort(), [...new Set(["viewer", ...(who ? [who] : []), ...(f.extra[op] ?? [])])].sort(), op);
   }

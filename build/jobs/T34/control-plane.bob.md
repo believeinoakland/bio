@@ -38,3 +38,7 @@ Tasks is merged on `tranche/T34` (K1868 (1)): its five ops (`tasksOps`) and C-13
 ## B8 · CHANGE
 
 Wizard-scripts is merged (K1869 (2)): `startfrom` and `baseupdates` in its ops map turn your R50 red; C-131.24 re-worded and C-131.33–.41 new reach your R43 (accepted red 4 for the stamp). Merge `tranche/T34` and carry both.
+
+## B9 · CHANGE
+
+Op-declarations is merged on `tranche/T34` (K1872): T34's specs, `OP_STAMPS` families and `OP_ALIASES` are there; also tasks, wizard-scripts, queue-producers, queue and instance-setup. Merge `tranche/T34`; your `totality.test.mjs`:13 and `r53-routes.test.mjs`:75 are yours to bring green (accepted red 12 until your merge). Admission's `queryGate` follows its merge.

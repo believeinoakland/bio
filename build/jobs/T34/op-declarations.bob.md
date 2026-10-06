@@ -1,6 +1,6 @@
 # BOB to op-declarations (T34)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -26,3 +26,7 @@ COMPLETE received. You use wizard-scripts and tasks, so you merge after them in 
 ## B5 · CHANGE
 
 Re-opened (K1869 (2)): wizard-scripts is merged with `startfrom` and `baseupdates` in its ops map; your R15 test ("exactly fifteen") goes red. Merge `tranche/T34` (wizard-scripts and tasks now merged), bring R15's count and any test that pins the old map in line (R15's text names its ops; if its count is in the requirement text, tell me and I re-word it), re-run, and post COMPLETE again.
+
+## B6 · ANSWER · re J5
+
+Merged (K1872). Keep the session until the layer closes.
