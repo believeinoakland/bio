@@ -47,3 +47,7 @@ Found by T34-44/T34-79 (full text: my record, Work, 'Other modules'):
 (e) op-declarations / admission / control-plane / affordances: new ops publishatmove, publishatcancel (body case, edition, at; stamp by), publishschedule (query case, state, after, limit; stamp viewer; absent viewer answers none).
 (f) queue-producers (T34-82): scheduledEditions({...}) with no viewer reads as the plane.
 (g) Generated artifact staled: bio-plane/dist/bio-plane.bundled.mjs.
+
+## J2 · COMPLETE
+
+T34-44 and T34-79 complete, B2 (K1826) and B3 (K1832) applied; pushed job/T34/publication. N597 spread dropped; R64 stampedEditions; R65 publicGroupDescription; R66-R71 in publication/schedule.mjs (table scheduled_editions, ops publishatmove, publishatcancel, publishschedule); R21's waiting clause; R70/R40 columns on published_cases, filled by migration. publication 112 pass, 0 fail, 1 todo (R30); dependents identical to tranche/T34 @ 91a71abdab. format 0; architecture 0; coverage 47/47; ownership 8 files, 0. modules.json unchanged. Deferred: R30 only. Size (session_018fH9gcTb8rPoU4TBHkufJK): test runs 20, module lines 3579. Record: build/jobs/T34/publication.md.
