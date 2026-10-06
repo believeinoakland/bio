@@ -27,11 +27,17 @@ import { RISK_TIERS, riskTierState } from "./action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS, list as heldProfiles, get as heldProfile, combine as combineProfiles }
   from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
-import { membershipOf } from "./membership/index.mjs";
+import { membershipOf, notAnAdmin } from "./membership/index.mjs";
 import { promotionOf } from "./promotion/index.mjs";
 import { governorOf } from "./host-governor/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
 import { captureOf } from "./capture/index.mjs";
+import { entitiesOf } from "./entities/index.mjs";
+import { linesOf, CAPACITIES as LINE_CAPACITIES } from "./lines/index.mjs";
+import { provenanceOf } from "./provenance/index.mjs";
+import { normAlias as termFold } from "./extraction/index.mjs";
+import { parse as legistarParse, readPages as legistarPages, readBodyName as legistarBodyName, KEY as LEGISTAR_KEY,
+         BASIS as LEGISTAR_BASIS } from "../../legistar-reader/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
 import { livefire } from "./livefire.mjs";
@@ -289,6 +295,17 @@ ${GROUP_LINE_UNREAD}
       <button id="pf-confirm">Make this change</button> <button id="pf-cancel">Keep things as they are</button>
     </div>
     <p class="err" id="pf-err"></p>
+  </div>
+  <!-- R53 (K1502, K1478 (i)): the assistant is optional for the copy, off unless an administrator chooses it, offered
+       here and changeable later. Enabling it binds no account: each member connects their own. -->
+  <h2>The assistant</h2>
+  <div class="card" id="as-state"><p class="small" style="margin:0">Reading whether the assistant is on&hellip;</p></div>
+  <div id="as-choose" hidden>
+    <p class="small">The assistant is optional. This copy holds no account for it: each member who wants it connects
+    their own Claude account or API key, and is told first that their questions and the material read to answer them
+    go to Anthropic under their own account. While it is off, no question is put to it and nothing runs.</p>
+    <div class="actions"><button id="as-toggle"></button></div>
+    <p class="err" id="as-err"></p>
   </div>
   <h2>What this page is, and is not</h2>
   <p>This page opens the record for reading, takes in new material, and
@@ -673,7 +690,8 @@ function panel(login, claimedAt){
     ADMIN = !!(r && r.result && r.result.administer === true);
     applyCaps();
     openProfiles();
-  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); });
+    openAssistant();
+  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); openAssistant(); });
   $("#panel-lede").textContent = WHO === "admin"
     ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
@@ -1554,6 +1572,41 @@ $("#pf-confirm").addEventListener("click", async ()=>{
   finally { $("#pf-confirm").disabled = false; }
 });
 
+/* ---- the assistant (R53) ----
+   Every signed-in member sees whether it is on; only a session that administers is offered the switch, which says
+   what it will do before it is pressed. A read that did not answer says so and offers nothing. */
+let AS_ON = null;
+async function openAssistant(){
+  let r = null;
+  try { r = await rec("assistantstate"); } catch { r = null; }
+  const res = r && r.result;
+  if (!res || res.ok !== true || typeof res.on !== "boolean") {
+    AS_ON = null;
+    $("#as-state").innerHTML = '<p class="small" style="margin:0">This copy could not read whether the assistant is on just now.</p>';
+    $("#as-choose").hidden = true; return;
+  }
+  AS_ON = res.on;
+  $("#as-state").innerHTML = '<p class="small" style="margin:0">'
+    + (res.on ? "The assistant is on for this copy." : "The assistant is off for this copy.")
+    + (res.set_at ? " Last set by " + escH(res.set_by) + " on " + fmtWhen(res.set_at) + "." : "") + "</p>";
+  if (!ADMIN) { $("#as-choose").hidden = true; return; }
+  $("#as-err").textContent = "";
+  $("#as-toggle").textContent = res.on ? "Switch the assistant off" : "Switch the assistant on";
+  $("#as-choose").hidden = false;
+}
+$("#as-toggle").addEventListener("click", async ()=>{
+  const e = $("#as-err"); e.textContent = "";
+  if (AS_ON === null) return;
+  $("#as-toggle").disabled = true;
+  try {
+    const r = await post("assistantset", { on: !AS_ON });
+    const res = r && (r.result || r);
+    if (!res || res.ok !== true) { e.textContent = (res && (res.translation || res.detail)) || (r && r.error) || "The change was not made."; return; }
+    openAssistant();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $("#as-toggle").disabled = false; }
+});
+
 /* ---- enrolment, for an invited member with no password yet ---- */
 $("#en-go").addEventListener("click", async ()=>{
   const e = $("#en-err"); e.textContent = "";
@@ -1695,6 +1748,43 @@ export const INSTANCE_SETUP_CHECKS = Object.freeze({
     translation: 'That profile is made up for testing: its facts describe no real place, so a copy never reads '
       + 'local facts from it. Nothing was changed.',
   },
+  /* R53–R55 (K1502, K1478 (i), D311): the assistant, optional for the copy, and each member's disclosure. */
+  ASSISTANT_OFF: {
+    check: 'C-119.5',
+    where: 'src/setup.mjs assistantGate > is-assistant-on',
+    translation: 'The assistant is switched off for this copy, so no question is put to it and nothing runs. One of '
+      + 'the group\'s administrators can switch it on. Nothing was asked.',
+  },
+  ASSISTANT_SWITCH_MALFORMED: {
+    check: 'C-119.6',
+    where: 'src/setup.mjs assistantSet > is-assistant-switch',
+    translation: 'The assistant is switched on or off, and the request said neither. Nothing was changed.',
+  },
+  DISCLOSURE_NOT_THE_MEMBERS: {
+    check: 'C-119.7',
+    where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
+    translation: 'The assistant\'s disclosure is recorded as shown only to the member it was shown to, by their own '
+      + 'act, never by another member or a machine on their behalf. Nothing was recorded.',
+  },
+  /* R51, R52: the captures a seeding reads. */
+  SEED_CAPTURE_UNREADABLE: {
+    check: 'C-119.9',
+    where: 'src/setup.mjs seatsSeed > is-seed-capture',
+    translation: 'Seats are seeded from captures the record holds of Legistar\'s bodies, persons and office records, '
+      + 'and one of them is not named or cannot be read. Nothing was seeded.',
+  },
+  SEED_CAPTURE_NOT_LEGISTAR: {
+    check: 'C-119.10',
+    where: 'src/setup.mjs seatsSeed > is-seed-capture',
+    translation: 'Seats are seeded only from Legistar\'s own lists of bodies, persons and office records, each named '
+      + 'where it belongs, and this capture is not the list named. Nothing was seeded.',
+  },
+  DISCLOSURE_MALFORMED: {
+    check: 'C-119.8',
+    where: 'src/setup.mjs disclosureShown > is-disclosure-shown',
+    translation: 'A shown disclosure is recorded with the member it was shown to and the version of its words. One '
+      + 'of them is missing. Nothing was recorded.',
+  },
 });
 
 const refusal = (code, detail, extra) => {
@@ -1708,7 +1798,30 @@ const refusal = (code, detail, extra) => {
  * measurements of the runtime are not derived from the corpus, in the family of `seq` and the settings.
  * ============================================================================================================ */
 export const INSTANCE_SETUP_TABLES = Object.freeze(["instance_group", "group_identity_history", "group_domain_checks",
-  "runtime_observations", "cpu_probe_runs", "cpu_probe_steps"]);
+  "runtime_observations", "cpu_probe_runs", "cpu_probe_steps", "assistant_switch", "assistant_disclosures"]);
+/* Each table's classes, declared explicitly through record-core's `declareTable` (its R21; plan T33, Rules (6)). Every
+   one is exempt from purge (R28, R41); none is a cache of anything; the append-only ones keep every version (R26, R53,
+   R54). A member's disclosure record is theirs and the group's, never exported (it names who connected an account). */
+const TABLE_CLASSES = Object.freeze({
+  instance_group: { export: "admin-only", version_chain: false },
+  group_identity_history: { export: "admin-only", version_chain: true },
+  group_domain_checks: { export: "admin-only", version_chain: true },
+  runtime_observations: { export: "admin-only", version_chain: false },
+  cpu_probe_runs: { export: "admin-only", version_chain: false },
+  cpu_probe_steps: { export: "admin-only", version_chain: false },
+  assistant_switch: { export: "admin-only", version_chain: true },
+  assistant_disclosures: { export: "never", version_chain: true },
+});
+/* R50–R52: the seeding ledgers name entities and lines of the registry (`entities`, `lines`), which a whole-store purge
+   clears, so a whole-store purge clears them with it and a later seeding starts afresh; a bundle's purge touches none. */
+export const INSTANCE_SETUP_SEED_TABLES = Object.freeze(["seed_entities", "seed_lines", "seed_offices"]);
+export const INSTANCE_SETUP_TABLE_DECLARATIONS = Object.freeze([
+  ...INSTANCE_SETUP_TABLES.map((name) => Object.freeze({
+    name, purge: "exempt", expunge: "none", sight: "group", derive: "stored", ...TABLE_CLASSES[name] })),
+  ...INSTANCE_SETUP_SEED_TABLES.map((name) => Object.freeze({
+    name, purge: "clear", expunge: "none", export: "admin-only", sight: "group", derive: "stored",
+    version_chain: false })),
+]);
 export const INSTANCE_SETUP_SCHEMA = `
 -- D-436 (State Rules v1.5 section 3.1, the core field group): THE PRODUCING GROUP'S SLUG, ONE VALUE FOR THE WHOLE
 -- INSTANCE. Every bundle this instance writes names it as its group, in the bytes that get signed, and nothing else may
@@ -1789,7 +1902,78 @@ CREATE TABLE IF NOT EXISTS cpu_probe_steps (
   at          TEXT NOT NULL,
   PRIMARY KEY (run, step)
 );
+-- R53 (K1502): whether the assistant is enabled for this copy, each set appended with who and when; the switch is the
+-- latest row, and with no row it is off. No row updates or deletes another.
+CREATE TABLE IF NOT EXISTS assistant_switch (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  on_     INTEGER NOT NULL CHECK (on_ IN (0, 1)),
+  set_by  TEXT NOT NULL,
+  set_at  TEXT NOT NULL
+);
+-- R50–R52: what this module seeded, so a repeat is answered already and the offices it seeded can be named (K1683).
+-- seed_entities: one row per scheme identifier this module seeded an entity under (or found one holding).
+CREATE TABLE IF NOT EXISTS seed_entities (
+  scheme     TEXT NOT NULL,
+  id         TEXT NOT NULL,
+  entity_id  TEXT NOT NULL,
+  kind       TEXT NOT NULL,
+  label      TEXT NOT NULL,
+  source     TEXT NOT NULL,
+  seeded_at  TEXT NOT NULL,
+  PRIMARY KEY (scheme, id)
+);
+-- seed_lines: one row per line this module recorded, keyed by its kind, its ends and the source row it rests on.
+CREATE TABLE IF NOT EXISTS seed_lines (
+  key          TEXT PRIMARY KEY,
+  kind         TEXT NOT NULL,
+  from_entity  TEXT NOT NULL,
+  to_entity    TEXT NOT NULL,
+  line_id      TEXT NOT NULL,
+  seeded_at    TEXT NOT NULL
+);
+-- seed_offices: each profile office (jurisdictions R24's counterparty) seeded, by its profile, role and body.
+CREATE TABLE IF NOT EXISTS seed_offices (
+  profile        TEXT NOT NULL,
+  role           TEXT NOT NULL,
+  body           TEXT NOT NULL,
+  entry          TEXT NOT NULL,
+  office_entity  TEXT NOT NULL,
+  body_entity    TEXT NOT NULL,
+  seeded_at      TEXT NOT NULL,
+  PRIMARY KEY (profile, role, body)
+);
+-- R54 (D311): each time the assistant's disclosure was shown to a member before they connected their own account: who,
+-- the disclosure's version, who recorded it and when. Append-only.
+CREATE TABLE IF NOT EXISTS assistant_disclosures (
+  seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+  member    TEXT NOT NULL,
+  version   TEXT NOT NULL,
+  shown_by  TEXT NOT NULL,
+  shown_at  TEXT NOT NULL
+);
 `;
+
+/* R54 (D311): the assistant's disclosure. Its words are the design stream's (NOTICE to UX-DESIGN) and are shown by the
+   surface; this module holds the version a shown disclosure is recorded against, and the meaning the words carry. A new
+   version of the words is a new `version`, and a member shown only an earlier one reads `shown: false` until shown again. */
+export const ASSISTANT_DISCLOSURE = Object.freeze({
+  version: "D311-1",
+  meaning: "your questions and the material read to answer them, people's facts included, go to Anthropic under your "
+    + "own account",
+});
+
+/* R50–R52: the machine's stamp on what it seeds (DEC-52), and the Legistar schemes the profiles declare for a body's
+   `BodyId`, a person's `PersonId` and a seat's `OfficeRecordId` (jurisdictions R52; K1682's reading 2). */
+export const SEED_MACHINE = "class:admin";
+/* A profile's zone (jurisdictions R41: `time_zone`, its `value` an IANA name), or null when it states none. */
+const zoneOf = (p) => {
+  const z = p && p.time_zone;
+  const v = z && typeof z === "object" ? z.value : z;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+};
+/* R53 (K1678): who set the switch when the installer's binding is recorded at the first boot. */
+export const ASSISTANT_INSTALLER = "installer";
+export const LEGISTAR_SCHEMES = Object.freeze({ body: "legistar_body_id", person: "legistar_person_id", seat: "legistar_office_record_id" });
 
 /* The probe run the trail held before runs were kept apart (R40): its rows, keyed on the step alone, become one run. */
 export const LEGACY_PROBE_RUN = "legacy";
@@ -1939,7 +2123,7 @@ export class InstanceSetup {
     this.#started = true;
     this.migrate();
     const out = { ok: true, started: true };
-    out.purge = this.#record().declarePurge("instance-setup", [], { exempt: [...INSTANCE_SETUP_TABLES] });
+    out.purge = this.#record().declareTable("instance-setup", INSTANCE_SETUP_TABLE_DECLARATIONS.map((t) => ({ ...t })));
     out.fact = this.#promotion().registerFact("producingGroup", "instance-setup", () => this.producingGroup());
     out.consumer = this.#scheduler().register("instance-setup", { name: "group-domain-recheck", key: "groupdomain",
       due: () => this.groupDomainWake(), wake: () => this.groupDomainWake(), tick: () => this.groupDomainTick() });
@@ -1947,7 +2131,16 @@ export class InstanceSetup {
       (m) => this.recordRuntimeObservation({ metric: m && m.metric, ms: m && m.value, detail: m && m.detail,
                                             unit: unitOfMetric(m && m.metric) }));
     const first = firstBoot === undefined ? this.#record().isFirstBoot() : firstBoot === true;
-    if (first) { out.group = this.#recordGroupAtFirstBoot(); out.profiles = this.#recordProfilesAtFirstBoot(); }
+    if (first) {
+      out.group = this.#recordGroupAtFirstBoot();
+      out.profiles = this.#recordProfilesAtFirstBoot();
+      out.assistant = this.#recordAssistantAtFirstBoot();
+      /* R50: at setup, the offices the profiles just recorded name are seeded (the machine's act, DEC-52). */
+      if (out.profiles && out.profiles.recorded === true) {
+        try { out.offices = this.officesSeed({ boot: true }); }
+        catch (e) { out.offices = { ok: false, detail: `the offices could not be seeded at setup: ${String(e && e.message || e).slice(0, 200)}` }; }
+      }
+    }
     /* The instance's start reconciles (scheduler R11), now that this consumer is registered: never `arm`, the producers'
        door, which would start the test seam's probe at every boot (K419). */
     try { out.armed = await this.#scheduler().start(); } catch { out.armed = null; /* the next arm reconciles */ }
@@ -1969,6 +2162,18 @@ export class InstanceSetup {
     this.#sql.exec(`INSERT INTO instance_group (id, slug, recorded_at, source, recorded_by)
                     VALUES (1, ?, ?, 'bootstrap', NULL) ON CONFLICT(id) DO NOTHING`, slug, this.#iso());
     return { recorded: true, group: slug };
+  }
+
+  /* R53 (K1678): at the first boot, the installer's choice bound as ASSISTANT_ENABLED (`on` or `off`, installer R37),
+     recorded with `by` the installer; no binding, or any other value, records nothing and the assistant stays off. */
+  #recordAssistantAtFirstBoot() {
+    const raw = this.#env.ASSISTANT_ENABLED;
+    const v = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+    if (v !== "on" && v !== "off")
+      return { recorded: false, bound: raw !== undefined && raw !== null && raw !== "",
+               ...(raw !== undefined && raw !== null && raw !== "" ? { why: "the installer bound neither on nor off, so the assistant stays off" } : {}) };
+    this.#sql.exec(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (?, ?, ?)`, v === "on" ? 1 : 0, ASSISTANT_INSTALLER, this.#iso());
+    return { recorded: true, on: v === "on" };
   }
 
   /** R3, op=instancegroup: what this store records — and when it records nothing, that it records nothing. */
@@ -2229,8 +2434,9 @@ export class InstanceSetup {
 
   #checkProfileList(list) {
     const ids = list.map((v) => (typeof v === "string" ? v.trim() : v));
-    const unknown = ids.filter((id) => typeof id !== "string" || !id || !heldProfile(id));
-    const tests = ids.filter((id) => typeof id === "string" && heldProfile(id) && heldProfile(id).test === true);
+    const J = this.#juris();
+    const unknown = ids.filter((id) => typeof id !== "string" || !id || !J.get(id));
+    const tests = ids.filter((id) => typeof id === "string" && J.get(id) && J.get(id).test === true);
     return { ids, unknown, tests };
   }
 
@@ -2260,12 +2466,13 @@ export class InstanceSetup {
     const core = this.#record();
     const set = core.getSetting("jurisdiction_profiles");
     const ids = Array.isArray(set) ? set.filter((x) => typeof x === "string") : [];
-    const choices = heldProfiles().filter((p) => p.test !== true).map((p) => ({ id: p.id, name: p.name, covers: p.covers }));
+    const J = this.#juris();
+    const choices = J.list().filter((p) => p.test !== true).map((p) => ({ id: p.id, name: p.name, covers: p.covers }));
     const active = ids.map((id) => {
-      const p = heldProfile(id);
+      const p = J.get(id);
       return p ? { id, name: p.name, covers: p.covers } : { id, name: null, covers: null, held: false };
     });
-    const combined = ids.length ? combineProfiles(ids) : { ok: true, conflicts: [] };
+    const combined = ids.length ? J.combine(ids) : { ok: true, conflicts: [] };
     const out = { ok: true, profiles: active, conflicts: combined.ok ? combined.conflicts : [],
                   ...(combined.ok ? {} : { errors: combined.errors }), view: profileView(combined), choices };
     if (!ids.length) {
@@ -2305,6 +2512,488 @@ export class InstanceSetup {
              note: unique.length
                ? "local facts are read from these profiles, in this order, from now on; what was recorded before is unchanged"
                : "no profile is active from now on: every local fact is answered as undetermined" };
+  }
+
+  /* =====================================================================
+   * THE BRIDGE AND THE SEATS (R50–R52; A ORG 1a and 1b; K1443, K1468, K1485; K1682's readings 1–4).
+   *
+   * What the active profiles name is seeded into the registry as identified entities and dated lines, by the machine
+   * (DEC-52: `class:admin`) from a system rule, never from a name match (lines R4): the profile's offices and bodies
+   * (R50), the Legistar bodies matched to them after normalisation (R51), and the Council's and committees' seats and
+   * holders from Legistar's own records (R52). Every entity is found or seeded under a scheme identifier the profile
+   * declares (`identifier_schemes`), so a repeat is answered `already` and nothing is seeded twice; nothing is deleted,
+   * and an office a profile stops naming keeps its lines as they stand. What cannot be seeded is said, with why: an
+   * entry with no identifier seeds nothing, and a `MemberType` the profile does not map records no holder.
+   * ===================================================================== */
+
+  #juris() { return this.#deps.jurisdictions ?? { list: heldProfiles, get: heldProfile, combine: combineProfiles }; }
+  #entities() { return this.#deps.entities ?? entitiesOf(this.#ctx); }
+  #lines() { return this.#deps.lines ?? linesOf(this.#ctx); }
+
+  /* The active profiles, in order, each with its held definition (none for an id no longer held). */
+  #activeProfiles() {
+    const set = this.#record().getSetting("jurisdiction_profiles");
+    const ids = Array.isArray(set) ? set.filter((x) => typeof x === "string" && x) : [];
+    return ids.map((id) => ({ id, p: this.#juris().get(id) || null })).filter((x) => x.p);
+  }
+
+  /* A profile's scheme by name (jurisdictions R52), or null. */
+  static #scheme(p, name) {
+    return (Array.isArray(p.identifier_schemes) ? p.identifier_schemes : [])
+      .find((x) => x && typeof x === "object" && x.scheme === name) || null;
+  }
+  /* `{scheme, id}` as a profile states it, or null when it is not one. */
+  static #ident(x) {
+    return x && typeof x === "object" && typeof x.scheme === "string" && x.scheme.trim()
+      && (typeof x.id === "string" ? x.id.trim() : Number.isFinite(x.id))
+      ? { scheme: x.scheme.trim(), id: String(x.id).trim() } : null;
+  }
+
+  /* Why an identifier cannot hold an entity of `kind` under profile `p`, or null when it can (checked before anything is
+     created, so a refusal leaves no entity behind it): the scheme is declared, it identifies that kind, and it names the
+     system a machine's identifier rests on (entities R43, K1443). */
+  static #identWhy(p, ident, kind) {
+    const sch = InstanceSetup.#scheme(p, ident.scheme);
+    if (!sch) return `the profile declares no identifier scheme ${ident.scheme}`;
+    if (!(Array.isArray(sch.entity_kinds) && sch.entity_kinds.includes(kind)))
+      return `the scheme ${ident.scheme} identifies ${(sch.entity_kinds || []).join(", ") || "no kind"}, not a ${kind}`;
+    if (!(Array.isArray(sch.systems) && sch.systems.length))
+      return `the scheme ${ident.scheme} names no system that issues it, which a machine's identifier rests on`;
+    return null;
+  }
+
+  /* One entity found or seeded under one identifier: the entity already holding it (a member's, or this module's from
+     an earlier run) is `already`; else it is created, machine-declared, and the identifier held on it with the
+     system's row as its basis. Answers `{state: seeded | already | unseeded, entity_id?, why?}`. */
+  #seedEntity({ p, ident, kind, label, note, row, source, sector }) {
+    const why = InstanceSetup.#identWhy(p, ident, kind);
+    if (why) return { state: "unseeded", why };
+    const E = this.#entities();
+    const mine = this.#one(`SELECT entity_id FROM seed_entities WHERE scheme = ? AND id = ?`, ident.scheme, ident.id);
+    let held = null;
+    try { held = E.entityByIdentifier({ scheme: ident.scheme, id: ident.id }); } catch { held = null; }
+    if (held && held.undetermined)
+      return { state: "unseeded", why: `more than one entity holds ${ident.scheme} ${ident.id}; which one is meant is a member's to settle`,
+               candidates: held.candidates ?? [] };
+    if (held && typeof held.entity_id === "string") {
+      if (!mine) this.#ledgerEntity(ident, held.entity_id, kind, label, source);
+      return { state: "already", entity_id: held.entity_id };
+    }
+    let entityId = mine ? mine.entity_id : null;
+    if (!entityId) {
+      const made = E.createEntity({ kind, label, note, declaredBy: SEED_MACHINE, ...(sector ? { sector } : {}) });
+      if (!made || made.ok !== true) return { state: "unseeded", why: `the registry refused the entity: ${made && (made.reason || made.detail)}` };
+      entityId = made.entity_id;
+      this.#ledgerEntity(ident, entityId, kind, label, source);
+    }
+    const sch = InstanceSetup.#scheme(p, ident.scheme);
+    const id = E.addIdentifier({ entityId, scheme: ident.scheme, id: ident.id, by: SEED_MACHINE,
+                                 basis: { system: sch.systems[0], row } });
+    if (!id || id.ok !== true)
+      return { state: "unseeded", entity_id: entityId,
+               why: `the registry refused the identifier ${ident.scheme} ${ident.id}: ${id && (id.reason || id.detail)}; the entity is kept and a later seeding holds it again` };
+    return { state: id.already ? "already" : "seeded", entity_id: entityId };
+  }
+  #ledgerEntity(ident, entityId, kind, label, source) {
+    this.#sql.exec(`INSERT INTO seed_entities (scheme, id, entity_id, kind, label, source, seeded_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(scheme, id) DO NOTHING`, ident.scheme, ident.id, entityId, kind, label, JSON.stringify(source), this.#iso());
+  }
+
+  /* One line recorded once, keyed by its kind, its ends and the source row it rests on (`lines.recordLine`, machine
+     from a system rule whose two ends the identifiers name, lines R4). Answers like `#seedEntity`. */
+  #seedLine({ key, kind, from, to, capacity, valid, basis }) {
+    const held = this.#one(`SELECT line_id FROM seed_lines WHERE key = ?`, key);
+    if (held) return { state: "already", line_id: held.line_id };
+    const r = this.#lines().recordLine({ kind, from, to, ...(capacity ? { capacity } : {}), ...(valid ? { valid } : {}),
+                                         basis, by: SEED_MACHINE });
+    if (!r || r.ok !== true) return { state: "unseeded", why: `the lines refused it: ${r && (r.reason || r.detail)}` };
+    this.#sql.exec(`INSERT INTO seed_lines (key, kind, from_entity, to_entity, line_id, seeded_at) VALUES (?, ?, ?, ?, ?, ?)`,
+                   key, kind, from, to, r.line_id, this.#iso());
+    return { state: "seeded", line_id: r.line_id };
+  }
+
+  /** R50, op=officesseed: each office the active profiles name (jurisdictions R24) seeded as an `office`, its body as a
+   *  `body`, each under the profile's identifier for it, with `post_in` from the office to its body and `part_of` from
+   *  the body to the organisation the profile names it within. An administrator's act (`by`, the control plane's stamp);
+   *  at setup the boot runs it once after R13 (`boot: true`). Answers what was seeded, already held, and could not be. */
+  officesSeed({ by = null, boot = false } = {}) {
+    if (!boot && (typeof by !== "string" || !by || !this.#membership().isAdministrator(by)))
+      return notAnAdmin(by ?? null, "seeding the offices the jurisdiction profiles name");
+    const out = { ok: true, seeded: [], already: [], unseeded: [], by: boot ? SEED_MACHINE : by };
+    const put = (r, item) => { out[r.state === "seeded" ? "seeded" : r.state === "already" ? "already" : "unseeded"].push(
+      { ...item, ...(r.entity_id ? { entity_id: r.entity_id } : {}), ...(r.line_id ? { line_id: r.line_id } : {}),
+        ...(r.why ? { why: r.why } : {}), ...(r.candidates ? { candidates: r.candidates } : {}) }); };
+    const active = this.#activeProfiles();
+    if (!active.length) out.detail = "no profile is active, so no office is named and nothing is seeded";
+    for (const { id: profile, p } of active) {
+      const cps = Array.isArray(p.counterparties) ? p.counterparties : [];
+      cps.forEach((cp, i) => {
+        const entry = `counterparties[${i}]`;
+        const role = cp && typeof cp.role === "string" ? cp.role.trim() : "";
+        const body = cp && typeof cp.body === "string" ? cp.body.trim() : "";
+        const where = { profile, entry, role, body };
+        const ids = cp && cp.ids && typeof cp.ids === "object" ? cp.ids : {};
+        const officeId = InstanceSetup.#ident(ids.office), bodyId = InstanceSetup.#ident(ids.body);
+        if (!officeId || !bodyId) {
+          put({ state: "unseeded", why: `the profile names no identifier for this ${!officeId ? "office (ids.office)" : "body (ids.body)"}, `
+            + "so nothing is seeded for it: an office is seeded only under the profile's own identifier, never by its name" },
+            { what: "office", ...where });
+          return;
+        }
+        const source = { profile, entry };
+        const cite = `jurisdiction profile ${profile}, ${entry}${cp.basis ? ` (basis: ${cp.basis})` : ""}`;
+        const b = this.#seedEntity({ p, ident: bodyId, kind: "body", label: body, sector: "government", source,
+          row: `${profile}/${entry}/body`, note: `The body the office "${role}" belongs to, as the active ${cite} names it; seeded at setup.` });
+        put(b, { what: "body", ...where, ident: bodyId });
+        const o = this.#seedEntity({ p, ident: officeId, kind: "office", label: `${role}, ${body}`, source,
+          row: `${profile}/${entry}/office`, note: `An office an action may be addressed to, as the active ${cite} names it; seeded at setup.` });
+        put(o, { what: "office", ...where, ident: officeId });
+        if (!o.entity_id || !b.entity_id || o.state === "unseeded" || b.state === "unseeded") {
+          put({ state: "unseeded", why: "its office or its body is not held under its identifier, so the line has no identified ends" },
+              { what: "post_in", ...where });
+          return;
+        }
+        this.#sql.exec(`INSERT INTO seed_offices (profile, role, body, entry, office_entity, body_entity, seeded_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(profile, role, body) DO NOTHING`,
+                       profile, role, body, entry, o.entity_id, b.entity_id, this.#iso());
+        const zone = zoneOf(p) ? { zone: zoneOf(p) } : null;
+        const rule = (ids2) => ({ rule: "a jurisdiction profile's office entry, seeded at setup", source, ids: ids2 });
+        put(this.#seedLine({ key: `post_in|${o.entity_id}|${b.entity_id}|${profile}`, kind: "post_in",
+                             from: o.entity_id, to: b.entity_id, valid: zone, basis: rule({ from: officeId, to: bodyId }) }),
+            { what: "post_in", ...where });
+        const within = cp.within && typeof cp.within === "object" ? cp.within : null;
+        const withinId = within ? InstanceSetup.#ident(within.ids) : null;
+        if (!within) {
+          put({ state: "unseeded", why: "the profile names no organisation this body is within, so no part_of line is seeded" },
+              { what: "part_of", ...where });
+          return;
+        }
+        const wLabel = typeof within.label === "string" && within.label.trim() ? within.label.trim() : null;
+        const wKind = ["institution", "body", "movement"].includes(within.kind) ? within.kind : "institution";
+        if (!withinId || !wLabel) {
+          put({ state: "unseeded", why: `the profile names the organisation this body is within with no ${!wLabel ? "label" : "identifier (within.ids)"}, `
+            + "so it is not seeded and no part_of line is" }, { what: "part_of", ...where });
+          return;
+        }
+        const w = this.#seedEntity({ p, ident: withinId, kind: wKind, label: wLabel, sector: "government", source,
+          row: `${profile}/${entry}/within`, note: `The organisation the body "${body}" is part of, as the active ${cite} names it; seeded at setup.` });
+        put(w, { what: "organisation", ...where, label: wLabel, ident: withinId });
+        if (!w.entity_id || w.state === "unseeded") {
+          put({ state: "unseeded", why: "the organisation is not held under its identifier, so the line has no identified ends" },
+              { what: "part_of", ...where });
+          return;
+        }
+        put(this.#seedLine({ key: `part_of|${b.entity_id}|${w.entity_id}|${profile}`, kind: "part_of",
+                             from: b.entity_id, to: w.entity_id, valid: zone, basis: rule({ from: bodyId, to: withinId }) }),
+            { what: "part_of", ...where });
+      });
+    }
+    out.counts = { seeded: out.seeded.length, already: out.already.length, unseeded: out.unseeded.length };
+    return out;
+  }
+
+  /** K1683: the office a seeded office entity is, as `{role, body}` (with its profile), or null for an entity this
+   *  module did not seed from a profile office (`profile` given: from that profile only). Writes nothing; never throws. */
+  officeOf(entityId, profile = null) {
+    try {
+      if (typeof entityId !== "string" || !entityId) return null;
+      const rows = this.#rows(`SELECT profile, role, body FROM seed_offices WHERE office_entity = ? ORDER BY profile, role, body`, entityId)
+        .filter((r) => profile == null || r.profile === profile);
+      return rows.length ? { role: rows[0].role, body: rows[0].body, profile: rows[0].profile } : null;
+    } catch { return null; }
+  }
+
+  /** K1683: the office entity seeded for a profile office `{role, body}`, or null: none seeded, or more than one
+   *  entity seeded under that role and body (two profiles naming it with different identifiers), which is not
+   *  settled here. Writes nothing; never throws. */
+  officeEntityOf({ role = null, body = null } = {}) {
+    try {
+      const r = typeof role === "string" ? role.trim() : "", b = typeof body === "string" ? body.trim() : "";
+      if (!r || !b) return null;
+      const ids = [...new Set(this.#rows(`SELECT office_entity FROM seed_offices WHERE role = ? AND body = ?`, r, b).map((x) => x.office_entity))];
+      return ids.length === 1 ? ids[0] : null;
+    } catch { return null; }
+  }
+
+  /* A held capture's text, locator and instant (`deps.readCapture`, else the record's evidence store and the receipt
+     provenance holds for it), or null. */
+  async #readCapture(sha) {
+    if (typeof this.#deps.readCapture === "function") return this.#deps.readCapture(sha);
+    const store = this.#record().evidenceStore ? this.#record().evidenceStore() : null;
+    const obj = store ? await store.get(sha) : null;
+    if (!obj) return null;
+    const text = new TextDecoder().decode(new Uint8Array(await obj.arrayBuffer()));
+    const got = provenanceOf(this.#ctx).receipts();
+    const first = (got && Array.isArray(got.rows) ? got.rows : []).filter((r) => r && r.capture_sha === sha)
+      .sort((a, b) => Date.parse(a.first_retrieved) - Date.parse(b.first_retrieved))[0];
+    return first ? { text, locator: first.address, at: first.first_retrieved } : null;
+  }
+
+  /* R51: the profile bodies (the active profiles' counterparty bodies) matched to the Legistar bodies of one parsed
+     `bodies` capture, by exact equality of normalised forms: a Legistar body's form is the organisation the
+     body-variant map names for it, else its marker-stripped base name folded; a profile body's forms are its own name
+     folded and, where its entry names one, its `organisation` key. One form's several `BodyId`s are one match. */
+  #matchBodies(parsed, active) {
+    const groups = new Map();
+    for (const r of parsed.rows) {
+      const f = r.facts || {};
+      const form = typeof f.organisation === "string" && f.organisation ? `organisation:${f.organisation}`
+        : `name:${termFold(f.base ?? f.name ?? "")}`;
+      if (form === "name:") continue;
+      if (!groups.has(form)) groups.set(form, []);
+      groups.get(form).push({ BodyId: f.BodyId, name: f.name, source: r.source });
+    }
+    const out = [];
+    for (const { id: profile, p } of active) {
+      const view = { vocabulary: p.vocabulary || {} };
+      (Array.isArray(p.counterparties) ? p.counterparties : []).forEach((cp, i) => {
+        const body = cp && typeof cp.body === "string" ? cp.body.trim() : "";
+        if (!body) return;
+        const read = legistarBodyName(body, { view });
+        const forms = new Set([`name:${termFold(read.base)}`, `name:${termFold(body)}`]);
+        for (const o of [cp.organisation, read.organisation]) if (typeof o === "string" && o) forms.add(`organisation:${o}`);
+        const hits = [...forms].filter((f) => groups.has(f));
+        const entry = `counterparties[${i}]`;
+        const role = typeof cp.role === "string" ? cp.role.trim() : "";
+        if (hits.length === 1) { out.push({ profile, entry, role, body, matched: true, form: hits[0], bodies: groups.get(hits[0]) }); return; }
+        const terms = termFold(body).split(/[^\p{L}\p{N}]+/u).filter((t) => t.length > 2);
+        const near = hits.length > 1 ? hits.flatMap((h) => groups.get(h))
+          : [...groups.values()].flat().filter((g) => terms.length && terms.every((t) => termFold(g.name).includes(t)));
+        out.push({ profile, entry, role, body, matched: false, candidates: near.slice(0, 20).map((g) => ({ BodyId: g.BodyId, name: g.name })),
+          why: hits.length > 1 ? "its normalised forms equal more than one Legistar body's; it is never resolved by choosing one, and a member may match it by their own act"
+                               : "no Legistar body's normalised form equals it; it is never matched by a near name, and a member may match it by their own act" });
+      });
+    }
+    return out;
+  }
+
+  /** R51, R52, op=seatsseed: from held captures of the client's `bodies`, `persons` and `officerecords` (each a sha, the
+   *  office records one or more pages), the profile bodies matched to Legistar bodies (R51), each match's `BodyId`s held
+   *  on the body entity, and each seat on a matched body seeded with its holder (R52). An administrator's act. */
+  async seatsSeed({ bodies = null, persons = null, officerecords = null, by = null } = {}) {
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return notAnAdmin(by ?? null, "seeding the seats Legistar records");
+    const active = this.#activeProfiles();
+    const want = { bodies: [bodies], persons: [persons], officerecords: Array.isArray(officerecords) ? officerecords : [officerecords] };
+    const parsed = {};
+    for (const [endpoint, shas] of Object.entries(want)) {
+      const list = shas.filter((x) => x !== null && x !== undefined);
+      if (!list.length || list.some((x) => typeof x !== "string" || !x.trim()))
+        return refusal("SEED_CAPTURE_UNREADABLE", `the request names no capture of Legistar's ${endpoint}. Nothing was seeded.`, { endpoint });
+      const pages = [];
+      for (const sha of list) {
+        let cap = null;
+        try { cap = await this.#readCapture(sha.trim().toLowerCase()); } catch { cap = null; }
+        if (!cap || typeof cap.text !== "string")
+          return refusal("SEED_CAPTURE_UNREADABLE", `the record holds no readable capture ${sha.slice(0, 64)}. Nothing was seeded.`,
+                         { endpoint, capture: sha });
+        let one = null;
+        try {
+          one = legistarParse({ locator: cap.locator, text: cap.text, at: cap.at ?? null,
+                                view: { vocabulary: Object.assign({}, ...active.map(({ p }) => p.vocabulary || {})) } });
+        } catch (e) { one = { why: String(e && e.message || e) }; }
+        if (!one || one.why || one.endpoint !== endpoint)
+          return refusal("SEED_CAPTURE_NOT_LEGISTAR", `capture ${sha.slice(0, 64)} is not a Legistar ${endpoint} list`
+            + `${one && one.why ? ` (${one.why.slice(0, 200)})` : one && one.endpoint ? ` (it is ${one.endpoint})` : ""}. Nothing was seeded.`,
+            { endpoint, capture: sha });
+        pages.push({ ...one, sha: sha.trim().toLowerCase(), at: cap.at ?? null });
+      }
+      parsed[endpoint] = pages;
+    }
+    const out = { ok: true, matches: [], unmatched: [], seeded: [], already: [], unseeded: [], holders_undetermined: [],
+                  bodies_without_records: [], same_names: [], by };
+    const put = (r, item) => { out[r.state === "seeded" ? "seeded" : r.state === "already" ? "already" : "unseeded"].push(
+      { ...item, ...(r.entity_id ? { entity_id: r.entity_id } : {}), ...(r.line_id ? { line_id: r.line_id } : {}),
+        ...(r.why ? { why: r.why } : {}) }); };
+    if (!active.length) { out.detail = "no profile is active, so no body is named and nothing is seeded"; return out; }
+    const bodiesCap = parsed.bodies[0];
+    const instant = (at) => (typeof at === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d/.test(at) ? `${at.slice(0, 19)}Z` : null);
+    /* R51: the matches, each BodyId held on the profile's seeded body entity. */
+    const seatBodies = new Map();   // BodyId → {entity, p, profile, label, ident}
+    for (const m of this.#matchBodies(bodiesCap, active)) {
+      if (!m.matched) { out.unmatched.push(m); continue; }
+      const { p } = active.find((a) => a.id === m.profile);
+      const sch = InstanceSetup.#scheme(p, LEGISTAR_SCHEMES.body);
+      const office = this.#one(`SELECT body_entity FROM seed_offices WHERE profile = ? AND role = ? AND body = ?`, m.profile, m.role, m.body);
+      const match = { profile: m.profile, entry: m.entry, role: m.role, body: m.body, form: m.form,
+                      bodies: m.bodies.map((b) => ({ BodyId: b.BodyId, name: b.name })) };
+      out.matches.push(match);
+      if (!office) { match.why = "the profile's body is not seeded (R50: the profile names no identifier for it), so its BodyIds are held on no entity"; continue; }
+      if (!sch) { match.why = `the profile declares no identifier scheme ${LEGISTAR_SCHEMES.body}, so its BodyIds are held on no entity`; continue; }
+      for (const b of m.bodies) {
+        const ident = { scheme: LEGISTAR_SCHEMES.body, id: String(b.BodyId) };
+        const why = InstanceSetup.#identWhy(p, ident, "body");
+        let r;
+        if (why) r = { state: "unseeded", why };
+        else {
+          const got = this.#entities().addIdentifier({ entityId: office.body_entity, scheme: ident.scheme, id: ident.id, by: SEED_MACHINE,
+                                                       basis: { system: sch.systems[0], row: `legistar:body:${b.BodyId}` } });
+          r = got && got.ok === true ? { state: got.already ? "already" : "seeded", entity_id: office.body_entity }
+            : { state: "unseeded", why: `the registry refused the identifier: ${got && (got.reason || got.detail)}` };
+          if (r.state !== "unseeded") {
+            this.#ledgerEntity(ident, office.body_entity, "body", m.body, { capture: bodiesCap.sha, row: b.source });
+            seatBodies.set(b.BodyId, { entity: office.body_entity, p, profile: m.profile, label: m.body, ident });
+          }
+        }
+        put(r, { what: "body_identifier", profile: m.profile, body: m.body, ident });
+      }
+    }
+    /* R52: the seats of the matched bodies, and their holders. */
+    const people = new Map();
+    for (const r of parsed.persons[0].rows) people.set(r.facts.PersonId, r);
+    const records = legistarPages(parsed.officerecords);
+    const recRows = Array.isArray(records.rows) ? records.rows : [];
+    out.records = { pages: records.pages, complete: records.complete, conflicts: records.conflicts, refused: records.refused,
+                    ...(records.why ? { why: records.why } : {}) };
+    const pageOf = (row) => parsed.officerecords.find((pg) => pg.rows.includes(row)) || parsed.officerecords[0];
+    const seen = new Set();
+    for (const row of recRows) {
+      const f = row.facts || {};
+      const sb = seatBodies.get(f.BodyId);
+      if (!sb) continue;
+      seen.add(f.BodyId);
+      const page = pageOf(row) || parsed.officerecords[0];
+      const recordedAt = instant(page.at);
+      const seatIdent = { scheme: LEGISTAR_SCHEMES.seat, id: String(f.OfficeRecordId) };
+      const memberType = typeof f.role === "string" ? f.role.trim() : "";
+      const seat = this.#seedEntity({ p: sb.p, ident: seatIdent, kind: "office", label: `${memberType || "Seat"}, ${sb.label}`,
+        source: { capture: page.sha, row: row.source }, row: row.key,
+        note: `A seat on ${sb.label}, Legistar office record ${f.OfficeRecordId}, ${LEGISTAR_BASIS} (its MemberType: ${memberType || "not given"}).` });
+      const where = { OfficeRecordId: f.OfficeRecordId, BodyId: f.BodyId, PersonId: f.PersonId ?? null };
+      put(seat, { what: "seat", ...where });
+      if (!seat.entity_id || seat.state === "unseeded") continue;
+      const basis = (ids) => ({ rule: "a Legistar office record", source: page.sha, system: LEGISTAR_KEY, recorded_at: recordedAt,
+                                row: row.source, ids });
+      put(this.#seedLine({ key: `seat_on|${seat.entity_id}|${sb.entity}|${row.key}`, kind: "seat_on", from: seat.entity_id,
+                           to: sb.entity, basis: basis({ from: seatIdent, to: sb.ident }) }), { what: "seat_on", ...where });
+      const pr = people.get(f.PersonId);
+      if (!Number.isInteger(f.PersonId) || !pr) {
+        out.holders_undetermined.push({ ...where, why: Number.isInteger(f.PersonId)
+          ? `the persons capture holds no PersonId ${f.PersonId}, so the holder is not seeded` : "the office record names no PersonId" });
+        continue;
+      }
+      const name = pr.facts.name_normal || pr.facts.name || `Legistar person ${f.PersonId}`;
+      const others = Array.isArray(pr.same_name_as) ? pr.same_name_as : [];
+      const personIdent = { scheme: LEGISTAR_SCHEMES.person, id: String(f.PersonId) };
+      const person = this.#seedEntity({ p: sb.p, ident: personIdent, kind: "person", label: name,
+        source: { capture: parsed.persons[0].sha, row: pr.source }, row: pr.key,
+        note: `Legistar person ${f.PersonId}, ${LEGISTAR_BASIS}.` + (others.length
+          ? ` Legistar also lists ${others.map((x) => `PersonId ${x}`).join(", ")} under the same name; they are held as `
+            + "separate persons and never merged here: whether they are one person is a member's claim." : "") });
+      if (others.length && !out.same_names.some((s2) => s2.PersonId === f.PersonId))
+        out.same_names.push({ PersonId: f.PersonId, name, same_name_as: others });
+      put(person, { what: "person", ...where });
+      if (!person.entity_id || person.state === "unseeded") continue;
+      const map = (sb.p.vocabulary && Array.isArray(sb.p.vocabulary.member_types) ? sb.p.vocabulary.member_types : [])
+        .find((x) => x && x.member_type === memberType);
+      const capacity = map && LINE_CAPACITIES.includes(map.capacity) ? map.capacity : null;
+      if (!capacity) {
+        out.holders_undetermined.push({ ...where, person: person.entity_id, seat: seat.entity_id,
+          why: `the profile maps no capacity for the MemberType ${JSON.stringify(memberType)}, so the holder's capacity is undetermined and no holds line is recorded` });
+        continue;
+      }
+      const zone = zoneOf(sb.p) ?? undefined;
+      put(this.#seedLine({ key: `holds|${person.entity_id}|${seat.entity_id}|${row.key}`, kind: "holds", from: person.entity_id,
+                           to: seat.entity_id, capacity,
+                           valid: { from: f.start ?? null, to: f.end ?? null, precision: "day", ...(zone ? { zone } : {}) },
+                           basis: basis({ from: personIdent, to: seatIdent }) }),
+          { what: "holds", ...where, capacity, start: f.start ?? null, end: f.end ?? null, dated: `${LEGISTAR_BASIS} on ${recordedAt}` });
+    }
+    for (const [bodyId, sb] of seatBodies)
+      if (!seen.has(bodyId)) out.bodies_without_records.push({ BodyId: bodyId, body: sb.label,
+        why: "Legistar holds no office record for this body (as for the boards and commissions), so no seat is seeded" });
+    out.counts = { matched: out.matches.length, unmatched: out.unmatched.length, seeded: out.seeded.length,
+                   already: out.already.length, unseeded: out.unseeded.length, holders_undetermined: out.holders_undetermined.length };
+    return out;
+  }
+
+  /* =====================================================================
+   * THE ASSISTANT, OPTIONAL FOR THE COPY, AND EACH MEMBER'S DISCLOSURE (R53–R55; K1502, K1478 (i), D311).
+   *
+   * The copy holds no Claude credential: enabling the assistant binds none, and each member who wants it connects their
+   * own account (credentials R22). The switch is the administrator's (K1522), off unless chosen, and every set is
+   * appended with who and when. While it is off, every ask and every run is refused by name (`ASSISTANT_OFF`) through
+   * `assistantGate`, which the plane and `answers` read before any model turn; turning it off ends nothing recorded.
+   * ===================================================================== */
+
+  /** R53: the switch as recorded, off when nothing is. Writes nothing and never throws. */
+  assistantState() {
+    let r = null;
+    try { r = this.#one(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq DESC LIMIT 1`); } catch { r = null; }
+    return r ? { ok: true, on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at }
+             : { ok: true, on: false, set_by: null, set_at: null,
+                 detail: "the assistant has never been switched on for this copy, so it is off" };
+  }
+
+  /** R53, op=assistantset: an administrator switches the assistant on or off for this copy. `by` is the control
+   *  plane's stamp (R29). Each set is appended, a repeat of the current value included, so the history says who
+   *  chose what and when. */
+  assistantSet({ on = undefined, by = null } = {}) {
+    if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
+      return notAnAdmin(by ?? null, "switching the assistant on or off for this copy");
+    /* DEC-49 REGION is-assistant-switch */
+    if (typeof on !== "boolean")
+      return refusal("ASSISTANT_SWITCH_MALFORMED", "`on` is true (switch the assistant on) or false (switch it off). "
+        + "Nothing was changed.");
+    /* END DEC-49 REGION is-assistant-switch */
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO assistant_switch (on_, set_by, set_at) VALUES (?, ?, ?)`, on ? 1 : 0, by, at);
+    return { ok: true, on, set_by: by, set_at: at,
+             history: this.#rows(`SELECT on_, set_by, set_at FROM assistant_switch ORDER BY seq`)
+               .map((r) => ({ on: r.on_ === 1, set_by: r.set_by, set_at: r.set_at })),
+             note: on
+               ? "the assistant is on for this copy. The copy holds no account of its own: each member who wants it "
+                 + "connects their own Claude account or API key, and is shown the disclosure first."
+               : "the assistant is off for this copy: no ask is put to it and no run starts. Nothing already recorded "
+                 + "is changed or ended." };
+  }
+
+  /** R55: null while the assistant is on; otherwise the refusal every ask and every run answers, whoever asks and
+   *  whatever account they hold. A standing question is not run while it is off. Writes nothing. */
+  assistantGate() {
+    const st = this.assistantState();
+    if (st.on === true) return null;
+    /* DEC-49 REGION is-assistant-on */
+    return refusal("ASSISTANT_OFF", st.set_at
+      ? `an administrator switched the assistant off for this copy on ${st.set_at}; no ask is put to it and no run starts.`
+      : "the assistant has never been switched on for this copy; no ask is put to it and no run starts.",
+      { set_by: st.set_by, set_at: st.set_at });
+    /* END DEC-49 REGION is-assistant-on */
+  }
+
+  /** R54, op=disclosureshown: the disclosure was shown to `member` before they connected their own account. `by` is
+   *  the control plane's stamp and must be that member's own session: no one records it on another's behalf. */
+  disclosureShown({ member = null, version = null, by = null } = {}) {
+    const m = typeof member === "string" ? member.trim() : "";
+    const v = typeof version === "string" ? version.trim() : "";
+    /* DEC-49 REGION is-disclosure-shown */
+    if (!m || !v)
+      return refusal("DISCLOSURE_MALFORMED", `${!m ? "the request names no member" : "the request names no version of "
+        + "the disclosure's words"}. Nothing was recorded.`);
+    if (typeof by !== "string" || by !== m || /^class:/.test(by))
+      return refusal("DISCLOSURE_NOT_THE_MEMBERS", "the disclosure is recorded by the member it was shown to, from "
+        + "their own signed-in session. Nothing was recorded.", { member: m, by: by ?? null });
+    /* END DEC-49 REGION is-disclosure-shown */
+    const at = this.#iso();
+    this.#sql.exec(`INSERT INTO assistant_disclosures (member, version, shown_by, shown_at) VALUES (?, ?, ?, ?)`,
+                   m, v.slice(0, 80), by, at);
+    return { ok: true, member: m, version: v.slice(0, 80), shown_at: at, shown: v.slice(0, 80) === ASSISTANT_DISCLOSURE.version };
+  }
+
+  /** R54: whether the disclosure at the current version (or `version`) was recorded as shown to `member`. A member with
+   *  none recorded is `shown: false`, never assumed. Writes nothing and never throws. */
+  disclosureOf({ member = null, version = ASSISTANT_DISCLOSURE.version } = {}) {
+    const m = typeof member === "string" ? member.trim() : "";
+    const v = typeof version === "string" && version.trim() ? version.trim() : ASSISTANT_DISCLOSURE.version;
+    let r = null;
+    try {
+      r = m ? this.#one(`SELECT version, shown_at FROM assistant_disclosures WHERE member = ? AND version = ?
+                         ORDER BY seq DESC LIMIT 1`, m, v) : null;
+    } catch { r = null; }
+    return r ? { ok: true, member: m, version: v, shown: true, shown_at: r.shown_at }
+             : { ok: true, member: m || null, version: v, shown: false, shown_at: null,
+                 detail: m ? "no disclosure at this version is recorded as shown to this member"
+                           : "the request names no member, so no disclosure is recorded as shown" };
   }
 
   /* =====================================================================
@@ -2467,6 +3156,12 @@ export function instanceSetupOps(m, url, body) {
     cpuprobestart: () => m.recordCpuProbeStart(body || {}),
     recordcpuprobestep: () => m.recordCpuProbeStep(body || {}),
     cpuprobeend: () => m.recordCpuProbeEnd(body || {}),
+    assistantstate: () => m.assistantState(),
+    assistantset: () => m.assistantSet({ ...(body || {}), by: q("by") }),
+    disclosureshown: () => m.disclosureShown({ ...(body || {}), by: q("by") }),
+    disclosureof: () => m.disclosureOf({ member: q("member") ?? (body || {}).member, version: q("version") ?? (body || {}).version }),
+    officesseed: () => m.officesSeed({ ...(body || {}), boot: false, by: q("by") }),
+    seatsseed: () => m.seatsSeed({ ...(body || {}), by: q("by") }),
   };
 }
 
