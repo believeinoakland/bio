@@ -34,3 +34,7 @@
   - `ownership`: 7 files changed by scheduler between tranche/T34 and HEAD; 0 failures.
 
 Size (session_01DWGvb5ymJ1hBtv8vEfM6AM): test runs 9, module lines 657
+
+## J1 · COMPLETE
+
+T34-51 complete: R22 (scheduled-publish over publication R67, re-armed via onPublishScheduled R71), R23 (onStandingSet, start-up faults kept in faults()), R9 (onDutyTracked, onChecksChanged, onDetectorSwitchedOn ask their daily consumer for a pass at once), R12's plane test green through op=accountreferenceset. Scheduler 95/0; plane/tasks/queue/instance-setup unchanged before and after the change (plane's one red is accepted red 8). format, architecture, coverage (23/23) and ownership all 0 failures. The plane bundle is stale until the close. The marks on R2, R5, R9, R22 and R23 can be struck. Details in the record.
