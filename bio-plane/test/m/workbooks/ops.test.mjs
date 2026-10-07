@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { seeded, BASIC, V } from "./fixture.mjs";
 import { workbooksOps, WORKBOOKS_OPS } from "../../../src/workbooks/index.mjs";
 import { METHOD } from "../../../src/calc-grammar/index.mjs";
+import { idPattern } from "../../../src/record-grammar/index.mjs";
 
 const url = (q) => new URL(`https://plane/x?${new URLSearchParams(q)}`);
 
@@ -43,7 +44,9 @@ test("R15 workbooksOps publishes one route arm per act and read, each answering 
   const ex = await workbooksOps(w.wb, url({ calc: calcId, viewer: V("bob") }), {}).workbookexport();
   assert.equal(ex.found, true);
   assert.equal(ex.bytes, undefined);
-  const direct = (await w.wb.exportRecipe({ calcId: "CALC-2026-0001", viewer: V("bob") })).bytes;
+  /* the id is the one calculations minted, in its opaque form (record-grammar R46), never a sequential guess */
+  assert.match(calcId, idPattern("CALC"));
+  const direct = (await w.wb.exportRecipe({ calcId, viewer: V("bob") })).bytes;
   assert.deepEqual(new Uint8Array(Buffer.from(ex.bytes_base64, "base64")), direct);
   assert.deepEqual(await workbooksOps(w.wb, url({ calc: calcId }), {}).workbookexport(), { ok: true, found: false }, "no viewer stamped");
 });
