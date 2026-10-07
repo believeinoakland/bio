@@ -26,3 +26,7 @@ Size (session_01ENYzMG4jn6hUTZ6bBR8iNB): test runs 3, module lines 281
 ## J1 · REPORT
 
 Stale generated artifacts (§14), not written by me: tokens.mjs's R13 detail string changed, so the plane bundle (bio-plane/dist and release/bio-plane.bundled.mjs), newgroup/src/release.mjs and agent-worker's bundle carry the old text until L1's regeneration. No caller pins the detail text. Also: the sweep row's target 'Your group's Civicsmith holds no Claude account' contradicts R13 since K1755 (the group's API key may be held); I kept the name and followed R13: 'binds no Claude account to its own settings'. Details in my record.
+
+## J2 · COMPLETE
+
+T35-4 applied: R13 detail and R23 to K1755/K1761 with the DEC-149 sweep string; 25/25 tests; format 1 failure (accepted red 13), architecture/coverage (24/24)/ownership 0 failures. Record: build/jobs/T35/runtime-limits.md on job/T35/runtime-limits.
