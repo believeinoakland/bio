@@ -1118,6 +1118,13 @@ export function makeFetch(hooks = {}) {
        lost update — it makes the courtesy lock reachable by a named daemon.
        The store additionally refuses a null/blank actor by name, so a bypass of
        this stamp fails closed rather than tripping the NOT NULL constraint. */
+    /* R58 (T35; acquisition R38, R40; capture R73): `op=unpack` reaches capture's pass-through with the caller's class
+       and whether it arrived by a member's session, the door's word, never the caller's (`cls: "member"` for a member's
+       session, `"daemon"` for the daemon continuing an automatic unpack); acquisition judges who may open an archive. */
+    if (op === "unpack") {
+      inner.searchParams.set("cls", viaSession ? "member" : cls);
+      inner.searchParams.set("member", viaSession ? "1" : "0");
+    }
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* K372 (monitoring R30): WHO PAUSED OR RESUMED THE DAEMON, the server's stamp by the roster acts' `by` expression and
        set after the caller's parameters were copied, so a caller's `actor` is overwritten; monitoring records it with
