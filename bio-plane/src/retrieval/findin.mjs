@@ -33,9 +33,6 @@ export const FIND_TERM_MAX = 200;
 export const FIND_EVENT_TYPES = Object.freeze(["meeting_minutes", "meeting_agenda"]);
 /* R74's `people`: the kinds of registered entity a name is found for (entities' closed kinds). */
 export const FIND_PEOPLE_KINDS = Object.freeze(["person", "office"]);
-/* R74's `people` (K1968): the followed entities asked of `entities.namingDocuments` per call, in entity-id order, each
-   one lookup; past it the kind is `truncated`, saying why, and never "Nothing here". */
-export const FIND_PEOPLE_MAX = 200;
 /* The one origin every match carries ("Found by search", DEC-164 (4)). */
 export const FIND_ORIGIN = "search";
 
@@ -213,7 +210,7 @@ export class Finder {
         acc.items.push(item);
       };
       const skip = (c, why) => acc.not_read.push({ capture_sha: c.capture_sha, why });
-      if (kind === "people") this.#people(captures, data, add, skip, viewer, acc);
+      if (kind === "people") this.#people(captures, data, add, skip, viewer, acc, limit);
       else if (kind === "term") this.#term(captures, data, add, skip, term, viewer, acc);
       else for (const c of captures) {
         const d = data.get(c.capture_sha);
@@ -234,8 +231,7 @@ export class Finder {
       const items = acc.items.slice(0, limit);
       /* DEC-98: "Nothing here" only when every capture of the scope was read for this kind and none matched. */
       const nothing = whole && items.length === 0 && acc.not_read.length === 0 && !truncated;
-      return { kind, items, count: items.length, truncated, ...(acc.why ? { truncated_why: acc.why } : {}),
-               nothing, ...(nothing ? { says: "Nothing here" } : {}),
+      return { kind, items, count: items.length, truncated, nothing, ...(nothing ? { says: "Nothing here" } : {}),
                not_read: acc.not_read };
     });
   }
@@ -350,27 +346,22 @@ export class Finder {
 
   /* `people`: each reference of the captures' readings that corresponds to a held name of a registered person or
      office, as `entities.namingDocuments` corresponds them (its R17); nothing is resolved (entities R9). */
-  #people(captures, data, add, skip, viewer, acc) {
-    const inScope = new Map(captures.map((c) => [c.capture_sha, c]));
-    for (const c of captures) if (!data.get(c.capture_sha).reading) skip(c, "not extracted: no reading of this capture is held");
+  #people(captures, data, add, skip, viewer, acc, limit) {
+    const read = [];
+    for (const c of captures) {
+      if (data.get(c.capture_sha).reading) read.push(c.capture_sha);
+      else skip(c, "not extracted: no reading of this capture is held");
+    }
     const entities = this.r.entitiesFor();
-    const followed = this.r.rowsOf(`SELECT entity_id, kind, label FROM entities WHERE kind IN (${FIND_PEOPLE_KINDS.map(() => "?").join(",")})
-                                     ORDER BY entity_id LIMIT ?`, ...FIND_PEOPLE_KINDS, FIND_PEOPLE_MAX + 1);
-    if (followed.length > FIND_PEOPLE_MAX) {
-      followed.length = FIND_PEOPLE_MAX;
-      acc.truncated = true;
-      acc.why = `only the first ${FIND_PEOPLE_MAX} people and offices the group follows were looked for, in id order`;
-    }
-    const found = [];
-    for (const ent of followed) {
-      const ans = entities ? entities.namingDocuments({ entityId: ent.entity_id, limit: 500, viewer }) : null;
-      if (!ans || ans.ok !== true) continue;
-      if (ans.truncated) acc.truncated = true;
-      for (const cand of ans.documents || []) {
-        if (!inScope.has(cand.capture_sha) || !data.get(cand.capture_sha).reading) continue;
-        found.push({ ent, cand });
-      }
-    }
+    if (!read.length || !entities) return;
+    /* entities R52 (K1972): R17's candidates for every followed person and office over this page's captures, in one
+       bounded read; its page is this kind's own, so its `truncated` is this kind's. */
+    const ans = entities.namingIn({ captureShas: read, kinds: [...FIND_PEOPLE_KINDS], limit, viewer });
+    if (!ans || ans.ok !== true) return;
+    if (ans.truncated) acc.truncated = true;
+    const byId = new Map((ans.entities || []).map((e) => [e.entity_id, { entity_id: e.entity_id, kind: e.entity_kind, label: e.entity_label }]));
+    const found = (ans.candidates || []).filter((cand) => byId.has(cand.entity_id))
+      .map((cand) => ({ ent: byId.get(cand.entity_id), cand }));
     found.sort((a, b) => a.cand.capture_sha.localeCompare(b.cand.capture_sha) || String(a.cand.ref).localeCompare(String(b.cand.ref))
       || a.ent.entity_id.localeCompare(b.ent.entity_id));
     for (const { ent, cand } of found) {

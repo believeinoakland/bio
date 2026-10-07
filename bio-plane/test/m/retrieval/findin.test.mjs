@@ -6,7 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { retrievalRoutes, FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT,
-         FIND_ITEMS_MAX, FIND_WORDS_MAX, FIND_TERM_MAX, FIND_PEOPLE_MAX, matchMoney, matchDates, matchRequirements }
+         FIND_ITEMS_MAX, FIND_WORDS_MAX, FIND_TERM_MAX, matchMoney, matchDates, matchRequirements }
   from "../../../src/retrieval/index.mjs";
 import { entitiesOf } from "../../../src/entities/index.mjs";
 import { labelTerms } from "../../../src/extraction/index.mjs";
@@ -209,19 +209,29 @@ test("R74 people, R74 term (DEC-164 (7)): a followed person or office is found b
   assert.deepEqual([ig.extent, typeof ig.extent_why, ig.entity.kind], [null, "string", "office"]);
 });
 
-test("R74 people (K1968): at most FIND_PEOPLE_MAX followed people and offices are looked for per call, in id order; past it the kind is truncated with why and never says Nothing here", () => {
+test("R74 people (K1972; entities R52): the followed people and offices are looked for by one namingIn read per page of captures, never per entity and never capped by count; truncated is namingIn's page, and a truncated kind never says Nothing here", () => {
   const w = find();
-  const c = w.cap("m.pdf", "m");
-  w.doc("INFO-M", {}, { captures: [c] });
+  const c = w.cap("m.pdf", "m"), d = w.cap("n.pdf", "n");
+  w.doc("INFO-M", {}, { captures: [c, d] });
   w.read(c, "INFO-M", { entities: [{ kind: "person", key: "z", label: "Zed Last", source: { kind: "pdf-page", ref: "page 1", page: 0, rect: null } }] });
-  for (let i = 0; i < FIND_PEOPLE_MAX; i++)
-    w.entities.createEntity({ kind: "office", label: `Office ${i}`, note: "n", declaredBy: "member:ann" });
-  const under = kindOf(run(w, { scope: { capture: c.sha }, kinds: ["people"] }), "people");
-  assert.deepEqual([under.count, under.truncated, under.nothing], [0, false, true], "200 followed: every one looked for");
+  w.read(d, "INFO-M", { entities: [{ kind: "person", key: "y", label: "Yan First", source: { kind: "pdf-page", ref: "page 1", page: 0, rect: null } }] });
+  for (let i = 0; i < 201; i++) w.entities.createEntity({ kind: "office", label: `Office ${i}`, note: "n", declaredBy: "member:ann" });
   w.entities.createEntity({ kind: "person", label: "Zed Last", note: "n", declaredBy: "member:ann" });
-  const over = kindOf(run(w, { scope: { capture: c.sha }, kinds: ["people"] }), "people");
-  assert.deepEqual([over.count, over.truncated, over.nothing, typeof over.truncated_why], [0, true, false, "string"],
-    "the 201st, in id order, is not looked for, and the answer says so");
+  w.entities.createEntity({ kind: "person", label: "Yan First", note: "n", declaredBy: "member:ann" });
+  const calls = { namingIn: [], namingDocuments: 0 };
+  const realIn = w.entities.namingIn.bind(w.entities), realDocs = w.entities.namingDocuments.bind(w.entities);
+  w.entities.namingIn = (a) => { calls.namingIn.push(a); return realIn(a); };
+  w.entities.namingDocuments = (a) => { calls.namingDocuments++; return realDocs(a); };
+  const all = kindOf(run(w, { scope: { ids: ["INFO-M"] }, kinds: ["people"] }), "people");
+  assert.deepEqual(all.items.map((i) => i.words).sort(), ["Yan First", "Zed Last"], "the 202nd and 203rd followed entities are found");
+  assert.deepEqual([all.truncated, "truncated_why" in all], [false, false]);
+  assert.equal(calls.namingIn.length, 1, "one read for the page");
+  assert.deepEqual([calls.namingIn[0].captureShas.slice().sort(), calls.namingIn[0].kinds, calls.namingIn[0].viewer],
+                   [[c.sha, d.sha].sort(), ["person", "office"], V("vera")]);
+  assert.equal(calls.namingDocuments, 0, "never one lookup per entity");
+  const cut = kindOf(run(w, { scope: { ids: ["INFO-M"] }, kinds: ["people"], limit: 1 }), "people");
+  assert.deepEqual([cut.count, cut.truncated, cut.nothing], [1, true, false]);
+  assert.equal(calls.namingIn[1].limit, 1, "the kind's own limit is namingIn's page");
 });
 
 test("R74 money, dates, requirements over fixed English fixtures: each match with its words, extent and origin; the same matches twice; never a force; a deadline's period only where stated plainly, never a due date", () => {
