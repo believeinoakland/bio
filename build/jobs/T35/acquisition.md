@@ -66,3 +66,7 @@ T35-21 complete: N661, the 18 DEC-149 rows, N688 (R17, R25–R27, R38–R41), F1
 - `format: 129 modules, 128 requirements files; 0 failures`; `architecture: 22 product files, 99 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 43 of 43 live requirement ids named by a test; 0 failures`; `ownership: 16 files changed by acquisition between tranche/T35 and HEAD; 0 failures`.
 
 Size (session_01UMj9SBkQaJdNggTSiaKV3Q): test runs 25, module lines 2842
+
+## J4 · COMPLETE
+
+B3 and B4 applied: memento wording re-pinned (memento.test.mjs:35, acquire.test.mjs:102); isOwnHost from capture-sources/own-hosts.mjs (no entry re-exports it); own_hosts already rides the render; promotion order is the caller's and already stated (archive first). tranche/T35 merged in, so J3's condition is gone: 144/144 against the real provenance and capture-sources, users green but control-plane's red 19, four checks 0 failures. Record: 'Completion after B3, B4'.
