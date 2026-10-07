@@ -437,7 +437,9 @@ async function xlsxParts(bytes) {
   const disc = await discriminate(b);
   if (!disc.ok) return { ok: false, why: disc.why, signals: disc.signals };
   if (disc.format !== "xlsx") {
-    return { ok: false, why: `not_xlsx:${disc.format}`, signals: disc.signals };
+    /* An undetermined discrimination carries its own reason (a refused
+       limit included, R12), as docx and pptx state it. */
+    return { ok: false, why: disc.format === "undetermined" ? disc.why : `not_xlsx:${disc.format}`, signals: disc.signals };
   }
   const container = readContainer(b);
 
