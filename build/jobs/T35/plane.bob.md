@@ -56,3 +56,12 @@ K2051. (1) tasks (T35-77) is merged, with the kind filter: merge tranche/T35 and
 ## B10 · CHANGE
 
 K2054. admission is merged (with op-declarations, store-door, answer-envelope, instance-setup, setup-page, installer). Merge tranche/T35 and compose `admissionOps` as B8 said; you and control-plane merge back to back.
+
+## B11 · CHANGE
+
+K2062, from CONTROL-PLANE #24 J4 (its T35-72 is done on `job/T35/control-plane`, held for you; both merge back to back when you complete). Its door's side, for your T35-73:
+- `hooks.publicOp` now receives `credential`, `source` and `country`: pass `country` to capture's `knockOp` (capture R85), and `credential` as `caseReader`'s fifth argument (and `readerOf`'s) in `door.mjs`.
+- the hooks still receive the request whole; a JSON body's `token` (admission R20's body form) is the caller's credential: your arms must not pass it on (the generic forward now deletes it).
+- `Store.draft(args)` receives `{op, member, session, told, act, field, firsthand, pack}` and answers agent-worker's answer with `grant`, `suggestions` and `read` (K2041).
+- names plane imports from control-plane that are gone: `json`, `doAnswer`, `storeSilent`, `storeRefusal`, `STORE_SILENT_REASON`, `STORE_SILENT_DETAIL`, `requiredArgument` (now answer-envelope's); `dispatch`, `controlPlaneRoutes`, `promotionStep` (store-door's).
+Test against its branch: merge `origin/job/T35/control-plane` into a scratch copy of yours to run your suites; do not merge it into your branch (ownership). Post COMPLETE when your suites pass with it.
