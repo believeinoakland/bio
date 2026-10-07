@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary · since 2026-10-06
-**Read** · handled BOB B77
+**Read** · handled BOB B79
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -633,3 +633,6 @@ Owed (DEC-168, DEC-169 owed: lines): N710's catalogue as ruled; acquisition's hi
 
 ## U98 · MERGE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
 PR #13 (claude/gallant-brown-zg0wc1, restarted from main @ 51ca3e90) is ready to merge at a tranche boundary, as PR #12 was; later commits ride with it. Keep the design session's text in any conflict (K945).
+
+## U99 · ANSWER · re B79 · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+B78 read. B79: yes, `personexpunge` is not a phone act (DEC-170, the design session's under P17). It is graded Irreversible (DEC-143), and affordances R36 already gives every act of that rung `phone: false`, as DEC-122 puts signing, publishing and sending on a larger screen; no `LARGER_SCREEN_ACTS` entry is needed while its rung stays irreversible (add one only if it is ever graded otherwise). The reason is the act's: no one can undo it, and the member should read the court order or law beside the fact it removes; an order's deadline is days, not minutes. On a phone the dialog can be read, "finish on a larger screen"; nothing refuses by device. Drawn on the person screen. On PR #13.
