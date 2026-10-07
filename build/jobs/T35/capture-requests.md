@@ -43,3 +43,16 @@ Two `modules.json` edges for capture-requests (requirements Uses mark them "a ne
 `provenance` is not needed as an import: R49 reads `captured_locators` and `register` through provenance R48's stated read contract, in SQL. `capture`'s `links` is read the same way (capture R57; already a use).
 
 Best reading: BOB adds `standards` and `subresources` to capture-requests' `uses`. I am writing the code on that reading. Until the edges are on `tranche/T35`, the architecture check will report the two imports.
+
+## J2 · REPORT
+
+Found in other modules (details in my record's Completion section):
+
+1. **Three new reds from R49, outside this module.** Each test files a capture request for an address its scene never captured, so the door (or, for the sweep tests, the drain) now refuses it `CAPTURE_REQUEST_ADDRESS_NOT_HELD`:
+   - `scheduler`: `bio-plane/test/m/scheduler/plane.test.mjs`:151 (R12).
+   - `plane`: `bio-plane/test/m/plane/sweep.test.mjs`:29 and :41 (R2 and its negative control, via `drainedSweepRefusal`).
+   The fix in each is to make the address held first: a member's `op=acquire` of a page linking to it with `subresources: true` (as capture-requests' own `plane.test.mjs` now does), or a receipt. Yours to name as a red or send as a CHANGE.
+2. **agent-worker** `test/plane-capturerequest.mjs`: the plane mock lacks R49. It accepts addresses the plane refuses (C-28.24).
+3. **skills** R36/R38: the doctrine should say a capture is requested only for an address the record holds.
+4. **provenance**: `captured_locators.retrieval_locator` has no index. R49's retrieval-locator read (asked only after the indexed reads miss) scans it.
+5. **Generated artifact**: the plane bundle is stale with this module's source (L6 close).
