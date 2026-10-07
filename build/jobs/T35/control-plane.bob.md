@@ -26,3 +26,7 @@ Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is follo
 ## B2 · CHANGE
 
 K2037 (from the L11 split jobs). (a) answer-envelope tests R1–R6 at its own functions; the door-level arms are yours in T35-72: R6's fetch-twice test over `/sign` and `/` once your door calls `answer-envelope`'s `withPagePolicy`, and `envelope.test.mjs`'s cases driven through `makeFetch` (keep, re-point or delete). (b) store-door reads an ask's grant only from the internal header `x-bio-grant` (`GRANT_HEADER`, exported from `store-door/dispatch.mjs`): set it where `index.mjs`:1089 sets `?grant=` today, never the query or body. Merge tranche/T35 (`modules.json` changed).
+
+## B3 · ANSWER · re J1
+
+K2038. (1) Headers `x-bio-session` and `x-bio-grant` (and `x-bio-credential-sha` for admission's lookup), never the address; store-door R9 now names them and hands each to the owner's map on the in-process URL. (2) The draft path is plane's: `Store.draft(args)` → `draftOnObject` in `plane/ask.mjs` (account, switch, grant only when suggestions on and not firsthand, POST /draft), answering agent-worker's answer plus `grant` and `suggestions`. Yours: the door flow after the owner's `ASSISTANT_DRAFT_UNAVAILABLE`, `checkDraft` over the grant's read log, usage via `askusage` with mode "draft". Do not add `control-plane/draft.mjs`'s object half. (3) K1986 is store-door's. (4) Delete outright; I hold your merge until plane completes and merge the two back to back. Merge tranche/T35.
