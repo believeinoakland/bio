@@ -24,3 +24,7 @@
 - Final `uses`: `bundler` (unchanged; `scripts/build.mjs`'s `writeMember`).
 
 Size (session_01R7wNZkLCVjXa645gdAf5GQ): test runs 9, module lines 1417
+
+## J1 · COMPLETE
+
+T35-49 done on job/T35/agent-runner: R15 (default fetch export answering 404 UNKNOWN, AgentRunner kept), R11 (exemption of exactly image.repository and the wrangler containers' repository prefix, proven exact), R16 (npm ci --omit=dev --ignore-scripts; no hasInstallScript in the lock) met and tested. coverage 16/16, format, architecture, ownership 0 failures. Stale generated artifact (§14): agent-runner/dist/ — regenerate with npm run build in agent-runner/; until then R12's export test and R15 are red (with a fresh bundle: 24/24, fleetbundles 0 fail, bundler 70/70). The Docker build itself was refused by my permission check (it needed the proxy CA in the build); R16's install was reproduced outside Docker instead (details in the record). Record: build/jobs/T35/agent-runner.md, Completion.
