@@ -42,3 +42,7 @@ R27's tests need events' `usesOf` (T35-28); I build against R46's wording now an
 ## J2 · QUESTION
 
 Applying B3 (K1966). One edge needed: B3's `NO_SHA` is extraction's one answer (`noSha`, its R63), and duties does not use `extraction`, so the architecture check fails on `import { noSha } from "../extraction/index.mjs"`. My reading: add `extraction` to duties' `uses` in `modules.json` (layer 4, earlier; content and events already import `noSha` the same way). The other three codes (`CAPTURE_NOT_HELD`, `NO_EXTENT`, `EXTENT_NOT_IN_CAPTURE`) are answered bare, as events R1 answers them (no row in any family), and the extent is checked with content's `checkContentExtent` over `contentContextFor`. Until the edge is added, the architecture check reports this one failure.
+
+## J3 · COMPLETE
+
+T35-34 complete: R24, R27, R28, R29 met, per my record's Completion. duties 49/49; format, architecture, coverage (29/29), ownership 0 failures. Users' reds are the tranche's own set; control-plane R53 now also names my four new ops (poweruses, uselink, useunlink, reviewpropose): specs for op-declarations (T35-70), routing for control-plane (T35-72). Stale: the plane bundle. New rows C-133.37–.39 await stamp.
