@@ -197,7 +197,7 @@ const SCREEN_REFS = {
     ["Council",null,"<b>Council</b> · Oakland City Council · its votes are recorded in minutes on Legistar","Approved amendment 1 in January 2024; no council vote is recorded for the March rent change."],
     ["City Administrator",null,"<b>City Administrator</b> · an office · runs the city's departments and answers to the council","Signed the March 2024 adjustment; no council vote stands behind it in this record."],
     ["We requested the rent schedules","action","<b>Request: the rent schedules</b> · a records request to the Office of the City Clerk · 4 September 2026 · answered 18 September","The group's own act, in its own lane, beside the reply it got."],
-    ["April notice",null,"<b>April notice</b> · the city's notice of the new rent · dated April 2024, month only","Its order against the March adjustment is undetermined; a source dated to the day would settle it."],
+    ["April notice",null,"<b>April notice</b> · the city's notice of the new rent · dated April 2024, month only","Its order against the March adjustment is undetermined; a source dated to the day would help order them."],
     ["Memo on rent indexing","document","<b>Memo on rent indexing</b> · a document · no date on its face","Kept apart until a source dates it; it may show how the 2024 rent was set."]
   ],
   "money": [
@@ -387,6 +387,36 @@ for (const [k, v] of Object.entries(SCREEN_REFS)) REFS[k] = (REFS[k] || []).conc
 
 /* Guidance (proposed information level 2, question S8): what each screen is and what a member can do there, on its heading;
    and what each section of the rail holds. */
+// What a screen's title names, when it names a particular thing: its explanation leads with that thing (Bob, 7 October:
+// titles' mouseovers lacked context); the screen's own purpose (SCREEN_HELP) follows in lighter type.
+const TITLE_HELP = {
+  "join": "<b>You're invited to Lakeshore Tenants</b>: Rosa's invitation for you to contribute to the group. The link works once and expires on 13 October 2026.",
+  "home": "<b>Lakeshore Tenants</b>: your group, tenants near the Coliseum meeting since 2025, six members. Its focus: rents and leases on city land, and the streets members live on.",
+  "archive": "<b>Agenda packet, City Council, 14 May 2024</b>: a ZIP archive Ana captured from the city's meeting site on 2 October 2026, for Sewer fund transfers. Every file inside is listed with what happened to it: filed, held for review, or set aside.",
+  "open-file": "<b>Pothole repair policy, Administrative Instruction 4.12</b>: the city's PDF that Dev captured from its website on 2 October. Before it opens, this says how risky opening it is and why.",
+  "document": "<b>Pothole repair policy, Administrative Instruction 4.12</b>: Public Works' policy, revised 2023, captured by Dev from oaklandca.gov on 2 October 2026. It holds the seven-day repair rule the Pothole repairs project tests the city against.",
+  "project": "<b>Pothole repairs</b>: your group's project asking whether the city repairs reported potholes as its own policy requires. Its questions, how strong each is against the project's bar, its members and its plan are here.",
+  "question": "<b>Is the city repairing reported potholes within seven days?</b>: Dev's question in Pothole repairs, opened 3 October. It tests the city against its own seven-day rule in Administrative Instruction 4.12; what supports it and what cuts against it are listed below.",
+  "assistant": "<b>Is the city repairing reported potholes within seven days?</b>: Dev's question in Pothole repairs, opened 3 October, with the assistant beside it. The assistant answers only from what your group holds.",
+  "person": "<b>L. Chen</b>: Director of Public Works since March 2022, named in 14 documents your group holds. Every fact about them here cites the document it comes from.",
+  "timeline": "<b>Timeline of The Coliseum lease</b>: what happened in the lease, in order, the city's acts and your group's in two lanes.",
+  "money": "<b>Sewer fund transfers, FY2022</b>: Ana's money trail of three figures read from the city's budget and its financial report, following money out of the Sewer Fund, mostly to the General Fund, in fiscal year 2022 (1 July 2021 to 30 June 2022).",
+  "calculation": "<b>Reports closed within seven days, FY2025</b>: a fact your group worked out from the Public Works work orders for fiscal year 2025: 812 of 903 pothole reports (89.9%) were marked closed within seven calendar days of being reported. Its method is shown below, Ana checked it on 5 October, and it is worked out again if an input changes. It counts reports closed, not potholes repaired.",
+  "explore": "<b>Explore connections</b>: chains from J. Ortega to the Coliseum lease, through money and votes, as of 2026, each step cited and graded.",
+  "proceeding": "<b>Lakeshore Tenants Assn. v. City, RG26-114502</b>: a Superior Court case the record follows, shown under a neutral label, \"the lease rent case\". Its parties, filings and orders, with their dates, are here.",
+  "due-date": "<b>Due 14 October 2026</b>: the day the City Clerk must reply to your group's records request. The law it comes from and how the days were counted are below.",
+  "standard": "<b>Repair reported potholes within seven calendar days</b>: a requirement the city set itself, in Administrative Instruction 4.12 §3, a Public Works policy in force since 2023. Your group's questions test the city against it.",
+  "plan": "<b>Repairs: closed is not repaired</b>: Dev's action plan, opened 3 October when the inquiry began, about reports marked closed when the pothole may not be repaired. Its options, the order to try them and what to check are here.",
+  "start-send": "<b>Start \"Records request: inspection logs\"</b>: the first step of that option in the plan. Nothing is sent until you confirm; this shows what it will say and what it rests on.",
+  "action": "<b>Records request: inspection logs</b>: your group's request to the Office of the City Clerk, sent by Mai on 2 October. What was sent, when the reply is due and what came back are here.",
+  "matter": "<b>The 2024 rent adjustment, made without a council vote</b>: what your group is pursuing about this one problem, judged noncompliant with lease §7.2 and established, from the first letter to the outcome.",
+  "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your group's published case. Nothing here is public until an owner signs and publishes it.",
+  "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
+  "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Once published it is permanent and public; it can be corrected by a new edition, never removed.",
+  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 14 November 2026, which corrects Edition 1.",
+  "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on 1 October. Nothing in it counts for your group until a member accepts it.",
+  "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
+};
 const SCREEN_HELP = {
   install: 'Installs Civicsmith in a Cloudflare account your group controls. Here you choose the group\'s permanent short name and let the installation test itself.',
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',
@@ -404,6 +434,7 @@ const SCREEN_HELP = {
   queue: 'Your queue: everything waiting on you, in one list. To do needs your act, Noticed is something new nobody has judged, and Status tells you where something stands.',
   finder: 'Find what your group holds, or look outside for something it doesn\'t yet. Capture what you find into the record.',
   capture: 'Add something to the record: a document from its address, a file, or what you saw yourself, in your own words.',
+  'open-file': 'Before a file opens: whether it is low or high risk and why, its safe view, the checks it has had, and how a held file is released.',
   archive: 'One captured archive and every file in it: which are filed and held for review beside it, which were already held, and which were not filed and why.',
   held: 'Captures waiting for a member to vouch for them before they enter the record. Release them, or set them aside with a reason.',
   'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
@@ -415,6 +446,7 @@ const SCREEN_HELP = {
   person: 'A person the record follows: positions over time, what they decided and signed, each fact dated and cited.',
   timeline: 'What happened, in order: the city\'s acts and your group\'s acts in two lanes, never mixed. Undated items are listed apart.',
   money: 'A money trail: figures from budgets and reports, each with its stage and period, included or left out with a reason.',
+  help: 'A help page: one of Civicsmith\'s methods explained in plain words, opened from the screens where it is used.',
   calculation: 'A calculation shown with its method and inputs, each tied to the record and recomputed when an input changes.',
   explore: 'Chains of connections between people, votes, contracts and payments, each step cited and graded. A chain is a lead until a member cites its documents.',
   proceeding: 'A court case or legal proceeding: its parties, its register of filings, and orders with their reply dates.',
@@ -442,4 +474,24 @@ const RAIL_HELP = {
   projects: 'Projects: your group\'s investigations, their questions, plans and cases.',
   people: 'People: the people and organisations the record follows. Your own group\'s members are under Settings.',
   settings: 'Settings: your account, your group\'s members, the assistant, translations and wizards.',
+};
+
+// What each table column shows, by screen and heading: the heading's explanation, at the level of names (always on).
+const COL_HELP = {
+  'money|Figure': 'What the amount is, in the words of its source: a transfer, a charge, a payment, a grant.',
+  'money|From': 'Who or which fund paid, as the source writes it. The payer is part of the figure itself, never guessed from somewhere else.',
+  'money|To, where it went': 'Who or which fund received the money, as the source writes it. "Not stated in this source" means this source does not say; record it from another source that does, citing the passage.',
+  'money|When it moved': 'The day the money actually moved, taken from the event the figure is tied to and the passage that dates it. A budget figure did not move, so it shows when it was adopted instead. <b>Undetermined</b> means no source the group holds gives the day; it is never guessed from the accounting period.',
+  'money|Stage': 'How far along the money was when the source counted it: <b>adopted</b> (budgeted), <b>committed</b> (promised by contract), or <b>actual</b> (spent; "paid" when the source shows the payment). Figures at different stages are compared, never added.',
+  'money|Period': 'The accounting period the source counts the amount in, here the city\'s fiscal year (FY2022 ran 1 July 2021 to 30 June 2022). It is not the date the money moved: that is in <b>When it moved</b>.',
+  'money|Amount': 'The amount exactly as the source states it. A rounded amount ("about $2 million") keeps its rounding.',
+  'money|Source': 'The document the figure was read from, with its capture grade: how sure the group is that the copy is what the office published. Click the mark for the document.',
+  'money|In this trail?': 'Whether this figure counts in the trail\'s comparison, and the member\'s reason for including it or leaving it out. A figure left out stays listed, with why.',
+  'security|Kind': 'The kind of attempt that was turned away. Each counts attempts, not people.',
+  'security|This period': 'How many of this kind in the period you are looking at.',
+  'security|Usual': 'Your group\'s own median for the same length of time over the four weeks before. Far above it is what makes a period Raised or High.',
+  'security|Busiest hour': 'The hour with the most of this kind, and its count.',
+  'translations|English': 'The words as Civicsmith ships them. <b>Protected</b> marks words that carry a ruling and need a second member\'s check before a translation is used; <b>Local name</b> marks a name kept as it is, with its explanation translated.',
+  'translations|Español': 'The translation members see. A shaded cell is a draft, not yet shown to anyone.',
+  'translations|Where it came from': 'Whether the translation came with a Civicsmith release, was typed by a member, or started as the assistant\'s draft, and whether it still needs its second check.',
 };
