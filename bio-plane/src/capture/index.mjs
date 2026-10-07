@@ -29,7 +29,7 @@ export { CAPTURE_ACCOUNT_TOKEN, captureAccountStatement } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
-import * as acquisitionApi from "../acquisition/index.mjs";
+import { unpack, archiveList, memberOf, acquisitionOf } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf, DOORBELL_VIA } from "../provenance/index.mjs";
@@ -172,7 +172,8 @@ const sameEnv = (a, b) => {
 
 /** K61, R58: the one Capture for this object's storage. `opts`: `env` (the object's bindings: the evidence bucket
  *  for the inbox, the renderer, the instance's name), `governor` (host-governor's, `governorOf(ctx)` by default),
- *  `record` (`recordOf(ctx)`), `provenance` (`provenanceOf(ctx)`), `attestation` (`attestationOf(ctx)`, K1224) and
+ *  `record` (`recordOf(ctx)`), `provenance` (`provenanceOf(ctx)`), `attestation` (`attestationOf(ctx)`, K1224),
+ *  `acquisition` (`acquisitionOf(ctx)`, its archive records, T35) and
  *  `ownHosts` (the group's own hosts, T35, R73; none by default, adopted from the first caller that names them, as
  *  `governor`). A later call's option is never silently
  *  dropped (N122: a first caller without `env` stripped the plane's renderer from every later one): an `env` or
@@ -186,9 +187,12 @@ export function captureOf(ctx, opts = {}) {
     c = new Capture(storage, { ...opts, record, provenance,
                                governor: opts.governor ?? governorOf(ctx, { env: opts.env ?? null }),
                                /* attestation's own instance for this host, over the record and provenance capture holds */
-                               attestation: opts.attestation ?? attestationOf(ctx, { record, provenance }) });
+                               attestation: opts.attestation ?? attestationOf(ctx, { record, provenance }),
+                               /* acquisition's own instance for this host (its archive records, R38–R41; B3, K1953),
+                                  made when first reached */
+                               acquisition: opts.acquisition ?? null, acquisitionHost: opts.acquisition ? null : ctx });
     instances.set(storage, c);
-    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "ownHosts"].filter((k) => opts[k] != null)));
+    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "acquisition", "ownHosts"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
     registerFigures(c);
     return c;
@@ -202,7 +206,7 @@ export function captureOf(ctx, opts = {}) {
   if (opts.env != null && given.has("env") && !sameEnv(c.env, opts.env)) refuse("env");
   if (opts.governor != null && given.has("governor") && c.governor !== opts.governor) refuse("governor");
   if (opts.ownHosts != null && given.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse("ownHosts");
-  for (const [name, held] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation]])
+  for (const [name, held] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation], ["acquisition", c.acquisition]])
     if (opts[name] != null && opts[name] !== held) refuse(name);
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
@@ -235,10 +239,10 @@ function registerFigures(c) {
 }
 
 export class Capture {
-  #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false;
+  #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
-                         ownHosts = [] } = {}) {
+                         acquisition = null, acquisitionHost = null, ownHosts = [] } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
@@ -249,10 +253,28 @@ export class Capture {
        `signReceipt`). */
     this.attestation = attestation;
     this.credentials = credentials;
+    /* R73 (T35; B3, K1953): acquisition's instance for this storage, which keeps its archive records (`acquisition`
+       R38–R41) and which the acquisition act reaches as `cap.acquisition`, as it reaches `cap.attestation`. */
+    this.#acquisition = acquisition;
+    this.#acquisitionHost = acquisitionHost;
     /* R73 (T35; F16): the group's own hosts (the copy's own and every fleet member's), built by the composition root
        (`plane`), read off this store by `acquisition` R42 and `capture-sources` R55, R65. */
     this.ownHosts = Capture.hostsOf(ownHosts);
   }
+
+  /** R73 (T35): acquisition's instance, the one given, else `acquisitionOf` over this host's storage made when first
+   *  reached (a record without record-core's table seam, a test's stand-in, reads as none: the archive acts then answer
+   *  acquisition's `ARCHIVE_RECORD_UNAVAILABLE`). */
+  get acquisition() {
+    if (!this.#acquisition && this.#acquisitionHost) {
+      const host = this.#acquisitionHost;
+      this.#acquisitionHost = null;
+      try { this.#acquisition = acquisitionOf(host, { record: this.core, provenance: this.provenance }); }
+      catch { this.#acquisition = null; }
+    }
+    return this.#acquisition;
+  }
+  set acquisition(a) { this.#acquisition = a; this.#acquisitionHost = null; }
 
   /* R73: a list of host names, lower-cased, each once; anything else reads as none. */
   static hostsOf(list) {
@@ -375,14 +397,14 @@ export class Capture {
   archiveLookup(args) { return archiveLookup(this, args); }
 
   /** R73 (T35; `acquisition` R38): `acquisition`'s `unpack` with this module's store handed in. */
-  unpack(args) { return acquisitionApi.unpack(this, args); }
+  unpack(args) { return unpack(this, args); }
 
   /** R73, R77 (T35; `acquisition` R41): `acquisition`'s `archiveList`, likewise. */
-  archiveList(args) { return acquisitionApi.archiveList(this, args); }
+  archiveList(args) { return archiveList(this, args); }
 
   /** R73, R77 (T35; `acquisition` R41): `acquisition`'s `memberOf`, likewise: every archive a capture was filed from or
    *  found in, `[]` for none. */
-  memberOf(captureSha) { return acquisitionApi.memberOf(this, captureSha); }
+  memberOf(captureSha) { return memberOf(this, captureSha); }
 
   #emitSync(event, payload) {
     const out = [];
@@ -1284,7 +1306,7 @@ export class Capture {
   }
 
   /* R77 (DEC-167 (8)): an archive's row additions, when the row's document holds an archive `acquisition.archiveList`
-     answers for the viewer: `archive`, its summary, and `files`, the held files beside it (filed, or already held and
+     answers for the viewer (one it opened, or one whose listing reads entries): `archive`, its summary, and `files`, the held files beside it (filed, or already held and
      found in it) whose documents are rows of this list for the viewer, in index order, at most `HELD_FILES_IN_ROW`, each
      `{document, sha256, index, name, grade, eligible}` (the grade the archive's), with `files_total` and
      `files_truncated`. Null for a document that holds no archive. The entries are read through `archiveList`, a page of
@@ -1296,7 +1318,9 @@ export class Capture {
     for (const sha of shas) {
       let first;
       try { first = await this.archiveList({ archiveSha: sha, viewer, limit: 1 }); } catch { first = null; }
-      if (!first || first.ok !== true || !first.archive) continue;
+      /* An archive is one acquisition recorded opening (`opened`), or a held one whose listing reads entries; a capture
+         whose bytes list as no archive (any other file, which `archiveList` answers as a listing refused whole) is not. */
+      if (!first || first.ok !== true || !first.archive || (first.archive.opened !== true && !(Number(first.archive.entries) > 0))) continue;
       const files = [];
       for (const state of ["filed", "already_held"]) {
         let after = null;
@@ -2610,7 +2634,7 @@ export function captureOps(c, url, body, env) {
     archivelookup: () => c.archiveLookup({ address: (body && body.address) || q("address") }),
     /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
        plane's stamps, never the body's, and the body names only the archive. */
-    unpack: () => c.unpack({ archiveSha: (body && body.archiveSha) || q("archive"), by: q("by"), cls: q("cls") }),
+    unpack: () => c.unpack({ archiveSha: (body && body.archiveSha) || q("archive"), by: q("by"), cls: q("cls"), member: q("member") === "1" }),
     archivelist: () => c.archiveList({ archiveSha: q("archive") ?? (body && body.archiveSha), viewer: q("viewer") ?? "",
                                        state: q("state"), ...page }),
   };
