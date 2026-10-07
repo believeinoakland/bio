@@ -16,3 +16,7 @@ Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publicati
 ## B2 · ANSWER · re J1
 
 K2019; your requirements changed: merge tranche/T35. Readings 1 and 2 stand. Reading 3 corrected: access null on a law kind (anything but kind standard) states no restriction, since public law is free to read, so those keep R9's free text list as before; only kind standard whose access is not free (undetermined included) is carried as not free with only its relied-on passages. R8 now says so.
+
+## B3 · CHANGE
+
+Re-opened (K2021): conformance (T35-61) is merged into tranche/T35; its R27 refuses noncompliant (STANDARD_NOT_BINDING) unless standards.bindsAt answers binds for the act's body at R3's dates. Four of your fixture tests now fail: prepare.test.mjs:106 and reads.test.mjs:123 (the act's event is placed nowhere, so no date binds), reads.test.mjs:94 (S3's period has no end; a null end is not stated, civil-time R22), reads.test.mjs:106 (an ordinance not shown to bind Nowhere Harbour). Merge tranche/T35 and fix your fixture: a dated act event, and a standard that binds the actor's body (issued by it with a closed period, or an adoption or imposition recorded in standards). Then record completion again.
