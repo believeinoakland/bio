@@ -54,7 +54,7 @@ screen('archive', 'Archive', 'working', 'A captured ZIP: every file with its sta
 screen('open-file', 'Opening a file', 'working', 'Before a file opens: its risk, the safe view, the deeper check, its checks as notes, and a hold released by two members or a second engine; nothing records who opened what (K1888, K1892, K1929, DEC-168).',
   [('owed:openoriginal K1888','Open the original'),('owed:openwithwarning DEC-173','Open the original after the warning, without a deeper check'),('owed:safeview K1888','Read the safe view'),('owed:deepercheck K1888','Ask for a deeper check'),('owed:releasescanhold K1892','Release, with a reason')], [7,15])
 screen('document', 'Document', 'working', 'One captured document: its copy, grade note, passages, versions and what cites it.',
-  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Claim the same person'),('monitor','Watch for changes'),('owed:findin DEC-164','Find in this')], [7,15,23])
+  [('gradenote','Read the grade note'),('release','Vouch for this copy'),('cite','Cite a passage'),('retire','Retire'),('attest','Attest'),('identityclaim','Say this is a person we follow'),('monitor','Watch for changes'),('owed:findin DEC-164','Find in this')], [7,15,23])
 screen('find-in', 'Find in this', 'working', 'One control on a document, a held set or a project: pick what to find; each result cites its passage and becomes a fact only by a member\'s own act (DEC-164, K1468).',
   [('owed:findin DEC-164','Find in this'),('standingquestionset','Keep finding this as documents arrive'),('recordpersonfact','Add a fact from this passage'),('recorddatedfact','Record a dated fact'),
    ('standarddeclare','Hold this as a standard'),('recordfact','Read into a money fact'),('tabledeclare','Declare the table'),('cite','Cite in the question'),('search','See all in Find')], [6,10])
@@ -73,7 +73,7 @@ screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it 
 
 # --- the record's subjects
 screen('person', 'Person', 'working', 'Positions, career, credentials, memberships, interests, statements; same person?',
-  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Claim the same person'),('withdrawidentityclaim','Withdraw a claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
+  [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
 screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
   [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',

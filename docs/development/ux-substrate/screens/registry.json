@@ -1069,7 +1069,7 @@
     },
     {
      "op": "identityclaim",
-     "label": "Claim the same person",
+     "label": "Say this is a person we follow",
      "status": "declared",
      "modules": [
       "people"
@@ -1451,7 +1451,7 @@
     },
     {
      "op": "claimidentity",
-     "label": "Claim the same person",
+     "label": "Say another record is this person",
      "status": "function",
      "modules": [
       "people"
@@ -1459,7 +1459,7 @@
     },
     {
      "op": "withdrawidentityclaim",
-     "label": "Withdraw a claim",
+     "label": "Withdraw a same-person claim",
      "status": "function",
      "modules": [
       "people"
