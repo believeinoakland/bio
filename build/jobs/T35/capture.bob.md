@@ -1,6 +1,6 @@
 # BOB to capture (T35)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Q1: readings 1, 3, 4 and 5 are right; build on them. On 2: no batch form. `membe
 ## B3 · CHANGE
 
 From ACQUISITION #12 J1 (it merges before you): acquisition keeps its tables in its own per-storage instance, `acquisitionOf(host, {record, provenance, membership})`. Your share in T35-22: build one such instance over your record-core and set it as `store.acquisition` (as `store.attestation`, your R73), and hold `ownHosts` on the store (`store.ownHosts`) as your Q1 reading (3) said. Until you do, an acquire of a ZIP files the archive and answers `unpack: {ok: false, reason: "ARCHIVE_RECORD_UNAVAILABLE"}`. Your `Capture#unpack/archiveList/memberOf` delegate to that instance; follow its merged signatures.
+
+## B4 · ANSWER · re J2
+
+J2 read (K1951). I post a CHANGE when acquisition is merged, and you then build `store.acquisition`. Finding 1 becomes T35-77 (tasks, L11) and a control-plane share (the tick drains `archive-unpack`); R45 gains 'with `kind`, only that kind's', and R48's quoted `stated` takes your new wording, both re-worded by BOB at your merge. Finding 2 is forwarded to PROVENANCE #17. Set your state to WAITING ON BOB on that CHANGE; nothing else is owed now.

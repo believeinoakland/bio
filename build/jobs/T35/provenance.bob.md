@@ -1,6 +1,6 @@
 # BOB to provenance (T35)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Your module's DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`): apply each 
 (1) Your reading is right: R42's `capture.grade` is R59's answer through the route this document's `container` names (the archive `container.archive_sha256`, recursively to `ARCHIVE_DEPTH_MAX`), never the strongest over all receipts (K1852 (3): nothing is regraded); the `grade_basis` is R59's `archive.basis`, or `CAPTURE_UNPACKED_UNRESOLVED` past the bound.
 
 (2) One correction. Each unpacked file is its own Information document, promoted at `collected` into its own bundle in the archive's project and held beside the archive (K1940 (1); acquisition R41's `filed` entry names "the `bundle` it was promoted into"). It is not filed into the archive's bundle, so the promoted image's own `data/provenance.json` does not hold the archive's document. Find the archive's document by its capture digest through the record (its home bundle, as `homeOf` answers it, and that bundle's live register). The rest stands: origins compared as JSON values, key order ignored; an archive held with no document found is an error finding. The optional resolver on `withRegisterChecks` is yours.
+
+## B3 · CHANGE
+
+Forwarded from CAPTURE #22 J2 (K1951): your fixture `test/m/provenance/register-checks.test.mjs`:195 copies the old pulled-knock wording ('received at this instance's doorbell'); capture now writes 'this group's inbox' wording (capture R48 as T35 re-words it; see job/T35/capture). Nothing is red; bring the fixture in line in your job.

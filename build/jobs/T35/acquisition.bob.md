@@ -18,3 +18,11 @@ All eight readings are right; build on them. Specifics:
 (2) Import `isOwnHost` through capture-sources' module entry (`../capture-sources/index.mjs`, re-exported there), not an inner file; if CAPTURE-SOURCES #11 exports it elsewhere, follow its merge (it merges before you).
 (3) C-137 is yours; no other L3 job opens a new family.
 (4)–(8) as read.
+
+## B3 · CHANGE
+
+Forwarded from CAPTURE-SOURCES #11 J2 (K1951): its DEC-149 row `memento.mjs`:256 now reads 'computed by your group's Civicsmith over the bytes it received'; your `test/m/acquisition/memento.test.mjs`:35 pins the old 'computed by this instance …'. Re-pin it in your job (red from capture-sources' merge until yours).
+
+## B4 · CHANGE
+
+Two more from CAPTURE-SOURCES #11 J3 and PROVENANCE #17 J2 (K1951): (1) `acquire.test.mjs`:78 (R3, R32) also pins the old memento wording 'computed by this instance'; re-pin it with `memento.test.mjs`:23/:35. (2) Your render request (`acquisition/index.mjs`:1013, from `RENDER_DEFAULTS`) passes `own_hosts` from the `ownHosts` you hold (R42), so capture-sources R64's own-host arm applies to real renders; capture-sources' `isOwnHost` is in `capture-sources/own-hosts.mjs` (import it through capture-sources' entry if it re-exports it there, else that file). (3) Provenance R42 requires the archive's own document to be filed in its home before any of its files is promoted: promote the archive first.
