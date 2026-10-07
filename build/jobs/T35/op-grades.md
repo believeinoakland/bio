@@ -151,3 +151,7 @@ B4 (K2049) is done and pushed after merging tranche/T35. standardrelease is now 
 - ownership: run after the commit.
 
 Size (session_013gccXT7dmwA6HqYDk4k5uR): test runs 16, module lines 2089
+
+## J5 · COMPLETE
+
+B5 (K2054) is done and pushed after merging tranche/T35. expunge is gone from OP_ALIASES (28 aliases now) and agentpack from NON_ACTS; the tests assert both are absent. op-grades: 26 of 26 pass. Checks: format, architecture and ownership show 0 failures; coverage is 22 of 22. Users: control-plane totality.test.mjs passes 1 of 1. The affordances suite has 30 failing tests with this change and 29 without it. The one new failure is affordances' t34.test.mjs R45, which pins 29 aliases and should pin 28. Of the other 29, 27 fail because plane.test.mjs's fixture stops at NOT_AUTHENTICATED ('pam joins PA', :100) before any grade is read. catalogue R31 pins CONSEQUENCE_STATEMENTS to the six plus actionholdrelease, without personexpunge and standardrelease. R21 fails on both runs and I have not traced it. All of these are affordances' to fix. For you: R22 still lists agentpack among the reads that NON_ACTS covers. Size: test runs 16, module lines 2091.
