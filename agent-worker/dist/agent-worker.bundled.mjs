@@ -1544,7 +1544,7 @@ var CONDITION_KINDS = Object.freeze({
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred": "a render this instance could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred",
+  "render-deferred": "a render your group's Civicsmith could not do is held under its C-83 reason until its request expires, and is then recorded undetermined (D-491, D-523) \u2014 LIVE: queue-producers #conditionsRenderDeferred",
   /* R33 (T23, K1099): the five sweep kinds `monitoring` R63 derives on read, each sentence taken from its statement
      there and the rule it cites (R57, R58, R60), and the three notice kinds of `network-notices` R12, R13, which
      `queue-producers` R27 raises for a project's owners. Conditions about our own sweeps and notices, never findings
