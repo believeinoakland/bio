@@ -19,3 +19,7 @@
 - `checks/format.mjs`: 129 modules, 128 requirements files, 0 failures. `architecture.mjs host-governor`: 6 product files, 11 relative imports, 0 failures. `coverage.mjs host-governor`: 27 of 27 live requirement ids named by a test, 0 failures. `ownership.mjs host-governor tranche/T35`: 0 failures.
 
 Size (session_01DiQ8e2AXB4Qa2CWaQJnMoW): test runs 3, module lines 434
+
+## J1 · COMPLETE
+
+T35-17 applied (record build/jobs/T35/host-governor.md, Completion). index.mjs:44 badAppetite's detail and translation now say 'or omit it to reset to your group's default'; field name kept; schema.mjs:9 (X, comment) stays. New test names R12, DEC-149 and the row, checks the exact sentence from governorConfig and op=governorconfig, and that no answer says instance/plane/copy/server (negative control: fails with the old words). host-governor 40/40; format, architecture, coverage (27/27), ownership: 0 failures. No other module's test pins the sentence. Stale: the plane bundle (dist/bio-plane.bundled.mjs embeds badAppetite), for L3's close. Deferred: none.
