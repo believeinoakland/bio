@@ -22,6 +22,7 @@
 - [7. Several instances in one account — planned, not built](#7-several-instances-in-one-account-planned-not-built)
 - [8. Where it stands, and the frontier](#8-where-it-stands-and-the-frontier)
 - [9. What this document does not own](#9-what-this-document-does-not-own)
+- [10. Custody of the signing keys](#10-custody-of-the-signing-keys)
 
 ---
 
@@ -161,3 +162,33 @@ Today several instances in one account collide on bucket names, plane and member
 ## 9. What this document does not own
 
 The record an instance holds (`BIO_State_Rules_Consistency_v1_5.md`); the extraction tiers the fleet serves (Part II §16); the assistant's cascade semantics (`BIO_Assistant_and_AI_Roles_v0_1.md`); the release PROCESS step by step (`kickoffs/DIST.md`); the test battery (`VERIFICATION.md`); the scheduler (`SCHEDULER.md`); the collision table (`MULTI-INSTANCE-ISOLATION.md`); and every ruling, which stays in the ledger it was ruled in.
+
+## 10. Custody of the signing keys
+
+A release is worth only what its signature adds over write access to the repository (§3), and that is decided by who can use the key, not by the code that checks it. As ruled (K1936); the mechanisms are T36's (N712, N713) and are RULED NOT BUILT until they land.
+
+**The keys.**
+
+| key | signs | public half | private half |
+| --- | --- | --- | --- |
+| the **release key** | the plane asset (`bio-release`) and the fleet statement (`bio-release-fleet`) | `ARMED_SIGNERS` (`newgroup/src/signers.mjs`); `RELEASE.json`'s `signer` | generated fresh by Bob on the signer page with a passphrase; then held as below |
+| the **recovery key** | one release, under the rule below | `ARMED_SIGNERS`, beside the release key | Bob alone, offline, passphrase-protected; never in an environment, a repository, a workflow or a session |
+| a **ratify key** | a member's ratifications (`bio-ratify`) | that member's copy's signer registry (`credentials` R9, R11), never the installer | the member's own |
+
+The development key the signer page minted without a passphrase leaves `ARMED_SIGNERS` when the two keys enter it, and its file is deleted. Once it is unarmed, any copy of it left anywhere signs nothing an installer accepts. The development ratify key made in the same file is replaced in the environment (`BIO_RATIFY_SEED`) at the same sitting.
+
+**Where the release key is held, in two steps.**
+
+1. **Step 1 (N712).** Bob keeps the passphrase-protected form the signer page gives at Generate. The session environment's `BIO_RELEASE_SEED` is replaced with the new key, and a session signs as today (`release-assemble.mjs --sign`; bundler R23).
+2. **Step 2 (N713), before the first real group installs.** The key is the secret of a GitHub Actions environment whose required reviewer is Bob. Sessions assemble a release and never sign it. `release-sign.yml` signs only after Bob approves that run, one approval per release. `BIO_RELEASE_SEED` leaves the session environment, and the sessions' GitHub token has no admin rights, so no session can change the environment's reviewer, its secret or the workflow's protection.
+
+**Rotation.** While the only verifier is the installer this project deploys (§5, R8, R11, R26), a key is replaced in four acts:
+
+1. A new key is generated on the signer page with a passphrase.
+2. Its public line enters `ARMED_SIGNERS`, and the key it replaces leaves. A lost key and a stolen key leave alike.
+3. Where the release key is held (step 1: `BIO_RELEASE_SEED`; step 2: the environment's secret), it is replaced.
+4. The current release is re-signed, and the installer is re-embedded (R26 refuses a release no armed key signed) and redeployed.
+
+Groups hold nothing to change. Releases signed earlier stay verifiable against the old public line. There is no revocation list: its attacker writes `RELEASE.json`, so removing a key from `ARMED_SIGNERS` and redeploying is the revocation.
+
+**The recovery key's one use.** It signs only the release that replaces a lost or stolen release key, and nothing else, ever. It is needed once a verifier holds its own `ARMED_SIGNERS` (an installer run by a group, or a copy that updates itself). Such a verifier accepts a replacement only if a key it already holds signed it. While the installer is ours, the four acts above are enough, and the recovery key stays unused. It is used offline: Bob opens the signer page, loads the key with its passphrase, signs the payload a session gives him and returns the signature. After that one use it is treated as spent, and a new recovery key is armed in the same edit.
