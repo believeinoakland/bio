@@ -387,6 +387,36 @@ for (const [k, v] of Object.entries(SCREEN_REFS)) REFS[k] = (REFS[k] || []).conc
 
 /* Guidance (proposed information level 2, question S8): what each screen is and what a member can do there, on its heading;
    and what each section of the rail holds. */
+// What a screen's title names, when it names a particular thing: its explanation leads with that thing (Bob, 7 October:
+// titles' mouseovers lacked context); the screen's own purpose (SCREEN_HELP) follows in lighter type.
+const TITLE_HELP = {
+  "join": "<b>You're invited to Lakeshore Tenants</b>: Rosa's invitation for you to contribute to the group. The link works once and expires on 13 October 2026.",
+  "home": "<b>Lakeshore Tenants</b>: your group, tenants near the Coliseum meeting since 2025, six members. Its focus: rents and leases on city land, and the streets members live on.",
+  "archive": "<b>Agenda packet, City Council, 14 May 2024</b>: a ZIP archive Ana captured from the city's meeting site on 2 October 2026, for Sewer fund transfers. Every file inside is listed with what happened to it: filed, held for review, or set aside.",
+  "open-file": "<b>Pothole repair policy, Administrative Instruction 4.12</b>: the city's PDF that Dev captured from its website on 2 October. Before it opens, this says how risky opening it is and why.",
+  "document": "<b>Pothole repair policy, Administrative Instruction 4.12</b>: Public Works' policy, revised 2023, captured by Dev from oaklandca.gov on 2 October 2026. It holds the seven-day repair rule the Pothole repairs project tests the city against.",
+  "project": "<b>Pothole repairs</b>: your group's project asking whether the city repairs reported potholes as its own policy requires. Its questions, how strong each is against the project's bar, its members and its plan are here.",
+  "question": "<b>Is the city repairing reported potholes within seven days?</b>: Dev's question in Pothole repairs, opened 3 October. It tests the city against its own seven-day rule in Administrative Instruction 4.12; what supports it and what cuts against it are listed below.",
+  "assistant": "<b>Is the city repairing reported potholes within seven days?</b>: Dev's question in Pothole repairs, opened 3 October, with the assistant beside it. The assistant answers only from what your group holds.",
+  "person": "<b>L. Chen</b>: Director of Public Works since March 2022, named in 14 documents your group holds. Every fact about them here cites the document it comes from.",
+  "timeline": "<b>Timeline of The Coliseum lease</b>: what happened in the lease, in order, the city's acts and your group's in two lanes.",
+  "money": "<b>Sewer fund transfers, FY2022</b>: Ana's money trail of three figures read from the city's budget and its financial report, following money out of the Sewer Fund, mostly to the General Fund, in fiscal year 2022 (1 July 2021 to 30 June 2022).",
+  "calculation": "<b>Reports closed within seven days, FY2025</b>: a fact your group worked out from the Public Works work orders for fiscal year 2025: 812 of 903 pothole reports (89.9%) were marked closed within seven calendar days of being reported. Its method is shown below, Ana checked it on 5 October, and it is worked out again if an input changes. It counts reports closed, not potholes repaired.",
+  "explore": "<b>Explore connections</b>: chains from J. Ortega to the Coliseum lease, through money and votes, as of 2026, each step cited and graded.",
+  "proceeding": "<b>Lakeshore Tenants Assn. v. City, RG26-114502</b>: a Superior Court case the record follows, shown under a neutral label, \"the lease rent case\". Its parties, filings and orders, with their dates, are here.",
+  "due-date": "<b>Due 14 October 2026</b>: the day the City Clerk must reply to your group's records request. The law it comes from and how the days were counted are below.",
+  "standard": "<b>Repair reported potholes within seven calendar days</b>: a requirement the city set itself, in Administrative Instruction 4.12 §3, a Public Works policy in force since 2023. Your group's questions test the city against it.",
+  "plan": "<b>Repairs: closed is not repaired</b>: Dev's action plan, opened 3 October when the inquiry began, about reports marked closed when the pothole may not be repaired. Its options, the order to try them and what to check are here.",
+  "start-send": "<b>Start \"Records request: inspection logs\"</b>: the first step of that option in the plan. Nothing is sent until you confirm; this shows what it will say and what it rests on.",
+  "action": "<b>Records request: inspection logs</b>: your group's request to the Office of the City Clerk, sent by Mai on 2 October. What was sent, when the reply is due and what came back are here.",
+  "matter": "<b>The 2024 rent adjustment, made without a council vote</b>: what your group is pursuing about this one problem, judged noncompliant with lease §7.2 and established, from the first letter to the outcome.",
+  "case-editor": "<b>The Coliseum lease · Edition 2</b>: Dev's draft of the next edition of your group's published case. Nothing here is public until an owner signs and publishes it.",
+  "review-copy": "<b>Share Edition 2 for review</b>: lets named outside readers see the draft of The Coliseum lease, Edition 2, before it is published. You can stop a reader's access at any time.",
+  "ceremony": "<b>Publish Edition 2</b>: the last checks and the signing of The Coliseum lease, Edition 2. Once published it is permanent and public; it can be corrected by a new edition, never removed.",
+  "published": "<b>The Coliseum lease</b>: your group's published case as anyone reads it: Edition 2, published 14 November 2026, which corrects Edition 1.",
+  "imported": "<b>Port lease revenue</b>: a case published by West Oakland Neighbors (Edition 2), imported by Dev on 1 October. Nothing in it counts for your group until a member accepts it.",
+  "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
+};
 const SCREEN_HELP = {
   install: 'Installs Civicsmith in a Cloudflare account your group controls. Here you choose the group\'s permanent short name and let the installation test itself.',
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',

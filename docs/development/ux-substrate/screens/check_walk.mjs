@@ -28,11 +28,23 @@ const out = await p.evaluate((aiOnly) => { const AI_ONLY = new Set(aiOnly);
     const extra = [...box.querySelectorAll('[data-act]')].map(e => e.dataset.act).filter(o => !r.acts.some(a => a.op === o) && !host.some(a => a.op === o));
     for (const o of new Set(extra)) if (!['airunopen','suggest','airunclose'].includes(o)) fails.push(`screen ${r.id}: draws act ${o} the registry does not list`);
   }
-  return { fails, walked, journeys: J.length, wizards: LIB.length, screens: REG.length };
+  // One visual element, one explanation (Bob, 7 October): no element that explains itself may sit inside another, on any
+  // screen, with or without the assistant, on desktop or phone, with every row panel open.
+  const SELN = '.cs-grade,.cs-strength,.cs-gap,.cs-origin,.cs-kind,.cs-due,.cs-hint,.cs-hunch,.cs-tag-outward,.cs-btn,.cs-path > span,.cs-ladder > span,.mk-tag,.cs-band,[data-tip]'.split(',').map(x => x + ':not([data-notip])').join(',');
+  let tipped = 0;
+  for (const r of REG) for (const ai of [true, false]) for (const dev of ['desktop', 'phone']) {
+    st.mode = 'screen'; st.id = r.id; st.ai = ai; st.dev = dev; st.step = 0; W.draw();
+    const pg = document.querySelector('#vscale .mk-page');
+    pg.querySelectorAll('tr.mk-detail[hidden]').forEach(d => { d.hidden = false; });
+    pg.querySelectorAll(SELN).forEach(el => { tipped++; const a = el.parentElement && el.parentElement.closest(SELN);
+      if (a && pg.contains(a)) fails.push(`screen ${r.id} (${ai ? 'with' : 'without'}, ${dev}): two explanations compete, ${a.tagName.toLowerCase()}.${a.className.split(' ')[0]} holds ${el.tagName.toLowerCase()}.${(el.className.baseVal ?? el.className).split(' ')[0]} "${el.textContent.trim().slice(0, 40)}"`); });
+  }
+  st.dev = 'desktop';
+  return { fails, walked, journeys: J.length, wizards: LIB.length, screens: REG.length, tipped };
 }, [...AI_ONLY]);
 await b.close();
 for (const f of out.fails) console.log('FAIL:', f);
 for (const e of errs) console.log('SCRIPT ERROR:', e);
-console.log(`walked ${out.walked} steps: ${out.journeys} journeys with and without the assistant, ${out.wizards} wizards; ${out.screens} screens checked against the registry`);
+console.log(`walked ${out.walked} steps: ${out.journeys} journeys with and without the assistant, ${out.wizards} wizards; ${out.screens} screens checked against the registry; ${out.tipped} explaining elements checked, none inside another`);
 console.log(out.fails.length || errs.length ? 'FAILED' : 'All checks pass.');
 process.exit(out.fails.length || errs.length ? 1 : 0);

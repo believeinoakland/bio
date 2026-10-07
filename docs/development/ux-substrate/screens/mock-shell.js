@@ -207,7 +207,10 @@ function renderFrame(screenId, c) {
   const s = SCR[screenId](c);
   WRITE_ON = false;
   s.main = attachRefs(screenId, s.main);
-  if (typeof SCREEN_HELP !== 'undefined' && SCREEN_HELP[screenId]) s.main = s.main.replace(/<h1([ >])/, `<h1 data-level="2" data-tip="${esc(SCREEN_HELP[screenId])}"$1`);
+  if (typeof SCREEN_HELP !== 'undefined' && SCREEN_HELP[screenId]) {
+    const th = typeof TITLE_HELP !== 'undefined' && TITLE_HELP[screenId];  // a title naming a particular thing explains that thing first, as a name does
+    s.main = s.main.replace(/<h1([ >])/, th ? `<h1 data-level="1" data-tip="${esc(th + '<span class=more>This screen: ' + SCREEN_HELP[screenId] + '</span>')}"$1` : `<h1 data-level="2" data-tip="${esc(SCREEN_HELP[screenId])}"$1`);
+  }
   const frame = s.frame || 'working';
   const dock = c.wizard ? wizardGuide(c.wizard) : (s.dock === 'assistant' && c.ai) || (c.dockAssist && c.ai) ? assistantPanel(screenId, c) : '';
   if (frame === 'published') return `<div class="cs-frame mk-page" data-frame="published"><header class="cs-pubhead"><span class="grp">${G.name}</span></header><main class="mk-pubmain">${pathNav(pathOf(screenId, s))}${s.main}</main>
