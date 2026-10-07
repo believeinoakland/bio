@@ -1,6 +1,6 @@
 # Plan T35
 
-**Status** · DRAFT (final) · assembled by a worker for BOB #127, 2026-10-06, on `tranche/T34` (closed, K1885), for BOB's review; becomes `next.md`'s T35 plan, then `current.md` at T35's opening (§5.2). Nothing here is committed or ruled.
+**Status** · REVIEWED by BOB #128, 2026-10-07 (K1899): assembled by a worker for BOB #127 (2026-10-06) on `tranche/T34`; becomes `current.md` at T35's opening (§5.2).
 
 **Sources** · `plan/draft-T35.md` and its checks `plan/draft-T35-checks.md` (items 1–18, the seven verdicts); `plan/draft-T35-dec149-l1-l7.md` (the L1–L7 sweep); `next.md` N551–N705; `archive/T34.md` (left-out table, Rules (5), Close); DEC-142–DEC-167 on `main` (K1885); `plan/draft-T35-security-review.md` with K1874, K1875, K1876, K1878, K1880, K1881, K1882; `plan/study-virus-scanning.md` with K1888, K1890, K1892; `plan/study-cloudflare-security.md`; `modules.json` (order, layers). Sizes: `.mjs`/`.js` lines over each module's `paths` on `tranche/T34` @ `28eb9244aa` (most specific path owns a file, K1821; tests and `dist/` excluded).
 
@@ -35,6 +35,15 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    5. Membership R83 `module-order.test.mjs` ×3 (T34's red 11, K1864), until T35-14 (N697).
    6. extraction's six tests red since K1737 (afterread ×1, convert-chain ×2, pdfstructure ×1, read ×2), until T35-25 (N636).
    7. From record-core's merge (T35-13) until control-plane's (T35-72): control-plane `lease.test.mjs`, which pins `ANONYMOUS_LEASE`'s old shape (N655). No other test pins the `SETTING_*` shapes (checks item 4).
+
+## BOB's review (K1899)
+
+1. **The ten DEC-149 rows moved from X to M** (agent-worker `cascade.mjs`:73, :75; ai-runs `index.mjs`:1688, :1694, :1698, :1699; promotion `index.mjs`:405, :413, :416, :903): each job words its own under the sweep's M rule (the field names stay; "the plane" goes; member-facing text says "your group's Civicsmith" or names the thing itself), with a test naming each string; BOB's START gives the rule, not a text per row (P17: wording is BOB's, delegated with the rule).
+2. **F2's final rule (K1880):** a capture request a run files is refused by name unless its address, query and fragment included, is one the record already holds; plus a length bound. T35-45's "proposed test" is the rule.
+3. **Placements confirmed:** N698's matchers in retrieval; N703's tally in credentials (admission and capture write through it); the co-archive setting in acquisition; the VBA read in ooxml; recovery codes in credentials, shown by setup-page, required by instance-setup; F1's order (admission reads the header before its callers send it); N695 split between control-plane (serves apart) and T36 (agent-worker reads apart); review joins L8.
+4. **P6 (K617, BOB's):** affordances (3,944) is split before T35-66 starts, along seams BOB names during L1–L10 (P18); control-plane (3,903) is split before T35-72 unless BOB's START estimate keeps it under about 4,000; membership's job reports any growth. Each split is a `modules.json` change BOB makes at L11's opening, recorded once.
+5. **K1892 and K1895 folded:** no download log (closed); N705 closed by K1895 (Scanii), its adapter an entry of the virus package's modules once Bob rules them.
+6. **L1's requirements** are worded before L1's START (jurisdictions, test-support, bundler, id-spaces, ooxml, office-readers, pdf-reader, format-registry, doctypes); runtime-limits' R13 and R23 stand as K1755 and K1761 worded them.
 
 ## Entries
 
@@ -200,13 +209,12 @@ Each line is one job (P8): every T35 entry for that module. Fields: module · (N
 | N701 (part) | `translationconfirm` in R27 (and the translation ops) | a dependency not yet built: N669 |
 | N703 (part) | the Settings › Security screen (DEC-165) | a dependency not yet built: the new screens |
 | N703 (part) | Cloudflare's blocked-request counts | a deployment or measurement: a zone and a read token per group's plan (`study-cloudflare-security.md` §3) |
-| N705 | the commercial scanner for the deeper check | not a module job: a P18 study; BOB recommends one to Bob (K1892) |
 | F1 (tail) | the query form of a credential refused by name | a deployment: one release carries both forms so installed callers move first (F1) |
 | F6 | retiring `MEMBER_TOKEN` (Q3) | a question that is Bob's (K1874, K1880: open) |
 | F8 | the release key's custody, recovery key and revocation (Q4; `study-release-key.md`) | a question that is Bob's (K1874, K1880: open) |
 | Virus package (new modules) | the ClamAV scanning container; `file-safety`'s scan-verdict notes, per-file threat grade, safe view, hold and release by two members or a second scanner, weekly re-scan and one before first opening, the per-document deeper check on request (K1888, K1890, K1892) | Bob's: architecture (new modules, K1888), brought to Bob by BOB #127 (see below) |
 
-**Closed without a T35 entry:** N564 (part), the library shipped by T34-80 (DEC-148); its two scripts naming ops not yet held are withheld until those ops exist (K1883): `subscriptionsignin` arrives in T35-70, the translation acts with N669. N629, its decisions ruled (K1740) and carried as N638–N653. N637, cleared by MONITORING #16 (K1847, K1855). N684, BOB's wording at T34's close. N656, a process act (rule 5). N667, N671, N679, moved into T34 (K1818). N686's L11 share: instance-setup R65 and wizard-scripts R24–R27 are met (checks item 16). The who-downloaded-what log: no log (K1892). F4's installer note: not taken (a rate-limit rule needs a domain, study §2.2).
+**Closed without a T35 entry:** N564 (part), the library shipped by T34-80 (DEC-148); its two scripts naming ops not yet held are withheld until those ops exist (K1883): `subscriptionsignin` arrives in T35-70, the translation acts with N669. N629, its decisions ruled (K1740) and carried as N638–N653. N637, cleared by MONITORING #16 (K1847, K1855). N684, BOB's wording at T34's close. N656, a process act (rule 5). N667, N671, N679, moved into T34 (K1818). N686's L11 share: instance-setup R65 and wizard-scripts R24–R27 are met (checks item 16). The who-downloaded-what log: no log (K1892). N705: Scanii chosen (K1895); its adapter waits with the virus package's modules. F4's installer note: not taken (a rate-limit rule needs a domain, study §2.2).
 
 **Carried from T34 and earlier** (`archive/T34.md` and `archive/T33.md` left-out tables, re-read at this opening): the measurement rows (C4 A11–A17, C8, T33-M1–M3), the real-group rows (T33-G1–G4), Bob's UX rows (T33-U1–U5, B4/B5, A54, B6–B10…, N487, H3…J11, N493 part, T27-1, C5), the dependency rows (N521, T33-X1, A8, A21, A22/A23 = installer R13, R24 (F11; R32 is met), A41, N538 (4)) and the trigger rows (T33-T1–T5, J7, H13, T28-1, T33-B1) keep their reasons unchanged. The deployment rows (N540, T33-D1–D10, B1–B3, B11/C9, B16, C1–C3) keep "a deployment or measurement": release 0.81.0 (K1876) measures M-Q2 only, which rule 6 uses.
 
@@ -229,4 +237,4 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 
 **Jobs per layer:** L1 12, L2 4, L3 6, L4 4, L5 13, L6 11, L7 2, L8 8, L9 4, L10 1, L11 10. **Total 75.** Joiners for DEC-149 rows only (rule 4): signatures, host-governor, calibration, reading-pipeline, content, connections, intent, reevaluation (runtime-limits, capture and citation carry other entries too).
 
-**Entries carried (`next.md` N551–N705):** wholly in T35: N553, N586, N623, N633–N636, N638–N640, N642, N644, N646, N648, N649, N651, N653, N655, N657, N658, N659 (with its constructs), N660, N661, N664, N674–N678, N680 (as the security package), N681, N682, N685, N686–N694, N696, N697, N699, N700, N702, N704. In part: N597, N643, N645, N652, N688 (the archive screen left out), N695, N698, N701, N703. Left out: N551 (part), N559, N563, N566, N572, N579, N592, N632, N641, N647, N650, N654, N666, N669, N670, N672, N673, N683, N705. Closed: N564, N629, N637, N656, N684 (N667, N671, N679 moved into T34).
+**Entries carried (`next.md` N551–N705):** wholly in T35: N553, N586, N623, N633–N636, N638–N640, N642, N644, N646, N648, N649, N651, N653, N655, N657, N658, N659 (with its constructs), N660, N661, N664, N674–N678, N680 (as the security package), N681, N682, N685, N686–N694, N696, N697, N699, N700, N702, N704. In part: N597, N643, N645, N652, N688 (the archive screen left out), N695, N698, N701, N703. Left out: N551 (part), N559, N563, N566, N572, N579, N592, N632, N641, N647, N650, N654, N666, N669, N670, N672, N673, N683. Closed: N564, N629, N637, N656, N684, N705 (K1895) (N667, N671, N679 moved into T34).
