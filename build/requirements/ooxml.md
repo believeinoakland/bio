@@ -106,7 +106,7 @@ None in the product. Layer 1, first module of the office-format stack. Its tests
 ### Invariants
 
 - **R22** Pure: no store, no network access, no clock read. Every service's result is determined only by its arguments; identical inputs always give an identical result. A range source's `read` (R27, R29) is the caller's: given the same bytes, the answer is the same.
-- **R23** Zero runtime dependency: inflate is `DecompressionStream("deflate-raw")` and hashing is `crypto.subtle.digest`, both host-platform primitives — MEASURED to round-trip in workerd (`MEASUREMENTS.md`, 2026-08-03).
+- **R23** Zero runtime dependency: inflate is `DecompressionStream("deflate-raw")` and hashing is `crypto.subtle.digest` (for R29's streamed digest, the host's `crypto.DigestStream` where it exists, else the module's own SHA-256, equal byte for byte; K1918), host-platform primitives — MEASURED to round-trip in workerd (`MEASUREMENTS.md`, 2026-08-03).
 - **R24** The central directory is the sole authority for a member's size, CRC and compression method; a local header's claims are read only to locate the member's bytes and are never trusted for its size or checksum.
 - **R25** Never invents structure. A function that cannot honestly read what it is given returns a named `why` — never a guess, never a silently truncated or partial result presented as whole — and never throws on malformed or adversarial bytes.
 - **R26** No jurisdiction: this module names no place, system or local vocabulary; every input is bytes plus a caller-supplied table (e.g. `flavours`), so its tests need no jurisdiction profile.
