@@ -1,0 +1,93 @@
+{
+  "name": "file-scanner",
+  "kind": "container",
+  "entry": "src/worker.mjs",
+  "testDir": "test",
+  "surface": {
+    "POST /scan": "R1-R4: ClamAV's verdicts on a duplicate of each target's stored bytes",
+    "POST /mirror": "R6: one run of the signature mirror (also the daily scheduled trigger)",
+    "POST /render": "R7: the safe view, a PDF of page images",
+    "GET /version": "R8: the build, ClamAV's and the renderer's versions, the mirror's and lists' state, the catalogue, the bounds",
+    "POST /provider/scan": "R5: an outside scanner's verdicts",
+    "POST /provider/sandbox": "R23: a sandbox submission",
+    "POST /provider/sandbox/result": "R23: a sandbox's result",
+    "POST /provider/cdr": "R24: an outside tool's rebuilt file",
+    "POST /provider/reputation": "R25: an address's reputation, by Cloudflare's lookup or a hash prefix",
+    "POST /provider/refresh": "R26: a hash-prefix tool's local list refreshed",
+    "POST /provider/forward": "R27: a counts record forwarded",
+    "POST /provider/test": "R28: a tool's test probe",
+    "GET /providers": "R29: the catalogue, offered, refused, held, and the generic transports",
+    "anything else": "R9: 404 {ok: false, code: \"UNKNOWN\"}"
+  },
+  "classes": [
+    {
+      "class_name": "FileScanner",
+      "image": {
+        "repository": "ghcr.io/believeinoakland/file-scanner-scanner",
+        "digest": null,
+        "platform": "linux/amd64",
+        "port": 8080,
+        "schedulingPolicy": "default",
+        "instance_type": "standard-1",
+        "memory": "4 GiB"
+      },
+      "max_instances": 3,
+      "build": {
+        "dockerfile": "Dockerfile.scanner",
+        "context": ".",
+        "command": "docker build --platform linux/amd64 -f Dockerfile.scanner -t <repository>:<version> file-scanner",
+        "packages": "packages-scanner.json"
+      }
+    },
+    {
+      "class_name": "SafeViewRenderer",
+      "image": {
+        "repository": "ghcr.io/believeinoakland/file-scanner-renderer",
+        "digest": null,
+        "platform": "linux/amd64",
+        "port": 8080,
+        "schedulingPolicy": "default",
+        "instance_type": "standard-1",
+        "memory": "4 GiB"
+      },
+      "max_instances": 3,
+      "build": {
+        "dockerfile": "Dockerfile.renderer",
+        "context": ".",
+        "command": "docker build --platform linux/amd64 -f Dockerfile.renderer -t <repository>:<version> file-scanner",
+        "packages": "packages-renderer.json"
+      }
+    }
+  ],
+  "bundle": {
+    "entry": "src/worker.mjs",
+    "outfile": "dist/file-scanner.bundled.mjs",
+    "manifest": "dist/file-scanner.bundle.json",
+    "external": [
+      "cloudflare:workers",
+      "cloudflare:sockets",
+      "node:*"
+    ]
+  },
+  "bind": [
+    {
+      "member": "bio-plane",
+      "binding": "FILE_SCANNER"
+    }
+  ],
+  "triggers": {
+    "crons": ["17 4 * * *"]
+  },
+  "optional_bindings": [
+    {
+      "binding": "SECURITY_VPC",
+      "kind": "workers_vpc",
+      "added_by": "installer, for a tool whose descriptor states reach \"tunnel\" (R21 REACH_NOT_BOUND until then)"
+    }
+  ],
+  "egress": {
+    "containers": [],
+    "worker": "database.clamav.net (R6), and per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
+  },
+  "note": "The fleet-member marker of a container member with two classes (R10; bundler R25, R27 as T36-2 amends them). `bundle` is the Worker that answers the plane's FILE_SCANNER binding and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each class states its own image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest in its Dockerfile, and its package statement (the Debian packages it installs). `bind` is the binding through which its caller reaches it. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the group's bucket and hands them copies."
+}
