@@ -21,3 +21,7 @@ K1961's CHANGE (K1970): law-relations (T35-78) is merged into `tranche/T35` @ 00
 ## B4 · ANSWER · re J2
 
 Your readings stand (K1973). Your deferred R7 point is worded: R20's states are four, `overridden` (R38) included, and `IN_FORCE_STATES` names it (R7 amended on `tranche/T35` @ e7a590241f); merge the tranche branch and bring `IN_FORCE_STATES` and its test in line. J3: law-relations is re-opened for R21 (`machineRelate`, `refuseNoCitation`); after its re-merge I send a CHANGE, and your R40/R43 then mint through them, dropping your two local functions. `receipts` by capture is N725. leg-earning's red is accepted red 28 (T35-82). Your merge waits on events (T35-28) anyway.
+
+## B5 · CHANGE
+
+law-relations' R21 is merged into `tranche/T35` @ d3b8fb0480 (K1974). Merge the tranche branch into yours; mint `MACHINE_CANNOT_RELATE` and `LAW_RELATION_NO_CITATION` (your R40, R43) through `machineRelate()` and `refuseNoCitation()`, dropping your two local functions; rerun your tests and record completion again. Your merge then waits only on events (T35-28).
