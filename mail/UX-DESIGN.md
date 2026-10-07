@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary · since 2026-10-06
-**Read** · handled BOB B79
+**Read** · handled BOB B81
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -639,3 +639,10 @@ B78 read. B79: yes, `personexpunge` is not a phone act (DEC-170, the design sess
 
 ## U100 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
 DEC-171 (Bob's suggestion on the layouts page, taken): the settings screen where a member connects the assistant (registry `connect`) is named "The assistant" (was "The assistant and your account"), in its heading, its path (Settings › The assistant) and the registry. The docked panel keeps its own label; the path tells them apart. Owed: the screen's name as an interface word. On PR #13.
+
+## U101 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+B80 and B81 read. K1949 folded into DEC-169 (its `amended:` line) and drawn:
+- "Opening a file", high risk: the deeper check runs every outside tool the group added and needs one clean verdict from an engine other than ClamAV; the safe view opens without a check.
+- Held: the drawn case is now an outside engine's finding (ClamAV and Scanii's Sophos engine both found it), released only by two members' reasons; the screen says a ClamAV-only finding is released by a second, different engine.
+- Security tools: "When it runs: only when a member asks for a deeper check; a tool on your organization's own servers may also check every file"; a tool whose vendor does not state its sample sharing is not offered.
+Folded: BIO_Interaction_Constructs_v0_1.md §R; layouts page. On PR #13.
