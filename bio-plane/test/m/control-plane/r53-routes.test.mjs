@@ -74,7 +74,7 @@ test("R53 (K1122, K1674; op-declarations R17–R20): every op T33's owners' maps
   assert.ok(["eventcreate", "explore", "standingset"].every((op) => ops.includes(op)));
 });
 
-test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller its spec admits, each declared key reaches the owner's route as the server's value — in the query, or in the body for `bodyBy` — whatever the caller forged; `member` and `session` are a session's own and absent for every other caller; a key the op does not declare is not set by the door", async () => {
+test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller its spec admits, each declared key reaches the owner's route as the server's value — in the query, in the body for `bodyBy`, in the `x-bio-session` header for `session` (R59) — whatever the caller forged; `member` and `session` are a session's own and absent for every other caller; a key the op does not declare is not set by the door", async () => {
   const { w, list } = callers();
   const forgedQ = Object.fromEntries([...KEYS, "grant"].map((k) => [k, FORGED]));
   let checked = 0, reached = 0;
@@ -91,7 +91,10 @@ test("R53, R17, R29: for every op `OP_STAMPS` declares and every kind of caller 
       const where = `${op} for ${c.name}${params === c.params ? "" : " (forged)"}`;
       assert.equal(inner.params.grant, undefined, `${where}: ?grant`);
       for (const k of keys) {
-        const got = k === "bodyBy" ? (inner.body?.by ?? null) : (inner.params[k] ?? null);
+        /* R59, store-door R9 (K2038 (1)): a stamped session travels in the `x-bio-session` header, never the address */
+        const got = k === "bodyBy" ? (inner.body?.by ?? null) : k === "session" ? (inner.headers["x-bio-session"] ?? null)
+          : (inner.params[k] ?? null);
+        if (k === "session") assert.equal(inner.params.session, undefined, `${where}: ?session`);
         /* R54 (K1863 (7)): membership's administrator acts take `by` as a member id, the custodial acts' expression */
         const want = k === "by" && MEMBER_ID_BY.includes(op)
           ? (c.session ? c.want.proposer : `class:${c.name === "agent" ? "ai" : c.name}`) : c.want[k];

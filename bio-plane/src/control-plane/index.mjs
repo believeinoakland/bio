@@ -21,7 +21,7 @@ import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinn
    one reader of a code's row (`families.mjs`). */
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
 /* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
-import { draftDue } from "./draft.mjs";
+import { draftDue, draftAsk, checkedDraft } from "./draft.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -706,6 +706,8 @@ const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
 const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances", "agentpack"]);
 /* store-door R9 (K2037 (b)): the internal header an ask's grant travels in to the store (store-door's `GRANT_HEADER`). */
 const GRANT_HEADER = "x-bio-grant";
+/* store-door R9 (K2038 (1)): the internal header a stamped session travels in to the store. */
+const SESSION_HEADER = "x-bio-session";
 async function grantAdmit(env, url, op, spec) {
   const own = GRANT_OWN_OPS.includes(op), token = url.searchParams.get("token");
   if ((!own && !AI_GRANT_OPS.includes(op)) || (op === "affordances" && url.searchParams.get("target"))) return {};
@@ -1086,14 +1088,24 @@ export function makeFetch(hooks = {}) {
     const stampOf = { viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : actor, by: actor,
       author: viaSession ? sessIdentity : actor, proposer: viaSession ? sessMember : actor,
       member: viaSession ? sessViewer : null, session: viaSession ? url.searchParams.get("token") : null };
+    /* R59, store-door R9 (K2038 (1)): a stamped `session` is a credential, so it reaches the store in the internal header
+       `x-bio-session`, never the address; store-door hands it to the owner's map in process. A caller's `session`
+       parameter is deleted for every op. */
+    inner.searchParams.delete("session");
+    let sessionCarried = null;
     for (const k of declared) if (Object.hasOwn(stampOf, k)) {
       inner.searchParams.delete(k);
+      if (k === "session") { sessionCarried = stampOf[k]; continue; }
       if (stampOf[k] !== null) inner.searchParams.set(k, stampOf[k]);
     }
     /* R59, store-door R9 (F1; K2037 (b)): an ask's grant reaches the store in the internal header `x-bio-grant`, never the
        address: a caller's `grant` parameter is deleted for every op, and the header is set for the grant's caller alone. */
     inner.searchParams.delete("grant");
-    const withGrant = (init) => (aiCred?.grant ? { ...init, headers: { ...(init.headers || {}), [GRANT_HEADER]: aiCred.grant } } : init);
+    const withGrant = (init) => {
+      const headers = { ...(init.headers || {}), ...(aiCred?.grant ? { [GRANT_HEADER]: aiCred.grant } : {}),
+                        ...(sessionCarried ? { [SESSION_HEADER]: sessionCarried } : {}) };
+      return Object.keys(headers).length ? { ...init, headers } : init;
+    };
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
        `author`, `by` and `viewer` follow below. A session stamps the member; a
@@ -3040,17 +3052,22 @@ export function makeFetch(hooks = {}) {
     if (draftDue(op, body) && viaSession && typeof stub.draft === "function") {
       let asked = {};
       try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
-      if (!asked || typeof asked !== "object" || Array.isArray(asked)) asked = {};
       const pack = await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
                                     aiCred, storeName, stub });
-      const drafted = await stub.draft({ op, member: sessMember, session: url.searchParams.get("token"),
-        told: op === "writinghelp" ? asked.told ?? null : asked.answers ?? null,
-        act: op === "writinghelp" ? asked.op ?? null : null, field: op === "writinghelp" ? asked.field ?? null : null,
-        firsthand: body.result.firsthand === true, pack });
-      let d = null;
-      try { d = await drafted.json(); } catch { d = null; }
-      if (!d || typeof d !== "object") return storeSilent(op);
-      return json({ ...d, store: storeName, tokenClass: cls }, drafted.status);
+      const ask = draftAsk(op, asked, { member: sessMember, session: url.searchParams.get("token"),
+                                       firsthand: body.result.firsthand === true, pack });
+      const res = await stub.draft(ask);
+      let drafted = null;
+      try { drafted = await res.json(); } catch { drafted = null; }
+      if (!drafted || typeof drafted !== "object") return storeSilent(op);
+      /* ai-runs R48: whatever the check answers, a conversation that reached the model is counted to the member's day */
+      if (drafted.ok === true)
+        await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ mode: "draft", usage: drafted.usage ?? null, calls: drafted.calls }) })));
+      const shaped = checkedDraft(ask, drafted, res.status, sessViewer);
+      return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
+        : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
     }
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")

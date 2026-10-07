@@ -1,15 +1,11 @@
-/* control-plane R57 (T35; N686, K1837, K1841; agent-worker R59, ai-runs R48, wizard-scripts R25, credentials R27, R35): the two
-   drafts asked of agent-worker's `POST /draft` once every refusal is answered. The Worker's half is driven through
-   `makeFetch(hooks)` over the harness's store; the object's half (`draftOnObject`) over a record with a seal secret, an
-   `AGENT_WORKER` binding that records what it was sent, and credentials, ai-runs and answers as they are. */
+/* control-plane R57 (T35; N686, K1837, K1841, K2038; agent-worker R59, ai-runs R48, wizard-scripts R25): the two drafts, asked
+   of the object's `draft` (plane's, which posts agent-worker's `POST /draft`) once every refusal is answered, their use
+   counted as a draft and the draft checked at the door before the member sees it. Driven through `makeFetch(hooks)` over the
+   harness's store, the object's `draft` a recorder answering as plane's does. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, world, call, opCalls, FORGED } from "./harness.mjs";
-import { draftOnObject, draftDue } from "../../../src/control-plane/draft.mjs";
-const { record } = await import("./record.mjs");
-const { credentialsOf } = await import("../../../src/credentials/index.mjs");
-const { membershipOf } = await import("../../../src/membership/index.mjs");
-const { answersOf } = await import("../../../src/answers/index.mjs");
+import { draftDue } from "../../../src/control-plane/draft.mjs";
 
 const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
 const reply = (o, status = 200) => new Response(JSON.stringify(o), { status });
@@ -18,13 +14,17 @@ const reply = (o, status = 200) => new Response(JSON.stringify(o), { status });
 
 /* A world whose store answers the two drafts as their owners do past every refusal (or with `refusal`), and whose objects
    record what their `draft` is asked. */
-function draftWorld(refusal = null) {
+function draftWorld(refusal = null, drafted = null, status = 200) {
   const asked = [];
   const w = world({ answer: (c) => (["writinghelp", "groupdescriptiondraft"].includes(c.route)
     ? reply({ ok: true, result: refusal ?? { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE", firsthand: c.route === "writinghelp" && c.body?.op === "observe" } })
     : null) });
   const get = w.env.STORE.get.bind(w.env.STORE);
-  w.env.STORE.get = (id) => ({ ...get(id), async draft(args) { asked.push({ ns: id, ...args }); return reply({ ok: true, result: { ok: true, text: "drafted" } }); } });
+  w.env.STORE.get = (id) => ({ ...get(id), async draft(args) {
+    asked.push({ ns: id, ...args });
+    return reply(drafted ?? { ok: true, task: { op: args.op }, draft: { text: "The lift was out.", focus: "Tenants.", purpose: "Tenants." },
+                              label: { kind: "machine" }, usage: USE, calls: 2, grant: "GRANT-SECRET", suggestions: false, read: [] }, status);
+  } });
   return { ...w, asked };
 }
 const packHooks = (seen = []) => ({
@@ -38,9 +38,11 @@ test("R57 (N686, K1983): past every refusal (the owner's ASSISTANT_DRAFT_UNAVAIL
   const help = await call(env, { op: "writinghelp", token: S.ann, method: "POST", hooks: packHooks(seen),
                                  params: { by: FORGED, viewer: FORGED },
                                  body: { op: "notewrite", field: "text", told: "the lift was out", by: FORGED, member: FORGED } });
-  assert.deepEqual([help.status, help.json.result.text, help.json.store, help.json.tokenClass], [200, "drafted", "bio", "member"], help.text.slice(0, 300));
+  assert.deepEqual([help.status, help.json.result.text, help.json.store, help.json.tokenClass], [200, "The lift was out.", "bio", "member"], help.text.slice(0, 300));
+  assert.equal(help.text.includes("GRANT-SECRET"), false, "the grant is never answered");
   const gdd = await call(env, { op: "groupdescriptiondraft", token: S.founder, method: "POST", hooks: packHooks(seen),
                                 body: { answers: [{ question: "Who?", text: "Tenants" }] } });
+  assert.deepEqual([gdd.json.result.focus.text, gdd.json.result.purpose.text, gdd.json.result.focus.label.kind], ["Tenants.", "Tenants.", "machine"]);
   assert.equal(gdd.status, 200, gdd.text.slice(0, 300));
   const [a, b] = asked;
   assert.deepEqual({ ...a, pack: undefined }, { ns: "bio", op: "writinghelp", member: "ann", session: S.ann, told: "the lift was out",
@@ -70,101 +72,36 @@ test("R57: an owner's refusal, and every answer that is not the owner's ASSISTAN
   assert.equal(draftDue("index", { result: { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" } }), false);
 });
 
-/* ---- the object's half ---- */
-
-/* A record with members `ann` (an administrator) and `bea`, each signed in; bea holding her own account, the group key
-   held and on for ann; and an AGENT_WORKER that records each body and answers `draft`. */
-async function objectWorld(draft = { text: "The lift was out." }, status = 200, extra = {}) {
-  const r = await record({ sealSecret: "control-plane-test-seal-secret-0003" });
-  const C = credentialsOf(r.ctx), mb = membershipOf(r.ctx);
-  await C.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
-  const sessions = {};
-  for (const [id, role] of [["ann", "admin"], ["bea", "member"]]) {
-    const a = await mb.memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: null, by: "admin" });
-    await mb.enroll({ invite: a.invite, handle: id, password: `${id}-passphrase-x` });
-    const s = await C.login({ role: `member:${id}`, password: `${id}-passphrase-x` });
-    assert.equal(s.ok, true, JSON.stringify(s));
-    sessions[id] = s.token;
-  }
-  assert.equal((await C.accountReferenceSet({ member: "member:bea", kind: "apikey", secret: "sk-bea-own-secret", by: "member:bea" })).ok, true);
-  assert.equal((await C.groupKeySet({ key: "sk-group-key-secret", by: "admin" })).ok, true);
-  assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);
-  assert.equal(C.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" }).ok, true);
-  const sent = [];
-  const env = { ...r.env, AGENT_WORKER: { async fetch(url, init) {
-    sent.push({ url, body: JSON.parse(init.body) });
-    if (extra.throws) throw new Error("down");
-    return reply(extra.ending ?? { ok: true, task: {}, draft, label: { kind: "machine" }, usage: USE, calls: 2 }, status);
-  } } };
-  const used = () => r.db.prepare("SELECT member, mode, calls FROM ai_usage").all().map((x) => ({ ...x }));
-  return { r, C, env, sent, sessions, used };
-}
-const answered = async (res) => ({ status: res.status, json: await res.json() });
-
-test("R57 (agent-worker R59, R6; credentials R35; ai-runs R48): the object posts `{task, told, account, firsthand, pack}` to /draft — the account the member's own act is served by in R6's wire shape, `pack` with no grant while the switch is off — counts the use to the member's day as a draft, and answers the checked draft in its owner's shape, labelled machine work; no key is in the answer (negative control: a sentence stating a fact neither told nor read is withheld whole)", async () => {
-  const { r, env, sent, sessions, used } = await objectWorld({ text: "The lift was out. It broke on 12 March." });
-  const pack = { version: "p1" };
-  const a = await answered(await draftOnObject(r.ctx, env, { op: "writinghelp", member: "bea", session: sessions.bea,
-                                                            told: "the lift was out", act: "notewrite", field: "text", pack }));
-  assert.equal(a.status, 200, JSON.stringify(a.json).slice(0, 300));
-  assert.deepEqual(sent[0].body, { task: { op: "writinghelp", act: "notewrite", field: "text" }, told: "the lift was out",
-    account: { kind: "apikey", level: "member", secret: "sk-bea-own-secret", member: "member:bea", suggestions: false },
-    firsthand: false, pack });
-  assert.equal(sent[0].url, "https://agent-worker/draft");
-  assert.deepEqual([a.json.result.text, a.json.result.label.kind], ["The lift was out.", "machine"]);
-  assert.deepEqual(a.json.result.withheld.map((x) => [x.sentence, x.code]), [["It broke on 12 March.", "WRITING_HELP_FACT_ADDED"]]);
-  assert.deepEqual(used(), [{ member: "bea", mode: "draft", calls: 2 }]);
-  assert.equal(JSON.stringify(a.json).includes("sk-"), false);
-  /* the group's description, for ann on the group's key: `{focus, purpose}` within their limits */
-  const g = await objectWorld({ focus: "Tenants of Elm Court.", purpose: "We keep the landlord to the lease." });
-  const b = await answered(await draftOnObject(g.r.ctx, g.env, { op: "groupdescriptiondraft", member: "ann", session: g.sessions.ann,
-    told: [{ question: "Who?", text: "Tenants of Elm Court" }, { question: "Why?", text: "We keep the landlord to the lease" }], pack }));
-  assert.equal(b.status, 200, JSON.stringify(b.json).slice(0, 300));
-  assert.deepEqual(g.sent[0].body.task, { op: "groupdescriptiondraft" });
-  assert.deepEqual(g.sent[0].body.account, { kind: "apikey", level: "group", secret: "sk-group-key-secret", member: "member:ann", suggestions: false });
-  assert.deepEqual([b.json.result.focus.text, b.json.result.purpose.text, b.json.result.focus.label.kind],
-                   ["Tenants of Elm Court.", "We keep the landlord to the lease.", "machine"]);
-});
-
-test("R57 (DEC-153 (2), K1841 (2); credentials R27; answers R1): with the serving account's suggestions switch on and a field that is not firsthand, a grant is minted under the member's own session and sent instead of the pack, and the draft is checked against that grant's read log; a firsthand field, or the switch off, mints and sends none (negative control: a read the grant made is what admits its fact)", async () => {
-  const { r, C, env, sent, sessions } = await objectWorld({ text: "Rent rose to 1,250 in May." });
-  assert.equal(C.accountSwitchSet({ member: "member:bea", switch: "suggestions", on: true, by: "member:bea" }).ok, true);
-  const args = { op: "writinghelp", member: "bea", session: sessions.bea, told: "rent went up", act: "notewrite", field: "text", pack: { version: "p" } };
-  const before = await answered(await draftOnObject(r.ctx, env, args));
-  const grant = sent[0].body.grant;
-  assert.equal(typeof grant, "string");
-  assert.deepEqual([sent[0].body.account.suggestions, "pack" in sent[0].body], [true, false]);
-  assert.deepEqual(before.json.result.withheld.map((x) => x.code), ["WRITING_HELP_FACT_ADDED"]);
-  /* the grant's read log holds the figure: the same draft now keeps it */
-  const a = answersOf(r.ctx);
-  const log = a.readLog(grant);
-  log.add("search", {}, { rows: [{ text: "Rent rose to 1,250 in May." }] });
-  a.holdLog(log);
-  sent.length = 0;
-  const again = await answered(await draftOnObject(r.ctx, { ...env, AGENT_WORKER: { async fetch(u, init) {
-    const body = JSON.parse(init.body); sent.push({ body });
-    a.holdLog(Object.assign(a.readLog(body.grant), { entries: log.entries, index: log.index }));
-    return reply({ ok: true, draft: { text: "Rent rose to 1,250 in May." }, usage: USE, calls: 1 }); } } }, args));
-  assert.deepEqual(again.json.result.withheld, [], JSON.stringify(again.json).slice(0, 300));
-  /* firsthand: no grant, the pack instead */
-  sent.length = 0;
-  await draftOnObject(r.ctx, env, { ...args, firsthand: true });
-  assert.deepEqual(["grant" in sent[0].body, sent[0].body.firsthand, "pack" in sent[0].body], [false, true, true]);
-});
-
-test("R57: no AGENT_WORKER binding is 503 AGENT_WORKER_UNBOUND, a member that does not answer 502 AGENT_WORKER_SILENT, an ending agent-worker names is relayed as given, and a member no account serves is credentials' own refusal; in each, nothing is counted and nothing is kept", async () => {
-  const w = await objectWorld();
-  const args = { op: "writinghelp", member: "bea", session: w.sessions.bea, told: "x", act: "notewrite", field: "text", pack: null };
-  const { AGENT_WORKER: _, ...unbound } = w.env;
-  const u = await answered(await draftOnObject(w.r.ctx, unbound, args));
+test("R57 (ai-runs R48): a draft that reached the model is counted to the member's day as a draft through the store's `askusage`, the member its viewer, whatever the check answers; an ending is not counted and is relayed as given, as is plane's AGENT_WORKER_UNBOUND, and the grant is never answered", async () => {
+  const counted = (env) => env.calls.filter((c) => c.route === "askusage").map((c) => [c.params.viewer, c.body.mode, c.body.calls, c.url.href.includes("GRANT")]);
+  const ok = draftWorld();
+  await call(ok.env, { op: "writinghelp", token: ok.S.ann, method: "POST", hooks: packHooks(), body: { op: "notewrite", field: "text", told: "the lift was out" } });
+  assert.deepEqual(counted(ok.env), [["member:ann", "draft", 2, false]]);
+  const end = draftWorld(null, { ok: false, code: "exhausted", detail: "the turns ran out", grant: "GRANT-SECRET" }, 502);
+  const e = await call(end.env, { op: "writinghelp", token: end.S.ann, method: "POST", hooks: packHooks(), body: { told: "x" } });
+  assert.deepEqual([e.status, e.json.code, e.json.detail, e.text.includes("GRANT-SECRET")], [502, "exhausted", "the turns ran out", false]);
+  assert.deepEqual(counted(end.env), []);
+  const unbound = draftWorld(null, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "no assistant" }, 503);
+  const u = await call(unbound.env, { op: "groupdescriptiondraft", token: unbound.S.founder, method: "POST", hooks: packHooks(), body: { answers: [] } });
   assert.deepEqual([u.status, u.json.reason], [503, "AGENT_WORKER_UNBOUND"]);
-  const s = await objectWorld(undefined, 200, { throws: true });
-  const sl = await answered(await draftOnObject(s.r.ctx, s.env, { ...args, session: s.sessions.bea }));
-  assert.deepEqual([sl.status, sl.json.reason], [502, "AGENT_WORKER_SILENT"]);
-  const e = await objectWorld(undefined, 200, { ending: { ok: false, code: "exhausted", detail: "the turns ran out" } });
-  const en = await answered(await draftOnObject(e.r.ctx, e.env, { ...args, session: e.sessions.bea }));
-  assert.deepEqual([en.status, en.json], [502, { ok: false, code: "exhausted", detail: "the turns ran out" }]);
-  const none = await answered(await draftOnObject(w.r.ctx, w.env, { ...args, member: "nobody" }));
-  assert.equal(none.json.ok, false);
-  for (const x of [w, s, e]) assert.deepEqual(x.used(), []);
+});
+
+test("R57 (wizard-scripts R25; DEC-153 (2)): the door checks the draft before the member sees it — a sentence stating a fact neither told nor read is withheld whole, the same fact read under the grant (`read`) is kept, a read while the switch is off or in a firsthand field is refused by name — and a description over its field's limit is not answered", async () => {
+  const draft = { text: "The lift was out. Rent rose to 1,250 in May." };
+  const run = async (extra, body = { op: "notewrite", field: "text", told: "the lift was out" }) => {
+    const w = draftWorld(null, { ok: true, draft, usage: USE, calls: 1, grant: "G", suggestions: false, read: [], ...extra });
+    return call(w.env, { op: "writinghelp", token: w.S.ann, method: "POST", hooks: packHooks(), body });
+  };
+  const bare = await run({});
+  assert.deepEqual([bare.json.result.text, bare.json.result.withheld.map((x) => x.sentence)], ["The lift was out.", ["Rent rose to 1,250 in May."]]);
+  const read = await run({ suggestions: true, read: ["Rent rose to 1,250 in May, the notice says."] });
+  assert.deepEqual([read.json.result.text, read.json.result.withheld], ["The lift was out. Rent rose to 1,250 in May.", []]);
+  const off = await run({ suggestions: false, read: ["something read"] });
+  assert.deepEqual([off.status, off.json.reason], [409, "WRITING_HELP_SUGGESTIONS_OFF"]);
+  const first = await run({ suggestions: true, read: ["something read"] }, { op: "observe", field: "text", told: "x" });
+  assert.deepEqual([first.status, first.json.reason], [409, "WRITING_HELP_FIRSTHAND_READ"]);
+  const long = draftWorld(null, { ok: true, draft: { focus: "Tenants. ".repeat(200), purpose: "Tenants." }, usage: USE, calls: 1, read: [] });
+  const l = await call(long.env, { op: "groupdescriptiondraft", token: long.S.founder, method: "POST", hooks: packHooks(),
+                                   body: { answers: [{ question: "Who?", text: "Tenants" }] } });
+  assert.deepEqual([l.status, l.json.reason], [409, "ASSISTANT_DRAFT_UNAVAILABLE"]);
 });
