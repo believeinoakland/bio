@@ -10,3 +10,12 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 
 Merge order in L1 (`modules.json` order): connection-grammar → signatures → bundler → office-readers → doctypes → file-scanner (last; it uses bundler).
 Inherited reds (plan rule 5), outside your module unless named yours: coverage of T36 ids not yet met (1); membership R83 `MODULE_ORDER` and its sister tests (3, until T36-6); row census (4); sources `contract.test.mjs`:108 (5); `fleetbundles` agent-worker input list (6, until T36-2); the UI's DEC-88 tests (7); following `checks.test.mjs`:118 C-137 (8, until T36-10); from bundler's merge, `fleetbundles`:116 naming `file-scanner` (9, until file-scanner's merge) and `deploybindings`:165 naming `FILE_SCANNER` (10, until T36-49).
+
+## B2 · CHANGE
+
+From BUNDLER #10 (J1 (A), (B); confirmed by BOB, K2077): your `fleet-member.json` marker for two classes, which bundler reads (R24–R27) and you must write:
+- `kind: "container"`, `bundle` as today, and `containers: [ {class_name, image: {repository, digest, platform?, port?, schedulingPolicy?, base: {repository, digest}, packages: "<member-relative path of the package statement>"}, max_instances?, bind?}, … ]`, one entry per class (`FileScanner`, `SafeViewRenderer`). `max_instances` and `bind` may be stated once at the member's top level for every class; nothing is defaulted.
+- Parts emitted: `container/<class_name>.json` per class.
+- Each image's package statement: a committed JSON file `{ "ecosystem": "<OSV ecosystem, e.g. Debian:12>", "base": {"repository": "…", "digest": "sha256:<64 hex>"}, "packages": [{"name", "version"}, …] }`; its `base.digest` must equal that class's `image.base.digest`.
+- `deploy-fleet` points each `containers[]` entry of your `wrangler.jsonc` at its class's pushed image by `class_name`; a wrangler container naming no marker class is refused.
+Until the image is built at the release cut, `image.digest` holds the unpublished placeholder as agent-runner's did. Bundler merges first; merge the tranche branch after it.
