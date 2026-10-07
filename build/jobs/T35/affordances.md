@@ -65,3 +65,11 @@ Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 20, module lines 2055
 ## J4 · COMPLETE
 
 B4 (K2049) done and pushed on `job/T35/affordances` (tranche/T35 merged first). The closed lists hold each owner's map as merged: `t33.test.mjs` (red 29) and `catalogue.test.mjs`:579 (red 36) both clear. Also new: R19's drives for op-grades' nine T35 `reasoned` ops (`t35-backing.test.mjs`), which R19's reach test needed once they were graded. K2038's re-export stays. affordances 208 of 208; users 336 of 340 (red 37, op-declarations' reds); format, architecture, coverage (32 of 32), ownership: 0 failures. Size: test runs 20, module lines 2055.
+
+## Completion (B5, K2052)
+
+Merged `tranche/T35` (op-grades' J4: `standardrelease` in `CONSEQUENCE_STATEMENTS`). `catalogue.test.mjs`'s consequence-statement pin gains `["standardrelease", "reasoned"]` (op-grades R4, R21), clearing red 39. K2038's re-export stays.
+
+Tests: affordances 208 of 208. Users (control-plane `totality`, plane `wizards`, queue, op-declarations, op-grades, tasks): 336 of 340, the four being red 37 and op-declarations' accepted reds. `format`, `architecture` (19 product files, 234 relative imports), `coverage` (32 of 32), `ownership`: 0 failures.
+
+Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 23, module lines 2055

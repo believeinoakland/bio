@@ -926,7 +926,8 @@ test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fr
   /* the rungs are the ladder's own: five reasoned, filingapprove terminal (its statement is its terminal effect) */
   assert.deepEqual(Object.keys(C).map((op) => [op, RUNGS[op]]), [["attribute", "reasoned"], ["leadshare", "reasoned"],
     ["entitycreate", "reasoned"], ["strengthbar", "reasoned"], ["filingapprove", "terminal"], ["workobjective", "reasoned"],
-    ["actionholdrelease", "terminal"], ["personexpunge", "reasoned"] /* op-grades R21: the dialog is its weight */]);
+    ["actionholdrelease", "terminal"], ["personexpunge", "reasoned"] /* op-grades R21: the dialog is its weight */,
+    ["standardrelease", "reasoned"] /* op-grades R4, R21 (K2049, K2052) */]);
   assert.match(C.workobjective.statement, /budget and scope/);
   assert.match(C.filingapprove.statement, /approved once/);
   assert.match(C.leadshare.statement, /cannot be un-read/);
