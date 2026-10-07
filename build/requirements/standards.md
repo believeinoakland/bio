@@ -122,7 +122,9 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 - `connection-grammar`: `registerOwner`, the `neighbours` contract, `derivedId`, `BOUNDS`, `ownerConformance` (R24, R28).
 - `acquisition`: `citationLookup` (R25), switched on by the group (K1449).
 - `id-spaces`: the citation recogniser's reading (R25). *(not in the plan's list; L1, earlier)* Since T35, `recogniseSeries` (its R30–R33) for a family, designation and edition (R33, R39).
-- `content`: since T35, a found extent's content row (R47) and a capture's author for R41.
+- `content`: since T35, a found extent's content row (R47).
+- `capture` (L3): `captureAccountsOf` (its actors), a capture's author for R41 (K1967).
+- `provenance` (L3): `receipts`, two held captures of one address and each one's retrieval instant, for R38's `version_basis` (K1967).
 - `record-core`: since T35, the `bundles` read contract (its R37: `object_type`) for R47's question, and the `bundle` sight class (R37).
 - `membership`: since T35, a capture's bundle sight and a project's owners (R37).
 - `calc-grammar` (L1): the figure parser for a target's threshold (R42). *(a new edge, BOB's)*

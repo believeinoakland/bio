@@ -8,7 +8,7 @@ import { hiddenBundles } from "../../../src/membership/index.mjs";
 
 const OPS = ["readingname", "readingnameplan", "entitycreate", "entityalias", "relationdeclare", "aliaswithdraw",
              "relationwithdraw", "resolutiondefect", "entity", "entitybyalias", "relation", "resolutions", "concerns",
-             "idmatch", "resolve", "resolvetestify", "entityidentify"];
+             "idmatch", "resolve", "resolvetestify", "entityidentify", "entitieskind"];
 
 /* A world with a registry, a reading, resolutions, a relation and a defect report, the same every time it is built. */
 function seeded() {
@@ -29,7 +29,7 @@ const dump = (w) => ["entities", "entity_aliases", "entity_relations", "resoluti
   .map((t) => w.rows(`SELECT * FROM ${t}`));
 const url = (q) => new URL(`https://do.invalid/?${new URLSearchParams(q)}`);
 
-test("R40 R43 entitiesOps holds exactly the fourteen ops it held, resolve and resolvetestify, and R43's entityidentify, each a function of no arguments", () => {
+test("R40 R43 R51 entitiesOps holds exactly the fourteen ops it held, resolve and resolvetestify, R43's entityidentify and R51's entitieskind, each a function of no arguments", () => {
   const { e } = seeded();
   const map = entitiesOps(e, url({}), {});
   assert.deepEqual(Object.keys(map).sort(), [...OPS].sort());
@@ -87,6 +87,9 @@ test("R40 every arm answers what its named service answers, reading its paramete
     ["entityidentify", () => [{}, { entityId: "ENT-2026-0003", scheme: "marlow_bar", id: "bar12345", basis: "the bar's roll", by: "member:ann" }],
                        (e) => e.addIdentifier({ entityId: "ENT-2026-0003", scheme: "marlow_bar", id: "bar12345", basis: "the bar's roll", by: "member:ann" })],
     ["entityidentify", () => [{}, null], (e) => e.addIdentifier({})],
+    ["entitieskind", () => [{ kind: "office", limit: "1", after: "ENT-2026-0001", viewer: "member:ann" }, null],
+                     (e) => e.entitiesOfKind({ kind: "office", limit: "1", after: "ENT-2026-0001", viewer: "member:ann" })],
+    ["entitieskind", () => [{}, null], (e) => e.entitiesOfKind({ kind: null, limit: null, after: null, viewer: null })],
   ];
   assert.deepEqual([...new Set(cases.map(([op]) => op))].sort(), [...OPS].sort(), "every op is driven");
   for (const [op, input, direct] of cases) {
