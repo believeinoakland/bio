@@ -243,7 +243,7 @@ test("R35 measured on the 50 captured policies: the header block read wholly rig
   let whole = 0;
   const per = {};
   for (const d of POLICIES.documents) {
-    const p = policy.parse({ text: d.text.document, pages: d.text.pages, view: MEASURED_VIEW });
+    const p = policy.parse({ text: d.text.document, view: MEASURED_VIEW });
     const s = score(p.header, ANSWERS[d.id]);
     if (s.ok) whole++;
     for (const [f, x] of Object.entries(s.fields)) { per[f] ??= [0, 0]; per[f][1]++; if (x.ok) per[f][0]++; }
@@ -257,7 +257,7 @@ test("R35 measured on the 50 captured policies: the header block read wholly rig
 test("R35 R27 section boundaries on the 50, against a member's reading of each one's top-level sections", () => {
   let right = 0;
   for (const d of POLICIES.documents) {
-    const p = policy.parse({ text: d.text.document, pages: d.text.pages, view: MEASURED_VIEW });
+    const p = policy.parse({ text: d.text.document, view: MEASURED_VIEW });
     if (scoreSections(p.sections, SECTION_ANSWERS[d.id]).ok) right++;
   }
   assert.equal(right, 45, "the measurement recorded in the job record");

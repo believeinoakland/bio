@@ -194,19 +194,19 @@ function anchor(raw, series, labels) {
   return best;
 }
 
-/** The page holding `offset`: where it starts, from the reading's pages (I2), else 0. */
-function pageStart(pages, raw, offset) {
-  if (!Array.isArray(pages) || !pages.length) return 0;
-  let at = 0, start = 0;
-  for (const p of pages) {
-    const t = String((p && p.text) || "");
-    if (!t.length) continue;
-    const i = raw.indexOf(t.slice(0, Math.min(40, t.length)), at);
-    if (i < 0) break;
-    if (i > offset) break;
-    start = i; at = i + 1;
+/** Where the header block begins: the anchor's line, and the lines above it a boxed layout prints there (labels,
+ *  numbers, short values), back to the first line that ends a sentence or reads as prose. A revision memorandum in
+ *  front of an order ends in its signature, after prose, so its own TO, DATE and SUBJECT are never the order's. */
+function blockStart(lines, offset) {
+  let i = lines.findIndex((l) => offset >= l.start && offset <= l.end);
+  if (i < 0) return 0;
+  let k = 0;
+  while (i > 0 && k < 12) {
+    const t = lines[i - 1].text.trim();
+    if (t && (isBody(t) || /\.\s*$/.test(t) && !/\b(?:Rev|No|Nos)\.$/.test(t) || t.split(/\s+/).length > 12)) break;
+    i--; k++;
   }
-  return start;
+  return lines[i].start;
 }
 
 /** The header block of a policy (R26), or `{header: null, why}`. */
@@ -218,7 +218,7 @@ export function readHeader(ctx, raw, locate = () => null) {
     return { header: null, why: "the active jurisdiction profiles give no policy series and no policy header labels, so no header is read" };
   const a = anchor(raw, series, labels);
   const lines = linesOf(raw);
-  const from = a ? pageStart(ctx.pages, raw, a.start) : 0;
+  const from = a ? blockStart(lines, a.start) : 0;
   /* The block's end: the first line after the anchor (or, with none, after the first label)
      that is page furniture, an outline heading or body text. */
   const firstLabel = (() => {
