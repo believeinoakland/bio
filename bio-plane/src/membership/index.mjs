@@ -136,9 +136,9 @@ export function notAnAdmin(by, act, extra = null) {
   return { ok: false, reason: "NOT_AN_ADMIN", code: "NOT_AN_ADMIN", check: row.check, translation: row.translation,
            by: by ?? null, ...Object.fromEntries(own),
            ...(remedy ? { remedy, message: `${row.translation} ${remedy}` } : {}),
-           detail: `${what} is an administrator's act (Membership Architecture v2 §4.9), and the plane stamps who is `
-                 + "asking from the signed-in session rather than taking it from the caller. This caller is not one "
-                 + "of the active administrators. Nothing was changed." };
+           detail: `${what} is an administrator's act (Membership Architecture v2 §4.9), and your group's Civicsmith `
+                 + "takes who is asking from the signed-in session rather than from the caller. This caller is not "
+                 + "one of the active administrators. Nothing was changed." };
   /* END DEC-49 REGION is-custodial-admin */
 }
 
@@ -171,7 +171,9 @@ export function notAParticipant(projectId, by, extra = null) {
    the file, so a change there fails the suite until the list follows. T33-19a (K1438, K1504): re-pinned to plan T33's
    Rules (2), its new modules in their places, `local-facts` and `standards` in layer 5 and `observation-log` after
    `connections`. A module the file lists before its job has built it is held here in its place all the same, so its
-   listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. */
+   listeners order correctly from the day it registers; R83's test names it as not yet built until its merge. T35-14
+   (N697, K1864): every module the file names is held, whether or not it registers a listener (`case-catalogue`,
+   `machinery-producers` and `setup-page` register none today). */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -190,13 +192,14 @@ export const MODULE_ORDER = Object.freeze([
           "answers", "agent-harness", "agent-model", "agent-runner", "agent-worker",
   /* 7 */ "intent", "reevaluation",
   /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "docket", "public-read",
-          "project-stage", "network-notices", "ratification", "case-checker", "case-import", "case-disclosures",
-          "case-authoring", "review",
+          "project-stage", "network-notices", "case-catalogue", "ratification", "case-checker", "case-import",
+          "case-disclosures", "case-authoring", "review",
   /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filing-templates", "filings",
           "escalation", "action-plans",
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
-  /* 11 */ "wizard-scripts", "affordances", "tasks", "queue-producers", "notice-producers", "queue", "instance-setup",
-           "op-declarations", "admission", "control-plane", "plane", "legacy-ui", "installer",
+  /* 11 */ "wizard-scripts", "affordances", "tasks", "machinery-producers", "queue-producers", "notice-producers",
+           "queue", "setup-page", "instance-setup", "op-declarations", "admission", "control-plane", "plane", "legacy-ui",
+           "installer",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -798,7 +801,7 @@ export class Membership {
         `${subject} is ${project ? `${String(project).slice(0, 80)}'s` : "a project-less"} `
         + `production, and publishing is an act of an OWNER of the publishing project (DEC-72 clause 5). `
         + `The signature is ${signer ?? "an unnamed signer"}'s, who is not an owner of it. Being a `
-        + `registered signer of this instance is not authority over a project. Nothing was committed.`);
+        + `registered signer in your group's Civicsmith is not authority over a project. Nothing was committed.`);
     /* END DEC-49 REGION is-case-signer-owner */
     return null;
   }
@@ -2243,8 +2246,8 @@ export class Membership {
       return { ok: false, reason: "ROOT_OF_TRUST",
                detail: "the founding administrator holds ADMIN_TOKEN and cannot be removed from inside the "
                      + "application. Whoever can set ADMIN_TOKEN can take the group over, and there is no "
-                     + "arrangement in which nobody holds that power, because the instance runs in somebody's "
-                     + "hosting account. The remedy is at the hosting account, not here (section 4.6)." };
+                     + "arrangement in which nobody holds that power, because your group's Civicsmith runs in "
+                     + "somebody's hosting account. The remedy is at the hosting account, not here (section 4.6)." };
     const m = this.#one(`SELECT member_id, role, status FROM members WHERE member_id=?`, memberId);
     if (!m) return { ok: false, reason: "NO_SUCH_MEMBER" };
     /* D-134: the TARGET is not an administrator — a different fact from the CALLER not being one, which is
@@ -2320,7 +2323,8 @@ export class Membership {
     /* DEC-49 REGION is-member-id-reserved */
     if (memberId === Membership.ROOT_ADMIN)
       return refusal("MEMBER_ID_RESERVED",
-        `'${Membership.ROOT_ADMIN}' names this instance's founding administrator; no member may be enrolled under it`);
+        `'${Membership.ROOT_ADMIN}' names the founding administrator of your group's Civicsmith; no member may be `
+        + `enrolled under it`);
     /* END DEC-49 REGION is-member-id-reserved */
     /* DEC-49 REGION is-member-add-shape */
     if (!label || typeof label !== "string")
@@ -2960,8 +2964,8 @@ export class Membership {
 
   /* ---- R107, R108 (DEC-136 (1)): whether members are told what a court can reach ---- */
 
-  static COURT_STATEMENT = "Your group's copy keeps this from the public and the people the group looks into. A court "
-    + "order your group can't defeat could still require it to be shown. Write accordingly.";
+  static COURT_STATEMENT = "Your group's Civicsmith keeps this from the public and the people the group looks into. A "
+    + "court order your group can't defeat could still require it to be shown. Write accordingly.";
 
   /** R107: an administrator's choice, `tell` or `dont`, the same act at setup and in the settings; appended. */
   courtNoticeSet({ choice, by = null } = {}) {
