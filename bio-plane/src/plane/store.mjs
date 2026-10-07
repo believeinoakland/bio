@@ -28,6 +28,7 @@ import { captureRequestsOf, captureRequestsOps } from "../capture-requests/index
 import { recordOf, recordCoreOps } from "../record-core/index.mjs";
 import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
+import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../link-sweep/index.mjs";
@@ -478,6 +479,10 @@ export class Store extends DurableObject {
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
       ...credentialsOps(credentialsOf(ctx), url, body, env),
+      /* K2042 (acquisition R43; CONTROL-PLANE #24 J3): the group's co-archive setting, acquisition's one instance per
+         host, at acquisition's place before capture's map; `by` is the door's stamp. */
+      coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
+      coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
       ...calibrationOps(calibrationOf(ctx), url, body),
       ...biasOps(biasOf(ctx), url, body),

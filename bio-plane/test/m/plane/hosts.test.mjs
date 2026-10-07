@@ -59,3 +59,20 @@ test("R2 negative control (F16 low, capture-sources R65): a store with no claim 
   const r = await captureCredentialsOf(x.ctx).credentialSupply({ kind: "other", host: "pdf-worker.acct.workers.dev", secret: "s", scope: "member", by: "ann" });
   assert.notEqual(r.reason ?? r.code, "CAPTURE_CREDENTIAL_OWN_HOST");
 });
+
+test("R5 (K2042; acquisition R43): the route map carries `coarchiveset` and `coarchivestate` on acquisition's one instance: on by default, set by an administrator, refused to anyone else, as acquisition answers called directly", async () => {
+  const { acquisitionOf } = await import("../../../src/acquisition/index.mjs");
+  const x = await store();
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                          VALUES ('ada', 'Cover ada', 'h_ada', 'admin', 'active', '["contribute"]', 't', 't'),
+                                 ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
+  assert.deepEqual(await x.call("/coarchivestate"), { on: true, set_by: null, set_at: null });
+  const refused = await x.call("/coarchiveset?by=member:ann", { on: false });
+  assert.equal(refused.ok, false, "a member who is not an administrator is refused");
+  const set = await x.call("/coarchiveset?by=member:ada", { on: false });
+  assert.deepEqual([set.ok, set.on, set.set_by], [true, false, "member:ada"]);
+  assert.deepEqual(await x.call("/coarchivestate"), JSON.parse(JSON.stringify(acquisitionOf(x.ctx).coArchiveState())));
+  assert.equal((await x.call("/coarchivestate")).on, false);
+  const map = Object.keys(x.routes("/coarchivestate"));
+  assert.ok(map.indexOf("coarchivestate") < map.indexOf("acquire"), "at acquisition's place, before capture's map");
+});
