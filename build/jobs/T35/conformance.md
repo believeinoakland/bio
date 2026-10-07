@@ -19,3 +19,20 @@ What R27 turns red outside conformance, measured on job/T35/conformance against 
 - consequences, actions, escalation, action-plans: 0 new reds. action-clocks (2), affordances (2), control-plane (4): the same failures before and after (inherited reds).
 - **A finding for standards (R20 with R43), against its requirements:** `inForceAt` answers `undetermined` for a standard whose period has `to: null` ("the record does not state when it ceased to be in force"), and `bindsAt` carries that undetermined into "is it the body's own". So a standard with an open-ended period (most standards in force today) never answers `binds`, and conformance R27 then refuses every `noncompliant` against it. R3 accepts an undetermined force; R27 does not accept an undetermined binding. Whether an open end should read as in force for `bindsAt`, or R27 should accept a binding undetermined only by an open end, is yours.
 - Generated artifact: my change stales the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, which embeds conformance), regenerated at L9's close (§14).
+
+## J3 · COMPLETE
+
+**Entries applied.** T35-61 whole (N651; K1723, K1713, K102), on the readings K2019 confirmed (J1):
+- R27: each standard's bindingness on the act's body read through `standards.bindsAt` at R3's dates, held per standard (`body`, `binds`, its why and what it rests on) on determinations and comparisons, labelled "Standard · binds <body>" / "Benchmark · not binding on <body>"; `STANDARD_NOT_BINDING` (C-113.32) for `noncompliant` unless it binds (undetermined refused the same); `BENCHMARK_CALLED_NONCONFORMING` (C-113.33) over row text and questions; `diverges` against a benchmark answered "below the benchmark"; `binds` never taken from a proposal; rows written before T35 read `undetermined`.
+- R28: `comparisonPropose` takes the act as R25 (event read, `ACT_NO_EVENT`, `NO_SUCH_EVENT`, `ACT_NOT_AN_EVENT`) with an office or organisation actor (`ACTOR_KINDS`), `ACTOR_IS_A_PERSON` (C-113.34), `ACTOR_NOT_AN_OFFICE_OR_ORGANISATION` (C-113.35); `determine` keeps `ACTOR_NOT_AN_OFFICE`.
+- R29: a row's `did` may be `{calc, result_key}`, read through `calculations.read` (the act then answers a Promise), held with result, denominator, population and derivation; `NO_SUCH_CALCULATION` as calculations answers it; `MEASURE_NO_DENOMINATOR` (C-113.36); "practice" never said.
+- `modules.json`'s calculations edge used (`calculationsOf`). Additive columns for stores made before T35. Rows C-113.32–.36 await stamp (red 2).
+- Refactor: the act's event resolution is one method, shared by determine and the comparison.
+
+**Deferred.** None.
+
+**Found in other modules** (J2 REPORT): filings' fixture, 4 tests red from R27 (its determinations against standards not binding the body); standards R20/R43: an open-ended period never binds, so no `noncompliant` against it (yours to rule); the plane bundle staled.
+
+**Tests and checks.** `node --test bio-plane/test/m/conformance/`: 76 tests, 76 pass, 0 fail (10 new in `t35.test.mjs`; R27, R28, R29 each named). Users before/after: consequences 0/0, actions 0/0, escalation 0/0, action-plans 0/0 fail; filings 0/4; action-clocks 2/2, affordances 2/2, control-plane 4/4 (inherited). `format`: 0 failures. `architecture conformance`: 0 failures. `coverage conformance`: 29 of 29 live ids, 0 failures. `ownership conformance tranche/T35`: 10 files, 0 failures.
+
+Size (session_016Bjc5tpJNX89ingrG1hp72): test runs 14, module lines 2083
