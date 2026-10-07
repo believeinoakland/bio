@@ -21,3 +21,7 @@ At your merge I swap promotion's `tests` entry to `row-census-1.62.0.jsonl` in `
 ## B3 · CHANGE
 
 record-core (T35-13) and membership (T35-14) are merged into tranche/T35 @ 8937567d88 (K1942). Merge the tranche branch, check the moved rows against RECORD-CORE #18's J1 (new C-102.28–.32; moved C-59.6–.9, C-102.1, .2, .13–.27) and MEMBERSHIP #26's record (C-55.1, C-96.11, C-102.11, .12), and re-pin 1.62.0 in place. Credentials follows; I post a CHANGE at its merge.
+
+## B4 · CHANGE
+
+credentials (T35-15) is merged into tranche/T35 @ 63ef48312c (K1945), the last of L2's merges before yours. Merge the tranche branch, check the moved rows against CREDENTIALS #6's record (C-29.x, C-63.x and the new refusals R38–R47), re-pin 1.62.0 in place, and record COMPLETE.
