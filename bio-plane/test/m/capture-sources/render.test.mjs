@@ -262,7 +262,7 @@ test("R12: requests counted by outcome; subresources and data carry the plane's 
   const claim = "e".repeat(64);
   const n = block(answer({ requests: [{ url: PAGE, type: "document", outcome: "completed", sha256: claim }] })).render;
   assert.deepEqual(n.subresources[0], { address: PAGE, type: "document", sha256: "undetermined",
-    digest_reason: "the plane did not keep this render's subresource bytes", renderer_sha256: claim });
+    digest_reason: "your group's Civicsmith did not keep this render's subresource bytes", renderer_sha256: claim });
   assert.equal(n.data[0].sha256, "undetermined");
   /* The page host is navigated_to's, else pageUrl's. */
   const moved = block(answer({ navigated_to: "https://moved.example.org/p",

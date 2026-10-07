@@ -44,6 +44,74 @@ const ORIGIN_KINDS = ['named_request', 'sweep', 'member', DOORBELL_ORIGIN];
 const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
 const HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const RAW_SHA_RE = /^[0-9a-f]{64}$/;
+/* R42 · N688 (K1844, K1852): the `capture.method` of a file `acquisition.unpack` cut out of a captured archive (its
+   R39), and the one document that carries a `container` block. */
+export const UNPACKED_METHOD = 'unpacked';
+const whole = (v) => Number.isSafeInteger(v) && v >= 0;
+/* A JSON value with every object's keys sorted, so two origins are compared as values, key order ignored. */
+const canon = (v) => JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x)
+  ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x));
+
+/** R42 · N688: an `unpacked` document's `container` block, its shape, and, when the record is at hand (`resolve`, at
+ *  the write and in the audit), the three facts the record decides: the archive is held (R5), the document's letter is
+ *  the one its archive earns (R59), and its origin is the archive's own document's. `resolve`:
+ *    holds(sha)               the record registers the capture or holds a receipt for it (R5)
+ *    gradeVia(sha, index)     R59's answer for entry `index` of archive `sha`
+ *    archiveOrigin(sha)       `{found, origin}` of the archive's own document in its home's register
+ *  Without it (the ratify gate's pure call) the shape and the method's pairing with the block are asked alone. */
+function checkContainer(ctx, findings, d, i) {
+  const cap = d.capture && typeof d.capture === 'object' ? d.capture : null;
+  const unpacked = !!cap && cap.method === UNPACKED_METHOD;
+  const c = d.container;
+  if (!unpacked) {
+    if (c !== undefined) findings.push(f('C-18.1', 'error', `provenance documents[${i}] carries a container block but its capture.method is '${cap ? cap.method : undefined}', not '${UNPACKED_METHOD}': only a file cut out of a captured archive names the archive it came from`));
+    return;
+  }
+  if (!c || typeof c !== 'object' || Array.isArray(c)) {
+    findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of an archive (capture.method '${UNPACKED_METHOD}') and carries no container block naming the archive and the entry it came from`));
+    return;
+  }
+  const bad = [];
+  if (typeof c.archive_sha256 !== 'string' || !RAW_SHA_RE.test(c.archive_sha256)) bad.push('archive_sha256 (64 lowercase hex)');
+  for (const k of ['index', 'compressed', 'uncompressed', 'local_offset']) if (!whole(c[k])) bad.push(`${k} (a whole number, at least 0)`);
+  if (!(c.path === null || typeof c.path === 'string')) bad.push('path (the entry\'s name, or null)');
+  if (typeof c.name_raw !== 'string' || !/^(?:[0-9a-f]{2})*$/.test(c.name_raw)) bad.push('name_raw (lowercase hex)');
+  if (c.method !== 0 && c.method !== 8) bad.push('method (0 or 8)');
+  if (!whole(c.crc32)) bad.push('crc32 (a whole number)');
+  if (typeof c.member_sha256 !== 'string' || c.member_sha256 !== cap.sha256) bad.push('member_sha256 (equal to capture.sha256)');
+  if (!(c.dos_time_stated === null || (typeof c.dos_time_stated === 'string' && c.dos_time_stated !== ''))) bad.push('dos_time_stated (the archive\'s stated time, or null)');
+  if (bad.length) {
+    findings.push(f('C-18.1', 'error', `provenance documents[${i}].container is malformed: ${bad.join('; ')}`));
+    return;
+  }
+  const r = ctx.resolve;
+  if (!r) {
+    if (cap.grade !== undefined && cap.grade !== null && !CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
+    if ((cap.grade === undefined || cap.grade === null) && (typeof cap.grade_basis !== 'string' || !cap.grade_basis)) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of an archive and carries no capture.grade and no grade_basis: why it carries no letter is stated, never left to be inferred`));
+    return;
+  }
+  const a = c.archive_sha256;
+  if (!r.holds(a)) {
+    findings.push(f('C-18.1', 'error', `provenance documents[${i}].container names archive ${a.slice(0, 16)}…, which the record neither registers nor holds a receipt for: a file is cut out only of an archive the record holds`));
+    return;
+  }
+  /* R59: the archive's answer, through the entry this block names. A letter is stated exactly when it earns one;
+     otherwise the basis is the archive's (the basis of the archive whose route decided it). */
+  const g = r.gradeVia(a, c.index) || {};
+  const letter = typeof g.grade === 'string' && g.grade ? g.grade : null;
+  const stated = cap.grade === undefined || cap.grade === null ? null : cap.grade;
+  if (letter && stated !== letter) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and states capture.grade '${stated}', but a file earns exactly what its archive earns, ${letter}`));
+  if (!letter) {
+    const basis = g.archive && typeof g.archive === 'object' ? g.archive.basis : g.basis;
+    if (stated !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and states capture.grade '${stated}', but its archive earns no letter (${basis}), so neither does the file`));
+    if (cap.grade_basis !== basis) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and its capture.grade_basis is '${cap.grade_basis}', not its archive's, '${basis}'`));
+  }
+  /* The archive's own document, found by its capture digest through the record: its home's live register. Each file
+     is its own document in its own bundle beside the archive (K1940 (1)), so this register never holds it. */
+  const found = r.archiveOrigin(a) || { found: false };
+  if (!found.found) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}…, and no register document of that archive can be read, so its origin cannot be shown to be the archive's`));
+  else if (canon(d.origin ?? null) !== canon(found.origin ?? null)) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and its origin is ${canon(d.origin ?? null).slice(0, 120)}, not its archive's, ${canon(found.origin ?? null).slice(0, 120)}`));
+}
 
 /** C-18.1: intake provenance register shape, release authority, and the
  *  ratification fence (sweep intake lands at collected, never higher). */
@@ -210,6 +278,9 @@ function checkReleaseAuthority(ctx, findings) {
       if (d.authored === true) {
         if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and carries capture.grade '${cap.grade}': the capture axis does not apply to an authored document, and a letter on it would read as strength the observation does not have (MEMBER-KNOWLEDGE-DESIGN.md §3)`));
         if (cap.actor_class !== 'member') findings.push(f('C-18.1', 'error', `provenance documents[${i}] is a member's authored observation and its capture.actor_class is '${cap.actor_class}', not 'member'`));
+      } else if (cap.method === UNPACKED_METHOD) {
+        /* N688 (R42, R59): a file cut out of an archive earns exactly what its archive earns, so its letter (or the
+           basis of none) is judged against the archive, with its container block (`checkContainer`, below). */
       } else if (d.origin && typeof d.origin === 'object' && d.origin.kind === DOORBELL_ORIGIN) {
         /* N381 (R51; K509 (3)): A PULLED KNOCK CARRIES NO FETCHED LETTER, and the basis is the statement. No instance
            asked any address for these bytes, so a letter would read as a measurement of a fetch that never happened;
@@ -220,6 +291,7 @@ function checkReleaseAuthority(ctx, findings) {
       } else if (!CAPTURE_GRADES.includes(cap.grade)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.grade '${cap.grade}' is not one of: ${CAPTURE_GRADES.join(', ')}`));
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }
+    checkContainer(ctx, findings, d, i);
     const or = d.origin;
     /* MK-1: the design's first §7 refusal, stated in the catalogue as well as
        fenced at the write (C-53.7) — an authored observation's origin is the
@@ -490,12 +562,14 @@ function checkInfo2Register(ctx, findings) {
 }
 
 /** The C-18 register arms over one bundle: `files` maps a path to its text (or bytes), `elided` names the paths held
- *  and not carried (a blob), `fm` is the parsed `bundle.md` front matter (null when unreadable). Answers the
+ *  and not carried (a blob), `fm` is the parsed `bundle.md` front matter (null when unreadable), `resolve` the
+ *  record's answers an `unpacked` document is judged against (R42, `checkContainer`; null where no record is at hand). Answers the
  *  catalogue's findings, in the order `checkBundle` ran the arms. Never throws for a well-formed call. */
-export function registerChecks({ files, fm, elided = null }) {
+export function registerChecks({ files, fm, elided = null, resolve = null }) {
   const findings = [];
   const ctx = { files: files instanceof Map ? files : new Map(Object.entries(files || {})), fm: fm || null,
-                elided: elided instanceof Set ? elided : new Set(elided || []) };
+                elided: elided instanceof Set ? elided : new Set(elided || []),
+                resolve: resolve && typeof resolve.holds === 'function' ? resolve : null };
   if (!ctx.fm || typeof ctx.fm !== 'object') return findings;
   checkReleaseAuthority(ctx, findings);
   checkAuthorityPublishable(ctx, findings);

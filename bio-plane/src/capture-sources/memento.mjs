@@ -253,7 +253,7 @@ export function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answ
       a && a.timegate ? `rel="timegate" ${a.timegate}` : null,
       a && a.timemap ? `rel="timemap" ${a.timemap}` : null,
       chosen.mimetype ? `mimetype ${chosen.mimetype}` : null,
-      chosen.digest === EMPTY_BODY_DIGEST ? null : `SHA-256 ${chosen.digest}, computed by this instance over the bytes it received, not a digest the archive stated`,
+      chosen.digest === EMPTY_BODY_DIGEST ? null : `SHA-256 ${chosen.digest}, computed by your group's Civicsmith over the bytes it received, not a digest the archive stated`,
     ].filter(Boolean).join("; "),
     bound: false,
     unsigned_reason: `no cryptographic attestation exists over a ${name} memento; this is a dated third-party claim we are trusting, not verifying`,

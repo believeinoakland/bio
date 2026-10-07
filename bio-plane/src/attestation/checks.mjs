@@ -23,9 +23,9 @@ export const ATTEST_CHECKS = {
   CAPTURE_HELD_IN_PARTS: {
     check: 'C-89.1',
     where: 'src/attestation/index.mjs attest > is-attest-parts',
-    translation: 'The record lists this document, but keeps it in parts rather than as one file, and this '
-      + 'instance has no record of fetching it itself. A timestamp is only requested for bytes this '
-      + 'instance can vouch for, so none was requested. Nothing is missing: do not capture the document '
-      + 'again. If the instance fetches it from its address, it can then be co-attested.',
+    translation: 'The record lists this document, but keeps it in parts rather than as one file, and your '
+      + "group's Civicsmith has no record of fetching it itself. A timestamp is only requested for bytes your "
+      + "group's Civicsmith can vouch for, so none was requested. Nothing is missing: do not capture the document "
+      + "again. If your group's Civicsmith fetches it from its address, it can then be co-attested.",
   },
 };
