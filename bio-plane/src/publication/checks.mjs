@@ -2,8 +2,9 @@
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * C-122.1 (R51, N364) is a family of its own here: a case's sources; C-122.2 (R58, DEC-112) and C-122.3, C-122.4 (R59,
- * N522) join it at T28, and C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35. C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9;
- * T33-62, T33-63), numbers and translations unchanged, and left this table, so no row id is held twice.
+ * N522) join it at T28, and C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35.
+ * C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9; T33-62, T33-63), numbers
+ * and translations unchanged, and left this table, so no row id is held twice.
  *
  * C-44.2, C-68.5 and C-98.1–.9, raised by `public-read`'s code since K651, are `public-read`'s (its R17), moved there
  * with their numbers, wheres and translations unchanged and deleted here (T19), so no row id is held twice.
