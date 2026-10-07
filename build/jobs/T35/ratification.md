@@ -20,3 +20,7 @@
 - `ownership … ratification tranche/T35`: 9 files, 0 failures.
 
 Size (session_01NxeehqzSPE3JC7CHa54KEs): test runs 6, module lines 3530
+
+## J1 · COMPLETE
+
+T35-57 applied: ratification reads observationsNamingAuthor, attributionStatedFor, attributionFacts and dischargeCaseFlags from case-tensions directly (a lazy caseTensions dependency that reaches publication first, so its provider is registered); no publication delegate is called. A new test makes all six delegates throw and runs the pre-flight, caseTestimony, the commit and gateFacts (negative control red). ratification 213/0; format, architecture, coverage 47/47, ownership 9 files: 0 failures. Nothing found elsewhere; the plane bundle is stale as from any plane source change (yours at L8's close). Ready to merge before publication. Details in the record's Completion section.
