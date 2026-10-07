@@ -993,6 +993,11 @@
      "status": "owed"
     },
     {
+     "op": "owed:openwithwarning DEC-173",
+     "label": "Open the original after the warning, without a deeper check",
+     "status": "owed"
+    },
+    {
      "op": "owed:safeview K1888",
      "label": "Read the safe view",
      "status": "owed"

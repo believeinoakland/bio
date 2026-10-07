@@ -2648,6 +2648,7 @@ owed: (BOB, N710) the catalogue as ruled: Sophos Intelix and WildFire from "hold
 
 ### DEC-169 · answered
 amended: 2026-10-07 · K1949 (Bob, "as recommended", B80), folded by the design session: added outside tools run only when a member asks (a deeper check), except a tool on the organization's own servers, which may check every file; the deeper check runs every outside tool added and needs one clean verdict from an engine other than ClamAV; only a hold found by ClamAV alone is released by a second, different engine, an outside engine's finding by two members; a tool whose vendor does not state its sample sharing is not offered; the safe view opens without a deeper check. Drawn in "Opening a file" (the held state now an outside engine's finding) and Security tools ("When it runs").
+amended: 2026-10-07 · DEC-173 (Bob, "S15: as recommended"): a high-risk original may be opened after warnings, without a deeper check, unless a scanner flagged it.
 raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (K1929: "the screens are the design stream's"; the virus package's later users name "the warning before opening, the safe view's label and its one click to the original")
 for: bob-session
 question: How a member meets a file's risk, the safe view, the deeper check and a scan hold, and how an administrator adds security tools.
@@ -2702,3 +2703,17 @@ response: **Bob, 2026-10-07: "I agree that a group should be able to keep their 
 decided: 2026-10-07 · Bob
 reasoning recorded in: this entry; S14 on `docs/development/ux-substrate/layouts.html`; `screens/mock-screens.js` (setup, Members, Settings › The assistant); the setup wizard's step (`library.src.py`); `BIO_Interaction_Constructs_v0_1.md` §R.
 owed: (BOB) instance-setup R59 restated: setup offers whether the group pays (its key) and the keep-away setting, separately, nothing preselected; the act behind `owed:aikeepaway DEC-172` (on with a required reason, off, by an active administrator; recorded with who and when); account resolution (agent-model `accountFor`, ai-runs, agent-worker) refusing every account, the group's and members' own, while keep-away is on, by a named refusal carrying the reason; a member's own account always accepted otherwise (credentials, admission); the reason, who and when readable by every member; the AI-only acts and drafts absent while it is on, as for a member reached by no account.
+
+### DEC-173 · answered
+raised: 2026-10-07 · the UX design session with Bob on his primary account (session_01NWPmrrYZbbF8Wkrvp5Y2vx; the development process runs on his secondary account since K1891) (Bob's comment on "Opening a file", 7 October: "Should there be an opportunity for members to open a file labeled as high risk without a deeper check (with the proper warnings they must accept)?"; S15)
+for: bob
+question: Whether a member may open a high-risk original without a passing deeper check, after warnings.
+why it is Bob's: it changes his ruling K1888 (3) ("the original needs a fresh deep check before a member may override") and what a member may open.
+provisional: K1888 (3), K1949 (Q6): the original only after a deeper check with a clean engine other than ClamAV; a group with no outside scanner can never open a high-risk original.
+alternative: A, keep the ruling; C, only when an administrator opens that one file up, with a recorded reason.
+recommendation: B.
+reversal cost: low.
+response: **Bob, 2026-10-07: "S15: as recommended".** Ruled (B): (1) for a high-risk file no scanner has flagged (no scan hold) and that the built-in scanner checked within `RESCAN_INTERVAL_MS` (a week), a member may open the original without a deeper check; (2) first the screen states why the file is high risk (its reasons, in member words) and what opening it risks (the file on their device, their device's protections and their sign-in to the group), and the member confirms "I will open it on my own device, not a shared one" and "I will not enable macros or editing"; (3) never for a file under a scan hold, which still needs its release (K1949 (Q7)); (4) who opened it, and who confirmed, is not recorded (K1892); (5) a passing deeper check still opens the original for every member for 24 hours.
+decided: 2026-10-07 · Bob
+reasoning recorded in: this entry; S15 on `docs/development/ux-substrate/layouts.html`; "Opening a file" in `screens/mock-screens.js`; `BIO_Interaction_Constructs_v0_1.md` §R.
+owed: (BOB, with N707) file-safety R8's `override` gains a warned path: `openOriginal` with the member's two confirmations opens a high-risk original when no scan hold applies and a ClamAV `clean` note is newer than `RESCAN_INTERVAL_MS`, refused otherwise by name (`SCAN_HOLD`, `NOT_SCANNED`, a stale-check refusal); `originalState` says which path is open; the act behind `owed:openwithwarning DEC-173`; no record of who opened or confirmed (R10).
