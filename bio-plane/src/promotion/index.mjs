@@ -166,7 +166,7 @@ function stepDeclared(held, detail) {
 }
 
 const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
-  detail: "a project by that name already exists on this instance, compared without regard to case or spacing. This "
+  detail: "a project by that name already exists in your group's Civicsmith, compared without regard to case or spacing. This "
         + "holds for deactivated projects too, because their names are still cited." });
 
 class Promotion {
@@ -402,7 +402,7 @@ class Promotion {
       /* DEC-49 REGION is-project-id-supplied */
       if (idSupplied)
         return refusal("PROJECT_ID_SUPPLIED",
-          "a new project's id is minted by the plane and returned; send the creation with no bundleId. "
+          "a new project's id is minted by the record and returned; send the creation with no bundleId. "
           + "A creation in the PROJ- namespace names no id, whatever type it claims. Nothing was created.");
       /* END DEC-49 REGION is-project-id-supplied */
       projectMd = sentMd;
@@ -410,10 +410,10 @@ class Promotion {
       if (!sentFm)
         return refusal("PROJECT_DOCUMENT_UNREADABLE",
           "the new project's bundle.md must arrive as inline text beginning with a --- front matter block, "
-          + "because the plane writes the minted id into it. Nothing was created.");
+          + "because the record writes the minted id into it. Nothing was created.");
       if (has(sentFm, "id"))
         return refusal("PROJECT_ID_IN_BYTES",
-          "the new project's bundle.md already carries a top-level id: line. The plane writes the id it mints; "
+          "the new project's bundle.md already carries a top-level id: line. The record writes the id it mints; "
           + "remove the line and send it again. Nothing was created.");
       /* END DEC-49 REGION is-project-id-bytes */
     }
@@ -621,7 +621,7 @@ class Promotion {
       if (promotedType === "project") {
         const key = projectNameKey(promotedTitle);
         if (!key)
-          return { ok: false, reason: "NO_TITLE", detail: "a project needs a name, and it must be unique across this instance" };
+          return { ok: false, reason: "NO_TITLE", detail: "a project needs a name, and it must be unique across your group's Civicsmith" };
         if (this.#nameTaken(key, bundleId)) return NAME_TAKEN();
       }
 
@@ -900,7 +900,7 @@ class Promotion {
     /* DEC-49 REGION is-project-fork-id-supplied */
     if (newId !== undefined && newId !== null && newId !== "")
       return refusal("PROJECT_FORK_ID_SUPPLIED",
-        "a fork's id is minted by the plane and returned as newId; send the fork with no newId. Nothing was forked.");
+        "a fork's id is minted by the record and returned as newId; send the fork with no newId. Nothing was forked.");
     /* END DEC-49 REGION is-project-fork-id-supplied */
     const head = typeof projectId === "string" && projectId ? record.head(projectId) : null;
     /* Sight before position: an unseen project answers as one that does not exist. A viewer never sent is internal. */

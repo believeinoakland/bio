@@ -15,7 +15,7 @@
              with no trailing newline, SHA-256 over UTF-8, lowercase hex.
 
    SCRIPTS THAT RUN WHEN IMPORTED: R50 names, since N350 (T14), every fleet member's `scripts/` (agent-worker's build
-   writes its bundle when imported, measured) and `civicos-ui/deploy-ui.mjs` (it exits) beside its first three. They are
+   writes its bundle when imported, measured; sheet-worker's too, T35) and `civicos-ui/deploy-ui.mjs` (it exits) beside its first three. They are
    left out as R50 leaves out `bio-plane/scripts/`, returned in `scripts`, and the suite fails by name if any of them
    holds a `check:` key, so leaving them out cannot move the census. Every other file is imported.
    A file node cannot import (it reaches `cloudflare:` or a browser global) is NOT skipped silently: it is returned in
@@ -29,8 +29,10 @@ import { pathToFileURL } from "node:url";
 
 export const ROW_LITERAL = /\bcheck\s*:\s*["'`]C-\d/;
 export const CHECK_KEY = /\bcheck\s*:/;
-const SCRIPTS = [/^(agent-worker|pdf-worker|ocr-worker|newgroup|docprofile|jurisdictions|civicos-ui)\/scripts\//,
-                 /^civicos-ui\/deploy-ui\.mjs$/];
+/* Every fleet member's `scripts/` by its shape, a top-level directory's own `scripts/` (bio-plane's is EXCLUDED below), never
+   a hand-kept list of members: the list named before T35 missed `sheet-worker` and `agent-runner`, whose builds the
+   census then imported and ran (PROMOTION #33, T35). */
+const SCRIPTS = [/^[^/]+\/scripts\//, /^civicos-ui\/deploy-ui\.mjs$/];
 const EXCLUDED = [/(^|\/)test\//, /\.test\.mjs$/, /\.control\.mjs$/, /^bio-plane\/scripts\//, /^bio-plane\/migrate\//,
                   /^civicos-ui\/check-[^/]*\.mjs$/];
 
