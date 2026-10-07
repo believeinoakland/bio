@@ -61,3 +61,7 @@ T35-66 is complete and pushed on `job/T35/affordances` (merged with `tranche/T35
 - `format`: 0 failures. `architecture affordances`: 18 product files, 229 relative imports; 0 failures. `coverage affordances`: 32 of 32; 0 failures. `ownership affordances tranche/T35`: 0 failures.
 
 Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 20, module lines 2055
+
+## J4 · COMPLETE
+
+B4 (K2049) done and pushed on `job/T35/affordances` (tranche/T35 merged first). The closed lists hold each owner's map as merged: `t33.test.mjs` (red 29) and `catalogue.test.mjs`:579 (red 36) both clear. Also new: R19's drives for op-grades' nine T35 `reasoned` ops (`t35-backing.test.mjs`), which R19's reach test needed once they were graded. K2038's re-export stays. affordances 208 of 208; users 336 of 340 (red 37, op-declarations' reds); format, architecture, coverage (32 of 32), ownership: 0 failures. Size: test runs 20, module lines 2055.
