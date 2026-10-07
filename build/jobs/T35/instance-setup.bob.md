@@ -22,3 +22,7 @@ K2038. Use `ROTATION_GUIDE_HREF` (`#replace-one-time-password`), which setup-pag
 ## B3 · CHANGE
 
 K2054. You are merged, and setup-page is merged too, but on the tranche `page.test.mjs`:104 (R47 F10, "the guide is one element of the composed page") still fails: red 41. Merge tranche/T35, make R47 pass (and switch to the named import, as you planned), and post COMPLETE.
+
+## B4 · CHANGE
+
+K2065. control-plane and plane are merged. On the tranche your `worker-reports.test.mjs` ("R42 R34 R33 on the real plane") fails: it sends its token in the address and the answer now carries `deprecated: "CREDENTIAL_IN_ADDRESS"` (control-plane R59). Merge tranche/T35, send the token in the `Authorization: Bearer` header (admission R20), run your suites, post COMPLETE. Red 44 until then.
