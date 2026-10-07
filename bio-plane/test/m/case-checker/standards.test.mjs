@@ -1,12 +1,11 @@
 /* case-checker: how a case uses the standards it measures against (R21; N648; K1723, K1739), at the interface
-   `checkStandardsUse({text, criteria, materials, passages})`. The case document is written with the writers the
-   publishing copy uses: `case-grammar`'s `grading_facts:` lines (its R17) and `ratification`'s `case_conclusions:` rows. */
+   `checkStandardsUse({text, criteria, materials, passages})`. The case document carries `case-grammar`'s `grading_facts:`
+   lines (its R17, by its own writer) and `case_conclusions:` rows in the shape the publishing copy writes them. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import * as CC from "../../../src/case-checker/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
-import { caseConclusionRowLines } from "../../../src/ratification/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
@@ -22,8 +21,11 @@ const RELIED = sha("passage relied on"), LOOSE = sha("passage no finding relies 
 
 const leg = (finding, ord, target, kind = "standard") => ({ finding, ord, target, kind, role: "supports", grade: "B",
   grade_axis: "capture", grade_source: "capture", ground: null });
-const conclusion = (claim, detail = "") => ({ relationship: "project", project: "PROJ-2026-0001-x", version: null,
-  claim: { state: "adopted", text: claim, detail }, falsifier: "a later count", by: "alice", at: "2026-10-01T00:00:00Z" });
+/* One member's `case_conclusions:` row, field for field as the publishing copy writes it; null for a member with none. */
+const conclusionRow = (m, claim, detail = "") => [`  - target: ${m}`, "    relationship: " + (claim === null ? "null" : "project"),
+  "    project: " + (claim === null ? "null" : "PROJ-2026-0001-x"), "    version: null", "    claim_state: " + (claim === null ? "null" : "adopted"),
+  `    claim: "${claim ?? ""}"`, `    claim_detail: "${detail}"`, '    falsifier: "a later count"', "    falsifier_override_by: null",
+  '    falsifier_override_at: ""', "    concluded_by: alice", '    concluded_at: "2026-10-01T00:00:00Z"'];
 
 /** A case document's text: `claims` per member, `legs` the signed grading facts, and the case's own statements. */
 function doc({ claims = { [A]: "Responses here were slower than the peer average.", [B]: "The permits violated the code." },
@@ -32,7 +34,7 @@ function doc({ claims = { [A]: "Responses here were slower than the peer average
                statement = "the 2019 permits are not covered", body = "", members = [A, B] } = {}) {
   return ["---", "format: bio-case-document/7", "case_id: CASE-2026-0001", "case_edition: 1",
     `case_scope: "${scope}"`, `case_findings: [${members.join(", ")}]`,
-    "case_conclusions:", ...members.flatMap((m) => caseConclusionRowLines(m, claims[m] === undefined ? null : conclusion(claims[m], details[m]))),
+    "case_conclusions:", ...members.flatMap((m) => conclusionRow(m, claims[m] ?? null, details[m])),
     ...CG.gradingFactsLines(legs),
     "completeness:", `  statement: "${statement}"`, "  author: alice",
     "---", "", "# Case", "", body, ""].join("\n");
