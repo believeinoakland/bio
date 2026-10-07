@@ -1,6 +1,6 @@
 # retrieval (T35)
 
-**Status** · session_01FeUn5pWXtcyMpN79S2qaN6 · depth 2 · COMPLETE · handled B3
+**Status** · session_01FeUn5pWXtcyMpN79S2qaN6 · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## J1 · QUESTION
 
