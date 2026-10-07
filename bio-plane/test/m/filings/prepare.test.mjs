@@ -135,7 +135,8 @@ test("R3 every blank is filled from the record naming its source, or left as a v
   const la = prep(x, A);
   assert.equal(la.unfilled.find((u) => u.name === "law"), undefined);
   /* No value, undetermined: a counterparty undetermined, no laws stated, no clock, no group, an act placed nowhere. */
-  const D2 = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption" }) } });
+  /* conformance R27 (K2021): an act placed nowhere has no date a standard binds on, so its outcomes are compliant */
+  const D2 = x.determine({ act: { ...x.act, event: x.event({ kind: "adoption" }) }, standards: [{ standard: x.S1, outcome: "compliant" }, { standard: x.S2, outcome: "compliant" }] });
   const C = x.action({ counterparty: { state: "undetermined", basis: "not yet known" }, clock: [], laws: null,
                        legs: [{ target: D2, kind: "rests_on" }] });
   x.groupRef.value = null;
