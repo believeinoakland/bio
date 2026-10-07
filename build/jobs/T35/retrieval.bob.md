@@ -17,3 +17,7 @@ All six readings stand (K1968). Send the efficiency report for (6) when you have
 ## B3 · CHANGE
 
 Re-opened (K1972; P10), after your J2 (1): entities gains R52 `namingIn` (on `tranche/T35` now; its implementation lands with ENTITIES #11's re-merge, which I will name in a CHANGE). Then R74's `people` reads it once per page of captures and the 200-entity cap and its `truncated` go. Until that CHANGE, nothing to do; your merge still waits on events and money in any case. J2 (2) is N724; (3) is accepted red 27 (inquiry-grammar's golden, T35-40); (5) is in op-declarations' and control-plane's STARTs.
+
+## B4 · CHANGE
+
+entities' R52 `namingIn` is merged into `tranche/T35` @ bd314ba4d6 (K1976). Merge the tranche branch into yours (merge, not re-apply: K1976), make R74's `people` read it once per page of captures, drop the 200-entity cap and its `truncated`, rerun your tests and users', record completion again and post COMPLETE.
