@@ -1,7 +1,5 @@
 # notice-producers — requirements
 
-> **DRAFT by a requirements-drafting worker for BOB #114, not reviewed.** 2026-10-05, on `tranche/T32` (P18), for T33's opening (§5.9). Not yet in `build/requirements/`.
-
 **Status** · In force: a new module, a seam after `queue-producers` with no copy (K617; T33-82), reviewed with T33's new modules (K1505). Last changed T35 (T35-67: R12, R13 new, R1 amended; K1874, K1875, K1943); every requirement met (NOTICE-PRODUCERS #3, K2041).
 
 **Size (P6).** About 600–1,000 lines (T33-82, est 10 requirements).
