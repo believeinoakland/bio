@@ -84,8 +84,9 @@ export const T35_NON_ACTS = {
     + "administrator; it names no address and no handle"),
   recoverycodesstate: R("how many of an administrator's own recovery codes are unspent, never a code"),
   adminrecoverystep: R("whether the group's second-administrator step is done, to an administrator"),
-  agentpack: R("the agent's pack and fences, as op=affordances carries them"),
   credit: "read: public, no credential",
+  /* `agentpack` has no `NEEDS` row (op-declarations R30: the untargeted `affordances`' spec), so it is named nowhere here
+     (K2054; `affordances` R12) */
   /* K2043 (B3) */
   standardforce: "standard-directed: keyed by a standard and one of its provisions, reached from the standard's text; a "
     + "member's confirmed force with its citation, moving no bundle",

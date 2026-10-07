@@ -74,7 +74,7 @@ const B3_CODES = { standardforce: "STANDARD_NO_REASON", standardforcewithdraw: "
 const B3_READS = ["bindsat", "editioninforce", "forcesof", "overridesof", "usesof", "applicationrecipes", "poweruses",
   "recordsrequests"];
 const R22_READS = ["archivelist", "coarchivestate", "findin", "entitieskind", "securitymap", "recoverycodesstate",
-  "adminrecoverystep", "agentpack"];
+  "adminrecoverystep"];
 
 test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `reversible`, unpack `undetermined`, the "
    + "note revise and delete and both sign-outs `caller-owned`, the recovery acts `credential` — each with R22's reason, "
@@ -96,6 +96,9 @@ test("R22 R3: every op op-declarations R30 declares is graded — coarchiveset `
   }
   assert.match(NON_ACTS.findin, /records nothing/);
   assert.equal(NON_ACTS.credit, "read: public, no credential");
+  /* K2054: agentpack has no NEEDS row (op-declarations R30), so it carries no reason and no grade */
+  assert.ok(!Object.hasOwn(NON_ACTS, "agentpack"));
+  assert.equal(gradeOf("agentpack"), null);
   assert.deepEqual(Object.keys(T35_NON_ACTS).sort(),
     [...Object.keys(R22_WRITES), ...R22_READS, "credit", ...Object.keys(B3_WRITES), ...B3_READS].sort());
   const ALL = [...Object.keys(R22_WRITES), ...R22_READS, "credit"];
