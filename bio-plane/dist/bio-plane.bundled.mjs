@@ -147690,6 +147690,17 @@ var FILING_TEMPLATE_CHECKS = Object.freeze({
     where: at19("#noTemplate", "is-no-such-template"),
     translation: "There is no template by that id in the group's library that you can read here. One you may not see answers exactly as one that does not exist."
   },
+  /* ---- new in T35 (R26; N702, K1869), in the C-115 family as R26 numbers them; awaiting promotion's stamp ---- */
+  TEMPLATE_REF_REFUSED: {
+    check: "C-115.45",
+    where: at19("#byName", "is-template-ref"),
+    translation: "Name one template, by its id or as @ and its name. Nothing was drafted."
+  },
+  TEMPLATE_NAME_AMBIGUOUS: {
+    check: "C-115.46",
+    where: at19("#byName", "is-template-ref"),
+    translation: "Two templates you can see go by that name here, so neither was chosen. Pick the template by its id. Nothing was drafted."
+  },
   /* ---- new (C-125) ---- */
   TEMPLATE_KIND_UNKNOWN: {
     check: "C-125.1",
@@ -148099,6 +148110,12 @@ function noTemplateGrant() {
     detail: "nothing answers to this review link: a link is read only while its grant is open and its version is in draft or in review; any other answers exactly as one that never existed."
   };
 }
+function templateHandle(name2) {
+  if (typeof name2 !== "string") return null;
+  const h = name2.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return h || null;
+}
+var TEMPLATE_NAME_REF_RE = /^@[a-z0-9]+(-[a-z0-9]+)*$/;
 var versionId = (template, version) => `${template}@${version}`;
 function parseVersionId(v) {
   const m = typeof v === "string" ? VERSION_RE.exec(v.trim()) : null;
@@ -149333,11 +149350,45 @@ var FilingTemplates = class _FilingTemplates {
     };
   }
   /* ================================================================ R25: offeredVersion */
+  /* R26: the one template `name` (`@<handle>`) names among those not retired that the viewer may see, the most specific
+     scope first: `project`'s own templates (when given), then the group's (widened), then the active profiles'. The
+     first scope holding the handle answers; two there are ambiguous. As `{t}`, or a refusal; writes nothing. */
+  #byName(name2, project, viewer) {
+    if (typeof name2 !== "string" || !TEMPLATE_NAME_REF_RE.test(name2))
+      return refuse15("TEMPLATE_REF_REFUSED", "a template is named as @ and its name's handle: lower-case letters and digits, runs joined by single hyphens", { name: typeof name2 === "string" ? name2.slice(0, 80) : null });
+    const handle = name2.slice(1), proj = str30(project);
+    const fits = (t2) => t2 && !t2.retired && templateHandle(t2.name) === handle && this.#canSee(t2, viewer);
+    const group = this.#rows(`SELECT template_id FROM tpl_templates ORDER BY template_id`).map((r) => this.#groupTemplate(r.template_id));
+    const scopes = [
+      proj ? group.filter((t2) => t2 && !t2.widened && t2.project === proj) : [],
+      group.filter((t2) => t2 && t2.widened),
+      this.#profileTemplates()
+    ];
+    for (const scope of scopes) {
+      const hits = scope.filter(fits);
+      if (hits.length > 1)
+        return refuse15("TEMPLATE_NAME_AMBIGUOUS", "two templates you can see go by that name in the same scope, so neither was chosen: name the template by its id", { name: name2 });
+      if (hits.length === 1) return { t: hits[0] };
+    }
+    return this.#noTemplate(null);
+  }
   /** R25 (`filings` R28, R31): the version of `template` a filing or briefing may use, with its metadata; the latest
-   *  approved when `version` is absent. Writes nothing. */
-  offeredVersion({ template = null, version = null, viewer = null } = {}) {
-    const t2 = this.#template(template, viewer);
-    if (!t2) return this.#noTemplate(template);
+   *  approved when `version` is absent. R26: `name` (`@<handle>`, with `project` when the draft has one) in place of
+   *  `template` names it as the library does. Writes nothing. */
+  offeredVersion({ template = null, name: name2 = null, project = null, version = null, viewer = null } = {}) {
+    const given5 = (v) => v !== null && v !== void 0 && v !== "";
+    if (given5(template) === given5(name2)) {
+      return refuse15("TEMPLATE_REF_REFUSED", given5(template) ? "a template is named by its id or by its name, not both" : "no template is named: give its id, or @ and its name");
+    }
+    let t2;
+    if (given5(name2)) {
+      const found3 = this.#byName(name2, project, viewer);
+      if (!found3.t) return found3;
+      t2 = found3.t;
+    } else {
+      t2 = this.#template(template, viewer);
+      if (!t2) return this.#noTemplate(template);
+    }
     if (t2.retired) return this.#retired(t2);
     const bad2 = _FilingTemplates.#badBlank(t2);
     if (bad2) return refuse15(
@@ -169464,6 +169515,31 @@ var CONFORMANCE_CHECKS = Object.freeze({
     where: at25("comparisonFacts", "is-standard-side-named"),
     translation: "Name which side of the question states what the standard requires, a or b. Your group's Civicsmith never chooses it. Nothing was written."
   },
+  STANDARD_NOT_BINDING: {
+    check: "C-113.32",
+    where: at25("determine", "is-standard-binding"),
+    translation: "This standard does not bind this body, so the act cannot be found nonconforming against it. Record it as a benchmark comparison: below, slower than, or above. Nothing was written."
+  },
+  BENCHMARK_CALLED_NONCONFORMING: {
+    check: "C-113.33",
+    where: at25("#benchmarkWords", "is-benchmark-worded"),
+    translation: "A benchmark does not bind this body, so the comparison cannot call the act a violation or nonconforming. Say how it compares: below, slower than, or above. Nothing was written."
+  },
+  ACTOR_IS_A_PERSON: {
+    check: "C-113.34",
+    where: at25("#comparedActor", "is-actor-not-a-person"),
+    translation: "An act is compared as the act of an office or an organisation. The people who took part are recorded on the act, never as the one who acted. Nothing was written."
+  },
+  ACTOR_NOT_AN_OFFICE_OR_ORGANISATION: {
+    check: "C-113.35",
+    where: at25("#comparedActor", "is-actor-office-or-organisation"),
+    translation: "Name the office or organisation whose act this is. Nothing was written."
+  },
+  MEASURE_NO_DENOMINATOR: {
+    check: "C-113.36",
+    where: at25("#measureOf", "is-measure-denominated"),
+    translation: "A measure of what the office does is shown with what it counted and out of how many. This calculation states no denominator or no population. Nothing was written."
+  },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: "C-113.21",
     where: at25("check", "is-determination-act"),
@@ -177850,6 +177926,10 @@ CREATE TABLE IF NOT EXISTS determination_standards (
   in_force_why      TEXT,
   PRIMARY KEY (determination_id, ord)
 );
+-- R27 (T35): each standard's bindingness on the act's body, as standards'
+-- bindsAt answered it at the act's dates (binds: true, false for a benchmark,
+-- or undetermined; binds_basis its why and what it rests on), added by
+-- migrateConformance's additive columns; a row written before T35 holds null.
 CREATE INDEX IF NOT EXISTS determination_standards_standard ON determination_standards (standard_id, determination_id);
 -- R1: THE COMPARISON, one row per row the member stated: what the standard
 -- requires, what was done, the reading (aligns, diverges, open) and the content
@@ -177864,6 +177944,10 @@ CREATE TABLE IF NOT EXISTS determination_rows (
   content           TEXT NOT NULL,
   PRIMARY KEY (determination_id, ord)
 );
+-- R29 (T35): a row whose did is a measure holds it in measure (an additive
+-- column): the calculation, its result key and the result, denominator,
+-- population and derivation as calculations read them at the write; did then
+-- holds the measure's words.
 -- R2: EACH FINDING PINNED, at the case edition and version it is published
 -- in, with its frozen pair as that edition states it (publication R37).
 CREATE TABLE IF NOT EXISTS determination_findings (
@@ -177913,7 +177997,9 @@ CREATE TABLE IF NOT EXISTS determination_flags (
 );
 -- R12: A COMPARISON PROPOSED, stored apart from determinations: who made it
 -- (machine = 1 for machine work), the act, the standards named, the rows and
--- the questions, and never an outcome.
+-- the questions, and never an outcome. From T35 its act is read as R25 and
+-- R28 read it, and bindings (an additive column) holds R27's bindingness of
+-- each standard on the act's body, read, never taken from the proposal.
 CREATE TABLE IF NOT EXISTS comparison_proposals (
   proposal_id       TEXT PRIMARY KEY,
   project_id        TEXT NOT NULL,
@@ -177965,12 +178051,23 @@ var CONFORMANCE_TABLES = Object.freeze([
   { name: "determination_causes", keys: ["determination_id"] },
   { name: "comparison_proposal_contradictions", keys: ["proposal_id", "inquiry_id"] }
 ]);
-var ADDITIVE4 = Object.freeze([["act_event", "TEXT"], ["act_entity", "TEXT"], ["act_when", "TEXT"]]);
+var ADDITIVE4 = Object.freeze([
+  ["determinations", "act_event", "TEXT"],
+  ["determinations", "act_entity", "TEXT"],
+  ["determinations", "act_when", "TEXT"],
+  ["determination_standards", "body", "TEXT"],
+  ["determination_standards", "binds", "TEXT"],
+  ["determination_standards", "binds_basis", "TEXT"],
+  ["determination_rows", "measure", "TEXT"],
+  ["comparison_proposals", "bindings", "TEXT"]
+]);
 function migrateConformance(sql) {
   const bare4 = CONFORMANCE_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
   for (const s of bare4.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
-  const have = [...sql.exec(`PRAGMA table_info(determinations)`)].map((r) => r.name);
-  for (const [column, decl] of ADDITIVE4) if (!have.includes(column)) sql.exec(`ALTER TABLE determinations ADD COLUMN ${column} ${decl}`);
+  for (const [table4, column, decl] of ADDITIVE4) {
+    const have = [...sql.exec(`PRAGMA table_info(${table4})`)].map((r) => r.name);
+    if (!have.includes(column)) sql.exec(`ALTER TABLE ${table4} ADD COLUMN ${column} ${decl}`);
+  }
 }
 
 // src/conformance/index.mjs
@@ -177993,6 +178090,21 @@ var PARTICIPANTS_SAY = "These are the people the record states took part in the 
 var NO_OFFICE_ENTITY = "no office entity is held for this role and body, so the actor stands as the office's role and body only";
 var ACTOR_BEFORE_ENTITIES = "this actor was recorded before an act's office carried an entity";
 var UNALIASED_SAYS = "This act was recorded before acts were events, and no event is linked to it yet. It reads as recorded; a member links it to its event (events' aliasAct) before it is determined again.";
+var ACTOR_KINDS = Object.freeze(["office", "institution", "body", "movement"]);
+var NONCONFORMING_WORDS2 = Object.freeze([
+  "violated",
+  "violates",
+  "violation",
+  "nonconforming",
+  "non-conforming",
+  "nonconformity",
+  "nonconformance"
+]);
+var NONCONFORMING_RE = new RegExp(`(?<![A-Za-z0-9-])(${NONCONFORMING_WORDS2.join("|")})(?![A-Za-z0-9-])`, "i");
+var BELOW_BENCHMARK = "below the benchmark";
+var BINDS_NOT_READ = "this was recorded before whether a standard binds the body was read";
+var MEASURE_SAYS = "What the office does, measured: the calculation's result with what it counted and out of how many, held beside the provision and never as the rule.";
+var measureWords = (calc) => `what the office does, as measured by ${calc}`;
 var ACT_RE2 = idPattern("ACT");
 var DATE_RE4 = /^\d{4}-\d{2}-\d{2}$/;
 var str33 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
@@ -178062,6 +178174,7 @@ var Conformance = class _Conformance {
     contradiction = null,
     events = null,
     entities: entities2 = null,
+    calculations = null,
     officeEntityOf = null,
     now = null
   } = {}) {
@@ -178069,7 +178182,19 @@ var Conformance = class _Conformance {
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards, contradiction, events, entities: entities2 };
+    this.#deps = {
+      host,
+      content,
+      inquiry,
+      strength,
+      reevaluation,
+      publication,
+      standards,
+      contradiction,
+      events,
+      entities: entities2,
+      calculations
+    };
     this.officeEntityOf = typeof officeEntityOf === "function" ? officeEntityOf : null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
@@ -178100,6 +178225,9 @@ var Conformance = class _Conformance {
   }
   get entities() {
     return this.#deps.entities ||= entitiesOf(this.#deps.host);
+  }
+  get calculations() {
+    return this.#deps.calculations ||= calculationsOf(this.#deps.host);
   }
   migrate() {
     migrateConformance(this.sql);
@@ -178253,43 +178381,10 @@ var Conformance = class _Conformance {
       const missing2 = { part, ...extra };
       return refusal25("ACT_INCOMPLETE", `${detail} The act names its event, the office that did it and the content that shows it. Nothing was written.`, missing2);
     };
-    const named = str33(a.event) ?? str33(a.id);
-    if (!named)
-      return refusal25("ACT_NO_EVENT", "the act names no event: a government act is the event that records what was done. Nothing was written.", { part: "event" });
-    let eventId3 = named;
-    if (ACT_RE2.test(named)) {
-      let f17 = null;
-      try {
-        f17 = this.events.eventForAct(named);
-      } catch {
-        f17 = null;
-      }
-      const recorded = this.#one(`SELECT * FROM determinations WHERE act_id=? AND project_id=? ORDER BY determination_id DESC
-                                  LIMIT 1`, named, project);
-      if (!f17 || !f17.found || !str33(f17.event_id)) {
-        if (!recorded) return noSuchEvent(named, { act: named });
-        return refusal25("ACT_NOT_AN_EVENT", `${named} was recorded before acts were events, and no event is linked to it yet. A member links it to its event first. Nothing was written.`, { act: named });
-      }
-      eventId3 = f17.event_id;
-      if (recorded && a.actor === void 0 && a.evidence === void 0)
-        a = {
-          ...a,
-          evidence: safeJson28(recorded.act_evidence, []),
-          actor: {
-            role: recorded.act_role,
-            body: recorded.act_body,
-            ...recorded.act_entity ? { entity_id: recorded.act_entity } : {}
-          }
-        };
-    }
-    let read3 = null;
-    try {
-      read3 = this.events.readEvent({ eventId: eventId3, viewer });
-    } catch {
-      read3 = null;
-    }
-    if (!read3 || read3.ok === false || !read3.found || !isObj38(read3.event)) return noSuchEvent(named);
-    const ev = read3.event;
+    const e2 = this.#actEvent(a, project, viewer);
+    if (!e2.ok) return e2;
+    a = e2.act;
+    const ev = e2.event;
     const actor = isObj38(a.actor) ? a.actor : {};
     let entity2 = null;
     if (actor.entity_id !== void 0 && actor.entity_id !== null) {
@@ -178333,16 +178428,110 @@ var Conformance = class _Conformance {
       evidence: [...new Set(ev0)]
     } };
   }
-  /* R25: whether `id` names an `office` entity (an absent one is not). */
-  #isOffice(id) {
-    if (!id) return false;
+  /* R25, R26 (and R28's comparison): the act's event. `event` (or a pre-T33 `id`) may be an `ACT-` id, resolved through
+     `events.eventForAct`: aliased, it is its event; not, it is `ACT_NOT_AN_EVENT` when this project recorded it and an
+     absent event otherwise. A pre-T33 act named by its `ACT-` id alone takes the actor and evidence it was recorded
+     with. The event is read as `viewer` reads it (`NO_SUCH_EVENT`, absent and unseen alike, events' one answer).
+     Answers `{ok, act, event}` or the refusal. */
+  #actEvent(a, project, viewer) {
+    const named = str33(a.event) ?? str33(a.id);
+    if (!named)
+      return refusal25("ACT_NO_EVENT", "the act names no event: a government act is the event that records what was done. Nothing was written.", { part: "event" });
+    let eventId3 = named;
+    if (ACT_RE2.test(named)) {
+      let f17 = null;
+      try {
+        f17 = this.events.eventForAct(named);
+      } catch {
+        f17 = null;
+      }
+      const recorded = this.#one(`SELECT * FROM determinations WHERE act_id=? AND project_id=? ORDER BY determination_id DESC
+                                  LIMIT 1`, named, project);
+      if (!f17 || !f17.found || !str33(f17.event_id)) {
+        if (!recorded) return noSuchEvent(named, { act: named });
+        return refusal25("ACT_NOT_AN_EVENT", `${named} was recorded before acts were events, and no event is linked to it yet. A member links it to its event first. Nothing was written.`, { act: named });
+      }
+      eventId3 = f17.event_id;
+      if (recorded && a.actor === void 0 && a.evidence === void 0)
+        a = {
+          ...a,
+          evidence: safeJson28(recorded.act_evidence, []),
+          actor: {
+            role: recorded.act_role,
+            body: recorded.act_body,
+            ...recorded.act_entity ? { entity_id: recorded.act_entity } : {}
+          }
+        };
+    }
+    let read3 = null;
+    try {
+      read3 = this.events.readEvent({ eventId: eventId3, viewer });
+    } catch {
+      read3 = null;
+    }
+    if (!read3 || read3.ok === false || !read3.found || !isObj38(read3.event)) return noSuchEvent(named);
+    return { ok: true, act: a, event: read3.event };
+  }
+  /* R28: the act a comparison compares, `{event, actor: {role?, body?, entity_id?}, evidence?}`: R25's event, then the
+     actor, which may be an office or an organisation of any sector (`ACTOR_KINDS`), never a person. An actor names its
+     entity, or its role and body (`ACT_INCOMPLETE` otherwise); a role and body with no entity take the office entity
+     seeded for them, as a determination's do. Evidence is optional on a comparison and kept as given. */
+  #comparedAct(act2, project, viewer) {
+    const e2 = this.#actEvent(isObj38(act2) ? act2 : {}, project, viewer);
+    if (!e2.ok) return e2;
+    const actor = isObj38(e2.act.actor) ? e2.act.actor : {};
+    const role = text5(actor.role), body = text5(actor.body);
+    let entity2 = null, kind = null;
+    if (actor.entity_id !== void 0 && actor.entity_id !== null) {
+      entity2 = str33(actor.entity_id);
+      kind = this.#entityKind(entity2);
+      if (kind === "person")
+        return refusal25("ACTOR_IS_A_PERSON", `${String(actor.entity_id).slice(0, 60)} is a person: an act is compared as the act of an office or an organisation, and the people who took part are the event's participants. Nothing was written.`, { entity_id: entity2 });
+      if (!ACTOR_KINDS.includes(kind))
+        return refusal25(
+          "ACTOR_NOT_AN_OFFICE_OR_ORGANISATION",
+          `${String(actor.entity_id).slice(0, 60)} is not an office or an organisation the record holds. Name the office or organisation whose act this is. Nothing was written.`,
+          { entity_id: entity2 }
+        );
+    } else if (!role || !body) {
+      return refusal25("ACT_INCOMPLETE", "the act names the office or organisation that did it, by its entity or by its role and body, never by a person. Nothing was written.", { part: "actor" });
+    } else if (this.officeEntityOf) {
+      let found3 = null;
+      try {
+        found3 = str33(this.officeEntityOf({ role, body }));
+      } catch {
+        found3 = null;
+      }
+      if (found3 && this.#isOffice(found3)) {
+        entity2 = found3;
+        kind = "office";
+      }
+    }
+    const ev = e2.event;
+    const evidence = Array.isArray(e2.act.evidence) ? e2.act.evidence.map(str33).filter(Boolean) : [];
+    return { ok: true, act: {
+      event: ev.event_id,
+      kind: ev.kind ?? null,
+      when: ev.when ?? null,
+      why: ev.why ?? null,
+      actor: { role, body, entity_id: entity2, entity_kind: kind },
+      evidence: [...new Set(evidence)]
+    } };
+  }
+  /* R25, R28: the kind of the entity `id` names, or null when the record holds none. */
+  #entityKind(id) {
+    if (!id) return null;
     let r = null;
     try {
       r = this.entities.readEntity({ entityId: id, viewer: "class:daemon" });
     } catch {
       r = null;
     }
-    return !!(r && r.found !== false && isObj38(r.entity) && r.entity.kind === "office");
+    return r && r.found !== false && r.ok !== false && isObj38(r.entity) ? r.entity.kind ?? null : null;
+  }
+  /* R25: whether `id` names an `office` entity (an absent one is not). */
+  #isOffice(id) {
+    return this.#entityKind(id) === "office";
   }
   /* The act as recorded (R9, R25, R26); with `seen` (R24), an evidence content id the viewer may not see leaves the list.
      From T33 it is `{id, event, actor: {role, body, entity_id, entity_why?}, evidence, when}`, `when` the event's as the
@@ -178572,6 +178761,138 @@ var Conformance = class _Conformance {
     }
     return { ok: true, standards: out };
   }
+  /* R27 (K1723): whether each standard binds the act's body, read through `standards.bindsAt` at each of R3's dates, as
+     the viewer reads it; never taken from a caller. The body is the actor's `body` as given (an entity id or the issuer's
+     name, as `bindsAt` matches an issuer), or for an organisation named only by its entity, that entity. Every date
+     `binds`: `true`; every date `benchmark`: `false`; anything else (a date or an answer undetermined, a read refused,
+     the two ends disagreeing) `"undetermined"` with why. Answers a Map from standard id to `{body, binds, why, rests_on,
+     label}`. */
+  #bindings(ids, act2, viewer) {
+    const body = act2.actor.body ?? act2.actor.entity_id ?? null;
+    let bodyLabel = body;
+    if (body) {
+      let e2 = null;
+      try {
+        e2 = this.entities.readEntity({ entityId: body, viewer: "class:daemon" });
+      } catch {
+        e2 = null;
+      }
+      if (e2 && e2.found !== false && e2.ok !== false && isObj38(e2.entity) && str33(e2.entity.label)) bodyLabel = e2.entity.label;
+    }
+    const dates = _Conformance.datesOf(act2);
+    const out = /* @__PURE__ */ new Map();
+    for (const id of ids) {
+      if (out.has(id)) continue;
+      const answers = dates.map((d) => {
+        if (!d.date) return { state: "undetermined", why: d.why, rests_on: [] };
+        if (!body) return { state: "undetermined", why: "the act names no body", rests_on: [] };
+        let r = null;
+        try {
+          r = this.standards.bindsAt({ standard: id, body, date: d.date, viewer });
+        } catch {
+          r = null;
+        }
+        if (!isObj38(r) || r.ok === false || !["binds", "benchmark", "undetermined"].includes(r.state))
+          return {
+            state: "undetermined",
+            rests_on: [],
+            why: `whether ${id} binds the body could not be read${isObj38(r) && r.detail ? ` (${oneLine6(r.detail)})` : ""}`
+          };
+        return { state: r.state, why: r.why ?? null, rests_on: Array.isArray(r.rests_on) ? r.rests_on : [], date: d.date };
+      });
+      const all = (state) => answers.every((x) => x.state === state);
+      const binds = all("binds") ? true : all("benchmark") ? false : "undetermined";
+      const open = answers.find((x) => x.state === "undetermined");
+      const why = binds === "undetermined" ? open ? open.why : "it binds the body at one end of the act's band and not at the other" : answers.map((x) => x.why).filter(Boolean).join("; ") || null;
+      out.set(id, {
+        body,
+        binds,
+        why,
+        rests_on: answers.flatMap((x) => x.rests_on).slice(0, 20),
+        label: bindingLabel(binds, bodyLabel ?? "the body")
+      });
+    }
+    return out;
+  }
+  /* R27: no row text or question of a standard that does not bind the body calls the act a violation or nonconforming.
+     `items` are `{standard, texts}`; the standards are those whose `binds` is `false`. */
+  #benchmarkWords(items, bindings) {
+    for (const { standard: standard2, texts } of items) {
+      const b = standard2 ? bindings.get(standard2) : null;
+      if (!b || b.binds !== false) continue;
+      for (const t2 of texts) {
+        const m = typeof t2 === "string" ? NONCONFORMING_RE.exec(t2) : null;
+        if (m)
+          return refusal25(
+            "BENCHMARK_CALLED_NONCONFORMING",
+            `${standard2} does not bind ${b.body}, so the comparison does not call the act "${m[1]}": say how it compares (below, slower than, or above). Nothing was written.`,
+            { standard: standard2, body: b.body, word: m[1] }
+          );
+      }
+    }
+    return null;
+  }
+  /* R29: the measures `rows` state as what was done, each read through `calculations.read` as `viewer` reads it, in row
+     order: an entry per row, null for a row whose `did` is words, else `{ok, measure}` or its refusal. A read; writes
+     nothing. */
+  async #measures(rows3, viewer) {
+    const list6 = Array.isArray(rows3) ? rows3.slice(0, LIMITS.rows) : [];
+    const out = [];
+    for (const r of list6) out.push(isObj38(r) && isObj38(r.did) ? await this.#measureOf(r.did, viewer) : null);
+    return out;
+  }
+  /* R29: one measure `{calc, result_key}`: the calculation's result (its `output`), its denominator (an application
+     recipe's, or a ratio's or share's own), its population (an application recipe's frozen uses, or the frozen record
+     sets it counts) and its derivation (the recipe and method version), each from the calculation and never composed
+     here. A calculation absent or unseen answers as calculations answers it, alike; one with no denominator or no
+     population is `MEASURE_NO_DENOMINATOR`. A result key that differs from the calculation's is stated, not refused. */
+  async #measureOf(did, viewer) {
+    const calc = str33(did.calc);
+    let r = null;
+    try {
+      r = calc ? await this.calculations.read({ calcId: calc, viewer }) : null;
+    } catch {
+      r = null;
+    }
+    if (!isObj38(r) || r.ok === false || !r.found)
+      return {
+        ok: false,
+        reason: "NO_SUCH_CALCULATION",
+        code: "NO_SUCH_CALCULATION",
+        calc,
+        detail: "no calculation answers to that id here, or it is not one you may see. Nothing was written."
+      };
+    const res = isObj38(r.results) ? r.results : {};
+    const app = isObj38(res.application) ? res.application : null;
+    const output = res.output ?? null;
+    const denominator = app && app.denominator != null ? app.denominator : isObj38(output) && output.denominator != null ? output.denominator : null;
+    const inputs = isObj38(r.calculation) && Array.isArray(r.calculation.inputs) ? r.calculation.inputs : [];
+    const sets = inputs.filter((i) => isObj38(i) && i.kind === "set");
+    const population = app && Array.isArray(app.population) && app.population.length ? app.population : sets.length ? sets.map((i) => ({ input: i.name, set: i.set ?? null, sha: i.sha ?? null })) : null;
+    if (denominator == null || !population)
+      return refusal25(
+        "MEASURE_NO_DENOMINATOR",
+        `${calc} states ${denominator == null ? "no denominator" : "no population"}: a measure of what the office does is shown with what it counted and out of how many. Nothing was written.`,
+        { calc, missing: denominator == null ? "denominator" : "population" }
+      );
+    const key = str33(did.result_key);
+    return { ok: true, measure: {
+      calc,
+      result_key: key,
+      result_key_now: r.result_key ?? null,
+      result_key_differs: !!key && key !== r.result_key,
+      result: output,
+      denominator,
+      population,
+      derivation: {
+        recipe: r.calculation ? r.calculation.recipe ?? null : null,
+        method_version: r.method_version ?? null,
+        says: app && str33(app.derivation) ? app.derivation : "the recipe stored with this calculation"
+      },
+      computed_at: r.computed_at ?? null,
+      says: MEASURE_SAYS
+    } };
+  }
   /* R3: standards R20's answer (`{state, why, standard, version}`) as a word and why. A refusal or an unreadable answer
      is undetermined, never in force. */
   #inForce(id, date, viewer) {
@@ -178585,8 +178906,9 @@ var Conformance = class _Conformance {
     const answer = ok2 && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
     return { date, answer, why: ok2 ? r.why ?? null : isObj38(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
   }
-  /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. */
-  #readRows(rows3, standards) {
+  /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. R29:
+     what was done may be a measure, read beforehand (`measures`, in row order); its refusal is answered here. */
+  #readRows(rows3, standards, measures = null) {
     const list6 = Array.isArray(rows3) ? rows3 : [];
     const named = new Set(standards.map((s) => s.standard));
     const out = [];
@@ -178596,10 +178918,19 @@ var Conformance = class _Conformance {
     };
     for (const [i, r] of list6.entries()) {
       const row9 = isObj38(r) ? r : {};
-      const standard2 = str33(row9.standard), requires = text5(row9.requires), did = text5(row9.did);
+      const standard2 = str33(row9.standard), requires = text5(row9.requires);
+      let did = text5(row9.did), measure = null;
       const reading2 = READINGS.includes(row9.reading) ? row9.reading : null;
       if (!standard2 || !named.has(standard2))
         return incomplete(`row ${i} names no standard this determination names.`, { row: i });
+      if (isObj38(row9.did)) {
+        const m = measures ? measures[i] : null;
+        if (m && m.ok === false) return { ...m, row: i };
+        if (m && m.ok) {
+          measure = m.measure;
+          did = measureWords(measure.calc);
+        }
+      }
       if (!requires || !did || !reading2)
         return incomplete(`row ${i} states ${[
           !requires && "what the standard requires",
@@ -178607,7 +178938,7 @@ var Conformance = class _Conformance {
           !reading2 && `a reading (${READINGS.join(", ")})`
         ].filter(Boolean).join(", ")}: each is required.`, { row: i });
       const content = Array.isArray(row9.content) ? row9.content.map(str33).filter(Boolean).slice(0, LIMITS.evidence) : str33(row9.content) ? [str33(row9.content)] : [];
-      out.push({ standard: standard2, requires, did, reading: reading2, content });
+      out.push({ standard: standard2, requires, did, reading: reading2, content, measure });
     }
     const bare4 = standards.find((s) => !out.some((r) => r.standard === s.standard));
     if (bare4) return incomplete(`${bare4.standard} has no row: each standard named is compared.`, { standard: bare4.standard });
@@ -178677,6 +179008,12 @@ var Conformance = class _Conformance {
    *  resting on findings `project` has published. Refusals in R1's order, then R12's proposal and R7's supersession. The
    *  determination and every inquiry it opens land together or not at all (R6). */
   determine(input = {}) {
+    const rows3 = isObj38(input) && Array.isArray(input.rows) ? input.rows : [];
+    if (!rows3.some((r) => isObj38(r) && isObj38(r.did))) return this.#determine(input, null);
+    const viewer = input.viewer != null ? input.viewer : input.author ?? null;
+    return this.#measures(rows3, viewer).then((m) => this.#determine(input, m));
+  }
+  #determine(input, measures) {
     const {
       project = null,
       act: act2 = null,
@@ -178712,7 +179049,7 @@ var Conformance = class _Conformance {
     if (!f17.ok) return f17;
     const s = this.#readStandards(standards, a.act, viewer);
     if (!s.ok) return s;
-    const r = this.#readRows(rows3, s.standards);
+    const r = this.#readRows(rows3, s.standards, measures);
     if (!r.ok) return r;
     for (const x of s.standards) {
       const outcomes = [...new Set(x.outcomes)];
@@ -178720,6 +179057,24 @@ var Conformance = class _Conformance {
         return refusal25("OUTCOME_UNKNOWN", `${x.standard} carries ${outcomes.length > 1 ? "two outcomes" : "no outcome"}: each standard carries one of ${OUTCOMES2.join(", ")}. Nothing was written.`, { standard: x.standard });
       x.outcome = outcomes[0];
     }
+    const bindings = this.#bindings(s.standards.map((x) => x.standard), a.act, viewer);
+    for (const x of s.standards) {
+      const b = bindings.get(x.standard);
+      Object.assign(x, {
+        body: b.body,
+        binds: b.binds,
+        binds_basis: { why: b.why, rests_on: b.rests_on, label: b.label },
+        label: b.label
+      });
+      if (x.outcome === "noncompliant" && b.binds !== true)
+        return refusal25("STANDARD_NOT_BINDING", b.binds === false ? `${x.standard} does not bind ${b.body} (${b.label}), so the act is not found noncompliant against it: record the comparison as a benchmark (below, slower than, or above). Nothing was written.` : `whether ${x.standard} binds ${b.body ?? "the body"} is undetermined (${b.why ?? "not recorded"}), and an act is found noncompliant only against a standard that binds its body: a member settles it in standards first. Nothing was written.`, { standard: x.standard, body: b.body, binds: b.binds });
+    }
+    const said8 = (Array.isArray(questions) ? questions : []).map((x) => isObj38(x) ? x.question : x);
+    const worded = this.#benchmarkWords([
+      ...r.rows.map((x) => ({ standard: x.standard, texts: [x.requires, x.measure ? null : x.did] })),
+      ...s.standards.map((x) => ({ standard: x.standard, texts: said8 }))
+    ], bindings);
+    if (worded) return worded;
     const qs = this.#readQuestions(questions, s.standards.map((x) => x.outcome), author);
     if (!qs.ok) return qs;
     const sig = this.#refuseSignificance(input);
@@ -178821,25 +179176,29 @@ var Conformance = class _Conformance {
         JSON.stringify(theAct.when ?? null)
       );
       standards.forEach((x, i) => this.sql.exec(
-        `INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force, in_force_why)
-         VALUES (?,?,?,?,?,?)`,
+        `INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force, in_force_why, body,
+           binds, binds_basis) VALUES (?,?,?,?,?,?,?,?,?)`,
         id,
         i,
         x.standard,
         x.outcome,
         x.in_force,
-        x.in_force_why
+        x.in_force_why,
+        x.body,
+        JSON.stringify(x.binds),
+        JSON.stringify(x.binds_basis)
       ));
       rows3.forEach((x, i) => this.sql.exec(
-        `INSERT INTO determination_rows (determination_id, ord, standard_id, requires, did, reading, content)
-         VALUES (?,?,?,?,?,?,?)`,
+        `INSERT INTO determination_rows (determination_id, ord, standard_id, requires, did, reading, content, measure)
+         VALUES (?,?,?,?,?,?,?,?)`,
         id,
         i,
         x.standard,
         x.requires,
         x.did,
         x.reading,
-        JSON.stringify(x.content)
+        JSON.stringify(x.content),
+        x.measure ? JSON.stringify(x.measure) : null
       ));
       pins.forEach((x, i) => this.sql.exec(
         `INSERT INTO determination_findings (determination_id, ord, finding_id, case_id, edition, version_sha, role, frozen)
@@ -178987,17 +179346,14 @@ var Conformance = class _Conformance {
       const mine = rows3.filter((x) => x.standard_id === s.standard_id);
       const readings = mine.map((x) => x.reading);
       const disagreement = s.outcome === "noncompliant" && readings.length && readings.every((x) => x === "aligns") ? "every row reads aligns, and the member's outcome is noncompliant" : s.outcome === "compliant" && readings.includes("diverges") ? "a row reads diverges, and the member's outcome is compliant" : null;
+      const b = bindingRead(s);
       return {
         standard: s.standard_id,
         outcome: s.outcome,
         in_force: s.in_force,
         in_force_why: s.in_force_why,
-        rows: mine.map((x) => ({
-          requires: x.requires,
-          did: x.did,
-          reading: x.reading,
-          content: seen.contents(safeJson28(x.content, []))
-        })),
+        ...b,
+        rows: mine.map((x) => rowRead(x, b.binds, seen)),
         disagreement
       };
     });
@@ -179303,6 +179659,12 @@ var Conformance = class _Conformance {
    *  rows and questions and never an outcome. It may name `contradiction`, the contradiction inquiry it came from
    *  (inquiry R48, N345): the proposal records the link, and still carries no outcome. */
   comparisonPropose(input = {}) {
+    const rows3 = isObj38(input) && Array.isArray(input.rows) ? input.rows : [];
+    if (!rows3.some((r) => isObj38(r) && isObj38(r.did))) return this.#propose(input, null);
+    const viewer = input.viewer != null ? input.viewer : input.proposer ?? null;
+    return this.#measures(rows3, viewer).then((m) => this.#propose(input, m));
+  }
+  #propose(input, measures) {
     const {
       project = null,
       act: act2 = null,
@@ -179327,25 +179689,46 @@ var Conformance = class _Conformance {
       from = this.#contradictionInquiry(contradiction, viewer);
       if (!from.ok) return from;
     }
-    const a = isObj38(act2) ? act2 : {};
-    const theAct = {
-      event: str33(a.event) ?? str33(a.id),
-      actor: isObj38(a.actor) ? {
-        role: text5(a.actor.role),
-        body: text5(a.actor.body),
-        entity_id: str33(a.actor.entity_id)
-      } : null,
-      evidence: Array.isArray(a.evidence) ? a.evidence.map(str33).filter(Boolean) : []
-    };
+    const a = this.#comparedAct(act2, pid, viewer);
+    if (!a.ok) return a;
+    const theAct = a.act;
     const stds = (Array.isArray(standards) ? standards : []).map((x) => isObj38(x) ? str33(x.standard ?? x.id) : str33(x)).filter(Boolean);
-    const rs = (Array.isArray(rows3) ? rows3 : []).filter(isObj38).map((x) => ({
-      standard: str33(x.standard),
-      requires: text5(x.requires),
-      did: text5(x.did),
-      reading: READINGS.includes(x.reading) ? x.reading : null,
-      content: Array.isArray(x.content) ? x.content.map(str33).filter(Boolean).slice(0, LIMITS.evidence) : []
-    }));
+    const rs = [];
+    for (const [i, x] of (Array.isArray(rows3) ? rows3 : []).entries()) {
+      if (!isObj38(x)) continue;
+      let did = text5(x.did), measure = null;
+      if (isObj38(x.did)) {
+        const m = measures ? measures[i] : null;
+        if (m && m.ok === false) return { ...m, row: i };
+        if (m && m.ok) {
+          measure = m.measure;
+          did = measureWords(measure.calc);
+        }
+      }
+      rs.push({
+        standard: str33(x.standard),
+        requires: text5(x.requires),
+        did,
+        reading: READINGS.includes(x.reading) ? x.reading : null,
+        content: Array.isArray(x.content) ? x.content.map(str33).filter(Boolean).slice(0, LIMITS.evidence) : [],
+        ...measure ? { measure } : {}
+      });
+    }
     const qs = (Array.isArray(questions) ? questions : []).map((x) => isObj38(x) ? x : { question: x }).map((x) => ({ question: text5(x.question), inquiry: str33(x.inquiry) })).filter((x) => x.question);
+    const bindings = this.#bindings(stds, theAct, viewer);
+    const worded = this.#benchmarkWords([
+      ...rs.map((x) => ({ standard: x.standard, texts: [x.requires, x.measure ? null : x.did] })),
+      ...stds.map((sid) => ({ standard: sid, texts: qs.map((x) => x.question) }))
+    ], bindings);
+    if (worded) return worded;
+    const held2 = [...bindings.entries()].map(([standard2, b]) => ({
+      standard: standard2,
+      body: b.body,
+      binds: b.binds,
+      why: b.why,
+      rests_on: b.rests_on,
+      label: b.label
+    }));
     const at35 = this.#when();
     const who2 = str33(proposer);
     let id = null;
@@ -179353,7 +179736,7 @@ var Conformance = class _Conformance {
       id = this.record.allocId("CMP", at35.slice(0, 4)).id;
       this.sql.exec(
         `INSERT INTO comparison_proposals (proposal_id, project_id, act, standards, rows, questions, proposer,
-                       machine, at) VALUES (?,?,?,?,?,?,?,?,?)`,
+                       machine, at, bindings) VALUES (?,?,?,?,?,?,?,?,?,?)`,
         id,
         pid,
         JSON.stringify(theAct),
@@ -179362,7 +179745,8 @@ var Conformance = class _Conformance {
         JSON.stringify(qs),
         who2,
         proposalLabel(who2, "comparison").machine_work ? 1 : 0,
-        at35
+        at35,
+        JSON.stringify(held2)
       );
       if (from)
         this.sql.exec(`INSERT INTO comparison_proposal_contradictions (proposal_id, inquiry_id, candidate, at)
@@ -179392,7 +179776,30 @@ var Conformance = class _Conformance {
     const seen = this.#sight(viewer);
     const act2 = safeJson28(r.act, null);
     const hidden = new Set(safeJson28(r.standards, []).filter((s) => !seen.sees(s)));
-    const rows3 = safeJson28(r.rows, []).filter((x) => !isObj38(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => isObj38(x) && Array.isArray(x.content) ? { ...x, content: seen.contents(x.content) } : x);
+    const held2 = safeJson28(r.bindings, null);
+    const bindings = safeJson28(r.standards, []).filter((sid) => !hidden.has(sid)).map((sid) => {
+      const b = Array.isArray(held2) ? held2.find((x) => isObj38(x) && x.standard === sid) : null;
+      return b ? {
+        standard: sid,
+        body: b.body ?? null,
+        binds: b.binds,
+        binds_why: b.why ?? null,
+        binds_rests_on: Array.isArray(b.rests_on) ? b.rests_on : [],
+        label: b.label ?? null
+      } : { standard: sid, body: null, binds: "undetermined", binds_why: BINDS_NOT_READ, binds_rests_on: [], label: null };
+    });
+    const bindsOf = (sid) => (bindings.find((b) => b.standard === sid) || {}).binds;
+    const rows3 = safeJson28(r.rows, []).filter((x) => !isObj38(x) || !x.standard || !hidden.has(x.standard) && seen.sees(x.standard)).map((x) => {
+      if (!isObj38(x)) return x;
+      const says = readingSays(x.reading, bindsOf(x.standard));
+      const { measure, ...rest } = x;
+      return {
+        ...rest,
+        ...measure ? { did: { calc: measure.calc, result_key: measure.result_key }, measure } : {},
+        ...says ? { reading_says: says } : {},
+        ...Array.isArray(x.content) ? { content: seen.contents(x.content) } : {}
+      };
+    });
     const questions = safeJson28(r.questions, []).map((x) => {
       if (!isObj38(x) || !x.inquiry || seen.sees(x.inquiry)) return x;
       const { inquiry: _i, ...rest } = x;
@@ -179404,6 +179811,7 @@ var Conformance = class _Conformance {
       project: r.project_id,
       act: isObj38(act2) ? { ...act2, evidence: seen.contents(act2.evidence) } : act2,
       standards: safeJson28(r.standards, []).filter((s) => !hidden.has(s)),
+      bindings,
       rows: rows3,
       questions,
       proposer: r.proposer ?? null,
@@ -179522,6 +179930,36 @@ var Conformance = class _Conformance {
     );
   }
 };
+function bindingLabel(binds, bodyLabel) {
+  if (binds === true) return `Standard \xB7 binds ${bodyLabel}`;
+  if (binds === false) return `Benchmark \xB7 not binding on ${bodyLabel}`;
+  return `Whether this binds ${bodyLabel} is not recorded`;
+}
+function bindingRead(s) {
+  if (s.binds == null) return { body: null, binds: "undetermined", binds_why: BINDS_NOT_READ, binds_rests_on: [], label: null };
+  const binds = safeJson28(s.binds, "undetermined");
+  const basis = safeJson28(s.binds_basis, {}) || {};
+  return {
+    body: s.body ?? null,
+    binds,
+    binds_why: basis.why ?? null,
+    binds_rests_on: Array.isArray(basis.rests_on) ? basis.rests_on : [],
+    label: str33(basis.label) ?? bindingLabel(binds, s.body ?? "the body")
+  };
+}
+function rowRead(x, binds, seen) {
+  const measure = safeJson28(x.measure, null);
+  const says = readingSays(x.reading, binds);
+  return {
+    requires: x.requires,
+    did: measure ? { calc: measure.calc, result_key: measure.result_key } : x.did,
+    reading: x.reading,
+    ...says ? { reading_says: says } : {},
+    ...measure ? { measure } : {},
+    content: seen.contents(safeJson28(x.content, []))
+  };
+}
+var readingSays = (reading2, binds) => binds === false && reading2 === "diverges" ? BELOW_BENCHMARK : null;
 var NO_SUCH_DETERMINATION_DETAIL = "no determination answers to that id here. One you may not see is answered exactly as one that does not exist, so this is not a hint either way.";
 var DETERMINATION_SUPERSEDED_DETAIL = "that determination has been superseded, and a determination is superseded once and not acted on once superseded. The one that superseded it is the determination to use.";
 var NO_SUCH_DETERMINATION_FIXED = ["ok", "reason", "code", "check", "translation", "determination", "detail"];
@@ -179624,11 +180062,14 @@ function determinationDoc({
     "",
     "## Standards and Outcomes",
     "",
-    ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.in_force === "undetermined" ? ` (whether it was in force is undetermined: ${oneLine6(s.in_force_why)})` : ""}`),
+    ...standards.map((s) => `- ${s.standard}: ${s.outcome}${s.label ? ` (${oneLine6(s.label)})` : ""}${s.in_force === "undetermined" ? ` (whether it was in force is undetermined: ${oneLine6(s.in_force_why)})` : ""}`),
     "",
     "## Comparison",
     "",
-    ...rows3.map((r) => `- ${r.standard} requires: ${oneLine6(r.requires)}. Done: ${oneLine6(r.did)}. Reading: ${r.reading}.` + (r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "")),
+    ...rows3.map((r) => {
+      const binds = (standards.find((s) => s.standard === r.standard) || {}).binds;
+      return `- ${r.standard} requires: ${oneLine6(r.requires)}. Done: ${oneLine6(r.did)}${r.measure ? ` (${r.measure.calc}${r.measure.result_key ? `, result ${r.measure.result_key}` : ""})` : ""}. Reading: ${readingSays(r.reading, binds) ?? r.reading}.` + (r.content.length ? ` Shown by: ${r.content.join(", ")}.` : "");
+    }),
     "",
     "## Findings",
     "",
@@ -183651,13 +184092,14 @@ function localDayOf(ms5, zone) {
   }
   return typeof d === "string" ? d : null;
 }
-function yearEntries(view, offices, year) {
-  const hs = (view && Array.isArray(view.holidays) ? view.holidays : []).filter((h) => h && !isListEntry(h) && Number(h.year) === year);
+function yearEntries(view, offices, year, list6 = null) {
+  const named = (h) => typeof list6 === "string" && list6 ? isListEntry(h) && h.list === list6 : !isListEntry(h);
+  const hs = (view && Array.isArray(view.holidays) ? view.holidays : []).filter((h) => h && named(h) && Number(h.year) === year);
   const keys = new Set((offices || []).map(officeKey2).filter(Boolean));
   const all = hs.filter((h) => !Array.isArray(h.offices));
-  const named = hs.filter((h) => Array.isArray(h.offices) && h.offices.some((o) => keys.has(officeKey2(o))));
-  const uncovered = all.length ? [] : (offices || []).filter((o) => !named.some((h) => h.offices.some((x) => officeKey2(x) === officeKey2(o))));
-  return { entries: [...all, ...named], uncovered };
+  const theirs = hs.filter((h) => Array.isArray(h.offices) && h.offices.some((o) => keys.has(officeKey2(o))));
+  const uncovered = all.length ? [] : (offices || []).filter((o) => !theirs.some((h) => h.offices.some((x) => officeKey2(x) === officeKey2(o))));
+  return { entries: [...all, ...theirs], uncovered };
 }
 var holidayFact = (h) => ({
   profile: h.profile ?? null,
@@ -183679,9 +184121,15 @@ function officeHours2(view, offices) {
   }
   return out;
 }
+var readsClosed = (d) => d.count === "business" || d.units === "business_hours" || d.roll === true || isObj39(d.extension) && d.extension.count === "business";
 function readsOfficeCalendar(d) {
-  if (!d || typeof d !== "object" || typeof d.closures === "string" && d.closures) return false;
-  return d.count === "business" || d.units === "business_hours" || d.roll === true;
+  if (!isObj39(d) || typeof d.closures === "string" && d.closures) return false;
+  return readsClosed(d);
+}
+function closureListsRead(d) {
+  if (!isObj39(d) || !readsClosed(d)) return [];
+  const names = [d.closures, isObj39(d.observed) ? d.observed.closures : null];
+  return [...new Set(names.filter((n) => typeof n === "string" && n))];
 }
 function factAnswer(path, r) {
   if (!r || typeof r !== "object" || r.ok === false) {
@@ -183809,7 +184257,7 @@ function computeDeadline(d, fm, view, { factOf = null } = {}) {
     const office = civilOffice(actionOffices(fm, v)[0]);
     const zone = actionZone(fm, v) || "UTC";
     const anchor2 = { value: start, precision: "day", zone };
-    const reads = rule.count === "business" || rule.units === "business_hours" || rule.roll === true || isObj39(rule.extension) && rule.extension.count === "business";
+    const reads = readsClosed(rule);
     const base2 = { ...rule, observed: void 0 };
     const cache = /* @__PURE__ */ new Map();
     const rec = recorder(factOf, cache);
@@ -184504,19 +184952,28 @@ var ActionClocks = class {
   }
   /** R11 (for `queue-producers` R21, through `local-facts` R4): the `local-facts` paths a live deadline reads, once each,
    *  with the actions that read them. For every visible action not `resolved` or `abandoned` whose kind has a profile
-   *  deadline counted in business days: its offices' `hours`; and, when one of its kind's deadlines reads the office
+   *  deadline counted in business days: its offices' `hours`; when one of its kind's deadlines reads the office
    *  calendar (`readsOfficeCalendar`: a count that skips or rolls past closed days and names no closure list), the
-   *  office-calendar entries that apply to its offices (R10) for each year from the UTC year of the instance clock to
-   *  the year of its latest pending clock entry, and at least the next year. A closure-list entry is never a path
-   *  (K1519; local-facts R6). Only facts the active profiles hold are paths (a year they do not list has no fact to
-   *  confirm, and a count reaching it is undetermined, jurisdictions R33). Each path's actions are `{action, project,
-   *  created_by}`, the project and creator as R3 computes them (K1000). At most 500 actions read, `truncated` stated. */
+   *  office-calendar entries that apply to its offices (R10); and (N689, K1847) for each named closure list one of its
+   *  kind's deadlines counts or rolls on, as its `closures` or its `observed.closures` (`closureListsRead`), that list's
+   *  entries for the same offices, each at its own path (`list=<name>`, local-facts R6), the path R12 reads it at;
+   *  each for every year from the UTC year of the instance clock to the year of its latest pending clock entry, and at
+   *  least the next year. A path a rule and an `observed` both name is listed once. Only facts the active profiles hold
+   *  are paths (a year they do not list has no fact to confirm, and a count reaching it is undetermined, jurisdictions
+   *  R33). Each path's actions are `{action, project, created_by}`, the project and creator as R3 computes them
+   *  (K1000). At most 500 actions read, `truncated` stated. */
   calendarFactsRead({ viewer = null, now = null } = {}) {
     const today2 = this.#today(now);
     const view = this.#view();
     const deadlines = (view && Array.isArray(view.deadlines) ? view.deadlines : []).filter((d) => d && typeof d.applies_to === "string");
     const business = new Set(deadlines.filter((d) => d.count === "business").map((d) => d.applies_to));
     const calendarKinds = new Set(deadlines.filter(readsOfficeCalendar).map((d) => d.applies_to));
+    const listsOf = /* @__PURE__ */ new Map();
+    for (const d of deadlines)
+      for (const l2 of closureListsRead(d)) {
+        if (!listsOf.has(d.applies_to)) listsOf.set(d.applies_to, /* @__PURE__ */ new Set());
+        listsOf.get(d.applies_to).add(l2);
+      }
     const gate = viewerPredicate(viewer);
     const closed = CLOSED_ACTION_STATES.map(() => "?").join(",");
     const rows3 = business.size ? this.#rows(
@@ -184538,17 +184995,20 @@ var ActionClocks = class {
       if (!business.has(fm.action_kind)) continue;
       const a = { action: r.bundle_id, project: this.#projectOf(fm, viewer), created_by: this.#createdBy(r.bundle_id) };
       const offices = actionOffices(fm, view);
-      if (calendarKinds.has(fm.action_kind)) {
+      const lists = [...listsOf.get(fm.action_kind) || []].sort();
+      if (calendarKinds.has(fm.action_kind) || lists.length) {
         let y1 = y0 + 1;
         for (const e2 of Array.isArray(fm.clock) ? fm.clock : [])
           if (e2 && e2.status === "pending" && isDay3(e2.date)) y1 = Math.max(y1, Number(e2.date.slice(0, 4)));
+        const reads = [...calendarKinds.has(fm.action_kind) ? [null] : [], ...lists];
         for (let y = y0; y <= y1; y++)
-          for (const h of yearEntries(view, offices, y).entries) {
-            try {
-              add2(factPath(holidayFact(h)), a);
-            } catch {
+          for (const list6 of reads)
+            for (const h of yearEntries(view, offices, y, list6).entries) {
+              try {
+                add2(factPath(holidayFact(h)), a);
+              } catch {
+              }
             }
-          }
       }
       for (const f17 of officeHours2(view, offices)) {
         try {
@@ -188255,6 +188715,76 @@ ${body}` : body;
       says: "what they did (the world's events) and what we did (the group's own acts, each source apart) are answered apart, each in its own order, never interleaved into one list"
     };
   }
+  /* R8 (T35, N653; K1739, K2019): a standard whose access, as `standards` holds it (its R41), is not `free` (for kind
+     `standard`, an access it does not state included; a law kind stating none is free) is carried by its designation, edition, issuer, citation, adoption and access, and only the
+     passages relied on: those the determination's comparison rows for it quote as what it requires (conformance's
+     `requires`, with each of the row's content ids that is a passage of the standard's text) and those the findings'
+     legs target among its text, each with its content id, quoted. Its other text content ids are not listed. A passage
+     whose extent is the whole document is named but never quoted: quoting it would carry the whole text. */
+  #heldBack(r, s, act2, facts, viewer) {
+    const textIds2 = new Set(Array.isArray(r.text) ? r.text.map(str35).filter(Boolean) : []);
+    const relied = /* @__PURE__ */ new Map();
+    const rely = (cid, by) => {
+      if (!relied.has(cid)) relied.set(cid, []);
+      relied.get(cid).push(by);
+    };
+    const requires = (Array.isArray(s.rows) ? s.rows : []).filter(isObj41).map((row9, i) => {
+      const ids = [...new Set((Array.isArray(row9.content) ? row9.content : []).map(str35).filter((c) => c && textIds2.has(c)))];
+      for (const c of ids) rely(c, { comparison_row: i, source: s.id });
+      return { requires: str35(row9.requires), content_ids: ids, row: i, source: s.id };
+    });
+    for (const f17 of facts) for (const c of f17.citations || [])
+      if (str35(c.content_id) && textIds2.has(str35(c.content_id))) rely(str35(c.content_id), { finding_leg: c.target ?? null, source: f17.source });
+    const passages = [...relied.entries()].map(([cid, by]) => ({ content_id: cid, ...this.#quote(cid, viewer), relied_on_by: by }));
+    const access = str35(r.access) || "undetermined";
+    const words4 = isObj41(r.says) && str35(r.says.access);
+    return {
+      designation: str35(r.designation),
+      edition: str35(r.edition),
+      ...str35(r.edition) ? {} : { edition_says: "the record states no edition of this standard" },
+      adoption: this.#adoption(r.id ?? s.id, act2, viewer),
+      access,
+      access_says: words4 ? `${words4}: only the passages relied on are carried, never the whole text` : "how this standard's text can be read is not stated, so it is carried as not free: only the passages relied on, never the whole text",
+      requires,
+      passages,
+      says: passages.length ? "only the passages the determination's comparison and the findings rely on are carried, each quoted" : "no passage of its text is relied on by a comparison row or a finding, so none is carried"
+    };
+  }
+  /* R8: one relied-on passage's words (`content.passageText`, its R46), or null with why; a passage whose document the
+     reader may not see is answered as unquoted, naming nothing of it. */
+  #quote(cid, viewer) {
+    const c = this.content;
+    const row9 = c && typeof c.contentRow === "function" ? this.#call(() => c.contentRow(cid)) : null;
+    if (!row9) return { text: null, text_why: "the record holds no passage by this content id" };
+    if (str35(row9.bundle_id) && typeof c.sees === "function" && !this.#call(() => c.sees(row9.bundle_id, viewer)))
+      return { text: null, text_why: "the passage is not one you may see" };
+    if (row9.extent_kind === "document")
+      return { text: null, text_why: "the passage cited is the whole document, so it is not quoted: only passages relied on travel" };
+    const t2 = typeof c.passageText === "function" ? this.#call(() => c.passageText(cid)) : null;
+    return typeof t2 === "string" ? { text: t2 } : { text: null, text_why: "the passage's words are not held as text here" };
+  }
+  /* R8: the edition the act's body had adopted on the act's day (`standards.editionInForce`, its R40), or undetermined
+     with why. */
+  #adoption(id, act2, viewer) {
+    const day2 = _Filings.#actDay(act2);
+    const body = isObj41(act2.actor) ? str35(act2.actor.body) : null;
+    if (!day2) return { state: "undetermined", why: "the act has no single day, so which edition was adopted is not asked" };
+    if (!body) return { state: "undetermined", why: "the determination names no body, so no adoption is read" };
+    const s = this.standards;
+    if (!s || typeof s.editionInForce !== "function") return { state: "undetermined", why: "no module answers a standard's adoptions here" };
+    const e2 = this.#call(() => s.editionInForce({ standard: id, body, date: day2, viewer }));
+    if (!isObj41(e2) || e2.ok === false) return { state: "undetermined", why: "the adoptions could not be read" };
+    const a = isObj41(e2.adoption) ? e2.adoption : null;
+    return {
+      state: e2.state ?? "undetermined",
+      body,
+      date: day2,
+      edition: e2.edition ?? null,
+      ...a ? { adoption: { id: a.id, mode: a.mode ?? null, from: a.from ?? null, citation: a.citation ?? null } } : {},
+      why: e2.why ?? null,
+      source: a ? a.id : id
+    };
+  }
   /* R9: the six sections and the consequences, each item naming its source. R8, R24: for an action resting on a
      premise override and no live determination, `det` is null: the facts section says in words that no determination
      is held, and nothing is drawn from one. R25: each exhibit read against the venue's standard. R33: the chronology. */
@@ -188272,16 +188802,11 @@ ${body}` : body;
         refused3 = true;
         return [];
       }
-      return [{
-        standard: s.id,
-        cite: r.cite ?? null,
-        kind: r.kind ?? null,
-        issuer: r.issuer ?? null,
-        text: Array.isArray(r.text) ? r.text : [],
-        outcome: s.outcome ?? null,
-        in_force: this.#inForce(s.id, _Filings.#actDay(act2)),
-        source: s.id
-      }];
+      const base2 = { standard: s.id, cite: r.cite ?? null, kind: r.kind ?? null, issuer: r.issuer ?? null };
+      const tail2 = { outcome: s.outcome ?? null, in_force: this.#inForce(s.id, _Filings.#actDay(act2)), source: s.id };
+      if (r.access === "free" || r.access == null && r.kind !== "standard")
+        return [{ ...base2, text: Array.isArray(r.text) ? r.text : [], access: r.access ?? null, ...tail2 }];
+      return [{ ...base2, ...this.#heldBack(r, s, act2, facts, viewer), ...tail2 }];
     });
     const unseen = { out_of_view: true };
     const theories = this.#rows(`SELECT * FROM theory_proposals WHERE action_id=? ORDER BY theory_id`, a.id).map((t2) => ({
