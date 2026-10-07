@@ -741,7 +741,11 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    CHANGED IN WHAT THE GATES RUN, no row line moving: none this job knows of beyond the rows above (the arrivals' own
    arms are counted with their rows). T35's layer 1 added and changed no row; T35's layer 2 (record-core, membership,
    credentials) is re-pinned in place as each merges (BOB's CHANGE), so T35 names one catalogue.
-   ROW_CENSUS (R50) re-pinned to this tree: 1378 rows. Rows a T35 job in layers 3–11 adds or changes are T36's stamp
+   T35 LAYER 2, re-pinned in place: record-core and membership (8937567d88, K1942): record-core ARRIVED C-102.28
+   ANONYMOUS_LEASE and C-102.29–.32 SETTING_NAME_REQUIRED, SETTING_BY_REQUIRED, SETTING_VALUE_REQUIRED, SETTING_INVALID
+   (N655, its R81) and CHANGED C-59.6–.9, C-102.1, .2, .13–.27 (DEC-149, its R82: the `BUILD_FAULT` sentence and "your
+   group's Civicsmith"); membership CHANGED C-55.1, C-96.11, C-102.11, .12 (DEC-149, its R112).
+   ROW_CENSUS (R50) re-pinned to this tree: 1383 rows. Rows a T35 job in layers 3–11 adds or changes are T36's stamp
    (plan T35, Rules 9 (2)). */
 export const CATALOG_VERSION = "1.62.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
@@ -835,8 +839,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1378,
-  digest: "c6c85ffe278847895cce16ca40b37ca8200d6f11a24b3b304470b390ade1642b" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1383,
+  digest: "71291fdce26a8a4408dc482365f25b845e45598cea6159a19b8d77b7076ff1e2" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

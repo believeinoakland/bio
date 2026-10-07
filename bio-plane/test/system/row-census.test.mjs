@@ -109,8 +109,9 @@
    job in layers 3–11 adds or changes turns this suite red, accepted by name until T35's layer-2 stamp (plan Rules (5)
    4), so none is declared. Negative control re-run on the stamp commit: its arms in the suite pass.
    RE-PINNED 2026-10-07 (PROMOTION #33, T35-16, N553's tail): over 1.62.0, the stamp's own lines
-   (`fixtures/row-census-1.62.0.jsonl`, 1378 lines, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named
-   in `build/jobs/T35/promotion.md`: 1378 rows, c6c85ffe…, over `tranche/T35` after its layer 1); the 1.61.0 snapshot (no
+   (`fixtures/row-census-1.62.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
+   `build/jobs/T35/promotion.md`; 1378 rows, c6c85ffe…, over `tranche/T35` after its layer 1; 1383 rows, 71291fdc…, after
+   record-core's and membership's merges, K1942); the 1.61.0 snapshot (no
    stamp reads it) deleted; T34's layers 3–11 rows (62 new, 5 re-keyed, 78 changed, each named by its job record; none
    declared here, accepted red 4 at T34's close) and this job's DEC-149 rows stamped in 1.62.0. Re-pinned in place as each
    T35 layer-2 job merges (BOB's CHANGE), so T35 names one catalogue. A row a T35 job in layers 3–11 adds or changes turns
@@ -134,7 +135,7 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    code (its line is the tree's). */
 const AWAITING_STAMP = [
   /* RE-ANCHORED 2026-10-07 (PROMOTION #33, T35-16): over 1.62.0, the stamp's own lines (`fixtures/row-census-1.62.0.jsonl`,
-     1378 lines, c6c85ffe…). T34's layers 3–11 rows were never declared (accepted red 4) and are stamped in 1.62.0. None
+     as re-pinned at each T35 layer-2 merge). T34's layers 3–11 rows were never declared (accepted red 4) and are stamped in 1.62.0. None
      is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
