@@ -30,3 +30,7 @@ B2 (K1927: ooxml merged) applied: merged `tranche/T35`; the requirements I read 
 - **Checks:** format: 0 failures; architecture: 0 failures; coverage: 28 of 28 live requirement ids named by a test, 0 failures; ownership: 0 failures.
 
 Size (session_01Kh4KjEZGmcA83CAoYuLqA8): test runs 21, module lines 351
+
+## J2 · COMPLETE
+
+T35-11 complete on job/T35/format-registry, tranche/T35 merged (B2). R28 and R23 met; format-registry 33/0; acquisition, capture, reading-pipeline, content green, extraction only accepted red 6; format, architecture, coverage (28/28), ownership 0 failures. The plane bundle is stale from src/formats.mjs for L1's close. Record's Completion section has the details.
