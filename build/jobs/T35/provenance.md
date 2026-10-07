@@ -26,7 +26,7 @@
 - Users of the changed service (every module whose `uses` names provenance, 562 test files): tests 4050, pass 4031, fail 17, every failure an accepted red by name: plane ask ×6 (22), extraction ×6 (6), sources contract R1 (21), action-clocks factreader ×2 (14), workbooks R15 (8), control-plane catalogue-end (19; it pins no C-103 row). After B2's change: ratification 212/212.
 - `checks/format.mjs`: 129 modules, 128 requirements files, 0 failures. `architecture.mjs provenance`: 0 failures. `coverage.mjs provenance`: 44 of 44 live requirement ids named by a test, 0 failures. `ownership.mjs provenance tranche/T35`: 0 failures.
 
-Size (session_011BVPDot1xsr4sPx4NrRahU): test runs 12, module lines 2698
+Size (session_011BVPDot1xsr4sPx4NrRahU): test runs 12, module lines 2696
 
 ## J1 · QUESTION
 
