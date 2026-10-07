@@ -656,3 +656,11 @@ DEC-172 (Bob, S14, on his comments on the layouts page: "I agree that a group sh
 Also on PR #13 since U101, from Bob's comments: the connect screen is "The assistant" (DEC-171, U100); its group-key notice states the member's daily limit and what happens at it, and points to connecting their own account; "Your ties" says why members are asked and who sees the list.
 Folded: BIO_Interaction_Constructs_v0_1.md §R; setup, Members, Settings › The assistant, the setup wizard's step (library, as approved by DEC-148, reworded for this ruling). On PR #13.
 Owed (DEC-172's owed: line): instance-setup R59 restated (pays / keep-away, separately); the act behind `owed:aikeepaway DEC-172` (reason required, who and when kept); account resolution refusing every account while keep-away is on, by a named refusal carrying the reason; a member's own account always accepted otherwise; the reason readable by every member.
+
+## U103 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+Design detail on PR #13 since U102, each from Bob's comments on the layouts page (no ruling):
+- Opening a file: a scanner finding is explained where it appears. Its name is a card (file kind, threat kind, the scanner's variant label) and a "What this is" panel says in plain words what that kind of threat does and that scanners report resemblance, not certainty. Owed (DEC-169's owed: line, with N714): a table of finding kinds (downloader, dropper, trojan, macro, exploit, phishing, potentially unwanted, heuristic or suspicious, …), each in plain member words held for translation, matched from the finding's name; "Civicsmith has no plain description of this name" when none matches.
+- Add: its three tabs are drawn in full; a file's chain of custody is asked ("How you got it": made it, handed it, sent it, downloaded it; Intake §3a), with where and when read from the file where it says.
+- Held captures: a photo shows a preview in its row; the hold strip names what is picked.
+- Your ties: one folding panel saying why members are asked and who sees the list (open on a first visit, remembered).
+- A rail narrowed to icons only names its sections at every information level (DEC-155).
