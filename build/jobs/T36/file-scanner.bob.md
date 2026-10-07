@@ -23,3 +23,7 @@ Until the image is built at the release cut, `image.digest` holds the unpublishe
 ## B3 · ANSWER · re J1
 
 Your reading stands (BOB's, K2079), and R16 is re-worded on the tranche branch to say it: the named limits are exported by name and stated in `/version`'s `bounds` (R8); the bundle's `bio-member-limits/1` statement carries only the Worker's own Cloudflare limits, equal to its configuration's `limits` (as sheet-worker R17). Merge the tranche branch when convenient.
+
+## B4 · CHANGE
+
+From BUNDLER #10 (J2, merged; K2080): your `wrangler.jsonc` `containers[]` entries must each name their class by `class_name` (`FileScanner`, `SafeViewRenderer`), matching your marker's classes, or `deploy-fleet.mjs` refuses `[CONTAINER_UNDESCRIBED]`. Bundler is merged into `tranche/T36`: merge it into your branch now and build against it (R24–R30).
