@@ -37,21 +37,22 @@ export async function liveToken(v) {
 }
 
 /* ---------------------------------------------------------------------------
- * DS-3 — THE ACCOUNT CASCADE'S INSTANCE LEVEL, RETIRED (K1502, T33-6).
+ * DS-3 — THE ACCOUNT CASCADE'S INSTANCE LEVEL, RETIRED (K1502, T33-6; K1755, K1761).
  *
- * There is no group-wide or project-wide Claude account. The terms Anthropic publishes let a subscription serve
- * only its own holder, so each member who wants the assistant connects their own Claude account or API key, held
- * by `credentials` under that member, and a member with neither has no assistant. The group's copy therefore binds
- * no Claude credential: the instance level always answers NONE, the same answer whatever `env` carries, and the
- * former binding (`INSTANCE_CLAUDE_TOKEN`) is not read at all — not even to test it — so a value an old install
- * left behind can never be spent.
+ * The group's copy binds no Claude credential in its environment. Where the assistant's account comes from is
+ * `credentials`' answer, never a binding: a member's own Claude subscription or API key, held under that member, or
+ * the group's one API key, which an active administrator sets (K1755). Both levels are Bob's choices, not Anthropic's
+ * rules (the register `build/terms/anthropic.md`, "Bob's choices"; the group key is one the terms permit, AT-9). So the
+ * instance level always answers NONE, the same answer whatever `env` carries, and the former binding
+ * (`INSTANCE_CLAUDE_TOKEN`) is not read at all — not even to test it — so a value an old install left behind can
+ * never be spent.
  *
  * DO NOT CONFUSE THIS WITH THE `ai` CREDENTIAL BELOW (`aik-…`, PL-11). That is BIO's own credential, which an agent
  * presents TO the plane; a Claude account is Anthropic's, which a run presents to Claude. They travel in opposite
  * directions, and only the second is retired here.
  *
- * The two services stay exported so their callers keep a stated answer until their own jobs re-point them to the
- * member's reference; a later change may remove them.
+ * The two services stay exported so their callers keep a stated answer until their own jobs re-point them to
+ * `credentials`' account resolution; a later change may remove them.
  */
 
 /** The stated reasons. A caller renders these; it never invents one. `CASCADE_PUBLISHED` is kept, stable, for the
@@ -59,13 +60,15 @@ export async function liveToken(v) {
 export const CASCADE_UNSET = "NO_INSTANCE_ACCOUNT";
 export const CASCADE_PUBLISHED = "INSTANCE_ACCOUNT_REVOKED_BY_PUBLICATION";
 
-const NO_INSTANCE_ACCOUNT_DETAIL = "This group's copy holds no Claude account, and none can be set for it: a Claude "
-  + "subscription serves only its own holder. Each member who wants the assistant connects their own Claude account "
-  + "or API key, which serves only that member's own asks.";
+// Member-facing (DEC-149: "Your group's Civicsmith", never "the plane", "the instance" or "this group's copy"). It
+// states no limit of Anthropic's plans, so it cites none (K1763); where an account comes from is R13's, K1755's.
+const NO_INSTANCE_ACCOUNT_DETAIL = "Your group's Civicsmith binds no Claude account to its own settings, and none can "
+  + "be set there. The assistant is reached through a member's own Claude account or API key, or through the group's "
+  + "API key that an administrator sets; each is held sealed in Civicsmith's credentials, never as a setting.";
 
 /**
  * The instance level's STATUS: always not configured, `CASCADE_UNSET`, with a detail saying where an account comes
- * from instead. `env` is accepted for the callers' sake and never read (K1502). An honest absence is STATED
+ * from instead (a member's own, or the group's API key, both in `credentials`; K1755). `env` is accepted for the callers' sake and never read (K1502). An honest absence is STATED
  * (CLAUDE.md) — never an empty success.
  */
 export async function instanceClaudeStatus(_env) {

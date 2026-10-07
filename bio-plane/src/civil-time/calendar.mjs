@@ -75,7 +75,7 @@ export function calendar({ view, list = null, office = null, factOf = null }) {
         if (f && (f.status === "disputed" || f.status === "absent")) {
           out = no(f.status === "disputed" ? "FACT_DISPUTED" : "FACT_ABSENT",
             `${listWords} for ${y}${Array.isArray(h.offices) ? ` (${h.offices.map(officeWords).join(", ")})` : ""} `
-            + (f.status === "disputed" ? "is disputed on this instance" : `cannot be read on this instance${f.why ? `: ${f.why}` : ""}`));
+            + (f.status === "disputed" ? "is disputed in your group's Civicsmith" : `cannot be read in your group's Civicsmith${f.why ? `: ${f.why}` : ""}`));
           break;
         }
         const list2 = governs || h.days;
@@ -109,8 +109,8 @@ export function calendarStated(cal) {
   for (const r of cal.read) {
     if (r.status === "unconfirmed") notes.push(`counted on an unconfirmed calendar (${r.basis ?? "no source stated"}, ${r.year})`);
     if (r.governs === "correction" && r.status !== "corrected")
-      notes.push(`counted on a correction that governs on this instance, now ${r.status}${r.says ? ` (${r.says})` : ""} (${r.year})`);
-    if (r.status === "corrected") notes.push(`counted on a calendar corrected on this instance${r.corrected_by ? ` by ${r.corrected_by}` : ""}${r.corrected_at ? `, ${r.corrected_at}` : ""} (${r.year})`);
+      notes.push(`counted on a correction that governs in your group's Civicsmith, now ${r.status}${r.says ? ` (${r.says})` : ""} (${r.year})`);
+    if (r.status === "corrected") notes.push(`counted on a calendar corrected in your group's Civicsmith${r.corrected_by ? ` by ${r.corrected_by}` : ""}${r.corrected_at ? `, ${r.corrected_at}` : ""} (${r.year})`);
   }
   return { list: cal.list, office: cal.office ?? null, entries: cal.read, status: cal.readable ? (cal.read.length ? "read" : "none_read") : "not_read", notes };
 }
