@@ -51,7 +51,7 @@ test("R65 the refusals, in order: NOT_AN_ADMIN (membership R84) before anything;
   assert.ok(before <= mark);
 });
 
-test("R65 in T34, with no model turn (N686), past every refusal the op answers wizard-scripts' ASSISTANT_DRAFT_UNAVAILABLE and nothing else, and writes nothing", async () => {
+test("R65 a draft that cannot be served (no turn handed in, as with no route to agent-worker's /draft) answers, past every refusal, wizard-scripts' ASSISTANT_DRAFT_UNAVAILABLE and nothing else, and writes nothing", async () => {
   const w = await world();
   const mark = writes(w);
   const r = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin" });
@@ -92,4 +92,25 @@ test("R65 the draft path (T35's turn handed in): each of focus and purpose label
   assert.equal((await big.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, by: "admin" })).reason, "ASSISTANT_DRAFT_UNAVAILABLE");
   const nothing = await world({ turn: async () => null });
   assert.equal((await nothing.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, by: "admin" })).reason, "ASSISTANT_DRAFT_UNAVAILABLE");
+});
+
+test("R65 T35 (N686, K1974) the door's call to agent-worker's /draft handed in per request is the turn used, past every refusal and only then; a call that throws or answers nothing is ASSISTANT_DRAFT_UNAVAILABLE, the fields unchanged", async () => {
+  const w = await world({ turn: async () => ({ focus: "the built-in turn", purpose: "x" }) });
+  const asked = [];
+  const door = async (a) => { asked.push(a); return { focus: "Because nobody else reads them.", purpose: "We watch the port's budget.", readLog: [] }; };
+  const r = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin", turn: door });
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.deepEqual([r.focus.text, r.purpose.text], ["Because nobody else reads them.", "We watch the port's budget."]);
+  assert.deepEqual(asked, [{ answers: ANSWERS, account: ASSISTANT.account, holdings: false }]);
+  /* refusals come first: the door's turn is never asked for a refused request */
+  for (const req of [{ by: "ruth" }, { assistant: { on: false } }, { answers: [] }]) {
+    const out = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin", turn: door, ...req });
+    assert.equal(out.ok, false, JSON.stringify(req));
+  }
+  assert.equal(asked.length, 1);
+  for (const bad of [async () => { throw new Error("AGENT_WORKER_SILENT"); }, async () => null, async () => "text"]) {
+    const out = await w.m.groupDescriptionDraft({ answers: ANSWERS, assistant: ASSISTANT, viewer: "admin", by: "admin", turn: bad });
+    assert.deepEqual([out.ok, out.reason], [false, "ASSISTANT_DRAFT_UNAVAILABLE"]);
+    assert.equal("focus" in out || "purpose" in out, false);
+  }
 });

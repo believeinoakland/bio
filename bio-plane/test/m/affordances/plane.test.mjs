@@ -12,13 +12,14 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNGS,
-         RUNG_ABSENT, deriveActs, decorate, PER_ITEM_MAX } from "../../../src/affordances.mjs";
+import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, deriveActs, decorate, PER_ITEM_MAX } from "../../../src/affordances.mjs";
+import { MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
-import { T33_RUNGS } from "../../../src/affordances/t33.mjs";
-import { OP_ALIASES } from "../../../src/affordances/t34.mjs";
+import { T33_RUNGS } from "../../../src/op-grades/t33.mjs";
+import { T35_RUNGS } from "../../../src/op-grades/t35.mjs";
+import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
   "line_kinds", "line_capacities", "line_roles", "money_kinds", "money_phases", "money_stages", "money_bases",
@@ -644,7 +645,9 @@ test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned
     /* R37: at wizard-scripts' interface over its fixture, t31.test.mjs */
     "wizardretire",
     /* R40 (T33-85): T33's, each at its owner's interface over its fixture, t33-backing.test.mjs */
-    ...Object.keys(T33_RUNGS).filter((op) => T33_RUNGS[op] === "reasoned")];
+    ...Object.keys(T33_RUNGS).filter((op) => T33_RUNGS[op] === "reasoned"),
+    /* K2049 (B4): op-grades' T35 ops (its R22), each at its owner's interface over its fixture, t35-backing.test.mjs */
+    ...Object.keys(T35_RUNGS).filter((op) => T35_RUNGS[op] === "reasoned")];
   /* R45: an alias is its op's handler (op-declarations R21, control-plane R55), so its op's drive is its backing */
   driven.push(...Object.keys(OP_ALIASES).filter((a) => driven.includes(OP_ALIASES[a])));
   /* R45: tasks' checkrecord (CHECK_NO_REASON, tasks R15): tasks is later in the order (P4), so this module's tests cannot

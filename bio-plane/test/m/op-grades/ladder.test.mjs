@@ -126,9 +126,9 @@ test("R4: CONSEQUENCE_STATEMENTS maps DEC-88's six judgement calls to {friction,
   assert.match(CONSEQUENCE_STATEMENTS.attribute.statement, /permanently/);
   assert.match(CONSEQUENCE_STATEMENTS.leadshare.statement, /cannot be un-read/);
   assert.match(CONSEQUENCE_STATEMENTS.workobjective.statement, /budget and scope/);
-  /* only the six, R8's actionholdrelease and R21's personexpunge carry one */
+  /* only the six, R8's actionholdrelease and R21's personexpunge and (K2049) standardrelease carry one */
   assert.deepEqual(Object.keys(CONSEQUENCE_STATEMENTS).sort(),
-    [...Object.keys(SIX), "actionholdrelease", "personexpunge"].sort());
+    [...Object.keys(SIX), "actionholdrelease", "personexpunge", "standardrelease"].sort());
 });
 
 /* ---- R5 ------------------------------------------------------------------------------------------------------------ */

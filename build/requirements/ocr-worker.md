@@ -1,11 +1,6 @@
 # ocr-worker — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `ocr-worker/src/index.mjs`,
-`ocr-worker/src/contract.mjs`, `ocr-worker/src/transcribe.mjs`, `ocr-worker/src/tessengine.mjs`,
-`ocr-worker/src/pngsamples.mjs`, `ocr-worker/src/tesslib.mjs` (generated vendor glue, not read
-beyond its header), `ocr-worker/wrangler.jsonc`. Every requirement below is met by the code as it
-stands; the old plan carries no row against this module (`docs/development/transition/old-plan/index.csv`)
-and `build/plan/next.md` names none either.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Every requirement met.
 
 ## Public
 

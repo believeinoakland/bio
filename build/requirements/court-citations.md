@@ -1,6 +1,6 @@
 # court-citations — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T33` (open), for BOB's review. New module, layer 1, directly before `id-spaces`, which reads it (plan Rules (2); K1504, Choices 2 and 3). Plan entry T33-8 (A COURTS (d) 2a; K1449), entered on GO (K1506; `measures-T33/courts-workbooks.md` §2). Every id is new and not yet met (T33-8). Code today: none.
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-8, entered on GO, K1506). Every requirement met (COURT-CITATIONS #1, K1518).
 
 **Size (P6).** About 300–500 lines of code and tests, plus the generated data file (about 3.6 MB of source JSON, translated). The generated file is not counted against P6 (§14).
 

@@ -1,6 +1,6 @@
 # subresources — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/subresources.mjs`. R17 met in T1 (D-603); the old battery's assertions of the defect are entry N15. AMENDED at T23's opening (fold 2) by a worker for BOB #94, 2026-10-02 (N482, K1020; plan resolution 1, K1069: the cap is subresources'): R35 states the default cap at the interface, replacing `deploybindings.test.mjs`'s source-text arm; not yet met.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20); R35's cap is this module's (K1069). Last changed T23 (R35, N482, K1020); every requirement met (K1116).
 
 ## Public
 

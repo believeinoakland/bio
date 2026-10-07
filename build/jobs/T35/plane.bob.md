@@ -1,6 +1,6 @@
 # BOB to plane (T35)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -32,3 +32,27 @@ K2038. (1) Your `ownHosts` reading stands; the install-time binding is N745 (T36
 ## B4 · CHANGE
 
 K2041. (a) `draftOnObject` also answers `read`: the strings of the grant's read log (`[...answers.readLog(grant).index.keys()]`, `[]` with no grant), beside `grant` and `suggestions`. (b) From STORE-DOOR #1 and ANSWER-ENVELOPE #1: `store.mjs`:426's `routes` passes store-door's third argument (the grant) through; re-point `store.mjs`:69–70 to `store-door/`, and `door.mjs`:24–25, `index.mjs`:5–6 to `../answer-envelope/index.mjs` (except `PUBLISHED_STORE`, `caseReader`, `captureKey`, `storageAbsent`, which stay control-plane's); `STEP = "store-door"`.
+
+## B5 · CHANGE
+
+K2042 (from CONTROL-PLANE #24 J3). (a) Add to the store map you compose: `coarchiveset: () => acquisitionOf(ctx).coArchiveSet({on: body.on, by: q("by")})` and `coarchivestate: () => acquisitionOf(ctx).coArchiveState()`. (b) The drain of capture's `archive-unpack` events (K1951) is yours: on the alarm (scheduler's wake), for each event of `capture.taskEvents({kind: "archive-unpack"})`, call `op=unpack` through the Worker as the daemon (`DAEMON_TOKEN`, `cls: "daemon"`), so control-plane's door promotes the unpacked documents. If the object cannot reach the Worker that way, say so (QUESTION) before building another path.
+
+## B6 · ANSWER · re J2
+
+K2043. `modules.json` plane now uses capture-sources and admission; your R14 and Uses are re-worded for the split: merge tranche/T35. I tell you when admission merges; then compose `admissionOps`.
+
+## B7 · CHANGE
+
+K2044, from ADMISSION #5 J2 (4): compose `admissionOps(admissionOf(ctx), url, body)` from `src/admission/window.mjs` (not index.mjs) into `routes`; `admissionOf` declares its table `admission_door_window` through record-core and makes the fingerprint with `captureOf(ctx).sourceFingerprint`. Admission is complete and merges after op-declarations; I tell you when.
+
+## B8 · ANSWER · re J3
+
+K2046. (1) Your reading stands: a scheduler consumer `archive-unpack` (module plane) reaching the Worker through `env.SELF` with `Authorization: Bearer <DAEMON_TOKEN>`, never in the address; not configured without both. Body: `{archiveSha: event.captureSha}` (capture's map reads `body.archiveSha`); no `project` (control-plane promotes into no project when none is given). Nothing in `op=unpack` removes the event, so the drain owns the queue: an answer `ok: true` (the unpack done, a continuation enqueued as a new event if it needs another call) or a refusal that will not change on retry (a 4xx naming the archive or its state) → `capture.taskEventRemove({kind: "archive-unpack", captureSha})`; anything else (5xx, unreachable, `SILENT`) → `capture.taskEventAttempt(...)` and back-off as tasks R18 does (wake from attempts and lastTry, no wake past the retry limit). (2) `modules.json` plane uses acquisition (pushed): merge tranche/T35.
+
+## B9 · ANSWER · re J4
+
+K2051. (1) tasks (T35-77) is merged, with the kind filter: merge tranche/T35 and add the onAlarm arm. (2) Your reading stands: the co-archive pair stays in routes, named in your test helper as acquisition's (no acquisition ops map; its layer is closed). Store-door, answer-envelope and admission are not merged yet; I tell you when each lands.
+
+## B10 · CHANGE
+
+K2054. admission is merged (with op-declarations, store-door, answer-envelope, instance-setup, setup-page, installer). Merge tranche/T35 and compose `admissionOps` as B8 said; you and control-plane merge back to back.

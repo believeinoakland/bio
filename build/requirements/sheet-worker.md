@@ -1,6 +1,6 @@
 # sheet-worker — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T33` (open), for BOB's review. New fleet member (a standalone Worker on the `ocr-worker` precedent), layer 1, last in the layer (plan Rules (2)). Plan entry T33-18 (C §(c) ANALYSIS L3; K1448), entered on GO with conditions (K1506; `measures-T33/courts-workbooks.md` §3): it ships inactive until enabled after the release, builds its own IronCalc wasm with the `xlsx` feature, holds a size and a time limit, refuses external links, and answers a failure as "not recomputed here", never as a verdict. Every id is new and not yet met (T33-18). Code today: none. T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-69 (N621; K1536, K1686): R17 (its limits stated in its bundle, covered by the signed release) added; not yet met (T34).
+**Status** · In force: a new fleet member, reviewed with T33's new modules (K1505; T33-18, entered on GO with conditions, K1506). Last changed T34 (T34-69: R17; K1536, K1686); every requirement met (SHEET-WORKER #2, K1731).
 
 **Size (P6).** About 800–1,200 lines with tests, plus the vendored wasm (about 2.3 MB raw), which is a generated artifact (PROCESS-MECHANICS §14).
 

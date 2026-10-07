@@ -1,6 +1,6 @@
 # test-support — requirements
 
-**Status** · Written by BOB #38, 2026-09-26: a helper module, so its requirements are BOB's (K20). Layer 1. Code: `bio-plane/test/sandbox.mjs`, `bio-plane/test/stdio.mjs`; tests `bio-plane/test/m/test-support/`. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-3: R10–R14 added, `makeZip` and its two hostile-archive helpers in `bio-plane/test/make-zip.mjs`, the fixtures ooxml's ZIP listing and cut are tested on (N688; K1844, K1852; F7); not yet met (T35-3).
+**Status** · In force: a helper module, its requirements BOB's (K20). Last changed T35 (T35-3: R10–R14; K1844, K1852); every requirement met (K1919).
 
 ## Public
 

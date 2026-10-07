@@ -1,4 +1,4 @@
-/* installer R1–R40, each at the module's interface: the Worker's routes driven with a request, everything it reaches
+/* installer R1–R42, each at the module's interface: the Worker's routes driven with a request, everything it reaches
  * answered by the fixture's stateful account, repository and copy; the embed step's exported functions; the pages it
  * serves, and the invitation page, as a browser receives them. A requirement not yet met is a `test.todo` naming its
  * cause (build/requirements/installer.md).
@@ -13,7 +13,7 @@ import worker, * as installer from "../src/index.mjs";
 import { CFG, planeLimits } from "../src/index.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "../../bio-plane/src/setup-fleet.mjs";
 import { setupPage } from "../../bio-plane/src/setup.mjs";
-import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER } from "../src/ui.mjs";
+import { EXAMPLE_SLUG, PUBLISHER, PROFILE_CHOICES, PROFILES_NONE, PAGE_CSS, ASSISTANT_OFFER, DESCRIPTION, WHO } from "../src/ui.mjs";
 import { RELEASE_VERSION, RELEASE_SOURCE } from "../src/release.mjs";
 import { resolveVersion, checkSignedAsset, embedRelease } from "../scripts/embed-release.mjs";
 import { verifySshsig, NS_RELEASE } from "../../bio-plane/src/sshsig.mjs";
@@ -326,8 +326,9 @@ test("R11 `fleet`: members install only from a reachable repository whose signed
   await noneOf("no-fleet", { fleet: false }, /names no capability workers/);
   await noneOf("no-fleetsig", { fleetSig: "none" }, /names no capability workers/);
   await noneOf("dropped", { signedMembers: ["agent-worker", "pdf-worker", "ocr-worker", "extra-worker"] }, /fleet signature did not verify/);
-  if (BUILTIN_LIMITS.ok) await noneOf("foreign-plane", { sig: "stranger" }, /signed against a different plane than the one just installed/);
-  if (BUILTIN_LIMITS.ok) await noneOf("not-newer", { version: RELEASE_VERSION }, /signed against a different plane than the one just installed/);
+  /* K1905: the words are R40's (T34-84): "a different release of Civicsmith", never "plane". */
+  if (BUILTIN_LIMITS.ok) await noneOf("foreign-plane", { sig: "stranger" }, /signed against a different release of Civicsmith than the one just installed/);
+  if (BUILTIN_LIMITS.ok) await noneOf("not-newer", { version: RELEASE_VERSION }, /signed against a different release of Civicsmith than the one just installed/);
   disarm();
   await noneOf("unarmed", {}, /carries no signing key/);
   armWith(SIGNER.line);
@@ -386,7 +387,8 @@ test("R14 `addr`: the account's workers.dev prefix is used; with none, one is re
   const has = seen(await run({ slug: "addr-has", subdomain: "grp" }));
   assert.ok(has.enabled.has("addr-has"));
   assert.equal(has.page.events.find((e) => e.k === "ok" && e.id === "addr").label, null, "nothing to say");
-  assert.ok(has.calls.some((c) => c.u === "https://addr-has.grp.workers.dev/api/?op=selftest&token=" + bindingOf(has.planePuts[0], "PROBE_TOKEN").text));
+  assert.ok(has.calls.some((c) => c.u === "https://addr-has.grp.workers.dev/api/?op=selftest"
+    && c.init.headers?.authorization === "Bearer " + bindingOf(has.planePuts[0], "PROBE_TOKEN").text), "the address enabled is the one verified");
   const none = seen(await run({ slug: "addr-none", subdomain: null }));
   assert.equal(none.prefix(), "addr-none");
   assert.match(none.page.label("addr"), /had no web address prefix yet, so it is now "addr-none"/);
@@ -403,14 +405,30 @@ test("R14 `addr`: the account's workers.dev prefix is used; with none, one is re
   }
 });
 
-test("R15 `verify`: op=selftest with the probe credential up to ten tries; a capable release's parts read back until each answers it, every lagging part named; an incapable release's parts stated undetermined; no success while a part lags", async () => {
+test("R15 `verify`: op=selftest with the probe credential up to ten tries, the credential only in each request's Authorization: Bearer header and in no address; a capable release's parts read back until each answers it, every lagging part named; an incapable release's parts stated undetermined; no success while a part lags", async () => {
   const quiet = seen(await run({ slug: "ver-quiet", copy: { selftest: () => jres({ ok: false }) } }));
   const probe = bindingOf(quiet.planePuts[0], "PROBE_TOKEN").text;
   const tries = quiet.calls.filter((c) => c.u.includes("op=selftest"));
   assert.equal(tries.length, 10);
-  assert.ok(tries.every((c) => c.u.endsWith("&token=" + probe)));
+  /* F1 (K1874): every verify request carries the probe credential in its header, exactly as admission R20 reads it, and
+     its address is the bare op. */
+  for (const c of tries) {
+    assert.equal(c.u, "https://ver-quiet.grp.workers.dev/api/?op=selftest");
+    assert.equal(c.init.headers?.authorization, "Bearer " + probe);
+  }
   assert.equal(quiet.page.status("verify"), "no");
   assert.match(quiet.page.done, /has not woken up yet/);
+  /* The sentinel: in a whole install, verify included, the probe credential (and every other credential the install
+     generated, and the Cloudflare token) is in no address of any request the installer makes, and the probe credential
+     reaches the copy only in the verify step's header. */
+  const ok = seen(await run({ slug: "ver-sentinel" }));
+  const secrets = secretsOf(ok.planePuts[0]).map((b) => b.text);
+  const sentinel = bindingOf(ok.planePuts[0], "PROBE_TOKEN").text;
+  for (const c of ok.calls) for (const v of [...secrets, TOK]) assert.equal(c.u.includes(v), false, `${c.method} ${c.u}`);
+  const carried = ok.calls.filter((c) => JSON.stringify(c.init.headers || {}).includes(sentinel));
+  assert.ok(carried.length >= 1 && carried.every((c) => c.u === "https://ver-sentinel.grp.workers.dev/api/?op=selftest"),
+    "the probe credential travels only to the verify step, in its header");
+  assert.equal(ok.page.status("verify"), "ok");
   armWith(SIGNER.line);
   const rel = await release({ version: NEXT });
   const all = seen(await run({ slug: "ver-all", rel }));
@@ -553,7 +571,11 @@ test("R18 an update crossing the first group-recording release (0.71.0) tells th
   assert.match(cross.page.done, /One thing this update does not do for you/);
   assert.match(cross.page.done, /Your group&#39;s Civicsmith ran 0\.70\.0 before this update/);
   assert.match(cross.page.done, /GROUP_UNDETERMINED/);
-  assert.match(cross.page.done, /POST https:\/\/cross\.grp\.workers\.dev\/api\/\?op=instancegroupseed/);
+  assert.match(cross.page.done, /POST https:\/\/cross\.grp\.workers\.dev\/api\/\?op=instancegroupseed<\/span>/);
+  /* F1 (K1874): the act is told with the credential in its header, never in the address. */
+  assert.match(cross.page.done, /in its header, never in the address/);
+  assert.match(cross.page.done, /Authorization: Bearer &hellip;/);
+  assert.ok(!/token=/.test(cross.page.done), "no credential in the address it tells");
   assert.match(cross.page.done, /store=scratch/);
   assert.match(cross.page.done, /A suggestion, not a default: your group&#39;s Civicsmith was installed under the name <span class="mono">cross<\/span>/);
   const fog = seen(await run({ slug: "fog", mode: "update", pre: { fog: planeBase("fog", "0.70.0") }, copy: { before: null } }));
@@ -1356,4 +1378,107 @@ test("R40 every member- or founder-facing string the installer serves (the insta
   const kept = seen(await run({ slug: "r40-kept", rel: tamper }));
   restoreSigners();
   assert.match(kept.page.label("rel"), /The repository's copy did not pass its integrity check/);
+});
+
+/* ------------------------------------------------------------------------------------------------ the short name and the description */
+
+/* R41: a page's own script, run as a browser runs it, against a stand-in for the few elements it touches: each element
+   with an id, and each checkbox and radio by name. `fetch` and `location` are recorded; a click runs its listeners. */
+function pageWorld(page) {
+  const els = new Map(), inputs = [];
+  const make = (tag, attrs) => {
+    const el = { tag, attrs, value: "", checked: false, disabled: false, textContent: "", dataset: {}, open: false, on: {},
+      selectionStart: 0, addEventListener(k, f) { (this.on[k] ||= []).push(f); }, focus() {}, setSelectionRange() {},
+      showModal() { this.open = true; }, close() { this.open = false; },
+      async click() { if (this.disabled) return; for (const f of this.on.click || []) await f({ target: this }); } };
+    return el;
+  };
+  for (const [, tag, attrs] of page.matchAll(/<([a-z]+)\b([^>]*)>/g)) {
+    const id = attrs.match(/\bid="([^"]+)"/)?.[1], name = attrs.match(/\bname="([^"]+)"/)?.[1];
+    const el = make(tag, attrs);
+    if (id) els.set(id, el);
+    if (tag === "input" && name) inputs.push(Object.assign(el, { name, value: attrs.match(/\bvalue="([^"]*)"/)?.[1] ?? "" }));
+  }
+  const document = {
+    querySelector: (q) => q.startsWith("#") ? els.get(q.slice(1)) ?? null
+      : inputs.find((i) => q === `input[name="${i.name}"]:checked` && i.checked) ?? null,
+    querySelectorAll: (q) => inputs.filter((i) => q === `input[name="${i.name}"]`),
+    getElementById: (id) => els.get(id) ?? null,
+  };
+  const sent = [], location = { href: null };
+  const fetch = async (url, init) => { sent.push({ url, body: JSON.parse(init.body) });
+    return { json: async () => ({ ok: true, authorize: "https://dash.cloudflare.com/oauth2/auth?x=1" }) }; };
+  const [js] = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+  new Function("document", "fetch", "location", js)(document, fetch, location);
+  return { el: (id) => els.get(id), sent, location };
+}
+
+test("R41 the install page's act that chooses the short name shows the Irreversible weight (its word beside its mark); before /begin is sent in install mode a full dialog states the choice is permanent and names the short name typed; only the confirming act sends /begin, closing sends nothing; the update page shows neither", async () => {
+  const home = await text("/"), upd = await text("/update");
+  const PIPS = /<span class="pips" aria-hidden="true">(?:<i class="on"><\/i>){5}<\/span>Irreversible<\/span>/;
+  /* The weight: five pips, the word beside them, on the button that chooses the short name and on the dialog's confirming act. */
+  const go = home.match(/<button id="go">([\s\S]*?)<\/button>/)[1];
+  assert.match(go, PIPS, "the act choosing the short name carries the Irreversible weight");
+  const yes = home.match(/<button type="button" id="confirm-yes">([\s\S]*?)<\/button>/)[1];
+  assert.match(yes, PIPS, "and so does the act that confirms it");
+  /* The dialog's words: the short name becomes the address and the worker's name and stands beside every signature; it
+     can never be changed but by installing a new Civicsmith and starting again. */
+  const dialog = home.match(/<dialog id="confirm"[\s\S]*?<\/dialog>/)[0];
+  const words = dialog.replace(/<[^>]+>/g, " ").replace(/&ldquo;|&rdquo;/g, "\"").replace(/\s+/g, " ");
+  assert.match(words, /is permanent/);
+  assert.match(words, /in every address of your group's Civicsmith/);
+  assert.match(words, /beside every signature/);
+  assert.match(words, /becomes the name of its worker in your Cloudflare account/);
+  assert.match(words, /can never be changed, by you or anyone, without installing a new Civicsmith and starting again/);
+  assert.ok(!/ceremony|publish/i.test(words), "not a publication, no ceremony (DEC-143)");
+  /* The behaviour, as the page's own script does it. */
+  const w = pageWorld(home);
+  w.el("slug").value = "River Keepers!";
+  await w.el("go").click();
+  assert.deepEqual(w.sent, [], "pressing the act sends nothing yet");
+  assert.equal(w.el("confirm").open, true, "the full dialog opens");
+  assert.equal(w.el("confirm-name").textContent, "river-keepers", "it names the short name typed, as it will be sent");
+  await w.el("confirm-no").click();
+  assert.deepEqual([w.sent, w.el("confirm").open, w.location.href], [[], false, null], "closing it sends nothing");
+  await w.el("go").click();
+  w.el("slug").value = "something-else";
+  await w.el("confirm-yes").click();
+  assert.equal(w.sent.length, 1, "only the confirming act sends /begin");
+  assert.deepEqual([w.sent[0].url, w.sent[0].body.slug, w.sent[0].body.mode], ["/begin", "river-keepers", "install"], "the name the dialog named");
+  assert.equal(w.el("confirm").open, false);
+  assert.equal(w.location.href, "https://dash.cloudflare.com/oauth2/auth?x=1");
+  /* A name too short opens nothing. */
+  const short = pageWorld(home);
+  short.el("slug").value = "ab";
+  await short.el("go").click();
+  assert.deepEqual([short.sent, short.el("confirm").open], [[], false]);
+  /* The update chooses no short name: no weight, no dialog, /begin sent at once. */
+  assert.ok(!upd.includes("Irreversible") && !upd.includes('class="pips"') && !upd.includes("<dialog"), "the update page shows neither");
+  const u = pageWorld(upd);
+  u.el("slug").value = "river-keepers";
+  await u.el("go").click();
+  assert.deepEqual(u.sent.map((x) => [x.url, x.body.mode]), [["/begin", "update"]]);
+});
+
+test("R42 where the installer's pages and the invitation page say in one line what Civicsmith is, the line is exactly DEC-146's description, with its second line where there is room; no page says \"civic groups\" alone or \"and other organisations\"", async () => {
+  /* The two lines, exactly as R42 (and public-read R30) state them. */
+  const LINE = "Free software for groups that check whether government keeps its own rules and promises.";
+  const SECOND = "Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work.";
+  assert.deepEqual([DESCRIPTION, WHO], [LINE, SECOND]);
+  const home = await text("/");
+  for (const [where, page] of [["install page", home], ["invitation page", INVITATION]]) {
+    assert.ok(page.includes(`<meta name="description" content="${LINE}">`), `${where}: its description`);
+    assert.equal([...page.matchAll(/<p class="what">([^<]*)<\/p>/g)].map((m) => m[1]).join("|"), LINE, `${where}: the one line`);
+    assert.equal([...page.matchAll(/<p class="small who">([^<]*)<\/p>/g)].map((m) => m[1]).join("|"), SECOND, `${where}: the second line`);
+    /* The page's one-line descriptions before DEC-146 are gone. */
+    assert.ok(!/accountability record|tamper-evident record/.test(page), where);
+  }
+  /* Every page this suite rendered, and the update page and a 404. */
+  const pages = [home, await text("/update"), await text("/elsewhere"), ...RAW, ...PAGES, INVITATION];
+  assert.ok(RAW.length > 40, "the pages this suite rendered");
+  for (const page of pages) {
+    const words = page.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    assert.equal(/\bcivic groups\b/i.test(words), false, words.match(/.{0,60}civic groups.{0,40}/i)?.[0]);
+    assert.equal(/\band other organi[sz]ations\b/i.test(words), false, words.match(/.{0,60}other organi[sz]ations.{0,40}/i)?.[0]);
+  }
 });

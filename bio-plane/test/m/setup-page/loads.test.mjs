@@ -116,7 +116,7 @@ function driven() {
   const fetch = async (url, init) => {
     urls.push(String(url));
     const op = new URL(url, ORIGIN).searchParams.get("op");
-    return { ok: true, status: 200, json: async () => answers[op] ?? { result: { ok: true } } };
+    return { ok: true, status: 200, json: async () => answers[op] ?? { result: { ok: true } }, blob: async () => new Blob(["abc"]) };
   };
   return { ...pageOver({ html: pageOf({ answered: true, result: hostile }), session: { t: "sess-1", e: 0, w: "admin" }, fetch }), urls };
 }
@@ -129,6 +129,9 @@ test("R12 driven through every section the page draws, signed out and signed in:
   await settle();
   await p.ui.openBrowse(); await settle();
   await p.ui.openBundle("INFO-2026-0001-a"); await settle();
+  /* a captured file's download: fetched on this origin, handed to the browser behind an object address of its own */
+  for (const b of p.dlbtns()) await b.fire();
+  await settle();
   await p.ui.openInbox(); await settle();
   await p.el("#go-members").fire(); await settle();
   p.el("#m-id").value = "bea"; p.el("#m-name").value = "volunteer-2"; await p.el("#m-add").fire(); await settle();
@@ -152,7 +155,10 @@ test("R12 driven through every section the page draws, signed out and signed in:
                     "memberadd", "acquire", "attest", "promote"]) assert.ok(ops.has(op), op);
   for (const s of ["#browse-body", "#b-files", "#inbox-body", "#m-list", "#k-list", "#b-ratify", "#pf-active"])
     assert.notEqual(p.el(s).innerHTML, "", s);
-  assert.match(p.el("#b-files").innerHTML, /href="\/api\/\?op=capture/);
+  assert.match(p.el("#b-files").innerHTML, /<button class="histbtn dlbtn" data-sha="a{64}" data-name="doc\.pdf">download<\/button>/);
+  assert.ok(ops.has("capture"), "the download was fetched");
+  assert.deepEqual(p.files.map((f) => f.name), ["doc.pdf"]);
+  for (const f of p.files) assert.ok(ownOrigin(f.url), f.url);
   for (const u of p.urls) assert.ok(ownOrigin(u), u);
   for (const page of [p, out, inv]) for (const s of DRAWN) assert.deepEqual(outsideLoads(page.el(s).innerHTML), [], s);
 });
@@ -168,9 +174,15 @@ test("R12 T34's sections, driven: the join link, the claim's choices, the office
     courtnotice: { result: { choice: null } }, assistantstate: { result: { ok: true, on: true, set_by: evil, set_at: "2026-10-06T00:00:00Z" } },
     groupkeystate: { result: { held: true, on: true } }, placewantedstate: { result: { name: evil } },
     entitycreate: { result: { ok: true, entity_id: "ENT-2026-0001", label: evil } },
+    entitieskind: { result: { ok: true, kind: "office", entities: [{ entity_id: "ENT-2026-0001", kind: "office", label: evil, declared_by: evil }],
+                              count: 1, limit: 100, truncated: false, next: null } },
     groupdescription: { result: { description: null, history: [] } },
     groupdescriptiondraft: { result: { focus: { text: evil, label: { kind: "machine", asked_by: evil } }, purpose: { text: evil, label: { kind: "machine", asked_by: evil } } } },
     memberlanguage: { result: { language: evil } },
+    recoverycodesissue: { result: { ok: true, codes: [evil, evil], issuedAt: "2026-10-06T00:00:00Z" } },
+    recoverycodesstate: { result: { ok: true, held: true, remaining: evil, issuedAt: "2026-10-06T00:00:00Z" } },
+    adminrecoverystep: { result: { ok: true, administrators: 1, codes_held: false, remaining: 0, met: false } },
+    memberadd: { result: { ok: true, invite: evil } },
     joinlinkinvite: { result: { ok: true, invite: "i" } }, invitelook: { result: { ok: true, cover: evil, role: evil } },
   };
   const fetch = async (url) => { urls.push(String(url));
@@ -180,19 +192,23 @@ test("R12 T34's sections, driven: the join link, the claim's choices, the office
   await settle();
   p.el("#pw1").value = "twelve-chars-a"; p.el("#pw2").value = "twelve-chars-a";
   await p.el("#do-claim").fire(); await settle();
+  p.el("#cl-sa-name").value = "Bea"; p.el("#cl-sa-id").value = "bea"; await p.el("#cl-sa-add").fire(); await settle();
   await p.el("#claim-on").fire(); await settle();
   p.el("#of-label").value = "Clerk"; p.el("#of-note").value = "n"; await p.el("#of-set").fire(); await settle();
   await p.el("#go-members").fire(); await settle();
+  p.el("#mk-sa-name").value = "Cy"; p.el("#mk-sa-id").value = "cy"; await p.el("#mk-sa-add").fire(); await settle();
   await p.el("#gd-ask").fire(); await settle();
   const j = pageOver({ html: PAGE_HTML, hash: "#join=l", fetch });
   await settle();
   j.el("#jn-cover").value = "Sam"; await j.el("#jn-go").fire(); await settle();
   const ops = new Set(urls.map((u) => new URL(u, ORIGIN).searchParams.get("op")));
-  for (const op of ["hostingaccess", "courtnotice", "groupkeystate", "entitycreate", "groupdescriptiondraft", "joinlinkinvite", "memberlanguage"]) assert.ok(ops.has(op), op);
+  for (const op of ["hostingaccess", "courtnotice", "groupkeystate", "entitycreate", "entitieskind", "groupdescriptiondraft", "joinlinkinvite",
+                    "memberlanguage", "recoverycodesissue", "recoverycodesstate", "adminrecoverystep"]) assert.ok(ops.has(op), op);
   for (const u of urls) assert.ok(ownOrigin(u), u);
   assert.match(p.el("#of-list").innerHTML, /&lt;img/);
-  for (const s of ["#of-list", "#as-state", "#en-who", "#pf-active"]) assert.deepEqual(outsideLoads(p.el(s).innerHTML), [], s);
+  for (const s of ["#of-list", "#as-state", "#en-who", "#pf-active", "#cl-sa-invite", "#mk-sa-invite"]) assert.deepEqual(outsideLoads(p.el(s).innerHTML), [], s);
   assert.deepEqual(outsideLoads(j.el("#en-who").innerHTML), []);
   /* what the script writes as text stays text: the rest of T34's lines are set through textContent */
-  for (const s of ["#cl-ha-now", "#mk-ha-now", "#pw-now", "#of-why", "#gd-label", "#ln-now"]) assert.equal(p.el(s).innerHTML, "", s);
+  for (const s of ["#cl-ha-now", "#mk-ha-now", "#pw-now", "#of-why", "#gd-label", "#ln-now", "#cl-rc-codes", "#mk-rc-codes", "#rs-now", "#mk-rc-now"])
+    assert.equal(p.el(s).innerHTML, "", s);
 });

@@ -1,6 +1,6 @@
 # hypotheses — requirements
 
-**Status** · New product module, layer 6 (plan T33-46; K1467, K1473, K1487, K1489). Reviewed (K1505); met by HYPOTHESES #1 in T33 (K1607). T34's fold, by a requirements worker for BOB #123 on `tranche/T34`, 2026-10-06, from plan entry T34-30 (N608, N576, N558; K1679, K1601, K1554, K1745; DEC-136, Bob's): R1 and R2 amended (`HYPOTHESIS_NO_STATEMENT`, `HYPOTHESIS_NO_REASON`, DEC-49 arm A); R6 amended (the calculation arm asks through `calculations.gradeFactsOf`, fail closed); R7 amended (the notes' ops); R11–R15 added (a member's own notes, BOB's wording of DEC-136 (2), (3); this module named their home by K1745); Uses gain `calculations` and membership's `courtNotice`; not yet met (T34). T35's fold, by a drafting worker for BOB #129 on `tranche/T35`, 2026-10-07, from plan entry T35-41 (N658; DEC-144, K1774): R11 amended (`noteRevise`: a member revises their own note in place, no history kept), R13 amended (`noteDelete`: a member deletes their own note for good, no marker; a turn never deletes it), R12, R14 and R15 amended to match, and R7 amended (`op=noterevise`, `op=notedelete`); only the note's own member; not yet met (T35).
+**Status** · In force: a new product module, reviewed (K1505; T33-46); a member's own notes as Bob ruled them (DEC-136, DEC-144). Last changed T35 (T35-41: R7, R11–R15 amended; K1774); every requirement met (K1983).
 
 **Size (P6).** New. Expected 500–700 lines. It is not added to `inquiry` (3,903 lines, P6).
 

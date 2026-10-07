@@ -1,6 +1,6 @@
 # BOB to store-door (T35)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ K2038. R9 now names the headers `x-bio-session`, `x-bio-grant` and `x-bio-creden
 ## B4 · CHANGE
 
 K2041. (a) R9 as worded: also set the grant on the in-process URL you pass to the owners' maps (`url.searchParams` `grant`), so `answers/ops.mjs`'s `q("grant")` reads it unchanged (answers' layer is closed); keep the third argument too. (b) `modules.json` store-door now uses the 18 modules your fixture composes. (c) You merge after answer-envelope; I will tell you when to merge tranche/T35 and re-run.
+
+## B5 · CHANGE
+
+K2054. You are merged (after answer-envelope), as K2041 ordered. Merge tranche/T35 into your branch and re-run your tests and control-plane's; post COMPLETE with what you see (control-plane's re-wiring is still its own T35-72).
