@@ -13,7 +13,7 @@ import { CONTRACT } from "../../docprofile/doctypes/index.mjs";
 import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { combine, list } from "../../jurisdictions/index.mjs";
 import {
-  PORT_ALDER, LAKEMONT, view, EMPTY, HELD, PA_AGENDA, PA_MINUTES, PA_REPORT, PA_BYLAW, PA_DIRECTORY, calendarHtml,
+  PORT_ALDER, LAKEMONT, view, EMPTY, HELD, PE, PE_POLICY, PA_AGENDA, PA_MINUTES, PA_REPORT, PA_BYLAW, PA_DIRECTORY, calendarHtml,
 } from "./fixtures.mjs";
 import { CASES, pairsOf } from "./golden-cases.mjs";
 import { registryOf, readWith, typeFor } from "./read.mjs";
@@ -25,11 +25,11 @@ const REG = (() => { const r = makeRegistry(); registerDoctypes(r.register); ret
 const typeOf = (key) => DOCTYPES.find((t) => t.key === key);
 const keys = (r) => r.entities.map((e) => e.key);
 const NOW = "2026-03-20T12:00:00Z";
-const ORDER = ["meeting_calendar", "meeting_minutes", "meeting_agenda", "staff_report", "regulation", "staff_directory", "generic"];
+const ORDER = ["meeting_calendar", "meeting_minutes", "meeting_agenda", "staff_report", "regulation", "policy", "staff_directory", "generic"];
 
 /* ------------------------------------------------------------------ R1, R2 */
 
-test("R1 DOCTYPES lists the seven types in registration order, generic alone the fallback", () => {
+test("R1 DOCTYPES lists the eight types in registration order, generic alone the fallback", () => {
   assert.deepEqual(DOCTYPES.map((t) => t.key), ORDER);
   assert.deepEqual(DOCTYPES.filter((t) => t.fallback === true).map((t) => t.key), ["generic"]);
   for (const t of DOCTYPES) if (t.key !== "generic") assert.notEqual(t.fallback, true, t.key);
@@ -46,12 +46,12 @@ test("R2 registerDoctypes calls register once per type in R1's order, and regist
   const reg = (m) => { seen.push(m.key); };
   const first = registerDoctypes(reg);
   assert.deepEqual(seen, ORDER);
-  assert.equal(first.registered, 7);
+  assert.equal(first.registered, 8);
   const again = registerDoctypes(reg);
   assert.equal(again.registered, 0);
   assert.match(again.why, /already/);
   assert.deepEqual(seen, ORDER, "nothing more registered");
-  // a real registry, by its register function and then whole: still seven, once each
+  // a real registry, by its register function and then whole: still eight, once each
   const r = makeRegistry();
   registerDoctypes(r.register);
   registerDoctypes(r);
@@ -65,7 +65,7 @@ test("R2 registerDoctypes calls register once per type in R1's order, and regist
   // a registry already holding some keeps them and gains the rest, still never twice
   const r3 = makeRegistry();
   r3.register(DOCTYPES[0]);
-  assert.equal(registerDoctypes(r3).registered, 6);
+  assert.equal(registerDoctypes(r3).registered, 7);
   assert.deepEqual(r3.all().map((m) => m.key), ORDER);
   assert.throws(() => registerDoctypes(null), TypeError);
   // what docprofile's registry needs: the fallback answers when nothing is recognised
@@ -130,7 +130,8 @@ test("R3 every type takes its local facts from ctx.view, and with no view from e
 
 test("R4 each type declares a contract, SUBSTANCE or MEMBERSHIP, generic SUBSTANCE", () => {
   const want = { meeting_calendar: "membership", meeting_agenda: "membership", meeting_minutes: "membership",
-                 staff_directory: "membership", staff_report: "substance", regulation: "substance", generic: "substance" };
+                 staff_directory: "membership", staff_report: "substance", regulation: "substance", policy: "substance",
+                 generic: "substance" };
   for (const t of DOCTYPES) {
     assert.ok([CONTRACT.SUBSTANCE, CONTRACT.MEMBERSHIP].includes(t.contract), t.key);
     assert.equal(t.contract, want[t.key], t.key);
@@ -327,7 +328,8 @@ test("R20 no place is named in this module's code, and every type is read under 
   assert.deepEqual(read("generic", "x"), { entities: [], facts: {} });
   for (const t of DOCTYPES) assert.ok(typeFor(REG, { text: { meeting_agenda: PA_AGENDA, meeting_minutes: PA_MINUTES,
     staff_report: PA_REPORT, regulation: PA_BYLAW, staff_directory: PA_DIRECTORY, generic: "x",
-    meeting_calendar: calendarHtml([["5", "B", "3/3/2026", null, "9"]]) }[t.key], view: PA, locator: "https://r.test/Calendar.aspx" }).type.key === t.key, t.key);
+    meeting_calendar: calendarHtml([["5", "B", "3/3/2026", null, "9"]]), policy: PE_POLICY }[t.key], view: t.key === "policy" ? PE : PA,
+    locator: "https://r.test/Calendar.aspx" }).type.key === t.key, t.key);
   // the first profile's shapes are not recognised when no active profile supplies them
   const oaklandShaped = PA_AGENDA.replace(/PA-(\d)(\d\d)/g, "26-0$1$2");
   for (const v of [PA, EMPTY]) assert.deepEqual(keys(typeOf("meeting_agenda").parse({ text: oaklandShaped, view: v })), []);
@@ -419,5 +421,5 @@ test("R4 R5 R1 a registry filled by registerDoctypes answers as docprofile's did
   }
   const both = typeFor(REG, { text: PA_MINUTES + "\n" + PA_AGENDA, view: PA });
   assert.ok(both.also.some((x) => x.key === "meeting_agenda"));
-  assert.ok(registryOf(DOCTYPES).all().length === 7);
+  assert.ok(registryOf(DOCTYPES).all().length === 8);
 });
