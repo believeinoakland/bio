@@ -29,7 +29,7 @@ B2 (K1927: ooxml merged) applied: merged `tranche/T35`; the requirements I read 
 - **Tests:** `node --test bio-plane/test/m/format-registry/`: pass 33, fail 0. Users of the registry: acquisition 88/0, capture 127/0, reading-pipeline 85/0, content 126/0, extraction 115/6 (accepted red 6, the same six tests as before my change).
 - **Checks:** format: 0 failures; architecture: 0 failures; coverage: 28 of 28 live requirement ids named by a test, 0 failures; ownership: 0 failures.
 
-Size (session_01Kh4KjEZGmcA83CAoYuLqA8): test runs 21, module lines 351
+Size (session_01Kh4KjEZGmcA83CAoYuLqA8): test runs 21, module lines 350
 
 ## J2 · COMPLETE
 
