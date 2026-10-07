@@ -47,6 +47,9 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    15. fleetbundles' STALE BUNDLE arms (the plane bundle embeds `signpage.mjs`, `calendar.mjs`, `tokens.mjs`), until L1's close regenerates (§14).
    16. The format check's bundler paths `release-advisories.mjs`, `third-party.json` (K1917), until T35-6 creates them.
    17. pdf-worker `structure.test.mjs` R7, R10 arms (its committed bundle predates pdf-reader R36; K1920), until L1's close regenerates it (§14).
+   18. From agent-worker's merge (T35-50) until admission's (T35-71): `bio-plane/test/d260-resume.test.mjs` and `fence-e2e.test.mjs`, which drive agent-worker against a plane that reads the credential only from the address until admission reads the header (F1; K1941). Nothing is released in between.
+   19. control-plane `catalogue-end.test.mjs`:21 (R43, R22), pinning the translation digests of C-102.11, C-102.12, C-55.1, C-96.11 and record-core's T35-13 rows, from membership's merge (T35-14) until T35-72 (MEMBERSHIP #26 J1).
+   20. hypotheses `notes.test.mjs`:43 (R11), pinning the court sentence's old wording, from membership's merge until T35-41 (MEMBERSHIP #26 J1).
 
 ## BOB's review (K1899)
 
@@ -261,3 +264,8 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 - **plane (T35-73):** builds `ownHosts` (the copy's own host and every fleet member's) and passes it through capture R73 to acquisition R42 and capture-sources R55, R65; until its merge the own-host check refuses nothing (F16, low).
 - **capture (T35-22):** an `archive-unpack` queue kind in R15, drained by the daemon, so an automatic unpack continues past one call; R48's quoted "knocks to this instance" re-worded with the P row (`doorbell.mjs`:24), wording only.
 - **`modules.json` at each START:** provenance, attestation and acquisition use ooxml; capture-sources uses record-grammar; acquisition uses membership.
+- **standards (T35-31), at L5's START:** `law-relations` (`law.mjs`) is split off first (P6; the wording's estimate is 2,339 + 1,200–1,700 lines, K617, BOB's review (4)); a `modules.json` change BOB makes then.
+- **`modules.json` at L5's START:** standards uses entities, calc-grammar; retrieval uses civil-time, calc-grammar (doctypes only if minutes and agendas are not in extraction's readings); calculations uses extraction, connection-grammar. **At L8's:** publication uses standards, entities. **At L9's:** conformance uses calculations. **At L10's:** following uses standards, acquisition.
+- **The found extent's one shape** is retrieval R73's match `{kind, words, capture_sha, extent}`: citation, events, money, people and standards resolve the document from the capture; each START says so. Standards' read names (bindingness `bindsAt`, `access`, `edition`, `designation`, `adoption`, `family`) are aligned in publication's, conformance's, filings' and following's STARTs, wording only.
+- **Before L6's START:** BOB folds K1880's and K1888's rules into the canon as one sentence each (Roles §3, a new rule 11) so skills R36, R38 can quote them (skills R21); DEC-153's sentences are on `main` already.
+- **control-plane (T35-72):** also routes `op=credit` (public-read R30), carries a draft's usage with `mode: "draft"` (ai-runs R48), and the door mints credentials R27's ask grant for a draft only when the switch is on and the field is not firsthand (agent-worker R59). **op-declarations (T35-70):** declares `credit`, `findin`, `entitieskind`. Deprecation code `CREDENTIAL_IN_ADDRESS` is one name in admission, control-plane and publication.
