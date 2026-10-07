@@ -338,7 +338,7 @@ export class Store extends DurableObject {
        queue's producers (K1868 (2)). */
     const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
     ctx.blockConcurrencyWhile(async () => {
-      await instanceSetup.start();
+      const started = await instanceSetup.start();
       /* F16 (K2038; capture R73, capture-sources R65): the group's own hosts, once the store is migrated and started so
          instance-setup's claim reads, handed once to capture (for acquisition R42, adopted from the first caller that
          names them) and to capture-sources' credentials (R55, R56); a claim made later is read at the next
@@ -348,6 +348,7 @@ export class Store extends DurableObject {
       const ownHosts = ownHostsOf(identity);
       captureOf(ctx, { ownHosts });
       captureCredentialsOf(ctx, { key: env.CAPTURE_CREDENTIALS_KEY ?? null, ownHosts });
+      return started;   /* R1: the blocked work answers instance-setup's start */
     });
   }
 
