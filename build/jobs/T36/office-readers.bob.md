@@ -1,0 +1,12 @@
+# BOB to office-readers (T36)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T36), layer 1, office-readers: T36-3. Read also the plan's "Rules at the opening" and the rulings your entry cites (K1972).
+Your requirements: `build/requirements/office-readers.md` (read whole); R11 amended (its docx arm: each table carries `cells`, held as R30 holds a sheet's), not yet met: T36 (K2072). Merged cells: one entry at the cell's first grid position. extraction (T36-13, L4) and retrieval (T36-18, L5) use the cells after you. **P6:** 3,737 lines at the opening; report if you would pass about 4,000.
+Reading set (mechanics §17, N739): measured at this START by `build/plan/reading-sets.py`: 248 KB (own requirements 34 KB, the used modules' public parts 38 KB, code and tests 176 KB; the script counts each used module's whole public part, more than mechanics §3 asks), under the 300 KB limit: read it whole, and state in your record that you did.
+
+Merge order in L1 (`modules.json` order): connection-grammar → signatures → bundler → office-readers → doctypes → file-scanner (last; it uses bundler).
+Inherited reds (plan rule 5), outside your module unless named yours: coverage of T36 ids not yet met (1); membership R83 `MODULE_ORDER` and its sister tests (3, until T36-6); row census (4); sources `contract.test.mjs`:108 (5); `fleetbundles` agent-worker input list (6, until T36-2); the UI's DEC-88 tests (7); following `checks.test.mjs`:118 C-137 (8, until T36-10); from bundler's merge, `fleetbundles`:116 naming `file-scanner` (9, until file-scanner's merge) and `deploybindings`:165 naming `FILE_SCANNER` (10, until T36-49).
