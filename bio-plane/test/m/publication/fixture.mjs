@@ -1,7 +1,7 @@
 /* publication over the modules it uses, each the real one (record-core, membership, credentials, promotion, provenance,
    content, connections, inquiry, basis-versions, reevaluation; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module registers (instance-setup's fact `producingGroup`, review's provider) is a stand-in the
-   test controls. The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
+   test controls; so are `standards` and `entities` when a test gives them (R72 reads them at a commit). The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
    test through R21 and R22, exactly as those modules call them. Every test drives `publication` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -103,7 +103,7 @@ const NO_READINGS = {
 /** This module's tests: the world over storage shaped as workerd's (K316). */
 export const planeWorld = (opts = {}) => world({ ...opts, workerd: true });
 
-export function world({ group = "test-group", workerd = false, contradiction = null } = {}) {
+export function world({ group = "test-group", workerd = false, contradiction = null, standards = null, entities = null } = {}) {
   const st = storage({ workerd });
   const all = (c) => (Array.isArray(c) ? c : c.toArray());
   const host = { storage: st };
@@ -156,7 +156,8 @@ export function world({ group = "test-group", workerd = false, contradiction = n
   const capture = { captureAccountsOf: (sha) => ({ captureSha: sha, actors: (actors.get(sha) || []).map((a) => ({ actor: a, at: NOW })),
                                                    accounts: [] }) };
   const p = publicationOf(host, { record, membership, credentials, promotion, inquiry: k, basisVersions, reevaluation: r,
-                                  ...(contradiction ? { contradiction } : {}), sources: src, acceptedWork, extraction,
+                                  ...(contradiction ? { contradiction } : {}), ...(standards ? { standards } : {}),
+                                  ...(entities ? { entities } : {}), sources: src, acceptedWork, extraction,
                                   capture, provenance: prov, now: () => clock.now });
   let n = 0;
   const w = {

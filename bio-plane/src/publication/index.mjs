@@ -79,7 +79,8 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
-import { parseFrontmatter, createSha256, sectionText as caseSectionText, idPattern } from "../record-grammar/index.mjs";
+import { parseFrontmatter, createSha256, sectionText as caseSectionText,
+         BUNDLE_ID_RE } from "../record-grammar/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -145,8 +146,8 @@ const CITATION_NAMES_CAPTURE = Object.freeze(["pinned", "only_capture"]);
 /* CPDF-10: a column this module WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const HEX64 = /^[0-9a-f]{64}$/;
-/* R72: a leg's target that names a held standard (inquiry-grammar R13). */
-const STANDARD_ID = idPattern("STD");
+/* R72: a leg's target that names a held standard (inquiry-grammar R13): a bundle id of the `STD` prefix, slug included. */
+const isStandardId = (v) => BUNDLE_ID_RE.test(v) && v.startsWith("STD-");
 /* R72: what an edition committed before T35 states of its criteria. */
 const CRITERIA_NOT_RECORDED = "the criteria were not recorded: this edition was committed before published cases recorded them";
 /* R72 (DEC-145 (6)): a standard's access in the members' words. */
@@ -1040,7 +1041,7 @@ export class Publication {
       const body = str(fm.subject_entity) || null;
       for (const leg of Array.isArray(fm.basis) ? fm.basis : []) {
         const standard = leg && typeof leg === "object" ? str(leg.target) : "";
-        if (!STANDARD_ID.test(standard)) continue;
+        if (!isStandardId(standard)) continue;
         const portion = str(leg.target_portion) || null;
         const key = JSON.stringify([standard, portion, body]);
         if (!rows.has(key)) rows.set(key, { standard, portion, body, named: [], requires: false });
