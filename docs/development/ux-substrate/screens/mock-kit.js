@@ -80,7 +80,8 @@ function fieldHtml(id, label, value, o, tag, cls, v) {
 const choice = (id, label, opts, sel, o = {}) => `<div class="cs-field"${o.act ? ` data-act="${esc(o.act)}"` : ''}><label for="${id}">${esc(label)}</label>${o.help ? `<span class="help">${o.help}</span>` : ''}<select id="${id}" class="cs-input"${o.onchange ? ` onchange="${o.onchange}"` : ''}>${opts.map(x => `<option${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></div>`;
 const checks = (name, opts, o = {}) => `<fieldset class="mk-checks"${o.act ? ` data-act="${esc(o.act)}"` : ''}${o.onchange ? ` onchange="${o.onchange}"` : ''}><legend>${esc(name)}</legend>${opts.map(([t, on], i) => `<label><input type="${o.radio ? 'radio' : 'checkbox'}" name="${esc(name)}"${on ? ' checked' : ''}> ${t}</label>`).join('')}</fieldset>`;
 const h1 = (t, sub) => `<div class="mk-h"><h1 class="t-title">${t}</h1>${sub ? `<p class="mk-sub">${sub}</p>` : ''}</div>`;
-const sec = (t, inner, o = {}) => `<section class="cs-section mk-sec"${o.act ? ` data-act="${esc(o.act)}"` : ''}><h2>${t}</h2>${inner}</section>`;
+// o.help: a heading that names a method or idea explains it for this screen's case (Bob, 7 October, on "Spot-check")
+const sec = (t, inner, o = {}) => `<section class="cs-section mk-sec"${o.act ? ` data-act="${esc(o.act)}"` : ''}><h2${o.help ? ` data-tip="${esc(o.help)}"` : ''}>${t}</h2>${inner}</section>`;
 const sheet = inner => `<div class="cs-sheet">${inner}</div>`;
 const row = (a, b, c = '', meta = '') => `<div class="cs-row">${a}<span>${b}</span>${c}${meta ? `<span class="meta">${meta}</span>` : ''}</div>`;
 const note = t => `<p class="mk-note">${t}</p>`;

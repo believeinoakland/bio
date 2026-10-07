@@ -446,6 +446,7 @@ const SCREEN_HELP = {
   person: 'A person the record follows: positions over time, what they decided and signed, each fact dated and cited.',
   timeline: 'What happened, in order: the city\'s acts and your group\'s acts in two lanes, never mixed. Undated items are listed apart.',
   money: 'A money trail: figures from budgets and reports, each with its stage and period, included or left out with a reason.',
+  help: 'A help page: one of Civicsmith\'s methods explained in plain words, opened from the screens where it is used.',
   calculation: 'A calculation shown with its method and inputs, each tied to the record and recomputed when an input changes.',
   explore: 'Chains of connections between people, votes, contracts and payments, each step cited and graded. A chain is a lead until a member cites its documents.',
   proceeding: 'A court case or legal proceeding: its parties, its register of filings, and orders with their reply dates.',

@@ -1727,8 +1727,27 @@
      "modules": [
       "calculations"
      ]
+    },
+    {
+     "op": "testify",
+     "label": "Record what you found at a report",
+     "status": "function",
+     "modules": [
+      "entities",
+      "provenance"
+     ]
     }
    ],
+   "journeys": [
+    9
+   ]
+  },
+  {
+   "id": "help",
+   "name": "Help: How spot-checks work",
+   "frame": "working",
+   "purpose": "A help page: one method explained in plain words, linked from where it is used (Bob, 7 October).",
+   "acts": [],
    "journeys": [
     9
    ]
