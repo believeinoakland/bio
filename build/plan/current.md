@@ -245,8 +245,8 @@ Each line is one job (P8): every T35 entry for that module. Fields: module · (N
 | N703 (part) | the Settings › Security screen (DEC-165) | a dependency not yet built: the new screens |
 | N703 (part) | Cloudflare's blocked-request counts | a deployment or measurement: a zone and a read token per group's plan (`study-cloudflare-security.md` §3) |
 | F1 (tail) | the query form of a credential refused by name | a deployment: one release carries both forms so installed callers move first (F1) |
-| F6 | retiring `MEMBER_TOKEN` (Q3) | a question that is Bob's (K1874, K1880: open) |
-| F8 | the release key's custody, recovery key and revocation (Q4; `study-release-key.md`) | a question that is Bob's (K1874, K1880: open) |
+| F6 | retiring `MEMBER_TOKEN` (Q3) | answered by Bob, K1936 (N711–N713; K2009) |
+| F8 | the release key's custody, recovery key and revocation (Q4; `study-release-key.md`) | answered by Bob, K1936 (N711–N713; K2009) |
 | Virus package (new modules) | the ClamAV scanning container; `file-safety`'s scan-verdict notes, per-file threat grade, safe view, hold and release by two members or a second scanner, weekly re-scan and one before first opening, the per-document deeper check on request (K1888, K1890, K1892) | Bob's: architecture (new modules, K1888), brought to Bob by BOB #127 (see below) |
 
 **Closed without a T35 entry:** N564 (part), the library shipped by T34-80 (DEC-148); its two scripts naming ops not yet held are withheld until those ops exist (K1883): `subscriptionsignin` arrives in T35-70, the translation acts with N669. N629, its decisions ruled (K1740) and carried as N638–N653. N637, cleared by MONITORING #16 (K1847, K1855). N684, BOB's wording at T34's close. N656, a process act (rule 5). N667, N671, N679, moved into T34 (K1818). N686's L11 share: instance-setup R65 and wizard-scripts R24–R27 are met (checks item 16). The who-downloaded-what log: no log (K1892). N705: Scanii chosen (K1895); its adapter waits with the virus package's modules. F4's installer note: not taken (a rate-limit rule needs a domain, study §2.2).
