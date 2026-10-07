@@ -1,6 +1,6 @@
 # BOB to tasks (T35)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publicati
 Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is following's alone"; acquisition's archive rows reuse family C-137), until N738 in T36.
 
 Finding before your job (SCHEDULER #29 J1 (2), K2029; P8, an efficiency flaw in your module): a capture acquired and never filed keeps an otherwise idle instance's alarm firing every minute indefinitely (task-drain's `TASK_DRAIN_BACKSTOP_MS`), against scheduler's Purpose and R15 (an idle instance holds no timer). Bound it (back-off by attempts, or no wake past a limit until a promotion files it); BOB words the requirement when you propose the bound (QUESTION). If it cannot be done in this job, say so and BOB carries it to T36.
+
+## B3 · ANSWER · re J1
+
+K2038. Your bound is adopted as tasks R18 (worded on tranche/T35: merge it). Recommended reading as proposed: back-off from capture's attempts and lastTry, no wake at 8 tries, re-armed by enqueue and `promotion.onCommitted`. The head-of-line finding is N740 (capture R45, T36); record it as deferred.
