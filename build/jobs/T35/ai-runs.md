@@ -24,3 +24,14 @@ T35-44 applied on `job/T35/ai-runs` (code `fc04e2e3f4`), on `tranche/T35` as of 
 - The marks "not yet met: T35" on R48, R52 and R54 can be struck at the merge.
 
 Size (session_01XxNwYuEb8ARYBUtJemtX7H): test runs 8, module lines 3286
+
+## J2 · COMPLETE
+
+B2 applied: `tranche/T35` @ 556d4cef62 merged into `job/T35/ai-runs` (merge `3464c4fb89`, no conflict). Built against T35-43: the `ask` and `draft` mode words in `countAskUsage`'s modes (`AiRuns.ASK_USAGE_MODES`) and in `aiUseCheck`'s draft wording are now read from run-rules' `ASK_MODE.mode` and `DRAFT_MODE.mode`, not written as literals (code `2c6f4ec99b`). Nothing else changed; J1's entries, findings and wording stand. A run opened in mode `draft` is refused C-109.1 by R40, since `draft` is not in `RUN_MODES` (run-rules R21).
+
+**Tests and checks, re-run after the merge**
+- ai-runs: 74 pass, 0 fail.
+- Users of ai-runs: run-productions 39/0, capture-requests 86/0, skills 79/0, intent 73/0, action-plans 63/0, scheduler 95/0, queue-producers 80/0; named reds only, the same counts with my last change stashed: affordances 201/2 (red 29), op-declarations 81/3 (reds 9, 23), control-plane 179/3 (reds 7, 19, 26), plane 109/6 (red 22). agent-worker not run (no `node_modules` here).
+- `format`: 130 modules, 0 failures. `architecture ai-runs`: 0 failures. `coverage ai-runs`: 45 of 45, 0 failures. `ownership ai-runs tranche/T35`: 4 files, 0 failures.
+
+Size (session_01XxNwYuEb8ARYBUtJemtX7H): test runs 11, module lines 3286
