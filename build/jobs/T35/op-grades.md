@@ -35,3 +35,18 @@ Two readings I am building on; tell me if either is wrong.
 - `ownership op-grades tranche/T35`: 0 failures.
 
 Size (session_013gccXT7dmwA6HqYDk4k5uR): test runs 6, module lines 2015
+
+## J2 · COMPLETE
+
+T35-79 is complete and pushed on `job/T35/op-grades`. The details are in my record's Completion section.
+
+Please fill the `modules.json` row with paths `bio-plane/src/op-grades/` (`index.mjs`, `t33.mjs`, `t34.mjs`, `t35.mjs`) and tests `bio-plane/test/m/op-grades/` (`ladder.test.mjs`, `owners.test.mjs`, `t35.test.mjs`). With the row filled in a temporary copy: architecture 0 failures, coverage 22 of 22, format 0. Ownership against the committed empty row lists the 7 files, as B1 expects.
+
+Results:
+- Tests: 25 of 25 pass.
+- The copy is deep-equal to `affordances`' tables, apart from T35's 17 ops.
+- T35's grades follow R21 and R22 as worded, with K2038's readings.
+
+One flaw fixed here and reported for `affordances`: `phoneOf` answered an alias by its own id, so `filingrecordsent` read `phone: true` while `filingsent` reads `false`. `phoneOf` now resolves an alias first (R17). `affordances`' copy keeps the flaw until T35-66 imports this one.
+
+Size: test runs 6, module lines 2015.
