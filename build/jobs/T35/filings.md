@@ -37,3 +37,7 @@ R8 (T35, N653): my reading, which I am building on; answer only if it is wrong.
 ## J2 · COMPLETE
 
 T35-64 applied: R8, a standard not free (kind standard with access not free, undetermined included, or any kind stated reading_room/paywalled) is carried by citation, issuer, designation, edition, adoption (standards.editionInForce for the act's body on its day) and access, and only the passages relied on: the comparison rows' requires with their content ids among its text, and the findings' legs' content ids, each quoted; a whole-document passage named, never quoted; other text ids never listed. Law kinds with null access keep R9's text list (B2, K2019). filings 70/70; escalation and action-plans 126/126; format, architecture, coverage (32/32), ownership: 0 failures. Nothing deferred. Stale: the plane bundle (not_product), for L9's close. Branch job/T35/filings; the record has the summary lines and Size.
+
+## J3 · COMPLETE · re B3
+
+B3 applied (K2021): tranche/T35 merged; four fixture determinations fixed, tests only: R3's and R18's act placed nowhere and R21's Nowhere Harbour actor state compliant outcomes; R15's S3 has a closed period so it binds. filings 70/70; escalation and action-plans 126/126; format, architecture, coverage 32/32, ownership: 0 failures. Record updated, pushed.
