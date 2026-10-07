@@ -54,10 +54,19 @@ const planeWith = async (bindings, { r2 = true } = {}) => {
   await mf.ready;
   return mf;
 };
-const call = async (mf, q, init) => {
-  const r = await mf.dispatchFetch(`https://copy.example/api/?${q}`, init);
+/* A call through the Worker. A `token=` in `q` is sent as an `Authorization: Bearer` header (admission R20), never in the
+   address, so no answer carries control-plane R59's `deprecated: "CREDENTIAL_IN_ADDRESS"`. */
+const call = async (mf, q, init = {}) => {
+  const params = new URLSearchParams(q);
+  const token = params.get("token");
+  params.delete("token");
+  const headers = new Headers(init.headers || {});
+  if (token) headers.set("authorization", `Bearer ${token}`);
+  const r = await mf.dispatchFetch(`https://copy.example/api/?${params}`, { ...init, headers });
   const text = await r.text();
-  return { status: r.status, text, j: JSON.parse(text) };
+  const j = JSON.parse(text);
+  assert.notEqual(j && j.deprecated, "CREDENTIAL_IN_ADDRESS", `${q.split("&")[0]}: the credential is in the header, not the address`);
+  return { status: r.status, text, j };
 };
 const doRoute = async (mf, store, path, body) => {
   const ns = await mf.getDurableObjectNamespace("STORE");
