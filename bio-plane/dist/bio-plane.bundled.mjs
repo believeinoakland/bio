@@ -17985,7 +17985,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
   let requests = null, data = null, subresources = null;
   if (Array.isArray(answer.requests)) {
     const at36 = new Map(answer.requests.map((r, i) => [r, i]));
-    const digestOf2 = (r) => {
+    const digestOf3 = (r) => {
       const i = at36.get(r);
       const d = Array.isArray(digests2) ? digests2[i] : null;
       if (d && (HEX643.test(String(d.sha256)) || d.sha256 === "undetermined")) return d;
@@ -18012,7 +18012,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
       outcome_unstated: unclassified
     };
     subresources = rq.filter((r) => r.outcome === "completed").map((r) => {
-      const d = digestOf2(r);
+      const d = digestOf3(r);
       return {
         address: r.url,
         type: isStr2(r.type) ? r.type : null,
@@ -18026,7 +18026,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
       undetermined3.push(`subresources: ${undigested} of the ${subresources.length} subresources the render loaded carry no digest, because their bytes were not kept; each names its reason (BOB #33, 2026-09-24)`);
     data = rq.filter((r) => r.outcome === "completed" && !NON_DATA_TYPES[String(r.type || "").toLowerCase()]).map((r) => {
       const o = originOf(r.url, pageHost);
-      const d = digestOf2(r);
+      const d = digestOf3(r);
       return {
         address: r.url,
         type: isStr2(r.type) ? r.type : null,
@@ -26451,15 +26451,15 @@ function samePromotion(entry3, want) {
   if (norm3(entry3.base) !== norm3(want.base) || norm3(entry3.kind) !== norm3(want.kind) || norm3(entry3.author) !== norm3(want.author) || norm3(entry3.writer) !== norm3(want.writer) || norm3(entry3.operation) !== norm3(want.operation)) return false;
   const held2 = Array.isArray(entry3.files) ? entry3.files.filter(isObj3) : [];
   if (!held2.length || held2.length !== want.files.length) return false;
-  const digestOf2 = (v) => typeof v === "string" && v !== "" ? v.toLowerCase() : null;
+  const digestOf3 = (v) => typeof v === "string" && v !== "" ? v.toLowerCase() : null;
   const byName = /* @__PURE__ */ new Map();
   for (const f17 of held2) {
-    const d = digestOf2(f17.sha256);
+    const d = digestOf3(f17.sha256);
     if (typeof f17.name !== "string" || d === null || byName.has(f17.name)) return false;
     byName.set(f17.name, d);
   }
   for (const f17 of want.files) {
-    const d = f17 ? digestOf2(f17.sha256) : null;
+    const d = f17 ? digestOf3(f17.sha256) : null;
     if (!f17 || typeof f17.path !== "string" || d === null || byName.get(f17.path) !== d) return false;
     byName.delete(f17.path);
   }
@@ -119805,6 +119805,14 @@ var CASE_SOURCES_CHECKS = {
     check: "C-122.4",
     where: "src/publication/index.mjs commitCaseEdition > is-accepted-work-standing",
     translation: "A flag was raised on another group's work this case rests on after the case was prepared, and the case must disclose it. Prepare the case again. Nothing was published."
+  },
+  /* C-122.5 (R33, R67; N687, K1839): a waiting edition taken at its time with no publisher able to check it (none
+     registered, one that throws, or one giving neither answer) is stopped, never published unchecked; the translation
+     is the one R67 already answered. */
+  SCHEDULED_CHECK_UNAVAILABLE: {
+    check: "C-122.5",
+    where: "src/publication/schedule.mjs unchecked > is-scheduled-check-available",
+    translation: "This edition was not published at its set time, because the checks it needed then could not be run. Nothing was published. Sign it again to publish it."
   }
 };
 function rowOf4(code) {
@@ -120382,7 +120390,12 @@ var ADDITIVE_COLUMNS3 = [
      else the commit's instant; the commit's instant). A row written before T34 is filled once below with its
      ratification instant in both, which it was, so neither is ever null. */
   ["published_cases", "signed_at", "TEXT"],
-  ["published_cases", "published_at", "TEXT"]
+  ["published_cases", "published_at", "TEXT"],
+  /* R72 (N649; K1723, K1739): THE PUBLISHED CRITERIA, the standards an edition's members are measured against, each
+     with its edition, citation, access, bindingness on the body and only the passages relied on, frozen with the edition
+     at its commit (a JSON list; `[]` for an edition whose members target no standard). NULL for an edition committed
+     before T35, read as not recorded and never filled. */
+  ["published_cases", "criteria", "TEXT"]
 ];
 var caseDocumentPath = (edition) => `case-document-edition-${Number(edition)}.md`;
 function migratePublication(sql) {
@@ -121602,13 +121615,14 @@ var CASE_CARRIAGE_SCHEMA = `
 -- R1, R3 (DEC-112 (3)(4); K1316): THE TEXTS A PUBLISHED CASE CARRIES WHOLE, BY SHA-256. Written by holdMaterials, inside
 -- the caller's commit transaction, for each material the signed document's materials: block lists included: true: a
 -- document's extracted text (case-grammar extractedTextOf), an observation's whole text, a document's captured bytes
--- where the register holds them inline as text, and a timestamp token held inline. The caller registers each by hash
+-- where the register holds them inline as text, and a timestamp token held inline; for a document cut out of a captured
+-- archive, its container record (canonical JSON) and the archive's bytes where held inline (R8). The caller registers each by hash
 -- (materials/<sha>) so it is served; public-read reads the text through publishedMaterialText. Content-addressed and
 -- append-only: a text once held is never rewritten or removed, and the table is exempt from purge as published bytes
 -- are (R6).
 CREATE TABLE IF NOT EXISTS published_material_texts (
   sha256    TEXT PRIMARY KEY,
-  kind      TEXT NOT NULL,      -- document | extracted_text | observation | attestation
+  kind      TEXT NOT NULL,      -- document | extracted_text | observation | attestation | archive | container (R8)
   text      TEXT NOT NULL,
   bytes     INTEGER NOT NULL,   -- the UTF-8 length of text
   published TEXT NOT NULL
@@ -121645,6 +121659,7 @@ var safeJson20 = (s) => {
 var HEX6410 = /^[0-9a-f]{64}$/;
 var str15 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var te9 = new TextEncoder();
+var digestOf2 = (v) => String(v ?? "").trim().replace(/^sha256:/i, "").toLowerCase();
 var shaOf4 = (text7) => createSha256().update(te9.encode(String(text7))).hex();
 var CaseCarriage = class {
   #deps;
@@ -121768,12 +121783,8 @@ var CaseCarriage = class {
       }
       if (typeof text7 === "string" && HEX6410.test(textSha) && shaOf4(text7) === textSha) hold(ref, "extracted_text", textSha, text7);
       else miss("extracted_text", "your group's Civicsmith holds no whole extracted text of that document at its stated digest");
-      for (const t2 of this.#tokenFiles(home, sha2)) {
-        const f17 = this.#fileRow(home.bundle_id, t2);
-        if (f17 && typeof f17.text === "string") hold(ref, "attestation", shaOf4(f17.text), f17.text);
-        else if (f17 && typeof f17.blobSha === "string" && HEX6410.test(f17.blobSha)) hold(ref, "attestation", f17.blobSha, null, f17.bytes);
-        else miss("attestation", `the timestamp token ${t2} is not held`);
-      }
+      this.#holdTokens(ref, home, sha2, hold, unheld);
+      this.#holdArchives(ref, home, sha2, hold, unheld);
     }
     try {
       for (const [sha2, kind, text7, size] of texts)
@@ -121800,6 +121811,51 @@ var CaseCarriage = class {
     }
     return { materials, unheld: unheld.slice(0, UNHELD_MAX), files };
   }
+  /* R1: each timestamp token the home's provenance names for capture `sha`: inline as text, blob-backed as evidence
+     under its blob digest, else named unheld under `sha`. */
+  #holdTokens(ref, home, sha2, hold, unheld) {
+    for (const t2 of this.#tokenFiles(home, sha2)) {
+      const f17 = this.#fileRow(home.bundle_id, t2);
+      if (f17 && typeof f17.text === "string") hold(ref, "attestation", shaOf4(f17.text), f17.text);
+      else if (f17 && typeof f17.blobSha === "string" && HEX6410.test(f17.blobSha)) hold(ref, "attestation", f17.blobSha, null, f17.bytes);
+      else unheld.push({ ref: ref || null, kind: "attestation", sha256: sha2, why: `the timestamp token ${t2} is not held` });
+    }
+  }
+  /** R8 (N688; K1844, K1852 (1); Intake §3b): a document is a member when the entry its home's `data/provenance.json`
+   *  states for it has `capture.method` `unpacked` and a `container` block. Its `container` record (canonical JSON,
+   *  kind `container`), its archive (as a document's captured bytes, kind `archive`) and the archive's tokens are held,
+   *  and the same for the archive when it is itself a member, up to the outermost. A block that does not name this
+   *  document, an archive not held, or a token not held is named unheld and never refused; the first two stop the walk,
+   *  since nothing further out can be checked against them. An archive already walked in this call ends it (a cycle). */
+  #holdArchives(ref, home, sha2, hold, unheld) {
+    const walked = /* @__PURE__ */ new Set([sha2]);
+    let cur = sha2, at35 = home;
+    for (; ; ) {
+      const entry3 = this.#entriesFor(at35, cur).find((d) => d.capture && d.capture.method === "unpacked" && d.container && typeof d.container === "object" && !Array.isArray(d.container));
+      if (!entry3) return;
+      const c = entry3.container;
+      const archive = str15(c.archive_sha256).toLowerCase();
+      if (digestOf2(c.member_sha256) !== cur || !HEX6410.test(archive)) {
+        unheld.push({ ref: ref || null, kind: "container", sha256: cur, why: "the container record does not name this document" });
+        return;
+      }
+      const record = canonicalJson(c);
+      hold(ref, "container", shaOf4(record), record);
+      if (walked.has(archive)) return;
+      walked.add(archive);
+      const aHome = this.#registered(archive);
+      const inline = aHome ? this.#fileText(aHome.bundle_id, aHome.path) : null;
+      if (inline && shaOf4(inline.content) === archive) hold(ref, "archive", archive, inline.content);
+      else if (aHome && !inline) hold(ref, "archive", archive, null, Number(aHome.bytes));
+      else {
+        unheld.push({ ref: ref || null, kind: "archive", sha256: archive, why: "the archive is not held" });
+        return;
+      }
+      this.#holdTokens(ref, aHome, archive, hold, unheld);
+      cur = archive;
+      at35 = aHome;
+    }
+  }
   /* R1: the register row homing a capture on a bundle that exists, or null (provenance's read contract, R48). */
   #registered(sha2) {
     try {
@@ -121819,16 +121875,19 @@ var CaseCarriage = class {
   }
   /* R1 (K1315, K1322): the timestamp token files the home's `data/provenance.json` names for one capture. */
   #tokenFiles(home, sha2) {
-    const f17 = home ? this.#fileText(home.bundle_id, "data/provenance.json") : null;
-    const reg = f17 ? safeJson20(f17.content) : null;
     const out = /* @__PURE__ */ new Set();
-    for (const d of reg && Array.isArray(reg.documents) ? reg.documents : []) {
-      if (!d || !d.capture || String(d.capture.sha256 || "").replace(/^sha256:/, "").toLowerCase() !== sha2) continue;
+    for (const d of this.#entriesFor(home, sha2)) {
       if (d.timestamp && typeof d.timestamp.token_file === "string" && d.timestamp.token_file) out.add(d.timestamp.token_file);
       for (const t2 of Array.isArray(d.attestations) ? d.attestations : [])
         if (t2 && t2.kind === "rfc3161" && typeof t2.file === "string" && t2.file) out.add(t2.file);
     }
     return [...out];
+  }
+  /* R1, R8: the entries the home's `data/provenance.json` states for capture `sha` (its `capture.sha256`). */
+  #entriesFor(home, sha2) {
+    const f17 = home ? this.#fileText(home.bundle_id, "data/provenance.json") : null;
+    const reg = f17 ? safeJson20(f17.content) : null;
+    return (reg && Array.isArray(reg.documents) ? reg.documents : []).filter((d) => d && typeof d === "object" && d.capture && digestOf2(d.capture.sha256) === sha2);
   }
   /** R2 (K1317): what a committed case edition held, `[{sha, held}]` in the order held, `held` `inline` or `evidence`,
    *  as R1 wrote it, so a retried ratification copies what is left (ratification R39); `[]` for an edition that held
@@ -123031,10 +123090,7 @@ function caseTensionsOps(c, url, body) {
 // src/publication/schedule.mjs
 var SCHEDULED_EDITIONS_MAX = 500;
 var SCHEDULE_STATES = Object.freeze(["waiting", "published", "stopped", "cancelled"]);
-var SCHEDULED_CHECK_UNAVAILABLE = Object.freeze({
-  code: "SCHEDULED_CHECK_UNAVAILABLE",
-  translation: "This edition was not published at its set time, because the checks it needed then could not be run. Nothing was published. Sign it again to publish it."
-});
+var SCHEDULED_CHECK_UNAVAILABLE = Object.freeze(rowOf4("SCHEDULED_CHECK_UNAVAILABLE"));
 var HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 var str17 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var safeJson21 = (s, d) => {
@@ -123132,6 +123188,23 @@ var waitingRow = (p3, caseId, edition) => one(
   Number(edition)
 );
 var isWaiting = (p3, caseId, edition) => !!waitingRow(p3, str17(caseId), edition);
+function waitingEditionOf(p3, caseId) {
+  try {
+    const id = str17(caseId);
+    if (!id) return null;
+    const r = one(p3, `SELECT case_id, edition, doc_sha, at_date, at_time, zone, publish_at FROM scheduled_editions
+                       WHERE case_id=? AND state='waiting' ORDER BY edition, seq LIMIT 1`, id);
+    return r ? {
+      case: r.case_id,
+      edition: Number(r.edition),
+      doc_sha: r.doc_sha,
+      at: { date: r.at_date, time: r.at_time, zone: r.zone },
+      publish_at: r.publish_at
+    } : null;
+  } catch {
+    return null;
+  }
+}
 function scheduleEdition(p3, {
   case: caseArg = null,
   caseId = null,
@@ -123260,7 +123333,7 @@ async function takeOne(p3, r, at35) {
     translation: String(s && s.translation || ""),
     ...s && s.check ? { check: String(s.check) } : {},
     ...s && s.cause ? { cause: s.cause } : {}
-  })) : [{ ...SCHEDULED_CHECK_UNAVAILABLE }];
+  })) : unchecked();
   const state = signed3 ? "published" : "stopped";
   p3.record.transact(() => p3.sql.exec(
     `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=? WHERE seq=? AND state='waiting'`,
@@ -123276,6 +123349,9 @@ async function takeOne(p3, r, at35) {
     state,
     ...signed3 ? { published_at: signed3.ratified_at } : { reasons: stops }
   };
+}
+function unchecked() {
+  return [{ ...SCHEDULED_CHECK_UNAVAILABLE }];
 }
 function ownersRow(p3, caseId, edition, by) {
   const g = viewerPredicate(by);
@@ -123438,6 +123514,9 @@ var safeJson22 = (s) => {
   }
 };
 var HEX6412 = /^[0-9a-f]{64}$/;
+var isStandardId2 = (v) => BUNDLE_ID_RE.test(v) && v.startsWith("STD-");
+var CRITERIA_NOT_RECORDED = "the criteria were not recorded: this edition was committed before published cases recorded them";
+var ACCESS_WORDS = Object.freeze({ free: "Free to read", reading_room: "Reading room only", paywalled: "Behind a paywall" });
 var str18 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var shaOf5 = (text7) => createSha256().update(new TextEncoder().encode(String(text7))).hex();
 var REVIEW_DOORS = Object.freeze([
@@ -123497,6 +123576,8 @@ var Publication = class {
     acceptedWork = null,
     capture: capture2 = null,
     extraction = null,
+    standards = null,
+    entities: entities2 = null,
     now = null
   } = {}) {
     this.sql = storage.sql;
@@ -123514,7 +123595,9 @@ var Publication = class {
       corpusExport,
       acceptedWork,
       capture: capture2,
-      extraction
+      extraction,
+      standards,
+      entities: entities2
     };
     this.now = typeof now === "function" ? now : () => (/* @__PURE__ */ new Date()).toISOString();
   }
@@ -123524,6 +123607,17 @@ var Publication = class {
   }
   get basisVersions() {
     return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host);
+  }
+  /* R72: read at a case edition's commit only. */
+  get standards() {
+    return this.#deps.standards ||= standardsOf(this.#deps.host, {
+      record: this.record,
+      membership: this.membership,
+      promotion: this.promotion
+    });
+  }
+  get entities() {
+    return this.#deps.entities ||= entitiesOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
@@ -123707,6 +123801,10 @@ var Publication = class {
   /** R66: the group's time zone as R66 reads it, or null (for `ratification` R44's offer). */
   groupZone() {
     return groupZone(this);
+  }
+  /** R74 (N681): the case's waiting edition, or null, for `case-authoring` (its R58). */
+  waitingEditionOf(caseId) {
+    return waitingEditionOf(this, caseId);
   }
   /* ---------------------------------------------------------------- R65: the group's self-description, publicly */
   /** R65 (DEC-132 (3); K1541): exactly what `membership.groupDescription` (its R110) answers the public: the four texts
@@ -124150,6 +124248,7 @@ var Publication = class {
         detail: `${standing.undisclosed.length} open flag(s) on another group's work this case document rests on are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them.`
       };
     }
+    const criteria2 = this.#criteriaOf(members2, when, attestorMember);
     if (!owner)
       this.sql.exec(
         `INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
@@ -124159,11 +124258,12 @@ var Publication = class {
       );
     const signedAt = signedAtFor(this, id, ed, when);
     this.sql.exec(
-      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened,signed_at,published_at)
-       VALUES (?,?,?,?,?,?,?,?,?)
+      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened,signed_at,published_at,
+         criteria)
+       VALUES (?,?,?,?,?,?,?,?,?,?)
        ON CONFLICT(case_id,edition) DO UPDATE SET scope=excluded.scope,
          completeness=excluded.completeness, bias_acknowledgement=excluded.bias_acknowledgement, bar=excluded.bar,
-         signed_at=excluded.signed_at, published_at=excluded.published_at`,
+         signed_at=excluded.signed_at, published_at=excluded.published_at, criteria=excluded.criteria`,
       id,
       ed,
       typeof scope === "string" ? scope : null,
@@ -124172,7 +124272,8 @@ var Publication = class {
       bar && typeof bar === "object" ? JSON.stringify(bar) : null,
       when,
       signedAt,
-      when
+      when,
+      JSON.stringify(criteria2)
     );
     members2.forEach((m, i) => {
       this.sql.exec(
@@ -124210,6 +124311,103 @@ var Publication = class {
       this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
                      ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, x.sha, id, x.path, "calculation_input", null, when);
     return { ...outcome(false), materials: this.#withInputs(held2.materials, inputs), materials_unheld: held2.unheld };
+  }
+  /* R72 (N649; K1723, K1739; DEC-145 (2), (6)): THE CRITERIA AN EDITION IS MEASURED AGAINST, read at its commit and
+     frozen with it: one row per distinct standard, portion and body that a leg of a member finding targets at the
+     member's pinned bytes (a `STD-` target, inquiry-grammar R13), in member order then leg order. Read from `standards`
+     as the signer reads it, on the commit's day; the body's name from `entities`. A benchmark is labelled "not binding
+     on" its body and never nonconforming; a standard's text reaches a row only as the passages its legs rely on (a
+     leg's own `content_id` among the standard's text, else the portion's `requires` passages), quoted as `standards`
+     answers them. A standard `standards` no longer answers is stated "not held" and never refuses the commit (that is
+     `case-checker`'s, its R21). Never throws. */
+  #criteriaOf(members2, when, signer) {
+    const viewer = str18(signer) ? `member:${str18(signer)}` : "admin";
+    const day2 = String(when).slice(0, 10);
+    const rows3 = /* @__PURE__ */ new Map();
+    for (const m of members2) {
+      let text7 = null;
+      try {
+        text7 = this.record.textAtSha(m.bundle_id, m.version_sha ?? null);
+      } catch {
+        text7 = null;
+      }
+      if (typeof text7 !== "string") continue;
+      const fm = parseFrontmatter(text7).data || {};
+      const body = str18(fm.subject_entity) || null;
+      for (const leg2 of Array.isArray(fm.basis) ? fm.basis : []) {
+        const standard2 = leg2 && typeof leg2 === "object" ? str18(leg2.target) : "";
+        if (!isStandardId2(standard2)) continue;
+        const portion = str18(leg2.target_portion) || null;
+        const key = JSON.stringify([standard2, portion, body]);
+        if (!rows3.has(key)) rows3.set(key, { standard: standard2, portion, body, named: [], requires: false });
+        const r = rows3.get(key);
+        const cid = str18(leg2.content_id).toLowerCase();
+        if (!HEX6412.test(cid)) r.requires = true;
+        else if (!r.named.includes(cid)) r.named.push(cid);
+      }
+    }
+    return [...rows3.values()].map((r) => this.#criterion(r, day2, viewer));
+  }
+  /* R72: one criteria row, as `standards` answers the standard at the commit. */
+  #criterion({ standard: standard2, portion, body, named, requires }, day2, viewer) {
+    let s = null;
+    try {
+      s = this.standards.standardRead({ id: standard2, viewer });
+    } catch {
+      s = null;
+    }
+    if (!s || s.ok !== true)
+      return {
+        standard: standard2,
+        portion,
+        designation: null,
+        edition: null,
+        issuer: null,
+        citation: null,
+        access: null,
+        body: null,
+        binds: null,
+        passages: null,
+        label: null,
+        access_words: null,
+        stated: "not held"
+      };
+    let binds = false;
+    if (body) {
+      try {
+        const b = this.standards.bindsAt({ standard: standard2, body, date: day2, viewer });
+        binds = !!b && b.ok === true && b.state === "binds";
+      } catch {
+        binds = false;
+      }
+    }
+    const held2 = new Set((Array.isArray(s.texts) ? s.texts : []).map((t2) => t2 && t2.content_id));
+    const quoted5 = new Map((Array.isArray(s.requires_quoted) ? s.requires_quoted : []).map((q10) => [q10.content_id, q10.text ?? null]));
+    const ids = [.../* @__PURE__ */ new Set([...named.filter((c) => held2.has(c)), ...requires && Array.isArray(s.requires) ? s.requires : []])];
+    const name2 = body ? this.#entityName(body) : null;
+    return {
+      standard: standard2,
+      portion,
+      designation: s.designation ?? null,
+      edition: s.edition ?? null,
+      issuer: s.owner && s.owner.label || s.issuer || null,
+      citation: s.cite ?? null,
+      access: s.access ?? null,
+      body,
+      binds,
+      passages: ids.map((c) => ({ content: c, text: quoted5.has(c) ? quoted5.get(c) : null })),
+      label: binds ? `Standard \xB7 binds ${name2}` : body ? `Benchmark \xB7 not binding on ${name2}` : "Benchmark \xB7 not binding",
+      access_words: ACCESS_WORDS[s.access] ?? null
+    };
+  }
+  /* R72: an entity's name as `entities` holds it; its id when it holds none. */
+  #entityName(id) {
+    try {
+      const e2 = this.entities.readEntity({ entityId: id });
+      return e2 && e2.found && e2.entity && e2.entity.label || id;
+    } catch {
+      return id;
+    }
   }
   /* R22: every input a document's `calculations:` rows name, `{calc, sha, path}`, once per (calculation, input), in the
      document's order; a row whose input or id the case file cannot spell carries nothing. */
@@ -124539,40 +124737,11 @@ var Publication = class {
   }
   /* ---------------------------------------------------------------- R61: what moved to case-tensions, and its provider */
   /* The case relation and revision flags (R4–R6), the tensions after publication (R50) and observation attribution (R17,
-     R39, R60) are `case-tensions`' since T33 (its R1–R7; K617, K1505), retired here as moved. Each name below answers
-     exactly what case-tensions' does, so importers not yet re-pointed read through this module (plan Rules (9) item 4). */
+     R39, R60) are `case-tensions`' since T33 (its R1–R7; K617, K1505), retired here as moved, and since T35 (N597) each
+     importer reads them there. `caseRelation` alone answers here, exactly as case-tensions' does, until `affordances`
+     reads it there (T35-66; R61). */
   caseRelation(id) {
     return this.caseTensionsModule.caseRelation(id);
-  }
-  flagCasesOnRevision(id, replacedSha, when) {
-    return this.caseTensionsModule.flagCasesOnRevision(id, replacedSha, when);
-  }
-  dischargeCaseFlags(caseId, edition, by, when) {
-    return this.caseTensionsModule.dischargeCaseFlags(caseId, edition, by, when);
-  }
-  caseFlags(a) {
-    return this.caseTensionsModule.caseFlags(a);
-  }
-  caseTensions(a) {
-    return this.caseTensionsModule.caseTensions(a);
-  }
-  observationsNamingAuthor(ids) {
-    return this.caseTensionsModule.observationsNamingAuthor(ids);
-  }
-  attributionInForce(caseId, edition, observation) {
-    return this.caseTensionsModule.attributionInForce(caseId, edition, observation);
-  }
-  attributionStatements(caseId, edition, project, observations) {
-    return this.caseTensionsModule.attributionStatements(caseId, edition, project, observations);
-  }
-  attributionFacts(doc) {
-    return this.caseTensionsModule.attributionFacts(doc);
-  }
-  attributionStatedFor(observation) {
-    return this.caseTensionsModule.attributionStatedFor(observation);
-  }
-  attributeObservation(a) {
-    return this.caseTensionsModule.attributeObservation(a);
   }
   /** R61 (K1505 (3), K1634): the provider this module registers with `case-tensions` at start, its seven doors each
    *  answering exactly the rows the moved code read from this module's tables before the split, and the splice (R21).
@@ -124983,7 +125152,7 @@ var Publication = class {
      in particular NO case-level strength, because there is no such thing —
      every member's frozen PAIR travels with that member. */
   caseEditionState(caseId, ed, group = null) {
-    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, bar, opened, ratified_at, manifest_sha
+    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, bar, opened, ratified_at, manifest_sha, criteria
                          FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
     if (!c) return null;
     const owner = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, caseId);
@@ -125160,6 +125329,10 @@ var Publication = class {
       opened: c.opened,
       ratified_at: c.ratified_at ?? null,
       manifest_sha: c.manifest_sha ?? null,
+      /* R72 (N649): the criteria frozen at the commit, in member then leg order, each with its label; null for an
+         edition committed before T35, stated as not recorded and never filled. */
+      criteria: c.criteria == null ? null : safeJson22(c.criteria),
+      ...c.criteria == null ? { criteria_detail: CRITERIA_NOT_RECORDED } : {},
       complete,
       awaiting,
       findings,
@@ -126233,7 +126406,7 @@ var DOCKET_CHECKS = Object.freeze({
   DOCKET_NO_GROUP_SLUG: {
     check: "C-129.16",
     where: MANAGER,
-    translation: "Your group's Civicsmith has no group name recorded, and a docket entry is never anonymous. Record the group's name first. Nothing was published."
+    translation: "Your group has no name recorded yet, and a docket entry is never anonymous. Record the group's name first. Nothing was published."
   },
   DOCKET_ENTRY_SETTLED: {
     check: "C-129.17",
@@ -127896,7 +128069,8 @@ var PUBLIC_READ_OWN_OPS = Object.freeze([
   "publishededitions",
   "publicread",
   "docketpublic",
-  "docketfeed"
+  "docketfeed",
+  "credit"
 ]);
 var PUBLIC_READ_RESERVED_PARAMS = Object.freeze([
   "name",
@@ -127981,6 +128155,15 @@ function withheldCase(row9, index2, content) {
   if (!w.whole) return out;
   for (const k of ["scope", "bias_acknowledgement", ...content]) if (Object.hasOwn(out, k)) out[k] = null;
   return { ...out, withheld: { whole: true, detail: WITHHELD_SENTENCE } };
+}
+var CRITERIA_NOT_RECORDED_SENTENCE = "the criteria were not recorded: this edition was committed before published cases recorded them";
+var CRITERIA_NOT_A_CASE_SENTENCE = "this is not a case, so it states no criteria";
+function criteriaOf(state, theCase, whole2) {
+  if (!theCase) return { criteria: null, criteria_detail: CRITERIA_NOT_A_CASE_SENTENCE };
+  if (whole2) return { criteria: null, criteria_detail: WITHHELD_SENTENCE };
+  if (!Array.isArray(state.criteria))
+    return { criteria: null, criteria_detail: typeof state.criteria_detail === "string" && state.criteria_detail ? state.criteria_detail : CRITERIA_NOT_RECORDED_SENTENCE };
+  return { criteria: state.criteria };
 }
 var COMPUTED_FACT = "computed fact";
 var CALC_DISCLOSED_SENTENCE = "this calculation did not agree when recomputed, or an input was not bound, and the publisher disclosed that in the words beside it";
@@ -128736,6 +128919,12 @@ var PublicRead = class {
                       plane's. */
       completeness: whole2 ? null : state.completeness,
       ratified_at: state.ratified_at,
+      /* R31 (DEC-145 (2), (6); `publication` R72, K2011): the criteria exactly as `publication`'s R53 state froze them
+         at the commit, each row with its `label` and `access_words`, in member then leg order, a standard not freely
+         readable carrying only the passages R72 holds; `[]` where no member targets a standard; null for an edition
+         committed before T35, stated as not recorded and never filled (R13). Nothing is re-read from `standards`.
+         A whole edition an order withholds states none (R28); a loose bundle is no case and states none. */
+      ...criteriaOf(state, theCase, whole2),
       /* R29 (DEC-147 (5)): when this edition was signed and when it was published, exactly as `publication` R70
          holds them on its row (one instant for both for an edition published at signing or before T34); each
          `edition_index` entry carries its own. Null on the loose branch, which is no case edition. Neither is in
@@ -134187,6 +134376,7 @@ var Ratification = class _Ratification {
     networkNotices = null,
     people = null,
     money = null,
+    caseTensions = null,
     worker = null
   } = {}) {
     this.sql = storage.sql;
@@ -134208,6 +134398,7 @@ var Ratification = class _Ratification {
       networkNotices,
       people,
       money,
+      caseTensions,
       worker
     };
   }
@@ -134223,6 +134414,11 @@ var Ratification = class _Ratification {
   }
   get publication() {
     return this.#deps.publication ||= publicationOf(this.#deps.host);
+  }
+  /* case-tensions, one per host: publication is reached first, since its factory creates case-tensions and registers
+     the provider case-tensions reads its tables through (publication R61). */
+  get caseTensions() {
+    return this.#deps.caseTensions ||= (void this.publication, caseTensionsOf2(this.#deps.host, { record: this.record, membership: this.membership, promotion: this.promotion }));
   }
   get retrieval() {
     return this.#deps.retrieval ||= retrievalOf(this.#deps.host);
@@ -134413,7 +134609,7 @@ var Ratification = class _Ratification {
    * `publish` AFFORDANCE (affordances' `#editionWarrantedForJoinedProjectOf`) BOTH ASK.
    *
    * WHY IT EXISTS. `ALREADY_A_CASE_MEMBER` used to compare the finding's BYTES alone
-   * (publication's `caseRelation` pin), which answered "would a new edition say anything
+   * (the `caseRelation` pin, now case-tensions'), which answered "would a new edition say anything
    * different" correctly only while a case recorded nothing but those bytes. Since
    * REC-135 (IC-166) an edition also records the conclusion it rests on — WHOSE, on
    * which reading, with the claim verbatim — and a project's conclusion lives on the
@@ -134422,7 +134618,7 @@ var Ratification = class _Ratification {
    * pinned edition recorded, whether or not `bundle_sha` moved. The refusal compares
    * the RELATIONSHIP, exactly as `NOT_CONCLUDED` does."*
    *
-   * WHAT IS ASKED. `rel` is publication's `caseRelation(bundleId)` as the caller holds it; `conc`
+   * WHAT IS ASKED. `rel` is case-tensions' `caseRelation(bundleId)` as the caller holds it; `conc`
    * is `caseConclusionFor`'s CONCLUDED answer — in `publishCase` the very object the
    * case document will record, carried on `prepared` and never re-read. The editions
    * are every RATIFIED edition whose roster pins this finding at its CURRENT sha
@@ -134602,8 +134798,8 @@ var Ratification = class _Ratification {
       /* MK-7: which of the observations this bundle is or rests on still name their author in their own files
          (§4.1 keeps those fenced), and — for an observation — whether a RATIFIED case document states a chosen level
          for it, which its words may not cross without. */
-      testimonyLegacy: this.publication.observationsNamingAuthor([...testimony.self, ...testimony.via.map((v) => v.observation)]),
-      attributionStated: this.publication.attributionStatedFor(bundleId),
+      testimonyLegacy: this.caseTensions.observationsNamingAuthor([...testimony.self, ...testimony.via.map((v) => v.observation)]),
+      attributionStated: this.caseTensions.attributionStatedFor(bundleId),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`,
@@ -134755,7 +134951,7 @@ var Ratification = class _Ratification {
         if (!bearer) refusals.push(machineCaseRefusal(cls3));
         refusals.push(operatorCaseRefusal(cls3));
       }
-      const attr2 = this.publication.attributionFacts({ text: src, case_id: caseId, edition });
+      const attr2 = this.caseTensions.attributionFacts({ text: src, case_id: caseId, edition });
       for (const r of [
         testimonyCaseRefusal(caseId, edition, attr2.legacy),
         attributionUnchosenRefusal(caseId, edition, attr2),
@@ -134850,7 +135046,7 @@ var Ratification = class _Ratification {
   caseTestimony({ caseId = null, edition = null } = {}) {
     const doc = this.#caseDocumentRow(String(caseId ?? ""), edition);
     if (!doc) return { ok: true, refusal: null };
-    const attr2 = this.publication.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
+    const attr2 = this.caseTensions.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
     return { ok: true, refusal: anonymousTestimonyRefusal(
       caseId,
       Number(edition),
@@ -135043,7 +135239,7 @@ var Ratification = class _Ratification {
       if (!plan.plan && !late) stopped.push(refusedStop(plan));
       const doc = plan.plan ? plan.doc : this.#caseDocumentRow(id, ed);
       if (doc) {
-        const attr2 = this.publication.attributionFacts({ text: doc.text, case_id: id, edition: ed });
+        const attr2 = this.caseTensions.attributionFacts({ text: doc.text, case_id: id, edition: ed });
         for (const r of [
           testimonyCaseRefusal(id, ed, attr2.legacy),
           attributionUnchosenRefusal(id, ed, attr2),
@@ -135350,7 +135546,7 @@ var Ratification = class _Ratification {
     if (!committed || !committed.ok) return committed || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
     const evidenceMaterials = evidenceShas(committed.materials ?? this.publication.heldMaterialsOf?.(id, ed));
     if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed, evidenceMaterials };
-    this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
+    this.caseTensions.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
     const prior = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition<? AND ratified_at IS NOT NULL
                               ORDER BY edition DESC LIMIT 1`, id, ed);
     const levelsIn = (text7) => {
@@ -140672,6 +140868,25 @@ if (proc && proc.versions && proc.versions.node && Array.isArray(proc.argv) && t
   }
 }
 
+// src/case-checker/standards.mjs
+var STANDARDS_USE_CODES = Object.freeze([
+  "MALFORMED",
+  "COPYRIGHTED_TEXT_CARRIED",
+  "COPYRIGHTED_PASSAGE_UNRELIED",
+  "BENCHMARK_CALLED_NONCONFORMING"
+]);
+var NONCONFORMING_WORDS = Object.freeze([
+  "violated",
+  "violates",
+  "violation",
+  "nonconforming",
+  "non-conforming",
+  "nonconformity",
+  "nonconformance"
+]);
+var escape = (w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var WORD_RES = NONCONFORMING_WORDS.map((w) => [w, new RegExp(`(?<![\\p{L}\\p{N}_])${escape(w)}(?![\\p{L}\\p{N}_])`, "iu")]);
+
 // src/case-checker/index.mjs
 function caseCheckerProgram() {
   return {
@@ -144322,6 +144537,14 @@ var CASE_DERIVATION_CHECKS = Object.freeze({
     check: "C-44.5",
     where: at18("#publishCase", "is-publish-draft-bound"),
     translation: "That draft has already been named as the draft of another published case, and the people who read it are listed there. One draft becomes one case, so it cannot be named for this one too. Nothing was published."
+  },
+  /* R58 (N681; K1833; DEC-147): an edition of the case is signed and waiting to be published at its set time
+     (publication R66, read through its R74), asked after R7 and before R8, before anything is written or an id drawn.
+     New in T35; its translation is BOB's draft (the UX stream's to revise), awaiting promotion's stamp (rule 17). */
+  CASE_EDITION_WAITING: {
+    check: "C-44.6",
+    where: at18("#publishCase", "is-case-edition-waiting"),
+    translation: "An edition of this case is signed and waiting to be published at the time set. Prepare the next edition after it is published, or cancel it first. Nothing was prepared."
   }
 });
 var STATEMENT_ACK_CHECKS = Object.freeze({
@@ -145651,6 +145874,18 @@ var CaseAuthoring = class {
         caseId: theCase,
         detail: `no published case answers to ${theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.`
       };
+    if (theCase) {
+      const waiting = this.publication.waitingEditionOf(theCase);
+      const owner = waiting ? this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase)?.project_id ?? this.#documentProject(theCase, waiting.edition) : null;
+      if (waiting && (!owner || owner === proj))
+        return derivationRefusal("CASE_EDITION_WAITING", {
+          caseId: theCase,
+          edition: Number(waiting.edition),
+          at: waiting.at ?? null,
+          publish_at: waiting.publish_at ?? null,
+          detail: `edition ${waiting.edition} of ${theCase} is signed and waiting to be published` + (waiting.at && waiting.at.date ? ` on ${waiting.at.date} at ${waiting.at.time}` + (waiting.at.zone ? ` (${waiting.at.zone})` : "") : "") + `. The next edition is prepared once it is published, stopped at its time, or cancelled (op=publishatcancel). Nothing was prepared.`
+        });
+    }
     for (const p3 of prepared) {
       const same3 = p3.warrant ? p3.warrant.same.filter((e2) => theCase && e2.case_id === theCase || e2.state === "prepared") : [];
       if (same3.length)
@@ -146592,6 +146827,17 @@ var CaseAuthoring = class {
     const named = d ? str29((parseFrontmatter(d.text).data || {}).case_project) : "";
     return named || null;
   }
+  /* The project a case edition's document names (publication R40: `case_documents`), signed or not, or null. */
+  #documentProject(caseId, edition) {
+    const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
+    const named = d ? str29((parseFrontmatter(d.text).data || {}).case_project) : "";
+    return named || null;
+  }
+  /* R59 (N681): whether `publication` holds this case edition waiting (its R66, R74): signed, for acknowledgeStatement. */
+  #waits(caseId, edition) {
+    const w = this.publication.waitingEditionOf(caseId);
+    return !!(w && Number(w.edition) === Number(edition));
+  }
   /* A case's highest published edition, 0 when it has none (publication R40: `published_cases`). */
   #highestEdition(caseId) {
     const t2 = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, caseId);
@@ -146890,10 +147136,10 @@ var CaseAuthoring = class {
         const doc = this.#one(`SELECT case_id, edition, text, ratified_at FROM case_documents
                                WHERE case_id=? AND edition=?`, cid, ed);
         if (!doc || !this.publication.hasCaseStanding(doc, v)) return review.deadAnswer();
-        if (doc.ratified_at)
+        if (doc.ratified_at || this.#waits(cid, ed))
           return ack(
             "STATEMENT_ACK_ALREADY_SIGNED",
-            `case ${cid} edition ${ed} is signed, and its completeness block \u2014 which lists who acknowledged its statement \u2014 is what the signature covers. An acknowledgement now could appear in no signed document of this edition; a published edition is corrected forward, by the next one (DEC-12).`,
+            `case ${cid} edition ${ed} is signed${doc.ratified_at ? "" : " and waiting to be published at its set time"}, and its completeness block \u2014 which lists who acknowledged its statement \u2014 is what the signature covers. An acknowledgement now could appear in no signed document of this edition; a published edition is corrected forward, by the next one (DEC-12).`,
             { caseId: cid, edition: ed }
           );
         const fm = parseFrontmatter(doc.text).data || {};
@@ -146963,7 +147209,7 @@ case_project: ${project}
       needle,
       projectLine
     );
-    const found3 = [byIdentity, byLink].filter((d, i, all) => d && all.findIndex((e2) => e2 && e2.case_id === d.case_id) === i).sort((a, b) => a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0);
+    const found3 = [byIdentity, byLink].filter((d, i, all) => d && all.findIndex((e2) => e2 && e2.case_id === d.case_id) === i).filter((d) => !this.#waits(d.case_id, d.edition)).sort((a, b) => a.case_id < b.case_id ? -1 : a.case_id > b.case_id ? 1 : 0);
     const same3 = this.#one(
       `SELECT ack_id, at, reason FROM statement_acknowledgements
                             WHERE project_id=? AND statement_sha=? AND case_id IS ? AND edition=?
@@ -146997,6 +147243,7 @@ case_project: ${project}
     const docs = found3.filter((d) => str29((parseFrontmatter(d.text).data || {}).case_project) === project);
     const reauthored = docs.map((d) => this.#reauthorAcknowledgements(d));
     const linkedTo = ident.caseId == null && draftId ? this.#draftLinkOf(draftId) : null;
+    const linkedSigned = !!(linkedTo && (linkedTo.sig_armored || this.#waits(linkedTo.case_id, linkedTo.edition)));
     return {
       ok: true,
       existed: !!same3,
@@ -147021,9 +147268,9 @@ case_project: ${project}
         edition: Number(linkedTo.edition),
         named_by: linkedTo.authored_by ?? null,
         named_at: linkedTo.authored_at ?? null,
-        signed: !!linkedTo.sig_armored
+        signed: linkedSigned
       } } : {},
-      listed: linkedTo ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), so it is a reading of that case (BIO_Publication \xA73 rule 13). ` + (linkedTo.sig_armored ? `That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.` : `Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.`) : ident.caseId != null ? `the completeness block of ${review.caseIdentitySentence(ident.caseId, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13) \u2014 UNTIL the case is published naming this draft (op=publish&draft=${draftId}): at that act this reading binds to the case it produced, and its document lists it with the link stated (REC-217, BOB #33). Published without draft=, it is counted there as undetermined and never named. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
+      listed: linkedTo ? `this is a reading of draft ${draftId}, which ${linkedTo.authored_by} named as the draft of edition ${linkedTo.edition} of ${linkedTo.case_id} when publishing it (${linkedTo.authored_at}), so it is a reading of that case (BIO_Publication \xA73 rule 13). ` + (linkedSigned ? `That edition is already SIGNED, and its list is what the signature covers: this reading can appear in no signed document of it, and is recorded as the act it was.` : `Its case document is authored and unsigned, so it now lists this reading (case_documents), re-authored; its owner signs the new bytes.`) : ident.caseId != null ? `the completeness block of ${review.caseIdentitySentence(ident.caseId, ident.edition)} lists this acknowledgement when its case document is authored with this exact statement (op=publish), or \u2014 if that document is already authored and unsigned \u2014 now, re-authored (case_documents). A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it. It is listed under NO OTHER CASE, even one whose statement is byte-identical: reading this case's statement is not reading that one's.` : `this is a reading of draft ${draftId}, which names no case \u2014 a case id is minted only by publication, so this acknowledgement is bound to NO case identity yet. op=reviewcopy lists it for this draft. NO case document lists it, and that is deliberate: a case document that named you would be claiming you read ITS statement, which this record cannot establish of any case (\xA73 rule 13) \u2014 UNTIL the case is published naming this draft (op=publish&draft=${draftId}): at that act this reading binds to the case it produced, and its document lists it with the link stated (REC-217, BOB #33). Published without draft=, it is counted there as undetermined and never named. A statement edited afterwards is a different sentence, and this acknowledgement is not listed under it.`
     };
   }
   /* REC-217 / §3 rule 13 (BOB #33): the case edition a publisher named this draft for, read off the act's own record
@@ -170398,7 +170645,7 @@ function parse11(src) {
   const cs = Array.from(src);
   let i = 0;
   const peek = () => cs[i], eat = () => cs[i++];
-  const escape2 = (inClass) => {
+  const escape3 = (inClass) => {
     const c = eat();
     if (c === void 0) throw new Refused2("a trailing backslash", "the expression ends with a backslash");
     if (/[1-9]/.test(c) || c === "k") throw new Refused2("a backreference", `\\${c} refers back to a group, and a backreference cannot be matched in linear time`);
@@ -170428,11 +170675,11 @@ function parse11(src) {
       if (c === void 0) throw new Refused2("an unclosed class", "a [ has no closing ]");
       if (c === "]" && !first) break;
       first = false;
-      let lo = c === "\\" ? escape2(true) : c;
+      let lo = c === "\\" ? escape3(true) : c;
       if (typeof lo === "string" && peek() === "-" && cs[i + 1] !== void 0 && cs[i + 1] !== "]") {
         eat();
         c = eat();
-        const hi = c === "\\" ? escape2(true) : c;
+        const hi = c === "\\" ? escape3(true) : c;
         if (typeof hi !== "string" || hi < lo) throw new Refused2("a reversed or open range", "a range in a class runs backwards or ends in a class");
         items.push([lo, hi]);
         continue;
@@ -170463,7 +170710,7 @@ function parse11(src) {
     if (c === ".") return { t: "char", test: (x) => x !== "\n" && x !== "\r" };
     if (c === "^" || c === "$") return { t: "assert", k: c };
     if (c === "\\") {
-      const e2 = escape2(false);
+      const e2 = escape3(false);
       if (e2 && e2.assert) return { t: "assert", k: e2.assert };
       return typeof e2 === "function" ? { t: "char", test: e2 } : lit2(e2);
     }
@@ -201398,6 +201645,13 @@ function packVersion(pack) {
 // src/signpage.mjs
 var SIGN_HTML = '<!doctype html>\n<meta charset="utf-8">\n<title>Civicsmith signing keys</title>\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<!--\n  Signing keys that never leave the person holding them.\n\n  This page is one file with no network access of any kind: no scripts\n  loaded, no fonts fetched, no data sent anywhere. Open it from a local\n  copy. Everything it does happens in the browser tab.\n\n  It produces SSHSIG signatures, the same format `ssh-keygen -Y sign`\n  emits, so anything signed here can be verified by anyone with stock\n  OpenSSH and no Civicsmith code:\n\n      ssh-keygen -Y verify -f allowed_signers -I <you> \\\n                 -n bio-release -s file.sig < file\n\n  Two keys, because they do different jobs. The release key signs the\n  software that installs into other people\'s accounts and is used a few\n  times a year. The ratification key attests documents and is used\n  constantly. Keeping routine use away from the supply-chain key is the\n  reason they are separate.\n\n  The ratification key also signs a project\'s "working on" notice, in its\n  own namespace (bio-working-on), so a signature on a notice can never be\n  taken as consent to publish a record, or the reverse. It signs a case\'s\n  public docket entries in their own namespace too (bio-docket), so an\n  entry\'s signature can never stand for a ratification or a notice.\n-->\n<style>\n  :root {\n    --ink: #16171a; --dim: #5c6069; --line: #d9dce1; --bg: #fbfbfc;\n    --accent: #1c4f8b; --accent-dark: #163f70; --warn: #8a4b00;\n    --good: #15603a; --bad: #93231d; --soft: #f1f3f6;\n  }\n  * { box-sizing: border-box; }\n  body { margin: 0; background: var(--bg); color: var(--ink);\n         font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }\n  main { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }\n  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }\n  .sub { color: var(--dim); margin: 0 0 28px; }\n  section { background: #fff; border: 1px solid var(--line); border-radius: 10px;\n            padding: 20px; margin: 0 0 18px; }\n  h2 { font-size: 15px; margin: 0 0 10px; text-transform: uppercase;\n       letter-spacing: 0.06em; color: var(--dim); font-weight: 600; }\n  p { margin: 0 0 12px; }\n  label { display: block; font-weight: 600; margin: 0 0 5px; font-size: 13px; }\n  input, textarea { width: 100%; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;\n                    padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px;\n                    background: #fff; color: var(--ink); }\n  textarea { resize: vertical; }\n  button { font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 6px;\n           border: 1px solid var(--accent); background: var(--accent); color: #fff;\n           cursor: pointer; }\n  button:hover { background: var(--accent-dark); }\n  button.ghost { background: #fff; color: var(--accent); }\n  button.ghost:hover { background: var(--soft); }\n  button:disabled { opacity: .45; cursor: default; background: var(--accent); }\n  button.big { font-size: 17px; padding: 14px 26px; width: 100%; }\n  .stack > * + * { margin-top: 14px; }\n  .keybox { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--soft); }\n  .keybox .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }\n  .keybox label { margin: 0; }\n  .keybox textarea { background: #fff; }\n  .copy { padding: 4px 12px; font-size: 12px; }\n  .note { color: var(--dim); font-size: 13px; margin: 0; }\n  .warn { color: var(--warn); }\n  .good { color: var(--good); }\n  .bad { color: var(--bad); }\n  .tabs { display: flex; gap: 8px; margin: 0 0 18px; flex-wrap: wrap; }\n  .tabs button { background: #fff; color: var(--dim); border-color: var(--line); }\n  .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }\n  .hide { display: none; }\n  code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 13px;\n         word-break: break-all; }\n  .status { font-size: 13px; padding: 8px 10px; border-radius: 6px; background: var(--soft); }\n  .row { display: flex; gap: 10px; flex-wrap: wrap; }\n  .row button { flex: 1 1 auto; }\n  details { margin-top: 6px; }\n  summary { cursor: pointer; font-size: 13px; color: var(--dim); font-weight: 600; }\n</style>\n\n<main>\n  <h1>Civicsmith signing keys</h1>\n  <p class="sub">Runs entirely in this tab. Nothing is sent anywhere.</p>\n\n  <div class="tabs">\n    <button id="tab-keys" aria-pressed="true">Keys</button>\n    <button id="tab-release" aria-pressed="false">Sign a release</button>\n    <button id="tab-ratify" aria-pressed="false">Sign a ratification</button>\n    <button id="tab-notice" aria-pressed="false">Sign a notice</button>\n    <button id="tab-docket" aria-pressed="false">Sign a docket entry</button>\n  </div>\n\n  <!-- -------------------------------------------------------------- keys -->\n  <div id="pane-keys">\n    <section>\n      <h2>Make your keys</h2>\n      <p>One press makes both keys. Copy the two public keys into the session, and keep\n         the private keys wherever you keep things.</p>\n      <button id="gen" class="big">Generate my keys</button>\n      <div id="gen-out" class="stack" style="margin-top:18px"></div>\n    </section>\n\n    <section>\n      <h2>Load a key you already have</h2>\n      <p class="note">Paste a private key from a previous run. The key says which job it is for,\n         so there is nothing to choose.</p>\n      <div class="stack">\n        <textarea id="load-blob" rows="3" placeholder="BIOKEY-RAW1....." spellcheck="false"></textarea>\n        <div class="row">\n          <button id="load">Load this key</button>\n          <button id="forget" class="ghost">Forget everything</button>\n        </div>\n      </div>\n      <details>\n        <summary>This key is protected with a passphrase</summary>\n        <div class="stack" style="margin-top:10px">\n          <input id="load-pass" type="password" autocomplete="current-password" placeholder="passphrase">\n        </div>\n      </details>\n      <div id="load-out" style="margin-top:12px"></div>\n    </section>\n  </div>\n\n  <!-- ----------------------------------------------------------- release -->\n  <div id="pane-release" class="hide">\n    <section>\n      <h2>Sign a release</h2>\n      <p>Choose the release asset (<code>bio-plane.bundled.mjs</code>). The signature covers the\n         exact bytes of that file, so a rebuilt asset needs a new signature.</p>\n      <div class="stack">\n        <div id="rel-key" class="status">No release key loaded.</div>\n        <input id="rel-file" type="file">\n        <button id="rel-sign" disabled>Sign these bytes</button>\n      </div>\n      <div class="stack" id="rel-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ ratify -->\n  <div id="pane-ratify" class="hide">\n    <section>\n      <h2>Sign a ratification</h2>\n      <p>Copy the record id and its current hash from its page in your group\'s Civicsmith. The signature covers\n         both, so it authorizes publishing that exact revision and no other.</p>\n      <div class="stack">\n        <div id="rat-key" class="status">No ratification key loaded.</div>\n        <div><label for="rat-id">Record id</label>\n          <input id="rat-id" placeholder="INFO-2026-5460-sewer-fund-transfers" spellcheck="false"></div>\n        <div><label for="rat-sha">Record hash</label>\n          <input id="rat-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="rat-sign" disabled>Sign this ratification</button>\n      </div>\n      <div class="stack" id="rat-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ notice -->\n  <div id="pane-notice" class="hide">\n    <section>\n      <h2>Sign a notice</h2>\n      <p>Copy the notice id, its revision number and its hash from its page in your group\'s Civicsmith. The signature\n         covers all three, so it puts your name to that exact revision of the notice and no other.\n         It is signed with your ratification key.</p>\n      <div class="stack">\n        <div id="not-key" class="status">No ratification key loaded.</div>\n        <div><label for="not-id">Notice id</label>\n          <input id="not-id" placeholder="NOTE-2026-4817" spellcheck="false"></div>\n        <div><label for="not-rev">Revision</label>\n          <input id="not-rev" placeholder="1" inputmode="numeric" spellcheck="false"></div>\n        <div><label for="not-sha">Notice hash</label>\n          <input id="not-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="not-sign" disabled>Sign this notice</button>\n      </div>\n      <div class="stack" id="not-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n\n  <!-- ------------------------------------------------------------ docket -->\n  <div id="pane-docket" class="hide">\n    <section>\n      <h2>Sign a docket entry</h2>\n      <p>Copy the case id, the entry number and the entry hash from its page in your group\'s Civicsmith. The signature\n         covers all three, so it puts your name to that exact entry on that case\'s public docket and\n         no other. It is signed with your ratification key.</p>\n      <div class="stack">\n        <div id="dock-key" class="status">No ratification key loaded.</div>\n        <div><label for="dock-case">Case id</label>\n          <input id="dock-case" placeholder="CASE-2026-3091" spellcheck="false"></div>\n        <div><label for="dock-seq">Entry number</label>\n          <input id="dock-seq" placeholder="1" inputmode="numeric" spellcheck="false"></div>\n        <div><label for="dock-sha">Entry hash</label>\n          <input id="dock-sha" placeholder="64 hex characters" spellcheck="false"></div>\n        <button id="dock-sign" disabled>Sign this docket entry</button>\n      </div>\n      <div class="stack" id="dock-out" style="margin-top:16px"></div>\n    </section>\n  </div>\n</main>\n\n<script>\n/* ------------------------------------------------------------- helpers */\nconst $ = (id) => document.getElementById(id);\nconst enc = new TextEncoder();\nconst u8 = (...a) => { let n = 0; for (const p of a) n += p.length;\n  const o = new Uint8Array(n); let i = 0; for (const p of a) { o.set(p, i); i += p.length; } return o; };\nconst b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };\nconst unb64 = (s) => Uint8Array.from(atob(s.replace(/\\s+/g, "")), (c) => c.charCodeAt(0));\nconst hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");\n\n/* SSH wire encoding: a string is its length as a big-endian uint32, then bytes. */\nconst u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);\nconst sshStr = (v) => { const b = typeof v === "string" ? enc.encode(v) : v; return u8(u32(b.length), b); };\n\n/* An ssh-ed25519 public key on the wire, and its authorized_keys line. */\nconst wirePubkey = (raw32) => u8(sshStr("ssh-ed25519"), sshStr(raw32));\nconst pubLine = (raw32, comment) => `ssh-ed25519 ${b64(wirePubkey(raw32))} ${comment}`;\n\n/* What ssh-keygen actually signs: SSHSIG | namespace | reserved | hash alg | H(message).\n   The outer armor wraps a blob that repeats the public key and namespace so a\n   verifier can identify the signer without being told. */\nasync function sshsig(privKey, raw32, namespace, message) {\n  const h = new Uint8Array(await crypto.subtle.digest("SHA-512", message));\n  const signed = u8(enc.encode("SSHSIG"), sshStr(namespace), sshStr(""), sshStr("sha512"), sshStr(h));\n  const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", privKey, signed));\n  const blob = u8(enc.encode("SSHSIG"), u32(1), sshStr(wirePubkey(raw32)),\n                  sshStr(namespace), sshStr(""), sshStr("sha512"),\n                  sshStr(u8(sshStr("ssh-ed25519"), sshStr(sig))));\n  const body = b64(blob).replace(/(.{70})/g, "$1\\n");\n  return `-----BEGIN SSH SIGNATURE-----\\n${body}\\n-----END SSH SIGNATURE-----\\n`;\n}\n\n/* WebCrypto has no seed-to-public-key call, so the public half is read out of a\n   JWK export of the same seed. Ed25519 takes PKCS#8, which for a raw seed is the\n   fixed 16-byte prefix every Ed25519 PKCS#8 key shares, followed by the seed. */\nconst PKCS8_HEAD = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20]);\nasync function keysFromSeed(seed32) {\n  const pkcs8 = u8(PKCS8_HEAD, seed32);\n  const priv = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);\n  const jwk = await crypto.subtle.exportKey("jwk",\n    await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]));\n  const raw32 = unb64(jwk.x.replace(/-/g, "+").replace(/_/g, "/"));\n  return { priv, raw32 };\n}\n\n/* The two jobs, and the only two labels this page uses. A private key carries\n   its own label, so loading one never asks which job it belongs to. */\nconst JOBS = {\n  "bio-release": { slot: "release", title: "Release key", what: "signs the software installer" },\n  "bio-ratify":  { slot: "ratify",  title: "Ratification key", what: "attests documents for publishing" },\n};\n\n/* Private key formats. Raw is the default: a development key is disposable and a\n   passphrase on it is ceremony without a threat. The wrapped form exists for\n   production keys and is recognised automatically on load. */\nconst rawKeyString = (label, seed) => `BIOKEY-RAW1.${label}.${b64(seed)}`;\n\nconst KDF_ITER = 600000;\nasync function wrapKey(seed32, pass, label) {\n  const salt = crypto.getRandomValues(new Uint8Array(16));\n  const iv = crypto.getRandomValues(new Uint8Array(12));\n  const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n  const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: KDF_ITER, hash: "SHA-256" },\n    base, { name: "AES-GCM", length: 256 }, false, ["encrypt"]);\n  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, seed32));\n  return ["BIOKEY1", label, b64(salt), b64(iv), b64(ct), KDF_ITER].join(".");\n}\n\nasync function parseKeyString(blob, pass) {\n  const s = (blob || "").trim();\n  if (s.startsWith("BIOKEY-RAW1.")) {\n    const [, label, seed] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    return { label, seed: unb64(seed) };\n  }\n  if (s.startsWith("BIOKEY1.")) {\n    const [, label, salt, iv, ct, iter] = s.split(".");\n    if (!JOBS[label]) throw new Error("that key does not name a job this page knows");\n    if (!pass) throw new Error("that key is protected with a passphrase; open the passphrase box below");\n    const base = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveKey"]);\n    const key = await crypto.subtle.deriveKey(\n      { name: "PBKDF2", salt: unb64(salt), iterations: Number(iter), hash: "SHA-256" },\n      base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);\n    try {\n      const seed = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(iv) }, key, unb64(ct)));\n      return { label, seed };\n    } catch { throw new Error("wrong passphrase, or the key was altered"); }\n  }\n  throw new Error("that does not look like a Civicsmith private key");\n}\n\n/* ---------------------------------------------------------------- state */\nconst KEYS = { release: null, ratify: null };   /* { priv, raw32, label } */\n\nfunction armed() {\n  for (const [slot, elId, what] of [["release", "rel-key", "release"], ["ratify", "rat-key", "ratification"],\n                                    ["ratify", "not-key", "ratification"], ["ratify", "dock-key", "ratification"]]) {\n    const k = KEYS[slot];\n    $(elId).innerHTML = k\n      ? `<span class="good">Signing as</span> <code>${pubLine(k.raw32, k.label)}</code>`\n      : `No ${what} key loaded. Make one on the Keys tab.`;\n  }\n  $("rel-sign").disabled = !KEYS.release;\n  $("rat-sign").disabled = !KEYS.ratify;\n  $("not-sign").disabled = !KEYS.ratify;\n  $("dock-sign").disabled = !KEYS.ratify;\n}\n\nasync function useSeed(label, seed) {\n  const { priv, raw32 } = await keysFromSeed(seed);\n  KEYS[JOBS[label].slot] = { priv, raw32, label };\n  armed();\n  return { priv, raw32 };\n}\n\n/* ---------------------------------------------------- copyable text block */\nlet boxSeq = 0;\nfunction copyBox(labelText, value, hint) {\n  const id = "box" + (++boxSeq);\n  const rows = value.split("\\n").length > 3 ? 7 : 2;\n  return `<div class="keybox">\n    <div class="top"><label for="${id}">${labelText}</label>\n      <button class="copy ghost" data-copy="${id}">Copy</button></div>\n    <textarea id="${id}" rows="${rows}" readonly spellcheck="false">${value.replace(/</g, "&lt;")}</textarea>\n    ${hint ? `<p class="note" style="margin-top:6px">${hint}</p>` : ""}\n  </div>`;\n}\n\n/* Clipboard, with a fallback because a page opened from disk cannot always\n   reach the async clipboard API. */\nasync function copyText(text) {\n  try { await navigator.clipboard.writeText(text); return true; } catch {}\n  try {\n    const ta = document.createElement("textarea");\n    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";\n    document.body.appendChild(ta); ta.select();\n    const ok = document.execCommand("copy");\n    document.body.removeChild(ta);\n    return ok;\n  } catch { return false; }\n}\ndocument.addEventListener("click", async (e) => {\n  const btn = e.target.closest ? e.target.closest("[data-copy]") : null;\n  if (!btn) return;\n  const src = $(btn.getAttribute("data-copy"));\n  const ok = await copyText(src ? src.value : "");\n  const was = btn.textContent;\n  btn.textContent = ok ? "Copied" : "Press Ctrl+C";\n  setTimeout(() => { btn.textContent = was; }, 1400);\n});\n\n/* ------------------------------------------------------------------ tabs */\nconst PANES = [["tab-keys", "pane-keys"], ["tab-release", "pane-release"], ["tab-ratify", "pane-ratify"],\n               ["tab-notice", "pane-notice"], ["tab-docket", "pane-docket"]];\nfor (const [btn, pane] of PANES) {\n  $(btn).onclick = () => {\n    for (const [b, p] of PANES) {\n      $(b).setAttribute("aria-pressed", String(b === btn));\n      $(p).classList.toggle("hide", p !== pane);\n    }\n  };\n}\n\n/* -------------------------------------------------------------- generate */\nfunction keyReport(made) {\n  return Object.entries(made)\n    .map(([l, m]) => `# ${JOBS[l].title} (${JOBS[l].what})\\npublic:  ${m.pub}\\nprivate: ${m.priv}`)\n    .join("\\n\\n") + "\\n";\n}\n\nasync function generateAll() {\n  const made = {};\n  for (const label of Object.keys(JOBS)) {\n    const seed = crypto.getRandomValues(new Uint8Array(32));\n    const { raw32 } = await useSeed(label, seed);\n    made[label] = { pub: pubLine(raw32, label), priv: rawKeyString(label, seed) };\n  }\n  return made;\n}\n\n$("gen").onclick = async () => {\n  const made = await generateAll();\n  const bothPub = Object.values(made).map((m) => m.pub).join("\\n");\n  const all = keyReport(made);\n\n  $("gen-out").innerHTML =\n    copyBox("Both public keys: paste these into the session", bothPub,\n            "Public keys are public by design. This is the only thing that needs to leave this page.")\n    + `<div class="row">\n         <button id="copy-all">Copy everything, keys and all</button>\n         <button id="dl" class="ghost">Download as a file</button>\n       </div>`\n    + Object.entries(made).map(([l, m]) =>\n        copyBox(`${JOBS[l].title}: private, keep this`, m.priv,\n                `Paste this back into "Load a key you already have" next time you sign. This one ${JOBS[l].what}.`)).join("")\n    + `<p class="note">These are development keys with no passphrase. When Civicsmith goes to real groups,\n         generate fresh keys and protect them. Nothing here carries over.</p>`;\n\n  $("copy-all").onclick = async (e) => {\n    const ok = await copyText(all);\n    e.target.textContent = ok ? "Copied" : "Use the boxes below instead";\n    setTimeout(() => { e.target.textContent = "Copy everything, keys and all"; }, 1400);\n  };\n  $("dl").onclick = () => {\n    const url = URL.createObjectURL(new Blob([all], { type: "text/plain" }));\n    const a = document.createElement("a");\n    a.href = url; a.download = "bio-signing-keys.txt";\n    document.body.appendChild(a); a.click(); document.body.removeChild(a);\n    URL.revokeObjectURL(url);\n  };\n};\n\n/* ------------------------------------------------------------------ load */\n$("load").onclick = async () => {\n  try {\n    const { label, seed } = await parseKeyString($("load-blob").value, $("load-pass").value);\n    const { raw32 } = await useSeed(label, seed);\n    $("load-pass").value = "";\n    $("load-out").innerHTML =\n      `<p class="good">${JOBS[label].title} loaded.</p><p class="note"><code>${pubLine(raw32, label)}</code></p>`;\n  } catch (e) {\n    $("load-out").innerHTML = `<p class="bad">${String(e.message || e)}</p>`;\n  }\n};\n$("forget").onclick = () => {\n  KEYS.release = null; KEYS.ratify = null; armed();\n  for (const id of ["load-blob", "load-pass"]) $(id).value = "";\n  for (const id of ["gen-out", "rel-out", "rat-out", "not-out", "dock-out"]) $(id).innerHTML = "";\n  $("load-out").innerHTML = `<p class="note">Forgotten. Nothing signing-related is left in this tab.</p>`;\n};\n\n/* -------------------------------------------------------- sign a release */\n$("rel-sign").onclick = async () => {\n  const f = $("rel-file").files[0];\n  if (!f) return ($("rel-out").innerHTML = `<p class="warn">Choose the release asset first.</p>`);\n  const k = KEYS.release;\n  const bytes = new Uint8Array(await f.arrayBuffer());\n  const sha = hex(await crypto.subtle.digest("SHA-256", bytes));\n  const sig = await sshsig(k.priv, k.raw32, "bio-release", bytes);\n  const manifest = JSON.stringify({ sha256: sha, sig, signer: pubLine(k.raw32, k.label) }, null, 1);\n  $("rel-out").innerHTML = copyBox(\n    `Signature for ${f.name}: paste this into the session`, manifest,\n    `Covers ${bytes.length} bytes hashing to <code>${sha}</code>.`);\n};\n\n/* ----------------------------------------------------- sign a ratification */\n$("rat-sign").onclick = async () => {\n  const id = $("rat-id").value.trim(), sha = $("rat-sha").value.trim().toLowerCase();\n  if (!id) return ($("rat-out").innerHTML = `<p class="warn">Paste the record id.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("rat-out").innerHTML = `<p class="warn">The record hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-ratify", enc.encode(`bio-ratify ${id} ${sha}\\n`));\n  $("rat-out").innerHTML = copyBox(\n    "Signature: paste this into the ratify box in your group\'s Civicsmith", sig,\n    `Authorizes publishing <code>${id}</code> at exactly that hash. If the record changes before\n     you submit it, your group\'s Civicsmith refuses this signature and you sign the new hash.`);\n};\n\n/* --------------------------------------------------------- sign a notice */\n/* The same bytes as the plane\'s noticeStatement: `bio-working-on <id> <revision>\n   <hash>` and a newline, in the namespace bio-working-on. The fields are checked\n   exactly as the plane checks them, so the page never signs a statement the\n   instance would build differently. An opaque id, as the plane\'s minter draws it:\n   the next line is written by scripts/embed-signpage.mjs from the plane\'s pattern,\n   whose counter is the id table\'s (four digits or more); never edit it by hand. */\nconst OPAQUE_ID_RE = /^[A-Z]+-\\d{4}-\\d{4,}(?:-[a-z0-9]+(?:-[a-z0-9]+)*)?$/;\n$("not-sign").onclick = async () => {\n  const id = $("not-id").value.trim(), rev = $("not-rev").value.trim();\n  const sha = $("not-sha").value.trim().toLowerCase();\n  if (!OPAQUE_ID_RE.test(id)) return ($("not-out").innerHTML = `<p class="warn">Paste the notice id, as your group\'s Civicsmith shows it.</p>`);\n  if (!/^[1-9][0-9]*$/.test(rev) || !Number.isSafeInteger(Number(rev)))\n    return ($("not-out").innerHTML = `<p class="warn">The revision is a whole number, 1 or more.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("not-out").innerHTML = `<p class="warn">The notice hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-working-on", enc.encode(`bio-working-on ${id} ${rev} ${sha}\\n`));\n  $("not-out").innerHTML = copyBox(\n    "Signature: paste this into the notice box in your group\'s Civicsmith", sig,\n    `Signs revision ${rev} of <code>${id}</code> at exactly that hash. If the notice changes before\n     you post it, your group\'s Civicsmith refuses this signature and you sign the new hash.`);\n};\n\n/* --------------------------------------------------- sign a docket entry */\n/* The same bytes as the plane\'s docketStatement: `bio-docket <case id> <entry\n   number> <hash>` and a newline, in the namespace bio-docket, the fields checked\n   exactly as the plane checks them. */\n$("dock-sign").onclick = async () => {\n  const id = $("dock-case").value.trim(), seq = $("dock-seq").value.trim();\n  const sha = $("dock-sha").value.trim().toLowerCase();\n  if (!OPAQUE_ID_RE.test(id)) return ($("dock-out").innerHTML = `<p class="warn">Paste the case id, as your group\'s Civicsmith shows it.</p>`);\n  if (!/^[1-9][0-9]*$/.test(seq) || !Number.isSafeInteger(Number(seq)))\n    return ($("dock-out").innerHTML = `<p class="warn">The entry number is a whole number, 1 or more.</p>`);\n  if (!/^[0-9a-f]{64}$/.test(sha)) return ($("dock-out").innerHTML = `<p class="warn">The entry hash is 64 hex characters.</p>`);\n  const k = KEYS.ratify;\n  const sig = await sshsig(k.priv, k.raw32, "bio-docket", enc.encode(`bio-docket ${id} ${seq} ${sha}\\n`));\n  $("dock-out").innerHTML = copyBox(\n    "Signature: paste this into the docket box in your group\'s Civicsmith", sig,\n    `Signs entry ${seq} on the docket of <code>${id}</code> at exactly that hash. If the entry changes before\n     you post it, your group\'s Civicsmith refuses this signature and you prepare and sign it again.`);\n};\n\narmed();\n</script>\n';
 
+// src/public-read/credit.mjs
+var CIVICSMITH_DESCRIPTION = "Free software for groups that check whether government keeps its own rules and promises.";
+var CIVICSMITH_WHO = "Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work.";
+function creditPage() {
+  return { ok: true, name: "Civicsmith", description: CIVICSMITH_DESCRIPTION, who: CIVICSMITH_WHO };
+}
+
 // src/public-read/door.mjs
 var PUBLIC_READ_DOOR_OPS = Object.freeze([
   "verify",
@@ -201406,7 +201660,8 @@ var PUBLIC_READ_DOOR_OPS = Object.freeze([
   "publishedbytes",
   "publicread",
   "docketpublic",
-  "docketfeed"
+  "docketfeed",
+  "credit"
 ]);
 async function publicReadDoorDocket(op, url, env, stub, { json: json19, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2 }) {
   const c = (url.searchParams.get("case") || "").trim();
@@ -201472,6 +201727,7 @@ async function publicReadDoorOp(op, url, env, stub, helpers) {
   }
   if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
   if (op === "docketpublic" || op === "docketfeed") return publicReadDoorDocket(op, url, env, stub, helpers);
+  if (op === "credit") return json19(creditPage(), 200);
   if (op === "publicread") return publicReadDoorRead(url.searchParams.get("name") || "", url, env, stub, helpers);
   if (publicReads && typeof op === "string" && !PUBLIC_READ_DOOR_OPS.includes(op) && (Array.isArray(publicReads) ? publicReads.includes(op) : typeof publicReads.has === "function" && publicReads.has(op)))
     return publicReadDoorRead(op, url, env, stub, helpers);
@@ -202752,6 +203008,16 @@ function makeFetch(hooks = {}) {
 }
 
 // src/publication/door.mjs
+var CREDENTIAL_IN_ADDRESS = "CREDENTIAL_IN_ADDRESS";
+async function bodySecret(body) {
+  let b = null;
+  try {
+    b = typeof body === "function" ? await body() : await body;
+  } catch {
+    b = null;
+  }
+  return b && typeof b === "object" && !Array.isArray(b) && typeof b.secret === "string" && b.secret ? b.secret : null;
+}
 var PUBLICATION_DOOR_OPS = Object.freeze(["caseflags", "casedocument"]);
 async function publicationDoorOp(op, url, stub, {
   json: json19,
@@ -202761,7 +203027,8 @@ async function publicationDoorOp(op, url, stub, {
   readerOf: readerOf2,
   sha256Hex: sha256Hex15,
   NS_RATIFY: NS_RATIFY2,
-  caseRatifyStatement: caseRatifyStatement2
+  caseRatifyStatement: caseRatifyStatement2,
+  body = null
 }) {
   if (op === "caseflags") {
     const q10 = new URLSearchParams();
@@ -202787,17 +203054,22 @@ async function publicationDoorOp(op, url, stub, {
       }, 400);
     const reader = await readerOf2();
     if (reader.silent) return storeSilent2(reader.silent, reader.correlation);
-    const docSecret = url.searchParams.has("secret") ? await sha256Hex15(url.searchParams.get("secret") || "") : "";
+    const fromBody = await bodySecret(body);
+    const inAddress = !fromBody && url.searchParams.has("secret");
+    const presented = fromBody ?? (inAddress ? url.searchParams.get("secret") || "" : null);
+    const docSecret = presented !== null ? await sha256Hex15(presented) : "";
+    const deprecated = inAddress ? { deprecated: CREDENTIAL_IN_ADDRESS } : {};
     const out = await doAnswer2(stub.fetch(
       `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}` + (docSecret ? `&secretSha=${docSecret}` : "")
     ));
-    if (out.refused) return storeRefusal2(out);
+    if (out.refused) return inAddress ? json19({ ...out.reply.body, ...deprecated }, out.reply.status) : storeRefusal2(out);
     if (!out.answered) return storeSilent2("casedocument", out.correlation);
     const r = out.result;
-    if (!r?.ok) return json19({ ok: false, ...r }, 404);
+    if (!r?.ok) return json19({ ok: false, ...r, ...deprecated }, 404);
     return json19({
       ok: true,
       ...r,
+      ...deprecated,
       /* THE STATEMENT TO SIGN, PRINTED. It is the exact bytes
          `caseRatifyStatement` builds, handed to the member so the
          signer page, the wizard and a member at a terminal all
@@ -214864,13 +215136,14 @@ var Review = class {
     strength = null,
     basisVersions = null,
     publication = null,
+    caseTensions = null,
     caseAuthoring = null,
     now = null
   } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, strength, basisVersions, publication, caseAuthoring };
+    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring };
     this.now = typeof now === "function" ? now : () => stampInstant("millisecond");
   }
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -214882,6 +215155,16 @@ var Review = class {
   }
   get publication() {
     return this.#deps.publication ||= publicationOf(this.#deps.host);
+  }
+  /* T35-60 (N597): case-tensions, one per host, forwarded the uses this module was given, as publication forwards its. */
+  get caseTensions() {
+    const { host, storage, basisVersions } = this.#deps;
+    return this.#deps.caseTensions ||= caseTensionsOf2(host, {
+      storage,
+      record: this.record,
+      membership: this.membership,
+      ...basisVersions ? { basisVersions } : {}
+    });
   }
   get caseAuthoring() {
     return this.#deps.caseAuthoring ||= caseAuthoringOf(this.#deps.host);
@@ -215355,7 +215638,7 @@ var Review = class {
     const seen = findings.filter((f17) => f17.present).map((f17) => f17.target);
     const r = this.basisVersions.testimonyReach(seen);
     return [.../* @__PURE__ */ new Set([...r.self, ...r.via.map((v) => v.observation)])].map((obs) => {
-      const chosen = ident.caseId ? this.publication.attributionInForce(ident.caseId, ident.edition, obs) : null;
+      const chosen = ident.caseId ? this.caseTensions.attributionInForce(ident.caseId, ident.edition, obs) : null;
       return {
         observation: obs,
         chosen: !!chosen,
@@ -221961,7 +222244,7 @@ var KIND_OF = {
   account: "account",
   department_code: "organisation"
 };
-var escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var escape2 = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 function codeForms2(ctx, column) {
   const kind = KIND_OF[column];
   const schemes = readerView(ctx).classification_schemes;
@@ -221975,7 +222258,7 @@ function codeForms2(ctx, column) {
     }
     for (const c of Array.isArray(s.codes) ? s.codes : []) {
       if (!c || typeof c.code !== "string" || !c.code) continue;
-      out.push({ scheme: s.scheme || null, re: new RegExp(`^${escape(c.code)}$`), label: `code ${c.code}` });
+      out.push({ scheme: s.scheme || null, re: new RegExp(`^${escape2(c.code)}$`), label: `code ${c.code}` });
     }
   }
   return out;
