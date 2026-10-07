@@ -74,3 +74,7 @@ law-relations: it exports no minting function for MACHINE_CANNOT_RELATE or LAW_R
 ## J4 · COMPLETE
 
 B4 is applied. I merged tranche/T35 @ e7a590241f. IN_FORCE_STATES now names four states, `overridden` included, and a test shows inForce answering `overridden` as inForceAt does (R7). standards: 65 of 66 pass; the one failure is R29, accepted red 25. The format, architecture, coverage (39/39) and ownership checks each show 0 failures. The two local minting functions stay until your CHANGE after law-relations' R21 re-merge. Size (session_01XCY7KyghJZH9SEre4scpDf): test runs 18, module lines 2952.
+
+## J5 · COMPLETE
+
+B5 is applied. I merged tranche/T35 @ d3b8fb0480. R40 and R43 now produce MACHINE_CANNOT_RELATE and LAW_RELATION_NO_CITATION through law-relations' machineRelate() and refuseNoCitation() (its R21), and my two local functions are gone. standards: 65 of 66 pass; the one failure is R29, accepted red 25. The format, architecture, coverage (39/39) and ownership checks each show 0 failures. GitHub refused pushes with 500s for about four minutes (16:55–17:00 UTC); everything is pushed now. Size (session_01XCY7KyghJZH9SEre4scpDf): test runs 19, module lines 2938.
