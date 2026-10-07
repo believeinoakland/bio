@@ -22,7 +22,7 @@
 - users of the reading: `test/m/odf-reader/`, `test/m/extraction/n26.test.mjs`, `test/m/format-registry/`: tests 112, pass 112, fail 0; `test/m/extraction/`, `test/m/observation-log/`: tests 194, pass 194, fail 0.
 - layer tests: none (manifest).
 
-**Checks** · `format.mjs`: 135 modules, 134 requirements files; 0 failures. `architecture.mjs office-readers`: 16 product files, 52 relative imports; 0 failures. `coverage.mjs office-readers`: 33 of 33 live requirement ids named by a test; 0 failures. `ownership.mjs office-readers tranche/T36`: see the commit's run below.
+**Checks** · `format.mjs`: 135 modules, 134 requirements files; 0 failures. `architecture.mjs office-readers`: 16 product files, 52 relative imports; 0 failures. `coverage.mjs office-readers`: 33 of 33 live requirement ids named by a test; 0 failures. `ownership.mjs office-readers tranche/T36`: 5 files changed; 0 failures.
 
 **P6** · 3,809 lines (3,737 at the opening), under about 4,000.
 
