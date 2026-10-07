@@ -29,3 +29,7 @@
 - `checks/ownership.mjs` agent-model tranche/T35: 5 files changed; 0 failures.
 
 Size (session_01492fK8cL8nD6NiXB6XUnvs): test runs 9, module lines 764
+
+## J1 · REPORT
+
+agent-worker (T35-50, R61) needs re-pointing for agent-model R12. (1) index.mjs:489: rowPrompt(step,row) no longer carries facts; use openRow(model.messages, state.step, row, rowFacts(state, LEVELS)). (2) :1275: open sub-sessions with subsessionOpening(contract). (3) requirements.test.mjs:1252 (contract read whole from the system prompt) and :1254 (tools now include read_facts) pin what R12 forbids. (4) agent-worker's committed bundle is stale from agent-model's source (R45 x2); BOB's at L6's close (§14). Details in my record.
