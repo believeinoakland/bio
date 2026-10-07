@@ -1526,8 +1526,8 @@ var fleet_member_default = {
   build: {
     dockerfile: "Dockerfile",
     context: ".",
-    command: "docker build --platform linux/amd64 -t docker.io/civicos/agent-runner:<version> agent-runner",
-    dependencies: "package-lock.json (npm ci; the Agent SDK pinned exactly)"
+    command: "docker build --platform linux/amd64 -t <repository>:<version> agent-runner",
+    dependencies: "package-lock.json (npm ci --omit=dev --ignore-scripts; the Agent SDK pinned exactly; R16)"
   },
   egress: [
     "api.anthropic.com"
@@ -1536,6 +1536,7 @@ var fleet_member_default = {
 };
 
 // src/worker.mjs
+var UNKNOWN = JSON.stringify({ ok: false, code: "UNKNOWN" });
 var AgentRunner = class extends Container {
   defaultPort = fleet_member_default.image.port;
   // A conversation's instance (agent-model opens one per conversation) sleeps soon after its connection ends (R9).
@@ -1548,7 +1549,13 @@ var AgentRunner = class extends Container {
     return this.containerFetch(request, this.defaultPort);
   }
 };
+var worker_default = {
+  fetch() {
+    return new Response(UNKNOWN, { status: 404, headers: { "content-type": "application/json" } });
+  }
+};
 export {
   AgentRunner,
-  ContainerProxy
+  ContainerProxy,
+  worker_default as default
 };

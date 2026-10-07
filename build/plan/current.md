@@ -61,6 +61,7 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    29. affordances `t33.test.mjs`:136 (grading of every op: events' `discretionrecord`, `assessmentrecord`, `usewithdraw`, `usesof` and calculations' `usesfreeze`, `applicationrecipes` have no grade) until T35-66 grades them; control-plane `r53-routes.test.mjs`:60 (no spec for events' four ops, calculations' two, duties' `poweruses`, `uselink`, `useunlink`, `reviewpropose`) until T35-70 declares them (K1976).
    30. agent-runner's own R12 export and R15 tests and agent-worker `requirements.test.mjs` R45 (×2): their committed bundles are stale from T35-49 and T35-48/T35-43 until L6's close regenerates them (§14; K1985).
    31. From capture-requests' merge (T35-45, R49: a requested address must be one the record holds) until T35-83 and T35-73: scheduler `plane.test.mjs`:151 (R12) and plane `sweep.test.mjs`:29, :41 (R2 and its negative control) file requests for addresses their scenes never captured (CAPTURE-REQUESTS #13 J2; K1993).
+   32. bundler's `system/fleetbundles.test.mjs` "agent-worker's 20 inputs are all recorded": its pinned list lacks `src/draft.mjs` and `src/reads.mjs`, which T35-50 added (R59, R63); the bundle itself is fresh. From L6's close until N733 (bundler's L1 is closed in T35, P10; K1996).
 
 ## BOB's review (K1899)
 
