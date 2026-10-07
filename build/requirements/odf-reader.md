@@ -261,7 +261,7 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   sub-document directory or a `ObjectReplacements/` part's source; `{kind:"odf-script", part}` for each member under the package root's `Scripts/` (embedded Python,
   BeanShell or JavaScript macros; K1917); `{kind:"launch", part, event}` for each
   `presentation:event-listener` whose `presentation:action` is `execute`; `{kind:"unread", part, why}` for a
-  part it could not read for this list. A file with none answers `[]`. *(not yet met: T35)*
+  part it could not read for this list. A file with none answers `[]`.
 
 ### Satisfies
 

@@ -5,7 +5,8 @@
  * module is the CONTAINER tier that all three formats (and ODF, which is the
  * same shape with different part names) share:
  *
- *   - the ZIP central-directory walk (never trusts local headers alone);
+ *   - the ZIP central-directory walk (never trusts local headers alone),
+ *     ZIP64 included;
  *   - member inflate via DecompressionStream("deflate-raw") — MEASURED to
  *     round-trip in workerd (MEASUREMENTS.md 2026-08-03 backfill), so the
  *     whole module carries ZERO dependency, the same finding class that made
@@ -23,7 +24,13 @@
  *     revision count, created/modified instants) — evidentiary per DEC-5:
  *     provenance-adjacent facts the publisher's own software recorded;
  *   - size-guard plumbing: over the bound → a STATED text-undetermined with
- *     the reason, NEVER silent truncation.
+ *     the reason, NEVER silent truncation; and every part inflated capped at
+ *     `MEMBER_MAX` and counted against the file's `ARCHIVE_TOTAL_MAX` (F18);
+ *   - plain ZIP ARCHIVES (N688): a validated listing of every entry with its
+ *     verdict and a verified streaming cut of one member, under limits
+ *     published by name (`listArchive`, `streamMember`, `ARCHIVE_LIMITS`);
+ *   - an office file's VBA PROJECT, read for its module names, auto-run
+ *     procedures and suspicious keywords, never run (`readVbaProject`, K1888).
  *
  * Doctrine, enforced structurally throughout: NEVER INVENT STRUCTURE. Every
  * function returns `{ ok:false, why:"<named reason>" }` for anything it cannot
@@ -149,6 +156,49 @@ export function sizeGuard(declaredBytes, bound = MEASURED_OOXML_TEXT_BOUND_BYTES
 }
 
 /* ------------------------------------------------------------------ *
+ * The archive limits (N688; K1844, K1852 (2), K1881, K1903), by name
+ * ------------------------------------------------------------------ *
+ *
+ * Protective limits are BOB's (K1881) and each is published as a bound with
+ * its name: a refusal on one names it exactly and carries its figure as
+ * `limit`. This module keeps five of them itself (the entries, total, member
+ * and ratio limits in `listArchive`/`streamMember`, and the member and total
+ * limits on every part `readPart` inflates, F18). The depth and the two tree
+ * limits are counted from the outermost archive across a whole unpack, which
+ * only the unpack act (`acquisition`) sees; they are published here so the
+ * figures live in one place. */
+export const ARCHIVE_ENTRIES_MAX = 10000;
+/* `acquisition` R10's 256 MiB capture cap, reused: an archive's declared
+ * uncompressed total may be no larger than a capture this copy would hold. */
+export const ARCHIVE_TOTAL_MAX = 268435456;
+export const MEMBER_MAX = 268435456;
+/* Above deflate's possible 1,032:1, so a larger declared ratio is malformed,
+ * not merely large (Fifield, "A better zip bomb", WOOT '19). */
+export const ARCHIVE_RATIO_MAX = 1100;
+export const ARCHIVE_DEPTH_MAX = 3;
+export const ARCHIVE_TREE_TOTAL_MAX = 268435456;
+export const ARCHIVE_TREE_ENTRIES_MAX = 10000;
+export const ARCHIVE_LIMITS = Object.freeze({
+  ARCHIVE_ENTRIES_MAX, ARCHIVE_TOTAL_MAX, MEMBER_MAX, ARCHIVE_RATIO_MAX,
+  ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
+});
+
+/* The declared uncompressed total of a container's entries, the per-file
+ * total every part read counts against (F18). Remembered per entries array,
+ * so a walk over thousands of parts sums once. */
+const DECLARED_TOTALS = new WeakMap();
+function declaredTotal(container) {
+  const entries = entriesOf(container);
+  let total = DECLARED_TOTALS.get(entries);
+  if (total === undefined) {
+    total = 0;
+    for (const e of entries) total += e?.uncompressedSize;
+    DECLARED_TOTALS.set(entries, total);
+  }
+  return total;
+}
+
+/* ------------------------------------------------------------------ *
  * CRC-32 (ZIP polynomial) — for verifying a member actually round-trips
  * ------------------------------------------------------------------ */
 
@@ -162,11 +212,15 @@ const CRC_TABLE = (() => {
   return t;
 })();
 
-export function crc32(bytes) {
-  const u8 = toBytes(bytes);
-  let c = 0xffffffff;
+/* The running register, so a streamed member is checked as it passes:
+ * start at 0xffffffff, feed each chunk, finish with `^ 0xffffffff`. */
+function crcUpdate(c, u8) {
   for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xff] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
+  return c;
+}
+
+export function crc32(bytes) {
+  return (crcUpdate(0xffffffff, toBytes(bytes)) ^ 0xffffffff) >>> 0;
 }
 
 /* ------------------------------------------------------------------ *
@@ -176,9 +230,94 @@ export function crc32(bytes) {
 const u16 = (b, p) => b[p] | (b[p + 1] << 8);
 const u32 = (b, p) => (b[p] | (b[p + 1] << 8) | (b[p + 2] << 16) | (b[p + 3] << 24)) >>> 0;
 
+/* A 64-bit little-endian field as a Number, or NaN when it would not be one
+ * exactly (above 2^53 - 1): a value the module cannot hold is never rounded. */
+const u64 = (b, p) => {
+  const hi = u32(b, p + 4);
+  return hi >= 0x200000 ? NaN : hi * 0x100000000 + u32(b, p);
+};
+
 const SIG_LOCAL = 0x04034b50; // PK\x03\x04
 const SIG_CENTRAL = 0x02014b50; // PK\x01\x02
 const SIG_EOCD = 0x06054b50; // PK\x05\x06
+const SIG_ZIP64_EOCD = 0x06064b50; // PK\x06\x06
+const SIG_ZIP64_LOCATOR = 0x07064b50; // PK\x06\x07
+const SIG_DESCRIPTOR = 0x08074b50; // PK\x07\x08
+
+/* The end-of-central-directory record's fields (APPNOTE §4.3.16). */
+function parseEocd(b, p) {
+  return {
+    diskEntries: u16(b, p + 8), totalEntries: u16(b, p + 10),
+    cdSize: u32(b, p + 12), cdOffset: u32(b, p + 16), commentLen: u16(b, p + 20),
+  };
+}
+const ZIP64_SENTINELS = { diskEntries: 0xffff, totalEntries: 0xffff, cdSize: 0xffffffff, cdOffset: 0xffffffff };
+const needsZip64 = (e) => Object.keys(ZIP64_SENTINELS).some((k) => e[k] === ZIP64_SENTINELS[k]);
+
+/* ZIP64 (APPNOTE §4.3.14, §4.3.15). `loc` is the 20-byte locator read directly
+ * before the EOCD, `rec` the first 56 bytes at the offset it names. Answers the
+ * end record's values, or null when either is absent, malformed or out of
+ * range: the locator must name disk 0 of at most one disk, and the end record
+ * (its own declared size included) must end exactly where the locator starts,
+ * so nothing unread lies between them. */
+function zip64End(loc, locOffset, rec, recOffset) {
+  if (!loc || loc.length < 20 || u32(loc, 0) !== SIG_ZIP64_LOCATOR) return null;
+  if (u32(loc, 4) !== 0 || u32(loc, 16) > 1 || u64(loc, 8) !== recOffset) return null;
+  if (!rec || rec.length < 56 || u32(rec, 0) !== SIG_ZIP64_EOCD) return null;
+  const size = u64(rec, 4);
+  if (!(size >= 44) || recOffset + 12 + size !== locOffset) return null;
+  if (u32(rec, 16) !== 0 || u32(rec, 20) !== 0) return null;
+  const z = {
+    recordOffset: recOffset, diskEntries: u64(rec, 24), totalEntries: u64(rec, 32),
+    cdSize: u64(rec, 40), cdOffset: u64(rec, 48),
+  };
+  return [z.diskEntries, z.totalEntries, z.cdSize, z.cdOffset].every(Number.isFinite) ? z : null;
+}
+/* The locator's offset field, or NaN: where the end record should be read. */
+const zip64RecordOffset = (loc) =>
+  (loc && loc.length >= 20 && u32(loc, 0) === SIG_ZIP64_LOCATOR ? u64(loc, 8) : NaN);
+
+/* A central-directory record's ZIP64 extra field (0x0001): the 64-bit values
+ * of exactly the fields its fixed record holds as sentinels, in APPNOTE's
+ * order (uncompressed, compressed, local-header offset, disk). `want` names
+ * which; null when the field is absent, short or holds a value over 2^53. */
+function zip64Extra(extra, want) {
+  for (let p = 0; p + 4 <= extra.length;) {
+    const id = u16(extra, p);
+    const size = u16(extra, p + 2);
+    if (p + 4 + size > extra.length) return null;
+    if (id === 0x0001) {
+      const out = {};
+      let q = p + 4;
+      const end = q + size;
+      for (const k of ["uncompressed", "compressed", "offset"]) {
+        if (!want[k]) continue;
+        if (q + 8 > end) return null;
+        out[k] = u64(extra, q);
+        if (!Number.isFinite(out[k])) return null;
+        q += 8;
+      }
+      if (want.disk && q + 4 > end) return null;
+      return out;
+    }
+    p += 4 + size;
+  }
+  return null;
+}
+
+/* One central-directory record's 64-bit values: its 32-bit fields, or, where
+ * a field holds 0xffffffff (the disk number 0xffff), the ZIP64 extra field's.
+ * null when a sentinel's value is missing from that field (R3). */
+function centralValues(b, p, extra) {
+  const v = { compressed: u32(b, p + 20), uncompressed: u32(b, p + 24), offset: u32(b, p + 42) };
+  const want = {
+    uncompressed: v.uncompressed === 0xffffffff, compressed: v.compressed === 0xffffffff,
+    offset: v.offset === 0xffffffff, disk: u16(b, p + 34) === 0xffff,
+  };
+  if (!want.uncompressed && !want.compressed && !want.offset && !want.disk) return v;
+  const z = zip64Extra(extra, want);
+  return z ? { ...v, ...z } : null;
+}
 
 /** True iff the bytes open with the ZIP local-file magic `PK\x03\x04` — the
  *  FIRST discriminator (I7: magic bytes first, content type second). An empty
@@ -204,7 +343,9 @@ export function normalizePartName(name) {
  *  or `{ ok:false, why }` with a NAMED reason. A central directory that is cut
  *  short, inconsistent with the EOCD counts, or off the end of the buffer is
  *  `central_directory_truncated` — a stated undetermined, never the readable
- *  prefix silently presented as the whole archive. */
+ *  prefix silently presented as the whole archive. ZIP64's 64-bit values are
+ *  read where a sentinel calls for them; a sentinel without them is
+ *  `zip64_record_invalid`. */
 export function readContainer(bytes) {
   const b = toBytes(bytes);
   if (b.length < 22) return { ok: false, why: "too_short_for_zip" };
@@ -218,18 +359,25 @@ export function readContainer(bytes) {
   }
   if (eocd < 0) return { ok: false, why: "eocd_not_found" };
 
-  const diskEntries = u16(b, eocd + 8);
-  const totalEntries = u16(b, eocd + 10);
-  const cdSize = u32(b, eocd + 12);
-  const cdOffset = u32(b, eocd + 16);
+  let { diskEntries, totalEntries, cdSize, cdOffset } = parseEocd(b, eocd);
+  let directoryEnd = eocd;
 
-  /* ZIP64 sentinels: honestly out of scope rather than misread. A public
-   * body's 4 GiB+ or 65k-part archive is stated, not guessed at. */
-  if (totalEntries === 0xffff || cdSize === 0xffffffff || cdOffset === 0xffffffff) {
-    return { ok: false, why: "zip64_unsupported" };
+  /* ZIP64 (N688; K1844): a sentinel in the EOCD sends the reader to the
+   * locator directly before it and the end record it names, whose 64-bit
+   * values are used. A sentinel without a well-formed pair is refused by name,
+   * never read as the 16- or 32-bit value it literally holds. */
+  if (needsZip64({ diskEntries, totalEntries, cdSize, cdOffset })) {
+    const locAt = eocd - 20;
+    const loc = locAt >= 0 ? b.subarray(locAt, eocd) : null;
+    const recAt = zip64RecordOffset(loc);
+    const z = Number.isFinite(recAt) && recAt + 56 <= locAt
+      ? zip64End(loc, locAt, b.subarray(recAt, recAt + 56), recAt) : null;
+    if (!z) return { ok: false, why: "zip64_record_invalid" };
+    ({ diskEntries, totalEntries, cdSize, cdOffset } = z);
+    directoryEnd = z.recordOffset;
   }
   if (diskEntries !== totalEntries) return { ok: false, why: "multi_disk_unsupported" };
-  if (cdOffset + cdSize > eocd) return { ok: false, why: "central_directory_truncated" };
+  if (cdOffset + cdSize > directoryEnd) return { ok: false, why: "central_directory_truncated" };
 
   const entries = [];
   const byName = new Map();
@@ -242,18 +390,19 @@ export function readContainer(bytes) {
     const flags = u16(b, p + 8);
     const method = u16(b, p + 10);
     const crc = u32(b, p + 16);
-    const compressedSize = u32(b, p + 20);
-    const uncompressedSize = u32(b, p + 24);
     const nameLen = u16(b, p + 28);
     const extraLen = u16(b, p + 30);
     const commentLen = u16(b, p + 32);
-    const localHeaderOffset = u32(b, p + 42);
     if (p + 46 + nameLen + extraLen + commentLen > cdEnd) {
       return { ok: false, why: "central_directory_truncated" };
     }
+    const values = centralValues(b, p, b.subarray(p + 46 + nameLen, p + 46 + nameLen + extraLen));
+    if (!values) return { ok: false, why: "zip64_record_invalid" };
+    const { compressed: compressedSize, uncompressed: uncompressedSize, offset: localHeaderOffset } = values;
     const nameBytes = b.subarray(p + 46, p + 46 + nameLen);
     /* General-purpose bit 11 declares UTF-8 names; otherwise cp437, for which
-     * latin1 is the honest dependency-free approximation (OOXML part names are
+     * latin1 is this walk's approximation (the listing, `listArchive`, decodes
+     * cp437 itself; K1903 (3); OOXML part names are
      * ASCII, where the two agree exactly). */
     const name = (flags & 0x0800) ? UTF8.decode(nameBytes) : LATIN1.decode(nameBytes);
     const entry = { name, method, crc32: crc, compressedSize, uncompressedSize, localHeaderOffset };
@@ -312,6 +461,16 @@ export async function readPart(bytes, container, name) {
   const want = normalizePartName(name);
   const entry = findEntry(container, want);
   if (!entry) return { ok: false, why: "part_absent", name: want };
+
+  /* F18 (K1881): capped BEFORE any inflation, on the central directory's
+   * declared sizes: this member, then everything the file declares. A size
+   * that is not a number is never shown to be under a limit. */
+  const declared = entry.uncompressedSize;
+  if (!(declared <= MEMBER_MAX)) return { ok: false, why: "MEMBER_MAX", name: want, declared, limit: MEMBER_MAX };
+  const total = declaredTotal(container);
+  if (!(total <= ARCHIVE_TOTAL_MAX)) {
+    return { ok: false, why: "ARCHIVE_TOTAL_MAX", name: want, declared: total, limit: ARCHIVE_TOTAL_MAX };
+  }
 
   const lh = entry.localHeaderOffset;
   if (lh + 30 > b.length || u32(b, lh) !== SIG_LOCAL) {
@@ -535,11 +694,36 @@ export const ODF_FLAVOURS = [
   },
 ];
 
+/* The macro-enabled OOXML flavours (K1888, K1903 (4)): each is read exactly
+ * as its plain twin (the same part-map, the same main part, so the same
+ * reader), and says which it is in `variant`, because the file carries active
+ * content its twin cannot: a VBA project `office-readers` lists as `active`.
+ * Each main content type is the one Office writes for that kind (Microsoft's
+ * `vnd.ms-*.macroEnabled` types, as requirement R10 lists them); none is the
+ * plain twin's, so a row can match only its own. */
+const MACRO_ROW = (flavour, variant, kind) => ({
+  partMap: "opc", flavour, variant,
+  mainContentType: `application/vnd.ms-${kind}.main+xml`,
+  conventionalMainPart: OOXML_FLAVOURS.find((r) => r.flavour === flavour).conventionalMainPart,
+});
+const MACRO_FLAVOURS = [
+  MACRO_ROW("docx", "docm", "word.document.macroEnabled"),
+  MACRO_ROW("docx", "dotm", "word.template.macroEnabledTemplate"),
+  MACRO_ROW("xlsx", "xlsm", "excel.sheet.macroEnabled"),
+  MACRO_ROW("xlsx", "xltm", "excel.template.macroEnabled"),
+  MACRO_ROW("xlsx", "xlam", "excel.addin.macroEnabled"),
+  MACRO_ROW("pptx", "pptm", "powerpoint.presentation.macroEnabled"),
+  MACRO_ROW("pptx", "potm", "powerpoint.template.macroEnabled"),
+  MACRO_ROW("pptx", "ppsm", "powerpoint.slideshow.macroEnabled"),
+  MACRO_ROW("pptx", "ppam", "powerpoint.addin.macroEnabled"),
+];
+
 /** The table `discriminate()` uses when a caller names none: both part-maps,
- *  OPC first. Order matters only in that a container carrying BOTH
- *  `[Content_Types].xml` and a `mimetype` member is read as OPC — see the
- *  precedence note in `discriminate`. */
-export const CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...ODF_FLAVOURS];
+ *  OPC first (the plain rows, then the macro-enabled ones). Order matters
+ *  only in that a container carrying BOTH `[Content_Types].xml` and a
+ *  `mimetype` member is read as OPC — see the precedence note in
+ *  `discriminate`. */
+export const CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...MACRO_FLAVOURS, ...ODF_FLAVOURS];
 
 /** Which office flavour, if any, this container is — MAGIC BYTES PLUS PARTS,
  *  never the caller-declared content type and never a filename extension
@@ -548,7 +732,9 @@ export const CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...ODF_FLAVOURS];
  *
  *  Returns:
  *    { ok:true,  format:"docx"|"xlsx"|"pptx"|"odt"|"ods"|"odp",
- *                mainPart, confidence:"high", signals }
+ *                variant, mainPart, confidence:"high", signals }
+ *        — `variant` the matched row's (a macro-enabled flavour such as
+ *        "xlsm"), null for a plain row;
  *    { ok:true,  format:"zip",  signals }            — a real ZIP, NOT office
  *    { ok:true,  format:"undetermined", why, signals } — a ZIP whose flavour
  *        cannot be honestly discriminated (unreadable/absent-but-declared
@@ -556,7 +742,8 @@ export const CONTAINER_FLAVOURS = [...OOXML_FLAVOURS, ...ODF_FLAVOURS];
  *        whose mimetype we do not know or whose placement is non-conforming).
  *        STATED, never guessed.
  *    { ok:false, why, signals }                      — not a readable ZIP at
- *        all (no magic, truncated central directory, zip64, …).
+ *        all (no magic, truncated central directory, a broken ZIP64
+ *        record, …).
  *
  *  The discrimination requires BOTH halves, and that rule is the same on both
  *  part-maps: the DECLARATION (OPC's `[Content_Types].xml` entry for a
@@ -664,7 +851,7 @@ export async function discriminate(bytes, contentType = null, flavours = CONTAIN
       return { ok: true, format: "undetermined", why: "declared_main_part_absent", flavourDeclared: f.flavour, signals };
     }
     signals.push(`ct:${f.mainContentType}`, `part:${declared} present`);
-    return { ok: true, format: f.flavour, mainPart: declared, confidence: "high", signals };
+    return { ok: true, format: f.flavour, variant: f.variant ?? null, mainPart: declared, confidence: "high", signals };
   }
 
   /* An OPC package (it has a readable [Content_Types].xml) that is none of
@@ -789,7 +976,7 @@ async function discriminateOdf(bytes, container, rows, signals) {
   }
 
   signals.push(`part:${ODF_MANIFEST_PART} present`, `part:${main} present`);
-  return { ok: true, format: row.flavour, mainPart: main, confidence: "high", signals };
+  return { ok: true, format: row.flavour, variant: row.variant ?? null, mainPart: main, confidence: "high", signals };
 }
 
 /* ------------------------------------------------------------------ *
@@ -1000,4 +1187,831 @@ export async function withContainerImages(outOrPromise, parts, dir) {
   const got = await containerImages(parts.bytes, parts.container, dir);
   return got.images ? { ...out, images: got.images }
                     : { ...out, images: null, imagesWhy: got.why };
+}
+
+/* ------------------------------------------------------------------ *
+ * ZIP ARCHIVES (N688; K1844, K1852): a validated listing and a verified cut
+ * ------------------------------------------------------------------ *
+ *
+ * An archive is a capture; each member that can be cut out UNAMBIGUOUSLY is a
+ * capture of its own carrying the archive's grade unchanged (Intake §3,
+ * K1852). Everything here serves the one word "unambiguously": the listing
+ * reads the archive the way the most careful tool would, cross-checks every
+ * local header against the central directory, and names anything two honest
+ * tools could read two ways, so nothing ambiguous is ever cut. The cut then
+ * proves each member by its size, its CRC-32 and the end of its deflate
+ * stream, hashing it as it passes. Nothing is ever written as a path: a name
+ * is the archive's claim, stated, and a member is addressed by its index.
+ *
+ * Both take the archive as bytes or as a RANGE SOURCE `{size, read(offset,
+ * length)}`, so a 256 MiB archive held in 8 MiB parts is listed by reading
+ * only its structures and cut one window at a time. */
+
+/* IBM code page 437's upper half (APPNOTE Appendix D), for names stored
+ * without bit 11. The lower half is ASCII, as Python's `cp437` codec and
+ * Info-ZIP read it (control codes stay control codes). */
+const CP437_HIGH =
+  "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐"
+  + "└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ";
+function cp437(bytes) {
+  let s = "";
+  for (const x of bytes) s += x < 0x80 ? String.fromCharCode(x) : CP437_HIGH[x - 0x80];
+  return s;
+}
+const UTF8_STRICT = new TextDecoder("utf-8", { fatal: true });
+const hex = (bytes) => Array.from(bytes, (x) => x.toString(16).padStart(2, "0")).join("");
+const sameBytes = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+/* The stated MS-DOS date and time (APPNOTE §4.4.6), no zone; null when the
+ * fields name no real instant (month 0, February 30, second 60, …). */
+function dosTime(time, date) {
+  const y = 1980 + (date >>> 9), mo = (date >>> 5) & 15, d = date & 31;
+  const h = time >>> 11, mi = (time >>> 5) & 63, s = (time & 31) * 2;
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
+  if (!days || d < 1 || d > days || h > 23 || mi > 59 || s > 59) return null;
+  const p = (n) => String(n).padStart(2, "0");
+  return `${y}-${p(mo)}-${p(d)}T${p(h)}:${p(mi)}:${p(s)}`;
+}
+
+/* A name that could reach outside a directory if anything used it as a path:
+ * a `..` segment, a leading `/` or `\`, a drive letter, a `\` or a NUL. */
+function pathUnsafe(name) {
+  return /^[/\\]/.test(name) || /^[A-Za-z]:/.test(name) || /[\\\0]/.test(name)
+    || name.split(/[/\\]/).includes("..");
+}
+
+class Unreadable extends Error {}
+
+/* The two kinds of source behind one interface. A range source's answer must
+ * hold `length` bytes; fewer, a rejection or a non-byte answer makes the whole
+ * service answer `source_unreadable`, never a partial reading. */
+function sourceOf(source) {
+  const isRange = source && typeof source === "object" && typeof source.read === "function"
+    && !ArrayBuffer.isView(source) && !(source instanceof ArrayBuffer);
+  if (!isRange) {
+    const b = toBytes(source);
+    return { size: b.length, read: async (offset, length) => b.subarray(offset, offset + length), whole: b };
+  }
+  const size = source.size;
+  if (!Number.isSafeInteger(size) || size < 0) return null;
+  return {
+    size,
+    async read(offset, length) {
+      if (length === 0) return new Uint8Array(0);
+      let got;
+      try { got = await source.read(offset, length); } catch { throw new Unreadable(); }
+      if (got instanceof ArrayBuffer) got = new Uint8Array(got);
+      else if (ArrayBuffer.isView(got) && !(got instanceof Uint8Array)) got = new Uint8Array(got.buffer, got.byteOffset, got.byteLength);
+      if (!(got instanceof Uint8Array) || got.length < length) throw new Unreadable();
+      return got.length === length ? got : got.subarray(0, length);
+    },
+  };
+}
+
+/** List an archive: every central-directory entry with its verdict (R27,
+ *  R28). Async; never throws. */
+export async function listArchive(source) {
+  try {
+    const src = sourceOf(source);
+    if (!src) return { ok: false, why: "source_unreadable", entries: null };
+    return await listFrom(src);
+  } catch {
+    return { ok: false, why: "source_unreadable", entries: null };
+  }
+}
+
+const refusal = (why, extra = {}) => ({ ok: false, why, ...extra, entries: null });
+const ambiguous = (detail, entries) => ({ ok: false, why: "ARCHIVE_AMBIGUOUS", detail, entries });
+
+async function listFrom(src) {
+  const { size } = src;
+  if (size < 22) return refusal("too_short_for_zip");
+
+  /* THE END RECORD. R3's window (22 bytes plus a comment of up to 65,535),
+   * but stricter than R3's backward scan: a candidate is an offset holding the
+   * signature whose comment length reaches EXACTLY the archive's end. One
+   * candidate is the end record; two are two archives in one file, which
+   * different tools resolve differently, so the archive is not read as one. */
+  const winStart = Math.max(0, size - 22 - 0xffff);
+  const win = await src.read(winStart, size - winStart);
+  const candidates = [];
+  for (let p = win.length - 22; p >= 0; p--) {
+    if (u32(win, p) === SIG_EOCD && p + 22 + u16(win, p + 20) === win.length) candidates.push(winStart + p);
+  }
+  if (candidates.length === 0) return refusal("eocd_not_found");
+  if (candidates.length > 1) return ambiguous("several_eocd_candidates", null);
+  const eocd = candidates[0];
+  const end = parseEocd(win, eocd - winStart);
+  let { diskEntries, totalEntries, cdSize, cdOffset } = end;
+  let directoryEnd = eocd;
+  let zip64 = false;
+
+  /* ZIP64: read whenever its locator stands directly before the EOCD (some
+   * writers emit it for small archives too), and required when the EOCD holds
+   * a sentinel. Where both records state a field, they must agree. */
+  const locAt = eocd - 20;
+  const loc = locAt >= 0 ? await src.read(locAt, 20) : null;
+  const hasLocator = !!loc && u32(loc, 0) === SIG_ZIP64_LOCATOR;
+  if (needsZip64(end) || hasLocator) {
+    const recAt = zip64RecordOffset(loc);
+    const z = Number.isFinite(recAt) && recAt + 56 <= locAt
+      ? zip64End(loc, locAt, await src.read(recAt, 56), recAt) : null;
+    if (!z) return refusal("zip64_record_invalid");
+    for (const k of Object.keys(ZIP64_SENTINELS)) {
+      if (end[k] !== ZIP64_SENTINELS[k] && end[k] !== z[k]) return ambiguous("directory_disagrees_with_eocd", null);
+    }
+    ({ diskEntries, totalEntries, cdSize, cdOffset } = z);
+    directoryEnd = z.recordOffset;
+    zip64 = true;
+  }
+  if (diskEntries !== totalEntries) return refusal("multi_disk_unsupported");
+  if (totalEntries > ARCHIVE_ENTRIES_MAX) return refusal("ARCHIVE_ENTRIES_MAX", { limit: ARCHIVE_ENTRIES_MAX });
+  if (cdOffset + cdSize > directoryEnd) return refusal("central_directory_truncated");
+
+  /* THE CENTRAL DIRECTORY, every record, the sole authority (R24). */
+  const cd = await src.read(cdOffset, cdSize);
+  const records = [];
+  let p = 0;
+  for (let i = 0; i < totalEntries; i++) {
+    if (p + 46 > cd.length || u32(cd, p) !== SIG_CENTRAL) return refusal("central_directory_truncated");
+    const nameLen = u16(cd, p + 28), extraLen = u16(cd, p + 30), commentLen = u16(cd, p + 32);
+    if (p + 46 + nameLen + extraLen + commentLen > cd.length) return refusal("central_directory_truncated");
+    const nameBytes = cd.subarray(p + 46, p + 46 + nameLen);
+    const values = centralValues(cd, p, cd.subarray(p + 46 + nameLen, p + 46 + nameLen + extraLen));
+    if (!values) return refusal("zip64_record_invalid");
+    records.push({
+      nameBytes, values, madeBy: u16(cd, p + 4), flags: u16(cd, p + 8), method: u16(cd, p + 10),
+      time: u16(cd, p + 12), date: u16(cd, p + 14), crc: u32(cd, p + 16), external: u32(cd, p + 38),
+    });
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  /* The records must fill the declared directory exactly, and the directory
+   * must end where the end records begin: bytes left between them are where
+   * a prefixed or concatenated archive shows itself (Info-ZIP and Python shift
+   * every offset by them; this reader would not). Two readings: refused, with
+   * the rows as read. */
+  const directoryFilled = p === cd.length && cdOffset + cdSize === directoryEnd;
+
+  const entries = [];
+  const ranges = [];
+  let outOfRange = false;
+  for (const [index, r] of records.entries()) {
+    const row = rowOf(index, r);
+    const local = await crossCheck(src, r, row, cdOffset);
+    if (local.outOfRange) outOfRange = true;
+    ranges.push(local.range);
+    row.verdict = verdictOf(row, local.agrees);
+    if (row.verdict === "MEMBER_MAX") row.limit = MEMBER_MAX;
+    if (row.verdict === "ARCHIVE_RATIO_MAX") row.limit = ARCHIVE_RATIO_MAX;
+    entries.push(row);
+  }
+  const shared = new Map();
+  for (const row of entries) shared.set(row.name_raw, (shared.get(row.name_raw) ?? 0) + 1);
+  for (const row of entries) row.name_shared = shared.get(row.name_raw);
+
+  if (!directoryFilled) return ambiguous("directory_disagrees_with_eocd", entries);
+  if (outOfRange) return ambiguous("entry_out_of_range", entries);
+  ranges.sort((a, b) => a[0] - b[0]);
+  for (let i = 1, reach = ranges[0]?.[1]; i < ranges.length; i++) {
+    if (ranges[i][0] < reach) return ambiguous("entries_overlap", entries);
+    reach = Math.max(reach, ranges[i][1]);
+  }
+
+  let declared_total = 0;
+  for (const row of entries) if (row.kind === "file") declared_total += row.uncompressed;
+  const out = { ok: true, entries, count: entries.length, declared_total, zip64, verdict: "ok" };
+  if (declared_total > ARCHIVE_TOTAL_MAX) { out.verdict = "ARCHIVE_TOTAL_MAX"; out.limit = ARCHIVE_TOTAL_MAX; }
+  return out;
+}
+
+/* One row as the central directory states it (R27). */
+function rowOf(index, r) {
+  let name, name_encoding;
+  if (r.flags & 0x0800) {
+    try { name = UTF8_STRICT.decode(r.nameBytes); name_encoding = "utf-8"; } catch { name = null; name_encoding = "utf-8-invalid"; }
+  } else {
+    name = cp437(r.nameBytes);
+    name_encoding = "cp437";
+  }
+  const asStated = name ?? LATIN1.decode(r.nameBytes);
+  const unixType = (r.madeBy >>> 8) === 3 ? (r.external >>> 16) & 0o170000 : 0;
+  return {
+    index, name_raw: hex(r.nameBytes), name, name_encoding, name_shared: 1, path_unsafe: pathUnsafe(asStated),
+    method: r.method, flags: r.flags, crc32: r.crc, compressed: r.values.compressed,
+    uncompressed: r.values.uncompressed, local_offset: r.values.offset, data_offset: null,
+    dos_time: dosTime(r.time, r.date),
+    kind: r.nameBytes.length && r.nameBytes[r.nameBytes.length - 1] === 0x2f ? "dir" : unixType === 0o120000 ? "symlink" : "file",
+    encrypted: (r.flags & 0x2041) !== 0 || r.method === 99,
+    verdict: null,
+  };
+}
+
+/* The local header (and, under bit 3, the data descriptor) against the
+ * central directory. Answers whether they agree, the entry's byte range
+ * (local header to the end of its data and descriptor) and whether any of it
+ * runs past the archive's end or into the central directory. Reads only the
+ * structures, never the member's data. */
+async function crossCheck(src, r, row, cdOffset) {
+  const lo = row.local_offset;
+  if (lo + 30 > cdOffset) return { agrees: false, outOfRange: true, range: [lo, lo + 30] };
+  const lh = await src.read(lo, 30);
+  if (u32(lh, 0) !== SIG_LOCAL) return { agrees: false, outOfRange: false, range: [lo, lo + 30] };
+  const nameLen = u16(lh, 26), extraLen = u16(lh, 28);
+  const dataOffset = lo + 30 + nameLen + extraLen;
+  if (dataOffset > cdOffset) return { agrees: false, outOfRange: true, range: [lo, dataOffset] };
+  row.data_offset = dataOffset;
+  const ne = await src.read(lo + 30, nameLen + extraLen);
+  const localZip64 = zip64Extra(ne.subarray(nameLen), { uncompressed: true, compressed: true });
+  let agrees = sameBytes(ne.subarray(0, nameLen), r.nameBytes)
+    && u16(lh, 6) === r.flags && u16(lh, 8) === r.method;
+  let end = dataOffset + row.compressed;
+  if (end > cdOffset) return { agrees, outOfRange: true, range: [lo, end] };
+
+  if (r.flags & 0x0008) {
+    /* The descriptor follows the data: an optional signature, the CRC-32,
+     * then both sizes, 8 bytes each when the local header carries ZIP64. */
+    const width = localZip64 ? 8 : 4;
+    const avail = Math.min(4 + 4 + 2 * width, cdOffset - end);
+    const d = await src.read(end, avail);
+    const signed = avail >= 4 && u32(d, 0) === SIG_DESCRIPTOR;
+    const length = (signed ? 4 : 0) + 4 + 2 * width;
+    if (length > avail) return { agrees, outOfRange: true, range: [lo, end + length] };
+    const q = signed ? 4 : 0;
+    const read = (at) => (width === 8 ? u64(d, at) : u32(d, at));
+    agrees = agrees && u32(d, q) === row.crc32 && read(q + 4) === row.compressed && read(q + 4 + width) === row.uncompressed;
+    end += length;
+  } else {
+    let compressed = u32(lh, 18), uncompressed = u32(lh, 22);
+    if (compressed === 0xffffffff || uncompressed === 0xffffffff) {
+      if (!localZip64) agrees = false;
+      else ({ compressed, uncompressed } = localZip64);
+    }
+    agrees = agrees && u32(lh, 14) === row.crc32 && compressed === row.compressed && uncompressed === row.uncompressed;
+  }
+  return { agrees, outOfRange: false, range: [lo, end] };
+}
+
+/* R28's per-row verdict: the first that applies. */
+function verdictOf(row, agrees) {
+  if (row.kind === "dir") return "directory";
+  if (row.kind === "symlink") return "symlink";
+  if (row.encrypted) return "MEMBER_ENCRYPTED";
+  if (row.method !== 0 && row.method !== 8) return "MEMBER_METHOD_UNSUPPORTED";
+  if (!agrees) return "MEMBER_AMBIGUOUS";
+  if (row.uncompressed > MEMBER_MAX) return "MEMBER_MAX";
+  if (row.uncompressed > row.compressed * ARCHIVE_RATIO_MAX) return "ARCHIVE_RATIO_MAX";
+  return "ok";
+}
+
+/* ------------------------------------------------------------------ *
+ * SHA-256, streamed (R29)
+ * ------------------------------------------------------------------ *
+ *
+ * `crypto.subtle.digest` takes a whole buffer, and a member may be 256 MiB in
+ * a 128 MB Worker, so the cut hashes as the bytes pass: through the host's
+ * own `crypto.DigestStream` where it has one (workerd), else through the
+ * FIPS 180-4 compression function below. Both answer the same digest as
+ * `crypto.subtle.digest` over the same bytes (the suite proves it). */
+const SHA_K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+]);
+function sha256Js() {
+  const H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
+  const W = new Uint32Array(64);
+  const block = new Uint8Array(64);
+  let filled = 0, length = 0;
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  const compress = (m, at) => {
+    for (let t = 0; t < 16; t++) W[t] = (m[at + 4 * t] << 24) | (m[at + 4 * t + 1] << 16) | (m[at + 4 * t + 2] << 8) | m[at + 4 * t + 3];
+    for (let t = 16; t < 64; t++) {
+      const a = W[t - 15], b = W[t - 2];
+      W[t] = (W[t - 16] + (rotr(a, 7) ^ rotr(a, 18) ^ (a >>> 3)) + W[t - 7] + (rotr(b, 17) ^ rotr(b, 19) ^ (b >>> 10))) | 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let t = 0; t < 64; t++) {
+      const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[t] + W[t]) | 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    H[0] += a; H[1] += b; H[2] += c; H[3] += d; H[4] += e; H[5] += f; H[6] += g; H[7] += h;
+  };
+  return {
+    update(u8) {
+      length += u8.length;
+      let i = 0;
+      if (filled) {
+        const take = Math.min(64 - filled, u8.length);
+        block.set(u8.subarray(0, take), filled);
+        filled += take; i = take;
+        if (filled < 64) return;
+        compress(block, 0); filled = 0;
+      }
+      for (; i + 64 <= u8.length; i += 64) compress(u8, i);
+      block.set(u8.subarray(i), 0);
+      filled = u8.length - i;
+    },
+    async finish() {
+      const bits = length * 8;
+      const tail = new Uint8Array(filled < 56 ? 64 : 128);
+      tail.set(block.subarray(0, filled));
+      tail[filled] = 0x80;
+      const v = new DataView(tail.buffer);
+      v.setUint32(tail.length - 8, Math.floor(bits / 0x100000000));
+      v.setUint32(tail.length - 4, bits >>> 0);
+      for (let at = 0; at < tail.length; at += 64) compress(tail, at);
+      return Array.from(H, (x) => x.toString(16).padStart(8, "0")).join("");
+    },
+  };
+}
+function sha256Stream() {
+  const DS = globalThis.crypto?.DigestStream;
+  if (typeof DS !== "function") return sha256Js();
+  const stream = new DS("SHA-256");
+  const writer = stream.getWriter();
+  return {
+    update: (u8) => writer.write(u8.slice()),
+    async finish() { await writer.close(); return hex(new Uint8Array(await stream.digest)); },
+  };
+}
+
+/** Cut one member (R29): `{chunks, done}`. Never throws; `done` never
+ *  rejects. `done` settles when `chunks` has been iterated to its end, or at
+ *  once when the row is refused before anything is read. A consumer that
+ *  stops early leaves the rest to be read and verified, unyielded, so `done`
+ *  still states whether the member was whole. */
+export function streamMember(source, row) {
+  let settle;
+  const done = new Promise((resolve) => { settle = resolve; });
+  const valid = row && typeof row === "object"
+    && Number.isSafeInteger(row.index) && Number.isSafeInteger(row.data_offset) && row.data_offset >= 0
+    && Number.isSafeInteger(row.compressed) && row.compressed >= 0
+    && Number.isSafeInteger(row.uncompressed) && row.uncompressed >= 0
+    && Number.isInteger(row.crc32) && (row.method === 0 || row.method === 8);
+  let early = null;
+  if (row?.verdict !== "ok") {
+    early = { ok: false, why: typeof row?.verdict === "string" ? row.verdict : "row_invalid", index: row?.index ?? null };
+    const limit = ARCHIVE_LIMITS[early.why];
+    if (limit !== undefined) early.limit = limit;
+  } else if (!valid) {
+    early = { ok: false, why: "row_invalid", index: row?.index ?? null };
+  }
+  if (early) settle(early);
+
+  let started = false;
+  const chunks = {
+    [Symbol.asyncIterator]() {
+      if (started || early) return (async function* () {})();
+      started = true;
+      return relay(cut(source, row), settle, row.index);
+    },
+  };
+  return { chunks, done };
+}
+
+/* Yields what `inner` yields; when it ends, or the consumer stops, drains
+ * the rest unyielded and settles with its answer. `cut` answers every
+ * failure itself; should it ever throw, the cut is stated unread rather than
+ * left unsettled. */
+async function* relay(inner, settle, index) {
+  const unread = { ok: false, why: "source_unreadable", index };
+  let result = null;
+  try {
+    for (;;) {
+      const { value, done } = await inner.next();
+      if (done) { result = value ?? unread; break; }
+      yield value;
+    }
+  } catch {
+    result = unread;
+  } finally {
+    try {
+      while (!result) {
+        const { value, done } = await inner.next();
+        if (done) result = value ?? unread;
+      }
+    } catch {
+      result = unread;
+    }
+    settle(result);
+  }
+}
+
+const CUT_WINDOW = 1 << 20;
+
+async function* cut(source, row) {
+  const corrupt = (detail) => ({ ok: false, why: "MEMBER_CORRUPT", detail, index: row.index });
+  const unreadable = { ok: false, why: "source_unreadable", index: row.index };
+  const src = sourceOf(source);
+  if (!src) return unreadable;
+  const declared = row.uncompressed;
+  let crc = 0xffffffff, size = 0;
+  const sha = sha256Stream();
+  const take = async (u8) => { crc = crcUpdate(crc, u8); size += u8.length; await sha.update(u8); };
+  async function* windows() {
+    for (let off = 0; off < row.compressed; off += CUT_WINDOW) {
+      const at = row.data_offset + off, length = Math.min(CUT_WINDOW, row.compressed - off);
+      if (at + length > src.size) throw new Unreadable();
+      yield await src.read(at, length);
+    }
+  }
+  const finish = async () => {
+    if (size !== declared) return corrupt("size_mismatch");
+    if (((crc ^ 0xffffffff) >>> 0) !== row.crc32) return corrupt("crc_mismatch");
+    return { ok: true, sha256: await sha.finish(), crc32: row.crc32, size };
+  };
+
+  if (row.method === 0) {
+    try {
+      for await (const w of windows()) {
+        if (size + w.length > declared) return corrupt("over_declared_size");
+        const piece = w.slice();
+        await take(piece);
+        yield piece;
+      }
+    } catch {
+      return unreadable;
+    }
+    return finish();
+  }
+
+  /* Deflate: the windows are written into the host's inflater while its
+   * output is read, so one window and one output chunk are held at a time.
+   * Output past the declared size stops the cut there. An inflater error
+   * after the whole declared member came out whole is the deflate stream not
+   * ending exactly at the end of the data (trailing bytes, or no final
+   * block): `stream_end_mismatch`; before, `inflate_failed`. */
+  let ds;
+  try { ds = new DecompressionStream("deflate-raw"); } catch { return corrupt("inflate_failed"); }
+  const writer = ds.writable.getWriter();
+  const reader = ds.readable.getReader();
+  let sourceFailed = false, fedAll = false;
+  const feeding = (async () => {
+    try {
+      for await (const w of windows()) await writer.write(w);
+      await writer.close();
+      fedAll = true;
+    } catch (e) {
+      if (e instanceof Unreadable) sourceFailed = true;
+      writer.abort().catch(() => {});
+    }
+  })();
+  let inflateError = false;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (size + value.length > declared) {
+        reader.cancel().catch(() => {});
+        await feeding;
+        return corrupt("over_declared_size");
+      }
+      await take(value);
+      yield value;
+    }
+  } catch {
+    inflateError = true;
+  }
+  await feeding;
+  if (sourceFailed) return unreadable;
+  if (inflateError || !fedAll) {
+    const whole = size === declared && ((crc ^ 0xffffffff) >>> 0) === row.crc32;
+    return corrupt(whole ? "stream_end_mismatch" : "inflate_failed");
+  }
+  return finish();
+}
+
+/* ------------------------------------------------------------------ *
+ * A VBA PROJECT, READ AND NEVER RUN (K1888; study-virus-scanning §3 A)
+ * ------------------------------------------------------------------ *
+ *
+ * An office file's macros live in one member, `vbaProject.bin`: an MS-CFB
+ * compound file whose `VBA` storage holds a `dir` stream (the project's
+ * records, MS-OVBA §2.3.4.2) and one stream per module, each module's source
+ * compressed (MS-OVBA §2.4.1) from the offset `dir` records. This reads the
+ * names out and matches two tables against each module's source, as olevba
+ * does. Nothing is run, evaluated or compiled, and the compiled p-code beside
+ * the source is not read: a project whose source was replaced while its
+ * p-code was kept ("VBA stomping") reads as its source says.
+ *
+ * The tables are olevba's (oletools 0.60.2, `olevba.py`): `AUTOEXEC_KEYWORDS`
+ * and `SUSPICIOUS_KEYWORDS`, their plain-string entries in their own order
+ * (the regex entries and olevba's temporary `Auto_Ope` are left out), then the
+ * four names requirement R33 adds that olevba spells differently (`XMLHTTP`,
+ * `WinHttpRequest`, `URLDownloadToFile`, `RegWrite`). A name is found as
+ * olevba finds it: `(?i)\b<name>\b` over the source. */
+export const VBA_AUTORUN_NAMES = Object.freeze([
+  "AutoExec", "AutoOpen", "DocumentOpen", "AutoExit", "AutoClose", "Document_Close", "DocumentBeforeClose",
+  "DocumentChange", "AutoNew", "Document_New", "NewDocument", "Document_Open", "Document_BeforeClose",
+  "Auto_Open", "Workbook_Open", "Workbook_Activate", "Auto_Close", "Workbook_Close", "Workbook_BeforeClose",
+  "Worksheet_Calculate",
+]);
+export const VBA_SUSPICIOUS_KEYWORDS = Object.freeze([
+  "Environ", "Win32_Environment", "Environment", "ExpandEnvironmentStrings", "HKCU\\Environment",
+  "HKEY_CURRENT_USER\\Environment", "Open", "Write", "Put", "Output", "Print #", "Binary",
+  "FileCopy", "CopyFile", "CopyHere", "CopyFolder", "MoveHere", "MoveFile", "MoveFolder", "Kill",
+  "CreateTextFile", "ADODB.Stream", "WriteText", "SaveToFile",
+  "Shell", "vbNormal", "vbNormalFocus", "vbHide", "vbMinimizedFocus", "vbMaximizedFocus", "vbNormalNoFocus",
+  "vbMinimizedNoFocus", "WScript.Shell", "Run", "ShellExecute", "ShellExecuteA", "shell32", "InvokeVerb",
+  "InvokeVerbEx", "DoIt", "ControlPanelItem", "Create", "MacScript", "AppleScript",
+  "PowerShell", "noexit", "ExecutionPolicy", "noprofile", "command", "EncodedCommand", "invoke-command",
+  "scriptblock", "Invoke-Expression", "AuthorizationManager", "Start-Process", "CALL",
+  "Application.Visible", "ShowWindow", "SW_HIDE", "MkDir", "ActiveWorkbook.SaveAs", "Application.AltStartupPath",
+  "CreateObject", "GetObject", "New-Object", "Shell.Application", "ExecuteExcel4Macro", "Windows", "FindWindow",
+  "Lib", "libc.dylib", "dylib",
+  "CreateThread", "CreateUserThread", "VirtualAlloc", "VirtualAllocEx", "RtlMoveMemory", "WriteProcessMemory",
+  "SetContextThread", "QueueApcThread", "WriteVirtualMemory", "VirtualProtect", "SetTimer",
+  "URLDownloadToFileA", "Msxml2.XMLHTTP", "Microsoft.XMLHTTP", "MSXML2.ServerXMLHTTP", "User-Agent",
+  "Net.WebClient", "DownloadFile", "DownloadString", "SendKeys", "AppActivate", "CallByName",
+  "Chr", "ChrB", "ChrW", "StrReverse", "Xor", "RegOpenKeyExA", "RegOpenKeyEx", "RegCloseKey",
+  "RegQueryValueExA", "RegQueryValueEx", "RegRead",
+  "SYSTEM\\ControlSet001\\Services\\Disk\\Enum", "VIRTUAL", "VMWARE", "VBOX",
+  "GetVolumeInformationA", "GetVolumeInformation", "1824245000",
+  "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProductId",
+  "76487-337-8429955-22614", "andy", "C:\\exec\\exec.exe", "popupkiller", "SbieDll.dll", "SandboxieControlWndClass",
+  "C:\\file.exe", "currentuser", "Schmidti", "Afx:400000:0",
+  "AccessVBOM", "VBAWarnings", "ProtectedView", "DisableAttachementsInPV", "DisableInternetFilesInPV",
+  "DisableUnsafeLocationsInPV", "blockcontentexecutionfrominternet",
+  "VBProject", "VBComponents", "CodeModule", "AddFromString", "FORMULA.FILL",
+  "XMLHTTP", "WinHttpRequest", "URLDownloadToFile", "RegWrite",
+]);
+
+/* Python's `\b` on either side of a name, written out: a boundary is a change
+ * between a word character (a letter, a digit or `_`, as Python's Unicode
+ * `\w`) and anything else, so the side condition depends on whether the name
+ * itself starts or ends with one. */
+const WORD = "[\\p{L}\\p{N}_]";
+const isWordChar = (ch) => new RegExp(WORD, "u").test(ch);
+const nameMatcher = (name) => {
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const before = isWordChar(name[0]) ? `(?<!${WORD})` : `(?<=${WORD})`;
+  const after = isWordChar(name[name.length - 1]) ? `(?!${WORD})` : `(?=${WORD})`;
+  return new RegExp(before + esc + after, "iu");
+};
+const AUTORUN_MATCHERS = VBA_AUTORUN_NAMES.map((n) => [n, nameMatcher(n)]);
+const SUSPICIOUS_MATCHERS = VBA_SUSPICIOUS_KEYWORDS.map((n) => [n, nameMatcher(n)]);
+const found = (matchers, source) => matchers.filter(([, re]) => re.test(source)).map(([n]) => n);
+
+/* MS-OVBA §2.4.1.3: a CompressedContainer from `start` to the end of `buf`,
+ * or null when it is not one. Every copy token is checked against the chunk
+ * it copies within, every chunk against 4,096 decompressed bytes, and the
+ * whole output against `MEMBER_MAX` (the cap every inflated part carries). */
+function decompressOvba(buf, start) {
+  if (!(start < buf.length) || buf[start] !== 0x01) return null;
+  let out = new Uint8Array(4096);
+  let n = 0;
+  const grow = (need) => {
+    if (n + need <= out.length) return true;
+    if (n + need > MEMBER_MAX) return false;
+    const next = new Uint8Array(Math.min(MEMBER_MAX, Math.max(out.length * 2, n + need)));
+    next.set(out.subarray(0, n));
+    out = next;
+    return true;
+  };
+  let p = start + 1;
+  while (p < buf.length) {
+    if (p + 2 > buf.length) return null;
+    const header = u16(buf, p);
+    if (((header >>> 12) & 7) !== 3) return null;
+    const chunkEnd = Math.min(p + (header & 0x0fff) + 3, buf.length);
+    const chunkStart = n;
+    let q = p + 2;
+    if ((header & 0x8000) === 0) {
+      if (q + 4096 > buf.length || !grow(4096)) return null;
+      out.set(buf.subarray(q, q + 4096), n);
+      n += 4096;
+      p = q + 4096;
+      continue;
+    }
+    while (q < chunkEnd) {
+      const flags = buf[q++];
+      for (let bit = 0; bit < 8 && q < chunkEnd; bit++) {
+        if (((flags >>> bit) & 1) === 0) {
+          if (!grow(1)) return null;
+          out[n++] = buf[q++];
+          continue;
+        }
+        if (q + 2 > chunkEnd) return null;
+        const token = u16(buf, q);
+        q += 2;
+        const difference = n - chunkStart;
+        let bitCount = 4;
+        while ((1 << bitCount) < difference) bitCount++;
+        const lengthMask = 0xffff >>> bitCount;
+        const length = (token & lengthMask) + 3;
+        const offset = (token >>> (16 - bitCount)) + 1;
+        if (offset > difference || difference + length > 4096 || !grow(length)) return null;
+        for (let k = 0; k < length; k++, n++) out[n] = out[n - offset];
+      }
+    }
+    if (n - chunkStart > 4096) return null;
+    p = chunkEnd;
+  }
+  return out.slice(0, n);
+}
+
+/* MS-CFB: the compound file's directory and a reader for each stream, or
+ * null when it is not one: a bad header, a FAT, DIFAT, mini FAT or stream
+ * chain that leaves the file, loops or ends early, or a directory tree that
+ * loops. Every stream's chain is walked here, so a stream read never fails. */
+function readCfb(b) {
+  const MAGIC = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
+  if (b.length < 512 || MAGIC.some((x, i) => b[i] !== x) || u16(b, 0x1c) !== 0xfffe) return null;
+  const major = u16(b, 0x1a), shift = u16(b, 0x1e);
+  if (!((major === 3 && shift === 9) || (major === 4 && shift === 12)) || u16(b, 0x20) !== 6) return null;
+  const ss = 1 << shift;
+  if (b.length < ss) return null;
+  const nSectors = Math.floor((b.length - ss) / ss);
+  const sector = (n) => b.subarray(ss * (n + 1), ss * (n + 2));
+  const ids = (s) => Array.from({ length: s.length / 4 }, (_, i) => u32(s, 4 * i));
+  const nFat = u32(b, 0x2c), cutoff = u32(b, 0x38);
+  if (nFat > nSectors || cutoff !== 4096) return null;
+
+  const fatSectors = ids(b.subarray(0x4c, 0x200)).slice(0, Math.min(nFat, 109));
+  const seen = new Set();
+  for (let s = u32(b, 0x44), k = u32(b, 0x48); fatSectors.length < nFat; k--) {
+    if (k <= 0 || s >= nSectors || seen.has(s)) return null;
+    seen.add(s);
+    const list = ids(sector(s));
+    fatSectors.push(...list.slice(0, -1).slice(0, nFat - fatSectors.length));
+    s = list[list.length - 1];
+  }
+  if (fatSectors.some((s) => s >= nSectors)) return null;
+  const fat = fatSectors.flatMap((s) => ids(sector(s)));
+
+  const chain = (table, start, limit) => {
+    const out = [];
+    const visited = new Set();
+    for (let s = start; s !== 0xfffffffe; s = table[s]) {
+      if (s >= limit || s >= table.length || visited.has(s)) return null;
+      visited.add(s);
+      out.push(s);
+    }
+    return out;
+  };
+  const gather = (list, read, unit, size) => {
+    if (list.length * unit < size) return null;
+    const out = new Uint8Array(list.length * unit);
+    list.forEach((s, i) => out.set(read(s), i * unit));
+    return out.subarray(0, size);
+  };
+
+  const dirChain = chain(fat, u32(b, 0x30), nSectors);
+  if (!dirChain || !dirChain.length) return null;
+  const dirBytes = gather(dirChain, sector, ss, dirChain.length * ss);
+  const entries = [];
+  for (let at = 0; at + 128 <= dirBytes.length; at += 128) {
+    const e = dirBytes.subarray(at, at + 128);
+    const nameLen = u16(e, 0x40);
+    const name = nameLen >= 2 && nameLen <= 64 && nameLen % 2 === 0
+      ? new TextDecoder("utf-16le").decode(e.subarray(0, nameLen - 2)) : "";
+    const high = u32(e, 0x7c);
+    entries.push({
+      name, type: e[0x42], left: u32(e, 0x44), right: u32(e, 0x48), child: u32(e, 0x4c),
+      start: u32(e, 0x74), size: major === 3 ? u32(e, 0x78) : high >= 0x200000 ? NaN : high * 0x100000000 + u32(e, 0x78),
+    });
+  }
+  const root = entries[0];
+  if (!root || root.type !== 5) return null;
+
+  const miniChain = root.size > 0 ? chain(fat, root.start, nSectors) : [];
+  const miniStream = miniChain && gather(miniChain, sector, ss, root.size);
+  const miniFatChain = u32(b, 0x40) > 0 ? chain(fat, u32(b, 0x3c), nSectors) : [];
+  if (!miniStream || !miniFatChain) return null;
+  const miniFat = miniFatChain.flatMap((s) => ids(sector(s)));
+  const nMini = Math.floor(miniStream.length / 64);
+  const data = new Map();
+  for (const e of entries) {
+    if (e.type !== 2) continue;
+    if (!Number.isFinite(e.size)) return null;
+    const bytes = e.size === 0 ? new Uint8Array(0) : e.size < cutoff
+      ? gather(chain(miniFat, e.start, nMini) ?? [], (s) => miniStream.subarray(64 * s, 64 * s + 64), 64, e.size)
+      : gather(chain(fat, e.start, nSectors) ?? [], sector, ss, e.size);
+    if (!bytes) return null;
+    data.set(e, bytes);
+  }
+
+  /* A storage's children: its child's red-black tree, walked by the
+   * siblings. A loop or a reference past the directory is not a tree. */
+  const children = (parent) => {
+    const out = [];
+    const stack = [parent.child];
+    const visited = new Set();
+    while (stack.length) {
+      const i = stack.pop();
+      if (i === 0xffffffff) continue;
+      if (i >= entries.length || visited.has(i)) return null;
+      visited.add(i);
+      out.push(entries[i]);
+      stack.push(entries[i].left, entries[i].right);
+    }
+    return out;
+  };
+  return { root, children, data };
+}
+
+/* A storage's child of one name and type; CFB names compare case-blind. */
+function childNamed(cfb, parent, name, type) {
+  const list = cfb.children(parent);
+  if (!list) return undefined;
+  return list.find((e) => e.type === type && e.name.toUpperCase() === name.toUpperCase()) ?? null;
+}
+
+/* Text in the project's code page (PROJECTCODEPAGE) where the host decodes
+ * it, else Windows-1252: names and source are matched, never run. */
+function codePageDecoder(cp) {
+  const label = cp === 65001 ? "utf-8" : cp === 10000 ? "macintosh" : cp === 932 ? "shift_jis"
+    : cp === 936 ? "gbk" : cp === 949 ? "euc-kr" : cp === 950 ? "big5" : `windows-${cp}`;
+  try { return new TextDecoder(label); } catch { return new TextDecoder("windows-1252"); }
+}
+
+/* The `dir` stream's records (MS-OVBA §2.3.4.2): the project's name and code
+ * page, and each module's names and source offset. Every record is an id, a
+ * 32-bit size and that many bytes, except PROJECTVERSION (0x0009), whose size
+ * field is a fixed 4 followed by 6 bytes. null when a record runs past the
+ * stream. */
+function parseVbaDir(d) {
+  let codePage = 1252, projectRaw = null;
+  const modules = [];
+  let cur = null;
+  for (let p = 0; p < d.length;) {
+    if (p + 6 > d.length) return null;
+    const id = u16(d, p);
+    const size = id === 0x0009 ? 6 : u32(d, p + 2);
+    if (p + 6 + size > d.length) return null;
+    const data = d.subarray(p + 6, p + 6 + size);
+    p += 6 + size;
+    if (id === 0x0010) break; // the dir stream's terminator
+    else if (id === 0x0003 && size >= 2) codePage = u16(data, 0);
+    else if (id === 0x0004) projectRaw = data;
+    else if (id === 0x0019) { cur = { nameRaw: data }; modules.push(cur); }
+    else if (cur && id === 0x0047) cur.nameUnicode = data;
+    else if (cur && id === 0x001a) cur.streamRaw = data;
+    else if (cur && id === 0x0032) cur.streamUnicode = data;
+    else if (cur && id === 0x0031 && size >= 4) cur.offset = u32(data, 0);
+    else if (id === 0x002b) cur = null;
+  }
+  const text = codePageDecoder(codePage);
+  const utf16 = new TextDecoder("utf-16le");
+  const pick = (uni, raw) => (uni && uni.length ? utf16.decode(uni) : raw ? text.decode(raw) : null);
+  return {
+    text,
+    project: projectRaw ? text.decode(projectRaw) : null,
+    modules: modules.map((m) => ({
+      name: pick(m.nameUnicode, m.nameRaw), stream: pick(m.streamUnicode, m.streamRaw), offset: m.offset,
+    })),
+  };
+}
+
+/** Read an office file's VBA project for its module names, auto-run
+ *  procedures and suspicious keywords, without running anything (R32).
+ *  Async; never throws. */
+export async function readVbaProject(bytes, container, partName) {
+  const part = normalizePartName(partName);
+  try {
+    const read = await readPart(bytes, container, part);
+    if (!read.ok) return { ok: false, why: read.why, part };
+    const cfb = readCfb(read.bytes);
+    if (!cfb) return { ok: false, why: "cfb_invalid", part };
+    const vba = childNamed(cfb, cfb.root, "VBA", 1);
+    const dirEntry = vba ? childNamed(cfb, vba, "dir", 2) : vba;
+    if (vba === undefined || dirEntry === undefined) return { ok: false, why: "cfb_invalid", part };
+    if (!dirEntry) return { ok: false, why: "vba_dir_absent", part };
+    const dirBytes = decompressOvba(cfb.data.get(dirEntry), 0);
+    const dir = dirBytes && parseVbaDir(dirBytes);
+    if (!dir) return { ok: false, why: "vba_dir_unreadable", part };
+
+    const modules = [];
+    const undetermined = [];
+    for (const m of dir.modules) {
+      const entry = m.stream == null ? null : childNamed(cfb, vba, m.stream, 2);
+      const source = entry && Number.isSafeInteger(m.offset) ? decompressOvba(cfb.data.get(entry), m.offset) : null;
+      if (!source) {
+        const why = entry ? "module_source_undecompressable" : "module_stream_absent";
+        modules.push({ name: m.name, stream: m.stream, read: false, why, autoRun: [], suspicious: [] });
+        undetermined.push({ module: m.name, why });
+        continue;
+      }
+      const code = dir.text.decode(source);
+      modules.push({
+        name: m.name, stream: m.stream, read: true, why: null,
+        autoRun: found(AUTORUN_MATCHERS, code), suspicious: found(SUSPICIOUS_MATCHERS, code),
+      });
+    }
+    const union = (table, key) => table.filter((n) => modules.some((m) => m[key].includes(n)));
+    return {
+      ok: true, part, project: dir.project, modules,
+      autoRun: union(VBA_AUTORUN_NAMES, "autoRun"), suspicious: union(VBA_SUSPICIOUS_KEYWORDS, "suspicious"),
+      undetermined,
+    };
+  } catch {
+    return { ok: false, why: "cfb_invalid", part };
+  }
 }

@@ -20,7 +20,7 @@ export const STUB = join(HERE, "stubfetch.mjs");
 
 /* bundler's scripts (its `paths`), and the files of other modules they read. */
 const OWN = ["fleet-bundle.mjs", "provenance.mjs", "build-plane.mjs", "deploy.mjs", "derive-bindings.mjs",
-  "resolve-version.mjs", "jsonc.mjs", "bundles.mjs", "deploy-fleet.mjs", "release-assemble.mjs"];
+  "resolve-version.mjs", "jsonc.mjs", "bundles.mjs", "deploy-fleet.mjs", "release-assemble.mjs", "release-advisories.mjs"];
 
 export const hex = (b) => createHash("sha256").update(b).digest("hex");
 export const VERSION = "1.2.3";
@@ -76,10 +76,31 @@ export function addMember(root, name, { version = VERSION, services = [{ binding
   return dir;
 }
 
+/** The production lockfile a container member's image installs from (R27): one package each of the shapes the
+ *  reading must handle, a dev package it must leave out, and the root entry. */
+export const CONTAINER_LOCK = {
+  name: "runner", version: VERSION, lockfileVersion: 3, requires: true,
+  packages: {
+    "": { name: "runner", version: VERSION, dependencies: { zeta: "2.0.0", alpha: "1.0.0" } },
+    "node_modules/zeta": { version: "2.0.0", resolved: "https://registry.npmjs.org/zeta/-/zeta-2.0.0.tgz" },
+    "node_modules/alpha": { version: "1.0.0" },
+    "node_modules/zeta/node_modules/alpha": { version: "0.9.0" },
+    "node_modules/@scope/pkg": { version: "3.1.0", optional: true },
+    "node_modules/aliased": { name: "real-name", version: "5.0.0" },
+    "node_modules/devonly": { version: "9.9.9", dev: true },
+  },
+};
+/** R27's list for CONTAINER_LOCK, written by hand: every non-dev installed copy, by name then version. */
+export const CONTAINER_PACKAGES = [
+  { name: "@scope/pkg", version: "3.1.0" }, { name: "alpha", version: "0.9.0" }, { name: "alpha", version: "1.0.0" },
+  { name: "real-name", version: "5.0.0" }, { name: "zeta", version: "2.0.0" },
+];
+
 /** A container member (R24): `kind: "container"` and an `image` block, with R25's descriptor fields, and, unless
  *  `bundle: false`, the Worker that hosts its class (a guarded bundle) and a config declaring its container. Any
- *  `marker` key overrides the marker's (`undefined` removes one). */
-export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true } = {}) {
+ *  `marker` key overrides the marker's (`undefined` removes one). Its `package-lock.json` is `lock` (R27), none when
+ *  null. */
+export function addContainerMember(root, name, { bundle = true, marker = {}, containers = true, lock = CONTAINER_LOCK } = {}) {
   const dir = join(root, name);
   if (bundle) {
     addMember(root, name, { services: [] });
@@ -96,6 +117,7 @@ export function addContainerMember(root, name, { bundle = true, marker = {}, con
     class_name: "Runner", max_instances: 3, bind: [{ member: "alpha-worker", binding: "RUNNER" }], ...marker };
   for (const k of Object.keys(m)) if (m[k] === undefined) delete m[k];
   put(root, `${name}/fleet-member.json`, JSON.stringify(m, null, 2));
+  if (lock) put(root, `${name}/package-lock.json`, JSON.stringify(lock, null, 2) + "\n");
   return dir;
 }
 const parseCfg = (p) => JSON.parse(readFileSync(p, "utf8").split("\n").slice(1).join("\n"));

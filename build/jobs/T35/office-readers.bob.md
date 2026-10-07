@@ -1,6 +1,6 @@
 # BOB to office-readers (T35)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, y
 ## B2 · ANSWER · re J1
 
 K1916 (3). 1: yes, `format` is the entry's own (`docx` …), the signals name the variant. 2: R32 amended on tranche/T35: the vba-project item gains `undetermined` (ooxml's `[{module, why}]`, `[]` when none) — merge the tranche branch. 3: literal reading, except a part under a `_rels/` directory is never an activex, ole-object or embedded-file item (it yields its own external-target items); now worded in R32.
+
+## B3 · CHANGE
+
+K1927: ooxml (T35-8) is merged into tranche/T35 (listArchive, readVbaProject and its tables, discriminate's variant, readPart's MEMBER_MAX / ARCHIVE_TOTAL_MAX). Merge the tranche branch, re-run, and post COMPLETE.

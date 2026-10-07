@@ -6,7 +6,7 @@
  * copy (R18). No service treats a profile by its identity (R20): `id`, `name` and `covers` are read
  * only to be reported back.
  *
- * Services: list() · get(id) · validate(profile) · combine(list). */
+ * Services: list() · get(id) · validate(profile) · combine(list) · isLocale(value). */
 import FIRST from "./profiles/oakland-alameda.mjs";
 import TEST from "./profiles/test-port-ellery.mjs";
 import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
@@ -32,7 +32,9 @@ export const VOCABULARY = Object.freeze(["furniture", "bodies", "member_titles",
   /* (K1513) the budget and financial-report readers' words */
   "financial_report_titles", "budget_book_titles", "financial_headings", "fiscal_year_forms", "budget_headers",
   /* T34 (R58, R60): the values a vote is recorded in, a response's reported statuses, the MemberType map. Data, not patterns. */
-  "vote_values", "response_statuses", "member_types"]);
+  "vote_values", "response_statuses", "member_types",
+  /* T35 (R69): the labels a policy document prints in its header block */
+  "policy_headers"]);
 /* R58, R60: the vocabulary keys whose entries carry no pattern, with each entry's fields. */
 const DATA_VOCABULARY = Object.freeze({ vote_values: ["value", "label", "citation", "basis"],
   response_statuses: ["status", "label", "citation", "basis"], member_types: ["member_type", "capacity", "organisation", "basis"] });
@@ -42,7 +44,17 @@ export const MEMBER_CAPACITIES = Object.freeze(["elected", "appointed"]);
    laws. An office's level (R24) is not a law's level and keeps its own. */
 export const LAW_LEVELS = Object.freeze(["federal", "state", "county", "city"]);
 export const COUNTERPARTY_LEVELS = Object.freeze(["state", "county", "city", "district"]);
+/* R23: `SOURCE_KINDS` stays the six `standards` reads (its R1, R12); the seven, with T35's `standard`, are
+   `STANDARD_SOURCE_KINDS`, which validate accepts and `standards` adopts in its own job (K1902 (1)). */
 export const SOURCE_KINDS = Object.freeze(["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
+export const STANDARD_SOURCE_KINDS = Object.freeze([...SOURCE_KINDS, "standard"]);
+/* R31 (T35-1): the kinds that always carry a law level; the others carry one only for a government issuer at one. */
+const LEVELLED_KINDS = ["statute", "regulation", "ordinance", "court"];
+/* R64: the one list of an issuer's sectors (K1453's closed list); `entities` reads it from here (K1902 (2)). */
+export const SECTORS = Object.freeze(["government", "company", "nonprofit", "association", "political", "religious", "education", "other"]);
+/* R69: the fields a policy header label names (doctypes R26). */
+export const POLICY_HEADER_FIELDS = Object.freeze(["type", "number", "title", "effective", "supersedes", "reference", "coordinator",
+  "review_due", "revision_cycle"]);
 export const VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
 export const COUNTS = Object.freeze(["calendar", "business"]);
 /* R26: the event a period runs from; `entered`, `served` and `hearing` are COURTS'. `received` is the counterparty's
@@ -150,10 +162,13 @@ function minutes(v) {
   const m = typeof v === "string" && HHMM_RE.exec(v);
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 }
-/** One well-formed BCP 47 language tag (N77). `Intl` reads no clock, store or network. */
-function isLocale(v) {
-  if (!isStr(v) || /\s|,/.test(v)) return false;
-  try { return Intl.getCanonicalLocales(v).length === 1; } catch { return false; }
+/** One well-formed BCP 47 language tag (R37, N77): the one reading `validate` gives `locale.value`, exported for its
+ *  callers (instance-setup R64; N700). `Intl` reads no clock, store or network. Never throws. */
+export function isLocale(v) {
+  try {
+    if (!isStr(v) || /\s|,/.test(v)) return false;
+    return Intl.getCanonicalLocales(v).length === 1;
+  } catch { return false; }
 }
 
 /** Whether `b` is a basis a profile may carry. `TEST` only in a test profile (R2). */
@@ -175,6 +190,8 @@ function compile(p) {
 }
 /** How many capture groups a compiled pattern has. */
 const groupCount = (re) => new RegExp(`${re.source}|`, re.flags).exec("").length - 1;
+/** The names of a compiled pattern's named groups (R63). */
+const groupNames = (re) => Object.keys(new RegExp(`${re.source}|`, re.flags).exec("").groups || {});
 
 /* ------------------------------------------------------------------------------------------------ */
 /* Reading a value in a form (R3): used by validate to judge a crosswalk's pairs. The same meaning   */
@@ -322,6 +339,23 @@ function validateInto(p, errors) {
       }
     }
   };
+  /* R3: a normal form's parts, each a literal or {group, unpad?, upper?, default?} naming a group the pattern has. */
+  const normalParts = (path, normal, groups) => {
+    if (!Array.isArray(normal) || !normal.length) { err(path, "NORMAL_INVALID", "normal is a non-empty list of parts"); return false; }
+    let ok = true;
+    normal.forEach((part, j) => {
+      if (typeof part === "string") return;
+      if (!isObj(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups
+          || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k))
+          || (own(part, "unpad") && typeof part.unpad !== "boolean")
+          || (own(part, "upper") && typeof part.upper !== "boolean")
+          || (own(part, "default") && typeof part.default !== "string")) {
+        ok = false;
+        err(`${path}[${j}]`, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
+      }
+    });
+    return ok;
+  };
   const pattern = (path, v) => { if (!compile(v)) err(path, "PATTERN_INVALID", "a pattern is {re, flags?}: a regular expression that compiles, flags from i and u"); };
   const fields = (path, o, allowed) => {
     for (const k of Object.keys(o)) if (!allowed.includes(k)) err(`${path}.${k}`, "UNKNOWN_SECTION", `'${k}' is not a field here`);
@@ -393,20 +427,7 @@ function validateInto(p, errors) {
         const re = compile(f.pattern);
         if (!re) pattern(`${fa}.pattern`, f.pattern);
         const groups = re ? groupCount(re) : Infinity;
-        let normalOk = Array.isArray(f.normal) && f.normal.length > 0;
-        if (!normalOk) err(`${fa}.normal`, "NORMAL_INVALID", "normal is a non-empty list of parts");
-        else f.normal.forEach((part, j) => {
-          if (typeof part === "string") return;
-          const pa = `${fa}.normal[${j}]`;
-          if (!isObj(part) || !Number.isInteger(part.group) || part.group < 1 || part.group > groups
-              || Object.keys(part).some((k) => !["group", "unpad", "upper", "default"].includes(k))
-              || (own(part, "unpad") && typeof part.unpad !== "boolean")
-              || (own(part, "upper") && typeof part.upper !== "boolean")
-              || (own(part, "default") && typeof part.default !== "string")) {
-            normalOk = false;
-            err(pa, "NORMAL_INVALID", "a part is a literal string or {group, unpad?, upper?, default?} naming a group the pattern has");
-          }
-        });
+        let normalOk = normalParts(`${fa}.normal`, f.normal, groups);
         if (own(f, "clean")) {
           const c = f.clean;
           const bad = !isObj(c) || Object.keys(c).some((k) => !["strip", "spaces", "upper"].includes(k))
@@ -530,6 +551,10 @@ function validateInto(p, errors) {
         } else if (key === "roster_headers") {
           fields(ea, e, ["role", "pattern", "basis"]);
           if (!ROSTER_ROLES.includes(e.role)) err(`${ea}.role`, "VALUE_INVALID", `role is one of ${ROSTER_ROLES.join(", ")}`);
+        } else if (key === "policy_headers") {
+          /* R69: a label a policy document prints in its header block, and the field it names */
+          fields(ea, e, ["field", "pattern", "basis"]);
+          if (!POLICY_HEADER_FIELDS.includes(e.field)) err(`${ea}.field`, "VALUE_INVALID", `field is one of ${POLICY_HEADER_FIELDS.join(", ")}`);
         } else if (key === "budget_headers") {
           fields(ea, e, ["column", "pattern", "basis"]);
           if (!BUDGET_COLUMNS.includes(e.column)) err(`${ea}.column`, "VALUE_INVALID", `column is one of ${BUDGET_COLUMNS.join(", ")}`);
@@ -630,17 +655,57 @@ function validateInto(p, errors) {
   /* The action sections (R23–R26, R28, R31–R33, R35, R39–R44). */
   const codeKeys = new Set(own(p, "vocabulary") && isObj(p.vocabulary) && Array.isArray(p.vocabulary.codes)
     ? p.vocabulary.codes.filter(isObj).map((c) => c.key) : []);
+  const families = new Set(); /* R63: a key and series.key once in the profile */
   if (own(p, "standard_sources")) list("standard_sources", p.standard_sources).forEach((s, i) => {
     const at = `standard_sources[${i}]`;
     if (!entry(at, s)) return;
-    fields(at, s, ["source", "kind", "issuer", "level", "cite", "code", "key", "basis"]);
+    fields(at, s, ["source", "kind", "issuer", "sector", "level", "cite", "code", "key", "series", "normal", "basis"]);
     if (own(s, "key") && (typeof s.key !== "string" || !ID_RE.test(s.key))) err(`${at}.key`, "VALUE_INVALID", "key is an issuer's segment, matching ^[a-z0-9][a-z0-9-]*$");
     str(`${at}.source`, s.source, "source"); str(`${at}.issuer`, s.issuer, "issuer");
     if (isStr(s.source)) lawNames.add(s.source);
-    if (!SOURCE_KINDS.includes(s.kind)) err(`${at}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${SOURCE_KINDS.join(", ")}`);
-    if (!LAW_LEVELS.includes(s.level)) err(`${at}.level`, "LEVEL_UNKNOWN", `every standard source has a level, one of ${LAW_LEVELS.join(", ")}`);
+    if (!STANDARD_SOURCE_KINDS.includes(s.kind)) err(`${at}.kind`, "SOURCE_KIND_UNKNOWN", `kind is one of ${STANDARD_SOURCE_KINDS.join(", ")}`);
+    /* R31, R64 (T35-1): a statute, regulation, ordinance or court entry carries a law level; a policy, commitment or
+       standard carries one only when its issuer is a government at one of the four, and otherwise its sector. An entry
+       with a level reads sector government; a level beside another sector is refused. */
+    const levelled = !["policy", "commitment", "standard"].includes(s.kind);
+    if (own(s, "level") || levelled) {
+      if (!LAW_LEVELS.includes(s.level)) err(`${at}.level`, "LEVEL_UNKNOWN", levelled && !own(s, "level")
+        ? `a ${LEVELLED_KINDS.includes(s.kind) ? s.kind : "source"} entry carries a level, one of ${LAW_LEVELS.join(", ")}`
+        : `level is one of ${LAW_LEVELS.join(", ")}`);
+    }
+    if (own(s, "sector")) {
+      if (!SECTORS.includes(s.sector)) err(`${at}.sector`, "SECTOR_UNKNOWN", `sector is one of ${SECTORS.join(", ")}`);
+      else if (own(s, "level") && s.sector !== "government") err(`${at}.sector`, "VALUE_INVALID", "a law level is a government's: an entry with a level has sector government or none");
+    } else if (!levelled && !own(s, "level")) err(`${at}.sector`, "SECTOR_UNKNOWN", `an entry with no level names its issuer's sector, one of ${SECTORS.join(", ")}`);
+    const cite = compile(s.cite);
     pattern(`${at}.cite`, s.cite);
     if (own(s, "code") && !codeKeys.has(s.code)) err(`${at}.code`, "CODE_UNKNOWN", `no vocabulary.codes entry has key '${String(s.code)}'`);
+    /* R63, R65: one numbered family of the issuer's documents; its cite recognises one item of it */
+    if (own(s, "series")) {
+      const sr = s.series, sa = `${at}.series`;
+      if (!isObj(sr)) err(sa, "SERIES_INVALID", "series is {key, label}");
+      else {
+        fields(sa, sr, ["key", "label"]);
+        if (typeof sr.key !== "string" || !KIND_RE.test(sr.key)) err(`${sa}.key`, "SERIES_INVALID", "series.key matches ^[a-z][a-z0-9_]*$");
+        if (!isStr(sr.label)) err(`${sa}.label`, "SERIES_INVALID", "series.label is how the family's documents name it, non-empty");
+        if (!own(s, "key")) err(sa, "SERIES_INVALID", "an entry with a series carries its issuer's key");
+        else if (typeof s.key === "string" && typeof sr.key === "string") {
+          const k = `${s.key}\u0000${sr.key}`;
+          if (families.has(k)) err(sa, "SERIES_INVALID", `the family ${s.key}/${sr.key} is given twice`);
+          families.add(k);
+        }
+      }
+      if (cite) {
+        const names = groupNames(cite);
+        if (!names.includes("number")) err(`${at}.cite`, "SERIES_INVALID", "a series' cite has a named group number, the item's number as written");
+        if (names.includes("edition") && s.kind !== "standard") err(`${at}.cite`, "SERIES_INVALID", "an edition group is a standard's designation only");
+      }
+    }
+    /* R63: the number's normal form, R3's parts over cite's groups */
+    if (own(s, "normal")) {
+      if (!own(s, "series")) err(`${at}.normal`, "SERIES_INVALID", "normal is a series' number's normal form: given with a series");
+      normalParts(`${at}.normal`, s.normal, cite ? groupCount(cite) : Infinity);
+    }
     basis(at, s);
   });
   const roles = new Set();
@@ -964,7 +1029,7 @@ function validateInto(p, errors) {
       const at = `law_ranks[${i}]`;
       if (!entry(at, r)) return;
       fields(at, r, ["kind", "level", "rank", "basis"]);
-      if (!SOURCE_KINDS.includes(r.kind)) err(`${at}.kind`, "RANK_INVALID", `kind is one of ${SOURCE_KINDS.join(", ")}`);
+      if (!STANDARD_SOURCE_KINDS.includes(r.kind)) err(`${at}.kind`, "RANK_INVALID", `kind is one of ${STANDARD_SOURCE_KINDS.join(", ")}`);
       if (!LAW_LEVELS.includes(r.level)) err(`${at}.level`, "RANK_INVALID", `level is one of ${LAW_LEVELS.join(", ")}`);
       if (!isPosInt(r.rank)) err(`${at}.rank`, "RANK_INVALID", "rank is a positive integer, 1 the highest");
       const k = `${r.kind}\u0000${r.level}`;
@@ -1398,8 +1463,47 @@ function merge(profiles) {
     else conflict("time_zone", given, "the active profiles name different time zones, so none is given: a time of day there is undetermined");
   }
 
-  for (const sec of ["search_terms", "records_laws", "standard_sources", "legal_organisations"])
+  for (const sec of ["search_terms", "records_laws", "legal_organisations"])
     if (has(sec)) { const v = []; for (const p of profiles) union(v, p[sec], p.id); view[sec] = strip(v); }
+
+  /* standard sources are unioned (R14); a family's label, cite and normal under its key and series key, and an
+     entry's level and sector under its source and issuer, are one value per key (R66): profiles that disagree have it
+     withheld. A family withheld is dropped from the view whole, so a citation of it is recognised by no profile's
+     choice (K1916 (2)); a level or sector withheld leaves its entry without that field. */
+  if (has("standard_sources")) {
+    const FAMILY = "a family of documents";
+    const given = profiles.flatMap((p) => (p.standard_sources || []).map((e) => ({ profile: p.id, e: clone(e) })));
+    const ONE = [
+      [(e) => (isObj(e.series) ? `${e.key}\u0000${e.series.key}` : null), [
+        ["series.label", (e) => e.series.label, (e) => { delete e.series.label; }],
+        ["cite", (e) => e.cite, (e) => { delete e.cite; }],
+        ["normal", (e) => e.normal ?? null, (e) => { delete e.normal; }]],
+        FAMILY, "the family is dropped from the view: a citation of it is recognised by no profile until they agree"],
+      [(e) => `${e.source}\u0000${e.issuer}`, [
+        ["level", (e) => e.level ?? null, (e) => { delete e.level; }],
+        /* an entry with a level reads sector government when it gives none (R64) */
+        ["sector", (e) => e.sector ?? (own(e, "level") ? "government" : null), (e) => { delete e.sector; }]],
+        "a standard source", "who issues it is undetermined"],
+    ];
+    for (const [keyOf, facts, what, says] of ONE) {
+      const groups = new Map();
+      for (const g of given) { const k = keyOf(g.e); if (k === null) continue; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(g); }
+      for (const [k, gs] of groups) {
+        if (new Set(gs.map((g) => g.profile)).size < 2) continue;
+        for (const [f, read, drop] of facts) {
+          const vals = gs.map((g) => ({ profile: g.profile, value: read(g.e), basis: g.e.basis }));
+          if (agree(vals)) continue;
+          conflict(`standard_sources[${k.replace("\u0000", "/")}].${f}`, vals,
+            `the active profiles give ${what} (${k.replace("\u0000", ", ")}) different ${f === "series.label" ? "labels" : `${f}s`}, so it is withheld: ${says}`);
+          for (const g of gs) drop(g.e);
+          if (what === FAMILY) for (const g of gs) g.dropped = true;
+        }
+      }
+    }
+    const v = [];
+    for (const g of given) if (!g.dropped) union(v, [g.e], g.profile);
+    view.standard_sources = strip(v);
+  }
 
   /* counterparties are unioned; an office's oversight marker and its hours are one value per role and body (R29,
      R42). */

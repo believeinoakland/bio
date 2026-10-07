@@ -9,7 +9,8 @@
  * with a rule naming one and observing the other, a one-day weekend, a venue's cutoff, outages and receipt rule,
  * every unit, direction and anchor, fiscal years, law ranks, proceedings, schemes, a lawful demand, recurrences. T34's (R62):
  * vote values, response statuses, a MemberType map, a counterparty with ids, within and organisation, and schemes for a
- * body, a seat and an institution. */
+ * body, a seat and an institution. T35's (R68): policy series of a government issuer at a level and at none, a company's,
+ * a standard whose designation reads an edition, a series whose normal form removes formatting, and policy headers. */
 const R = String.raw;
 
 /* R40: a template's whole attribution, as filing-templates reads a profile template (its R15); every blank in
@@ -211,6 +212,18 @@ export default {
     staff_titles: [
       { pattern: { re: R`\b(?:Town\s+Reeve|Harbour\s+Master|Deputy\s+Clerk)\b`, flags: "i" }, basis: "TEST" },
     ],
+    /* T35 (R69) */
+    policy_headers: [
+      { field: "type", pattern: { re: R`^HARBOUR\s+STANDING\s+ORDER$` }, basis: "TEST" },
+      { field: "number", pattern: { re: R`^Order\s+No\.` }, basis: "TEST" },
+      { field: "title", pattern: { re: R`^Concerning:` }, basis: "TEST" },
+      { field: "effective", pattern: { re: R`^In\s+force\s+from:` }, basis: "TEST" },
+      { field: "supersedes", pattern: { re: R`^Replaces:` }, basis: "TEST" },
+      { field: "reference", pattern: { re: R`^Authority:` }, basis: "TEST" },
+      { field: "coordinator", pattern: { re: R`^Owner:` }, basis: "TEST" },
+      { field: "review_due", pattern: { re: R`^Review\s+by:` }, basis: "TEST" },
+      { field: "revision_cycle", pattern: { re: R`^Reviewed\s+every:` }, basis: "TEST" },
+    ],
     /* T34 (R58, R60, R62) */
     vote_values: [
       { value: "content", label: "Content", citation: "P.E.B.L. § 5(1)", basis: "TEST" },
@@ -245,6 +258,23 @@ export default {
       level: "city", cite: { re: R`\bP\.?E\.?B\.?L\.?\s*§\s*\d+`, flags: "i" }, code: "pebl", key: "selectboard", basis: "TEST" },
     { source: "Marlow County Budget Commitments", kind: "commitment", issuer: "Marlow County Commission", level: "county",
       cite: { re: R`\bMCBC\s+\d{4}-\d+` }, basis: "TEST" },
+    /* T35 (R63, R64, R68): a government's series at a level, whose normal form drops the number's padding */
+    { source: "Port Ellery Harbour Standing Orders", kind: "policy", issuer: "Harbour Master", level: "city",
+      key: "harbour-master", series: { key: "hso", label: "Harbour Standing Order" },
+      cite: { re: R`\bHSO\s+(?<number>(\d{1,2})\/(\d{2}))(?:\s+para\.?\s*(?<portion>\d+))?`, flags: "i" },
+      normal: ["HSO-", { group: 2, unpad: true }, "/", { group: 3 }], basis: "TEST" },
+    /* a government at no law level: its sector says what issuer it is (R31) */
+    { source: "Marlow Schools Board Rules", kind: "policy", issuer: "Marlow Schools Board", sector: "government",
+      key: "marlow-schools", series: { key: "rule", label: "Board Rule" },
+      cite: { re: R`\bBoard\s+Rule\s+(?<number>[A-Z]\d{2})\b` }, basis: "TEST" },
+    /* a company's own policy */
+    { source: "Ellery Ferries Code of Conduct", kind: "policy", issuer: "Ellery Ferries Ltd", sector: "company",
+      key: "ellery-ferries", series: { key: "coc", label: "Code of Conduct rule" },
+      cite: { re: R`\bEF\s+Rule\s+(?<number>\d+(?:\.\d+)?)` }, basis: "TEST" },
+    /* a standards body's standard, its designation reading an edition */
+    { source: "Marlow Harbour Safety Standards", kind: "standard", issuer: "Marlow Harbour Safety Institute", sector: "association",
+      key: "mhsi", series: { key: "mhs", label: "MHSI Standard" },
+      cite: { re: R`\bMHS\s+(?<number>\d{3})(?:(?:-|,\s*)(?<edition>\d{4})(?:\s+edition)?)?` }, basis: "TEST" },
   ],
   counterparties: [
     { role: "Town Clerk", body: "City of Port Ellery", level: "city", elected: false,
