@@ -141,7 +141,7 @@ export class Tasks {
      bundle (taskDrain keeps those, it does not drop them), and retrying that at
      the short cadence would be a hot loop against work that only a later promote
      can unblock. BATCH bounds one tick; a deeper backlog re-arms and continues.
-     (T35; SCHEDULER #29 J1 (2), K2029) The backstop backs off: an event tried `a`
+     (R18; SCHEDULER #29 J1 (2), K2029, K2038) The backstop backs off: an event tried `a`
      times is next due BACKSTOP × 2^(a−1) after its last try (capture R45's durable
      `attempts` and `lastTry`), and one tried RETRY_LIMIT times wants no wake at
      all, so an unfiled capture costs a bounded number of timed retries and then an
@@ -360,7 +360,9 @@ export class Tasks {
         (id) => !!this.#one(`SELECT 1 FROM tasks WHERE id=?`, id));
       if (!taskId) {
         const exhausted = mintExhausted("TASK");
-        out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts,
+        /* a try like an unfiled event's, so R18's back-off bounds it too */
+        this.#capture.taskEventAttempt({ kind: q.kind, captureSha: q.capture_sha, at });
+        out.waiting.push({ captureSha: q.capture_sha, attempts: q.attempts + 1,
           code: exhausted.code, check: exhausted.check, detail: exhausted.detail });
         continue;
       }
@@ -996,6 +998,10 @@ export class Tasks {
   }
 }
 
+/* R18: the drain's back-off constants, exported by name. */
+export const TASK_DRAIN_BACKSTOP_MS = Tasks.TASK_DRAIN_BACKSTOP_MS;
+export const TASK_DRAIN_RETRY_LIMIT = Tasks.TASK_DRAIN_RETRY_LIMIT;
+
 const OF = new WeakMap();
 
 /** K61: the one tasks instance for this Durable Object's storage (`ctx`, or the storage itself). On first reaching it,
@@ -1025,7 +1031,7 @@ export function tasksOf(ctx, deps = {}) {
         scheduler.register("tasks", t.drainConsumer());
         const capture = (deps && deps.capture) || captureOf(ctx);
         capture.on("task", "tasks", async () => ({ armedAt: await t.armDrain() }));
-        /* a committed promotion may have filed a waiting capture: the drain is re-armed at its delay (K2029) */
+        /* a committed promotion may have filed a waiting capture: the drain is re-armed at its delay (R18) */
         promotion.onCommitted("tasks", async () => { await t.armDrain(); return null; });
       }
     }

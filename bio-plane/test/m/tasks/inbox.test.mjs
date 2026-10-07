@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, inbox, ev, host, NOW, iso } from "./world.mjs";
-import { tasksOf, tasksOps, Tasks, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
+import { tasksOf, tasksOps, Tasks, TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
@@ -138,7 +138,8 @@ test("R1 (N322): an exhausted task id space keeps the event, its waiting entry c
   const r = w.t.taskDrain({ actor: "alarm", now: iso(NOW) });
   const ex = mintExhausted("TASK");
   assert.deepEqual([r.drained, r.created, r.folded, r.refused, r.remaining], [0, [], [], [], 1]);
-  assert.deepEqual(r.waiting, [{ captureSha: "a3", attempts: 0, code: "MINT_EXHAUSTED", check: ex.check, detail: ex.detail }]);
+  assert.deepEqual(r.waiting, [{ captureSha: "a3", attempts: 1, code: "MINT_EXHAUSTED", check: ex.check, detail: ex.detail }]);
+  assert.equal(w.queue[0].attempts, 1, "counted as a try, so R18's back-off bounds it");
   assert.equal(ex.check, "C-59.6");
   assert.equal(w.queue.length, 1, "the event is kept, not dropped");
   assert.equal(w.all(`SELECT count(*) c FROM tasks`)[0].c, before, "no task is written");
@@ -234,11 +235,12 @@ test("R1 (T35; K1951, K1974): the drain and every count ask capture only for kin
   assert.deepEqual([...new Set(reads.map(([, kind]) => kind))], ["authority-undetermined"]);
 });
 
-test("R1 (K2029): after a tick that drains nothing the wake backs off by each event's own attempts, and past the retry limit an unfiled capture holds no timer", async () => {
+test("R18 (K2038): after a tick that drains nothing the wake backs off by each event's own attempts, and past the retry limit an unfiled capture holds no timer", async () => {
   const w = box([ev("zz")]);
   const c = w.t.drainConsumer();
   const at = (ms) => Date.parse(iso(ms));     // the drain stamps whole seconds
-  assert.equal(Tasks.TASK_DRAIN_RETRY_LIMIT, 8);
+  assert.deepEqual([TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT], [60000, 8], "exported by name");
+  assert.deepEqual([Tasks.TASK_DRAIN_BACKSTOP_MS, Tasks.TASK_DRAIN_RETRY_LIMIT], [TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT]);
   let t = NOW;
   const wakes = [];
   for (let a = 1; a <= Tasks.TASK_DRAIN_RETRY_LIMIT; a++) {
@@ -277,7 +279,7 @@ test("R1 (K2029): after a tick that drains nothing the wake backs off by each ev
   assert.equal(c.wake(t), null);
 });
 
-test("R1 (K2029): a committed promotion re-arms the drain at its delay, through promotion's commit notice registered at start", async () => {
+test("R18 (K2038): a committed promotion re-arms the drain at its delay, through promotion's commit notice registered at start", async () => {
   const listeners = [];
   let armed = 0;
   const w = inbox([ev("zz")], HOMES, { start: true, fakes: {
