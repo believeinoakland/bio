@@ -873,6 +873,17 @@ console.log("\n--- FL-12 · the fan-out's internet level files its request by AD
     { method: "POST", headers: { authorization: `Bearer ${AIK}` }, body: JSON.stringify({ run: "run-1", target: "INQ-1", url: "https://example.org/a" }) })).json()).result ?? {};
   t("FL-12a: a request carrying its locator only as `url` is refused CAPTURE_REQUEST_NOT_PUBLIC (C-28.2) by the mock, as by the plane",
     [direct.code, direct.check], ["CAPTURE_REQUEST_NOT_PUBLIC", "C-28.2"]);
+  /* capture-requests R49 (T35; F2, K1880): the mock refuses, as the plane does, an address the record does not
+     already hold (query included) and one over 2,048 characters, so a run's request is never accepted on a mock's word. */
+  /* Aimed at no question, so a held address passes R49 and stops at the next rule, and nothing is queued here. */
+  const direct49 = async (address) => (await (await mock.fetch(`http://plane/?op=capturerequest&store=scratch`,
+    { method: "POST", headers: { authorization: `Bearer ${AIK}` },
+      body: JSON.stringify({ run: "run-1", target: "PROJ-1", address }) })).json()).result ?? {};
+  t("capture-requests R49: the mock refuses an address the record does not hold, query included, and an over-long one, by name; a held one (host case aside) passes to the next rule",
+    [(await direct49("https://example.org/a?d=leaked")).code, (await direct49("https://elsewhere.example/a")).code,
+     (await direct49("https://example.org/a?" + "x".repeat(2048))).code, (await direct49("https://EXAMPLE.org/a")).code],
+    ["CAPTURE_REQUEST_ADDRESS_NOT_HELD", "CAPTURE_REQUEST_ADDRESS_NOT_HELD", "CAPTURE_REQUEST_ADDRESS_TOO_LONG",
+     "CAPTURE_REQUEST_NOT_AN_INQUIRY"]);
   const out = await (await runOp(mf, { ...base,
     judgements: [{ targets: [{ level: "internet", url: "https://example.org/a" }] }, { reports: goodReturns }, {}, {}] })).json();
   const st = await mockState(mf);

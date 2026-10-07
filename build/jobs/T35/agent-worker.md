@@ -53,3 +53,11 @@ T35-50 applied whole, on the tranche with run-rules and agent-model merged (B3, 
 - Suites: all green but requirements R45 ×3 (red 30: my bundle is stale, not edited). t35 206/0. Checks: format, architecture, coverage (57/57), ownership (25 files): 0 failures.
 - REPORT: `bio-plane/test/d260-resume.test.mjs` and `fence-e2e.test.mjs` (red 18) are not in the tree, so red 18 may be moot.
 - Still to merge when you say: ai-runs, capture-requests, skills, answers, agent-runner.
+
+## Completion after B5 (CHANGE)
+
+**Applied.** Merged `tranche/T35` (capture-requests T35-45, answers T35-47). `test/plane-capturerequest.mjs` now refuses as capture-requests R49 does, after the public-locator rule: over 2,048 characters `CAPTURE_REQUEST_ADDRESS_TOO_LONG`, and an address the record does not already hold (scheme and host lower-cased, query and fragment included) `CAPTURE_REQUEST_ADDRESS_NOT_HELD`; the record's holdings are its `HELD_ADDRESSES`, which hold every address the suites' runs request. A new fanout arm drives the mock directly: an unheld address, one with an added query, and an over-long one refused by name; a held one (host case aside) passes to the next rule. answers R1 (a draft's reach is `askAdmits`) needs no change: R55's equality and the draft's read tool hold (ask 57/0, t35 206/0).
+
+**Tests and checks** (merge `tranche/T35` @ capture-requests and answers): agent-worker 140/0; ask 57/0; cascade 56/0; fanout 185/0; harness 261/0; plan 55/0; requirements 290/3 (R45 ×3, red 30); t35 206/0; versions 20/0; wire-vocabulary 83/0. format 0 failures; architecture 0 failures; coverage 57 of 57, 0 failures; ownership 25 files, 0 failures.
+
+Size (session_015n9TPjBe1pYaYabW7hyVhC): test runs 35, module lines 2477
