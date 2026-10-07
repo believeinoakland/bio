@@ -33,3 +33,7 @@ With the source change stashed, this test fails (submission refused `WIZARD_DRAF
 - `checks/ownership.mjs` wizard-scripts tranche/T35: 0 failures (3 files: the source, the test, this record).
 
 Size (session_01F19u4T5HkFviDXS9qe5X7j): test runs 3, module lines 2273
+
+## J1 · COMPLETE
+
+T35-84 applied: a {template} ref beginning with @ calls offeredVersion({name, project?, viewer}) (the script's project at submit, approve and the registration's re-check); an <id>@<n> ref keeps its split. New test in checks.test.mjs names K2021 (red without the fix). wizard-scripts 64/64; format, architecture, coverage (27/27), ownership (3 files) 0 failures. Stales bio-plane/dist/bio-plane.bundled.mjs (§14). Record: build/jobs/T35/wizard-scripts.md.
