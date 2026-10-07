@@ -12,7 +12,7 @@ import { retrievalOf } from "../../../src/retrieval/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
-const STEP = "control-plane";   /* control-plane's promotion step (its R42), registered under its name */
+const STEP = "store-door";   /* store-door's promotion step (its R5, was control-plane R42), registered under its name (K2037) */
 const { MODULE_MAPS, ownMaps } = await import("./maps.mjs");   /* after the fixture: control-plane reaches `cloudflare:workers` */
 
 const tables = (sql) => [...sql.exec(`SELECT type, name, sql FROM sqlite_master ORDER BY type, name`)].map((r) => ({ ...r }));

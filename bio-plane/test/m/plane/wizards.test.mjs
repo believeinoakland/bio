@@ -2,8 +2,8 @@
    object's storage first in layer 11, its migration runs in R3's pass, its tables are declared to purge, its ops map is
    routed through control-plane's door, and before the first request it is registered (its R13) with the screen registry
    and the Civicsmith library the bundle carries, the member op table (`op-declarations`' `OPS`), the acts a machine is
-   refused (`affordances`' `MACHINE_REFUSALS`), the labelled machine drafts (`case-authoring` R39's, and since T34
-   `groupdescriptiondraft` and `writinghelp`, DEC-152, DEC-153) and the acts `affordances` grades `irreversible`. The release
+   refused (`op-grades`' `MACHINE_REFUSALS`), the labelled machine drafts (`case-authoring` R39's, and since T34
+   `groupdescriptiondraft` and `writinghelp`, DEC-152, DEC-153) and the acts `op-grades` grades `irreversible`. The release
    suite, holding `requiredFailures` empty for that registration, is `release.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -14,7 +14,7 @@ import { SCREENS } from "../../../src/plane/screens.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps, WIZARD_SCRIPTS_TABLES, CIVICSMITH_LIBRARY, SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
-import { MACHINE_REFUSALS, RUNGS } from "../../../src/affordances.mjs";
+import { MACHINE_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 
 const WZ = [...WIZARD_SCRIPTS_TABLES];
@@ -70,7 +70,7 @@ test("R19 (T34; DEC-152, DEC-153; K1818): before the first request it is registe
   assert.deepEqual(wizardRegistration(), { screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
                                            machineDrafts: drafts, irreversible: graded, library: CIVICSMITH_LIBRARY });
   assert.deepEqual(MACHINE_DRAFTS, drafts);
-  /* the irreversible acts are affordances' grading, read whole (publish among them), never a copy of it */
+  /* the irreversible acts are op-grades' grading, read whole (publish among them), never a copy of it */
   assert.ok(graded.includes("publish"), graded.join());
   assert.deepEqual(irreversibleActs(), graded);
   assert.deepEqual(irreversibleActs({ a: "irreversible", b: "reasoned", c: "irreversible" }), ["a", "c"], "follows the grading it is given");
