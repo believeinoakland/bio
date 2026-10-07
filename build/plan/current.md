@@ -60,6 +60,7 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    28. leg-earning `earnedBasis` R1/R3 "for a cell leg" (its regex pins content's pre-DEC-149 sentence), until T35-82 (K1973).
    29. affordances `t33.test.mjs`:136 (grading of every op: events' `discretionrecord`, `assessmentrecord`, `usewithdraw`, `usesof` and calculations' `usesfreeze`, `applicationrecipes` have no grade) until T35-66 grades them; control-plane `r53-routes.test.mjs`:60 (no spec for events' four ops, calculations' two, duties' `poweruses`, `uselink`, `useunlink`, `reviewpropose`) until T35-70 declares them (K1976).
    30. agent-runner's own R12 export and R15 tests and agent-worker `requirements.test.mjs` R45 (×2): their committed bundles are stale from T35-49 and T35-48/T35-43 until L6's close regenerates them (§14; K1985).
+   31. From capture-requests' merge (T35-45, R49: a requested address must be one the record holds) until T35-83 and T35-73: scheduler `plane.test.mjs`:151 (R12) and plane `sweep.test.mjs`:29, :41 (R2 and its negative control) file requests for addresses their scenes never captured (CAPTURE-REQUESTS #13 J2; K1993).
 
 ## BOB's review (K1899)
 
@@ -190,6 +191,8 @@ Each line is one job (P8): every T35 entry for that module. Fields: module · (N
 
 - **T35-65 · following** · (N652) watches the published copy of each policy a group holds on a schedule, keeps every version seen, shows a change "Noticed" for a member · K1727, K1740; DEC-145 · req: a new R (POLICIES L5 PO16, STANDARDS L5), BOB's wording · depends T35-31. Not here: whole portals and new editions (left out).
 
+- **T35-83 · scheduler** · (K1993; capture-requests R49, a provided service changed in L6, P10) `test/m/scheduler/plane.test.mjs`:151's R12 scene holds its requested address first (a member's `op=acquire` of a page linking to it with `subresources: true`, or a receipt, as capture-requests' own `plane.test.mjs` does), clearing red 31's scheduler arm; no requirement changes · K1993 · req: none · depends T35-45 (merged in L6).
+
 ### L11
 
 - **T35-66 · affordances** · (N623, DEC-142) `personexpunge` a named exception beside `actionholdrelease` (DEC-113 tier): the full dialog states what is removed and from where, that no one can undo it, that the marker "Removed where the law requires, <date>, by <member>" stays, and that published cases change only through the docket; confirmed with a reason naming the law or order. (N657, DEC-143) `personexpunge` shows the Irreversible weight. (N597, its share) `facts.mjs`:112, :202 read `caseRelation` from case-tensions. (N695, its share) R39's `connection_kinds` carried once, not as both `values` and `words` (the job checks legacy-ui's reads). Grades the new ops (as T34-75): `unpack`, `archivelist`, the note revise and delete ops, `subscriptionsignin`, `findin`, `securitymap`, the offices read, `signout`, `signouteverywhere`, the recovery-code ops, the co-archive setting · K1643, K1700, K1774, K1864 · req: BOB's wording of DEC-142, DEC-143; R39 · depends —. **P6:** 3,944 lines; the dialog and the grades pass about 4,000: BOB splits first (K617) before the job adds them.
@@ -266,7 +269,7 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 
 ## Summary
 
-**Jobs per layer:** L1 13, L2 4, L3 6, L4 4, L5 13, L6 11, L7 2, L8 8, L9 4, L10 1, L11 13. **Total 79.** Joiners for DEC-149 rows only (rule 4): signatures, host-governor, calibration, reading-pipeline, content, connections, intent, reevaluation (runtime-limits, capture and citation carry other entries too).
+**Jobs per layer:** L1 13, L2 4, L3 6, L4 4, L5 13, L6 11, L7 2, L8 8, L9 4, L10 2, L11 13. **Total 80.** Joiners for DEC-149 rows only (rule 4): signatures, host-governor, calibration, reading-pipeline, content, connections, intent, reevaluation (runtime-limits, capture and citation carry other entries too).
 
 **Entries carried (`next.md` N551–N705):** wholly in T35: N553, N586, N623, N633–N636, N638–N640, N642, N644, N646, N648, N649, N651, N653, N655, N657, N658, N659 (with its constructs), N660, N661, N664, N674–N678, N680 (as the security package), N681, N682, N685, N686–N694, N696, N697, N699, N700, N702, N704. In part: N597, N643, N645, N652, N688 (the archive screen left out), N695, N698, N701, N703. Left out: N551 (part), N559, N563, N566, N572, N579, N592, N632, N641, N647, N650, N654, N666, N669, N670, N672, N673, N683. Closed: N564, N629, N637, N656, N684, N705 (K1895) (N667, N671, N679 moved into T34).
 
@@ -274,6 +277,7 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 
 - **control-plane (T35-72):** re-pins `rows-before-r43.json` for C-26.2 (BIAS #11 J1), C-28.13, C-83.1, .3, .4, .5, .8, C-48.1, .4, .7, C-68.1 and C-89.1 with red 19's rows (ACQUISITION #12 J2, ATTESTATION #3 J1); `op=unpack` calls `unpack(store, {archiveSha, by, cls, member})` with the stamps (`cls: "member"` for a member session, `"daemon"` for the tick), the other three ops the instance's methods; promotes `acquire`'s `document`, then `unpack.documents`. Its scheduled tick drains capture's `archive-unpack` events as `op=unpack` (K1951); builds acquisition's instance (`acquisitionOf`) for its four ops; promotes an archive's document, then its files'; routes `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`; passes `country` to capture's `knock` and `knockAttempt` (capture R85).
 - **op-declarations (T35-70):** declares `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`.
+- **plane (T35-73):** also its `system/sweep.test.mjs`:29, :41 hold the requested address first (capture-requests R49; red 31; K1993).
 - **plane (T35-73):** its `ask.test.mjs` signs in through `login` or writes the token's SHA-256 (red 22). Builds `ownHosts` (the copy's own host and every fleet member's) and passes it through capture R73 to acquisition R42 and capture-sources R55, R65; until its merge the own-host check refuses nothing (F16, low).
 - **capture (T35-22):** an `archive-unpack` queue kind in R15, drained by the daemon, so an automatic unpack continues past one call; R48's quoted "knocks to this instance" re-worded with the P row (`doorbell.mjs`:24), wording only.
 - **`modules.json` at each START:** provenance, attestation and acquisition use ooxml; capture-sources uses record-grammar; acquisition uses membership.

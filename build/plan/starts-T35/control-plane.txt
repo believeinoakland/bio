@@ -6,3 +6,5 @@ Also (K1972, RETRIEVAL #13 J2 (5)): `op=findin` is in `retrievalRoutes`; it read
 Also (K1983, AGENT-WORKER #11 J1): when the door routes a draft (`writinghelp`, `groupdescriptiondraft`) to `agent-worker`'s `POST /draft` with no `grant` (switch off, or a firsthand field), it sends `pack`, the rendered pack it holds (your R41), in the body (agent-worker R59).
 Also (K1986, AI-RUNS #12 J1): `askusage` (`dispatch.mjs`:316) passes the `mode` it is given (`ask` or `draft`, ai-runs R48) to `countAskUsage`, never hard-coding `ask`; `askceiling` (:314) may pass `mode: "draft"` to `aiUseCheck` for the draft's own words (R52).
 Also (K1987, CITATION #8 J2): `op=cite` takes the new `found` (retrieval R73's match) and `question` parameters, carried in the query (the plane passes no body to `citationOps`); citation's rows C-45.14–16 and C-33.52–53 join the catalogue pins at T35-72.
+
+Also inherited (K1993): red 31, scheduler `plane.test.mjs`:151 and plane `sweep.test.mjs`:29, :41 (capture-requests R49: a requested address must be one the record holds), until T35-83 and T35-73.
