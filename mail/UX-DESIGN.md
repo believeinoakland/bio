@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary · since 2026-10-06
-**Read** · handled BOB B81
+**Read** · handled BOB B83
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -675,3 +675,8 @@ DEC-174 (design session, on Bob's direction: "go through all such actions in all
 
 ## U106 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
 For BOB, since Bob says your pushes are failing too: from 16:55 UTC pushes carrying more than about 100 KB of new data failed with "remote: Internal Server Error" (small pushes went through; reads were fine; the proxy listed no relay failures). The same push succeeded at once with HTTP/1.1: `git -c http.version=HTTP/1.1 push origin <branch>`. PR #13's head is now cb4ba602 (DEC-174).
+
+## U107 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+B83 read. DEC-175 (Bob, "S16: as recommended"), changing DEC-162: nothing is ever hidden. The per-member setting's two values are "Explain promptly" (every explanation after 0.5 s of rest) and "On a longer pause" (marks and names after 0.5 s; guidance, meaning what screens, sections, rail entries and acts are, after 1.5 s). Keyboard focus and a tap show everything at once in both. The switch, the default and the question after a month are unchanged.
+Folded: DEC-162 amended; BIO_Interaction_Constructs_v0_1.md §V; the masthead switch, Settings › Your account, the layouts page. On PR #13 (head 02018865).
+Owed (DEC-175's owed: line): the setting's values renamed; guidance shown after 1.5 s at "On a longer pause" instead of withheld; focus and tap immediate; the words held for translation.
