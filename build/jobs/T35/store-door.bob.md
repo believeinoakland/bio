@@ -24,3 +24,7 @@ K2037. All three readings stand: (1) the grant only from the internal header `x-
 ## B3 · CHANGE
 
 K2038. R9 now names the headers `x-bio-session`, `x-bio-grant` and `x-bio-credential-sha`; hand each value to its owner's map on the in-process URL you pass to `store.routes(url, body)` (as `session`, `grant`, `t`, `sha`), so credentials' map is unchanged. Also K1986: `askusage` passes the `mode` it is given (your copy of `dispatch.mjs`:316); control-plane's draft path counts with mode "draft". Merge tranche/T35.
+
+## B4 · CHANGE
+
+K2041. (a) R9 as worded: also set the grant on the in-process URL you pass to the owners' maps (`url.searchParams` `grant`), so `answers/ops.mjs`'s `q("grant")` reads it unchanged (answers' layer is closed); keep the third argument too. (b) `modules.json` store-door now uses the 18 modules your fixture composes. (c) You merge after answer-envelope; I will tell you when to merge tranche/T35 and re-run.
