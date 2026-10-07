@@ -45,9 +45,10 @@ export const STANDING_FIND_CAPTURES_MAX = 10000;
 export const FIND_ORIGIN = "search";
 /** R20, R28: the label a standing find's entry carries in place of "machine work". */
 export const STANDING_FIND_LABEL = "found by search, from your standing question";
-/* retrieval's per-call bounds (its R73; K1881): captures read per call, and the most items a kind answers. */
-const FIND_PAGE = 200;
+/* retrieval's bounds (its R73; K1881): the most items a kind answers per call, and the most ids an enumerated scope
+   holds (a selection is frozen into at most that many, K1982). */
 const FIND_ITEMS = 500;
+const FIND_IDS = 200;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const json = (v) => (v === undefined ? null : JSON.stringify(v));
@@ -101,14 +102,14 @@ function findOf(find) {
 const given = (v) => v !== null && v !== undefined;
 
 /** R15, R28: a member's standing question, by that member's own act: a saved query, or a find. */
-export function standingQuestionSet(self, { author = null, question = null, query = null, find = null, cadence = null,
-                                            ends = null } = {}) {
+export function standingQuestionSet(self, { author = null, owner = null, question = null, query = null, find = null,
+                                            cadence = null, ends = null } = {}) {
   if (!memberOf(author) || isMachineIdentity(author))
     return refusal("MACHINE_CANNOT_AUTHOR", "a standing question is set only by a member's own act");
   if (given(query) === given(find))
     return refusal("STANDING_NEEDS_SEARCH", given(query) ? "a standing question keeps a saved query or a find, not both"
       : "a standing question keeps a saved query or a find, and neither was given");
-  if (given(find)) return setFind(self, { author, question, find, cadence, ends });
+  if (given(find)) return setFind(self, { author, owner, question, find, cadence, ends });
   const ql = self.dep("query");
   const asked = typeof query === "string" ? { q: query } : query && typeof query === "object" ? query : {};
   const saved = ql && typeof ql.savedForm === "function"
@@ -131,21 +132,37 @@ export function standingQuestionSet(self, { author = null, question = null, quer
 }
 
 /* R28: a standing find. `findIn` is asked once, under the author's sight, to check the find (its refusal answered as
-   given); it writes nothing. Then R15's cadence and end, and the row. */
-function setFind(self, { author, question, find, cadence, ends }) {
+   given); it writes nothing. Then R15's cadence and end. A selection expires and a standing find outlives it, so a
+   selection is frozen here into the bundle ids it now holds under the author's sight (retrieval's `selectionResolve`,
+   its R19, read under the selection's owner, the control plane's stamp), refused `SCOPE_TOO_LARGE` over 200 (K1982).
+   Then the row. */
+function setFind(self, { author, owner, question, find, cadence, ends }) {
   const want = findOf(find);
   const retrieval = self.dep("retrieval");
   const stamp = stampOf(memberOf(author));
+  const maker = typeof owner === "string" && owner ? owner : stamp;
+  const failed = (e) => ({ ok: false, reason: "NO_SCOPE", code: "NO_SCOPE", detail: String(e && e.message || e).slice(0, 200) });
   let checked;
   try {
     checked = retrieval && typeof retrieval.findIn === "function"
-      ? retrieval.findIn({ ...want, limit: 1, viewer: stamp, owner: stamp })
-      : { ok: false, reason: "NO_SCOPE", code: "NO_SCOPE", detail: "no find is reachable" };
-  } catch (e) { checked = { ok: false, reason: "NO_SCOPE", code: "NO_SCOPE", detail: String(e && e.message || e).slice(0, 200) }; }
+      ? retrieval.findIn({ ...want, limit: 1, viewer: stamp, owner: maker }) : failed("no find is reachable");
+  } catch (e) { checked = failed(e); }
   if (!checked || checked.ok !== true) return checked;
   if (!CADENCES.includes(cadence)) return refusal("BAD_CADENCE", `the cadence is one of ${CADENCES.join(", ")}`);
   const now = self.now();
   if (!isDay(ends) || ends <= today(self, now)) return refusal("STANDING_NEEDS_END", "the end date is a date after today");
+  const handle = want.scope && typeof want.scope === "object" && Object.keys(want.scope).length === 1
+    ? want.scope.selection : undefined;
+  if (handle !== undefined) {
+    let sel;
+    try { sel = retrieval.selectionResolve({ handle, viewer: stamp, owner: maker, weight: "report" }); } catch (e) { sel = failed(e); }
+    if (!sel || sel.ok !== true) return sel;
+    const ids = Array.isArray(sel.members) ? sel.members : [];
+    if (ids.length > FIND_IDS)
+      return { ok: false, reason: "SCOPE_TOO_LARGE", code: "SCOPE_TOO_LARGE", limit: FIND_IDS, got: ids.length,
+               detail: `a standing find keeps a selection as the ids it holds, at most ${FIND_IDS}, and this one holds ${ids.length}` };
+    want.scope = { ids };
+  }
   const words = typeof question === "string" && question.trim() ? question : null;
   const r = self.record.transact(() => {
     const a = self.record.allocId("STQ", now.slice(0, 4));

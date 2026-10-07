@@ -20,8 +20,9 @@ export function answersOps(a, url, body) {
     ruleservicesswitch: () => a.ruleServicesSwitch({ on: b.on === true, by: viewer }),
     /* R15–R20 */
     /* R15, R28: a saved query or a find (`{scope, kinds, term?}`, as `retrieval.findIn` takes them) */
-    standingset: () => a.standingQuestionSet({ author: viewer, question: b.question ?? null, query: b.query ?? null,
-                                                find: b.find ?? null, cadence: b.cadence ?? null, ends: b.ends ?? null }),
+    standingset: () => a.standingQuestionSet({ author: viewer, owner: q(url, "owner"), question: b.question ?? null,
+                                                query: b.query ?? null, find: b.find ?? null, cadence: b.cadence ?? null,
+                                                ends: b.ends ?? null }),
     standing: () => (q(url, "id") ?? b.id ? a.standingQuestionRead({ id: q(url, "id") ?? b.id, viewer })
                                            : a.standingQuestionsOf({ viewer })),
     standingend: () => a.standingQuestionEnd({ id: q(url, "id") ?? b.id ?? null, author: viewer }),

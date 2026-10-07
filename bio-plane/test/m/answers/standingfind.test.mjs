@@ -144,6 +144,39 @@ test("R28 at most 500 new matches per entry, truncated with the count of the res
   assert.equal((await w.a.standingTick(new Date(w.clock.now).toISOString())).ran[0].new_found, false);
 });
 
+test("R28 a selection is frozen at set time into the ids it then holds (K1982): the find outlives the selection; over 200 ids it is refused SCOPE_TOO_LARGE, writing no question", async () => {
+  const w = findWorld();
+  const c = w.arrive("The clerk shall file the report.");
+  const sel = await w.retrieval.selectionCreate({ owner: ANN, viewer: ANN, ids: ["INFO-C1", "INFO-OUT"] });
+  assert.equal(sel.ok, true, JSON.stringify(sel));
+  assert.equal(code(setFind(w, { find: { scope: { selection: sel.handle }, kinds: ["requirements"] }, author: VERA })), "NOT_YOURS",
+               "read under the selection's owner");
+  const q = setFind(w, { find: { scope: { selection: sel.handle }, kinds: ["requirements"] } });
+  assert.equal(q.ok, true, JSON.stringify(q));
+  assert.deepEqual(q.find.scope, { ids: ["INFO-C1", "INFO-OUT"] });
+  assert.deepEqual(w.a.standingQuestionRead({ id: q.id, viewer: ANN }).question.find.scope, { ids: ["INFO-C1", "INFO-OUT"] });
+  w.retrieval.selectionRelease({ handle: sel.handle, owner: ANN });
+  await w.a.standingTick(new Date(w.clock.now).toISOString());
+  const more = w.cap("late.pdf", "late bytes");
+  w.doc("INFO-C1", { project: w.proj }, { captures: [w.cap("c1.pdf", "c bytes 1"), more] });
+  w.unit(more.sha, "INFO-C1", 0, "The treasurer must reconcile the accounts.");
+  w.at("2026-09-28");
+  const t = await w.a.standingTick(new Date(w.clock.now).toISOString());
+  assert.equal(t.ran[0].new_found, true, "the released selection's ids still run, and a capture arriving in one is new");
+  assert.deepEqual(w.a.standingAnswersFor({ member: ANN }).entries[0].finds.matches.map((m) => m.capture_sha), [more.sha]);
+  assert.equal(w.rows(`SELECT held_back_json FROM standing_runs WHERE stq_id=? AND held_back_json IS NOT NULL`, q.id).length, 0);
+  /* over 200 */
+  const ids = [];
+  for (let i = 0; i < 201; i++) { const id = `INFO-S${i}`; w.doc(id, {}, {}); ids.push(id); }
+  const big = await w.retrieval.selectionCreate({ owner: ANN, viewer: ANN, ids });
+  assert.equal(big.ok, true, JSON.stringify(big));
+  const n = w.count("standing_questions");
+  const r = setFind(w, { find: { scope: { selection: big.handle }, kinds: ["money"] } });
+  assert.equal(code(r), "SCOPE_TOO_LARGE"); assert.equal(r.limit, 200); assert.equal(r.got, 201);
+  assert.equal(w.count("standing_questions"), n, "no question written");
+  assert.equal(c.sha.length, 64);
+});
+
 test("R28 a run whose scope findIn now refuses ran, found nothing, and says why", async () => {
   const w = findWorld();
   const c = w.arrive("The clerk shall file.");
