@@ -68,4 +68,5 @@
 - An entry found mid-tranche for a module whose job has not started joins that job's START when small; `next.md` holds only open entries, applied ones moving to `archive/next-applied.md`. (K279, K411)
 - The handoff is `build/handoff.md`, replaced whole each time (TRANSITION.md is archived). (K2026)
 - Reading-set budgets: BOB's takeover set at most 250 KB; a module job's set at most 300 KB, measured by `build/plan/reading-sets.py` at each START, a job reading of each used module only its Purpose and the services its Uses names (mechanics §3, K2057); a set still over it given a task digest by the job's workers (K2032). (K2053, K2057)
+- P20 and mechanics §17 (K2060) hold the rule below: sets are defined in advance, measured, and fixed by trim, split, then a task summary whose helpers know the work and what follows it; Bob hears only of a set BOB cannot fix.
 - Everything a session must read is read whole, never scanned. A body too large is trimmed, or workers told the task read it in full and write the summary most useful to that task, citing its sections; a summary serves only its task, and the source stays binding. (K2028, K2032)

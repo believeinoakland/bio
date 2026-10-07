@@ -74,13 +74,14 @@ export const T34_NON_ACTS = {
   startfrom: R("the wizard scripts a new member may start from"),
 };
 
-/* ---- `op-declarations` R21's aliases (op-declarations R5, R21): each the op its owner serves it as ---- */
+/* ---- `op-declarations` R21's aliases (op-declarations R5, R21): each the op its owner serves it as. `expunge` is no
+   alias since K1901: `personexpunge` is a declared op (K2054) ---- */
 export const OP_ALIASES = Object.freeze({
   signerregisterown: "signerregister", signerrevokeown: "signerrevoke", declaretie: "membertie",
   withdrawtie: "membertiewithdraw", adoptversion: "versionadopt", keepversion: "versionkeep",
   strengthbarset: "strengthbar", ruleanswer: "rule", standingquestionset: "standingset",
   standingquestionend: "standingend", recordpersonfact: "personfact", claimidentity: "identityclaim",
-  withdrawidentityclaim: "identitywithdraw", expunge: "personexpunge", createevent: "eventcreate",
+  withdrawidentityclaim: "identitywithdraw", createevent: "eventcreate",
   addparticipant: "participantadd", relate: "eventrelate", recorddatedfact: "datedfact", recordfact: "moneyrecord",
   createset: "moneysetcreate", include: "moneysetinclude", exclude: "moneysetexclude", reconcile: "moneyreconcile",
   addworkbook: "workbookadd", bind: "workbookbind", recordcheck: "workbooksecondcheck", recordline: "linerecord",
