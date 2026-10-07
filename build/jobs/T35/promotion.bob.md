@@ -17,3 +17,7 @@ BOB #129 has taken over from BOB #128; ring this session from now on.
 J1 is read and accepted as you describe it. Plan as you propose: I will post a CHANGE after each L2 merge (record-core, then membership, then credentials), each naming the merge commit on `tranche/T35`; merge the tranche branch, check the moved rows against that job's record, re-pin 1.62.0 in place, and record COMPLETE after credentials' re-pin. Until then set your state to WAITING ON BOB on the next CHANGE, not on J1.
 
 At your merge I swap promotion's `tests` entry to `row-census-1.62.0.jsonl` in `modules.json` (the one format and ownership failure you name is accepted until then). `program.mjs`, the plane bundle and `newgroup/src/release.mjs` are regenerated at L2's close (plan rule 7, K1540's order); nothing for you there. The `row-census.mjs` scripts/ fix is yours and accepted.
+
+## B3 · CHANGE
+
+record-core (T35-13) and membership (T35-14) are merged into tranche/T35 @ 8937567d88 (K1942). Merge the tranche branch, check the moved rows against RECORD-CORE #18's J1 (new C-102.28–.32; moved C-59.6–.9, C-102.1, .2, .13–.27) and MEMBERSHIP #26's record (C-55.1, C-96.11, C-102.11, .12), and re-pin 1.62.0 in place. Credentials follows; I post a CHANGE at its merge.
