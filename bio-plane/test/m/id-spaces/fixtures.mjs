@@ -159,3 +159,33 @@ export const REPORTERS = {
     { key: "Tst.", name: "Test", cite_type: "state", editions: [{ key: "Tst.", start: null, end: null }], variations: { "R.": "Tst." } },
   ],
 };
+
+/* Policy series and standard designations (R30–R33), in `jurisdictions` R63's `standard_sources` shape, made up
+ * for tests: a city's administrative instructions (a government issuer at a level), a police department's
+ * general and special orders, a school board's policies (a government issuer at no level, its `normal`
+ * removing the zero-padding of the number), a company's code-of-conduct rules (another sector), and a
+ * standards body's standards whose designation reads an edition. They are grafted onto a combined view, in the
+ * view's own shape (with `profile` and `bases`), because `combine` learns `series` only with the jurisdictions job
+ * that merges in this tranche (its R63–R66, T35-1); `withSeries` is equivalent to combining a profile that
+ * holds them. */
+const src = (o, profile = "test-harbor") => ({ ...o, basis: T, profile, bases: [{ profile, basis: T }] });
+export const SERIES = [
+  src({ source: "Harbor administrative instructions", kind: "policy", issuer: "Harbor City Administrator", level: "city", key: "harbor",
+        series: { key: "ai", label: "Administrative Instruction" },
+        cite: P("\\bA\\.?I\\.?\\s+(?<number>\\d{1,2}\\.\\d{1,3})(?:\\s*§\\s*(?<portion>\\d+(?:\\.\\d+)*))?") }),
+  src({ source: "Harbor police general orders", kind: "policy", issuer: "Harbor Police Department", level: "city", key: "harbor-pd",
+        series: { key: "dgo", label: "Departmental General Order" },
+        cite: P("\\bDGO\\s+(?<number>[A-Z]-\\d{1,2}(?:\\.\\d+)?)", "i"), normal: [{ group: "number", upper: true }] }),
+  src({ source: "Harbor police special orders", kind: "policy", issuer: "Harbor Police Department", level: "city", key: "harbor-pd",
+        series: { key: "so", label: "Special Order" }, cite: P("\\bS\\.?O\\.?\\s+(?<number>\\d{4})") }),
+  src({ source: "Harbor school board policies", kind: "policy", issuer: "Harbor Unified School District Board", sector: "government", key: "harbor-usd",
+        series: { key: "bp", label: "Board Policy" }, cite: P("\\bBP\\s+(?<number>\\d{4})"), normal: ["BP ", { group: "number", unpad: true }] }),
+  src({ source: "Tidewater Corp code of conduct", kind: "policy", issuer: "Tidewater Corp", sector: "company", key: "tidewater",
+        series: { key: "coc", label: "Code of Conduct rule" }, cite: P("\\bCOC[- ](?<number>\\d{1,3})") }),
+  src({ source: "Test Standards Association standards", kind: "standard", issuer: "Test Standards Association", sector: "association", key: "tsa",
+        series: { key: "std", label: "TSA standard" },
+        cite: P("\\bTSA\\s+(?<number>\\d{3,4})(?:(?:,\\s*|-)(?<edition>\\d{4})(?:\\s+edition)?)?") }),
+];
+export function withSeries(view, sources = SERIES) {
+  return { ...view, standard_sources: [...(view.standard_sources || []), ...sources] };
+}
