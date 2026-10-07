@@ -123,7 +123,7 @@ export const CALIBRATION_CADENCE_MS = 30 * 24 * 60 * 60 * 1000;
 export function cadenceSentence(ms = CALIBRATION_CADENCE_MS) {
   const days = ms / (24 * 60 * 60 * 1000);
   return `one probe per calibratable engine every ${
-    Number.isInteger(days) ? days : days.toFixed(2)} day(s), on this instance's own account`;
+    Number.isInteger(days) ? days : days.toFixed(2)} day(s), which your group's Civicsmith runs on its own account`;
 }
 
 /** The verdicts `compare` can return. Named rather than spelled, because every
@@ -284,8 +284,8 @@ export function drifted(verdict) {
     case DRIFT.BETTER:
       return { verdict, raises_obligation: false, regrades: false,
                why: `this engine now measures BETTER. Nothing is raised and nothing moves: a grade `
-                  + `rises only by an authored act, so an automatic upgrade here would be the plane `
-                  + `making a claim nobody authored (DEC-4)` };
+                  + `rises only by an authored act, so an automatic upgrade here would be your group's `
+                  + `Civicsmith making a claim nobody authored (DEC-4)` };
     case DRIFT.SAME:
       return { verdict, raises_obligation: false, regrades: false,
                why: `this measurement agrees with the one it supersedes, so nothing rests on a `
