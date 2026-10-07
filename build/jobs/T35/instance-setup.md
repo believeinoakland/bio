@@ -2,6 +2,28 @@
 
 **Status** · session_01QZZgwL4ojyBbUL3VUYqwZM · depth 2 · RUNNING until 2026-10-07T21:31:59Z (users' suites (op-declarations, control-plane, plane, installer) on my branch and on tranche/T35, compared) · handled B2
 
+## Completion
+
+**Entries applied (T35-69; N700, K1868 (3); K1888, K1943; F10, K1874 (Q6), K2038; K1974).**
+- R64 (N700): `memberLanguageSet` reads a tag through `jurisdictions.isLocale` (its R37); this module's own `isLanguageTag` is gone. Tested: one case over 23 tags, each accepted exactly when `isLocale` accepts it, and `isLanguageTag` no longer exported.
+- R66 (K1888): `adminRecoveryStep({viewer})`, route `adminrecoverystep` (viewer from the control plane's stamp): `{ok, administrators, codes_held, remaining, met}` from `membership.activeAdmins` and `credentials.recoveryCodesState` for the viewer's own role; `NOT_AN_ADMIN` through `membership.notAnAdmin` for anyone else, machine classes included; a provider that throws or answers no list or state is `STORE_DID_NOT_ANSWER`, never `met: false`; it writes nothing and gates nothing. Tested over the real membership and credentials (credentials' test world).
+- R47 (F10, K2038): `HOSTING_CONTROL.guide` holds the block's last sentence, the same words for the page and the installer: "If the one-time password may have been seen, replace it: follow the guide “Replace the one-time password” in your group's Civicsmith, on its first page and in its members and keys section." `hostingControlBlock(cls, {guideHref})` makes the guide's name a link when given an href. The page passes setup-page's `ROTATION_GUIDE_HREF`. The installer's call is unchanged and renders the sentence as text. Until setup-page's merge brings the name, the page reads it through a namespace import.
+- R65 (K1974): `groupDescriptionDraft` takes the door's call to agent-worker's `/draft` per request (`turn`), used only after every refusal. A draft that cannot be served answers `ASSISTANT_DRAFT_UNAVAILABLE`: no turn, a turn that throws or answers nothing, or a draft over the limits. Comments and the sentence re-worded for T35. DEC-172 is not folded, so K1757's wording stands.
+
+**Deferred.** None. The page's guide link test (R47, `page.test.mjs` "setup-page R14 …") is red until setup-page's T35 merge brings `ROTATION_GUIDE_HREF` and the guide; I merge tranche/T35 after that merge when BOB says so, and switch the namespace read to a named import.
+
+**Found in other modules (to BOB).**
+- plane `test/m/plane/door.test.mjs`:110 pins instance-setup's routes at twenty-four and drives each one. There are now 25 (`adminrecoverystep`), so the test is red from this merge until plane's job (T35-73) counts and drives the new route. op-declarations (T35-70) declares the op: a read, administrators' sessions, `NEEDS` null (requirements' Suggestions), and control-plane (T35-72) routes it.
+- Stale generated artifact: `newgroup/dist/newgroup.bundled.mjs` embeds `setup-fleet.mjs` (R47's sentence), so installer's `newgroup-bundle-fresh.test.mjs` is red until the layer close regenerates it (mechanics §14). The installer's screen then shows the guide sentence as text with no code change (installer R34).
+- control-plane (T35-72): R57's door may pass its `/draft` call to `groupDescriptionDraft` as `turn`, which keeps the refusal order and the `{focus, purpose}` shape in one place. Or it may build the answer itself, as R57 words it. Either meets R65.
+
+**Tests and checks run** (on the commit below):
+- `node --test bio-plane/test/m/instance-setup/`: ℹ tests 108 ℹ pass 107 ℹ fail 1 . The one failure is the R47 guide-link case, waiting on setup-page.
+- The users' suites (op-declarations, control-plane, plane with migrate-released, installer with newgroup-bundle-fresh), mine against tranche/T35 @ 301119dbe8: the same failures, plus the two above.
+- `format`: 0 failures. `architecture instance-setup`: 0 failures. `coverage instance-setup`: 48 of 48. `ownership instance-setup tranche/T35`: 0 failures.
+
+Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 9, module lines 2522
+
 ## J1 · QUESTION
 
 R47 (F10): the block's guide name is a link on the page (setup-page R14) to setup-page R27's guide. The link needs the guide element's id, which is setup-page's, and setup-page (before me in the order) does not export one yet (job/T35/setup-page has no guide so far).
