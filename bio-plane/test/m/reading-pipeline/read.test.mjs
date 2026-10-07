@@ -154,7 +154,7 @@ test("R3 R11: a tier-2 member that fails, refuses or is unbound leaves tier 1 st
   const w = fresh();
   const bad = { page: 0, reason: "no_tounicode", count: 1 };
   const t1 = i2([{ page: 0, text: "x", undetermined: [bad, bad, bad] }]);
-  for (const [env, says] of [[{}, /no pdf-worker member is bound/],
+  for (const [env, says] of [[{}, /no pdf-worker member is set up in your group's Civicsmith/],
                              [{ PDF_WORKER: member(() => ({ status: 500, body: { ok: false } })) }, /answered without improving/],
                              [{ PDF_WORKER: member(() => new Error("down")) }, /could not be reached/]]) {
     const r = (await readPdf(w, t1, { env })).reading;
@@ -322,7 +322,7 @@ test("R11: a determined reading carries text_source, text_tier, text_container a
   const u = (await readPdf(w, i2([{ page: 0, text: "", undetermined: [bad, bad] }]))).reading;
   assert.equal(u.found, false);
   assert.equal(u.read_from_text, false);
-  assert.match(u.basis, /no pdf-worker member is bound/);
+  assert.match(u.basis, /no pdf-worker member is set up in your group's Civicsmith/);
 });
 
 test("R12 R21: page_count is the structure's count when positive, else null, never zero; container_extent itemises by the keys the entry emitted, absent when no entry answered", async () => {

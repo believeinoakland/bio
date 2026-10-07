@@ -112,8 +112,9 @@ export async function tier2Escalate(env, { sha, storeName, text }) {
 
 /* The sentence a reading's basis carries when tier 2 could not help (R3: "the reason is carried"). */
 export function tier2FailureNote(failure) {
+  /* DEC-149 (T35-24, K1960): on the reading's basis, so it names the group's Civicsmith, never "this instance". */
   return failure === "unbound"
-    ? "tier 1 read essentially nothing of this document and no pdf-worker member is bound to this instance, so tier 1's reading stands"
+    ? "tier 1 read essentially nothing of this document and no pdf-worker member is set up in your group's Civicsmith, so tier 1's reading stands"
     : failure === "no_improvement"
       ? "tier 1 read essentially nothing of this document and the pdf-worker member answered without improving it, so tier 1's reading stands"
       : failure === "unavailable"

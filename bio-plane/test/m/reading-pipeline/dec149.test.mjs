@@ -1,16 +1,18 @@
 /* reading-pipeline: DEC-149's sweep rows for this module (T35-24; `plan/draft-T35-dec149-l1-l7.md`, rows
-   `index.mjs`:591–592 and :945). Two sentences a member reads on a reading's basis named the deployment "this
-   instance"; each now names the group's Civicsmith. Each test pins its whole sentence, at the module's interface,
+   `index.mjs`:591–592 and :945, and :116, re-classed M by K1960). Three sentences a member reads on a reading's
+   basis named the deployment "this instance"; each now names the group's Civicsmith. Each test pins its whole sentence, at the module's interface,
    and that no member-facing text of it says "instance" or "the plane". Each test names the requirement ids it checks
    in its title. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { tier3Extend } from "../../../src/reading-pipeline/index.mjs";
+import { tier3Extend, tier2Escalate, tier2FailureNote } from "../../../src/reading-pipeline/index.mjs";
 import { fresh, hold, doc, withEntry, i2, noText } from "./fixture.mjs";
 
 const OLD_NAMES = /\binstance\b|\bthe plane\b/i;
 const NO_OCR = "this document has no text layer to read and no OCR engine is installed in your group's Civicsmith, "
              + "so nothing is claimed about what it says";
+const NO_TIER2 = "tier 1 read essentially nothing of this document and no pdf-worker member is set up in your group's "
+              + "Civicsmith, so tier 1's reading stands";
 const NO_STORE = "your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read";
 
 test("R24 R21 (DEC-149): with no evidence store handed in, the failed reading's basis is exactly \"your group's Civicsmith has no evidence store set up, so the capture's bytes cannot be read\", never \"this instance\"", async () => {
@@ -33,5 +35,19 @@ test("R4 R9 R11 (DEC-149): with no OCR member bound, the tier-3 note is exactly 
   assert.equal(reading.found, false);
   assert.equal(reading.tier3_candidate, true);
   assert.ok(reading.basis.startsWith(`${NO_OCR} (`), reading.basis);
+  assert.doesNotMatch(reading.basis, OLD_NAMES);
+});
+
+test("R3 R11 (DEC-149, K1960): with no pdf-worker member bound, the tier-2 note is exactly \"tier 1 read essentially nothing of this document and no pdf-worker member is set up in your group's Civicsmith, so tier 1's reading stands\", on the reading's basis, never \"this instance\"", async () => {
+  const bad = { page: 0, reason: "no_tounicode", count: 1 };
+  const t1 = i2([{ page: 0, text: "", undetermined: [bad, bad, bad] }]);
+  assert.equal((await tier2Escalate({}, { sha: "d", storeName: "bio", text: t1 })).outcome, "unbound");
+  assert.equal(tier2FailureNote("unbound"), NO_TIER2);
+  const w = fresh();
+  const d = await hold(w.evidence, "%PDF dec149 tier2");
+  const { reading } = await withEntry({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(t1), pages: 1, notes: [] }) },
+    () => w.read(doc({ digest: d, ct: "application/pdf", format: "pdf" })));
+  assert.equal(reading.text_tier, 1);
+  assert.ok(reading.basis.startsWith(`${NO_TIER2} — `), reading.basis);
   assert.doesNotMatch(reading.basis, OLD_NAMES);
 });
