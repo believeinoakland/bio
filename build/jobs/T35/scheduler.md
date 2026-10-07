@@ -11,7 +11,7 @@
 
 **Deferred.** None.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 - `plane` (T35-73, red 31's other arm, `sweep.test.mjs`:29, :41): K1993's remedy, "a member's `op=acquire` of a page linking to it", is not enough by itself in a scene that then follows or reads the alarm. The acquired page must also be filed in a bundle (a register row), or its task event keeps a 60 s wake. Worth carrying into T35-73's START.
 - `tasks` (R1; layer 11): a capture that is acquired and never filed keeps its event `waiting` indefinitely. `task-drain`'s wake is then `now + TASK_DRAIN_BACKSTOP_MS` (60 s) at every reconcile, with no end, so an otherwise idle instance's alarm fires every minute for as long as an unfiled capture exists. That works against scheduler's Purpose and R15 ("an idle instance holds no timer"), and costs a Durable Object wake a minute. A bound (back off by attempts, or stop waking once an event has waited past some limit, until a promotion files it) is tasks' to state. This is a finding against tasks' efficiency, not a red.
 - Generated artifacts: none made stale (tests only).
