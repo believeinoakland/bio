@@ -36,7 +36,9 @@
 - Outside my module, my files' effect: `test/system/row-census.test.mjs` lists C-112.53 arrived and the nine rows held twice (red 2, declared above); `test/m/control-plane/totality.test.mjs` R22 fails naming `law-relations/checks.mjs` (red 26). Layer tests: none named in the manifest.
 - `format`: 130 modules, 129 requirements files; 0 failures. `architecture law-relations`: 8 product files, 25 relative imports; 0 failures. `coverage law-relations`: 20 of 20 live requirement ids named by a test; 0 failures. `ownership law-relations tranche/T35`: 9 files; 0 failures.
 
-Size (session_01MvNbDarJEgUrb9jDF7FgTx): test runs 14, module lines 944
+**Re-opened by CHANGE B3 (K1973; STANDARDS #9's J3).** Merged `tranche/T35` @ e7a590241f. R21 applied: `machineRelate(author)` and `refuseNoCitation(of, citation)` exported, the one site each of `MACHINE_CANNOT_RELATE` and `LAW_RELATION_NO_CITATION` (no change of what they answer), so `standards` (its R40, R43) mints the codes through them. Test `relations.test.mjs` R21: each answers deep-equal to `lawRelate`'s refusal for the same author or citation, through its row; `machineRelate` answers null for a named member. Module tests: 26 pass, 0 fail. `format` 0 failures; `architecture law-relations` 8 product files, 26 relative imports, 0 failures; `coverage law-relations` 21 of 21; `ownership law-relations tranche/T35` 0 failures. No row changed; no artifact made stale.
+
+Size (session_01MvNbDarJEgUrb9jDF7FgTx): test runs 16, module lines 948
 
 ## J1 · QUESTION
 
