@@ -1,6 +1,6 @@
 # instance-setup (T35)
 
-**Status** · session_01QZZgwL4ojyBbUL3VUYqwZM · depth 2 · COMPLETE · handled B2
+**Status** · session_01QZZgwL4ojyBbUL3VUYqwZM · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
@@ -24,6 +24,14 @@
 
 Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 9, module lines 2522
 
+## Completion of B3 (K2054)
+
+**Applied.** Merged tranche/T35 (setup-page merged). R47's page link now reads setup-page's `ROTATION_GUIDE_HREF` as a named import; the namespace read is gone. Red 41 cleared. Its cause was my test, not the code. setup-page shows the guide as its section `#s-rotate`, which its script opens at the address `#replace-one-time-password`. There is no element with that id, and my test asked for one. The test now checks three things: the block's one link is the guide's name, to setup-page's exported address; the composed page carries the guide's section once; and the page's script opens it at that address.
+
+**Tests and checks** (on the commit below): `node --test bio-plane/test/m/instance-setup/`: tests 108, pass 108, fail 0. `format`: 0 failures. `architecture instance-setup`: 0 failures. `coverage instance-setup`: 48 of 48. `ownership instance-setup tranche/T35`: 2 files, 0 failures.
+
+Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 11, module lines 2519
+
 ## J1 · QUESTION
 
 R47 (F10): the block's guide name is a link on the page (setup-page R14) to setup-page R27's guide. The link needs the guide element's id, which is setup-page's, and setup-page (before me in the order) does not export one yet (job/T35/setup-page has no guide so far).
@@ -35,3 +43,7 @@ Please confirm the name `ROTATION_GUIDE_ID` with SETUP-PAGE, or name another. Un
 ## J2 · COMPLETE
 
 T35-69 applied (R64 isLocale, R66 op=adminrecoverystep, R47 guide sentence linked to setup-page's ROTATION_GUIDE_HREF per K2038, R65's per-request /draft turn). Module tests 107 of 108: the one red is R47's page link, waiting on setup-page's merge; I merge tranche/T35 after it when you say so. Checks: format, architecture and ownership 0 failures; coverage 48 of 48. Reported: plane door.test.mjs:110 pins 24 routes (now 25, T35-73); the newgroup bundle is stale (setup-fleet.mjs), to be regenerated at the layer close. Details in the record's Completion.
+
+## J3 · COMPLETE
+
+B3 (K2054) done: merged tranche/T35. R47's link now reads setup-page's ROTATION_GUIDE_HREF as a named import. Red 41 cleared: my test looked for an element with the guide's id, but setup-page shows the guide as section #s-rotate opened at that address. The test now checks the link, the section and the script's address. instance-setup 108 of 108; format, architecture and ownership 0 failures; coverage 48 of 48. Record: 'Completion of B3'.
