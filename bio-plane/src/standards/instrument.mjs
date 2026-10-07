@@ -18,7 +18,7 @@ export function matchSource(view, cite) {
   for (const e of entries) {
     let m = null;
     try { m = e && e.cite ? new RegExp(e.cite.re, e.cite.flags || "").exec(text) : null; } catch { m = null; }
-    if (m) return { entry: e, matched: m[0], index: m.index };
+    if (m) return { entry: e, matched: m[0], index: m.index, groups: m.groups ?? null };
   }
   return null;
 }
@@ -32,7 +32,11 @@ export function codeOf(view, source) {
 /* The instrument's own number or section path as `text` states it: a code's section-number pattern when the source
    names a code that states one, else the number ending what the source's pattern matched. Lower-cased, white space
    removed; null when the text states none. */
-function numberIn(view, source, text, matched) {
+function numberIn(view, source, text, matched, groups = null) {
+  /* a series' own `number` group (jurisdictions R63) names the instrument's number; anything after it (a paragraph)
+     names a portion. A path separator inside it is written as a hyphen, so the key keeps its three segments. */
+  if (source && isObj(source.series) && groups && typeof groups.number === "string" && groups.number.trim())
+    return groups.number.replace(/\s+/g, "").replace(/\//g, "-").toLowerCase();
   const code = codeOf(view, source);
   const pattern = code && isObj(code.sections) && isObj(code.sections.number) ? code.sections.number : null;
   if (pattern) {
@@ -68,7 +72,7 @@ export function instrumentKey({ cite = null, view = null } = {}) {
     const m = matchSource(view, cite);
     if (!m) return { state: "undetermined", key: null,
                      why: "the citation matches the citation form of no source the active jurisdiction profiles list" };
-    return compose(view, m.entry, numberIn(view, m.entry, String(cite), m.matched));
+    return compose(view, m.entry, numberIn(view, m.entry, String(cite), m.matched, m.groups));
   } catch {
     return { state: "undetermined", key: null, why: "the citation could not be read for an instrument key" };
   }

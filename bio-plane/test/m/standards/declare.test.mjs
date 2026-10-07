@@ -182,10 +182,10 @@ test("R6 supersedes names an earlier standard: the earlier stays readable and bo
   assert.equal(w.declare({ supersedes: "" }).supersedes, null, "an empty supersedes names none");
 });
 
-test("R1 the refusals hold in a world with no active profile too (the kinds are jurisdictions' own list)", () => {
+test("R1 R12 the refusals hold in a world with no active profile too (the kinds are jurisdictions' own seven, STANDARD_SOURCE_KINDS, standard included)", () => {
   const w = world({ profiles: null });
   w.member("bob");
-  assert.deepEqual(STANDARD_KINDS, ["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
+  assert.deepEqual(STANDARD_KINDS, ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"]);
   assert.equal(codeOf(w.declare({ kind: "guideline" })), "STANDARD_KIND_UNKNOWN");
   assert.equal(w.declare().ok, true);
 });
