@@ -2,6 +2,28 @@
 
 **Status** · session_01Vz8Hy7MosEXL3LQKkTb5xV · depth 2 · RUNNING until 2026-10-07T16:56:49Z (plane module tests (users of money)) · handled B2
 
+## Completion
+
+**Entries applied (T35-32).**
+- N635 (K1736): every name money takes from `calc-grammar` now comes from its index. `readingOf` and `cmpD` (inner names of `decimal.mjs`) are gone: R1's range check and R11's "within the coarser fact's precision" go through the index's `relate` (R21 there). R11's results are unchanged (a rounded or approximate figure still stands for half its printed unit either side; touching intervals still count as consistent). money's private `dec()` helper is removed.
+- N698 (DEC-164 (4), (5), K1865; R2 as amended, K1941; readings J1, confirmed B2 / K1965): `recordFact`'s `source` takes retrieval R73's match whole (`origin: "search"`). Only its `capture_sha` and `extent` are kept, checked and graded as any other extent. A found table is refused `NO_SOURCE` and the detail names `calculations`. The new optional `question` must be an `inquiry` bundle the writer may see, else `QUESTION_NOT_HELD` (after `ADJUSTS_NOT_HELD`). It is stored in the new `money_facts.question` column, which `migrate` adds to an older store, and is not part of R19's read contract. `readFact`, `moneyOf` and committed-against-paid's facts answer it only to a viewer who may see the inquiry, else `null`.
+
+**Deferred.** None. R2's `*(not yet met: T35)*` mark in `build/requirements/money.md` is BOB's to strike at merge (not my file).
+
+**Found in other modules.** None. The plan's suggestion of a test asserting that no file imports `calc-grammar/decimal.mjs` was not written, because tests check behaviour, never source text (JOB step 5). The architecture check has 0 failures.
+
+**Tests and checks.**
+- money `bio-plane/test/m/money/`: 57 pass, 0 fail. The new `found.test.mjs` has five R2 tests: a found extent as the source; refusals unchanged; `QUESTION_NOT_HELD` order and alike-answer; question kept and withheld; old store migrated.
+- Users of money: money-checks 41/0, duties 37/0, people 37/0, explore 27/0, query-language 45/0, retrieval 139/0, calculations 38/0, strength 143/0, contradiction 119/0, intent 73/0, corpus-export 25/0, ratification 212/0, case-disclosures 59/0, case-authoring 145/0, consequences 41/0, affordances 203/0.
+  - op-declarations 81/3: accepted reds 9 (t34 R21/R5, R21/R27) and 23 (t33 R19/R6).
+  - plane (with `migrate-released`) 110/6: all six are `ask.test.mjs`, accepted red 22.
+- `format`: 130 modules, 2 failures, both law-relations entries (accepted red 24).
+- `architecture . money`: 0 failures.
+- `coverage . money`: 23 of 23 live ids named, 0 failures.
+- `ownership . money tranche/T35`: 4 files, 0 failures.
+
+Size (session_01Vz8Hy7MosEXL3LQKkTb5xV): test runs 6, module lines 1314
+
 ## J1 · QUESTION
 
 R2's found extent (T35-32; K1941's one shape). My reading, which I am building on unless you say otherwise:
