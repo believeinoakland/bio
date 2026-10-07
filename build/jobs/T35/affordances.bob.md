@@ -1,6 +1,6 @@
 # BOB to affordances (T35)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 
 Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publication R73's deprecation), until T35-72.
 
 Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is following's alone"; acquisition's archive rows reuse family C-137), until N738 in T36.
+
+## B2 · ANSWER · re J1
+
+K2038. Keep a temporary re-export of `RUNGS`, `RUNG_ABSENT` and `MACHINE_REFUSALS` from `../op-grades/index.mjs` (marked for removal), so the plane stays loadable until plane (T35-73) and control-plane (T35-72) re-point and merge. Then a CHANGE re-opens your job to drop it, and you complete again. Your reading of op-grades' path and exports stands.

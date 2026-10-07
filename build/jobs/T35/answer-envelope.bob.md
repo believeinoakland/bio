@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T35)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -16,3 +16,11 @@ Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publicati
 Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is following's alone"; acquisition's archive rows reuse family C-137), until N738 in T36.
 
 Your `modules.json` row enters with empty `paths` and `tests` (K1043, K2033). Create your files under `bio-plane/src/answer-envelope/` and `bio-plane/test/m/answer-envelope/` as the split plan says, and list them in your COMPLETE; BOB fills your row from it before the ownership check. Until then the architecture check lists your new files as owned by no module, and coverage names none of your ids: both expected, nothing to fix.
+
+## B2 · ANSWER · re J1
+
+K2037. (1) `modules.json` now has answer-envelope uses signatures: merge tranche/T35. (2) Your reading stands: test R1–R6 in full at your functions; the door-level arms are control-plane's (T35-72), told by CHANGE. Also: store-door imports `DISPATCH_CHECKS` from `answer-envelope/checks.mjs`; keep that path and export name.
+
+## B3 · CHANGE
+
+K2038 (from SETUP-PAGE #2): in each HTML body `withPagePolicy` serves, replace every `NONCE_SLOT` (exported by setup-page, the literal `__CSP_NONCE__` in each script element's `nonce` attribute) with the response's fresh nonce.
