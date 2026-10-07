@@ -18,3 +18,7 @@
 **Checks.** format: 130 modules, 129 requirements files; 0 failures. architecture: 42 product files, 134 relative imports (0 naming no tracked file, not judged); 0 failures. coverage: 1 modules, 30 of 30 live requirement ids named by a test; 0 failures. ownership: 6 files changed by public-read between tranche/T35 and HEAD; 0 failures.
 
 Size (session_01R8Qq2yQAfRUWoK9dEbUeyQ): test runs 13, module lines 3326
+
+## J1 · COMPLETE
+
+T35-56 applied: R30 met. creditPage() and op=credit (door, at 200, no store hop, same bytes for every caller); constants CIVICSMITH_DESCRIPTION / CIVICSMITH_WHO exported in src/public-read/credit.mjs for installer's equality test (T35-50); credit added to PUBLIC_READ_DOOR_OPS and PUBLIC_READ_OWN_OPS. L11: once op-declarations declares credit (classes: null), control-plane reaches it through hooks.publicOp -> publicReadDoorOp with no arm of its own. Module tests 135/135; users green except the named accepted reds 19, 26, 29 (control-plane) and 22, 31 (plane), the same with the change stashed. format, architecture, coverage (30/30), ownership: 0 failures. Nothing deferred, nothing found elsewhere. Record: build/jobs/T35/public-read.md.
