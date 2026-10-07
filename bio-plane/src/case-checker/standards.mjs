@@ -9,8 +9,10 @@
  *   - a finding measured only against benchmarks (every criteria row `binds: false`) may say "slower than" or "below",
  *     never "violated" or "nonconforming": `BENCHMARK_CALLED_NONCONFORMING` names the finding, the standard and the word.
  *
- * Which rows are a finding's: those whose `standard` is the target of one of that member finding's own `standard` legs
- * in the document's signed `grading_facts:` block (`case-grammar` R17), as `publication` R72 counts a member's legs.
+ * Which rows are a finding's (K2002): those whose `standard` is the target of one of that member finding's own `standard`
+ * legs in the document's signed `grading_facts:` block (`case-grammar` R17), as `publication` R72 counts a member's legs,
+ * and whose `body` is the member's `subject_entity` as the document states it (on its `case_roles:` or
+ * `case_conclusions:` row); when the document states none, every row of that standard.
  * What a finding states: its `case_conclusions:` row's `claim` and `claim_detail`; the case's statement: its `case_scope`
  * and its `completeness:` `statement`. The body is not read: it prints quoted passages, whose own words may say
  * "violation". A row with `stated: "not held"` is not judged and is named in `unjudged`.
@@ -80,7 +82,7 @@ function judge(args) {
   const unjudged = [];
   const judged = [];
   for (const r of criteria) {
-    if (r.stated === "not held") unjudged.push({ standard: r.standard, portion: r.portion ?? null });
+    if (r.stated === "not held") unjudged.push({ standard: r.standard, portion: r.portion ?? null, body: r.body ?? null });
     else judged.push(r);
   }
   const copyrighted = judged.filter((r) => r.access !== "free");
@@ -106,12 +108,15 @@ function judge(args) {
   const legs = gradingFactsOf(fm) || {};
   const conclusions = Array.isArray(fm.case_conclusions) ? fm.case_conclusions.filter(isObj) : [];
   const completeness = isObj(fm.completeness) ? fm.completeness : {};
+  const roles = Array.isArray(fm.case_roles) ? fm.case_roles.filter(isObj) : [];
+  const rowOf = (list, finding) => list.find((x) => String(x.target ?? "") === finding) || {};
   const caseWords = wordsIn([fm.case_scope, completeness.statement]);
   for (const finding of members) {
     const targets = new Set((legs[finding] || []).filter((l) => isObj(l) && l.kind === "standard" && str(l.target)).map((l) => l.target));
-    const rows = judged.filter((r) => targets.has(r.standard));
+    const subject = str(rowOf(roles, finding).subject_entity) || str(rowOf(conclusions, finding).subject_entity);
+    const rows = judged.filter((r) => targets.has(r.standard) && (subject === null || r.body === subject));
     if (!rows.length || rows.some((r) => r.binds !== false)) continue;
-    const c = conclusions.find((x) => String(x.target ?? "") === finding) || {};
+    const c = rowOf(conclusions, finding);
     const found = [...new Set([...wordsIn([c.claim, c.claim_detail]), ...caseWords])];
     const words = NONCONFORMING_WORDS.filter((w) => found.includes(w));
     for (const standard of [...new Set(rows.map((r) => r.standard))]) for (const word of words)

@@ -31,10 +31,12 @@ const conclusionRow = (m, claim, detail = "") => [`  - target: ${m}`, "    relat
 function doc({ claims = { [A]: "Responses here were slower than the peer average.", [B]: "The permits violated the code." },
                details = {}, legs = [leg(A, 0, BENCH), leg(A, 1, R, "inquiry"), leg(B, 0, CODE), leg(R, 0, BOOK)],
                scope = "How quickly the office answers, and whether its permits follow the code.",
-               statement = "the 2019 permits are not covered", body = "", members = [A, B] } = {}) {
+               statement = "the 2019 permits are not covered", body = "", members = [A, B], subjects = {}, subjectsIn = "case_roles" } = {}) {
+  const subj = (m, where) => (subjectsIn === where && subjects[m] ? [`    subject_entity: ${subjects[m]}`] : []);
   return ["---", "format: bio-case-document/7", "case_id: CASE-2026-0001", "case_edition: 1",
     `case_scope: "${scope}"`, `case_findings: [${members.join(", ")}]`,
-    "case_conclusions:", ...members.flatMap((m) => conclusionRow(m, claims[m] ?? null, details[m])),
+    "case_roles:", ...members.flatMap((m) => [`  - target: ${m}`, "    role: load_bearing", `    version_sha: ${sha(m)}`, "    edition: 1", ...subj(m, "case_roles")]),
+    "case_conclusions:", ...members.flatMap((m) => [...conclusionRow(m, claims[m] ?? null, details[m]), ...subj(m, "case_conclusions")]),
     ...CG.gradingFactsLines(legs),
     "completeness:", `  statement: "${statement}"`, "  author: alice",
     "---", "", "# Case", "", body, ""].join("\n");
@@ -138,6 +140,23 @@ test("R21 (K1723): a finding resting on any standard that binds its body, a find
                                 { code: "BENCHMARK_CALLED_NONCONFORMING", finding: A, standard: BOOK, word: "violated" }]);
 });
 
+test("R21 (K2002): a criteria row is keyed by its body: a member's rows are those of its standards whose body is its subject entity as the document states it, and every row of the standard when it states none", () => {
+  /* one benchmark, two bodies: it binds the second, not the first */
+  const two = () => { const c = criteria(); c.push({ ...c[0], body: "ENT-2026-0002", binds: true }); return c; };
+  const bad = { [A]: "Responses violated the standard.", [B]: "Fine." };
+  const refused = { ok: false, refusals: [{ code: "BENCHMARK_CALLED_NONCONFORMING", finding: A, standard: BENCH, word: "violated" }] };
+  for (const subjectsIn of ["case_roles", "case_conclusions"]) {
+    assert.deepEqual(CC.checkStandardsUse(args({ criteria: two(), doc: { claims: bad, subjects: { [A]: "ENT-2026-0001" }, subjectsIn } })), refused, subjectsIn);
+    assert.deepEqual(CC.checkStandardsUse(args({ criteria: two(), doc: { claims: bad, subjects: { [A]: "ENT-2026-0002" }, subjectsIn } })), { ok: true }, subjectsIn);
+  }
+  /* the document states no subject: every row of the standard is the member's, and one binds */
+  assert.deepEqual(CC.checkStandardsUse(args({ criteria: two(), doc: { claims: bad } })), { ok: true });
+  /* only the benchmark row for its body: refused as before */
+  assert.deepEqual(CC.checkStandardsUse(args({ doc: { claims: bad, subjects: { [A]: "ENT-2026-0001" } } })), refused);
+  /* a subject no row of its standards names leaves it no row, so it is not judged a benchmark's */
+  assert.deepEqual(CC.checkStandardsUse(args({ doc: { claims: bad, subjects: { [A]: "ENT-2026-0009" } } })), { ok: true });
+});
+
 test("R21: every departure is named, never only the first, in the order the arms are listed and each once", () => {
   const c = criteria(); c[0].passages.push({ content: LOOSE, text: "the chapter" });
   const m = materials(); m[1].included = true;
@@ -152,11 +171,16 @@ test("R21: a criteria row stated 'not held' is not judged, by any arm, and is na
   const c = criteria(); c[0].stated = "not held"; c[0].passages.push({ content: LOOSE, text: "x" });
   const m = materials(); m[1].included = true;
   const r = CC.checkStandardsUse(args({ criteria: c, materials: m, doc: { claims: { [A]: "It violated the peer average.", [B]: "Fine." } } }));
-  assert.deepEqual(r, { ok: true, unjudged: [{ standard: BENCH, portion: null }] });
+  assert.deepEqual(r, { ok: true, unjudged: [{ standard: BENCH, portion: null, body: "ENT-2026-0001" }] });
   /* the other rows are still judged beside it */
   const c2 = criteria(); c2[1].stated = "not held"; c2[0].passages.push({ content: LOOSE, text: "x" });
   assert.deepEqual(CC.checkStandardsUse(args({ criteria: c2 })),
-    { ok: false, refusals: [{ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: BENCH, content: LOOSE }], unjudged: [{ standard: CODE, portion: "s. 4" }] });
+    { ok: false, refusals: [{ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: BENCH, content: LOOSE }], unjudged: [{ standard: CODE, portion: "s. 4", body: "ENT-2026-0001" }] });
+  /* a standard no longer held is recorded with every other field null (publication R72): named with a null body */
+  const c3 = criteria(); c3[0] = { standard: BENCH, portion: null, designation: null, edition: null, issuer: null, citation: null, access: null,
+    body: null, binds: null, passages: null, captures: null, label: null, access_words: null, stated: "not held" };
+  assert.deepEqual(CC.checkStandardsUse(args({ criteria: c3, doc: { claims: { [A]: "It violated the peer average.", [B]: "Fine." } } })),
+    { ok: true, unjudged: [{ standard: BENCH, portion: null, body: null }] });
 });
 
 test("R21: pure: it reads only its arguments and leaves them unchanged, the same arguments give the same answer, and it never throws, malformed arguments naming each field", () => {
