@@ -175,7 +175,7 @@ test("R37: the memento's hop is R34's shape for any archive, every fact from wha
   assert.equal(h.asserts, `these bytes were served for ${ORIG} at 2026-03-03T12:00:00Z, with HTTP status 200`);
   for (const part of ["Memento-Datetime: Tue, 03 Mar 2026 12:00:00 GMT", `memento ${WB}/20260303120000id_/${ORIG}`, `rel="original" ${ORIG}`,
     `rel="timegate" ${WB}/${ORIG}`, `rel="timemap" ${WB}/timemap/link/${ORIG}`, "mimetype application/pdf",
-    `SHA-256 ${SHA}, computed by this instance over the bytes it received, not a digest the archive stated`])
+    `SHA-256 ${SHA}, computed by your group's Civicsmith over the bytes it received, not a digest the archive stated`])
     assert.ok(h.evidence.includes(part), part);
   assert.equal(h.bound, false);
   assert.match(h.unsigned_reason, /no cryptographic attestation exists over a Internet Archive Wayback Machine memento; this is a dated third-party claim we are trusting, not verifying/);
