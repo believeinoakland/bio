@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { renderPack, SOURCING } from "../../../src/skillpack.mjs";
 import { legalLookupLayer, LEGAL_LOOKUP_CLAUSES, LEGAL_LOOKUP_ACTS, LEGAL_LOOKUP_ACT, LEGAL_LOOKUP_MODE,
-         LADDERS_SOURCE, PLANNING_ACTS, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
+         LADDERS_SOURCE, ROLES_SOURCE, PLANNING_ACTS, DISCOVERY_IS_NOT_CAPTURE, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { DEPLOYMENT_SEQUENCE, DEPLOYED_MODES } from "../../../src/run-rules/index.mjs";
 import { ROOT, SRC, read, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
@@ -23,7 +23,7 @@ const LOAD_WHEN = "the run looks for the law that governs a question, a body or 
 /* The ladders' sections the clauses are quoted from. */
 const sections = () => {
   const text = read(LADDERS_SOURCE);
-  return { "§6.4": section(text, "6.4 "), "§10": section(text, "10. Doctrine") };
+  return { "§6.4": section(text, "6.4 "), "§10": section(text, "10. Doctrine"), "§3": section(read(ROLES_SOURCE), "3. The rules") };
 };
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
 
@@ -61,7 +61,7 @@ test("R33 R5 the legal_lookup layer, in disclosed after wizard_authoring: author
   assert.ok(bySection["§6.4"].length > 0 && bySection["§10"].length > 0, "§6.4 and §10 are where they were");
   for (const c of LEGAL_LOOKUP_CLAUSES) {
     assert.deepEqual(Object.keys(c).sort(), ["section", "source", "text"]);
-    assert.equal(c.source, LADDERS_SOURCE);
+    assert.equal(c.source, c.section === "§3" ? ROLES_SOURCE : LADDERS_SOURCE);
     assert.ok(foundIn(bySection[c.section], c.text), `"${c.text}" is in ${c.section}`);
   }
   /* §6.4's sentence is a list, quoted whole: the four levels, captures of what is missing, standards proposed with
@@ -73,6 +73,13 @@ test("R33 R5 the legal_lookup layer, in disclosed after wizard_authoring: author
     assert.match(skill, re);
   /* §10's closed-book row: no rule from the model's own knowledge. */
   assert.ok(LEGAL_LOOKUP_CLAUSES.some((c) => c.section === "§10" && /^No fact and no rule from the model's knowledge/.test(c.text)));
+  /* (T35; K1880) the capture clause: Roles §3 rule 11's sentence, the very object the resident research boundary
+     carries (R38 (a)), so the two never differ; found in rule 11's own paragraph. */
+  assert.ok(LEGAL_LOOKUP_CLAUSES.includes(DISCOVERY_IS_NOT_CAPTURE), "R33 carries R38 (a)'s object");
+  const rule11 = bySection["§3"].split("\n").find((l) => l.startsWith("11. ")) ?? "";
+  assert.ok(foundIn(rule11, DISCOVERY_IS_NOT_CAPTURE.text), "in rule 11");
+  for (const re of [/nothing it reads that way enters the record/, /fetched by the substrate's capture/, /never by the assistant/])
+    assert.match(DISCOVERY_IS_NOT_CAPTURE.text, re);
   /* The lookup can miss: a changed word is not found, and §6.4's sentence is not §10's. */
   assert.ok(!foundIn(bySection["§6.4"], skill.replace("captured text", "any text")));
   assert.ok(!foundIn(bySection["§10"], skill));

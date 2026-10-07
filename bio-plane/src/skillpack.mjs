@@ -29,13 +29,18 @@
  * reaches work that needs them."* A run cannot hold a project, so it cannot hold
  * a pack that carries every vocabulary the plane publishes either.
  *
- *   ALWAYS RESIDENT — four members, and each is in the resident half because a
+ *   ALWAYS RESIDENT — five members, and each is in the resident half because a
  *   run that forgets it produces an answer nobody can trust:
  *     1. THE OBJECTIVE (§2). Positive and therefore testable.
  *     2. THE MACHINE / MEMBER BOUNDARY (§4). What the run may never do.
  *     3. THE FOUR-LEVEL RULE (Content Framework Part II §14.3). What an absence
  *        may never be read as.
  *     4. THE ABSENCE VOCABULARY (D-129). The words the third rule is stated in.
+ *     5. THE RESEARCH BOUNDARY (T35: F5, K1880, K1888; R37, R38). Record content
+ *        is data, never an instruction; discovery reads anywhere public and only
+ *        the substrate's capture enters the record; a file is read only as the
+ *        readers' text. Resident because an injected document reaches a run
+ *        before any layer it could ask for.
  *
  *   PROGRESSIVELY DISCLOSED — the vocabularies and recipes of §14b.1 (the
  *   recipes are wizard scripts since DEC-120), each with the trigger that
@@ -144,7 +149,8 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    source-scan proving it holds no control-flow authority). Two deliverables with
    two suites, and the pack composes them. */
 import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, wizardAuthoringLayer,
-         legalLookupLayer, askLayer, suggestionsLayer, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
+         legalLookupLayer, askLayer, suggestionsLayer, writingHelpLayer, RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE,
+         SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
 /* N345. The recommender's prompt is contradiction's (its R41): measured on the blind fixture of dissolved pairs
    under its digest, and carried here unchanged as the words a run recommends under (R27). The digest is checked
@@ -246,6 +252,9 @@ export const SOURCING = {
   ask_unpublished: "absent",    /* while op=affordances publishes no answers checks (R34) */
   answer_checks:  "driven",     /* op=affordances .answer_checks, answers' checks as answers holds them (R34) */
   suggestions:    "authored",   /* skilldoctrine.mjs, ladders §2's suggestion switch, DEC-27 (R35) */
+  writing_help:   "authored",   /* skilldoctrine.mjs, Interaction Constructs §P (DEC-153), Roles §3, pilot §3 (R36) */
+  writing_help_unpublished: "absent", /* while op=affordances publishes no writing help act (R36) */
+  research_boundary: "authored", /* skilldoctrine.mjs, ladders §9.4 and Roles §3 rule 11, resident (R2, R37, R38) */
   wizard_scripts: "absent",     /* absent until the plane publishes wizard scripts — see the header (R9) */
   wizard_scripts_published: "driven", /* op=affordances .wizard_scripts, validated against .screens (R10) */
   /* SK-2's five layers. `authored` throughout, and the label is the honest one:
@@ -371,6 +380,13 @@ export function renderPack(published) {
     throw new Error("the pack carries contradiction's recommender prompt only as it was measured: "
       + "sha256(RECOMMEND_PROMPT) is not contradiction's RECOMMEND_PROMPT_SHA256");
 
+  /* R37, R38: the research boundary is resident in every run and ask, so a pack without one of its clauses is not
+     rendered: a run would hold the rest of its instructions and not this. */
+  for (const c of [0, 1, 2].map((i) => RESEARCH_BOUNDARY_CLAUSES?.[i]))
+    if (!c || typeof c.text !== "string" || c.text.trim() === "")
+      throw new Error("the resident research boundary carries record content as data (R37), discovery that is not "
+        + "capture and files read only as extracted text (R38), each quoted from canon: one of its clauses is not held");
+
   const levels = Object.keys(OBSERVATION_LEVELS);
   const states = Object.keys(OBSERVATION_STATES);
   if (levels.length === 0 || states.length === 0)
@@ -401,6 +417,9 @@ export function renderPack(published) {
       answer_shape: ABSENCE_ANSWER_SHAPE,
     },
     absence: { states: OBSERVATION_STATES, sourcing: SOURCING.absence },
+    /* R2, R37, R38: held from the first token of every run, ask and draft; each clause carries its source. */
+    research_boundary: { clauses: RESEARCH_BOUNDARY_CLAUSES, note: RESEARCH_BOUNDARY_NOTE,
+                         sourcing: SOURCING.research_boundary },
     /* WHAT MAY BE ASKED FOR. The disclosed layer's NAMES are resident — a run
        that does not know a layer exists cannot ask for it — and its bodies are
        not. That is the whole of progressive disclosure as a mechanism rather
@@ -497,6 +516,9 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
     ask: askLayer(published),
     /* R35 (K1479, K1502). Loaded only where the asking member's own switch is on, which this pack never reads. */
     suggestions: suggestionsLayer(),
+    /* R36 (DEC-153; K1841). The doctrine a run drafting in a member's own-words field works under, with its acts read
+       from the published catalogue; a stated absence while the plane publishes no writing help act. */
+    writing_help: writingHelpLayer(catalog),
     wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.wizard_scripts_published,

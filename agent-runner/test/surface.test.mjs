@@ -4,8 +4,10 @@ import { readFileSync } from 'node:fs';
 import net from 'node:net';
 import { stubSdk, success, request, startRunner, conversation } from './helpers.mjs';
 import { imageReference, readManifest } from '../src/manifest.mjs';
+import { parseJsonc } from '../../bio-plane/scripts/jsonc.mjs';
 
-const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
+const pkg = JSON.parse(read('../package.json'));
 const PLACE = /oakland|alameda|california|\bbay area\b/i;
 
 // A raw HTTP exchange, so upgrade requests to other paths can be checked as well.
@@ -80,9 +82,26 @@ test('R10 the manifest\'s egress allow-list is the model API alone', () => {
   assert.deepEqual(readManifest().egress, ['api.anthropic.com']);
 });
 
-test('R11 no place is named in its behaviour or outward text', async () => {
-  const texts = [JSON.stringify(readManifest()), readFileSync(new URL('../Dockerfile', import.meta.url), 'utf8'), JSON.stringify(pkg),
-    readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'), readFileSync(new URL('../src/worker.mjs', import.meta.url), 'utf8')];
+// R11's one exemption (K1905): the image's registry address is a distribution coordinate, the publisher's namespace,
+// not a place the product states. Exactly two values are exempt: the marker's `image.repository`, and the same
+// repository as the prefix of each image reference in the wrangler configuration's `containers`. Everything else in
+// the module's configuration, outward text and behaviour is read whole.
+const placeFaults = (texts) => texts.filter((t) => PLACE.test(t));
+function configurationTexts(manifest, wranglerText) {
+  const repo = manifest.image && manifest.image.repository;
+  const marker = JSON.stringify({ ...manifest, image: { ...manifest.image, repository: '<repository>' } });
+  const ref = new RegExp(`("image"\\s*:\\s*")${repo.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}@`, 'g');
+  const containers = parseJsonc(wranglerText, 'wrangler.jsonc').containers || [];
+  const found = wranglerText.match(ref) || [];
+  assert.equal(found.length, containers.length, 'the exempt repository appears once per container image reference');
+  for (const c of containers) assert.ok(c.image.startsWith(`${repo}@`), 'each container image is the marker\'s repository');
+  return [marker, wranglerText.replace(ref, '$1<repository>@')];
+}
+
+test('R11 no place is named in its behaviour, outward text or configuration; the registry address alone is exempt', async () => {
+  const manifest = readManifest(), wranglerText = read('../wrangler.jsonc');
+  const texts = [...configurationTexts(manifest, wranglerText), read('../Dockerfile'), JSON.stringify(pkg),
+    read('../src/worker.mjs'), read('../src/entry.mjs'), read('../src/runner.mjs'), read('../src/ws.mjs'), read('../src/manifest.mjs')];
   const { sdk } = stubSdk(async (call, { callTool }) => { await callTool('search', {}); return success(); });
   const r = await startRunner(sdk);
   try {
@@ -90,6 +109,45 @@ test('R11 no place is named in its behaviour or outward text', async () => {
     texts.push(JSON.stringify((await conversation(r.base, request())).frames));
     texts.push(JSON.stringify((await conversation(r.base, request({ credential: null }))).frames));
     texts.push(JSON.stringify((await conversation(r.base, 'nope')).frames));
+    texts.push(JSON.stringify((await conversation(r.base, request({ max_turns: 0 }))).frames));
   } finally { await r.stop(); }
-  for (const t of texts) assert.doesNotMatch(t, PLACE);
+  assert.deepEqual(placeFaults(texts), []);
+
+  // The exemption is exactly those two values: the publisher's namespace there passes (the release writes
+  // `ghcr.io/believeinoakland/agent-runner`, K1905), and the same word anywhere else still fails.
+  const ns = 'ghcr.io/believeinoakland/agent-runner', digest = 'sha256:' + '9d'.repeat(32);
+  const published = { ...manifest, image: { ...manifest.image, repository: ns, digest } };
+  const publishedWrangler = wranglerText.replace(`"${manifest.image.repository}@sha256:UNPUBLISHED"`, `"${ns}@${digest}"`);
+  assert.notEqual(publishedWrangler, wranglerText);
+  assert.deepEqual(placeFaults(configurationTexts(published, publishedWrangler)), [], 'the registry address is exempt');
+  for (const [what, m, w] of [
+    ['the build command', { ...published, build: { ...published.build, command: `docker build -t ${ns}:<version> agent-runner` } }, publishedWrangler],
+    ['the note', { ...published, note: `${published.note} Published under ${ns}.` }, publishedWrangler],
+    ['another marker field', { ...published, image: { ...published.image, platform: 'oakland/amd64' } }, publishedWrangler],
+    ['a wrangler comment', published, `// Oakland's member\n${publishedWrangler}`],
+    ['the wrangler name', published, publishedWrangler.replace('"name": "agent-runner"', '"name": "agent-runner-oakland"')],
+  ]) assert.notDeepEqual(placeFaults(configurationTexts(m, w)), [], `a place word in ${what} still fails`);
+});
+
+// R16 (F20; K1881): no package's install or lifecycle script runs at image build. A dependency that needs its script
+// is admitted only by a reviewed change naming it here, which BOB rules on; none is.
+const ADMITTED_INSTALL_SCRIPTS = [];
+
+test('R16 the image installs with npm ci --omit=dev --ignore-scripts, and the lock holds no package with an install script', () => {
+  const lines = read('../Dockerfile').split('\n').filter((l) => !/^\s*#/.test(l));
+  const installs = lines.flatMap((l) => l.split(/&&|;|\|\|/)).map((c) => c.trim()).filter((c) => /\bnpm\s+(ci|install|i|add|rebuild)\b/.test(c));
+  assert.ok(installs.length >= 1, 'the image installs its dependencies');
+  for (const c of installs) {
+    assert.match(c, /^(RUN\s+)?npm\s+ci\b/, `${c}: dependencies come from package-lock.json by npm ci alone`);
+    assert.match(c, /(^|\s)--ignore-scripts(\s|$)/, `${c}: no install script runs`);
+    assert.match(c, /(^|\s)--omit=dev(\s|$)/, `${c}: no dev dependency enters the image`);
+  }
+  assert.match(read('../Dockerfile'), /^COPY package\.json package-lock\.json \.\/$/m, 'the lock is in the build context');
+  const lock = JSON.parse(read('../package-lock.json'));
+  const scripted = Object.entries(lock.packages).filter(([, p]) => p.hasInstallScript).map(([k]) => k.replace(/^.*node_modules\//, ''));
+  assert.deepEqual(scripted.filter((n) => !ADMITTED_INSTALL_SCRIPTS.includes(n)), [],
+    'a package needing its install script is admitted only by a reviewed change naming it (R16)');
+  // the package itself declares no lifecycle script that npm ci would run
+  for (const s of ['preinstall', 'install', 'postinstall', 'prepare', 'preprepare', 'postprepare'])
+    assert.ok(!(pkg.scripts && s in pkg.scripts), `package.json declares no ${s}`);
 });
