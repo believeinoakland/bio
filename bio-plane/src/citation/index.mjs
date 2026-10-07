@@ -25,6 +25,8 @@
  * call with `deps`, returned to every later caller. `deps`:
  *   record, membership, promotion, content, retrieval   the modules it uses, through their factories on the same host
  *                unless a test passes its own.
+ *   provenance   `{homeOf}` (provenance R4): the document a found match's capture is held in (R1, T35); by default
+ *                `provenanceOf(host)`.
  *   inquiry      `{earned, checkLegExtentGrammar, BASIS_ROLES}` (inquiry R13, R5, R4): the earned registry that fills a
  *                leg's grade, the one leg-part grammar, and the role vocabulary; by default `inquiryOf(host)`'s
  *                registry with the grammar and roles inquiry exports. One lacking any of the three refuses citing onto
@@ -38,6 +40,7 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { promotionOf, INLINE_MAX } from "../promotion/index.mjs";
 import { contentOf, citationExtent } from "../content/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { retrievalOf, answerChanged } from "../retrieval/index.mjs";
 import { inquiryOf, checkLegExtentGrammar, BASIS_ROLES } from "../inquiry/index.mjs";
 import { CITE_CHECKS, CITE_EXTENT_CHECKS } from "./checks.mjs";
@@ -80,6 +83,21 @@ export const EXTENT_PARAMS = Object.freeze({
   content_id: "text",
 });
 
+/* R1 (T35; N698, DEC-164 (4)): a found match's extent (`content`'s extent grammar, retrieval R73) as the part bag a
+   cited extent arrives in: each field `f` as `extent_f`, so the found part meets exactly the refusals a named part
+   meets, and a field no part carries (`extent_space`, a nested note) is refused by name (C-45.7), never dropped. */
+export function foundExtentBag(extent) {
+  const bag = {};
+  for (const [k, v] of Object.entries(extent)) {
+    if (v === undefined || v === null) continue;
+    bag[`extent_${k}`] = Array.isArray(v) ? `[${v.join(", ")}]` : typeof v === "object" ? JSON.stringify(v) : String(v);
+  }
+  return bag;
+}
+
+const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const given = (v) => v !== null && v !== undefined && String(v).trim() !== "";
+
 /* A refusal with a catalogue row carries the row's check and translation (R1). */
 const rowOf = (family, code) => ({ code, check: family[code].check, translation: family[code].translation });
 
@@ -88,8 +106,9 @@ const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.
 /* ------------------------------------------------------------------ the module */
 
 export class Citation {
-  constructor({ record, membership, promotion, content, retrieval, inquiry = null, now } = {}) {
+  constructor({ record, membership, promotion, content, retrieval, provenance = null, inquiry = null, now } = {}) {
     this.record = record;
+    this.provenance = provenance;
     this.membership = membership;
     this.promotion = promotion;
     this.content = content;
@@ -332,11 +351,81 @@ export class Citation {
    *   - IT DOES NOT VALIDATE A LEG beyond routing its part through `inquiry.checkLegExtentGrammar`, the same function
    *     that judges it again at the write.
    *   - IT ASKS ONE THING ABOUT A TARGET'S STATE, ON BOTH ARMS: whether the group RETIRED it (R5). */
-  cite({ project = null, handle = null, viewer = null, owner = null,
+  cite({ project = null, handle = null, found = null, question = null, viewer = null, owner = null,
          note = "", author = null, role = null, extent = null, identity = null } = {}) {
-    /* The gate first, so an unknown or someone else's selection is refused before a project is looked at. */
-    const sel = this.retrieval.selectionResolve({ handle, viewer, owner, weight: "report" });
+    /* T35 (N698, DEC-164 (4), (5)): WHAT IS CITED, from ONE source, asked before anything else. A selection (`handle`,
+       with an optional `extent`), or one match "Find in this" answered (`found`, retrieval R73), which stands in place
+       of both: its document is the one member, its extent that member's part. Being found changes no judgement: the
+       found part meets every refusal below a named part meets, at the same weight (R7). */
+    /* DEC-49 REGION is-cite-found — C-45.14-16. */
+    const fromFound = found !== null && found !== undefined;
+    const bagGiven = isObj(extent) && Object.values(extent).some(given);
+    if (fromFound === given(handle) || (fromFound && bagGiven))
+      return { ok: false, reason: "CITE_ONE_SOURCE", ...rowOf(CITE_EXTENT_CHECKS, "CITE_ONE_SOURCE"), project,
+               detail: fromFound
+                 ? "this call names a passage found by search and also a selection or a part of a document. A found "
+                   + "passage already names its document and its part, so the record could not tell which you meant; "
+                   + "nothing was written."
+                 : "this call names neither a selection nor a passage found by search, so there is nothing to cite; "
+                   + "nothing was written." };
+    let foundDoc = null, foundCapture = null;
+    if (fromFound) {
+      /* Read for its capture and extent ONLY, never its words: the words are the search's, the part is the record's. */
+      const sha = isObj(found) && typeof found.capture_sha === "string" ? found.capture_sha.trim().toLowerCase() : "";
+      const home = /^[0-9a-f]{64}$/.test(sha) && this.provenance && typeof this.provenance.homeOf === "function"
+        ? this.provenance.homeOf(sha) : null;
+      /* A capture the record holds in no document, and one in a document this viewer may not see, are answered
+         alike (R9's rule, retrieval's CAPTURE_NOT_HELD): neither names a document this member can cite. */
+      const doc = home && typeof home.bundleId === "string" && this.membership.inSight(home.bundleId, viewer)
+        ? home.bundleId : null;
+      if (!doc || !isObj(found.extent) || typeof found.extent.kind !== "string" || !found.extent.kind.trim())
+        return { ok: false, reason: "FOUND_MALFORMED", ...rowOf(CITE_EXTENT_CHECKS, "FOUND_MALFORMED"), project,
+                 missing: [...(doc ? [] : ["document"]), ...(sha ? [] : ["capture_sha"]),
+                           ...(isObj(found) && isObj(found.extent) && typeof found.extent.kind === "string"
+                               && found.extent.kind.trim() ? [] : ["extent"])],
+                 detail: "a passage found by search is cited by the document it is in, the capture it was found in "
+                       + "and its part of that capture, and this one names "
+                       + "no document you can see, no capture, or no part; nothing was written." };
+      /* The part was found in THESE bytes; a leg on this document is pinned to `content.captureFor`'s capture (R2,
+         REC-220). Where they differ the part would be written against bytes it was not found in. */
+      const pinned = this.content.captureFor(doc);
+      if (pinned !== sha)
+        return { ok: false, reason: "FOUND_CAPTURE_MOVED", ...rowOf(CITE_EXTENT_CHECKS, "FOUND_CAPTURE_MOVED"), project,
+                 document: doc, found_capture: sha, pinned_capture: pinned ?? null,
+                 detail: `this passage was found in capture ${sha} of ${doc}, and a citation of ${doc} is pinned to `
+                       + `${pinned ? `capture ${pinned}` : "no capture"}, so its part could name different words. `
+                       + "Nothing was written." };
+      foundDoc = doc; foundCapture = sha;
+      extent = foundExtentBag(found.extent);
+    }
+    /* END DEC-49 REGION is-cite-found */
+
+    /* The question the member looked for it for, optional (DEC-164 (5)): kept in the Session Log and the answer, and
+       changing no other judgement. An absent question and one this viewer may not see are answered alike. */
+    /* DEC-49 REGION is-cite-question — C-33.52-53. */
+    let questionId = null;
+    if (given(question)) {
+      const qid = String(question).trim();
+      const qh = this.record.head(qid);
+      if (!qh || !this.membership.inSight(qid, viewer))
+        return { ok: false, reason: "NO_SUCH_QUESTION", ...rowOf(CITE_CHECKS, "NO_SUCH_QUESTION"), project, question: qid,
+                 detail: "no question by that id is one you can see, so this citation cannot be kept with it; nothing "
+                       + "was written." };
+      if (normalizeType(qh.type) !== "inquiry")
+        return { ok: false, reason: "NOT_AN_INQUIRY", ...rowOf(CITE_CHECKS, "NOT_AN_INQUIRY"), project, question: qid,
+                 got: qh.type,
+                 detail: `${qid} is not a question, so it cannot be the question this was cited for; nothing was written.` };
+      questionId = qid;
+    }
+    /* END DEC-49 REGION is-cite-question */
+
+    /* The gate first, so an unknown or someone else's selection is refused before a project is looked at. A found
+       match has no selection: its one member is its document, and nothing could have moved (R3). */
+    const sel = fromFound
+      ? { ok: true, members: [foundDoc], drift: false, moved: false, gate: null, expires: null }
+      : this.retrieval.selectionResolve({ handle, viewer, owner, weight: "report" });
     if (!sel.ok) return sel;
+    if (fromFound) handle = null;
 
     const obj = this.#citingObject(project, viewer);
     if (!obj.ok) return obj;
@@ -375,7 +464,7 @@ export class Citation {
                         || typeof this.inquiry.checkLegExtentGrammar !== "function" || !Array.isArray(this.inquiry.BASIS_ROLES)))
       return { ok: false, reason: "INQUIRY_UNAVAILABLE", project, handle, drift: sel.drift,
                detail: "citing onto a question needs the inquiry module's role vocabulary, leg grammar and earned "
-                     + "registry, and this instance was created without them, so nothing was written." };
+                     + "registry, and your group's Civicsmith was created without them, so nothing was written." };
     /* DEC-49 REGION is-cite-role — REC-64/C-33.16-18. */
     const rl = role === null || role === undefined || String(role) === "" ? null : String(role);
     if (ontoInquiry) {
@@ -564,7 +653,7 @@ export class Citation {
        THAT IT WENT NOWHERE (narrowing an existing citation is its own act, Bob's 5.3). */
     if (!add.length)
       return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
-               cited: [], alreadyCited: already.sort(), severed: [],
+               cited: [], alreadyCited: already.sort(), severed: [], question: questionId,
                bundleSha: p.bundleSha, rowVersion: null,
                detail: "every member of the selection was already cited; nothing was written"
                      + (authored.length
@@ -644,19 +733,24 @@ export class Citation {
     const listed = shown.join(", ") + (add.length > shown.length ? `, and ${add.length - shown.length} more` : "");
     const ungraded = filled.filter((l) => !l.grade).length;
     const graded = filled.length - ungraded;
-    const setMovedNote = answerChanged(sel.drift, sel.moved)
+    const setMovedNote = !fromFound && answerChanged(sel.drift, sel.moved)
       ? " (the set had moved since it was made; citing is report-weight and proceeded)" : "";
+    /* R3 (T35): what the act was cited FROM, a selection or a passage found by search in its document, and the
+       question it was looked for for, when one was named. */
+    const trigger = (fromFound ? `Trigger: a part of ${foundDoc} found by search in capture ${foundCapture}`
+                               : `Trigger: selection ${handle}${setMovedNote}`)
+      + (questionId ? `; for question ${questionId}` : "") + "\n";
     text = appendSessionLog(text, ontoInquiry
       ? `### Session ${when} | Rested this question on ${add.length} record${add.length === 1 ? "" : "s"}`
         + ` (${rl}) | ${author || "member"}\n`
-        + `Trigger: selection ${handle}${setMovedNote}\n`
+        + trigger
         + `Changes: basis legs added for ${listed}, each with role ${rl}. `
         + `Grades: ${graded} filled from the record's own resolutions to this question's subject; `
         + `${ungraded} left undetermined and stated.`
         + `${nt ? ` Note: ${nt}.` : ""}\n`
       : `### Session ${when} | Cited ${add.length} Information record${add.length === 1 ? "" : "s"}`
         + ` | ${author || "member"}\n`
-        + `Trigger: selection ${handle}${setMovedNote}\n`
+        + trigger
         + `Changes: cites edges added to ${listed}.`
         + `${nt ? ` Note: ${nt}.` : ""}\n`);
 
@@ -685,7 +779,7 @@ export class Citation {
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
 
     return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
-             cited: add.slice().sort(), alreadyCited: already.sort(), severed: [],
+             cited: add.slice().sort(), alreadyCited: already.sort(), severed: [], question: questionId,
              ...(ontoInquiry ? {} : { pinned_captures: Object.fromEntries(
                add.slice().sort().map((t) => [t, edgePins.get(t) ?? null])) }),
              bundleSha: promoted.bundleSha, rowVersion: promoted.rowVersion,
@@ -727,7 +821,8 @@ export function citationOf(host, deps) {
     const content = d.content || contentOf(host, { record, membership });
     const retrieval = d.retrieval || retrievalOf(host, { record, membership, promotion });
     const inquiry = d.inquiry || inquiryServices(inquiryOf(host, { record, membership, promotion, content }));
-    c = new Citation({ ...d, record, membership, promotion, content, retrieval, inquiry });
+    const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
+    c = new Citation({ ...d, record, membership, promotion, content, retrieval, provenance, inquiry });
     instances.set(host, c);
   }
   return c;
@@ -736,6 +831,11 @@ export function citationOf(host, deps) {
 /* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
    them in, and control-plane's `dispatch` answers every store request over it; K3). `url` carries the control plane's stamps (`viewer`, `owner`, `author`, `identity`); weight is never read
    from the caller (R7). */
+function foundParam(raw) {
+  if (raw === null || raw === undefined) return null;
+  try { return JSON.parse(raw); } catch { return raw; }
+}
+
 export function citationOps(c, url) {
   const q = (key) => url.searchParams.get(key);
   return {
@@ -748,6 +848,10 @@ export function citationOps(c, url) {
          which ones it carries; a named `get()` per field is what once dropped a part in silence. None sent is an empty
          bag, which is `document`. */
       extent: Object.fromEntries([...url.searchParams].filter(([k]) => k === "content_id" || k.startsWith("extent_"))),
+      /* T35 (N698): a found match travels as one JSON parameter, read whole; one that does not parse is passed on as
+         sent, for FOUND_MALFORMED to name. `question` is the optional question it was looked for for. */
+      found: foundParam(q("found")),
+      question: q("question"),
     }),
     sever: () => c.sever({ project: q("project"), handle: q("handle"), viewer: q("viewer"), owner: q("owner"),
                            reason: q("reason") ?? "", author: q("author"), identity: q("identity") }),

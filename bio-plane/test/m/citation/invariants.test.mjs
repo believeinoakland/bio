@@ -131,7 +131,7 @@ test("R10: no place is named in this module's outward text — its rows, and the
   assert.doesNotMatch(w.md(p), PLACES);
 });
 
-test("R11: each check moved here with its number, code and translation unchanged, its `where` re-pointed to this module, and no other home holds its code or number", () => {
+test("R11: each check moved here with its number, code and translation unchanged, its `where` re-pointed to this module, the rows T35 added (R1) beside them, and no other home holds its code or number", () => {
   assert.deepEqual(Object.entries(CITE_CHECKS).map(([k, r]) => [k, r.check, r.where]), [
     ["BAD_NOTE", "C-33.15", "src/citation/index.mjs cite > is-cite-note"],
     ["NO_ROLE", "C-33.16", "src/citation/index.mjs cite > is-cite-role"],
@@ -139,12 +139,17 @@ test("R11: each check moved here with its number, code and translation unchanged
     ["ROLE_NOT_APPLICABLE", "C-33.18", "src/citation/index.mjs cite > is-cite-role"],
     ["SEVERED_EDGE", "C-33.19", "src/citation/index.mjs cite > is-cite-severed"],
     ["RETIRED_NOT_CITABLE", "C-33.39", "src/citation/index.mjs cite > is-cite-retired"],
+    ["NO_SUCH_QUESTION", "C-33.52", "src/citation/index.mjs cite > is-cite-question"],
+    ["NOT_AN_INQUIRY", "C-33.53", "src/citation/index.mjs cite > is-cite-question"],
   ]);
   assert.deepEqual(Object.entries(CITE_EXTENT_CHECKS).map(([k, r]) => [k, r.check, r.where]), [
     ["UNKNOWN_EXTENT_FIELD", "C-45.7", "src/citation/index.mjs cite > is-cite-extent"],
     ["EXTENT_NOT_APPLICABLE", "C-45.8", "src/citation/index.mjs cite > is-cite-extent"],
     ["EXTENT_ON_MANY", "C-45.9", "src/citation/index.mjs cite > is-cite-extent"],
     ["BAD_EXTENT_VALUE", "C-45.10", "src/citation/index.mjs cite > is-cite-extent"],
+    ["CITE_ONE_SOURCE", "C-45.14", "src/citation/index.mjs cite > is-cite-found"],
+    ["FOUND_MALFORMED", "C-45.15", "src/citation/index.mjs cite > is-cite-found"],
+    ["FOUND_CAPTURE_MOVED", "C-45.16", "src/citation/index.mjs cite > is-cite-found"],
   ]);
   for (const r of [...Object.values(CITE_CHECKS), ...Object.values(CITE_EXTENT_CHECKS)]) assert.ok(r.translation.length > 80);
   /* The rest of C-45 is `content`'s own table (its R48): none of this module's four codes or numbers is there. */
@@ -166,7 +171,7 @@ test("R11: each check moved here with its number, code and translation unchanged
     assert.deepEqual(homes.filter((h) => h.code === code || h.check === row.check), [], `${code} (${row.check}) is held only here`);
 });
 
-test("K3, R7: the op routes — the control plane's stamps are read from the query, the part arrives whole as a bag, and no weight is read from the caller", async () => {
+test("K3, R1, R7: the op routes — the control plane's stamps are read from the query, the part arrives whole as a bag, a found match as one JSON parameter with the optional question, and no weight is read from the caller", async () => {
   const calls = [];
   const fake = new Proxy({}, { get: (_, act) => (a) => { calls.push([act, a]); return { ok: true, act }; } });
   const url = new URL("http://x/?project=P&handle=H&viewer=member:ann&owner=o&note=n&author=member:ann&identity=member:ann"
@@ -175,13 +180,21 @@ test("K3, R7: the op routes — the control plane's stamps are read from the que
   assert.deepEqual(Object.keys(ops).sort(), ["cite", "reinstate", "sever"]);
   ops.cite(); ops.sever(); ops.reinstate();
   assert.deepEqual(calls[0], ["cite", { project: "P", handle: "H", viewer: "member:ann", owner: "o", note: "n", author: "member:ann",
-    identity: "member:ann", role: "supports", extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" } }]);
+    identity: "member:ann", role: "supports", extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
+    found: null, question: null }]);
   const edgeArgs = { project: "P", handle: "H", viewer: "member:ann", owner: "o", reason: "why", author: "member:ann", identity: "member:ann" };
   assert.deepEqual(calls[1], ["sever", edgeArgs]);
   assert.deepEqual(calls[2], ["reinstate", edgeArgs]);
   const bare = citationOps(fake, new URL("http://x/?project=P"));
   bare.cite(); bare.sever();
-  assert.deepEqual([calls[3][1].note, calls[3][1].extent, calls[3][1].role, calls[4][1].reason], ["", {}, null, ""]);
+  assert.deepEqual([calls[3][1].note, calls[3][1].extent, calls[3][1].role, calls[3][1].found, calls[3][1].question, calls[4][1].reason],
+                   ["", {}, null, null, null, ""]);
+  /* A found match arrives parsed, whole; one that does not parse arrives as sent, for FOUND_MALFORMED to name. */
+  const m = { kind: "term", words: "w", capture_sha: "a".repeat(64), extent: { kind: "pdf-page", page: 0 }, origin: "search" };
+  citationOps(fake, new URL(`http://x/?project=P&question=INQ-1&found=${encodeURIComponent(JSON.stringify(m))}`)).cite();
+  assert.deepEqual([calls[5][1].found, calls[5][1].question, calls[5][1].handle], [m, "INQ-1", null]);
+  citationOps(fake, new URL("http://x/?project=P&found=%7Bnot-json")).cite();
+  assert.equal(calls[6][1].found, "{not-json");
   /* Through the real module: a cite over the route lands, weight report. */
   const w = world();
   w.info("INFO-2026-0001");
