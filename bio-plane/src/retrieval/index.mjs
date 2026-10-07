@@ -34,12 +34,18 @@ import { PROJECTION_COLUMNS, PROJECTION_INDEXED, PROJECTION_TABLE, PROJECTION_RE
          SELECTION_SCHEMA, RETRIEVAL_PURGE, SELECTION_ID_CHUNK } from "./schema.mjs";
 import { Frontier, FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE } from "./frontier.mjs";
 import { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERMS_SCHEMA, TERM_FIELDS, fieldRelation, termRows } from "./fields.mjs";
+import { entitiesOf } from "../entities/index.mjs";
+import { Finder, FIND_KINDS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
+         FIND_TERM_MAX } from "./findin.mjs";
 
 export { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 export { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 export { meaningLevels } from "./levels.mjs";
 export { SELECTION_ID_CHUNK, PROJECTION_TABLE, PROJECTION_RELATION } from "./schema.mjs";
 export { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERM_FIELDS } from "./fields.mjs";
+export { FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
+         FIND_WORDS_MAX, FIND_TERM_MAX, FIND_EVENT_TYPES, FIND_PEOPLE_KINDS, FIND_ORIGIN, matchMoney, matchDates,
+         matchRequirements, cutWords } from "./findin.mjs";
 /* R33, R71: the names of the tables this module declares. */
 export const RETRIEVAL_TABLES = Object.freeze([...RETRIEVAL_PURGE.map((t) => t.name), TERMS_TABLE]);
 export { FRONTIER_LIMIT_DEFAULT, FRONTIER_LIMIT_MAX, FRONTIER_INTERNET_NOTE };
@@ -133,9 +139,12 @@ export class Retrieval {
   #localFacts; #combine; #host;
   /* query-language's money words (its R28), injected until it reads `money` itself (K1563 (1); its J2). */
   #money = null;
+  /* R74's `people`: entities' name lookup (its R17). `undefined`: the host's own, made when first asked. */
+  #entities;
 
   constructor({ storage, record, membership, promotion, extraction, observation = null, now = null, selectionNow = null,
-                order = null, terms = null, localFacts = undefined, combine = combineProfiles, host = null, money = null }) {
+                order = null, terms = null, localFacts = undefined, combine = combineProfiles, host = null, money = null,
+                entities = undefined }) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.record = record;
@@ -154,7 +163,9 @@ export class Retrieval {
     this.#host = host;
     this.#money = money && typeof money === "object" ? money : null;
     this.#combine = typeof combine === "function" ? combine : null;
+    this.#entities = entities;
     this.frontierReader = new Frontier(this);
+    this.finder = new Finder(this);
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -1197,6 +1208,30 @@ export class Retrieval {
     this.#sql.exec(`UPDATE selections SET touched=?, expires=? WHERE handle=?`,
       now.toISOString(), new Date(now.getTime() + SELECTION_TTL_MS).toISOString(), handle);
     const tally = { applied: 0 };
+    const { members, drift } = this.#selectionMembers(sel, viewer, tally);
+    const moved = drift.revised.length + drift.removed + drift.added > 0;
+    /* DEC-49 REGION is-selection-moved — C-33.32. THE REFUSE GATE ASKS THE ANSWER-CHANGED QUESTION, not the per-row
+       one (REC-55); `moved` itself is PUBLISHED UNCHANGED and still means per-row movement. */
+    const stopped = answerChanged(drift, moved) && weight === "refuse";
+    return {
+      ok: !stopped, handle, kind: sel.kind, q: sel.q, owner: sel.owner,
+      n: members.length, snapshotN: sel.n, weight, moved,
+      ...(stopped ? { reason: "SET_MOVED", code: "SET_MOVED",
+                      check: SELECTION_CHECKS.SET_MOVED.check,
+                      translation: SELECTION_CHECKS.SET_MOVED.translation,
+                      detail: "this action changes state, so it will not run against a set that moved "
+                            + "since it was selected. Look at the selection again and re-select." } : {}),
+      drift, members: stopped ? [] : members.map((m) => m.bundle_id),
+      expires: new Date(now.getTime() + SELECTION_TTL_MS).toISOString(),
+      gate: { applied: tally.applied },
+    };
+    /* END DEC-49 REGION is-selection-moved */
+  }
+
+  /* R19's re-resolution of a selection's members under the current viewer, and its drift; read-only (it is the read
+     both `selectionResolve` and R73's selection scope make, and only the former extends the selection's life). */
+  #selectionMembers(sel, viewer, tally) {
+    const handle = sel.handle;
     const drift = { revised: [], purged: [], hidden: [], added: 0, removed: 0, kind: sel.kind };
     let members;
     if (sel.kind === "enumerated") {
@@ -1236,23 +1271,7 @@ export class Retrieval {
                      + "because a query selection stores the criterion rather than the rows";
       }
     }
-    const moved = drift.revised.length + drift.removed + drift.added > 0;
-    /* DEC-49 REGION is-selection-moved — C-33.32. THE REFUSE GATE ASKS THE ANSWER-CHANGED QUESTION, not the per-row
-       one (REC-55); `moved` itself is PUBLISHED UNCHANGED and still means per-row movement. */
-    const stopped = answerChanged(drift, moved) && weight === "refuse";
-    return {
-      ok: !stopped, handle, kind: sel.kind, q: sel.q, owner: sel.owner,
-      n: members.length, snapshotN: sel.n, weight, moved,
-      ...(stopped ? { reason: "SET_MOVED", code: "SET_MOVED",
-                      check: SELECTION_CHECKS.SET_MOVED.check,
-                      translation: SELECTION_CHECKS.SET_MOVED.translation,
-                      detail: "this action changes state, so it will not run against a set that moved "
-                            + "since it was selected. Look at the selection again and re-select." } : {}),
-      drift, members: stopped ? [] : members.map((m) => m.bundle_id),
-      expires: new Date(now.getTime() + SELECTION_TTL_MS).toISOString(),
-      gate: { applied: tally.applied },
-    };
-    /* END DEC-49 REGION is-selection-moved */
+    return { members, drift };
   }
 
   /** R21: the owner's selections newest first, the caps, and the instance's selection bytes. D-464: a row naming a
@@ -1415,6 +1434,128 @@ export class Retrieval {
     };
   }
 
+  /* ---- "Find in this" (R73–R75; T35-37, N698, DEC-164) ---- */
+
+  /** R73: a find over one scope, by kind, that records nothing. The scope is resolved here under the viewer's sight
+   *  (every capture the viewer may not see is left out and counted nowhere, R29); the kinds are answered by
+   *  `findin.mjs`'s matchers over at most `FIND_CAPTURES_PER_CALL` captures, in capture-sha order, `next` naming where
+   *  to continue. `owner` is the control plane's owner stamp, which a selection scope is read under (R19: a selection
+   *  is its maker's); it defaults to the viewer. It writes nothing: a selection named as the scope is read without
+   *  extending its life, and no observation, fact or reading is written; it calls no model. */
+  findIn({ scope = null, kinds = null, term = null, limit = null, cursor = null, viewer = null, owner = null } = {}) {
+    const no = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
+    if (typeof viewer !== "string" || !viewer)
+      return no("VIEWER_MISSING", "a find answers only to a stamped viewer, and this request carries none");
+    if (scope == null || (typeof scope === "object" && !Array.isArray(scope) && !Object.keys(scope).length))
+      return no("NO_SCOPE", "a find runs over one scope: a capture, a selection, a set of ids or a project");
+    const forms = ["capture", "selection", "ids", "project"];
+    const keys = scope && typeof scope === "object" && !Array.isArray(scope) ? Object.keys(scope) : null;
+    if (!keys || keys.length !== 1 || !forms.includes(keys[0]))
+      return no("SCOPE_UNKNOWN", `a scope is exactly one of ${forms.map((f) => `{${f}}`).join(", ")}`, { forms });
+    const form = keys[0], value = scope[form];
+    const resolved = this.#findScope(form, value, viewer, typeof owner === "string" && owner ? owner : viewer);
+    if (resolved.ok === false) return resolved;
+    const asked = Array.isArray(kinds) ? kinds : typeof kinds === "string" && kinds ? kinds.split(",") : [];
+    const wanted = [...new Set(asked.map((k) => String(k).trim()).filter(Boolean))];
+    if (!wanted.length) return no("NO_KINDS", `a find names the kinds it looks for: ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
+    const unknown = wanted.filter((k) => !FIND_KINDS.includes(k));
+    if (unknown.length)
+      return no("KIND_UNKNOWN", `no kind called ${unknown.map((k) => JSON.stringify(k.slice(0, 40))).join(", ")}; `
+        + `the kinds are ${FIND_KINDS.join(", ")}`, { kinds: FIND_KINDS });
+    const words = typeof term === "string" ? term.trim() : "";
+    if (wanted.includes("term") && !words) return no("NO_TERM", "the kind term finds a name or term as written, and none was given");
+    if (words.length > FIND_TERM_MAX)
+      return no("TERM_TOO_LONG", `a term is at most ${FIND_TERM_MAX} characters`, { limit: FIND_TERM_MAX, got: words.length });
+    const n = Number(limit);
+    const cap = limit == null || limit === "" || !Number.isFinite(n) ? FIND_ITEMS_DEFAULT
+      : Math.max(1, Math.min(FIND_ITEMS_MAX, Math.floor(n)));
+    const after = typeof cursor === "string" && cursor ? cursor : null;
+    const remaining = resolved.captures.filter((c) => after === null || c.capture_sha > after);
+    const page = remaining.slice(0, FIND_CAPTURES_PER_CALL);
+    const next = remaining.length > page.length ? page[page.length - 1].capture_sha : null;
+    const found = this.finder.find({ captures: page, kinds: wanted, term: words, limit: cap, viewer,
+                                     whole: after === null && next === null });
+    return { ok: true, scope: { form, [form]: value, captures: resolved.captures.length },
+             kinds: found, captures_read: page.length, limit: cap, captures_limit: FIND_CAPTURES_PER_CALL, next };
+  }
+
+  /* R73's scope, resolved under the viewer's sight to the captures it holds (`[{capture_sha, bundle_id}]`, one entry
+     per capture under its first visible bundle, in capture-sha order), or the scope's refusal. A capture is held by
+     the bundles that register it (provenance's `register`, its R48). */
+  #findScope(form, value, viewer, owner) {
+    const no = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
+    const sees = this.sight(viewer);
+    const byCapture = new Map();
+    const holdOf = (bundleIds) => {
+      for (let i = 0; i < bundleIds.length; i += SELECTION_ID_CHUNK) {
+        const part = bundleIds.slice(i, i + SELECTION_ID_CHUNK);
+        for (const r of this.#rows(`SELECT DISTINCT capture_sha, bundle_id FROM register
+                                     WHERE bundle_id IN (${part.map(() => "?").join(",")})`, ...part))
+          if (sees(r.bundle_id)) keep(r);
+      }
+    };
+    const keep = (r) => { const b = byCapture.get(r.capture_sha); if (!b || r.bundle_id < b) byCapture.set(r.capture_sha, r.bundle_id); };
+    const ownersOf = (sha) => this.#rows(`SELECT DISTINCT capture_sha, bundle_id FROM register WHERE capture_sha = ?`, sha)
+      .filter((r) => sees(r.bundle_id));
+    const SHA = /^[0-9a-f]{64}$/;
+    if (form === "capture") {
+      const sha = typeof value === "string" ? value.trim() : "";
+      const held = sha ? ownersOf(sha) : [];
+      if (!held.length)
+        return no("CAPTURE_NOT_HELD", "this record holds no capture with that fingerprint that you may see");
+      held.forEach(keep);
+    } else if (form === "selection") {
+      const handle = typeof value === "string" ? value : "";
+      const sel = handle ? this.#one(`SELECT * FROM selections WHERE handle=?`, handle) : null;
+      if (!sel || sel.expires < this.#nowIso())
+        return { ok: false, reason: "NO_SUCH_SELECTION", detail: "unknown, released, or expired" };
+      if (sel.owner !== owner)
+        return { ok: false, reason: "NOT_YOURS", detail: "a selection is readable only by the credential that made it" };
+      const { members } = this.#selectionMembers(sel, viewer, { applied: 0 });
+      holdOf(members.map((m) => m.bundle_id));
+    } else if (form === "ids") {
+      const list = Array.isArray(value) ? [...new Set(value.filter((v) => typeof v === "string" && v).map((v) => v.trim()))] : [];
+      if (list.length > FIND_IDS_MAX)
+        return no("SCOPE_TOO_LARGE", `an enumerated scope holds at most ${FIND_IDS_MAX} ids`, { limit: FIND_IDS_MAX, got: list.length });
+      for (const id of list.filter((v) => SHA.test(v))) ownersOf(id).forEach(keep);
+      holdOf(list.filter((v) => !SHA.test(v)));
+    } else {
+      const id = typeof value === "string" ? value.trim() : "";
+      const proj = id ? this.#one(`SELECT bundle_id, object_type FROM bundles WHERE bundle_id = ?`, id) : null;
+      if (!proj || normalizeType(proj.object_type) !== "project" || !sees(id))
+        return no("NO_SUCH_PROJECT", "this record holds no project by that id that you may see");
+      holdOf([id, ...this.#rows(`SELECT bundle_id FROM bundles WHERE project = ? ORDER BY bundle_id`, id).map((r) => r.bundle_id)]);
+    }
+    const captures = [...byCapture].map(([capture_sha, bundle_id]) => ({ capture_sha, bundle_id }))
+      .sort((a, b) => (a.capture_sha < b.capture_sha ? -1 : a.capture_sha > b.capture_sha ? 1 : 0));
+    return { ok: true, captures };
+  }
+
+  /** R74's `term`, through the compiler (R28): a compile with this module's relations and zone. */
+  planOf(input) { return this.#compile(input); }
+
+  /** R74's `people`: entities' name lookup (its R17), the host's own unless a caller handed one; null when none. */
+  entitiesFor() {
+    if (this.#entities === undefined) {
+      this.#entities = null;
+      try { if (this.#host) this.#entities = entitiesOf(this.#host); } catch { this.#entities = null; }
+    }
+    return this.#entities;
+  }
+
+  /** R75: the primary language subtag of the active profiles' `locale` (`jurisdictions` R37), lower-cased, or null
+   *  when no profile is active or none states one (profiles that disagree have it withheld, its R15). */
+  localeOf() {
+    let ids = null;
+    try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
+    if (!Array.isArray(ids) || !ids.length || !this.#combine) return null;
+    try {
+      const c = this.#combine(ids);
+      const v = c && c.ok && c.view && c.view.locale ? c.view.locale.value : null;
+      return typeof v === "string" && v ? v.split("-")[0].toLowerCase() : null;
+    } catch { return null; }
+  }
+
   /** R35–R50: `op=frontier` (`frontier.mjs`). */
   frontier(args = {}) { return this.frontierReader.read(args); }
 }
@@ -1554,5 +1695,14 @@ export function retrievalRoutes(r, url, body) {
     index: () => r.buildIndex({ viewer: q.get("viewer") }),
     image: () => r.readImage({ id: q.get("id"), viewer: q.get("viewer") }),
     file: () => r.readFile({ id: q.get("id"), path: q.get("path"), viewer: q.get("viewer") }),
+    /* R73: "Find in this" (`owed:findin`): the scope, kinds, term, limit and cursor from the body (or the query, the
+       scope as JSON and the kinds comma-separated); the viewer and owner the control plane's stamps. */
+    findin: () => {
+      const b = body && typeof body === "object" ? body : {};
+      const scopeQ = (() => { try { return q.has("scope") ? JSON.parse(q.get("scope")) : null; } catch { return undefined; } })();
+      return r.findIn({ scope: b.scope ?? scopeQ, kinds: b.kinds ?? q.get("kinds"), term: b.term ?? q.get("term"),
+                        limit: b.limit ?? q.get("limit"), cursor: b.cursor ?? q.get("cursor"),
+                        viewer: q.get("viewer"), owner: q.get("owner") });
+    },
   };
 }
