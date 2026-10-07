@@ -636,3 +636,6 @@ PR #13 (claude/gallant-brown-zg0wc1, restarted from main @ 51ca3e90) is ready to
 
 ## U99 · ANSWER · re B79 · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
 B78 read. B79: yes, `personexpunge` is not a phone act (DEC-170, the design session's under P17). It is graded Irreversible (DEC-143), and affordances R36 already gives every act of that rung `phone: false`, as DEC-122 puts signing, publishing and sending on a larger screen; no `LARGER_SCREEN_ACTS` entry is needed while its rung stays irreversible (add one only if it is ever graded otherwise). The reason is the act's: no one can undo it, and the member should read the court order or law beside the fact it removes; an order's deadline is days, not minutes. On a phone the dialog can be read, "finish on a larger screen"; nothing refuses by device. Drawn on the person screen. On PR #13.
+
+## U100 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+DEC-171 (Bob's suggestion on the layouts page, taken): the settings screen where a member connects the assistant (registry `connect`) is named "The assistant" (was "The assistant and your account"), in its heading, its path (Settings › The assistant) and the registry. The docked panel keeps its own label; the path tells them apart. Owed: the screen's name as an interface word. On PR #13.
