@@ -29,6 +29,7 @@ export { CAPTURE_ACCOUNT_TOKEN, captureAccountStatement } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
+import * as acquisitionApi from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 import { provenanceOf, DOORBELL_VIA } from "../provenance/index.mjs";
@@ -84,7 +85,9 @@ export const PULL_WITHIN_FAILED_DETAIL =
    The F5 bound lives HERE, at the producer boundary, so a subject is inert before it is stored rather than after
    it is read. Single line, length-capped, control characters stripped: newlines go first because a multi-line
    subject is how a plausible-looking instruction gets room to look like a message rather than a label. */
-export const TASK_KINDS = Object.freeze(["authority-undetermined"]);
+/* R15 (T35; K1940): `archive-unpack` is the continuation of an automatic unpack past one call (`acquisition` R40),
+   drained by the daemon as `op=unpack`; its digest is the archive's. `authority-undetermined` is `tasks`' (D-98). */
+export const TASK_KINDS = Object.freeze(["authority-undetermined", "archive-unpack"]);
 const boundedSubject = (v) =>
   String(v == null ? "" : v).replace(/[\r\n\t]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
 
@@ -151,6 +154,9 @@ export const INBOX_SORTS = Object.freeze(["received", "status", "secret", "proje
 export const SORT_DIRS = Object.freeze(["asc", "desc"]);
 /* R77: the orders `heldCaptures` sorts by. */
 export const HELD_SORTS = Object.freeze(["age", "source", "project"]);
+/* R77 (DEC-167 (8); K1881, BOB's): the most held files an archive's row carries; the rest are read through
+   `acquisition.archiveList`. */
+export const HELD_FILES_IN_ROW = 50;
 
 const instances = new WeakMap();
 /* R58 (N122, K155): for each instance, which of its options a caller supplied, so a later caller's option is judged
@@ -166,7 +172,9 @@ const sameEnv = (a, b) => {
 
 /** K61, R58: the one Capture for this object's storage. `opts`: `env` (the object's bindings: the evidence bucket
  *  for the inbox, the renderer, the instance's name), `governor` (host-governor's, `governorOf(ctx)` by default),
- *  `record` (`recordOf(ctx)`), `provenance` (`provenanceOf(ctx)`) and `attestation` (`attestationOf(ctx)`, K1224). A later call's option is never silently
+ *  `record` (`recordOf(ctx)`), `provenance` (`provenanceOf(ctx)`), `attestation` (`attestationOf(ctx)`, K1224) and
+ *  `ownHosts` (the group's own hosts, T35, R73; none by default, adopted from the first caller that names them, as
+ *  `governor`). A later call's option is never silently
  *  dropped (N122: a first caller without `env` stripped the plane's renderer from every later one): an `env` or
  *  `governor` the instance took by default is adopted from the first later caller that supplies it, and one that
  *  differs from what an earlier caller supplied throws, naming the option. A test may pass its own. */
@@ -180,7 +188,7 @@ export function captureOf(ctx, opts = {}) {
                                /* attestation's own instance for this host, over the record and provenance capture holds */
                                attestation: opts.attestation ?? attestationOf(ctx, { record, provenance }) });
     instances.set(storage, c);
-    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation"].filter((k) => opts[k] != null)));
+    supplied.set(c, new Set(["env", "governor", "record", "provenance", "attestation", "ownHosts"].filter((k) => opts[k] != null)));
     registerGrammar(c.core);
     registerFigures(c);
     return c;
@@ -193,10 +201,12 @@ export function captureOf(ctx, opts = {}) {
   /* Every option judged before any is adopted, so a refused call changes nothing. */
   if (opts.env != null && given.has("env") && !sameEnv(c.env, opts.env)) refuse("env");
   if (opts.governor != null && given.has("governor") && c.governor !== opts.governor) refuse("governor");
+  if (opts.ownHosts != null && given.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse("ownHosts");
   for (const [name, held] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation]])
     if (opts[name] != null && opts[name] !== held) refuse(name);
   if (opts.env != null && !given.has("env")) { c.env = opts.env; given.add("env"); }
   if (opts.governor != null && !given.has("governor")) { c.governor = opts.governor; given.add("governor"); }
+  if (opts.ownHosts != null && !given.has("ownHosts")) { c.ownHosts = Capture.hostsOf(opts.ownHosts); given.add("ownHosts"); }
   return c;
 }
 
@@ -227,7 +237,8 @@ function registerFigures(c) {
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false;
 
-  constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null } = {}) {
+  constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
+                         ownHosts = [] } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
     this.core = record;
@@ -238,6 +249,19 @@ export class Capture {
        `signReceipt`). */
     this.attestation = attestation;
     this.credentials = credentials;
+    /* R73 (T35; F16): the group's own hosts (the copy's own and every fleet member's), built by the composition root
+       (`plane`), read off this store by `acquisition` R42 and `capture-sources` R55, R65. */
+    this.ownHosts = Capture.hostsOf(ownHosts);
+  }
+
+  /* R73: a list of host names, lower-cased, each once; anything else reads as none. */
+  static hostsOf(list) {
+    return Object.freeze([...new Set((Array.isArray(list) ? list : []).filter((h) => typeof h === "string" && h.trim())
+      .map((h) => h.trim().toLowerCase()))]);
+  }
+  static sameHosts(a, b) {
+    const x = Capture.hostsOf(a), y = Capture.hostsOf(b);
+    return x.length === y.length && x.every((h) => y.includes(h));
   }
 
   /* credentials' instance for this storage (R69's attesting keys, its R11), reached when first needed. */
@@ -350,6 +374,16 @@ export class Capture {
   /** R73: `acquisition`'s `archiveLookup` (its R3), likewise. */
   archiveLookup(args) { return archiveLookup(this, args); }
 
+  /** R73 (T35; `acquisition` R38): `acquisition`'s `unpack` with this module's store handed in. */
+  unpack(args) { return acquisitionApi.unpack(this, args); }
+
+  /** R73, R77 (T35; `acquisition` R41): `acquisition`'s `archiveList`, likewise. */
+  archiveList(args) { return acquisitionApi.archiveList(this, args); }
+
+  /** R73, R77 (T35; `acquisition` R41): `acquisition`'s `memberOf`, likewise: every archive a capture was filed from or
+   *  found in, `[]` for none. */
+  memberOf(captureSha) { return acquisitionApi.memberOf(this, captureSha); }
+
   #emitSync(event, payload) {
     const out = [];
     for (const { module, fn } of this.#listeners.get(event) || []) {
@@ -444,7 +478,7 @@ export class Capture {
         return { knocker_digest: null, pseudonym: null, basis: "no secret was presented" };
       const key = this.#knockerKey({ create: false });
       if (!key) return { knocker_digest: null, pseudonym: null,
-                         basis: "no knock carrying a secret has been received at this instance, so no secret is recognised" };
+                         basis: "no knock carrying a secret has been received by your group's Civicsmith, so no secret is recognised" };
       const knocker_digest = await Capture.#knockerDigest(key, secret);
       return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
     } catch { return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" }; }
@@ -506,16 +540,31 @@ export class Capture {
     } catch { /* the tally is status: a count that cannot be written changes nothing */ }
   }
 
-  /* R80: a refusal answered, counted first. */
-  #refusedKnock(answer, nowMs) {
+  /** R85 (N703; K1875, DEC-165, DEC-166): one refused hand-over in the security tally, through `credentials`'
+   *  `securityCount({kind: "handover", country})` (its R44), beside R80's tally. `country` is the control plane's stamp
+   *  (Cloudflare's two-letter label for the request), never the body's; nothing else of the knock reaches the count. A
+   *  count that cannot be written is dropped: it never changes the refusal's answer, R53's order or R80's tally, and
+   *  this module keeps no table for it. */
+  #securityCount(country) {
+    try {
+      const cr = this.#credentials();
+      if (cr && typeof cr.securityCount === "function")
+        cr.securityCount({ kind: "handover", country: typeof country === "string" && country ? country : null });
+    } catch { /* the security tally is status: a count that cannot be written changes nothing */ }
+  }
+
+  /* R80, R85: a refusal answered, counted first in both tallies. */
+  #refusedKnock(answer, nowMs, country = null) {
     this.#tallyRefusal(nowMs, answer && answer[Capture.#LIMIT_REACHED] === true);
+    this.#securityCount(country);
     return answer;
   }
 
-  /** R80: a knock the Worker refused before the store was asked to keep anything (R49–R51, the required-argument
-   *  refusals, R66's weak secret), counted in the tally and nowhere else. Answers `{counted: true}` and never throws. */
-  doorbellRefused({ now = null } = {}) {
-    this.#tallyRefusal(now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now(), false);
+  /** R80, R85: a knock the Worker refused before the store was asked to keep anything (R49–R51, the required-argument
+   *  refusals, R66's weak secret), counted in the doorbell's tally and the security tally (`country` the control
+   *  plane's stamp, or null). Answers `{counted: true}` and never throws. */
+  doorbellRefused({ now = null, country = null } = {}) {
+    this.#refusedKnock(null, now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now(), country);
     return { counted: true };
   }
 
@@ -562,13 +611,13 @@ export class Capture {
    *  exactly as `knock` asks them: a refusal is R31's (`RATE_IP` or `RATE_GLOBAL`, with `stated`, the published bound)
    *  and counts nothing; an admitted attempt is counted in both windows, in one transaction that asks again, and
    *  answers null. Nothing else is written. */
-  async knockAttempt({ sourceAddress = null, now = null } = {}) {
+  async knockAttempt({ sourceAddress = null, now = null, country = null } = {}) {
     const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const rate = await this.#rateWindows({ sourceAddress, nowMs });
     const refusal = this.#knockRateRefusal(rate) || this.#tx(() => this.#countKnock(rate));
     if (!refusal) return null;
-    /* R80: every refusal R71 answers is counted in the tally. */
-    this.#refusedKnock(refusal, nowMs);
+    /* R80, R85: every refusal R71 answers is counted in both tallies. */
+    this.#refusedKnock(refusal, nowMs, country);
     return { ...refusal, stated: refusal.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
   }
 
@@ -580,18 +629,18 @@ export class Capture {
    *  removed unless another knock's row already names the same digest. */
   async knock({ contentB64 = null, content = null, note, contact, sourceAddress = null, windowMs = KNOCK.windowMs,
                 perIpLimit = KNOCK.perIp, globalLimit = KNOCK.global, now = null, knockerSecret = null,
-                generateSecret = false } = {}) {
+                generateSecret = false, country = null } = {}) {
     const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     let bytes;
     try {
       bytes = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te.encode(String(content ?? ""));
-    } catch { return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs); }
-    /* R53, R66: a weak secret before the rate: nothing is stored, and nothing counted but R80's tally. */
-    if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs);
+    } catch { return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs, country); }
+    /* R53, R66: a weak secret before the rate: nothing is stored, and nothing counted but the tallies (R80, R85). */
+    if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs, country);
     const sha = hexOf(await crypto.subtle.digest("SHA-256", bytes));
     const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
     const early = this.#knockRateRefusal(rate);
-    if (early) return this.#refusedKnock(early, nowMs);
+    if (early) return this.#refusedKnock(early, nowMs, country);
     const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
     const key = `bio/inbox/${sha}`;
     let stored = false;
@@ -630,8 +679,8 @@ export class Capture {
     if (!answer.ok && stored && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha)) {
       try { await bucket.delete?.(key); } catch { /* an orphaned content-addressed object is harmless */ }
     }
-    /* R80: a knock refused on the second ask is counted, outside the refused transaction, which rolled back. */
-    return answer.ok ? answer : this.#refusedKnock(answer, nowMs);
+    /* R80, R85: a knock refused on the second ask is counted, outside the refused transaction, which rolled back. */
+    return answer.ok ? answer : this.#refusedKnock(answer, nowMs, country);
   }
 
   /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, paged by `after`: a
@@ -767,7 +816,7 @@ export class Capture {
       const row = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
       return { ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", code: "EVIDENCE_STORAGE_NOT_CONFIGURED", check: row.check,
                translation: row.translation, status: 503, knockId,
-               detail: "this instance has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
+               detail: "this group's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written" };
     }
     /* The bytes as received: the evidence bucket's inbox object, else the inline copy. They must hash to the row's digest. */
     let bytes = null;
@@ -854,7 +903,7 @@ export class Capture {
         /* R65 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
            before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
         who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were received at this instance's doorbell as knock ${row.knock_id} at ${row.received}, `
+        asserts: `these bytes were received at the doorbell of your group's Civicsmith as knock ${row.knock_id} at ${row.received}, `
                + `and brought into the record by ${by} at ${at}; they were received, not fetched from any address`,
         evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
         bound: false, via: DOORBELL_VIA,
@@ -1030,7 +1079,7 @@ export class Capture {
      is no archived locator, the replay cannot be fetched (the governor holding its host included), or it is too large. */
   async #replayMatches(sha, archived) {
     const replay = rawReplayOf(archived);
-    if (!replay) return { matches: "undetermined", match_basis: archived ? "the archived locator is not a replay this instance can read raw" : "the co-archive gave no archived locator to compare" };
+    if (!replay) return { matches: "undetermined", match_basis: archived ? "the archived locator is not a replay your group's Civicsmith can read raw" : "the co-archive gave no archived locator to compare" };
     try {
       const g = await governedFetch(this, replay, "reattest");
       if (g.refusedByGovernor) return { matches: "undetermined", replay, match_basis: `the governor is holding requests to the archive (${g.reason})` };
@@ -1042,7 +1091,7 @@ export class Capture {
         const { done, value } = await reader.read();
         if (done) break;
         total += value.length;
-        if (total > REPLAY_MAX) { try { await reader.cancel(); } catch { /* gone */ } return { matches: "undetermined", replay, match_basis: "the replay is larger than this instance compares" }; }
+        if (total > REPLAY_MAX) { try { await reader.cancel(); } catch { /* gone */ } return { matches: "undetermined", replay, match_basis: "the replay is larger than your group's Civicsmith compares" }; }
         h.update(value);
       }
       const got = h.hex();
@@ -1107,12 +1156,35 @@ export class Capture {
     return { sql: g.sql, args: g.args };
   }
 
+  /* R77: the WHERE terms of a held document: an Information document at `collected`, not set aside, seen by the viewer,
+     and passing the `member` and `project` filters; with their arguments. One builder for the list and for asking
+     whether one document (an archive's, R77's grouping) is a row of it. */
+  #heldWhere({ viewer, who, project }) {
+    const sight = this.#sightOf(viewer);
+    const hasProject = project != null && project !== "";
+    return {
+      sql: `b.object_type = 'information' AND b.current_state = 'collected' AND ${Capture.#NOT_SET_ASIDE} AND (${sight.sql})
+            AND ${who ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
+                                  WHERE r.bundle_id = b.bundle_id
+                                    AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
+            AND ${hasProject ? "b.project = ?" : "1=1"}`,
+      args: [...sight.args, ...(who ? [who] : []), ...(hasProject ? [String(project)] : [])],
+    };
+  }
+
   /** R77 (DEC-97 (1)): the Information documents at `collected` not set aside, as the viewer may see them, at most
    *  `limit` (N90), with `truncated` and `next`. `member` keeps the documents that member captured (`capture_actors`
    *  over the register); `project` that project's (the document's `project`). Each row: the document, its source, its
    *  project, its age since collected, its batch eligibility (R78) and `captured_for`, the questions it was captured for as
    *  R83's reader answers them for the viewer (DEC-141 (1)). Sorted by `age` (the default, oldest first),
-   *  `source` or `project`, either way, a row with none last; ties by id. Writes nothing; nothing is notified. */
+   *  `source` or `project`, either way, a row with none last; ties by id. Writes nothing; nothing is notified.
+   *
+   *  DEC-167 (8) (N688; T35): a document whose capture is a file cut out of an archive (`acquisition.memberOf`) is listed
+   *  beside its archive, not as a row of its own, while its archive's document is a row of this list for the viewer:
+   *  that row carries `archive` (`acquisition.archiveList`'s summary) and `files`, its held files the viewer may see
+   *  passing the same filters, in index order, at most `HELD_FILES_IN_ROW` with `files_total` and `files_truncated`. A
+   *  file whose archive is not a row is a row of its own, with `archive: {sha256}`. `limit` counts rows, never files:
+   *  the page is read in windows and a file shown beside its archive is skipped, so a page holds `limit` rows. */
   async heldCaptures({ member = null, project = null, sort = null, dir = null, limit = null, after = null, viewer = undefined,
                        now = null } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
@@ -1127,37 +1199,133 @@ export class Capture {
     const k0 = by === "age" ? "'0'" : by === "source" ? "CASE WHEN src_address IS NULL THEN '1' ELSE '0' END"
                                                     : "CASE WHEN project IS NULL OR project = '' THEN '1' ELSE '0' END";
     const asc = by === "age" ? way === "desc" : way === "asc";
-    const sight = this.#sightOf(viewer);
     const who = typeof member === "string" && member ? memberIdOf(member) : null;
-    const found = this.#rows(
+    const where = this.#heldWhere({ viewer, who, project });
+    const window = (key, n) => this.#rows(
       `SELECT * FROM (SELECT bundle_id, title, project, since, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
          SELECT b.bundle_id, b.title, b.project, ${Capture.#SINCE} AS since, ${Capture.#SOURCE("address")} AS src_address,
                 ${Capture.#SOURCE("via")} AS src_via, ${Capture.#SOURCE("first_retrieved")} AS src_retrieved
-           FROM bundles b
-          WHERE b.object_type = 'information' AND b.current_state = 'collected' AND ${Capture.#NOT_SET_ASIDE} AND (${sight.sql})
-            AND ${who ? `EXISTS (SELECT 1 FROM register r JOIN capture_actors ca ON ca.capture_sha = r.capture_sha
-                                  WHERE r.bundle_id = b.bundle_id
-                                    AND (CASE WHEN ca.actor LIKE 'member:%' THEN substr(ca.actor, 8) ELSE ca.actor END) = ?)` : "1=1"}
-            AND ${project != null && project !== "" ? "b.project = ?" : "1=1"})) q
-        WHERE ${from ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
+           FROM bundles b WHERE ${where.sql})) q
+        WHERE ${key ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
         ORDER BY k0 ASC, k1 ${asc ? "ASC" : "DESC"}, bundle_id ASC LIMIT ?`,
-      ...sight.args, ...(who ? [who] : []), ...(project != null && project !== "" ? [String(project)] : []),
-      ...(from ? [from[0], from[0], from[1], from[1], from[2]] : []), cap + 1);
-    const page = found.slice(0, cap), truncated = found.length > cap, last = page[page.length - 1];
+      ...where.args, ...(key ? [key[0], key[0], key[1], key[1], key[2]] : []), n);
+    /* R77 (DEC-167 (8)): whether a document is a row of this list (the same filters), memoised for the page. */
+    const isRow = new Map();
+    const rowOf = (bundleId) => {
+      if (!bundleId) return false;
+      if (!isRow.has(bundleId))
+        isRow.set(bundleId, !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND ${where.sql}`, bundleId, ...where.args));
+      return isRow.get(bundleId);
+    };
+    const kept = [];
+    let key = from, more = true;
+    while (kept.length <= cap && more) {
+      const found = window(key, cap + 1);
+      more = found.length > cap;
+      if (!found.length) break;
+      const last = found[found.length - 1];
+      key = [String(last.k0), String(last.k1), last.bundle_id];
+      const archives = this.#archivesOfDocuments(found.map((r) => r.bundle_id));
+      for (const r of found) {
+        const of = archives.get(r.bundle_id) || [];
+        /* Beside an archive that is a row: not a row of its own. */
+        if (of.some((a) => rowOf(a.bundle))) continue;
+        kept.push({ ...r, of_archive: of.length ? of[0].sha256 : null });
+        if (kept.length > cap) break;
+      }
+    }
+    const page = kept.slice(0, cap), truncated = kept.length > cap, last = page[page.length - 1];
     const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
     const rows = [];
     for (const r of page) {
       const since = Date.parse(r.since);
       const asked = this.#questionsOf(r.bundle_id, viewer);
+      const grouped = await this.#archiveRow(r.bundle_id, { viewer, rowOf });
       rows.push({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
                   source: r.src_address ? { address: r.src_address, via: r.src_via, retrieved: r.src_retrieved } : null,
                   collected_since: r.since, age_days: Number.isFinite(since) ? Math.max(0, Math.floor((at - since) / 86400000)) : null,
                   ...(await this.#eligibility(r.bundle_id)),
                   ...(asked.questions ? { captured_for: Capture.#shown(asked.questions) }
-                                      : { captured_for: null, captured_for_basis: asked.basis }) });
+                                      : { captured_for: null, captured_for_basis: asked.basis }),
+                  ...(grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})) });
     }
     return { ok: true, held: rows, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+  }
+
+  /* R77 (DEC-167 (8)): for each document of a window, the archives its captures were cut out of or found in
+     (`acquisition.memberOf` over the captures the register files under it, provenance R48), each with the document its
+     archive is filed in (the register's home of the archive's digest), in `memberOf`'s order. Asked once per window, one
+     capture at a time; a document with no archive is absent. A `memberOf` that fails reads as no archive: the document
+     stands as a row of its own, never hidden. */
+  #archivesOfDocuments(bundleIds) {
+    const out = new Map();
+    if (!bundleIds.length) return out;
+    let regs = [];
+    try {
+      regs = this.#rows(`SELECT capture_sha, bundle_id FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))
+                          ORDER BY bundle_id, capture_sha`, JSON.stringify(bundleIds));
+    } catch { regs = []; }
+    for (const { capture_sha, bundle_id } of regs) {
+      let of;
+      try { of = this.memberOf(capture_sha); } catch { of = []; }
+      if (!Array.isArray(of)) continue;
+      for (const m of of) {
+        const archiveSha = m && typeof m.archiveSha === "string" ? m.archiveSha.toLowerCase() : null;
+        if (!archiveSha || !HEX64.test(archiveSha) || archiveSha === capture_sha) continue;
+        const list = out.get(bundle_id) || [];
+        if (list.some((a) => a.sha256 === archiveSha)) continue;
+        const home = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, archiveSha);
+        list.push({ sha256: archiveSha, bundle: home ? home.bundle_id : null });
+        out.set(bundle_id, list);
+      }
+    }
+    return out;
+  }
+
+  /* R77 (DEC-167 (8)): an archive's row additions, when the row's document holds an archive `acquisition.archiveList`
+     answers for the viewer: `archive`, its summary, and `files`, the held files beside it (filed, or already held and
+     found in it) whose documents are rows of this list for the viewer, in index order, at most `HELD_FILES_IN_ROW`, each
+     `{document, sha256, index, name, grade, eligible}` (the grade the archive's), with `files_total` and
+     `files_truncated`. Null for a document that holds no archive. The entries are read through `archiveList`, a page of
+     at most 1000 at a time, never by this module's own SQL over acquisition's tables. */
+  async #archiveRow(bundleId, { viewer, rowOf }) {
+    let shas = [];
+    try { shas = this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? ORDER BY capture_sha`, bundleId).map((r) => r.capture_sha); }
+    catch { shas = []; }
+    for (const sha of shas) {
+      let first;
+      try { first = await this.archiveList({ archiveSha: sha, viewer, limit: 1 }); } catch { first = null; }
+      if (!first || first.ok !== true || !first.archive) continue;
+      const files = [];
+      for (const state of ["filed", "already_held"]) {
+        let after = null;
+        for (;;) {
+          let page;
+          try { page = await this.archiveList({ archiveSha: sha, viewer, state, limit: READ_LIMIT.max, after }); } catch { page = null; }
+          if (!page || page.ok !== true || !Array.isArray(page.entries)) break;
+          for (const e of page.entries) {
+            const fileSha = e && typeof e.sha256 === "string" ? e.sha256.toLowerCase() : null;
+            if (!fileSha || fileSha === sha) continue;
+            const home = this.#one(`SELECT bundle_id FROM register WHERE capture_sha = ?`, fileSha);
+            if (!home || home.bundle_id === bundleId || !rowOf(home.bundle_id)) continue;
+            files.push({ document: home.bundle_id, sha256: fileSha, index: Number(e.index), name: e.name ?? null });
+          }
+          if (!page.truncated || !page.next) break;
+          after = page.next;
+        }
+      }
+      files.sort((a, b) => a.index - b.index || (a.document < b.document ? -1 : a.document > b.document ? 1 : 0));
+      const seen = new Set(), unique = files.filter((f) => (seen.has(f.document) ? false : (seen.add(f.document), true)));
+      const shown = [];
+      for (const f of unique.slice(0, HELD_FILES_IN_ROW))
+        shown.push({ ...f, grade: first.archive.grade ?? null, eligible: (await this.#eligibility(f.document)).eligible });
+      const sum = first.summary || {};
+      return { archive: { sha256: sha, entries: first.archive.entries ?? null, filed: sum.filed ?? null,
+                          already_held: sum.already_held ?? null, not_filed: sum.not_filed ?? null, waiting: sum.waiting ?? null },
+               files: shown, files_total: unique.length, files_truncated: unique.length > HELD_FILES_IN_ROW };
+    }
+    return null;
   }
 
   /* R78: one document's batch eligibility, by the registered examination (`ratification` R34): `eligible: true`, or
@@ -1411,7 +1579,7 @@ export class Capture {
         const running = this.#one(`SELECT COUNT(*) AS n FROM render_slots`).n;
         if (running >= capN)
           return { state: "waiting", day, cap: capN, running, reserve_ms: reserve,
-                   why: `${running} renders are running and this instance runs at most ${capN} at once` };
+                   why: `${running} renders are running and your group's Civicsmith runs at most ${capN} at once` };
       }
       const cur = this.#one(`SELECT * FROM render_allowance WHERE day = ?`, day);
       const spent = cur ? cur.spent_ms : 0;
@@ -2192,20 +2360,25 @@ export class Capture {
                     : { ok: true, queued: true, deduped: false, kind, captureSha, enqueued: now, armedAt };
   }
 
-  /** R45: the queued events, oldest first (by `enqueued`, then digest), at most `limit`. */
-  taskEvents({ limit = 50 } = {}) {
+  /** R45: the queued events, oldest first (by `enqueued`, then digest), at most `limit`; with `kind`, only that kind's,
+   *  so each drainer reads its own (T35: `tasks` drains `authority-undetermined`, the daemon `archive-unpack`). */
+  taskEvents({ limit = 50, kind = null } = {}) {
     try {
       const n = Math.max(0, Math.min(1000, Math.trunc(Number(limit)) || 0));
+      const one = typeof kind === "string" && kind;
       return this.#rows(`SELECT kind, capture_sha, subject, locator, enqueued, attempts, last_try FROM task_queue
-                          ORDER BY enqueued, capture_sha LIMIT ?`, n)
+                          WHERE ${one ? "kind = ?" : "1=1"} ORDER BY enqueued, capture_sha LIMIT ?`, ...(one ? [kind] : []), n)
         .map((r) => ({ kind: r.kind, captureSha: r.capture_sha, subject: r.subject, locator: r.locator,
                        enqueued: r.enqueued, attempts: r.attempts, lastTry: r.last_try }));
     } catch { return []; }
   }
 
-  /** R45 */
-  taskEventCount() {
-    try { return Number(this.#one(`SELECT COUNT(*) AS n FROM task_queue`).n); } catch { return 0; }
+  /** R45; with `kind`, that kind's count only. */
+  taskEventCount({ kind = null } = {}) {
+    try {
+      const one = typeof kind === "string" && kind;
+      return Number(this.#one(`SELECT COUNT(*) AS n FROM task_queue WHERE ${one ? "kind = ?" : "1=1"}`, ...(one ? [kind] : [])).n);
+    } catch { return 0; }
   }
 
   /** R45 */
@@ -2405,13 +2578,14 @@ export function captureOps(c, url, body, env) {
     dropcapturesession: () => c.dropCaptureSession({ session: q("session") }),
     sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6, limit: page.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
-    knock: () => c.knock({ ...(body || {}), sourceAddress: q("source") }),
+    /* R85: `country` is the control plane's stamp in the query, never the body's (nor is `sourceAddress`). */
+    knock: () => c.knock({ ...(body || {}), sourceAddress: q("source"), country: q("country") }),
     inboxlist: () => c.inboxList(q("status") || null, { ...page, sort: q("sort"), dir: q("dir") }),
     inboxget: () => c.inboxGet(q("id")),
     /* N499: a body names no `at` or `within`: the pull's instant and its joined act are an in-process caller's. */
     inboxresolve: () => { const b = body || {}; return c.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason }); },
     /* R80: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
-    doorbellrefused: () => c.doorbellRefused(body || {}),
+    doorbellrefused: () => c.doorbellRefused({ now: body && body.now, country: q("country") }),
     doorbelltally: () => c.doorbellTally({ viewer: q("viewer") ?? "" }),
     /* R76, R77, R79, R81: by the caller's stamped viewer; an unstamped call sees nothing. The author is the stamp. */
     gradenote: () => c.gradeNoteOf({ captureSha: q("capture") ?? (body && body.captureSha), viewer: q("viewer") ?? "" }),
@@ -2434,5 +2608,10 @@ export function captureOps(c, url, body, env) {
     acquire: () => c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
                                           storeName: q("store") || "bio" }),
     archivelookup: () => c.archiveLookup({ address: (body && body.address) || q("address") }),
+    /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
+       plane's stamps, never the body's, and the body names only the archive. */
+    unpack: () => c.unpack({ archiveSha: (body && body.archiveSha) || q("archive"), by: q("by"), cls: q("cls") }),
+    archivelist: () => c.archiveList({ archiveSha: q("archive") ?? (body && body.archiveSha), viewer: q("viewer") ?? "",
+                                       state: q("state"), ...page }),
   };
 }

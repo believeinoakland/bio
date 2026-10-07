@@ -129,14 +129,14 @@ export const KNOCK_CHECKS = {
     translation: 'This group\'s inbox did not read what you sent, because the request itself is larger '
       + 'than this door accepts. Nothing was stored, nothing was opened, and nothing about your '
       + 'material was judged — its size was read off the request and it stopped there. The size this '
-      + 'instance will read is published beside this message. Send the material again smaller, or as '
+      + 'inbox will read is published beside this message. Send the material again smaller, or as '
       + 'more than one knock, and it will be read. The group can see how often its doorbell turns people away.',
   },
   KNOCK_PAYLOAD_TOO_LARGE: {
     check: 'C-85.4',
     where: 'src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large',
     translation: 'This group\'s inbox read your material and cannot keep it, because it is larger than '
-      + 'this instance stores. That is a fact about how this group has set its instance up rather '
+      + 'this inbox stores. That is a fact about how this group has set its Civicsmith up rather '
       + 'than a judgement about what you sent — a group that has configured evidence storage can keep '
       + 'far more — and the size this one can keep is published beside this message. Nothing was '
       + 'stored. Send something smaller, or ask the group\'s members how to get the whole of it to them. The group can see how often its doorbell turns people away.',
