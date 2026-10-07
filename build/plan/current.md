@@ -58,7 +58,7 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    26. control-plane's catalogue-totality test, from T35-78's merge until T35-80 adds `law-relations/checks.mjs` to the families list it copies (answer-envelope, K1974); BOB records the merge that makes the test green.
    27. inquiry-grammar's golden-corpus tests (R1–R4, R6, R16) and basis-versions `registration.test.mjs` R43: `test/m/inquiry-grammar/golden.json` pins C-2.8's `CONTENT_EXTENT_NO_PRODUCER` sentence as "Nothing in this plane produces…", which content's DEC-149 rows (T35-26, L4) re-worded; until T35-40 re-pins it (K1972).
    28. leg-earning `earnedBasis` R1/R3 "for a cell leg" (its regex pins content's pre-DEC-149 sentence), until T35-82 (K1973).
-   29. affordances `t33.test.mjs`:136 (grading of every op: events' `discretionrecord`, `assessmentrecord`, `usewithdraw`, `usesof` and calculations' `usesfreeze`, `applicationrecipes` have no grade) until T35-66 grades them; control-plane `r53-routes.test.mjs`:60 (no spec for events' four ops) until T35-70 declares them (K1976).
+   29. affordances `t33.test.mjs`:136 (grading of every op: events' `discretionrecord`, `assessmentrecord`, `usewithdraw`, `usesof` and calculations' `usesfreeze`, `applicationrecipes` have no grade) until T35-66 grades them; control-plane `r53-routes.test.mjs`:60 (no spec for events' four ops, calculations' two, duties' `poweruses`, `uselink`, `useunlink`, `reviewpropose`) until T35-70 declares them (K1976).
 
 ## BOB's review (K1899)
 
