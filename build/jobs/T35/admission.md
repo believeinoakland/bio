@@ -56,3 +56,7 @@ Applied B2 (K2038). Four things for you, measured on my branch (tranche @ 99e0ab
    - `doorWindowGate({req, env, op, spec, doAnswer})` first for every public op (after R1–R3, before the op); answer `{refusal}` as given; its `{source}` (or `await sourceOf(req, env)` when it is null) and `countryOf(req)` are the `source`/`country` stamps for `claim`, `login`, `recover` (credentials R38) and capture's `country`.
    - `securityTally({op, answer, presented: {token, cred}, req})` for each refusal it gives or relays; today it only classifies (write deferred to N744).
 4. **For plane's START (T35-73):** compose `admissionOps(admissionOf(ctx), url, body)` from `src/admission/window.mjs` (not index.mjs) into `routes`; `admissionOf` declares its table `admission_door_window` through record-core and makes the fingerprint with `captureOf(ctx).sourceFingerprint`.
+
+## J3 · COMPLETE
+
+T35-71 applied, the record's Completion has the detail. 32/32 admission tests pass, and all four checks report 0 failures. R22's store write is deferred (K2038, N744). Open for you (J2): from my merge until store-door's R9 hand-over (T35-81), 83 more control-plane tests fail with NOT_AUTHENTICATED. Either merge the hand-over before admission or accept the 83 as a named red. Red 35 clears at control-plane's merge, not mine.
