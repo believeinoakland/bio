@@ -22,3 +22,7 @@
 - `format`: 130 modules, 129 requirements files; 0 failures. `architecture`: 15 product files, 65 relative imports; 0 failures. `coverage`: 31 of 31 live requirement ids named by a test; 0 failures. `ownership`: 3 files changed by intent between tranche/T35 and HEAD; 0 failures.
 
 Size (session_01UdnNvtAgsbA7Psysnpv2Ch): test runs 4, module lines 2120
+
+## J1 · COMPLETE
+
+T35-51 applied: C-111.24 SOURCE_DECLARED now ends 'A source registers once, when your group's Civicsmith starts.' (DEC-149), awaiting stamp (red 2). Tested at the interface (discovery.test.mjs, R15 R22), with a check that no intent row names the plane, instance, copy or a server. intent 74/74; format, architecture, coverage 31/31, ownership 0 failures. For you, in the record: control-plane rows-before-r43.json:755 pins C-111.24's digest (red 19's catalogue-end, which T35-72 re-pins; no new failing test); the plane bundle embeds the old sentence until L7's close regenerates it.
