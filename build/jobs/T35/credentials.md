@@ -33,3 +33,7 @@
 - `format.mjs`: 0 failures. `architecture.mjs credentials`: 0 failures. `coverage.mjs credentials`: 47 of 47 ids, 0 failures. `ownership.mjs credentials tranche/T35`: 11 files, 0 failures.
 
 Size (session_018Ck3Fpjqfuff67UQ1EwxJB): test runs 12, module lines 2504
+
+## J1 · REPORT
+
+Found in other modules by my merge (record, Completion, items 1–5): (1) plane ask.test.mjs ×6 writes raw tokens into sessions(token); under R40 the column is token_sha. Plane should sign in through login or insert sha256 of its token. (2) op-declarations t33.test.mjs:180: my seven new routes (signout, signouteverywhere, securitymap, recoverycodesissue, recoverycodesstate, recover, subscriptiondisconnect) have no spec until T35-70. (3) control-plane catalogue-end.test.mjs pins row translations; DEC-149's six re-worded rows trip it (row-census cause, red 2). (4) Until admission stamps source (T35-71), all sign-ins share one window source. (5) The plane bundle is stale (rule 7).
