@@ -114335,7 +114335,7 @@ var REEVALUATION_ACT_CHECKS = Object.freeze({
   MACHINE_CANNOT_ADOPT_VERSION: {
     check: "C-110.1",
     where: at13("#choiceSubject", "is-version-choice"),
-    translation: "Only a named member can move a reference to a newer version of a document. The assistant and the plane's own credentials may say a newer version exists; they never choose which one a finding rests on."
+    translation: "Only a named member can move a reference to a newer version of a document. The assistant and the record's own machine credentials may say a newer version exists; they never choose which one a finding rests on."
   },
   MACHINE_CANNOT_KEEP_VERSION: {
     check: "C-110.2",
@@ -168972,7 +168972,7 @@ var INTENT_CHECKS = Object.freeze({
   SOURCE_DECLARED: {
     check: "C-111.24",
     where: at23("registerSource", "is-source-once"),
-    translation: "This source of proposals is already registered. A source registers once, when the plane starts."
+    translation: "This source of proposals is already registered. A source registers once, when your group's Civicsmith starts."
   },
   SOURCE_MALFORMED: {
     check: "C-111.25",
