@@ -1,0 +1,14 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_016ugHTajUHdmuCsGKMnbB4L,job,jurisdictions,44463360,442544,6852,93586,,13,6085
+session_01FWZ869SsVrV3mffbRFWTNY,job,civil-time,3123314,77640,60,11450,,5,1386
+session_016FG9ULYTRSS3dhqvhVKfG6,job,test-support,5541254,146011,6505,59088,,6,721
+session_01ENYzMG4jn6hUTZ6bBR8iNB,job,runtime-limits,3127008,93622,58,12132,,3,281
+session_01S19brLpPpaT6mCpQtwVbHH,job,signatures,5386034,171166,68,13273,,9,869
+session_01PSRv1PEnzVenMM8dS21qae,job,bundler,10496484,201406,120,49285,,9,2973
+session_01VGEWLNunPZ8F4aBDx9uTno,job,id-spaces,7185945,138508,606,24558,,4,1804
+session_014EpXPcr4nfcapzqQAhZ57c,job,ooxml,24757250,340196,187,155434,,24,2017
+session_0197hpZKQkhjw4tqoDSVoZF9,job,office-readers,18254565,312289,145,67121,,9,3737
+session_01Cp5wGJf8KyKDzCvUrmymPr,job,odf-reader,11756361,233833,118,33992,,9,2420
+session_01Jry3dXC9WHUGbknu4WMyTM,job,pdf-reader,12260389,264059,114,46476,,4,3108
+session_01Kh4KjEZGmcA83CAoYuLqA8,job,format-registry,8361755,152862,114,31519,,21,350
+session_01Y6hcEDnNpHHyH8SJXrD1tK,job,doctypes,53294293,410957,365,167388,,17,3461
