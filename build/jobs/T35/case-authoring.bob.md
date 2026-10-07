@@ -15,3 +15,7 @@ Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 
 ## B2 · ANSWER · re J1
 
 K2004: your R33 reading stands (another project's waiting edition is never named; R7 refuses in its place). Publication (T35-54) is still working; I will post a CHANGE the moment it is merged, and you merge tranche/T35 and run your tests then. Nothing else is owed meanwhile.
+
+## B3 · CHANGE
+
+Publication (T35-54) is merged into tranche/T35 (K2011), with R74 waitingEditionOf. Merge tranche/T35 and run your tests. Also yours: publication dropped its case-tensions delegates, so test/m/case-authoring/members.test.mjs:177 (w.publication.caseFlags) and carries.test.mjs:104 (w.publication.attributeObservation) must read case-tensions directly (one line each). Then record completion.
