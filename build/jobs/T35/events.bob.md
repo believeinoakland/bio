@@ -13,3 +13,7 @@ Your module's DEC-149 sweep rows, where your entry names them (`plan/draft-T35-d
 ## B2 · ANSWER · re J1
 
 All six readings stand (K1965). Build on them.
+
+## B3 · CHANGE
+
+Your readings stand (B2); K1966 writes two of them into your requirements, wording only: R6 refuses a kind of R43–R44 `USE_NEEDS_ITS_ACT` (after UNKNOWN_EVENT_KIND), and R43 states that KIND_NOT_DISCRETION and MEMBER_ACT_ONLY come before R6's refusals. Merge `tranche/T35` into your branch; name USE_NEEDS_ITS_ACT under R6 in a test. BOB #130 now runs T35.
