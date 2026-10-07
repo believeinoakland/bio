@@ -3,6 +3,7 @@
    anywhere (R24). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { caseTensionsOf } from "../../../src/case-tensions/index.mjs";
 import { world, V, T0, readingLines, currentLines } from "./fixture.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
@@ -174,7 +175,7 @@ test("R13, R23: publishing writes nothing on any finding — each member is pinn
   assert.equal(b1.ok, true, JSON.stringify(b1).slice(0, 300));
   assert.deepEqual([w.head(Q), w.head(Q2)], [shaQ, shaQ2]);
   assert.deepEqual(w.row(`SELECT doc_sha, text FROM case_documents WHERE case_id=?`, a1.caseId), aDoc);
-  assert.deepEqual(w.publication.caseFlags({}).flags, [], "no revision flag raised");
+  assert.deepEqual(caseTensionsOf(w.host).caseFlags({}).flags, [], "no revision flag raised");
   const byId = Object.fromEntries(b1.findings.map((f) => [f.target, f]));
   assert.deepEqual([byId[Q].edition, byId[Q].bundleSha, byId[Q2].edition, b1.edition],
     [1, shaQ, 1, 1], "Q's bytes are its published edition 1; Q2's next on its own chain; B's case at its edition 1");

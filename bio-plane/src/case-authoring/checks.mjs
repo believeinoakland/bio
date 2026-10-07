@@ -4,7 +4,7 @@
  * Moved here from the check catalogue with their ids, codes and translations unchanged (K6, R29): C-44.1 and C-44.3–C-44.5
  * (the case-identity family, `CASE_DERIVATION_CHECKS`; C-44.2 is held by `public-read`, so the family is one across
  * the two, as `BIAS_CHECKS` is) and C-82.2–C-82.7 (`STATEMENT_ACK_CHECKS`, whole; C-82.1 is retired, D-521, and its
- * number is not reused); C-82.8 is new in T22 (R19, DEC-88). Each `where` names the region of this module that
+ * number is not reused); C-82.8 is new in T22 (R19, DEC-88), C-44.6 in T35 (R58, N681). Each `where` names the region of this module that
  * enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) were copied
  * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29; K695), ids, codes, `where`s and translations unchanged, and stamped by
  * promotion in T19; the catalogue and its copies are deleted (K529). R56's `CALCULATION_NOT_DISCLOSED` joins
@@ -85,6 +85,15 @@ export const CASE_DERIVATION_CHECKS = Object.freeze({
     translation: 'That draft has already been named as the draft of another published case, and the people who '
       + 'read it are listed there. One draft becomes one case, so it cannot be named for this one too. '
       + 'Nothing was published.',
+  },
+  /* R58 (N681; K1833; DEC-147): an edition of the case is signed and waiting to be published at its set time
+     (publication R66, read through its R74), asked after R7 and before R8, before anything is written or an id drawn.
+     New in T35; its translation is BOB's draft (the UX stream's to revise), awaiting promotion's stamp (rule 17). */
+  CASE_EDITION_WAITING: {
+    check: 'C-44.6',
+    where: at('#publishCase', 'is-case-edition-waiting'),
+    translation: 'An edition of this case is signed and waiting to be published at the time set. Prepare the next '
+      + 'edition after it is published, or cancel it first. Nothing was prepared.',
   },
 });
 
