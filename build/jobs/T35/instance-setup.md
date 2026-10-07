@@ -1,6 +1,6 @@
 # instance-setup (T35)
 
-**Status** · session_01QZZgwL4ojyBbUL3VUYqwZM · depth 2 · RUNNING until 2026-10-07T21:31:59Z (users' suites (op-declarations, control-plane, plane, installer) on my branch and on tranche/T35, compared) · handled B1
+**Status** · session_01QZZgwL4ojyBbUL3VUYqwZM · depth 2 · RUNNING until 2026-10-07T21:31:59Z (users' suites (op-declarations, control-plane, plane, installer) on my branch and on tranche/T35, compared) · handled B2
 
 ## J1 · QUESTION
 
