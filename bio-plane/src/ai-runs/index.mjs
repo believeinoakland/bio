@@ -35,7 +35,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STAT
          OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage, checkBound, checkCondition,
          checkConsume, checkRunState, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
          runPrincipalGate, checkSkillVersion, DEPLOYED_MODES, DEFAULT_MODE, AI_RUNS_CHECKS, RUN_MODES, startAllowed,
-         checkVerification, deployable } from "../run-rules/index.mjs";
+         checkVerification, deployable, ASK_MODE, DRAFT_MODE } from "../run-rules/index.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 
 export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
@@ -2800,7 +2800,7 @@ export class AiRuns {
    *  (T35; N686) A draft (`run-rules` R21, also no run) is counted the same way with `mode` `draft`, to the member who
    *  asked for it, under its own mode, so R51's reads answer drafts apart. Neither is a run, so a `mode` other than `ask`
    *  or `draft` is refused as a malformed entry (C-22.13), counting nothing. */
-  static ASK_USAGE_MODES = Object.freeze(["ask", "draft"]);
+  static ASK_USAGE_MODES = Object.freeze([ASK_MODE.mode, DRAFT_MODE.mode]);
   countAskUsage({ member = null, mode = null, usage = null, calls = null, at = null } = {}) {
     const id = memberIdOf(member);
     if (!id) return this.#noAccount(null, "Counting an ask's use");
@@ -2832,7 +2832,7 @@ export class AiRuns {
    *  before its first model call, as the act of the member who asked for it (`mode: "draft"` names it in the words). */
   aiUseCheck({ member = null, at = null, mode = null } = {}) {
     const id = memberIdOf(member);
-    if (!id || !this.#accountServing(id)) return this.#noAccount(id, String(mode ?? "").trim() === "draft" ? "A draft" : "An ask");
+    if (!id || !this.#accountServing(id)) return this.#noAccount(id, String(mode ?? "").trim() === DRAFT_MODE.mode ? "A draft" : "An ask");
     return this.#ceilingRefusal(id, at ? Date.parse(at) : Date.now());
   }
 
