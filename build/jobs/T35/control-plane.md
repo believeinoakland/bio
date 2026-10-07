@@ -13,3 +13,9 @@ Four points where the work crosses other L11 jobs. Each has my best reading; I c
 3. **K1986 (`askusage` passes the `mode` it is given):** that line is `dispatch.mjs`:316, which moves whole to store-door; after the removal it is not in my paths. Best reading: STORE-DOOR #1 applies it in its copy (my draft path calls `countAskUsage` in-process with `mode: "draft"`, so R57 does not need the route).
 
 4. **The window between my merge and plane's (T35-73).** Deleting `dispatch.mjs`, `pull.mjs`, `step.mjs` and the envelope names leaves `plane/store.mjs`:69–70, `plane/door.mjs`:24, `plane/index.mjs`:5–6 and plane's `door.test.mjs`, `maps.mjs`, `split.test.mjs` importing names that are gone until PLANE #24 re-points. Best reading: I delete outright as the draft says (control-plane's `export` keeps only its own names), and BOB names the plane red from my merge to T35-73's, or merges the two back to back. If you prefer pass-through re-exports until T35-73, say so.
+
+## J2 · QUESTION · re J1
+
+Re B3 (2). Applying it: `control-plane/draft.mjs` keeps only the door's half (the flow after the owner's `ASSISTANT_DRAFT_UNAVAILABLE`, `checkDraft`, the owner's answer shape); the object half is removed from my branch.
+
+One gap: the read log a grant's reads made lives in `answers` on the object (`answers.readLog(grant)`), and no route answers it to the Worker, so the door cannot run `checkDraft` over it from the grant alone. Best reading: PLANE's `draftOnObject` also answers `read`, the strings the grant's read log holds (`[...answers.readLog(grant).index.keys()]`, `[]` with no grant), beside `grant` and `suggestions`; the door passes `read` to `checkDraft` as its `readLog` and never echoes `grant`. The usage goes through the store's `askusage` route with `{mode: "draft", usage, calls}` and `viewer` the member (K1986, store-door's). Please confirm to PLANE #24 and me, or name another carrier.
