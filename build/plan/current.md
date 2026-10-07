@@ -47,7 +47,7 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    15. fleetbundles' STALE BUNDLE arms (the plane bundle embeds `signpage.mjs`, `calendar.mjs`, `tokens.mjs`), until L1's close regenerates (§14).
    16. The format check's bundler paths `release-advisories.mjs`, `third-party.json` (K1917), until T35-6 creates them.
    17. pdf-worker `structure.test.mjs` R7, R10 arms (its committed bundle predates pdf-reader R36; K1920), until L1's close regenerates it (§14).
-   18. From agent-worker's merge (T35-50) until admission's (T35-71): `bio-plane/test/d260-resume.test.mjs` and `fence-e2e.test.mjs`, which drive agent-worker against a plane that reads the credential only from the address until admission reads the header (F1; K1941). Nothing is released in between.
+   18. From agent-worker's merge (T35-50) until admission's (T35-71): `bio-plane/test/d260-resume.test.mjs` and `fence-e2e.test.mjs`, which drive agent-worker against a plane that reads the credential only from the address until admission reads the header (F1; K1941). Nothing is released in between. **Retired (K1994):** both files were deleted in T20.
    19. control-plane `catalogue-end.test.mjs`:21 (R43, R22), pinning the translation digests of C-102.11, C-102.12, C-55.1, C-96.11 and record-core's T35-13 rows, from membership's merge (T35-14) until T35-72 (MEMBERSHIP #26 J1).
    20. hypotheses `notes.test.mjs`:43 (R11), pinning the court sentence's old wording, from membership's merge until T35-41 (MEMBERSHIP #26 J1).
    21. sources `contract.test.mjs`:108 R1, pinning `mintExhausted`'s old detail, from record-core's merge (T35-13) until N718 (RECORD-CORE #18 J1; sources has no T35 job).
