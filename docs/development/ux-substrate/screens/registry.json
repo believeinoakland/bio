@@ -97,12 +97,17 @@
     },
     {
      "op": "assistantset",
-     "label": "Choose how members reach the assistant",
+     "label": "Choose whether the group pays for the assistant",
      "status": "declared",
      "modules": [
       "instance-setup",
       "setup-page"
      ]
+    },
+    {
+     "op": "owed:aikeepaway DEC-172",
+     "label": "Keep the group's material away from AI, with a reason",
+     "status": "owed"
     },
     {
      "op": "groupkeyset",
@@ -355,6 +360,11 @@
      "modules": [
       "credentials"
      ]
+    },
+    {
+     "op": "owed:aikeepaway DEC-172",
+     "label": "Keep the group's material away from AI, with a reason",
+     "status": "owed"
     }
    ],
    "journeys": [
