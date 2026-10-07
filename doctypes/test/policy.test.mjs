@@ -11,7 +11,7 @@ import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { EMPTY, HELD, PE, PE_POLICY } from "./fixtures.mjs";
 import { CASES } from "./golden-cases.mjs";
 import { readWith } from "./read.mjs";
-import { POLICIES, ANSWERS, SECTION_ANSWERS, MEASURED_VIEW, score, scoreSections } from "./policies.mjs";
+import { POLICIES, ANSWERS, SECTION_ANSWERS, score, scoreSections } from "./policies.mjs";
 
 const policy = DOCTYPES.find((t) => t.key === "policy");
 const REG = (() => { const r = makeRegistry(); for (const t of DOCTYPES) r.register(t); return r; })();
@@ -43,6 +43,11 @@ test("R1 R25 policy is registered after regulation, matches CERTAIN only on a he
     assert.equal(r.confidence, CONFIDENCE.NONE);
     assert.match(r.why, /supply no policy series or no policy header labels/);
   }
+  // a standard's designation opening a line is never the series a header names (K1933): the test profile's MHSI standard
+  const standard = PE_POLICY.replace("HARBOUR STANDING ORDER\nOrder No. 07/24", "MHSI Standard 101\nOrder No. 07/24");
+  assert.equal(policy.detect({ text: standard, view: PE }).confidence, CONFIDENCE.NONE);
+  const asPolicy = { ...PE, standard_sources: PE.standard_sources.map((x) => (x.kind === "standard" ? { ...x, kind: "policy" } : x)) };
+  assert.equal(policy.detect({ text: standard, view: asPolicy }).confidence, CONFIDENCE.CERTAIN, "the same line, were it a policy series");
   // through the registry
   assert.equal(readWith(REG, PE_POLICY, { view: PE }).doctype.type.key, "policy");
 });
@@ -230,7 +235,7 @@ test("R34 assess: a header field or a section that moved, or one read on one sid
 
 /* ------------------------------------------------------------------- R35, R3 */
 
-test("R35 measured on the 50 captured policies: the header block read wholly right for at least 90%, each field as recorded", () => {
+test("R35 measured on the 50 captured policies under the held first profile: the header block read wholly right for at least 90%, each field as recorded", () => {
   assert.equal(POLICIES.documents.length, 50);
   const families = {};
   for (const d of POLICIES.documents) {
@@ -243,13 +248,13 @@ test("R35 measured on the 50 captured policies: the header block read wholly rig
   let whole = 0;
   const per = {};
   for (const d of POLICIES.documents) {
-    const p = policy.parse({ text: d.text.document, view: MEASURED_VIEW });
+    const p = policy.parse({ text: d.text.document, view: HELD });
     const s = score(p.header, ANSWERS[d.id]);
     if (s.ok) whole++;
     for (const [f, x] of Object.entries(s.fields)) { per[f] ??= [0, 0]; per[f][1]++; if (x.ok) per[f][0]++; }
   }
   assert.ok(whole >= 45, `${whole} of 50 headers read wholly right; the target is 45 (90%)`);
-  assert.equal(whole, 46, "the measurement recorded in the job record (K1924)");
+  assert.equal(whole, 46, "the measurement recorded in the job record (K1924, K1933)");
   assert.deepEqual(per, { type: [48, 50], number: [49, 50], title: [49, 50], effective: [47, 49], supersedes: [6, 6],
                           reference: [18, 18], coordinator: [16, 17], review_due: [8, 9], revision_cycle: [8, 9] });
 });
@@ -257,7 +262,7 @@ test("R35 measured on the 50 captured policies: the header block read wholly rig
 test("R35 R27 section boundaries on the 50, against a member's reading of each one's top-level sections", () => {
   let right = 0;
   for (const d of POLICIES.documents) {
-    const p = policy.parse({ text: d.text.document, view: MEASURED_VIEW });
+    const p = policy.parse({ text: d.text.document, view: HELD });
     if (scoreSections(p.sections, SECTION_ANSWERS[d.id]).ok) right++;
   }
   assert.equal(right, 45, "the measurement recorded in the job record");

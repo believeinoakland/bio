@@ -49,14 +49,16 @@ function groupSource(src, name) {
 const escapeRe = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const compile = (src, flags) => { try { return new RegExp(src, flags); } catch { return null; } };
 
-/** The policy series the view names (jurisdictions R63): each with its label as printed at the
+/** The policy series the view names (jurisdictions R63; `kind: "policy"` only): each with its label as printed at the
  *  head of a document (words at the opening of one line or of successive lines), its number's
  *  form, and its citation pattern. */
 export function policySeries(ctx) {
   const out = [];
   const sources = readerView(ctx).standard_sources;
   for (const s of Array.isArray(sources) ? sources : []) {
-    if (!s || !s.series || typeof s.series !== "object" || typeof s.series.label !== "string" || !s.series.label.trim()) continue;
+    /* A policy series only: a standard's designation (`kind: "standard"`) is cited inside a policy's header, never
+       the series the header names (K1933). */
+    if (!s || s.kind !== "policy" || !s.series || typeof s.series !== "object" || typeof s.series.label !== "string" || !s.series.label.trim()) continue;
     if (typeof s.key !== "string" || typeof s.series.key !== "string") continue;
     const cite = s.cite && typeof s.cite.re === "string" ? s.cite : null;
     const flags = String((cite && cite.flags) || "").replace(/[^iu]/g, "");

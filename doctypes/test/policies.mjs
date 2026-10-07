@@ -1,8 +1,7 @@
-/* The 50 captured policies (fixtures/policies.json), the member's answers (fixtures/policies-answers.json), and the
- * view R35 measures the reader under: the policy series and header labels as measured on these 50 documents
- * themselves (`world.md` §4; the labels each document prints), held here, never in the module's code (R3, R20). It
- * stands in for the first profile's series (jurisdictions R67) and labels (R69) until that profile holds them; a
- * test also reads under the made-up Port Alder's series, so no reading depends on this one place. */
+/* The 50 captured policies (fixtures/policies.json) and the member's answers (fixtures/policies-answers.json), which
+ * R35's tests read under the held first profile (jurisdictions R67, R69; K1933). `MEASURED_VIEW` is the series and
+ * labels as first measured on these 50 documents, before that profile held them (the job record's first measurement,
+ * K1924): kept as that record, read by no test. */
 import fs from "node:fs";
 
 export const POLICIES = JSON.parse(fs.readFileSync(new URL("./fixtures/policies.json", import.meta.url), "utf8"));
