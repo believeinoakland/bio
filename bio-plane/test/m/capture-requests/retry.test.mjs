@@ -70,6 +70,7 @@ test("R31 the AI does not capture: the door writes a row and fetches nothing, th
   const id = w.ask({ address: "https://a.example.org/doc", purpose: "acquire" }).request;
   assert.equal(w.capture.calls.length, 0, "the door fetched nothing");
   /* a body cannot change what leaves: the row's values are the arm's */
+  w.hold("https://a.example.org/moved");
   w.st.sql.exec(`UPDATE capture_requests SET address='https://a.example.org/moved' WHERE request=?`, id);
   await w.cr.drain({});
   assert.deepEqual(w.capture.calls.map((c) => [c.opts.captureRequest.locator, c.opts.captureRequest.purpose]),

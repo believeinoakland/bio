@@ -346,6 +346,84 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
     translation: 'This mark could not be made or withdrawn. Marking a site as a platform that asks for a login is a '
       + 'member\'s own act, and it names one site by its plain host name, such as www.example.org. Nothing was written.',
   },
+  /* R49 (T35; F2 as Bob ruled it, K1880, with BOB's final rule; K1881 for the bound) — AN ADDRESS THE RECORD ALREADY
+     HOLDS. The assistant reads any public site while it searches and nothing it reads that way enters the record; what
+     enters the record is fetched by the drain, and only for an address the record already holds (a receipt's address or
+     retrieval locator, or a held capture's outbound link, query and fragment included), so nothing drawn from the
+     record can leave inside an address. Judged at the door (R2) and again at the drain (R14), both through ONE region
+     (`addressRefusal`), terminal. New at T35, awaiting stamp (accepted red 2). */
+  CAPTURE_REQUEST_ADDRESS_TOO_LONG: {
+    check: 'C-28.23',
+    where: 'src/capture-requests/index.mjs addressRefusal > is-capture-address-held',
+    translation: 'This web address is longer than 2,048 characters, the most a capture request may carry. A longer one is '
+      + 'refused whole, never cut, because a shortened address would name a different page. Nothing was queued or fetched.',
+  },
+  CAPTURE_REQUEST_ADDRESS_NOT_HELD: {
+    check: 'C-28.24',
+    where: 'src/capture-requests/index.mjs addressRefusal > is-capture-address-held',
+    translation: 'The assistant may read anywhere while it searches, but it asks to capture only an address the record '
+      + 'already holds: one a held document was captured from, or one a held document links to, exactly as written, '
+      + 'its query and anchor included. This address is not one of them, so nothing was queued or fetched.',
+  },
+  /* R50 (T35; K1888 (4)) — THE MEMBER'S CO-ARCHIVE CHOICE, carried from the request to the drain's fetch. Two door
+     refusals, each before anything is written, through one region (`coArchiveRefusal`). New at T35, awaiting stamp. */
+  CAPTURE_REQUEST_CO_ARCHIVE_NOT_A_MEMBERS: {
+    check: 'C-28.25',
+    where: 'src/capture-requests/index.mjs coArchiveRefusal > is-capture-co-archive',
+    translation: 'Whether a capture also asks a public archive to keep a copy is a member\'s choice, or else the group\'s '
+      + 'setting. This request was not made by a member, so it cannot choose. Nothing was queued.',
+  },
+  CAPTURE_REQUEST_CO_ARCHIVE_MALFORMED: {
+    check: 'C-28.26',
+    where: 'src/capture-requests/index.mjs coArchiveRefusal > is-capture-co-archive',
+    translation: 'The choice about a public archive copy reads co_archive: true (ask for one), false (ask for none), or '
+      + 'nothing to let the group\'s setting decide. This request sent something else. Nothing was queued.',
+  },
+  /* R51–R53 (T35; N646, POLICIES L2 PO3; K1724, K1740) — A RECORDS REQUEST FOR A POLICY KNOWN ONLY BY CITATION. The
+     group's own record of asking the issuer for a policy's text, and of the answer; it fetches nothing and sends
+     nothing. Every refusal through one region (`recordsRefusal`). New at T35, awaiting stamp. */
+  MACHINE_CANNOT_REQUEST_RECORDS: {
+    check: 'C-28.27',
+    where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
+    translation: 'Asking an office for its records, and recording what it answered, is a member\'s own act. This was not '
+      + 'made by a member, so nothing was written.',
+  },
+  RECORDS_REQUEST_NOT_CITED: {
+    check: 'C-28.28',
+    where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
+    translation: 'A records request is opened for a policy the record knows only because something it holds cites it. '
+      + 'This one is held another way, so nothing was written.',
+  },
+  RECORDS_ANSWER_NO_CAPTURE: {
+    check: 'C-28.29',
+    where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
+    translation: 'An answer saying the office produced the policy names the captured document it produced, one the '
+      + 'record holds and you can see. None was named, or the one named is not held, so nothing was written.',
+  },
+  RECORDS_ANSWER_NO_GROUND: {
+    check: 'C-28.30',
+    where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
+    translation: 'An answer saying the office withheld the policy records the ground it gave, in at most 1,000 '
+      + 'characters. None was given, so nothing was written.',
+  },
+  NO_SUCH_RECORDS_REQUEST: {
+    check: 'C-28.31',
+    where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
+    translation: 'No records request you can see answers to that id. One about a policy you may not see is answered '
+      + 'exactly as one that does not exist. Nothing was written.',
+  },
+  RECORDS_REQUEST_ANSWERED: {
+    check: 'C-28.32',
+    where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
+    translation: 'This records request already holds its answer, and an answer is never replaced. Nothing was written.',
+  },
+  RECORDS_ANSWER_UNKNOWN: {
+    check: 'C-28.33',
+    where: 'src/capture-requests/index.mjs recordsRefusal > is-records-request',
+    translation: 'The answer to a records request is one of four: produced (the office produced the text), none_exists '
+      + '(it says no such record exists), withheld (it declined, and why) or no_answer (none came). This was none of '
+      + 'them, so nothing was written.',
+  },
 });
 
 for (const row of Object.values(CAPTURE_REQUEST_CHECKS)) Object.freeze(row);

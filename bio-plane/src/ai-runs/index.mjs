@@ -35,7 +35,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STAT
          OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage, checkBound, checkCondition,
          checkConsume, checkRunState, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
          runPrincipalGate, checkSkillVersion, DEPLOYED_MODES, DEFAULT_MODE, AI_RUNS_CHECKS, RUN_MODES, startAllowed,
-         checkVerification, deployable } from "../run-rules/index.mjs";
+         checkVerification, deployable, ASK_MODE, DRAFT_MODE } from "../run-rules/index.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 
 export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
@@ -892,7 +892,7 @@ export class AiRuns {
     if (!deployed.includes(runMode))
       return refusal("AI_RUN_MODE_NOT_DEPLOYED", {
                mode: String(mode).slice(0, 60), deployed: [...deployed],
-               note: `the mode '${String(mode).slice(0, 60)}' is not deployed on this instance: the modes deploy in one `
+               note: `the mode '${String(mode).slice(0, 60)}' is not deployed in your group's Civicsmith: the modes deploy in one `
                    + `order, each only after the one before it is verified live, and today ${deployed.join(", ")} `
                    + `${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written` });
     /* END DEC-49 REGION is-airun-open-mode */
@@ -1672,7 +1672,9 @@ export class AiRuns {
     return { ready: true, stamp: `${c.principal}/${c.tokenId}`, tokenId: c.tokenId, token: cred.token, store };
   }
 
-  /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. */
+  /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. The
+   *  sentence (`says`) is served to a member in the run's log (R24), so it calls the group's own Civicsmith "your group's
+   *  Civicsmith" (R54, DEC-149); `withheld`'s values are codes and stay. */
   #aiRunResumeDecision(run, resumer) {
     const principal = String((run && run.principal_plane) || "");
     /* R52 (K1503, K1755): the run continues only on the account that serves the act of the member who started it (their
@@ -1685,18 +1687,19 @@ export class AiRuns {
                    + "account that serves that member's act (K1503, K1755). It waits." };
     if (resumer && resumer.ready && principal === resumer.stamp)
       return { dispatch: true, withheld: null,
-               says: `Resumption: handed to agent-worker under the instance's organisation credential `
-                   + `'${resumer.tokenId}', which opened this run.` };
+               says: `Resumption: handed to agent-worker under the organisation credential '${resumer.tokenId}' of `
+                   + `your group's Civicsmith, which opened this run.` };
     const member = principal.startsWith("member:");
     const withheld = member ? "MEMBER_PRINCIPAL_RUN"
       : (resumer && !resumer.ready) ? resumer.withheld : "NOT_THE_INSTANCE_CREDENTIALS_RUN";
     const why = member
-      ? "a member's credential opened it, and the instance resumes only runs its own organisation credential "
+      ? "a member's credential opened it, and your group's Civicsmith resumes only runs its own organisation credential "
         + "opened (D-260, DEC-55 (4): continuing a member's run under the group's key would re-attribute its acts). "
         + "It waits for its own principal"
       : withheld === "NOT_THE_INSTANCE_CREDENTIALS_RUN"
-        ? "another principal opened it, and the instance's organisation credential resumes only the runs it opened"
-        : `the instance cannot resume anything here (${withheld})`;
+        ? "another principal opened it, and the organisation credential of your group's Civicsmith resumes only the runs "
+          + "it opened"
+        : `your group's Civicsmith cannot resume anything here (${withheld})`;
     return { dispatch: false, withheld, says: `Resumption: NOT dispatched — ${why}.` };
   }
 
@@ -2793,13 +2796,20 @@ export class AiRuns {
    *  for `member`, by `answers` (and the control plane's `askusage`). `usage` is the conversation's summed figures,
    *  `calls` the model calls they cover, read as in a tick's entry (a `null` counts one); `mode` the conversation's mode.
    *  An omitted `calls` reads as `null` (ai-runs #11 J1 (1): a caller that predates N588 states none). Writes the counter
-   *  only, to `member`'s day, whichever account served the ask (K1755). */
+   *  only, to `member`'s day, whichever account served the ask (K1755).
+   *  (T35; N686) A draft (`run-rules` R21, also no run) is counted the same way with `mode` `draft`, to the member who
+   *  asked for it, under its own mode, so R51's reads answer drafts apart. Neither is a run, so a `mode` other than `ask`
+   *  or `draft` is refused as a malformed entry (C-22.13), counting nothing. */
+  static ASK_USAGE_MODES = Object.freeze([ASK_MODE.mode, DRAFT_MODE.mode]);
   countAskUsage({ member = null, mode = null, usage = null, calls = null, at = null } = {}) {
     const id = memberIdOf(member);
     if (!id) return this.#noAccount(null, "Counting an ask's use");
     const entry = { mode, model: null, usage, calls };
     const bad = this.#usageRefusal([entry]);
     if (bad) return bad;
+    if (!AiRuns.ASK_USAGE_MODES.includes(String(mode).trim()))
+      return this.#refuse("AI_RUN_CONSUME_INVALID", `the mode '${String(mode).slice(0, 40)}' is not one an ask's use is `
+        + `counted under: an ask counts as 'ask' and a draft as 'draft'; a run's use arrives on its own ticks.`);
     const ms = at ? Date.parse(at) : Date.now();
     this.#transact(() => this.#count(id, [entry], ms));
     return { ok: true, counted: 1, calls: AiRuns.#callsOf(entry), day: this.#dayOf(ms).day };
@@ -2818,10 +2828,11 @@ export class AiRuns {
 
   /** R50, R52: before an ask's (or a standing question's) first model call, `answers` asks this: null when an account
    *  serves `member` (their own, or the group's key, K1755) and they are under the ceiling in force for them today, the
-   *  copy's included; else the refusal, in plain words. Writes nothing. */
-  aiUseCheck({ member = null, at = null } = {}) {
+   *  copy's included; else the refusal, in plain words. Writes nothing. (T35; N686) A draft is held back the same way,
+   *  before its first model call, as the act of the member who asked for it (`mode: "draft"` names it in the words). */
+  aiUseCheck({ member = null, at = null, mode = null } = {}) {
     const id = memberIdOf(member);
-    if (!id || !this.#accountServing(id)) return this.#noAccount(id, "An ask");
+    if (!id || !this.#accountServing(id)) return this.#noAccount(id, String(mode ?? "").trim() === DRAFT_MODE.mode ? "A draft" : "An ask");
     return this.#ceilingRefusal(id, at ? Date.parse(at) : Date.now());
   }
 

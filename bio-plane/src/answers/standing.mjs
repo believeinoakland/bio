@@ -9,10 +9,16 @@
  * and its finds are seen by its author alone (R16), and it reads nothing outside the asking scope (R21). Setting or
  * ending one tells each module listening (R27), so the scheduler re-arms its wake.
  *
+ * A standing find (R28; DEC-164 (6), K1865) keeps a find in place of a saved query: "Keep finding this as documents
+ * arrive", over a scope as `retrieval.findIn` takes it. Each run calls `findIn` under its author's sight, page by page,
+ * and keeps the matches' keys (kind, capture, extent and the words as read); a match is new when its key was not in the
+ * previous run's. No model is ever called for it and it needs no account; its new matches reach the author once, as one
+ * entry, marked "Found by search", never "machine work". It records nothing else (DEC-164 (4)).
+ *
  * These are the `Answers` instance's methods' bodies (`self`); `index.mjs` binds them. */
 
 import { localDay } from "../civil-time/index.mjs";
-import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { isMachineIdentity, sha256HexSync, canonicalJson } from "../record-grammar/index.mjs";
 import { refusal } from "./checks.mjs";
 import { checkAnswer } from "./check.mjs";
 import { ReadLog } from "./readlog.mjs";
@@ -29,6 +35,20 @@ export const STANDING_LABEL = "machine work, from your standing question";
 export const STANDING_AI_SETTING = "answers_standing_ai";
 /** R17: the most ids a run reads of its saved query's answer. */
 export const STANDING_IDS_MAX = 10000;
+/** R28 (K1881, K1941): the most new matches one entry carries; the rest are counted. */
+export const STANDING_FIND_MAX = 500;
+/** R28: the most match keys a standing find keeps from one run, and the most captures one run reads (the job's bound,
+ *  as R17's ids). A match past the kept keys is neither kept nor told, so it is never told twice. */
+export const STANDING_FIND_KEYS_MAX = 10000;
+export const STANDING_FIND_CAPTURES_MAX = 10000;
+/** R28 (DEC-164 (4)): a find's matches carry `origin: "search"` ("Found by search"), and so does its entry. */
+export const FIND_ORIGIN = "search";
+/** R20, R28: the label a standing find's entry carries in place of "machine work". */
+export const STANDING_FIND_LABEL = "found by search, from your standing question";
+/* retrieval's bounds (its R73; K1881): the most items a kind answers per call, and the most ids an enumerated scope
+   holds (a selection is frozen into at most that many, K1982). */
+const FIND_ITEMS = 500;
+const FIND_IDS = 200;
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 const json = (v) => (v === undefined ? null : JSON.stringify(v));
@@ -64,15 +84,32 @@ function today(self, now) {
 }
 
 function questionAnswer(r) {
-  return { id: r.stq_id, question: r.question, query: parse(r.form_json), cadence: r.cadence, ends: r.ends,
+  const find = parse(r.find_json);
+  return { id: r.stq_id, question: find && r.question === "" ? null : r.question, query: find ? null : parse(r.form_json),
+           ...(find ? { find } : {}), cadence: r.cadence, ends: r.ends,
            created_at: r.created_at, ended: r.ended_at ? { at: r.ended_at, by: r.ended_by } : null,
            last_run_at: r.last_run_at, next_due: r.ended_at ? null : r.next_due };
 }
 
-/** R15: a member's standing question, by that member's own act. */
-export function standingQuestionSet(self, { author = null, question = null, query = null, cadence = null, ends = null } = {}) {
+/* R28: a find as the member set it, `{scope, kinds, term}` in the form `retrieval.findIn` takes them; null for anything
+   that is not an object (findIn then answers its own refusal). */
+function findOf(find) {
+  if (find === null || typeof find !== "object" || Array.isArray(find)) return { scope: find ?? null, kinds: null, term: null };
+  const kinds = Array.isArray(find.kinds) ? find.kinds : typeof find.kinds === "string" ? find.kinds.split(",") : [];
+  return { scope: find.scope ?? null, kinds: [...new Set(kinds.map((k) => String(k).trim()).filter(Boolean))],
+           term: typeof find.term === "string" && find.term.trim() ? find.term.trim() : null };
+}
+const given = (v) => v !== null && v !== undefined;
+
+/** R15, R28: a member's standing question, by that member's own act: a saved query, or a find. */
+export function standingQuestionSet(self, { author = null, owner = null, question = null, query = null, find = null,
+                                            cadence = null, ends = null } = {}) {
   if (!memberOf(author) || isMachineIdentity(author))
     return refusal("MACHINE_CANNOT_AUTHOR", "a standing question is set only by a member's own act");
+  if (given(query) === given(find))
+    return refusal("STANDING_NEEDS_SEARCH", given(query) ? "a standing question keeps a saved query or a find, not both"
+      : "a standing question keeps a saved query or a find, and neither was given");
+  if (given(find)) return setFind(self, { author, owner, question, find, cadence, ends });
   const ql = self.dep("query");
   const asked = typeof query === "string" ? { q: query } : query && typeof query === "object" ? query : {};
   const saved = ql && typeof ql.savedForm === "function"
@@ -91,6 +128,50 @@ export function standingQuestionSet(self, { author = null, question = null, quer
   });
   /* R27: a new question is due at once, on today's local day */
   if (r && r.ok) self.tellStanding(r.id, today(self, now));
+  return r;
+}
+
+/* R28: a standing find. `findIn` is asked once, under the author's sight, to check the find (its refusal answered as
+   given); it writes nothing. Then R15's cadence and end. A selection expires and a standing find outlives it, so a
+   selection is frozen here into the bundle ids it now holds under the author's sight (retrieval's `selectionResolve`,
+   its R19, read under the selection's owner, the control plane's stamp), refused `SCOPE_TOO_LARGE` over 200 (K1982).
+   Then the row. */
+function setFind(self, { author, owner, question, find, cadence, ends }) {
+  const want = findOf(find);
+  const retrieval = self.dep("retrieval");
+  const stamp = stampOf(memberOf(author));
+  const maker = typeof owner === "string" && owner ? owner : stamp;
+  const failed = (e) => ({ ok: false, reason: "NO_SCOPE", code: "NO_SCOPE", detail: String(e && e.message || e).slice(0, 200) });
+  let checked;
+  try {
+    checked = retrieval && typeof retrieval.findIn === "function"
+      ? retrieval.findIn({ ...want, limit: 1, viewer: stamp, owner: maker }) : failed("no find is reachable");
+  } catch (e) { checked = failed(e); }
+  if (!checked || checked.ok !== true) return checked;
+  if (!CADENCES.includes(cadence)) return refusal("BAD_CADENCE", `the cadence is one of ${CADENCES.join(", ")}`);
+  const now = self.now();
+  if (!isDay(ends) || ends <= today(self, now)) return refusal("STANDING_NEEDS_END", "the end date is a date after today");
+  const handle = want.scope && typeof want.scope === "object" && Object.keys(want.scope).length === 1
+    ? want.scope.selection : undefined;
+  if (handle !== undefined) {
+    let sel;
+    try { sel = retrieval.selectionResolve({ handle, viewer: stamp, owner: maker, weight: "report" }); } catch (e) { sel = failed(e); }
+    if (!sel || sel.ok !== true) return sel;
+    const ids = Array.isArray(sel.members) ? sel.members : [];
+    if (ids.length > FIND_IDS)
+      return { ok: false, reason: "SCOPE_TOO_LARGE", code: "SCOPE_TOO_LARGE", limit: FIND_IDS, got: ids.length,
+               detail: `a standing find keeps a selection as the ids it holds, at most ${FIND_IDS}, and this one holds ${ids.length}` };
+    want.scope = { ids };
+  }
+  const words = typeof question === "string" && question.trim() ? question : null;
+  const r = self.record.transact(() => {
+    const a = self.record.allocId("STQ", now.slice(0, 4));
+    if (!a || !a.id) return { ok: false, reason: "MINT_EXHAUSTED", detail: "no standing-question id could be allocated" };
+    self.sql.exec(`INSERT INTO standing_questions (stq_id, author, question, form_json, find_json, cadence, ends, created_at, next_due)
+                   VALUES (?,?,?,?,?,?,?,?,NULL)`, a.id, stamp, words ?? "", json(null), json(want), cadence, ends, now);
+    return { ok: true, id: a.id, question: words, find: want, cadence, ends, created_at: now };
+  });
+  if (r && r.ok) self.tellStanding(r.id, today(self, now));   /* R27 */
   return r;
 }
 
@@ -213,8 +294,81 @@ async function heldBack(self, r, at) {
   return { held: null, grant: g.token };
 }
 
-/* One run of one question (R17–R19). */
+/* R28: a match's key: its kind, capture and extent, and the words as read (two amounts in one paragraph share an
+   extent), with the entity a name corresponds to and a table's column; the words stand in where no extent is read. */
+function matchKey(m) {
+  const t = m && m.table ? m.table : null;
+  return sha256HexSync(canonicalJson({
+    kind: m.kind ?? null, capture: m.capture_sha ?? (t && t.capture_sha) ?? null, extent: m.extent ?? (t && t.extent) ?? null,
+    as_read: m.as_read ?? null, entity: m.entity && m.entity.entity_id ? m.entity.entity_id : null,
+    column: t ? t.column ?? null : null, words: (m.extent ?? (t && t.extent)) == null ? m.words ?? null : null,
+  })).slice(0, 32);
+}
+
+/* R28: one run of a standing find: `findIn` over the whole scope, page by page, under the author's sight now. */
+async function runFind(self, r, now) {
+  const retrieval = self.dep("retrieval");
+  const want = parse(r.find_json) || {};
+  const day = today(self, now);
+  const next = nextDueDay(day, r.cadence);
+  const matches = [];
+  let cursor = null, read = 0, refused = null, partial = false;
+  do {
+    let res = null;
+    try {
+      res = retrieval && typeof retrieval.findIn === "function"
+        ? retrieval.findIn({ scope: want.scope, kinds: want.kinds, term: want.term, limit: FIND_ITEMS, cursor,
+                             viewer: r.author, owner: r.author })
+        : null;
+    } catch { res = null; }
+    if (!res || res.ok !== true) { refused = res ? res.reason ?? res.code ?? null : "no retrieval"; break; }
+    for (const k of res.kinds || []) {
+      for (const m of k.items || []) matches.push(m);
+      if (k.truncated) partial = true;
+    }
+    read += res.captures_read || 0;
+    cursor = res.next ?? null;
+    if (cursor !== null && read >= STANDING_FIND_CAPTURES_MAX) { partial = true; break; }
+  } while (cursor !== null);
+  if (refused !== null) {
+    /* the run could not read its scope: it ran, found nothing, and says why */
+    self.record.transact(() => {
+      self.sql.exec(`UPDATE standing_questions SET last_run_at=?, next_due=? WHERE stq_id=?`, now, next, r.stq_id);
+      self.sql.exec(`INSERT INTO standing_runs (stq_id, author, at, new_found, held_back_json) VALUES (?,?,?,0,?)`,
+                    r.stq_id, r.author, now, json({ condition: "query_refused", reason: refused }));
+      return { ok: true };
+    });
+    return { id: r.stq_id, ran: true, new_found: false };
+  }
+  const keyed = [], keys = new Set();
+  for (const m of matches) {
+    const k = matchKey(m);
+    if (keys.has(k)) continue;
+    if (keys.size >= STANDING_FIND_KEYS_MAX) { partial = true; break; }
+    keys.add(k);
+    keyed.push([k, m]);
+  }
+  const first = r.last_run_at === null;
+  const prev = new Set(parse(r.last_ids_json) || []);
+  const fresh = first ? [] : keyed.filter(([k]) => !prev.has(k)).map(([, m]) => m);
+  const found = fresh.length > 0;
+  const finds = found ? { matches: fresh.slice(0, STANDING_FIND_MAX), truncated: fresh.length > STANDING_FIND_MAX,
+                          more: Math.max(0, fresh.length - STANDING_FIND_MAX), origin: FIND_ORIGIN,
+                          ...(partial ? { partial: true } : {}) } : null;
+  self.record.transact(() => {
+    self.sql.exec(`UPDATE standing_questions SET last_run_at=?, next_due=?, last_ids_json=?, last_occ_json=NULL, last_digest=NULL
+                   WHERE stq_id=?`, now, next, json([...keys]), r.stq_id);
+    if (found) self.sql.exec(`INSERT INTO standing_runs (stq_id, author, at, new_found, finds_json) VALUES (?,?,?,1,?)`,
+                             r.stq_id, r.author, now, json(finds));
+    else self.sql.exec(`INSERT INTO standing_runs (stq_id, author, at, new_found) VALUES (?,?,?,0)`, r.stq_id, r.author, now);
+    return { ok: true };
+  });
+  return { id: r.stq_id, ran: true, new_found: found, ...(found ? { held_back: null } : {}) };
+}
+
+/* One run of one question (R17–R19; a standing find's, R28). */
 async function runOne(self, r, now) {
+  if (r.find_json) return runFind(self, r, now);
   const retrieval = self.dep("retrieval");
   const form = parse(r.form_json);
   let res = null;
@@ -292,13 +446,14 @@ export function standingAnswersFor(self, { member = null, after = null, limit = 
   const n = Number(limit);
   const cap = Number.isInteger(n) && n > 0 ? Math.min(n, STANDING_ANSWERS_MAX) : STANDING_ANSWERS_MAX;
   const from = Number.isInteger(Number(after)) ? Number(after) : 0;
-  const rows = self.rows(`SELECT r.*, q.question FROM standing_runs r JOIN standing_questions q ON q.stq_id = r.stq_id
+  const rows = self.rows(`SELECT r.*, q.question, q.find_json FROM standing_runs r JOIN standing_questions q ON q.stq_id = r.stq_id
                           WHERE r.author=? AND r.new_found=1 AND r.seq > ? ORDER BY r.seq LIMIT ?`, stampOf(m), from, cap + 1);
   const page = rows.slice(0, cap);
   return { ok: true,
-           entries: page.map((x) => ({ question: { id: x.stq_id, question: x.question }, run: x.seq, at: x.at,
-                                       finds: parse(x.finds_json), answer: parse(x.answer_json),
+           entries: page.map((x) => ({ question: { id: x.stq_id, question: x.find_json && x.question === "" ? null : x.question },
+                                       run: x.seq, at: x.at, finds: parse(x.finds_json), answer: parse(x.answer_json),
                                        withheld: parse(x.withheld_json) || [], held_back: parse(x.held_back_json),
-                                       label: STANDING_LABEL })),
+                                       label: x.find_json ? STANDING_FIND_LABEL : STANDING_LABEL,
+                                       ...(x.find_json ? { origin: FIND_ORIGIN } : {}) })),
            cursor: rows.length > cap ? page[page.length - 1].seq : null };
 }
