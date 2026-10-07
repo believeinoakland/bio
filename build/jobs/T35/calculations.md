@@ -37,7 +37,7 @@ The test stand-ins follow the real shapes, and a new test runs R32 and R36 over 
 
 Tests and checks: `node --test bio-plane/test/m/calculations/` 47 pass, 0 fail. `format` 0 failures; `architecture calculations` 0; `coverage calculations` 37 of 37; `ownership calculations tranche/T35` 0.
 
-Size (session_01R2CzzJxS8M5bLSwSsNm9sy): test runs 14, module lines 3160
+Size (session_01R2CzzJxS8M5bLSwSsNm9sy): test runs 14, module lines 3157
 
 ## J1 · QUESTION
 
