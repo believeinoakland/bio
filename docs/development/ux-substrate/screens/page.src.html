@@ -548,7 +548,7 @@ const REG = {{REG}};
     var th = b.closest('th'), tb = th.closest('table'), body = tb.tBodies[0], i = th.cellIndex, up = th.getAttribute('aria-sort') !== 'ascending';
     [].forEach.call(tb.tHead.rows[0].cells, function (h) { if (h.hasAttribute('aria-sort')) h.setAttribute('aria-sort', 'none'); });
     th.setAttribute('aria-sort', up ? 'ascending' : 'descending');
-    var key = function (r) { var t = (r.cells[i] ? r.cells[i].textContent : '').trim(), n = t.replace(/[$,%\s]/g, ''); return { t: t, n: /^-?\d+(\.\d+)?$/.test(n) ? +n : null }; };
+    var key = function (r) { var c = r.cells[i], t = (c ? (c.hasAttribute('data-sort') ? c.getAttribute('data-sort') : c.textContent) : '').trim(), n = t.replace(/[$,%\s]/g, ''); return { t: t, n: /^-?\d+(\.\d+)?$/.test(n) ? +n : null }; };
     var rows = [].slice.call(body.rows), ks = rows.map(key), num = ks.every(function (k) { return k.n !== null || !k.t; });
     rows.map(function (r, j) { return [r, ks[j], j]; }).sort(function (a, b) { if (!a[1].t !== !b[1].t) return a[1].t ? -1 : 1;
       var d = num ? a[1].n - b[1].n : a[1].t.localeCompare(b[1].t, undefined, { numeric: true, sensitivity: 'base' }); return (up ? d : -d) || a[2] - b[2]; })
