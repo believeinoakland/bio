@@ -6,7 +6,7 @@
    key (R35) is granted once they have read its notice (R36). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, sha } from "./fixture.mjs";
 import { ACCOUNT_CHECKS, AI_GRANT_OPS, AI_GRANT_TTL_SECONDS } from "../../../src/credentials/index.mjs";
 
 const shape = (r) => ({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation });
@@ -53,7 +53,7 @@ test("R27 aiGrantMint: refusals as R22 and NO_ACCOUNT, each minting nothing; min
   assert.equal((await w.c.aiGrantAdmit({ token: g.token, op: "search" })).viewer, "member:ann", "its viewer is the member");
   assert.deepEqual(JSON.parse(w.snapshot()), after, "admitting reads keeps no read log");
   /* a grant never outlives the session it was minted under */
-  w.sql.exec(`UPDATE sessions SET expires=? WHERE token=?`, Date.now() + 5000, w.session.ann);
+  w.sql.exec(`UPDATE sessions SET expires=? WHERE token_sha=?`, Date.now() + 5000, sha(w.session.ann));
   const short = await w.c.aiGrantMint({ member: "ann", by: "ann", session: w.session.ann });
   assert.ok(short.expires <= Date.now() + 5000);
 });
@@ -65,7 +65,7 @@ test("R27 a grant ends at its time, with its session, and with the member's revo
   for (const t of [a, b, d]) assert.equal((await w.c.aiGrantAdmit({ token: t, op: "search" })).ok, true);
   w.sql.exec(`UPDATE ai_grants SET expires=? WHERE member_id='ann'`, Date.now() - 1);
   assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: a, op: "search" })), refusal("GRANT_NOT_HELD"), "expired");
-  w.sql.exec(`DELETE FROM sessions WHERE token=?`, w.session.bob);                 // signed out
+  w.sql.exec(`DELETE FROM sessions WHERE token_sha=?`, sha(w.session.bob));         // its session gone
   assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: b, op: "search" })), refusal("GRANT_NOT_HELD"), "its session ended");
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.deepEqual(shape(await w.c.aiGrantAdmit({ token: d, op: "search" })), refusal("GRANT_NOT_HELD"), "revoked");
@@ -156,7 +156,7 @@ test("R31 aiGrantHeld answers {ok, member, viewer, expires} exactly when R28 wou
   assert.equal(w.snapshot(), before, "it writes nothing, keeps no read log");
   w.sql.exec(`UPDATE ai_grants SET expires=? WHERE member_id='ann' AND kind='ask'`, Date.now() - 1);
   assert.equal((await agree(a, "expired")).ok, false);
-  w.sql.exec(`DELETE FROM sessions WHERE token=?`, w.session.bob);
+  w.sql.exec(`DELETE FROM sessions WHERE token_sha=?`, sha(w.session.bob));
   assert.equal((await agree(b, "signed out")).ok, false);
   w.m.memberSet({ memberId: "dee", status: "revoked", by: "admin" });
   assert.equal((await agree(d, "revoked")).ok, false);

@@ -2,7 +2,7 @@
    (K637), against this module's services. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, PASSWORD, FOUNDER_PASSWORD } from "./fixture.mjs";
+import { world, PASSWORD, FOUNDER_PASSWORD, sha } from "./fixture.mjs";
 import { Credentials } from "../../../src/credentials/index.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
 
@@ -66,7 +66,7 @@ test("R4 login: one refusal for every failing case, same detail, same cost; succ
   assert.deepEqual([ok.ok, ok.role], [true, "member:ann"]);
   assert.match(ok.token, /^[0-9a-f]{64}$/);
   assert.ok(ok.expires > Date.now() && ok.expires <= Date.now() + 60_000);
-  assert.equal(w.row(`SELECT role FROM sessions WHERE token=?`, ok.token).role, "member:ann");
+  assert.equal(w.row(`SELECT role FROM sessions WHERE token_sha=?`, sha(ok.token)).role, "member:ann");
   assert.equal((await w.c.login({ role: "admin", password: FOUNDER_PASSWORD })).ok, true);
   w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
   /* an invited member who never enrolled, with a password set for the role: inactive, refused */
@@ -75,6 +75,9 @@ test("R4 login: one refusal for every failing case, same detail, same cost; succ
   /* a member row that is gone (no row) though a credential exists */
   await w.c.setPassword({ role: "member:ghost", password: PASSWORD("ghost") });
   const before = w.snapshot();
+  /* each from its own source, so R38's window (its own test) does not pause them */
+  let n = 0;
+  const src = () => `fp-${n++}`;
   const cases = [
     { role: "member:nobody", password: "whatever-password" },          // no credential
     { role: "member:bob", password: PASSWORD("bob") },                 // revoked member, right password
@@ -86,12 +89,16 @@ test("R4 login: one refusal for every failing case, same detail, same cost; succ
     { role: "member:ann" },                                            // no password
   ];
   const answers = [];
-  for (const c of cases) answers.push(await w.c.login(c));
+  for (const c of cases) answers.push(await w.c.login({ ...c, source: src() }));
   for (const a of answers)
     assert.deepEqual(a, { ok: false, reason: "SIGN_IN_REFUSED", detail: Credentials.LOGIN_REFUSAL_DETAIL.SIGN_IN_REFUSED });
-  assert.equal(w.snapshot(), before, "a refusal issues no session and writes nothing");
+  /* a refusal issues no session and writes nothing but its counts (R38's window, R44's tally) */
+  const COUNTS = ["signin_window", "security_counts", "security_pending", "security_key", "sqlite_sequence"];
+  const unCounted = (snap) => JSON.stringify(JSON.parse(snap).filter(([t]) => !COUNTS.includes(t)));
+  assert.equal(unCounted(w.snapshot()), unCounted(before), "a refusal issues no session and writes nothing else");
+  assert.equal(w.row(`SELECT SUM(count) AS n FROM security_counts WHERE kind='signin'`).n, cases.length);
   /* the same cost: every refusal derives a PBKDF2 key, so none answers in a fraction of the others' time */
-  const time = async (c) => { const t0 = performance.now(); await w.c.login(c); return performance.now() - t0; };
+  const time = async (c) => { const t0 = performance.now(); await w.c.login({ ...c, source: src() }); return performance.now() - t0; };
   const t = [];
   for (const c of cases) t.push(await time(c));
   assert.ok(Math.min(...t) > Math.max(...t) / 5, `refusal times differ too much: ${t.map((x) => x.toFixed(1))}`);
@@ -102,9 +109,9 @@ test("R4 login: one refusal for every failing case, same detail, same cost; succ
 
 test("R4 login sweeps expired sessions as it issues one", async () => {
   const w = await world().group("ann");
-  w.sql.exec(`INSERT INTO sessions (token, role, expires, created) VALUES ('stale', 'member:ann', ?, 'x')`, Date.now() - 1);
+  w.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`, sha("stale"), Date.now() - 1);
   assert.equal((await w.c.login({ role: "member:ann", password: PASSWORD("ann") })).ok, true);
-  assert.equal(w.row(`SELECT COUNT(*) AS n FROM sessions WHERE token='stale'`).n, 0);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM sessions WHERE token_sha=?`, sha("stale")).n, 0);
 });
 
 test("R5 session resolves rights at each call through membership's sessionRights: founder, administrator, member, revoked, unknown, expired", async () => {
@@ -138,10 +145,10 @@ test("R5 session resolves rights at each call through membership's sessionRights
   const r = w.c.session(aTok);
   assert.deepEqual([r.role, r.capabilities, r.administer, r.rootOfTrust], ["member:ann", [], false, false]);
   /* an unrecognised role holds none */
-  w.sql.exec(`INSERT INTO sessions (token, role, expires, created) VALUES ('odd', 'class:probe', ?, 'x')`, Date.now() + 1e6);
+  w.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'class:probe', ?, 'x')`, sha("odd"), Date.now() + 1e6);
   assert.deepEqual([w.c.session("odd").capabilities, w.c.session("odd").administer], [[], false]);
   /* expired: null, and the row is removed */
-  w.sql.exec(`INSERT INTO sessions (token, role, expires, created) VALUES ('old', 'admin', ?, 'x')`, Date.now() - 1);
+  w.sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'admin', ?, 'x')`, sha("old"), Date.now() - 1);
   assert.equal(w.c.session("old"), null);
-  assert.equal(w.row(`SELECT COUNT(*) AS n FROM sessions WHERE token='old'`).n, 0);
+  assert.equal(w.row(`SELECT COUNT(*) AS n FROM sessions WHERE token_sha=?`, sha("old")).n, 0);
 });
