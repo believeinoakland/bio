@@ -32,3 +32,9 @@ Size (session_01SJohZ5PQ7yKQBnZCaZeVfS): test runs 13, module lines 27415
 ## J2 · COMPLETE
 
 T35-74 applied (F1, K1874; K2040). app.html sends the session as Authorization: Bearer (authHeaders(): rec, recPost, both op=capture reads) and the review door POSTs the grant's secret in the JSON body; the API notes say so. New suite credential-in-header.test.mjs, 15/0 (negative control 7 red). The suites' fixture calls and wire recorders are re-pointed the same way. Until admission, control-plane (R59) and plane merge, five suites that drive the real plane through the UI are red on this branch: group-identity-surface, group-surface, meaning-arms, several-cases-choice, review-copy. Against a stand-in plane that reads the header (in a throwaway worktree, never committed) the runner is 28 PASS, and only red 3 fails, with the same assertions as at baseline. I merge tranche/T35 and re-run when you say so. Deferred: check-mock-envelope's 2 failures (present at baseline). Checks: format, architecture, coverage, ownership 0 failures. Details are in my record.
+
+## After B3 (K2065): tranche/T35 merged
+
+I merged `tranche/T35`, which now carries admission, control-plane and plane. UI runner: 28 PASS, 3 FAIL. The three failures are red 3 (progression-revision 18 of 30 failed, queue-recipients 10 failed, statement-ack 1 failed), with failing assertions identical to the baseline's (diff empty). The five suites that drive the real plane (group-identity-surface, group-surface, meaning-arms, several-cases-choice, review-copy) are green, and so is credential-in-header. check-mock-envelope still has its 2 baseline failures (deferred). Checks: format, architecture, coverage and ownership each 0 failures (ownership: 12 files).
+
+Size (session_01SJohZ5PQ7yKQBnZCaZeVfS): test runs 14, module lines 27415
