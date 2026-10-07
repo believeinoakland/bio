@@ -1,7 +1,8 @@
 /* standards' tables (requirements: `build/requirements/standards.md`, R14; K4: new, nothing moved). A standard is a
  * record document of its own type (R15): its bundle, history and manifest are record-core's. What is stored here is
  * what the reads answer from without parsing documents: each declaration as it was made, its text's content ids, each
- * proposal and each adoption. Every row is written once and never updated or removed (R14): a correction is a new
+ * proposal and each adoption; since T35, each force, override, release, body's adoption, imposition and benchmark. The
+ * law relations' five tables are `law-relations`' (K1961). Every row is written once and never updated or removed (R14): a correction is a new
  * standard that supersedes the old one (R6), and "what supersedes it" is read from the successor's row. Each table is
  * declared to record-core's purge. */
 
@@ -134,73 +135,6 @@ CREATE TABLE IF NOT EXISTS standard_benchmarks (
   author         TEXT NOT NULL,
   at             TEXT NOT NULL
 );
--- R22, R23: a law relation from one standard (or a portion of it) to another, recorded by a member's act. 'class' keeps
--- temporal and referential apart (D192); a temporal relation's effective date, or its enactment event and edge, bounds
--- the version it amends (R20). Withdrawn in law_withdrawals, never edited or deleted (R14).
-CREATE TABLE IF NOT EXISTS law_relations (
-  relation_id     TEXT PRIMARY KEY,
-  type            TEXT NOT NULL,
-  class           TEXT NOT NULL,
-  from_standard   TEXT NOT NULL,
-  from_portion    TEXT,
-  to_standard     TEXT NOT NULL,
-  to_portion      TEXT,
-  citation        TEXT NOT NULL,
-  effective_date  TEXT,
-  effective_event TEXT,
-  effective_edge  TEXT,
-  proposal_id     TEXT,
-  reason          TEXT NOT NULL,
-  author          TEXT NOT NULL,
-  at              TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS law_relations_from ON law_relations(from_standard, relation_id);
-CREATE INDEX IF NOT EXISTS law_relations_to ON law_relations(to_standard, relation_id);
--- R26: a court link from an extent of a court standard's text to a portion of a held statute, regulation or ordinance.
-CREATE TABLE IF NOT EXISTS court_links (
-  link_id        TEXT PRIMARY KEY,
-  type           TEXT NOT NULL,
-  from_standard  TEXT NOT NULL,
-  to_standard    TEXT NOT NULL,
-  to_portion     TEXT,
-  citation       TEXT NOT NULL,
-  proposal_id    TEXT,
-  reason         TEXT NOT NULL,
-  author         TEXT NOT NULL,
-  at             TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS court_links_from ON court_links(from_standard, link_id);
-CREATE INDEX IF NOT EXISTS court_links_to ON court_links(to_standard, link_id);
--- R27: a treatment row: a later decision's treatment of a held decision, citing the later decision's extent.
-CREATE TABLE IF NOT EXISTS court_treatments (
-  treatment_id   TEXT PRIMARY KEY,
-  decision       TEXT NOT NULL,
-  treatment      TEXT NOT NULL,
-  by_decision    TEXT NOT NULL,
-  citation       TEXT NOT NULL,
-  proposal_id    TEXT,
-  reason         TEXT NOT NULL,
-  author         TEXT NOT NULL,
-  at             TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS court_treatments_decision ON court_treatments(decision, treatment_id);
--- R14, R23: a relation, link or treatment withdrawn, once, with who, when and why; the row it withdraws stays.
-CREATE TABLE IF NOT EXISTS law_withdrawals (
-  item_id        TEXT PRIMARY KEY,
-  reason         TEXT NOT NULL,
-  withdrawn_by   TEXT NOT NULL,
-  withdrawn_at   TEXT NOT NULL
-);
--- R23, R26, R27, R30: a machine's (or a member's) suggestion of a relation, link or treatment, stored apart and never
--- moving an answer; 'adopted_as' is set by nothing: the adoption is the recorded row naming it (proposal_id).
-CREATE TABLE IF NOT EXISTS law_proposals (
-  proposal_id    TEXT PRIMARY KEY,
-  what           TEXT NOT NULL,
-  fields_json    TEXT NOT NULL,
-  why            TEXT NOT NULL,
-  proposed_by    TEXT NOT NULL,
-  proposed_at    TEXT NOT NULL
-);
 `;
 
 /** R18, R19: the columns T33 adds to `standards`, each added to a table created before it and never filled: a standard
@@ -238,11 +172,6 @@ export const STANDARDS_TABLES = Object.freeze([
   { name: "standard_body_adoptions", keys: ["standard_id"] },
   { name: "standard_impositions", keys: ["standard_id"] },
   { name: "standard_benchmarks", keys: ["standard_id"] },
-  { name: "law_relations", keys: ["from_standard", "to_standard"] },
-  { name: "court_links", keys: ["from_standard", "to_standard"] },
-  { name: "court_treatments", keys: ["decision", "by_decision"] },
-  { name: "law_withdrawals", keys: [] },
-  { name: "law_proposals", keys: [] },
 ].map((t) => Object.freeze({ ...t, ...CLASSES })));
 
 /** Creates the tables where absent, and adds R1's `reason` column (DEC-88) and R18–R19's columns to a `standards` table

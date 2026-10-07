@@ -8,6 +8,7 @@ import { seeded, V, MACHINE, BYLAW, REASON, sha } from "./fixture.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS, STANDARDS_TABLES, COPY_STATES, ACCESS_STATES, HELD_STATES, FORCES, POLICY_FORCES,
          familyKey, standardsOps, IN_FORCE_STATES } from "../../../src/standards/index.mjs";
 import { STANDARD_SOURCE_KINDS } from "../../../../jurisdictions/index.mjs";
+import { LAW_RELATIONS_CHECKS } from "../../../src/law-relations/index.mjs";
 import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
@@ -16,7 +17,8 @@ const HSO = "HSO 4/21 para 3", MHS = "MHS 101-2020 edition";
 const policy = (w, extra = {}) => w.declare({ cite: HSO, kind: "policy", issuer: "Harbour Master", ...extra });
 const refusalRow = (r, code) => {
   assert.equal(codeOf(r), code, JSON.stringify(r).slice(0, 300));
-  assert.deepEqual([r.check, r.translation], [STANDARDS_CHECKS[code].check, STANDARDS_CHECKS[code].translation], code);
+  const row = STANDARDS_CHECKS[code] ?? LAW_RELATIONS_CHECKS[code];
+  assert.deepEqual([r.check, r.translation], [row.check, row.translation], code);
 };
 
 test("R1 R12 the kinds are jurisdictions' seven STANDARD_SOURCE_KINDS (standard included), the same list and never a copy; STANDARD_KIND_UNKNOWN names the seven", () => {
@@ -536,4 +538,31 @@ test("R35 R37 R38 R40 R43 the ops map holds the T35 acts and reads, stamps from 
                "ADOPTION_MODE_UNKNOWN");
   assert.deepEqual(IN_FORCE_STATES, ["in_force", "not_in_force", "undetermined"]);
   assert.equal(sha("x").length, 64);
+});
+
+test("R48 the law services are law-relations' LawRecords, delegated: LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER and IN_FORCE_METHOD are re-exported as the same objects, each law service answers what that module answers, the ops are kept, and law.mjs is gone", async () => {
+  const S = await import("../../../src/standards/index.mjs");
+  const L = await import("../../../src/law-relations/index.mjs");
+  for (const n of ["LAW_RELATIONS", "COURT_LINKS", "TREATMENTS", "CONNECTION_KINDS", "CONNECTION_OWNER", "IN_FORCE_METHOD"])
+    assert.equal(S[n], L[n], n);
+  const { existsSync } = await import("node:fs");
+  assert.equal(existsSync(new URL("../../../src/standards/law.mjs", import.meta.url)), false);
+  const w = seeded();
+  const at = w.passage().contentId, bt = w.passage().contentId;
+  const a = w.declare({ cite: "PEBL § 10", text: [at] }).id, b = w.declare({ cite: "PEBL § 20", text: [bt] }).id;
+  const r = w.s.lawRelate({ type: "incorporates", from: a, to: b, citation: at, edition: "2020", reason: REASON, author: V("bob"), viewer: V("bob") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(w.s.lawRelationsOf({ standard: b, viewer: V("carol") }).referential[0].type, "incorporates");
+  assert.equal(codeOf(w.s.lawRelate({ type: "x", from: a, to: b, citation: at, reason: REASON, author: V("bob") })), "LAW_RELATION_UNKNOWN");
+  assert.deepEqual(Object.keys(standardsOps(w.s, new URL("https://p.test/"), {})).filter((k) => /^(law|court|stillstanding|citationresolve)/.test(k)).sort(),
+                   ["citationresolve", "courtlink", "courttreat", "lawaddresses", "lawpropose", "lawrelate", "lawrelations", "lawwithdraw", "stillstanding"]);
+  /* R43 reads the adopted incorporates relation: a standard incorporated by one that binds the body binds it */
+  const body = w.entity("Port Ellery Selectboard");
+  const own = w.declare({ cite: "PEBL § 30", text: [bt], issuer: body, period: { from: "2020-01-01", to: "2040-12-31" } }).id;
+  const inc = w.declare({ cite: MHS, kind: "standard", issuer: "MHSI", period: { from: "2020-01-01", to: "2040-12-31" } }).id;
+  assert.equal(w.s.bindsAt({ standard: inc, body, date: "2025-01-01" }).state, "benchmark");
+  assert.equal(w.s.lawRelate({ type: "incorporates", from: own, to: inc, citation: bt, edition: "2020", reason: REASON, author: V("bob") }).ok, true);
+  const bound = w.s.bindsAt({ standard: inc, body, date: "2025-01-01" });
+  assert.equal(bound.state, "binds");
+  assert.ok(bound.rests_on.some((x) => x.incorporated_by === own));
 });

@@ -7,8 +7,7 @@ import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
 const TABLES = ["standards", "standard_texts", "standard_proposals", "standard_adoptions", "standard_forces",
                 "standard_force_withdrawals", "standard_force_proposals", "standard_overrides", "standard_releases",
-                "standard_body_adoptions", "standard_impositions", "standard_benchmarks", "law_relations", "court_links",
-                "court_treatments", "law_withdrawals", "law_proposals"];
+                "standard_body_adoptions", "standard_impositions", "standard_benchmarks"];
 
 test("R11 nothing a machine writes is a standard: R1 and R10 by a member are its only writers; a raw promotion of a standard, by a member or a machine, and any revision of one are refused STANDARD_WRITTEN_ELSEWHERE; a replay is admitted", () => {
   const w = seeded();
@@ -107,7 +106,7 @@ test("R14 declarations, supersessions, proposals and adoptions are append-only, 
     for (const t of TABLES) assert.deepEqual(now[t].slice(0, prev[t].length), prev[t], `${t}: an earlier row is unchanged`);
     prev = now;
   }
-  assert.deepEqual(TABLES.map((t) => prev[t].length), [3, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(TABLES.map((t) => prev[t].length), [3, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
   /* a single-bundle purge clears one standard's rows; the whole-store form every row */
   const id = prev.standards[0].standard_id;
   const one = w.record.purge({ bundleId: id });

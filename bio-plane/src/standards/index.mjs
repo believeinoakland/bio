@@ -37,7 +37,13 @@
  * portion, the passages it requires, its copy, how current the copy is and what its period rests on. In force at a date
  * is R20's `inForceAt`, through `civil-time.validAt` over each version's period, bounded by adopted temporal relations
  * and by a codifier copy's lag; `inForce` stays its alias (Choices 18). Law relations, court links and treatment rows,
- * the citation resolver and the connection owner are `./law.mjs`'s. */
+ * the citation resolver and the owner's read are `law-relations`' (K1961), constructed over this instance's reads and
+ * delegated to (R48); the owner's registration at load stays here.
+ *
+ * T35 (T35-31): how much of a standard is held (text, cited, absent), its family, force per provision, the copy and what
+ * it says of itself, sight from its source and its release, versions from captures, overrides, the source of force,
+ * designation, edition and issuer, adoptions and the edition in force, access, targets, binding or benchmark, the
+ * members' words (`./words.mjs`), a found extent and the question beside a declaration (R33–R47). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
@@ -61,7 +67,8 @@ import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite, isPorti
 import { COPY_STATES, HELD_STATES, ACCESS_STATES, FORCES, POLICY_FORCES, ownerWords, forceWords, bindingWords, heldWords,
          accessWords, notPublicWords } from "./words.mjs";
 import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
-         weakestCeiling, machineRelate, refuseNoCitation } from "./law.mjs";
+         weakestCeiling } from "../law-relations/index.mjs";
+import { refusal as lawRefusal } from "../law-relations/checks.mjs";
 
 export { STANDARDS_CHECKS } from "./checks.mjs";
 export { STANDARDS_SCHEMA, STANDARDS_TABLES } from "./schema.mjs";
@@ -159,7 +166,7 @@ export function periodInForce(period, date) {
 
 export class Standards {
   #writing = null;   // the standard this module is promoting, for its own check (R11)
-  #law;              // R22–R28: `./law.mjs`, over this instance's internal reads
+  #law;              // R48: `law-relations`' LawRecords, over this instance's internal reads
 
   constructor({ storage, record, membership, promotion, content = null, combine = combineProfiles, now = null,
                 events = null, keyedStore = null, citationLookup = acquisitionCitationLookup,
@@ -196,7 +203,8 @@ export class Standards {
   }
   #when() { return stampInstant("second", Date.parse(this.now())); }
 
-  /* The reads `./law.mjs` works through: this instance's tables and the modules it uses, never a copy of them. */
+  /* R48 (law-relations R13): the reads `law-relations` works through: this instance's tables and the modules it uses,
+     never a copy of them. */
   #internal() {
     return {
       sql: this.sql, record: this.record, membership: this.membership,
@@ -209,6 +217,15 @@ export class Standards {
       eventDay: (event, edge, viewer) => this.#eventDay(event, edge, viewer),
       eventWhen: (event, viewer) => { const d = this.#eventDay(event, "start", viewer); return d.day ? d : null; },
       gradeOf: (ids) => weakestCeiling(ids.length ? this.content.standings(ids) : {}, ids), zone: () => this.#zone(),
+      /* law-relations R13: the standards at an instrument key, of a kind, and whose stated period does not exclude a day */
+      idsAtKey: (key, portion) => this.#rows(`SELECT standard_id FROM standards WHERE instrument=?
+                                              ${portion !== null && portion !== undefined ? "AND portion_path=?" : ""} ORDER BY standard_id`,
+                                             ...(portion !== null && portion !== undefined ? [key, portion] : [key])).map((r) => r.standard_id),
+      idsOfKind: (kind, limit) => this.#rows(`SELECT standard_id FROM standards WHERE kind=? ORDER BY standard_id LIMIT ?`,
+                                             kind, limit).map((r) => r.standard_id),
+      idsCovering: (day) => this.#rows(`SELECT standard_id FROM standards WHERE NOT ((period_from IS NOT NULL AND period_from > ?)
+                                          OR (period_to IS NOT NULL AND period_to < ?)) ORDER BY standard_id`, day, day)
+        .map((r) => r.standard_id),
       recognise: (t) => this.recognise(t),
       citationLookup: ({ text, viewer }) => this.lookupFn(
         (typeof this.keyedStoreRef === "function" ? this.keyedStoreRef() : this.keyedStoreRef) || {}, { text, viewer }),
@@ -1402,7 +1419,7 @@ export class Standards {
   }
 
   /* ===================================================================== *
-   * R22–R28: LAW RELATIONS, COURT LINKS, TREATMENTS, THE RESOLVER, THE OWNER (`./law.mjs`)
+   * R48: LAW RELATIONS, COURT LINKS, TREATMENTS, THE RESOLVER, THE OWNER'S READ (`law-relations`, delegated)
    * ===================================================================== */
 
   lawRelate(args) { return this.#law.lawRelate(args); }
@@ -2079,6 +2096,19 @@ function refuseFieldUnknown(a, keys) {
   return null;
 }
 
+/* R40, R43: `law-relations`' MACHINE_CANNOT_RELATE and LAW_RELATION_NO_CITATION, answered through its catalogue's
+   rows (it exports no minting function for them; reported to BOB, K1970's CHANGE). */
+function machineRelate(author) {
+  if (str(author) && !isMachineIdentity(str(author))) return null;
+  return lawRefusal("MACHINE_CANNOT_RELATE", "recording an adoption or an imposition is a named member's act; a machine "
+                    + "proposes. Nothing was written.");
+}
+function refuseNoCitation(of, citation) {
+  return lawRefusal("LAW_RELATION_NO_CITATION", `the citation is a content id among the text of ${of}, the passage that `
+                    + "says so, which you may read. Nothing was written.",
+                    { standard: of, citation: typeof citation === "string" ? citation.slice(0, 80) : null });
+}
+
 /** R33: a family's key, composed from its source `key` and series `key` (`jurisdictions` R50, R63). Pure. */
 export function familyKey(family) {
   const k = family && typeof family.key === "string" ? family.key.trim() : "";
@@ -2093,7 +2123,7 @@ function refuseFieldInvalid(field, why) {
   /* END DEC-49 REGION is-standard-law-field */
 }
 
-/* R23, R26, R27, R30: the refusals `./law.mjs`'s acts share with R1, R9 and R10, each minted as theirs are. */
+/* R48 (law-relations R13): the refusals `law-relations`' acts answer as the host's, each minted as R1's, R9's and R10's are. */
 const refuseReason = (fault) => refuseLawReason(fault);
 function refuseLawReason(fault) {
   /* DEC-49 REGION is-standard-reason */
@@ -2252,7 +2282,7 @@ export function standardsOps(s, url, body) {
 }
 
 const instances = new WeakMap();
-/* R28 (K1563 (1)): the instance the module's one registration in connection-grammar's default registry reads: the
+/* R48 (K1563 (1)): the instance the module's one registration in connection-grammar's default registry reads: the
    host's, when the registry passes `host`, else the isolate's one instance; with several and no host, ambiguous. */
 let current = null, constructed = 0;
 function ownerRead(a) {
@@ -2264,10 +2294,10 @@ function ownerRead(a) {
     : constructed === 0 ? { refused: "OWNER_NOT_READY", why: "no standards instance is constructed yet" }
     : { refused: "OWNER_HOST_AMBIGUOUS", why: `${constructed} standards instances are held here and the read names no host` };
 }
-/** R28: the owner's registration (`connection-grammar` R2), over an instance, for a registry a caller holds. */
+/** R48: the owner's registration (`connection-grammar` R2), over an instance, for a registry a caller holds. */
 export const connectionOwnerOf = (s) => ({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
                                           neighbours: (a) => s.neighbours(a) });
-/* R28: registered once at load as a connection owner. */
+/* R48: registered once at load as the connection owner `standards` of law-relations' kinds. */
 registerOwner({ owner: CONNECTION_OWNER, kinds: CONNECTION_KINDS.map((k) => ({ ...k })),
   neighbours: ownerRead });
 

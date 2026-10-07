@@ -9,7 +9,7 @@ import { proposalLabel } from "../../../src/record-grammar/labels.mjs";
 const codeOf = (r) => (r && r.ok === false ? r.reason : "ok");
 const KEY = "/eli/xx-port-ellery/selectboard/12";
 
-test("R23 a proposed law relation, court link or treatment is labelled through record-grammar's proposalLabel(proposer, \"law_relation\") (its R49), never the standard subject, for a machine and a member proposer alike", () => {
+test("R48 lawPropose, delegated to law-relations (its R2): a proposed law relation, court link or treatment is labelled through record-grammar's proposalLabel(proposer, \"law_relation\") (its R49), never the standard subject, for a machine and a member proposer alike", () => {
   const w = seeded();
   const at = w.passage().contentId, bt = w.passage().contentId, ct = w.passage().contentId;
   const a = w.declare({ cite: "PEBL § 10", text: [at] }).id, b = w.declare({ cite: "PEBL § 20", text: [bt] }).id;
