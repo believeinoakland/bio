@@ -5,6 +5,8 @@
    `entitiesOf(ctx)` (K61); the grade order (R33–R34) and the one `NO_SUCH_ENTITY` answer (R36, `noSuchEntity`) are
    module-level, as is the one `NO_ENTITY` answer (R37, `noEntity`). R35's read contract is the `entities` and
    `resolutions` columns `schema.mjs` names; the ops map (R40, `entitiesOps`) and the count figures (R41) close it.
+   T35 (T35-27): the sector list is jurisdictions' `SECTORS` (R50), and `entitiesOfKind` reads the group's entities of
+   one kind (R51).
    Moved from `store.mjs` (the registry, the recogniser, the name lookup, `idMatch`, their dispatch), the check
    catalogue (C-91, now `checks.mjs`; the shared act rows and the grade list are `record-grammar`'s, read from there)
    and `schema.mjs` (the four tables, now `schema.mjs` here), with the rows this job applied named at their sites.
@@ -14,7 +16,7 @@ import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER
 import { normAlias, labelTerms, noSha } from "../extraction/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { spaces as idSpaces, recognise as recogniseId, parcelStanding, systemOf, judgePair } from "../idspaces.mjs";
-import { combine } from "../../../jurisdictions/index.mjs";
+import { combine, SECTORS } from "../../../jurisdictions/index.mjs";
 import { SHARED_ACT_CHECKS } from "../record-grammar/acts.mjs";
 import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
@@ -25,6 +27,9 @@ import { ENTITIES_SCHEMA, WITHDRAWAL_COLUMNS, BASIS_NORM_COLUMN, BASIS_NORM_INDE
 import { IDSPACE_CHECKS, ENTITY_CHECKS, idspaceRefusal } from "./checks.mjs";
 
 export { IDSPACE_CHECKS, ENTITY_CHECKS, ENTITIES_SCHEMA };
+/* R50 (K1902 (2)): the one sector list is `jurisdictions`' `SECTORS` (its R64); this module holds no copy and exports
+   that same frozen list, so a reader of either name reads one list. */
+export { SECTORS };
 
 /* R7 (REC-35, N13): the closed kind vocabulary, the UNION of safeguard 4's four SUBJECT kinds and the framework's
    entity kinds (D-83 reconciles the two doctrines this one axis serves), with `program`, `place` and `proceeding`
@@ -35,10 +40,9 @@ export const ENTITY_KINDS = Object.freeze(["source", "institution", "office", "m
 /* The three DECLARED-relation predicates safeguard 4 names, and only these. */
 export const RELATION_KINDS = Object.freeze(["proxy_for", "member_of", "overlaps"]);
 /* R42 (K1453): the organisation kinds, which carry a sector ("organisations of every kind"; an office is a post, not an
-   organisation), and the closed sector list. An organisation whose sector nobody has stated reads `undetermined`. */
+   organisation); the closed sector list is jurisdictions' (R50). An organisation whose sector nobody has stated reads
+   `undetermined`. */
 export const ORGANISATION_KINDS = Object.freeze(["institution", "body", "movement"]);
-export const SECTORS = Object.freeze(["government", "company", "nonprofit", "association", "political", "religious",
-  "education", "other"]);
 export const SECTOR_UNDETERMINED = "undetermined";
 /* R45: the reserved scheme a proceeding's number is held under, in the profile `proceeding` space, scoped by its forum. */
 export const PROCEEDING_SCHEME = "proceeding";
@@ -67,6 +71,9 @@ export const MEANING_LIMIT_MAX = 5000;
 /* R17 (REC-57): the name lookup's bound. */
 export const NAMING_LIMIT_DEFAULT = 100;
 export const NAMING_LIMIT_MAX = 500;
+/* R51 (N699, K1881): the page of the group's entities of one kind. */
+export const KIND_LIMIT_DEFAULT = 100;
+export const KIND_LIMIT_MAX = 500;
 /* R22: the most addresses read per capture to judge its system. */
 export const IDMATCH_ADDRESS_LIMIT = 32;
 /* R8: a withdrawal's stated reason, at most. */
@@ -579,6 +586,41 @@ export class Entities {
   /** R7: the closed lists `affordances` publishes. */
   kinds() { return [...ENTITY_KINDS]; }
   relationKinds() { return [...RELATION_KINDS]; }
+
+  /** R51 (N699, K1867): the group's registered entities of one kind, a page at a time in `entity_id` order after
+   *  `after`, so `setup-page` lists every office the group holds. Refuses `NO_KIND`, `UNKNOWN_KIND` (as R1), then
+   *  `VIEWER_MISSING` (as R47). The registry is group-wide (C6, K1489): every viewer `membership.viewerPredicate`
+   *  recognises sees every entity of the kind, and one it does not answers none. One indexed read (`entities_kind`),
+   *  `truncated` by reading one past. Writes nothing and never throws. */
+  entitiesOfKind({ kind, limit = null, after = null, viewer } = {}) {
+    try {
+      const k = typeof kind === "string" ? kind.trim().toLowerCase() : "";
+      if (!k) return { ok: false, reason: "NO_KIND", detail: "a kind is named: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+      if (!ENTITY_KINDS.includes(k))
+        return { ok: false, reason: "UNKNOWN_KIND", kind: k.slice(0, 80), kinds: [...ENTITY_KINDS],
+                 detail: "the subject registry admits a closed kind vocabulary: one of " + ENTITY_KINDS.join(", ") + ". Nothing was read." };
+      if (viewer === undefined || viewer === null || viewer === "")
+        return { ok: false, reason: "VIEWER_MISSING",
+                 detail: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
+      const n = Number(limit);
+      const cap = limit == null || limit === "" || !Number.isFinite(n) ? KIND_LIMIT_DEFAULT
+        : Math.max(1, Math.min(Math.trunc(n), KIND_LIMIT_MAX));
+      const from = typeof after === "string" ? after : "";
+      const empty = { ok: true, kind: k, entities: [], count: 0, limit: cap, truncated: false, next: null };
+      if (viewerPredicate(viewer).scope === "DENY") return empty;
+      const isOrg = ORGANISATION_KINDS.includes(k);
+      const rows = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector FROM entities
+                                WHERE kind=? AND entity_id > ? ORDER BY entity_id LIMIT ?`, k, from, cap + 1);
+      const truncated = rows.length > cap;
+      const page = truncated ? rows.slice(0, cap) : rows;
+      const entities = page.map((e) => ({ entity_id: e.entity_id, kind: e.kind, label: e.label, note: e.note,
+        ...(isOrg ? { sector: e.sector || SECTOR_UNDETERMINED } : {}), declared_by: e.declared_by, at: e.at }));
+      return { ...empty, entities, count: entities.length, truncated,
+               next: truncated ? entities[entities.length - 1].entity_id : null };
+    } catch (err) {
+      return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
+    }
+  }
 
   /** R8 (K106): a mistaken alias withdrawn, never erased. Hidden from every new match and from R6; still listed
    *  by R5, shown as withdrawn with who, when and why. A repeat answers `already: true` and writes nothing. */
@@ -1591,6 +1633,8 @@ export function entitiesOps(e, url, body) {
     entityidentify: () => e.addIdentifier(body || {}),
     entity: () => e.readEntity({ entityId: q("id"), viewer: q("viewer") }),
     entitybyalias: () => e.entitiesByAlias({ alias: q("alias"), viewer: q("viewer") }),
+    /* R51 (N699): the group's entities of one kind, paged; `op-declarations` and `control-plane` route it as a member read. */
+    entitieskind: () => e.entitiesOfKind({ kind: q("kind"), limit: q("limit"), after: q("after"), viewer: q("viewer") }),
     relation: () => e.readRelation({ relationId: q("id") }),
     resolutions: () => e.resolutionsFor({ captureSha: q("sha256"), limit: q("limit"), viewer: q("viewer") }),
     concerns: () => e.concerns({ entityId: q("id"), limit: q("limit"), viewer: q("viewer") }),
