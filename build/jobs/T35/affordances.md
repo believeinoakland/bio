@@ -1,6 +1,6 @@
 # affordances (T35)
 
-**Status** · session_01JWst2i7Y31gjWS15iiZoqL · depth 2 · WORKING · handled B7
+**Status** · session_01JWst2i7Y31gjWS15iiZoqL · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
