@@ -34,3 +34,7 @@ K2052. Both your J4 and op-grades' J4 are merged into tranche/T35. op-grades' J4
 ## B6 · CHANGE
 
 K2054, adding to B5: `src/affordances/t34.mjs`'s alias copy still holds `expunge` (no op since K1901; op-grades drops it too, B5 to it). Drop it in the same pass.
+
+## B7 · CHANGE
+
+K2059. op-grades J5 is merged: `OP_ALIASES` has 28 entries, no `expunge`. Merge tranche/T35, re-pin `t34.test.mjs` (R45 R12) to 28 with a check that no alias is `expunge`, and post COMPLETE. Note: on the tranche your plane-driven suites (27 tests) now fail at `plane.test.mjs`:100 with NOT_AUTHENTICATED since admission merged; that is red 43, cleared by control-plane and plane (T35-72, T35-73), not yours to fix. Name it in your COMPLETE; I send a CHANGE when they merge, with the K2038 re-export drop.
