@@ -1,6 +1,6 @@
 # promotion (T35)
 
-**Status** · session_0149kWBQZo4PvpqDKSn6ihKi · depth 2 · WAITING ON BOB (J1) · handled B0
+**Status** · session_0149kWBQZo4PvpqDKSn6ihKi · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## J1 · REPORT
 
