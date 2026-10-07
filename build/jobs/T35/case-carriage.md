@@ -2,6 +2,35 @@
 
 **Status** · session_0135Aih7kZEH3wwKzzpukHAF · depth 2 · WORKING · handled B0
 
+## Work (CASE-CARRIAGE #3)
+
+**Entry applied: T35-53 (N688; K1844, K1941), R8.** An included document whose home's `data/provenance.json` entry has `capture.method` `unpacked` and a `container` block is carried with three more things:
+- its `container` record, as `canonicalJson` text of kind `container`;
+- its archive, held as a document's bytes are (inline, else `evidence` with the register's byte count), under kind `archive`;
+- the archive's own timestamp tokens, of kind `attestation`.
+
+The walk repeats outward, through each enclosing archive, to the outermost. Every file is answered under `materials/<sha>` in `files`, so `publication` registers it and ratification R39 copies the evidence. Each failure is answered in `unheld`, never refused: a container block naming another document or no archive digest, an archive not held, a token not held. A document that is not a member is held exactly as R1 states. An archive already walked in the same call ends the walk, so a cycle cannot loop. The readings of the open points are in J1. The code is `index.mjs`: `#holdArchives`, with `#holdTokens` and `#entriesFor` factored out of R1's token read and no change to R1's behaviour. `schema.mjs` names the two new kinds in its comments; the column has no CHECK constraint, so no migration is needed.
+
+**Does case-grammar R13 need `archive` and `container` kinds? Yes (N717).**
+- `CASE_FILE_KINDS` (`case-grammar/casefile.mjs`:36) lacks both, and `caseFileManifestCheck` refuses any other kind (:183).
+- `public-read/casefile.mjs`:105–113 carries only the `materials:` rows' document, extracted text and observation, plus the `co_attestation` tokens registered under a material's ref (`public-read/index.mjs`:1133). The archive's token, registered under the member's ref with kind `attestation`, therefore reaches the case file today. The archive and the `container` record do not: they are registered in `published_shas` (so `op=verify` and the published bytes answer them), but are not written into the case file.
+- For the case file to carry all three, R13 needs the two kinds, and `public-read` needs a share that carries each `published_shas` row of kind `archive` or `container` under the material's ref. Both are outside this module: reported, not done.
+- The alternative, filing the archive as `document` and the record as `attestation`, would misname the archive as the material itself, so I do not recommend it.
+
+**Found in other modules.**
+- `case-grammar` R13 and `public-read` R23, above.
+- `modules.json`: case-carriage needs a `test-support` edge (J2).
+
+**Deferred:** nothing.
+
+**Tests and checks** (after commit `case-carriage R8`):
+- `node --test bio-plane/test/m/case-carriage/`: 29 pass, 0 fail, 0 skipped. The 7 R8 arms are in `archive.test.mjs`. The outsider's three steps ran with the real `sha256sum -c`, `unzip -p` and `openssl ts -verify` against a throwaway TSA's token over the archive; in-process equivalents stand in where a runner lacks a tool.
+- The users' suites, `node --test bio-plane/test/m/publication/ bio-plane/test/m/public-read/ bio-plane/test/m/ratification/`: 456 tests, 455 pass, 0 fail.
+- `format`: 0 failures. `coverage`: 8 of 8 live ids, 0 failures. `ownership`: 4 files, 0 failures.
+- `architecture`: 1 failure, the `test-support` edge in J2 (BOB's `modules.json`).
+
+Size (session_0135Aih7kZEH3wwKzzpukHAF): test runs 6, module lines 392
+
 ## J1 · QUESTION
 
 R8's wording leaves four small points open. I am building on the readings below and carrying on; answer only if one is wrong.
