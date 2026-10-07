@@ -58,3 +58,7 @@ Checks (from the process repository):
 - `ownership store-door tranche/T35`: 0 failures.
 
 Size (session_01MXpTEk4ANkFVxAzUYMNVuY): test runs 9, module lines 512
+
+## J3 · REPORT
+
+Correction to J2's ownership line: I ran it before committing. Run on HEAD with my row empty, `ownership store-door tranche/T35` gives 11 files and 10 failures: my ten new files are outside the empty `paths`, which B1 expects. With the row filled in as J2 lists it (run locally, not committed), it gives 11 files and 0 failures. Nothing else in J2 changes.
