@@ -478,11 +478,12 @@ SCR.timeline = c => ({ rail: 'projects', title: 'Timeline', crumbs: ['The Colise
   ${acts(btn('createevent', 'Record an event', { tone: 'primary' }), btn('addparticipant', 'Add who took part'), btn('relate', 'Link events'), btn('recorddatedfact', 'Record a dated fact'), btn('hypothesishold', 'Keep a suspected cause as a hunch'))}` });
 
 SCR.money = c => ({ rail: 'projects', title: 'Money trail', crumbs: ['Sewer fund transfers', 'Money trail'], main: `
-  ${h1('Sewer fund transfers, FY2022', 'A money trail · 3 figures · started by Ana')}
-  <div class="tw"><table class="mk-table"><thead><tr><th>Figure</th><th>Stage</th><th>Period</th><th>Amount</th><th>Source</th><th></th></tr></thead><tbody>
-   <tr><td>Transfer out, Sewer Fund 3100</td><td>adopted</td><td>FY2022</td><td class="num">$4,200,000</td><td>${grade('capture', 'B')}</td><td>included · "the transfer we ask about"</td></tr>
-   <tr><td>Transfer out, Sewer Fund 3100</td><td>actual (paid)</td><td>FY2022</td><td class="num">$4,750,000</td><td>${grade('capture', 'B')}</td><td>included</td></tr>
-   <tr><td>Overhead charge</td><td>actual</td><td>FY2022</td><td class="num">$310,000</td><td>${grade('capture', 'B')}</td><td class="muted">left out · "a different transfer"</td></tr></tbody></table></div>
+  ${h1('Sewer fund transfers, FY2022', 'A money trail · 3 figures · from the Sewer Fund, mostly to the General Fund · started by Ana')}
+  <div class="tw"><table class="mk-table"><thead><tr><th>Figure</th><th>From</th><th>To, where it went</th><th>Stage</th><th>Period</th><th>Amount</th><th>Source</th><th></th></tr></thead><tbody>
+   <tr><td>Transfer out</td><td>Sewer Fund 3100</td><td><b>General Fund 1010</b></td><td>adopted</td><td>FY2022</td><td class="num">$4,200,000</td><td>${grade('capture', 'B')}</td><td>included · "the transfer we ask about"</td></tr>
+   <tr><td>Transfer out</td><td>Sewer Fund 3100</td><td><b>General Fund 1010</b></td><td>actual (paid)</td><td>FY2022</td><td class="num">$4,750,000</td><td>${grade('capture', 'B')}</td><td>included</td></tr>
+   <tr><td>Overhead charge</td><td>Sewer Fund 3100</td><td class="muted">not stated in this source</td><td>actual</td><td>FY2022</td><td class="num">$310,000</td><td>${grade('capture', 'B')}</td><td class="muted">left out · "a different transfer"</td></tr></tbody></table></div>
+  ${note('Where the money went is read from each source, as it writes it: the adopted budget\'s transfer schedule and the financial report both name the General Fund. Where a source does not say, the table says so and never guesses; record the destination from another source with <b>Read a figure</b>, citing the passage.')}
   ${note('Adopted against paid: <b>$550,000 more paid than adopted</b>. The two sources differ in basis: the budget is by fund, the financial report by department.')}
   ${acts(btn('recordfact', 'Read a figure', { tone: 'primary' }), btn('createset', 'Start a money trail'), btn('include', 'Include, with a reason'), btn('exclude', 'Leave out, with a reason'), btn('reconcile', 'Compare two sources'), btn('committedagainstpaid', 'Committed against paid'), btn('authoritychain', 'What authorised it'))}` });
 
