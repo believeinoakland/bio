@@ -1,9 +1,9 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R11).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R13).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
  *
- *   noticeItems    queue's one read of this module (R1): every item R2–R6 derive for a member and viewer, each homed
+ *   noticeItems    queue's one read of this module (R1): every item R2–R6, R12, R13 derive for a member and viewer, each homed
  *                  through queue's walk and carrying queue's options (both passed in), with `facts` stating each
  *                  producer's bound and `truncated`, and `failed`, the providers that threw.
  *
@@ -12,10 +12,13 @@
  *   R4  standing-answer          FINDING, answers.standingAnswersFor     the assistant's machine work, told once
  *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state
  *   R6  inquiry-recheck-due      OBLIGATION (K1505 (15), K1522), inquiry.datedWaits, to the wait's setter alone
+ *   R12 security-level-high      FINDING, credentials.securityLevel/securityMap  once per High episode, to administrators
+ *   R13 policy-changed-noticed   FINDING, following.policyChanges        a policy's silent change, DEC-145 (5)'s words
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
- * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry.
+ * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry, credentials, following, standards;
+ * and `view`, the jurisdiction view whose time zone R13's date is read in (the profile's, when not given).
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue: `noticeItems` takes them as `homesOf(subjectIds)`
  * and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, held for one synchronous read.
@@ -25,12 +28,16 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { STATES, vocabFor } from "../record-grammar/document.mjs";
 import { MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
-import { overdueOn, dayRange } from "../civil-time/index.mjs";
+import { overdueOn, dayRange, localDay } from "../civil-time/index.mjs";
+import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyChecksOf } from "../money-checks/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
+import { credentialsOf, SECURITY_THRESHOLD, SECURITY_DAYS } from "../credentials/index.mjs";
+import { followingOf } from "../following/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -53,14 +60,29 @@ export const DUTIES_MAX = 500;
 export const TAKE_UP = Object.freeze({ id: "hypothesishold", label: "Take this hint up as your own hunch or hypothesis", weight: "single" });
 /** R6: the setter's own answer to a wait come round: record that they looked (`inquiry` R56, `op=waitlook`). */
 export const WAIT_LOOK = Object.freeze({ id: "waitlook", label: "Record that you looked", weight: "single" });
-/** The kinds this module raises, with their class (queue R1's `classOfKind` gains them, T33-83). */
+/** R12: the levels `credentials.securityLevel` answers (its R45); anything else is no answer, never `Ordinary`. */
+export const SECURITY_LEVELS = Object.freeze(["Ordinary", "Raised", "High"]);
+/** R12: the hours one `securityMap` read covers, so it answers hour by hour (its R45: `hour` up to 48 hours). */
+export const SECURITY_READ_HOURS = 48;
+/** R13 (K1943, K1881): the window of changes read, by the later capture's age, and the changes one read follows. */
+export const POLICY_CHANGE_DAYS = 90;
+export const POLICY_CHANGES_MAX = 1000;
+/** R13: `following.policyChanges`' page (its R21: at most 200). */
+export const POLICY_CHANGES_PAGE = 200;
+/** The kinds this module raises, with their class (queue R1's `classOfKind` gains them, T33-83; T35-67). */
 export const NOTICE_KINDS = Object.freeze({
   "interest-check-noticed": "FINDING",
   "money-detector-noticed": "FINDING",
   "standing-answer": "FINDING",
   "temporal-expectation-due": "FINDING",
   "inquiry-recheck-due": "OBLIGATION",
+  "security-level-high": "FINDING",
+  "policy-changed-noticed": "FINDING",
 });
+
+const HOUR_MS = 3600e3, DAY_MS = 24 * HOUR_MS;
+/* A provider's failure, named in `facts.failed` as the provider it came from (R1). */
+const failure = (provider) => Object.assign(new Error(`${provider} did not answer`), { provider });
 
 const filled = (v) => typeof v === "string" && v.trim() !== "";
 const bare = (m) => { const t = typeof m === "string" ? m.trim() : ""; const x = /^member:(.+)$/.exec(t); return x ? x[1] : t || null; };
@@ -104,6 +126,9 @@ export class NoticeProducers {
   get #duties() { return this.#dep("duties", () => dutiesOf(this.#host)); }
   get #answers() { return this.#dep("answers", () => answersOf(this.#host)); }
   get #inquiry() { return this.#dep("inquiry", () => inquiryOf(this.#host)); }
+  get #credentials() { return this.#dep("credentials", () => credentialsOf(this.#host)); }
+  get #following() { return this.#dep("following", () => followingOf(this.#host)); }
+  get #standards() { return this.#dep("standards", () => standardsOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #homesOf(ids) { return this.#homesFn ? this.#homesFn(ids || []) : { ...UNGROUPED }; }
@@ -111,7 +136,8 @@ export class NoticeProducers {
 
   /* ================================================================== R1 · noticeItems
    * queue's ONE read of this module. Each producer reads one provider; a provider that throws contributes no item and
-   * is named in `facts.failed` (the read never throws). `facts` states each producer's bound and whether it cut. */
+   * is named in `facts.failed` (the read never throws). `facts` states each producer's bound and whether it cut. R13's
+   * second provider (`standards`, the declarer) is named for itself when it is the one that fails. */
   noticeItems({ member = null, viewer = null, now = null, identity = null, homesOf = null, optionsOf = null } = {}) {
     void identity;        // queue's options are closed over it already (its R12); named here as R1 names it
     const me = isMachine(member) ? null : bare(member);
@@ -126,11 +152,13 @@ export class NoticeProducers {
       standing_answer: { bound: STANDING_PAGES_MAX * 200, truncated: false },
       temporal_expectation: { bound: DUTIES_MAX, truncated: false },
       inquiry_recheck: { truncated: false },
+      security_level: { days: SECURITY_DAYS, truncated: false },
+      policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
       failed,
     };
     const run = (provider, fn) => {
       try { const r = fn(); items.push(...r.items); Object.assign(facts[r.fact], r.facts || {}); }
-      catch { if (!failed.includes(provider)) failed.push(provider); }
+      catch (e) { const named = e && typeof e.provider === "string" ? e.provider : provider; if (!failed.includes(named)) failed.push(named); }
     };
     try {
       if (!me) return { items, facts };
@@ -142,6 +170,8 @@ export class NoticeProducers {
       run("answers", () => ({ fact: "standing_answer", ...this.#standingAnswers(me, viewer, at) }));
       run("duties", () => ({ fact: "temporal_expectation", ...this.#dutiesDue(me, viewer, at) }));
       run("inquiry", () => ({ fact: "inquiry_recheck", ...this.#waitsDue(me, viewer, at) }));
+      run("credentials", () => ({ fact: "security_level", ...this.#securityHigh(me, at) }));
+      run("following", () => ({ fact: "policy_change", ...this.#policyChanges(me, viewer, at) }));
       return { items, facts };
     } catch {
       return { items: [], facts: { ...facts, failed: [...new Set([...failed, "notice-producers"])] } };
@@ -492,6 +522,182 @@ export class NoticeProducers {
       });
     }
     return { items, facts: {} };
+  }
+  /* ================================================================== R12 · the security level becomes High
+   * (credentials R45; N703, K1874 (Q5), K1875, DEC-165 (7)). To an active administrator alone, while
+   * `securityLevel` answers High: one item per episode, keyed by the episode's start. The episode is the unbroken run
+   * of whole hours, reaching the call, at whose end the level was High by credentials' own rule (a `through` in the
+   * 24 hours ending then, or that hour unusual at its threshold), read back hour by hour from `securityMap` under the
+   * administrator's own `by`, at most the days of counts kept; the hour of the call counts as High, as the call says.
+   * A level that does not answer one of the three is a failure, never read as Ordinary. Counts only, in its words. */
+  #securityHigh(me, now) {
+    let admins;
+    try { admins = (this.#membership.activeAdmins() || []).map(bare); } catch { throw failure("membership"); }
+    if (!admins.includes(me)) return { items: [], facts: {} };
+    const lv = this.#credentials.securityLevel();
+    if (!lv || typeof lv !== "object" || !SECURITY_LEVELS.includes(lv.level)) throw failure("credentials");
+    if (lv.level !== "High") return { items: [], facts: {} };
+    const { start, through, truncated } = this.#episode(me, now);
+    const from = instantOf(start), to = instantOf(now);
+    const got = through === 0 ? "nothing got through"
+      : `${through} ${through === 1 ? "sign-in or recovery" : "sign-ins or recoveries"} got through under a paused role`;
+    return { items: [{
+      id: `FINDING::security-level-high::${from}`, class: "FINDING", kind: "security-level-high",
+      label: NOTICED_LABEL, by: "the machine's",
+      case: this.#homesOf([]),
+      subject: { kind: "civicsmith", id: null, episode: from },
+      summary: "The security level of your group's Civicsmith is High",
+      detail: `The security level of your group's Civicsmith has been High since ${from}, and in that time ${got}.`,
+      screen: { op: "securitymap", from, to },
+      basis: { source: "credentials.securityLevel", level: lv.level, level_at: lv.levelAt ?? null, episode: { from, to },
+               through, threshold: { ...SECURITY_THRESHOLD },
+               detail: "the level is credentials' (its R45), over counts only (its R44); an episode is an unbroken run "
+                     + "of hours at whose end the level was High, told once to each administrator, and a later one "
+                     + "is told again." },
+      age: ageFrom(from, now, "no_episode_start"),
+      assignee: null, assignee_role: null,
+      recipients: [me],
+      options: this.#optionsOf([]),
+    }], facts: { truncated } };
+  }
+
+  /** R12: the episode reaching `now`: its first hour's start, the `through` count since, and whether the read reached
+   *  the days kept still High. `securityMap` refusing is a failure of the provider (R1). */
+  #episode(by, now) {
+    const cur = Math.floor(now / HOUR_MS);
+    const floor = cur - SECURITY_DAYS * 24;
+    const hours = new Map();
+    let lo = cur + 1;
+    const load = () => {
+      const fromH = Math.max(floor, lo - SECURITY_READ_HOURS);
+      if (fromH >= lo) return false;
+      const to = lo === cur + 1 ? now : lo * HOUR_MS;
+      const m = this.#credentials.securityMap({ from: instantOf(fromH * HOUR_MS), to: instantOf(to), by: `member:${by}` });
+      if (!m || m.ok !== true || m.step !== "hour" || !Array.isArray(m.buckets)) throw failure("credentials");
+      for (const b of m.buckets) {
+        const h = Math.floor(Date.parse(b.start) / HOUR_MS);
+        if (!Number.isFinite(h)) continue;
+        hours.set(h, { through: Number(b.counts && b.counts.through) || 0, total: Number(b.counts && b.counts.total) || 0,
+                       usual: Number(b.usual && b.usual.total) || 0 });
+      }
+      lo = fromH;
+      return true;
+    };
+    const at = (h) => { while (h < lo) if (!load()) return null; return hours.get(h) ?? { through: 0, total: 0, usual: 0 }; };
+    const unusual = (x) => x.total >= SECURITY_THRESHOLD.atLeast
+      && x.total > (x.usual === 0 ? SECURITY_THRESHOLD.times : SECURITY_THRESHOLD.times * x.usual);
+    /* credentials R45's rule at the end of hour h: a `through` in the 24 hours ending then, or the hour unusual */
+    const highAt = (h) => {
+      const x = at(h);
+      if (!x) return null;
+      if (unusual(x)) return true;
+      for (let k = h; k > h - 24 && k >= floor; k--) { const y = at(k); if (y && y.through > 0) return true; }
+      return false;
+    };
+    at(cur);
+    let start = cur, truncated = false;
+    for (let h = cur - 1; ; h--) {
+      if (h < floor) { truncated = true; break; }
+      const high = highAt(h);
+      if (high === null) { truncated = true; break; }
+      if (!high) break;
+      start = h;
+    }
+    let through = 0;
+    for (let h = start; h <= cur; h++) through += (hours.get(h) || { through: 0 }).through;
+    return { start: start * HOUR_MS, through, truncated };
+  }
+
+  /* ================================================================== R13 · a policy's silent change
+   * (following R21; N652, K1727, K1740, DEC-145 (5)). The changes `policyChanges` answers this viewer whose later
+   * capture is no older than the window and whose `amendment_held` is false, following its cursor to at most the bound
+   * of changes read (`facts` states it, and `truncated`). Each goes to the member who declared the policy in
+   * `standards` while that member is active, else to the administrators, and only while the recipient sees it (the
+   * read is the recipient's own). Its detail is DEC-145 (5)'s sentence, nothing more: never what the change means. */
+  #policyChanges(me, viewer, now) {
+    const since = now - POLICY_CHANGE_DAYS * DAY_MS;
+    const changes = [];
+    let after = null, read = 0, truncated = false;
+    for (;;) {
+      if (read >= POLICY_CHANGES_MAX) { truncated = true; break; }
+      const r = this.#following.policyChanges({ after, limit: Math.min(POLICY_CHANGES_PAGE, POLICY_CHANGES_MAX - read), viewer });
+      if (!r || r.ok === false || !Array.isArray(r.changes)) throw failure("following");
+      read += r.changes.length;
+      for (const c of r.changes) {
+        const t = c && c.after ? Date.parse(c.after.at) : NaN;
+        if (!Number.isFinite(t) || t < since || c.amendment_held !== false) continue;
+        changes.push(c);
+      }
+      if (r.cursor === null || r.cursor === undefined || r.changes.length === 0) break;
+      after = r.cursor;
+    }
+    if (!changes.length) return { items: [], facts: { truncated } };
+    const recipientOf = new Map();
+    let admins = null;
+    const adminsNow = () => {
+      if (admins === null) { try { admins = (this.#membership.activeAdmins() || []).map(bare); } catch { throw failure("membership"); } }
+      return admins;
+    };
+    const zone = this.#zone();
+    const items = [];
+    for (const c of changes) {
+      if (!filled(c.standard) || !c.before || !c.after || !filled(c.after.capture)) continue;
+      if (!recipientOf.has(c.standard)) {
+        let s;
+        try { s = this.#standards.standardRead({ id: c.standard, viewer }); } catch { throw failure("standards"); }
+        if (!s || s.ok === false) { recipientOf.set(c.standard, null); continue; }
+        const declarer = isMachine(s.declared_by) ? null : bare(s.declared_by);
+        let active = false;
+        try { active = !!declarer && (this.#membership.memberFacts(declarer) || {}).status === "active"; }
+        catch { throw failure("membership"); }
+        recipientOf.set(c.standard, active ? { rule: "declarer", members: [declarer], cite: s.cite ?? null }
+          : { rule: "administrators", members: adminsNow(), cite: s.cite ?? null });
+      }
+      const to = recipientOf.get(c.standard);
+      if (!to || !to.members.includes(me)) continue;
+      const date = NoticeProducers.#localDate(c.before.at, zone);
+      items.push({
+        id: `FINDING::policy-changed-noticed::${c.watch}::${c.after.capture}`, class: "FINDING", kind: "policy-changed-noticed",
+        label: NOTICED_LABEL, by: "the machine's",
+        case: this.#homesAt([c.standard], viewer),
+        subject: { kind: "standard", id: c.standard, cite: to.cite, address: c.address ?? null, watch: c.watch,
+                   before: { capture: c.before.capture, at: c.before.at }, after: { capture: c.after.capture, at: c.after.at } },
+        summary: `The published copy of ${to.cite ?? c.standard} changed`,
+        detail: `Changed without notice: the text differs from the copy captured on ${date}, and no amendment was announced`,
+        basis: { source: "following.policyChanges", standard: c.standard, watch: c.watch, address: c.address ?? null,
+                 before: c.before, after: c.after, amendment_held: false, recipients_rule: to.rule, zone,
+                 detail: "a difference between two captures of a policy's published copy (following R21), never a "
+                       + "finding of the record and never what the change means; it leaves when an amendment is held "
+                       + "for it or its recipient disposes of it." },
+        age: ageFrom(c.after.at, now, "no_capture_instant"),
+        assignee: null, assignee_role: null,
+        recipients: to.members,
+        options: this.#optionsOf([c.standard]),
+      });
+    }
+    return { items, facts: { truncated } };
+  }
+
+  /** R13: the profile's time zone (the jurisdiction view's), or null when none is held. */
+  #zone() {
+    try {
+      let view = this.#deps.view;
+      if (typeof view === "function") view = view();
+      if (!view) {
+        const row = this.#rows(`SELECT value FROM settings WHERE name='jurisdiction_profiles' ORDER BY rowid DESC LIMIT 1`)[0];
+        const ids = row ? JSON.parse(row.value) : null;
+        const c = Array.isArray(ids) && ids.length ? combineProfiles(ids) : null;
+        view = c && c.ok ? c.view : null;
+      }
+      const z = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
+      return z && typeof localDay("2026-01-01T00:00:00Z", z) === "string" ? z : null;
+    } catch { return null; }
+  }
+
+  /** R13: the local day of an instant in `zone` (civil-time), as `following` reads it, the UTC day when none is held. */
+  static #localDate(at, zone) {
+    try { const d = localDay(at, zone || "UTC"); if (typeof d === "string") return d; } catch { /* below */ }
+    return dayOf(at) ?? "an earlier date";
   }
 }
 
