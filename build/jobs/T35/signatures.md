@@ -21,3 +21,7 @@
 - `node checks/ownership.mjs … signatures tranche/T35`: 4 files changed; 0 failures.
 
 Size (session_01S19brLpPpaT6mCpQtwVbHH): test runs 9, module lines 869
+
+## J1 · REPORT
+
+Generated artifact staled (§14): bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) embed src/signpage.mjs, which T35-5 re-embedded. fleetbundles.test.mjs: 2 FAIL on bio-plane (STALE BUNDLE) until BOB regenerates at L1's close (node bio-plane/scripts/bundles.mjs, K1540's order); 0 fail before the change. release/ and newgroup/src/release.mjs, newgroup/dist carry the old strings as release copies, refreshed by the next release.
