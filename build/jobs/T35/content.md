@@ -31,3 +31,7 @@ Wording (your START's rule; DEC-149's "where 'Civicsmith' could mean the softwar
 ## J2 · REPORT
 
 Stale artifact and two notes (record, Completion): (1) my rewording makes the plane bundle bio-plane/dist/bio-plane.bundled.mjs stale (it embeds content's old sentences at :35932, :35943, :48778 and the crop detail); bundler's to regenerate at L4's close (§14). (2) extraction index.mjs:1212 and reading-pipeline index.mjs:945 still say 'this instance has no evidence store bound': already their sweep rows (T35-25, T35-24). (3) calculations index.mjs:328 (L5, not in the sweep) says 'your group's Civicsmith has no evidence store bound'; the sweep's rule says 'set up' where 'bound' is the only binding word.
+
+## J3 · COMPLETE
+
+T35-26 applied: the six DEC-149 rows reworded (codes, checks, translations unchanged; nothing awaits stamp), each named by a test in test/m/content/words.test.mjs. Module tests 131/131; format, architecture, coverage (55/55), ownership: 0 failures. Applied on J1's reading of R48 (its answer not yet in). Record: build/jobs/T35/content.md, Completion. Pushed job/T35/content.
