@@ -65,3 +65,9 @@ Found in other modules (also in my record's Completion):
 2. **Red 10** covers two assertions in `deploybindings.test.mjs`: the service-binding list (:165) and the pre-flight target list beside it, which now names `file-scanner`. One cause; both clear when T36-49 adds `FILE_SCANNER`.
 3. **file-scanner** (T36-5): beyond B2's marker contract, its wrangler.jsonc `containers[]` entries must each name their class by `class_name` (`FileScanner`, `SafeViewRenderer`), or `deploy-fleet.mjs` refuses `[CONTAINER_UNDESCRIBED]` (config and marker classes disagree).
 4. **bundler's requirements** (yours to word, if wanted): `bundles.mjs --install-dirs` (R30's install list, B2) is not stated in R21.
+
+## J3 · COMPLETE
+
+T36-2 complete on `job/T36/bundler`: R24–R30 as B2 confirmed (two-class members with `container/<class>.json` parts and per-class deploy; system package statements pinned by base digest, listed and asked of OSV under their ecosystem; `--sign` refused outside GitHub Actions before the seed is read, `--emit-plane`, `--plane-sig`, `bundles.mjs --install-dirs`). N733 applied: red 6 cleared. Reds 9 and 10 named as accepted.
+The commands `release-sign.yml` calls, by usage line and in order, are in my record (Completion, "R30") and in `release-assemble.mjs`'s header.
+Tests: module 88/88; fleetbundles 119 pass, 1 fail (red 9), no SKIP; deploybindings 35/2 (red 10, both assertions, see J2); resolveversion, bundle, newgroup-bundle-fresh green; every bundle fresh. Checks format, architecture, coverage (30/30), ownership: 0 failures.
