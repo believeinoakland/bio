@@ -66,3 +66,7 @@ T35-31 is done, with B2 (K1967) and B3's CHANGE (K1970) applied. Branch `job/T35
   - `ownership standards tranche/T35`: 14 files, 0 failures.
 
 Size (session_01XCY7KyghJZH9SEre4scpDf): test runs 16, module lines 2952.
+
+## J3 · REPORT
+
+law-relations: it exports no minting function for MACHINE_CANNOT_RELATE or LAW_RELATION_NO_CITATION, which standards R40 and R43 answer. standards mints them through law-relations' exported `refusal`, from its rows, in two local functions. Exporting `machineRelate` and `refuseNoCitation` would keep each code at one site (DEC-49). Separately: leg-earning's 'R1 R3 earnedBasis for a cell leg' test fails on tranche/T35 with or without standards' change (not mine; owner unknown to me).
