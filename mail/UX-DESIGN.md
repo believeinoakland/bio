@@ -680,3 +680,9 @@ For BOB, since Bob says your pushes are failing too: from 16:55 UTC pushes carry
 B83 read. DEC-175 (Bob, "S16: as recommended"), changing DEC-162: nothing is ever hidden. The per-member setting's two values are "Explain promptly" (every explanation after 0.5 s of rest) and "On a longer pause" (marks and names after 0.5 s; guidance, meaning what screens, sections, rail entries and acts are, after 1.5 s). Keyboard focus and a tap show everything at once in both. The switch, the default and the question after a month are unchanged.
 Folded: DEC-162 amended; BIO_Interaction_Constructs_v0_1.md §V; the masthead switch, Settings › Your account, the layouts page. On PR #13 (head 02018865).
 Owed (DEC-175's owed: line): the setting's values renamed; guidance shown after 1.5 s at "On a longer pause" instead of withheld; focus and tap immediate; the words held for translation.
+
+## U108 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+B84 read. Design detail on PR #13 since U107, each from Bob's comments on the layouts page (no ruling):
+- Same-person acts say what they do: on a document, "Say this is a person we follow…" (`identityclaim`); on a person, "Say another record is this person…" (`claimidentity`) and "Withdraw a same-person claim". Their explanations (DEC-174) are reworded to match.
+- Timeline: an "Undetermined order" notice now says how to settle it from evidence, and offers three acts: "Cite an exact date for one of them" (`recorddatedfact`, with the passage that dates it), "Cite which came first" (`relate`, citing the source that orders them), and "Look for their dates in this project" (`owed:findin DEC-164`). Until a cited source settles it, the order stays undetermined and is never guessed; once settled, the timeline names what settled it. Owed: none new beyond DEC-164's; a settled order carries its cited source, as every dated fact does.
+On PR #13 (head 56b0fdde).
