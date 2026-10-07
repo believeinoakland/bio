@@ -2,6 +2,31 @@
 
 **Status** · session_01QwVmt6HWf2hxMSDJiXer1s · depth 2 · RUNNING until 2026-10-07T17:12:29Z (tests of the 29 modules using events, head and tranche baseline) · handled B1
 
+## Completion
+
+**Entries applied (T35-28; N642 with N659's words, N698; K1713 (2), K1740, K1865, K1965, K1966; DEC-145 (7), DEC-164 (4), (5)).** On J1's six readings, which B2 confirmed and B3 wrote into R6 and R43.
+- R43 `recordDiscretion` (kinds `discretion`, `waiver`): `KIND_NOT_DISCRETION`, `MEMBER_ACT_ONLY`, then R6's, then `PROVISION_MALFORMED`, `STATED_REASON_MISSING` (a cited passage or the literal `"none"`), `OUTCOME_UNKNOWN` (granted, denied, partly_granted, other; its passage required), `QUESTION_NOT_HELD`, then a waiver's `WAIVER_NO_SCOPE`, conditions (a list of passages, empty read "no conditions stated") and `BAD_DATE` for expiry, and `FIELD_NOT_FOR_KIND` for a discretion. Every passage is `{captureSha, extent}` refused as R1; a `findIn` match passes as it is (its `capture_sha`). The provision key is checked for shape only (`{standard, portion?}`, each non-blank, at most 200 characters, no other key).
+- R44 `recordAssessment`: the standard assessed against and its unmet items (`PROVISION_MALFORMED`, `UNMET_NOT_CITED`, R1's extent refusals, the passage in a capture the assessment's attestations cite); an empty list reads "no standard found unmet", never "met".
+- R6 (B3, K1966): `createEvent` of a use's kind is refused `USE_NEEDS_ITS_ACT`; `EVENT_KINDS` gain the three kinds; `USE_KINDS`, `OUTCOMES` exported.
+- R45: every read answers a use's facet (`use`): `readEvent`, `eventsFor`, `timeline`, `statementsOf`'s lists, `usesOf` and the connection owner's items. `says`: discretion in DEC-145 (7)'s words ("Discretion used by <decider>, <date>, stated reason: “…”" or "no reason stated"; "decider not recorded", "date not recorded"); waiver and assessment in plain sentences of the same form until the design stream gives words. The cited words are the record's: each passage is minted through `content.mint` at the act and read by `content.passageText` at each read (300 characters); a passage whose text is not held reads "in the cited passage, its words not read"; one in a capture the viewer may not see is `{withheld: true}` and reads "in a document you cannot see". A facet is never edited (no act changes its columns; a split copies it, question included). `withdrawUse` (`NO_REASON`, `NO_SUCH_EVENT`, `KIND_NOT_DISCRETION`, a repeat `already`) leaves the use readable, shown withdrawn.
+- R46 `usesOf`: uses not withdrawn, by provision (no portion: every portion), decider, subject, kinds (`KIND_NOT_DISCRETION`), from/to with placed-nowhere apart; R31's order; `after`, `limit` (1–500, default 100), `truncated`, `next`, `count`, and the population sentence; R40's sight; writes nothing, never throws.
+- R47: `event_uses` (event_id, kind, provision_standard, provision_portion, reason_stated, outcome, withdrawn, and the facet's cited passages) and `event_unmet` (event_id, provision_standard, provision_portion, cite), declared through record-core, gated by the one-home check.
+- R48: the question (an `inquiry` bundle the actor may see; `QUESTION_NOT_HELD` after `NO_METHOD` in R1) kept beside the dated fact (`dated_facts.question`, added at boot to an older store) or the use, answered to a viewer who may see the inquiry and withheld as absent from any other; no question answers `null`; a repeat of R1 keeps the first.
+- R1 (N698): a found extent is taken as any other extent of the capture; same refusals, grade and identity.
+- R36: ops `discretionrecord`, `assessmentrecord`, `usewithdraw` (the url's stamp the author) and `usesof` (filters `standard`, `portion`, `decider`, `subject`, `kinds`, `from`, `to`, `after`, `limit`, `viewer` from the url).
+- In my own tests: the fixture's `capture` takes `units`, indexed by extraction's writer, so a cited page's words are the record's.
+
+**Deferred.** None.
+
+**Found in other modules (to BOB, J3).** My four new ops turn two users' tests red, as a provided service's change does until its users carry it: affordances `t33.test.mjs`:136 (R40, R12: events' op map now holds `assessmentrecord`, `discretionrecord`, `usesof`, `usewithdraw`, which affordances does not grade) and control-plane `r53-routes.test.mjs`:60 (R53: the four have no spec until op-declarations declares them, T35-70). Generated artifact made stale: the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` embeds `bio-plane/src/events/` (regenerated at the layer close, §14).
+
+**Tests and checks run** (on 971de001fd):
+- `node --test bio-plane/test/m/events/`: tests 54, pass 54, fail 0.
+- Every user of events (29 modules from `modules.json`, 2244 tests): pass 2222, fail 14; on `tranche/T35` the same tests give 12 fails, all accepted reds (op-declarations t33:180, t34:64, :129; plane `ask` ×6; control-plane catalogue-end; standards `reads` R29; following `checks` R1, red there too). The two only here are the ops above.
+- `format`: 130 modules, 129 requirements files; 2 failures, both law-relations' paths and tests (accepted red 24). `architecture events`: 17 product files, 59 relative imports; 0 failures. `coverage events`: 48 of 48 live ids named by a test; 0 failures. `ownership events tranche/T35`: 9 files; 0 failures.
+
+Size (session_01QwVmt6HWf2hxMSDJiXer1s): test runs 8, module lines 2299
+
 ## J1 · QUESTION
 
 Six readings of R43–R48 I am building on; carrying on with the job meanwhile. Say only where one is wrong.
