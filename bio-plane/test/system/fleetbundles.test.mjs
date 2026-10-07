@@ -116,7 +116,7 @@ t("members discovered by their own marker file, never a list kept here",
   members.map((m) => m.name), ["agent-runner", "agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"]);
 t("agent-runner is listed as a container member, with its image (R24)",
   members.filter(isContainer).map((m) => [m.name, m.kind, m.image.repository]),
-  [["agent-runner", "container", "docker.io/civicos/agent-runner"]]);
+  [["agent-runner", "container", "ghcr.io/believeinoakland/agent-runner"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —

@@ -1,0 +1,12 @@
+{
+  "class_name": "AgentRunner",
+  "image": "ghcr.io/believeinoakland/agent-runner@sha256:9dd0d3a85d251e285cc4ec7868b6be6fbe5505c1ebfe07c38431b443f65557a0",
+  "scheduling_policy": "default",
+  "max_instances": 10,
+  "bind": [
+    {
+      "member": "agent-worker",
+      "binding": "RUNNER"
+    }
+  ]
+}
