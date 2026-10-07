@@ -27,3 +27,7 @@
 **P6** · 3,809 lines (3,737 at the opening), under about 4,000.
 
 Size (session_012a2UNtTuD5PNQ4KYMYjtA1): test runs 5, module lines 3809
+
+## J1 · COMPLETE
+
+T36-3 applied: docx text() tables carry cells as R30 holds a sheet's (R11 amended); merged cells one entry at the first grid position (vMerge/hMerge continuations join their cell, gridSpan and gridBefore placed). office-readers tests 106/106, users of the reading (odf-reader, extraction, format-registry, observation-log) 306/306; format, architecture, coverage (33/33), ownership: 0 failures. 3,809 lines. Stale: the plane bundle bio-plane/dist/bio-plane.bundled.mjs (embeds docx.mjs), for the layer close. Record: build/jobs/T36/office-readers.md.
