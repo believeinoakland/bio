@@ -4,7 +4,9 @@
  * watched per meeting is captured before each meeting by the body's notice period; a public register is re-read (or
  * re-rendered) on the tick, and one behind a member's account or a fee only at that member's act; a member may follow
  * a register's own query for one identifier naming a person; a portal's dataset is snapshotted and diffed by key.
- * Like `monitoring`, it watches and captures; what a change means is never its to say (R16).
+ * Each policy the group holds is watched at its published copy with no member act, every version seen kept, its
+ * changes read by `notice-producers` (R20, R21; K1727, K1740). Like `monitoring`, it watches and captures; what a
+ * change means is never its to say (R16).
  *
  * New code beside `monitoring` (plan T33 Choices 7; no copy seam was found). Every tick runs under
  * `monitoring.sweepHost()` (its R65: one pause, one idempotence key, one landing), as `link-sweep` does (N506).
@@ -17,6 +19,9 @@
  *   entities, events     a body's existence and Legistar identifier (R1); its observed meetings (R4) and the
  *                        Legistar write (`followedImport`, R2).
  *   monitoring           `sweepHost()` (R13), `schedule(now)` (R4: the `per_meeting` subjects), `monitor` (R4's capture).
+ *   standards            the held policies (`standardsIn`, `standardRead`), who may read one (`isMeasure`), and the
+ *                        amendments of one (`lawRelationsOf`) (R20, R21). A policy's text capture is read through
+ *                        `content`'s read contract (its R45) and its address through `provenance`'s (its R48).
  *   view                 the jurisdiction view, or a function answering it (default: `jurisdictions.combine` of the
  *                        instance's active profiles, record-core R26).
  *   now                  the instance clock in milliseconds.
@@ -28,8 +33,9 @@ import { captureOf } from "../capture/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { monitoringOf, MONITOR_VIEWER, MONITOR_CADENCE_MS } from "../monitoring/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
 import { isMachineIdentity, isPublicHttpsLocator } from "../record-grammar/index.mjs";
-import { isCalendarDate, validAt } from "../civil-time/index.mjs";
+import { isCalendarDate, validAt, localDay } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parse as parseLegistar, KEY as LEGISTAR_KEY } from "../../../legistar-reader/index.mjs";
 import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
@@ -53,12 +59,19 @@ export const FOLLOW_TICK_BATCH = 50;
 export const BODY_READ_FETCHES = 200;
 /** R12: the cadences a follow may name: daily (the default) or longer, from monitoring's intervals (its R14). */
 export const FOLLOW_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
-export const FOLLOW_KINDS = Object.freeze(["body", "register", "person-query", "portal"]);
+export const FOLLOW_KINDS = Object.freeze(["body", "register", "person-query", "portal", "policy"]);
+/** R20 (K1881, K1941): a policy watch's cadence, every 7 days from its last read; no act shortens it. */
+export const POLICY_WATCH_CADENCE = "weekly";
+/** R20: the access of a policy (standards R41) that is never read on the tick (R8, R15). */
+export const POLICY_GATED_ACCESS = Object.freeze(["paywalled", "reading_room"]);
+/** R21: the most changes one answer gives, and its default. */
+export const POLICY_CHANGES_MAX = 200;
 export const FOLLOW_PURPOSE = "following";
 const MACHINE = MONITOR_VIEWER;
 const EPOCH_MS = 3600000;
 const STATIC_ONLY = "only its static form is followed: the register is not re-rendered, so what a visitor's browser would add is not seen";
 const NOT_PUBLIC = "not reproducible by the public: it was read with a member's own credential or for a fee";
+const POLICY_PAGE = 200;
 
 const said = (v) => typeof v === "string" && v.trim() !== "";
 /* every refusal carries its C-137 row (DEC-49; `checks.mjs`) */
@@ -82,6 +95,7 @@ export function followingOf(host, deps = {}) {
       capture: lazy(deps.capture, () => captureOf(host)),
       entities: lazy(deps.entities, () => entitiesOf(host)),
       events: lazy(deps.events, () => eventsOf(host)),
+      standards: lazy(deps.standards, () => standardsOf(host, { record, membership })),
       monitoring: lazy(deps.monitoring, () => monitoringOf(host, { record, membership })) });
     instances.set(storage, f);
     f.migrate();
@@ -92,14 +106,14 @@ export function followingOf(host, deps = {}) {
 export class Following {
   #sql; #declared = false; #listeners = [];
 
-  constructor({ storage, record, membership, now, view, bytes, capture, entities, events, monitoring }) {
+  constructor({ storage, record, membership, now, view, bytes, capture, entities, events, standards, monitoring }) {
     this.#sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.now = typeof now === "function" ? now : () => Date.now();
     this.viewOpt = view;
     this.bytesOpt = bytes;
-    this.dep = { capture, entities, events, monitoring };
+    this.dep = { capture, entities, events, standards, monitoring };
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -107,6 +121,7 @@ export class Following {
   get capture() { return this.dep.capture(); }
   get entities() { return this.dep.entities(); }
   get events() { return this.dep.events(); }
+  get standards() { return this.dep.standards(); }
   get monitoring() { return this.dep.monitoring(); }
   get host() { return this.monitoring.sweepHost(); }
 
@@ -176,12 +191,15 @@ export class Following {
     return null;
   }
   #cadence(c) { return c == null || c === "" ? "daily" : FOLLOW_CADENCES.includes(c) ? c : null; }
-  #insert(kind, subject, { home = null, author, from = null, until = null, cadence = "daily", gated = null }) {
-    const at = instant(this.now());
-    this.#sql.exec(`INSERT INTO follows (kind, subject, home, author, from_day, until_day, cadence, gated, at) VALUES (?,?,?,?,?,?,?,?,?)`,
-                   kind, JSON.stringify(subject), home, author, from, until, cadence, gated ? JSON.stringify(gated) : null, at);
+  /* `lastRead`: R20's watch counts its policy's own text capture as its first read, so it is next due 7 days after it. */
+  #insert(kind, subject, { home = null, author, from = null, until = null, cadence = "daily", gated = null, at: given = null,
+                           lastRead = null }) {
+    const at = given || instant(this.now());
+    this.#sql.exec(`INSERT INTO follows (kind, subject, home, author, from_day, until_day, cadence, gated, at, last_read, last_outcome)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)`, kind, JSON.stringify(subject), home, author, from, until, cadence,
+                   gated ? JSON.stringify(gated) : null, at, lastRead, lastRead ? "held" : null);
     const id = Number(this.#one(`SELECT max(follow_id) AS n FROM follows`).n);
-    this.#tell(id, at);
+    this.#tell(id, lastRead ? this.#nextDue(id) : at);
     return { ok: true, follow: id, kind, at, ...(kind === "register" && !subject.render ? { form: "static", note: STATIC_ONLY } : {}) };
   }
   /* R8: an account or fee gate as declared by the following member; anything else is a public register. */
@@ -365,6 +383,7 @@ export class Following {
   /** R12: everything due now, oldest due first, and the earliest instant one falls due. */
   plan(now) {
     const nowMs = Number.isFinite(now) ? now : this.now();
+    this.#syncPolicies(nowMs);
     const follows = this.#followPlan(nowMs), meetings = this.#meetingPlan(nowMs);
     const due = [], unscheduled = [];
     let wake = null;
@@ -452,15 +471,21 @@ export class Following {
     const at = instant(nowMs);
     const gated = json(f.gated);
     let r;
-    if (gated && (f.kind === "register" || f.kind === "person-query")) {
+    if (f.kind === "policy" && POLICY_GATED_ACCESS.includes(subject.access)) {
+      /* R20, R8, R15: a policy behind an account or a fee is never read on the tick, nothing fetched */
+      r = { member_act_required: { follow: Number(f.follow_id), kind: f.kind, standard: subject.standard, gate: subject.access,
+            why: "this policy is read only by a member's own act: its copy is behind an account or a fee" }, outcome: "member_act_required" };
+    } else if (gated && (f.kind === "register" || f.kind === "person-query")) {
       /* R8, R15: never read on the tick, nothing fetched */
       r = { member_act_required: { follow: Number(f.follow_id), kind: f.kind, gate: gated.kind, ...(gated.price ? { price: gated.price } : {}),
             why: "this register is read only by the act of the member whose own credential or fee it uses" }, outcome: "member_act_required" };
     } else if (f.kind === "body") r = await this.#readBody(f, subject, nowMs);
     else if (f.kind === "portal") r = await this.#readPortal(f, subject, nowMs);
+    else if (f.kind === "policy") r = await this.#readPolicy(f, subject, nowMs);
     else r = await this.#readRegister(f, subject, nowMs);
-    /* a failed read stays due (its epoch stays open, so this tick's retry reads it again only under a fresh epoch) */
-    if (r.outcome === "failed") this.#sql.exec(`UPDATE follows SET last_outcome=? WHERE follow_id=?`, r.outcome, f.follow_id);
+    /* a failed read stays due (its epoch stays open, so this tick's retry reads it again only under a fresh epoch); a
+       policy watch's failed attempt counts as its read, so its address is fetched at most every 7 days (R20, K1881) */
+    if (r.outcome === "failed" && f.kind !== "policy") this.#sql.exec(`UPDATE follows SET last_outcome=? WHERE follow_id=?`, r.outcome, f.follow_id);
     else {
       this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, at, r.outcome, f.follow_id);
       this.#tell(Number(f.follow_id), this.#nextDue(f.follow_id));
@@ -470,7 +495,8 @@ export class Following {
 
   /* One address read through acquire's capture-request arm (R2, R7, R9, R10), held bytes compared, and landed when new.
      `member` and `credential` are R8's (a member's own act); the tick passes neither (R15). */
-  async #take(f, address, nowMs, { render = false, reading = null, member = null, credential = null, notPublic = false, title = null } = {}) {
+  async #take(f, address, nowMs, { render = false, reading = null, member = null, credential = null, notPublic = false, title = null,
+                                   home = f.home } = {}) {
     const held = this.#one(`SELECT * FROM follow_reads WHERE follow_id=? AND address=?`, f.follow_id, address);
     const opts = { cls: member ? "member" : "daemon", member: !!member, sessMember: member || null,
       captureRequest: { locator: address, purpose: FOLLOW_PURPOSE, agent: null, render: render === true,
@@ -491,10 +517,11 @@ export class Following {
       if (rd) doc.reading = rd;
     }
     if (notPublic) doc.capture = { ...doc.capture, reproducible_by_public: false };
-    const landed = this.host.land({ id: `follow ${f.follow_id}`, bundle: f.home, locators: [address], target: null }, { locator: address, doc }, at, {
+    const by = f.kind === "policy" ? "the group's standing watch of a policy it holds" : `a member's standing act (${f.author})`;
+    const landed = this.host.land({ id: `follow ${f.follow_id}`, bundle: home, locators: [address], target: null }, { locator: address, doc }, at, {
       title: title || `Followed: ${address}`,
       summary: `The answer served at ${address}, read for the follow ${f.follow_id}.`,
-      notes: `Read for the follow ${f.follow_id} (${f.kind}), a member's standing act (${f.author}). Collected ${at}. Filed at collected and `
+      notes: `Read for the follow ${f.follow_id} (${f.kind}), ${by}. Collected ${at}. Filed at collected and `
            + `never higher: verifying it is a named member's decision.${notPublic ? ` ${NOT_PUBLIC}.` : ""}`,
       trigger: `follow ${f.follow_id}` });
     if (!landed || !landed.ok) return { failed: { address, reason: (landed && (landed.reason || landed.detail)) || "NOT_FILED" } };
@@ -608,11 +635,177 @@ export class Following {
   }
 
   /* ===================================================================== *
+   * THE POLICIES A GROUP HOLDS (R20, R21; K1727, K1740).
+   * ===================================================================== */
+
+  /* R20: every policy `standards` holds whose text is held from a capture with a direct receipt at a public https
+     address, one entry per (policy, address): `{standard, address, capture, at, home, access}`, the latest of its text
+     captures at that address. A superseded policy, one held cited or absent, and one whose text has no such capture
+     are not watched. `home` is the text's bundle while the policy is held at its source's sight (standards R37), so
+     each capture takes the policy's sight; else null (group-wide). Null when standards cannot be read. */
+  #heldPolicies() {
+    const out = new Map();
+    let after = null;
+    try {
+      for (let page = 0; page < 1000; page++) {
+        const r = this.standards.standardsIn({ kind: "policy", after, limit: POLICY_PAGE, viewer: MACHINE });
+        if (!r || r.ok === false || !Array.isArray(r.items)) return null;
+        for (const p of r.items) {
+          if ((p.held || "text") !== "text" || p.superseded_by) continue;
+          const bundleSight = p.sight && p.sight.class === "bundle";
+          for (const contentId of Array.isArray(p.text) ? p.text : []) {
+            const c = this.#one(`SELECT capture_sha, bundle_id FROM content WHERE content_id=?`, contentId);
+            if (!c) continue;
+            for (const l of this.#rows(`SELECT address, first_retrieved FROM captured_locators WHERE capture_sha=? AND via='direct'
+                                         ORDER BY first_retrieved`, c.capture_sha)) {
+              if (!said(l.address) || !isPublicHttpsLocator(l.address)) continue;
+              const key = `${p.id}\n${l.address}`;
+              const was = out.get(key);
+              if (!was || l.first_retrieved > was.at)
+                out.set(key, { standard: p.id, address: l.address, capture: c.capture_sha, at: l.first_retrieved,
+                               home: bundleSight ? c.bundle_id : null, access: p.access ?? null });
+            }
+          }
+        }
+        if (!r.truncated || !r.cursor) break;
+        after = r.cursor;
+      }
+    } catch { return null; }
+    return out;
+  }
+
+  /* R20: the watches made when a policy's text is first held and ended when it is superseded or no longer watchable;
+     each make and end tells R19's listeners. Nothing changes when standards cannot be read. */
+  #syncPolicies(nowMs) {
+    const held = this.#heldPolicies();
+    if (!held) return;
+    const live = new Map();
+    for (const w of this.#rows(`SELECT follow_id, subject FROM follows WHERE kind='policy' AND ended_at IS NULL`)) {
+      const s = json(w.subject) || {};
+      live.set(`${s.standard}\n${s.address}`, Number(w.follow_id));
+    }
+    for (const [key, id] of live) {
+      if (held.has(key)) continue;
+      this.#sql.exec(`UPDATE follows SET ended_at=?, ended_by=? WHERE follow_id=?`, instant(nowMs), MACHINE, id);
+      this.#tell(id, null);
+    }
+    for (const [key, p] of held) {
+      if (live.has(key)) continue;
+      const r = this.#insert("policy", { kind: "policy", standard: p.standard, address: p.address, access: p.access },
+                             { home: p.home, author: "", cadence: POLICY_WATCH_CADENCE, at: instant(nowMs), lastRead: p.at });
+      /* the policy's own text capture is the first version seen, and the bytes the first read compares with */
+      this.#sql.exec(`INSERT INTO policy_versions (follow_id, seq, capture_sha, bundle_id, at) VALUES (?, 1, ?, ?, ?)`,
+                     r.follow, p.capture, p.home, p.at);
+      this.#sql.exec(`INSERT OR REPLACE INTO follow_reads (follow_id, address, capture_sha, bundle_id, facts, at) VALUES (?,?,?,?,NULL,?)`,
+                     r.follow, p.address, p.capture, p.home, p.at);
+    }
+  }
+
+  /* R20: one policy watch's read: its address, compared with the last version seen; bytes that differ are kept as a new
+     version beside every earlier one, landed with the policy's sight. */
+  async #readPolicy(f, s, nowMs) {
+    let home = f.home;
+    try {
+      const a = this.standards.standardRead({ id: s.standard, viewer: MACHINE });
+      if (a && a.ok !== false && a.sight && a.sight.class !== "bundle") home = null;   /* released (standards R37) */
+    } catch { /* keep the watch's own home */ }
+    const t = await this.#take(f, s.address, nowMs, { home, title: `Policy watched: ${s.address}` });
+    const base = { follow: Number(f.follow_id), kind: "policy", standard: s.standard };
+    if (t.failed) return { read: { ...base, outcome: "failed" }, failed: [{ ...base, ...t.failed }], outcome: "failed" };
+    if (t.same) return { read: { ...base, outcome: "unchanged", capture: t.sha }, outcome: "unchanged" };
+    const prev = this.#one(`SELECT seq, capture_sha, at FROM policy_versions WHERE follow_id=? ORDER BY seq DESC LIMIT 1`, f.follow_id);
+    const at = instant(nowMs);
+    this.#sql.exec(`INSERT INTO policy_versions (follow_id, seq, capture_sha, bundle_id, at) VALUES (?,?,?,?,?)`,
+                   f.follow_id, (prev ? Number(prev.seq) : 0) + 1, t.sha, t.bundle, at);
+    return { read: { ...base, outcome: "captured", capture: t.sha },
+             captured: [{ ...base, address: s.address, capture: t.sha, bundle: t.bundle,
+                          ...(prev ? { before: { capture: prev.capture_sha, at: prev.at } } : {}) }], outcome: "captured" };
+  }
+
+  /* R14, R21: whether the viewer may read the watched policy (standards' own sight, R37): `isMeasure` answers exactly
+     that for a policy held with its text, the only kind watched. A viewer naming no one reads none. */
+  #readsPolicy(standard, viewer) {
+    if (!said(viewer) || viewerPredicate(viewer).scope === "DENY" || !said(standard)) return false;
+    try { return this.standards.isMeasure(standard, viewer) === true; } catch { return false; }
+  }
+
+  /** R21: the policy changes a member reviews as "Noticed": one entry per kept version whose bytes differ from the one
+   *  before, in order of the later capture's instant (then of keeping), after the cursor `after`, at most `limit`. A
+   *  change in a policy the viewer may not read is left out whole. Writes nothing; says nothing of what a change means. */
+  policyChanges({ after = null, limit = null, viewer = null } = {}) {
+    const n = Number.isInteger(Number(limit)) && limit !== null && limit !== ""
+      ? Math.min(POLICY_CHANGES_MAX, Math.max(1, Number(limit))) : POLICY_CHANGES_MAX;
+    const from = said(String(after ?? "")) ? this.#one(`SELECT change_id, at FROM policy_versions WHERE change_id=?`, Number(after)) : null;
+    const rows = this.#rows(`SELECT v.change_id, v.follow_id, v.capture_sha, v.at, p.capture_sha AS before_sha, p.at AS before_at, f.subject
+                             FROM policy_versions v JOIN policy_versions p ON p.follow_id = v.follow_id AND p.seq = v.seq - 1
+                             JOIN follows f ON f.follow_id = v.follow_id
+                             WHERE v.capture_sha <> p.capture_sha ${from ? "AND (v.at > ? OR (v.at = ? AND v.change_id > ?))" : ""}
+                             ORDER BY v.at, v.change_id`, ...(from ? [from.at, from.at, Number(from.change_id)] : []));
+    const seen = new Map();
+    const changes = [];
+    let more = false;
+    for (const r of rows) {
+      const s = json(r.subject) || {};
+      if (!seen.has(s.standard)) seen.set(s.standard, this.#readsPolicy(s.standard, viewer));
+      if (!seen.get(s.standard)) continue;
+      if (changes.length === n) { more = true; break; }
+      changes.push({ change: Number(r.change_id), watch: Number(r.follow_id), standard: s.standard, address: s.address,
+                     before: { capture: r.before_sha, at: r.before_at }, after: { capture: r.capture_sha, at: r.at },
+                     amendment_held: this.#amendmentHeld(s.standard, r.before_at, r.at) });
+    }
+    return { ok: true, changes: changes.map(({ change, ...c }) => c),
+             cursor: more ? String(changes[changes.length - 1].change) : null,
+             note: "a difference between two captures of a policy's published copy, never a finding: what it means is a member's to say" };
+  }
+
+  /* R21: whether standards holds an amendment of the policy, or a version superseding it, effective between the two
+     captures' local days (inclusive): the successor's stated start or the later capture of its version basis
+     (standards R38), or an adopted temporal relation into it (`law-relations` R2, through `lawRelationsOf`). */
+  #amendmentHeld(standard, beforeAt, afterAt) {
+    const zone = this.zone();
+    let lo, hi;
+    try { lo = localDay(beforeAt, zone); hi = localDay(afterAt, zone); } catch { return false; }
+    const within = (d) => typeof d === "string" && isCalendarDate(d) && d >= lo && d <= hi;
+    try {
+      const a = this.standards.standardRead({ id: standard, viewer: MACHINE });
+      const next = a && a.ok !== false ? a.superseded_by : null;
+      if (next) {
+        const b = this.standards.standardRead({ id: next, viewer: MACHINE });
+        if (b && b.ok !== false) {
+          if (within(b.period && b.period.from)) return true;
+          if (b.version_basis && typeof b.version_basis.through === "string" && within(localDay(b.version_basis.through, zone))) return true;
+        }
+      }
+    } catch { /* not held, read as none */ }
+    try {
+      const r = this.standards.lawRelationsOf({ standard, viewer: MACHINE });
+      for (const t of r && Array.isArray(r.temporal) ? r.temporal : []) {
+        if (t.direction !== "in" || t.withdrawn || !t.effective) continue;
+        const day = t.effective.date ? t.effective.date : this.#eventDay(t.effective.event, t.effective.edge);
+        if (within(day)) return true;
+      }
+    } catch { /* none held */ }
+    return false;
+  }
+
+  /* R21: the local day an event's `when` gives at its edge (`events`), or null. */
+  #eventDay(eventId, edge) {
+    try {
+      const r = this.events.readEvent({ eventId, viewer: MACHINE });
+      const w = r && r.event ? r.event.when : null;
+      if (!w || typeof w.zone !== "string") return null;
+      const at = edge === "end" ? (typeof w.end === "string" ? instant(Date.parse(w.end) - 1000) : null) : w.start;
+      return typeof at === "string" ? localDay(at, w.zone) : null;
+    } catch { return null; }
+  }
+
+  /* ===================================================================== *
    * THE READS (R11, R14).
    * ===================================================================== */
 
   #sees(f, viewer) {
     if (viewerPredicate(viewer).scope === "DENY") return false;
+    if (f.kind === "policy") return this.#readsPolicy((json(f.subject) || {}).standard, viewer);
     return f.home == null || this.membership.inSight(f.home, viewer);
   }
 
@@ -645,6 +838,7 @@ export class Following {
   /** R14: every follow the viewer may see, and every per-meeting watch, with what is not being read and why. */
   follows({ viewer = null, now = null } = {}) {
     const nowMs = Number.isFinite(Number(now)) && now !== null && now !== "" ? Number(now) : this.now();
+    this.#syncPolicies(nowMs);
     const plan = this.#followPlan(nowMs);
     const items = [];
     for (const p of plan) {
@@ -652,10 +846,12 @@ export class Following {
       if (!this.#sees(f, viewer)) continue;
       const s = json(f.subject) || {};
       const gated = json(f.gated);
-      items.push({ follow: p.id, kind: f.kind, subject: s, author: f.author, home: f.home,
+      items.push({ follow: p.id, kind: f.kind, subject: s, author: f.kind === "policy" ? null : f.author, home: f.home,
         period: f.kind === "body" ? { from: f.from_day, until: f.until_day } : null, cadence: f.cadence, at: f.at,
         last_read: f.last_read, last_outcome: f.last_outcome, next_due: p.due_at ?? instant(nowMs),
         ...(gated ? { gated, unscheduled: "read only at its member's own act (R8); the tick fetches nothing" } : {}),
+        ...(f.kind === "policy" ? { watch: "the group's standing watch of a policy it holds: no member made it, and it ends when the policy is superseded",
+                                    ...(POLICY_GATED_ACCESS.includes(s.access) ? { unscheduled: "read only by a member's own act: the policy's copy is behind an account or a fee; the tick fetches nothing" } : {}) } : {}),
         ...(f.kind === "register" && !s.render ? { form: "static", note: STATIC_ONLY } : {}) });
     }
     for (const m of this.#meetingPlan(nowMs)) {

@@ -8,7 +8,9 @@
    claim, running, ranked, land; `land` registers the capture under a new bundle in the request's project and writes
    the document's reading as promotion's projection does, extraction R20), its `schedule` (R16's unscheduled
    `per_meeting` rows) and `monitor` (R1–R10's answer); and `capture.acquire`'s capture-request arm (acquisition
-   R21–R23), serving bytes a test puts at an address, answering `unchanged` to a matching `heldSha`. */
+   R21–R23), serving bytes a test puts at an address, answering `unchanged` to a matching `heldSha`; and `standards`' reads
+   R20 and R21 use (its R5, R8, R34, R37; `law-relations` R11 through its R48), over the policies a test holds in
+   `w.policies`, with `content`'s table (its R45 read contract, a policy's text passages) created for the test. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -171,7 +173,39 @@ export function world({ view = testView(), now = T0 } = {}) {
     const r = ents.addIdentifier({ entityId, scheme, id: String(id), basis: "the test's cited source", by: MEMBER });
     if (!r.ok) throw new Error(`fixture: addIdentifier refused ${r.reason}: ${r.detail}`);
   };
-  w.f = followingOf(host, { record, membership, capture, entities: ents, events: ev, monitoring, view: () => view,
+  /* ---- standards: the policies a test holds, each {id, kind?, held?, text: [content ids], superseded_by?, access?,
+     sight?: "group" | "bundle", readers?: [viewer], period?, version_basis?, temporal?: [law relations]} ---- */
+  /* `content`'s table as its R45 read contract states it (the columns R20 reads, and those the row needs) */
+  st.sql.exec(`CREATE TABLE IF NOT EXISTS content (content_id TEXT PRIMARY KEY, capture_sha TEXT NOT NULL, bundle_id TEXT NOT NULL,
+               extent_kind TEXT NOT NULL, extent TEXT NOT NULL, ref TEXT NOT NULL, minted_by TEXT NOT NULL, at TEXT NOT NULL)`);
+  w.policies = [];
+  const pol = (id) => w.policies.find((p) => p.id === id) || null;
+  const answer = (p) => ({ id: p.id, kind: p.kind || "policy", held: p.held || "text", text: p.text || [], access: p.access ?? null,
+    superseded_by: p.superseded_by ?? null, sight: { class: p.sight || "group" }, period: p.period || { from: null, to: null },
+    version_basis: p.version_basis ?? null });
+  const reads = (p, viewer) => !!p && (viewer === MACHINE || (p.readers ? p.readers.includes(viewer) : /^member:/.test(String(viewer))));
+  w.standardReads = 0;
+  const standards = {
+    standardsIn({ kind, after = null, limit = 200, viewer }) {
+      w.standardReads++;
+      const all = w.policies.filter((p) => (p.kind || "policy") === kind && reads(p, viewer)).sort((a, b) => (a.id < b.id ? -1 : 1))
+        .filter((p) => after === null || p.id > after);
+      const page = all.slice(0, limit);
+      return { ok: true, items: page.map(answer), truncated: all.length > limit, cursor: all.length > limit ? page.at(-1).id : null };
+    },
+    standardRead({ id, viewer }) { const p = pol(id); return reads(p, viewer) ? { ok: true, ...answer(p) } : { ok: false, reason: "NO_SUCH_STANDARD" }; },
+    isMeasure(id, viewer) { const p = pol(id); return !!p && (p.held || "text") === "text" && reads(p, viewer); },
+    lawRelationsOf({ standard }) { const p = pol(standard); return { ok: true, standard, temporal: (p && p.temporal) || [], referential: [] }; },
+  };
+  /* a policy's text passage, held from a capture with a direct receipt at `address` retrieved at `retrieved` */
+  w.policyText = (contentId, captureSha, bundleId, address, retrieved) => {
+    st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at) VALUES (?,?,?,'document','{}','the whole document','plane',?)`,
+                contentId, captureSha, bundleId, retrieved);
+    if (address) prov.recordReceipt({ address, addressNorm: address, captureSha, retrieved });
+    return contentId;
+  };
+  w.standards = standards;
+  w.f = followingOf(host, { record, membership, capture, entities: ents, events: ev, monitoring, standards, view: () => view,
                             now: () => w.t, bytes: async (s) => w.store.get(s) || null });
   w.capture = capture;
   w.monitoring = monitoring;
