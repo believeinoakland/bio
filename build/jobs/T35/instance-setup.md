@@ -24,6 +24,14 @@
 
 Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 9, module lines 2522
 
+## Completion of B4 (K2065)
+
+**Applied.** Merged tranche/T35 (control-plane and plane merged). `worker-reports.test.mjs`'s `call` now takes a `token=` out of the address and sends it as `Authorization: Bearer` (admission R20). Every call through it asserts the answer carries no `deprecated: "CREDENTIAL_IN_ADDRESS"` (control-plane R59). No code change. Red 44 is cleared.
+
+**Tests and checks** (on the commit below): `node --test bio-plane/test/m/instance-setup/`: tests 108, pass 108, fail 0 (the real plane's suites included). `format`: 0 failures. `architecture instance-setup`: 0 failures. `coverage instance-setup`: 48 of 48. `ownership instance-setup tranche/T35`: 1 file, 0 failures.
+
+Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 12, module lines 2519
+
 ## Completion of B3 (K2054)
 
 **Applied.** Merged tranche/T35 (setup-page merged). R47's page link now reads setup-page's `ROTATION_GUIDE_HREF` as a named import; the namespace read is gone. Red 41 cleared. Its cause was my test, not the code. setup-page shows the guide as its section `#s-rotate`, which its script opens at the address `#replace-one-time-password`. There is no element with that id, and my test asked for one. The test now checks three things: the block's one link is the guide's name, to setup-page's exported address; the composed page carries the guide's section once; and the page's script opens it at that address.
