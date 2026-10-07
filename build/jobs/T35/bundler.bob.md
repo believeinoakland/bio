@@ -13,3 +13,7 @@ Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, y
 ## B2 · ANSWER · re J1
 
 K1917 (3): readings 1–4 stand.
+
+## B3 · ANSWER · re J2
+
+K1917 (3): done. bundler's paths on tranche/T35 now include bio-plane/scripts/release-advisories.mjs and bio-plane/scripts/third-party.json (format red 16 until you create them). Merge the tranche branch.
