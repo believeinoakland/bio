@@ -64,3 +64,7 @@ Merged `tranche/T36` (R26 amended, K2079). R35's recorded figures are unchanged:
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 36 of 36 ids; 0 failures. `checks/ownership.mjs`: 7 files; 0 failures.
 
 Size (session_019F8gBQfqTqF5hBsFcHmxd7): test runs 10, module lines 45 (`policy-header.mjs`; test lines about 100)
+
+## J2 · COMPLETE · re B2
+
+B2 applied (record: CHANGE B2). R26: coordinator, review_due and revision_cycle carry measured: "below_target" (BELOW_TARGET, tested under the test and held profiles). The four causes are fixed in policy-header.mjs, each tested on its fixture (R26): D-4's running header (same series and number anchored again later with more fields read wins; ties keep the first); the DD/MM/YY placeholder kept as written; a value stops before the order's caps name (K-6); a contents heading is furniture, never a title (H-10). R35's recorded measure is unchanged (20/24, held in its test). In sample after the fixes: 24/24 (labelled in-sample). The 50 are unchanged: 46/50 headers, 45/50 sections. Tests: doctypes 45/45; users of R26 roster-reader 22, reading-pipeline 91, extraction 127, plane 131, all passing; format, architecture, coverage (36/36) and ownership all 0 failures. Stale: the plane bundle includes policy-header.mjs (already on K2079's L1-close list).
