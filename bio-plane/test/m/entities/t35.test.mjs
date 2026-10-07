@@ -2,7 +2,7 @@
    registered entities of one kind, `entitiesOfKind` and its op (R51). Run over the test profile (layers.md rule 3). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, MACHINE } from "./fixture.mjs";
+import { world, sha, MACHINE } from "./fixture.mjs";
 import { SECTORS, ORGANISATION_KINDS, ENTITY_KINDS, KIND_LIMIT_DEFAULT, KIND_LIMIT_MAX, entitiesOps } from "../../../src/entities/index.mjs";
 import { SECTORS as JURISDICTION_SECTORS } from "../../../../jurisdictions/index.mjs";
 
@@ -142,4 +142,103 @@ test("R51 R40 entitieskind joins the ops map: it answers what entitiesOfKind ans
     assert.deepEqual(got, want, JSON.stringify(q));
   }
   assert.equal(entitiesOps(w.e, url({ kind: "office" }), {}).entitieskind().reason, "VIEWER_MISSING");
+});
+
+/* R52: one registry over two worlds: `full` holds the named captures, others the viewer can see and a project's capture
+   an outsider cannot; `only` holds the named captures alone. R17 in `only` is what R52 answers in `full`. */
+function naming(withOthers) {
+  const w = world({ profiles: ["test-port-ellery"] });
+  const reg = (kind, label, aliases = []) => w.e.createEntity({ note: NOTE, kind, label, aliases }).entity_id;
+  const ids = {
+    master: reg("office", "Harbour Master", ["hm:7", "!!!"]),
+    clerk: reg("office", "Harbour Clerk", ["clerk"]),
+    pat: reg("person", "Pat Quill", ["P. Quill"]),
+    lee: reg("person", "Lee Quill"),
+    board: reg("body", "Harbour Board"),
+  };
+  w.read("INFO-1", sha("n-a"), [
+    { ref: "hm:7", kind: "hm", key: "7", label: "Harbour Master" },
+    { kind: "q", key: "1", label: "Report of the Harbour Master" },
+    { kind: "q", key: "2", label: "Harbour Clerk" },
+    { kind: "p", key: "3", label: "Pat Quill" },
+    { kind: "p", key: "4", label: "Quill, Pat and Lee Quill" },
+  ]);
+  w.read("INFO-2", sha("n-b"), [
+    { kind: "p", key: "P. Quill", label: "the clerk" },
+    { kind: "q", key: "5", label: "Harbour Board minutes" },
+    { kind: "q", key: "6", label: "harbour" },
+  ]);
+  if (withOthers) {
+    w.read("INFO-3", sha("n-c"), [{ kind: "q", key: "8", label: "Harbour Master" }, { kind: "p", key: "9", label: "Lee Quill" }]);
+    w.project("PROJ-2026-0001-x", "insider");
+    w.read("PROJ-2026-0001-x", sha("n-hid"), [{ kind: "q", key: "1", label: "Harbour Master" }, { kind: "p", key: "2", label: "Pat Quill" }]);
+  }
+  return { ...w, ...ids };
+}
+const NAMED = [sha("n-a"), sha("n-b")];
+
+test("R52 namingIn answers exactly what R17 answers per entity were the named captures the whole corpus: entities of the kinds in id order, each candidate with its entity_id in R17's order, the same names_uninformative and names_unusable; a capture the viewer cannot see is in no figure; it writes nothing", () => {
+  const full = naming(true), only = naming(false);
+  {
+    /* the outsider names the project's capture too, which they cannot see */
+    const before = JSON.stringify(dump(full)) + JSON.stringify(full.rows(`SELECT * FROM resolutions`));
+    const inSight = full.e.namingIn({ captureShas: [...NAMED, sha("n-hid")], kinds: ["office", "person"], limit: 500, viewer: "member:outsider" });
+    assert.equal(JSON.stringify(dump(full)) + JSON.stringify(full.rows(`SELECT * FROM resolutions`)), before, "writes nothing");
+    assert.deepEqual([inSight.ok, inSight.kinds, inSight.truncated, inSight.limit], [true, ["office", "person"], false, 500]);
+    const offices = [full.master, full.clerk], persons = [full.pat, full.lee];
+    assert.deepEqual(inSight.entities.map((e) => e.entity_id), [...offices, ...persons].sort(), "entities of the kinds, in id order; the body is not asked");
+    const want = [];
+    for (const id of [...offices, ...persons].sort()) {
+      const r = only.e.namingDocuments({ entityId: id, limit: 500, viewer: "member:outsider" });
+      const mine = inSight.entities.find((e) => e.entity_id === id);
+      assert.deepEqual([mine.entity_label, mine.entity_kind, mine.names_used, mine.names_unusable, mine.names_uninformative, mine.count],
+                       [r.entity_label, r.entity_kind, r.names_used, r.names_unusable, r.names_uninformative, r.count], id);
+      want.push(...r.documents.map((d) => ({ entity_id: id, ...d })));
+    }
+    assert.deepEqual(inSight.candidates, want, "R17's candidates, entity by entity, in R17's order");
+    assert.ok(want.length > 6, "the fixture offers candidates of every correspondence");
+    assert.ok(want.some((d) => d.selectivity && d.selectivity.value != null), "a partial match with its selectivity");
+    assert.deepEqual(inSight.entities.find((e) => e.entity_id === full.master).names_unusable, ["!!!"]);
+    assert.ok(!inSight.candidates.some((c) => c.capture_sha === sha("n-hid") || c.capture_sha === sha("n-c")), "only the named captures the viewer can see");
+  }
+  /* the machine sees the project capture: it is then one of the named captures, and R17 over the three agrees */
+  const three = naming(true);
+  const m = three.e.namingIn({ captureShas: [...NAMED, sha("n-hid")], kinds: ["person"], viewer: MACHINE });
+  assert.ok(m.candidates.some((c) => c.capture_sha === sha("n-hid")), "a capture the viewer can see is looked in");
+  /* an uninformative partial: a name every reference at a source carries */
+  const w = world();
+  const h = w.e.createEntity({ note: NOTE, kind: "office", label: "Harbour" }).entity_id;
+  w.read("INFO-1", sha("u"), [{ kind: "q", key: "1", label: "Harbour one" }, { kind: "q", key: "2", label: "Harbour two" }]);
+  const u = w.e.namingIn({ captureShas: [sha("u")], kinds: ["office"], viewer: MACHINE });
+  assert.deepEqual(u.entities[0].names_uninformative, [{ alias: "Harbour", source: "label", reaches: 2, corpus: 2 }]);
+  assert.deepEqual(u.candidates, []);
+  assert.deepEqual(u.entities[0].names_uninformative, w.e.namingDocuments({ entityId: h, viewer: MACHINE }).names_uninformative);
+});
+
+test("R52 namingIn refuses each kind as R51 does, no capture NO_SHA, more than 200 captures TOO_MANY_CAPTURES; a page of 1-500 candidates (default 200) truncated by reading one past; an unrecognised viewer sees none", () => {
+  const w = naming(true);
+  const ok = { captureShas: NAMED, kinds: ["office"], viewer: MACHINE };
+  for (const kinds of [undefined, null, [], [""], ["office", " "], [7]]) assert.equal(w.e.namingIn({ ...ok, kinds }).reason, "NO_KIND", JSON.stringify(kinds));
+  const uk = w.e.namingIn({ ...ok, kinds: ["office", "court"] });
+  assert.deepEqual([uk.reason, uk.kind, uk.kinds], ["UNKNOWN_KIND", "court", [...ENTITY_KINDS]]);
+  for (const captureShas of [undefined, [], [""], "x"]) assert.equal(w.e.namingIn({ ...ok, captureShas }).reason, "NO_SHA", JSON.stringify(captureShas));
+  const many = Array.from({ length: 201 }, (_, i) => sha(`c${i}`));
+  const tm = w.e.namingIn({ ...ok, captureShas: many });
+  assert.deepEqual([tm.ok, tm.reason, tm.count, tm.max], [false, "TOO_MANY_CAPTURES", 201, 200]);
+  assert.equal(w.e.namingIn({ ...ok, captureShas: many.slice(0, 200) }).ok, true, "200 are looked in");
+  assert.equal(w.e.namingIn({ ...ok, captureShas: [...many.slice(0, 200), many[0].toUpperCase()] }).ok, true, "the same capture named twice is one");
+  const all = w.e.namingIn({ ...ok, kinds: ["office", "person"] });
+  assert.deepEqual([all.limit, all.truncated], [200, false]);
+  assert.ok(all.count >= 4);
+  const page = w.e.namingIn({ ...ok, kinds: ["office", "person"], limit: 3 });
+  assert.deepEqual([page.count, page.limit, page.truncated, page.candidates], [3, 3, true, all.candidates.slice(0, 3)]);
+  const exact = w.e.namingIn({ ...ok, kinds: ["office", "person"], limit: all.count });
+  assert.deepEqual([exact.count, exact.truncated], [all.count, false], "exactly a page: not truncated");
+  for (const [limit, cap] of [[0, 1], [-1, 1], [501, 500], ["x", 200], [null, 200]])
+    assert.equal(w.e.namingIn({ ...ok, limit }).limit, cap, String(limit));
+  for (const viewer of [null, undefined, "somebody"]) {
+    const r = w.e.namingIn({ ...ok, kinds: ["office", "person"], viewer });
+    assert.deepEqual([r.ok, r.candidates], [true, []], String(viewer));
+    assert.ok(r.entities.every((e) => e.count === 0 && e.names_uninformative.length === 0));
+  }
 });
