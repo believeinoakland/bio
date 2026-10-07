@@ -28,8 +28,9 @@
  *   inquiry        `earned`, `subjectEntityOf` (R7's earned registry).
  *   basisVersions  `conclusionOf`, `conclusionRecordOf`, `noProjectConclusionOf`, `projectsDrawingOn` (R1),
  *                  `testimonyReach` (R7).
- *   publication    the case documents, the case relation and pins, the registries, the attribution facts, and the two
- *                  commits (its R2, R4, R7, R17, R22).
+ *   publication    the case documents, the pins, the registries, and the two commits (its R2, R7, R22).
+ *   caseTensions   `observationsNamingAuthor`, `attributionStatedFor`, `attributionFacts` (its R5; R2, R7, R35) and
+ *                  `dischargeCaseFlags` (its R2; R3), read directly, never through publication (T35-57, N597; K1643).
  *   retrieval      `selectionResolve` (R21, R29: the bulk release's and retirement's selection).
  *   connections    `citesInto` (its R22; R29: the retirement's live citers, `./retire.mjs`).
  *   contradiction  `candidatesFor` (its R25, R26; R22's contested arm). capture: `registerReader` (its R78; R34).
@@ -47,6 +48,7 @@ import { provenanceOf, partsHeld } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
@@ -116,13 +118,13 @@ export class Ratification {
   constructor({ storage, record, membership, promotion, host = null, provenance = null, inquiry = null,
                 basisVersions = null, publication = null, retrieval = null, connections = null,
                 credentials = null, contradiction = null, strength = null, reevaluation = null,
-                networkNotices = null, people = null, money = null, worker = null } = {}) {
+                networkNotices = null, people = null, money = null, caseTensions = null, worker = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials,
-                   contradiction, strength, reevaluation, networkNotices, people, money, worker };
+                   contradiction, strength, reevaluation, networkNotices, people, money, caseTensions, worker };
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -130,6 +132,12 @@ export class Ratification {
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
+  /* case-tensions, one per host: publication is reached first, since its factory creates case-tensions and registers
+     the provider case-tensions reads its tables through (publication R61). */
+  get caseTensions() {
+    return this.#deps.caseTensions ||= (void this.publication,
+      caseTensionsOf(this.#deps.host, { record: this.record, membership: this.membership, promotion: this.promotion }));
+  }
   get retrieval() { return this.#deps.retrieval ||= retrievalOf(this.#deps.host); }
   get connections() { return this.#deps.connections ||= connectionsOf(this.#deps.host); }
   get contradiction() { return this.#deps.contradiction ||= contradictionOf(this.#deps.host); }
@@ -285,7 +293,7 @@ export class Ratification {
    * `publish` AFFORDANCE (affordances' `#editionWarrantedForJoinedProjectOf`) BOTH ASK.
    *
    * WHY IT EXISTS. `ALREADY_A_CASE_MEMBER` used to compare the finding's BYTES alone
-   * (publication's `caseRelation` pin), which answered "would a new edition say anything
+   * (the `caseRelation` pin, now case-tensions'), which answered "would a new edition say anything
    * different" correctly only while a case recorded nothing but those bytes. Since
    * REC-135 (IC-166) an edition also records the conclusion it rests on — WHOSE, on
    * which reading, with the claim verbatim — and a project's conclusion lives on the
@@ -294,7 +302,7 @@ export class Ratification {
    * pinned edition recorded, whether or not `bundle_sha` moved. The refusal compares
    * the RELATIONSHIP, exactly as `NOT_CONCLUDED` does."*
    *
-   * WHAT IS ASKED. `rel` is publication's `caseRelation(bundleId)` as the caller holds it; `conc`
+   * WHAT IS ASKED. `rel` is case-tensions' `caseRelation(bundleId)` as the caller holds it; `conc`
    * is `caseConclusionFor`'s CONCLUDED answer — in `publishCase` the very object the
    * case document will record, carried on `prepared` and never re-read. The editions
    * are every RATIFIED edition whose roster pins this finding at its CURRENT sha
@@ -450,8 +458,8 @@ export class Ratification {
       /* MK-7: which of the observations this bundle is or rests on still name their author in their own files
          (§4.1 keeps those fenced), and — for an observation — whether a RATIFIED case document states a chosen level
          for it, which its words may not cross without. */
-      testimonyLegacy: this.publication.observationsNamingAuthor([...testimony.self, ...testimony.via.map((v) => v.observation)]),
-      attributionStated: this.publication.attributionStatedFor(bundleId),
+      testimonyLegacy: this.caseTensions.observationsNamingAuthor([...testimony.self, ...testimony.via.map((v) => v.observation)]),
+      attributionStated: this.caseTensions.attributionStatedFor(bundleId),
       dangling: this.#rows(
         `SELECT r.target_id FROM refs r LEFT JOIN bundles b ON b.bundle_id=r.target_id
          WHERE r.bundle_id=? AND b.bundle_id IS NULL`, bundleId).map((r) => r.target_id),
@@ -600,7 +608,7 @@ export class Ratification {
         refusals.push(operatorCaseRefusal(cls));
       }
 
-      const attr = this.publication.attributionFacts({ text: src, case_id: caseId, edition });
+      const attr = this.caseTensions.attributionFacts({ text: src, case_id: caseId, edition });
       for (const r of [testimonyCaseRefusal(caseId, edition, attr.legacy),
                        attributionUnchosenRefusal(caseId, edition, attr),
                        attributionStaleRefusal(caseId, edition, attr),
@@ -680,7 +688,7 @@ export class Ratification {
   caseTestimony({ caseId = null, edition = null } = {}) {
     const doc = this.#caseDocumentRow(String(caseId ?? ""), edition);
     if (!doc) return { ok: true, refusal: null };
-    const attr = this.publication.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
+    const attr = this.caseTensions.attributionFacts({ text: doc.text, case_id: caseId, edition: Number(edition) });
     return { ok: true, refusal: anonymousTestimonyRefusal(caseId, Number(edition),
                                                           this.#uncorroborated(doc.text, attr)) };
   }
@@ -831,7 +839,7 @@ export class Ratification {
       if (!plan.plan && !late) stopped.push(refusedStop(plan));
       const doc = plan.plan ? plan.doc : this.#caseDocumentRow(id, ed);
       if (doc) {
-        const attr = this.publication.attributionFacts({ text: doc.text, case_id: id, edition: ed });
+        const attr = this.caseTensions.attributionFacts({ text: doc.text, case_id: id, edition: ed });
         for (const r of [testimonyCaseRefusal(id, ed, attr.legacy), attributionUnchosenRefusal(id, ed, attr),
                          attributionStaleRefusal(id, ed, attr),
                          anonymousTestimonyRefusal(id, ed, this.#uncorroborated(doc.text, attr))])
@@ -1170,9 +1178,9 @@ export class Ratification {
     if (!committed || !committed.ok) return committed || { ok: false, reason: "CASE_PUBLISH_FAILED", caseId: id, edition: ed };
     const evidenceMaterials = evidenceShas(committed.materials ?? this.publication.heldMaterialsOf?.(id, ed));   /* R39 */
     if (committed.existed) return { ok: true, existed: true, caseId: id, edition: ed, evidenceMaterials };
-    /* R3, publication R5: a ratified newer edition discharges the case's outstanding revision flags, stamped with
+    /* R3, case-tensions R2 (was publication R5): a ratified newer edition discharges the case's outstanding revision flags, stamped with
        who ratified it and when; never deleted (set-but-never-clear). */
-    this.publication.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
+    this.caseTensions.dischargeCaseFlags(id, ed, attestorMember ?? null, now);
     /* R36 (DEC-102 item 2): each observation this edition reaches, and each off-the-record capture's attesting member
        (a row keyed `capture`, publication R60; DEC-119 (3)), whose level in force (stated in the signed bytes, C-92.11)
        differs from its level at the case's previous ratified edition is told to reevaluation (its R29, R32), in this

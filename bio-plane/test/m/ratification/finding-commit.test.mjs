@@ -176,7 +176,7 @@ test("R7: gateFacts answers the head, the lists older readers read, the register
   w.st.sql.exec(`INSERT INTO refs (bundle_id, target_id) VALUES (?, ?), (?, ?)`, Q, DOC, Q, "INFO-2026-0404-gone");
   w.registers.set(Q, [{ capture_sha: "c".repeat(64), path: "snapshots/a.pdf", bytes: 10, authored: 0 }]);
   w.bv.reach = { self: [], via: [{ finding: Q, observation: "INFO-2026-0002-obs" }] };
-  w.publication.observationsNamingAuthor = (ids) => ids.map((x) => `legacy:${x}`);
+  w.caseTensions.observationsNamingAuthor = (ids) => ids.map((x) => `legacy:${x}`);
   w.pub.claims.set(Q, ["CASE-2026-0001"]);
   const f = w.r.gateFacts(Q, V("eve"));
   assert.equal(f.ok, true);
