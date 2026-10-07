@@ -15,6 +15,12 @@
  *
  * REC-163: the page is not served byte-for-byte as built. Its one line saying whose record this is carries the
  * record's own producing group, read when the page is served — see `pageOf` below.
+ *
+ * T35 (T35-68): the session token leaves every address (R26, F1): every request under a session carries it only in its
+ * `Authorization: Bearer` header, and a captured file's download is a fetch with that header handed to the browser as a
+ * file. Every script element carries the response's nonce through NONCE_SLOT (R28, F17). The claim shows the founder's
+ * recovery codes once (R29) and asks for a second administrator (R16); the guide to replacing the one-time password is
+ * part of the page (R27, F10); the offices section lists every office the group holds (R20, N699).
  */
 
 /* R5: the record's document vocabulary and the inquiry title rule are record-grammar's (its R30, R32, R35), read
@@ -24,6 +30,9 @@ import { deriveInquiryTitle } from "../record-grammar/titles.mjs";
 /* R7 (N65 (3)): the risk tiers and their reader are action-grammar's, read there and never copied (its R1). */
 import { RISK_TIERS, riskTierState } from "../action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS } from "../../../jurisdictions/index.mjs";
+/* R20: who is a machine rather than a named person is record-grammar's one vocabulary (its R13, R15), injected below so
+   the offices section tells an office a member added from one a machine or profile registered by the same rule. */
+import { NON_MEMBER_AUTHORS, ACTOR_CLASSES, MACHINE_STAMP_PREFIXES } from "../record-grammar/actors.mjs";
 
 
 /* The intake form obeys the record grammar's own tables (record-grammar R32, R35) rather than a copy of
@@ -171,6 +180,41 @@ const languageBlock = (p) => `<div class="card" id="${p}">
    R47 block (who really controls the group's Civicsmith) when it composes the page. The block's words are held once in
    `instance-setup`'s leaf for this page and the installer's last screen, so this module never imports them. */
 export const HOSTING_SLOT = "<!--hosting-control-->";
+/* R28 (F17; answer-envelope R6): the one slot, in each script element's `nonce` attribute, that the door fills per
+   response with the nonce its policy names. Unfilled it is inert under a policy that names no nonce. */
+export const NONCE_SLOT = "__CSP_NONCE__";
+/* R27 (F10; K1874 (Q6)): where the guide to replacing the one-time password is reached. A link to it anywhere on the
+   page, R14's block included (instance-setup R47 writes that link), opens the guide, signed in or out. */
+export const ROTATION_GUIDE_HREF = "#replace-one-time-password";
+const MACHINE_VOCAB_JSON = JSON.stringify({ authors: NON_MEMBER_AUTHORS, classes: ACTOR_CLASSES, prefixes: MACHINE_STAMP_PREFIXES });
+
+/* R29: the recovery codes, shown once where they are issued: `cl` at the claim, `mk` in members and keys. The codes are
+   drawn as text into `<P>-rc-codes` and held only in the script's memory while shown. */
+const codesBlock = (p) => `<div class="card" id="${p}-rc">
+    <p style="margin:0 0 10px"><b>Your recovery codes</b></p>
+    <p class="small" id="${p}-rc-now"></p>
+    <div id="${p}-rc-shown" hidden>
+      <p style="margin:0 0 10px">These ten recovery codes are yours. If you lose your password, each one sets a new
+      password once: it works once and is then spent. They are shown now and will never be shown again.</p>
+      <p style="margin:0 0 10px">Keep them apart from your password and from the hosting account's sign-in, so that
+      losing one does not lose the others.</p>
+      <pre class="mono" id="${p}-rc-codes"></pre>
+      <div class="actions"><button id="${p}-rc-copy">Copy them as text</button> <button id="${p}-rc-save">Save them as a file</button></div>
+    </div>${p === "mk" ? `
+    <div class="actions"><button id="mk-rc-issue">Issue new recovery codes</button></div>
+    <p class="hint">Issuing new codes spends every code you hold now.</p>` : ""}
+    <p class="err" id="${p}-rc-err"></p>
+  </div>`;
+/* R16: adding an administrator, at the claim (`cl`) and in members and keys' setup step (`mk`): a name for the group
+   to know them by and an id, sent as op=memberadd with role admin; the invitation answered is shown once. */
+const adminAddForm = (p) => `<label for="${p}-sa-name">The name your group knows them by</label>
+    <input id="${p}-sa-name">
+    <label for="${p}-sa-id">The name they will sign in with</label>
+    <input id="${p}-sa-id">
+    <p class="hint">Lowercase, no spaces. Anything you type is tidied to fit.</p>
+    <div class="actions"><button id="${p}-sa-add">Invite them as an administrator</button></div>
+    <p class="err" id="${p}-sa-err"></p>
+    <div id="${p}-sa-invite"></div>`;
 
 export const PAGE_HTML = `<!doctype html>
 <html lang="en">
@@ -291,19 +335,24 @@ ${GROUP_LINE_UNREAD}
   <button id="do-claim">Claim this group's Civicsmith</button>
   <p class="err" id="claim-err"></p>
   </div>
-  <!-- R15–R18 (DEC-134, DEC-136 (1), K1755): once the claim succeeds, in the same section and only here, the
-       recommendation of a second administrator with its statement of dependence (R16), then three choices the founder
-       may leave unanswered: who holds the hosting account (R15), whether members are told what a court can reach
-       (R17), and how members reach the assistant (R18). Nothing is gated on any of them. -->
+  <!-- R29, R16, R15–R18 (K1888; DEC-134, DEC-136 (1), K1755): once the claim succeeds, in the same section and only
+       here, the founder's recovery codes shown once (R29), then the ask to add a second administrator with its statement
+       of dependence and the act itself (R16), then three choices the founder may leave unanswered: who holds the hosting
+       account (R15), whether members are told what a court can reach (R17), and how members reach the assistant (R18).
+       Nothing is gated on any of them. -->
   <div id="claim-after" hidden>
     <div class="okbox"><p style="margin:0">Claimed. The one-time password no longer works, and you are signed in
     as the administrator.</p></div>
-    <div class="notice" id="cl-second">
-      <p style="margin:0 0 8px"><b>We recommend adding a second administrator.</b> So your group is never stuck when
-      one person is away, and so no one person holds everything, add at least one more administrator under Members and
-      keys.</p>
-      <p style="margin:0">While your group has one administrator, it depends on that person, and on whoever holds the
-      hosting account.</p>
+    ${codesBlock("cl")}
+    <div class="notice" id="cl-sa">
+      <p style="margin:0 0 8px"><b>Add a second administrator.</b> So your group is never stuck when one person is
+      away, so no one person holds everything, and so each administrator holds recovery codes of their own, add at
+      least one more administrator now.</p>
+      <p style="margin:0 0 8px">While your group has one administrator, it depends on that person, and on whoever holds
+      the hosting account.</p>
+      ${adminAddForm("cl")}
+      <p class="hint">You can leave this for later: Members and keys shows it until your group has two administrators
+      who each hold recovery codes. Nothing waits on it.</p>
     </div>
     <p class="small">Three choices follow. Each can be left for later, and each can be changed at any time under
     Members and keys.</p>
@@ -380,8 +429,8 @@ ${GROUP_LINE_UNREAD}
       <p class="err" id="pw-err"></p>
     </div>
   </div>
-  <!-- R20 (DEC-150 (2)): when no active profile names an office, the offices section says why nothing is filled in and
-       offers an administrator adding the group's own offices, each the administrator's act, marked as the group's. -->
+  <!-- R20 (DEC-150 (2); N699, entities R51): every office the group holds, read from the record, one a member added
+       marked as the group's; with none, why nothing is filled in; and an administrator's adding of the group's own. -->
   <div id="of" hidden>
     <h2>Offices</h2>
     <div class="card"><p class="small" style="margin:0" id="of-why"></p><div id="of-list"></div></div>
@@ -431,6 +480,7 @@ ${GROUP_LINE_UNREAD}
   <div id="b-md" class="md"></div>
   <h2>Files in this record</h2>
   <div class="card" id="b-files"></div>
+  <p class="err" id="dl-err"></p>
   <h2>History</h2>
   <p class="small">Every revision this record has ever had. The record is
   append-only: nothing here can be edited or removed.</p>
@@ -579,6 +629,16 @@ ${GROUP_LINE_UNREAD}
   and is not a legal name. Only administrators see cover and handle together, and
   publishing the pairing is a separate decision either of you can make. Registered
   keys are what allow a member to publish; a password alone never can.</p>
+  <!-- R16 (K1888; instance-setup R66): the setup step, shown to every administrator while it is not met (two
+       administrators, each holding recovery codes) with the acts that meet it, and nothing of it once it is met. It gates
+       nothing. -->
+  <div class="notice" id="rs" hidden>
+    <p style="margin:0 0 8px"><b>Two administrators, each holding recovery codes.</b> This step of setting up your group
+    is open until it is met. Nothing waits on it.</p>
+    <p class="small" style="margin:0" id="rs-now"></p>
+    <div id="rs-add" hidden>${adminAddForm("mk")}</div>
+    <div class="actions" id="rs-codes" hidden><button id="rs-issue">Issue your recovery codes</button></div>
+  </div>
   <h2>Members</h2>
   <div class="card" id="m-list"></div>
   <label for="m-id">Add a member: the name they will sign in with</label>
@@ -616,8 +676,14 @@ ${GROUP_LINE_UNREAD}
   <p class="err" id="k-err"></p>
   <!-- R15, R17, R18: the claim section's settings, each with its current record, offered to an administrator at any
        time. -->
+  <!-- R29: every administrator's own recovery codes: their state, never a code, and issuing new ones, shown once. -->
+  <h2>Your recovery codes</h2>
+  ${codesBlock("mk")}
   <h2>Your group's settings</h2>
   ${hostingBlock("mk")}
+  <!-- R27: the guide to replacing the one-time password, reached from here as from the claim's block. -->
+  <p class="small"><a class="filelink" href="${ROTATION_GUIDE_HREF}">How to replace the one-time password in the hosting
+  account</a>, and when to.</p>
   ${courtBlock("mk")}
   ${aiBlock("mk")}
   <!-- R23 (DEC-152; K1837): who your group is, its focus and purpose (membership R109), with the assistant's help offered
@@ -683,10 +749,61 @@ ${GROUP_LINE_UNREAD}
   </div>
 </section>
 
+<!-- R27 (F10; K1874 (Q6): DEC-2 is not reopened): the guide to replacing the one-time password in the hosting account,
+     part of the page, holding no secret and reading nothing. The words are plain until the design stream gives its own. -->
+<section id="s-rotate">
+  <p class="crumb"><a id="rt-back">Back</a></p>
+  <h1>Replacing the one-time password</h1>
+  <p>The one-time password is the value called <b>ADMIN_TOKEN</b> in the hosting account. Whoever holds it can claim
+  your group's Civicsmith, so it is replaced when it may no longer be yours alone. In plain steps:</p>
+  <ol id="rt-steps">
+    <li>Sign in to the hosting account (<a class="filelink" href="https://dash.cloudflare.com/" target="_blank"
+    rel="noopener">Cloudflare</a>).</li>
+    <li>Make a new long random value with a password manager's generator: at least 32 characters.</li>
+    <li>Open your group's Civicsmith's Worker, then its settings' secrets, and replace <b>ADMIN_TOKEN</b> with the new
+    value.</li>
+    <li>At once, come back to this page and claim your group's Civicsmith again with the new value, choosing the
+    founder's password. A replaced one-time password lets whoever holds the new value claim it, so do not leave this
+    for later.</li>
+    <li>Keep the new value where the hosting account's sign-in is kept, never in a message or a shared document.</li>
+  </ol>
+  <h2>When to do it</h2>
+  <ul id="rt-when">
+    <li>The value may have been seen by someone else.</li>
+    <li>Someone who held the hosting account leaves.</li>
+    <li>After any use of it but the claim.</li>
+  </ul>
+  <h2>What does not change</h2>
+  <p id="rt-same">The record, the members, their passwords and their keys stay as they are.</p>
+</section>
+
 </main>
-<script>
+<script nonce="${NONCE_SLOT}">
 const $ = (s)=>document.querySelector(s);
-const show = (id)=>{document.querySelectorAll("section").forEach(x=>x.classList.remove("on"));$(id).classList.add("on");};
+/* R29: leaving the section that shows recovery codes forgets them (forgetCodes, below). */
+let SHOWN = "#s-loading";
+const show = (id)=>{
+  if (id !== SHOWN) { forgetCodes("cl"); forgetCodes("mk"); }
+  SHOWN = id;
+  document.querySelectorAll("section").forEach(x=>x.classList.remove("on"));$(id).classList.add("on");};
+/* R26 (F1; admission R20): the session token travels only in the Authorization header of a request under a session,
+   never in its address, its query or its body, and never in a link the page writes. */
+const auth = ()=>({ Authorization: "Bearer " + SESSION });
+/* R26: a 401 signs the page out, as it always has. */
+const signedOut = ()=>{ SESSION = null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); };
+/* R27: the guide to replacing the one-time password, opened by a link to it from wherever the page shows one; its
+   fragment is stripped at once, as every fragment is, and Back returns to where the member was. */
+const ROTATION = ${JSON.stringify(ROTATION_GUIDE_HREF)};
+let GUIDE_FROM = null;
+function guideFromHash(){
+  if (location.hash !== ROTATION) return false;
+  history.replaceState({}, "", location.pathname);
+  if (SHOWN !== "#s-rotate") GUIDE_FROM = SHOWN === "#s-loading" ? null : SHOWN;
+  show("#s-rotate");
+  return true;
+}
+window.addEventListener("hashchange", guideFromHash);
+$("#rt-back").addEventListener("click", ()=>{ const back = GUIDE_FROM; GUIDE_FROM = null; if (back) show(back); else state(); });
 const api = async (op, body)=>{
   const r = await fetch("/api/?op="+op, body ? {method:"POST",body:JSON.stringify(body)} : undefined);
   return r.json();
@@ -718,6 +835,7 @@ const NOT_LIVE_INVITE = "This invitation link is not live. An invitation is used
 async function state(){
   /* The wizard hands over with the one-time password in the URL fragment.
      Fragments never reach any server. Strip it immediately either way. */
+  if (guideFromHash()) return;
   const join = location.hash.match(/join=([^&]+)/);
   if (join) {
     /* R2 (DEC-133 (6)): a join link rides the fragment, is stripped at once, and leaves the browser only in
@@ -752,7 +870,7 @@ async function state(){
     if (saved && saved.t && (!saved.e || saved.e > Date.now())) {
       SESSION = saved.t;
       WHO = saved.w || "admin";
-      const probe = await fetch("/api/?op=stats&token="+saved.t);
+      const probe = await fetch("/api/?op=stats", { headers: auth() });
       if (probe.ok) {
         const b2 = await api("bootstrap");
         window.__ver = b2.version || "";
@@ -818,12 +936,14 @@ $("#do-claim").addEventListener("click", async ()=>{
     }
     const l = await api("login", { role: "admin", password: p1 });
     if (!l.result || !l.result.token) { panel(l.result, r.result.consumedAt); return; }
-    /* R15–R18: signed in, and kept in the claim's section for its three choices and the one recommendation. */
+    /* R29, R16, R15–R18: signed in, and kept in the claim's section: the founder's recovery codes first, then the ask
+       for a second administrator, then the three choices. */
     WHO = "admin";
     signIn(l.result, r.result.consumedAt);
     CLAIMED = { login: l.result, at: r.result.consumedAt };
     $("#claim-form").hidden = true;
     $("#claim-after").hidden = false;
+    await issueCodes("cl");
     showSettings("cl");
   } catch(err){ e.textContent = "The claim did not go through: " + err.message; }
   finally { $("#do-claim").disabled = false; }
@@ -902,9 +1022,10 @@ function panel(login, claimedAt){
     ADMIN = !!(r && r.result && r.result.administer === true);
     applyCaps();
     openProfiles();
+    openOffices();
     openAssistant();
     showLanguage("ln");
-  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); openAssistant(); showLanguage("ln"); });
+  }).catch(()=>{ CAPS = new Set(); ADMIN = false; applyCaps(); openProfiles(); openOffices(); openAssistant(); showLanguage("ln"); });
   $("#panel-lede").textContent = WHO === "admin"
     ? "Signed in as administrator." : "Signed in as " + WHO + ".";
   $("#p-version").textContent = window.__ver || "unknown";
@@ -916,9 +1037,9 @@ function panel(login, claimedAt){
 
 /* ---- the record, read-only through the signed-in session ---- */
 const rec = async (op, params={})=>{
-  const q = new URLSearchParams({ op, token: SESSION, ...params });
-  const r = await fetch("/api/?"+q.toString());
-  if (r.status === 401) { SESSION = null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
+  const q = new URLSearchParams({ op, ...params });
+  const r = await fetch("/api/?"+q.toString(), { headers: auth() });
+  if (r.status === 401) signedOut();
   return r.json();
 };
 const escH = (x)=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -929,7 +1050,9 @@ const chip = (st)=>'<span class="chip '+escH(st)+'">'+escH(st)+"</span>";
 async function openBrowse(){
   show("#s-browse");
   let list;
-  try { list = (await rec("list")).result || []; } catch { return; }
+  try { list = (await rec("list")).result; } catch { return; }
+  /* a read that did not answer a list is said as that, never drawn as an empty record */
+  if (!Array.isArray(list)) { $("#browse-summary").textContent = ""; $("#browse-body").innerHTML = "<p>The record could not be read just now.</p>"; return; }
   const by = {};
   for (const b of list) (by[b.object_type] ||= []).push(b);
   $("#browse-summary").textContent = list.length + " records. Everything below is read-only; the record can only be changed through the gated tools.";
@@ -1029,8 +1152,11 @@ function renderBundle(id, img, revisionKey){
     if (typeof v === "string")
       return '<div class="kv"><span class="k">'+escH(k)+'</span><span class="v dim">'+v.length.toLocaleString()+" chars</span></div>";
     const dl = k.split("/").pop();
-    return '<div class="kv"><span class="k">'+escH(k)+'</span><span class="v"><a class="filelink" href="/api/?op=capture&sha256='+escH(v.blobSha||v.sha256)+"&token="+encodeURIComponent(SESSION)+"&dl="+encodeURIComponent(dl)+'">download</a> <span class="dim mono">'+escH((v.sha256||v.blobSha||"").slice(0,12))+"&hellip;</span></span></div>";
+    /* R26: a button, never a link carrying the session: the bytes are fetched under the header (downloadCapture). */
+    return '<div class="kv"><span class="k">'+escH(k)+'</span><span class="v"><button class="histbtn dlbtn" data-sha="'+escH(v.blobSha||v.sha256)+'" data-name="'+escH(dl)+'">download</button> <span class="dim mono">'+escH((v.sha256||v.blobSha||"").slice(0,12))+"&hellip;</span></span></div>";
   }).join("") || "<p class=\\"small\\" style=\\"margin:0\\">No files.</p>";
+  $("#dl-err").textContent = "";
+  document.querySelectorAll("#b-files .dlbtn").forEach(b=>b.addEventListener("click", ()=>downloadCapture(b.dataset.sha, b.dataset.name)));
 
   let entries = [];
   try { entries = JSON.parse(img["_history/manifest.json"]||"{}").entries || []; } catch {}
@@ -1048,6 +1174,28 @@ function renderBundle(id, img, revisionKey){
   }).join("") || "<p class=\\"small\\" style=\\"margin:0\\">Created in a single revision; nothing has been superseded.</p>";
   document.querySelectorAll("#b-history .histbtn[data-rev]").forEach(x=>x.addEventListener("click",()=>renderBundle(id, img, x.dataset.rev)));
   document.querySelector("main").classList.add("wide");
+}
+/* R26 (F1; K1874): a captured file's download is a fetch under the session's header, its bytes handed to the browser
+   as a file behind a short-lived object address released once the download has started. No address the page writes,
+   copies or leaves in the browser's history carries the session. */
+function saveFile(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.hidden = true;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 0);
+}
+async function downloadCapture(sha, name){
+  const e = $("#dl-err"); e.textContent = "";
+  try {
+    const r = await fetch("/api/?" + new URLSearchParams({ op: "capture", sha256: sha, dl: name }).toString(), { headers: auth() });
+    if (r.status === 401) signedOut();
+    if (!r.ok) {
+      const j = await r.json().catch(()=>null);
+      e.textContent = (j && (j.translation || j.detail || (j.result && (j.result.translation || j.result.detail))))
+        || "That file could not be downloaded just now."; return; }
+    saveFile(await r.blob(), name);
+  } catch(err){ if (SESSION) e.textContent = "That file could not be downloaded: " + err.message; }
 }
 $("#go-browse").addEventListener("click", openBrowse);
 $("#crumb-panel").addEventListener("click", ()=>{document.querySelector("main").classList.remove("wide");show("#s-panel");});
@@ -1134,9 +1282,8 @@ const HEADINGS = ${HEADINGS_JSON};
 const SCHEMA_OF = { information:"information@1", inquiry:"inquiry@1", focus:"focus@1", problem:"problem@1", project:"project@1", action:"action@1" };
 const schemaFor = (type, hasDoc)=> type === "information" && hasDoc ? "information@2" : SCHEMA_OF[type];
 const post = async (op, body)=>{
-  const r = await fetch("/api/?op="+op+"&token="+encodeURIComponent(SESSION),
-    { method:"POST", body: JSON.stringify(body) });
-  if (r.status === 401) { SESSION=null; try{sessionStorage.removeItem("bio-session");}catch{}; show("#s-login"); throw new Error("signed out"); }
+  const r = await fetch("/api/?op="+op, { method:"POST", headers: auth(), body: JSON.stringify(body) });
+  if (r.status === 401) signedOut();
   return r.json();
 };
 const sha256Text = async (text)=>{
@@ -1594,6 +1741,8 @@ $("#go-members").addEventListener("click", openMembers);
 async function openMembers(){
   show("#s-members"); $("#m-err").textContent=""; $("#k-err").textContent="";
   showSettings("mk"); showGroupDescription(); showLanguage("mln");
+  /* R16, R29: the setup step while it is not met, and this administrator's own codes' state (never a code). */
+  showStep(); if (!CODES.mk) showCodesState("mk");
   const m = await rec("memberlist");
   const rows = (m.result && m.result.members) || [];
   $("#m-list").innerHTML = rows.length ? rows.map(x=>
@@ -1745,10 +1894,8 @@ async function openProfiles(){
         + (res.boot && res.boot.why ? " At install, " + escH(res.boot.why) + ", so nothing was recorded." : "") + "</p>")
     + ((res.conflicts||[]).length ? '<p class="small" style="margin:8px 0 0">The active profiles disagree on '
         + (res.conflicts.length) + " fact" + (res.conflicts.length === 1 ? "" : "s") + ", and each is left unread rather than chosen between.</p>" : "");
-  /* R20: the offices section, when no active profile names an office; R19's place named in it. */
-  if (profilesNameNoOffice(res)) { if (ADMIN) await showPlace(); showOffices(); } else $("#of").hidden = true;
   if (!ADMIN) { $("#pf-choose").hidden = true; return; }
-  showPlace();
+  await showPlace();
   PF_ORDER = [];
   $("#pf-warn").hidden = true; $("#pf-err").textContent = "";
   const choices = Array.isArray(res.choices) ? res.choices : [];
@@ -1938,6 +2085,96 @@ $("#claim-on").addEventListener("click", ()=>{
   panel(CLAIMED && CLAIMED.login, CLAIMED && CLAIMED.at);
 });
 
+/* ---- recovery codes (R29; credentials R46) ----
+   Issued for the signed-in administrator's own role: at the claim for the founder (cl), and in members and keys at any
+   time (mk). The ten codes answered are drawn once, as text, and held only here, in CODES, while shown: never in the
+   browser's storage, an address, a log or a later request, and forgotten when the member leaves the section (show). */
+const CODES = { cl: null, mk: null };
+function forgetCodes(P){
+  CODES[P] = null;
+  const box = $(ID(P, "rc-codes")); if (box) box.textContent = "";
+  const shown = $(ID(P, "rc-shown")); if (shown) shown.hidden = true;
+}
+async function showCodesState(P){
+  let s = null;
+  try { s = resultOf(await rec("recoverycodesstate")); } catch { s = null; }
+  const now = $(ID(P, "rc-now"));
+  if (!s || s.ok === false || typeof s.held !== "boolean") { now.textContent = "Whether you hold recovery codes could not be read just now."; return; }
+  now.textContent = s.held
+    ? "You hold recovery codes: " + s.remaining + " left" + (s.issuedAt ? ", issued " + new Date(s.issuedAt).toLocaleDateString() : "") + "."
+    : "You hold no recovery codes yet.";
+}
+async function issueCodes(P){
+  const e = $(ID(P, "rc-err")); e.textContent = "";
+  forgetCodes(P);
+  let r;
+  try { r = await post("recoverycodesissue", {}); } catch(err){ e.textContent = "That did not go through: " + err.message; return; }
+  const why = refusalOf(r);
+  if (why) { e.textContent = why; return; }
+  const res = resultOf(r) || {};
+  if (!Array.isArray(res.codes) || !res.codes.length) { e.textContent = "No recovery codes were answered. Nothing was shown."; return; }
+  CODES[P] = res.codes.map(String);
+  $(ID(P, "rc-codes")).textContent = CODES[P].join(NL);
+  $(ID(P, "rc-shown")).hidden = false;
+  $(ID(P, "rc-now")).textContent = "";
+}
+for (const P of ["cl", "mk"]) {
+  $(ID(P, "rc-copy")).addEventListener("click", async ()=>{
+    const e = $(ID(P, "rc-err")); e.textContent = "";
+    if (!CODES[P]) return;
+    try { await navigator.clipboard.writeText(CODES[P].join(NL)); }
+    catch(err){ e.textContent = "They could not be copied: " + err.message; }
+  });
+  /* the file is made here, in the browser: no request carries the codes, and its name carries none of them */
+  $(ID(P, "rc-save")).addEventListener("click", ()=>{
+    if (!CODES[P]) return;
+    saveFile(new Blob([CODES[P].join(NL) + NL], { type: "text/plain" }), "recovery-codes.txt");
+  });
+}
+$("#mk-rc-issue").addEventListener("click", async ()=>{ await issueCodes("mk"); showStep(); });
+$("#rs-issue").addEventListener("click", async ()=>{ await issueCodes("mk"); showStep(); });
+
+/* ---- a second administrator (R16; membership R12, R13; instance-setup R66) ----
+   At the claim (cl) and in members and keys' step (mk): a name for the group to know them by and an id, sent as
+   op=memberadd with role admin; the invitation answered is shown once, to pass on; a refusal in membership's words.
+   The step is shown to an administrator while it is not met and not at all once it is; it gates nothing. */
+async function adminAdd(P){
+  const e = $(ID(P, "sa-err")); e.textContent = ""; $(ID(P, "sa-invite")).innerHTML = "";
+  const wanted = $(ID(P, "sa-id")).value.trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
+  $(ID(P, "sa-id")).value = wanted;
+  $(ID(P, "sa-add")).disabled = true;
+  try {
+    const r = await post("memberadd", { memberId: wanted, cover: $(ID(P, "sa-name")).value.trim(), role: "admin" });
+    const why = refusalOf(r);
+    if (why) { e.textContent = why; return; }
+    const res = resultOf(r) || {};
+    if (!res.invite) { e.textContent = "No invitation was answered. Nothing was shown."; return; }
+    const link = location.origin + location.pathname + "#invite=" + encodeURIComponent(res.invite);
+    $(ID(P, "sa-invite")).innerHTML = '<div class="okbox"><p style="margin:0">Send ' + escH(wanted)
+      + ' this link to join as an administrator. It works once, it is not shown again, and it goes nowhere after it has been used.</p>'
+      + '<p class="mono" style="margin:8px 0 0;word-break:break-all">' + escH(link) + "</p></div>";
+    $(ID(P, "sa-id")).value = ""; $(ID(P, "sa-name")).value = "";
+    if (P === "mk") showStep();
+  } catch(err){ e.textContent = "That did not go through: " + err.message; }
+  finally { $(ID(P, "sa-add")).disabled = false; }
+}
+for (const P of ["cl", "mk"]) $(ID(P, "sa-add")).addEventListener("click", ()=>adminAdd(P));
+async function showStep(){
+  let s = null;
+  try { s = resultOf(await rec("adminrecoverystep")); } catch { s = null; }
+  const box = $("#rs");
+  if (s && s.ok === true && s.met === true) { box.hidden = true; return; }
+  box.hidden = false;
+  if (!s || s.ok !== true || typeof s.administrators !== "number") {
+    $("#rs-now").textContent = "Whether your group has two administrators holding recovery codes could not be read just now.";
+    $("#rs-add").hidden = true; $("#rs-codes").hidden = true; return;
+  }
+  $("#rs-now").textContent = "Your group has " + s.administrators + " administrator" + (s.administrators === 1 ? "" : "s") + ". "
+    + (s.codes_held ? "You hold recovery codes (" + s.remaining + " left)." : "You hold no recovery codes yet.");
+  $("#rs-add").hidden = s.administrators >= 2;
+  $("#rs-codes").hidden = s.codes_held === true;
+}
+
 /* ---- a member's language for the screens (R22) ----
    The member's own act, on the panel (ln) and in members and keys (mln); the field starts from the device's setting
    until the member has chosen, and an empty field clears the choice so the device's setting governs again. */
@@ -1967,6 +2204,7 @@ async function showPlace(){
   try { r = resultOf(await rec("placewantedstate")); } catch { r = null; }
   PLACE = r && typeof r.name === "string" && r.name ? r.name : null;
   $("#pw-now").textContent = PLACE ? "Named: " + PLACE + ". Administrators will be told when an update brings it." : "";
+  if (OFFICES !== undefined) drawOffices();
   return PLACE;
 }
 let PLACE = null;
@@ -1980,31 +2218,55 @@ $("#pw-set").addEventListener("click", async ()=>{
     if (why) { e.textContent = why; return; }
     $("#pw-name").value = "";
     await showPlace();
-    if (!$("#of").hidden) showOffices();
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
   finally { $("#pw-set").disabled = false; }
 });
 
-/* ---- the offices section (R20) ----
-   Shown when no active profile names an office: it says nothing is filled in because Civicsmith does not hold the
-   group's place yet, names the place an administrator named (R19), and offers an administrator adding the group's own
-   offices through op=entitycreate, each the administrator's own act, with no profile as its basis. Every office added
-   here is listed marked as added by the group. */
-let OFFICES = [];
-function profilesNameNoOffice(res){
-  if (!res || res.ok !== true) return false;
-  if (Array.isArray(res.offices)) return res.offices.length === 0;
-  return !(Array.isArray(res.profiles) && res.profiles.length);
+/* ---- the offices section (R20; entities R51) ----
+   Every office the group holds, read through op=entitieskind (kind office), following its next until it is null; an
+   office a member added (its declared_by a member, not a machine or a profile) is marked as added by the group. A read
+   that does not answer is said as not read, never as no offices. With none held, it says nothing is filled in because
+   Civicsmith does not hold the group's place yet, naming the place an administrator named (R19). Either way an
+   administrator may add the group's own offices through op=entitycreate, each their own act with no profile as its
+   basis, and an office so added joins the list. */
+let OFFICES;   // undefined: not read yet; null: the read did not answer; else every office read
+/* record-grammar's machine-identity rule (its R15) over its own vocabulary, injected: absent is not a machine. */
+const MACHINE = ${MACHINE_VOCAB_JSON};
+const isMachine = (who)=>{
+  let s = ""; try { s = String(who ?? "").trim().toLowerCase(); } catch { s = ""; }
+  return s !== "" && (MACHINE.prefixes.some((p)=>s.startsWith(p)) || MACHINE.classes.includes(s) || MACHINE.authors.includes(s));
+};
+const addedByMember = (o)=> typeof o.declared_by === "string" && o.declared_by.trim() !== "" && !isMachine(o.declared_by);
+async function openOffices(){
+  const all = [];
+  let after = null;
+  for (let page = 0; page < 1000; page++) {
+    let r = null;
+    try { r = await rec("entitieskind", { kind: "office", ...(after ? { after } : {}) }); } catch { r = null; }
+    const res = resultOf(r);
+    if (!res || res.ok !== true || !Array.isArray(res.entities)) { OFFICES = null; drawOffices(); return; }
+    all.push(...res.entities);
+    if (res.next === null) break;
+    if (typeof res.next !== "string" || !res.next || res.next === after) { OFFICES = null; drawOffices(); return; }
+    after = res.next;
+  }
+  OFFICES = all;
+  drawOffices();
 }
-function showOffices(){
+function drawOffices(){
   $("#of").hidden = false;
-  $("#of-why").textContent = "Nothing is filled in here because Civicsmith does not hold your group's place yet"
-    + (PLACE ? " (" + PLACE + ")" : "") + ". "
-    + (ADMIN ? "You can add your group's offices yourself; each is marked as added by your group."
-             : "An administrator can add your group's offices; each is marked as added by your group.");
-  $("#of-list").innerHTML = OFFICES.map((o)=>'<div class="kv"><span class="k">' + escH(o.label)
-    + '</span><span class="v"><span class="chip">added by your group</span></span></div>').join("");
   $("#of-add").hidden = !ADMIN;
+  const adding = ADMIN ? "You can add your group's offices yourself; each is marked as added by your group."
+                       : "An administrator can add your group's offices; each is marked as added by your group.";
+  if (OFFICES === null || OFFICES === undefined) {
+    $("#of-why").textContent = "Your group's offices could not be read just now. " + adding;
+    $("#of-list").innerHTML = ""; return;
+  }
+  $("#of-why").textContent = OFFICES.length
+    ? (OFFICES.length === 1 ? "The one office your group holds." : "The " + OFFICES.length + " offices your group holds.") + " " + adding
+    : "Nothing is filled in here because Civicsmith does not hold your group's place yet" + (PLACE ? " (" + PLACE + ")" : "") + ". " + adding;
+  $("#of-list").innerHTML = OFFICES.map((o)=>'<div class="kv"><span class="k">' + escH(o.label) + '</span><span class="v">'
+    + (addedByMember(o) ? '<span class="chip">added by your group</span>' : "") + "</span></div>").join("");
 }
 $("#of-set").addEventListener("click", async ()=>{
   const e = $("#of-err"); e.textContent = "";
@@ -2016,10 +2278,8 @@ $("#of-set").addEventListener("click", async ()=>{
     const r = await post("entitycreate", { kind: "office", label, note });
     const why = refusalOf(r);
     if (why) { e.textContent = why; return; }
-    const res = resultOf(r) || {};
-    OFFICES.push({ entity_id: res.entity_id || null, label: res.label || label });
     $("#of-label").value = ""; $("#of-note").value = "";
-    showOffices();
+    await openOffices();
   } catch(err){ e.textContent = "That did not go through: " + err.message; }
   finally { $("#of-set").disabled = false; }
 });
