@@ -181,6 +181,8 @@ Each line is one job (P8): every T35 entry for that module. Fields: module · (N
 - **T35-74 · legacy-ui** · (F1) `app.html`'s calls send the session in the header, not `&token=` (and its API notes, :947–952) · K1874 · req: none · depends T35-71.
 - **T35-75 · installer** · (K1905) `requirements.test.mjs`:329's R11 "foreign-plane" case reads T34-84's wording ("a different release of Civicsmith"), clearing red 12. (N657, DEC-143) the short-name step shows the Irreversible weight with its permanence statement. (N660, DEC-146) the description line as the installer's. (F1) the verify step (`newgroup/src/index.mjs`:972) sends the probe token in the header · K1774, K1874 · req: BOB's wording · depends T35-71.
 
+**L11 splits (K1907, K617):** `plan/draft-T35-splits.md` is part of this plan: T35-77 `op-grades` (from affordances), T35-78 `answer-envelope` and T35-79 `store-door` (from control-plane), each merged before its source's job; T35-66 and T35-72 are re-cut as the removal sides there; T35-73 gains the plane's re-points. `modules.json` gains the three rows at L11's opening.
+
 **L11 merge order:** `modules.json` order: affordances → notice-producers → setup-page → instance-setup → op-declarations → admission (it reads the header before its callers send it) → control-plane → plane → legacy-ui → installer.
 
 ## Left out of T35 (one hard reason each)
@@ -241,6 +243,6 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 
 ## Summary
 
-**Jobs per layer:** L1 13, L2 4, L3 6, L4 4, L5 13, L6 11, L7 2, L8 8, L9 4, L10 1, L11 10. **Total 76.** Joiners for DEC-149 rows only (rule 4): signatures, host-governor, calibration, reading-pipeline, content, connections, intent, reevaluation (runtime-limits, capture and citation carry other entries too).
+**Jobs per layer:** L1 13, L2 4, L3 6, L4 4, L5 13, L6 11, L7 2, L8 8, L9 4, L10 1, L11 13. **Total 79.** Joiners for DEC-149 rows only (rule 4): signatures, host-governor, calibration, reading-pipeline, content, connections, intent, reevaluation (runtime-limits, capture and citation carry other entries too).
 
 **Entries carried (`next.md` N551–N705):** wholly in T35: N553, N586, N623, N633–N636, N638–N640, N642, N644, N646, N648, N649, N651, N653, N655, N657, N658, N659 (with its constructs), N660, N661, N664, N674–N678, N680 (as the security package), N681, N682, N685, N686–N694, N696, N697, N699, N700, N702, N704. In part: N597, N643, N645, N652, N688 (the archive screen left out), N695, N698, N701, N703. Left out: N551 (part), N559, N563, N566, N572, N579, N592, N632, N641, N647, N650, N654, N666, N669, N670, N672, N673, N683. Closed: N564, N629, N637, N656, N684, N705 (K1895) (N667, N671, N679 moved into T34).
