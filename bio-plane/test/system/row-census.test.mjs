@@ -111,7 +111,7 @@
    RE-PINNED 2026-10-07 (PROMOTION #33, T35-16, N553's tail): over 1.62.0, the stamp's own lines
    (`fixtures/row-census-1.62.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
    `build/jobs/T35/promotion.md`; 1378 rows, c6c85ffe…, over `tranche/T35` after its layer 1; 1383 rows, 71291fdc…, after
-   record-core's and membership's merges, K1942); the 1.61.0 snapshot (no
+   record-core's and membership's merges, K1942; 1390 rows, ff8c6743…, after credentials', K1945); the 1.61.0 snapshot (no
    stamp reads it) deleted; T34's layers 3–11 rows (62 new, 5 re-keyed, 78 changed, each named by its job record; none
    declared here, accepted red 4 at T34's close) and this job's DEC-149 rows stamped in 1.62.0. Re-pinned in place as each
    T35 layer-2 job merges (BOB's CHANGE), so T35 names one catalogue. A row a T35 job in layers 3–11 adds or changes turns
