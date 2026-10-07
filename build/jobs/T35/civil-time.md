@@ -27,3 +27,7 @@ Size (session_01FWZ869SsVrV3mffbRFWTNY): test runs 5, module lines 1386
 ## J1 · REPORT
 
 action-clocks: factreader.test.mjs:64 (/disputed on this instance by member:bob/) and :112 (/cannot be read on this instance: local facts' read failed: storage gone/) pin civil-time's old wording, which reaches them through computeDeadline's why. After T35-2 action-clocks is 51 pass, 2 fail (53/0 on tranche/T35); each regex needs 'this instance' -> 'your group's Civicsmith'. Its comment calendar.test.mjs:2 says the same words. Generated artifacts made stale (§14): bio-plane/src/case-checker/program.mjs and bio-plane/dist/bio-plane.bundled.mjs (both embed civil-time/calendar.mjs).
+
+## J2 · COMPLETE
+
+T35-2 applied: calendar.mjs:78 (two strings), :112, :113 say 'in your group's Civicsmith'; recurrence.mjs:197 stays. New test 'R16 R25 DEC-149' names each string whole. civil-time 65/0; coverage 29/29, architecture 0, ownership 0 failures; format 1 failure (accepted red 13). Reported in J1: action-clocks factreader.test.mjs:64, :112 and the two stale artifacts. Record: build/jobs/T35/civil-time.md on job/T35/civil-time.
