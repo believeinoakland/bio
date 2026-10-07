@@ -932,9 +932,9 @@ export class Extraction {
                : row.origin === "asserted"
                  ? { state: "asserted", asserted_by: row.asserted_by, standing: row.asserted_standing,
                      justification: row.justification,
-                     why: "this instance did not compose this reading: a caller carried it in, and it is recorded as that "
+                     why: "your group's Civicsmith did not compose this reading: a caller carried it in, and it is recorded as that "
                         + "caller's assertion, standing as the caller stands" }
-                 : { state: "composed", why: "this instance read the capture's bytes and composed this reading" },
+                 : { state: "composed", why: "your group's Civicsmith read the capture's bytes and composed this reading" },
              text_provenance: ts
                ? { transcribed: !!ts.transcribed, terminal_step: ts.terminal_step,
                    engines: safeJson(ts.engines) || [], derivation_cap: ts.derivation_cap,
@@ -1209,7 +1209,7 @@ export class Extraction {
     if (checkChain(reading.text_source) || !reading.text_source.some(m.isLayer)) return m.noLayer;
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (last && Number(last.n) > Number(cutoff)) return m.after;
-    if (!ev) return "this instance has no evidence store bound, so the stored bytes cannot be read again";
+    if (!ev) return "your group's Civicsmith has no evidence store set up, so the stored bytes cannot be read again";
     const doc = this.#storedDocument(row.bundle_id, sha) || { capture: { sha256: sha } };
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
     if (!got.bytes) return "the capture's bytes are not held in the evidence store";
@@ -1440,7 +1440,7 @@ export class Extraction {
           compared: w.compared ?? null,
           after_read: w.afterRead ?? null,
           candidates: "the content-axis frontier (op=frontier&level=content) lists the captures still below "
-                    + "what this instance's fleet can read; this one is re-read now",
+                    + "what your group's Civicsmith can read; this one is re-read now",
         };
       }
     }

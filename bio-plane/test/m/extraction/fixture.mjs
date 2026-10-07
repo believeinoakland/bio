@@ -11,6 +11,12 @@ import { membershipOf } from "../../../src/membership/index.mjs";
 import { Extraction } from "../../../src/extraction/index.mjs";
 import { calibrationOf, CALIBRATION_SCHEMA } from "../../../src/calibration/index.mjs";
 import { registerFormat, unregisterFormat, getFormat } from "../../../src/formats.mjs";
+import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctypes } from "../../../../doctypes/index.mjs";
+
+/* K1737, N636: docprofile registers no content type of its own, so every suite that loads this fixture registers
+   doctypes' readers, as the plane's store does (`plane/wiring.mjs`). */
+registerDoctypes(registerDoctype);
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 
