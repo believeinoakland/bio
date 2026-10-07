@@ -189,7 +189,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   exceeds `ARCHIVE_TOTAL_MAX`, is never inflated, and what needed it is stated by the
   limit's name where that part's failure is stated today (an `undetermined` link or entry,
   `images:null` with `imagesWhy`, an `active` item with `read:false`), never omitted
-  silently. *(not yet met: T35)*
+  silently.
 - **R13** `csvEntry`: the guard compares the BODY's own byte length (after any BOM), not a
   declared-uncompressed figure — a CSV has no central directory to sum — against
   `MEASURED_CSV_TEXT_BOUND_BYTES`. Over the bound, `structure()` and `text()` both carry the
@@ -281,7 +281,7 @@ second copy that could drift.
   `active` is `[]` only when nothing was found and nothing went unread. It reads names
   from the central directory, the `.rels` parts and the VBA project, so it is carried in
   full over the text size guard (R12). This module asserts no threat (R24): an item says
-  the file can act, not that it is malicious. *(not yet met: T35)*
+  the file can act, not that it is malicious.
 
 - **R33** (K1888, K1903) The macro-enabled flavours are read as their plain twins
   (`ooxml` R10): `docxEntry` reads `.docm` and `.dotm`, `xlsxEntry` `.xlsm`, `.xltm` and
@@ -298,7 +298,7 @@ second copy that could drift.
   `application/vnd.ms-powerpoint.template.macroEnabled.12`,
   `application/vnd.ms-powerpoint.slideshow.macroEnabled.12`,
   `application/vnd.ms-powerpoint.addin.macroEnabled.12`), with `format` the twin's.
-  *(not yet met: T35)*
+ 
 
 Errors: none of R1–R33 ever throws. A precondition this module cannot verify (bytes that
 are not this format, a value `recognise`-style helpers were not asked to check) is answered
