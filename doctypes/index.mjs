@@ -1,4 +1,5 @@
-/* doctypes — the seven content types, split from docprofile by copy (T33-13; K617).
+/* doctypes — the content types, split from docprofile by copy (T33-13; K617); eight since
+ * T35-12 added `policy`.
  *
  * What kind of document a capture is, what is in it, and whether a change between two
  * readings of it is meaningful. Each type recognises a document by the vocabulary the
@@ -9,7 +10,9 @@
  * matches at CERTAIN, so registration order decides a certain/certain tie. Minutes come
  * before the agenda (an agenda packet can be both; the rarer reading is offered first),
  * the substance types before the directory (a report carrying a contact block is a
- * report first), and `generic`, the one fallback, last. The reasons are recorded at each
+ * report first), `policy` after `regulation` (an ordinance or code section is read as law and
+ * a staff report citing a policy as a report, before either is read as a policy), and
+ * `generic`, the one fallback, last. The reasons are recorded at each
  * type's own header and at docprofile's registry, where this order was first measured.
  *
  * This module does not register itself anywhere: `registerDoctypes(register)` is how a
@@ -19,15 +22,16 @@ import meetingMinutes from "./meeting-minutes.mjs";
 import meetingAgenda from "./meeting-agenda.mjs";
 import staffReport from "./staff-report.mjs";
 import regulation from "./regulation.mjs";
+import policy from "./policy.mjs";
 import staffDirectory from "./staff-directory.mjs";
 import generic from "./generic.mjs";
 
-/** The seven types in their registration order (R1). Frozen: the order is a fact other
+/** The eight types in their registration order (R1). Frozen: the order is a fact other
  *  modules rest on, not a list a caller may edit. */
-export const DOCTYPES = Object.freeze([meetingCalendar, meetingMinutes, meetingAgenda, staffReport, regulation,
+export const DOCTYPES = Object.freeze([meetingCalendar, meetingMinutes, meetingAgenda, staffReport, regulation, policy,
                                        staffDirectory, generic]);
 
-/* Which registrations have already received the seven. A `register` function is
+/* Which registrations have already received the types. A `register` function is
    remembered by identity; a registry object (`makeRegistry()`'s, passed whole) also by
    the members it already holds, so a second call, through either, adds nothing. */
 const REGISTERED = new WeakSet();
@@ -41,7 +45,7 @@ export function registerDoctypes(register) {
   if (typeof fn !== "function")
     throw new TypeError("registerDoctypes needs a registry's register function, or the registry itself");
   const key = target || register;
-  if (REGISTERED.has(key)) return { registered: 0, why: "the seven types are already registered here" };
+  if (REGISTERED.has(key)) return { registered: 0, why: "the types are already registered here" };
   const held = target && typeof target.all === "function" ? new Set(target.all().map((m) => m && m.key)) : new Set();
   let n = 0;
   for (const t of DOCTYPES) {
@@ -54,4 +58,4 @@ export function registerDoctypes(register) {
   return { registered: n, why: n ? null : "every type was already held by this registry" };
 }
 
-export { meetingCalendar, meetingMinutes, meetingAgenda, staffReport, regulation, staffDirectory, generic };
+export { meetingCalendar, meetingMinutes, meetingAgenda, staffReport, regulation, policy, staffDirectory, generic };

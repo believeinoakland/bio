@@ -530,6 +530,8 @@ function csvStructure(parts) {
       counts: {},
     },
     dialect,
+    /* R32: a csv can carry nothing that acts when opened — the format's zero. */
+    active: [],
     notes,
   };
 }
@@ -579,6 +581,8 @@ function csvText(parts) {
     images: [],
     /* R31: the format carries no metadata part, so none is stated. */
     metadata: null,
+    /* R32: nothing in a csv can act when it is opened — the format's zero. */
+    active: [],
     dialect,
   };
 

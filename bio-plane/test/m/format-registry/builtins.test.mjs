@@ -1,5 +1,5 @@
 /* format-registry: requirement-named tests for the built-in html and pdf entries and the built-in roster
- * (build/requirements/format-registry.md R17-R23), at the module's interface. This file never changes the
+ * (build/requirements/format-registry.md R17-R23; the zip entry's R28 is zip.test.mjs), at the module's interface. This file never changes the
  * registry, so R23 sees it exactly as module load left it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -23,8 +23,8 @@ const isHit = (r, format, confidence) => {
   assert.deepEqual(Object.keys(r), ["format", "confidence", "signals"]);
 };
 
-test("R23: at module load the registry holds exactly the nine built-in entries, in order, the readers' own objects unmodified", () => {
-  assert.deepEqual(listFormats(), ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv"]);
+test("R23: at module load the registry holds exactly the ten built-in entries, in order, the readers' own objects unmodified", () => {
+  assert.deepEqual(listFormats(), ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"]);
   for (const [f, e] of [["docx", docxEntry], ["xlsx", xlsxEntry], ["pptx", pptxEntry], ["odt", odtEntry],
     ["ods", odsEntry], ["odp", odpEntry], ["csv", csvEntry]]) {
     assert.equal(getFormat(f), e, `${f} is the reader's own entry object`);
@@ -32,6 +32,7 @@ test("R23: at module load the registry holds exactly the nine built-in entries, 
   }
   assert.equal(html.format, "html");
   assert.equal(pdf.format, "pdf");
+  assert.equal(getFormat("zip").format, "zip");
 });
 
 test("R17: html detect with bytes — a doctype or <html> tag, any case, within the first 1024 bytes is certain; else null; content type unconsulted", () => {

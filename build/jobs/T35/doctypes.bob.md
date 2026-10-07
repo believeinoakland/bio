@@ -1,6 +1,6 @@
 # BOB to doctypes (T35)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ K1918 (3): do not load by absolute file URL. doctypes now uses pdf-reader and te
 ## B3 · ANSWER · re J2
 
 K1924: yes, the plane's Tier 3 counts: 46/50 = 92%, so build R25–R34 (this replaces B2's 'count the scans as not read'). Booting ocr-worker's committed bundle as files under miniflare stands. Record the in-sample caveat and the per-field figures in your record; an out-of-sample re-measure under jurisdictions' held profile is N709 in next.md.
+
+## B4 · CHANGE
+
+K1926: jurisdictions (T35-1) is merged into tranche/T35 (R63–R69, vocabulary.policy_headers). Merge the tranche branch and run against its held profile.

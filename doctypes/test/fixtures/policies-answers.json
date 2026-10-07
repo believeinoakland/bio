@@ -1,0 +1,1607 @@
+{
+ "note": "A member's reading of the header block of each of the 50 policies in policies.json (doctypes R35), written by DOCTYPES #2 on 2026-10-07 from the documents themselves (for the three image-only scans, from the page images), before any policy reader existed, and never from a reader's output. `type` is the series (`ai`, `dgo`, `so`); dates are the calendar date the header prints (two-digit years read 00-49 as 20xx, 50-99 as 19xx); every other field is the text the header gives it. For an order fronted by a revision memorandum, the header is the order's own. A field the header does not print, or prints with no value, is absent. `title` is the order's own name as its first page prints it.",
+ "answers": {
+  "642": {
+   "type": "so",
+   "number": "8011",
+   "title": "Compliance Unit Liaison Policy",
+   "effective": "2003-05-09"
+  },
+  "693": {
+   "type": "so",
+   "number": "8791",
+   "title": "Revision of Departmental General Order B-6, PERFORMANCE APPRAISAL",
+   "effective": "2007-11-26"
+  },
+  "694": {
+   "type": "so",
+   "number": "8793",
+   "title": "Update of Departmental General Order (DGO) J-3, TOWING PROCEDURES (Rev. 7 Apr 00) and Report Writing Manual (RWM) T-19, TOWING PROCEDURES (Rev. 7 Apr 00)",
+   "effective": "2007-11-25"
+  },
+  "698": {
+   "type": "so",
+   "number": "8832",
+   "title": "Update of Departmental General Order B-6, PERFORMANCE APPRAISAL",
+   "effective": "2008-03-05"
+  },
+  "743": {
+   "type": "so",
+   "number": "9042",
+   "title": "New Procedures Regarding Stop Data Collection",
+   "effective": "2010-06-11"
+  },
+  "774": {
+   "type": "so",
+   "number": "9098",
+   "title": "Addition of Mental Health Disposition Codes",
+   "effective": "2013-03-25"
+  },
+  "1893442": {
+   "type": "so",
+   "number": "9196",
+   "title": "Documentation of the Use of Force",
+   "effective": "2020-02-15"
+  },
+  "2227646": {
+   "type": "so",
+   "number": "9205",
+   "title": "Banning of the Carotid Restraint and All Forms of Asphyxia",
+   "effective": "2021-01-01"
+  },
+  "2706547": {
+   "type": "so",
+   "number": "9208",
+   "title": "Documentation of the Use of Force",
+   "effective": "2022-06-04"
+  },
+  "3327411": {
+   "type": "so",
+   "number": "9213",
+   "title": "DGO M-03 Amendment",
+   "effective": "2023-12-05"
+  },
+  "579540": {
+   "type": "ai",
+   "number": "71",
+   "title": "Equal Employment Opportunity/Anti-Discrimination/Non-Harassment Policy and Complaint Procedure",
+   "effective": "2020-03-09",
+   "supersedes": "AI 70, AI 71 dated 1/1/03, AI 115, AI 116, AI 126, AI 71 dated 4/1/04 AI 71 dated 1/1/08"
+  },
+  "2108538": {
+   "type": "ai",
+   "number": "544",
+   "title": "Managing Violence in the Workplace (Human Resources Management)",
+   "reference": "ASIS/SHRM WVPI.1-2011 (as amended)",
+   "effective": "2020-09-01",
+   "supersedes": "AI 544, Dated June 1, 1995"
+  },
+  "2663632": {
+   "type": "ai",
+   "number": "580",
+   "title": "City Race and Equity",
+   "reference": "Ordinance 14-0457, OMC",
+   "effective": "2021-06-14",
+   "supersedes": "None"
+  },
+  "2674928": {
+   "type": "ai",
+   "number": "73",
+   "title": "Gender Inclusion Policy",
+   "reference": "Administrative Instruction 71",
+   "effective": "2022-03-14",
+   "supersedes": "None"
+  },
+  "ai-594": {
+   "type": "ai",
+   "number": "594",
+   "title": "Employee Telecommute Program Policy",
+   "reference": "None",
+   "effective": "2021-01-15",
+   "supersedes": "None"
+  },
+  "ai-123": {
+   "type": "ai",
+   "number": "123",
+   "title": "Disability Access Policy",
+   "reference": "Section 504 of the Rehabilitation Act of 1973, as amended; Title II of the Americans with Disabilities Act of 1990, as amended; U.S. Department of Justice ADA Title II Regulations, as amended; Fair Housing Amendments Act of 1988 A.I. 181 A.I. 4502 Resolution 61055 C.M.S.",
+   "effective": "2017-10-13",
+   "supersedes": "AI 123, dated August 21, 1992 AI 138, dated July 1, 1994"
+  },
+  "415": {
+   "type": "dgo",
+   "number": "K-03",
+   "title": "USE OF FORCE",
+   "effective": "2022-01-01",
+   "coordinator": "Training Division"
+  },
+  "416": {
+   "type": "dgo",
+   "number": "K-4",
+   "title": "REPORTING AND INVESTIGATING THE USE OF FORCE",
+   "effective": "2014-10-16",
+   "coordinator": "BFO Commander",
+   "review_due": "2015-04-16",
+   "revision_cycle": "3 Years"
+  },
+  "417": {
+   "type": "dgo",
+   "number": "K-4.1",
+   "title": "FORCE REVIEW AND EXECUTIVE FORCE REVIEW BOARDS",
+   "effective": "2015-12-16",
+   "coordinator": "BOS Deputy Chief",
+   "review_due": "2018-12-16",
+   "revision_cycle": "3 Years"
+  },
+  "1266222": {
+   "type": "dgo",
+   "number": "M-03",
+   "title": "COMPLAINTS AGAINST DEPARTMENTAL PERSONNEL OR PROCEDURES",
+   "effective": "2017-12-22",
+   "coordinator": "IAD Commander",
+   "review_due": "2018-12-22",
+   "revision_cycle": "1 Year"
+  },
+  "1431388": {
+   "type": "dgo",
+   "number": "A-02",
+   "title": "ADMINISTRATIVE COMMUNICATIONS",
+   "effective": "2018-07-09",
+   "coordinator": "Personnel Section"
+  },
+  "5": {
+   "type": "dgo",
+   "number": "A-1",
+   "title": "DEPARTMENTAL PUBLICATIONS",
+   "effective": "2008-07-28",
+   "coordinator": "OIG Commander",
+   "review_due": "2009-01-28",
+   "revision_cycle": "3 Years"
+  },
+  "17": {
+   "type": "dgo",
+   "number": "A-17",
+   "title": "CRIME ANALYSIS",
+   "reference": "CALEA Standards 15.1.1; 15.1.2",
+   "effective": "2000-04-19"
+  },
+  "25": {
+   "type": "dgo",
+   "number": "B-3",
+   "title": "OUTSIDE EMPLOYMENT",
+   "reference": "CALEA Standard 22.3.3",
+   "effective": "2001-07-30"
+  },
+  "30": {
+   "type": "dgo",
+   "number": "B-8",
+   "title": "Field Training Program",
+   "effective": "2014-06-02",
+   "coordinator": "BFO Deputy Chief",
+   "review_due": "2014-12-02",
+   "revision_cycle": "3 Years"
+  },
+  "35": {
+   "type": "dgo",
+   "number": "B-14",
+   "title": "EMERGENCY INFORMATION RECORDS",
+   "reference": "CALEA Standard 22.2.6",
+   "effective": "2008-04-15",
+   "coordinator": "Personnel Division Commander",
+   "review_due": "2008-10-15",
+   "revision_cycle": "3 Years"
+  },
+  "41": {
+   "type": "dgo",
+   "number": "B-21",
+   "title": "DEPARTMENTAL HONOR GUARD",
+   "reference": "CALEA Standards 22.2.8; 41.3.4",
+   "effective": "1999-02-23"
+  },
+  "59": {
+   "type": "dgo",
+   "number": "C-5",
+   "title": "BADGE, CAP SHIELD, IDENTIFICATION CARD, AND CALL BOX KEY CONTROL",
+   "effective": "1994-08-02"
+  },
+  "97": {
+   "type": "dgo",
+   "number": "D-6",
+   "title": "REPRESENTATION UNITS",
+   "effective": "1998-06-16"
+  },
+  "103": {
+   "type": "dgo",
+   "number": "D-12",
+   "title": "MILITARY LEAVE",
+   "effective": "2009-06-01",
+   "coordinator": "PTT Division Commander",
+   "review_due": "2009-12-01",
+   "revision_cycle": "3 Years"
+  },
+  "2665968": {
+   "type": "dgo",
+   "number": "D-18",
+   "title": "MEMBER PERSONAL SOCIAL MEDIA",
+   "effective": "2022-09-14",
+   "coordinator": "Office of Chief of Police"
+  },
+  "117": {
+   "type": "dgo",
+   "number": "E-2",
+   "title": "WARRANT SERVICE ON DEPARTMENTAL PERSONNEL",
+   "reference": "CALEA Standards 74.1.1; 74.1.2; 74.3.2",
+   "effective": "1999-06-11"
+  },
+  "123": {
+   "type": "dgo",
+   "number": "E-7.1",
+   "title": "ELECTRONIC CONSOLIDATED ARREST REPORT",
+   "effective": "2014-10-03",
+   "coordinator": "CID Commander",
+   "review_due": "2015-04-03",
+   "revision_cycle": "3 Years"
+  },
+  "133": {
+   "type": "dgo",
+   "number": "F-5",
+   "title": "UNDERCOVER EXPENDITURES",
+   "reference": "CALEA Standards 17.4.1-3; 43.1.3",
+   "effective": "2000-06-23"
+  },
+  "148": {
+   "type": "dgo",
+   "number": "G-5",
+   "title": "HANDLING HAZARDOUS SUBSTANCES",
+   "reference": "CALEA Standard N/A",
+   "effective": "2000-02-23"
+  },
+  "196": {
+   "type": "dgo",
+   "number": "H-6",
+   "title": "POLICE SEALS",
+   "reference": "CALEA Standard 83.2.1",
+   "effective": "2000-11-15"
+  },
+  "202": {
+   "type": "dgo",
+   "number": "I-02",
+   "title": "DEPARTMENT FLEET",
+   "effective": "2023-01-01",
+   "coordinator": "Bureau of Services"
+  },
+  "3622083": {
+   "type": "dgo",
+   "number": "I-12",
+   "title": "AUTOMATED LICENSE PLATE READERS",
+   "effective": "2024-08-14",
+   "coordinator": "Information Technology Unit"
+  },
+  "219": {
+   "type": "dgo",
+   "number": "I-17",
+   "title": "GOVERNMENT EMERGENCY TELECOMMUNICATIONS SERVICE",
+   "effective": "2007-09-07"
+  },
+  "3250232": {
+   "type": "dgo",
+   "number": "I-26",
+   "title": "REMOTE CONTROLLED GROUND SYSTEM (ROBOTS) and POLE CAMERAS",
+   "effective": "2023-09-29",
+   "coordinator": "Electronic Services Unit, Special Operations Division"
+  },
+  "2868228": {
+   "type": "dgo",
+   "number": "J-03.1",
+   "title": "TOWING PROCEDURES – ABANDONED/SALVAGED RECREATIONAL WATERBORNE VESSELS SUBMERGED NAVIGATIONAL HAZARD ABATEMENT PLAN (SNHAP)",
+   "effective": "2022-09-21",
+   "coordinator": "Special Operations Section"
+  },
+  "3256441": {
+   "type": "dgo",
+   "number": "K-7",
+   "title": "Military Equipment Funding, Acquisition and Use Policy",
+   "coordinator": "Special Operations Section"
+  },
+  "439": {
+   "type": "dgo",
+   "number": "M-1",
+   "title": "REGULATORY PERMITS AND LICENSES",
+   "reference": "CALEA Standard: 42.2.1",
+   "effective": "2001-01-18"
+  },
+  "1262403": {
+   "type": "dgo",
+   "number": "M-4",
+   "title": "COORDINATION OF CRIMINAL INVESTIGATIONS",
+   "reference": "CALEA Standard 42.1.1-4; 42.2.1-3",
+   "effective": "2017-12-01"
+  },
+  "454": {
+   "type": "dgo",
+   "number": "M-11",
+   "title": "RESTITUTION AS A CONDITION OF PROBATION",
+   "reference": "CALEA Standard N/A",
+   "effective": "2000-12-01"
+  },
+  "462": {
+   "type": "dgo",
+   "number": "M-19",
+   "title": "PROHIBITIONS REGARDING RACIAL PROFILING AND OTHER BIAS-BASED POLICING",
+   "effective": "2004-11-15"
+  },
+  "472": {
+   "type": "dgo",
+   "number": "N-5",
+   "title": "LOST, STOLEN, DAMAGED CITY PROPERTY",
+   "effective": "1981-09-18"
+  },
+  "477": {
+   "type": "dgo",
+   "number": "N-12",
+   "title": "DEPARTMENTAL AUDITS AND INSPECTIONS",
+   "reference": "CALEA Standards 53.1.1; 53.2.1",
+   "effective": "2001-03-23"
+  },
+  "486": {
+   "type": "dgo",
+   "number": "O-6.1",
+   "title": "CALIFORNIA CHILD SAFETY (AMBER) NETWORK",
+   "effective": "2011-09-08",
+   "coordinator": "Family Services Section 1 Commander",
+   "review_due": "2012-03-06",
+   "revision_cycle": "3 Years"
+  },
+  "498": {
+   "type": "dgo",
+   "number": "P-2",
+   "title": "ADMINISTRATIVE PER SE PROGRAM AND CHEMICAL TESTS FOR DRUG AND ALCOHOL RELATED ARRESTS",
+   "reference": "CALEA Standard 61.1.3; 61.1.5; 61.1.11",
+   "effective": "2000-05-19"
+  }
+ },
+ "sections": {
+  "642": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "COMPLIANCE UNIT RESPONSIBILITIES"
+   },
+   {
+    "number": "III",
+    "heading": "OIG AUDIT UNIT RESPONSIBILITIES"
+   }
+  ],
+  "693": [],
+  "694": [],
+  "698": [
+   {
+    "number": "III",
+    "heading": "PERFORMANCE REVIEW"
+   }
+  ],
+  "743": [
+   {
+    "number": "II",
+    "heading": "DEFINITION OF RACIAL PROFILING"
+   },
+   {
+    "number": "III",
+    "heading": "POLICY"
+   },
+   {
+    "number": "IV",
+    "heading": "New DGO M-19, Part III, D-K"
+   },
+   {
+    "number": "XI",
+    "heading": "SUPERVISORY AND COMMANDER RESPONSIBILITIES"
+   }
+  ],
+  "774": [],
+  "1893442": [
+   {
+    "number": "II",
+    "heading": "FORCE LEVELS"
+   }
+  ],
+  "2227646": [
+   {
+    "number": "1",
+    "heading": "A person lying"
+   },
+   {
+    "number": "2",
+    "heading": "Any body-to-body"
+   },
+   {
+    "number": "3",
+    "heading": "Officers shall not"
+   },
+   {
+    "number": "4",
+    "heading": "When a person has"
+   },
+   {
+    "number": "5",
+    "heading": "Once a person is restrained"
+   },
+   {
+    "number": "6",
+    "heading": "At a scene, officers"
+   },
+   {
+    "number": "7",
+    "heading": "Officers must be aware"
+   }
+  ],
+  "2706547": [
+   {
+    "number": "1",
+    "heading": "Type 32 incidents where no"
+   },
+   {
+    "number": "2",
+    "heading": "Type 32 incidents where one"
+   }
+  ],
+  "3327411": [
+   {
+    "number": "7",
+    "heading": "If a person expresses"
+   },
+   {
+    "number": "9",
+    "heading": "Class II misconduct"
+   }
+  ],
+  "579540": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "POLICY"
+   },
+   {
+    "number": "III",
+    "heading": "DEFINITIONS AND APPLICATIONS"
+   },
+   {
+    "number": "IV",
+    "heading": "PROCEDURES"
+   },
+   {
+    "number": "V",
+    "heading": "ADDITIONAL INFORMATION"
+   }
+  ],
+  "2108538": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "POLICY"
+   },
+   {
+    "number": "III",
+    "heading": "Definitions"
+   },
+   {
+    "number": "IV",
+    "heading": "PROCEDURE FOR REPORTING THREATS"
+   },
+   {
+    "number": "V",
+    "heading": "ORGANIZATIONAL RESPONSIBILITIES"
+   }
+  ],
+  "2663632": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "POLICY BACKGROUND"
+   },
+   {
+    "number": "III",
+    "heading": "Race and Equity Theory of Change"
+   },
+   {
+    "number": "IV",
+    "heading": "GENERAL PROCEDURES"
+   },
+   {
+    "number": "V",
+    "heading": "DEFINITIONS"
+   }
+  ],
+  "2674928": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "POLICY"
+   },
+   {
+    "number": "III",
+    "heading": "DEFINITIONS AND CORE CONCEPTS"
+   },
+   {
+    "number": "IV",
+    "heading": "CONFIDENTIALITY AND PRIVACY"
+   },
+   {
+    "number": "V",
+    "heading": "TRANSITIONING"
+   },
+   {
+    "number": "VI",
+    "heading": "NAMES AND PRONOUNS"
+   },
+   {
+    "number": "VII",
+    "heading": "APPEARANCE AND ATTIRE"
+   },
+   {
+    "number": "VIII",
+    "heading": "ACCESS TO GENDER-SPECIFIC FACILITIES"
+   },
+   {
+    "number": "IX",
+    "heading": "GENDER-SPECIFIC WORKPLACE ASSIGNMENTS"
+   },
+   {
+    "number": "X",
+    "heading": "REPORTING VIOLATIONS"
+   }
+  ],
+  "415": [
+   {
+    "number": "A",
+    "heading": "MISSION"
+   },
+   {
+    "number": "B",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "C",
+    "heading": "DE-ESCALATION"
+   },
+   {
+    "number": "D",
+    "heading": "USE OF FORCE"
+   },
+   {
+    "number": "E",
+    "heading": "LEVELS OF RESISTANCE"
+   },
+   {
+    "number": "F",
+    "heading": "LEVELS OF FORCE"
+   },
+   {
+    "number": "G",
+    "heading": "COMMANDS AND LESS-LETHAL"
+   },
+   {
+    "number": "H",
+    "heading": "LETHAL FORCE"
+   },
+   {
+    "number": "I",
+    "heading": "PROHIBITED USES"
+   },
+   {
+    "number": "J",
+    "heading": "CONSIDERATIONS AFTER"
+   },
+   {
+    "number": "K",
+    "heading": "TRAINING"
+   },
+   {
+    "number": "L",
+    "heading": "MUTUAL AID"
+   }
+  ],
+  "416": [
+   {
+    "number": "I",
+    "heading": "POLICY"
+   },
+   {
+    "number": "II",
+    "heading": "FORCE LEVELS"
+   },
+   {
+    "number": "III",
+    "heading": "LEVEL 1 FORCE OR IN-CUSTODY"
+   },
+   {
+    "number": "IV",
+    "heading": "LEVEL 2 FORCE INCIDENTS"
+   },
+   {
+    "number": "V",
+    "heading": "LEVEL 3 FORCE INCIDENTS"
+   },
+   {
+    "number": "VI",
+    "heading": "LEVEL 4 FORCE INCIDENTS"
+   },
+   {
+    "number": "VII",
+    "heading": "LEVEL 1 FORCE INCIDENTS INVOL"
+   },
+   {
+    "number": "VIII",
+    "heading": "COMMAND REVIEW AND ENDORSEMENT"
+   },
+   {
+    "number": "IX",
+    "heading": "RISK MANAGEMENT"
+   }
+  ],
+  "417": [
+   {
+    "number": "I",
+    "heading": "FORCE REVIEW BOARD"
+   },
+   {
+    "number": "II",
+    "heading": "AUTHORITY AND TRAINING"
+   },
+   {
+    "number": "III",
+    "heading": "CONVENING FORCE REVIEW"
+   },
+   {
+    "number": "IV",
+    "heading": "FORCE REVIEW AND EXECUTIVE"
+   },
+   {
+    "number": "V",
+    "heading": "FRB and EFRB"
+   },
+   {
+    "number": "VI",
+    "heading": "FORCE REVIEW AND EXECUTIVE"
+   },
+   {
+    "number": "VII",
+    "heading": "BOARD RECOMMENDATION"
+   },
+   {
+    "number": "VIII",
+    "heading": "RECORDS RETENTION"
+   }
+  ],
+  "1266222": [
+   {
+    "number": "I",
+    "heading": "POLICY"
+   },
+   {
+    "number": "II",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "III",
+    "heading": "RECEIVING AND PROCESSING"
+   },
+   {
+    "number": "IV",
+    "heading": "PRELIMINARY INQUIRY"
+   },
+   {
+    "number": "V",
+    "heading": "DUE DATES AND TIMELINES"
+   },
+   {
+    "number": "VI",
+    "heading": "INVESTIGATION OF COMPLAINTS"
+   },
+   {
+    "number": "VII",
+    "heading": "REVIEW OF INVESTIGATIONS"
+   },
+   {
+    "number": "VIII",
+    "heading": "DUE DATE EXTENSIONS"
+   },
+   {
+    "number": "IX",
+    "heading": "GENERAL POLICY"
+   }
+  ],
+  "1431388": [
+   {
+    "number": "A",
+    "heading": "EXTERNAL COMMUNICATIONS"
+   },
+   {
+    "number": "B",
+    "heading": "BUSINESS CARDS"
+   }
+  ],
+  "5": [
+   {
+    "number": "I",
+    "heading": "DEFINITIONS AND TERMINOLOGY"
+   },
+   {
+    "number": "II",
+    "heading": "GENERAL PUBLICATION POLICY"
+   },
+   {
+    "number": "III",
+    "heading": "EVALUATION AND REVIEW"
+   },
+   {
+    "number": "IV",
+    "heading": "DUPLICATION AND DISTRIBUTION"
+   },
+   {
+    "number": "V",
+    "heading": "COMMENTS AND/OR RECOMMEDATIONS"
+   },
+   {
+    "number": "VI",
+    "heading": "ADDITIONAL RESPONSIBILITIES"
+   }
+  ],
+  "17": [
+   {
+    "number": "I",
+    "heading": "DEPARTMENTAL POLICY"
+   },
+   {
+    "number": "II",
+    "heading": "CRIME ANALYSIS SECTION"
+   },
+   {
+    "number": "III",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "IV",
+    "heading": "ORGANIZATION AND RESPONSIBILIT"
+   },
+   {
+    "number": "V",
+    "heading": "PROCEDURES"
+   },
+   {
+    "number": "VI",
+    "heading": "CUSTODIAN OF RECORDS"
+   }
+  ],
+  "25": [
+   {
+    "number": "I",
+    "heading": "REGULATION OF OUTSIDE EMPLOYMENT"
+   },
+   {
+    "number": "II",
+    "heading": "PERMIT APPLICATION"
+   },
+   {
+    "number": "III",
+    "heading": "CITY NOT LIABLE"
+   }
+  ],
+  "30": [
+   {
+    "number": "I",
+    "heading": "FIELD TRAINING UNIT"
+   },
+   {
+    "number": "II",
+    "heading": "FTO RECRUITMENT"
+   },
+   {
+    "number": "III",
+    "heading": "FTO SCREENING"
+   },
+   {
+    "number": "IV",
+    "heading": "ASSIGNMENTS, TRAINING SCHEDULE"
+   },
+   {
+    "number": "V",
+    "heading": "TRAINEE OFFICER REMOVAL"
+   },
+   {
+    "number": "VI",
+    "heading": "LATERAL OFFICER EARLY RELEASE"
+   },
+   {
+    "number": "VII",
+    "heading": "FIELD TRAINING MEETINGS"
+   },
+   {
+    "number": "VIII",
+    "heading": "FTO DECERTIFICATION"
+   },
+   {
+    "number": "IX",
+    "heading": "FTO RECERTIFICATION"
+   },
+   {
+    "number": "X",
+    "heading": "WRITTEN REPORTS"
+   },
+   {
+    "number": "XI",
+    "heading": "FIELD TRAINING PROGRAM INCENTI"
+   },
+   {
+    "number": "XII",
+    "heading": "FIELD TRAINING PROGRAM REVIEW"
+   }
+  ],
+  "35": [
+   {
+    "number": "I",
+    "heading": "GENERAL PROCEDURES"
+   },
+   {
+    "number": "II",
+    "heading": "EMERGENCY INFORMATION RECORD"
+   },
+   {
+    "number": "III",
+    "heading": "ADMINISTRATION PROCEDURES"
+   },
+   {
+    "number": "IV",
+    "heading": "OPTIONAL PROCEDURES"
+   }
+  ],
+  "41": [
+   {
+    "number": "I",
+    "heading": "OBJECTIVE"
+   },
+   {
+    "number": "II",
+    "heading": "DEPLOYMENT"
+   },
+   {
+    "number": "III",
+    "heading": "COMPOSITION/COORDINATION"
+   },
+   {
+    "number": "IV",
+    "heading": "SELECTION/DESELECTION/TRAINING"
+   },
+   {
+    "number": "V",
+    "heading": "UNIFORM"
+   }
+  ],
+  "59": [
+   {
+    "number": "I",
+    "heading": "CONTROL BY PERSONNEL AND TRAINING"
+   },
+   {
+    "number": "II",
+    "heading": "RESPONSIBILITIES OF MEMBERS"
+   },
+   {
+    "number": "III",
+    "heading": "REPAIR AND REPLACEMENT"
+   },
+   {
+    "number": "IV",
+    "heading": "ALTERATION OF BADGE FOR RETIRE"
+   },
+   {
+    "number": "V",
+    "heading": "ALTERATION OF IDENTIFICATION"
+   }
+  ],
+  "97": [
+   {
+    "number": "I",
+    "heading": "UNREPRESENTED SWORN UNIT"
+   },
+   {
+    "number": "II",
+    "heading": "REPRESENTED SWORN UNITS"
+   },
+   {
+    "number": "III",
+    "heading": "REPRESENTED CIVILIAN UNITS"
+   },
+   {
+    "number": "IV",
+    "heading": "UNREPRESENTED CIVILIAN UNITS"
+   },
+   {
+    "number": "V",
+    "heading": "RECORD OF BENEFITS"
+   }
+  ],
+  "103": [
+   {
+    "number": "I",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "II",
+    "heading": "ELIGIBILITY TO RECEIVE MILITARY LEAVE"
+   },
+   {
+    "number": "III",
+    "heading": "MILITARY LEAVE ADMINISTRATIVE PROCEDURES"
+   },
+   {
+    "number": "IV",
+    "heading": "PERSONNEL SECTION RESPONSIBILITIES"
+   },
+   {
+    "number": "V",
+    "heading": ""
+   },
+   {
+    "number": "VI",
+    "heading": ""
+   }
+  ],
+  "2665968": [
+   {
+    "number": "A",
+    "heading": "VALUES AND RULES"
+   },
+   {
+    "number": "B",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "C",
+    "heading": "GENERAL CONSIDERATIONS"
+   },
+   {
+    "number": "D",
+    "heading": "SPECIFIC RULES"
+   },
+   {
+    "number": "E",
+    "heading": "TRAINING"
+   }
+  ],
+  "117": [
+   {
+    "number": "I",
+    "heading": "RECORDS DIVISION"
+   },
+   {
+    "number": "II",
+    "heading": "PROFESSIONAL STANDARDS DIVISION"
+   },
+   {
+    "number": "III",
+    "heading": "WARRANT SERVICE"
+   }
+  ],
+  "123": [
+   {
+    "number": "I",
+    "heading": "DEFINITION"
+   },
+   {
+    "number": "II",
+    "heading": "POLICY"
+   },
+   {
+    "number": "III",
+    "heading": "RESPONSIBILITIES"
+   }
+  ],
+  "133": [
+   {
+    "number": "I",
+    "heading": "USE OF UNDERCOVER FUNDS"
+   },
+   {
+    "number": "II",
+    "heading": "ACCOUNTABILITY FOR FUNDS"
+   },
+   {
+    "number": "III",
+    "heading": "REIMBURSEMENT FOR EXPENDITURES"
+   },
+   {
+    "number": "IV",
+    "heading": "DEPUTY CHIEF RESPONSIBILITIES"
+   },
+   {
+    "number": "V",
+    "heading": "CHIEF OF POLICE RESPONSIBILITIES"
+   },
+   {
+    "number": "VI",
+    "heading": "BUDGET & ACCOUNTING"
+   },
+   {
+    "number": "VII",
+    "heading": "RECOVERY OF EXPENDITURES"
+   }
+  ],
+  "148": [
+   {
+    "number": "I",
+    "heading": "GENERAL INFORMATION"
+   },
+   {
+    "number": "II",
+    "heading": "CRIMINALISTICS SECTION"
+   },
+   {
+    "number": "III",
+    "heading": "MEMBERS AND EMPLOYEES"
+   }
+  ],
+  "196": [
+   {
+    "number": "I",
+    "heading": "FUNCTION"
+   },
+   {
+    "number": "II",
+    "heading": "DISTRIBUTION"
+   },
+   {
+    "number": "III",
+    "heading": "USE"
+   }
+  ],
+  "202": [
+   {
+    "number": "A",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "B",
+    "heading": "FLEET UNIT ROLES"
+   },
+   {
+    "number": "C",
+    "heading": "MARKED VEHICLE"
+   },
+   {
+    "number": "D",
+    "heading": "UNMARKED VEHICLE"
+   },
+   {
+    "number": "E",
+    "heading": "CITY-OWNED TAKE-HOME"
+   },
+   {
+    "number": "F",
+    "heading": "RENTAL VEHICLES"
+   },
+   {
+    "number": "G",
+    "heading": "DAMAGE, REPORTING"
+   },
+   {
+    "number": "H",
+    "heading": "DEPARTMENT PARKING"
+   }
+  ],
+  "3622083": [
+   {
+    "number": "A",
+    "heading": "Definitions"
+   },
+   {
+    "number": "B",
+    "heading": "Description of the Technology"
+   },
+   {
+    "number": "C",
+    "heading": "Purpose of the Technology"
+   },
+   {
+    "number": "D",
+    "heading": "Authorized Uses"
+   },
+   {
+    "number": "E",
+    "heading": "Restrictions on Use"
+   },
+   {
+    "number": "F",
+    "heading": "Data Collection"
+   },
+   {
+    "number": "G",
+    "heading": "Data Access"
+   },
+   {
+    "number": "H",
+    "heading": "Data Protection"
+   },
+   {
+    "number": "I",
+    "heading": "Data Retention"
+   },
+   {
+    "number": "J",
+    "heading": "Public Access"
+   },
+   {
+    "number": "K",
+    "heading": "Third Party Data Sharing"
+   },
+   {
+    "number": "L",
+    "heading": "Training"
+   },
+   {
+    "number": "M",
+    "heading": "Auditing and Oversight"
+   },
+   {
+    "number": "N",
+    "heading": "Maintenance"
+   }
+  ],
+  "219": [
+   {
+    "number": "I",
+    "heading": "GOVERNMENT EMERGENCY TELECOMMUNICATIONS"
+   },
+   {
+    "number": "II",
+    "heading": "GETS POINT OF CONTACT"
+   },
+   {
+    "number": "III",
+    "heading": "ASSIGNMENT OF GETS CARDS"
+   },
+   {
+    "number": "IV",
+    "heading": "USING THE GETS CARD"
+   },
+   {
+    "number": "V",
+    "heading": "FISCAL RESPONSIBILTIES"
+   }
+  ],
+  "3250232": [
+   {
+    "number": "I",
+    "heading": "VALUE STATEMENT"
+   },
+   {
+    "number": "II",
+    "heading": "DESCRIPTION OF THE TECHNOLOGY"
+   },
+   {
+    "number": "III",
+    "heading": "GENERAL GUIDELINES"
+   },
+   {
+    "number": "IV",
+    "heading": "ROBOT DATA"
+   },
+   {
+    "number": "V",
+    "heading": "ROBOT ADMINISTRATION"
+   }
+  ],
+  "2868228": [
+   {
+    "number": "A",
+    "heading": "Definitions and Authorities"
+   },
+   {
+    "number": "B",
+    "heading": "Reported or Located"
+   },
+   {
+    "number": "C",
+    "heading": "Request for grant funding"
+   },
+   {
+    "number": "D",
+    "heading": "Contracts"
+   },
+   {
+    "number": "E",
+    "heading": "Hazardous Materials"
+   }
+  ],
+  "3256441": [
+   {
+    "number": "A",
+    "heading": "POLICY AND APPLICABILITY"
+   },
+   {
+    "number": "B",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "C",
+    "heading": "MILITARY EQUIPMENT COORDINATOR"
+   },
+   {
+    "number": "D",
+    "heading": "APPROVAL FOR FUNDING"
+   },
+   {
+    "number": "E",
+    "heading": "MILITARY EQUIPMENT USE"
+   },
+   {
+    "number": "F",
+    "heading": "MILITARY EQUIPMENT REPORTING"
+   },
+   {
+    "number": "G",
+    "heading": "COMMUNITY ENGAGEMENT"
+   },
+   {
+    "number": "H",
+    "heading": "COORDINATION WITH OTHER"
+   },
+   {
+    "number": "I",
+    "heading": "INQUIRY AND COMPLAINT"
+   },
+   {
+    "number": "J",
+    "heading": "AUDITING AND OVERSIGHT"
+   },
+   {
+    "number": "K",
+    "heading": "REPORTING/ RECORDS"
+   },
+   {
+    "number": "L",
+    "heading": "MILITARY EQUIPMENT INVENTORY"
+   }
+  ],
+  "439": [
+   {
+    "number": "I",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "II",
+    "heading": "CITY MANAGER PERMITS"
+   },
+   {
+    "number": "III",
+    "heading": "POLICE PERMITS"
+   },
+   {
+    "number": "IV",
+    "heading": "PENAL CODE PERMITS"
+   },
+   {
+    "number": "V",
+    "heading": "INTERDEPARTMENTAL RESPONSIBILITIES"
+   },
+   {
+    "number": "VI",
+    "heading": "PERMIT APPLICATION PROCEDURES"
+   },
+   {
+    "number": "VII",
+    "heading": "PROCEDURES FOR INVESTIGATING"
+   },
+   {
+    "number": "VIII",
+    "heading": "APPROVAL, DENIAL"
+   }
+  ],
+  "1262403": [
+   {
+    "number": "I",
+    "heading": "COMMAND OF CRIME SCENE"
+   },
+   {
+    "number": "II",
+    "heading": "PRELIMINARY INVESTIGATIONS"
+   },
+   {
+    "number": "III",
+    "heading": "RESPONSIBILITIES OF INVESTIG"
+   },
+   {
+    "number": "IV",
+    "heading": "SPECIAL PROCEDURES"
+   },
+   {
+    "number": "V",
+    "heading": "CRIME ANALYSIS SECTION"
+   },
+   {
+    "number": "VI",
+    "heading": "REFERENCES"
+   }
+  ],
+  "454": [
+   {
+    "number": "I",
+    "heading": "POLICY"
+   },
+   {
+    "number": "II",
+    "heading": "REPORTING OFFICERS AND EMPLOYEES"
+   },
+   {
+    "number": "III",
+    "heading": ""
+   },
+   {
+    "number": "IV",
+    "heading": "BUDGET AND ACCOUNTING DIVISION"
+   }
+  ],
+  "462": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "DEFINITION OF RACIAL PROFILING"
+   },
+   {
+    "number": "III",
+    "heading": "POLICY"
+   },
+   {
+    "number": "IV",
+    "heading": "CONSENT SEARCHES"
+   },
+   {
+    "number": "V",
+    "heading": "CONDUCTING STOPS"
+   },
+   {
+    "number": "VI",
+    "heading": "EXAMPLES OF RACIAL PROFILING"
+   },
+   {
+    "number": "VII",
+    "heading": "STOP-DATA COLLECTION"
+   },
+   {
+    "number": "VIII",
+    "heading": "MEMBER RESPONSIBILITIES"
+   },
+   {
+    "number": "IX",
+    "heading": "COMPLAINTS"
+   },
+   {
+    "number": "X",
+    "heading": "TRAINING"
+   },
+   {
+    "number": "XI",
+    "heading": "SUPERVISORY RESPONSIBI"
+   },
+   {
+    "number": "XII",
+    "heading": "BUREAU OF FIELD OPERAT"
+   },
+   {
+    "number": "XIII",
+    "heading": "OFFICE OF INSPECTOR GE"
+   },
+   {
+    "number": "XIV",
+    "heading": "RACIAL PROFILING PROGR"
+   }
+  ],
+  "472": [
+   {
+    "number": "I",
+    "heading": "DAMAGE, LOSS, THEFT OF CITY"
+   },
+   {
+    "number": "II",
+    "heading": "DAMAGE, LOSS, THEFT OF CITY"
+   },
+   {
+    "number": "III",
+    "heading": ""
+   },
+   {
+    "number": "IV",
+    "heading": ""
+   },
+   {
+    "number": "V",
+    "heading": "PERSONAL SAFETY EQUIPMENT"
+   }
+  ],
+  "477": [
+   {
+    "number": "I",
+    "heading": "INTRODUCTION"
+   },
+   {
+    "number": "II",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "III",
+    "heading": "POLICY"
+   },
+   {
+    "number": "IV",
+    "heading": "AUDIT AND INSPECTION"
+   },
+   {
+    "number": "V",
+    "heading": "AUDITS AND INSPECTIONS"
+   },
+   {
+    "number": "VI",
+    "heading": "AUDITS AND INSPECTIONS"
+   },
+   {
+    "number": "VII",
+    "heading": "OFFICE OF INSPECTOR GENERAL"
+   },
+   {
+    "number": "VIII",
+    "heading": "REFERENCES"
+   }
+  ],
+  "486": [
+   {
+    "number": "I",
+    "heading": "CRITERIA FOR ACTIVATION"
+   },
+   {
+    "number": "II",
+    "heading": "REQUESTING AN AMBER ALERT"
+   },
+   {
+    "number": "III",
+    "heading": "NOTIFICATIONS"
+   },
+   {
+    "number": "IV",
+    "heading": "AMBER ALERT CANCELLATION"
+   },
+   {
+    "number": "V",
+    "heading": "MISSING CHILD CHECKLIST"
+   }
+  ],
+  "498": [
+   {
+    "number": "I",
+    "heading": "TEST REQUIREMENTS"
+   },
+   {
+    "number": "II",
+    "heading": "BLOOD TESTS"
+   },
+   {
+    "number": "III",
+    "heading": "URINE TESTS"
+   },
+   {
+    "number": "IV",
+    "heading": "HOSPITALIZED OFFENDERS"
+   },
+   {
+    "number": "V",
+    "heading": "BREATH TESTS"
+   },
+   {
+    "number": "VI",
+    "heading": "ADMINISTRATIVE PER SE"
+   },
+   {
+    "number": "VII",
+    "heading": "YOUTH SERVICES DIVISION"
+   },
+   {
+    "number": "VIII",
+    "heading": "REFERENCE"
+   }
+  ],
+  "ai-594": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "POLICY"
+   },
+   {
+    "number": "III",
+    "heading": "ELIGIBLITY"
+   },
+   {
+    "number": "IV",
+    "heading": "AGEEEMENT OPTIONS"
+   },
+   {
+    "number": "V",
+    "heading": "TRAINING"
+   },
+   {
+    "number": "VI",
+    "heading": "WORK HOURS"
+   },
+   {
+    "number": "VII",
+    "heading": "WORKSITE"
+   },
+   {
+    "number": "VIII",
+    "heading": "EQUIPMENT AND SUPPLIES"
+   },
+   {
+    "number": "IX",
+    "heading": "SECURITY OF CONFIDENTIAL"
+   },
+   {
+    "number": "X",
+    "heading": "SUNSHINE LAWS"
+   },
+   {
+    "number": "XI",
+    "heading": "PROCEDURES"
+   }
+  ],
+  "ai-123": [
+   {
+    "number": "I",
+    "heading": "PURPOSE"
+   },
+   {
+    "number": "II",
+    "heading": "POLICY"
+   },
+   {
+    "number": "III",
+    "heading": "EXCEPTIONS"
+   },
+   {
+    "number": "IV",
+    "heading": "DEFINITIONS"
+   },
+   {
+    "number": "V",
+    "heading": "PROCEDURES"
+   },
+   {
+    "number": "VI",
+    "heading": "ADDITIONAL INFORMATION"
+   },
+   {
+    "number": "VII",
+    "heading": "APPENDICES"
+   }
+  ]
+ },
+ "sections_note": "The top-level sections of each policy's own body, in order, as a member reads them (its outline's first level: roman numerals, or capital letters where the order numbers its parts so); the table of contents and a revision memorandum's text are not the body. `heading` is the start of the heading as printed, empty where the text read does not show it (a part number lost or misread by the text layer or the OCR). A Special Order that only replaces passages has the parts it prints; one with no outline has none. Numbered paragraphs (1., 2.) are sections as the outline's other levels are."
+}
