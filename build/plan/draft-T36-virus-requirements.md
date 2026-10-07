@@ -6,6 +6,8 @@
 
 ## 0. For BOB: questions for Bob, decisions taken, conflicts found **[changed, rev. 2: Q1–Q4 ruled; Q5–Q9 new; decisions (9)–(16); conflicts (d) resolved, (f)–(j) new]**
 
+**Ruled (K1949, Bob 2026-10-07, "as recommended"):** Q5–Q9 as each is recommended below, and K1929 (4) read as letting a high-risk file's safe copy open without a deeper check. Their requirement text stands as written at the recommendations.
+
 **Ruled by Bob (no longer open).**
 - **Q1** (K1928, K1929 (Q1)): as recommended for single files; **an archive itself is low risk only when the copy fetched it, every member was unpacked and graded low and nothing was refused**, else high. Written in `file-safety` R6, R20.
 - **Q2** (K1928): as recommended. `file-safety` R14.
