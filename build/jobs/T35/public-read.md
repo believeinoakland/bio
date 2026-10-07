@@ -36,3 +36,7 @@ T35-56 applied: R30 met. creditPage() and op=credit (door, at 200, no store hop,
 **Checks.** format: 130 modules, 129 requirements files; 0 failures. architecture: 43 product files, 137 relative imports (0 naming no tracked file, not judged); 0 failures. coverage: 1 modules, 31 of 31 live requirement ids named by a test; 0 failures. ownership: 8 files changed by public-read between tranche/T35 and HEAD; 0 failures.
 
 Size (session_01R8Qq2yQAfRUWoK9dEbUeyQ): test runs 24, module lines 3345
+
+## J2 · COMPLETE · re B2
+
+B2 applied: R31 met. publishedCase answers criteria exactly as publication R53 froze them (label, access_words, passages as R72 holds them; member then leg order; [] for none; null with publication's not-recorded sentence before T35; no standards read at serving). Readings of my own: a loose bundle answers criteria null (not a case); an edition withheld whole by a court order answers criteria null with the withheld sentence (R28). Found: control-plane converts.test.mjs:108 (reviewcopy convert) is red on tranche/T35 with or without this change: it pins NO_CASE_DOCUMENT's bytes, and publication R73 now adds deprecated: CREDENTIAL_IN_ADDRESS. It is not among the accepted reds; it looks like control-plane's to re-pin (T35-72). Module tests 138/138; users otherwise as before (accepted reds 19, 26, 29, 22, 31). format, architecture, coverage 31/31, ownership: 0 failures.
