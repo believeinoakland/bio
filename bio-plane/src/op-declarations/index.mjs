@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R29). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R30). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
@@ -46,11 +46,14 @@ const frozenList = (a) => Object.freeze(a);
    stamps — so the control plane routes the two to one handler and they answer alike (control-plane R55). Each was read
    at the owner's ops map. A function no op serves has no alias (R6): `projectcreated` (membership, called in process
    by promotion), `setpassword` (credentials, in process), `countask` (answers' count inside `ask`),
-   `registerproceeding` (entities, in no ops map) and `deadlinecompute` (an answers rule service, reached as `rule`). */
+   `registerproceeding` (entities, in no ops map) and `deadlinecompute` (an answers rule service, reached as `rule`).
+   T35 (K1901): the registry is read as PR #12 left it. The person screen names `personexpunge` itself (DEC-142), so it
+   is the declared op of people's family and no alias names `expunge`; an act marked `owed:<op>` whose op is declared
+   here under that name (`placewanted`, `securitymap`, `findin`, …) is that op, with no alias made for it. */
 const OP_ALIASES = Object.freeze({
   signerregisterown: "signerregister", signerrevokeown: "signerrevoke",             // credentials (membership R89, R90)
   declaretie: "membertie", withdrawtie: "membertiewithdraw", recordpersonfact: "personfact",   // people
-  claimidentity: "identityclaim", withdrawidentityclaim: "identitywithdraw", expunge: "personexpunge",
+  claimidentity: "identityclaim", withdrawidentityclaim: "identitywithdraw",
   adoptversion: "versionadopt", keepversion: "versionkeep",                         // reevaluation
   strengthbarset: "strengthbar",                                                    // strength
   ruleanswer: "rule", standingquestionset: "standingset", standingquestionend: "standingend",  // answers
@@ -117,6 +120,15 @@ const OP_KINDS = Object.freeze({
   door:      Object.freeze({ spec: { classes: null, mutating: true },  needs: undefined, public: true,  stamped: false }),
   public:    Object.freeze({ spec: { classes: null, mutating: false }, needs: undefined, public: true,  stamped: false }),
   plainread: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: undefined, stamped: false }),
+  /* T35 (R30): the archive's unpack, which the daemon continues past one call (`capture`'s `archive-unpack` queue) — the
+     one family act a `daemon` reaches, its bearers bounded to `daemon` and `probe` by `machineClasses`, `contribute`;
+     a group setting's plain read with a present null row (`coarchivestate`), stamped nothing; and a session's own end
+     (`signout`, `signouteverywhere`), a session's only, no working capability, stamped only with what its family's
+     extras name (the session token itself, never the caller's copy). */
+  daemonact:   Object.freeze({ spec: { classes: [...MEMBER_PROBE, "daemon"], machineClasses: ["daemon", "probe"], mutating: true },
+                               needs: "contribute" }),
+  settingread: Object.freeze({ spec: { classes: MEMBER_PROBE, mutating: false }, needs: null, stamped: false }),
+  sessionend:  Object.freeze({ spec: { classes: SESSION_KINDS, machineClasses: [], mutating: true }, needs: null, stamped: false }),
 });
 const QUERY = (key) => Object.freeze({ key, at: "query" });
 const BODY = (key) => Object.freeze({ key, at: "body" });
@@ -134,13 +146,16 @@ const family = ({ owner, cite, actor = null, proposer = null, extra = {}, ops })
 };
 const OP_FAMILIES = Object.freeze({
   /* events R36 (K1122): dated facts and events; `eventmerge`/`eventsplit` refuse a machine (MEMBER_ACT_ONLY, R14), the
-     read opt-in is an administrator's (R4, K1505 (9)); the machine's following imports write as `class:daemon` (R22). */
-  events: family({ owner: "events", cite: "events R36", actor: QUERY("by"), ops: {
+     read opt-in is an administrator's (R4, K1505 (9)); the machine's following imports write as `class:daemon` (R22).
+     T35 (R43–R46): a use of a power and an assessment recorded by a member (MEMBER_ACT_ONLY: the machine proposes), a
+     use withdrawn with a reason (no machine refusal, as a relation's withdrawal), and the uses read. */
+  events: family({ owner: "events", cite: "events R36, R43–R46", actor: QUERY("by"), ops: {
     datedfact: "open", editacts: "open", readoptin: "admin", eventcreate: "open", eventattest: "open", eventgovern: "open",
     participantadd: "open", participantcorrect: "open", eventmerge: "member", eventsplit: "member", eventrelate: "open",
     eventrelationwithdraw: "open", actalias: "open", eventimport: "open", registerimport: "open",
     event: "read", eventforact: "read", datedfacts: "read", eventsfor: "read", timeline: "read", sequence: "read",
-    whowassent: "read", statementsof: "read", proceedingstatus: "read" } }),
+    whowassent: "read", statementsof: "read", proceedingstatus: "read",
+    discretionrecord: "member", assessmentrecord: "member", usewithdraw: "open", usesof: "read" } }),
   /* lines R16 (A ORG; R18 here): a line recorded, withdrawn or held current through by a member or, on a system rule's
      basis, the machine (MACHINE_NEEDS_IDENTIFIERS otherwise, R4, R21); `structureat` and `holderat` its one home. */
   lines: family({ owner: "lines", cite: "lines R16, R21; R18", actor: BODY("by"), ops: {
@@ -160,12 +175,14 @@ const OP_FAMILIES = Object.freeze({
     moneyamountchecks: "read", moneyjunction: "read", moneycheckparams: "read", moneydetectors: "read",
     moneynoticed: "read" } }),
   /* duties R19: a duty proposed by any credential (R1, R5), adopted, declared, revised, withdrawn, matched and
-     transitioned by a member (MEMBER_ACT_ONLY, R2–R14). */
-  duties: family({ owner: "duties", cite: "duties R19", actor: QUERY("by"), proposer: QUERY("by"), ops: {
+     transitioned by a member (MEMBER_ACT_ONLY, R2–R14). T35 (R27, R28): a use linked to a power and unlinked by a member
+     (DUTY_MEMBER_ACT_ONLY), a policy's review proposed by any credential (R2's `propose`), and a power's uses read. */
+  duties: family({ owner: "duties", cite: "duties R19, R27, R28", actor: QUERY("by"), proposer: QUERY("by"), ops: {
     dutypropose: "proposal", dutyadopt: "member", dutydeclare: "member", dutyrevise: "member", dutywithdraw: "member",
     dutymatch: "member", dutytransition: "member",
     duty: "read", dutiesof: "read", dutyoccurrences: "read", dutytransitions: "read", powersof: "read",
-    dutysetagainst: "read" } }),
+    dutysetagainst: "read",
+    uselink: "member", useunlink: "member", reviewpropose: "proposal", poweruses: "read" } }),
   /* people R27: identity claims and person facts by a member or, within R3 and R10, the machine; a member's own tie
      (R20) and a source's person link a member's (MEMBER_ACT_ONLY, R21); expunging and the check gate an
      administrator's (R12, R24); `samepersoncandidates` published since M-P6 passed (R8, K1592). */
@@ -181,18 +198,20 @@ const OP_FAMILIES = Object.freeze({
     explore: "read", explorepreset: "read", exploreverify: "read", exploretimeline: "read" } }),
   /* hypotheses R7: a hypothesis held, revised and withdrawn by a member (MACHINE_CANNOT_HYPOTHESISE, R1, R2, K1473);
      since T34 (K1807; its R11–R13) a member's own note written and turned, the body's `by` its author, and the notes
-     read, the viewer stamped. */
-  hypotheses: family({ owner: "hypotheses", cite: "hypotheses R7, R11–R13; K1807", actor: BODY("by"), ops: {
+     read, the viewer stamped; since T35 (R30; DEC-144) a member's own note revised and deleted, `notewrite`'s posture. */
+  hypotheses: family({ owner: "hypotheses", cite: "hypotheses R7, R11–R13; K1807; R30", actor: BODY("by"), ops: {
     hypothesishold: "member", hypothesisrevise: "member", hypothesiswithdraw: "member", hypotheses: "read",
-    notewrite: "member", noteturn: "member", notes: "read" } }),
+    notewrite: "member", noteturn: "member", notes: "read", noterevise: "member", notedelete: "member" } }),
   /* calculations R24 (C:A-16): its actor is the stamped viewer. Declaring a table, adopting a binding, ingesting money,
      accepting a calculation, recording a set and switching a pattern refuse a machine (MEMBER_ACT_ONLY, R2, R8, R14,
-     R21, R23); a calculation and a recorded draw any author's (R4, R18); the pattern gate an administrator's (R23). */
-  calculations: family({ owner: "calculations", cite: "calculations R24", actor: QUERY("viewer"), ops: {
+     R21, R23); a calculation and a recorded draw any author's (R4, R18); the pattern gate an administrator's (R23).
+     T35 (R32, R33): freezing the held uses a member's (MEMBER_ACT_ONLY), the recipes of application a read. */
+  calculations: family({ owner: "calculations", cite: "calculations R24, R32, R33", actor: QUERY("viewer"), ops: {
     tabledeclare: "member", bindingadopt: "member", moneyingest: "member", calculationcreate: "open",
     calculationaccept: "member", calculationdraw: "open", recordset: "member", patterngate: "admin",
     patternswitch: "member",
-    table: "read", tablesat: "read", calculationevaluate: "read", calculation: "read", patterns: "read" } }),
+    table: "read", tablesat: "read", calculationevaluate: "read", calculation: "read", patterns: "read",
+    usesfreeze: "member", applicationrecipes: "read" } }),
   /* workbooks R15 (K1570): every act a sighted author's, a machine not refused by name (R13); the second check
      refuses only its own author (SELF_CHECK, R11). */
   workbooks: family({ owner: "workbooks", cite: "workbooks R15; K1570", actor: BODY("by"), ops: {
@@ -215,20 +234,33 @@ const OP_FAMILIES = Object.freeze({
     follows: "read", snapshots: "read", snapshotdiff: "read" } }),
   /* T33's ops in earlier modules (R17, R18; the START's findings). standards (K1571): relating, linking and treating a
      member's (MACHINE_CANNOT_RELATE, R23, R26, R27, R30), proposing any credential's; `inforceat` is R18's in-force
-     read beside `standardinforce` (R7's alias). */
-  standards: family({ owner: "standards", cite: "standards R20–R30; K1571; R18", actor: BODY("author"),
+     read beside `standardinforce` (R7's alias). T35 (T35-31; its R35, R37, R40, R43): a provision's force declared or
+     confirmed, withdrawn, a standard released from its bundle's sight, an adoption, an imposition and a benchmark
+     recorded, each a member's (MACHINE_CANNOT_DECLARE_STANDARD, MACHINE_CANNOT_RELATE), `author` the body's; a force
+     proposed by any credential; the forces, overrides, edition in force and whether it binds, reads. */
+  standards: family({ owner: "standards", cite: "standards R20–R30, R35, R37, R40, R43; K1571; R18", actor: BODY("author"),
     proposer: BODY("proposer"), ops: {
     lawrelate: "member", lawwithdraw: "member", lawpropose: "proposal", courtlink: "member", courttreat: "member",
     inforceat: "read", standardsfor: "read", lawrelations: "read", lawaddresses: "read", stillstanding: "read",
-    citationresolve: "read" } }),
+    citationresolve: "read",
+    standardforce: "member", standardforcewithdraw: "member", standardrelease: "member", standardadoption: "member",
+    standardimpose: "member", standardbenchmark: "member", standardforcepropose: "proposal",
+    forcesof: "read", overridesof: "read", editioninforce: "read", bindsat: "read" } }),
   /* credentials (K1544; R20): the member's own account reference, its switches and the ask grant, set by the member
      alone (MACHINE_CANNOT_HOLD_ACCOUNT, NOT_YOUR_ACCOUNT, R22–R27), never an administrator for another member;
      `aigrantmint` also reads the session's own `member` and `session` (R27); the keyed services an administrator's
      (R29). No spec admits a project-level Claude credential or a group subscription: neither exists (K1502, K1755);
-     the group's API key is reached only through R24's acts below. */
-  credentials: family({ owner: "credentials", cite: "credentials R22–R29; K1544; R20", actor: QUERY("by"),
+     the group's API key is reached only through R24's acts below. T35 (R30; its R39, R43, R45–R47; F14, N703, K1888):
+     a session's own end and every session of its role, the session token the control plane authenticated the one
+     stamp; the security map, an administrator's read with `by`; recovery codes issued and their state, an
+     administrator's own (NOT_AN_ADMIN), `by` stamped; `recover` reached with no credential, as `login` is, its role,
+     code and password the body's and `source` and `country` the control plane's (admission R21); and a member's own
+     subscription disconnected (R43; `subscriptionsignin` has no spec, R27). */
+  credentials: family({ owner: "credentials", cite: "credentials R22–R29, R39, R43, R45–R47; K1544; R20, R30", actor: QUERY("by"),
     extra: { accountreferenceset: ["member"], accountreferenceremove: ["member"], accountswitchset: ["member"],
-             accountreference: ["member"], aigrantmint: ["member", "session"] }, ops: {
+             accountreference: ["member"], aigrantmint: ["member", "session"],
+             signout: ["session"], signouteverywhere: ["session"], securitymap: ["by"], recoverycodesstate: ["by"],
+             recover: ["source", "country"] }, ops: {
     accountreferenceset: "own", accountreferenceremove: "own", accountswitchset: "own", aigrantmint: "own",
     keyedserviceset: "admin", keyedserviceswitch: "admin",
     accountreference: "ownread", keyedservices: "read",
@@ -236,11 +268,15 @@ const OP_FAMILIES = Object.freeze({
        switches set by an administrator's own session (NOT_AN_ADMIN); its state a session's read; the notice a member's
        own, read by the viewer and marked seen by the session's own `by`. None is on `AI_GRANT_OPS`. */
     groupkeyset: "admin", groupkeyremove: "admin", groupkeyswitch: "admin", groupswitchset: "admin",
-    groupkeystate: "ownread", groupkeynotice: "ownread", groupkeynoticeseen: "own" } }),
+    groupkeystate: "ownread", groupkeynotice: "ownread", groupkeynoticeseen: "own",
+    signout: "sessionend", signouteverywhere: "sessionend", securitymap: "ownread", recoverycodesissue: "admin",
+    recoverycodesstate: "ownread", recover: "door", subscriptiondisconnect: "own" } }),
   /* sources (K1550): marking a capture as from a keyed service, its capturer's own act (MACHINE_CANNOT_MARK, R16, R18). */
   sources: family({ owner: "sources", cite: "sources R16, R18; K1550", actor: QUERY("by"), ops: { sourcekeyed: "member" } }),
-  /* entities (K1572; R18): a scheme identifier, `resolutiondefect`'s stamp; a machine on a system rule's basis (R43). */
-  entities: family({ owner: "entities", cite: "entities R43; K1572; R18", actor: BODY("by"), ops: { entityidentify: "open" } }),
+  /* entities (K1572; R18): a scheme identifier, `resolutiondefect`'s stamp; a machine on a system rule's basis (R43).
+     T35 (R30; its R51, N699): the registry's entities of a kind, the offices among them, a read. */
+  entities: family({ owner: "entities", cite: "entities R43, R51; K1572; R18, R30", actor: BODY("by"), ops: {
+    entityidentify: "open", entitieskind: "read" } }),
   /* ai-runs (K1601, K1610, K1612; R20): a member's own ceiling (NOT_YOUR_CEILING), the copy's an administrator's
      (R50); a run's verification refused to a machine (AI_RUN_VERIFICATION_UNFIT, run-rules R19); usage read by a
      session, the copy's figure an administrator's (R51). */
@@ -260,21 +296,26 @@ const OP_FAMILIES = Object.freeze({
     proposer: QUERY("proposer"), ops: {
     clockadopt: "member", clockpropose: "proposal", clocksics: "read", clocklateness: "read" } }),
   /* capture-requests (K1601): marking a host a platform and lifting the mark, a member's act on the group's drain
-     (R46), its actor the stamped viewer; the marks a read. */
-  "capture-requests": family({ owner: "capture-requests", cite: "capture-requests R46; K1601", actor: QUERY("viewer"), ops: {
-    capturerequestplatformmark: "member", capturerequestplatformunmark: "member", capturerequestplatformhosts: "read" } }),
+     (R46), its actor the stamped viewer; the marks a read. T35 (its R51–R53): the group's records request for a policy
+     held by citation, opened and its answer recorded by a member (MACHINE_CANNOT_REQUEST_RECORDS), its `by` read from
+     the control plane's `principal` stamp; the requests a read. */
+  "capture-requests": family({ owner: "capture-requests", cite: "capture-requests R46, R51–R53; K1601", actor: QUERY("viewer"),
+    extra: { recordsrequestopen: ["principal"], recordsrequestanswer: ["principal"] }, ops: {
+    capturerequestplatformmark: "member", capturerequestplatformunmark: "member", capturerequestplatformhosts: "read",
+    recordsrequestopen: "member", recordsrequestanswer: "member", recordsrequests: "read" } }),
   /* instance-setup (R17; K1683, its op names): seeding the offices and the seats and setting the assistant, an
      administrator's own session (R50, R52, R53); the disclosure shown, a member's own record (R54); the assistant's
      state a read, and a member's disclosure their own read. T34: the unheld place, an administrator's act and read
      (R26; its R60, NOT_AN_ADMIN); the member's screen language, their own act (`machineClasses: []`) and the read
      (R28; its R64); the group's description drafted for its administrator, a session's labelled draft writing nothing,
-     `by` and `viewer` stamped (R29; its R65, DEC-152; K1837). */
-  "instance-setup": family({ owner: "instance-setup", cite: "instance-setup R50, R52–R54, R60, R64, R65; R17, R26, R28, R29; K1683",
+     `by` and `viewer` stamped (R29; its R65, DEC-152; K1837). T35 (R30; its R66, K1888): the second-administrator
+     step, a session's read answered to an administrator (NOT_AN_ADMIN otherwise). */
+  "instance-setup": family({ owner: "instance-setup", cite: "instance-setup R50, R52–R54, R60, R64–R66; R17, R26, R28–R30; K1683",
     actor: QUERY("by"), extra: { groupdescriptiondraft: ["by"] }, ops: {
     officesseed: "admin", seatsseed: "admin", assistantset: "admin", disclosureshown: "own",
     assistantstate: "read", disclosureof: "ownread",
     placewanted: "admin", placewantedstate: "ownread", memberlanguageset: "sessionact", memberlanguage: "read",
-    groupdescriptiondraft: "ownread" } }),
+    groupdescriptiondraft: "ownread", adminrecoverystep: "ownread" } }),
   /* T34 (R22; membership R98–R110, DEC-133, DEC-134, DEC-136; K1749): the group's settings. The administrator's acts
      take `hostingaccessset`'s spec (`roster`; NOT_AN_ADMIN is membership's own answer, a bearer's included), `by`
      from the query; the website's and the join page's doors are public, stamped nothing, the key or link read from the
@@ -301,6 +342,18 @@ const OP_FAMILIES = Object.freeze({
   "wizard-scripts": family({ owner: "wizard-scripts", cite: "wizard-scripts R23, R26, R27; R15, R28, R29; K1818",
     actor: QUERY("by"), extra: { writinghelp: ["by"] }, ops: {
     startfrom: "read", baseupdates: "ownread", writinghelp: "ownread" } }),
+  /* T35 (R30; acquisition R38–R43, served through `capture`'s map, its R73; N688, DEC-167, K1844, K1888, K1940): the
+     archive opened and continued (the daemon drains `archive-unpack` as this op), `by` from the query beside the door's
+     `cls` and `member`, any other caller answered UNPACK_NOT_PERMITTED; its entries read; the group's co-archive setting
+     set by an administrator (`hostingaccessset`'s spec, NOT_AN_ADMIN), and read, stamped nothing. */
+  acquisition: family({ owner: "acquisition", cite: "acquisition R38, R41, R43; capture R73; R30", actor: QUERY("by"), ops: {
+    unpack: "daemonact", archivelist: "read", coarchiveset: "roster", coarchivestate: "settingread" } }),
+  /* T35 (R30; retrieval R73, DEC-164, K1972): "Find in this", a read, the viewer and the selection's `owner` stamped
+     (a selection scope is read under its owner, the viewer by default). */
+  retrieval: family({ owner: "retrieval", cite: "retrieval R73; K1972; R30", extra: { findin: ["owner"] }, ops: {
+    findin: "read" } }),
+  /* T35 (R30; public-read R30, DEC-146): the credit page, the same bytes for every caller, stamped nothing. */
+  "public-read": family({ owner: "public-read", cite: "public-read R30; R30", ops: { credit: "public" } }),
 });
 const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
 /* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. */
@@ -324,10 +377,14 @@ const ASK_GRANT_OPS = frozenList(["askceiling", "askcheck", "askusage"]);
    keys the door sets on it, from a closed set the control plane implements once each: `viewer` (the caller's sight),
    `by` (the actor in the query), `bodyBy` (the actor in the body, a caller's copy overwritten), `author` (the
    positional identity), `proposer` (the label), `member` (the session's own member) and `session` (the session token,
-   into the store request only). Read from `OP_FAMILIES` — `viewer` on every op, the actor's key on each act, the
+   into the store request only); since T35 (R30) `owner` (a selection's owner, `select`'s expression), `principal` (the
+   caller's principal, `capturerequestretry`'s expression), and `source` and `country` (the caller's keyed fingerprint
+   and Cloudflare's country label, admission R21, never the address). Read from `OP_FAMILIES` — `viewer` on every op, the actor's key on each act, the
    proposer's on each proposal, and the family's extras — so the families stay the one append site. A family whose
    actor IS the viewer (calculations, answers, capture-requests' marks) needs no second key. The ask's three plane
-   ops carry the grant's member as `viewer` (K1601); `exportpage` and `moneydetectorsrun` are stamped nothing. */
+   ops carry the grant's member as `viewer` (K1601); `exportpage` and `moneydetectorsrun` are stamped nothing. T35
+   (R30): `claim` and `login` keep their specs and are stamped `source` and `country` (admission R21), as `recover` is;
+   `agentpack` is stamped `viewer`, as the untargeted `affordances` it is served apart from. */
 const stampKey = (st) => (!st || st.key === "viewer" ? null : st.key === "by" ? (st.at === "body" ? "bodyBy" : "by") : st.key);
 const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
   ...Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds).map((op) => {
@@ -337,6 +394,8 @@ const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
   })),
   ...ASK_GRANT_OPS.map((op) => [op, frozenList(["viewer"])]),
   ["exportpage", frozenList([])], ["moneydetectorsrun", frozenList([])],
+  ["claim", frozenList(["source", "country"])], ["login", frozenList(["source", "country"])],
+  ["agentpack", frozenList(["viewer"])],
 ])));
 
 /* BIO plane, control plane entry.
@@ -456,6 +515,10 @@ const OPS = frozenTable(aliasRows({
   /* REC-19 / DEC-8: what may be done to an object, published by the plane; working corpus, member and above,
      viewer-stamped. */
   affordances:         { classes: ["admin", "member", "probe"], mutating: false },
+  /* T35 (R30; N695; control-plane R41): the agent's pack and fences served apart from the untargeted `affordances`,
+     with its spec, its session sets (none: a read) and its NEEDS row (none), so a member's agent credential reaches it
+     by its scope as it reaches `op=affordances`; `viewer` stamped (`OP_STAMPS`). */
+  agentpack:           { classes: ["admin", "member", "probe"], mutating: false },
   /* S-10: the retrieval surface reads the working corpus, never public; `viewer` is stamped (D-15). */
   search:     { classes: ["admin", "member", "probe"],           mutating: false },
   /* PL-9 / D-222: op=search's compiler at meaning grain, fenced as op=search and viewer-stamped. */
@@ -2942,6 +3005,11 @@ const NEEDS = Object.freeze(aliasRows({
      stale (its R12), K516's precedent. */
   exportpage:            null,
   moneydetectorsrun:     null,
+  /* T35 (K2038): the credit page and `recover` take NO WORKING CAPABILITY — each public, reached by every caller — and
+     are PRESENT, null, because op-grades names both in NON_ACTS (its R22) and affordances' totality reads a NON_ACTS key
+     this table does not carry as stale (its R12), K516's precedent. */
+  credit:                null,
+  recover:               null,
 }));
 
 /* REC-19's act decoration, shared by op=affordances and op=queue (REC-20) so a queue item's options[] and an
