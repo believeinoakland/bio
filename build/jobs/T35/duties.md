@@ -2,6 +2,31 @@
 
 **Status** · session_01TGUk8GSCkas5fYA7hBEf9q · depth 2 · WORKING · handled B4
 
+
+## Completion
+
+**Entries applied (T35-34; N644, N675; K1713, K1740, K1799, K1965, K1966, K1968).** On J1's five readings (B2, K1965), with B3's change to R28's citations (K1966) and B4's edge (K1968).
+- R24: `OCCURRENCE_KEY_RE` stated in `vocab.mjs`, which imports nothing; `index.mjs` re-exports the same object (`===`). Inquiry-grammar R15 can now import it from `vocab.mjs` (T35-40).
+- R27: `usesOfPower` reads `events.usesOf` page by page (`next`) in events' own order and keeps the uses linked by `provision` (the power's source standard, and its portion or a part of it) or by `member` (`linkUse`); `after`, `limit`, `truncated` and `placed_nowhere` as events answers them; `decider_is_obligor` `true`, `false` or `undetermined` with why (a person decider read through `lines.holderAt`), a fact about the record, never a judgment. `linkUse` / `unlinkUse` (member's acts; `DUTY_MEMBER_ACT_ONLY`, `NO_SUCH_DUTY`, `NOT_A_POWER` C-133.39, `NO_SUCH_EVENT` through events, `DUTY_NO_REASON`; a repeat `already`), held in a new append-only table `duty_use_links` (declared, gated). `readDuty`, `dutiesOf` and `powersOf` answer each power's `uses` count; R18's owner gains `used_in` ("used in", derived).
+- R28: `proposeReview` proposes one duty of the owner ("review the policy", the policy as source, basis `commitment`, trigger `date`, or `recurrence` from a cited cycle). `reviewDue` and `cycle` are `{captureSha, extent}` (a found match passing as it is), refused `NO_SHA` (extraction's `noSha`), `CAPTURE_NOT_HELD`, `NO_EXTENT`, `EXTENT_NOT_IN_CAPTURE` (bare, as events R1), `REVIEW_EXTENT_NOT_HELD` (C-133.38), then minted through `content.mint` and read with `content.passageText`; `REVIEW_DATE_UNREAD` (C-133.37) unless the words state exactly one whole date; a cycle in years, months, weeks, or days that are whole weeks, else `BAD_RECURRENCE`. An adopted review past its date with no match keeps the state `overdue`, answered `label: "Noticed"` with R28's why and a question saying it is the body's own commitment.
+- R29: a source standard issued by an organisation outside government (an entity issuer, `standards` R39) becomes a duty only for an obligor acting for a public body with an enforcer named; a government obligor only where `standards.bindsAt` answers `binds`; otherwise `NOT_ACTING_FOR_PUBLIC` / `NO_ENFORCER`, the detail saying the policy stays held as a standard (translations unchanged).
+- R1 (reading 5): a source whose standard a public body issued counts as "a source naming the body" for an acting organisation.
+- R19: ops `poweruses`, `uselink`, `useunlink`, `reviewpropose` (names provisional, as the module's other ops).
+
+**Deferred.** None.
+
+**Found in other modules (to BOB, in COMPLETE).**
+- `control-plane` R53 (`t33`-family test, already red on `tranche/T35`) now also names the four new ops, which have no spec or `OP_STAMPS` entry: their specs are `op-declarations`' (T35-70) and their routing `control-plane`'s (T35-72).
+- Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs` (duties' source changed), regenerated at the layer's close (§14).
+- Rows C-133.37–.39 are new and await promotion's stamp (accepted red 2).
+
+**Tests and checks run** (on this commit's parent, after merging `tranche/T35` @ bd314ba4d6):
+- `node --test bio-plane/test/m/duties/`: tests 49, pass 49, fail 0.
+- Every user of duties (16 modules): people 40/0, explore 27/0, retrieval 139/0, calculations 46/0, strength 143/0, answers 34/0, actions 96/0, action-plans 63/0, scheduler 95/0, notice-producers 45/0, `migrate-released` 1/0; inquiry-grammar 6, leg-earning 1, affordances 2, op-declarations 3, control-plane 3 and plane 6 fail, each the identical set on `tranche/T35` without this job's changes (accepted reds); only control-plane R53's message gains the four ops above.
+- `format`: 130 modules, 129 requirements files; 0 failures. `architecture duties`: 11 product files, 48 relative imports; 0 failures. `coverage duties`: 29 of 29 live ids; 0 failures. `ownership duties tranche/T35`: 9 files; 0 failures.
+
+Size (session_01TGUk8GSCkas5fYA7hBEf9q): test runs 12, module lines 1939
+
 ## J1 · QUESTION
 
 Readings I am building on (T35-34); answer only where you differ.
