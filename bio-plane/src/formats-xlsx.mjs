@@ -66,6 +66,11 @@
  * workbook.xml — but text extraction is refused as a STATED
  * text-undetermined carrying the guard's own marker verbatim. Streaming to
  * 64 MiB is DEFERRED (COFF-6's landed line) and deliberately not built.
+ * Every part read passes ooxml.mjs's part cap (R12, F18).
+ *
+ * ACTIVE CONTENT (R32): `active` on structure() and text(), from docx.mjs's
+ * one `activeContent` builder, Excel 4.0 macro sheets included; .xlsm/.xltm/
+ * .xlam read as this entry with `variant` set (R33).
  *
  * This module asserts nothing about MEANING (FRAMEWORK's, through I2) and
  * WRITES nothing.
@@ -78,7 +83,7 @@ import {
   withContainerImages,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
-import { withMetadata } from "./docx.mjs";
+import { withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -95,6 +100,12 @@ const isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 
 export const XLSX_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+/* R33 (K1903): the macro-enabled flavours' package types, read as xlsx. */
+const XLSX_TWIN_CONTENT_TYPES = new Map([
+  ["application/vnd.ms-excel.sheet.macroEnabled.12", "xlsm"],
+  ["application/vnd.ms-excel.template.macroEnabled.12", "xltm"],
+  ["application/vnd.ms-excel.addin.macroEnabled.12", "xlam"],
+]);
 
 const WORKBOOK_PART = "xl/workbook.xml";
 const SHARED_STRINGS_PART = "xl/sharedStrings.xml";
@@ -541,9 +552,13 @@ async function xlsxParts(bytes) {
     else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
   }
 
+  /* R32: names, rels, the VBA project and Excel 4.0 macro sheets — read over
+     the guard too (K1903). */
+  const active = await activeContent(b, container, rels, "xl/");
+
   return {
-    ok: true, format: "xlsx", bytes: b, container,
-    sheets, definedNames, tables, rels, sharedStrings, core, declared, guard, undetermined,
+    ok: true, format: "xlsx", variant: disc.variant ?? null, bytes: b, container,
+    sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, undetermined,
   };
 }
 
@@ -1002,11 +1017,7 @@ export const xlsxEntry = {
       }
       return null;
     }
-    if (contentType === XLSX_CONTENT_TYPE) {
-      return { format: "xlsx", confidence: "likely",
-        signals: [`content type "${contentType}"`] };
-    }
-    return null;
+    return detectByContentType("xlsx", XLSX_CONTENT_TYPE, XLSX_TWIN_CONTENT_TYPES, contentType);
   },
   parts: (bytes) => xlsxParts(bytes),
   /* Accept either parts() output or raw bytes, exactly as docx.mjs does, so
@@ -1016,13 +1027,13 @@ export const xlsxEntry = {
     const parts = isBytes(partsOrBytes)
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
-    return xlsxStructure(parts);
+    return withActive(await xlsxStructure(parts), parts);
   },
   text: async (partsOrBytes) => {
     const parts = isBytes(partsOrBytes)
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under xl/media/, exhaustive or NULL. */
-    return withContainerImages(withMetadata(xlsxText(parts), parts), parts, "xl/media/");
+    return withContainerImages(withActive(withMetadata(xlsxText(parts), parts), parts), parts, "xl/media/");
   },
 };

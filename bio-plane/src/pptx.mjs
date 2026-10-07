@@ -99,7 +99,12 @@
  * (ppt/slides/*.xml + ppt/notesSlides/*.xml, summed from the central
  * directory — the COFF-6 metric) exceed ooxml.mjs's bound. Container walk,
  * rels, presentation.xml (structural, tiny) and core-properties still run;
- * nothing is silently truncated.
+ * nothing is silently truncated. Every part read passes ooxml.mjs's part cap
+ * (R12, F18).
+ *
+ * ACTIVE CONTENT (R32): `active` on structure() and text(), from docx.mjs's
+ * one `activeContent` builder; .pptm/.potm/.ppsm/.ppam read as this entry
+ * with `variant` set (R33).
  *
  * This module ASSERTS nothing about meaning (FRAMEWORK's, through I2) and
  * WRITES nothing. Never invent structure: everything unreadable is stated.
@@ -111,7 +116,7 @@ import {
   discriminate, walkRels, relsPartFor, sizeGuard,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
 } from "./ooxml.mjs";
-import { mceSkipper, withMetadata } from "./docx.mjs";
+import { mceSkipper, withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
 
@@ -128,6 +133,13 @@ const isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 
 export const PPTX_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+/* R33 (K1903): the macro-enabled flavours' package types, read as pptx. */
+const PPTX_TWIN_CONTENT_TYPES = new Map([
+  ["application/vnd.ms-powerpoint.presentation.macroEnabled.12", "pptm"],
+  ["application/vnd.ms-powerpoint.template.macroEnabled.12", "potm"],
+  ["application/vnd.ms-powerpoint.slideshow.macroEnabled.12", "ppsm"],
+  ["application/vnd.ms-powerpoint.addin.macroEnabled.12", "ppam"],
+]);
 const CONTENT_TYPES_PART = "[Content_Types].xml";
 const MAIN_PART = "ppt/presentation.xml";
 const EMBEDDINGS_DIR = "ppt/embeddings/";
@@ -492,10 +504,13 @@ async function pptxParts(bytes) {
     else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
   }
 
+  /* R32: names, rels and the VBA project — read over the guard too. */
+  const active = await activeContent(b, container, rels, "ppt/");
+
   return {
-    ok: true, format: "pptx", bytes: b, container, mainPart, presentationXml,
+    ok: true, format: "pptx", variant: d.variant ?? null, bytes: b, container, mainPart, presentationXml,
     order, slideParts, notesParts, slideXml, notesXml, notesOf, hiddenParts,
-    rels, core, guard, undetermined,
+    rels, core, active, guard, undetermined,
   };
 }
 
@@ -915,10 +930,7 @@ export const pptxEntry = {
       }
       return null;
     }
-    if (contentType === PPTX_CONTENT_TYPE) {
-      return { format: "pptx", confidence: "likely", signals: [`content type "${contentType}"`] };
-    }
-    return null;
+    return detectByContentType("pptx", PPTX_CONTENT_TYPE, PPTX_TWIN_CONTENT_TYPES, contentType);
   },
   parts: (bytes) => pptxParts(bytes),
   structure: async (partsOrBytes) => {
@@ -928,13 +940,13 @@ export const pptxEntry = {
     const parts = isBytes(partsOrBytes)
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
-    return pptxStructure(parts);
+    return withActive(await pptxStructure(parts), parts);
   },
   text: async (partsOrBytes) => {
     const parts = isBytes(partsOrBytes)
       ? await pptxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under ppt/media/, exhaustive or NULL. */
-    return withContainerImages(withMetadata(await pptxText(parts), parts), parts, "ppt/media/");
+    return withContainerImages(withActive(withMetadata(await pptxText(parts), parts), parts), parts, "ppt/media/");
   },
 };

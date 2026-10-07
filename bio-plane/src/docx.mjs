@@ -72,7 +72,16 @@
  * when the DECLARED UNCOMPRESSED bytes of the text parts we would inflate
  * (word/document.xml + word/comments.xml, summed from the central directory —
  * the COFF-6 metric) exceed ooxml.mjs's bound. Container walk, rels and
- * core-properties still run; nothing is silently truncated.
+ * core-properties still run; nothing is silently truncated. Every part read
+ * at all passes ooxml.mjs's part cap (R12, F18): a refusal names its limit
+ * where that part's failure is stated.
+ *
+ * ACTIVE CONTENT (R32, K1888): `structure()` and `text()` carry `active`,
+ * what in the file can act when opened (a VBA project, ActiveX and OLE parts,
+ * embedded files, external relationship targets), found and read, never run;
+ * `activeContent` below is the one builder the three OOXML entries share. The
+ * macro-enabled flavours (.docm, .dotm) read as this entry with `variant` set
+ * (R33).
  *
  * This module ASSERTS nothing about meaning (FRAMEWORK's, through I2) and
  * WRITES nothing. Never invent structure: everything unreadable is stated.
@@ -83,6 +92,7 @@ import {
   hasZipMagic, readContainer, readPart, normalizePartName,
   discriminate, walkRels, relsPartFor, sizeGuard,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
+  readVbaProject,
 } from "./ooxml.mjs";
 
 const UTF8 = new TextDecoder("utf-8", { fatal: false });
@@ -100,6 +110,12 @@ const isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 
 export const DOCX_CONTENT_TYPE =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+/* R33 (K1903): the macro-enabled flavours' package types, each read as this
+ * entry's own format; the flavour is named in the signals, never as `format`. */
+const DOCX_TWIN_CONTENT_TYPES = new Map([
+  ["application/vnd.ms-word.document.macroEnabled.12", "docm"],
+  ["application/vnd.ms-word.template.macroEnabled.12", "dotm"],
+]);
 const CONTENT_TYPES_PART = "[Content_Types].xml";
 const MAIN_PART = "word/document.xml";
 const COMMENTS_PART = "word/comments.xml";
@@ -509,7 +525,11 @@ async function docxParts(bytes) {
     else undetermined.push({ part: CORE_PROPERTIES_PART, why: c.why });
   }
 
-  return { ok: true, format: "docx", bytes: b, container, mainPart, documentXml, commentsXml, rels, core, guard, undetermined };
+  /* R32: read from names, rels and the VBA project, so over the guard too. */
+  const active = await activeContent(b, container, rels, "word/");
+
+  return { ok: true, format: "docx", variant: d.variant ?? null, bytes: b, container, mainPart,
+    documentXml, commentsXml, rels, core, active, guard, undetermined };
 }
 
 /* ------------------------------------------------------------------ *
@@ -866,6 +886,82 @@ export function withMetadata(out, parts) {
 }
 
 /* ------------------------------------------------------------------ *
+ * R32 (K1888, K1903) — what in the file can act when it is opened
+ * ------------------------------------------------------------------ */
+
+const HYPERLINK_REL_RE = /\/relationships\/hyperlink$/;
+
+/** The `active` list: every part of the file that can act when it is opened,
+ *  FOUND AND READ, NEVER RUN. One item per finding, in central-directory
+ *  order of its part, and within one `.rels` part in that part's order. It
+ *  reads only names, `.rels` parts and the VBA project (through `ooxml`, whose
+ *  part cap every read passes, R12), so it stands over the text guard too.
+ *  `dir` is the format's own directory (`word/`, `ppt/`, `xl/`). An item says
+ *  the file CAN act, never that it is malicious (R24); a `.rels` part that
+ *  could not be read is an `unread` item, so an empty list is a finding and
+ *  never a walk that missed. Shared by the three OOXML entries — one builder,
+ *  so their lists cannot drift. */
+export async function activeContent(bytes, container, rels, dir) {
+  /* walkRels' results, by part, in its own order (a duplicated name keeps
+     each of its readings in turn). */
+  const relsOf = new Map();
+  const queue = (part, r) => { if (!relsOf.has(part)) relsOf.set(part, []); relsOf.get(part).push(r); };
+  for (const bp of rels.byPart) queue(bp.part, { relationships: bp.relationships });
+  for (const u of rels.undetermined) queue(u.part, { why: u.why });
+
+  const active = [];
+  for (const entry of container.entries) {
+    const part = normalizePartName(entry.name);
+    if (!part || part.endsWith("/")) continue;
+    const last = part.slice(part.lastIndexOf("/") + 1);
+    if (last.toLowerCase() === "vbaproject.bin") {
+      const v = await readVbaProject(bytes, container, part);
+      active.push(v.ok
+        ? { kind: "vba-project", part, read: true, why: null, project: v.project,
+            modules: v.modules.map((m) => m.name), autoRun: v.autoRun, suspicious: v.suspicious }
+        : { kind: "vba-project", part, read: false, why: v.why, project: null,
+            modules: null, autoRun: null, suspicious: null });
+    }
+    if (part.startsWith(`${dir}activeX/`)) active.push({ kind: "activex", part });
+    else if (part.startsWith(`${dir}embeddings/`)) {
+      active.push({ kind: /^oleobject/i.test(last) ? "ole-object" : "embedded-file", part });
+    } else if (dir === "xl/" && part.startsWith("xl/macrosheets/")) active.push({ kind: "xl4-macrosheet", part });
+    const read = relsOf.get(part)?.shift();
+    if (!read) continue;
+    if (read.why != null) { active.push({ kind: "unread", part, why: read.why }); continue; }
+    for (const r of read.relationships) {
+      if (r.external && !HYPERLINK_REL_RE.test(r.type ?? ""))
+        active.push({ kind: "external-target", part, type: r.type, target: r.target });
+    }
+  }
+  return active;
+}
+
+/** Carry R32's `active` and R33's `variant` onto an ok structure() or text()
+ *  result: both are the parts read once, so the two answers carry the same
+ *  list. `variant` is the macro-enabled flavour (`"docm"`), null for a plain
+ *  file. */
+export function withActive(out, parts) {
+  if (!out || !out.ok) return out;
+  return { ...out, variant: parts.variant ?? null, active: parts.active };
+}
+
+/** `detect(null, contentType)` for an OOXML entry: `likely` for the plain
+ *  type and for each macro-enabled twin's (R2, R33), with `format` always the
+ *  entry's own; else null. Exact equality, never case-folded (R2). */
+export function detectByContentType(format, plainType, twins, contentType) {
+  if (contentType === plainType) {
+    return { format, confidence: "likely", signals: [`content type "${contentType}"`] };
+  }
+  const variant = typeof contentType === "string" ? twins.get(contentType) : undefined;
+  if (variant) {
+    return { format, confidence: "likely", signals: [`content type "${contentType}"`,
+      `the macro-enabled flavour ${variant}, read as ${format} (R33)`] };
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------------ *
  * The I7 entry
  * ------------------------------------------------------------------ */
 
@@ -893,10 +989,7 @@ export const docxEntry = {
       }
       return null;
     }
-    if (contentType === DOCX_CONTENT_TYPE) {
-      return { format: "docx", confidence: "likely", signals: [`content type "${contentType}"`] };
-    }
-    return null;
+    return detectByContentType("docx", DOCX_CONTENT_TYPE, DOCX_TWIN_CONTENT_TYPES, contentType);
   },
   parts: (bytes) => docxParts(bytes),
   structure: async (partsOrBytes) => {
@@ -906,7 +999,7 @@ export const docxEntry = {
     const parts = isBytes(partsOrBytes)
       ? await docxParts(partsOrBytes)
       : partsOrBytes;
-    return docxStructure(parts);
+    return withActive(await docxStructure(parts), parts);
   },
   text: async (partsOrBytes) => {
     const parts = isBytes(partsOrBytes)
@@ -914,6 +1007,6 @@ export const docxEntry = {
       : partsOrBytes;
     /* FW-19 / IC-124: `images` — every image under word/media/, content-
        addressed, exhaustive or NULL (ooxml.mjs's `containerImages`). */
-    return withContainerImages(withMetadata(await docxText(parts), parts), parts, "word/media/");
+    return withContainerImages(withActive(withMetadata(await docxText(parts), parts), parts), parts, "word/media/");
   },
 };
