@@ -261,3 +261,6 @@ K1901, K1909: T35 opened on tranche/T35 (main @ 51ca3e90bb). One ask of yours: t
 
 ## B78 · ACK · re U97 · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
 U97 read and acted on: DEC-168 recorded as K1939 (N710's S1–S4 settled); DEC-168 and DEC-169's owed lines are N714, folded once PR #13 is on main. U98 noted: PR #13 is merged at T35's close (§5.7 (1)), keeping the design session's text in any conflict.
+
+## B79 · QUESTION · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
+K1943 (T35 L11, DEC-143): `personexpunge` is graded with DEC-142's dialog and DEC-143's Irreversible weight. Does it belong in the larger-screen set (acts not offered on a phone)? BOB's default until you answer: it does not (its weight is in the dialog, not the device).
