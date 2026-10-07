@@ -24,6 +24,14 @@
 
 Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 9, module lines 2522
 
+## Completion of B3 (K2054)
+
+**Applied.** Merged tranche/T35 (setup-page merged). R47's page link now reads setup-page's `ROTATION_GUIDE_HREF` as a named import; the namespace read is gone. Red 41 cleared. Its cause was my test, not the code. setup-page shows the guide as its section `#s-rotate`, which its script opens at the address `#replace-one-time-password`. There is no element with that id, and my test asked for one. The test now checks three things: the block's one link is the guide's name, to setup-page's exported address; the composed page carries the guide's section once; and the page's script opens it at that address.
+
+**Tests and checks** (on the commit below): `node --test bio-plane/test/m/instance-setup/`: tests 108, pass 108, fail 0. `format`: 0 failures. `architecture instance-setup`: 0 failures. `coverage instance-setup`: 48 of 48. `ownership instance-setup tranche/T35`: 2 files, 0 failures.
+
+Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 11, module lines 2520
+
 ## J1 · QUESTION
 
 R47 (F10): the block's guide name is a link on the page (setup-page R14) to setup-page R27's guide. The link needs the guide element's id, which is setup-page's, and setup-page (before me in the order) does not export one yet (job/T35/setup-page has no guide so far).
