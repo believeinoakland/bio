@@ -42,3 +42,25 @@ Size (session_019F8gBQfqTqF5hBsFcHmxd7): test runs 4, module lines 0 (reader cod
 ## J1 · COMPLETE
 
 T36-4 done (record: build/jobs/T36/doctypes.md, Completion). R35 out-of-sample measure, 2026-10-07, under the held first profile: 24 fresh policies (AI 139 and 23 DGOs; every SO and AI on PowerDMS is already among the 50), none among the 50; answers committed before the reader ran (45320047f7). All 24 CERTAIN and typed policy through the registry. 20 of 24 headers wholly right (83%). Per field: type 24/24, number 24/24, title 22/24, effective 24/24, supersedes 1/1, reference 11/11, coordinator 9/11, review_due 4/6, revision_cycle 4/5. BELOW 90%: coordinator, review_due, revision_cycle. The re-scoping of R25–R34 is yours; not re-scoped, not tuned. Causes: D-4's revision memo running header anchors the header too early (one miss in each of the three fields); B-01's 'DD MMM YY' placeholder dropped, not kept as written (against R26; fix deferred to keep the measure clean); K-6's coordinator runs into the body's caps name; H-10's title read from the contents page. Reader code unchanged; tests 40/40; format, architecture, coverage (36/36) and ownership checks all 0 failures. RS1: read whole about 140 KB; two worker summaries (about 20 KB and 18 KB, citations in the record); one point mattered (registry precedence), checked: all 24 policy.
+
+## CHANGE B2 (K2079): the re-scope applied
+
+Merged `tranche/T36` (R26 amended, K2079). R35's recorded figures are unchanged: the measure was taken before these fixes and stays the measure (20 of 24, 2026-10-07), held as such in the R35 test.
+
+- **R26 `measured: "below_target"`.** `coordinator`, `review_due` and `revision_cycle`, where read, carry `measured: "below_target"` (`BELOW_TARGET` in `policy-header.mjs`, with the measurement it rests on). No other field carries it. Tested under the test profile and the held profile.
+- **The four causes, fixed in `policy-header.mjs`, each tested on its fixture (named R26):**
+  1. **D-4: a running header anchored the block too early.** Every line opening with a series' label is now a candidate anchor. The first one stands, unless the same series and number anchor again further on and that block reads more fields. That is the case here: the revision memorandum's running header prints the order's name and one field above the order's own header. Where the two blocks read the same fields (H-10 and M-9 print their header before and after the contents page), the first still stands.
+  2. **B-01: a placeholder date was dropped.** The placeholder shape now also knows `DD`, `MM` and `YY`/`YYYY` blanks. "DD MMM YY" is kept as written, with `date: null` and why.
+  3. **K-6: the coordinator ran on into the body.** A field's value printed beside its label ends at its line when the next line is set in capitals and the value is not: that capitalised line is the order's name. The title is excepted, because the old layout's index terms are followed by the name.
+  4. **H-10: the title was read from the contents page.** A contents heading, singular or plural ("TABLE OF CONTENT"), is page furniture, so it is never taken as a title. The title stays the header's own.
+- **In-sample figure, labelled so (not R35's measure):** after the fixes, all 24 of the fresh policies read wholly right (24/24; every field at 100%), including the four that missed: D-4 (96), B-01 (23), K-6 (419) and H-10 (200). On the 50, the figures are unchanged: 46 of 50 headers and 45 of 50 section sets.
+- **N751** (a fresh measure once new policies exist) is BOB's measurement; nothing is owed here.
+
+**Found in other modules.** The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json`) includes `doctypes/policy-header.mjs`, so it is stale after this change. It is not mine to rebuild (mechanics §14); it is already on K2079's list of what is stale for L1's close.
+
+**Tests and checks run (B2).**
+- `node --test doctypes/test/*.test.mjs`: tests 45, pass 45, fail 0.
+- The users of the changed service, R26's added key: roster-reader 22/22, reading-pipeline 91/91, extraction 127/127, plane 131/131.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs`: 0 failures. `checks/coverage.mjs`: 36 of 36 ids; 0 failures. `checks/ownership.mjs`: 7 files; 0 failures.
+
+Size (session_019F8gBQfqTqF5hBsFcHmxd7): test runs 10, module lines 45 (`policy-header.mjs`; test lines about 100)

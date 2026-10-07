@@ -11,7 +11,7 @@ import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { EMPTY, HELD, PE, PE_POLICY } from "./fixtures.mjs";
 import { CASES } from "./golden-cases.mjs";
 import { readWith } from "./read.mjs";
-import { POLICIES, ANSWERS, SECTION_ANSWERS, FRESH, FRESH_ANSWERS, score, scoreSections } from "./policies.mjs";
+import { POLICIES, ANSWERS, SECTION_ANSWERS, FRESH, FRESH_ANSWERS, score, scoreSections, same } from "./policies.mjs";
 
 const policy = DOCTYPES.find((t) => t.key === "policy");
 const REG = (() => { const r = makeRegistry(); for (const t of DOCTYPES) r.register(t); return r; })();
@@ -268,8 +268,24 @@ test("R35 R27 section boundaries on the 50, against a member's reading of each o
   assert.equal(right, 45, "the measurement recorded in the job record");
 });
 
+/* R35's out-of-sample measure as taken on 2026-10-07 (T36-4), before the four causes it found were fixed (K2079): the
+   reader then read 20 of the 24 headers wholly right. Recorded in the job record `build/jobs/T36/doctypes.md`; it stays
+   the measure. */
+const FRESH_MEASURE = { date: "2026-10-07", whole: 20, of: 24,
+  fields: { type: [24, 24], number: [24, 24], title: [22, 24], effective: [24, 24], supersedes: [1, 1], reference: [11, 11],
+            coordinator: [9, 11], review_due: [4, 6], revision_cycle: [4, 5] } };
+const readFresh = () => {
+  let whole = 0;
+  const per = {};
+  for (const d of FRESH.documents) {
+    const s = score(policy.parse({ text: d.text.document, view: HELD }).header, FRESH_ANSWERS[d.id]);
+    if (s.ok) whole++;
+    for (const [f, x] of Object.entries(s.fields)) { per[f] ??= [0, 0]; per[f][1]++; if (x.ok) per[f][0]++; }
+  }
+  return { whole, per };
+};
+
 test("R35 measured out of sample: 24 fresh policies of the same issuers and series, none among the 50, per header field under the held first profile", () => {
-  /* The measurement of 2026-10-07 (T36-4), recorded in the job record `build/jobs/T36/doctypes.md`. */
   assert.ok(FRESH.documents.length >= 20);
   const shas = new Set(POLICIES.documents.map((d) => d.sha256)), ids = new Set(POLICIES.documents.map((d) => d.id));
   const families = new Set(POLICIES.documents.map((d) => d.family));
@@ -280,23 +296,64 @@ test("R35 measured out of sample: 24 fresh policies of the same issuers and seri
     assert.match(d.sha256, /^[0-9a-f]{64}$/);
     assert.ok([1, 2, 3].includes(d.tier), d.id);
     assert.ok(FRESH_ANSWERS[d.id], `a member's reading of ${d.id}`);
+    assert.equal(policy.detect({ text: d.text.document, view: HELD }).confidence, CONFIDENCE.CERTAIN, d.id);
+    assert.equal(readWith(REG, d.text, { view: HELD }).doctype.type.key, "policy", `${d.id} through the registry`);
   }
-  let whole = 0, certain = 0;
-  const per = {};
-  for (const d of FRESH.documents) {
-    if (policy.detect({ text: d.text.document, view: HELD }).confidence === CONFIDENCE.CERTAIN) certain++;
-    const s = score(policy.parse({ text: d.text.document, view: HELD }).header, FRESH_ANSWERS[d.id]);
-    if (s.ok) whole++;
-    for (const [f, x] of Object.entries(s.fields)) { per[f] ??= [0, 0]; per[f][1]++; if (x.ok) per[f][0]++; }
-  }
-  assert.equal(certain, 24, "every fresh policy is read as a policy");
-  for (const d of FRESH.documents) assert.equal(readWith(REG, d.text, { view: HELD }).doctype.type.key, "policy", `${d.id} through the registry`);
-  assert.equal(whole, 20, "20 of 24 headers read wholly right");
-  assert.deepEqual(per, { type: [24, 24], number: [24, 24], title: [22, 24], effective: [24, 24], supersedes: [1, 1],
-                          reference: [11, 11], coordinator: [9, 11], review_due: [4, 6], revision_cycle: [4, 5] });
-  /* The fields read correctly for fewer than 90% of the policies that print them: the measurement names them (R35). */
-  const below = Object.entries(per).filter(([, [ok, n]]) => ok / n < 0.9).map(([f]) => f);
+  /* The recorded measure: its counts are the 24's, and the fields under 90% are named (R35). */
+  assert.equal(FRESH_MEASURE.of, FRESH.documents.length);
+  const printed = {};
+  for (const a of Object.values(FRESH_ANSWERS)) for (const f of Object.keys(a)) printed[f] = (printed[f] || 0) + 1;
+  for (const [f, [, n]] of Object.entries(FRESH_MEASURE.fields)) assert.equal(n, printed[f], f);
+  const below = Object.entries(FRESH_MEASURE.fields).filter(([, [ok, n]]) => ok / n < 0.9).map(([f]) => f);
   assert.deepEqual(below, ["coordinator", "review_due", "revision_cycle"]);
+  /* The reader today reads each field at least as the measure recorded (after K2079's fixes: in sample, all 24). */
+  const now = readFresh();
+  assert.ok(now.whole >= FRESH_MEASURE.whole);
+  for (const [f, [ok]] of Object.entries(FRESH_MEASURE.fields)) assert.ok(now.per[f][0] >= ok, f);
+  assert.equal(now.whole, 24, "in sample, after the fixes: the figure recorded in the job record");
+});
+
+test("R26 the fields below R35's target carry measured below_target, under any profile; the others do not", () => {
+  for (const [text, view] of [[PE_POLICY, PE], [FRESH.documents.find((d) => d.id === "37").text.document, HELD]]) {
+    const h = policy.parse({ text, view }).header;
+    for (const f of ["coordinator", "review_due", "revision_cycle"]) assert.equal(h[f].measured, "below_target", f);
+    for (const f of ["type", "number", "title", "effective"]) assert.equal(h[f].measured, undefined, f);
+  }
+});
+
+const freshHeader = (id) => {
+  const d = FRESH.documents.find((x) => x.id === id);
+  return { d, h: policy.parse({ text: d.text.document, view: HELD }).header };
+};
+
+test("R26 a revision memorandum's running header naming the order does not anchor the header: the order's own block is read (DGO D-4)", () => {
+  const { d, h } = freshHeader("96");
+  for (const [f, x] of Object.entries(score(h, FRESH_ANSWERS["96"]).fields)) assert.ok(x.ok, `${f}: ${x.got}`);
+  const running = d.text.document.indexOf("DEPARTMENTAL GENERAL ORDER D-4 Effective Date:");
+  assert.ok(running > 0 && h.type.start > running, "the series anchored is the order's own, after the memorandum's running header");
+  /* the same order anchored twice with the same fields (a header printed before and after its contents): the first */
+  const { d: d2, h: h2 } = freshHeader("200");
+  assert.ok(h2.start < d2.text.document.indexOf("TABLE OF CONTENT"));
+});
+
+test("R26 a placeholder date in any blank form ('DD MMM YY') is kept as written with date null and why, never dropped (DGO B-01)", () => {
+  const { h } = freshHeader("23");
+  assert.equal(h.review_due.text, "DD MMM YY");
+  assert.equal(h.review_due.date, null);
+  assert.match(h.review_due.why, /placeholder/);
+  assert.ok(!h.missing.includes("review_due"));
+});
+
+test("R26 a field's value stops at its line where the order's name follows in capitals, never running into the body (DGO K-6)", () => {
+  const { d, h } = freshHeader("419");
+  assert.equal(h.coordinator.text, "Patrol Rifle Program Instructor Staff");
+  assert.equal(d.text.document.slice(h.coordinator.start, h.coordinator.end), "Patrol Rifle Program Instructor Staff");
+});
+
+test("R26 the title is read from the header block, never from a contents page's heading (DGO H-10)", () => {
+  const { h } = freshHeader("200");
+  assert.ok(same(h.title.text, "Property Clearance and Disposal"), h.title.text);
+  assert.doesNotMatch(h.title.text, /contents?/i);
 });
 
 test("R3 R20 policy takes its series and labels from ctx.view, and with no view from every non-test held profile", () => {
