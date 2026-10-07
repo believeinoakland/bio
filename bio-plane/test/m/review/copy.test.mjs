@@ -294,6 +294,8 @@ test("R16: every observation the edition would reach, each with whether its auth
   assert.match(c.observations[0].stated, /chosen no level for CASE-2026-0001 edition 2; the edition cannot be signed/);
   assert.equal(JSON.stringify(c.observations).includes("\"level\""), false, "never the level itself");
   assert.ok(w.calls.attribution.some(([cid, e, o]) => cid === "CASE-2026-0001" && e === 2 && o === "OBS-2026-0003-w"));
+  /* read from case-tensions directly, never through publication (T35-60, N597; publication R61) */
+  assert.deepEqual([w.calls.attribution.length, w.calls.attributionViaPublication.length], [3, 0]);
   /* a draft naming no case: each unchosen, saying why, and the attribution is not asked */
   const asked = w.calls.attribution.length;
   const n = w.r.act({ act: "draft", author: "ann", project: P, newCase: true, targets: ["INQ-2026-0001-a"] });
@@ -301,6 +303,31 @@ test("R16: every observation the edition would reach, each with whether its auth
   assert.deepEqual(cn.observations.map((o) => o.chosen), [false, false]);
   for (const o of cn.observations) assert.match(o.stated, /names no case yet, so no level can be chosen/);
   assert.equal(w.calls.attribution.length, asked);
+  assert.equal(w.calls.attributionViaPublication.length, 0);
+});
+
+test("R16 (T35-60): the attribution in force is case-tensions' attributionInForce, read directly and never through publication", () => {
+  const w = standard();
+  w.publishedCase("CASE-2026-0001", P, 2);
+  w.bundle("OBS-2026-0001-o", "observation");
+  w.reach.set("OBS-2026-0001-o", ["OBS-2026-0001-o"]);
+  const d = w.r.act({ act: "draft", author: "ann", project: P, caseId: "CASE-2026-0001", targets: ["OBS-2026-0001-o"] });
+  w.chosen.add("CASE-2026-0001|3|OBS-2026-0001-o");
+  /* both doors */
+  grant(w, d, 1);
+  for (const c of [w.r.copy({ draft: d.draftId, viewer: V("ann") }), w.r.copy({ secretSha: SECRET(1), bySecret: true })])
+    assert.deepEqual(c.observations, [{ observation: "OBS-2026-0001-o", chosen: true,
+      stated: "its author has chosen a level for CASE-2026-0001 edition 3" }]);
+  assert.deepEqual(w.calls.attribution, [["CASE-2026-0001", 3, "OBS-2026-0001-o"], ["CASE-2026-0001", 3, "OBS-2026-0001-o"]]);
+  assert.deepEqual(w.calls.attributionViaPublication, [], "publication is never asked");
+  /* what case-tensions answers is what the copy says: withdrawn there, unchosen here */
+  w.chosen.clear();
+  const c = w.r.copy({ draft: d.draftId, viewer: V("ann") });
+  assert.equal(c.observations[0].chosen, false);
+  assert.match(c.observations[0].stated, /chosen no level for CASE-2026-0001 edition 3/);
+  /* negative control: a read through publication would be seen */
+  w.r.publication.attributionInForce("CASE-2026-0001", 3, "OBS-2026-0001-o");
+  assert.equal(w.calls.attributionViaPublication.length, 1);
 });
 
 test("R17: last_change is the newest dated act the answer carries, ordered by instant; whole-second ties are named; what is live is stated", () => {
