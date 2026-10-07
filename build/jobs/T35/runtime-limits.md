@@ -12,7 +12,7 @@
 
 **Deferred.** None.
 
-**Found in other modules / generated artifacts (REPORT J2).** The old detail string is embedded in generated bundles that include `tokens.mjs`, now stale: the plane bundle (`bio-plane/dist/`, and `release/bio-plane.bundled.mjs`), `newgroup/src/release.mjs` (a generated bundle string), and `agent-worker`'s bundle (inputs include `tokens.mjs`). Not written by this job (§14); regenerated at the layer close. No caller pins the detail text (grep over `bio-plane/src`, `bio-plane/test`, `agent-worker/src`). The requirement marks `*(not yet met: T35)*` on R13 and R23 are BOB's to strike at merge.
+**Found in other modules / generated artifacts (REPORT J1).** The old detail string is embedded in generated bundles that include `tokens.mjs`, now stale: the plane bundle (`bio-plane/dist/`, and `release/bio-plane.bundled.mjs`), `newgroup/src/release.mjs` (a generated bundle string), and `agent-worker`'s bundle (inputs include `tokens.mjs`). Not written by this job (§14); regenerated at the layer close. No caller pins the detail text (grep over `bio-plane/src`, `bio-plane/test`, `agent-worker/src`). The requirement marks `*(not yet met: T35)*` on R13 and R23 are BOB's to strike at merge.
 
 **Tests and checks.**
 - `node --test bio-plane/test/m/runtime-limits/`: tests 25, pass 25, fail 0. No layer tests named in `build/manifest.md`. No provided service's interface changed (text of `detail` only), so no user's tests are owed.
