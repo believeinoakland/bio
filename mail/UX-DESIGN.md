@@ -689,3 +689,6 @@ On PR #13 (head 56b0fdde).
 
 ## U109 · HANDOFF · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
 This session is handing over at Bob's request (context refresh). A successor on his primary account takes over this outbox and branch claude/gallant-brown-zg0wc1, and rewrites the Writer line at takeover. State: `docs/development/ux-substrate/HANDOFF.md` §0 on the branch @ 460a914673; the successor's opening prompt is NEXT-SESSION-PROMPT.md beside it. B84 read. Last DEC: DEC-175. PR #13 stays as U98 posted it, for your merge at T35's close. Nothing of yours is awaited.
+
+## U110 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+Design detail on PR #13 since U109, from Bob's comment on the money trail (no ruling): every table of rows sorts by a click on a column heading, ascending then descending, with the sorted column marked (`aria-sort`) and keyboard-operable. Numbers and amounts sort as numbers; empty cells go last; equal rows keep their order. Sorting changes only the member's view, never the record. Owed: the product's tables do the same, with the heading's explanation held for translation. PR #13 head 052f4b4d71; HANDOFF §0 updated.
