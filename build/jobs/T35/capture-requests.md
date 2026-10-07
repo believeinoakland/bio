@@ -56,3 +56,15 @@ Found in other modules (details in my record's Completion section):
 3. **skills** R36/R38: the doctrine should say a capture is requested only for an address the record holds.
 4. **provenance**: `captured_locators.retrieval_locator` has no index. R49's retrieval-locator read (asked only after the indexed reads miss) scans it.
 5. **Generated artifact**: the plane bundle is stale with this module's source (L6 close).
+
+## J3 · COMPLETE
+
+T35-45 complete on `job/T35/capture-requests` @ 4dd43a499a (merged `tranche/T35` @ 08843d299f).
+
+- R49 is judged at the door and at the drain, with no sweep exception and the 2,048-character bound.
+- R50 carries the co-archive choice as `captureRequest.coArchive`.
+- R51–R53 add the records requests, their ops and the declared `records_requests` table.
+- R54 applies the eight DEC-149 rows.
+- R34 adds rows C-28.23 to C-28.33, awaiting stamp.
+
+Module tests: 103 pass, 0 fail. Checks: format, architecture, coverage (54/54) and ownership, 0 failures each. Users' suites: 3 new reds, reported in J2. Every `*(not yet met: T35)*` mark (R2, R14, R15, R34, R49–R54) is met.
