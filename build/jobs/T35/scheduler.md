@@ -28,3 +28,7 @@ Size (session_013E5dGLgQtrrBK6U5UXXWAA): test runs 13, module lines 657
 ## J1 · REPORT
 
 Two findings outside scheduler (record, Completion). (1) plane T35-73 (red 31's other arm, sweep.test.mjs:29, :41): K1993's remedy, op=acquire of a page linking to the address, is not enough alone in a scene that follows or reads the alarm. The acquired page must also be filed in a bundle (a register row), or its task event stays waiting and task-drain wants a wake every 60 s (TASK_DRAIN_BACKSTOP_MS), forever. In scheduler's R12 scene that kept 1,000 alarms from reaching the 24 h expiry and broke the next test's 'nothing due within a minute'. Worth carrying into T35-73's START. (2) tasks R1 (efficiency): a capture acquired and never filed keeps an otherwise idle instance's alarm firing every minute indefinitely, against scheduler's Purpose and R15 (an idle instance holds no timer). A bound (back-off by attempts, or no wake past a limit until a promotion files it) is tasks' to state. Not a red.
+
+## J2 · COMPLETE
+
+T35-83 applied: plane.test.mjs's R12 scene captures an index page linking to its requested address and files it, then requests as before; claim and assertions unchanged; no source or requirement change. Red 31's scheduler arm cleared. scheduler 95/0, capture-requests 103/0; format, architecture, coverage (23/23), ownership (1 file): 0 failures. Record: Completion (T35-83).
