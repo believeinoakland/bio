@@ -1,6 +1,6 @@
 # entities (T35)
 
-**Status** · session_01AauqX25foruEiA5tiNQTf8 · depth 2 · COMPLETE · handled B1
+**Status** · session_01AauqX25foruEiA5tiNQTf8 · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
@@ -27,3 +27,28 @@ Size (session_01AauqX25foruEiA5tiNQTf8): test runs 4, module lines 1922
 ## J1 · COMPLETE
 
 T35-27 applied: R50 (SECTORS imported from jurisdictions, no copy held) and R51 (entitiesOfKind, op=entitieskind; limit 1-500, default 100). entities 93/0; coverage 51/51; architecture, ownership 0 failures; format's only failures are inherited red 24. Users' suites: no new failure (every red is also red on tranche/T35). Stale artifact: the plane bundle. Shares already named: op-declarations T35-70 declares entitieskind; control-plane T35-72 routes it; setup-page T35-68 reads it. Record: build/jobs/T35/entities.md on job/T35/entities.
+
+## Completion (B2 · CHANGE, K1972)
+
+**Applied.** I merged `tranche/T35` (fe0b3eb3e1) and built R52: `namingIn({captureShas, kinds, limit, viewer})`.
+- Kinds are refused as R51 refuses them (`NO_KIND`, `UNKNOWN_KIND`). An empty or missing capture list is `NO_SHA` (extraction's `noSha`). More than 200 distinct captures is `TOO_MANY_CAPTURES`.
+- It makes one read of the named captures' `reading_ref_terms` rows, with the viewer's gate inside the read. A capture the viewer cannot see is in no figure.
+- R17's candidate loop is now one private rule, `#namingCandidates`. `namingDocuments` feeds it from its SQL, unchanged in behaviour (its tests are unchanged and pass). `namingIn` feeds it from the one read. Both answer by the same code.
+- The answer is `{ok, kinds, captures, entities, candidates, count, limit, truncated, detail}`.
+  - `entities`: every entity of the kinds in id order, each with `names_used`, `names_unusable`, `names_uninformative` and `count`.
+  - `candidates`: R17's candidates entity by entity in R17's order, each with its `entity_id`, cut at `limit` (1–500, default 200) with `truncated` measured by reading one past.
+- No op was added; none is required.
+
+**Reading made (BOB may overturn).** "Over the references of the given captures only" is read as the corpus too. Selectivity and `names_uninformative` are measured over the named captures the viewer can see, so the answer is what R17 would give were those captures the whole corpus. The test is built on that: R52 in a world that also holds other captures equals R17 in a world holding only the named ones. If BOB means the whole corpus as R17's denominator, only the source's `corpus` and `reach` functions change.
+
+**Tests and checks** (on `job/T35/entities` after the merge):
+- `node --test bio-plane/test/m/entities/`: pass 95, fail 0. The two new R52 tests in `t35.test.mjs` cover equality with R17 per entity, sight, an uninformative name, each refusal, the 200-capture bound and the page.
+- Retrieval: pass 139, fail 0.
+- `format`: 130 modules; 0 failures. `architecture entities`: 0 failures. `coverage entities`: 52 of 52 live ids named by a test. `ownership entities tranche/T35`: 0 failures.
+- Stale artifact (§14): the plane bundle, as before.
+
+Size (session_01AauqX25foruEiA5tiNQTf8): test runs 8, module lines 2018
+
+## J2 · COMPLETE
+
+B2 applied: R52 namingIn built. It makes one bounded read of the named captures' term rows, with the viewer's gate inside it, and runs R17's own candidate rule over that read (refactored into one shared private rule, namingDocuments unchanged). Reading for you to confirm: the corpus for selectivity and names_uninformative is the named captures the viewer can see, so the answer equals R17 were those captures the whole corpus; the test proves that equality. entities 95/0, retrieval 139/0; format, architecture, coverage (52/52), ownership 0 failures. No op added. Record updated.
