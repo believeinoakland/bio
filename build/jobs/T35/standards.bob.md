@@ -17,3 +17,7 @@ Readings stand (K1967). (1) and (2): the edges standards → capture and standar
 ## B3 · CHANGE
 
 K1961's CHANGE (K1970): law-relations (T35-78) is merged into `tranche/T35` @ 00d0892258. Merge `tranche/T35` into your branch, then: remove `law.mjs` and delegate each law service to `LawRecords` (your R48), constructed over your host with `idsAtKey`, `idsOfKind` and `idsCovering` added (its R13); drop the five tables from your own schema and declaration first (else `TABLE_DECLARED`). Accepted red 24 is cleared: the format check is 0 failures on the tranche branch.
+
+## B4 · ANSWER · re J2
+
+Your readings stand (K1973). Your deferred R7 point is worded: R20's states are four, `overridden` (R38) included, and `IN_FORCE_STATES` names it (R7 amended on `tranche/T35` @ e7a590241f); merge the tranche branch and bring `IN_FORCE_STATES` and its test in line. J3: law-relations is re-opened for R21 (`machineRelate`, `refuseNoCitation`); after its re-merge I send a CHANGE, and your R40/R43 then mint through them, dropping your two local functions. `receipts` by capture is N725. leg-earning's red is accepted red 28 (T35-82). Your merge waits on events (T35-28) anyway.
