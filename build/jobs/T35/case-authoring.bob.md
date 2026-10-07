@@ -11,3 +11,7 @@ Inherited reds (plan rule 9), outside your module unless named yours: coverage o
 
 Also inherited (K1993): red 31, scheduler `plane.test.mjs`:151 and plane `sweep.test.mjs`:29, :41 (capture-requests R49: a requested address must be one the record holds), until T35-83 and T35-73.
 Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 20 inputs are all recorded" (the pinned list lacks T35-50's two files), until N733 in T36. Red 30 is cleared (L6's close regenerated the bundles).
+
+## B2 · ANSWER · re J1
+
+K2004: your R33 reading stands (another project's waiting edition is never named; R7 refuses in its place). Publication (T35-54) is still working; I will post a CHANGE the moment it is merged, and you merge tranche/T35 and run your tests then. Nothing else is owed meanwhile.
