@@ -1,3 +1,15 @@
 # control-plane (T35)
 
 **Status** · session_01P62eYdiWj9iNakZSwvdHKj · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Four points where the work crosses other L11 jobs. Each has my best reading; I carry on with it.
+
+1. **R59 / store-door R9: how `session` and `grant` reach the store.** Today the door puts both in the store request's query (`index.mjs`:1083 `session`, :1089 `grant`), and the maps read them from there: credentials' map reads `url.searchParams.get("session")` (`signout`, `signouteverywhere`, `aigrantmint`, `credentials/index.mjs`:1914–1941) and `underGrant` reads `grant` (`dispatch.mjs`:220, now store-door's). Best reading: the door sends them as request headers `x-bio-session` and `x-bio-grant`, never in the address; store-door R9 reads those headers and hands the value to the map on the in-process URL object it already passes to `store.routes(url, body)` (no request's address), so credentials' map is unchanged. STORE-DOOR #1 needs the same two names; please confirm them to both of us, or name others.
+
+2. **R57: where the `/draft` call runs.** The account's key is unsealed only on the object (`credentials.accountFor`), as for the ask (`plane/ask.mjs` `askOnObject`). Best reading: the Worker door forwards `groupdescriptiondraft` / `writinghelp` to the store as today (store-door R10's resolution, then the owner's refusals); when the owner answers `ASSISTANT_DRAFT_UNAVAILABLE` (every refusal passed; wizard-scripts' answer carries `firsthand`), the door computes the pack (R41, untargeted affordances) and calls the object's `draft(args)`. The body of that call is a new export of mine, `draftOnObject(ctx, env, args)` in `control-plane/draft.mjs` (account, the switch, the grant only when suggestions on and not firsthand, `POST /draft`, `checkDraft` over the grant's read log, `countAskUsage` with `mode: "draft"`, the owner's answer shape, `AGENT_WORKER_UNBOUND` / `AGENT_WORKER_SILENT`). `plane` wires `Store.draft(args)` to it in T35-73 (its R19 share), as `ask` is wired. instance-setup's own `groupDraftTurn` seam is then left unused. Please confirm, or say if PLANE should inject `groupDraftTurn` instead.
+
+3. **K1986 (`askusage` passes the `mode` it is given):** that line is `dispatch.mjs`:316, which moves whole to store-door; after the removal it is not in my paths. Best reading: STORE-DOOR #1 applies it in its copy (my draft path calls `countAskUsage` in-process with `mode: "draft"`, so R57 does not need the route).
+
+4. **The window between my merge and plane's (T35-73).** Deleting `dispatch.mjs`, `pull.mjs`, `step.mjs` and the envelope names leaves `plane/store.mjs`:69–70, `plane/door.mjs`:24, `plane/index.mjs`:5–6 and plane's `door.test.mjs`, `maps.mjs`, `split.test.mjs` importing names that are gone until PLANE #24 re-points. Best reading: I delete outright as the draft says (control-plane's `export` keeps only its own names), and BOB names the plane red from my merge to T35-73's, or merges the two back to back. If you prefer pass-through re-exports until T35-73, say so.
