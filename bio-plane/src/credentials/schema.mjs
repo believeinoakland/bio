@@ -18,13 +18,18 @@ CREATE TABLE IF NOT EXISTS credentials (
 
 -- Sessions are DO-backed so a password login can be exchanged for a bearer
 -- token without the password travelling on every later request.
+-- R40 (F13): a session is held only as the SHA-256 of its token, 'token_sha';
+-- the token itself is answered once, by login, and stored nowhere. A store
+-- whose sessions were held as tokens is carried over as their digests at boot
+-- (Credentials#migrate), so they stay live and no token stays stored.
 CREATE TABLE IF NOT EXISTS sessions (
-  token   TEXT PRIMARY KEY,
-  role    TEXT NOT NULL,
-  expires INTEGER NOT NULL,
-  created TEXT NOT NULL
+  token_sha TEXT PRIMARY KEY,
+  role      TEXT NOT NULL,
+  expires   INTEGER NOT NULL,
+  created   TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS sessions_expires ON sessions(expires);
+CREATE INDEX IF NOT EXISTS sessions_role ON sessions(role);
 
 -- One row, id=1. Records that the bootstrap credential has been spent.
 CREATE TABLE IF NOT EXISTS bootstrap (
@@ -102,7 +107,10 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
   -- D-463: the namespace this credential is confined to for its whole life ('scratch'), or NULL for one that is
   -- not confined. It arrives already judged at the mint edge (the control plane owns the namespaces). NULLABLE AND
   -- NEVER BACK-FILLED: a credential minted before this column existed was minted unconfined, and NULL is that fact.
-  confined_to     TEXT
+  confined_to     TEXT,
+  -- R42 (F15): the instant the credential expires, whole days after it was minted (1 to 365, 90 by default). A
+  -- credential minted before this column existed is given 90 days after the migration that adds it (K1934 (5)).
+  expires_at      TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
@@ -135,7 +143,7 @@ CREATE TABLE IF NOT EXISTS keyed_services (
 );
 
 -- R27 (Q1-3; K1450): the short-lived, read-only ask grant. Only the SHA-256 of the token is kept, with its member,
--- the session it was minted under (the grant ends with it) and its expiry. It is no run row, no observation row and
+-- the session it was minted under (the grant ends with it; R40: the session's digest, never its token) and its expiry. It is no run row, no observation row and
 -- no read log. Never exported (R30).
 -- R32 (N580; K1481, K1609): a standing question's grant is held here too, 'kind' 'standing' and 'session' empty: the
 -- scheduler acts with no session, so it ends at its time, or at once when its member is revoked (R16) or removes
@@ -183,6 +191,78 @@ CREATE TABLE IF NOT EXISTS group_key_notices (
   member_id TEXT PRIMARY KEY,
   seen_at   TEXT NOT NULL
 );
+
+-- R38 (F3; K1881): the sign-in window. Refused sign-ins, claims and recoveries, counted per source and per role in
+-- 10-minute windows ('win' the window's number since the epoch), the current window and the one before it kept for
+-- the two-bucket estimate. 'kind' is 'source' or 'role'; 'key' is a keyed digest (R44's key) of the caller's source
+-- fingerprint or of the role asked, so no row names an address or a role. Never exported (R30).
+CREATE TABLE IF NOT EXISTS signin_window (
+  kind  TEXT NOT NULL,
+  key   TEXT NOT NULL,
+  win   INTEGER NOT NULL,
+  count INTEGER NOT NULL,
+  PRIMARY KEY (kind, key, win)
+);
+
+-- R44 (N703; DEC-165, DEC-166): the security tally. COUNTS ONLY: a kind, an hour (whole hours since the epoch, UTC)
+-- and Cloudflare's two-letter country label ('' when none or not yet placed), and how many. No address,
+-- fingerprint, handle, role, op, path, time within the hour or content. Counts older than 90 days are dropped.
+CREATE TABLE IF NOT EXISTS security_counts (
+  kind    TEXT NOT NULL,
+  hour    INTEGER NOT NULL,
+  country TEXT NOT NULL,
+  count   INTEGER NOT NULL,
+  PRIMARY KEY (kind, hour, country)
+);
+
+-- R44 (DEC-166's place rule): a refused sign-in, claim or recovery this module counts is counted at once without a
+-- place; its country waits here, named only by a keyed digest of its role, until an hour has passed with no
+-- successful sign-in or recovery under that role (then it is placed and the row dropped) or one follows within the
+-- hour (then the row is dropped and the count is never placed). A pause (R38's 'rate') waiting here is also what
+-- makes a success within the hour a 'through'.
+CREATE TABLE IF NOT EXISTS security_pending (
+  seq     INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind    TEXT NOT NULL,
+  hour    INTEGER NOT NULL,
+  country TEXT,
+  role    TEXT NOT NULL,
+  at      INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS security_pending_role ON security_pending(role);
+CREATE INDEX IF NOT EXISTS security_pending_at ON security_pending(at);
+
+-- R38, R44: the key the window's and the tally's digests are made under (HMAC-SHA-256), 256 random bits generated
+-- once, answered by no op, never exported, exempt from purge (capture R56's pattern, a key of this module's own).
+CREATE TABLE IF NOT EXISTS security_key (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  key_hex TEXT NOT NULL,
+  created TEXT NOT NULL
+);
+
+-- R46 (K1888): administrators' one-time recovery codes. Only each code's SHA-256 is kept, with the role it recovers,
+-- when it was issued and when it was spent (by a recovery, a new issue, or the member's revocation).
+CREATE TABLE IF NOT EXISTS recovery_codes (
+  code_sha  TEXT PRIMARY KEY,
+  role      TEXT NOT NULL,
+  issued_at TEXT NOT NULL,
+  spent_at  TEXT
+);
+CREATE INDEX IF NOT EXISTS recovery_codes_role ON recovery_codes(role);
+
+-- R47: each recovery, with its role and instant; never the code.
+CREATE TABLE IF NOT EXISTS recoveries (
+  seq  INTEGER PRIMARY KEY AUTOINCREMENT,
+  role TEXT NOT NULL,
+  at   TEXT NOT NULL
+);
+
+-- R43 (DEC-156; K1819): that a member is connected through their own Claude subscription, and since when. A FACT
+-- ONLY: no login, no code from Anthropic's page, no token and no digest of any of them; the sign-in lives in the
+-- member's own agent-runner container, where the Claude Code binary wrote it. Seen by its member alone.
+CREATE TABLE IF NOT EXISTS subscription_connections (
+  member_id TEXT PRIMARY KEY,
+  since     TEXT NOT NULL
+);
 `;
 
 /* Columns a store written before they existed gains at boot: additive and nullable, never back-filled (D-85). */
@@ -193,11 +273,14 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["signers", "status_at", "TEXT"],
   ["ai_credentials", "confined_to", "TEXT"],
   ["ai_grants", "kind", "TEXT"],
+  ["ai_credentials", "expires_at", "TEXT"],
 ];
 
 /* R18: every table this module owns, declared exempt from purge (identity and credentials outlive a reset corpus). */
 export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap", "signers", "ai_credentials",
-  "account_references", "keyed_services", "ai_grants", "group_key", "group_key_acts", "group_key_notices"];
+  "account_references", "keyed_services", "ai_grants", "group_key", "group_key_acts", "group_key_notices",
+  "signin_window", "security_counts", "security_pending", "security_key", "recovery_codes", "recoveries",
+  "subscription_connections"];
 
 /* R30 (plan T33, Rules (6)): each table's classes for record-core's `declareTable` (its R21), declared explicitly.
    Every table is purge-exempt (R18) and never expunged. Account references, keyed-service keys, password hashes,
@@ -205,11 +288,17 @@ export const CREDENTIALS_EXEMPT_TABLES = ["credentials", "sessions", "bootstrap"
    references and a member's notice are seen by their owner alone. Signer keys are public halves the group already
    publishes (`groupkeyspublic`), so they export; the bootstrap row is an administrator's fact. The group key's
    tables are `sight: "group"`: record-core's R21 offers no administrator sight, and no read answers the key whatever
-   its sight; `groupKeyState` answers its state to administrators alone (R34; K1760). */
+   its sight; `groupKeyState` answers its state to administrators alone (R34; K1760). T35's tables (R30) are declared
+   the same way, never exported: the sign-in window, the tally with its waiting places and its key, and the recovery
+   codes and recoveries are the group's (the tally's reading is administrators' alone, R45's own); a member's connected
+   subscription is its owner's. */
 const CLASSES = { purge: "exempt", expunge: "none", derive: "stored", version_chain: false };
 export const CREDENTIALS_TABLES = Object.freeze([
   ["credentials", "never", "group"], ["sessions", "never", "group"], ["bootstrap", "admin-only", "group"],
   ["signers", "yes", "group"], ["ai_credentials", "never", "group"], ["account_references", "never", "owner"],
   ["keyed_services", "never", "group"], ["ai_grants", "never", "group"], ["group_key", "never", "group"],
   ["group_key_acts", "never", "group"], ["group_key_notices", "never", "owner"],
+  ["signin_window", "never", "group"], ["security_counts", "never", "group"], ["security_pending", "never", "group"],
+  ["security_key", "never", "group"], ["recovery_codes", "never", "group"], ["recoveries", "never", "group"],
+  ["subscription_connections", "never", "owner"],
 ].map(([name, exp, sight]) => Object.freeze({ name, ...CLASSES, export: exp, sight })));

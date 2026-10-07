@@ -92,7 +92,7 @@ Terms. **published** is the plane's own answer to `op=affordances` with no targe
 - DEC-120 (the `wizard_scripts` layer, R5, R9, R10: "recipe" retired) and DEC-121 (3), (4) (the `wizard_authoring` layer, R32); `BIO_Interaction_Constructs_v0_1.md` §P "THE WIZARD"; K1364 B3.
 - `docs/development/INVESTIGATIVE-SESSION.md` §2 (the objective; CHECK first), §4 (the fence), §11 (the run records its skill version), §14 (bias minimisation on top of the fence), §14a (the doctrine layer, versioned), §14b.1 (progressive disclosure; reports, not reading), §14b.4 (scripted and judged; the prohibition set), §14b.5 (nothing is boilerplate), §3 (D-220, versions as versions).
 - `docs/development/ASSISTANT-PILOT.md` §1 (the layers by drift rate; the refusal surfaced verbatim, never paraphrased; recipes as validated data).
-- `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rules 1, 3, 4, 5, 9 and 10; §4 (the skill pack); §7.3 point 7 and §8 (the extract mode not deployed).
+- `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3 rules 1, 3, 4, 5, 9, 10 and 11; §4 (the skill pack); §7.3 point 7 and §8 (the extract mode not deployed).
 - `docs/architecture/BIO_Content_Framework_v0_10.md` Part II §14.3 (the four-level search and which absence).
 - DEC-24, DEC-49, DEC-55, DEC-60, DEC-61, D-82, D-129.
 - DEC-153 and K1841 (1), (2), K1364 (the `writing_help` layer, R36; R35's switch); `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rules 1, 7, 9 and §5 and `ASSISTANT-PILOT.md` §3 as amended citing DEC-153. `docs/architecture/BIO_Capability_Ladders_v0_1.md` §9.4 (record content as data; R37) and `plan/draft-T35-security-review.md` F5 (K1881). K1880 (R28, R33, R38 (a)); K1888 (R38 (b)).

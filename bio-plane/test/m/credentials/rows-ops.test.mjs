@@ -18,6 +18,7 @@ test("R6 R9 R12 R14 R15 the rows: ids and words as copied, each where naming its
     AI_CREDENTIAL_REVOKE_NOT_A_MEMBER: ["C-29.4", W("aiCredentialRevoke", "is-ai-credential-revoke"), /recorded against the person/],
     AI_CREDENTIAL_UNKNOWN: ["C-29.5", W("aiCredentialRevoke", "is-ai-credential-revoke"), /no agent credential by that name/],
     AI_CREDENTIAL_PRINCIPAL_NOT_THE_MINTER: ["C-29.11", W("aiCredentialMint", "is-ai-credential-mint"), /member who creates it/],
+    AI_CREDENTIAL_BAD_EXPIRY: ["C-29.28", W("aiCredentialMint", "is-ai-credential-expiry"), /from 1 to 365, and 90/],
     BAD_KEY: ["C-96.8", W("signerAdd", "is-signer-key-shape"), /begins AAAA/],
     SIGNER_KEY_HELD_BY_ANOTHER: ["C-96.15", W("signerRegisterOwn", "is-signer-key-held"),
       /^This key is registered to another member, so it cannot be yours\. Make a new key in this browser\. Nothing was changed\.$/],
@@ -82,8 +83,9 @@ test("R12 R15 the AI credential routes: `who` and `secretSha` from the query ove
   assert.deepEqual(Object.keys(w.ops()).sort(), ["accountreference", "accountreferenceremove", "accountreferenceset",
     "accountswitchset", "aicredentiallook", "aicredentialmint", "aicredentialrevoke", "aicredentials", "aigrantmint",
     "bootstrap", "claim", "groupkeynotice", "groupkeynoticeseen", "groupkeyremove", "groupkeyset", "groupkeystate",
-    "groupkeyswitch", "groupswitchset", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "session",
-    "setpassword", "signeradd", "signerlist", "signerset"]);
+    "groupkeyswitch", "groupswitchset", "keyedservices", "keyedserviceset", "keyedserviceswitch", "login", "recover",
+    "recoverycodesissue", "recoverycodesstate", "securitymap", "session", "setpassword", "signeradd", "signerlist", "signerset",
+    "signout", "signouteverywhere", "subscriptiondisconnect"]);
 });
 
 test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 the T33-20 and T34 rows: each id once, across every family, each where naming its one site, frozen; C-29.16 retired with R26 (K1756) and C-29.18 never reused", async () => {
@@ -102,6 +104,7 @@ test("R22 R23 R24 R25 R27 R28 R29 R31 R32 R33 R35 R36 R37 the T33-20 and T34 row
     STANDING_SWITCH_OFF: ["C-29.25", W("aiGrantMintStanding", "is-standing-grant")],
     NO_QUESTION: ["C-29.26", W("aiGrantMintStanding", "is-standing-grant")],
     GROUP_KEY_NOTICE_DUE: ["C-29.27", W("#noticeDue", "is-group-key-notice-seen")],
+    SUBSCRIPTION_LOGIN_REFUSED: ["C-29.29", W("subscriptionConnected", "is-subscription-fact")],
     UNKNOWN_KEYED_SERVICE: ["C-96.19", W("#keyedService", "is-keyed-service")],
     KEYED_SERVICE_NO_KEY: ["C-96.20", W("keyedServiceSet", "is-keyed-service-key")],
     KEYED_SERVICE_OFF: ["C-96.21", W("keyedServiceFor", "is-keyed-service-on")],
