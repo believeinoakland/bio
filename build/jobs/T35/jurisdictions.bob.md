@@ -13,3 +13,7 @@ Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, y
 ## B2 · CHANGE
 
 K1916 (2), a clarification of R66 (no change of meaning): when combine withholds a family as a conflict, the conflict's `at` is `standard_sources[<key>/<series.key>].<field>` (as your other keyed conflicts), and the withheld entry is dropped from the view. id-spaces codes to this.
+
+## B3 · ANSWER · re J1
+
+K1918 (1): your reading governs; R36 is reworded on tranche/T35 ('every entry R31 requires a level for'). Merge the tranche branch.
