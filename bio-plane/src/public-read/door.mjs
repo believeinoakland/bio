@@ -1,10 +1,10 @@
 /* public-read — the door's half of the public read path (requirements: `build/requirements/public-read.md` R1, R4, R5,
- * R9, R10, R18, R21). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
+ * R9, R10, R18, R21, R30). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
  * `publishedmanifest` arms, the REC-22 note, and the `publishedcase`/`publishedbytes` dispatch line, which hands both
  * to the Worker's `publishedRoutes` (`../publication/worker.mjs`, this module's by `paths`, K697, K702).
  * `bindPublishedPlane`'s hook hand-over stays the door's.
  *
- * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of its seven ops, or null for any other, so the door
+ * `publicReadDoorOp(op, url, env, stub, helpers)` answers one of its eight ops, or null for any other, so the door
  * asks it and goes on. `helpers` are the door's own (`control-plane`'s, later in the order, handed in as
  * `capturePublicOp` is): `json`, `requiredArgument`, `storeSilent`, `storeRefusal`, `doAnswer`; and, optionally,
  * `publicReads`, the names of the registered reads the door routes as ops of their own (R18).
@@ -17,13 +17,17 @@
  *
  * R21: THE DOCKET AND ITS FEED, `op=docketpublic&case=<case>` and `op=docketfeed&case=<case>`, through
  * `publicReadDoorDocket`, under the same terms: the published store the door hands in, no credential, and of the query
- * only `case`, and for the docket `captures=omit` (R25), forwarded only when it is exactly that. */
+ * only `case`, and for the docket `captures=omit` (R25), forwarded only when it is exactly that.
+ *
+ * R30: THE CREDIT PAGE, `op=credit`, answered here from `./credit.mjs` at 200 with no credential and no store hop: it
+ * reads nothing of the group's record, so it is the same bytes for every group's Civicsmith and every caller. */
 
 import { publishedRoutes } from "../publication/worker.mjs";
 import { PUBLIC_READ_NAME, PUBLIC_READ_RESERVED_PARAMS, PUBLIC_READ_NOT_REGISTERED, DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
+import { creditPage } from "./credit.mjs";
 
 export const PUBLIC_READ_DOOR_OPS = Object.freeze(["verify", "publishedmanifest", "publishedcase", "publishedbytes",
-                                                   "publicread", "docketpublic", "docketfeed"]);
+                                                   "publicread", "docketpublic", "docketfeed", "credit"]);
 
 /** R21 (DEC-116 item 8; DEC-100 item 2): a case's docket (`docketpublic`, JSON at 200) or its Atom feed (`docketfeed`,
  *  the feed's own bytes at 200 under `application/atom+xml`), relayed from the published store under R10's terms: only
@@ -142,6 +146,8 @@ export async function publicReadDoorOp(op, url, env, stub, helpers) {
   if (op === "publishedcase" || op === "publishedbytes") return publishedRoutes({ op, url, env, stub });
   /* R21: the docket and its feed, by case. */
   if (op === "docketpublic" || op === "docketfeed") return publicReadDoorDocket(op, url, env, stub, helpers);
+  /* R30 (DEC-146): the credit page, the same bytes for every caller; it reads nothing, so the store is not asked. */
+  if (op === "credit") return json(creditPage(), 200);
   /* R18: a registered read, by `name`, or by its own op where the door names it. */
   if (op === "publicread") return publicReadDoorRead(url.searchParams.get("name") || "", url, env, stub, helpers);
   if (publicReads && typeof op === "string" && !PUBLIC_READ_DOOR_OPS.includes(op)
