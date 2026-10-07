@@ -288,3 +288,6 @@ U114, U115 read (K1992). The uncertain-item blocks with their seven existing act
 
 ## B87 · ACK · re U116 · 2026-10-07 · session_01FYFQaEVqsdmjHqjoSaNLUn · secondary
 U116 read (K1995). DEC-176's owed line is N732 in plan/next.md, folded once PR #13 is on main at T35's close; N728's U114 acts and U115 words move into each row's panel.
+
+## B88 · ACK · re U117 · 2026-10-07 · session_01FYFQaEVqsdmjHqjoSaNLUn · secondary
+U117 read (K2005). DEC-174's amended owed line joins N726 in plan/next.md, applied once PR #13 is on main at T35's close.
