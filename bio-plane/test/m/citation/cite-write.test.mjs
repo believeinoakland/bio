@@ -176,17 +176,19 @@ test("R3: the entry says the set had moved when the selection's answer changed s
   assert.match(w.md(p), new RegExp(`Trigger: selection ${h} \\(the set had moved since it was made; citing is report-weight and proceeded\\)\\n`));
 });
 
-test("R3: the answer carries cited, alreadyCited, drift, moved, bundleSha, rowVersion, the gate and its expiry; pinned_captures only on a project; the per-leg fields only on an inquiry", async () => {
+test("R3: the answer carries cited, alreadyCited, drift, moved, bundleSha, rowVersion, the gate and its expiry, and question (null when none was named); pinned_captures only on a project; the per-leg fields only on an inquiry", async () => {
   const { w, p, q } = setup();
   const h = await w.select(["INFO-2026-0001"]);
   const onP = w.cit.cite({ project: p, handle: h, ...ANN });
   const head = w.record.head(p);
   assert.deepEqual(Object.keys(onP).sort(), ["alreadyCited", "bundleSha", "cited", "drift", "expires", "gate", "handle", "moved",
-    "ok", "pinned_captures", "project", "rowVersion", "severed", "weight"].sort());
+    "ok", "pinned_captures", "project", "question", "rowVersion", "severed", "weight"].sort());
+  assert.equal(onP.question, null);
   assert.deepEqual([onP.bundleSha, onP.rowVersion, onP.weight], [head.bundleSha, head.rowVersion, "report"]);
   const onQ = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
   assert.deepEqual(Object.keys(onQ).sort(), ["alreadyCited", "bundleSha", "cited", "citingObjectType", "drift", "expires", "gate",
-    "gradesFilled", "gradesUndetermined", "handle", "legs", "moved", "ok", "project", "role", "rowVersion", "severed", "weight"].sort());
+    "gradesFilled", "gradesUndetermined", "handle", "legs", "moved", "ok", "project", "question", "role", "rowVersion", "severed", "weight"].sort());
+  assert.equal(onQ.question, null);
   assert.equal(typeof onQ.expires, "string");
 });
 
