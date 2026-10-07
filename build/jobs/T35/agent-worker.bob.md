@@ -17,3 +17,7 @@ All three readings stand (K1983). (1) R59 now takes `pack` when no grant is sent
 ## B3 · CHANGE
 
 run-rules (T35-43) is merged into tranche/T35 @ 556d4cef62 (K1984): DRAFT_MODE, deployedModesFor(flags), the draft mode R16/R18/R21. Merge the tranche branch into yours (a merge, never re-applying its commits) and build against it.
+
+## B4 · CHANGE
+
+agent-model (T35-48) is merged into tranche/T35 @ 4af933fb5c (K1987). Merge it, then re-point as its J1 says: index.mjs:489 opens each judged row with openRow(model.messages, state.step, row, rowFacts(state, LEVELS)) (rowPrompt carries no facts now); :1275 opens sub-sessions with subsessionOpening(contract); use its READ_FACTS and READ_RESULT (agent-model/src/model.mjs) in place of your own read_facts tool (B2 (3)); re-word requirements.test.mjs:1252 and :1254, which pin what agent-model R12 forbids. R45's two bundle arms stay red until L6's close (red 30).
