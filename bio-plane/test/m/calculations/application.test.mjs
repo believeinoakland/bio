@@ -330,3 +330,54 @@ test("R37 no result, label or sentence says nonconforming, violated, breach or n
   assert.doesNotMatch(JSON.stringify(w.rows(`SELECT * FROM calc_pattern_results`)), /discretion|waiver/);
   assert.doesNotMatch(text, /Noticed/);
 });
+
+test("R32, R36 over events' and standards' real services: a discretion events records (its R43) is frozen with its provision, folded reason, outcome and when; policy_against_practice asks standards' real isMeasure, so a provision held cited is refused PROVISION_NOT_A_MEASURE naming its held state, and one held as its own words answers the divergence beside it", async () => {
+  const w = seeded();
+  const decider = w.person("Dana Reyes"), subject = w.entity("Harbour Builders", "institution");
+  /* a captured decision whose first page, read as text, states the reason */
+  const doc = w.document("a decision");
+  const extent = { kind: "pdf-page", page: 0 };
+  w.ex.readings[doc.capSha] = { pageCount: 1, chain: [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }] };
+  w.ex.units[doc.capSha] = { units: [{ seq: 0, extent, text: "Granted in the interest of the public." }], state: "whole" };
+  const minted = w.content.mint({ bundleId: doc.bundleId, captureSha: doc.capSha, extent, mintedBy: V("bob") });
+  assert.equal(minted.ok, true, JSON.stringify(minted).slice(0, 300));
+  const row = { capture_sha: doc.capSha };
+  const policy = w.standard({ from: "2020-01-01", to: "2030-12-31" });
+  const record = (statedReason, outcome) => {
+    const fact = w.events.recordDatedFact({ captureSha: row.capture_sha, extent, kind: "signed", value: "2026-03-04", method: "read by a member", by: V("bob") });
+    assert.equal(fact.ok, true, JSON.stringify(fact).slice(0, 300));
+    const r = w.events.recordDiscretion({ kind: "discretion", provision: { standard: policy, portion: "s2" }, statedReason,
+      outcome: { value: outcome, extent: { captureSha: row.capture_sha, extent } },
+      attestations: [{ datedFactId: fact.dated_fact.dated_fact_id }],
+      participants: [{ entityId: decider, role: "decider", attestation: 0 }, { entityId: subject, role: "subject", attestation: 0 }], by: V("bob") });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+    return r.event_id;
+  };
+  const a = record({ captureSha: row.capture_sha, extent }, "granted");
+  const b = record("none", "denied");
+  const f = await w.c.freezeUses({ by: V("bob"), provision: { standard: policy } });
+  assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  const rows = await (async () => (await w.c.readTable({ sha: f.sha, viewer: V("bob"), limit: 10 })).table.rows)();
+  const byId = Object.fromEntries(rows.map((r) => [r.event_id, r]));
+  assert.deepEqual([byId[a].provision_standard, byId[a].provision_portion, byId[a].reason_stated, byId[a].reason_fold, byId[a].outcome, byId[a].when_start],
+    [policy, "s2", "1", "granted in the interest of the public", "granted", "2026-03-04"]);
+  assert.deepEqual([byId[b].reason_stated, byId[b].reason_fold, byId[b].outcome], ["0", "", "denied"]);
+  assert.equal(w.standards.isMeasure(policy, V("bob")), true, "standards' real service, called as its R34 states");
+  const run = (standard) => w.c.create({ question: "Departs?", period: { from: "2026-01-01", to: "2026-12-31" }, kind: "policy_against_practice",
+    terms: { provision: { standard, portion: "s2" }, departure: [{ field: "reason_stated", test: "eq", value: 0 }] },
+    inputs: [{ name: "practice", table: f.sha }], by: V("bob") });
+  const r = await run(policy);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+  const A = r.results.application;
+  assert.deepEqual([A.practice.divergence.numerator, A.practice.divergence.denominator].map(num), ["1", "2"]);
+  assert.equal(A.provision.standing.state, "in_force", "standards' real inForceAt");
+  /* a standard held cited: known only because a held capture cites it */
+  const cited = w.standards.standardDeclare({ cite: "Unwritten Practice § 1", kind: "policy", issuer: "The Selectboard", held: "cited",
+    cited_by: { captureSha: doc.capSha, extent },
+    period: { from: "2020-01-01", to: "2030-12-31" }, reason: "a policy cited and not seen", author: V("bob"), viewer: V("bob") });
+  assert.equal(cited.ok, true, JSON.stringify(cited).slice(0, 300));
+  assert.equal(w.standards.isMeasure(cited.id, V("bob")), false);
+  const refused = await run(cited.id);
+  assert.equal(code(refused), "PROVISION_NOT_A_MEASURE");
+  assert.equal(refused.held, "cited", "naming its held state");
+});
