@@ -11,3 +11,7 @@ Inherited reds (plan rule 9), outside your module unless named yours: coverage o
 
 Also inherited (K1993): red 31, scheduler `plane.test.mjs`:151 and plane `sweep.test.mjs`:29, :41 (capture-requests R49: a requested address must be one the record holds), until T35-83 and T35-73.
 Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 20 inputs are all recorded" (the pinned list lacks T35-50's two files), until N733 in T36. Red 30 is cleared (L6's close regenerated the bundles).
+
+## B2 · ANSWER · re J1
+
+K2002. Your four readings stand, with one change from publication's R72 (now on tranche/T35; merge it): a criteria row is keyed (standard, portion, body), so two members targeting one portion with different bodies give two rows. (1) A member finding's rows are those whose standard is a target of its own standard legs AND whose body is that member's subject_entity as the document states it; when it states none, all rows of that standard. (4) unjudged entries are {standard, portion, body}.
