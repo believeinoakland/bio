@@ -1444,12 +1444,15 @@ export const NON_ACTS = {
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its
  * button, whatever its rung: every op RUNGS grades `irreversible`, and `personexpunge` (DEC-142), whose rung stays
- * `reasoned`, its name honest. No other op: derived here before the aliases below are applied, so it names ops, never
+ * `reasoned`, its name honest, and (K2049) `standardrelease`, `reasoned` too. No other op: derived here before the aliases below are applied, so it names ops, never
  * an alias of one. It changes no rung and no decorated act's shape (`affordances` R11); `affordances` publishes it as
  * `VOCABULARIES.irreversible_weight`, the same frozen array (its R4), served as JSON, which is why it is not a `Set`. */
 export const IRREVERSIBLE_WEIGHT = Object.freeze([
   ...Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible"),
   "personexpunge",
+  /* K2049 (DEC-143 applied): standards R37's release moves a policy to the group's sight and is never undone; its rung
+     stays as R3 gives it (`reasoned`) */
+  "standardrelease",
 ]);
 
 /* R17 (op-declarations R21): each alias takes its op's very rung, absence and reason, so it never differs from its op. */
