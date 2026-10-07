@@ -1,0 +1,18 @@
+{
+ "tool": "olevba 0.60.2 (oletools), run 2026-10-07 by OFFICE-READERS #6 on vba-sample.bin, built by fixtures.mjs vbaProject() with the sample in active.test.mjs",
+ "modules": [
+  "ThisDocument",
+  "Module1"
+ ],
+ "autoexec": [
+  "AutoOpen"
+ ],
+ "suspicious": [
+  "Environ",
+  "Shell",
+  "WScript.Shell",
+  "Run",
+  "CreateObject",
+  "Base64 Strings"
+ ]
+}

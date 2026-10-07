@@ -65,17 +65,18 @@ export const MAIN_TYPE = {
 };
 export const MAIN_PART = { docx: "word/document.xml", xlsx: "xl/workbook.xml", pptx: "ppt/presentation.xml" };
 
-function contentTypes(flavour) {
+function contentTypes(flavour, mainType = MAIN_TYPE[flavour]) {
   return `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">`
     + `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>`
     + `<Default Extension="xml" ContentType="application/xml"/>`
-    + `<Override PartName="/${MAIN_PART[flavour]}" ContentType="${MAIN_TYPE[flavour]}"/></Types>`;
+    + `<Override PartName="/${MAIN_PART[flavour]}" ContentType="${mainType}"/></Types>`;
 }
 
-/** The OPC skeleton of a flavour: content types and the package rels. */
-export function skeleton(flavour) {
+/** The OPC skeleton of a flavour: content types and the package rels.
+ *  `mainType` declares another main content type (a macro-enabled twin's). */
+export function skeleton(flavour, mainType = MAIN_TYPE[flavour]) {
   return [
-    { name: "[Content_Types].xml", data: contentTypes(flavour) },
+    { name: "[Content_Types].xml", data: contentTypes(flavour, mainType) },
     { name: "_rels/.rels", data: rels([{ id: "rId1", type: RT.office, target: MAIN_PART[flavour] }]) },
   ];
 }
@@ -100,7 +101,7 @@ export const wr = (t) => `<w:r><w:t xml:space="preserve">${t}</w:t></w:r>`;
 /** A DOCX: { body, rels:[...], comments, core, extra:[members], cd:{usize...} for the main part } */
 export function docx(o = {}) {
   return zip([
-    ...skeleton("docx"),
+    ...skeleton("docx", o.mainType),
     { name: "word/document.xml", data: o.document ?? wdoc(o.body ?? wp(wr("Hello"))), cd: o.mainCd },
     ...(o.rels ? [{ name: "word/_rels/document.xml.rels", data: o.rels }] : []),
     ...(o.comments != null ? [{ name: "word/comments.xml", data: o.comments, cd: o.commentsCd }] : []),
@@ -127,7 +128,7 @@ export function pptx(o = {}) {
   const pres = o.presentation ?? (`<?xml version="1.0"?><p:presentation ${P}><p:sldIdLst>`
     + slides.map((s, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 10}"${s.sldIdShow != null ? ` show="${s.sldIdShow}"` : ""}/>`).join("")
     + `</p:sldIdLst></p:presentation>`);
-  const members = [...skeleton("pptx"), { name: "ppt/presentation.xml", data: pres, cd: o.mainCd }];
+  const members = [...skeleton("pptx", o.mainType), { name: "ppt/presentation.xml", data: pres, cd: o.mainCd }];
   if (o.presRels !== false) members.push({ name: "ppt/_rels/presentation.xml.rels", data: o.presRels ?? presRels });
   for (const s of slides) {
     members.push({ name: `ppt/slides/${s.file}`, data: s.xml ?? slideXml(s.texts ?? [], s), cd: s.cd });
@@ -166,7 +167,7 @@ export function xlsx(o = {}) {
     + `</sheets>`
     + ((o.definedNames ?? []).length ? `<definedNames>${o.definedNames.map((d) => `<definedName name="${d.name}"${d.localSheetId != null ? ` localSheetId="${d.localSheetId}"` : ""}${d.hidden ? ' hidden="1"' : ""}>${d.ref}</definedName>`).join("")}</definedNames>` : "")
     + `</workbook>`);
-  const members = [...skeleton("xlsx"), { name: "xl/workbook.xml", data: wb, cd: o.workbookCd }];
+  const members = [...skeleton("xlsx", o.mainType), { name: "xl/workbook.xml", data: wb, cd: o.workbookCd }];
   if (o.wbRels !== false) {
     members.push({ name: "xl/_rels/workbook.xml.rels", data: o.wbRels ?? rels(sheets.map((s, i) => ({ id: `rId${i + 1}`, type: RT.sheet, target: `worksheets/sheet${i + 1}.xml` }))) });
   }
@@ -186,3 +187,150 @@ export const tablePart = (name, ref) => `<?xml version="1.0"?><table ${S} id="1"
 export const CORRUPT = { crc: 0x12345678 };
 /** A declared uncompressed size over the 20 MiB bound (the bytes themselves are small). */
 export const OVER = { usize: 20 * 1024 * 1024 + 1 };
+
+/* ------------------------------------------------------------------ VBA (R32) */
+
+/* MS-OVBA §2.4.1 compression, literal tokens only: a container is the
+ * signature byte 0x01 and its chunks; each chunk's flag byte 0x00 says its
+ * next eight tokens are literal bytes. Valid compressed data, written so the
+ * fixture needs no compressor of its own to trust. A chunk here decompresses
+ * to at most 3,584 bytes, so its compressed size (448 flag bytes + the
+ * literals) stays inside a chunk's 4,096-byte payload. */
+export function ovbaCompress(data) {
+  const src = enc(data);
+  const out = [0x01];
+  for (let at = 0; at < src.length || at === 0; at += 3584) {
+    const piece = src.subarray(at, at + 3584);
+    const body = [];
+    for (let i = 0; i < piece.length; i += 8) body.push(0x00, ...piece.subarray(i, i + 8));
+    const size = body.length + 2;
+    const header = ((size - 3) & 0x0fff) | 0x3000 | 0x8000;
+    out.push(header & 255, header >> 8, ...body);
+    if (!src.length) break;
+  }
+  return new Uint8Array(out);
+}
+
+const le16 = (v) => [v & 255, (v >> 8) & 255];
+const le32 = (v) => [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255];
+const latin = (s) => Array.from(s, (c) => c.charCodeAt(0) & 255);
+const utf16 = (s) => Array.from(s).flatMap((c) => le16(c.charCodeAt(0)));
+const rec = (id, bytes) => [...le16(id), ...le32(bytes.length), ...bytes];
+
+/* The decompressed `VBA/dir` stream (MS-OVBA §2.3.4.2): PROJECTINFORMATION,
+ * no references, PROJECTMODULES with one MODULE record per module, each
+ * module's source at TextOffset 0 of its own stream (no p-code). */
+function vbaDir(project, modules) {
+  const out = [
+    ...rec(0x0001, le32(1)), ...rec(0x0002, le32(0x409)), ...rec(0x0014, le32(0x409)), ...rec(0x0003, le16(1252)),
+    ...rec(0x0004, latin(project)),
+    ...rec(0x0005, []), ...rec(0x0040, []),
+    ...rec(0x0006, []), ...rec(0x003d, []),
+    ...rec(0x0007, le32(0)), ...rec(0x0008, le32(0)),
+    ...le16(0x0009), ...le32(4), ...le32(1), ...le16(0),
+    ...rec(0x000c, []), ...rec(0x003c, []),
+    ...le16(0x000f), ...le32(2), ...le16(modules.length),
+    ...rec(0x0013, le16(0xffff)),
+  ];
+  for (const m of modules) {
+    out.push(...rec(0x0019, latin(m.name)), ...rec(0x0047, utf16(m.name)),
+      ...rec(0x001a, latin(m.stream ?? m.name)), ...rec(0x0032, utf16(m.stream ?? m.name)),
+      ...rec(0x001c, []), ...rec(0x0048, []),
+      ...rec(0x0031, le32(0)), ...rec(0x001e, le32(0)), ...rec(0x002c, le16(0xffff)),
+      ...le16(m.document ? 0x0022 : 0x0021), ...le32(0),
+      ...le16(0x002b), ...le32(0));
+  }
+  out.push(...le16(0x0010), ...le32(0));
+  return new Uint8Array(out);
+}
+
+/* A minimal MS-CFB compound file (version 3, 512-byte sectors): one FAT
+ * sector, the directory, the mini FAT and the mini stream, every stream in
+ * the mini stream (all are under the 4,096-byte cutoff). `tree` is
+ * { name: Uint8Array | { ...subtree } }; siblings are chained right-ward in
+ * CFB name order (length, then upper case), a valid if unbalanced tree. */
+export function cfb(tree) {
+  const entries = [{ name: "Root Entry", type: 5, kids: [] }];
+  const add = (obj, parent) => {
+    for (const [name, v] of Object.entries(obj)) {
+      const e = v instanceof Uint8Array ? { name, type: 2, data: v } : { name, type: 1, kids: [] };
+      const id = entries.length;
+      entries.push(e);
+      parent.kids.push(id);
+      if (e.type === 1) add(v, e);
+    }
+  };
+  add(tree, entries[0]);
+  const key = (n) => [n.length, n.toUpperCase()];
+  for (const e of entries) if (e.kids) e.kids.sort((a, b) => {
+    const [la, ua] = key(entries[a].name), [lb, ub] = key(entries[b].name);
+    return la - lb || (ua < ub ? -1 : ua > ub ? 1 : 0);
+  });
+  /* the mini stream: each stream at a 64-byte mini-sector boundary */
+  const mini = [];
+  const miniFat = [];
+  for (const e of entries) {
+    if (e.type !== 2) continue;
+    const n = Math.max(1, Math.ceil(e.data.length / 64));
+    e.start = e.data.length ? miniFat.length : 0xfffffffe;
+    if (!e.data.length) continue;
+    for (let i = 0; i < n; i++) miniFat.push(i === n - 1 ? 0xfffffffe : miniFat.length + 1);
+    const padded = new Uint8Array(n * 64); padded.set(e.data);
+    mini.push(...padded);
+  }
+  const dirSectors = Math.ceil(entries.length / 4);
+  const miniFatSectors = Math.max(1, Math.ceil(miniFat.length / 128));
+  const miniSectors = Math.ceil(mini.length / 512);
+  const firstDir = 1, firstMiniFat = firstDir + dirSectors, firstMini = firstMiniFat + miniFatSectors;
+  const total = firstMini + miniSectors;
+  const fat = new Array(128).fill(0xffffffff);
+  fat[0] = 0xfffffffd;
+  const chain = (start, n) => { for (let i = 0; i < n; i++) fat[start + i] = i === n - 1 ? 0xfffffffe : start + i + 1; };
+  chain(firstDir, dirSectors); chain(firstMiniFat, miniFatSectors); chain(firstMini, miniSectors);
+  const header = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, ...new Array(16).fill(0),
+    ...le16(0x003e), ...le16(0x0003), ...le16(0xfffe), ...le16(9), ...le16(6), ...new Array(6).fill(0),
+    ...le32(0), ...le32(1), ...le32(firstDir), ...le32(0), ...le32(4096),
+    ...le32(firstMiniFat), ...le32(miniFatSectors), ...le32(0xfffffffe), ...le32(0), ...le32(0)];
+  while (header.length < 512) header.push(0xff);
+  const dir = [];
+  entries.forEach((e, id) => {
+    const name = utf16(e.name).concat([0, 0]);
+    const b = new Array(128).fill(0);
+    name.forEach((x, i) => { b[i] = x; });
+    b.splice(64, 2, ...le16(name.length));
+    b[66] = e.type; b[67] = 1;
+    const parent = entries.find((p) => p.kids && p.kids.includes(id));
+    const sib = parent ? parent.kids[parent.kids.indexOf(id) + 1] : undefined;
+    b.splice(68, 4, ...le32(0xffffffff));
+    b.splice(72, 4, ...le32(sib ?? 0xffffffff));
+    b.splice(76, 4, ...le32(e.kids && e.kids.length ? e.kids[0] : 0xffffffff));
+    if (e.type === 5) { b.splice(116, 4, ...le32(miniSectors ? firstMini : 0xfffffffe)); b.splice(120, 4, ...le32(mini.length)); }
+    if (e.type === 2) { b.splice(116, 4, ...le32(e.start)); b.splice(120, 4, ...le32(e.data.length)); }
+    dir.push(...b);
+  });
+  while (dir.length < dirSectors * 512) {
+    const empty = new Array(128).fill(0);
+    empty.splice(68, 12, ...le32(0xffffffff), ...le32(0xffffffff), ...le32(0xffffffff));
+    dir.push(...empty);
+  }
+  const mf = new Array(miniFatSectors * 128).fill(0xffffffff);
+  miniFat.forEach((v, i) => { mf[i] = v; });
+  const body = [...fat.flatMap(le32), ...dir, ...mf.flatMap(le32), ...mini];
+  while (body.length < (total - 0) * 512) body.push(0);
+  return new Uint8Array([...header, ...body]);
+}
+
+/** A vbaProject.bin: { project, modules:[{ name, source, stream?, document? }] }.
+ *  `corrupt: [name]` writes those modules' streams as bytes that are no
+ *  compressed container, so the module's source cannot be read. */
+export function vbaProject({ project = "VBAProject", modules = [], corrupt = [] } = {}) {
+  const vba = {
+    _VBA_PROJECT: new Uint8Array([0xcc, 0x61, 0xff, 0xff, 0x00, 0x00, 0x00]),
+    dir: ovbaCompress(vbaDir(project, modules)),
+  };
+  for (const m of modules) vba[m.stream ?? m.name] = corrupt.includes(m.name) ? new Uint8Array([0x07, 0x07, 0x07]) : ovbaCompress(m.source ?? "");
+  const projectText = `ID="{00000000-0000-0000-0000-000000000000}"\r\n`
+    + modules.map((m) => (m.document ? `Document=${m.name}/&H00000000` : `Module=${m.name}`)).join("\r\n")
+    + `\r\nName="${project}"\r\n`;
+  return cfb({ PROJECT: enc(projectText), VBA: vba });
+}
