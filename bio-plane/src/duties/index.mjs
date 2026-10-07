@@ -3,7 +3,9 @@
  * authority. A duty `DUT-` is a duty, a prohibition or a power, held from its source at its version and adopted by a
  * member's act (R1–R8). Its occurrences are derived on read from its trigger, its source in force and the events that
  * meet it (R9–R12); each change of an occurrence's state is recorded, append-only (R13, R14). "Overdue" raises a
- * question, never a violation (R11). Powers are read as the instruments that grant them (R15).
+ * question, never a violation (R11). Powers are read as the instruments that grant them (R15), and linked to the events
+ * that use them (R27). A policy's own review date is held as the body's commitment, an overdue review "Noticed" (R28);
+ * an organisation's own policy becomes a duty only where K1440 allows (R29). (T35-34: K1713, K1740, K1799.)
  *
  * No place is named here (R23): the response vocabulary, the rules and the calendar are the active jurisdiction
  * profiles' data, read through the view. No due date is stored (R21): `civil-time` computes it on every read, and
@@ -35,7 +37,8 @@ import { noSuchEvent, eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { noSuchFact, moneyOf } from "../money/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
-import { contentOf } from "../content/index.mjs";
+import { contentOf, checkContentExtent } from "../content/index.mjs";
+import { noSha } from "../extraction/index.mjs";
 import { OBSERVATION_LEVELS } from "../observation-log/index.mjs";
 import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalendarDate, validAt as civilValidAt } from "../civil-time/index.mjs";
 import { defaultRegistry, derivedId, BOUNDS } from "../connection-grammar/index.mjs";
@@ -44,7 +47,7 @@ import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { DUTIES_CHECKS, refusal } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
-         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS } from "./vocab.mjs";
+         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED } from "./vocab.mjs";
 
 export { DUTIES_CHECKS } from "./checks.mjs";
 export { DUTIES_SCHEMA, DUTIES_TABLES, DUTIES_TABLE_NAMES } from "./schema.mjs";
@@ -135,10 +138,6 @@ export function noSuchDuty(dutyId, extra = null) {
            duty_id: dutyId ?? null, ...Object.fromEntries(own), detail: NO_SUCH_DUTY_DETAIL };
   /* END DEC-49 REGION is-duty-held */
 }
-
-/** R24 (N583): the form of R9's occurrence key, `OCC-` and 32 lowercase hexadecimal digits, anchored at both ends. A
- *  later module that checks a key's form (`inquiry-grammar` R15) imports it rather than spelling its own. */
-export const OCCURRENCE_KEY_RE = Object.freeze(/^OCC-[0-9a-f]{32}$/);
 
 /* ===================================================================== *
  * The module
@@ -264,6 +263,20 @@ export class Duties {
       if (!said(f[end]) || !this.#entity(f[end])) return noSuchEntity(f[end] ?? null, { end });
     }
     const src = isObj(f.source) ? f.source : {};
+    /* R29 (K1440 as amended by K1453): a source whose standard an organisation outside government issued is that
+       organisation's own policy, held and measured in `standards`; it becomes a duty only where its obligor acts for a
+       public body and an enforcer is named. */
+    const issuer = this.#issuerOf(src);
+    const ownPolicy = issuer && ORGANISATION_KINDS.includes(issuer.kind) && issuer.sector !== "government" ? issuer : null;
+    const stays = ownPolicy ? ` The policy of ${ownPolicy.label ?? src.standard} stays held as a standard and may be compared with what the `
+      + "organisation does (calculations); it is not tracked here as an obligation." : "";
+    if (ownPolicy && (obligor.kind === "person" || PUBLIC_KINDS.includes(obligor.kind) || this.#isPublic(obligor))
+        && !(obligor.kind !== "person" && this.#bindsObligor(src, f.obligor))) {
+      /* DEC-49 REGION is-duty-public */
+      return refusal("NOT_ACTING_FOR_PUBLIC", `an organisation's own policy binds no public body or person as an obligation here unless an adoption puts it in force for that body.${stays}`,
+        { obligor: f.obligor, issuer: src.standard ?? null });
+      /* END DEC-49 REGION is-duty-public */
+    }
     if (obligor.kind === "person") {
       /* DEC-49 REGION is-duty-person */
       if (!["standard", "court"].includes(src.kind) || !said(src.binds))
@@ -271,16 +284,19 @@ export class Duties {
           + "them by name or role: cite it as the source and say what it binds (source.binds).");
       /* END DEC-49 REGION is-duty-person */
     } else if (!PUBLIC_KINDS.includes(obligor.kind) && !this.#isPublic(obligor)) {
-      const acting = ORGANISATION_KINDS.includes(obligor.kind) ? this.#actingFor(f.obligor) : null;
+      /* R1: a held acting line, or a source naming the public body it acts for (its standard issued by that body) */
+      const acting = ORGANISATION_KINDS.includes(obligor.kind)
+        ? this.#actingFor(f.obligor) || (issuer && this.#isPublic(issuer) ? { line: null, kind: "source", body: issuer.entity_id } : null)
+        : null;
       /* DEC-49 REGION is-duty-public */
       if (!acting)
-        return refusal("NOT_ACTING_FOR_PUBLIC", ORGANISATION_KINDS.includes(obligor.kind)
-          ? `this organisation's sector is ${obligor.sector ?? "undetermined"}, and no ${ACTING_LINES.join(" or ")} line ties it to a public body.`
-          : `an entity of kind ${obligor.kind} owes no obligation.`, { obligor: f.obligor });
+        return refusal("NOT_ACTING_FOR_PUBLIC", (ORGANISATION_KINDS.includes(obligor.kind)
+          ? `this organisation's sector is ${obligor.sector ?? "undetermined"}, and no ${ACTING_LINES.join(" or ")} line, and no source it rests on, ties it to a public body.`
+          : `an entity of kind ${obligor.kind} owes no obligation.`) + stays, { obligor: f.obligor });
       /* END DEC-49 REGION is-duty-public */
       /* DEC-49 REGION is-duty-enforcer */
       if (!said(f.enforcer))
-        return refusal("NO_ENFORCER", "an obligation owed by an organisation outside government names the office that enforces it (enforcer).");
+        return refusal("NO_ENFORCER", `an obligation owed by an organisation outside government names the office that enforces it (enforcer).${stays}`);
       /* END DEC-49 REGION is-duty-enforcer */
       out.acting_for = acting;
     }
@@ -333,6 +349,10 @@ export class Duties {
       if (!row) return refusal("EXTENT_NOT_HELD", "a reported status quotes a held passage (its content id).", { extent: said(rs.extent) ? rs.extent.slice(0, 80) : null });
       /* END DEC-49 REGION is-duty-extent */
     }
+    /* R28: a review duty is the body's own commitment over the policy it reviews, never a rule */
+    if (f.review !== undefined && f.review !== null
+        && (!isObj(f.review) || f.review.standard !== src.standard || src.kind !== "standard" || tm.basis !== "commitment"))
+      return refusal("BAD_TIME", "a policy's review is the body's own commitment (time.basis commitment) over the standard it reviews (review.standard is the source's).");
     if (f.project !== undefined && f.project !== null && !(said(f.project) && this.record.bundleInfo(f.project)))
       return refusal("ARISING_IN_NOT_HELD", "the project named is not held.", { project: said(f.project) ? f.project.slice(0, 80) : null });
     return null;
@@ -350,6 +370,26 @@ export class Duties {
       if (other && this.#isPublic(this.#entity(other))) return { line: l.line_id ?? null, kind: l.kind, body: other };
     }
     return null;
+  }
+
+  /* R1, R29: the source standard's issuer, when it is a registered entity (`standards` R39); else null. */
+  #issuerOf(src) {
+    if (!isObj(src) || !["standard", "court"].includes(src.kind)) return null;
+    const std = this.#standard(src.standard);
+    const iss = std ? std.issuer : null;
+    const id = said(iss) ? iss.trim() : isObj(iss) && said(iss.entity_id) ? iss.entity_id : isObj(iss) && said(iss.entity) ? iss.entity : null;
+    if (!id || !/^ENT-/.test(id)) return null;
+    const e = this.#entity(id);
+    return e ? { ...e, entity_id: e.entity_id ?? id } : null;
+  }
+  /* R29: whether `standards.bindsAt` answers that the source binds the obligor today (an adoption puts an
+     organisation's own policy in force for a body, `standards` R40, R43); false when it cannot answer. */
+  #bindsObligor(src, obligor) {
+    if (!this.standards || typeof this.standards.bindsAt !== "function") return false;
+    try {
+      const r = this.standards.bindsAt({ standard: src.standard, body: obligor, date: this.#stamp().slice(0, 10), viewer: SYSTEM_VIEWER });
+      return !!r && r.ok !== false && (r.binds === true || r.state === "binds" || r.answer === "binds");
+    } catch { return false; }
   }
 
   /* R1: the source union. */
@@ -425,7 +465,7 @@ export class Duties {
 
   /** R21: the one-home checks every write to the module's tables asks (record-core R78's store gate). */
   oneHome(row, { op } = {}) {
-    if (op !== "insert" && (row && (row.table === "duty_transitions" || row.table === "duty_versions" || row.table === "duty_matches")))
+    if (op !== "insert" && (row && (row.table === "duty_transitions" || row.table === "duty_versions" || row.table === "duty_matches" || row.table === "duty_use_links")))
       return refusal("APPEND_ONLY", `${row.table} is appended to and never ${op === "delete" ? "deleted from" : "updated"}.`);
     const fields = row && row.fields_json ? safeJson(row.fields_json) : null;
     let hyp = null, dueKey = null, amount = null;
@@ -460,7 +500,7 @@ export class Duties {
   /* The fields a duty holds (Terms), normalised: only the known keys, never a due date or an amount (R21). */
   static #fields(f) {
     const keys = ["modality", "obligor", "obligee", "performance", "source", "trigger", "time", "exceptions", "enforcer",
-                  "observed_by", "arising_in", "reported_status", "delegation", "project"];
+                  "observed_by", "arising_in", "reported_status", "delegation", "project", "review"];
     const out = {};
     for (const k of keys) if (f[k] !== undefined && f[k] !== null) out[k] = clone(f[k]);
     if (!Array.isArray(out.exceptions)) out.exceptions = out.exceptions === undefined ? [] : [out.exceptions];
@@ -510,6 +550,71 @@ export class Duties {
       time: { basis: "rule", rule: rule.rule, applies_to: rule.applies_to, ...(said(b.office_role) ? { office: b.office_role } : {}) },
       by: b.by, why: `computed from the profile rule ${rule.rule} (${rule.citation || "no citation"})`,
     });
+  }
+
+  /** R28: a policy's own review date held as the body's own commitment: a proposal (R2) of one duty of the policy's
+   *  owner to review it, its date read from the cited passage of the policy's text (`reviewDue`), recurring by the
+   *  cited revision cycle (`cycle`) when one is given. Refused under R1 and R29 as any duty is. */
+  proposeReview(a = {}) {
+    const b = isObj(a) ? a : {};
+    if (!said(b.by)) return memberOnly(b.by, "proposing a review with no stamp");
+    const std = this.#standard(b.standard);
+    if (!std) return noSuchStandard(said(b.standard) ? b.standard : null);
+    const due = this.#policyWords(std, b.reviewDue, "review_due", b.by);
+    if (!due.ok) return due;
+    const day = reviewDay(due.words);
+    /* DEC-49 REGION is-duty-review-date */
+    if (!day.ok) return refusal("REVIEW_DATE_UNREAD", due.words === null ? "the extent's words are not held as read text."
+                                  : `${day.why}; the words are kept as written: "${String(due.words).slice(0, 200)}".`,
+                                { review_due: due.cite, words: due.words === null ? null : String(due.words).slice(0, 500) });
+    /* END DEC-49 REGION is-duty-review-date */
+    let trigger = { kind: "date", date: day.date }, cycle = null;
+    if (b.cycle !== undefined && b.cycle !== null) {
+      const cy = this.#policyWords(std, b.cycle, "cycle", b.by);
+      if (!cy.ok) return cy;
+      const rr = reviewCycle(cy.words);
+      /* DEC-49 REGION is-duty-recurrence */
+      if (!rr.ok) return refusal("BAD_RECURRENCE", `${rr.why}: "${String(cy.words ?? "").slice(0, 200)}".`, { cycle: cy.cite });
+      /* END DEC-49 REGION is-duty-recurrence */
+      trigger = { kind: "recurrence", rrule: rr.rrule, dtstart: day.date };
+      cycle = cy.cite;
+    }
+    return this.propose({
+      modality: "duty", obligor: b.owner, performance: { act: "review the policy" },
+      source: { kind: "standard", standard: b.standard }, trigger,
+      time: { basis: "commitment", citation: due.cite.content_id },
+      review: { standard: b.standard, review_due: due.cite, cycle },
+      by: b.by, why: said(b.why) ? b.why : `the policy's own review date (${day.date}), a commitment it states`,
+    });
+  }
+
+  /* R28 (K1941, K1965): the words of an extent of the standard's own held text, `{captureSha, extent}` (a found match's
+     `capture_sha` passing as it is), refused as `content` refuses an extent; minted through `content.mint` and read with
+     `content.passageText`. `{ok, words, cite}` or the refusal. */
+  #policyWords(std, cite, field, by) {
+    const c = isObj(cite) ? cite : {};
+    const sha = str(c.captureSha ?? c.capture_sha).toLowerCase();
+    if (!sha) return noSha(`${field} cites an extent of the policy's text, named by its capture sha256`);
+    const home = /^[0-9a-f]{64}$/.test(sha) && this.provenance ? this.provenance.homeOf(sha) : null;
+    if (!home || (this.membership && !this.membership.inSight(home.bundleId, isMember(by) ? str(by) : SYSTEM_VIEWER)))
+      return { ok: false, reason: "CAPTURE_NOT_HELD", detail: "the record holds no such capture you can see", [field]: sha.slice(0, 80) };
+    if (!isObj(c.extent)) return { ok: false, reason: "NO_EXTENT", detail: `${field} names the extent of the capture that states it` };
+    let bad;
+    try { bad = checkContentExtent(c.extent, this.content.contentContextFor(sha)); }
+    catch (e) { bad = { code: "CONTENT_EXTENT_UNREADABLE", detail: String(e && e.message || e).slice(0, 200) }; }
+    if (bad) return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: "the extent names no part of that capture", extent_refusal: bad };
+    const ids = Array.isArray(std.text) ? std.text : Array.isArray(std.texts) ? std.texts.map((t) => t && t.content_id) : [];
+    const held = new Set(ids.map((id) => { const r = said(id) ? this.content.contentRow(id) : null; return r ? r.capture_sha : null; }).filter(Boolean));
+    /* DEC-49 REGION is-duty-review-extent */
+    if (!held.has(sha))
+      return refusal("REVIEW_EXTENT_NOT_HELD", `${field} cites a capture that is not the policy's held text.`, { [field]: sha.slice(0, 80) });
+    /* END DEC-49 REGION is-duty-review-extent */
+    const m = this.content.mint({ bundleId: home.bundleId, captureSha: sha, extent: c.extent, mintedBy: str(by) });
+    if (!m || m.ok === false || !said(m.content_id))
+      return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: "the extent names no part of that capture", extent_refusal: m || null };
+    let words = null;
+    try { words = this.content.passageText(m.content_id); } catch { words = null; }
+    return { ok: true, words, cite: { capture_sha: sha, extent: clone(c.extent), content_id: m.content_id } };
   }
 
   /** R2, R3: a member adopts a proposal in one act, naming the clause. */
@@ -683,7 +788,7 @@ export class Duties {
     } catch (e) { return { state: "undetermined", why: `the in-force read failed: ${String(e && e.message || e).slice(0, 200)}` }; }
   }
 
-  #dutyView(d, viewer, date) {
+  #dutyView(d, viewer, date, memo = {}) {
     const fields = this.#fieldsOf(d.duty_id, d.version);
     const versions = this.#rows(`SELECT version, fields_json, reason, by_member, at FROM duty_versions WHERE duty_id=? ORDER BY version`, d.duty_id)
       .map((v) => ({ version: v.version, fields: safeJson(v.fields_json), reason: v.reason, by: v.by_member, at: v.at }));
@@ -695,6 +800,7 @@ export class Duties {
       withdrawn: d.withdrawn_at ? { at: d.withdrawn_at, by: d.withdrawn_by, reason: d.withdraw_reason } : null,
       in_force: { date, ...this.inForce(fields, date, viewer) },
       words: fields.modality === "power" ? "power" : "obligation",
+      ...(fields.modality === "power" ? { uses: this.#useCount(d, fields, viewer, memo) } : {}),
     };
   }
 
@@ -718,12 +824,12 @@ export class Duties {
     const n = Number(b.limit);
     const limit = Number.isInteger(n) ? Math.min(Math.max(n, 1), LIST_MAX) : LIST_DEFAULT;
     const date = said(b.at) ? b.at.slice(0, 10) : this.#stamp().slice(0, 10);
-    const out = [];
+    const out = [], memo = {};
     let truncated = false;
     for (const d of this.#rows(`SELECT * FROM duties WHERE ${as}=? ORDER BY duty_id`, b.entity)) {
       if (!this.visible(this.#fieldsOf(d.duty_id, d.version), b.viewer)) continue;
       if (out.length === limit) { truncated = true; break; }
-      out.push(this.#dutyView(d, b.viewer, date));
+      out.push(this.#dutyView(d, b.viewer, date, memo));
     }
     return { ok: true, entity: b.entity, as, duties: out, count: out.length, limit, truncated };
   }
@@ -926,7 +1032,13 @@ export class Duties {
     }
     occ.state = state.state;
     occ.why = state.why;
-    if (occ.state === "overdue") {
+    if (occ.state === "overdue" && isObj(fields.review) && basis === "commitment") {
+      /* R28 (K1431, D241): the body's own review date passed with no review recorded: noticed, never a legal deadline */
+      occ.label = NOTICED;
+      occ.why = "the body's own review date, a commitment it stated, has passed and no review is recorded";
+      occ.question = `Was the policy reviewed by ${due.due && due.due.value ? due.due.value : "its stated review date"}? The date is the body's own `
+        + "commitment, not a deadline the law sets; this is a question, not a finding.";
+    } else if (occ.state === "overdue") {
       const dueWords = typeof due.due === "string" ? due.due : due.due && due.due.value ? due.due.value
         : due.due && due.due.candidates ? `${due.due.candidates[0].value}–${due.due.candidates[1].value}` : "the due date";
       if (basis === "dependency")
@@ -1080,7 +1192,7 @@ export class Duties {
     if (e.kind !== "office") return refusal("NOT_AN_OFFICE", "powers are read for an office.", { entity_id: b.office, kind: e.kind });
     /* END DEC-49 REGION is-duty-office */
     const date = said(b.at) ? b.at.slice(0, 10) : this.#stamp().slice(0, 10);
-    const powers = [], undetermined = [];
+    const powers = [], undetermined = [], memo = {};
     for (const d of this.#rows(`SELECT * FROM duties WHERE obligor=? AND modality='power' ORDER BY duty_id`, b.office)) {
       const fields = this.#fieldsOf(d.duty_id, d.version);
       if (!this.visible(fields, b.viewer)) continue;
@@ -1093,13 +1205,172 @@ export class Duties {
                  instrument: !std ? null : said(std.instrument) ? std.instrument : std.instrument && std.instrument.key ? std.instrument.key : null };
       };
       const item = { duty_id: d.duty_id, performance: fields.performance, instrument: instrument(fields.source),
-                     delegation: fields.delegation ? instrument(fields.delegation) : null, in_force: inForce };
+                     delegation: fields.delegation ? instrument(fields.delegation) : null, in_force: inForce,
+                     uses: this.#useCount(d, fields, b.viewer, memo) };
       if (inForce.state === "in_force") powers.push(item);
       else if (inForce.state === "not_in_force") continue;
       else undetermined.push({ ...item, why: inForce.why ?? `in force: ${inForce.state}` });
     }
     return { ok: true, office: b.office, at: date, powers, undetermined,
              says: "the powers held in force on the date, each read as the instrument that grants it; whether any act was within a power is a member's determination, not this read" };
+  }
+
+  /* ===================================================================== *
+   * R27: a power held, linked to the events that use it
+   * ===================================================================== */
+
+  /* R27: every use of a power `events` answers this viewer (`events.usesOf`, R46), paged through whole in events' own
+     order: `{placed, nowhere, error}`. Read once per call and shared by every power the call answers. */
+  #scanUses(viewer, from = null, to = null) {
+    if (!this.events || typeof this.events.usesOf !== "function")
+      return { placed: [], nowhere: [], error: "the events service cannot answer the uses of a power" };
+    const placed = [], nowhere = new Map();
+    let after;
+    for (let page = 0; page < 1000; page++) {
+      let r;
+      try {
+        r = this.events.usesOf({ ...(from ? { from } : {}), ...(to ? { to } : {}), ...(after ? { after } : {}), limit: LIST_MAX,
+                                 viewer: Duties.#reader(viewer) });
+      } catch (e) { return { placed, nowhere: [...nowhere.values()], error: String(e && e.message || e).slice(0, 200) }; }
+      if (!r || r.ok === false) return { placed, nowhere: [...nowhere.values()], error: r && (r.detail || r.reason) || "the uses could not be read" };
+      const items = Array.isArray(r.items) ? r.items : Array.isArray(r.events) ? r.events : [];
+      placed.push(...items);
+      for (const x of Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []) if (x && x.event_id) nowhere.set(x.event_id, x);
+      if (!r.truncated || !items.length) break;
+      after = items[items.length - 1].event_id;
+    }
+    return { placed, nowhere: [...nowhere.values()], error: null };
+  }
+
+  /* R27: the member links of a power, the latest act per event governing: Map event_id → {act, by, at, reason, earlier}. */
+  #useLinks(dutyId) {
+    const out = new Map();
+    for (const r of this.#rows(`SELECT * FROM duty_use_links WHERE duty_id=? ORDER BY seq`, dutyId)) {
+      const prev = out.get(r.event_id);
+      out.set(r.event_id, { act: r.act, by: r.by_member, at: r.at, reason: r.reason, earlier: prev ? [...prev.earlier, { act: prev.act, by: prev.by, at: prev.at, reason: prev.reason }] : [] });
+    }
+    return out;
+  }
+
+  /* R27: how an event is linked to the power: `provision` when its provision key names the power's source standard
+     (and portion, or a portion within it, where the source names one), `member` when a member's link stands. */
+  static #linkedBy(fields, ev, links) {
+    const how = [];
+    const src = fields.source || {};
+    const prov = ev && (isObj(ev.provision) ? ev.provision : isObj(ev.facet) && isObj(ev.facet.provision) ? ev.facet.provision : null);
+    if (prov && said(prov.standard) && ["standard", "court"].includes(src.kind) && prov.standard === src.standard
+        && (!said(src.portion) || (said(prov.portion) && (prov.portion === src.portion || prov.portion.startsWith(`${src.portion}/`)))))
+      how.push("provision");
+    const l = links.get(ev && ev.event_id);
+    if (l && l.act === "link") how.push("member");
+    return how;
+  }
+
+  /* R27: whether the event's decider participant is the power's obligor, a fact about the record: true, false, or
+     undetermined with why (a person decider and no holding of the office at the event's when held). */
+  #deciderIsObligor(ev, obligor, viewer) {
+    const deciders = (Array.isArray(ev.participants) ? ev.participants : [])
+      .filter((p) => p && p.role === "decider" && !p.superseded).map((p) => p.entity ?? p.entity_id).filter(said);
+    if (!deciders.length) return { value: "undetermined", why: "decider not recorded" };
+    if (deciders.includes(obligor)) return { value: true };
+    const obl = this.#entity(obligor);
+    let why = null;
+    for (const dec of deciders) {
+      const e = this.#entity(dec);
+      if (!e || e.kind !== "person") continue;
+      if (!obl || obl.kind !== "office") continue;
+      if (!this.lines || typeof this.lines.holderAt !== "function") { why = "the holder of the office cannot be read here"; continue; }
+      let h = null;
+      const at = ev.when && ev.when !== "undetermined" && !isUndet(ev.when) ? ev.when : null;
+      if (!at) { why = "the event's date is not recorded, so who held the office is not read"; continue; }
+      try { h = this.lines.holderAt({ office: obligor, at, viewer: Duties.#reader(viewer) }); } catch { h = null; }
+      if (h && h.ok !== false && said(h.holder)) { if (h.holder === dec) return { value: true, holding: h.line ? h.line.line_id ?? null : null }; continue; }
+      why = h && said(h.undetermined) ? `the decider is a person, and who held the office at the event's date is undetermined: ${h.undetermined}`
+        : "the decider is a person, and no holding of the office at the event's date is held";
+    }
+    return why ? { value: "undetermined", why } : { value: false };
+  }
+
+  /* R27: the uses of one power from a scan, each `{event, linked, link?, decider_is_obligor, decider_why?}`. */
+  #usesFrom(d, fields, scan, viewer) {
+    const links = this.#useLinks(d.duty_id);
+    const item = (ev) => {
+      const how = Duties.#linkedBy(fields, ev, links);
+      if (!how.length) return null;
+      const dio = this.#deciderIsObligor(ev, d.obligor, viewer);
+      const l = links.get(ev.event_id);
+      return { event_id: ev.event_id, event: ev, linked: how, ...(l ? { link: l } : {}),
+               decider_is_obligor: dio.value, ...(dio.why ? { decider_why: dio.why } : {}),
+               says: "a held use of the power, linked as stated; whether the act was within the power is not this read's to say" };
+    };
+    return { placed: scan.placed.map(item).filter(Boolean), nowhere: scan.nowhere.map(item).filter(Boolean) };
+  }
+
+  /* R27: a duty that is a power the viewer may see, or the refusal. */
+  #power(dutyId, viewer) {
+    if (!said(dutyId)) return { refused: noSuchDuty(dutyId ?? null) };
+    const d = this.#one(`SELECT * FROM duties WHERE duty_id=?`, dutyId);
+    const fields = d ? this.#fieldsOf(d.duty_id, d.version) : null;
+    if (!d || (viewer !== undefined && !this.visible(fields, viewer))) return { refused: noSuchDuty(dutyId) };
+    /* DEC-49 REGION is-duty-power */
+    if (d.modality !== "power") return { refused: refusal("NOT_A_POWER", "the uses of a power are read for a duty of modality power.", { duty_id: d.duty_id, modality: d.modality }) };
+    /* END DEC-49 REGION is-duty-power */
+    return { d, fields };
+  }
+
+  /** R27: the events of kinds discretion, waiver and assessment that use the power, each with how it is linked and
+   *  whether its decider is the power's obligor; paged as `events.usesOf` pages. Never whether an act was within it. */
+  usesOfPower(a = {}) {
+    const b = isObj(a) ? a : {};
+    const p = this.#power(b.dutyId, b.viewer ?? null);
+    if (p.refused) return p.refused;
+    const n = Number(b.limit);
+    const limit = Number.isInteger(n) ? Math.min(Math.max(n, 1), LIST_MAX) : LIST_DEFAULT;
+    const scan = this.#scanUses(b.viewer ?? null, said(b.from) ? b.from : null, said(b.to) ? b.to : null);
+    const { placed, nowhere } = this.#usesFrom(p.d, p.fields, scan, b.viewer ?? null);
+    let start = 0;
+    if (said(b.after)) { const i = placed.findIndex((x) => x.event_id === b.after); start = i < 0 ? placed.length : i + 1; }
+    const items = placed.slice(start, start + limit);
+    return { ok: true, duty_id: p.d.duty_id, items, placed_nowhere: nowhere, count: items.length, limit,
+             truncated: start + limit < placed.length, total: placed.length + nowhere.length,
+             ...(scan.error ? { undetermined: { why: scan.error } } : {}),
+             says: "the held uses of this power this viewer may see, never every use made: a population, not a census" };
+  }
+
+  /* R27: the count of uses `usesOfPower` would answer the viewer, from a shared scan. */
+  #useCount(d, fields, viewer, memo) {
+    if (!memo.scan) memo.scan = this.#scanUses(viewer ?? null);
+    const u = this.#usesFrom(d, fields, memo.scan, viewer ?? null);
+    return u.placed.length + u.nowhere.length;
+  }
+
+  /** R27: a member links an event to the power it uses (a use recorded without a provision, or one the provision key
+   *  does not name). */
+  linkUse(a = {}) { return this.#linkAct(a, "link"); }
+  /** R27: a member unlinks it; the link is kept, shown unlinked with who, when and why. */
+  unlinkUse(a = {}) { return this.#linkAct(a, "unlink"); }
+
+  #linkAct(a, act) {
+    const b = isObj(a) ? a : {};
+    const m = memberOnly(b.by, act === "link" ? "linking a use to a power" : "unlinking a use from a power");
+    if (m) return m;
+    const p = this.#power(b.dutyId);
+    if (p.refused) return p.refused;
+    const ev = this.#event(b.eventId, b.viewer ?? null);
+    if (!ev || (ev.kind !== undefined && !USE_KINDS.includes(ev.kind)))
+      return noSuchEvent(said(b.eventId) ? b.eventId.slice(0, 80) : null,
+                         ev ? { why: `the event is of kind ${ev.kind}, not one of ${USE_KINDS.join(", ")}` } : undefined);
+    const n = noReason(b.reason);
+    if (n) return n;
+    const cur = this.#useLinks(p.d.duty_id).get(ev.event_id ?? b.eventId);
+    if (act === "link" ? cur && cur.act === "link" : !cur || cur.act !== "link")
+      return { ok: true, already: true, duty_id: p.d.duty_id, event_id: b.eventId, act };
+    const at = this.#stamp();
+    return this.record.transact(() => {
+      const g = this.#write("duty_use_links", { duty_id: p.d.duty_id, event_id: b.eventId, act, reason: b.reason.trim(), by_member: str(b.by), at });
+      if (g) return g;
+      return { ok: true, duty_id: p.d.duty_id, event_id: b.eventId, act, by: str(b.by), at, reason: b.reason.trim() };
+    });
   }
 
   /* ===================================================================== *
@@ -1206,6 +1477,29 @@ export class Duties {
                    grade: { assertion: "D", ends: ["D", "D"] }, derived: { method, inputs: [m.duty_id, m.event_id, m.occurrence_key], as_of } });
       }
     }
+    /* R27: "used in", a power to an event that uses it, derived on read with how it is linked */
+    if (at !== undefined && at !== null && kinds.includes("used_in") && (node.startsWith("DUT-") || node.startsWith("EVT-"))) {
+      const asOfDay = typeof at === "string" ? at.slice(0, 10) : at && at.value ? at.value.slice(0, 10) : null;
+      const powers = node.startsWith("DUT-") ? this.#rows(`SELECT * FROM duties WHERE duty_id=? AND modality='power'`, node)
+        : this.#rows(`SELECT * FROM duties WHERE modality='power' ORDER BY duty_id`);
+      let scan = null;
+      if (node.startsWith("EVT-")) {
+        const ev = this.#event(node, b.viewer);
+        scan = { placed: ev && USE_KINDS.includes(ev.kind) && !ev.withdrawn ? [ev] : [], nowhere: [] };
+      } else if (powers.length) scan = this.#scanUses(b.viewer);
+      for (const d of powers) {
+        const fields = this.#fieldsOf(d.duty_id, d.version);
+        if (!this.visible(fields, b.viewer)) continue;
+        const u = this.#usesFrom(d, fields, scan, b.viewer);
+        for (const x of [...u.placed, ...u.nowhere]) {
+          const method = `duties/used-in/1: the event's ${x.linked.join(" and ")} link to the power, as of the date`;
+          all.push({ id: derivedId({ kind: "used_in", from: d.duty_id, to: x.event_id, as_of: asOfDay, method }), kind: "used_in",
+                     from: d.duty_id, to: x.event_id, owner: MODULE, valid: { from: asOfDay, to: asOfDay, precision: "day", zone },
+                     evidence: [{ source: x.event_id, linked: x.linked }], grade: { assertion: "D", ends: ["D", "D"] },
+                     derived: { method, inputs: [d.duty_id, x.event_id], as_of: asOfDay } });
+        }
+      }
+    }
     let items = all.filter((c) => kinds.includes(c.kind) && (c.from === node || c.to === node));
     const marked = [];
     for (const c of items) {
@@ -1234,6 +1528,62 @@ export const INTERNAL = Symbol("duties-internal-reader");
 function validAtOf(c, at) { return civilValidAt({ valid: c.valid, basis: null }, at); }
 
 /* ===================================================================== *
+ * R28: a review date and a revision cycle read from a policy's own words
+ * ===================================================================== */
+
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const MONTH_RE = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+const monthOf = (w) => MONTHS.findIndex((m) => m.startsWith(w.toLowerCase().slice(0, 3))) + 1;
+const pad = (n) => String(n).padStart(2, "0");
+
+/** R28: the one whole calendar date the words state (`YYYY-MM-DD`, "June 30, 2027", "30 June 2027"), or why not: no
+ *  date, a placeholder, a month or year alone, or more than one date. Never completes or guesses a date. */
+export function reviewDay(words) {
+  if (typeof words !== "string" || !words.trim()) return { ok: false, why: "the passage holds no words to read a date from" };
+  const found = new Set();
+  for (const m of words.matchAll(/(?<![\d-])(\d{4})-(\d{2})-(\d{2})(?![\d-])/g)) found.add(`${m[1]}-${m[2]}-${m[3]}`);
+  for (const m of words.matchAll(new RegExp(`\\b${MONTH_RE}\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})\\b`, "gi")))
+    found.add(`${m[3]}-${pad(monthOf(m[1]))}-${pad(Number(m[2]))}`);
+  for (const m of words.matchAll(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+${MONTH_RE}\\.?,?\\s+(\\d{4})\\b`, "gi")))
+    found.add(`${m[3]}-${pad(monthOf(m[2]))}-${pad(Number(m[1]))}`);
+  const dates = [...found];
+  if (dates.length === 0) return { ok: false, why: "the words state no whole calendar date (a day, its month and its year)" };
+  if (dates.length > 1) return { ok: false, why: `the words state more than one date (${dates.sort().join(", ")})` };
+  if (!isCalendarDate(dates[0])) return { ok: false, why: `${dates[0]} is not a calendar date` };
+  return { ok: true, date: dates[0] };
+}
+
+const NUMBER_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+const CYCLE_WORDS = [[/\bsemi-?annual(?:ly)?\b/i, "MONTHLY", 6], [/\bbiennial(?:ly)?\b/i, "YEARLY", 2], [/\btriennial(?:ly)?\b/i, "YEARLY", 3],
+                     [/\b(?<!semi-?)annual(?:ly)?\b|\byearly\b/i, "YEARLY", 1], [/\bquarterly\b/i, "MONTHLY", 3], [/\bmonthly\b/i, "MONTHLY", 1]];
+
+/** R28: the revision cycle the words state, in whole years, months, weeks or days, as a `civil-time` RRULE; a cycle
+ *  of days not a whole number of weeks, none, or more than one, is not read. */
+export function reviewCycle(words) {
+  if (typeof words !== "string" || !words.trim()) return { ok: false, why: "the passage holds no words to read a cycle from" };
+  const found = new Set();
+  const num = `(\\d{1,3}|${Object.keys(NUMBER_WORDS).join("|")})`;
+  const add = (n, unit) => {
+    const k = Number.isInteger(Number(n)) ? Number(n) : NUMBER_WORDS[String(n).toLowerCase()];
+    if (!k) return;
+    const u = unit.toLowerCase();
+    if (u.startsWith("year")) found.add(`FREQ=YEARLY;INTERVAL=${k}`);
+    else if (u.startsWith("month")) found.add(`FREQ=MONTHLY;INTERVAL=${k}`);
+    else if (u.startsWith("week")) found.add(`FREQ=WEEKLY;INTERVAL=${k}`);
+    else found.add(k % 7 === 0 ? `FREQ=WEEKLY;INTERVAL=${k / 7}` : `DAYS:${k}`);
+  };
+  for (const m of words.matchAll(new RegExp(`\\b(?:every|each)\\s+${num}\\s+(years?|months?|weeks?|days?)\\b`, "gi"))) add(m[1], m[2]);
+  for (const m of words.matchAll(new RegExp(`\\b(?:every|each)\\s+(year|month|week)\\b`, "gi"))) add(1, m[1]);
+  for (const m of words.matchAll(new RegExp(`\\b${num}[- ](year|month|week|day)\\s+(?:review\\s+|revision\\s+)?(?:cycle|interval|period)`, "gi"))) add(m[1], m[2]);
+  for (const [re, freq, n] of CYCLE_WORDS) if (re.test(words)) found.add(`FREQ=${freq};INTERVAL=${n}`);
+  const all = [...found];
+  if (all.length === 0) return { ok: false, why: "the words state no revision cycle in whole years, months, weeks or days" };
+  if (all.length > 1) return { ok: false, why: "the words state more than one revision cycle" };
+  if (all[0].startsWith("DAYS:")) return { ok: false, why: `a cycle of ${all[0].slice(5)} days is not a whole number of weeks, and the supported recurrences are weekly, monthly or yearly` };
+  return { ok: true, rrule: all[0] };
+}
+
+/* ===================================================================== *
  * R19: the ops map
  * ===================================================================== */
 
@@ -1257,6 +1607,11 @@ export function dutiesOps(s, url, body) {
     dutytransitions: () => s.transitionsOf({ dutyId: q("id"), occurrenceKey: q("key"), viewer: q("viewer") }),
     powersof: () => s.powersOf({ office: q("office"), at: q("at"), viewer: q("viewer") }),
     dutysetagainst: () => s.setAgainst({ dutyId: q("id"), period: b.period ?? null, viewer: q("viewer") }),
+    poweruses: () => s.usesOfPower({ dutyId: q("id"), from: q("from") ?? undefined, to: q("to") ?? undefined, after: q("after") ?? undefined,
+                                     limit: q("limit") === null ? undefined : Number(q("limit")), viewer: q("viewer") }),
+    uselink: () => s.linkUse(act()),
+    useunlink: () => s.unlinkUse(act()),
+    reviewpropose: () => s.proposeReview(act()),
   };
 }
 

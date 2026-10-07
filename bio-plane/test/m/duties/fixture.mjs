@@ -110,6 +110,15 @@ export function world({ now = NOW, view = fictionalView(), deps = {} } = {}) {
       if (!r.ok) fail("standard", r);
       return r.id;
     },
+    /** A policy (a standard of kind `policy`) declared by bob, `issuer` its issuer (a string or a registered entity's
+     *  id), its text one fresh capture per entry of `words`, its page 0 holding those words. `{id, passages, cites}`:
+     *  each passage's content id, and its extent as `{captureSha, extent}` (K1941's one shape). */
+    policy({ issuer = "Town Council", words = ["The Town Clerk maintains this policy."], cite = "Records Policy" } = {}) {
+      const ps = words.map((t) => sw.passage(undefined, { text: t }));
+      const r = sw.declare({ cite, kind: "policy", issuer, text: ps.map((x) => x.contentId), period: { from: "2020-01-01", to: "2099-12-31" } });
+      if (!r.ok) fail("policy", r);
+      return { id: r.id, passages: ps.map((x) => x.contentId), cites: ps.map((x) => ({ captureSha: x.capSha, extent: { kind: "pdf-page", page: 0 } })) };
+    },
     /** A real event (events R6), attested by bob's testimony, dated `value` (a day or a date-time) or undated. */
     event({ kind = "communication", value = null, concerns = [] } = {}) {
       const r = ev.createEvent({ kind, concerns, attestations: [{ testimony: `I saw the ${kind}.`, ...(value !== null ? { value } : {}) }], by: BOB });
