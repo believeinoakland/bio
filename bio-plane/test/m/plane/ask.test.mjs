@@ -185,28 +185,36 @@ test("K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): a member with
   assert.equal(x.asks[1][1].account.secret, "sk-ant-zz-ann");
 });
 
-/* R19 (N686; K2038; control-plane R57, agent-worker R59): the draft's account and grant on the `bio` object. */
+/* R19 (N686; K2038, K2041, K2062; control-plane R57, agent-worker R59): the draft's account and grant on the `bio` object,
+   asked in control-plane's `draftAsk` shape and answering a Response the door reads as JSON. */
 const TASK = { op: "writinghelp", act: "conclude", field: "reason" };
-const draft = (x, extra = {}) => x.s.draft({ member: "member:ann", session: SESSION, task: TASK, told: "what I saw", ...extra });
+const PACK = { layers: ["writing_help"] };
+const ask = (extra = {}) => ({ op: "writinghelp", member: "ann", session: SESSION, told: "what I saw", act: "conclude",
+                               field: "reason", firsthand: false, pack: PACK, ...extra });
+const draft = async (x, extra = {}) => { const res = await x.s.draft(ask(extra)); return { status: res.status, body: await res.json() }; };
 
-test("R19 (N686; K2038; agent-worker R59): a member's draft carries their account in R6's shape to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back as given with the switch", async () => {
+test("R19 (N686; K2062; agent-worker R59): a member's draft carries their account in R6's shape and the door's pack to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back at its status with the switch and an empty read log", async () => {
   const x = await world();
   const r = await draft(x);
-  assert.deepEqual(r, { status: 200, answer: DRAFT, grant: null, suggestions: false, read: [] });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body, { ...DRAFT, grant: null, suggestions: false, read: [] });
   assert.equal(x.asks.length, 1);
   const [u, body] = x.asks[0];
   assert.equal(u, "https://agent-worker/draft");
-  assert.deepEqual(body, { task: TASK, told: "what I saw",
+  assert.deepEqual(body, { task: TASK, told: "what I saw", pack: PACK,
     account: { kind: "apikey", level: "member", secret: "sk-ant-zz-ann", member: "member:ann", suggestions: false } },
-    "no grant and no firsthand flag: the draft works only from what the member told it");
+    "no grant, so the door's pack rides with it and the draft works only from what the member told it");
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 0, "no grant minted");
+  /* the group's description: its task names the op alone */
+  await draft(x, { op: "groupdescriptiondraft", told: [{ question: "q", text: "t" }], act: null, field: null });
+  assert.deepEqual(x.asks[1][1].task, { op: "groupdescriptiondraft" });
 });
 
-test("R19 (N686; DEC-153 (2), K1841 (2)): with the member's suggestions on, a grant is minted for them and sent, and handed back for the door's read-log check; a firsthand field never gets one", async () => {
+test("R19 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions on, a grant is minted and sent in place of the pack, and its read log's strings come back; a firsthand field never gets one", async () => {
   const x = await world();
   assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   /* the assistant member reads through the grant while it drafts, as agent-worker R59's read tool does: a read on this
-     object under the grant, recorded in its read log (answers R1, R2) */
+     object under the grant, in store-door's header, recorded in its read log (answers R1, R2) */
   const fetchDraft = x.env.AGENT_WORKER.fetch;
   x.env.AGENT_WORKER.fetch = async (u, init) => {
     const b = JSON.parse(init.body);
@@ -215,18 +223,18 @@ test("R19 (N686; DEC-153 (2), K1841 (2)): with the member's suggestions on, a gr
   };
   const r = await draft(x);
   assert.equal(r.status, 200);
-  assert.equal(r.suggestions, true);
-  assert.match(r.grant, /^[0-9a-f]{64}$/);
-  assert.deepEqual(r.read, [...answersOf(x.ctx).readLog(r.grant).index.keys()], "K2041: the strings of the grant's read log");
-  assert.ok(r.read.length > 0, JSON.stringify(r.read));
-  assert.equal(x.asks[0][1].grant, r.grant, "the grant sent is the one handed back");
-  assert.equal(x.asks[0][1].account.suggestions, true);
-  const admit = await credentialsOf(x.ctx).aiGrantAdmit({ token: r.grant, op: "search", write: false });
+  assert.equal(r.body.suggestions, true);
+  assert.match(r.body.grant, /^[0-9a-f]{64}$/);
+  assert.equal(x.asks[0][1].grant, r.body.grant, "the grant sent is the one handed back");
+  assert.equal(x.asks[0][1].pack, undefined, "with a grant the pack is read under it, not sent");
+  assert.deepEqual(r.body.read, [...answersOf(x.ctx).readLog(r.body.grant).index.keys()], "K2041: the strings of the grant's read log");
+  assert.ok(r.body.read.length > 0, JSON.stringify(r.body.read));
+  const admit = await credentialsOf(x.ctx).aiGrantAdmit({ token: r.body.grant, op: "search", write: false });
   assert.equal(admit.viewer, "member:ann", "the member's own read-only grant");
   /* firsthand: what the member saw is only worded, never read for (DEC-153 (2)) */
   const f = await draft(x, { firsthand: true });
-  assert.equal(f.grant, null);
-  assert.deepEqual(f.read, [], "no grant, no read log");
+  assert.equal(f.body.grant, null);
+  assert.deepEqual(f.body.read, [], "no grant, no read log");
   assert.equal(x.asks[1][1].grant, undefined);
   assert.equal(x.asks[1][1].firsthand, true);
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 1, "one grant, the first draft's");
@@ -242,31 +250,31 @@ test("R19 (N686; credentials R35, R37): a member with no account of their own is
   const r = await draft(x);
   assert.equal(r.status, 200);
   assert.deepEqual(x.asks[0][1].account, { kind: "apikey", level: "group", secret: "sk-ant-zz-group", member: "member:ann", suggestions: true });
-  assert.equal(r.suggestions, true);
-  assert.match(r.grant, /^[0-9a-f]{64}$/);
+  assert.equal(r.body.suggestions, true);
+  assert.match(r.body.grant, /^[0-9a-f]{64}$/);
 });
 
-test("R19 negative controls (N686): no assistant member, the assistant off, no account, a session not the member's, and a member that does not answer each end the draft in their owner's words, nothing asked or nothing kept", async () => {
+test("R19 negative controls (N686): no assistant member, the assistant off, no account, a session not the member's, and a member that does not answer each end the draft in their owner's words at their status, nothing asked or nothing kept", async () => {
   const unbound = await world({ worker: false });
   const r1 = await draft(unbound);
-  assert.equal(r1.status, 503);
-  assert.equal(r1.answer.reason, "AGENT_WORKER_UNBOUND");
+  assert.deepEqual([r1.status, r1.body.reason], [503, "AGENT_WORKER_UNBOUND"]);
   const off = await world();
   assert.equal(instanceSetupOf(off.ctx).assistantSet({ on: false, by: "ada" }).ok, true);
   const r2 = await draft(off);
-  assert.deepEqual([r2.status, r2.answer.reason], [403, "ASSISTANT_OFF"]);
+  assert.deepEqual([r2.status, r2.body.reason], [403, "ASSISTANT_OFF"]);
   const none = await world({ account: false });
   const r3 = await draft(none);
   assert.equal(r3.status, 409);
-  assert.match(JSON.stringify(r3.answer), /NO_ACCOUNT/);
+  assert.match(JSON.stringify(r3.body), /NO_ACCOUNT/);
   const x = await world();
   assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   const r4 = await draft(x, { session: "t".repeat(64) });
   assert.equal(r4.status, 403, "a grant is minted only under the member's own live session");
-  assert.equal(r4.grant, null);
+  assert.equal(r4.body.grant, null);
   assert.equal(off.asks.length + none.asks.length + x.asks.length, 0, "nothing reached agent-worker");
   const silent = await world();
   silent.env.AGENT_WORKER.fetch = async () => { throw new Error("gone"); };
-  const r5 = await draftOnObject(silent.ctx, silent.env, { member: "member:ann", session: SESSION, task: TASK, told: "t" });
-  assert.deepEqual([r5.status, r5.answer.reason], [502, "AGENT_WORKER_SILENT"]);
+  const r5 = await draftOnObject(silent.ctx, silent.env, ask());
+  assert.equal(r5.status, 502);
+  assert.equal((await r5.json()).reason, "AGENT_WORKER_SILENT");
 });

@@ -40,3 +40,19 @@ test("R6 (K2011; publication R73): the body's secret wins over an address secret
   const none = await ask({});
   assert.ok(!none.seen[0].includes("secretSha"));
 });
+
+test("R6 (K2062; capture R85): the public hook hands capture's knock the country the door read, so the store is told it beside the source; with none, none is sent", async () => {
+  const knock = async (country) => {
+    const seen = [];
+    const stub = { fetch: async (r) => { seen.push(String(r instanceof Request ? r.url : r));
+      return new Response(JSON.stringify({ ok: true, result: { ok: true, knockId: "k" } }), { headers: { "content-type": "application/json" } }); } };
+    const env = { STORE: { idFromName: (n) => n, get: () => stub } };
+    const url = new URL("http://x/api/?op=knock");
+    const req = new Request(url, { method: "POST", body: JSON.stringify({ contentText: "a tip" }) });
+    await publicOp({ req, url, env, op: "knock", stub, fp: "f", presentedAi: { cred: null }, credential: null, country });
+    return seen.find((u) => u.startsWith("http://do/knock?")) ?? null;
+  };
+  assert.match(await knock("US"), /[?&]country=US(&|$)/);
+  const none = await knock(null);
+  assert.ok(none && !none.includes("country="), none);
+});
