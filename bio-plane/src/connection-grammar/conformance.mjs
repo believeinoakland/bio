@@ -11,6 +11,7 @@
 import { canonicalJson } from '../record-grammar/index.mjs';
 import { createRegistry } from './registry.mjs';
 import { answerFailures, isRefusal } from './reads.mjs';
+import { hubBoundOf } from './bounds.mjs';
 
 /** The most pages the battery follows before it calls the paging unbounded. */
 const PAGE_LIMIT = 10000;
@@ -23,6 +24,13 @@ const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const sorted = (a) => [...a].sort();
 const sameSet = (a, b) => canonicalJson(sorted(a)) === canonicalJson(sorted(b));
 const statesDates = (v) => isObj(v) && ((v.from !== null && v.from !== undefined) || (v.to !== null && v.to !== undefined));
+
+/** R6, R10: the kinds whose items, over pages joined, exceed that kind's hub bound: a hub shown as items. */
+function hubsShown(items) {
+  const n = new Map();
+  for (const i of items) n.set(i.kind, (n.get(i.kind) ?? 0) + 1);
+  return [...n].filter(([k, c]) => c > hubBoundOf(k)).map(([k, c]) => `${c} items of ${k}, more than its hub bound of ${hubBoundOf(k)}`);
+}
 
 /**
  * @param {{owner: string, neighbours: Function, kinds: {kind: string, word: string, class: string}[], fixture: any,
@@ -101,6 +109,7 @@ export function ownerConformance(arg) {
   if (!same) fail('determinism', 'two identical calls gave different answers');
 
   const sees = collect(fx.viewers.sees, scope);
+  if (sees) for (const why of hubsShown(sees.items)) fail('hub', `${fx.node} is a hub shown as items: ${why}; a hub is named, never shown`);
   if (sees) {
     const ids = sees.items.map((i) => i.id);
     if (new Set(ids).size !== ids.length) fail('paging', 'an item is answered on two pages');
@@ -159,6 +168,15 @@ export function ownerConformance(arg) {
     const h = isObj(fx.hub) ? call({ node: fx.hub.node, kinds: asked, at: fx.hub.at ?? fx.at, viewer: fx.viewers.sees, scope }) : null;
     if (!isObj(h) || isRefusal(h) || !isObj(h.hub)) fail('hub', 'the fixture\'s hub node is not answered as a hub');
     if (isObj(h) && !isRefusal(h)) failures.push(...answerFailures(h, { ...ctx(fx.hub.node, scope), at: fx.hub.at ?? fx.at }));
+    // R6, R10: the bound is per kind. Asked one kind alone, a hub answer is judged against that kind's own bound.
+    if (isObj(fx.hub) && asked.length > 1) {
+      for (const k of asked) {
+        const one = call({ node: fx.hub.node, kinds: [k], at: fx.hub.at ?? fx.at, viewer: fx.viewers.sees, scope });
+        if (isObj(one) && !isRefusal(one) && one.hub !== undefined) {
+          failures.push(...answerFailures(one, { ...ctx(fx.hub.node, scope), at: fx.hub.at ?? fx.at, kinds: [k] }).filter((f) => f.check === 'hub'));
+        }
+      }
+    }
   }
   return done();
 }
