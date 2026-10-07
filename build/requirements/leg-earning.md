@@ -1,6 +1,6 @@
 # leg-earning — requirements
 
-**Status** · New module, layer 6, before `inquiry` (plan Rules (2), Choices 5). Split from `inquiry` by copy with no change of meaning (K617; plan Rule 4): the earned registry, the resting-on reads and the basis table (R12, K1601). Moved: inquiry R13 → R1, R14 → R2, R15 → R3, R16 → R4, R17 → R5, the cycle walk → R6, R39's projects-drawing read → R7; new R8, R9 (K1447). Reviewed (K1505); met by LEG-EARNING #1 in T33 (K1612).
+**Status** · In force: a new module, reviewed (K1505; T33-44), split from `inquiry` by copy (K617), meaning unchanged: R1–R7 name their `inquiry` sources; R8, R9 new (K1447); it holds the basis table (R12, K1601). Every requirement met (LEG-EARNING #1, K1612).
 
 **Size (P6).** About 600–800 lines move (the earned registry, `store.mjs` 26364–26744 at extraction, the reads 31123–31191 and 35552–35759, now in `inquiry/index.mjs`), taking `inquiry` (3,903) well under 4,000.
 

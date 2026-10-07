@@ -5,16 +5,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pageOf, PAGE_HTML } from "../../../src/setup-page/index.mjs";
-import { pageOver } from "./fixture.mjs";
+import { pageOver, bearerOf } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const settle = async () => { for (let i = 0; i < 30; i++) await tick(); };
 
 /* A fake plane: `profiles` the op's answer, the assistant on or off, the stored place, language and description, each
    op answering its documented shape; `refuse[op]` makes one refuse in the plane's words. */
-function plane({ administer = true, profiles = { ok: true, profiles: [], conflicts: [], choices: [] }, on = false, refuse = {}, draft = null } = {}) {
-  const st = { place: null, language: null, description: null, entities: [], assistant: { ok: true, on, set_by: on ? "admin" : null, set_at: on ? "2026-10-05T09:00:00Z" : null } };
+function plane({ administer = true, profiles = { ok: true, profiles: [], conflicts: [], choices: [] }, on = false, refuse = {}, draft = null,
+                 entities = [], pageSize = 100, offices = "answers" } = {}) {
+  const st = { place: null, language: null, description: null, entities: entities.slice(), assistant: { ok: true, on, set_by: on ? "admin" : null, set_at: on ? "2026-10-05T09:00:00Z" : null } };
   const sent = [];
+  let query = {};
   const answer = (op, body) => {
     if (refuse[op]) return { result: { ok: false, ...refuse[op] } };
     switch (op) {
@@ -32,7 +34,18 @@ function plane({ administer = true, profiles = { ok: true, profiles: [], conflic
         st.place = body.name && body.name.trim(); return { result: { ok: true, name: st.place } };
       case "entitycreate": {
         const entity_id = `ENT-2026-${String(st.entities.length + 1).padStart(4, "0")}`;
-        st.entities.push({ entity_id, ...body }); return { result: { ok: true, entity_id, kind: body.kind, label: body.label.trim(), alias_count: 1 } };
+        st.entities.push({ entity_id, kind: body.kind, label: body.label.trim(), note: body.note, declared_by: "member:ada", at: "2026-10-06T09:30:00Z" });
+        return { result: { ok: true, entity_id, kind: body.kind, label: body.label.trim(), alias_count: 1 } };
+      }
+      /* entities R51: one kind's entities in id order after `after`, `limit` per answer, `next` the last answered when
+         one more follows, else null */
+      case "entitieskind": {
+        if (offices === "silent") return { error: "the store did not answer" };
+        const all = st.entities.filter((e) => e.kind === body?.kind || e.kind === "office").sort((x, y) => x.entity_id.localeCompare(y.entity_id));
+        const from = all.filter((e) => !query.after || e.entity_id > query.after);
+        const page = from.slice(0, pageSize);
+        return { result: { ok: true, kind: "office", entities: page, count: page.length, limit: pageSize, truncated: from.length > pageSize,
+                           next: from.length > pageSize ? page.at(-1).entity_id : null } };
       }
       case "memberlanguage": return { result: { language: st.language, set_at: st.language ? "2026-10-06T08:00:00Z" : null } };
       case "memberlanguageset":
@@ -48,7 +61,9 @@ function plane({ administer = true, profiles = { ok: true, profiles: [], conflic
     const u = new URL(url, "https://copy.example");
     const op = u.searchParams.get("op");
     const body = init && init.body ? JSON.parse(init.body) : null;
-    sent.push({ op, body, method: (init && init.method) || "GET", token: u.searchParams.get("token") });
+    sent.push({ op, body, method: (init && init.method) || "GET", token: bearerOf(init), query: u.searchParams.get("token"),
+                params: Object.fromEntries(u.searchParams) });
+    query = Object.fromEntries(u.searchParams);
     const out = answer(op, body);
     return { ok: true, status: 200, json: async () => out };
   };
@@ -85,44 +100,76 @@ test("R19 under Places an administrator is offered 'Name a place not yet listed'
   assert.deepEqual(ops(m.sent, ["placewanted", "placewantedstate"]), []);
 });
 
-test("R20 when no active profile names an office, the offices section says nothing is filled in because Civicsmith does not hold the group's place yet, names the place named, and offers an administrator adding offices through op=entitycreate (kind office), each shown marked as added by the group", async () => {
-  const p = await signedIn();
+/* Offices as entities R51 answers them: one a member added, one a profile seeded (machine-attributed, instance-setup R50). */
+const office = (n, declared_by, label) => ({ entity_id: `ENT-2026-${String(n).padStart(4, "0")}`, kind: "office", label, note: "n",
+  declared_by, at: "2026-10-01T00:00:00Z" });
+const SEEDED = office(1, "class:admin", "Clerk of the Council"), ADDED = office(2, "member:ada", "Harbor Auditor");
+
+test("R20 the offices section lists every office the group holds, read through op=entitieskind (kind office) and following next until null, each with its label; one a member added is marked as added by the group, one a machine or profile registered is not", async () => {
+  const many = Array.from({ length: 7 }, (_, i) => office(i + 1, i % 2 ? "member:ada" : "class:admin", `Office ${i + 1}`));
+  const p = await signedIn({ entities: many, pageSize: 3 });
+  const reads = p.sent.filter((c) => c.op === "entitieskind");
+  assert.deepEqual(reads.map((c) => [c.method, c.token, c.params.kind, c.params.after ?? null]),
+    [["GET", "sess-1", "office", null], ["GET", "sess-1", "office", "ENT-2026-0003"], ["GET", "sess-1", "office", "ENT-2026-0006"]]);
   assert.equal(p.el("#of").hidden, false);
-  assert.match(p.el("#of-why").textContent, /^Nothing is filled in here because Civicsmith does not hold your group's place yet\. You can add your group's offices yourself/);
+  const list = p.el("#of-list").innerHTML;
+  for (const o of many) {
+    const row = (list.match(new RegExp(`<span class="k">${o.label}</span><span class="v">([^]*?)</span></div>`)) || [])[1];
+    assert.equal(row, o.declared_by === "member:ada" ? '<span class="chip">added by your group</span>' : "", o.label);
+  }
+  assert.match(p.el("#of-why").textContent, /^The 7 offices your group holds\. You can add your group's offices yourself/);
+  /* every machine form record-grammar names reads as not the group's; absent is not a machine, and is not marked either */
+  for (const who of ["class:admin", "token:abc", "daemon", "session", "claude", "system"]) assert.equal(p.ui.addedByMember({ declared_by: who }), false, who);
+  for (const who of ["member:ada", "admin", "ruth"]) assert.equal(p.ui.addedByMember({ declared_by: who }), true, who);
+  for (const who of [null, "", "  ", undefined]) assert.equal(p.ui.addedByMember({ declared_by: who }), false, String(who));
+  /* with an active profile as without: the section lists what the record holds */
+  const held = await signedIn({ profiles: HELD, entities: [SEEDED, ADDED] });
+  assert.equal(held.el("#of").hidden, false);
+  assert.match(held.el("#of-list").innerHTML, /Clerk of the Council<\/span><span class="v"><\/span>[^]*Harbor Auditor<\/span><span class="v"><span class="chip">added by your group/);
+});
+
+test("R20 a read that does not answer is stated as not read, never as no offices; when it answers none, the section says nothing is filled in because Civicsmith does not hold the group's place yet and names the place named", async () => {
+  for (const silent of [{ offices: "silent" }, { refuse: { entitieskind: { reason: "VIEWER_MISSING" } } }]) {
+    const p = await signedIn(silent);
+    assert.match(p.el("#of-why").textContent, /^Your group's offices could not be read just now\./, JSON.stringify(silent));
+    assert.doesNotMatch(p.el("#of-why").textContent, /Nothing is filled in/);
+    assert.equal(p.el("#of-list").innerHTML, "");
+  }
+  const none = await signedIn();
+  assert.match(none.el("#of-why").textContent, /^Nothing is filled in here because Civicsmith does not hold your group's place yet\. You can add your group's offices yourself/);
+  none.el("#pw-name").value = "Harbor Point"; await none.el("#pw-set").fire(); await settle();
+  assert.match(none.el("#of-why").textContent, /does not hold your group's place yet \(Harbor Point\)\./);
+  const m = await signedIn({ administer: false }, { w: "ruth" });
+  assert.match(m.el("#of-why").textContent, /An administrator can add your group's offices/);
+});
+
+test("R20 in either case an administrator may add the group's offices through op=entitycreate (kind office), each the administrator's own act with no profile as its basis, and an office so added joins the list as the group's; a refusal is stated in the plane's words", async () => {
+  const p = await signedIn({ entities: [SEEDED] });
   assert.equal(p.el("#of-add").hidden, false);
-  p.el("#pw-name").value = "Harbor Point"; await p.el("#pw-set").fire(); await settle();
-  assert.match(p.el("#of-why").textContent, /does not hold your group's place yet \(Harbor Point\)\./);
   /* the label and the administrator's own note are required by the page as by entities R1 */
   p.el("#of-label").value = "City Clerk"; p.el("#of-note").value = "";
   await p.el("#of-set").fire(); await settle();
   assert.deepEqual(ops(p.sent, ["entitycreate"]), []);
   p.el("#of-note").value = "Keeps the council's minutes and answers records requests.";
   await p.el("#of-set").fire(); await settle();
-  p.el("#of-label").value = "Harbor Auditor"; p.el("#of-note").value = "Audits the harbor fund.";
-  await p.el("#of-set").fire(); await settle();
   /* each the administrator's own act: no declaredBy, no machine, no profile as its basis */
   assert.deepEqual(ops(p.sent, ["entitycreate"]), [
-    ["entitycreate", { kind: "office", label: "City Clerk", note: "Keeps the council's minutes and answers records requests." }],
-    ["entitycreate", { kind: "office", label: "Harbor Auditor", note: "Audits the harbor fund." }]]);
-  for (const c of p.sent.filter((x) => x.op === "entitycreate")) assert.deepEqual([c.method, c.token], ["POST", "sess-1"]);
-  const list = p.el("#of-list").innerHTML;
-  assert.match(list, /City Clerk<\/span><span class="v"><span class="chip">added by your group<\/span>/);
-  assert.match(list, /Harbor Auditor<\/span><span class="v"><span class="chip">added by your group<\/span>/);
-  /* a refusal in the plane's words */
+    ["entitycreate", { kind: "office", label: "City Clerk", note: "Keeps the council's minutes and answers records requests." }]]);
+  for (const c of p.sent.filter((x) => x.op === "entitycreate")) assert.deepEqual([c.method, c.token, c.query], ["POST", "sess-1", null]);
+  assert.match(p.el("#of-list").innerHTML, /Clerk of the Council<\/span><span class="v"><\/span>[^]*City Clerk<\/span><span class="v"><span class="chip">added by your group<\/span>/);
+  assert.equal(p.sent.filter((c) => c.op === "entitieskind").length, 2, "the list is read again, so the office joins it");
+  /* the first office, with none held: the section stops saying nothing is filled in */
+  const q = await signedIn();
+  q.el("#of-label").value = "Harbor Auditor"; q.el("#of-note").value = "Audits the harbor fund.";
+  await q.el("#of-set").fire(); await settle();
+  assert.match(q.el("#of-why").textContent, /^The one office your group holds\./);
   const r = await signedIn({ refuse: { entitycreate: { reason: "ENTITY_NO_NOTE", translation: "A subject is registered with a note in your own words." } } });
   r.el("#of-label").value = "Clerk"; r.el("#of-note").value = "n"; await r.el("#of-set").fire(); await settle();
   assert.equal(r.el("#of-err").textContent, "A subject is registered with a note in your own words.");
-  /* a member sees why and is offered no adding; with an active profile the section is not shown */
-  const m = await signedIn({ administer: false }, { w: "ruth" });
+  /* a member sees the offices and is offered no adding */
+  const m = await signedIn({ administer: false, entities: [ADDED] }, { w: "ruth" });
   assert.deepEqual([m.el("#of").hidden, m.el("#of-add").hidden], [false, true]);
-  assert.match(m.el("#of-why").textContent, /An administrator can add your group's offices/);
-  const held = await signedIn({ profiles: HELD });
-  assert.equal(held.el("#of").hidden, true);
-  /* an answer naming the profiles' offices decides by them */
-  const named = await signedIn({ profiles: { ...HELD, offices: [{ role: "Clerk", body: "the council" }] } });
-  assert.equal(named.el("#of").hidden, true);
-  const none = await signedIn({ profiles: { ...HELD, offices: [] } });
-  assert.equal(none.el("#of").hidden, false);
+  assert.match(m.el("#of-list").innerHTML, /Harbor Auditor/);
 });
 
 test("R22 enrolment offers the language for the screens before op=enroll, starting from the device's setting, and sends op=memberlanguageset once enroll has signed the new member in", async () => {
@@ -131,7 +178,7 @@ test("R22 enrolment offers the language for the screens before op=enroll, starti
     const u = new URL(url, "https://copy.example");
     const op = u.searchParams.get("op");
     const body = init && init.body ? JSON.parse(init.body) : null;
-    sent.push({ op, body, token: u.searchParams.get("token") });
+    sent.push({ op, body, token: bearerOf(init) });
     const out = op === "invitelook" ? { result: { ok: true, cover: "c", role: "member" } }
       : op === "enroll" ? { result: { ok: true, memberId: "sam" } }
       : op === "login" ? { result: { ok: true, token: "sess-sam", expires: 0 } }

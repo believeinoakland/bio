@@ -11,11 +11,25 @@ import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { monitoringOf, monitoringOps } from "../../../src/monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps, LINK_SWEEP_MODULE, LINK_SWEEP_TABLES } from "../../../src/link-sweep/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
+import { captureOf } from "../../../src/capture/index.mjs";
 
 const json = async (res) => ({ status: res.status, body: await res.json() });
 /* A daemon credential bound, so capture-requests drains (its R38). */
 const DAEMON = { DAEMON_TOKEN: "dmn-plane" };
-const ENV = { STORE: { idFromName: (n) => n }, ...DAEMON };
+/* The evidence bucket (`CAPTURES`), in memory, so a capture keeps its bytes (capture R73, acquisition). */
+function bucket() {
+  const held = new Map();
+  const bytes = async (v) => (v instanceof Uint8Array ? v : typeof v === "string" ? new TextEncoder().encode(v)
+    : v instanceof ArrayBuffer ? new Uint8Array(v) : new Uint8Array(await new Response(v).arrayBuffer()));
+  const object = (k, b) => ({ key: k, size: b.length, body: new Response(b).body, text: async () => new TextDecoder().decode(b),
+                              arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) });
+  return { async put(k, v) { const b = await bytes(v); held.set(k, b); return { key: k, size: b.length }; },
+           async get(k) { return held.has(k) ? object(k, held.get(k)) : null; },
+           async head(k) { return held.has(k) ? { key: k, size: held.get(k).length } : null; },
+           async delete(k) { held.delete(k); },
+           async list() { return { objects: [...held.keys()].map((key) => ({ key })), truncated: false }; } };
+}
+const ENV = { STORE: { idFromName: (n) => n }, ...DAEMON, CAPTURES: bucket() };
 
 /* One object over a fresh storage, `before(ctx)` run on the storage before the class is constructed. */
 async function built(before = () => {}) {
@@ -41,6 +55,9 @@ test("R2 (N506, K1163; link-sweep R12): link-sweep is handed the composed captur
 
 test("R2 negative control (K1163): link-sweep built before the plane without capture-requests holds no scope check until a sweep service runs, so the same request is refused for want of one", async () => {
   const x = await built((ctx) => {
+    /* record-core handed the evidence bucket as the plane hands it (R2), since the bare link-sweep below reaches it
+       first; only link-sweep's own order is wrong in this scene, so the held address can still be captured */
+    recordOf(ctx, { evidence: ENV.CAPTURES, evidencePrefix: () => "bio/captures/" });
     linkSweepOf(ctx);   /* the wrong order: link-sweep first, handed nothing; the per-storage instance is this one */
     schedulerOf(ctx, ENV, { owners: {} });
   });
@@ -97,8 +114,34 @@ test("R5 (N506; link-sweep R9): `op=sweeps` is link-sweep's in the route map, at
   assert.deepEqual(await json(await x.fetch("/sweepz")), { status: 400, body: { ok: false, error: "unknown op: sweepz" } });
 });
 
-/* One sweep-named capture request by an open run on an inquiry the admin sees, drained once; the row's refusal detail. */
+/* The address the sweep-named request asks for, and the page that links to it. */
+const ASKED = "https://council.example.org/agendas/1";
+const INDEX = "https://index.example.org/agendas.html";
+
+/* capture-requests R49 (K1993): the record holds `ASKED` first. A member's capture of the index page that links to it
+   (`op=acquire`'s act, capture R73, with `subresources: true`, so its outbound links are held, capture R27); only that
+   page is fetched, from a network answering it alone. The scene follows no alarm, so the capture is not filed in a
+   bundle (K2029 concerns a scene that follows the alarm). */
+async function holdAsked(ctx) {
+  const real = globalThis.fetch, fetched = [];
+  globalThis.fetch = async (u) => {
+    const url = String(u instanceof Request ? u.url : u);
+    fetched.push(url);
+    if (url !== INDEX) return new Response("not here", { status: 404 });
+    return new Response(`<!doctype html><html><head><title>Agendas</title></head><body><a href="${ASKED}">Agenda 1</a></body></html>`,
+      { headers: { "content-type": "text/html; charset=utf-8" } });
+  };
+  try {
+    const r = await captureOf(ctx).acquire({ locator: INDEX, subresources: true }, { cls: "admin", storeName: "bio", member: false });
+    assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 300));
+  } finally { globalThis.fetch = real; }
+  assert.ok(!fetched.includes(ASKED), "the asked address itself is never fetched to hold it");
+}
+
+/* One sweep-named capture request by an open run on an inquiry the admin sees, for an address the record holds,
+   drained once; the row's refusal detail. */
 async function drainedSweepRefusal(ctx) {
+  await holdAsked(ctx);
   const sql = ctx.storage.sql;
   const INQ = "INQ-2026-0001-zz";
   sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha)
@@ -108,7 +151,7 @@ async function drainedSweepRefusal(ctx) {
                                  expires, state) VALUES ('R-zz', 'running', 'inquiry', ?, 'class:admin', 'instance', ?, ?, ?, '{}')`,
            INQ, t, t, later);
   const cr = captureRequestsOf(ctx);
-  const a = await cr.captureRequest({ run: "R-zz", address: "https://council.example.org/agendas/1", target: INQ,
+  const a = await cr.captureRequest({ run: "R-zz", address: ASKED, target: INQ,
                                       purpose: "investigate", sweep: `${INQ}#agendas` }, { viewer: "class:admin", caller: "class:admin" });
   assert.equal(a.ok, true, JSON.stringify(a).slice(0, 400));
   const d = await cr.drain({});

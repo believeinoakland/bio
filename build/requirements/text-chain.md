@@ -1,6 +1,6 @@
 # text-chain — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/textchain.mjs`. R72 (D-416), R77 (D-633, K38) and R81 (D-723, K38) built in T2. No local fact is held here. Carried rows D-635 and D-665 concern `mergeTier3Text` and OCR routing in `index.mjs`, outside this module. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Carried rows D-635 and D-665 are outside this module. Every requirement met.
 
 ## Public
 

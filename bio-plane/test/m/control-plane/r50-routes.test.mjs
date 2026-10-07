@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const { wizardScriptsOps } = await import("../../../src/wizard-scripts/index.mjs");
 const { record } = await import("./record.mjs");
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 
 const { OPS } = O;
 const MAP = Object.keys(wizardScriptsOps(null, new URL("http://do/"), null));

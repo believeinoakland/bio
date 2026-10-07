@@ -62,7 +62,7 @@ test("R6: an aik-<64 hex> token is resolved once per request against bio's crede
     assert.equal(r.caller.cls, "ai", op);
     assert.deepEqual([r.caller.aiCred.tokenId, r.caller.aiCred.principal, r.caller.viaSession], ["agent-ann", "member:ann", false]);
     const looks = env.calls.filter((c) => c.route === "aicredentiallook");
-    assert.deepEqual(looks.map((c) => [c.ns, c.params.sha]), [["bio", sha(K.ann)]]);
+    assert.deepEqual(looks.map((c) => [c.ns, c.headers["x-bio-credential-sha"], c.params]), [["bio", sha(K.ann), {}]]);
     assert.equal(env.calls.some((c) => c.href.includes(K.ann)), false, "the value never reaches the store");
     assert.ok(!env.calls.some((c) => c.route === "session"), "an agent credential never falls into the session lookup");
   }
@@ -78,7 +78,7 @@ test("R6: an aik-<64 hex> token is resolved once per request against bio's crede
   const s = await gate(env, { op: "index", token: S.ann, params: { store: "scratch" }, method: "GET" });
   assert.deepEqual([s.caller.cls, s.caller.viaSession, s.caller.member, s.caller.viewer, s.caller.identity, s.caller.storeName],
                    ["member", true, "ann", "member:ann", "member:ann", "scratch"]);
-  assert.deepEqual(env.calls.map((c) => [c.ns, c.route, c.params.t]), [["bio", "session", S.ann]]);
+  assert.deepEqual(env.calls.map((c) => [c.ns, c.route, c.headers["x-bio-session"], c.params]), [["bio", "session", S.ann, {}]]);
   const f = await gate(env, { op: "index", token: S.founder, method: "GET" });
   assert.deepEqual([f.caller.cls, f.caller.member, f.caller.viewer, f.caller.identity], ["admin", "admin", "admin", "member:admin"]);
   assert.deepEqual(A.resolveSession({ role: "member:cy" }), { viewer: "member:cy", identity: "member:cy", member: "cy" });
@@ -113,7 +113,7 @@ test("R7: a caller with no class is refused 401 NOT_AUTHENTICATED (C-38.1), for 
   assert.ok((await gate(env, { op: "index", token: S.ann, method: "GET" })).caller);
 });
 
-test("R6: both lookups are credentials' (K637): the routes the module asks, `session?t=` and `aicredentiallook?sha=`, are answered by credentials' own op map, through its `session` (its R5) and `aiCredentialLook` (its R15), and membership's map answers neither", async () => {
+test("R6: both lookups are credentials' (K637): the routes the module asks, `session` and `aicredentiallook`, the token and the digest in the `x-bio-session` and `x-bio-credential-sha` headers that store-door hands to credentials' own op map as `t` and `sha` (K2038), are answered through its `session` (its R5) and `aiCredentialLook` (its R15), and membership's map answers neither; nothing of either is in the address", async () => {
   const { credentialsOps } = await import("../../../src/credentials/index.mjs");
   const { membershipOps } = await import("../../../src/membership/index.mjs");
   const S = hex64(), K = aik();
@@ -126,7 +126,11 @@ test("R6: both lookups are credentials' (K637): the routes the module asks, `ses
                                   : { found: false }; },
   };
   const { env } = world({ answer: async (call) => {
+    assert.equal(call.href, `http://do/${call.route}`, "nothing in the address");
+    /* store-door's hand-over (its R9): the header's value on the in-process URL */
     const u = new URL(call.href);
+    if (call.headers["x-bio-session"]) u.searchParams.set("t", call.headers["x-bio-session"]);
+    if (call.headers["x-bio-credential-sha"]) u.searchParams.set("sha", call.headers["x-bio-credential-sha"]);
     const route = credentialsOps(c, u, null, {})[call.route];
     assert.ok(route, `credentials answers ${call.route}`);
     assert.equal(membershipOps({}, u, null, {})[call.route], undefined, `membership answers no ${call.route}`);

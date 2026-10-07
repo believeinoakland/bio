@@ -21,16 +21,26 @@ import { CONNECTIONS_OPS, connectionsOp } from "../connections/ops.mjs";
 import { ratificationOp } from "../ratification/ops.mjs";
 import { ACT_GATE } from "../op-declarations/index.mjs";
 import { askOp } from "./ask.mjs";
-import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL, SCRATCH, sha256Hex,
-         caseReader, captureKey, requiredArgument, storageAbsent } from "../control-plane/index.mjs";
+/* K1907, K2041: the answer's envelope is answer-envelope's (its R1–R5); the reads of a case, a capture's key and the
+   store's absence stay control-plane's, with the namespace names it re-exports from admission. */
+import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL,
+         requiredArgument } from "../answer-envelope/index.mjs";
+import { SCRATCH, sha256Hex, caseReader, captureKey, storageAbsent } from "../control-plane/index.mjs";
 
 /* The public ops: each owner's handler asked in turn; the bootstrap report answers any other. */
-export async function publicOp({ req, url, env, op, stub, fp, presentedAi }) {
+/* K2062 (control-plane's door, admission R20, R21): the hook is handed the caller's presented `credential` (read from the
+   header or body, never the query), the keyed `source` and Cloudflare's `country`. `credential` reaches the readers of a
+   case (`caseReader`, admission's `readerOf`); `country` reaches capture's knock (capture R85). A JSON body's `token` is
+   the caller's credential and no arm passes it on. */
+export async function publicOp({ req, url, env, op, stub, fp, presentedAi, credential = null, country = null }) {
   { const pr = await publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (pr) return pr; }
   { const pd = await publicationDoorOp(op, url, stub, { json, storeSilent, storeRefusal, doAnswer, sha256Hex, NS_RATIFY,
-      caseRatifyStatement, readerOf: () => caseReader(url, env, "bio", presentedAi.cred) }); if (pd) return pd; }
+      caseRatifyStatement, readerOf: () => caseReader(url, env, "bio", presentedAi.cred, credential),
+      /* publication R73 (F1; K2011): the request's body, read on a copy and only when its door asks for it, so the
+         review copy's secret arrives in the body and the request stays readable by the arms after it. */
+      body: () => req.clone().json() }); if (pd) return pd; }
   /* Anyone, no token, no session: capture's doorbell, confined to the inbox namespace. */
-  { const knocked = await capturePublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (knocked) return knocked; }
+  { const knocked = await capturePublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, country }); if (knocked) return knocked; }
   return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer });
 }
 

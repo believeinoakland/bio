@@ -5,7 +5,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
-import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/affordances/t33.mjs";
+import * as G from "../../../src/op-grades/index.mjs";
+import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
+import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
@@ -32,8 +34,8 @@ import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { world as eventsWorld } from "../events/fixture.mjs";
 
-const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, ACTS, CAPTURE_ACTS, PER_ITEM_ACTS,
-        RUNG_ABSENCE_GROUNDS } = A;
+const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS } = A;
+const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNG_ABSENCE_GROUNDS } = G;
 const url = new URL("http://x/");
 const keysOf = (f) => Object.keys(f({}, url, {}, {}));
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
@@ -133,13 +135,26 @@ const ALL_WRITES = { ...Object.assign({}, ...Object.values(T33).map((m) => m.wri
 const ALL_READS = [...Object.values(T33).flatMap((m) => m.reads), ...UNROUTED_READS];
 const published = () => new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
 
-test("R40 R12: each new module's op map holds exactly the ops graded for it, and each earlier module's map holds the ops "
-   + "T33 adds to it", () => {
+/* K2049 (B4): the ops each of T33's new modules adds in T35, graded by op-grades in its `t35.mjs` (its R22, K2043) and held
+   to their owners there; pinned here so the maps stay closed. */
+const T35_ADDS = { events: ["discretionrecord", "assessmentrecord", "usewithdraw", "usesof"],
+  duties: ["poweruses", "uselink", "useunlink", "reviewpropose"], hypotheses: ["noterevise", "notedelete"],
+  calculations: ["usesfreeze", "applicationrecipes"] };
+
+test("R40 R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35 adds (K2049), each "
+   + "named in op-grades' T35 table — and each earlier module's map holds the ops T33 adds to it", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
-    const mine = [...Object.keys(m.writes), ...m.reads];
+    const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? [])];
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
+  }
+  for (const op of Object.values(T35_ADDS).flat()) {
+    assert.ok(Object.hasOwn(T35_NON_ACTS, op), op);
+    assert.equal(NON_ACTS[op], T35_NON_ACTS[op], op);
+    /* a write carries a T35 rung or absence, a read (`read:`) neither */
+    const write = !T35_NON_ACTS[op].startsWith("read:");
+    assert.equal(Object.hasOwn(T35_RUNGS, op) || Object.hasOwn(T35_RUNG_ABSENT, op), write, op);
   }
 });
 
@@ -268,10 +283,15 @@ test("R39 R4: each vocabulary's values are the very objects its owner answers �
     assert.equal(v.line_roles.values[k], lines.roles(k), k);
     assert.deepEqual(Object.keys(v.line_roles.words[k]), [...lines.roles(k)], k);
   }
-  /* connection_kinds: every kind connection-grammar's owners() lists, with its registered word and class */
-  assert.deepEqual(v.connection_kinds.values, owners());
+  /* connection_kinds (N695, K1864): every kind connection-grammar's owners() lists, carried once: `values` the kind
+     names in owners()' order, `words` each kind's registered word, class and owner, and nothing else beside them */
   const listed = owners().flatMap((o) => o.kinds.map((k) => [k.kind, { word: k.word, class: k.class, owner: o.owner }]));
+  assert.deepEqual(Object.keys(v.connection_kinds), ["values", "words"]);
+  assert.deepEqual(v.connection_kinds.values, listed.map(([k]) => k));
+  assert.ok(v.connection_kinds.values.every((k) => typeof k === "string"), "the values are kind names, not registry entries");
+  assert.equal(new Set(v.connection_kinds.values).size, v.connection_kinds.values.length, "each kind once");
   assert.deepEqual(v.connection_kinds.words, Object.fromEntries(listed));
+  assert.deepEqual(Object.keys(v.connection_kinds.words), v.connection_kinds.values);
 });
 
 test("R39: each word is the owner's registered word where it holds one, else K1486's, else one plain word marked "

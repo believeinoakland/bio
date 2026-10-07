@@ -10,7 +10,7 @@ import { M, O, world, call, opCalls, aik, cred, hex64, member, refused, FORGED, 
 const { actionsOps } = await import("../../../src/actions/index.mjs");
 const { docketOps } = await import("../../../src/docket/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");

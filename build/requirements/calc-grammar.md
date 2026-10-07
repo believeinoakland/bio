@@ -1,6 +1,6 @@
 # calc-grammar — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1439; scope §2), layer 1 directly after `civil-time`. Plan entry T33-4 (C:A-1; recorded draws, C §(c) ANALYSIS L4). Every id is not yet met. `join` takes its id-space resolver from the caller, because `id-spaces` comes later in layer 1 (K1504, Choices 4). T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-4 (N567, N571; K1569, K1576: a capacity bound, no change of meaning): R21 (`relate` exported from the index) and R22 (a streamed table, about 1,000,000 cells) added; not yet met (T34).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-4). Last changed T34 (T34-4: R21, R22; K1569, K1576); every requirement met (CALC-GRAMMAR #2, K1736).
 
 **Size (P6).** About 800–1,200 lines (ladders §8.4).
 

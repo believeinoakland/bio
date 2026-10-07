@@ -1,5 +1,5 @@
-/* control-plane: THE INSTANCE'S DOOR (R1–R57). The Worker's HTTP entry — routing, the stamps, the answer's decoration
-   and envelope — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
+/* control-plane: THE INSTANCE'S DOOR (R1–R59). The Worker's HTTP entry — routing and the stamps (the answer's envelope
+   and decoration are `answer-envelope`'s, the store's door `store-door`'s, since the split, K1907, K1974) — moved from legacy-index (`index.mjs`) at control-plane's extraction (T12, K3, K93). Who may call an op is
    `admission`'s and what each op is `op-declarations'` (the split, K617, K624 (2)): this door calls admission's gates in
    R28's order and reads op-declarations' tables. An op's own handler is its module's: `makeFetch(hooks)` takes the
    hooks `plane` composes from the arms' owners (`publicOp` for the unauthenticated ops, `gatedOp` for the admitted ones,
@@ -9,17 +9,24 @@
 import { parseFrontmatter, createSha256, normalizeType, MACHINE_AUTHOR_PREFIX, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 /* C-68.1 (K794, K796, K850): the capability complaint is acquisition's, minted at its one region (`evidenceStorageAbsent`). */
 import { evidenceStorageAbsent } from "../acquisition/index.mjs";
-/* R32: the doors' own rows (`checks.mjs`). */
-import { DISPATCH_CHECKS, BOOTSTRAP_CHECKS, REPLAY_CHECKS, REQUIRED_ARGUMENT_CHECKS } from "./checks.mjs";
 /* K617, K624 (2): who may call an op is `admission`'s — the namespace gates, the credential's resolution, the admission
    in its order, the bearer fences, the reader of a public op's caller and the mint's secrets — called here in R28's
    order; each gate answers `null`, a refusal `{status, body}` this door answers as given, or a silence. */
 import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinnedNamespaceGate,
          aiCredentialPresented, admit, bearerFence, readerOf, aiCredentialMint, reviewGrantSecret,
          projectCreationGate, queryGate } from "../admission/index.mjs";
-/* R22, R41 (K585 (1)): the composed catalogue — the check catalogue, every module's families, this module's own — and the
-   one reader of a code's row (`families.mjs`). */
-import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
+/* T35 (admission R20–R22; F1, F4, N703; K2044): the credential read once from the header or the body (the address only
+   for T35's release, and then named deprecated), the public ops' window and the caller's source and country, and the
+   security tally of every refusal the door gives or relays. */
+import { presentedCredential, CREDENTIAL_IN_ADDRESS, doorWindowGate, sourceOf, countryOf, securityTally } from "../admission/index.mjs";
+/* answer-envelope (its R1–R8; the split, K1907, K1974): the envelope, its decoration, the store's answer read once, the
+   internal-error answer, the row readers, the page policy and the composed catalogue the published fences read (R41). */
+import { json, doAnswer, storeRefusal, storeSilent, relayAnswer, planeInternalError, replayRow, requiredArgument,
+         installationRow, dispatchRow, withPagePolicy, CHECK_FAMILIES } from "../answer-envelope/index.mjs";
+/* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
+import { draftDue, draftAsk, checkedDraft } from "./draft.mjs";
+/* R58 (T35): the promotions of what an unpack files. */
+import { archiveDocuments, promoteArchive } from "./archive.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -80,19 +87,6 @@ const WIZARD_VIEWER_OPS = Object.freeze(["wizarddraft", "wizardrevise", "wizards
 const MEMBERSHIP_ADMIN_ACTS = Object.freeze(["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke",
   "joinlinkenable", "joinlinkset", "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"]);
 
-/* R51 (DEC-122 (3); N528): the policy every `text/html` response this door serves carries, so a browser loads no script,
-   style, font, image or connection from another origin and sends nothing elsewhere. Both pages are single files with
-   their script and style inline, fetching only `/api` on their own origin, so inline is allowed and nothing else is. */
-const PAGE_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
-  + "img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
-function withPagePolicy(res) {
-  const type = res && res.headers ? res.headers.get("content-type") || "" : "";
-  if (!/^\s*text\/html\b/i.test(type)) return res;
-  const headers = new Headers(res.headers);
-  headers.set("content-security-policy", PAGE_POLICY);
-  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
-}
-
 /* R50 (wizard-scripts R16; K1364 B4): A REFUSAL ANSWERED TO A MEMBER'S SESSION IS COUNTED, UNATTRIBUTED. Read off the
    answer on its way out (the two levels R22 decorates): its op and its code, and nothing else of the call, reach the
    store's internal route `wizardrefusaltally` (`dispatch.mjs`), which hands them to `wizard-scripts.tallyRefusal`. A
@@ -110,6 +104,26 @@ async function tallySessionRefusal(res, session) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ op: session.op, code }) })));
   } catch { /* the tally is status, never a gate */ }
+}
+
+/* R59 (admission R20, R22; F1, N703; K2044): ON THE WAY OUT. A refusal the door gives or relays, at either of the two
+   levels R22 decorates, is handed once to admission's `securityTally` (a tally that fails never changes the answer); and
+   every JSON answer to a request whose credential was read from its address carries `deprecated: "CREDENTIAL_IN_ADDRESS"`
+   at its top level, beside `store` and `tokenClass`, the one name admission and publication use. */
+async function outOfAddress(res, seen, req) {
+  if (!res || !/application\/json/i.test(res.headers.get("content-type") || "")) return res;
+  let body;
+  try { body = await res.clone().json(); } catch { return res; }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return res;
+  const refusal = body.ok === false ? body : body.result && typeof body.result === "object" && body.result.ok === false ? body.result : null;
+  if (refusal) {
+    try { await securityTally({ op: seen.op, answer: refusal, presented: { token: seen.credential?.token ?? null, cred: seen.cred }, req }); }
+    catch { /* the tally is status, never a gate */ }
+  }
+  if (!seen.credential?.inAddress || body.deprecated === CREDENTIAL_IN_ADDRESS) return res;
+  const headers = new Headers(res.headers);
+  headers.delete("content-length");
+  return new Response(JSON.stringify({ ...body, deprecated: CREDENTIAL_IN_ADDRESS }), { status: res.status, statusText: res.statusText, headers });
 }
 
 /* REC-22: the ONE namespace the public read path answers from. An instance has
@@ -138,11 +152,13 @@ async function sha256Hex(v) {
    `#noReviewCopy` is carried at 404 with nothing added, so a caller outside the fence reads the same status and the
    same bytes from the single read (`reviewcopy`) and from the list (`casedrafts`); a store that did not answer is a
    silence, stated as one. */
-async function reviewAnswer(out, op) {
-  if (out.refused) return storeRefusal(out);   /* R23: the store's own refusal, at its status */
+/* R59 (admission R20): `extra` is `{deprecated}` for a secret read from the address, put in the answer before the in-band
+   hash is taken, so the hash is over the answer exactly as served. */
+async function reviewAnswer(out, op, extra = {}) {
+  if (out.refused) return storeRefusal(out, extra);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
-  if (!r?.ok) return json({ ok: false, ...r }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+  if (!r?.ok) return json({ ok: false, ...r, ...extra }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
   if (op === "reviewcopy") {
     /* REC-148 / DEC-31's BOUND RULE (`BIO_Publication_v0_1.md` §6A.3 point 1): the answer carries its
        hash, date, author and both floors IN-BAND, by the SAME function the container manifest is
@@ -152,7 +168,7 @@ async function reviewAnswer(out, op) {
        into the floors and not served twice. (Moved here from the review door's inline branch when REC-198
        made this function the one answer shape for every read of a draft.) */
     const { required_strength: bar, ...copy } = r;
-    const served = { ok: true, ...copy };
+    const served = { ok: true, ...copy, ...extra };
     const { quartet } = await inbandQuartet({
       subject: served,
       over: "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and "
@@ -165,7 +181,7 @@ async function reviewAnswer(out, op) {
       date: r.last_change?.at ?? null, author: r.updated_by ?? null, bar: bar ?? null });
     return json({ ...served, inband: quartet }, 200);
   }
-  return json({ ok: true, ...r }, 200);
+  return json({ ok: true, ...r, ...extra }, 200);
 }
 
 /* R44 (K921; filing-templates R8, R9, R13, R14) — THE TEMPLATE GRANT'S FOUR DOORS, on the review copy's (R20) for its
@@ -183,16 +199,17 @@ async function reviewAnswer(out, op) {
    inner request carries the caller's own arguments with every stamp and credential removed. */
 const TEMPLATE_GRANT_DOORS = Object.freeze([...TEMPLATE_DOOR_ACTIONS, ...TEMPLATE_DOOR_READS]);   /* op-declarations R8 */
 const deadTemplateGrant = () => json({ ok: false, ...noTemplateGrant() }, 404);
-async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub }) {
+async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential }) {
   const inner = new URL(`http://do/${op}`);
   for (const [k, v] of url.searchParams) inner.searchParams.set(k, v);
   for (const k of ["token", "op", "store", "secret", "secretSha", "bySecret", ...QUERY_STAMPS]) inner.searchParams.delete(k);
-  if (url.searchParams.has("secret")) {
+  /* R59 (admission R20): the secret is the body's `secret` (the address's only for T35's release) */
+  if (credential.secret !== null) {
     inner.searchParams.set("bySecret", "1");
-    inner.searchParams.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
+    inner.searchParams.set("secretSha", await sha256Hex(credential.secret || ""));
   } else {
     const admitted = await admit({ url, env, op, spec: { ...spec, classes: ["admin", "member"], machineClasses: [] },
-                                   method: req.method, presented: presentedAi, doAnswer });
+                                   method: req.method, presented: presentedAi, doAnswer, credential });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal || !admitted.caller.viaSession) return deadTemplateGrant();
     inner.searchParams.set("viewer", admitted.caller.viewer);
@@ -203,7 +220,7 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub })
     let b = {};
     try { b = JSON.parse((await req.text()) || "{}"); } catch { b = {}; }
     if (!b || typeof b !== "object" || Array.isArray(b)) b = {};
-    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret"]) delete b[k];
+    for (const k of [...BODY_STAMPS, ...QUERY_STAMPS, "secretSha", "bySecret", "secret", "token"]) delete b[k];
     body = JSON.stringify(b);
   }
   const out = await doAnswer(stub.fetch(new Request(inner, body === undefined ? { method: "GET" } : { method: "POST", body })));
@@ -217,314 +234,9 @@ async function templateGrantDoor({ req, url, env, op, spec, presentedAi, stub })
 
 /* WHO IS ASKING, FOR A PUBLIC OP THAT ANSWERS WORKING MATERIAL ONLY TO SOME: `admission`'s `readerOf` (its R16), in the
    shape the arms behind plane's hooks read (`{viewer, cls}`, or `{silent: <op>, correlation}`). */
-async function caseReader(url, env, storeName, presentedAi) {
-  const r = await readerOf(url, env, storeName, presentedAi, doAnswer);
+async function caseReader(url, env, storeName, presentedAi, credential = null) {
+  const r = await readerOf(url, env, storeName, presentedAi, doAnswer, credential);
   return r.silent ? { silent: r.silent.op, correlation: r.silent.correlation } : r;
-}
-
-/* N630 (K1717, K1864 (1)): compact JSON, no indentation, so no answer carries whitespace it does not need. */
-const json = (o, status = 200) =>
-  new Response(JSON.stringify(dec49Attach(o)), {
-    status, headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
-  });
-
-/* =========================================================================
- * D-262 — THE CATALOGUE ROW, ATTACHED ON THE WAY OUT. ONE PLACE.
- *
- * WHAT WAS WRONG, MEASURED RATHER THAN SUSPECTED. Twelve `MACHINE_CANNOT_*`
- * fences fire; twelve carry a catalogued C-number and a canned translation
- * (REC-64 wrote eleven of them); **exactly ONE put either on the wire.** That
- * one — `MACHINE_CANNOT_MOVE_VERSION` — is the only site in the family that
- * refuses through a helper that reads the catalogue row. The other eleven build
- * `{ ok: false, reason: "MACHINE_CANNOT_…", detail: … }` by hand, and a hand
- * cannot carry a row it does not read. So a member's agent met the string
- * `MACHINE_CANNOT_RELEASE` and nothing else, which is the exact failure DEC-49
- * exists to prevent, surviving inside the mechanism built to prevent it.
- *
- * WHY A DECORATION AND NOT ELEVEN EDITS — decided by measurement, and the
- * measurement is the reversal cost as much as the write cost. Eleven site edits
- * are eleven places to be right and eleven places to be wrong, and they close
- * ELEVEN sites out of a plane that mints hundreds of refusals in eight
- * separately-written `refuse` closures; the twelfth site proves the per-site fix
- * does not generalise, because it was written and the other eleven still were
- * not. This file already rules on the shape: `doAnswer`'s own header says *"the
- * fix is a CHOKEPOINT, not twenty-four remembered checks, because a rule that
- * must be remembered at every site is a rule that will be forgotten at the
- * twenty-fifth."* `json()` is that chokepoint on the way OUT — **MEASURED
- * 2026-08-09: 118 of this file's 125 response returns go through `json()`, and
- * the other 7 are `new Response(...)` returning a 204, a version string, two
- * HTML pages and three byte bodies — not one of them a refusal carrier.** It
- * covers the generic store forward AND the 36 `doAnswer` handlers that never
- * reach that forward. Eleven site edits would have closed the generic forward's
- * eleven and left every one of the 36 exactly as it was.
- *
- * WHAT IT COSTS TO REVERSE: delete this block and the one call above. Nothing
- * else in the plane depends on it, because nothing in the plane READS these
- * three fields — they exist for the caller. That is the asymmetry that decided
- * it: the decoration's blast radius is one function, and eleven site edits'
- * blast radius is eleven member-facing methods.
- *
- * WHAT IT DELIBERATELY DOES NOT DO, and each is a fence rather than an omission:
- *
- *   - **IT NEVER OVERWRITES.** A field already present is left exactly as the
- *     site wrote it. So a site that says something DIFFERENT from the catalogue
- *     is not silently corrected into agreement — R22's tests
- *     (`test/m/control-plane/envelope.test.mjs`) drive a field already present
- *     and see it kept. A decoration that overwrote would make a comparison of
- *     what the caller RECEIVED against the row unable to fail, which is the
- *     "equality that costs nothing" this project refuses.
- *   - **IT NEVER INVENTS.** A code with no catalogue row is left bare and is
- *     reported by the instrument as census. Untranslated codes are REC-64's
- *     remaining sweep; making one up here would hide that work rather than do
- *     it.
- *   - **IT ADDS NO CODE OF ITS OWN**, so it mints nothing DEC-49 must catalogue
- *     and it moves no floor in the guard.
- *   - **IT DOES NOT MAKE A SITE'S CODE INVISIBLE.** Every code stays a STRING
- *     LITERAL at its site; arm C of the DEC-49 guard still COMPARES it. This
- *     decoration is downstream of the guard's whole subject and replaces none
- *     of it.
- *
- * REACH, STATED PLAINLY BECAUSE IT IS NOT TOTAL: this covers what leaves through
- * `json()`. The eight `new Response(...)` returns in this file (bytes, HTML, the
- * setup and signing pages) do not pass through it and are not refusal carriers;
- * a future one that IS would be outside this and is exactly what the
- * instrument's op sweep would find.
- * ========================================================================= */
-
-/* A REFUSAL is `ok: false` carrying a code — and `ok: false` is required rather
-   than inferred from the presence of a `reason`, because an ANSWER may carry a
-   `reason` field for something that is not a refusal at all, and decorating one
-   of those would put a member-facing sentence on a success. A refusal shape that
-   does NOT say `ok: false` is therefore out of reach here, and the instrument
-   prints it rather than quietly covering for it. */
-function dec49Decorate(r) {
-  if (!r || typeof r !== "object" || Array.isArray(r)) return;
-  if (r.ok !== false) return;
-  const code = typeof r.reason === "string" ? r.reason
-             : typeof r.code === "string" ? r.code : null;
-  if (!code) return;
-  const row = dec49Row(code);
-  if (!row) return;
-  if (r.code === undefined) r.code = code;
-  if (r.check === undefined) r.check = row.check;
-  if (r.translation === undefined) r.translation = row.translation;
-}
-
-/* TWO LEVELS AND NO MORE. The control plane answers a refusal in exactly two
-   shapes: its own, at the top level, and the store's, forwarded UNDER `result`
-   by the generic tail (the Durable Object's envelope is `{ok:true, result:…}`
-   even when the method inside it refused, which is precisely why `result.ok`
-   has to be looked at). A general deep walk would reach into arrays of rows and
-   sub-objects that are DATA rather than refusals — `residue` entries, per-part
-   verdicts, a run's steps — and put a member-facing sentence on something no
-   member is being refused. Bounded on purpose. */
-function dec49Attach(o) {
-  if (!o || typeof o !== "object" || Array.isArray(o)) return o;
-  dec49Decorate(o);
-  if (o.result && typeof o.result === "object") dec49Decorate(o.result);
-  return o;
-}
-
-/* ===============================================================   REC-52: A FAILURE TO ANSWER IS NOT AN ANSWER, AND THE PLANE MUST NOT
-   CONVERT ITS OWN INTO A CLAIM ABOUT THE RECORD.
-   ===============================================================
-   THE DEFECT THIS CLOSES, stated once so the next reader does not have to
-   reconstruct it. The Durable Object answers in exactly one envelope:
-
-       { ok: true,  result: <whatever the method returned> }        // it answered
-       { ok: false, error: <stack> }                       500      // it threw
-       { ok: false, error: "unknown op: <op>" }            400      // no such method
-       { ok: false, reason: "BAD_JSON", detail: … }        400      // unreadable body
-
-   Twenty-four handlers in this file used to read `.result` off that envelope
-   WITHOUT LOOKING AT `ok`, and JavaScript makes both failure modes silent:
-
-     - `json({ ok: true, ...out.result })` spreads `undefined`, which is a
-       no-op, so what leaves the control plane is `{ok:true}` at HTTP 200 —
-       a SUCCESSFUL envelope carrying nothing. Section 7a (`op=verify`) was
-       the measured instance, and UI-37 could not fix its own defect by making
-       the transport throw on `ok:false` BECAUSE THERE WAS NO `ok:false` TO
-       THROW ON; the motivating case sailed straight past.
-
-     - `(c || { reason: "NOT_PUBLISHED" })` and `if (!v || !v.published)
-       return notFound()` turn an absent answer into a SUBSTANTIVE NEGATIVE:
-       the plane telling a stranger that the record does not hold that part,
-       when in fact the plane failed to ask. This is the defect this project
-       ranks worst — the record asserting something it does not know — and it
-       sits at the layer BENEATH every surface, where no surface can correct
-       it. A surface that faithfully renders what it received will faithfully
-       render a lie.
-
-   THE FIX IS A CHOKEPOINT, not twenty-four remembered checks, because a rule
-   that must be remembered at every site is a rule that will be forgotten at
-   the twenty-fifth. `doAnswer` is the ONLY place in this file that opens a
-   Durable Object envelope, and R23's tests (`test/m/control-plane/envelope.test.mjs`)
-   drive every relay with a store that answers nothing, a non-JSON body, a stack and
-   its own refusal.
-
-   `answered` is `ok === true` AND NOTHING ELSE. It is deliberately NOT
-   "result is present and non-empty": a store method may legitimately answer
-   `null`, `[]` or `{}`, and treating a real empty answer as a non-answer
-   would be this same collapse running in the opposite direction — which is
-   one character away and is asserted against in its own arm.
-
-   WHAT THE CALLER IS TOLD, and why it says so little. `storeSilent` reports
-   the state of the EXCHANGE and makes no statement about the record at all,
-   because there is none to make. It does NOT echo the Durable Object's
-   `error`: that field is a raw stack trace (`String(e && e.stack || e)`),
-   and every op below that can reach this refusal — verify, publishedcase,
-   publishedbytes, publishedmanifest, bootstrap — is reachable with NO
-   credential of any kind. An anonymous stack trace is a disclosure, and a
-   diagnostic a stranger cannot act on is not worth one. */
-const STORE_SILENT_REASON = "STORE_DID_NOT_ANSWER";
-const STORE_SILENT_DETAIL =
-  "this group's Civicsmith could not consult its own record, so nothing here is a statement about the record. "
-  + "It is NOT a claim that what you asked for is absent, unpublished, unknown or refused — those are "
-  + "answers, and this is the absence of one. The question stands unanswered; ask again.";
-
-/* Takes the Response (or a promise of one) from a Durable Object stub fetch and
-   returns `{ answered, result }`. A body that is not JSON at all is not an
-   answer either, which is why the parse is guarded rather than allowed to throw
-   into whatever catch happens to be nearest.
-   R23 (K421): a JSON reply with `ok: false` below 500 is the store's OWN REFUSAL (`BAD_JSON`, `unknown op: <op>`), not
-   a silence: it comes back `refused`, and `reply` (its status and envelope) is what a relay answers with. An `ok: false`
-   at 500 or above is the store's catch, whose `error` is a stack (R30): a silence, never relayed. An answer carries its
-   `reply` too, so a relay keeps the store's status and envelope without opening the reply a second time. */
-async function doAnswer(res) {
-  let r = null, out = null;
-  try { r = await res; out = await r.json(); } catch { out = null; }
-  if (!out || typeof out !== "object" || Array.isArray(out)) return { answered: false, result: undefined };
-  const reply = { status: typeof r.status === "number" ? r.status : 200, body: out };
-  if (out.ok === true) return { answered: true, result: out.result, reply };
-  if (out.ok === false && reply.status < 500) return { answered: false, refused: true, result: undefined, reply };
-  /* R25 (N333): the store's own internal error carries a correlation id, which the silence carries on (and nothing else
-     of the store's envelope), so an operator can find the logged stack. */
-  const correlation = out.reason === "STORE_INTERNAL_ERROR" && typeof out.correlation === "string"
-    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(out.correlation) ? out.correlation : undefined;
-  return correlation ? { answered: false, result: undefined, correlation } : { answered: false, result: undefined };
-}
-
-/* R23 (K421): the store's own refusal, relayed with its status, code and sentence; `extra` is what the relay adds (R21). */
-function storeRefusal(out, extra = {}) {
-  return json({ ...out.reply.body, ...extra }, out.reply.status);
-}
-
-/* 502 rather than 500: the control plane is intact and reachable — what failed
-   is the store BEHIND it, which is precisely the distinction this refusal
-   exists to draw. `op` is named so an operator reading a log knows which read
-   went silent without the answer implying anything about what it was reading. */
-/* D-561 (C-69.2): THE CODE IS NOW A STRING LITERAL AT THIS SITE and carries its canned translation, because every
-   public read meets this refusal and its reader is often a member of the public. `STORE_SILENT_REASON` still names
-   the same code for the three post-commit sub-reports in `ratify` and `recordcasemanifest` — the SAME condition
-   (the store did not answer), stated inside an answer rather than refused; the DEC-49 guard's arm G declares the two
-   spellings one condition by name. The wire only GAINS `code`, `check` and `translation`. */
-/* R25 (N333): `correlation`, when `doAnswer` read one from the store's own internal error, is carried. */
-function storeSilent(op, correlation = undefined) {
-  /* DEC-49 REGION is-store-silent */
-  return json({ ok: false, reason: "STORE_DID_NOT_ANSWER", ...dispatchRow("STORE_DID_NOT_ANSWER"),
-                op, detail: STORE_SILENT_DETAIL, correlation }, 502);
-  /* END DEC-49 REGION is-store-silent */
-}
-
-/* R23, R24 (D-679): a store answer RELAYED to the caller. `claim`, `login`, `invitelook` and `enroll` answered
-   `json(await r.json(), 200)` — the store's envelope at HTTP 200 WITHOUT READING `ok`, so a store that failed told an
-   anonymous caller "success" in the status line. An answer (a refusal the store returned inside `ok: true` included)
-   is re-wrapped in the envelope the store answers, `{ok: true, result}`, at the store's own status; the store's own
-   refusal (R23) is relayed at its status; anything else is `storeSilent`, never 200. */
-async function relayAnswer(res, op) {
-  /* REC-52: the store's envelope is opened by `doAnswer` and nowhere else. */
-  const out = await doAnswer(res);
-  if (out.refused) return storeRefusal(out);
-  if (!out.answered) return storeSilent(op, out.correlation);
-  return json({ ok: true, result: out.result }, out.reply.status);
-}
-
-/* D-629 / DEC-49 (C-69.3, R25) — THE WORKER'S OUTERMOST CATCH, which it did not have: a throw anywhere in the door
-   reached the Workers runtime as an uncaught exception (the platform's own error page), no BIO answer at all. A throw
-   is logged server-side with its stack under a CORRELATION id, and the caller receives the code, the canned
-   translation and the id — no stack, no message, no path. A named refusal is RETURNED, never thrown, so none passes
-   through here. */
-function planeInternalError(e, req) {
-  const correlation = crypto.randomUUID();
-  let op = "";
-  try { const u = new URL(req.url); op = u.searchParams.get("op") || u.pathname; } catch { /* no op to name */ }
-  const answer = planeInternalAnswer(correlation);
-  /* The log line names the code by READING the answer, never by a second literal. */
-  try {
-    console.error(JSON.stringify({ event: answer.reason, correlation, op: String(op).slice(0, 200),
-                                   stack: String(e && e.stack || e) }));
-  } catch { /* a log that cannot be written never changes what the caller is told */ }
-  return json(answer, 500);
-}
-function planeInternalAnswer(correlation) {
-  /* DEC-49 REGION is-plane-internal-error */
-  return { ok: false, error: "internal error", reason: "PLANE_INTERNAL_ERROR", ...dispatchRow("PLANE_INTERNAL_ERROR"),
-           correlation };
-  /* END DEC-49 REGION is-plane-internal-error */
-}
-
-/* D-512: C-66.6's row — a replay the plane could not verify — on `identityFenceRow`'s shape and its refusal to invent. */
-const replayRow = (code) => {
-  const row = REPLAY_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`replayRow: ${code} has no REPLAY_CHECKS row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-
-/* D-270 / C-61 (R39; moved from legacy-index with the row, K621, K636): the argument complaint's row reader,
-   `admissionRow`'s shape and its refusal to invent — a code with no sentence behind it throws here rather than
-   reaching a member. */
-const requiredArgumentRow = (code) => {
-  const row = REQUIRED_ARGUMENT_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`requiredArgumentRow: ${code} has no REQUIRED_ARGUMENT_CHECKS row with a canned `
-                  + `translation (DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-
-/* THE ARGUMENT COMPLAINT (C-61). ONE code for the whole condition with the argument in `argument` and the shape in
- * `shape`, rather than a row per op — `AI_BEYOND_TASK_SCOPE` is the standing precedent for one code whose producers
- * are told apart by a field. A HELPER and not edited sites, for the `where` field's sake: a DEC-49 row holds ONE
- * `where` naming the SMALLEST SPAN. Every module that answers this complaint is handed this one function. */
-function requiredArgument(op, argument, shape, error) {
-  /* DEC-49 REGION is-required-argument
-   * THE SPAN `REQUIRED_ARGUMENT_MISSING` names. Code a STRING LITERAL at its site. `error` is passed in BYTE-IDENTICAL
-   * from the call site, so every legacy sentence survives unaltered and no consumer reading `error` moves. */
-  return { ok: false, reason: "REQUIRED_ARGUMENT_MISSING",
-           ...requiredArgumentRow("REQUIRED_ARGUMENT_MISSING"),
-           error, op, argument, shape,
-           detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried `
-                 + `none the operation could use. Nothing was changed.` };
-  /* END DEC-49 REGION is-required-argument */
-}
-
-/* D-278 / C-68 and C-69: the same reader again, one per family, and the same
-   refusal to invent. */
-/* C-68.2–.4 are this module's (R15). */
-const installationRow = (code) => {
-  const row = BOOTSTRAP_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`installationRow: ${code} has no BOOTSTRAP_CHECKS row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-const dispatchRow = (code) => {
-  const row = DISPATCH_CHECKS[code];
-  if (!row || typeof row.translation !== "string" || !row.translation)
-    throw new Error(`dispatchRow: ${code} has no DISPATCH_CHECKS row with a canned translation `
-                  + `(DEC-49). A code with no sentence behind it must not reach a member.`);
-  return { code, check: row.check, translation: row.translation };
-};
-
-/* Some of these reads happen INSIDE a per-item renderer that returns a rendered
-   object rather than a Response, so it has no way to refuse on its own behalf.
-   Rather than let it fabricate a rendering from an answer it never got, it
-   throws this and the handler that owns the Response turns it into the same
-   refusal. A sentinel class and not a bare string, so a genuine crash on the
-   same path is re-thrown instead of being reported as a polite silence. */
-class StoreSilent extends Error {
-  constructor(op) { super(`the store did not answer ${op}`); this.op = op; }
 }
 
 /* The R2 key for a capture's bytes (I1 §2): content-addressed under the store
@@ -553,13 +265,13 @@ function storageAbsent(op, error) {
    so a probe naming nothing still reads `scratch`), and for every other caller `store=scratch` when named and `bio`
    otherwise, the invitation ops' rule. A silence is a silence (REC-52): never "no group is recorded". Moved from
    legacy-index at T19 (its door share). */
-async function groupRead(op, url, env, presentedAi) {
-  const held = url.searchParams.get("token");
+async function groupRead(op, url, env, presentedAi, credential) {
+  const held = credential.token;
   const heldCls = held ? await classify(held, env) : null;
   const heldScope = heldCls ? scopeFor(heldCls, url) : null;
   const store = heldScope && !heldScope.error ? heldScope.name
     : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
-  const reader = await caseReader(url, env, store, presentedAi.cred);
+  const reader = await caseReader(url, env, store, presentedAi.cred, credential);
   if (reader.silent) return storeSilent(reader.silent, reader.correlation);
   const io = { json, storeSilent, storeRefusal, doAnswer };
   return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
@@ -700,9 +412,14 @@ const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
    (`affordances` untargeted), the door then asks credentials in `bio` whether a live grant admits it (the four, off the
    list, by its first read). Admitted, the caller is `ai`, its viewer the grant's member, its grant stamped `grant`
    (answers' arms, the read log); GRANT_OP_REFUSED is answered; anything else keeps admission's answer. */
-const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances"]);
-async function grantAdmit(env, url, op, spec) {
-  const own = GRANT_OWN_OPS.includes(op), token = url.searchParams.get("token");
+/* R41 (T35): `agentpack` is admitted under a grant as the untargeted `affordances` is (op-declarations R30). */
+const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances", "agentpack"]);
+/* store-door R9 (K2037 (b)): the internal header an ask's grant travels in to the store (store-door's `GRANT_HEADER`). */
+const GRANT_HEADER = "x-bio-grant";
+/* store-door R9 (K2038 (1)): the internal header a stamped session travels in to the store. */
+const SESSION_HEADER = "x-bio-session";
+async function grantAdmit(env, url, op, spec, token) {
+  const own = GRANT_OWN_OPS.includes(op);
   if ((!own && !AI_GRANT_OPS.includes(op)) || (op === "affordances" && url.searchParams.get("target"))) return {};
   const out = await doAnswer(env.STORE.get(env.STORE.idFromName("bio")).fetch(new Request("http://do/aigrantadmit", {
     method: "POST", body: JSON.stringify({ token, op: own ? AI_GRANT_OPS[0] : op, write: own ? false : spec.mutating }) })));
@@ -717,7 +434,8 @@ async function grantAdmit(env, url, op, spec) {
 /* R1–R25: the Worker entry. `hooks.publicOp(ctx)` answers a public op whose handler is a module's, through plane's hooks;
    `hooks.gatedOp(ctx)` an admitted op's handler there, or undefined for the generic forward below. */
 /* R17: the stamps a caller may never supply, in the query and in a body. */
-const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred"]);
+const QUERY_STAMPS = Object.freeze(["viewer", "identity", "author", "by", "actor", "who", "origin", "administer", "aiCred",
+                                    /* T35 (R58): who is calling, the door's alone (admission R21) */ "source", "country"]);
 const BODY_STAMPS = Object.freeze(["actorIdentity", "actorViewer", "actorMemberId", "ownerMemberId", "assistantPrincipal",
                                    "migrationReplay"]);
 /* R36, R23 (K1037): the ops whose refusals state their own HTTP status in `result.status`, which the forward answers. */
@@ -727,17 +445,25 @@ export function makeFetch(hooks = {}) {
   /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
      R51: every HTML answer leaves with the page policy. */
   const planeDoor = async function planeDoor(req, env) {
-    const seen = { session: null };
+    const seen = { session: null, credential: null, cred: null, op: null };
     let res;
     try { res = await fetch(req, env, seen); } catch (e) { res = planeInternalError(e, req); }
     await tallySessionRefusal(res, seen.session);
-    return withPagePolicy(res);
+    res = await outOfAddress(res, seen, req);
+    return await withPagePolicy(res);
   };
   planeDoor.limits = PLANE_LIMITS;
   planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
   return planeDoor;
   async function fetch(req, env, seen = { session: null }) {
     const url = new URL(req.url);
+    /* R59 (admission R20; F1, K2044): the credential this request presents, read once — the `Authorization` header's, else
+       a JSON body's `token`, else (T35's release only) the address's — and every gate below judges it and no other. */
+    let reqBody = null;
+    if (req.method === "POST")
+      try { reqBody = JSON.parse((await req.clone().text()) || "null"); } catch { reqBody = null; }
+    const credential = presentedCredential({ req, url, body: reqBody });
+    seen.credential = credential;
     if (req.method === "OPTIONS")
       return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, OPTIONS", "access-control-allow-headers": "content-type" } });
 
@@ -800,6 +526,7 @@ export function makeFetch(hooks = {}) {
     /* R55 (op-declarations R21): a requirement function's name that aliases an op is that op, before every gate: its
        handler, its stamps and its answer, so the two answer alike. */
     if (Object.hasOwn(OP_ALIASES, op)) op = OP_ALIASES[op];
+    seen.op = op;
     let spec = Object.hasOwn(OPS, op) ? OPS[op] : undefined;   /* R2: the table's own keys only */
     /* R36 (N364; capture R32, R65): a knock resolved to `pulled` is R65's pull, so it is routed as `op=inboxpull` before
        any gate: every gate, stamp and answer it meets is the pull's, the promotion included, and no pull files a capture
@@ -833,8 +560,9 @@ export function makeFetch(hooks = {}) {
     if (unknownNamespace) return refused(unknownNamespace);
     /* R28 (K1861 (6)): admission's query gate, which never refuses: what an op may take only from the body (a door's key,
        link and cover; the group key) and a public door's `token` leave the URL before anything reads it (R54, R56). */
-    queryGate(url, op);
-    const presentedAi = await aiCredentialPresented(url, env, doAnswer);
+    queryGate(url, op, credential);
+    const presentedAi = await aiCredentialPresented(url, env, doAnswer, { credential, op });
+    seen.cred = presentedAi.cred ?? null;
     if (presentedAi.silent) return storeSilent(presentedAi.silent.op, presentedAi.silent.correlation);
     const confinedNamespace = confinedNamespaceGate(url, presentedAi.cred);
     if (confinedNamespace) return refused(confinedNamespace);
@@ -843,6 +571,14 @@ export function makeFetch(hooks = {}) {
 
     /* Unauthenticated by design. Each one gates itself. */
     if (spec.classes === null) {
+      /* R28, R58 (admission R21; F4): the public ops' window first, before the op reads or writes anything; then who is
+         calling, as admission knows them (a keyed fingerprint and a country, never the address), the stamps `claim`,
+         `login` and `recover` take (credentials R1, R4, R47) and capture's knock its `country` (its R85). */
+      const windowed = await doorWindowGate({ req, env, op, spec, doAnswer });
+      if (windowed.refusal) return refused(windowed.refusal);
+      const source = windowed.source ?? await sourceOf(req, env);
+      const country = countryOf(req);
+      const doorStamps = new URLSearchParams({ ...(source ? { source } : {}), ...(country ? { country } : {}) }).toString();
       const fp = await fingerprint(env.ADMIN_TOKEN);
       const stub = env.STORE.get(env.STORE.idFromName("bio"));
       /* Claiming and logging in are pinned to `bio` above, because an instance
@@ -871,7 +607,7 @@ export function makeFetch(hooks = {}) {
           return json({ ok: false, reason: "BOOTSTRAP_CREDENTIAL_MISMATCH", ...installationRow("BOOTSTRAP_CREDENTIAL_MISMATCH"),
             error: "bootstrap credential does not match" }, 403);
         /* END DEC-49 REGION is-bootstrap-claim */
-        return relayAnswer(stub.fetch(new Request(`http://do/claim?fp=${fp}`, {
+        return relayAnswer(stub.fetch(new Request(`http://do/claim?fp=${fp}${doorStamps ? `&${doorStamps}` : ""}`, {
           method: "POST", body: JSON.stringify({ role: "admin", password: body.password }) })), "claim");
       }
       /* ===== REC-126 / DEC-31 / IC-145: THE REVIEW COPY'S READ AND COMMENT (R20) ====== */
@@ -896,7 +632,7 @@ export function makeFetch(hooks = {}) {
       /* D-150: `statementack` takes these two doors, and a member may name an unsigned case
          document (`case` + `edition`) in place of a draft. */
       if (op === "reviewcopy" || op === "reviewcomment" || op === "statementack") {
-        const bySecret = url.searchParams.has("secret");
+        const bySecret = credential.secret !== null;   /* R59 (admission R20): the body's `secret` */
         const q = new URLSearchParams();
         const draftParam = (url.searchParams.get("draft") || "").trim();
         if (draftParam) q.set("draft", draftParam);
@@ -906,9 +642,9 @@ export function makeFetch(hooks = {}) {
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         if (bySecret) {
           q.set("bySecret", "1");
-          q.set("secretSha", await sha256Hex(url.searchParams.get("secret") || ""));
+          q.set("secretSha", await sha256Hex(credential.secret || ""));
         } else {
-          const reader = await caseReader(url, env, "bio", presentedAi.cred);   /* admission's `readerOf` */
+          const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);   /* admission's `readerOf` */
           if (reader.silent) return storeSilent(reader.silent, reader.correlation);
           q.set("viewer", reader.viewer);
         }
@@ -932,15 +668,24 @@ export function makeFetch(hooks = {}) {
         }
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
           commentBody === null ? undefined : { method: "POST", body: commentBody }));
-        return reviewAnswer(out, op);
+        return reviewAnswer(out, op, credential.inAddress ? { deprecated: CREDENTIAL_IN_ADDRESS } : {});
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
          the caller names (`invStub` above). Moved from legacy-index at T19 (its door share). */
       if (op === "login") {
         const body = await req.json().catch(() => ({}));
-        return relayAnswer(stub.fetch(new Request("http://do/login", {
+        return relayAnswer(stub.fetch(new Request(`http://do/login${doorStamps ? `?${doorStamps}` : ""}`, {
           method: "POST", body: JSON.stringify({ role: body.role || "admin", password: body.password }) })), "login");
+      }
+      /* R58 (credentials R47; K1888): `recover`, credential-free as `login` is, pinned to `bio`: its `role`, `code` and
+         `password` from the body alone, relayed once and never logged, kept or echoed here (R30); `source` and `country`
+         the door's. */
+      if (op === "recover") {
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        return relayAnswer(stub.fetch(new Request(`http://do/recover${doorStamps ? `?${doorStamps}` : ""}`, {
+          method: "POST", body: JSON.stringify({ role: o.role, code: o.code, password: o.password }) })), "recover");
       }
       if (op === "invitelook" || op === "enroll") {
         const body = await req.json().catch(() => ({}));
@@ -961,13 +706,13 @@ export function makeFetch(hooks = {}) {
       /* R54 (membership R110): the group's self-description, the viewer read as admission's `readerOf` reads who is asking
          (`""` for no one) in the store the caller names, so the public receives only what membership answers the public. */
       if (op === "groupdescription") {
-        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred);
+        const reader = await caseReader(url, env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", presentedAi.cred, credential);
         if (reader.silent) return storeSilent(reader.silent, reader.correlation);
         return relayAnswer(invStub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
-      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub });
-      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi);
+      if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential });
+      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi, credential);
       if (op === "knockerconsent") return knockerConsent(req, stub);
       /* R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads, each asked by its own name, served by
          public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
@@ -977,16 +722,16 @@ export function makeFetch(hooks = {}) {
       if (NETWORK_NOTICES_PUBLIC_READS.includes(op) || CASE_CHECKER_PUBLIC_READS.includes(op))
         return publicReadDoorRead(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
-      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi });
+      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country });
     }
 
     /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
        refusal and session gate), the class or the agent's task scope, the capability, the landing. A refusal is answered
        as the gate gives it; a store that could not be asked is a silence, never a statement about the caller. */
-    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer });
+    let admitted = await admit({ url, env, op, spec, method: req.method, presented: presentedAi, doAnswer, credential });
     if (admitted.silent) return storeSilent(admitted.silent.op, admitted.silent.correlation);
     if (admitted.refusal?.body?.reason === "NOT_AUTHENTICATED") {   /* R53: an ask's grant */
-      const granted = await grantAdmit(env, url, op, spec);
+      const granted = await grantAdmit(env, url, op, spec, credential.token);
       if (granted.silent) return storeSilent(granted.silent.op, granted.silent.correlation);
       if (granted.caller || granted.refusal) admitted = granted;
     }
@@ -1074,19 +819,35 @@ export function makeFetch(hooks = {}) {
        caller's query and set by one expression: `viewer` every read's; `by` (query) and `bodyBy` (the body's `by`, below)
        the actor in the viewer's form (a session's viewer; a machine `class:<cls>`, an agent `class:ai/<tokenId>`);
        `author` the positional identity and `proposer` the label, by `QUERY_AUTHOR_ACTIONS`' and `actionlawspropose`'s
-       expressions; `member` and `session` a session's own member and token, never set for another caller. A grant's
-       token is stamped `grant` for its caller alone. */
+       expressions; `member` and `session` a session's own member and token, never set for another caller. An ask grant
+       token travels in the `x-bio-grant` header (below). */
     const declared = OP_STAMPS[op] || [];
     const actor = viaSession ? sessViewer : cls === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`;
     const stampOf = { viewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : actor, by: actor,
       author: viaSession ? sessIdentity : actor, proposer: viaSession ? sessMember : actor,
-      member: viaSession ? sessViewer : null, session: viaSession ? url.searchParams.get("token") : null };
+      member: viaSession ? sessViewer : null, session: viaSession ? credential.token : null,
+      /* T35 (op-declarations R30; K1972): `principal`, the run verbs' expression; `owner`, a selection's owner (the
+         stamp a selection scope is read under) */
+      principal: viaSession ? sessIdentity : cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}`,
+      owner: viaSession ? sessIdentity : `${MACHINE_CLASS_PREFIX}${cls}` };
+    /* R59, store-door R9 (K2038 (1)): a stamped `session` is a credential, so it reaches the store in the internal header
+       `x-bio-session`, never the address; store-door hands it to the owner's map in process. A caller's `session`
+       parameter is deleted for every op. */
+    inner.searchParams.delete("session");
+    let sessionCarried = null;
     for (const k of declared) if (Object.hasOwn(stampOf, k)) {
       inner.searchParams.delete(k);
+      if (k === "session") { sessionCarried = stampOf[k]; continue; }
       if (stampOf[k] !== null) inner.searchParams.set(k, stampOf[k]);
     }
-    if (Object.hasOwn(OP_STAMPS, op) || AI_GRANT_OPS.includes(op) || GRANT_OWN_OPS.includes(op)) inner.searchParams.delete("grant");
-    if (aiCred?.grant) inner.searchParams.set("grant", aiCred.grant);
+    /* R59, store-door R9 (F1; K2037 (b)): an ask's grant reaches the store in the internal header `x-bio-grant`, never the
+       address: a caller's `grant` parameter is deleted for every op, and the header is set for the grant's caller alone. */
+    inner.searchParams.delete("grant");
+    const withGrant = (init) => {
+      const headers = { ...(init.headers || {}), ...(aiCred?.grant ? { [GRANT_HEADER]: aiCred.grant } : {}),
+                        ...(sessionCarried ? { [SESSION_HEADER]: sessionCarried } : {}) };
+      return Object.keys(headers).length ? { ...init, headers } : init;
+    };
     /* Who holds a lease is stamped by the server, never taken from the request,
        for BOTH a session and a machine credential — the same impostor rule
        `author`, `by` and `viewer` follow below. A session stamps the member; a
@@ -1099,6 +860,13 @@ export function makeFetch(hooks = {}) {
        lost update — it makes the courtesy lock reachable by a named daemon.
        The store additionally refuses a null/blank actor by name, so a bypass of
        this stamp fails closed rather than tripping the NOT NULL constraint. */
+    /* R58 (T35; acquisition R38, R40; capture R73): `op=unpack` reaches capture's pass-through with the caller's class
+       and whether it arrived by a member's session, the door's word, never the caller's (`cls: "member"` for a member's
+       session, `"daemon"` for the daemon continuing an automatic unpack); acquisition judges who may open an archive. */
+    if (op === "unpack") {
+      inner.searchParams.set("cls", viaSession ? "member" : cls);
+      inner.searchParams.set("member", viaSession ? "1" : "0");
+    }
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* K372 (monitoring R30): WHO PAUSED OR RESUMED THE DAEMON, the server's stamp by the roster acts' `by` expression and
        set after the caller's parameters were copied, so a caller's `actor` is overwritten; monitoring records it with
@@ -2027,10 +1795,63 @@ export function makeFetch(hooks = {}) {
     }
     /* R28: an op whose handler is a module's, reached through plane's hooks, answers here, after the R14 fences and R16;
        undefined falls through to the forward. */
+    /* R41 (T35; N695, K1717, K1864): `op=agentpack` serves the fences and the rendered pack apart, the very values the
+       untargeted `op=affordances` answer carries for this caller now: the affordances handler is asked untargeted and
+       the door's decoration read off its answer; a refusal or a silence is answered as that handler gives it. */
+    if (op === "agentpack") {
+      const u = new URL(url);
+      u.searchParams.set("op", "affordances");
+      u.searchParams.delete("target");
+      const res = hooks.gatedOp ? await hooks.gatedOp({ req: new Request(u, { method: "GET", headers: req.headers }), url: u, env,
+        op: "affordances", cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
+        grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;
+      if (!res) return storeSilent("agentpack");
+      const published = await publishAffordances(res, u);
+      let b = null;
+      try { b = await published.clone().json(); } catch { b = null; }
+      if (!b || b.ok !== true || !b.result || typeof b.result !== "object") return published;
+      const { fences, pack, pack_absent } = b.result;
+      return json({ ok: true, fences, pack: pack ?? null, ...(pack ? {} : { pack_absent }), store: storeName, tokenClass: cls }, 200);
+    }
+    /* R58 (K2042 (2)): the promotions after an unpack, Worker-side, one act each, with `op=promote`'s stamps for this
+       caller; the archive's project is the request body's `project`, read from a copy before the handler reads the body. */
+    const archiveWho = { author: viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`,
+      ...(viaSession ? { actorMemberId: sessMember } : {}),
+      actorIdentity: viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
+      actorViewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
+      ...(viaSession ? {} : { assistantPrincipal: cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}` }) };
+    let archiveProject = null;
+    if ((op === "acquire" || op === "unpack") && req.method === "POST")
+      try { const b = JSON.parse((await req.clone().text()) || "null"); archiveProject = b && typeof b.project === "string" ? b.project : null; }
+      catch { archiveProject = null; }
+    async function promoteAcquired(res) {
+      let b = null;
+      try { b = await res.clone().json(); } catch { return res; }
+      const docs = archiveDocuments("acquire", b);
+      if (!docs.length) return res;
+      const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject, archiveSha: b.document?.capture?.sha256 ?? null,
+                                          who: archiveWho });
+      return json({ ...b, ...done }, res.status);
+    }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
+    if (armed && op === "acquire") return promoteAcquired(armed);
     if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
+    /* R57 (K1983): the rendered pack the door holds for this caller, the untargeted `op=affordances` answer's (R41),
+       sent with a draft that reads nothing of the record; null when none renders. */
+    async function heldPack(ctx) {
+      if (!hooks.gatedOp) return null;
+      const u = new URL(url);
+      u.searchParams.set("op", "affordances");
+      u.searchParams.delete("target");
+      try {
+        const res = await hooks.gatedOp({ ...ctx, req: new Request(u, { method: "GET" }), url: u, op: "affordances" });
+        if (!res) return null;
+        const a = await (await publishAffordances(res, u)).json();
+        return a && a.ok === true && a.result && a.result.pack ? a.result.pack : null;
+      } catch { return null; }
+    }
     /* Who is acting on a project's roster is decided by the SERVER. Set after
        the caller's parameters were copied, so a caller-supplied `by` is
        overwritten rather than honoured: "only an owner may remove" is worth
@@ -2263,8 +2084,9 @@ export function makeFetch(hooks = {}) {
     if (passBody) {
       try {
         const b0 = JSON.parse(passBody);
-        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && BODY_STAMPS.some((k) => k in b0)) {
-          for (const k of BODY_STAMPS) delete b0[k];
+        /* R59 (admission R20): a body's `token` is the caller's credential, the door's alone, never passed on */
+        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && [...BODY_STAMPS, "token"].some((k) => k in b0)) {
+          for (const k of [...BODY_STAMPS, "token"]) delete b0[k];
           passBody = JSON.stringify(b0);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
@@ -2955,7 +2777,7 @@ export function makeFetch(hooks = {}) {
         secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a "
           + "fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and "
           + "COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
-        read: "op=reviewcopy&secret=<the value above>",
+        read: "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
       }, store: storeName, tokenClass: cls }, 200);
     }
 
@@ -2978,7 +2800,7 @@ export function makeFetch(hooks = {}) {
           + "fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, "
           + "COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw "
           + "this grant and open another.",
-        read: "op=templateread&secret=<the value above>",
+        read: "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
       }, store: storeName, tokenClass: cls }, 200);
     }
 
@@ -2986,15 +2808,47 @@ export function makeFetch(hooks = {}) {
        the function `reviewcopy` answers through — so the dead answer a caller outside the fence receives is the
        single read's, status and bytes, and not this handler's generic envelope. */
     if (op === "casedrafts")
-      return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, { method: "GET" }))), op);
+      return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, withGrant({ method: "GET" })))), op);
 
     /* R23 (K421), R30, REC-52: the reply is read through `doAnswer`. The store's own refusal (`BAD_JSON`, an unknown
        route) is relayed at its status; anything that is not JSON carrying a boolean `ok`, or the store's catch, is a
        silence, never relayed (a store's stack included). */
-    const out = await doAnswer(stub.fetch(new Request(inner, { method: req.method, body: passBody })));
+    const out = await doAnswer(stub.fetch(new Request(inner, withGrant({ method: req.method, body: passBody }))));
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    /* R58 (K2042 (2)): what an `op=unpack` filed is promoted, one act each, and named in the answer */
+    if (op === "unpack" && body.result && body.result.ok === true) {
+      const docs = archiveDocuments("unpack", body.result);
+      if (docs.length || Array.isArray(body.result.documents)) {
+        const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject,
+                                            archiveSha: body.result.archive?.sha256 ?? null, who: archiveWho });
+        return json({ ...body, result: { ...body.result, ...done }, store: storeName, tokenClass: cls }, status);
+      }
+    }
+    /* R57 (T35; N686, K1837, K1841): past every refusal of the store's door and of the owner, a draft is asked of the
+       object (`draft.mjs`, wired by plane as its `draft`), with the pack the door holds (R41) and the request's own words;
+       only a member's session reaches these ops (their specs). */
+    if (draftDue(op, body) && viaSession && typeof stub.draft === "function") {
+      let asked = {};
+      try { asked = passBody ? JSON.parse(passBody) : {}; } catch { asked = {}; }
+      const pack = await heldPack({ req, url, env, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps,
+                                    aiCred, storeName, stub });
+      const ask = draftAsk(op, asked, { member: sessMember, session: credential.token,
+                                       firsthand: body.result.firsthand === true, pack });
+      const res = await stub.draft(ask);
+      let drafted = null;
+      try { drafted = await res.json(); } catch { drafted = null; }
+      if (!drafted || typeof drafted !== "object") return storeSilent(op);
+      /* ai-runs R48: whatever the check answers, a conversation that reached the model is counted to the member's day */
+      if (drafted.ok === true)
+        await doAnswer(stub.fetch(new Request(`http://do/askusage?viewer=${encodeURIComponent(sessViewer)}`, { method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ mode: "draft", usage: drafted.usage ?? null, calls: drafted.calls }) })));
+      const shaped = checkedDraft(ask, drafted, res.status, sessViewer);
+      return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
+        : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
+    }
     /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
@@ -3007,10 +2861,8 @@ export function makeFetch(hooks = {}) {
     return json({ ...body, store: storeName, tokenClass: cls }, status);
   }
 }
-export { json, doAnswer, storeSilent, storeRefusal, relayAnswer, StoreSilent, STORE_SILENT_REASON, STORE_SILENT_DETAIL, PUBLISHED_STORE,
-         sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, installationRow, dispatchRow, replayRow,
-         dec49Row, dec49Attach, CHECK_FAMILIES, CHECK_FAMILY_FILES, migrationReplayOf, DRIVE_PROVENANCE_PATH,
-         publishAffordances, requiredArgument, storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
+export { PUBLISHED_STORE, sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, migrationReplayOf, DRIVE_PROVENANCE_PATH,
+         publishAffordances, storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
 /* K624 (1), (2): admission's namespace names, read through this door by plane's hooks and by the fleet members' pin
    (`members-pin.test.mjs`); the door itself calls admission directly. */
 export { SCRATCH, NAMESPACES } from "../admission/index.mjs";

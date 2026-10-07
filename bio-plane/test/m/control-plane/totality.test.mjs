@@ -6,7 +6,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O } from "./harness.mjs";
-import { unaccounted, RUNGS, RUNG_ABSENT } from "../../../src/affordances.mjs";
+import { unaccounted } from "../../../src/affordances.mjs";
+/* the grades are op-grades' since the split (its R1, R2; plan T35-79); `unaccounted` (affordances R12) stays affordances' */
+import { RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 
 /* R55 (op-declarations R21): an alias is an op of the door's table (routed to its op's handler), and affordances grades
    it as its op (its R45), so the table carries every alias beside its op (K1879). */

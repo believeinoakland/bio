@@ -36,22 +36,23 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   }
   /* The public surface is exactly the ops that gate themselves. */
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
-    ["activitymethod", "bootstrap", "casechecker", "casedocument", "casefilespec", "caseflags", "claim", "docketfeed",
+    ["activitymethod", "bootstrap", "casechecker", "casedocument", "casefilespec", "caseflags", "claim", "credit", "docketfeed",
      "docketpublic", "enroll", "groupdescription",
      "groupidentity", "groupkeyspublic",
      "instancegroup", "invitelook", "joinlinkinvite", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
-     "publishedcase", "publishedmanifest", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
+     "publishedcase", "publishedmanifest", "recover", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
      "templatecomments", "templateread", "templatereview", "verify", "websiteinvite"]);
   /* Inherited names are no op. */
   for (const k of ["toString", "constructor", "__proto__", "hasOwnProperty"]) assert.ok(!Object.hasOwn(OPS, k), k);
 });
 
-test("R2 (daemon-token convert): exactly four ops admit daemon — acquire, capturerequestdrain, monitor, reevaluationraise — over the exported OPS", () => {
+test("R2, R30 (daemon-token convert): exactly five ops admit daemon — acquire, capturerequestdrain, monitor, reevaluationraise and, since T35, unpack, whose bearers are bounded to daemon and probe — over the exported OPS", () => {
   const daemon = Object.keys(OPS).filter((op) => Array.isArray(OPS[op].classes) && OPS[op].classes.includes("daemon"));
-  assert.deepEqual(daemon.sort(), ["acquire", "capturerequestdrain", "monitor", "reevaluationraise"]);
+  assert.deepEqual(daemon.sort(), ["acquire", "capturerequestdrain", "monitor", "reevaluationraise", "unpack"]);
   for (const op of daemon) {
     assert.equal(OPS[op].mutating, true, op);
-    assert.ok(!("machineClasses" in OPS[op]), op);
+    if (op === "unpack") assert.deepEqual([...OPS[op].machineClasses], ["daemon", "probe"], op);
+    else assert.ok(!("machineClasses" in OPS[op]), op);
   }
 });
 
@@ -72,9 +73,10 @@ test("R3: SESSION_OPS is {member, admin}, two sets of op names each with a spec;
   for (const [op, need] of Object.entries(NEEDS)) {
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
     assert.ok(need === null || CAPABILITIES.includes(need), `${op}: ${need}`);
-    /* A session reaches an op in its set, a read its classes admit, and a public read (every caller, R10's). */
-    const reached = inSession(op) || (!OPS[op].mutating && (OPS[op].classes === null
-      || OPS[op].classes.includes("member") || OPS[op].classes.includes("admin")));
+    /* A session reaches an op in its set, a read its classes admit, and a public op (every caller: R10's reads, and
+       since T35 `recover`, which op-grades names a NON_ACT, K2038). */
+    const reached = inSession(op) || OPS[op].classes === null || (!OPS[op].mutating
+      && (OPS[op].classes.includes("member") || OPS[op].classes.includes("admin")));
     /* An op unattended by a recorded decision may carry a present null row, for affordances' grading of it (K1689). */
     const unattendedNull = Object.hasOwn(UNATTENDED_BY_DECISION, op) && need === null;
     assert.ok(reached || unattendedNull, `${op} is in NEEDS and no session reaches it`);

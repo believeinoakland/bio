@@ -6,14 +6,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, refused, FORGED } from "./harness.mjs";
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 const { record } = await import("./record.mjs");
 const { credentialsOf, credentialsOps } = await import("../../../src/credentials/index.mjs");
 const { membershipOf, membershipOps } = await import("../../../src/membership/index.mjs");
 const { instanceSetupOf } = await import("../../../src/setup.mjs");
 const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
 const { wizardScriptsOf } = await import("../../../src/wizard-scripts/index.mjs");
-const CHECKS = await import("../../../src/control-plane/checks.mjs");
+const CHECKS = await import("../../../src/answer-envelope/checks.mjs");
 
 const { OPS } = O;
 const OP_STAMPS = O.OP_STAMPS || {};

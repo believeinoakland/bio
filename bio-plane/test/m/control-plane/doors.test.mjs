@@ -26,7 +26,10 @@ test("routing: OPTIONS answers 204 with access-control-allow-origin *, /version 
     const s = await call(env, { path: p });
     assert.equal(s.status, 200);
     assert.match(s.headers.get("content-type"), /^text\/html/);
-    assert.equal(s.text, SIGN_HTML);
+    /* answer-envelope R6 (F17): the page as shipped, each script element given this response's nonce */
+    const nonce = /'nonce-([^']+)'/.exec(s.headers.get("content-security-policy") || "")?.[1];
+    assert.ok(nonce, "a nonce");
+    assert.equal(s.text.replaceAll(` nonce="${nonce}"`, ""), SIGN_HTML);
   }
   /* none of the three asks the store anything */
   assert.equal(env.calls.length, 0);

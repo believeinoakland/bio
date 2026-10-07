@@ -7,7 +7,7 @@ import { pageOf, groupLine, PAGE_HTML } from "../../../src/setup-page/index.mjs"
 import { STATES, HEADINGS, deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
 import { RISK_TIERS, riskTierState } from "../../../src/action-grammar/index.mjs";
 import { COUNTERPARTY_LEVELS } from "../../../../jurisdictions/index.mjs";
-import { pageOver } from "./fixture.mjs";
+import { pageOver, bearerOf } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const settle = async () => { for (let i = 0; i < 20; i++) await tick(); };
@@ -20,7 +20,7 @@ function load({ hash = "", answer = () => ({ ok: true }), session = null } = {})
     const u = new URL(url, "https://copy.example");
     const op = u.searchParams.get("op") || u.pathname.slice(1);
     const body = init && init.body ? JSON.parse(init.body) : null;
-    calls.push({ op, method: (init && init.method) || "GET", body, token: u.searchParams.get("token") });
+    calls.push({ op, method: (init && init.method) || "GET", body, token: bearerOf(init), query: u.searchParams.get("token") });
     const out = await answer(op, body, u);
     return { ok: true, status: 200, json: async () => out };
   };
@@ -179,14 +179,14 @@ test("R6 a bundle's history is listed in write order when every entry carries a 
 /* The served bytes with what no member reads taken out: HTML comments, the script's comments, and the identifiers K899
    (1) keeps (`bundle_id`, `bundleId`, `bundle.md` and its history paths, the section id and the script's names). */
 const memberText = (html) => html.replace(/<!--[^]*?-->/g, "")
-  .replace(/<script>([^]*?)<\/script>/g, (_, s) => s.replace(/\/\*[^]*?\*\//g, "").replace(/(^|[^:"'\\])\/\/[^\n]*/g, "$1"))
+  .replace(/<script\b[^>]*>([^]*?)<\/script>/g, (_, s) => s.replace(/\/\*[^]*?\*\//g, "").replace(/(^|[^:"'\\])\/\/[^\n]*/g, "$1"))
   .replace(/\b(?:bundle_id|bundleId|bundle\.md|_history\/bundle_|s-bundle|openBundle|renderBundle|bundleSha|checkBundle)\b/g, "");
 
 test("K899 (1) the page says record where it said bundle: no text a member reads holds the word, the identifiers stay; the crumb, labels, browse summary and header, the not-found line and the publish refusals say record", async () => {
   assert.doesNotMatch(memberText(PAGE_HTML), /bundle/i);
   /* not vacuous: the identifiers the page sends and reads are still there */
   for (const id of ['id="s-bundle"', '"bundle.md"', "bundleId", "bundle_id"]) assert.ok(PAGE_HTML.includes(id), id);
-  assert.match(memberText('<p>Files in this bundle</p><script>/* a bundle */ x("bundle.md")</script>'), /bundle/);
+  assert.match(memberText('<p>Files in this bundle</p><script nonce="n">/* a bundle */ x("bundle.md")</script>'), /bundle/);
   for (const words of ["<h2>Files in this record</h2>", "Every revision this record has ever had.", "This adds a record to the working record.",
                        '<a id="e-back">Record</a>', '<span class="k">Record</span>'])
     assert.ok(PAGE_HTML.includes(words), words);
@@ -327,7 +327,7 @@ test("R2 #join= strips the fragment, asks the name the person chooses, and sends
     ["joinlinkinvite", "POST", { link: "jl-secret/1", cover: "Sam from the block" }],
     ["invitelook", "POST", { invite: "inv-from-link" }]]);
   for (const c of p.calls) assert.equal(new URL(`https://copy.example/api/?op=${c.op}`).search.includes("jl-secret"), false);
-  assert.ok(p.calls.every((c) => c.token === null), "no session, and the link rides no URL");
+  assert.ok(p.calls.every((c) => c.token === null && c.query === null), "no session, and the link rides no URL");
   assert.match(p.el("#en-who").innerHTML, /Sam from the block/);
   assert.deepEqual([p.el("#en-join").hidden, p.el("#en-form").hidden, p.el("#en-go").hidden], [true, false, false]);
 });
