@@ -29,3 +29,7 @@ The sweep's three X rows (`calibration/schema.mjs`:68, :75, :80, SQL comments) s
 - `checks/ownership.mjs … calibration tranche/T35`: 0 failures (run after the commit).
 
 Size (session_01Pi6ot7irScmMV3ovpZPrRp): test runs 5, module lines 1108
+
+## J1 · COMPLETE
+
+T35-23 applied: all seven DEC-149 rows now say "your group's Civicsmith"; each named by a test in words.test.mjs (negative control: 8 of 8 fail on the old source). calibration 73/73; scheduler 95/95; extraction 115/121, its 6 being accepted red 6. format, architecture, coverage (20/20), ownership: 0 failures. One wording choice: :301 drops the sweep's "on its own account", which the cadence sentence after it already says. Stale: the plane bundle (not_product) embeds the old strings; regenerate at L4's close. Nothing deferred.
