@@ -16,7 +16,8 @@
 | one record per module job | `build/jobs/T<n>/<module>.md` |
 | the capability ladders: what each construct can do at each rung L0–L5, every need found, and what each later rung takes (read before planning a stage that adds capability, or when a member's situation shows a gap) | `docs/architecture/BIO_Capability_Ladders_v0_1.md` (canon); the study's full evidence on branch `study/constructs`, commit `892fca16c4` (never deleted, K1433) |
 | what Anthropic's plans and terms permit or forbid: verbatim quotes, each with its page, date read and the plan it governs (ids `AT-n`), the questions the pages leave open, and Bob's own choices; every other statement cites it (K1763) | `build/terms/anthropic.md` |
-| every ruling, one line each | `build/rulings.md` |
+| the rulings in force, read whole at takeover | `build/rulings-active.md` |
+| every ruling, one line each (searched on need, never read whole) | `build/rulings.md` |
 | tokens processed per session | `build/metrics/T<n>.csv` (transition sessions under `T0`) |
 | the latest handoff (replaced whole at each handoff) | `build/handoff.md` |
 | the old plan, frozen, and its triage | `docs/development/transition/old-plan/` |
@@ -62,5 +63,5 @@ Bob's UX design work runs under his **primary account**, outside this process an
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current: **ROOT #6**, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (Bob's secondary account, 2026-10-07; K2022). Earlier ROOTs are archived (rulings K693–K2022).
-- **BOB:** read `roles/BOB.md` in the process repository, then this file, then the latest handoff, `build/handoff.md`.
+- **BOB:** read `roles/BOB.md` in the process repository, then this file, then `build/rulings-active.md`, then the latest handoff, `build/handoff.md`.
 - **A module job:** read `roles/JOB.md` in the process repository; BOB's first message names the module and the tranche.

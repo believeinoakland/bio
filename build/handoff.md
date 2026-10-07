@@ -21,7 +21,7 @@
 4. Release 0.81.0, held until T35 completes (K1922): re-cut from T35's tip; each deploy approved by Bob (K1716).
 5. Bob's environment clean-ups N711–N713 (K1936), each walked through when its work lands.
 6. Open T36 from `plan/draft-T36.md`: settle its "Questions for BOB" first (all BOB's), then §5.2.
-7. History clean-up (Bob agreed, 2026-10-07): split `rulings.md` into a short active file read at takeover and an archive searched on need; trim requirements Status lines to approval and current state.
+7. History clean-up (Bob agreed, 2026-10-07; N737, N739): `build/rulings-active.md` is read at takeover (K2034); still owed: trim requirements Status lines, and measure every reading set against a budget (K2028, K2032).
 
 ## Process notes
 
