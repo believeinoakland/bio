@@ -884,8 +884,10 @@ design session, 2026-10-07, DEC-169).** Before a file opens, a member sees its r
 in plain words. A low-risk file opens as it is, scanned first when its last check is over a week old. A high-risk file opens
 in the safe view, a derived copy so labelled, never cited; "Open the original" appears only once a deeper check passes, and
 then opens it to any member for 24 hours. A finding holds the original: the safe view stays, members who can see the file are
-told once, naming no one, and the hold is released by two members' reasons or by a second, different scanner; never by the
-machine. Checks are notes naming tool, engine, version and date. Who opened which file is never recorded, and the screen says
+told once, naming no one; a hold found by the built-in scanner alone is released by a second, different engine's clean
+check, any other finding only by two members' reasons; never by the machine (K1949). Outside tools run when a member asks for
+a deeper check, which needs one clean verdict from an engine other than the built-in one; a tool on the organization's own
+servers may also check every file; a tool silent on sample sharing is not offered (K1949). Checks are notes naming tool, engine, version and date. Who opened which file is never recorded, and the screen says
 so. Administrators add the organization's own tools in Settings › Security, or at setup: each tool shows what it is sent, who
 receives it, how long it keeps files and whether it shares, before it is turned on; a vendor that keeps the files it judges
 malicious is allowed with that keeping confirmed (S10); a default-sharing service only in a private mode verified on every
