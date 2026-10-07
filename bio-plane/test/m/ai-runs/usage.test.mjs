@@ -127,12 +127,12 @@ test("R49: ai_usage holds, per member, per local day in the group's time zone an
   const w = await useWorld({ zone: "America/Los_Angeles" });
   /* 03:00Z on 1 July is still 30 June in Los Angeles; 08:00Z is 1 July */
   for (const [member, mode, when] of [["ann", "ask", at("03:00:00")], ["ann", "ask", at("06:59:59")], ["ann", "ask", at("07:00:00")],
-                                      ["ann", "check", at("08:00:00")], ["bob", "ask", at("08:00:00")]])
+                                      ["ann", "draft", at("08:00:00")], ["bob", "ask", at("08:00:00")]])
     w.runs.countAskUsage({ member, mode, usage: USAGE(), at: when });
   assert.deepEqual(w.rows(`SELECT member, day, mode, calls, input_tokens, output_tokens FROM ai_usage ORDER BY member, day, mode`), [
     { member: "ann", day: "2026-06-30", mode: "ask", calls: 2, input_tokens: 2000, output_tokens: 400 },
     { member: "ann", day: "2026-07-01", mode: "ask", calls: 1, input_tokens: 1000, output_tokens: 200 },
-    { member: "ann", day: "2026-07-01", mode: "check", calls: 1, input_tokens: 1000, output_tokens: 200 },
+    { member: "ann", day: "2026-07-01", mode: "draft", calls: 1, input_tokens: 1000, output_tokens: 200 },
     { member: "bob", day: "2026-07-01", mode: "ask", calls: 1, input_tokens: 1000, output_tokens: 200 }]);
   /* the columns: a member, a day, a mode and numbers — nothing else */
   assert.deepEqual(w.rows(`PRAGMA table_info(ai_usage)`).map((c) => c.name), ["member", "day", "mode", "calls", "input_tokens",
@@ -265,14 +265,14 @@ test("R50: a provider's refusal for a spent limit (429 enforced_spend_limit_reac
 test("R51: aiUsage answers an administrator the month's use per mode, summed over every member and naming none (NOT_AN_ADMIN to any other viewer); aiUsageMine answers a member their own day against the ceiling in force, never a cost; neither writes; op=aiusage routes both", async () => {
   const w = await useWorld();
   for (const [m, mode, when, over] of [["ann", "ask", "2026-07-01T05:00:00Z", {}], ["bob", "ask", "2026-07-20T05:00:00Z", { total_cost_usd: null }],
-                                       ["ann", "check", "2026-07-02T05:00:00Z", { input_tokens: null }], ["bob", "ask", "2026-08-01T05:00:00Z", {}]])
+                                       ["ann", "draft", "2026-07-02T05:00:00Z", { input_tokens: null }], ["bob", "ask", "2026-08-01T05:00:00Z", {}]])
     w.runs.countAskUsage({ member: m, mode, usage: USAGE(over), at: when });
   const before = w.dump() + JSON.stringify(usageRows(w));
   const july = w.runs.aiUsage({ viewer: "admin", month: "2026-07" });
   assert.deepEqual(july, { ok: true, month: "2026-07", zone: "UTC", modes: [
     { mode: "ask", calls: 2, input_tokens: 2000, output_tokens: 400, cache_read_input_tokens: 0, cache_creation_input_tokens: 0,
       total_cost_usd: 0.012, tokens_unstated: 0, cost_unstated: 1 },
-    { mode: "check", calls: 1, input_tokens: 0, output_tokens: 200, cache_read_input_tokens: 0, cache_creation_input_tokens: 0,
+    { mode: "draft", calls: 1, input_tokens: 0, output_tokens: 200, cache_read_input_tokens: 0, cache_creation_input_tokens: 0,
       total_cost_usd: 0.012, tokens_unstated: 1, cost_unstated: 0 }] });
   assert.equal(/ann|bob/.test(JSON.stringify(july)), false, "naming no member");
   assert.equal(w.runs.aiUsage({ viewer: "member:second", month: "2026-08" }).modes[0].calls, 1, "any administrator");
@@ -416,4 +416,66 @@ test("R53: the module's tables are declared explicitly through record-core's dec
   assert.deepEqual([w.count("ai_usage"), w.count("ai_ceilings")], [1, 1]);
   w.purge({});
   assert.deepEqual([w.count("ai_usage"), w.count("ai_ceilings")], [0, 0]);
+});
+
+/* T35-44 (N686; DEC-152, DEC-153; K1837): a draft (run-rules R21) is no run; it is the act of the member who asked for it. */
+test("R48, R52 (T35; N686): countAskUsage counts a draft's conversation with mode draft to the member who asked for it, under mode draft in the counter, so the reads of use answer drafts as a mode of their own; a mode other than ask or draft is refused AI_RUN_CONSUME_INVALID, counting nothing; a draft writes no run row and no observation", async () => {
+  const w = await useWorld();
+  const before = JSON.stringify(usageRows(w));
+  for (const mode of ["check", "plan", "extract", "Draft", "asks", "draft "  + "x"])
+    refused(w.runs.countAskUsage({ member: "member:ann", mode, usage: USAGE(), calls: 1, at: at("09:00:00") }), "AI_RUN_CONSUME_INVALID");
+  assert.equal(JSON.stringify(usageRows(w)), before, "nothing counted on a refusal");
+  /* the draft's use, its member's, under its own mode; an ask beside it under its own */
+  assert.deepEqual(w.runs.countAskUsage({ member: "member:ann", mode: "draft", usage: USAGE(), calls: 2, at: at("09:00:00") }),
+    { ok: true, counted: 1, calls: 2, day: "2026-07-01" });
+  assert.equal(w.runs.countAskUsage({ member: "ann", mode: "draft", usage: USAGE({ output_tokens: 1 }), calls: null, at: at("10:00:00") }).calls, 1,
+    "a null calls counts as one, as in a tick's entry");
+  w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE(), calls: 1, at: at("11:00:00") });
+  assert.deepEqual(w.rows(`SELECT member, day, mode, calls, input_tokens, output_tokens FROM ai_usage ORDER BY mode`), [
+    { member: "ann", day: "2026-07-01", mode: "ask", calls: 1, input_tokens: 1000, output_tokens: 200 },
+    { member: "ann", day: "2026-07-01", mode: "draft", calls: 3, input_tokens: 2000, output_tokens: 201 }]);
+  assert.deepEqual([w.count("ai_runs"), w.count("observation_log")], [0, 0], "a draft writes no run row and no observation");
+  /* R51: the administrator's month answers drafts apart; the member's own day counts them in her use */
+  assert.deepEqual(w.runs.aiUsage({ viewer: "admin", month: "2026-07" }).modes.map((m) => [m.mode, m.calls]), [["ask", 1], ["draft", 3]]);
+  assert.deepEqual(w.runs.aiUsageMine({ viewer: "member:ann", day: "2026-07-01" }).used, { tokens: 3401, calls: 4 });
+});
+
+test("R52, R50 (T35; N686; DEC-152, DEC-153): a draft is the act of the member who asked for it — before its first model call aiUseCheck holds it back by the ceiling in force for that member, the copy's included, exactly as that member's ask; with no account serving them AI_NO_ACCOUNT, in words naming a draft; served by the group's API key it is still that member's, its use counted to their day; nothing written by the check", async () => {
+  const w = await useWorld();
+  const check = (member, when) => w.runs.aiUseCheck({ member, mode: "draft", at: when });
+  /* no account: dan has none of his own and the group key is not set */
+  const none = check("member:dan", T0);
+  refused(none, "AI_NO_ACCOUNT");
+  assert.match(none.detail, /^A draft needs a Claude account to serve the member whose act started it/);
+  refused(check(null, T0), "AI_NO_ACCOUNT");
+  refused(check("class:ai/tok-org", T0), "AI_NO_ACCOUNT");
+  /* an account serves ann: under her ceiling, the draft may start; the check writes nothing */
+  const before = w.dump() + JSON.stringify(usageRows(w));
+  assert.equal(check("member:ann", at("00:01:00")), null);
+  assert.equal(w.dump() + JSON.stringify(usageRows(w)), before);
+  /* her own ceiling: drafts and asks count alike, and hold back a draft and an ask alike */
+  w.runs.aiCeilingSet({ member: "member:ann", calls: 2, by: "member:ann" });
+  w.runs.countAskUsage({ member: "member:ann", mode: "draft", usage: USAGE(), calls: 1, at: at("00:02:00") });
+  assert.equal(check("member:ann", at("00:03:00")), null);
+  w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE(), calls: 1, at: at("00:04:00") });
+  const own = check("member:ann", at("00:05:00"));
+  refused(own, "AI_USE_CEILING_REACHED");
+  assert.deepEqual(w.runs.aiUseCheck({ member: "member:ann", at: at("00:05:00") }), own, "exactly as her ask is held back");
+  for (const text of [own.translation, own.detail]) assert.equal(COST.test(text), false, text);
+  /* the copy's ceiling holds a draft too */
+  w.runs.aiCeilingSet({ member: "member:ann", calls: null, by: "member:ann" });
+  w.runs.aiCopyCeilingSet({ calls: 2, by: "admin" });
+  refused(check("member:ann", at("00:06:00")), "AI_USE_COPY_CEILING_REACHED");
+  w.runs.aiCopyCeilingSet({ calls: null, by: "admin" });
+  assert.equal(check("member:ann", at("00:06:00")), null);
+  /* the group's API key serves dan: his draft is his act, counted to his day and held by his ceiling */
+  assert.equal((await w.credentials.groupKeySet({ key: "group-key-secret", by: "admin" })).ok, true);
+  assert.equal(w.credentials.groupKeySwitch({ on: true, by: "admin" }).ok, true);
+  assert.equal(check("member:dan", at("00:07:00")), null);
+  w.runs.countAskUsage({ member: "member:dan", mode: "draft", usage: USAGE(), calls: 1, at: at("00:07:30") });
+  assert.deepEqual(w.rows(`SELECT member, mode, calls FROM ai_usage WHERE member='dan'`), [{ member: "dan", mode: "draft", calls: 1 }]);
+  w.runs.aiCeilingSet({ member: "member:dan", calls: 1, by: "member:dan" });
+  refused(check("member:dan", at("00:08:00")), "AI_USE_CEILING_REACHED");
+  /* tomorrow, free again */
+  assert.equal(check("member:dan", "2026-07-02T00:00:00Z"), null);
 });
