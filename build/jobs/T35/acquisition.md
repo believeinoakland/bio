@@ -51,3 +51,7 @@ What T35-21 touches outside acquisition, for you to route.
 4. **capture's share (T35-22, as B2 told CAPTURE #22):** set `acquisition` on its store and pass `ownHosts` (opts or `store.ownHosts`); add the `archive-unpack` queue kind (`{kind, captureSha, subject, at}`), drained as `op=unpack` by the daemon. `profileOf` gained an optional `parts`; capture's knock pull needs no change.
 5. **Generated artifact:** the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) is stale from this job; regenerated at the layer's close (§14).
 6. **For your record, no action:** `MEMBER_MAX` cannot arise through ooxml's listing while `MEMBER_MAX` = `ARCHIVE_TOTAL_MAX` (one member over it puts the archive over the total, refused whole first). Not a defect; noted in case the figures ever part.
+
+## J3 · COMPLETE
+
+T35-21 complete: N661, the 18 DEC-149 rows, N688 (R17, R25–R27, R38–R41), F16 (R42), K1888 (R20, R43), C-137 (R29). 144/144 module tests; format, architecture, coverage and ownership 0 failures; users' tests as on the base. The record's Completion section has everything. One condition (J2 item 1): my branch loads only after provenance and capture-sources merge; please run my tests then. Module 2,842 lines.
