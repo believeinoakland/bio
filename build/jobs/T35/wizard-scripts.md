@@ -30,6 +30,6 @@ With the source change stashed, this test fails (submission refused `WIZARD_DRAF
 - `checks/format.mjs`: 133 modules, 132 requirements files; 0 failures.
 - `checks/architecture.mjs` wizard-scripts: 23 product files, 52 relative imports; 0 failures.
 - `checks/coverage.mjs` wizard-scripts: 27 of 27 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs` wizard-scripts tranche/T35: 0 failures (re-run after commit, below).
+- `checks/ownership.mjs` wizard-scripts tranche/T35: 0 failures (3 files: the source, the test, this record).
 
 Size (session_01F19u4T5HkFviDXS9qe5X7j): test runs 3, module lines 2273
