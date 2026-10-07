@@ -26,3 +26,7 @@ N636 needs a modules.json edge: extraction's uses gains doctypes (L1, earlier). 
 - `ownership extraction tranche/T35`: 7 files changed; 0 failures.
 
 Size (session_012j4Xu6XxwHWUGxui4G3m5P): test runs 7, module lines 4
+
+## J2 · COMPLETE
+
+T35-25 done on job/T35/extraction (tranche/T35 merged, K1958). N636: fixture registers doctypes' readers; the six K1737 reds clear (red 6). N664: all seven DEC-149 rows, with dec149.test.mjs and an R66 arm in n26.test.mjs naming each string; C-51.1, C-51.4 await stamp. 127/127; format, architecture, coverage (45/45), ownership (7 files) 0 failures. Stale: the plane bundle (L4 close). Record has details.
