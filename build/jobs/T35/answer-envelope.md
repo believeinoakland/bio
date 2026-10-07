@@ -47,3 +47,7 @@ Found for other modules (details in my record, "Found in other modules"):
 2. control-plane (T35-72): `withPagePolicy` is now async (`return await withPagePolicy(res)`); R6's route-level fetch-twice arm is its (B2). Its catalogue-end test (red 19), `rows-before-r43.json`, families, page-policy and envelope's non-door cases are now mine; my copy of the snapshot is re-pinned for 48 T35 owner re-wordings (listed in its `changed.note`).
 3. plane (T35-73): `door.mjs`:24–25 and `index.mjs`:5–6 re-point to `../answer-envelope/index.mjs`; every name they read is exported, except `PUBLISHED_STORE`, `caseReader`, `captureKey`, `storageAbsent`, which stay control-plane's.
 4. setup-page: I hold `NONCE_SLOT` as K2038's literal `__CSP_NONCE__` (exported here as `NONCE_SLOT`); setup-page's export must spell the same.
+
+## J3 · COMPLETE
+
+T35-80 complete on `job/T35/answer-envelope`; B2 and B3 applied. My row's files: paths `bio-plane/src/answer-envelope/` (`index.mjs`, `checks.mjs`, `families.mjs`; 802 lines), tests `bio-plane/test/m/answer-envelope/` (`envelope.test.mjs`, `page-policy.test.mjs`, `families.test.mjs`, `catalogue-end.test.mjs`, `load.mjs`, `rows-before-r43.json`). With the row filled locally: architecture 0 failures, coverage 9 of 9, ownership 0 failures; format 0 failures. Tests 26: 24 pass, 2 red until the row is filled and T35-72 deletes control-plane's `checks.mjs` (after the fill, one red naming only that copy). Record: `build/jobs/T35/answer-envelope.md`, "Completion".
