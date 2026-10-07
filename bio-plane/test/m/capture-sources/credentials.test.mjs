@@ -28,7 +28,7 @@ const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 
 
 /* A group: the founder, a second administrator, members `ann` (owner of P1), `bob` (joined P1), `cy` (invited to
    P1, not joined), `dee` (no project); project P1 and P2 (owned by dee); inquiries Q1 in P1 and Q0 in none. */
-async function world({ key = KEY, clock = null } = {}) {
+async function world({ key = KEY, clock = null, ownHosts = undefined } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) { const st = db.prepare(q);
     return st.columns().length ? st.all(...args.map(bind)).map((r) => ({ ...r })) : (st.run(...args.map(bind)), []); } };
@@ -45,7 +45,7 @@ async function world({ key = KEY, clock = null } = {}) {
   signIn.migrate();
   let t = Date.parse("2026-09-28T00:00:00Z");
   const now = clock || (() => (t += 1000));
-  const c = credentialsOf(ctx, { key, now });
+  const c = credentialsOf(ctx, { key, now, ownHosts });
   await signIn.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
   const enrol = async (id, role = "member") => {
     const a = await m.memberAdd({ memberId: id, cover: `cover of ${id}`, role, by: "admin" });
@@ -63,10 +63,12 @@ async function world({ key = KEY, clock = null } = {}) {
   bundle("Q1", "inquiry", "P1");
   bundle("Q0", "inquiry");
   const raw = () => db.prepare(`SELECT * FROM ${CREDENTIALS_TABLE}`).all();
-  return { db, rc, m, c, raw, storage, supply: (o) => c.credentialSupply({ kind: "login", host: HOST, secret: SECRET, scope: "member", by: "ann", ...o }) };
+  return { db, rc, m, c, raw, storage, ctx, supply: (o) => c.credentialSupply({ kind: "login", host: HOST, secret: SECRET, scope: "member", by: "ann", ...o }) };
 }
 
 const codeOf = (a) => a && a.code;
+/* R65: the group's own hosts, as the composition root hands them in: the Civicsmith's host and the fleet's suffix. */
+const OWN = ["plane.grp.example", ".acct.workers.dev"];
 const CODES = Object.keys(CAPTURE_CREDENTIAL_CHECKS);
 const ENTRY_KEYS = ["credential", "host", "kind", "project", "scope", "supplied_at", "supplied_by", "withdrawn_at", "withdrawn_by"];
 
@@ -132,9 +134,9 @@ test("R55: each refusal, in order, writes nothing and carries its check and tran
   assert.equal(codeOf(await k.supply({})), "CAPTURE_CREDENTIAL_NO_KEY");
   assert.equal(codeOf(await (await world({ key: "" })).supply({})), "CAPTURE_CREDENTIAL_NO_KEY");
   assert.equal(k.raw().length, 0);
-  /* The catalogue rows: eleven, one family, each with its `where` in this module and a translation of a whole
+  /* The catalogue rows: twelve, one family, each with its `where` in this module and a translation of a whole
      sentence or more (N189: one condition per code, K275). */
-  assert.deepEqual(CODES.map((c) => CAPTURE_CREDENTIAL_CHECKS[c].check), Array.from({ length: 11 }, (_, i) => `C-105.${i + 1}`));
+  assert.deepEqual(CODES.map((c) => CAPTURE_CREDENTIAL_CHECKS[c].check), Array.from({ length: 12 }, (_, i) => `C-105.${i + 1}`));
   for (const c of CODES) {
     const row = CAPTURE_CREDENTIAL_CHECKS[c];
     assert.match(row.where, /^src\/capture-sources\/credentials\.mjs [#\w]+ > is-[a-z-]+$/, c);
@@ -577,13 +579,14 @@ test("R55, R57, R63: the family's one home is CAPTURE_CREDENTIAL_CHECKS, and eve
   assert.equal(new Set(checks).size, checks.length, "a C-105 number held twice");
 
   /* Arm C: the governed sites. Every refusal path of the module, driven at its interface. */
-  const w = await world();
+  const w = await world({ ownHosts: OWN });
   const answers = [];
   const own = (await w.supply({ scope: "member", by: "ann" })).credential.credential;
   const p1 = (await w.supply({ scope: "project", project: "P1", by: "ann" })).credential.credential;
   const grp = (await w.supply({ scope: "group", by: "ann" })).credential.credential;
   for (const over of [{ by: "nobody" }, { kind: "cookie" }, { host: "https://x" }, { scope: "team" }, { scope: "group", project: "P1" },
-                      { scope: "project", project: "P9" }, { secret: "" }, { scope: "project", project: "P1", by: "dee" }, {}])
+                      { scope: "project", project: "P9" }, { secret: "" }, { scope: "project", project: "P1", by: "dee" },
+                      { host: "plane.grp.example" }, {}])
     answers.push(await w.supply(over));
   answers.push(await (await world({ key: null })).supply({}));
   const failingInsert = { exec(q, ...a) { if (/^\s*INSERT/.test(q)) throw new Error("disk full"); return w.storage.sql.exec(q, ...a); } };
@@ -615,4 +618,85 @@ test("R55, R57, R63: the family's one home is CAPTURE_CREDENTIAL_CHECKS, and eve
     assert.ok(Object.hasOwn(CAPTURE_CREDENTIAL_CHECKS, name), `${name} is named in an answer and is not a row`);
   /* And every row is answered by a site: no row of the family lacks a refusal path. */
   assert.deepEqual([...new Set(refused.map((a) => a.reason))].sort(), [...CODES].sort());
+});
+
+test("R55, R65: a credential for one of the group's own hosts is refused OWN_HOST, after BAD_HOST and before the scope, writing nothing", async () => {
+  const w = await world({ ownHosts: OWN });
+  for (const [over, code] of [
+    [{ host: "plane.grp.example" }, "CAPTURE_CREDENTIAL_OWN_HOST"],
+    [{ host: "PLANE.Grp.Example" }, "CAPTURE_CREDENTIAL_OWN_HOST"],
+    [{ host: "agent.acct.workers.dev" }, "CAPTURE_CREDENTIAL_OWN_HOST"],
+    [{ host: "deep.agent.acct.workers.dev", scope: "group" }, "CAPTURE_CREDENTIAL_OWN_HOST"],
+    [{ host: "plane.grp.example", scope: "team" }, "CAPTURE_CREDENTIAL_OWN_HOST"],          /* before the scope */
+    [{ host: "plane.grp.example", scope: "project", project: "P9" }, "CAPTURE_CREDENTIAL_OWN_HOST"],
+    [{ host: "plane.grp.example", secret: "" }, "CAPTURE_CREDENTIAL_OWN_HOST"],
+    [{ host: "https://plane.grp.example" }, "CAPTURE_CREDENTIAL_BAD_HOST"],                /* after BAD_HOST */
+    [{ host: "plane.grp.example", kind: "cookie" }, "CAPTURE_CREDENTIAL_BAD_KIND"],
+    [{ host: "plane.grp.example", by: "nobody" }, "CAPTURE_CREDENTIAL_NOT_A_MEMBER"],
+  ]) {
+    const a = await w.supply(over);
+    assert.equal(codeOf(a), code, JSON.stringify(over));
+    assert.deepEqual([a.reason, a.check, a.translation], [code, CAPTURE_CREDENTIAL_CHECKS[code].check, CAPTURE_CREDENTIAL_CHECKS[code].translation]);
+    noLeak(a, SECRET, JSON.stringify(over));
+  }
+  const own = await w.supply({ host: "plane.grp.example" });
+  assert.equal(own.check, "C-105.12");
+  assert.match(own.detail, /one of your group's own/);
+  assert.equal(w.raw().length, 0);
+  /* Not one of them: a parent of a suffix entry, a host beside the Civicsmith's, a look-alike. */
+  for (const host of ["acct.workers.dev", "grp.example", "plane.grp.example.evil.example", HOST]) {
+    const a = await w.supply({ host, scope: "group" });
+    assert.equal(a.ok, true, host);
+  }
+  /* With no own hosts handed in, the arm refuses nothing (F16 low, K1940); the other arms are unchanged. */
+  const open = await world();
+  assert.equal((await open.supply({ host: "plane.grp.example" })).ok, true);
+  assert.equal(codeOf(await open.supply({ host: "https://plane.grp.example" })), "CAPTURE_CREDENTIAL_BAD_HOST");
+});
+
+test("R56, R65: a credential for one of the group's own hosts is never answered for a fetch, one supplied before the refusal included", async () => {
+  /* Supplied while no list was handed in, as before R55 refused them. */
+  const w = await world();
+  const before = (await w.supply({ host: "plane.grp.example", scope: "group" })).credential;
+  const fleet = (await w.supply({ host: "agent.acct.workers.dev", scope: "group" })).credential;
+  const other = (await w.supply({ host: HOST, scope: "group" })).credential;
+  const ask = (host) => w.c.credentialsForFetch({ host, principalPlane: "member:ann", target: "Q0" });
+  assert.equal((await ask("plane.grp.example")).credentials[0].credential, before.credential);
+  assert.equal((await ask("agent.acct.workers.dev")).credentials[0].credential, fleet.credential);
+  /* The composition root hands the list in on a later call: the same store takes it. */
+  assert.equal(credentialsOf(w.ctx, { ownHosts: OWN }), w.c);
+  for (const host of ["plane.grp.example", "PLANE.GRP.EXAMPLE", "agent.acct.workers.dev"]) {
+    const a = await ask(host);
+    assert.deepEqual(a.credentials, [], host);
+    assert.match(a.reason, /^CAPTURE_CREDENTIAL_OWN_HOST: \S+ is one of your group's own hosts, so no credential is used for it and the fetch goes without credentials$/, host);
+    noLeak(a, SECRET, host);
+  }
+  assert.equal((await ask(HOST)).credentials[0].credential, other.credential);
+  /* A call without a list leaves the store's list as it is. */
+  credentialsOf(w.ctx, {});
+  assert.deepEqual((await ask("plane.grp.example")).credentials, []);
+});
+
+test("R55, R56 (DEC-149, credentials.mjs:60, :268, :302, :360, :368): the refusals and fetch reasons name your group's Civicsmith", async () => {
+  const OLD = /\b(?:the|this) (?:plane|instance)\b|this instance's/i;
+  /* :60, C-105.8's translation. */
+  const row = CAPTURE_CREDENTIAL_CHECKS.CAPTURE_CREDENTIAL_NO_KEY;
+  assert.equal(row.translation, "No encryption key is set for your group's Civicsmith, so no credential is stored or used.");
+  /* :268, the supplier who is not a member. */
+  const w = await world();
+  assert.equal((await w.supply({ by: "nobody" })).detail, "the supplier named is not an active member of your group");
+  /* :302, no key at supply. */
+  const k = await world({ key: null });
+  assert.equal((await k.supply({})).detail, "no encryption key is set for your group's Civicsmith, so nothing is stored in the clear");
+  /* :360, no key at a fetch. */
+  k.db.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
+             VALUES ('CRED-x','login','${HOST}','group',NULL,'dee','2026-09-28T00:00:00Z','AAAAAAAAAAAAAAAA','AAAA')`);
+  assert.equal((await k.c.credentialsForFetch({ host: HOST, principalPlane: "member:dee", target: "Q0" })).reason,
+    "CAPTURE_CREDENTIAL_NO_KEY: no encryption key is set for your group's Civicsmith, so no credential is used and the source's refusal stands");
+  /* :368, a ciphertext that will not decrypt. */
+  w.db.exec(`INSERT INTO ${CREDENTIALS_TABLE} (credential_id, kind, host, scope, project, supplied_by, supplied_at, iv, ciphertext)
+             VALUES ('CRED-y','login','${HOST}','group',NULL,'dee','2026-09-28T00:00:00Z','AAAAAAAAAAAAAAAA','AAAA')`);
+  assert.equal((await w.c.credentialsForFetch({ host: HOST, principalPlane: "member:dee", target: "Q0" })).reason,
+    "credential CRED-y will not decrypt under the key of your group's Civicsmith, so the fetch goes without credentials and the source's refusal stands");
+  for (const c of Object.keys(CAPTURE_CREDENTIAL_CHECKS)) assert.doesNotMatch(CAPTURE_CREDENTIAL_CHECKS[c].translation, OLD, c);
 });

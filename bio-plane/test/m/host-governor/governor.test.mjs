@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world } from "./fixture.mjs";
-import { governorOf, governedFetch, retryAfterMs, governorOverStub, governorRoutes, appetiteOf, GOVERNOR }
+import { governorOf, governedFetch, retryAfterMs, governorOverStub, governorRoutes, governorOp, appetiteOf, GOVERNOR }
   from "../../../src/host-governor/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 
@@ -257,6 +257,23 @@ test("R12: an appetite that is present and not a positive finite number is refus
   // the one rule both the service and the op judge by
   assert.equal(appetiteOf(-1), null);
   assert.equal(appetiteOf("2.5"), 2.5);
+});
+
+test("R12: BAD_APPETITE's words say \"your group's default\", never \"the instance\" (DEC-149; T35-17, the sweep's row index.mjs:44)", async () => {
+  const WORDS = "appetite_per_min must be a positive number, or omit it to reset to your group's default";
+  const w = world();
+  const answers = [w.g.governorConfig({ host: "b.example", appetite_per_min: -1 }),
+                   w.g.governorConfig({ host: "b.example", appetite_per_min: "abc" })];
+  // the op answers the same refusal before the store is asked
+  const op = await governorOp("governorconfig", new URL("http://x/api/?op=governorconfig&host=b.example&appetite_per_min=0"),
+                              { fetch: async () => { throw new Error("asked the store"); } });
+  assert.equal(op.status, 400);
+  answers.push(op.body);
+  for (const r of answers) {
+    assert.equal(r.detail, WORDS);
+    assert.equal(r.translation, WORDS);
+    assert.doesNotMatch(JSON.stringify(r), /instance|plane|\bcopy\b|server/i);
+  }
 });
 
 test("R13: state answers one host's row or every row by host, each with its full fields, and never creates one", () => {

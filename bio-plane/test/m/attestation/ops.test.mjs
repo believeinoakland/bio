@@ -26,7 +26,7 @@ test("R1, R2: op=attest is a POST over the working bucket, asks the store's regi
                    { body: { ok: false, error: "attest is a POST" }, status: 405 });
   const calls = [];
   assert.deepEqual(await attestOp(post({ sha256: s }), {}, storeAnswering(() => null), helpers(calls)), { absent: "attest" });
-  assert.deepEqual(calls, [["absent", "attest", "this instance has no evidence storage configured"]]);
+  assert.deepEqual(calls, [["absent", "attest", "your group's Civicsmith has no evidence storage configured"]]);
   /* A malformed digest: attest's own refusal and status, with the store and class beside it. */
   const bucket = evidence({});
   const bad = await attestOp(post({ sha256: "nope" }), { CAPTURES: bucket }, storeAnswering(() => null), helpers());

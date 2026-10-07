@@ -213,7 +213,7 @@ export function readDriveAddress(address) {
   return { ...base, shape: "unknown", harvestable: false,
     why: `this is a Drive host (${host}) with a path shape this recogniser does not read, so it is `
        + "named rather than harvested. A Drive address whose shape is unread is not a document "
-       + "this instance can promise to have captured." };
+       + "your group's Civicsmith can promise to have captured." };
 }
 
 /** The export address, composed BY THE PLANE from the file id and the kind — the
@@ -251,7 +251,7 @@ export function driveHop(drive, { retrieved, resolved = null, detected = null } 
       `export address ${drive.exportAddress}`,
       `export format ${drive.format} (${drive.mimetype})`,
       `producer ${DRIVE_PRODUCER}`,
-      `the export address was COMPOSED BY THIS INSTANCE from the file id and the kind carried in `
+      `the export address was COMPOSED BY YOUR GROUP'S CIVICSMITH from the file id and the kind carried in `
         + `${drive.address}, and no part of it was read from the request (D-112)`,
       `the export endpoint is canonicalised to ${EXPORT_HOST}${drive.host === EXPORT_HOST ? "" : `, though the link named ${drive.host}`}`,
       resolved && resolved !== drive.exportAddress ? `redirected to ${resolved}` : null,
@@ -441,19 +441,19 @@ export function classifyDriveBaseline({ drive, locator, rows, retrievals = [] })
     : docSaid ? `the register's profile says ${format}` : "the register's profile names no format";
   if (fromExport && !fromPage) return { verdict: htmlSaid ? "undetermined" : "export", ...facts,
     basis: htmlSaid
-      ? `the plane recorded fetching the export address, but ${said}; the two disagree and neither is taken over the other`
-      : `the plane recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said}` };
+      ? `your group's Civicsmith recorded fetching the export address, but ${said}; the two disagree and neither is taken over the other`
+      : `your group's Civicsmith recorded fetching the export address ${drive.exportAddress} (CAP-8), and ${said}` };
   if (fromPage && !fromExport) return { verdict: docSaid ? "undetermined" : "shell", ...facts,
     basis: docSaid
-      ? `the plane recorded fetching ${fetchedAddress}, not the export, but ${said}; the two disagree and neither is taken over the other`
-      : `the plane recorded fetching ${fetchedAddress}, not the export address — Google serves the application there, not the document — and ${said}` };
+      ? `your group's Civicsmith recorded fetching ${fetchedAddress}, not the export, but ${said}; the two disagree and neither is taken over the other`
+      : `your group's Civicsmith recorded fetching ${fetchedAddress}, not the export address — Google serves the application there, not the document — and ${said}` };
   if (fromExport && fromPage) return { verdict: "undetermined", ...facts,
-    basis: `the plane recorded these bytes from BOTH the export and ${fetchedAddress}; which one the baseline is cannot be told` };
+    basis: `your group's Civicsmith recorded these bytes from BOTH the export and ${fetchedAddress}; which one the baseline is cannot be told` };
   /* No direct retrieval on record: the register alone. */
   if (row.locator === drive.exportAddress && !htmlSaid) return { verdict: "export", ...facts,
-    basis: `the register row names the export address and ${said}; the plane holds no retrieval record for these bytes` };
+    basis: `the register row names the export address and ${said}; your group's Civicsmith holds no retrieval record for these bytes` };
   if (htmlSaid && row.locator !== drive.exportAddress) return { verdict: "shell", ...facts,
-    basis: `${said} for a row at the document address; the plane holds no retrieval record for these bytes, so this rests on the register alone` };
+    basis: `${said} for a row at the document address; your group's Civicsmith holds no retrieval record for these bytes, so this rests on the register alone` };
   return { verdict: "undetermined", ...facts,
-    basis: `the plane holds no direct retrieval record for these bytes and ${said}` };
+    basis: `your group's Civicsmith holds no direct retrieval record for these bytes and ${said}` };
 }

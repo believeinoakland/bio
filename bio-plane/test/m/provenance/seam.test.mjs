@@ -19,11 +19,12 @@ test("R58: PROVENANCE_ACT_CHECKS is exported whole (C-103.1–C-103.7), each row
     assert.ok(typeof r.translation === "string" && r.translation.split(/\s+/).length >= 8, code);
     assert.equal(r.translation.includes(code), false, `${code}: a translation in words, never the machine code`);
   }
-  /* Translations unchanged by the split (N512 moved no words). */
+  /* Translations unchanged by the split (N512 moved no words); C-103.7's re-worded by DEC-149's sweep (T35-18, plan
+     rule 4: "the instance" goes, "your group's Civicsmith" names it), its code and number unchanged. */
   assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_MALFORMED.translation, "A receipt names the captured document's fingerprint, "
     + "the address it was fetched from and when, and one of those was missing or not in its form, so no receipt was signed.");
-  assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation, "This instance holds no key to sign its receipts with, so "
-    + "this receipt was not signed, and nothing claims that it was. Whoever runs the instance can add one.");
+  assert.equal(PROVENANCE_ACT_CHECKS.RECEIPT_NO_KEY.translation, "Your group's Civicsmith holds no key to sign its receipts "
+    + "with, so this receipt was not signed, and nothing claims that it was. Whoever hosts your group's Civicsmith can add one.");
   assert.equal(PROVENANCE_ACT_CHECKS.NO_BUNDLE.translation, "This did not say which document it is about, so nothing was done.");
   assert.equal(DOORBELL_ORIGIN, "doorbell");
   assert.equal(P.DOORBELL_VIA, "doorbell");

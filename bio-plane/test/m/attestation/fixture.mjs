@@ -119,15 +119,17 @@ export function world({ group = "test-group", now = "2026-09-27T03:00:00.000Z", 
       return attestationOf({ storage: st }, { record, provenance: prov, signingKey: key, instanceName,
                                               now: at ? () => at : () => clock.now });
     },
-    /** Promote an information bundle with a register document for each capture. */
-    promoteInfo(id, { captures = [], docs = null } = {}) {
+    /** Promote an information bundle with a register document for each capture. `replay` promotes it as a replay,
+     *  which holds the register verbatim (provenance's C-18 arms exempt a replay), for a world built from what an
+     *  earlier act recorded. */
+    promoteInfo(id, { captures = [], docs = null, replay = false } = {}) {
       const files = [{ path: "bundle.md", text: infoMd(id) }];
       for (const c of captures) files.push({ path: c.path, text: c.text });
       files.push({ path: "data/provenance.json",
                    text: JSON.stringify({ documents: docs ?? captures.map((c) => provDoc(c)) }, null, 2) });
       return promotion.promote({
         bundleId: id, base: null, snapKey: `k${Math.random().toString(16).slice(2)}`, author: "member:alice",
-        files, meta: { object_type: "information" },
+        files, meta: { object_type: "information" }, ...(replay ? { replay: true } : {}),
         register: captures.map((c) => ({ sha256: sha(c.text), path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })),
       });
     },
