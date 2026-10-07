@@ -57,3 +57,11 @@ Signatures made elsewhere complete a release with `node bio-plane/scripts/releas
 - `format`: 0 failures; `architecture … bundler`: 0 failures; `coverage … bundler`: 30 of 30 live ids named, 0 failures; `ownership … bundler tranche/T36`: 0 failures (re-run after the commit below).
 
 Size (session_01AVSxAcVVnwvGFa9niTqNUo): test runs 11, module lines 7856
+
+## J2 · REPORT
+
+Found in other modules (also in my record's Completion):
+1. **installer** (newgroup): its `containerDescriptor` reads one `container.json` part. A member with two or more classes now carries one `Container` part per class, `container/<class_name>.json` (file-scanner: `container/FileScanner.json`, `container/SafeViewRenderer.json`). To install file-scanner the installer must read every `Container` part of a member. One-class members (agent-runner) are unchanged, byte for byte.
+2. **Red 10** covers two assertions in `deploybindings.test.mjs`: the service-binding list (:165) and the pre-flight target list beside it, which now names `file-scanner`. One cause; both clear when T36-49 adds `FILE_SCANNER`.
+3. **file-scanner** (T36-5): beyond B2's marker contract, its wrangler.jsonc `containers[]` entries must each name their class by `class_name` (`FileScanner`, `SafeViewRenderer`), or `deploy-fleet.mjs` refuses `[CONTAINER_UNDESCRIBED]` (config and marker classes disagree).
+4. **bundler's requirements** (yours to word, if wanted): `bundles.mjs --install-dirs` (R30's install list, B2) is not stated in R21.
