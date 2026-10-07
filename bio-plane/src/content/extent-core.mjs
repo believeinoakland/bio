@@ -9,7 +9,9 @@
  * `refusal` helper's one table, the comments that described the catalogue's own file, the comments that named a
  * check or suite T20 deleted as live (N469, re-pointed to the module test that proves the claim), and the comments
  * that named the catalogue or the legacy store (both deleted in T19) as live (T22) changed. Every answer, finding and
- * refusal is the catalogue's.
+ * refusal is the catalogue's, but for two `detail` sentences (the `dom` arm's and the unlanded kind's), which DEC-149
+ * reworded in T35 (T35-26: the software is not called "this plane" to a member); their codes, checks and translations
+ * are unchanged.
  *
  * THE ALGEBRA IS NOT COPIED: `CONTENT_EXTENT_KINDS`' eight, `CONTENT_EXTENT_A1_RE`, `rangeCorners`, `a1ToRowCol`,
  * `canonicalExtent`, `describeExtent` and `contentCitedAs` are read from `text-chain` (its R92–R98), byte-identical to
@@ -278,8 +280,8 @@ export function checkContentExtent(extent, ctx = {}) {
       `no extent was supplied and none could be read from the leg`);
   if (e.kind === CONTENT_EXTENT_KIND_NO_PRODUCER)
     return refusal("CONTENT_EXTENT_NO_PRODUCER",
-      `extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a `
-      + `dom address yet (CONTENT-HTML), so a row minted against one would be an address into a `
+      `extent kind 'dom' names a region of an HTML document. Nothing produces a dom address `
+      + `yet (CONTENT-HTML), so a row minted against one would be an address into a `
       + `grammar no producer writes and no reader can evaluate`);
   const row = CONTENT_EXTENT_KINDS[e.kind];
   if (!row)
@@ -288,8 +290,8 @@ export function checkContentExtent(extent, ctx = {}) {
       + `${Object.keys(CONTENT_EXTENT_KINDS).join(', ')}`);
   if (!row.landed)
     return refusal("CONTENT_EXTENT_UNREADABLE",
-      `extent kind '${e.kind}' (${row.human}) is named in the grammar and this plane cannot yet `
-      + `evaluate what it covers, so it mints nothing. The pdf-page and document arms landed with `
+      `extent kind '${e.kind}' (${row.human}) is named in the grammar and what it covers cannot `
+      + `yet be evaluated, so it mints nothing. The pdf-page and document arms landed with `
       + `REC-82 and the other three follow with REC-85`);
   if (e.kind === 'pdf-page') {
     if (!Number.isInteger(e.page) || e.page < 0)
