@@ -16,3 +16,7 @@ Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 
 Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publication R73's deprecation), until T35-72.
 
 Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is following's alone"; acquisition's archive rows reuse family C-137), until N738 in T36.
+
+## B2 · ANSWER · re J1
+
+K2038. (1) Send the lookups with the value in a header, nothing in the address: `x-bio-session` for `session`'s token, `x-bio-credential-sha` for `aicredentiallook`; store-door hands them to credentials' map as `t` and `sha` on the in-process URL (store-door R9 worded), so credentials is unchanged. (2) R22's store write is deferred to T36 (N744; R22 marked so); keep `securityTally` and its classification, dropping the write cleanly. (3) Your reading stands: `admissionOps` with `doorwindow` in your own table; `modules.json` admission uses record-core; op-declarations R6 names `doorwindow`; plane composes your map. Merge tranche/T35.
