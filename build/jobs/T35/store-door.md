@@ -62,3 +62,19 @@ Size (session_01MXpTEk4ANkFVxAzUYMNVuY): test runs 9, module lines 512
 ## J3 · REPORT
 
 Correction to J2's ownership line: I ran it before committing. Run on HEAD with my row empty, `ownership store-door tranche/T35` gives 11 files and 10 failures: my ten new files are outside the empty `paths`, which B1 expects. With the row filled in as J2 lists it (run locally, not committed), it gives 11 files and 0 failures. Nothing else in J2 changes.
+
+## J4 · COMPLETE
+
+B3 and B4 applied (commit on `job/T35/store-door`; `tranche/T35` merged as B3 asked).
+- **R9 (K2038, K2041 (a)):** `dispatch` reads `x-bio-session`, `x-bio-grant` and `x-bio-credential-sha` (`SESSION_HEADER`, `GRANT_HEADER`, `CREDENTIAL_SHA_HEADER`). It sets each header's value on the in-process URL that `store.routes(url, body, grant)` receives, overriding any query value: the session as `session` and `t`, the grant as `grant`, the digest as `sha`.
+  - The grant is still also handed as the third argument.
+  - A header that is absent leaves the URL as the Worker sent it. This keeps parameters that are not credentials, such as capture's `loadcapturesession` `session` id and extraction's `session=1` flag, and the grant ids that review, wizard-scripts, filing-templates and docket revoke by.
+  - R11's read log takes the read's arguments before the headers are handed on, so no session or digest is logged.
+- **K1986:** `askusage` now passes `b.mode ?? "ask"` to `countAskUsage`. A draft's usage counts under `draft`; ai-runs refuses any other mode.
+- **K2041 (b):** noted. Architecture, run with my row filled in locally: 0 failures.
+
+Tests: `node --test bio-plane/test/m/store-door/`: 36 pass, 0 fail. New: an R9 case for the three headers, through credentials' `session` and `aicredentiallook` and answers' `answercheck` over a real record. R11's `askusage` case now covers `draft`, `run` refused, and the absent mode as `ask`. Still tested against an untracked copy of `control-plane/checks.mjs` at `answer-envelope/checks.mjs`, now removed; I re-run after T35-80 merges, as B4 (c) says.
+
+Checks on HEAD, with my row empty as on the tranche: format 0 failures; architecture 0 failures; coverage 12 ids unnamed and ownership 10 failures, both because the row is empty (expected). With the row filled in locally: architecture 0 failures, coverage 12 of 12 named, ownership 11 files and 0 failures.
+
+Size (session_01MXpTEk4ANkFVxAzUYMNVuY): test runs 12, module lines 533
