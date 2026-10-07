@@ -84,6 +84,7 @@ Terms.
 
 - `record-grammar`: `ID_TABLE`, `isHypothesisId` (R3, R21).
 - `civil-time`: due-date computation with basis kinds, uncertain dates, RRULE, `validAt`, trace (R1, R9, R10).
+- `extraction` (L4): `noSha` (its R63), R28's `NO_SHA` (K1968).
 - `connection-grammar`: shape, owner registry, battery (R18).
 - `record-core`: `transact`, `allocId`, `declareTable` (R3, R13, R22).
 - `membership`: `viewerPredicate`, `listenerRefusal`, projects (R12, R16, R22, R26).
