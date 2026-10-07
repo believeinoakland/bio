@@ -36,3 +36,7 @@ Size (session_014x9ruBn6FrdPiY5Dafkq2k): test runs 7, module lines 1265
 ## J2 · REPORT
 
 Found in another module (case-authoring's case document; case-grammar's blocks): no writer of the case document states a member finding's subject_entity, so K2002's body key cannot narrow a member's criteria rows in any document written today. R21 then reads every row of the standard: a member is judged a benchmark's only when every body's row is binds: false, so a benchmark row beside a binding row for another body lets 'violated' pass. R21 reads subject_entity from the member's case_roles: or case_conclusions: row when present; stating it there (the member's subject_entity at its pinned bytes) is case-authoring's and case-grammar's, a format addition for N717 or later. Also: program.mjs is not stale (R21 is not in the standalone program; the R13 test passes after merging tranche/T35), so nothing to regenerate for this job.
+
+## J3 · COMPLETE
+
+T35-58 applied: R21 checkStandardsUse (bio-plane/src/case-checker/standards.mjs), on J1's readings as B2/K2002 answered them, body key included. Tests: 44 pass, 0 fail (R21: 9 tests). Checks: format, architecture, coverage (21 of 21), ownership: 0 failures each. program.mjs not stale. Record: build/jobs/T35/case-checker.md, Completion section. One finding reported as J2.
