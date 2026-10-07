@@ -23,3 +23,4 @@
 - N722 · affordances, op-declarations · DEC-171 (UX-DESIGN U100): the `connect` screen is named "The assistant" (Settings › The assistant) as an interface word in the registry · K1957 · hard reason: as N721.
 - N723 · membership · R83's `MODULE_ORDER` names `law-relations` (K1961), clearing T35's red 25 · K1961 · hard reason: one job per module (membership's T35 job, T35-14, merged; L2 closed).
 - N724 · office-readers, extraction · a `.docx` table's cells held in the reading as office-readers R30 holds a sheet's (today `{table, ref, rows, cols}` only, R11; a PDF table not at all), so retrieval R74 can name a document table's date or amount column (RETRIEVAL #13 J2 (2)) · K1972 · hard reason: the order (office-readers L2 and extraction L4 closed).
+- N725 · provenance · a read of receipts by capture, so standards R38's `version_basis` need not read all of `receipts()` (STANDARDS #9 J2) · K1973 · hard reason: the order (provenance L3 closed); fine at today's volumes.
