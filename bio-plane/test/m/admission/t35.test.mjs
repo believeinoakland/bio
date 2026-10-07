@@ -85,6 +85,11 @@ test("R20: a sentinel credential sent by header, by body and by query to one op 
     assert.equal(url.searchParams.has("token"), false);
     const a = await A.admit({ url, env, op: "index", spec: OPS.index, method: "GET", presented: { cred: null }, doAnswer, credential });
     assert.deepEqual([a.caller.cls, a.caller.viaSession], ["member", true]);
+    /* the same value in the header and the query: the header's is the one presented, and the address loses it */
+    const twice = requestOf({ token: S.ann, via: "header", params: { token: S.ann } });
+    const tc = A.presentedCredential(twice);
+    A.queryGate(twice.url, "index", tc);
+    assert.deepEqual([tc.inAddress, twice.url.searchParams.has("token")], [false, false]);
     /* negative control: the query's own credential stays where it is the one presented (T35's deprecated form) */
     const q = urlOf({ token: S.ann });
     A.queryGate(q, "index", A.presentedCredential({ url: q }));

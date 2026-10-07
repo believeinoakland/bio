@@ -2,6 +2,35 @@
 
 **Status** · session_01UzvBSSmkGxV7XjL9Ky2FMv · depth 2 · WORKING · handled B2
 
+## Completion
+
+**Entries applied (T35-71; K1874, K1875, K1881, K1934 (5); B2 = K2038).** Code `bio-plane/src/admission/` 882 → 1,260 lines (`index.mjs`, `checks.mjs`, new `window.mjs`).
+- R20 (F1): `presentedCredential({req, url, body})` answers `{token, secret, inAddress}` and never throws. It reads the token from an exact `Authorization: Bearer` header, else a JSON body's `token`, else (T35 only) the query; the secret from the body, else the query. Every gate now judges that answer through an optional `credential` argument on `queryGate`, `aiCredentialPresented`, `admit` and `readerOf`. Without it they read the URL alone, so control-plane's current calls are unchanged. `queryGate` drops a query `token` or `secret` that sits beside a header or body credential. `CREDENTIAL_IN_ADDRESS` is exported.
+- R6, R20 (K2038 (1)): the store lookups carry the session token in `x-bio-session` and the digest in `x-bio-credential-sha`. The address holds neither.
+- R5 (F12): the four bindings are compared as SHA-256 digests, every byte, with no early exit, and every binding's liveness is asked on each call, so the time taken does not depend on what was presented.
+- R10 (K1934 (5)): `expired: true` is refused 401 `AI_CREDENTIAL_EXPIRED` (C-29.30) before any scope is judged; a credential both revoked and expired is answered revoked. R16: an expired credential reads as no one.
+- R21 (F4; K2038 (3)): `countryOf`, `sourceOf` (capture R56's digest when `KNOCK_FINGERPRINT_KEY` is bound, else `null` and the store answers it), the estimator, `doorRetryAfter`, and `doorRateLimited` (429 `DOOR_RATE_LIMITED`, C-38.9, with `stated` and `retryAfter`). `doorWindowGate` counts public ops only and fails open, logging the correlation id only. The store side is `window.mjs`: `admissionOf` declares `admission_door_window` (exempt from purge, `export: never`; it holds source, bucket and count only), the fingerprint comes from `captureOf(ctx).sourceFingerprint`, and `admissionOps` serves the store-internal route `doorwindow`.
+- R22 (N703; K2038 (2)): `securityKindOf` and `securityTally` classify every arm and answer `{kind, country}` (`country` is null when the credential names a member) or `null`. They write nothing: the store write is deferred to N744.
+- R14: the two new rows are added. R17's test is re-worded for R21's window.
+
+**Deferred.** R22's store write (K2038, N744). Nothing else.
+
+**Found in other modules (also in my REPORT J2 to BOB).**
+- control-plane (its tests, not its code): from my merge until store-door's R9 hand-over (T35-81) merges, 83 more control-plane tests fail, all `NOT_AUTHENTICATED`. The suite goes from 178/4 on the tranche to 95/87 on my branch, because credentials' map still reads `t` and `sha` from the query. Either store-door's hand-over merges before admission, or the 83 are a named red. That is BOB's call.
+- setup-page red 35 clears only when control-plane passes the request or credential to `admit` (T35-72), not at my merge.
+- control-plane (T35-72) must call `presentedCredential` once, pass `credential` to the gates, add `deprecated` when `inAddress` is true, call `doorWindowGate` first for public ops, stamp `source` and `country`, and call `securityTally` for every refusal. plane (T35-73) must compose `admissionOps` from `window.mjs`.
+- No generated artifact is made stale by this job, as far as I know. The plane bundle is regenerated at layer close.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/admission/`: `ℹ tests 32`, `ℹ pass 32`, `ℹ fail 0`.
+- Users of admission: `test/m/control-plane/` 95 pass / 87 fail (tranche baseline 178 / 4; the 83 new failures are the hand-over above). `test/m/plane/` 107 / 8, the same as baseline.
+- `node checks/format.mjs`: `format: 133 modules, 132 requirements files; 0 failures`.
+- `node checks/architecture.mjs … admission`: `architecture: 13 product files, 26 relative imports (0 naming no tracked file, not judged); 0 failures`.
+- `node checks/coverage.mjs … admission`: `coverage: 1 modules, 22 of 22 live requirement ids named by a test; 0 failures`.
+- `node checks/ownership.mjs … admission tranche/T35`: `ownership: 10 files changed by admission between tranche/T35 and HEAD; 0 failures`.
+
+Size (session_01UzvBSSmkGxV7XjL9Ky2FMv): test runs 20, module lines 1260
+
 ## J1 · QUESTION
 
 Three of my T35 requirements need a store side that no module provides on `tranche/T35` @ 301119dbe8. Each is BOB's (another module's change, or a `modules.json` edge). My best reading for each; I carry on with everything else meanwhile (R5's constant time, R10's expiry, R20's `presentedCredential` threaded through every gate, R22's classifier, R21's estimator and its row).

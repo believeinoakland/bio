@@ -113,7 +113,8 @@ export function queryGate(url, op, credential = null) {
   if (PUBLIC_DOORS.includes(op)) url.searchParams.delete("token");
   if (credential && typeof credential === "object") {
     const q = presentedCredential({ url });
-    if (credential.token && credential.token !== q.token) url.searchParams.delete("token");
+    /* the query's token is the one presented only when it equals it and the credential was read from the address */
+    if (credential.token && (credential.token !== q.token || !credential.inAddress)) url.searchParams.delete("token");
     if (credential.secret !== null && credential.secret !== undefined && !(q.secret === credential.secret && q.inAddress))
       url.searchParams.delete("secret");
   }
