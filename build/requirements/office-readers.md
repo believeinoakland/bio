@@ -1,6 +1,6 @@
 # office-readers — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/docx.mjs`, `bio-plane/src/pptx.mjs`, `bio-plane/src/formats-xlsx.mjs`, `bio-plane/src/csv.mjs`. R9 (D-415, K36) built in T2. R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14, carried in `build/plan/next.md`). Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-10 (entry C:A-3; B §(d) EVENTS 3; K1448, K1505 (11)): R30 (typed cells, the contract `odf-reader` R46 shares) and R31 (office metadata in `text()`) added; not yet met (T33-10). P6: wiring only; if the job would take the module past about 4,000 lines, `formats-xlsx` splits first (BOB's, K617).
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/docx.mjs`, `bio-plane/src/pptx.mjs`, `bio-plane/src/formats-xlsx.mjs`, `bio-plane/src/csv.mjs`. R9 (D-415, K36) built in T2. R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14, carried in `build/plan/next.md`). Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-10 (entry C:A-3; B §(d) EVENTS 3; K1448, K1505 (11)): R30 (typed cells, the contract `odf-reader` R46 shares) and R31 (office metadata in `text()`) added; not yet met (T33-10). P6: wiring only; if the job would take the module past about 4,000 lines, `formats-xlsx` splits first (BOB's, K617). T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-9: R32 added (K1888: each reader's answer carries an `active` list, read and never run) and R12 amended (F18; K1881: the size guard counts every part read, images included, through `ooxml`'s part cap); R33 added and R32 amended (K1903: the macro-enabled flavours read as their plain twins; `xl4-macrosheet` in `active`); not yet met (T35-9).
 
 ## Public
 
@@ -182,6 +182,14 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
   from the small central-directory-adjacent metadata (docx: none extra; pptx:
   `ppt/presentation.xml`, so slide numbering survives; xlsx: `xl/workbook.xml`, so sheet
   names/order/hidden state survive) still run and are reported.
+  The guard counts every part read, not only text parts (F18; K1881): every part these
+  entries inflate (text parts, images, R11; embedded parts, R7; `.rels` parts, the core
+  properties, the VBA project, R32) is read through `ooxml`'s part cap (its R31), so a part
+  whose declared size exceeds `MEMBER_MAX`, or any part of a file whose declared total
+  exceeds `ARCHIVE_TOTAL_MAX`, is never inflated, and what needed it is stated by the
+  limit's name where that part's failure is stated today (an `undetermined` link or entry,
+  `images:null` with `imagesWhy`, an `active` item with `read:false`), never omitted
+  silently. *(not yet met: T35)*
 - **R13** `csvEntry`: the guard compares the BODY's own byte length (after any BOM), not a
   declared-uncompressed figure — a CSV has no central directory to sum — against
   `MEASURED_CSV_TEXT_BOUND_BYTES`. Over the bound, `structure()` and `text()` both carry the
@@ -241,7 +249,55 @@ second copy that could drift.
 - **R30** (C:A-3; K1448) `xlsxEntry.text()` and `csvEntry.text()` give each sheet a `cells` list, `[{source, value, type, declared, cached, formula}]`, one per cell holding a value or a formula, in row then column order. `source` is the cell's `sheet-cell` reference (R17). `value` is the cell's stored lexical value exactly as the file holds it (xlsx `<v>`, an inline string's text, or a resolved shared string; a csv field's decoded text), never re-rendered through a binary float, so `0.1` stays `"0.1"`. `type` is one of `number`, `text`, `boolean`, `date`, `time`, `error` (`time` given by `odf-reader` alone), read only from what the file declares (xlsx `t`: absent or `n` number, `s`, `str` and `inlineStr` text, `b` boolean, `d` date, `e` error); a date implied only by a cell's style is not inferred; every csv field is `text`. `declared` is the format's own type token as written (`null` for csv). For a cell carrying `<f>`, `formula` is its text and `cached` its cached `<v>` (`null` when the file carries none), the same pair R10's `formula` item holds; otherwise both are `null`. Nothing is recalculated (R10's rule: a cached value is the file's statement, never this module's computation). A cell whose shared string cannot be resolved, or a csv field under an undetermined encoding (R11), keeps its entry with `value: null` and stays in `undetermined`. Over the size guard (R12, R13) `cells` is `null`, never `[]`. `cells` is the contract `odf-reader` R46 gives `.ods` sheets, field for field.
 - **R31** (B §(d) EVENTS 3; K1505 (11)) `docxEntry.text()`, `pptxEntry.text()` and `xlsxEntry.text()` also carry `metadata`: `{author, lastModifiedBy, created, modified, source: "docProps/core.xml"}`, the core-properties item's `creator`, `lastModifiedBy`, `created` and `modified` (R10) exactly as the part writes them (W3CDTF strings unchanged), each `null` when absent; `metadata` is `null` when there is no readable core part, and the reason is in `undetermined`. It is what the file states about itself, the one source `content` hands `events` for an edit act's author and dates; this module asserts no act (R24). csv's `metadata` is always `null` (the format carries none).
 
-Errors: none of R1–R31 ever throws. A precondition this module cannot verify (bytes that
+#### Active content (T35-9)
+
+- **R32** (K1888) `docxEntry`, `pptxEntry` and `xlsxEntry`: `structure()` and `text()` both
+  carry `active`, the same list from one builder: every part of the file that can act when
+  it is opened, found and read, never run. csv's `active` is always `[]` (the format can
+  carry none). One item per finding, in central-directory order of its `part`, and within
+  one `.rels` part in that part's order:
+  - `{kind:"vba-project", part, read, why, project, modules, autoRun, suspicious}` for each
+    member whose name's last segment is `vbaProject.bin` (without regard to case), read
+    through `ooxml.readVbaProject` (its R32): `modules` the module names, `autoRun` and
+    `suspicious` its lists against `ooxml`'s tables; when that read refuses, `read:false`,
+    `why` its refusal, the other fields `null`, the item still listed.
+  - `{kind:"activex", part}` for each member under the format's own `activeX/` directory
+    (`word/activeX/`, `ppt/activeX/`, `xl/activeX/`).
+  - `{kind:"ole-object", part}` for each member under the format's own `embeddings/`
+    directory whose name's last segment begins `oleObject` (without regard to case).
+  - `{kind:"embedded-file", part}` for every other member under that `embeddings/`
+    directory (the parts R7's `intra` links name).
+  - `{kind:"external-target", part, type, target}` for every external relationship
+    (`ooxml` R16's `external`) whose type is not the hyperlink type
+    (`…/relationships/hyperlink`, which R7's `links` already carry): `part` the `.rels`
+    part holding it, `type` and `target` as written.
+  - `{kind:"xl4-macrosheet", part}` (xlsx, K1903) for each member under `xl/macrosheets/`
+    (an Excel 4.0 macro sheet).
+  - `{kind:"unread", part, why}` for a `.rels` part `ooxml.walkRels` could not read or
+    parse (its `undetermined`): the list MAY be missing items, stated, never read as none.
+  `active` is `[]` only when nothing was found and nothing went unread. It reads names
+  from the central directory, the `.rels` parts and the VBA project, so it is carried in
+  full over the text size guard (R12). This module asserts no threat (R24): an item says
+  the file can act, not that it is malicious. *(not yet met: T35)*
+
+- **R33** (K1888, K1903) The macro-enabled flavours are read as their plain twins
+  (`ooxml` R10): `docxEntry` reads `.docm` and `.dotm`, `xlsxEntry` `.xlsm`, `.xltm` and
+  `.xlam`, `pptxEntry` `.pptm`, `.potm`, `.ppsm` and `.ppam`, through the same `parts()`,
+  `structure()` and `text()` with every requirement above unchanged; R4's "discriminated as
+  the entry's own format" holds for a twin's `variant` as for the plain row. Their
+  `structure()` and `text()` answers carry `variant` (`ooxml.discriminate`'s, e.g.
+  `"docm"`; `null` for a plain file, absent for csv), and their `active` (R32) lists the VBA
+  project. `detect(null, contentType)` also answers `{format, confidence:"likely",
+  signals}` for each twin's package content type (`application/vnd.ms-word.document.macroEnabled.12`,
+  `application/vnd.ms-word.template.macroEnabled.12`, `application/vnd.ms-excel.sheet.macroEnabled.12`,
+  `application/vnd.ms-excel.template.macroEnabled.12`, `application/vnd.ms-excel.addin.macroEnabled.12`,
+  `application/vnd.ms-powerpoint.presentation.macroEnabled.12`,
+  `application/vnd.ms-powerpoint.template.macroEnabled.12`,
+  `application/vnd.ms-powerpoint.slideshow.macroEnabled.12`,
+  `application/vnd.ms-powerpoint.addin.macroEnabled.12`), with `format` the twin's.
+  *(not yet met: T35)*
+
+Errors: none of R1–R33 ever throws. A precondition this module cannot verify (bytes that
 are not this format, a value `recognise`-style helpers were not asked to check) is answered
 as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 
@@ -256,7 +312,9 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
   `normalizePartName`, `discriminate` (the full magic + parts + declared-content-type
   discrimination), `walkRels`/`parseRels`/`relsPartFor`, `sizeGuard` and
   `declaredTextBytes` with the measured bound `MEASURED_OOXML_TEXT_BOUND_BYTES`,
-  `CORE_PROPERTIES_PART`/`readCoreProperties`, and `withContainerImages`. `csv.mjs` uses
+  `CORE_PROPERTIES_PART`/`readCoreProperties`, `withContainerImages`, and (T35-9)
+  `readVbaProject` with `VBA_AUTORUN_NAMES`/`VBA_SUSPICIOUS_KEYWORDS` and the limits
+  `MEMBER_MAX`/`ARCHIVE_TOTAL_MAX` (its R30–R33). `csv.mjs` uses
   only the measured bound constant, not the container walk (it is not a container).
 
 ### Invariants
@@ -294,7 +352,10 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
 - Bob's rulings: DEC-5 (2026-08-01 — surface tracked changes, comments, speaker notes,
   hidden state and document metadata as evidence; never redact); BOB #32 (2026-09-24 — the
   CSV entry's design); BOB #33 (2026-09-24 21:55Z, REC-218 — the dialect persisted as
-  `reading.dialect`, read through this module's optional `dialect` slot).
+  `reading.dialect`, read through this module's optional `dialect` slot); K1888
+  (2026-10-06, the virus package: the readers' structure check, `build/plan/study-virus-scanning.md`
+  §3 A), R32; K1881 with F18 of `build/plan/draft-T35-security-review.md` (a cap and a
+  total on every part read), R12.
 
 ### Suggestions
 
@@ -325,3 +386,9 @@ as a stated `undetermined`/`ok:false`, never an exception and never a guess.
   measurement needs a deployed plane, which is DIST's act. Until it lands, the bound stays
   `MEASURED_OOXML_TEXT_BOUND_BYTES` reused, and a job on this module should not change the
   figure without a new measurement recorded under `measurements/`.
+- R32's `active` is the office half of the per-capture "active content" list (the PDF half is
+  `pdf-reader`'s R36); the threat grade, the members' warning and the assistant's rule
+  read it downstream (K1888), so its item shape should stay plain data. The VBA parsing is
+  `ooxml`'s (P6: this module stays near 3,700 lines; the job reports if it would pass about
+  4,000). A test fixture with a VBA project can be any small `.docm` whose olevba report is
+  recorded beside it.

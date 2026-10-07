@@ -1,6 +1,6 @@
 # odf-reader — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/odf.mjs`; tests `bio-plane/test/m/odf-reader/`. R29 (D-346) and R36 (D-612) built in T2. No local fact is held here. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). N30 folded by a drafting worker for BOB #64, 2026-09-29 (T13, K408): R45 (`ODF_REPEAT_EXPANSION_MAX`), R16's hidden rows as ranges, R41's new branch. T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-11 (entry C:A-4; K1448): R46 (typed cells, `office-readers` R30's contract) added; not yet met (T33-11).
+**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/odf.mjs`; tests `bio-plane/test/m/odf-reader/`. R29 (D-346) and R36 (D-612) built in T2. No local fact is held here. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). N30 folded by a drafting worker for BOB #64, 2026-09-29 (T13, K408): R45 (`ODF_REPEAT_EXPANSION_MAX`), R16's hidden rows as ranges, R41's new branch. T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-11 (entry C:A-4; K1448): R46 (typed cells, `office-readers` R30's contract) added; not yet met (T33-11). T35's fold, by BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-76 (K1903): R47 `active` (ODF Basic macros, event listeners, embedded objects).
 
 ## Public
 
@@ -252,6 +252,14 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   or refusal code in that file names `odf.mjs` or belongs to it). The IC-1 reference builders
   it calls are owned by `office-readers`; the C-45.x checks that validate a citation against
   them are owned by `content`.
+- **R47** (K1888, K1903) `structure()` and `text()` both carry `active`, the same list from one
+  builder: every part of the file that can act when it is opened, found and read, never run, in
+  the shape of office-readers R32. One item per finding, in central-directory order: `{kind:"odf-basic",
+  part}` for each member under a `Basic/` directory (a Basic library) and `{kind:"odf-basic", part,
+  event}` for each `script:event-listener` in `content.xml` or `styles.xml` (`event` its
+  `script:event-name`); `{kind:"embedded-file", part}` for each member under an `Object …/`
+  sub-document directory or a `ObjectReplacements/` part's source; `{kind:"unread", part, why}` for a
+  part it could not read for this list. A file with none answers `[]`. *(not yet met: T35)*
 
 ### Satisfies
 

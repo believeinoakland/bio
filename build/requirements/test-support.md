@@ -1,12 +1,12 @@
 # test-support — requirements
 
-**Status** · Written by BOB #38, 2026-09-26: a helper module, so its requirements are BOB's (K20). Layer 1. Code: `bio-plane/test/sandbox.mjs`, `bio-plane/test/stdio.mjs`; tests `bio-plane/test/m/test-support/`. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`).
+**Status** · Written by BOB #38, 2026-09-26: a helper module, so its requirements are BOB's (K20). Layer 1. Code: `bio-plane/test/sandbox.mjs`, `bio-plane/test/stdio.mjs`; tests `bio-plane/test/m/test-support/`. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-3: R10–R14 added, `makeZip` and its two hostile-archive helpers in `bio-plane/test/make-zip.mjs`, the fixtures ooxml's ZIP listing and cut are tested on (N688; K1844, K1852; F7); not yet met (T35-3).
 
 ## Public
 
 ### Purpose
 
-Gives any test process a temporary-file sandbox it owns and removes, and standard output that cannot lose a test's final tally when the process exits. A test takes both by importing the sandbox module.
+Gives any test process a temporary-file sandbox it owns and removes, and standard output that cannot lose a test's final tally when the process exits. A test takes both by importing the sandbox module. It also writes ZIP archives in memory, conforming or deliberately hostile, for the tests of every module that reads one (`bio-plane/test/make-zip.mjs`; importing it has no side effect).
 
 ### Provides
 
@@ -26,6 +26,24 @@ Gives any test process a temporary-file sandbox it owns and removes, and standar
 - **R7** A second call changes nothing and returns `already: true` with the same `streams`. A stream that cannot be changed (a file, which is already synchronous, or an absent stream) is left as it is and is no error. Never throws.
 - **R8** Importing the sandbox module also applies R6.
 
+**`makeZip(entries, options = {})` → `Uint8Array`** (N688; K1844, K1852)
+- **R10** `entries` is an array of `{name, data, method = 8}`: `name` a string or the raw name bytes (a `Uint8Array`), `data` a `Uint8Array` or a string (written as UTF-8), `method` 0 (stored) or 8 (deflate; any other number is written as declared over the data as given). With no override (R12), the answer is one conforming archive in APPNOTE 6.3's form: for each entry in order a local header and its data, then the central directory, then the end-of-central-directory record; each entry's CRC-32 and sizes true; general-purpose bit 11 set exactly when a string `name` is not ASCII; one fixed MS-DOS time when none is given. *(not yet met: T35)*
+- **R11** A conforming archive (R10) passes both oracles: Info-ZIP `unzip -t` exits 0 over it, and Python's `zipfile` lists the entries in order with their names and gives back each entry's `data` byte for byte. *(not yet met: T35)*
+- **R12** Every hostile shape below is written by an override and nothing else changes: the bytes say exactly what the override names, and the rest stays as R10 writes it. *(not yet met: T35)*
+  - **Duplicate names:** two entries with one `name` are written as two entries; nothing is merged or renamed.
+  - **Unsafe and non-UTF-8 names:** a `name` is written verbatim (`../`, a leading `/`, a drive letter, `\`); `utf8: false` on an entry clears bit 11 over non-ASCII raw bytes (a CP437 name).
+  - **Central directory and local header disagree:** an entry's `local: {name, method, flags, crc32, compressedSize, uncompressedSize}` (any subset) is what that entry's local header states; its central-directory record keeps the true values. `central: {…}` (the same fields, and `localOffset`) does the reverse, and a `localOffset` past the archive's end writes an entry out of range.
+  - **Bit 3:** `dataDescriptor: true` sets bit 3, writes zero CRC and sizes in the local header and a data descriptor after the data; `descriptor: {crc32, compressedSize, uncompressedSize, signature}` overrides what the descriptor states, and `signature: false` omits its optional signature.
+  - **ZIP64:** an entry's `zip64: true` writes its sizes and offset as `0xFFFFFFFF` with the true values in a `0x0001` extra field; `options.zip64: true` also writes the ZIP64 end record and its locator, with the end record's 16- and 32-bit fields at their sentinels. `zip64Record: {…}` overrides what the ZIP64 end record states.
+  - **Encrypted:** an entry's `encrypted` is `"traditional"` (bit 0), `"strong"` (bits 0 and 6), `"aes"` (method 99 with a `0x9901` extra field) or `"directory"` (bit 13); the data is written as given, never actually encrypted.
+  - **Overlap:** an entry's `sameDataAs: <index>` points its central-directory record at the local header and data of an earlier entry, so two entries' byte ranges coincide.
+  - **The end record:** `options.eocd: {entries, diskEntries, cdSize, cdOffset}` (any subset) is what the end record states; `options.comment` is the archive comment (a string or bytes); `options.secondEocd: true` writes a second, well-formed end-record candidate inside the comment.
+  - **Nesting:** an entry's `data` may itself be `makeZip`'s output.
+- **R13** Deterministic: the same `entries` and `options` give the same bytes on every call. No clock, no randomness, nothing written to disk. A spec it cannot write (an entry without `name` or `data`, a `sameDataAs` naming no earlier entry, an unknown `encrypted` value) throws an `Error` naming the field. *(not yet met: T35)*
+
+**`zipBomb({kernel, entries})` → `Uint8Array`, `nestedZip({depth, fanout, leaf})` → `Uint8Array`** (N688; F7)
+- **R14** `zipBomb` writes one deflated kernel of `kernel` zero bytes once and `entries` central-directory entries that all point at it (R12's overlap), each declaring `kernel` uncompressed bytes, so the declared total is `kernel × entries` while the archive stays near one kernel's compressed size. `nestedZip` writes an archive `depth` levels deep (1 is a plain archive of leaves): each level holds `fanout` entries, each the next level's archive, and the deepest holds `fanout` copies of `leaf` (bytes, written stored or deflated as R10). Both are deterministic and built on `makeZip` alone (R13). *(not yet met: T35)*
+
 ## Private
 
 ### Uses
@@ -39,7 +57,10 @@ None.
 ### Satisfies
 
 - `build/layers.md`, "Helper modules": the shared test sandbox the workers' tests and the kept suites use.
+- `docs/architecture/BIO_Intake_Doctrine_v1_1.md` §3, "Members of a captured archive" (K1852): R10–R14 are the archives, conforming and hostile, on which "cut out unambiguously" and "over a published limit" are tested (N688, K1844; F7 of `build/plan/draft-T35-security-review.md`, the nested tree).
 
 ### Suggestions
 
 - A test of R2 spawns a child process that imports the module, writes a file, and exits through `process.exit()`, then checks the directory is gone; R2's read-only case is tested by running that child as a non-root user (`setpriv` or `runuser`) with a read-only subdirectory left in the sandbox, and at the interface with an injected `EACCES` (N22); a test of R6 floods a pipe from a child and checks the final line arrives.
+- `make-zip.mjs` runs only in Node tests, so deflate may be Node's `zlib.deflateRawSync`. R11's oracles run as child processes (`unzip -t`, `python3 -I -c` with `zipfile`); a host lacking either skips that check by name rather than passing it. A test of R12 reads each hostile fixture back at the byte level (Python's `zipfile` or `struct`) and checks the one field the override names.
+- The ooxml job (T35-8) checks its `listArchive` verdicts against the same two oracles over these fixtures (K1844's oracles): where `unzip -t` or `zipfile` extract other bytes than the central directory states, `listArchive` must not answer `ok`.
