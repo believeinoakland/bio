@@ -3,8 +3,9 @@
  * (R1's `unfollow`), and the per-meeting link is a chain whose last row governs. */
 
 export const FOLLOWING_SCHEMA = `
--- R1, R7, R9, R10: ONE ROW PER FOLLOW. subject is JSON ({kind, ...}); home the bundle whose project the follow lives
--- in and its captures land in (null: group-wide); gated JSON for R8 (null: public).
+-- R1, R7, R9, R10, R20: ONE ROW PER FOLLOW. subject is JSON ({kind, ...}); home the bundle whose project the follow
+-- lives in and its captures land in (null: group-wide); gated JSON for R8 (null: public). A policy watch (R20) has
+-- author '' (none: the group's standing watch, K1727).
 CREATE TABLE IF NOT EXISTS follows (
   follow_id   INTEGER PRIMARY KEY AUTOINCREMENT,
   kind        TEXT NOT NULL,
@@ -66,6 +67,19 @@ CREATE TABLE IF NOT EXISTS portal_snapshots (
   rows        TEXT,
   why         TEXT,
   PRIMARY KEY (follow_id, seq)
+);
+
+-- R20, R21: every version a policy watch has seen at its address, in the order seen: the policy's own text capture
+-- first (seq 1, its receipt's first retrieval), then each read whose bytes differed from the one before. Never
+-- edited or removed: a later version is a new row beside the earlier ones.
+CREATE TABLE IF NOT EXISTS policy_versions (
+  change_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+  follow_id   INTEGER NOT NULL,
+  seq         INTEGER NOT NULL,
+  capture_sha TEXT NOT NULL,
+  bundle_id   TEXT,
+  at          TEXT NOT NULL,
+  UNIQUE (follow_id, seq)
 );`;
 
 const t = (name, cls) => ({ name, purge: "clear", expunge: "none", export: "admin-only", derive: "stored", version_chain: false, ...cls });
@@ -78,6 +92,7 @@ export const FOLLOWING_TABLES = Object.freeze([
   t("per_meeting_links", { keys: ["bundle_id"], sight: "bundle", version_chain: true }),
   t("per_meeting_captures", { keys: ["bundle_id"], sight: "bundle" }),
   t("portal_snapshots", { keys: ["bundle_id"], sight: "source" }),
+  t("policy_versions", { keys: ["bundle_id"], sight: "source" }),
 ]);
 
 export function migrateFollowing(sql) {
