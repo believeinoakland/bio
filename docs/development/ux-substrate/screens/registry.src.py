@@ -75,7 +75,7 @@ screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it 
 screen('person', 'Person', 'working', 'Positions, career, credentials, memberships, interests, statements; same person?',
   [('person','Open the person'),('recordpersonfact','Add a fact from a document'),('claimidentity','Say another record is this person'),('withdrawidentityclaim','Withdraw a same-person claim'),('followregister','Follow a register'),('personexpunge','Remove a fact where the law requires')], [10])
 screen('timeline', 'Timeline', 'working', 'What they did and what we did, in two lanes (K1462, K1494).',
-  [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch')], [11])
+  [('createevent','Record an event'),('addparticipant','Add who took part'),('relate','Link events'),('recorddatedfact','Record a dated fact'),('hypothesishold','Keep a suspected cause as a hunch'),('owed:findin DEC-164','Look for dates in this project')], [11])
 screen('money', 'Money trail', 'working', 'Money facts with stage and period; a trail; reconciling sources (K1457, K1468).',
   [('recordfact','Read a figure into a money fact'),('createset','Start a money trail'),('include','Include with a reason'),('exclude','Leave out with a reason'),('reconcile','Compare two sources'),('committedagainstpaid','Committed against paid'),('authoritychain','What authorised it')], [12])
 screen('calculation', 'Calculation', 'working', 'A computed fact with its method, or a member\'s spreadsheet bound to the record.',

@@ -471,7 +471,9 @@ SCR.timeline = c => ({ rail: 'projects', title: 'Timeline', crumbs: ['The Colise
    <div class="mk-ev"><span class="mk-date">March 2024 <i>(month known)</i></span><b>Rent adjusted without a vote</b><span>signed: City Administrator · ${grade('capture', 'B')}</span></div><div></div>
    <div></div><div class="mk-ev us"><span class="mk-date">4 Sep 2026</span><b>We requested the rent schedules</b><span>${due('met', 'Answered 18 Sep')}</span></div>
    <div class="mk-ev"><span class="mk-date">18 Sep 2026</span><b>City Clerk releases schedules</b><span>answered our request</span></div><div></div></div>
-  ${gapm('undetermined', '<b>Undetermined</b> order: the March adjustment and the April notice, because both are dated only by month.')}
+  <div class="cs-sheet" style="padding:12px 14px;display:grid;gap:8px">${gapm('undetermined', '<b>Undetermined</b> order: the March adjustment and the April notice, because both are dated only by month.')}
+   <p class="mk-small" style="margin:0">Settle it from evidence: a passage that gives either one its day (the rent ledger, a council agenda, a letter's date), or a source that says which came first. Until then both are kept as they are, never guessed into order; once settled, the timeline says what settled it.</p>
+   ${acts(btn('recorddatedfact', 'Cite an exact date for one of them'), btn('relate', 'Cite which came first'), btn('owed:findin DEC-164', 'Look for their dates in this project', { icon: 'search' }))}</div>
   ${sec('Undated', sheet(row(I('timeline'), 'Memo on rent indexing, undated', '<span class="muted">listed apart, never guessed into place</span>')))}
   ${acts(btn('createevent', 'Record an event', { tone: 'primary' }), btn('addparticipant', 'Add who took part'), btn('relate', 'Link events'), btn('recorddatedfact', 'Record a dated fact'), btn('hypothesishold', 'Keep a suspected cause as a hunch'))}` });
 
