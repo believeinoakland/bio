@@ -23,6 +23,10 @@
 
 Size (session_01Dryjzy6STyiTmo8nuxcBrs): test runs 9, module lines 2184
 
+**CHANGE B3 (K2021), after conformance's merge (its R27: noncompliant only on a standard `bindsAt` answers binds).** tranche/T35 merged. Four fixture determinations fixed, test-only, no module change: `prepare.test.mjs` R3's and `reads.test.mjs` R18's act placed nowhere, and R21's actor at Nowhere Harbour, now state compliant outcomes (no date or body binds); R15's ordinance S3 now has a closed period (to 2030-12-31), so it binds the Selectboard. Re-run: filings 70/70; escalation and action-plans 126/126; format, architecture, coverage (32/32), ownership (5 files): 0 failures.
+
+Size (session_01Dryjzy6STyiTmo8nuxcBrs): test runs 12, module lines 2184
+
 ## J1 · QUESTION
 
 R8 (T35, N653): my reading, which I am building on; answer only if it is wrong.
