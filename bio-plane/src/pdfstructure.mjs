@@ -912,7 +912,7 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
   const ef = doc.dictOf(fs.EF);
   const streamRef = ef && (ef.F || ef.UF || ef.DOS || ef.Mac || ef.Unix);
   const stream = doc.resolve(streamRef);
-  const label = name || strOf(doc, fs.UF) || strOf(doc, fs.F) || null;
+  const label = embeddedName(doc, fs, name);
   if (!stream || stream.t !== "stream")
     return undeterminedRecord({ page: sourcePage, rect }, "embedded_stream_absent", { name: label });
   const bytes = await doc.streamDecoded(stream);
@@ -930,6 +930,13 @@ async function embeddedFileRecord(doc, filespec, sourcePage, rect, name) {
 function strOf(doc, v) {
   v = doc.resolve(v);
   return v && v.t === "str" ? v.v : null;
+}
+
+/** An embedded file's filing label (R5's `name`): the given label (an
+ *  annotation's /Contents, a tree's key), else the file specification's own
+ *  /UF or /F, else null. `fs` is the resolved file specification, or null. */
+function embeddedName(doc, fs, given) {
+  return given || (fs && (strOf(doc, fs.UF) || strOf(doc, fs.F))) || null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -2756,6 +2763,163 @@ function extractPageBoxes(doc) {
 }
 
 /* ------------------------------------------------------------------ *
+ * K1888 (R36) — EVERY PLACE THE FILE CAN ACT WHEN IT IS OPENED
+ * ------------------------------------------------------------------ *
+ *
+ * The readers' structure check of the virus package: what a viewer would RUN
+ * or OPEN on its own, found by the keys and names that say so, after PDFiD's
+ * triage keys (`/OpenAction`, `/AA`, `/JS`, `/JavaScript`, `/XFA`,
+ * `/RichMedia`, `/Launch`, `/EmbeddedFile`, `/Encrypt`). READ, NEVER RUN: a
+ * script's text is not even read, only the fact that a key holds one. An item
+ * says the file CAN act, never that it is malicious; the threat grade
+ * downstream weighs it.
+ *
+ * EVERY OBJECT R8's READ REACHES IS EXAMINED, in the page tree or not, in
+ * object-number order, each walked depth-first through its direct
+ * dictionaries and arrays (a referenced object is examined in its own turn),
+ * so an action hidden off the page tree is still found and a key is listed
+ * wherever it sits, as PDFiD counts it. A name is compared DECODED, because
+ * the parser decodes `#xx` before anything sees it (`/J#61vaScript` is
+ * `/JavaScript`): the obfuscation PDFiD reports separately cannot hide a key.
+ *
+ * ONE ITEM PER DICTIONARY PER KIND, at the first key that shows it, so a
+ * JavaScript action written `/S /JavaScript /JS (…)` is one place, not two;
+ * an embedded file is one item per FILE (a tree node can name several).
+ *
+ * WHAT IT COULD NOT READ, IT SAYS. An object stream that would not decode
+ * hides every object in it, and an encrypted document's object streams are
+ * ciphertext: each adds one `unread` item, so a short list is never read as
+ * a clean one. `[]` is a measured nothing. */
+const ACTIVE_WALK_DEPTH = 64;
+
+/** R36's list for an opened document. */
+function extractActive(doc) {
+  /* The page an object belongs to: a page itself, or an annotation one of
+     them lists (the first page wins). */
+  const pageOf = new Map();
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const num = doc._pageOrder[idx];
+    if (!pageOf.has(num)) pageOf.set(num, idx);
+  }
+  for (let idx = 0; idx < doc.pageCount; idx++) {
+    const pm = doc.pageDict(idx);
+    const annots = pm ? doc.resolve(pm.Annots) : null;
+    if (!annots || annots.t !== "arr") continue;
+    for (const a of annots.items) if (a && a.t === "ref" && !pageOf.has(a.n)) pageOf.set(a.n, idx);
+  }
+  const efNodes = embeddedTreeNodes(doc);
+  const items = [];
+  for (const num of [...doc.objects.keys()].sort((a, b) => a - b)) {
+    const page = pageOf.has(num) ? pageOf.get(num) : null;
+    walkActive(doc, doc.objects.get(num), efNodes, 0,
+      (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail }));
+  }
+  if (doc.notes.includes("objstm_undecodable"))
+    items.push({ kind: "unread", where: null, detail: "objstm_undecodable" });
+  if (doc.isEncrypted()) items.push({ kind: "unread", where: null, detail: "encrypted" });
+  return items;
+}
+
+/** Every node of the catalog's /Names /EmbeddedFiles tree (R5's), by the
+ *  identity of its resolved dict, so the walk knows a /Names array there is
+ *  a list of files and not of anything else. */
+function embeddedTreeNodes(doc) {
+  const nodes = new Set();
+  const names = doc.root ? doc.dictOf(doc.root.Names) : null;
+  const visit = (v, depth) => {
+    const node = doc.resolve(v);
+    if (!node || node.t !== "dict" || depth > 64 || nodes.has(node.map)) return;
+    nodes.add(node.map);
+    const kids = doc.resolve(node.map.Kids);
+    if (kids && kids.t === "arr") for (const kid of kids.items) visit(kid, depth + 1);
+  };
+  if (names) visit(names.EmbeddedFiles, 0);
+  return nodes;
+}
+
+/** Walk one value, calling `emit(kind, key, detail)` for each finding. */
+function walkActive(doc, v, efNodes, depth, emit) {
+  if (!v || typeof v !== "object" || depth > ACTIVE_WALK_DEPTH) return;
+  if (v.t === "arr") {
+    for (const it of v.items) walkActive(doc, it, efNodes, depth + 1, emit);
+    return;
+  }
+  const map = v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null;
+  if (!map) return;
+  const found = new Set();
+  const once = (kind, key, detail) => { if (!found.has(kind)) { found.add(kind); emit(kind, key, detail); } };
+  const attachment = nameOf(doc, map.Subtype) === "FileAttachment";
+  for (const key of Object.keys(map)) {
+    const val = map[key];
+    switch (key) {
+      case "OpenAction": once("open-action", key, openActionDetail(doc, val)); break;
+      case "AA": {
+        const aa = doc.dictOf(val);
+        once("additional-actions", key, aa ? Object.keys(aa).map((k) => "/" + k) : []);
+        break;
+      }
+      case "JS": case "JavaScript": once("javascript", key, null); break;
+      case "S": {
+        const s = nameOf(doc, val);
+        if (s === "JavaScript") once("javascript", key, null);
+        else if (s === "Launch") once("launch", key, launchTarget(doc, map));
+        break;
+      }
+      case "XFA": once("xfa", key, null); break;
+      case "RichMediaContent": once("rich-media", key, null); break;
+      case "Subtype": if (nameOf(doc, val) === "RichMedia") once("rich-media", key, null); break;
+      case "FS":
+        if (attachment) emit("embedded-file", key, embeddedName(doc, doc.dictOf(val), strOf(doc, map.Contents)));
+        break;
+      case "Filter":
+        /* R23's own test: the Standard handler's dictionary, a bare name and a
+           numeric /R, which the standard requires stay unencrypted. */
+        if (val && val.t === "name" && val.v === "Standard" && map.R != null && typeof doc.resolve(map.R) === "number")
+          once("encryption", key, doc.resolve(map.R));
+        break;
+      case "Names": {
+        if (!efNodes.has(map)) break;
+        const pairs = doc.resolve(val);
+        if (!pairs || pairs.t !== "arr") break;
+        for (let i = 0; i + 1 < pairs.items.length; i += 2) {
+          const k = doc.resolve(pairs.items[i]);
+          emit("embedded-file", key, embeddedName(doc, doc.dictOf(pairs.items[i + 1]), k && k.t === "str" ? k.v : null));
+        }
+        break;
+      }
+      default: break;
+    }
+    walkActive(doc, val, efNodes, depth + 1, emit);
+  }
+  /* An attachment with no /FS is still R5's record (undetermined): listed. */
+  if (attachment && !("FS" in map)) emit("embedded-file", "FS", embeddedName(doc, null, strOf(doc, map.Contents)));
+}
+
+/** `/OpenAction`'s detail: the action's /S, or "destination" for a bare
+ *  destination (an array, a name or a string); null for an action dict with
+ *  no /S or a value that resolves to nothing. */
+function openActionDetail(doc, val) {
+  const r = doc.resolve(val);
+  if (!r) return null;
+  if (r.t === "arr" || r.t === "name" || r.t === "str") return "destination";
+  if (r.t === "dict") return nameOf(doc, r.map.S);
+  return null;
+}
+
+/** A Launch action's target as the file states it: /F (a string, or a file
+ *  specification's /UF or /F), or the same under /Win; null when none. */
+function launchTarget(doc, action) {
+  for (const holder of [action, doc.dictOf(action.Win)]) {
+    if (!holder) continue;
+    const f = doc.resolve(holder.F);
+    if (f && f.t === "str") return f.v;
+    const name = f && f.t === "dict" ? embeddedName(doc, f.map, null) : null;
+    if (name) return name;
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------------ *
  * The public entry point
  * ------------------------------------------------------------------ */
 
@@ -2901,6 +3065,9 @@ export async function extractPdfStructure(bytes) {
     /* R33: each page's MediaBox, top-level for `images`' reason (tier 2
        replaces `text`): the bound a `pdf-page` rect is checked against. */
     pageBoxes: extractPageBoxes(doc),
+    /* R36 (K1888): every place the file can act when opened, read and never
+       run; top-level for the same reason. */
+    active: extractActive(doc),
     notes: doc.notes,
   };
 }

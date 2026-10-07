@@ -210,6 +210,29 @@ test("R15 the anchor: its local day in the governing zone; after a channel's cut
   assert.equal(ev(t, "notice_of_sitting_friday", minute("2026-10-08T19:00", HFX)).code, "RULE_NOT_APPLICABLE");
 });
 
+/* DEC-149 (K1847; N690): what the count says of a calendar entry's status in the group's own copy says "your group's
+   Civicsmith", never "this instance"; each of the four strings, whole. */
+test("R16 R25 DEC-149: a disputed or unreadable entry, and a correction counted on, are named in your group's Civicsmith", () => {
+  const v = firstView();
+  const st = (status, extra = {}) => () => ({ status, ...extra });
+  const dis = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("disputed") });
+  assert.equal(dis.code, "FACT_DISPUTED");
+  assert.equal(dis.why, "the closure list 'judicial' for 2026 is disputed in your group's Civicsmith");
+  const abs = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent", { why: "the read failed" }) });
+  assert.equal(abs.code, "FACT_ABSENT");
+  assert.equal(abs.why, "the closure list 'judicial' for 2026 cannot be read in your group's Civicsmith: the read failed");
+  const bare = ev(v, "records_response", day("2026-10-01", LA), { factOf: st("absent") });
+  assert.equal(bare.why, "the closure list 'judicial' for 2026 cannot be read in your group's Civicsmith");
+  const fixed = [{ date: "2026-10-12", name: "corrected in" }];
+  const gov = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("confirmed", { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
+  assert.ok(gov.trace.calendar.notes.includes("counted on a correction that governs in your group's Civicsmith, now confirmed (corrected locally by a member, 2026-10-02) (2026)"), JSON.stringify(gov.trace.calendar.notes));
+  const cor = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed, by: "a member", at: "2026-10-02" }) });
+  assert.ok(cor.trace.calendar.notes.includes("counted on a calendar corrected in your group's Civicsmith by a member, 2026-10-02 (2026)"), JSON.stringify(cor.trace.calendar.notes));
+  const plain = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: fixed }) });
+  assert.ok(plain.trace.calendar.notes.includes("counted on a calendar corrected in your group's Civicsmith (2026)"), JSON.stringify(plain.trace.calendar.notes));
+  for (const r of [dis, abs, bare, gov, cor, plain]) assert.doesNotMatch(JSON.stringify(r), /this instance|the plane/);
+});
+
 test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed or absent entry, an UNMEASURED basis, an undetermined anchor, a rule form not counted", () => {
   const v = firstView();
   /* the judicial list holds no 2027 */
@@ -231,14 +254,14 @@ test("R16 undetermined with why: an uncovered year, a withheld fact, a disputed 
   assert.match(un.trace.calendar.notes.join(" "), /unconfirmed calendar/);
   const cor = ev(v, "records_response", day("2026-09-30", LA), { factOf: st("corrected", { value: [{ date: "2026-10-12", name: "corrected in" }], by: "a member", at: "2026-10-02" }) });
   assert.equal(cor.due.value, "2026-10-13", "the corrected list governs");
-  assert.match(cor.trace.calendar.notes.join(" "), /corrected on this instance by a member/);
+  assert.match(cor.trace.calendar.notes.join(" "), /corrected in your group's Civicsmith by a member/);
   /* N603 (local-facts R2, R3): a correction governs until a later act and a later confirm confirms it, so it is counted
      on whenever the answer says the governing value is a correction, whatever the status reads now; never otherwise */
   const fixed = [{ date: "2026-10-12", name: "corrected in" }];
   for (const status of ["confirmed", "unconfirmed"]) {
     const r = ev(v, "records_response", day("2026-09-30", LA), { factOf: st(status, { corrected: true, value: fixed, says: "corrected locally by a member, 2026-10-02" }) });
     assert.equal(r.due.value, "2026-10-13", `the confirmed correction governs (${status})`);
-    assert.match(r.trace.calendar.notes.join(" "), new RegExp(`counted on a correction that governs on this instance, now ${status} \\(corrected locally by a member, 2026-10-02\\)`));
+    assert.match(r.trace.calendar.notes.join(" "), new RegExp(`counted on a correction that governs in your group's Civicsmith, now ${status} \\(corrected locally by a member, 2026-10-02\\)`));
     assert.ok(r.trace.calendar.entries.some((e) => e.governs === "correction" && e.status === status));
     assert.match(r.trace.notes.join(" "), new RegExp(`counted on its correction, now ${status}`));
   }
