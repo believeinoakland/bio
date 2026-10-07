@@ -2,7 +2,9 @@
    dates documents state. A DATED FACT is a document's own stated date (R1–R5); an EVENT is a happening one or more
    records attest (R6–R10), with who took part (R11–R13), its merges and splits (R14), the listeners that move with its
    time (R15, R16), its cited relations (R17–R20), `ACT-` aliases (R21), Legistar and register following (R22–R25, R38;
-   `follow.mjs`), the reads (R26–R34), the connection owner (R35), the ops map (R36) and the read contract (R37). It
+   `follow.mjs`), the reads (R26–R34), the connection owner (R35), the ops map (R36), the read contract (R37) and, since
+   T35, the uses of a power: acts of discretion, waivers and assessments with their facets and `usesOf` (R43–R48;
+   `uses.mjs`). It
    never stores a sequence, an amount, an absence or the group's own acts, and never infers a cause (R39–R42).
    Reached through `eventsOf(ctx)` (K61). Members see these as the timeline (K1462). */
 import { recordOf } from "../record-core/index.mjs";
@@ -16,13 +18,14 @@ import { idPattern, isHypothesisId, isMachineIdentity, sha256HexSync, canonicalJ
   from "../record-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { registerOwner } from "../connection-grammar/index.mjs";
-import { EVENTS_SCHEMA } from "./schema.mjs";
+import { EVENTS_SCHEMA, EVENTS_ADDED_COLUMNS } from "./schema.mjs";
 import { EVENT_CHECKS } from "./checks.mjs";
 import { readDate, whenOf, sequenceOf, spanOfBound, placeAgainst, orderByWhen } from "./time.mjs";
 import { followedImport, followedRegister, datesOfReading, READ_DATE_CLASSES } from "./follow.mjs";
 import { neighboursOf, OWNER_KINDS } from "./owner.mjs";
+import { USE_KINDS, OUTCOMES, recordDiscretion, recordAssessment, withdrawUse, facetOf, usesOf } from "./uses.mjs";
 
-export { EVENTS_SCHEMA, EVENT_CHECKS };
+export { EVENTS_SCHEMA, EVENT_CHECKS, USE_KINDS, OUTCOMES };
 
 /* K1569 (R6, R11, R14, R17, R21): THE ONE ANSWER TO ONE CONDITION, no event with the id asked is held (an alias resolves
    to its kept event first). Every act of any module answering it answers through here (duties among them). `extra` adds
@@ -59,7 +62,7 @@ export const DATED_KINDS = Object.freeze(["meeting", "adopted", "effective", "si
   "received", "hearing", "period_covered", "edited"]);
 export const EVENT_KINDS = Object.freeze(["meeting", "vote", "adoption", "enactment", "signing", "award", "payment",
   "transfer", "filing", "order", "hearing", "issuance", "publication", "statement", "communication", "appointment",
-  "departure", "inspection", "other"]);
+  "departure", "inspection", "other", "discretion", "waiver", "assessment"]);
 /* schema.org's EventStatusType: a cancelled meeting is one event with status EventCancelled, never a missing one. */
 export const STATUSES = Object.freeze(["EventScheduled", "EventCancelled", "EventPostponed", "EventRescheduled",
   "EventMovedOnline"]);
@@ -99,7 +102,7 @@ function oneHome(row) {
   if (h) return { code: "HYPOTHESIS_ID", detail: `a hypothesis (${row[h]}) is never held in an event's ${h} (K1467)` };
   return null;
 }
-const GATED = ["events", "event_attestations", "event_participants", "event_concerns", "event_relations"];
+const GATED = ["events", "event_attestations", "event_participants", "event_concerns", "event_relations", "event_uses", "event_unmet"];
 
 /* ---- the instance (K61) ---- */
 
@@ -171,6 +174,10 @@ export class Events {
   migrate() {
     const bare = EVENTS_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    for (const [table, column, decl] of EVENTS_ADDED_COLUMNS) {
+      const have = this.#rows(`PRAGMA table_info(${table})`).map((c) => c.name);
+      if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    }
     if (!this.#migrated) {
       this.#migrated = true;
       const d = this.declareTables();
@@ -200,6 +207,8 @@ export class Events {
       t("event_aliases", { keys: [], sight: "group" }),
       t("event_changes", { keys: [], version_chain: true }),
       t("event_sources", { keys: [], export: "admin-only" }),
+      t("event_uses", { keys: [] }),
+      t("event_unmet", { keys: [] }),
       t("event_read_optin", { keys: [], sight: "group", export: "admin-only", version_chain: true }),
     ]);
   }
@@ -268,7 +277,7 @@ export class Events {
    * ===================================================================== */
 
   /** R1, R2: a document's own date, cited at its extent. */
-  recordDatedFact({ captureSha, extent, kind, value, method, by = null } = {}) {
+  recordDatedFact({ captureSha, extent, kind, value, method, question = null, by = null } = {}) {
     if (!said(captureSha)) return noSha("a dated fact is a captured document's own statement, named by its capture sha256");
     const held = this.#heldCapture(captureSha, by);
     if (!held) return refuse("CAPTURE_NOT_HELD", "the record holds no such capture you can see");
@@ -279,8 +288,10 @@ export class Events {
     const d = readDate(value, this.zone());
     if (d.bad) return refuse("BAD_DATE", d.bad);
     if (!said(method)) return refuse("NO_METHOD", "a dated fact says how its date was read (a member's reading, a reader, OCR, office metadata)");
+    if (question !== null && question !== undefined && !(said(question) && this.#questionSeen(question.trim(), by)))
+      return refuse("QUESTION_NOT_HELD", "no question with that id is held where you can see it; a question is an inquiry the record holds");
     return this.#record.transact(() => this.#holdFact({ sha: held.sha, bundleId: held.bundleId, extent, kind, date: d,
-      method: method.trim().slice(0, 400), by }));
+      method: method.trim().slice(0, 400), by, question: question == null ? null : question.trim() }));
   }
 
   /* R1, R2: the extent within the capture, by content's own check over the capture's context. */
@@ -294,16 +305,16 @@ export class Events {
   }
 
   /* R1, R2: one dated fact, inside the caller's transaction; its grade is the capture's own, never above it. */
-  #holdFact({ sha, bundleId, extent, kind, date, method, by, sourceRow = null, upperBound = false }) {
+  #holdFact({ sha, bundleId, extent, kind, date, method, by, sourceRow = null, upperBound = false, question = null }) {
     const ext = canonicalExtent(extent);
     const id = sha256HexSync(canonicalJson([sha, ext, sourceRow, kind, date.value, date.precision, date.zone])).slice(0, 32);
     const prior = this.#one(`SELECT * FROM dated_facts WHERE dated_fact_id=?`, id);
-    if (prior) return { ok: true, already: true, dated_fact: this.#factView(prior) };
+    if (prior) return { ok: true, already: true, dated_fact: this.#factView(prior, by) };
     const row = { dated_fact_id: id, capture_sha: sha, bundle_id: bundleId, extent: ext, source_row: sourceRow, kind,
                   value: date.value, precision: date.precision, zone: date.zone, method, grade: this.#captureGrade(sha),
-                  upper_bound: upperBound ? 1 : 0, by_actor: stamp(by), at: this.#instant() };
+                  upper_bound: upperBound ? 1 : 0, by_actor: stamp(by), at: this.#instant(), question };
     this.#insert("dated_facts", row);
-    return { ok: true, dated_fact: this.#factView(row) };
+    return { ok: true, dated_fact: this.#factView(row, by) };
   }
 
   #insert(table, row) {
@@ -314,10 +325,17 @@ export class Events {
     return Number(this.#one(`SELECT last_insert_rowid() AS id`).id);
   }
 
-  #factView(r) {
+  /* R48: the question beside the row, to a viewer who may see that inquiry; withheld as absent from any other. */
+  #factView(r, viewer = null) {
+    const q = r.question == null ? { question: null } : this.#questionSeen(r.question, viewer) ? { question: r.question } : {};
     return { dated_fact_id: r.dated_fact_id, capture_sha: r.capture_sha, extent: json(r.extent), source_row: r.source_row ?? null,
              kind: r.kind, value: r.value, precision: r.precision, zone: r.zone, method: r.method, grade: r.grade,
-             ...(r.upper_bound ? { upper_bound: true, label: "on or before" } : {}), by: r.by_actor, at: r.at };
+             ...(r.upper_bound ? { upper_bound: true, label: "on or before" } : {}), by: r.by_actor, at: r.at, ...q };
+  }
+  /* R1, R48: whether `viewer` may see the inquiry bundle a question names (record-core R37's object_type). */
+  #questionSeen(id, viewer) {
+    const b = said(id) ? this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=? AND object_type='inquiry'`, id) : null;
+    return !!b && viewer != null && this.#sees(b.bundle_id, viewer);
   }
 
   /** R4 (K1505 (9)): the capture classes whose readings' stated dates are held after read, an administrator's act. */
@@ -392,7 +410,7 @@ export class Events {
     const rows = this.#rows(`SELECT * FROM dated_facts WHERE capture_sha=? ORDER BY extent, source_row, kind, value`, captureSha.trim().toLowerCase());
     const sees = this.#seer(viewer);
     const seen = rows.filter((r) => sees(r.bundle_id));
-    return { ok: true, capture_sha: captureSha, count: seen.length, dated_facts: seen.map((r) => this.#factView(r)) };
+    return { ok: true, capture_sha: captureSha, count: seen.length, dated_facts: seen.map((r) => this.#factView(r, viewer)) };
   }
 
   /* ===================================================================== *
@@ -510,8 +528,17 @@ export class Events {
   }
   #voteRefusal(voteValue) { const m = this.#voteMatch(voteValue); return m.ok ? null : m; }
 
-  /** R6: an event held with at least one attestation, its concerns and its participants, in one transaction. */
-  createEvent({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
+  /** R6: an event held with at least one attestation, its concerns and its participants, in one transaction. An event
+   *  of a use's kind (R43, R44) is held only with its facet, through its own act. */
+  createEvent(args = {}) {
+    if (USE_KINDS.includes(args && args.kind))
+      return refuse("USE_NEEDS_ITS_ACT", `an event of kind ${args.kind} is held only with its provision, reason and outcome: `
+        + `it is recorded with op=${args.kind === "assessment" ? "assessmentrecord" : "discretionrecord"}`, { kind: args.kind });
+    const c = this.#checkCreate(args || {});
+    return c.ok ? this.#writeEvent(c) : c;
+  }
+  /* R6's refusals, in order, writing nothing: the kind, the status, the attestations, the concerns, the participants. */
+  #checkCreate({ kind, status = "EventScheduled", where = null, concerns = [], attestations, participants = [], by = null } = {}) {
     if (!EVENT_KINDS.includes(kind)) return refuse("UNKNOWN_EVENT_KIND", `an event is one of ${EVENT_KINDS.join(", ")}`, { kinds: [...EVENT_KINDS] });
     if (!STATUSES.includes(status)) return refuse("UNKNOWN_STATUS", `a status is one of ${STATUSES.join(", ")}`, { statuses: [...STATUSES] });
     if (!Array.isArray(attestations) || !attestations.length)
@@ -527,6 +554,10 @@ export class Events {
       if (!(Number.isInteger(p.attestation) && p.attestation >= 0 && p.attestation < rows.length))
         return refuse("NO_ATTESTATION", "a participant names the attestation that states it, by its index in attestations");
     }
+    return { ok: true, kind, status, where, ends, rows, parts, by };
+  }
+  /* R6: the checked event written in one transaction; `facet(eventId, attIds)` writes a use's own rows there (R43). */
+  #writeEvent({ kind, status, where, ends, rows, parts, by }, facet = null) {
     return this.#tx(() => {
       const at = this.#instant();
       const id = this.#record.allocId("EVT", at.slice(0, 4));
@@ -540,6 +571,7 @@ export class Events {
       for (const p of parts)
         this.#insert("event_participants", { event_id: eventId, entity_id: p.entityId, role: p.role,
           vote_value: p.role === "voted" ? p.voteValue.trim() : null, attestation_id: attIds[p.attestation], by_actor: stamp(by), at });
+      if (facet) facet(eventId, attIds);
       this.#setWhen(eventId);
       return { ok: true, event_id: eventId, attestation_ids: attIds };
     });
@@ -792,6 +824,12 @@ export class Events {
       this.#sql.exec(`UPDATE event_attestations SET event_id=? WHERE attestation_id IN (${list})`, nid.id);
       this.#sql.exec(`UPDATE event_participants SET event_id=? WHERE attestation_id IN (${list})`, nid.id);
       this.#sql.exec(`UPDATE event_choices SET event_id=? WHERE attestation_id IN (${list})`, nid.id);
+      /* R45: a use's facet is never edited; the event split from it carries the same facet, its question included */
+      for (const u of this.#rows(`SELECT * FROM event_uses WHERE event_id=?`, id)) this.#insert("event_uses", { ...u, event_id: nid.id });
+      for (const x of this.#rows(`SELECT * FROM event_unmet WHERE event_id=? ORDER BY unmet_id`, id)) {
+        const { unmet_id, ...rest } = x;
+        this.#insert("event_unmet", { ...rest, event_id: nid.id });
+      }
       for (const [e, o, kind] of [[id, nid.id, "split_out"], [nid.id, id, "split_from"]])
         this.#sql.exec(`INSERT INTO event_changes (event_id, kind, other, detail, reason, by_actor, at) VALUES (?,?,?,?,?,?,?)`,
                        e, kind, o, JSON.stringify({ attestations: ids }), why, stamp(by), at);
@@ -987,10 +1025,13 @@ export class Events {
     const choices = this.#rows(`SELECT attestation_id, reason, by_actor, at FROM event_choices WHERE event_id=? ORDER BY choice_id`, id)
       .filter((c) => attById.has(Number(c.attestation_id)))
       .map((c) => ({ attestation_id: Number(c.attestation_id), reason: c.reason, by: c.by_actor, at: c.at }));
-    return { event_id: id, kind: ev.kind, status: ev.status, where: ev.where_text, when, ...(why ? { why } : {}),
+    const view = { event_id: id, kind: ev.kind, status: ev.status, where: ev.where_text, when, ...(why ? { why } : {}),
              governing: when && when !== "undetermined" ? Number(w.governing) : null, concerns, within,
              attestations: atts.map((a) => this.#attestationView(a, viewer)), participants: parts, relations,
              choices, merges_and_splits: changes, by: ev.by_actor, at: ev.at };
+    /* R45: a use of a power answers its facet */
+    const use = USE_KINDS.includes(ev.kind) ? facetOf(this.#kernel(), id, viewer, view) : null;
+    return use ? { ...view, use } : view;
   }
 
   /** R26: one event, by its id or an alias of it. */
@@ -1028,8 +1069,14 @@ export class Events {
       if (!roles.length && !x.concerns && x.roles.size) continue;
       const w = this.#whenRead(id);
       const when = w.when === "undetermined" || (w.governing != null && !seen.has(Number(w.governing))) ? null : w.when;
-      out.push({ event_id: id, kind: ev.kind, status: ev.status, when, ...(w.when === "undetermined" ? { why: "cache stale" } : {}),
-                 roles: roles.sort(), concerns: x.concerns });
+      const item = { event_id: id, kind: ev.kind, status: ev.status, when, ...(w.when === "undetermined" ? { why: "cache stale" } : {}),
+                     roles: roles.sort(), concerns: x.concerns };
+      /* R45: a use answers its facet in every list too */
+      if (USE_KINDS.includes(ev.kind)) {
+        const v = this.#eventView(id, viewer);
+        if (v && v.use) item.use = v.use;
+      }
+      out.push(item);
     }
     return out;
   }
@@ -1181,6 +1228,23 @@ export class Events {
              rests_on: rests.filter((x) => x.stage === reached.stage.stage), citation: flow.citation ?? null };
   }
 
+  /** R43: an act of discretion or a waiver, held as an event with its facet (`uses.mjs`). */
+  recordDiscretion(args = {}) { return recordDiscretion(this.#kernel(), args); }
+  /** R44: an accreditation or certification assessment, with the standards it found unmet. */
+  recordAssessment(args = {}) { return recordAssessment(this.#kernel(), args); }
+  /** R45: a use recorded wrongly, withdrawn and still readable. */
+  withdrawUse(args = {}) { return withdrawUse(this.#kernel(), args); }
+  /** R46: the held uses a viewer may see, filtered, in R31's order: a population, never a census. */
+  usesOf(args = {}) { return usesOf(this.#kernel(), args); }
+
+  /* R45: an entity's label as the reader may read it, else its id. */
+  #entityLabel(entityId, viewer) {
+    try {
+      const e = this.#ents.readEntity({ entityId, viewer });
+      return e && e.entity && said(e.entity.label) ? e.entity.label : entityId;
+    } catch { return entityId; }
+  }
+
   /** R35: this owner's connections at a node (connection-grammar's contract). */
   neighbours(args) { return neighboursOf(this.#kernel(), args); }
 
@@ -1201,6 +1265,17 @@ export class Events {
       whenRead: (e) => this.#whenRead(e), visibleAttestations: (e, v) => this.#visibleAttestations(e, v),
       resolutionGrade: (en, a) => this.#resolutionGrade(en, a), captureGrade: (s) => this.#captureGrade(s),
       voteMatch: (v) => this.#voteMatch(v, { fromSource: true }), tell: (c) => this.#tell(c), allocEvent: () => this.#record.allocId("EVT", this.#instant().slice(0, 4)),
+      /* the uses (R43–R48) */
+      checkCreate: (a) => this.#checkCreate(a), writeEvent: (c, f) => this.#writeEvent(c, f), extentRefusal: (s, e) => this.#extentRefusal(s, e),
+      stamp, noSuchEvent, questionSeen: (q, v) => this.#questionSeen(q, v), entityLabel: (e, v) => this.#entityLabel(e, v),
+      eventView: (id, v) => this.#eventView(id, v), range: (i, f, t) => this.#range(i, f, t), clamp,
+      order: (items) => orderByWhen(items, (i) => i.event_id), facet: (id, v) => { const x = this.#eventView(id, v); return x ? x.use || null : null; },
+      mint: ({ bundleId, captureSha, extent, by }) => {
+        const c = this.#content;
+        try { const r = c && typeof c.mint === "function" ? c.mint({ bundleId, captureSha, extent, mintedBy: stamp(by) || "class:daemon" }) : null; return r && r.ok ? r.content_id : null; }
+        catch { return null; }
+      },
+      passageText: (id) => { const c = this.#content; try { return c && typeof c.passageText === "function" ? c.passageText(id) : null; } catch { return null; } },
     };
   }
 }
@@ -1227,6 +1302,9 @@ export function eventsOps(ev, url, body) {
     actalias: act((b) => ev.aliasAct(b)),
     eventimport: act((b) => ev.followedImport(b)),
     registerimport: act((b) => ev.followedRegister(b)),
+    discretionrecord: act((b) => ev.recordDiscretion(b)),
+    assessmentrecord: act((b) => ev.recordAssessment(b)),
+    usewithdraw: act((b) => ev.withdrawUse(b)),
     event: () => ev.readEvent({ eventId: q("id"), viewer: q("viewer") }),
     eventforact: () => ev.eventForAct(q("act")),
     datedfacts: () => ev.datedFactsFor({ captureSha: q("sha256"), viewer: q("viewer") }),
@@ -1236,6 +1314,9 @@ export function eventsOps(ev, url, body) {
     sequence: () => ev.sequence({ a: q("a"), b: q("b"), viewer: q("viewer") }),
     whowassent: () => ev.whoWasSent({ eventId: q("id"), viewer: q("viewer") }),
     statementsof: () => ev.statementsOf({ entity: q("entity"), from: q("from"), to: q("to"), limit: q("limit"), viewer: q("viewer") }),
+    usesof: () => ev.usesOf({ provision: q("standard") ? { standard: q("standard"), ...(q("portion") ? { portion: q("portion") } : {}) } : null,
+                              decider: q("decider"), subject: q("subject"), kinds: q("kinds"), from: q("from"), to: q("to"),
+                              after: q("after"), limit: q("limit"), viewer: q("viewer") }),
     proceedingstatus: () => ev.proceedingStatusAt({ proceeding: q("proceeding"), at: q("at"), viewer: q("viewer") }),
   };
 }

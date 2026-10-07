@@ -27,7 +27,7 @@ Terms. An **entry** is `{actor_class, actor, authority_kind, authority, level, s
   - R6's content-level detail for a reading with pages left unread (`tier3_candidate` true): "this document has pages no engine in your group's Civicsmith could read";
   - the condition `render-deferred`'s sentence begins "a render your group's Civicsmith could not do is held under its C-83 reason", the rest of its sentence unchanged.
 
-  No served sentence of this module says "the plane", "this instance", "the instance", "copy" or "server" for the group's Civicsmith; the module's tests name each of the four strings. Rows already written keep their stored `detail` as written (the log is append-only, R4); a read composes the new sentences only where it composes a sentence. *(not yet met: T35)*
+  No served sentence of this module says "the plane", "this instance", "the instance", "copy" or "server" for the group's Civicsmith; the module's tests name each of the four strings. Rows already written keep their stored `detail` as written (the log is append-only, R4); a read composes the new sentences only where it composes a sentence.
 
 **observe(entry, at?, terminal?) → null or refusal** The one append site.
 - **R2** Refusals, in order: C-22.6 (the entry names a bundle to be written into); C-22.9 (an authority kind absent or not in R1); C-22.1 (a state not in R1); C-22.2 (a definitive state on a `governed` entry); C-22.3 (`PRESENT` with the condition `client-rendered-shell`); C-22.10 (`PRESENT` with no `result_ref`, or an `observation` referent that is not an earlier `PRESENT` row of the same authority, the fault named as `not_earlier`, `unresolved`, `other_authority` or `not_present`); C-22.4 (a condition not in the condition vocabulary). A refused entry writes nothing.

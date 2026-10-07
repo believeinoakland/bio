@@ -17,7 +17,8 @@ test("R6 createEvent refuses in order UNKNOWN_EVENT_KIND, UNKNOWN_STATUS, NO_ATT
   const att = [{ captureSha: s, extent: doc }];
   const r = (x) => w.ev.createEvent({ kind: "meeting", attestations: att, by: MEMBER, ...x }).reason;
   assert.deepEqual(EVENT_KINDS, ["meeting", "vote", "adoption", "enactment", "signing", "award", "payment", "transfer", "filing", "order",
-    "hearing", "issuance", "publication", "statement", "communication", "appointment", "departure", "inspection", "other"]);
+    "hearing", "issuance", "publication", "statement", "communication", "appointment", "departure", "inspection", "other",
+    "discretion", "waiver", "assessment"]);
   assert.deepEqual(STATUSES, ["EventScheduled", "EventCancelled", "EventPostponed", "EventRescheduled", "EventMovedOnline"]);
   assert.equal(r({ kind: "party", status: "nope", attestations: [] }), "UNKNOWN_EVENT_KIND");
   assert.equal(r({ status: "nope", attestations: [] }), "UNKNOWN_STATUS");

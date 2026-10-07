@@ -13,6 +13,7 @@ import { promotionOf } from "../../../src/promotion/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
@@ -130,15 +131,36 @@ export function world({ now = NOW, profiles = [TEST_PROFILE], written = [], cons
   const ev = events === "none" ? null : events || eventsOf(host, { record, membership, content, extraction, provenance: prov,
                                                                    readHooks: {}, now: () => clock.now });
   if (ev && ev !== events) ev.migrate();
+  /* the real entities module over the same host (R39, R35, R43: an issuer, a holder, a body) */
+  const entities = entitiesOf(host, { record, membership, provenance: prov, now: () => clock.now });
+  entities.migrate();
+  /* R41: who captured a capture, as `capture.captureAccountsOf` answers it; the test says who (a stand-in for capture,
+     whose own instance needs the host governor and attestation) */
+  const actors = {};
+  const capture = { captureAccountsOf: (sha) => ({ captureSha: sha, actors: (actors[sha] || []).map((actor) => ({ actor, at: "t" })),
+                                                  accounts: [] }) };
   /* R16: the instance is constructed and never migrated by its caller. `construct: false` leaves it to the test. */
   const build = () => standardsOf(host, { record, membership, promotion, content, now: () => clock.now,
                                           combine: combineWith || ((ids) => combine(ids.map((id) => byId.get(id) ?? id))),
-                                          events: () => ev, ...(keyedStore ? { keyedStore } : {}),
+                                          events: () => ev, entities, capture, ...(keyedStore ? { keyedStore } : {}),
                                           ...(citationLookup ? { citationLookup } : {}) });
   const s = construct ? build() : null;
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, prov, content, s, clock, ex, build, events: ev,
+    st, host, record, membership, promotion, prov, content, s, clock, ex, build, events: ev, entities, actors,
+    /** A registered entity (R39: an issuer; R35: a discretion's holder; R43: a body): its id. */
+    entity(label, { kind = "institution", sector = "government" } = {}) {
+      const r = entities.createEntity({ kind, label, sector, note: `${label}, as the record names it.`, declaredBy: V("bob") });
+      if (!r.ok) throw new Error(`fixture entity refused: ${JSON.stringify(r).slice(0, 300)}`);
+      return r.entity_id ?? r.entity?.entity_id;
+    },
+    /** An inquiry's bundle (R47's question), filed in `project` when given. */
+    inquiry(project = null) {
+      const id = `INQ-2026-${String(++n).padStart(4, "0")}`;
+      st.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha,
+                   project) VALUES (?, 'inquiry', 'test-group', 'Why?', 'open', 't', 't', ?, ?)`, id, sha(id), project);
+      return id;
+    },
     /** A held event (events R6) attested by a member's testimony, dated `value` (a day, or `{value, precision, zone}`)
      *  or undated; or, with `fencedTo`, by a dated fact of a document in a project of that member's (events R1, R7). */
     event({ value = null, kind = "meeting", by = V("bob"), fencedTo = null } = {}) {
