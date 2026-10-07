@@ -23,7 +23,7 @@
 - Users and upstream, on this branch: roster-reader 22/0, docprofile 35/0, court-doctypes 24/0, bio-plane `test/m/reading-pipeline` 85/0, `test/m/events/follow.test.mjs` 6/0, `test/m/plane/t33.test.mjs` 16/0, jurisdictions 102/0. No layer tests in the manifest.
 - civicos-process checks: format 0 failures; architecture (doctypes) 0 failures; coverage (doctypes) 36 of 36 live ids named, 0 failures; ownership (doctypes, tranche/T35) 0 failures.
 
-Size (session_01Y6hcEDnNpHHyH8SJXrD1tK): test runs 17, module lines 3,462.
+Size (session_01Y6hcEDnNpHHyH8SJXrD1tK): test runs 17, module lines 3,461.
 
 ## J1 · QUESTION
 
