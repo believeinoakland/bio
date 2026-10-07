@@ -103,3 +103,7 @@ The deferred re-wording of pre-split test titles is dropped, not done: mapping a
 Tests: affordances 208 of 208. Users control-plane, plane and op-declarations: 390 of 390. `format`, `architecture`, `coverage` (32 of 32), `ownership`: 0 failures.
 
 Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 29, module lines 2052
+
+## J8 · COMPLETE
+
+B8 (K2065) done and pushed: tranche/T35 merged; K2038's re-export of RUNGS, RUNG_ABSENT, MACHINE_REFUSALS removed; a scan of every tracked .mjs/.js/.html outside dist/ (multi-line named imports and namespace reads) finds no importer reading them through affordances. affordances 208 of 208; control-plane, plane, op-declarations 390 of 390; format, architecture, coverage (32 of 32), ownership: 0 failures. The deferred title re-wording is dropped, with the reason in my record (it would write tokens coverage reads as live ids). Size: test runs 29, module lines 2052.
