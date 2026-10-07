@@ -702,7 +702,8 @@ const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
    (`affordances` untargeted), the door then asks credentials in `bio` whether a live grant admits it (the four, off the
    list, by its first read). Admitted, the caller is `ai`, its viewer the grant's member, its grant stamped `grant`
    (answers' arms, the read log); GRANT_OP_REFUSED is answered; anything else keeps admission's answer. */
-const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances"]);
+/* R41 (T35): `agentpack` is admitted under a grant as the untargeted `affordances` is (op-declarations R30). */
+const GRANT_OWN_OPS = Object.freeze(["askceiling", "askcheck", "askusage", "affordances", "agentpack"]);
 /* store-door R9 (K2037 (b)): the internal header an ask's grant travels in to the store (store-door's `GRANT_HEADER`). */
 const GRANT_HEADER = "x-bio-grant";
 async function grantAdmit(env, url, op, spec) {
@@ -2033,6 +2034,24 @@ export function makeFetch(hooks = {}) {
     }
     /* R28: an op whose handler is a module's, reached through plane's hooks, answers here, after the R14 fences and R16;
        undefined falls through to the forward. */
+    /* R41 (T35; N695, K1717, K1864): `op=agentpack` serves the fences and the rendered pack apart, the very values the
+       untargeted `op=affordances` answer carries for this caller now: the affordances handler is asked untargeted and
+       the door's decoration read off its answer; a refusal or a silence is answered as that handler gives it. */
+    if (op === "agentpack") {
+      const u = new URL(url);
+      u.searchParams.set("op", "affordances");
+      u.searchParams.delete("target");
+      const res = hooks.gatedOp ? await hooks.gatedOp({ req: new Request(u, { method: "GET", headers: req.headers }), url: u, env,
+        op: "affordances", cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
+        grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;
+      if (!res) return storeSilent("agentpack");
+      const published = await publishAffordances(res, u);
+      let b = null;
+      try { b = await published.clone().json(); } catch { b = null; }
+      if (!b || b.ok !== true || !b.result || typeof b.result !== "object") return published;
+      const { fences, pack, pack_absent } = b.result;
+      return json({ ok: true, fences, pack: pack ?? null, ...(pack ? {} : { pack_absent }), store: storeName, tokenClass: cls }, 200);
+    }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
@@ -2975,7 +2994,7 @@ export function makeFetch(hooks = {}) {
         secretIsShownOnce: "This is the only time your group's Civicsmith will show this value. It is stored only as a "
           + "fingerprint and cannot be recovered. Give it to the recipient: it lets them READ this one draft and "
           + "COMMENT on it, and nothing else. If it is lost, withdraw this grant and issue another.",
-        read: "op=reviewcopy&secret=<the value above>",
+        read: "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
       }, store: storeName, tokenClass: cls }, 200);
     }
 
@@ -2998,7 +3017,7 @@ export function makeFetch(hooks = {}) {
           + "fingerprint and cannot be recovered. Give it to the reviewer: it lets them READ this one template version, "
           + "COMMENT on it and REVIEW it while it is a draft or in review, and nothing else. If it is lost, withdraw "
           + "this grant and open another.",
-        read: "op=templateread&secret=<the value above>",
+        read: "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
       }, store: storeName, tokenClass: cls }, 200);
     }
 
