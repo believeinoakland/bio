@@ -40,6 +40,7 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    10. plane `system/migrate-released.test.mjs` "born on 0.80.0" (the seed does not fit 0.80.0's plane; K1901), until T35-73.
    11. agent-runner R11 "no place is named" (the GHCR address; K1905), until T35-49.
    12. installer `newgroup/test/requirements.test.mjs`:329 R11 "foreign-plane" (K1905), until T35-75.
+   13. The format check's `test-support: paths entry bio-plane/test/make-zip.mjs names no file` (K1911), until T35-3 creates it.
 
 ## BOB's review (K1899)
 
