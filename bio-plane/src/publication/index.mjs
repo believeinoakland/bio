@@ -24,14 +24,21 @@
  *
  * Split a fourth time for size (K617, K1505; T33-62, T33-63): the case relation and revision flags, the tensions after
  * publication and observation attribution are `case-tensions`', with their three tables and the C-92 rows. This module
- * creates it, registers with it the provider its moved code reads this module's tables and splice through (R61), and
- * keeps one-line delegates for every moved name, so importers read through it until re-pointed (plan Rules (9) item 4).
+ * creates it and registers with it the provider its moved code reads this module's tables and splice through (R61).
+ * Since T35 (N597) it serves none of case-tensions' names and re-exports none: each importer reads case-tensions
+ * directly. `caseRelation` alone answers here, exactly as case-tensions does, until `affordances` reads it there.
  *
  * T34 (T34-44, T34-79): the set-wide read of the court-order stamps (R64), the group's self-description as the public is
  * told it (R65), and publishing at a set time (R66–R71, `./schedule.mjs`, its table `scheduled_editions`): a signed
  * edition waits with its signature held beside its document, is checked again at its time by the one publisher
  * `ratification` registers, and is moved or cancelled by an owner until then. Case-tensions' ops are the plane's to
  * spread since T33-90 (N597); this module's map no longer spreads them.
+ *
+ * T35 (T35-54): the published criteria (R72; N649): at a case edition's commit, each standard its members' legs target,
+ * read from `standards` (and the body's name from `entities`), frozen on the edition's row: a benchmark labelled "not
+ * binding on" its body, a copyrighted standard by its edition, citation and access with only the passages relied on.
+ * The waiting edition read `case-authoring` calls (R74; N681), C-122.5 for an edition no publisher could check (R33;
+ * N687), and the review copy's secret read from the request body, never the address (R73, `./door.mjs`; F1).
  *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
@@ -47,7 +54,7 @@
  *                                   `producingGroup`.
  *   credentials    `attestingKeys` (its R11; R2's signers), reached lazily (K757).
  *   inquiry        `exclusionsNaming` (R12).
- *   caseTensions   `attributionFacts` (R2), `dischargeCaseFlags` (R22), and every moved name's delegate; created at
+ *   caseTensions   `attributionFacts` (R2), `dischargeCaseFlags` (R22), `caseRelation` (R61's one delegate); created at
  *                  creation on the same host with this module's record, membership, promotion and clock, a given
  *                  `basisVersions`, `contradiction` and `capture` forwarded to it (test injection), and the provider
  *                  (R61) registered with it.
@@ -56,6 +63,8 @@
  *                  membership, promotion and clock, so its two tables exist and are declared at every boot (its R6). A
  *                  given `sources`, `acceptedWork` or `extraction` is forwarded to it (test injection).
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
+ *   standards      `standardRead` (its R5) and `bindsAt` (its R43), at a case edition's commit only (R72).
+ *   entities       `readEntity` (its R5): a criteria row's body by name (R72).
  *   corpusExport   created at creation with this module's clock, so `export_log` exists and is declared at every boot
  *                  (its R4); its ops are spread by the plane's op map (`corpusExportOps`, N483), and nothing here calls it.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
@@ -70,7 +79,9 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
-import { parseFrontmatter, createSha256, sectionText as caseSectionText } from "../record-grammar/index.mjs";
+import { parseFrontmatter, createSha256, sectionText as caseSectionText, idPattern } from "../record-grammar/index.mjs";
+import { standardsOf } from "../standards/index.mjs";
+import { entitiesOf } from "../entities/index.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { rowOf } from "./checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS, migratePublication,
@@ -88,8 +99,6 @@ import { caseDocumentStatesMemberBlocks, caseDocumentBlocks, SECTIONS, REAUTHORA
          caseFilePath } from "../case-grammar/index.mjs";
 
 export { CASE_SOURCES_CHECKS } from "./checks.mjs";
-/* The moved names (case-tensions R1–R7, R9), re-exported unchanged for importers not yet re-pointed. */
-export { ATTRIBUTION_ACT_CHECKS, CASE_FLAGS_LIMIT, ATTRIBUTION_REASON_MAX, CASE_TENSIONS_MAX } from "../case-tensions/index.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
@@ -136,6 +145,12 @@ const CITATION_NAMES_CAPTURE = Object.freeze(["pinned", "only_capture"]);
 /* CPDF-10: a column this module WROTE as JSON, read back; null rather than a throw on a malformed value. */
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const HEX64 = /^[0-9a-f]{64}$/;
+/* R72: a leg's target that names a held standard (inquiry-grammar R13). */
+const STANDARD_ID = idPattern("STD");
+/* R72: what an edition committed before T35 states of its criteria. */
+const CRITERIA_NOT_RECORDED = "the criteria were not recorded: this edition was committed before published cases recorded them";
+/* R72 (DEC-145 (6)): a standard's access in the members' words. */
+const ACCESS_WORDS = Object.freeze({ free: "Free to read", reading_room: "Reading room only", paywalled: "Behind a paywall" });
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 const shaOf = (text) => createSha256().update(new TextEncoder().encode(String(text))).hex();
 
@@ -173,19 +188,25 @@ export class Publication {
 
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
                 contradiction = null, sources = null, credentials = null, corpusExport = null, acceptedWork = null,
-                capture = null, extraction = null, now = null } = {}) {
+                capture = null, extraction = null, standards = null, entities = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport, acceptedWork,
-                   capture, extraction };
+                   capture, extraction, standards, entities };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
+  /* R72: read at a case edition's commit only. */
+  get standards() {
+    return this.#deps.standards ||= standardsOf(this.#deps.host, { record: this.record, membership: this.membership,
+                                                                   promotion: this.promotion });
+  }
+  get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
@@ -315,6 +336,8 @@ export class Publication {
   scheduledEditions(a) { return schedule.scheduledEditions(this, a); }
   /** R66: the group's time zone as R66 reads it, or null (for `ratification` R44's offer). */
   groupZone() { return schedule.groupZone(this); }
+  /** R74 (N681): the case's waiting edition, or null, for `case-authoring` (its R58). */
+  waitingEditionOf(caseId) { return schedule.waitingEditionOf(this, caseId); }
 
   /* ---------------------------------------------------------------- R65: the group's self-description, publicly */
 
@@ -941,6 +964,8 @@ export class Publication {
                      + "are not disclosed by it, so nothing was committed. Prepare the case again, disclosing them." };
       /* END DEC-49 REGION is-accepted-work-standing */
     }
+    /* R72 (N649): the published criteria, read after every refusal and frozen on the edition's row below. */
+    const criteria = this.#criteriaOf(members, when, attestorMember);
     if (!owner)
       this.sql.exec(`INSERT INTO cases (case_id,project_id,opened) VALUES (?,?,?) ON CONFLICT(case_id) DO NOTHING`,
                     id, project ?? null, when);
@@ -948,14 +973,15 @@ export class Publication {
        (R66), else this commit's instant; published at this commit. */
     const signedAt = schedule.signedAtFor(this, id, ed, when);
     this.sql.exec(
-      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened,signed_at,published_at)
-       VALUES (?,?,?,?,?,?,?,?,?)
+      `INSERT INTO published_cases (case_id,edition,scope,completeness,bias_acknowledgement,bar,opened,signed_at,published_at,
+         criteria)
+       VALUES (?,?,?,?,?,?,?,?,?,?)
        ON CONFLICT(case_id,edition) DO UPDATE SET scope=excluded.scope,
          completeness=excluded.completeness, bias_acknowledgement=excluded.bias_acknowledgement, bar=excluded.bar,
-         signed_at=excluded.signed_at, published_at=excluded.published_at`,
+         signed_at=excluded.signed_at, published_at=excluded.published_at, criteria=excluded.criteria`,
       id, ed, typeof scope === "string" ? scope : null, completeness ? JSON.stringify(completeness) : null,
       typeof biasAcknowledgement === "string" ? biasAcknowledgement : null,
-      bar && typeof bar === "object" ? JSON.stringify(bar) : null, when, signedAt, when);
+      bar && typeof bar === "object" ? JSON.stringify(bar) : null, when, signedAt, when, JSON.stringify(criteria));
     /* THE ROSTER AND THE PINS, IN ONE ACT: the publisher authored all N pins in one document and a member signed it,
        so the freeze is one statement somebody made. The ordinal is the roster's own order. */
     members.forEach((m, i) => {
@@ -992,6 +1018,68 @@ export class Publication {
       this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
                      ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, x.sha, id, x.path, "calculation_input", null, when);
     return { ...outcome(false), materials: this.#withInputs(held.materials, inputs), materials_unheld: held.unheld };
+  }
+
+  /* R72 (N649; K1723, K1739; DEC-145 (2), (6)): THE CRITERIA AN EDITION IS MEASURED AGAINST, read at its commit and
+     frozen with it: one row per distinct standard, portion and body that a leg of a member finding targets at the
+     member's pinned bytes (a `STD-` target, inquiry-grammar R13), in member order then leg order. Read from `standards`
+     as the signer reads it, on the commit's day; the body's name from `entities`. A benchmark is labelled "not binding
+     on" its body and never nonconforming; a standard's text reaches a row only as the passages its legs rely on (a
+     leg's own `content_id` among the standard's text, else the portion's `requires` passages), quoted as `standards`
+     answers them. A standard `standards` no longer answers is stated "not held" and never refuses the commit (that is
+     `case-checker`'s, its R21). Never throws. */
+  #criteriaOf(members, when, signer) {
+    const viewer = str(signer) ? `member:${str(signer)}` : "admin";
+    const day = String(when).slice(0, 10);
+    const rows = new Map();
+    for (const m of members) {
+      let text = null;
+      try { text = this.record.textAtSha(m.bundle_id, m.version_sha ?? null); } catch { text = null; }
+      if (typeof text !== "string") continue;
+      const fm = parseFrontmatter(text).data || {};
+      const body = str(fm.subject_entity) || null;
+      for (const leg of Array.isArray(fm.basis) ? fm.basis : []) {
+        const standard = leg && typeof leg === "object" ? str(leg.target) : "";
+        if (!STANDARD_ID.test(standard)) continue;
+        const portion = str(leg.target_portion) || null;
+        const key = JSON.stringify([standard, portion, body]);
+        if (!rows.has(key)) rows.set(key, { standard, portion, body, named: [], requires: false });
+        const r = rows.get(key);
+        const cid = str(leg.content_id).toLowerCase();
+        if (!HEX64.test(cid)) r.requires = true;
+        else if (!r.named.includes(cid)) r.named.push(cid);
+      }
+    }
+    return [...rows.values()].map((r) => this.#criterion(r, day, viewer));
+  }
+
+  /* R72: one criteria row, as `standards` answers the standard at the commit. */
+  #criterion({ standard, portion, body, named, requires }, day, viewer) {
+    let s = null;
+    try { s = this.standards.standardRead({ id: standard, viewer }); } catch { s = null; }
+    if (!s || s.ok !== true)
+      return { standard, portion, designation: null, edition: null, issuer: null, citation: null, access: null, body: null,
+               binds: null, passages: null, label: null, access_words: null, stated: "not held" };
+    let binds = false;
+    if (body) {
+      try { const b = this.standards.bindsAt({ standard, body, date: day, viewer }); binds = !!b && b.ok === true && b.state === "binds"; }
+      catch { binds = false; }
+    }
+    const held = new Set((Array.isArray(s.texts) ? s.texts : []).map((t) => t && t.content_id));
+    const quoted = new Map((Array.isArray(s.requires_quoted) ? s.requires_quoted : []).map((q) => [q.content_id, q.text ?? null]));
+    const ids = [...new Set([...named.filter((c) => held.has(c)), ...(requires && Array.isArray(s.requires) ? s.requires : [])])];
+    const name = body ? this.#entityName(body) : null;
+    return { standard, portion, designation: s.designation ?? null, edition: s.edition ?? null,
+             issuer: (s.owner && s.owner.label) || s.issuer || null, citation: s.cite ?? null, access: s.access ?? null,
+             body, binds, passages: ids.map((c) => ({ content: c, text: quoted.has(c) ? quoted.get(c) : null })),
+             label: binds ? `Standard · binds ${name}` : body ? `Benchmark · not binding on ${name}` : "Benchmark · not binding",
+             access_words: ACCESS_WORDS[s.access] ?? null };
+  }
+
+  /* R72: an entity's name as `entities` holds it; its id when it holds none. */
+  #entityName(id) {
+    try { const e = this.entities.readEntity({ entityId: id }); return (e && e.found && e.entity && e.entity.label) || id; }
+    catch { return id; }
   }
 
   /* R22: every input a document's `calculations:` rows name, `{calc, sha, path}`, once per (calculation, input), in the
@@ -1255,21 +1343,10 @@ export class Publication {
   /* ---------------------------------------------------------------- R61: what moved to case-tensions, and its provider */
 
   /* The case relation and revision flags (R4–R6), the tensions after publication (R50) and observation attribution (R17,
-     R39, R60) are `case-tensions`' since T33 (its R1–R7; K617, K1505), retired here as moved. Each name below answers
-     exactly what case-tensions' does, so importers not yet re-pointed read through this module (plan Rules (9) item 4). */
+     R39, R60) are `case-tensions`' since T33 (its R1–R7; K617, K1505), retired here as moved, and since T35 (N597) each
+     importer reads them there. `caseRelation` alone answers here, exactly as case-tensions' does, until `affordances`
+     reads it there (T35-66; R61). */
   caseRelation(id) { return this.caseTensionsModule.caseRelation(id); }
-  flagCasesOnRevision(id, replacedSha, when) { return this.caseTensionsModule.flagCasesOnRevision(id, replacedSha, when); }
-  dischargeCaseFlags(caseId, edition, by, when) { return this.caseTensionsModule.dischargeCaseFlags(caseId, edition, by, when); }
-  caseFlags(a) { return this.caseTensionsModule.caseFlags(a); }
-  caseTensions(a) { return this.caseTensionsModule.caseTensions(a); }
-  observationsNamingAuthor(ids) { return this.caseTensionsModule.observationsNamingAuthor(ids); }
-  attributionInForce(caseId, edition, observation) { return this.caseTensionsModule.attributionInForce(caseId, edition, observation); }
-  attributionStatements(caseId, edition, project, observations) {
-    return this.caseTensionsModule.attributionStatements(caseId, edition, project, observations);
-  }
-  attributionFacts(doc) { return this.caseTensionsModule.attributionFacts(doc); }
-  attributionStatedFor(observation) { return this.caseTensionsModule.attributionStatedFor(observation); }
-  attributeObservation(a) { return this.caseTensionsModule.attributeObservation(a); }
 
   /** R61 (K1505 (3), K1634): the provider this module registers with `case-tensions` at start, its seven doors each
    *  answering exactly the rows the moved code read from this module's tables before the split, and the splice (R21).
@@ -1661,7 +1738,7 @@ export class Publication {
      in particular NO case-level strength, because there is no such thing —
      every member's frozen PAIR travels with that member. */
   caseEditionState(caseId, ed, group = null) {
-    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, bar, opened, ratified_at, manifest_sha
+    const c = this.#one(`SELECT scope, completeness, bias_acknowledgement, bar, opened, ratified_at, manifest_sha, criteria
                          FROM published_cases WHERE case_id=? AND edition=?`, caseId, ed);
     if (!c) return null;
     /* CASE-5 / DEC-72 clause 2: WHOSE PRODUCTION, on the one accessor that
@@ -1861,6 +1938,10 @@ export class Publication {
              })(),
              opened: c.opened, ratified_at: c.ratified_at ?? null,
              manifest_sha: c.manifest_sha ?? null,
+             /* R72 (N649): the criteria frozen at the commit, in member then leg order, each with its label; null for an
+                edition committed before T35, stated as not recorded and never filled. */
+             criteria: c.criteria == null ? null : safeJson(c.criteria),
+             ...(c.criteria == null ? { criteria_detail: CRITERIA_NOT_RECORDED } : {}),
              complete, awaiting, findings,
              detail: complete
                ? "every finding in this case edition is ratified, so the container can be assembled whole"

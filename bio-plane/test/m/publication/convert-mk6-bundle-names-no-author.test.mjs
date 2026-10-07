@@ -73,7 +73,7 @@ function publishedAnswers(w, obs, docSha) {
     excludedBy: w.p.excludedBy(DOC, V("olive")),
     "op=excludedby": w.op("excludedby", { id: DOC, viewer: "class:daemon" }),
     excludedByObservation: w.p.excludedBy(obs, V("olive")),
-    caseFlags: w.p.caseFlags({ caseId: CASE }),
+    caseFlags: w.p.caseTensionsModule.caseFlags({ caseId: CASE }),
     "op=caseflags": w.op("caseflags", {}),
     caseCitedParts: w.p.caseCitedParts({ case: CASE }),
     ratifiedCases: w.p.ratifiedCases({}),

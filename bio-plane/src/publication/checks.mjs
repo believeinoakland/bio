@@ -2,7 +2,7 @@
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * C-122.1 (R51, N364) is a family of its own here: a case's sources; C-122.2 (R58, DEC-112) and C-122.3, C-122.4 (R59,
- * N522) join it at T28. C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9;
+ * N522) join it at T28, and C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35. C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9;
  * T33-62, T33-63), numbers and translations unchanged, and left this table, so no row id is held twice.
  *
  * C-44.2, C-68.5 and C-98.1–.9, raised by `public-read`'s code since K651, are `public-read`'s (its R17), moved there
@@ -50,6 +50,15 @@ export const CASE_SOURCES_CHECKS = {
     where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
     translation: "A flag was raised on another group's work this case rests on after the case was prepared, and the case "
       + 'must disclose it. Prepare the case again. Nothing was published.',
+  },
+  /* C-122.5 (R33, R67; N687, K1839): a waiting edition taken at its time with no publisher able to check it (none
+     registered, one that throws, or one giving neither answer) is stopped, never published unchecked; the translation
+     is the one R67 already answered. */
+  SCHEDULED_CHECK_UNAVAILABLE: {
+    check: 'C-122.5',
+    where: 'src/publication/schedule.mjs unchecked > is-scheduled-check-available',
+    translation: 'This edition was not published at its set time, because the checks it needed then could not be run. '
+      + 'Nothing was published. Sign it again to publish it.',
   },
 };
 
