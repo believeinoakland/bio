@@ -19,7 +19,7 @@
     "GET /providers": "R29: the catalogue, offered, refused, held, and the generic transports",
     "anything else": "R9: 404 {ok: false, code: \"UNKNOWN\"}"
   },
-  "classes": [
+  "containers": [
     {
       "class_name": "FileScanner",
       "image": {
@@ -28,15 +28,25 @@
         "platform": "linux/amd64",
         "port": 8080,
         "schedulingPolicy": "default",
-        "instance_type": "standard-1",
-        "memory": "4 GiB"
+        "base": {
+          "repository": "docker.io/library/node",
+          "digest": "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+        },
+        "packages": "packages-scanner.json"
       },
+      "instance_type": "standard-1",
+      "memory": "4 GiB",
       "max_instances": 3,
+      "bind": [
+        {
+          "member": "file-scanner",
+          "binding": "SCANNER"
+        }
+      ],
       "build": {
         "dockerfile": "Dockerfile.scanner",
         "context": ".",
-        "command": "docker build --platform linux/amd64 -f Dockerfile.scanner -t <repository>:<version> file-scanner",
-        "packages": "packages-scanner.json"
+        "command": "docker build --platform linux/amd64 -f Dockerfile.scanner -t <repository>:<version> file-scanner"
       }
     },
     {
@@ -47,15 +57,25 @@
         "platform": "linux/amd64",
         "port": 8080,
         "schedulingPolicy": "default",
-        "instance_type": "standard-1",
-        "memory": "4 GiB"
+        "base": {
+          "repository": "docker.io/library/node",
+          "digest": "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+        },
+        "packages": "packages-renderer.json"
       },
+      "instance_type": "standard-1",
+      "memory": "4 GiB",
       "max_instances": 3,
+      "bind": [
+        {
+          "member": "file-scanner",
+          "binding": "RENDERER"
+        }
+      ],
       "build": {
         "dockerfile": "Dockerfile.renderer",
         "context": ".",
-        "command": "docker build --platform linux/amd64 -f Dockerfile.renderer -t <repository>:<version> file-scanner",
-        "packages": "packages-renderer.json"
+        "command": "docker build --platform linux/amd64 -f Dockerfile.renderer -t <repository>:<version> file-scanner"
       }
     }
   ],
@@ -69,14 +89,10 @@
       "node:*"
     ]
   },
-  "bind": [
-    {
-      "member": "bio-plane",
-      "binding": "FILE_SCANNER"
-    }
-  ],
   "triggers": {
-    "crons": ["17 4 * * *"]
+    "crons": [
+      "17 4 * * *"
+    ]
   },
   "optional_bindings": [
     {
@@ -89,5 +105,12 @@
     "containers": [],
     "worker": "database.clamav.net (R6), and per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
   },
-  "note": "The fleet-member marker of a container member with two classes (R10; bundler R25, R27 as T36-2 amends them). `bundle` is the Worker that answers the plane's FILE_SCANNER binding and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each class states its own image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest in its Dockerfile, and its package statement (the Debian packages it installs). `bind` is the binding through which its caller reaches it. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the group's bucket and hands them copies."
+  "note": "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the group's bucket and hands them copies.",
+  "callers": [
+    {
+      "member": "bio-plane",
+      "binding": "FILE_SCANNER",
+      "kind": "service"
+    }
+  ]
 }

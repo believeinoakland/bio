@@ -256,7 +256,7 @@ export function engineFamily(providerId) {
 }
 
 function verdictFamily(v) {
-  if (!v || typeof v !== 'object') return [];
+  if (!v || typeof v !== 'object' || typeof v.engine !== 'string' || !v.engine) return [];
   const d = BY_ID.get(v.tool);
   // A per-engine tool's verdict, and a template's (whose engine is the administrator's statement), are their engine's.
   if (v.tool === 'clamav' || !d || d.template || d.per_engine) return normaliseFamily([v.engine]);

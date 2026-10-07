@@ -1,14 +1,29 @@
 {
+  "ecosystem": "Debian:12",
+  "base": {
+    "repository": "docker.io/library/node",
+    "digest": "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+  },
   "image": "scanner",
   "class_name": "FileScanner",
-  "base": "docker.io/library/node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562",
-  "ecosystem": "Debian",
   "source": "https://snapshot.debian.org/archive/debian/20261006T000000Z bookworm main",
   "packages": [
-    { "name": "clamav", "version": "1.4.3+dfsg-1~deb12u2" },
-    { "name": "clamav-base", "version": "1.4.3+dfsg-1~deb12u2" },
-    { "name": "clamav-freshclam", "version": "1.4.3+dfsg-1~deb12u2" },
-    { "name": "libclamav12", "version": "1.4.3+dfsg-1~deb12u2" }
+    {
+      "name": "clamav",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      "name": "clamav-base",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      "name": "clamav-freshclam",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      "name": "libclamav12",
+      "version": "1.4.3+dfsg-1~deb12u2"
+    }
   ],
   "note": "The package statement of the ClamAV image (bundler R27): each Debian package Dockerfile.scanner installs, pinned, from the snapshot named, over the base pinned by digest (node:22-bookworm-slim, its linux/amd64 manifest as read on 2026-10-06, the base agent-runner pins). Its server is container/scanner.mjs and container/common.mjs, run by the base's Node; no npm package is installed."
 }

@@ -1510,7 +1510,7 @@ var fleet_member_default = {
     "GET /providers": "R29: the catalogue, offered, refused, held, and the generic transports",
     "anything else": 'R9: 404 {ok: false, code: "UNKNOWN"}'
   },
-  classes: [
+  containers: [
     {
       class_name: "FileScanner",
       image: {
@@ -1519,15 +1519,25 @@ var fleet_member_default = {
         platform: "linux/amd64",
         port: 8080,
         schedulingPolicy: "default",
-        instance_type: "standard-1",
-        memory: "4 GiB"
+        base: {
+          repository: "docker.io/library/node",
+          digest: "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+        },
+        packages: "packages-scanner.json"
       },
+      instance_type: "standard-1",
+      memory: "4 GiB",
       max_instances: 3,
+      bind: [
+        {
+          member: "file-scanner",
+          binding: "SCANNER"
+        }
+      ],
       build: {
         dockerfile: "Dockerfile.scanner",
         context: ".",
-        command: "docker build --platform linux/amd64 -f Dockerfile.scanner -t <repository>:<version> file-scanner",
-        packages: "packages-scanner.json"
+        command: "docker build --platform linux/amd64 -f Dockerfile.scanner -t <repository>:<version> file-scanner"
       }
     },
     {
@@ -1538,15 +1548,25 @@ var fleet_member_default = {
         platform: "linux/amd64",
         port: 8080,
         schedulingPolicy: "default",
-        instance_type: "standard-1",
-        memory: "4 GiB"
+        base: {
+          repository: "docker.io/library/node",
+          digest: "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+        },
+        packages: "packages-renderer.json"
       },
+      instance_type: "standard-1",
+      memory: "4 GiB",
       max_instances: 3,
+      bind: [
+        {
+          member: "file-scanner",
+          binding: "RENDERER"
+        }
+      ],
       build: {
         dockerfile: "Dockerfile.renderer",
         context: ".",
-        command: "docker build --platform linux/amd64 -f Dockerfile.renderer -t <repository>:<version> file-scanner",
-        packages: "packages-renderer.json"
+        command: "docker build --platform linux/amd64 -f Dockerfile.renderer -t <repository>:<version> file-scanner"
       }
     }
   ],
@@ -1560,14 +1580,10 @@ var fleet_member_default = {
       "node:*"
     ]
   },
-  bind: [
-    {
-      member: "bio-plane",
-      binding: "FILE_SCANNER"
-    }
-  ],
   triggers: {
-    crons: ["17 4 * * *"]
+    crons: [
+      "17 4 * * *"
+    ]
   },
   optional_bindings: [
     {
@@ -1580,7 +1596,14 @@ var fleet_member_default = {
     containers: [],
     worker: "database.clamav.net (R6), and per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
   },
-  note: "The fleet-member marker of a container member with two classes (R10; bundler R25, R27 as T36-2 amends them). `bundle` is the Worker that answers the plane's FILE_SCANNER binding and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each class states its own image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest in its Dockerfile, and its package statement (the Debian packages it installs). `bind` is the binding through which its caller reaches it. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the group's bucket and hands them copies."
+  note: "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the group's bucket and hands them copies.",
+  callers: [
+    {
+      member: "bio-plane",
+      binding: "FILE_SCANNER",
+      kind: "service"
+    }
+  ]
 };
 
 // src/limits.mjs
@@ -1752,7 +1775,10 @@ var runId = (now) => `r${new Date(now).toISOString().replace(/[-:.TZ]/g, "")}${M
 var reply = (status, body) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 function signaturesOf(current) {
   if (!current) return null;
-  const v = (db) => current.files[`${db}.cvd`] ? Number(current.files[`${db}.cvd`].version) : null;
+  const v = (db) => {
+    const f = Object.entries(current.files).find(([n]) => n.split(".")[0] === db);
+    return f && Number.isFinite(Number(f[1].version)) ? Number(f[1].version) : null;
+  };
   return { main: v("main"), daily: v("daily"), bytecode: v("bytecode"), published: current.published };
 }
 async function ask(container2, path, init) {
@@ -1766,15 +1792,16 @@ async function ask(container2, path, init) {
 }
 async function ensureSet(deps, current) {
   const held = await ask(deps.scanner, "/sigs");
-  if (!held) return false;
-  if (held.set === current.set) return true;
+  if (!held) return null;
+  const version2 = held.clamav_version || "not reported";
+  if (held.set === current.set) return version2;
   for (const [name, f] of Object.entries(current.files)) {
     const obj = await deps.bucket.get(f.key);
-    if (!obj) return false;
+    if (!obj) return null;
     const put = await ask(deps.scanner, `/sigs/${current.set}/${name}`, { method: "PUT", body: obj.body, duplex: "half" });
-    if (!put) return false;
+    if (!put) return null;
   }
-  return !!await ask(deps.scanner, `/sigs/${current.set}/load`, { method: "POST" });
+  return await ask(deps.scanner, `/sigs/${current.set}/load`, { method: "POST" }) ? version2 : null;
 }
 async function scan(deps, body) {
   const started = deps.now();
@@ -1790,7 +1817,7 @@ async function scan(deps, body) {
     capture_sha,
     tool: "clamav",
     engine: "clamav",
-    engine_version: engineVersion,
+    engine_version: null,
     signatures,
     scanned_at: new Date(deps.now()).toISOString(),
     findings: [],
@@ -1803,7 +1830,11 @@ async function scan(deps, body) {
   let setReason = null;
   if (!current) setReason = "SIGNATURES_ABSENT";
   else if (!(Date.parse(current.published) >= deps.now() - SIGNATURES_MAX_AGE_MS)) setReason = "SIGNATURES_STALE";
-  else if (!await ensureSet(deps, current)) setReason = "SCANNER_UNAVAILABLE";
+  else {
+    const v = await ensureSet(deps, current);
+    if (v) engineVersion = v;
+    else setReason = "SCANNER_UNAVAILABLE";
+  }
   const job = runId(deps.now());
   const staged = [];
   for (let i = 0; i < targets.length; i++) {
@@ -1823,10 +1854,10 @@ async function scan(deps, body) {
     }
     const { stream, outcome } = targetStream(deps.bucket, store, t);
     const put = await ask(deps.scanner, `/job/${job}/${i}`, { method: "PUT", body: stream, duplex: "half" });
-    const o = await outcome;
-    if (!o.ok || !put) {
+    const o = await Promise.race([outcome, new Promise((res) => setTimeout(() => res({ ok: true, unread: true }), 0))]);
+    if (o.unread || !o.ok || !put) {
       await ask(deps.scanner, `/job/${job}/${i}`, { method: "DELETE" });
-      out[i] = notScanned(t.capture_sha, o.ok ? "SCANNER_UNAVAILABLE" : o.reason);
+      out[i] = notScanned(t.capture_sha, o.ok || o.unread ? "SCANNER_UNAVAILABLE" : o.reason);
       continue;
     }
     staged.push([i, t.capture_sha]);
@@ -1841,6 +1872,7 @@ async function scan(deps, body) {
   } else {
     await ask(deps.scanner, `/job/${job}`, { method: "DELETE" });
   }
+  for (const v of out) v.engine_version = engineVersion;
   return reply(200, { ok: true, verdicts: out });
 }
 async function putStream(bucket, key, response) {
@@ -1969,7 +2001,16 @@ async function render(deps, body) {
   } catch {
     r = null;
   }
-  const o = await outcome;
+  const PENDING = {};
+  let o = await Promise.race([outcome, new Promise((res) => setTimeout(() => res(PENDING), 0))]);
+  if (o === PENDING) {
+    if (r && r.status === 200) {
+      await r.body?.cancel().catch(() => {
+      });
+      r = null;
+    }
+    o = { ok: true };
+  }
   if (!o.ok) return refuse(STATUS[o.reason] || 409, o.reason in STATUS ? o.reason : "DIGEST_MISMATCH");
   if (!r) return refuse(503, "RENDER_FAILED", { message: "the renderer could not be reached" });
   if (r.status !== 200) {
@@ -2285,7 +2326,7 @@ var PROVIDERS = Object.freeze([
     max_bytes: 2147483648,
     hosts: ["*.blob.core.windows.net", "login.microsoftonline.com"],
     engine_family: ["microsoft-defender"],
-    credentials: ["tenant_id", "client_id", "client_secret"],
+    credentials: ["client_id", "client_secret"],
     test_probe: { kind: "eicar" },
     handling: {
       sends: ["file_bytes"],
@@ -2551,7 +2592,7 @@ var PROVIDERS = Object.freeze([
     reach: "public",
     hosts: ["*.ingest.monitor.azure.com", "login.microsoftonline.com"],
     engine_family: ["sentinel"],
-    credentials: ["tenant_id", "client_id", "client_secret"],
+    credentials: ["client_id", "client_secret"],
     test_probe: { kind: "zero_counts" },
     handling: {
       sends: ["counts"],
@@ -2980,7 +3021,7 @@ var defender = {
   async scan(ctx, file) {
     const token = await clientToken(
       ctx.net,
-      `https://login.microsoftonline.com/${encodeURIComponent(ctx.cred("tenant_id"))}/oauth2/v2.0/token`,
+      `https://login.microsoftonline.com/${encodeURIComponent(String(ctx.config.tenant_id || ""))}/oauth2/v2.0/token`,
       { client_id: ctx.cred("client_id"), client_secret: ctx.cred("client_secret"), scope: "https://storage.azure.com/.default" }
     );
     const account = String(ctx.config.storage_account || "");
@@ -3459,7 +3500,7 @@ var sentinel = {
   async forward(ctx, record) {
     const token = await clientToken(
       ctx.net,
-      `https://login.microsoftonline.com/${encodeURIComponent(ctx.cred("tenant_id"))}/oauth2/v2.0/token`,
+      `https://login.microsoftonline.com/${encodeURIComponent(String(ctx.config.tenant_id || ""))}/oauth2/v2.0/token`,
       { client_id: ctx.cred("client_id"), client_secret: ctx.cred("client_secret"), scope: "https://monitor.azure.com//.default" }
     );
     const host = hostPart(ctx.config.endpoint || "");
@@ -3915,7 +3956,13 @@ async function providerTest(deps, body) {
       return out.bytes.length && (out.removed || []).length ? answer(true, `removed: ${out.removed.join(", ")}`) : answer(false, out.bytes.length ? "the rebuilt file reported nothing removed" : "no rebuilt file");
     }
     if (kind === "url_reputation") {
-      const r = await c.adapter.reputation(ctx, c.d.test_probe.address);
+      const look = () => c.adapter.reputation(ctx, c.d.test_probe.address);
+      const r = await look().catch(async (e) => {
+        if (!c.adapter.refresh || !/^REPUTATION_LIST_(ABSENT|STALE)$/.test(reasonOf(e))) throw e;
+        const f = await c.adapter.refresh(ctx);
+        if (!f.ok) throw new ToolError(String(f.error).split(":")[0]);
+        return look();
+      });
       return r.listed ? answer(true, "the test address answered listed") : answer(false, "the test address did not answer listed");
     }
     await c.adapter.forward(ctx, zeroCounts(deps.now()));
@@ -3936,34 +3983,70 @@ function providersList() {
 
 // packages-scanner.json
 var packages_scanner_default = {
+  ecosystem: "Debian:12",
+  base: {
+    repository: "docker.io/library/node",
+    digest: "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+  },
   image: "scanner",
   class_name: "FileScanner",
-  base: "docker.io/library/node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562",
-  ecosystem: "Debian",
   source: "https://snapshot.debian.org/archive/debian/20261006T000000Z bookworm main",
   packages: [
-    { name: "clamav", version: "1.4.3+dfsg-1~deb12u2" },
-    { name: "clamav-base", version: "1.4.3+dfsg-1~deb12u2" },
-    { name: "clamav-freshclam", version: "1.4.3+dfsg-1~deb12u2" },
-    { name: "libclamav12", version: "1.4.3+dfsg-1~deb12u2" }
+    {
+      name: "clamav",
+      version: "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      name: "clamav-base",
+      version: "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      name: "clamav-freshclam",
+      version: "1.4.3+dfsg-1~deb12u2"
+    },
+    {
+      name: "libclamav12",
+      version: "1.4.3+dfsg-1~deb12u2"
+    }
   ],
   note: "The package statement of the ClamAV image (bundler R27): each Debian package Dockerfile.scanner installs, pinned, from the snapshot named, over the base pinned by digest (node:22-bookworm-slim, its linux/amd64 manifest as read on 2026-10-06, the base agent-runner pins). Its server is container/scanner.mjs and container/common.mjs, run by the base's Node; no npm package is installed."
 };
 
 // packages-renderer.json
 var packages_renderer_default = {
+  ecosystem: "Debian:12",
+  base: {
+    repository: "docker.io/library/node",
+    digest: "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+  },
   image: "renderer",
   class_name: "SafeViewRenderer",
-  base: "docker.io/library/node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562",
-  ecosystem: "Debian",
   source: "https://snapshot.debian.org/archive/debian/20261006T000000Z bookworm main; https://snapshot.debian.org/archive/debian-security/20261006T000000Z bookworm-security main",
   packages: [
-    { name: "fonts-dejavu-core", version: "2.37-6" },
-    { name: "fonts-liberation2", version: "2.1.5-1" },
-    { name: "libreoffice-core", version: "4:7.4.7-1+deb12u14" },
-    { name: "libreoffice-impress", version: "4:7.4.7-1+deb12u14" },
-    { name: "libreoffice-writer", version: "4:7.4.7-1+deb12u14" },
-    { name: "poppler-utils", version: "22.12.0-2+deb12u3" }
+    {
+      name: "fonts-dejavu-core",
+      version: "2.37-6"
+    },
+    {
+      name: "fonts-liberation2",
+      version: "2.1.5-1"
+    },
+    {
+      name: "libreoffice-core",
+      version: "4:7.4.7-1+deb12u14"
+    },
+    {
+      name: "libreoffice-impress",
+      version: "4:7.4.7-1+deb12u14"
+    },
+    {
+      name: "libreoffice-writer",
+      version: "4:7.4.7-1+deb12u14"
+    },
+    {
+      name: "poppler-utils",
+      version: "22.12.0-2+deb12u3"
+    }
   ],
   note: "The package statement of the safe-view image (bundler R27): each Debian package Dockerfile.renderer installs, pinned, from the snapshots named, over the base pinned by digest (as packages-scanner.json's). Its server is container/renderer.mjs and container/common.mjs; no npm package is installed."
 };
@@ -4019,7 +4102,7 @@ async function handle(request, deps) {
 }
 
 // src/worker.mjs
-var classOf = (name) => fleet_member_default.classes.find((c) => c.class_name === name);
+var classOf = (name) => fleet_member_default.containers.find((c) => c.class_name === name);
 var FileScanner = class extends Container {
   defaultPort = classOf("FileScanner").image.port;
   sleepAfter = "10m";
@@ -4072,6 +4155,5 @@ export {
   ContainerProxy,
   FileScanner,
   SafeViewRenderer,
-  worker_default as default,
-  depsOf
+  worker_default as default
 };

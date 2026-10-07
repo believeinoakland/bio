@@ -11,7 +11,7 @@ import { MEMBER_LIMITS_STATEMENT } from './limits.mjs';
 
 export { ContainerProxy };
 
-const classOf = (name) => member.classes.find((c) => c.class_name === name);
+const classOf = (name) => member.containers.find((c) => c.class_name === name);
 
 export class FileScanner extends Container {
   defaultPort = classOf('FileScanner').image.port;
@@ -38,7 +38,7 @@ async function socketConnect(address, options) {
   return connect(address, options);
 }
 
-export function depsOf(env) {
+function depsOf(env) {
   return {
     bucket: env.CAPTURES || null, scanner: container(env.SCANNER, 'file-scanner'), renderer: container(env.RENDERER, 'safe-view'),
     fetch: (req) => fetch(req), connect: socketConnect, vpc: env.SECURITY_VPC || null, now: () => Date.now(),

@@ -1,16 +1,37 @@
 {
+  "ecosystem": "Debian:12",
+  "base": {
+    "repository": "docker.io/library/node",
+    "digest": "sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562"
+  },
   "image": "renderer",
   "class_name": "SafeViewRenderer",
-  "base": "docker.io/library/node@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce4a2792e3eb0ffc7562",
-  "ecosystem": "Debian",
   "source": "https://snapshot.debian.org/archive/debian/20261006T000000Z bookworm main; https://snapshot.debian.org/archive/debian-security/20261006T000000Z bookworm-security main",
   "packages": [
-    { "name": "fonts-dejavu-core", "version": "2.37-6" },
-    { "name": "fonts-liberation2", "version": "2.1.5-1" },
-    { "name": "libreoffice-core", "version": "4:7.4.7-1+deb12u14" },
-    { "name": "libreoffice-impress", "version": "4:7.4.7-1+deb12u14" },
-    { "name": "libreoffice-writer", "version": "4:7.4.7-1+deb12u14" },
-    { "name": "poppler-utils", "version": "22.12.0-2+deb12u3" }
+    {
+      "name": "fonts-dejavu-core",
+      "version": "2.37-6"
+    },
+    {
+      "name": "fonts-liberation2",
+      "version": "2.1.5-1"
+    },
+    {
+      "name": "libreoffice-core",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "libreoffice-impress",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "libreoffice-writer",
+      "version": "4:7.4.7-1+deb12u14"
+    },
+    {
+      "name": "poppler-utils",
+      "version": "22.12.0-2+deb12u3"
+    }
   ],
   "note": "The package statement of the safe-view image (bundler R27): each Debian package Dockerfile.renderer installs, pinned, from the snapshots named, over the base pinned by digest (as packages-scanner.json's). Its server is container/renderer.mjs and container/common.mjs; no npm package is installed."
 }
