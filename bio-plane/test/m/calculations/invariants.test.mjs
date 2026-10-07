@@ -17,7 +17,7 @@ test("R24 calculationsOps publishes route arms for the ops (tabledeclare, table,
   const source = w.csv("dept,amount\nparks,10\nroads,20\n");
   const ops = (params, body) => calculationsOps(w.c, url(params), body);
   for (const op of ["tabledeclare", "table", "tablesat", "bindingadopt", "moneyingest", "calculationcreate", "calculationevaluate", "calculationaccept",
-    "calculation", "calculationdraw", "recordset", "patterns", "patterngate", "patternswitch"])
+    "calculation", "calculationdraw", "recordset", "usesfreeze", "applicationrecipes", "patterns", "patterngate", "patternswitch"])
     assert.equal(typeof ops({ viewer: V("bob") }, {})[op], "function", op);
   /* the body cannot name its author: a machine stamp in the url is refused whatever the body says */
   const forged = await ops({ viewer: MACHINE }, { source, schema: { fields: F }, header: ["dept", "amount"], by: V("bob") }).tabledeclare();
@@ -76,7 +76,7 @@ test("R26 no eval and no user code is run: a recipe outside the closed grammar i
   delete globalThis.__calcRan;
 });
 
-test("R27 no outward text uses breach, violation, diverted, misused or a score's word: every answer, refusal and result of a full run is free of them", async () => {
+test("R27 no outward text uses breach, violation, diverted, misused, a score's word, or (R37) nonconforming or violated: every answer, refusal and result of a full run is free of them", async () => {
   const w = seeded();
   const out = [];
   const keep = async (p) => { const r = await p; out.push(r); return r; };
@@ -100,7 +100,7 @@ test("R27 no outward text uses breach, violation, diverted, misused or a score's
   await keep(w.c.patternResults({ viewer: V("alice") }));
   /* the refusal codes are the requirement's own names; everything else is the outward text */
   const text = JSON.stringify(out, (k, v) => (k === "reason" || k === "code" ? undefined : v));
-  assert.doesNotMatch(text, /\bbreach|\bviolat|\bdiverted\b|\bmisused\b|\bscore\b|\brisk score|\bsuspicious\b|\bconflict\b/i);
+  assert.doesNotMatch(text, /\bbreach|\bviolat|\bnon-?conforming|\bdiverted\b|\bmisused\b|\bscore\b|\brisk score|\bsuspicious\b|\bconflict\b/i);
   assert.ok(text.includes("computed fact"));
 });
 

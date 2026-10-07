@@ -131,13 +131,13 @@ test("R1 a table is held as canonical RFC 4180 UTF-8 CSV plus its schema, keyed 
   assert.equal(code(await bare.c.declareTable({ source: src, schema: { fields: F }, header: HEADER, by: V("bob") })), "SOURCE_NOT_READ");
 });
 
-test("R1 with no evidence store bound a table's bytes cannot be held: refused NO_EVIDENCE_STORE, nothing written, its why naming the group's Civicsmith as your group's Civicsmith, never this instance (DEC-149)", async () => {
+test("R1 with no evidence store bound a table's bytes cannot be held: refused NO_EVIDENCE_STORE, nothing written, its why naming the group's Civicsmith as your group's Civicsmith, never this instance, and says the store is not set up (DEC-149; CONTENT #14 J2)", async () => {
   const w = seeded({ evidence: false });
   const cells = [["A1", "vendor"], ["B1", "amount"], ["C1", "paid"], ["A2", "Acme"], ["B2", "12"], ["C2", "2025-08-01"]].map(([cell, value]) => ({ source: { cell }, value, type: "s" }));
   const r = await w.c.declareTable({ source: w.sheet(cells, "A1:C2"), schema: { fields: F }, header: HEADER, by: V("bob") });
   assert.equal(code(r), "NO_EVIDENCE_STORE");
-  assert.equal(r.detail, "your group's Civicsmith has no evidence store bound, so a table's bytes cannot be held. Nothing was written.");
-  assert.doesNotMatch(r.detail, /\b(this|the) instance\b|\bcopy\b|\bplane\b|\bserver\b/);
+  assert.equal(r.detail, "your group's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.");
+  assert.doesNotMatch(r.detail, /\b(this|the) instance\b|\bcopy\b|\bplane\b|\bserver\b|\bbound\b/);
   assert.equal(w.count("calc_tables"), 0);
 });
 
