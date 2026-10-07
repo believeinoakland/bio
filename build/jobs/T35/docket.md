@@ -17,3 +17,7 @@
 **Ran.** `node --test bio-plane/test/m/docket/`: tests 59, pass 59, fail 0. Users (wording only): public-read 131/0, network-notices 72/0; promotion `gate.test.mjs` 8/0. No layer tests named in `build/manifest.md`. Checks: format "130 modules, 129 requirements files; 0 failures"; architecture "12 product files, 55 relative imports (0 naming no tracked file, not judged); 0 failures"; coverage "26 of 26 live requirement ids named by a test; 0 failures"; ownership "3 files changed by docket between tranche/T35 and HEAD; 0 failures".
 
 Size (session_011Vi7vfBaCXdnheezEF7LYc): test runs 9, module lines 1486
+
+## J1 · COMPLETE
+
+T35-55 applied (N685): C-129.16 DOCKET_NO_GROUP_SLUG now says 'Your group has no name recorded yet, and a docket entry is never anonymous. Record the group's name first. Nothing was published.', as C-127.4. C-129.22 DOCKET_STALE already had C-127.12's form; its extra clause 'or the docket has moved since' is R5's own third condition, so it stays (row unchanged). words.test.mjs re-pins C-129.16 and names N685. Module 59/59; public-read 131/0, network-notices 72/0, promotion gate 8/0; format, architecture, coverage 26/26, ownership 0 failures. Reds: row census (red 2) gains C-129.16 again for T36's stamp; catalogue-end (red 19) unchanged, pins no docket row; the plane bundle is stale on C-129.16 until the layer close. Detail in my record's Completion.
