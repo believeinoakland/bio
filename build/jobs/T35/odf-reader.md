@@ -52,3 +52,7 @@ R47's wording leaves four points open. Below is my best reading of each, and I a
    - (b) `presentation:event-listener` with `presentation:action="execute"` (an `.odp` shape that launches a program) can act too.
 
    Should R47 list them, for example `Scripts/` members as `odf-basic` and (b) as an `odf-basic` item with its `event`? That is BOB's wording to make.
+
+## J2 · REPORT
+
+Generated artifact made stale (mechanics §14): bio-plane/dist/bio-plane.bundled.mjs embeds bio-plane/src/odf.mjs, which T35-76 changed (owned by not_product). Regenerate it at L1's close. case-checker's program.mjs and the worker bundles do not include odf.mjs.
