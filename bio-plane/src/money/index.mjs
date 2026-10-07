@@ -20,10 +20,9 @@ import { linesOf } from "../lines/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isHypothesisId, canonicalJson, sha256HexSync } from "../record-grammar/index.mjs";
 import { bounds, compare, fiscalPeriod, validAt } from "../civil-time/index.mjs";
-import { parseFigure, add, subtract, SUM_RULE } from "../calc-grammar/index.mjs";
-import { readingOf, cmpD } from "../calc-grammar/decimal.mjs";
+import { parseFigure, add, subtract, relate, SUM_RULE } from "../calc-grammar/index.mjs";
 import { BOUNDS, LOWEST_GRADE, exhausted, defaultRegistry } from "../connection-grammar/index.mjs";
-import { MONEY_SCHEMA, MONEY_TABLES } from "./schema.mjs";
+import { MONEY_SCHEMA, MONEY_TABLES, MONEY_ADDED_COLUMNS } from "./schema.mjs";
 import { MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, STAGE_FAMILIES, FUND_TYPES, BALANCE_FAMILIES, METHODS,
   MACHINE_METHODS, SET_PURPOSES, CONCERNS_KINDS, CHANGES, CONNECTION_KIND, CONNECTION_WORD } from "./vocab.mjs";
 
@@ -43,10 +42,12 @@ const SOURCE_DEPTH_MAX = 32;
 /* R1, R6: the fields a write may carry, and a party's. Every other field is refused (R6: no field marks a fact as
    the group's own). `fact_id`, `grade` and `at` are the module's to assign, never a caller's. */
 const FIELDS = new Set(["amount", "as_read", "currency", "sign", "precision", "kind", "phase", "stage", "adjusts",
-  "basis", "period", "from", "to", "codes", "balance_class", "buys", "concerns", "source", "method", "by"]);
+  "basis", "period", "from", "to", "codes", "balance_class", "buys", "concerns", "source", "method", "question", "by"]);
 const PARTY_FIELDS = new Set(["entity", "fund", "account", "as_written", "identifier"]);
 const PERIOD_FIELDS = new Set(["from", "to", "precision", "zone", "fiscal", "body"]);
 const SOURCE_FIELDS = new Set(["capture_sha", "extent", "content_id", "fact", "table", "row", "binding"]);
+/* R2 (T35; K1941): retrieval R73's match, the found extent's one shape; only its capture and extent are taken. */
+const FOUND = "search";
 const BUYS_FIELDS = new Set(["quantity", "unit", "what"]);
 
 const SHA_RE = /^[0-9a-f]{64}$/;
@@ -147,6 +148,10 @@ export class Money {
   migrate() {
     const bare = MONEY_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    /* A store made before T35 gains R2's question column. */
+    for (const [col, type] of MONEY_ADDED_COLUMNS)
+      if (!this.#rows(`PRAGMA table_info(money_facts)`).some((c) => c.name === col))
+        this.#sql.exec(`ALTER TABLE money_facts ADD COLUMN ${col} ${type}`);
     this.declareTables();
   }
 
@@ -307,7 +312,7 @@ export class Money {
     if ((input.precision === "range") !== (value === null))
       return refusal("BAD_RANGE", input.precision === "range" ? "a range carries its low and high as {low, high}"
         : "only a fact of precision range carries {low, high}");
-    if (low !== null && cmpD(dec(low), dec(high)) > 0) return refusal("BAD_RANGE", "a range's low is above its high");
+    if (low !== null && relate(exactFigure(low), exactFigure(high)) === "higher") return refusal("BAD_RANGE", "a range's low is above its high");
     if (!MONEY_KINDS.includes(input.kind))
       return refusal("UNKNOWN_MONEY_KIND", `kind is one of ${list(MONEY_KINDS)}`, { list: MONEY_KINDS });
     if (!PHASES.includes(input.phase)) return refusal("UNKNOWN_PHASE", `phase is one of ${list(PHASES)}`, { list: PHASES });
@@ -402,6 +407,15 @@ export class Money {
         return refusal("ADJUSTS_NOT_HELD", `the fact an adjustment names (${String(input.adjusts).slice(0, 60)}) is not held`);
       adjusts = input.adjusts;
     }
+    /* R2 (T35): the optional question, an inquiry bundle the record holds and the writer may see; kept beside the fact. */
+    let question = null;
+    if (input.question !== undefined && input.question !== null) {
+      const q = filled(input.question) ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, input.question) : null;
+      if (!q || q.object_type !== "inquiry" || !this.#visibleBundle(input.question, who))
+        return refusal("QUESTION_NOT_HELD", `the question ${String(input.question).slice(0, 60)} is not an inquiry held here, `
+          + "or not visible to the writer");
+      question = input.question;
+    }
 
     /* R3: how the figure was read. */
     const method = input.method === undefined || input.method === null ? (isMachine(by) ? null : "typed") : input.method;
@@ -441,7 +455,7 @@ export class Money {
       buys = { ...input.buys };
     }
     return { ok: true, by, value, low, high, input, stage, period, codes, parties, balanceClass, refs, src, adjusts,
-             method, buys };
+             method, buys, question };
   }
 
   /* R2: exactly one source, never a calculation; held and visible to the writer. Answers the source with its grade
@@ -456,6 +470,15 @@ export class Money {
       return refusal("SOURCE_IS_CALCULATION", "a calculation is never a money fact's source: its result is a calculation, "
         + "and the facts it read are the sources (K1468)");
     if (!isObj(x)) return refusal("NO_SOURCE", "a source is {capture_sha, extent}, {content_id} or {fact}");
+    if (x.origin === FOUND) {
+      /* A find's match is the citation of a passage, never itself a fact: its capture and extent are the source, as
+         any other extent of a held capture, and nothing else of it is kept (R2, R3). A table it names is counted
+         through a calculation, never read in here row by row (K1468). */
+      if (x.table !== undefined)
+        return refusal("NO_SOURCE", "a found table's amount column is declared and counted through calculations, never "
+          + "read into money facts row by row; record a figure from one passage of the table instead");
+      return this.#source({ capture_sha: x.capture_sha, extent: x.extent }, who);
+    }
     const k = Object.keys(x).find((f) => !SOURCE_FIELDS.has(f));
     if (k) return refusal("UNKNOWN_FIELD", `a source has no field ${k.slice(0, 40)}`, { field: k });
     const tableForm = x.table !== undefined || x.row !== undefined || x.binding !== undefined;
@@ -526,7 +549,7 @@ export class Money {
       source_capture_sha: src.capture ?? null, source_extent: src.extent ? JSON.stringify(src.extent) : null,
       source_content_id: src.contentId ?? null, source_table: src.table ? src.table.table : null,
       source_row: src.table ? src.table.row : null, source_binding: src.table ? src.table.binding : null,
-      source_fact: src.fact ?? null, method: v.method,
+      source_fact: src.fact ?? null, method: v.method, question: v.question,
       grade_reading: src.grade ?? null, grade_basis: src.grade_basis ?? null,
       by, at, sight_bundle: src.sight ?? null, withdrawn_at: null, projected_key: projectedKey,
     };
@@ -620,10 +643,10 @@ export class Money {
     const g = this.#gate("f.sight_bundle", viewer ?? "");
     const adjustments = this.#rows(`SELECT f.fact_id FROM money_facts f WHERE f.adjusts=? AND (${g.sql}) ORDER BY f.at, f.fact_id`, row.fact_id, ...g.args).map((r) => r.fact_id);
     const citing = this.#rows(`SELECT f.fact_id FROM money_facts f WHERE f.source_fact=? AND (${g.sql}) ORDER BY f.at, f.fact_id`, row.fact_id, ...g.args).map((r) => r.fact_id);
-    return { ok: true, found: true, fact: { ...this.#view_(row), adjustments, cited_by: citing } };
+    return { ok: true, found: true, fact: { ...this.#view_(row, viewer ?? ""), adjustments, cited_by: citing } };
   }
 
-  #view_(row) {
+  #view_(row, viewer) {
     const codes = this.#rows(`SELECT scheme, code FROM money_codes WHERE fact_id=? ORDER BY scheme, code`, row.fact_id);
     const concerns = this.#rows(`SELECT concerns FROM money_concerns WHERE fact_id=? ORDER BY concerns`, row.fact_id).map((r) => r.concerns);
     const w = row.withdrawn_at ? this.#one(`SELECT reason, by, at FROM money_withdrawals WHERE fact_id=?`, row.fact_id) : null;
@@ -653,6 +676,8 @@ export class Money {
                parties: { from: this.#partyGrade(capture, row.from_entity ?? row.from_fund),
                           to: this.#partyGrade(capture, row.to_entity ?? row.to_fund) } },
       by: row.by, at: row.at, withdrawn: w ? { by: w.by, at: w.at, reason: w.reason } : null,
+      /* R2 (T35): the question, to a viewer who may see its bundle; withheld as absent from any other. */
+      question: row.question && this.#visibleBundle(row.question, viewer) ? row.question : null,
     };
   }
   /* The capture a fact finally rests on, through the facts it cites. */
@@ -703,7 +728,7 @@ export class Money {
       if (o === false) continue;
       const into = o === true ? facts : undetermined;
       if (into.length >= lim) { truncated = true; continue; }
-      into.push(this.#view_(r));
+      into.push(this.#view_(r, viewer ?? ""));
     }
     return { ok: true, entity, count: facts.length, facts, undetermined,
              ...(undetermined.length ? { undetermined_why: "these facts' periods state no end, so whether they overlap the period asked is not settled" } : {}),
@@ -760,8 +785,7 @@ export class Money {
     if (x.currency !== y.currency) push("currency", x.currency, y.currency);
     const ends = (r) => ({ from: r.from_entity ?? r.from_fund ?? null, to: r.to_entity ?? r.to_fund ?? null });
     if (canonicalJson(ends(x)) !== canonicalJson(ends(y))) push("parties", ends(x), ends(y));
-    const ix = interval(x), iy = interval(y);
-    const overlap = cmpD(ix.hi, iy.lo) >= 0 && cmpD(iy.hi, ix.lo) >= 0;
+    const overlap = overlaps(x, y);
     const equal = x.precision !== "range" && y.precision !== "range" && x.amount === y.amount;
     const amounts = equal ? "equal" : overlap ? "within the coarser fact's precision" : "differ";
     if (!overlap) {
@@ -906,7 +930,7 @@ export class Money {
   }
   /* One side: its facts and their sum through calc-grammar, under R10's rule (a refused sum is answered as such). */
   #side(entries, viewer) {
-    const facts = entries.map(({ r, label, set_id }) => ({ ...this.#view_(r), label, ...(set_id ? { set_id } : {}) }));
+    const facts = entries.map(({ r, label, set_id }) => ({ ...this.#view_(r, viewer), label, ...(set_id ? { set_id } : {}) }));
     if (!entries.length) return { facts, sum: null, says: "no fact is held on this side" };
     const ok = this.summable({ factIds: entries.map((e) => e.r.fact_id), viewer });
     if (ok.ok === false) return { facts, sum: null, refused: ok };
@@ -1046,10 +1070,8 @@ export class Money {
 
 /* ---- helpers ---- */
 
-function dec(s) {
-  const [i, f = ""] = s.replace(/,/g, "").split(".");
-  return { n: BigInt(i + f), s: f.length };
-}
+/* An unsigned exact decimal as calc-grammar's figure (R1's range check). */
+const exactFigure = (value) => ({ value: value.replace(/,/g, ""), sign: "+", precision: "exact" });
 function toList(v) {
   if (v === undefined || v === null || v === "") return [];
   return (Array.isArray(v) ? v : String(v).split(",")).map((x) => String(x).trim()).filter(Boolean);
@@ -1077,13 +1099,16 @@ function figureOf(r) {
   const neg = r.amount.startsWith("-");
   return { value: neg ? r.amount.slice(1) : r.amount, sign: neg ? "-" : "+", precision: r.precision, currency: r.currency };
 }
-/* The interval a fact's amount may stand for (R11): a rounded or approximate figure stands for half its printed unit
-   either side, a range for its bounds, an exact figure for itself. */
-function interval(r) {
-  const f = figureOf(r);
-  if (f.precision === "approximate") f.precision = "rounded";
-  const x = readingOf(f);
-  return { lo: x.lo, hi: x.hi };
+/* Whether two facts' amounts may stand for one figure (R11), through calc-grammar's `relate`: a rounded or approximate
+   figure stands for half its printed unit either side, a range for its bounds, an exact figure for itself. Currency is
+   R11's own dimension, so the amounts are related apart from it. */
+function overlaps(x, y) {
+  const loose = (r) => {
+    const { currency: _c, ...f } = figureOf(r);
+    return f.precision === "approximate" ? { ...f, precision: "rounded" } : f;
+  };
+  const rel = relate(loose(x), loose(y));
+  return rel !== "lower" && rel !== "higher";
 }
 /* R5: the facts a promoted bundle carries in `data/money.json`. */
 function factsOf(c) {
