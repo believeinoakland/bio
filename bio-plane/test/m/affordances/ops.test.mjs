@@ -16,7 +16,7 @@ const world = () => {
     record: w.record, membership: w.membership, sql: w.st.sql, inquiry: w.k, basisVersions: w.bv, contradiction: w.c,
     connections: { citesInto: () => NONE },
     citation: { retiredNotCitable: () => false },
-    publication: { caseRelation: () => ({ member: false }) },
+    caseTensions: { caseRelation: () => ({ member: false }) },
     ratification: { caseConclusionFor: () => ({ state: "none" }), editionsRecordingConclusion: () => ({ same: [] }) },
   });
   return { w, a };
@@ -62,4 +62,30 @@ test("R22: answering the route writes nothing — every table's rows are unchang
     for (const target of [IQ.a, INFO.a, "INQ-2026-9999-nowhere", ""])
       route(a, { target, viewer: M1, identity: M1, author: M1, by: "m1" }).affordancefacts();
   assert.equal(snapshot(), before);
+});
+
+/* N597 (K1643): the case relation is asked of `case-tensions.caseRelation` (its R1), the predicate the refusals run since
+   the split, never through publication's delegate: what case-tensions answers is what `case_member` says, both ways. */
+test("R14: case_member is case-tensions' caseRelation for the target, asked of it and of no other provider", () => {
+  for (const member of [true, false]) {
+    const w = seeded();
+    const asked = [];
+    const a = affordancesOf(w.host, {
+      record: w.record, membership: w.membership, sql: w.st.sql, inquiry: w.k, basisVersions: w.bv, contradiction: w.c,
+      connections: { citesInto: () => NONE },
+      citation: { retiredNotCitable: () => false },
+      caseTensions: { caseRelation: (id) => { asked.push(id); return { member: member ? ["CASE-1"] : null }; } },
+      publication: { caseRelation: () => { throw new Error("publication's delegate was asked"); } },
+      ratification: { caseConclusionFor: () => ({ state: "none" }), editionsRecordingConclusion: () => ({ same: [] }) },
+    });
+    const f = a.affordanceFacts({ target: IQ.a, viewer: M1, identity: M1, author: M1, by: "m1" });
+    assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+    assert.equal(f.case_member, member);
+    assert.ok(asked.length > 0 && asked.every((id) => id === IQ.a), JSON.stringify(asked));
+    /* a target that is not an inquiry is no case member, and case-tensions is not asked of it */
+    asked.length = 0;
+    const info = a.affordanceFacts({ target: INFO.a, viewer: M1, identity: M1, author: M1, by: "m1" });
+    assert.equal(info.case_member, false);
+    assert.deepEqual(asked, []);
+  }
 });

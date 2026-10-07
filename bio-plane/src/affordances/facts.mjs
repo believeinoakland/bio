@@ -10,7 +10,7 @@
  * same question, so a published act and the refusal it fronts cannot disagree (DEC-8): live citations through
  * `connections.citesInto` (retire's CITED guard), reinstatable edges through `citation.retiredNotCitable`
  * (`#edgeTransition`'s), what rests on a question through `inquiry.restsOnLive` (divide's CITED guard), the case
- * relation through `publication.caseRelation`, a project's conclusion through `basis-versions.conclusionOf` and
+ * relation through `case-tensions.caseRelation` (its R1; N597), a project's conclusion through `basis-versions.conclusionOf` and
  * `ratification.caseConclusionFor` / `editionsRecordingConclusion` (publishCase()'s gates), whether the viewer sees both
  * sides of a contradiction inquiry's candidate through `contradiction.candidateSidesSeen` (resolve's C-93.27 check), and
  * every position through `membership`'s predicates.
@@ -26,7 +26,7 @@
  * REACHED as `affordancesOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`). The modules it
  * asks are reached through their factories on the same host at the moment of the call, when the Durable Object has
  * already made each of them with its own options; `deps` (a test's) replaces any of `record`, `membership`,
- * `connections`, `citation`, `inquiry`, `publication`, `basisVersions`, `ratification`, `contradiction`, `wizardScripts`.
+ * `connections`, `citation`, `inquiry`, `caseTensions`, `basisVersions`, `ratification`, `contradiction`, `wizardScripts`.
  *
  * R37 (N528): the second route, `op=affordancescreens`, answers what the untargeted `op=affordances` publishes of
  * `wizard-scripts`: the registered screens and, for each, the offered scripts that start there for this viewer. */
@@ -37,7 +37,7 @@ import { membershipOf, Membership } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { citationOf } from "../citation/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
-import { publicationOf } from "../publication/index.mjs";
+import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
@@ -54,7 +54,7 @@ class AffordanceFacts {
     this.connections = of("connections", connectionsOf);
     this.citation = of("citation", citationOf);
     this.inquiry = of("inquiry", inquiryOf);
-    this.publication = of("publication", publicationOf);
+    this.caseTensions = of("caseTensions", caseTensionsOf);
     this.basisVersions = of("basisVersions", basisVersionsOf);
     this.ratification = of("ratification", ratificationOf);
     this.contradiction = of("contradiction", contradictionOf);
@@ -109,7 +109,7 @@ class AffordanceFacts {
      relationship is CONCLUDED, and no edition pinning these bytes already records that conclusion. Only a case member is
      walked: a finding no case pins is offered `publish` by `!case_member` already. */
   #editionWarrantedForProject(inquiryId, viewer, memberId, currentState) {
-    const rel = this.publication().caseRelation(inquiryId);
+    const rel = this.caseTensions().caseRelation(inquiryId);
     if (!rel.member) return false;
     const r = this.ratification();
     return this.#joinedCitingProjects(inquiryId, viewer, memberId).some((pid) => {
@@ -198,8 +198,9 @@ class AffordanceFacts {
     return { ok: true, target: id, object_type: b.object_type,
              declared_type: typeof docFm.object_type === "string" ? docFm.object_type : b.object_type,
              current_state: b.current_state, criticality: b.criticality ?? null,
-             /* CASE-4 / DEC-72: the case relation, through the one predicate the refusals run. */
-             case_member: type === "inquiry" ? !!this.publication().caseRelation(id).member : false,
+             /* CASE-4 / DEC-72: the case relation, through the one predicate the refusals run (case-tensions R1; N597,
+                never publication's delegate). */
+             case_member: type === "inquiry" ? !!this.caseTensions().caseRelation(id).member : false,
              /* D-310 / DEC-72 clause 5: owner of SOME project (the project is a PARAMETER of op=publish). */
              project_owner: who === null ? null : m.ownsAnyProject(who),
              /* REC-149: the PAIR — does the caller own THIS project (`projectVisibilitySet`'s refusal). */

@@ -2,8 +2,8 @@
    `unaccounted(opTable)` (R12), and that neither writes to what it is handed (R22). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, NON_ACTS, RUNGS, RUNG_ABSENT, decorate, unaccounted,
-         deriveActs } from "../../../src/affordances.mjs";
+import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, decorate, unaccounted, deriveActs } from "../../../src/affordances.mjs";
+import { NON_ACTS, RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 
 const KEYS = ["id", "label", "weight", "needs", "mode", "rung", "rung_absence", "prompt", "phone" /* R36 */];
 const gateOf = (needs, modes) => ({ needs: (op) => needs[op], mode: (op) => modes[op] });

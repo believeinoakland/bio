@@ -5,7 +5,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
-import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/affordances/t33.mjs";
+import * as G from "../../../src/op-grades/index.mjs";
+import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
@@ -32,8 +33,8 @@ import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { world as eventsWorld } from "../events/fixture.mjs";
 
-const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, ACTS, CAPTURE_ACTS, PER_ITEM_ACTS,
-        RUNG_ABSENCE_GROUNDS } = A;
+const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS } = A;
+const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNG_ABSENCE_GROUNDS } = G;
 const url = new URL("http://x/");
 const keysOf = (f) => Object.keys(f({}, url, {}, {}));
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
@@ -268,10 +269,15 @@ test("R39 R4: each vocabulary's values are the very objects its owner answers â€
     assert.equal(v.line_roles.values[k], lines.roles(k), k);
     assert.deepEqual(Object.keys(v.line_roles.words[k]), [...lines.roles(k)], k);
   }
-  /* connection_kinds: every kind connection-grammar's owners() lists, with its registered word and class */
-  assert.deepEqual(v.connection_kinds.values, owners());
+  /* connection_kinds (N695, K1864): every kind connection-grammar's owners() lists, carried once: `values` the kind
+     names in owners()' order, `words` each kind's registered word, class and owner, and nothing else beside them */
   const listed = owners().flatMap((o) => o.kinds.map((k) => [k.kind, { word: k.word, class: k.class, owner: o.owner }]));
+  assert.deepEqual(Object.keys(v.connection_kinds), ["values", "words"]);
+  assert.deepEqual(v.connection_kinds.values, listed.map(([k]) => k));
+  assert.ok(v.connection_kinds.values.every((k) => typeof k === "string"), "the values are kind names, not registry entries");
+  assert.equal(new Set(v.connection_kinds.values).size, v.connection_kinds.values.length, "each kind once");
   assert.deepEqual(v.connection_kinds.words, Object.fromEntries(listed));
+  assert.deepEqual(Object.keys(v.connection_kinds.words), v.connection_kinds.values);
 });
 
 test("R39: each word is the owner's registered word where it holds one, else K1486's, else one plain word marked "
