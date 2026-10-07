@@ -50,6 +50,90 @@ CREATE TABLE IF NOT EXISTS standard_adoptions (
   adopted_by    TEXT NOT NULL,
   adopted_at    TEXT NOT NULL
 );
+-- T35 (R35): a provision's force, confirmed by a member's act with the citation of its own words; withdrawn in
+-- standard_force_withdrawals, never edited (R14). A proposed force is stored apart in standard_force_proposals (R9's way).
+CREATE TABLE IF NOT EXISTS standard_forces (
+  force_id       TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  portion        TEXT NOT NULL,
+  force          TEXT NOT NULL,
+  holder         TEXT,
+  criteria       TEXT,
+  citation       TEXT NOT NULL,
+  proposal_id    TEXT,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS standard_forces_standard ON standard_forces(standard_id, portion, force_id);
+CREATE TABLE IF NOT EXISTS standard_force_withdrawals (
+  force_id       TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  withdrawn_by   TEXT NOT NULL,
+  withdrawn_at   TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS standard_force_proposals (
+  proposal_id    TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  fields_json    TEXT NOT NULL,
+  why            TEXT NOT NULL,
+  proposed_by    TEXT NOT NULL,
+  proposed_at    TEXT NOT NULL
+);
+-- R38: a portion of one standard displacing a portion of another until an event or a later revision of its own key.
+CREATE TABLE IF NOT EXISTS standard_overrides (
+  standard_id    TEXT NOT NULL,
+  ord            INTEGER NOT NULL,
+  target         TEXT NOT NULL,
+  portion        TEXT NOT NULL,
+  until_json     TEXT NOT NULL,
+  PRIMARY KEY (standard_id, ord)
+);
+CREATE INDEX IF NOT EXISTS standard_overrides_target ON standard_overrides(target, portion);
+-- R37: a policy held at its source's sight, released to the group by an owner of that source's project, once.
+CREATE TABLE IF NOT EXISTS standard_releases (
+  standard_id    TEXT PRIMARY KEY,
+  reason         TEXT NOT NULL,
+  released_by    TEXT NOT NULL,
+  released_at    TEXT NOT NULL
+);
+-- R40: a body's adoption of an edition, by a member's act naming the adopting act and its passage.
+CREATE TABLE IF NOT EXISTS standard_body_adoptions (
+  adoption_id    TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  act            TEXT NOT NULL,
+  body           TEXT,
+  edition        TEXT NOT NULL,
+  from_json      TEXT NOT NULL,
+  amendments_json TEXT NOT NULL,
+  mode           TEXT NOT NULL,
+  citation       TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS standard_body_adoptions_standard ON standard_body_adoptions(standard_id, adoption_id);
+-- R43: a held law imposing a standard on a body, and a member's declaration that a comparison is a benchmark.
+CREATE TABLE IF NOT EXISTS standard_impositions (
+  imposition_id  TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  body           TEXT NOT NULL,
+  law            TEXT NOT NULL,
+  citation       TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS standard_impositions_standard ON standard_impositions(standard_id, body);
+CREATE TABLE IF NOT EXISTS standard_benchmarks (
+  benchmark_id   TEXT PRIMARY KEY,
+  standard_id    TEXT NOT NULL,
+  body           TEXT NOT NULL,
+  reason         TEXT NOT NULL,
+  author         TEXT NOT NULL,
+  at             TEXT NOT NULL
+);
 -- R22, R23: a law relation from one standard (or a portion of it) to another, recorded by a member's act. 'class' keeps
 -- temporal and referential apart (D192); a temporal relation's effective date, or its enactment event and edge, bounds
 -- the version it amends (R20). Withdrawn in law_withdrawals, never edited or deleted (R14).
@@ -126,6 +210,14 @@ const T33_COLUMNS = Object.freeze([
   ["requires_json", "TEXT"], ["copy", "TEXT"], ["copy_json", "TEXT"], ["current_through", "TEXT"],
   ["current_through_basis", "TEXT"], ["period_basis_json", "TEXT"],
 ]);
+/** R33–R42, R47: the columns T35 adds to `standards`, added the same way: a standard recorded before them states none,
+ *  read as not stated (`held` text, sight group, no family, access undetermined for a `standard`, no question). */
+const T35_COLUMNS = Object.freeze([
+  ["family_json", "TEXT"], ["family_key", "TEXT"], ["held", "TEXT"], ["held_json", "TEXT"], ["copy_claimed_json", "TEXT"],
+  ["sight_json", "TEXT"], ["version_basis_json", "TEXT"], ["force_source_json", "TEXT"], ["designation", "TEXT"],
+  ["designation_json", "TEXT"], ["edition", "TEXT"], ["issuer_entity", "TEXT"], ["access", "TEXT"], ["target_json", "TEXT"],
+  ["question", "TEXT"],
+]);
 
 /* R14 (plan T33, Rules (6)): every table declared explicitly through `record-core.declareTable`, append-only
    (`version_chain: true`), group-wide (`sight: "group"`: a standard is instance-wide, R5), the other classes as
@@ -138,6 +230,14 @@ export const STANDARDS_TABLES = Object.freeze([
   { name: "standard_texts", keys: ["standard_id"] },
   { name: "standard_proposals", keys: [] },
   { name: "standard_adoptions", keys: ["standard_id"] },
+  { name: "standard_forces", keys: ["standard_id"] },
+  { name: "standard_force_withdrawals", keys: ["standard_id"] },
+  { name: "standard_force_proposals", keys: ["standard_id"] },
+  { name: "standard_overrides", keys: ["standard_id", "target"] },
+  { name: "standard_releases", keys: ["standard_id"] },
+  { name: "standard_body_adoptions", keys: ["standard_id"] },
+  { name: "standard_impositions", keys: ["standard_id"] },
+  { name: "standard_benchmarks", keys: ["standard_id"] },
   { name: "law_relations", keys: ["from_standard", "to_standard"] },
   { name: "court_links", keys: ["from_standard", "to_standard"] },
   { name: "court_treatments", keys: ["decision", "by_decision"] },
@@ -152,7 +252,10 @@ export function migrateStandards(sql) {
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
   const cols = [...sql.exec(`PRAGMA table_info(standards)`)].map((c) => c.name);
   if (!cols.includes("reason")) sql.exec(`ALTER TABLE standards ADD COLUMN reason TEXT`);
-  for (const [c, type] of T33_COLUMNS) if (!cols.includes(c)) sql.exec(`ALTER TABLE standards ADD COLUMN ${c} ${type}`);
+  for (const [c, type] of [...T33_COLUMNS, ...T35_COLUMNS])
+    if (!cols.includes(c)) sql.exec(`ALTER TABLE standards ADD COLUMN ${c} ${type}`);
+  /* R33: the family filter */
+  sql.exec(`CREATE INDEX IF NOT EXISTS standards_family ON standards(family_key, standard_id)`);
   /* R32: the reads by instrument key and portion, and by a portion's content id */
   sql.exec(`CREATE INDEX IF NOT EXISTS standards_instrument ON standards(instrument, portion_path, standard_id)`);
   sql.exec(`CREATE INDEX IF NOT EXISTS standards_portion_content ON standards(portion_content, standard_id)`);
