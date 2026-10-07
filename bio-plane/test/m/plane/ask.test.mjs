@@ -9,6 +9,7 @@ import { store } from "./fixture.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { askOp, draftOnObject } from "../../../src/plane/ask.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
+import { answersOf } from "../../../src/answers/index.mjs";
 
 const SEAL = "a-long-seal-secret-for-the-test-only";
 const SESSION = "s".repeat(64);
@@ -190,7 +191,7 @@ const draft = (x, extra = {}) => x.s.draft({ member: "member:ann", session: SESS
 test("R19 (N686; K2038; agent-worker R59): a member's draft carries their account in R6's shape to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back as given with the switch", async () => {
   const x = await world();
   const r = await draft(x);
-  assert.deepEqual(r, { status: 200, answer: DRAFT, grant: null, suggestions: false });
+  assert.deepEqual(r, { status: 200, answer: DRAFT, grant: null, suggestions: false, read: [] });
   assert.equal(x.asks.length, 1);
   const [u, body] = x.asks[0];
   assert.equal(u, "https://agent-worker/draft");
@@ -203,10 +204,20 @@ test("R19 (N686; K2038; agent-worker R59): a member's draft carries their accoun
 test("R19 (N686; DEC-153 (2), K1841 (2)): with the member's suggestions on, a grant is minted for them and sent, and handed back for the door's read-log check; a firsthand field never gets one", async () => {
   const x = await world();
   assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  /* the assistant member reads through the grant while it drafts, as agent-worker R59's read tool does: a read on this
+     object under the grant, recorded in its read log (answers R1, R2) */
+  const fetchDraft = x.env.AGENT_WORKER.fetch;
+  x.env.AGENT_WORKER.fetch = async (u, init) => {
+    const b = JSON.parse(init.body);
+    if (b.grant) await x.fetch(`/search?q=clerk&grant=${b.grant}&viewer=member:ann`);
+    return fetchDraft(u, init);
+  };
   const r = await draft(x);
   assert.equal(r.status, 200);
   assert.equal(r.suggestions, true);
   assert.match(r.grant, /^[0-9a-f]{64}$/);
+  assert.deepEqual(r.read, [...answersOf(x.ctx).readLog(r.grant).index.keys()], "K2041: the strings of the grant's read log");
+  assert.ok(r.read.length > 0, JSON.stringify(r.read));
   assert.equal(x.asks[0][1].grant, r.grant, "the grant sent is the one handed back");
   assert.equal(x.asks[0][1].account.suggestions, true);
   const admit = await credentialsOf(x.ctx).aiGrantAdmit({ token: r.grant, op: "search", write: false });
@@ -214,6 +225,7 @@ test("R19 (N686; DEC-153 (2), K1841 (2)): with the member's suggestions on, a gr
   /* firsthand: what the member saw is only worded, never read for (DEC-153 (2)) */
   const f = await draft(x, { firsthand: true });
   assert.equal(f.grant, null);
+  assert.deepEqual(f.read, [], "no grant, no read log");
   assert.equal(x.asks[1][1].grant, undefined);
   assert.equal(x.asks[1][1].firsthand, true);
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 1, "one grant, the first draft's");

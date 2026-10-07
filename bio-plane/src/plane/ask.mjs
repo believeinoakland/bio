@@ -7,6 +7,7 @@
    The secret leaves the object only in that one call and is kept nowhere; every refusal is its owner's, in its words. */
 import { credentialsOf } from "../credentials/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
+import { answersOf } from "../answers/index.mjs";
 
 const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const idOf = (m) => (typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m);
@@ -89,11 +90,16 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
  *  switch (the member's own reference's, credentials R25; the group key's, its R37), mints the member's ask grant only
  *  when `suggestions` is on and `firsthand` is not true (DEC-153 (2), K1841 (2)), and posts `{task, told, account,
  *  grant?, firsthand?}` to agent-worker's `/draft` in its R6 wire shape. It answers `{status, answer, grant,
- *  suggestions}`: agent-worker's answer as given (or the refusal that ended it first), the grant it minted (null when
- *  none), and the switch, so the door checks the draft against that grant's read log (`wizard-scripts.checkDraft`) and
- *  counts its usage; the door answers the member, never this. The secret leaves the object only in that one call. */
+ *  suggestions, read}`: agent-worker's answer as given (or the refusal that ended it first), the grant it minted (null
+ *  when none), the switch, and (K2041) `read`, the strings of that grant's read log on this object (`answers.readLog`,
+ *  its R1, R2: what the draft's reads under the grant returned; `[]` with no grant), so the door checks the draft
+ *  against them (`wizard-scripts.checkDraft`) and counts its usage; the door answers the member, never this. The secret leaves the object only in that one call. */
 export async function draftOnObject(ctx, env, { member = null, session = null, task = null, told = null, firsthand = false } = {}) {
-  const out = (status, answer, grant = null, suggestions = false) => ({ status, answer, grant, suggestions });
+  const readOf = (grant) => {
+    if (!grant) return [];
+    try { return [...answersOf(ctx).readLog(grant).index.keys()]; } catch { return []; }
+  };
+  const out = (status, answer, grant = null, suggestions = false) => ({ status, answer, grant, suggestions, read: readOf(grant) });
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was drafted." });
