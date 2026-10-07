@@ -262,3 +262,23 @@ test("R14 no law relation, court link or treatment row is written by a machine: 
   const p = w.law.lawPropose({ what: "treatment", decision: court.id, treatment: "affirmed", why: "Read in a news report.", proposer: MACHINE });
   assert.deepEqual([p.proposal.machine_work, p.proposal.by, w.count("law_proposals"), w.count("court_treatments")], [true, MACHINE, 1, 0]);
 });
+
+test("R21 machineRelate() and refuseNoCitation() are exported, the one site each of MACHINE_CANNOT_RELATE and LAW_RELATION_NO_CITATION, answering exactly what lawRelate answers for each code", async () => {
+  const { machineRelate, refuseNoCitation } = await import("../../../src/law-relations/index.mjs");
+  const w = seeded();
+  const { a, b, at, bt } = two(w);
+  const good = { type: "refers_to", from: a, to: b, citation: at, reason: REASON, author: V("bob"), viewer: V("bob") };
+  for (const author of [MACHINE, "class:daemon", "token:x", "", null, undefined, "  "]) {
+    const m = machineRelate(author);
+    assert.deepEqual(m, w.law.lawRelate({ ...good, author }), String(author));
+    rowOf(m, "MACHINE_CANNOT_RELATE");
+  }
+  for (const author of [V("bob"), "admin", "carol"]) assert.equal(machineRelate(author), null, author);
+  for (const citation of [bt, "", null, 7, "x".repeat(200), " nope "]) {
+    const r = refuseNoCitation(a, citation);
+    assert.deepEqual(r, w.law.lawRelate({ ...good, citation }), JSON.stringify(citation));
+    rowOf(r, "LAW_RELATION_NO_CITATION");
+    assert.equal(r.standard, a);
+  }
+  assert.equal(w.count("law_relations"), 0, "neither writes");
+});
