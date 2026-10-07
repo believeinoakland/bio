@@ -173,7 +173,7 @@ export function observationCoverage({ state, resultRef } = {}) {
    `surfaced_by` (agent / human) and this is the column it maps onto (design
    section 5) -- one word, not two spellings of one fact. */
 export const OBSERVATION_ACTOR_CLASSES = {
-  plane:   "the plane's own scheduler looked, with no member and no machine behind it",
+  plane:   "the scheduler of your group's Civicsmith looked, with no member and no machine behind it",
   machine: "a machine credential looked: a run, an agent, an unattended writer",
   member:  "a member's authored act caused the look (a lead, an objective)",
 };
@@ -195,7 +195,7 @@ export const OBSERVATION_AUTHORITY_KINDS = {
   extract:   "an extraction attempt over a capture (REC-94)",
   derive:    "a derivation over extracted content (REC-95)",
   lead:      "a member's LEAD -- the authored act that puts a name behind a negative answer (D-194, Program B)",
-  objective: "a standing objective the instance is monitoring for",
+  objective: "a standing objective your group's Civicsmith is monitoring for",
 };
 
 /* WHAT THE SUBJECT IS. `unstated` is the sixth and it is NOT in design section
@@ -623,7 +623,7 @@ function detailFor(tier, terminal, reading, outcome) {
     parts.push("and this record does not hold a page count for this document, so whether those "
              + "are ALL of its pages is undetermined rather than assumed (CAP-9 / D-345)");
   if (reading.tier3_candidate === true)
-    parts.push("this document has pages no engine bound to this instance could read");
+    parts.push("this document has pages no engine in your group's Civicsmith could read");
   if (typeof reading.text_container === "string" && reading.text_container)
     parts.push(reading.text_container);
   return parts.join("; ");
@@ -1406,7 +1406,7 @@ export const CONDITION_KINDS = Object.freeze({
      a render held under a C-83 reason is SHOWN with that reason, and at its request's `expires` it is
      recorded UNDETERMINED and released. A CONDITION and not a FINDING: our own renderer, allowance or
      pacing is what holds it, a fact about our machinery and never about the page. */
-  "render-deferred":              "a render this instance could not do is held under its C-83 reason until its "
+  "render-deferred":              "a render your group's Civicsmith could not do is held under its C-83 reason until its "
                               + "request expires, and is then recorded undetermined (D-491, D-523) "
                               + "— LIVE: queue-producers #conditionsRenderDeferred",
   /* R33 (T23, K1099): the five sweep kinds `monitoring` R63 derives on read, each sentence taken from its statement

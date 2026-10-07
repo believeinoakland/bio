@@ -358,7 +358,7 @@ export const BIAS_CHECKS = {
     check: 'C-26.2',
     where: 'src/bias/checks.mjs checkBiasSet, run at op=promote, in the audit and at the gate',
     translation: 'That statement names its subject in prose rather than pointing at the subject registry. '
-      + 'Registry entries are what let the record notice when a project statement and an instance '
+      + 'Registry entries are what let the record notice when a project statement and a group '
       + 'statement are about the same thing — in prose, nothing can tell, and a collision that is '
       + 'quiet is the one this construct exists to prevent.',
   },

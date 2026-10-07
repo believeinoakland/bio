@@ -151,3 +151,89 @@ test("R33 every table is declared explicitly through record-core's declareTable 
   w.record.purge({ bundleId: w.project() });
   assert.equal(w.one(`SELECT COUNT(*) AS n FROM identity_claims`).n, 1);
 });
+
+/* retrieval R73's match: what a find answers, a recording act taking its capture and extent as the citation. */
+const found = (c, kind = "person") => ({ kind, words: "Rita Moreno, Port Warden, of Port Ellery", capture_sha: c.captureSha,
+                                         extent: { kind: "pdf-page", page: 0 }, origin: "search" });
+
+test("R9 (T35) the citation may be an extent a find answered (retrieval R73's match: its capture_sha and extent), taken exactly as any other extent: the same refusals, the grade of its capture, and the sight of its capture", () => {
+  const w = world();
+  const p = w.person("Rita Moreno");
+  const open = w.capture("roster"), fenced = w.capture("fenced roster", { fenced: true });
+  const base = { person: p, kind: "locality", value: "Port Ellery", valid, by: ANN };
+  /* found, for each kind a find answers people and offices by */
+  const viaFind = w.p.recordPersonFact({ ...base, citation: found(open) });
+  const viaDoc = w.p.recordPersonFact({ ...base, citation: doc(open) });
+  assert.equal(viaFind.ok, true);
+  assert.equal(w.p.recordPersonFact({ ...base, citation: found(open, "office") }).ok, true);
+  const read = w.p.personAt({ entityId: p, at: "2024-01-01", viewer: ANN }).facts;
+  const a = read.find((f) => f.fact_id === viaFind.fact_id), b = read.find((f) => f.fact_id === viaDoc.fact_id);
+  assert.deepEqual(a.citation, doc(open), "held as its capture and extent, nothing of the find kept");
+  assert.equal(a.grade, b.grade, "being found changes no grade");
+  assert.equal(a.grade, w.prov.captureGrade(open.captureSha).grade, "the grade of its capture");
+  assert.ok(!JSON.stringify(w.rows(`SELECT * FROM person_facts WHERE fact_id=?`, viaFind.fact_id)).includes("search"), "the find's words and origin are not stored");
+  /* the same refusals as any other extent */
+  const gone = { ...found(open), capture_sha: "f".repeat(64) };
+  assert.deepEqual([w.p.recordPersonFact({ ...base, citation: gone }).reason, w.p.recordPersonFact({ ...base, citation: { captureSha: "f".repeat(64), extent: found(open).extent } }).reason],
+                   ["NO_CITATION", "NO_CITATION"]);
+  assert.equal(w.p.recordPersonFact({ ...base, citation: { ...found(open), extent: null } }).reason, "NO_CITATION");
+  const badExtent = w.p.recordPersonFact({ ...base, citation: { ...found(open), extent: { kind: "pdf-page", page: -1 } } });
+  const badDoc = w.p.recordPersonFact({ ...base, citation: { captureSha: open.captureSha, extent: { kind: "pdf-page", page: -1 } } });
+  assert.equal(badExtent.ok, false);
+  assert.equal(badExtent.reason, badDoc.reason, "content's extent refusal, as for any other extent");
+  assert.equal(w.p.recordPersonFact({ ...base, citation: found(open), valid: null }).reason, "BAD_VALIDITY");
+  /* the sight of its capture: a fact found in a fenced document is answered only to who may see that document */
+  const hid = w.p.recordPersonFact({ ...base, value: "Marlow", citation: found(fenced) });
+  assert.ok(w.p.personAt({ entityId: p, at: "2024-01-01", viewer: ANN }).facts.some((f) => f.fact_id === hid.fact_id));
+  assert.ok(!w.p.personAt({ entityId: p, at: "2024-01-01", viewer: OUT }).facts.some((f) => f.fact_id === hid.fact_id));
+});
+
+test("R9 (T35) recordPersonFact takes an optional question, an inquiry the record holds and the actor may see, refused QUESTION_NOT_HELD after BAD_VALIDITY (absent and unseen alike); kept beside the fact unchanged and answered with it by every read that answers the fact to a viewer who may see that inquiry, withheld as absent (null) from any other; a fact recorded without one answers question: null", () => {
+  const w = world();
+  const p = w.person("Sam Ortiz"), twin = w.person("Sam Ortiz");
+  const c = w.capture("minutes");
+  const q = w.question(), hidden = w.question({ fenced: true });
+  const base = { person: p, kind: "birth", value: "1961-03-03", valid, citation: found(c), by: ANN };
+  /* refusals: after BAD_VALIDITY, absent and unseen alike, writing nothing */
+  assert.equal(w.p.recordPersonFact({ ...base, valid: null, question: "INQ-2026-9999" }).reason, "BAD_VALIDITY");
+  const absent = w.p.recordPersonFact({ ...base, question: "INQ-2026-9999" });
+  const unseen = w.p.recordPersonFact({ ...base, question: hidden, by: OUT });
+  const notInquiry = w.p.recordPersonFact({ ...base, question: c.bundle });
+  const project = w.p.recordPersonFact({ ...base, question: w.project() });
+  for (const r of [absent, unseen, notInquiry, project, w.p.recordPersonFact({ ...base, question: 7 })]) assert.equal(r.reason, "QUESTION_NOT_HELD");
+  assert.equal(absent.detail, unseen.detail, "an absent and an unseen question answer alike");
+  assert.equal(w.p.recordPersonFact({ ...base, question: q, by: null }).ok, false, "an unstamped act writes nothing");
+  assert.equal(w.one(`SELECT COUNT(*) AS n FROM person_facts`).n, 0);
+  /* recorded with it, and without one */
+  const withQ = w.p.recordPersonFact({ ...base, question: q });
+  assert.deepEqual([withQ.ok, withQ.question], [true, q]);
+  const fencedQ = w.p.recordPersonFact({ ...base, kind: "locality", value: "Port Ellery", question: hidden });
+  assert.equal(fencedQ.question, hidden, "a participant may name the fenced inquiry");
+  const contact = w.p.recordPersonFact({ ...base, kind: "address", value: "4 Quay St", question: q });
+  const none = w.p.recordPersonFact({ ...base, kind: "name", value: "Sam Ortiz" });
+  assert.equal(none.question, null);
+  assert.equal(w.p.recordPersonFact({ ...base, kind: "name", value: "S. Ortiz", question: "" }).question, null, "an empty question is none");
+  /* every read that answers the fact: personAt, and candidates' life rows */
+  const ofAnn = Object.fromEntries(w.p.personAt({ entityId: p, at: "2024-01-01", viewer: ANN }).facts.map((f) => [f.fact_id, f.question]));
+  assert.deepEqual([ofAnn[withQ.fact_id], ofAnn[fencedQ.fact_id], ofAnn[contact.fact_id], ofAnn[none.fact_id]], [q, hidden, q, null]);
+  const ofOut = Object.fromEntries(w.p.personAt({ entityId: p, at: "2024-01-01", viewer: OUT }).facts.map((f) => [f.fact_id, f.question]));
+  assert.deepEqual([ofOut[withQ.fact_id], ofOut[fencedQ.fact_id], ofOut[none.fact_id]], [q, null, null], "withheld as absent from a viewer outside its project");
+  assert.ok(!JSON.stringify(w.p.personAt({ entityId: p, at: "2024-01-01", viewer: OUT })).includes(hidden));
+  w.p.recordPersonFact({ person: twin, kind: "birth", value: "1961-03-03", valid, citation: doc(c), by: ANN });
+  const life = (viewer) => w.p.samePersonCandidates({ entityId: twin, viewer }).candidates[0].fields.life.rows.candidate;
+  assert.deepEqual(life(ANN).map((f) => f.question), [q]);
+  const w2 = world();
+  const p2 = w2.person("Ida Vos"), t2 = w2.person("Ida Vos"), c2 = w2.capture("open"), h2 = w2.question({ fenced: true });
+  w2.p.recordPersonFact({ person: p2, kind: "birth", value: "1970-01-01", valid, citation: doc(c2), question: h2, by: ANN });
+  w2.p.recordPersonFact({ person: t2, kind: "birth", value: "1970-01-01", valid, citation: doc(c2), by: ANN });
+  const lifeOf = (viewer) => w2.p.samePersonCandidates({ entityId: t2, viewer }).candidates[0].fields.life.rows.candidate[0].question;
+  assert.deepEqual([lifeOf(ANN), lifeOf(OUT)], [h2, null]);
+  /* unchanged by any later act */
+  w.p.withdrawPersonFact({ factId: withQ.fact_id, reason: "a later reading", by: OUT });
+  w.p.recordPersonFact({ ...base, question: hidden });
+  assert.equal(w.one(`SELECT question FROM person_facts WHERE fact_id=?`, withQ.fact_id).question, q);
+  /* a store made before the column gains it in place */
+  w.st.sql.exec(`ALTER TABLE person_contacts DROP COLUMN question`);
+  w.p.migrate();
+  assert.equal(w.p.recordPersonFact({ ...base, kind: "contact", value: "+1 555 0102", question: q }).question, q);
+});

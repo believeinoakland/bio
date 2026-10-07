@@ -1,4 +1,4 @@
-/* standards: the reverse index (R21), the citation resolver (R25), the connection owner (R28), the move's listener
+/* standards: the reverse index (R21), the citation resolver and the connection owner delegated to law-relations (R48), the move's listener
    order (R29) and the tables' declarations (R14, R16) — T33-31. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -57,7 +57,7 @@ test("R21 standardsFor: for a held standard (or an instrument key) every documen
   assert.equal(w.s.standardsFor({ target: std, viewer: "nobody" }).reason, "NO_SUCH_STANDARD");
 });
 
-test("R25 resolveCourtCitation answers verified only when a held capture the viewer may see states the citation (a court standard's text stating volume, reporter and page), naming the capture and extent; otherwise not verified, refusing nothing; with lookup and the keyed service on it adds the service's matches labelled as the service's and never verified; switched off it says so; it writes nothing", async () => {
+test("R48 resolveCourtCitation, delegated to law-relations (its R4), answers verified only when a held capture the viewer may see states the citation (a court standard's text stating volume, reporter and page), naming the capture and extent; otherwise not verified, refusing nothing; with lookup and the keyed service on it adds the service's matches labelled as the service's and never verified; switched off it says so; it writes nothing", async () => {
   const calls = [];
   const lookup = async (store, { text, viewer }) => {
     calls.push({ store, text, viewer });
@@ -136,7 +136,7 @@ function ownerWorld() {
   return { w, node, ids, withdrawn, open, inside, meeting, fenced };
 }
 
-test("R28 the module registers once at load as a connection owner of its law-relation kinds and court links (evidentiary) and \"in force at an event's date\" (derived), each with its members' word; for a standard node, neighbours answers its relations and links valid at `at`, an undetermined one marked so, withdrawn ones not at all, a fenced one only to who may read its passage; the owner-conformance battery passes", () => {
+test("R48 the module registers once at load as the connection owner `standards` of law-relations' kinds of its law-relation kinds and court links (evidentiary) and \"in force at an event's date\" (derived), each with its members' word; for a standard node, neighbours answers its relations and links valid at `at`, an undetermined one marked so, withdrawn ones not at all, a fenced one only to who may read its passage; the owner-conformance battery passes", () => {
   /* registered at load, in the default registry, with the members' words */
   for (const k of CONNECTION_KINDS) assert.deepEqual(defaultKindOf(k.kind), { owner: CONNECTION_OWNER, word: k.word, class: k.class }, k.kind);
   assert.deepEqual(CONNECTION_KINDS.map((k) => k.class).filter((c) => c === "derived"), ["derived"]);
@@ -166,7 +166,7 @@ test("R28 the module registers once at load as a connection owner of its law-rel
                "several instances in this isolate and no host named (K1563 (1))");
 });
 
-test("R28 for an event node, neighbours answers the held standards in force at the event's when (R20), each a derived item with its method and connection-grammar's derivedId, an undetermined in-force answer marked so; an event the viewer may not read, or none, answers nothing", () => {
+test("R48 neighbours, delegated to law-relations (its R7): for an event node, it answers the held standards in force at the event's when (R20), each a derived item with its method and connection-grammar's derivedId, an undetermined in-force answer marked so; an event the viewer may not read, or none, answers nothing", () => {
   const { w, meeting, fenced } = ownerWorld();
   const at = "2022-05-05T18:00:00Z", day = "2022-05-05";
   const a = w.s.neighbours({ node: meeting, at, viewer: V("carol") });
@@ -232,7 +232,7 @@ test("R29 the move to layer 5 changes no answer: with a promotion step, a projec
   assert.ok(order("check").includes("observation-log") && !order("check").includes("progressions"));
 });
 
-test("R14 R16 every table is declared explicitly through record-core.declareTable: version_chain true, sight group, the other classes declarePurge's default form; constructing the instance creates them all, and law relations, links, treatments and withdrawals are append-only", () => {
+test("R14 R16 R48 every table is declared explicitly through record-core.declareTable: version_chain true, sight group, the other classes declarePurge's default form; constructing the instance creates them all (the law tables law-relations', constructed with it), and law relations and withdrawals are append-only", () => {
   const w = world({ construct: false });
   w.member("bob");
   const tables = () => new Set(w.rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name));
@@ -261,7 +261,7 @@ test("R14 R16 every table is declared explicitly through record-core.declareTabl
   for (const t of STANDARDS_TABLES) assert.ok(t.name in all.removed, t.name);
 });
 
-test("R20 R21 R23–R27 the ops map holds the new acts and reads, reading stamps from the URL and acts' fields from the body", async () => {
+test("R20 R21 R48 the ops map holds (the law ops kept, each delegated) the new acts and reads, reading stamps from the URL and acts' fields from the body", async () => {
   const w = seeded();
   const t = w.passage().contentId, u = w.passage().contentId;
   const a = w.declare({ text: [t] }).id, b = w.declare({ cite: "PEBL § 30", text: [u] }).id;

@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS identity_cluster (
 );
 CREATE INDEX IF NOT EXISTS identity_cluster_component ON identity_cluster(component);
 -- PERSON FACTS (R9, R11): a name, birth, death or locality as the cited document states it, with its validity.
--- Seen as the citing capture is seen (R31).
+-- Seen as the citing capture is seen (R31). question is the inquiry bundle the fact was recorded for (R9, T35; DEC-164
+-- (5)), kept unchanged beside the fact and answered only to a viewer who may see that bundle; NULL when none.
 CREATE TABLE IF NOT EXISTS person_facts (
   fact_id          TEXT PRIMARY KEY,
   person           TEXT NOT NULL,
@@ -52,7 +53,8 @@ CREATE TABLE IF NOT EXISTS person_facts (
   at               TEXT NOT NULL,
   withdrawn_by     TEXT,
   withdrawn_at     TEXT,
-  withdrawn_reason TEXT
+  withdrawn_reason TEXT,
+  question         TEXT
 );
 CREATE INDEX IF NOT EXISTS person_facts_person ON person_facts(person, kind);
 -- THE CONTACT FACTS (R10; K1485 row 9, K1493): an address or contact a member recorded from a cited document. Export
@@ -69,7 +71,8 @@ CREATE TABLE IF NOT EXISTS person_contacts (
   at               TEXT NOT NULL,
   withdrawn_by     TEXT,
   withdrawn_at     TEXT,
-  withdrawn_reason TEXT
+  withdrawn_reason TEXT,
+  question         TEXT
 );
 CREATE INDEX IF NOT EXISTS person_contacts_person ON person_contacts(person);
 -- MEMBERS' OWN TIES (R20; K1490): a member's declared tie to a registered entity, seen by that member and
@@ -204,3 +207,5 @@ export const PEOPLE_TABLES = Object.freeze([
 ]);
 /* The cluster cache's declaration is made by the instance, which names its rebuild (R6; record-core R77). */
 export const CLUSTER_TABLE = "identity_cluster";
+/* Columns added after a table was first created (R9's question, T35): added in place to a store made before them. */
+export const ADDITIVE_COLUMNS = Object.freeze([["person_facts", "question", "TEXT"], ["person_contacts", "question", "TEXT"]]);
