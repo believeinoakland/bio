@@ -2823,6 +2823,18 @@ var PRODUCT = "Civicsmith";
 var PUBLISHER = `This installer is run by the publisher of ${PRODUCT} releases.`;
 var EXAMPLE_SLUG = "clean-water-coalition";
 var publisherFooter = () => `<p class="small publisher">${PUBLISHER}</p>`;
+var DESCRIPTION = "Free software for groups that check whether government keeps its own rules and promises.";
+var WHO = "Neighbourhood and issue groups, newsrooms, professional associations, and public offices checking their own work.";
+var whatBlock = () => `<p class="what">${DESCRIPTION}</p>
+<p class="small who">${WHO}</p>`;
+var IRREVERSIBLE = `<span class="w"><span class="pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>Irreversible</span>`;
+var PERMANENCE = "Your short name is in every address of your group's Civicsmith and beside every signature your members make, and it becomes the name of its worker in your Cloudflare account. It can never be changed, by you or anyone, without installing a new Civicsmith and starting again.";
+var confirmDialog = () => `<dialog id="confirm" aria-labelledby="confirm-h">
+<h2 id="confirm-h">&ldquo;<span class="mono" id="confirm-name"></span>&rdquo; is permanent</h2>
+<p>${PERMANENCE}</p>
+<div class="actions"><button type="button" id="confirm-yes">Install with this short name${IRREVERSIBLE}</button>
+<button type="button" class="quiet" id="confirm-no">Choose another name</button></div>
+</dialog>`;
 var PROFILE_CHOICES = Object.freeze(list().filter((p) => p.test !== true).map(({ id, name, covers }) => Object.freeze({ id, name, covers: Object.freeze([...covers]) })));
 var escText = (s) => String(s).replace(
   /[&<>"']/g,
@@ -2911,6 +2923,19 @@ fieldset.profiles legend{padding:0;margin:0 0 8px}
 @keyframes pulse{50%{opacity:.35}}
 .actions{margin-top:8px}
 .publisher{margin-top:34px;border-top:1px solid var(--rule);padding-top:16px}
+.what{font-size:19px;margin:0 0 6px}
+.who{margin:0 0 18px}
+button .w{display:inline-flex;align-items:center;gap:6px;margin-left:12px;padding-left:12px;
+  border-left:1px solid currentColor;font-size:12.5px;font-weight:500}
+.pips{display:inline-flex;gap:2px}
+.pips i{width:6px;height:6px;border-radius:50%;border:1.25px solid currentColor}
+.pips i.on{background:currentColor}
+button.quiet{background:transparent;color:var(--verdigris-dk);border-color:var(--rule);margin-left:8px}
+button.quiet:hover{background:transparent;border-color:var(--verdigris)}
+dialog{max-width:560px;border:1px solid var(--rule);border-left:3px solid var(--signal);background:#F6F7F2;
+  color:var(--ink);padding:22px 24px}
+dialog::backdrop{background:rgba(22,35,46,.45)}
+dialog h2{margin-top:0}
 `;
 function page({
   title,
@@ -2924,7 +2949,10 @@ function page({
   buttonText,
   mode,
   footer,
-  extra = ""
+  goNote,
+  extra = "",
+  confirm = false,
+  what = false
 }) {
   return `<!doctype html>
 <html lang="en">
@@ -2939,6 +2967,7 @@ function page({
 <main>
 <p class="eyebrow">${eyebrow}</p>
 <h1>${title}</h1>
+${what ? whatBlock() : ""}
 <p class="lede">${lede}</p>
 
 ${blocks}
@@ -2948,11 +2977,11 @@ ${blocks}
 <p class="hint" id="slug-hint">${slugHint}</p>
 ${extra}
 
-<button id="go">${buttonText}</button>
+<button id="go">${buttonText}${confirm ? IRREVERSIBLE : ""}</button>
 <p class="err" id="err"></p>
+${confirm ? confirmDialog() : ""}
 
-<p class="small">Pressing the button takes you to dash.cloudflare.com to
-approve the permission, then brings you straight back here.</p>
+<p class="small">${goNote}</p>
 ${footer}
 ${publisherFooter()}
 </main>
@@ -2964,10 +2993,8 @@ const chosen=[];document.querySelectorAll('input[name="profile"]').forEach(b=>b.
   const i=chosen.indexOf(b.value);if(b.checked&&i<0)chosen.push(b.value);if(!b.checked&&i>=0)chosen.splice(i,1);}));
 $("#slug").addEventListener("input",e=>{const p=e.target.selectionStart;e.target.value=slugify(e.target.value);
   try{e.target.setSelectionRange(p,p)}catch{}});
-$("#go").addEventListener("click",async()=>{
-  const err=$("#err");err.textContent="";
-  const slug=slugify($("#slug").value);
-  if(slug.length<3){err.textContent="The name needs at least 3 characters.";$("#slug").focus();return;}
+async function begin(slug){
+  const err=$("#err");
   $("#go").disabled=true;
   try{
     const r=await fetch("/begin",{method:"POST",headers:{"content-type":"application/json"},
@@ -2977,19 +3004,33 @@ $("#go").addEventListener("click",async()=>{
     location.href=j.authorize;
   }catch(e){err.textContent="Could not start: "+e.message;}
   finally{$("#go").disabled=false;}
+}
+const dlg=$("#confirm");
+$("#go").addEventListener("click",()=>{
+  const err=$("#err");err.textContent="";
+  const slug=slugify($("#slug").value);
+  if(slug.length<3){err.textContent="The name needs at least 3 characters.";$("#slug").focus();return;}
+  if(!dlg){begin(slug);return;}
+  $("#confirm-name").textContent=slug;dlg.dataset.slug=slug;dlg.showModal();
 });
+if(dlg){
+  $("#confirm-yes").addEventListener("click",()=>{const slug=dlg.dataset.slug;dlg.close();begin(slug);});
+  $("#confirm-no").addEventListener("click",()=>dlg.close());
+}
 </script>
 </body>
 </html>`;
 }
 var WIZARD_HTML = page({
   mode: "install",
+  confirm: true,
+  what: true,
   title: `Set up your group's ${PRODUCT}`,
-  description: `Install your group's own ${PRODUCT}, the accountability record, into your own Cloudflare account.`,
+  description: DESCRIPTION,
   eyebrow: `${PRODUCT} &middot; installer`,
-  lede: `In a few minutes your group will have its own ${PRODUCT}, the
-accountability record, running in your own Cloudflare account. Not an account
-of ours: yours, under your control, from the first second.`,
+  lede: `In a few minutes your group will have its own ${PRODUCT}, running in
+your own Cloudflare account. Not an account of ours: yours, under your control,
+from the first second.`,
   blocks: `<div class="card">
 <p style="margin:0"><b>What you need:</b> a Cloudflare account with two
 things turned on. First, the <b>Workers Paid plan</b> ($5 a month): your group's
@@ -3027,9 +3068,12 @@ ${assistantBlock()}
 <h2>Name your group's Civicsmith</h2>`,
   slugLabel: "A short name for your group",
   slugHint: `Lower-case letters, digits, and hyphens. It becomes part of your
-web address, so pick something you are happy to say out loud.`,
+web address and is recorded beside every signature, and it can never be changed,
+so pick something you are happy to say out loud.`,
   placeholder: EXAMPLE_SLUG,
-  buttonText: "Continue to Cloudflare",
+  buttonText: "Continue with this short name",
+  goNote: `Pressing the button asks you to confirm the short name, then takes you
+to dash.cloudflare.com to approve the permission, and brings you straight back here.`,
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Already running your group's Civicsmith and looking for the current release? That is
 <a href="/update">a separate page</a>.</p>`
@@ -3064,6 +3108,8 @@ you want it to resume paused assistant runs on its own. It is stored there as a 
 the update sends none and keeps any it already holds. This installer never creates one.</p>`,
   placeholder: EXAMPLE_SLUG,
   buttonText: "Continue to Cloudflare",
+  goNote: `Pressing the button takes you to dash.cloudflare.com to
+approve the permission, then brings you straight back here.`,
   footer: `<p class="small" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:16px">
 Setting up your group's Civicsmith for the first time instead? That is <a href="/">the setup page</a>.</p>`
 });
@@ -3284,11 +3330,17 @@ var HOSTING_CONTROL = Object.freeze({
     "Add at least one other trusted person to that account.",
     "Where possible, let someone other than the group's administrators hold it.",
     "The same account is the way back in if the password you choose is lost: sign in to it, replace the ADMIN_TOKEN value in this worker's settings, and your group's Civicsmith can be claimed again."
-  ])
+  ]),
+  guide: Object.freeze({
+    sentence: "If the one-time password may have been seen, replace it: follow the guide \u201CReplace the one-time password\u201D in your group's Civicsmith, on its first page and in its members and keys section.",
+    name: "Replace the one-time password"
+  })
 });
 var escBlock = (x) => String(x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-function hostingControlBlock(cls = "notice") {
-  return `<div class="${escBlock(cls)}" id="hosting-control"><p><b>${escBlock(HOSTING_CONTROL.heading)}</b></p>` + HOSTING_CONTROL.sentences.map((s, i, all) => `<p${i === all.length - 1 ? ' style="margin:0"' : ""}>${escBlock(s)}</p>`).join("") + "</div>";
+function hostingControlBlock(cls = "notice", { guideHref = null } = {}) {
+  const { sentence, name } = HOSTING_CONTROL.guide;
+  const guide = typeof guideHref === "string" && guideHref ? sentence.split(name).map(escBlock).join(`<a href="${escBlock(guideHref)}">${escBlock(name)}</a>`) : escBlock(sentence);
+  return `<div class="${escBlock(cls)}" id="hosting-control"><p><b>${escBlock(HOSTING_CONTROL.heading)}</b></p>` + HOSTING_CONTROL.sentences.map((s) => `<p>${escBlock(s)}</p>`).join("") + `<p style="margin:0">${guide}</p></div>`;
 }
 
 // src/index.mjs
@@ -4037,7 +4089,7 @@ async function ensureSubdomain(token, acct, slug) {
 async function verifyInstall(base, probe) {
   for (let i = 0; i < 10; i++) {
     try {
-      const r = await fetch(`${base}/api/?op=selftest&token=${probe}`);
+      const r = await fetch(`${base}/api/?op=selftest`, { headers: { authorization: "Bearer " + probe } });
       const j = await r.json();
       if (j.ok === true && j.bindings?.STORE === true) return j;
     } catch {
@@ -4441,9 +4493,10 @@ the setup page&#39;s saves, and a new document that names none &mdash; with <spa
 A document that states its own group is kept as it says, and nothing already in your record changes.</p>
 <p>To record it, send one request carrying the ADMIN_TOKEN of your group&#39;s Civicsmith (the one-time password the installer showed you,
 if you kept it; otherwise put a new ADMIN_TOKEN value in your worker&#39;s settings on Cloudflare, which also starts the
-claim step over): <span class="mono">POST ${at}/api/?op=instancegroupseed&amp;token=&hellip;</span> with the body
+claim step over) in its header, never in the address: <span class="mono">POST ${at}/api/?op=instancegroupseed</span> with the
+header <span class="mono">Authorization: Bearer &hellip;</span> and the body
 <span class="mono">{"slug":"your-group-slug"}</span>, then the same request with <span class="mono">&amp;store=scratch</span>
-added, for your scratch record. Each records it once and never again, so check the spelling first;
+added to the address, for your scratch record. Each records it once and never again, so check the spelling first;
 <span class="mono">op=instancegroup</span> shows what is recorded.</p>
 <p class="small">A suggestion, not a default: your group&#39;s Civicsmith was installed under the name <span class="mono">${esc(slug)}</span>.
 Your group&#39;s slug may differ from it: the name an installation is given and the name of the group producing its record need not be
