@@ -68,7 +68,7 @@ Paces this instance's outbound fetches, one host at a time, so it leans on anoth
 - **R23** The governor records capacity signals only. It holds no verdict on whether a source is reachable, and none of its refusals is a statement about the source.
 - **R24** `host_governor` is this module's own table and no other module writes it. It is declared to `record-core` exempt from `purge` (K47), as today: a cool-off is a counterparty's refusal, and a purged instance still honours it.
 - **R25** No jurisdiction and no named counterparty: no host is named in this module. A per-host figure (the archive's 24/min) is set by the module that owns the knowledge of that counterparty, through R11.
-- **R27** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349). It reads the store's answer through the plane's `doAnswer`, handed in as `capture`'s handlers take it (K445).
+- **R27** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`answer-envelope` R3: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`store-door` R6; N349). It reads the store's answer through the plane's `doAnswer`, handed in as `capture`'s handlers take it (K445).
 
 ### Satisfies
 

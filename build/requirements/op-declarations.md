@@ -56,15 +56,15 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
 **The specs of the litigation hold's ops** (N518; DEC-113, K1134 (3))
 - **R12** `OPS` holds a spec for each op N518 adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin`, with the stamps the act lists name:
   - `actionholdrelease` (`actions` R56): mutating, classes `admin`, `member`, `probe` as `actionhold`'s, `NEEDS` `contribute`, in `ACTIONS_ACTIONS` beside `actionhold`, so `author` and `viewer` are stamped;
-  - `actionholdpreview` and `projectholds` (`actions` R57, R58): reads, classes `admin`, `member`, `probe`, `viewer` stamped, each with a `NEEDS` row of no capability (`null`, as `optionstartpreview`'s), since `affordances` names them (its R33).
+  - `actionholdpreview` and `projectholds` (`actions` R57, R58): reads, classes `admin`, `member`, `probe`, `viewer` stamped, each with a `NEEDS` row of no capability (`null`, as `optionstartpreview`'s), since `op-grades` names them (its R8).
 
   R6 holds over them.
 - **R13** (DEC-116, DEC-100; `docket` R1–R8, R12; N520) `OPS` holds a spec for each op `docket` adds, each in `SESSION_OPS.member` and `SESSION_OPS.admin` unless it is public, with `NEEDS` `contribute` for every mutating op a member's session reaches, and the stamps the act lists name:
   - `docketfile` (`docket` R1, stamped `author` and `viewer`), `docketpressure` (its R2, `author` and `viewer`), `docketdecline` (its R7, `by`) and `docketpost` (its R5, `by`): mutating; `docket` (its R3), `docketprepare` (its R4; it writes nothing; `viewer` and `by`) and `docketinvitation` (its R8): reads; each for a member session only, classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token files, places, declines or signs a docket entry, `docket` R1, R4, R18), `viewer` (or `author`, `by`) stamped;
   - the public reads `docketpublic` and `docketfeed` (`public-read` R21; `docket` R14, R15): `classes: null`, not mutating, nothing stamped.
 - **R14** (DEC-112 (3)(6), DEC-96 items 1, 2; `case-import` R1–R8, `case-checker` R15; N520, N522) `OPS` holds a spec for each op `case-import` and `case-checker` add, each in `SESSION_OPS.member` and `SESSION_OPS.admin` unless it is public, with `NEEDS` `contribute` for every mutating op a member's session reaches, and the stamps the act lists name:
-  - `caseimport` (`case-import` R1), `caseimportdocument` (its R5), `importaccept`, `importacceptwithdraw` (its R6, R7), `importflag` and `importflagclear` (its R8): mutating, `by` and `viewer` stamped; `importedcases` and `importedcase` (its R4): reads, `viewer` stamped, each with a `NEEDS` row of no capability (`null`), since `affordances` names them (its R35); each for a member session only, with classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token imports, completes, accepts, withdraws, flags or clears, or reads an import, `case-import` R1, R4, R8);
-  - the public reads `casechecker` and `casefilespec` (`public-read` R18; `case-checker` R15): `classes: null`, not mutating, nothing stamped, each with a `NEEDS` row of `null`, since `affordances` names them (its R35).
+  - `caseimport` (`case-import` R1), `caseimportdocument` (its R5), `importaccept`, `importacceptwithdraw` (its R6, R7), `importflag` and `importflagclear` (its R8): mutating, `by` and `viewer` stamped; `importedcases` and `importedcase` (its R4): reads, `viewer` stamped, each with a `NEEDS` row of no capability (`null`), since `op-grades` names them (its R10); each for a member session only, with classes `admin`, `member` and `machineClasses: []` (no machine, AI credential or operator token imports, completes, accepts, withdraws, flags or clears, or reads an import, `case-import` R1, R4, R8);
+  - the public reads `casechecker` and `casefilespec` (`public-read` R18; `case-checker` R15): `classes: null`, not mutating, nothing stamped, each with a `NEEDS` row of `null`, since `op-grades` names them (its R10).
 
   `publish` and `publishpreflight` keep their specs: `flagsDisclosed` (`case-authoring` R53, R55; `case-disclosures` R14) is a body field that reaches the handler as given, as `tensionsDisclosed` does, and no act list names it as a stamp.
 
@@ -74,7 +74,7 @@ Terms. An **op** is a name the instance answers. An **op spec** is `{classes, ma
   - `wizardeditorgrant` and `wizardeditorrevoke` (its R8): mutating, `by` stamped, an administrator's own session;
   - `wizardpropose` (its R5): any credential, `ai` included, stamped `proposer` and `viewer`;
   - `wizardprogress` (its R15): a member's session, mutating, stamped with nothing that names the member;
-  - the reads `wizards`, `wizardread`, `wizardsat`, `wizarduse` and `wizardcandidates` (its R10, R11, R15, R16), `viewer` stamped, and `wizardcheck` (its R12), reached also by an `ai` credential; each with a `NEEDS` row of no capability (`null`), since `affordances` names them (its R37);
+  - the reads `wizards`, `wizardread`, `wizardsat`, `wizarduse` and `wizardcandidates` (its R10, R11, R15, R16), `viewer` stamped, and `wizardcheck` (its R12), reached also by an `ai` credential; each with a `NEEDS` row of no capability (`null`), since `op-grades` names them (its R11);
   - (T34, DEC-158 (4); K1818) the read `baseupdates` (its R26), `viewer` stamped, `NEEDS` `null`, for a member session only.
 
   R6 holds over them.

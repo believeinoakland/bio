@@ -126,7 +126,7 @@ Terms. **I2 text** is the text shape format entries and the two members return (
 - **R48** Every list read is bounded and says when it was cut (`limit`, `truncated`).
 - **R49** Purge: the reading tables are declared keyed to their bundle (`readings`, `reading_refs`, `reading_ref_terms`, `reading_text_source`, `reading_history`, `capture_text`; `capture_text_fts` whole-store only).
 - **R50** No place is named in this module's behaviour or outward text (R18).
-- **R64** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349). It reads the store's answer through the plane's `doAnswer`, handed in as `capture`'s handlers take it (K445).
+- **R64** (N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`answer-envelope` R3: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`store-door` R6; N349). It reads the store's answer through the plane's `doAnswer`, handed in as `capture`'s handlers take it (K445).
 
 ### Satisfies
 

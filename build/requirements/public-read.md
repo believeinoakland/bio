@@ -84,7 +84,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 ### Invariants
 
-- **R9** (was `publication` R48; N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`control-plane` R23: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`control-plane` R25; N349).
+- **R9** (was `publication` R48; N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`answer-envelope` R3: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`store-door` R6; N349).
 - **R10** (copied from `publication` R25) The public read path (R1–R5, R18's registered reads, and R20–R21's docket reads) needs no credential and reads the published projection, the published store and `docket`'s public answers only, so it can disclose nothing unpublished; a scratch namespace is not readable there (rule 10).
 - **R11** (copied from `publication` R26) No answer, document or row this module serves composes a case-level strength: every pair is per member and per axis (DEC-44, DEC-21).
 - **R12** (copied from `publication` R27) Signer and deliverer are two facts, and neither is copied from the other; every authorship field is a stamp or read from a signature.
