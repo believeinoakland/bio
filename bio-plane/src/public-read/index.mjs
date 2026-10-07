@@ -2,9 +2,9 @@
  * `build/requirements/public-read.md`; BIO_Publication_v0_1.md §1, §2, §3 rules 9–12 and 16). The public reads by hash,
  * by finding and by case, and the whole projection (R1–R4), and the evidence-package block beside a published case
  * (R8), and the named credential-free reads a later module registers (R18); beside a case, `docket`'s withdrawal stamp
- * and last entry (R20), and the docket and its feed served (R21). It writes nothing (R16): every table it reads is
- * `publication`'s, read under `publication` R40, and it reaches `publication` and `docket` only through the services
- * named below.
+ * and last entry (R20), and the docket and its feed served (R21); a case's criteria as `publication` froze them (R31).
+ * It writes nothing (R16): every table it reads is `publication`'s, read under `publication` R40, and it reaches
+ * `publication` and `docket` only through the services named below.
  *
  * Split from `publication` by copy (K617, K651; seam read `build/extraction/publication-split.md` §3.2): the methods
  * below are `publication/index.mjs`' `registerEvidenceBlock`, `#evidencePackage`, `publishedManifest`,
@@ -111,6 +111,19 @@ function withheldCase(row, index, content) {
   if (!w.whole) return out;
   for (const k of ["scope", "bias_acknowledgement", ...content]) if (Object.hasOwn(out, k)) out[k] = null;
   return { ...out, withheld: { whole: true, detail: WITHHELD_SENTENCE } };
+}
+
+/* R31 (`publication` R72): what an edition answers of its criteria, as R53 froze them; never recomputed. */
+export const CRITERIA_NOT_RECORDED_SENTENCE = "the criteria were not recorded: this edition was committed before published "
+  + "cases recorded them";
+export const CRITERIA_NOT_A_CASE_SENTENCE = "this is not a case, so it states no criteria";
+function criteriaOf(state, theCase, whole) {
+  if (!theCase) return { criteria: null, criteria_detail: CRITERIA_NOT_A_CASE_SENTENCE };
+  if (whole) return { criteria: null, criteria_detail: WITHHELD_SENTENCE };
+  if (!Array.isArray(state.criteria))
+    return { criteria: null, criteria_detail: typeof state.criteria_detail === "string" && state.criteria_detail
+      ? state.criteria_detail : CRITERIA_NOT_RECORDED_SENTENCE };
+  return { criteria: state.criteria };
 }
 
 /* R26 (D275; `calc-grammar` R10): every calculation output is a computed fact, never a finding. */
@@ -1019,6 +1032,12 @@ export class PublicRead {
                 `convert-multifinding.test.mjs`; `op=ratify`'s is the control
                 plane's. */
              completeness: whole ? null : state.completeness, ratified_at: state.ratified_at,
+             /* R31 (DEC-145 (2), (6); `publication` R72, K2011): the criteria exactly as `publication`'s R53 state froze them
+                at the commit, each row with its `label` and `access_words`, in member then leg order, a standard not freely
+                readable carrying only the passages R72 holds; `[]` where no member targets a standard; null for an edition
+                committed before T35, stated as not recorded and never filled (R13). Nothing is re-read from `standards`.
+                A whole edition an order withholds states none (R28); a loose bundle is no case and states none. */
+             ...criteriaOf(state, theCase, whole),
              /* R29 (DEC-147 (5)): when this edition was signed and when it was published, exactly as `publication` R70
                 holds them on its row (one instant for both for an edition published at signing or before T34); each
                 `edition_index` entry carries its own. Null on the loose branch, which is no case edition. Neither is in
