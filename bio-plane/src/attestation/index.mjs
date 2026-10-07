@@ -237,7 +237,8 @@ export function receiptStatement({ instance, retrieved, retrievalLocator, captur
 }
 
 const noKey = () => actRefusal("RECEIPT_NO_KEY",
-  "your group's Civicsmith holds no receipt-signing key it can read, so nothing is signed. The operator binds one as a secret; "
+  "your group's Civicsmith holds no receipt-signing key it can read, so nothing is signed. Whoever hosts your group's "
+  + "Civicsmith sets one as a secret; "
   + "nothing is claimed signed until then");
 
 /* ======================================================================= *

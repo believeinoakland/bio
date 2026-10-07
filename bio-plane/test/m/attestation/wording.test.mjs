@@ -67,6 +67,8 @@ test("DEC-149: index.mjs:239 \"your group's Civicsmith holds no receipt-signing 
                    await w.att.instanceSign(w.att.instanceStatement("a/1", s))]) {
     assert.equal(r.reason, "RECEIPT_NO_KEY");
     says(r.detail, "your group's Civicsmith holds no receipt-signing key it can read, so nothing is signed.");
+    /* The sentence after it, under the sweep's rule ("whoever hosts"; a key is set, not bound). */
+    says(r.detail, "Whoever hosts your group's Civicsmith sets one as a secret; nothing is claimed signed until then");
   }
 });
 
