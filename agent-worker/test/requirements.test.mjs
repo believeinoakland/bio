@@ -1249,13 +1249,20 @@ section("agent-harness R7 · sub-sessions run, one per level, each under its con
   const r = await runOp(mf, { ...base, account: ACCOUNTS });
   const calls = (await modelState(mf)).calls.map((c) => JSON.parse(c.raw));
   const subs = calls.filter((b) => (b.tools || []).some((x) => x.name === "report"));
-  const firsts = subs.filter((b) => b.messages.length === 1);
+  /* agent-model R12 (T35, K1987): a sub-session's opening is three turns, its own words, a `read_facts` call and that
+     call's result, which holds the contract's fields from the record; its system carries only the table's own fields
+     (level, scope, returns). So a first request is one whose transcript is that opening, and its brief is the two put
+     back together. */
+  const firsts = subs.filter((b) => b.messages.length === 3);
+  const factsOfOpening = (b) => JSON.parse(b.messages[2].content[0].content.map((c) => c.text).join(""));
   t("agent-harness R7: one sub-session per level, each starting its own conversation (nothing shared with the parent or another level)",
     firsts.map((b) => JSON.parse(sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]).level), LEVELS);
-  t("agent-harness R7: each is briefed with its own spawn contract, exactly as published", firsts.map((b) => sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]),
-    (r.out.fanout?.contracts || []).map((c) => JSON.stringify(c)));
-  t("agent-harness R7: its tools are its contract's scope and `report`, nothing else",
-    [...new Set(subs.map((b) => b.tools.map((x) => x.name).join(",")))], ["meaningrows,report"]);
+  t("agent-harness R7, R61: each is briefed with its own spawn contract, exactly as published: the table's fields in its system, the record's as read_facts' result",
+    firsts.map((b) => JSON.stringify(Object.fromEntries(Object.entries({ ...JSON.parse(sysText(b).split("YOUR SPAWN CONTRACT:\n")[1]),
+                                                                          ...factsOfOpening(b) }).sort(([a], [c]) => a.localeCompare(c))))),
+    (r.out.fanout?.contracts || []).map((c) => JSON.stringify(Object.fromEntries(Object.entries(c).sort(([a], [d]) => a.localeCompare(d))))));
+  t("agent-harness R7: its tools are its contract's scope, `report` and agent-model's `read_facts`, nothing else",
+    [...new Set(subs.map((b) => b.tools.map((x) => x.name).join(",")))], ["meaningrows,report,read_facts"]);
   t("agent-harness R7: no sub-session was handed the lens or a credential", subs.some((b) => /LENS|aik-|sk-ant/.test(JSON.stringify(b))), false);
   const st = await planeState(mf);
   t("agent-harness R7: a sub-session's meaningrows reached the plane through the parent's reader",

@@ -151,7 +151,9 @@ function modelAnswer(body) {
     return { content: [{ type: "tool_use", id: "a3", name: "answer", input: { question_as_read: "who held the seat",
       clarifying: null, summary: "not held", sentences: [], label: "machine work" } }] };
   const last = body.messages[body.messages.length - 1];
-  const answered = Array.isArray(last?.content) && last.content.some((b) => b.type === "tool_result");
+  /* R61: a conversation opens with its facts as `read_facts`' result (ids `facts_…`); that is not a turn the model took. */
+  const answered = Array.isArray(last?.content)
+    && last.content.some((b) => b.type === "tool_result" && !String(b.tool_use_id).startsWith("facts_"));
   if (names.includes("report") && !answered)
     return { content: [{ type: "tool_use", id: "q", name: "meaningrows", input: { rows: "leg", q: "", limit: SUBSESSION_LIMIT } }] };
   if (names.includes("report"))

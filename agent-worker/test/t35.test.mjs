@@ -81,7 +81,7 @@ function plane(cfg = {}) {
         context: cfg.mode === "plan" ? { type: "project", id: PROJECT, questions: [] } : { type: "inquiry", id: "INQ-T35" },
         max_passes: cfg.maxPasses ?? 1, principal: { plane: MEMBER, claude: MEMBER, skill: PACK.version },
         state: S.state, budget: WIDE.map((b) => ({ ...b, consumed: 0 })) } });
-      case "airunlog": return ok({ found: true, entries: [{ seq: 1, detail: doc }], truncated: true });
+      case "airunlog": return ok({ found: true, entries: [{ seq: 1, detail: doc }], truncated: false });
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),
         context: { type: "inquiry", id: "INQ-T35" }, mode: cfg.mode ?? "check", skill: PACK.version, standard_pair: null } });
       case "affordances": return ok(cfg.noPack ? { pack: null, pack_absent: "no fences" } : { pack: cfg.pack ?? PACK });
@@ -159,7 +159,8 @@ function modelApi(script = {}) {
     const blocks = (body.messages || []).flatMap((m) => (Array.isArray(m.content) ? m.content : []));
     /* The turns this conversation took: tool results other than the facts a judged row is opened with (R61). */
     const results = blocks.filter((b) => b.type === "tool_result" && !String(b.tool_use_id).startsWith("facts_"));
-    const seen = blocks.filter((b) => b.type === "tool_result").map((b) => String(b.content)).join("\n");
+    const seen = blocks.filter((b) => b.type === "tool_result")
+      .map((b) => (typeof b.content === "string" ? b.content : JSON.stringify(b.content))).join("\n");
     const inj = (/INJECT:([a-z]+)/.exec(seen) || [])[1] || null;
     const dump = JSON.stringify({ system: body.system, messages: body.messages }).slice(0, 4000);
     const lastUser = [...(body.messages || [])].reverse().find((m) => m.role === "user");
@@ -438,7 +439,9 @@ section("R61 · record text reaches the model only inside tool results");
     check.model.filter((q) => (q.body.tools || []).some((x) => x.name === "judge_compose"))
       .every((q) => q.body.messages.some((m) => Array.isArray(m.content) && m.content.some((b) => b.type === "tool_use" && b.name === "read_facts"))), true);
   t("R61: the run's adjust row judged a refusal it was told only as a tool result: the run adjusted and resent",
-    [check.status, check.out?.adjusted, check.S.suggested.length], [200, 1, 2]);
+    [check.status, check.out?.adjusted,
+     check.S.suggested.filter((b) => b.name === "v-model").map((b) => b.description)],
+    [200, 1, ["what the reading says, in full words", "what the reading says, changed in answer to the refusal"]]);
   t("R61: an ask's question and a draft's told are the member's own words, in user turns",
     [ask.model[0].body.messages.some((m) => m.role === "user" && JSON.stringify(m.content).includes("who held the seat in March?")),
      draft.model[0].body.messages[0].role === "user"], [true, true]);
@@ -528,7 +531,7 @@ section("R63 · a read hands the model a file's extracted text and active list, 
     t(`R63: ${what}: no byte field did, in any encoding`,
       [seen.includes(FILE_BYTES.file_b64.slice(0, 64)), seen.includes("data:application/pdf"), seen.includes(JSON.stringify(FILE_BYTES.raw.slice(0, 20)).slice(1, -1))],
       [false, false, false]);
-    t(`R63: ${what}: a field named like bytes that holds no bytes is kept (a length)`, /"bytes":1234/.test(seen), true);
+    t(`R63: ${what}: a field named like bytes that holds no bytes is kept (a length)`, /\\?"bytes\\?":1234/.test(seen), true);
     t(`R63: ${what}: the drop is told to the model beside the answer`, /held a file's bytes and were dropped/.test(seen), true);
   }
   t("R63: a run names the drop in its trace", [run, plan].map((r) => (r.out?.trace || []).some((x) => /held a file's bytes and were dropped/.test(x.note || ""))), [true, true]);
