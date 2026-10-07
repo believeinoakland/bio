@@ -623,6 +623,12 @@ fieldset.mk-checks label { display: flex; gap: 8px; align-items: center; }
 .mk-table th, .mk-table td { text-align: left; padding: 7px 9px; border-bottom: var(--hair); vertical-align: top; }
 .mk-table th { font: 600 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); }
 .mk-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mk-sort { all: unset; cursor: pointer; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; white-space: nowrap; }
+.mk-sort:focus-visible { outline: 2px solid var(--c-focus, currentColor); outline-offset: 2px; }
+.mk-sort::after { content: " \2195"; opacity: .45; }
+.mk-table th[aria-sort="ascending"] .mk-sort::after { content: " \2191"; opacity: 1; }
+.mk-table th[aria-sort="descending"] .mk-sort::after { content: " \2193"; opacity: 1; }
+.mk-table th[aria-sort="ascending"], .mk-table th[aria-sort="descending"] { color: var(--c-ink); }
 .mk-draftcell { background: var(--c-machine-tint); }
 .mk-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
 .mk-lanehead { font: 700 var(--t-xs) var(--f-sans); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--c-muted); border-bottom: 2px solid var(--c-ink); padding-bottom: 4px; }
@@ -2172,6 +2178,9 @@ function decorate(html, id, c) {
   R.querySelectorAll('.cs-wizmark').forEach(w => { set(w, `<b>${w.textContent.trim()}</b>: ${w.getAttribute('title')}. A wizard walks you through this screen step by step; it points at the real control and never presses it.`, 2); w.removeAttribute('title'); });
   R.querySelectorAll('.mk-steps li').forEach(li => set(li, li.classList.contains('done') ? `<b>${li.textContent}</b>: done.` : li.getAttribute('aria-current') ? `<b>${li.textContent}</b>: you are here.` : `<b>${li.textContent}</b>: still to do. You can leave and come back; nothing is lost.`, 2));
   R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
+  R.querySelectorAll('.mk-table').forEach(tb => { if (!tb.tHead || !tb.tBodies[0] || tb.tBodies[0].rows.length < 2) return;
+    [...tb.tHead.rows[0].cells].forEach(th => { const x = th.textContent.trim(); if (!x) return; th.setAttribute('aria-sort', 'none');
+      th.innerHTML = `<button type="button" class="mk-sort" data-level="2" data-tip="<b>Sort by ${x}</b>: click to put the rows in order by this column; click again to reverse it. It changes only how you see this table, never the record.">${th.innerHTML}</button>`; }); });
   set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
   set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
   set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises. Civicsmith is software; it neither wrote nor checked this case.', 1);
@@ -2970,6 +2979,15 @@ function journeySteps(j, ai) {
   document.addEventListener('focusout', function () { hideT = setTimeout(hide, 50); });
   function setLevel(n) { window.CS_LEVEL = n; hide(); document.querySelectorAll('.mk-lvlbtn .mk-hide-phone').forEach(function (s) { s.textContent = n === 2 ? 'Explain promptly' : 'On a longer pause'; }); document.querySelectorAll('[data-lvl]').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.lvl === n)); }); }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); if (e.altKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.code === 'KeyI')) { e.preventDefault(); setLevel(window.CS_LEVEL === 2 ? 1 : 2); } });
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.mk-sort'); if (!b) return;
+    var th = b.closest('th'), tb = th.closest('table'), body = tb.tBodies[0], i = th.cellIndex, up = th.getAttribute('aria-sort') !== 'ascending';
+    [].forEach.call(tb.tHead.rows[0].cells, function (h) { if (h.hasAttribute('aria-sort')) h.setAttribute('aria-sort', 'none'); });
+    th.setAttribute('aria-sort', up ? 'ascending' : 'descending');
+    var key = function (r) { var t = (r.cells[i] ? r.cells[i].textContent : '').trim(), n = t.replace(/[$,%\s]/g, ''); return { t: t, n: /^-?\d+(\.\d+)?$/.test(n) ? +n : null }; };
+    var rows = [].slice.call(body.rows), ks = rows.map(key), num = ks.every(function (k) { return k.n !== null || !k.t; });
+    rows.map(function (r, j) { return [r, ks[j], j]; }).sort(function (a, b) { if (!a[1].t !== !b[1].t) return a[1].t ? -1 : 1;
+      var d = num ? a[1].n - b[1].n : a[1].t.localeCompare(b[1].t, undefined, { numeric: true, sensitivity: 'base' }); return (up ? d : -d) || a[2] - b[2]; })
+      .forEach(function (x) { body.appendChild(x[0]); }); });
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-lvl]'); if (b) setLevel(+b.dataset.lvl); if (e.target.closest && e.target.closest('[data-lvltoggle]')) setLevel(window.CS_LEVEL === 2 ? 1 : 2); });
   document.addEventListener('click', function (e) { var g = e.target.closest && e.target.closest('[data-goto]'); if (g && g.closest('.mk-page')) { e.preventDefault(); hide(); var W = window.CS_WALK; if (W && typeof SCR !== 'undefined' && SCR[g.dataset.goto]) { W.st.mode = 'screen'; W.st.id = g.dataset.goto; W.st.step = 0; W.draw(); var v = document.getElementById('vscale'); if (v) v.scrollIntoView({ block: 'nearest' }); } return; }
     var el = target(e); if (el && el.closest('.mk-page') && !el.closest('button') && !el.closest('summary')) { e.preventDefault(); if (cur === el) hide(); else show(el); } });

@@ -188,6 +188,9 @@ function decorate(html, id, c) {
   R.querySelectorAll('.cs-wizmark').forEach(w => { set(w, `<b>${w.textContent.trim()}</b>: ${w.getAttribute('title')}. A wizard walks you through this screen step by step; it points at the real control and never presses it.`, 2); w.removeAttribute('title'); });
   R.querySelectorAll('.mk-steps li').forEach(li => set(li, li.classList.contains('done') ? `<b>${li.textContent}</b>: done.` : li.getAttribute('aria-current') ? `<b>${li.textContent}</b>: you are here.` : `<b>${li.textContent}</b>: still to do. You can leave and come back; nothing is lost.`, 2));
   R.querySelectorAll('.cs-row > svg:first-child, .cs-row > .ic:first-child').forEach(sv => { const u = sv.querySelector('use'); const n = u && (u.getAttribute('href') || '').replace('#i-', ''); if (ICON_KIND[n]) set(sv, ICON_KIND[n] + '.', 2); });
+  R.querySelectorAll('.mk-table').forEach(tb => { if (!tb.tHead || !tb.tBodies[0] || tb.tBodies[0].rows.length < 2) return;
+    [...tb.tHead.rows[0].cells].forEach(th => { const x = th.textContent.trim(); if (!x) return; th.setAttribute('aria-sort', 'none');
+      th.innerHTML = `<button type="button" class="mk-sort" data-level="2" data-tip="<b>Sort by ${x}</b>: click to put the rows in order by this column; click again to reverse it. It changes only how you see this table, never the record.">${th.innerHTML}</button>`; }); });
   set(R.querySelector('.cs-pubhead .grp'), GROUP_PUBLIC, 1);
   set(R.querySelector('.cs-pubfoot .id'), '<b>The signature</b>: an owner of the project signed this edition with their key. Anyone can check it, and recreate the case, with the open checker, without the group\'s help.', 1);
   set(R.querySelector('.cs-credit'), '<b>Made with Civicsmith</b>: free software for groups that check whether government keeps its own rules and promises. Civicsmith is software; it neither wrote nor checked this case.', 1);

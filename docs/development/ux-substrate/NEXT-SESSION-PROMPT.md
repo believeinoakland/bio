@@ -9,7 +9,7 @@ Setup:
    - Read BOB's outbox (mail/BOB.md) past B84, and look for new K-rulings that touch the design (build/rulings.md on main and on tranche/T35, past K1977).
    - Subscribe to PR #13.
    - Delete the old session's check-in, trigger trig_01EzXtP6Kmqt2k8ktKe77Vo7, and arm your own safety-net check-in. Never touch trig_01LvNnxKBdB31x23mDSg9XBN.
-   - Read the layouts page (https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv, v74) before you ever republish it. Watch it and the other four pages HANDOFF §0 lists, for my comments.
+   - Read the layouts page (https://claude.ai/artifact/WE1RL6GUUZX4dLeSzbFrbv, v75) before you ever republish it. Watch it and the other four pages HANDOFF §0 lists, for my comments.
 5. Then report in a few lines what you found.
 
 From then on, I review the layouts page by comments sent to Claude. For each, change the page, rebuild, walk, commit, push, republish, then reply in the thread in plain words and resolve it.
