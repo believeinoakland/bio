@@ -1,4 +1,4 @@
-/* conformance's refusal rows (requirements: `build/requirements/conformance.md`, R1, R6–R8, R12, R18–R22). DEC-49:
+/* conformance's refusal rows (requirements: `build/requirements/conformance.md`, R1, R6–R8, R12, R18–R29). DEC-49:
  * every refusal this module answers carries its code, its row and the member's translation, so a surface shows the same
  * sentence wherever the act is reached. The family is C-113, this module's own, minted with the module (K107 (3)'s
  * rule: the job names a new code's row; K174: a module holds its new family). K275, K380 (N309, N312): a code names one
@@ -18,7 +18,11 @@
  * `ACT_NO_EVENT`, C-113.30 `ACTOR_NOT_AN_OFFICE` and C-113.31 `ACT_NOT_AN_EVENT` (R25, R26), stamped by promotion in T34;
  * `NO_SUCH_EVENT` is events' one row, relayed through its `noSuchEvent`. C-113.5's translation no longer names a date:
  * the act's date is its event's `when`. DEC-149 (T34-87): C-113.28 names the group's Civicsmith as "your group's
- * Civicsmith", never "the plane"; awaiting stamp until T35's promotion job (plan T34, Rules (5) item 4). */
+ * Civicsmith", never "the plane"; awaiting stamp until T35's promotion job (plan T34, Rules (5) item 4). T35-61 (N651;
+ * K1723, K1713) adds C-113.32 `STANDARD_NOT_BINDING`, C-113.33 `BENCHMARK_CALLED_NONCONFORMING` (R27), C-113.34
+ * `ACTOR_IS_A_PERSON`, C-113.35 `ACTOR_NOT_AN_OFFICE_OR_ORGANISATION` (R28) and C-113.36 `MEASURE_NO_DENOMINATOR` (R29),
+ * their translations BOB's drafts, awaiting stamp until T36's promotion job (plan T35, accepted red 2). R29's absent or
+ * unseen calculation is `calculations`' answer, `NO_SUCH_CALCULATION`, with no row of this module's. */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -157,6 +161,30 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     check: 'C-113.28', where: at("comparisonFacts", "is-standard-side-named"),
     translation: 'Name which side of the question states what the standard requires, a or b. Your group\'s Civicsmith '
       + 'never chooses it. Nothing was written.',
+  },
+  STANDARD_NOT_BINDING: {
+    check: 'C-113.32', where: at("determine", "is-standard-binding"),
+    translation: 'This standard does not bind this body, so the act cannot be found nonconforming against it. Record it '
+      + 'as a benchmark comparison: below, slower than, or above. Nothing was written.',
+  },
+  BENCHMARK_CALLED_NONCONFORMING: {
+    check: 'C-113.33', where: at("#benchmarkWords", "is-benchmark-worded"),
+    translation: 'A benchmark does not bind this body, so the comparison cannot call the act a violation or '
+      + 'nonconforming. Say how it compares: below, slower than, or above. Nothing was written.',
+  },
+  ACTOR_IS_A_PERSON: {
+    check: 'C-113.34', where: at("#comparedActor", "is-actor-not-a-person"),
+    translation: 'An act is compared as the act of an office or an organisation. The people who took part are recorded '
+      + 'on the act, never as the one who acted. Nothing was written.',
+  },
+  ACTOR_NOT_AN_OFFICE_OR_ORGANISATION: {
+    check: 'C-113.35', where: at("#comparedActor", "is-actor-office-or-organisation"),
+    translation: 'Name the office or organisation whose act this is. Nothing was written.',
+  },
+  MEASURE_NO_DENOMINATOR: {
+    check: 'C-113.36', where: at("#measureOf", "is-measure-denominated"),
+    translation: 'A measure of what the office does is shown with what it counted and out of how many. This calculation '
+      + 'states no denominator or no population. Nothing was written.',
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: 'C-113.21', where: at("check", "is-determination-act"),

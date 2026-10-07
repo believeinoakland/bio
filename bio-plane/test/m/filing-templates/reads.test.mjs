@@ -268,3 +268,94 @@ test("R25 offeredVersion answers the version a filing may use with its metadata:
   const ret = refused(w.ft.offeredVersion({ template: a.template, version: a.version, viewer: A }), "TEMPLATE_RETIRED");
   assert.equal(ret.retired.reason, "retired now");
 });
+
+test("R26 a template's handle: its name case-folded, each run of characters other than ASCII letters and digits one -, none at either end; a name with no ASCII letter or digit has none", () => {
+  for (const [name, h] of [["Records request", "records-request"], ["records-request", "records-request"], ["  Records -- Request!  ", "records-request"],
+                           ["Request under the records act", "request-under-the-records-act"], ["Plan B (2026)", "plan-b-2026"],
+                           ["Café ask", "caf-ask"], ["x", "x"], ["--", null], ["été", "t"], ["日本", null], ["", null], [null, null], [7, null]])
+    assert.equal(ft.templateHandle(name), h, JSON.stringify(name));
+  for (const ok of ["@records-request", "@a", "@a1-b2-c3"]) assert.match(ok, ft.TEMPLATE_NAME_REF_RE);
+  for (const bad of ["records-request", "@", "@Records", "@a--b", "@-a", "@a-", "@a b", "@a_b", "@@a", " @a"]) assert.doesNotMatch(bad, ft.TEMPLATE_NAME_REF_RE);
+});
+
+test("R26 offeredVersion takes {name, project?, version?} in place of template: among templates not retired that the viewer may see, the project's first (when given), then the group's, then the active profiles'; the first scope holding the handle answers, and R25 answers its version exactly as for its id; writes nothing", () => {
+  const w = seeded();
+  const E = V("erin");
+  const P = { project: w.P };
+  const by = (name, x = {}) => w.ft.offeredVersion({ name, viewer: A, ...x });
+  const same = (named, id, x = {}) => assert.deepEqual(named, w.ft.offeredVersion({ template: id, viewer: A, ...x }));
+  /* the profile's templates, by their names' handles (R15: a profile template's name is its kind's label) */
+  const pt = jurisdictions.get(TEST).action_kinds;
+  for (const k of pt) same(by(`@${ft.templateHandle(k.label)}`), k.template.id);
+  same(by("@request-under-the-records-act", P), "TPL-test-records-request");
+  /* two project templates whose names share a handle, then one widened: project first when given, else the group's */
+  const wide = approved(w, { name: "Records request" });
+  w.clock.now = "2026-10-02T00:00:00Z";
+  const own = approved(w, { name: "Records-request" });
+  const amb = refused(by("@records-request", P), "TEMPLATE_NAME_AMBIGUOUS");
+  for (const id of [wide.template, own.template]) assert.equal(JSON.stringify(amb).includes(id), false, "naming neither");
+  refused(by("@records-request"), "NO_SUCH_TEMPLATE", "a project's templates are asked only when the project is given");
+  assert.equal(w.ft.templateApprove({ version: wide.version, widen: true, by: E, viewer: E }).ok, true);
+  const p1 = by("@records-request", P);
+  same(p1, own.template);
+  assert.deepEqual([p1.ok, p1.template, p1.version, p1.default, p1.origin], [true, own.template, own.version, true, "group"]);
+  same(by("@records-request"), wide.template);
+  same(by("@records-request", { project: w.Q }), wide.template, "another project holds none: the group's answers");
+  /* the group's before the profile's */
+  const shadow = approved(w, { name: "Request under the records act" });
+  w.ft.templateApprove({ version: shadow.version, widen: true, by: E, viewer: E });
+  same(by("@request-under-the-records-act"), shadow.template);
+  /* a retired template is not resolved: the next scope holding the handle answers */
+  w.ft.templateRetire({ template: shadow.template, reason: "superseded", by: E, viewer: E });
+  same(by("@request-under-the-records-act"), "TPL-test-records-request");
+  /* version: a named updated version, with updated_by, as for its id */
+  const two = w.ft.templateDraft({ template: own.template, text: "Two {{group}}", author: A, viewer: A });
+  w.ft.templateSubmit({ version: two.version, reviewers: ["frank"], author: A, viewer: A });
+  w.ft.templateApprove({ version: two.version, reason: "r", by: B, viewer: B });
+  const old = by("@records-request", { ...P, version: own.version });
+  same(old, own.template, { version: own.version });
+  assert.deepEqual([old.state, old.updated_by], ["updated", two.version]);
+  assert.deepEqual(by("@records-request", { ...P, version: 1 }).version, own.version);
+  /* R25's refusals follow the resolution: a template with no approved version */
+  draft(w, { name: "Only drafted" });
+  refused(by("@only-drafted", P), "TEMPLATE_NOT_OFFERED");
+  /* writes nothing */
+  const before = w.snapshot();
+  by("@records-request", P); by("@records-request"); by("@nothing-here", P); by("bad"); w.ft.offeredVersion({ viewer: A });
+  assert.deepEqual(w.snapshot(), before);
+});
+
+test("R26 refusals in order, each writing nothing: template and name both or neither, or a name not @ and a handle, TEMPLATE_REF_REFUSED; no such template in any scope NO_SUCH_TEMPLATE, R25's one answer (a hidden one answers as absent); two in the first scope holding it TEMPLATE_NAME_AMBIGUOUS; then R25's", () => {
+  const w = seeded();
+  const a = approved(w, { name: "Records request" });
+  const before = w.snapshot();
+  const P = { project: w.P };
+  refused(w.ft.offeredVersion({ template: a.template, name: "@records-request", ...P, viewer: A }), "TEMPLATE_REF_REFUSED");
+  for (const x of [{}, { template: "", name: "" }, { template: null, name: null }, { version: 1 }])
+    refused(w.ft.offeredVersion({ ...x, viewer: A }), "TEMPLATE_REF_REFUSED");
+  for (const name of ["records-request", "@Records-request", "@records--request", "@records request", "@", "@-x", ["@x"], 7])
+    refused(w.ft.offeredVersion({ name, ...P, viewer: A }), "TEMPLATE_REF_REFUSED");
+  /* refused before resolution: a malformed name for a template that exists is not answered as it */
+  assert.equal(w.ft.offeredVersion({ name: "@Records-request", ...P, viewer: A }).template, undefined);
+  /* absent and hidden: one answer, as R25's for an id */
+  const none = refused(w.ft.offeredVersion({ name: "@nothing-here", ...P, viewer: A }), "NO_SUCH_TEMPLATE");
+  const hidden = refused(w.ft.offeredVersion({ name: "@records-request", ...P, viewer: D }), "NO_SUCH_TEMPLATE");
+  assert.deepEqual(hidden, none);
+  assert.deepEqual(code(none), code(w.ft.offeredVersion({ template: "TPL-2026-0000", viewer: A })));
+  assert.equal(JSON.stringify(hidden).includes(a.template), false);
+  /* negative control: the same name for a viewer who may see it */
+  assert.equal(w.ft.offeredVersion({ name: "@records-request", ...P, viewer: A }).template, a.template);
+  assert.deepEqual(w.snapshot(), before);
+  /* ambiguity among the active profiles' templates: two profiles' templates under one label */
+  const bad = structuredClone(twoProfiles.get(HARBOUR));
+  bad.action_kinds.find((k) => k.kind === "records_request").template = { ...structuredClone(jurisdictions.get(TEST).action_kinds[0].template),
+    id: "TPL-test-harbour-records" };
+  const jur = { ...twoProfiles, get: (id) => (id === HARBOUR ? structuredClone(bad) : twoProfiles.get(id)) };
+  const w2 = seeded({ profiles: [TEST, HARBOUR], jur });
+  refused(w2.ft.offeredVersion({ name: "@request-under-the-records-act", viewer: A }), "TEMPLATE_NAME_AMBIGUOUS");
+  assert.equal(w2.ft.offeredVersion({ template: "TPL-test-harbour-records", viewer: A }).ok, true, "each still named by its id");
+  /* an earlier scope holding one answers before a later scope's ambiguity */
+  const g = approved(w2, { name: "Request under the records act" });
+  w2.ft.templateApprove({ version: g.version, widen: true, by: V("erin"), viewer: V("erin") });
+  assert.equal(w2.ft.offeredVersion({ name: "@request-under-the-records-act", viewer: A }).template, g.template);
+});

@@ -6,7 +6,8 @@
  * `TEMPLATE_TIER3_FILE` (was `TEMPLATE_KIND_TIER3`), each translation re-worded for its new code; C-115.32, .33, .35,
  * .37 and .38 (`NO_SUCH_TEMPLATE`, which `filings` passes through as this module's) moved; `filings`' T21 job deleted
  * its copies (K624 (1)). C-115.34, .39 and .40 stay `filings`'. Every other code is a new
- * row of this module's family, C-125 (K933). Every row here was stamped by 1.52.0 (PROMOTION #23, T22 layer 2; K991). */
+ * row of this module's family, C-125 (K933), except R26's two (T35, N702): C-115.45 and C-115.46, as R26 numbers them.
+ * Every row but those two was stamped by 1.52.0 (PROMOTION #23, T22 layer 2; K991); they await T36's promotion job. */
 
 const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 
@@ -42,6 +43,16 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
     check: "C-115.38", where: at("#noTemplate", "is-no-such-template"),
     translation: "There is no template by that id in the group's library that you can read here. One you may not see "
       + "answers exactly as one that does not exist.",
+  },
+  /* ---- new in T35 (R26; N702, K1869), in the C-115 family as R26 numbers them; awaiting promotion's stamp ---- */
+  TEMPLATE_REF_REFUSED: {
+    check: "C-115.45", where: at("#byName", "is-template-ref"),
+    translation: "Name one template, by its id or as @ and its name. Nothing was drafted.",
+  },
+  TEMPLATE_NAME_AMBIGUOUS: {
+    check: "C-115.46", where: at("#byName", "is-template-ref"),
+    translation: "Two templates you can see go by that name here, so neither was chosen. Pick the template by its id. "
+      + "Nothing was drafted.",
   },
   /* ---- new (C-125) ---- */
   TEMPLATE_KIND_UNKNOWN: {

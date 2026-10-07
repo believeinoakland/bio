@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CLK, officeCalendarProfile } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
 import { factPath } from "../../../src/local-facts/index.mjs";
-import { combine } from "../../../../jurisdictions/index.mjs";
+import { combine, get } from "../../../../jurisdictions/index.mjs";
 
 const M = V("alice"), BOB = V("bob");
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b", C = "ACTN-2026-0003-c", D = "ACTN-2026-0004-d";
@@ -231,13 +231,84 @@ test("R11 calendarFactsRead lists, once each, the holiday entries and office hou
   const bare = world({ profiles: null });
   bare.action(A, CPL("Town Clerk", "City of Port Ellery"));
   assert.deepEqual(bare.c.calendarFactsRead({ viewer: M }).paths, []);
-  /* K1519: on the test profile itself every business deadline counts on a closure list, which is no local fact: only
-     the offices' hours are read, and no list entry ever becomes a path. */
+  /* K1519: a deadline counted on a closure list reads no office-calendar entry (the test profile's own business deadline
+     counts on 'town'); what it reads of the list is R11's next test's. */
   const lists = world();
   lists.action(A, [...CPL("Town Clerk", "City of Port Ellery"), "clock:", ...CLK("2028-03-01")]);
-  assert.deepEqual(lists.c.calendarFactsRead({ viewer: M }).paths.map((p) => p.path),
-    [factPath({ profile: "test-port-ellery", fact: "hours", office: { role: "Town Clerk", body: "City of Port Ellery" } })]);
+  const listed = lists.c.calendarFactsRead({ viewer: M }).paths.map((p) => p.path);
+  for (const x of [pathOf(TEST, 2026), pathOf(TEST, 2026, ["Town Clerk"]), pathOf(TEST, 2027)])
+    assert.ok(!listed.includes(x), `no office-calendar entry: ${x}`);
 });
+
+/* The path of a named closure list's entry (local-facts R6), as R12 reads it. */
+const listPath = (year, list, offices = null) =>
+  factPath({ profile: "test-port-ellery", fact: "holidays", year, ...(offices ? { offices } : {}), list });
+
+test("R11 (N689) calendarFactsRead also lists each entry of the named closure list a live deadline's closures or observed.closures reads, at its own list=<name> path (the one R12 reads), once each: the test profile's CPRA-like rule counts on 'town' and its observed practice names 'court', so both lists' entries are listed, each once", () => {
+  const w = world();
+  w.action(A, [...CPL("Town Clerk", "City of Port Ellery"), "clock:", ...CLK("2027-03-01")]);
+  w.action(B, CPL("Town Clerk", "City of Port Ellery"));
+  w.promote(C, actionMd(C, [...CPL("Selectboard", "Port Ellery Selectboard"), "action_kind: bylaw_complaint"]));
+  const rule = TEST.deadlines.find((d) => d.rule === "records_answer");
+  assert.deepEqual([rule.count, rule.closures, rule.observed.closures], ["business", "town", "court"], "the profile as the test reads it");
+  const r = w.c.calendarFactsRead({ viewer: M });
+  const town = listPath(2026, "town"), court = listPath(2026, "court");
+  assert.match(town, /list=town/); assert.match(court, /list=court/);
+  const hours = factPath({ profile: "test-port-ellery", fact: "hours", office: { role: "Town Clerk", body: "City of Port Ellery" } });
+  assert.deepEqual(r.paths.map((p) => [p.path, p.actions.map((x) => x.action)]),
+    [[court, [A, B]], [town, [A, B]], [hours, [A, B]]].sort((x, y) => (x[0] < y[0] ? -1 : 1)),
+    "each list's 2026 entry (no 2027 entry of either list is held, so none is a fact); never the office calendar's; C's kind has no business-day deadline");
+  assert.equal(new Set(r.paths.map((p) => p.path)).size, r.paths.length, "once each");
+  /* each listed path is the one R12 reads the entry at, and a member can confirm it there. */
+  const read = clocks.factReader(w.localFacts, M);
+  for (const [list, path] of [["town", town], ["court", court]]) {
+    const h = TEST.holidays.find((x) => x.list === list && x.year === 2026);
+    assert.equal(read(h).path, path);
+    assert.equal(w.localFacts.factConfirm({ path, act: "confirm", how: "the published list", by: M, viewer: M }).ok, true, path);
+  }
+  /* so the count's unconfirmed statement names a path calendarFactsRead lists. */
+  const fresh = world();
+  fresh.action(A, CPL("Town Clerk", "City of Port Ellery"));
+  fresh.actions.actionCorrespond({ target: A, direction: "sent", at: "2026-08-12", account: "sent", viewer: M, author: M });
+  const p = fresh.c.clockPropose({ target: A, rule: "records_answer", proposer: M, viewer: M }).proposal;
+  const paths = fresh.c.calendarFactsRead({ viewer: M }).paths.map((x) => x.path);
+  for (const y of p.calendar.years.filter((x) => x.status === "unconfirmed")) assert.ok(paths.includes(y.path), y.path);
+});
+
+test("R11 (N689) a list a rule only rolls on is listed; a path a rule and its observed both name is listed once; a list entry for another office, a list no live deadline reads, and a rule naming a list it neither counts nor rolls on read nothing", () => {
+  const p = structuredClone(get("test-port-ellery"));
+  /* the records request: a calendar count that rolls on 'court', its observed practice 'court' too; a calendar count
+     naming 'town' that neither counts nor rolls on it; and the business count, its 'town' list taken off (so it reads
+     the office calendar). A 'court' 2027 entry for the Selectboard alone, and a 'town' 2027 entry for all offices. */
+  p.deadlines = p.deadlines.map((d) => (d.rule !== "records_answer" ? d : (({ closures, observed, ...rest }) => rest)(d)));
+  p.deadlines.push({ ...p.deadlines.find((d) => d.rule === "filing_reply"), rule: "records_roll", applies_to: "records_request",
+                     closures: "court", observed: { closures: "court", status: "researched", basis: "TEST" } });
+  p.deadlines.push({ ...p.deadlines.find((d) => d.rule === "filing_reply"), rule: "records_plain", applies_to: "records_request",
+                     roll: undefined, closures: "town" });
+  p.deadlines = p.deadlines.map((d) => JSON.parse(JSON.stringify(d)));
+  const court26 = p.holidays.find((h) => h.list === "court" && h.year === 2026);
+  p.holidays.push({ ...structuredClone(court26), year: 2027, offices: ["Selectboard"], days: [{ date: "2027-01-01", name: "New Year" }] });
+  p.holidays.push({ ...structuredClone(p.holidays.find((h) => h.list === "town" && h.year === 2026)), year: 2027,
+                    days: [{ date: "2027-01-01", name: "New Year" }] });
+  const w = world({ override: { "test-port-ellery": p } });
+  w.action(A, CPL("Town Clerk", "City of Port Ellery"));
+  const listed = w.c.calendarFactsRead({ viewer: M }).paths.map((x) => x.path);
+  assert.equal(listed.filter((x) => x === listPath(2026, "court")).length, 1, "rolled on, and named by both the rule and its observed: once");
+  assert.ok(!listed.includes(listPath(2027, "court", ["Selectboard"])), "another office's list entry is not read");
+  assert.ok(!listed.some((x) => /list=town/.test(x)), "'town' is named only by a rule that neither counts nor rolls on it");
+  assert.ok(listed.includes(pathOf(TEST, 2026)) && listed.includes(pathOf(TEST, 2027)), "the business count, naming no list, reads the office calendar");
+  /* addressed to the Selectboard, its 2027 'court' entry is read. */
+  w.action(B, CPL("Selectboard", "Port Ellery Selectboard"));
+  const r = w.c.calendarFactsRead({ viewer: M });
+  assert.deepEqual(r.paths.find((x) => x.path === listPath(2027, "court", ["Selectboard"])).actions.map((a) => a.action), [B]);
+  assert.deepEqual(r.paths.find((x) => x.path === listPath(2026, "court")).actions.map((a) => a.action), [A, B]);
+  /* the pure predicate, at its interface. */
+  assert.deepEqual(clocks.closureListsRead(p.deadlines.find((d) => d.rule === "records_roll")), ["court"]);
+  assert.deepEqual(clocks.closureListsRead(p.deadlines.find((d) => d.rule === "records_plain")), []);
+  assert.deepEqual(clocks.closureListsRead(rule0()), ["town", "court"]);
+  for (const x of [null, undefined, 3, "x", {}, { count: "business" }]) assert.deepEqual(clocks.closureListsRead(x), [], String(x));
+});
+const rule0 = () => TEST.deadlines.find((d) => d.rule === "records_answer");
 
 test("R11 at most 500 actions are read, `truncated` stated", () => {
   const w = world();
