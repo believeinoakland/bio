@@ -44,3 +44,7 @@ Found while testing calculations' users (details in my record's Completion):
 2. The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, §14) is stale from calculations' source; for the layer close.
 3. Built against events' and standards' T35 interfaces before they merge, through test providers: `events.usesOf` and R45's event view; `standards.standardRead` (`period`, `held`, `target`), `inForceAt`, `isMeasure({standard, viewer})`, `bindsAt({standard, body, date, viewer})` read as `{state, why}`, `forcesOf({standard, viewer})` read as `{forces}`. Worth checking against their code at their merges; a different shape is a CHANGE to me.
 4. One refinement of reading 3 (K1967), made after J1: a donation is dated, so one made before the act counts as `donation`, as an employment ended before it counts as `former_employment`; a tie whose validity at the act's date cannot be decided is listed with that said.
+
+## J3 · COMPLETE
+
+T35-38 applied whole (R9, R32–R37, CONTENT #14 J2's 'set up'); 46/46 calculations tests; coverage 37/37, architecture and ownership 0 failures, format only red 24. My record's Completion section has the detail; J2 the findings.
