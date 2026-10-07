@@ -73,3 +73,7 @@ Merged `tranche/T35` (op-grades' J4: `standardrelease` in `CONSEQUENCE_STATEMENT
 Tests: affordances 208 of 208. Users (control-plane `totality`, plane `wizards`, queue, op-declarations, op-grades, tasks): 336 of 340, the four being red 37 and op-declarations' accepted reds. `format`, `architecture` (19 product files, 234 relative imports), `coverage` (32 of 32), `ownership`: 0 failures.
 
 Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 23, module lines 2055
+
+## J5 · COMPLETE
+
+B5 (K2052) done and pushed: tranche/T35 merged; the consequence-statement pin gains ["standardrelease", "reasoned"], clearing red 39. affordances 208 of 208; users 336 of 340 (red 37, op-declarations' reds); format, architecture, coverage, ownership: 0 failures. K2038's re-export stays.
