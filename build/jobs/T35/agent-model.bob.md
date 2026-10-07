@@ -1,14 +1,14 @@
-# BOB to run-rules (T35)
+# BOB to agent-model (T35)
 
-**Read** · handled J3
+**Read** · handled J0
 
 ## B1 · START
 
-Depth 2. Your entries: `build/plan/current.md` (T35), layer 6, run-rules: T35-43. Read also the plan's "Rules at the opening", "BOB's review", "Shares named for later STARTs" and the rulings your entry cites. Your requirements: `build/requirements/run-rules.md` (read whole). R16 and R18 amended, R21 new (K1941). (N686) The mode `draft`: interactive, writes no run row, read-only within `ASK_SCOPE` (answers R1), deployed by its own flag as R16's `ask`; a draft shares `ASK_BOUNDS` (K1941). ai-runs, skills, answers and agent-worker depend on you: each merges the tranche branch after your merge when BOB says so. Your change stales agent-worker's committed bundle, which embeds run-rules, (a generated artifact, `build/manifest.md`); do not edit it by hand: report it, BOB regenerates it at the layer's close. Depends —.
+Depth 2. Your entries: `build/plan/current.md` (T35), layer 6, agent-model: T35-48. Read also the plan's "Rules at the opening", "BOB's review", "Shares named for later STARTs" and the rulings your entry cites. Your requirements: `build/requirements/agent-model.md` (read whole). R12 new (K1941). (F5) Record text reaches the model only inside tool results or search-result blocks, never spliced into the system prompt; agent-worker R61 relies on it. Depends —.
 
 Merge order in L6: inquiry-grammar → hypotheses → citation → run-rules → ai-runs → capture-requests → skills → answers → agent-model → agent-runner → agent-worker last (`modules.json` order; a provider merges before its users in this layer, and a user merges the tranche branch after its provider's merge when BOB says so).
 Inherited reds (plan rule 9), outside your module unless named yours: coverage of T35 ids not yet met (1); row census (2: rows L6 adds or re-words stay awaiting stamp until T36's promotion job); DEC-88 UI tests (3); control-plane `lease.test.mjs` (7); op-declarations ×2 (9); plane migrate-released (10); agent-runner R11 (11); installer R11 (12); action-clocks factreader ×2 (14); agent-worker e2e suites `d260-resume`, `fence-e2e` from T35-50's merge until T35-71's (18); control-plane catalogue-end (19); hypotheses notes R11 (20); sources contract R1 (21); plane ask ×6 (22); op-declarations t33:180 (23); membership module-order and its sisters, standards `reads.test.mjs` among them (25); control-plane catalogue-totality from T35-78's merge (26); inquiry-grammar golden and basis-versions R43 (27, until T35-40); leg-earning `earnedBasis` cell leg (28, until T35-82).
 
-## B2 · ANSWER · re J1
+## B2 · CHANGE
 
-Stands (K1982): R16's Provides now names DRAFT_MODE and deployedModesFor(flags), DEPLOYED_MODES being deployedModesFor(); on tranche/T35 @ 08843d299f.
+Agent-model R1 amended (K1983, on tranche/T35 @ 2fb6fa0470; merge it): MODEL_FOR_MODE holds an entry for `draft` (agent-worker R59's POST /draft), provisional and today's default model until M-Q9 measures it. Add it with a test naming R1. Agent-worker opens each judged row with a fixed `read_facts` tool's result (your R12); if you export an opener or the tool for that, say so in your record.

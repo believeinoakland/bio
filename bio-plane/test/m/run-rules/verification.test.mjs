@@ -2,7 +2,7 @@
    deployed on the verifications the record holds. Each refusal has its negative control beside it. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { VERIFICATION_RECORDED, checkVerification, deployable, DEPLOYMENT_SEQUENCE, ASK_MODE } from "../../../src/run-rules/index.mjs";
+import { VERIFICATION_RECORDED, checkVerification, deployable, DEPLOYMENT_SEQUENCE, ASK_MODE, DRAFT_MODE } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
 
 const ok = (mode, extra = {}) => ({ mode, run: `RUN-${mode}`, verified_by: "member:ann", at: "2026-10-06T00:00:00Z",
@@ -36,7 +36,7 @@ test("R19: VERIFICATION_RECORDED is the act's shape {mode, run, verified_by, at,
   assert.match(checkVerification(ok("check", { verified_by: "class:daemon" })).detail, /names a machine/);
 });
 
-test("R19: deployable(mode, verifications) — the order's first mode always; each later one only when a well-formed verification is held for every mode before it (investigate only after check's), so the chain is the record's; plan and ask deploy apart and are not the chain's to decide; any other word false; never throws", () => {
+test("R19: deployable(mode, verifications) — the order's first mode always; each later one only when a well-formed verification is held for every mode before it (investigate only after check's), so the chain is the record's; plan, ask and draft deploy apart and are not the chain's to decide; any other word false; never throws", () => {
   const chain = DEPLOYMENT_SEQUENCE.order.filter((m) => !Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m));
   assert.deepEqual(chain, ["check", "investigate", "extract"]);
   for (const vs of [[], null, undefined, "x", [ok("investigate")]]) assert.equal(deployable("check", vs), true, String(vs));
@@ -56,6 +56,7 @@ test("R19: deployable(mode, verifications) — the order's first mode always; ea
   for (const vs of [[], [ok("check"), ok("investigate"), ok("extract")]]) {
     assert.equal(deployable("plan", vs), true);
     assert.equal(deployable(ASK_MODE.mode, vs), true);
+    assert.equal(deployable(DRAFT_MODE.mode, vs), true);
   }
   /* any other word */
   for (const m of ["", null, undefined, "Check", "verify", "__proto__", "toString", 3])

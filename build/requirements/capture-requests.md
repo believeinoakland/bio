@@ -105,7 +105,8 @@ Terms. A **records request** is a row of this module's own records-request table
 - `run-rules`: `runPrincipalGate` (its R5; R1, R8).
 - `provenance`: the `captured_locators` read contract (its R48) for R49 (T35). *(a new edge; BOB's)*
 - `capture`: also R27's links (raw address and fragment) and R57's read contract, for R49 (T35).
-- `standards`: `standardRead` (its R5: sight, the issuer, and T35-31's `held` with the citation) and `noSuchStandard` (its R17) for R51–R53 (T35). *(a new edge; BOB's)*
+- `standards`: `standardRead` (its R5: sight, the issuer, and T35-31's `held` with the citation) and `noSuchStandard` (its R17) for R51–R53 (T35), reached as `standardsOf(host)` (K1982).
+- `subresources` (L1): `normalizeAddress`, R49's candidates found on the indexed `address_norm` columns, then compared exactly (K1982).
 - `runtime-limits`: `unattendedCredential(env)` (its R26): `bound` for whether the drain is configured (R11, R37), `token()` for the credential the drain spends until R16 retires it (K90 (2)). *(not declared)*
 
 ### Invariants

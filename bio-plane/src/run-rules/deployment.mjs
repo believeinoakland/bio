@@ -161,20 +161,65 @@ export const ASK_MODE = Object.freeze({
   bounds: "ASK_BOUNDS (R17), declared when the ask starts",
 });
 
-/** The modes a RUN may be in: the order's, and nothing else. `ask` is deployed through DEPLOYED_MODES (R16) but is no
- *  run, so an open that must refuse a run in a mode that is not a run's reads this list beside DEPLOYED_MODES. */
+/** R21 (T35-43; N686; DEC-152, DEC-153; K1837, K1841): THE MODE `draft` — the assistant's labelled draft of a member's
+ *  own words ("Help me write this", DEC-153; the group's description, DEC-152), answered into the member's field and
+ *  kept only by the member's own act (`wizard-scripts` R24, R25; K1364). The second interactive mode, on `ask`'s rule:
+ *  it is NO RUN, so it writes no run row and keeps nothing (the draft is answered, never stored); it is read-only, its
+ *  reach within `answers`' `ASK_SCOPE` (that module's R1) and holding no write op of any module; a draft for a field
+ *  that records what the member saw (`wizard-scripts` R25's `firsthand`) reads nothing at all; it shares R17's
+ *  `ASK_BOUNDS` (K1941: a draft is an ask's size or less, and one set keeps one ceiling to measure, M-Q7). It deploys
+ *  apart by a flag of its OWN (R16 as amended): `ask`'s flag never deploys it, nor its flag `ask`. Not in
+ *  `DEPLOYMENT_SEQUENCE.order` and not in `RUN_MODES`, so a run opened in mode `draft` is refused (`ai-runs` R40,
+ *  C-109.1). Frozen. */
+export const DRAFT_MODE = Object.freeze({
+  mode: "draft",
+  read_only: true,
+  reach: "within answers' ASK_SCOPE (its R1); no write op of any module",
+  firsthand_reach: "nothing: a draft for a field that records what the member saw reads nothing at all",
+  interactive: true,
+  writes_run_row: false,
+  keeps: "nothing: the draft is answered into the member's field, never stored, and is the member's words only by "
+    + "the member's own act of keeping or editing it",
+  why: "it answers one member's request for help with their own words inside that member's act and is no run: it "
+    + "writes no run row and keeps nothing (K1364, K1450)",
+  deploys_apart: true,
+  deployed: false,
+  when: "only by a reviewed change of its own that sets this flag, the change that serves agent-worker's POST /draft, "
+    + "whatever the run modes' state and whatever ask's flag",
+  bounds: "ASK_BOUNDS (R17), declared when the draft starts",
+});
+
+/** The modes a RUN may be in: the order's, and nothing else. `ask` and `draft` are deployed through DEPLOYED_MODES (R16,
+ *  R21) but are no runs, so an open that must refuse a run in a mode that is not a run's reads this list beside
+ *  DEPLOYED_MODES. */
 export const RUN_MODES = Object.freeze([...DEPLOYMENT_SEQUENCE.order]);
 
-/** R9, R14, R16 (ai-runs R40 reads it): THE MODES DEPLOYED NOW. The chain's first member deploys first; each later member of
- *  the chain enables only once the one before it has been verified live, recorded in `verification_recorded`. With
- *  nothing recorded, only the first. A mode that deploys apart (`deploys_apart`) is not in the chain and is deployed
- *  exactly when its own flag is true; so is `ask` (R16), which is no run and in no order. */
 const CHAIN = DEPLOYMENT_SEQUENCE.order.filter((m) => !Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m));
-export const DEPLOYED_MODES = Object.freeze([
-  ...CHAIN.slice(0, DEPLOYMENT_SEQUENCE.verification_recorded == null ? 1 : 2),
-  ...DEPLOYMENT_SEQUENCE.order.filter((m) => DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed === true),
-  ...(ASK_MODE.deployed === true ? [ASK_MODE.mode] : []),
-]);
+const own = (o, k) => o != null && typeof o === "object" && Object.prototype.hasOwnProperty.call(o, k);
+
+/** R9, R14, R16, R21 — WHICH MODES ARE DEPLOYED UNDER THESE FLAGS? The one computation DEPLOYED_MODES is, exported so
+ *  each flag can be judged on its own. `flags` may name `verification_recorded` (the chain's), `plan` (R14), `ask`
+ *  (R16) and `draft` (R21); a name left out takes the value this module holds today. The chain's first member deploys
+ *  first; its second only once a verification is recorded. A mode that deploys apart is deployed exactly when its own
+ *  flag is `true`: no other flag, and no state of the run modes, moves it. Frozen; pure; never throws. */
+export function deployedModesFor(flags) {
+  const f = flags != null && typeof flags === "object" ? flags : {};
+  const verified = own(f, "verification_recorded") ? f.verification_recorded : DEPLOYMENT_SEQUENCE.verification_recorded;
+  const apart = (m, held) => (own(f, m) ? f[m] : held) === true;
+  return Object.freeze([
+    ...CHAIN.slice(0, verified == null ? 1 : 2),
+    ...DEPLOYMENT_SEQUENCE.order.filter((m) => apart(m, DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed)),
+    ...(apart(ASK_MODE.mode, ASK_MODE.deployed) ? [ASK_MODE.mode] : []),
+    ...(apart(DRAFT_MODE.mode, DRAFT_MODE.deployed) ? [DRAFT_MODE.mode] : []),
+  ]);
+}
+
+/** R9, R14, R16, R21 (ai-runs R40 reads it): THE MODES DEPLOYED NOW. The chain's first member deploys first; each later
+ *  member of the chain enables only once the one before it has been verified live, recorded in
+ *  `verification_recorded`. With nothing recorded, only the first. A mode that deploys apart (`deploys_apart`) is not
+ *  in the chain and is deployed exactly when its own flag is true; so are `ask` (R16) and `draft` (R21), which are no
+ *  runs and in no order, each by its own flag alone. */
+export const DEPLOYED_MODES = deployedModesFor();
 
 /** The mode a run that names none opens in (K182 (4c)): the first deployed, recorded on the run. */
 export const DEFAULT_MODE = DEPLOYED_MODES[0];
@@ -228,11 +273,12 @@ export function checkVerification(v) {
 /** R19 — MAY `mode` BE DEPLOYED, ON THE VERIFICATIONS THE RECORD HOLDS? The order's chain (its modes less those that
  *  deploy apart): its first member always; each later one only when a well-formed `verification_recorded`
  *  (`checkVerification`) is held for EVERY chain mode before it — `investigate` only after `check`'s, `extract` only
- *  after both. A mode that deploys apart (`plan`, R14; `ask`, R16) is never decided by the chain: its own reviewed flag
- *  alone deploys it, so this answers true for it. Any other word is false. Pure; never throws. */
+ *  after both. A mode that deploys apart (`plan`, R14; `ask`, R16; `draft`, R21) is never decided by the chain: its own
+ *  reviewed flag alone deploys it, so this answers true for it. Any other word is false. Pure; never throws. */
 export function deployable(mode, verifications) {
   const m = typeof mode === "string" ? mode : "";
-  if (m === ASK_MODE.mode || Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m)) return true;
+  if (m === ASK_MODE.mode || m === DRAFT_MODE.mode
+      || Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, m)) return true;
   const at = CHAIN.indexOf(m);
   if (at < 0) return false;
   const held = new Set((Array.isArray(verifications) ? verifications : [])
