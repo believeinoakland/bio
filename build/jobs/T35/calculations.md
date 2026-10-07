@@ -36,3 +36,11 @@ Seven readings I am building on (carrying on meanwhile; none blocks):
 5. R35's measure: a figure (a `CALC-` or cited figure) for one period, the calculation's own; or a table with `from`, `to` (dates) and `value` columns, one row per period; `bindsAt` and the version in force are read at each period's `to`.
 6. R9's engine: office-readers records no application, so `engine` is "the file's spreadsheet program" and `engine_measured` false for every such input (no agreement of that engine is recorded as measured); marked on a table from a sheet range holding any formula cell, and on a figure citing a formula cell.
 7. R32's frozen uses table is withheld whole (R10) from a viewer who may not see every event in it (`events.readEvent`), and keyed to its `project` for purge.
+
+## J2 · REPORT
+
+Found while testing calculations' users (details in my record's Completion):
+1. `affordances` `t33.test.mjs`:136 (R40/R12) and `op-declarations` `t33.test.mjs`:180 (R19/R6, red 23) now also fail on calculations' two new ops, `usesfreeze` (R32, a member's act) and `applicationrecipes` (R33, a read): no grade and no spec yet. Owed by their T35 jobs (T35-66, T35-70).
+2. The plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`, §14) is stale from calculations' source; for the layer close.
+3. Built against events' and standards' T35 interfaces before they merge, through test providers: `events.usesOf` and R45's event view; `standards.standardRead` (`period`, `held`, `target`), `inForceAt`, `isMeasure({standard, viewer})`, `bindsAt({standard, body, date, viewer})` read as `{state, why}`, `forcesOf({standard, viewer})` read as `{forces}`. Worth checking against their code at their merges; a different shape is a CHANGE to me.
+4. One refinement of reading 3 (K1967), made after J1: a donation is dated, so one made before the act counts as `donation`, as an employment ended before it counts as `former_employment`; a tie whose validity at the act's date cannot be decided is listed with that said.
