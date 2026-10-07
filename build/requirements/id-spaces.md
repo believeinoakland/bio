@@ -1,6 +1,6 @@
 # id-spaces — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25, the T6 sample. Rewritten the same day for the rule "No jurisdiction in the product" (`build/layers.md`) and the conventions in `README.md`. Layer 1. Code today: `bio-plane/src/idspaces.mjs`, which names Oakland's systems in code (plan entry N2). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-9 (entries B1b.3; A COURTS (d) 2a, the C1 core; K1441, K1452): R1 amended (the spaces `account`, `object`, `vendor`, `proceeding` and `person`, the person schemes as forms); R27–R29 (the citation recogniser, reading `court-citations` when that module is built) added; not yet met (T33-9). T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-7 (N569, with N613's `office` scheme; K1574, K1682): R1 amended (the `body` and `office` spaces, eleven in all); not yet met (T34). T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-7: R30–R33 added (`recogniseSeries`: policy citations and standard designations with edition, read from the profiles' series, `jurisdictions` R63; K1713, K1740); not yet met (T35).
+**Status** · In force: written by BOB #37 (T6 sample), a helper module, its requirements BOB's (K20). Last changed T35 (T35-7: R30–R33; K1713, K1740); every requirement met (K1926).
 
 ## Public
 

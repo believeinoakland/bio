@@ -1,6 +1,6 @@
 # odf-reader — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code: `bio-plane/src/odf.mjs`; tests `bio-plane/test/m/odf-reader/`. R29 (D-346) and R36 (D-612) built in T2. No local fact is held here. Every id met and tested in T2 (2026-09-26; `build/plan/archive/T2.md`). N30 folded by a drafting worker for BOB #64, 2026-09-29 (T13, K408): R45 (`ODF_REPEAT_EXPANSION_MAX`), R16's hidden rows as ranges, R41's new branch. T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-11 (entry C:A-4; K1448): R46 (typed cells, `office-readers` R30's contract) added; not yet met (T33-11). T35's fold, by BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-76 (K1903): R47 `active` (ODF Basic macros, event listeners, embedded objects).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-76: R47; K1903); every requirement met (K1919).
 
 ## Public
 
