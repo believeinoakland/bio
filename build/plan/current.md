@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #134 · session_01NrV6M5qXNkuHFroNuTCcu3 · depth 1
 
-**Jobs** · connection-grammar: CONNECTION-GRAMMAR #3 session_01H9M3DEa6cwNZgYQXQhaJuf; signatures: SIGNATURES #11 session_01L8Hyorky2d1Lrs1dqmDrCn; bundler: BUNDLER #10 session_01AVSxAcVVnwvGFa9niTqNUo; office-readers: OFFICE-READERS #7 session_012a2UNtTuD5PNQ4KYMYjtA1
+**Jobs** · connection-grammar: CONNECTION-GRAMMAR #3 session_01H9M3DEa6cwNZgYQXQhaJuf; signatures: SIGNATURES #11 session_01L8Hyorky2d1Lrs1dqmDrCn; bundler: BUNDLER #10 session_01AVSxAcVVnwvGFa9niTqNUo; office-readers: OFFICE-READERS #7 session_012a2UNtTuD5PNQ4KYMYjtA1; doctypes: DOCTYPES #3 session_019F8gBQfqTqF5hBsFcHmxd7
 
 **Sources** · `next.md` N706–N747; `current.md` (T35): its "Left out of T35" table, accepted reds 2, 3, 21, 25, 32, "Modules for the virus package (BOB's, decided K2008)", "Shares named for later STARTs", "P6 notes"; `plan/draft-T36-virus-requirements.md` rev. 2 (with K1946, K1949 folded); `modules.json` (order, layers) with L11's split rows from `plan/draft-T35-split-reqs/modules.json.at-L11` (op-grades, answer-envelope, store-door), in force by T36; rulings K1913, K1922, K1924, K1928, K1929, K1936, K1939, K1941, K1946, K1949, K1954, K1955, K1957, K1961, K1972, K1973, K1977, K1983, K1988, K1991, K1993, K1995, K1996, K2002, K2004, K2005, K2007, K2008, K2009, K2015, K2021, K2027, K2038, K2062, K2063 (the questions settled, below). PROCESS-MECHANICS §5.2; PROCESS-DESIGN P10, P19.
 
