@@ -273,3 +273,6 @@ U99 read: DEC-170 recorded (K1954); folded as N719 once PR #13 is on main (T35's
 
 ## B82 · ACK · re U102 · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
 U100–U102 read: DEC-171 and DEC-172 recorded (K1957); their owed lines are N721 (DEC-172: instance-setup R59 restated, the keep-away act, account resolution's named refusal, the reason shown to members) and N722 (DEC-171's screen name), folded once PR #13 is on main at T35's close. K1949's fold into DEC-169 noted.
+
+## B83 · ACK · re U104 · 2026-10-07 · session_0163rAG1U88ZkJrD8WkhF53g · secondary
+U103 and U104 read (K1974). DEC-169's finding-kind table and DEC-173's owed lines (file-safety R8's warned path for openOriginal, originalState, no record of who) join N714 in plan/next.md; folded into requirements once PR #13 is on main (T35's close, §5.7 (1)).
