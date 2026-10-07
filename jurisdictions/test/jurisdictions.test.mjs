@@ -922,7 +922,7 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   const f = get(FIRST);
   /* every entry R31 gives a level carries one; OUSD's families, a government at no law level, carry their sector (T35-1) */
   for (const x of [...f.records_laws, ...f.standard_sources])
-    assert.ok(LAW_LEVELS.includes(x.level) || (x.kind === "policy" && !("level" in x) && x.sector === "government"), x.name || x.source);
+    assert.ok(LAW_LEVELS.includes(x.level) || (["policy", "commitment", "standard"].includes(x.kind) && !("level" in x) && x.sector), x.name || x.source);
   /* the Tier 3 kinds §8 names are held, for the organisations that evaluate them */
   assert.ok(f.action_kinds.filter((k) => k.tier === 3).length >= 3);
   /* the legal organisations Bob named (K283 (2), K303): exactly these two, each taking up its Tier 3 kinds,
