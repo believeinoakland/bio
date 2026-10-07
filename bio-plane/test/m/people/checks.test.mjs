@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, OUT, BOSS, MACHINE, PRESET_PERSONS } from "./fixture.mjs";
-import { SHIPPED_CHECKS, GATE_RATE_MAX } from "../../../src/people/index.mjs";
+import { SHIPPED_CHECKS, GATE_RATE_MAX, HINT_MARK, peopleOps } from "../../../src/people/index.mjs";
 
 const span = (from, to) => ({ from, to });
 const RD = { from: { line: "holds", sector: "government" }, to: { line: "holds" }, join: { lines: ["oversees", "contracts_with"] }, order: { after: true, within_days: 730 }, hops: 0 };
@@ -192,4 +192,35 @@ test("R35 onChecksChanged takes one registration per module (membership's listen
     assert.ok(x.p.listChecks({ viewer: ANN }).checks.some((c) => c.check === r.check), "the act stands");
   }
   assert.equal(counts(loud), counts(quiet), "a listened act writes exactly what an unlistened one does");
+});
+
+test("R24 (T35; DEC-131) each answered result, wherever it reaches a member (op=interestchecks, and what R25's listeners are told), carries mark 'Hint · machine work' beside label 'Noticed', its detail beginning with that mark and calling it a hint, never a signal; label, layer, by and every key stay", () => {
+  const w = world();
+  door(w);
+  const told = [];
+  w.p.onCheckResult("notice-producers", (e) => told.push(e.result));
+  const rd = shipped(w);
+  w.p.evaluateChecks({ budgetMs: 10000 });
+  w.p.recordCheckGate({ check: rd.check, version: 1, goldSet: "g", falseAlarmRate: 0.1, by: BOSS });
+  const op = peopleOps(w.p, new URL(`https://plane.example/?check=${rd.check}&viewer=${encodeURIComponent(ANN)}`), null).interestchecks();
+  const answered = op.checks[0].results;
+  assert.equal(answered.length, 1);
+  assert.equal(told.length, 1);
+  const sentence = "Hint · machine work. A check noticed this hint, a pattern in held facts, worth a look. It is not a finding and says nothing about anyone.";
+  for (const r of [answered[0], told[0]]) {
+    assert.equal(r.mark, "Hint · machine work", "DEC-131's words, exactly");
+    assert.equal(r.mark, HINT_MARK);
+    assert.equal(r.detail, sentence);
+    assert.ok(r.detail.startsWith(r.mark));
+    assert.match(r.detail, /\bhint\b/);
+    assert.doesNotMatch(JSON.stringify(r), /signal/i);
+    assert.deepEqual([r.label, r.layer, r.by], ["Noticed", "hypothesis", "the machine's"]);
+    assert.deepEqual(Object.keys(r).sort(), ["at", "by", "check", "denominator", "derivation", "detail", "label", "layer", "mark", "name",
+      "project", "result_id", "version"]);
+  }
+  assert.deepEqual(told[0], answered[0], "the listener is told what the op answers");
+  /* a member's own check's results carry it too */
+  const own = w.p.defineCheck({ name: "my door", condition: RD, denominator: "people with a government post", by: ANN });
+  w.p.evaluateChecks({ budgetMs: 10000 });
+  for (const r of w.p.checkResults({ check: own.check, viewer: ANN }).checks[0].results) assert.equal(r.mark, HINT_MARK);
 });
