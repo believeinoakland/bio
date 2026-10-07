@@ -77,7 +77,7 @@ set a credential.
   for every `env`, whatever it carries, `INSTANCE_CLAUDE_TOKEN` included: the group's copy binds no Claude
   credential in its environment, and `detail` says that the assistant is reached through a member's own
   Claude account or API key or the group's API key, each held in `credentials` (K1755), never a binding. It reads no binding for a Claude credential, and `INSTANCE_CLAUDE_BINDING` is
-  no longer exported. *(not yet met: T35)*
+  no longer exported.
 - **R14** *(retired: K1502, T33-6; the instance-level Claude credential is retired and R13 answers every `env` alike)*
 - **R15** *(retired: K1502, T33-6; no `env` gives `configured: true`, R13)*
 - **R16** `detail` is `null` exactly when `configured` is `true`, otherwise a string; the return value
@@ -127,7 +127,7 @@ set a credential.
   only by already being present on the `env` object the caller passes at each call; nothing exported here
   can create, change or clear it (DS-3, D-260 §6: minting and setting an account credential is a member act
   elsewhere, never a plane write path). No Claude credential is read from `env` at all (R13, R17; K1502): a
-  member's own account reference and the group's API key are `credentials`' (K1755). *(not yet met: T35)*
+  member's own account reference and the group's API key are `credentials`' (K1755).
 - **R24** `report()` never states a duration for synchronous work: `measured_ms` is always `null`, and
   `note` says why, rather than reporting a zero that would read as a measurement.
 - **R25** No place is named in this module (`build/layers.md`, "No jurisdiction in the product"). It holds
