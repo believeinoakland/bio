@@ -2,12 +2,12 @@
    shape (R15). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BOUNDS, depthOf, exhausted, EXHAUSTION_REASONS, chainGrade, chainLabel, orderPaths } from "../../../src/connection-grammar/index.mjs";
+import { BOUNDS, depthOf, exhausted, EXHAUSTION_REASONS, hubBoundOf, chainGrade, chainLabel, orderPaths } from "../../../src/connection-grammar/index.mjs";
 import { tie, said, guess, mention, valid, NODE } from "./fixtures/owner.mjs";
 
-test("R10 BOUNDS is frozen with the walk bounds, and depthOf answers the depth or refuses", () => {
+test("R10 BOUNDS is frozen with the walk bounds and the per-kind hub bound (a vote 4,000, every other kind 1,000), and depthOf answers the depth or refuses", () => {
   assert.ok(Object.isFrozen(BOUNDS));
-  assert.deepEqual(Object.keys(BOUNDS).sort(), ["depth_default", "depth_max", "fanout", "hub", "nodes", "time_budget_ms"]);
+  assert.deepEqual(Object.keys(BOUNDS).sort(), ["depth_default", "depth_max", "fanout", "hub", "hub_by_kind", "nodes", "time_budget_ms"]);
   assert.equal(BOUNDS.depth_default, 8);
   assert.equal(BOUNDS.depth_max, 10);
   assert.equal(BOUNDS.fanout, 1000);
@@ -15,6 +15,18 @@ test("R10 BOUNDS is frozen with the walk bounds, and depthOf answers the depth o
   assert.equal(BOUNDS.hub, 1000);
   assert.ok(Number.isInteger(BOUNDS.time_budget_ms) && BOUNDS.time_budget_ms > 0);
   assert.throws(() => { BOUNDS.hub = 5; }, TypeError);
+  // hub_by_kind: a member's vote 4,000, every other kind hub's 1,000; frozen, and nothing inherited reads as a bound.
+  assert.ok(Object.isFrozen(BOUNDS.hub_by_kind));
+  assert.deepEqual(Object.entries(BOUNDS.hub_by_kind), [["event_voted", 4000]]);
+  assert.equal(Object.getPrototypeOf(BOUNDS.hub_by_kind), null);
+  assert.throws(() => { BOUNDS.hub_by_kind.event_voted = 5; }, TypeError);
+  assert.throws(() => { BOUNDS.hub_by_kind.event_held = 5; }, TypeError);
+  assert.equal(hubBoundOf("event_voted"), 4000);
+  assert.ok(BOUNDS.hub_by_kind.event_voted < BOUNDS.nodes, "a vote hub is still under the walk's node bound");
+  for (const k of ["event_held", "sample_tie", "constructor", "__proto__", "toString", "", undefined, null, 3]) {
+    assert.equal(hubBoundOf(k), BOUNDS.hub, String(k));
+    assert.equal(BOUNDS.hub_by_kind[/** @type {any} */ (k)] ?? BOUNDS.hub, BOUNDS.hub, String(k));
+  }
   assert.equal(depthOf(), 8);
   assert.equal(depthOf(null), 8);
   for (let d = 1; d <= 10; d++) assert.equal(depthOf(d), d);

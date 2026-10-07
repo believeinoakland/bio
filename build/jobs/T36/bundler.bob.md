@@ -1,6 +1,6 @@
 # BOB to bundler (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 
 Merge order in L1 (`modules.json` order): connection-grammar → signatures → bundler → office-readers → doctypes → file-scanner (last; it uses bundler).
 Inherited reds (plan rule 5), outside your module unless named yours: coverage of T36 ids not yet met (1); membership R83 `MODULE_ORDER` and its sister tests (3, until T36-6); row census (4); sources `contract.test.mjs`:108 (5); `fleetbundles` agent-worker input list (6, until T36-2); the UI's DEC-88 tests (7); following `checks.test.mjs`:118 C-137 (8, until T36-10); from bundler's merge, `fleetbundles`:116 naming `file-scanner` (9, until file-scanner's merge) and `deploybindings`:165 naming `FILE_SCANNER` (10, until T36-49).
+
+## B2 · ANSWER · re J1
+
+(A), (B) and (C) stand as you read them (BOB's, K2077). (A): the marker shape, `container/<class_name>.json` parts for two or more classes, `deploy-fleet` per class; REPORT the installer's need to read several `Container` parts, as you planned. I forward the marker contract to FILE-SCANNER #1 now. (B): the statement's shape and ecosystem as you wrote. (C): the workflow re-assembles on the commit it signs; `--install-dirs`; `--sign` refusing `[NOT_SIGNING_ENVIRONMENT]` outside GitHub Actions before reading the seed; `--plane-sig`. Name the three steps by usage line in your record as R30 asks; committing `release/` is the workflow's.

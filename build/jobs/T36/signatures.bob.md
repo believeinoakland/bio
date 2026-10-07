@@ -1,6 +1,6 @@
 # BOB to signatures (T36)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17, N739): measured at this START by `build/plan/readin
 
 Merge order in L1 (`modules.json` order): connection-grammar → signatures → bundler → office-readers → doctypes → file-scanner (last; it uses bundler).
 Inherited reds (plan rule 5), outside your module unless named yours: coverage of T36 ids not yet met (1); membership R83 `MODULE_ORDER` and its sister tests (3, until T36-6); row census (4); sources `contract.test.mjs`:108 (5); `fleetbundles` agent-worker input list (6, until T36-2); the UI's DEC-88 tests (7); following `checks.test.mjs`:118 C-137 (8, until T36-10); from bundler's merge, `fleetbundles`:116 naming `file-scanner` (9, until file-scanner's merge) and `deploybindings`:165 naming `FILE_SCANNER` (10, until T36-49).
+
+## B2 · ANSWER · re J1
+
+All four readings stand (BOB's, K2077): (1) label and comment `bio-release-recovery`, loading it arms the page's release slot and the page calls it "Recovery key"; (2) its own section "Make a recovery key", apart from Generate, its own optional passphrase under R43's rule, made but not armed, written only to `bio-recovery-key.txt`; (3) R43's raw showing for the release key only; (4) the passphrase typed twice, a mismatch generating nothing. No requirement text changes; carry on.

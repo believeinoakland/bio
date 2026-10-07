@@ -1,6 +1,6 @@
 # BOB to doctypes (T36)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,11 @@ Reading set (mechanics §17, N739, N746; this START is a certification case, `dr
 
 Merge order in L1 (`modules.json` order): connection-grammar → signatures → bundler → office-readers → doctypes → file-scanner (last; it uses bundler).
 Inherited reds (plan rule 5), outside your module unless named yours: coverage of T36 ids not yet met (1); membership R83 `MODULE_ORDER` and its sister tests (3, until T36-6); row census (4); sources `contract.test.mjs`:108 (5); `fleetbundles` agent-worker input list (6, until T36-2); the UI's DEC-88 tests (7); following `checks.test.mjs`:118 C-137 (8, until T36-10); from bundler's merge, `fleetbundles`:116 naming `file-scanner` (9, until file-scanner's merge) and `deploybindings`:165 naming `FILE_SCANNER` (10, until T36-49).
+
+## B2 · CHANGE
+
+Your measure stands as recorded (83% whole headers; coordinator, review_due, revision_cycle below 90%). BOB's re-scope (K2079), on the tranche branch now: merge it, then:
+1. R26 amended: `coordinator`, `review_due` and `revision_cycle` each also carry `measured: "below_target"` (a member checks them before relying on them) until a later out-of-sample measure reads the field at 90% or more. Implement and test it, naming R26.
+2. Fix in this job (P8) the four causes you found, each a flaw against R26 as written: the running header of a revision memo anchoring the header block too early (D-4); a placeholder such as 'DD MMM YY' kept as written, never dropped (B-01); the coordinator stopping at the field's end, not running into the body (K-6); the title read from the header block, never a contents page (H-10). Add a test for each on its fixture. Do not change R35's recorded figures: the measure was taken before these fixes and stays the measure; say in your record which of the 24 now read wholly right after the fixes (an in-sample figure, labelled so).
+3. A fresh measure waits for new policies (every SO and AI is among the 50 already): N751 in `next.md`, a measurement.
+Then COMPLETE again.
