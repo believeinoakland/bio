@@ -1,6 +1,6 @@
 # id-spaces — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25, the T6 sample. Rewritten the same day for the rule "No jurisdiction in the product" (`build/layers.md`) and the conventions in `README.md`. Layer 1. Code today: `bio-plane/src/idspaces.mjs`, which names Oakland's systems in code (plan entry N2). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-9 (entries B1b.3; A COURTS (d) 2a, the C1 core; K1441, K1452): R1 amended (the spaces `account`, `object`, `vendor`, `proceeding` and `person`, the person schemes as forms); R27–R29 (the citation recogniser, reading `court-citations` when that module is built) added; not yet met (T33-9). T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-7 (N569, with N613's `office` scheme; K1574, K1682): R1 amended (the `body` and `office` spaces, eleven in all); not yet met (T34).
+**Status** · DRAFT by BOB #37, 2026-09-25, the T6 sample. Rewritten the same day for the rule "No jurisdiction in the product" (`build/layers.md`) and the conventions in `README.md`. Layer 1. Code today: `bio-plane/src/idspaces.mjs`, which names Oakland's systems in code (plan entry N2). T33's fold, by a requirements worker for BOB #114 on `tranche/T32`, 2026-10-05, from plan entry T33-9 (entries B1b.3; A COURTS (d) 2a, the C1 core; K1441, K1452): R1 amended (the spaces `account`, `object`, `vendor`, `proceeding` and `person`, the person schemes as forms); R27–R29 (the citation recogniser, reading `court-citations` when that module is built) added; not yet met (T33-9). T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-7 (N569, with N613's `office` scheme; K1574, K1682): R1 amended (the `body` and `office` spaces, eleven in all); not yet met (T34). T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-7: R30–R33 added (`recogniseSeries`: policy citations and standard designations with edition, read from the profiles' series, `jurisdictions` R63; K1713, K1740); not yet met (T35).
 
 ## Public
 
@@ -60,11 +60,17 @@ Every service takes `view`: the combined view of the active jurisdiction profile
 - **R28** With no reporter data (the `court-citations` module not built and none passed), it answers `{citations: [], undetermined: {why}}`, saying no reporter data is held, never an empty finding read as "cites nothing". A run of text that has a volume-reporter-page shape but a reporter no variant names is listed in `undetermined.unrecognised` with its offsets, never dropped and never guessed.
 - **R29** Pure and place-free, as R23 and R24: the reporters are data; no reporter, court or jurisdiction is named in this module's code. Never throws on any `text`.
 
+**recogniseSeries(view, text) → `{citations, undetermined?}`** (T35-7; N639; POLICIES L1, STANDARDS L1, Capability Ladders §6B.4, §6C.4; K1713, K1740)
+- **R30** Finds each citation in `text` of an item of a policy series or a standard designation that the view's `standard_sources` supply (`jurisdictions` R63: an entry with `series`, its `cite`), and answers each as `{key, series, label, kind, issuer, number, normal, portion?, edition?, start, end, basis, profile}`, in reading order: `key` and `series` the entry's issuer and family keys, `label`, `kind` and `issuer` the entry's, `number`, `portion` and `edition` the groups as written, `normal` the number's normal form (`jurisdictions` R63; R4: formatting removed, never a digit changed), `start`/`end` the citation's offsets in `text`, and `basis` and `profile` the entry's. So "AI 4.12 §3", "DGO K-03", "SO 9196" and "NFPA 1710, 2020 edition" are recognised from a profile that supplies those series, and from no code. *(not yet met: T35)*
+- **R31** A citation whose text names no edition has no `edition`: it is never defaulted to an edition, the latest or any other (§6C.4: the edition in force is `standards`' to read on a date). A run of text that two or more entries' `cite` patterns match at overlapping offsets, naming different families or numbers, is listed in `undetermined.ambiguous` with every reading, never one chosen; two entries that read the same family and number are one citation. A family the view withholds as a conflict (`jurisdictions` R66) is not read, and `undetermined.conflicts` names it. *(not yet met: T35)*
+- **R32** With no series in the view, it answers `{citations: [], undetermined: {why}}`, saying the active profiles supply no series, never an empty finding read as "cites no policy or standard". A reading is never a resolution: whether a held standard is the cited item, and which version of it, is `standards`' (T35-31); a citation names no force and no binding (K1722, K1723). *(not yet met: T35)*
+- **R33** Pure and place-free, as R23 and R24: every series, issuer and pattern comes from the view; no family, issuer or designation is named in this module's code. Never throws on any `view` or `text`; a `text` that is not a string gives `{citations: [], undetermined: {why}}`. *(not yet met: T35)*
+
 ## Private
 
 ### Uses
 
-- `jurisdictions`: the combined view's shape (`combine`), and its identifier spaces, systems, floors, crosswalks and conflicts.
+- `jurisdictions`: the combined view's shape (`combine`), and its identifier spaces, systems, floors, crosswalks and conflicts; since T35-7, its `standard_sources` entries with `series` (R63) and their conflicts (R66), for R30–R33.
 - `court-citations` (CONDITIONAL, T33-8): its reporter and variant data for R27, a `uses` edge only when that module reads GO and is built (plan T33, Rule 5); without it, R28 holds.
 
 ### Invariants
@@ -78,8 +84,10 @@ Every service takes `view`: the combined view of the active jurisdiction profile
 - `BIO_Content_Framework_v0_10.md` §8.3, "What makes a shared identifier count", with BOB #34's amendment to rule 3 (2026-09-25).
 - `build/layers.md`, "No jurisdiction in the product".
 - `BIO_Capability_Ladders_v0_1.md` §2 PEOPLE and MONEY (scheme identifiers; money identifiers), COURTS C1 (the profile `proceeding` space; the citation recogniser); rulings K1441, K1449, K1452.
+- `BIO_Capability_Ladders_v0_1.md` §6B.3–§6B.4 POLICIES L1 (policy citations recognised from the profile's series) and §6C.3–§6C.4 STANDARDS L1 (a designation and its edition recognised); rulings K1713, K1722, K1723, K1740 (R30–R33).
 
 ### Suggestions
 
 - **For the caller** (`entities`, `op=idmatch`): pass `systemOf` only the addresses the record located each capture at, never an address from the request. A provenance hop a caller can hand in is one a caller can invent. That requirement belongs in `entities`, with the three refusals C-91.1 to C-91.3 now in `bio-checks.mjs`.
+- **For the callers of R30** (L1's "find every document citing one"): a search over captured text groups the citations by `key`, `series` and `normal`; that service is the caller's, never this module's (it reads nothing). A policy number is not an identifier of a thirteenth space: two citations of one item are compared by `normal`, and a shared policy number is not judged a connection by `judgePair` unless BOB adds a space for it.
 - The Oakland profile's facts are measured: M-119, M-132 and M-157. None of them is captured as a crosswalk today (M-157: 0 crosswalk lines).
