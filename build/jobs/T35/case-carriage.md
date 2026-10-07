@@ -47,3 +47,7 @@ R8's wording leaves four small points open. I am building on the readings below 
 My reading: add `test-support` to case-carriage's `uses` in `modules.json`, and to its requirements' Uses as "`make-zip.mjs` (tests only; R8)". Nothing else is waiting on this. Every other check is clean: format 0, coverage 8/8, ownership 0, and 29/29 tests pass. J1 still stands.
 
 If you would rather not add the edge, say so and I will write the archive in-process inside the test instead.
+
+## J3 · COMPLETE
+
+T35-53 applied: R8 met (a member is carried with its container record, its archive and the archive's tokens, outward to the outermost; the outsider's three steps are tested with sha256sum, unzip and openssl ts -verify). After B2 and the merge of tranche/T35: format 0, architecture 0, coverage 8/8, ownership 0 failures; case-carriage 29/29; publication, public-read and ratification 455 pass, 0 fail. case-grammar R13 does need the archive and container kinds, and public-read needs a share to carry them in the case file (record, 'Does case-grammar R13 need…'; N717). Nothing deferred. Size: test runs 7, module lines 392.
