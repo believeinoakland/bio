@@ -31,3 +31,7 @@ R16 as amended asks that `DEPLOYED_MODES` hold `ask` and `draft` "each exactly w
 ## J2 · REPORT
 
 Generated artifact made stale (§14): agent-worker/dist/agent-worker.bundled.mjs and .bundle.json embed run-rules; agent-worker requirements.test.mjs R45's two arms (static check, byte-identical fresh build) fail after T35-43 (291/2; 293/0 on the tranche). Regenerate at the layer's close as B1 says. Also: build/requirements/run-rules.md R16, R18, R21 still carry '*(not yet met: T35)*'; this job meets them (your file).
+
+## J3 · COMPLETE
+
+T35-43 applied: DRAFT_MODE (frozen, flag false), deployedModesFor(flags) with DEPLOYED_MODES = deployedModesFor() (K1982), deployable('draft') as the apart modes, startAllowed refuses a draft with no member's act whatever standing holds. Tests R16 (T35), R18 (T35), R21 new; run-rules 27/0; users green but agent-worker R45 (stale bundle, J2) and control-plane's accepted reds 19, 26, 29. format, architecture, coverage (21/21), ownership: 0 failures. Record: build/jobs/T35/run-rules.md on job/T35/run-rules.
