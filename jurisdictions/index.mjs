@@ -1468,15 +1468,17 @@ function merge(profiles) {
 
   /* standard sources are unioned (R14); a family's label, cite and normal under its key and series key, and an
      entry's level and sector under its source and issuer, are one value per key (R66): profiles that disagree have it
-     withheld from every entry it is on, so a citation of that family is recognised by no profile's choice. */
+     withheld. A family withheld is dropped from the view whole, so a citation of it is recognised by no profile's
+     choice (K1916 (2)); a level or sector withheld leaves its entry without that field. */
   if (has("standard_sources")) {
+    const FAMILY = "a family of documents";
     const given = profiles.flatMap((p) => (p.standard_sources || []).map((e) => ({ profile: p.id, e: clone(e) })));
     const ONE = [
       [(e) => (isObj(e.series) ? `${e.key}\u0000${e.series.key}` : null), [
         ["series.label", (e) => e.series.label, (e) => { delete e.series.label; }],
         ["cite", (e) => e.cite, (e) => { delete e.cite; }],
         ["normal", (e) => e.normal ?? null, (e) => { delete e.normal; }]],
-        "a family of documents", "a citation of the family is recognised by no profile until they agree"],
+        FAMILY, "the family is dropped from the view: a citation of it is recognised by no profile until they agree"],
       [(e) => `${e.source}\u0000${e.issuer}`, [
         ["level", (e) => e.level ?? null, (e) => { delete e.level; }],
         /* an entry with a level reads sector government when it gives none (R64) */
@@ -1494,11 +1496,12 @@ function merge(profiles) {
           conflict(`standard_sources[${k.replace("\u0000", "/")}].${f}`, vals,
             `the active profiles give ${what} (${k.replace("\u0000", ", ")}) different ${f === "series.label" ? "labels" : `${f}s`}, so it is withheld: ${says}`);
           for (const g of gs) drop(g.e);
+          if (what === FAMILY) for (const g of gs) g.dropped = true;
         }
       }
     }
     const v = [];
-    for (const g of given) union(v, [g.e], g.profile);
+    for (const g of given) if (!g.dropped) union(v, [g.e], g.profile);
     view.standard_sources = strip(v);
   }
 

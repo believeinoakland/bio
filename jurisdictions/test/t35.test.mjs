@@ -195,15 +195,20 @@ test("R66 combine: standard sources unioned; a family's label, cite and normal, 
     assert.ok(mine[0].values.length === 2 && mine[0].values.every((v) => v.profile && v.basis && "value" in v), where);
     assert.ok(/withheld/.test(mine[0].says), where);
     const field = where.split("].")[1];
-    const entries = c.view.standard_sources.filter((s) => (field.startsWith("series") || field === "cite" || field === "normal")
-      ? s.series && s.series.key === "hso" : s.source === (field === "sector" ? "Ellery Ferries Code of Conduct" : "Port Ellery Harbour Standing Orders"));
-    assert.ok(entries.length >= 1, where);
-    const read = { "series.label": (s) => s.series.label, cite: (s) => s.cite, normal: (s) => s.normal, sector: (s) => s.sector, level: (s) => s.level }[field];
+    /* K1916 (2): a family withheld is dropped from the view whole */
+    if (field.startsWith("series") || field === "cite" || field === "normal") {
+      assert.equal(c.view.standard_sources.filter((s) => s.key === "harbour-master" && s.series && s.series.key === "hso").length, 0, `${where}: dropped`);
+      assert.equal(c.view.standard_sources.length, get(TEST).standard_sources.length - 1, `${where}: the other entries stand`);
+      continue;
+    }
+    const entries = c.view.standard_sources.filter((s) => s.source === (field === "sector" ? "Ellery Ferries Code of Conduct" : "Port Ellery Harbour Standing Orders"));
+    assert.ok(entries.length >= 1, `${where}: the entry stands`);
+    const read = { sector: (s) => s.sector, level: (s) => s.level }[field];
     for (const s of entries) assert.equal(read(s), undefined, `${where}: withheld from every entry, never chosen`);
   }
-  /* a citation of a family whose cite is withheld is recognised by no profile's choice */
+  /* a citation of a family whose cite is withheld is recognised by no profile's choice: no entry of the view reads it */
   const c = combine([TEST, other(changes["standard_sources[harbour-master/hso].cite"])]).view;
-  assert.ok(c.standard_sources.filter((s) => s.series && s.series.key === "hso").every((s) => !s.cite));
+  assert.ok(!c.standard_sources.some((s) => s.cite && rx(s.cite).test("HSO 03/07")));
   /* a level written beside government and the same level alone agree: a level reads government (R64) */
   const g = combine([TEST, other((b) => { src(b, "hso").sector = "government"; })]);
   assert.deepEqual(g.conflicts.filter((x) => x.at.startsWith("standard_sources")), []);
