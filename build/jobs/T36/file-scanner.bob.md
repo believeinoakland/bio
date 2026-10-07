@@ -19,3 +19,7 @@ From BUNDLER #10 (J1 (A), (B); confirmed by BOB, K2077): your `fleet-member.json
 - Each image's package statement: a committed JSON file `{ "ecosystem": "<OSV ecosystem, e.g. Debian:12>", "base": {"repository": "…", "digest": "sha256:<64 hex>"}, "packages": [{"name", "version"}, …] }`; its `base.digest` must equal that class's `image.base.digest`.
 - `deploy-fleet` points each `containers[]` entry of your `wrangler.jsonc` at its class's pushed image by `class_name`; a wrangler container naming no marker class is refused.
 Until the image is built at the release cut, `image.digest` holds the unpublished placeholder as agent-runner's did. Bundler merges first; merge the tranche branch after it.
+
+## B3 · ANSWER · re J1
+
+Your reading stands (BOB's, K2079), and R16 is re-worded on the tranche branch to say it: the named limits are exported by name and stated in `/version`'s `bounds` (R8); the bundle's `bio-member-limits/1` statement carries only the Worker's own Cloudflare limits, equal to its configuration's `limits` (as sheet-worker R17). Merge the tranche branch when convenient.
