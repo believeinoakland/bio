@@ -22,6 +22,8 @@ import { SCRATCH, classify, scopeFor, namespaceGate, confinedNamespaceGate, pinn
 import { CHECK_FAMILIES, CHECK_FAMILY_FILES, dec49Row } from "./families.mjs";
 /* R57 (T35): the draft asked of agent-worker once every refusal is answered. */
 import { draftDue, draftAsk, checkedDraft } from "./draft.mjs";
+/* R58 (T35): the promotions of what an unpack files. */
+import { archiveDocuments, promoteArchive } from "./archive.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
 import { SIGN_HTML } from "../signpage.mjs";
@@ -2071,9 +2073,30 @@ export function makeFetch(hooks = {}) {
       const { fences, pack, pack_absent } = b.result;
       return json({ ok: true, fences, pack: pack ?? null, ...(pack ? {} : { pack_absent }), store: storeName, tokenClass: cls }, 200);
     }
+    /* R58 (K2042 (2)): the promotions after an unpack, Worker-side, one act each, with `op=promote`'s stamps for this
+       caller; the archive's project is the request body's `project`, read from a copy before the handler reads the body. */
+    const archiveWho = { author: viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`,
+      ...(viaSession ? { actorMemberId: sessMember } : {}),
+      actorIdentity: viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
+      actorViewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
+      ...(viaSession ? {} : { assistantPrincipal: cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}` }) };
+    let archiveProject = null;
+    if ((op === "acquire" || op === "unpack") && req.method === "POST")
+      try { const b = JSON.parse((await req.clone().text()) || "null"); archiveProject = b && typeof b.project === "string" ? b.project : null; }
+      catch { archiveProject = null; }
+    async function promoteAcquired(res) {
+      let b = null;
+      try { b = await res.clone().json(); } catch { return res; }
+      const docs = archiveDocuments("acquire", b);
+      if (!docs.length) return res;
+      const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject, archiveSha: b.document?.capture?.sha256 ?? null,
+                                          who: archiveWho });
+      return json({ ...b, ...done }, res.status);
+    }
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
+    if (armed && op === "acquire") return promoteAcquired(armed);
     if (armed) return op === "affordances" ? publishAffordances(armed, url) : armed;
     /* R57 (K1983): the rendered pack the door holds for this caller, the untargeted `op=affordances` answer's (R41),
        sent with a draft that reads nothing of the record; null when none renders. */
@@ -3053,6 +3076,15 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    /* R58 (K2042 (2)): what an `op=unpack` filed is promoted, one act each, and named in the answer */
+    if (op === "unpack" && body.result && body.result.ok === true) {
+      const docs = archiveDocuments("unpack", body.result);
+      if (docs.length || Array.isArray(body.result.documents)) {
+        const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject,
+                                            archiveSha: body.result.archive?.sha256 ?? null, who: archiveWho });
+        return json({ ...body, result: { ...body.result, ...done }, store: storeName, tokenClass: cls }, status);
+      }
+    }
     /* R57 (T35; N686, K1837, K1841): past every refusal of the store's door and of the owner, a draft is asked of the
        object (`draft.mjs`, wired by plane as its `draft`), with the pack the door holds (R41) and the request's own words;
        only a member's session reaches these ops (their specs). */
