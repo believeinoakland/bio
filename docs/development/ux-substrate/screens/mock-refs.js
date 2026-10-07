@@ -404,6 +404,7 @@ const SCREEN_HELP = {
   queue: 'Your queue: everything waiting on you, in one list. To do needs your act, Noticed is something new nobody has judged, and Status tells you where something stands.',
   finder: 'Find what your group holds, or look outside for something it doesn\'t yet. Capture what you find into the record.',
   capture: 'Add something to the record: a document from its address, a file, or what you saw yourself, in your own words.',
+  'open-file': 'Before a file opens: whether it is low or high risk and why, its safe view, the checks it has had, and how a held file is released.',
   archive: 'One captured archive and every file in it: which are filed and held for review beside it, which were already held, and which were not filed and why.',
   held: 'Captures waiting for a member to vouch for them before they enter the record. Release them, or set them aside with a reason.',
   'find-in': 'Look through a document, the documents you are holding together, or a project for people, money, dates, requirements or a word. Each result shows its passage; you record what matters with the usual act.',
