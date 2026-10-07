@@ -42,6 +42,7 @@ test("R46 a request the run judges a personal site or a login-gated platform is 
   assert.equal(count(w), 1);
   /* the op reads site_kind from the body, as it reads the address */
   const url = new URL("http://x/capturerequest?viewer=member%3Aann&principal=member%3Aann%2Ftok1");
+  w.hold("https://p.example.org/x");
   memberOnly(captureRequestsOps(w.cr, url, { run: "R-1", address: "https://p.example.org/x", target: "INQ-1",
                                              purpose: "investigate", site_kind: "platform" }).capturerequest(), "op");
   assert.equal(count(w), 1);
@@ -219,8 +220,10 @@ test("R47 both tables are declared explicitly through record-core's declareTable
       expunge: "none", export: "admin-only", sight: "bundle", derive: "stored", version_chain: false },
     { module: "capture-requests", name: "capture_request_platforms", purge: "exempt", expunge: "none",
       export: "admin-only", sight: "group", derive: "stored", version_chain: false },
+    { module: "capture-requests", name: "records_requests", keys: ["standard"], purge: "clear", expunge: "none",
+      export: "yes", sight: "bundle", derive: "stored", version_chain: false },
   ]);
-  assert.equal(CAPTURE_REQUESTS_TABLES.length, 2);
+  assert.equal(CAPTURE_REQUESTS_TABLES.length, 3);
   assert.equal(Object.isFrozen(CAPTURE_REQUESTS_TABLES), true);
   for (const t of ["capture_requests", "capture_request_platforms"])
     assert.equal(w.record.declareTable("x", [{ name: t, purge: "clear", expunge: "none", export: "yes", sight: "group",

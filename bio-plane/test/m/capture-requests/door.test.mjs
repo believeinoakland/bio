@@ -188,6 +188,7 @@ test("R8 principal_plane is the caller stamp and principal_claude the run's; nei
   assert.deepEqual([r.purpose, r.ua_mode], ["whatever", "made-up"], "judged only at the drain (R14)");
   /* the op handler takes the stamps from the query string only */
   const url = new URL("http://x/capturerequest?viewer=member%3Aann&principal=member%3Aann%2Ftok1");
+  w.hold("https://example.org/op"); w.hold("https://example.org/op2");
   const b = captureRequestsOps(w.cr, url, { run: "R-1", address: "https://example.org/op", target: "INQ-1",
                                            purpose: "investigate", viewer: "class:admin", caller: "member:eve" })
     .capturerequest();
@@ -217,7 +218,7 @@ test("R9 the door makes no outbound request of any kind and runs no conduct or a
   assert.deepEqual(touched, []);
 });
 
-test("R34 R46 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.22, each row frozen, naming a region of this module and a translation; C-28.5 and C-28.12 stay unallocated and C-28.13 is acquisition's", () => {
+test("R34 R46 R49 R50 R51 R52 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.33, each row frozen, naming a region of this module and a translation; C-28.5 and C-28.12 stay unallocated and C-28.13 is acquisition's", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(CATALOGUE).map(([k, r]) => [k, r.check])), {
     CAPTURE_REQUEST_NO_RUN: "C-28.1", CAPTURE_REQUEST_NOT_PUBLIC: "C-28.2", CAPTURE_REQUEST_NOT_AN_INQUIRY: "C-28.3",
     CAPTURE_REQUEST_CARRIES_A_CAPTURE: "C-28.4", CAPTURE_CONDUCT_UA_ILLEGIBLE: "C-28.6",
@@ -227,12 +228,17 @@ test("R34 R46 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.22, ea
     CAPTURE_REQUEST_RENDER_MALFORMED: "C-28.16", CAPTURE_FETCH_FAILED: "C-28.17", CAPTURE_REQUEST_NOT_RETRYABLE: "C-28.18",
     CAPTURE_SWEEP_OUT_OF_SCOPE: "C-28.19", MEMBER_CAPTURE_ONLY: "C-28.20", CAPTURE_REQUEST_SITE_KIND_UNKNOWN: "C-28.21",
     CAPTURE_PLATFORM_MARK_REFUSED: "C-28.22",
+    CAPTURE_REQUEST_ADDRESS_TOO_LONG: "C-28.23", CAPTURE_REQUEST_ADDRESS_NOT_HELD: "C-28.24",
+    CAPTURE_REQUEST_CO_ARCHIVE_NOT_A_MEMBERS: "C-28.25", CAPTURE_REQUEST_CO_ARCHIVE_MALFORMED: "C-28.26",
+    MACHINE_CANNOT_REQUEST_RECORDS: "C-28.27", RECORDS_REQUEST_NOT_CITED: "C-28.28", RECORDS_ANSWER_NO_CAPTURE: "C-28.29",
+    RECORDS_ANSWER_NO_GROUND: "C-28.30", NO_SUCH_RECORDS_REQUEST: "C-28.31", RECORDS_REQUEST_ANSWERED: "C-28.32",
+    RECORDS_ANSWER_UNKNOWN: "C-28.33",
   });
   assert.equal(Object.isFrozen(CATALOGUE), true);
   for (const [code, r] of Object.entries(CATALOGUE)) {
     assert.equal(Object.isFrozen(r), true, code);
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"], code);
-    assert.match(r.where, /^src\/capture-requests\/index\.mjs \S+ > is-capture-[a-z-]+$/, code);
+    assert.match(r.where, /^src\/capture-requests\/index\.mjs \S+ > is-(capture|records)-[a-z-]+$/, code);
     assert.ok(typeof r.translation === "string" && r.translation.length > 60, code);
   }
   const door = ["CAPTURE_REQUEST_NO_RUN", "CAPTURE_REQUEST_NOT_PUBLIC", "CAPTURE_REQUEST_NOT_AN_INQUIRY",
@@ -247,6 +253,7 @@ function st(w) { return w.st.sql; }
 test("R6 an in-process caller's stated instant (`at`) sets each request's requested_at and expires, so two requests expire apart; the op never reads `at` from a body", async () => {
   const w = world().scene();
   const iso = (ms) => new Date(ms).toISOString().replace(/\.\d+Z$/, "Z");
+  for (const n of [1, 2, 3, 4]) w.hold(`https://example.org/${n}`);
   const a = w.cr.captureRequest({ run: "R-1", address: "https://example.org/1", target: "INQ-1", purpose: "investigate" },
                                 { viewer: V("ann"), caller: "member:ann/tok1", at: T0 - 3_600_000 });
   const b = w.cr.captureRequest({ run: "R-1", address: "https://example.org/2", target: "INQ-1", purpose: "investigate" },

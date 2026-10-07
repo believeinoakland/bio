@@ -13,6 +13,7 @@ import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { governorOf } from "../../../src/host-governor/index.mjs";
 import { credentialsOf } from "../../../src/capture-sources/credentials.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
+import { normalizeAddress, fragmentOf } from "../../../src/subresources.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -113,11 +114,23 @@ export const renderRefusal = (code, state) => ({ status: 409, body: { ok: false,
 
 /** A world: the record's modules, the capture stand-in, a table of runs, and capture-requests over them. `group` is
  *  the instance's recorded producing group (promotion R13; null: none recorded). */
-export function world({ env = ENV, configured, credentials = true, group = "test-group", order } = {}) {
+export function world({ env = ENV, configured, credentials = true, group = "test-group", order, standards } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
+  /* R49 (T35): the read contracts R49 judges an address against, at their stated columns: provenance's
+     `captured_locators` and `register` (its R48) and capture's `links` (its R27, R57). The record's own modules write
+     them in the product; here `hold` writes them, as a capture of a held document would. */
+  st.db.exec(`CREATE TABLE captured_locators (address_norm TEXT NOT NULL, address TEXT NOT NULL, capture_sha TEXT NOT NULL,
+                via TEXT NOT NULL DEFAULT 'direct', retrieval_locator TEXT, first_retrieved TEXT NOT NULL,
+                last_retrieved TEXT NOT NULL, observations INTEGER NOT NULL DEFAULT 1,
+                PRIMARY KEY (address_norm, capture_sha, via))`);
+  st.db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT NOT NULL,
+                encoding TEXT NOT NULL, bytes INTEGER NOT NULL, registered TEXT NOT NULL)`);
+  st.db.exec(`CREATE TABLE links (source_bundle TEXT, source_capture TEXT NOT NULL, link_ref TEXT NOT NULL,
+                address TEXT NOT NULL, address_norm TEXT NOT NULL, citation_norm TEXT NOT NULL, fragment TEXT,
+                partition TEXT NOT NULL, origin TEXT, captured_at TEXT NOT NULL, first_seen TEXT NOT NULL)`);
   const clock = { ms: T0 };
   const now = () => clock.ms;
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
@@ -156,7 +169,8 @@ export function world({ env = ENV, configured, credentials = true, group = "test
   const cr = captureRequestsOf(host, { record, observations: obs, governor, capture, credentials: creds, runs: runSight,
                                        env, now, storeName: "bio", aiRuns, promotion, inquiry,
                                        ...(configured !== undefined ? { configured } : {}),
-                                       ...(order !== undefined ? { order } : {}) });
+                                       ...(order !== undefined ? { order } : {}),
+                                       ...(standards !== undefined ? { standards } : {}) });
   cr.migrate();
   const w = {
     st, host, record, membership, promotion, obs, governor, creds, capture, runs, cr, clock, waitRegs, agents, asked,
@@ -191,9 +205,36 @@ export function world({ env = ENV, configured, credentials = true, group = "test
       w.run("R-1");
       return w;
     },
+    /** R49: the record holds `address`: as an acquisition receipt's address (default), a receipt's retrieval locator
+     *  (`as: "retrieval"`, for the receipt of `of`), or a held capture's outbound link (`as: "link"`, its fragment cut
+     *  off the address as capture files it). `bundle` files the capture in that bundle (register); none leaves it
+     *  filed in no bundle. Answers the capture's digest. */
+    hold(address, { as = "receipt", of = "https://held.example.org/source", bundle = null, capture = null } = {}) {
+      const digest = capture || sha(`held ${as} ${address}`);
+      if (as === "link") {
+        const i = address.indexOf("#");
+        const raw = i === -1 ? address : address.slice(0, i);
+        st.sql.exec(`INSERT INTO links (source_bundle, source_capture, link_ref, address, address_norm, citation_norm,
+                       fragment, partition, captured_at, first_seen) VALUES (?, ?, ?, ?, ?, ?, ?, 'deferred', 't', 't')`,
+                    bundle, digest, address, raw, normalizeAddress(raw), address, fragmentOf(address));
+      } else {
+        const addr = as === "retrieval" ? of : address;
+        st.sql.exec(`INSERT OR IGNORE INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator,
+                       first_retrieved, last_retrieved) VALUES (?, ?, ?, ?, ?, 't', 't')`,
+                    normalizeAddress(addr), addr, digest, as === "retrieval" ? "archive" : "direct",
+                    as === "retrieval" ? address : null);
+      }
+      if (bundle)
+        st.sql.exec(`INSERT OR IGNORE INTO register (capture_sha, bundle_id, path, encoding, bytes, registered)
+                     VALUES (?, ?, 'snapshots/x.bin', 'binary', 1, 't')`, digest, bundle);
+      return digest;
+    },
     ask(over = {}, stamps = {}) {
+      const { held = true, ...rest } = over;
+      const address = rest.address ?? "https://example.org/a";
+      if (held && typeof address === "string" && /^https:\/\//i.test(address)) w.hold(address);
       return cr.captureRequest({ run: "R-1", address: "https://example.org/a", target: "INQ-1", purpose: "investigate",
-                                 ...over }, { viewer: V("ann"), caller: "member:ann/tok1", ...stamps });
+                                 ...rest }, { viewer: V("ann"), caller: "member:ann/tok1", ...stamps });
     },
     tick(ms = 60_000) { clock.ms += ms; },
   };

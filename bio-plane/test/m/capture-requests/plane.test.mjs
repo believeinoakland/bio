@@ -14,6 +14,9 @@ import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 const SEEN = [], AGENTS = new Map();
+const HELD = ["https://src.example.org/a.pdf", "https://spine.example.org/spine.pdf", "https://down.example.org/gone.pdf",
+              "https://up.example.org/doc.pdf", "https://up.example.org/member-browser.pdf",
+              "https://up.example.org/held-for.pdf"];
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: join(SRC, "plane", "index.mjs"),
   script: readFileSync(join(SRC, "plane", "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
@@ -27,6 +30,11 @@ const mf = new Miniflare({
   outboundService(request) {
     SEEN.push(request.url);
     AGENTS.set(request.url, request.headers.get("User-Agent"));
+    /* R49 (T35): the page a member captures first, whose outbound links are the addresses the runs below ask for, so
+       each is an address the record already holds (capture R27's links) */
+    if (new URL(request.url).host === "index.example.org")
+      return new Response(`<!doctype html><html><head><title>Index</title></head><body>${HELD.map((u) =>
+        `<a href="${u}">${u}</a>`).join(" ")}</body></html>`, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (new URL(request.url).host === "down.example.org") return new Response("unavailable", { status: 503 });
     if (new URL(request.url).host === "up.example.org")
       return new Response(new TextEncoder().encode(`%PDF-1.4 a document of its own at ${request.url}`), { headers: { "content-type": "application/pdf" } });
@@ -84,6 +92,9 @@ async function world() {
   assert.equal(run.started, true, JSON.stringify(run));
   const AI = (await call("aicredentialmint", RUTH, { tokenId: "no-writes", principalKind: "member", principalMember: "ruth",
     taskScope: "investigative", writes: [], note: "reads only" })).body.token;
+  /* R49 (T35): a member captures the index page, so every address it links to is one the record already holds */
+  const idx = (await call("acquire", RUTH, { locator: "https://index.example.org/list.html", subresources: true })).body;
+  assert.equal(idx.ok, true, JSON.stringify(idx).slice(0, 400));
   setup = { RUTH, NOCON, AI };
   return setup;
 }

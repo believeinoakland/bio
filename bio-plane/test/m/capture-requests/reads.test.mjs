@@ -66,7 +66,7 @@ test("R24 each row answers the request's fields less the principals, render as a
   const r = rows.find((x) => x.request === id);
   assert.deepEqual(Object.keys(r).sort(), ["address", "attempts", "attribution", "capture_sha", "captured_at", "code",
     "detail", "expires", "host", "lead_inquiry", "purpose", "render", "render_deferral", "request", "requested_at",
-    "run", "run_woken_at", "source_reason", "state", "sweep", "target", "ua_mode", "updated"].sort());
+    "run", "run_woken_at", "source_reason", "state", "sweep", "target", "ua_mode", "updated", "co_archive"].sort());
   assert.equal(r.sweep, null, "an ordinary request names no sweep (R45)");
   assert.equal(r.render, true);
   assert.equal(r.lead_inquiry, "INQ-2");

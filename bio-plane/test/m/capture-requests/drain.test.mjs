@@ -210,6 +210,7 @@ test("R14 civicos is accepted on input and read in a stored row as civicsmith: a
      VALUES (?, 'R-1', 'INQ-1', ?, ?, 'investigate', 'civicos', 'member:ann/tok1', 'instance', ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)`,
     request, address, new URL(address).host, state, iso0, iso0, exp0, extra.captured_at ?? null, extra.capture_sha ?? null,
     extra.lead ?? null, extra.render ?? 0, extra.code ?? null);
+  for (const a of ["https://old.example.org/wait", "https://done.example.org/x", "https://render.example.org/x"]) w.hold(a);
   legacy("CR-OLD-WAIT", "https://old.example.org/wait", "requested");
   legacy("CR-OLD-DONE", "https://done.example.org/x", "captured", { captured_at: iso0, capture_sha: sha("old"), lead: "INQ-2" });
   legacy("CR-OLD-RENDER", "https://render.example.org/x", "requested", { render: 1, code: "RENDER_DEFERRED" });
