@@ -43,3 +43,7 @@ R36 says the first profile gives every records_laws and standard_sources entry a
 ## J2 · COMPLETE
 
 T35-1 done: R23, R28, R31, R37, R63-R69 met and tested (102/102); K1916 (2) applied (a family in conflict dropped whole); all six Oakland/OUSD families sourced on primary pages 2026-10-07, no standard designation held (none measured). Checks: format, architecture, coverage (69/69), ownership all 0 failures. Stale artifact from this change: newgroup/dist/newgroup.bundled.mjs (installer newgroup-bundle-fresh (C)), yours to regenerate. Record: build/jobs/T35/jurisdictions.md, Completion.
+
+## J3 · COMPLETE
+
+B4 (K1930) done: the measured header labels added to R69's data (Ref, Rev., New Order, DATE, Effective Date with or without colon, Evaluation Date, SUBJECT/AGENCY), each sourced to the documents printing it. Also fixed from the same 50 documents: SO cite takes 'SPECIAL ORDER NO. 8011', AI cite 'Administrative Instruction No. 501', and CALEA standards (cited by designation on 12 DGOs) held as a standard source per R67. doctypes' scorer under the held profile: 45/50 headers wholly right (was 25; MEASURED_VIEW 46). The one difference: doctypes anchors DGO A-1's header on 'CALEA Standard:' because its anchor takes any series, a standard included; anchoring on policy series only would give 46 (a doctypes finding, yours). Tests 102/102; checks 0 failures. Record: build/jobs/T35/jurisdictions.md, 'Completion of B4'.
