@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { pageOf, PAGE_HTML, HOSTING_SLOT } from "../../../src/setup-page/index.mjs";
-import { pageOver } from "./fixture.mjs";
+import { pageOver, bearerOf } from "./fixture.mjs";
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const settle = async () => { for (let i = 0; i < 30; i++) await tick(); };
@@ -14,9 +14,9 @@ const noComments = (html) => html.replace(/<!--[^]*?-->/g, "");
 /* A fake plane holding the settings the claim section drives, answering as their modules document: hostingAccessSet
    (`NO_HOLDERS` for empty holders), courtNoticeSet (`COURT_NOTICE_UNKNOWN_CHOICE`), assistantSet, groupKeySet
    (`NO_SECRET`), groupKeySwitch, and their reads. `refuse[op]` makes one op refuse in the plane's words. */
-function plane({ administer = true, refuse = {} } = {}) {
+function plane({ administer = true, refuse = {}, admins = 1, step = "answers" } = {}) {
   const st = { hosting: null, court: null, assistant: { ok: true, on: false, set_by: null, set_at: null },
-               key: { held: false, on: false, set_at: null, by: null } };
+               key: { held: false, on: false, set_at: null, by: null }, codes: null, issued: 0, admins, invited: [] };
   const sent = [];
   const answer = (op, body) => {
     if (refuse[op]) return { result: { ok: false, ...refuse[op] } };
@@ -42,6 +42,20 @@ function plane({ administer = true, refuse = {} } = {}) {
       case "groupkeyswitch": st.key = { ...st.key, on: body.on }; return { result: { ok: true, on: body.on } };
       case "groupkeystate": return { result: administer ? st.key : { on: st.key.on } };
       case "profiles": return { result: { ok: true, profiles: [], conflicts: [], choices: [] } };
+      case "list": return { result: [] };
+      /* credentials R46: ten codes answered once, each issue spending the last; the state never a code */
+      case "recoverycodesissue":
+        st.issued += 1; st.codes = Array.from({ length: 10 }, (_, i) => `rc${st.issued}-${String(i).padStart(2, "0")}-q7wk-3fz9-h2mx`);
+        return { result: { ok: true, codes: st.codes.slice(), issuedAt: "2026-10-06T10:00:30Z" } };
+      case "recoverycodesstate": return { result: { ok: true, held: !!st.codes, remaining: st.codes ? 10 : 0, issuedAt: st.codes ? "2026-10-06T10:00:30Z" : null } };
+      /* instance-setup R66 */
+      case "adminrecoverystep":
+        if (step === "silent") return { error: "the store did not answer" };
+        return { result: { ok: true, administrators: st.admins, codes_held: !!st.codes, remaining: st.codes ? 10 : 0, met: st.admins >= 2 && !!st.codes } };
+      /* membership R12, R13: an administrator invited directly while fewer than two exist */
+      case "memberadd":
+        if (!String(body.cover ?? "").trim()) return { result: { ok: false, reason: "NO_COVER", translation: "A member is added with a cover to tell them apart by. Nothing was written." } };
+        st.invited.push(body); return { result: { ok: true, memberId: body.memberId, role: body.role, invite: `inv-${body.memberId}-once`, expires: "2026-10-13T10:00:00Z" } };
       default: return { result: { ok: true } };
     }
   };
@@ -49,7 +63,7 @@ function plane({ administer = true, refuse = {} } = {}) {
     const u = new URL(url, "https://copy.example");
     const op = u.searchParams.get("op");
     const body = init && init.body ? JSON.parse(init.body) : null;
-    sent.push({ op, body, token: u.searchParams.get("token"), method: (init && init.method) || "GET" });
+    sent.push({ op, body, token: bearerOf(init), query: u.searchParams.get("token"), method: (init && init.method) || "GET" });
     const out = answer(op, body);
     return { ok: true, status: 200, json: async () => out };
   };
@@ -105,7 +119,7 @@ test("R15 once the claim succeeds the section asks who holds the hosting account
   p.el("#cl-ha-holders").value = "Ada"; p.el("#cl-ha-note").value = "";
   await p.el("#cl-ha-set").fire(); await settle();
   assert.deepEqual(ops(p.after(), ["hostingaccessset"]).at(-1)[1], { holders: "Ada", note: null });
-  for (const c of p.after()) assert.equal(c.token, "sess-founder", c.op);
+  for (const c of p.after()) assert.deepEqual([c.token, c.query], ["sess-founder", null], c.op);
 });
 
 test("R15 R17 R18 members and keys shows the current records (hosting access or that none is recorded, the court-notice choice, the assistant and the group key's state) and offers an administrator the same acts at any time", async () => {
@@ -132,26 +146,101 @@ test("R15 R17 R18 members and keys shows the current records (hosting access or 
   assert.equal(m.el("#go-members").hidden, true);
 });
 
-const SECOND = [/We recommend adding a second administrator\./, /never stuck when\s+one person is away/, /no one person holds everything/,
-  /While your group has one administrator, it depends on that person, and on whoever holds the\s+hosting account\./];
+const SECOND = [/<b>Add a second administrator\.<\/b>/, /never stuck when one person is\s+away/, /no one person holds everything/,
+  /each administrator holds\s+recovery codes of their own/,
+  /While your group has one administrator, it depends on that person, and on whoever holds\s+the hosting account\./];
+const CODES1 = Array.from({ length: 10 }, (_, i) => `rc1-${String(i).padStart(2, "0")}-q7wk-3fz9-h2mx`);
 
-test("R16 once the claim succeeds, and only there, the page recommends a second administrator, saying why, and states that one administrator means depending on that person and the hosting account; nothing is asked, recorded or gated", async () => {
+test("R29 once the claim succeeds and the founder is signed in, before R15–R18, the page issues the founder's recovery codes (op=recoverycodesissue) and shows the ten once, saying what they are for, that they are never shown again, and to keep them apart from the password and the hosting account's sign-in", async () => {
+  const claim = claimSection(PAGE_HTML);
+  const after = (claim.match(/<div id="claim-after" hidden>[^]*$/) || [""])[0];
+  for (const re of [/each one sets a new\s+password once: it works once and is then spent/, /They are shown now and will never be shown again\./,
+                    /Keep them apart from your password and from the hosting account's sign-in/])
+    assert.match(after, re);
+  assert.ok(after.indexOf('id="cl-rc"') < after.indexOf('id="cl-sa"') && after.indexOf('id="cl-sa"') < after.indexOf('id="cl-ha"'),
+    "the codes, then the second administrator, then R15–R18");
+  const p = await claimed();
+  const issued = p.after().filter((c) => c.op === "recoverycodesissue");
+  assert.deepEqual(issued.map((c) => [c.method, c.body, c.token, c.query]), [["POST", {}, "sess-founder", null]]);
+  assert.equal(p.after()[0].op, "recoverycodesissue", "issued first, before the choices are read");
+  assert.equal(p.el("#cl-rc-shown").hidden, false);
+  assert.equal(p.el("#cl-rc-codes").textContent, CODES1.join("\n"));
+  assert.equal(p.el("#cl-rc-err").textContent, "");
+});
+
+test("R29 the codes are held only in the page's memory while shown: never in the browser's storage, an address, a log or a later request; copied as text or saved as a file made in the browser, its name carrying none; gone when the founder leaves the section", async () => {
+  const logged = [];
+  const quiet = { log: (...a) => logged.push(a), warn: (...a) => logged.push(a), error: (...a) => logged.push(a), info: (...a) => logged.push(a) };
+  const pl = plane();
+  const copied = [];
+  const p = pageOver({ html: pageOf({ answered: true, result: { ok: true, group: "river-town" } }), hash: "#boot=one-time", fetch: pl.fetch,
+    globals: { console: quiet, navigator: { clipboard: { writeText: async (t) => { copied.push(t); } } } } });
+  await settle();
+  p.el("#pw1").value = "the-founders-password"; p.el("#pw2").value = "the-founders-password";
+  await p.el("#do-claim").fire(); await settle();
+  assert.equal(p.el("#cl-rc-codes").textContent, CODES1.join("\n"));
+  await p.el("#cl-rc-copy").fire(); await settle();
+  assert.deepEqual(copied, [CODES1.join("\n")]);
+  await p.el("#cl-rc-save").fire(); await settle();
+  assert.equal(p.files.length, 1);
+  assert.equal(p.files[0].name, "recovery-codes.txt");
+  assert.equal(await p.files[0].blob.text(), CODES1.join("\n") + "\n");
+  assert.ok(CODES1.every((c) => !p.files[0].name.includes(c) && !p.files[0].url.includes(c)));
+  assert.deepEqual(p.objectUrls.map((u) => u.released), [true], "the file's object address is released");
+  /* the founder goes on through the claim's choices and into the page */
+  p.el("#cl-ha-holders").value = "Ada"; await p.el("#cl-ha-set").fire(); await settle();
+  p.el("#cl-cn-tell").checked = true; await p.el("#cl-cn-set").fire(); await settle();
+  await p.el("#claim-on").fire(); await settle();
+  await p.el("#go-members").fire(); await settle();
+  const later = pl.sent.slice(pl.sent.findIndex((c) => c.op === "recoverycodesissue") + 1);
+  assert.ok(later.length > 5, "not vacuous: requests followed");
+  const anyCode = (t) => CODES1.some((c) => String(t).includes(c));
+  for (const c of pl.sent) assert.equal(anyCode(JSON.stringify(c.body ?? null)) && c.op !== "recoverycodesissue", false, c.op);
+  for (const c of later) assert.equal(anyCode(JSON.stringify(c)), false, c.op);
+  for (const k of ["bio-session"]) assert.equal(anyCode(p.sandbox.sessionStorage.getItem(k)), false);
+  assert.equal(anyCode(JSON.stringify(logged)), false, "nothing logged holds a code");
+  /* left the section: the codes are gone from it */
+  assert.deepEqual([p.el("#cl-rc-codes").textContent, p.el("#cl-rc-shown").hidden], ["", true]);
+  assert.match(p.el("#mk-rc-now").textContent, /^You hold recovery codes: 10 left/);
+  assert.equal(anyCode(p.el("#mk-rc-now").textContent), false);
+});
+
+test("R29 a refusal is stated in credentials' words and the claim's section goes on", async () => {
+  const p = await claimed({ refuse: { recoverycodesissue: { reason: "NOT_AN_ADMIN", translation: "Only an administrator holds recovery codes." } } });
+  assert.equal(p.el("#cl-rc-err").textContent, "Only an administrator holds recovery codes.");
+  assert.deepEqual([p.el("#claim-after").hidden, p.el("#cl-rc-shown").hidden], [false, true]);
+  p.el("#cl-ha-holders").value = "Ada"; await p.el("#cl-ha-set").fire(); await settle();
+  assert.deepEqual(ops(p.after(), ["hostingaccessset"]), [["hostingaccessset", { holders: "Ada", note: null }]]);
+});
+
+test("R29 members and keys offers every administrator op=recoverycodesissue for their own role at any time, saying issuing again spends the earlier codes, and shows op=recoverycodesstate's held, remaining and issuedAt, never a code", async () => {
+  assert.match(PAGE_HTML, /<button id="mk-rc-issue">Issue new recovery codes<\/button><\/div>\s*<p class="hint">Issuing new codes spends every code you hold now\.<\/p>/);
+  const pl = plane();
+  const p = pageOver({ html: pageOf(undefined), session: { t: "sess-1", e: 0, w: "admin" }, fetch: pl.fetch });
+  await settle();
+  await p.el("#go-members").fire(); await settle();
+  assert.equal(p.el("#mk-rc-now").textContent, "You hold no recovery codes yet.");
+  await p.el("#mk-rc-issue").fire(); await settle();
+  assert.deepEqual(ops(pl.sent, ["recoverycodesissue"]), [["recoverycodesissue", {}]]);
+  assert.equal(p.el("#mk-rc-codes").textContent, CODES1.join("\n"));
+  await p.el("#mk-rc-issue").fire(); await settle();
+  assert.equal(p.el("#mk-rc-codes").textContent, CODES1.map((c) => c.replace("rc1-", "rc2-")).join("\n"), "issued again: the new codes");
+  /* leaving the section forgets them; coming back shows the state, never a code */
+  await p.el("#go-browse").fire(); await settle();
+  assert.deepEqual([p.el("#mk-rc-codes").textContent, p.el("#mk-rc-shown").hidden], ["", true]);
+  await p.el("#go-members").fire(); await settle();
+  assert.match(p.el("#mk-rc-now").textContent, /^You hold recovery codes: 10 left, issued /);
+  assert.equal(p.el("#mk-rc-codes").textContent, "");
+});
+
+test("R16 once the claim succeeds and the codes are shown, the page asks the founder to add a second administrator, saying why, and states that one administrator means depending on that person and the hosting account", async () => {
   const claim = claimSection(PAGE_HTML);
   const after = (claim.match(/<div id="claim-after" hidden>[^]*$/) || [""])[0];
   for (const re of SECOND) {
     assert.match(after, re);
     assert.equal(noComments(PAGE_HTML).split(re).length - 1, 1, `said once in the page: ${re}`);
   }
-  const rec = (after.match(/<div class="notice" id="cl-second">[^]*?<\/div>/) || [""])[0];
-  assert.ok(rec);
-  assert.doesNotMatch(rec, /<(?:input|button|select|textarea)\b/);
-  const p = await claimed();
-  assert.equal(p.el("#claim-after").hidden, false);
-  /* nothing is gated: going on reaches the panel with nothing recorded */
-  await p.el("#claim-on").fire(); await settle();
-  assert.deepEqual([p.el("#claim-after").hidden, p.el("#claim-form").hidden], [true, false]);
-  assert.deepEqual(ops(p.after(), ["hostingaccessset", "courtnoticeset", "assistantset", "groupkeyset", "groupkeyswitch", "memberadd"]), []);
-  assert.ok(p.after().some((c) => c.op === "whoami"), "the panel opened");
+  assert.doesNotMatch(noComments(PAGE_HTML), /We recommend adding a second administrator/, "asked for, not only recommended");
   /* before a claim succeeds the part is hidden: a refused claim leaves it so */
   const r = plane({ refuse: { claim: { reason: "ALREADY_CLAIMED" } } });
   const q = pageOver({ html: PAGE_HTML, hash: "#boot=t", fetch: r.fetch });
@@ -161,6 +250,68 @@ test("R16 once the claim succeeds, and only there, the page recommends a second 
   await q.el("#do-claim").fire(); await settle();
   assert.equal(q.el("#claim-after").hidden, true);
   assert.match(q.el("#claim-err").textContent, /already claimed/);
+  assert.deepEqual(r.sent.filter((c) => ["recoverycodesissue", "memberadd"].includes(c.op)), []);
+});
+
+test("R16 the act is offered there: a name and an id sent as op=memberadd with role admin, the one-time invitation answered shown once to pass on, membership's refusal stated; the founder may leave it for later, and nothing is gated", async () => {
+  const p = await claimed();
+  p.el("#cl-sa-name").value = "  "; p.el("#cl-sa-id").value = "bea";
+  await p.el("#cl-sa-add").fire(); await settle();
+  assert.equal(p.el("#cl-sa-err").textContent, "A member is added with a cover to tell them apart by. Nothing was written.");
+  p.el("#cl-sa-name").value = "Bea from the clinic"; p.el("#cl-sa-id").value = " Bea Two ";
+  await p.el("#cl-sa-add").fire(); await settle();
+  const adds = p.after().filter((c) => c.op === "memberadd");
+  assert.deepEqual(adds.map((c) => [c.method, c.body, c.token, c.query]).at(-1),
+    ["POST", { memberId: "bea-two", cover: "Bea from the clinic", role: "admin" }, "sess-founder", null]);
+  assert.match(p.el("#cl-sa-invite").innerHTML, /Send bea-two this link to join as an administrator\. It works once, it is not shown again/);
+  assert.match(p.el("#cl-sa-invite").innerHTML, /https:\/\/copy\.example\/#invite=inv-bea-two-once/);
+  assert.deepEqual([p.el("#cl-sa-err").textContent, p.el("#cl-sa-id").value, p.el("#cl-sa-name").value], ["", "", ""]);
+  /* left for later: going on reaches the panel with nothing asked of it */
+  const q = await claimed();
+  await q.el("#claim-on").fire(); await settle();
+  assert.deepEqual([q.el("#claim-after").hidden, q.el("#claim-form").hidden], [true, false]);
+  assert.deepEqual(ops(q.after(), ["hostingaccessset", "courtnoticeset", "assistantset", "groupkeyset", "groupkeyswitch", "memberadd"]), []);
+  assert.ok(q.after().some((c) => c.op === "whoami"), "the panel opened");
+});
+
+test("R16 members and keys shows every administrator instance-setup's step while it is not met: how many administrators, whether they hold codes, and the acts that meet it (adding an administrator, issuing their codes); nothing of it once met; an unanswered step is said, never read as unmet", async () => {
+  const at = async (opts) => {
+    const pl = plane(opts);
+    const p = pageOver({ html: pageOf(undefined), session: { t: "sess-1", e: 0, w: "admin" }, fetch: pl.fetch });
+    p.el("#rs").hidden = true;   // as the markup carries it
+    await settle();
+    await p.el("#go-members").fire(); await settle();
+    return { ...p, pl };
+  };
+  assert.match(PAGE_HTML, /<div class="notice" id="rs" hidden>/);
+  const one = await at({ admins: 1 });
+  assert.deepEqual(one.pl.sent.filter((c) => c.op === "adminrecoverystep").map((c) => [c.method, c.token, c.query]), [["GET", "sess-1", null]]);
+  assert.equal(one.el("#rs").hidden, false);
+  assert.equal(one.el("#rs-now").textContent, "Your group has 1 administrator. You hold no recovery codes yet.");
+  assert.deepEqual([one.el("#rs-add").hidden, one.el("#rs-codes").hidden], [false, false]);
+  /* its acts: issuing this administrator's codes, then adding the second; the step re-read after each */
+  await one.el("#rs-issue").fire(); await settle();
+  assert.equal(one.el("#mk-rc-codes").textContent, CODES1.join("\n"));
+  assert.equal(one.el("#rs-now").textContent, "Your group has 1 administrator. You hold recovery codes (10 left).");
+  assert.deepEqual([one.el("#rs-add").hidden, one.el("#rs-codes").hidden], [false, true]);
+  one.el("#mk-sa-name").value = "Bea"; one.el("#mk-sa-id").value = "bea";
+  await one.el("#mk-sa-add").fire(); await settle();
+  assert.deepEqual(ops(one.pl.sent, ["memberadd"]), [["memberadd", { memberId: "bea", cover: "Bea", role: "admin" }]]);
+  assert.match(one.el("#mk-sa-invite").innerHTML, /#invite=inv-bea-once/);
+  /* two administrators, codes not held: only the codes' act */
+  const two = await at({ admins: 2 });
+  assert.equal(two.el("#rs-now").textContent, "Your group has 2 administrators. You hold no recovery codes yet.");
+  assert.deepEqual([two.el("#rs-add").hidden, two.el("#rs-codes").hidden], [true, false]);
+  /* met: nothing of it */
+  await two.el("#rs-issue").fire(); await settle();
+  assert.equal(two.el("#rs").hidden, true);
+  /* unanswered: said, and no act offered as though it were unmet */
+  const silent = await at({ step: "silent" });
+  assert.equal(silent.el("#rs-now").textContent, "Whether your group has two administrators holding recovery codes could not be read just now.");
+  assert.deepEqual([silent.el("#rs-add").hidden, silent.el("#rs-codes").hidden], [true, true]);
+  /* nothing gated: with the step open, every act of the section is still sent */
+  one.el("#mk-ha-holders").value = "Ada"; await one.el("#mk-ha-set").fire(); await settle();
+  assert.deepEqual(ops(one.pl.sent, ["hostingaccessset"]), [["hostingaccessset", { holders: "Ada", note: null }]]);
 });
 
 test("R17 once the claim succeeds the section offers whether members are told what a court can reach: the short explanation, then tell or don't, nothing preselected, sent as op=courtnoticeset; unchosen records nothing", async () => {
@@ -207,7 +358,7 @@ test("R18 once the claim succeeds the section offers how members reach the assis
     await p.el("#cl-ai-set").fire(); await settle();
     const sent = p.after().filter((c) => ["assistantset", "groupkeyset", "groupkeyswitch"].includes(c.op));
     assert.deepEqual(sent.map((c) => [c.op, c.body]), want, choice);
-    for (const c of sent) { assert.equal(c.method, "POST"); assert.equal(c.token, "sess-founder"); }
+    for (const c of sent) { assert.equal(c.method, "POST"); assert.deepEqual([c.token, c.query], ["sess-founder", null]); }
     /* the key is never shown again: the field is emptied, and no drawn text holds it */
     assert.equal(p.el("#cl-ai-key").value, "", choice);
     for (const s of ["#cl-ai-now", "#cl-ai-err", "#as-state", "#mk-ai-now"])

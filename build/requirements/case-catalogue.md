@@ -1,6 +1,6 @@
 # case-catalogue — requirements
 
-**Status** · New product module, layer 8, directly before `ratification`; no `from`. Split from `ratification` by copy with no change of meaning (K617, K1824; seam read `build/extraction/ratification-split.md`), so that `ratification`'s T34 job (T34-85) ends under 4,000 lines. Drafted by a worker for BOB #125 on `tranche/T34`, 2026-10-06. Moved: `ratification` R8's catalogue → R1, R9's definitions → R2, R38 → R3, R14's C-41 share → R4; R5 a copy of `ratification` R15 (which stays). `ratification` keeps both registrations with `promotion` (its R8, R9) and re-exports every name this module provides, so no importer changes code (K624 (1): copy, then `ratification`'s job deletes its copy). No requirement's meaning changed. Not yet met (T34).
+**Status** · In force: split from `ratification` for size by copy (K617, K1824, BOB's), meaning unchanged: R1–R4 name their `ratification` ids, R5 a copy of its R15, which stays; `ratification` keeps both registrations with `promotion` (its R8, R9) and deleted its copy (K1839). Every requirement met (CASE-CATALOGUE #1, K1829).
 
 **Size (P6).** About 1,000 lines (`ratification/checks.mjs` 13–962 and 1246–1281), leaving `ratification` about 3,005.
 

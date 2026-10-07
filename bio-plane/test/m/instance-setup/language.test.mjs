@@ -3,7 +3,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, frame } from "./fixture.mjs";
-import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLE_DECLARATIONS, isLanguageTag } from "../../../src/setup.mjs";
+import { INSTANCE_SETUP_CHECKS, INSTANCE_SETUP_TABLE_DECLARATIONS } from "../../../src/setup.mjs";
+import * as S from "../../../src/setup.mjs";
+import { isLocale } from "../../../../jurisdictions/index.mjs";
 
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
@@ -25,7 +27,6 @@ test("R64 memberLanguageSet keeps any one well-formed BCP 47 tag as given, the m
   assert.equal(w.st.db.prepare(`SELECT count(*) n FROM member_languages`).get().n, 0);
   /* any well-formed tag is kept, as given: a tag no translation is held for included */
   for (const tag of ["es", "zh-Hant", "pt-BR", "yue-Hant-HK", "tlh", "ase"]) {
-    assert.equal(isLanguageTag(tag), true, tag);
     const r = w.m.memberLanguageSet({ language: ` ${tag} `, by: "ruth" });
     assert.deepEqual([r.ok, r.member, r.language], [true, "ruth", tag], tag);
   }
@@ -62,4 +63,19 @@ test("R64 R29 over the routes: op=memberlanguageset takes the member from the co
   assert.equal((await call(w.m, "memberlanguage?viewer=ruth")).result.language, "de");
   assert.equal((await call(w.m, "memberlanguage?viewer=ada", { viewer: "ruth" })).result.language, null);
   assert.equal((await call(w.m, "memberlanguageset?by=class:ai", { language: "de" })).result.reason, "MACHINE_CANNOT_SET_LANGUAGE");
+});
+
+test("R64 N700 jurisdictions.isLocale decides what a language tag is: a tag it refuses is refused LANGUAGE_MALFORMED and one it accepts is kept, over every case, and this module exports no reading of its own", async () => {
+  const w = await boot();
+  const cases = ["en", "es", "zh-Hant", "de-CH-1996", "x-private", "i-klingon", "en-US-u-ca-gregory", "sgn-BE-FR", "art-lojban",
+                 "en_US", "en US", "en,es", "e", "12", "en--US", "-en", "en-", "root", "und", "a".repeat(9), "en-a-bbb-a-ccc",
+                 "xx-YYYY-zzzzzzzzzzzz", "de-419-DE"];
+  let accepted = 0, refused = 0;
+  for (const tag of cases) {
+    const r = w.m.memberLanguageSet({ language: tag, by: "ruth" });
+    if (isLocale(tag)) { accepted++; assert.deepEqual([r.ok, r.language], [true, tag], tag); }
+    else { refused++; assert.deepEqual([r.ok, r.reason, r.check], [false, "LANGUAGE_MALFORMED", "C-119.12"], tag); }
+  }
+  assert.ok(accepted > 0 && refused > 0, "the cases hold tags isLocale accepts and tags it refuses");
+  assert.equal("isLanguageTag" in S, false, "no tag reading of this module's own");
 });

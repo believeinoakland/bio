@@ -1,6 +1,6 @@
 # court-doctypes — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T33` (open), for BOB's review. New module (K1504, Choices 2; scope §2: later readers each in their own sibling, never back into `docprofile` or `doctypes`), layer 1 after `roster-reader`. Plan entry T33-16 (A COURTS (d) 2a, the C1 core: the three register doctypes and the register row diff; K1443, K1480), entered on GO with conditions (K1506; `measures-T33/courts-workbooks.md` §1). Every id is new and not yet met (T33-16). Code today: none. The ladder's `court_order` and `oversight_report` doctypes (§7.4) are not in this entry.
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-16, entered on GO with conditions, K1506). Every requirement met (COURT-DOCTYPES #1, K1527).
 
 **Size (P6).** About 900–1,300 lines with tests.
 

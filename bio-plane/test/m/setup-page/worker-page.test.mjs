@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { Miniflare } from "miniflare";
-import { pageOver } from "./fixture.mjs";
+import { pageOver, scriptOf } from "./fixture.mjs";
 import { deriveInquiryTitle } from "../../../src/record-grammar/index.mjs";
 import { pageOf, PAGE_HTML } from "../../../src/setup-page/index.mjs";
 import { list as heldProfiles } from "../../../../jurisdictions/index.mjs";
@@ -164,7 +164,7 @@ test("R1 through the Worker: signed out, this module's page over the plane's pub
 test("R1 the group line sits inside <main> before the first section the script switches between, and the script never addresses it, so every state of the page, signed in or out, shows it", async () => {
   const p = pageOf(await readOf(await planeAt()));
   const at = p.indexOf('id="instance-group"'), main = p.indexOf("<main"), sec = p.indexOf("<section");
-  const script = p.slice(p.lastIndexOf("<script>") + 8, p.lastIndexOf("</script>"));
+  const script = scriptOf(p);
   assert.ok(main > -1 && at > main && at < sec, `main ${main}, line ${at}, first section ${sec}`);
   assert.ok(script.length > 1000);
   assert.doesNotMatch(script, /instance-group|eyebrow/);

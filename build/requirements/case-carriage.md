@@ -1,6 +1,6 @@
 # case-carriage — requirements
 
-**Status** · DRAFT by a worker for BOB #106, 2026-10-03, on `tranche/T28` (N532; K617, P6; seam read `build/extraction/publication-split-2.md`). Split from `publication` with no change of meaning: its R57's holding with `heldMaterialsOf` and `publishedMaterialText` (here R1–R3), R59's and R51's re-reads (R4, R5), R31's clause on the held materials (R6), R34 copied (R7). Layer 8, directly before `publication`, which creates it (K1024's form). Code today: `bio-plane/src/publication/index.mjs` 894–1054 and `schema.mjs` 571–596 on `tranche/T28`. A product module with no `from`. Not yet met: R1–R7 (T29). Folded by a fold worker for BOB #106 on `prep/T29-folds`, 2026-10-03, entry N532, ruling K1332, from the seam read's Appendix A, with K1332's two wording fixes: R1's tokens are those the capture's `provenance.json` names, as built (K1322), not tokens a `co_attestation` row names; the `register` read contract (`provenance` R48) lists `bytes`. R51's re-read is taken with R57's and R59's (K1332). T35's fold, by a drafting worker for BOB #129 on `tranche/T35`, 2026-10-07, from plan entry T35-53 (N688; K1844, `build/plan/draft-zip-architecture.md` item 9): R8 (a cited archive member carries its archive, the archive's tokens and its `container` record) new; not yet met (T35).
+**Status** · In force: split from `publication` for size, BOB's (N532, K617, K1332), meaning unchanged. Last changed T35 (T35-53: R8); every requirement met (K2004).
 
 **Size (P6).** About 270 lines.
 

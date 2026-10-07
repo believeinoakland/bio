@@ -50,4 +50,4 @@ None (`test-support` for tests).
 
 ---
 
-**Status** · Written by BOB #44, 2026-09-27, applying K70 (`build/extraction/pdf-worker-split.md` §3): R1 from pdf-worker R22, R2 from R23, R3 from R25 (K43), R4 from R25, R6 from R40's second sentence; R5, R7–R9 new. Layer 1. Not yet met as a module: the CCITT decoder is not yet moved and no test names these ids (T4, entry T4-0a).
+**Status** · In force: written by BOB #44 applying K70 (a helper module, its requirements BOB's, K20), split from `pdf-worker` (R1–R4 and R6 from its R22, R23, R25, R40; R5, R7–R9 new). Every requirement met (layer 1 closed, K284; R4's working set K281).

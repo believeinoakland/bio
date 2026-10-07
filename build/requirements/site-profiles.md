@@ -1,6 +1,6 @@
 # site-profiles — requirements
 
-**Status** · DRAFT by a worker for BOB #80, 2026-10-01, on `tranche/T19` before layer 1 starts, for BOB's review; split from `docprofile` by K617 and K653 BOB-2 (a module whose code passes about 4,000 lines is split before its next job, along seams BOB names, with no change to any requirement's meaning). R1–R4, R6–R9, R11 and R12 are `docprofile` R1–R3, R28, R7–R10, R26 and R27, moved without change of meaning (each marked "was"). R5, R10 and R13–R15 are new ids for services `docprofile` already relied on inside one module and now reaches across the seam (the shared registry, `compare`, the event catalogue, `unescapeHtml`); each states what the code does and what `docprofile` R4, R12 and R14 already assume. R16–R19 are `docprofile` R30–R32 and R35 as they apply to the moved code; they keep holding in `docprofile` for its own. Layer 1. Code: `site-profiles/` (copied from `docprofile/index.mjs`, `recogniser.mjs`, `events.mjs`, `handlers/`; `docprofile/registry.mjs` stays `docprofile`'s facade and re-exports this module's names).
+**Status** · In force: split from `docprofile` for size (K617, K653), meaning unchanged: R1–R4, R6–R9, R11 and R12 marked "was"; R16–R19 are `docprofile` R30–R32 and R35 as they apply to the moved code, holding in `docprofile` too. Every requirement met.
 
 **Size (P6).** About 905 lines copied. `docprofile` keeps about 3,150 after its deletion.
 
