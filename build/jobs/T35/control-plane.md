@@ -62,6 +62,6 @@ B7 applied: tranche merged; C-1's and C-2's copies deleted (`checks.mjs`, `famil
 
 **Tests and checks run** (bio-plane, after merging `tranche/T35`).
 - `node --test test/m/control-plane/*.test.mjs`: tests 167, pass 167, fail 0.
-- `node checks/format.mjs`: 0 failures. `coverage.mjs … control-plane`: 32 of 32 live ids named by a test; 0 failures. `ownership.mjs … control-plane tranche/T35`: 0 failures. `architecture.mjs … control-plane`: 15 failures, every one a test's import of `store-door` or `op-grades`, which control-plane does not yet declare (J4).
+- `node checks/format.mjs`: 0 failures. `coverage.mjs … control-plane`: 32 of 32 live ids named by a test; 0 failures. `ownership.mjs … control-plane tranche/T35`: 0 failures. `architecture.mjs … control-plane`: 0 failures (after K2062's `uses`, merged from `tranche/T35`; before it, 15 test imports of `store-door` and `op-grades`).
 
-Size (session_01P62eYdiWj9iNakZSwvdHKj): test runs 32, module lines 3025
+Size (session_01P62eYdiWj9iNakZSwvdHKj): test runs 33, module lines 3025
