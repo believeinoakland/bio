@@ -29,3 +29,11 @@
 - `checks/format.mjs`: 133 modules, 132 requirements files; 0 failures. `checks/architecture.mjs installer`: 17 product files, 33 relative imports; 0 failures. `checks/coverage.mjs installer`: 42 of 42 live requirement ids named by a test; 0 failures. `checks/ownership.mjs installer tranche/T35`: 5 files changed; 0 failures.
 
 Size (session_01QqohgZCP4a7QUZydHh4NT7): test runs 7, module lines 2380
+
+## J1 · REPORT
+
+Findings outside installer from T35-75 (also in my record):
+1. Generated artifact stale: `newgroup/dist/newgroup.bundled.mjs`. `newgroup-bundle-fresh` (C) fails, (A) and (B) pass. Not edited by hand; please regenerate it at L11's close (`cd newgroup && npm run build`).
+2. Deploy order: the verify step now sends the probe credential only as `Authorization: Bearer` (R15, F1). Today's admission (`bio-plane/src/admission/index.mjs` :180, :431, :440, :552) reads only `?token=`; it reads the header from T35-71 (R20). The installer must not be deployed until `newgroup/src/release.mjs` embeds a release carrying admission R20 (0.81.0 or later, held by K1922). Over an older embed, every new install would read as "not woken up yet". Nothing is deployed in T35; a note for the cut.
+3. installer R15, R41 and R42's `*(not yet met: T35)*` markers can be cleared at the merge.
+4. Optional: the Suggestion's byte-for-byte test against public-read R30's exports needs a test-only `uses` edge, installer to public-read. I tested against R42's literal lines instead. Add the edge if you want it.
