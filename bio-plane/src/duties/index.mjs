@@ -1236,8 +1236,8 @@ export class Duties {
       const items = Array.isArray(r.items) ? r.items : Array.isArray(r.events) ? r.events : [];
       placed.push(...items);
       for (const x of Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []) if (x && x.event_id) nowhere.set(x.event_id, x);
-      if (!r.truncated || !items.length) break;
-      after = items[items.length - 1].event_id;
+      if (!r.truncated || !said(r.next)) break;
+      after = r.next;
     }
     return { placed, nowhere: [...nowhere.values()], error: null };
   }
@@ -1257,7 +1257,7 @@ export class Duties {
   static #linkedBy(fields, ev, links) {
     const how = [];
     const src = fields.source || {};
-    const prov = ev && (isObj(ev.provision) ? ev.provision : isObj(ev.facet) && isObj(ev.facet.provision) ? ev.facet.provision : null);
+    const prov = ev && (isObj(ev.use) && isObj(ev.use.provision) ? ev.use.provision : isObj(ev.provision) ? ev.provision : null);
     if (prov && said(prov.standard) && ["standard", "court"].includes(src.kind) && prov.standard === src.standard
         && (!said(src.portion) || (said(prov.portion) && (prov.portion === src.portion || prov.portion.startsWith(`${src.portion}/`)))))
       how.push("provision");
@@ -1285,8 +1285,9 @@ export class Duties {
       if (!at) { why = "the event's date is not recorded, so who held the office is not read"; continue; }
       try { h = this.lines.holderAt({ office: obligor, at, viewer: Duties.#reader(viewer) }); } catch { h = null; }
       if (h && h.ok !== false && said(h.holder)) { if (h.holder === dec) return { value: true, holding: h.line ? h.line.line_id ?? null : null }; continue; }
-      why = h && said(h.undetermined) ? `the decider is a person, and who held the office at the event's date is undetermined: ${h.undetermined}`
-        : "the decider is a person, and no holding of the office at the event's date is held";
+      why = h && h.ok !== false && Array.isArray(h.lines) && h.lines.length && said(h.undetermined)
+        ? `the decider is a person, and who held the office at the event's date is undetermined: ${h.undetermined}`
+        : `the decider is a person, and no holding of the office at the event's date is held${h && said(h.undetermined) ? ` (${h.undetermined})` : ""}`;
     }
     return why ? { value: "undetermined", why } : { value: false };
   }
@@ -1485,7 +1486,7 @@ export class Duties {
       let scan = null;
       if (node.startsWith("EVT-")) {
         const ev = this.#event(node, b.viewer);
-        scan = { placed: ev && USE_KINDS.includes(ev.kind) && !ev.withdrawn ? [ev] : [], nowhere: [] };
+        scan = { placed: ev && USE_KINDS.includes(ev.kind) && !(isObj(ev.use) && ev.use.withdrawn) ? [ev] : [], nowhere: [] };
       } else if (powers.length) scan = this.#scanUses(b.viewer);
       for (const d of powers) {
         const fields = this.#fieldsOf(d.duty_id, d.version);

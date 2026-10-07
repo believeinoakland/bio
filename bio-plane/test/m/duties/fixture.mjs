@@ -125,6 +125,21 @@ export function world({ now = NOW, view = fictionalView(), deps = {} } = {}) {
       if (!r.ok) fail("event", r);
       return r.event_id;
     },
+    /** A real use of a power (events R43, R44), recorded by bob: `kind` discretion, waiver or assessment, `provision`
+     *  a provision key or null, `decider` and `subject` entity ids (or null), `value` its date (or null: placed
+     *  nowhere), its outcome cited in a fresh passage. Its event id. */
+    use({ kind = "discretion", provision = null, decider = null, subject = null, value = null } = {}) {
+      const p = sw.passage();
+      const cite = { captureSha: p.capSha, extent: { kind: "pdf-page", page: 0 } };
+      const parts = [[decider, "decider"], [subject, "subject"]].filter(([e]) => e).map(([entityId, role]) => ({ entityId, role, attestation: 0 }));
+      const common = { attestations: [{ testimony: `I saw the ${kind}.`, ...(value !== null ? { value } : {}) }], participants: parts, by: BOB };
+      const r = kind === "assessment"
+        ? ev.recordAssessment({ provision: provision ?? { standard: "STD-none" }, unmet: [], ...common })
+        : ev.recordDiscretion({ kind, ...(provision ? { provision } : {}), statedReason: "none", outcome: { value: "granted", extent: cite },
+                                ...(kind === "waiver" ? { scope: cite } : {}), ...common });
+      if (!r.ok) fail("use", r);
+      return r.event_id;
+    },
     /** A real line (lines R1), on bob's testimony; withdrawn when asked. */
     line({ kind, from, to, withdrawn = false }) {
       const r = lines.recordLine({ kind, from, to, basis: { statement: `the ${kind} the test states` }, by: BOB });
