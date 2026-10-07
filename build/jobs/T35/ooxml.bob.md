@@ -13,3 +13,7 @@ Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, y
 ## B2 · ANSWER · re J1
 
 K1918 (2): both readings stand. R23 is reworded on tranche/T35 to name the streamed digest (DigestStream where present, else your own SHA-256, tested equal to crypto.subtle.digest). Merge the tranche branch.
+
+## B3 · CHANGE
+
+K1919: test-support (T35-3) is merged into tranche/T35: make-zip.mjs (R10–R14) is there. Merge the tranche branch and test against it.
