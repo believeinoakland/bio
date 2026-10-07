@@ -57,3 +57,7 @@ T35-16's two shares are done and pushed on `job/T35/promotion` @ `dbb9b8c51a`, o
 - `checks/ownership.mjs bio promotion tranche/T35`: 1 failure (the new fixture, until the swap).
 
 Size (session_0149kWBQZo4PvpqDKSn6ihKi): test runs 16, module lines 3420
+
+## J2 · COMPLETE
+
+T35-16 complete on `job/T35/promotion` (record: `## Completion`). Sweep: 19 rows, 12 tests in `wording.test.mjs`. Stamp: `CATALOG_VERSION` 1.62.0, `ROW_CENSUS` 1390 rows `ff8c6743…`, re-pinned at B3 and B4 with exactly the rows the records name. row-census 8/0; promotion and d526 119/0; credentials, membership and record-core 442/0; architecture 0; coverage 56/56. Format and ownership show only the `modules.json` fixture swap (1.61.0 → 1.62.0), which is yours at merge. Also yours at L2's close: `program.mjs` (case-checker R13 ×2), the plane bundle and `newgroup/src/release.mjs`.
