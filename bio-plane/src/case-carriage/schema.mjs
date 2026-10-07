@@ -7,13 +7,14 @@ export const CASE_CARRIAGE_SCHEMA = `
 -- R1, R3 (DEC-112 (3)(4); K1316): THE TEXTS A PUBLISHED CASE CARRIES WHOLE, BY SHA-256. Written by holdMaterials, inside
 -- the caller's commit transaction, for each material the signed document's materials: block lists included: true: a
 -- document's extracted text (case-grammar extractedTextOf), an observation's whole text, a document's captured bytes
--- where the register holds them inline as text, and a timestamp token held inline. The caller registers each by hash
+-- where the register holds them inline as text, and a timestamp token held inline; for a document cut out of a captured
+-- archive, its container record (canonical JSON) and the archive's bytes where held inline (R8). The caller registers each by hash
 -- (materials/<sha>) so it is served; public-read reads the text through publishedMaterialText. Content-addressed and
 -- append-only: a text once held is never rewritten or removed, and the table is exempt from purge as published bytes
 -- are (R6).
 CREATE TABLE IF NOT EXISTS published_material_texts (
   sha256    TEXT PRIMARY KEY,
-  kind      TEXT NOT NULL,      -- document | extracted_text | observation | attestation
+  kind      TEXT NOT NULL,      -- document | extracted_text | observation | attestation | archive | container (R8)
   text      TEXT NOT NULL,
   bytes     INTEGER NOT NULL,   -- the UTF-8 length of text
   published TEXT NOT NULL
