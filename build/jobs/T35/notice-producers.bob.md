@@ -1,6 +1,6 @@
 # BOB to notice-producers (T35)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Also inherited (K1996): red 32, bundler `fleetbundles.test.mjs` "agent-worker's 
 Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publication R73's deprecation), until T35-72.
 
 Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is following's alone"; acquisition's archive rows reuse family C-137), until N738 in T36.
+
+## B2 · ANSWER · re J1
+
+K2038. R13: your reading stands (the bound counts every change read, cost bounded; `truncated` stated). R12's episode reading stands. J2: (1) queue's kinds → N742 (queue has no T35 job; your items are tested at your interface), (2) credentials' failure-as-Ordinary → N743, (3) following's `since` → N741; keep treating anything but the three levels as failed.
