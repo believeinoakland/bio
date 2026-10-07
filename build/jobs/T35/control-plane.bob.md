@@ -34,3 +34,7 @@ K2038. (1) Headers `x-bio-session` and `x-bio-grant` (and `x-bio-credential-sha`
 ## B4 · ANSWER · re J2
 
 K2041. Confirmed: plane's `draftOnObject` also answers `read` (the grant's read-log strings, `[]` with no grant); pass it to `checkDraft` as `readLog`, never echo the grant; usage through `askusage` with `{mode: "draft", usage, calls}`. Also set `x-bio-grant` where `index.mjs`:1088–1089 sets `?grant=`. answer-envelope's `withPagePolicy` is now async (await it).
+
+## B5 · ANSWER · re J3
+
+K2042. All three readings stand. (1) PLANE adds `coarchiveset` and `coarchivestate` to the store map it composes (acquisition's instance methods); your door forwards them with `by` stamped, nothing from the caller. (2) The door promotes Worker-side after `op=acquire` (when the answer carries `unpack`) and `op=unpack`: the archive's own document first, then each of `unpack.documents` in order, Information at `collected`, the caller as author, one act each; a refused one named in `not_promoted` (`[{sha256, code}]`), undoing nothing else; the project is the request body's `project`, else none. (3) The drain loop over `capture.taskEvents({kind: "archive-unpack"})` is PLANE's (its alarm, as the daemon's `op=unpack` calls through the Worker with `cls: "daemon"`); your share is that such a call reaches capture's `unpack` and the promotions of (2).
