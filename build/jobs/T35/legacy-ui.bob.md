@@ -18,3 +18,7 @@ Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is follo
 ## B2 · ANSWER · re J1
 
 K2040. Your reading stands: re-point the three review-grant calls to POST with `secret` in the JSON body (F1, K1874; control-plane R59), and keep the fragment link as is.
+
+## B3 · CHANGE
+
+K2065. admission, control-plane and plane are all merged (K2045's condition). Merge tranche/T35 into your branch, re-run your five plane-driven suites and the rest, and post COMPLETE with the result (the `check-mock-envelope` baseline as before).
