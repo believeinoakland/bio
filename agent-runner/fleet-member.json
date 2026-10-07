@@ -35,8 +35,8 @@
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".",
-    "command": "docker build --platform linux/amd64 -t docker.io/civicos/agent-runner:<version> agent-runner",
-    "dependencies": "package-lock.json (npm ci; the Agent SDK pinned exactly)"
+    "command": "docker build --platform linux/amd64 -t <repository>:<version> agent-runner",
+    "dependencies": "package-lock.json (npm ci --omit=dev --ignore-scripts; the Agent SDK pinned exactly; R16)"
   },
   "egress": [
     "api.anthropic.com"
