@@ -28,3 +28,7 @@
 - `ownership: 8 files changed by connection-grammar between tranche/T36 and HEAD; 0 failures`
 
 Size (session_01H9M3DEa6cwNZgYQXQhaJuf): test runs 6, module lines 1508 (code 690)
+
+## J1 · REPORT
+
+events (bio-plane/src/events/owner.mjs:95) judges a hub on the whole set of the kinds asked against BOUNDS.hub (1,000), not per kind as connection-grammar R6 now says (T36-40). (1) A member with 1,001-4,000 votes read for event_voted alone is answered a hub, which the registry now refuses OWNER_NONCONFORMING (explore reads an owner refusal, not the votes). (2) A node with e.g. 600 votes and 600 of another kind is answered a hub though no kind exceeds its bound (undetectable at the registry: a hub answer names no kind). The fix is events': count per kind and compare with hubBoundOf(kind) (exported beside BOUNDS; BOUNDS.hub_by_kind[kind] ?? BOUNDS.hub reads the same). Nothing is red today (events 54/0, explore 27/0, unchanged); it shows on real volumes, and T36-42's M-X1a re-measure on a 4,000-vote fixture meets it if it reads through events' owner. Also: the plane bundle is stale (bounds.mjs, reads.mjs, conformance.mjs).
