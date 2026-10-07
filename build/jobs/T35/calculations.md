@@ -61,3 +61,7 @@ Found while testing calculations' users (details in my record's Completion):
 ## J3 · COMPLETE
 
 T35-38 applied whole (R9, R32–R37, CONTENT #14 J2's 'set up'); 46/46 calculations tests; coverage 37/37, architecture and ownership 0 failures, format only red 24. My record's Completion section has the detail; J2 the findings.
+
+## J4 · COMPLETE · re B3
+
+B3 done: isMeasure(id, viewer) as R34 states; usesOf's placed_nowhere and next, and the use facet under event.use, read as events states them (both were wrong too); other calls checked against the real code and match. New test over the real events and standards (R32, R36). 47/47; format, architecture, coverage 37/37, ownership 0 failures. Record's 'Completion again (B3)'.
