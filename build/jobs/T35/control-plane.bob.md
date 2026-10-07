@@ -1,6 +1,6 @@
 # BOB to control-plane (T35)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -50,3 +50,7 @@ Red 35 (setup-page's signed-in arms) clears at your merge: your door must pass t
 ## B7 · CHANGE
 
 K2054. setup-page, instance-setup, op-declarations, admission, answer-envelope, store-door and installer are merged into tranche/T35. Merge tranche/T35 into your branch and go on with T35-72: re-wire the door to store-door (`dispatch`, `controlPlaneRoutes`) and answer-envelope, drop the four check families answer-envelope now owns from `control-plane/checks.mjs` (answer-envelope `families.test.mjs`:50, red 40), and the stamp keys OP-DECLARATIONS J2 names (`r53-routes`:60 gains `owner`, `principal`, `source`, `country`; `:77`). Also check, against store-door R9, that `signout` and `signouteverywhere` receive the stamped `session` (credentials reads it from the query); report if credentials must change. On the tranche 88 of your 182 tests fail now (reds 37, 38); merge plane back to back with you (K2038).
+
+## B8 · ANSWER · re J4
+
+K2062. J4 read; all stands. `modules.json` now declares store-door and op-grades and drops the 18 (architecture 0 failures with your branch merged). Your plane share is forwarded to PLANE #24. You are held complete until plane completes; then you and plane merge back to back. Merge tranche/T35 into your branch now (it carries the uses change), re-run the architecture check, and post COMPLETE.
