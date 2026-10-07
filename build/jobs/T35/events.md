@@ -1,3 +1,14 @@
 # events (T35)
 
 **Status** · session_01QwVmt6HWf2hxMSDJiXer1s · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+Six readings of R43–R48 I am building on; carrying on with the job meanwhile. Say only where one is wrong.
+
+1. **Refusal order (R43, R44).** `KIND_NOT_DISCRETION` and `MEMBER_ACT_ONLY` first (the act cannot be this one at all), then R6's (`NO_ATTESTATION`, each attestation's, each participant's R11 refusal), then R43's rest in its stated order (`PROVISION_MALFORMED`, `STATED_REASON_MISSING`, `OUTCOME_UNKNOWN`, `QUESTION_NOT_HELD`, then the waiver's `WAIVER_NO_SCOPE`, conditions, `BAD_DATE` for expiry, and `FIELD_NOT_FOR_KIND` for a discretion). R44: `MEMBER_ACT_ONLY`, R6's, `PROVISION_MALFORMED` (the standard), each unmet item (`PROVISION_MALFORMED`, `UNMET_NOT_CITED`, its extent's R1 refusals), `QUESTION_NOT_HELD`.
+2. **One citation form.** Every cited passage (`statedReason`, `outcome.extent`, `scope`, each condition, each unmet item's `extent`) is `{captureSha, extent}`, refused as R1 refuses (`NO_SHA`, `CAPTURE_NOT_HELD`, `NO_EXTENT`, `EXTENT_NOT_IN_CAPTURE`); a found match's own `capture_sha` key is taken as `captureSha`, so a `findIn` match passes as it is (K1941's one shape). `outcome.extent` is required. An unmet item's capture must be one the assessment's attestations cite ("an attesting capture"); another capture is `EXTENT_NOT_IN_CAPTURE`.
+3. **The cited words in `says` (R45).** Read from the record, never the caller: each cited passage is minted through `content.mint` (its R12, find-or-mint) at the act, and its words read by `content.passageText` (R46) at each read, cut at 300 characters. Where the text is not held as read text, `says` names the passage without words ("stated reason: in the cited passage, its words not read"), never "no reason stated".
+4. **Sight of a facet's citation (R40).** An event is answered as R40 says; within its facet, a cited passage whose capture the viewer may not see is answered `{withheld: true}` (no sha, extent or words) and `says` reads "stated reason: in a document you cannot see". The question (R48) is withheld wholly, as R48 says.
+5. **`createEvent` of kind `discretion`, `waiver` or `assessment`** is refused `USE_NEEDS_ITS_ACT` (a use is held only with its facet, through R43/R44; R6's callers change nothing). A split of a use event (R14) copies the facet, question included, to the new event; a merge leaves the absorbed facet with its alias, read through the kept event's kind.
+6. **Op names** (yours, `op-declarations`): `discretionrecord`, `assessmentrecord`, `usewithdraw`, `usesof`, as the requirements' suggestion names them. `withdrawUse` is any stamped author's act (R45 names no member-only refusal for it).
