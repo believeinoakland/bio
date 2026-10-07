@@ -1,6 +1,6 @@
 # instance-setup (T35)
 
-**Status** · session_01QZZgwL4ojyBbUL3VUYqwZM · depth 2 · COMPLETE · handled B3
+**Status** · session_01QZZgwL4ojyBbUL3VUYqwZM · depth 2 · COMPLETE · handled B4
 
 ## Completion
 
@@ -23,6 +23,14 @@
 - `format`: 0 failures. `architecture instance-setup`: 0 failures. `coverage instance-setup`: 48 of 48. `ownership instance-setup tranche/T35`: 0 failures.
 
 Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 9, module lines 2522
+
+## Completion of B4 (K2065)
+
+**Applied.** Merged tranche/T35 (control-plane and plane merged). `worker-reports.test.mjs`'s `call` now takes a `token=` out of the address and sends it as `Authorization: Bearer` (admission R20). Every call through it asserts the answer carries no `deprecated: "CREDENTIAL_IN_ADDRESS"` (control-plane R59). No code change. Red 44 is cleared.
+
+**Tests and checks** (on the commit below): `node --test bio-plane/test/m/instance-setup/`: tests 108, pass 108, fail 0 (the real plane's suites included). `format`: 0 failures. `architecture instance-setup`: 0 failures. `coverage instance-setup`: 48 of 48. `ownership instance-setup tranche/T35`: 1 file, 0 failures.
+
+Size (session_01QZZgwL4ojyBbUL3VUYqwZM): test runs 12, module lines 2519
 
 ## Completion of B3 (K2054)
 
@@ -47,3 +55,7 @@ T35-69 applied (R64 isLocale, R66 op=adminrecoverystep, R47 guide sentence linke
 ## J3 · COMPLETE
 
 B3 (K2054) done: merged tranche/T35. R47's link now reads setup-page's ROTATION_GUIDE_HREF as a named import. Red 41 cleared: my test looked for an element with the guide's id, but setup-page shows the guide as section #s-rotate opened at that address. The test now checks the link, the section and the script's address. instance-setup 108 of 108; format, architecture and ownership 0 failures; coverage 48 of 48. Record: 'Completion of B3'.
+
+## J4 · COMPLETE
+
+B4 (K2065) done: merged tranche/T35. worker-reports.test.mjs sends its token as Authorization: Bearer (admission R20) and asserts no CREDENTIAL_IN_ADDRESS deprecation. Red 44 cleared. instance-setup 108 of 108; format, architecture and ownership 0 failures; coverage 48 of 48. Record: 'Completion of B4'.
