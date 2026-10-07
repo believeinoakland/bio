@@ -22,3 +22,7 @@
 - `ownership.mjs runtime-limits tranche/T35`: 3 files; 0 failures.
 
 Size (session_01ENYzMG4jn6hUTZ6bBR8iNB): test runs 3, module lines 281
+
+## J1 · REPORT
+
+Stale generated artifacts (§14), not written by me: tokens.mjs's R13 detail string changed, so the plane bundle (bio-plane/dist and release/bio-plane.bundled.mjs), newgroup/src/release.mjs and agent-worker's bundle carry the old text until L1's regeneration. No caller pins the detail text. Also: the sweep row's target 'Your group's Civicsmith holds no Claude account' contradicts R13 since K1755 (the group's API key may be held); I kept the name and followed R13: 'binds no Claude account to its own settings'. Details in my record.
