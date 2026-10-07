@@ -41,7 +41,7 @@ export function appetiteOf(value) {
 /** R12, R19: the one refusal of an appetite that is present and not a positive finite number. It has no catalogue
  *  row, so it carries its requirement as its check and its words as its translation. */
 export function badAppetite(host = null) {
-  const detail = "appetite_per_min must be a positive number, or omit it to reset to the instance default";
+  const detail = "appetite_per_min must be a positive number, or omit it to reset to your group's default";
   return { ok: false, configured: false, reason: "BAD_APPETITE", code: "BAD_APPETITE", check: "host-governor.R12",
            translation: detail, detail, ...(host ? { host } : {}) };
 }
