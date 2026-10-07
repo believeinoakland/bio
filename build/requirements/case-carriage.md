@@ -61,6 +61,7 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
 
 ### Uses
 
+- `test-support`: `make-zip.mjs` (tests only; R8; K2002).
 - `record-grammar`: `createSha256`; `canonicalJson` (T35, R8).
 - `record-core`: `readFile` (R13), the `bundles` read contract (R37), `declarePurge` (R21).
 - `membership`, `promotion`: only to construct `extraction`, `sources` and `accepted-work` through their factories.

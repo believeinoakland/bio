@@ -281,3 +281,22 @@ test("R36: an off-the-record capture's attesting member whose level moved betwee
   assert.deepEqual(s.w.levelMoves, [{ capture: CA, from: "project", to: "cover", case: CASE, edition: 2, at: second.ratified_at }]);
   assert.ok(s.w.levelMoves.every((m) => !("observation" in m)), "never an observation for a capture");
 });
+
+/* T35-57 (N597; K1643): the attribution reads and the flags' discharge are case-tensions' (its R2, R5), read directly,
+   so publication may drop its delegates (its R61): here each delegate throws, and nothing this module does reaches one. */
+test("R2, R3, R7, R18: the attribution facts, the testimony and attribution reads and the discharge of a case's flags are read from case-tensions, never through publication", async () => {
+  const { w, commit, text } = setup();
+  for (const k of ["observationsNamingAuthor", "attributionStatedFor", "attributionFacts", "dischargeCaseFlags",
+                   "attributionInForce", "caseRelation"])
+    w.publication[k] = () => { throw new Error(`publication.${k} was reached`); };
+  const pf = w.r.caseRatifyPreflight({ text, signer: "alice", viewer: V("alice") });
+  assert.equal(pf.refusals.some((r) => /ATTRIBUTION|TESTIMONY/.test(r.reason)), false, JSON.stringify(pf.refusals));
+  assert.equal(w.r.caseTestimony({ caseId: CASE, edition: 1 }).refusal, null);
+  const r = await commit();
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.deepEqual(w.calls.filter((x) => x[0] === "dischargeCaseFlags").map((x) => x.slice(1, 4)), [[CASE, 1, "alice"]]);
+  const f = w.r.gateFacts(Q1, V("alice"));
+  assert.deepEqual([f.ok, f.testimonyLegacy, f.attributionStated], [true, [], false]);
+  for (const k of ["observationsNamingAuthor", "attributionStatedFor", "attributionFacts"])
+    assert.ok(w.calls.some((x) => x[0] === k), `case-tensions' ${k} was asked`);
+});
