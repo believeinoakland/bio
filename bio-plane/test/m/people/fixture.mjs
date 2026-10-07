@@ -58,6 +58,19 @@ export function world({ profiles = null, deps: over = {}, entitiesOver = null } 
       if (fenced) st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, w.project(), ps.bundleId);
       return { captureSha: ps.capSha, bundle: ps.bundleId };
     },
+    /** An open inquiry (a question, record-core R37's `object_type: inquiry`) through promotion; `fenced` files it in
+     *  the fenced project. Its bundle id. */
+    question({ fenced = false } = {}) {
+      const id = `INQ-2026-${String(++docs).padStart(4, "0")}`;
+      const md = ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`, "current_state: open",
+        "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`, "surfaced_by: human",
+        "references: []", "state_history: []", "---", "", "## Question", "", `Who held the post in ${id}?`, "", "## Session Log", ""].join("\n");
+      const r = dw.promotion.promote({ bundleId: id, base: null, snapKey: `q${docs}`, author: ANN, files: [{ path: "bundle.md", text: md }],
+                                       meta: { object_type: "inquiry" } });
+      if (!r.ok) fail("question", r);
+      if (fenced) st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, w.project(), id);
+      return id;
+    },
     person(label, aliases = []) {
       const r = entities.createEntity({ kind: "person", label, aliases, note: "a person the test registers", declaredBy: ANN });
       if (!r.ok) fail("person", r);
