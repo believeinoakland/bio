@@ -33,6 +33,9 @@ export const FIND_TERM_MAX = 200;
 export const FIND_EVENT_TYPES = Object.freeze(["meeting_minutes", "meeting_agenda"]);
 /* R74's `people`: the kinds of registered entity a name is found for (entities' closed kinds). */
 export const FIND_PEOPLE_KINDS = Object.freeze(["person", "office"]);
+/* R74's `people` (K1968): the followed entities asked of `entities.namingDocuments` per call, in entity-id order, each
+   one lookup; past it the kind is `truncated`, saying why, and never "Nothing here". */
+export const FIND_PEOPLE_MAX = 200;
 /* The one origin every match carries ("Found by search", DEC-164 (4)). */
 export const FIND_ORIGIN = "search";
 
@@ -231,7 +234,8 @@ export class Finder {
       const items = acc.items.slice(0, limit);
       /* DEC-98: "Nothing here" only when every capture of the scope was read for this kind and none matched. */
       const nothing = whole && items.length === 0 && acc.not_read.length === 0 && !truncated;
-      return { kind, items, count: items.length, truncated, nothing, ...(nothing ? { says: "Nothing here" } : {}),
+      return { kind, items, count: items.length, truncated, ...(acc.why ? { truncated_why: acc.why } : {}),
+               nothing, ...(nothing ? { says: "Nothing here" } : {}),
                not_read: acc.not_read };
     });
   }
@@ -351,7 +355,12 @@ export class Finder {
     for (const c of captures) if (!data.get(c.capture_sha).reading) skip(c, "not extracted: no reading of this capture is held");
     const entities = this.r.entitiesFor();
     const followed = this.r.rowsOf(`SELECT entity_id, kind, label FROM entities WHERE kind IN (${FIND_PEOPLE_KINDS.map(() => "?").join(",")})
-                                     ORDER BY entity_id`, ...FIND_PEOPLE_KINDS);
+                                     ORDER BY entity_id LIMIT ?`, ...FIND_PEOPLE_KINDS, FIND_PEOPLE_MAX + 1);
+    if (followed.length > FIND_PEOPLE_MAX) {
+      followed.length = FIND_PEOPLE_MAX;
+      acc.truncated = true;
+      acc.why = `only the first ${FIND_PEOPLE_MAX} people and offices the group follows were looked for, in id order`;
+    }
     const found = [];
     for (const ent of followed) {
       const ans = entities ? entities.namingDocuments({ entityId: ent.entity_id, limit: 500, viewer }) : null;

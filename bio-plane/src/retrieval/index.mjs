@@ -44,7 +44,7 @@ export { meaningLevels } from "./levels.mjs";
 export { SELECTION_ID_CHUNK, PROJECTION_TABLE, PROJECTION_RELATION } from "./schema.mjs";
 export { FIELD_VIEWS, FIELD_VIEW_PREFIX, TERMS_TABLE, TERM_FIELDS } from "./fields.mjs";
 export { FIND_KINDS, FIND_MATCHERS, FIND_CAPTURES_PER_CALL, FIND_IDS_MAX, FIND_ITEMS_DEFAULT, FIND_ITEMS_MAX,
-         FIND_WORDS_MAX, FIND_TERM_MAX, FIND_EVENT_TYPES, FIND_PEOPLE_KINDS, FIND_ORIGIN, matchMoney, matchDates,
+         FIND_WORDS_MAX, FIND_TERM_MAX, FIND_EVENT_TYPES, FIND_PEOPLE_KINDS, FIND_PEOPLE_MAX, FIND_ORIGIN, matchMoney, matchDates,
          matchRequirements, cutWords } from "./findin.mjs";
 /* R33, R71: the names of the tables this module declares. */
 export const RETRIEVAL_TABLES = Object.freeze([...RETRIEVAL_PURGE.map((t) => t.name), TERMS_TABLE]);
