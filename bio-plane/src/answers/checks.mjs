@@ -23,11 +23,11 @@ export const ANSWERS_CHECKS = Object.freeze({
     "This sentence said something is missing without saying where the record looked, or in words other than the "
     + "record's own, so it is not shown."),
   RULE_SERVICE_UNKNOWN: row(6, "rules.mjs ruleAnswer", "is-rule-service",
-    "No rule service of that name is held in this copy. Nothing was read."),
+    "No rule service of that name is held in your group's Civicsmith. Nothing was read."),
   RULE_SERVICE_EXISTS: row(7, "rules.mjs registerRuleService", "is-rule-service-new",
     "A rule service of that name is already held; the first one stays. Nothing was changed."),
   RULE_SERVICES_OFF: row(8, "rules.mjs ruleAnswer", "is-rule-services-on",
-    "The record's rule services are switched off in this copy until the assistant's measured bar is met. Nothing "
+    "The record's rule services are switched off in your group's Civicsmith until the assistant's measured bar is met. Nothing "
     + "was read."),
   MACHINE_CANNOT_AUTHOR: row(9, "standing.mjs standingQuestionSet", "is-standing-member",
     "A standing question is kept only by a member's own act; the machine cannot set one. Nothing was written."),
@@ -37,6 +37,9 @@ export const ANSWERS_CHECKS = Object.freeze({
     "A standing question needs an end date after today, so it does not run for ever. Nothing was written."),
   NO_SUCH_STANDING_QUESTION: row(12, "standing.mjs", "is-standing-yours",
     "No standing question of yours answers to that. Nothing was changed."),
+  STANDING_NEEDS_SEARCH: row(13, "standing.mjs standingQuestionSet", "is-standing-search",
+    "A standing question keeps one search: a saved search, or a find in a document, a set or a project. Give one of "
+    + "these, not both. Nothing was written."),
 });
 
 /** The row's fields beside a refusal: `{ok: false, reason, code, check, translation, detail, ...extra}`. */
