@@ -1,6 +1,6 @@
 /* action-clocks — the count of a deadline from a profile rule, the statement of the calendar it read, and the reader of
  * that calendar's confirmations (requirements: `build/requirements/action-clocks.md`, R2, R10, R11, R12; K986, K998,
- * K1444, K1445, K1519). Pure: it reads only its arguments and `jurisdictions`' held profiles.
+ * K1444, K1445, K1519, K1847). Pure: it reads only its arguments and `jurisdictions`' held profiles.
  *
  * The count itself is `civil-time`'s (`evaluateRule`, its R9–R17, R25: the direction, calendar or business days, the
  * weekend from the profile, the closure list a rule names, the roll, the extension, hours and the close of business);
@@ -8,7 +8,8 @@
  * Moved here from `index.mjs` at T33-74, `computeDeadline` delegating since (C-2, C-4). T34-50: a named closure list's
  * entry is a local fact at its own path (N562; `local-facts` R6), read and stated as any holiday year is; and civil-time
  * counts on a correction that governs whatever its status now (N603, its R16), so the count hands it every answer as
- * read and no longer rewrites the view itself. */
+ * read and no longer rewrites the view itself. T35-62: R11's paths include the entries of each named closure list a
+ * live deadline counts or rolls on (`closureListsRead`; N689). */
 
 import { evaluateRule, localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
@@ -77,15 +78,17 @@ export function localDayOf(ms, zone) {
 
 /* R11 (jurisdictions R33, R43, R47): the office-calendar entries a count for `offices` (`actionOffices`: none or one)
    reads for `year`: the year's entry for all offices and those naming the office; a closure-list entry is never one
-   (K1519). An office covered by neither leaves the year undetermined (`uncovered`), as does a year with no entry. */
-export function yearEntries(view, offices, year) {
-  const hs = (view && Array.isArray(view.holidays) ? view.holidays : []).filter((h) => h && !isListEntry(h) && Number(h.year) === year);
+   (K1519). With `list`, the same for the entries of that named closure list instead (N689), and no office-calendar
+   entry. An office covered by neither leaves the year undetermined (`uncovered`), as does a year with no entry. */
+export function yearEntries(view, offices, year, list = null) {
+  const named = (h) => (typeof list === "string" && list ? isListEntry(h) && h.list === list : !isListEntry(h));
+  const hs = (view && Array.isArray(view.holidays) ? view.holidays : []).filter((h) => h && named(h) && Number(h.year) === year);
   const keys = new Set((offices || []).map(officeKey).filter(Boolean));
   const all = hs.filter((h) => !Array.isArray(h.offices));
-  const named = hs.filter((h) => Array.isArray(h.offices) && h.offices.some((o) => keys.has(officeKey(o))));
+  const theirs = hs.filter((h) => Array.isArray(h.offices) && h.offices.some((o) => keys.has(officeKey(o))));
   const uncovered = all.length ? [] : (offices || [])
-    .filter((o) => !named.some((h) => h.offices.some((x) => officeKey(x) === officeKey(o))));
-  return { entries: [...all, ...named], uncovered };
+    .filter((o) => !theirs.some((h) => h.offices.some((x) => officeKey(x) === officeKey(o))));
+  return { entries: [...all, ...theirs], uncovered };
 }
 /* R10, R11, R12: the `local-facts` fact of one holiday entry (a closure-list entry's naming its `list`, local-facts R6),
    and those of the offices' `hours` the view holds. */
@@ -107,11 +110,25 @@ export function officeHours(view, offices) {
   return out;
 }
 
+/* R2, R11: whether a rule's count reads closed days at all: it skips them (a business count, business hours, or an
+   extension counted in business days) or rolls past them. */
+const readsClosed = (d) => d.count === "business" || d.units === "business_hours" || d.roll === true
+  || (isObj(d.extension) && d.extension.count === "business");
+
 /** R11: whether a rule's count reads the office calendar: a count that skips or rolls past closed days (a business
- *  count, business hours, or a roll) and names no closure list; a rule counted on a list reads no local fact. */
+ *  count, business hours, an extension in business days, or a roll) and names no closure list. */
 export function readsOfficeCalendar(d) {
-  if (!d || typeof d !== "object" || (typeof d.closures === "string" && d.closures)) return false;
-  return d.count === "business" || d.units === "business_hours" || d.roll === true;
+  if (!isObj(d) || (typeof d.closures === "string" && d.closures)) return false;
+  return readsClosed(d);
+}
+
+/** R11 (N689; jurisdictions R26, R47): the named closure lists a rule's count reads, each once: its `closures` and its
+ *  `observed.closures`, when the count counts on the list or only rolls on it (as `readsOfficeCalendar` asks of the
+ *  office calendar); none for a rule that reads no closed day. */
+export function closureListsRead(d) {
+  if (!isObj(d) || !readsClosed(d)) return [];
+  const names = [d.closures, isObj(d.observed) ? d.observed.closures : null];
+  return [...new Set(names.filter((n) => typeof n === "string" && n))];
 }
 
 /* R10: local-facts' answer for one path (its R2), as the count reads it: its status; the value that governs here
@@ -252,8 +269,7 @@ export function computeDeadline(d, fm, view, { factOf = null } = {}) {
     const office = civilOffice(actionOffices(fm, v)[0]);
     const zone = actionZone(fm, v) || "UTC";
     const anchor = { value: start, precision: "day", zone };
-    const reads = rule.count === "business" || rule.units === "business_hours" || rule.roll === true
-      || (isObj(rule.extension) && rule.extension.count === "business");
+    const reads = readsClosed(rule);
     const base = { ...rule, observed: undefined };
     const cache = new Map();
     const rec = recorder(factOf, cache);

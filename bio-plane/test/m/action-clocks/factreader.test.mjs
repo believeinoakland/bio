@@ -36,7 +36,7 @@ function setUp() {
   return { w, act, propose };
 }
 
-test("R12 factReader answers each holiday entry as R10's count reads it, over the real local-facts: unconfirmed, confirmed, corrected (its value, says, member and day) and disputed; it writes nothing", () => {
+test("R12 factReader answers each holiday entry as R10's count reads it, over the real local-facts: unconfirmed, confirmed, corrected (its value, says, member and day) and disputed; it writes nothing; a disputed year is \"disputed in your group's Civicsmith\" (DEC-149)", () => {
   const { w, act } = setUp();
   const read = clocks.factReader(w.localFacts, M);
   assert.equal(typeof read, "function");
@@ -61,7 +61,7 @@ test("R12 factReader answers each holiday entry as R10's count reads it, over th
   assert.deepEqual([s.path, s.status, s.by, s.at, s.corrected], [pathOf(ALL26), "disputed", BOB, d.at.slice(0, 10), false]);
   /* each as the count reads it: the corrected Clerk's closure is not counted, the disputed year leaves it undetermined. */
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: read });
-  assert.equal(n.date, null); assert.match(n.why, /disputed on this instance by member:bob/);
+  assert.equal(n.date, null); assert.match(n.why, /disputed in your group's Civicsmith by member:bob/);
   /* the reads wrote nothing beyond the members' own acts. */
   const acts = counts(w);
   read(CLERK26); read(ALL26); clocks.computeDeadline(R5, FM, TEST, { factOf: read });
@@ -77,7 +77,7 @@ test("R12 a lapsed confirmation is unconfirmed, naming the day it was made; the 
   assert.deepEqual([r.status, r.last_at], ["unconfirmed", c.at.slice(0, 10)]);
 });
 
-test("R12 negative controls: an entry naming no local fact, a factStatus that throws or refuses, or an answer local-facts cannot give is absent with why; nothing is thrown", () => {
+test("R12 negative controls: an entry naming no local fact, a factStatus that throws or refuses, or an answer local-facts cannot give is absent with why; nothing is thrown; the count says it \"cannot be read in your group's Civicsmith\" (DEC-149)", () => {
   const { w } = setUp();
   const read = clocks.factReader(w.localFacts, M);
   /* an entry naming no local fact (a closure list's name local-facts cannot name among them). */
@@ -109,7 +109,7 @@ test("R12 negative controls: an entry naming no local fact, a factStatus that th
   assert.deepEqual([trap.status, trap.why], ["absent", "local facts answered in a shape the count cannot read"]);
   /* each such answer makes a business count undetermined, with why, and nothing is thrown. */
   const n = clocks.computeDeadline(R5, FM, TEST, { factOf: clocks.factReader({ factStatus: () => { throw new Error("storage gone"); } }, M) });
-  assert.equal(n.date, null); assert.match(n.why, /cannot be read on this instance: local facts' read failed: storage gone/);
+  assert.equal(n.date, null); assert.match(n.why, /cannot be read in your group's Civicsmith: local facts' read failed: storage gone/);
   /* the viewer is passed through: local-facts reads for the viewer named. */
   const seen = [];
   clocks.factReader({ factStatus: (a) => { seen.push(a); return { ok: true, status: "confirmed" }; } }, BOB)(CLERK26);
