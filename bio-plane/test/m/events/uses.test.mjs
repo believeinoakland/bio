@@ -74,7 +74,7 @@ test("R43 recordDiscretion refuses in order KIND_NOT_DISCRETION, MEMBER_ACT_ONLY
   for (const value of OUTCOMES) assert.equal(w.ev.recordDiscretion(base({ outcome: { value, extent: { captureSha: s, extent: page(0) } } })).ok, true, value);
 });
 
-test("R43 createEvent of a use's kind is refused USE_NEEDS_ITS_ACT: a use is held only with its facet; USE_KINDS are discretion, waiver, assessment", () => {
+test("R6 R43 createEvent of a use's kind is refused USE_NEEDS_ITS_ACT (after UNKNOWN_EVENT_KIND): a use is held only with its facet; USE_KINDS are discretion, waiver, assessment", () => {
   const { w, s } = setup();
   assert.deepEqual(USE_KINDS, ["discretion", "waiver", "assessment"]);
   for (const kind of USE_KINDS)
