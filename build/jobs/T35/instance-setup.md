@@ -55,3 +55,7 @@ T35-69 applied (R64 isLocale, R66 op=adminrecoverystep, R47 guide sentence linke
 ## J3 · COMPLETE
 
 B3 (K2054) done: merged tranche/T35. R47's link now reads setup-page's ROTATION_GUIDE_HREF as a named import. Red 41 cleared: my test looked for an element with the guide's id, but setup-page shows the guide as section #s-rotate opened at that address. The test now checks the link, the section and the script's address. instance-setup 108 of 108; format, architecture and ownership 0 failures; coverage 48 of 48. Record: 'Completion of B3'.
+
+## J4 · COMPLETE
+
+B4 (K2065) done: merged tranche/T35. worker-reports.test.mjs sends its token as Authorization: Bearer (admission R20) and asserts no CREDENTIAL_IN_ADDRESS deprecation. Red 44 cleared. instance-setup 108 of 108; format, architecture and ownership 0 failures; coverage 48 of 48. Record: 'Completion of B4'.
