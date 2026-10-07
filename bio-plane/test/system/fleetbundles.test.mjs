@@ -112,8 +112,10 @@ const members = discoverMembers(REPO_ROOT);
 console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them is GUARDED ---");
 /* T34-6 (BUNDLER #8; N578, bundler R24): `agent-runner` is the fleet's first CONTAINER member — its deliverable is an
    image named by digest, not a Worker bundle — so it is discovered and listed here, and not bundle-guarded below. */
+/* T36-2 (BUNDLER #10; rev. 2 §2 R10): `file-scanner`, the fleet's second container member and its first with two
+   classes, is named here ahead of its own job's merge (T36-5): red 9 of T36's opening, accepted by name, until it lands. */
 t("members discovered by their own marker file, never a list kept here",
-  members.map((m) => m.name), ["agent-runner", "agent-worker", "ocr-worker", "pdf-worker", "sheet-worker"]);
+  members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
 t("agent-runner is listed as a container member, with its image (R24)",
   members.filter(isContainer).map((m) => [m.name, m.kind, m.image.repository]),
   [["agent-runner", "container", "docker.io/civicos/agent-runner"]]);
@@ -221,7 +223,10 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      added the member's own `ask.mjs` and `ops.mjs`; observation-log's `checks.mjs` brings record-grammar's `ids.mjs`
      and `actors.mjs` (T33-30). `src/harness.mjs`, `src/model.mjs` and `src/subsession.mjs` left: the first and last
      are re-export files the build no longer reaches (N586), the second moved to agent-model. */
-  t("agent-worker's 20 inputs are all recorded — its four own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
+  /* RE-PINNED 2026-10-07 (BUNDLER #10, T36-2; N733, T35's red 32): 20 -> 22 inputs, from the committed manifest this
+     suite reads (`agent-worker/dist/agent-worker.bundle.json`; its staleness arm green). Two arrive and none leave, the
+     member's own `src/draft.mjs` and `src/reads.mjs`, which its `index.mjs` now imports (agent-worker's T35 job). */
+  t("agent-worker's 22 inputs are all recorded — its six own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
@@ -231,7 +236,8 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/record-grammar/actors.mjs", "../bio-plane/src/record-grammar/ids.mjs",
      "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
-     "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/index.mjs", "src/ops.mjs",
+     "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
+     "src/reads.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);

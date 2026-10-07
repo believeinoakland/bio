@@ -15,7 +15,8 @@ import { join, relative } from "node:path";
 import {
   REPO_ROOT, RECIPE, DEFAULT_EXTERNAL, discoverMembers, optionsFor, buildMember, manifestFrom,
   writeMember, verifyStatic, verifyFresh, freshBuildRunnable, unresolvableSpecifiers, sha256,
-  isContainer, isGuarded, containerDescriptor, imageReference,
+  isContainer, isGuarded, containerDescriptor, imageReference, containerClasses, containerParts, classPackages,
+  statementPackages, markerIsContainer,
 } from "../../../scripts/fleet-bundle.mjs";
 import {
   readGitProvenance, stateOf, contentStateOf, classifyDiscovered, reportProvenance, repoPath,
@@ -669,4 +670,123 @@ test("R25: imageReference names the image only by digest, in agent-runner R7's f
   const runner = discoverMembers().find((m) => m.name === "agent-runner");
   const own = imageReference(runner.image);
   assert.ok(own.reference ? /@sha256:[0-9a-f]{64}$/.test(own.reference) : own.missing === "image.digest", JSON.stringify(own));
+});
+
+/* --------------------------------------------- R24, R25, R27: a member with two classes (T36-2) */
+
+const BASE = "sha256:" + "1e".repeat(32), OTHER = "sha256:" + "2e".repeat(32);
+const TWO = () => [
+  { class_name: "FileScanner", max_instances: 4,
+    image: { ...IMAGE, repository: "docker.io/civicos/file-scanner", base: { digest: BASE }, packages: "img/scan.json" } },
+  { class_name: "SafeViewRenderer",
+    image: { ...IMAGE, repository: "docker.io/civicos/safe-view", digest: "sha256:" + "3e".repeat(32), base: { digest: BASE } } },
+];
+
+test("R24: a container member stating its classes as a `containers` list, each with its own image, is a container member, listed with each class's name and image", () => {
+  const root = tmp("r24multi");
+  try {
+    containerFixture(root, "scanner", { noImage: true, extra: { containers: TWO(), bind: [{ member: "x", binding: "B" }] } });
+    containerFixture(root, "half", { noImage: true, extra: { containers: [TWO()[0], { class_name: "NoImage" }] } });
+    const [half, scanner] = discoverMembers(root);
+    assert.equal(isContainer(scanner), true);
+    assert.equal(scanner.image, null, "no one top-level image");
+    assert.deepEqual(scanner.containers, TWO().map((c) => ({ class_name: c.class_name, image: c.image })));
+    assert.equal(isGuarded(scanner), false, "no Worker bundle: listed, not guarded, as any container member");
+    assert.equal(isContainer(half), false, "a class with no image block is not a container member's list");
+    assert.equal(markerIsContainer(scanner.marker), true);
+    assert.equal(markerIsContainer(half.marker), false);
+    assert.equal(markerIsContainer({ kind: "container", image: IMAGE }), true);
+    assert.equal(markerIsContainer({ kind: "worker", image: IMAGE }), false);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("R25: a member with more than one class gets one Container part per class, container/<class>.json, each its own class_name and image, max_instances and bind from the class else the member; one class is container.json as before", () => {
+  const names = ["agent-worker", "plane-x"];
+  const member = (marker) => ({ name: "scanner", dir: "scanner", abs: "/nowhere", bundle: { entry: "src/index.mjs" }, marker });
+  const top = { kind: "container", containers: TWO(), max_instances: 1, bind: [{ member: "plane-x", binding: "FILE_SCANNER" }] };
+  const got = containerParts(member(top), names, { packages: false });
+  assert.deepEqual(got.parts.map((p) => p.path), ["container/FileScanner.json", "container/SafeViewRenderer.json"]);
+  assert.deepEqual(got.parts.map((p) => p.descriptor), [
+    { class_name: "FileScanner", image: `docker.io/civicos/file-scanner@${DIGEST}`, scheduling_policy: "default", max_instances: 4,
+      bind: [{ member: "plane-x", binding: "FILE_SCANNER" }] },
+    { class_name: "SafeViewRenderer", image: `docker.io/civicos/safe-view@sha256:${"3e".repeat(32)}`, scheduling_policy: "default",
+      max_instances: 1, bind: [{ member: "plane-x", binding: "FILE_SCANNER" }] },
+  ], "each class its own image; max_instances from the class where stated, else the member's");
+  for (const p of got.parts) assert.equal(p.bytes.toString("utf8"), JSON.stringify(p.descriptor, null, 2) + "\n");
+  const perClassBind = TWO().map((c, i) => ({ ...c, bind: [{ member: "agent-worker", binding: i ? "RENDER" : "SCAN" }] }));
+  assert.deepEqual(containerParts(member({ ...top, containers: perClassBind }), names, { packages: false }).parts.map((p) => p.descriptor.bind),
+    [[{ member: "agent-worker", binding: "SCAN" }], [{ member: "agent-worker", binding: "RENDER" }]], "a class's own bind wins");
+
+  /* One class, either form: the part is container.json, exactly what containerDescriptor writes. */
+  const one = { kind: "container", image: IMAGE, class_name: "Runner", max_instances: 2, bind: [{ member: "agent-worker", binding: "R" }] };
+  const single = containerParts(member(one), names, { packages: false });
+  assert.deepEqual(single.parts.map((p) => [p.path, p.bytes.toString()]), [["container.json", containerDescriptor(member(one), names).bytes.toString()]]);
+  const listOfOne = { kind: "container", containers: [{ class_name: "Runner", image: IMAGE }], max_instances: 2, bind: one.bind };
+  assert.deepEqual(containerParts(member(listOfOne), names, { packages: false }).parts.map((p) => [p.path, p.bytes.toString()]),
+    single.parts.map((p) => [p.path, p.bytes.toString()]), "a list of one is one class");
+  assert.equal(containerClasses(member(listOfOne)).multi, false);
+  assert.equal(containerClasses(member(top)).multi, true);
+});
+
+test("R25: a class lacking a field is refused naming the class and every field; a duplicated class, both forms at once, or no bundle are refused too", () => {
+  const names = ["plane-x"];
+  const member = (marker, bundle = { entry: "src/index.mjs" }) => ({ name: "scanner", dir: "scanner", abs: "/nowhere", bundle, marker });
+  const base = { kind: "container", max_instances: 1, bind: [{ member: "plane-x", binding: "FILE_SCANNER" }] };
+  const lacks = (containers, extra = {}) => containerParts(member({ ...base, containers, ...extra }), names, { packages: false });
+  const [a, b] = TWO();
+  assert.deepEqual(lacks([a, { ...b, image: { ...b.image, digest: null } }]), { missing: ["image.digest"], class: "SafeViewRenderer" });
+  assert.deepEqual(lacks([{ ...a, max_instances: 0 }, b]), { missing: ["max_instances"], class: "FileScanner" });
+  assert.deepEqual(lacks([a, b], { bind: undefined }), { missing: ["bind"], class: "FileScanner" }, "no bind on the class or the member");
+  assert.deepEqual(lacks([a, { ...b, class_name: "bad-name", image: { ...b.image, schedulingPolicy: "regional" } }]),
+    { missing: ["image.schedulingPolicy", "class_name"], class: "bad-name" }, "every field it lacks");
+  assert.deepEqual(lacks([a, { ...b, class_name: undefined }]), { missing: ["class_name"], class: "(unnamed)" });
+  assert.deepEqual(lacks([a, { ...b, class_name: "FileScanner" }]), { missing: ["class_name"], class: "FileScanner" }, "two classes, one name");
+  assert.match(lacks([a, b], { image: IMAGE }).missing[0], /^image \(a top-level image beside a `containers` list\)$/);
+  assert.deepEqual(containerParts(member({ ...base, containers: TWO() }, null), names), { missing: ["bundle"] });
+});
+
+test("R27: a class naming a package statement reads its packages from it, sorted, under the ecosystem it names, only when its base digest is the marker's; otherwise unread naming the file, the package or the digest", () => {
+  const root = tmp("r27st");
+  try {
+    const dir = join(root, "scanner");
+    mkdirSync(join(dir, "img"), { recursive: true });
+    const st = { ecosystem: "Debian:12", base: { repository: "docker.io/library/debian", digest: BASE },
+      packages: [{ name: "clamav", version: "1.4.3" }, { name: "bzip2", version: "1.0.8" }, { name: "clamav", version: "1.0.0" }] };
+    const file = join(dir, "img/scan.json");
+    const write = (o) => writeFileSync(file, typeof o === "string" ? o : JSON.stringify(o));
+    write(st);
+    const sorted = [{ name: "bzip2", version: "1.0.8" }, { name: "clamav", version: "1.0.0" }, { name: "clamav", version: "1.4.3" }];
+    assert.deepEqual(statementPackages(file, "scanner/img/scan.json", BASE), { ecosystem: "Debian:12", packages: sorted });
+    const m = { name: "scanner", dir: "scanner", abs: dir, bundle: { entry: "src/index.mjs" },
+      marker: { kind: "container", containers: TWO(), max_instances: 1, bind: [{ member: "plane-x", binding: "F" }] } };
+    const [scan, render] = containerClasses(m).classes;
+    assert.deepEqual(classPackages(m, scan), { ecosystem: "Debian:12", packages: sorted });
+    assert.deepEqual(classPackages(m, render), { unread: "scanner/package-lock.json is missing" },
+      "a class naming no statement installs from npm: the member's lockfile");
+    writeFileSync(join(dir, "package-lock.json"), JSON.stringify({ lockfileVersion: 3, packages: { "": {}, "node_modules/x": { version: "1.0.0" } } }));
+    assert.deepEqual(classPackages(m, render), { ecosystem: "npm", packages: [{ name: "x", version: "1.0.0" }] });
+    const parts = containerParts(m, ["plane-x"]);
+    assert.deepEqual(parts.parts.map((p) => p.descriptor.packages), [sorted, [{ name: "x", version: "1.0.0" }]], "each part its own image's list, last");
+
+    const unread = () => statementPackages(file, "scanner/img/scan.json", BASE).unread;
+    const cases = [
+      ["scanner/img/scan.json is missing", () => rmSync(file)],
+      ["scanner/img/scan.json does not parse", () => write("{ torn")],
+      ["scanner/img/scan.json does not parse: it names no ecosystem", () => write({ ...st, ecosystem: undefined })],
+      ["scanner/img/scan.json does not parse: it has no `packages` list", () => write({ ...st, packages: undefined })],
+      ["scanner/img/scan.json names no base image digest", () => write({ ...st, base: { repository: "debian" } })],
+      [`scanner/img/scan.json was taken against the base ${OTHER}, not the base the marker pins (${BASE})`, () => write({ ...st, base: { digest: OTHER } })],
+      ["scanner/img/scan.json names the package bzip2 without a version", () => write({ ...st, packages: [{ name: "bzip2" }] })],
+      ["scanner/img/scan.json names a package with no name", () => write({ ...st, packages: [{ version: "1" }] })],
+    ];
+    for (const [named, arrange] of cases) {
+      arrange();
+      const u = unread();
+      assert.ok(typeof u === "string" && u.startsWith(named), `${named}: ${u}`);
+      write(st);
+    }
+    assert.match(statementPackages(file, "scanner/img/scan.json", null).unread, /not the base the marker pins \(none\)/, "a marker pinning no base");
+    const away = { ...scan, image: { ...scan.image, packages: "../elsewhere.json" } };
+    assert.match(classPackages(m, away).unread, /names no package statement for FileScanner as a member-relative path/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
