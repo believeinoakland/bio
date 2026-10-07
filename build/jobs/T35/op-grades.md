@@ -1,6 +1,6 @@
 # op-grades (T35)
 
-**Status** · session_013gccXT7dmwA6HqYDk4k5uR · depth 2 · COMPLETE · handled B3
+**Status** · session_013gccXT7dmwA6HqYDk4k5uR · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -104,3 +104,25 @@ For you:
 3. R22's wording names only op-declarations R30's ops. You may want to word these 25 into it.
 
 Size: test runs 10, module lines 2079.
+
+## Completion (CHANGE B4, K2049)
+
+**Applied.** First merged `tranche/T35` into this branch; it carries R22's new wording, which names the 25 ops. Then:
+- `standardrelease` joins `IRREVERSIBLE_WEIGHT` (index.mjs). Its rung stays `reasoned` (R3).
+- `standardrelease` gains a `CONSEQUENCE_STATEMENTS` entry (t35.mjs): `friction: "dialog"`, as DEC-143 rules for an act that is never undone. Its statement says only what standards R37 enforces: every member sees the policy from then on, it is never held back at its source's sight again, and the release is recorded with who, when and why.
+- The R21 and R4 tests hold both.
+
+**Found.** R21 still reads that `IRREVERSIBLE_WEIGHT` holds `personexpunge` "and no other op", and that only the six, `actionholdrelease` and `personexpunge` carry a consequence statement (R4). K2049 adds `standardrelease` to both, so R21's wording (and R4's list) needs BOB's update to match.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/op-grades/`: tests 26, pass 26, fail 0.
+- format: 0 failures.
+- architecture: 7 product files, 0 failures.
+- coverage: 22 of 22.
+- ownership: run after the commit.
+
+Size (session_013gccXT7dmwA6HqYDk4k5uR): test runs 12, module lines 2089
+
+## J4 · COMPLETE
+
+B4 (K2049) is done and pushed after merging tranche/T35. standardrelease is now in IRREVERSIBLE_WEIGHT; its rung stays reasoned. It also gains a CONSEQUENCE_STATEMENTS dialog stating what standards R37 enforces: every member sees the policy from then on, it is never undone, and the release is recorded with who, when and why. Tests: 26 of 26 pass. Checks: format, architecture and ownership show 0 failures; coverage is 22 of 22. For you: R21 still says IRREVERSIBLE_WEIGHT holds personexpunge 'and no other op', and R4 lists which ops carry a statement; both need wording for standardrelease. Size: test runs 12, module lines 2089.

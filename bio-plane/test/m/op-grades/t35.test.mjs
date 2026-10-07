@@ -28,14 +28,21 @@ test("R21: personexpunge keeps its `reasoned` rung and its NON_ACTS sentence, st
   assert.doesNotMatch(s.replace("<date>", "").replace("<member>", ""), /<[a-z]+>/, "only the two fields to fill");
 });
 
-test("R21: IRREVERSIBLE_WEIGHT, frozen, holds every op RUNGS grades `irreversible` (publish, publishat, publishatmove) and "
-   + "personexpunge, and no other op; it changes no rung", () => {
+test("R21 R22 (K2049): IRREVERSIBLE_WEIGHT, frozen, holds every op RUNGS grades `irreversible` (publish, publishat, "
+   + "publishatmove), personexpunge and standardrelease, and no other op; it changes no rung", () => {
   assert.ok(Object.isFrozen(IRREVERSIBLE_WEIGHT));
   const irreversible = Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible" && !Object.hasOwn(OP_ALIASES, op));
   assert.deepEqual(irreversible.sort(), ["publish", "publishat", "publishatmove"]);
-  assert.deepEqual([...IRREVERSIBLE_WEIGHT].sort(), [...irreversible, "personexpunge"].sort());
+  assert.deepEqual([...IRREVERSIBLE_WEIGHT].sort(), [...irreversible, "personexpunge", "standardrelease"].sort());
   assert.equal(new Set(IRREVERSIBLE_WEIGHT).size, IRREVERSIBLE_WEIGHT.length);
   assert.equal(RUNGS.personexpunge, "reasoned", "the weight is not a rung");
+  /* K2049: standardrelease, never undone (standards R37), carries the weight and DEC-143's dialog; its rung stays */
+  assert.equal(RUNGS.standardrelease, "reasoned");
+  const r = CONSEQUENCE_STATEMENTS.standardrelease;
+  assert.ok(Object.isFrozen(r));
+  assert.equal(r.friction, "dialog");
+  for (const part of [/every member of your group/, /cannot be undone/, /your name, the time and your reason/])
+    assert.match(r.statement, part);
   assert.equal(JSON.stringify(IRREVERSIBLE_WEIGHT), JSON.stringify([...IRREVERSIBLE_WEIGHT]), "served as a list");
 });
 

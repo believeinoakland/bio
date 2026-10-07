@@ -132,4 +132,11 @@ export const T35_CONSEQUENCE_STATEMENTS = Object.freeze({
       + "every export. It cannot be undone, by you or by anyone. A marker stays in its place: \"Removed where the law "
       + "requires, <date>, by <member>\". Published cases change only through the docket. Confirm with a reason naming "
       + "the law or order that requires it: \"Remove it for good, with this reason\"." }),
+  /* K2049 (DEC-143 applied): releasing a policy held at its source's sight is never undone (standards R37), so it carries
+     the Irreversible weight and DEC-143's full dialog stating that it is permanent; its rung stays `reasoned`. The
+     statement says what the owner enforces: the group's sight from then on, recorded with who, when and why. */
+  standardrelease: Object.freeze({ friction: "dialog",
+    statement: "Releasing this policy lets every member of your group see it, and every read of it, from now on. It "
+      + "cannot be undone: once released, it is never held back at its source's sight again. The release is recorded "
+      + "with your name, the time and your reason." }),
 });

@@ -67,4 +67,5 @@
 - Merge in `modules.json` order, upstream first; a provider merges early for its users; a job that uses no unmerged same-layer job may merge as soon as it is complete. promotion's stamp merges last in its layer; rows changed in later layers wait, accepted red by name, for the next tranche's stamp. (K425, K527, K1680, K1965, K1750)
 - An entry found mid-tranche for a module whose job has not started joins that job's START when small; `next.md` holds only open entries, applied ones moving to `archive/next-applied.md`. (K279, K411)
 - The handoff is `build/handoff.md`, replaced whole each time (TRANSITION.md is archived). (K2026)
+- Reading-set budgets: BOB's takeover set at most 250 KB; a module job's set at most 300 KB, measured by `build/plan/reading-sets.py` at each START, a set over it given a task digest by the job's workers (K2032). (K2053)
 - Everything a session must read is read whole, never scanned. A body too large is trimmed, or workers told the task read it in full and write the summary most useful to that task, citing its sections; a summary serves only its task, and the source stays binding. (K2028, K2032)
