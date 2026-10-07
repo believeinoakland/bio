@@ -34,6 +34,8 @@ const indentOf = (l) => l.text.length - l.text.trimStart().length;
 const FURNITURE = /^\s*(?:Page\s+\d+\s+of\s+\d+|\d{1,3})\s*$/i;
 /* A line set in capitals. */
 const caps = (t) => { const letters = t.replace(/[^A-Za-z]/g, ""); return letters.length >= 4 && t.replace(/[^A-Z]/g, "").length / letters.length >= 0.85; };
+/* A line opening with an outline marker. */
+const OUTLINE_LINE = /^\s*(?:[IVX]{1,5}|[A-Z]|\d{1,2}|[a-z])[.)]\s+\S/;
 /* A table of contents' line: dot leaders, or a heading ending in its page number. */
 const TOC_LINE = /\.{4,}|^[^a-z]*[A-Z][^a-z]*\s\d{1,3}\s*$/;
 
@@ -160,8 +162,10 @@ const APPLIES = /\b(?:this\s+(?:order|policy|instruction|directive|special\s+ord
 function sentenceAround(raw, at, endAt) {
   let start = at;
   while (start > 0 && !/[.;:]\s/.test(raw.slice(start - 2, start)) && raw[start - 1] !== "\n" ) start--;
-  /* Back over a line break inside a sentence: the previous line did not end it. */
-  while (start > 0 && raw[start - 1] === "\n" && !/[.;:]\s*$/.test(raw.slice(raw.lastIndexOf("\n", start - 2) + 1, start - 1))) {
+  /* Back over a line break inside a sentence: the previous line did not end it, and is not a heading. */
+  const prevLine = (at) => raw.slice(raw.lastIndexOf("\n", at - 2) + 1, at - 1);
+  while (start > 0 && raw[start - 1] === "\n" && !/[.;:]\s*$/.test(prevLine(start))
+         && !OUTLINE_LINE.test(prevLine(start)) && !caps(prevLine(start))) {
     start = raw.lastIndexOf("\n", start - 2) + 1;
     const stop = raw.slice(start, at).search(/[.;:]\s(?=\S)/);
     if (stop >= 0) { start += stop + 2; break; }
@@ -231,7 +235,7 @@ export function readResponsibilities(raw, sections, from, locate) {
       const n = m ? Number(m[2]) : null;
       /* A step a little past the one expected is still the table's next (a page's footer printed into a line can
          hide a step's number, whose text then stays with the step before). */
-      if (m && ((n >= expect && n <= expect + 2 && n > 1 && cur) || (n === 1 && (m[1].trim() || pending.length)))) {
+      if (m && ((n >= expect && n <= expect + 2 && n > 1 && cur) || (n === 1 && (m[1].trim() || pending.length || cur)))) {
         if (n === 1) {
           const inline = m[1].trim();
           /* The party's name: the short lines just above, after the last that ends a sentence; the lines before
@@ -398,7 +402,7 @@ export default {
           events.push(event("instrument_changed", { key: `header.${f}`, was, now,
             why: `this policy's ${f.replace("_", " ")} as its header states it is not what it was at this address` }));
       }
-    } else headerWhy = "no header was read from " + (ha || hb ? "one of the readings" : "either reading") + ", so nothing is said about the header";
+    } else headerWhy = (ha || hb ? "only one of the readings" : "neither reading") + " gave a header, so nothing is said about the header";
     const sa = Array.isArray(a.sections) ? a.sections : [], sb = Array.isArray(b.sections) ? b.sections : [];
     let sectionsWhy = null;
     if (sa.length && sb.length) {
@@ -422,7 +426,7 @@ export default {
       }
       for (const [k, now] of mb) if (!ma.has(k)) events.push(event("instrument_changed", { key: "section", section: now.path,
         was: null, now: now.number, why: `section ${now.number} is read now and was not read before` }));
-    } else sectionsWhy = "no section was read from " + (sa.length || sb.length ? "one of the readings" : "either reading")
+    } else sectionsWhy = (sa.length || sb.length ? "only one of the readings" : "neither reading") + " gave sections"
       + ", so nothing is said about sections: " + (b.sections_why || a.sections_why || "neither reading carries sections");
     if (headerWhy && sectionsWhy)
       return { meaningful: null, significance: null, events: [], confirmed: null, header_why: headerWhy, sections_why: sectionsWhy,

@@ -96,7 +96,7 @@ export function headerLabels(ctx) {
   const out = [];
   for (const e of vocabulary(ctx, "policy_headers")) {
     if (!HEADER_FIELDS.includes(e.field)) continue;
-    const re = vocabRegex(e.pattern, (src) => `(?<![A-Za-z0-9(])(?:${src})(?![A-Za-z0-9])[ \\t]*:?`, "g");
+    const re = vocabRegex(e.pattern, (src) => `(?<![A-Za-z0-9(])(?:${src})(?![A-Za-z0-9])[ \\t]*:?`, "gm");
     if (re) out.push({ field: e.field, re });
   }
   return out;
@@ -131,7 +131,9 @@ const caps = (t) => { const letters = t.replace(/[^A-Za-z]/g, ""); return letter
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 const MON = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sept?(?:ember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
 const DATE = new RegExp(`(?<![A-Za-z0-9])(?:(?<d1>\\d{1,2})[ \\t]+(?<m1>${MON})\\.?[ \\t]+(?<y1>\\d{4}|\\d{2})|(?<m2>${MON})\\.?[ \\t]+(?<d2>\\d{1,2}),?[ \\t]+(?<y2>\\d{4})|(?<m3>\\d{1,2})/(?<d3>\\d{1,2})/(?<y3>\\d{4}|\\d{2}))(?![A-Za-z0-9])`, "gi");
-const PLACEHOLDER = /(?<![A-Za-z0-9])(?:XX|\d{1,2})[ \t]+(?:XX|MMM|[A-Z]{3})[ \t]+\d{2,4}(?![A-Za-z0-9])/;
+/* A date with blanks left in it ("XX XX 21", "XX MMM 20", "XX March 26"): a placeholder, kept as written. */
+const PLACEHOLDER = /(?<![A-Za-z0-9])(?:XX|\d{1,2})[ \t]+(?:XX|MMM|[A-Za-z]{3,9})\.?[ \t]+(?:XX|\d{2,4})(?![A-Za-z0-9])/;
+const isPlaceholder = (t) => PLACEHOLDER.test(t) && /\bXX\b|\bMMM\b/.test(t);
 
 /** A whole calendar date read off `text`, or null. A two-digit year is read 00–49 as the
  *  2000s and 50–99 as the 1900s, which the 50 measured headers bear out (1981 to 2024). */
@@ -257,35 +259,33 @@ export function readHeader(ctx, raw, locate = () => null) {
   /* The raw extent of each label's value: from the label to the next label or boundary. */
   const spans = taken.map((t) => ({ ...t, vEnd: Math.min(nextBound(t.end), end) }));
   for (const s of spans) {
-    if (header[s.field]) continue;
+    /* A label of the type bounds the fields beside it; the type itself is the series the anchor names (R26). */
+    if (s.field === "type" || header[s.field]) continue;
     let vEnd = s.vEnd;
     if (ONE_LINE.has(s.field)) { const nl = raw.indexOf("\n", raw.slice(s.end, vEnd).trim() ? s.end + (raw.slice(s.end).length - raw.slice(s.end).trimStart().length) : s.end); if (nl >= 0 && nl < vEnd) vEnd = nl; }
     if (DATE_FIELDS.has(s.field)) {
-      const value = raw.slice(s.end, vEnd);
-      let d = readDate(value), base = s.end;
-      /* A boxed layout prints a date label's value below other labels: the first date of the
-         block after the label that no other date label holds. */
-      if (!d && !value.trim().replace(/[:\s]/g, "")) {
-        /* nothing beside the label: look on, past labels that are not dates */
+      const beside = field(raw, s.end, vEnd, locate);
+      if (beside && !readDate(beside.text) && isPlaceholder(beside.text)) {
+        header[s.field] = { ...beside, date: null,
+          why: "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed" };
+        continue;
       }
+      /* Beside its label; else, as a boxed layout prints it, below labels that are not dates, up to the next date
+         label: the first whole date there. */
+      let d = readDate(raw.slice(s.end, vEnd)), base = s.end;
       if (!d) {
-        for (const o of spans) {
-          if (o.start < s.end || DATE_FIELDS.has(o.field) && o !== s) { if (o.start >= s.end && DATE_FIELDS.has(o.field)) break; continue; }
-          const dd = readDate(raw.slice(o.end, o.vEnd));
-          if (dd) { d = dd; base = o.end; break; }
-        }
-        if (!d && a) { const dd = readDate(raw.slice(s.end, end)); if (dd && !spans.some((o) => o !== s && DATE_FIELDS.has(o.field) && o.start > s.end && o.start < s.end + dd.index)) { d = dd; base = s.end; } }
+        const nextDateLabel = spans.find((o) => o !== s && o.start >= s.end && DATE_FIELDS.has(o.field));
+        const dd = readDate(raw.slice(s.end, nextDateLabel ? nextDateLabel.start : end));
+        if (dd) d = dd;
       }
-      if (d) {
+      if (d && !usedDates.has(base + d.index)) {
         const start = base + d.index;
-        if (usedDates.has(start)) continue;
         usedDates.add(start);
         header[s.field] = { text: d.text, date: d.date, start, end: start + d.text.length, source: locate(start) || null };
         continue;
       }
-      const f = field(raw, s.end, vEnd, locate);
-      if (f && PLACEHOLDER.test(f.text)) { header[s.field] = { ...f, date: null, why: "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed" }; continue; }
-      why[s.field] = f ? "its label is printed with no calendar date beside it" : "its label is printed with nothing beside it";
+      why[s.field] = beside ? "its label is printed with no calendar date beside it or below it in the header"
+        : "its label is printed with nothing beside it";
       continue;
     }
     const f = field(raw, s.end, vEnd, locate);
@@ -326,7 +326,7 @@ export function readHeader(ctx, raw, locate = () => null) {
       if (f) header.title = { ...f, inline: true };
     }
   }
-  if (!(a && a.number && header.title && header.title.inline)) {
+  if (!(header.title && header.title.inline)) {
     let i = endLine;
     while (i < lines.length && (FURNITURE.test(lines[i].text) || !lines[i].text.trim())) i++;
     if (i < lines.length && !OUTLINE.test(lines[i].text) && caps(lines[i].text)) {
@@ -358,6 +358,7 @@ export function readHeader(ctx, raw, locate = () => null) {
     if (d && d.index > 0 && d.index + d.text.length >= header.title.text.length - 1) header.title.text = tidy(header.title.text.slice(0, d.index));
   }
 
+  if (header.title) delete header.title.inline;
   const missing = HEADER_FIELDS.filter((f) => !header[f]);
   for (const f of missing) if (!why[f]) why[f] = f === "type"
     ? "no line of this text opens with a policy series the active jurisdiction profiles name"
