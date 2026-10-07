@@ -26,3 +26,7 @@
 - `checks/format.mjs`: 129 modules, 128 requirements files, 0 failures. `architecture.mjs record-core`: 0 failures. `coverage.mjs record-core`: 82 of 82 live ids named by a test, 0 failures. `ownership.mjs record-core tranche/T35`: 6 files, 0 failures.
 
 Size (session_017vQLzkn2zJ8X6s82ZjqvLM): test runs 10, module lines 2291
+
+## J1 · COMPLETE
+
+T35-13 applied (record build/jobs/T35/record-core.md, Completion). R81: ANONYMOUS_LEASE C-102.28, SETTING_NAME_REQUIRED C-102.29, SETTING_BY_REQUIRED C-102.30, SETTING_VALUE_REQUIRED C-102.31, SETTING_INVALID C-102.32, each with its row and one fixed detail (ANONYMOUS_LEASE's detail is unchanged; SETTING_INVALID keeps name). R82: all 26 sweep rows applied; BUILD_FAULT now says 'your group's Civicsmith'; C-102.13/.14 read the same; mintExhausted's detail moved. Awaiting stamp (T35-16): new C-102.28–.32; moved C-59.6–.9, C-102.1, .2, .13–.27. record-core 163/0, stats-disclosure 36/0; format/architecture/coverage (82/82)/ownership: 0 failures. REPORT: against tranche/T35 @ef11113220, two dependant tests go newly red, both pinning wording R82 moves: (1) control-plane catalogue-end.test.mjs R43/R22 (rows-before-r43.json translation digests, first at C-102.1), for control-plane's T35-72 to re-pin as it does lease.test.mjs; (2) sources contract.test.mjs:108 R1, which pins mintExhausted('SRC')'s old 'the plane could not find…' detail, for sources' next job. Stale: case-checker program.mjs and the plane bundle (rule 7). Deferred: none.
