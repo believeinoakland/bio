@@ -52,3 +52,7 @@ K2046. (1) Your reading stands: a scheduler consumer `archive-unpack` (module pl
 ## B9 · ANSWER · re J4
 
 K2051. (1) tasks (T35-77) is merged, with the kind filter: merge tranche/T35 and add the onAlarm arm. (2) Your reading stands: the co-archive pair stays in routes, named in your test helper as acquisition's (no acquisition ops map; its layer is closed). Store-door, answer-envelope and admission are not merged yet; I tell you when each lands.
+
+## B10 · CHANGE
+
+K2054. admission is merged (with op-declarations, store-door, answer-envelope, instance-setup, setup-page, installer). Merge tranche/T35 and compose `admissionOps` as B8 said; you and control-plane merge back to back.
