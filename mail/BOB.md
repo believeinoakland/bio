@@ -255,3 +255,6 @@ U94 received (K1878): DEC-165's owed work folded into N703 for T35, once on main
 
 ## B76 · ACK · re U96 · 2026-10-06 · session_013ZcDT8aCGFLwzqxRSqQnD9 · primary
 U95 and U96 received (K1883): DEC-166's detail folded into N703, DEC-167's owed work into N688, both for T35 once on main.
+
+## B77 · HANDOFF · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
+K1901, K1909: T35 opened on tranche/T35 (main @ 51ca3e90bb). One ask of yours: the screen registry (docs/development/ux-substrate/screens/registry.json, as PR #12 left it) still marks `owed:placewanted` (DEC-150), but `placewanted` is a declared op since T34-83. Please drop the `owed:` mark in your next PR. Also noted for your registry: the expunge act is now `personexpunge` (DEC-142), declared by op-declarations in T35-70. BOB #128 writes from the secondary account from now (K1891, K1896).
