@@ -39,14 +39,23 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [] } 
       idFromName(n) { return n; },
       get(id) {
         return {
-          async fetch(input) {
-            const u = new URL(String(input));
-            const call = { ns: id, route: u.pathname.slice(1), params: Object.fromEntries(u.searchParams), href: u.href };
+          async fetch(input, init) {
+            const isReq = typeof input === "object" && input !== null && typeof input.url === "string";
+            const u = new URL(isReq ? input.url : String(input));
+            const method = (isReq ? input.method : init?.method) || "GET";
+            let raw = null;
+            try { raw = isReq ? await input.clone().text() : (typeof init?.body === "string" ? init.body : null); } catch { raw = null; }
+            let body = null;
+            try { body = raw ? JSON.parse(raw) : null; } catch { body = null; }
+            const call = { ns: id, route: u.pathname.slice(1), params: Object.fromEntries(u.searchParams), href: u.href,
+                           method, body, raw: raw ?? "" };
             calls.push(call);
             if (answer) { const r = await answer(call); if (r) return r; }
-            if (call.route === "session") return ok({ session: sessions[u.searchParams.get("t")] ?? null });
+            /* credentials' routes read the body first, then the query (the form R20 asks of them) */
+            const arg = (k) => (body && typeof body[k] === "string" ? body[k] : u.searchParams.get(k));
+            if (call.route === "session") return ok({ session: sessions[arg("t")] ?? null });
             if (call.route === "aicredentiallook") {
-              const c = bySha.get(u.searchParams.get("sha"));
+              const c = bySha.get(arg("sha"));
               return ok(c ? { found: true, credential: c } : { found: false });
             }
             return ok({ ok: true });
@@ -88,27 +97,40 @@ export const urlOf = (params = {}) => {
   return u;
 };
 
+/** A request carrying `token` as R20 reads one: `via` "query" (the address, T35's deprecated form), "header"
+ *  (`Authorization: Bearer`) or "body" (a JSON body's `token`). Answers `{ url, req, body }`. */
+export function requestOf({ token, params = {}, via = "query", method = "POST", extraBody = {} } = {}) {
+  const url = urlOf({ ...params, ...(via === "query" ? { token } : {}) });
+  const headers = new Headers();
+  if (via === "header" && token !== undefined) headers.set("authorization", `Bearer ${token}`);
+  const body = method === "GET" ? null : { ...extraBody, ...(via === "body" && token !== undefined ? { token } : {}) };
+  const req = new Request(url, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
+  return { url, req, body };
+}
+
 /** The gates in the door's order, for a request naming `op` with `token` and `params`. Answers one of
- *  `{ refusal }`, `{ silent }`, `{ public: true, url }` (a public op past R1–R3) or `{ caller, url }`. */
-export async function gate(env, { op, token, params = {}, method = "POST", tables }) {
-  const url = urlOf({ ...params, token });
+ *  `{ refusal }`, `{ silent }`, `{ public: true, url }` (a public op past R1–R3) or `{ caller, url, credential }`.
+ *  `via` sends the credential as R20 reads one ("query" by default, the form every test before T35 sent). */
+export async function gate(env, { op, token, params = {}, method = "POST", tables, via = "query" }) {
+  const { url, req, body } = requestOf({ token, params, via, method });
   const spec = Object.hasOwn(O.OPS, op) ? O.OPS[op] : undefined;
   assert.ok(spec, `test asks an op with a spec: ${op}`);
   const ns = A.namespaceGate(url);
   if (ns) return { refusal: ns };
-  A.queryGate(url, op);
-  const presented = await A.aiCredentialPresented(url, env, doAnswer);
+  const credential = A.presentedCredential({ req, url, body });
+  A.queryGate(url, op, credential);
+  const presented = await A.aiCredentialPresented(url, env, doAnswer, { credential, op });
   if (presented.silent) return { silent: presented.silent };
   const confined = A.confinedNamespaceGate(url, presented.cred);
   if (confined) return { refusal: confined };
   const pinned = A.pinnedNamespaceGate(url, op, spec);
   if (pinned) return { refusal: pinned };
-  if (spec.classes === null) return { public: true, url };
-  const a = await A.admit({ url, env, op, spec, method, presented, doAnswer, ...(tables ? { tables } : {}) });
+  if (spec.classes === null) return { public: true, url, credential };
+  const a = await A.admit({ url, env, op, spec, method, presented, doAnswer, credential, ...(tables ? { tables } : {}) });
   if (!a.caller) return a;
   const fence = A.bearerFence(op, a.caller);
   if (fence) return { refusal: fence };
-  return { caller: a.caller, url };
+  return { caller: a.caller, url, credential };
 }
 
 /** Session tables of op-declarations' shape, arranged from its own (which are frozen) by `edit(member, admin, decided)`. */
