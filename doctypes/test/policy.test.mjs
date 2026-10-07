@@ -11,7 +11,7 @@ import { flattenText, makeLocator } from "../../docprofile/readtext.mjs";
 import { EMPTY, HELD, PE, PE_POLICY } from "./fixtures.mjs";
 import { CASES } from "./golden-cases.mjs";
 import { readWith } from "./read.mjs";
-import { POLICIES, ANSWERS, SECTION_ANSWERS, score, scoreSections } from "./policies.mjs";
+import { POLICIES, ANSWERS, SECTION_ANSWERS, FRESH, FRESH_ANSWERS, score, scoreSections } from "./policies.mjs";
 
 const policy = DOCTYPES.find((t) => t.key === "policy");
 const REG = (() => { const r = makeRegistry(); for (const t of DOCTYPES) r.register(t); return r; })();
@@ -266,6 +266,37 @@ test("R35 R27 section boundaries on the 50, against a member's reading of each o
     if (scoreSections(p.sections, SECTION_ANSWERS[d.id]).ok) right++;
   }
   assert.equal(right, 45, "the measurement recorded in the job record");
+});
+
+test("R35 measured out of sample: 24 fresh policies of the same issuers and series, none among the 50, per header field under the held first profile", () => {
+  /* The measurement of 2026-10-07 (T36-4), recorded in the job record `build/jobs/T36/doctypes.md`. */
+  assert.ok(FRESH.documents.length >= 20);
+  const shas = new Set(POLICIES.documents.map((d) => d.sha256)), ids = new Set(POLICIES.documents.map((d) => d.id));
+  const families = new Set(POLICIES.documents.map((d) => d.family));
+  for (const d of FRESH.documents) {
+    assert.ok(!shas.has(d.sha256) && !ids.has(d.id), `${d.id} is among the 50`);
+    assert.ok(families.has(d.family), `${d.id}: a series the 50 measured`);
+    assert.match(d.source, /^https:\/\//);
+    assert.match(d.sha256, /^[0-9a-f]{64}$/);
+    assert.ok([1, 2, 3].includes(d.tier), d.id);
+    assert.ok(FRESH_ANSWERS[d.id], `a member's reading of ${d.id}`);
+  }
+  let whole = 0, certain = 0;
+  const per = {};
+  for (const d of FRESH.documents) {
+    if (policy.detect({ text: d.text.document, view: HELD }).confidence === CONFIDENCE.CERTAIN) certain++;
+    const s = score(policy.parse({ text: d.text.document, view: HELD }).header, FRESH_ANSWERS[d.id]);
+    if (s.ok) whole++;
+    for (const [f, x] of Object.entries(s.fields)) { per[f] ??= [0, 0]; per[f][1]++; if (x.ok) per[f][0]++; }
+  }
+  assert.equal(certain, 24, "every fresh policy is read as a policy");
+  for (const d of FRESH.documents) assert.equal(readWith(REG, d.text, { view: HELD }).doctype.type.key, "policy", `${d.id} through the registry`);
+  assert.equal(whole, 20, "20 of 24 headers read wholly right");
+  assert.deepEqual(per, { type: [24, 24], number: [24, 24], title: [22, 24], effective: [24, 24], supersedes: [1, 1],
+                          reference: [11, 11], coordinator: [9, 11], review_due: [4, 6], revision_cycle: [4, 5] });
+  /* The fields read correctly for fewer than 90% of the policies that print them: the measurement names them (R35). */
+  const below = Object.entries(per).filter(([, [ok, n]]) => ok / n < 0.9).map(([f]) => f);
+  assert.deepEqual(below, ["coordinator", "review_due", "revision_cycle"]);
 });
 
 test("R3 R20 policy takes its series and labels from ctx.view, and with no view from every non-test held profile", () => {
