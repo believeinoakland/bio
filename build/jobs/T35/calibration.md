@@ -1,6 +1,6 @@
 # calibration (T35)
 
-**Status** · session_01Pi6ot7irScmMV3ovpZPrRp · depth 2 · WORKING · handled B1
+**Status** · session_01Pi6ot7irScmMV3ovpZPrRp · depth 2 · COMPLETE · handled B1
 
 ## Completion (CALIBRATION #8, 2026-10-07)
 
