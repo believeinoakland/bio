@@ -39,3 +39,7 @@ Best readings for R43/R44 (details I take as yours to rule; I am building on the
 ## J2 · REPORT
 
 Generated artifact staled (§14): bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) embed src/signpage.mjs, re-rendered by T36-1. fleetbundles.test.mjs: 4 FAIL on bio-plane (STALE BUNDLE, byte identity, manifest sha, comment arm) until BOB regenerates (node bio-plane/scripts/bundles.mjs, K1540's order); before the change only inherited red 6. release/bio-plane.bundled.mjs and newgroup/src/release.mjs carry the old page as release copies, refreshed by the next release; newgroup-bundle-fresh stays green.
+
+## J3 · COMPLETE
+
+T36-1 applied as B2 ruled: R43 (passphrase at Generate, typed twice; every private key given out protected; load refuses another passphrase; the release key's raw form shown once on request, never to a file) and R44 (the recovery key, bio-release-recovery, named in every box, its file and on load; signs bio-release). signpage.mjs re-rendered. New signer-keys.test.mjs (9 tests). signatures 86/86; SIGN_HTML users 22/22; format, architecture, coverage (44/44), ownership 0 failures. One staled artifact reported (J2). R43, R44 can lose their not-yet-met marks. Record: build/jobs/T36/signatures.md on job/T36/signatures.
