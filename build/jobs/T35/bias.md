@@ -42,3 +42,7 @@ Size (session_019zdNUsk54fCyiEu7YX6E5x): test runs 5, module lines 1916
 ## J1 · REPORT
 
 Two findings outside bias, from T35-36. (1) control-plane rows-before-r43.json pins C-26.2's translation digest. BIAS_STATEMENT_SUBJECT_NOT_REGISTERED moves 34a21a493da8de0f → f10fde3b4d80b59b, because its translation said "an instance statement" split across two lines. catalogue-end.test.mjs is already red (red 19) and stops at its first difference, so this adds C-26.2 to T35-72's re-pin list without a new red. (2) The plane bundle (§14) embeds src/bias/ and is stale until L5's close regenerates it. Also done in bias, under BOB's review (1) M rule: R11's NOT_AN_ADMIN act and remedy said "the whole instance" (a row the sweep missed) and now say "the whole group". No other module's test pins those strings.
+
+## J2 · COMPLETE
+
+T35-36 applied. R16's lock_violations detail and R24's interactions_stated say "group statement", word for word as the requirements quote them. C-26.2's translation is re-worded the same way. R11's act and remedy now say "the whole group". The scope value instance and the field names are unchanged. New test/m/bias/dec149.test.mjs names each string; it fails 5 of 5 on the old source. bias tests: 67 pass, 0 fail, 1 todo (R26, deferred by K102). Checks: architecture 0, coverage 48/48, ownership 0; format 2 failures, both red 24 (law-relations). Record committed on job/T35/bias @ f9dc8e210d.
