@@ -51,6 +51,9 @@ export const DETECTORS_RUNNER = "class:daemon";
 export const NOTICED_DEFAULT = 100, NOTICED_MAX = 500;
 /** R1, R2, R9: the one label every check and shown result carries: the machine's, a question. */
 export const NOTICED = "Noticed";
+/** R17 (DEC-131; K1863, N694): the mark every "Noticed" answer carries beside its label where an op relays it to a
+ *  member, DEC-131's words exactly; `notice-producers` exports the same string as its `HINT_MARK`. */
+export const HINT_MARK = "Hint · machine work";
 /** R4: how a detector groups the facts of its population into subjects. A subject is a fact, a contract, or the
  *  pattern of facts paid to (or by) one party; a party that is a person is never a subject (R4, R10). */
 export const PER = Object.freeze(["fact", "contract", "payee", "payer"]);
@@ -264,7 +267,7 @@ export class MoneyChecks {
   /* One check's answer (R1's shape): `holds` true, false or "undetermined", why, and the derivation with what it read.
      A sum money refuses is answered as that refusal, never as a check (R2). */
   static #answer(check, { holds, why, sums = {}, read, parameters = [], refused = null }) {
-    const base = { check, label: NOTICED, kind: "question",
+    const base = { check, label: NOTICED, mark: HINT_MARK, kind: "question",
                    derivation: { method: "calc-grammar exact decimals over money's facts", sums, parameters }, read };
     if (refused) return { ...base, refused, holds: "undetermined", why: "a sum the summation rule refuses is answered as that refusal" };
     return { ...base, holds, why };
@@ -358,7 +361,7 @@ export class MoneyChecks {
     checks.push(cap.undetermined
       ? MoneyChecks.#answer("change_orders_past_share", { holds: "undetermined", why: cap.undetermined, read: { facts: [] } })
       : this.#changeOrderCheck("change_orders_past_share", cap.award, cap.orders, con));
-    return { ok: true, contract: con, label: NOTICED, checks };
+    return { ok: true, contract: con, label: NOTICED, mark: HINT_MARK, checks };
   }
 
   /** R1: the amount part of a progression instance's junction checks (progressions R32, moved), derived on read and
@@ -398,7 +401,7 @@ export class MoneyChecks {
       else if (cap.undetermined) checks.push(MoneyChecks.#answer("junction_amendments_past_share", { holds: "undetermined", why: cap.undetermined, read: { facts: [] } }));
       else checks.push(this.#changeOrderCheck("junction_amendments_past_share", cap.award, cap.orders, eid));
     }
-    return { ok: true, found: true, progression_key: key, entity_id: eid, label: NOTICED, shown: true, checks };
+    return { ok: true, found: true, progression_key: key, entity_id: eid, label: NOTICED, mark: HINT_MARK, shown: true, checks };
   }
 
   /* The capture a fact's source extent is in: money R19's `source_capture_sha` (K1563 (4)), or null. */
@@ -782,14 +785,14 @@ export class MoneyChecks {
         const inputs = parse(r.inputs) || [];
         if (!inputs.length || !inputs.every((i) => sees(i.fact_id))) continue;
         if (items.length >= lim) { truncated = true; break; }
-        items.push({ result_id: r.result_id, detector_id: r.detector_id, version: r.version, label: NOTICED, by: "the machine",
+        items.push({ result_id: r.result_id, detector_id: r.detector_id, version: r.version, label: NOTICED, mark: HINT_MARK, by: "the machine",
                      kind: "signal", layer: "hypothesis", detector_label: v.label, subject: parse(r.subject),
                      numerator: parse(r.numerator), denominator: parse(r.denominator), derivation: parse(r.derivation),
                      inputs, at: r.at, gate: { gold_set: g.gold_set, false_alarm_rate: g.false_alarm_rate } });
       }
       if (truncated) break;
     }
-    return { ok: true, project: pid, label: NOTICED, items, truncated };
+    return { ok: true, project: pid, label: NOTICED, mark: HINT_MARK, items, truncated };
   }
 
   /* R4: the shipped detectors, installed once as data, each version-kept like a member's. */

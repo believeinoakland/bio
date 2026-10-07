@@ -48,10 +48,11 @@ export { BIAS_CHECKS, BIAS_STATEMENT_KINDS, BIAS_VERDICT_WHOLESALE, BIAS_VERDICT
 export { BIAS_SCHEMA, BIAS_TABLES, BIAS_ADDITIVE_COLUMNS } from "./schema.mjs";
 import { BIAS_SCHEMA, BIAS_ADDITIVE_COLUMNS } from "./schema.mjs";
 
-/* R11 (N327, DEC-83): the instance-scope adoption's fixed act, and its next step, for `membership.notAnAdmin`. */
-export const INSTANCE_ADOPTION_ACT = "adopting a bias set for the whole instance";
+/* R11 (N327, DEC-83): the instance-scope adoption's fixed act, and its next step, for `membership.notAnAdmin`. Its
+   words say "the whole group", never "the instance" (DEC-149); the scope value stays `instance`. */
+export const INSTANCE_ADOPTION_ACT = "adopting a bias set for the whole group";
 export const INSTANCE_ADOPTION_REMEDY = "A project's owners set the lens over that project's work: adopt this set for "
-  + "a project you own, or ask an administrator to adopt it for the whole instance.";
+  + "a project you own, or ask an administrator to adopt it for the whole group.";
 
 /* The manifest's bound (R18). 200 is the common read, "what lens is in force", which a group's whole declared bias
    fits inside many times over; 2,000 is for a regrade, two lenses re-run against each other, where a lens silently
@@ -466,8 +467,8 @@ class Bias {
           if (target && target.locked) {
             lockViolations.push({ project_bundle: a.bundle_id, statement_id: s.statement_id,
                                   nullifies: s.nullifies, instance_bundle: target.bundle_id,
-                                  detail: "a project override naming a LOCKED instance statement is a "
-                                        + "conformance error; the instance statement stands" });
+                                  detail: "a project override naming a LOCKED group statement is a "
+                                        + "conformance error; the group statement stands" });
           } else if (target) {
             effective.delete(s.nullifies);
             level.delete(s.nullifies);
@@ -503,7 +504,7 @@ class Bias {
       return { bundle_id: a.bundle_id, scope: a.scope_type, text: m ? m[1].trim() : "", stated: !!(m && m[1].trim()) };
     });
 
-    /* R24 (safeguard 3): a project statement in force on a subject an instance statement in force also addresses,
+    /* R24 (safeguard 3): a project statement in force on a subject a group statement in force also addresses,
        naming no statement it overrides, is an INTERACTION, listed with both justifications so a reviewer reads the
        one against the other. Nothing is refused (R28). */
     for (const s of all) if (s.scope === "instance") {
@@ -551,9 +552,9 @@ class Bias {
       residue,
       lock_violations: lockViolations,
       interactions,
-      interactions_stated: "each entry is a project statement on a subject an instance statement in force also "
+      interactions_stated: "each entry is a project statement on a subject a group statement in force also "
         + "addresses, which names no statement it overrides: it must carry a justification addressing the "
-        + "instance statement, and it is listed so a reviewer reads the two together (safeguard 3). It refuses nothing.",
+        + "group statement, and it is listed so a reviewer reads the two together (safeguard 3). It refuses nothing.",
       unregistered_subjects: unregistered,
       unregistered_subjects_stated: unregistered === null
         ? "undetermined: the subject registry could not be asked, so whether every subject is registered is not known"
