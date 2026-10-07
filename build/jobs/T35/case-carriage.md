@@ -1,6 +1,6 @@
 # case-carriage (T35)
 
-**Status** · session_0135Aih7kZEH3wwKzzpukHAF · depth 2 · WAITING ON BOB (J2) · handled B0
+**Status** · session_0135Aih7kZEH3wwKzzpukHAF · depth 2 · WAITING ON BOB (J2) · handled B1
 
 ## Work (CASE-CARRIAGE #3)
 
