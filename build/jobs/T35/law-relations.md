@@ -1,6 +1,6 @@
 # law-relations (T35)
 
-**Status** · session_01MvNbDarJEgUrb9jDF7FgTx · depth 2 · WORKING · handled B2
+**Status** · session_01MvNbDarJEgUrb9jDF7FgTx · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
