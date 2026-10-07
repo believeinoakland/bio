@@ -7,7 +7,7 @@ import { ID_TABLE, isHypothesisId } from "../../../src/record-grammar/index.mjs"
 import { isRecordId, defaultRegistry } from "../../../src/connection-grammar/index.mjs";
 import { Membership } from "../../../src/membership/index.mjs";
 
-const COURT = "Your group's copy keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly.";
+const COURT = "Your group's Civicsmith keeps this from the public and the people the group looks into. A court order your group can't defeat could still require it to be shown. Write accordingly.";
 const url = (op, q = {}) => { const u = new URL(`https://plane.example/?op=${op}`); for (const [k, v] of Object.entries(q)) u.searchParams.set(k, v); return u; };
 const count = (w) => w.rows(`SELECT COUNT(*) AS n FROM member_notes`)[0].n;
 const row = (code) => HYPOTHESES_CHECKS[code];
@@ -65,7 +65,7 @@ test("R11 while the group's court notice is tell, the first note a member keeps 
   assert.equal(keys(w.h.noteWrite({ text: "h", by: ANN })), false);
 });
 
-test("R12 notesOf answers the viewer's own notes, newest first, each {note, text, at, turned}, at most limit (200 by default, clamped 1…1000) with truncated and next; any other viewer, an administrator, the founder, a machine and no viewer, reads none, exactly as a member with no notes", () => {
+test("R12 notesOf answers the viewer's own notes, newest first, each {note, text, at, revised, turned}, at most limit (200 by default, clamped 1…1000) with truncated and next; any other viewer, an administrator, the founder, a machine and no viewer, reads none, exactly as a member with no notes", () => {
   const w = world();
   const ids = [];
   for (let i = 0; i < 205; i++) ids.push(w.h.noteWrite({ text: `ann ${i}`, by: ANN }).note);
@@ -76,8 +76,8 @@ test("R12 notesOf answers the viewer's own notes, newest first, each {note, text
   assert.equal(first.truncated, true);
   assert.deepEqual(first.notes.slice(0, 2).map((n) => n.text), ["ann 204", "ann 203"], "newest first");
   for (const n of first.notes) {
-    assert.deepEqual(Object.keys(n).sort(), ["at", "note", "text", "turned"]);
-    assert.deepEqual(n.turned, []);
+    assert.deepEqual(Object.keys(n).sort(), ["at", "note", "revised", "text", "turned"]);
+    assert.deepEqual([n.turned, n.revised], [[], null]);
   }
   const rest = w.h.notesOf({ viewer: ANN, after: first.next.after });
   assert.deepEqual([rest.notes.length, rest.truncated, rest.next], [5, false, null]);
@@ -97,7 +97,7 @@ test("R12 notesOf answers the viewer's own notes, newest first, each {note, text
   /* nothing names how many another member keeps: the outsider's page is the same whatever Ann keeps */
   const fresh = world();
   fresh.h.noteWrite({ text: "the outsider's own", by: OUTSIDER });
-  const strip = (r) => ({ ...r, notes: r.notes.map((n) => ({ text: n.text, turned: n.turned })) });
+  const strip = (r) => ({ ...r, notes: r.notes.map((n) => ({ text: n.text, revised: n.revised, turned: n.turned })) });
   assert.deepEqual(strip(w.h.notesOf({ viewer: OUTSIDER })), strip(fresh.h.notesOf({ viewer: OUTSIDER })));
 });
 

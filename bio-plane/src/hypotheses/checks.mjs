@@ -4,10 +4,12 @@
  * Each row is `{check, where, translation}`, family C-134, minted here. The acts' rows (R1, R2) are this module's own
  * answers, under codes of its own (N608, DEC-49 arm A: `HYPOTHESIS_NO_STATEMENT`, `HYPOTHESIS_NO_REASON`, numbers and
  * translations unchanged); the leg rows (R5, R6) are carried inside `BASIS_REFUSED` by the check this module registers
- * with `promotion`; the notes' rows (R11, R13; T34, K1807) answer a member's own notes. Rows changed or added in T34 await
+ * with `promotion`; the notes' rows (R11, R13; T34, K1807) answer a member's own notes, and (T35, DEC-144) C-134.13–C-134.16 name
+ * `noteRevise` and `noteDelete` too, with no new code. Rows changed or added in T34 and T35 await
  * `promotion`'s next stamp. No translation names a place. This file imports nothing. */
 
 const act = (fn) => `src/hypotheses/index.mjs ${fn}`;
+const acts = (...fns) => fns.map(act).join("; ");
 const leg = "src/hypotheses/index.mjs legRefusals";
 
 export const HYPOTHESES_CHECKS = {
@@ -35,13 +37,13 @@ export const HYPOTHESES_CHECKS = {
     translation: "This connection was derived through a declared grouping or a hunch, so it is a lead, never something a finding rests on. Find a source for each step. Nothing was written." },
   LEG_NOT_REDERIVED: { check: "C-134.12", where: `${leg} > is-rederived-leg`,
     translation: "This derived connection could not be worked out again from its derivation, so a finding cannot rest on it. Nothing was written." },
-  MACHINE_CANNOT_NOTE: { check: "C-134.13", where: act("noteWrite"),
+  MACHINE_CANNOT_NOTE: { check: "C-134.13", where: acts("noteWrite", "noteRevise", "noteTurn", "noteDelete"),
     translation: "Only a member keeps a note of their own. Nothing was written." },
-  NOTE_NO_TEXT: { check: "C-134.14", where: act("noteWrite"),
+  NOTE_NO_TEXT: { check: "C-134.14", where: acts("noteWrite", "noteRevise"),
     translation: "Write the note in your own words. Nothing was written." },
-  NOTE_TOO_LONG: { check: "C-134.15", where: act("noteWrite"),
+  NOTE_TOO_LONG: { check: "C-134.15", where: acts("noteWrite", "noteRevise"),
     translation: "This note is longer than one note can hold. Split it into shorter notes. Nothing was written, and nothing was cut." },
-  NO_SUCH_NOTE: { check: "C-134.16", where: act("noteTurn"),
+  NO_SUCH_NOTE: { check: "C-134.16", where: acts("noteTurn", "noteRevise", "noteDelete"),
     translation: "There is no note of yours by that number. Nothing was written." },
   NOTE_TURN_UNKNOWN: { check: "C-134.17", where: act("noteTurn"),
     translation: "A note becomes an observation, a hunch or a question. Nothing was written." },
