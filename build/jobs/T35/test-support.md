@@ -1,6 +1,6 @@
 # test-support (T35)
 
-**Status** · session_016FG9ULYTRSS3dhqvhVKfG6 · depth 2 · WORKING · handled B2
+**Status** · session_016FG9ULYTRSS3dhqvhVKfG6 · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
