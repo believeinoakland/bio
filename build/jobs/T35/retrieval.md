@@ -1,6 +1,6 @@
 # retrieval (T35)
 
-**Status** · session_01FeUn5pWXtcyMpN79S2qaN6 · depth 2 · WORKING · handled B0
+**Status** · session_01FeUn5pWXtcyMpN79S2qaN6 · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
