@@ -28,7 +28,10 @@ import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_S
 export async function publicOp({ req, url, env, op, stub, fp, presentedAi }) {
   { const pr = await publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (pr) return pr; }
   { const pd = await publicationDoorOp(op, url, stub, { json, storeSilent, storeRefusal, doAnswer, sha256Hex, NS_RATIFY,
-      caseRatifyStatement, readerOf: () => caseReader(url, env, "bio", presentedAi.cred) }); if (pd) return pd; }
+      caseRatifyStatement, readerOf: () => caseReader(url, env, "bio", presentedAi.cred),
+      /* publication R73 (F1; K2011): the request's body, read on a copy and only when its door asks for it, so the
+         review copy's secret arrives in the body and the request stays readable by the arms after it. */
+      body: () => req.clone().json() }); if (pd) return pd; }
   /* Anyone, no token, no session: capture's doorbell, confined to the inbox namespace. */
   { const knocked = await capturePublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (knocked) return knocked; }
   return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer });

@@ -3,6 +3,7 @@
    member's grant is minted at their act, their own account unsealed for this ask, their suggestions switch read, and
    the question posted to agent-worker's `/ask`, whose answer comes back unchanged. Driven on the Durable Object class. */
 import { test } from "node:test";
+import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
@@ -28,7 +29,9 @@ async function world({ account = true, worker = true } = {}) {
   assert.equal(on.ok, true, JSON.stringify(on));
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
             VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
-  sql.exec(`INSERT INTO sessions (token, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`, SESSION, Date.now() + 3600e3);
+  /* credentials R40 (F13): a session is held only as its token's SHA-256 */
+  sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`,
+           createHash("sha256").update(SESSION).digest("hex"), Date.now() + 3600e3);
   if (account) {
     const r = await credentialsOf(x.ctx).accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" });
     assert.equal(r.ok, true, JSON.stringify(r));
@@ -98,21 +101,37 @@ test("B7 (K1690; instance-setup R55): while the copy's assistant is off, an ask 
   assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 0, "no grant minted");
 });
 
-test("B2 (control-plane R53): the door's arm asks the bio object only for a member's own session or a presented grant's member; any other caller is refused", async () => {
+test("B2 (control-plane R53; F1, admission R20): the door's arm asks the bio object only for a member's own session or a presented grant's member, reading the credential from the Authorization header, else the body's token, else (T35 only) the query; any other caller is refused", async () => {
   const seen = [];
   const env = { STORE: { idFromName: (n) => n, get: (id) => ({ ask: async (a) => { seen.push([id, a]); return new Response("{}"); } }) } };
-  const req = () => new Request("http://plane/ask", { method: "POST", body: JSON.stringify({ question: "q", conversation: [] }) });
-  const url = new URL(`http://plane/ask?token=${SESSION}`);
-  await askOp({ req: req(), url, env, viaSession: true, sessMember: "ann" });
+  const OTHER = "o".repeat(64);
+  const req = (headers = {}, extra = {}) => new Request("http://plane/ask", { method: "POST", headers,
+    body: JSON.stringify({ question: "q", conversation: [], ...extra }) });
+  const bare = new URL("http://plane/ask");
+  /* the header: the session and the grant each read from `Authorization: Bearer` */
+  await askOp({ req: req({ authorization: `Bearer ${SESSION}` }), url: bare, env, viaSession: true, sessMember: "ann" });
   assert.deepEqual(seen[0], ["bio", { member: "member:ann", question: "q", conversation: [], store: null, session: SESSION, grant: null }]);
-  await askOp({ req: req(), url, env, viaSession: false, grantMember: "member:bob" });
+  await askOp({ req: req({ authorization: `bearer ${SESSION}` }), url: bare, env, viaSession: false, grantMember: "member:bob" });
   assert.deepEqual(seen[1][1], { member: "member:bob", question: "q", conversation: [], store: null, session: null, grant: SESSION });
+  /* the header wins over a query token beside it, which is not read */
+  await askOp({ req: req({ authorization: `Bearer ${SESSION}` }), url: new URL(`http://plane/ask?token=${OTHER}`), env,
+                viaSession: true, sessMember: "ann" });
+  assert.equal(seen[2][1].session, SESSION);
+  /* the body's token, when no header presents one; it wins over the query */
+  await askOp({ req: req({}, { token: SESSION }), url: new URL(`http://plane/ask?token=${OTHER}`), env, viaSession: true, sessMember: "ann" });
+  assert.equal(seen[3][1].session, SESSION);
+  /* the query, for T35's release only (admission R20: admitted and named deprecated by the door) */
+  await askOp({ req: req(), url: new URL(`http://plane/ask?token=${SESSION}`), env, viaSession: true, sessMember: "ann" });
+  assert.equal(seen[4][1].session, SESSION);
+  /* an Authorization header in another form presents nothing */
+  await askOp({ req: req({ authorization: `Basic ${SESSION}` }), url: bare, env, viaSession: true, sessMember: "ann" });
+  assert.equal(seen[5][1].session, null);
   /* a binding class or an ai credential is no member: refused before anything is read */
-  const r = await askOp({ req: req(), url, env, viaSession: false });
+  const r = await askOp({ req: req(), url: bare, env, viaSession: false });
   assert.equal(r.status, 403);
   assert.equal((await r.json()).reason, "ASK_NOT_A_MEMBER");
-  assert.equal(seen.length, 2);
-  const bad = await askOp({ req: new Request("http://plane/ask", { method: "POST", body: "{x" }), url, env, viaSession: true, sessMember: "ann" });
+  assert.equal(seen.length, 6);
+  const bad = await askOp({ req: new Request("http://plane/ask", { method: "POST", body: "{x" }), url: bare, env, viaSession: true, sessMember: "ann" });
   assert.equal(bad.status, 400);
 });
 

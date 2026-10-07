@@ -11,6 +11,18 @@ import { instanceSetupOf } from "../setup.mjs";
 const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const idOf = (m) => (typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m);
 
+/* F1 (K1874; admission R20): the session or grant the caller presented, read where admission read it: the
+   `Authorization` header when it is exactly `Bearer <value>`, else the JSON body's `token`, else, for T35's release
+   only, the query's `token`. Never anything else of the request. */
+const BEARER = /^bearer ([\x21-\x7e]+)$/i;
+function presentedToken(req, url, body) {
+  const m = BEARER.exec(req.headers.get("authorization") || "");
+  if (m) return m[1];
+  if (body && typeof body === "object" && !Array.isArray(body) && typeof body.token === "string" && body.token !== "")
+    return body.token;
+  return url.searchParams.get("token");
+}
+
 /** The door's arm (in the Worker): admits only a member's own session or a presented grant's member, reads the body,
  *  and asks the `bio` object, which answers through `askOnObject`. */
 export async function askOp({ req, url, env, viaSession, sessMember, grantMember }) {
@@ -24,8 +36,8 @@ export async function askOp({ req, url, env, viaSession, sessMember, grantMember
   const named = url.searchParams.get("store");
   const args = { member, question: body && body.question, conversation: body && body.conversation,
                  store: named ? named : null,
-                 session: viaSession ? url.searchParams.get("token") : null,
-                 grant: viaSession ? null : url.searchParams.get("token") };
+                 session: viaSession ? presentedToken(req, url, body) : null,
+                 grant: viaSession ? null : presentedToken(req, url, body) };
   return env.STORE.get(env.STORE.idFromName("bio")).ask(args);
 }
 
