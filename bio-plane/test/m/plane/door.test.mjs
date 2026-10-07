@@ -1,4 +1,4 @@
-/* plane R1, R5: the Durable Object class driven through control-plane's door (its R25, R26), the frame every store
+/* plane R1, R5: the Durable Object class driven through store-door's door (its R1, R2; K2043), the frame every store
    route passes. Moved from control-plane's `store-class.test.mjs` (K856): it constructs this module's class, which
    control-plane's tests may not import (P4). The class is constructed for real over a Durable Object storage at the plane's shape
    (node:sqlite behind `sql.exec` answering a cursor, as workerd's does), and driven through its `fetch`, which is this
@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import "./fixture.mjs";   /* answers `cloudflare:workers` */
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 const { Store } = await import("../../../src/plane/store.mjs");
 const S = await import("../../../src/setup.mjs");
 
@@ -80,6 +80,8 @@ const DRIVES = [
   ["placewantedstate?viewer=admin", "GET"],
   ["memberlanguageset?by=member:nobody", "POST", { language: "es" }],
   ["memberlanguage?viewer=member:nobody", "GET"],
+  /* instance-setup's T35 route (R66): the two-administrators recovery step, read by an administrator */
+  ["adminrecoverystep?viewer=admin", "GET"],
 ];
 const req = ([path, method, body]) => new Request(`http://do/${path}`, body === undefined ? { method } : { method, body: JSON.stringify(body) });
 /* Instants differ between two runs; everything else must not. */
@@ -107,9 +109,9 @@ test("R1: the class whose fetch is control-plane's door: at construction it star
   assert.equal(started(await settle(other))[0].started, true);
 });
 
-test("R1, R5 (K1690, K1870): instance-setup's twenty-four routes are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
+test("R1, R5 (K1690, K1870): instance-setup's twenty-five routes are part of the route map beside every module's, and each answers through the door, in the door's envelope, what its own route answers called directly", async () => {
   const ops = Object.keys(S.instanceSetupOps(null, new URL("http://do/"), null));
-  assert.equal(ops.length, 24);
+  assert.equal(ops.length, 25);
   assert.deepEqual([...new Set(DRIVES.map(([p]) => p.split("?")[0]))].sort(), [...ops].sort(), "every route is driven");
   const now = object(), before = object();
   const store = new Store(now.ctx, now.env);

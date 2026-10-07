@@ -14,7 +14,7 @@ import { filingsOf } from "../../../src/filings/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 const { gatedOp } = await import("../../../src/plane/door.mjs");   /* after the fixture: it reaches `cloudflare:workers` */
-const { json } = await import("../../../src/control-plane/index.mjs");
+const { json } = await import("../../../src/answer-envelope/index.mjs");
 
 /* An Ed25519 private key as the operator binds `RECEIPT_SIGNING_KEY`: PKCS#8, base64. */
 const signingKey = () => generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");

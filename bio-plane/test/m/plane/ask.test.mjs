@@ -148,7 +148,8 @@ test("B5 (K1685; answers R1, R2): a read under an ask's grant reaching this obje
   a.logRead = (e) => { seen.push([e.grant, e.op, e.viewer]); return was(e); };
   try {
     const grant = "g".repeat(64);
-    const r = await x.fetch(`/search?q=clerk&grant=${grant}&viewer=member:ann`);
+    /* store-door R9 (F1): the grant reaches the object in the door's `x-bio-grant` header, never the address */
+    const r = await x.fetch(`/search?q=clerk&viewer=member:ann`, { headers: { "x-bio-grant": grant } });
     assert.equal(r.status, 200);
     assert.deepEqual(seen, [[grant, "search", "member:ann"]], "the read was recorded in this object's read log");
     /* negative control: a read with no grant is recorded nowhere */
@@ -209,7 +210,7 @@ test("R19 (N686; DEC-153 (2), K1841 (2)): with the member's suggestions on, a gr
   const fetchDraft = x.env.AGENT_WORKER.fetch;
   x.env.AGENT_WORKER.fetch = async (u, init) => {
     const b = JSON.parse(init.body);
-    if (b.grant) await x.fetch(`/search?q=clerk&grant=${b.grant}&viewer=member:ann`);
+    if (b.grant) await x.fetch(`/search?q=clerk&viewer=member:ann`, { headers: { "x-bio-grant": b.grant } });
     return fetchDraft(u, init);
   };
   const r = await draft(x);

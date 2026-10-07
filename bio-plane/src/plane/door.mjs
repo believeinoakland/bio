@@ -21,8 +21,11 @@ import { CONNECTIONS_OPS, connectionsOp } from "../connections/ops.mjs";
 import { ratificationOp } from "../ratification/ops.mjs";
 import { ACT_GATE } from "../op-declarations/index.mjs";
 import { askOp } from "./ask.mjs";
-import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL, SCRATCH, sha256Hex,
-         caseReader, captureKey, requiredArgument, storageAbsent } from "../control-plane/index.mjs";
+/* K1907, K2041: the answer's envelope is answer-envelope's (its R1–R5); the reads of a case, a capture's key and the
+   store's absence stay control-plane's, with the namespace names it re-exports from admission. */
+import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL,
+         requiredArgument } from "../answer-envelope/index.mjs";
+import { SCRATCH, sha256Hex, caseReader, captureKey, storageAbsent } from "../control-plane/index.mjs";
 
 /* The public ops: each owner's handler asked in turn; the bootstrap report answers any other. */
 export async function publicOp({ req, url, env, op, stub, fp, presentedAi }) {

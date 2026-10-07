@@ -1,6 +1,6 @@
 /* plane R1–R5: the instance's Durable Object class, the composition root. It builds every module on the object's storage
    in the order below (R2), runs their migrations before any request (R3), hands the alarm to `scheduler` (R4), and answers
-   every store request through `control-plane`'s `dispatch` over the one route map (R5). It holds no construct of its own:
+   every store request through `store-door`'s `dispatch` over the one route map (R5; K2043). It holds no construct of its own:
    no table, no row, no refusal, no op (R9); its own stats sight is `stats.mjs`' (R10). Moved from
    `store.mjs`' constructor, `#migrate`, `alarm`, `onAlarm`, `#nowMs`, `#ownNamespace` and `routes`, and from
    `control-plane/dispatch.mjs`' `Store` (control-plane R35, now this module's R1), with their behaviour unchanged. */
@@ -67,8 +67,8 @@ import { queueProducersOf } from "../queue-producers/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { wizardScriptsOf, wizardScriptsOps } from "../wizard-scripts/index.mjs";
 import { instanceSetupOf, instanceSetupOps } from "../setup.mjs";
-import { dispatch, controlPlaneRoutes } from "../control-plane/dispatch.mjs";
-import { promotionStep } from "../control-plane/step.mjs";
+import { dispatch, controlPlaneRoutes } from "../store-door/dispatch.mjs";   /* K1907, K2041: the store's door */
+import { promotionStep } from "../store-door/step.mjs";
 import { registerOwnersCounts, registerStats } from "./stats.mjs";
 import { wizardRegistration } from "./wizards.mjs";
 import { SCREENS } from "./screens.mjs";
@@ -88,6 +88,7 @@ import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { askOnObject, draftOnObject } from "./ask.mjs";
+import { admissionOf, admissionOps } from "../admission/window.mjs";
 import { archiveUnpackConsumer } from "./unpack.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
@@ -314,6 +315,9 @@ export class Store extends DurableObject {
        registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
        library, the member op table, the acts a machine is refused and the labelled machine drafts (its R13). */
     wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration());
+    /* K2044, K2054 (admission R21): admission's door window, built at its place in layer 11 so its table is made and
+       declared through record-core before the first request; its fingerprint is capture's (its R56). */
+    admissionOf(ctx);
     promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861, K2037): store-door's step (its R5), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
@@ -442,11 +446,11 @@ export class Store extends DurableObject {
   /* scheduler's alarm read (its R13), reached over the object's RPC by scheduler's plane test. */
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
-  /* R1, R5: every store request passes control-plane's one frame. R14 (DEC-113; control-plane R46): it is handed the
+  /* R1, R5: every store request passes store-door's one frame (K2043). R14 (DEC-113; control-plane R46): it is handed the
      object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
      record's and fails closed), and `actions`' `purgeHeld` (its R60) on this storage, each asked at the purge only. */
   async fetch(req) {
-    return dispatch(req, { routes: (url, body) => this.routes(url, body), membership: () => membershipOf(this.ctx),
+    return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
       namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionsOf(this.ctx).purgeHeld(q),
       /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. */
       logRead: (entry) => answersOf(this.ctx).logRead(entry) });
@@ -478,7 +482,7 @@ export class Store extends DurableObject {
 
   /* R5: the one route map, every module's own ops map (the `membershipOps` pattern), then instance-setup's, then
      control-plane's, in this order; this module holds no route of its own. */
-  routes(url, body) {
+  routes(url, body, grant = null) {
     const ctx = this.ctx, env = this.env;
     return {
       ...membershipOps(membershipOf(ctx), url, body, env),
@@ -562,7 +566,10 @@ export class Store extends DurableObject {
       ...reviewOps(reviewOf(ctx), url, body),
       ...wizardScriptsOps(wizardScriptsOf(ctx), url, body),   /* R19 (N528): the wizard scripts' ops, layer 11 */
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
-      ...controlPlaneRoutes(ctx, url, body),
+      /* K2044, K2054 (admission R21): the Worker's count of a request to a public op, `doorwindow`, store-internal */
+      ...admissionOps(admissionOf(ctx), url, body),
+      /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
+      ...controlPlaneRoutes(ctx, url, body, grant),
     };
   }
 }
