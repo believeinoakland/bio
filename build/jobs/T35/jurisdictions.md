@@ -26,6 +26,16 @@
 
 Size (session_016ugHTajUHdmuCsGKMnbB4L): test runs 9, module lines 6048
 
+## Completion of B4 (K1930)
+
+**Applied.** The first profile's `vocabulary.policy_headers` (R69) gains the labels doctypes measured on its 50 captured policies, each checked here on the documents that print it and sourced in `test/fixtures/policies.mjs` (PowerDMS 5, 17, 25, 148, 462, 642, 2108538): `Ref` (reference), `Rev.`, `New Order`, `DATE` and `Effective Date` without its colon (effective), `Evaluation Date` (review_due), `SUBJECT/AGENCY` (title), and `Coordinator`, `Index as`, `Index Number`, `Automatic Revision Cycle` with or without a colon. Labels are written with no trailing colon, as doctypes' reader adds one. Found while reading the 50 and fixed in my own data: the Special Order cite takes `SPECIAL ORDER NO. 8011` (six SOs print their own number so), the AI cite `Administrative Instruction No. 501` (DGO D-06); and, on 12 General Orders, OPD cites CALEA's accreditation standards by designation (`Ref: CALEA Standards 15.1.1; 15.1.2`), so the first profile now holds them as a `standard` source (sector association, `calea/standards`, no edition printed), as R67 asks where a measured primary source names one.
+
+**Measured with doctypes' own scorer** (`doctypes/test/policies.mjs` `score`, its policy reader): headers read wholly right under the first profile's combined view 45 of 50 (was 25), under `MEASURED_VIEW` 46. The one difference is DGO A-1 (PowerDMS 5), whose header opens "CALEA Standard:": doctypes anchors a header on the first line opening with any series' label, so it reads that page as a CALEA standard. **Found in doctypes (to BOB):** its header anchor (`policy-header.mjs` `anchor`) takes any `standard_sources` series, a `standard` included; anchoring only on `policy` series (or preferring them) would read A-1 rightly and give 46 under the held profile. The other four misses are the same under both views (AI 580 prints "ADMINSTRATIVE"; N-5, 103, 41 as doctypes records).
+
+**Tests and checks** (on the commit below): `node --test jurisdictions/test/`: tests 102, pass 102, fail 0. id-spaces, standards, doctypes, entities, instance-setup: pass 313, fail 1 (standards R29, accepted red 5). `format`: 0 failures; `architecture jurisdictions`: 0 failures; `coverage jurisdictions`: 69 of 69; `ownership jurisdictions tranche/T35`: 5 files, 0 failures. The installer bundle stays stale as reported.
+
+Size (session_016ugHTajUHdmuCsGKMnbB4L): test runs 13, module lines 6085
+
 ## J1 · QUESTION
 
 R36 says the first profile gives every records_laws and standard_sources entry a level; R31 (amended, T35-1) and R67 say an OUSD BP/AR entry carries no level, only sector government. My reading, which I am building on: R31 as amended governs, so R36's sentence reads 'every entry R31 requires a level for carries one' (statute, regulation, ordinance, court, and a policy, commitment or standard of a government at one of the four levels); OUSD's entries carry sector government and no level. I am updating my own R23 and R36 tests to that reading. If you want R36's wording amended to match, that is yours; nothing else waits on it.
