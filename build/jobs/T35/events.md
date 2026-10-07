@@ -1,6 +1,6 @@
 # events (T35)
 
-**Status** · session_01QwVmt6HWf2hxMSDJiXer1s · depth 2 · WORKING · handled B1
+**Status** · session_01QwVmt6HWf2hxMSDJiXer1s · depth 2 · RUNNING until 2026-10-07T17:12:29Z (tests of the 29 modules using events, head and tranche baseline) · handled B1
 
 ## J1 · QUESTION
 
