@@ -262,7 +262,7 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 
 ## Shares named for later STARTs (K1940; P10: a provided service's change carried to its users in this tranche)
 
-- **control-plane (T35-72):** promotes an archive's document, then its files'; routes `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`; passes `country` to capture's `knock` and `knockAttempt` (capture R85).
+- **control-plane (T35-72):** builds acquisition's instance (`acquisitionOf`) for its four ops; promotes an archive's document, then its files'; routes `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`; passes `country` to capture's `knock` and `knockAttempt` (capture R85).
 - **op-declarations (T35-70):** declares `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`.
 - **plane (T35-73):** its `ask.test.mjs` signs in through `login` or writes the token's SHA-256 (red 22). Builds `ownHosts` (the copy's own host and every fleet member's) and passes it through capture R73 to acquisition R42 and capture-sources R55, R65; until its merge the own-host check refuses nothing (F16, low).
 - **capture (T35-22):** an `archive-unpack` queue kind in R15, drained by the daemon, so an automatic unpack continues past one call; R48's quoted "knocks to this instance" re-worded with the P row (`doorbell.mjs`:24), wording only.
