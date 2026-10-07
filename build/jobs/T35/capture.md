@@ -1,6 +1,6 @@
 # capture (T35)
 
-**Status** · session_013T8uwQxiDgxa5pVNpN7fas · depth 2 · WORKING · handled B4
+**Status** · session_013T8uwQxiDgxa5pVNpN7fas · depth 2 · RUNNING until 2026-10-07T16:17:01Z (the users' tests, on my branch and on tranche/T35) · handled B4
 
 ## J1 · QUESTION
 
