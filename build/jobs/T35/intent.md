@@ -19,6 +19,6 @@
 - `node --test bio-plane/test/m/intent/`: tests 74, pass 74, fail 0 (one new test).
 - `catalogue-end.test.mjs` (the one test outside the module that pins the row): 1 pass, 1 fail, both with and without this change (red 19); no new failing test.
 - Layer tests: none named in `build/manifest.md`.
-- `format`: 130 modules, 129 requirements files; 0 failures. `architecture`: 15 product files, 65 relative imports; 0 failures. `coverage`: 31 of 31 live requirement ids named by a test; 0 failures. `ownership`: 0 failures (re-run after the commit, below).
+- `format`: 130 modules, 129 requirements files; 0 failures. `architecture`: 15 product files, 65 relative imports; 0 failures. `coverage`: 31 of 31 live requirement ids named by a test; 0 failures. `ownership`: 3 files changed by intent between tranche/T35 and HEAD; 0 failures.
 
 Size (session_01UdnNvtAgsbA7Psysnpv2Ch): test runs 4, module lines 2120
