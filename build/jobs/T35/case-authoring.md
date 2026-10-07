@@ -1,6 +1,6 @@
 # case-authoring (T35)
 
-**Status** · session_01Wf4MncyKDeDENFcc6teTX8 · depth 2 · WORKING · handled B2
+**Status** · session_01Wf4MncyKDeDENFcc6teTX8 · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
