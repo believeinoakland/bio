@@ -56,3 +56,7 @@ R47's wording leaves four points open. Below is my best reading of each, and I a
 ## J2 · REPORT
 
 Generated artifact made stale (mechanics §14): bio-plane/dist/bio-plane.bundled.mjs embeds bio-plane/src/odf.mjs, which T35-76 changed (owned by not_product). Regenerate it at L1's close. case-checker's program.mjs and the worker bundles do not include odf.mjs.
+
+## J3 · COMPLETE
+
+T35-76 applied: R47 as amended by K1917. One builder (activeOf) in parts(); every successful structure() and text() of odt/ods/odp carries active, guard and repeat-bound branches included. Kinds: odf-basic (Basic/ members; script:event-listener with event), odf-script (Scripts/ members), launch (presentation:event-listener with action execute), embedded-file (Object …/ members; the source an ObjectReplacements/ part names), unread (content.xml or styles.xml not read). Listed in central-directory order; nothing run. New active.test.mjs, 7 tests named R47; three whole-answer assertions now expect active. odf-reader 69/0; users format-registry and acquisition 115/0, capture 129/0. Coverage 47/47, architecture 0, ownership 0 failures. Format: 3 failures, all accepted reds (13, 16). Reported in J3: the plane bundle is stale. Deferred: nothing. Record: build/jobs/T35/odf-reader.md on job/T35/odf-reader.
