@@ -48,7 +48,7 @@ test("R28 (N398; admission R4, R7–R10): op=purge is the root of trust's and th
 
 test("R39 (N408, K621): op=purge whose confirm is not exactly the namespace the request resolved to is refused 400 REQUIRED_ARGUMENT_MISSING (C-61.1) naming argument confirm, expected and got, with tokenClass and store, before the store is called; a probe can confirm only scratch", async () => {
   const { env } = world();
-  const { REQUIRED_ARGUMENT_CHECKS } = await import("../../../src/control-plane/checks.mjs");
+  const { REQUIRED_ARGUMENT_CHECKS } = await import("../../../src/answer-envelope/checks.mjs");
   const cases = [
     [env.ADMIN_TOKEN, {}, "bio", null, "admin"], [env.ADMIN_TOKEN, { confirm: "scratch" }, "bio", "scratch", "admin"],
     [env.ADMIN_TOKEN, { confirm: "Bio" }, "bio", "Bio", "admin"], [env.ADMIN_TOKEN, { confirm: "" }, "bio", "", "admin"],
@@ -66,5 +66,5 @@ test("R39 (N408, K621): op=purge whose confirm is not exactly the namespace the 
     assert.equal(opCalls(env).length, 0, "nothing reaches the store");
   }
   /* the row is the module's own, its `where` naming its one site */
-  assert.equal(REQUIRED_ARGUMENT_CHECKS.REQUIRED_ARGUMENT_MISSING.where, "src/control-plane/index.mjs requiredArgument > is-required-argument");
+  assert.equal(REQUIRED_ARGUMENT_CHECKS.REQUIRED_ARGUMENT_MISSING.where, "src/answer-envelope/index.mjs requiredArgument > is-required-argument");
 });

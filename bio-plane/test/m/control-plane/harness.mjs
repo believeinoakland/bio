@@ -17,7 +17,8 @@ registerHooks({
   },
 });
 
-export const M = await import("../../../src/control-plane/index.mjs");
+/* The door's own names, with the envelope's beside them (answer-envelope, since the split, K1974), as the suites read both. */
+export const M = { ...(await import("../../../src/answer-envelope/index.mjs")), ...(await import("../../../src/control-plane/index.mjs")) };
 export const O = await import("../../../src/op-declarations/index.mjs");
 export const { makeFetch } = M;
 export const { OPS, SESSION_OPS, NEEDS } = O;
@@ -57,9 +58,10 @@ export function makeEnv({ sessions = {}, creds = {}, answer = null, omit = [], g
                            headers: Object.fromEntries(req.headers) };
             calls.push(call);
             if (answer) { const r = await answer(call); if (r) return r; }
-            if (route === "session") return ok({ session: sessions[u.searchParams.get("t")] ?? null });
+            /* admission R6, R20 (K2038): a lookup's credential travels in a header, as store-door R9 hands it on */
+            if (route === "session") return ok({ session: sessions[req.headers.get("x-bio-session") ?? u.searchParams.get("t")] ?? null });
             if (route === "aicredentiallook") {
-              const c = bySha.get(u.searchParams.get("sha"));
+              const c = bySha.get(req.headers.get("x-bio-credential-sha") ?? u.searchParams.get("sha"));
               return ok(c ? { found: true, credential: c } : { found: false });
             }
             if (route === "groupidentitypublic" || route === "instancegrouppublic")

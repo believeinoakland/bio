@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, M, world, call, opCalls, aik, cred, hex64, refused, FORGED } from "./harness.mjs";
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 const { record } = await import("./record.mjs");
 const { AI_GRANT_OPS, ACCOUNT_CHECKS } = await import("../../../src/credentials/index.mjs");
 const { ASK_PLANE_OPS } = await import("../../../../agent-worker/src/ops.mjs");
@@ -198,29 +198,7 @@ test("R53 (K1601, K1674; agent-worker R54): the ask's own four calls (askceiling
   }
 });
 
-/* ---- the read log, in the record store's door ---- */
-
-test("R53 (K1674; answers R1, R2): a read the store serves under a grant is handed to `store.logRead` with its grant, op, arguments (query and body, stamps aside), answer and viewer, and answered as logged; no grant, `rule` (which records its own) and an op off the asking scope are answered as served; a store that cannot log is the store's internal error, never an unlogged answer", async () => {
-  const logged = [];
-  const store = (logRead) => ({
-    routes: () => ({ search: () => ({ rows: ["INQ-1", "MTI-2026-0001"] }), rule: () => ({ value: 1 }), askceiling: () => ({ ok: true }) }),
-    membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }), ...(logRead ? { logRead } : {}) });
-  const logging = store((e) => { logged.push(e); return { rows: ["INQ-1"], scrubbed: true }; });
-  const go = async (s, path, body) => (await D.dispatch(new Request(`http://do/${path}`, body ? { method: "POST", body: JSON.stringify(body) } : {}), s));
-  const a = await (await go(logging, "search?grant=G1&viewer=member:ann&q=x", { limit: 5 })).json();
-  assert.deepEqual(a, { ok: true, result: { rows: ["INQ-1"], scrubbed: true } });
-  assert.deepEqual(logged, [{ grant: "G1", op: "search", args: { q: "x", limit: 5 }, answer: { rows: ["INQ-1", "MTI-2026-0001"] }, viewer: "member:ann" }]);
-  for (const path of ["search?viewer=member:ann&q=x", "rule?grant=G1&viewer=member:ann", "askceiling?grant=G1&viewer=member:ann"]) {
-    const r = await (await go(logging, path)).json();
-    assert.equal(r.ok, true, path);
-    assert.equal(r.result.scrubbed, undefined, path);
-  }
-  assert.equal(logged.length, 1);
-  const lost = await go(store(null), "search?grant=G1&viewer=member:ann");
-  const body = await lost.json();
-  assert.deepEqual([lost.status, body.reason], [500, "STORE_INTERNAL_ERROR"]);
-  assert.equal(JSON.stringify(body).includes("MTI-"), false, "nothing unlogged is answered");
-});
+/* ---- the read log and the ask's own routes are the store's door's (store-door R11, its own tests) ---- */
 
 test("R53 (K1674; credentials R28): the record store's door routes `aigrantadmit` to credentials' `aiGrantAdmit` (store-internal: no spec, so no caller reaches it through the Worker), answering credentials' own words (negative control: a name no module serves is R26's refusal)", async () => {
   const r = await record();
@@ -231,26 +209,6 @@ test("R53 (K1674; credentials R28): the record store's door routes `aigrantadmit
   refused(await call(env, { op: "aigrantadmit", token: env.ADMIN_TOKEN, method: "POST", body: {} }), 400, "UNKNOWN_OP", "C-69.1");
   const u = await r.go("aigrantnothing", "POST", {});
   assert.deepEqual([u.status, u.json.error], [400, "unknown op: aigrantnothing"]);
-});
-
-test("R53 (K1685; agent-worker R54): the record store's door routes the ask's own calls to their owners with the stamped viewer as the member — askceiling to ai-runs' ceiling check (a member with no account is AI_NO_ACCOUNT; under the ceiling `{ok: true}`), askusage to its ask counter (mode `ask` whatever was sent; a malformed use refused, nothing counted), askcheck to answers' checks over the grant's read log", async () => {
-  const r = await record();
-  const ceil = await r.go("askceiling?viewer=member:ann");
-  assert.deepEqual([ceil.status, ceil.json.ok, ceil.json.result.ok, ceil.json.result.reason], [200, true, false, "AI_NO_ACCOUNT"]);
-  const use = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
-  const u = await r.go("askusage?viewer=member:ann", "POST", { mode: "run", usage: use });
-  assert.deepEqual([u.json.ok, u.json.result.ok, u.json.result.counted], [true, true, 1], JSON.stringify(u.json).slice(0, 300));
-  const counted = r.db.prepare("SELECT member, mode, calls FROM ai_usage").all().map((x) => ({ ...x }));
-  assert.deepEqual(counted.map((x) => [x.member, x.mode]), [["ann", "ask"]]);
-  const bad = await r.go("askusage?viewer=member:ann", "POST", { usage: { input_tokens: "lots" } });
-  assert.equal(bad.json.result.ok, false);
-  assert.equal(r.db.prepare("SELECT COUNT(*) n FROM ai_usage").get().n, 1, "a refused use counts nothing");
-  const noViewer = await r.go("askusage", "POST", { usage: use });
-  assert.equal(noViewer.json.result.ok, false, "no member, nothing counted");
-  const c = await r.go("askcheck?grant=G1&viewer=member:ann", "POST", { answer: { sentences: [] } });
-  assert.equal(c.status, 200, JSON.stringify(c.json).slice(0, 300));
-  assert.equal(c.json.ok, true);
-  assert.ok(c.json.result && typeof c.json.result === "object", JSON.stringify(c.json).slice(0, 300));
 });
 
 test("R53, R29 (K1687): standards' five T33 acts read their author from the body, so the door sets it there — `author`, or `proposer` on `lawpropose` — as the positional identity for a session and the machine's own name otherwise, whatever the caller put in the body (negative control: a caller's body field of its own reaches the route)", async () => {

@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { O, world, call, opCalls, aik, cred, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const { caseImportOps } = await import("../../../src/case-import/index.mjs");
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 
 const { OPS, NEEDS } = O;
 const WATCH = ["importwatch", "importunwatch"];
