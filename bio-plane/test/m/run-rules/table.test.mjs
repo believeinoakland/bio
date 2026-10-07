@@ -124,9 +124,10 @@ test("R12: no place is named in the module's behaviour or outward text — its r
     RR.checkRunContextKind({ contextType: "x" }).detail, RR.checkRunContextKind({ contextType: "project" }).detail,
     RR.runPrincipalGate({}).detail, RR.runPrincipalGate({ act: "x" }).detail,
     RR.checkRunState({ notes: "x".repeat(262144) }).detail,
-    JSON.stringify(RR.DEPLOYMENT_SEQUENCE), JSON.stringify(RR.ASK_MODE), JSON.stringify(RR.ASK_BOUNDS),
+    JSON.stringify(RR.DEPLOYMENT_SEQUENCE), JSON.stringify(RR.ASK_MODE), JSON.stringify(RR.DRAFT_MODE), JSON.stringify(RR.ASK_BOUNDS),
     JSON.stringify(RR.VERIFICATION_RECORDED), RR.startAllowed({}).detail,
-    RR.startAllowed({ mode: "check", standing: { author: "member:a" } }).detail, RR.checkVerification({}).detail,
+    RR.startAllowed({ mode: "check", standing: { author: "member:a" } }).detail, RR.startAllowed({ mode: "draft" }).detail,
+    RR.checkVerification({}).detail,
     RR.checkAskBounds([]).detail, RR.checkAskBounds({ x: 1 }).detail, RR.checkAskBounds({ turns: 0 }).detail,
     RR.checkAskBounds({ turns: 1.5 }).detail, RR.checkAskBounds({ turns: 99 }).detail, RR.checkAskBounds({}).detail,
   ];
