@@ -91,7 +91,7 @@ export const cred = (extra = {}) => ({ tokenId: "agent-1", principal: "member:an
  *  R59 (admission R20) has it, in an `Authorization: Bearer` header; `tokenIn: "query"` sends it in the address instead
  *  (T35's deprecated form), `tokenIn: "body"` as a JSON body's `token`. */
 export async function call(env, { op, token, params = {}, method = "GET", body, path = "/api", headers = {},
-                                  hooks, tokenIn = "header", secretIn = "body" } = {}) {
+                                  hooks, tokenIn = "header", secretIn = "body", cf = null } = {}) {
   const u = new URL(`https://plane.example${path}`);
   if (op !== undefined) u.searchParams.set("op", op);
   if (token !== undefined && tokenIn === "query") u.searchParams.set("token", token);
@@ -109,7 +109,10 @@ export async function call(env, { op, token, params = {}, method = "GET", body, 
   const init = { method, headers };
   if (body !== undefined) init.body = typeof body === "string" ? body : JSON.stringify(body);
   const fetch = makeFetch(hooks ?? defaultHooks());
-  const res = await fetch(new Request(u, init), env);
+  const request = new Request(u, init);
+  /* Cloudflare's `request.cf` (its `country`), as the platform sets it */
+  if (cf) Object.defineProperty(request, "cf", { value: cf });
+  const res = await fetch(request, env);
   const text = await res.text();
   let json = null;
   try { json = JSON.parse(text); } catch { json = null; }

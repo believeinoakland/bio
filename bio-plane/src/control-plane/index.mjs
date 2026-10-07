@@ -2084,8 +2084,9 @@ export function makeFetch(hooks = {}) {
     if (passBody) {
       try {
         const b0 = JSON.parse(passBody);
-        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && BODY_STAMPS.some((k) => k in b0)) {
-          for (const k of BODY_STAMPS) delete b0[k];
+        /* R59 (admission R20): a body's `token` is the caller's credential, the door's alone, never passed on */
+        if (b0 && typeof b0 === "object" && !Array.isArray(b0) && [...BODY_STAMPS, "token"].some((k) => k in b0)) {
+          for (const k of [...BODY_STAMPS, "token"]) delete b0[k];
           passBody = JSON.stringify(b0);
         }
       } catch { /* the DO will refuse the malformed body with its own words */ }
