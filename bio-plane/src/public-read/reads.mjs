@@ -15,7 +15,7 @@ export const PUBLIC_READ_PARAM = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
 /* The ops this module answers itself, store side and door side; no registered read may take one of their names. */
 export const PUBLIC_READ_OWN_OPS = Object.freeze(["verify", "publishedmanifest", "publishedcase", "publishedbytes",
                                                   "publishedlist", "publishededitions", "publicread", "docketpublic",
-                                                  "docketfeed"]);
+                                                  "docketfeed", "credit"]);
 
 /* R10's terms: what no registered read may declare and the door never forwards. The credentials and the door's routing
    keys (`token`, `op`, `store`, `secret`, `secretSha`, `bySecret`), every stamp the door sets from a caller (`control-plane`
