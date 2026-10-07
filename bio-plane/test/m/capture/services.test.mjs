@@ -77,7 +77,7 @@ test("R44 (N202): listeners for source outcomes and tasks are called after the w
 
 test("R15: taskEnqueue accepts only a known kind and a 64-hex digest, bounds subject and locator, dedupes on (kind, digest)", async () => {
   const { c, rows } = fresh();
-  assert.deepEqual(TASK_KINDS, ["authority-undetermined"]);
+  assert.deepEqual(TASK_KINDS, ["authority-undetermined", "archive-unpack"]);
   assert.equal((await c.taskEnqueue({ kind: "other", captureSha: A })).reason, "BAD_KIND");
   assert.equal((await c.taskEnqueue({ captureSha: "abc" })).reason, "BAD_CAPTURE_SHA");
   assert.equal((await c.taskEnqueue({ captureSha: A.toUpperCase() })).reason, "BAD_CAPTURE_SHA");
