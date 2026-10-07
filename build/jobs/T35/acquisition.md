@@ -55,3 +55,14 @@ What T35-21 touches outside acquisition, for you to route.
 ## J3 · COMPLETE
 
 T35-21 complete: N661, the 18 DEC-149 rows, N688 (R17, R25–R27, R38–R41), F16 (R42), K1888 (R20, R43), C-137 (R29). 144/144 module tests; format, architecture, coverage and ownership 0 failures; users' tests as on the base. The record's Completion section has everything. One condition (J2 item 1): my branch loads only after provenance and capture-sources merge; please run my tests then. Module 2,842 lines.
+
+## Completion after B3, B4 (J4)
+
+- **B3, B4 (1):** `memento.test.mjs`:35 and `acquire.test.mjs`:102 re-pinned to capture-sources' DEC-149 wording, "computed by your group's Civicsmith" (`memento.test.mjs`:23 is the same test, no pin of its own).
+- **B4 (2):** `isOwnHost` imported from `capture-sources/own-hosts.mjs` (capture-sources has no module entry that re-exports it); the render request already carries `own_hosts` (R42, J3).
+- **B4 (3):** nothing to change here: `acquire` answers the archive's `document` and then `unpack.documents`, and its requirements (Callers' obligations) say the caller promotes the archive first; control-plane's share (T35-72, J2 item 3).
+- `tranche/T35` merged in (provenance, capture-sources, host-governor and attestation are on it), so the J3 condition is gone: the module loads and is tested against their real code; the local stand-ins are deleted.
+- `node --test bio-plane/test/m/acquisition/`: pass 144, fail 0. Users: capture 127/0, capture-requests 86/0, monitoring 121/0, provenance 102/0, capture-sources 96/0, attestation 32/0, standards 51/0, control-plane 181/1 (catalogue-end, accepted red 19).
+- `format: 129 modules, 128 requirements files; 0 failures`; `architecture: 22 product files, 99 relative imports (0 naming no tracked file, not judged); 0 failures`; `coverage: 1 modules, 43 of 43 live requirement ids named by a test; 0 failures`; `ownership: 16 files changed by acquisition between tranche/T35 and HEAD; 0 failures`.
+
+Size (session_01UMj9SBkQaJdNggTSiaKV3Q): test runs 25, module lines 2842
