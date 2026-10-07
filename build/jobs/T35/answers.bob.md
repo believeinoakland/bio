@@ -13,3 +13,7 @@ Your module's DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`), as your ent
 ## B2 · ANSWER · re J1
 
 (1) stands. (2) changed (K1982): a selection scope is frozen at set time into the enumerated ids it then holds, refused SCOPE_TOO_LARGE over 200 (R28 re-worded on tranche/T35 @ 08843d299f; merge it). Your recorded choices stand.
+
+## B3 · CHANGE
+
+run-rules (T35-43) is merged into tranche/T35 @ 556d4cef62 (K1984): DRAFT_MODE, deployedModesFor(flags), the draft mode R16/R18/R21. Merge the tranche branch into yours (a merge, never re-applying its commits) and build against it.
