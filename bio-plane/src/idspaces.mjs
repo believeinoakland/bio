@@ -25,7 +25,11 @@
  *
  * It also RECOGNISES court citations (R27–R29): volume, reporter, page, the reporter known only from the
  * reporter data `court-citations` holds (or the same data passed in). A citation recognised is a spelling
- * recognised, never a case resolved. */
+ * recognised, never a case resolved.
+ *
+ * And it RECOGNISES citations of a policy series' items and standard designations (R30–R33), every series,
+ * issuer and pattern read from the view's `standard_sources` (`jurisdictions` R63). A citation read is never a
+ * resolution, and an edition not written is never supplied. */
 
 import * as CourtCitations from "../../court-citations/index.mjs";
 
@@ -582,5 +586,149 @@ export function recogniseCitations(text, reporters = undefined) {
     return { citations, undetermined };
   } catch {
     return { citations: [], undetermined: { why: "the text could not be read for citations, so whether it cites anything is undetermined" } };
+  }
+}
+
+/* ---------------------------------------------------------------- recogniseSeries (R30–R33) */
+
+/* The view's numbered families: each `standard_sources` entry with `series` (`jurisdictions` R63), keyed by its
+   issuer's `key` and its `series.key`. A family the view withholds (`jurisdictions` R66) is not read: combine
+   reports it in `conflicts` at `standard_sources[<key>/<series.key>]…`; a view whose entries of one family
+   disagree, or one that kept a family without its `cite`, is read the same way. Data only: no family, issuer
+   or designation is named here (R33). */
+const famKey = (key, series) => `${key}\u0000${series}`;
+function conflictFamily(c) {
+  const at = typeof c.at === "string" ? c.at : "";
+  const m = /^standard_sources\[([^\]]*)\]/.exec(at);
+  if (!m) return null;
+  const parts = m[1].split("/");
+  return parts.length === 2 && parts[0] && parts[1] ? { key: parts[0], series: parts[1] } : null;
+}
+function seriesOf(view, conflicts) {
+  const withheld = new Map(), readable = [], unreadable = [], byFam = new Map();
+  for (const c of conflicts) {
+    if (!isObj(c)) continue;
+    const f = conflictFamily(c);
+    if (!f) continue;
+    const k = famKey(f.key, f.series);
+    if (!withheld.has(k)) withheld.set(k, { key: f.key, series: f.series, at: [], says: [] });
+    withheld.get(k).at.push(c.at);
+    if (typeof c.says === "string" && c.says) withheld.get(k).says.push(c.says);
+  }
+  for (const s of arr(view.standard_sources)) {
+    if (!isObj(s) || !isObj(s.series)) continue;
+    if (typeof s.key !== "string" || !s.key || typeof s.series.key !== "string" || !s.series.key) {
+      unreadable.push({ source: typeof s.source === "string" ? s.source : null, why: "a series with no issuer key or no family key names no family" });
+      continue;
+    }
+    const k = famKey(s.key, s.series.key);
+    if (!byFam.has(k)) byFam.set(k, []);
+    byFam.get(k).push(s);
+  }
+  const sig = (s) => JSON.stringify([s.series.label ?? null, s.cite ?? null, s.normal ?? null]);
+  for (const [k, list] of byFam) {
+    const { key, series } = { key: list[0].key, series: list[0].series.key };
+    const withheldHere = (why) => {
+      if (!withheld.has(k)) withheld.set(k, { key, series, at: [], says: [] });
+      withheld.get(k).says.push(why);
+    };
+    if (withheld.has(k)) continue;
+    if (new Set(list.map(sig)).size > 1) { withheldHere("the view's entries for this family give different labels, patterns or normal forms"); continue; }
+    const s = list[0];
+    if (!isObj(s.cite)) { withheldHere("the view holds this family with no citation pattern (withheld)"); continue; }
+    const re = compileFind(s.cite);
+    if (!re) { unreadable.push({ key, series, why: "its citation pattern does not compile" }); continue; }
+    readable.push({ entry: s, re });
+  }
+  return { readable, withheld: [...withheld.values()], unreadable, held: byFam.size + withheld.size };
+}
+
+/* A citation pattern compiled to search a whole text, or null when it does not compile. */
+const FINDS = new WeakMap();
+function compileFind(p) {
+  if (!isObj(p) || typeof p.re !== "string") return null;
+  if (FINDS.has(p)) return FINDS.get(p);
+  let re = null;
+  try { re = new RegExp(p.re, `g${typeof p.flags === "string" ? p.flags.replace(/[^iu]/g, "") : ""}`); } catch { re = null; }
+  FINDS.set(p, re);
+  return re;
+}
+
+/* One match read as the entry says: the number, portion and edition as written, the normal form from the
+   entry's normal parts (R3 there: formatting removed only, R4 here), or the number as matched. */
+function readMatch(s, m) {
+  const g = m.groups || {};
+  const number = typeof g.number === "string" ? g.number : "";
+  if (!number) return null;
+  let normal = number;
+  if (Array.isArray(s.normal) && s.normal.length) {
+    normal = normalOf({ normal: s.normal }, m);
+    if (!normal) return null;
+  }
+  const out = { key: s.key, series: s.series.key, label: typeof s.series.label === "string" ? s.series.label : null,
+                kind: s.kind ?? null, issuer: s.issuer ?? null, number, normal };
+  if (typeof g.portion === "string" && g.portion) out.portion = g.portion;
+  if (s.kind === "standard" && typeof g.edition === "string" && g.edition) out.edition = g.edition;
+  out.start = m.index; out.end = m.index + m[0].length;
+  out.basis = s.basis ?? null; out.profile = s.profile ?? null;
+  return out;
+}
+
+const noSeries = (why, extra = {}) => ({ citations: [], undetermined: { why, ...extra } });
+
+/** The policy-series and standard citations in `text`, read from the view's series (R30–R33). Never throws. */
+export function recogniseSeries(v, text) {
+  try {
+    const { view, conflicts } = viewOf(v);
+    if (typeof text !== "string")
+      return noSeries("no text was given (not a string), so nothing was read: whether it cites a policy or a standard is undetermined");
+    const { readable, withheld, unreadable, held } = seriesOf(view, conflicts);
+    const named = withheld.map(({ key, series, at, says }) => ({ key, series, ...(at.length ? { at } : {}),
+      says: says.length ? says.join("; ") : "the active profiles disagree on this family, so it is withheld" }));
+    const extra = { ...(named.length ? { conflicts: named } : {}), ...(unreadable.length ? { unreadable } : {}) };
+    if (!held)
+      return noSeries("the active profiles supply no policy series or standard designation, so no citation of one can be "
+        + "recognised: finding none says nothing about whether the text cites a policy or a standard", extra);
+    /* every entry's matches, then grouped where they overlap */
+    const found = [];
+    for (const { entry, re } of readable) {
+      re.lastIndex = 0;
+      for (let m; (m = re.exec(text)); ) {
+        if (m[0].length === 0) { re.lastIndex++; continue; }
+        const r = readMatch(entry, m);
+        if (r) found.push(r);
+      }
+    }
+    found.sort((a, b) => a.start - b.start || b.end - a.end);
+    const groups = [];
+    for (const f of found) {
+      const g = groups[groups.length - 1];
+      if (g && f.start < g.end) { g.items.push(f); g.end = Math.max(g.end, f.end); }
+      else groups.push({ start: f.start, end: f.end, items: [f] });
+    }
+    const citations = [], ambiguous = [];
+    for (const g of groups) {
+      const readings = new Map();
+      for (const f of g.items) {
+        const k = JSON.stringify([f.key, f.series, f.normal]);
+        if (!readings.has(k)) readings.set(k, f);
+      }
+      if (readings.size === 1) {
+        /* one family and number, however many entries or spellings read it: the widest reading is the citation */
+        citations.push(g.items.reduce((best, f) => (f.end - f.start > best.end - best.start ? f : best)));
+        continue;
+      }
+      ambiguous.push({ text: text.slice(g.start, g.end), start: g.start, end: g.end, readings: [...readings.values()] });
+    }
+    const why = [];
+    if (ambiguous.length) why.push(`${ambiguous.length} run(s) of text are read by more than one family or number: listed with every reading, never one chosen`);
+    if (named.length) why.push(`${named.length} famil(ies) are withheld because the active profiles disagree on them, so a citation of `
+      + "one is not read: whether the text cites them is undetermined");
+    if (unreadable.length) why.push(`${unreadable.length} series cannot be read from the view, so a citation of one is not recognised`);
+    if (!readable.length && !why.length) why.push("no series in the view can be read");
+    if (!why.length) return { citations };
+    return { citations, undetermined: { why: why.join("; "), ...(ambiguous.length ? { ambiguous } : {}), ...extra } };
+  } catch {
+    return noSeries("the text could not be read for policy or standard citations, so whether it cites one is undetermined");
   }
 }
