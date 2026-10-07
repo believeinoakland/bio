@@ -55,6 +55,10 @@
  *           Element references are IC-1's `slide-shape`, built by IMPORTING
  *           `slideShapeRef` from `pptx.mjs`.
  *
+ *   All three structure()s and text()s also carry `active` (R47), the one
+ *   list of what can act when the file is opened, in `office-readers` R32's
+ *   shape (`activeOf`).
+ *
  * NO NEW IC-1 UNION MEMBER WAS NEEDED and none is invented: an OpenDocument
  * text document has paragraphs, a spreadsheet has cells, a presentation has
  * slides and shapes, and those are precisely the three arms IC-1 resolved.
@@ -711,8 +715,102 @@ async function odfPartsUnguarded(row, bytes) {
 
   const manifest = await manifestIntraLinks(b, container, contentXml, undetermined);
 
+  /* R47: what can act when the file is opened, read once here so structure()
+     and text() carry the one list, over every bound included. */
+  const contentWhy = guard ? guard.why : contentXml == null
+    ? (undetermined.find((u) => u.part === CONTENT_PART)?.why ?? "part_unreadable") : null;
+  const active = await activeOf(b, container, contentXml, contentWhy);
+
   return { ok: true, format: row.flavour, row, bytes: b, container, contentXml, declared, guard, core,
-    embedded: manifest.links, manifestWhy: manifest.why, undetermined };
+    embedded: manifest.links, manifestWhy: manifest.why, undetermined, active };
+}
+
+/* ------------------------------------------------------------------ *
+ * R47 (K1888, K1903) — ACTIVE CONTENT, found and read, never run
+ * ------------------------------------------------------------------ */
+
+/* WHAT CAN ACT WHEN AN OPENDOCUMENT FILE IS OPENED, in `office-readers`
+ * R32's shape (the OOXML half of the same list):
+ *   - a Basic library: every member under the package root's `Basic/`
+ *     (`script-lc.xml`, a library's `script-lb.xml`, each module's source);
+ *   - an event binding: every `script:event-listener` in content.xml or
+ *     styles.xml, with the event it fires on (`dom:load`, `dom:click`, …) —
+ *     the binding is the act, whatever it names;
+ *   - an embedded object: every member under an `Object …/` sub-document
+ *     directory, and the OLE blob an `ObjectReplacements/` rendering stands
+ *     for (stored as ONE member, `Object 2`, so only its rendering names it).
+ * Names come from the central directory, so they are listed whatever bound
+ * the text read met; the listeners need the two parts read, and a part that
+ * could not be is stated (`unread`), so `[]` always means "none", never "not
+ * looked". Nothing is run, evaluated or resolved: a listener's target is not
+ * followed, and a Basic module's source is not read. This asserts no threat:
+ * an item says the file CAN act, not that it is malicious. */
+const STYLES_PART = "styles.xml";
+const SCRIPT_NS = "urn:oasis:names:tc:opendocument:xmlns:script:1.0";
+
+/** The prefixes a part binds to the script namespace; the conventional
+ *  `script` when it declares none (a producer that never declares it still
+ *  means it). */
+function scriptPrefixes(xml) {
+  const out = new Set();
+  for (const m of xml.matchAll(/\sxmlns:([\w.-]+)\s*=\s*("([^"]*)"|'([^']*)')/g)) {
+    if ((m[3] ?? m[4]) === SCRIPT_NS) out.add(m[1]);
+  }
+  if (!out.size) out.add("script");
+  return out;
+}
+
+/** Each `script:event-listener` in a part's markup, in document order, as
+ *  the `script:event-name` it binds (null when it names none). */
+function eventListenersIn(xml) {
+  const prefixes = scriptPrefixes(xml);
+  const out = [];
+  const RE = tokens();
+  let m;
+  while ((m = RE.exec(xml)) !== null) {
+    if (m[1] === undefined || m[0][1] === "/") continue;
+    const i = m[1].indexOf(":");
+    if (i < 0 || m[1].slice(i + 1) !== "event-listener" || !prefixes.has(m[1].slice(0, i))) continue;
+    out.push(attrsOf(m[2])["event-name"] ?? null);
+  }
+  return out;
+}
+
+async function activeOf(bytes, container, contentXml, contentWhy) {
+  const names = [];
+  const seen = new Set();
+  for (const e of container.entries) {
+    const name = normalizePartName(e.name);
+    if (!name || name.endsWith("/") || seen.has(name)) continue;
+    seen.add(name);
+    names.push(name);
+  }
+  const has = new Set(names);
+  /* The OLE blobs: the source each `ObjectReplacements/X` rendering names. */
+  const replaced = new Set();
+  for (const n of names) {
+    if (!n.startsWith("ObjectReplacements/")) continue;
+    const source = n.slice("ObjectReplacements/".length);
+    if (source && has.has(source)) replaced.add(source);
+  }
+
+  const items = [];
+  for (const name of names) {
+    if (name.startsWith("Basic/")) items.push({ kind: "odf-basic", part: name });
+    else if (/^Object [^/]*\//.test(name) || replaced.has(name)) items.push({ kind: "embedded-file", part: name });
+    else if (name === CONTENT_PART) {
+      if (contentXml == null) items.push({ kind: "unread", part: name, why: contentWhy });
+      else for (const event of eventListenersIn(contentXml)) items.push({ kind: "odf-basic", part: name, event });
+    } else if (name === STYLES_PART) {
+      /* styles.xml is inflated for this list alone, so it is bounded the way
+         content.xml is (COFF-6's metric, from the central directory first). */
+      const g = sizeGuard(declaredTextBytes(container, (n) => n === STYLES_PART).total);
+      const read = g.ok ? await readPart(bytes, container, STYLES_PART) : { ok: false, why: g.why };
+      if (!read.ok) items.push({ kind: "unread", part: name, why: read.why });
+      else for (const event of eventListenersIn(UTF8.decode(read.bytes))) items.push({ kind: "odf-basic", part: name, event });
+    }
+  }
+  return items;
 }
 
 /* ------------------------------------------------------------------ *
@@ -2053,12 +2151,15 @@ function entryFor(row, structureOf, textOf) {
      that would cross the bound stops, and the projection answers as it does
      over the size guard, content.xml not read and the repeat marker stated;
      what parts() read outside content.xml (R28–R30) is still answered. */
-  const bounded = (projectionOf, parts) => {
+  const bounded = (projectionOf, parts) => withActive(parts, (() => {
     try { return metered(() => projectionOf(parts)); } catch (e) {
       if (!(e instanceof OverRepeatBound)) throw e;
       return projectionOf({ ...parts, contentXml: null, repeat: e.marker });
     }
-  };
+  })());
+  /* R47: both projections carry parts()' one `active` list, on every
+     successful answer, the bound branches included. */
+  const withActive = (parts, out) => (out && out.ok ? { ...out, active: parts.active } : out);
   return {
     format: row.flavour,
     detect: (bytes, contentType) => detectOdf(row, bytes, contentType),
