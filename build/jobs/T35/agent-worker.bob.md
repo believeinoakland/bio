@@ -13,3 +13,7 @@ Your module's DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`), as your ent
 ## B2 · ANSWER · re J1
 
 All three readings stand (K1983). (1) R59 now takes `pack` when no grant is sent (amended on tranche/T35 @ 2fb6fa0470; merge it); control-plane's job sends it. (2) AGENT-MODEL #3 is told to add `draft` to MODEL_FOR_MODE (provisional until M-Q9); merge after its merge when I say. (3) build the read_facts opener yourself; adopt agent-model's if it exports one. Your notes (no DEPLOYED_MODES gate, no askusage) stand.
+
+## B3 · CHANGE
+
+run-rules (T35-43) is merged into tranche/T35 @ 556d4cef62 (K1984): DRAFT_MODE, deployedModesFor(flags), the draft mode R16/R18/R21. Merge the tranche branch into yours (a merge, never re-applying its commits) and build against it.
