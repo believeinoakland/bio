@@ -39,3 +39,7 @@ Also found, for your record (my module, not fixable here alone): R1's drain read
 ## J2 · REPORT
 
 Generated artifact made stale: the plane bundle (bio-plane/dist/bio-plane.bundled.mjs) embeds tasks, changed by T35-77 and R18; for L11's close regeneration (§14). Nothing else outside tasks.
+
+## J3 · COMPLETE
+
+T35-77 applied (drain and counts ask only authority-undetermined; tested with a negative control) and R18 built as K2038 worded it (back-off from capture's attempts, no wake at 8 tries, re-armed by enqueue and promotion.onCommitted; constants exported). Also fixed: a MINT_EXHAUSTED try is now counted, so R18 bounds it. Deferred: head-of-line, N740. tasks 98/0; users' failures identical to baseline; format, architecture, coverage (18/18), ownership (5 files): 0 failures. Record: Completion (T35-77; R18).
