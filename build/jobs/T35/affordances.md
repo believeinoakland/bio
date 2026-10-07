@@ -46,3 +46,18 @@ Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 12, module lines 2055
 ## J3 · COMPLETE
 
 T35-66 is complete and pushed on `job/T35/affordances` (merged with `tranche/T35` after op-grades). Details in my record's Completion section: A-1's removal side (tables read from op-grades, no copy; `irreversible_weight` in VOCABULARIES; K2038's marked re-export), N597, N695. affordances 202 of 204 (reds 29, 36); users 332 of 336 (reds 37, 9, 23/29); format, architecture, coverage (32 of 32), ownership: 0 failures. Size: test runs 12, module lines 2055.
+
+## Completion (B4, K2049)
+
+**CHANGE applied.** Merged `tranche/T35` (op-grades' re-merge grading the 25 T35 ops). The closed lists the tests pin now hold each owner's map as merged:
+- `t33.test.mjs` (R40 R12; red 29): `T35_ADDS` names the ops T33's new modules add in T35 (events `discretionrecord`, `assessmentrecord`, `usewithdraw`, `usesof`; duties `poweruses`, `uselink`, `useunlink`, `reviewpropose`; hypotheses `noterevise`, `notedelete`; calculations `usesfreeze`, `applicationrecipes`), each map held to exactly T33's ops and these, and each add held to op-grades' `T35_NON_ACTS` (a write with a T35 rung or absence, a read with neither).
+- `catalogue.test.mjs` (R3 R7 R12; red 36): standards' eleven T35 ops (`standardforce`, `standardforcepropose`, `standardforcewithdraw`, `standardrelease`, `standardadoption`, `standardimpose`, `standardbenchmark`, `forcesof`, `overridesof`, `editioninforce`, `bindsat`) set aside from layer 9's closed set as T33's are, pinned to standards' map and to op-grades' T35 table.
+- R19's backing for op-grades' nine new `reasoned` ops (the six standards writes, events `usewithdraw`, duties `uselink`, `useunlink`), each driven at its owner's interface over its fixture (new `t35-backing.test.mjs`), and `plane.test.mjs`'s reach list counts them. Without these R19's reach test was red once op-grades graded them.
+- K2038's re-export stays until plane and control-plane merge.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/affordances/`: tests 208, pass 208, fail 0 (reds 29 and 36 cleared).
+- Users: control-plane `totality`, plane `wizards`, queue, op-declarations, op-grades, tasks: tests 340, pass 336, fail 4 (red 37 totality; op-declarations' accepted reds).
+- `format`: 0 failures. `architecture affordances`: 18 product files, 229 relative imports; 0 failures. `coverage affordances`: 32 of 32; 0 failures. `ownership affordances tranche/T35`: 0 failures.
+
+Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 20, module lines 2055
