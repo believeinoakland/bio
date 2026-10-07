@@ -19,6 +19,8 @@ const sourcesFor = (p, name) => p[name] ?? p["default-src"];
 const ownOnly = (sources) => Array.isArray(sources) && sources.length > 0 && sources.every((s) =>
   ["'self'", "'none'", "'unsafe-inline'", "data:"].includes(s));
 const NONCE_SOURCE = /^'nonce-([A-Za-z0-9+/_-]+={0,2})'$/;
+/* A text with each script start tag's nonce attribute removed. */
+const unNonced = (html) => html.replace(/<script\b[^>]*>/gi, (tag) => tag.replace(/\snonce(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>]+))?/gi, ""));
 /* Every script start tag of an HTML text, as the browser's tokeniser finds it in these pages. */
 const scriptTags = (html) => html.match(/<script\b[^>]*>/gi) || [];
 
@@ -63,8 +65,9 @@ test("R6: the signer page and the setup page, each served twice, carry a policy 
       const body = await r.text();
       const { nonce, scripts } = judge(r.headers.get("content-security-policy"), body, `${where} #${i + 1}`);
       assert.equal(scripts, before, `${where}: no script element added or lost`);
-      /* only the nonce attribute moved */
-      assert.equal(body.replaceAll(` nonce="${nonce}"`, ""), page, `${where}: nothing else of the page changed`);
+      /* only the nonce moved: the script elements' nonce attributes, and setup-page R28's slot wherever it stands */
+      assert.equal(body.includes(M.NONCE_SLOT), false, `${where}: no slot left unfilled`);
+      assert.equal(unNonced(body), unNonced(page.replaceAll(M.NONCE_SLOT, nonce)), `${where}: nothing else of the page changed`);
       seen.push(nonce);
     }
     assert.notEqual(seen[0], seen[1], `${where}: two responses, two nonces`);
@@ -118,6 +121,23 @@ test("R6: every script element of any page is given the response's nonce, whatev
   assert.equal(plain.status, 500);
   assert.equal(await plain.text(), "<!doctype html><p>x</p>");
   judge(plain.headers.get("content-security-policy"), "", "no script");
+});
+
+test("R6 (setup-page R28, K2038): every NONCE_SLOT (`__CSP_NONCE__`) in an HTML body served is the response's nonce, in a script element's nonce attribute and wherever else the page holds it, and no slot is left (negative control: a JSON answer holding the literal is not touched)", async () => {
+  assert.equal(M.NONCE_SLOT, "__CSP_NONCE__");
+  const page = `<!doctype html><script nonce="${M.NONCE_SLOT}">const s = document.createElement("script"); s.nonce = "${M.NONCE_SLOT}";</script>`
+    + `<p>${M.NONCE_SLOT}</p><script type="module" nonce='${M.NONCE_SLOT}'>1</script>`;
+  for (let i = 0; i < 2; i++) {
+    const r = await M.withPagePolicy(html(page));
+    const body = await r.text();
+    const { nonce, scripts } = judge(r.headers.get("content-security-policy"), body, "slots");
+    assert.equal(scripts, 2);
+    assert.equal(body.includes(M.NONCE_SLOT), false);
+    assert.equal(body, `<!doctype html><script nonce="${nonce}">const s = document.createElement("script"); s.nonce = "${nonce}";</script>`
+      + `<p>${nonce}</p><script nonce="${nonce}" type="module">1</script>`);
+  }
+  const j = M.json({ ok: true, v: M.NONCE_SLOT });
+  assert.equal(await M.withPagePolicy(j), j);
 });
 
 test("R6: a response that is not text/html leaves exactly as it came, with no policy: JSON, plain text, bytes, a 204 and no response at all", async () => {

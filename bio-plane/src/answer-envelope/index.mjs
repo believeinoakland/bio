@@ -19,6 +19,10 @@ const PAGE_POLICY = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-s
   + "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'";
 const pagePolicy = (nonce) => `${PAGE_POLICY}; script-src 'nonce-${nonce}'`;
 
+/* `setup-page` R28's slot (K2038): the literal its template holds in each script element's `nonce` attribute, which
+   every HTML body served gets the response's nonce in place of, wherever it stands. */
+const NONCE_SLOT = "__CSP_NONCE__";
+
 /* 16 bytes from `crypto.getRandomValues`, in base64 (CSP's nonce grammar). */
 function pageNonce() {
   const b = crypto.getRandomValues(new Uint8Array(16));
@@ -81,7 +85,7 @@ async function withPagePolicy(res) {
   const headers = new Headers(res.headers);
   headers.delete("content-length");
   headers.set("content-security-policy", pagePolicy(nonce));
-  return new Response(stampScripts(text, nonce), { status: res.status, statusText: res.statusText, headers });
+  return new Response(stampScripts(text.replaceAll(NONCE_SLOT, nonce), nonce), { status: res.status, statusText: res.statusText, headers });
 }
 
 /* N630 (K1717, K1864 (1)): compact JSON, no indentation, so no answer carries whitespace it does not need. */
@@ -390,7 +394,7 @@ class StoreSilent extends Error {
   constructor(op) { super(`the store did not answer ${op}`); this.op = op; }
 }
 
-export { PAGE_POLICY, pagePolicy, withPagePolicy, json, dec49Attach, dec49Row, CHECK_FAMILIES, CHECK_FAMILY_FILES,
+export { PAGE_POLICY, pagePolicy, withPagePolicy, NONCE_SLOT, json, dec49Attach, dec49Row, CHECK_FAMILIES, CHECK_FAMILY_FILES,
          doAnswer, storeRefusal, storeSilent, relayAnswer, STORE_SILENT_REASON, STORE_SILENT_DETAIL,
          planeInternalError, planeInternalAnswer, replayRow, requiredArgumentRow, requiredArgument, installationRow,
          dispatchRow, StoreSilent };
