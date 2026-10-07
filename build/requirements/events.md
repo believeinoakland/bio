@@ -1,6 +1,6 @@
 # events — requirements
 
-**Status** · New product module, layer 5, directly after `entities` and before `lines` (plan T33, Rules (2); K1470). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §2 EVENTS, §5B.4 (L1 at stage 1a, L2 and the duty half of L3 at stage 2a, L3 relations at stage 2b), the reads of §5B.5 that T33 carries (`whoWasSent`, statements in order, edit acts from office metadata), and rulings K1443, K1444, K1462, K1464, K1465, K1467, K1468, K1470, K1487, K1489, K1494. Plan entry T33-26 (B1a.2 whole; B §(d) EVENTS 2a, 2b, 3; scope §1 EVENTS). Measures: `measures-T33/legistar-events.md` M-V1, M-V2, M-V3 (all GO). Every requirement is new; all met at T33-26 (K1574). R38 is CONDITIONAL on `measures-T33/courts-workbooks.md` reading GO (Rule 5). For BOB's review and Bob's approval (a product module, P17). T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-17 (N561, N591, N595, N602, N606; K1563 (8), K1626, K1632, K1635, K1653, K1668): R11 reads the profile's `vote_values` (`jurisdictions` R58), R16's telling states its instant, R22's meeting concerns its followed body, R29 lists placed-nowhere items apart under a dated read, R30 passes the `viewer` to each source and carries its `truncated`; wording of BOB's, no new meaning; not yet met (T34). T35's fold, by a drafting worker for BOB #129 on `tranche/T35`, 2026-10-07, from plan entry T35-28 (N642 with N659's words, DEC-145 (7); N698, DEC-164 (4), (5); K1713 (2), K1740, K1865): Terms' event kinds gain `discretion`, `waiver` and `assessment`, and Terms gain the provision key and the question; R1 amended (a found extent as its citation, the optional question); R43–R48 new (an act of discretion, a waiver and an accreditation assessment as events, each citing a provision held as an opaque `standards` key; their words and withdrawal; `usesOf`; the read contract's new tables; the question kept beside a recorded row); not yet met (T35).
+**Status** · In force: a new product module, reviewed (K1505; T33-26); its meaning the canon ladders' and Bob's rulings (K1443, K1444, K1462, K1464, K1465, K1467, K1468, K1470, K1487, K1489, K1494). Last changed T35 (T35-28: Terms, R1 amended; R43–R48 new; K1713, K1740, K1865); every requirement met (EVENTS #3, K1976).
 
 **Size (P6).** About 2,400–2,900 lines at this scope (constructs-2 §4.1; B §(c)). Under 4,000.
 
@@ -94,7 +94,7 @@ Terms.
 **The read contract**
 - **R37** The tables of events (`event_id`, `kind`, `status`), the `event_when_cache` (`event_id`, `start`, `end`, `precision`, `zone`) `event_participants` (`event_id`, `entity_id`, `role`) and `event_attestations` (`event_id`, `capture_sha`: each capture an attestation of the event cites, K1563) are a stated read contract on the terms of `record-core` R37: a later module may join them in its own SQL, and every write to them stays this module's.
 
-**A register row as an event (CONDITIONAL on courts-workbooks GO)**
+**A register row as an event**
 - **R38** A court register row read by the court doctypes, with an entry id the source assigns, becomes a `filing` or `order` event of the proceeding, written as R22 writes, only for a proceeding a member follows.
 
 **recordDiscretion({kind, provision?, statedReason, outcome, attestations, participants?, scope?, conditions?, expiry?, question?, by}), recordAssessment({provision, unmet, attestations, participants?, question?, by})** (T35; N642; POLICIES L3 PO6, PO7, STANDARDS L3 ST8; Capability Ladders §6B.4, §6B.5, §6C.4; K1713 (2), K1740; DEC-145 (7))
@@ -128,7 +128,7 @@ Terms.
 - `content`: extents and their capture grade; office metadata through the content of an office capture (R2, R5).
 - `entities`: `noEntity`, `noSuchEntity`, `has`, `resolutionsFor`, scheme identifiers (R11, R12, R22, R34).
 - `legistar-reader`: its rows of bodies, persons, events, items, votes and posting times (R22–R25).
-- `court-doctypes` (CONDITIONAL, only on GO; L1): register rows with entry ids (R38).
+- `court-doctypes` (L1): register rows with entry ids (R38).
 
 ### Invariants
 

@@ -86,15 +86,20 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   memberlanguageset: "instance-setup (T34-81)", memberlanguage: "instance-setup (T34-81)",
   groupdescriptiondraft: "instance-setup (T34-90)",
   /* the door routes it itself, calling wizard-scripts' `writingHelp` with the assistant it resolves (K1863 (7)) */
-  writinghelp: "control-plane (T34-60)" };
+  writinghelp: "control-plane (T34-60)",
+  /* T35 (R30): the second-administrator step, built by instance-setup's T35 job beside this one; the co-archive
+     setting, the acquisition instance's two methods the door routes (control-plane R58) */
+  adminrecoverystep: "instance-setup (T35-69)", coarchiveset: "control-plane (T35-72)",
+  coarchivestate: "control-plane (T35-72)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
-  assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["action-clocks", "actions", "ai-runs", "answers", "calculations",
-    "capture-requests", "corpus-export", "credentials", "duties", "entities", "events", "explore", "following", "hypotheses",
-    "inquiry", "instance-setup", "lines", "membership", "money", "money-checks", "people", "publication", "sources",
-    "standards", "tasks", "wizard-scripts", "workbooks"]);
-  assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "door", "member", "open", "own", "ownread", "plainread",
-    "proposal", "public", "publishact", "read", "roster", "sessionact", "sessionread", "tally"]);
+  assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "answers",
+    "calculations", "capture-requests", "corpus-export", "credentials", "duties", "entities", "events", "explore",
+    "following", "hypotheses", "inquiry", "instance-setup", "lines", "membership", "money", "money-checks", "people",
+    "public-read", "publication", "retrieval", "sources", "standards", "tasks", "wizard-scripts", "workbooks"]);
+  assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
+    "plainread", "proposal", "public", "publishact", "read", "roster", "sessionact", "sessionend", "sessionread",
+    "settingread", "tally"]);
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -144,6 +149,10 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     door: [{ classes: null, mutating: true }, undefined],
     public: [{ classes: null, mutating: false }, undefined],
     plainread: [{ classes: MP, mutating: false }, undefined],
+    /* T35 (R30) */
+    daemonact: [{ classes: [...MP, "daemon"], machineClasses: ["daemon", "probe"], mutating: true }, "contribute"],
+    settingread: [{ classes: MP, mutating: false }, null],
+    sessionend: [{ classes: ["admin", "member"], machineClasses: [], mutating: true }, null],
   };
   const PUBLIC = ["door", "public"];
   let n = 0;
@@ -151,7 +160,9 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     n++;
     assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
     assert.deepEqual(plain(OPS[op]), want[k][0], op);
-    if (want[k][1] === undefined) assert.ok(!Object.hasOwn(NEEDS, op), `${op} has a NEEDS row`);
+    /* K2038: the credit page and `recover`, public, carry a present null row (op-grades' NON_ACTS, its R22) */
+    if (["credit", "recover"].includes(op)) assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === null, op);
+    else if (want[k][1] === undefined) assert.ok(!Object.hasOwn(NEEDS, op), `${op} has a NEEDS row`);
     else {
       assert.ok(Object.hasOwn(NEEDS, op), `${op} has no NEEDS row`);
       assert.equal(NEEDS[op], want[k][1], op);
@@ -175,6 +186,7 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
   /* negative controls */
   assert.notDeepEqual(plain({ ...OPS.eventmerge, machineClasses: undefined }), want.member[0]);
   assert.notDeepEqual(plain({ ...OPS.timeline, mutating: true }), want.read[0]);
+  assert.notDeepEqual(plain({ ...OPS.unpack, machineClasses: undefined }), want.daemonact[0]);
 });
 
 test("R19, R6: each new module's ops map and each family's share of an earlier module's map — every op the owner serves to a caller has a spec, every family op is served by its owner's map or by the named L11 job, and the in-process routes have no spec (negative control: an op added to a map without a spec is seen)", () => {
@@ -255,7 +267,11 @@ test("R19, R4: each family's actor stamp reaches its owner on every act, and its
 test("R19, R4: every family read is stamped with the viewer, and the owner reads it from the query: the viewer reaches the owner on each served read that names a subject by sight (negative control: under another key it does not)", async () => {
   /* reads that take no viewer by their owner's requirement: events' act-to-event alias (R21), money-checks' parameter
      list (R3) and the keyed services list (credentials R29); the door stamps it on them all the same */
-  const NO_VIEWER = ["eventforact", "moneycheckparams", "keyedservices"];
+  const NO_VIEWER = ["eventforact", "moneycheckparams", "keyedservices",
+    /* T35: calculations' recipes of application are data, the same for every caller (its R33) */
+    "applicationrecipes",
+    /* T35: the security map and the recovery codes' state answer `by`, an administrator's own (credentials R45, R46) */
+    "securitymap", "recoverycodesstate"];
   let checked = 0;
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     if (!MAPS[owner]) continue;
@@ -270,14 +286,17 @@ test("R19, R4: every family read is stamped with the viewer, and the owner reads
 });
 
 /* K1674, K1683: the stamp interface — op → keys from the closed set the control plane implements once each. */
-const STAMP_KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session"];
+const STAMP_KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session",
+  /* T35 (R30): a selection's owner, the caller's principal, and the keyed source and country (admission R21) */
+  "owner", "principal", "source", "country"];
 const keyOf = (st) => (!st || st.key === "viewer" ? null : st.key === "by" ? (st.at === "body" ? "bodyBy" : "by") : st.key);
 
-test("R19, R4, R5 (K1674, K1683): OP_STAMPS maps every op this module declares for T33 — each family op, the ask's three plane ops, exportpage and moneydetectorsrun, and no other — to frozen stamp keys from the closed set viewer, by, bodyBy, author, proposer, member, session: viewer on every family op, the family's actor key on each act (by at the query, bodyBy at the body), its proposer key on each proposal, the family's extras, the grant's member as viewer on the ask ops (negative control: a drifted key is seen)", () => {
+test("R19, R4, R5, R30 (K1674, K1683): OP_STAMPS maps every op this module declares for T33 — each family op, the ask's three plane ops, exportpage and moneydetectorsrun, and T35's claim, login and agentpack, and no other — to frozen stamp keys from the closed set viewer, by, bodyBy, author, proposer, member, session, owner, principal, source, country: viewer on every family op, the family's actor key on each act (by at the query, bodyBy at the body), its proposer key on each proposal, the family's extras, the grant's member as viewer on the ask ops (negative control: a drifted key is seen)", () => {
   assert.ok(Object.isFrozen(OP_STAMPS));
   /* T34 (R21): an alias of a stamped op carries its op's stamps */
   const aliased = Object.keys(OP_ALIASES).filter((al) => FAMILY_OPS.includes(OP_ALIASES[al]));
-  assert.deepEqual(Object.keys(OP_STAMPS).sort(), [...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased].sort());
+  assert.deepEqual(Object.keys(OP_STAMPS).sort(), [...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased,
+    "claim", "login", "agentpack"].sort());
   for (const al of aliased) assert.deepEqual([...OP_STAMPS[al]], [...OP_STAMPS[OP_ALIASES[al]]], al);
   for (const [op, keys] of Object.entries(OP_STAMPS)) {
     assert.ok(Object.isFrozen(keys) && Array.isArray(keys), op);

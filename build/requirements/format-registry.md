@@ -1,9 +1,6 @@
 # format-registry — requirements
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6). Layer 1. Code today: `bio-plane/src/formats.mjs`. No
-row of the old plan and no entry of `build/plan/next.md` targets this module; it holds no local fact
-(no place name, no jurisdiction-specific vocabulary) so "No jurisdiction in the product" (`layers.md`)
-needs no change here. All requirements below are met by the code as it stands today. T35's fold, by a drafting worker for BOB #128 on `tranche/T34`, 2026-10-07, from plan entry T35-11: R28 added (N688; K1844: the built-in `zip` entry, detected as `ooxml.discriminate`'s `format:"zip"`, its parts `ooxml.listArchive`) and R23 amended (the roster nine → ten, `zip` last, so office and ODF files keep winning detection first); not yet met (T35-11).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-11: R28 new, R23 amended; K1844); every requirement met (FORMAT-REGISTRY #2, K1930).
 
 ## Public
 

@@ -1,6 +1,6 @@
 # BOB to control-plane (T35)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -30,3 +30,23 @@ K2037 (from the L11 split jobs). (a) answer-envelope tests R1–R6 at its own fu
 ## B3 · ANSWER · re J1
 
 K2038. (1) Headers `x-bio-session` and `x-bio-grant` (and `x-bio-credential-sha` for admission's lookup), never the address; store-door R9 now names them and hands each to the owner's map on the in-process URL. (2) The draft path is plane's: `Store.draft(args)` → `draftOnObject` in `plane/ask.mjs` (account, switch, grant only when suggestions on and not firsthand, POST /draft), answering agent-worker's answer plus `grant` and `suggestions`. Yours: the door flow after the owner's `ASSISTANT_DRAFT_UNAVAILABLE`, `checkDraft` over the grant's read log, usage via `askusage` with mode "draft". Do not add `control-plane/draft.mjs`'s object half. (3) K1986 is store-door's. (4) Delete outright; I hold your merge until plane completes and merge the two back to back. Merge tranche/T35.
+
+## B4 · ANSWER · re J2
+
+K2041. Confirmed: plane's `draftOnObject` also answers `read` (the grant's read-log strings, `[]` with no grant); pass it to `checkDraft` as `readLog`, never echo the grant; usage through `askusage` with `{mode: "draft", usage, calls}`. Also set `x-bio-grant` where `index.mjs`:1088–1089 sets `?grant=`. answer-envelope's `withPagePolicy` is now async (await it).
+
+## B5 · ANSWER · re J3
+
+K2042. All three readings stand. (1) PLANE adds `coarchiveset` and `coarchivestate` to the store map it composes (acquisition's instance methods); your door forwards them with `by` stamped, nothing from the caller. (2) The door promotes Worker-side after `op=acquire` (when the answer carries `unpack`) and `op=unpack`: the archive's own document first, then each of `unpack.documents` in order, Information at `collected`, the caller as author, one act each; a refused one named in `not_promoted` (`[{sha256, code}]`), undoing nothing else; the project is the request body's `project`, else none. (3) The drain loop over `capture.taskEvents({kind: "archive-unpack"})` is PLANE's (its alarm, as the daemon's `op=unpack` calls through the Worker with `cls: "daemon"`); your share is that such a call reaches capture's `unpack` and the promotions of (2).
+
+## B6 · CHANGE
+
+K2044, from ADMISSION #5 J2 (3), for your door (all exported from `src/admission/index.mjs`):
+   - `presentedCredential({req, url, body})` once, the body parsed once; pass its answer as `credential` to `queryGate(url, op, credential)`, `aiCredentialPresented(url, env, doAnswer, {credential, op})`, `admit({..., credential})` and `readerOf(url, env, storeName, presented, doAnswer, credential)` (each falls back to the URL alone when not given, so today's calls still work). The review and template doors read `credential.secret`, not `url.searchParams.get("secret")`. When `credential.inAddress` is true, the answer carries `deprecated: CREDENTIAL_IN_ADDRESS` (exported).
+   - `doorWindowGate({req, env, op, spec, doAnswer})` first for every public op (after R1–R3, before the op); answer `{refusal}` as given; its `{source}` (or `await sourceOf(req, env)` when it is null) and `countryOf(req)` are the `source`/`country` stamps for `claim`, `login`, `recover` (credentials R38) and capture's `country`.
+   - `securityTally({op, answer, presented: {token, cred}, req})` for each refusal it gives or relays; today it only classifies (write deferred to N744).
+Red 35 (setup-page's signed-in arms) clears at your merge: your door must pass the request so the header session is seen.
+
+## B7 · CHANGE
+
+K2054. setup-page, instance-setup, op-declarations, admission, answer-envelope, store-door and installer are merged into tranche/T35. Merge tranche/T35 into your branch and go on with T35-72: re-wire the door to store-door (`dispatch`, `controlPlaneRoutes`) and answer-envelope, drop the four check families answer-envelope now owns from `control-plane/checks.mjs` (answer-envelope `families.test.mjs`:50, red 40), and the stamp keys OP-DECLARATIONS J2 names (`r53-routes`:60 gains `owner`, `principal`, `source`, `country`; `:77`). Also check, against store-door R9, that `signout` and `signouteverywhere` receive the stamped `session` (credentials reads it from the query); report if credentials must change. On the tranche 88 of your 182 tests fail now (reds 37, 38); merge plane back to back with you (K2038).

@@ -4,18 +4,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
+import * as G from "../../../src/op-grades/index.mjs";
 import { caseImportOps } from "../../../src/case-import/index.mjs";
 import * as ci from "../case-import/fixture.mjs";
 
-const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, NON_ACTS, RUNGS, RUNG_ABSENT, VOCABULARIES, MACHINE_REFUSALS,
-        JUSTIFICATION_REFUSALS, LARGER_SCREEN_ACTS, decorate, unaccounted } = A;
+const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, decorate, unaccounted } = A;
+const { NON_ACTS, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, LARGER_SCREEN_ACTS } = G;
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? ["rung", RUNGS[op]]
   : Object.hasOwn(RUNG_ABSENT, op) ? ["absent", RUNG_ABSENT[op].ground] : null;
 const published = () => [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS];
 
 /* ============================================================ R36: the phone flag */
-/* The oracle, from R36's text alone. */
-const phoneWant = (op) => {
+/* The oracle, from R36's text alone, an alias answering as its op (`op-grades` R17, R18: `LARGER_SCREEN_ACTS` names ops). */
+const phoneWant = (alias) => {
+  const op = Object.hasOwn(G.OP_ALIASES, alias) ? G.OP_ALIASES[alias] : alias;
   const g = gradeOf(op);
   if (g && g[0] === "rung" && ["terminal", "attested", "irreversible"].includes(g[1])) return false;
   if (g && g[0] === "absent" && g[1] === "credential") return false;
@@ -38,7 +40,10 @@ test("R36: every op the catalogue grades or names, decorated, carries `phone` ex
     [true, true, true, true, true, true]);
   /* an op named nowhere is no heavy act: true */
   assert.equal(decorate({ id: "no-such-op", label: "x" }, null).phone, true);
-  assert.equal(A.phoneOf("filingsent"), false);
+  assert.equal(G.phoneOf("filingsent"), false);
+  /* an alias decorated as its op: `filingrecordsent` is kept for a larger screen as `filingsent` is */
+  assert.equal(G.OP_ALIASES.filingrecordsent, "filingsent");
+  assert.equal(decorate({ id: "filingrecordsent", label: "x" }, null).phone, false);
 });
 
 test("R36: filingsent is in LARGER_SCREEN_ACTS though its rung is `reasoned`; the set is frozen and holds exactly it, "

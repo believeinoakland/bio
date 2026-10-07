@@ -1,21 +1,22 @@
-/* affordances — R40 (C:A-16; B1a.16; K1522): THE OPS T33'S NEW MODULES PUBLISH, AND THE OPS T33 ADDS TO EARLIER ONES,
- * graded by R7 and R27 with R12's totality holding over them. Data only: no op's behaviour is decided here (P6).
+/* op-grades — R13 (was `affordances` R40; C:A-16; B1a.16; K1522): THE OPS T33'S NEW MODULES PUBLISH, AND THE OPS T33
+ * ADDS TO EARLIER ONES, graded by R5 and R3 with `affordances` R12's totality holding over them. Data only: no op's
+ * behaviour is decided here (P6).
  *
- * Each writing op has a rung (`T33_RUNGS`) or one ground of `RUNG_ABSENCE_GROUNDS` (`T33_RUNG_ABSENT`), on R27's rule:
+ * Each writing op has a rung (`T33_RUNGS`) or one ground of `RUNG_ABSENCE_GROUNDS` (`T33_RUNG_ABSENT`), on R3's rule:
  * `reasoned` where the owner refuses the act without the member's authored account (the code beside it, each in
- * `JUSTIFICATION_REFUSALS`, R19), `reversible` where a published act of the owner's takes the result back, and
- * `undetermined` where neither holds; the other grounds where the act is no act on the record (a setting beneath it, a
- * measurement, a member's own attention). Every op, read or write, carries its `NON_ACTS` reason (`T33_NON_ACTS`), since
- * `op-declarations` R17–R20 gives each a `NEEDS` row (`contribute` for a write, `null` for a read): none is an act on a
- * bundle's state that `affordanceFacts` describes, so none is an `ACTS` row and `MACHINE_REFUSALS` gains nothing (R7,
- * R20: it holds only `ACTS`); each owner refuses a machine by its own code where it does.
+ * `JUSTIFICATION_REFUSALS`, `affordances` R19), `reversible` where a published act of the owner's takes the result back,
+ * and `undetermined` where neither holds; the other grounds where the act is no act on the record (a setting beneath it,
+ * a measurement, a member's own attention). Every op, read or write, carries its `NON_ACTS` reason (`T33_NON_ACTS`),
+ * since `op-declarations` R17–R20 gives each a `NEEDS` row (`contribute` for a write, `null` for a read): none is an act
+ * on a bundle's state that `affordanceFacts` describes, so none is an `ACTS` row and `MACHINE_REFUSALS` gains nothing
+ * (R5, `affordances` R20: it holds only `ACTS`); each owner refuses a machine by its own code where it does.
  *
- * `../affordances.mjs` spreads these three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`; this file imports nothing,
- * so the spread closes no cycle. Grouped by owner, in `modules.json` order. */
+ * `./index.mjs` spreads these three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`; this file imports nothing, so the
+ * spread closes no cycle. Grouped by owner, in `modules.json` order. */
 
 const R = (s) => `read: ${s}; writes nothing`;
 
-/* ---- the rungs, each with the backing it names (R19) ---- */
+/* ---- the rungs, each with the backing it names (`affordances` R19) ---- */
 export const T33_RUNGS = {
   /* events (R13, R14, R17, R20) */
   eventgovern:           "reversible", // a further eventgovern chooses another attestation; every choice is kept
@@ -114,7 +115,7 @@ export const T33_RUNG_ABSENT = {
   /* people */
   interestcheckdefine:  { ground: "undetermined", is: "a member or the machine defines an interest check, or a new version of one, with its condition and denominator; earlier versions kept, and a machine's results shown only once gated (people R22)" },
   interestcheckgate:    { ground: "substrate", is: "an administrator records a check version's false-alarm rate measured on a named gold set; results show only at or under the gate (people R24)" },
-  /* hypotheses (R43; R11, R13): a member's own note, answered to its author alone, and a turn recorded on it; what a turn
+  /* hypotheses (R15; hypotheses R11, R13): a member's own note, answered to its author alone, and a turn recorded on it; what a turn
      makes is its owner's act, graded there */
   notewrite:            { ground: "caller-owned", is: "a member writes a note of their own, answered to that member alone; never a record id, never cited, published or counted (hypotheses R11)" },
   noteturn:             { ground: "caller-owned", is: "the note's author records that the note became an observation, a hunch or a question their own act made (hypotheses R13)" },
@@ -161,7 +162,7 @@ export const T33_RUNG_ABSENT = {
   askusage:             { ground: "observational", is: "counts one assistant call's usage against the member's own day, naming no question or answer (K1601)" },
 };
 
-/* ---- every op's NON_ACTS reason (R7, R40) ---- */
+/* ---- every op's NON_ACTS reason (R5, R13) ---- */
 export const T33_NON_ACTS = {
   /* events */
   datedfact: "dated-fact-directed: keyed by (capture, extent); holds a document's own stated date and moves no bundle",
@@ -271,7 +272,7 @@ export const T33_NON_ACTS = {
   hypothesisrevise: "hypothesis-directed: keyed by hypothesis; a new statement with its reason, the history kept",
   hypothesiswithdraw: "hypothesis-directed: keyed by hypothesis; keeps it, shown withdrawn",
   hypotheses: R("one hypothesis, or an inquiry's, each labelled a hypothesis with its history"),
-  /* R43: a member's own notes */
+  /* R15: a member's own notes */
   notewrite: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
   noteturn: "note-directed: a member's own note, keyed by the note and answered to its author alone; never a record id, never cited, published or counted; moves no bundle",
   notes: R("a member's own notes, to that member alone"),
@@ -370,7 +371,7 @@ export const T33_NON_ACTS = {
   officesseed: "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's",
   assistantset: "the copy's configuration: whether the assistant is enabled; an administrator's, not an act on an object",
   /* B3 (K1689). `askusage` carries no NEEDS row (op-declarations' UNATTENDED_BY_DECISION, K1601), so it has no reason
-     here (R12: a reason for an ungated op reads stale); its rank is above. */
+     here (`affordances` R12: a reason for an ungated op reads stale); its rank is above. */
   seatsseed: "the instance's configuration: seeds the seats of matched bodies and their holders from held captures; an administrator's",
   disclosureshown: "personal state, keyed by member: the assistant's disclosure shown to them, with its version",
   ask: "member-directed: a member's own question to the assistant under their own account; no object is before them",

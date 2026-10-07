@@ -1,6 +1,6 @@
 # BOB to op-grades (T35)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -20,3 +20,15 @@ Your `modules.json` row enters with empty `paths` and `tests` (K1043, K2033). Cr
 ## B2 · ANSWER · re J1
 
 K2038. Both readings stand: (1) `IRREVERSIBLE_WEIGHT` and `CONSEQUENCE_STATEMENTS` hold canonical ops only (`personexpunge`, not the alias `expunge`); a reader resolves an alias first. (2) `credit` and `recover` are in `NON_ACTS` per R22; op-declarations is told to give them rows so affordances R12 does not read them stale.
+
+## B3 · CHANGE
+
+K2043, re-opening your job (P10). Grade, in your tables (`RUNGS` or `RUNG_ABSENT`, and `NON_ACTS` where the op is no act), every op served in T35 that has no grade yet, each by its owner's requirements as op-declarations declares it (member act, proposal, read; MEMBER_ACT_ONLY where the owner says so): standards `bindsat`, `editioninforce`, `forcesof`, `standardforce`, `standardforcewithdraw`, `standardrelease`, `standardadoption`, `standardimpose`, `standardbenchmark`, `standardforcepropose`, `overridesof`; events `discretionrecord`, `assessmentrecord`, `usesof`, `usewithdraw`; calculations `usesfreeze`, `applicationrecipes`; duties `poweruses`, `uselink`, `useunlink`, `reviewpropose`; capture-requests `recordsrequestopen`, `recordsrequestanswer`, `recordsrequests`; credentials `subscriptiondisconnect`. Check against `git show origin/job/T35/op-declarations:build/jobs/T35/op-declarations.md` for any op its REPORT adds. This clears red 29 and red 36 (affordances `catalogue.test.mjs`:579). Merge tranche/T35 first; record completion again.
+
+## B4 · CHANGE
+
+K2049. (1) `standardrelease` is never undone, so by DEC-143's rule it carries the Irreversible weight: add it to `IRREVERSIBLE_WEIGHT` (and `CONSEQUENCE_STATEMENTS` as its owner's requirements word it); its rung stays as R3 gives it. (2) R22 now names the 25 ops (merge tranche/T35). Record completion again.
+
+## B5 · CHANGE
+
+K2054 (from OP-DECLARATIONS J2). Your J4 is merged. Two stale rows: `expunge` is no op since K1901, so drop it from your `OP_ALIASES` copy and its grading rows; `agentpack` has no `NEEDS` row (op-declarations R30, equal to affordances), so drop it from `NON_ACTS`. Merge tranche/T35 first, run your tests and your users (affordances, control-plane totality), post COMPLETE.

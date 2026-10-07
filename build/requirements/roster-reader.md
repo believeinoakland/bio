@@ -1,6 +1,6 @@
 # roster-reader — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1504, Choices 2; scope §2: later readers each in their own sibling module, never back into `docprofile` or `doctypes`), layer 1 after `legistar-reader`. Plan entry T33-15 (B §(d) PEOPLE 2b; C2 row 12, K1484). Every id is not yet met. T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-64 (N614; K1505 (6), K1683): R12 (a store-reading roster source for `people.staffingAt`) added; not yet met (T34).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-15), its own layer-1 sibling (K1504). Last changed T34 (T34-64: R12; K1683); every requirement met (ROSTER-READER #2, K1730).
 
 **Size (P6).** About 500–800 lines.
 

@@ -1,6 +1,6 @@
 # legistar-reader — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1504, Choices 1: its own layer-1 sibling, not inside `doctypes`), layer 1 directly after `doctypes`. Plan entry T33-14 (A ORG 1b doctypes; B §(d) EVENTS 2a; `measures-T33/legistar-events.md`). Every id is not yet met. Tested against captured Legistar Web API JSON only; the live acquisition waits for the release (scope §3).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-14), its own layer-1 sibling (K1504). Every requirement met (LEGISTAR-READER #1, K1515).
 
 **Size (P6).** About 600–900 lines.
 

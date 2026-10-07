@@ -1,8 +1,8 @@
-/* affordances — R45 (K1864): THE OPS T34 DECLARES IN `op-declarations` R22–R24, R26, R28 AND R15, graded by R7 and R27
- * with R12's totality holding over them, each grade read from its owner's requirements as R40 does; and R21's ALIASES,
- * each taking its op's grade and reason through one frozen table, so an alias never differs from its op. Data only: no
- * op's behaviour is decided here (P6). `../affordances.mjs` spreads the three tables and applies `aliased` to its own.
- * This file imports nothing, so the spread closes no cycle. */
+/* op-grades — R17 (was `affordances` R45; K1864): THE OPS T34 DECLARES IN `op-declarations` R22–R24, R26, R28 AND R15,
+ * graded by R5 and R3 with `affordances` R12's totality holding over them, each grade read from its owner's requirements
+ * as R13 does; and `op-declarations` R21's ALIASES, each taking its op's grade and reason through one frozen table, so an
+ * alias never differs from its op. Data only: no op's behaviour is decided here (P6). `./index.mjs` spreads the three
+ * tables and applies `aliased` to its own. This file imports nothing, so the spread closes no cycle. */
 
 const R = (s) => `read: ${s}; writes nothing`;
 const ROSTER_DOOR = (s) => `roster governance: ${s}; the subject is who may join, not a bundle`;
@@ -29,7 +29,7 @@ export const T34_RUNG_ABSENT = {
   /* membership R107, R109: the group's settings and its words for itself, as groupnameset */
   courtnoticeset:       { ground: "substrate", is: "an administrator records whether members are told what a court can reach, appended; it moves no document, claim or grade (membership R107)" },
   groupdescriptionset:  { ground: "substrate", is: "an administrator records the group's own description of itself and who may read it, appended; a presentation value in no signed bytes (membership R109)" },
-  /* tasks R13, R14, on R27's rule: no reason is asked and no published act takes either back */
+  /* tasks R13, R14, on R3's rule: no reason is asked and no published act takes either back */
   checkrequest:         { ground: "undetermined", is: "a project owner asks a member, or the members declaring an expertise, to check one held object (tasks R13)" },
   checktake:            { ground: "undetermined", is: "a member who may see the object takes a check request, once; another's take is refused (tasks R14)" },
   /* credentials R33, R36, R37: the group's key, as keyedserviceset; its switches, as keyedserviceswitch */
@@ -43,7 +43,7 @@ export const T34_RUNG_ABSENT = {
   memberlanguageset:    { ground: "caller-owned", is: "a member sets the language the interface speaks to them (instance-setup R64)" },
 };
 
-/* ---- every gated op's NON_ACTS reason (R7) ---- */
+/* ---- every gated op's NON_ACTS reason (R5) ---- */
 export const T34_NON_ACTS = {
   invitewithdraw: ROSTER_DOOR("an administrator's withdrawal of an invitation"),
   websitekeycreate: ROSTER_DOOR("the website's key, an administrator's"),
@@ -74,7 +74,7 @@ export const T34_NON_ACTS = {
   startfrom: R("the wizard scripts a new member may start from"),
 };
 
-/* ---- R21's aliases (op-declarations R5, R21): each the op its owner serves it as ---- */
+/* ---- `op-declarations` R21's aliases (op-declarations R5, R21): each the op its owner serves it as ---- */
 export const OP_ALIASES = Object.freeze({
   signerregisterown: "signerregister", signerrevokeown: "signerrevoke", declaretie: "membertie",
   withdrawtie: "membertiewithdraw", adoptversion: "versionadopt", keepversion: "versionkeep",

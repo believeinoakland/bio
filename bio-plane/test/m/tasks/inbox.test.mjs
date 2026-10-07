@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, inbox, ev, host, NOW, iso } from "./world.mjs";
-import { tasksOf, tasksOps, Tasks, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
+import { tasksOf, tasksOps, Tasks, TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT, QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, checkInboxGrammar,
          TASKS_TABLES, tasksOwns } from "../../../src/tasks/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
@@ -138,7 +138,8 @@ test("R1 (N322): an exhausted task id space keeps the event, its waiting entry c
   const r = w.t.taskDrain({ actor: "alarm", now: iso(NOW) });
   const ex = mintExhausted("TASK");
   assert.deepEqual([r.drained, r.created, r.folded, r.refused, r.remaining], [0, [], [], [], 1]);
-  assert.deepEqual(r.waiting, [{ captureSha: "a3", attempts: 0, code: "MINT_EXHAUSTED", check: ex.check, detail: ex.detail }]);
+  assert.deepEqual(r.waiting, [{ captureSha: "a3", attempts: 1, code: "MINT_EXHAUSTED", check: ex.check, detail: ex.detail }]);
+  assert.equal(w.queue[0].attempts, 1, "counted as a try, so R18's back-off bounds it");
   assert.equal(ex.check, "C-59.6");
   assert.equal(w.queue.length, 1, "the event is kept, not dropped");
   assert.equal(w.all(`SELECT count(*) c FROM tasks`)[0].c, before, "no task is written");
@@ -200,6 +201,104 @@ test("R1: registered at start with the scheduler (as `task-drain`, under tasks) 
   tasksOf(h.host, { record: h.record, membership: h.membership, scheduler: s, capture: { on: () => ({ ok: true }), taskEventCount: () => 0 } });
   assert.ok(s.consumers().includes("task-drain"));
   assert.equal(s.registry(null).find((c) => c.name === "task-drain").module, "tasks");
+});
+
+test("R1 (T35; K1951, K1974): the drain and every count ask capture only for kind authority-undetermined, so an archive-unpack event is never taken, routed, folded, refused or counted", async () => {
+  const unpack = (sha, subject = "an archive") => ({ ...ev(sha, subject), kind: "archive-unpack" });
+  // archive-unpack events whose capture is filed (so they would be routed), one on a subject with a live task (so it would
+  // fold), one ungrammatical (so it would be refused), one unfiled (so it would wait)
+  const w = inbox([unpack("u1"), ev("a1"), unpack("u2"), unpack("u3", "x".repeat(300)), ev("a3"), unpack("u4")],
+                  { ...HOMES, u1: DOC2, u2: DOC, u3: DOC3 });
+  w.member("ada", { role: "admin" }); w.bundle(DOC); w.bundle(DOC2); w.bundle(DOC3);
+  w.task("TASK-2026-0001-live", DOC3);
+  const r = w.t.taskDrain({ limit: 10, actor: "alarm" });
+  assert.deepEqual(r.created.map((c) => c.refers_to).sort(), [DOC, DOC2].sort(), "the two authority-undetermined events, and only they");
+  assert.deepEqual([r.drained, r.folded, r.waiting, r.refused, r.remaining], [2, [], [], [], 0], "remaining counts only its kind");
+  assert.deepEqual(w.queue.map((e) => e.captureSha), ["u1", "u2", "u3", "u4"], "every archive-unpack event is left queued, untouched");
+  assert.ok(w.queue.every((e) => e.attempts === 0 && e.lastTry === null));
+  assert.equal(w.log.some(([k, sha]) => (k === "attempt" || k === "remove") && /^u/.test(sha)), false, "never attempted or removed");
+  assert.equal(w.all(`SELECT count(*) c FROM tasks WHERE kind <> 'authority-undetermined'`)[0].c, 0, "no task of another kind");
+  assert.deepEqual(JSON.parse(w.all(`SELECT history FROM tasks WHERE id='TASK-2026-0001-live'`)[0].history).map((h) => h.event), ["created"], "not folded");
+  // the inbox's queued count and the consumer's wait count only its kind
+  assert.equal(w.t.taskList({ viewer: "class:admin" }).counts.queued, 0, "four archive-unpack events queued, none counted");
+  const c = w.t.drainConsumer();
+  await w.t.armDrain();
+  assert.equal(c.wake(NOW), null, "only archive-unpack waits: the consumer wants no wake");
+  assert.equal(c.tick(NOW).drain.drained, 0);
+  w.queue.push(ev("a1", "again"));
+  await w.t.armDrain();
+  assert.equal(c.wake(NOW), NOW + Tasks.TASK_DRAIN_DELAY_MS, "its own kind waits: it wakes");
+  assert.equal(w.t.taskList({ viewer: "class:admin" }).counts.queued, 1);
+  // every read of capture's queue named the kind
+  const reads = w.log.filter(([k]) => k === "events" || k === "count");
+  assert.ok(reads.length >= 6);
+  assert.deepEqual([...new Set(reads.map(([, kind]) => kind))], ["authority-undetermined"]);
+});
+
+test("R18 (K2038): after a tick that drains nothing the wake backs off by each event's own attempts, and past the retry limit an unfiled capture holds no timer", async () => {
+  const w = box([ev("zz")]);
+  const c = w.t.drainConsumer();
+  const at = (ms) => Date.parse(iso(ms));     // the drain stamps whole seconds
+  assert.deepEqual([TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT], [60000, 8], "exported by name");
+  assert.deepEqual([Tasks.TASK_DRAIN_BACKSTOP_MS, Tasks.TASK_DRAIN_RETRY_LIMIT], [TASK_DRAIN_BACKSTOP_MS, TASK_DRAIN_RETRY_LIMIT]);
+  let t = NOW;
+  const wakes = [];
+  for (let a = 1; a <= Tasks.TASK_DRAIN_RETRY_LIMIT; a++) {
+    w.now = t;
+    assert.equal(c.tick(t).drain.drained, 0);
+    assert.equal(w.queue[0].attempts, a);
+    const next = c.wake(t);
+    if (a < Tasks.TASK_DRAIN_RETRY_LIMIT) {
+      assert.equal(next, at(t) + Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1), `after try ${a}`);
+      wakes.push((next - t) / 60000);
+      t = next;
+    } else assert.equal(next, null, "at the limit: no timer, though the event waits");
+  }
+  assert.deepEqual(wakes, [1, 2, 4, 8, 16, 32, 64], "minutes between timed retries");
+  assert.equal(w.queue.length, 1, "kept, never dropped");
+  // a wake asked early on a backed-off event is the event's own due instant, never sooner than now
+  w.queue[0].attempts = 3;
+  assert.equal(c.wake(at(t) + 1000), at(t) + 4 * 60000);
+  assert.equal(c.wake(at(t) + 10 * 60000), at(t) + 10 * 60000, "overdue: due now");
+  w.queue[0].attempts = 9;
+  // an enqueue re-arms at the delay; another drain still retries it; then no timer again
+  await w.t.armDrain();
+  assert.equal(c.wake(t), t + Tasks.TASK_DRAIN_DELAY_MS);
+  c.tick(t);
+  assert.equal(w.queue[0].attempts, 10, "retried by the drain that ran");
+  assert.equal(c.wake(t), null);
+  // the earliest of several: an event never tried by a drain wants the plain backstop
+  w.queue.push(ev("yy"));
+  assert.equal(c.wake(t), t + Tasks.TASK_DRAIN_BACKSTOP_MS);
+  // once the capture is filed, the next drain makes the task and the queue empties: no wake
+  w.queue.splice(1);
+  w.bundle(DOC);
+  w.queue[0].captureSha = "a1";
+  await w.t.armDrain();
+  assert.equal(c.tick(t).drain.created.length, 1);
+  assert.equal(c.wake(t), null);
+});
+
+test("R18 (K2038): a committed promotion re-arms the drain at its delay, through promotion's commit notice registered at start", async () => {
+  const listeners = [];
+  let armed = 0;
+  const w = inbox([ev("zz")], HOMES, { start: true, fakes: {
+    promotion: { registerStep: () => ({ ok: true }), onCommitted: (m, fn) => { listeners.push([m, fn]); return { ok: true }; } },
+    scheduler: { register: () => ({ ok: true }), arm: async () => { armed++; return 7; } } } });
+  assert.deepEqual(listeners.map(([m]) => m), ["tasks"]);
+  const c = w.t.drainConsumer();
+  c.tick(NOW);
+  assert.equal(c.wake(NOW), Date.parse(iso(NOW)) + Tasks.TASK_DRAIN_BACKSTOP_MS, "idle: backed off");
+  assert.equal(await listeners[0][1]({ bundleId: DOC, bundleSha: "s", type: "information", replay: false }), null, "it writes and answers nothing");
+  assert.equal(armed, 1, "the scheduler is armed");
+  assert.equal(c.wake(NOW), NOW + Tasks.TASK_DRAIN_DELAY_MS, "at the delay: the promotion may have filed it");
+  // with the real promotion, the listener is held under tasks
+  const h = host();
+  const { promotionOf } = await import("../../../src/promotion/index.mjs");
+  const p = promotionOf(h.host, { record: h.record, membership: h.membership });
+  tasksOf(h.host, { record: h.record, membership: h.membership, promotion: p,
+    scheduler: { register: () => ({ ok: true }), arm: async () => null }, capture: { on: () => ({ ok: true }), taskEventCount: () => 0 } });
+  assert.equal(p.onCommitted("tasks", () => null).reason, "LISTENER_DECLARED", "registered once, under tasks");
 });
 
 test("R2: taskList lists visible tasks newest first, filtered, bounded with truncated, and counts over the visible set", () => {

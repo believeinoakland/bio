@@ -4,8 +4,8 @@
    accepted. The last test holds the list driven here to the ops `t33.mjs` grades `reasoned`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { JUSTIFICATION_REFUSALS, RUNGS } from "../../../src/affordances.mjs";
-import { T33_RUNGS } from "../../../src/affordances/t33.mjs";
+import { JUSTIFICATION_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
+import { T33_RUNGS } from "../../../src/op-grades/t33.mjs";
 
 /* Each op driven below, by its owner; the last test holds this list to t33.mjs. */
 const DRIVEN = [

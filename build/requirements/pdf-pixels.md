@@ -126,4 +126,4 @@ Status.
 
 ---
 
-**Status** · Written by BOB #44, 2026-09-27, applying K70 (`build/extraction/pdf-worker-split.md` §3): R13–R34, R39 moved from `pdf-worker` unchanged in number; R22, R23, R25 and R40 reworded to cite `image-codecs`; R41 new (R38's rule for this module's code). Layer 1. R13–R40 met and tested in T2 as `pdf-worker`; R25's mapping clause and R41 are checked by this module's first job (T4-0b).
+**Status** · In force: written by BOB #44 applying K70 (a helper module, its requirements BOB's, K20): R13–R34 and R39 moved from `pdf-worker` keeping their numbers; R41 new. Every requirement met (layer 1 closed, K284).

@@ -1,6 +1,6 @@
 # workbooks — requirements
 
-**Status** · New product module, layer 5, last, after `calculations` (plan Rules (2); K1504, Choices 10: the workbook path in its own module, P6). Plan entry T33-42 (C §(c) ANALYSIS L3; K1448), entered on GO with conditions (K1506). Reviewed (K1505); met by WORKBOOKS #1 in T33 (K1597).
+**Status** · In force: a new product module, reviewed (K1505; T33-42, entered on GO with conditions, K1506), the workbook path in its own module (K1504). Last changed T35 (R8 quotes DEC-149's wording, K1966); every requirement met (WORKBOOKS #2, K1969).
 
 **Size (P6).** About 1,500–2,200 lines with tests.
 

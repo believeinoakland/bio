@@ -1,6 +1,6 @@
 # connection-grammar — requirements
 
-**Status** · DRAFT by a requirements worker for BOB #114, 2026-10-05, on `tranche/T32`, before T33 opens (§5.9), for BOB's review. New module (K1469, K1470; scope §2), layer 1 directly after `calc-grammar`. Plan entry T33-5 (B1a.1; the owner registry by option (ii), entries B §(b)). Every id is not yet met. T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-5 (N560; K1563 (2); ENTITIES #9 J1, CONNECTIONS #12 J1, EXPLORE #1 J1): R9 amended (an owner's declaration that its kinds are undated or group-wide; those checks `inapplicable`); R20 added (the contract's optional `unread`); not yet met (T34). N566's hub bound is left out of T34 (no council volumes measured; plan T34, Left out).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-5; K1469, K1470). Last changed T34 (T34-5: R9 amended; R20 new); every requirement met (CONNECTION-GRAMMAR #2, K1735).
 
 **Size (P6).** About 400–700 lines (entries B §(c)).
 
