@@ -3,9 +3,13 @@
    page's own behaviour is setup-page's, tested there. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { setupPage, groupLine, SETUP_HTML, ROTATION_GUIDE_HREF } from "../../../src/setup.mjs";
+import { setupPage, groupLine, SETUP_HTML } from "../../../src/setup.mjs";
 import { HOSTING_CONTROL, hostingControlBlock } from "../../../src/setup-fleet.mjs";
 import { PAGE_HTML, HOSTING_SLOT, pageOf, groupLine as pageGroupLine } from "../../../src/setup-page/index.mjs";
+import * as setupPageModule from "../../../src/setup-page/index.mjs";
+/* K2038: setup-page's address of its guide to replacing the one-time password (its R27); read through the namespace
+   until setup-page's T35 merge brings the name. */
+const ROTATION_GUIDE_HREF = setupPageModule.ROTATION_GUIDE_HREF ?? null;
 
 test("R47 K1851 the composed page is setup-page's template with the hosting block in its one slot and no slot left; setupPage(read) is that page with the read's group line, and groupLine is setup-page's", () => {
   assert.equal(PAGE_HTML.split(HOSTING_SLOT).length - 1, 1, "the template carries the slot once");
@@ -93,7 +97,7 @@ test("R47 F10 the block ends by naming the guide to replacing the one-time passw
 });
 
 test("R47 F10 setup-page R14 on the page this module serves, the guide's name links to setup-page's guide (its R27), an element of the same page", () => {
-  assert.equal(typeof ROTATION_GUIDE_HREF, "string", "setup-page names its guide's element id (ROTATION_GUIDE_ID)");
+  assert.equal(ROTATION_GUIDE_HREF, "#replace-one-time-password", "setup-page exports its guide's address (K2038)");
   const id = ROTATION_GUIDE_HREF.slice(1);
   const block = (SETUP_HTML.match(/<div class="notice" id="hosting-control">[^]*?<\/div>/) || [""])[0];
   assert.ok(block.includes(`<a href="${ROTATION_GUIDE_HREF}">${HOSTING_CONTROL.guide.name}</a>`));

@@ -8,8 +8,9 @@
  */
 
 import { PAGE_HTML, HOSTING_SLOT, GROUP_LINE_UNREAD, groupLine } from "./setup-page/index.mjs";
-/* R47 (F10): the element id of setup-page's guide to replacing the one-time password (its R27), which the block's guide
-   name links to (its R14). */
+/* R47 (F10; K2038): the block's guide name links to setup-page's guide to replacing the one-time password (its R14,
+   R27), at the address setup-page exports as `ROTATION_GUIDE_HREF`. Read through the namespace until setup-page's T35
+   merge brings the name, then as a named import. */
 import * as setupPageModule from "./setup-page/index.mjs";
 /* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
 import { civicsmithUserAgent } from "./acquisition/index.mjs";
@@ -37,8 +38,7 @@ import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "./setup-fleet.mjs";
 
 /* R47 (DEC-109; K1038; K1851): the page as composed, setup-page's template with the hosting block in its one slot. */
-export const ROTATION_GUIDE_HREF = typeof setupPageModule.ROTATION_GUIDE_ID === "string" && setupPageModule.ROTATION_GUIDE_ID
-  ? `#${setupPageModule.ROTATION_GUIDE_ID}` : null;
+const ROTATION_GUIDE_HREF = typeof setupPageModule.ROTATION_GUIDE_HREF === "string" ? setupPageModule.ROTATION_GUIDE_HREF : null;
 export const SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
 /** The page as served: the composed page, its unread group line replaced by what one read of the record said
  *  (setup-page R1's `groupLine`, re-exported). */
