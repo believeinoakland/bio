@@ -80,8 +80,8 @@ export const STANDARD = "standard";
 /** R1, R12: the seven kinds, `jurisdictions`' own list (its R23's `STANDARD_SOURCE_KINDS`, K1902 (1)), never a copy:
  *  the whole vocabulary of a standard. */
 export const STANDARD_KINDS = STANDARD_SOURCE_KINDS;
-/** R7: the three answers of `inForce`. */
-export const IN_FORCE_STATES = Object.freeze(["in_force", "not_in_force", "undetermined"]);
+/** R7, R20: the four answers of `inForceAt` and its alias `inForce`, `overridden` (R38) included (K1973). */
+export const IN_FORCE_STATES = Object.freeze(["in_force", "not_in_force", "undetermined", "overridden"]);
 /** R1: a citation's bound; R9: a proposal's `why`; R8: a page; R2: the passages one standard's text names; the bound on
  *  a proposal's named act; R1: the declarer's reason, in characters (DEC-88). */
 export const CITE_MAX = 200, WHY_MAX = 240, PAGE_MAX = 200, TEXTS_MAX = 50, ACT_MAX = 200, REASON_MAX = 2000;

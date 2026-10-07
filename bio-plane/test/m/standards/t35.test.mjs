@@ -271,7 +271,7 @@ test("R38 version_basis: two held captures of one address whose texts differ, na
   assert.equal(at("2025-03-20").state, "undetermined", "no end stated");
 });
 
-test("R38 overrides: a portion of this standard displaces a held standard's portion until an event or its own next revision; R20 answers \"overridden\" naming the overriding standard, undetermined where the until event has no when; overridesOf answers both directions; force_source names a kind and its passage (FORCE_SOURCE_INVALID); OVERRIDE_INVALID names the field", () => {
+test("R7 R38 overrides: a portion of this standard displaces a held standard's portion until an event or its own next revision; R20 answers \"overridden\" naming the overriding standard, undetermined where the until event has no when; overridesOf answers both directions; force_source names a kind and its passage (FORCE_SOURCE_INVALID); OVERRIDE_INVALID names the field", () => {
   const w = seeded();
   const t = w.passage().contentId, o = w.passage().contentId;
   const base = w.declare({ text: [t], portion: { path: "12(a)", content_id: t }, period: { from: "2010-01-01", to: "2040-12-31" } }).id;
@@ -292,6 +292,8 @@ test("R38 overrides: a portion of this standard displaces a held standard's port
   assert.deepEqual(ov.force_source, { kind: "court_order", citation: o });
   const f = w.s.inForceAt({ standard: base, date: "2025-06-01" });
   assert.deepEqual([f.state, f.overridden_by], ["overridden", { standard: ov.id, portion: "3" }]);
+  /* R7 (K1973): the alias answers exactly the same state, overridden included, one of the four IN_FORCE_STATES */
+  assert.deepEqual([w.s.inForce(base, "2025-06-01").state, IN_FORCE_STATES.includes("overridden")], ["overridden", true]);
   assert.equal(w.s.inForceAt({ standard: base, date: "2026-01-02" }).state, "in_force", "after the until event");
   assert.equal(w.s.inForceAt({ standard: base, date: "2023-06-01" }).state, "in_force", "before the overriding policy");
   assert.deepEqual(w.s.overridesOf({ standard: base, viewer: V("carol") }).overridden_by.map((x) => x.by), [ov.id]);
@@ -536,7 +538,7 @@ test("R35 R37 R38 R40 R43 the ops map holds the T35 acts and reads, stamps from 
   assert.equal(ops("", { standard: p, reason: "x", author: V("bob") }).standardrelease().reason, "NOT_HELD_FROM_SOURCE");
   assert.equal(ops("", { standard: p, act: p, edition: "1", from: "2020-01-01", mode: "x", citation: t.contentId, reason: REASON, author: V("bob") }).standardadoption().reason,
                "ADOPTION_MODE_UNKNOWN");
-  assert.deepEqual(IN_FORCE_STATES, ["in_force", "not_in_force", "undetermined"]);
+  assert.deepEqual(IN_FORCE_STATES, ["in_force", "not_in_force", "undetermined", "overridden"]);
   assert.equal(sha("x").length, 64);
 });
 
