@@ -268,10 +268,15 @@ test("R39 R4: each vocabulary's values are the very objects its owner answers â€
     assert.equal(v.line_roles.values[k], lines.roles(k), k);
     assert.deepEqual(Object.keys(v.line_roles.words[k]), [...lines.roles(k)], k);
   }
-  /* connection_kinds: every kind connection-grammar's owners() lists, with its registered word and class */
-  assert.deepEqual(v.connection_kinds.values, owners());
+  /* connection_kinds (N695, K1864): every kind connection-grammar's owners() lists, carried once: `values` the kind
+     names in owners()' order, `words` each kind's registered word, class and owner, and nothing else beside them */
   const listed = owners().flatMap((o) => o.kinds.map((k) => [k.kind, { word: k.word, class: k.class, owner: o.owner }]));
+  assert.deepEqual(Object.keys(v.connection_kinds), ["values", "words"]);
+  assert.deepEqual(v.connection_kinds.values, listed.map(([k]) => k));
+  assert.ok(v.connection_kinds.values.every((k) => typeof k === "string"), "the values are kind names, not registry entries");
+  assert.equal(new Set(v.connection_kinds.values).size, v.connection_kinds.values.length, "each kind once");
   assert.deepEqual(v.connection_kinds.words, Object.fromEntries(listed));
+  assert.deepEqual(Object.keys(v.connection_kinds.words), v.connection_kinds.values);
 });
 
 test("R39: each word is the owner's registered word where it holds one, else K1486's, else one plain word marked "

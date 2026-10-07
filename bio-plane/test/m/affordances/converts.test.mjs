@@ -14,12 +14,14 @@
    - `publish` (R14, R8, R18): `case_member` measured after a real publication — `publish` withheld and refused
      ALREADY_A_CASE_MEMBER, `reopen` offered and accepted.
    The last two over case-authoring's fixture (real record, membership, promotion, connections, inquiry, basis-versions,
-   publication, ratification, contradiction, case-authoring). */
+   publication, ratification, contradiction, case-authoring), with `case_member` asked of the case-tensions instance
+   publication builds on the same host (N597). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as bvFix from "../basis-versions/fixture.mjs";
 import * as caFix from "../case-authoring/fixture.mjs";
 import { affordancesOf, deriveActs, decorate, MACHINE_REFUSALS, SELF_ATTESTED_PROMPT } from "../../../src/affordances.mjs";
+import { caseTensionsOf } from "../../../src/case-tensions/index.mjs";
 
 const NOTHING_RESTS = { confirmed: [], frozen: [], severed: [] };
 const ids = (f) => deriveActs(f).map((a) => a.id);
@@ -55,7 +57,7 @@ function concludedElsewhere() {
     record: w.record, membership: w.membership, connections: w.k, basisVersions: w.bv, sql: w.st.sql,
     inquiry: { restsOnLive: () => NOTHING_RESTS },
     citation: { retiredNotCitable: () => false },
-    publication: { caseRelation: () => ({ member: false }) },
+    caseTensions: { caseRelation: () => ({ member: false }) },
     ratification: { caseConclusionFor: () => ({ state: "none" }), editionsRecordingConclusion: () => ({ same: [] }) },
   });
   /* the stamps the control plane sends for a session member, and for a machine credential (`token:` author, `class:` by) */
@@ -129,7 +131,7 @@ function publishable() {
   w.join(P, "ruth");
   const a = affordancesOf(w.host, {
     record: w.record, membership: w.membership, connections: w.connections, inquiry: w.inquiry, sql: w.st.sql,
-    publication: w.publication, basisVersions: w.basisVersions, ratification: w.ratification,
+    caseTensions: caseTensionsOf(w.host), basisVersions: w.basisVersions, ratification: w.ratification,
     contradiction: w.contradiction, citation: { retiredNotCitable: () => false },
   });
   const as = (m) => a.affordanceFacts({ target: F, viewer: caFix.V(m), identity: caFix.V(m), author: caFix.V(m), by: m });

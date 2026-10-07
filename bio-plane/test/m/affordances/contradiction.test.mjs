@@ -2,7 +2,7 @@
    membership, promotion, inquiry and contradiction modules, with the candidates laid down through contradiction's own
    doors (the pairing forms them, a run proposes them, a member takes one up). `affordanceFacts` (R14) is asked
    in-process through `affordancesOf(host, deps)` over that record; the providers it reads that the fixture does not
-   build (connections, citation, publication, ratification) are stand-ins answering that nothing cites, rests on or
+   build (connections, citation, case-tensions, ratification) are stand-ins answering that nothing cites, rests on or
    publishes these documents; `contradiction` is the fixture's own. Measured here: the `contradiction_inquiry` and (N365)
    `contradiction_sides_seen` facts (R14), the
    offer agreeing with the act on such an inquiry (R8, R18), the backing of the five N345 acts graded `reasoned` (R19),
@@ -19,7 +19,7 @@ const factsOf = (w) => affordancesOf(w.host, {
   record: w.record, membership: w.membership, sql: w.st.sql, inquiry: w.k, basisVersions: w.bv, contradiction: w.c,
   connections: { citesInto: () => NONE },
   citation: { retiredNotCitable: () => false },
-  publication: { caseRelation: () => ({ member: false }) },
+  caseTensions: { caseRelation: () => ({ member: false }) },
   ratification: { caseConclusionFor: () => ({ state: "none" }), editionsRecordingConclusion: () => ({ same: [] }) },
 });
 /* A world with one K2 duty taken up as a contradiction inquiry. */
