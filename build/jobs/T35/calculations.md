@@ -1,6 +1,6 @@
 # calculations (T35)
 
-**Status** · session_01R2CzzJxS8M5bLSwSsNm9sy · depth 2 · COMPLETE · handled B2
+**Status** · session_01R2CzzJxS8M5bLSwSsNm9sy · depth 2 · COMPLETE · handled B3
 
 ## Completion (CALCULATIONS #3)
 
@@ -26,6 +26,19 @@
 
 Size (session_01R2CzzJxS8M5bLSwSsNm9sy): test runs 9, module lines 3155
 
+## Completion again (B3 · CHANGE)
+
+Merged `tranche/T35` @ bd314ba4d6 (events and standards merged). Checked every call against the real services:
+- `standards.isMeasure` is called `isMeasure(id, viewer)`, as its R34 states (it was called with an object, so every provision read not-a-measure).
+- `events.usesOf` answers an act placed nowhere in `placed_nowhere`, apart from `items`, and continues by `next`: `freezeUses` now takes both lists and pages by `next` (before, acts placed nowhere were dropped).
+- A use's facet (`provision`, `stated_reason`, `outcome`) is under `use` on its event view (events R45): read there. A `stated_reason` withheld from the member folds empty.
+- `readEvent` (`governing`, `attestations[].grade`), `standardRead` (`period`, `held`, `target`), `inForceAt` (`state`), `bindsAt` (`state` binds, benchmark or undetermined) and `forcesOf` (`forces[].portion`, `.force`) match what this module reads.
+The test stand-ins follow the real shapes, and a new test runs R32 and R36 over the real events (`recordDiscretion`) and standards (`isMeasure`, `inForceAt`, a standard held `cited`).
+
+Tests and checks: `node --test bio-plane/test/m/calculations/` 47 pass, 0 fail. `format` 0 failures; `architecture calculations` 0; `coverage calculations` 37 of 37; `ownership calculations tranche/T35` 0.
+
+Size (session_01R2CzzJxS8M5bLSwSsNm9sy): test runs 14, module lines 3157
+
 ## J1 · QUESTION
 
 Seven readings I am building on (carrying on meanwhile; none blocks):
@@ -48,3 +61,7 @@ Found while testing calculations' users (details in my record's Completion):
 ## J3 · COMPLETE
 
 T35-38 applied whole (R9, R32–R37, CONTENT #14 J2's 'set up'); 46/46 calculations tests; coverage 37/37, architecture and ownership 0 failures, format only red 24. My record's Completion section has the detail; J2 the findings.
+
+## J4 · COMPLETE · re B3
+
+B3 done: isMeasure(id, viewer) as R34 states; usesOf's placed_nowhere and next, and the use facet under event.use, read as events states them (both were wrong too); other calls checked against the real code and match. New test over the real events and standards (R32, R36). 47/47; format, architecture, coverage 37/37, ownership 0 failures. Record's 'Completion again (B3)'.

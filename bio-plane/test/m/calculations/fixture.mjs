@@ -113,7 +113,7 @@ export function usesProvider(w) {
       const e = { event_id: id, kind, status: "held", when: w8, governing: w8 ? 1 : null,
         attestations: [{ attestation_id: 1, grade }],
         participants: [...(decider ? [{ entity_id: decider, role: "decider" }] : []), ...(subject ? [{ entity_id: subject, role: "subject" }] : [])],
-        provision, stated_reason: stated, outcome: { value: outcome } };
+        use: { kind, provision, stated_reason: stated, outcome: { value: outcome } } };
       uses.push(e);
       return id;
     },
@@ -121,13 +121,17 @@ export function usesProvider(w) {
       if (Array.isArray(kinds) && kinds.some((k) => !["discretion", "waiver", "assessment"].includes(k)))
         return { ok: false, reason: "KIND_NOT_DISCRETION", detail: "a use is of kind discretion, waiver or assessment" };
       const has = (e, role, id) => e.participants.some((p) => p.role === role && p.entity_id === id);
+      const pv = (e) => e.use.provision;
       let list = uses.filter((e) => seen(e, viewer) && (!kinds || kinds.includes(e.kind))
-        && (!provision || (e.provision && e.provision.standard === provision.standard && (!provision.portion || e.provision.portion === provision.portion)))
+        && (!provision || (pv(e) && pv(e).standard === provision.standard && (!provision.portion || pv(e).portion === provision.portion)))
         && (!decider || has(e, "decider", decider)) && (!subject || has(e, "subject", subject)));
+      /* as R46 answers: placed ones first, those placed nowhere apart, one page over both, `next` continuing it */
+      list = [...list.filter((e) => e.when), ...list.filter((e) => !e.when)];
       if (after) list = list.slice(list.findIndex((e) => e.event_id === after) + 1);
       const cap = Math.max(1, Math.min(500, limit));
-      return { ok: true, items: list.slice(0, cap).map((e) => ({ ...e })), count: Math.min(cap, list.length), truncated: list.length > cap,
-        says: "the held uses this viewer may see, never every use made" };
+      const shown = list.slice(0, cap).map((e) => ({ ...e }));
+      return { ok: true, items: shown.filter((e) => e.when), placed_nowhere: shown.filter((e) => !e.when), count: shown.length,
+        truncated: list.length > cap, next: list.length > cap ? shown.at(-1).event_id : null };
     },
     readEvent({ eventId, viewer = null } = {}) {
       const e = uses.find((x) => x.event_id === eventId);
@@ -162,7 +166,7 @@ export function standardsProvider(w) {
       if (!to) return { state: "undetermined", why: "no end is stated", standard };
       return { state: "in_force", why: `${date} is within ${from}–${to}`, standard, version: standard };
     },
-    isMeasure({ standard = null } = {}) { const s = held.get(standard); return !!s && s.held === "text"; },
+    isMeasure(id, viewer = null) { void viewer; const s = held.get(id); return !!s && s.held === "text"; },
     bindsAt({ standard = null, body = null, date = null } = {}) {
       const s = held.get(standard);
       const state = s && s.binds ? s.binds[body] : undefined;

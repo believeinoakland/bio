@@ -18,7 +18,7 @@
  *                undetermined where a read needs them). They are reached through `deps`, never imported, so this
  *                module reads them only through their public services.
  *                Since T35: `events.usesOf` and `readEvent` (R32's frozen uses and their sight), `standards`' `standardRead`,
- *                `inForceAt`, `isMeasure`, `bindsAt` and `forcesOf` (R34–R36), and `entities.readEntity` (R32's kinds).
+ *                `inForceAt`, `isMeasure(id, viewer)`, `bindsAt` and `forcesOf` (R34–R36), and `entities.readEntity` (R32's kinds).
  *   registry     `connection-grammar`'s registry (default: the one the plane wires): the owners' `neighbours`, one hop,
  *                for R32's relationships, passed this module's host.
  *   combine      `jurisdictions.combine` (default): the active profiles' view, for fiscal periods, business days and
@@ -874,7 +874,7 @@ export class Calculations {
       const r = read(pv.standard);
       if (!r) return noStandard(pv.standard, "the provision");
       let measure = false;
-      try { measure = standards && typeof standards.isMeasure === "function" ? standards.isMeasure({ standard: str(pv.standard), viewer }) === true : false; } catch { measure = false; }
+      try { measure = standards && typeof standards.isMeasure === "function" ? standards.isMeasure(str(pv.standard), viewer) === true : false; } catch { measure = false; }
       if (!measure) return no("PROVISION_NOT_A_MEASURE", `the provision's standard is held ${r.held ?? "without its text"}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.`, { standard: str(pv.standard), held: r.held ?? null });
       const date = period && !period.key ? period.to || period.from : null;
       let standing = { state: "undetermined", why: "the calculation's period states no date, so the version in force is undetermined" };
@@ -1631,20 +1631,21 @@ export class Calculations {
       try { const r = entities ? entities.readEntity({ entityId: id, viewer }) : null; return r && r.found ? r.entity : null; } catch { return null; }
     };
     const d = ent(decider), sj = ent(subject);
-    const prov = plain(ev.provision) ? ev.provision : {};
+    const use = plain(ev.use) ? ev.use : ev;   /* events R45: the use's facet, under `use` on its event view */
+    const prov = plain(use.provision) ? use.provision : {};
     const days = this.#whenDays(ev.when);
     let stated = 0, fold = "";
-    if (plain(ev.stated_reason)) {
+    if (plain(use.stated_reason)) {
       stated = 1;
       try {
-        const sr = ev.stated_reason;
-        const ext = canonicalExtent(sr.extent);
-        const row = this.#one(`SELECT content_id FROM content WHERE capture_sha=? AND extent=? AND stale=0 LIMIT 1`, sr.capture_sha, ext);
+        /* the passage's whole text, read again (a facet's `words` may be cut); a reason the member may not see folds empty */
+        const sr = use.stated_reason;
+        const row = sr.withheld ? null : this.#one(`SELECT content_id FROM content WHERE capture_sha=? AND extent=? AND stale=0 LIMIT 1`, sr.capture_sha, canonicalExtent(sr.extent));
         const text = row ? this.content.passageText(row.content_id) : null;
         fold = typeof text === "string" ? foldReason(text) : "";
       } catch { fold = ""; }
     }
-    const outcome = plain(ev.outcome) ? ev.outcome.value : ev.outcome;
+    const outcome = plain(use.outcome) ? use.outcome.value : use.outcome;
     const ties = decider && subject && !decider.includes(";") && !subject.includes(";") ? this.#ties(decider, subject, ev.when, viewer) : "";
     return [ev.event_id, ev.kind, str(prov.standard), str(prov.portion), decider, d ? d.kind ?? "" : "", subject, sj ? sj.kind ?? "" : "",
       sj && sj.sector ? String(sj.sector) : "", days ? days.start : "", days ? days.end : "", days ? days.precision : (ev.when ? "undetermined" : ""),
@@ -1667,12 +1668,13 @@ export class Calculations {
       try { r = await events.usesOf({ ...filter, ...(after ? { after } : {}), limit: 500, viewer: by }); }
       catch (e) { r = no("EVENTS_THREW", String(e && e.message || e).slice(0, 200)); }
       if (!r || r.ok === false) return { ...(r || no("EVENTS_FAILED", "the uses were not answered")), detail: `${(r && (r.detail || r.why)) || "the uses were not answered"}. Nothing was written.` };
-      const page = Array.isArray(r.items) ? r.items : [];
+      /* events R46: an act placed nowhere is answered apart, never dropped: it is a row all the same */
+      const page = [...(Array.isArray(r.items) ? r.items : []), ...(Array.isArray(r.placed_nowhere) ? r.placed_nowhere : [])];
       items.push(...page);
       if (items.length > USES_MAX) return no("TABLE_TOO_LARGE", `the uses this filter answers are over ${USES_MAX} acts, ${TABLE_MAX_CELLS} cells, the bound; narrow the filter. Nothing was written.`, { bound: "cells", max: TABLE_MAX_CELLS });
       if (!r.truncated || !page.length) break;
       const last = page.at(-1);
-      after = (plain(last.event) ? last.event : last).event_id;
+      after = typeof r.next === "string" && r.next ? r.next : (plain(last.event) ? last.event : last).event_id;
     }
     if (!items.length) return no("NO_USES", "the filter answers no held use of a power you may see. Nothing was written.", { filter });
     const tb = tableBuilder([...USES_HEADER], USES_FIELDS);
