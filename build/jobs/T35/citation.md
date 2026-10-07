@@ -32,3 +32,7 @@ The architecture check will refuse the import until the edge is in `modules.json
 - `format`: 130 modules, 129 requirements files; 0 failures. `architecture`: 12 product files, 46 relative imports; 0 failures. `coverage`: 12 of 12 live requirement ids named by a test; 0 failures. `ownership`: 7 files changed by citation between tranche/T35 and HEAD; 0 failures.
 
 Size (session_013PbWmoBUuyHPeboigwqVPg): test runs 10, module lines 1186
+
+## J2 · COMPLETE
+
+T35-42 applied (B2's K1982 edge merged): cite takes found (retrieval R73's match; document via provenance.homeOf, part as the named-part bag, so every member and part refusal applies) with the optional question; CITE_ONE_SOURCE, FOUND_MALFORMED, FOUND_CAPTURE_MOVED (C-45.14-16), NO_SUCH_QUESTION, NOT_AN_INQUIRY (C-33.52-53), awaiting stamp; R3's Session Log and answer (question always carried, null when none). R12: index.mjs:378 says your group's Civicsmith, tested. citation 66/66; users' tests 706 pass, the same 13 inherited reds as without the change; format, architecture, coverage 12/12, ownership 0 failures. For you, in the record: op=cite's new found/question params for affordances/op-declarations; plane passes no body to citationOps (found travels in the query); control-plane's catalogue pins may need the five rows at T35-72.
