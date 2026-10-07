@@ -12,6 +12,8 @@
 - **DEC-149** (7 rows): `checks.mjs`:138–139 C-103.7 → "Your group's Civicsmith holds no key … Whoever hosts your group's Civicsmith can add one."; `index.mjs` direct, archive and doorbell `why`s and testify's two sentences re-worded as the sweep proposes. New `dec149.test.mjs` names each string; `seam.test.mjs` R58 updated for C-103.7's new words (code and number unchanged).
 - **Awaiting stamp:** C-103.7 RECEIPT_NO_KEY, awaiting stamp (its translation moved; T36's promotion job stamps it; row census red 2).
 
+**B3 (CHANGE, K1951):** `register-checks.test.mjs`' pulled-knock fixture's `asserts` now reads "received at the doorbell of your group's Civicsmith", field for field as capture's `#pulledDocument` writes it on `job/T35/capture`; its `who` stays (acquisition's spelling). provenance 102/102; format, architecture, coverage (44/44), ownership (8 files): 0 failures. `tranche/T35` was rewritten after my first merge (the same commits under new hashes, e.g. K1950 `2768b5c252` → `946aa3151c`), so I merged it again and took the tranche's text for every file outside this module's paths; the branch now differs from the tranche only in this module's files and this record.
+
 **Deferred.** None.
 
 **Found in other modules / for BOB.**
@@ -26,7 +28,7 @@
 - Users of the changed service (every module whose `uses` names provenance, 562 test files): tests 4050, pass 4031, fail 17, every failure an accepted red by name: plane ask ×6 (22), extraction ×6 (6), sources contract R1 (21), action-clocks factreader ×2 (14), workbooks R15 (8), control-plane catalogue-end (19; it pins no C-103 row). After B2's change: ratification 212/212.
 - `checks/format.mjs`: 129 modules, 128 requirements files, 0 failures. `architecture.mjs provenance`: 0 failures. `coverage.mjs provenance`: 44 of 44 live requirement ids named by a test, 0 failures. `ownership.mjs provenance tranche/T35`: 0 failures.
 
-Size (session_011BVPDot1xsr4sPx4NrRahU): test runs 12, module lines 2696
+Size (session_011BVPDot1xsr4sPx4NrRahU): test runs 14, module lines 2696
 
 ## J1 · QUESTION
 
