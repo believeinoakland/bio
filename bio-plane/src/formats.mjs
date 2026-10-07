@@ -58,6 +58,7 @@ import { xlsxEntry } from "./formats-xlsx.mjs";
 import { pptxEntry } from "./pptx.mjs";
 import { odtEntry, odsEntry, odpEntry } from "./odf.mjs";
 import { csvEntry } from "./csv.mjs";
+import * as ooxml from "./ooxml.mjs";
 
 /* Registration order is dispatch order within a pass: the first entry whose
    detect() answers wins that pass. Kept insertion-ordered by Map. */
@@ -257,6 +258,50 @@ registerFormat(odpEntry);
    order is therefore immaterial for this entry in pass 1, and in pass 2 no
    registered entry claims `text/csv`. */
 registerFormat(csvEntry);
+
+/* THE ZIP ENTRY (T35-11; N688, K1844, K1852) — a plain ZIP archive, recognised
+   so that it can be opened on capture: `acquisition` cuts its members, each a
+   capture of its own (Intake §3). It is the tenth entry and registered LAST,
+   so every office and OpenDocument entry is asked first in each pass.
+
+   DETECT IS `ooxml.discriminate`'S `format:"zip"`, ANSWERED SYNCHRONOUSLY:
+   ZIP magic, a central directory `readContainer` can read, and in it neither
+   an OPC content-type map nor a `mimetype` member — the same lookups
+   discriminate makes before it would inflate anything, so the two cannot
+   disagree, and no part is ever inflated here. Anything carrying either
+   declaration is an office or ODF file (or an undetermined one), never `zip`.
+   "likely", not "certain": the archive is not opened until `parts()`.
+
+   `parts` is `listArchive` (ooxml R27-R28), its answer unchanged. `structure`
+   and `text` are null: a member is read as its own capture, never through
+   this entry. */
+const ZIP_CONTENT_TYPES = ["application/zip", "application/x-zip-compressed"];
+
+registerFormat({
+  format: "zip",
+  detect(bytes, contentType) {
+    if (bytes) {
+      if (!ooxml.hasZipMagic(bytes)) return null;
+      const container = ooxml.readContainer(bytes);
+      if (!container.ok) return null;
+      const { CONTENT_TYPES_PART: opcMap, ODF_MIMETYPE_PART: odfMime } = ooxml;
+      if (container.byName.has(opcMap)) return null;
+      if (container.byName.has(odfMime)
+        || container.entries.some((e) => ooxml.normalizePartName(e.name) === odfMime)) return null;
+      return { format: "zip", confidence: "likely",
+               signals: ["magic: PK\\x03\\x04 with a readable central directory",
+                         `part: ${opcMap} absent`, `part: ${odfMime} absent`,
+                         `entries: ${container.count}`] };
+    }
+    if (contentType && ZIP_CONTENT_TYPES.includes(contentType))
+      return { format: "zip", confidence: "likely",
+               signals: [`content type "${contentType}"`] };
+    return null;
+  },
+  parts: (bytes) => ooxml.listArchive(bytes),
+  structure: null,
+  text: null,
+});
 
 /* REC-218 — THE DIALECT AS THE RECORD KEEPS IT (BOB #33, 2026-09-24 21:55Z,
    option (b)): a `reading.dialect` key of its OWN, `{delimiter, encoding}`,

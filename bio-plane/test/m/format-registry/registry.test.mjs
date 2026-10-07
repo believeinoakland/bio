@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { registerFormat, unregisterFormat, getFormat, listFormats, detectFormat } from "../../../src/formats.mjs";
 
-const BUILT_IN = ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv"];
+const BUILT_IN = ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"];
 const enc = (s) => new TextEncoder().encode(s);
 const PDF = enc("%PDF-1.7\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n");
 const HTML = enc("<!DOCTYPE html><html><body>x</body></html>");
@@ -151,7 +151,7 @@ test("R8: listFormats returns every key in registration order; a re-registered f
     assert.deepEqual(listFormats(), [...BUILT_IN, "r8-b", "r8-a"]);
     const html = unregisterFormat("html");
     registerFormat(html);
-    assert.deepEqual(listFormats(), ["pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "r8-b", "r8-a", "html"]);
+    assert.deepEqual(listFormats(), ["pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip", "r8-b", "r8-a", "html"]);
     const list = listFormats();
     list.push("mutated");
     assert.equal(listFormats().includes("mutated"), false);
