@@ -26,6 +26,19 @@
 
 Size (session_01R2CzzJxS8M5bLSwSsNm9sy): test runs 9, module lines 3155
 
+## Completion again (B3 · CHANGE)
+
+Merged `tranche/T35` @ bd314ba4d6 (events and standards merged). Checked every call against the real services:
+- `standards.isMeasure` is called `isMeasure(id, viewer)`, as its R34 states (it was called with an object, so every provision read not-a-measure).
+- `events.usesOf` answers an act placed nowhere in `placed_nowhere`, apart from `items`, and continues by `next`: `freezeUses` now takes both lists and pages by `next` (before, acts placed nowhere were dropped).
+- A use's facet (`provision`, `stated_reason`, `outcome`) is under `use` on its event view (events R45): read there. A `stated_reason` withheld from the member folds empty.
+- `readEvent` (`governing`, `attestations[].grade`), `standardRead` (`period`, `held`, `target`), `inForceAt` (`state`), `bindsAt` (`state` binds, benchmark or undetermined) and `forcesOf` (`forces[].portion`, `.force`) match what this module reads.
+The test stand-ins follow the real shapes, and a new test runs R32 and R36 over the real events (`recordDiscretion`) and standards (`isMeasure`, `inForceAt`, a standard held `cited`).
+
+Tests and checks: `node --test bio-plane/test/m/calculations/` 47 pass, 0 fail. `format` 0 failures; `architecture calculations` 0; `coverage calculations` 37 of 37; `ownership calculations tranche/T35` 0.
+
+Size (session_01R2CzzJxS8M5bLSwSsNm9sy): test runs 14, module lines 3160
+
 ## J1 · QUESTION
 
 Seven readings I am building on (carrying on meanwhile; none blocks):
