@@ -31,7 +31,8 @@ const ctx = {
   location: { protocol: "https:" },
   fetch: async (url, init) => {
     const u = new URL(url, "https://x.test"); const op = u.searchParams.get("op");
-    CALLS.push({op, params:Object.fromEntries(u.searchParams), method:(init&&init.method)||"GET", body:init&&init.body?JSON.parse(init.body):null});
+    CALLS.push({op, params:Object.fromEntries(u.searchParams), method:(init&&init.method)||"GET", body:init&&init.body?JSON.parse(init.body):null,
+      auth:(init&&init.headers&&init.headers.authorization)||null});   /* T35-74 (F1): the session rides the header */
     const reply = o => ({ ok:true, json: async()=>o });
     /* CORRECTED 2026-08-05 (UI-23), never exempted. `select` and `release` were
        answered UNWRAPPED here while `search`, `list` and `whoami` below were
@@ -186,7 +187,7 @@ await G.doRelease(["INFO-1","INFO-2"]);
 const sel = CALLS.find(c=>c.op==="select");
 const rel = CALLS.find(c=>c.op==="release");
 if(!sel || sel.method!=="POST" || sel.params.kind!=="enumerated" || sel.body.ids.length!==2) throw new Error("select call malformed: "+JSON.stringify(sel));
-if(!rel || rel.params.handle!=="sel-abc123" || !rel.params.acknowledgment.includes("homogeneous") || rel.params.token!=="tok") throw new Error("release call malformed: "+JSON.stringify(rel));
+if(!rel || rel.params.handle!=="sel-abc123" || !rel.params.acknowledgment.includes("homogeneous") || rel.auth!=="Bearer tok" || "token" in rel.params) throw new Error("release call malformed: "+JSON.stringify(rel));
 const rv = ctx.document.querySelector("#rv");
 if(!(rv._inserted||"").includes("Released 2 documents")){
   console.log("CALLS:", JSON.stringify(CALLS.map(c=>c.op)));

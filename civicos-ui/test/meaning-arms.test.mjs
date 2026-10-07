@@ -133,8 +133,9 @@ const mf = new Miniflare({
   bindings: { ADMIN_TOKEN: "adm-ui63", MEMBER_TOKEN: "mem-ui63", PROBE_TOKEN: "prb-ui63", VERSION: "test" },
 });
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+/* T35-74 (F1, K1874): the credential travels in the `Authorization: Bearer` header, never in the address. */
 const get = async (op, qs = "", tok = "mem-ui63") => rP(await (await mf.dispatchFetch(
-  `http://x/api/?op=${op}&token=${tok}&${qs}`)).json());
+  `http://x/api/?op=${op}&${qs}`, { headers: { authorization: `Bearer ${tok}` } })).json());
 
 /* ============================================================
    0. THE GROUND — THE ARTIFACT, NOT A DOCUMENT ABOUT IT

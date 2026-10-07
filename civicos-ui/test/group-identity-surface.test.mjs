@@ -89,8 +89,9 @@ function plane(){
   return mf;
 }
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
+/* T35-74 (F1, K1874): the credential travels in the `Authorization: Bearer` header, never in the address. */
 const post = async (mf, op, body, tok) => rP(await (await mf.dispatchFetch(
-  `${ORIGIN}/api/?op=${op}${tok ? "&token=" + tok : ""}`, { method:"POST", body: JSON.stringify(body) })).json());
+  `${ORIGIN}/api/?op=${op}`, { method:"POST", headers: tok ? { authorization: `Bearer ${tok}` } : {}, body: JSON.stringify(body) })).json());
 async function session(mf, id, role){
   const add = await post(mf, "memberadd", { memberId:id, cover:`cover for ${id}`, role, capabilities:["contribute"] }, ADM);
   if(!add || !add.invite) throw new Error(`memberadd ${id}: ${JSON.stringify(add)}`);
@@ -117,7 +118,10 @@ function loadApp(fetchImpl){
   const SENT = [];
   async function bridge(u, opts){
     const url = new URL(u, ORIGIN);
-    SENT.push({ op: url.searchParams.get("op"), params: Object.fromEntries(url.searchParams.entries()) });
+    /* T35-74 (F1): the surface's credential is the `Authorization: Bearer` header's; `cred` is what it presented. */
+    const auth = String((opts && opts.headers && (opts.headers.authorization || opts.headers.Authorization)) || "");
+    SENT.push({ op: url.searchParams.get("op"), params: Object.fromEntries(url.searchParams.entries()),
+                cred: auth.startsWith("Bearer ") ? auth.slice(7) : null });
     return fetchImpl(url, opts);
   }
   const ctx = { console:{ log(){}, warn(){}, error(){}, info(){} }, URL, URLSearchParams, JSON, Array, Object, String,
@@ -146,7 +150,7 @@ async function header(mf){
   await A.U.PUB_GROUP;
   const sent = A.SENT.filter(s => s.op === "groupidentity");
   return { name: A.at("#p-gname"), gid: A.at("#p-gid"), all: A.headerText(),
-           strangers: sent.length === 1 && !("token" in sent[0].params) };
+           strangers: sent.length === 1 && !("token" in sent[0].params) && sent[0].cred === null };
 }
 /* The fence, read as a signed-in member through the real boot. */
 async function fence(mf, tok){
@@ -156,7 +160,7 @@ async function fence(mf, tok){
   try{ await B.U.boot(); }catch(e){ err = e; }
   const sent = B.SENT.filter(s => s.op === "groupidentity");
   return { grp: B.at("#m-grp"), idstr: B.at("#m-idstr"), title: (B.els.get("#m-idstr") || {}).title || "",
-           err, member: sent.length >= 1 && sent[0].params.token === tok };
+           err, member: sent.length >= 1 && sent[0].cred === tok && !("token" in sent[0].params) };
 }
 
 let exitCode = 1;
@@ -167,7 +171,7 @@ await session(mf, "gus", "admin");
 const OLIVE = await session(mf, "olive", "member");
 const setName = (name) => post(mf, "groupnameset", { name }, RUTH);
 const setDomain = (domain) => post(mf, "groupdomainset", { domain }, RUTH);
-const credentialed = async () => rP(await (await mf.dispatchFetch(`${ORIGIN}/api/?op=groupidentity&token=${ADM}`)).json());
+const credentialed = async () => rP(await (await mf.dispatchFetch(`${ORIGIN}/api/?op=groupidentity`, { headers: { authorization: `Bearer ${ADM}` } })).json());
 
 /* ============================================================
    0. THE FIXTURE, FLOORED: the plane records the slug and nothing beside it
