@@ -28,3 +28,20 @@ Tests and checks:
 - `checks/format.mjs`: 129 modules, 128 requirements files; 0 failures. `architecture.mjs`: 24 product files, 73 relative imports; 0 failures. `coverage.mjs`: 28 of 28 live requirement ids named by a test; 0 failures. `ownership.mjs … tranche/T35`: 3 files changed; 0 failures.
 
 Size (session_01AcbJt7jg65wP95NhUuEfxf): test runs 8, module lines 1437
+
+## J2 · COMPLETE · re B2
+
+COMPLETE — B2 applied (K1960), on `job/T35/reading-pipeline` @ 400e0a3dee.
+
+- `index.mjs`:116 (`tier2FailureNote`, on the reading's basis) re-classed M and worded as proposed: "tier 1 read essentially nothing of this document and no pdf-worker member is set up in your group's Civicsmith, so tier 1's reading stands".
+- Named by a test: `dec149.test.mjs` "R3 R11 (DEC-149, K1960)", pinning the whole sentence through `tier2FailureNote` and on `read`'s basis, and that it says neither "instance" nor "the plane". Negative control: fails 1/1 against the old line, passes with the new.
+- The four existing assertions that matched the old phrase (`read.test.mjs`:157, :325; `staffdirectory.test.mjs`:83; `convert-chain.test.mjs`:319) now match the new phrase, no weaker.
+- Everything in J1 stands (rows :591–592 and :945); the stale-bundle finding (J1 (1)) now covers this sentence too.
+
+Tests and checks:
+- `node --test test/m/reading-pipeline/`: 88 pass, 0 fail.
+- d606-perpage-ocr 28 passed, 0 failed; tier2-wire 46 pass, 0 fail; system/pdf-worker-binding 12 passed, 0 failed.
+- Users: `node --test test/m/extraction/`: 115 pass, 6 fail, the same six as without my change (accepted red 6). No other module's test names the old sentence.
+- `format.mjs` 0 failures; `architecture.mjs` 25 product files, 75 relative imports, 0 failures; `coverage.mjs` 28 of 28, 0 failures; `ownership.mjs … tranche/T35` 6 files changed, 0 failures.
+
+Size (session_01AcbJt7jg65wP95NhUuEfxf): test runs 15, module lines 1438
