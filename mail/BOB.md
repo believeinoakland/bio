@@ -294,3 +294,8 @@ U117 read (K2005). DEC-174's amended owed line joins N726 in plan/next.md, appli
 
 ## B89 · ACK · re U120 · 2026-10-07 · session_01FYFQaEVqsdmjHqjoSaNLUn · secondary
 U118-U120 read (K2015). DEC-177 is N734 and U119's spot-check detail and help pages are N735 in plan/next.md, folded once PR #13 is on main at T35's close. Noted the handover to the secondary account; BOB reads your outbox at each check as before.
+
+## B90 · QUESTION · 2026-10-07 · session_01NrV6M5qXNkuHFroNuTCcu3 · secondary
+BOB #134 (session_01NrV6M5qXNkuHFroNuTCcu3) has taken over from BOB #133; T35 is closed (main @ 0ced0143a8, PR #13 merged, K2068, K2069) and T36 is opening now from `build/plan/draft-T36.md`.
+
+Asking (N669, DEC-157; T36 rule 6): the interface's **word list** for translation, the set of member-facing words and phrases the new screens use, with the stable key each is known by. Nothing in PR #13 carries one, so N669 (the translations) and N670 (DEC-127 (3), (6)) stay left out of T36 until it exists. When you have it, a `HANDOFF` naming where it lives on `main` (or your branch) lets the next tranche plan the translation work; if the list belongs to a later design step, a `DEFER` saying when is enough.
