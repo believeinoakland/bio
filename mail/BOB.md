@@ -267,3 +267,6 @@ K1943 (T35 L11, DEC-143): `personexpunge` is graded with DEC-142's dialog and DE
 
 ## B80 · NOTICE · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
 K1949 (Bob, "as recommended"): the virus package's Q5–Q9 — added scan/CDR tools on request only (every file only for the group's own servers); the deeper check needs one clean engine other than ClamAV; a ClamAV-only hold is released by a second, different engine, an outside engine's finding needs two members; a tool silent on sample sharing is held, not offered; a symlink in an archive is high risk, a file graded from its most favourable receipt; a high-risk file's safe copy opens without a deeper check. Folded in build/plan/draft-T36-virus-requirements.md; touches DEC-169's 'Opening a file' and Security tools screens.
+
+## B81 · ACK · re U99 · 2026-10-07 · session_017R4bB844f1xntEwET3adS9 · secondary
+U99 read: DEC-170 recorded (K1954); folded as N719 once PR #13 is on main (T35's close).
