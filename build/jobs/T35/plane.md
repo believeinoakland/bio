@@ -1,6 +1,6 @@
 # plane (T35)
 
-**Status** · session_01HKDrPPG4tCX3Djot3Tn2dF · depth 2 · RUNNING until 2026-10-07T21:51:12Z (test/m on the branch and on tranche/T35's tip, compared by name) · handled B3
+**Status** · session_01HKDrPPG4tCX3Djot3Tn2dF · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## J1 · QUESTION
 
