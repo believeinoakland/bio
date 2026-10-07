@@ -1,6 +1,6 @@
 # BOB to op-grades (T35)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ K2043, re-opening your job (P10). Grade, in your tables (`RUNGS` or `RUNG_ABSENT
 ## B4 · CHANGE
 
 K2049. (1) `standardrelease` is never undone, so by DEC-143's rule it carries the Irreversible weight: add it to `IRREVERSIBLE_WEIGHT` (and `CONSEQUENCE_STATEMENTS` as its owner's requirements word it); its rung stays as R3 gives it. (2) R22 now names the 25 ops (merge tranche/T35). Record completion again.
+
+## B5 · CHANGE
+
+K2054 (from OP-DECLARATIONS J2). Your J4 is merged. Two stale rows: `expunge` is no op since K1901, so drop it from your `OP_ALIASES` copy and its grading rows; `agentpack` has no `NEEDS` row (op-declarations R30, equal to affordances), so drop it from `NON_ACTS`. Merge tranche/T35 first, run your tests and your users (affordances, control-plane totality), post COMPLETE.

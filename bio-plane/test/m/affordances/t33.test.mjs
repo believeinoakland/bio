@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
+import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
@@ -134,13 +135,26 @@ const ALL_WRITES = { ...Object.assign({}, ...Object.values(T33).map((m) => m.wri
 const ALL_READS = [...Object.values(T33).flatMap((m) => m.reads), ...UNROUTED_READS];
 const published = () => new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
 
-test("R40 R12: each new module's op map holds exactly the ops graded for it, and each earlier module's map holds the ops "
-   + "T33 adds to it", () => {
+/* K2049 (B4): the ops each of T33's new modules adds in T35, graded by op-grades in its `t35.mjs` (its R22, K2043) and held
+   to their owners there; pinned here so the maps stay closed. */
+const T35_ADDS = { events: ["discretionrecord", "assessmentrecord", "usewithdraw", "usesof"],
+  duties: ["poweruses", "uselink", "useunlink", "reviewpropose"], hypotheses: ["noterevise", "notedelete"],
+  calculations: ["usesfreeze", "applicationrecipes"] };
+
+test("R40 R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35 adds (K2049), each "
+   + "named in op-grades' T35 table — and each earlier module's map holds the ops T33 adds to it", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
-    const mine = [...Object.keys(m.writes), ...m.reads];
+    const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? [])];
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
+  }
+  for (const op of Object.values(T35_ADDS).flat()) {
+    assert.ok(Object.hasOwn(T35_NON_ACTS, op), op);
+    assert.equal(NON_ACTS[op], T35_NON_ACTS[op], op);
+    /* a write carries a T35 rung or absence, a read (`read:`) neither */
+    const write = !T35_NON_ACTS[op].startsWith("read:");
+    assert.equal(Object.hasOwn(T35_RUNGS, op) || Object.hasOwn(T35_RUNG_ABSENT, op), write, op);
   }
 });
 

@@ -1,4 +1,4 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R65).
+/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R66).
  *
  * THE PAGE AT THE ROOT is `setup-page`'s (K1851): the template, its group line and its script. This module composes it,
  * placing R47's block on who controls the group's Civicsmith in the template's one slot (setup-page R14), and re-exports
@@ -8,11 +8,17 @@
  */
 
 import { PAGE_HTML, HOSTING_SLOT, GROUP_LINE_UNREAD, groupLine } from "./setup-page/index.mjs";
+/* R47 (F10; K2038): the block's guide name links to setup-page's guide to replacing the one-time password (its R14,
+   R27), at the address setup-page exports as `ROTATION_GUIDE_HREF`. Read through the namespace until setup-page's T35
+   merge brings the name, then as a named import. */
+import * as setupPageModule from "./setup-page/index.mjs";
 /* The Civicsmith agent's one composer is acquisition's (its R24), read there and never copied. */
 import { civicsmithUserAgent } from "./acquisition/index.mjs";
-import { list as heldProfiles, get as heldProfile, combine as combineProfiles } from "../../jurisdictions/index.mjs";
+/* R64 (N700): a language tag is read by jurisdictions' `isLocale` (its R37), never by a reading of this module's own. */
+import { list as heldProfiles, get as heldProfile, combine as combineProfiles, isLocale } from "../../jurisdictions/index.mjs";
 import { recordOf, stampInstant } from "./record-core/index.mjs";
 import { membershipOf, notAnAdmin } from "./membership/index.mjs";
+import { credentialsOf } from "./credentials/index.mjs";
 import { promotionOf } from "./promotion/index.mjs";
 import { governorOf } from "./host-governor/index.mjs";
 import { schedulerOf } from "./scheduler/index.mjs";
@@ -32,7 +38,8 @@ import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, hostingControlBlock } from "./setup-fleet.mjs";
 
 /* R47 (DEC-109; K1038; K1851): the page as composed, setup-page's template with the hosting block in its one slot. */
-export const SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice"));
+const ROTATION_GUIDE_HREF = typeof setupPageModule.ROTATION_GUIDE_HREF === "string" ? setupPageModule.ROTATION_GUIDE_HREF : null;
+export const SETUP_HTML = PAGE_HTML.replace(HOSTING_SLOT, () => hostingControlBlock("notice", { guideHref: ROTATION_GUIDE_HREF }));
 /** The page as served: the composed page, its unread group line replaced by what one read of the record said
  *  (setup-page R1's `groupLine`, re-exported). */
 export function setupPage(read) {
@@ -245,17 +252,12 @@ const draftRefused = (checked) => (checked && typeof checked.code === "string"
   : draftUnavailable("the draft could not be checked, so nothing is offered."));
 
 /* R60: the longest name a place is given, in characters. R65: the answers' bounds, and membership R109's limits on
-   the focus and the purpose a draft must fit. R64: one BCP 47 tag, as `jurisdictions` R37 reads one (`Intl` reads no
-   clock, store or network), at most 255 characters. */
+   the focus and the purpose a draft must fit. */
 export const PLACE_NAME_MAX = 200;
 export const GROUP_DRAFT_ANSWERS_MAX = 20;
 export const GROUP_DRAFT_ANSWER_MAX = 1000;
 export const GROUP_FOCUS_MAX = 1000;
 export const GROUP_PURPOSE_MAX = 4000;
-export function isLanguageTag(v) {
-  if (typeof v !== "string" || !v || v.length > 255 || /\s|,/.test(v)) return false;
-  try { return Intl.getCanonicalLocales(v).length === 1; } catch { return false; }
-}
 
 /* ============================================================================================================
  * THE TABLES (K4, `build/layers.md` ruling 3: each module owns its tables), created by `migrate` at start. Every one
@@ -595,6 +597,7 @@ export class InstanceSetup {
 
   #record() { return this.#deps.record ?? recordOf(this.#ctx); }
   #membership() { return this.#deps.membership ?? membershipOf(this.#ctx); }
+  #credentials() { return this.#deps.credentials ?? credentialsOf(this.#ctx, { record: this.#record(), membership: this.#membership() }); }
   #promotion() { return this.#deps.promotion ?? promotionOf(this.#ctx); }
   #governor() { return this.#deps.governor ?? governorOf(this.#ctx); }
   #scheduler() { return this.#deps.scheduler ?? schedulerOf(this.#ctx, this.#env); }
@@ -1685,7 +1688,7 @@ export class InstanceSetup {
     let tag = null;
     if (language !== null) {
       tag = typeof language === "string" ? language.trim() : "";
-      if (!isLanguageTag(tag))
+      if (!isLocale(tag))
         return refusal("LANGUAGE_MALFORMED", `${tag ? `'${tag.slice(0, 40)}' is not` : "the request names no language, and "
           + "one is chosen as"} one well-formed BCP 47 language tag (en, es, zh-Hant); null clears the choice. Nothing was changed.`);
     }
@@ -1710,20 +1713,54 @@ export class InstanceSetup {
   }
 
   /* =====================================================================
+   * TWO ADMINISTRATORS, EACH HOLDING RECOVERY CODES (R66; K1888, DEC-134 (2), (6)). The one-time recommendation of a
+   * second administrator is a step of setting up the group, answered to each administrator: how many administrators the
+   * group has (`membership.activeAdmins`, its R86) and whether the viewer's own role holds unspent recovery codes
+   * (`credentials.recoveryCodesState`, its R46). It gates nothing: a group may run with one administrator.
+   * ===================================================================== */
+
+  /** R66, op=adminrecoverystep: `{ok: true, administrators, codes_held, remaining, met}` to an administrator (`viewer`,
+   *  the control plane's stamp, R29), `NOT_AN_ADMIN` to anyone else, a machine credential included. A provider that does
+   *  not answer is the store's silence (R43), never `met: false`. Writes nothing and never throws. */
+  adminRecoveryStep({ viewer = null } = {}) {
+    const silent = (what, e) => ({ ok: false, reason: "STORE_DID_NOT_ANSWER", code: "STORE_DID_NOT_ANSWER",
+      detail: `${what} did not answer (${String(e && e.message || e).slice(0, 160)}), so whether the step is met is not known` });
+    const who = typeof viewer === "string" ? viewer.trim() : "";
+    let admin;
+    try { admin = !!who && !/^class:/.test(who) && this.#membership().isAdministrator(who) === true; }
+    catch (e) { return silent("the membership read of who is an administrator", e); }
+    if (!admin) return notAnAdmin(viewer ?? null, "reading the step of two administrators holding recovery codes");
+    let admins, codes;
+    try { admins = this.#membership().activeAdmins(); }
+    catch (e) { return silent("the membership read of the administrators", e); }
+    try { codes = this.#credentials().recoveryCodesState({ by: who }); }
+    catch (e) { return silent("the read of your recovery codes", e); }
+    if (!Array.isArray(admins)) return silent("the membership read of the administrators", "no list");
+    if (!codes || codes.ok !== true || typeof codes.held !== "boolean") return silent("the read of your recovery codes", "no answer");
+    const administrators = admins.length;
+    const remaining = Number.isInteger(codes.remaining) && codes.remaining > 0 ? codes.remaining : 0;
+    const codes_held = codes.held === true && remaining > 0;
+    return { ok: true, administrators, codes_held, remaining, met: administrators >= 2 && codes_held };
+  }
+
+  /* =====================================================================
    * THE ASSISTANT DRAFTS THE GROUP'S DESCRIPTION (R65; DEC-152, K1818, K1837, K1841 (2)). On "Who your group is", an
    * administrator answers a few questions and asks for a labelled draft of the group's focus and purpose
    * (`membership` R109). It writes nothing: the words become the group's only when the administrator keeps them through
    * `op=groupdescriptionset`. The draft is built from the answers and, while the suggestions switch of the account that
-   * serves the administrator is on, what the group holds, and it passes `wizard-scripts`' no-added-fact check. In T34
-   * there is no model turn (N686): past every refusal the op answers `ASSISTANT_DRAFT_UNAVAILABLE`.
+   * serves the administrator is on, what the group holds, and it passes `wizard-scripts`' no-added-fact check. In T35
+   * (N686, K1974) the door routes the draft past every refusal to `agent-worker`'s `POST /draft` (its R59; `control-plane`
+   * R57): it may hand that call in as `turn`, and a draft it cannot serve (no turn, no answer, or one over the limits)
+   * answers `ASSISTANT_DRAFT_UNAVAILABLE`, so the page's fields are unchanged.
    * ===================================================================== */
 
   /** R65, op=groupdescriptiondraft, which the door routes itself and calls here in-process (control-plane R57): `by` and
    *  `viewer` are its stamps (R29) and `assistant` is `{on, account}` as it resolved them (never the key); `answers` is
    *  the request's. The refusals, in order: NOT_AN_ADMIN, ASSISTANT_OFF, the door's account and
-   *  ceiling codes (answered there), GROUP_DRAFT_ANSWERS_MALFORMED or GROUP_DRAFT_NO_ANSWERS; then the draft, or, while
-   *  no model turn exists, ASSISTANT_DRAFT_UNAVAILABLE. */
-  async groupDescriptionDraft({ answers = undefined, assistant = null, viewer = null, by = null } = {}) {
+   *  ceiling codes (answered there), GROUP_DRAFT_ANSWERS_MALFORMED or GROUP_DRAFT_NO_ANSWERS; then the draft, or, when
+   *  the draft cannot be served, ASSISTANT_DRAFT_UNAVAILABLE. `turn` is the door's call to agent-worker's `/draft`
+   *  (`{answers, account, holdings}` → `{focus, purpose, readLog}`), else the one this module was built with. */
+  async groupDescriptionDraft({ answers = undefined, assistant = null, viewer = null, by = null, turn = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return notAnAdmin(by ?? null, "asking the assistant to draft your group's description");
     const off = this.assistantGate();
@@ -1739,14 +1776,14 @@ export class InstanceSetup {
     if (given.every((a) => !a.text.trim()))
       return refusal("GROUP_DRAFT_NO_ANSWERS", "every answer is empty, so there is nothing to draft from. Nothing was saved.");
     /* END DEC-49 REGION is-group-draft-answers */
-    const unavailable = () => draftUnavailable("the assistant's turn that drafts the group's description is not built "
-      + "yet, so nothing was drafted and the fields are as they were.");
-    const turn = this.#deps.groupDraftTurn;
-    if (typeof turn !== "function") return unavailable();
+    const unavailable = () => draftUnavailable("the assistant could not serve a draft of the group's description, so "
+      + "nothing was drafted and the fields are as they were.");
+    const draftTurn = typeof turn === "function" ? turn : this.#deps.groupDraftTurn;
+    if (typeof draftTurn !== "function") return unavailable();
     const account = assistant && typeof assistant === "object" ? assistant.account ?? null : null;
     const suggestions = !!(account && account.suggestions === true);
     let got = null;
-    try { got = await turn({ answers: given.map((a) => ({ question: a.question, text: a.text })), account, holdings: suggestions }); }
+    try { got = await draftTurn({ answers: given.map((a) => ({ question: a.question, text: a.text })), account, holdings: suggestions }); }
     catch { got = null; }
     if (!got || typeof got !== "object") return unavailable();
     const told = given.map((a) => a.text);
@@ -1934,6 +1971,7 @@ export function instanceSetupOps(m, url, body) {
     placewantedstate: () => m.placeWanted({ viewer: q("viewer") }),
     memberlanguageset: () => m.memberLanguageSet({ ...(body || {}), by: q("by") }),
     memberlanguage: () => m.memberLanguage({ viewer: q("viewer") }),
+    adminrecoverystep: () => m.adminRecoveryStep({ viewer: q("viewer") }),
   };
 }
 

@@ -93,4 +93,4 @@ the build actually serving rather than the build that was meant to (D-108).
 
 ---
 
-**Status** · DRAFT by BOB #37, 2026-09-25 (T6); every id met and tested in T2. SPLIT by BOB #44, 2026-09-27, applying K70: R13–R34, R39, R40 moved to `pdf-pixels` (their numbers are retired here, never reused) and the decoders to `image-codecs`; R38 reworded to this module's own code; R41 new (the purity half of R40). Layer 1.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Split by BOB #44 (K70): R13–R34, R39 and R40 moved to `pdf-pixels`, their numbers retired here and never reused; the decoders to `image-codecs`. Every requirement met.

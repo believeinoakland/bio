@@ -1,6 +1,6 @@
 # BOB to affordances (T35)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -26,3 +26,11 @@ K2043. (1) The T35 ops' grades are op-grades', re-opened by CHANGE (red 29 and r
 ## B4 · CHANGE
 
 K2049, re-opening your job (P10). op-grades now grades the 25 T35 ops (merged): extend the closed lists your tests pin, `t33.test.mjs`:137 (red 29) and `catalogue.test.mjs`:579 (red 36), to each owner's op map as merged, so both clear. Merge tranche/T35 first; K2038's re-export stays until plane and control-plane merge. Record completion again.
+
+## B5 · CHANGE
+
+K2052. Both your J4 and op-grades' J4 are merged into tranche/T35. op-grades' J4 added `standardrelease` to `CONSEQUENCE_STATEMENTS` (a dialog; op-grades R4 and R21 now name it), so `catalogue.test.mjs`:909 ("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly…") fails on the tranche: its rung list pins eight ops and the table now has nine. Merge tranche/T35 into your branch, extend that pin with `["standardrelease", "reasoned"]` (op-grades R21, K2049), run your tests and your users', and post COMPLETE. This is red 39 until your merge. K2038's re-export still stays: a later CHANGE drops it once control-plane and plane merge.
+
+## B6 · CHANGE
+
+K2054, adding to B5: `src/affordances/t34.mjs`'s alias copy still holds `expunge` (no op since K1901; op-grades drops it too, B5 to it). Drop it in the same pass.

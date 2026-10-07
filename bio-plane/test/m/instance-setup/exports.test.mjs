@@ -12,6 +12,7 @@ test("N234 (K405): the installer's names come from a leaf that loads alone, impo
   assert.deepEqual(Object.keys(alone).sort(), ["FLEET_BINDINGS", "GROUP_SLUG_RE", "HOSTING_CONTROL", "hostingControlBlock"]);
   assert.deepEqual(alone.HOSTING_CONTROL, leaf.HOSTING_CONTROL);
   assert.equal(alone.hostingControlBlock("notice"), leaf.hostingControlBlock("notice"));
+  assert.equal(alone.hostingControlBlock("notice", { guideHref: "#g" }), leaf.hostingControlBlock("notice", { guideHref: "#g" }));
   assert.ok(alone.GROUP_SLUG_RE instanceof RegExp);
   assert.equal(alone.GROUP_SLUG_RE.source, GROUP_SLUG_RE.source);
   assert.deepEqual(alone.FLEET_BINDINGS, FLEET_BINDINGS);
@@ -72,7 +73,7 @@ test("N348 this module holds no Durable Object door or class of its own: its rou
   assert.equal("instanceSetupStore" in S, false);
   assert.equal(typeof S.instanceSetupOps, "function");
   const ops = S.instanceSetupOps(null, new URL("http://do/"), null);
-  assert.deepEqual(Object.keys(ops).sort(), ["assistantset", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate", "disclosureof",
+  assert.deepEqual(Object.keys(ops).sort(), ["adminrecoverystep", "assistantset", "assistantstate", "cpuprobeend", "cpuprobestart", "cpuprobestate", "disclosureof",
     "disclosureshown", "groupdomainset", "groupidentity", "groupidentitypublic",
     "groupnameset", "instancegroup", "instancegrouppublic", "instancegroupseed", "memberlanguage",
     "memberlanguageset", "officesseed", "placewanted", "placewantedstate", "profiles", "profilesset",

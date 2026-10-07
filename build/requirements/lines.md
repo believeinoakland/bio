@@ -1,6 +1,6 @@
 # lines — requirements
 
-**Status** · New product module, layer 5, directly after `events` and before `local-facts` (plan T33, Rules (2); K1470). Its meaning is the ladders' and the rulings': `BIO_Capability_Ladders_v0_1.md` §2 ORGANISATIONS AND OBLIGATIONS, §2 PEOPLE, §2 COURTS, §5.4 L1 to L2, §5A (the people line kinds), §7 (the party and proceeding families), and rulings K1441, K1443, K1452, K1453, K1455, K1464, K1470, K1487, K1489. Plan entry T33-27 (A ORG `lines`, B1a.5; every closed kind now; C1's party and proceeding families with reads; no `chain` walker). Measures: `measures-T33/legistar-events.md` M-P2 (PARTIAL: seats for the Council and its committees only, end dates unreliable). Every requirement is new; R1–R21 met at T33-27 (K1577, K1579). For BOB's review and Bob's approval (a product module, P17). T34's fold, by a requirements worker for BOB #122 on `tranche/T34`, 2026-10-06, from plan entry T34-18 (N573; K1592): a `holds` line carries its `title` as written (Terms, R1, R9), so `people` R15's `careerOf` answers it; wording of BOB's, no new meaning; not yet met (T34).
+**Status** · In force: a new product module, reviewed (K1505; T33-27; banner cleared K1577); its meaning the canon ladders' and Bob's rulings (K1441, K1443, K1452, K1453, K1455, K1464, K1470, K1487, K1489). Last changed T34 (T34-18: Terms, R1, R9; K1592); every requirement met (K1795).
 
 **Size (P6).** About 1,800–2,300 lines (constructs-2 §4.1). Under 4,000.
 
