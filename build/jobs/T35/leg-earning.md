@@ -1,6 +1,6 @@
 # leg-earning (T35)
 
-**Status** · session_01FbWipBopZj7ompcCxdF8EJ · depth 2 · WORKING · handled B1
+**Status** · session_01FbWipBopZj7ompcCxdF8EJ · depth 2 · COMPLETE · handled B1
 
 ## Completion (LEG-EARNING #3, T35-82)
 
