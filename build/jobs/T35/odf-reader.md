@@ -25,7 +25,7 @@ Names are read off the central directory. Nothing is run or resolved: no listene
 
 Three existing assertions that compare whole `text()` answers now include `active` in what they expect (`odt.test.mjs` R13, `odp.test.mjs` R27, `repeats.test.mjs` `refusedOds`). Nothing was loosened.
 
-**Found in other modules (REPORT J3):** generated artifact made stale (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` embeds `bio-plane/src/odf.mjs` (owned by `not_product`); regenerate at L1's close. `program.mjs` and the worker bundles do not include `odf.mjs`.
+**Found in other modules (REPORT J2; the COMPLETE entry, J3, cites it as J3 by mistake):** generated artifact made stale (mechanics §14): `bio-plane/dist/bio-plane.bundled.mjs` embeds `bio-plane/src/odf.mjs` (owned by `not_product`); regenerate at L1's close. `program.mjs` and the worker bundles do not include `odf.mjs`.
 
 **Deferred:** nothing.
 
