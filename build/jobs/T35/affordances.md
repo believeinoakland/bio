@@ -93,3 +93,13 @@ Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 27, module lines 2055
 ## J7 · COMPLETE
 
 B7 (K2059) done and pushed: tranche/T35 merged; `t34.test.mjs` re-pinned to 28 aliases, with checks that `expunge` is no alias. affordances: 181 of 181 outside `plane.test.mjs`; `plane.test.mjs` 0 of 27, all at :100 with NOT_AUTHENTICATED, red 43 (T35-72, T35-73). Users 349 of 349. format, architecture, coverage (32 of 32), ownership: 0 failures. K2038's re-export stays until your CHANGE.
+
+## Completion (B8, K2065)
+
+Merged `tranche/T35` (control-plane T35-72 and plane T35-73 re-pointed to op-grades). K2038's temporary re-export of `RUNGS`, `RUNG_ABSENT` and `MACHINE_REFUSALS` is removed: `affordances.mjs` re-exports none of op-grades' names (A-1, B1). A scan of every tracked `.mjs`, `.js` and `.html` outside `dist/` (named imports, multi-line included, and `import * as X` reads of `X.RUNGS`, `X.RUNG_ABSENT`, `X.MACHINE_REFUSALS`) finds no importer reading them through affordances.
+
+The deferred re-wording of pre-split test titles is dropped, not done: mapping a retired id to op-grades' (R38 → its R12, R40 → its R13, R45 → its R17) would write tokens the coverage check reads as affordances' own live ids (R12, R13, R17) and could hide a real gap there. The titles keep the retired ids, which name no live id of this module, beside the live ones they test.
+
+Tests: affordances 208 of 208. Users control-plane, plane and op-declarations: 390 of 390. `format`, `architecture`, `coverage` (32 of 32), `ownership`: 0 failures.
+
+Size (session_01JWst2i7Y31gjWS15iiZoqL): test runs 29, module lines 2052

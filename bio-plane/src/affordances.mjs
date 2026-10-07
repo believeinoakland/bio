@@ -123,9 +123,6 @@ export { affordancesAnswer, affordancesOp } from "./affordances/door.mjs";
    `decorate` reads `RUNGS`, `RUNG_ABSENT` and `phoneOf`, and `unaccounted` (R12) checks the totality over them. */
 import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_PATH, RUNG_ABSENCE_GROUNDS, CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS,
          IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf } from "./op-grades/index.mjs";
-/* TEMPORARY (K2038): re-exported only so `plane/wizards.mjs` and the two tests that read them here stay loadable until
-   plane (T35-73) and control-plane (T35-72) re-point to `op-grades`; removed by the CHANGE that follows their merge. */
-export { RUNGS, RUNG_ABSENT, MACHINE_REFUSALS } from "./op-grades/index.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
 import { composedVocabularies } from "./affordances/words.mjs";
 
