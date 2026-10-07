@@ -1,10 +1,8 @@
-/* plane (K1951, K2042, K2046): the daemon's drain of capture's `archive-unpack` events, driven on the Durable Object
-   class as the scheduler asks it — the consumer the composition root registered, taken from the scheduler's own
-   registry (its R8) and asked `due`, `wake` and `tick` as `onAlarm` asks them — with the object's loopback `SELF` a
-   stand-in for the Worker that records each request and answers as scripted. The whole alarm path (`onAlarm`) is not
-   driven here while `tasks`' drain still takes every kind: it removes an `archive-unpack` event before this consumer
-   is reached, until its own T35-77 share passes `kind: "authority-undetermined"` (K1951), which merges before this
-   module. The arm through `onAlarm` is added then. */
+/* plane (K1951, K2042, K2046, K2051): the daemon's drain of capture's `archive-unpack` events, driven on the Durable
+   Object class: once through the scheduler's whole alarm (`onAlarm(now)`, scheduler R4), where `tasks`' drain leaves
+   the kind alone (its T35-77 filter), and in detail as the scheduler asks the consumer (taken from its registry, R8,
+   and asked `due`, `wake` and `tick` as `onAlarm` asks them). The object's loopback `SELF` is a stand-in for the
+   Worker that records each request and answers as scripted. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
@@ -79,4 +77,13 @@ test("K2046 negative controls: without SELF or without DAEMON_TOKEN the drain ca
   const r = await y.alarm(T0);
   assert.equal(r.archiveunpack.retried, 3);
   assert.deepEqual(y.left(), [[A, 1], [B, 1], [C, 1]]);
+});
+
+test("K2051: through the scheduler's whole alarm, tasks' drain leaves archive-unpack events to this drain, which asks each of the Worker once and empties the queue of the done", async () => {
+  const x = await world({ answers: { [C]: [503, { ok: false, reason: "STORE_DID_NOT_ANSWER" }] } });
+  const r = await x.s.onAlarm(T0);
+  assert.deepEqual(x.seen.map((s) => s.body.archiveSha), [A, B, C], "each event reached the Worker: none was taken by task-drain");
+  assert.deepEqual([r.archiveunpack.asked, r.archiveunpack.removed, r.archiveunpack.retried], [3, 2, 1]);
+  assert.deepEqual(x.left(), [[C, 1]]);
+  assert.ok(r.nextAt !== null && r.nextAt >= T0 + UNPACK_BACKSTOP_MS, "the alarm is re-armed for the retry's back-off, not sooner");
 });
