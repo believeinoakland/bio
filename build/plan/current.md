@@ -253,3 +253,11 @@ Over or at about 4,000 if the jobs add as planned: **affordances** 3,944 (T35-66
 **Jobs per layer:** L1 13, L2 4, L3 6, L4 4, L5 13, L6 11, L7 2, L8 8, L9 4, L10 1, L11 13. **Total 79.** Joiners for DEC-149 rows only (rule 4): signatures, host-governor, calibration, reading-pipeline, content, connections, intent, reevaluation (runtime-limits, capture and citation carry other entries too).
 
 **Entries carried (`next.md` N551–N705):** wholly in T35: N553, N586, N623, N633–N636, N638–N640, N642, N644, N646, N648, N649, N651, N653, N655, N657, N658, N659 (with its constructs), N660, N661, N664, N674–N678, N680 (as the security package), N681, N682, N685, N686–N694, N696, N697, N699, N700, N702, N704. In part: N597, N643, N645, N652, N688 (the archive screen left out), N695, N698, N701, N703. Left out: N551 (part), N559, N563, N566, N572, N579, N592, N632, N641, N647, N650, N654, N666, N669, N670, N672, N673, N683. Closed: N564, N629, N637, N656, N684, N705 (K1895) (N667, N671, N679 moved into T34).
+
+## Shares named for later STARTs (K1940; P10: a provided service's change carried to its users in this tranche)
+
+- **control-plane (T35-72):** promotes an archive's document, then its files'; routes `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`; passes `country` to capture's `knock` and `knockAttempt` (capture R85).
+- **op-declarations (T35-70):** declares `unpack`, `archivelist`, `coarchiveset`, `coarchivestate`.
+- **plane (T35-73):** builds `ownHosts` (the copy's own host and every fleet member's) and passes it through capture R73 to acquisition R42 and capture-sources R55, R65; until its merge the own-host check refuses nothing (F16, low).
+- **capture (T35-22):** an `archive-unpack` queue kind in R15, drained by the daemon, so an automatic unpack continues past one call; R48's quoted "knocks to this instance" re-worded with the P row (`doorbell.mjs`:24), wording only.
+- **`modules.json` at each START:** provenance, attestation and acquisition use ooxml; capture-sources uses record-grammar; acquisition uses membership.
