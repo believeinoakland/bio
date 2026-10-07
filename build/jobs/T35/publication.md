@@ -1,6 +1,6 @@
 # publication (T35)
 
-**Status** · session_01Vx8XnooM8HK7frXGpL3x5e · depth 2 · WORKING · handled B3
+**Status** · session_01Vx8XnooM8HK7frXGpL3x5e · depth 2 · RUNNING until 2026-10-07T19:40:01Z (the 17 using modules' test suites) · handled B3
 
 ## J1 · QUESTION
 
