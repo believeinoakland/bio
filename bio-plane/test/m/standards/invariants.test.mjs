@@ -5,7 +5,9 @@ import { seeded, world, V, MACHINE, BYLAW, REASON } from "./fixture.mjs";
 import { STANDARDS_CHECKS, STANDARD_KINDS, STANDARDS_TABLES } from "../../../src/standards/index.mjs";
 import { get as profileOf } from "../../../../jurisdictions/index.mjs";
 
-const TABLES = ["standards", "standard_texts", "standard_proposals", "standard_adoptions", "law_relations", "court_links",
+const TABLES = ["standards", "standard_texts", "standard_proposals", "standard_adoptions", "standard_forces",
+                "standard_force_withdrawals", "standard_force_proposals", "standard_overrides", "standard_releases",
+                "standard_body_adoptions", "standard_impositions", "standard_benchmarks", "law_relations", "court_links",
                 "court_treatments", "law_withdrawals", "law_proposals"];
 
 test("R11 nothing a machine writes is a standard: R1 and R10 by a member are its only writers; a raw promotion of a standard, by a member or a machine, and any revision of one are refused STANDARD_WRITTEN_ELSEWHERE; a replay is admitted", () => {
@@ -40,7 +42,7 @@ test("R11 nothing a machine writes is a standard: R1 and R10 by a member are its
   assert.equal(w.passage().contentId.length, 64, "other types are untouched");
 });
 
-test("R12 no service accepts or answers a judgment of a standard's merit: a field outside each act's own is refused STANDARD_FIELD_UNKNOWN by name, the six kinds are the whole vocabulary, and no answer carries a judgment", () => {
+test("R12 no service accepts or answers a judgment of a standard's merit: a field outside each act's own is refused STANDARD_FIELD_UNKNOWN by name, the seven kinds are the whole vocabulary, and no answer carries a judgment", () => {
   const w = seeded();
   const text = w.passage().contentId;
   const good = { cite: BYLAW, kind: "ordinance", issuer: "S", reason: REASON, text, author: V("bob") };
@@ -52,15 +54,17 @@ test("R12 no service accepts or answers a judgment of a standard's merit: a fiel
   }
   const p = w.s.standardPropose({ cite: BYLAW, why: "w", proposer: V("carol") }).proposal;
   assert.equal(w.s.standardAdopt({ proposal: p.id, author: V("bob"), reason: REASON, merit: "high" }).reason, "STANDARD_FIELD_UNKNOWN");
-  assert.deepEqual(STANDARD_KINDS, ["statute", "regulation", "ordinance", "court", "policy", "commitment"]);
+  assert.deepEqual(STANDARD_KINDS, ["statute", "regulation", "ordinance", "court", "policy", "commitment", "standard"]);
   const r = w.s.standardDeclare(good);
   const keys = new Set(["ok", "id", "cite", "kind", "issuer", "reason", "text", "period", "source", "declared_by", "declared_at",
                         "supersedes", "superseded_by", "proposal", "bundleSha", "texts", "says", "instrument", "portion",
-                        "requires", "copy", "current_through", "period_basis", "requires_quoted"]);
+                        "requires", "copy", "current_through", "period_basis", "requires_quoted", "family", "owner", "held",
+                        "version_basis", "overrides", "force_source", "designation", "edition", "access", "target", "question",
+                        "sight"]);
   for (const answer of [r, w.s.standardRead({ id: r.id, viewer: V("carol") }), w.s.standardsIn({ viewer: V("carol") }).items[0]])
     for (const k of Object.keys(answer)) assert.ok(keys.has(k), `an answer carries only what the record holds: ${k}`);
   const words = /\b(merit|desirab|good law|bad law|unjust|fair|rating|score)\w*/i;
-  const outward = [...Object.values(STANDARDS_CHECKS).map((c) => c.translation), w.s.standardRead({ id: r.id, viewer: V("carol") }).says];
+  const outward = [...Object.values(STANDARDS_CHECKS).map((c) => c.translation), w.s.standardRead({ id: r.id, viewer: V("carol") }).says.note];
   /* the only mentions are the two that say the record holds none */
   const denials = /never whether it is a good one|never a view of its merit/g;
   for (const t of outward) assert.ok(!words.test(t.replace(denials, "")), t);
@@ -78,7 +82,7 @@ test("R13 a fact the profile does not supply is undetermined, never a default; n
   const places = profileOf("oakland-alameda").covers.flatMap((c) => c.split(/[ ,]+/)).filter((x) => x.length > 3);
   const u = t.declare({ cite: "Unmatched § 9" });
   const texts = [...Object.values(STANDARDS_CHECKS).map((c) => c.translation), u.source.why,
-                 t.s.standardRead({ id: m.id, viewer: V("carol") }).says, t.s.inForce(m.id, "2021-01-01").why,
+                 t.s.standardRead({ id: m.id, viewer: V("carol") }).says.note, t.s.inForce(m.id, "2021-01-01").why,
                  t.s.standardPropose({ cite: BYLAW, why: "w", proposer: V("carol") }).says];
   for (const s of texts) for (const place of [...places, "Oakland", "Alameda"]) assert.ok(!s.includes(place), `${place} in: ${s}`);
 });
@@ -103,7 +107,7 @@ test("R14 declarations, supersessions, proposals and adoptions are append-only, 
     for (const t of TABLES) assert.deepEqual(now[t].slice(0, prev[t].length), prev[t], `${t}: an earlier row is unchanged`);
     prev = now;
   }
-  assert.deepEqual(TABLES.map((t) => prev[t].length), [3, 3, 1, 1, 0, 0, 0, 0, 0]);
+  assert.deepEqual(TABLES.map((t) => prev[t].length), [3, 3, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   /* a single-bundle purge clears one standard's rows; the whole-store form every row */
   const id = prev.standards[0].standard_id;
   const one = w.record.purge({ bundleId: id });

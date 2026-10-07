@@ -45,27 +45,34 @@ import { proposalLabel } from "../record-grammar/labels.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { contentOf } from "../content/index.mjs";
-import { combine as combineProfiles, SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
+import { contentOf, contentIdFor } from "../content/index.mjs";
+import { combine as combineProfiles, STANDARD_SOURCE_KINDS } from "../../../jurisdictions/index.mjs";
+import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
+import { captureOf } from "../capture/index.mjs";
+import { parseFigure } from "../calc-grammar/index.mjs";
 import { validAt, localDay } from "../civil-time/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { registerOwner, isRecordId } from "../connection-grammar/index.mjs";
 import { citationLookup as acquisitionCitationLookup } from "../acquisition/index.mjs";
-import { recogniseCitations } from "../idspaces.mjs";
+import { recogniseCitations, recogniseSeries } from "../idspaces.mjs";
 import { STANDARDS_CHECKS, refusal } from "./checks.mjs";
 import { STANDARDS_TABLES, migrateStandards } from "./schema.mjs";
 import { instrumentKey, matchSource, referenceKey, sourceCopy, foldCite, isPortionPath } from "./instrument.mjs";
+import { COPY_STATES, HELD_STATES, ACCESS_STATES, FORCES, POLICY_FORCES, ownerWords, forceWords, bindingWords, heldWords,
+         accessWords, notPublicWords } from "./words.mjs";
 import { LawRecords, LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD,
-         weakestCeiling } from "./law.mjs";
+         weakestCeiling, machineRelate, refuseNoCitation } from "./law.mjs";
 
 export { STANDARDS_CHECKS } from "./checks.mjs";
 export { STANDARDS_SCHEMA, STANDARDS_TABLES } from "./schema.mjs";
 export { instrumentKey, referenceKey, isPortionPath, PORTION_PATH_MAX } from "./instrument.mjs";
 export { LAW_RELATIONS, COURT_LINKS, TREATMENTS, CONNECTION_KINDS, CONNECTION_OWNER, IN_FORCE_METHOD };
+export { FORCES, POLICY_FORCES, COPY_STATES, HELD_STATES, ACCESS_STATES } from "./words.mjs";
 
 export const STANDARD = "standard";
-/** R1, R12: the six kinds, `jurisdictions`' own list (its R23), never a copy: the whole vocabulary of a standard. */
-export const STANDARD_KINDS = SOURCE_KINDS;
+/** R1, R12: the seven kinds, `jurisdictions`' own list (its R23's `STANDARD_SOURCE_KINDS`, K1902 (1)), never a copy:
+ *  the whole vocabulary of a standard. */
+export const STANDARD_KINDS = STANDARD_SOURCE_KINDS;
 /** R7: the three answers of `inForce`. */
 export const IN_FORCE_STATES = Object.freeze(["in_force", "not_in_force", "undetermined"]);
 /** R1: a citation's bound; R9: a proposal's `why`; R8: a page; R2: the passages one standard's text names; the bound on
@@ -74,9 +81,17 @@ export const CITE_MAX = 200, WHY_MAX = 240, PAGE_MAX = 200, TEXTS_MAX = 50, ACT_
 /** R12: the fields each act takes. Anything else is refused by name, never ignored: a field silently dropped is a view
  *  the caller believes was recorded. */
 const DECLARE_KEYS = Object.freeze(["cite", "kind", "issuer", "reason", "text", "period", "supersedes", "instrument",
-                                    "portion", "requires", "copy", "current_through", "period_basis", "author", "viewer"]);
-/** R19: a copy's statuses (`jurisdictions` R6). */
-export const COPY_STATES = Object.freeze(["official", "codifier", "undetermined"]);
+                                    "portion", "requires", "copy", "current_through", "period_basis", "held", "cited_by",
+                                    "search", "family", "copy_claimed", "version_basis", "overrides", "force_source",
+                                    "designation", "edition", "access", "target", "question", "author", "viewer"]);
+/** R39: a designation's and an edition's bounds, in characters; R34: a searched place's. */
+export const DESIGNATION_MAX = 200, EDITION_MAX = 50, PLACE_MAX = 500, PLACES_MAX = 50;
+/** R38: where a standard's force comes from. R40: how a body adopts an edition. R42: a target's comparators. */
+export const FORCE_SOURCES = Object.freeze(["delegation", "resolution", "oversight_approval", "court_order", "contract"]);
+export const ADOPTION_MODES = Object.freeze(["by_reference", "voluntary", "by_accreditation"]);
+export const COMPARATORS = Object.freeze(["at_least", "at_most", "within"]);
+/** R43: the kinds that are a benchmark when nothing binds them; the laws, undetermined instead. */
+const BENCHMARK_KINDS = Object.freeze(["policy", "standard", "commitment"]);
 /** R21: the reverse index's page, clamped. */
 export const FOR_LIMIT_MAX = 500, FOR_LIMIT_DEFAULT = 100;
 /* R20: the viewer an internal read (no viewer named) asks `events` as: the machine's stamp (DEC-52). */
@@ -84,6 +99,16 @@ const INTERNAL_READER = "class:daemon";
 /* R21: the most reference rows one reverse read scans; past it the answer says it is truncated. */
 const SCAN_FOR = 5000;
 const PROPOSE_KEYS = Object.freeze(["cite", "kind", "issuer", "text", "why", "act", "proposer", "viewer"]);
+/* R35, R40: the fields of the T35 acts. */
+const FORCE_KEYS = Object.freeze(["standard", "portion", "force", "holder", "criteria", "citation", "reason", "author", "viewer"]);
+const FORCE_PROPOSE_KEYS = Object.freeze(["standard", "portion", "force", "holder", "criteria", "citation", "why", "proposer",
+                                          "viewer"]);
+const ADOPTION_KEYS = Object.freeze(["standard", "act", "edition", "from", "amendments", "mode", "citation", "reason",
+                                     "author", "viewer"]);
+/* R41: what a read says in place of a reading-room or paywalled standard's words for a caller that is not a member. */
+const TEXT_WITHHELD = "this standard's words are read only by members of your group, inside the group";
+/* R41: a member viewer, `member:<id>`, never a machine credential. */
+const isMemberViewer = (v) => typeof v === "string" && /^member:./.test(v) && !isMachineIdentity(v);
 const ADOPT_KEYS = Object.freeze([...DECLARE_KEYS, "proposal"]);
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -136,7 +161,7 @@ export class Standards {
 
   constructor({ storage, record, membership, promotion, content = null, combine = combineProfiles, now = null,
                 events = null, keyedStore = null, citationLookup = acquisitionCitationLookup,
-                recognise = recogniseCitations } = {}) {
+                recognise = recogniseCitations, entities = null, capture = null, provenance = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -148,6 +173,9 @@ export class Standards {
     this.keyedStoreRef = keyedStore;
     this.lookupFn = citationLookup;
     this.recognise = recognise;
+    this.entitiesRef = entities;
+    this.captureRef = capture;
+    this.provenanceRef = provenance;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     migrateStandards(this.sql);   // R16: the tables exist once the instance does, so no caller migrates (N220, N267)
     this.#law = new LawRecords(this.#internal());
@@ -157,6 +185,13 @@ export class Standards {
   #one(qs, ...a) { const r = this.#rows(qs, ...a); return r.length ? r[0] : null; }
   get content() { return typeof this.contentRef === "function" ? this.contentRef() : this.contentRef; }
   get events() { return typeof this.eventsRef === "function" ? this.eventsRef() : this.eventsRef; }
+  get entities() { return typeof this.entitiesRef === "function" ? this.entitiesRef() : this.entitiesRef; }
+  get capture() { return typeof this.captureRef === "function" ? this.captureRef() : this.captureRef; }
+  /* R38: the receipts of where and when a capture was retrieved; `content`'s own provenance unless one is passed */
+  get provenance() {
+    const p = typeof this.provenanceRef === "function" ? this.provenanceRef() : this.provenanceRef;
+    return p || (this.content ? this.content.provenance : null);
+  }
   #when() { return stampInstant("second", Date.parse(this.now())); }
 
   /* The reads `./law.mjs` works through: this instance's tables and the modules it uses, never a copy of them. */
@@ -300,16 +335,9 @@ export class Standards {
                      + "group holds its government to this standard, kept with it and read back with it. Nothing was "
                      + "written.", { max_chars: REASON_MAX });
     /* END DEC-49 REGION is-standard-reason */
-    const texts = textIds(a.text);
-    /* DEC-49 REGION is-standard-text */
-    if (!texts || !texts.length || texts.length > TEXTS_MAX)
-      return refusal("STANDARD_NO_TEXT", texts && texts.length > TEXTS_MAX
-        ? `a standard's text names at most ${TEXTS_MAX} passages. Nothing was written.`
-        : "a standard is held with its own words as captured: name one or more content ids. Nothing was written.",
-        { max: TEXTS_MAX });
-    /* END DEC-49 REGION is-standard-text */
-    const unresolved = this.#unresolvedText(texts, a.viewer ?? null);
-    if (unresolved) return refuseTextUnresolved(unresolved);
+    const heldAs = this.#heldFields(a);
+    if (heldAs.ok === false) return heldAs;
+    const texts = heldAs.texts;
     const period = periodOf(a.period);
     /* DEC-49 REGION is-standard-period */
     if (!period)
@@ -330,9 +358,401 @@ export class Standards {
                        + "written.", { supersedes, superseded_by: later });
       /* END DEC-49 REGION is-supersession-once */
     }
-    const law = this.#lawFields(a, cite, texts, period, a.viewer ?? null);
+    const viewer = a.viewer ?? null;
+    const law = this.#lawFields(a, cite, texts, period, viewer);
     if (law.ok === false) return law;
-    return { ok: true, fields: { cite, kind: a.kind, issuer, reason: a.reason, texts, period, supersedes, ...law.fields } };
+    const t35 = this.#t35Fields(a, { cite, kind: a.kind, issuer, texts, period, supersedes, viewer, copy: law.fields.copy });
+    if (t35.ok === false) return t35;
+    return { ok: true, fields: { cite, kind: a.kind, issuer, reason: a.reason, texts, period, supersedes, held: heldAs.held,
+                                 held_detail: heldAs.detail, ...law.fields, ...t35.fields } };
+  }
+
+  /* R2, R34, R47: how much of the standard is held, and its text. `held: "text"` (the default) names one or more
+     passages, each a content id or a found extent (R47); `cited` names who cited it and where, `absent` the searches
+     made, and neither names text. `{ok: true, held, texts, detail}`, or a refusal. */
+  #heldFields(a) {
+    const viewer = a.viewer ?? null;
+    const held = a.held == null || a.held === "" ? "text" : a.held;
+    if (!HELD_STATES.includes(held))
+      return refuseFieldInvalid("held", `is one of ${HELD_STATES.join(", ")}`);
+    if (held === "text") {
+      const texts = this.#textIdsResolved(a.text);
+      if (texts && texts.unresolved) return refuseTextUnresolved(texts.unresolved);
+      /* DEC-49 REGION is-standard-text */
+      if (!texts || !texts.ids.length || texts.ids.length > TEXTS_MAX)
+        return refusal("STANDARD_NO_TEXT", texts && texts.ids.length > TEXTS_MAX
+          ? `a standard's text names at most ${TEXTS_MAX} passages. Nothing was written.`
+          : "a standard is held with its own words as captured: name one or more content ids. Nothing was written.",
+          { max: TEXTS_MAX });
+      /* END DEC-49 REGION is-standard-text */
+      const unresolved = this.#unresolvedText(texts.ids, viewer);
+      if (unresolved) return refuseTextUnresolved(unresolved);
+      return { ok: true, held, texts: texts.ids, detail: null };
+    }
+    const named = a.text != null && !(Array.isArray(a.text) && !a.text.length) && a.text !== "";
+    /* DEC-49 REGION is-held-text */
+    if (named)
+      return refusal("STANDARD_TEXT_NOT_HELD_AS", `a standard held ${held} holds none of its own words, so it names no text. `
+                     + "Nothing was written.", { held });
+    /* END DEC-49 REGION is-held-text */
+    if (held === "cited") {
+      const c = a.cited_by;
+      const ok = isObj(c) && Object.keys(c).every((k) => k === "captureSha" || k === "extent") && typeof c.captureSha === "string"
+        && isObj(c.extent) ? this.#extentRow(c.captureSha, c.extent, viewer) : null;
+      /* DEC-49 REGION is-cited-by-held */
+      if (!ok)
+        return refusal("STANDARD_CITED_BY_MISSING", "a standard held cited names where it is cited: cited_by {captureSha, "
+                       + "extent}, a passage of a held capture you may see. Nothing was written.");
+      /* END DEC-49 REGION is-cited-by-held */
+      return { ok: true, held, texts: [], detail: { captureSha: c.captureSha.trim().toLowerCase(), extent: c.extent,
+                                                    content_id: ok.content_id, bundle_id: ok.bundle_id } };
+    }
+    const sr = a.search;
+    const placeOk = (p) => (typeof p === "string" && p.trim() && [...p].length <= PLACE_MAX)
+      || (isObj(p) && Object.keys(p).every((k) => k === "captureSha" || k === "extent") && typeof p.captureSha === "string"
+          && isObj(p.extent) && !!this.#extentRow(p.captureSha, p.extent, viewer));
+    const searchOk = isObj(sr) && Object.keys(sr).every((k) => ["places", "request", "answer"].includes(k))
+      && Array.isArray(sr.places) && sr.places.length > 0 && sr.places.length <= PLACES_MAX && sr.places.every(placeOk)
+      && (sr.request == null || (typeof sr.request === "string" && sr.request.trim() && sr.request.length <= ACT_MAX))
+      && (sr.answer == null || (isObj(sr.answer) && typeof sr.answer.captureSha === "string" && isObj(sr.answer.extent)
+                                && !!this.#extentRow(sr.answer.captureSha, sr.answer.extent, viewer)));
+    /* DEC-49 REGION is-search-stated */
+    if (!searchOk)
+      return refusal("STANDARD_SEARCH_MISSING", "a standard looked for and not found names the searches made: search "
+                     + `{places, request?, answer?}, places a list of 1 to ${PLACES_MAX} portals, sites or offices (each at most `
+                     + `${PLACE_MAX} characters) or held captures of the page searched, request a records request's reference, `
+                     + "answer a held passage of its reply. Nothing was written.", { max_places: PLACES_MAX });
+    /* END DEC-49 REGION is-search-stated */
+    return { ok: true, held, texts: [], detail: {
+      places: sr.places.map((p) => (typeof p === "string" ? p.trim()
+                                     : { captureSha: p.captureSha.trim().toLowerCase(), extent: p.extent })),
+      request: sr.request == null ? null : sr.request.trim(),
+      answer: sr.answer == null ? null : { captureSha: sr.answer.captureSha.trim().toLowerCase(), extent: sr.answer.extent } } };
+  }
+
+  /* R2, R47: a standard's named text as content ids: each a content id, or a found extent ({capture_sha, extent}, a
+     find's match, `retrieval` R73) resolved to `content`'s row for that extent, exactly as a content id named directly.
+     `{ids}`, `{ids, unresolved}` naming the first extent content holds no row for, or null when not in that shape. */
+  #textIdsResolved(v) {
+    const list = typeof v === "string" || isObj(v) ? [v] : Array.isArray(v) ? v : null;
+    if (!list) return null;
+    const ids = [];
+    for (const x of list) {
+      if (typeof x === "string") { if (x.trim()) ids.push(x.trim()); continue; }
+      if (!isObj(x) || typeof (x.capture_sha ?? x.captureSha) !== "string" || !isObj(x.extent)) return null;
+      const row = this.#extentRow(x.capture_sha ?? x.captureSha, x.extent, null);
+      if (!row) return { ids, unresolved: `${String(x.capture_sha ?? x.captureSha).slice(0, 64)}` };
+      ids.push(row.content_id);
+    }
+    return { ids: [...new Set(ids)] };
+  }
+
+  /* R33, R36–R42, R47: the fields T35 adds, each asked in R1's order (family, copy, versions, designation and issuer,
+     access, target, the question); `{ok: true, fields}` when none is refused. Each refusal writes nothing. */
+  #t35Fields(a, f) {
+    const fam = this.#familyField(a, f.cite);
+    if (fam.ok === false) return fam;
+    const copy = this.#copyFields(a, f);
+    if (copy.ok === false) return copy;
+    const ver = this.#versionFields(a, f);
+    if (ver.ok === false) return ver;
+    const des = this.#designationFields(a, f, fam.recognised);
+    if (des.ok === false) return des;
+    const acc = this.#accessFields(a, f);
+    if (acc.ok === false) return acc;
+    const tgt = this.#targetField(a, f);
+    if (tgt.ok === false) return tgt;
+    const qn = this.#questionField(a);
+    if (qn.ok === false) return qn;
+    return { ok: true, fields: { family: fam.family, copy: copy.copy, ...ver.fields, ...des.fields, access: acc.access,
+                                 target: tgt.target, question: qn.question, sight: this.#sightOf(f.kind, f.texts) } };
+  }
+
+  /* R33: the family, from the cite's series reading (`id-spaces.recogniseSeries` over the active view), a declared one
+     kept as declared with the difference stated; a declared key/series pair no active profile holds is refused. */
+  #familyField(a, cite) {
+    const { view, why } = this.#view();
+    let recognised = null;
+    try {
+      const r = view ? recogniseSeries(view, cite) : null;
+      recognised = r && Array.isArray(r.citations) && r.citations.length ? r.citations[0] : null;
+    } catch { recognised = null; }
+    const read = recognised ? { key: recognised.key, series: recognised.series,
+                                number: recognised.normal ?? recognised.number } : null;
+    if (a.family == null) {
+      if (read) return { ok: true, recognised, family: { state: "matched", ...read, family_key: familyKey(read),
+                                                         label: recognised.label ?? null } };
+      return { ok: true, recognised, family: { state: "undetermined", key: null, family_key: null,
+        why: view ? "the citation matches no series the active jurisdiction profiles list, and none was declared"
+                  : why } };
+    }
+    const d = a.family;
+    if (!isObj(d) || Object.keys(d).some((k) => !["key", "series", "number"].includes(k)) || typeof d.key !== "string"
+        || typeof d.series !== "string" || typeof d.number !== "string" || !d.number.trim() || d.number.length > CITE_MAX)
+      return refuseFieldInvalid("family", "is {key, series, number}: an active profile's source key and series key, and the "
+                                + "item's number in that series");
+    const entries = view && Array.isArray(view.standard_sources) ? view.standard_sources : [];
+    const held = entries.find((e) => e && e.key === d.key.trim() && isObj(e.series) && e.series.key === d.series.trim());
+    /* DEC-49 REGION is-family-known */
+    if (!held)
+      return refusal("FAMILY_UNKNOWN", `no active jurisdiction profile lists the series ${d.key.slice(0, 40)}/`
+                     + `${d.series.slice(0, 40)}. Nothing was written.`, { family: { key: d.key.slice(0, 40), series: d.series.slice(0, 40) } });
+    /* END DEC-49 REGION is-family-known */
+    const fam = { key: d.key.trim(), series: d.series.trim(), number: d.number.trim() };
+    const differs = read && (read.key !== fam.key || read.series !== fam.series || read.number !== fam.number)
+      ? { differs: { read, says: `recorded as declared; the citation reads as ${read.key}/${read.series} ${read.number}` } } : {};
+    return { ok: true, recognised, family: { state: "declared", ...fam, family_key: familyKey(fam),
+                                             label: held.series.label ?? null, ...differs } };
+  }
+
+  /* R19, R36: the copy as the member declares it, and what the copy says of itself, held apart, never merged. */
+  #copyFields(a, f) {
+    const bad = (detail, extra) => {
+      /* DEC-49 REGION is-copy-known */
+      return refusal("COPY_UNKNOWN", `${detail} is one of ${COPY_STATES.join(", ")}. Nothing was written.`,
+                     { copies: [...COPY_STATES], ...extra });
+      /* END DEC-49 REGION is-copy-known */
+    };
+    if (a.copy != null && !COPY_STATES.includes(a.copy)) return bad("a copy", { field: "copy" });
+    let claimed = null;
+    if (a.copy_claimed != null) {
+      const c = a.copy_claimed;
+      if (!isObj(c) || !COPY_STATES.includes(c.says)) return bad("what a copy says of itself", { field: "copy_claimed" });
+      const ext = typeof c.extent === "string" ? c.extent.trim() : "";
+      /* DEC-49 REGION is-copy-claim-cited */
+      if (!ext || !f.texts.includes(ext) || Object.keys(c).some((k) => k !== "says" && k !== "extent"))
+        return refusal("COPY_CLAIM_NOT_CITED", "what a copy says of itself names the passage of its text that says it: "
+                       + "copy_claimed {says, extent}, extent one of the standard's text passages. Nothing was written.");
+      /* END DEC-49 REGION is-copy-claim-cited */
+      claimed = { says: c.says, extent: ext };
+    }
+    const copy = { ...f.copy };
+    if (claimed) {
+      copy.claimed = claimed;
+      if (claimed.says !== copy.copy)
+        copy.claim_differs = `the copy says it is ${claimed.says}; it is recorded as ${copy.copy}, and neither is resolved`;
+    }
+    return { ok: true, copy };
+  }
+
+  /* R38: a version read from two captures, overrides, and where the standard's force comes from. */
+  #versionFields(a, f) {
+    const fields = { version_basis: null, overrides: [], force_source: null };
+    if (a.version_basis != null) {
+      const vb = this.#versionBasis(a.version_basis, f);
+      /* DEC-49 REGION is-version-basis */
+      if (!vb.ok)
+        return refusal("VERSION_BASIS_INVALID", `${vb.why}. Nothing was written.`);
+      /* END DEC-49 REGION is-version-basis */
+      fields.version_basis = vb.basis;
+    }
+    if (a.overrides != null) {
+      const list = Array.isArray(a.overrides) ? a.overrides : null;
+      const bad = (field, why) => {
+        /* DEC-49 REGION is-override-form */
+        return refusal("OVERRIDE_INVALID", `an override's ${field} ${why}. Nothing was written.`, { field });
+        /* END DEC-49 REGION is-override-form */
+      };
+      if (!list || !list.length || list.length > TEXTS_MAX) return bad("list", `is a list of 1 to ${TEXTS_MAX} overrides`);
+      for (const o of list) {
+        if (!isObj(o) || Object.keys(o).some((k) => !["target", "portion", "until"].includes(k))) return bad("form", "is {target, portion, until}");
+        if (typeof o.target !== "string" || !o.target.trim()) return bad("target", "names a held standard");
+        const t = this.#row(o.target.trim());
+        if (!t || (f.viewer !== null && !this.#readable(t.standard_id, f.viewer))) return noSuchStandard(o.target.trim(), { id: o.target.trim(), field: "target" });
+        if (!isPortionPath(o.portion) || (t.portion_path && o.portion.trim() !== t.portion_path))
+          return portionUnknown(t.standard_id, o.portion, { field: "portion" });
+        const u = o.until;
+        const until = typeof u === "string" && /^EVT-/.test(u) && isRecordId(u) ? { event: u }
+          : u === "revision" ? { revision: true } : null;
+        if (!until) return bad("until", "is an event (EVT-…) or \"revision\", a later revision of this standard's own key");
+        fields.overrides.push({ target: t.standard_id, portion: o.portion.trim(), until });
+      }
+    }
+    if (a.force_source != null) {
+      const fs = a.force_source;
+      const ok = isObj(fs) && Object.keys(fs).every((k) => k === "kind" || k === "citation") && FORCE_SOURCES.includes(fs.kind)
+        && typeof fs.citation === "string" && f.texts.includes(fs.citation.trim());
+      /* DEC-49 REGION is-force-source */
+      if (!ok)
+        return refusal("FORCE_SOURCE_INVALID", `force_source is {kind, citation}: kind one of ${FORCE_SOURCES.join(", ")}, `
+                       + "citation one of the standard's text passages stating it. Nothing was written.", { kinds: [...FORCE_SOURCES] });
+      /* END DEC-49 REGION is-force-source */
+      fields.force_source = { kind: fs.kind, citation: fs.citation.trim() };
+    }
+    return { ok: true, fields };
+  }
+
+  /* R38: two held captures of one address whose texts differ, the version they bound named by `supersedes`. The period's
+     start is the band after the earlier capture's retrieval and on or before the later's, never an enactment date. */
+  #versionBasis(v, f) {
+    if (!isObj(v) || Object.keys(v).some((k) => k !== "captures") || !Array.isArray(v.captures) || v.captures.length !== 2
+        || !v.captures.every((c) => typeof c === "string" && /^[0-9a-f]{64}$/.test(c.trim().toLowerCase())))
+      return { ok: false, why: "version_basis is {captures: [earlier, later]}, two capture digests" };
+    if (!f.supersedes) return { ok: false, why: "a version read from two captures names the version it supersedes" };
+    const [e, l] = v.captures.map((c) => c.trim().toLowerCase());
+    if (e === l) return { ok: false, why: "the two captures are one; their texts do not differ" };
+    let rows = [];
+    try { rows = (this.provenance.receipts({}).rows || []).filter((r) => r.capture_sha === e || r.capture_sha === l); }
+    catch { rows = []; }
+    const pairs = [];
+    for (const re of rows.filter((r) => r.capture_sha === e))
+      for (const rl of rows.filter((r) => r.capture_sha === l && r.address_norm === re.address_norm))
+        pairs.push({ address: re.address_norm, after: re.first_retrieved, through: rl.first_retrieved });
+    const pair = pairs.find((p) => Date.parse(p.after) < Date.parse(p.through));
+    if (!pair) return { ok: false, why: pairs.length ? "the earlier capture was not retrieved before the later one"
+                                                     : "the two captures are not both held as retrieved from one address" };
+    return { ok: true, basis: { captures: [e, l], address: pair.address, after: pair.after, through: pair.through,
+                                says: "the period starts after the earlier capture and on or before the later one: it rests on "
+                                    + "the captures, never on an enactment date" } };
+  }
+
+  /* R39: designation and edition as the cite reads them, a declared one kept as declared with the difference stated;
+     the issuer may be a registered entity. An edition is never defaulted. */
+  #designationFields(a, f, recognised) {
+    const read = { designation: recognised ? `${recognised.label ? `${recognised.label} ` : ""}${recognised.normal ?? recognised.number}` : null,
+                   edition: recognised && typeof recognised.edition === "string" ? recognised.edition : null };
+    const out = {};
+    for (const [field, max] of [["designation", DESIGNATION_MAX], ["edition", EDITION_MAX]]) {
+      const d = a[field];
+      if (d != null && (typeof d !== "string" || !d.trim() || [...d].length > max))
+        return refuseFieldInvalid(field, `is the ${field} as written, at most ${max} characters`);
+      const value = d != null ? d.trim() : read[field];
+      out[field] = { value, declared: d != null, read: read[field],
+                     ...(d != null && read[field] !== null && read[field] !== value
+                       ? { says: `recorded as declared; the citation reads ${read[field]}` } : {}),
+                     ...(value === null ? { why: field === "edition" ? "no edition is stated, and none is assumed"
+                                                                     : "the citation states no designation" } : {}) };
+    }
+    let issuerEntity = null;
+    if (/^ENT-/.test(f.issuer)) {
+      const e = this.#entity(f.issuer, f.viewer);
+      if (!e) return noSuchEntity(f.issuer, { field: "issuer" });
+      issuerEntity = f.issuer;
+    }
+    return { ok: true, fields: { designation: out.designation, edition: out.edition, issuer_entity: issuerEntity } };
+  }
+
+  /* An entity the viewer may read (`entities.readEntity`), or null. */
+  #entity(id, viewer) {
+    try {
+      const r = this.entities ? this.entities.readEntity({ entityId: id, viewer: viewer ?? INTERNAL_READER }) : null;
+      return r && r.ok !== false && r.found ? r.entity : null;
+    } catch { return null; }
+  }
+
+  /* R41: access; a reading-room or paywalled standard takes text only from a capture a member made by their own act. */
+  #accessFields(a, f) {
+    if (a.access != null && !ACCESS_STATES.includes(a.access)) {
+      /* DEC-49 REGION is-access-known */
+      return refusal("ACCESS_UNKNOWN", `access is one of ${ACCESS_STATES.join(", ")}. Nothing was written.`,
+                     { access: [...ACCESS_STATES] });
+      /* END DEC-49 REGION is-access-known */
+    }
+    const access = a.access ?? null;
+    if (access === "reading_room" || access === "paywalled")
+      for (const id of f.texts) {
+        const row = this.content.contentRow(id);
+        const by = row ? this.#memberCaptured(row.capture_sha) : false;
+        /* DEC-49 REGION is-text-member-captured */
+        if (!by)
+          return refusal("TEXT_NOT_MEMBER_CAPTURED", `${String(id).slice(0, 80)} is not from a capture a member made by `
+                         + "their own act. Nothing was written.", { content_id: String(id).slice(0, 80) });
+        /* END DEC-49 REGION is-text-member-captured */
+      }
+    return { ok: true, access };
+  }
+
+  /* R41: whether a member (never a machine credential) captured these bytes by their own act (`capture`'s actors). */
+  #memberCaptured(captureSha) {
+    try {
+      const c = this.capture;
+      const r = c && typeof c.captureAccountsOf === "function" ? c.captureAccountsOf(captureSha, { viewer: INTERNAL_READER }) : null;
+      return !!r && Array.isArray(r.actors)
+        && r.actors.some((x) => typeof x.actor === "string" && /^member:./.test(x.actor) && !isMachineIdentity(x.actor));
+    } catch { return false; }
+  }
+
+  /* R42: a target of a commitment, policy or standard: metric, threshold, period and definition. */
+  #targetField(a, f) {
+    if (a.target == null) return { ok: true, target: null };
+    const bad = (field, why) => {
+      /* DEC-49 REGION is-target-form */
+      return refusal("TARGET_INVALID", `a target's ${field} ${why}. Nothing was written.`, { field });
+      /* END DEC-49 REGION is-target-form */
+    };
+    const t = a.target;
+    if (!BENCHMARK_KINDS.includes(f.kind)) return bad("kind", `is held only by a ${BENCHMARK_KINDS.join(", ")}`);
+    if (!isObj(t) || Object.keys(t).some((k) => !["metric", "threshold", "period", "definition"].includes(k)))
+      return bad("form", "is {metric, threshold, period, definition}");
+    const m = t.metric;
+    if (!isObj(m) || typeof m.words !== "string" || !m.words.trim() || m.words.length > CITE_MAX
+        || typeof m.content_id !== "string" || !f.texts.includes(m.content_id.trim()))
+      return bad("metric", "is {words, content_id}: the measured quantity in words, and the passage of the standard's text stating it");
+    const th = t.threshold;
+    if (!isObj(th) || !COMPARATORS.includes(th.comparator)) return bad("threshold", `names a comparator, one of ${COMPARATORS.join(", ")}`);
+    let fig = null;
+    try { fig = typeof th.value === "string" ? parseFigure(th.value) : null; } catch { fig = null; }
+    if (!fig || fig.refused || fig.precision !== "exact")
+      return bad("threshold", "value is an exact decimal, written as the text states it");
+    if (typeof th.unit !== "string" || !th.unit.trim() || th.unit.length > EDITION_MAX)
+      return bad("threshold", "unit is the unit as the text states it");
+    const p = t.period;
+    let period = null;
+    if (isObj(p) && typeof p.recurrence === "string") {
+      if (!p.recurrence.trim() || p.recurrence.length > CITE_MAX || typeof p.content_id !== "string" || !f.texts.includes(p.content_id.trim()))
+        return bad("period", "as a recurrence is {recurrence, content_id}, the passage stating it");
+      period = { recurrence: p.recurrence.trim(), content_id: p.content_id.trim() };
+    } else {
+      period = isObj(p) ? periodOf(p) : null;
+      if (!period) return bad("period", "is {from, to}, each a YYYY-MM-DD date or null, or a recurrence the text states");
+    }
+    const d = t.definition;
+    if (d !== "none" && !(typeof d === "string" && this.#heldFor(d, f.viewer)))
+      return bad("definition", "is the passage of the body's own definition of the metric, or \"none\"");
+    return { ok: true, target: { metric: { words: m.words.trim(), content_id: m.content_id.trim() },
+                                 threshold: { comparator: th.comparator, value: `${fig.sign === "-" ? "-" : ""}${fig.value}`, unit: th.unit.trim(),
+                                              as_read: th.value },
+                                 period, definition: d === "none" ? "none" : d.trim(),
+                                 ...(d === "none" ? { definition_says: "no definition stated" } : {}) } };
+  }
+
+  /* R47: the question beside a declaration, an inquiry's bundle the author may see. */
+  #questionField(a) {
+    if (a.question == null || a.question === "") return { ok: true, question: null };
+    const q = typeof a.question === "string" ? a.question.trim() : "";
+    const b = q ? this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, q) : null;
+    /* DEC-49 REGION is-question-held */
+    if (!b || b.object_type !== "inquiry" || !this.membership.inSight(q, str(a.author)))
+      return refusal("QUESTION_NOT_HELD", "no question your group's record holds that you may see answers to that id. "
+                     + "Nothing was written.", { question: q.slice(0, 80) || null });
+    /* END DEC-49 REGION is-question-held */
+    return { ok: true, question: q };
+  }
+
+  /* R37: a policy whose text is filed in a project's bundle is held with that bundle's sight; any other, group. */
+  #sightOf(kind, texts) {
+    if (kind !== "policy") return { class: "group" };
+    const bundles = new Set();
+    for (const id of texts) {
+      const row = this.content.contentRow(id);
+      if (!row) continue;
+      const b = this.#one(`SELECT bundle_id, project FROM bundles WHERE bundle_id=?`, row.bundle_id);
+      if (b && b.project) bundles.add(b.bundle_id);
+    }
+    return bundles.size ? { class: "bundle", bundles: [...bundles].sort() } : { class: "group" };
+  }
+
+  /* `content`'s row for a capture's extent, read and never minted (the id `content` gives that extent under the
+     capture's chain), or null; with a viewer, only a row in a document the viewer may see. */
+  #extentRow(captureSha, extent, viewer) {
+    try {
+      const sha = String(captureSha).trim().toLowerCase();
+      if (!/^[0-9a-f]{64}$/.test(sha)) return null;
+      const chain = extent.kind === "bytes" ? null : this.content.contentContextFor(sha).chain;
+      const row = this.content.contentRow(contentIdFor(sha, extent, chain));
+      if (!row || (viewer !== null && !this.membership.inSight(row.bundle_id, viewer))) return null;
+      return row;
+    } catch { return null; }
   }
 
   /* R18, R19: where the standard sits in its law, each field checked, in the order R18–R19 name them; `{ok: true,
@@ -341,11 +761,7 @@ export class Standards {
   #lawFields(a, cite, texts, period, viewer) {
     const { view } = this.#view();
     const key = instrumentKey({ cite, view });
-    const bad = (field, why) => {
-      /* DEC-49 REGION is-standard-law-field */
-      return refusal("STANDARD_FIELD_INVALID", `${field} ${why}. Nothing was written.`, { field });
-      /* END DEC-49 REGION is-standard-law-field */
-    };
+    const bad = refuseFieldInvalid;
     if (a.instrument != null && a.instrument !== "" && a.instrument !== key.key)
       return bad("instrument", key.key ? `is composed from the profiles as ${key.key}, and a different key was given`
                                        : `cannot be given: ${key.why}`);
@@ -373,7 +789,7 @@ export class Standards {
     }
     const m = matchSource(view, cite);
     const sourceCopyIs = m ? sourceCopy(view, m.entry) : "undetermined";
-    if (a.copy != null && !COPY_STATES.includes(a.copy)) return bad("copy", `is one of ${COPY_STATES.join(", ")}`);
+    /* R36: the declared copy's form is asked in R36's place (#copyFields), after the family (R1's order) */
     const copy = a.copy ?? sourceCopyIs;
     const copyAnswer = { copy, source_copy: sourceCopyIs, declared: a.copy != null,
                          ...(a.copy != null && a.copy !== sourceCopyIs
@@ -445,16 +861,29 @@ export class Standards {
           actorIdentity: author, actorViewer: viewer ?? author });
       } finally { this.#writing = null; }
       if (!r || !r.ok) return r;
-      this.sql.exec(`INSERT INTO standards (standard_id, cite, kind, issuer, period_from, period_to, supersedes,
-                       source_json, proposal_id, declared_by, declared_at, reason, instrument, instrument_json, portion_path,
-                       portion_content, requires_json, copy, copy_json, current_through, current_through_basis,
-                       period_basis_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                    id, f.cite, f.kind, f.issuer, f.period.from, f.period.to, f.supersedes, JSON.stringify(source),
-                    proposalId, author, at, f.reason, f.instrument.key, JSON.stringify(f.instrument),
-                    f.portion ? f.portion.path : null, f.portion ? f.portion.content_id : null, JSON.stringify(f.requires),
-                    f.copy.copy, JSON.stringify(f.copy), f.current_through ? f.current_through.date : null,
-                    f.current_through ? f.current_through.basis : null,
-                    f.period_basis ? JSON.stringify(f.period_basis) : null);
+      /* one row, written once (R14): R1, R3, R4, R10's fields, R18–R19's, and T35's (R33–R42, R47) */
+      const cols = {
+        standard_id: id, cite: f.cite, kind: f.kind, issuer: f.issuer, period_from: f.period.from, period_to: f.period.to,
+        supersedes: f.supersedes, source_json: JSON.stringify(source), proposal_id: proposalId, declared_by: author,
+        declared_at: at, reason: f.reason, instrument: f.instrument.key, instrument_json: JSON.stringify(f.instrument),
+        portion_path: f.portion ? f.portion.path : null, portion_content: f.portion ? f.portion.content_id : null,
+        requires_json: JSON.stringify(f.requires), copy: f.copy.copy, copy_json: JSON.stringify(f.copy),
+        current_through: f.current_through ? f.current_through.date : null,
+        current_through_basis: f.current_through ? f.current_through.basis : null,
+        period_basis_json: f.period_basis ? JSON.stringify(f.period_basis) : null,
+        family_json: JSON.stringify(f.family), family_key: f.family.family_key ?? null, held: f.held,
+        held_json: f.held_detail ? JSON.stringify(f.held_detail) : null,
+        copy_claimed_json: f.copy.claimed ? JSON.stringify(f.copy.claimed) : null, sight_json: JSON.stringify(f.sight),
+        version_basis_json: f.version_basis ? JSON.stringify(f.version_basis) : null,
+        force_source_json: f.force_source ? JSON.stringify(f.force_source) : null, designation: f.designation.value,
+        designation_json: JSON.stringify(f.designation), edition: f.edition.value, issuer_entity: f.issuer_entity,
+        access: f.access, target_json: f.target ? JSON.stringify(f.target) : null, question: f.question,
+      };
+      const names = Object.keys(cols);
+      this.sql.exec(`INSERT INTO standards (${names.join(", ")}) VALUES (${names.map(() => "?").join(",")})`,
+                    ...names.map((n) => cols[n]));
+      f.overrides.forEach((o, i) => this.sql.exec(`INSERT INTO standard_overrides (standard_id, ord, target, portion, until_json)
+                                                   VALUES (?,?,?,?,?)`, id, i, o.target, o.portion, JSON.stringify(o.until)));
       f.texts.forEach((c, i) => this.sql.exec(`INSERT INTO standard_texts (standard_id, ord, content_id) VALUES (?,?,?)`,
                                               id, i, c));
       if (proposalId)
@@ -479,7 +908,7 @@ export class Standards {
 
   /* R1's fields, R3's source, the declarer, time and reason (R4), both ends of a supersession (R6), the proposal (R10).
      A standard recorded before the reason was asked for answers `reason: null`. */
-  #answer(row) {
+  #answer(row, viewer = null) {
     const texts = this.#rows(`SELECT content_id FROM standard_texts WHERE standard_id=? ORDER BY ord`, row.standard_id)
       .map((t) => t.content_id);
     return { id: row.standard_id, cite: row.cite, kind: row.kind, issuer: row.issuer, reason: row.reason ?? null,
@@ -487,7 +916,69 @@ export class Standards {
              period: { from: row.period_from ?? null, to: row.period_to ?? null }, source: safeJson(row.source_json),
              declared_by: row.declared_by, declared_at: row.declared_at, supersedes: row.supersedes ?? null,
              superseded_by: this.#successorOf(row.standard_id), proposal: row.proposal_id ?? null,
-             ...this.#lawAnswer(row) };
+             ...this.#lawAnswer(row), ...this.#t35Answer(row, viewer) };
+  }
+
+  /* R33–R42, R45, R47 as read back: a standard recorded before T35 is held `text`, at group sight, with no family,
+     edition, target or question stated (each said so, never invented). */
+  #t35Answer(row, viewer) {
+    const held = row.held || "text";
+    const heldDetail = safeJson(row.held_json);
+    const issuerEntity = row.issuer_entity ? this.#entity(row.issuer_entity, viewer) : null;
+    const issuerLabel = issuerEntity ? issuerEntity.label : row.issuer;
+    const access = row.access ?? (row.kind === "standard" ? "undetermined" : null);
+    const sight = this.#sight(row);
+    const notPublic = sight.class === "bundle" && !sight.released ? { release_by: this.#releaseBy(sight) } : null;
+    const qn = row.question && viewer !== null && this.membership.inSight(row.question, viewer) ? row.question : null;
+    const says = { ...(ownerWords(row.kind, issuerLabel) ? { owner: ownerWords(row.kind, issuerLabel) } : {}),
+                   ...(heldWords(held, heldDetail) || {}),
+                   ...(accessWords(access) ? { access: accessWords(access) } : {}),
+                   ...(notPublic ? notPublicWords(notPublic.release_by) : {}) };
+    return {
+      family: safeJson(row.family_json) || { state: "undetermined", key: null, family_key: null,
+                                             why: "recorded before a family was read" },
+      owner: { issuer: row.issuer, label: issuerLabel, entity: row.issuer_entity ?? null,
+               sector: issuerEntity ? issuerEntity.sector ?? null : null },
+      held, ...(held === "cited" ? { cited_by: heldDetail } : {}), ...(held === "absent" ? { search: heldDetail } : {}),
+      version_basis: safeJson(row.version_basis_json), overrides: this.#overridesBy(row.standard_id),
+      force_source: safeJson(row.force_source_json),
+      designation: safeJson(row.designation_json) || { value: null, declared: false, read: null,
+                                                       why: "recorded before a designation was read" },
+      edition: row.edition ?? null, access, target: safeJson(row.target_json), question: qn,
+      sight: sight.class === "bundle" ? { class: sight.released ? "group" : "bundle", released: sight.released || null }
+                                      : { class: "group" },
+      ...(notPublic ? { not_public: notPublic } : {}),
+      says,
+    };
+  }
+
+  /* R37: a standard's sight as recorded, with its release. */
+  #sight(row) {
+    const s = safeJson(row.sight_json) || { class: "group" };
+    if (s.class !== "bundle") return { class: "group" };
+    const rel = this.#one(`SELECT reason, released_by, released_at FROM standard_releases WHERE standard_id=?`, row.standard_id);
+    return { class: "bundle", bundles: Array.isArray(s.bundles) ? s.bundles : [],
+             released: rel ? { by: rel.released_by, at: rel.released_at, reason: rel.reason } : null };
+  }
+
+  /* R37: the projects whose owners may release a standard held at a source's sight, and those owners. */
+  #releaseBy(sight) {
+    const projects = new Set();
+    for (const b of sight.bundles || []) {
+      const r = this.#one(`SELECT project FROM bundles WHERE bundle_id=?`, b);
+      if (r && r.project) projects.add(r.project);
+    }
+    return [...projects].sort().map((p) => {
+      let owners = [];
+      try { owners = this.membership.projectOwners(p) || []; } catch { owners = []; }
+      return { project: p, owners };
+    });
+  }
+
+  /* R38: the overrides a standard makes. */
+  #overridesBy(id) {
+    return this.#rows(`SELECT target, portion, until_json FROM standard_overrides WHERE standard_id=? ORDER BY ord`, id)
+      .map((o) => ({ target: o.target, portion: o.portion, until: safeJson(o.until_json) }));
   }
 
   /* R18, R19 as read back: a standard recorded before them states none (its key undetermined, said so). */
@@ -509,20 +1000,35 @@ export class Standards {
     if (!sid) return refuseNoId("standard");
     const row = this.#row(sid);
     if (!row || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
-    const a = this.#answer(row);
+    const a = this.#answer(row, viewer);
     const standings = this.content.standings(a.text);
     const texts = a.text.map((contentId) => ({ content_id: contentId, standing: standings[contentId] ?? null,
                                                newer: this.content.passageNotice({ contentId, viewer }) }));
-    const quoted = a.requires.map((contentId) => ({ content_id: contentId, text: this.content.passageText(contentId) }));
-    return { ok: true, ...a, texts, requires_quoted: quoted,
-             says: "a standard as the record holds it: what it is and where it comes from, never whether it is a good "
-                 + "one. Each passage of its text says whether a newer capture of its document still holds it; "
-                 + "nothing is moved." };
+    /* R41: a reading-room or paywalled standard's words are answered only to a member viewer, kept inside the group */
+    const withheld = (a.access === "reading_room" || a.access === "paywalled") && !isMemberViewer(viewer);
+    const quoted = a.requires.map((contentId) => ({ content_id: contentId,
+                                                    text: withheld ? null : this.content.passageText(contentId) }));
+    return { ok: true, ...a, texts, requires_quoted: quoted, ...(withheld ? { text_withheld: TEXT_WITHHELD } : {}),
+             says: { ...a.says, note: "a standard as the record holds it: what it is and where it comes from, never "
+                 + "whether it is a good one. Each passage of its text says whether a newer capture of its document still "
+                 + "holds it; nothing is moved." } };
   }
 
   /* R5: what a viewer may read. A standard is a bundle outside any project, so membership R43 lets every member, machine
      credential and the founder see it; any other viewer, and none, is answered as for an absent standard. */
-  #readable(id, viewer) { return viewer !== null && viewer !== undefined && this.membership.inSight(id, viewer); }
+  #readable(id, viewer) {
+    if (viewer === null || viewer === undefined || !this.membership.inSight(id, viewer)) return false;
+    const row = this.#row(id);
+    return !row || this.#sightAdmits(row, viewer);
+  }
+
+  /* R37: a policy held at its source's sight is answered only to a viewer who may see every bundle its text is filed
+     in, until released; any other standard, and a released one, to every viewer the record admits. */
+  #sightAdmits(row, viewer) {
+    const s = this.#sight(row);
+    if (s.class !== "bundle" || s.released) return true;
+    return viewer !== null && viewer !== undefined && s.bundles.every((b) => this.membership.inSight(b, viewer));
+  }
 
   /** R7: whether a standard was in force on a date, with why: the alias of R20's `inForceAt({standard: id, date})`,
    *  answering exactly its state and why (Choices 18), so its callers need no change. */
@@ -592,6 +1098,65 @@ export class Standards {
 
   /* R20: one version against a date: civil-time.validAt over its period, then a codifier copy's lag. */
   #versionAt(row, date, viewer) {
+    /* R34: a standard whose text is not held is never a measure, and never in force */
+    if ((row.held || "text") !== "text")
+      return { state: "undetermined", why: "its text is not held, so it is not a measure",
+               period: { from: row.period_from ?? null, to: row.period_to ?? null }, bound_by: [] };
+    const v0 = this.#versionAtPeriod(row, date, viewer);
+    if (v0.state === "not_in_force") return v0;
+    /* R38: a version read from two captures starts in the band between them, never at an enactment date */
+    const vb = safeJson(row.version_basis_json);
+    if (vb) {
+      const zone = this.#zone();
+      const after = localDay(vb.after, zone), through = localDay(vb.through, zone);
+      if (date < after)
+        return { ...v0, state: "not_in_force", why: `this version was first captured after ${after}: the capture of ${after} `
+                 + "holds the text it superseded" };
+      if (date < through)
+        return { ...v0, state: "undetermined", why: `this version's text changed between the captures of ${after} and `
+                 + `${through}, so whether it was in force on ${date} is undetermined` };
+    }
+    /* R38: a portion another held standard overrides on the date */
+    const ov = this.#overriddenAt(row, date, viewer);
+    if (ov) return { ...v0, ...ov };
+    return v0;
+  }
+
+  /* R38: the override in force on `date` over this version's portion, as `{state, why, overridden_by}`, or null. An
+     override whose `until` event has no day, or a revision whose order against the date is not decided, answers
+     undetermined, never in force. */
+  #overriddenAt(row, date, viewer) {
+    if (!row.portion_path) return null;
+    const os = this.#rows(`SELECT o.standard_id, o.until_json, s.instrument, s.portion_path FROM standard_overrides o
+                           JOIN standards s ON s.standard_id = o.standard_id
+                           WHERE o.target=? AND o.portion=? ORDER BY o.standard_id`, row.standard_id, row.portion_path);
+    for (const o of os) {
+      const by = this.#row(o.standard_id);
+      if (!by || (viewer !== null && !this.#sightAdmits(by, viewer))) continue;
+      const own = this.#versionAtPeriod(by, date, viewer);
+      if (own.state === "not_in_force") continue;
+      const u = safeJson(o.until_json) || {};
+      let until = null, why = null;
+      if (u.event) { const d = this.#eventDay(u.event, "start", viewer); until = d.day; why = d.why; }
+      else if (u.revision) {
+        const next = by.instrument ? this.#one(`SELECT period_from FROM standards WHERE instrument=? AND supersedes=?`,
+                                               by.instrument, by.standard_id) : null;
+        until = next ? next.period_from ?? null : undefined;
+        if (until === null) why = "the revision that ends it states no start";
+      }
+      const overriding = { overridden_by: { standard: by.standard_id, portion: by.portion_path ?? null } };
+      if (until === null || own.state === "undetermined")
+        return { state: "undetermined", ...overriding,
+                 why: `${by.standard_id} overrides this portion, and ${why || own.why}, so whether it was overridden on ${date} is undetermined` };
+      if (until === undefined || date < until)
+        return { state: "overridden", ...overriding,
+                 why: `${by.standard_id}${by.portion_path ? ` (${by.portion_path})` : ""} displaces this portion on ${date}`
+                    + (until ? `, until ${until}` : ", until its own key's next revision") };
+    }
+    return null;
+  }
+
+  #versionAtPeriod(row, date, viewer) {
     const p = this.#periodOf(row, viewer);
     const zone = this.#zone();
     const bound = (side) => (p[side] !== null ? p[side] : p.why[side] ? { event: "unread", edge: side } : null);
@@ -641,19 +1206,22 @@ export class Standards {
         if (!row || (viewer !== null && !this.#readable(row.standard_id, viewer))) return refuseNoSuchStandard(str(standard));
         const v = this.#versionAt(row, date, viewer);
         return { ok: true, date, state: v.state, why: v.why, standard: row.standard_id,
-                 version: { standard: row.standard_id, ...v.period, bound_by: v.bound_by } };
+                 version: { standard: row.standard_id, ...v.period, bound_by: v.bound_by },
+                 ...(v.overridden_by ? { overridden_by: v.overridden_by } : {}) };
       }
       const p = portion == null || portion === "" ? null : String(portion);
       const rows = this.#rows(`SELECT * FROM standards WHERE instrument=? ${p !== null ? "AND portion_path=?" : ""}
-                               ORDER BY standard_id LIMIT ?`, ...(p !== null ? [str(key), p] : [str(key)]), PAGE_MAX + 1);
+                               ORDER BY standard_id LIMIT ?`, ...(p !== null ? [str(key), p] : [str(key)]), PAGE_MAX + 1)
+        .filter((r) => viewer === null || this.#readable(r.standard_id, viewer));
       const base = { ok: true, date, key: str(key), portion: p };
       if (!rows.length)
         return { ...base, state: "undetermined", standard: null, version: null,
                  why: `no version of ${str(key)}${p !== null ? ` at ${p}` : ""} is held, so whether it was in force is undetermined` };
       const vs = rows.slice(0, PAGE_MAX).map((r) => ({ id: r.standard_id, ...this.#versionAt(r, date, viewer) }));
-      const inn = vs.filter((v) => v.state === "in_force"), unsure = vs.filter((v) => v.state === "undetermined");
+      const inn = vs.filter((v) => v.state === "in_force" || v.state === "overridden"), unsure = vs.filter((v) => v.state === "undetermined");
       if (inn.length === 1 && !unsure.length)
-        return { ...base, state: "in_force", why: inn[0].why, standard: inn[0].id, version: { standard: inn[0].id, ...inn[0].period } };
+        return { ...base, state: inn[0].state, why: inn[0].why, standard: inn[0].id, version: { standard: inn[0].id, ...inn[0].period },
+                 ...(inn[0].overridden_by ? { overridden_by: inn[0].overridden_by } : {}) };
       if (inn.length > 1)
         return { ...base, state: "undetermined", standard: null, version: null, versions: inn.map((v) => v.id),
                  why: `${inn.map((v) => v.id).join(" and ")} each cover ${date}; none is preferred, so which was in force is undetermined` };
@@ -672,7 +1240,8 @@ export class Standards {
    *  and the ones not in force left out. The stated period filters in SQL (a superset: a stated bound that excludes
    *  the date excludes it in R7 too), then R7 (with its relations and event bounds) is asked of each row, reading on
    *  until the page and the row past it are found, so the page and its cut are exact. */
-  standardsIn({ at = null, kind = null, source = null, cite = null, after = null, limit = null, viewer = null } = {}) {
+  standardsIn({ at = null, kind = null, source = null, cite = null, family = null, after = null, limit = null,
+                viewer = null } = {}) {
     const date = at == null || at === "" ? null : at;
     if (date !== null && !isDate(date)) return refuseDateInvalid(date);
     if (kind != null && kind !== "" && !STANDARD_KINDS.includes(kind)) return refuseKindUnknown(kind);
@@ -684,6 +1253,9 @@ export class Standards {
     if (str(source) === "undetermined") where.push(`json_extract(s.source_json, '$.state')='undetermined'`);
     else if (str(source)) { where.push(`json_extract(s.source_json, '$.source')=?`); args.push(str(source)); }
     if (str(cite)) { where.push("instr(lower(s.cite), lower(?)) > 0"); args.push(str(cite)); }
+    /* R33: a family filter, by its key (`familyKey`) or {key, series} */
+    const fk = isObj(family) ? familyKey(family) : str(family) || null;
+    if (family != null && family !== "") { where.push("s.family_key=?"); args.push(fk ?? ""); }
     if (date) { where.push("NOT ((s.period_from IS NOT NULL AND s.period_from > ?) OR (s.period_to IS NOT NULL AND s.period_to < ?))");
                 args.push(date, date); }
     const kept = [];
@@ -693,6 +1265,7 @@ export class Standards {
                                 WHERE ${[...where, ...(cursor ? ["s.standard_id > ?"] : [])].join(" AND ")}
                                 ORDER BY s.standard_id LIMIT ?`, ...args, ...(cursor ? [cursor] : []), n + 1);
       for (const r of page) {
+        if (!this.#sightAdmits(r, viewer)) continue;
         const f = date ? this.#versionAt(r, date, viewer) : null;
         if (f && f.state === "not_in_force") continue;
         kept.push({ r, f });
@@ -703,7 +1276,7 @@ export class Standards {
     }
     const truncated = kept.length > n;
     const page = kept.slice(0, n);
-    const items = page.map(({ r, f }) => ({ ...this.#answer(r), ...(f ? { in_force: { state: f.state, why: f.why } } : {}) }));
+    const items = page.map(({ r, f }) => ({ ...this.#answer(r, viewer), ...(f ? { in_force: { state: f.state, why: f.why } } : {}) }));
     return { ok: true, items, count: items.length, limit: n, truncated,
              cursor: truncated ? page[page.length - 1].r.standard_id : null,
              ...(date ? { at: date, says: `standards in force on ${date}, or whose period does not decide it (stated `
@@ -736,15 +1309,15 @@ export class Standards {
   /* R32's one read: the rows the condition admits that the viewer may read (R8's gate), one past the cap. */
   #versionsWhere(cond, args, viewer) {
     const gate = viewerPredicate(viewer);
-    const rows = this.#rows(`SELECT s.standard_id, s.instrument, s.portion_path, s.portion_content, s.period_from, s.period_to,
-                               s.supersedes FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
-                             WHERE (${gate.sql}) AND ${cond} ORDER BY s.standard_id LIMIT ?`,
-                            ...gate.args, ...args, PAGE_MAX + 1);
+    const rows = this.#rows(`SELECT s.* FROM standards s JOIN bundles b ON b.bundle_id = s.standard_id
+                             WHERE (${gate.sql}) AND ${cond} ORDER BY s.standard_id`,
+                            ...gate.args, ...args).filter((r) => this.#sightAdmits(r, viewer)).slice(0, PAGE_MAX + 1);
     const items = rows.slice(0, PAGE_MAX).map((r) => ({
       id: r.standard_id, instrument: r.instrument ?? null,
       portion: r.portion_path ? { path: r.portion_path, content_id: r.portion_content } : null,
       period: { from: r.period_from ?? null, to: r.period_to ?? null },
-      supersedes: r.supersedes ?? null, superseded_by: this.#successorOf(r.standard_id) }));
+      supersedes: r.supersedes ?? null, superseded_by: this.#successorOf(r.standard_id),
+      family: safeJson(r.family_json), says: this.#t35Answer(r, viewer).says }));
     return { ok: true, items, truncated: rows.length > PAGE_MAX };
   }
 
@@ -839,6 +1412,491 @@ export class Standards {
   neighbours(args) { return this.#law.neighbours(args); }
 
   /* ===================================================================== *
+   * T35: MEASURES, FORCES, SIGHT, ADOPTIONS AND BINDING (R34, R35, R37, R38, R40, R43)
+   * ===================================================================== */
+
+  /** R34: true only for a standard held `text` that the viewer may read; a later module that judges an act against a
+   *  standard asks this first. Writes nothing and never throws. */
+  isMeasure(id, viewer = null) {
+    try {
+      const row = this.#row(str(id));
+      /* a caller naming no viewer is internal, and asks of the record as a whole (membership's terms) */
+      return !!row && (row.held || "text") === "text" && (viewer === null || this.#readable(row.standard_id, viewer));
+    } catch { return false; }
+  }
+
+  /* R35: a provision's force, checked in R35's order after the author; `{ok: true, fields}` or a refusal. */
+  #forceRefusal(a) {
+    const viewer = a.viewer ?? null;
+    const sid = str(a.standard);
+    const row = this.#row(sid);
+    if (!row || !this.#readable(sid, viewer ?? INTERNAL_READER)) return noSuchStandard(sid || null, { id: sid || null });
+    /* DEC-49 REGION is-force-text-held */
+    if ((row.held || "text") !== "text")
+      return refusal("FORCE_TEXT_NOT_HELD", `${sid} is held ${row.held}, without its text, so no provision's force is read `
+                     + "from it. Nothing was written.", { standard: sid, held: row.held });
+    /* END DEC-49 REGION is-force-text-held */
+    if (!isPortionPath(a.portion) || (row.portion_path && a.portion.trim() !== row.portion_path))
+      return portionUnknown(sid, a.portion);
+    const portion = a.portion.trim();
+    const allowed = row.kind === "policy" ? [...FORCES, ...POLICY_FORCES] : [...FORCES];
+    /* DEC-49 REGION is-force-known */
+    if (!allowed.includes(a.force))
+      return refusal("FORCE_UNKNOWN", `a ${row.kind}'s provision's force is one of ${allowed.join(", ")}. Nothing was written.`,
+                     { forces: allowed, kind: row.kind });
+    /* END DEC-49 REGION is-force-known */
+    let holder = null, criteria = null;
+    if (a.force === "discretionary") {
+      holder = str(a.holder);
+      /* DEC-49 REGION is-force-holder */
+      if (!holder || !this.#entity(holder, viewer))
+        return refusal("FORCE_NO_HOLDER", "a discretion names the office or body holding it, a registered entity you may "
+                       + "read. Nothing was written.", { holder: holder ? holder.slice(0, 80) : null });
+      /* END DEC-49 REGION is-force-holder */
+      const texts = this.#texts(sid);
+      criteria = a.criteria === "none" ? "none" : typeof a.criteria === "string" && texts.includes(a.criteria.trim())
+        ? a.criteria.trim() : null;
+      /* DEC-49 REGION is-force-criteria */
+      if (criteria === null)
+        return refusal("FORCE_NO_CRITERIA", "a discretion names the passage of the standard's text stating its criteria, "
+                       + "or \"none\", read \"no criteria stated\". Nothing was written.");
+      /* END DEC-49 REGION is-force-criteria */
+    }
+    const citation = typeof a.citation === "string" ? a.citation.trim() : "";
+    /* DEC-49 REGION is-force-cited */
+    if (!citation)
+      return refusal("FORCE_NO_CITATION", "a provision's force is recorded with the content id of the provision's own "
+                     + "words that state it. Nothing was written.");
+    /* END DEC-49 REGION is-force-cited */
+    if (!this.#texts(sid).includes(citation))
+      return refusal("STANDARD_PORTION_NOT_IN_TEXT", `${citation.slice(0, 80)} is not one of this standard's text passages. `
+                     + "Nothing was written.", { content_id: citation.slice(0, 80) });
+    return { ok: true, fields: { standard: sid, portion, force: a.force, holder, criteria, citation } };
+  }
+
+  /* R35: a confirmed force held on the provision, not withdrawn, or null. */
+  #confirmedForce(standard, portion) {
+    return this.#one(`SELECT f.* FROM standard_forces f WHERE f.standard_id=? AND f.portion=? AND NOT EXISTS
+                        (SELECT 1 FROM standard_force_withdrawals w WHERE w.force_id=f.force_id) ORDER BY f.at LIMIT 1`,
+                     standard, portion);
+  }
+
+  /** R35: `forceDeclare` (`op=standardforce`): the force of one provision, by a member's act, citing the provision's own
+   *  words. At most one confirmed force a provision; a correction withdraws it first. */
+  forceDeclare(args = {}) {
+    const a = isObj(args) ? args : {};
+    const byMachine = machineRefusal(a.author);
+    if (byMachine) return byMachine;
+    const unknown = refuseFieldUnknown(a, FORCE_KEYS);
+    if (unknown) return unknown;
+    return this.#forceWrite(a, null);
+  }
+
+  #forceWrite(a, proposalId) {
+    const r = this.#forceRefusal(a);
+    if (r.ok === false) return r;
+    const f = r.fields;
+    const held = this.#confirmedForce(f.standard, f.portion);
+    /* DEC-49 REGION is-force-once */
+    if (held)
+      return refusal("FORCE_ALREADY_CONFIRMED", `${f.standard} at ${f.portion} already holds the confirmed force ${held.force} `
+                     + `(${held.force_id}); withdraw it with a reason first. Nothing was written.`,
+                     { force_id: held.force_id, force: held.force });
+    /* END DEC-49 REGION is-force-once */
+    const fault = reasonFault(a.reason);
+    if (fault) return refuseReason(fault);
+    return this.record.transact(() => {
+      const at = this.#when();
+      const id = `force-${rand(12)}`;
+      this.sql.exec(`INSERT INTO standard_forces (force_id, standard_id, portion, force, holder, criteria, citation, proposal_id,
+                       reason, author, at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`, id, f.standard, f.portion, f.force, f.holder,
+                    f.criteria, f.citation, proposalId, a.reason, str(a.author), at);
+      return { ok: true, force: this.#forceAnswer(this.#one(`SELECT * FROM standard_forces WHERE force_id=?`, id), a.viewer ?? null) };
+    });
+  }
+
+  #forceAnswer(f, viewer) {
+    const w = this.#one(`SELECT * FROM standard_force_withdrawals WHERE force_id=?`, f.force_id);
+    const holder = f.holder ? this.#entity(f.holder, viewer) : null;
+    let words = null;
+    try { words = this.content.passageText(f.citation); } catch { words = null; }
+    const row = this.#row(f.standard_id);
+    if (row && (row.access === "reading_room" || row.access === "paywalled") && !isMemberViewer(viewer)) words = null;
+    return { id: f.force_id, standard: f.standard_id, portion: f.portion, force: f.force, holder: f.holder ?? null,
+             holder_label: holder ? holder.label : null, criteria: f.criteria ?? null, citation: f.citation,
+             reason: f.reason, by: f.author, at: f.at, proposal: f.proposal_id ?? null,
+             withdrawn: w ? { by: w.withdrawn_by, at: w.withdrawn_at, reason: w.reason } : null,
+             says: forceWords({ force: f.force, holderLabel: holder ? holder.label : f.holder, criteria: f.criteria, words }) };
+  }
+
+  /** R35: a proposed force, stored apart, labelled through `proposalLabel(proposer, "standard")`, R9's way; never a
+   *  force until a member confirms it. */
+  forcePropose(args = {}) {
+    const a = isObj(args) ? args : {};
+    const unknown = refuseFieldUnknown(a, FORCE_PROPOSE_KEYS);
+    if (unknown) return unknown;
+    const who = str(a.proposer);
+    if (!who) return refuseProposerUnnamed();
+    const why = str(a.why);
+    if (!why || why.length > WHY_MAX) return refuseWhyInvalid();
+    const r = this.#forceRefusal({ ...a, viewer: a.viewer ?? null });
+    if (r.ok === false) return r;
+    return this.record.transact(() => {
+      const at = this.#when();
+      const id = `fprop-${rand(12)}`;
+      this.sql.exec(`INSERT INTO standard_force_proposals (proposal_id, standard_id, fields_json, why, proposed_by, proposed_at)
+                     VALUES (?,?,?,?,?,?)`, id, r.fields.standard, JSON.stringify(r.fields), why, who, at);
+      return { ok: true, proposal: this.#forceProposalAnswer(this.#one(`SELECT * FROM standard_force_proposals WHERE proposal_id=?`, id)),
+               force: false, says: "this is a proposed force and not a force: it moves no answer until a member confirms it "
+                                 + "naming this proposal" };
+    });
+  }
+
+  #forceProposalAnswer(p) {
+    const adopted = this.#one(`SELECT force_id FROM standard_forces WHERE proposal_id=?`, p.proposal_id);
+    return { id: p.proposal_id, ...safeJson(p.fields_json), why: p.why, at: p.proposed_at,
+             ...proposalLabel(p.proposed_by, STANDARD), confirmed_as: adopted ? adopted.force_id : null };
+  }
+
+  /** R35: `forceConfirm` is `forceDeclare` by a member naming the proposal, refused as it is. */
+  forceConfirm(args = {}) {
+    const a = isObj(args) ? args : {};
+    const byMachine = machineRefusal(a.author);
+    if (byMachine) return byMachine;
+    const unknown = refuseFieldUnknown(a, ["proposal", "reason", "author", "viewer"]);
+    if (unknown) return unknown;
+    const p = typeof a.proposal === "string" && a.proposal
+      ? this.#one(`SELECT * FROM standard_force_proposals WHERE proposal_id=?`, a.proposal) : null;
+    if (!p) return refuseNoSuchProposal(str(a.proposal) || null);
+    const done = this.#one(`SELECT force_id FROM standard_forces WHERE proposal_id=?`, p.proposal_id);
+    if (done) return refuseProposalAdopted(p.proposal_id, done.force_id);
+    return this.#forceWrite({ ...safeJson(p.fields_json), reason: a.reason, author: a.author, viewer: a.viewer ?? null },
+                            p.proposal_id);
+  }
+
+  /** R35: withdraw a confirmed force, kept with who, when and why. */
+  forceWithdraw({ force = null, reason = null, author = null, viewer = null } = {}) {
+    const byMachine = machineRefusal(author);
+    if (byMachine) return byMachine;
+    const f = typeof force === "string" && force ? this.#one(`SELECT * FROM standard_forces WHERE force_id=?`, force) : null;
+    /* DEC-49 REGION is-force-held */
+    if (!f || (viewer !== null && !this.#readable(f.standard_id, viewer)))
+      return refusal("NO_SUCH_FORCE", "no confirmed force answers to that id here. Nothing was written.",
+                     { force: str(force) || null });
+    /* END DEC-49 REGION is-force-held */
+    const fault = reasonFault(reason);
+    if (fault) return refuseReason(fault);
+    const w = this.#one(`SELECT * FROM standard_force_withdrawals WHERE force_id=?`, f.force_id);
+    if (w) return { ok: true, already: true, force: f.force_id, withdrawn: { by: w.withdrawn_by, at: w.withdrawn_at, reason: w.reason } };
+    return this.record.transact(() => {
+      const at = this.#when();
+      this.sql.exec(`INSERT INTO standard_force_withdrawals (force_id, standard_id, reason, withdrawn_by, withdrawn_at)
+                     VALUES (?,?,?,?,?)`, f.force_id, f.standard_id, reason, str(author), at);
+      return { ok: true, force: f.force_id, withdrawn: { by: str(author), at, reason },
+               says: "withdrawn, never deleted: the row stays, read as withdrawn" };
+    });
+  }
+
+  /** R35: each portion's confirmed force with its citation, holder and criteria, and its proposals apart, labelled. */
+  forcesOf({ standard = null, viewer = null } = {}) {
+    const sid = str(standard);
+    if (!sid) return refuseNoId("forcesof");
+    if (!this.#row(sid) || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
+    const all = this.#rows(`SELECT * FROM standard_forces WHERE standard_id=? ORDER BY portion, at, force_id`, sid)
+      .map((f) => this.#forceAnswer(f, viewer));
+    return { ok: true, standard: sid, forces: all.filter((f) => !f.withdrawn), withdrawn: all.filter((f) => f.withdrawn),
+             proposals: this.#rows(`SELECT * FROM standard_force_proposals WHERE standard_id=? ORDER BY proposal_id`, sid)
+               .map((p) => this.#forceProposalAnswer(p)),
+             says: { ...this.#t35Answer(this.#row(sid), viewer).says,
+                     note: "a force is read from the provision's own words and confirmed by a member; a proposal moves "
+                         + "nothing" } };
+  }
+
+  /** R37: `releaseStandard` (`op=standardrelease`): an owner of the source's project moves a policy held at its source's
+   *  sight to the group's, from then on, never undone. */
+  releaseStandard({ standard = null, reason = null, author = null, viewer = null } = {}) {
+    const byMachine = machineRefusal(author);
+    if (byMachine) return byMachine;
+    const sid = str(standard);
+    const row = this.#row(sid);
+    if (!row || !this.#readable(sid, viewer ?? str(author))) return refuseNoSuchStandard(sid || null);
+    const s = this.#sight(row);
+    /* DEC-49 REGION is-held-from-source */
+    if (s.class !== "bundle" || s.released)
+      return refusal("NOT_HELD_FROM_SOURCE", `${sid} is ${s.released ? "already released and " : ""}seen by every member of `
+                     + "your group. Nothing was written.", { standard: sid });
+    /* END DEC-49 REGION is-held-from-source */
+    const who = str(author).replace(/^member:/, "");
+    const owners = this.#releaseBy(s);
+    /* DEC-49 REGION is-release-owner */
+    if (!owners.length || !owners.every((p) => p.owners.includes(who)))
+      return refusal("RELEASE_NOT_OWNER", "only an owner of the project its source material is filed in may release it. "
+                     + "Nothing was written.", { release_by: owners });
+    /* END DEC-49 REGION is-release-owner */
+    const fault = reasonFault(reason);
+    if (fault) return refuseReason(fault);
+    return this.record.transact(() => {
+      const at = this.#when();
+      this.sql.exec(`INSERT INTO standard_releases (standard_id, reason, released_by, released_at) VALUES (?,?,?,?)`,
+                    sid, reason, str(author), at);
+      return { ok: true, standard: sid, released: { by: str(author), at, reason },
+               says: "released to every member of your group from now on; a release is never undone" };
+    });
+  }
+
+  /** R38: the overrides naming or made by a standard. */
+  overridesOf({ standard = null, viewer = null } = {}) {
+    const sid = str(standard);
+    if (!sid) return refuseNoId("overridesof");
+    if (!this.#row(sid) || !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
+    const made = this.#overridesBy(sid);
+    const naming = this.#rows(`SELECT standard_id, target, portion, until_json FROM standard_overrides WHERE target=?
+                               ORDER BY standard_id, ord`, sid)
+      .filter((o) => this.#readable(o.standard_id, viewer))
+      .map((o) => ({ by: o.standard_id, portion: o.portion, until: safeJson(o.until_json) }));
+    return { ok: true, standard: sid, makes: made, overridden_by: naming };
+  }
+
+  /** R40: `adoptionRecord` (`op=standardadoption`): by a member's act, that a body adopted an edition of a held standard,
+   *  named by the act that adopted it and the act's passage stating it. */
+  adoptionRecord(args = {}) {
+    const a = isObj(args) ? args : {};
+    const byMachine = machineRelate(a.author);
+    if (byMachine) return byMachine;
+    const unknown = refuseFieldUnknown(a, ADOPTION_KEYS);
+    if (unknown) return unknown;
+    const viewer = a.viewer ?? null;
+    const sid = str(a.standard);
+    if (!this.#row(sid) || !this.#readable(sid, viewer ?? str(a.author))) return noSuchStandard(sid || null, { id: sid || null, end: "standard" });
+    const act = str(a.act);
+    const actRow = /^EVT-/.test(act) ? null : this.#row(act);
+    const actEvent = /^EVT-/.test(act) ? this.#eventDay(act, "start", viewer) : null;
+    if (!actRow && !(actEvent && (actEvent.day || !/not held/.test(actEvent.why || ""))))
+      return noSuchStandard(act || null, { id: act || null, end: "act" });
+    if (actRow && !this.#readable(act, viewer ?? str(a.author))) return noSuchStandard(act, { id: act, end: "act" });
+    /* DEC-49 REGION is-adoption-mode */
+    if (!ADOPTION_MODES.includes(a.mode))
+      return refusal("ADOPTION_MODE_UNKNOWN", `an adoption is ${ADOPTION_MODES.join(", ")}. Nothing was written.`,
+                     { modes: [...ADOPTION_MODES] });
+    /* END DEC-49 REGION is-adoption-mode */
+    const edition = typeof a.edition === "string" ? a.edition.trim() : "";
+    /* DEC-49 REGION is-adoption-edition */
+    if (!edition || [...edition].length > EDITION_MAX)
+      return refusal("ADOPTION_NO_EDITION", `an adoption names the edition adopted, at most ${EDITION_MAX} characters. `
+                     + "Nothing was written.", { max: EDITION_MAX });
+    /* END DEC-49 REGION is-adoption-edition */
+    const citation = typeof a.citation === "string" ? a.citation.trim() : "";
+    /* DEC-49 REGION is-adoption-cited */
+    if (!citation || (actRow ? !this.#texts(act).includes(citation) : !this.#heldFor(citation, viewer)))
+      return refusal("ADOPTION_NO_CITATION", "an adoption names the passage of the adopting act stating it. Nothing was "
+                     + "written.", { citation: citation.slice(0, 80) || null });
+    /* END DEC-49 REGION is-adoption-cited */
+    const from = isDate(a.from) ? { date: a.from }
+      : isObj(a.from) && typeof a.from.event === "string" && /^EVT-/.test(a.from.event) && isRecordId(a.from.event)
+        && (a.from.edge === "start" || a.from.edge === "end") ? { event: a.from.event, edge: a.from.edge } : null;
+    if (!from) return refuseFieldInvalid("from", "is a date (YYYY-MM-DD) or an event {event, edge}");
+    const amendments = a.amendments == null ? [] : Array.isArray(a.amendments) && a.amendments.every(isPortionPath)
+      && a.amendments.length <= TEXTS_MAX ? a.amendments.map((x) => x.trim()) : null;
+    if (!amendments) return refuseFieldInvalid("amendments", "is a list of portion paths of the adopting act");
+    const fault = reasonFault(a.reason);
+    if (fault) return refuseReason(fault);
+    const body = actRow ? actRow.issuer_entity ?? actRow.issuer : null;
+    return this.record.transact(() => {
+      const at = this.#when();
+      const id = `adopt-${rand(12)}`;
+      this.sql.exec(`INSERT INTO standard_body_adoptions (adoption_id, standard_id, act, body, edition, from_json,
+                       amendments_json, mode, citation, reason, author, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                    id, sid, act, body, edition, JSON.stringify(from), JSON.stringify(amendments), a.mode, citation,
+                    a.reason, str(a.author), at);
+      return { ok: true, adoption: this.#adoptionAnswer(this.#one(`SELECT * FROM standard_body_adoptions WHERE adoption_id=?`, id)) };
+    });
+  }
+
+  #adoptionAnswer(r) {
+    return { id: r.adoption_id, standard: r.standard_id, act: r.act, body: r.body ?? null, edition: r.edition,
+             from: safeJson(r.from_json), amendments: safeJson(r.amendments_json) || [], mode: r.mode, citation: r.citation,
+             reason: r.reason, by: r.author, at: r.at };
+  }
+
+  /* R40: an adoption's start as a day, or why there is none. */
+  #adoptionFrom(r, viewer) {
+    const f = safeJson(r.from_json) || {};
+    if (f.date) return { day: f.date };
+    return this.#eventDay(f.event, f.edge, viewer);
+  }
+
+  /** R40: the edition a body's adoptions put in force on a date: each adoption from its start up to the next one's,
+   *  with the adoption it rests on and the lag between the edition's own date, where held, and the adoption's start. */
+  editionInForce({ designation = null, standard = null, body = null, date = null, viewer = null } = {}) {
+    try {
+      if (!isDate(date)) return refuseDateInvalid(date);
+      const b = str(body);
+      if (!b) return refuseFieldInvalid("body", "names the adopting body");
+      let ids;
+      if (str(standard)) ids = [str(standard)];
+      else if (str(designation))
+        ids = this.#rows(`SELECT standard_id FROM standards WHERE designation=? ORDER BY standard_id LIMIT ?`, str(designation),
+                         PAGE_MAX).map((r) => r.standard_id);
+      else return refuseNoId("editioninforce");
+      ids = ids.filter((id) => this.#row(id) && (viewer === null || this.#readable(id, viewer)));
+      const rows = ids.length ? this.#rows(`SELECT * FROM standard_body_adoptions WHERE standard_id IN (${ids.map(() => "?").join(",")})
+                                            AND body=? ORDER BY adoption_id`, ...ids, b) : [];
+      const dated = rows.map((r) => ({ r, from: this.#adoptionFrom(r, viewer) }));
+      const unread = dated.filter((d) => !d.from.day);
+      const base = { ok: true, body: b, date, designation: str(designation) || null, standard: str(standard) || null };
+      if (unread.length)
+        return { ...base, state: "undetermined", adoptions: unread.map((d) => d.r.adoption_id),
+                 why: `when ${unread.map((d) => d.r.adoption_id).join(", ")} took effect is not read: ${unread.map((d) => d.from.why).join("; ")}` };
+      const sorted = dated.sort((x, y) => (x.from.day < y.from.day ? -1 : x.from.day > y.from.day ? 1 : 0));
+      const before = sorted.filter((d) => d.from.day <= date);
+      if (!before.length)
+        return { ...base, state: "undetermined", edition: null, adoptions: [],
+                 why: `no adoption by ${b} held takes effect on or before ${date}` };
+      const lastDay = before[before.length - 1].from.day;
+      const deciding = before.filter((d) => d.from.day === lastDay);
+      if (deciding.length > 1 && new Set(deciding.map((d) => d.r.edition)).size > 1)
+        return { ...base, state: "undetermined", edition: null, adoptions: deciding.map((d) => d.r.adoption_id),
+                 why: `${deciding.map((d) => d.r.adoption_id).join(" and ")} each take effect ${lastDay}; none is preferred` };
+      const d = deciding[0];
+      const own = this.#row(d.r.standard_id);
+      const editionDate = own && own.period_from ? own.period_from : null;
+      const lag = editionDate ? Math.round((Date.parse(`${d.from.day}T00:00:00Z`) - Date.parse(`${editionDate}T00:00:00Z`)) / 86400000) : null;
+      return { ...base, state: "in_force", edition: d.r.edition, adoption: this.#adoptionAnswer(d.r),
+               lag: lag === null ? { days: null, why: "the edition's own date is not held" }
+                                 : { days: lag, edition_from: editionDate, adopted_from: d.from.day },
+               why: `${b} adopted edition ${d.r.edition} effective ${d.from.day} (${d.r.adoption_id}), and no later adoption `
+                  + `by it takes effect by ${date}` };
+    } catch {
+      return { ok: true, state: "undetermined", why: "the adoptions could not be read" };
+    }
+  }
+
+  /** R43: `impositionRecord`: by a member's act, a held law imposes the standard on a body, citing the law's passage. */
+  impositionRecord(args = {}) {
+    const a = isObj(args) ? args : {};
+    const byMachine = machineRelate(a.author);
+    if (byMachine) return byMachine;
+    const unknown = refuseFieldUnknown(a, ["standard", "body", "law", "citation", "reason", "author", "viewer"]);
+    if (unknown) return unknown;
+    const reader = a.viewer ?? str(a.author);
+    const sid = str(a.standard), law = str(a.law), body = str(a.body);
+    if (!this.#row(sid) || !this.#readable(sid, reader)) return noSuchStandard(sid || null, { id: sid || null, end: "standard" });
+    if (!this.#row(law) || !this.#readable(law, reader)) return noSuchStandard(law || null, { id: law || null, end: "law" });
+    if (!this.#entity(body, a.viewer ?? null)) return noSuchEntity(body || null, { field: "body" });
+    const citation = typeof a.citation === "string" ? a.citation.trim() : "";
+    if (!citation || !this.#texts(law).includes(citation) || !this.#heldFor(citation, a.viewer ?? null))
+      return refuseNoCitation(law, a.citation);
+    const fault = reasonFault(a.reason);
+    if (fault) return refuseReason(fault);
+    return this.record.transact(() => {
+      const at = this.#when();
+      const id = `impose-${rand(12)}`;
+      this.sql.exec(`INSERT INTO standard_impositions (imposition_id, standard_id, body, law, citation, reason, author, at)
+                     VALUES (?,?,?,?,?,?,?,?)`, id, sid, body, law, citation, a.reason, str(a.author), at);
+      return { ok: true, imposition: { id, standard: sid, body, law, citation, reason: a.reason, by: str(a.author), at } };
+    });
+  }
+
+  /** R43: a member declares a comparison a benchmark, with who, when and why; it never makes a standard bind. */
+  benchmarkDeclare(args = {}) {
+    const a = isObj(args) ? args : {};
+    const byMachine = machineRefusal(a.author);
+    if (byMachine) return byMachine;
+    const unknown = refuseFieldUnknown(a, ["standard", "body", "reason", "author", "viewer"]);
+    if (unknown) return unknown;
+    const sid = str(a.standard), body = str(a.body);
+    if (!this.#row(sid) || !this.#readable(sid, a.viewer ?? str(a.author))) return refuseNoSuchStandard(sid || null);
+    if (!this.#entity(body, a.viewer ?? null)) return noSuchEntity(body || null, { field: "body" });
+    const fault = reasonFault(a.reason);
+    if (fault) return refuseReason(fault);
+    return this.record.transact(() => {
+      const at = this.#when();
+      const id = `bench-${rand(12)}`;
+      this.sql.exec(`INSERT INTO standard_benchmarks (benchmark_id, standard_id, body, reason, author, at) VALUES (?,?,?,?,?,?)`,
+                    id, sid, body, a.reason, str(a.author), at);
+      return { ok: true, benchmark: { id, standard: sid, body, reason: a.reason, by: str(a.author), at },
+               says: "declared a benchmark: a comparison, never a finding that the body is bound" };
+    });
+  }
+
+  /** R43: whether a held standard binds a body on a date: `binds` on its issuer, an adoption, an incorporating standard
+   *  that binds the body, or an imposition, in force on the date; else a policy, standard or commitment is a labelled
+   *  `benchmark`, and a law `undetermined`; undetermined too where a date or adoption needed is. Each answer names what
+   *  it rests on. Writes nothing and never throws. */
+  bindsAt({ standard = null, body = null, date = null, viewer = null } = {}) {
+    try {
+      const sid = str(standard), b = str(body);
+      if (!sid) return refuseNoId("bindsat");
+      if (!isDate(date)) return refuseDateInvalid(date);
+      const row = this.#row(sid);
+      if (!row || (viewer !== null && !this.#readable(sid, viewer))) return refuseNoSuchStandard(sid);
+      const ent = this.#entity(b, viewer);
+      const bodyLabel = ent ? ent.label : b || "the body";
+      const answer = (state, why, rests_on) => ({ ok: true, standard: sid, body: b || null, date, state, why, rests_on,
+                                                  says: { binding: bindingWords(state, bodyLabel),
+                                                          ...this.#t35Answer(row, viewer).says } });
+      const r = this.#bindingOf(row, b, date, viewer, new Set());
+      if (r.state === "binds") return answer("binds", r.why, r.rests_on);
+      if (r.state === "undetermined") return answer("undetermined", r.why, r.rests_on);
+      if (BENCHMARK_KINDS.includes(row.kind))
+        return answer("benchmark", `nothing held puts ${sid} in force on ${bodyLabel} on ${date}: it is a benchmark, not `
+                      + "binding on the body", r.rests_on);
+      return answer("undetermined", "whether this law binds the body is not recorded", r.rests_on);
+    } catch {
+      return { ok: true, standard: str(standard), body: str(body) || null, date, state: "undetermined",
+               why: "what binds the body could not be read", rests_on: [] };
+    }
+  }
+
+  /* R43: the grounds on which `row` binds `body` on `date`: `{state: binds | none | undetermined, why, rests_on}`. */
+  #bindingOf(row, body, date, viewer, seen) {
+    const sid = row.standard_id;
+    seen.add(sid);
+    const rests = [];
+    const unsure = [];
+    const inForce = this.#versionAt(row, date, viewer);
+    if ((row.issuer_entity && row.issuer_entity === body) || (!row.issuer_entity && row.issuer === body)) {
+      rests.push({ issuer: body });
+      if (inForce.state === "in_force") return { state: "binds", why: `${body} issued it, and it is in force on ${date}`, rests_on: rests };
+      if (inForce.state === "undetermined") unsure.push(`it is ${body}'s own, and ${inForce.why}`);
+    }
+    for (const ad of this.#rows(`SELECT * FROM standard_body_adoptions WHERE standard_id=? AND body=? ORDER BY adoption_id`, sid, body)) {
+      const f = this.#adoptionFrom(ad, viewer);
+      rests.push({ adoption: ad.adoption_id });
+      if (!f.day) { unsure.push(`${ad.adoption_id}'s start is not read: ${f.why}`); continue; }
+      if (f.day <= date) return { state: "binds", why: `${body} adopted it (${ad.adoption_id}), effective ${f.day}`, rests_on: rests };
+    }
+    for (const im of this.#rows(`SELECT * FROM standard_impositions WHERE standard_id=? AND body=? ORDER BY imposition_id`, sid, body)) {
+      const law = this.#row(im.law);
+      if (!law) continue;
+      rests.push({ imposition: im.imposition_id, law: im.law });
+      const lf = this.#versionAt(law, date, viewer);
+      if (lf.state === "in_force") return { state: "binds", why: `${im.law} imposes it on ${body} and is in force on ${date}`, rests_on: rests };
+      if (lf.state === "undetermined") unsure.push(`${im.law} imposes it, and ${lf.why}`);
+    }
+    for (const inc of this.#incorporatedBy(sid, viewer)) {
+      if (seen.has(inc.from)) continue;
+      const from = this.#row(inc.from);
+      if (!from) continue;
+      const r = this.#bindingOf(from, body, date, viewer, seen);
+      rests.push({ incorporated_by: inc.from, relation: inc.id });
+      if (r.state === "binds") return { state: "binds", why: `${inc.from} incorporates it and binds ${body} (${r.why})`, rests_on: rests };
+      if (r.state === "undetermined") unsure.push(`${inc.from} incorporates it, and ${r.why}`);
+    }
+    return unsure.length ? { state: "undetermined", why: unsure.join("; "), rests_on: rests } : { state: "none", why: null, rests_on: rests };
+  }
+
+  /* R43: the adopted `incorporates` relations naming `sid` as their end (`law-relations` R9, through R11). */
+  #incorporatedBy(sid, viewer) {
+    try {
+      const r = this.#law.lawRelationsOf({ standard: sid, viewer: viewer ?? null });
+      const refs = r && Array.isArray(r.referential) ? r.referential : [];
+      return refs.filter((x) => x.type === "incorporates" && x.direction === "in" && !x.withdrawn)
+        .map((x) => ({ id: x.id, from: x.from.standard }));
+    } catch { return []; }
+  }
+
+  /* ===================================================================== *
    * PROPOSALS (R9, R10)
    * ===================================================================== */
 
@@ -922,7 +1980,9 @@ export class Standards {
     const fromProposal = [];
     const take = (k, v) => { if (a[k] == null || a[k] === "") { if (v != null) fromProposal.push(k); return v; } return a[k]; };
     const fields = { ...a, cite: take("cite", p.cite), kind: take("kind", p.kind), issuer: take("issuer", p.issuer),
-                     text: take("text", (safeJson(p.text_json) || []).length ? safeJson(p.text_json) : null) };
+                     /* R9: a proposal adopted as cited (or absent) takes no text from it: it is held without its words */
+                     text: a.held === "cited" || a.held === "absent" ? a.text
+                       : take("text", (safeJson(p.text_json) || []).length ? safeJson(p.text_json) : null) };
     const d = this.#declareRefusal(fields);
     if (d.ok === false) return d;
     const r = this.#write(d.fields, str(a.author), a.viewer ?? null, p.proposal_id);
@@ -1014,7 +2074,22 @@ function refuseFieldUnknown(a, keys) {
   return null;
 }
 
+/** R33: a family's key, composed from its source `key` and series `key` (`jurisdictions` R50, R63). Pure. */
+export function familyKey(family) {
+  const k = family && typeof family.key === "string" ? family.key.trim() : "";
+  const s = family && typeof family.series === "string" ? family.series.trim() : "";
+  return k && s ? `${k}/${s}` : null;
+}
+
+/* R18, R19, R33, R39, R40: a field not in the form it takes, named. */
+function refuseFieldInvalid(field, why) {
+  /* DEC-49 REGION is-standard-law-field */
+  return refusal("STANDARD_FIELD_INVALID", `${field} ${why}. Nothing was written.`, { field });
+  /* END DEC-49 REGION is-standard-law-field */
+}
+
 /* R23, R26, R27, R30: the refusals `./law.mjs`'s acts share with R1, R9 and R10, each minted as theirs are. */
+const refuseReason = (fault) => refuseLawReason(fault);
 function refuseLawReason(fault) {
   /* DEC-49 REGION is-standard-reason */
   return refusal("STANDARD_NO_REASON", `this act ${fault}. The reason is the member's own words on why the record holds `
@@ -1133,7 +2208,7 @@ export function standardsOps(s, url, body) {
   return {
     standarddeclare: () => s.standardDeclare({ ...b, viewer: qp("viewer") }),
     standard: () => s.standardRead({ id: qp("id"), viewer: qp("viewer") }),
-    standards: () => s.standardsIn({ at: qp("at"), kind: qp("kind"), source: qp("source"), cite: qp("cite"),
+    standards: () => s.standardsIn({ at: qp("at"), kind: qp("kind"), source: qp("source"), cite: qp("cite"), family: qp("family"),
                                      after: qp("after"), limit: qp("limit"), viewer: qp("viewer") }),
     standardinforce: () => s.inForce(qp("id"), qp("date")),
     standardpropose: () => s.standardPropose({ ...b, viewer: qp("viewer") }),
@@ -1152,6 +2227,22 @@ export function standardsOps(s, url, body) {
     stillstanding: () => s.stillStanding({ decision: qp("id"), date: qp("date"), viewer: qp("viewer") }),
     citationresolve: () => s.resolveCourtCitation({ citation: qp("citation"), lookup: qp("lookup") === "1",
                                                    viewer: qp("viewer") }),
+    /* T35-31: R35, R37, R38, R40, R43 (the ops are declared by op-declarations, T35-70) */
+    standardforce: () => (b.proposal != null ? s.forceConfirm({ ...b, viewer: qp("viewer") })
+                                             : s.forceDeclare({ ...b, viewer: qp("viewer") })),
+    standardforcepropose: () => s.forcePropose({ ...b, viewer: qp("viewer") }),
+    standardforcewithdraw: () => s.forceWithdraw({ force: b.force ?? null, reason: b.reason ?? null, author: b.author ?? null,
+                                                   viewer: qp("viewer") }),
+    forcesof: () => s.forcesOf({ standard: qp("id"), viewer: qp("viewer") }),
+    standardrelease: () => s.releaseStandard({ standard: b.standard ?? null, reason: b.reason ?? null, author: b.author ?? null,
+                                               viewer: qp("viewer") }),
+    overridesof: () => s.overridesOf({ standard: qp("id"), viewer: qp("viewer") }),
+    standardadoption: () => s.adoptionRecord({ ...b, viewer: qp("viewer") }),
+    editioninforce: () => s.editionInForce({ designation: qp("designation"), standard: qp("id"), body: qp("body"),
+                                             date: qp("date"), viewer: qp("viewer") }),
+    bindsat: () => s.bindsAt({ standard: qp("id"), body: qp("body"), date: qp("date"), viewer: qp("viewer") }),
+    standardimpose: () => s.impositionRecord({ ...b, viewer: qp("viewer") }),
+    standardbenchmark: () => s.benchmarkDeclare({ ...b, viewer: qp("viewer") }),
   };
 }
 
@@ -1187,7 +2278,9 @@ export function standardsOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     s = new Standards({ ...d, storage, record, membership, promotion,
                         content: d.content || (() => contentOf(host, { record, membership })),
-                        events: d.events || (() => eventsOf(host, { record, membership })) });
+                        events: d.events || (() => eventsOf(host, { record, membership })),
+                        entities: d.entities || (() => entitiesOf(host, { record, membership })),
+                        capture: d.capture || (() => captureOf(host, { record })) });
     instances.set(host, s);
     current = s;
     constructed++;

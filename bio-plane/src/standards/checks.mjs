@@ -110,10 +110,10 @@ export const STANDARDS_CHECKS = Object.freeze({
   },
   /* T33-31 (R18–R27; K1438, K1442, K1446, K1447, K1449): rows minted in T33, awaiting promotion's stamp (T34). */
   STANDARD_FIELD_INVALID: {
-    check: 'C-112.21', where: at("#lawFields", "is-standard-law-field"),
-    translation: 'A field that says where this standard sits in its law (its instrument, portion, the passages it '
-      + 'requires, its copy, how current the copy is, or what its period rests on) is not in the form it takes. The '
-      + 'answer names the field. Nothing was written.',
+    check: 'C-112.21', where: at("refuseFieldInvalid", "is-standard-law-field"),
+    translation: 'A field of this act (where the standard sits in its law, how much of it is held, its family, '
+      + 'designation or edition, or when an adoption took effect) is not in the form it takes. The answer names the '
+      + 'field. Nothing was written.',
   },
   STANDARD_PORTION_NOT_IN_TEXT: {
     check: 'C-112.22', where: at("#lawFields", "is-portion-in-text"),

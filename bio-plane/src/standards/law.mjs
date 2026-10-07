@@ -68,7 +68,7 @@ const reasonFault = (r) => (typeof r !== "string" || !r.trim() ? "carries no rea
 
 /* ---- the refusals several acts answer, each minted at one site (DEC-49) ---- */
 
-function machineRelate(author) {
+export function machineRelate(author) {
   /* DEC-49 REGION is-law-member */
   if (str(author) && !isMachineIdentity(str(author))) return null;
   return refusal("MACHINE_CANNOT_RELATE", "recording a law relation, court link or treatment is a named member's act; a "
@@ -83,7 +83,7 @@ function refuseRelationUnknown(type, allowed) {
   /* END DEC-49 REGION is-law-relation-type */
 }
 
-function refuseNoCitation(of, citation) {
+export function refuseNoCitation(of, citation) {
   /* DEC-49 REGION is-law-relation-cited */
   return refusal("LAW_RELATION_NO_CITATION", `the citation is a content id among the text of ${of}, the passage that makes `
                  + "this row, which you may read. Nothing was written.",

@@ -77,7 +77,7 @@ test("R19 requires lists the portion's passages that state what it requires, amo
   for (const requires of [[w.passage().contentId], [], "x", [7]])
     assert.deepEqual([codeOf(w.declare({ text: [b], requires })), w.declare({ text: [b], requires }).field], ["STANDARD_FIELD_INVALID", "requires"]);
   /* copy: the matched source's code states `official` in the test profile; a source with no code is undetermined */
-  assert.deepEqual(COPY_STATES, ["official", "codifier", "undetermined"]);
+  assert.deepEqual(COPY_STATES, ["official", "codifier", "in_force", "draft", "superseded", "production", "vendor_model", "undetermined"]);
   assert.deepEqual(r.copy, { copy: "official", source_copy: "official", declared: false });
   const cod = w.declare({ copy: "codifier" });
   assert.deepEqual([cod.copy.copy, cod.copy.source_copy, cod.copy.declared], ["codifier", "official", true]);
@@ -85,7 +85,7 @@ test("R19 requires lists the portion's passages that state what it requires, amo
   assert.equal(w.declare({ cite: "MCBC 2024-2", kind: "commitment" }).copy.copy, "undetermined", "no code: undetermined");
   assert.equal(w.declare({ cite: "Some Code § 1" }).copy.copy, "undetermined", "no match: undetermined");
   assert.equal(w.declare({ copy: "official" }).copy.says, undefined, "as the source states: nothing said");
-  assert.equal(w.declare({ copy: "photocopy" }).field, "copy");
+  assert.deepEqual([w.declare({ copy: "photocopy" }).reason, w.declare({ copy: "photocopy" }).field], ["COPY_UNKNOWN", "copy"], "R36");
   /* current_through */
   const ct = w.declare({ copy: "codifier", current_through: { date: "2025-06-30", basis: banner } });
   assert.deepEqual(ct.current_through, { date: "2025-06-30", basis: banner });
