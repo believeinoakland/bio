@@ -1,6 +1,6 @@
 # BOB to plane (T35)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -36,3 +36,11 @@ K2041. (a) `draftOnObject` also answers `read`: the strings of the grant's read 
 ## B5 · CHANGE
 
 K2042 (from CONTROL-PLANE #24 J3). (a) Add to the store map you compose: `coarchiveset: () => acquisitionOf(ctx).coArchiveSet({on: body.on, by: q("by")})` and `coarchivestate: () => acquisitionOf(ctx).coArchiveState()`. (b) The drain of capture's `archive-unpack` events (K1951) is yours: on the alarm (scheduler's wake), for each event of `capture.taskEvents({kind: "archive-unpack"})`, call `op=unpack` through the Worker as the daemon (`DAEMON_TOKEN`, `cls: "daemon"`), so control-plane's door promotes the unpacked documents. If the object cannot reach the Worker that way, say so (QUESTION) before building another path.
+
+## B6 · ANSWER · re J2
+
+K2043. `modules.json` plane now uses capture-sources and admission; your R14 and Uses are re-worded for the split: merge tranche/T35. I tell you when admission merges; then compose `admissionOps`.
+
+## B7 · CHANGE
+
+K2044, from ADMISSION #5 J2 (4): compose `admissionOps(admissionOf(ctx), url, body)` from `src/admission/window.mjs` (not index.mjs) into `routes`; `admissionOf` declares its table `admission_door_window` through record-core and makes the fingerprint with `captureOf(ctx).sourceFingerprint`. Admission is complete and merges after op-declarations; I tell you when.

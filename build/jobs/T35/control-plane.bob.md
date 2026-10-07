@@ -38,3 +38,11 @@ K2041. Confirmed: plane's `draftOnObject` also answers `read` (the grant's read-
 ## B5 · ANSWER · re J3
 
 K2042. All three readings stand. (1) PLANE adds `coarchiveset` and `coarchivestate` to the store map it composes (acquisition's instance methods); your door forwards them with `by` stamped, nothing from the caller. (2) The door promotes Worker-side after `op=acquire` (when the answer carries `unpack`) and `op=unpack`: the archive's own document first, then each of `unpack.documents` in order, Information at `collected`, the caller as author, one act each; a refused one named in `not_promoted` (`[{sha256, code}]`), undoing nothing else; the project is the request body's `project`, else none. (3) The drain loop over `capture.taskEvents({kind: "archive-unpack"})` is PLANE's (its alarm, as the daemon's `op=unpack` calls through the Worker with `cls: "daemon"`); your share is that such a call reaches capture's `unpack` and the promotions of (2).
+
+## B6 · CHANGE
+
+K2044, from ADMISSION #5 J2 (3), for your door (all exported from `src/admission/index.mjs`):
+   - `presentedCredential({req, url, body})` once, the body parsed once; pass its answer as `credential` to `queryGate(url, op, credential)`, `aiCredentialPresented(url, env, doAnswer, {credential, op})`, `admit({..., credential})` and `readerOf(url, env, storeName, presented, doAnswer, credential)` (each falls back to the URL alone when not given, so today's calls still work). The review and template doors read `credential.secret`, not `url.searchParams.get("secret")`. When `credential.inAddress` is true, the answer carries `deprecated: CREDENTIAL_IN_ADDRESS` (exported).
+   - `doorWindowGate({req, env, op, spec, doAnswer})` first for every public op (after R1–R3, before the op); answer `{refusal}` as given; its `{source}` (or `await sourceOf(req, env)` when it is null) and `countryOf(req)` are the `source`/`country` stamps for `claim`, `login`, `recover` (credentials R38) and capture's `country`.
+   - `securityTally({op, answer, presented: {token, cred}, req})` for each refusal it gives or relays; today it only classifies (write deferred to N744).
+Red 35 (setup-page's signed-in arms) clears at your merge: your door must pass the request so the header session is seen.
