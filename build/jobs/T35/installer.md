@@ -14,7 +14,7 @@
 
 **Deferred:** none. R13 and R24 stay carried (plan rule 2, F11; MULTI-INSTANCE-ISOLATION).
 
-**Found in other modules and process (REPORT J2)**
+**Found in other modules and process (REPORT J1)**
 1. `newgroup/dist/newgroup.bundled.mjs` (generated, `build/manifest.md` §14) is stale from this change. `newgroup-bundle-fresh` (C) fails, (A) and (B) pass. Not edited by hand. BOB regenerates it at L11's close (`cd newgroup && npm run build`).
 2. Deploy order: the verify step now sends the probe credential only in the header. The plane reads it there only from admission T35-71 (R20); today's `bio-plane/src/admission/index.mjs` reads only `?token=` (:180, :431, :440, :552). The installer must not be deployed until `newgroup/src/release.mjs` embeds a release carrying admission R20 (0.81.0 or later, held by K1922). Deployed over an older embed, the verify step would read every new install as "not woken up yet". Nothing is deployed in T35, so this is a note for the cut.
 3. The requirements markers `*(not yet met: T35)*` on installer R15, R41 and R42 can be cleared at the merge (BOB's file).
