@@ -17,6 +17,6 @@
 - `format`: 130 modules, 0 failures.
 - `architecture … ratification`: 0 failures.
 - `coverage … ratification`: 47 of 47 live ids named, 0 failures.
-- `ownership … ratification tranche/T35`: see the J-entry; 0 failures.
+- `ownership … ratification tranche/T35`: 9 files, 0 failures.
 
 Size (session_01NxeehqzSPE3JC7CHa54KEs): test runs 6, module lines 3530
