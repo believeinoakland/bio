@@ -646,3 +646,13 @@ B80 and B81 read. K1949 folded into DEC-169 (its `amended:` line) and drawn:
 - Held: the drawn case is now an outside engine's finding (ClamAV and Scanii's Sophos engine both found it), released only by two members' reasons; the screen says a ClamAV-only finding is released by a second, different engine.
 - Security tools: "When it runs: only when a member asks for a deeper check; a tool on your organization's own servers may also check every file"; a tool whose vendor does not state its sample sharing is not offered.
 Folded: BIO_Interaction_Constructs_v0_1.md §R; layouts page. On PR #13.
+
+## U102 · NOTICE · 2026-10-07 · session_01NWPmrrYZbbF8Wkrvp5Y2vx · primary
+DEC-172 (Bob, S14, on his comments on the layouts page: "I agree that a group should be able to keep their information away from AIs. But in those situations when administrators have asked for that, that should be explained to members."). This changes K1757's wording of K1755 (setup's four-way choice):
+- A member may always connect their own Claude subscription or API key, serving only them, whatever the group pays for.
+- The group's settings are two separate choices: whether the group pays (its API key, nothing preselected), and "keep our material away from AI", off by default, turned on by an administrator only with a reason.
+- While keep-away is on, no assistant may be used in the group, the group's key or a member's own; every member sees on Settings › The assistant who turned it on, when, and the reason in the administrator's words.
+- "The group's key only" no longer exists; a group that does not pay lets members bring their own.
+Also on PR #13 since U101, from Bob's comments: the connect screen is "The assistant" (DEC-171, U100); its group-key notice states the member's daily limit and what happens at it, and points to connecting their own account; "Your ties" says why members are asked and who sees the list.
+Folded: BIO_Interaction_Constructs_v0_1.md §R; setup, Members, Settings › The assistant, the setup wizard's step (library, as approved by DEC-148, reworded for this ruling). On PR #13.
+Owed (DEC-172's owed: line): instance-setup R59 restated (pays / keep-away, separately); the act behind `owed:aikeepaway DEC-172` (reason required, who and when kept); account resolution refusing every account while keep-away is on, by a named refusal carrying the reason; a member's own account always accepted otherwise; the reason readable by every member.
