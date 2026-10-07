@@ -8,7 +8,8 @@
  *                                                         `hunch`, answered only inside the inquiry holding them
  *   check (R5, R6)                                        registered with `promotion` (its R39): no leg rests on a
  *                                                         hypothesis or on a derived connection carrying a lead
- *   noteWrite, notesOf, noteTurn (R11–R15)                a member's own notes, answered to their author alone
+ *   noteWrite, noteRevise, notesOf, noteTurn, noteDelete  a member's own notes, answered to their author alone;
+ *   (R11–R15)                                             revised in place and deleted for good (DEC-144)
  *   hypothesesOps (R7)                                    the route arms
  *
  * SHAPE (K61, K1563 (1)). `hypothesesOf(host, deps)` answers the one instance per host; making it creates and declares
@@ -23,7 +24,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { BOUNDS, HUNCH_LABEL, defaultRegistry, isRecordId } from "../connection-grammar/index.mjs";
 import { exploreOf } from "../explore/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
-import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES } from "./schema.mjs";
+import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTES_ADDED_COLUMNS } from "./schema.mjs";
 import { HYPOTHESES_CHECKS } from "./checks.mjs";
 
 export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, HYPOTHESES_CHECKS };
@@ -136,6 +137,11 @@ export class Hypotheses {
   migrate() {
     const bare = (HYPOTHESES_SCHEMA + NOTES_SCHEMA).split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
+    /* A copy whose notes table predates a column gains it here (`revised`, T35). */
+    for (const [table, column, decl] of NOTES_ADDED_COLUMNS) {
+      const have = this.#rows(`PRAGMA table_info(${table})`).map((c) => c.name);
+      if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+    }
     if (this.#declared) return { ok: true, already: true };
     const base = { purge: "clear", expunge: "none", export: "yes", sight: "bundle", derive: "stored", version_chain: false,
                    keys: ["bundle_id"] };
@@ -343,16 +349,26 @@ export class Hypotheses {
     if (!Number.isSafeInteger(n) || n < 1) return null;
     return this.#one(`SELECT note_id, member, text, at FROM member_notes WHERE note_id = ? AND member = ?`, n, member);
   }
+  static #noSuchNote(note) {
+    return refuse("NO_SUCH_NOTE", "no note of yours is held by that number", { note: typeof note === "number" || typeof note === "string" ? note : null });
+  }
+
+  /* R11's text checks, shared by `noteWrite` and `noteRevise`: a refusal, or null. */
+  static #badText(text) {
+    if (!filled(text)) return refuse("NOTE_NO_TEXT", "a note holds the member's words, and this one holds none");
+    const bytes = UTF8.encode(text).length;
+    if (bytes > NOTE_MAX_BYTES)
+      return refuse("NOTE_TOO_LONG", `a note holds at most ${NOTE_MAX_BYTES} bytes, and this one is ${bytes}`, { max_bytes: NOTE_MAX_BYTES, bytes });
+    return null;
+  }
 
   /** R11: `noteWrite({text, by})` keeps one note in the member's words, refused (never cut) past its bound; the first
    *  note a member keeps while the group tells members what a court can reach answers the court statement, once. */
   noteWrite({ text = null, by = null } = {}) {
     const member = this.#noteMember(by);
     if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a member keeps a note of their own");
-    if (!filled(text)) return refuse("NOTE_NO_TEXT", "a note holds the member's words, and this one holds none");
-    const bytes = UTF8.encode(text).length;
-    if (bytes > NOTE_MAX_BYTES)
-      return refuse("NOTE_TOO_LONG", `a note holds at most ${NOTE_MAX_BYTES} bytes, and this one is ${bytes}`, { max_bytes: NOTE_MAX_BYTES, bytes });
+    const bad = Hypotheses.#badText(text);
+    if (bad) return bad;
     let tell = false;
     try { tell = this.#membership.courtNotice().choice === "tell"; } catch { tell = false; }
     const at = this.#now();
@@ -368,6 +384,38 @@ export class Hypotheses {
     });
   }
 
+  /** R11 (T35, DEC-144): `noteRevise({note, text, by})` replaces, in place, the text of one note `by` kept; the note keeps
+   *  its number and its turns, and its earlier text is kept nowhere (R14, R15). Never answers the court statement. */
+  noteRevise({ note = null, text = null, by = null } = {}) {
+    const member = this.#noteMember(by);
+    if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author revises it");
+    const n = this.#ownNote(note, member);
+    if (!n) return Hypotheses.#noSuchNote(note);
+    const bad = Hypotheses.#badText(text);
+    if (bad) return bad;
+    const at = this.#now();
+    const noteId = Number(n.note_id);
+    return this.#record.transact(() => {
+      this.#sql.exec(`UPDATE member_notes SET text = ?, revised = ? WHERE note_id = ? AND member = ?`, text, at, noteId, member);
+      return { ok: true, note: noteId, at };
+    });
+  }
+
+  /** R13 (T35, DEC-144): `noteDelete({note, by})` deletes one note `by` kept, for good: its row and its turns in one act,
+   *  nothing marking that it existed; what a turn made stays its owner's, unchanged. */
+  noteDelete({ note = null, by = null } = {}) {
+    const member = this.#noteMember(by);
+    if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author deletes it");
+    const n = this.#ownNote(note, member);
+    if (!n) return Hypotheses.#noSuchNote(note);
+    const noteId = Number(n.note_id);
+    return this.#record.transact(() => {
+      this.#sql.exec(`DELETE FROM member_note_turns WHERE note_id = ? AND member = ?`, noteId, member);
+      this.#sql.exec(`DELETE FROM member_notes WHERE note_id = ? AND member = ?`, noteId, member);
+      return { ok: true, note: noteId, deleted: true };
+    });
+  }
+
   /** R12: `notesOf({viewer, after?, limit?})`: the viewer's own notes, newest first, each with its turns; any other
    *  viewer, and none, reads exactly as a member with no notes. */
   notesOf({ viewer = null, after = null, limit = undefined } = {}) {
@@ -377,10 +425,10 @@ export class Hypotheses {
     if (!member) return { ok: true, notes: [], limit: lim, truncated: false, next: null };
     const from = after === null || after === undefined || after === "" ? null : Number(after);
     const cursor = Number.isSafeInteger(from) && from > 0 ? from : null;
-    const rows = this.#rows(`SELECT note_id, text, at FROM member_notes WHERE member = ? ${cursor ? "AND note_id < ?" : ""}
+    const rows = this.#rows(`SELECT note_id, text, at, revised FROM member_notes WHERE member = ? ${cursor ? "AND note_id < ?" : ""}
                              ORDER BY note_id DESC LIMIT ?`, ...(cursor ? [member, cursor, lim + 1] : [member, lim + 1]));
     const page = rows.slice(0, lim);
-    const notes = page.map((r) => ({ note: Number(r.note_id), text: r.text, at: r.at,
+    const notes = page.map((r) => ({ note: Number(r.note_id), text: r.text, at: r.at, revised: r.revised ?? null,
       turned: this.#rows(`SELECT turned_into, made_id, at FROM member_note_turns WHERE note_id = ? AND member = ? ORDER BY seq`, r.note_id, member)
         .map((t) => ({ into: t.turned_into, id: t.made_id, at: t.at })) }));
     const truncated = rows.length > lim;
@@ -390,12 +438,12 @@ export class Hypotheses {
   /** R13: `noteTurn({note, into, by, hunch?, made?})` records that a note became an observation, a hunch or a question,
    *  by its author's own act: a hunch is held here (R1), a note past R1's statement bound refused, never cut (K1807);
    *  an observation or a question is made by its owner's act and named in `made`. The note itself is unchanged and
-   *  stays its author's alone. */
+   *  stays its author's alone; a turn never deletes it. */
   noteTurn({ note = null, into = null, by = null, hunch = null, made = null } = {}) {
     const member = this.#noteMember(by);
     if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author turns it");
     const n = this.#ownNote(note, member);
-    if (!n) return refuse("NO_SUCH_NOTE", "no note of yours is held by that number", { note: typeof note === "number" || typeof note === "string" ? note : null });
+    if (!n) return Hypotheses.#noSuchNote(note);
     if (!NOTE_TURNS.includes(into)) return refuse("NOTE_TURN_UNKNOWN", `a note becomes one of ${NOTE_TURNS.join(", ")}`, { turns: [...NOTE_TURNS] });
     const noteId = Number(n.note_id);
     const append = (id) => {
@@ -570,8 +618,8 @@ function stringsIn(v, out = []) {
 
 /* ---- the ops map (R7) ---- */
 
-/** R7: the route arms, keyed by op name, each a function of no arguments: the hypotheses' four and, since T34, the
- *  notes' three. An act's arguments come from the body, whose `by` is the control plane's stamp; a read's from `url`'s
+/** R7: the route arms, keyed by op name, each a function of no arguments: the hypotheses' four and the notes' five
+ *  (three since T34; `noterevise`, `notedelete` since T35, DEC-144). An act's arguments come from the body, whose `by` is the control plane's stamp; a read's from `url`'s
  *  query, the `viewer` stamp among them, never the body. */
 export function hypothesesOps(hypotheses, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -585,5 +633,7 @@ export function hypothesesOps(hypotheses, url, body) {
     notewrite: () => hypotheses.noteWrite(b),
     notes: () => hypotheses.notesOf({ viewer: q("viewer"), after: q("after"), limit: q("limit") ?? undefined }),
     noteturn: () => hypotheses.noteTurn(b),
+    noterevise: () => hypotheses.noteRevise(b),
+    notedelete: () => hypotheses.noteDelete(b),
   };
 }
