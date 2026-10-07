@@ -43,6 +43,9 @@ N680 (the security package, K1831), N688 (ZIP archives, K1844, K1852), N686 (the
    11. agent-runner R11 "no place is named" (the GHCR address; K1905), until T35-49.
    12. installer `newgroup/test/requirements.test.mjs`:329 R11 "foreign-plane" (K1905), until T35-75.
    13. The format check's `test-support: paths entry bio-plane/test/make-zip.mjs names no file` (K1911), until T35-3 creates it.
+   14. action-clocks `factreader.test.mjs`:64, :112 (civil-time's new wording; K1917), until T35-62.
+   15. fleetbundles' STALE BUNDLE arms (the plane bundle embeds `signpage.mjs`, `calendar.mjs`, `tokens.mjs`), until L1's close regenerates (§14).
+   16. The format check's bundler paths `release-advisories.mjs`, `third-party.json` (K1917), until T35-6 creates them.
 
 ## BOB's review (K1899)
 
@@ -161,7 +164,7 @@ Each line is one job (P8): every T35 entry for that module. Fields: module · (N
 ### L9
 
 - **T35-61 · conformance** · (N651, with N659's words) refuses a nonconforming determination or comparison against a standard that does not bind the body; comparison rows for any actor's act; policy against practice with its denominator; the determination still judges an office's duty after publication (K102) · K1723, K1740 · req: its actor and new Rs (POLICIES L4, STANDARDS L4), BOB's wording · depends T35-31, T35-38.
-- **T35-62 · action-clocks** · (N689) R11 also lists the entries a live deadline's `closures` (and `observed.closures`) reads, at their `list=<name>` paths · K1847 · req: R11 (a clarification), BOB's wording · depends —.
+- **T35-62 · action-clocks** · (K1917) `factreader.test.mjs`:64 and :112 follow civil-time's DEC-149 wording ("your group's Civicsmith", T35-2), clearing red 14. (N689) R11 also lists the entries a live deadline's `closures` (and `observed.closures`) reads, at their `list=<name>` paths · K1847 · req: R11 (a clarification), BOB's wording · depends —.
 - **T35-63 · filing-templates** · (N702) R25 resolves a template by name as well as by id, so the library's `@records-request`, `@communication` drafts resolve · K1869 · req: a new R, BOB's wording · depends —.
 - **T35-64 · filings** · (N653) R8's counsel packet carries a copyrighted or paywalled standard as its edition, citation, access and the passages the finding relies on, never whole · K1739, K1742 · req: R8, BOB's wording · depends T35-31.
 
