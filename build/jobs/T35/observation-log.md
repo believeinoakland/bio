@@ -20,3 +20,7 @@ No check row's translation moved, so nothing awaits stamp. Rows already written 
 **Ran.** `node --test bio-plane/test/m/observation-log/`: tests 67, pass 67, fail 0. Layer tests: none named in `build/manifest.md`. No provided service changed (served wording only); as a check, the tests of the modules that read these vocabularies (extraction, reading-pipeline, capture-requests, retrieval, queue, machinery-producers, queue-producers, link-sweep, and two system suites; 24 files): tests 207, pass 207, fail 0. Checks (civicos-process): `format.mjs`: 130 modules, 129 requirements files; 2 failures, both accepted red 24 (`law-relations`' paths and tests entries, until T35-78). `architecture.mjs … observation-log`: 15 product files, 58 relative imports; 0 failures. `coverage.mjs … observation-log`: 36 of 36 live requirement ids named by a test; 0 failures. `ownership.mjs … observation-log tranche/T35`: 0 failures.
 
 Size (session_01A9EYJuESL7uTGS8gLgUrJf): test runs 4, module lines 3235
+
+## J1 · REPORT
+
+Stale artifacts (record, Completion): R36's rewording makes the plane bundle bio-plane/dist/bio-plane.bundled.mjs (:66472, :66677, :66939) and agent-worker's bundle agent-worker/dist/agent-worker.bundled.mjs (:1547, render-deferred, through run-rules) stale; neither is mine to regenerate (§14). No other module's test pins the four sentences.
