@@ -28,3 +28,7 @@ My best reading, which I am applying now: re-point those three too, each a POST 
 - `format`: 133 modules, 0 failures. `architecture`: 0 failures. `coverage`: 0 of 0 live ids (legacy, no requirements file), 0 failures. `ownership` against `tranche/T35`: 0 failures (re-run after the commit below).
 
 Size (session_01SJohZ5PQ7yKQBnZCaZeVfS): test runs 13, module lines 27415
+
+## J2 · COMPLETE
+
+T35-74 applied (F1, K1874; K2040). app.html sends the session as Authorization: Bearer (authHeaders(): rec, recPost, both op=capture reads) and the review door POSTs the grant's secret in the JSON body; the API notes say so. New suite credential-in-header.test.mjs, 15/0 (negative control 7 red). The suites' fixture calls and wire recorders are re-pointed the same way. Until admission, control-plane (R59) and plane merge, five suites that drive the real plane through the UI are red on this branch: group-identity-surface, group-surface, meaning-arms, several-cases-choice, review-copy. Against a stand-in plane that reads the header (in a throwaway worktree, never committed) the runner is 28 PASS, and only red 3 fails, with the same assertions as at baseline. I merge tranche/T35 and re-run when you say so. Deferred: check-mock-envelope's 2 failures (present at baseline). Checks: format, architecture, coverage, ownership 0 failures. Details are in my record.
