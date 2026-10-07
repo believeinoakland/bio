@@ -45,3 +45,11 @@ Three readings I am building on; I carry on with them unless you answer otherwis
 1. **R9's `edition` and R15's "columns unchanged".** R9 records and reads back the `edition` of an `incorporates` relation; no column of the five tables holds it. My reading: `law_relations` gains one nullable column, `edition`, added at construction where absent (`ALTER TABLE … ADD COLUMN`, never filled for an earlier row), so a store created before the split still needs no caller migration (R16). Every other name and column is unchanged. An `edition` given on a relation that is not `incorporates` is refused `LAW_RELATION_NO_EDITION` (C-112.53; its translation says only an incorporation carries one), rather than silently dropped.
 2. **R8.** `COURT_LINKS` becomes `interprets, applies, holds_invalid, requires`, and a link's target kinds `statute, regulation, ordinance, policy`, independently (any link type to any of the four). `CONNECTION_KINDS` gains `court_requires`, word "requires". C-112.29's translation is re-worded to name a policy among the targets (awaiting stamp).
 3. **K1961's "`recogniseCitations` the seam's default".** I read it as `standards`' constructor default (it already passes `recognise = recogniseCitations`), so this module drops the unused import and R13 requires `recognise` of the host, as R13 words it. The `id-spaces` edge stays in `modules.json` (the host's `recognise` is its reading).
+
+## J2 · COMPLETE
+
+T35-78 applied: `bio-plane/src/law-relations/` (index, checks, schema), a copy of `standards/law.mjs` over the R13 host contract; the nine C-112 rows and C-112.53 (R9); the five tables declared under `law-relations` (R9's nullable `edition` added, K1967); R8, R9 and R19 applied.
+
+Tests 25/25 (three runs); format, architecture, ownership 0 failures; coverage 20/20. Outside my module only the accepted reds: row census (red 2; my ten rows declared awaiting stamp in the record) and control-plane totality R22 (red 26).
+
+For standards' job (T35-31): add `idsAtKey`, `idsOfKind`, `idsCovering` to its host, and drop the five tables from its own schema and declaration before constructing `LawRecords` (else `TABLE_DECLARED`). No generated artifact made stale. Ready to merge first in L5. Record: `build/jobs/T35/law-relations.md`.
