@@ -11,8 +11,11 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash, generateKeyPairSync } from "node:crypto";
 import { RECORD_SCHEMA, recordOf } from "../../../src/record-core/index.mjs";
 import { attestationOf } from "../../../src/attestation/index.mjs";
-import { acquire, archiveLookup } from "../../../src/acquisition/index.mjs";
+import { acquire, archiveLookup, acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { acceptDatetime } from "../../../src/capture-sources/memento.mjs";
+import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
+import { EARNED_CAPTURE_CEILING } from "../../../src/record-grammar/index.mjs";
+import { ARCHIVE_CAPTURE_GRADE } from "../../../src/provenance/index.mjs";
 
 export const sha = (b) => createHash("sha256").update(typeof b === "string" ? Buffer.from(b) : Buffer.from(b)).digest("hex");
 export const H = (hex) => hex.padEnd(64, "0").slice(0, 64);
@@ -64,15 +67,50 @@ export function governor({ refuse = [], held = [] } = {}) {
   };
 }
 
-/* provenance's R5 and R13 as the store reaches them (`registerHolds` is also what attestation's `attest` asks, R1). */
-export function provenance({ registered = [], acquired = [] } = {}) {
+/* provenance's R4–R7, R13, R24–R26 and R59 as the store reaches them (`registerHolds` is also what attestation's `attest`
+   asks, R1). With `sql`, each receipt is also written to `captured_locators` (R48's read contract, which acquisition R39
+   reads for an archive's document address). `homes` maps a capture to its home bundle (R4); `named` maps a capture to the
+   parts its home's document names (R6). `captureGrade` answers as R24, R25, R26 and R59 state for the vias recorded. */
+export function provenance({ registered = [], acquired = [], sql = null, homes = {}, named = {} } = {}) {
   const receipts = [], holds = [];
-  return {
-    receipts, holds,
-    recordReceipt(r) { receipts.push(r); return { recorded: true }; },
-    registerHolds({ sha: s }) { holds.push(s); return { ok: true, sha: s, asked: true, registered: registered.includes(s),
-      acquired: acquired.includes(s) || receipts.some((r) => r.captureSha === s) }; },
+  const vias = (s) => [...new Set(receipts.filter((r) => r.captureSha === s).map((r) => r.via || "direct"))];
+  const p = {
+    receipts, holds, homes, named,
+    recordReceipt(r) {
+      receipts.push(r);
+      if (sql && r.addressNorm && r.captureSha)
+        sql.exec(`INSERT INTO captured_locators (address_norm, address, capture_sha, via, retrieval_locator, first_retrieved, last_retrieved)
+                  VALUES (?,?,?,?,?,?,?) ON CONFLICT DO UPDATE SET observations=observations+1, last_retrieved=excluded.last_retrieved`,
+                 r.addressNorm, r.address ?? r.addressNorm, r.captureSha, r.via || "direct", r.retrievalLocator ?? null, r.retrieved, r.retrieved);
+      return { recorded: true };
+    },
+    registerHolds({ sha: s, bundle = null }) { holds.push(s); return { ok: true, sha: s, asked: true, registered: registered.includes(s),
+      acquired: acquired.includes(s) || receipts.some((r) => r.captureSha === s),
+      ...(bundle ? { parts: named[s] ? { state: "named", parts: named[s] } : { state: "none" } } : {}) }; },
+    homeOf(s) { return homes[s] ? { bundleId: homes[s], path: "data/x", encoding: "binary", bytes: 0, registered: "T", authored: false } : null; },
+    captureGrade(s, depth = 0) {
+      const v = vias(s);
+      if (v.includes("direct")) return { grade: EARNED_CAPTURE_CEILING, route: "direct", determined: true, basis: "measured" };
+      if (v.includes("archive.org")) return { grade: ARCHIVE_CAPTURE_GRADE, route: "archive", determined: true, basis: "measured" };
+      if (v.includes("unpacked")) {
+        const r = receipts.find((x) => x.captureSha === s && x.via === "unpacked");
+        const m = /^zip:([0-9a-f]{64})!(\d+)$/.exec(r.retrievalLocator || "");
+        if (!m || depth >= 3) return { grade: null, route: "unpacked", determined: false, basis: "CAPTURE_UNPACKED_UNRESOLVED" };
+        const a = p.captureGrade(m[1], depth + 1);
+        return { ...a, route: "unpacked", basis: "CAPTURE_UNPACKED_FROM_ARCHIVE",
+                 archive: { sha256: a.archive ? a.archive.sha256 : m[1], through: [...(a.archive ? a.archive.through : []), Number(m[2])],
+                            route: a.archive ? a.archive.route : a.route, basis: a.archive ? a.archive.basis : a.basis } };
+      }
+      if (v.includes("doorbell")) return { grade: null, route: "doorbell", determined: false, basis: "CAPTURE_RECEIVED_NOT_FETCHED" };
+      return { grade: null, route: "unrecorded", determined: false, basis: "CAPTURE_ROUTE_UNRECORDED" };
+    },
   };
+  return p;
+}
+
+/* membership's R64 as acquisition R43 reaches it: the administrators named. */
+export function membership({ admins = ["boss"] } = {}) {
+  return { admins, isAdministrator: (id) => admins.includes(id) };
 }
 
 /** A fresh Ed25519 private key, PKCS#8, base64: what an operator binds as the instance's secret (attestation R4). */
@@ -171,18 +209,24 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
 /* A fresh world: record-core over a fresh store, an evidence bucket, the governor, provenance, attestation's real
    instance (its instance key `signingKey`, a fresh one unless a test binds none with `null`) and the capture store
    carrying it as `attestation`, as capture R73 hands it in. */
-export function world({ env = {}, gov = {}, provOpts = {}, prov = undefined, failures = 3, evidence = true, signingKey = pkcs8() } = {}) {
+export function world({ env = {}, gov = {}, provOpts = {}, prov = undefined, failures = 3, evidence = true, signingKey = pkcs8(),
+                        admins = ["boss"], acquisition = true } = {}) {
   const s = storage();
   const host = { storage: s };
   const b = bucket();
   const core = recordOf(host, { evidence: evidence ? b : null, evidencePrefix: "bio/captures/" });
   core.migrate();
+  for (const t of PROVENANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) s.db.exec(t);
   const g = governor(gov);
-  const p = prov === undefined ? provenance(provOpts) : prov;
+  const p = prov === undefined ? provenance({ sql: s.sql, ...provOpts }) : prov;
   const att = attestationOf(host, { record: core, provenance: p, signingKey, instanceName: "inst" });
   const store = captureStore({ core, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9", ...env }, gov: g, prov: p, failures });
   store.attestation = att;
-  return { s, b, core, gov: g, prov: p, att, store, rows: (q, ...a) => s.sql.exec(q, ...a),
+  /* acquisition's own instance over the same storage (R38–R41, R43), handed in as `store.acquisition` (capture R73's form) */
+  const mem = membership({ admins });
+  const acq = acquisition ? acquisitionOf(host, { record: core, provenance: p, membership: mem }) : null;
+  if (acq) store.acquisition = acq;
+  return { s, b, core, gov: g, prov: p, att, store, acq, mem, host, rows: (q, ...a) => s.sql.exec(q, ...a),
            signed: () => s.sql.exec("SELECT * FROM signed_receipts"),
            held: (digest) => b.held.has(`bio/captures/${digest}`), bytesOf: (digest) => b.held.get(`bio/captures/${digest}`) };
 }

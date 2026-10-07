@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, text, rendererEnv } from "./fixture.mjs";
 import { readFileSync, readdirSync } from "node:fs";
-import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, CIVICSMITH_CONTACT_URL,
+import { ACQUISITION_CHECKS, CAPTURE_REQUEST_ARM_CHECKS, DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ARCHIVE_CHECKS, CIVICSMITH_CONTACT_URL,
          civicsmithUserAgent, firstHopWho, userAgent, evidenceStorageAbsent } from "../../../src/acquisition/index.mjs";
 import * as acquisition from "../../../src/acquisition/index.mjs";
 import * as checksTable from "../../../src/acquisition/checks.mjs";
@@ -18,27 +18,39 @@ const EXPECTED = {
   DRIVE_EXPORT_IS_THE_SHELL: "C-48.5", DRIVE_EXPORT_UNREACHABLE: "C-48.6", DRIVE_EXPORT_BYTES_ARE_THE_SHELL: "C-48.7",
   EVIDENCE_STORAGE_NOT_CONFIGURED: "C-68.1",
   SWEEP_SCOPE_MISSING: "C-128.1", SWEEP_REDIRECT_OUT_OF_SCOPE: "C-128.2",
+  /* C-137 (T35, N688, F16, K1888): driven by their own refusals in unpack.test.mjs, own-host.test.mjs, co-archive.test.mjs */
+  ARCHIVE_NOT_HELD: "C-137.1", ARCHIVE_UNREADABLE: "C-137.2", ARCHIVE_AMBIGUOUS: "C-137.3", UNPACK_NOT_PERMITTED: "C-137.4",
+  MEMBER_ENCRYPTED: "C-137.5", MEMBER_METHOD_UNSUPPORTED: "C-137.6", MEMBER_AMBIGUOUS: "C-137.7", MEMBER_CORRUPT: "C-137.8",
+  MEMBER_MAX: "C-137.9", ARCHIVE_RATIO_MAX: "C-137.10", ARCHIVE_ENTRIES_MAX: "C-137.11", ARCHIVE_TOTAL_MAX: "C-137.12",
+  ARCHIVE_DEPTH_MAX: "C-137.13", ARCHIVE_TREE_TOTAL_MAX: "C-137.14", ARCHIVE_TREE_ENTRIES_MAX: "C-137.15",
+  UNPACK_DAILY_BYTES: "C-137.16", UNPACK_DAILY_ENTRIES: "C-137.17", OWN_HOST_REFUSED: "C-137.18", CO_ARCHIVE_SETTING_INVALID: "C-137.19",
 };
 
-test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1 and R31's C-128.1–C-128.2, each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
+test("R29 R31: this module's table holds exactly C-48.1–C-48.7, C-83.1–C-83.8, C-28.13, C-68.1, R31's C-128.1–C-128.2 and T35's C-137.1–C-137.19, each with its code, number, a translation and a where naming this module's site (C-68.1's its one raiser's, K850)", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(ACQUISITION_CHECKS).map(([k, v]) => [k, v.check])), EXPECTED);
   assert.deepEqual(Object.keys(DRIVE_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("DRIVE_")).sort(), "C-48.8 and C-48.9 are monitoring's");
   assert.deepEqual(Object.keys(RENDER_CAPTURE_CHECKS).sort(), Object.keys(EXPECTED).filter((k) => k.startsWith("RENDER_")).sort());
   assert.deepEqual(Object.keys(CAPTURE_REQUEST_ARM_CHECKS), ["CAPTURE_NOT_DRAINING"], "the rest of C-28 is capture-requests'");
   assert.deepEqual(Object.keys(INSTALLATION_CHECKS), ["EVIDENCE_STORAGE_NOT_CONFIGURED"], "the rest of C-68 is control-plane's and publication's");
   assert.deepEqual(Object.keys(SWEEP_SCOPE_CHECKS), ["SWEEP_SCOPE_MISSING", "SWEEP_REDIRECT_OUT_OF_SCOPE"], "R31's two rows");
+  assert.deepEqual(Object.keys(ARCHIVE_CHECKS), Object.keys(EXPECTED).filter((k) => EXPECTED[k].startsWith("C-137.")), "C-137, in order");
   for (const [code, row] of Object.entries(ACQUISITION_CHECKS)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, code);
-    assert.match(row.where, /^src\/acquisition\/index\.mjs (acquire|evidenceStorageAbsent) > is-[a-z-]+/, code);
+    assert.match(row.where, /^src\/acquisition\/(index|unpack)\.mjs (acquire|evidenceStorageAbsent|unpack|coArchiveSet) > is-[a-z-]+/, code);
     assert.ok(Object.isFrozen(row), `${code} is frozen`);
     assert.ok(!/oakland|alameda/i.test(row.translation), `${code}: R30, no place in outward text`);
   }
-  assert.ok(Object.isFrozen(ACQUISITION_CHECKS) && Object.isFrozen(DRIVE_CAPTURE_CHECKS) && Object.isFrozen(RENDER_CAPTURE_CHECKS) && Object.isFrozen(INSTALLATION_CHECKS) && Object.isFrozen(SWEEP_SCOPE_CHECKS));
+  assert.ok(Object.isFrozen(ACQUISITION_CHECKS) && Object.isFrozen(DRIVE_CAPTURE_CHECKS) && Object.isFrozen(RENDER_CAPTURE_CHECKS) && Object.isFrozen(INSTALLATION_CHECKS) && Object.isFrozen(SWEEP_SCOPE_CHECKS) && Object.isFrozen(ARCHIVE_CHECKS));
+  /* DEC-167 (3), R29: C-137's words carry no offset, method number or figure: those travel in the answer's own fields */
+  for (const [code, row] of Object.entries(ARCHIVE_CHECKS)) {
+    assert.doesNotMatch(row.translation, /\d/, `${code}: no figure in the member's words`);
+    assert.doesNotMatch(row.translation, /this instance|this copy|the plane|the instance/i, `${code}: DEC-149's voice`);
+  }
   /* K794, K850: C-68.1 is the catalogue's row with its number and translation unchanged, its where the one raiser's region */
   assert.deepEqual({ ...INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED }, {
     check: "C-68.1", where: "src/acquisition/index.mjs evidenceStorageAbsent > is-storage-absent",
-    translation: "This copy was installed without the storage it keeps captured documents in, so it cannot "
-      + "keep or read the bytes of a captured document. That is a fact about how the copy was set up, not "
+    translation: "Your group's Civicsmith was installed without the storage it keeps captured documents in, so it cannot "
+      + "keep or read the bytes of a captured document. That is a fact about how your group's Civicsmith was set up, not "
       + "about this request: whoever installed it can connect that storage in the hosting account. Nothing "
       + "was changed." });
 });
@@ -76,7 +88,7 @@ test("R29 R31: every refusal carrying a row answers that row's check and transla
      { cls: "daemon", member: false, captureRequest: { locator: "https://s.example/a", scope: ["https://s.example/"],
       origin: { kind: "sweep", matched_sweep: "INFO-2026-0001-l#s", deeming_actor: "bio-monitor" } } }, null],
   ];
-  assert.deepEqual(cases.map((c) => c[0]).sort(), Object.keys(EXPECTED).sort(), "every row is driven");
+  assert.deepEqual(cases.map((c) => c[0]).sort(), Object.keys(EXPECTED).filter((k) => !(k in ARCHIVE_CHECKS)).sort(), "every row acquire answers is driven");
   for (const [code, w, routes, body, opts, control] of cases) {
     const r = await run(w, routes, body, opts);
     assert.deepEqual([r.body.ok, r.body.reason, r.body.check, r.body.translation], [false, code, ACQUISITION_CHECKS[code].check, ACQUISITION_CHECKS[code].translation], code);
@@ -145,7 +157,7 @@ test("R29 (C-68.1, K794): acquire with no evidence storage is refused 503 with i
     const w = world({ evidence: false });
     const r = await run(w, { "https://a.example/x": text("x") }, body, o);
     assert.deepEqual([r.status, r.body.ok, r.body.reason, r.body.check, r.body.translation, r.body.op, r.body.error],
-                     [503, false, "EVIDENCE_STORAGE_NOT_CONFIGURED", row.check, row.translation, "acquire", "this instance has no evidence storage configured"], JSON.stringify(body));
+                     [503, false, "EVIDENCE_STORAGE_NOT_CONFIGURED", row.check, row.translation, "acquire", "your group's Civicsmith has no evidence storage configured"], JSON.stringify(body));
     assert.deepEqual([r.net.seen.length, w.prov.receipts.length, w.b.calls.length], [0, 0, 0], "nothing fetched, filed or stored");
   }
   /* negative control: the same act with storage bound is a filed capture carrying no row */
@@ -186,8 +198,8 @@ test("R29 (C-68.1, K850): the exported raiser answers the door's body for the op
   assert.equal(JSON.stringify(evidenceStorageAbsent("capture", "e", {}).body), JSON.stringify(doorBody("capture", "e")));
 });
 
-test("R29 (C-68.1, K850): acquire without evidence storage answers as before, byte for byte, and its answer is the raiser's own", async () => {
-  const error = "this instance has no evidence storage configured";
+test("R29 (C-68.1, K850): acquire without evidence storage answers as before, byte for byte (its error in DEC-149's words), and its answer is the raiser's own", async () => {
+  const error = "your group's Civicsmith has no evidence storage configured";
   const r = await run(world({ evidence: false }), { "https://a.example/x": text("x") }, { locator: "https://a.example/x" });
   assert.equal(r.status, 503);
   assert.equal(JSON.stringify(r.body), JSON.stringify(acquireBody(error)), "acquire's body unchanged: ok, reason, check, translation, op, error; no code");

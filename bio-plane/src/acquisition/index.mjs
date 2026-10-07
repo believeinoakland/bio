@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R37; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R43; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -9,6 +9,9 @@
  * What `capture` keeps about sources and sites (reachability, site assets, links, sessions, the platform's ceiling, the
  * render allowance, the event queue, the validators) is reached ONLY through the store handed in; this module is earlier
  * in the order than `capture` and imports none of it.
+ *
+ * T35 (N688, F16, K1888): an archive this act captures is opened in the same call (R40; `unpack.mjs`, R38–R41), no fetch
+ * goes to one of the group's own hosts (R42), and the co-archive is asked as the group or the member chooses (R20, R43).
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
@@ -29,6 +32,10 @@ import { RENDER_DEFAULTS, RENDERED_METHOD, completenessReading, keepRenderBodies
 import { governedFetch as hostGovernedFetch, retryAfterMs } from "../host-governor/index.mjs";
 import { ARCHIVE_CAPTURE_GRADE } from "../provenance/index.mjs";
 import { attest } from "../attestation/index.mjs";
+import { hasZipMagic, listArchive, normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
+import { isOwnHost } from "../capture-sources/index.mjs";
+import { ARCHIVE_CHECKS } from "./checks.mjs";
+import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
@@ -36,6 +43,11 @@ export { CIVICSMITH_CONTACT_URL, civicsmithUserAgent, firstHopWho, CAPTURE_REQUE
          DRIVE_CAPTURE_CHECKS, RENDER_CAPTURE_CHECKS, INSTALLATION_CHECKS, SWEEP_SCOPE_CHECKS, ACQUISITION_CHECKS } from "./checks.mjs";
 /* R36, R37 (T33-21, K1449): the keyed-service fetch path and its first client. */
 export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, CITATION_TEXT_MAX, CITATION_LOOKUP_LABEL } from "./keyed.mjs";
+/* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
+   co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
+export { ARCHIVE_CHECKS } from "./checks.mjs";
+export { unpack, archiveList, memberOf, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
+         UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS } from "./unpack.mjs";
 
 
 const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -482,27 +494,33 @@ export function governedCall(cap, purpose) {
   };
 }
 
-/** R20 (K60, K72 (10)): co-attestation at every capture, through `attestation`'s `attest` (its R1–R3): a trusted
- *  timestamp over the capture digest and, wherever the source permits, a co-archive of the locator at capture time.
- *  Every attempt and its outcome is recorded; a failure is an attempt, never a failed capture. The archive arm's
- *  locator is itself an archive replay, so no co-archive is asked of it. `holds` asks `provenance`'s register (its R5)
- *  through the store handed in. */
-async function coAttest(cap, { sha, locator, via, ev }) {
+/** R20 (K60, K72 (10); K1888): co-attestation at every capture, through `attestation`'s `attest` (its R1–R3): a trusted
+ *  timestamp over the capture digest and, wherever the source permits and R43 asks it (`coArchive.on`), a co-archive of
+ *  the locator at capture time. Every attempt and its outcome is recorded; a failure is an attempt, never a failed
+ *  capture. The archive arm's locator is itself an archive replay, so no co-archive is asked of it. A co-archive R43
+ *  does not ask for is recorded as not asked, with who decided (`group` or `member`), never as a failed attempt.
+ *  `holds` asks `provenance`'s register (its R5) through the store handed in. */
+async function coAttest(cap, { sha, locator, via, ev, coArchive = { on: true, by: "group" } }) {
   const p = cap.provenance;
   /* The register's shape (C-18.1): each attempt `{service, attempted, ok}`, `attempted` whether the service was
      asked, `ok` whether it answered; attestation's instant and words are kept beside them. */
   const recorded = (a) => ({ ...a, service: String(a.service || a.kind || "attest"), attempted: true, ok: a.ok === true,
                              ...(typeof a.attempted === "string" ? { at: a.attempted } : {}) });
   const notAsked = (why) => [{ service: "attest", attempted: false, ok: false, at: stampSecond(), note: why }];
+  /* R20, R43: the C-18.1 shape (`service`, `attempted`, `ok`) with `attempted: false`, so it reads as no attempt */
+  const coNotAsked = via !== "archive.org" && !coArchive.on
+    ? [{ service: "co_archive", kind: "co_archive", attempted: false, ok: false, asked: false, by: coArchive.by,
+         note: coArchive.by === "member" ? "the capturing member chose no co-archive for this capture"
+                                         : "your group's setting asks no co-archive at capture" }] : [];
   try {
-    const out = await attest({ sha256: sha, archive: via !== "archive.org", locator },
+    const out = await attest({ sha256: sha, archive: via !== "archive.org" && coArchive.on, locator },
       { head: (s) => ev.head(s), put: (s, b) => ev.put(s, b), fetch: governedCall(cap, "attest"),
         holds: async (s) => (p && typeof p.registerHolds === "function" ? p.registerHolds({ sha: s }) : null) });
     const attempts = Array.isArray(out && out.attempts) ? out.attempts.filter((a) => a && typeof a === "object") : [];
-    return attempts.length ? attempts.map(recorded)
-      : notAsked(String((out && (out.reason || out.note || out.detail)) || "no attempt was reported"));
+    return [...(attempts.length ? attempts.map(recorded)
+      : notAsked(String((out && (out.reason || out.note || out.detail)) || "no attempt was reported"))), ...coNotAsked];
   } catch (e) {
-    return notAsked(String(e && e.message || e).slice(0, 200));
+    return [...notAsked(String(e && e.message || e).slice(0, 200)), ...coNotAsked];
   }
 }
 
@@ -523,17 +541,32 @@ export function evidenceStorageAbsent(op, error, { code = true } = {}) {
   /* END DEC-49 REGION is-storage-absent */
 }
 
-/** R1–R23. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member` (whether the
- *  caller is a member session), `sessMember` (that member), `storeName`, and — only from the in-process drain, never
- *  from a request — `captureRequest` (the draining row's address, purpose, agent and render flag, K58). Answers
- *  `{status, body}`. */
-export async function acquire(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null } = {}) {
+/* R42 (F16, K1881): the group's own hosts this act refuses, handed in by its caller (`opts.ownHosts`, else the store's
+   `ownHosts`), capture-sources' one rule (its R65) deciding each. With none given, nothing is refused on this ground. */
+const ownHostsOf = (cap, given) => (Array.isArray(given) ? given : cap && Array.isArray(cap.ownHosts) ? cap.ownHosts : null);
+const hostnameOf = (u) => { try { return new URL(u).hostname.toLowerCase(); } catch { return null; } };
+const onOwnHost = (u, ownHosts) => !!ownHosts && isOwnHost(hostnameOf(u), ownHosts);
+/* R42, C-137.18: the refusal, naming the host; nothing was fetched or filed. */
+function ownHostRefused(locator, extra = {}) {
+  const row = ARCHIVE_CHECKS.OWN_HOST_REFUSED;
+  return { ok: false, reason: "OWN_HOST_REFUSED", code: "OWN_HOST_REFUSED", check: row.check, translation: row.translation,
+           host: hostnameOf(locator), locator, ...extra,
+           detail: `${hostnameOf(locator)} is one of your group's own hosts; nothing was fetched or filed` };
+}
+
+/** R1–R23, R40, R42, R43. The one act that fetches and files. `opts`: `cls` (the control plane's caller class), `member`
+ *  (whether the caller is a member session), `sessMember` (that member), `storeName`, `ownHosts` (R42), and — only from
+ *  the in-process drain, never from a request — `captureRequest` (the draining row's address, purpose, agent, render
+ *  flag and the member's co-archive choice, K58). Answers `{status, body}`. */
+export async function acquire(cap, body0, { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null,
+                                           ownHosts = null } = {}) {
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
+  const own = ownHostsOf(cap, ownHosts);
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
   /* C-68.1 (K794, K850): raised through this module's one raiser, its body as it has always been (no `code`). */
-  if (!ev) return evidenceStorageAbsent(op, "this instance has no evidence storage configured", { code: false });
+  if (!ev) return evidenceStorageAbsent(op, "your group's Civicsmith has no evidence storage configured", { code: false });
   /* R1, K58: THE CAPTURE-REQUEST ARM IS IN PROCESS ONLY. From outside, `via: "capture-request"` is refused
      C-28.13 whatever the caller: the AI does not capture, it REQUESTS, and the daemon captures. */
   if (!captureRequest && body.via === "capture-request") {
@@ -541,7 +574,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     const row = CAPTURE_REQUEST_ARM_CHECKS.CAPTURE_NOT_DRAINING;
     return answer(403, { ok: false, reason: "CAPTURE_NOT_DRAINING", code: "CAPTURE_NOT_DRAINING",
       check: row.check, translation: row.translation, cls, request: body.request ?? null, op,
-      detail: "this instance fetches a requested document only from inside its own drain, and a request cannot "
+      detail: "your group's Civicsmith fetches a requested document only from inside its own drain, and a request cannot "
             + "reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with "
             + "provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it." });
     /* END DEC-49 REGION is-capture-request-arm */
@@ -622,7 +655,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (supplied.length)
       return answer(400, { ok: false, reason: "DRIVE_HOP_FACT_SUPPLIED", ...driveRow("DRIVE_HOP_FACT_SUPPLIED"), op, supplied,
         detail: `this request carried ${supplied.map((k) => `\`${k}\``).join(", ")}. The export `
-              + `address, the export format and the producer are DERIVED by this instance from the `
+              + `address, the export format and the producer are DERIVED by your group's Civicsmith from the `
               + `file id and the kind in the address, at the moment it performs the fetch, and are `
               + `never read from a request. A provenance hop a caller can hand us is a provenance `
               + `hop a caller can invent (D-112), and the whole value of a disclosed chain is that `
@@ -659,7 +692,11 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   if (!(archiveAsked && !session) && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
     return answer(400, { ok: false, reason: "BAD_LOCATOR",
       detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address" });
-  if (session) return continueCapture(cap, { body, session, cls, storeName, ev });
+  /* DEC-49 REGION is-own-host
+     R42 (F16): no fetch goes to one of the group's own hosts, the render arm's included; refused before any request. */
+  if (!archiveAsked && !session && onOwnHost(locator, own)) return answer(403, { ...ownHostRefused(locator), op });
+  /* END DEC-49 REGION is-own-host */
+  if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own });
 
   /* R15, D-97: authority is THREE-VALUED and undetermined is a task, not a blocker. */
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
@@ -712,7 +749,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     if (adm && adm.state === "waiting")
       return answer(429, { ok: false, reason: "RENDER_AT_CAPACITY", ...renderRow("RENDER_AT_CAPACITY"),
         op, render: { state: "waiting", content: "undetermined", running: adm.running, cap: adm.cap },
-        detail: `${adm.running} renders are running on this instance, which runs at most ${adm.cap} at once; `
+        detail: `${adm.running} renders are running in your group's Civicsmith, which runs at most ${adm.cap} at once; `
               + `this render is waiting and nothing was fetched.` });
     if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
     if (!adm || adm.state !== "admitted")
@@ -758,13 +795,15 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
                                      ...(validators.lastModified ? { "if-modified-since": validators.lastModified } : {}) } : null;
   let res = archiveMemento ? archiveMemento.res : null, resolvedUrl = null;
   if (!res) try {
-    /* R31: a sweep's redirects are followed BY HAND, one governed fetch per hop, each target judged against the scope
-       before anything is fetched at it; the credential (R23) still goes to its own host only. */
+    /* R31, R42: a sweep's redirects, and every redirect when the group's own hosts are named, are followed BY HAND,
+       one governed fetch per hop, each target judged (against the scope, against the group's own hosts) before
+       anything is fetched at it; the credential (R23) still goes to its own host only. */
     let url = locator;
     const home = hostOf(locator);
+    const byHand = !!sweepScope || !!own;
     for (let hop = 0; ; hop++) {
       const g = await governedFetch(cap, url, crPurpose || "acquire", crAgent, { headers: conditional,
-        credential: sweepScope && hostOf(url) !== home ? null : crCredential, manual: !!sweepScope });
+        credential: byHand && hostOf(url) !== home ? null : crCredential, manual: byHand });
       if (g.refusedByGovernor) {
         await noteOutcome("governed", null);
         return answer(429, { ok: false, reason: "HOST_COOLING_OFF",
@@ -772,13 +811,20 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
           retry_in_ms: g.retry_in_ms || 0, locator });
       }
       res = g.res;
-      if (!sweepScope) break;
+      if (!byHand) break;
       const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
       if (!loc || hop >= REDIRECT_MAX) break;
       let next = null;
       try { next = new URL(loc, url).href; } catch { next = null; }
+      /* DEC-49 REGION is-own-host
+         R42: a redirect to one of the group's own hosts is not followed; the acquire answers the same refusal. */
+      if (next && onOwnHost(next, own)) {
+        cancelBody(res);
+        return answer(403, { ...ownHostRefused(next, { redirected_from: url, status: res.status }), op });
+      }
+      /* END DEC-49 REGION is-own-host */
       /* DEC-49 REGION is-sweep-redirect */
-      if (!next || !inSweepScope(next, sweepScope)) {
+      if (sweepScope && (!next || !inSweepScope(next, sweepScope))) {
         cancelBody(res);
         const row = SWEEP_SCOPE_CHECKS.SWEEP_REDIRECT_OUT_OF_SCOPE;
         return answer(422, { ok: false, reason: "SWEEP_REDIRECT_OUT_OF_SCOPE", code: "SWEEP_REDIRECT_OUT_OF_SCOPE", check: row.check,
@@ -823,7 +869,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     return answer(502, { ok: false, reason: "DRIVE_EXPORT_UNREACHABLE", ...driveRow("DRIVE_EXPORT_UNREACHABLE"), op,
       status: res.status, locator: driveCapture.address, export_address: driveCapture.exportAddress, drive: driveFacts,
       detail: `Google answered ${res.status} at the OpenDocument export address `
-            + `${driveCapture.exportAddress}, which this instance composed from the ${driveCapture.kind} `
+            + `${driveCapture.exportAddress}, which your group's Civicsmith composed from the ${driveCapture.kind} `
             + `id in ${driveCapture.address}. Nothing was captured, and the application page at the `
             + `document's own address was NOT captured in its place — a fallback to the shell would `
             + `record a success holding no document. A 404 usually means the id is wrong; a 403 `
@@ -1010,7 +1056,8 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
               + `not an HTML page; nothing was filed.` });
     }
     /* R7: the locale R17's view names, the default only as capture-sources' own fallback. */
-    try { answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view) }); }
+    /* R42: the render is handed the group's own hosts, which its driver never lets a page reach (capture-sources R64). */
+    try { answerR = await renderer.render({ url: pageUrl, ...RENDER_DEFAULTS, locale: renderLocale(pv.view), ...(own ? { own_hosts: own } : {}) }); }
     catch (e) { answerR = { ok: false, error: String(e && e.message || e) }; }
     try { cap.renderSpend({ ms: answerR && answerR.elapsed_ms, releaseMs: renderReserved, slot: renderSlot, at: retrieved }); }
     catch { /* an unrecorded spend under-counts the allowance; it never fails the render */ }
@@ -1081,7 +1128,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   let subs = null, subsSkipped = sessionSkip, sessionId = null;
   if (body.subresources === true && !subsSkipped) {
     const w = await walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base: resolvedUrl || locator,
-                                             retrieved, resume: null, sessionId: null });
+                                             retrieved, resume: null, sessionId: null, own });
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
   }
 
@@ -1090,10 +1137,10 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
   for (const [hk, hv] of res.headers) profHeaders[hk.toLowerCase()] = hv;
   /* N615 (K1683, K1773): `doctypeFor` is handed the capture's origin. Every arm of this act is a fetch the copy makes,
      a member session's request included, so it is always `"fetch"`; `"member"` is only for bytes a member supplied by
-     their own act outside the copy (an upload or a knock), which a caller of `profileOf` states. So a content type
+     their own act outside the copy (an upload), which a caller of `profileOf` states. So a content type
      read only from a member's own capture (court-doctypes R2) never matches a fetch. */
   const profile = await profileOf({ ev, sha, ct, total, multipart, headers: profHeaders, locator: documentAddress, view: pv,
-                                    retrieved, origin: "fetch" });
+                                    retrieved, origin: "fetch", parts: renderRecorded ? null : parts });
   /* R4, CAP-8: Google's hop, built from what this call established. Its confirmation is the FORMAT registry's own
      detection over the stored export's BYTES, whole (an OpenDocument package is recognised by its central directory,
      which lies past the first KiB `profile.format` reads for any export of real size): a detection that fell back to
@@ -1109,8 +1156,12 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     driveHopRecorded = driveHop(driveCapture, { retrieved, resolved: resolvedUrl, detected });
   }
 
-  /* R20: co-attestation at every capture (K60). */
-  const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev });
+  /* R20, R43 (K60, K1888): co-attestation at every capture; the co-archive as the group's setting asks, unless the member
+     chose for this capture (the body's `coArchive` from a member session, or the request's on the capture-request arm). */
+  const memberChoice = captureRequest ? captureRequest.coArchive
+    : (member && typeof sessMember === "string" && sessMember ? body.coArchive : undefined);
+  const coArchive = typeof memberChoice === "boolean" ? { on: memberChoice, by: "member" } : { on: coArchiveStateOf(cap.core).on, by: "group" };
+  const attestations = await coAttest(cap, { sha, locator: documentAddress, via, ev, coArchive });
 
   const document = {
     file: `snapshots/${name}`, locator, retrieved,
@@ -1169,6 +1220,22 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     origin: captureRequest ? (crOrigin || { kind: "named_request" }) : { kind: "named_request" },
     attestation_attempts: attestations,
   };
+  /* R40 (K1852 (2)): an archive opens on capture, in the same call, `by` its caller and within every budget; the files it
+     files are answered beside the document for the caller to promote after it. A refusal is stated there and never
+     fails the capture. */
+  let unpacked = null;
+  if (profile && profile.format && profile.format.format === "zip") {
+    try {
+      unpacked = await unpack(cap, { archiveSha: sha, by: actor, cls, member }, { automatic: true,
+        parts: parts.map((p) => ({ sha256: p.sha256, bytes: p.bytes })), origin: document.origin,
+        address: addressIsDerived ? documentAddress : (resolvedUrl || locator),
+        addressNorm: addressIsDerived ? addrNorm : normalizeAddress(resolvedUrl || locator) });
+    } catch (e) {
+      const row = ARCHIVE_CHECKS.ARCHIVE_UNREADABLE;
+      unpacked = { ok: false, reason: "ARCHIVE_UNREADABLE", code: "ARCHIVE_UNREADABLE", check: row.check, translation: row.translation,
+                   why: "source_unreadable", detail: String(e && e.message || e).slice(0, 200) };
+    }
+  }
   return answer(200, {
     ok: true, existed,
     ...(existedUndetermined ? { existed_undetermined: existedUndetermined } : {}),
@@ -1179,6 +1246,7 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
+    ...(unpacked ? { unpack: unpacked } : {}),
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
   });
 }
@@ -1188,11 +1256,11 @@ export async function acquire(cap, body0, { cls = null, member = false, sessMemb
  *  `view` (`profileView`); `profileRecord`; the normalisation rules and boundary; `format` from the bytes (the first
  *  KiB read back when not already read), else the declared type with the absence stated; and `digests`. Every
  *  unreadable byte is stated, never a failed capture. The acquisition act and the knock's pull (capture R65) call it.
- *  `origin` (N615, K1683, K1773), `"member"` for bytes a member supplied by their own act (an upload or a knock) or
+ *  `origin` (N615, K1683, K1773), `"member"` for bytes a member supplied by their own act (an upload) or
  *  `"fetch"` for a fetch the copy made, reaches `doctypeFor` as `ctx.origin`; absent, none is stated and a type that
  *  needs a member's own capture does not match. */
 export async function profileOf({ ev, sha, ct = null, total = 0, multipart = false, headers = {}, locator = null, view, retrieved,
-                                  origin = null }) {
+                                  origin = null, parts = null }) {
   const pv = view || { view: undefined, ids: null };
   let profileText = "", profileBytes = null;
   if (profilesAsText(ct, total, multipart)) {
@@ -1226,11 +1294,38 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
     jurisdiction_view: pv.ids,
     format: detectFormat(formatBytes, ct || null),
   };
+  /* R17 (N688; K1852 (2)): past the read's bound (a capture held in parts), `zip` only from the bytes: the ZIP magic, and
+     ooxml's listing over the stored parts as a range source answering whole with neither an OPC content-type map nor an
+     ODF `mimetype` in it, so an office or OpenDocument file is never profiled `zip`; a declared type never makes one. */
+  if (!formatBytes && Array.isArray(parts) && parts.length) {
+    const z = await zipPastBound(ev, parts);
+    if (z) profile.format = z;
+    else if (profile.format && profile.format.format === "zip")
+      profile.format = { format: "undetermined", confidence: "none",
+        signals: [...(profile.format.signals || []), "the stored bytes were not read as a ZIP archive, so the declared type does not make one"] };
+  }
   let containerBytes = null;
   const odfFmt = profile.format && ODF_FORMATS.includes(profile.format.format);
   if (!profileBytes && !multipart && odfFmt && total > 0 && total <= ODF_DIGEST_MAX) containerBytes = readWhole;
   profile.digests = await substanceDigests(profileBytes, stackId, profCtx, sha, multipart, containerBytes);
   return profile;
+}
+
+/** R17: whether bytes held in `parts` (`[{sha256, bytes}]`, in order) are a plain ZIP archive, read without holding them
+ *  whole: the ZIP magic in the first part, then `ooxml.listArchive` over the parts as a range source. Answers the format
+ *  registry's shape for `zip`, or null. Never throws. */
+async function zipPastBound(ev, parts) {
+  try {
+    const first = await ev.get(parts[0].sha256);
+    if (!first || !hasZipMagic(new Uint8Array(await first.arrayBuffer()).subarray(0, 4))) return null;
+    const l = await listArchive(partsSource(ev, parts));
+    if (!l.ok) return null;
+    const names = new Set(l.entries.map((e) => normalizePartName(e.name || "")));
+    if (names.has(CONTENT_TYPES_PART) || names.has(ODF_MIMETYPE_PART)) return null;
+    return { format: "zip", confidence: "likely",
+             signals: ["magic: PK\\x03\\x04 in the stored bytes", "listed whole over the stored parts",
+                       `part: ${CONTENT_TYPES_PART} absent`, `part: ${ODF_MIMETYPE_PART} absent`, `entries: ${l.count}`] };
+  } catch { return null; }
 }
 
 /* The answer's `subresources`, `snapshot` and `files` (R19). */
@@ -1261,7 +1356,7 @@ function snapshotOf(subs, sessionId, name, shellRecorded) {
 /** R19: the walk of a page's supporting files, over the primary READ BACK from the store (the parser sees the bytes
  *  the record holds, never a copy in flight beside them). Every bookkeeping write after it is stated or ignored,
  *  never a failed capture. */
-async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId }) {
+async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, locator, base, retrieved, resume, sessionId, own = null }) {
   const SUB_PARSE_MAX = 8 * 1024 * 1024;
   if (multipart || total > SUB_PARSE_MAX)
     return { subs: null, skipped: { reason: "TOO_LARGE_TO_PARSE", detail:
@@ -1298,13 +1393,25 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
          take a small jittered stagger, and REPORT every outcome; a host cooling off stops the rest. */
       let subHost = null;
       try { subHost = new URL(u).host; } catch { /* refused below by the fetch itself */ }
+      /* R42: a supporting file on one of the group's own hosts is that file's outcome; the capture goes on. */
+      if (onOwnHost(u, own)) return { ok: false, status: 0, reason: "OWN_HOST_REFUSED" };
       if (subHost && cap.governor) {
         try { if (await cap.governor.isHeld(subHost, Date.now())) return { ok: false, status: 0, reason: "HOST_COOLING_OFF" }; }
         catch { /* an unreadable governor never blocks */ }
       }
       const stagger = cap.subresourceStaggerMs();
       if (stagger) await new Promise((s) => setTimeout(s, stagger));
-      const r = await fetch(u, { redirect: "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+      /* R42: with the group's own hosts named, a redirect is followed by hand and never to one of them. */
+      let r = await fetch(u, { redirect: own ? "manual" : "follow", headers: { "user-agent": userAgent(env, "acquire") } });
+      for (let hop = 0, at = u; own && r.status >= 300 && r.status < 400 && hop < REDIRECT_MAX; hop++) {
+        let next = null;
+        try { next = new URL(r.headers.get("location") || "", at).href; } catch { next = null; }
+        if (!next || !isPublicHttpsLocator(next)) break;
+        cancelBody(r);
+        if (onOwnHost(next, own)) return { ok: false, status: 0, reason: "OWN_HOST_REFUSED" };
+        at = next;
+        r = await fetch(next, { redirect: "manual", headers: { "user-agent": userAgent(env, "acquire") } });
+      }
       if (subHost && cap.governor) {
         try { await cap.governor.governorReport({ host: subHost, status: r.status, retry_after_ms: retryAfterMs(r.headers.get("retry-after")) }); }
         catch { /* an unrecorded outcome is not a failed fetch */ }
@@ -1352,13 +1459,13 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
 /** R12: a continuation resumes the session's outstanding supporting files against the session's OWN primary, read
  *  back from the store by its digest; the primary is not fetched again, and nothing new is filed about it, so the
  *  answer carries no document: the first tick answered it. */
-async function continueCapture(cap, { body, session, cls, storeName, ev }) {
+async function continueCapture(cap, { body, session, cls, storeName, ev, own = null }) {
   const name = String(session.primaryFile || "snapshots/capture").replace(/^snapshots\//, "");
   let obj = null;
   try { obj = await ev.head(session.primarySha); } catch { obj = null; }
   const size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : 0;
   const w = await walkSubresources(cap, { ev, sha: session.primarySha, total: size, multipart: false, ct: "text/html",
-    name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session });
+    name, locator: session.locator, base: session.base, retrieved: stampSecond(), resume: session.state, sessionId: session.session, own });
   return { status: 200, body: {
     ok: true, existed: true,
     continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
