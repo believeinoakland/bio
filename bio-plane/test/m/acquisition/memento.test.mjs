@@ -32,7 +32,7 @@ test("R32: the TimeGate's memento, its raw bytes fetched, is chosen by selectCap
   assert.deepEqual([hop.who, hop.via, hop.bound, hop.document_address], ["Internet Archive Wayback Machine", "archive.org", false, ADDR]);
   assert.equal(hop.asserts, `these bytes were served for ${ADDR} at 2025-03-01T10:15:00Z, with HTTP status 200`);
   for (const part of [`Memento-Datetime: ${http1123("20250301101500")}`, `memento ${raw}`, `rel="original" ${ADDR}`, `rel="timemap" ${TM}`,
-                      "mimetype text/plain", `SHA-256 ${sha("the memento")}, computed by this instance over the bytes it received`])
+                      "mimetype text/plain", `SHA-256 ${sha("the memento")}, computed by your group's Civicsmith over the bytes it received`])
     assert.ok(hop.evidence.includes(part), part);
   assert.deepEqual([w.prov.receipts.length, w.prov.receipts[0].address, w.prov.receipts[0].retrievalLocator], [1, ADDR, raw]);
   /* the document address is the memento's rel=original, not the address asked about */

@@ -1,6 +1,6 @@
 /* acquisition R17 with N615 (K1683, K1773): intake's `doctypeFor` is handed the capture's origin. Every arm of
    `acquire` is a fetch the copy makes, a member session's request included, so it hands `"fetch"`; `"member"` is only
-   for bytes a member supplied by their own act (an upload or a knock), which a caller states through `profileOf`. So a
+   for bytes a member supplied by their own act (an upload), which a caller states through `profileOf`. So a
    content type read only from a member's own capture (court-doctypes R2's `ecourt_roa`) never matches a fetch. Checked at the module's interface: through `acquire` (fixture.mjs `run`)
    and the exported `profileOf`, over a probe content type that reports the origin it was handed and a member-only type
    that matches as court-doctypes R2 does (`ctx.origin` `"member"`, else refused with its why). Both are test-local,
