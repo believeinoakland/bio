@@ -83,3 +83,24 @@ Size: test runs 6, module lines 2015.
 - ownership: run after the commit.
 
 Size (session_013gccXT7dmwA6HqYDk4k5uR): test runs 10, module lines 2079
+
+## J3 · COMPLETE
+
+B3 (K2043) is done and pushed after merging `tranche/T35`. All 25 ops are graded in `t35.mjs` from their owners' requirements, with a reason in `NON_ACTS`. Details are in my record's second Completion section.
+- `reasoned`: standards' six acts on `STANDARD_NO_REASON`, `usewithdraw` on `NO_REASON`, `uselink` and `useunlink` on `DUTY_NO_REASON`.
+- `undetermined`: `discretionrecord` and `assessmentrecord` (as `eventcreate`), the two proposals (as `lawpropose` and `dutypropose`), and the two records-request acts.
+- `observational`: `usesfreeze`, as `recordset`.
+- `credential`: `subscriptiondisconnect`.
+- Eight reads, each `read:`.
+
+Results:
+- Tests: 26 of 26 pass.
+- Checks: format, architecture and ownership show 0 failures; coverage is 22 of 22.
+- No ops are added beyond your list; op-declarations has no REPORT yet.
+
+For you:
+1. Red 29 and red 36 still fail on `origin/job/T35/affordances` with these tables in place. `t33.test.mjs`:137 and `catalogue.test.mjs`:579 pin each owner's op map to an exact list that lacks the new ops. The grades are here; extending those lists is `affordances`' work.
+2. `standardrelease` is never undone but is graded `reasoned`, by R3's rule. Whether it is a named `terminal` exception is your ruling.
+3. R22's wording names only op-declarations R30's ops. You may want to word these 25 into it.
+
+Size: test runs 10, module lines 2079.
