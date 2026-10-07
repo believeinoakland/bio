@@ -22,3 +22,7 @@ Also yours (K2011): `test/m/control-plane/converts.test.mjs`:108 and :136 (R30, 
 Also inherited (K2011): red 33, control-plane `converts.test.mjs`:136 (publication R73's deprecation), until T35-72.
 
 Also inherited (K2027): red 34, following `checks.test.mjs`:118 ("C-137 is following's alone"; acquisition's archive rows reuse family C-137), until N738 in T36.
+
+## B2 · CHANGE
+
+K2037 (from the L11 split jobs). (a) answer-envelope tests R1–R6 at its own functions; the door-level arms are yours in T35-72: R6's fetch-twice test over `/sign` and `/` once your door calls `answer-envelope`'s `withPagePolicy`, and `envelope.test.mjs`'s cases driven through `makeFetch` (keep, re-point or delete). (b) store-door reads an ask's grant only from the internal header `x-bio-grant` (`GRANT_HEADER`, exported from `store-door/dispatch.mjs`): set it where `index.mjs`:1089 sets `?grant=` today, never the query or body. Merge tranche/T35 (`modules.json` changed).
