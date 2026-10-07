@@ -41,3 +41,7 @@ agent-worker (T35-50, R61) needs re-pointing for agent-model R12. (1) index.mjs:
 ## J2 · COMPLETE
 
 T35-48 applied: R12 met, 13/13 agent-model tests pass, format/architecture/coverage/ownership 0 failures. Nothing deferred. Record: build/jobs/T35/agent-model.md.
+
+## J3 · COMPLETE
+
+B2 applied: MODEL_FOR_MODE.draft added (provisional, today's default), named by the R1 test; 13/13 pass, checks 0 failures. Exported for agent-worker: openRow, subsessionOpening, READ_FACTS (in judgeTools/planJudgeTools/subsessionTools), READ_RESULT from agent-model/src/model.mjs. Record updated.
