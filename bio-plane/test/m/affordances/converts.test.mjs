@@ -20,7 +20,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as bvFix from "../basis-versions/fixture.mjs";
 import * as caFix from "../case-authoring/fixture.mjs";
-import { affordancesOf, deriveActs, decorate, MACHINE_REFUSALS, SELF_ATTESTED_PROMPT } from "../../../src/affordances.mjs";
+import { affordancesOf, deriveActs, decorate, SELF_ATTESTED_PROMPT } from "../../../src/affordances.mjs";
+import { MACHINE_REFUSALS } from "../../../src/op-grades/index.mjs";
 import { caseTensionsOf } from "../../../src/case-tensions/index.mjs";
 
 const NOTHING_RESTS = { confirmed: [], frozen: [], severed: [] };

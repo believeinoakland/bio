@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
+import * as G from "../../../src/op-grades/index.mjs";
 import { ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
 import { hypothesesOps } from "../../../src/hypotheses/index.mjs";
@@ -11,7 +12,8 @@ import { HYPOTHESES_CHECKS } from "../../../src/hypotheses/checks.mjs";
 import { DUTIES_CHECKS } from "../../../src/duties/checks.mjs";
 import * as hyFix from "../hypotheses/fixture.mjs";
 
-const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, ACTS, CAPTURE_ACTS, PER_ITEM_ACTS } = A;
+const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS } = A;
+const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS } = G;
 const url = new URL("http://x/");
 const keysOf = (f) => Object.keys(f({}, url, {}));
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? ["rung", RUNGS[op]]
@@ -134,10 +136,10 @@ test("R44 R37 R7 R12: groupdescriptiondraft and writinghelp carry R44's sentence
 test("R21 R4 (DEC-149): the undetermined ground's sentence, served as vocabularies.rung_absence_grounds, names no "
    + "Civicsmith ('no refusal establishes one'), and no sentence this module serves in the catalogue calls it the plane, this "
    + "instance, this copy or the server; 'server-side' stays", () => {
-  const u = A.RUNG_ABSENCE_GROUNDS.undetermined;
+  const u = G.RUNG_ABSENCE_GROUNDS.undetermined;
   assert.match(u, /^THIS IS A REAL ACT ON THE RECORD AND IT HAS NO RUNG\. No document assigns one and no refusal establishes one, so the honest answer is that it is UNDETERMINED/);
   assert.doesNotMatch(u, /plane/);
-  assert.match(A.RUNG_ABSENCE_GROUNDS["caller-owned"], /server-side/);
+  assert.match(G.RUNG_ABSENCE_GROUNDS["caller-owned"], /server-side/);
   /* this module's own served text: `answer_checks` is `answers`' family, carried whole for the pack (K1601) */
   const { answer_checks, ...own } = A.affordancesAnswer({ kinds: null, gate: null });
   assert.ok(answer_checks && typeof answer_checks === "object");
@@ -171,7 +173,7 @@ test("R44 R17 R21: the door passes the screens route's writing_help_refused into
 /* ---- R45 (K1864) ---------------------------------------------------------------------------------------------------- */
 import { membershipOps } from "../../../src/membership/index.mjs";
 import { credentialsOps } from "../../../src/credentials/index.mjs";
-import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS, OP_ALIASES, aliased } from "../../../src/affordances/t34.mjs";
+import { T34_RUNGS, T34_RUNG_ABSENT, T34_NON_ACTS, OP_ALIASES, aliased } from "../../../src/op-grades/t34.mjs";
 /* Each op R45 grades, by owner, with its grade; reads apart. `tasks` and `instance-setup` are later in the order (P4), so
    their ops are named as op-declarations R23, R26 and R28 name them; membership's and credentials' maps are read. */
 const R45_WRITES = {

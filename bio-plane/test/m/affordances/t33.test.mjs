@@ -5,7 +5,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
-import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/affordances/t33.mjs";
+import * as G from "../../../src/op-grades/index.mjs";
+import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
@@ -32,8 +33,8 @@ import { actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { world as eventsWorld } from "../events/fixture.mjs";
 
-const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, ACTS, CAPTURE_ACTS, PER_ITEM_ACTS,
-        RUNG_ABSENCE_GROUNDS } = A;
+const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS } = A;
+const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNG_ABSENCE_GROUNDS } = G;
 const url = new URL("http://x/");
 const keysOf = (f) => Object.keys(f({}, url, {}, {}));
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;

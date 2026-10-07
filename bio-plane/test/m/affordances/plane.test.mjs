@@ -12,13 +12,13 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNGS,
-         RUNG_ABSENT, deriveActs, decorate, PER_ITEM_MAX } from "../../../src/affordances.mjs";
+import { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, deriveActs, decorate, PER_ITEM_MAX } from "../../../src/affordances.mjs";
+import { MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 import * as actionGrammar from "../../../src/action-grammar/index.mjs";
 import { list as listProfiles, combine as combineProfiles } from "../../../../jurisdictions/index.mjs";
 
-import { T33_RUNGS } from "../../../src/affordances/t33.mjs";
-import { OP_ALIASES } from "../../../src/affordances/t34.mjs";
+import { T33_RUNGS } from "../../../src/op-grades/t33.mjs";
+import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
   "line_kinds", "line_capacities", "line_roles", "money_kinds", "money_phases", "money_stages", "money_bases",

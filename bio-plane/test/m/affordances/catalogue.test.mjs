@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as A from "../../../src/affordances.mjs";
+import * as G from "../../../src/op-grades/index.mjs";
 /* The grammars the catalogue reads (T19): the record's (states, grades) and the action document's (kinds and the action
    vocabularies), each the module whose refusals run on it. */
 import { STATES, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE } from "../../../src/record-grammar/index.mjs";
@@ -25,15 +26,18 @@ import * as docket from "../../../src/docket/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { list as profiles, get as profile } from "../../../../jurisdictions/index.mjs";
 
-const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, NON_ACTS, RUNGS, RUNG_ABSENT, RUNG_LADDER, RUNG_ABSENCE_GROUNDS,
-        IRREVERSIBLE_CORRECTION_PATH, VOCABULARIES, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS } = A;
+const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES } = A;
+const { NON_ACTS, RUNGS, RUNG_ABSENT, RUNG_LADDER, RUNG_ABSENCE_GROUNDS, IRREVERSIBLE_CORRECTION_PATH, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS } = G;
 const ids = (xs) => xs.map((a) => a.id).sort();
 /* R40 (T33-85): T33's grades and reasons, the tables spread into RUNGS, RUNG_ABSENT and NON_ACTS; held to the op maps in
    t33.test.mjs, so the tests below that predate T33 set them aside where they count a closed set. */
-import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/affordances/t33.mjs";
+import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 const T33_OPS = new Set([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT), ...Object.keys(T33_NON_ACTS)]);
 /* R45 (K1864): T34's grades and R21's aliases, held to their owners and ops in t34.test.mjs, set aside as T33's are. */
-import { T34_RUNGS, T34_RUNG_ABSENT, OP_ALIASES } from "../../../src/affordances/t34.mjs";
+import { T34_RUNGS, T34_RUNG_ABSENT, OP_ALIASES } from "../../../src/op-grades/t34.mjs";
+/* K1974 (A-1): the grading tables are `op-grades'`, which holds T35's grades (its R21, R22) to their owners in its own
+   `t35.test.mjs`; set aside here as T33's and T34's are. */
+import { T35_RUNGS, T35_RUNG_ABSENT, T35_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t35.mjs";
 
 test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
@@ -144,6 +148,8 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   for (const [op, r] of Object.entries(T33_RUNGS)) want[r].push(op);
   /* R45: T34's rungs (t34.mjs), and each alias at its op's rung */
   for (const [op, r] of Object.entries(T34_RUNGS)) want[r].push(op);
+  /* op-grades R22 (T35): T35's rungs (t35.mjs) */
+  for (const [op, r] of Object.entries(T35_RUNGS)) want[r].push(op);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
@@ -195,7 +201,7 @@ test("R4 R36: VOCABULARIES carries exactly the named vocabularies", () => {
     /* R30 */ "template_states", "template_uses", "template_review_outcomes", "local_fact_acts",
     "local_fact_statuses",
     /* R34 */ "docket_shelves", "docket_entry_kinds", "docket_proposals", "docket_pressure_kinds",
-    /* R36 */ "larger_screen_acts"].sort());
+    /* R36 */ "larger_screen_acts", /* R4 (op-grades R21; DEC-143) */ "irreversible_weight"].sort());
 });
 
 test("R4: each fixed value is the very object its enforcing module refuses against — the same reference, never a copy", () => {
@@ -210,7 +216,7 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     ["version_states", basisVersions.VERSION_MACHINE.legal], ["version_edges", basisVersions.VERSION_MACHINE.edges],
     ["version_reason_required", basisVersions.VERSION_REASON_REQUIRED], ["rung_ladder", RUNG_LADDER],
     ["rung_correction_path", IRREVERSIBLE_CORRECTION_PATH], ["rung_absence_grounds", RUNG_ABSENCE_GROUNDS],
-    ["rung_consequences", A.CONSEQUENCE_STATEMENTS] /* R31: this module's own */,
+    ["rung_consequences", G.CONSEQUENCE_STATEMENTS] /* R4: op-grades' (its R4, R21) */,
     ["sufficiency_claim_states", basisVersions.SUFFICIENCY_CLAIM_STATES], ["content_mint_states", content.CONTENT_MINT_STATES],
     /* N345: inquiry R46's frozen vocabularies and contradiction R31's dismissal reasons */
     ["contradiction_coordinates", inquiry.CONTRADICTION_COORDINATES], ["plurality_differences", inquiry.PLURALITY_DIFFERENCES],
@@ -223,7 +229,8 @@ test("R4: each fixed value is the very object its enforcing module refuses again
     /* R34: docket R1, R2, R6's four */
     ["docket_shelves", docket.SHELVES], ["docket_entry_kinds", docket.ENTRY_KINDS], ["docket_proposals", docket.PROPOSALS],
     ["docket_pressure_kinds", docket.PRESSURE_KINDS],
-    ["larger_screen_acts", A.LARGER_SCREEN_ACTS] /* R36: this module's own */,
+    ["larger_screen_acts", G.LARGER_SCREEN_ACTS] /* R36: op-grades' (its R18) */,
+    ["irreversible_weight", G.IRREVERSIBLE_WEIGHT] /* R4: op-grades' (its R21) */,
   ];
   assert.deepEqual(same.filter(([k, v]) => VOCABULARIES[k] !== v).map(([k]) => k), []);
   assert.equal(same.length + 1, Object.keys(VOCABULARIES).length, "every key but action_kind is a fixed value checked here");
@@ -474,6 +481,8 @@ test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved
     ...undeterminedOf(T33_RUNG_ABSENT),
     /* R45 (T34): tasks' two, and the aliases of undetermined ops (t34.mjs) */
     ...undeterminedOf(T34_RUNG_ABSENT),
+    /* op-grades R22 (T35): `unpack` (t35.mjs) */
+    ...undeterminedOf(T35_RUNG_ABSENT),
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
@@ -889,10 +898,12 @@ test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fr
    + "leadshare, entitycreate, strengthbar and filingapprove, in-place for workobjective — and R33's actionholdrelease, "
    + "the full dialog, each with its statement, published as VOCABULARIES.rung_consequences by reference, the rungs "
    + "unchanged and the decorated act's keys too", () => {
-  const C = A.CONSEQUENCE_STATEMENTS;
+  const C = G.CONSEQUENCE_STATEMENTS;
   assert.deepEqual(Object.fromEntries(Object.entries(C).map(([op, c]) => [op, c.friction])), {
     attribute: "dialog", leadshare: "dialog", entitycreate: "dialog", strengthbar: "dialog", filingapprove: "dialog",
-    workobjective: "in-place", actionholdrelease: "dialog" });
+    workobjective: "in-place", actionholdrelease: "dialog",
+    /* op-grades R21 (DEC-142): T35's, beside actionholdrelease */
+    ...Object.fromEntries(Object.entries(T35_CONSEQUENCE_STATEMENTS).map(([op, c]) => [op, c.friction])) });
   for (const [op, c] of Object.entries(C)) {
     assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"], op);
     assert.ok(typeof c.statement === "string" && c.statement.length > 80, op);
@@ -903,7 +914,7 @@ test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fr
   /* the rungs are the ladder's own: five reasoned, filingapprove terminal (its statement is its terminal effect) */
   assert.deepEqual(Object.keys(C).map((op) => [op, RUNGS[op]]), [["attribute", "reasoned"], ["leadshare", "reasoned"],
     ["entitycreate", "reasoned"], ["strengthbar", "reasoned"], ["filingapprove", "terminal"], ["workobjective", "reasoned"],
-    ["actionholdrelease", "terminal"]]);
+    ["actionholdrelease", "terminal"], ["personexpunge", "reasoned"] /* op-grades R21: the dialog is its weight */]);
   assert.match(C.workobjective.statement, /budget and scope/);
   assert.match(C.filingapprove.statement, /approved once/);
   assert.match(C.leadshare.statement, /cannot be un-read/);
@@ -1123,7 +1134,7 @@ test("R33 R2 R7 R12 R20: actionholdrelease is `terminal`, a named exception to R
   assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
   /* the consequence statement: the dialog, what is restarted for the projects the surface reads beside it, and that it
      cannot be undone */
-  const c = A.CONSEQUENCE_STATEMENTS.actionholdrelease;
+  const c = G.CONSEQUENCE_STATEMENTS.actionholdrelease;
   assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"]);
   assert.equal(c.friction, "dialog");
   assert.match(c.statement, /restarts deletion for the projects shown beside this/);

@@ -12,7 +12,8 @@ import assert from "node:assert/strict";
 import { seeded, cand, IQ, INFO, M1, M2, OUT, RUN, PRINCIPAL } from "../contradiction/seed.mjs";
 import { MACHINE, sha } from "../contradiction/fixture.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
-import { affordancesOf, deriveActs, JUSTIFICATION_REFUSALS, MACHINE_REFUSALS, RUNGS } from "../../../src/affordances.mjs";
+import { affordancesOf, deriveActs } from "../../../src/affordances.mjs";
+import { JUSTIFICATION_REFUSALS, MACHINE_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 
 const NONE = { confirmed: [], severed: [] };
 const factsOf = (w) => affordancesOf(w.host, {

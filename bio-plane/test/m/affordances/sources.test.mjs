@@ -12,7 +12,8 @@ import { captureAccountStatement } from "../../../src/capture/index.mjs";
 /* The namespace capture signs an account in (capture R69; K539 read it as the signer page's, `bio-ratify`), written out
    because `signatures` is not in affordances' uses: a change there fails the accepting arm below, loudly. */
 const NS_RATIFY = "bio-ratify";
-import { ACTS, JUSTIFICATION_REFUSALS, MACHINE_REFUSALS, RUNGS, CONSENT_PROMPT } from "../../../src/affordances.mjs";
+import { ACTS, CONSENT_PROMPT } from "../../../src/affordances.mjs";
+import { JUSTIFICATION_REFUSALS, MACHINE_REFUSALS, RUNGS } from "../../../src/op-grades/index.mjs";
 
 const NO_EVIDENCE = [undefined, "", "   ", null];
 const inFamily = (r, label) =>
