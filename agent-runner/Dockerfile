@@ -7,7 +7,8 @@ FROM node:22-bookworm-slim@sha256:efd0ab5780c2d9ab1f0f869571a00d5edb17793bff4cce
 ENV NODE_ENV=production PORT=8080 NODE_EXTRA_CA_CERTS=/etc/cloudflare/certs/cloudflare-containers-ca.crt
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# No package's install or lifecycle script runs at build (R16): the lock holds none that needs one.
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY src/entry.mjs src/runner.mjs src/ws.mjs ./src/
 # Nothing of the image is writable to the runner but the temporary directory each conversation makes and removes (R9).
 USER node

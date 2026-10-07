@@ -36,14 +36,17 @@ export const HYPOTHESES_TABLES = Object.freeze(["hypotheses", "hypothesis_revisi
 
 /* A member's own notes (R11–R15; DEC-136 (2), (3)). A note is keyed by a number of its own (`note_id`), never a record
    id, so no leg, reference, citation, connection, search or count names one (R14). `member_notes` holds the words as
-   kept, never changed; `member_note_turns` each turn of a note into an observation, a hunch or a question, appended;
-   `member_note_told` the one time a member was answered the court statement (R11). Each is its author's alone. */
+   last kept: a revision overwrites them in place, keeping no earlier text (R11, R15); `member_note_turns` each turn of
+   a note into an observation, a hunch or a question, appended; `member_note_told` the one time a member was answered
+   the court statement (R11). A deletion removes the note's row and its turns in one act, and AUTOINCREMENT keeps a
+   deleted note's number from ever being taken again (R13, R14). Each is its author's alone. */
 export const NOTES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS member_notes (
   note_id       INTEGER PRIMARY KEY AUTOINCREMENT,
   member        TEXT NOT NULL,      -- the member who kept it; the only one answered it
-  text          TEXT NOT NULL,      -- the member's words, as kept
-  at            TEXT NOT NULL
+  text          TEXT NOT NULL,      -- the member's words, as last kept
+  at            TEXT NOT NULL,
+  revised       TEXT                -- the instant of its last revision, or null
 );
 CREATE INDEX IF NOT EXISTS member_notes_of ON member_notes (member, note_id);
 CREATE TABLE IF NOT EXISTS member_note_turns (
@@ -60,5 +63,8 @@ CREATE TABLE IF NOT EXISTS member_note_told (
   at            TEXT NOT NULL
 );
 `;
+
+/* Columns added to a notes table after its first release, each added at boot where an older copy lacks it. */
+export const NOTES_ADDED_COLUMNS = Object.freeze([Object.freeze(["member_notes", "revised", "TEXT"])]);
 
 export const NOTES_TABLES = Object.freeze(["member_notes", "member_note_turns", "member_note_told"]);
