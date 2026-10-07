@@ -72,3 +72,30 @@ My readings, carried on now (P17: yours to correct):
 - `ownership: 6 files changed by op-declarations between tranche/T35 and HEAD; 0 failures`.
 
 Size (session_01636dBMY68z64H9eWzh6W3u): test runs 24, module lines 3092
+
+## J2 · REPORT
+
+B2 applied: `credit` and `recover` carry present null `NEEDS` rows (op-grades R22's `NON_ACTS`). `doorwindow` is tested as having no spec. B3 read.
+
+**For op-grades (K2041).** These are computed with affordances' `unaccounted` rule over my `OPS`/`NEEDS` and op-grades' tables on the tranche.
+- **Unpublished.** Gated, but in no published act and not in `NON_ACTS` (25):
+  - `applicationrecipes`, `assessmentrecord`, `bindsat`, `discretionrecord`, `editioninforce`, `forcesof`, `overridesof`, `poweruses`;
+  - `recordsrequestanswer`, `recordsrequestopen`, `recordsrequests`, `reviewpropose`;
+  - `standardadoption`, `standardbenchmark`, `standardforce`, `standardforcepropose`, `standardforcewithdraw`, `standardimpose`, `standardrelease`;
+  - `subscriptiondisconnect`, `uselink`, `usesfreeze`, `usesof`, `useunlink`, `usewithdraw`.
+- **Unranked.** Mutating, with no rung or stated absence (17):
+  - `assessmentrecord`, `discretionrecord`, `recordsrequestanswer`, `recordsrequestopen`, `reviewpropose`;
+  - `standardadoption`, `standardbenchmark`, `standardforce`, `standardforcepropose`, `standardforcewithdraw`, `standardimpose`, `standardrelease`;
+  - `subscriptiondisconnect`, `uselink`, `usesfreeze`, `useunlink`, `usewithdraw`.
+- **Stale.**
+  - `expunge` is in op-grades' `OP_ALIASES` copy and its grading rows. It is no op since K1901.
+  - `agentpack` is in op-grades' `NON_ACTS`, but R30 gives it no `NEEDS` row (equal to `affordances`', which has none), so R12 reads it as stale. My reading: op-grades drops it from `NON_ACTS`. The alternative is that I give it a null row, against R30's "equal" (your call).
+
+**Other modules.**
+- **affordances.** `src/affordances/t34.mjs`'s alias copy still holds `expunge`. Its `unaccounted` reads its own tables until it re-points (K2038 (3)). Today control-plane's `totality`:15 lists every op above plus the op-grades-graded T35 ops, because affordances' tables have not re-pointed yet.
+- **control-plane (T35-72).**
+  - `r53-routes`:60's closed set of stamp keys must gain `owner`, `principal`, `source` and `country`.
+  - `r53-routes`:77 fails until the door stamps them: `principal` on the records requests, `owner` on `findin`, `source` and `country` on `claim`, `login` and `recover`.
+  - Two reds are new on control-plane from my merge (`r53-routes`:77, `totality`:15), and `:60`'s cause changes. Red 29's no-spec cause is gone.
+- **credentials.** `signout` and `signouteverywhere` read `session` from the query. control-plane R59 sends a stamped `session` in the body or a header. Unless store-door R9 bridges it, credentials' map needs to read it there.
+- **Generated artifacts.** The plane bundle is stale (`src/op-declarations/index.mjs`).
