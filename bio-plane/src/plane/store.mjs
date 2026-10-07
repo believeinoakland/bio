@@ -86,18 +86,20 @@ import { answersOf, answersOps } from "../answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
-import { askOnObject } from "./ask.mjs";
-import { registerReaders, rosterSource, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
+import { askOnObject, draftOnObject } from "./ask.mjs";
+import { rosterSource } from "../../../roster-reader/index.mjs";
+import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
+import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
          ratificationWorker } from "./wiring.mjs";
 
-/* The name control-plane's promotion step (its R42) is registered under. */
-const STEP = "control-plane";
+/* The name store-door's promotion step (its R5, was control-plane R42) is registered under (K2037). */
+const STEP = "store-door";
 
 /* The first module of layer 11 in the modules' total order. `MODULE_ORDER` carries no layers and product code cannot read
    `build/` at run time, so it is named here; `store.test.mjs`' R2 test holds it to `build/modules.json`'s layers. */
 const FIRST_LAYER_11 = "wizard-scripts";
 
-/* The order promotion ranks its steps by: the modules' total order (membership R83), with control-plane's step (its R42;
+/* The order promotion ranks its steps by: the modules' total order (membership R83), with store-door's step (its R5;
    R10) after every module of layers 1–10 and before every later one (K1416: before the first layer-11 module, now
    `wizard-scripts`, N544), the rank the step has held since it was `legacy-store`'s, so every step's checks and
    projections, and the order of refusals, are today's. Promotion ranks a name the order lacks last (its R39). */
@@ -130,7 +132,7 @@ export class Store extends DurableObject {
     registerOwnersCounts(ctx);
     registerStats(ctx);
     /* promotion, built first with the order its steps rank by (membership, then promotion, as provenance's first call
-       built them), so control-plane's step ranks after layer 10 and before every layer-11 module (STEP_ORDER). */
+       built them), so store-door's step ranks after layer 10 and before every layer-11 module (STEP_ORDER). */
     const promotion = promotionOf(ctx, { order: STEP_ORDER });
     /* R16 (N522; K1307): accepted-work's one instance on this host, made here, before inquiry's factory and every reader,
        on this promotion, so its promotion check (its R4) is registered at its rank before the first request. The same
@@ -180,8 +182,9 @@ export class Store extends DurableObject {
        entry from local-facts (civil-time R9). Before people, whose duties read would otherwise build it bare. */
     const duties = dutiesOf(ctx, { factOf: dutiesFactOf(() => localFacts) });
     const people = peopleOf(ctx, { money, duties, events, lines });
-    /* R23 (K1505 (6)): roster-reader's source registered into people (its R19). */
-    people.registerRosterSource("roster-reader", rosterSource());
+    /* R23 (K1505 (6); N633, K1730): roster-reader's source registered into people (its R19), reading the held rosters
+       of an organisation through the store's read composed here (roster-reader R12). */
+    people.registerRosterSource("roster-reader", rosterSource(rosterReads({ sql: () => this.sql })));
     /* explore (K1566): the one read across the registered owners; it holds nothing, so it is kept for the route map. */
     this.explore = exploreOf(ctx, { events, money });
     /* retrieval: its projection and text index join every promotion; R21 (K1593): the projected fields' providers,
@@ -309,7 +312,7 @@ export class Store extends DurableObject {
        registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
        library, the member op table, the acts a machine is refused and the labelled machine drafts (its R13). */
     wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration());
-    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861): control-plane's step (its R42), the testimony slot and the sight index */
+    promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861, K2037): store-door's step (its R5), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
     schedulerOf(ctx, env);
     /* R3: the migration pass, then scheduler's start. */
@@ -334,7 +337,18 @@ export class Store extends DurableObject {
     /* R1: instance-setup started once per object (its `start` is idempotent on one storage), built here first, with the
        queue's producers (K1868 (2)). */
     const instanceSetup = instanceSetupOf(ctx, env, { queueProducers });
-    ctx.blockConcurrencyWhile(async () => instanceSetup.start());
+    ctx.blockConcurrencyWhile(async () => {
+      await instanceSetup.start();
+      /* F16 (K2038; capture R73, capture-sources R65): the group's own hosts, once the store is migrated and started so
+         instance-setup's claim reads, handed once to capture (for acquisition R42, adopted from the first caller that
+         names them) and to capture-sources' credentials (R55, R56); a claim made later is read at the next
+         construction. */
+      let identity = null;
+      try { identity = instanceSetup.groupIdentity(); } catch { identity = null; }
+      const ownHosts = ownHostsOf(identity);
+      captureOf(ctx, { ownHosts });
+      captureCredentialsOf(ctx, { key: env.CAPTURE_CREDENTIALS_KEY ?? null, ownHosts });
+    });
   }
 
   /* R3: record-core's `RECORD_SCHEMA` first, then each owner's `migrate()` in this order. */
@@ -412,6 +426,9 @@ export class Store extends DurableObject {
   /* B2 (K1674, K1684): `op=ask`'s work on the `bio` object, reached over the object's RPC from the door's arm (no route:
      R5). */
   async ask(args) { return askOnObject(this.ctx, this.env, args || {}); }
+  /* R19 (N686; K2038; control-plane R57): a draft's account and grant on the `bio` object, reached over the object's
+     RPC by control-plane's door (no route: R5). */
+  async draft(args) { return draftOnObject(this.ctx, this.env, args || {}); }
 
   /* R4: scheduler's. */
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }

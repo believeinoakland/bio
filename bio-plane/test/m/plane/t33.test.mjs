@@ -35,7 +35,8 @@ import { legistar } from "../../../../legistar-reader/index.mjs";
 import { ROSTER_TYPES } from "../../../../roster-reader/index.mjs";
 import { COURT_TYPES } from "../../../../court-doctypes/index.mjs";
 import { BUDGET_TYPES } from "../../../../budget-doctypes/index.mjs";
-import { registerReaders, rosterSource, ROSTER_NOT_READ, officePorts, dutiesFactOf, sheetRecompute, NO_ENGINE,
+import { rosterSource, LEVEL_READ, LEVEL_NOT_READ } from "../../../../roster-reader/index.mjs";
+import { registerReaders, rosterReads, ROSTER_CONTENT_TYPES, officePorts, dutiesFactOf, sheetRecompute, NO_ENGINE,
          retrievalTerms } from "../../../src/plane/wiring.mjs";
 
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
@@ -275,16 +276,76 @@ test("R22 (T33-12; docprofile R36): the content types are registered into docpro
   assert.equal(registerDoctype({ key: "zz" }).ok, false, "negative control: a type with no detect is refused by the seam");
 });
 
-test("R23 (K1505 (6)): roster-reader's source is registered into people once, and staffing states it reads no held roster", async () => {
+/* N633 (K1730; roster-reader R12): the held rosters of one organisation, seeded as the modules that own them hold them:
+   bundles (record-core), extraction's placed reading and its text units, entities' resolutions, calculations' tables
+   and the canonical bytes it keeps for a synchronous read. `hidden` is filed in a project ann is not on. */
+const ORG = "ENT-2026-0001-org", OTHER = "ENT-2026-0002-other";
+const CHART = "Records Division\nDirector Jane Doe\nManager\nJohn Roe";
+function seedRosters(x) {
+  const sql = x.ctx.storage.sql;
+  sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+            VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
+  for (const [id, kind] of [[ORG, "organisation"], [OTHER, "organisation"]])
+    sql.exec(`INSERT INTO entities (entity_id, kind, label) VALUES (?, ?, ?)`, id, kind, id);
+  const bundle = (id, project = null) => sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state,
+      created, last_updated, bundle_sha, project) VALUES (?, 'information', 'g', ?, 'collected', 't', 't', 'sha', ?)`, id, id, project);
+  const capture = (sha, bid, type, text, entity) => {
+    sql.exec(`INSERT INTO readings (capture_sha, bundle_id, content_type, reading) VALUES (?, ?, ?, '{}')`, sha, bid, type);
+    text.split("\n").forEach((t, seq) => sql.exec(`INSERT INTO capture_text (capture_sha, bundle_id, extent_kind, extent, ref, seq,
+        text, chain_kind) VALUES (?, ?, 'doc-para', ?, ?, ?, ?, 'text')`, sha, bid, String(seq), `para ${seq}`, seq, t));
+    sql.exec(`INSERT INTO resolutions (capture_sha, bundle_id, ref, entity_id, grade, method) VALUES (?, ?, 'r', ?, 'B', 'm')`, sha, bid, entity);
+  };
+  const table = (sha, bid, capSha, header, rows) => {
+    const csv = [header, ...rows].map((r) => r.join(",")).join("\r\n") + "\r\n";
+    sql.exec(`INSERT INTO calc_tables (sha, bundle_id, source_json, schema_json, header_json, rows, bytes, undetermined_json,
+        undetermined_count, declared_by, declared_at) VALUES (?, ?, ?, '{}', ?, ?, ?, '[]', 0, 'class:daemon', 't')`,
+      sha, bid, JSON.stringify({ capture_sha: capSha }), JSON.stringify(header), rows.length, csv.length);
+    sql.exec(`INSERT INTO calc_table_bytes (sha, seq, bundle_id, chunk) VALUES (?, 0, ?, ?)`, sha, bid, csv);
+  };
+  bundle("INFO-1"); bundle("INFO-2"); bundle("INFO-3"); bundle("INFO-4", "PROJ-2026-0001-closed");
+  capture("c1", "INFO-1", "org_chart", CHART, ORG);                        /* read: placed as a chart, resolved to ORG */
+  capture("c2", "INFO-2", "org_chart", CHART, OTHER);                      /* not ORG's */
+  capture("c3", "INFO-2", "agenda", CHART, ORG);                           /* ORG's, not placed as a roster */
+  capture("c4", "INFO-4", "staff_roster", CHART, ORG);                     /* ORG's, in a project ann is not on */
+  capture("c5", "INFO-3", "budget", "Fund,Amount", ORG);                   /* the source of two tables below */
+  table("t1", "INFO-3", "c5", ["Full Name", "Job Title", "Department", "Phone"],
+        [["Ann Lee", "Chair", "Finance", "510-555-0101"], ["Bo Diaz", "Clerk", "Records", ""]]);
+  table("t2", "INFO-3", "c5", ["Fund", "Amount"], [["General", "100"]]);   /* R6 names no roster: not handed */
+  table("t3", "INFO-2", "c2", ["Full Name", "Job Title"], [["Cy Ng", "Chair"]]);   /* OTHER's */
+}
+
+test("R23 (K1505 (6); N633, K1730; roster-reader R12): people's roster-reader source reads the organisation's held rosters through the store's read: captures placed as a roster or chart resolving to it, and calculations' tables with R6's roles, each within the viewer's sight; registered once", async () => {
   const x = await store();
-  const again = peopleOf(x.ctx).registerRosterSource("roster-reader", rosterSource());
+  seedRosters(x);
+  const again = peopleOf(x.ctx).registerRosterSource("roster-reader", rosterSource(rosterReads({ sql: () => x.ctx.storage.sql })));
   assert.equal(again.ok, false);
-  assert.equal(again.reason, "LISTENER_DECLARED");
-  const a = rosterSource()({ organisation: "ENT-1", at: "2026-01-01" });
-  assert.deepEqual([a.level, a.rows, a.why], ["held as a table, not read", [], ROSTER_NOT_READ]);
-  assert.deepEqual(a.types, ROSTER_TYPES.map((t) => t.key));
-  /* negative control: a bare people instance holds no roster-reader source */
-  assert.equal(peopleOf(storage().ctx).registerRosterSource("roster-reader", rosterSource()).ok, true);
+  assert.equal(again.reason, "LISTENER_DECLARED", "the plane registered it at construction");
+  const staffing = (viewer) => {
+    const a = peopleOf(x.ctx).staffingAt({ organisation: ORG, at: "2026-01-01", viewer });
+    assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+    const r = a.rosters.find((s) => s.source === "roster-reader");
+    assert.ok(r, JSON.stringify(a.rosters).slice(0, 300));
+    return r.answer;
+  };
+  const ann = staffing("member:ann");
+  assert.equal(ann.level, LEVEL_READ);
+  assert.deepEqual(ann.rosters.map((r) => r.source), [{ capture_sha: "c1" }, { table: "t1" }],
+                   "the chart placed and resolved to ORG and its roster table; nothing of OTHER, no agenda, no money table, nothing out of sight");
+  assert.deepEqual(ann.rosters[0].rows.map((r) => [r.name, r.title]), [["Jane Doe", "Director"]], "the chart read by roster-reader R3");
+  assert.deepEqual(ann.rosters[1].rows.map((r) => [r.name, r.title, r.unit]), [["Ann Lee", "Chair", "Finance"], ["Bo Diaz", "Clerk", "Records"]],
+                   "the table read through R6's roles");
+  assert.doesNotMatch(JSON.stringify(ann), /510-555/, "a contact column is never read (roster-reader R4)");
+  assert.deepEqual(ROSTER_CONTENT_TYPES, ["staff_roster", "org_chart"]);
+  /* an administrator's sight reaches the project's roster too; a viewer the gate does not know sees none */
+  assert.deepEqual(staffing("class:admin").rosters.map((r) => r.source), [{ capture_sha: "c1" }, { capture_sha: "c4" }, { table: "t1" }]);
+  /* negative control: the store's read refuses or fails, and the source says it reads no held roster */
+  const failing = rosterReads({ sql: () => { throw new Error("storage gone"); } })({ organisation: ORG, viewer: "class:admin" });
+  assert.equal(failing.ok, false);
+  const notRead = rosterSource(rosterReads({ sql: () => { throw new Error("storage gone"); } }))({ organisation: ORG, at: "2026-01-01" });
+  assert.equal(notRead.level, LEVEL_NOT_READ);
+  assert.deepEqual(rosterReads({ sql: () => x.ctx.storage.sql })({ organisation: ORG, viewer: "nobody" }), { items: [] }, "a viewer the gate does not know sees nothing");
+  /* a bare people instance holds no roster-reader source */
+  assert.equal(peopleOf(storage().ctx).registerRosterSource("roster-reader", rosterSource(() => [])).ok, true);
 });
 
 test("R23 (K1505 (3); publication R61): case-tensions holds publication's provider, registered once, and the route map's `caseflags` and `attribute` are case-tensions'", async () => {

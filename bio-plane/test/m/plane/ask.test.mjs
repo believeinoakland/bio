@@ -7,17 +7,22 @@ import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { store } from "./fixture.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
-import { askOp } from "../../../src/plane/ask.mjs";
+import { askOp, draftOnObject } from "../../../src/plane/ask.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 
 const SEAL = "a-long-seal-secret-for-the-test-only";
 const SESSION = "s".repeat(64);
+/* agent-worker R59's answer to a writing-help draft */
+const DRAFT = { ok: true, task: { op: "writinghelp", act: "conclude", field: "reason" }, draft: { text: "A worded reason." },
+                label: { kind: "machine" }, usage: { input_tokens: 3, output_tokens: 4 }, calls: 1 };
 
 /* A plane whose agent-worker records each ask and answers a two-line stream; ann holds a session and an account. */
 async function world({ account = true, worker = true } = {}) {
   const asks = [];
   const env = { ACCOUNT_SEAL_SECRET: SEAL };
   if (worker) env.AGENT_WORKER = { fetch: async (u, init) => { asks.push([u, JSON.parse(init.body)]);
+    if (u === "https://agent-worker/draft")
+      return new Response(JSON.stringify(DRAFT), { status: 200, headers: { "content-type": "application/json" } });
     return new Response('{"event":"step","step":"interpreting"}\n{"event":"answer","ok":true}\n',
                         { status: 200, headers: { "content-type": "application/x-ndjson" } }); } };
   const x = await store({ env });
@@ -176,4 +181,79 @@ test("K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): a member with
   await x.s.ask({ member: "member:ann", session: SESSION, question: "q" });
   assert.equal(x.asks[1][1].account.level, "member");
   assert.equal(x.asks[1][1].account.secret, "sk-ant-zz-ann");
+});
+
+/* R19 (N686; K2038; control-plane R57, agent-worker R59): the draft's account and grant on the `bio` object. */
+const TASK = { op: "writinghelp", act: "conclude", field: "reason" };
+const draft = (x, extra = {}) => x.s.draft({ member: "member:ann", session: SESSION, task: TASK, told: "what I saw", ...extra });
+
+test("R19 (N686; K2038; agent-worker R59): a member's draft carries their account in R6's shape to agent-worker's /draft, with no grant while their suggestions switch is off; agent-worker's answer comes back as given with the switch", async () => {
+  const x = await world();
+  const r = await draft(x);
+  assert.deepEqual(r, { status: 200, answer: DRAFT, grant: null, suggestions: false });
+  assert.equal(x.asks.length, 1);
+  const [u, body] = x.asks[0];
+  assert.equal(u, "https://agent-worker/draft");
+  assert.deepEqual(body, { task: TASK, told: "what I saw",
+    account: { kind: "apikey", level: "member", secret: "sk-ant-zz-ann", member: "member:ann", suggestions: false } },
+    "no grant and no firsthand flag: the draft works only from what the member told it");
+  assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 0, "no grant minted");
+});
+
+test("R19 (N686; DEC-153 (2), K1841 (2)): with the member's suggestions on, a grant is minted for them and sent, and handed back for the door's read-log check; a firsthand field never gets one", async () => {
+  const x = await world();
+  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  const r = await draft(x);
+  assert.equal(r.status, 200);
+  assert.equal(r.suggestions, true);
+  assert.match(r.grant, /^[0-9a-f]{64}$/);
+  assert.equal(x.asks[0][1].grant, r.grant, "the grant sent is the one handed back");
+  assert.equal(x.asks[0][1].account.suggestions, true);
+  const admit = await credentialsOf(x.ctx).aiGrantAdmit({ token: r.grant, op: "search", write: false });
+  assert.equal(admit.viewer, "member:ann", "the member's own read-only grant");
+  /* firsthand: what the member saw is only worded, never read for (DEC-153 (2)) */
+  const f = await draft(x, { firsthand: true });
+  assert.equal(f.grant, null);
+  assert.equal(x.asks[1][1].grant, undefined);
+  assert.equal(x.asks[1][1].firsthand, true);
+  assert.equal([...x.ctx.storage.sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c, 1, "one grant, the first draft's");
+});
+
+test("R19 (N686; credentials R35, R37): a member with no account of their own is served by the group's key, carried as level `group` with the group's suggestions switch", async () => {
+  const x = await world({ account: false });
+  const c = credentialsOf(x.ctx);
+  assert.equal((await c.groupKeySet({ key: "sk-ant-zz-group", by: "ada" })).ok, true);
+  assert.equal((await c.groupKeySwitch({ on: true, by: "ada" })).ok, true);
+  assert.equal((await c.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" })).ok, true);
+  assert.equal((await c.groupSwitchSet({ switch: "suggestions", on: true, by: "ada" })).ok, true);
+  const r = await draft(x);
+  assert.equal(r.status, 200);
+  assert.deepEqual(x.asks[0][1].account, { kind: "apikey", level: "group", secret: "sk-ant-zz-group", member: "member:ann", suggestions: true });
+  assert.equal(r.suggestions, true);
+  assert.match(r.grant, /^[0-9a-f]{64}$/);
+});
+
+test("R19 negative controls (N686): no assistant member, the assistant off, no account, a session not the member's, and a member that does not answer each end the draft in their owner's words, nothing asked or nothing kept", async () => {
+  const unbound = await world({ worker: false });
+  const r1 = await draft(unbound);
+  assert.equal(r1.status, 503);
+  assert.equal(r1.answer.reason, "AGENT_WORKER_UNBOUND");
+  const off = await world();
+  assert.equal(instanceSetupOf(off.ctx).assistantSet({ on: false, by: "ada" }).ok, true);
+  const r2 = await draft(off);
+  assert.deepEqual([r2.status, r2.answer.reason], [403, "ASSISTANT_OFF"]);
+  const none = await world({ account: false });
+  const r3 = await draft(none);
+  assert.equal(r3.status, 409);
+  assert.match(JSON.stringify(r3.answer), /NO_ACCOUNT/);
+  const x = await world();
+  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  const r4 = await draft(x, { session: "t".repeat(64) });
+  assert.equal(r4.status, 403, "a grant is minted only under the member's own live session");
+  assert.equal(r4.grant, null);
+  assert.equal(off.asks.length + none.asks.length + x.asks.length, 0, "nothing reached agent-worker");
+  const silent = await world();
+  silent.env.AGENT_WORKER.fetch = async () => { throw new Error("gone"); };
+  const r5 = await draftOnObject(silent.ctx, silent.env, { member: "member:ann", session: SESSION, task: TASK, told: "t" });
+  assert.deepEqual([r5.status, r5.answer.reason], [502, "AGENT_WORKER_SILENT"]);
 });

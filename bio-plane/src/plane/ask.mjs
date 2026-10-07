@@ -80,3 +80,50 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   }
   return new Response(res.body, { status: res.status, headers: res.headers });
 }
+
+/** plane R19 (N686; K1837, K1841, K2038; control-plane R57, agent-worker R59, credentials R27, R35, R37): on the `bio`
+ *  object, the draft's account and grant, the `/draft` twin of `askOnObject`. control-plane's door, past every refusal
+ *  its own and the owner's, asks it for a member's `groupdescriptiondraft` or `writinghelp`. While the copy's assistant
+ *  is off it is refused `ASSISTANT_OFF` (instance-setup R55); it resolves the account that serves the member's own act
+ *  (`accountFor`, an `ask`-kind act: a draft is the member's own read-only ask), reads that account's `suggestions`
+ *  switch (the member's own reference's, credentials R25; the group key's, its R37), mints the member's ask grant only
+ *  when `suggestions` is on and `firsthand` is not true (DEC-153 (2), K1841 (2)), and posts `{task, told, account,
+ *  grant?, firsthand?}` to agent-worker's `/draft` in its R6 wire shape. It answers `{status, answer, grant,
+ *  suggestions}`: agent-worker's answer as given (or the refusal that ended it first), the grant it minted (null when
+ *  none), and the switch, so the door checks the draft against that grant's read log (`wizard-scripts.checkDraft`) and
+ *  counts its usage; the door answers the member, never this. The secret leaves the object only in that one call. */
+export async function draftOnObject(ctx, env, { member = null, session = null, task = null, told = null, firsthand = false } = {}) {
+  const out = (status, answer, grant = null, suggestions = false) => ({ status, answer, grant, suggestions });
+  const w = env && env.AGENT_WORKER;
+  if (!w || typeof w.fetch !== "function")
+    return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was drafted." });
+  const off = instanceSetupOf(ctx, env).assistantGate();
+  if (off) return out(403, off);
+  const c = credentialsOf(ctx);
+  let ref = await c.accountFor({ member, act: { kind: "ask", member } });
+  if (!ref || ref.ok !== true) return out(409, ref);
+  let suggestions = false;
+  try {
+    if (ref.level === "member") { const st = c.accountReferenceState({ member, viewer: member }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
+    else { const g = c.groupKeySwitches(); suggestions = !!(g && g.suggestions === true); }
+  } catch { suggestions = false; }
+  let grant = null;
+  if (suggestions && firsthand !== true) {
+    const g = await c.aiGrantMint({ member, by: member, session });
+    if (!g || g.ok !== true) return out(403, g, null, suggestions);
+    grant = g.token;
+  }
+  const body = JSON.stringify({ task, told, account: { kind: ref.kind, level: ref.level, secret: ref.key, member, suggestions },
+                                ...(grant ? { grant } : {}), ...(firsthand === true ? { firsthand: true } : {}) });
+  ref = null;
+  let res;
+  try {
+    res = await w.fetch("https://agent-worker/draft", { method: "POST", headers: { "content-type": "application/json" }, body });
+  } catch {
+    return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, grant, suggestions);
+  }
+  let answer;
+  try { answer = await res.json(); }
+  catch { answer = { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member's answer was not JSON. Nothing was kept." }; }
+  return out(res.status, answer, grant, suggestions);
+}
