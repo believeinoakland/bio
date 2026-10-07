@@ -31,4 +31,4 @@ The architecture check will refuse the import until the edge is in `modules.json
 - Layer tests: none named in `build/manifest.md`.
 - `format`: 130 modules, 129 requirements files; 0 failures. `architecture`: 12 product files, 46 relative imports; 0 failures. `coverage`: 12 of 12 live requirement ids named by a test; 0 failures. `ownership`: 7 files changed by citation between tranche/T35 and HEAD; 0 failures.
 
-Size (session_013PbWmoBUuyHPeboigwqVPg): test runs 10, module lines 1153
+Size (session_013PbWmoBUuyHPeboigwqVPg): test runs 10, module lines 1186
