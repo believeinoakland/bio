@@ -243,7 +243,7 @@ test("R10 a conforming archive is laid out in APPNOTE 6.3's form: each local hea
 
 /* ------------------------------------------------------------------ R11 */
 
-test("R11 a conforming archive passes both oracles: unzip -t exits 0, and Python's zipfile lists the entries in order with their names and gives back each entry's data byte for byte", { skip: NO_ORACLES }, () => {
+test("R11 a conforming archive with at least one entry passes both oracles: unzip -t exits 0, and Python's zipfile lists the entries in order with their names and gives back each entry's data byte for byte", { skip: NO_ORACLES }, () => {
   for (const [what, entries] of Object.entries(CONFORMING)) {
     const z = makeZip(entries);
     const u = unzipT(z);
@@ -258,7 +258,7 @@ test("R11 a conforming archive passes both oracles: unzip -t exits 0, and Python
   }
   /* An archive with no entries is conforming (R10) and zipfile reads it;
      Info-ZIP's unzip answers "zipfile is empty" with status 1 for any such
-     archive, so it is not an oracle for that one (J1, reading 1). */
+     archive, so R11 covers archives with at least one entry (K1917). */
   assert.deepEqual(readZipfile(makeZip([])).entries, []);
 });
 
