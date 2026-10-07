@@ -32,3 +32,7 @@ Code: `bio-plane/src/case-checker/standards.mjs`, exported from the module's ind
 - `node checks/ownership.mjs … case-checker tranche/T35`: 4 files changed; 0 failures.
 
 Size (session_014x9ruBn6FrdPiY5Dafkq2k): test runs 7, module lines 1265
+
+## J2 · REPORT
+
+Found in another module (case-authoring's case document; case-grammar's blocks): no writer of the case document states a member finding's subject_entity, so K2002's body key cannot narrow a member's criteria rows in any document written today. R21 then reads every row of the standard: a member is judged a benchmark's only when every body's row is binds: false, so a benchmark row beside a binding row for another body lets 'violated' pass. R21 reads subject_entity from the member's case_roles: or case_conclusions: row when present; stating it there (the member's subject_entity at its pinned bytes) is case-authoring's and case-grammar's, a format addition for N717 or later. Also: program.mjs is not stale (R21 is not in the standalone program; the R13 test passes after merging tranche/T35), so nothing to regenerate for this job.
