@@ -7,7 +7,8 @@ import assert from "node:assert/strict";
 import { world } from "../money-checks/fixture.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
-import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX } from "../../../src/notice-producers/index.mjs";
+import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS } from "../../../src/notice-producers/index.mjs";
+import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
 const P = "PROJ-2026-0001-alpha", H = "PROJ-2026-0002-hidden";
@@ -29,8 +30,20 @@ function providers(calls = []) {
         state: "overdue", why: "passed", evidence: [], question: "Was it done by 2026-01-11?" }] }) },
     inquiry: { datedWaits: ({ member }) => ({ ok: true, member, waits: [{ inquiry: "INQ-1", index: 0, text: "a reply", description: "from the office",
       date: "2026-10-01", set_by: member, set_at: NOW, state: "due" }] }) },
+    credentials: { securityLevel: () => ({ level: "High", levelAt: "2026-10-06T11:00:00Z" }),
+      securityMap: ({ from, to }) => { const f = Date.parse(from), t = Date.parse(to);
+        return { ok: true, from, to, step: "hour", buckets: Array.from({ length: Math.ceil((t - f) / 3600e3) }, (_, i) => {
+          const start = new Date(f + i * 3600e3).toISOString().replace(/\.\d+Z$/, "Z");
+          const n = start >= "2026-10-06T11:00:00Z" ? 40 : 0;
+          return { start, counts: { through: 0, total: n }, usual: { through: 0, total: 0 } }; }) }; } },
+    following: { policyChanges: () => ({ ok: true, cursor: null, changes: [{ watch: 7, standard: "STD-1", address: "https://example.org/p",
+      before: { capture: "a".repeat(64), at: "2026-09-01T00:00:00Z" }, after: { capture: "b".repeat(64), at: "2026-10-01T00:00:00Z" }, amendment_held: false }] }) },
+    standards: { standardRead: ({ id }) => ({ ok: true, id, cite: "a policy", declared_by: "member:alice" }) },
   };
 }
+/* membership as the real one answers, with alice an administrator besides (R12's recipient). */
+const adminAlice = (m) => ({ participation: (...a) => m.participation(...a), projectOwners: (...a) => m.projectOwners(...a),
+  memberFacts: () => ({ status: "active" }), activeAdmins: () => ["alice"] });
 function setup(over = {}) {
   const w = world();
   w.project(P, ["alice"]);
@@ -38,18 +51,19 @@ function setup(over = {}) {
   w.st.sql.exec(`CREATE TABLE IF NOT EXISTS duties (duty_id TEXT, obligor TEXT)`);
   w.st.sql.exec(`INSERT INTO duties VALUES ('DUT-1', 'ENT-2026-0001')`);
   const calls = [];
-  const n = fresh(w.host, { membership: w.membership, ...providers(calls), ...over });
+  const n = fresh(w.host, { membership: w.membership, ...providers(calls), ...(typeof over === "function" ? over(w) : over) });
   return { w, n, calls, ...reader(n) };
 }
 
-test("R1: every item R2–R6 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated", () => {
-  const { read, asked } = setup();
+test("R1: every item R2–R6, R12 and R13 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated", () => {
+  const { read, asked } = setup((w) => ({ membership: adminAlice(w.membership) }));
   const r = read("alice", { now: NOW });
   const m = byId(r);
   assert.deepEqual(Object.keys(m).sort(), [
     `FINDING::interest-check-noticed::CHK-1::r-${P}`, `FINDING::money-detector-noticed::md-1::m-${P}`,
     "FINDING::standing-answer::STQ-1::1", "FINDING::temporal-expectation-due::DUT-1::OCC-1::overdue",
-    "OBLIGATION::inquiry-recheck-due::INQ-1::2026-10-01"].sort());
+    "OBLIGATION::inquiry-recheck-due::INQ-1::2026-10-01", "FINDING::security-level-high::2026-10-06T11:00:00Z",
+    `FINDING::policy-changed-noticed::7::${"b".repeat(64)}`].sort());
   for (const it of r.items) {
     assert.equal(it.class, NOTICE_KINDS[it.kind], it.kind);
     assert.ok(it.case && Array.isArray(it.case.ancestors), "a home set from the walk passed in");
@@ -60,7 +74,9 @@ test("R1: every item R2–R6 derive for this member and viewer, each homed throu
   assert.deepEqual(m["FINDING::temporal-expectation-due::DUT-1::OCC-1::overdue"].options, [{ id: "opt", on: ["DUT-1"] }], "queue's options for the subject");
   assert.deepEqual(r.facts, { projects: { bound: NOTICE_PROJECTS_MAX, truncated: false }, interest_check: { truncated: false },
     money_detector: { truncated: false }, standing_answer: { bound: 1000, truncated: false },
-    temporal_expectation: { bound: DUTIES_MAX, truncated: false }, inquiry_recheck: { truncated: false }, failed: [] });
+    temporal_expectation: { bound: DUTIES_MAX, truncated: false }, inquiry_recheck: { truncated: false },
+    security_level: { days: SECURITY_DAYS, truncated: false }, policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
+    failed: [] });
 });
 
 test("R1: with no walk and no options passed, an item is ungrouped and carries only its own acts", () => {
@@ -72,11 +88,11 @@ test("R1: with no walk and no options passed, an item is ungrouped and carries o
 
 test("R1: writes nothing and never throws; a provider that throws contributes no item and is named in facts.failed, the others still answer", () => {
   const boom = () => { throw new Error("down"); };
-  const { w, read } = setup({ people: { checkResults: boom, listChecks: boom }, inquiry: { datedWaits: boom } });
+  const { w, read } = setup({ people: { checkResults: boom, listChecks: boom }, inquiry: { datedWaits: boom }, following: { policyChanges: boom } });
   const before = snapshot((q) => w.st.sql.exec(q));
   const r = read("alice", { now: NOW });
   assert.deepEqual(snapshot((q) => w.st.sql.exec(q)), before);
-  assert.deepEqual(r.facts.failed, ["people", "inquiry"]);
+  assert.deepEqual(r.facts.failed, ["people", "inquiry", "following"]);
   assert.deepEqual(r.items.map((i) => i.kind).sort(), ["money-detector-noticed", "standing-answer", "temporal-expectation-due"]);
   /* a provider throwing part-way contributes nothing at all */
   let calls = 0;

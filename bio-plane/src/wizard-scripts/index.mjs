@@ -649,14 +649,16 @@ export class WizardScripts {
     return true;
   }
 
-  /* R12 against the registration: a `{template}` through filing-templates' R25 as `viewer` sees it; the offered scripts
-     `viewer` may see, for duplicates (the script itself left out). */
-  #check(steps, viewer, self = null) {
+  /* R12 against the registration: a `{template}` through filing-templates' R25 as `viewer` sees it, a ref beginning with
+     `@` by its name's handle (its R26, in `project`, the script's, when it has one; K2021), an `<id>@<n>` ref split into
+     template and version; the offered scripts `viewer` may see, for duplicates (the script itself left out). */
+  #check(steps, viewer, self = null, project = null) {
     const reg = this.#registration();
     const templateOffered = (ref) => {
-      if (!this.templates) return false;
-      const p = typeof ref === "string" && ref.includes("@") ? ref.split("@") : [ref, null];
-      const r = this.#call(() => this.templates.offeredVersion({ template: p[0], version: p[1], viewer }));
+      if (!this.templates || typeof ref !== "string") return false;
+      const asked = ref.startsWith("@") ? { name: ref, ...(project ? { project } : {}) }
+        : ref.includes("@") ? { template: ref.split("@")[0], version: ref.split("@")[1] } : { template: ref, version: null };
+      const r = this.#call(() => this.templates.offeredVersion({ ...asked, viewer }));
       return !!r && r.ok === true;
     };
     const offered = this.#offeredScripts(viewer).filter((x) => x.s.id !== self).map((x) => ({ id: x.s.id, steps: x.steps }));
@@ -698,7 +700,7 @@ export class WizardScripts {
       const n = this.#latestApproved(s, this.#events(s.id));
       if (n === null) continue;
       const v = this.#one(`SELECT author FROM wiz_versions WHERE script_id=? AND version=?`, s.id, n);
-      const { refusals } = this.#check(this.#steps(s, n), `member:${v.author}`, s.id);
+      const { refusals } = this.#check(this.#steps(s, n), `member:${v.author}`, s.id, s.project);
       const was = this.#isBroken(s.id, n);
       if (refusals.length && !was) {
         const first = { code: refusals[0].code, step: refusals[0].step, check: refusals[0].check, detail: refusals[0].detail };
@@ -952,7 +954,7 @@ export class WizardScripts {
     const state = this.#stateOf(this.#events(s.id), n);
     if (state !== "draft") return this.#notADraft(s, n, state);
     const steps = this.#steps(s, n);
-    const { refusals, warnings } = this.#check(steps, viewer, s.id);
+    const { refusals, warnings } = this.#check(steps, viewer, s.id, s.project);
     if (refusals.length) return WizardScripts.#checked(refusals, warnings, { version: versionId(s.id, n) });
     const at = this.#when();
     const sha = this.#latestRevision(s.id, n).sha;
@@ -999,7 +1001,7 @@ export class WizardScripts {
       return refuse("APPROVER_IS_AUTHOR", "you are the version's author and its only member contributor: another member approves it",
                     { version: versionId(s.id, n) });
     /* END DEC-49 REGION is-wizard-approve */
-    const { refusals, warnings } = this.#check(this.#steps(s, n), viewer, s.id);
+    const { refusals, warnings } = this.#check(this.#steps(s, n), viewer, s.id, s.project);
     if (refusals.length) return WizardScripts.#checked(refusals, warnings, { version: versionId(s.id, n) });
     const at = this.#when();
     const prev = this.#latestApproved(s, events);

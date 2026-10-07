@@ -82,6 +82,42 @@ test("R12 op=wizardcheck serves checkScript to any credential, ai included, agai
   assert.deepEqual(w.snapshot(), before);
 });
 
+test("R12 R2 a {template} draft named @ and a handle reaches filing-templates' offeredVersion by name (its R26), in the script's project; an <id>@<n> ref keeps its split (K2021)", () => {
+  const w = seeded();
+  const B = V("bob");
+  /* a project template of P named "Records request", approved as filing-templates' acts leave it (alice drafts, bob approves) */
+  const ft = w.filingTemplates;
+  const t = ft.templateDraft({ project: w.P, kind: "records_request", use: "file", profiles: ["test-port-ellery"], name: "Records request",
+                               text: "To the {{counterparty_role}}: {{group}} asks under {{law}}.", author: A, viewer: A });
+  assert.equal(t.ok, true, JSON.stringify(t));
+  const secret = "a".repeat(64);
+  for (const r of [ft.templateReviewGrant({ version: t.version, recipient: "Pat Lawyer", organisation: "Legal Aid (test)", secretSha: secret, by: A, viewer: A }),
+                   ft.templateSubmit({ version: t.version, reviewers: ["bob"], author: A, viewer: A }),
+                   ft.templateReview({ version: t.version, outcome: "no_concerns", scope: "legal sufficiency", secretSha: secret }),
+                   ft.templateApprove({ version: t.version, by: B, viewer: B })])
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const on = (template) => [step("case-home", "casenote", { draft: { template } }), STEPS[1]];
+  /* a script of P: '@records-request' is P's template, found by its handle, and the script submits and is approved */
+  const a = approved(w, { name: "Ask for records", steps: on("@records-request") });
+  assert.equal(w.wz.wizardRead({ version: a.version, viewer: F }).offered, true);
+  /* the same ref in a script of Q, where no template goes by that name, is refused naming its step */
+  w.join(w.Q, "frank");
+  const q = draft(w, { project: w.Q, name: "Elsewhere", steps: on("@records-request") });
+  const sq = w.wz.wizardSubmit({ version: q.version, author: F, viewer: F });
+  assert.deepEqual([sq.ok, sq.code, sq.step], [false, "WIZARD_DRAFT_REFUSED", 1]);
+  /* with no project (op=wizardcheck), a handle resolves among the group's and the active profiles' templates */
+  assert.deepEqual(codes(w.wz.wizardCheck({ steps: on("@request-under-the-records-act"), viewer: F })), [], "the profile's, by its label's handle");
+  assert.deepEqual(codes(w.wz.wizardCheck({ steps: on("@records-request"), viewer: F })), [["WIZARD_DRAFT_REFUSED", 1]], "a project's is asked only with the project");
+  for (const bad of ["@no-such-template", "@Records request", "@"])
+    assert.deepEqual(codes(w.wz.wizardCheck({ steps: on(bad), viewer: F })), [["WIZARD_DRAFT_REFUSED", 1]], bad);
+  /* an <id>@<n> ref keeps its split: template and version */
+  assert.deepEqual(codes(w.wz.wizardCheck({ steps: on(`${OFFERED_TEMPLATE}@1`), viewer: F })), [], "id and version");
+  assert.deepEqual(codes(w.wz.wizardCheck({ steps: on(`${OFFERED_TEMPLATE}@9`), viewer: F })), [["WIZARD_DRAFT_REFUSED", 1]], "no such version");
+  assert.deepEqual(codes(w.wz.wizardCheck({ steps: on(t.version), viewer: F })), [], "a group template's id@version, as its viewer sees it");
+  /* the registration's re-check reads the script's project too: P's script stays offered at the next start */
+  assert.deepEqual(restart(w).registered.broken, []);
+});
+
 test("R13 wizardRegister once per construction; a second is WIZARD_ALREADY_REGISTERED; registeredScreens answers the registry ([] before)", () => {
   const w = seeded({ register: false });
   assert.deepEqual(w.wz.registeredScreens(), []);
