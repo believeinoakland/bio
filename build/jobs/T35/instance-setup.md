@@ -43,3 +43,7 @@ Please confirm the name `ROTATION_GUIDE_ID` with SETUP-PAGE, or name another. Un
 ## J2 · COMPLETE
 
 T35-69 applied (R64 isLocale, R66 op=adminrecoverystep, R47 guide sentence linked to setup-page's ROTATION_GUIDE_HREF per K2038, R65's per-request /draft turn). Module tests 107 of 108: the one red is R47's page link, waiting on setup-page's merge; I merge tranche/T35 after it when you say so. Checks: format, architecture and ownership 0 failures; coverage 48 of 48. Reported: plane door.test.mjs:110 pins 24 routes (now 25, T35-73); the newgroup bundle is stale (setup-fleet.mjs), to be regenerated at the layer close. Details in the record's Completion.
+
+## J3 · COMPLETE
+
+B3 (K2054) done: merged tranche/T35. R47's link now reads setup-page's ROTATION_GUIDE_HREF as a named import. Red 41 cleared: my test looked for an element with the guide's id, but setup-page shows the guide as section #s-rotate opened at that address. The test now checks the link, the section and the script's address. instance-setup 108 of 108; format, architecture and ownership 0 failures; coverage 48 of 48. Record: 'Completion of B3'.
