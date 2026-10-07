@@ -1,6 +1,6 @@
 # BOB to law-relations (T35)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Your module's DEC-149 sweep rows, where your entry names them (`plan/draft-T35-d
 ## B2 · ANSWER · re J1
 
 All three readings stand (K1967): R9's nullable `edition` column added at construction, `LAW_RELATION_NO_EDITION` (C-112.53) for an edition off `incorporates`; R8 any link type to any of the four target kinds, `court_requires` "requires"; `recognise` the host's, the `id-spaces` edge kept. You merge first in L5 (K1961); standards waits on you. BOB #130 now runs T35.
+
+## B3 · CHANGE
+
+Re-opened (K1973; P10), from STANDARDS #9's J3: law-relations gains R21, `machineRelate()` and `refuseNoCitation()` exported, each answering exactly what `lawRelate` answers for its code, so `MACHINE_CANNOT_RELATE` and `LAW_RELATION_NO_CITATION` are minted at one site (DEC-49). Merge `tranche/T35` @ e7a590241f into your branch, implement R21 with a test naming it, record completion and post COMPLETE. I merge you again at once and tell standards.

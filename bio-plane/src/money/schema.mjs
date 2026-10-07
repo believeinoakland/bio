@@ -7,7 +7,8 @@
    (`fact_id`) and `money_concerns` (`fact_id`, `concerns`, one row per id concerned) are part of it (K1563). Beside
    them, `withdrawn_at` is NULL while the fact stands.
    `sight_bundle` is the bundle whose sight the fact follows (R21): its source capture's, or its source fact's. Every
-   child row carries it, so a bundle's purge reaches each table by its own column. No table holds a total (R20). */
+   child row carries it, so a bundle's purge reaches each table by its own column. No table holds a total (R20).
+   `question` (R2, T35) is the inquiry bundle a fact was recorded for, or NULL; it is not part of R19's contract. */
 export const MONEY_SCHEMA = `
 CREATE TABLE IF NOT EXISTS money_facts (
   fact_id TEXT PRIMARY KEY,
@@ -21,7 +22,7 @@ CREATE TABLE IF NOT EXISTS money_facts (
   source_capture_sha TEXT, source_extent TEXT, source_content_id TEXT, source_table TEXT, source_row TEXT, source_binding TEXT,
   source_fact TEXT,
   method TEXT NOT NULL, grade_reading TEXT, grade_basis TEXT,
-  by TEXT, at TEXT NOT NULL, sight_bundle TEXT, withdrawn_at TEXT, projected_key TEXT
+  by TEXT, at TEXT NOT NULL, sight_bundle TEXT, withdrawn_at TEXT, projected_key TEXT, question TEXT
 );
 CREATE INDEX IF NOT EXISTS money_facts_from_entity ON money_facts (from_entity, period_start);
 CREATE INDEX IF NOT EXISTS money_facts_to_entity ON money_facts (to_entity, period_start);
@@ -60,6 +61,9 @@ CREATE TABLE IF NOT EXISTS money_fund_types (
 );
 CREATE INDEX IF NOT EXISTS money_fund_types_fund ON money_fund_types (fund, seq);
 `;
+
+/** Columns added since a table was first made, `migrate` adds each to a store that lacks it: [column, type]. */
+export const MONEY_ADDED_COLUMNS = Object.freeze([Object.freeze(["question", "TEXT"])]);
 
 /** R21: the tables, in purge order (children before the facts they name). */
 export const MONEY_TABLES = Object.freeze(["money_set_proposals", "money_set_acts", "money_sets", "money_withdrawals",

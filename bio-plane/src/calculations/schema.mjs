@@ -1,7 +1,8 @@
 /* calculations' tables (requirements: `build/requirements/calculations.md`, R29). Each is declared explicitly to
- * record-core (`declareTable`, its R21): tables, bindings, ingests, calculations, their inputs and results, draws and
- * frozen sets export `yes`; the machine's pattern definitions, results, gates and switches export `admin-only`. Every
- * row naming a project is keyed to it for purge; a table and what is made from it are keyed to its source's bundle.
+ * record-core (`declareTable`, its R21): tables, bindings, ingests, calculations, their inputs and results, draws,
+ * frozen sets and frozen uses export `yes`; the machine's pattern definitions, results, gates and switches export
+ * `admin-only`. Every row naming a project is keyed to it for purge; a table and what is made from it are keyed to its
+ * source's bundle (a frozen uses table to its project).
  * Rows are appended and never rewritten, except a calculation's `recompute_status`, `accepted_*` and its latest
  * results, each change of which is appended to `calc_recomputes` (a version chain). */
 
@@ -129,6 +130,17 @@ CREATE TABLE IF NOT EXISTS calc_sets (
   frozen_by     TEXT NOT NULL,
   frozen_at     TEXT NOT NULL
 );
+-- R32: a frozen table of the held uses of powers: its filter, the asking member, the instant, and the events it holds
+-- (its sight: every one of them, R10). Its canonical bytes are a calc_tables row keyed by the same sha.
+CREATE TABLE IF NOT EXISTS calc_uses (
+  sha           TEXT PRIMARY KEY,
+  project       TEXT,
+  filter_json   TEXT NOT NULL,
+  ids_json      TEXT NOT NULL,
+  n             INTEGER NOT NULL,
+  frozen_by     TEXT NOT NULL,
+  frozen_at     TEXT NOT NULL
+);
 -- R22, R23: the machine's patterns, their results, their gates and their switches.
 CREATE TABLE IF NOT EXISTS calc_pattern_results (
   result_key    TEXT PRIMARY KEY,
@@ -191,6 +203,7 @@ export const CALCULATIONS_TABLES = Object.freeze([
   cls("calc_recomputes", { export: "yes", sight: "bundle", keys: ["project"], version_chain: true }),
   cls("calc_draws", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_sets", { export: "yes", sight: "bundle", keys: ["project"] }),
+  cls("calc_uses", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_pattern_results", { export: "admin-only", sight: "group", keys: [] }),
   cls("calc_pattern_runs", { export: "admin-only", sight: "group", keys: [], version_chain: true }),
   cls("calc_pattern_gates", { export: "admin-only", sight: "group", keys: [], version_chain: true }),

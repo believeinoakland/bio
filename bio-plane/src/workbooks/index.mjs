@@ -37,7 +37,7 @@ export const NOT_RECOMPUTED = "not recomputed here";
 /** R6: how many cells each recorded list keeps; the counts are always whole, and a cut list says how many it left. */
 export const LIST_MAX = 2000;
 /** R8: the meaning every recompute statement carries. */
-export const RECOMPUTE_MEANING = "agreement between the file's engine and the instance's engine, never accuracy";
+export const RECOMPUTE_MEANING = "agreement between the file's engine and the engine your group's Civicsmith runs, never accuracy";
 /** R8: the engine's measured agreement on the corpus, as `sheet-worker`'s job recorded it (T33-18, K1531), for the
  *  engine build it was measured on. Another build answers that it is not measured. */
 export const ENGINE_MEASURE = Object.freeze({
@@ -622,7 +622,7 @@ function disclosure(rec) {
     return { text: `${NOT_RECOMPUTED}: ${why}; open it in any spreadsheet program`, status: NOT_RECOMPUTED };
   }
   const measured = rec.engine === ENGINE_MEASURE.engine && rec.engine_version === ENGINE_MEASURE.engine_version;
-  return { text: `recomputed by the instance's engine (${rec.engine} ${rec.engine_version}); open it in any spreadsheet program`,
+  return { text: `recomputed by the engine your group's Civicsmith runs (${rec.engine} ${rec.engine_version}); open it in any spreadsheet program`,
            meaning: RECOMPUTE_MEANING, status: rec.status,
            measure: measured ? ENGINE_MEASURE : { measured: false, why: `no corpus measure is recorded for ${rec.engine} ${rec.engine_version}` } };
 }

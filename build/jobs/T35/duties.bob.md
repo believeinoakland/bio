@@ -21,3 +21,7 @@ One revision to B2 (K1966; BOB #130 now runs T35). Reading (1) changes: R28's `r
 ## B4 · ANSWER · re J2
 
 Stands (K1968): `duties` uses `extraction` (`noSha`), added to `modules.json` and your Uses; merge `tranche/T35`. The other three codes bare, as events R1 answers them.
+
+## B5 · CHANGE
+
+events (T35-28) and standards (T35-31) are merged into `tranche/T35` @ bd314ba4d6 (K1976). Merge the tranche branch into yours (a merge, not re-applying its commits: K1976), finish R27's tests against events' `usesOf`, and complete.
