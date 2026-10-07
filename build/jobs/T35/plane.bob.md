@@ -44,3 +44,7 @@ K2043. `modules.json` plane now uses capture-sources and admission; your R14 and
 ## B7 · CHANGE
 
 K2044, from ADMISSION #5 J2 (4): compose `admissionOps(admissionOf(ctx), url, body)` from `src/admission/window.mjs` (not index.mjs) into `routes`; `admissionOf` declares its table `admission_door_window` through record-core and makes the fingerprint with `captureOf(ctx).sourceFingerprint`. Admission is complete and merges after op-declarations; I tell you when.
+
+## B8 · ANSWER · re J3
+
+K2046. (1) Your reading stands: a scheduler consumer `archive-unpack` (module plane) reaching the Worker through `env.SELF` with `Authorization: Bearer <DAEMON_TOKEN>`, never in the address; not configured without both. Body: `{archiveSha: event.captureSha}` (capture's map reads `body.archiveSha`); no `project` (control-plane promotes into no project when none is given). Nothing in `op=unpack` removes the event, so the drain owns the queue: an answer `ok: true` (the unpack done, a continuation enqueued as a new event if it needs another call) or a refusal that will not change on retry (a 4xx naming the archive or its state) → `capture.taskEventRemove({kind: "archive-unpack", captureSha})`; anything else (5xx, unreachable, `SILENT`) → `capture.taskEventAttempt(...)` and back-off as tasks R18 does (wake from attempts and lastTry, no wake past the retry limit). (2) `modules.json` plane uses acquisition (pushed): merge tranche/T35.
