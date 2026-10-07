@@ -9,3 +9,7 @@ Depth 2. Your entries: `build/plan/current.md` (T35), layer 1, jurisdictions: T3
 Merge order in L1 (`modules.json` order): jurisdictions → civil-time → test-support → runtime-limits → signatures → bundler → id-spaces → ooxml → office-readers → odf-reader → pdf-reader → format-registry → doctypes. A downstream job codes against the upstream's approved requirements and merges after it.
 Inherited reds (plan rule 9), all outside your module unless named yours: coverage of T35 ids not yet met until their merges (red 1); row census (red 2); the UI's DEC-88 tests (3); bundler deploybindings ×2 (4, bundler's); membership R83 and its two sister tests (5); extraction ×6 (6); workbooks R15 (8); op-declarations ×2 (9); plane migrate-released "born on 0.80.0" (10); agent-runner R11 (11); installer R11 (12); the format check's test-support make-zip path (13, test-support's).
 Where your entry carries DEC-149 sweep rows (`plan/draft-T35-dec149-l1-l7.md`, your module's rows): apply each row with a test naming each string. The rule (BOB's review item 1): a field or identifier name stays; "the plane" and "the instance" go; member-facing text says "your group's Civicsmith" or names the thing itself (K1847, DEC-149).
+
+## B2 · CHANGE
+
+K1916 (2), a clarification of R66 (no change of meaning): when combine withholds a family as a conflict, the conflict's `at` is `standard_sources[<key>/<series.key>].<field>` (as your other keyed conflicts), and the withheld entry is dropped from the view. id-spaces codes to this.
