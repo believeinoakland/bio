@@ -22,3 +22,7 @@ From ACQUISITION #12 J1 (it merges before you): acquisition keeps its tables in 
 ## B4 · ANSWER · re J2
 
 J2 read (K1951). I post a CHANGE when acquisition is merged, and you then build `store.acquisition`. Finding 1 becomes T35-77 (tasks, L11) and a control-plane share (the tick drains `archive-unpack`); R45 gains 'with `kind`, only that kind's', and R48's quoted `stated` takes your new wording, both re-worded by BOB at your merge. Finding 2 is forwarded to PROVENANCE #17. Set your state to WAITING ON BOB on that CHANGE; nothing else is owed now.
+
+## B5 · CHANGE
+
+acquisition (T35-21) is merged into tranche/T35 @ 17758a92a0 (K1953). Merge the tranche branch, build `store.acquisition` with `acquisitionOf(ctx, {record, provenance, membership})`, re-point `unpack`/`archiveList`/`memberOf` to it (acquisition's merged signatures: `unpack(store, {archiveSha, by, cls, member})`, `instance.archiveList({archiveSha, viewer, state, limit, after})`, `instance.memberOf(captureSha)`), write R77's grouping tests against the real `archiveList`, and record COMPLETE. `isOwnHost` is in `capture-sources/own-hosts.mjs`.
