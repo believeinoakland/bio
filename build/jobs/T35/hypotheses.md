@@ -1,6 +1,6 @@
 # hypotheses (T35)
 
-**Status** · session_016UPzGLbp62BPHEDSMqCmk1 · depth 2 · COMPLETE · handled B1
+**Status** · session_016UPzGLbp62BPHEDSMqCmk1 · depth 2 · COMPLETE · handled B2
 
 
 ## Completion
