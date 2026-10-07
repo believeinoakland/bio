@@ -105,18 +105,20 @@ export function defaultFakes() {
 }
 
 /** A capture queue the drain reads (capture R45), with the provenance homes it resolves (provenance R4). */
-export function inbox(events = [], homes = {}) {
+export function inbox(events = [], homes = {}, { fakes = {}, start = false } = {}) {
   const queue = [...events];
   const log = [];
+  /* capture R45: with `kind`, only that kind's events and count; each call is logged with what it asked */
+  const ofKind = (kind) => queue.filter((e) => !(typeof kind === "string" && kind) || e.kind === kind);
   const w = world({
     capture: {
-      taskEvents: ({ limit }) => queue.slice(0, limit).map((e) => ({ ...e })),
-      taskEventCount: () => queue.length,
+      taskEvents: ({ limit, kind } = {}) => { log.push(["events", kind ?? null]); return ofKind(kind).slice(0, limit).map((e) => ({ ...e })); },
+      taskEventCount: ({ kind } = {}) => { log.push(["count", kind ?? null]); return ofKind(kind).length; },
       taskEventAttempt: ({ kind, captureSha, at }) => { const e = queue.find((x) => x.kind === kind && x.captureSha === captureSha);
         if (e) { e.attempts += 1; e.lastTry = at; } log.push(["attempt", captureSha]); return !!e; },
       taskEventRemove: ({ kind, captureSha }) => { const i = queue.findIndex((x) => x.kind === kind && x.captureSha === captureSha);
         if (i >= 0) queue.splice(i, 1); log.push(["remove", captureSha]); return i >= 0; } },
-    provenance: { homeOf: (sha) => (homes[sha] ? { bundleId: homes[sha] } : null) } });
+    provenance: { homeOf: (sha) => (homes[sha] ? { bundleId: homes[sha] } : null) }, ...fakes }, { start });
   w.queue = queue; w.log = log;
   return w;
 }

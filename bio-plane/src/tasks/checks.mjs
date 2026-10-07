@@ -81,7 +81,10 @@ function asText(v) {
    a pattern of this module's own; the slug after it keeps C-19.1's rule. The counter is four or more digits, so the
    10,000th task of a year is accepted and every id valid before T33 stays valid, with the same finding when it is not. */
 const TASK_ID_RE = new RegExp(`^${idPattern('TASK').source.slice(1, -1)}-[a-z0-9]+(-[a-z0-9]+)*$`);
-const TASK_KIND_ENUM = ['authority-undetermined'];
+/* R1 (T35; K1951, K1974): the one kind of capture's queue (its R15, R45) this module drains, and the one kind the grammar
+   admits; capture's other kinds (`archive-unpack`) are not tasks. */
+export const TASK_EVENT_KIND = 'authority-undetermined';
+const TASK_KIND_ENUM = [TASK_EVENT_KIND];
 const TASK_ROLE_ENUM = ['project-manager', 'group-admin', 'member'];
 const TASK_STATUS_ENUM = ['open', 'resolved', 'forwarded'];
 const TASK_EVENT_ENUM = ['created', 'forwarded', 'resolved', 'folded'];

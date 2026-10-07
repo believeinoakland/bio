@@ -15,7 +15,8 @@
  * REACHED as `tasksOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call. At that
  * call it seeds its TASK ledger row (R5) and declares its table to record-core's purge (R8). When the declaration holds,
  * it registers its figure with record-core's counts (R5), the task grammar with promotion and with record-core's audit
- * (R4), and, unless `deps.start` is false, its `task-drain` consumer with the scheduler and capture's task notice (R1).
+ * (R4), and, unless `deps.start` is false, its `task-drain` consumer with the scheduler, capture's task notice and
+ * promotion's commit notice (R1).
  * When another module already holds the table (as queue did until its job removed its copy of this code: N363), this
  * module registers none of those, so each consumer, listener, step, audit check and figure has one live registration.
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
@@ -36,10 +37,10 @@ import { connectionsOf } from "../connections/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 import { PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { TASKS_SCHEMA, TASKS_TABLES } from "./schema.mjs";
-import { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, checkInboxGrammar } from "./checks.mjs";
+import { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, TASK_EVENT_KIND, checkInboxGrammar } from "./checks.mjs";
 
 export { TASKS_SCHEMA, TASKS_TABLES, tasksOwns } from "./schema.mjs";
-export { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, checkInboxGrammar } from "./checks.mjs";
+export { QUEUE_MACHINE_CHECKS, TASK_ACTOR_CHECKS, QUEUE_INBOX_CHECKS, CHECK_REQUEST_CHECKS, TASK_EVENT_KIND, checkInboxGrammar } from "./checks.mjs";
 
 /* The id suffix the TASK grammar requires: lowercase alphanumeric groups joined
    by single dashes, never empty, never leading or trailing dashes. Derived from
@@ -140,12 +141,21 @@ export class Tasks {
      bundle (taskDrain keeps those, it does not drop them), and retrying that at
      the short cadence would be a hot loop against work that only a later promote
      can unblock. BATCH bounds one tick; a deeper backlog re-arms and continues.
+     (T35; SCHEDULER #29 J1 (2), K2029) The backstop backs off: an event tried `a`
+     times is next due BACKSTOP × 2^(a−1) after its last try (capture R45's durable
+     `attempts` and `lastTry`), and one tried RETRY_LIMIT times wants no wake at
+     all, so an unfiled capture costs a bounded number of timed retries and then an
+     otherwise idle instance holds no timer (scheduler R15). It stays queued, never
+     dropped, and is retried by every drain that runs for another reason; an
+     enqueue (capture R44) and a committed promotion (promotion R45: only a
+     promotion files a capture, provenance R1, R4) re-arm the drain at DELAY.
      DELAY is overridable per instance through TASK_DRAIN_DELAY_MS: production
      takes the short default, and a test that drives the consumer by hand pushes
      the automatic one out of its own window so the two never race on the clock. */
   static TASK_DRAIN_DELAY_MS = 1000;
   static TASK_DRAIN_BACKSTOP_MS = 60000;
   static TASK_DRAIN_ALARM_BATCH = 200;
+  static TASK_DRAIN_RETRY_LIMIT = 8;
 
   /** The RULED routing order, resolved at write time by the consumer.
    *
@@ -308,9 +318,10 @@ export class Tasks {
   taskDrain({ limit = 50, actor = "consumer", now = null } = {}) {
     const cap = clampLimit(limit, 50, 500);
     const at = now && ISO_INSTANT.test(now) ? now : stampInstant("second", this.#nowMs());
-    /* capture R45: the queued events oldest first, each `{kind, captureSha, subject, locator, enqueued, attempts}`;
-       provenance R4: the bundle a capture is filed in. */
-    const queued = this.#capture.taskEvents({ limit: cap })
+    /* capture R45: the queued events oldest first, each `{kind, captureSha, subject, locator, enqueued, attempts}`, of this
+       module's one kind only (T35; K1951, K1974), so another kind (`archive-unpack`) is never taken, routed, folded,
+       refused or counted here; provenance R4: the bundle a capture is filed in. */
+    const queued = this.#capture.taskEvents({ limit: cap, kind: TASK_EVENT_KIND })
       .map((e) => ({ ...e, capture_sha: e.captureSha, attempts: Number(e.attempts) || 0 }));
     const out = { drained: 0, created: [], folded: [], waiting: [], refused: [] };
     const drop = (q) => this.#capture.taskEventRemove({ kind: q.kind, captureSha: q.capture_sha });
@@ -388,7 +399,7 @@ export class Tasks {
         assignee_role: task.assignee_role, basis: route.basis });
       out.drained++;
     }
-    out.remaining = this.#capture.taskEventCount();
+    out.remaining = this.#capture.taskEventCount({ kind: TASK_EVENT_KIND });
     /* REC-57: `remaining` answers "is this all of it" (a non-zero remainder says
        the queue is not drained), so no `truncated` is minted beside it. The other
        half is the bound: a caller that sees work left needs to know what cap
@@ -441,7 +452,7 @@ export class Tasks {
         open: n("open"),
         forwarded: n("forwarded"),
         resolved: n("resolved"),
-        queued: this.#capture.taskEventCount(),
+        queued: this.#capture.taskEventCount({ kind: TASK_EVENT_KIND }),
       },
     };
   }
@@ -957,14 +968,29 @@ export class Tasks {
   /** capture's task notice (capture R44): a queued event re-arms the drain at its short delay. */
   async armDrain() { this.#lastDrainProgress = true; return await this.#scheduler.arm(); }
 
-  /** R1: the `task-drain` consumer: due at every firing; its wake is the delay after a tick that drained something,
-   *  the backstop after one that drained nothing, and null with no event queued. */
+  /** After a tick that drained nothing: the earliest instant a waiting event of the drain's batch is next due, each
+   *  backed off by its own attempts (capture R45), an event at the retry limit wanting none; null when none wants one. */
+  #backoffWake(now) {
+    let at = null;
+    for (const e of this.#capture.taskEvents({ limit: Tasks.TASK_DRAIN_ALARM_BATCH, kind: TASK_EVENT_KIND })) {
+      const a = Number(e.attempts) || 0;
+      if (a >= Tasks.TASK_DRAIN_RETRY_LIMIT) continue;
+      const last = Date.parse(e.lastTry);
+      /* never tried by a drain (an event a mint could not yet take, R1): the plain backstop from now */
+      const due = a < 1 || !Number.isFinite(last) ? now + Tasks.TASK_DRAIN_BACKSTOP_MS
+                                                  : Math.max(now, last + Tasks.TASK_DRAIN_BACKSTOP_MS * 2 ** (a - 1));
+      if (at === null || due < at) at = due;
+    }
+    return at;
+  }
+
+  /** R1: the `task-drain` consumer: due at every firing; its wake is the delay after a tick that drained something (or
+   *  an arming since), the backed-off backstop after one that drained nothing, and null with no event queued. */
   drainConsumer() {
     return { name: "task-drain", key: "drain",
       due:  (now) => now,
-      wake: (now) => this.#capture.taskEventCount() > 0
-                       ? now + (this.#lastDrainProgress ? this.#drainDelayMs() : Tasks.TASK_DRAIN_BACKSTOP_MS)
-                       : null,
+      wake: (now) => !(this.#capture.taskEventCount({ kind: TASK_EVENT_KIND }) > 0) ? null
+                       : this.#lastDrainProgress ? now + this.#drainDelayMs() : this.#backoffWake(now),
       tick: ()    => { const d = this.taskDrain({ limit: Tasks.TASK_DRAIN_ALARM_BATCH, actor: "alarm" });
                        this.#lastDrainProgress = d.drained > 0; return { drain: d }; } };
   }
@@ -975,9 +1001,9 @@ const OF = new WeakMap();
 /** K61: the one tasks instance for this Durable Object's storage (`ctx`, or the storage itself). On first reaching it,
  *  its TASK ledger is seeded (R5) and its table declared to record-core's purge (R8). When that declaration holds, its
  *  figure is registered with record-core's counts (R5), C-19.1 with promotion and with record-core's audit (R4), and,
- *  unless `deps.start` is false, its scheduler consumer and capture's task notice (R1; capture R44). A table another
- *  module already declared means that module holds the inbox (as queue did until N363's removal), so this module then
- *  registers nothing further: one live registration each. */
+ *  unless `deps.start` is false, its scheduler consumer, capture's task notice (R1; capture R44) and promotion's commit
+ *  notice (its R45). A table another module already declared means that module holds the inbox (as queue did until
+ *  N363's removal), so this module then registers nothing further: one live registration each. */
 export function tasksOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let t = OF.get(storage);
@@ -999,6 +1025,8 @@ export function tasksOf(ctx, deps = {}) {
         scheduler.register("tasks", t.drainConsumer());
         const capture = (deps && deps.capture) || captureOf(ctx);
         capture.on("task", "tasks", async () => ({ armedAt: await t.armDrain() }));
+        /* a committed promotion may have filed a waiting capture: the drain is re-armed at its delay (K2029) */
+        promotion.onCommitted("tasks", async () => { await t.armDrain(); return null; });
       }
     }
   }
