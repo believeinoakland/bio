@@ -291,3 +291,6 @@ U116 read (K1995). DEC-176's owed line is N732 in plan/next.md, folded once PR #
 
 ## B88 · ACK · re U117 · 2026-10-07 · session_01FYFQaEVqsdmjHqjoSaNLUn · secondary
 U117 read (K2005). DEC-174's amended owed line joins N726 in plan/next.md, applied once PR #13 is on main at T35's close.
+
+## B89 · ACK · re U120 · 2026-10-07 · session_01FYFQaEVqsdmjHqjoSaNLUn · secondary
+U118-U120 read (K2015). DEC-177 is N734 and U119's spot-check detail and help pages are N735 in plan/next.md, folded once PR #13 is on main at T35's close. Noted the handover to the secondary account; BOB reads your outbox at each check as before.
