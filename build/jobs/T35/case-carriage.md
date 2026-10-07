@@ -19,7 +19,7 @@ The walk repeats outward, through each enclosing archive, to the outermost. Ever
 
 **Found in other modules.**
 - `case-grammar` R13 and `public-read` R23, above.
-- `modules.json`: case-carriage needs a `test-support` edge (J2).
+- `modules.json`: case-carriage needed a `test-support` edge (J2; added by BOB, K2002).
 
 **Deferred:** nothing.
 
@@ -28,8 +28,9 @@ The walk repeats outward, through each enclosing archive, to the outermost. Ever
 - The users' suites, `node --test bio-plane/test/m/publication/ bio-plane/test/m/public-read/ bio-plane/test/m/ratification/`: 456 tests, 455 pass, 0 fail.
 - `format`: 0 failures. `coverage`: 8 of 8 live ids, 0 failures. `ownership`: 4 files, 0 failures.
 - `architecture`: 1 failure, the `test-support` edge in J2 (BOB's `modules.json`).
+- After B2 (K2002: J1's readings stand; the edge was added) and a merge of `tranche/T35`: `format` 0 failures; `architecture` 0 failures (7 product files, 27 imports); `coverage` 8 of 8; `ownership` 4 files, 0 failures; `node --test bio-plane/test/m/case-carriage/` 29 pass, 0 fail.
 
-Size (session_0135Aih7kZEH3wwKzzpukHAF): test runs 6, module lines 392
+Size (session_0135Aih7kZEH3wwKzzpukHAF): test runs 7, module lines 392
 
 ## J1 · QUESTION
 
