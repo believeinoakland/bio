@@ -2,6 +2,8 @@
 
 **Status** · OPEN · BOB #128 · session_017R4bB844f1xntEwET3adS9 · depth 1
 
+**Jobs** · jurisdictions: JURISDICTIONS #8 session_016ugHTajUHdmuCsGKMnbB4L
+
 **Sources** · `plan/draft-T35.md` and its checks `plan/draft-T35-checks.md` (items 1–18, the seven verdicts); `plan/draft-T35-dec149-l1-l7.md` (the L1–L7 sweep); `next.md` N551–N705; `archive/T34.md` (left-out table, Rules (5), Close); DEC-142–DEC-167 on `main` (K1885); `plan/draft-T35-security-review.md` with K1874, K1875, K1876, K1878, K1880, K1881, K1882; `plan/study-virus-scanning.md` with K1888, K1890, K1892; `plan/study-cloudflare-security.md`; `modules.json` (order, layers). Sizes: `.mjs`/`.js` lines over each module's `paths` on `tranche/T34` @ `28eb9244aa` (most specific path owns a file, K1821; tests and `dist/` excluded).
 
 **At T35's opening:** PR #12 is on `main` (K1885), so DEC-142–DEC-167 are folded and "the DEC is not on `main`" is no hard reason. T34 closed with every entry merged (K1885), T34-54, T34-60 and T34-80 included. Layers 1–11 are open again.
