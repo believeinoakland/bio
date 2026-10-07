@@ -1,14 +1,16 @@
 /* inquiry-grammar's T34 requirements at the module's interface (T34-28; N582, N583; K1607, K1608): R13's portion path
-   and R15's occurrence key judged by the forms `standards` (its R31) and `duties` (its R24) state (duties' held here and asserted equal to its
-   export until N675, K1799);
+   and R15's occurrence key judged by the forms `standards` (its R31) and `duties` (its R24) state (duties' imported from its
+   `vocab.mjs`, which imports nothing of the record, since T35: N675, K1799);
    R17's derived-connection leg kind with its five `derivation_*` fields, checked against `connection-grammar`'s
    `derivedId` (its R11); and R16's row for it. New at T34, so findings are stated by hand. Pure functions, driven with
    documents and legs. */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import * as IG from "../../../src/inquiry-grammar/index.mjs";
 import { isPortionPath, PORTION_PATH_MAX } from "../../../src/standards/index.mjs";
 import { OCCURRENCE_KEY_RE } from "../../../src/duties/index.mjs";
+import { OCCURRENCE_KEY_RE as VOCAB_OCCURRENCE_KEY_RE } from "../../../src/duties/vocab.mjs";
 import { derivedId } from "../../../src/connection-grammar/index.mjs";
 import { INFO, LEG_CASES, REGISTRY_VARIANTS, PUBLISHED, EARNED, legFm } from "./corpus.mjs";
 import { GOLDEN, run, plain } from "./fixture.mjs";
@@ -46,10 +48,27 @@ test("R13 a target_portion is refused exactly when standards.isPortionPath (its 
 
 /* ---- R15: the occurrence key is duties' form ---- */
 
-test("R15 the occurrence key form held here (K1799) is duties' export exactly: the same source and flags as duties.OCCURRENCE_KEY_RE (its R24), frozen, so the two cannot drift", () => {
-  assert.equal(IG.OCCURRENCE_KEY_RE.source, OCCURRENCE_KEY_RE.source);
-  assert.equal(IG.OCCURRENCE_KEY_RE.flags, OCCURRENCE_KEY_RE.flags);
+test("R15 the occurrence key form is duties' own (its R24), imported and not held: this module's OCCURRENCE_KEY_RE is the very value duties' vocab.mjs and its index.mjs export (===), frozen, so no copy exists to drift (N675, K1799)", () => {
+  assert.equal(IG.OCCURRENCE_KEY_RE, VOCAB_OCCURRENCE_KEY_RE);
+  assert.equal(IG.OCCURRENCE_KEY_RE, OCCURRENCE_KEY_RE);
   assert.ok(Object.isFrozen(IG.OCCURRENCE_KEY_RE));
+});
+
+test("R15 R9 loading this module loads nothing of the record from duties: of duties' files only vocab.mjs is resolved, and no store, record-core or duties/index.mjs file, so the case checker that bundles this grammar carries no store code (K1799)", () => {
+  /* a fresh process, so every module this face loads is resolved again and seen */
+  const probe = `import { registerHooks } from "node:module"; const seen = [];
+    registerHooks({ resolve(s, c, next) { const r = next(s, c); seen.push(r.url); return r; } });
+    await import(${JSON.stringify(new URL("../../../src/inquiry-grammar/index.mjs", import.meta.url).href)});
+    process.stdout.write(JSON.stringify(seen));`;
+  const seen = JSON.parse(execFileSync(process.execPath, ["--input-type=module", "-e", probe], { encoding: "utf8" }))
+    .map((u) => u.replace(/^.*\/src\//, ""));
+  assert.ok(seen.includes("inquiry-grammar/grammar.mjs"), "the probe saw the module load");
+  assert.deepEqual([...new Set(seen.filter((u) => u.startsWith("duties/")))], ["duties/vocab.mjs"]);
+  for (const u of seen) assert.ok(!/^(record-core|store|duties\/index)/.test(u) && !/store\.mjs$/.test(u), u);
+  /* negative control: duties' index face does load the record */
+  const viaIndex = probe.replace(/inquiry-grammar\/index\.mjs/, "duties/index.mjs");
+  const loaded = JSON.parse(execFileSync(process.execPath, ["--input-type=module", "-e", viaIndex], { encoding: "utf8" }));
+  assert.ok(loaded.some((u) => /\/src\/(record-core|store)/.test(u) || /store\.mjs$/.test(u)), "duties/index.mjs loads record code");
 });
 
 test("R15 an occurrence ref spells and parses exactly when duties.OCCURRENCE_KEY_RE (its R24) admits the key: occurrenceRef, parseOccurrenceRef, OCCURRENCE_REF_RE and the leg arm (over the trimmed ref) agree with it on every key tried", () => {

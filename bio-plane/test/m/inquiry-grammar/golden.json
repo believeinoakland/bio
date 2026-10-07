@@ -942,7 +942,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+     "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
@@ -955,7 +955,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+     "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
@@ -968,7 +968,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+     "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
@@ -7984,7 +7984,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+     "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
@@ -8091,7 +8091,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+     "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
@@ -8198,7 +8198,7 @@
     {
      "check": "C-2.8",
      "severity": "error",
-     "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+     "message": "basis[3] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
      "repairable": true,
      "repairs": [
       "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
@@ -11341,7 +11341,7 @@
      {
       "check": "C-2.8",
       "severity": "error",
-      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+      "message": "basis[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
       "repairable": true,
       "repairs": [
        "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
@@ -11354,7 +11354,7 @@
      {
       "check": "C-25.10",
       "severity": "error",
-      "message": "basis_version_legs[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing in this plane produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
+      "message": "basis_version_legs[0] names an extent this record cannot evaluate: extent kind 'dom' names a region of an HTML document. Nothing produces a dom address yet (CONTENT-HTML), so a row minted against one would be an address into a grammar no producer writes and no reader can evaluate",
       "repairable": true,
       "repairs": [
        "name one of the landed extent kinds — doc-para, doc-table, document, image, pdf-page, sheet-cell, sheet-range, slide-shape — with the fields that arm takes",
