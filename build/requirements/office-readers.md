@@ -1,6 +1,6 @@
 # office-readers — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); R11 marked not yet met (T36), every other requirement met (K1931).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). R11's csv bound stays the OOXML figure (20 MiB) until measured on a deployed plane (DIST-14). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078) (K1931).
 
 ## Public
 
@@ -143,7 +143,7 @@ xlsx and csv), or `{ok:false, container, reason}` when `parts` failed.
     walk reads it into `document` (its paragraphs newline-joined, `w:delText` never, `w:ins`
     in); `type` is always `text` and `declared`, `cached` and `formula` are `null` (a Word
     table declares no cell type, so no date or number is inferred). A nested table's cells are
-    its own table's. *(not yet met: T36)*
+    its own table's.
   - `pptx`: `document` is slide text only, newline-joined, in deck order — speaker notes
     are NEVER in it. `slides` is `[{slide, ref, part, hidden, shapes, text}]`, one per deck
     entry; a hidden slide's `text` IS populated and its `hidden` is `true` (DEC-5: the
