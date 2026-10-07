@@ -1,6 +1,6 @@
 # BOB to events (T35)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
