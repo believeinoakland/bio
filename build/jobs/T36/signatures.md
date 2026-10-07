@@ -35,3 +35,7 @@ Best readings for R43/R44 (details I take as yours to rule; I am building on the
 2. The recovery key is made in its own section ("Make a recovery key"), apart from Generate, with its own passphrase field under R43's rule (optional, protected form when given). Making it does not arm it; its file is `bio-recovery-key.txt`, never mixed into `bio-signing-keys.txt`.
 3. R43's one raw showing is offered for the release key only, not for the ratification key or the recovery key (Distribution §10: the recovery key is never in an environment).
 4. A passphrase at Generate must be typed twice; a mismatch generates nothing.
+
+## J2 · REPORT
+
+Generated artifact staled (§14): bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (not_product) embed src/signpage.mjs, re-rendered by T36-1. fleetbundles.test.mjs: 4 FAIL on bio-plane (STALE BUNDLE, byte identity, manifest sha, comment arm) until BOB regenerates (node bio-plane/scripts/bundles.mjs, K1540's order); before the change only inherited red 6. release/bio-plane.bundled.mjs and newgroup/src/release.mjs carry the old page as release copies, refreshed by the next release; newgroup-bundle-fresh stays green.
