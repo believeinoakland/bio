@@ -113,7 +113,7 @@ Terms. A **script** is R1's record; a **version** R1's version. A version's **st
 - `membership`: `viewerPredicate`, `isJoinedParticipant` (R54), `isProjectOwner`, `projectOwners` (R65), `isAdministrator` (R64), the `NOT_AN_ADMIN` answer (R84).
 - `filing-templates`: `offeredVersion` (its R25), for a `{template}` draft (R2, R12).
 - Read from the door, not used (T34): the assistant's state and the account serving the viewer arrive as R24's and R27's `assistant` (`store-door` R10), so this module names neither `instance-setup` nor `credentials`.
-- Registered at start, not used (K31's pattern; `plane` R19): the screen registry, the member op table (`op-declarations`), `affordances`' `MACHINE_REFUSALS` and its `irreversible` acts (R24), the machine-draft ops, the Civicsmith library.
+- Registered at start, not used (K31's pattern; `plane` R19): the screen registry, the member op table (`op-declarations`), `op-grades`' `MACHINE_REFUSALS` and its `irreversible` acts (R24), the machine-draft ops, the Civicsmith library.
 
 ### Invariants
 
