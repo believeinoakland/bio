@@ -943,13 +943,18 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
 /* ============================================================
    CivicOS runtime. Wired to the live plane's ops.
    Contracts (from bio-plane/src/index.mjs, setup.mjs):
+     The credential T travels in the `Authorization: Bearer T` header, NEVER in
+     the address (F1, K1874; admission R20): an address is logged, cached and
+     shown, a header is not. A review grant's secret travels in a POST's JSON
+     body as `secret` (control-plane R59). `authHeaders()` is the one place the
+     header is made.
      POST /api/?op=login {role,password}     -> {ok, token}
-     GET  /api/?op=list&token=T              -> {result:[{bundle_id,object_type,title,current_state,last_updated}]}
-     GET  /api/?op=image&id=X&token=T        -> {result:{filename:content|{sha256,bytes,...}}}
-     GET  /api/?op=whoami&token=T            -> {result:{tokenClass,session,member,handle,administer,capabilities}}
-     GET  /api/?op=search&q=..&token=T       -> {result:{hits:[provenance cols incl criticality],total,...}}
-     POST /api/?op=select&token=T {ids}      -> {result?} {ok,handle,kind,n,expires}   (enumerated selection)
-     GET  /api/?op=release&handle=H&acknowledgment=A&mitigation=M&token=T
+     GET  /api/?op=list                      -> {result:[{bundle_id,object_type,title,current_state,last_updated}]}
+     GET  /api/?op=image&id=X                -> {result:{filename:content|{sha256,bytes,...}}}
+     GET  /api/?op=whoami                    -> {result:{tokenClass,session,member,handle,administer,capabilities}}
+     GET  /api/?op=search&q=..               -> {result:{hits:[provenance cols incl criticality],total,...}}
+     POST /api/?op=select {ids}              -> {result?} {ok,handle,kind,n,expires}   (enumerated selection)
+     GET  /api/?op=release&handle=H&acknowledgment=A&mitigation=M
           -> {ok,released:[ids],acknowledgment,mitigation} on success; refusals carry
              reason + detail + offenders, rendered verbatim (the plane's refusals teach).
           Requires a MEMBER SESSION holding `contribute`; a machine token is refused
@@ -960,6 +965,11 @@ img.avview{height:auto;max-height:72vh;object-fit:contain}
      GET  /api/?op=publishedmanifest         -> {result:{published:[...]}}  (public, no token)
    ============================================================ */
 const PLANE = { base:"", token:null, session:false, me:null, preview:false };
+/* The session's credential, as the request header that carries it; nothing when
+   the surface holds none. Every tokened request takes its headers from here. */
+function authHeaders(){
+  return PLANE.token ? { authorization: "Bearer " + PLANE.token } : {};
+}
 const BUILD = "__BUILD_ID__";   // injected at build; "__BUILD" + "_ID__" means a raw file open
 /* The app itself stays alive: when a newer build is serving, an open tab
    learns it and offers the reload, instead of quietly running stale code
@@ -1141,15 +1151,15 @@ async function apiR(op, body){
    know which is which.
    UI-68 gave it an optional THIRD argument, a POST body, for the one credential-free
    WRITE there is: a review copy's recipient commenting through `op=reviewcomment`,
-   which takes its `secret` as a parameter and its text as the body. It still never
-   carries a token. */
+   which takes its `secret` and its text in the body (F1: a secret never rides an
+   address). It still never carries a token. */
 async function apiQ(op, params, body){
   const j = await api(op, body || null, params||{});
   return (j && j.result !== undefined) ? j.result : j;
 }
 async function rec(op, params={}){
-  const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
-  const r = await fetch(`${PLANE.base}/api/?${q}`);
+  const q = new URLSearchParams({ op, ...params });
+  const r = await fetch(`${PLANE.base}/api/?${q}`, {headers:authHeaders()});
   const j = await r.json().catch(()=>({ok:false,error:"your group's Civicsmith did not answer in a form this page can read"}));
   if(!r.ok || j.ok===false) throw j;
   return j;
@@ -1198,9 +1208,9 @@ async function recR(op, params={}){
   return (j && j.result !== undefined) ? j.result : j;
 }
 async function recPost(op, body, params={}){
-  const q = new URLSearchParams({ op, ...(PLANE.token?{token:PLANE.token}:{}), ...params });
+  const q = new URLSearchParams({ op, ...params });
   const r = await fetch(`${PLANE.base}/api/?${q}`,
-    {method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body||{})});
+    {method:"POST",headers:{"content-type":"application/json",...authHeaders()},body:JSON.stringify(body||{})});
   const j = await r.json().catch(()=>({ok:false,error:"your group's Civicsmith did not answer in a form this page can read"}));
   if(!r.ok || j.ok===false) throw j;
   return j;
@@ -2891,7 +2901,7 @@ async function fetchParts(parts, onProgress){
   const chunks = []; let got = 0;
   for(let i=0;i<parts.length;i++){
     const p = parts[i];
-    const r = await fetch(`${PLANE.base}/api/?` + new URLSearchParams({op:"capture", sha256:p.sha, ...(PLANE.token?{token:PLANE.token}:{})}));
+    const r = await fetch(`${PLANE.base}/api/?` + new URLSearchParams({op:"capture", sha256:p.sha}), {headers:authHeaders()});
     if(!r.ok){ let j=null; try{ j=await r.json(); }catch(_){}
       return { ok:false, reason:(j&&(j.reason||j.error))||("HTTP "+r.status), part:p.path }; }
     const buf = new Uint8Array(await r.arrayBuffer());
@@ -2911,7 +2921,7 @@ async function fetchParts(parts, onProgress){
    back rather than a boolean so a mismatch can be REPORTED with both values,
    which is what makes a refusal legible instead of merely firm. */
 async function fetchCapture(sha256){
-  const r = await fetch(`${PLANE.base}/api/?` + new URLSearchParams({op:"capture", sha256, ...(PLANE.token?{token:PLANE.token}:{})}));
+  const r = await fetch(`${PLANE.base}/api/?` + new URLSearchParams({op:"capture", sha256}), {headers:authHeaders()});
   if(!r.ok){ let j=null; try{ j=await r.json(); }catch(_){}
     return { ok:false, reason:(j&&(j.reason||j.error))||("HTTP "+r.status) }; }
   const bytes = new Uint8Array(await r.arrayBuffer());
@@ -25580,7 +25590,8 @@ try{ window.addEventListener("hashchange", ()=>{ if(!STANCE_HASH_LOCK) stanceRou
    recipient door and is asked by `publishedRouteFromHash` — the one router
    that runs at load holding nothing — because a recipient has no session. The
    secret rides in the FRAGMENT, which a browser never sends to a server; it
-   crosses to the plane only as `op=reviewcopy`'s own `secret=` parameter.
+   crosses to the plane only in the JSON body of a POST, as `secret` (F1, K1874;
+   control-plane R59), never in an address.
    ============================================================ */
 let RVC = null;              /* the member door's state */
 let RVC_HASH_LOCK = false;
@@ -25793,13 +25804,13 @@ async function rvcAcknowledge(){
   catch(e){ RVC.ackRefusal = rvcIsAnswer(e) ? e : { detail: RVC_UNREACHED }; }
   await rvcLoad();
 }
-/* The recipient door's. It carries the grant's secret as a parameter and NO token —
+/* The recipient door's. It carries the grant's secret in its body and NO token —
    the whole point of the door — so it goes through `apiQ`, the credential-free seam. */
 async function rvsAcknowledge(){
   if(!RVS || !RVS.copy) return;
   RVS.ackRefusal = null; RVS.acked = null;
   try{
-    const r = await apiQ("statementack", { secret: RVS.secret });
+    const r = await apiQ("statementack", {}, { secret: RVS.secret });
     if(r && r.ok === true) RVS.acked = r; else RVS.ackRefusal = r || {};
   }catch(_){ RVS.ackRefusal = { detail: RVC_UNREACHED }; }
   await rvsLoad();
@@ -26211,7 +26222,7 @@ async function rvsLoad(){
   if(!RVS) return;
   RVS.busy = true; rvsPaint();
   try{
-    const j = await apiQ("reviewcopy", { secret: RVS.secret });
+    const j = await apiQ("reviewcopy", {}, { secret: RVS.secret });
     if(j && j.ok === true && j.kind === "review-copy"){ RVS.copy = j; RVS.dead = null; }
     else { RVS.copy = null; RVS.dead = j || {}; }
     RVS.err = null;
@@ -26223,7 +26234,7 @@ async function rvsComment(){
   if(!RVS || !RVS.copy) return;
   RVS.commentRefusal = null;
   let r;
-  try{ r = await apiQ("reviewcomment", { secret: RVS.secret }, { text: RVS.comment || "" }); }
+  try{ r = await apiQ("reviewcomment", {}, { secret: RVS.secret, text: RVS.comment || "" }); }
   catch(_){ r = { detail: RVC_UNREACHED }; }
   if(r && r.ok === true) RVS.comment = "";
   else RVS.commentRefusal = r || {};

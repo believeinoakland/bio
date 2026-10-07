@@ -108,8 +108,18 @@ mf = new Miniflare({
               GOVERNOR_APPETITE_PER_MIN: "600000" },
 });
 const rP = (j) => (j && typeof j === "object" && "result" in j) ? j.result : j;
-const GET = async (q) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`)).json());
-const POST = async (q, body) => rP(await (await mf.dispatchFetch(`http://x/api/?${q}`,
+/* T35-74 (F1, K1874): a credential travels in the `Authorization: Bearer` header and a review grant's secret in a
+   POST's JSON body, never in an address; the fixture's `token=` and `secret=` are moved there before the plane is asked. */
+const planeAsk = (base, q, init = {}) => {
+  const u = new URL(`${base}/api/?${q}`), t = u.searchParams.get("token"), s = u.searchParams.get("secret");
+  u.searchParams.delete("token"); u.searchParams.delete("secret");
+  const headers = { ...(init.headers || {}), ...(t ? { authorization: `Bearer ${t}` } : {}) };
+  if(s === null) return mf.dispatchFetch(u.toString(), { ...init, headers });
+  const body = { ...(init.body ? JSON.parse(init.body) : {}), secret: s };
+  return mf.dispatchFetch(u.toString(), { ...init, method: "POST", headers, body: JSON.stringify(body) });
+};
+const GET = async (q) => rP(await (await planeAsk("http://x", q)).json());
+const POST = async (q, body) => rP(await (await planeAsk("http://x", q,
   { method: "POST", body: JSON.stringify(body ?? {}) })).json());
 const must = async (what, r) => {
   if (!r || r.ok !== true) { ok(`FIXTURE: ${what}`, false, JSON.stringify(r).slice(0, 400)); await finish(1); }
@@ -193,7 +203,8 @@ function page(hash, token, me) {
       const params = Object.fromEntries(url.searchParams.entries());
       let body = null;
       try { body = opts && opts.body ? JSON.parse(opts.body) : null; } catch (_) { body = null; }
-      WIRE.push({ op: params.op, params, body, method: (opts && opts.method) || "GET" });
+      WIRE.push({ op: params.op, params, body, method: (opts && opts.method) || "GET",
+                  auth: (opts && opts.headers && opts.headers.authorization) || null });   /* T35-74 (F1): the header's credential */
       return mf.dispatchFetch(url.toString(), opts);
     } };
   ctx.globalThis = ctx; vm.createContext(ctx);
@@ -312,8 +323,9 @@ await R.run(handler(readR0, "onclick", /rvsAcknowledge\(\)/));
 await drawn("the recipient's acknowledgement is drawn", () => /data-rvc-acked/.test(R.html("#pub-body")));
 const readR1 = R.html("#pub-body");
 const ackWire = R.WIRE.filter((w) => w.op === "statementack");
-ok("NO CREDENTIAL: the recipient's acknowledgement carried the grant's secret and NO token",
-   ackWire.length === 1 && ackWire[0].params.secret === SECRET && !("token" in ackWire[0].params),
+ok("NO CREDENTIAL: the recipient's acknowledgement carried the grant's secret, in its body (T35-74), and NO token",
+   ackWire.length === 1 && ackWire[0].body?.secret === SECRET && !("secret" in ackWire[0].params)
+   && !("token" in ackWire[0].params) && ackWire[0].auth === null,
    JSON.stringify(ackWire.map((w) => w.params)));
 const direct2 = await GET(`op=reviewcopy&draft=${encodeURIComponent(DRAFT)}&token=${IRIS}`);
 const listed = direct2.statement_acknowledgements.acknowledgements;
