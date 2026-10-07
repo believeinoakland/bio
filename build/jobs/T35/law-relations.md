@@ -55,3 +55,7 @@ T35-78 applied: `bio-plane/src/law-relations/` (index, checks, schema), a copy o
 Tests 25/25 (three runs); format, architecture, ownership 0 failures; coverage 20/20. Outside my module only the accepted reds: row census (red 2; my ten rows declared awaiting stamp in the record) and control-plane totality R22 (red 26).
 
 For standards' job (T35-31): add `idsAtKey`, `idsOfKind`, `idsCovering` to its host, and drop the five tables from its own schema and declaration before constructing `LawRecords` (else `TABLE_DECLARED`). No generated artifact made stale. Ready to merge first in L5. Record: `build/jobs/T35/law-relations.md`.
+
+## J3 · COMPLETE
+
+B3 applied: merged tranche/T35 @ e7a590241f; R21 met: machineRelate() and refuseNoCitation() exported, the one site of MACHINE_CANNOT_RELATE and LAW_RELATION_NO_CITATION, each answering deep-equal to lawRelate's refusal (test R21). Tests 26/26; format, architecture, ownership 0 failures; coverage 21/21. No row changed, no artifact stale. Ready to merge. Record: build/jobs/T35/law-relations.md.
