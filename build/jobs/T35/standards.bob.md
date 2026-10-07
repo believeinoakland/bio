@@ -13,3 +13,7 @@ Your module's DEC-149 sweep rows, where your entry names them (`plan/draft-T35-d
 ## B2 · ANSWER · re J1
 
 Readings stand (K1967). (1) and (2): the edges standards → capture and standards → provenance are added in `modules.json`, and your Uses names `capture.captureAccountsOf` (R41) and `provenance.receipts` (R38); merge `tranche/T35` into your branch before the architecture check. (3)–(5) stand; C-112.53 stays law-relations'. Sequence unchanged (K1961): after law-relations merges I send a CHANGE naming that merge. BOB #130 now runs T35.
+
+## B3 · CHANGE
+
+K1961's CHANGE (K1970): law-relations (T35-78) is merged into `tranche/T35` @ 00d0892258. Merge `tranche/T35` into your branch, then: remove `law.mjs` and delegate each law service to `LawRecords` (your R48), constructed over your host with `idsAtKey`, `idsOfKind` and `idsCovering` added (its R13); drop the five tables from your own schema and declaration first (else `TABLE_DECLARED`). Accepted red 24 is cleared: the format check is 0 failures on the tranche branch.
