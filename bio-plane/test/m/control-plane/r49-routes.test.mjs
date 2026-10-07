@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, aik, cred, refused, FORGED, QUERY_STAMPS, BODY_STAMPS } from "./harness.mjs";
 const { caseImportOps } = await import("../../../src/case-import/index.mjs");
 const { publicReadDoorOp } = await import("../../../src/public-read/door.mjs");
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 
 const { OPS } = O;
 const U = new URL("http://do/");

@@ -45,7 +45,12 @@ test("R44: templatereviewgrant is answered as reviewgrant is — admission's rev
   const { secret } = r.json.result;
   assert.match(secret, /^rv1_[A-Za-z0-9_-]{43}$/);
   assert.equal(typeof r.json.result.secretIsShownOnce, "string");
-  assert.equal(r.json.result.read, "op=templateread&secret=<the value above>");
+  /* R59 (F1): the instruction names the body, never an address carrying the secret */
+  assert.equal(r.json.result.read, "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address");
+  assert.equal(/[?&]secret=/.test(r.json.result.read), false);
+  const rg = await call(w.env, { op: "reviewgrant", token: w.S.ann, method: "POST", body: { draft: "D1" } });
+  assert.equal(rg.status, 200, rg.text.slice(0, 200));
+  assert.equal(rg.json.result.read, "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address");
   assert.equal(r.json.result.grant, "TRG-2026-0001");
   const inner = opCalls(w.env).filter((c) => c.route === "templatereviewgrant");
   assert.equal(inner.length, 1);

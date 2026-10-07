@@ -4,10 +4,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { M, O, world, call, opCalls, sha, hex64, aik, cred, refused, FORGED, QUERY_STAMPS } from "./harness.mjs";
 import * as REVIEW_CHECKS from "../../../src/review/checks.mjs";
-import * as CP_CHECKS from "../../../src/control-plane/checks.mjs";
+import * as CP_CHECKS from "../../../src/answer-envelope/checks.mjs";
 import * as ADMISSION_CHECKS from "../../../src/admission/checks.mjs";
 import { aiScopeDeclaration, aiConfinementDeclaration } from "../../../src/admission/index.mjs";
-const D = await import("../../../src/control-plane/dispatch.mjs");
+const D = await import("../../../src/store-door/dispatch.mjs");
 
 const { OPS, UNATTENDED_BY_DECISION } = O;
 const GATED = Object.keys(OPS).filter((k) => OPS[k].classes !== null);
@@ -500,7 +500,8 @@ test("R32, R39, R46: each check the door answers carries its C-number on the wir
     assert.equal(sentences[code], both[code].translation, code);
   }
   for (const [code, row] of Object.entries(own))
-    assert.match(row.where, /^src\/control-plane\/(index|dispatch)\.mjs \S+ > is-[a-z-]+$/, code);
+    /* answer-envelope R8: each row's `where` names the file whose code raises it (the door's, the envelope's or the store's door) */
+    assert.match(row.where, /^src\/(control-plane\/index|answer-envelope\/index|store-door\/dispatch)\.mjs \S+ > is-[a-z-]+$/, code);
 });
 
 test("R33: no place is named in this module's answers", async () => {

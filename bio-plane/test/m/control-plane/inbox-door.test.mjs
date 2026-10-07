@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, call, opCalls, FORGED } from "./harness.mjs";
 const { record: fixture } = await import("./record.mjs");
-const P = await import("../../../src/control-plane/pull.mjs");
+const P = await import("../../../src/store-door/pull.mjs");
 const { captureOf, REASON_MAX } = await import("../../../src/capture/index.mjs");
 const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");

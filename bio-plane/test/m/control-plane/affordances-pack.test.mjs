@@ -84,3 +84,24 @@ test("R41 (affordances R37; skills R9, R10): `screens` and `wizard_scripts` in t
   assert.deepEqual(r.json.result.pack.disclosed.wizard_scripts.body, []);
   assert.equal(typeof r.json.result.pack.disclosed.wizard_scripts.absent_because, "string");
 });
+
+test("R41 (T35; N695, K1864): `op=agentpack` serves `fences` and `pack` apart — the very values the untargeted `op=affordances` answer carries for the same caller — for a session, an agent credential and a binding; a render that throws answers `pack: null` and `pack_absent` on the same terms; a refusal of the handler is answered as given (negative control: the untargeted affordances answer still carries both keys, until agent-worker reads them apart)", async () => {
+  const w = world();
+  const base = untargeted();
+  const hooks = hooksAnswering((ctx) => (ctx.op === "affordances" ? M.json({ ok: true, result: base }, 200) : undefined));
+  for (const token of [w.S.ann, w.A.ann, w.env.ADMIN_TOKEN]) {
+    const a = await call(w.env, { op: "agentpack", token, hooks });
+    const u = await call(w.env, { op: "affordances", token, hooks });
+    assert.equal(a.status, 200, a.text.slice(0, 200));
+    assert.deepEqual([a.json.ok, a.json.fences, a.json.pack], [true, u.json.result.fences, u.json.result.pack]);
+    assert.equal(typeof a.json.pack.version, "string");
+    assert.equal("catalog" in a.json, false, "only the two keys, not the rest of the answer");
+  }
+  const bare = hooksAnswering(() => M.json({ ok: true, result: { ...untargeted(), vocabularies: {} } }, 200));
+  const b = await call(w.env, { op: "agentpack", token: w.S.ann, hooks: bare });
+  assert.equal(b.json.pack, null);
+  assert.match(b.json.pack_absent, /vocabular/);
+  const refusing = hooksAnswering(() => M.json({ ok: false, reason: "NO_SUCH_BUNDLE" }, 404));
+  const r = await call(w.env, { op: "agentpack", token: w.S.ann, hooks: refusing });
+  assert.deepEqual([r.status, r.json.reason, "pack" in r.json], [404, "NO_SUCH_BUNDLE", false]);
+});
